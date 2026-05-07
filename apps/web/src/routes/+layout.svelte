@@ -95,6 +95,16 @@
   </div>
 {/if}
 
+{#if data.user?.role === 'inspector'}
+  <div class="role-banner inspector" role="status">
+    👁 Inspector mode — read-only across all records, plans, and exports.
+  </div>
+{:else if data.user?.role === 'custom-operator'}
+  <div class="role-banner custom-operator" role="status">
+    🤝 Custom Operator — can record sprays on assigned blocks; stock financials are hidden.
+  </div>
+{/if}
+
 {#if data.dirtySprayers.length > 0}
   <div class="decon-banner" role="status">
     <span>
@@ -221,6 +231,14 @@
     background: rgba(255, 255, 255, 0.25);
     color: white;
   }
+  .user-area .role-inspector {
+    background: #ececec;
+    color: #1f5e3a;
+  }
+  .user-area .role-custom-operator {
+    background: #c8d8ee;
+    color: #1f3a5e;
+  }
   .user-area .signout,
   .user-area .signin {
     background: rgba(255, 255, 255, 0.15);
@@ -334,6 +352,21 @@
     background: #b71c1c;
     color: #fff;
     border-bottom-color: #5a0e0e;
+  }
+  .role-banner {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    text-align: center;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .role-banner.inspector {
+    background: #ececec;
+    color: #333;
+  }
+  .role-banner.custom-operator {
+    background: #e3edf9;
+    color: #1f3a5e;
   }
   .decon-banner {
     background: #b71c1c;

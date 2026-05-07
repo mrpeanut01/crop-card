@@ -11,7 +11,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
-  role: text('role', { enum: ['owner', 'helper'] })
+  role: text('role', { enum: ['owner', 'helper', 'inspector', 'custom-operator'] })
     .notNull()
     .default('helper'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })

@@ -1,9 +1,24 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { loginByEmail } from '$lib/server/auth';
+import { ALL_SESSION_ROLES, type SessionRole } from '$lib/server/session';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
   return { user: locals.user ?? null };
+};
+
+function coerceRole(input: unknown): SessionRole {
+  const s = String(input ?? 'helper');
+  return (ALL_SESSION_ROLES as readonly string[]).includes(s)
+    ? (s as SessionRole)
+    : 'helper';
+}
+
+const DEMO_EMAIL: Record<SessionRole, string> = {
+  owner: 'owner@cropcard.local',
+  helper: 'helper@cropcard.local',
+  inspector: 'inspector@cropcard.local',
+  'custom-operator': 'custom-operator@cropcard.local'
 };
 
 export const actions: Actions = {
@@ -11,8 +26,7 @@ export const actions: Actions = {
   signin: async (event) => {
     const fd = await event.request.formData();
     const email = String(fd.get('email') ?? '').trim();
-    const desired = String(fd.get('role') ?? 'helper');
-    const role: 'owner' | 'helper' = desired === 'owner' ? 'owner' : 'helper';
+    const role = coerceRole(fd.get('role'));
     if (!email) return fail(400, { error: 'email required' });
     try {
       loginByEmail(event, email, role);
@@ -21,14 +35,11 @@ export const actions: Actions = {
     }
     throw redirect(303, '/today');
   },
-  /** One-tap demo sign-in — creates owner@cropcard.local or helper@cropcard.local. */
+  /** One-tap demo sign-in for any of the four roles. */
   demo: async (event) => {
     const fd = await event.request.formData();
-    const role = (String(fd.get('role') ?? 'owner') === 'helper' ? 'helper' : 'owner') as
-      | 'owner'
-      | 'helper';
-    const email = role === 'owner' ? 'owner@cropcard.local' : 'helper@cropcard.local';
-    loginByEmail(event, email, role);
+    const role = coerceRole(fd.get('role'));
+    loginByEmail(event, DEMO_EMAIL[role], role);
     throw redirect(303, '/today');
   }
 };

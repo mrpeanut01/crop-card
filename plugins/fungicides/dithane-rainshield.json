@@ -1,0 +1,16 @@
+{
+  "pluginId": "dithane-rainshield",
+  "type": "fungicide",
+  "displayName": "Dithane Rainshield F45 (Corteva mancozeb)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "mancozeb", "fracCode": "M03" }],
+  "ratePerAcre": { "amount": 3, "unit": "lb" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 24,
+  "preHarvestIntervalDays": 77,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["apple scab", "downy mildew", "rust", "early blight"],
+  "labelClaims": { "safeForCropFamilies": ["orchard", "solanaceae", "cucurbit"] },
+  "notes": "Brand-name mancozeb with rainfast formulation. Same active as Manzate / Penncozeb."
+}

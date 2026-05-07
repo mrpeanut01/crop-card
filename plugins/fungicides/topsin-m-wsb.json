@@ -1,0 +1,16 @@
+{
+  "pluginId": "topsin-m-wsb",
+  "type": "fungicide",
+  "displayName": "Topsin M WSB (UPL thiophanate-methyl)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE-BLOOM",
+  "activeIngredients": [{ "name": "thiophanate-methyl", "fracCode": "1" }],
+  "ratePerAcre": { "amount": 1.5, "unit": "lb" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 24,
+  "preHarvestIntervalDays": 1,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["apple scab", "brown rot (stone fruit)", "Botrytis", "powdery mildew"],
+  "labelClaims": { "safeForCropFamilies": ["orchard", "stone-fruit", "small-fruit"] },
+  "notes": "Single-site MBC FRAC 1 — high resistance risk. Rotate aggressively. NOT tank-mix-compatible with copper."
+}

@@ -1,0 +1,13 @@
+{
+  "pluginId": "radiant-sc",
+  "type": "insecticide",
+  "displayName": "Radiant SC (Corteva spinetoram)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "spinetoram", "iracGroup": "5" }],
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 1,
+  "ratePerAcre": { "amount": 8, "unit": "fl-oz" },
+  "targetPests": ["thrips", "leafminer", "diamondback moth", "armyworm", "cabbage looper", "spotted-wing drosophila"],
+  "pollinatorRisk": "moderate",
+  "notes": "Spinosyn IRAC 5 — semi-systemic. SWD-active in berry crops. Avoid bloom or apply at sunset."
+}

@@ -1,0 +1,11 @@
+{
+  "pluginId": "uan-28",
+  "type": "fertilizer",
+  "displayName": "UAN 28% (urea-ammonium nitrate liquid)",
+  "version": "1.0.0",
+  "analysis": { "n": 28, "p": 0, "k": 0 },
+  "form": "liquid",
+  "organic": false,
+  "applicationRange": { "min": 5, "max": 35, "unit": "gal-per-acre" },
+  "notes": "Lower-strength than UAN 32 — less salt-out risk in cold weather. 10.66 lb/gal → 2.98 lb N per gallon."
+}

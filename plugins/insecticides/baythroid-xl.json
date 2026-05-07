@@ -1,0 +1,13 @@
+{
+  "pluginId": "baythroid-xl",
+  "type": "insecticide",
+  "displayName": "Baythroid XL (Bayer beta-cyfluthrin)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "beta-cyfluthrin", "iracGroup": "3A" }],
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 1,
+  "ratePerAcre": { "amount": 2.8, "unit": "fl-oz" },
+  "targetPests": ["European corn borer", "Colorado potato beetle", "stink bug", "aphid", "armyworm", "leafhopper"],
+  "pollinatorRisk": "high",
+  "notes": "Pyrethroid IRAC 3A. Restricted-use. Brassica / cucurbit / fruiting / leafy / corn / potato."
+}

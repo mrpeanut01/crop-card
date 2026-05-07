@@ -1,0 +1,23 @@
+{
+  "pluginId": "potato-yukon-gold",
+  "type": "crop",
+  "displayName": "Potato — Yukon Gold (early)",
+  "version": "1.0.0",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": { "min": 80, "max": 90 },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": { "min": 10, "max": 12 },
+    "seedDepthIn": { "min": 4, "max": 6 }
+  },
+  "postHarvestCuring": {
+    "method": "Cure 7–10 d at 60–65 °F, 90–95% RH; then store 38–40 °F",
+    "durationWeeks": { "min": 1, "max": 2 },
+    "storageLocation": "Cool, dark, ventilated"
+  },
+  "harvestIndicators": ["Vines die back", "Skin set (does not rub off)"],
+  "notes": "Early-maturing yellow-flesh potato. Hill 2× during season. Colorado potato beetle is the dominant pest; rotate Coragen/Spinosad/Bt per IRAC stewardship."
+}

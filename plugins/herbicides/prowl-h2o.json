@@ -1,0 +1,20 @@
+{
+  "pluginId": "prowl-h2o",
+  "type": "herbicide",
+  "displayName": "Prowl H2O (BASF)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [{ "name": "pendimethalin", "chemistryClass": "microtubule-inhibitor" }],
+  "ratePerAcre": { "amount": 2, "unit": "qt" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 42.7, "unit": "fl-oz" },
+    "25gal":  { "amount": 106.7, "unit": "fl-oz" },
+    "50gal":  { "amount": 213.3, "unit": "fl-oz" },
+    "100gal": { "amount": 426.7, "unit": "fl-oz" }
+  },
+  "deconRequired": true,
+  "tankMixOrder": 5,
+  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "soybean-asgrow-roundup-ready-2-xtend", "tomato-roma-vf", "pepper-bell-california-wonder", "potato-yukon-gold"] },
+  "notes": "PRE soil-active dinitroaniline. Excellent annual grass + small-seeded broadleaf control on corn / soybean / vegetables (broadleaf-tolerant). DO NOT use on alliums or cereals."
+}

@@ -1,0 +1,16 @@
+{
+  "pluginId": "serenade-aso",
+  "type": "fungicide",
+  "displayName": "Serenade ASO (Bayer Bacillus subtilis — OMRI)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "Bacillus subtilis QST 713", "fracCode": "BM02" }],
+  "ratePerAcre": { "amount": 4, "unit": "qt" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "none",
+  "targetDiseases": ["powdery mildew (suppression)", "bacterial spot", "Botrytis (suppression)"],
+  "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green", "small-fruit", "orchard"] },
+  "notes": "OMRI biological FRAC BM02. Multi-site biofungicide. Rotational/preventive only."
+}

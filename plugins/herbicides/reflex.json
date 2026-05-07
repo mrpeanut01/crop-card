@@ -1,0 +1,20 @@
+{
+  "pluginId": "reflex",
+  "type": "herbicide",
+  "displayName": "Reflex (Syngenta fomesafen)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "fomesafen sodium salt", "chemistryClass": "ppo-inhibitor" }],
+  "ratePerAcre": { "amount": 1.5, "unit": "pt" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 16,  "unit": "fl-oz" },
+    "25gal":  { "amount": 40,  "unit": "fl-oz" },
+    "50gal":  { "amount": 80,  "unit": "fl-oz" },
+    "100gal": { "amount": 160, "unit": "fl-oz" }
+  },
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": { "safeForCropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend", "snap-pea-sugar-snap"] },
+  "notes": "POST PPO inhibitor. Soybean + dry bean + snap bean tolerant. Glyphosate-resistant pigweed control."
+}

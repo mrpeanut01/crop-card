@@ -1,0 +1,10 @@
+{
+  "pluginId": "plum-stanley",
+  "type": "crop",
+  "displayName": "Plum — Stanley (European prune-type)",
+  "version": "1.0.0",
+  "cropFamily": "stone-fruit",
+  "defaultRowSpacingInches": 216,
+  "harvestIndicators": ["Dusty-blue waxy bloom", "Slight give"],
+  "notes": "Self-fertile European plum. Black knot (Apiosporina morbosa) is the main disease — winter prune + burn knots."
+}

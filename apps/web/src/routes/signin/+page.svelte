@@ -30,24 +30,50 @@
         <input type="hidden" name="role" value="helper" />
         <button class="primary helper" type="submit">Sign in as Helper</button>
       </form>
+      <form method="POST" action="?/demo">
+        <input type="hidden" name="role" value="inspector" />
+        <button class="primary inspector" type="submit">Sign in as Inspector</button>
+      </form>
+      <form method="POST" action="?/demo">
+        <input type="hidden" name="role" value="custom-operator" />
+        <button class="primary custom-operator" type="submit">Sign in as Custom Operator</button>
+      </form>
     </div>
+    <ul class="role-help">
+      <li><strong>Owner</strong> — full read/write across the farm.</li>
+      <li>
+        <strong>Helper</strong> — record sprays + harvest; cannot edit locked records or override custom
+        rates.
+      </li>
+      <li>
+        <strong>Inspector</strong> — read-only across everything; for audits + cost-share visits.
+      </li>
+      <li>
+        <strong>Custom Operator</strong> — like helper but scoped to assigned blocks and cannot see stock
+        financials.
+      </li>
+    </ul>
   </section>
 
   <section class="card">
     <h2>Email sign-in</h2>
     <p class="lede">
-      First-time emails default to <em>helper</em>. Tick the owner box to claim owner role on first
-      sign-in (this is dev auth — production should use Auth.js magic-link, which the codebase has
-      installed).
+      Pick a role; first-time emails are created with that role. (This is dev auth — production
+      should use Auth.js magic-link, which the codebase has installed.)
     </p>
     <form method="POST" action="?/signin">
       <label>
         Email
         <input type="email" name="email" required placeholder="you@example.com" />
       </label>
-      <label class="checkbox">
-        <input type="checkbox" name="role" value="owner" />
-        First sign-in: claim owner role
+      <label>
+        Role
+        <select name="role">
+          <option value="helper">Helper</option>
+          <option value="owner">Owner</option>
+          <option value="inspector">Inspector</option>
+          <option value="custom-operator">Custom Operator</option>
+        </select>
       </label>
       <button type="submit" class="primary">Sign in</button>
     </form>
@@ -83,6 +109,24 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
+  }
+  .role-help {
+    margin: 1rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.45;
+  }
+  .role-help li {
+    margin-bottom: 0.25rem;
+  }
+  select {
+    padding: 0.6rem;
+    border: 2px solid #d0d7d0;
+    border-radius: 4px;
+    font-size: 1rem;
+    min-height: 48px;
+    background: white;
   }
   form {
     margin: 0;
@@ -124,6 +168,12 @@
   .primary.helper {
     background: #1f5e3a;
   }
+  .primary.inspector {
+    background: #4a4a4a;
+  }
+  .primary.custom-operator {
+    background: #4a6ea3;
+  }
   .role {
     padding: 0.1rem 0.5rem;
     border-radius: 3px;
@@ -139,6 +189,14 @@
   .role-helper {
     background: #e7f1ea;
     color: #1f5e3a;
+  }
+  .role-inspector {
+    background: #ececec;
+    color: #4a4a4a;
+  }
+  .role-custom-operator {
+    background: #e3edf9;
+    color: #4a6ea3;
   }
   .error {
     color: #b00020;

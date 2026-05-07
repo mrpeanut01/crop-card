@@ -1,0 +1,16 @@
+{
+  "pluginId": "raspberry-heritage",
+  "type": "crop",
+  "displayName": "Raspberry — Heritage (red, primocane-fruiting)",
+  "version": "1.0.0",
+  "cropFamily": "bramble",
+  "preHarvestIntervalDays": 1,
+  "defaultRowSpacingInches": 96,
+  "seasonalTasks": [
+    { "key": "mow-canes-down", "kind": "pruning", "dayOfYear": 60, "windowDays": 30, "title": "Mow primocane raspberry to ground (winter)", "body": "Single-crop management: cut all canes 1 in tall after dormancy; new canes will fruit Aug-Oct." },
+    { "key": "swd-monitoring", "kind": "scout", "dayOfYear": 195, "windowDays": 90, "title": "SWD trap + spray decision", "body": "Spotted-wing drosophila is the dominant ripe-fruit pest. Pyrethroids on 5–7 d intervals during ripening." },
+    { "key": "harvest", "kind": "harvest", "dayOfYear": 225, "windowDays": 60, "title": "Fall raspberry harvest", "body": "Pick every 2–3 d. Cool berries to 32–34 °F within 1 h." }
+  ],
+  "harvestIndicators": ["Berry pulls free easily", "Bright uniform red"],
+  "notes": "Fall-bearing red raspberry. Primocane mow-down management — single 1.5 mo harvest, no summer crop."
+}

@@ -1,0 +1,14 @@
+{
+  "pluginId": "banvel",
+  "type": "herbicide",
+  "displayName": "Banvel (BASF dicamba DMA salt, generic)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "dicamba dimethylamine salt", "chemistryClass": "synthetic-auxin" }],
+  "ratePerAcre": { "amount": 1, "unit": "pt" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "wheat-soft-red-winter", "barley-grain-thoroughbred"] },
+  "notes": "Older DMA-salt dicamba. Pasture / corn / cereals — NOT Xtend soybean (use Engenia or XtendiMax instead). Drift-prone."
+}

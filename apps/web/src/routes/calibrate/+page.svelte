@@ -11,6 +11,9 @@
   let saving = $state(false);
   let saveError = $state<string | null>(null);
   let saveOk = $state(false);
+  let pendingSent = $state(false);
+  let pendingActionId = $state<string | null>(null);
+  let pendingActionError = $state<string | null>(null);
 
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
 
@@ -38,6 +41,7 @@
     saving = true;
     saveError = null;
     saveOk = false;
+    pendingSent = false;
     try {
       const res = await fetch(`/api/sprayers/${encodeURIComponent(sprayer.id)}/calibration`, {
         method: 'POST',
@@ -53,12 +57,37 @@
         saveError = out.error ?? `HTTP ${res.status}`;
         return;
       }
-      saveOk = true;
+      // Owner: 200 + status:'applied'. Helper: 202 + status:'pending-owner-review'.
+      if (out.status === 'pending-owner-review') {
+        pendingSent = true;
+      } else {
+        saveOk = true;
+      }
       await invalidateAll();
     } catch (e) {
       saveError = e instanceof Error ? e.message : String(e);
     } finally {
       saving = false;
+    }
+  }
+
+  async function actOnPending(id: string, action: 'approve' | 'reject') {
+    pendingActionId = id;
+    pendingActionError = null;
+    try {
+      const res = await fetch(`/api/calibrations/pending/${encodeURIComponent(id)}`, {
+        method: action === 'approve' ? 'POST' : 'DELETE'
+      });
+      if (!res.ok) {
+        const out = await res.json().catch(() => ({}));
+        pendingActionError = out.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      await invalidateAll();
+    } catch (e) {
+      pendingActionError = e instanceof Error ? e.message : String(e);
+    } finally {
+      pendingActionId = null;
     }
   }
 </script>
@@ -151,8 +180,72 @@
       {#if saveError}<p class="error">{saveError}</p>{/if}
       {#if saveOk}<p class="ok-msg">✓ Saved. Future spray dilutions will use this GPA.</p>{/if}
     {:else}
-      <p class="lock-msg">Owner role required to save calibration.</p>
+      <p class="lock-msg">
+        Owner role required to apply this calibration to {sprayer?.label ?? 'the sprayer'}. You can
+        send the result to the owner for review.
+      </p>
+      <button class="primary" onclick={save} disabled={saving || !sprayer || pendingSent}>
+        {#if saving}
+          Sending…
+        {:else if pendingSent}
+          ✓ Sent to owner
+        {:else}
+          Send {gpaResult.gpa} GPA to owner →
+        {/if}
+      </button>
+      {#if saveError}<p class="error">{saveError}</p>{/if}
+      {#if pendingSent}
+        <p class="ok-msg">
+          The owner will review and apply (or reject) this on their next visit to /calibrate.
+        </p>
+      {/if}
     {/if}
+  </section>
+{/if}
+
+{#if data.canSave && data.pendingCalibrations.length > 0}
+  <section class="card pending-review" aria-labelledby="pending-review-title">
+    <h2 id="pending-review-title">
+      Pending calibrations from helpers ({data.pendingCalibrations.length})
+    </h2>
+    <p class="hint">
+      Helpers ran the 1/128-acre wizard and submitted these GPAs for your approval. Approve to
+      apply; reject to discard.
+    </p>
+    <ul class="pending-list">
+      {#each data.pendingCalibrations as p (p.id)}
+        {@const eq = data.sprayers.find((s) => s.id === p.equipmentId)}
+        <li class="pending-item">
+          <div class="pending-meta">
+            <strong>{eq?.label ?? p.equipmentId}</strong>
+            <span class="gpa-stamp">{p.calibratedGpa} GPA</span>
+            <small>
+              from {p.submittedByEmail} ·
+              {new Date(p.submittedAt).toLocaleString()}
+              {#if p.spreadInches}· {p.spreadInches} in spread{/if}
+              {#if p.ouncesCollected !== undefined}· {p.ouncesCollected} oz{/if}
+            </small>
+          </div>
+          <div class="pending-actions">
+            <button
+              class="approve"
+              onclick={() => actOnPending(p.id, 'approve')}
+              disabled={pendingActionId === p.id}
+            >
+              {pendingActionId === p.id ? 'Working…' : 'Approve & apply'}
+            </button>
+            <button
+              class="reject"
+              onclick={() => actOnPending(p.id, 'reject')}
+              disabled={pendingActionId === p.id}
+            >
+              Reject
+            </button>
+          </div>
+        </li>
+      {/each}
+    </ul>
+    {#if pendingActionError}<p class="error">{pendingActionError}</p>{/if}
   </section>
 {/if}
 
@@ -284,9 +377,75 @@
     margin: 0.5rem 0 0;
   }
   .lock-msg {
-    color: #b35900;
+    color: #4a2900;
     background: #fff3cd;
-    padding: 0.5rem 0.75rem;
+    padding: 0.6rem 0.9rem;
     border-radius: 4px;
+    margin: 0 0 0.75rem;
+  }
+  .pending-review {
+    background: #f8fbf9;
+    border-left: 4px solid #1f5e3a;
+  }
+  .pending-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .pending-item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 6px;
+    border-left: 4px solid #b35900;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pending-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1 1 220px;
+  }
+  .gpa-stamp {
+    font-family: monospace;
+    font-weight: 700;
+    color: #1f5e3a;
+    font-size: 1.4rem;
+  }
+  .pending-meta small {
+    color: #555;
+  }
+  .pending-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .pending-actions button {
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    border: 2px solid;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 60px;
+  }
+  .pending-actions .approve {
+    background: #1f5e3a;
+    color: white;
+    border-color: #1f5e3a;
+  }
+  .pending-actions .reject {
+    background: white;
+    color: #b00020;
+    border-color: #b00020;
+  }
+  .pending-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>

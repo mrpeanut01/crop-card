@@ -1,0 +1,16 @@
+{
+  "pluginId": "bravo-weather-stik",
+  "type": "fungicide",
+  "displayName": "Bravo Weather Stik (Syngenta chlorothalonil)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "chlorothalonil", "fracCode": "M05" }],
+  "ratePerAcre": { "amount": 1.5, "unit": "pt" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["early blight", "late blight", "Alternaria", "Septoria leaf spot", "downy mildew", "anthracnose"],
+  "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green", "small-fruit"] },
+  "notes": "Multi-site M05. Workhorse vegetable + small-fruit fungicide. Restricted-use in some jurisdictions; verify state regulations."
+}

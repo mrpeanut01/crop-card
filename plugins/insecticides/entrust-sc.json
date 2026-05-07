@@ -1,0 +1,13 @@
+{
+  "pluginId": "entrust-sc",
+  "type": "insecticide",
+  "displayName": "Entrust SC (Corteva spinosad — OMRI)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "spinosad", "iracGroup": "5" }],
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 1,
+  "ratePerAcre": { "amount": 6, "unit": "fl-oz" },
+  "targetPests": ["thrips", "leafminer", "diamondback moth", "Colorado potato beetle", "armyworm", "cabbage looper"],
+  "pollinatorRisk": "moderate",
+  "notes": "OMRI-listed organic spinosad. Same a.i. as Tracer/Success — different formulation. Apply at sunset to avoid bee toxicity."
+}

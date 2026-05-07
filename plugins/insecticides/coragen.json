@@ -1,0 +1,16 @@
+{
+  "pluginId": "coragen",
+  "type": "insecticide",
+  "displayName": "Coragen (FMC chlorantraniliprole)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "chlorantraniliprole", "iracGroup": "28" }],
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 1,
+  "ratePerAcre": { "amount": 5, "unit": "fl-oz" },
+  "targetPests": ["Colorado potato beetle", "European corn borer", "diamondback moth", "tomato hornworm", "cabbage looper", "armyworm", "leafminer larvae"],
+  "pollinatorRisk": "low",
+  "labelClaims": {
+    "safeForCropFamilies": ["solanaceae", "brassica", "cucurbit", "leafy-green", "corn", "legume"]
+  },
+  "notes": "Diamide IRAC 28. Long residual + low pollinator risk = workhorse vegetable insecticide."
+}

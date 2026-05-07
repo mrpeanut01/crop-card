@@ -127,7 +127,10 @@
   triggers, and harvest windows from each crop's DTM.
 </p>
 
-<a class="calendar-link" href="/plan/calendar">📅 View season calendar →</a>
+<nav class="plan-tabs" aria-label="Plan views">
+  <a href="/plan" class="active" aria-current="page">📋 Blocks & plantings</a>
+  <a href="/plan/calendar">📅 Calendar</a>
+</nav>
 
 {#if !data.canEdit}
   <section class="card role-notice">
@@ -392,21 +395,31 @@
   .role-notice h2 {
     color: #b35900;
   }
-  .calendar-link {
-    display: inline-block;
-    background: white;
-    color: #1f5e3a;
-    border: 2px solid #1f5e3a;
-    padding: 0.6rem 1rem;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    min-height: 44px;
-    line-height: 1.4;
+  .plan-tabs {
+    display: flex;
+    gap: 0;
+    margin: 0.5rem 0 1.25rem;
+    border-bottom: 2px solid #1f5e3a;
   }
-  .calendar-link:hover {
-    background: #f0f8f3;
+  .plan-tabs a {
+    padding: 0.75rem 1.25rem;
+    text-decoration: none;
+    color: #555;
+    font-weight: 600;
+    border-bottom: 4px solid transparent;
+    margin-bottom: -2px;
+    min-height: 60px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .plan-tabs a:hover {
+    color: #1f5e3a;
+    background: #f8fbf9;
+  }
+  .plan-tabs a.active {
+    color: #1f5e3a;
+    border-bottom-color: #1f5e3a;
   }
   .block:target {
     outline: 3px solid #ffd400;

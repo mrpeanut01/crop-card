@@ -1,0 +1,14 @@
+{
+  "pluginId": "buckwheat-cover",
+  "type": "crop",
+  "displayName": "Buckwheat (warm-season cover crop)",
+  "version": "1.0.0",
+  "cropFamily": "cover-grass",
+  "daysToMaturity": { "min": 30, "max": 45 },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "recommendedLbsPerAcre": 60
+  },
+  "notes": "Quick-cycling 30–45 day summer smother crop. Fits between spring + fall cash crops. NOT a true grass family — but kernel-grouped under cover-grass for termination semantics."
+}

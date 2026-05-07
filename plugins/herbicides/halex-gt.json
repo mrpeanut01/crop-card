@@ -1,0 +1,18 @@
+{
+  "pluginId": "halex-gt",
+  "type": "herbicide",
+  "displayName": "Halex GT (Syngenta)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [
+    { "name": "glyphosate", "chemistryClass": "glyphosate" },
+    { "name": "S-metolachlor", "chemistryClass": "chloroacetamide" },
+    { "name": "mesotrione", "chemistryClass": "hppd-inhibitor" }
+  ],
+  "ratePerAcre": { "amount": 3.6, "unit": "pt" },
+  "gpaCalibration": 15,
+  "requiresAMS": true,
+  "deconRequired": true,
+  "tankMixOrder": 6,
+  "notes": "Total POST corn package: glyphosate (RR-traited) + chloroacetamide residual + HPPD broadleaf. Tank-mix with AMS. Kernel does not yet model glyphosate-resistance traits — RR2 corn must be approved per spray via the bypass override."
+}

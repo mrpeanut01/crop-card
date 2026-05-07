@@ -25,6 +25,8 @@ export type StockCategory =
 export type MovementReason =
   | 'receipt'
   | 'spray-event'
+  | 'insecticide-event'
+  | 'fertility-application'
   | 'planting'
   | 'adjustment'
   | 'spill'
@@ -59,6 +61,8 @@ export interface StockMovement {
   delta: number;
   reason: MovementReason;
   sprayEventId?: string;
+  insecticideEventId?: string;
+  fertilityApplicationId?: string;
   performedById?: string;
   notes?: string;
 }
@@ -317,6 +321,8 @@ function rowToMovement(row: typeof stockMovements.$inferSelect): StockMovement {
     delta: fromHundredths(row.deltaHundredths),
     reason: row.reason as MovementReason,
     sprayEventId: row.sprayEventId ?? undefined,
+    insecticideEventId: row.insecticideEventId ?? undefined,
+    fertilityApplicationId: row.fertilityApplicationId ?? undefined,
     performedById: row.performedById ?? undefined,
     notes: row.notes ?? undefined
   };
@@ -363,6 +369,9 @@ export function decrementForUse(input: {
   amount: number;
   unit: StockUnit;
   sprayEventId?: string;
+  insecticideEventId?: string;
+  fertilityApplicationId?: string;
+  reason?: MovementReason;
   performedById?: string;
   occurredAt?: number;
 }): DecrementResult {
@@ -404,6 +413,13 @@ export function decrementForUse(input: {
     if (balance <= 0) continue;
     const take = Math.min(balance, remaining);
     const id = randomUUID();
+    const reason: MovementReason =
+      input.reason ??
+      (input.insecticideEventId
+        ? 'insecticide-event'
+        : input.fertilityApplicationId
+          ? 'fertility-application'
+          : 'spray-event');
     const movement = db
       .insert(stockMovements)
       .values({
@@ -411,10 +427,12 @@ export function decrementForUse(input: {
         stockLotId: lot.id,
         occurredAt: new Date(now),
         deltaHundredths: -take,
-        reason: 'spray-event',
+        reason,
         sprayEventId: input.sprayEventId ?? null,
+        insecticideEventId: input.insecticideEventId ?? null,
+        fertilityApplicationId: input.fertilityApplicationId ?? null,
         performedById: input.performedById ?? null,
-        notes: 'auto-decrement from spray event'
+        notes: `auto-decrement from ${reason}`
       })
       .returning()
       .get();

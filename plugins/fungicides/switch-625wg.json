@@ -1,0 +1,19 @@
+{
+  "pluginId": "switch-625wg",
+  "type": "fungicide",
+  "displayName": "Switch 62.5WG (Syngenta cyprodinil + fludioxonil)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE-HARVEST",
+  "activeIngredients": [
+    { "name": "cyprodinil", "fracCode": "9" },
+    { "name": "fludioxonil", "fracCode": "12" }
+  ],
+  "ratePerAcre": { "amount": 14, "unit": "oz" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["Botrytis (gray mold)", "Sclerotinia", "anthracnose", "summer fruit rots"],
+  "labelClaims": { "safeForCropFamilies": ["small-fruit", "vine-fruit", "stone-fruit", "leafy-green"] },
+  "notes": "FRAC 9 + 12 premix. Pre-harvest strawberry / grape / lettuce gray mold standard."
+}

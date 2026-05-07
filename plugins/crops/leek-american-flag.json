@@ -1,0 +1,11 @@
+{
+  "pluginId": "leek-american-flag",
+  "type": "crop",
+  "displayName": "Leek — American Flag",
+  "version": "1.0.0",
+  "cropFamily": "allium",
+  "daysToMaturity": { "min": 110, "max": 140 },
+  "defaultRowSpacingInches": 12,
+  "harvestIndicators": ["Shaft 1 in diameter, 8+ in long"],
+  "notes": "Hill 2× during season for white shaft. Cold-hardy — overwinters under mulch."
+}

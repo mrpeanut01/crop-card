@@ -1,0 +1,17 @@
+{
+  "pluginId": "anthem-maxx",
+  "type": "herbicide",
+  "displayName": "Anthem MAXX (FMC)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [
+    { "name": "pyroxasulfone", "chemistryClass": "vlcfa-pyroxasulfone" },
+    { "name": "fluthiacet-methyl", "chemistryClass": "ppo-inhibitor" }
+  ],
+  "ratePerAcre": { "amount": 4.5, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 3,
+  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "soybean-asgrow-roundup-ready-2-xtend"] },
+  "notes": "Premix HRAC 15 + 14 (PPO). Two-mode-of-action PRE for resistance management."
+}

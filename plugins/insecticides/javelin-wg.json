@@ -1,0 +1,13 @@
+{
+  "pluginId": "javelin-wg",
+  "type": "insecticide",
+  "displayName": "Javelin WG (Certis Bt kurstaki)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "Bacillus thuringiensis kurstaki", "iracGroup": "11A" }],
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "ratePerAcre": { "amount": 1, "unit": "lb" },
+  "targetPests": ["cabbage looper", "diamondback moth", "imported cabbage worm", "armyworm"],
+  "pollinatorRisk": "none",
+  "notes": "Bt IRAC 11A — alternate to DiPel. OMRI."
+}

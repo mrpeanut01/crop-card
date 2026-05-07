@@ -1,0 +1,14 @@
+{
+  "pluginId": "poast-plus",
+  "type": "herbicide",
+  "displayName": "Poast Plus (BASF sethoxydim)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "sethoxydim", "chemistryClass": "accase-inhibitor" }],
+  "ratePerAcre": { "amount": 1.5, "unit": "pt" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": { "safeForCropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend", "snap-pea-sugar-snap", "carrot-nantes-half-long"] },
+  "notes": "Older ACCase inhibitor; now mostly replaced by clethodim. Vegetable label use."
+}

@@ -1,0 +1,14 @@
+{
+  "pluginId": "zidua-sc",
+  "type": "herbicide",
+  "displayName": "Zidua SC (BASF pyroxasulfone)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [{ "name": "pyroxasulfone", "chemistryClass": "vlcfa-pyroxasulfone" }],
+  "ratePerAcre": { "amount": 2.5, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 3,
+  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "soybean-asgrow-roundup-ready-2-xtend", "wheat-soft-red-winter"] },
+  "notes": "HRAC 15 isoxazoline — newer VLCFA. Excellent ryegrass + waterhemp PRE on corn / soybean / wheat."
+}

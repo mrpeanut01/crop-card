@@ -1,0 +1,16 @@
+{
+  "pluginId": "indar-2f",
+  "type": "fungicide",
+  "displayName": "Indar 2F (Corteva fenbuconazole)",
+  "version": "1.0.0",
+  "applicationTiming": "BLOOM",
+  "activeIngredients": [{ "name": "fenbuconazole", "fracCode": "3" }],
+  "ratePerAcre": { "amount": 6, "unit": "fl-oz" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 14,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["brown rot", "apple scab", "cherry leaf spot", "powdery mildew"],
+  "labelClaims": { "safeForCropFamilies": ["stone-fruit", "orchard"] },
+  "notes": "DMI FRAC 3 triazole. Brown rot specialist. Rotate with FRAC 11 / 7. 14-day PHI."
+}

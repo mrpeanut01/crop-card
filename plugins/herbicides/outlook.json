@@ -1,0 +1,14 @@
+{
+  "pluginId": "outlook",
+  "type": "herbicide",
+  "displayName": "Outlook (BASF dimethenamid-P)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [{ "name": "dimethenamid-P", "chemistryClass": "chloroacetamide" }],
+  "ratePerAcre": { "amount": 14, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 3,
+  "labelClaims": { "safeForCropPluginIds": ["corn-bloody-butcher", "soybean-asgrow-roundup-ready-2-xtend"] },
+  "notes": "VLCFA / chloroacetamide PRE. Sister to S-metolachlor; better activity on Texas panicum + nutsedge."
+}

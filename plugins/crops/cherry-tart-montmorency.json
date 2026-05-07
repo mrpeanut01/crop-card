@@ -1,0 +1,10 @@
+{
+  "pluginId": "cherry-tart-montmorency",
+  "type": "crop",
+  "displayName": "Cherry — Tart, Montmorency",
+  "version": "1.0.0",
+  "cropFamily": "stone-fruit",
+  "defaultRowSpacingInches": 216,
+  "harvestIndicators": ["Bright red", "Easy stem release"],
+  "notes": "Self-fertile pie cherry. Hardier and more disease-tolerant than sweet cherries."
+}

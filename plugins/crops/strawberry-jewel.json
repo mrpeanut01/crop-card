@@ -1,0 +1,18 @@
+{
+  "pluginId": "strawberry-jewel",
+  "type": "crop",
+  "displayName": "Strawberry — Jewel (June-bearing)",
+  "version": "1.0.0",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": { "min": 365, "max": 730 },
+  "defaultRowSpacingInches": 36,
+  "seasonalTasks": [
+    { "key": "row-renovation", "kind": "cultural", "dayOfYear": 195, "windowDays": 21, "title": "Renovate matted rows post-harvest", "body": "Mow tops, narrow rows to 12 in, fertilize, irrigate. Within 1 wk of last harvest." },
+    { "key": "winter-mulch", "kind": "cultural", "dayOfYear": 335, "windowDays": 21, "title": "Apply straw winter mulch", "body": "3 in straw after 2–3 hard frosts but before sustained cold." },
+    { "key": "remove-mulch", "kind": "cultural", "dayOfYear": 75, "windowDays": 14, "title": "Pull mulch off rows for spring growth", "body": "Mulch goes between rows for weed suppression + frost-cloth base." },
+    { "key": "frost-watch", "kind": "scout", "dayOfYear": 105, "windowDays": 30, "title": "Bloom frost watch", "body": "Open blossoms freeze at 30 °F; row cover + irrigation can save a crop." }
+  ],
+  "harvestIndicators": ["3/4 red color minimum", "Bright glossy red", "No white shoulders"],
+  "notes": "Standard June-bearing matted-row variety. 3-yr productive life; renovate annually."
+}

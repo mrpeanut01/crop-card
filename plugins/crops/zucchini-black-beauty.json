@@ -1,0 +1,17 @@
+{
+  "pluginId": "zucchini-black-beauty",
+  "type": "crop",
+  "displayName": "Zucchini — Black Beauty",
+  "version": "1.0.0",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 0,
+  "daysToMaturity": { "min": 50, "max": 60 },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": { "min": 18, "max": 24 }
+  },
+  "harvestIndicators": ["6–8 in length", "Glossy skin"],
+  "notes": "Pick every 2 d at peak. Squash bug + vine borer are the main pests; row-cover until flowering."
+}

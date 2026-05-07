@@ -1,0 +1,13 @@
+{
+  "pluginId": "sivanto-prime",
+  "type": "insecticide",
+  "displayName": "Sivanto Prime (Bayer flupyradifurone)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "flupyradifurone", "iracGroup": "4D" }],
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 1,
+  "ratePerAcre": { "amount": 12, "unit": "fl-oz" },
+  "targetPests": ["aphid", "whitefly", "leafhopper", "psyllid"],
+  "pollinatorRisk": "low",
+  "notes": "Butenolide IRAC 4D — bee-friendlier neonic alternative. Sucking-pest specialist."
+}

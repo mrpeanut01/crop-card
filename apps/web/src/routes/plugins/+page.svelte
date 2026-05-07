@@ -108,6 +108,11 @@
   </p>
 {/if}
 
+<p class="community-link">
+  Looking to share or discover plugins? See the <a href="/plugins/community">community plugins</a>
+  page.
+</p>
+
 {#if data.failures.length > 0}
   <section class="alert">
     <strong>⚠ {data.failures.length} plugin file(s) failed to load:</strong>
@@ -436,6 +441,18 @@
     padding: 0.75rem 1rem;
     border-radius: 4px;
     margin-bottom: 1rem;
+  }
+  .community-link {
+    background: #f5f7f4;
+    padding: 0.6rem 0.9rem;
+    border-radius: 4px;
+    color: #444;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .community-link a {
+    color: #1f5e3a;
+    font-weight: 600;
   }
 
   .reject-backdrop {

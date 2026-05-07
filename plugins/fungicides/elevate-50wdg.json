@@ -1,0 +1,16 @@
+{
+  "pluginId": "elevate-50wdg",
+  "type": "fungicide",
+  "displayName": "Elevate 50WDG (Arysta fenhexamid)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE-HARVEST",
+  "activeIngredients": [{ "name": "fenhexamid", "fracCode": "17" }],
+  "ratePerAcre": { "amount": 1.5, "unit": "lb" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["Botrytis", "Sclerotinia"],
+  "labelClaims": { "safeForCropFamilies": ["small-fruit", "vine-fruit", "stone-fruit"] },
+  "notes": "FRAC 17 — Botrytis specialist. Strawberry / grape / blueberry pre-harvest."
+}

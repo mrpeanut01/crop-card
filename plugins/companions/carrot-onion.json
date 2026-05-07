@@ -1,0 +1,8 @@
+{
+  "pluginId": "carrot-onion",
+  "type": "companion",
+  "displayName": "Carrots + Onions (mutual pest confusion)",
+  "version": "1.0.0",
+  "goodWith": ["carrot-nantes-half-long", "onion-storage-yellow-stuttgarter", "scallion-evergreen-bunching"],
+  "badWith": []
+}

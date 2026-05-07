@@ -1,0 +1,13 @@
+{
+  "pluginId": "xentari",
+  "type": "insecticide",
+  "displayName": "XenTari DF (Valent Bt aizawai)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "Bacillus thuringiensis aizawai", "iracGroup": "11A" }],
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "ratePerAcre": { "amount": 1, "unit": "lb" },
+  "targetPests": ["beet armyworm", "diamondback moth (Bt-kurstaki resistant strains)"],
+  "pollinatorRisk": "none",
+  "notes": "Bt aizawai — manages Bt-kurstaki-resistant DBM populations. Rotate with kurstaki for resistance."
+}

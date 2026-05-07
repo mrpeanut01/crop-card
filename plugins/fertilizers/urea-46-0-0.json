@@ -1,0 +1,11 @@
+{
+  "pluginId": "urea-46-0-0",
+  "type": "fertilizer",
+  "displayName": "Urea (46-0-0)",
+  "version": "1.0.0",
+  "analysis": { "n": 46, "p": 0, "k": 0 },
+  "form": "granular",
+  "organic": false,
+  "applicationRange": { "min": 50, "max": 250, "unit": "lb-per-acre" },
+  "notes": "Highest-N synthetic granular. Volatilizes when surface-applied — incorporate within 48 h or use urease-inhibitor coating (Agrotain). 1 lb urea = 0.46 lb actual N."
+}

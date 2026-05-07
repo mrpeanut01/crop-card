@@ -1,0 +1,13 @@
+{
+  "pluginId": "sevin-xlr-plus",
+  "type": "insecticide",
+  "displayName": "Sevin XLR Plus (Tessenderlo carbaryl)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "carbaryl", "iracGroup": "1A" }],
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "ratePerAcre": { "amount": 2, "unit": "qt" },
+  "targetPests": ["Japanese beetle", "Mexican bean beetle", "fall armyworm", "tarnished plant bug"],
+  "pollinatorRisk": "high",
+  "notes": "Carbamate IRAC 1A. Highly bee-toxic. Consumer-favorite legacy product but use restraint — many alternatives are more selective."
+}

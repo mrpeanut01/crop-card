@@ -1,0 +1,11 @@
+{
+  "pluginId": "edamame-midori-giant",
+  "type": "crop",
+  "displayName": "Edamame Soybean — Midori Giant",
+  "version": "1.0.0",
+  "cropFamily": "legume",
+  "daysToMaturity": { "min": 75, "max": 85 },
+  "defaultRowSpacingInches": 24,
+  "harvestIndicators": ["Pods plump (R6 stage)", "Beans fill 80–90% of pod"],
+  "notes": "Vegetable soybean. Harvest entire plant once 75% pods are filled — short window."
+}

@@ -25,6 +25,54 @@
   let tankSizeGallons = $state(50);
   let showAllHerbicides = $state(data.preselect.windowStage === null);
 
+  type SprayerPrefs = {
+    tankSizeGallons: number;
+    windMph: number;
+    tempF: number;
+    rainMm: number;
+    cornHeightIn?: number;
+  };
+
+  function prefsKey(sprayerId: string) {
+    return `cropcard:spray-prefs:${sprayerId}`;
+  }
+
+  function loadSprayerPrefs(sprayerId: string): SprayerPrefs | null {
+    if (typeof localStorage === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(prefsKey(sprayerId));
+      if (!raw) return null;
+      return JSON.parse(raw) as SprayerPrefs;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveSprayerPrefs(sprayerId: string, prefs: SprayerPrefs) {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(prefsKey(sprayerId), JSON.stringify(prefs));
+    } catch {
+      // Quota exceeded or storage disabled — silent best-effort.
+    }
+  }
+
+  // F-R: when the user picks a sprayer, hydrate tank size + last-used
+  // conditions from the previous spray on this sprayer so Marco isn't
+  // re-tapping the same numbers each time.
+  let prefsLastApplied = $state<string | null>(null);
+  $effect(() => {
+    if (!selectedSprayerId || prefsLastApplied === selectedSprayerId) return;
+    const prefs = loadSprayerPrefs(selectedSprayerId);
+    prefsLastApplied = selectedSprayerId;
+    if (!prefs) return;
+    tankSizeGallons = prefs.tankSizeGallons;
+    windMph = prefs.windMph;
+    tempF = prefs.tempF;
+    rainMm = prefs.rainMm;
+    if (prefs.cornHeightIn !== undefined) cornHeightIn = prefs.cornHeightIn;
+  });
+
   let evaluating = $state(false);
   let result = $state<EvaluateResult | null>(null);
   let lastError = $state<string | null>(null);
@@ -154,6 +202,17 @@
     recording = true;
     lastError = null;
     queuedOffline = false;
+
+    // F-R: remember tank size + conditions for this sprayer so the next spray
+    // pre-fills. Only persist on actual record (server or offline queue), not
+    // on a safety-check-only run.
+    saveSprayerPrefs(sprayer.id, {
+      tankSizeGallons,
+      windMph,
+      tempF,
+      rainMm,
+      cornHeightIn: isCornBlock ? cornHeightIn : undefined
+    });
 
     // Already known offline → queue directly without trying the network.
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {

@@ -1,0 +1,11 @@
+{
+  "pluginId": "acorn-squash-table-queen",
+  "type": "crop",
+  "displayName": "Acorn Squash — Table Queen",
+  "version": "1.0.0",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": { "min": 80, "max": 90 },
+  "defaultRowSpacingInches": 60,
+  "harvestIndicators": ["Dark green rind with tiny orange spot", "Hard rind"],
+  "notes": "Bush-type winter squash; less aggressive vining than butternut. Cure briefly (3–5 d) only."
+}

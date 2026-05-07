@@ -1,0 +1,18 @@
+{
+  "pluginId": "peach-redhaven",
+  "type": "crop",
+  "displayName": "Peach — Redhaven",
+  "version": "1.0.0",
+  "cropFamily": "stone-fruit",
+  "preHarvestIntervalDays": 7,
+  "defaultRowSpacingInches": 216,
+  "seasonalTasks": [
+    { "key": "dormant-spray", "kind": "spray", "dayOfYear": 60, "windowDays": 14, "title": "Dormant copper + oil", "body": "Peach leaf curl preventive — must be applied before bud swell." },
+    { "key": "shuck-split-cover", "kind": "spray", "dayOfYear": 115, "windowDays": 10, "title": "Shuck-split cover spray", "body": "Brown rot + plum curculio window. Captan + insecticide tank-mix per label." },
+    { "key": "summer-cover", "kind": "spray", "dayOfYear": 165, "windowDays": 28, "title": "Summer cover sprays (10–14 d intervals)", "body": "Brown rot, oriental fruit moth. Adjust by trap counts." },
+    { "key": "pre-harvest", "kind": "spray", "dayOfYear": 200, "windowDays": 14, "title": "Pre-harvest brown rot", "body": "DMI fungicide 3 wk + 7 d before harvest. Respect 3-day PHI." },
+    { "key": "harvest", "kind": "harvest", "dayOfYear": 220, "windowDays": 21, "title": "Peach harvest window", "body": "Ground-color yellow-orange + slight give = pick. Refrigerate within 4 h." }
+  ],
+  "harvestIndicators": ["Ground color shifts yellow-orange", "Flesh gives slightly under thumb"],
+  "notes": "Standard yellow-flesh freestone peach. Bacterial spot susceptibility — copper bactericides mid-summer."
+}

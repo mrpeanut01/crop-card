@@ -1,0 +1,17 @@
+{
+  "pluginId": "cuprofix-ultra-disperss",
+  "type": "fungicide",
+  "displayName": "Cuprofix Ultra Disperss (UPL copper)",
+  "version": "1.0.0",
+  "applicationTiming": "DORMANT",
+  "activeIngredients": [{ "name": "copper sulfate basic", "fracCode": "M01" }],
+  "ratePerAcre": { "amount": 4, "unit": "lb" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 48,
+  "preHarvestIntervalDays": 1,
+  "pollinatorRisk": "low",
+  "deconRequired": true,
+  "targetDiseases": ["fire blight", "bacterial spot", "downy mildew", "leaf curl", "anthracnose"],
+  "labelClaims": { "safeForCropFamilies": ["orchard", "stone-fruit", "vine-fruit"] },
+  "notes": "M01 multi-site copper. Phytotoxic on apple after pink stage. Decon sprayer thoroughly — copper residue can damage non-target crops next pass."
+}

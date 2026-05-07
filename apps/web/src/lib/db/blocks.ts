@@ -14,6 +14,8 @@ export interface Block {
   name: string;
   acres?: number;
   blockLabel?: string;
+  /** GeoJSON Polygon or MultiPolygon (Phase 10 GPS stub). */
+  geometryGeojson?: string;
 }
 
 export interface PlantingRecord {
@@ -49,6 +51,7 @@ export function listBlocks(): BlockWithPlantings[] {
     name: b.name,
     acres: b.acres ?? undefined,
     blockLabel: b.blockLabel ?? undefined,
+    geometryGeojson: b.geometryGeojson ?? undefined,
     plantings: grouped.get(b.id) ?? []
   }));
 }
@@ -73,11 +76,17 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
     name: row.name,
     acres: row.acres ?? undefined,
     blockLabel: row.blockLabel ?? undefined,
+    geometryGeojson: row.geometryGeojson ?? undefined,
     plantings
   };
 }
 
-export function createBlock(input: { name: string; acres?: number; blockLabel?: string }): Block {
+export function createBlock(input: {
+  name: string;
+  acres?: number;
+  blockLabel?: string;
+  geometryGeojson?: string;
+}): Block {
   const id = randomUUID();
   const row = db
     .insert(blocks)
@@ -85,7 +94,8 @@ export function createBlock(input: { name: string; acres?: number; blockLabel?: 
       id,
       name: input.name,
       acres: input.acres ?? null,
-      blockLabel: input.blockLabel ?? null
+      blockLabel: input.blockLabel ?? null,
+      geometryGeojson: input.geometryGeojson ?? null
     })
     .returning()
     .get();
@@ -93,7 +103,29 @@ export function createBlock(input: { name: string; acres?: number; blockLabel?: 
     id: row.id,
     name: row.name,
     acres: row.acres ?? undefined,
-    blockLabel: row.blockLabel ?? undefined
+    blockLabel: row.blockLabel ?? undefined,
+    geometryGeojson: row.geometryGeojson ?? undefined
+  };
+}
+
+/** Update a block's GeoJSON geometry (Phase 10 GPS stub). */
+export function setBlockGeometry(
+  blockId: string,
+  geometryGeojson: string | null
+): Block | undefined {
+  const row = db
+    .update(blocks)
+    .set({ geometryGeojson })
+    .where(eq(blocks.id, blockId))
+    .returning()
+    .get();
+  if (!row) return undefined;
+  return {
+    id: row.id,
+    name: row.name,
+    acres: row.acres ?? undefined,
+    blockLabel: row.blockLabel ?? undefined,
+    geometryGeojson: row.geometryGeojson ?? undefined
   };
 }
 

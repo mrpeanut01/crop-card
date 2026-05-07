@@ -38,6 +38,10 @@ function subdirFor(type: Plugin['type']): string {
       return 'herbicides';
     case 'insecticide':
       return 'insecticides';
+    case 'fungicide':
+      return 'fungicides';
+    case 'fertilizer':
+      return 'fertilizers';
     case 'companion':
       return 'companions';
   }

@@ -1,0 +1,17 @@
+{
+  "pluginId": "snap-pea-sugar-snap",
+  "type": "crop",
+  "displayName": "Snap Pea — Sugar Snap",
+  "version": "1.0.0",
+  "cropFamily": "legume",
+  "daysToMaturity": { "min": 60, "max": 70 },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": { "min": 1, "max": 2 },
+    "seedDepthIn": { "min": 1, "max": 1.5 }
+  },
+  "harvestIndicators": ["Pods plump and crisp", "Eat pod and pea together"],
+  "notes": "Cool-season; plant as early as soil works. Trellis required (5–6 ft)."
+}

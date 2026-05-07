@@ -21,6 +21,7 @@ export type CalendarEventKind =
   | 'harvest-window'
   | 'cover-termination'
   | 'orchard-task'
+  | 'seasonal-task'
   | 'curing-progress'
   | 'curing-ready';
 
@@ -203,7 +204,7 @@ export function eventsForPlanting(
     }
   }
 
-  // Orchard seasonal tasks (FR-10): dormant oil, bloom fungicide, etc.
+  // Orchard seasonal tasks (FR-10) — perennial families render multi-year.
   // Each task fires once per calendar year on the plugin's `dayOfYear`.
   if (crop.cropFamily === 'orchard' && crop.orchardSeasonalTasks?.length) {
     const seasonYears = orchardSeasonYears(plant);
@@ -220,6 +221,38 @@ export function eventsForPlanting(
           title: `${task.title} — ${planting.varietyDisplayName}`,
           body: task.body,
           detail: { taskKey: task.key, year }
+        });
+      }
+    }
+  }
+
+  // Generic seasonalTasks (Phase 9) — works for any family. Perennial families
+  // (orchard, stone-fruit, small-fruit, bramble, vine-fruit, forage) render
+  // across the next 3 calendar years; annuals render only the planting year.
+  if (crop.seasonalTasks?.length) {
+    const isPerennial =
+      crop.cropFamily === 'orchard' ||
+      crop.cropFamily === 'stone-fruit' ||
+      crop.cropFamily === 'small-fruit' ||
+      crop.cropFamily === 'bramble' ||
+      crop.cropFamily === 'vine-fruit' ||
+      crop.cropFamily === 'forage';
+    const years = isPerennial ? orchardSeasonYears(plant) : [new Date(plant).getFullYear()];
+    for (const year of years) {
+      for (const task of crop.seasonalTasks) {
+        const start = task.dayOfYear
+          ? dayOfYearToMs(year, task.dayOfYear)
+          : plant + (task.daysAfterPlanting ?? 0) * DAY_MS;
+        events.push({
+          kind: 'seasonal-task',
+          blockId: planting.blockId,
+          cropPluginId: planting.cropPluginId,
+          varietyDisplayName: planting.varietyDisplayName,
+          startMs: start,
+          endMs: start + (task.windowDays ?? 7) * DAY_MS,
+          title: `${task.title} — ${planting.varietyDisplayName}`,
+          body: task.body,
+          detail: { taskKey: task.key, year, kind: task.kind }
         });
       }
     }

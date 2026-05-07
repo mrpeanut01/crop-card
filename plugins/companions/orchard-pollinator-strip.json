@@ -1,0 +1,8 @@
+{
+  "pluginId": "orchard-pollinator-strip",
+  "type": "companion",
+  "displayName": "Orchard pollinator strip (alleyway clover + dandelion + chicory)",
+  "version": "1.0.0",
+  "goodWith": ["apple-orchard", "pear-bartlett", "peach-redhaven", "blueberry-bluecrop", "white-clover-cover", "crimson-clover-cover"],
+  "badWith": []
+}

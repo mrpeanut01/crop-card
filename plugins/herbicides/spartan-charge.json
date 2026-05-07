@@ -1,0 +1,17 @@
+{
+  "pluginId": "spartan-charge",
+  "type": "herbicide",
+  "displayName": "Spartan Charge (FMC sulfentrazone + carfentrazone)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [
+    { "name": "sulfentrazone", "chemistryClass": "ppo-inhibitor" },
+    { "name": "carfentrazone-ethyl", "chemistryClass": "ppo-inhibitor" }
+  ],
+  "ratePerAcre": { "amount": 5, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": { "safeForCropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend"] },
+  "notes": "PRE PPO premix — soybean + sunflower + dry bean. Burndown + residual."
+}

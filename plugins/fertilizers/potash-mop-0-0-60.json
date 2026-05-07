@@ -1,0 +1,11 @@
+{
+  "pluginId": "potash-mop-0-0-60",
+  "type": "fertilizer",
+  "displayName": "Muriate of Potash / MOP (0-0-60)",
+  "version": "1.0.0",
+  "analysis": { "n": 0, "p": 0, "k": 60 },
+  "form": "granular",
+  "organic": false,
+  "applicationRange": { "min": 50, "max": 300, "unit": "lb-per-acre" },
+  "notes": "Standard K source — KCl. Avoid on chloride-sensitive crops (potato seed pieces, tobacco) — use SOP instead. Soil-test based rate."
+}

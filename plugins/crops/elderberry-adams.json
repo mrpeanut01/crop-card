@@ -1,0 +1,10 @@
+{
+  "pluginId": "elderberry-adams",
+  "type": "crop",
+  "displayName": "Elderberry — Adams",
+  "version": "1.0.0",
+  "cropFamily": "small-fruit",
+  "defaultRowSpacingInches": 96,
+  "harvestIndicators": ["Whole cluster turns deep purple-black", "Berries soft + fragrant"],
+  "notes": "Mid-size native shrub. Two cultivars needed for cross-pollination (e.g., Adams + York)."
+}

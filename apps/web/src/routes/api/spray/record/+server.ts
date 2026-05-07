@@ -27,6 +27,7 @@ import {
 } from '$lib/safety';
 import type { StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
+import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 
@@ -109,8 +110,11 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: `unknown sprayer: ${parsed.data.sprayer.id}` }, { status: 404 });
   }
 
-  // Helper-role gate (FR-09 / NFR-09): only owners may apply a custom rate.
+  // Role gates (FR-09 / NFR-09).
   const auth = currentUser(event);
+  if (auth && !canMutate(auth.role)) {
+    return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
   if (parsed.data.customRateOverride && auth?.role !== 'owner') {
     return json({ error: 'custom rate override requires owner role' }, { status: 403 });
   }

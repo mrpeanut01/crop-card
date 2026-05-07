@@ -1,0 +1,16 @@
+{
+  "pluginId": "oats-grain-jerry",
+  "type": "crop",
+  "displayName": "Oats — Jerry (spring grain)",
+  "version": "1.0.0",
+  "cropFamily": "cereal-grain",
+  "daysToMaturity": { "min": 90, "max": 110 },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 7,
+    "recommendedLbsPerAcre": 96
+  },
+  "harvestIndicators": ["Heads turn cream-tan", "Grain moisture 13–14%"],
+  "notes": "Spring oats for grain production. Crown rust + leaf blotch are main pests. Often nurse-cropped with alfalfa seeding."
+}

@@ -1,0 +1,11 @@
+{
+  "pluginId": "cantaloupe-hales-best",
+  "type": "crop",
+  "displayName": "Cantaloupe — Hale's Best Jumbo",
+  "version": "1.0.0",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": { "min": 80, "max": 90 },
+  "defaultRowSpacingInches": 60,
+  "harvestIndicators": ["Full-slip stem release", "Net-pattern fully expressed", "Floral aroma at blossom end"],
+  "notes": "Heat-loving — wait for stable warm soil. Susceptible to bacterial wilt (cucumber beetle vectored)."
+}

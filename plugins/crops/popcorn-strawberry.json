@@ -1,0 +1,11 @@
+{
+  "pluginId": "popcorn-strawberry",
+  "type": "crop",
+  "displayName": "Popcorn — Strawberry (heirloom)",
+  "version": "1.0.0",
+  "cropFamily": "corn",
+  "daysToMaturity": { "min": 95, "max": 110 },
+  "defaultRowSpacingInches": 30,
+  "harvestIndicators": ["Husks fully dry", "Kernels glassy + hard", "Test pop on a few ears"],
+  "notes": "Strawberry-shaped ornamental popcorn ears. Plant ≥250 ft from sweet/dent corn to prevent cross-pollination."
+}

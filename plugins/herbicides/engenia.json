@@ -1,0 +1,13 @@
+{
+  "pluginId": "engenia",
+  "type": "herbicide",
+  "displayName": "Engenia (BASF dicamba BAPMA salt)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "dicamba BAPMA salt", "chemistryClass": "synthetic-auxin" }],
+  "ratePerAcre": { "amount": 12.8, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "notes": "RESTRICTED-USE. Use ONLY on Xtend-traited soybeans + cotton — kernel does not yet model dicamba-tolerance traits, so Xtend soybean must be approved via the bypass-override flow each spray. Strict label requirements: TTI nozzles, ≤10 mph wind, no tank mix outside approved list, sensitive-crop downwind buffer."
+}

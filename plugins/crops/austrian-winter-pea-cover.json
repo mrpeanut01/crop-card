@@ -1,0 +1,13 @@
+{
+  "pluginId": "austrian-winter-pea-cover",
+  "type": "crop",
+  "displayName": "Austrian Winter Pea (cover crop)",
+  "version": "1.0.0",
+  "cropFamily": "cover-legume",
+  "daysToMaturity": { "min": 180, "max": 220 },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "recommendedLbsPerAcre": 70
+  },
+  "notes": "Cool-season N-fixer; pairs well with cereal rye or oats. Highest N contribution of common winter legumes (~150 lb N / acre at full biomass)."
+}

@@ -1,0 +1,13 @@
+{
+  "pluginId": "movento",
+  "type": "insecticide",
+  "displayName": "Movento (Bayer spirotetramat)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "spirotetramat", "iracGroup": "23" }],
+  "reEntryIntervalHours": 24,
+  "preHarvestIntervalDays": 7,
+  "ratePerAcre": { "amount": 6, "unit": "fl-oz" },
+  "targetPests": ["aphid", "scale", "mealybug", "psyllid", "phylloxera"],
+  "pollinatorRisk": "low",
+  "notes": "Tetronic IRAC 23 — fully systemic, bidirectional. Slow-acting but suppresses scale + below-ground pests."
+}

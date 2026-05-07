@@ -1,0 +1,18 @@
+{
+  "pluginId": "tomato-roma-vf",
+  "type": "crop",
+  "displayName": "Tomato — Roma VF",
+  "version": "1.0.0",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": { "min": 75, "max": 80 },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": { "min": 24, "max": 36 },
+    "seedDepthIn": { "min": 0.25, "max": 0.5 }
+  },
+  "harvestIndicators": ["Uniform red color", "Slight give to firm pressure", "Easy stem release"],
+  "notes": "Determinate paste tomato. VF disease resistance package. Source: 2026/2027 Mid-Atlantic Commercial Vegetable Production Recommendations (VCE 456-420)."
+}

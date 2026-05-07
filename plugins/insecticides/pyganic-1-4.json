@@ -1,0 +1,13 @@
+{
+  "pluginId": "pyganic-1-4",
+  "type": "insecticide",
+  "displayName": "PyGanic Crop Protection EC 1.4 II (MGK pyrethrins — OMRI)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "pyrethrins", "iracGroup": "3A" }],
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 0,
+  "ratePerAcre": { "amount": 16, "unit": "fl-oz" },
+  "targetPests": ["aphid", "flea beetle", "leafhopper", "cucumber beetle", "stink bug (knockdown only)"],
+  "pollinatorRisk": "high",
+  "notes": "OMRI organic pyrethrin. Knockdown-only — no residual. Apply at sunset to avoid bee toxicity."
+}

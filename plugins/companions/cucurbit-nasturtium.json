@@ -1,0 +1,8 @@
+{
+  "pluginId": "cucurbit-nasturtium",
+  "type": "companion",
+  "displayName": "Cucurbits + Nasturtium (squash bug trap)",
+  "version": "1.0.0",
+  "goodWith": ["zucchini-black-beauty", "summer-squash-yellow-crookneck", "cucumber-marketmore-76", "nasturtium-companion"],
+  "badWith": []
+}

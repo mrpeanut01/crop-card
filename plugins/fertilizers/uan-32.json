@@ -1,0 +1,11 @@
+{
+  "pluginId": "uan-32",
+  "type": "fertilizer",
+  "displayName": "UAN 32% (urea-ammonium nitrate liquid)",
+  "version": "1.0.0",
+  "analysis": { "n": 32, "p": 0, "k": 0 },
+  "form": "liquid",
+  "organic": false,
+  "applicationRange": { "min": 5, "max": 30, "unit": "gal-per-acre" },
+  "notes": "32% N liquid blend (50% urea + 50% NH4NO3). Y-drop or sidedress preferred. 11.06 lb/gal density → 3.54 lb N per gallon."
+}

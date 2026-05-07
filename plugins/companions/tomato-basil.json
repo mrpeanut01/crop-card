@@ -1,0 +1,8 @@
+{
+  "pluginId": "tomato-basil",
+  "type": "companion",
+  "displayName": "Tomato + Basil",
+  "version": "1.0.0",
+  "goodWith": ["tomato-roma-vf", "tomato-cherokee-purple", "basil-genovese", "pepper-bell-california-wonder"],
+  "badWith": []
+}

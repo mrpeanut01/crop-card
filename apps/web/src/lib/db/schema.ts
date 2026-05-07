@@ -11,7 +11,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
-  role: text('role', { enum: ['owner', 'helper'] })
+  role: text('role', { enum: ['owner', 'helper', 'inspector', 'custom-operator'] })
     .notNull()
     .default('helper'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
@@ -23,7 +23,10 @@ export const blocks = sqliteTable('blocks', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   acres: integer('acres'),
-  blockLabel: text('block_label')
+  blockLabel: text('block_label'),
+  /** GeoJSON Polygon / MultiPolygon (Phase 10 — GPS mapping stub).
+   *  Stored as text; never indexed. /map renders an SVG fallback if no PostGIS. */
+  geometryGeojson: text('geometry_geojson')
 });
 
 export const plantingRecords = sqliteTable('planting_records', {
@@ -45,6 +48,13 @@ export const sprayers = sqliteTable('sprayers', {
   lastSprayedAt: integer('last_sprayed_at', { mode: 'timestamp_ms' }),
   lastDeconAt: integer('last_decon_at', { mode: 'timestamp_ms' })
 });
+
+// F-M / UC-10: when a helper completes the 1/128-acre wizard they cannot
+// directly write to a sprayer's calibrated_gpa (owner-only per FR-12). They
+// stage the result here for owner review. Owner approval calls
+// recordCalibration() on the equipment row and deletes the pending entry.
+// FK targets `equipment` (Phase 8a unified table); legacy `sprayers` is
+// vestigial and never populated.
 
 export const sprayEvents = sqliteTable('spray_events', {
   id: text('id').primaryKey(),
@@ -134,6 +144,27 @@ export const equipmentLog = sqliteTable('equipment_log', {
   payloadJson: text('payload_json')
 });
 
+// F-M / UC-10: helpers complete the 1/128-acre wizard but cannot write a
+// sprayer's calibrated_gpa directly (owner-only per FR-12). They stage the
+// result here. Owner approval calls recordCalibration() on the equipment row
+// and deletes the pending entry.
+export const pendingCalibrations = sqliteTable('pending_calibrations', {
+  id: text('id').primaryKey(),
+  equipmentId: text('equipment_id')
+    .notNull()
+    .references(() => equipment.id),
+  submittedById: text('submitted_by_id')
+    .notNull()
+    .references(() => users.id),
+  submittedAt: integer('submitted_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+  calibratedGpa: integer('calibrated_gpa').notNull(),
+  spreadInches: integer('spread_inches'),
+  ouncesCollected: integer('ounces_collected'),
+  notes: text('notes')
+});
+
 // ─── Stock Management (Phase 8b) ─────────────────────────────────────────
 //
 // Inventory tracking for herbicides, insecticides, fungicides, fertilizer,
@@ -182,6 +213,106 @@ export const stockLots = sqliteTable('stock_lots', {
   notes: text('notes')
 });
 
+// ─── Fertility / Soil Tests (Phase 10) ───────────────────────────────────
+//
+// Per-block N/P/K budget. soil_tests holds lab results; fertility_applications
+// records anything applied (synthetic, manure, compost, fertigation);
+// fertility_credits stores cover-crop / legume credits the agronomist
+// computed (e.g., +40 lb-N/ac from a clover mulch). Per-block remaining
+// budget = sum of credits + applied − crop demand. Quantities stored in
+// hundredths of pounds-per-acre to match stock-management precision.
+
+export const soilTests = sqliteTable('soil_tests', {
+  id: text('id').primaryKey(),
+  blockId: text('block_id')
+    .notNull()
+    .references(() => blocks.id),
+  sampledAt: integer('sampled_at', { mode: 'timestamp_ms' }).notNull(),
+  lab: text('lab'),
+  reportPdfUrl: text('report_pdf_url'),
+  ph: integer('ph_hundredths'),
+  /** Cation Exchange Capacity (meq/100g × 100). */
+  cecHundredths: integer('cec_hundredths'),
+  organicMatterPctHundredths: integer('organic_matter_pct_hundredths'),
+  nitratePpm: integer('nitrate_ppm'),
+  phosphorusPpm: integer('phosphorus_ppm'),
+  potassiumPpm: integer('potassium_ppm'),
+  notes: text('notes')
+});
+
+export const fertilityApplications = sqliteTable('fertility_applications', {
+  id: text('id').primaryKey(),
+  blockId: text('block_id')
+    .notNull()
+    .references(() => blocks.id),
+  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+  /** Free-form source label: '10-10-10', 'composted chicken manure', 'urea 46-0-0'. */
+  source: text('source').notNull(),
+  /** Optional FK to a stock_item for fertilizer auto-decrement. */
+  stockItemId: text('stock_item_id').references(() => stockItems.id),
+  /** Quantity applied per acre, in hundredths of the unit. */
+  ratePerAcreHundredths: integer('rate_per_acre_hundredths').notNull(),
+  rateUnit: text('rate_unit').notNull(),
+  /** Pounds N / P2O5 / K2O delivered per acre (hundredths). Computed at write
+   *  time from source + rate so per-block budget queries are simple sums. */
+  nDeliveredHundredths: integer('n_delivered_hundredths').notNull().default(0),
+  pDeliveredHundredths: integer('p_delivered_hundredths').notNull().default(0),
+  kDeliveredHundredths: integer('k_delivered_hundredths').notNull().default(0),
+  performedById: text('performed_by_id').references(() => users.id),
+  notes: text('notes')
+});
+
+export const fertilityCredits = sqliteTable('fertility_credits', {
+  id: text('id').primaryKey(),
+  blockId: text('block_id')
+    .notNull()
+    .references(() => blocks.id),
+  /** Credit window the rotation expert assigned this credit to. */
+  appliesToYear: integer('applies_to_year').notNull(),
+  /** 'cover-crop:clover', 'cover-crop:hairy-vetch', 'manure-residual', 'compost-residual'. */
+  source: text('source').notNull(),
+  /** Plugin-anchored credit: which cover-crop or legume plugin produced it. */
+  cropPluginId: text('crop_plugin_id'),
+  /** Pounds N credit per acre (hundredths). */
+  nLbPerAcreHundredths: integer('n_lb_per_acre_hundredths').notNull().default(0),
+  /** P2O5 lb/ac (hundredths). */
+  pLbPerAcreHundredths: integer('p_lb_per_acre_hundredths').notNull().default(0),
+  /** K2O lb/ac (hundredths). */
+  kLbPerAcreHundredths: integer('k_lb_per_acre_hundredths').notNull().default(0),
+  notes: text('notes'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
+});
+
+// ─── Insecticide Events (Phase 10) ───────────────────────────────────────
+//
+// Mirror of spray_events but for the insecticide flow (UC-05 scout + spray).
+// Kept separate from spray_events so herbicide cross-contam queries stay
+// fast and so insecticide-specific fields (target pest, REI, PHI) live
+// natively. Re-uses the safety kernel for env gates + sprayer decon.
+
+export const insecticideEvents = sqliteTable('insecticide_events', {
+  id: text('id').primaryKey(),
+  blockId: text('block_id')
+    .notNull()
+    .references(() => blocks.id),
+  sprayerId: text('sprayer_id').references(() => equipment.id),
+  performedById: text('performed_by_id')
+    .notNull()
+    .references(() => users.id),
+  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+  productsJson: text('products_json').notNull(),
+  /** Triggering scout observation — pest counts / threshold reading. */
+  scoutObservationJson: text('scout_observation_json'),
+  conditionsJson: text('conditions_json').notNull(),
+  reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' }),
+  preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
+  rulesVersion: text('rules_version').notNull(),
+  pluginHashesJson: text('plugin_hashes_json').notNull(),
+  lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+});
+
 export const stockMovements = sqliteTable('stock_movements', {
   id: text('id').primaryKey(),
   stockLotId: text('stock_lot_id')
@@ -191,9 +322,22 @@ export const stockMovements = sqliteTable('stock_movements', {
   /** Signed delta in default-unit hundredths. +receipts, -consumption. */
   deltaHundredths: integer('delta_hundredths').notNull(),
   reason: text('reason', {
-    enum: ['receipt', 'spray-event', 'planting', 'adjustment', 'spill', 'expiry']
+    enum: [
+      'receipt',
+      'spray-event',
+      'insecticide-event',
+      'fertility-application',
+      'planting',
+      'adjustment',
+      'spill',
+      'expiry'
+    ]
   }).notNull(),
   sprayEventId: text('spray_event_id').references(() => sprayEvents.id),
+  insecticideEventId: text('insecticide_event_id').references(() => insecticideEvents.id),
+  fertilityApplicationId: text('fertility_application_id').references(
+    () => fertilityApplications.id
+  ),
   performedById: text('performed_by_id').references(() => users.id),
   notes: text('notes')
 });

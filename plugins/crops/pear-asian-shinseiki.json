@@ -1,0 +1,10 @@
+{
+  "pluginId": "pear-asian-shinseiki",
+  "type": "crop",
+  "displayName": "Pear — Asian, Shinseiki",
+  "version": "1.0.0",
+  "cropFamily": "orchard",
+  "defaultRowSpacingInches": 240,
+  "harvestIndicators": ["Tree-ripe (unlike European pears)", "Yellow-skin variety"],
+  "notes": "Heavy thinning required (1 fruit per cluster). Same fire-blight risk as European pears."
+}

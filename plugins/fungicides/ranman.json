@@ -1,0 +1,16 @@
+{
+  "pluginId": "ranman",
+  "type": "fungicide",
+  "displayName": "Ranman (FMC cyazofamid)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "cyazofamid", "fracCode": "21" }],
+  "ratePerAcre": { "amount": 2.75, "unit": "fl-oz" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["downy mildew", "late blight", "Phytophthora"],
+  "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit"] },
+  "notes": "FRAC 21 QiI. Late-blight specialist for tomato + potato + cucurbits."
+}

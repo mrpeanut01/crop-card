@@ -1,0 +1,40 @@
+{
+  "pluginId": "garlic-music-hardneck",
+  "type": "crop",
+  "displayName": "Garlic — Music (hardneck, Porcelain)",
+  "version": "1.0.0",
+  "cropFamily": "allium",
+  "daysToMaturity": { "min": 240, "max": 270 },
+  "defaultRowSpacingInches": 8,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 8,
+    "inRowSpacingIn": { "min": 4, "max": 6 },
+    "seedDepthIn": { "min": 2, "max": 3 }
+  },
+  "postHarvestCuring": {
+    "method": "Cure 3–4 wk hung in shade with airflow",
+    "durationWeeks": { "min": 3, "max": 4 },
+    "storageLocation": "Cool, dry — 60 °F, 60% RH"
+  },
+  "seasonalTasks": [
+    {
+      "key": "garlic-plant",
+      "kind": "cultural",
+      "dayOfYear": 295,
+      "windowDays": 21,
+      "title": "Plant garlic cloves",
+      "body": "Mid-Oct → mid-Nov. Mulch 4–6 in straw after planting."
+    },
+    {
+      "key": "garlic-scape-cut",
+      "kind": "thinning",
+      "dayOfYear": 165,
+      "windowDays": 14,
+      "title": "Cut scapes (hardneck only)",
+      "body": "Remove flower scapes when they curl once — channels energy into bulbing."
+    }
+  ],
+  "harvestIndicators": ["Lower 3–4 leaves brown", "Upper leaves still green"],
+  "notes": "Plant in fall, harvest July. 5 lb seed / 100 ft row. Brand variety from Filaree Farm."
+}

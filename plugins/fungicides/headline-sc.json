@@ -1,0 +1,16 @@
+{
+  "pluginId": "headline-sc",
+  "type": "fungicide",
+  "displayName": "Headline SC (BASF pyraclostrobin)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "pyraclostrobin", "fracCode": "11" }],
+  "ratePerAcre": { "amount": 12, "unit": "fl-oz" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["bitter rot", "summer fruit rots", "Alternaria", "anthracnose", "powdery mildew"],
+  "labelClaims": { "safeForCropFamilies": ["orchard", "small-fruit", "vine-fruit", "solanaceae", "cucurbit", "legume"] },
+  "notes": "QoI strobilurin FRAC 11. Apple bitter rot + black rot specialist. Rotate with FRAC 7 SDHI."
+}

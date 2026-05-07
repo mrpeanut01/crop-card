@@ -1,0 +1,16 @@
+{
+  "pluginId": "revus",
+  "type": "fungicide",
+  "displayName": "Revus (Syngenta mandipropamid)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "mandipropamid", "fracCode": "40" }],
+  "ratePerAcre": { "amount": 8, "unit": "fl-oz" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 1,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["downy mildew", "late blight"],
+  "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green", "vine-fruit"] },
+  "notes": "FRAC 40 CAA. Downy mildew + late blight specialist. Tomato / cucurbit / lettuce / grape."
+}

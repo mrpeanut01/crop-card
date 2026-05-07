@@ -1,0 +1,16 @@
+{
+  "pluginId": "manzate-pro-stick",
+  "type": "fungicide",
+  "displayName": "Manzate Pro-Stick (UPL mancozeb)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "mancozeb", "fracCode": "M03" }],
+  "ratePerAcre": { "amount": 3, "unit": "lb" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 24,
+  "preHarvestIntervalDays": 77,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["apple scab", "downy mildew", "early blight", "late blight", "rust", "Septoria leaf spot"],
+  "labelClaims": { "safeForCropFamilies": ["orchard", "vine-fruit", "solanaceae", "cucurbit"] },
+  "notes": "Multi-site M03 dithiocarbamate. Long PHI restricts pre-harvest use; backbone of pre-bloom + early-cover programs."
+}

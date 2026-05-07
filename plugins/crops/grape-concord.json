@@ -1,0 +1,19 @@
+{
+  "pluginId": "grape-concord",
+  "type": "crop",
+  "displayName": "Grape — Concord (American)",
+  "version": "1.0.0",
+  "cropFamily": "vine-fruit",
+  "preHarvestIntervalDays": 14,
+  "defaultRowSpacingInches": 96,
+  "seasonalTasks": [
+    { "key": "winter-prune", "kind": "pruning", "dayOfYear": 60, "windowDays": 30, "title": "Winter pruning (dormant)", "body": "Cane prune to 4-arm Kniffin or umbrella Kniffin. 80% of last year's wood removed." },
+    { "key": "early-shoot-thin", "kind": "thinning", "dayOfYear": 130, "windowDays": 21, "title": "Shoot thinning at 6 in", "body": "Remove non-count shoots and weak shoots from cordon to balance crop." },
+    { "key": "downy-mildew-cover", "kind": "spray", "dayOfYear": 140, "windowDays": 14, "title": "Pre-bloom mancozeb / copper", "body": "Black rot + downy mildew + powdery mildew window. M03 mancozeb 3 lb/A." },
+    { "key": "post-bloom-cover", "kind": "spray", "dayOfYear": 165, "windowDays": 14, "title": "Post-bloom cover", "body": "FRAC 11 strobilurin or FRAC 7 SDHI — alternate from M03." },
+    { "key": "leaf-pull", "kind": "cultural", "dayOfYear": 200, "windowDays": 21, "title": "Pull basal leaves around clusters", "body": "Improves spray penetration + reduces botrytis." },
+    { "key": "harvest", "kind": "harvest", "dayOfYear": 250, "windowDays": 28, "title": "Concord harvest", "body": "Brix ≥ 16 + characteristic foxy aroma. Single-pass mechanical or hand." }
+  ],
+  "harvestIndicators": ["Deep blue-black with bloom", "Brix ≥16", "Easy stem release"],
+  "notes": "Slip-skin American grape — juice + jam. Most disease-tolerant of common cultivars."
+}

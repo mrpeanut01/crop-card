@@ -1,0 +1,16 @@
+{
+  "pluginId": "aprovia",
+  "type": "fungicide",
+  "displayName": "Aprovia (Syngenta benzovindiflupyr)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "benzovindiflupyr", "fracCode": "7" }],
+  "ratePerAcre": { "amount": 5.5, "unit": "fl-oz" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 30,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["apple scab", "rust", "powdery mildew"],
+  "labelClaims": { "safeForCropFamilies": ["orchard"] },
+  "notes": "SDHI FRAC 7. Apple program — rotate with FRAC 11 strobilurins."
+}

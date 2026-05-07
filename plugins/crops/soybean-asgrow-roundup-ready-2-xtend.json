@@ -1,0 +1,18 @@
+{
+  "pluginId": "soybean-asgrow-roundup-ready-2-xtend",
+  "type": "crop",
+  "displayName": "Soybean — Asgrow RR2 Xtend (group 3.5)",
+  "version": "1.0.0",
+  "cropFamily": "legume",
+  "daysToMaturity": { "min": 110, "max": 125 },
+  "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 30,
+    "inRowSpacingIn": { "min": 1.5, "max": 3 },
+    "seedDepthIn": { "min": 1.25, "max": 1.75 },
+    "seedsPerAcre": 140000
+  },
+  "harvestIndicators": ["R8 — 95% pods at mature pod color", "Seed moisture 13–14%"],
+  "notes": "Roundup Ready 2 Xtend trait — tolerant to glyphosate + dicamba. Brand-name commodity soybean. Maturity Group 3.5 fits Mid-Atlantic; adjust by region."
+}

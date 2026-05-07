@@ -64,3 +64,34 @@ describe('checkChemistryCompatibility', () => {
     expect(out.map((v) => v.code)).toEqual(['CHEMISTRY_INCOMPATIBLE', 'CHEMISTRY_INCOMPATIBLE']);
   });
 });
+
+describe('Phase 9 — new chemistry pair incompatibilities', () => {
+  it('flags glufosinate × glyphosate antagonism', () => {
+    expect(isIncompatiblePair('glufosinate', 'glyphosate')).toBe(true);
+  });
+
+  it('flags glufosinate × synthetic-auxin label-prohibited mix', () => {
+    expect(isIncompatiblePair('glufosinate', 'synthetic-auxin')).toBe(true);
+  });
+
+  it('flags clomazone × glyphosate formulation incompatibility', () => {
+    expect(isIncompatiblePair('clomazone', 'glyphosate')).toBe(true);
+  });
+
+  it('flags ppo-inhibitor × als-imidazolinone crop-injury risk', () => {
+    expect(isIncompatiblePair('ppo-inhibitor', 'als-imidazolinone')).toBe(true);
+  });
+
+  it('flags accase × atrazine antagonism', () => {
+    expect(isIncompatiblePair('accase-inhibitor', 'photosystem-ii-triazine')).toBe(true);
+  });
+
+  it('flags accase × glufosinate antagonism', () => {
+    expect(isIncompatiblePair('accase-inhibitor', 'glufosinate')).toBe(true);
+  });
+
+  it('does not falsely flag compatible newer pairs', () => {
+    expect(isIncompatiblePair('microtubule-inhibitor', 'glyphosate')).toBe(false);
+    expect(isIncompatiblePair('vlcfa-pyroxasulfone', 'photosystem-ii-triazine')).toBe(false);
+  });
+});

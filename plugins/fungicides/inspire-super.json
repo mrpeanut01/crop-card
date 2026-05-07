@@ -1,0 +1,19 @@
+{
+  "pluginId": "inspire-super",
+  "type": "fungicide",
+  "displayName": "Inspire Super (Syngenta cyprodinil + difenoconazole)",
+  "version": "1.0.0",
+  "applicationTiming": "BLOOM",
+  "activeIngredients": [
+    { "name": "cyprodinil", "fracCode": "9" },
+    { "name": "difenoconazole", "fracCode": "3" }
+  ],
+  "ratePerAcre": { "amount": 20, "unit": "fl-oz" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 14,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["apple scab", "powdery mildew", "rust"],
+  "labelClaims": { "safeForCropFamilies": ["orchard"] },
+  "notes": "Premix FRAC 9 + 3. Pome-fruit only. Phytotox risk with non-ionic surfactants — DO NOT tank-mix with NIS."
+}

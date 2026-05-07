@@ -10,7 +10,14 @@ import { error, type RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
-import { readSession, writeSession, type SessionRole } from './session';
+import {
+  ALL_SESSION_ROLES,
+  canMutate,
+  isReadOnly,
+  readSession,
+  writeSession,
+  type SessionRole
+} from './session';
 
 export interface AuthenticatedUser {
   id: string;
@@ -36,6 +43,19 @@ export function requireOwner(event: RequestEvent): AuthenticatedUser {
   return u;
 }
 
+/** Inspector role is read-only across all surfaces; reject any mutation. */
+export function requireMutator(event: RequestEvent): AuthenticatedUser {
+  const u = requireUser(event);
+  if (!canMutate(u.role)) throw error(403, 'inspector role is read-only');
+  return u;
+}
+
+/** True when the current session has read-only permissions (inspector). */
+export function isInspectorSession(event: RequestEvent): boolean {
+  const u = currentUser(event);
+  return !!u && isReadOnly(u.role);
+}
+
 /**
  * Look up or create a user by email. New emails default to helper role; the
  * `system` user is hard-coded as owner. Real magic-link flows would replace
@@ -49,6 +69,9 @@ export function loginByEmail(
   const normalized = email.trim().toLowerCase();
   if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
     throw error(400, 'invalid email');
+  }
+  if (!ALL_SESSION_ROLES.includes(desiredRole)) {
+    throw error(400, `invalid role: ${desiredRole}`);
   }
 
   const existing = db.select().from(users).where(eq(users.email, normalized)).get();

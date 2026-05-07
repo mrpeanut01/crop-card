@@ -18,7 +18,37 @@ import type { Cookies } from '@sveltejs/kit';
 const COOKIE_NAME = 'cropcard.session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-export type SessionRole = 'owner' | 'helper';
+export type SessionRole = 'owner' | 'helper' | 'inspector' | 'custom-operator';
+
+export const ALL_SESSION_ROLES: ReadonlyArray<SessionRole> = [
+  'owner',
+  'helper',
+  'inspector',
+  'custom-operator'
+];
+
+/**
+ * Permission semantics:
+ *   owner            — full read/write across the farm
+ *   helper           — read-only for plan/plugins/equipment, can record
+ *                      sprays (kernel-validated), cannot apply custom rates
+ *   inspector        — read-only across EVERYTHING incl. records, exports.
+ *                      No mutations whatsoever. For audits + cost-share visits.
+ *   custom-operator  — like helper but scoped to assigned blocks (assignment
+ *                      table is phase-11; for now treats as helper). Cannot
+ *                      see /stock financial cost data.
+ */
+export function isReadOnly(role: SessionRole): boolean {
+  return role === 'inspector';
+}
+
+export function canMutate(role: SessionRole): boolean {
+  return role !== 'inspector';
+}
+
+export function isOwner(role: SessionRole): boolean {
+  return role === 'owner';
+}
 
 export interface SessionPayload {
   userId: string;
@@ -79,7 +109,7 @@ function verify(cookie: string): SessionPayload | null {
   }
   const p = parsed as SessionPayload;
   if (typeof p.exp !== 'number' || p.exp < Date.now()) return null;
-  if (p.role !== 'owner' && p.role !== 'helper') return null;
+  if (!ALL_SESSION_ROLES.includes(p.role)) return null;
   return p;
 }
 

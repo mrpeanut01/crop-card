@@ -14,6 +14,8 @@ import { getRegistry } from '$lib/server/registry';
 
 const requestSchema = z.object({
   blockId: z.string().min(1),
+  cropId: z.string().optional(),
+  taskId: z.string().optional(),
   cropPluginId: z.string().min(1),
   occurredAt: z.number().int().optional(),
   quantity: z.string().max(60).optional(),
@@ -39,12 +41,26 @@ export const POST: RequestHandler = async ({ request }) => {
   if (!plugin || plugin.plugin.type !== 'crop') {
     return json({ error: 'unknown crop plugin' }, { status: 404 });
   }
+  const occurredAt = parsed.data.occurredAt ?? Date.now();
   const event = insertHarvestEvent({
     blockId: parsed.data.blockId,
+    cropId: parsed.data.cropId,
     cropPluginId: parsed.data.cropPluginId,
-    occurredAt: parsed.data.occurredAt ?? Date.now(),
+    occurredAt,
     quantity: parsed.data.quantity,
     lotNumber: parsed.data.lotNumber
   });
+  if (parsed.data.taskId) {
+    try {
+      const { completeTask } = await import('$lib/db/tasks');
+      completeTask(parsed.data.taskId, {
+        eventTable: 'harvest_event',
+        eventId: event.id,
+        occurredAt
+      });
+    } catch {
+      // Non-fatal; the harvest is recorded.
+    }
+  }
   return json({ event });
 };

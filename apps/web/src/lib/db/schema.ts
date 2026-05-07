@@ -29,15 +29,31 @@ export const blocks = sqliteTable('blocks', {
   geometryGeojson: text('geometry_geojson')
 });
 
-export const plantingRecords = sqliteTable('planting_records', {
+// Phase 12: planting_records → crops. A "Crop" is an active instance of a
+// planting on a specific block — analogous to a Brewfather Batch. Lifecycle
+// status drives the dashboard (active vs harvested vs archived), and every
+// event table now FK's `crop_id` so per-crop timelines are first-class.
+export const crops = sqliteTable('crops', {
   id: text('id').primaryKey(),
   blockId: text('block_id')
     .notNull()
     .references(() => blocks.id),
   cropPluginId: text('crop_plugin_id').notNull(),
   varietyDisplayName: text('variety_display_name').notNull(),
-  plantingDate: integer('planting_date', { mode: 'timestamp_ms' }).notNull()
+  plantingDate: integer('planting_date', { mode: 'timestamp_ms' }).notNull(),
+  status: text('status', {
+    enum: ['planned', 'active', 'harvested', 'failed', 'archived']
+  })
+    .notNull()
+    .default('active'),
+  harvestedAt: integer('harvested_at', { mode: 'timestamp_ms' }),
+  archivedAt: integer('archived_at', { mode: 'timestamp_ms' })
 });
+
+/** @deprecated Renamed to `crops`. Re-exported here so a couple of legacy
+ *  callers compile during the in-flight rename; remove once all imports
+ *  switch to `crops`. The underlying table is `crops` either way. */
+export const plantingRecords = crops;
 
 export const sprayers = sqliteTable('sprayers', {
   id: text('id').primaryKey(),
@@ -61,6 +77,9 @@ export const sprayEvents = sqliteTable('spray_events', {
   blockId: text('block_id')
     .notNull()
     .references(() => blocks.id),
+  /** Phase 12: per-crop attribution. Nullable for back-compat with old
+   *  rows that pre-date the rename; the migration backfill resolves most. */
+  cropId: text('crop_id').references(() => crops.id),
   sprayerId: text('sprayer_id')
     .notNull()
     .references(() => sprayers.id),
@@ -81,6 +100,7 @@ export const harvestEvents = sqliteTable('harvest_events', {
   blockId: text('block_id')
     .notNull()
     .references(() => blocks.id),
+  cropId: text('crop_id').references(() => crops.id),
   cropPluginId: text('crop_plugin_id').notNull(),
   occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
   quantity: text('quantity'),
@@ -245,6 +265,7 @@ export const fertilityApplications = sqliteTable('fertility_applications', {
   blockId: text('block_id')
     .notNull()
     .references(() => blocks.id),
+  cropId: text('crop_id').references(() => crops.id),
   occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
   /** Free-form source label: '10-10-10', 'composted chicken manure', 'urea 46-0-0'. */
   source: text('source').notNull(),
@@ -297,6 +318,7 @@ export const insecticideEvents = sqliteTable('insecticide_events', {
   blockId: text('block_id')
     .notNull()
     .references(() => blocks.id),
+  cropId: text('crop_id').references(() => crops.id),
   sprayerId: text('sprayer_id').references(() => equipment.id),
   performedById: text('performed_by_id')
     .notNull()
@@ -355,6 +377,7 @@ export const hayCuttings = sqliteTable('hay_cuttings', {
   blockId: text('block_id')
     .notNull()
     .references(() => blocks.id),
+  cropId: text('crop_id').references(() => crops.id),
   cropPluginId: text('crop_plugin_id').notNull(),
   /** Sequential within (block, year). Operator assigns; defaults to next. */
   cuttingNumber: integer('cutting_number').notNull(),
@@ -394,4 +417,61 @@ export const weatherForecastCache = sqliteTable('weather_forecast_cache', {
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
   /** Raw NWS payload (the day-summary array). */
   payloadJson: text('payload_json').notNull()
+});
+
+// ─── Tasks (Phase 12 — /today as front door) ─────────────────────────────
+//
+// Forward-looking work items. A "primary" task is the operation itself
+// (spray, mow, harvest); pre-tasks and post-tasks wrap it (mower-check
+// before mow, decon after restricted-use spray). Tasks materialize:
+//   - manually by the operator ("schedule a spray for Thursday")
+//   - by promoting a calendar-engine event ("[+ Schedule]" on a derived
+//     spray-window suggestion)
+//   - automatically as pre/post-tasks attached to a primary, sourced from
+//     plugin templates (cropPlugin.preTasks, equipment.preTasks)
+//
+// Closure: when a primary task's referenced event lands (e.g. a spray
+// is recorded), the matching event endpoint stamps `completed_at` here.
+//
+// Self-FK: pre/post-tasks point at their primary via linkedToTaskId. We
+// declare it as a plain `text` column without a Drizzle FK constraint at
+// the type level (the migration adds the FK in SQL); this avoids a TS
+// circular-reference error from referencing tasks within its own table
+// definition. Application code enforces the relationship.
+export const tasks = sqliteTable('tasks', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  body: text('body'),
+  kind: text('kind', { enum: ['primary', 'pre-task', 'post-task'] }).notNull(),
+  /** For pre/post-tasks, the primary they wrap. */
+  linkedToTaskId: text('linked_to_task_id'),
+  /** Most tasks belong to a crop; block-level / equipment-level tasks
+   *  (e.g. winter equipment check) leave cropId null. */
+  cropId: text('crop_id').references(() => crops.id),
+  blockId: text('block_id').references(() => blocks.id),
+  equipmentId: text('equipment_id').references(() => equipment.id),
+  scheduledFor: integer('scheduled_for', { mode: 'timestamp_ms' }).notNull(),
+  completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+  abortedAt: integer('aborted_at', { mode: 'timestamp_ms' }),
+  abortReason: text('abort_reason'),
+  /** When closure happens via an event row, point at it loosely (table + id
+   *  rather than a polymorphic FK). */
+  relatedEventTable: text('related_event_table', {
+    enum: [
+      'spray_event',
+      'harvest_event',
+      'insecticide_event',
+      'hay_cutting',
+      'fertility_application'
+    ]
+  }),
+  relatedEventId: text('related_event_id'),
+  /** Stable key when this task was materialized from a plugin template;
+   *  lets `materializePluginPrePost` skip duplicates. */
+  pluginTemplateKey: text('plugin_template_key'),
+  recurrenceJson: text('recurrence_json'),
+  createdById: text('created_by_id').references(() => users.id),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
 });

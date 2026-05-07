@@ -43,6 +43,13 @@
       "when": 1778160418148,
       "tag": "0005_clean_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1778169945747,
+      "tag": "0006_strong_ultimo",
+      "breakpoints": true
     }
   ]
 }

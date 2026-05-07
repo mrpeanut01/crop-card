@@ -13,6 +13,8 @@ import { harvestEvents } from './schema';
 
 export interface HarvestEventInput {
   blockId: string;
+  /** Phase 12: per-crop attribution. Nullable for back-compat. */
+  cropId?: string;
   cropPluginId: string;
   occurredAt: number;
   quantity?: string;
@@ -30,6 +32,7 @@ export function insertHarvestEvent(input: HarvestEventInput): HarvestEvent {
     .values({
       id,
       blockId: input.blockId,
+      cropId: input.cropId ?? null,
       cropPluginId: input.cropPluginId,
       occurredAt: new Date(input.occurredAt),
       quantity: input.quantity ?? null,
@@ -66,6 +69,7 @@ function rowToEvent(row: typeof harvestEvents.$inferSelect): HarvestEvent {
   return {
     id: row.id,
     blockId: row.blockId,
+    cropId: row.cropId ?? undefined,
     cropPluginId: row.cropPluginId,
     occurredAt: row.occurredAt.getTime(),
     quantity: row.quantity ?? undefined,

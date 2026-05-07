@@ -309,6 +309,7 @@
     position: absolute;
     bottom: 100%;
     right: 0;
+    z-index: 101;
     background: #1f5e3a;
     border-radius: 8px 0 0 0;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);

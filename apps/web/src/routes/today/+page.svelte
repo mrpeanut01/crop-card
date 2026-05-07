@@ -1,7 +1,83 @@
 <script lang="ts">
   import type { CalendarEvent } from '$lib/calendar/engine';
+  import type { Task } from '$lib/db/tasks';
 
   let { data } = $props();
+
+  type Tab = 'today' | '7d' | '30d' | 'season';
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'today', label: 'Today' },
+    { id: '7d', label: 'Next 7 days' },
+    { id: '30d', label: 'Next 30 days' },
+    { id: 'season', label: 'Season' }
+  ];
+
+  let busy = $state(false);
+  let actionError = $state<string | null>(null);
+
+  function fmtDate(ms: number): string {
+    return new Date(ms).toLocaleDateString();
+  }
+
+  function fmtDateTime(ms: number): string {
+    return new Date(ms).toLocaleString();
+  }
+
+  /** Promote a calendar-engine derived event into a real Task. */
+  async function scheduleFromEvent(e: CalendarEvent) {
+    busy = true;
+    actionError = null;
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: e.title,
+          body: e.body ?? `Promoted from ${e.kind} suggestion`,
+          kind: 'primary',
+          blockId: e.blockId,
+          scheduledFor: e.startMs,
+          pluginTemplateKey: `derived:${e.kind}:${e.blockId}:${e.startMs}`
+        })
+      });
+      if (!res.ok) {
+        const out = await res.json().catch(() => ({}));
+        actionError = out.error ?? 'failed to schedule';
+        return;
+      }
+      window.location.reload();
+    } catch (err) {
+      actionError = err instanceof Error ? err.message : String(err);
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function patchTask(id: string, body: Record<string, unknown>) {
+    busy = true;
+    actionError = null;
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const out = await res.json().catch(() => ({}));
+        actionError = out.error ?? 'failed';
+        return;
+      }
+      window.location.reload();
+    } catch (err) {
+      actionError = err instanceof Error ? err.message : String(err);
+    } finally {
+      busy = false;
+    }
+  }
+
+  function preTasksFor(taskId: string): Task[] {
+    return (data.tasksByPrimary as Record<string, Task[]>)[taskId] ?? [];
+  }
 
   function fmtRange(startMs: number, endMs: number) {
     const a = new Date(startMs).toLocaleDateString();
@@ -72,6 +148,141 @@
   <h1>Today</h1>
   <p class="date">{data.today}</p>
 </header>
+
+<nav class="tabs" role="tablist" aria-label="Calendar window">
+  {#each TABS as t (t.id)}
+    <a
+      class="tab"
+      class:active={data.tab === t.id}
+      role="tab"
+      aria-selected={data.tab === t.id}
+      href="?tab={t.id}"
+    >
+      {t.label}
+    </a>
+  {/each}
+</nav>
+
+{#if actionError}
+  <p class="error" role="alert">{actionError}</p>
+{/if}
+
+<section class="card task-panel" aria-label="Scheduled tasks in window">
+  <h2>
+    {#if data.tab === 'today'}Today's tasks{:else if data.tab === '7d'}Next 7 days{:else if data.tab === '30d'}Next
+      30 days{:else}Season{/if}
+  </h2>
+
+  {#if data.primariesInWindow.length === 0 && data.derivedEvents.length === 0}
+    <p class="hint">
+      Nothing scheduled in this window. Plugin suggestions below will appear once a crop is planted.
+    </p>
+  {/if}
+
+  {#each data.primariesInWindow as primary (primary.id)}
+    {@const pre = preTasksFor(primary.id).filter((t) => t.kind === 'pre-task')}
+    {@const post = preTasksFor(primary.id).filter((t) => t.kind === 'post-task')}
+    <article class="primary-task">
+      <header>
+        <span class="when">{fmtDateTime(primary.scheduledFor)}</span>
+        <strong class="title">{primary.title}</strong>
+      </header>
+      {#if primary.body}<p class="body">{primary.body}</p>{/if}
+      {#if pre.length > 0}
+        <details open>
+          <summary>{pre.length} pre-task{pre.length === 1 ? '' : 's'}</summary>
+          <ul class="linked">
+            {#each pre as t (t.id)}
+              <li>
+                <span class="when">{fmtDateTime(t.scheduledFor)}</span>
+                <strong>{t.title}</strong>
+                {#if t.body}<span class="body">— {t.body}</span>{/if}
+                <button
+                  class="mini"
+                  on:click={() => patchTask(t.id, { action: 'complete' })}
+                  disabled={busy}
+                >
+                  ✓ Done
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </details>
+      {/if}
+      {#if post.length > 0}
+        <details>
+          <summary>{post.length} post-task{post.length === 1 ? '' : 's'}</summary>
+          <ul class="linked">
+            {#each post as t (t.id)}
+              <li>
+                <span class="when">{fmtDateTime(t.scheduledFor)}</span>
+                <strong>{t.title}</strong>
+                {#if t.body}<span class="body">— {t.body}</span>{/if}
+                <button
+                  class="mini"
+                  on:click={() => patchTask(t.id, { action: 'complete' })}
+                  disabled={busy}
+                >
+                  ✓ Done
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </details>
+      {/if}
+      <div class="row">
+        <button
+          class="primary"
+          on:click={() => patchTask(primary.id, { action: 'complete' })}
+          disabled={busy}
+        >
+          ✓ Mark primary complete
+        </button>
+        <button
+          class="secondary"
+          on:click={() => patchTask(primary.id, { action: 'abort', reason: 'aborted from /today' })}
+          disabled={busy}
+        >
+          Abort
+        </button>
+      </div>
+    </article>
+  {/each}
+
+  {#if data.derivedEvents.length > 0}
+    <h3 class="suggestions-heading">Plugin suggestions</h3>
+    <p class="hint">
+      Calendar engine derived these from your active crops. Click <strong>Schedule</strong> to promote
+      one to a task you can attach pre/post-tasks to.
+    </p>
+    <ul class="suggestions">
+      {#each data.derivedEvents as e (e.kind + e.blockId + e.startMs + e.title)}
+        <li>
+          <span class="when">{fmtDate(e.startMs)}</span>
+          <strong>{e.title}</strong>
+          <span class="kind">{e.kind}</span>
+          {#if e.body}<span class="body">— {e.body}</span>{/if}
+          <button class="mini" on:click={() => scheduleFromEvent(e)} disabled={busy}>
+            + Schedule
+          </button>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+
+  {#if data.tab === 'season' && data.activeCrops.length > 0}
+    <h3 class="suggestions-heading">Active crops</h3>
+    <ul class="active-crops">
+      {#each data.activeCrops as c (c.id)}
+        <li>
+          <strong>{c.varietyDisplayName}</strong>
+          — block {c.blockId.slice(0, 8)} — planted {fmtDate(c.plantingDate)}
+          <span class="status status-{c.status}">{c.status}</span>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</section>
 
 {#if !data.bootstrapDone}
   <section class="card bootstrap" aria-labelledby="bootstrap-title">
@@ -276,10 +487,191 @@
 
 <style>
   .today {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
   .today h1 {
     margin: 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin: 0 0 1rem;
+    border-bottom: 2px solid #d0d7d0;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 0.6rem 1rem;
+    color: #555;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    font-weight: 600;
+    white-space: nowrap;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+  .tab.active {
+    color: #1f5e3a;
+    border-bottom-color: #1f5e3a;
+    background: #f5f7f4;
+  }
+  .task-panel {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  .primary-task {
+    border: 1px solid #d0d7d0;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .primary-task header {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    margin-bottom: 0.4rem;
+  }
+  .primary-task .when {
+    color: #777;
+    font-size: 0.85rem;
+  }
+  .primary-task .title {
+    font-size: 1rem;
+  }
+  .primary-task .body {
+    color: #444;
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+  }
+  ul.linked {
+    list-style: none;
+    padding: 0.5rem 0 0;
+    margin: 0;
+  }
+  ul.linked li {
+    display: flex;
+    gap: 0.4rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+    padding: 0.3rem 0;
+    border-top: 1px dashed #e5e5e5;
+    font-size: 0.9rem;
+  }
+  details summary {
+    cursor: pointer;
+    color: #1f5e3a;
+    font-weight: 600;
+    margin: 0.4rem 0;
+  }
+  .suggestions {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .suggestions li {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+    border-top: 1px solid #eee;
+    font-size: 0.9rem;
+  }
+  .suggestions .kind {
+    background: #f0f3f0;
+    color: #555;
+    border-radius: 3px;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+  .suggestions-heading {
+    margin-top: 1rem;
+    color: #555;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .active-crops {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+  }
+  .active-crops li {
+    padding: 0.3rem 0;
+    border-top: 1px solid #eee;
+  }
+  .status {
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin-left: 0.4rem;
+  }
+  .status-active {
+    background: #e7f1ea;
+    color: #1f5e3a;
+  }
+  .status-harvested {
+    background: #fff8e1;
+    color: #b35900;
+  }
+  .row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .primary,
+  .secondary,
+  .mini {
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .primary {
+    background: #1f5e3a;
+    color: white;
+    padding: 0.5rem 0.9rem;
+    min-height: 44px;
+  }
+  .secondary {
+    background: #f0f3f0;
+    color: #1f5e3a;
+    padding: 0.5rem 0.9rem;
+    min-height: 44px;
+    border: 1px solid #1f5e3a;
+  }
+  .mini {
+    background: #1f5e3a;
+    color: white;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+    min-height: 32px;
+  }
+  .primary:disabled,
+  .secondary:disabled,
+  .mini:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .hint {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0.4rem 0;
+  }
+  .error {
+    background: #fce4e4;
+    color: #b00020;
+    padding: 0.6rem;
+    border-radius: 4px;
+    margin: 0.5rem 0;
   }
   .stock-alerts {
     display: flex;

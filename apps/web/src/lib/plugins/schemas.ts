@@ -16,6 +16,57 @@ const pluginBase = z.object({
   version: z.string().min(1)
 });
 
+/** Spacing guide values, surfaced inside the planting task view (FR-13). */
+const minMaxNumber = z
+  .object({ min: z.number().nonnegative(), max: z.number().nonnegative() })
+  .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' });
+
+export const plantingGuideSchema = z
+  .object({
+    soilTempMinF: z.number().optional(),
+    rowSpacingIn: z.number().positive().optional(),
+    inRowSpacingIn: minMaxNumber.optional(),
+    seedDepthIn: minMaxNumber.optional(),
+    seedsPerAcre: z.number().int().positive().optional(),
+    recommendedLbsPerAcre: z.number().positive().optional()
+  })
+  .partial();
+
+/** Post-harvest curing data, drives FR-08 curing reminders. */
+export const postHarvestCuringSchema = z
+  .object({
+    method: z.string().min(1),
+    durationWeeks: z
+      .object({ min: z.number().int().positive(), max: z.number().int().positive() })
+      .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' }),
+    targetMoisturePercent: minMaxNumber.optional(),
+    storageLocation: z.string().optional()
+  })
+  .partial({ targetMoisturePercent: true, storageLocation: true });
+
+/**
+ * Orchard-specific seasonal task templates (FR-10). Each entry fires once
+ * per planting per year at the given offset from `referenceDate` (the
+ * planting date is treated as the season anchor for v1; phase-9 follow-up
+ * could anchor to bud-break instead).
+ */
+export const orchardSeasonalTaskSchema = z.object({
+  key: z.enum([
+    'dormant-oil',
+    'pre-bloom-fungicide',
+    'bloom-fungicide',
+    'post-bloom-thinning',
+    'summer-cover-spray',
+    'pre-harvest-cover-spray',
+    'harvest'
+  ]),
+  /** Days from January 1 of each season-year (positive int 1-366). */
+  dayOfYear: z.number().int().min(1).max(366),
+  windowDays: z.number().int().min(1).max(60).default(7),
+  title: z.string().min(1),
+  body: z.string().optional()
+});
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal('crop'),
   cropFamily: z.enum(CROP_FAMILIES),
@@ -24,8 +75,13 @@ export const cropPluginSchema = pluginBase.extend({
   daysToMaturity: z
     .object({ min: z.number().int().positive(), max: z.number().int().positive() })
     .optional(),
-  /** Spec-richer fields are accepted but not deeply validated yet. Phase 4
-   *  introduces calendar-engine schemas that tighten this. */
+  /** Detailed planting guidance surfaced on /plan per-block (FR-13). */
+  plantingGuide: plantingGuideSchema.optional(),
+  /** Curing instructions + duration, surfaced on /harvest (FR-08). */
+  postHarvestCuring: postHarvestCuringSchema.optional(),
+  /** Orchard-only seasonal task list (FR-10). */
+  orchardSeasonalTasks: z.array(orchardSeasonalTaskSchema).optional(),
+  /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),
   growthStages: z.array(z.record(z.string(), z.unknown())).optional(),
   harvestIndicators: z.array(z.string()).optional(),

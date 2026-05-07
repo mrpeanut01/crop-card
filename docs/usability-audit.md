@@ -2,6 +2,8 @@
 
 ISO 9241-210 deliverable: **Usability Evaluation Report**.
 
+> **Status update.** Sprint A (6 findings) and Sprint B (4 findings) have been implemented. See [§5 — Recommended remediation roadmap](#5-recommended-remediation-roadmap) for what's resolved and what's still open. Findings below are kept in their original form so the rationale stays auditable; resolved ones carry a `(RESOLVED)` tag in §3.
+
 This is a static audit — every finding cites a route file and line. No browser, no axe-core, no real user testing. Where this audit calls for one of those, it says so explicitly. Findings are prioritized P0 / P1 / P2 (definitions in §1.4).
 
 The audit framework, personas, and use cases are documented separately:
@@ -86,6 +88,32 @@ Nielsen 10 and Norman 7 are used to *label* findings within the ISO frame (e.g.,
 ## 3. Findings — prioritized fix list
 
 Each finding has: ID, severity, persona affected, ISO/Nielsen labels, evidence, fix proposal. Refactoring proposals are **only** included where required to satisfy a documented FR; field-name renames are explicitly avoided.
+
+### Resolution log
+
+| Finding | Sprint | Status | Commit-ready file change |
+|---|---|---|---|
+| F-A | B | RESOLVED | STOP-card heading now white-on-`#b71c1c` (≈10.7:1); decon banner + offline status bar match; pending-sync banner darkened to `#4a2900` on `#fff3cd` (≈12:1) |
+| F-D | B | RESOLVED (partial) | Mobile bottom-nav at `<768px` with 5 priority items (Today/Spray/Scout/Plan/Records) + native `<details>` "More" sheet for Harvest/Calibrate/Equipment/Stock/Plugins. Desktop unchanged |
+| F-E | B | RESOLVED | New `/+page.server.ts` redirects authenticated users to `/today`; tile grid still shown for unauthenticated landing |
+| F-F | A | RESOLVED | Persistent labels in `harvest` quantity/lot and `scout` max-height; placeholders removed |
+| F-G | A | RESOLVED | 36px override removed; sign-in/out inherits the global 48px floor |
+| F-H | A | RESOLVED | `.cta` on `/today` bumped to 60px min-height with stronger padding |
+| F-I | A | RESOLVED | Primary CTAs in spray, calibrate, decon bumped from 56→60px |
+| F-J | A | RESOLVED | `evaluate()` awaits `tick()` then `scrollIntoView` on `.result, .error` |
+| F-K | A | RESOLVED | Dilution-amount font 1.2rem → 1.75rem (≈28px) with monospace for legibility |
+| F-Q | B | RESOLVED | Readiness indicators render inline (Layer 0) when planting `status === 'in-window'`; collapsed `<details>` still used for too-early/past/harvested |
+| F-B | E | OPEN | UC-13..UC-16; needs FR-19..FR-23 + plugin schema v1.1; weather provider decision pending |
+| F-C | E | OPEN | Plugin schema v1.1 validator; additive backward-compat |
+| F-L | C | OPEN | UC-20 onboarding card |
+| F-M | C | OPEN | Helper "Send to owner" calibration |
+| F-N | — | OPEN | `/records/pending` discoverability |
+| F-O | — | OPEN | `/plan` and `/plan/calendar` unification |
+| F-P | — | OPEN | Shared `SprayerCard.svelte` component |
+| F-R | — | OPEN | Spray flow pre-fill from sprayer profile |
+| F-S | — | OPEN | Desktop 3-column layout |
+
+Verification after Sprints A+B: `pnpm typecheck` shows 0 errors (20 pre-existing warnings unrelated to these changes); `pnpm test:unit` 108/108 pass.
 
 ### P0 — Blocks core task or violates a hard invariant
 
@@ -293,25 +321,13 @@ Each finding has: ID, severity, persona affected, ISO/Nielsen labels, evidence, 
 
 Ordered by user-impact / effort ratio.
 
-### Sprint A — quick wins (≤1 day each, no schema change)
+### Sprint A — quick wins ✓ COMPLETE
 
-1. **F-J** — auto-scroll bypass card into view (5 LOC)
-2. **F-F** — replace placeholders with persistent labels (3 inputs, ~10 LOC)
-3. **F-G** — remove 36px sign-in override (delete 4 lines)
-4. **F-H** — bump today CTA to 60px (1 LOC)
-5. **F-I** — bump primary CTAs from 56→60px (3 files, 1 LOC each)
-6. **F-K** — bump dilution font to 1.75rem (1 LOC)
+All 6 findings (F-J, F-F, F-G, F-H, F-I, F-K) implemented. See [§3 resolution log](#resolution-log) for the file-level changes. `pnpm typecheck` clean; `pnpm test:unit` 108/108.
 
-Effort: ½ day total. Resolves 6 P1 findings.
+### Sprint B — visual + a11y rework ✓ COMPLETE
 
-### Sprint B — visual + a11y rework (1–2 days)
-
-1. **F-A** — STOP card and decon banner palette to white-on-#B71C1C (≥10:1)
-2. **F-D** — bottom-nav at <768px with 5 items + More sheet
-3. **F-E** — `/` → `/today` redirect for authenticated users
-4. **F-Q** — readiness indicators inline for in-window plantings
-
-Effort: 1–2 days. Resolves 1 P0 + 3 P1.
+All 4 findings (F-A, F-D, F-E, F-Q) implemented. F-D shipped as a 5-item priority bottom-nav with a native `<details>` "More" sheet for the remaining 5 routes (Harvest, Calibrate, Equipment, Stock, Plugins) — desktop ≥768px reverts to inline top-nav. `pnpm typecheck` clean; `pnpm test:unit` 108/108.
 
 ### Sprint C — onboarding + helper continuity (2–3 days)
 

@@ -68,6 +68,9 @@
       <li><span class="dot companion-trigger"></span> companion plant trigger</li>
       <li><span class="dot harvest-window"></span> harvest window</li>
       <li><span class="dot cover-termination"></span> cover crop termination</li>
+      <li><span class="dot orchard-task"></span> orchard task</li>
+      <li><span class="dot curing-progress"></span> curing in progress</li>
+      <li><span class="dot curing-ready"></span> curing ready</li>
     </ul>
   </section>
 {/if}
@@ -207,6 +210,18 @@
   .harvest-window .dot,
   .dot.harvest-window {
     background: #c2185b;
+  }
+  .orchard-task .dot,
+  .dot.orchard-task {
+    background: #c45a00;
+  }
+  .curing-progress .dot,
+  .dot.curing-progress {
+    background: #d4a017;
+  }
+  .curing-ready .dot,
+  .dot.curing-ready {
+    background: #2e7d32;
   }
   .cover-termination .dot,
   .dot.cover-termination {

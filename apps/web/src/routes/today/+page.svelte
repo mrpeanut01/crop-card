@@ -42,6 +42,23 @@
         };
       case 'planting':
         return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
+      case 'orchard-task': {
+        const taskKey = (e.detail?.taskKey as string | undefined) ?? '';
+        // Spray-related orchard tasks → spray flow; harvest → harvest page.
+        if (taskKey === 'harvest') return { href: '/harvest', label: 'Open harvest →' };
+        const isSpray = /spray|fungicide|oil/.test(taskKey);
+        if (isSpray) {
+          const params = new URLSearchParams({ block: e.blockId });
+          return {
+            href: `/spray?${params.toString()}`,
+            label: 'Plan this orchard spray →'
+          };
+        }
+        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
+      }
+      case 'curing-progress':
+      case 'curing-ready':
+        return { href: '/harvest', label: 'Open harvest →' };
       case 'emergence':
         return null;
     }

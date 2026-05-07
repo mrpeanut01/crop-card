@@ -2,8 +2,74 @@
   "pluginId": "apple-orchard",
   "type": "crop",
   "displayName": "Apple (Orchard)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "cropFamily": "orchard",
-  "harvestIndicators": ["Variety-specific color break", "Seeds dark brown", "Easy stem release"],
+  "harvestIndicators": [
+    "Variety-specific color break",
+    "Seeds dark brown",
+    "Easy stem release",
+    "Brix ≥ 12 (refractometer)"
+  ],
+  "plantingGuide": {
+    "rowSpacingIn": 240,
+    "soilTempMinF": 50
+  },
+  "postHarvestCuring": {
+    "method": "Cool to 32–36°F within 24 hr; stage in cold room before long-term storage",
+    "durationWeeks": { "min": 1, "max": 2 },
+    "targetMoisturePercent": { "min": 84, "max": 88 },
+    "storageLocation": "Cold storage; high humidity"
+  },
+  "orchardSeasonalTasks": [
+    {
+      "key": "dormant-oil",
+      "dayOfYear": 75,
+      "windowDays": 14,
+      "title": "Dormant oil spray window",
+      "body": "Apply horticultural oil before bud-break to smother overwintering scale + mites. Temp ≥ 40°F for 24 h after spray."
+    },
+    {
+      "key": "pre-bloom-fungicide",
+      "dayOfYear": 105,
+      "windowDays": 10,
+      "title": "Pre-bloom fungicide (silver-tip → green-tip)",
+      "body": "Scab + powdery mildew protectant. Captan / sulfur per label."
+    },
+    {
+      "key": "bloom-fungicide",
+      "dayOfYear": 120,
+      "windowDays": 14,
+      "title": "Bloom fungicide (pink → petal-fall)",
+      "body": "Critical scab + fire blight window. NO insecticides during open bloom — protect pollinators."
+    },
+    {
+      "key": "post-bloom-thinning",
+      "dayOfYear": 140,
+      "windowDays": 14,
+      "title": "Hand or chemical fruit thinning",
+      "body": "Thin to one fruit per cluster at 10–15 mm fruit size for size + return-bloom."
+    },
+    {
+      "key": "summer-cover-spray",
+      "dayOfYear": 180,
+      "windowDays": 21,
+      "title": "Summer cover spray (codling moth + apple maggot)",
+      "body": "Pheromone trap counts drive timing. Avoid pollinator activity — spray after sunset."
+    },
+    {
+      "key": "pre-harvest-cover-spray",
+      "dayOfYear": 230,
+      "windowDays": 21,
+      "title": "Pre-harvest cover spray (sooty blotch / flyspeck)",
+      "body": "Final fungicide pass; respect the 14-day pre-harvest interval per product."
+    },
+    {
+      "key": "harvest",
+      "dayOfYear": 270,
+      "windowDays": 30,
+      "title": "Apple harvest window",
+      "body": "Pick to color + brix indicators (above). Cool within 24 h."
+    }
+  ],
   "notes": "Perennial. Treat orchard boundary as a no-spray buffer for residual corn/pumpkin herbicides."
 }

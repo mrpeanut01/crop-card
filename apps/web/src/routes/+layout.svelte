@@ -59,17 +59,22 @@
       {/if}
     </div>
   </div>
-  <nav aria-label="Primary">
+  <nav aria-label="Primary" class="primary-nav">
     <a href="/today">Today</a>
-    <a href="/plan">Plan</a>
     <a href="/spray">Spray</a>
     <a href="/scout">Scout</a>
-    <a href="/harvest">Harvest</a>
-    <a href="/calibrate">Calibrate</a>
-    <a href="/equipment">Equipment</a>
-    <a href="/stock">Stock</a>
+    <a href="/plan">Plan</a>
     <a href="/records">Records</a>
-    <a href="/plugins">Plugins</a>
+    <details class="more">
+      <summary>More</summary>
+      <div class="more-menu">
+        <a href="/harvest">Harvest</a>
+        <a href="/calibrate">Calibrate</a>
+        <a href="/equipment">Equipment</a>
+        <a href="/stock">Stock</a>
+        <a href="/plugins">Plugins</a>
+      </div>
+    </details>
   </nav>
 </header>
 
@@ -232,28 +237,83 @@
     background: rgba(255, 255, 255, 0.3);
   }
 
-  nav {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+  .primary-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: #1f5e3a;
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
-
-  nav a {
+  .primary-nav > a,
+  .primary-nav > details > summary {
     color: white;
     text-decoration: none;
-    padding: 0.5rem 0.75rem;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    display: inline-flex;
+    padding: 0.5rem 0.25rem;
+    background: transparent;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-height: 60px;
+    border-top: 3px solid transparent;
+    border-radius: 0;
   }
-
-  nav a:hover {
-    background: rgba(255, 255, 255, 0.2);
+  .primary-nav > a:hover,
+  .primary-nav > details > summary:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .primary-nav .more {
+    position: relative;
+  }
+  .primary-nav .more > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  .primary-nav .more > summary::-webkit-details-marker {
+    display: none;
+  }
+  .primary-nav .more[open] > summary {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .primary-nav .more-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: #1f5e3a;
+    border-radius: 8px 0 0 0;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    min-width: 12rem;
+  }
+  .primary-nav .more-menu a {
+    color: white;
+    text-decoration: none;
+    padding: 0.9rem 1rem;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+  }
+  .primary-nav .more-menu a:first-child {
+    border-top: none;
+  }
+  .primary-nav .more-menu a:hover {
+    background: rgba(255, 255, 255, 0.15);
   }
 
   main {
     padding: 1rem;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0) + 1rem);
     max-width: 960px;
     margin: 0 auto;
   }
@@ -297,6 +357,31 @@
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
+    }
+    .primary-nav {
+      position: static;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0;
+      box-shadow: none;
+      grid-template-columns: none;
+    }
+    .primary-nav > a,
+    .primary-nav > details > summary {
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      min-height: 48px;
+      font-size: 1rem;
+      border-top: none;
+    }
+    .primary-nav .more-menu a {
+      min-height: 48px;
+    }
+    main {
+      padding: 1rem;
+      padding-bottom: 1rem;
     }
   }
 </style>

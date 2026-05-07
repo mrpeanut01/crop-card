@@ -95,9 +95,48 @@ export const load: PageServerLoad = async ({ url }) => {
     return (a.windowStartMs ?? Infinity) - (b.windowStartMs ?? Infinity);
   });
 
+  // FR-08: enrich each recorded harvest with curing-status from the crop
+  // plugin's postHarvestCuring data so the operator sees countdown to ready.
+  const recordedHarvests = all.map((h) => {
+    const rec = registry.get(h.cropPluginId);
+    const crop = rec?.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : undefined;
+    const curing = crop?.postHarvestCuring;
+    if (!curing) {
+      return { ...h, curing: null };
+    }
+    const minMs = h.occurredAt + curing.durationWeeks.min * 7 * DAY_MS;
+    const maxMs = h.occurredAt + curing.durationWeeks.max * 7 * DAY_MS;
+    let phase: 'in-progress' | 'ready' | 'overdue';
+    let daysRemaining = 0;
+    if (now < minMs) {
+      phase = 'in-progress';
+      daysRemaining = Math.ceil((minMs - now) / DAY_MS);
+    } else if (now <= maxMs) {
+      phase = 'ready';
+      daysRemaining = Math.ceil((maxMs - now) / DAY_MS);
+    } else {
+      phase = 'overdue';
+      daysRemaining = Math.floor((now - maxMs) / DAY_MS);
+    }
+    return {
+      ...h,
+      curing: {
+        method: curing.method,
+        minWeeks: curing.durationWeeks.min,
+        maxWeeks: curing.durationWeeks.max,
+        targetMoisturePercent: curing.targetMoisturePercent,
+        storageLocation: curing.storageLocation,
+        readyMs: minMs,
+        overdueMs: maxMs,
+        phase,
+        daysRemaining
+      }
+    };
+  });
+
   return {
     plantings,
-    recordedHarvests: all,
+    recordedHarvests,
     focusPlantingId
   };
 };

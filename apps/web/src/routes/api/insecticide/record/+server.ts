@@ -23,6 +23,8 @@ import { getRegistry } from '$lib/server/registry';
 
 const requestSchema = z.object({
   blockId: z.string().min(1),
+  cropId: z.string().optional(),
+  taskId: z.string().optional(),
   occurredAt: z.number().int().optional(),
   productPluginIds: z.array(z.string().min(1)).min(1),
   sprayerId: z.string().min(1).optional(),
@@ -114,6 +116,7 @@ export const POST: RequestHandler = async (event) => {
 
   const persisted = insertInsecticideEvent({
     blockId: parsed.data.blockId,
+    cropId: parsed.data.cropId,
     sprayerId: parsed.data.sprayerId,
     performedById: performer.id,
     occurredAt,
@@ -169,6 +172,22 @@ export const POST: RequestHandler = async (event) => {
           `${p.pluginId}: stock decrement failed — ${e instanceof Error ? e.message : String(e)}`
         );
       }
+    }
+  }
+
+  // Phase 12D: close any originating primary task.
+  if (parsed.data.taskId) {
+    try {
+      const { completeTask } = await import('$lib/db/tasks');
+      completeTask(parsed.data.taskId, {
+        eventTable: 'insecticide_event',
+        eventId: persisted.id,
+        occurredAt
+      });
+    } catch (e) {
+      stockWarnings.push(
+        `task ${parsed.data.taskId} not closed: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
   }
 

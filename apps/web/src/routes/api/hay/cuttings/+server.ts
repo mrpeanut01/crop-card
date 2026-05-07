@@ -20,6 +20,8 @@ import { getRegistry } from '$lib/server/registry';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
+  cropId: z.string().optional(),
+  taskId: z.string().optional(),
   cropPluginId: z.string().min(1),
   year: z.number().int().min(1900).max(3000).optional(),
   cuttingNumber: z.number().int().positive().optional(),
@@ -121,6 +123,7 @@ export const POST: RequestHandler = async (event) => {
 
   const persisted = createCutting({
     blockId: parsed.data.blockId,
+    cropId: parsed.data.cropId,
     cropPluginId: parsed.data.cropPluginId,
     year,
     cuttingNumber: parsed.data.cuttingNumber,
@@ -130,6 +133,20 @@ export const POST: RequestHandler = async (event) => {
     rulesVersion: RULES_VERSION,
     notes: parsed.data.notes
   });
+
+  // Phase 12D: close any originating primary task.
+  if (parsed.data.taskId) {
+    try {
+      const { completeTask } = await import('$lib/db/tasks');
+      completeTask(parsed.data.taskId, {
+        eventTable: 'hay_cutting',
+        eventId: persisted.id,
+        occurredAt
+      });
+    } catch {
+      // Non-fatal; the cutting is recorded.
+    }
+  }
 
   return json(
     {

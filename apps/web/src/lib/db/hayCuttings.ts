@@ -16,6 +16,8 @@ import type { BaleType, HayStatus } from '$lib/hay/types';
 export interface HayCutting {
   id: string;
   blockId: string;
+  /** Phase 12: per-crop attribution. */
+  cropId?: string;
   cropPluginId: string;
   cuttingNumber: number;
   year: number;
@@ -39,6 +41,7 @@ function rowToCutting(row: typeof hayCuttings.$inferSelect): HayCutting {
   return {
     id: row.id,
     blockId: row.blockId,
+    cropId: row.cropId ?? undefined,
     cropPluginId: row.cropPluginId,
     cuttingNumber: row.cuttingNumber,
     year: row.year,
@@ -62,6 +65,7 @@ function rowToCutting(row: typeof hayCuttings.$inferSelect): HayCutting {
 
 export interface CreateCuttingInput {
   blockId: string;
+  cropId?: string;
   cropPluginId: string;
   year: number;
   cuttingNumber?: number;
@@ -92,6 +96,7 @@ export function createCutting(input: CreateCuttingInput): HayCutting {
     .values({
       id,
       blockId: input.blockId,
+      cropId: input.cropId ?? null,
       cropPluginId: input.cropPluginId,
       cuttingNumber,
       year: input.year,

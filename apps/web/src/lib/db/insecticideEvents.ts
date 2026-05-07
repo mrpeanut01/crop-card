@@ -32,6 +32,8 @@ export interface ScoutObservation {
 
 export interface InsecticideEventInput {
   blockId: string;
+  /** Phase 12: per-crop attribution. */
+  cropId?: string;
   sprayerId?: string;
   performedById: string;
   occurredAt: number;
@@ -53,6 +55,7 @@ function rowToEvent(row: typeof insecticideEvents.$inferSelect): InsecticideEven
   return {
     id: row.id,
     blockId: row.blockId,
+    cropId: row.cropId ?? undefined,
     sprayerId: row.sprayerId ?? undefined,
     performedById: row.performedById,
     occurredAt: row.occurredAt.getTime(),
@@ -74,6 +77,7 @@ export function insertInsecticideEvent(input: InsecticideEventInput): Insecticid
     .values({
       id,
       blockId: input.blockId,
+      cropId: input.cropId ?? null,
       sprayerId: input.sprayerId ?? null,
       performedById: input.performedById,
       occurredAt: new Date(input.occurredAt),

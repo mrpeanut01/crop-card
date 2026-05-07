@@ -28,6 +28,10 @@ export type CalendarEventKind =
 export interface CalendarEvent {
   kind: CalendarEventKind;
   blockId: string;
+  /** Phase 12D: per-crop attribution. The plantingRecord's id (now crops.id)
+   *  flows through here so [+ Schedule] from /today can promote the event
+   *  into a Task tied to the right Crop, not just the block. */
+  cropId?: string;
   cropPluginId: string;
   varietyDisplayName: string;
   /** Inclusive start (ms epoch). */
@@ -74,6 +78,7 @@ export function eventsForPlanting(
   events.push({
     kind: 'planting',
     blockId: planting.blockId,
+    cropId: planting.id,
     cropPluginId: planting.cropPluginId,
     varietyDisplayName: planting.varietyDisplayName,
     startMs: plant,
@@ -87,6 +92,7 @@ export function eventsForPlanting(
   events.push({
     kind: 'emergence',
     blockId: planting.blockId,
+    cropId: planting.id,
     cropPluginId: planting.cropPluginId,
     varietyDisplayName: planting.varietyDisplayName,
     startMs: plant + emergence.min * DAY_MS,
@@ -100,6 +106,7 @@ export function eventsForPlanting(
     events.push({
       kind: 'spray-window',
       blockId: planting.blockId,
+      cropId: planting.id,
       cropPluginId: planting.cropPluginId,
       varietyDisplayName: planting.varietyDisplayName,
       startMs: plant + 18 * DAY_MS,
@@ -111,6 +118,7 @@ export function eventsForPlanting(
     events.push({
       kind: 'spray-window',
       blockId: planting.blockId,
+      cropId: planting.id,
       cropPluginId: planting.cropPluginId,
       varietyDisplayName: planting.varietyDisplayName,
       startMs: plant + 28 * DAY_MS,
@@ -124,6 +132,7 @@ export function eventsForPlanting(
     events.push({
       kind: 'companion-trigger',
       blockId: planting.blockId,
+      cropId: planting.id,
       cropPluginId: planting.cropPluginId,
       varietyDisplayName: planting.varietyDisplayName,
       startMs: plant + (THREE_SISTERS_OFFSETS.beansAfterCornDays - 1) * DAY_MS,
@@ -134,6 +143,7 @@ export function eventsForPlanting(
     events.push({
       kind: 'companion-trigger',
       blockId: planting.blockId,
+      cropId: planting.id,
       cropPluginId: planting.cropPluginId,
       varietyDisplayName: planting.varietyDisplayName,
       startMs:
@@ -156,6 +166,7 @@ export function eventsForPlanting(
     events.push({
       kind: 'spray-window',
       blockId: planting.blockId,
+      cropId: planting.id,
       cropPluginId: planting.cropPluginId,
       varietyDisplayName: planting.varietyDisplayName,
       startMs: plant + 30 * DAY_MS,
@@ -182,6 +193,7 @@ export function eventsForPlanting(
       events.push({
         kind: 'cover-termination',
         blockId: planting.blockId,
+        cropId: planting.id,
         cropPluginId: planting.cropPluginId,
         varietyDisplayName: planting.varietyDisplayName,
         startMs: nextCashCrop.plantingDate - 21 * DAY_MS,
@@ -194,6 +206,7 @@ export function eventsForPlanting(
       events.push({
         kind: 'cover-termination',
         blockId: planting.blockId,
+        cropId: planting.id,
         cropPluginId: planting.cropPluginId,
         varietyDisplayName: planting.varietyDisplayName,
         startMs: plant + 180 * DAY_MS,
@@ -214,6 +227,7 @@ export function eventsForPlanting(
         events.push({
           kind: 'orchard-task',
           blockId: planting.blockId,
+          cropId: planting.id,
           cropPluginId: planting.cropPluginId,
           varietyDisplayName: planting.varietyDisplayName,
           startMs: start,
@@ -246,6 +260,7 @@ export function eventsForPlanting(
         events.push({
           kind: 'seasonal-task',
           blockId: planting.blockId,
+          cropId: planting.id,
           cropPluginId: planting.cropPluginId,
           varietyDisplayName: planting.varietyDisplayName,
           startMs: start,
@@ -264,6 +279,7 @@ export function eventsForPlanting(
     events.push({
       kind: 'harvest-window',
       blockId: planting.blockId,
+      cropId: planting.id,
       cropPluginId: planting.cropPluginId,
       varietyDisplayName: planting.varietyDisplayName,
       startMs: plant + dtm.min * DAY_MS,
@@ -316,6 +332,7 @@ export function eventsForHarvest(harvest: HarvestEvent, crop: CropPlugin): Calen
   out.push({
     kind: 'curing-progress',
     blockId: harvest.blockId,
+    cropId: harvest.cropId,
     cropPluginId: harvest.cropPluginId,
     varietyDisplayName: crop.displayName,
     startMs: start,
@@ -335,6 +352,7 @@ export function eventsForHarvest(harvest: HarvestEvent, crop: CropPlugin): Calen
   out.push({
     kind: 'curing-ready',
     blockId: harvest.blockId,
+    cropId: harvest.cropId,
     cropPluginId: harvest.cropPluginId,
     varietyDisplayName: crop.displayName,
     startMs: minMs,

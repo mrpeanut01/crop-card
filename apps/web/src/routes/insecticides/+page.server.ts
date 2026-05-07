@@ -1,9 +1,12 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import { listInsecticideEvents, activeReEntryRestrictions } from '$lib/db/insecticideEvents';
 import { getRegistry } from '$lib/server/registry';
 
 export const load: PageServerLoad = async ({ url }) => {
+  const cropId = url.searchParams.get('crop');
+  const crop = cropId ? getCrop(cropId) : undefined;
   const registry = await getRegistry();
   const insecticidePlugins = registry
     .all()
@@ -34,6 +37,7 @@ export const load: PageServerLoad = async ({ url }) => {
     })),
     recentEvents: listInsecticideEvents({ limit: 20 }),
     activeREI: activeReEntryRestrictions(),
-    preselectedBlockId: url.searchParams.get('block') ?? null
+    preselectedBlockId: crop?.blockId ?? url.searchParams.get('block') ?? null,
+    preselectedCropId: crop?.id ?? null
   };
 };

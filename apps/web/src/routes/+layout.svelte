@@ -61,6 +61,7 @@
   </div>
   <nav aria-label="Primary" class="primary-nav">
     <a href="/today">Today</a>
+    <a href="/crops">Crops</a>
     <a href="/spray">Spray</a>
     <a href="/scout">Scout</a>
     <a href="/plan">Plan</a>
@@ -268,7 +269,7 @@
     background: #1f5e3a;
     box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2);
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 0;
     padding-bottom: env(safe-area-inset-bottom, 0);
   }

@@ -126,6 +126,7 @@
           body: e.body ?? `Promoted from ${e.kind} suggestion`,
           kind: 'primary',
           blockId: e.blockId,
+          cropId: e.cropId,
           scheduledFor: e.startMs,
           pluginTemplateKey: `derived:${e.kind}:${e.blockId}:${e.startMs}`
         })

@@ -19,6 +19,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 type Tab = 'today' | '7d' | '30d' | 'season';
+type View = 'list' | 'calendar';
 
 function clampTab(raw: string | null): Tab {
   switch (raw) {
@@ -31,8 +32,13 @@ function clampTab(raw: string | null): Tab {
   }
 }
 
+function clampView(raw: string | null): View {
+  return raw === 'calendar' ? 'calendar' : 'list';
+}
+
 export const load: PageServerLoad = async ({ url }) => {
   const tab = clampTab(url.searchParams.get('tab'));
+  const view = clampView(url.searchParams.get('view'));
   const registry = await getRegistry();
   const stats = getRegistryStats();
   const blocks = listBlocks();
@@ -123,6 +129,7 @@ export const load: PageServerLoad = async ({ url }) => {
   return {
     today: new Date().toISOString().slice(0, 10),
     tab,
+    view,
     tabFromMs,
     tabToMs,
     rulesVersion: RULES_VERSION,

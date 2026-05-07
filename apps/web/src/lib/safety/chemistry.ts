@@ -13,12 +13,12 @@ const INCOMPATIBLE_PAIRS: ReadonlySet<string> = new Set([
   pairKey('accase-inhibitor', 'sulfonylurea'),
   pairKey('accase-inhibitor', 'glyphosate'),
   // Phase 9 — label-prohibited or known-antagonistic tank mixes
-  pairKey('glufosinate', 'glyphosate'),           // antagonism — cannot tank-mix
-  pairKey('glufosinate', 'synthetic-auxin'),      // label-prohibited per Bayer Liberty 280 SL
-  pairKey('clomazone', 'glyphosate'),             // formulation incompatibility on most labels
-  pairKey('ppo-inhibitor', 'als-imidazolinone'),  // crop-injury risk (soybean / dry bean)
+  pairKey('glufosinate', 'glyphosate'), // antagonism — cannot tank-mix
+  pairKey('glufosinate', 'synthetic-auxin'), // label-prohibited per Bayer Liberty 280 SL
+  pairKey('clomazone', 'glyphosate'), // formulation incompatibility on most labels
+  pairKey('ppo-inhibitor', 'als-imidazolinone'), // crop-injury risk (soybean / dry bean)
   pairKey('accase-inhibitor', 'photosystem-ii-triazine'), // atrazine antagonism on grass control
-  pairKey('accase-inhibitor', 'glufosinate')      // antagonism — Liberty disrupts grass uptake
+  pairKey('accase-inhibitor', 'glufosinate') // antagonism — Liberty disrupts grass uptake
 ]);
 
 function pairKey(a: ChemistryClass, b: ChemistryClass): string {

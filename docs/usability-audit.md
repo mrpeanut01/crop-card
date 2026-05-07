@@ -103,15 +103,16 @@ Each finding has: ID, severity, persona affected, ISO/Nielsen labels, evidence, 
 | F-J | A | RESOLVED | `evaluate()` awaits `tick()` then `scrollIntoView` on `.result, .error` |
 | F-K | A | RESOLVED | Dilution-amount font 1.2rem → 1.75rem (≈28px) with monospace for legibility |
 | F-Q | B | RESOLVED | Readiness indicators render inline (Layer 0) when planting `status === 'in-window'`; collapsed `<details>` still used for too-early/past/harvested |
-| F-B | E | OPEN | UC-13..UC-16; needs FR-19..FR-23 + plugin schema v1.1; weather provider decision pending |
-| F-C | E | OPEN | Plugin schema v1.1 validator; additive backward-compat |
-| F-L | C | OPEN | UC-20 onboarding card |
-| F-M | C | OPEN | Helper "Send to owner" calibration |
-| F-N | — | OPEN | `/records/pending` discoverability |
-| F-O | — | OPEN | `/plan` and `/plan/calendar` unification |
-| F-P | — | OPEN | Shared `SprayerCard.svelte` component |
-| F-R | — | OPEN | Spray flow pre-fill from sprayer profile |
-| F-S | — | OPEN | Desktop 3-column layout |
+| F-B | E | OPEN | UC-13..UC-16; needs FR-19..FR-23 (hay engine + Zadoks + moisture gate + weather adapter + cuttings table); weather provider decision pending — see §8 |
+| F-C | C | RESOLVED | Plugin schema v1.1 fields added (additive, optional): `cropOperationModel`, `hayOperations`, `zadoksStages`, `moistureGates`. Backward-compat preserved. New unit tests in `schemasV11.test.ts` (5 cases) |
+| F-L | C | RESOLVED | Inline bootstrap card on `/today` driven by `data.bootstrap` from the loader; auto-hides once block + planting + sprayer + calibration are in place. Each step has a deep-link CTA (60dp) |
+| F-M | C | RESOLVED | New `pending_calibrations` table (Drizzle 0003), `lib/server/pendingCalibrations.ts` repo, `/api/calibrations/pending` + `[id]` endpoints, helper "Send to owner" button + owner Approve/Reject queue on `/calibrate`. FR-12 owner-only enforcement preserved at the equipment write |
+| F-N | C | RESOLVED | `/records` now badges the existing pending-queue link with the live count (client-side from Dexie) and amber-highlights when >0 |
+| F-O | C | RESOLVED | Tab strip across `/plan` and `/plan/calendar` — same visual pattern, `aria-current="page"` for the active view; calendar's standalone "back to plan" link removed |
+| F-P | — | DEFERRED | Shared `SprayerCard.svelte` — P2, ROI marginal until divergence grows. Both consumers (today + spray) already use consistent `.warn` / `.ok` class names |
+| F-R | C | RESOLVED | Spray flow now persists last-used tank size + conditions per sprayer to `localStorage`; `$effect` rehydrates the form on sprayer change. Saves Marco 2-3 stepper interactions per spray |
+| F-S | — | DEFERRED | Desktop 3-column layout — larger redesign, no consumer route yet |
+| F-T1..T10 | D' | OPEN | UC-22 inspector-facing export findings (see §6). Quick wins (T1, T2, T5, T9) are bounded; T3/T6/T10 stack on Sprint E |
 
 Verification after Sprints A+B: `pnpm typecheck` shows 0 errors (20 pre-existing warnings unrelated to these changes); `pnpm test:unit` 108/108 pass.
 
@@ -329,6 +330,23 @@ All 6 findings (F-J, F-F, F-G, F-H, F-I, F-K) implemented. See [§3 resolution l
 
 All 4 findings (F-A, F-D, F-E, F-Q) implemented. F-D shipped as a 5-item priority bottom-nav with a native `<details>` "More" sheet for the remaining 5 routes (Harvest, Calibrate, Equipment, Stock, Plugins) — desktop ≥768px reverts to inline top-nav. `pnpm typecheck` clean; `pnpm test:unit` 108/108.
 
+### Sprint C — onboarding + helper continuity + plugin v1.1 + small polish ✓ COMPLETE
+
+Resolved: F-N, F-L, F-O, F-R, F-M, F-C. Deferred (P2, low ROI): F-P, F-S.
+
+- **F-N** — pending-queue badge on `/records` link, client-side count.
+- **F-L (UC-20)** — bootstrap card on `/today` (block + planting + sprayer + calibration).
+- **F-O** — tab strip across `/plan` and `/plan/calendar`.
+- **F-R** — per-sprayer `localStorage` rehydration of tank size + conditions.
+- **F-M (UC-10)** — new `pending_calibrations` Drizzle table (migration 0003), helper "Send to owner" + owner Approve/Reject queue. Owner write of GPA still gated by `requireOwner` per FR-12.
+- **F-C** — plugin schema v1.1 (additive Zod fields: `cropOperationModel`, `hayOperations`, `zadoksStages`, `moistureGates`); 5 new unit tests pass; v1.0 plugins remain valid.
+
+Verification: `pnpm test:unit` 135/135 pass. `pnpm typecheck` reports 4 errors, all in concurrent in-progress files NOT modified by this sprint (`pluginFiles.ts`, `+layout.server.ts`, `signin/+page.server.ts`, `today/+page.svelte:17 ctaFor`) — these stem from the user's expansion of `SessionRole` to include `inspector` / `custom-operator` and added `CalendarEvent.kind` values; resolving them is the user's WIP, separate from this audit.
+
+### Sprint D' — UC-22 inspector export polish (NOT YET STARTED)
+
+Findings F-T1..T10 in §6. Quick-win bundle (T1, T2, T5, T9) is bounded; ETA ~½ day.
+
 ### Sprint C — onboarding + helper continuity (2–3 days)
 
 1. **F-L (UC-20)** — `OnboardingCard.svelte` wired to `data.counts`
@@ -365,15 +383,107 @@ Estimate: 10–12 days. Discuss the weather provider choice with the user before
 
 ---
 
-## 6. What this audit did *not* cover
+## 6. UC-22 — Inspector / Auditor export audit (Dale's perspective)
+
+This section is the deliverable for [UC-22](./use-cases.md#uc-22--inspector-record-review-proposed-documents-the-export-receiver-journey). Dale (persona P4) never logs in; he reads the PDF / CSV that Sherry emails him. The audit reads each export endpoint and judges what Dale sees in isolation.
+
+Files audited:
+- [apps/web/src/routes/api/spray/records/export.pdf/+server.ts](../apps/web/src/routes/api/spray/records/export.pdf/+server.ts)
+- [apps/web/src/routes/api/spray/records/export.csv/+server.ts](../apps/web/src/routes/api/spray/records/export.csv/+server.ts)
+
+### What works well (P0 Inspector requirements that are met)
+
+- **Integrity hash on cover** (PDF) — SHA-256 over canonical record payload. Pair with [NFR-10] tamper-evident audit. ✓
+- **Rules version + plugin hashes** in every CSV row, and in the PDF integrity-hash payload — FR-09 compliance is provable. ✓
+- **Generated-at timestamp + record count** on PDF cover. ✓
+- **ISO 8601 timestamps** in CSV — machine-parseable. ✓
+- **Locked-state column** — distinguishes immutable from editable records. ✓
+
+### Findings — inspector-facing
+
+#### F-T1 — Block & sprayer shown by ID only, no human label (PDF + CSV) — **P1**
+
+PDF: `e.blockId.slice(0, 8) + '…'` ([export.pdf:62](../apps/web/src/routes/api/spray/records/export.pdf/+server.ts#L62)). CSV: full `blockId` and `sprayerId` strings. Dale sees `1f3c4d29…` and has no idea whether that is "Front field" or "South 5". The inspector can't cross-reference without calling Sherry. Fix: join in `block.name` and `sprayer.label` and include those columns alongside the IDs (keep IDs for kernel audit).
+
+#### F-T2 — Farm name, operator, location not in the export — **P1**
+
+Neither export contains "who is this from". An inspector receiving this email has only the filename `cropcard-spray-records-<timestamp>.pdf` and the body of the email Sherry typed. For a regulatory audit (VDACS, USDA organic certifier) this is inadequate. Fix: add a `farm-context` block to the PDF cover and a header row to the CSV — farm name, operator email, farm street address, county, license/registration if applicable. Source the values from a new `farm_profile` table (single row) or a settings.json file.
+
+#### F-T3 — Products shown by pluginId, not by EPA Reg # / label name — **P1**
+
+PDF + CSV use `p.pluginId` (e.g., `gly-roundup-original`). For VDACS / USDA / OSHA audits the EPA Registration Number and label name are normative. Fix: extend [herbicidePluginSchema](../apps/web/src/lib/plugins/schemas.ts) with optional `epaRegistrationNumber` and `labelName`. When set, render those alongside the pluginId in the export. Backwards-compatible.
+
+#### F-T4 — Chemistry classes missing from PDF (CSV-only) — **P2**
+
+CSV row 25 carries `chemistryClasses`. PDF table has no equivalent column ([export.pdf:46-56](../apps/web/src/routes/api/spray/records/export.pdf/+server.ts#L46)). A printed audit packet without active-ingredient class is hard to validate against label restrictions. Fix: add a "Chemistry" column to the PDF table.
+
+#### F-T5 — Filter context not shown when an export is filtered — **P1**
+
+If Sherry exports with `?sprayerId=X` or `?blockId=Y`, the resulting PDF/CSV contains only matching records but says nothing about the filter. Dale can't tell if he's seeing the complete history or a filtered subset. Fix: PDF cover line "Filter: sprayer=X · block=Y" or "Filter: none — full history"; CSV first row a `# filter: ...` comment line (papaparse will preserve it; Dale's spreadsheet may or may not skip — alternative is a header column).
+
+#### F-T6 — Conditions not labeled against label limits — **P2**
+
+PDF cell shows `5 mph\n70°F\n0 mm`. There's no "label limit was 10 mph" context. Dale has to look up each product label separately. Fix: keep raw conditions for objectivity, but add a per-product "within label limits at time of spray" boolean computed at record time and store it on the spray event. Bigger change; document for follow-up rather than ship now.
+
+#### F-T7 — No page numbers / total pages on PDF — **P2**
+
+Multi-page exports are common with 2-year retention. Without page numbers an inspector receiving a printed copy can't verify completeness. Fix: pdfmake supports a `footer` callback — add `Page N of M`.
+
+#### F-T8 — No glossary / legend on PDF — **P2**
+
+Symbols `🔒 locked`, `⚠ custom rate`, the meaning of `rulesVersion` value, and what plugin hashes are for are unexplained. Fix: append a half-page "What this report shows" appendix on the PDF, and a `# README` block at the top of the CSV (or a separate `cropcard-export-readme.txt` zipped alongside).
+
+#### F-T9 — No exporter / signature — **P2**
+
+Who exported the file (`exportedByEmail`) isn't on either output. For NFR-10 audit chain it should be. Fix: capture `event.locals.user?.email` in both endpoints and embed in the cover / header row.
+
+#### F-T10 — Lot-number cross-reference missing — **P2**
+
+When Dale audits a specific harvest lot, he needs the spray history *for that lot*. Currently he has to manually intersect: harvest event with `lotNumber` X → look up `blockId` → filter spray records by that block — but only sprays within the planting's grow window count. Fix: add a `/api/spray/records/by-lot/:lotNumber/export.pdf` endpoint that does the join server-side. Larger feature; document for follow-up.
+
+### Recommended Sprint D' (export polish) — half day
+
+Quick wins that would close most P1s without schema changes:
+1. **F-T1** — join block name & sprayer label into both exports
+2. **F-T2** — add a `farm_profile` settings file or single-row table; render on cover + CSV header
+3. **F-T5** — add filter-context line to both exports
+4. **F-T9** — embed exporter email
+
+Plugin schema and DB schema work (F-T3 EPA reg numbers, F-T6 label-limits, F-T10 by-lot endpoint) is bigger and can stack on Sprint E's plugin v1.1 work.
+
+## 7. What this audit did *not* cover
 
 - Live PWA boot. No browser screenshots. No axe / Lighthouse. Several findings (F-A contrast values, font sizes) are based on CSS values; live measurement is recommended before fixing.
 - Service-worker / Workbox per-route offline behavior (H19 unverified). CLAUDE.md flags this.
 - The `/equipment` route — visible in nav and home tiles but not walked here.
 - The `/api/spray/evaluate` endpoint — the kernel itself. Out of scope (this is UX, not safety).
-- The PDF/CSV export rendering — flagged as UC-22 audit pending.
 - Plugin authoring rejection-message round-trip (H8 unverified).
 - Performance / load-time / bundle-size.
 - Internationalization — the app is single-locale.
 
-A follow-up live-PWA audit pass is warranted after Sprint A and B land.
+A follow-up live-PWA audit pass is warranted after Sprint A, B, and C land.
+
+## 8. Sprint E gating decision — weather provider for FR-22
+
+Sprint E (FR-19..FR-23, hay + small-grain workflows) is gated by the weather-provider choice. UC-13 ("Hay cutting decision (weather-windowed)") needs a 72-hour rain probability forecast. The hay moisture gate (FR-21) is implemented in TypeScript regardless; only the *cutting-window decision* needs forecast data.
+
+Plugin schema v1.1 (F-C ✓) is already in place, so on the data-model side Sprint E is unblocked. The remaining gate is which forecast API to integrate.
+
+### Options
+
+| Provider | Cost | Auth | Notes for CropCard |
+|---|---|---|---|
+| **NOAA NWS** (`api.weather.gov`) | Free | None (just a User-Agent header) | US-only — fine for Loudoun County, VA. JSON, well-documented, point-forecast endpoint covers 7-day rain probability per ~2.5km grid. No quota. Recommended default. |
+| **Open-Meteo** | Free for non-commercial | None | Global; ECMWF + GFS blend. Generous quota. License caveat for commercial use. |
+| **OpenWeatherMap** | Free tier 1,000 calls/day | API key | Mature; richer historical data; key needs to be a server-only secret. Adds env-var management. |
+| **Visual Crossing** | Free tier 1,000/day | API key | Best historical replay if we ever need forensic weather lookup. |
+
+### Decision (2026-05-06): NOAA NWS
+
+User selected **NOAA NWS** (`api.weather.gov`) as the FR-22 forecast source. Rationale: free, no API key, US-only matches CropCard's Loudoun-County footprint, no quota concerns. The adapter at `apps/web/src/lib/weather/` will be a thin wrapper so a future swap to a commercial provider is local.
+
+If global support is needed later, swap to Open-Meteo.
+
+### What's needed to start Sprint E
+
+Sprint E is now unblocked on the data side — plugin schema v1.1 (F-C ✓) and the weather-provider decision (NOAA NWS) are settled. Remaining gate: confirmation that CropCard can make outbound HTTPS requests from the Azure Container Apps deployment (likely yes — no NetworkPolicy in `infra/azure/main.bicep`; verify on first deploy). The Sprint E plan in §5 above is ready to execute as 10–12 days of work whenever the next session opens.

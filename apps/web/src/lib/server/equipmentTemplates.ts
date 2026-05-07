@@ -45,7 +45,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'tractor',
     category: 'Two-wheel tractor',
     label: '2-wheel walk-behind tractor (BCS / Grillo)',
-    description: 'PTO-driven walking tractor with quick-change implements. Workhorse for ¼–2 acre vegetable plots.',
+    description:
+      'PTO-driven walking tractor with quick-change implements. Workhorse for ¼–2 acre vegetable plots.',
     spec: { hp: '8–16', driveType: 'walk-behind', ptoRpm: 990 }
   },
   {
@@ -61,7 +62,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'tractor',
     category: 'Compact utility tractor',
     label: 'Compact utility tractor (25–50 hp)',
-    description: 'Mid-range utility tractor — handles full-width tillage, baling, and PTO sprayers up to 200 gal.',
+    description:
+      'Mid-range utility tractor — handles full-width tillage, baling, and PTO sprayers up to 200 gal.',
     spec: { hp: '25–50', hitch: 'Cat-1/2', ptoRpm: 540 }
   },
   {
@@ -69,7 +71,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'tractor',
     category: 'Utility tractor',
     label: 'Utility tractor (50–100 hp)',
-    description: 'Standard farm tractor for hay operations, large planters, and 200+ gal pull sprayers.',
+    description:
+      'Standard farm tractor for hay operations, large planters, and 200+ gal pull sprayers.',
     spec: { hp: '50–100', hitch: 'Cat-2', ptoRpm: '540/1000' }
   },
   {
@@ -77,7 +80,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'tractor',
     category: 'Row-crop tractor',
     label: 'Row-crop tractor (100+ hp)',
-    description: 'High-clearance row-crop tractor for corn / soybean operations. Adjustable wheel track.',
+    description:
+      'High-clearance row-crop tractor for corn / soybean operations. Adjustable wheel track.',
     spec: { hp: '100–200', hitch: 'Cat-2/3', ptoRpm: '540E/1000' }
   },
 
@@ -87,7 +91,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'sprayer',
     category: 'Backpack sprayer',
     label: '4 gal backpack sprayer (Solo / Birchmeier)',
-    description: 'Manual diaphragm pump backpack. Spot-spray + small-plot use; calibrate to walking pace.',
+    description:
+      'Manual diaphragm pump backpack. Spot-spray + small-plot use; calibrate to walking pace.',
     spec: { tankGal: 4, pumpType: 'manual diaphragm' },
     defaultGpa: 30
   },
@@ -123,7 +128,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'sprayer',
     category: '3-point sprayer',
     label: '200 gal 3-point boom sprayer',
-    description: 'Cat-2 3-pt hitch, PTO roller pump, jet agitation, 21-ft boom. Standard for row-crop work.',
+    description:
+      'Cat-2 3-pt hitch, PTO roller pump, jet agitation, 21-ft boom. Standard for row-crop work.',
     spec: { tankGal: 200, boomFt: 21, agitation: 'jet', hitch: 'Cat-2' },
     defaultGpa: 15
   },
@@ -132,7 +138,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'sprayer',
     category: 'Orchard airblast sprayer',
     label: '100 gal orchard airblast sprayer',
-    description: 'PTO-driven airblast for tree fruit canopies — fungicide + insecticide cover sprays.',
+    description:
+      'PTO-driven airblast for tree fruit canopies — fungicide + insecticide cover sprays.',
     spec: { tankGal: 100, fanDiameterIn: 30, hitch: 'PTO' },
     defaultGpa: 50
   },
@@ -175,7 +182,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'other',
     category: 'Power harrow',
     label: 'Walk-behind power harrow (BCS-compatible)',
-    description: '32 in PTO power harrow for stale-bedding and fine seedbed prep without inversion.',
+    description:
+      '32 in PTO power harrow for stale-bedding and fine seedbed prep without inversion.',
     spec: { workingWidthIn: 32, depth: '4 in' }
   },
 
@@ -201,7 +209,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'planter',
     category: 'Plate planter',
     label: '2-row mechanical plate planter (Cole / Covington)',
-    description: '2-row plate planter for corn / soybean / pumpkin / cucurbit; 30–40 in row spacing.',
+    description:
+      '2-row plate planter for corn / soybean / pumpkin / cucurbit; 30–40 in row spacing.',
     spec: { rows: 2, rowSpacingIn: '30–40' }
   },
   {
@@ -217,7 +226,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'planter',
     category: 'Transplanter',
     label: 'Water-wheel mechanical transplanter (Mechanical Transplanter / Holland)',
-    description: 'Pulled water-wheel transplanter — 2 operators, 1 row at a time. For tomato, pepper, brassica plug starts.',
+    description:
+      'Pulled water-wheel transplanter — 2 operators, 1 row at a time. For tomato, pepper, brassica plug starts.',
     spec: { rows: 1, operators: 2 }
   },
   {
@@ -225,7 +235,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'planter',
     category: 'Paper-pot transplanter',
     label: 'Paper Pot Transplanter (HP-262 / 264)',
-    description: 'Walk-behind paper-pot transplanter for high-density greens, alliums, and salad mix.',
+    description:
+      'Walk-behind paper-pot transplanter for high-density greens, alliums, and salad mix.',
     spec: { paperPotsPerChain: 264 }
   },
 
@@ -251,7 +262,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'mower',
     category: 'Flail mower',
     label: '6 ft flail mower',
-    description: 'Cover-crop and crop-residue flail mower; finer cut than rotary, better for biomass distribution.',
+    description:
+      'Cover-crop and crop-residue flail mower; finer cut than rotary, better for biomass distribution.',
     spec: { workingWidthFt: 6, hitch: 'Cat-1/2' }
   },
   {
@@ -301,7 +313,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'irrigation',
     category: 'Drip tape system',
     label: 'Drip tape irrigation kit (1 acre, single zone)',
-    description: '15 mil drip tape, header line, valve, screen filter, pressure regulator. Standard for raised-bed vegetables.',
+    description:
+      '15 mil drip tape, header line, valve, screen filter, pressure regulator. Standard for raised-bed vegetables.',
     spec: { tapeMil: 15, emitterSpacingIn: 12, gph: 0.4 }
   },
   {
@@ -327,7 +340,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'other',
     category: 'Broadcast spreader',
     label: '500 lb 3-pt broadcast spreader (cone-type)',
-    description: 'Cat-1 PTO broadcast spreader for granular fertilizer + lime. 30 ft swath at 540 RPM.',
+    description:
+      'Cat-1 PTO broadcast spreader for granular fertilizer + lime. 30 ft swath at 540 RPM.',
     spec: { capacityLb: 500, swathFt: 30 }
   },
   {
@@ -343,7 +357,8 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     type: 'other',
     category: 'Greens harvester',
     label: 'Quick Cut Greens Harvester',
-    description: 'Battery-powered serrated bar harvester for salad mix and baby greens. ~30× faster than knife.',
+    description:
+      'Battery-powered serrated bar harvester for salad mix and baby greens. ~30× faster than knife.',
     spec: { cutWidthIn: 14, batteryVolt: 18 }
   }
 ];

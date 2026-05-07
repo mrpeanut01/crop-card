@@ -69,7 +69,7 @@ export function listPendingCalibrations(): PendingCalibration[] {
     equipmentId: r.equipmentId,
     submittedById: r.submittedById,
     submittedByEmail: r.submittedByEmail ?? 'unknown',
-    submittedAt: r.submittedAt,
+    submittedAt: r.submittedAt instanceof Date ? r.submittedAt.getTime() : r.submittedAt,
     calibratedGpa: r.calibratedGpa,
     spreadInches: r.spreadInches ?? undefined,
     ouncesCollected: r.ouncesCollected ?? undefined,

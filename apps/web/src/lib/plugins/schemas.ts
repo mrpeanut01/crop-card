@@ -88,15 +88,10 @@ export const hayOperationsSchema = z.object({
   weatherWindowDays: z.number().int().min(1).max(14).default(3),
   /** Per-bale-type baling thresholds. Keys are bale-type strings. */
   baleMoistureGate: z
-    .record(
-      z.enum(['small-square', 'large-round', 'large-square']),
-      moistureThresholdsSchema
-    )
+    .record(z.enum(['small-square', 'large-round', 'large-square']), moistureThresholdsSchema)
     .optional(),
   /** Storage temperature watch — fires reminder events (FR-23 supports). */
-  storageTempWatchF: z
-    .object({ warn: z.number(), danger: z.number() })
-    .optional()
+  storageTempWatchF: z.object({ warn: z.number(), danger: z.number() }).optional()
 });
 
 /** Zadoks small-grain growth-stage table (FR-20). */
@@ -148,7 +143,16 @@ export const seasonalTaskSchema = z
   .object({
     key: z.string().min(1).max(80),
     kind: z
-      .enum(['spray', 'cultural', 'pruning', 'thinning', 'fertilize', 'irrigate', 'scout', 'harvest'])
+      .enum([
+        'spray',
+        'cultural',
+        'pruning',
+        'thinning',
+        'fertilize',
+        'irrigate',
+        'scout',
+        'harvest'
+      ])
       .default('cultural'),
     dayOfYear: z.number().int().min(1).max(366).optional(),
     daysAfterPlanting: z.number().int().min(0).max(3650).optional(),
@@ -257,7 +261,10 @@ export const herbicidePluginSchema = pluginBase.extend({
 const insecticideIngredientSchema = z.object({
   name: z.string().min(1),
   /** IRAC mode-of-action group code (e.g., '1A', '3A', '4A', '5', '6', '11A', '15', '22', '28', '29', 'UN'). Used by agronomy/resistance.ts for rotation hints; NOT a safety-kernel input. */
-  iracGroup: z.string().regex(/^[A-Z0-9]{1,4}$/).optional()
+  iracGroup: z
+    .string()
+    .regex(/^[A-Z0-9]{1,4}$/)
+    .optional()
 });
 
 /** Phase 10: declarative scouting threshold. The /scout flow renders an
@@ -337,7 +344,10 @@ const fungicideIngredientSchema = z.object({
   name: z.string().min(1),
   fracCode: z
     .string()
-    .regex(/^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/, 'fracCode must look like M03, P01, U06, BM01, or a number')
+    .regex(
+      /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/,
+      'fracCode must look like M03, P01, U06, BM01, or a number'
+    )
 });
 
 export const fungicidePluginSchema = pluginBase.extend({

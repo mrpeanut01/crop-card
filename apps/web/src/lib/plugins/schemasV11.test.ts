@@ -56,7 +56,9 @@ describe('cropPluginSchema v1.1 additive fields', () => {
     expect(parsed.success).toBe(true);
     if (parsed.success) {
       expect(parsed.data.hayOperations?.weatherWindowDays).toBe(3);
-      expect(parsed.data.hayOperations?.baleMoistureGate?.['small-square']?.dangerAbovePct).toBe(22);
+      expect(parsed.data.hayOperations?.baleMoistureGate?.['small-square']?.dangerAbovePct).toBe(
+        22
+      );
     }
   });
 

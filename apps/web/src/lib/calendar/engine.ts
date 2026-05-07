@@ -237,9 +237,7 @@ export function eventsForPlanting(
       crop.cropFamily === 'bramble' ||
       crop.cropFamily === 'vine-fruit' ||
       crop.cropFamily === 'forage';
-    const years = isPerennial
-      ? orchardSeasonYears(plant)
-      : [new Date(plant).getFullYear()];
+    const years = isPerennial ? orchardSeasonYears(plant) : [new Date(plant).getFullYear()];
     for (const year of years) {
       for (const task of crop.seasonalTasks) {
         const start = task.dayOfYear

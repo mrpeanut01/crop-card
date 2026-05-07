@@ -103,7 +103,7 @@ describe('Phase 9 — new crop families × chemistry kill matrix', () => {
   const celery: CropStage = { cropPluginId: 'celery', cropFamily: 'apiaceae' };
   const blueberry: CropStage = { cropPluginId: 'blueberry-bluecrop', cropFamily: 'small-fruit' };
   const raspberry: CropStage = { cropPluginId: 'raspberry-heritage', cropFamily: 'bramble' };
-  const grape: CropStage = { cropPluginId: 'grape-concord', cropFamily: 'vine-fruit' };
+  const _grape: CropStage = { cropPluginId: 'grape-concord', cropFamily: 'vine-fruit' };
   const peach: CropStage = { cropPluginId: 'peach-redhaven', cropFamily: 'stone-fruit' };
   const wheat: CropStage = { cropPluginId: 'wheat-soft-red', cropFamily: 'cereal-grain' };
   const alfalfa: CropStage = { cropPluginId: 'alfalfa', cropFamily: 'forage' };
@@ -169,7 +169,18 @@ describe('Phase 9 — new crop families × chemistry kill matrix', () => {
   });
 
   it('blocks paraquat over every standing crop (non-selective burndown)', () => {
-    for (const c of [tomato, cabbage, onion, lettuce, carrot, celery, blueberry, peach, wheat, basil]) {
+    for (const c of [
+      tomato,
+      cabbage,
+      onion,
+      lettuce,
+      carrot,
+      celery,
+      blueberry,
+      peach,
+      wheat,
+      basil
+    ]) {
       expect(checkCropCompatibility([paraquat], c)).toHaveLength(1);
     }
   });

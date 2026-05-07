@@ -1,0 +1,31 @@
+{
+  "pluginId": "2-4-d-amine",
+  "type": "herbicide",
+  "displayName": "2,4-D Amine",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "2,4-D dimethylamine salt", "chemistryClass": "synthetic-auxin" }],
+  "ratePerAcre": { "amount": 1.0, "unit": "pt" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 8,  "unit": "fl-oz", "display": "1.0 cup" },
+    "25gal":  { "amount": 20, "unit": "fl-oz", "display": "2.5 cup" },
+    "50gal":  { "amount": 40, "unit": "fl-oz", "display": "1.25 qt" },
+    "75gal":  { "amount": 60, "unit": "fl-oz", "display": "1.88 qt" },
+    "100gal": { "amount": 80, "unit": "fl-oz", "display": "2.50 qt" }
+  },
+  "acresPerTank": {
+    "10gal":  0.67,
+    "25gal":  1.67,
+    "50gal":  3.33,
+    "75gal":  5.00,
+    "100gal": 6.67
+  },
+  "requiresAMS": true,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": {
+    "safeForCropPluginIds": ["corn-bloody-butcher"]
+  },
+  "notes": "Triple-rinse with ammonia + water before using sprayer on pumpkins, beans, or companions."
+}

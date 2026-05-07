@@ -1,0 +1,12 @@
+{
+  "pluginId": "spinosad",
+  "displayName": "Spinosad",
+  "version": "1.0.0",
+  "type": "insecticide",
+  "activeIngredients": [
+    {
+      "name": "spinosyn"
+    }
+  ],
+  "reEntryIntervalHours": 4
+}

@@ -1,0 +1,331 @@
+<script lang="ts">
+  import type { CalendarEvent } from '$lib/calendar/engine';
+
+  let { data } = $props();
+
+  function fmtRange(startMs: number, endMs: number) {
+    const a = new Date(startMs).toLocaleDateString();
+    if (startMs === endMs) return a;
+    const b = new Date(endMs).toLocaleDateString();
+    return `${a} – ${b}`;
+  }
+
+  /**
+   * Map a calendar event to a deep-link URL + a button label so the user can
+   * one-tap from "today's action" into the right page with context filled in.
+   */
+  function ctaFor(e: CalendarEvent): { href: string; label: string } | null {
+    switch (e.kind) {
+      case 'spray-window': {
+        const stage = (e.detail?.stage as string | undefined) ?? null;
+        const params = new URLSearchParams();
+        params.set('block', e.blockId);
+        if (stage) params.set('windowStage', stage);
+        return {
+          href: `/scout?${params.toString()}`,
+          label: 'Scout this block →'
+        };
+      }
+      case 'companion-trigger':
+        return {
+          href: `/plan#block-${e.blockId}`,
+          label: 'Open block plan →'
+        };
+      case 'harvest-window':
+        // The plantingId isn't carried on the event; jump to /harvest where
+        // the readiness card with the right block + variety auto-focuses.
+        return { href: `/harvest`, label: 'Open harvest →' };
+      case 'cover-termination':
+        return {
+          href: `/spray?block=${encodeURIComponent(e.blockId)}&windowStage=BURNDOWN`,
+          label: 'Plan burndown →'
+        };
+      case 'planting':
+        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
+      case 'emergence':
+        return null;
+    }
+  }
+</script>
+
+<header class="today">
+  <h1>Today</h1>
+  <p class="date">{data.today}</p>
+</header>
+
+{#if data.eventsToday.length > 0}
+  <section class="card today-actions">
+    <h2>Today's actions</h2>
+    <ul>
+      {#each data.eventsToday as e (e.cropPluginId + e.title + e.startMs)}
+        {@const cta = ctaFor(e)}
+        <li class="event {e.kind}">
+          <strong>{e.title}</strong>
+          <small>{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName}</small>
+          {#if e.body}<p>{e.body}</p>{/if}
+          {#if cta}
+            <a class="cta" href={cta.href}>{cta.label}</a>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
+{:else}
+  <section class="card empty">
+    <h2>No scheduled action today</h2>
+    <p>
+      {#if data.counts.blocks === 0}
+        Add a block on <a href="/plan">/plan</a> with a planting record to see calendar-driven actions here.
+      {:else}
+        Calendar engine has nothing for today. Plan a one-off spray on <a href="/spray">/spray</a> if needed.
+      {/if}
+    </p>
+    <a href="/spray" class="primary">Plan a spray</a>
+  </section>
+{/if}
+
+{#if data.upcoming.length > 0}
+  <section class="card">
+    <h2>Next 14 days</h2>
+    <ul class="upcoming">
+      {#each data.upcoming.slice(0, 12) as e (e.cropPluginId + e.title + e.startMs)}
+        {@const cta = ctaFor(e)}
+        <li class="event {e.kind}">
+          <span class="when">{fmtRange(e.startMs, e.endMs)}</span>
+          <strong>{e.title}</strong>
+          <small>{e.varietyDisplayName}</small>
+          {#if cta}<a class="cta-small" href={cta.href}>{cta.label}</a>{/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
+{/if}
+
+<section class="card">
+  <h2>Sprayers</h2>
+  <ul class="sprayers">
+    {#each data.sprayers as s (s.id)}
+      <li>
+        <strong>{s.label}</strong>
+        <span class="id">{s.id}</span>
+        {#if s.lastChemistryClass}
+          <span class="warn">last load: {s.lastChemistryClass}</span>
+          <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}" class="link">Decon →</a>
+        {:else}
+          <span class="ok">clean</span>
+        {/if}
+        {#if s.lastDeconAt}
+          <span class="meta">decon {new Date(s.lastDeconAt).toLocaleString()}</span>
+        {/if}
+      </li>
+    {/each}
+  </ul>
+</section>
+
+<section class="card audit">
+  <h2>Kernel</h2>
+  <dl>
+    <dt>Rules version</dt>
+    <dd><code>{data.rulesVersion}</code></dd>
+    <dt>Crops registered</dt>
+    <dd>{data.counts.crops}</dd>
+    <dt>Herbicides registered</dt>
+    <dd>{data.counts.herbicides}</dd>
+    <dt>Blocks defined</dt>
+    <dd>{data.counts.blocks}</dd>
+    {#if data.pluginFailures.length > 0}
+      <dt>Plugin load failures</dt>
+      <dd class="warn">
+        <ul>
+          {#each data.pluginFailures as f}<li>{f}</li>{/each}
+        </ul>
+      </dd>
+    {/if}
+  </dl>
+</section>
+
+<style>
+  .today {
+    margin-bottom: 1.5rem;
+  }
+  .today h1 {
+    margin: 0;
+  }
+  .date {
+    margin: 0;
+    color: #555;
+    font-family: monospace;
+  }
+  .card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  .card h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    color: #1f5e3a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .empty {
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+  .empty h2 {
+    color: #555;
+  }
+  .primary {
+    display: inline-block;
+    background: #1f5e3a;
+    color: white;
+    padding: 0.9rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 0.75rem;
+    min-height: 48px;
+    line-height: 1.4;
+  }
+  .today-actions ul,
+  .upcoming {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .today-actions li,
+  .upcoming li {
+    padding: 0.6rem 0.75rem;
+    border-left: 4px solid #1f5e3a;
+    background: #f8fbf9;
+    margin: 0.4rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .event small {
+    color: #555;
+    margin-left: 0.5rem;
+    font-family: monospace;
+  }
+  .event.spray-window {
+    border-left-color: #b35900;
+    background: #fff8ec;
+  }
+  .event.companion-trigger {
+    border-left-color: #4d8e36;
+  }
+  .event.harvest-window {
+    border-left-color: #6b3fa0;
+    background: #f5f0fa;
+  }
+  .event.cover-termination {
+    border-left-color: #777;
+  }
+  .event p {
+    margin: 0.25rem 0 0;
+    font-size: 0.9rem;
+  }
+  .cta {
+    display: inline-block;
+    margin-top: 0.5rem;
+    background: #1f5e3a;
+    color: white;
+    text-decoration: none;
+    padding: 0.6rem 1rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-height: 44px;
+    line-height: 1.4;
+  }
+  .cta-small {
+    margin-left: auto;
+    color: #1f5e3a;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid #1f5e3a;
+    border-radius: 4px;
+  }
+  .upcoming li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .upcoming .when {
+    font-family: monospace;
+    color: #555;
+    min-width: 11rem;
+  }
+  .sprayers {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .sprayers li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid #eee;
+  }
+  .sprayers li:first-child {
+    border-top: none;
+  }
+  .sprayers .id {
+    font-family: monospace;
+    color: #666;
+    font-size: 0.85rem;
+  }
+  .sprayers .warn {
+    background: #fff3cd;
+    color: #b35900;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .sprayers .ok {
+    background: #e7f1ea;
+    color: #1f5e3a;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .sprayers .meta {
+    color: #777;
+    font-size: 0.8rem;
+  }
+  .sprayers .link {
+    margin-left: auto;
+    color: #b00020;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.4rem 1rem;
+    margin: 0;
+  }
+  dt {
+    color: #666;
+  }
+  dd {
+    margin: 0;
+  }
+  dd code {
+    background: #f5f5f5;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+  }
+  .warn ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+</style>

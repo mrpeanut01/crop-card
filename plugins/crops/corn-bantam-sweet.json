@@ -1,0 +1,11 @@
+{
+  "pluginId": "corn-bantam-sweet",
+  "displayName": "Bantam Sweet Corn",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "corn",
+  "daysToMaturity": {
+    "min": 75,
+    "max": 80
+  }
+}

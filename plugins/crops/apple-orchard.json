@@ -1,0 +1,9 @@
+{
+  "pluginId": "apple-orchard",
+  "type": "crop",
+  "displayName": "Apple (Orchard)",
+  "version": "1.0.0",
+  "cropFamily": "orchard",
+  "harvestIndicators": ["Variety-specific color break", "Seeds dark brown", "Easy stem release"],
+  "notes": "Perennial. Treat orchard boundary as a no-spray buffer for residual corn/pumpkin herbicides."
+}

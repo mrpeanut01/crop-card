@@ -1,0 +1,28 @@
+{
+  "pluginId": "stadia-dry",
+  "type": "herbicide",
+  "displayName": "Stadia (dry)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "stadia-active-ingredient", "chemistryClass": "sulfonylurea" }],
+  "ratePerAcre": { "amount": 1.5, "unit": "oz" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 1,    "unit": "oz" },
+    "25gal":  { "amount": 2.5,  "unit": "oz" },
+    "50gal":  { "amount": 5,    "unit": "oz" },
+    "75gal":  { "amount": 7.5,  "unit": "oz" },
+    "100gal": { "amount": 10,   "unit": "oz" }
+  },
+  "requiresAMS": true,
+  "deconRequired": true,
+  "tankMixOrder": 2,
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "corn-bloody-butcher",
+      "corn-sweet-bodacious",
+      "pumpkin-ez-gro-monster"
+    ]
+  },
+  "notes": "Dry formulation, dissolves in tank. Cannot tank-mix with Clethodim — enforce 7-day separation."
+}

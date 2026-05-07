@@ -1,0 +1,8 @@
+{
+  "pluginId": "three-sisters",
+  "type": "companion",
+  "displayName": "Three Sisters (Corn/Beans/Squash)",
+  "version": "1.0.0",
+  "goodWith": ["corn", "beans", "squash"],
+  "badWith": []
+}

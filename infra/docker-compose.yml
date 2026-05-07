@@ -1,0 +1,42 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: dev
+    image: cropcard-web:dev
+    ports:
+      - "5173:5173"
+    command: ["sh", "-c", "if [ ! -e /app/apps/web/node_modules/.modules.yaml ] && [ ! -e /app/node_modules/.modules.yaml ]; then pnpm install --frozen-lockfile; fi && pnpm --filter @cropcard/web dev"]
+    volumes:
+      - ..:/app
+      - web-node-modules:/app/node_modules
+      - web-app-node-modules:/app/apps/web/node_modules
+      - web-data:/data
+    # Azurite well-known dev credentials are sourced from infra/.env.dev
+    # (gitignored). Run `cp infra/.env.dev.example infra/.env.dev` once.
+    env_file:
+      - .env.dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: file:/data/cropcard.db
+      AUTH_SECRET: dev-only-not-secret-change-in-prod
+      AUTH_TRUST_HOST: "true"
+      AUTH_URL: http://localhost:5173
+      AZURE_BLOB_CONTAINER: cropcard-dev
+    depends_on:
+      - azurite
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --location /data"
+    ports:
+      - "10000:10000"
+    volumes:
+      - azurite-data:/data
+
+volumes:
+  web-node-modules:
+  web-app-node-modules:
+  web-data:
+  azurite-data:

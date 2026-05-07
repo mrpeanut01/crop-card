@@ -1,0 +1,10 @@
+{
+  "pluginId": "24d",
+  "type": "herbicide",
+  "displayName": "2,4-D Amine",
+  "version": "1.0.0",
+  "activeIngredients": [
+    { "name": "2,4-D", "chemistryClass": "synthetic-auxin" }
+  ],
+  "ratePerAcre": { "amount": 16, "unit": "fl-oz" }
+}

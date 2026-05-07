@@ -1,0 +1,11 @@
+{
+  "pluginId": "corn-sweet-bodacious",
+  "type": "crop",
+  "displayName": "Bodacious Sweet Corn",
+  "version": "1.0.0",
+  "cropFamily": "corn",
+  "daysToMaturity": { "min": 75, "max": 80 },
+  "defaultRowSpacingInches": 30,
+  "harvestIndicators": ["Silks brown and dry at tip", "Kernels milky when tested"],
+  "notes": "Sugar-enhanced (SE) sweet corn. Plant ≥250 ft from dent corn to prevent cross-pollination."
+}

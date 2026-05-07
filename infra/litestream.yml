@@ -1,0 +1,18 @@
+# Litestream replication config.
+#
+# AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY, AZURE_BLOB_CONTAINER are injected
+# from Azure Container Apps env vars (or Key Vault secret refs).
+# In production we prefer managed-identity, but Litestream's Azure backend
+# uses account+key, so we plumb a Key Vault secret for the account key.
+
+dbs:
+  - path: /data/cropcard.db
+    replicas:
+      - type: abs
+        account-name: ${AZURE_STORAGE_ACCOUNT}
+        account-key: ${AZURE_STORAGE_KEY}
+        bucket: ${AZURE_BLOB_CONTAINER}
+        path: cropcard.db
+        retention: 168h          # 7 days of WAL retention
+        snapshot-interval: 24h
+        sync-interval: 1s

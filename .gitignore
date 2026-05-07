@@ -1,0 +1,41 @@
+node_modules/
+.pnpm-store/
+
+# Build artifacts
+.svelte-kit/
+build/
+dist/
+*.tsbuildinfo
+
+# Dev DBs and logs
+data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+logs/
+*.log
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+!.env.dev.example
+infra/.env.dev
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+
+# Azure
+*.bicepparam.local
+.azure/

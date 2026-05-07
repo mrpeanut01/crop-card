@@ -1,0 +1,10 @@
+{
+  "pluginId": "glyphosate-generic",
+  "type": "herbicide",
+  "displayName": "Glyphosate 41%",
+  "version": "1.0.0",
+  "activeIngredients": [
+    { "name": "glyphosate", "chemistryClass": "glyphosate" }
+  ],
+  "ratePerAcre": { "amount": 32, "unit": "fl-oz" }
+}

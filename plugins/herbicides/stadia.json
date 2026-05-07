@@ -1,0 +1,10 @@
+{
+  "pluginId": "stadia",
+  "type": "herbicide",
+  "displayName": "Stadia",
+  "version": "1.0.0",
+  "activeIngredients": [
+    { "name": "rimsulfuron", "chemistryClass": "sulfonylurea" }
+  ],
+  "ratePerAcre": { "amount": 1, "unit": "oz" }
+}

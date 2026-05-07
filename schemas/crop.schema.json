@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cropcard.dev/schemas/crop.schema.json",
+  "title": "CropCard Crop Plugin",
+  "description": "Data-only crop variety definition. Cannot override Safety Kernel rules.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "pluginType",
+    "id",
+    "displayName",
+    "cropFamily",
+    "dtm",
+    "planting"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "pluginType": { "const": "crop" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "displayName": { "type": "string", "minLength": 1 },
+    "cropFamily": {
+      "type": "string",
+      "enum": ["corn", "cucurbit", "legume", "broadleaf-companion", "orchard", "cover-grass", "cover-legume"]
+    },
+    "subType": { "type": "string" },
+    "dtm": {
+      "type": "object",
+      "required": ["min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "integer", "minimum": 1 },
+        "max": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "planting": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "soilTempMinF": { "type": "number" },
+        "rowSpacingIn": { "type": "number" },
+        "inRowSpacingIn": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        },
+        "seedDepthIn": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        },
+        "seedsPerAcre": { "type": "integer" },
+        "recommendedLbsPerAcre": { "type": "number" },
+        "emergenceDaysAfterPlanting": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "integer" },
+            "max": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "growthStages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "daysFromPlanting"],
+        "properties": {
+          "stage": { "type": "string" },
+          "daysFromPlanting": {
+            "type": "object",
+            "properties": {
+              "min": { "type": "integer" },
+              "max": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "herbicideCompatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "safe": { "type": "array", "items": { "type": "string" } },
+        "unsafe": { "type": "array", "items": { "type": "string" } },
+        "stageRestrictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["product"],
+            "properties": {
+              "product": { "type": "string" },
+              "maxCropHeightIn": { "type": "number" },
+              "stageWindow": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "companionBenefits": { "type": "array", "items": { "type": "string" } },
+    "harvestIndicators": { "type": "array", "items": { "type": "string" } },
+    "postHarvestCuring": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "method": { "type": "string" },
+        "durationWeeks": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "integer" },
+            "max": { "type": "integer" }
+          }
+        },
+        "targetMoisturePercent": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        }
+      }
+    },
+    "notes": { "type": "string" }
+  }
+}

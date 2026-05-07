@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cropcard.dev/schemas/herbicide.schema.json",
+  "title": "CropCard Herbicide Plugin",
+  "description": "Data-only herbicide product definition. The plugin's safeCrops list is intersected with the Safety Kernel's hardcoded active-ingredient kill list at registration time; plugins cannot widen safety.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "pluginType",
+    "id",
+    "displayName",
+    "activeIngredientClass",
+    "applicationTiming",
+    "baseRatePerAcre",
+    "gpaCalibration"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "pluginType": { "const": "herbicide" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "displayName": { "type": "string", "minLength": 1 },
+    "activeIngredientClass": {
+      "type": "string",
+      "description": "Must reference a class from the Safety Kernel's active-ingredient matrix.",
+      "enum": [
+        "synthetic-auxin",
+        "chloroacetamide",
+        "hppd-inhibitor",
+        "accase-inhibitor",
+        "glyphosate",
+        "sulfonylurea"
+      ]
+    },
+    "targetWeedTypes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["broadleaf", "grass", "sedge", "general"]
+      }
+    },
+    "applicationTiming": {
+      "type": "string",
+      "enum": ["BURNDOWN", "PRE", "POST", "POST-DIRECTED"]
+    },
+    "baseRatePerAcre": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "number", "exclusiveMinimum": 0 },
+        "unit": { "type": "string", "enum": ["fl oz", "pt", "qt", "gal", "lb", "oz"] }
+      }
+    },
+    "gpaCalibration": { "type": "integer", "minimum": 1 },
+    "dilutionTable": {
+      "type": "object",
+      "patternProperties": {
+        "^\\d+gal$": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": { "type": "number" },
+            "unit": { "type": "string" },
+            "display": { "type": "string" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "acresPerTank": {
+      "type": "object",
+      "patternProperties": {
+        "^\\d+gal$": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "safeCrops": { "type": "array", "items": { "type": "string" } },
+    "unsafeCrops": { "type": "array", "items": { "type": "string" } },
+    "cropStageGate": {
+      "type": "object",
+      "properties": {
+        "crop": { "type": "string" },
+        "maxHeightIn": { "type": "number" },
+        "stageWindow": { "type": "array", "items": { "type": "string" } },
+        "message": { "type": "string" }
+      }
+    },
+    "preSprayConditions": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "windSpeedMph": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        },
+        "tempF": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        },
+        "nocturnalLowMinF": { "type": "number" },
+        "rainFreePeriodHours": { "type": "number" }
+      }
+    },
+    "tankMixOrder": { "type": "integer", "minimum": 1, "maximum": 10 },
+    "requiresAMS": { "type": "boolean" },
+    "deconRequired": { "type": "boolean" },
+    "deconNote": { "type": "string" },
+    "notes": { "type": "string" }
+  }
+}

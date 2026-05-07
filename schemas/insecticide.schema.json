@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cropcard.dev/schemas/insecticide.schema.json",
+  "title": "CropCard Insecticide Plugin",
+  "description": "Data-only insecticide protocol. Out of scope for v1 (spec §11) but schema published for plugin authors.",
+  "type": "object",
+  "required": ["schemaVersion", "pluginType", "id", "displayName", "targetPest"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "pluginType": { "const": "insecticide" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "displayName": { "type": "string", "minLength": 1 },
+    "targetPest": { "type": "string" },
+    "scoutingThreshold": { "type": "string" },
+    "applicationProtocol": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage": { "type": "string" },
+          "product": { "type": "string" },
+          "rate": { "type": "string" },
+          "interval": { "type": "string" }
+        }
+      }
+    },
+    "preHarvestIntervalDays": { "type": "integer", "minimum": 0 },
+    "notes": { "type": "string" }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "pluginId": "nasturtium-companion",
+  "type": "crop",
+  "displayName": "Nasturtium",
+  "version": "1.0.0",
+  "cropFamily": "broadleaf-companion",
+  "daysToMaturity": { "min": 50, "max": 60 },
+  "defaultRowSpacingInches": 12,
+  "notes": "Trap crop for aphids and squash bugs. Sacrificial host — interplant at pumpkin block edges."
+}

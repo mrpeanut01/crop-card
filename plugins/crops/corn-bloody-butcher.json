@@ -1,0 +1,15 @@
+{
+  "pluginId": "corn-bloody-butcher",
+  "type": "crop",
+  "displayName": "Bloody Butcher Dent Corn",
+  "version": "1.0.0",
+  "cropFamily": "corn",
+  "daysToMaturity": { "min": 90, "max": 100 },
+  "defaultRowSpacingInches": 36,
+  "harvestIndicators": [
+    "Husks fully dry and papery",
+    "Kernels fully dented",
+    "Black layer visible at kernel tip"
+  ],
+  "notes": "Heirloom dent. Keep isolated from sweet corn to prevent cross-pollination."
+}

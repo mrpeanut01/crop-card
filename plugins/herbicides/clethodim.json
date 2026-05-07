@@ -1,0 +1,10 @@
+{
+  "pluginId": "clethodim",
+  "type": "herbicide",
+  "displayName": "Clethodim 2EC",
+  "version": "1.0.0",
+  "activeIngredients": [
+    { "name": "clethodim", "chemistryClass": "accase-inhibitor" }
+  ],
+  "ratePerAcre": { "amount": 8, "unit": "fl-oz" }
+}

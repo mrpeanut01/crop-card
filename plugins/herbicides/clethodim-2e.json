@@ -1,0 +1,24 @@
+{
+  "pluginId": "clethodim-2e",
+  "type": "herbicide",
+  "displayName": "Clethodim 2EC",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "clethodim", "chemistryClass": "accase-inhibitor" }],
+  "ratePerAcre": { "amount": 8, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 5.3,  "unit": "fl-oz" },
+    "25gal":  { "amount": 13.3, "unit": "fl-oz" },
+    "50gal":  { "amount": 26.7, "unit": "fl-oz" },
+    "75gal":  { "amount": 40,   "unit": "fl-oz" },
+    "100gal": { "amount": 53.3, "unit": "fl-oz" }
+  },
+  "requiresAMS": false,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": {
+    "safeForCropPluginIds": ["pumpkin-ez-gro-monster", "pole-beans-rattlesnake"]
+  },
+  "notes": "Selective grass killer for over-the-top pumpkin/bean POST. NEVER apply to corn — kills it."
+}

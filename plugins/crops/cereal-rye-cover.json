@@ -1,0 +1,9 @@
+{
+  "pluginId": "cereal-rye-cover",
+  "type": "crop",
+  "displayName": "Cereal Rye (cover)",
+  "version": "1.0.0",
+  "cropFamily": "cover-grass",
+  "defaultRowSpacingInches": 6,
+  "notes": "Overwinter weed-suppressing cover. Terminate at early joint stage, ≥14 days before corn plant date."
+}

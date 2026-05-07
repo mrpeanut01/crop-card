@@ -1,0 +1,10 @@
+{
+  "pluginId": "bt-kurstaki",
+  "type": "insecticide",
+  "displayName": "Bt kurstaki",
+  "version": "1.0.0",
+  "activeIngredients": [
+    { "name": "Bacillus thuringiensis kurstaki" }
+  ],
+  "reEntryIntervalHours": 4
+}

@@ -1,0 +1,22 @@
+{
+  "pluginId": "mesotrione-4sc",
+  "type": "herbicide",
+  "displayName": "Mesotrione 4SC",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "mesotrione", "chemistryClass": "hppd-inhibitor" }],
+  "ratePerAcre": { "amount": 3, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 2,  "unit": "fl-oz" },
+    "25gal":  { "amount": 5,  "unit": "fl-oz" },
+    "50gal":  { "amount": 10, "unit": "fl-oz" },
+    "75gal":  { "amount": 15, "unit": "fl-oz" },
+    "100gal": { "amount": 20, "unit": "fl-oz" }
+  },
+  "requiresAMS": true,
+  "deconRequired": false,
+  "tankMixOrder": 5,
+  "labelClaims": { "safeForCropPluginIds": ["corn-bloody-butcher", "corn-sweet-bodacious"] },
+  "notes": "POST corn V4–V6 only. Tank-mix with NIS or COC + AMS for best efficacy."
+}

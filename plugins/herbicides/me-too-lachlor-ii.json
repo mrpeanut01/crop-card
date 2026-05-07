@@ -1,0 +1,22 @@
+{
+  "pluginId": "me-too-lachlor-ii",
+  "type": "herbicide",
+  "displayName": "Me-Too-Lachlor II",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [{ "name": "S-metolachlor", "chemistryClass": "chloroacetamide" }],
+  "ratePerAcre": { "amount": 1.33, "unit": "pt" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 10.6, "unit": "fl-oz" },
+    "25gal":  { "amount": 26.6, "unit": "fl-oz" },
+    "50gal":  { "amount": 53.2, "unit": "fl-oz" },
+    "75gal":  { "amount": 79.8, "unit": "fl-oz" },
+    "100gal": { "amount": 106,  "unit": "fl-oz" }
+  },
+  "requiresAMS": false,
+  "deconRequired": true,
+  "tankMixOrder": 3,
+  "labelClaims": { "safeForCropPluginIds": ["corn-bloody-butcher", "corn-sweet-bodacious"] },
+  "notes": "Soil-active PRE-emergence. Lethal to pumpkins, beans, and broadleaf companions — decon required after use."
+}

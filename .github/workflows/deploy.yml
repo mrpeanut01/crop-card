@@ -1,0 +1,95 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  RESOURCE_GROUP: cropcard-dev-rg
+  LOCATION: eastus2
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          IMAGE="${IMAGE_NAME}:sha-${GITHUB_SHA::7}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/Dockerfile
+          target: runtime
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group
+        run: az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
+
+      - name: Deploy Bicep
+        run: |
+          az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --template-file infra/azure/main.bicep \
+            --parameters infra/azure/parameters.dev.bicepparam \
+            --parameters image="${{ needs.build-and-push.outputs.image }}" \
+            --parameters authSecret="${{ secrets.AUTH_SECRET }}" \
+            --parameters emailApiKey="${{ secrets.RESEND_API_KEY }}" \
+            --parameters emailFrom="${{ vars.EMAIL_FROM }}"
+
+      - name: Smoke-test deployed app
+        run: |
+          FQDN=$(az deployment group show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name main \
+            --query properties.outputs.appFqdn.value -o tsv)
+          echo "Deployed: https://${FQDN}"
+          for i in 1 2 3 4 5; do
+            if curl -fsSL "https://${FQDN}/api/health"; then
+              echo "Health OK"
+              exit 0
+            fi
+            echo "Attempt $i failed; retrying..."
+            sleep 5
+          done
+          echo "Health check failed"
+          exit 1

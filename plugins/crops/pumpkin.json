@@ -1,0 +1,9 @@
+{
+  "pluginId": "pumpkin",
+  "type": "crop",
+  "displayName": "Pumpkin",
+  "version": "1.0.0",
+  "cropFamily": "cucurbit",
+  "defaultRowSpacingInches": 60,
+  "preHarvestIntervalDays": 7
+}

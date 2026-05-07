@@ -1,0 +1,9 @@
+{
+  "pluginId": "corn",
+  "type": "crop",
+  "displayName": "Corn (Field)",
+  "version": "1.0.0",
+  "cropFamily": "corn",
+  "defaultRowSpacingInches": 30,
+  "preHarvestIntervalDays": 0
+}

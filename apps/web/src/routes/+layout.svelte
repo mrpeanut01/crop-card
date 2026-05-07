@@ -78,6 +78,7 @@
         <a href="/stock">Stock</a>
         <a href="/map">Map</a>
         <a href="/plugins">Plugins</a>
+        <a href="/settings">Settings</a>
       </div>
     </details>
   </nav>

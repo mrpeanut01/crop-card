@@ -8,6 +8,7 @@
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { deleteCropCascade } from '$lib/db/admin';
 import { getCrop, updateStatus } from '$lib/db/crops';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
@@ -57,4 +58,23 @@ export const PATCH: RequestHandler = async (event) => {
   const status = ACTION_TO_STATUS[parsed.data.action];
   const updated = updateStatus(event.params.id, status, parsed.data.occurredAt);
   return json({ crop: updated });
+};
+
+/**
+ * DELETE /api/crops/:id
+ *
+ * Hard delete with full cascade through all events tied to this crop:
+ * spray / insecticide / harvest / hay cutting / fertility application,
+ * plus any tasks (and their pre/post-tasks) and any stock_movements
+ * pointing at the deleted events.
+ */
+export const DELETE: RequestHandler = (event) => {
+  if (!event.params.id) throw error(400, 'id required');
+  const auth = currentUser(event);
+  if (auth && !canMutate(auth.role)) {
+    return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
+  const c = getCrop(event.params.id);
+  if (!c) throw error(404, 'crop not found');
+  return json(deleteCropCascade(event.params.id));
 };

@@ -39,6 +39,31 @@
     params.set('crop', data.crop.id);
     return `${path}?${params.toString()}`;
   }
+
+  async function deleteCrop() {
+    if (
+      !confirm(
+        `Delete crop "${data.crop.varietyDisplayName}" and all attached events? This cascades through every spray, harvest, insecticide, hay cutting, and fertility application tied to this crop, plus all tasks. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    busy = true;
+    actionError = null;
+    try {
+      const res = await fetch(`/api/crops/${data.crop.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const out = await res.json().catch(() => ({}));
+        actionError = out.error ?? 'delete failed';
+        return;
+      }
+      window.location.href = '/crops';
+    } catch (e) {
+      actionError = e instanceof Error ? e.message : String(e);
+    } finally {
+      busy = false;
+    }
+  }
 </script>
 
 <header class="crop-header">
@@ -100,6 +125,19 @@
   {#if data.crop.archivedAt}
     <p class="meta-row">Archived: {fmtDateTime(data.crop.archivedAt)}</p>
   {/if}
+  <hr />
+  <details class="danger-zone">
+    <summary>⚠ Danger zone</summary>
+    <p class="hint">
+      Permanently deletes this crop AND every event attached to it (spray records, insecticide
+      records, harvest events, hay cuttings, fertility apps, tasks, plus stock movements that cite
+      those events). Block-level data (the block itself, soil tests, fertility credits) is not
+      affected.
+    </p>
+    <button class="danger" on:click={deleteCrop} disabled={busy}>
+      🗑 Delete crop + all attached events
+    </button>
+  </details>
 </section>
 
 {#if data.cropPlugin?.daysToMaturity}
@@ -461,5 +499,32 @@
   }
   .projected {
     border-left: 4px solid #1f5e3a;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 1rem 0 0.5rem;
+  }
+  .danger-zone summary {
+    cursor: pointer;
+    color: #b00020;
+    font-weight: 600;
+  }
+  .danger-zone .hint {
+    margin: 0.6rem 0;
+  }
+  .danger {
+    background: #b00020;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 48px;
+  }
+  .danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style>

@@ -70,6 +70,29 @@
     return ts ? new Date(ts).toLocaleDateString() : '—';
   }
 
+  async function deleteEquipment(id: string, label: string) {
+    if (
+      !confirm(
+        `Delete "${label}"? This removes its calibration history, hour-meter state, log entries, and pending calibrations. Tasks that referenced it will keep working but lose the equipment link.`
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/equipment/${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) {
+        const out = await res.json().catch(() => ({}));
+        alert(`Delete failed: ${out.error ?? res.status}`);
+        return;
+      }
+      await invalidateAll();
+    } catch (e) {
+      alert(`Delete failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
   const counts = $derived.by(() => {
     const m = new Map<EquipmentType, number>();
     for (const e of data.equipment) m.set(e.type, (m.get(e.type) ?? 0) + 1);
@@ -137,6 +160,14 @@
           <a href="/equipment/{e.id}"><strong>{e.label}</strong></a>
           <span class="type-badge">{e.type}</span>
           {#if e.retiredAt}<span class="retired">retired {fmt(e.retiredAt)}</span>{/if}
+          <button
+            class="delete-btn"
+            onclick={() => deleteEquipment(e.id, e.label)}
+            title="Delete"
+            aria-label="Delete {e.label}"
+          >
+            🗑
+          </button>
         </header>
         <dl>
           {#if e.type === 'sprayer'}
@@ -285,6 +316,22 @@
     color: #888;
     font-style: italic;
     font-size: 0.85rem;
+  }
+  .delete-btn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid #d0d7d0;
+    color: #b00020;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    min-height: 32px;
+    min-width: 36px;
+  }
+  .delete-btn:hover {
+    background: #fce4e4;
+    border-color: #b00020;
   }
   dl {
     display: grid;

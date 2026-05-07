@@ -83,3 +83,20 @@ export const PATCH: RequestHandler = async (event) => {
     task: updateTask(id, { title: parsed.data.title, body: parsed.data.body })
   });
 };
+
+/**
+ * DELETE /api/tasks/:id
+ *
+ * Hard delete (vs. PATCH abort which is the soft path). Cascades to any
+ * pre/post-tasks linked to this primary so a forgotten test task doesn't
+ * leave orphaned wraparounds.
+ */
+export const DELETE: RequestHandler = async (eventCtx) => {
+  if (!eventCtx.params.id) throw error(400, 'id required');
+  const auth = currentUser(eventCtx);
+  if (auth && !canMutate(auth.role)) {
+    return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
+  const { deleteTask } = await import('$lib/db/admin');
+  return json(deleteTask(eventCtx.params.id));
+};

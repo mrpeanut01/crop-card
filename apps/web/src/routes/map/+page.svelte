@@ -64,6 +64,22 @@
       .join(' ');
   }
 
+  async function deleteBlock(id: string, name: string, plantingsCount: number) {
+    const ok = confirm(
+      plantingsCount > 0
+        ? `Delete "${name}" and all its ${plantingsCount} crop(s) plus every event recorded against them? Cannot be undone.`
+        : `Delete "${name}"?`
+    );
+    if (!ok) return;
+    const res = await fetch(`/api/blocks/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const out = await res.json().catch(() => ({}));
+      alert(`Delete failed: ${out.error ?? res.status}`);
+      return;
+    }
+    window.location.reload();
+  }
+
   let pasteBlockId = $state(data.blocks[0]?.id ?? '');
   let pasteText = $state('');
   let busy = $state(false);
@@ -137,7 +153,7 @@
 
 <section class="card">
   <h2>Attach geometry to a block</h2>
-  <form on:submit={savePaste}>
+  <form onsubmit={savePaste}>
     <label>
       Block
       <select bind:value={pasteBlockId}>
@@ -174,12 +190,36 @@
           — {b.acres} acres{/if}
         — {b.plantingsCount} planting{b.plantingsCount === 1 ? '' : 's'}
         {b.geometryGeojson ? '· geometry ✓' : '· no geometry'}
+        <button
+          class="delete-btn"
+          onclick={() => deleteBlock(b.id, b.name, b.plantingsCount)}
+          title="Delete block and cascade"
+          aria-label="Delete {b.name}"
+        >
+          🗑
+        </button>
       </li>
     {/each}
   </ul>
 </section>
 
 <style>
+  .delete-btn {
+    margin-left: 0.5rem;
+    background: transparent;
+    border: 1px solid #d0d7d0;
+    color: #b00020;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    min-height: 28px;
+    min-width: 32px;
+  }
+  .delete-btn:hover {
+    background: #fce4e4;
+    border-color: #b00020;
+  }
   .card {
     background: white;
     padding: 1.25rem;

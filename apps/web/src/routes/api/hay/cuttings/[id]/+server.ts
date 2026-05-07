@@ -141,3 +141,16 @@ export const PATCH: RequestHandler = async (event) => {
 
   return json({ cutting: updated, advancedTo: proposed });
 };
+
+/**
+ * DELETE /api/hay/cuttings/:id — hard delete a recorded cutting.
+ */
+export const DELETE: RequestHandler = async (eventCtx) => {
+  if (!eventCtx.params.id) throw error(400, 'id required');
+  const auth = currentUser(eventCtx);
+  if (auth && !canMutate(auth.role)) {
+    return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
+  const { deleteHayCutting } = await import('$lib/db/admin');
+  return json(deleteHayCutting(eventCtx.params.id));
+};

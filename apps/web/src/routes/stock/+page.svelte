@@ -84,6 +84,29 @@
   function fmt(ts?: number) {
     return ts ? new Date(ts).toLocaleDateString() : '—';
   }
+
+  async function deleteItem(id: string, name: string, lotCount: number) {
+    if (
+      !confirm(
+        lotCount > 0
+          ? `Delete "${name}"? This removes the SKU plus all ${lotCount} lot(s) and their movement history.`
+          : `Delete "${name}"?`
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/stock/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const out = await res.json().catch(() => ({}));
+        alert(`Delete failed: ${out.error ?? res.status}`);
+        return;
+      }
+      await invalidateAll();
+    } catch (e) {
+      alert(`Delete failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
 </script>
 
 <h1>Stock</h1>
@@ -198,6 +221,14 @@
           <a href="/stock/{i.id}"><strong>{i.displayName}</strong></a>
           <span class="cat">{i.category}</span>
           {#if i.pluginId}<code>{i.pluginId}</code>{/if}
+          <button
+            class="delete-btn"
+            onclick={() => deleteItem(i.id, i.displayName, i.lotCount)}
+            title="Delete SKU and all lots"
+            aria-label="Delete {i.displayName}"
+          >
+            🗑
+          </button>
         </header>
         <dl>
           <dt>On hand</dt>
@@ -224,6 +255,22 @@
 {/if}
 
 <style>
+  .delete-btn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid #d0d7d0;
+    color: #b00020;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    min-height: 32px;
+    min-width: 36px;
+  }
+  .delete-btn:hover {
+    background: #fce4e4;
+    border-color: #b00020;
+  }
   h1 {
     margin: 0 0 0.25rem;
   }

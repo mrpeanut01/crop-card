@@ -70,17 +70,15 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'bramble',
       'vine-fruit',
       'stone-fruit',
-      'forage',
       'herb-culinary',
       'cover-legume'
     ],
-    notes: '2,4-D, dicamba and similar HRAC 4 auxin mimics. Highly drift-prone over broadleaves.'
+    notes: '2,4-D, dicamba and similar HRAC 4 auxin mimics. Highly drift-prone over broadleaves. Cereal grain (wheat, oats, barley) and grass hay are class-tolerant — true grasses. Soybean RR2-Xtend / dicamba-tolerant cultivars need explicit cultivar opt-in via labelClaims.safeForCropPluginIds.'
   },
   chloroacetamide: {
     hracGroup: 15,
     killsFamilies: [
       'cucurbit',
-      'legume',
       'broadleaf-companion',
       'orchard',
       'solanaceae',
@@ -95,7 +93,7 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'herb-culinary',
       'cover-legume'
     ],
-    notes: 'Me-Too-Lachlor / S-metolachlor / acetochlor (HRAC 15, formerly K3). Soil-active VLCFA inhibitor; persistent residue.'
+    notes: 'Me-Too-Lachlor / S-metolachlor / acetochlor (HRAC 15, formerly K3). Soil-active VLCFA inhibitor; persistent residue. Soybean / corn / cotton / peanut are label-tolerant via deep seed placement; tomato / pepper labels are rate-sensitive — claim explicitly via safeForCropPluginIds.'
   },
   'hppd-inhibitor': {
     hracGroup: 27,
@@ -173,13 +171,9 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
   'microtubule-inhibitor': {
     hracGroup: 3,
     killsFamilies: [
-      'corn',
-      'cover-grass',
-      'cereal-grain',
-      'allium',
-      'forage'
+      'allium'
     ],
-    notes: 'Pendimethalin (Prowl H2O), trifluralin (Treflan), HRAC 3 dinitroanilines. PRE soil-active grass + small-seeded broadleaf killer; broadleaf-tolerant but lethal to grass crops + alliums.'
+    notes: 'Pendimethalin (Prowl H2O), trifluralin (Treflan), HRAC 3 dinitroanilines. PRE soil-active. Corn / soybean / cereals / vegetables are label-tolerant via deep seedbed placement. Alliums (shallow + bulb-sensitive) are not.'
   },
   'photosystem-ii-triazine': {
     hracGroup: 5,
@@ -187,7 +181,6 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'cucurbit',
       'legume',
       'broadleaf-companion',
-      'orchard',
       'solanaceae',
       'brassica',
       'allium',
@@ -196,13 +189,12 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'apiaceae',
       'small-fruit',
       'bramble',
-      'vine-fruit',
       'stone-fruit',
       'herb-culinary',
       'cover-legume',
       'forage'
     ],
-    notes: 'Atrazine, simazine, metribuzin (HRAC 5). Corn / sorghum tolerant; lethal to almost everything else. Long soil persistence — rotation restrictions apply.'
+    notes: 'Atrazine, simazine, metribuzin (HRAC 5). Corn / sorghum tolerant; established orchard / vineyard FLOOR use is label-allowed via simazine (Princep); deeper-rooted perennial trees + vines tolerate residual when foliar contact is avoided. Long soil persistence — rotation restrictions apply.'
   },
   'photosystem-i-diquat': {
     hracGroup: 22,
@@ -261,18 +253,15 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
     killsFamilies: [
       'cucurbit',
       'broadleaf-companion',
-      'orchard',
       'solanaceae',
       'brassica',
       'leafy-green',
       'root',
       'apiaceae',
-      'small-fruit',
-      'bramble',
       'herb-culinary',
       'cover-legume'
     ],
-    notes: 'Fomesafen (Reflex), flumioxazin (Valor), sulfentrazone, lactofen (Cobra) — HRAC 14 PPO inhibitors. Soybean / dry-bean tolerant POST; lethal to most broadleaves. Some are PRE-only (Valor).'
+    notes: 'Fomesafen (Reflex), flumioxazin (Valor), sulfentrazone, lactofen (Cobra) — HRAC 14 PPO inhibitors. Soybean / dry-bean / snap-bean POST-tolerant; perennial fruit (orchard / blueberry / grape / bramble) labels exist for soil-applied flumioxazin under established stands.'
   },
   'als-imidazolinone': {
     hracGroup: 2,
@@ -291,17 +280,16 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'bramble',
       'vine-fruit',
       'stone-fruit',
+      'cereal-grain',
       'herb-culinary',
-      'forage',
       'cover-grass'
     ],
-    notes: 'Imazethapyr (Pursuit), imazamox (Beyond) — HRAC 2 IMI subset. Legume-tolerant POST (soybean, dry bean, alfalfa); long soil residual restricts rotation to corn / cucurbits.'
+    notes: 'Imazethapyr (Pursuit), imazamox (Beyond) — HRAC 2 IMI subset. Legume + alfalfa-tolerant POST (soybean, dry bean, alfalfa); long soil residual restricts rotation to corn / cucurbits / vegetables for 12-26 mo. Clearfield/IMI-resistant wheat must opt back in via labelClaims.safeForCropPluginIds.'
   },
   'vlcfa-pyroxasulfone': {
     hracGroup: 15,
     killsFamilies: [
       'cucurbit',
-      'legume',
       'broadleaf-companion',
       'orchard',
       'solanaceae',
@@ -316,7 +304,7 @@ export const CHEMISTRY_KILL_MATRIX: Readonly<Record<ChemistryClass, ChemistryPro
       'herb-culinary',
       'cover-legume'
     ],
-    notes: 'Pyroxasulfone (Zidua, Anthem MAXX) — HRAC 15 isoxazoline VLCFA inhibitor. Soil-active PRE; corn / soybean / cereal tolerant per label.'
+    notes: 'Pyroxasulfone (Zidua, Anthem MAXX) — HRAC 15 isoxazoline VLCFA inhibitor. Soil-active PRE; corn / soybean / cereal label-tolerant.'
   },
   clomazone: {
     hracGroup: 13,

@@ -109,7 +109,10 @@ export function createBlock(input: {
 }
 
 /** Update a block's GeoJSON geometry (Phase 10 GPS stub). */
-export function setBlockGeometry(blockId: string, geometryGeojson: string | null): Block | undefined {
+export function setBlockGeometry(
+  blockId: string,
+  geometryGeojson: string | null
+): Block | undefined {
   const row = db
     .update(blocks)
     .set({ geometryGeojson })

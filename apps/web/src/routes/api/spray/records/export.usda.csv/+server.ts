@@ -63,8 +63,7 @@ export const GET: RequestHandler = async ({ url }) => {
         date_iso: new Date(e.occurredAt).toISOString().slice(0, 10),
         block_label: block?.blockLabel ?? block?.name ?? e.blockId,
         applicator: e.performedById,
-        product_name:
-          plugin && 'displayName' in plugin ? plugin.displayName : p.pluginId,
+        product_name: plugin && 'displayName' in plugin ? plugin.displayName : p.pluginId,
         epa_reg_no: epa,
         active_ingredients: p.chemistryClasses.join(' / '),
         rate_per_acre: p.rate?.amount?.toString() ?? '',
@@ -86,9 +85,7 @@ export const GET: RequestHandler = async ({ url }) => {
     for (const p of e.products) {
       const plugin = registry.get(p.pluginId)?.plugin;
       const epa =
-        plugin && plugin.type === 'insecticide'
-          ? (plugin.epaRegistrationNumber ?? '')
-          : '';
+        plugin && plugin.type === 'insecticide' ? (plugin.epaRegistrationNumber ?? '') : '';
       rows.push({
         date_iso: new Date(e.occurredAt).toISOString().slice(0, 10),
         block_label: block?.blockLabel ?? block?.name ?? e.blockId,

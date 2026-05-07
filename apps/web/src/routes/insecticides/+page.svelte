@@ -19,10 +19,6 @@
   let error = $state<string | null>(null);
   let busy = $state(false);
 
-  const selectedPlugin = $derived(
-    insecticides.find((p) => p.pluginId === selectedPluginId) ?? null
-  );
-
   async function recordSpray(ev: Event) {
     ev.preventDefault();
     busy = true;
@@ -73,8 +69,9 @@
     <ul>
       {#each data.activeREI as e (e.id)}
         <li>
-          <strong>Block {e.blockId}</strong> —
-          re-entry clear {new Date(e.reEntryClearAt ?? 0).toLocaleString()}
+          <strong>Block {e.blockId}</strong> — re-entry clear {new Date(
+            e.reEntryClearAt ?? 0
+          ).toLocaleString()}
         </li>
       {/each}
     </ul>
@@ -84,7 +81,9 @@
 <section class="card">
   <h2>Library</h2>
   {#if insecticides.length === 0}
-    <p>No insecticide plugins installed. Add JSON files under <code>plugins/insecticides/</code>.</p>
+    <p>
+      No insecticide plugins installed. Add JSON files under <code>plugins/insecticides/</code>.
+    </p>
   {:else}
     <ul class="library">
       {#each insecticides as p (p.pluginId)}
@@ -171,7 +170,8 @@
       <legend>Conditions</legend>
       <label>Wind (mph) <input type="number" min="0" bind:value={windMph} /></label>
       <label>Temp (°F) <input type="number" bind:value={tempF} /></label>
-      <label>Rain forecast (%) <input type="number" min="0" max="100" bind:value={rainPct} /></label>
+      <label>Rain forecast (%) <input type="number" min="0" max="100" bind:value={rainPct} /></label
+      >
       <label>Tank size (gal) <input type="number" min="1" bind:value={tankSize} /></label>
     </fieldset>
 

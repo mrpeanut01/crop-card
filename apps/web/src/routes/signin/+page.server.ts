@@ -9,9 +9,7 @@ export const load: PageServerLoad = ({ locals }) => {
 
 function coerceRole(input: unknown): SessionRole {
   const s = String(input ?? 'helper');
-  return (ALL_SESSION_ROLES as readonly string[]).includes(s)
-    ? (s as SessionRole)
-    : 'helper';
+  return (ALL_SESSION_ROLES as readonly string[]).includes(s) ? (s as SessionRole) : 'helper';
 }
 
 const DEMO_EMAIL: Record<SessionRole, string> = {

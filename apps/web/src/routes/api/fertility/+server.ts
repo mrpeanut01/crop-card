@@ -11,8 +11,7 @@ import { fertilityBudgetForBlock } from '$lib/db/fertility';
 
 export const GET: RequestHandler = ({ url }) => {
   const blockId = url.searchParams.get('blockId');
-  const year =
-    Number(url.searchParams.get('year')) || new Date().getFullYear();
+  const year = Number(url.searchParams.get('year')) || new Date().getFullYear();
   if (!blockId) return json({ error: 'blockId required' }, { status: 400 });
   const budget = fertilityBudgetForBlock(blockId, year);
   return json({ budget });

@@ -1,9 +1,6 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import {
-  insertFertilityCredit,
-  listFertilityCreditsForBlock
-} from '$lib/db/fertility';
+import { insertFertilityCredit, listFertilityCreditsForBlock } from '$lib/db/fertility';
 import { defaultCoverCredit } from '$lib/fertility/coverCropCredits';
 
 const inputSchema = z.object({

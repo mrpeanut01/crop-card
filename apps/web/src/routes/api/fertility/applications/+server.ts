@@ -1,9 +1,6 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import {
-  insertFertilityApplication,
-  listFertilityApplicationsForBlock
-} from '$lib/db/fertility';
+import { insertFertilityApplication, listFertilityApplicationsForBlock } from '$lib/db/fertility';
 import { ensureSystemUser } from '$lib/db/users';
 import { currentUser } from '$lib/server/auth';
 

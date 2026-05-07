@@ -57,9 +57,7 @@ function rowToEvent(row: typeof insecticideEvents.$inferSelect): InsecticideEven
     performedById: row.performedById,
     occurredAt: row.occurredAt.getTime(),
     products: JSON.parse(row.productsJson),
-    scoutObservation: row.scoutObservationJson
-      ? JSON.parse(row.scoutObservationJson)
-      : undefined,
+    scoutObservation: row.scoutObservationJson ? JSON.parse(row.scoutObservationJson) : undefined,
     conditions: JSON.parse(row.conditionsJson),
     reEntryClearAt: row.reEntryClearAt?.getTime(),
     preHarvestClearAt: row.preHarvestClearAt?.getTime(),
@@ -80,9 +78,7 @@ export function insertInsecticideEvent(input: InsecticideEventInput): Insecticid
       performedById: input.performedById,
       occurredAt: new Date(input.occurredAt),
       productsJson: JSON.stringify(input.products),
-      scoutObservationJson: input.scoutObservation
-        ? JSON.stringify(input.scoutObservation)
-        : null,
+      scoutObservationJson: input.scoutObservation ? JSON.stringify(input.scoutObservation) : null,
       conditionsJson: JSON.stringify(input.conditions),
       reEntryClearAt: input.reEntryClearAt ? new Date(input.reEntryClearAt) : null,
       preHarvestClearAt: input.preHarvestClearAt ? new Date(input.preHarvestClearAt) : null,

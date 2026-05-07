@@ -41,9 +41,17 @@
     </div>
     <ul class="role-help">
       <li><strong>Owner</strong> — full read/write across the farm.</li>
-      <li><strong>Helper</strong> — record sprays + harvest; cannot edit locked records or override custom rates.</li>
-      <li><strong>Inspector</strong> — read-only across everything; for audits + cost-share visits.</li>
-      <li><strong>Custom Operator</strong> — like helper but scoped to assigned blocks and cannot see stock financials.</li>
+      <li>
+        <strong>Helper</strong> — record sprays + harvest; cannot edit locked records or override custom
+        rates.
+      </li>
+      <li>
+        <strong>Inspector</strong> — read-only across everything; for audits + cost-share visits.
+      </li>
+      <li>
+        <strong>Custom Operator</strong> — like helper but scoped to assigned blocks and cannot see stock
+        financials.
+      </li>
     </ul>
   </section>
 

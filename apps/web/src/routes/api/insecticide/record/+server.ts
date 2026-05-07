@@ -120,9 +120,7 @@ export const POST: RequestHandler = async (event) => {
     products: products.map((p) => ({
       pluginId: p.pluginId,
       displayName: p.displayName,
-      iracGroups: Array.from(
-        new Set(p.activeIngredients.map((ai) => ai.iracGroup ?? 'UN'))
-      ),
+      iracGroups: Array.from(new Set(p.activeIngredients.map((ai) => ai.iracGroup ?? 'UN'))),
       rate: p.ratePerAcre
     })),
     scoutObservation: parsed.data.scout as ScoutObservation | undefined,

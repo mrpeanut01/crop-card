@@ -77,8 +77,8 @@
   <section class="card bootstrap" aria-labelledby="bootstrap-title">
     <h2 id="bootstrap-title">Get started — UC-20</h2>
     <p class="bootstrap-lede">
-      A few one-time setup steps. CropCard plans, calibrates, and records around blocks +
-      sprayers — once these three are in place, the calendar drives the rest.
+      A few one-time setup steps. CropCard plans, calibrates, and records around blocks + sprayers —
+      once these three are in place, the calendar drives the rest.
     </p>
     <ol class="bootstrap-steps">
       <li class:done={data.bootstrap.hasBlock && data.bootstrap.hasPlanting}>

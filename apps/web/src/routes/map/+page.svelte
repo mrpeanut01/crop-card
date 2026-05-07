@@ -117,13 +117,8 @@
       role="img"
       aria-label="Field map"
     >
-      {#each polygons as p, i (p.block.id)}
-        <path
-          d={pathOf(p.rings)}
-          fill="rgba(31, 94, 58, 0.18)"
-          stroke="#1f5e3a"
-          stroke-width="2"
-        />
+      {#each polygons as p (p.block.id)}
+        <path d={pathOf(p.rings)} fill="rgba(31, 94, 58, 0.18)" stroke="#1f5e3a" stroke-width="2" />
         {#if p.rings[0]?.length}
           <text
             x={sx(p.rings[0].reduce((acc, pt) => acc + pt[0], 0) / p.rings[0].length)}
@@ -175,7 +170,8 @@
     {#each data.blocks as b (b.id)}
       <li>
         <strong>{b.name}</strong>
-        {#if b.acres !== null} — {b.acres} acres{/if}
+        {#if b.acres !== null}
+          — {b.acres} acres{/if}
         — {b.plantingsCount} planting{b.plantingsCount === 1 ? '' : 's'}
         {b.geometryGeojson ? '· geometry ✓' : '· no geometry'}
       </li>

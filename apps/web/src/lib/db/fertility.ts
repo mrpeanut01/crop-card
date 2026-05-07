@@ -48,9 +48,7 @@ function rowToSoilTest(row: typeof soilTests.$inferSelect): SoilTest {
     ph: row.ph !== null ? row.ph / 100 : undefined,
     cec: row.cecHundredths !== null ? row.cecHundredths / 100 : undefined,
     organicMatterPct:
-      row.organicMatterPctHundredths !== null
-        ? row.organicMatterPctHundredths / 100
-        : undefined,
+      row.organicMatterPctHundredths !== null ? row.organicMatterPctHundredths / 100 : undefined,
     nitratePpm: row.nitratePpm ?? undefined,
     phosphorusPpm: row.phosphorusPpm ?? undefined,
     potassiumPpm: row.potassiumPpm ?? undefined,
@@ -71,9 +69,7 @@ export function insertSoilTest(input: SoilTestInput): SoilTest {
       ph: input.ph !== undefined ? Math.round(input.ph * 100) : null,
       cecHundredths: input.cec !== undefined ? Math.round(input.cec * 100) : null,
       organicMatterPctHundredths:
-        input.organicMatterPct !== undefined
-          ? Math.round(input.organicMatterPct * 100)
-          : null,
+        input.organicMatterPct !== undefined ? Math.round(input.organicMatterPct * 100) : null,
       nitratePpm: input.nitratePpm ?? null,
       phosphorusPpm: input.phosphorusPpm ?? null,
       potassiumPpm: input.potassiumPpm ?? null,
@@ -115,9 +111,7 @@ export interface FertilityApplication extends FertilityApplicationInput {
   id: string;
 }
 
-function rowToApplication(
-  row: typeof fertilityApplications.$inferSelect
-): FertilityApplication {
+function rowToApplication(row: typeof fertilityApplications.$inferSelect): FertilityApplication {
   return {
     id: row.id,
     blockId: row.blockId,
@@ -134,9 +128,7 @@ function rowToApplication(
   };
 }
 
-export function insertFertilityApplication(
-  input: FertilityApplicationInput
-): FertilityApplication {
+export function insertFertilityApplication(input: FertilityApplicationInput): FertilityApplication {
   const id = randomUUID();
   const row = db
     .insert(fertilityApplications)
@@ -222,10 +214,7 @@ export function insertFertilityCredit(input: FertilityCreditInput): FertilityCre
   return rowToCredit(row);
 }
 
-export function listFertilityCreditsForBlock(
-  blockId: string,
-  year?: number
-): FertilityCredit[] {
+export function listFertilityCreditsForBlock(blockId: string, year?: number): FertilityCredit[] {
   const conds = [eq(fertilityCredits.blockId, blockId)];
   if (year !== undefined) conds.push(eq(fertilityCredits.appliesToYear, year));
   return db

@@ -199,8 +199,11 @@
     <label>Rate <input type="number" min="0" step="any" bind:value={appRate} /></label>
     <label>Unit <input type="text" bind:value={appUnit} /></label>
     <label>N delivered (lb/ac) <input type="number" min="0" step="any" bind:value={appN} /></label>
-    <label>P₂O₅ delivered (lb/ac) <input type="number" min="0" step="any" bind:value={appP} /></label>
-    <label>K₂O delivered (lb/ac) <input type="number" min="0" step="any" bind:value={appK} /></label>
+    <label
+      >P₂O₅ delivered (lb/ac) <input type="number" min="0" step="any" bind:value={appP} /></label
+    >
+    <label>K₂O delivered (lb/ac) <input type="number" min="0" step="any" bind:value={appK} /></label
+    >
     <button type="submit" class="primary" disabled={busy}>Record</button>
   </form>
 </details>
@@ -214,7 +217,14 @@
       <input type="checkbox" bind:checked={creditUseDefaults} />
       Use default credit table for this plugin
     </label>
-    <label>Override N credit (lb/ac, optional) <input type="number" min="0" step="any" bind:value={creditN} /></label>
+    <label
+      >Override N credit (lb/ac, optional) <input
+        type="number"
+        min="0"
+        step="any"
+        bind:value={creditN}
+      /></label
+    >
     <button type="submit" class="primary" disabled={busy}>Record credit</button>
   </form>
 </details>
@@ -223,7 +233,15 @@
   <summary><h2>Record soil test</h2></summary>
   <form on:submit={recordSoilTest}>
     <label>pH <input type="number" min="0" max="14" step="0.1" bind:value={stPh} /></label>
-    <label>Organic matter % <input type="number" min="0" max="100" step="0.1" bind:value={stOM} /></label>
+    <label
+      >Organic matter % <input
+        type="number"
+        min="0"
+        max="100"
+        step="0.1"
+        bind:value={stOM}
+      /></label
+    >
     <label>Nitrate (ppm) <input type="number" min="0" bind:value={stNO3} /></label>
     <label>Phosphorus (ppm) <input type="number" min="0" bind:value={stP} /></label>
     <label>Potassium (ppm) <input type="number" min="0" bind:value={stK} /></label>
@@ -240,7 +258,8 @@
       {#each data.applications as a (a.id)}
         <li>
           {new Date(a.occurredAt).toLocaleDateString()} —
-          {a.source} · {a.ratePerAcre} {a.rateUnit}
+          {a.source} · {a.ratePerAcre}
+          {a.rateUnit}
           ({a.nLbPerAcre?.toFixed(0) ?? 0} N · {a.pLbPerAcre?.toFixed(0) ?? 0} P ·
           {a.kLbPerAcre?.toFixed(0) ?? 0} K lb/ac)
         </li>
@@ -275,10 +294,9 @@
     <ul>
       {#each data.soilTests as t (t.id)}
         <li>
-          {new Date(t.sampledAt).toLocaleDateString()} —
-          pH {t.ph?.toFixed(1) ?? '?'},
-          OM {t.organicMatterPct?.toFixed(1) ?? '?'}%,
-          NO₃ {t.nitratePpm ?? '?'} ppm
+          {new Date(t.sampledAt).toLocaleDateString()} — pH {t.ph?.toFixed(1) ?? '?'}, OM {t.organicMatterPct?.toFixed(
+            1
+          ) ?? '?'}%, NO₃ {t.nitratePpm ?? '?'} ppm
         </li>
       {/each}
     </ul>

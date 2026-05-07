@@ -341,3 +341,57 @@ export const stockMovements = sqliteTable('stock_movements', {
   performedById: text('performed_by_id').references(() => users.id),
   notes: text('notes')
 });
+
+// ─── Hay / Forage cuttings (Sprint E — FR-19, FR-21, FR-23) ─────────────
+//
+// One row per cutting per block per year. Tracks the multi-step workflow
+// (mow → ted → rake → bale → store) declared by the crop plugin's
+// `hayOperations.steps`. The bale step records moisture + bale-type so the
+// kernel can enforce the plugin's `baleMoistureGate` thresholds (FR-21);
+// >22% baled hay is the canonical fire-risk gate.
+
+export const hayCuttings = sqliteTable('hay_cuttings', {
+  id: text('id').primaryKey(),
+  blockId: text('block_id')
+    .notNull()
+    .references(() => blocks.id),
+  cropPluginId: text('crop_plugin_id').notNull(),
+  /** Sequential within (block, year). Operator assigns; defaults to next. */
+  cuttingNumber: integer('cutting_number').notNull(),
+  year: integer('year').notNull(),
+  status: text('status', {
+    enum: ['mowing', 'tedding', 'raking', 'baling', 'storing', 'complete', 'aborted']
+  })
+    .notNull()
+    .default('mowing'),
+  mowAt: integer('mow_at', { mode: 'timestamp_ms' }),
+  tedAt: integer('ted_at', { mode: 'timestamp_ms' }),
+  rakeAt: integer('rake_at', { mode: 'timestamp_ms' }),
+  baleAt: integer('bale_at', { mode: 'timestamp_ms' }),
+  storedAt: integer('stored_at', { mode: 'timestamp_ms' }),
+  baleType: text('bale_type', { enum: ['small-square', 'large-round', 'large-square'] }),
+  balesQuantity: integer('bales_quantity'),
+  /** Moisture % × 100 (so 17.5% → 1750). Enforced against plugin's
+   *  baleMoistureGate at the bale step. */
+  baleMoistureHundredths: integer('bale_moisture_hundredths'),
+  /** Canonical 3-day forecast captured at mow decision; immutable. */
+  weatherForecastJson: text('weather_forecast_json'),
+  performedById: text('performed_by_id').references(() => users.id),
+  rulesVersion: text('rules_version').notNull(),
+  notes: text('notes'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
+});
+
+// Per-location NOAA NWS forecast cache. Reduces API calls; `expiresAt`
+// drives re-fetch (1 hr default per the NWS rate-limit guidance).
+export const weatherForecastCache = sqliteTable('weather_forecast_cache', {
+  id: text('id').primaryKey(),
+  /** Lat/lon rounded to 4 decimals (≈11 m precision) — keys the cache. */
+  cacheKey: text('cache_key').notNull().unique(),
+  fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  /** Raw NWS payload (the day-summary array). */
+  payloadJson: text('payload_json').notNull()
+});

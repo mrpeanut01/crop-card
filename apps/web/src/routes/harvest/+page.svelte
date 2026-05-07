@@ -112,12 +112,21 @@
           </div>
 
           {#if p.harvestIndicators.length > 0}
-            <details>
-              <summary>Readiness indicators</summary>
-              <ul class="indicators">
-                {#each p.harvestIndicators as ind}<li>{ind}</li>{/each}
-              </ul>
-            </details>
+            {#if p.status === 'in-window' && !p.alreadyHarvested}
+              <div class="indicators-inline">
+                <strong>Readiness indicators</strong>
+                <ul class="indicators">
+                  {#each p.harvestIndicators as ind}<li>{ind}</li>{/each}
+                </ul>
+              </div>
+            {:else}
+              <details>
+                <summary>Readiness indicators</summary>
+                <ul class="indicators">
+                  {#each p.harvestIndicators as ind}<li>{ind}</li>{/each}
+                </ul>
+              </details>
+            {/if}
           {/if}
 
           {#if recordingFor === p.plantingId}
@@ -129,12 +138,12 @@
               }}
             >
               <label>
-                Quantity
-                <input type="text" placeholder="e.g. 14 bushels" bind:value={quantity} />
+                Quantity (e.g. 14 bushels)
+                <input type="text" bind:value={quantity} />
               </label>
               <label>
-                Lot number
-                <input type="text" placeholder="e.g. 2026-A-7" bind:value={lotNumber} />
+                Lot number (e.g. 2026-A-7)
+                <input type="text" bind:value={lotNumber} />
               </label>
               <div class="actions">
                 <button type="submit" class="primary">Record harvest</button>
@@ -285,6 +294,19 @@
   }
   details {
     margin-top: 0.5rem;
+  }
+  .indicators-inline {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #fff;
+    border-left: 3px solid #1f5e3a;
+    border-radius: 0 4px 4px 0;
+  }
+  .indicators-inline strong {
+    color: #1f5e3a;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
   .indicators {
     margin: 0.4rem 0 0 1.25rem;

@@ -316,7 +316,7 @@
     color: #1f5e3a;
     font-weight: 600;
     font-size: 1rem;
-    min-height: 56px;
+    min-height: 60px;
     cursor: pointer;
   }
   .actions button.primary {
@@ -376,7 +376,7 @@
     padding: 0.9rem 1.25rem;
     font: inherit;
     cursor: pointer;
-    min-height: 56px;
+    min-height: 60px;
     flex: 1 1 240px;
   }
   .skip:hover {
@@ -437,7 +437,7 @@
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
-    min-height: 56px;
+    min-height: 60px;
   }
   .checklist ol {
     padding-left: 1.5rem;

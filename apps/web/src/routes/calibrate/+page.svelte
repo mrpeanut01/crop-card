@@ -268,7 +268,7 @@
     font-weight: 600;
     cursor: pointer;
     width: 100%;
-    min-height: 56px;
+    min-height: 60px;
   }
   .primary:disabled {
     background: #999;

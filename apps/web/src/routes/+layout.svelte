@@ -222,12 +222,10 @@
     color: white;
     border: none;
     border-radius: 4px;
-    padding: 0.4rem 0.75rem;
+    padding: 0.6rem 1rem;
     font: inherit;
     text-decoration: none;
     cursor: pointer;
-    min-height: 36px;
-    min-width: 36px;
   }
   .user-area .signout:hover,
   .user-area .signin:hover {
@@ -261,34 +259,37 @@
   }
   .status-bar {
     background: #fff3cd;
-    color: #b35900;
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+    color: #4a2900;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
     text-align: center;
-    border-bottom: 1px solid #f0e0a0;
+    border-bottom: 1px solid #d4b75a;
     display: flex;
     justify-content: center;
     gap: 0.75rem;
     flex-wrap: wrap;
-  }
-  .status-bar.offline {
-    background: #fce8e8;
-    color: #b00020;
-    border-bottom-color: #ffb3b3;
     font-weight: 600;
   }
+  .status-bar.offline {
+    background: #b71c1c;
+    color: #fff;
+    border-bottom-color: #5a0e0e;
+  }
   .decon-banner {
-    background: #fff3cd;
-    color: #b35900;
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
+    background: #b71c1c;
+    color: #fff;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
     text-align: center;
-    border-bottom: 1px solid #f0e0a0;
+    border-bottom: 2px solid #5a0e0e;
     font-weight: 600;
   }
   .decon-banner a {
-    color: #b35900;
+    color: #fff;
     text-decoration: underline;
+  }
+  .decon-banner a strong {
+    color: #fff;
   }
 
   @media (min-width: 768px) {

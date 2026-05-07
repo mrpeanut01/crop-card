@@ -1,0 +1,15 @@
+{
+  "pluginId": "permit",
+  "type": "herbicide",
+  "displayName": "Permit (Gowan halosulfuron-methyl, corn label)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "halosulfuron-methyl", "chemistryClass": "sulfonylurea" }],
+  "ratePerAcre": { "amount": 1, "unit": "oz" },
+  "gpaCalibration": 15,
+  "requiresAMS": true,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "corn-sweet-bodacious"] },
+  "notes": "Corn + sorghum nutsedge + broadleaf POST. Same a.i. as Sandea but corn-labeled formulation."
+}

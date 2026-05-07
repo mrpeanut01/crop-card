@@ -1,0 +1,16 @@
+{
+  "pluginId": "quadris-flowable",
+  "type": "fungicide",
+  "displayName": "Quadris Flowable (Syngenta azoxystrobin)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "azoxystrobin", "fracCode": "11" }],
+  "ratePerAcre": { "amount": 12, "unit": "fl-oz" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["downy mildew", "powdery mildew", "Alternaria", "Septoria", "anthracnose", "rust"],
+  "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green", "brassica", "small-fruit", "vine-fruit", "orchard"] },
+  "notes": "QoI strobilurin FRAC 11. NEVER apply to apples — phytotoxic to McIntosh-class cultivars. Resistance risk high; rotate."
+}

@@ -1,0 +1,16 @@
+{
+  "pluginId": "cucumber-marketmore-76",
+  "type": "crop",
+  "displayName": "Cucumber — Marketmore 76 (slicer)",
+  "version": "1.0.0",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": { "min": 55, "max": 65 },
+  "defaultRowSpacingInches": 48,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 48,
+    "inRowSpacingIn": { "min": 8, "max": 12 }
+  },
+  "harvestIndicators": ["8 in length", "Uniform dark green", "Not yellowing"],
+  "notes": "Disease-resistant slicer (SC, DM, PM, CMV, AS). Bush-type. Trellising improves quality + reduces fruit rot."
+}

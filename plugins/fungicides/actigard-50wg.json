@@ -1,0 +1,16 @@
+{
+  "pluginId": "actigard-50wg",
+  "type": "fungicide",
+  "displayName": "Actigard 50WG (Syngenta acibenzolar-S-methyl)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE-BLOOM",
+  "activeIngredients": [{ "name": "acibenzolar-S-methyl", "fracCode": "P01" }],
+  "ratePerAcre": { "amount": 0.5, "unit": "oz" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "none",
+  "targetDiseases": ["bacterial spot", "fire blight (induced resistance)", "downy mildew (suppression)"],
+  "labelClaims": { "safeForCropFamilies": ["solanaceae", "orchard", "leafy-green"] },
+  "notes": "FRAC P01 host-defense inducer. Plant immunity primer; needs 4–7 d before pathogen pressure to be effective. Apple fire-blight prevention; tomato bacterial spot."
+}

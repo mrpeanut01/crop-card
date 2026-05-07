@@ -1,0 +1,13 @@
+{
+  "pluginId": "aza-direct",
+  "type": "insecticide",
+  "displayName": "Aza-Direct (Gowan azadirachtin — OMRI)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "azadirachtin", "iracGroup": "UN" }],
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "ratePerAcre": { "amount": 1, "unit": "pt" },
+  "targetPests": ["aphid", "thrips", "whitefly", "leafminer", "Colorado potato beetle (suppression)", "Mexican bean beetle"],
+  "pollinatorRisk": "low",
+  "notes": "OMRI organic neem extract IGR + antifeedant. Slow, broad-spectrum. Stop bee toxicity by spraying at sunset."
+}

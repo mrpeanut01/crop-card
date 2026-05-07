@@ -1,0 +1,16 @@
+{
+  "pluginId": "barley-grain-thoroughbred",
+  "type": "crop",
+  "displayName": "Barley — Thoroughbred (winter feed)",
+  "version": "1.0.0",
+  "cropFamily": "cereal-grain",
+  "daysToMaturity": { "min": 220, "max": 250 },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 7,
+    "recommendedLbsPerAcre": 96
+  },
+  "harvestIndicators": ["Heads tan + nodding", "Grain moisture <14%"],
+  "notes": "Winter feed barley. Earlier harvest than wheat (~2 wk earlier) — fits double-crop rotation with soybeans."
+}

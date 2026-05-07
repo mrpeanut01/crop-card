@@ -1,0 +1,13 @@
+{
+  "pluginId": "lannate-lv",
+  "type": "insecticide",
+  "displayName": "Lannate LV (Corteva methomyl)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "methomyl", "iracGroup": "1A" }],
+  "reEntryIntervalHours": 48,
+  "preHarvestIntervalDays": 3,
+  "ratePerAcre": { "amount": 1.5, "unit": "pt" },
+  "targetPests": ["European corn borer", "armyworm", "fall armyworm", "leafminer"],
+  "pollinatorRisk": "high",
+  "notes": "RESTRICTED-USE carbamate IRAC 1A. Acutely toxic to humans and bees — closed-system handling, full PPE. 48-hr REI."
+}

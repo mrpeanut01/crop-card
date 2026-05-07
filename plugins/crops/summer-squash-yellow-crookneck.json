@@ -1,0 +1,11 @@
+{
+  "pluginId": "summer-squash-yellow-crookneck",
+  "type": "crop",
+  "displayName": "Summer Squash — Yellow Crookneck",
+  "version": "1.0.0",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": { "min": 50, "max": 60 },
+  "defaultRowSpacingInches": 36,
+  "harvestIndicators": ["6–7 in length", "Tender skin", "Crookneck pronounced"],
+  "notes": "Pick young + frequently. Bush type — minimal trellising."
+}

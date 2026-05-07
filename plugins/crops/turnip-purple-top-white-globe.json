@@ -1,0 +1,11 @@
+{
+  "pluginId": "turnip-purple-top-white-globe",
+  "type": "crop",
+  "displayName": "Turnip — Purple Top White Globe",
+  "version": "1.0.0",
+  "cropFamily": "brassica",
+  "daysToMaturity": { "min": 55, "max": 65 },
+  "defaultRowSpacingInches": 18,
+  "harvestIndicators": ["Roots 2–3 in", "Tops can be eaten as greens"],
+  "notes": "Dual-use: roots + greens. Fall crop is sweetest after a frost."
+}

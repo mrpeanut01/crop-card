@@ -1,0 +1,13 @@
+{
+  "pluginId": "belay",
+  "type": "insecticide",
+  "displayName": "Belay (Valent clothianidin)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "clothianidin", "iracGroup": "4A" }],
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "ratePerAcre": { "amount": 6, "unit": "fl-oz" },
+  "targetPests": ["aphid", "flea beetle", "stink bug", "leafhopper", "cucumber beetle", "Colorado potato beetle"],
+  "pollinatorRisk": "high",
+  "notes": "Neonicotinoid IRAC 4A. Brassica / cucurbit / fruiting / leafy label. NO bloom application."
+}

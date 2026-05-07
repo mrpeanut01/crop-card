@@ -1,0 +1,10 @@
+{
+  "pluginId": "apricot-moorpark",
+  "type": "crop",
+  "displayName": "Apricot — Moorpark",
+  "version": "1.0.0",
+  "cropFamily": "stone-fruit",
+  "defaultRowSpacingInches": 216,
+  "harvestIndicators": ["Orange ground color", "Slight give at pit end"],
+  "notes": "Late-blooming variety best for Mid-Atlantic — early bloom apricots routinely lose to spring frost."
+}

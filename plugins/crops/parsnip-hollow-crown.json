@@ -1,0 +1,11 @@
+{
+  "pluginId": "parsnip-hollow-crown",
+  "type": "crop",
+  "displayName": "Parsnip — Hollow Crown",
+  "version": "1.0.0",
+  "cropFamily": "apiaceae",
+  "daysToMaturity": { "min": 100, "max": 130 },
+  "defaultRowSpacingInches": 18,
+  "harvestIndicators": ["Frost-touched roots are sweetest", "Roots 8–12 in"],
+  "notes": "Long-season root. Requires fresh seed every year (rapid viability loss). Harvest after first hard frost or overwinter."
+}

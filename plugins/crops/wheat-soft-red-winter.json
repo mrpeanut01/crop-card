@@ -1,0 +1,17 @@
+{
+  "pluginId": "wheat-soft-red-winter",
+  "type": "crop",
+  "displayName": "Wheat — Soft Red Winter",
+  "version": "1.0.0",
+  "cropFamily": "cereal-grain",
+  "daysToMaturity": { "min": 240, "max": 270 },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 7,
+    "seedDepthIn": { "min": 1, "max": 1.5 },
+    "recommendedLbsPerAcre": 120
+  },
+  "harvestIndicators": ["Hard dough stage", "Grain moisture 13–15%", "Heads bend at neck"],
+  "notes": "Mid-Atlantic standard winter wheat — pastry/cookie-grade. Plant after Hessian-fly-free date (Sep 15 in N VA). Source: VCE Small Grains Production Guide."
+}

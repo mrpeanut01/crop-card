@@ -1,0 +1,13 @@
+{
+  "pluginId": "agrimek-sc",
+  "type": "insecticide",
+  "displayName": "AgriMek SC (Syngenta abamectin)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "abamectin", "iracGroup": "6" }],
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "ratePerAcre": { "amount": 3.5, "unit": "fl-oz" },
+  "targetPests": ["spider mite", "leafminer", "psyllid", "russet mite"],
+  "pollinatorRisk": "high",
+  "notes": "Avermectin IRAC 6 — translaminar. Mite + leafminer specialist. Restricted-use. Apple / orchard / vegetable."
+}

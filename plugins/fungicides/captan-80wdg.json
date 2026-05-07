@@ -1,0 +1,17 @@
+{
+  "pluginId": "captan-80wdg",
+  "type": "fungicide",
+  "displayName": "Captan 80 WDG (Arysta phthalimide)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "captan", "fracCode": "M04" }],
+  "ratePerAcre": { "amount": 5, "unit": "lb" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 24,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "deconRequired": false,
+  "targetDiseases": ["apple scab", "bitter rot", "summer fruit rots", "brown rot (stone fruit)", "anthracnose", "leaf spot"],
+  "labelClaims": { "safeForCropFamilies": ["orchard", "stone-fruit", "small-fruit", "bramble", "vine-fruit"] },
+  "notes": "Multi-site M04 — backbone of orchard cover-spray programs. 0-day PHI; 24-hr REI. Phytotoxic when tank-mixed with oil within 14 d."
+}

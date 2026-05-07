@@ -1,0 +1,15 @@
+{
+  "pluginId": "kumulus-df",
+  "type": "fungicide",
+  "displayName": "Kumulus DF (BASF sulfur)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "sulfur", "fracCode": "M02" }],
+  "ratePerAcre": { "amount": 8, "unit": "lb" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 24,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "none",
+  "targetDiseases": ["powdery mildew", "rust", "apple rust mite"],
+  "notes": "Granular sulfur — phytotox >85 °F. Resistance management partner for DMI / SDHI."
+}

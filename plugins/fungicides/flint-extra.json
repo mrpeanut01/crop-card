@@ -1,0 +1,16 @@
+{
+  "pluginId": "flint-extra",
+  "type": "fungicide",
+  "displayName": "Flint Extra (Bayer trifloxystrobin)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "trifloxystrobin", "fracCode": "11" }],
+  "ratePerAcre": { "amount": 3.8, "unit": "fl-oz" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 14,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["apple scab", "powdery mildew", "summer rots"],
+  "labelClaims": { "safeForCropFamilies": ["orchard"] },
+  "notes": "QoI FRAC 11. Apple program standard. Rotate with non-11 every other cover spray."
+}

@@ -1,0 +1,10 @@
+{
+  "pluginId": "grape-cabernet-franc",
+  "type": "crop",
+  "displayName": "Grape — Cabernet Franc (Vitis vinifera, wine)",
+  "version": "1.0.0",
+  "cropFamily": "vine-fruit",
+  "defaultRowSpacingInches": 96,
+  "harvestIndicators": ["Brix 22–24", "pH 3.4–3.6", "Seeds brown"],
+  "notes": "Vinifera wine grape — Mid-Atlantic favorite. Higher disease pressure than Concord; FRAC rotation critical."
+}

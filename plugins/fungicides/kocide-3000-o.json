@@ -1,0 +1,17 @@
+{
+  "pluginId": "kocide-3000-o",
+  "type": "fungicide",
+  "displayName": "Kocide 3000-O (Certis copper hydroxide — OMRI)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "copper hydroxide", "fracCode": "M01" }],
+  "ratePerAcre": { "amount": 1.75, "unit": "lb" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 48,
+  "preHarvestIntervalDays": 1,
+  "pollinatorRisk": "low",
+  "deconRequired": true,
+  "targetDiseases": ["bacterial spot", "downy mildew", "fire blight (suppression)", "early blight"],
+  "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "small-fruit", "stone-fruit", "orchard"] },
+  "notes": "OMRI organic. Lower phytotox than copper sulfate. Tank-mix incompatible with Topsin M."
+}

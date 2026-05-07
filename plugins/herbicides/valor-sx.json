@@ -1,0 +1,14 @@
+{
+  "pluginId": "valor-sx",
+  "type": "herbicide",
+  "displayName": "Valor SX (Valent flumioxazin)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [{ "name": "flumioxazin", "chemistryClass": "ppo-inhibitor" }],
+  "ratePerAcre": { "amount": 2, "unit": "oz" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": { "safeForCropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend", "apple-orchard", "grape-concord", "blueberry-bluecrop"] },
+  "notes": "PRE PPO. Soybean burndown + bound-residual; orchard/vineyard floor maintenance. 30-d preemergence rotation to corn."
+}

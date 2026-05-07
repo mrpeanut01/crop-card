@@ -1,0 +1,13 @@
+{
+  "pluginId": "actara",
+  "type": "insecticide",
+  "displayName": "Actara (Syngenta thiamethoxam)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "thiamethoxam", "iracGroup": "4A" }],
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "ratePerAcre": { "amount": 3, "unit": "oz" },
+  "targetPests": ["aphid", "whitefly", "thrips", "leafhopper", "Colorado potato beetle", "tarnished plant bug"],
+  "pollinatorRisk": "high",
+  "notes": "Neonicotinoid IRAC 4A. Foliar + soil. NO bloom application — bee toxicity."
+}

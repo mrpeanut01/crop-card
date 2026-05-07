@@ -1,0 +1,21 @@
+{
+  "pluginId": "roundup-powermax-3",
+  "type": "herbicide",
+  "displayName": "Roundup PowerMAX 3 (Bayer)",
+  "version": "1.0.0",
+  "applicationTiming": "BURNDOWN",
+  "activeIngredients": [{ "name": "glyphosate potassium salt", "chemistryClass": "glyphosate" }],
+  "ratePerAcre": { "amount": 22, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 14.7, "unit": "fl-oz" },
+    "25gal":  { "amount": 36.7, "unit": "fl-oz" },
+    "50gal":  { "amount": 73.3, "unit": "fl-oz" },
+    "75gal":  { "amount": 110,  "unit": "fl-oz" },
+    "100gal": { "amount": 146.7, "unit": "fl-oz" }
+  },
+  "requiresAMS": true,
+  "deconRequired": false,
+  "tankMixOrder": 3,
+  "notes": "Brand-name burndown. K-salt formulation, lower rate than IPA-salt generics. Restricted-use for many crops; never spray over non-RR standing crop."
+}

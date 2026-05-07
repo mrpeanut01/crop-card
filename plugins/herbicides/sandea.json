@@ -1,0 +1,15 @@
+{
+  "pluginId": "sandea",
+  "type": "herbicide",
+  "displayName": "Sandea (Gowan halosulfuron-methyl)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "halosulfuron-methyl", "chemistryClass": "sulfonylurea" }],
+  "ratePerAcre": { "amount": 0.66, "unit": "oz" },
+  "gpaCalibration": 15,
+  "requiresAMS": false,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": { "safeForCropPluginIds": ["pumpkin-ez-gro-monster", "butternut-squash-waltham", "corn-feed-dent-pioneer"] },
+  "notes": "Vegetable + cucurbit nutsedge specialist. POST or PRE; very small rate. Verify rotation interval before next crop."
+}

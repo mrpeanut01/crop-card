@@ -1,0 +1,11 @@
+{
+  "pluginId": "watermelon-sugar-baby",
+  "type": "crop",
+  "displayName": "Watermelon — Sugar Baby",
+  "version": "1.0.0",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": { "min": 75, "max": 85 },
+  "defaultRowSpacingInches": 84,
+  "harvestIndicators": ["Tendril nearest fruit dries + browns", "Dull thump (not ringing)", "Field spot turns yellow-cream"],
+  "notes": "Icebox-size (8–10 lb). Black plastic mulch + drip is standard practice in Mid-Atlantic."
+}

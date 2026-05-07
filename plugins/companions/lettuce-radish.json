@@ -1,0 +1,8 @@
+{
+  "pluginId": "lettuce-radish",
+  "type": "companion",
+  "displayName": "Lettuce + Radish (row marker + flea beetle distraction)",
+  "version": "1.0.0",
+  "goodWith": ["lettuce-buttercrunch", "lettuce-romaine-paris-island-cos", "radish-cherry-belle"],
+  "badWith": []
+}

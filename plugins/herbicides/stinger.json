@@ -1,0 +1,14 @@
+{
+  "pluginId": "stinger",
+  "type": "herbicide",
+  "displayName": "Stinger (Corteva clopyralid)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "clopyralid", "chemistryClass": "synthetic-auxin" }],
+  "ratePerAcre": { "amount": 0.25, "unit": "pt" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "wheat-soft-red-winter", "barley-grain-thoroughbred"] },
+  "notes": "Clopyralid is uniquely-narrow synthetic auxin — controls Asteraceae (thistles, ragweed) without harming grass crops. Strawberry establishment label exists but requires bypass-override since the kernel uses class-level lethality (synthetic-auxin → small-fruit blocked)."
+}

@@ -1,0 +1,23 @@
+{
+  "pluginId": "butternut-squash-waltham",
+  "type": "crop",
+  "displayName": "Butternut Squash — Waltham",
+  "version": "1.0.0",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 0,
+  "daysToMaturity": { "min": 95, "max": 105 },
+  "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 60,
+    "inRowSpacingIn": { "min": 24, "max": 36 },
+    "seedDepthIn": { "min": 1, "max": 1.5 }
+  },
+  "postHarvestCuring": {
+    "method": "Cure 10 d at 80–85 °F, 80–85% RH; store 50–55 °F, 50–70% RH",
+    "durationWeeks": { "min": 1, "max": 2 },
+    "storageLocation": "Cool, dry"
+  },
+  "harvestIndicators": ["Tan rind, no green streaks", "Stem corked + dry", "Hollow sound when tapped"],
+  "notes": "Long-storage winter squash. Harvest before frost. Powdery mildew is the main disease — rotate fungicides FRAC 7 / 11 / M02."
+}

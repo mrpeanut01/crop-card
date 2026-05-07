@@ -1,0 +1,20 @@
+{
+  "pluginId": "pursuit",
+  "type": "herbicide",
+  "displayName": "Pursuit (BASF imazethapyr)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "imazethapyr", "chemistryClass": "als-imidazolinone" }],
+  "ratePerAcre": { "amount": 4, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 2.7, "unit": "fl-oz" },
+    "25gal":  { "amount": 6.7, "unit": "fl-oz" },
+    "50gal":  { "amount": 13.3, "unit": "fl-oz" },
+    "100gal": { "amount": 26.7, "unit": "fl-oz" }
+  },
+  "deconRequired": true,
+  "tankMixOrder": 5,
+  "labelClaims": { "safeForCropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend", "alfalfa-vernema"] },
+  "notes": "POST IMI. Soybean + alfalfa label. 18-mo rotation restriction to corn (depending on soil type) — verify carryover before rotating."
+}

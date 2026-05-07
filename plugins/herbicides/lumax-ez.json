@@ -1,0 +1,18 @@
+{
+  "pluginId": "lumax-ez",
+  "type": "herbicide",
+  "displayName": "Lumax EZ (Syngenta premix)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [
+    { "name": "S-metolachlor", "chemistryClass": "chloroacetamide" },
+    { "name": "atrazine", "chemistryClass": "photosystem-ii-triazine" },
+    { "name": "mesotrione", "chemistryClass": "hppd-inhibitor" }
+  ],
+  "ratePerAcre": { "amount": 2.5, "unit": "qt" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 6,
+  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer"] },
+  "notes": "Three-mode corn PRE premix. Restricted-use."
+}

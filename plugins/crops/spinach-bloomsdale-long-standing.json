@@ -1,0 +1,11 @@
+{
+  "pluginId": "spinach-bloomsdale-long-standing",
+  "type": "crop",
+  "displayName": "Spinach — Bloomsdale Long-Standing",
+  "version": "1.0.0",
+  "cropFamily": "leafy-green",
+  "daysToMaturity": { "min": 40, "max": 55 },
+  "defaultRowSpacingInches": 12,
+  "harvestIndicators": ["6–8 leaves", "Before bolt"],
+  "notes": "Cold-hardy savoy spinach. Spring + fall + overwintering crops; not summer."
+}

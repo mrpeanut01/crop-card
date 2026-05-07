@@ -1,0 +1,13 @@
+{
+  "pluginId": "oats-cover-spring",
+  "type": "crop",
+  "displayName": "Oats (spring cover crop, winter-killed)",
+  "version": "1.0.0",
+  "cropFamily": "cover-grass",
+  "daysToMaturity": { "min": 60, "max": 90 },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "recommendedLbsPerAcre": 96
+  },
+  "notes": "Winter-kills below ~20 °F — clean spring residue, no termination spray needed. Plant Aug–Sep for vegetable-bed prep."
+}

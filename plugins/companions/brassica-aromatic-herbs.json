@@ -1,0 +1,8 @@
+{
+  "pluginId": "brassica-aromatic-herbs",
+  "type": "companion",
+  "displayName": "Brassicas + aromatic herbs (cabbage moth deterrent)",
+  "version": "1.0.0",
+  "goodWith": ["broccoli-de-cicco", "cabbage-savoy-king", "thyme-german-winter", "sage-broadleaf", "dill-mammoth"],
+  "badWith": []
+}

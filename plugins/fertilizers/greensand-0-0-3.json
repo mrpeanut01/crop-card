@@ -1,0 +1,12 @@
+{
+  "pluginId": "greensand-0-0-3",
+  "type": "fertilizer",
+  "displayName": "Greensand (0-0-3 + Fe, OMRI)",
+  "version": "1.0.0",
+  "analysis": { "n": 0, "p": 0, "k": 3 },
+  "form": "granular",
+  "organic": true,
+  "secondaryNutrients": { "fe": 12 },
+  "applicationRange": { "min": 100, "max": 600, "unit": "lb-per-acre" },
+  "notes": "Mined glauconite. Slow-release K + Fe + trace minerals. Improves soil structure. Multi-year residual."
+}

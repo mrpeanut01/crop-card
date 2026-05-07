@@ -1,0 +1,12 @@
+{
+  "pluginId": "bone-meal-3-15-0",
+  "type": "fertilizer",
+  "displayName": "Bone Meal (3-15-0 + Ca, OMRI)",
+  "version": "1.0.0",
+  "analysis": { "n": 3, "p": 15, "k": 0 },
+  "form": "meal",
+  "organic": true,
+  "secondaryNutrients": { "ca": 24 },
+  "applicationRange": { "min": 100, "max": 400, "unit": "lb-per-acre" },
+  "notes": "Slow-release organic P + Ca. Pre-plant or transplant-hole booster for tomato + brassica + bulb crops."
+}

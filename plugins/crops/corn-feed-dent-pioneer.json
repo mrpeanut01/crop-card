@@ -1,0 +1,18 @@
+{
+  "pluginId": "corn-feed-dent-pioneer",
+  "type": "crop",
+  "displayName": "Field Corn — Pioneer P1257AM (RR2 + YGCB, dent)",
+  "version": "1.0.0",
+  "cropFamily": "corn",
+  "daysToMaturity": { "min": 110, "max": 120 },
+  "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 30,
+    "inRowSpacingIn": { "min": 5, "max": 7 },
+    "seedDepthIn": { "min": 1.5, "max": 2 },
+    "seedsPerAcre": 32000
+  },
+  "harvestIndicators": ["Black layer at kernel base", "Grain moisture 25–30% (high-moisture corn) or 15–18% (dry corn)"],
+  "notes": "Standard Mid-Atlantic dent corn. Roundup Ready 2 + YieldGard CB (corn borer) traited. 110 d maturity fits Loudoun County."
+}

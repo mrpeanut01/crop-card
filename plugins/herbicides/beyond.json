@@ -1,0 +1,13 @@
+{
+  "pluginId": "beyond",
+  "type": "herbicide",
+  "displayName": "Beyond (BASF imazamox)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "imazamox", "chemistryClass": "als-imidazolinone" }],
+  "ratePerAcre": { "amount": 4, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 5,
+  "notes": "Clearfield (IMI-traited) crops only — wheat, soybean, dry bean, sunflower. NOT for non-traited crops. Strict label-only use."
+}

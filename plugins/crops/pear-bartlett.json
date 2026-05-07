@@ -1,0 +1,22 @@
+{
+  "pluginId": "pear-bartlett",
+  "type": "crop",
+  "displayName": "Pear — Bartlett (European)",
+  "version": "1.0.0",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 14,
+  "defaultRowSpacingInches": 240,
+  "postHarvestCuring": {
+    "method": "Pick green; ripen 5–7 d at 65–70 °F or store 30–32 °F",
+    "durationWeeks": { "min": 1, "max": 8 },
+    "storageLocation": "Cold storage"
+  },
+  "seasonalTasks": [
+    { "key": "dormant-oil", "kind": "spray", "dayOfYear": 70, "windowDays": 14, "title": "Dormant oil + copper", "body": "Pear psylla overwinters under bark scales. Copper for fire blight." },
+    { "key": "bloom", "kind": "spray", "dayOfYear": 110, "windowDays": 10, "title": "Bloom — Streptomycin/Apogee fire-blight gate", "body": "MaryBlyt or Cougar Blight model triggers; never apply broad-spectrum insecticide during open bloom." },
+    { "key": "fire-blight-cover", "kind": "spray", "dayOfYear": 140, "windowDays": 21, "title": "Post-bloom fire-blight cover", "body": "Apogee plant growth regulator suppresses shoot blight." },
+    { "key": "harvest", "kind": "harvest", "dayOfYear": 235, "windowDays": 21, "title": "Harvest pears (pre-tree-ripe)", "body": "Pick when starch test shows ripening but before tree-ripe; finish on bench." }
+  ],
+  "harvestIndicators": ["Color break (deep green→light green)", "Stem releases when fruit lifted + twisted", "Starch test"],
+  "notes": "Susceptible to fire blight (Erwinia amylovora) — DO NOT prune in wet weather; sterilize tools 70% alcohol between cuts."
+}

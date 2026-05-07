@@ -1,0 +1,11 @@
+{
+  "pluginId": "oregano-greek",
+  "type": "crop",
+  "displayName": "Oregano — Greek (Origanum vulgare hirtum)",
+  "version": "1.0.0",
+  "cropFamily": "herb-culinary",
+  "daysToMaturity": { "min": 90, "max": 120 },
+  "defaultRowSpacingInches": 18,
+  "harvestIndicators": ["Pre-flower harvest for peak essential oils"],
+  "notes": "Hardy perennial in zones 5+. Cut hard 2–3× per season."
+}

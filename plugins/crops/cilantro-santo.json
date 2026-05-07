@@ -1,0 +1,11 @@
+{
+  "pluginId": "cilantro-santo",
+  "type": "crop",
+  "displayName": "Cilantro — Santo (slow-bolt)",
+  "version": "1.0.0",
+  "cropFamily": "apiaceae",
+  "daysToMaturity": { "min": 35, "max": 55 },
+  "defaultRowSpacingInches": 12,
+  "harvestIndicators": ["Foliage harvest pre-bolt", "Allow some plants to flower for coriander seed"],
+  "notes": "Cool-season. Succession every 14 d through spring + fall. Bolts in summer heat."
+}

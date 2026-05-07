@@ -1,0 +1,12 @@
+{
+  "pluginId": "rock-phosphate-0-3-0",
+  "type": "fertilizer",
+  "displayName": "Soft Rock Phosphate (0-3-0, OMRI)",
+  "version": "1.0.0",
+  "analysis": { "n": 0, "p": 3, "k": 0 },
+  "form": "granular",
+  "organic": true,
+  "secondaryNutrients": { "ca": 20 },
+  "applicationRange": { "min": 200, "max": 1000, "unit": "lb-per-acre" },
+  "notes": "Slow-release P + Ca. 25% citrate-soluble P (label-listed) — multi-year residual. NOT a quick P-fix; pair with bone meal for fast P."
+}

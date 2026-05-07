@@ -1,0 +1,16 @@
+{
+  "pluginId": "forum",
+  "type": "fungicide",
+  "displayName": "Forum (BASF dimethomorph)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [{ "name": "dimethomorph", "fracCode": "40" }],
+  "ratePerAcre": { "amount": 6, "unit": "fl-oz" },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 4,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["downy mildew", "Phytophthora"],
+  "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green"] },
+  "notes": "FRAC 40 CAA. Tank-mix with multi-site M03 / M05 mandatory for resistance management."
+}

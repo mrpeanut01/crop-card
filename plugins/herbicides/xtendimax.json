@@ -1,0 +1,13 @@
+{
+  "pluginId": "xtendimax",
+  "type": "herbicide",
+  "displayName": "XtendiMax with VaporGrip (Bayer)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "dicamba diglycolamine salt", "chemistryClass": "synthetic-auxin" }],
+  "ratePerAcre": { "amount": 22, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "notes": "RESTRICTED-USE. Xtend-traited soybeans + cotton only — kernel does not yet model trait tolerance. Approve each spray via bypass override. Same label restrictions as Engenia."
+}

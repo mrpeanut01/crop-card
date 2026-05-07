@@ -1,0 +1,11 @@
+{
+  "pluginId": "fennel-florence-zefa-fino",
+  "type": "crop",
+  "displayName": "Fennel — Florence Zefa Fino (bulbing)",
+  "version": "1.0.0",
+  "cropFamily": "apiaceae",
+  "daysToMaturity": { "min": 75, "max": 90 },
+  "defaultRowSpacingInches": 18,
+  "harvestIndicators": ["Bulb 3–4 in across", "Pre-bolt"],
+  "notes": "Bulbing fennel — cool-season; bolts in heat. Plant late summer for fall harvest."
+}

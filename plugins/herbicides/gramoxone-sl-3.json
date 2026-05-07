@@ -1,0 +1,20 @@
+{
+  "pluginId": "gramoxone-sl-3",
+  "type": "herbicide",
+  "displayName": "Gramoxone SL 3.0 (Syngenta)",
+  "version": "1.0.0",
+  "applicationTiming": "BURNDOWN",
+  "activeIngredients": [{ "name": "paraquat dichloride", "chemistryClass": "photosystem-i-diquat" }],
+  "ratePerAcre": { "amount": 2, "unit": "pt" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 21.3, "unit": "fl-oz" },
+    "25gal":  { "amount": 53.3, "unit": "fl-oz" },
+    "50gal":  { "amount": 106.7, "unit": "fl-oz" },
+    "100gal": { "amount": 213.3, "unit": "fl-oz" }
+  },
+  "requiresAMS": false,
+  "deconRequired": true,
+  "tankMixOrder": 5,
+  "notes": "RESTRICTED-USE PESTICIDE. Closed-system loading required. Highly toxic; respirator + chem-resistant suit. Burndown only — kills any green tissue contacted."
+}

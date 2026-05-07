@@ -1,0 +1,21 @@
+{
+  "pluginId": "dual-ii-magnum",
+  "type": "herbicide",
+  "displayName": "Dual II Magnum (Syngenta)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [{ "name": "S-metolachlor", "chemistryClass": "chloroacetamide" }],
+  "ratePerAcre": { "amount": 1.33, "unit": "pt" },
+  "gpaCalibration": 15,
+  "dilutionTable": {
+    "10gal":  { "amount": 10.6, "unit": "fl-oz" },
+    "25gal":  { "amount": 26.6, "unit": "fl-oz" },
+    "50gal":  { "amount": 53.2, "unit": "fl-oz" },
+    "100gal": { "amount": 106,  "unit": "fl-oz" }
+  },
+  "requiresAMS": false,
+  "deconRequired": true,
+  "tankMixOrder": 3,
+  "labelClaims": { "safeForCropPluginIds": ["corn-bloody-butcher", "corn-sweet-bodacious", "corn-feed-dent-pioneer", "soybean-asgrow-roundup-ready-2-xtend"] },
+  "notes": "Brand-name S-metolachlor. PRE-emergence soil-active grass + small-seeded broadleaf control. Lethal to broadleaves."
+}

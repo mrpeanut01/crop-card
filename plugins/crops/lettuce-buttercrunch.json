@@ -1,0 +1,11 @@
+{
+  "pluginId": "lettuce-buttercrunch",
+  "type": "crop",
+  "displayName": "Lettuce — Buttercrunch (Bibb)",
+  "version": "1.0.0",
+  "cropFamily": "leafy-green",
+  "daysToMaturity": { "min": 50, "max": 60 },
+  "defaultRowSpacingInches": 12,
+  "harvestIndicators": ["Loose head 5–6 in", "Cut whole or harvest outer leaves"],
+  "notes": "Heat-tolerant Bibb. Best below 80 °F — bolts in mid-summer."
+}

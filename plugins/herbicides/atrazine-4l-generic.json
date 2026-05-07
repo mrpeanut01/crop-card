@@ -1,0 +1,15 @@
+{
+  "pluginId": "atrazine-4l-generic",
+  "type": "herbicide",
+  "displayName": "Atrazine 4L (generic)",
+  "version": "1.0.0",
+  "applicationTiming": "PRE",
+  "activeIngredients": [{ "name": "atrazine", "chemistryClass": "photosystem-ii-triazine" }],
+  "ratePerAcre": { "amount": 2, "unit": "qt" },
+  "gpaCalibration": 15,
+  "requiresAMS": false,
+  "deconRequired": true,
+  "tankMixOrder": 6,
+  "labelClaims": { "safeForCropPluginIds": ["corn-bloody-butcher", "corn-feed-dent-pioneer"] },
+  "notes": "Generic atrazine 4 lb a.i./gal SC. Restricted-use. Same PRE corn / sorghum semantics as Aatrex."
+}

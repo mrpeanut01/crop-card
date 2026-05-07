@@ -1,0 +1,12 @@
+{
+  "pluginId": "gypsum",
+  "type": "fertilizer",
+  "displayName": "Gypsum (CaSO4·2H2O)",
+  "version": "1.0.0",
+  "analysis": { "n": 0, "p": 0, "k": 0 },
+  "form": "granular",
+  "organic": true,
+  "secondaryNutrients": { "ca": 22, "s": 17 },
+  "applicationRange": { "min": 0.5, "max": 2, "unit": "ton-per-acre" },
+  "notes": "Calcium + sulfur source without raising soil pH. Tomato blossom-end-rot prevention; peanut + alfalfa Ca demand."
+}

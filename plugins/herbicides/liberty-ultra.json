@@ -1,0 +1,14 @@
+{
+  "pluginId": "liberty-ultra",
+  "type": "herbicide",
+  "displayName": "Liberty ULTRA (BASF)",
+  "version": "1.0.0",
+  "applicationTiming": "POST",
+  "activeIngredients": [{ "name": "L-glufosinate ammonium", "chemistryClass": "glufosinate" }],
+  "ratePerAcre": { "amount": 24, "unit": "fl-oz" },
+  "gpaCalibration": 15,
+  "requiresAMS": true,
+  "deconRequired": true,
+  "tankMixOrder": 4,
+  "notes": "Newer L-isomer formulation — 2× more active per oz than Liberty 280. LibertyLink crops only."
+}

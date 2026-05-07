@@ -1,0 +1,10 @@
+{
+  "pluginId": "cherry-bing-sweet",
+  "type": "crop",
+  "displayName": "Cherry — Bing (sweet)",
+  "version": "1.0.0",
+  "cropFamily": "stone-fruit",
+  "defaultRowSpacingInches": 240,
+  "harvestIndicators": ["Deep mahogany red", "Firm flesh"],
+  "notes": "Requires pollinizer (Rainier, Stella). Cherry fruit fly + spotted-wing drosophila monitoring critical pre-harvest."
+}

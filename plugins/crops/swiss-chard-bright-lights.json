@@ -1,0 +1,11 @@
+{
+  "pluginId": "swiss-chard-bright-lights",
+  "type": "crop",
+  "displayName": "Swiss Chard — Bright Lights (rainbow)",
+  "version": "1.0.0",
+  "cropFamily": "leafy-green",
+  "daysToMaturity": { "min": 55, "max": 65 },
+  "defaultRowSpacingInches": 18,
+  "harvestIndicators": ["Outer leaves 10 in", "Continue cut-and-come"],
+  "notes": "Continuous-harvest crop spring → frost. Mixed-color stems (red, yellow, white, pink)."
+}

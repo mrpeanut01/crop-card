@@ -1,0 +1,19 @@
+{
+  "pluginId": "merivon",
+  "type": "fungicide",
+  "displayName": "Merivon (BASF fluxapyroxad + pyraclostrobin)",
+  "version": "1.0.0",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    { "name": "fluxapyroxad", "fracCode": "7" },
+    { "name": "pyraclostrobin", "fracCode": "11" }
+  ],
+  "ratePerAcre": { "amount": 5.5, "unit": "fl-oz" },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "targetDiseases": ["apple scab", "summer rots", "powdery mildew"],
+  "labelClaims": { "safeForCropFamilies": ["orchard", "small-fruit", "stone-fruit"] },
+  "notes": "FRAC 7 + 11 premix. Two MOAs in one product."
+}

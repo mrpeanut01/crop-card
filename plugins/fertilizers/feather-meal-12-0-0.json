@@ -1,0 +1,11 @@
+{
+  "pluginId": "feather-meal-12-0-0",
+  "type": "fertilizer",
+  "displayName": "Feather Meal (12-0-0, OMRI)",
+  "version": "1.0.0",
+  "analysis": { "n": 12, "p": 0, "k": 0 },
+  "form": "meal",
+  "organic": true,
+  "applicationRange": { "min": 200, "max": 600, "unit": "lb-per-acre" },
+  "notes": "Slow-release organic N (3–6 mo). Pre-plant incorporated. Less salt damage risk than blood meal."
+}

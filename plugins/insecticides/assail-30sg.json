@@ -1,0 +1,13 @@
+{
+  "pluginId": "assail-30sg",
+  "type": "insecticide",
+  "displayName": "Assail 30SG (UPL acetamiprid)",
+  "version": "1.0.0",
+  "activeIngredients": [{ "name": "acetamiprid", "iracGroup": "4A" }],
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "ratePerAcre": { "amount": 4, "unit": "oz" },
+  "targetPests": ["aphid", "whitefly", "leafhopper", "plum curculio", "codling moth", "apple maggot"],
+  "pollinatorRisk": "moderate",
+  "notes": "Neonicotinoid IRAC 4A — lower bee toxicity than imidacloprid. Apple / pear / grape / vegetable label."
+}

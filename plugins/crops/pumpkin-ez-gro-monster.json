@@ -2,14 +2,26 @@
   "pluginId": "pumpkin-ez-gro-monster",
   "type": "crop",
   "displayName": "EZ Gro Monster Pumpkin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "cropFamily": "cucurbit",
   "daysToMaturity": { "min": 120, "max": 130 },
   "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 96,
+    "inRowSpacingIn": { "min": 36, "max": 48 },
+    "seedDepthIn": { "min": 1, "max": 1.5 },
+    "seedsPerAcre": 1500
+  },
   "harvestIndicators": [
     "Rind hard to fingernail",
     "Stem fully corked",
     "Full color achieved"
   ],
-  "notes": "Long-season giant pumpkin. Cure at 80°F with airflow for 10–14 days."
+  "postHarvestCuring": {
+    "method": "Cure at 80°F with airflow",
+    "durationWeeks": { "min": 1, "max": 2 },
+    "storageLocation": "50–60°F dry shelter; off the ground"
+  },
+  "notes": "Long-season giant pumpkin."
 }

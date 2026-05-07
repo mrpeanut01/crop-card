@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { tick } from 'svelte';
 
   let { data } = $props();
 
@@ -110,6 +111,12 @@
       lastError = e instanceof Error ? e.message : String(e);
     } finally {
       evaluating = false;
+    }
+    if (result || lastError) {
+      await tick();
+      document
+        .querySelector('.result, .error')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
@@ -753,7 +760,7 @@
     cursor: pointer;
     width: 100%;
     margin-top: 0.5rem;
-    min-height: 56px;
+    min-height: 60px;
   }
   .primary:disabled {
     background: #999;
@@ -772,14 +779,27 @@
     border: 2px solid #1f5e3a;
   }
   .result.stop {
-    background: #fce8e8;
-    border: 2px solid #b00020;
+    background: #fff;
+    border: 3px solid #b71c1c;
+    padding: 0;
   }
   .result h2 {
     margin: 0 0 1rem;
   }
   .result.stop h2 {
-    color: #b00020;
+    background: #b71c1c;
+    color: #fff;
+    margin: 0 0 1rem;
+    padding: 1rem 1.25rem;
+    font-size: 1.5rem;
+    border-radius: 5px 5px 0 0;
+  }
+  .result.stop > :not(h2) {
+    margin-left: 1.25rem;
+    margin-right: 1.25rem;
+  }
+  .result.stop > :last-child {
+    margin-bottom: 1.25rem;
   }
   .mix-order {
     padding-left: 1.25rem;
@@ -797,8 +817,9 @@
     border-bottom: 1px solid #ccc;
   }
   .dilution td strong {
-    font-size: 1.2rem;
+    font-size: 1.75rem;
     color: #1f5e3a;
+    font-family: monospace;
   }
   .audit {
     color: #666;

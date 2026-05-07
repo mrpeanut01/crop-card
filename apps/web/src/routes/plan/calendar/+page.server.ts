@@ -8,8 +8,9 @@
  */
 
 import type { PageServerLoad } from './$types';
-import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
+import { eventsForHarvest, eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import { listBlocks } from '$lib/db/blocks';
+import { listHarvestEvents } from '$lib/db/harvestEvents';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 
@@ -26,14 +27,22 @@ export const load: PageServerLoad = async ({ url }) => {
   const registry = await getRegistry();
   const blocks = listBlocks();
 
-  // Aggregate every event from every planting.
+  // Aggregate every event from every planting + every recorded harvest.
   const allEvents: CalendarEvent[] = [];
   for (const b of blocks) {
     for (const p of b.plantings) {
       const rec = registry.get(p.cropPluginId);
       if (!rec || rec.plugin.type !== 'crop') continue;
-      allEvents.push(...eventsForPlanting(p, rec.plugin as CropPlugin));
+      allEvents.push(
+        ...eventsForPlanting(p, rec.plugin as CropPlugin, { blockPlantings: b.plantings })
+      );
     }
+  }
+  const harvests = listHarvestEvents();
+  for (const h of harvests) {
+    const rec = registry.get(h.cropPluginId);
+    if (!rec || rec.plugin.type !== 'crop') continue;
+    allEvents.push(...eventsForHarvest(h, rec.plugin as CropPlugin));
   }
 
   // Determine month to render: ?ym=YYYY-MM, default to current month.

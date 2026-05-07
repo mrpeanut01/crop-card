@@ -69,8 +69,8 @@
 
 <section class="card">
   <h2>Tallest weed observed (inches)</h2>
-  <input type="number" min="0" step="0.5" bind:value={maxHeight} placeholder="e.g. 1.5" />
-  <small>Leave blank if you didn't measure.</small>
+  <input type="number" min="0" step="0.5" bind:value={maxHeight} />
+  <small>Leave blank if you didn't measure. Example: 1.5</small>
 </section>
 
 <section class="result {result.decision === 'SPRAY' ? 'spray' : 'skip'}">

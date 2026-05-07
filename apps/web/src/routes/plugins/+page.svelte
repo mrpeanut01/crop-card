@@ -146,9 +146,22 @@
         <div class="meta">
           <code title="SHA-256 of canonical plugin JSON">{r.hash.slice(0, 16)}…</code>
         </div>
-        <button class="link" onclick={() => (viewing = viewing === r.pluginId ? null : r.pluginId)}>
-          {viewing === r.pluginId ? 'Hide JSON' : 'View JSON'}
-        </button>
+        <div class="plugin-actions">
+          <button
+            class="link"
+            onclick={() => (viewing = viewing === r.pluginId ? null : r.pluginId)}
+          >
+            {viewing === r.pluginId ? 'Hide JSON' : 'View JSON'}
+          </button>
+          <a
+            class="link download"
+            href="/api/plugins/{encodeURIComponent(r.pluginId)}/export"
+            download
+            title="Download canonical plugin JSON for sharing or backup (FR-17)"
+          >
+            ⬇ Download
+          </a>
+        </div>
         {#if viewing === r.pluginId}
           <pre>{JSON.stringify(r.plugin, null, 2)}</pre>
         {/if}
@@ -324,6 +337,13 @@
     font-size: 0.8rem;
     margin: 0.25rem 0;
   }
+  .plugin-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.4rem;
+    align-items: center;
+  }
   .link {
     background: none;
     border: none;
@@ -332,7 +352,16 @@
     text-decoration: underline;
     padding: 0;
     font: inherit;
-    margin-top: 0.25rem;
+  }
+  .link.download {
+    text-decoration: none;
+    background: #e7f1ea;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .link.download:hover {
+    background: #d4e5db;
   }
   pre {
     background: #f5f5f5;

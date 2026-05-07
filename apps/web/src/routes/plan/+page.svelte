@@ -185,10 +185,44 @@
       {:else}
         <ul class="plantings">
           {#each block.plantings as p (p.id)}
+            {@const guide = data.plantingGuides[p.cropPluginId]}
             <li>
-              <strong>{p.varietyDisplayName}</strong>
-              <code>{p.cropPluginId}</code>
-              planted {new Date(p.plantingDate).toLocaleDateString()}
+              <div class="planting-row">
+                <strong>{p.varietyDisplayName}</strong>
+                <code>{p.cropPluginId}</code>
+                <span class="planted">planted {new Date(p.plantingDate).toLocaleDateString()}</span>
+              </div>
+              {#if guide}
+                <details class="spacing-guide">
+                  <summary>Spacing &amp; depth guide</summary>
+                  <dl>
+                    {#if guide.soilTempMinF !== undefined}
+                      <dt>Soil temp min</dt>
+                      <dd>{guide.soilTempMinF}°F</dd>
+                    {/if}
+                    {#if guide.rowSpacingIn !== undefined}
+                      <dt>Row spacing</dt>
+                      <dd>{guide.rowSpacingIn} in</dd>
+                    {/if}
+                    {#if guide.inRowSpacingIn}
+                      <dt>In-row spacing</dt>
+                      <dd>{guide.inRowSpacingIn.min}–{guide.inRowSpacingIn.max} in</dd>
+                    {/if}
+                    {#if guide.seedDepthIn}
+                      <dt>Seed depth</dt>
+                      <dd>{guide.seedDepthIn.min}–{guide.seedDepthIn.max} in</dd>
+                    {/if}
+                    {#if guide.seedsPerAcre !== undefined}
+                      <dt>Seeds / acre</dt>
+                      <dd>{guide.seedsPerAcre.toLocaleString()}</dd>
+                    {/if}
+                    {#if guide.recommendedLbsPerAcre !== undefined}
+                      <dt>Recommended lbs / acre</dt>
+                      <dd>{guide.recommendedLbsPerAcre}</dd>
+                    {/if}
+                  </dl>
+                </details>
+              {/if}
             </li>
           {/each}
         </ul>
@@ -474,5 +508,44 @@
     border-radius: 3px;
     font-size: 0.8rem;
     margin: 0 0.4rem;
+  }
+  .planting-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .planted {
+    color: #555;
+    font-size: 0.9rem;
+  }
+  .spacing-guide {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #f8fbf9;
+    border-left: 3px solid #1f5e3a;
+    border-radius: 0 4px 4px 0;
+  }
+  .spacing-guide summary {
+    cursor: pointer;
+    color: #1f5e3a;
+    font-weight: 600;
+    font-size: 0.9rem;
+    list-style: revert;
+  }
+  .spacing-guide dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.3rem 0.75rem;
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+  }
+  .spacing-guide dt {
+    color: #666;
+  }
+  .spacing-guide dd {
+    margin: 0;
+    color: #1f5e3a;
+    font-weight: 600;
   }
 </style>

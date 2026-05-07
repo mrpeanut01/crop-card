@@ -112,12 +112,21 @@
           </div>
 
           {#if p.harvestIndicators.length > 0}
-            <details>
-              <summary>Readiness indicators</summary>
-              <ul class="indicators">
-                {#each p.harvestIndicators as ind}<li>{ind}</li>{/each}
-              </ul>
-            </details>
+            {#if p.status === 'in-window' && !p.alreadyHarvested}
+              <div class="indicators-inline">
+                <strong>Readiness indicators</strong>
+                <ul class="indicators">
+                  {#each p.harvestIndicators as ind}<li>{ind}</li>{/each}
+                </ul>
+              </div>
+            {:else}
+              <details>
+                <summary>Readiness indicators</summary>
+                <ul class="indicators">
+                  {#each p.harvestIndicators as ind}<li>{ind}</li>{/each}
+                </ul>
+              </details>
+            {/if}
           {/if}
 
           {#if recordingFor === p.plantingId}
@@ -129,12 +138,12 @@
               }}
             >
               <label>
-                Quantity
-                <input type="text" placeholder="e.g. 14 bushels" bind:value={quantity} />
+                Quantity (e.g. 14 bushels)
+                <input type="text" bind:value={quantity} />
               </label>
               <label>
-                Lot number
-                <input type="text" placeholder="e.g. 2026-A-7" bind:value={lotNumber} />
+                Lot number (e.g. 2026-A-7)
+                <input type="text" bind:value={lotNumber} />
               </label>
               <div class="actions">
                 <button type="submit" class="primary">Record harvest</button>
@@ -154,6 +163,54 @@
 {/if}
 
 {#if data.recordedHarvests.length > 0}
+  {@const inCuring = data.recordedHarvests.filter((h) => h.curing && h.curing.phase !== 'overdue')}
+  {#if inCuring.length > 0}
+    <section class="card curing-card">
+      <h2>Curing in progress (FR-08)</h2>
+      <ul class="curing-list">
+        {#each inCuring as h (h.id)}
+          <li class="curing-item phase-{h.curing!.phase}">
+            <header>
+              <strong>{h.cropPluginId}</strong>
+              {#if h.lotNumber}<span class="lot">lot {h.lotNumber}</span>{/if}
+              <span class="phase-badge phase-{h.curing!.phase}">
+                {h.curing!.phase === 'in-progress' ? '⏳ in progress' : '✓ ready window'}
+              </span>
+            </header>
+            <p class="meta">
+              Harvested {new Date(h.occurredAt).toLocaleDateString()} · method: {h.curing!.method ??
+                '—'} ·
+              {h.curing!.minWeeks}–{h.curing!.maxWeeks} wk
+            </p>
+            {#if h.curing!.phase === 'in-progress'}
+              <p class="countdown">
+                <strong>{h.curing!.daysRemaining}</strong> day{h.curing!.daysRemaining === 1
+                  ? ''
+                  : 's'}
+                until ready window opens
+              </p>
+            {:else}
+              <p class="countdown ready">
+                <strong>Ready now</strong> — verify
+                {#if h.curing!.targetMoisturePercent}
+                  moisture {h.curing!.targetMoisturePercent.min}–{h.curing!.targetMoisturePercent
+                    .max}%
+                {:else}
+                  by feel + visual check
+                {/if}
+                · {h.curing!.daysRemaining} day{h.curing!.daysRemaining === 1 ? '' : 's'} until window
+                closes
+                {#if h.curing!.storageLocation}
+                  · then move to <em>{h.curing!.storageLocation}</em>
+                {/if}
+              </p>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    </section>
+  {/if}
+
   <section class="card">
     <h2>Recorded harvests</h2>
     <table>
@@ -164,6 +221,7 @@
           <th>Variety</th>
           <th>Quantity</th>
           <th>Lot</th>
+          <th>Curing</th>
         </tr>
       </thead>
       <tbody>
@@ -174,6 +232,19 @@
             <td><code>{h.cropPluginId}</code></td>
             <td>{h.quantity ?? '—'}</td>
             <td>{h.lotNumber ?? '—'}</td>
+            <td>
+              {#if h.curing}
+                <span class="phase-badge phase-{h.curing.phase}">
+                  {h.curing.phase === 'in-progress'
+                    ? `${h.curing.daysRemaining}d → ready`
+                    : h.curing.phase === 'ready'
+                      ? `ready (${h.curing.daysRemaining}d left)`
+                      : 'overdue — store now'}
+                </span>
+              {:else}
+                <span class="muted">no curing data</span>
+              {/if}
+            </td>
           </tr>
         {/each}
       </tbody>
@@ -188,6 +259,78 @@
   .lede {
     color: #555;
     margin: 0 0 1.5rem;
+  }
+  .curing-card {
+    border-left: 4px solid #d4a017;
+    background: #fffaeb;
+  }
+  .curing-card h2 {
+    color: #6b4f00;
+  }
+  .curing-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .curing-item {
+    padding: 0.6rem 0.8rem;
+    margin: 0.4rem 0;
+    background: white;
+    border-radius: 4px;
+    border-left: 3px solid #d4a017;
+  }
+  .curing-item.phase-ready {
+    border-left-color: #2e7d32;
+    background: #f0f8f0;
+  }
+  .curing-item header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.4rem;
+  }
+  .curing-item .lot {
+    color: #666;
+    font-size: 0.85rem;
+  }
+  .phase-badge {
+    padding: 0.1rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: auto;
+  }
+  .phase-badge.phase-in-progress {
+    background: #fff3cd;
+    color: #6b4f00;
+  }
+  .phase-badge.phase-ready {
+    background: #e7f1ea;
+    color: #2e7d32;
+  }
+  .phase-badge.phase-overdue {
+    background: #fce8e8;
+    color: #b00020;
+  }
+  .curing-item .meta {
+    color: #555;
+    font-size: 0.85rem;
+    margin: 0 0 0.4rem;
+  }
+  .countdown {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .countdown.ready {
+    color: #2e7d32;
+    font-weight: 600;
+  }
+  .muted {
+    color: #888;
+    font-style: italic;
+    font-size: 0.85rem;
   }
   .card {
     background: white;
@@ -285,6 +428,19 @@
   }
   details {
     margin-top: 0.5rem;
+  }
+  .indicators-inline {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #fff;
+    border-left: 3px solid #1f5e3a;
+    border-radius: 0 4px 4px 0;
+  }
+  .indicators-inline strong {
+    color: #1f5e3a;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
   .indicators {
     margin: 0.4rem 0 0 1.25rem;

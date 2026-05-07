@@ -42,6 +42,23 @@
         };
       case 'planting':
         return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
+      case 'orchard-task': {
+        const taskKey = (e.detail?.taskKey as string | undefined) ?? '';
+        // Spray-related orchard tasks → spray flow; harvest → harvest page.
+        if (taskKey === 'harvest') return { href: '/harvest', label: 'Open harvest →' };
+        const isSpray = /spray|fungicide|oil/.test(taskKey);
+        if (isSpray) {
+          const params = new URLSearchParams({ block: e.blockId });
+          return {
+            href: `/spray?${params.toString()}`,
+            label: 'Plan this orchard spray →'
+          };
+        }
+        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
+      }
+      case 'curing-progress':
+      case 'curing-ready':
+        return { href: '/harvest', label: 'Open harvest →' };
       case 'emergence':
         return null;
     }
@@ -301,16 +318,17 @@
     font-size: 0.9rem;
   }
   .cta {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     margin-top: 0.5rem;
     background: #1f5e3a;
     color: white;
     text-decoration: none;
-    padding: 0.6rem 1rem;
+    padding: 0.9rem 1.25rem;
     border-radius: 4px;
     font-weight: 600;
-    font-size: 0.9rem;
-    min-height: 44px;
+    font-size: 1rem;
+    min-height: 60px;
     line-height: 1.4;
   }
   .cta-small {

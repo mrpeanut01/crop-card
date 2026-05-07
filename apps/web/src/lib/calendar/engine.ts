@@ -11,6 +11,7 @@
 
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { PlantingRecord } from '$lib/db/blocks';
+import type { HarvestEvent } from '$lib/db/harvestEvents';
 
 export type CalendarEventKind =
   | 'planting'
@@ -18,7 +19,10 @@ export type CalendarEventKind =
   | 'spray-window'
   | 'companion-trigger'
   | 'harvest-window'
-  | 'cover-termination';
+  | 'cover-termination'
+  | 'orchard-task'
+  | 'curing-progress'
+  | 'curing-ready';
 
 export interface CalendarEvent {
   kind: CalendarEventKind;
@@ -49,7 +53,20 @@ const THREE_SISTERS_OFFSETS = {
   pumpkinsAfterBeansDays: 21
 };
 
-export function eventsForPlanting(planting: PlantingRecord, crop: CropPlugin): CalendarEvent[] {
+export interface EventContext {
+  /**
+   * Other plantings in the same block, oldest-first. Used to anchor
+   * cover-crop termination at 14 days before the next non-cover planting
+   * (FR-18). Pass an empty array when context isn't available.
+   */
+  blockPlantings?: ReadonlyArray<PlantingRecord>;
+}
+
+export function eventsForPlanting(
+  planting: PlantingRecord,
+  crop: CropPlugin,
+  ctx: EventContext = {}
+): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   const plant = planting.plantingDate;
 
@@ -147,20 +164,65 @@ export function eventsForPlanting(planting: PlantingRecord, crop: CropPlugin): C
     });
   }
 
-  // Cover-crop termination ahead of any cash-crop succession
+  // Cover-crop termination ahead of any cash-crop succession (FR-18).
   if (crop.cropFamily === 'cover-grass' || crop.cropFamily === 'cover-legume') {
-    events.push({
-      kind: 'cover-termination',
-      blockId: planting.blockId,
-      cropPluginId: planting.cropPluginId,
-      varietyDisplayName: planting.varietyDisplayName,
-      // Spec: terminate 14 days before the following cash-crop planting; we
-      // surface a generic "after spring growth" window absent the next planting.
-      startMs: plant + 180 * DAY_MS,
-      endMs: plant + 195 * DAY_MS,
-      title: `Terminate cover: ${planting.varietyDisplayName}`,
-      body: 'Burndown ≥14 days before the following cash-crop plant date.'
-    });
+    const nextCashCrop = (ctx.blockPlantings ?? [])
+      .filter(
+        (p) => p.id !== planting.id && p.plantingDate > plant
+        // The cash-crop check is family-aware in the caller; here we only
+        // need "any other planting after this cover crop in the same block."
+      )
+      .sort((a, b) => a.plantingDate - b.plantingDate)[0];
+
+    if (nextCashCrop) {
+      // Spec FR-18: terminate ≥14 days before the next cash-crop plant date.
+      // Window opens 21 days prior, closes 14 days prior — the operator has
+      // a 7-day window to do the burndown.
+      events.push({
+        kind: 'cover-termination',
+        blockId: planting.blockId,
+        cropPluginId: planting.cropPluginId,
+        varietyDisplayName: planting.varietyDisplayName,
+        startMs: nextCashCrop.plantingDate - 21 * DAY_MS,
+        endMs: nextCashCrop.plantingDate - 14 * DAY_MS,
+        title: `Terminate cover: ${planting.varietyDisplayName}`,
+        body: `Burndown ≥14 days before ${nextCashCrop.varietyDisplayName} planting on ${new Date(nextCashCrop.plantingDate).toLocaleDateString()}.`,
+        detail: { nextCashCropPlantingId: nextCashCrop.id, anchorDate: nextCashCrop.plantingDate }
+      });
+    } else {
+      events.push({
+        kind: 'cover-termination',
+        blockId: planting.blockId,
+        cropPluginId: planting.cropPluginId,
+        varietyDisplayName: planting.varietyDisplayName,
+        startMs: plant + 180 * DAY_MS,
+        endMs: plant + 195 * DAY_MS,
+        title: `Terminate cover: ${planting.varietyDisplayName}`,
+        body: 'No follow-up planting recorded yet — generic spring termination window. Add the next cash-crop planting to /plan to anchor this exactly.'
+      });
+    }
+  }
+
+  // Orchard seasonal tasks (FR-10): dormant oil, bloom fungicide, etc.
+  // Each task fires once per calendar year on the plugin's `dayOfYear`.
+  if (crop.cropFamily === 'orchard' && crop.orchardSeasonalTasks?.length) {
+    const seasonYears = orchardSeasonYears(plant);
+    for (const year of seasonYears) {
+      for (const task of crop.orchardSeasonalTasks) {
+        const start = dayOfYearToMs(year, task.dayOfYear);
+        events.push({
+          kind: 'orchard-task',
+          blockId: planting.blockId,
+          cropPluginId: planting.cropPluginId,
+          varietyDisplayName: planting.varietyDisplayName,
+          startMs: start,
+          endMs: start + (task.windowDays ?? 7) * DAY_MS,
+          title: `${task.title} — ${planting.varietyDisplayName}`,
+          body: task.body,
+          detail: { taskKey: task.key, year }
+        });
+      }
+    }
   }
 
   // Harvest window from DTM
@@ -187,6 +249,71 @@ function readEmergenceDays(_crop: CropPlugin): { min: number; max: number } | un
   // Phase 4.5 will tighten the schema; for now we accept the shape if present.
   // Returns undefined if the plugin doesn't carry it.
   return undefined;
+}
+
+/** For an orchard planting at `plantedAtMs`, the years we render seasonal
+ *  tasks for: this calendar year, plus the next 2 (perennial). */
+function orchardSeasonYears(plantedAtMs: number): number[] {
+  const start = new Date(plantedAtMs).getFullYear();
+  return [start, start + 1, start + 2];
+}
+
+function dayOfYearToMs(year: number, dayOfYear: number): number {
+  // Day 1 = January 1 at local midnight.
+  const d = new Date(year, 0, 1);
+  d.setDate(d.getDate() + (dayOfYear - 1));
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+/**
+ * Curing reminders for FR-08. After a harvest is recorded, emit:
+ *   - a `curing-progress` event from harvest-date → harvest-date + min weeks
+ *   - a `curing-ready` window from harvest-date + min weeks → + max weeks
+ * Operators see the curing card on /today + /harvest with the countdown.
+ */
+export function eventsForHarvest(harvest: HarvestEvent, crop: CropPlugin): CalendarEvent[] {
+  const curing = crop.postHarvestCuring;
+  if (!curing) return [];
+  const out: CalendarEvent[] = [];
+  const start = harvest.occurredAt;
+  const minMs = start + curing.durationWeeks.min * 7 * DAY_MS;
+  const maxMs = start + curing.durationWeeks.max * 7 * DAY_MS;
+
+  out.push({
+    kind: 'curing-progress',
+    blockId: harvest.blockId,
+    cropPluginId: harvest.cropPluginId,
+    varietyDisplayName: crop.displayName,
+    startMs: start,
+    endMs: minMs,
+    title: `Curing in progress: ${crop.displayName}`,
+    body: curing.method
+      ? `Method: ${curing.method}. Min ${curing.durationWeeks.min} wk${curing.durationWeeks.min === 1 ? '' : 's'}.`
+      : undefined,
+    detail: {
+      harvestEventId: harvest.id,
+      lotNumber: harvest.lotNumber,
+      method: curing.method,
+      targetMoisturePercent: curing.targetMoisturePercent
+    }
+  });
+
+  out.push({
+    kind: 'curing-ready',
+    blockId: harvest.blockId,
+    cropPluginId: harvest.cropPluginId,
+    varietyDisplayName: crop.displayName,
+    startMs: minMs,
+    endMs: maxMs,
+    title: `Curing ready: ${crop.displayName}`,
+    body: curing.targetMoisturePercent
+      ? `Verify moisture ${curing.targetMoisturePercent.min}-${curing.targetMoisturePercent.max}% before storage.`
+      : 'Verify by feel + visual check before transferring to storage.',
+    detail: { harvestEventId: harvest.id, lotNumber: harvest.lotNumber }
+  });
+
+  return out;
 }
 
 export function eventsInRange(

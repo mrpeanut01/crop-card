@@ -1,0 +1,329 @@
+<script lang="ts">
+  import { invalidateAll } from '$app/navigation';
+
+  let { data } = $props();
+
+  type EquipmentType =
+    | 'sprayer'
+    | 'planter'
+    | 'drill'
+    | 'rake'
+    | 'baler'
+    | 'tractor'
+    | 'mower'
+    | 'irrigation'
+    | 'other';
+
+  const allTypes: EquipmentType[] = [
+    'sprayer',
+    'planter',
+    'drill',
+    'rake',
+    'baler',
+    'tractor',
+    'mower',
+    'irrigation',
+    'other'
+  ];
+
+  let typeFilter = $state<'all' | EquipmentType>('all');
+  const filtered = $derived(
+    typeFilter === 'all' ? data.equipment : data.equipment.filter((e) => e.type === typeFilter)
+  );
+
+  let newType = $state<EquipmentType>('planter');
+  let newLabel = $state('');
+  let newNotes = $state('');
+  let creating = $state(false);
+  let createError = $state<string | null>(null);
+
+  async function createEquipment() {
+    if (!newLabel.trim()) return;
+    creating = true;
+    createError = null;
+    try {
+      const res = await fetch('/api/equipment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: newType,
+          label: newLabel.trim(),
+          notes: newNotes.trim() || undefined
+        })
+      });
+      const out = await res.json();
+      if (!res.ok) {
+        createError = out.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      newLabel = '';
+      newNotes = '';
+      await invalidateAll();
+    } catch (e) {
+      createError = e instanceof Error ? e.message : String(e);
+    } finally {
+      creating = false;
+    }
+  }
+
+  function fmt(ts?: number) {
+    return ts ? new Date(ts).toLocaleDateString() : '—';
+  }
+
+  const counts = $derived.by(() => {
+    const m = new Map<EquipmentType, number>();
+    for (const e of data.equipment) m.set(e.type, (m.get(e.type) ?? 0) + 1);
+    return m;
+  });
+</script>
+
+<h1>Equipment</h1>
+<p class="lede">
+  Field gear: planters, drills, rakes, balers, sprayers, tractors, mowers, irrigation. Sprayer-typed
+  equipment carries the chemistry-history, decon, and GPA-calibration state the safety kernel reads
+  on every spray.
+</p>
+
+<section class="card">
+  <h2>Filter by type</h2>
+  <div class="filters">
+    <button class="chip" class:active={typeFilter === 'all'} onclick={() => (typeFilter = 'all')}>
+      All ({data.equipment.length})
+    </button>
+    {#each allTypes as t (t)}
+      {@const c = counts.get(t) ?? 0}
+      {#if c > 0 || typeFilter === t}
+        <button class="chip" class:active={typeFilter === t} onclick={() => (typeFilter = t)}>
+          {t} ({c})
+        </button>
+      {/if}
+    {/each}
+  </div>
+</section>
+
+{#if !data.canEdit}
+  <section class="card role-notice">
+    <h2>View only</h2>
+    <p>Helper role can browse equipment + log maintenance entries. Owners create + retire.</p>
+  </section>
+{/if}
+
+{#if data.canEdit}
+  <section class="card">
+    <h2>Add equipment</h2>
+    <div class="row">
+      <select bind:value={newType}>
+        {#each allTypes as t (t)}<option value={t}>{t}</option>{/each}
+      </select>
+      <input type="text" placeholder="e.g. John Deere 4020" bind:value={newLabel} />
+      <input type="text" placeholder="notes (optional)" bind:value={newNotes} />
+      <button class="primary" onclick={createEquipment} disabled={creating || !newLabel.trim()}>
+        {creating ? '…' : 'Add'}
+      </button>
+    </div>
+    {#if createError}<p class="error">{createError}</p>{/if}
+  </section>
+{/if}
+
+{#if filtered.length === 0}
+  <section class="card empty">
+    <p>No equipment matching this filter.</p>
+  </section>
+{:else}
+  <ul class="equipment-list">
+    {#each filtered as e (e.id)}
+      <li class="card item type-{e.type}">
+        <header>
+          <a href="/equipment/{e.id}"><strong>{e.label}</strong></a>
+          <span class="type-badge">{e.type}</span>
+          {#if e.retiredAt}<span class="retired">retired {fmt(e.retiredAt)}</span>{/if}
+        </header>
+        <dl>
+          {#if e.type === 'sprayer'}
+            <dt>GPA</dt>
+            <dd>{e.state.calibratedGpa ?? '—'}</dd>
+            <dt>Last load</dt>
+            <dd>
+              {#if e.state.lastChemistryClass}
+                <span class="warn">{e.state.lastChemistryClass}</span>
+                <a class="link" href="/spray/decon?sprayer={encodeURIComponent(e.id)}">Decon →</a>
+              {:else}
+                <span class="ok">clean</span>
+              {/if}
+            </dd>
+            <dt>Last decon</dt>
+            <dd>{fmt(e.state.lastDeconAt)}</dd>
+          {:else}
+            <dt>Hour meter</dt>
+            <dd>{e.state.hourMeter ?? '—'}</dd>
+            <dt>Last used</dt>
+            <dd>{fmt(e.state.lastUsedAt)}</dd>
+          {/if}
+        </dl>
+        {#if e.notes}<p class="notes">{e.notes}</p>{/if}
+      </li>
+    {/each}
+  </ul>
+{/if}
+
+<style>
+  h1 {
+    margin: 0 0 0.25rem;
+  }
+  .lede {
+    color: #555;
+    margin: 0 0 1.5rem;
+  }
+  .card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  .card h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    color: #1f5e3a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .filters {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .chip {
+    background: white;
+    border: 2px solid #d0d7d0;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: capitalize;
+    font: inherit;
+    min-height: 40px;
+  }
+  .chip.active {
+    background: #1f5e3a;
+    color: white;
+    border-color: #1f5e3a;
+  }
+  .role-notice {
+    border-left: 4px solid #b35900;
+    background: #fff8ec;
+  }
+  .role-notice h2 {
+    color: #b35900;
+  }
+  .row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .row select,
+  .row input {
+    flex: 1 1 120px;
+    padding: 0.6rem;
+    border: 2px solid #d0d7d0;
+    border-radius: 4px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  .primary {
+    background: #1f5e3a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 48px;
+  }
+  .primary:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  .error {
+    color: #b00020;
+  }
+  .empty {
+    text-align: center;
+    padding: 2rem;
+    color: #555;
+  }
+  .equipment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .item header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+  .item header a {
+    color: #1f5e3a;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  .item header a:hover {
+    text-decoration: underline;
+  }
+  .type-badge {
+    background: #e7f1ea;
+    color: #1f5e3a;
+    padding: 0.1rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .retired {
+    color: #888;
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.4rem 1rem;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  dt {
+    color: #666;
+  }
+  dd {
+    margin: 0;
+  }
+  .warn {
+    background: #fff3cd;
+    color: #b35900;
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  .ok {
+    background: #e7f1ea;
+    color: #1f5e3a;
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  .link {
+    color: #b00020;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+  .notes {
+    color: #555;
+    font-size: 0.9rem;
+    margin: 0.5rem 0 0;
+  }
+</style>

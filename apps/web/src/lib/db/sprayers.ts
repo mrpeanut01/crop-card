@@ -1,14 +1,15 @@
 /**
- * DB-backed sprayer repo (replaces the in-memory one from Phase 3).
- * Same surface area: list, get, recordSpray, recordDecon.
+ * Legacy sprayer adapter (Phase 8a).
  *
- * Seeds CORN + PUMPKIN sprayers on first call so existing pages keep working.
+ * Phase 8a unified all field gear under `equipment`. The repo here remains
+ * for back-compat with existing call sites (every endpoint that referenced
+ * a "sprayer" by id) and now reads/writes against the equipment + state
+ * tables filtered to `type='sprayer'`. New code should import from
+ * `$lib/db/equipment` directly.
  */
 
-import { eq } from 'drizzle-orm';
+import { appendEquipmentLog, getEquipment, listEquipment, updateEquipmentState } from './equipment';
 import type { ChemistryClass } from '$lib/safety/types';
-import { db } from './client';
-import { sprayers } from './schema';
 
 export interface Sprayer {
   id: string;
@@ -20,74 +21,57 @@ export interface Sprayer {
   lastDeconAt?: number;
 }
 
-const SEED: Sprayer[] = [
-  { id: 'CORN', label: 'Corn-dedicated sprayer', calibratedGpa: 15 },
-  { id: 'PUMPKIN', label: 'Pumpkin/bean-dedicated sprayer', calibratedGpa: 15 }
-];
-
-let seeded = false;
-function ensureSeeded() {
-  if (seeded) return;
-  for (const s of SEED) {
-    const exists = db.select().from(sprayers).where(eq(sprayers.id, s.id)).get();
-    if (!exists) {
-      db.insert(sprayers)
-        .values({
-          id: s.id,
-          label: s.label,
-          calibratedGpa: s.calibratedGpa
-        })
-        .run();
-    }
-  }
-  seeded = true;
-}
-
-function rowToSprayer(row: typeof sprayers.$inferSelect): Sprayer {
+function toSprayer(eq: ReturnType<typeof listEquipment>[number]): Sprayer {
   return {
-    id: row.id,
-    label: row.label,
-    calibratedGpa: row.calibratedGpa ?? 15,
-    calibrationDate: row.calibrationDate?.getTime(),
-    lastChemistryClass: row.lastChemistryClass as ChemistryClass | undefined,
-    lastSprayedAt: row.lastSprayedAt?.getTime(),
-    lastDeconAt: row.lastDeconAt?.getTime()
+    id: eq.id,
+    label: eq.label,
+    calibratedGpa: eq.state.calibratedGpa ?? 15,
+    calibrationDate: eq.state.calibrationDate,
+    lastChemistryClass: eq.state.lastChemistryClass,
+    lastSprayedAt: eq.state.lastUsedAt,
+    lastDeconAt: eq.state.lastDeconAt
   };
 }
 
+// Bootstrap (CORN + PUMPKIN seed) lives in equipment.ts so both repos
+// converge on the same canonical id space.
+
 export function listSprayers(): Sprayer[] {
-  ensureSeeded();
-  return db.select().from(sprayers).all().map(rowToSprayer);
+  return listEquipment({ type: 'sprayer' }).map(toSprayer);
 }
 
 export function getSprayer(id: string): Sprayer | undefined {
-  ensureSeeded();
-  const row = db.select().from(sprayers).where(eq(sprayers.id, id)).get();
-  return row ? rowToSprayer(row) : undefined;
+  const eq = getEquipment(id);
+  if (!eq || eq.type !== 'sprayer') return undefined;
+  return toSprayer(eq);
 }
 
 export function recordSpray(id: string, chemistry: ChemistryClass, occurredAt: number): Sprayer {
-  ensureSeeded();
-  const updated = db
-    .update(sprayers)
-    .set({ lastChemistryClass: chemistry, lastSprayedAt: new Date(occurredAt) })
-    .where(eq(sprayers.id, id))
-    .returning()
-    .get();
-  if (!updated) throw new Error(`unknown sprayer: ${id}`);
-  return rowToSprayer(updated);
+  updateEquipmentState(id, {
+    lastChemistryClass: chemistry,
+    lastUsedAt: occurredAt
+  });
+  appendEquipmentLog({
+    equipmentId: id,
+    kind: 'use',
+    occurredAt,
+    payload: { chemistryClass: chemistry }
+  });
+  const out = getSprayer(id);
+  if (!out) throw new Error(`unknown sprayer: ${id}`);
+  return out;
 }
 
 export function recordDecon(id: string, completedAt: number): Sprayer {
-  ensureSeeded();
-  const updated = db
-    .update(sprayers)
-    .set({ lastDeconAt: new Date(completedAt) })
-    .where(eq(sprayers.id, id))
-    .returning()
-    .get();
-  if (!updated) throw new Error(`unknown sprayer: ${id}`);
-  return rowToSprayer(updated);
+  updateEquipmentState(id, { lastDeconAt: completedAt });
+  appendEquipmentLog({
+    equipmentId: id,
+    kind: 'decon',
+    occurredAt: completedAt
+  });
+  const out = getSprayer(id);
+  if (!out) throw new Error(`unknown sprayer: ${id}`);
+  return out;
 }
 
 export function recordCalibration(
@@ -95,19 +79,20 @@ export function recordCalibration(
   calibratedGpa: number,
   calibratedAt: number = Date.now()
 ): Sprayer {
-  ensureSeeded();
   if (!Number.isFinite(calibratedGpa) || calibratedGpa <= 0) {
     throw new Error('calibratedGpa must be positive');
   }
-  const updated = db
-    .update(sprayers)
-    .set({
-      calibratedGpa: Math.round(calibratedGpa),
-      calibrationDate: new Date(calibratedAt)
-    })
-    .where(eq(sprayers.id, id))
-    .returning()
-    .get();
-  if (!updated) throw new Error(`unknown sprayer: ${id}`);
-  return rowToSprayer(updated);
+  updateEquipmentState(id, {
+    calibratedGpa: Math.round(calibratedGpa),
+    calibrationDate: calibratedAt
+  });
+  appendEquipmentLog({
+    equipmentId: id,
+    kind: 'calibration',
+    occurredAt: calibratedAt,
+    payload: { calibratedGpa: Math.round(calibratedGpa) }
+  });
+  const out = getSprayer(id);
+  if (!out) throw new Error(`unknown sprayer: ${id}`);
+  return out;
 }

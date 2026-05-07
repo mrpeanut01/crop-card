@@ -59,7 +59,14 @@ export const load: PageServerLoad = async ({ url }) => {
     .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
   // Pre-fill from query params.
-  const requestedBlockId = url.searchParams.get('block');
+  const requestedCropId = url.searchParams.get('crop');
+  let requestedBlockId = url.searchParams.get('block');
+  // ?crop=<id> wins when present — resolve through to its block.
+  if (requestedCropId) {
+    const { getCrop } = await import('$lib/db/crops');
+    const c = getCrop(requestedCropId);
+    if (c) requestedBlockId = c.blockId;
+  }
   const requestedProducts = url.searchParams.getAll('product');
   const windowStage = url.searchParams.get('windowStage');
   const fromScout = url.searchParams.get('fromScout') === '1';
@@ -101,6 +108,7 @@ export const load: PageServerLoad = async ({ url }) => {
     sprayers: listSprayers(),
     preselect: {
       blockId: requestedBlockId,
+      cropId: requestedCropId,
       productPluginIds: requestedProducts,
       windowStage: filteredByStage,
       fromScout

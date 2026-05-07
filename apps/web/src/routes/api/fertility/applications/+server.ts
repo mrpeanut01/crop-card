@@ -6,6 +6,8 @@ import { currentUser } from '$lib/server/auth';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
+  cropId: z.string().optional(),
+  taskId: z.string().optional(),
   occurredAt: z.number().int().optional(),
   source: z.string().min(1).max(120),
   stockItemId: z.string().optional(),
@@ -36,11 +38,24 @@ export const POST: RequestHandler = async (event) => {
     );
   }
   const performer = auth ?? (await ensureSystemUser());
+  const occurredAt = parsed.data.occurredAt ?? Date.now();
   const persisted = insertFertilityApplication({
     ...parsed.data,
-    occurredAt: parsed.data.occurredAt ?? Date.now(),
+    occurredAt,
     performedById: performer.id
   });
+  if (parsed.data.taskId) {
+    try {
+      const { completeTask } = await import('$lib/db/tasks');
+      completeTask(parsed.data.taskId, {
+        eventTable: 'fertility_application',
+        eventId: persisted.id,
+        occurredAt
+      });
+    } catch {
+      // Non-fatal; the application is recorded.
+    }
+  }
   return json({ application: persisted }, { status: 201 });
 };
 

@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import {
   fertilityBudgetForBlock,
   listFertilityApplicationsForBlock,
@@ -9,10 +10,13 @@ import {
 
 export const load: PageServerLoad = ({ url }) => {
   const blocks = listBlocks();
-  const blockId = url.searchParams.get('block') ?? blocks[0]?.id ?? '';
+  const cropId = url.searchParams.get('crop');
+  const crop = cropId ? getCrop(cropId) : undefined;
+  const blockId = crop?.blockId ?? url.searchParams.get('block') ?? blocks[0]?.id ?? '';
   const year = Number(url.searchParams.get('year')) || new Date().getFullYear();
 
   return {
+    selectedCropId: crop?.id ?? null,
     blocks: blocks.map((b) => ({
       id: b.id,
       name: b.name,

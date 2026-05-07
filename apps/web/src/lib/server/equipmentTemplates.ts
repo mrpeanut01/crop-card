@@ -121,7 +121,23 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     description:
       'Manual diaphragm pump backpack. Spot-spray + small-plot use; calibrate to walking pace.',
     spec: { tankGal: 4, pumpType: 'manual diaphragm' },
-    defaultGpa: 30
+    defaultGpa: 30,
+    preTasks: [
+      {
+        key: 'backpack-pump-test',
+        title: 'Pump test + nozzle pattern check',
+        body: 'Pressurize with water; inspect spray pattern for clogged orifice or warped tip.',
+        condition: 'always-before-use'
+      }
+    ],
+    postTasks: [
+      {
+        key: 'backpack-decon-rinse',
+        title: 'Triple-rinse + air-dry tank',
+        body: 'Backpack tanks pickle if hot product sits overnight. Rinse and hang upside-down.',
+        condition: 'after-restricted-use-chemistry'
+      }
+    ]
   },
   {
     templateId: 'sprayer-25gal-atv',
@@ -130,7 +146,30 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     label: '25 gal ATV/UTV-mount sprayer',
     description: '12V pump, boomless or 3-nozzle boom; for orchard rows and row-crop spot work.',
     spec: { tankGal: 25, pump: '12V Shurflo', boomFt: 6 },
-    defaultGpa: 15
+    defaultGpa: 15,
+    preTasks: [
+      {
+        key: 'atv-12v-pump-test',
+        title: 'Run pump dry-test → check pressure switch',
+        body: '12V pumps fail silently with corroded contacts after sitting. Verify rated psi.',
+        condition: 'last-used-gt-days',
+        conditionDays: 30
+      },
+      {
+        key: 'atv-pre-mix-calibration',
+        title: 'Confirm 1/128-acre calibration',
+        body: 'Re-walk calibration if last cal >30d ago.',
+        condition: 'last-used-gt-days',
+        conditionDays: 30
+      }
+    ],
+    postTasks: [
+      {
+        key: 'atv-decon-restricted',
+        title: 'Tank decon — chemistry switch',
+        condition: 'after-restricted-use-chemistry'
+      }
+    ]
   },
   {
     templateId: 'sprayer-50gal-pull',
@@ -172,7 +211,29 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     label: '100 gal pull-behind boom sprayer',
     description: 'PTO-driven roller pump, hydraulic boom fold, mechanical agitation.',
     spec: { tankGal: 100, boomFt: 18, agitation: 'mechanical' },
-    defaultGpa: 15
+    defaultGpa: 15,
+    preTasks: [
+      {
+        key: 'pull100-spring-startup',
+        title: 'Spring-startup: roller-pump prime + boom-fold hydraulics',
+        body: 'Inspect rollers (replace if grooved); cycle boom fold for sticky cylinders.',
+        condition: 'after-storage-period',
+        conditionDays: 90
+      },
+      {
+        key: 'pull100-calibration',
+        title: 'Re-calibrate GPA at boom pressure',
+        condition: 'last-used-gt-days',
+        conditionDays: 30
+      }
+    ],
+    postTasks: [
+      {
+        key: 'pull100-decon-restricted',
+        title: 'Tank decon — chemistry switch',
+        condition: 'after-restricted-use-chemistry'
+      }
+    ]
   },
   {
     templateId: 'sprayer-200gal-3pt',
@@ -182,7 +243,29 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     description:
       'Cat-2 3-pt hitch, PTO roller pump, jet agitation, 21-ft boom. Standard for row-crop work.',
     spec: { tankGal: 200, boomFt: 21, agitation: 'jet', hitch: 'Cat-2' },
-    defaultGpa: 15
+    defaultGpa: 15,
+    preTasks: [
+      {
+        key: 's200-spring-startup',
+        title: 'Spring-startup + agitation jet check',
+        body: 'Jet agitation clogs with old residue. Run 50 gal water + flush all return-to-tank lines.',
+        condition: 'after-storage-period',
+        conditionDays: 90
+      },
+      {
+        key: 's200-calibration',
+        title: 'Re-calibrate GPA',
+        condition: 'last-used-gt-days',
+        conditionDays: 30
+      }
+    ],
+    postTasks: [
+      {
+        key: 's200-decon-restricted',
+        title: 'Tank decon — chemistry switch',
+        condition: 'after-restricted-use-chemistry'
+      }
+    ]
   },
   {
     templateId: 'sprayer-airblast-100gal',
@@ -192,7 +275,29 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     description:
       'PTO-driven airblast for tree fruit canopies — fungicide + insecticide cover sprays.',
     spec: { tankGal: 100, fanDiameterIn: 30, hitch: 'PTO' },
-    defaultGpa: 50
+    defaultGpa: 50,
+    preTasks: [
+      {
+        key: 'airblast-fan-bearings',
+        title: 'Inspect fan bearings + PTO shaft guards',
+        body: 'Airblast fan spins fast; failed bearings throw blades. Bearings + shields BEFORE first run each season.',
+        condition: 'after-storage-period',
+        conditionDays: 90
+      },
+      {
+        key: 'airblast-nozzle-pattern',
+        title: 'Check nozzle pattern — airblast canopy coverage',
+        body: 'Spot-test pattern with water on a target tree; uneven nozzle wear is the most common quality issue.',
+        condition: 'always-before-use'
+      }
+    ],
+    postTasks: [
+      {
+        key: 'airblast-decon-restricted',
+        title: 'Tank decon — chemistry switch',
+        condition: 'after-restricted-use-chemistry'
+      }
+    ]
   },
 
   // ─── Tillage + bed prep ─────────────────────────────────────────────────
@@ -285,7 +390,21 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     category: 'No-till drill',
     label: '7 ft no-till drill (Great Plains / Esch)',
     description: 'Coulter-based no-till drill for cover crops, small grains, hay seedings.',
-    spec: { workingWidthFt: 7, rowsCount: 12 }
+    spec: { workingWidthFt: 7, rowsCount: 12 },
+    preTasks: [
+      {
+        key: 'drill-coulter-bearings',
+        title: 'Inspect coulter + opener bearings; spin freely',
+        condition: 'last-used-gt-days',
+        conditionDays: 60
+      },
+      {
+        key: 'drill-seed-rate-calibration',
+        title: 'Run seed-rate calibration for chosen species',
+        body: 'Drill seed cups vary by species size; verify lb/ac with a static calibration before in-field run.',
+        condition: 'always-before-use'
+      }
+    ]
   },
   {
     templateId: 'transplanter-mechanical',
@@ -294,7 +413,20 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     label: 'Water-wheel mechanical transplanter (Mechanical Transplanter / Holland)',
     description:
       'Pulled water-wheel transplanter — 2 operators, 1 row at a time. For tomato, pepper, brassica plug starts.',
-    spec: { rows: 1, operators: 2 }
+    spec: { rows: 1, operators: 2 },
+    preTasks: [
+      {
+        key: 'transplanter-water-tank-flush',
+        title: 'Flush + fill water tank; check drip valves',
+        body: 'Stagnant water + algae clog drip valves. Flush + add fresh water with optional starter fertilizer.',
+        condition: 'always-before-use'
+      },
+      {
+        key: 'transplanter-wheel-spacing',
+        title: 'Set water-wheel spacing for plug spacing',
+        condition: 'always-before-use'
+      }
+    ]
   },
   {
     templateId: 'transplanter-paperpot',
@@ -338,7 +470,22 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     category: 'Mower-conditioner',
     label: '9 ft disc mower-conditioner',
     description: 'Hay mower-conditioner with rubber rolls; first step in hay operation.',
-    spec: { workingWidthFt: 9, conditionerType: 'rubber-roll' }
+    spec: { workingWidthFt: 9, conditionerType: 'rubber-roll' },
+    preTasks: [
+      {
+        key: 'discmower-blade-bolt-torque',
+        title: 'Torque-check disc blade bolts',
+        body: 'Disc-cutter bolts loosen with use; loose bolt + rock = thrown blade. Check before each first cut.',
+        condition: 'always-before-use'
+      },
+      {
+        key: 'discmower-spring-startup',
+        title: 'Inspect roll-clearance + driveline U-joints',
+        body: 'After winter sit, U-joints can seize and conditioner rolls can develop flat spots. Spin freely first.',
+        condition: 'after-storage-period',
+        conditionDays: 90
+      }
+    ]
   },
   {
     templateId: 'tedder-4basket',
@@ -346,7 +493,21 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     category: 'Hay tedder',
     label: '4-basket hay tedder',
     description: 'Spreads + flips windrows for faster drying. Cat-1 3-pt.',
-    spec: { baskets: 4, workingWidthFt: 17 }
+    spec: { baskets: 4, workingWidthFt: 17 },
+    preTasks: [
+      {
+        key: 'tedder-tine-replace',
+        title: 'Inspect + replace bent / missing tines',
+        body: 'Bent tines leave hay on the ground. Check + grease basket spindles.',
+        condition: 'always-before-use'
+      },
+      {
+        key: 'tedder-bearings',
+        title: 'Lube basket spindle bearings after long sit',
+        condition: 'last-used-gt-days',
+        conditionDays: 90
+      }
+    ]
   },
   {
     templateId: 'rake-side-delivery',
@@ -354,7 +515,21 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     category: 'Hay rake',
     label: 'Side-delivery hay rake',
     description: 'Single-rotor rake for forming windrows ahead of baling.',
-    spec: { workingWidthFt: 9 }
+    spec: { workingWidthFt: 9 },
+    preTasks: [
+      {
+        key: 'rake-tine-replace',
+        title: 'Replace missing / broken rake teeth',
+        body: 'Missing teeth leave skips in the windrow → bale weight inconsistency.',
+        condition: 'always-before-use'
+      },
+      {
+        key: 'rake-bearings',
+        title: 'Lube rotor bearings + check chain tension',
+        condition: 'last-used-gt-days',
+        conditionDays: 90
+      }
+    ]
   },
   {
     templateId: 'baler-small-square',
@@ -385,7 +560,27 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     category: 'Round baler',
     label: '4×4 round baler',
     description: 'Compact round baler — bales fit in standard pickup beds; ~600 lb dry hay.',
-    spec: { baleSize: '4×4 ft', baleWeightLb: 600 }
+    spec: { baleSize: '4×4 ft', baleWeightLb: 600 },
+    preTasks: [
+      {
+        key: 'roundbaler-belt-inspection',
+        title: 'Inspect bale-forming belts for cracks / fraying',
+        body: 'Frayed belts slip and form lopsided bales. Replace before season if any visible damage.',
+        condition: 'after-storage-period',
+        conditionDays: 90
+      },
+      {
+        key: 'roundbaler-bearings',
+        title: 'Grease pickup + roller bearings',
+        condition: 'last-used-gt-days',
+        conditionDays: 90
+      },
+      {
+        key: 'roundbaler-test-bale',
+        title: 'Form 1 test bale + check density',
+        condition: 'always-before-use'
+      }
+    ]
   },
 
   // ─── Irrigation ─────────────────────────────────────────────────────────

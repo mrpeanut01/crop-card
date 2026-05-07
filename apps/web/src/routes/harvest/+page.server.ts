@@ -27,7 +27,9 @@ export interface PlantingHarvestStatus {
 }
 
 export const load: PageServerLoad = async ({ url }) => {
-  const focusPlantingId = url.searchParams.get('planting') ?? null;
+  // ?crop=<id> aliases ?planting=<id> for Phase 12D crop-attribution
+  // navigation. Both fall through to the planting-status loop below.
+  const focusPlantingId = url.searchParams.get('crop') ?? url.searchParams.get('planting') ?? null;
   const blocks = listBlocks();
   const registry = await getRegistry();
   const all = listHarvestEvents();

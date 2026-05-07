@@ -1,11 +1,14 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import { listCuttings } from '$lib/db/hayCuttings';
 import { getRegistry } from '$lib/server/registry';
 
 export const load: PageServerLoad = async ({ url }) => {
   const registry = await getRegistry();
   const blocks = listBlocks();
+  const cropId = url.searchParams.get('crop');
+  const crop = cropId ? getCrop(cropId) : undefined;
   const hayCrops = registry
     .crops()
     .filter((c) => c.hayOperations !== undefined)
@@ -35,6 +38,7 @@ export const load: PageServerLoad = async ({ url }) => {
   });
 
   const selectedBlockId =
+    crop?.blockId ??
     url.searchParams.get('block') ??
     blockOptions.find((b) => b.hayPlanting)?.id ??
     blockOptions[0]?.id ??
@@ -45,6 +49,7 @@ export const load: PageServerLoad = async ({ url }) => {
     blocks: blockOptions,
     hayCrops,
     selectedBlockId,
+    selectedCropId: crop?.id ?? null,
     year,
     cuttings: selectedBlockId ? listCuttings({ blockId: selectedBlockId, year }) : []
   };

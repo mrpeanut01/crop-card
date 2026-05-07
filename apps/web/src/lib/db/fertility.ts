@@ -94,6 +94,8 @@ export function listSoilTestsForBlock(blockId: string): SoilTest[] {
 
 export interface FertilityApplicationInput {
   blockId: string;
+  /** Phase 12: per-crop attribution. */
+  cropId?: string;
   occurredAt: number;
   source: string;
   stockItemId?: string;
@@ -115,6 +117,7 @@ function rowToApplication(row: typeof fertilityApplications.$inferSelect): Ferti
   return {
     id: row.id,
     blockId: row.blockId,
+    cropId: row.cropId ?? undefined,
     occurredAt: row.occurredAt.getTime(),
     source: row.source,
     stockItemId: row.stockItemId ?? undefined,
@@ -135,6 +138,7 @@ export function insertFertilityApplication(input: FertilityApplicationInput): Fe
     .values({
       id,
       blockId: input.blockId,
+      cropId: input.cropId ?? null,
       occurredAt: new Date(input.occurredAt),
       source: input.source,
       stockItemId: input.stockItemId ?? null,

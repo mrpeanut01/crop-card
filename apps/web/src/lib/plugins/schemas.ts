@@ -191,6 +191,19 @@ export const cropPluginSchema = pluginBase.extend({
   zadoksStages: z.array(zadoksStageSchema).optional(),
   /** Generic harvest-moisture gates (FR-21) — small grains, hay, etc. */
   moistureGates: z.array(harvestMoistureGateSchema).optional(),
+  /**
+   * Genetic / breeding traits the cultivar carries (Phase 11). Free-form
+   * kebab-case identifiers. Herbicide plugins can declare `requiresTraits`
+   * that, when fully present on the crop, exempt that herbicide from the
+   * family-kill bypass check (because the trait is what makes the kill
+   * matrix's default safe-list wrong for this specific cultivar).
+   *
+   * Example values:
+   *   'glyphosate-tolerant-rr2', 'dicamba-tolerant-xtend',
+   *   'glufosinate-tolerant-llink', 'imi-tolerant-clearfield',
+   *   'enlist-2-4-d-tolerant'
+   */
+  traits: z.array(z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/)).optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),
@@ -250,6 +263,24 @@ export const herbicidePluginSchema = pluginBase.extend({
   /** Variable-rate stub — overrides ratePerAcre when the spray UI surfaces
    *  zones. Consumers without a zone-aware planter ignore this field. */
   ratesPerZone: ratesPerZoneSchema.optional(),
+  /**
+   * Trait-gated safety claims (Phase 11). Each entry says "this herbicide
+   * is safe on cropPluginId X *if* the planted cultivar carries every
+   * listed trait." The bypass check rejects the claim unless the registry
+   * confirms the trait list. At spray time the kernel's family-kill rule
+   * is skipped for (product, crop) pairs where the trait override fires.
+   *
+   * Example: engenia → `[{ cropPluginId: 'soybean-asgrow-roundup-ready-2-xtend',
+   *   requiresTraits: ['dicamba-tolerant-xtend'] }]`
+   */
+  traitGatedSafeFor: z
+    .array(
+      z.object({
+        cropPluginId: z.string(),
+        requiresTraits: z.array(z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/)).min(1)
+      })
+    )
+    .optional(),
   labelClaims: z
     .object({
       safeForCropPluginIds: z.array(z.string()).optional()

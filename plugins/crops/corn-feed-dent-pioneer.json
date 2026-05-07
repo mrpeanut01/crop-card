@@ -13,6 +13,7 @@
     "seedDepthIn": { "min": 1.5, "max": 2 },
     "seedsPerAcre": 32000
   },
+  "traits": ["glyphosate-tolerant-rr2"],
   "harvestIndicators": ["Black layer at kernel base", "Grain moisture 25–30% (high-moisture corn) or 15–18% (dry corn)"],
-  "notes": "Standard Mid-Atlantic dent corn. Roundup Ready 2 + YieldGard CB (corn borer) traited. 110 d maturity fits Loudoun County."
+  "notes": "Standard Mid-Atlantic dent corn. Roundup Ready 2 + YieldGard CB (corn borer) traited. 110 d maturity fits Loudoun County. Phase 11 trait override: halex-gt + roundup-powermax-3 are tolerated thanks to the RR2 trait."
 }

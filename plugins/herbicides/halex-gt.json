@@ -14,5 +14,11 @@
   "requiresAMS": true,
   "deconRequired": true,
   "tankMixOrder": 6,
-  "notes": "Total POST corn package: glyphosate (RR-traited) + chloroacetamide residual + HPPD broadleaf. Tank-mix with AMS. Kernel does not yet model glyphosate-resistance traits — RR2 corn must be approved per spray via the bypass override."
+  "traitGatedSafeFor": [
+    {
+      "cropPluginId": "corn-feed-dent-pioneer",
+      "requiresTraits": ["glyphosate-tolerant-rr2"]
+    }
+  ],
+  "notes": "Total POST corn package: glyphosate (RR-traited) + chloroacetamide residual + HPPD broadleaf. Tank-mix with AMS. Phase 11 trait override: kernel allows halex-gt on the RR2-traited dent corn cultivar; without the trait the glyphosate AI would be lethal."
 }

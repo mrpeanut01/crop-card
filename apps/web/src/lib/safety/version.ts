@@ -2,4 +2,4 @@
  * Bump on any change to safety-kernel rules. Persisted on every spray record
  * so rule updates cannot retroactively misvalidate prior decisions.
  */
-export const RULES_VERSION = '0.2.0-safety-kernel' as const;
+export const RULES_VERSION = '0.3.0-safety-kernel' as const;

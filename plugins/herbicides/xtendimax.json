@@ -9,5 +9,11 @@
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,
-  "notes": "RESTRICTED-USE. Xtend-traited soybeans + cotton only — kernel does not yet model trait tolerance. Approve each spray via bypass override. Same label restrictions as Engenia."
+  "traitGatedSafeFor": [
+    {
+      "cropPluginId": "soybean-asgrow-roundup-ready-2-xtend",
+      "requiresTraits": ["dicamba-tolerant-xtend"]
+    }
+  ],
+  "notes": "RESTRICTED-USE. Xtend-traited soybeans + cotton only. Phase 11 trait override: kernel allows xtendimax on Xtend-traited soybean. Same label restrictions as Engenia (TTI nozzles, ≤10 mph wind, sensitive-crop buffer)."
 }

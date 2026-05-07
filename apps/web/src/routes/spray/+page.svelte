@@ -6,7 +6,7 @@
   // Preselect from query params so deep-links from /today and /scout land on
   // a partially-filled form instead of a blank one.
   const preselectedBlock =
-    (data.preselect.blockId && data.blocks.find((b) => b.id === data.preselect.blockId))
+    data.preselect.blockId && data.blocks.find((b) => b.id === data.preselect.blockId)
       ? data.preselect.blockId
       : (data.blocks[0]?.id ?? '');
 
@@ -57,9 +57,7 @@
 
   const block = $derived(data.blocks.find((b) => b.id === selectedBlockId));
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
-  const isCornBlock = $derived(
-    block?.crops.some((c) => c.cropFamily === 'corn') ?? false
-  );
+  const isCornBlock = $derived(block?.crops.some((c) => c.cropFamily === 'corn') ?? false);
 
   function toggleHerbicide(id: string) {
     if (selectedHerbicideIds.includes(id)) {
@@ -202,8 +200,8 @@
 
 <h1>Plan a spray</h1>
 <p class="lede">
-  Pick a block, herbicide(s), sprayer, and conditions. The safety kernel
-  decides whether the dilution table renders or you get a STOP card.
+  Pick a block, herbicide(s), sprayer, and conditions. The safety kernel decides whether the
+  dilution table renders or you get a STOP card.
 </p>
 
 {#if data.preselect.fromScout || data.preselect.blockId}
@@ -220,150 +218,178 @@
   <section class="step empty-state">
     <h2>No blocks with plantings yet</h2>
     <p>
-      Add a block + planting on <a href="/plan">/plan</a> first. The spray
-      flow operates on real plantings so the kernel knows what crops are in
-      the block.
+      Add a block + planting on <a href="/plan">/plan</a> first. The spray flow operates on real plantings
+      so the kernel knows what crops are in the block.
     </p>
   </section>
 {:else}
-<section class="step">
-  <h2>1. Block</h2>
-  <div class="cards">
-    {#each data.blocks as b (b.id)}
-      <button
-        type="button"
-        class="card"
-        class:selected={selectedBlockId === b.id}
-        onclick={() => (selectedBlockId = b.id)}
-      >
-        <strong>{b.label}</strong>
-        <small>{b.description}</small>
-        <ul>
-          {#each b.crops as c}
-            <li>{c.displayName} <em>({c.cropFamily})</em></li>
-          {/each}
-        </ul>
-      </button>
-    {/each}
-  </div>
-</section>
-
-<section class="step">
-  <h2>2. Herbicide(s)</h2>
-  {#if data.preselect.windowStage && !showAllHerbicides}
-    <p class="filter-hint">
-      Filtered to <strong>{data.preselect.windowStage}</strong> window from today's
-      calendar. <button class="link-button" onclick={() => (showAllHerbicides = true)}>
-        Show all herbicides
-      </button>
-    </p>
-  {/if}
-  <div class="cards">
-    {#each (showAllHerbicides ? data.allHerbicides : data.herbicides) as h (h.pluginId)}
-      <button
-        type="button"
-        class="card"
-        class:selected={selectedHerbicideIds.includes(h.pluginId)}
-        onclick={() => toggleHerbicide(h.pluginId)}
-      >
-        <strong>{h.displayName}</strong>
-        <small>{h.applicationTiming ?? 'unspecified timing'} • {h.chemistryClasses.join(', ')}</small>
-        <small>
-          {h.ratePerAcre.amount} {h.ratePerAcre.unit}/A @ {h.gpaCalibration} GPA
-          {#if h.requiresAMS}• AMS{/if}
-          {#if h.deconRequired}• decon{/if}
-        </small>
-      </button>
-    {/each}
-  </div>
-</section>
-
-<section class="step">
-  <h2>3. Sprayer</h2>
-  <div class="cards">
-    {#each data.sprayers as s (s.id)}
-      <button
-        type="button"
-        class="card"
-        class:selected={selectedSprayerId === s.id}
-        onclick={() => (selectedSprayerId = s.id)}
-      >
-        <strong>{s.label}</strong>
-        <small>id: {s.id} • {s.calibratedGpa} GPA</small>
-        {#if s.lastChemistryClass}
-          <small class="warn">last load: {s.lastChemistryClass}</small>
-        {:else}
-          <small class="ok">clean</small>
-        {/if}
-        {#if s.lastDeconAt}
-          <small>last decon: {new Date(s.lastDeconAt).toLocaleString()}</small>
-        {/if}
-      </button>
-    {/each}
-  </div>
-</section>
-
-<section class="step">
-  <h2>4. Tank size</h2>
-  <p class="hint">Pick the tank you're loading. Per spec §4.2, supported sizes are 10/25/50/75/100 gal.</p>
-  <div class="quick-picks" role="radiogroup" aria-label="Tank size in gallons">
-    {#each [10, 25, 50, 75, 100] as size (size)}
-      <button
-        type="button"
-        role="radio"
-        aria-checked={tankSizeGallons === size}
-        class="pick"
-        class:selected={tankSizeGallons === size}
-        onclick={() => (tankSizeGallons = size)}
-      >
-        {size} <span>gal</span>
-      </button>
-    {/each}
-  </div>
-</section>
-
-<section class="step">
-  <h2>5. Conditions</h2>
-  <div class="conditions">
-    <div class="stepper">
-      <span class="stepper-label">Wind</span>
-      <button type="button" aria-label="Decrease wind" onclick={() => (windMph = Math.max(0, windMph - 1))}>−</button>
-      <output>{windMph}<small> mph</small></output>
-      <button type="button" aria-label="Increase wind" onclick={() => (windMph = windMph + 1)}>+</button>
+  <section class="step">
+    <h2>1. Block</h2>
+    <div class="cards">
+      {#each data.blocks as b (b.id)}
+        <button
+          type="button"
+          class="card"
+          class:selected={selectedBlockId === b.id}
+          onclick={() => (selectedBlockId = b.id)}
+        >
+          <strong>{b.label}</strong>
+          <small>{b.description}</small>
+          <ul>
+            {#each b.crops as c}
+              <li>{c.displayName} <em>({c.cropFamily})</em></li>
+            {/each}
+          </ul>
+        </button>
+      {/each}
     </div>
-    <div class="stepper">
-      <span class="stepper-label">Temp</span>
-      <button type="button" aria-label="Decrease temp" onclick={() => (tempF = tempF - 1)}>−</button>
-      <output>{tempF}<small>°F</small></output>
-      <button type="button" aria-label="Increase temp" onclick={() => (tempF = tempF + 1)}>+</button>
-    </div>
-    <div class="stepper">
-      <span class="stepper-label">Rain (24h)</span>
-      <button type="button" aria-label="Decrease rain" onclick={() => (rainMm = Math.max(0, rainMm - 1))}>−</button>
-      <output>{rainMm}<small> mm</small></output>
-      <button type="button" aria-label="Increase rain" onclick={() => (rainMm = rainMm + 1)}>+</button>
-    </div>
-    {#if isCornBlock}
-      <div class="stepper">
-        <span class="stepper-label">Corn ht</span>
-        <button type="button" aria-label="Decrease corn height" onclick={() => (cornHeightIn = Math.max(0, (cornHeightIn ?? 0) - 1))}>−</button>
-        <output>{cornHeightIn ?? 0}<small> in</small></output>
-        <button type="button" aria-label="Increase corn height" onclick={() => (cornHeightIn = (cornHeightIn ?? 0) + 1)}>+</button>
-      </div>
+  </section>
+
+  <section class="step">
+    <h2>2. Herbicide(s)</h2>
+    {#if data.preselect.windowStage && !showAllHerbicides}
+      <p class="filter-hint">
+        Filtered to <strong>{data.preselect.windowStage}</strong> window from today's calendar.
+        <button class="link-button" onclick={() => (showAllHerbicides = true)}>
+          Show all herbicides
+        </button>
+      </p>
     {/if}
-  </div>
-</section>
+    <div class="cards">
+      {#each showAllHerbicides ? data.allHerbicides : data.herbicides as h (h.pluginId)}
+        <button
+          type="button"
+          class="card"
+          class:selected={selectedHerbicideIds.includes(h.pluginId)}
+          onclick={() => toggleHerbicide(h.pluginId)}
+        >
+          <strong>{h.displayName}</strong>
+          <small
+            >{h.applicationTiming ?? 'unspecified timing'} • {h.chemistryClasses.join(', ')}</small
+          >
+          <small>
+            {h.ratePerAcre.amount}
+            {h.ratePerAcre.unit}/A @ {h.gpaCalibration} GPA
+            {#if h.requiresAMS}• AMS{/if}
+            {#if h.deconRequired}• decon{/if}
+          </small>
+        </button>
+      {/each}
+    </div>
+  </section>
 
-<div class="sticky-cta">
-  <button
-    type="button"
-    class="primary"
-    onclick={evaluate}
-    disabled={evaluating || selectedHerbicideIds.length === 0}
-  >
-    {evaluating ? 'Checking…' : 'Check safety'}
-  </button>
-</div>
+  <section class="step">
+    <h2>3. Sprayer</h2>
+    <div class="cards">
+      {#each data.sprayers as s (s.id)}
+        <button
+          type="button"
+          class="card"
+          class:selected={selectedSprayerId === s.id}
+          onclick={() => (selectedSprayerId = s.id)}
+        >
+          <strong>{s.label}</strong>
+          <small>id: {s.id} • {s.calibratedGpa} GPA</small>
+          {#if s.lastChemistryClass}
+            <small class="warn">last load: {s.lastChemistryClass}</small>
+          {:else}
+            <small class="ok">clean</small>
+          {/if}
+          {#if s.lastDeconAt}
+            <small>last decon: {new Date(s.lastDeconAt).toLocaleString()}</small>
+          {/if}
+        </button>
+      {/each}
+    </div>
+  </section>
+
+  <section class="step">
+    <h2>4. Tank size</h2>
+    <p class="hint">
+      Pick the tank you're loading. Per spec §4.2, supported sizes are 10/25/50/75/100 gal.
+    </p>
+    <div class="quick-picks" role="radiogroup" aria-label="Tank size in gallons">
+      {#each [10, 25, 50, 75, 100] as size (size)}
+        <button
+          type="button"
+          role="radio"
+          aria-checked={tankSizeGallons === size}
+          class="pick"
+          class:selected={tankSizeGallons === size}
+          onclick={() => (tankSizeGallons = size)}
+        >
+          {size} <span>gal</span>
+        </button>
+      {/each}
+    </div>
+  </section>
+
+  <section class="step">
+    <h2>5. Conditions</h2>
+    <div class="conditions">
+      <div class="stepper">
+        <span class="stepper-label">Wind</span>
+        <button
+          type="button"
+          aria-label="Decrease wind"
+          onclick={() => (windMph = Math.max(0, windMph - 1))}>−</button
+        >
+        <output>{windMph}<small> mph</small></output>
+        <button type="button" aria-label="Increase wind" onclick={() => (windMph = windMph + 1)}
+          >+</button
+        >
+      </div>
+      <div class="stepper">
+        <span class="stepper-label">Temp</span>
+        <button type="button" aria-label="Decrease temp" onclick={() => (tempF = tempF - 1)}
+          >−</button
+        >
+        <output>{tempF}<small>°F</small></output>
+        <button type="button" aria-label="Increase temp" onclick={() => (tempF = tempF + 1)}
+          >+</button
+        >
+      </div>
+      <div class="stepper">
+        <span class="stepper-label">Rain (24h)</span>
+        <button
+          type="button"
+          aria-label="Decrease rain"
+          onclick={() => (rainMm = Math.max(0, rainMm - 1))}>−</button
+        >
+        <output>{rainMm}<small> mm</small></output>
+        <button type="button" aria-label="Increase rain" onclick={() => (rainMm = rainMm + 1)}
+          >+</button
+        >
+      </div>
+      {#if isCornBlock}
+        <div class="stepper">
+          <span class="stepper-label">Corn ht</span>
+          <button
+            type="button"
+            aria-label="Decrease corn height"
+            onclick={() => (cornHeightIn = Math.max(0, (cornHeightIn ?? 0) - 1))}>−</button
+          >
+          <output>{cornHeightIn ?? 0}<small> in</small></output>
+          <button
+            type="button"
+            aria-label="Increase corn height"
+            onclick={() => (cornHeightIn = (cornHeightIn ?? 0) + 1)}>+</button
+          >
+        </div>
+      {/if}
+    </div>
+  </section>
+
+  <div class="sticky-cta">
+    <button
+      type="button"
+      class="primary"
+      onclick={evaluate}
+      disabled={evaluating || selectedHerbicideIds.length === 0}
+    >
+      {evaluating ? 'Checking…' : 'Check safety'}
+    </button>
+  </div>
 {/if}
 
 {#if lastError}
@@ -415,8 +441,7 @@
       {/if}
 
       <p class="audit">
-        Rule version: {result.ruleVersion} •
-        Plugin hashes:
+        Rule version: {result.ruleVersion} • Plugin hashes:
         {#each Object.entries(result.pluginHashes) as [id, h] (id)}
           <code>{id}@{h.slice(0, 8)}</code>
         {/each}
@@ -428,8 +453,8 @@
         </button>
       {:else if queuedOffline}
         <p class="recorded queued">
-          ☁ Offline — queued as <code>{recordedId}</code>. Will sync to the
-          server when connection returns.
+          ☁ Offline — queued as <code>{recordedId}</code>. Will sync to the server when connection
+          returns.
         </p>
         <div class="next-actions" aria-label="What's next">
           <a href="/records/pending" class="secondary">View queue</a>
@@ -449,12 +474,10 @@
       <h2>⛔ STOP — do not spray</h2>
       {#if result.requiresDecon}
         <p>
-          The selected sprayer last carried a different chemistry. Run the
-          decontamination wizard before this spray will be allowed.
+          The selected sprayer last carried a different chemistry. Run the decontamination wizard
+          before this spray will be allowed.
         </p>
-        <button type="button" class="primary" onclick={goToDecon}>
-          Open decon wizard →
-        </button>
+        <button type="button" class="primary" onclick={goToDecon}> Open decon wizard → </button>
       {/if}
       <ul class="violations">
         {#each result.violations as v (v.code + JSON.stringify(v.detail))}

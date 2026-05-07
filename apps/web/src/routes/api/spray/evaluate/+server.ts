@@ -162,8 +162,7 @@ export const POST: RequestHandler = async ({ request }) => {
     const tankSize = parsed.data.tankSizeGallons ?? 50;
     // Caller-supplied GPA wins; otherwise fall back to the sprayer's saved
     // calibration so spray dilutions reflect real-world rig performance.
-    const effectiveGpa =
-      parsed.data.calibratedGpa ?? (stored ? stored.calibratedGpa : undefined);
+    const effectiveGpa = parsed.data.calibratedGpa ?? (stored ? stored.calibratedGpa : undefined);
     dilutions = computeTankMixDilutions(fullProducts, tankSize, effectiveGpa);
     tankMixOrder = buildTankMixSteps(fullProducts);
   }

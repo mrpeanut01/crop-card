@@ -1,8 +1,10 @@
 name: deploy
 
+# Manual-only until Azure secrets (AZURE_CLIENT_ID, AZURE_TENANT_ID,
+# AZURE_SUBSCRIPTION_ID, AUTH_SECRET, RESEND_API_KEY) and the EMAIL_FROM
+# repo variable are configured. Trigger via the Actions tab → "deploy" →
+# "Run workflow".
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 env:

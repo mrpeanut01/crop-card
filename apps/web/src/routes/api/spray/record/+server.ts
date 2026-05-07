@@ -107,10 +107,7 @@ export const POST: RequestHandler = async (event) => {
   // Helper-role gate (FR-09 / NFR-09): only owners may apply a custom rate.
   const auth = currentUser(event);
   if (parsed.data.customRateOverride && auth?.role !== 'owner') {
-    return json(
-      { error: 'custom rate override requires owner role' },
-      { status: 403 }
-    );
+    return json({ error: 'custom rate override requires owner role' }, { status: 403 });
   }
 
   const enrichCrop = (c: z.infer<typeof cropStageInput>) => ({

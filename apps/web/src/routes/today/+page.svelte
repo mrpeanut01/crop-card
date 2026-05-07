@@ -75,9 +75,11 @@
     <h2>No scheduled action today</h2>
     <p>
       {#if data.counts.blocks === 0}
-        Add a block on <a href="/plan">/plan</a> with a planting record to see calendar-driven actions here.
+        Add a block on <a href="/plan">/plan</a> with a planting record to see calendar-driven actions
+        here.
       {:else}
-        Calendar engine has nothing for today. Plan a one-off spray on <a href="/spray">/spray</a> if needed.
+        Calendar engine has nothing for today. Plan a one-off spray on <a href="/spray">/spray</a> if
+        needed.
       {/if}
     </p>
     <a href="/spray" class="primary">Plan a spray</a>

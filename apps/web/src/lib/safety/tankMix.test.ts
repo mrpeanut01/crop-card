@@ -28,11 +28,7 @@ describe('checkTankMix', () => {
   });
 
   it('allows clethodim exactly 7 days after stadia', () => {
-    const v = checkTankMix(
-      [clethodim],
-      7 * DAY_MS,
-      [{ pluginId: 'stadia', occurredAt: 0 }]
-    );
+    const v = checkTankMix([clethodim], 7 * DAY_MS, [{ pluginId: 'stadia', occurredAt: 0 }]);
     expect(v).toEqual([]);
   });
 
@@ -41,11 +37,7 @@ describe('checkTankMix', () => {
   });
 
   it('symmetric: stadia within 7 days of clethodim also blocks', () => {
-    const v = checkTankMix(
-      [stadia],
-      DAY_MS,
-      [{ pluginId: 'clethodim', occurredAt: 0 }]
-    );
+    const v = checkTankMix([stadia], DAY_MS, [{ pluginId: 'clethodim', occurredAt: 0 }]);
     expect(v.map((x) => x.code)).toContain('TANK_MIX_SEPARATION');
   });
 });

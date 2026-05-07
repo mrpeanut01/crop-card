@@ -65,17 +65,14 @@
 
 <h1>Sprayer calibration</h1>
 <p class="lede">
-  1/128-acre method (UC-10, FR-12). Walk the calibration distance at your
-  normal spray speed, collect output in a jug, and the fluid ounces you
-  collect equals your gallons-per-acre. The dilution calculator uses this
-  GPA to scale every product rate.
+  1/128-acre method (UC-10, FR-12). Walk the calibration distance at your normal spray speed,
+  collect output in a jug, and the fluid ounces you collect equals your gallons-per-acre. The
+  dilution calculator uses this GPA to scale every product rate.
 </p>
 
 <section class="card" aria-labelledby="step-1">
   <h2 id="step-1">1. Sprayer</h2>
-  <label for="sprayer-select">
-    Choose sprayer
-  </label>
+  <label for="sprayer-select"> Choose sprayer </label>
   <select id="sprayer-select" bind:value={selectedSprayerId}>
     {#each data.sprayers as s (s.id)}
       <option value={s.id}>
@@ -93,8 +90,8 @@
 <section class="card" aria-labelledby="step-2">
   <h2 id="step-2">2. Spray width</h2>
   <p class="hint">
-    For a single-nozzle handheld: the effective spray fan width on the ground
-    at your normal walking height. For a boom: the per-nozzle spacing.
+    For a single-nozzle handheld: the effective spray fan width on the ground at your normal walking
+    height. For a boom: the per-nozzle spacing.
   </p>
   <div class="grid">
     <label>
@@ -116,9 +113,9 @@
       <span>≈ {distance.steps} steps at {distance.strideFeet} ft</span>
     </p>
     <p class="hint">
-      Mark a start and end point this far apart. Walk at normal spray speed
-      with the sprayer running, collecting all output in a graduated jug.
-      Pour off and read the volume in fluid ounces.
+      Mark a start and end point this far apart. Walk at normal spray speed with the sprayer
+      running, collecting all output in a graduated jug. Pour off and read the volume in fluid
+      ounces.
     </p>
   </section>
 {/if}
@@ -140,8 +137,8 @@
     <h2 id="result-title">Result</h2>
     {#if gpaResult.outsideSanityBand}
       <p class="warn-msg">
-        ⚠ {gpaResult.gpa} GPA is outside the 5–60 sanity band. Check your
-        spread-width measurement and re-run before saving.
+        ⚠ {gpaResult.gpa} GPA is outside the 5–60 sanity band. Check your spread-width measurement and
+        re-run before saving.
       </p>
     {/if}
     <p class="big-gpa">
@@ -160,8 +157,13 @@
 {/if}
 
 <style>
-  h1 { margin: 0 0 0.25rem; }
-  .lede { color: #555; margin: 0 0 1.5rem; }
+  h1 {
+    margin: 0 0 0.25rem;
+  }
+  .lede {
+    color: #555;
+    margin: 0 0 1.5rem;
+  }
   .card {
     background: white;
     border-radius: 8px;
@@ -272,8 +274,15 @@
     background: #999;
     cursor: not-allowed;
   }
-  .error { color: #b00020; margin: 0.5rem 0 0; }
-  .ok-msg { color: #1f5e3a; font-weight: 600; margin: 0.5rem 0 0; }
+  .error {
+    color: #b00020;
+    margin: 0.5rem 0 0;
+  }
+  .ok-msg {
+    color: #1f5e3a;
+    font-weight: 600;
+    margin: 0.5rem 0 0;
+  }
   .lock-msg {
     color: #b35900;
     background: #fff3cd;

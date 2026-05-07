@@ -88,7 +88,10 @@ export function readSession(cookies: Cookies): SessionPayload | null {
   return c ? verify(c) : null;
 }
 
-export function writeSession(cookies: Cookies, user: { id: string; email: string; role: SessionRole }): void {
+export function writeSession(
+  cookies: Cookies,
+  user: { id: string; email: string; role: SessionRole }
+): void {
   const payload: SessionPayload = {
     userId: user.id,
     email: user.email,

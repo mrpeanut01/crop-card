@@ -51,8 +51,10 @@ export function listHarvestEvents(filters: ListFilters = {}): HarvestEvent[] {
   const conditions = [];
   if (filters.blockId) conditions.push(eq(harvestEvents.blockId, filters.blockId));
   if (filters.cropPluginId) conditions.push(eq(harvestEvents.cropPluginId, filters.cropPluginId));
-  if (filters.fromMs !== undefined) conditions.push(gte(harvestEvents.occurredAt, new Date(filters.fromMs)));
-  if (filters.toMs !== undefined) conditions.push(lte(harvestEvents.occurredAt, new Date(filters.toMs)));
+  if (filters.fromMs !== undefined)
+    conditions.push(gte(harvestEvents.occurredAt, new Date(filters.fromMs)));
+  if (filters.toMs !== undefined)
+    conditions.push(lte(harvestEvents.occurredAt, new Date(filters.toMs)));
 
   let q = db.select().from(harvestEvents).$dynamic();
   if (conditions.length > 0) q = q.where(and(...conditions));

@@ -60,9 +60,7 @@ describe('seed plugin library', () => {
         }
       ],
       crop: { cropPluginId: 'corn-bloody-butcher', cropFamily: 'corn', heightInches: 6 },
-      coPlantedCrops: [
-        { cropPluginId: 'pole-beans-rattlesnake', cropFamily: 'legume' }
-      ],
+      coPlantedCrops: [{ cropPluginId: 'pole-beans-rattlesnake', cropFamily: 'legume' }],
       sprayer: { id: 'CORN' },
       conditions: { windMph: 5, tempF: 70, rainForecastMmNext24h: 0 }
     };

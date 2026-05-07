@@ -1,0 +1,9 @@
+build/
+.svelte-kit/
+node_modules/
+drizzle/
+coverage/
+playwright-report/
+test-results/
+*.lock
+pnpm-lock.yaml

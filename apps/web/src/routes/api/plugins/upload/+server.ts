@@ -28,10 +28,7 @@ export const POST: RequestHandler = async (event) => {
     return json(result, { status: 201 });
   } catch (e) {
     if (e instanceof PluginAuthorError) {
-      return json(
-        { error: e.message, code: e.code, issues: e.issues },
-        { status: 400 }
-      );
+      return json({ error: e.message, code: e.code, issues: e.issues }, { status: 400 });
     }
     return json({ error: e instanceof Error ? e.message : String(e) }, { status: 400 });
   }

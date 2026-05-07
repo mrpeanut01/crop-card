@@ -42,5 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: azure/setup-cli@v2
-      - run: az bicep build --file infra/azure/main.bicep
+      # az CLI is preinstalled on ubuntu-latest runners; install bicep into it.
+      - name: Install Bicep
+        run: az bicep install
+      - name: Build Bicep
+        run: az bicep build --file infra/azure/main.bicep

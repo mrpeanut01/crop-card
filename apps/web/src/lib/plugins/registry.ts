@@ -30,12 +30,18 @@ export class PluginRegistry {
   register(rawJson: unknown): PluginRecord {
     const parsed = pluginSchema.safeParse(rawJson);
     if (!parsed.success) {
-      throw new PluginRegistrationError('plugin failed schema validation', issuesFromZod(parsed.error));
+      throw new PluginRegistrationError(
+        'plugin failed schema validation',
+        issuesFromZod(parsed.error)
+      );
     }
 
     const bypass = detectBypass(parsed.data, (id) => this.cropFamilyOf(id));
     if (bypass.length > 0) {
-      throw new PluginRegistrationError('plugin attempts to bypass safety kernel', issuesFromBypass(bypass));
+      throw new PluginRegistrationError(
+        'plugin attempts to bypass safety kernel',
+        issuesFromBypass(bypass)
+      );
     }
 
     const record: PluginRecord = { plugin: parsed.data, hash: hashPlugin(rawJson) };

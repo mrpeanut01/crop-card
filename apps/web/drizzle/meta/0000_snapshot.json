@@ -94,12 +94,8 @@
           "name": "harvest_events_block_id_blocks_id_fk",
           "tableFrom": "harvest_events",
           "tableTo": "blocks",
-          "columnsFrom": [
-            "block_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["block_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -153,12 +149,8 @@
           "name": "planting_records_block_id_blocks_id_fk",
           "tableFrom": "planting_records",
           "tableTo": "blocks",
-          "columnsFrom": [
-            "block_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["block_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -255,12 +247,8 @@
           "name": "spray_events_block_id_blocks_id_fk",
           "tableFrom": "spray_events",
           "tableTo": "blocks",
-          "columnsFrom": [
-            "block_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["block_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -268,12 +256,8 @@
           "name": "spray_events_sprayer_id_sprayers_id_fk",
           "tableFrom": "spray_events",
           "tableTo": "sprayers",
-          "columnsFrom": [
-            "sprayer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sprayer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -281,12 +265,8 @@
           "name": "spray_events_performed_by_id_users_id_fk",
           "tableFrom": "spray_events",
           "tableTo": "users",
-          "columnsFrom": [
-            "performed_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["performed_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -391,9 +371,7 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },

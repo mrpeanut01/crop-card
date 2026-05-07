@@ -49,10 +49,7 @@ const THREE_SISTERS_OFFSETS = {
   pumpkinsAfterBeansDays: 21
 };
 
-export function eventsForPlanting(
-  planting: PlantingRecord,
-  crop: CropPlugin
-): CalendarEvent[] {
+export function eventsForPlanting(planting: PlantingRecord, crop: CropPlugin): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   const plant = planting.plantingDate;
 
@@ -127,7 +124,9 @@ export function eventsForPlanting(
           DAY_MS,
       endMs:
         plant +
-        (THREE_SISTERS_OFFSETS.beansAfterCornDays + THREE_SISTERS_OFFSETS.pumpkinsAfterBeansDays + 3) *
+        (THREE_SISTERS_OFFSETS.beansAfterCornDays +
+          THREE_SISTERS_OFFSETS.pumpkinsAfterBeansDays +
+          3) *
           DAY_MS,
       title: 'Three Sisters: plant pumpkins on outer hills',
       body: 'Plant pumpkin hills at outer block edges so vines do not shade young corn or beans.'

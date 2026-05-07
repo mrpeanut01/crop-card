@@ -31,11 +31,13 @@ function ensureSeeded() {
   for (const s of SEED) {
     const exists = db.select().from(sprayers).where(eq(sprayers.id, s.id)).get();
     if (!exists) {
-      db.insert(sprayers).values({
-        id: s.id,
-        label: s.label,
-        calibratedGpa: s.calibratedGpa
-      }).run();
+      db.insert(sprayers)
+        .values({
+          id: s.id,
+          label: s.label,
+          calibratedGpa: s.calibratedGpa
+        })
+        .run();
     }
   }
   seeded = true;
@@ -64,11 +66,7 @@ export function getSprayer(id: string): Sprayer | undefined {
   return row ? rowToSprayer(row) : undefined;
 }
 
-export function recordSpray(
-  id: string,
-  chemistry: ChemistryClass,
-  occurredAt: number
-): Sprayer {
+export function recordSpray(id: string, chemistry: ChemistryClass, occurredAt: number): Sprayer {
   ensureSeeded();
   const updated = db
     .update(sprayers)

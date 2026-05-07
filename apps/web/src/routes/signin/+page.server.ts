@@ -24,9 +24,9 @@ export const actions: Actions = {
   /** One-tap demo sign-in — creates owner@cropcard.local or helper@cropcard.local. */
   demo: async (event) => {
     const fd = await event.request.formData();
-    const role = (String(fd.get('role') ?? 'owner') === 'helper'
-      ? 'helper'
-      : 'owner') as 'owner' | 'helper';
+    const role = (String(fd.get('role') ?? 'owner') === 'helper' ? 'helper' : 'owner') as
+      | 'owner'
+      | 'helper';
     const email = role === 'owner' ? 'owner@cropcard.local' : 'helper@cropcard.local';
     loginByEmail(event, email, role);
     throw redirect(303, '/today');

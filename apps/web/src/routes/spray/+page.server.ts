@@ -49,9 +49,7 @@ export const load: PageServerLoad = async ({ url }) => {
         pluginId: h.pluginId,
         displayName: h.displayName,
         applicationTiming: h.applicationTiming,
-        chemistryClasses: Array.from(
-          new Set(h.activeIngredients.map((ai) => ai.chemistryClass))
-        ),
+        chemistryClasses: Array.from(new Set(h.activeIngredients.map((ai) => ai.chemistryClass))),
         ratePerAcre: h.ratePerAcre,
         gpaCalibration: h.gpaCalibration,
         requiresAMS: h.requiresAMS ?? false,
@@ -74,9 +72,10 @@ export const load: PageServerLoad = async ({ url }) => {
   if (windowStage) {
     filteredByStage = windowStage;
     if (windowStage === 'V2-V3') {
-      herbicides = allHerbicides.filter((h) =>
-        h.applicationTiming === 'POST' &&
-        h.chemistryClasses.some((c) => c === 'synthetic-auxin' || c === 'sulfonylurea')
+      herbicides = allHerbicides.filter(
+        (h) =>
+          h.applicationTiming === 'POST' &&
+          h.chemistryClasses.some((c) => c === 'synthetic-auxin' || c === 'sulfonylurea')
       );
     } else if (windowStage === 'V4-V6') {
       herbicides = allHerbicides.filter(

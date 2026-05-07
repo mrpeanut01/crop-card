@@ -44,7 +44,11 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # ─── build ──────────────────────────────────────────────────────────────
 FROM deps AS build
 COPY . .
-RUN pnpm --filter @cropcard/web build
+RUN pnpm --filter @cropcard/web build && \
+    # Materialize a self-contained production deployment for the runtime stage.
+    # `pnpm deploy --prod` resolves all symlinks and drops devDependencies so
+    # the resulting tree can be copied as-is into a clean container.
+    pnpm --filter @cropcard/web deploy --prod /app/deploy
 
 # ─── dev (used by docker-compose for HMR) ───────────────────────────────
 FROM deps AS dev
@@ -61,13 +65,15 @@ WORKDIR /app
 # Litestream binary
 COPY --from=base /usr/local/bin/litestream /usr/local/bin/litestream
 
-# Built SvelteKit (Node adapter)
+# `pnpm deploy --prod` resolved a fully-flat node_modules at /app/deploy.
+# Take the resolved deps from there + the build artifacts from the original
+# package location so we never depend on pnpm's symlink layout at runtime.
+COPY --from=build /app/deploy/node_modules ./node_modules
+COPY --from=build /app/deploy/package.json ./package.json
 COPY --from=build /app/apps/web/build ./build
-COPY --from=build /app/apps/web/package.json ./package.json
 COPY --from=build /app/apps/web/drizzle ./drizzle
-
-# Production-only deps
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/web/scripts ./scripts
+COPY --from=build /app/plugins /app/plugins
 
 # Entrypoint + Litestream config
 COPY infra/entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -81,6 +87,7 @@ USER app
 
 ENV NODE_ENV=production
 ENV DATABASE_URL=file:/data/cropcard.db
+ENV PLUGINS_DIR=/app/plugins
 ENV HOST=0.0.0.0
 ENV PORT=8080
 EXPOSE 8080

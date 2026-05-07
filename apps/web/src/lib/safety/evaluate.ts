@@ -16,10 +16,7 @@ export interface EvaluateOptions {
  * should branch on `requiresDecon` to route the operator to the decon wizard
  * rather than rendering the dilution table.
  */
-export function evaluateSpray(
-  ctx: SprayContext,
-  options: EvaluateOptions = {}
-): SafetyResult {
+export function evaluateSpray(ctx: SprayContext, options: EvaluateOptions = {}): SafetyResult {
   const violations = [
     ...checkCropCompatibility(ctx.products, ctx.crop, ctx.coPlantedCrops),
     ...checkChemistryCompatibility(ctx.products),

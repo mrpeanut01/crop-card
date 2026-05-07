@@ -26,7 +26,10 @@ export interface TankMixStep {
 export function buildTankMixSteps(products: HerbicidePlugin[]): TankMixStep[] {
   const steps: TankMixStep[] = [];
   let n = 1;
-  steps.push({ order: n++, instruction: 'Half-fill spray tank with clean water and start agitation.' });
+  steps.push({
+    order: n++,
+    instruction: 'Half-fill spray tank with clean water and start agitation.'
+  });
 
   if (products.some((p) => p.requiresAMS)) {
     steps.push({

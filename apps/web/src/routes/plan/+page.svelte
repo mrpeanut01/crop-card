@@ -98,14 +98,11 @@
     try {
       for (const m of suggestion.members) {
         const date = advisor.primaryDateMs + m.plantingOffsetDays * 24 * 60 * 60 * 1000;
-        const res = await fetch(
-          `/api/blocks/${encodeURIComponent(advisor.blockId)}/plantings`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cropPluginId: m.cropPluginId, plantingDate: date })
-          }
-        );
+        const res = await fetch(`/api/blocks/${encodeURIComponent(advisor.blockId)}/plantings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cropPluginId: m.cropPluginId, plantingDate: date })
+        });
         if (!res.ok) {
           const out = await res.json();
           plantingError = out.error ?? `HTTP ${res.status}`;
@@ -126,8 +123,8 @@
 
 <h1>Plan the season</h1>
 <p class="lede">
-  Create blocks and plantings. The calendar engine derives spray windows,
-  companion-planting triggers, and harvest windows from each crop's DTM.
+  Create blocks and plantings. The calendar engine derives spray windows, companion-planting
+  triggers, and harvest windows from each crop's DTM.
 </p>
 
 <a class="calendar-link" href="/plan/calendar">📅 View season calendar →</a>
@@ -135,24 +132,31 @@
 {#if !data.canEdit}
   <section class="card role-notice">
     <h2>View only</h2>
-    <p>Helper role can browse blocks + plantings but cannot create them. Sign in as Owner to plan the season.</p>
+    <p>
+      Helper role can browse blocks + plantings but cannot create them. Sign in as Owner to plan the
+      season.
+    </p>
   </section>
 {/if}
 
 {#if data.canEdit}
-<section class="card">
-  <h2>Create a block</h2>
-  <div class="row">
-    <input type="text" placeholder="e.g. Corn Block A" bind:value={newBlockName} />
-    <input type="number" placeholder="acres" bind:value={newBlockAcres} step="0.1" min="0" />
-    <button class="primary" onclick={createBlock} disabled={creatingBlock || !newBlockName.trim()}>
-      {creatingBlock ? '…' : 'Create'}
-    </button>
-  </div>
-  {#if blockError}
-    <p class="error">{blockError}</p>
-  {/if}
-</section>
+  <section class="card">
+    <h2>Create a block</h2>
+    <div class="row">
+      <input type="text" placeholder="e.g. Corn Block A" bind:value={newBlockName} />
+      <input type="number" placeholder="acres" bind:value={newBlockAcres} step="0.1" min="0" />
+      <button
+        class="primary"
+        onclick={createBlock}
+        disabled={creatingBlock || !newBlockName.trim()}
+      >
+        {creatingBlock ? '…' : 'Create'}
+      </button>
+    </div>
+    {#if blockError}
+      <p class="error">{blockError}</p>
+    {/if}
+  </section>
 {/if}
 
 {#if data.blocks.length === 0}
@@ -191,26 +195,26 @@
       {/if}
 
       {#if data.canEdit}
-      <h3>Add planting</h3>
-      <form
-        onsubmit={(e) => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget as HTMLFormElement);
-          const cropId = fd.get('crop')?.toString() ?? '';
-          const date = fd.get('date')?.toString() ?? '';
-          if (cropId && date) addPlanting(block.id, cropId, date);
-        }}
-        class="row"
-      >
-        <select name="crop" required>
-          <option value="">Select crop variety…</option>
-          {#each data.crops as c}
-            <option value={c.pluginId}>{c.displayName} ({c.cropFamily})</option>
-          {/each}
-        </select>
-        <input type="date" name="date" value={today} required />
-        <button type="submit" class="primary">Add</button>
-      </form>
+        <h3>Add planting</h3>
+        <form
+          onsubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget as HTMLFormElement);
+            const cropId = fd.get('crop')?.toString() ?? '';
+            const date = fd.get('date')?.toString() ?? '';
+            if (cropId && date) addPlanting(block.id, cropId, date);
+          }}
+          class="row"
+        >
+          <select name="crop" required>
+            <option value="">Select crop variety…</option>
+            {#each data.crops as c}
+              <option value={c.pluginId}>{c.displayName} ({c.cropFamily})</option>
+            {/each}
+          </select>
+          <input type="date" name="date" value={today} required />
+          <button type="submit" class="primary">Add</button>
+        </form>
       {/if}
     </section>
   {/each}

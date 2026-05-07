@@ -97,8 +97,10 @@ export function listSprayEvents(filters: ListFilters = {}): SprayEvent[] {
   const conditions = [];
   if (filters.blockId) conditions.push(eq(sprayEvents.blockId, filters.blockId));
   if (filters.sprayerId) conditions.push(eq(sprayEvents.sprayerId, filters.sprayerId));
-  if (filters.fromMs !== undefined) conditions.push(gte(sprayEvents.occurredAt, new Date(filters.fromMs)));
-  if (filters.toMs !== undefined) conditions.push(lte(sprayEvents.occurredAt, new Date(filters.toMs)));
+  if (filters.fromMs !== undefined)
+    conditions.push(gte(sprayEvents.occurredAt, new Date(filters.fromMs)));
+  if (filters.toMs !== undefined)
+    conditions.push(lte(sprayEvents.occurredAt, new Date(filters.toMs)));
 
   let q = db.select().from(sprayEvents).$dynamic();
   if (conditions.length > 0) q = q.where(and(...conditions));

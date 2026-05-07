@@ -1,9 +1,4 @@
-import type {
-  ChemistryClass,
-  HerbicideProduct,
-  SafetyViolation,
-  SprayerState
-} from './types';
+import type { ChemistryClass, HerbicideProduct, SafetyViolation, SprayerState } from './types';
 
 /**
  * Cross-contamination gate. If the planned chemistry classes differ from the

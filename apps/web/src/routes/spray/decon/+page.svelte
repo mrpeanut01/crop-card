@@ -40,8 +40,7 @@
     {
       key: 'ammonia',
       title: 'Ammonia soak — 30 minutes',
-      body:
-        'Add 1 cup household ammonia per 5 gal of water. Fill tank to operating volume, run pump for 30 sec, then SHUT OFF and let the solution sit for 30 minutes. Timer below.',
+      body: 'Add 1 cup household ammonia per 5 gal of water. Fill tank to operating volume, run pump for 30 sec, then SHUT OFF and let the solution sit for 30 minutes. Timer below.',
       requiresTimer: true
     },
     {
@@ -142,9 +141,8 @@
 
 <h1>Sprayer decontamination</h1>
 <p class="lede">
-  Required by FR-05 before this sprayer can be used on a different chemistry.
-  Each step must be confirmed before the next is unlocked. The 30-minute
-  ammonia soak is timed by the app.
+  Required by FR-05 before this sprayer can be used on a different chemistry. Each step must be
+  confirmed before the next is unlocked. The 30-minute ammonia soak is timed by the app.
 </p>
 
 <section class="step">
@@ -169,12 +167,13 @@
 
     {#if currentStep.requiresTimer}
       {#if !timerStartedAt}
-        <button type="button" class="primary" onclick={startTimer}>
-          Start 30-minute timer
-        </button>
+        <button type="button" class="primary" onclick={startTimer}> Start 30-minute timer </button>
       {:else if !timerDone}
         <p class="timer">Soaking… <strong>{fmt(remaining)}</strong> remaining</p>
-        <p class="hint">You may close this tab — the timer is cosmetic; what matters is the actual 30-minute dwell on the chemicals. The next step unlocks at zero.</p>
+        <p class="hint">
+          You may close this tab — the timer is cosmetic; what matters is the actual 30-minute dwell
+          on the chemicals. The next step unlocks at zero.
+        </p>
       {:else}
         <p class="timer-done">✓ 30 minutes elapsed. Step unlocked.</p>
       {/if}
@@ -183,7 +182,11 @@
     <div class="actions">
       <button type="button" onclick={back} disabled={stepIndex === 0}>← Back</button>
       <button type="button" class="primary" onclick={next} disabled={!stepCanAdvance || submitting}>
-        {stepIndex === STEPS.length - 1 ? (submitting ? 'Recording…' : 'Confirm complete') : 'Next →'}
+        {stepIndex === STEPS.length - 1
+          ? submitting
+            ? 'Recording…'
+            : 'Confirm complete'
+          : 'Next →'}
       </button>
     </div>
     {#if submitError}
@@ -205,8 +208,8 @@
   <section class="step success">
     <h2>✓ Decon recorded</h2>
     <p>
-      Sprayer <strong>{sprayer?.label ?? selectedSprayerId}</strong> is cleared.
-      The kernel will now allow it on different chemistry until its next load.
+      Sprayer <strong>{sprayer?.label ?? selectedSprayerId}</strong> is cleared. The kernel will now allow
+      it on different chemistry until its next load.
     </p>
     <button type="button" class="primary" onclick={() => goto('/spray')}>
       Back to spray plan

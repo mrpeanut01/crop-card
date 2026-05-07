@@ -12,8 +12,8 @@
   <h1>Season calendar</h1>
   <p class="lede">
     {data.eventCountTotal} event{data.eventCountTotal === 1 ? '' : 's'}
-    derived from {data.blockCount} block{data.blockCount === 1 ? '' : 's'}.
-    Click any day with events for details. Color shows event kind.
+    derived from {data.blockCount} block{data.blockCount === 1 ? '' : 's'}. Click any day with
+    events for details. Color shows event kind.
   </p>
   <nav class="month-nav" aria-label="Month navigation">
     <a href="/plan/calendar?ym={data.prev}">← Prev</a>
@@ -73,8 +73,13 @@
 {/if}
 
 <style>
-  .head h1 { margin: 0; }
-  .lede { color: #555; margin: 0.25rem 0 1rem; }
+  .head h1 {
+    margin: 0;
+  }
+  .lede {
+    color: #555;
+    margin: 0.25rem 0 1rem;
+  }
   .month-nav {
     display: flex;
     align-items: center;
@@ -146,7 +151,9 @@
     color: #555;
     font-weight: 600;
   }
-  .cell.today .num { color: #1f5e3a; }
+  .cell.today .num {
+    color: #1f5e3a;
+  }
   .events {
     list-style: none;
     padding: 0;
@@ -181,12 +188,30 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .planting .dot, .dot.planting { background: #1f5e3a; }
-  .emergence .dot, .dot.emergence { background: #4d8e36; }
-  .spray-window .dot, .dot.spray-window { background: #b35900; }
-  .companion-trigger .dot, .dot.companion-trigger { background: #6b3fa0; }
-  .harvest-window .dot, .dot.harvest-window { background: #c2185b; }
-  .cover-termination .dot, .dot.cover-termination { background: #777; }
+  .planting .dot,
+  .dot.planting {
+    background: #1f5e3a;
+  }
+  .emergence .dot,
+  .dot.emergence {
+    background: #4d8e36;
+  }
+  .spray-window .dot,
+  .dot.spray-window {
+    background: #b35900;
+  }
+  .companion-trigger .dot,
+  .dot.companion-trigger {
+    background: #6b3fa0;
+  }
+  .harvest-window .dot,
+  .dot.harvest-window {
+    background: #c2185b;
+  }
+  .cover-termination .dot,
+  .dot.cover-termination {
+    background: #777;
+  }
 
   .legend {
     background: white;

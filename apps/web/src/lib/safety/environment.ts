@@ -11,9 +11,7 @@ export const ENV_BOUNDS = {
   maxRainForecastMmNext24h: 5
 } as const;
 
-export function checkEnvironment(
-  conditions: EnvironmentalConditions
-): SafetyViolation[] {
+export function checkEnvironment(conditions: EnvironmentalConditions): SafetyViolation[] {
   const violations: SafetyViolation[] = [];
 
   if (conditions.windMph > ENV_BOUNDS.maxWindMph) {

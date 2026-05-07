@@ -8,10 +8,7 @@
  */
 
 import type { PageServerLoad } from './$types';
-import {
-  eventsForPlanting,
-  type CalendarEvent
-} from '$lib/calendar/engine';
+import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import { listBlocks } from '$lib/db/blocks';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
@@ -78,8 +75,7 @@ export const load: PageServerLoad = async ({ url }) => {
   // Compute prev / next month strings for nav.
   const prev = new Date(year, month - 1, 1);
   const next = new Date(year, month + 1, 1);
-  const fmtYM = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const fmtYM = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
   return {
     grid,

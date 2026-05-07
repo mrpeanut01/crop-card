@@ -22,9 +22,7 @@ export const GET: RequestHandler = ({ url }) => {
     sprayerId: e.sprayerId,
     performedById: e.performedById,
     products: e.products.map((p) => p.pluginId).join('|'),
-    chemistryClasses: Array.from(
-      new Set(e.products.flatMap((p) => p.chemistryClasses))
-    ).join('|'),
+    chemistryClasses: Array.from(new Set(e.products.flatMap((p) => p.chemistryClasses))).join('|'),
     windMph: e.conditions.windMph,
     tempF: e.conditions.tempF,
     rainForecastMmNext24h: e.conditions.rainForecastMmNext24h,

@@ -1,7 +1,4 @@
-import {
-  CHEMISTRY_KILL_MATRIX,
-  type CropFamily
-} from '$lib/safety/cropFamilyLethality';
+import { CHEMISTRY_KILL_MATRIX, type CropFamily } from '$lib/safety/cropFamilyLethality';
 import type { ChemistryClass } from '$lib/safety/types';
 import type { HerbicidePlugin, Plugin } from './schemas';
 
@@ -39,7 +36,11 @@ interface HardcodedBan {
 const HARDCODED_BANS: readonly HardcodedBan[] = [
   {
     cropPluginId: 'pumpkin',
-    bannedClasses: new Set<ChemistryClass>(['synthetic-auxin', 'chloroacetamide', 'hppd-inhibitor']),
+    bannedClasses: new Set<ChemistryClass>([
+      'synthetic-auxin',
+      'chloroacetamide',
+      'hppd-inhibitor'
+    ]),
     reason: 'lethal to cucurbits per kernel kill matrix'
   },
   {

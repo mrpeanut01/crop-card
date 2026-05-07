@@ -30,9 +30,7 @@ export const GET: RequestHandler = async () => {
         pluginId: h.pluginId,
         displayName: h.displayName,
         applicationTiming: h.applicationTiming,
-        chemistryClasses: Array.from(
-          new Set(h.activeIngredients.map((ai) => ai.chemistryClass))
-        ),
+        chemistryClasses: Array.from(new Set(h.activeIngredients.map((ai) => ai.chemistryClass))),
         ratePerAcre: h.ratePerAcre,
         gpaCalibration: h.gpaCalibration,
         tankMixOrder: h.tankMixOrder,

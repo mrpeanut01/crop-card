@@ -34,10 +34,7 @@ export const POST: RequestHandler = async (event) => {
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
-    return json(
-      { error: 'invalid request', issues: parsed.error.issues },
-      { status: 400 }
-    );
+    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
 
   const sprayer = recordCalibration(id, parsed.data.calibratedGpa);

@@ -54,9 +54,10 @@
                 ? 'Plugin rejected — schema validation failed'
                 : `Plugin rejected (HTTP ${res.status})`,
           code: out.code ?? 'other',
-          issues: Array.isArray(out.issues) && out.issues.length > 0
-            ? out.issues
-            : [{ path: '', message: out.error ?? `HTTP ${res.status}` }]
+          issues:
+            Array.isArray(out.issues) && out.issues.length > 0
+              ? out.issues
+              : [{ path: '', message: out.error ?? `HTTP ${res.status}` }]
         };
         return;
       }
@@ -92,9 +93,9 @@
 
 <h1>Plugin Manager</h1>
 <p class="lede">
-  All crop, herbicide, insecticide, and companion knowledge lives in
-  data-only JSON files under <code>plugins/</code>. The kernel reads them
-  through a registry that validates schema + checks for bypass attempts at
+  All crop, herbicide, insecticide, and companion knowledge lives in data-only JSON files under <code
+    >plugins/</code
+  >. The kernel reads them through a registry that validates schema + checks for bypass attempts at
   registration. Loaded {data.records.length} plugin{data.records.length === 1 ? '' : 's'}.
 </p>
 
@@ -102,8 +103,8 @@
   <a class="primary-cta" href="/plugins/new">+ Author a new plugin (guided wizard)</a>
 {:else}
   <p class="role-notice">
-    📚 <strong>View only</strong> — helper role can browse + audit plugins.
-    Sign in as Owner to author or upload new ones.
+    📚 <strong>View only</strong> — helper role can browse + audit plugins. Sign in as Owner to author
+    or upload new ones.
   </p>
 {/if}
 
@@ -161,9 +162,9 @@
     <details>
       <summary>Advanced: upload raw plugin JSON</summary>
       <p class="lede">
-        Paste a JSON document or upload a <code>.json</code> file. The registry
-        will validate against the schema + bypass matrix. Most authors should
-        use the <a href="/plugins/new">guided wizard</a> instead.
+        Paste a JSON document or upload a <code>.json</code> file. The registry will validate
+        against the schema + bypass matrix. Most authors should use the
+        <a href="/plugins/new">guided wizard</a> instead.
       </p>
       <input type="file" accept="application/json" onchange={handleFile} />
       <textarea
@@ -193,17 +194,15 @@
       <h2 id="reject-title">⛔ {reject.title}</h2>
       {#if reject.code === 'bypass'}
         <p class="why">
-          The plugin's declared chemistry would kill a crop family it claims
-          safety on. The kernel's kill matrix is hardcoded in
-          <code>cropFamilyLethality.ts</code> and cannot be overridden by any
-          plugin file (NFR-09). This is the system working — fix the
-          plugin's <code>safeForCropPluginIds</code> or its
+          The plugin's declared chemistry would kill a crop family it claims safety on. The kernel's
+          kill matrix is hardcoded in
+          <code>cropFamilyLethality.ts</code> and cannot be overridden by any plugin file (NFR-09).
+          This is the system working — fix the plugin's <code>safeForCropPluginIds</code> or its
           <code>chemistryClass</code>, then try again.
         </p>
       {:else if reject.code === 'schema'}
         <p class="why">
-          The plugin doesn't conform to the schema. See the field-level
-          messages below.
+          The plugin doesn't conform to the schema. See the field-level messages below.
         </p>
       {/if}
       <ul class="issues">
@@ -220,8 +219,13 @@
 {/if}
 
 <style>
-  h1 { margin: 0 0 0.25rem; }
-  .lede { color: #555; margin: 0 0 1.5rem; }
+  h1 {
+    margin: 0 0 0.25rem;
+  }
+  .lede {
+    color: #555;
+    margin: 0 0 1.5rem;
+  }
   .card {
     background: white;
     border-radius: 8px;
@@ -244,7 +248,11 @@
     border-left: 4px solid #b00020;
     margin-bottom: 1rem;
   }
-  .filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
   .filter {
     background: white;
     border: 2px solid #d0d7d0;
@@ -260,10 +268,24 @@
     color: white;
     border-color: #1f5e3a;
   }
-  .plugins { list-style: none; padding: 0; margin: 0; }
-  .plugins li { padding: 0.6rem 0; border-top: 1px solid #eee; }
-  .plugins li:first-child { border-top: none; }
-  .plugins header { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .plugins {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .plugins li {
+    padding: 0.6rem 0;
+    border-top: 1px solid #eee;
+  }
+  .plugins li:first-child {
+    border-top: none;
+  }
+  .plugins header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
   .id {
     font-family: monospace;
     color: #555;
@@ -280,12 +302,28 @@
     text-transform: uppercase;
     color: white;
   }
-  .type-crop { background: #1f5e3a; }
-  .type-herbicide { background: #b00020; }
-  .type-insecticide { background: #b35900; }
-  .type-companion { background: #6b3fa0; }
-  .version { color: #888; font-size: 0.85rem; margin-left: auto; }
-  .meta { color: #555; font-size: 0.8rem; margin: 0.25rem 0; }
+  .type-crop {
+    background: #1f5e3a;
+  }
+  .type-herbicide {
+    background: #b00020;
+  }
+  .type-insecticide {
+    background: #b35900;
+  }
+  .type-companion {
+    background: #6b3fa0;
+  }
+  .version {
+    color: #888;
+    font-size: 0.85rem;
+    margin-left: auto;
+  }
+  .meta {
+    color: #555;
+    font-size: 0.8rem;
+    margin: 0.25rem 0;
+  }
   .link {
     background: none;
     border: none;
@@ -314,7 +352,9 @@
     font-size: 0.9rem;
     margin: 0.5rem 0;
   }
-  input[type='file'] { padding: 0.4rem 0; }
+  input[type='file'] {
+    padding: 0.4rem 0;
+  }
   .primary {
     background: #1f5e3a;
     color: white;
@@ -325,8 +365,13 @@
     cursor: pointer;
     min-height: 48px;
   }
-  .primary:disabled { background: #999; cursor: not-allowed; }
-  .success { color: #1f5e3a; }
+  .primary:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  .success {
+    color: #1f5e3a;
+  }
 
   .primary-cta {
     display: block;
@@ -383,15 +428,23 @@
     border-top: 6px solid #b00020;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   }
-  .reject-modal.schema { border-top-color: #b35900; }
-  .reject-modal.other { border-top-color: #555; }
+  .reject-modal.schema {
+    border-top-color: #b35900;
+  }
+  .reject-modal.other {
+    border-top-color: #555;
+  }
   .reject-modal h2 {
     margin: 0 0 0.75rem;
     color: #b00020;
     font-size: 1.2rem;
   }
-  .reject-modal.schema h2 { color: #b35900; }
-  .reject-modal.other h2 { color: #555; }
+  .reject-modal.schema h2 {
+    color: #b35900;
+  }
+  .reject-modal.other h2 {
+    color: #555;
+  }
   .reject-modal .why {
     background: #fff8ec;
     padding: 0.75rem;

@@ -18,7 +18,10 @@ declare module 'pdfmake' {
     end(): void;
   }
 
-  type Fonts = Record<string, { normal: string; bold: string; italics: string; bolditalics: string }>;
+  type Fonts = Record<
+    string,
+    { normal: string; bold: string; italics: string; bolditalics: string }
+  >;
 
   class PdfPrinter {
     constructor(fonts: Fonts);

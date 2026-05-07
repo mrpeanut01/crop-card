@@ -21,11 +21,10 @@ else
 fi
 
 echo "[entrypoint] running drizzle migrations"
-node ./node_modules/drizzle-kit/bin.cjs migrate \
-  --config=./drizzle.config.ts || {
-    echo "[entrypoint] migration failed; refusing to start"
-    exit 1
-  }
+node ./scripts/migrate.mjs || {
+  echo "[entrypoint] migration failed; refusing to start"
+  exit 1
+}
 
 if [ -n "${AZURE_BLOB_CONTAINER:-}" ]; then
   echo "[entrypoint] starting litestream replicate -> node build/index.js"

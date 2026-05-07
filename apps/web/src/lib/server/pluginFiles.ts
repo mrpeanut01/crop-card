@@ -9,12 +9,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  PluginRegistrationError,
-  PluginRegistry,
-  type Plugin,
-  pluginSchema
-} from '$lib/plugins';
+import { PluginRegistrationError, PluginRegistry, type Plugin, pluginSchema } from '$lib/plugins';
 import { getRegistry, resetRegistry } from './registry';
 
 export class PluginAuthorError extends Error {
@@ -48,7 +43,9 @@ function subdirFor(type: Plugin['type']): string {
   }
 }
 
-export async function writePluginFile(plugin: unknown): Promise<{ path: string; pluginId: string }> {
+export async function writePluginFile(
+  plugin: unknown
+): Promise<{ path: string; pluginId: string }> {
   const parsed = pluginSchema.safeParse(plugin);
   if (!parsed.success) {
     throw new PluginAuthorError(

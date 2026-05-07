@@ -61,9 +61,6 @@ describe('checkChemistryCompatibility', () => {
       product('b', ['sulfonylurea']),
       product('c', ['glyphosate'])
     ]);
-    expect(out.map((v) => v.code)).toEqual([
-      'CHEMISTRY_INCOMPATIBLE',
-      'CHEMISTRY_INCOMPATIBLE'
-    ]);
+    expect(out.map((v) => v.code)).toEqual(['CHEMISTRY_INCOMPATIBLE', 'CHEMISTRY_INCOMPATIBLE']);
   });
 });

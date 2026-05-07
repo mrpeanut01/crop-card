@@ -16,8 +16,7 @@ function fakeCookies(): Cookies & { _store: Map<string, string> } {
   return {
     _store: store,
     get: (name: string) => store.get(name),
-    getAll: () =>
-      Array.from(store.entries()).map(([name, value]) => ({ name, value })),
+    getAll: () => Array.from(store.entries()).map(([name, value]) => ({ name, value })),
     set: (name: string, value: string) => store.set(name, value),
     delete: (name: string) => {
       store.delete(name);
@@ -84,7 +83,12 @@ describe('session HMAC cookie', () => {
     // Tamper into 'admin' — but tampering breaks the signature, so verify
     // that role-coverage rejects an unsigned 'admin' attempt too.
     const fakeBody = Buffer.from(
-      JSON.stringify({ userId: 'u1', email: 'x@example.com', role: 'admin', exp: Date.now() + 1000 })
+      JSON.stringify({
+        userId: 'u1',
+        email: 'x@example.com',
+        role: 'admin',
+        exp: Date.now() + 1000
+      })
     )
       .toString('base64')
       .replace(/\+/g, '-')

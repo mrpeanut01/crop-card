@@ -64,9 +64,9 @@
 
 <h1>Harvest</h1>
 <p class="lede">
-  Each planting's harvest window is computed from the crop plugin's
-  days-to-maturity. Walk the block, check readiness against the indicators,
-  and record the harvest with optional lot number for traceability.
+  Each planting's harvest window is computed from the crop plugin's days-to-maturity. Walk the
+  block, check readiness against the indicators, and record the harvest with optional lot number for
+  traceability.
 </p>
 
 {#if data.plantings.length === 0}
@@ -102,8 +102,10 @@
             {/if}
           </header>
           <div class="meta">
-            Planted {new Date(p.plantingDate).toLocaleDateString()} ·
-            Window {fmtRange(p.windowStartMs, p.windowEndMs)}
+            Planted {new Date(p.plantingDate).toLocaleDateString()} · Window {fmtRange(
+              p.windowStartMs,
+              p.windowEndMs
+            )}
             {#if p.status === 'too-early'}· {p.daysUntilWindow}d until window{/if}
             {#if p.status === 'in-window'}· {p.daysIntoWindow}d into window{/if}
             {#if p.status === 'past'}· {p.daysPastWindow}d past{/if}
@@ -119,7 +121,13 @@
           {/if}
 
           {#if recordingFor === p.plantingId}
-            <form class="record-form" onsubmit={(e) => { e.preventDefault(); submitRecord(p); }}>
+            <form
+              class="record-form"
+              onsubmit={(e) => {
+                e.preventDefault();
+                submitRecord(p);
+              }}
+            >
               <label>
                 Quantity
                 <input type="text" placeholder="e.g. 14 bushels" bind:value={quantity} />
@@ -174,8 +182,13 @@
 {/if}
 
 <style>
-  h1 { margin: 0 0 0.25rem; }
-  .lede { color: #555; margin: 0 0 1.5rem; }
+  h1 {
+    margin: 0 0 0.25rem;
+  }
+  .lede {
+    color: #555;
+    margin: 0 0 1.5rem;
+  }
   .card {
     background: white;
     border-radius: 8px;
@@ -190,8 +203,15 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .empty { text-align: center; padding: 2rem; }
-  .plantings { list-style: none; padding: 0; margin: 0; }
+  .empty {
+    text-align: center;
+    padding: 2rem;
+  }
+  .plantings {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
   .planting {
     border-left: 4px solid #ccc;
     background: #fafbfa;
@@ -199,10 +219,20 @@
     margin: 0.5rem 0;
     border-radius: 0 4px 4px 0;
   }
-  .planting.status-in-window { border-left-color: #1f5e3a; background: #f0f8f3; }
-  .planting.status-past { border-left-color: #b35900; background: #fff8ec; }
-  .planting.status-too-early { border-left-color: #6b6b6b; }
-  .planting.harvested { opacity: 0.7; }
+  .planting.status-in-window {
+    border-left-color: #1f5e3a;
+    background: #f0f8f3;
+  }
+  .planting.status-past {
+    border-left-color: #b35900;
+    background: #fff8ec;
+  }
+  .planting.status-too-early {
+    border-left-color: #6b6b6b;
+  }
+  .planting.harvested {
+    opacity: 0.7;
+  }
   .planting.focused {
     outline: 3px solid #ffd400;
     outline-offset: 2px;
@@ -213,7 +243,10 @@
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  .block { color: #555; font-size: 0.9rem; }
+  .block {
+    color: #555;
+    font-size: 0.9rem;
+  }
   .family {
     font-size: 0.75rem;
     color: #1f5e3a;
@@ -228,21 +261,52 @@
     font-size: 0.85rem;
     font-weight: 600;
   }
-  .badge.in-window { background: #e7f1ea; color: #1f5e3a; }
-  .badge.past { background: #fff3cd; color: #b35900; }
-  .badge.too-early { background: #eaeaea; color: #555; }
-  .badge.harvested { background: #ddd; color: #555; }
-  .meta { color: #555; font-size: 0.85rem; margin: 0.4rem 0; font-family: monospace; }
-  details { margin-top: 0.5rem; }
-  .indicators { margin: 0.4rem 0 0 1.25rem; padding: 0; }
+  .badge.in-window {
+    background: #e7f1ea;
+    color: #1f5e3a;
+  }
+  .badge.past {
+    background: #fff3cd;
+    color: #b35900;
+  }
+  .badge.too-early {
+    background: #eaeaea;
+    color: #555;
+  }
+  .badge.harvested {
+    background: #ddd;
+    color: #555;
+  }
+  .meta {
+    color: #555;
+    font-size: 0.85rem;
+    margin: 0.4rem 0;
+    font-family: monospace;
+  }
+  details {
+    margin-top: 0.5rem;
+  }
+  .indicators {
+    margin: 0.4rem 0 0 1.25rem;
+    padding: 0;
+  }
   .record-form {
     margin-top: 0.75rem;
     display: grid;
     gap: 0.5rem;
     grid-template-columns: 1fr 1fr;
   }
-  .record-form .actions { grid-column: 1 / -1; display: flex; gap: 0.5rem; }
-  .record-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
+  .record-form .actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .record-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+  }
   .record-form input {
     padding: 0.6rem;
     border: 2px solid #d0d7d0;
@@ -271,10 +335,38 @@
     cursor: pointer;
     min-height: 48px;
   }
-  button.primary { background: #1f5e3a; color: white; border-color: #1f5e3a; }
-  .error { color: #b00020; grid-column: 1 / -1; margin: 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #eee; }
-  th { background: #f5f7f4; color: #1f5e3a; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
-  code { background: #f5f5f5; padding: 0.05rem 0.3rem; border-radius: 3px; font-size: 0.8rem; }
+  button.primary {
+    background: #1f5e3a;
+    color: white;
+    border-color: #1f5e3a;
+  }
+  .error {
+    color: #b00020;
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+  }
+  th {
+    background: #f5f7f4;
+    color: #1f5e3a;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+  }
+  code {
+    background: #f5f5f5;
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+  }
 </style>

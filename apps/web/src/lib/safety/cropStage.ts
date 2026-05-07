@@ -41,10 +41,7 @@ const GATES: Gate[] = [
   }
 ];
 
-export function checkCropStage(
-  products: HerbicideProduct[],
-  crop: CropStage
-): SafetyViolation[] {
+export function checkCropStage(products: HerbicideProduct[], crop: CropStage): SafetyViolation[] {
   const violations: SafetyViolation[] = [];
   for (const product of products) {
     for (const gate of GATES) {

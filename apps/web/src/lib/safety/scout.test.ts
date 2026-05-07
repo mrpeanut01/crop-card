@@ -9,13 +9,17 @@ describe('evaluateScout', () => {
   });
 
   it('returns SPRAY when average meets the 3/10 sq ft threshold', () => {
-    const r = evaluateScout({ spots: [{ weedsPer10SqFt: 4 }, { weedsPer10SqFt: 3 }, { weedsPer10SqFt: 2 }] });
+    const r = evaluateScout({
+      spots: [{ weedsPer10SqFt: 4 }, { weedsPer10SqFt: 3 }, { weedsPer10SqFt: 2 }]
+    });
     expect(r.decision).toBe('SPRAY');
     expect(r.averagePer10SqFt).toBeCloseTo(3, 5);
   });
 
   it('returns SKIP when below threshold and no oversized weeds', () => {
-    const r = evaluateScout({ spots: [{ weedsPer10SqFt: 1 }, { weedsPer10SqFt: 0 }, { weedsPer10SqFt: 2 }] });
+    const r = evaluateScout({
+      spots: [{ weedsPer10SqFt: 1 }, { weedsPer10SqFt: 0 }, { weedsPer10SqFt: 2 }]
+    });
     expect(r.decision).toBe('SKIP');
   });
 

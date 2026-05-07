@@ -34,9 +34,8 @@
 
 <h1>Scout & spray decision</h1>
 <p class="lede">
-  Walk the block, count broadleaves in 4–5 random 10 sq ft spots, and note
-  the tallest weed. The threshold (FR-07): ≥ 3 weeds / 10 sq ft on average,
-  or any weed taller than 2 inches → spray.
+  Walk the block, count broadleaves in 4–5 random 10 sq ft spots, and note the tallest weed. The
+  threshold (FR-07): ≥ 3 weeds / 10 sq ft on average, or any weed taller than 2 inches → spray.
 </p>
 
 {#if data.blocks.length > 0}
@@ -59,12 +58,7 @@
   {#each spots as _, i (i)}
     <label class="spot">
       Spot {i + 1}: weeds in 10 sq ft
-      <input
-        type="number"
-        min="0"
-        step="1"
-        bind:value={spots[i].weedsPer10SqFt}
-      />
+      <input type="number" min="0" step="1" bind:value={spots[i].weedsPer10SqFt} />
       {#if spots.length > 1}
         <button type="button" class="remove" onclick={() => removeSpot(i)}>✕</button>
       {/if}

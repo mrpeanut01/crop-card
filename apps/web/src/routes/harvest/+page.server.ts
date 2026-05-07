@@ -31,11 +31,8 @@ export const load: PageServerLoad = async ({ url }) => {
   const blocks = listBlocks();
   const registry = await getRegistry();
   const all = listHarvestEvents();
-  const harvestedKey = (blockId: string, cropPluginId: string) =>
-    `${blockId}|${cropPluginId}`;
-  const harvestedSet = new Set(
-    all.map((e) => harvestedKey(e.blockId, e.cropPluginId))
-  );
+  const harvestedKey = (blockId: string, cropPluginId: string) => `${blockId}|${cropPluginId}`;
+  const harvestedSet = new Set(all.map((e) => harvestedKey(e.blockId, e.cropPluginId)));
 
   const now = Date.now();
   const plantings: PlantingHarvestStatus[] = [];

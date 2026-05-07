@@ -18,8 +18,8 @@
   <section class="card">
     <h2>Demo sign-in</h2>
     <p class="lede">
-      Pick a role to try it out. New emails default to helper; the demo
-      buttons hard-set the role on first sign-in.
+      Pick a role to try it out. New emails default to helper; the demo buttons hard-set the role on
+      first sign-in.
     </p>
     <div class="demo-buttons">
       <form method="POST" action="?/demo">
@@ -36,9 +36,9 @@
   <section class="card">
     <h2>Email sign-in</h2>
     <p class="lede">
-      First-time emails default to <em>helper</em>. Tick the owner box to
-      claim owner role on first sign-in (this is dev auth — production
-      should use Auth.js magic-link, which the codebase has installed).
+      First-time emails default to <em>helper</em>. Tick the owner box to claim owner role on first
+      sign-in (this is dev auth — production should use Auth.js magic-link, which the codebase has
+      installed).
     </p>
     <form method="POST" action="?/signin">
       <label>
@@ -58,7 +58,9 @@
 {/if}
 
 <style>
-  h1 { margin: 0 0 1rem; }
+  h1 {
+    margin: 0 0 1rem;
+  }
   .card {
     background: white;
     padding: 1.25rem;
@@ -82,7 +84,9 @@
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
   }
-  form { margin: 0; }
+  form {
+    margin: 0;
+  }
   label {
     display: flex;
     flex-direction: column;
@@ -114,8 +118,12 @@
     min-height: 56px;
     font-size: 1rem;
   }
-  .primary.owner { background: #b35900; }
-  .primary.helper { background: #1f5e3a; }
+  .primary.owner {
+    background: #b35900;
+  }
+  .primary.helper {
+    background: #1f5e3a;
+  }
   .role {
     padding: 0.1rem 0.5rem;
     border-radius: 3px;
@@ -124,7 +132,15 @@
     text-transform: uppercase;
     margin-left: 0.5rem;
   }
-  .role-owner { background: #fff3cd; color: #b35900; }
-  .role-helper { background: #e7f1ea; color: #1f5e3a; }
-  .error { color: #b00020; }
+  .role-owner {
+    background: #fff3cd;
+    color: #b35900;
+  }
+  .role-helper {
+    background: #e7f1ea;
+    color: #1f5e3a;
+  }
+  .error {
+    color: #b00020;
+  }
 </style>

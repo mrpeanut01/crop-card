@@ -17,11 +17,9 @@ export interface DrainResult {
 }
 
 function uuid(): string {
-  return (
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-      ? crypto.randomUUID()
-      : `pending_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-  );
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `pending_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export async function enqueueSprayRecord(payload: unknown): Promise<string> {

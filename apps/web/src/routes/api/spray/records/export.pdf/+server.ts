@@ -103,8 +103,7 @@ export const GET: RequestHandler = async ({ url }) => {
         }
       },
       {
-        text:
-          '\nRetention: minimum 2 years from occurrence (NFR-05). Records are immutable after the 48-hour lock window (FR-09). Plugin hashes embedded per record allow tamper-evident auditing.',
+        text: '\nRetention: minimum 2 years from occurrence (NFR-05). Records are immutable after the 48-hour lock window (FR-09). Plugin hashes embedded per record allow tamper-evident auditing.',
         style: 'sub',
         margin: [0, 16, 0, 0]
       }

@@ -12,7 +12,8 @@
 
   function applyFilter(field: 'sprayerId' | 'blockId', value: string) {
     const params = new URLSearchParams();
-    if (data.activeSprayerId && field !== 'sprayerId') params.set('sprayerId', data.activeSprayerId);
+    if (data.activeSprayerId && field !== 'sprayerId')
+      params.set('sprayerId', data.activeSprayerId);
     if (data.activeBlockId && field !== 'blockId') params.set('blockId', data.activeBlockId);
     if (value) params.set(field, value);
     const qs = params.toString();
@@ -24,8 +25,8 @@
   <h1>Spray records</h1>
   <p class="lede">
     {data.records.length} record{data.records.length === 1 ? '' : 's'}
-    {data.activeSprayerId || data.activeBlockId ? 'matching filter' : 'on file'}.
-    Records lock 48 hours after occurrence (FR-09). Retention 2 years (NFR-05).
+    {data.activeSprayerId || data.activeBlockId ? 'matching filter' : 'on file'}. Records lock 48
+    hours after occurrence (FR-09). Retention 2 years (NFR-05).
   </p>
   <div class="filters" role="group" aria-label="Filters">
     <label>
@@ -62,8 +63,8 @@
 
 {#if data.approachingRetention.length > 0}
   <section class="alert">
-    ⚠ {data.approachingRetention.length} record(s) approaching the 2-year retention horizon.
-    Confirm with owner before any deletion.
+    ⚠ {data.approachingRetention.length} record(s) approaching the 2-year retention horizon. Confirm with
+    owner before any deletion.
   </section>
 {/if}
 
@@ -101,7 +102,8 @@
             {Array.from(new Set(r.products.flatMap((p) => p.chemistryClasses))).join(', ')}
           </td>
           <td class="cond">
-            {r.conditions.windMph} mph / {r.conditions.tempF}°F / {r.conditions.rainForecastMmNext24h}mm
+            {r.conditions.windMph} mph / {r.conditions.tempF}°F / {r.conditions
+              .rainForecastMmNext24h}mm
           </td>
           <td><code>{r.rulesVersion}</code></td>
           <td>

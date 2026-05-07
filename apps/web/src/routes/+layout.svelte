@@ -94,7 +94,8 @@
       ⚠ {data.dirtySprayers.length} sprayer{data.dirtySprayers.length === 1 ? '' : 's'}
       need{data.dirtySprayers.length === 1 ? 's' : ''} decontamination —
       {#each data.dirtySprayers as s, i (s.id)}
-        {#if i > 0}, {/if}
+        {#if i > 0},
+        {/if}
         <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}">
           <strong>{s.label}</strong> ({s.lastChemistryClass})
         </a>
@@ -114,13 +115,7 @@
     margin: 0;
     padding: 0;
     font-family:
-      -apple-system,
-      BlinkMacSystemFont,
-      'Segoe UI',
-      Roboto,
-      'Helvetica Neue',
-      Arial,
-      sans-serif;
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f5f7f4;
     color: #1a1a1a;
   }

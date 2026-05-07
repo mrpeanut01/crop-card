@@ -1,8 +1,4 @@
-import type {
-  ChemistryClass,
-  HerbicideProduct,
-  SafetyViolation
-} from './types';
+import type { ChemistryClass, HerbicideProduct, SafetyViolation } from './types';
 
 /**
  * Pairwise prohibitions between chemistry classes when co-applied (tank mix
@@ -26,9 +22,7 @@ export function isIncompatiblePair(a: ChemistryClass, b: ChemistryClass): boolea
   return INCOMPATIBLE_PAIRS.has(pairKey(a, b));
 }
 
-export function checkChemistryCompatibility(
-  products: HerbicideProduct[]
-): SafetyViolation[] {
+export function checkChemistryCompatibility(products: HerbicideProduct[]): SafetyViolation[] {
   const violations: SafetyViolation[] = [];
   const classes = products.flatMap((p) =>
     p.activeIngredients.map((ai) => ({ pluginId: p.pluginId, cls: ai.chemistryClass }))

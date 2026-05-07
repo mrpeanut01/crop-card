@@ -81,10 +81,20 @@ export function createBlock(input: { name: string; acres?: number; blockLabel?: 
   const id = randomUUID();
   const row = db
     .insert(blocks)
-    .values({ id, name: input.name, acres: input.acres ?? null, blockLabel: input.blockLabel ?? null })
+    .values({
+      id,
+      name: input.name,
+      acres: input.acres ?? null,
+      blockLabel: input.blockLabel ?? null
+    })
     .returning()
     .get();
-  return { id: row.id, name: row.name, acres: row.acres ?? undefined, blockLabel: row.blockLabel ?? undefined };
+  return {
+    id: row.id,
+    name: row.name,
+    acres: row.acres ?? undefined,
+    blockLabel: row.blockLabel ?? undefined
+  };
 }
 
 export function addPlanting(input: {

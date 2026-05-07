@@ -22,8 +22,7 @@
     try {
       const { drainQueue } = await import('$lib/client/syncQueue');
       const result = await drainQueue();
-      lastDrainResult =
-        `Synced ${result.succeeded.length}; ${result.failed.length} still pending.`;
+      lastDrainResult = `Synced ${result.succeeded.length}; ${result.failed.length} still pending.`;
       await refresh();
     } catch (e) {
       lastDrainResult = `error: ${e instanceof Error ? e.message : e}`;
@@ -46,10 +45,9 @@
 
 <h1>Pending sync queue</h1>
 <p class="lede">
-  Spray records confirmed offline (or that hit a transient network error) are
-  stored in IndexedDB. They submit to <code>/api/spray/record</code> when the
-  app reconnects — the server still re-runs the kernel on each one. Records
-  the kernel rejects stay flagged for owner review.
+  Spray records confirmed offline (or that hit a transient network error) are stored in IndexedDB.
+  They submit to <code>/api/spray/record</code> when the app reconnects — the server still re-runs the
+  kernel on each one. Records the kernel rejects stay flagged for owner review.
 </p>
 
 {#if !dexieAvailable}
@@ -88,11 +86,30 @@
 {/if}
 
 <style>
-  h1 { margin: 0 0 0.25rem; }
-  .lede { color: #555; margin: 0 0 1rem; }
-  code { background: #f5f5f5; padding: 0.05rem 0.4rem; border-radius: 3px; font-size: 0.85rem; }
-  .actions { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
-  .actions a { color: #1f5e3a; text-decoration: none; font-weight: 600; }
+  h1 {
+    margin: 0 0 0.25rem;
+  }
+  .lede {
+    color: #555;
+    margin: 0 0 1rem;
+  }
+  code {
+    background: #f5f5f5;
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+  }
+  .actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .actions a {
+    color: #1f5e3a;
+    text-decoration: none;
+    font-weight: 600;
+  }
   .primary {
     background: #1f5e3a;
     color: white;
@@ -103,11 +120,26 @@
     cursor: pointer;
     min-height: 48px;
   }
-  .primary:disabled { background: #999; cursor: not-allowed; }
-  .result { color: #1f5e3a; font-weight: 600; }
-  .empty { color: #555; font-style: italic; }
-  .warn { color: #b00020; }
-  .pending { list-style: none; padding: 0; margin: 0; }
+  .primary:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  .result {
+    color: #1f5e3a;
+    font-weight: 600;
+  }
+  .empty {
+    color: #555;
+    font-style: italic;
+  }
+  .warn {
+    color: #b00020;
+  }
+  .pending {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
   .pending li {
     background: white;
     padding: 0.75rem 1rem;
@@ -122,7 +154,10 @@
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  .meta { color: #777; font-size: 0.85rem; }
+  .meta {
+    color: #777;
+    font-size: 0.85rem;
+  }
   .attempts {
     background: #f5f5f5;
     padding: 0.05rem 0.5rem;
@@ -147,7 +182,9 @@
     margin: 0.4rem 0;
     font-size: 0.85rem;
   }
-  details { margin-top: 0.4rem; }
+  details {
+    margin-top: 0.4rem;
+  }
   pre {
     background: #f5f5f5;
     padding: 0.5rem;

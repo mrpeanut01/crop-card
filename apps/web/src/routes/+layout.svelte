@@ -309,6 +309,7 @@
     position: absolute;
     bottom: 100%;
     right: 0;
+    z-index: 101;
     background: #1f5e3a;
     border-radius: 8px 0 0 0;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);
@@ -415,6 +416,15 @@
     }
     .primary-nav .more-menu a {
       min-height: 48px;
+    }
+    /* Desktop: nav is at the TOP, so the More dropdown must open DOWN
+       below the summary (not up, which was clipping it off-screen). */
+    .primary-nav .more-menu {
+      bottom: auto;
+      top: 100%;
+      right: 0;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
     }
     main {
       padding: 1rem;

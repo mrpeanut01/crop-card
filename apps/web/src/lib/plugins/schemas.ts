@@ -204,6 +204,43 @@ export const cropPluginSchema = pluginBase.extend({
    *   'enlist-2-4-d-tolerant'
    */
   traits: z.array(z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/)).optional(),
+  /**
+   * Pre-task templates (Phase 12). When the operator schedules a primary
+   * task tied to this crop (mow, harvest, plant, etc.), matching pre-tasks
+   * auto-attach. Examples: "Test germination 14d before plant",
+   * "Inspect deer fencing the day before silking starts".
+   *
+   * `daysBeforePlant` and `daysBeforeFirstHarvest` are the well-known
+   * anchors; `phaseKey` lets a plugin tie a pre-task to one of its own
+   * `seasonalTasks` entries by key.
+   */
+  preTasks: z
+    .array(
+      z.object({
+        key: z.string().min(1).max(80),
+        title: z.string().min(1).max(120),
+        body: z.string().max(500).optional(),
+        daysBeforePlant: z.number().int().nonnegative().optional(),
+        daysBeforeFirstHarvest: z.number().int().nonnegative().optional(),
+        phaseKey: z.string().min(1).max(80).optional(),
+        daysBeforePhase: z.number().int().nonnegative().optional()
+      })
+    )
+    .optional(),
+  /** Post-task templates — fire after a referenced phase. Same anchors. */
+  postTasks: z
+    .array(
+      z.object({
+        key: z.string().min(1).max(80),
+        title: z.string().min(1).max(120),
+        body: z.string().max(500).optional(),
+        daysAfterPlant: z.number().int().nonnegative().optional(),
+        daysAfterHarvest: z.number().int().nonnegative().optional(),
+        phaseKey: z.string().min(1).max(80).optional(),
+        daysAfterPhase: z.number().int().nonnegative().optional()
+      })
+    )
+    .optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

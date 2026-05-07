@@ -21,6 +21,8 @@ export const RETENTION_ALERT_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface SprayEventInput {
   blockId: string;
+  /** Phase 12: per-crop attribution. Nullable for back-compat. */
+  cropId?: string;
   sprayerId: string;
   performedById: string;
   occurredAt: number;
@@ -52,6 +54,7 @@ function rowToEvent(row: typeof sprayEvents.$inferSelect): SprayEvent {
   return {
     id: row.id,
     blockId: row.blockId,
+    cropId: row.cropId ?? undefined,
     sprayerId: row.sprayerId,
     performedById: row.performedById,
     occurredAt: row.occurredAt.getTime(),
@@ -71,6 +74,7 @@ export function insertSprayEvent(input: SprayEventInput): SprayEvent {
     .values({
       id,
       blockId: input.blockId,
+      cropId: input.cropId ?? null,
       sprayerId: input.sprayerId,
       performedById: input.performedById,
       occurredAt: new Date(input.occurredAt),

@@ -26,6 +26,30 @@ export type EquipmentType =
   | 'irrigation'
   | 'other';
 
+/**
+ * Pre/post-task templates (Phase 12). When an operator schedules a primary
+ * task that uses this equipment, matching pre-tasks auto-attach if their
+ * conditions match. Conditions are evaluated against equipment state.
+ *
+ *   'always-before-use' — fires every time
+ *   'last-used-gt-days' — fires when equipmentState.lastUsedAt is older than
+ *                         conditionDays (or never used at all)
+ *   'after-storage-period' — fires once after a >conditionDays gap
+ */
+export interface EquipmentPreTaskTemplate {
+  key: string;
+  title: string;
+  body?: string;
+  condition?: 'always-before-use' | 'last-used-gt-days' | 'after-storage-period';
+  conditionDays?: number;
+}
+export interface EquipmentPostTaskTemplate {
+  key: string;
+  title: string;
+  body?: string;
+  condition?: 'always-after-use' | 'after-restricted-use-chemistry';
+}
+
 export interface EquipmentTemplate {
   templateId: string;
   type: EquipmentType;
@@ -36,6 +60,9 @@ export interface EquipmentTemplate {
   spec?: Record<string, string | number>;
   /** Suggested default GPA calibration (sprayer-only). */
   defaultGpa?: number;
+  /** Phase 12 — auto-attach pre-tasks when this equipment is used in a primary. */
+  preTasks?: EquipmentPreTaskTemplate[];
+  postTasks?: EquipmentPostTaskTemplate[];
 }
 
 export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
@@ -112,7 +139,31 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     label: '50 gal pull-behind boom sprayer',
     description: '12V on-demand pump with 3-section 12-ft boom. Ground-driven or pump-driven.',
     spec: { tankGal: 50, boomFt: 12, sections: 3 },
-    defaultGpa: 15
+    defaultGpa: 15,
+    preTasks: [
+      {
+        key: 'sprayer-spring-startup',
+        title: 'Spring-startup check after winter storage',
+        body: 'Inspect hoses for cracks, replace any nozzles >50 hr, run 5 gal water + 1 oz dish soap through the system.',
+        condition: 'after-storage-period',
+        conditionDays: 90
+      },
+      {
+        key: 'sprayer-pre-mix-calibration',
+        title: 'Confirm 1/128-acre calibration',
+        body: 'Re-walk the calibration if last calibration was >30 d ago — nozzle wear changes the GPA.',
+        condition: 'last-used-gt-days',
+        conditionDays: 30
+      }
+    ],
+    postTasks: [
+      {
+        key: 'sprayer-decon-restricted',
+        title: 'Tank decon — chemistry switch',
+        body: 'Run the kernel-prescribed decon sequence (ammonia rinse, etc.) before next use with a different chemistry class.',
+        condition: 'after-restricted-use-chemistry'
+      }
+    ]
   },
   {
     templateId: 'sprayer-100gal-pull',
@@ -211,7 +262,22 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     label: '2-row mechanical plate planter (Cole / Covington)',
     description:
       '2-row plate planter for corn / soybean / pumpkin / cucurbit; 30–40 in row spacing.',
-    spec: { rows: 2, rowSpacingIn: '30–40' }
+    spec: { rows: 2, rowSpacingIn: '30–40' },
+    preTasks: [
+      {
+        key: 'planter-chain-inspection',
+        title: 'Inspect drive chains + grease zerks after winter sit',
+        body: 'Spin each row unit by hand; tension chains; pump grease into all zerks.',
+        condition: 'after-storage-period',
+        conditionDays: 120
+      },
+      {
+        key: 'planter-plate-match',
+        title: 'Confirm seed plates match the variety',
+        body: 'Plate cell size = ~1.1× seed size. Wrong plate skips or doubles.',
+        condition: 'always-before-use'
+      }
+    ]
   },
   {
     templateId: 'no-till-drill-7ft',
@@ -296,7 +362,22 @@ export const SEED_EQUIPMENT_TEMPLATES: ReadonlyArray<EquipmentTemplate> = [
     category: 'Small square baler',
     label: 'Small square baler (40–60 lb bales)',
     description: 'Pickup-style square baler. Small-farm hay standard.',
-    spec: { baleSize: '14×18×36 in', baleWeightLb: '40–60' }
+    spec: { baleSize: '14×18×36 in', baleWeightLb: '40–60' },
+    preTasks: [
+      {
+        key: 'baler-bearings-check',
+        title: 'Check bearings + grease zerks after long sit',
+        body: 'Squeak-test the pickup, plunger, and knotter shafts. Pump grease until fresh purge appears.',
+        condition: 'last-used-gt-days',
+        conditionDays: 90
+      },
+      {
+        key: 'baler-twine-knotter',
+        title: 'Test-bale 2 windrows + inspect every knot',
+        body: 'Mis-tied knots waste twine and dump bales. First 2 bales each session are the canary.',
+        condition: 'always-before-use'
+      }
+    ]
   },
   {
     templateId: 'baler-round-4x4',

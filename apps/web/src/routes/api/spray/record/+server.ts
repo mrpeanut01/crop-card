@@ -39,6 +39,11 @@ const cropStageInput = z.object({
 
 const requestSchema = z.object({
   blockId: z.string().min(1),
+  /** Phase 12: per-crop attribution. When supplied, the spray_event row
+   *  carries crop_id; if a `taskId` is also supplied, that primary task
+   *  is marked complete on success. */
+  cropId: z.string().optional(),
+  taskId: z.string().optional(),
   occurredAt: z.number().int().optional(),
   blockCrops: z.object({
     primary: cropStageInput,
@@ -158,6 +163,7 @@ export const POST: RequestHandler = async (event) => {
   // Persist event (`event` is the request context; use a separate name).
   const persisted = insertSprayEvent({
     blockId: parsed.data.blockId,
+    cropId: parsed.data.cropId,
     sprayerId: stored.id,
     performedById: performer.id,
     occurredAt,
@@ -214,6 +220,24 @@ export const POST: RequestHandler = async (event) => {
           `${line.pluginId}: stock decrement failed — ${e instanceof Error ? e.message : String(e)}`
         );
       }
+    }
+  }
+
+  // Phase 12: close the originating primary task if the caller passed one.
+  if (parsed.data.taskId) {
+    try {
+      const { completeTask } = await import('$lib/db/tasks');
+      completeTask(parsed.data.taskId, {
+        eventTable: 'spray_event',
+        eventId: persisted.id,
+        occurredAt
+      });
+    } catch (e) {
+      // Non-fatal — log and continue. The spray was recorded; the task can
+      // be closed manually on /today if this fails.
+      stockWarnings.push(
+        `task ${parsed.data.taskId} not closed: ${e instanceof Error ? e.message : String(e)}`
+      );
     }
   }
 

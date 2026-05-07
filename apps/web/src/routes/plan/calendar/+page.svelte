@@ -15,11 +15,14 @@
     derived from {data.blockCount} block{data.blockCount === 1 ? '' : 's'}. Click any day with
     events for details. Color shows event kind.
   </p>
+  <nav class="plan-tabs" aria-label="Plan views">
+    <a href="/plan">📋 Blocks & plantings</a>
+    <a href="/plan/calendar" class="active" aria-current="page">📅 Calendar</a>
+  </nav>
   <nav class="month-nav" aria-label="Month navigation">
     <a href="/plan/calendar?ym={data.prev}">← Prev</a>
     <strong>{data.monthLabel}</strong>
     <a href="/plan/calendar?ym={data.next}">Next →</a>
-    <a href="/plan" class="back">Back to /plan</a>
   </nav>
 </header>
 
@@ -83,6 +86,32 @@
     color: #555;
     margin: 0.25rem 0 1rem;
   }
+  .plan-tabs {
+    display: flex;
+    gap: 0;
+    margin: 0.5rem 0 1.25rem;
+    border-bottom: 2px solid #1f5e3a;
+  }
+  .plan-tabs a {
+    padding: 0.75rem 1.25rem;
+    text-decoration: none;
+    color: #555;
+    font-weight: 600;
+    border-bottom: 4px solid transparent;
+    margin-bottom: -2px;
+    min-height: 60px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .plan-tabs a:hover {
+    color: #1f5e3a;
+    background: #f8fbf9;
+  }
+  .plan-tabs a.active {
+    color: #1f5e3a;
+    border-bottom-color: #1f5e3a;
+  }
   .month-nav {
     display: flex;
     align-items: center;
@@ -97,17 +126,13 @@
     padding: 0.5rem 0.75rem;
     border: 2px solid #1f5e3a;
     border-radius: 4px;
-    min-height: 44px;
-    line-height: 1.4;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
   }
   .month-nav strong {
     font-size: 1.2rem;
     color: #1f5e3a;
-  }
-  .month-nav .back {
-    margin-left: auto;
-    border: none;
-    background: white;
   }
   .empty {
     background: white;

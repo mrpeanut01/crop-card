@@ -11,6 +11,9 @@
   let saving = $state(false);
   let saveError = $state<string | null>(null);
   let saveOk = $state(false);
+  let pendingSent = $state(false);
+  let pendingActionId = $state<string | null>(null);
+  let pendingActionError = $state<string | null>(null);
 
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
 
@@ -38,6 +41,7 @@
     saving = true;
     saveError = null;
     saveOk = false;
+    pendingSent = false;
     try {
       const res = await fetch(`/api/sprayers/${encodeURIComponent(sprayer.id)}/calibration`, {
         method: 'POST',
@@ -53,7 +57,12 @@
         saveError = out.error ?? `HTTP ${res.status}`;
         return;
       }
-      saveOk = true;
+      // Owner: 200 + status:'applied'. Helper: 202 + status:'pending-owner-review'.
+      if (out.status === 'pending-owner-review') {
+        pendingSent = true;
+      } else {
+        saveOk = true;
+      }
       await invalidateAll();
     } catch (e) {
       saveError = e instanceof Error ? e.message : String(e);

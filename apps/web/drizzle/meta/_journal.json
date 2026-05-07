@@ -22,6 +22,13 @@
       "when": 1778122459662,
       "tag": "0002_sparkling_red_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1778125011415,
+      "tag": "0003_special_devos",
+      "breakpoints": true
     }
   ]
 }

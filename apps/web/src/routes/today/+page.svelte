@@ -70,6 +70,74 @@
   <p class="date">{data.today}</p>
 </header>
 
+{#if !data.bootstrapDone}
+  <section class="card bootstrap" aria-labelledby="bootstrap-title">
+    <h2 id="bootstrap-title">Get started — UC-20</h2>
+    <p class="bootstrap-lede">
+      A few one-time setup steps. CropCard plans, calibrates, and records around blocks +
+      sprayers — once these three are in place, the calendar drives the rest.
+    </p>
+    <ol class="bootstrap-steps">
+      <li class:done={data.bootstrap.hasBlock && data.bootstrap.hasPlanting}>
+        <span class="step-num" aria-hidden="true">
+          {data.bootstrap.hasBlock && data.bootstrap.hasPlanting ? '✓' : '1'}
+        </span>
+        <div class="step-body">
+          <strong>Add your first block & planting</strong>
+          <small>
+            {#if data.bootstrap.hasBlock && data.bootstrap.hasPlanting}
+              Done.
+            {:else if data.bootstrap.hasBlock}
+              Block added. Now record a planting in it.
+            {:else}
+              A block is your field; a planting is what's growing in it.
+            {/if}
+          </small>
+          {#if !(data.bootstrap.hasBlock && data.bootstrap.hasPlanting)}
+            <a class="cta" href="/plan">Open Plan →</a>
+          {/if}
+        </div>
+      </li>
+      <li class:done={data.bootstrap.hasSprayer}>
+        <span class="step-num" aria-hidden="true">
+          {data.bootstrap.hasSprayer ? '✓' : '2'}
+        </span>
+        <div class="step-body">
+          <strong>Register a sprayer</strong>
+          <small>
+            {#if data.bootstrap.hasSprayer}
+              Done.
+            {:else}
+              The kernel won't let you spray without one — it tracks chemistry & decon state.
+            {/if}
+          </small>
+          {#if !data.bootstrap.hasSprayer}
+            <a class="cta" href="/equipment">Open Equipment →</a>
+          {/if}
+        </div>
+      </li>
+      <li class:done={data.bootstrap.hasCalibration}>
+        <span class="step-num" aria-hidden="true">
+          {data.bootstrap.hasCalibration ? '✓' : '3'}
+        </span>
+        <div class="step-body">
+          <strong>Calibrate the sprayer</strong>
+          <small>
+            {#if data.bootstrap.hasCalibration}
+              Done.
+            {:else}
+              UC-10 1/128-acre method. The dilution calculator scales every product rate by GPA.
+            {/if}
+          </small>
+          {#if data.bootstrap.hasSprayer && !data.bootstrap.hasCalibration}
+            <a class="cta" href="/calibrate">Open Calibrate →</a>
+          {/if}
+        </div>
+      </li>
+    </ol>
+  </section>
+{/if}
+
 {#if data.lowStock.length > 0 || data.expiringStock.length > 0}
   <section class="stock-alerts" role="status" aria-live="polite">
     {#if data.lowStock.length > 0}
@@ -419,5 +487,77 @@
   .warn ul {
     margin: 0;
     padding-left: 1.25rem;
+  }
+  .bootstrap {
+    background: #f8fbf9;
+    border: 2px solid #1f5e3a;
+  }
+  .bootstrap h2 {
+    color: #1f5e3a;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 1.2rem;
+  }
+  .bootstrap-lede {
+    color: #555;
+    margin: 0 0 1rem;
+  }
+  .bootstrap-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .bootstrap-steps li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    background: white;
+    border-left: 4px solid #1f5e3a;
+  }
+  .bootstrap-steps li.done {
+    opacity: 0.65;
+    border-left-color: #888;
+  }
+  .step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #1f5e3a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  .bootstrap-steps li.done .step-num {
+    background: #4d8e36;
+  }
+  .step-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .step-body small {
+    color: #555;
+  }
+  .step-body .cta {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0.4rem;
+    padding: 0.7rem 1rem;
+    background: #1f5e3a;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 600;
+    min-height: 60px;
+    line-height: 1.4;
+    align-self: flex-start;
   }
 </style>

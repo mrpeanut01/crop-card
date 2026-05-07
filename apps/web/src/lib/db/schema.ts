@@ -46,6 +46,13 @@ export const sprayers = sqliteTable('sprayers', {
   lastDeconAt: integer('last_decon_at', { mode: 'timestamp_ms' })
 });
 
+// F-M / UC-10: when a helper completes the 1/128-acre wizard they cannot
+// directly write to a sprayer's calibrated_gpa (owner-only per FR-12). They
+// stage the result here for owner review. Owner approval calls
+// recordCalibration() on the equipment row and deletes the pending entry.
+// FK targets `equipment` (Phase 8a unified table); legacy `sprayers` is
+// vestigial and never populated.
+
 export const sprayEvents = sqliteTable('spray_events', {
   id: text('id').primaryKey(),
   blockId: text('block_id')
@@ -132,6 +139,27 @@ export const equipmentLog = sqliteTable('equipment_log', {
   performedById: text('performed_by_id').references(() => users.id),
   notes: text('notes'),
   payloadJson: text('payload_json')
+});
+
+// F-M / UC-10: helpers complete the 1/128-acre wizard but cannot write a
+// sprayer's calibrated_gpa directly (owner-only per FR-12). They stage the
+// result here. Owner approval calls recordCalibration() on the equipment row
+// and deletes the pending entry.
+export const pendingCalibrations = sqliteTable('pending_calibrations', {
+  id: text('id').primaryKey(),
+  equipmentId: text('equipment_id')
+    .notNull()
+    .references(() => equipment.id),
+  submittedById: text('submitted_by_id')
+    .notNull()
+    .references(() => users.id),
+  submittedAt: integer('submitted_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+  calibratedGpa: integer('calibrated_gpa').notNull(),
+  spreadInches: integer('spread_inches'),
+  ouncesCollected: integer('ounces_collected'),
+  notes: text('notes')
 });
 
 // ─── Stock Management (Phase 8b) ─────────────────────────────────────────

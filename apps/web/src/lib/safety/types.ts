@@ -6,12 +6,22 @@
  */
 
 export const CHEMISTRY_CLASSES = [
-  'synthetic-auxin',
-  'chloroacetamide',
-  'hppd-inhibitor',
-  'accase-inhibitor',
-  'glyphosate',
-  'sulfonylurea'
+  // Legacy v1 classes (HRAC mapping in cropFamilyLethality.ts → ChemistryProfile.hracGroup)
+  'synthetic-auxin',          // HRAC 4 — 2,4-D, dicamba
+  'chloroacetamide',          // HRAC 15 (legacy K3) — S-metolachlor, acetochlor
+  'hppd-inhibitor',           // HRAC 27 — mesotrione, tembotrione
+  'accase-inhibitor',         // HRAC 1 — clethodim, sethoxydim, fluazifop
+  'glyphosate',               // HRAC 9 — glyphosate (non-selective)
+  'sulfonylurea',             // HRAC 2 — Stadia-class, halosulfuron, nicosulfuron
+  // Phase 9 expansion (HRAC-aligned, friendly names kept for plugin readability)
+  'microtubule-inhibitor',    // HRAC 3 — pendimethalin, trifluralin (dinitroanilines)
+  'photosystem-ii-triazine',  // HRAC 5 — atrazine, simazine, metribuzin
+  'photosystem-i-diquat',     // HRAC 22 — paraquat, diquat
+  'glufosinate',              // HRAC 10 — Liberty (glutamine synthetase inhibitor)
+  'ppo-inhibitor',            // HRAC 14 — fomesafen, flumioxazin, sulfentrazone, lactofen
+  'als-imidazolinone',        // HRAC 2 (IMI subset) — imazethapyr, imazamox, imazaquin
+  'vlcfa-pyroxasulfone',      // HRAC 15 — pyroxasulfone (newer VLCFA inhibitor)
+  'clomazone'                 // HRAC 13 — clomazone (carotenoid biosynthesis)
 ] as const;
 
 export type ChemistryClass = (typeof CHEMISTRY_CLASSES)[number];

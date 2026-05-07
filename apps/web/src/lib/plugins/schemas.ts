@@ -44,6 +44,76 @@ export const postHarvestCuringSchema = z
   })
   .partial({ targetMoisturePercent: true, storageLocation: true });
 
+// ─── Plugin schema v1.1 (HCD Guide §4) — additive, optional ─────────────
+//
+// New crop-plugin fields supporting hay (FR-19, FR-21, FR-23) and small
+// grain (FR-20) workflows. All fields are optional. Existing v1.0 plugins
+// pass validation unchanged. Per CLAUDE.md invariant #1, kernel rules live
+// in TypeScript; plugins declare thresholds, the kernel enforces.
+
+export const cropOperationModelSchema = z.enum([
+  'single-event',
+  'multi-step',
+  'perennial-multi-cut'
+]);
+
+const moistureThresholdsSchema = z.object({
+  /** Below this percent → soft warning (e.g., leaf shatter on hay). */
+  warnBelowPct: z.number().nonnegative().max(100).optional(),
+  /** Below this percent → hard STOP. */
+  dangerBelowPct: z.number().nonnegative().max(100).optional(),
+  /** Above this percent → soft warning. */
+  warnAbovePct: z.number().nonnegative().max(100).optional(),
+  /** Above this percent → hard STOP (e.g., baled hay >22% = fire risk). */
+  dangerAbovePct: z.number().nonnegative().max(100).optional(),
+  /** Optimum band for the operation (display + green-state UI). */
+  optimumPercent: minMaxNumber.optional()
+});
+
+/** Hay-specific multi-step operation declaration (FR-19, FR-21). */
+export const hayOperationsSchema = z.object({
+  steps: z
+    .array(z.enum(['mow', 'ted', 'rake', 'bale', 'store']))
+    .min(2)
+    .default(['mow', 'rake', 'bale', 'store']),
+  cuttingsPerSeason: z
+    .object({ min: z.number().int().positive(), max: z.number().int().positive() })
+    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
+    .optional(),
+  cutIntervalDays: z
+    .object({ min: z.number().int().positive(), max: z.number().int().positive() })
+    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
+    .optional(),
+  mowTrigger: z.string().optional(),
+  weatherWindowDays: z.number().int().min(1).max(14).default(3),
+  /** Per-bale-type baling thresholds. Keys are bale-type strings. */
+  baleMoistureGate: z
+    .record(
+      z.enum(['small-square', 'large-round', 'large-square']),
+      moistureThresholdsSchema
+    )
+    .optional(),
+  /** Storage temperature watch — fires reminder events (FR-23 supports). */
+  storageTempWatchF: z
+    .object({ warn: z.number(), danger: z.number() })
+    .optional()
+});
+
+/** Zadoks small-grain growth-stage table (FR-20). */
+export const zadoksStageSchema = z.object({
+  stage: z.string().regex(/^Z\d{2}(-Z\d{2})?$/, 'stage must look like Z30 or Z30-Z39'),
+  name: z.string().min(1),
+  daysFromPlanting: z
+    .object({ min: z.number().int().nonnegative(), max: z.number().int().positive() })
+    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
+});
+
+/** Generic harvest-moisture gate for any moisture-sensitive crop (FR-21). */
+export const harvestMoistureGateSchema = z.object({
+  operation: z.literal('harvest'),
+  thresholds: moistureThresholdsSchema
+});
+
 /**
  * Orchard-specific seasonal task templates (FR-10). Each entry fires once
  * per planting per year at the given offset from `referenceDate` (the
@@ -67,6 +137,29 @@ export const orchardSeasonalTaskSchema = z.object({
   body: z.string().optional()
 });
 
+/**
+ * Generic seasonal task — works for any crop family (Phase 9 generalization
+ * of orchardSeasonalTasks). Either `dayOfYear` (calendar-anchored, perennials)
+ * or `daysAfterPlanting` (relative, annuals) drives the start time.
+ * Perennial families (orchard, stone-fruit, small-fruit, bramble, vine-fruit,
+ * forage) render across multiple calendar years; annuals render once.
+ */
+export const seasonalTaskSchema = z
+  .object({
+    key: z.string().min(1).max(80),
+    kind: z
+      .enum(['spray', 'cultural', 'pruning', 'thinning', 'fertilize', 'irrigate', 'scout', 'harvest'])
+      .default('cultural'),
+    dayOfYear: z.number().int().min(1).max(366).optional(),
+    daysAfterPlanting: z.number().int().min(0).max(3650).optional(),
+    windowDays: z.number().int().min(1).max(60).default(7),
+    title: z.string().min(1),
+    body: z.string().optional()
+  })
+  .refine((v) => v.dayOfYear !== undefined || v.daysAfterPlanting !== undefined, {
+    message: 'seasonalTask requires either dayOfYear or daysAfterPlanting'
+  });
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal('crop'),
   cropFamily: z.enum(CROP_FAMILIES),
@@ -79,8 +172,22 @@ export const cropPluginSchema = pluginBase.extend({
   plantingGuide: plantingGuideSchema.optional(),
   /** Curing instructions + duration, surfaced on /harvest (FR-08). */
   postHarvestCuring: postHarvestCuringSchema.optional(),
-  /** Orchard-only seasonal task list (FR-10). */
+  /** Orchard-only seasonal task list (FR-10). Kept for back-compat; new
+   *  plugins should prefer the generic `seasonalTasks` field. */
   orchardSeasonalTasks: z.array(orchardSeasonalTaskSchema).optional(),
+  /** Generic seasonal task list (Phase 9). Works for any crop family. */
+  seasonalTasks: z.array(seasonalTaskSchema).optional(),
+  // ─── v1.1 additions (HCD Guide §4) ──────────────────────────────────
+  /** Operation model: single-event (vegetables), multi-step (hay), or
+   * perennial-multi-cut (hay across cuttings). Drives FR-19 workflow. */
+  cropOperationModel: cropOperationModelSchema.optional(),
+  /** Hay-specific multi-step operation declaration (FR-19, FR-21, FR-23). */
+  hayOperations: hayOperationsSchema.optional(),
+  /** Small-grain Zadoks stage table (FR-20). */
+  zadoksStages: z.array(zadoksStageSchema).optional(),
+  /** Generic harvest-moisture gates (FR-21) — small grains, hay, etc. */
+  moistureGates: z.array(harvestMoistureGateSchema).optional(),
+  // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),
   growthStages: z.array(z.record(z.string(), z.unknown())).optional(),

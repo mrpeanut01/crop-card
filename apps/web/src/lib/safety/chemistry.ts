@@ -7,10 +7,18 @@ import type { ChemistryClass, HerbicideProduct, SafetyViolation } from './types'
  * change and requires a RULES_VERSION bump.
  */
 const INCOMPATIBLE_PAIRS: ReadonlySet<string> = new Set([
+  // Legacy v1 pairs
   pairKey('synthetic-auxin', 'chloroacetamide'),
   pairKey('synthetic-auxin', 'hppd-inhibitor'),
   pairKey('accase-inhibitor', 'sulfonylurea'),
-  pairKey('accase-inhibitor', 'glyphosate')
+  pairKey('accase-inhibitor', 'glyphosate'),
+  // Phase 9 — label-prohibited or known-antagonistic tank mixes
+  pairKey('glufosinate', 'glyphosate'),           // antagonism — cannot tank-mix
+  pairKey('glufosinate', 'synthetic-auxin'),      // label-prohibited per Bayer Liberty 280 SL
+  pairKey('clomazone', 'glyphosate'),             // formulation incompatibility on most labels
+  pairKey('ppo-inhibitor', 'als-imidazolinone'),  // crop-injury risk (soybean / dry bean)
+  pairKey('accase-inhibitor', 'photosystem-ii-triazine'), // atrazine antagonism on grass control
+  pairKey('accase-inhibitor', 'glufosinate')      // antagonism — Liberty disrupts grass uptake
 ]);
 
 function pairKey(a: ChemistryClass, b: ChemistryClass): string {

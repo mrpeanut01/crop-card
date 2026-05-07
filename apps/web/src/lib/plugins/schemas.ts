@@ -152,7 +152,7 @@ export const seasonalTaskSchema = z
       .default('cultural'),
     dayOfYear: z.number().int().min(1).max(366).optional(),
     daysAfterPlanting: z.number().int().min(0).max(3650).optional(),
-    windowDays: z.number().int().min(1).max(60).default(7),
+    windowDays: z.number().int().min(1).max(120).default(7),
     title: z.string().min(1),
     body: z.string().optional()
   })
@@ -163,7 +163,7 @@ export const seasonalTaskSchema = z
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal('crop'),
   cropFamily: z.enum(CROP_FAMILIES),
-  defaultRowSpacingInches: z.number().positive().max(120).optional(),
+  defaultRowSpacingInches: z.number().positive().max(360).optional(),
   preHarvestIntervalDays: z.number().int().nonnegative().optional(),
   daysToMaturity: z
     .object({ min: z.number().int().positive(), max: z.number().int().positive() })
@@ -209,6 +209,18 @@ export const dilutionTableSchema = z.record(
   })
 );
 
+/** Variable-rate per-management-zone (Phase 10 stub for §11 OOS). Optional;
+ *  consumers without a zone-aware planter or a soil-test grid can ignore. */
+const ratesPerZoneSchema = z.array(
+  z.object({
+    /** Zone label or soil-test polygon id. Free-form; the operator's call. */
+    zone: z.string().min(1),
+    amount: z.number().positive(),
+    unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt']),
+    notes: z.string().optional()
+  })
+);
+
 export const herbicidePluginSchema = pluginBase.extend({
   type: z.literal('herbicide'),
   activeIngredients: z.array(activeIngredientSchema).min(1),
@@ -224,6 +236,16 @@ export const herbicidePluginSchema = pluginBase.extend({
   requiresAMS: z.boolean().optional(),
   deconRequired: z.boolean().optional(),
   tankMixOrder: z.number().int().min(1).max(10).optional(),
+  /** EPA registration number (e.g., '524-617'). Required for USDA / NRCS
+   *  cost-share spray-record exports; optional on plugin so legacy plugins
+   *  validate. The /records export warns when missing. */
+  epaRegistrationNumber: z
+    .string()
+    .regex(/^\d{1,6}-\d{1,6}(-\d{1,6})?$/, 'EPA reg numbers look like 524-617 or 524-617-100')
+    .optional(),
+  /** Variable-rate stub — overrides ratePerAcre when the spray UI surfaces
+   *  zones. Consumers without a zone-aware planter ignore this field. */
+  ratesPerZone: ratesPerZoneSchema.optional(),
   labelClaims: z
     .object({
       safeForCropPluginIds: z.array(z.string()).optional()
@@ -233,13 +255,149 @@ export const herbicidePluginSchema = pluginBase.extend({
 });
 
 const insecticideIngredientSchema = z.object({
-  name: z.string().min(1)
+  name: z.string().min(1),
+  /** IRAC mode-of-action group code (e.g., '1A', '3A', '4A', '5', '6', '11A', '15', '22', '28', '29', 'UN'). Used by agronomy/resistance.ts for rotation hints; NOT a safety-kernel input. */
+  iracGroup: z.string().regex(/^[A-Z0-9]{1,4}$/).optional()
+});
+
+/** Phase 10: declarative scouting threshold. The /scout flow renders an
+ *  observation form with the listed metric; if the recorded value crosses
+ *  the threshold, the UI nudges the operator into the spray flow with this
+ *  insecticide pre-selected. The kernel never auto-sprays. */
+const scoutingThresholdSchema = z.object({
+  /** Pest the threshold is observing (free-form; matches targetPests). */
+  pest: z.string().min(1),
+  /** Metric the observer counts. */
+  metric: z.enum([
+    'count-per-plant',
+    'count-per-leaf',
+    'count-per-trap-per-week',
+    'pct-defoliation',
+    'pct-infested-plants',
+    'eggs-per-plant'
+  ]),
+  /** Spray-action threshold; values ≥ this nudge the spray flow. */
+  threshold: z.number().nonnegative(),
+  /** Optional warning band (yellow). */
+  warnAt: z.number().nonnegative().optional(),
+  notes: z.string().optional()
+});
+
+/** Phase 10: multi-step application protocol — e.g. burndown then post-emerge,
+ *  Bt rotation cycle, biocontrol release schedule. Free-form steps the UI
+ *  renders as a checklist on the spray prep screen. */
+const applicationProtocolStepSchema = z.object({
+  step: z.string().min(1),
+  detail: z.string().optional(),
+  /** Day-offset from the first application (0 = same day). */
+  dayOffset: z.number().int().nonnegative().optional()
 });
 
 export const insecticidePluginSchema = pluginBase.extend({
   type: z.literal('insecticide'),
   activeIngredients: z.array(insecticideIngredientSchema).min(1),
-  reEntryIntervalHours: z.number().int().nonnegative()
+  reEntryIntervalHours: z.number().int().nonnegative(),
+  /** Phase 9 additions — all optional for back-compat with v1 plugins. */
+  preHarvestIntervalDays: z.number().int().nonnegative().optional(),
+  ratePerAcre: z
+    .object({
+      amount: z.number().positive(),
+      unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
+    })
+    .optional(),
+  gpaCalibration: z.number().int().positive().default(15).optional(),
+  dilutionTable: dilutionTableSchema.optional(),
+  targetPests: z.array(z.string().min(1)).optional(),
+  pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),
+  /** Phase 10: scouting nudge thresholds — drives /scout → /spray handoff. */
+  scoutingThresholds: z.array(scoutingThresholdSchema).optional(),
+  /** Phase 10: multi-step protocol — e.g. Bt rotation, biocontrol release. */
+  applicationProtocol: z.array(applicationProtocolStepSchema).optional(),
+  /** Phase 10: EPA reg number for USDA / NRCS spray-record export. */
+  epaRegistrationNumber: z
+    .string()
+    .regex(/^\d{1,6}-\d{1,6}(-\d{1,6})?$/, 'EPA reg numbers look like 524-617 or 524-617-100')
+    .optional(),
+  labelClaims: z
+    .object({
+      safeForCropPluginIds: z.array(z.string()).optional(),
+      safeForCropFamilies: z.array(z.enum(CROP_FAMILIES)).optional()
+    })
+    .optional(),
+  notes: z.string().optional()
+});
+
+/**
+ * Fungicide ingredient — FRAC code is a string (M01, M03, 1, 7, 11, 21, P01, ...).
+ * NOT consumed by the safety kernel kill-matrix; used by
+ * `agronomy/resistance.ts` for rotation hints (don't apply same FRAC group
+ * twice in a row).
+ */
+const fungicideIngredientSchema = z.object({
+  name: z.string().min(1),
+  fracCode: z
+    .string()
+    .regex(/^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/, 'fracCode must look like M03, P01, U06, BM01, or a number')
+});
+
+export const fungicidePluginSchema = pluginBase.extend({
+  type: z.literal('fungicide'),
+  activeIngredients: z.array(fungicideIngredientSchema).min(1),
+  applicationTiming: z
+    .enum(['DORMANT', 'PRE-BLOOM', 'BLOOM', 'POST-BLOOM', 'COVER', 'PRE-HARVEST'])
+    .optional(),
+  ratePerAcre: z.object({
+    amount: z.number().positive(),
+    unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
+  }),
+  gpaCalibration: z.number().int().positive().default(15),
+  dilutionTable: dilutionTableSchema.optional(),
+  reEntryIntervalHours: z.number().int().nonnegative(),
+  preHarvestIntervalDays: z.number().int().nonnegative(),
+  pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),
+  /** Fungicides rarely require sprayer decon (no herbicide cross-contam class) but a few do (e.g., copper after a Bordeaux mix). */
+  deconRequired: z.boolean().optional(),
+  targetDiseases: z.array(z.string().min(1)).optional(),
+  labelClaims: z
+    .object({
+      safeForCropPluginIds: z.array(z.string()).optional(),
+      safeForCropFamilies: z.array(z.enum(CROP_FAMILIES)).optional()
+    })
+    .optional(),
+  notes: z.string().optional()
+});
+
+export const fertilizerPluginSchema = pluginBase.extend({
+  type: z.literal('fertilizer'),
+  /** Guaranteed analysis — N-P-K percentage by weight. P is reported as P2O5 elemental %, K as K2O elemental %, per US labeling convention. */
+  analysis: z.object({
+    n: z.number().min(0).max(100),
+    p: z.number().min(0).max(100),
+    k: z.number().min(0).max(100)
+  }),
+  form: z.enum(['granular', 'liquid', 'soluble', 'compost', 'slow-release', 'meal']),
+  organic: z.boolean().default(false),
+  secondaryNutrients: z
+    .object({
+      ca: z.number().min(0).max(100).optional(),
+      mg: z.number().min(0).max(100).optional(),
+      s: z.number().min(0).max(100).optional(),
+      b: z.number().min(0).max(100).optional(),
+      zn: z.number().min(0).max(100).optional(),
+      mn: z.number().min(0).max(100).optional(),
+      cu: z.number().min(0).max(100).optional(),
+      fe: z.number().min(0).max(100).optional()
+    })
+    .optional(),
+  applicationRange: z
+    .object({
+      min: z.number().positive(),
+      max: z.number().positive(),
+      unit: z.enum(['lb-per-acre', 'gal-per-acre', 'ton-per-acre'])
+    })
+    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
+    .optional(),
+  notes: z.string().optional()
 });
 
 export const companionPluginSchema = pluginBase.extend({
@@ -252,11 +410,15 @@ export const pluginSchema = z.discriminatedUnion('type', [
   cropPluginSchema,
   herbicidePluginSchema,
   insecticidePluginSchema,
+  fungicidePluginSchema,
+  fertilizerPluginSchema,
   companionPluginSchema
 ]);
 
 export type CropPlugin = z.infer<typeof cropPluginSchema>;
 export type HerbicidePlugin = z.infer<typeof herbicidePluginSchema>;
 export type InsecticidePlugin = z.infer<typeof insecticidePluginSchema>;
+export type FungicidePlugin = z.infer<typeof fungicidePluginSchema>;
+export type FertilizerPlugin = z.infer<typeof fertilizerPluginSchema>;
 export type CompanionPlugin = z.infer<typeof companionPluginSchema>;
 export type Plugin = z.infer<typeof pluginSchema>;

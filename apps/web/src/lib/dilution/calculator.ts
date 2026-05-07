@@ -118,3 +118,60 @@ export function computeTankMixDilutions(
     computeDilution({ herbicide, tankSizeGallons, calibratedGpa })
   );
 }
+
+/**
+ * Generic per-product dilution math — used by the insecticide flow, which
+ * carries a minimal product shape. Equivalent to `computeDilution` but
+ * decoupled from HerbicidePlugin so non-herbicide consumers don't have to
+ * fabricate one. (Pricing/stock-decrement only — no safety semantics.)
+ */
+export interface RatedProduct {
+  pluginId: string;
+  displayName: string;
+  ratePerAcre: { amount: number; unit: HerbicidePlugin['ratePerAcre']['unit'] };
+  gpaCalibration?: number;
+}
+
+export function computeRatedDilution(
+  product: RatedProduct,
+  tankSizeGallons: number,
+  calibratedGpa?: number
+): DilutionLine {
+  if (!Number.isFinite(tankSizeGallons) || tankSizeGallons <= 0) {
+    throw new Error('tankSizeGallons must be a positive number');
+  }
+  const ratePerAcre = product.ratePerAcre;
+  const gpaUsed = calibratedGpa ?? product.gpaCalibration ?? 15;
+  if (gpaUsed <= 0) throw new Error('calibratedGpa must be positive');
+
+  const acresCovered = tankSizeGallons / gpaUsed;
+  const ratePerAcreFlOz = toFlOz(ratePerAcre.amount, ratePerAcre.unit);
+  if (ratePerAcreFlOz === null) {
+    const amount = ratePerAcre.amount * acresCovered;
+    return {
+      pluginId: product.pluginId,
+      displayName: product.displayName,
+      productAmount: amount,
+      unit: ratePerAcre.unit,
+      display: formatDisplay(amount, ratePerAcre.unit),
+      acresCovered,
+      gpaUsed,
+      ratePerAcre,
+      customRateApplied: false
+    };
+  }
+  const totalFlOz = ratePerAcreFlOz * acresCovered;
+  const factor = FL_OZ_PER_UNIT[ratePerAcre.unit] ?? 1;
+  const amountInSourceUnit = totalFlOz / factor;
+  return {
+    pluginId: product.pluginId,
+    displayName: product.displayName,
+    productAmount: amountInSourceUnit,
+    unit: ratePerAcre.unit,
+    display: formatDisplay(amountInSourceUnit, ratePerAcre.unit),
+    acresCovered,
+    gpaUsed,
+    ratePerAcre,
+    customRateApplied: false
+  };
+}

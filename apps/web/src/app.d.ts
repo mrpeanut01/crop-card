@@ -7,7 +7,11 @@ declare global {
       user?: import('$lib/server/auth').AuthenticatedUser;
     }
     interface PageData {
-      user?: { id: string; email: string; role: 'owner' | 'helper' } | null;
+      user?: {
+        id: string;
+        email: string;
+        role: 'owner' | 'helper' | 'inspector' | 'custom-operator';
+      } | null;
     }
     // interface PageData {}
     // interface PageState {}

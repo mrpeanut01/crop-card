@@ -69,9 +69,12 @@
       <summary>More</summary>
       <div class="more-menu">
         <a href="/harvest">Harvest</a>
+        <a href="/insecticides">Insecticides</a>
+        <a href="/fertility">Fertility</a>
         <a href="/calibrate">Calibrate</a>
         <a href="/equipment">Equipment</a>
         <a href="/stock">Stock</a>
+        <a href="/map">Map</a>
         <a href="/plugins">Plugins</a>
       </div>
     </details>

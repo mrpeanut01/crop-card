@@ -59,9 +59,12 @@
       case 'curing-progress':
       case 'curing-ready':
         return { href: '/harvest', label: 'Open harvest →' };
+      case 'seasonal-task':
+        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
       case 'emergence':
         return null;
     }
+    return null;
   }
 </script>
 

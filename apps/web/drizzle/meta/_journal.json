@@ -29,6 +29,13 @@
       "when": 1778125011415,
       "tag": "0003_special_devos",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1778125716472,
+      "tag": "0004_rare_whiplash",
+      "breakpoints": true
     }
   ]
 }

@@ -84,6 +84,14 @@
     <a class="btn" href="/api/spray/records/export.csv{exportQuery}" download>Download CSV</a>
     <a class="btn" href="/api/spray/records/export.pdf{exportQuery}" download>Download PDF</a>
     <a
+      class="btn"
+      href="/api/spray/records/export.usda.csv{exportQuery}"
+      download
+      title="USDA / NRCS Pesticide Application Records template"
+    >
+      Download USDA / NRCS CSV
+    </a>
+    <a
       class="btn-secondary"
       class:has-pending={pendingCount && pendingCount > 0}
       href="/records/pending"

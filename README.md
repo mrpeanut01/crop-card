@@ -2,7 +2,14 @@
 
 Offline-first PWA replacing the paper Field Card for small-plot row crop herbicide planning, planting, and harvest tracking.
 
-Spec: [Farm Management Web App — Final Requirements Specification](./docs/spec.md) (verbatim attachment from initial brief).
+> The upstream HCD Guide refers to this product as **"RowWise"**. This repository's name is **CropCard**; both names refer to the same product.
+
+## Design documentation
+
+- [docs/personas.md](./docs/personas.md) — ISO 9241-210 *Context of Use* for the 5 personas (Owner, Helper, Hay Operator, Inspector, First-Run user)
+- [docs/use-cases.md](./docs/use-cases.md) — UC-01..UC-24 catalog with route refs and status tags
+- [docs/usability-audit.md](./docs/usability-audit.md) — ISO 9241-210 *Usability Evaluation Report* with prioritized P0/P1/P2 findings
+- [docs/hcd-review-prompt.md](./docs/hcd-review-prompt.md) — Claude Code system-prompt template for follow-up usability reviews
 
 ## What's here
 

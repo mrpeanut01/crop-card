@@ -53,6 +53,46 @@
   <p class="date">{data.today}</p>
 </header>
 
+{#if data.lowStock.length > 0 || data.expiringStock.length > 0}
+  <section class="stock-alerts" role="status" aria-live="polite">
+    {#if data.lowStock.length > 0}
+      <div class="stock-alert low">
+        <strong
+          >⚠ {data.lowStock.length} SKU{data.lowStock.length === 1 ? '' : 's'} low on stock:</strong
+        >
+        <ul>
+          {#each data.lowStock as i (i.id)}
+            <li>
+              <a href="/stock/{i.id}">{i.displayName}</a>
+              — {i.onHand}
+              {i.defaultUnit} on hand (reorder at {i.reorderThreshold}
+              {i.defaultUnit})
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+    {#if data.expiringStock.length > 0}
+      <div class="stock-alert expiring">
+        <strong
+          >⏳ {data.expiringStock.length} lot{data.expiringStock.length === 1 ? '' : 's'} expiring within
+          30 days:</strong
+        >
+        <ul>
+          {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
+            <li>
+              <a href="/stock/{e.itemId}">{e.itemName}</a>
+              {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}
+              — {e.balance}
+              {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+  </section>
+{/if}
+
 {#if data.eventsToday.length > 0}
   <section class="card today-actions">
     <h2>Today's actions</h2>
@@ -152,6 +192,38 @@
   }
   .today h1 {
     margin: 0;
+  }
+  .stock-alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .stock-alert {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #b35900;
+    background: #fff3cd;
+    color: #b35900;
+  }
+  .stock-alert.expiring {
+    background: #fff8ec;
+    border-left-color: #b00020;
+    color: #b00020;
+  }
+  .stock-alert ul {
+    margin: 0.4rem 0 0 1.25rem;
+    padding: 0;
+  }
+  .stock-alert a {
+    color: inherit;
+    text-decoration: underline;
+  }
+  .stock-alert code {
+    background: white;
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
   }
   .date {
     margin: 0;

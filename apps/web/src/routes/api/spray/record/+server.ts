@@ -12,7 +12,9 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { computeTankMixDilutions } from '$lib/dilution/calculator';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
+import { decrementForUse, getStockItemByPluginId, type DecrementResult } from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
@@ -23,6 +25,7 @@ import {
   type HerbicideProduct,
   type SprayContext
 } from '$lib/safety';
+import type { StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
@@ -47,6 +50,8 @@ const requestSchema = z.object({
     tempF: z.number(),
     rainForecastMmNext24h: z.number().nonnegative()
   }),
+  /** Tank size for auto-decrement; if omitted, no stock decrement happens. */
+  tankSizeGallons: z.number().positive().optional(),
   customRateOverride: z.boolean().optional(),
   notes: z.string().max(500).optional()
 });
@@ -169,5 +174,47 @@ export const POST: RequestHandler = async (event) => {
   );
   for (const cls of newClasses) recordSpray(stored.id, cls, occurredAt);
 
-  return json({ event: persisted, ruleVersion: RULES_VERSION });
+  // Auto-decrement stock from the dilution math (Phase 8b). Warn-don't-block
+  // policy: shortfalls are surfaced in the response but don't cancel the
+  // spray record (the product is already in the tank; refusing the record
+  // would create a worse audit gap than letting the negative balance
+  // persist for reconciliation on /stock).
+  const stockResults: DecrementResult[] = [];
+  const stockWarnings: string[] = [];
+  if (parsed.data.tankSizeGallons) {
+    const effectiveGpa = stored ? stored.calibratedGpa : undefined;
+    const lines = computeTankMixDilutions(fullProducts, parsed.data.tankSizeGallons, effectiveGpa);
+    for (const line of lines) {
+      const stockItem = getStockItemByPluginId(line.pluginId);
+      if (!stockItem) {
+        stockWarnings.push(
+          `${line.pluginId}: not tracked in stock — add a SKU on /stock to enable auto-decrement`
+        );
+        continue;
+      }
+      try {
+        const result = decrementForUse({
+          stockItemId: stockItem.id,
+          amount: line.productAmount,
+          unit: line.unit as StockUnit,
+          sprayEventId: persisted.id,
+          performedById: performer.id,
+          occurredAt
+        });
+        stockResults.push(result);
+        for (const note of result.notes) stockWarnings.push(`${line.pluginId}: ${note}`);
+      } catch (e) {
+        stockWarnings.push(
+          `${line.pluginId}: stock decrement failed — ${e instanceof Error ? e.message : String(e)}`
+        );
+      }
+    }
+  }
+
+  return json({
+    event: persisted,
+    ruleVersion: RULES_VERSION,
+    stockDecrements: stockResults,
+    stockWarnings
+  });
 };

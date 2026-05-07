@@ -15,6 +15,13 @@
       "when": 1778121597118,
       "tag": "0001_colorful_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1778122459662,
+      "tag": "0002_sparkling_red_skull",
+      "breakpoints": true
     }
   ]
 }

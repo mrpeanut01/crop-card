@@ -133,3 +133,67 @@ export const equipmentLog = sqliteTable('equipment_log', {
   notes: text('notes'),
   payloadJson: text('payload_json')
 });
+
+// ─── Stock Management (Phase 8b) ─────────────────────────────────────────
+//
+// Inventory tracking for herbicides, insecticides, fungicides, fertilizer,
+// seed, adjuvants, fuel, and parts. Each SKU (stock_item) has zero or more
+// lots; each lot accumulates signed movements. On-hand = received_quantity
+// + sum of movements per lot. Spray events auto-decrement via FIFO oldest
+// non-expired lot. Quantities stored as integer hundredths of the default
+// unit so we don't lose precision (1.50 fl-oz → 150 stored).
+
+export const stockItems = sqliteTable('stock_items', {
+  id: text('id').primaryKey(),
+  /** Optional link to a herbicide/insecticide plugin. Drives auto-decrement. */
+  pluginId: text('plugin_id'),
+  category: text('category', {
+    enum: [
+      'herbicide',
+      'insecticide',
+      'fungicide',
+      'fertilizer',
+      'seed',
+      'adjuvant',
+      'fuel',
+      'part'
+    ]
+  }).notNull(),
+  displayName: text('display_name').notNull(),
+  /** Canonical unit for on-hand display + reorder threshold. */
+  defaultUnit: text('default_unit').notNull(),
+  /** Reorder threshold in default-unit hundredths. */
+  reorderThresholdHundredths: integer('reorder_threshold_hundredths'),
+  notes: text('notes')
+});
+
+export const stockLots = sqliteTable('stock_lots', {
+  id: text('id').primaryKey(),
+  stockItemId: text('stock_item_id')
+    .notNull()
+    .references(() => stockItems.id),
+  lotNumber: text('lot_number'),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
+  receivedAt: integer('received_at', { mode: 'timestamp_ms' }).notNull(),
+  /** Initial quantity in default-unit hundredths. */
+  receivedQuantityHundredths: integer('received_quantity_hundredths').notNull(),
+  receivedCostCents: integer('received_cost_cents'),
+  supplier: text('supplier'),
+  notes: text('notes')
+});
+
+export const stockMovements = sqliteTable('stock_movements', {
+  id: text('id').primaryKey(),
+  stockLotId: text('stock_lot_id')
+    .notNull()
+    .references(() => stockLots.id),
+  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+  /** Signed delta in default-unit hundredths. +receipts, -consumption. */
+  deltaHundredths: integer('delta_hundredths').notNull(),
+  reason: text('reason', {
+    enum: ['receipt', 'spray-event', 'planting', 'adjustment', 'spill', 'expiry']
+  }).notNull(),
+  sprayEventId: text('spray_event_id').references(() => sprayEvents.id),
+  performedById: text('performed_by_id').references(() => users.id),
+  notes: text('notes')
+});

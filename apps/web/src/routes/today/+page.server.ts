@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
+import { expiringSoon, lowStockItems } from '$lib/db/stock';
 import {
   eventsForPlanting,
   eventsToday,
@@ -37,6 +38,21 @@ export const load: PageServerLoad = async () => {
     sprayers: listSprayers(),
     pluginFailures: stats.failures,
     eventsToday: eventsToday(allEvents),
-    upcoming: upcomingEvents(allEvents, 14)
+    upcoming: upcomingEvents(allEvents, 14),
+    lowStock: lowStockItems().map((i) => ({
+      id: i.id,
+      displayName: i.displayName,
+      onHand: i.onHand,
+      defaultUnit: i.defaultUnit,
+      reorderThreshold: i.reorderThreshold ?? 0
+    })),
+    expiringStock: expiringSoon(30).map((e) => ({
+      itemId: e.item.id,
+      itemName: e.item.displayName,
+      lotNumber: e.lot.lotNumber,
+      balance: e.lot.balance,
+      unit: e.item.defaultUnit,
+      daysUntilExpiry: e.lot.daysUntilExpiry ?? 0
+    }))
   };
 };

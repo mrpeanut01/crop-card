@@ -8,6 +8,7 @@
     { href: '/plan/calendar', title: 'Calendar', sub: 'Visual month grid of every event' },
     { href: '/calibrate', title: 'Calibrate', sub: '1/128-acre method GPA wizard' },
     { href: '/equipment', title: 'Equipment', sub: 'Sprayers + planters + tractors + log' },
+    { href: '/stock', title: 'Stock', sub: 'Inventory, lots, low-stock alerts' },
     { href: '/records', title: 'Records', sub: 'Spray-record archive + CSV/PDF' },
     { href: '/plugins', title: 'Plugins', sub: 'Manage crop / herbicide library' },
     { href: '/spray/decon', title: 'Decon', sub: 'Sprayer decontamination wizard' }

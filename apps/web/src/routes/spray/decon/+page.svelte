@@ -85,7 +85,8 @@
   const elapsed = $derived(timerStartedAt ? now - timerStartedAt : 0);
   const remaining = $derived(Math.max(0, TIMER_MS - elapsed));
   const timerDone = $derived(timerStartedAt != null && remaining === 0);
-  const stepCanAdvance = $derived(currentStep.requiresTimer ? timerDone : true);
+  let timerSkipped = $state(false);
+  const stepCanAdvance = $derived(currentStep.requiresTimer ? timerDone || timerSkipped : true);
 
   function fmt(ms: number) {
     const total = Math.ceil(ms / 1000);
@@ -158,6 +159,25 @@
       {sprayer.lastSprayedAt ? new Date(sprayer.lastSprayedAt).toLocaleString() : 'unknown'}
     </p>
   {/if}
+
+  {#if !completed}
+    <details class="quick-mark">
+      <summary>Already cleaned the sprayer? Mark it clean now.</summary>
+      <p class="hint">
+        Use this if the decon was done outside the app (or you've completed it before and just need
+        to update state). Records a decon timestamp without walking through the per-step wizard. The
+        kernel will treat the sprayer as decontaminated immediately.
+      </p>
+      <button
+        type="button"
+        class="primary mark-clean"
+        onclick={complete}
+        disabled={submitting || !sprayer}
+      >
+        {submitting ? 'Marking…' : 'Mark sprayer clean now'}
+      </button>
+    </details>
+  {/if}
 </section>
 
 {#if !completed}
@@ -166,13 +186,38 @@
     <p>{currentStep.body}</p>
 
     {#if currentStep.requiresTimer}
-      {#if !timerStartedAt}
-        <button type="button" class="primary" onclick={startTimer}> Start 30-minute timer </button>
+      {#if !timerStartedAt && !timerSkipped}
+        <div class="timer-actions">
+          <button type="button" class="primary" onclick={startTimer}>
+            Start 30-minute timer
+          </button>
+          <button
+            type="button"
+            class="skip"
+            onclick={() => {
+              timerSkipped = true;
+            }}
+          >
+            Skip — I've already done the soak
+          </button>
+        </div>
+      {:else if timerSkipped}
+        <p class="timer-skipped">
+          ⏭ Timer skipped — you've confirmed the 30-minute dwell already happened. Tap Next to
+          continue.
+        </p>
       {:else if !timerDone}
         <p class="timer">Soaking… <strong>{fmt(remaining)}</strong> remaining</p>
         <p class="hint">
           You may close this tab — the timer is cosmetic; what matters is the actual 30-minute dwell
-          on the chemicals. The next step unlocks at zero.
+          on the chemicals. The next step unlocks at zero. Or
+          <button
+            type="button"
+            class="link-button"
+            onclick={() => {
+              timerSkipped = true;
+            }}>skip the timer</button
+          > if the soak already finished.
         </p>
       {:else}
         <p class="timer-done">✓ 30 minutes elapsed. Step unlocked.</p>
@@ -304,6 +349,76 @@
     border-radius: 4px;
     font-weight: 600;
     margin: 1rem 0;
+  }
+  .timer-skipped {
+    background: #f5f0fa;
+    color: #6b3fa0;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-weight: 600;
+    margin: 1rem 0;
+    border-left: 4px solid #6b3fa0;
+  }
+  .timer-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+  }
+  .timer-actions .primary {
+    flex: 1 1 240px;
+  }
+  .skip {
+    background: white;
+    color: #555;
+    border: 2px solid #d0d7d0;
+    border-radius: 6px;
+    padding: 0.9rem 1.25rem;
+    font: inherit;
+    cursor: pointer;
+    min-height: 56px;
+    flex: 1 1 240px;
+  }
+  .skip:hover {
+    border-color: #555;
+  }
+  .link-button {
+    background: none;
+    border: none;
+    color: #1f5e3a;
+    text-decoration: underline;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    min-height: auto;
+    min-width: auto;
+  }
+  .quick-mark {
+    margin-top: 1rem;
+    background: #fffceb;
+    padding: 0.6rem 0.9rem;
+    border-radius: 4px;
+    border-left: 4px solid #ffd400;
+  }
+  .quick-mark summary {
+    cursor: pointer;
+    color: #5a4a00;
+    font-weight: 600;
+    list-style: revert;
+  }
+  .quick-mark[open] summary {
+    margin-bottom: 0.5rem;
+  }
+  .quick-mark .hint {
+    color: #555;
+    font-size: 0.9rem;
+  }
+  .mark-clean {
+    margin-top: 0.5rem;
+    background: #b35900;
+  }
+  .mark-clean:hover {
+    background: #944800;
   }
   .hint {
     color: #555;

@@ -67,6 +67,7 @@
     <a href="/harvest">Harvest</a>
     <a href="/calibrate">Calibrate</a>
     <a href="/equipment">Equipment</a>
+    <a href="/stock">Stock</a>
     <a href="/records">Records</a>
     <a href="/plugins">Plugins</a>
   </nav>

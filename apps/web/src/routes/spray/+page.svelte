@@ -135,6 +135,7 @@
       },
       productPluginIds: selectedHerbicideIds,
       sprayer: { id: sprayer.id },
+      tankSizeGallons,
       conditions: { windMph, tempF, rainForecastMmNext24h: rainMm }
     };
   }

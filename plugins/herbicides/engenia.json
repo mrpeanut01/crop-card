@@ -9,5 +9,11 @@
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,
-  "notes": "RESTRICTED-USE. Use ONLY on Xtend-traited soybeans + cotton — kernel does not yet model dicamba-tolerance traits, so Xtend soybean must be approved via the bypass-override flow each spray. Strict label requirements: TTI nozzles, ≤10 mph wind, no tank mix outside approved list, sensitive-crop downwind buffer."
+  "traitGatedSafeFor": [
+    {
+      "cropPluginId": "soybean-asgrow-roundup-ready-2-xtend",
+      "requiresTraits": ["dicamba-tolerant-xtend"]
+    }
+  ],
+  "notes": "RESTRICTED-USE. Use ONLY on Xtend-traited soybeans + cotton. Phase 11 trait override: the kernel allows engenia on the Xtend-traited soybean cultivar; dicamba (synthetic-auxin) would otherwise be lethal to the legume family. Strict label requirements: TTI nozzles, ≤10 mph wind, no tank mix outside approved list, sensitive-crop downwind buffer."
 }

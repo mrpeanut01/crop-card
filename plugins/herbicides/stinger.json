@@ -10,5 +10,8 @@
   "deconRequired": true,
   "tankMixOrder": 4,
   "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "wheat-soft-red-winter", "barley-grain-thoroughbred"] },
-  "notes": "Clopyralid is uniquely-narrow synthetic auxin — controls Asteraceae (thistles, ragweed) without harming grass crops. Strawberry establishment label exists but requires bypass-override since the kernel uses class-level lethality (synthetic-auxin → small-fruit blocked)."
+  "traitGatedSafeFor": [
+    { "cropPluginId": "strawberry-jewel", "requiresTraits": ["native-clopyralid-tolerant"] }
+  ],
+  "notes": "Clopyralid is uniquely-narrow synthetic auxin — controls Asteraceae (thistles, ragweed) without harming grass crops. Phase 11 trait override: the strawberry establishment label is honored because strawberry-jewel declares native-clopyralid-tolerant; without that trait the synthetic-auxin → small-fruit kernel rule still blocks."
 }

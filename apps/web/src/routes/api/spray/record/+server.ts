@@ -96,7 +96,8 @@ export const POST: RequestHandler = async (event) => {
       pluginId: record.plugin.pluginId,
       displayName: record.plugin.displayName,
       activeIngredients: record.plugin.activeIngredients,
-      labelClaims: record.plugin.labelClaims
+      labelClaims: record.plugin.labelClaims,
+      traitGatedSafeFor: record.plugin.traitGatedSafeFor
     });
     pluginHashes[id] = record.hash;
   }
@@ -121,7 +122,8 @@ export const POST: RequestHandler = async (event) => {
 
   const enrichCrop = (c: z.infer<typeof cropStageInput>) => ({
     ...c,
-    cropFamily: c.cropFamily ?? registry.cropFamilyOf(c.cropPluginId)
+    cropFamily: c.cropFamily ?? registry.cropFamilyOf(c.cropPluginId),
+    traits: registry.cropTraitsOf(c.cropPluginId)
   });
 
   const ctx: SprayContext = {

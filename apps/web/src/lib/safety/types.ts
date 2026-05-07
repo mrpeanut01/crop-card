@@ -36,6 +36,14 @@ export interface HerbicideProduct {
   displayName: string;
   activeIngredients: ActiveIngredient[];
   labelClaims?: { safeForCropPluginIds?: string[] };
+  /**
+   * Per-claim trait gates (Phase 11). When the planted cultivar's
+   * `cropPluginId` matches an entry here AND every listed trait is on
+   * the crop's `traits[]`, the family-kill compatibility check is
+   * bypassed for that (product, crop) pair only. Other claims of the
+   * same product over different crops are unaffected.
+   */
+  traitGatedSafeFor?: Array<{ cropPluginId: string; requiresTraits: string[] }>;
 }
 
 export interface CropStage {
@@ -46,6 +54,12 @@ export interface CropStage {
   /** Heights in inches — agronomic convention for row crops in this market. */
   heightInches?: number;
   growthStage?: string;
+  /**
+   * Genetic / breeding traits the cultivar carries (Phase 11). The kernel
+   * uses this to grant per-product trait overrides on the family-kill check.
+   * Omitting this is equivalent to `[]` — no trait protection.
+   */
+  traits?: readonly string[];
 }
 
 /**

@@ -8,10 +8,24 @@
  *
  * The kill matrix is hardcoded in cropFamilyLethality.ts and cannot be
  * overridden by any plugin file.
+ *
+ * Phase 11 trait override: when a herbicide declares `requiresTraits` and
+ * the crop's `traits[]` includes every listed trait, the kill-matrix check
+ * is skipped for that (product, crop) pair. The trait is precisely what
+ * makes the matrix-default unsafe call wrong for this cultivar — e.g.,
+ * dicamba (synthetic-auxin → kills legumes) on Xtend-traited soybean.
+ * Without `requiresTraits`, the gate behaves exactly as before.
  */
 
 import { killsFamily, type CropFamily } from './cropFamilyLethality';
 import type { ChemistryClass, CropStage, HerbicideProduct, SafetyViolation } from './types';
+
+function traitOverrideActive(product: HerbicideProduct, crop: CropStage): boolean {
+  const claim = product.traitGatedSafeFor?.find((c) => c.cropPluginId === crop.cropPluginId);
+  if (!claim || claim.requiresTraits.length === 0) return false;
+  const have = new Set(crop.traits ?? []);
+  return claim.requiresTraits.every((t) => have.has(t));
+}
 
 export function checkCropCompatibility(
   products: HerbicideProduct[],
@@ -24,6 +38,9 @@ export function checkCropCompatibility(
   for (const product of products) {
     for (const crop of allCrops) {
       if (!crop.cropFamily) continue;
+      // Layer 0: trait override skips the family-kill check for this pair.
+      if (traitOverrideActive(product, crop)) continue;
+
       const killing = uniqueClasses(product).filter((cls) =>
         killsFamily(cls, crop.cropFamily as CropFamily)
       );

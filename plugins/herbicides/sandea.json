@@ -11,5 +11,9 @@
   "deconRequired": true,
   "tankMixOrder": 4,
   "labelClaims": { "safeForCropPluginIds": ["pumpkin-ez-gro-monster", "butternut-squash-waltham", "corn-feed-dent-pioneer"] },
-  "notes": "Vegetable + cucurbit nutsedge specialist. POST or PRE; very small rate. Verify rotation interval before next crop."
+  "traitGatedSafeFor": [
+    { "cropPluginId": "tomato-roma-vf", "requiresTraits": ["native-halosulfuron-tolerant"] },
+    { "cropPluginId": "tomato-cherokee-purple", "requiresTraits": ["native-halosulfuron-tolerant"] }
+  ],
+  "notes": "Vegetable + cucurbit nutsedge specialist. POST or PRE; very small rate. Phase 11 trait override: tomato cultivars carry the native-halosulfuron-tolerant trait, exempting them from the sulfonylurea → solanaceae family-kill default. Verify rotation interval before next crop."
 }

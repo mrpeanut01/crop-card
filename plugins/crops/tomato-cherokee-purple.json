@@ -12,6 +12,7 @@
     "rowSpacingIn": 48,
     "inRowSpacingIn": { "min": 24, "max": 36 }
   },
+  "traits": ["native-halosulfuron-tolerant"],
   "harvestIndicators": ["Dusky purple-red shoulders", "Slight softness at blossom end"],
-  "notes": "Indeterminate heirloom — requires staking. Susceptible to early/late blight; preventive copper or chlorothalonil per UMD vegetable guide."
+  "notes": "Indeterminate heirloom — requires staking. Susceptible to early/late blight; preventive copper or chlorothalonil per UMD vegetable guide. Phase 11 trait override: declares native halosulfuron tolerance so Sandea is permitted despite the sulfonylurea → solanaceae family-kill default."
 }

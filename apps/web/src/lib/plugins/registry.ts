@@ -36,7 +36,10 @@ export class PluginRegistry {
       );
     }
 
-    const bypass = detectBypass(parsed.data, (id) => this.cropFamilyOf(id));
+    const bypass = detectBypass(parsed.data, {
+      cropFamily: (id) => this.cropFamilyOf(id),
+      cropTraits: (id) => this.cropTraitsOf(id)
+    });
     if (bypass.length > 0) {
       throw new PluginRegistrationError(
         'plugin attempts to bypass safety kernel',
@@ -70,6 +73,14 @@ export class PluginRegistry {
     const rec = this.byId.get(cropPluginId);
     if (!rec || rec.plugin.type !== 'crop') return undefined;
     return (rec.plugin as CropPlugin).cropFamily;
+  }
+
+  /** Trait list declared on the crop cultivar. Used by the trait-override
+   *  layer of the bypass check (Phase 11). */
+  cropTraitsOf(cropPluginId: string): readonly string[] {
+    const rec = this.byId.get(cropPluginId);
+    if (!rec || rec.plugin.type !== 'crop') return [];
+    return (rec.plugin as CropPlugin).traits ?? [];
   }
 
   crops(): CropPlugin[] {

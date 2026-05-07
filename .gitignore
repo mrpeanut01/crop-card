@@ -35,6 +35,7 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+.playwright-data/
 
 # Azure
 *.bicepparam.local

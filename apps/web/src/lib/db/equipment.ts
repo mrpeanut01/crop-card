@@ -36,6 +36,8 @@ export type EquipmentLogKind =
 export interface Equipment {
   id: string;
   type: EquipmentType;
+  /** FK into taxonomy_terms (domain='equipment'). Replaces `type` for display. */
+  typeId?: string;
   label: string;
   spec?: Record<string, unknown>;
   notes?: string;
@@ -117,6 +119,7 @@ function rowToEquipment(row: typeof equipment.$inferSelect): Equipment {
   return {
     id: row.id,
     type: row.type as EquipmentType,
+    typeId: row.typeId ?? undefined,
     label: row.label,
     spec: row.specJson ? safeJson(row.specJson) : undefined,
     notes: row.notes ?? undefined,
@@ -176,6 +179,7 @@ export function getEquipment(id: string): EquipmentWithState | undefined {
 
 export interface CreateEquipmentInput {
   type: EquipmentType;
+  typeId?: string;
   label: string;
   spec?: Record<string, unknown>;
   notes?: string;
@@ -189,6 +193,7 @@ export function createEquipment(input: CreateEquipmentInput): Equipment {
     .values({
       id,
       type: input.type,
+      typeId: input.typeId ?? null,
       label: input.label,
       specJson: input.spec ? JSON.stringify(input.spec) : null,
       notes: input.notes ?? null
@@ -197,6 +202,24 @@ export function createEquipment(input: CreateEquipmentInput): Equipment {
     .get();
   db.insert(equipmentState).values({ equipmentId: id }).run();
   return rowToEquipment(row);
+}
+
+export function updateEquipment(
+  id: string,
+  patch: { label?: string; notes?: string }
+): Equipment {
+  ensureSeeded();
+  const set: Partial<typeof equipment.$inferInsert> = {};
+  if (patch.label !== undefined) set.label = patch.label;
+  if (patch.notes !== undefined) set.notes = patch.notes || null;
+  if (Object.keys(set).length === 0) {
+    const row = db.select().from(equipment).where(eq(equipment.id, id)).get();
+    if (!row) throw new Error(`unknown equipment: ${id}`);
+    return rowToEquipment(row);
+  }
+  const updated = db.update(equipment).set(set).where(eq(equipment.id, id)).returning().get();
+  if (!updated) throw new Error(`unknown equipment: ${id}`);
+  return rowToEquipment(updated);
 }
 
 export function updateEquipmentState(

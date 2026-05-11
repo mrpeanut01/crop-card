@@ -1,11 +1,38 @@
 {
   "pluginId": "summer-squash-yellow-crookneck",
   "type": "crop",
-  "displayName": "Summer Squash — Yellow Crookneck",
+  "displayName": "Summer Squash \u2014 Yellow Crookneck",
   "version": "1.0.0",
   "cropFamily": "cucurbit",
-  "daysToMaturity": { "min": 50, "max": 60 },
+  "daysToMaturity": {
+    "min": 50,
+    "max": 60
+  },
   "defaultRowSpacingInches": 36,
-  "harvestIndicators": ["6–7 in length", "Tender skin", "Crookneck pronounced"],
-  "notes": "Pick young + frequently. Bush type — minimal trellising."
+  "harvestIndicators": [
+    "6\u20137 in length",
+    "Tender skin",
+    "Crookneck pronounced"
+  ],
+  "notes": "Pick young + frequently. Bush type \u2014 minimal trellising.",
+  "plantingGuide": {
+    "vineSpreadFt": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 30,
+      "offsetDaysMax": 60,
+      "title": "POST grass window (Clethodim)",
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+    }
+  ]
 }

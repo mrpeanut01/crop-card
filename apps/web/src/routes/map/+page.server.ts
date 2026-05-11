@@ -1,16 +1,12 @@
+/**
+ * Phase 13: /map absorbed into /plan?tab=layout.
+ * Old bookmarks redirect; the polygon paste UI + SVG renderer live in the
+ * Layout tab on /plan.
+ */
+
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { listBlocks } from '$lib/db/blocks';
 
 export const load: PageServerLoad = () => {
-  const blocks = listBlocks();
-  return {
-    blocks: blocks.map((b) => ({
-      id: b.id,
-      name: b.name,
-      acres: b.acres ?? null,
-      blockLabel: b.blockLabel ?? null,
-      geometryGeojson: b.geometryGeojson ?? null,
-      plantingsCount: b.plantings.length
-    }))
-  };
+  throw redirect(307, '/plan?tab=layout');
 };

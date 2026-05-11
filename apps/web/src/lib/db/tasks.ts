@@ -53,6 +53,10 @@ export interface Task {
   relatedEventId?: string;
   pluginTemplateKey?: string;
   recurrenceJson?: string;
+  /** Phase 14 hybrid drift. */
+  userOverridden: boolean;
+  staleAnchor: boolean;
+  supersededByTaskId?: string;
   createdById?: string;
   createdAt: number;
 }
@@ -75,6 +79,9 @@ function rowToTask(row: typeof tasks.$inferSelect): Task {
     relatedEventId: row.relatedEventId ?? undefined,
     pluginTemplateKey: row.pluginTemplateKey ?? undefined,
     recurrenceJson: row.recurrenceJson ?? undefined,
+    userOverridden: row.userOverridden ?? false,
+    staleAnchor: row.staleAnchor ?? false,
+    supersededByTaskId: row.supersededByTaskId ?? undefined,
     createdById: row.createdById ?? undefined,
     createdAt: row.createdAt.getTime()
   };
@@ -177,6 +184,10 @@ export interface UpdateTaskInput {
   title?: string;
   body?: string;
   scheduledFor?: number;
+  /** Phase 14: a "user edit" — set when the operator manually edits a
+   *  derived/materialized task. Date shift, body annotate, retitle all
+   *  qualify. Opening a detail panel does NOT call updateTask. */
+  isUserEdit?: boolean;
 }
 
 export function updateTask(id: string, input: UpdateTaskInput): Task {
@@ -184,6 +195,9 @@ export function updateTask(id: string, input: UpdateTaskInput): Task {
   if (input.title !== undefined) updates.title = input.title;
   if (input.body !== undefined) updates.body = input.body;
   if (input.scheduledFor !== undefined) updates.scheduledFor = new Date(input.scheduledFor);
+  // A user edit flips the override flag — drift logic then keeps this row
+  // anchored if the source planting moves.
+  if (input.isUserEdit !== false) updates.userOverridden = true;
   const row = db.update(tasks).set(updates).where(eq(tasks.id, id)).returning().get();
   if (!row) throw new Error(`unknown task id: ${id}`);
   return rowToTask(row);
@@ -334,6 +348,69 @@ export function materializePluginPrePost(ctx: PluginPrePostContext): {
   return { preTaskIds: preIds, postTaskIds: postIds };
 }
 
+/**
+ * Phase 15: materialize a crop plugin's `seasonalTasks` array into standalone
+ * primary tasks for one planting. Idempotent on `pluginTemplateKey`. For
+ * `daysAfterPlanting` entries we anchor on the planting date; for `dayOfYear`
+ * entries we use the same year as plantingDate (rolling forward to next year
+ * if the DOY has already passed in the planting year — the task should land
+ * in the upcoming season, not the past).
+ */
+export function materializeSeasonalTasks(ctx: {
+  cropId: string;
+  blockId: string;
+  plantingDateMs: number;
+  cropPlugin: CropPlugin;
+}): string[] {
+  const created: string[] = [];
+  const seasonal = ctx.cropPlugin.seasonalTasks;
+  if (!seasonal || seasonal.length === 0) return created;
+
+  const existingKeys = new Set(
+    db
+      .select({ key: tasks.pluginTemplateKey })
+      .from(tasks)
+      .where(eq(tasks.cropId, ctx.cropId))
+      .all()
+      .map((r) => r.key)
+      .filter((k): k is string => !!k)
+  );
+
+  for (const t of seasonal) {
+    const key = `crop:${ctx.cropPlugin.pluginId}:seasonal:${t.key}`;
+    if (existingKeys.has(key)) continue;
+
+    let scheduledFor: number;
+    if (t.daysAfterPlanting !== undefined) {
+      scheduledFor = ctx.plantingDateMs + t.daysAfterPlanting * 24 * 60 * 60 * 1000;
+    } else if (t.dayOfYear !== undefined) {
+      const plantDate = new Date(ctx.plantingDateMs);
+      const year = plantDate.getUTCFullYear();
+      const candidate = doyToMs(year, t.dayOfYear);
+      scheduledFor = candidate >= ctx.plantingDateMs ? candidate : doyToMs(year + 1, t.dayOfYear);
+    } else {
+      continue;
+    }
+
+    const task = createTask({
+      title: t.title,
+      body: t.body,
+      kind: 'primary',
+      cropId: ctx.cropId,
+      blockId: ctx.blockId,
+      scheduledFor,
+      pluginTemplateKey: key
+    });
+    created.push(task.id);
+  }
+  return created;
+}
+
+function doyToMs(year: number, dayOfYear: number): number {
+  // dayOfYear is 1-indexed; Date.UTC takes 0-indexed days within month.
+  return Date.UTC(year, 0, dayOfYear);
+}
+
 function equipmentPreTaskMatches(
   t: EquipmentPreTaskTemplate,
   lastUsedAt: number | undefined,
@@ -358,6 +435,109 @@ function equipmentPreTaskMatches(
     default:
       return false;
   }
+}
+
+// ─── Phase 14: hybrid task drift policy ─────────────────────────────────
+//
+// When a planting's date moves, materialized non-override tasks shift with
+// it; overridden ones flag `staleAnchor`. When a planting is deleted, tasks
+// cascade. When a planting's crop swaps, tasks supersede.
+
+/**
+ * Re-anchor pre/post tasks of a primary task when the primary's
+ * `scheduledFor` changes. Overridden rows stay put + get `staleAnchor`.
+ */
+export function reanchorPluginPrePost(
+  primaryTaskId: string,
+  oldScheduledFor: number,
+  newScheduledFor: number
+): { shifted: number; flaggedStale: number } {
+  const delta = newScheduledFor - oldScheduledFor;
+  if (delta === 0) return { shifted: 0, flaggedStale: 0 };
+  const linked = db
+    .select()
+    .from(tasks)
+    .where(eq(tasks.linkedToTaskId, primaryTaskId))
+    .all()
+    .map(rowToTask);
+  let shifted = 0;
+  let flaggedStale = 0;
+  for (const t of linked) {
+    if (t.completedAt || t.abortedAt) continue;
+    if (t.userOverridden) {
+      db.update(tasks)
+        .set({ staleAnchor: true })
+        .where(eq(tasks.id, t.id))
+        .run();
+      flaggedStale++;
+      continue;
+    }
+    db.update(tasks)
+      .set({ scheduledFor: new Date(t.scheduledFor + delta) })
+      .where(eq(tasks.id, t.id))
+      .run();
+    shifted++;
+  }
+  return { shifted, flaggedStale };
+}
+
+/**
+ * Crop-swap supersession: mark the existing pre/post tasks as superseded
+ * when the underlying plugin changes. Caller is responsible for then
+ * calling `materializePluginPrePost` with the new plugin context to
+ * generate the replacements; this function returns the IDs marked so the
+ * UI can hide them by default.
+ */
+export function supersedePluginPrePost(primaryTaskId: string): string[] {
+  const linked = db
+    .select()
+    .from(tasks)
+    .where(eq(tasks.linkedToTaskId, primaryTaskId))
+    .all();
+  const ids: string[] = [];
+  for (const t of linked) {
+    if (t.completedAt || t.abortedAt) continue;
+    db.update(tasks)
+      .set({ supersededByTaskId: primaryTaskId })
+      .where(eq(tasks.id, t.id))
+      .run();
+    ids.push(t.id);
+  }
+  return ids;
+}
+
+/**
+ * Cascade delete every task linked (directly or transitively) to a crop.
+ * Used by the deletion-confirmation modal's "Delete all" branch. Returns
+ * count of deleted rows.
+ */
+export function cascadeDeleteForCrop(cropId: string): number {
+  // 1. Find primary tasks for this crop.
+  const primaries = db
+    .select({ id: tasks.id })
+    .from(tasks)
+    .where(eq(tasks.cropId, cropId))
+    .all()
+    .map((r) => r.id);
+  let total = 0;
+  for (const pid of primaries) {
+    const r = db.delete(tasks).where(eq(tasks.linkedToTaskId, pid)).run();
+    total += r.changes;
+  }
+  const r2 = db.delete(tasks).where(eq(tasks.cropId, cropId)).run();
+  total += r2.changes;
+  return total;
+}
+
+/** Cascade soft-orphan: NULL the cropId on every task tied to this crop.
+ *  Used by the "Detach tasks" branch of the deletion modal. */
+export function detachTasksFromCrop(cropId: string): number {
+  const r = db
+    .update(tasks)
+    .set({ cropId: null })
+    .where(eq(tasks.cropId, cropId))
+    .run();
+  return r.changes;
 }
 
 /** Convenience: load equipment + its template + lastUsedAt for a given equipmentId. */

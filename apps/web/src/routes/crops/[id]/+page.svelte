@@ -72,7 +72,7 @@
     <p class="meta">
       Block <strong>{data.block.name}</strong>
       {#if data.block.acres}— {data.block.acres} ac{/if}
-      · Planted {fmt(data.crop.plantingDate)}
+      {#if data.crop.plantingDate}· Planted {fmt(data.crop.plantingDate)}{:else}· Planned — no date set{/if}
     </p>
   </div>
   <div class="status-row">
@@ -88,32 +88,32 @@
   <h2>Status</h2>
   {#if data.crop.status === 'active'}
     <div class="row">
-      <button class="primary" on:click={() => changeStatus('mark-harvested')} disabled={busy}>
+      <button class="primary" onclick={() => changeStatus('mark-harvested')} disabled={busy}>
         ✓ Mark harvested
       </button>
-      <button class="secondary" on:click={() => changeStatus('mark-failed')} disabled={busy}>
+      <button class="secondary" onclick={() => changeStatus('mark-failed')} disabled={busy}>
         Mark failed
       </button>
-      <button class="secondary" on:click={() => changeStatus('archive')} disabled={busy}>
+      <button class="secondary" onclick={() => changeStatus('archive')} disabled={busy}>
         Archive
       </button>
     </div>
   {:else if data.crop.status === 'planned'}
     <div class="row">
-      <button class="primary" on:click={() => changeStatus('reactivate')} disabled={busy}>
+      <button class="primary" onclick={() => changeStatus('reactivate')} disabled={busy}>
         Activate (move to active)
       </button>
-      <button class="secondary" on:click={() => changeStatus('archive')} disabled={busy}>
+      <button class="secondary" onclick={() => changeStatus('archive')} disabled={busy}>
         Archive
       </button>
     </div>
   {:else}
     <div class="row">
-      <button class="secondary" on:click={() => changeStatus('reactivate')} disabled={busy}>
+      <button class="secondary" onclick={() => changeStatus('reactivate')} disabled={busy}>
         Re-activate
       </button>
       {#if data.crop.status !== 'archived'}
-        <button class="secondary" on:click={() => changeStatus('archive')} disabled={busy}>
+        <button class="secondary" onclick={() => changeStatus('archive')} disabled={busy}>
           Archive
         </button>
       {/if}
@@ -134,7 +134,7 @@
       those events). Block-level data (the block itself, soil tests, fertility credits) is not
       affected.
     </p>
-    <button class="danger" on:click={deleteCrop} disabled={busy}>
+    <button class="danger" onclick={deleteCrop} disabled={busy}>
       🗑 Delete crop + all attached events
     </button>
   </details>

@@ -8,7 +8,11 @@
 
 export type LiquidUnit = 'fl-oz' | 'pt' | 'qt' | 'gal';
 export type SolidUnit = 'oz' | 'lb' | 'kg' | 'g';
-export type CountUnit = 'count' | 'bag-50lb' | 'bag-25kg';
+/** Discrete-count units. `seeds` is a 1:1 plant equivalent for the
+ *  AllocationWizard + SeedQuantityModal seed-math; it isn't convertible to
+ *  any weight or volume unit. `count` covers transplants, plugs, packets
+ *  with a labelled count, and any other "discrete plantable item." */
+export type CountUnit = 'count' | 'seeds' | 'bag-50lb' | 'bag-25kg';
 export type StockUnit = LiquidUnit | SolidUnit | CountUnit;
 
 export const ALL_STOCK_UNITS: ReadonlyArray<StockUnit> = [
@@ -21,6 +25,7 @@ export const ALL_STOCK_UNITS: ReadonlyArray<StockUnit> = [
   'kg',
   'g',
   'count',
+  'seeds',
   'bag-50lb',
   'bag-25kg'
 ];

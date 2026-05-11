@@ -14,7 +14,13 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeTankMixDilutions } from '$lib/dilution/calculator';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
-import { decrementForUse, getStockItemByPluginId, type DecrementResult } from '$lib/db/stock';
+import {
+  decrementForUse,
+  getStockItem,
+  getStockItemByPluginId,
+  type DecrementResult,
+  type StockItem
+} from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
@@ -25,6 +31,11 @@ import {
   type HerbicideProduct,
   type SprayContext
 } from '$lib/safety';
+import { augmentSafetyResult } from '$lib/safety/userAddedRestrictions';
+import {
+  buildRestrictionsFromStockItems,
+  type StockPluginPair
+} from '$lib/safety/userAddedRestrictionsFromStock';
 import type { StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
@@ -50,6 +61,10 @@ const requestSchema = z.object({
     coPlanted: z.array(cropStageInput).optional()
   }),
   productPluginIds: z.array(z.string().min(1)).min(1),
+  /** Phase 17 (Track 2.4) — parallel to productPluginIds. When supplied, the
+   *  named stock items feed the safety augmenter; missing entries fall back
+   *  to lookup by pluginId. */
+  stockItemIds: z.array(z.string().min(1).nullable()).optional(),
   sprayer: z.object({ id: z.string().min(1) }),
   conditions: z.object({
     windMph: z.number().nonnegative(),
@@ -145,7 +160,37 @@ export const POST: RequestHandler = async (event) => {
     conditions: parsed.data.conditions
   };
 
-  const kernel = evaluateSpray(ctx);
+  const kernelResult = evaluateSpray(ctx);
+
+  // Resolve stock items once: explicit ids first, then pluginId lookup. The
+  // map is also reused below for auto-decrement so we hit the DB once per item.
+  const stockByPluginId = new Map<string, StockItem>();
+  const stockPairs: StockPluginPair[] = [];
+  for (let i = 0; i < fullProducts.length; i++) {
+    const plugin = fullProducts[i];
+    const explicitId = parsed.data.stockItemIds?.[i] ?? undefined;
+    const stockItem = explicitId
+      ? getStockItem(explicitId)
+      : getStockItemByPluginId(plugin.pluginId);
+    if (!stockItem) continue;
+    stockByPluginId.set(plugin.pluginId, stockItem);
+    if (stockItem.activeIngredientsJson) {
+      stockPairs.push({
+        stockItem,
+        plugin: {
+          pluginId: plugin.pluginId,
+          displayName: plugin.displayName,
+          activeIngredients: plugin.activeIngredients
+        }
+      });
+    }
+  }
+
+  const kernel = augmentSafetyResult(
+    kernelResult,
+    ctx,
+    buildRestrictionsFromStockItems(stockPairs)
+  );
   if (!kernel.ok) {
     return json(
       {
@@ -197,7 +242,7 @@ export const POST: RequestHandler = async (event) => {
     const effectiveGpa = stored ? stored.calibratedGpa : undefined;
     const lines = computeTankMixDilutions(fullProducts, parsed.data.tankSizeGallons, effectiveGpa);
     for (const line of lines) {
-      const stockItem = getStockItemByPluginId(line.pluginId);
+      const stockItem = stockByPluginId.get(line.pluginId);
       if (!stockItem) {
         stockWarnings.push(
           `${line.pluginId}: not tracked in stock — add a SKU on /stock to enable auto-decrement`

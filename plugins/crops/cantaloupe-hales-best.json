@@ -1,11 +1,32 @@
 {
   "pluginId": "cantaloupe-hales-best",
   "type": "crop",
-  "displayName": "Cantaloupe — Hale's Best Jumbo",
+  "displayName": "Cantaloupe \u2014 Hale's Best Jumbo",
   "version": "1.0.0",
   "cropFamily": "cucurbit",
-  "daysToMaturity": { "min": 80, "max": 90 },
+  "daysToMaturity": {
+    "min": 80,
+    "max": 90
+  },
   "defaultRowSpacingInches": 60,
-  "harvestIndicators": ["Full-slip stem release", "Net-pattern fully expressed", "Floral aroma at blossom end"],
-  "notes": "Heat-loving — wait for stable warm soil. Susceptible to bacterial wilt (cucumber beetle vectored)."
+  "harvestIndicators": [
+    "Full-slip stem release",
+    "Net-pattern fully expressed",
+    "Floral aroma at blossom end"
+  ],
+  "notes": "Heat-loving \u2014 wait for stable warm soil. Susceptible to bacterial wilt (cucumber beetle vectored).",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 30,
+      "offsetDaysMax": 60,
+      "title": "POST grass window (Clethodim)",
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+    }
+  ]
 }

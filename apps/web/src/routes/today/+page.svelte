@@ -241,7 +241,7 @@
 </header>
 
 <div class="tab-row">
-  <nav class="tabs" role="tablist" aria-label="Calendar window">
+  <div class="tabs" role="tablist" aria-label="Calendar window">
     {#each TABS as t (t.id)}
       <a
         class="tab"
@@ -253,13 +253,13 @@
         {t.label}
       </a>
     {/each}
-  </nav>
+  </div>
   <nav class="view-toggle" aria-label="View mode">
     <a
       class="view"
       class:active={data.view === 'list'}
       href={urlFor({ view: 'list' })}
-      aria-pressed={data.view === 'list'}
+      aria-current={data.view === 'list' ? 'page' : undefined}
     >
       ☰ List
     </a>
@@ -267,7 +267,7 @@
       class="view"
       class:active={data.view === 'calendar'}
       href={urlFor({ view: 'calendar' })}
-      aria-pressed={data.view === 'calendar'}
+      aria-current={data.view === 'calendar' ? 'page' : undefined}
     >
       ▦ Calendar
     </a>
@@ -416,7 +416,7 @@
                 {#if t.body}<span class="body">— {t.body}</span>{/if}
                 <button
                   class="mini"
-                  on:click={() => patchTask(t.id, { action: 'complete' })}
+                  onclick={() => patchTask(t.id, { action: 'complete' })}
                   disabled={busy}
                 >
                   ✓ Done
@@ -437,7 +437,7 @@
                 {#if t.body}<span class="body">— {t.body}</span>{/if}
                 <button
                   class="mini"
-                  on:click={() => patchTask(t.id, { action: 'complete' })}
+                  onclick={() => patchTask(t.id, { action: 'complete' })}
                   disabled={busy}
                 >
                   ✓ Done
@@ -450,14 +450,14 @@
       <div class="row">
         <button
           class="primary"
-          on:click={() => patchTask(primary.id, { action: 'complete' })}
+          onclick={() => patchTask(primary.id, { action: 'complete' })}
           disabled={busy}
         >
           ✓ Mark primary complete
         </button>
         <button
           class="secondary"
-          on:click={() => patchTask(primary.id, { action: 'abort', reason: 'aborted from /today' })}
+          onclick={() => patchTask(primary.id, { action: 'abort', reason: 'aborted from /today' })}
           disabled={busy}
         >
           Abort
@@ -479,7 +479,7 @@
           <strong>{e.title}</strong>
           <span class="kind">{e.kind}</span>
           {#if e.body}<span class="body">— {e.body}</span>{/if}
-          <button class="mini" on:click={() => scheduleFromEvent(e)} disabled={busy}>
+          <button class="mini" onclick={() => scheduleFromEvent(e)} disabled={busy}>
             + Schedule
           </button>
         </li>
@@ -493,7 +493,7 @@
       {#each data.activeCrops as c (c.id)}
         <li>
           <strong>{c.varietyDisplayName}</strong>
-          — block {c.blockId.slice(0, 8)} — planted {fmtDate(c.plantingDate)}
+          — block {c.blockId.slice(0, 8)} — {c.plantingDate ? `planted ${fmtDate(c.plantingDate)}` : 'planned'}
           <span class="status status-{c.status}">{c.status}</span>
         </li>
       {/each}

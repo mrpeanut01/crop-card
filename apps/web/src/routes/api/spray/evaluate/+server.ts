@@ -22,6 +22,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeTankMixDilutions, type DilutionLine } from '$lib/dilution/calculator';
+import { getStockItem, getStockItemByPluginId, type StockItem } from '$lib/db/stock';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 import {
@@ -32,6 +33,11 @@ import {
   type SprayContext,
   type TankMixStep
 } from '$lib/safety';
+import { augmentSafetyResult } from '$lib/safety/userAddedRestrictions';
+import {
+  buildRestrictionsFromStockItems,
+  type StockPluginPair
+} from '$lib/safety/userAddedRestrictionsFromStock';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer } from '$lib/server/sprayers';
 
@@ -59,6 +65,12 @@ const requestSchema = z.object({
     coPlanted: z.array(cropStageInput).optional()
   }),
   productPluginIds: z.array(z.string().min(1)).min(1),
+  /** Phase 17 (Track 2.4) — when present, stock items are looked up by id
+   *  and their `activeIngredientsJson` feeds the safety augmenter so the
+   *  kernel verdict reflects operator-confirmed label chemistry. Parallel
+   *  array to productPluginIds; missing entries fall back to lookup by
+   *  pluginId so existing callers stay compatible. */
+  stockItemIds: z.array(z.string().min(1).nullable()).optional(),
   sprayer: sprayerInput,
   /** Optional tank size for dilution math; default 50gal at 15 GPA. */
   tankSizeGallons: z.number().positive().optional(),
@@ -154,9 +166,14 @@ export const POST: RequestHandler = async ({ request }) => {
     conditions: parsed.data.conditions
   };
 
-  const result = evaluateSpray(ctx, {
+  const kernelResult = evaluateSpray(ctx, {
     priorApplications: parsed.data.priorApplications
   });
+
+  const restrictions = buildRestrictionsFromStockItems(
+    resolveStockPluginPairs(fullProducts, parsed.data.stockItemIds)
+  );
+  const result = augmentSafetyResult(kernelResult, ctx, restrictions);
 
   let dilutions: DilutionLine[] | undefined;
   let tankMixOrder: TankMixStep[] | undefined;
@@ -178,3 +195,27 @@ export const POST: RequestHandler = async ({ request }) => {
     sprayerState
   });
 };
+
+function resolveStockPluginPairs(
+  plugins: ReadonlyArray<HerbicidePlugin>,
+  stockItemIds: ReadonlyArray<string | null> | undefined
+): StockPluginPair[] {
+  const pairs: StockPluginPair[] = [];
+  for (let i = 0; i < plugins.length; i++) {
+    const plugin = plugins[i];
+    const explicitId = stockItemIds?.[i] ?? undefined;
+    const stockItem: StockItem | undefined = explicitId
+      ? getStockItem(explicitId)
+      : getStockItemByPluginId(plugin.pluginId);
+    if (!stockItem?.activeIngredientsJson) continue;
+    pairs.push({
+      stockItem,
+      plugin: {
+        pluginId: plugin.pluginId,
+        displayName: plugin.displayName,
+        activeIngredients: plugin.activeIngredients
+      }
+    });
+  }
+  return pairs;
+}

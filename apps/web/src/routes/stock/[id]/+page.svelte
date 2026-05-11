@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { untrack } from 'svelte';
   import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 
   let { data } = $props();
@@ -7,7 +8,7 @@
 
   // Receive new lot
   let receiveQty = $state<number | undefined>(undefined);
-  let receiveUnit = $state<StockUnit>(item.defaultUnit);
+  let receiveUnit = $state<StockUnit>(untrack(() => item.defaultUnit));
   let lotNumber = $state('');
   let expiresIso = $state('');
   let supplier = $state('');
@@ -48,9 +49,9 @@
   }
 
   // Manual adjustment
-  let adjustLotId = $state<string>(data.lots[0]?.id ?? '');
+  let adjustLotId = $state<string>(untrack(() => data.lots[0]?.id ?? ''));
   let adjustDelta = $state(0);
-  let adjustUnit = $state<StockUnit>(item.defaultUnit);
+  let adjustUnit = $state<StockUnit>(untrack(() => item.defaultUnit));
   let adjustReason = $state<'adjustment' | 'spill' | 'expiry'>('adjustment');
   let adjustNotes = $state('');
   let adjusting = $state(false);
@@ -99,7 +100,7 @@
 </script>
 
 <header class="head">
-  <a href="/stock" class="back">← All stock</a>
+  <a href="/stock" class="back">← Inventory</a>
   <h1>{item.displayName}</h1>
   <p class="meta">
     <span class="cat">{item.category}</span>

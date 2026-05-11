@@ -26,27 +26,70 @@
     'other'
   ];
 
-  let typeFilter = $state<'all' | EquipmentType>('all');
+  let typeFilter = $state<'all' | string>('all');
   const filtered = $derived(
-    typeFilter === 'all' ? data.equipment : data.equipment.filter((e) => e.type === typeFilter)
+    typeFilter === 'all'
+      ? data.equipment
+      : data.equipment.filter((e) => e.typeName === typeFilter)
   );
 
-  let newType = $state<EquipmentType>('planter');
+  let newTypeName = $state('');
   let newLabel = $state('');
   let newNotes = $state('');
   let creating = $state(false);
   let createError = $state<string | null>(null);
+
+  /** Resolve newTypeName → typeId, prompting to add a new term if it doesn't
+   *  match an existing equipment type. Returns { ok: false } when the user
+   *  cancels the prompt or the create fails. */
+  async function resolveTypeId(): Promise<{ ok: boolean; typeId: string | null; legacyType: EquipmentType }> {
+    const name = newTypeName.trim();
+    if (!name) {
+      createError = 'Type is required';
+      return { ok: false, typeId: null, legacyType: 'other' };
+    }
+    const existing = data.types.find((t) => t.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      return { ok: true, typeId: existing.id, legacyType: nameToLegacyEnum(existing.name) };
+    }
+    const confirmed = confirm(
+      `"${name}" isn't in your Equipment Type list yet.\n\nAdd it as a new Type?`
+    );
+    if (!confirmed) return { ok: false, typeId: null, legacyType: 'other' };
+    const res = await fetch('/api/types', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: 'equipment', name })
+    });
+    const out = await res.json();
+    if (!res.ok) {
+      createError = `Failed to add type: ${out.error ?? res.status}`;
+      return { ok: false, typeId: null, legacyType: 'other' };
+    }
+    return { ok: true, typeId: out.type.id as string, legacyType: 'other' };
+  }
+
+  /** Map a Type name to the closest legacy enum value so the existing
+   *  equipment.type column stays valid. User-added Types fall back to 'other'. */
+  function nameToLegacyEnum(name: string): EquipmentType {
+    const lower = name.toLowerCase();
+    for (const t of allTypes) if (lower.includes(t)) return t;
+    return 'other';
+  }
 
   async function createEquipment() {
     if (!newLabel.trim()) return;
     creating = true;
     createError = null;
     try {
+      const typeRes = await resolveTypeId();
+      if (!typeRes.ok) { creating = false; return; }
       const res = await fetch('/api/equipment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: newType,
+          type: typeRes.legacyType,
+          typeId: typeRes.typeId,
           label: newLabel.trim(),
           notes: newNotes.trim() || undefined
         })
@@ -58,6 +101,7 @@
       }
       newLabel = '';
       newNotes = '';
+      newTypeName = '';
       await invalidateAll();
     } catch (e) {
       createError = e instanceof Error ? e.message : String(e);
@@ -94,8 +138,8 @@
   }
 
   const counts = $derived.by(() => {
-    const m = new Map<EquipmentType, number>();
-    for (const e of data.equipment) m.set(e.type, (m.get(e.type) ?? 0) + 1);
+    const m = new Map<string, number>();
+    for (const e of data.equipment) m.set(e.typeName, (m.get(e.typeName) ?? 0) + 1);
     return m;
   });
 </script>
@@ -113,13 +157,10 @@
     <button class="chip" class:active={typeFilter === 'all'} onclick={() => (typeFilter = 'all')}>
       All ({data.equipment.length})
     </button>
-    {#each allTypes as t (t)}
-      {@const c = counts.get(t) ?? 0}
-      {#if c > 0 || typeFilter === t}
-        <button class="chip" class:active={typeFilter === t} onclick={() => (typeFilter = t)}>
-          {t} ({c})
-        </button>
-      {/if}
+    {#each [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0])) as [name, c] (name)}
+      <button class="chip" class:active={typeFilter === name} onclick={() => (typeFilter = name)}>
+        {name} ({c})
+      </button>
     {/each}
   </div>
 </section>
@@ -134,16 +175,25 @@
 {#if data.canEdit}
   <section class="card">
     <h2>Add equipment</h2>
+    <datalist id="equipment-type-suggestions">
+      {#each data.types as t (t.id)}<option value={t.name}>{t.description ?? ''}</option>{/each}
+    </datalist>
     <div class="row">
-      <select bind:value={newType}>
-        {#each allTypes as t (t)}<option value={t}>{t}</option>{/each}
-      </select>
+      <input
+        type="text"
+        list="equipment-type-suggestions"
+        placeholder="Type (e.g. Tractor)"
+        bind:value={newTypeName}
+      />
       <input type="text" placeholder="e.g. John Deere 4020" bind:value={newLabel} />
       <input type="text" placeholder="notes (optional)" bind:value={newNotes} />
-      <button class="primary" onclick={createEquipment} disabled={creating || !newLabel.trim()}>
+      <button class="primary" onclick={createEquipment} disabled={creating || !newLabel.trim() || !newTypeName.trim()}>
         {creating ? '…' : 'Add'}
       </button>
     </div>
+    {#if newTypeName.trim() && !data.types.find((t) => t.name.toLowerCase() === newTypeName.trim().toLowerCase())}
+      <p class="hint-new-type">"{newTypeName.trim()}" is new — you'll be asked to confirm adding it on save.</p>
+    {/if}
     {#if createError}<p class="error">{createError}</p>{/if}
   </section>
 {/if}
@@ -158,7 +208,7 @@
       <li class="card item type-{e.type}">
         <header>
           <a href="/equipment/{e.id}"><strong>{e.label}</strong></a>
-          <span class="type-badge">{e.type}</span>
+          <span class="type-badge">{e.typeName}</span>
           {#if e.retiredAt}<span class="retired">retired {fmt(e.retiredAt)}</span>{/if}
           <button
             class="delete-btn"
@@ -251,7 +301,12 @@
     gap: 0.5rem;
     flex-wrap: wrap;
   }
-  .row select,
+  .hint-new-type {
+    font-size: 0.82rem;
+    color: #2563eb;
+    margin: 0.4rem 0 0;
+    font-style: italic;
+  }
   .row input {
     flex: 1 1 120px;
     padding: 0.6rem;

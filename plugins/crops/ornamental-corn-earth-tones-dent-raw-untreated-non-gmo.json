@@ -1,0 +1,44 @@
+{
+  "pluginId": "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo",
+  "displayName": "Ornamental Corn Earth Tones Dent Raw Untreated Non-GMO",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "corn",
+  "daysToMaturity": {
+    "min": 90,
+    "max": 90
+  },
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 9,
+    "seedDepthIn": {
+      "min": 1.25,
+      "max": 1.25
+    }
+  },
+  "notes": "Heirloom dent flour corn reselection. 8-10\" ears, earth tone colors. Untreated, Non-GMO. 97% germ. SD/LB 1660. Use: decor, flour, feed.",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "synthetic-auxin",
+      "stageCode": "V2",
+      "anchor": "stage",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "POST broadleaf scout window (V2\u2013V3)",
+      "body": "Scout block; if \u22653 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted."
+    },
+    {
+      "chemistryClass": "hppd-inhibitor",
+      "stageCode": "V4",
+      "anchor": "stage",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "POST grass + late broadleaf window (V4\u2013V6)",
+      "body": "Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin."
+    }
+  ]
+}

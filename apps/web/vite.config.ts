@@ -49,6 +49,26 @@ export default defineConfig({
           {
             urlPattern: ({ url }) => url.pathname === '/api/health',
             handler: 'NetworkOnly'
+          },
+          // Phase 13b: cache satellite + street tiles so the Layout map
+          // works offline after first load. 30-day cache window.
+          {
+            urlPattern: /^https:\/\/server\.arcgisonline\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'esri-tiles',
+              expiration: { maxEntries: 500, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'osm-tiles',
+              expiration: { maxEntries: 500, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] }
+            }
           }
         ]
       },
@@ -71,6 +91,7 @@ export default defineConfig({
       'tests/unit/**/*.{test,spec}.{js,ts}',
       'tests/integration/**/*.{test,spec}.{js,ts}'
     ],
-    environment: 'node'
+    environment: 'node',
+    globalSetup: ['./tests/globalSetup.ts']
   }
 });

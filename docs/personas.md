@@ -46,19 +46,19 @@ The two roles enforced by [auth.ts](../apps/web/src/lib/server/auth.ts) — `own
 
 ## P3 — Mixed Crop & Hay Operator
 
-**Source:** HCD Guide §3.5. **Implementation status:** *not in CropCard yet.* See UC-13..UC-16 and FR-19..FR-23 in [use-cases.md](./use-cases.md) and [usability-audit.md](./usability-audit.md).
+**Source:** HCD Guide §3.5. **Implementation status:** UC-13 / UC-14 hay flow shipped (Sprint E). UC-15 stage projection shipped in v1.3 (`growthStageTable` + Plan→Schedule stage badges). UC-16 small-grain harvest-moisture capture still gap. See UC-13..UC-16 and FR-19..FR-23 in [use-cases.md](./use-cases.md) and [usability-audit.md](./usability-audit.md).
 
 | Context-of-Use attribute | Detail |
 |---|---|
-| Primary goals | Make hay during the 3-day weather window. Hit the moisture target at baling — too high burns the barn down, too low loses leaf value. Hit Zadoks stages on small grains for nitrogen and fungicide timing. |
-| Primary tasks | Decide whether to cut today (UC-13). Log each hay step as it happens — Mow → Ted → Rake → Bale (UC-14). Track Zadoks stage progression on wheat / barley / oats (UC-15). Record harvest with moisture (UC-16). |
+| Primary goals | Make hay during the 3-day weather window. Hit the moisture target at baling — too high burns the barn down, too low loses leaf value. Hit Zadoks stages on small grains for nitrogen and fungicide timing. For dual-purpose corn (e.g., Bloody Butcher) decide at field-time whether to pick at R3 for sweet eating or leave to R6 for cornmeal / ornamental. |
+| Primary tasks | Decide whether to cut today (UC-13). Log each hay step as it happens — Mow → Ted → Rake → Bale (UC-14). Track Zadoks stage progression on wheat / barley / oats (UC-15). Record harvest with moisture (UC-16). View current stage badge + harvest-target windows on every Plan→Schedule card (UC-40). |
 | Environment | Tractor cab (mounted phone or tablet); occasionally walking the field with a moisture meter. |
 | Devices | Phone or rugged tablet, often dock-mounted in the cab. |
 | Connectivity | Same as P1/P2. Weather data needed for UC-13 — will require a forecast adapter (FR-22). |
 | Physical constraints | Gloves; tractor vibration; engine noise rules out audio feedback. |
 | Cognitive context | Hay decisions are time-critical. A wrong "is the window open?" answer costs an entire cut. Needs a single screen that shows: forecast, last-cut date, target moisture, GO / NO-GO. |
 | Authority | Same `owner` / `helper` split as P1/P2. Saving moisture readings is `helper`-allowed (entry-level data); changing thresholds is `owner`-only. |
-| Success criteria | Can decide to cut, mow, ted, rake, and bale a field across 3 days and have a complete cutting record with moisture at each step, under 2 minutes total of phone-time across the operation. |
+| Success criteria | Can decide to cut, mow, ted, rake, and bale a field across 3 days and have a complete cutting record with moisture at each step, under 2 minutes total of phone-time across the operation. Stage badge visible on every active corn / small-grain card on Plan→Schedule; dual-purpose corn surfaces both harvest-target windows. |
 
 ---
 

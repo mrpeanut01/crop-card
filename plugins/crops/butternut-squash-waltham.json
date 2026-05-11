@@ -1,23 +1,57 @@
 {
   "pluginId": "butternut-squash-waltham",
   "type": "crop",
-  "displayName": "Butternut Squash — Waltham",
+  "displayName": "Butternut Squash \u2014 Waltham",
   "version": "1.0.0",
   "cropFamily": "cucurbit",
   "preHarvestIntervalDays": 0,
-  "daysToMaturity": { "min": 95, "max": 105 },
+  "daysToMaturity": {
+    "min": 95,
+    "max": 105
+  },
   "defaultRowSpacingInches": 60,
   "plantingGuide": {
     "soilTempMinF": 70,
     "rowSpacingIn": 60,
-    "inRowSpacingIn": { "min": 24, "max": 36 },
-    "seedDepthIn": { "min": 1, "max": 1.5 }
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    },
+    "seedDepthIn": {
+      "min": 1,
+      "max": 1.5
+    },
+    "vineSpreadFt": {
+      "min": 10,
+      "max": 14
+    }
   },
   "postHarvestCuring": {
-    "method": "Cure 10 d at 80–85 °F, 80–85% RH; store 50–55 °F, 50–70% RH",
-    "durationWeeks": { "min": 1, "max": 2 },
+    "method": "Cure 10 d at 80\u201385 \u00b0F, 80\u201385% RH; store 50\u201355 \u00b0F, 50\u201370% RH",
+    "durationWeeks": {
+      "min": 1,
+      "max": 2
+    },
     "storageLocation": "Cool, dry"
   },
-  "harvestIndicators": ["Tan rind, no green streaks", "Stem corked + dry", "Hollow sound when tapped"],
-  "notes": "Long-storage winter squash. Harvest before frost. Powdery mildew is the main disease — rotate fungicides FRAC 7 / 11 / M02."
+  "harvestIndicators": [
+    "Tan rind, no green streaks",
+    "Stem corked + dry",
+    "Hollow sound when tapped"
+  ],
+  "notes": "Long-storage winter squash. Harvest before frost. Powdery mildew is the main disease \u2014 rotate fungicides FRAC 7 / 11 / M02.",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 30,
+      "offsetDaysMax": 60,
+      "title": "POST grass window (Clethodim)",
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+    }
+  ]
 }

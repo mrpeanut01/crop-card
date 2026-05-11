@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
+
   let { data } = $props();
 
-  let blockId = $state(data.selectedBlockId);
-  let year = $state(data.year);
+  let blockId = $state(untrack(() => data.selectedBlockId));
+  let year = $state(untrack(() => data.year));
   let busy = $state(false);
   let message = $state<string | null>(null);
   let error = $state<string | null>(null);
@@ -137,7 +139,7 @@
   delivered total. Crop demand comes from the planting plugin or operator override.
 </p>
 
-<form class="filter" on:submit|preventDefault={reload}>
+<form class="filter" onsubmit={(e) => { e.preventDefault(); reload(); }}>
   <label>
     Block
     <select bind:value={blockId}>
@@ -194,7 +196,7 @@
 
 <details class="card">
   <summary><h2>Record fertilizer application</h2></summary>
-  <form on:submit={recordApplication}>
+  <form onsubmit={recordApplication}>
     <label>Source <input type="text" bind:value={appSource} /></label>
     <label>Rate <input type="number" min="0" step="any" bind:value={appRate} /></label>
     <label>Unit <input type="text" bind:value={appUnit} /></label>
@@ -210,7 +212,7 @@
 
 <details class="card">
   <summary><h2>Record cover-crop / residual credit</h2></summary>
-  <form on:submit={recordCredit}>
+  <form onsubmit={recordCredit}>
     <label>Source <input type="text" bind:value={creditSource} /></label>
     <label>Cover-crop plugin id <input type="text" bind:value={creditPlugin} /></label>
     <label class="checkbox">
@@ -231,7 +233,7 @@
 
 <details class="card">
   <summary><h2>Record soil test</h2></summary>
-  <form on:submit={recordSoilTest}>
+  <form onsubmit={recordSoilTest}>
     <label>pH <input type="number" min="0" max="14" step="0.1" bind:value={stPh} /></label>
     <label
       >Organic matter % <input

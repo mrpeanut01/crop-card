@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ url }) => {
     const block = blockMap.get(c.blockId);
     const pluginRecord = registry.get(c.cropPluginId);
     const cropPlugin = pluginRecord?.plugin.type === 'crop' ? pluginRecord.plugin : undefined;
-    const daysSincePlanted = Math.floor((Date.now() - c.plantingDate) / (24 * 60 * 60 * 1000));
+    const daysSincePlanted = c.plantingDate !== null ? Math.floor((Date.now() - c.plantingDate) / (24 * 60 * 60 * 1000)) : null;
     return {
       ...c,
       blockName: block?.name ?? c.blockId.slice(0, 8),

@@ -17,12 +17,14 @@ import { eq, inArray, isNotNull } from 'drizzle-orm';
 import { db } from './client';
 import {
   blocks,
+  cropEquipment,
   crops,
   equipment,
   equipmentLog,
   equipmentState,
   fertilityApplications,
   fertilityCredits,
+  fields,
   hayCuttings,
   harvestEvents,
   insecticideEvents,
@@ -119,6 +121,13 @@ export function deleteTask(id: string): DeleteSummary {
 
 // ─── Per-crop (cascades through every event tied to that planting) ──────
 
+// TODO(phase-15-bug): user reported that deleting a crop from the Schedule
+// tab also wiped the navigation "Plan" tile / overall plan state. Repro
+// hypothesis: this cascade may be removing rows another page reads as a
+// presence signal (e.g., last surviving crop on a block hides the Plan tab,
+// or a blocks/fields delete chains through here unexpectedly). Needs a
+// deterministic repro before fixing — see docs/clickthrough-reports/ when
+// next investigated.
 export function deleteCropCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
 
@@ -143,7 +152,8 @@ export function deleteCropCascade(id: string): DeleteSummary {
     .all()
     .map((r) => r.id);
 
-  // 2. Delete stock movements pointing at these events.
+  // 2. Delete stock movements pointing at these events OR directly at the crop
+  //    (Phase 13: movements may carry cropId without an event link).
   if (sprayIds.length) {
     removed.stock_movements_spray = db
       .delete(stockMovements)
@@ -162,6 +172,7 @@ export function deleteCropCascade(id: string): DeleteSummary {
       .where(inArray(stockMovements.fertilityApplicationId, fertilityIds))
       .run().changes;
   }
+  removed.stock_movements_crop = del(stockMovements, eq(stockMovements.cropId, id));
 
   // 3. Delete tasks tied to this crop (and their pre/post-tasks).
   const taskIds = db
@@ -177,6 +188,9 @@ export function deleteCropCascade(id: string): DeleteSummary {
       .run().changes;
   }
   removed.tasks = del(tasks, eq(tasks.cropId, id));
+
+  // 3a. Drop crop ↔ equipment bindings (Phase 13).
+  removed.crop_equipment = del(cropEquipment, eq(cropEquipment.cropId, id));
 
   // 4. Delete the events themselves.
   removed.spray_events = del(sprayEvents, eq(sprayEvents.cropId, id));
@@ -237,6 +251,8 @@ export function deleteEquipmentCascade(id: string): DeleteSummary {
   removed.pending_calibrations = del(pendingCalibrations, eq(pendingCalibrations.equipmentId, id));
   removed.equipment_log = del(equipmentLog, eq(equipmentLog.equipmentId, id));
   removed.equipment_state = del(equipmentState, eq(equipmentState.equipmentId, id));
+  // Phase 13: drop any per-crop bindings.
+  removed.crop_equipment = del(cropEquipment, eq(cropEquipment.equipmentId, id));
   // tasks.equipment_id is nullable; null it out instead of deleting tasks.
   db.update(tasks).set({ equipmentId: null }).where(eq(tasks.equipmentId, id)).run();
   // insecticide_events.sprayerId references equipment(id) but is nullable; null it.
@@ -245,6 +261,31 @@ export function deleteEquipmentCascade(id: string): DeleteSummary {
     .where(eq(insecticideEvents.sprayerId, id))
     .run();
   removed.equipment = del(equipment, eq(equipment.id, id));
+  return { removed };
+}
+
+// ─── Per-field (Phase 13) ───────────────────────────────────────────────
+
+/**
+ * Cascade through every block in this field, then every crop and every
+ * event tied to those blocks. The block walker reuses deleteBlockCascade
+ * so the heavy lifting stays in one place.
+ */
+export function deleteFieldCascade(id: string): DeleteSummary {
+  const removed: Record<string, number> = {};
+  const blockIds = db
+    .select({ id: blocks.id })
+    .from(blocks)
+    .where(eq(blocks.fieldId, id))
+    .all()
+    .map((r) => r.id);
+  for (const bid of blockIds) {
+    const r = deleteBlockCascade(bid);
+    for (const [k, v] of Object.entries(r.removed)) {
+      removed[k] = (removed[k] ?? 0) + v;
+    }
+  }
+  removed.fields = del(fields, eq(fields.id, id));
   return { removed };
 }
 
@@ -318,6 +359,7 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
   // Order: leaf rows first.
   removed.stock_movements = db.delete(stockMovements).run().changes;
   removed.tasks = db.delete(tasks).run().changes;
+  removed.crop_equipment = db.delete(cropEquipment).run().changes;
   removed.spray_events = db.delete(sprayEvents).run().changes;
   removed.harvest_events = db.delete(harvestEvents).run().changes;
   removed.insecticide_events = db.delete(insecticideEvents).run().changes;
@@ -336,6 +378,7 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     removed.sprayers = db.delete(sprayers).run().changes;
   }
   removed.blocks = db.delete(blocks).run().changes;
+  removed.fields = db.delete(fields).run().changes;
   if (!opts.keepWeatherCache) {
     removed.weather_forecast_cache = db.delete(weatherForecastCache).run().changes;
   }

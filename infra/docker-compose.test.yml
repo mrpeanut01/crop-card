@@ -1,0 +1,54 @@
+# Standalone compose file for the isolated clickthrough-test stack. Runs
+# alongside the regular dev stack (which holds :5173 / :10000) on different
+# host ports under a separate `crop-card-test` project so its volumes are
+# distinct from the main `crop-card` dev stack.
+#
+# Bring up:
+#   docker compose -f infra/docker-compose.test.yml up -d
+#
+# Tear down (deletes its volumes):
+#   docker compose -f infra/docker-compose.test.yml down -v
+
+name: crop-card-test
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: dev
+    image: cropcard-web:dev
+    ports:
+      - "5273:5173"
+    command: ["sh", "-c", "if [ ! -e /app/apps/web/node_modules/.modules.yaml ] && [ ! -e /app/node_modules/.modules.yaml ]; then pnpm install --frozen-lockfile; fi && pnpm --filter @cropcard/web dev"]
+    volumes:
+      - ..:/app
+      - web-node-modules:/app/node_modules
+      - web-app-node-modules:/app/apps/web/node_modules
+      - web-data:/data
+    env_file:
+      - .env.dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: file:/data/test.db
+      AUTH_SECRET: dev-only-not-secret-change-in-prod
+      AUTH_TRUST_HOST: "true"
+      AUTH_URL: http://localhost:5273
+      AZURE_BLOB_CONTAINER: cropcard-dev
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      - azurite
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --location /data"
+    ports:
+      - "10100:10000"
+    volumes:
+      - azurite-data:/data
+
+volumes:
+  web-node-modules:
+  web-app-node-modules:
+  web-data:
+  azurite-data:

@@ -1,32 +1,103 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cropcard.dev/schemas/companion.schema.json",
-  "title": "CropCard Companion-System Plugin",
-  "description": "Multi-crop interplanting system (e.g., Three Sisters). Drives FR-15 companion advisor.",
+  "title": "CropCard Companion Plugin",
+  "description": "Pairwise companion + multi-crop interplanting system (e.g., Three Sisters). Drives the companion advisor + the group-planning engine. Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema) — the Zod schema is the runtime source of truth; this file is documentation for plugin authors.",
   "type": "object",
-  "required": ["schemaVersion", "pluginType", "id", "displayName", "members"],
-  "additionalProperties": false,
+  "required": ["pluginId", "type", "displayName", "version"],
+  "additionalProperties": true,
   "properties": {
-    "schemaVersion": { "const": "1.0" },
-    "pluginType": { "const": "companion-system" },
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-    "displayName": { "type": "string", "minLength": 1 },
-    "description": { "type": "string" },
+    "pluginId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,127}$"
+    },
+    "type": { "const": "companion" },
+    "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+([-+].+)?$"
+    },
+    "goodWith": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Crop pluginIds that pair well with each other when interplanted on the same block."
+    },
+    "badWith": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Crop pluginIds that should NOT be interplanted (allelopathy, shared disease vectors, etc.)."
+    },
+    "primaryFamily": {
+      "type": "string",
+      "description": "Anchor crop family for multi-crop systems (e.g., Three Sisters anchors on 'corn'). When present, members[] describes the other families and their planting offsets. Matches a CROP_FAMILIES enum value (see crop.schema.json cropFamily).",
+      "enum": [
+        "corn",
+        "cucurbit",
+        "legume",
+        "broadleaf-companion",
+        "orchard",
+        "cover-grass",
+        "cover-legume",
+        "solanaceae",
+        "brassica",
+        "allium",
+        "leafy-green",
+        "root",
+        "apiaceae",
+        "small-fruit",
+        "bramble",
+        "vine-fruit",
+        "stone-fruit",
+        "cereal-grain",
+        "forage",
+        "herb-culinary"
+      ]
+    },
     "members": {
       "type": "array",
-      "minItems": 2,
+      "description": "Phase 15 — declarative multi-crop system. Each entry describes a non-anchor member family and its planting offset from the anchor.",
       "items": {
         "type": "object",
-        "required": ["cropPluginId", "role"],
+        "required": ["family", "role", "plantingOffsetDays"],
+        "additionalProperties": false,
         "properties": {
-          "cropPluginId": { "type": "string" },
-          "role": { "type": "string", "enum": ["primary", "trellis", "ground-cover", "trap", "pollinator", "n-fixer"] },
-          "plantingOffsetDays": { "type": "integer" },
-          "plantingTrigger": { "type": "string" }
+          "family": {
+            "type": "string",
+            "enum": [
+              "corn",
+              "cucurbit",
+              "legume",
+              "broadleaf-companion",
+              "orchard",
+              "cover-grass",
+              "cover-legume",
+              "solanaceae",
+              "brassica",
+              "allium",
+              "leafy-green",
+              "root",
+              "apiaceae",
+              "small-fruit",
+              "bramble",
+              "vine-fruit",
+              "stone-fruit",
+              "cereal-grain",
+              "forage",
+              "herb-culinary"
+            ]
+          },
+          "role": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "plantingOffsetDays": { "type": "integer", "minimum": 0, "maximum": 365 },
+          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "body": { "type": "string", "maxLength": 500 }
         }
       }
     },
-    "benefits": { "type": "array", "items": { "type": "string" } },
+    "benefit": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "One-paragraph explanation of why the system works (nitrogen fixation, weed suppression, pollinator attraction, etc.)."
+    },
     "notes": { "type": "string" }
   }
 }

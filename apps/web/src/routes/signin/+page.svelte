@@ -138,11 +138,6 @@
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
   }
-  label.checkbox {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-  }
   input[type='email'] {
     padding: 0.6rem;
     border: 2px solid #d0d7d0;

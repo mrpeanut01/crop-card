@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
   import { goto } from '$app/navigation';
 
   let { data } = $props();
 
-  let selectedSprayerId = $state(data.sprayer?.id ?? data.sprayers[0]?.id ?? '');
+  let selectedSprayerId = $state(untrack(() => data.sprayer?.id ?? data.sprayers[0]?.id ?? ''));
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
 
   // FR-05 sequence: drain → 3× plain water rinse → ammonia soak (30 min) →

@@ -1,0 +1,38 @@
+{
+  "pluginId": "pumpkin-cinderella-film-coated-treated",
+  "displayName": "Pumpkin Cinderella Film Coated Treated",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": {
+    "min": 115,
+    "max": 115
+  },
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 42,
+    "seedDepthIn": {
+      "min": 1.375,
+      "max": 1.375
+    },
+    "vineSpreadFt": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "notes": "Film coated, Thiram 480 DP treated. 85% germ. 115 DTM. Flat round fruit 10-15 lbs, ornamental/pie use. SKU 01683FLCTRT-1OZ.",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 30,
+      "offsetDaysMax": 60,
+      "title": "POST grass window (Clethodim)",
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+    }
+  ]
+}

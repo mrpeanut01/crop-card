@@ -28,7 +28,26 @@ export const plantingGuideSchema = z
     inRowSpacingIn: minMaxNumber.optional(),
     seedDepthIn: minMaxNumber.optional(),
     seedsPerAcre: z.number().int().positive().optional(),
-    recommendedLbsPerAcre: z.number().positive().optional()
+    recommendedLbsPerAcre: z.number().positive().optional(),
+    /** v1.3 — mature vine spread in feet (cucurbits, gourds, vining berries).
+     *  Used by sufficiency.footprintSqFt to size sprawling crops correctly so
+     *  the AI allocator doesn't over-pack vine crops based on row spacing. */
+    vineSpreadFt: minMaxNumber.optional(),
+    /** v1.3 — explicit per-plant mature canopy area in sq ft. When supplied,
+     *  overrides both row-spacing and vineSpreadFt-derived footprint. Use
+     *  for crops with non-circular canopies or when you have a survey value. */
+    matureCanopyFtSq: z.number().positive().max(2000).optional(),
+    // ─── Phase 17 (Track 1) — promote engine fallbacks to plugin data ────
+    /** Seed count per pound for this variety. Replaces the family-default
+     *  fallback in `seed/quantity.ts`. */
+    seedsPerLb: z.number().positive().optional(),
+    /** Reference seeding density used by the swim-lane shade heuristic when
+     *  comparing actual planted density against a "typical" rate. Replaces
+     *  the FAMILY_DENSITY_REF fallback in `calendar/engine.ts`. */
+    referenceDensitySeedsPerAcre: z.number().int().positive().optional(),
+    /** Days from planting until visible emergence. Replaces the global
+     *  `DEFAULT_EMERGENCE_DAYS = {7, 14}` fallback in `calendar/engine.ts`. */
+    emergenceDays: minMaxNumber.optional()
   })
   .partial();
 
@@ -94,7 +113,8 @@ export const hayOperationsSchema = z.object({
   storageTempWatchF: z.object({ warn: z.number(), danger: z.number() }).optional()
 });
 
-/** Zadoks small-grain growth-stage table (FR-20). */
+/** Zadoks small-grain growth-stage table (FR-20).
+ *  @deprecated Loader normalizes into `growthStageTable` with `system: 'zadoks'`. */
 export const zadoksStageSchema = z.object({
   stage: z.string().regex(/^Z\d{2}(-Z\d{2})?$/, 'stage must look like Z30 or Z30-Z39'),
   name: z.string().min(1),
@@ -102,6 +122,85 @@ export const zadoksStageSchema = z.object({
     .object({ min: z.number().int().nonnegative(), max: z.number().int().positive() })
     .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
 });
+
+// ─── Plugin schema v1.3 (growth-stage phenology) ─────────────────────────
+//
+// Generic per-variety growth-stage table + corn-type classifier. Unifies the
+// V/R-stage knowledge previously hard-coded in the calendar engine for corn
+// with Zadoks (small grains), BBCH (cucurbit/solanaceae), and simple-named
+// stages (leafy/brassica/root/herb). Plugins inherit a family-default table
+// from `growthStageTemplates.ts` when omitted.
+
+export const STAGE_SYSTEMS = [
+  'vr-corn',
+  'r-soybean',
+  'zadoks',
+  'bbch',
+  'simple',
+  'perennial-calendar'
+] as const;
+export const stageSystemSchema = z.enum(STAGE_SYSTEMS);
+export type StageSystem = (typeof STAGE_SYSTEMS)[number];
+
+export const CORN_TYPES = ['sweet', 'popcorn', 'dent', 'flour', 'flint', 'dual-purpose'] as const;
+export const cornTypeSchema = z.enum(CORN_TYPES);
+export type CornType = (typeof CORN_TYPES)[number];
+
+export const STAGE_BODY_KINDS = [
+  'vegetative',
+  'reproductive',
+  'ripening',
+  'dormant',
+  'transition'
+] as const;
+
+export const HARVEST_USE_CASES = [
+  'fresh-eating',
+  'milling',
+  'ornamental',
+  'seed-saving',
+  'silage',
+  'dry-storage',
+  'juicing',
+  'canning'
+] as const;
+
+export const growthStageSchema = z.object({
+  code: z.string().min(1).max(16),
+  name: z.string().min(1).max(80),
+  daysFromPlanting: z
+    .object({ min: z.number().int().nonnegative(), max: z.number().int().positive() })
+    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' }),
+  inspect: z.string().max(280).optional(),
+  bodyKind: z.enum(STAGE_BODY_KINDS).optional()
+});
+export type GrowthStage = z.infer<typeof growthStageSchema>;
+
+export const harvestTargetSchema = z.object({
+  stageCode: z.string().min(1).max(16),
+  label: z.string().min(1).max(60),
+  useCase: z.enum(HARVEST_USE_CASES).optional()
+});
+export type HarvestTarget = z.infer<typeof harvestTargetSchema>;
+
+export const growthStageTableSchema = z
+  .object({
+    system: stageSystemSchema,
+    referenceDtmDays: z.number().int().positive().optional(),
+    stages: z
+      .array(growthStageSchema)
+      .min(1)
+      .refine(
+        (arr) => arr.every((s, i, a) => i === 0 || s.daysFromPlanting.min >= a[i - 1].daysFromPlanting.min),
+        'stages must be ordered by daysFromPlanting.min ascending'
+      ),
+    harvestTargets: z.array(harvestTargetSchema).min(1)
+  })
+  .refine(
+    (t) => t.harvestTargets.every((h) => t.stages.some((s) => s.code === h.stageCode)),
+    'every harvestTargets[].stageCode must match a stages[].code'
+  );
+export type GrowthStageTable = z.infer<typeof growthStageTableSchema>;
 
 /** Generic harvest-moisture gate for any moisture-sensitive crop (FR-21). */
 export const harvestMoistureGateSchema = z.object({
@@ -163,6 +262,58 @@ export const seasonalTaskSchema = z
   .refine((v) => v.dayOfYear !== undefined || v.daysAfterPlanting !== undefined, {
     message: 'seasonalTask requires either dayOfYear or daysAfterPlanting'
   });
+
+// ─── Phase 17 (Track 1) — agronomy block + per-crop spray windows ───────
+//
+// `agronomy` and `sprayWindows` move family-keyed lookup tables and
+// hardcoded engine branches (rotation lookback, perennial detection,
+// cover-crop termination lead, corn V2/V4 + cucurbit Clethodim windows)
+// out of TypeScript and into per-crop plugin data. All fields optional so
+// existing plugins keep working; engines fall through to a single
+// family-default registry in `familyDefaults.ts` when omitted.
+
+export const CROP_LIFECYCLES = ['annual', 'biennial', 'perennial'] as const;
+export const cropLifecycleSchema = z.enum(CROP_LIFECYCLES);
+export type CropLifecycle = (typeof CROP_LIFECYCLES)[number];
+
+export const agronomySchema = z
+  .object({
+    /** Annual / biennial / perennial. Drives multi-year calendar rendering. */
+    lifecycle: cropLifecycleSchema.optional(),
+    /** Years before the same family may replant the same block. */
+    rotationLookbackYears: z.number().int().min(0).max(10).optional(),
+    /** Cover-crop only — minimum days between cover termination and next
+     *  cash crop planting. */
+    terminationLeadDaysMin: z.number().int().min(0).max(120).optional()
+  })
+  .partial();
+export type Agronomy = z.infer<typeof agronomySchema>;
+
+export const SPRAY_WINDOW_ANCHORS = ['planting', 'emergence', 'stage'] as const;
+
+export const cropSprayWindowSchema = z
+  .object({
+    /** Chemistry class the window applies to (matches kernel chemistry-class
+     *  enum). The engine joins on this when projecting candidate sprays. */
+    chemistryClass: z.enum(CHEMISTRY_CLASSES),
+    /** Optional growth-stage anchor (matches a `growthStageTable.stages[].code`
+     *  on this crop). When set, `anchor` should be 'stage'. */
+    stageCode: z.string().min(1).max(16).optional(),
+    /** Days from the anchor; min/max define the open window. */
+    offsetDaysMin: z.number().int().nonnegative(),
+    offsetDaysMax: z.number().int().nonnegative(),
+    /** What the offset is measured from. */
+    anchor: z.enum(SPRAY_WINDOW_ANCHORS),
+    title: z.string().min(1).max(120),
+    body: z.string().max(500).optional()
+  })
+  .refine((v) => v.offsetDaysMin <= v.offsetDaysMax, {
+    message: 'offsetDaysMin must be ≤ offsetDaysMax'
+  })
+  .refine((v) => v.anchor !== 'stage' || !!v.stageCode, {
+    message: 'anchor "stage" requires stageCode'
+  });
+export type CropSprayWindow = z.infer<typeof cropSprayWindowSchema>;
 
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal('crop'),
@@ -241,6 +392,35 @@ export const cropPluginSchema = pluginBase.extend({
       })
     )
     .optional(),
+  // ─── v1.2 additions (Phase 14 swim-lane shade modeling) ─────────────
+  /** Mature canopy height in feet. Used by the swim-lane shade heuristic
+   *  to weight how much shadow this crop casts on neighbor blocks. */
+  matureHeightFt: z.number().positive().max(60).optional(),
+  /** Explicit shade-casting flag. True for tall crops (corn, sunflower,
+   *  sorghum, sweet corn). Defaults to derivation from `matureHeightFt`
+   *  when absent: `matureHeightFt >= 5` → casts shade. */
+  shadeCasting: z.boolean().optional(),
+  // ─── v1.3 additions (growth-stage phenology) ────────────────────────
+  /** Per-variety stage system + day-from-planting offsets + harvest target(s).
+   *  When omitted, the calendar engine falls back to the family default in
+   *  `growthStageTemplates.ts`. Dual-purpose varieties (e.g., Bloody Butcher
+   *  corn, harvestable as sweet eating at R3 or as dent at R6) list multiple
+   *  `harvestTargets` and downstream UI / AI auto-schedule picks among them. */
+  growthStageTable: growthStageTableSchema.optional(),
+  /** Corn-family classifier: 'sweet' | 'popcorn' | 'dent' | 'flour' | 'flint'
+   *  | 'dual-purpose'. UI filter + AI auto-schedule sugar; the actual harvest
+   *  math is driven by `growthStageTable.harvestTargets`. Cross-field check:
+   *  only valid when cropFamily === 'corn'. */
+  cornType: cornTypeSchema.optional(),
+  // ─── Phase 17 (Track 1) — agronomy block + per-crop spray windows ───
+  /** Lifecycle, rotation, and termination-lead data the calendar engine
+   *  used to derive from family-keyed lookup tables. Optional; missing
+   *  values fall through to `familyDefaults.ts`. */
+  agronomy: agronomySchema.optional(),
+  /** Per-variety spray windows the engine surfaces on /plan as candidate
+   *  application tasks. Replaces the corn V2/V3 + V4/V6 and cucurbit
+   *  Clethodim windows previously hardcoded in `calendar/engine.ts`. */
+  sprayWindows: z.array(cropSprayWindowSchema).optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),
@@ -478,10 +658,42 @@ export const fertilizerPluginSchema = pluginBase.extend({
   notes: z.string().optional()
 });
 
+// ─── Phase 17 (Track 1, B8) — companion-system shape ────────────────────
+//
+// The original `companion` plugin (goodWith/badWith) describes general
+// crop affinity. A companion-SYSTEM (e.g. Three Sisters) additionally
+// declares an ordered planting protocol: a primary crop family and one or
+// more secondary members planted at relative day offsets. The engine emits
+// one `companion-trigger` event per member when the primary is planted.
+//
+// Both shapes share `type: 'companion'`. Presence of `members` opts into
+// the system shape; absence keeps the legacy goodWith/badWith semantics.
+
+export const companionSystemMemberSchema = z.object({
+  /** Crop family this member must belong to (engine matches against
+   *  registered crop plugins). */
+  family: z.enum(CROP_FAMILIES),
+  /** Free-form role label surfaced in the suggestion UI ("trellis", "ground-cover"). */
+  role: z.string().min(1).max(80),
+  /** Days after the primary planting when this member should go in. */
+  plantingOffsetDays: z.number().int().nonnegative().max(365),
+  /** Optional title override for the engine's companion-trigger event. */
+  title: z.string().min(1).max(120).optional(),
+  /** Optional body override. */
+  body: z.string().max(500).optional()
+});
+export type CompanionSystemMember = z.infer<typeof companionSystemMemberSchema>;
+
 export const companionPluginSchema = pluginBase.extend({
   type: z.literal('companion'),
   goodWith: z.array(z.string()).default([]),
-  badWith: z.array(z.string()).default([])
+  badWith: z.array(z.string()).default([]),
+  /** Companion-system declaration. When present, the engine emits
+   *  `companion-trigger` events for each member after the primary planting. */
+  primaryFamily: z.enum(CROP_FAMILIES).optional(),
+  members: z.array(companionSystemMemberSchema).optional(),
+  /** Short benefit description surfaced in the companion suggestion UI. */
+  benefit: z.string().max(500).optional()
 });
 
 export const pluginSchema = z.discriminatedUnion('type', [

@@ -15,7 +15,7 @@ export interface PlantingHarvestStatus {
   cropPluginId: string;
   varietyDisplayName: string;
   cropFamily?: string;
-  plantingDate: number;
+  plantingDate: number | null;
   windowStartMs?: number;
   windowEndMs?: number;
   status: HarvestStatus;
@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ url }) => {
       let daysIntoWindow: number | undefined;
       let daysPastWindow: number | undefined;
 
-      if (dtm) {
+      if (dtm && p.plantingDate !== null) {
         windowStartMs = p.plantingDate + dtm.min * DAY_MS;
         windowEndMs = p.plantingDate + dtm.max * DAY_MS;
         if (now < windowStartMs) {

@@ -1,10 +1,11 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { untrack } from 'svelte';
   import { calibrationDistance, computeCalibratedGpa } from '$lib/dilution/calibration';
 
   let { data } = $props();
 
-  let selectedSprayerId = $state(data.sprayers[0]?.id ?? '');
+  let selectedSprayerId = $state(untrack(() => data.sprayers[0]?.id ?? ''));
   let spreadInches = $state<number | undefined>(20);
   let strideFeet = $state(2.5);
   let ouncesCollected = $state<number | undefined>(undefined);

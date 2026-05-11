@@ -1,15 +1,16 @@
 <script lang="ts">
   import type { ForecastDay, HayViolation } from '$lib/hay';
+  import { untrack } from 'svelte';
 
   let { data } = $props();
 
-  let blockId = $state(data.selectedBlockId);
-  let year = $state(data.year);
-  let cropPluginId = $state<string>(
+  let blockId = $state(untrack(() => data.selectedBlockId));
+  let year = $state(untrack(() => data.year));
+  let cropPluginId = $state<string>(untrack(() =>
     data.blocks.find((b) => b.id === data.selectedBlockId)?.hayPlanting?.cropPluginId ??
       data.hayCrops[0]?.pluginId ??
       ''
-  );
+  ));
 
   let busy = $state(false);
   let error = $state<string | null>(null);
@@ -175,7 +176,7 @@
   moisture thresholds at the bale step.
 </p>
 
-<form class="filter" on:submit|preventDefault={reload}>
+<form class="filter" onsubmit={(e) => { e.preventDefault(); reload(); }}>
   <label>
     Block
     <select bind:value={blockId}>
@@ -213,7 +214,7 @@
       Mow trigger: <strong>{selectedCrop.hayOperations?.mowTrigger ?? '—'}</strong>. Plugin requires
       a {selectedCrop.hayOperations?.weatherWindowDays}-day dry window.
     </p>
-    <button class="secondary" on:click={fetchForecast} disabled={busy || !blockId}>
+    <button class="secondary" onclick={fetchForecast} disabled={busy || !blockId}>
       {busy ? 'Fetching…' : 'Check NOAA forecast'}
     </button>
     {#if forecastError}<p class="error">{forecastError}</p>{/if}
@@ -251,7 +252,7 @@
     <div class="row">
       <button
         class="primary"
-        on:click={() => startCutting()}
+        onclick={() => startCutting()}
         disabled={busy || !blockId || !cropPluginId}
       >
         Record cutting now (mow done)
@@ -259,7 +260,7 @@
       {#if mowViolations.length > 0}
         <button
           class="secondary danger"
-          on:click={() => startCutting({ override: true })}
+          onclick={() => startCutting({ override: true })}
           disabled={busy}
         >
           Override + record anyway
@@ -320,19 +321,19 @@
         {/if}
         {#if nextStep(c)}
           <div class="row">
-            <button class="primary" on:click={() => advance(c.id, nextStep(c)!)} disabled={busy}>
+            <button class="primary" onclick={() => advance(c.id, nextStep(c)!)} disabled={busy}>
               Advance — {nextStep(c)}
             </button>
             {#if nextStep(c) === 'bale'}
               <button
                 class="secondary danger"
-                on:click={() => advance(c.id, 'bale', { override: true })}
+                onclick={() => advance(c.id, 'bale', { override: true })}
                 disabled={busy}
               >
                 Override bale gate
               </button>
             {/if}
-            <button class="secondary" on:click={() => abortCutting(c.id)} disabled={busy}>
+            <button class="secondary" onclick={() => abortCutting(c.id)} disabled={busy}>
               Abort
             </button>
           </div>

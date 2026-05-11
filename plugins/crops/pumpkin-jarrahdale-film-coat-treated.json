@@ -1,0 +1,38 @@
+{
+  "pluginId": "pumpkin-jarrahdale-film-coat-treated",
+  "displayName": "Pumpkin Jarrahdale Film Coat Treated",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": {
+    "min": 100,
+    "max": 100
+  },
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 42,
+    "seedDepthIn": {
+      "min": 1.375,
+      "max": 1.375
+    },
+    "vineSpreadFt": {
+      "min": 10,
+      "max": 15
+    }
+  },
+  "notes": "Heirloom Jarrahdale pumpkin. Treated with Thiram. 96% germ. DO NOT use seed for food, feed, or oil. SD/LB 2,106.",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 30,
+      "offsetDaysMax": 60,
+      "title": "POST grass window (Clethodim)",
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+    }
+  ]
+}

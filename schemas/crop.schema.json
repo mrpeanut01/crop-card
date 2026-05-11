@@ -2,128 +2,169 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cropcard.dev/schemas/crop.schema.json",
   "title": "CropCard Crop Plugin",
-  "description": "Data-only crop variety definition. Cannot override Safety Kernel rules.",
+  "description": "Data-only crop variety definition. Cannot override Safety Kernel rules. Mirrors apps/web/src/lib/plugins/schemas.ts (cropPluginSchema) — the Zod schema is the runtime source of truth; this file is documentation for plugin authors.",
   "type": "object",
-  "required": [
-    "schemaVersion",
-    "pluginType",
-    "id",
-    "displayName",
-    "cropFamily",
-    "dtm",
-    "planting"
-  ],
-  "additionalProperties": false,
+  "required": ["pluginId", "type", "displayName", "version", "cropFamily"],
+  "additionalProperties": true,
   "properties": {
-    "schemaVersion": { "const": "1.0" },
-    "pluginType": { "const": "crop" },
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-    "displayName": { "type": "string", "minLength": 1 },
+    "pluginId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,127}$"
+    },
+    "type": { "const": "crop" },
+    "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+([-+].+)?$",
+      "description": "Semver."
+    },
     "cropFamily": {
       "type": "string",
-      "enum": ["corn", "cucurbit", "legume", "broadleaf-companion", "orchard", "cover-grass", "cover-legume"]
+      "enum": [
+        "corn",
+        "cucurbit",
+        "legume",
+        "broadleaf-companion",
+        "orchard",
+        "cover-grass",
+        "cover-legume",
+        "solanaceae",
+        "brassica",
+        "allium",
+        "leafy-green",
+        "root",
+        "apiaceae",
+        "small-fruit",
+        "bramble",
+        "vine-fruit",
+        "stone-fruit",
+        "cereal-grain",
+        "forage",
+        "herb-culinary"
+      ]
     },
-    "subType": { "type": "string" },
-    "dtm": {
+    "defaultRowSpacingInches": { "type": "number", "exclusiveMinimum": 0, "maximum": 360 },
+    "preHarvestIntervalDays": { "type": "integer", "minimum": 0 },
+    "daysToMaturity": {
       "type": "object",
       "required": ["min", "max"],
-      "additionalProperties": false,
       "properties": {
-        "min": { "type": "integer", "minimum": 1 },
-        "max": { "type": "integer", "minimum": 1 }
+        "min": { "type": "integer", "exclusiveMinimum": 0 },
+        "max": { "type": "integer", "exclusiveMinimum": 0 }
       }
     },
-    "planting": {
+    "plantingGuide": {
       "type": "object",
       "additionalProperties": true,
-      "properties": {
-        "soilTempMinF": { "type": "number" },
-        "rowSpacingIn": { "type": "number" },
-        "inRowSpacingIn": {
-          "type": "object",
-          "properties": {
-            "min": { "type": "number" },
-            "max": { "type": "number" }
-          }
-        },
-        "seedDepthIn": {
-          "type": "object",
-          "properties": {
-            "min": { "type": "number" },
-            "max": { "type": "number" }
-          }
-        },
-        "seedsPerAcre": { "type": "integer" },
-        "recommendedLbsPerAcre": { "type": "number" },
-        "emergenceDaysAfterPlanting": {
-          "type": "object",
-          "properties": {
-            "min": { "type": "integer" },
-            "max": { "type": "integer" }
-          }
-        }
-      }
+      "description": "Detailed planting guidance. See Zod plantingGuideSchema for the full field list."
     },
-    "growthStages": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["stage", "daysFromPlanting"],
-        "properties": {
-          "stage": { "type": "string" },
-          "daysFromPlanting": {
-            "type": "object",
-            "properties": {
-              "min": { "type": "integer" },
-              "max": { "type": "integer" }
-            }
-          }
-        }
-      }
-    },
-    "herbicideCompatibility": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "safe": { "type": "array", "items": { "type": "string" } },
-        "unsafe": { "type": "array", "items": { "type": "string" } },
-        "stageRestrictions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["product"],
-            "properties": {
-              "product": { "type": "string" },
-              "maxCropHeightIn": { "type": "number" },
-              "stageWindow": { "type": "array", "items": { "type": "string" } }
-            }
-          }
-        }
-      }
-    },
-    "companionBenefits": { "type": "array", "items": { "type": "string" } },
-    "harvestIndicators": { "type": "array", "items": { "type": "string" } },
     "postHarvestCuring": {
       "type": "object",
       "additionalProperties": true,
-      "properties": {
-        "method": { "type": "string" },
-        "durationWeeks": {
-          "type": "object",
-          "properties": {
-            "min": { "type": "integer" },
-            "max": { "type": "integer" }
-          }
-        },
-        "targetMoisturePercent": {
-          "type": "object",
-          "properties": {
-            "min": { "type": "number" },
-            "max": { "type": "number" }
-          }
+      "description": "Curing instructions + duration. See Zod postHarvestCuringSchema."
+    },
+    "seasonalTasks": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "cropOperationModel": {
+      "type": "string",
+      "enum": ["single-event", "multi-step", "perennial-multi-cut"]
+    },
+    "hayOperations": { "type": "object", "additionalProperties": true },
+    "zadoksStages": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "moistureGates": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+    "traits": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" }
+    },
+    "preTasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "title"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "body": { "type": "string", "maxLength": 500 },
+          "daysBeforePlant": { "type": "integer", "minimum": 0 },
+          "daysBeforeFirstHarvest": { "type": "integer", "minimum": 0 },
+          "phaseKey": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "daysBeforePhase": { "type": "integer", "minimum": 0 }
         }
       }
     },
-    "notes": { "type": "string" }
+    "postTasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "title"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "body": { "type": "string", "maxLength": 500 },
+          "daysAfterPlant": { "type": "integer", "minimum": 0 },
+          "daysAfterHarvest": { "type": "integer", "minimum": 0 },
+          "phaseKey": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "daysAfterPhase": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "matureHeightFt": { "type": "number", "exclusiveMinimum": 0, "maximum": 60 },
+    "shadeCasting": { "type": "boolean" },
+    "growthStageTable": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Per-variety stage system + day-from-planting offsets + harvest target(s). See Zod growthStageTableSchema for the full field list."
+    },
+    "cornType": {
+      "type": "string",
+      "enum": ["sweet", "popcorn", "dent", "flour", "flint", "dual-purpose"],
+      "description": "Only valid when cropFamily === 'corn'."
+    },
+    "agronomy": {
+      "type": "object",
+      "description": "Phase 17 (Track 1) — lifecycle, rotation, and termination-lead data the calendar engine used to derive from family-keyed lookup tables.",
+      "additionalProperties": false,
+      "properties": {
+        "lifecycle": { "type": "string", "enum": ["annual", "biennial", "perennial"] },
+        "rotationLookbackYears": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "terminationLeadDaysMin": { "type": "integer", "minimum": 0, "maximum": 120 }
+      }
+    },
+    "sprayWindows": {
+      "type": "array",
+      "description": "Phase 17 (Track 1) — per-variety spray windows surfaced on /plan as candidate application tasks. Replaces the corn V2/V3 + V4/V6 and cucurbit clethodim windows previously hardcoded in the engine.",
+      "items": {
+        "type": "object",
+        "required": ["chemistryClass", "offsetDaysMin", "offsetDaysMax", "anchor", "title"],
+        "additionalProperties": false,
+        "properties": {
+          "chemistryClass": {
+            "type": "string",
+            "description": "Matches the kernel ChemistryClass enum in apps/web/src/lib/safety/types.ts (synthetic-auxin, glyphosate, accase-inhibitor, etc.)."
+          },
+          "stageCode": { "type": "string", "minLength": 1, "maxLength": 16, "description": "Required when anchor === 'stage'. Matches a growthStageTable.stages[].code on this crop." },
+          "offsetDaysMin": { "type": "integer", "minimum": 0 },
+          "offsetDaysMax": { "type": "integer", "minimum": 0 },
+          "anchor": { "type": "string", "enum": ["planting", "emergence", "stage"] },
+          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "body": { "type": "string", "maxLength": 500 }
+        }
+      }
+    },
+    "harvestIndicators": { "type": "array", "items": { "type": "string" } },
+    "companionBenefits": { "type": "array", "items": { "type": "string" } },
+    "notes": { "type": "string" },
+    "orchardSeasonalTasks": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    }
   }
 }

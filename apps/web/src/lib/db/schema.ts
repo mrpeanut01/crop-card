@@ -6,7 +6,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -19,14 +19,113 @@ export const users = sqliteTable('users', {
     .default(sql`(unixepoch() * 1000)`)
 });
 
+// ─── Fields → Blocks hierarchy (Phase 13) ───────────────────────────────
+//
+// A "Field" is a parent grouping for blocks. Larger growers may operate
+// multiple fields (e.g., "Home Field" + "North Field"); smaller growers
+// have a single auto-created "Home Field" that the UI hides. The migration
+// auto-creates one Home Field row and points every existing block at it.
+export const fields = sqliteTable('fields', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  /** Optional reported acreage. Polygon-derived acres is informational only. */
+  acres: integer('acres'),
+  /** Free-form address / lat-lng paste; no geocoding. */
+  location: text('location'),
+  notes: text('notes'),
+  /** Optional field-level outline (GeoJSON Polygon). Block polygons remain
+   *  authoritative for the SVG renderer. */
+  geometryGeojson: text('geometry_geojson'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
+});
+
 export const blocks = sqliteTable('blocks', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   acres: integer('acres'),
   blockLabel: text('block_label'),
+  /** Phase 13: parent field. Nullable in SQL for the migration backfill;
+   *  application code treats blocks as always-having a field after migrate. */
+  fieldId: text('field_id').references(() => fields.id),
   /** GeoJSON Polygon / MultiPolygon (Phase 10 — GPS mapping stub).
    *  Stored as text; never indexed. /map renders an SVG fallback if no PostGIS. */
-  geometryGeojson: text('geometry_geojson')
+  geometryGeojson: text('geometry_geojson'),
+  /** Tillage practice for this block — drives pre-planting prep schedule. */
+  tillageMethod: text('tillage_method', {
+    enum: ['conventional', 'reduced-till', 'no-till']
+  })
+    .notNull()
+    .default('conventional'),
+  /** Phase 14 (swim-lane): column ordering. **Increases going east**
+   *  (column 0 = westmost). Auto-computed from `geometryGeojson` centroid
+   *  longitude rank when blocks are written; nullable for blocks without
+   *  geometry. Falls back to alphabetical `name` if both axis indices null. */
+  eastWestIndex: integer('east_west_index'),
+  /** Phase 14 (swim-lane): increases going north. Auto-computed from
+   *  centroid latitude rank. Tie-breaker for column ordering and shade
+   *  neighbor matching (a block only shades neighbors within ±1 N-S). */
+  northSouthIndex: integer('north_south_index'),
+  /** Phase 14 (swim-lane): if true, manual axis indices are not overwritten
+   *  by `inferBlockAxes` on subsequent writes. */
+  axesLocked: integer('axes_locked', { mode: 'boolean' }).notNull().default(false),
+  /** Phase 14 (swim-lane): user-tagged sun exposure. Used for AI suggestions
+   *  and as a UI hint; does not feed the shade engine. */
+  sunExposure: text('sun_exposure', {
+    enum: ['full', 'partial', 'shade']
+  }),
+  /** v1.3 shade model: slope steepness, percent (0–100). Optional. Used by
+   *  shadeModel.ts to elongate / shorten projected shadows along the
+   *  downhill axis. Null = treated as flat. */
+  slopePercent: real('slope_percent'),
+  /** v1.3 shade model: downhill aspect (compass bearing where the slope
+   *  faces, 0–360, 0=N, 90=E, etc.). Optional. Required for slopePercent
+   *  to take effect; null aspect → slope treated as flat. */
+  slopeAspectDeg: real('slope_aspect_deg')
+});
+
+/**
+ * v1.3 shade model — external shade emitters that aren't crops. Tree rows,
+ * buildings, hedges, fences, and other tall stationary features that cast
+ * shadows onto blocks. Modelled with the same height + opacity inputs as
+ * shade-casting crops, but with a deciduous canopy gate (oaks bare in
+ * winter, fully canopied summer through fall).
+ */
+export const shadeSources = sqliteTable('shade_sources', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  /** Categorization for UI + reasonable defaults at form submit. */
+  kind: text('kind', {
+    enum: ['tree-row', 'tree-grove', 'tree-single', 'hedge', 'building', 'fence', 'structure', 'other']
+  })
+    .notNull()
+    .default('tree-row'),
+  /** GeoJSON Polygon, MultiPolygon, LineString, or Point. The shade model
+   *  uses the centroid for direction calculations and the polygon edges
+   *  for footprint. */
+  geometryGeojson: text('geometry_geojson'),
+  /** Optional scoping to a field; null = farm-wide. Future: shade-source
+   *  filtering by field on the schedule view. */
+  fieldId: text('field_id').references(() => fields.id),
+  /** Mature height in feet. Required for shadow projection. */
+  heightFt: real('height_ft').notNull(),
+  /** Opacity factor 0..1. 1 = solid (building / dense conifer hedge),
+   *  0.6 = leafed deciduous, 0.2 = bare deciduous, 0.0 = transparent. */
+  opacity: real('opacity').notNull().default(0.7),
+  /** When true, opacity is gated by leaf-on / leaf-off windows. */
+  isDeciduous: integer('is_deciduous', { mode: 'boolean' }).notNull().default(false),
+  /** Day-of-year leaves emerge (1-366). Defaults to 105 ≈ Apr 15 in N VA. */
+  leafOnDayOfYear: integer('leaf_on_day_of_year').notNull().default(105),
+  /** Day-of-year leaves drop (1-366). Defaults to 305 ≈ Nov 1 in N VA. */
+  leafOffDayOfYear: integer('leaf_off_day_of_year').notNull().default(305),
+  notes: text('notes'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
 });
 
 // Phase 12: planting_records → crops. A "Crop" is an active instance of a
@@ -40,20 +139,67 @@ export const crops = sqliteTable('crops', {
     .references(() => blocks.id),
   cropPluginId: text('crop_plugin_id').notNull(),
   varietyDisplayName: text('variety_display_name').notNull(),
-  plantingDate: integer('planting_date', { mode: 'timestamp_ms' }).notNull(),
+  plantingDate: integer('planting_date', { mode: 'timestamp_ms' }),
   status: text('status', {
     enum: ['planned', 'active', 'harvested', 'failed', 'archived']
   })
     .notNull()
     .default('active'),
   harvestedAt: integer('harvested_at', { mode: 'timestamp_ms' }),
-  archivedAt: integer('archived_at', { mode: 'timestamp_ms' })
+  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
+  quantityPlantedHundredths: integer('quantity_planted_hundredths'),
+  quantityUnit: text('quantity_unit'),
+  // Phase 15 — planting groups (e.g., Three Sisters trios, succession runs).
+  // Members of one group share `groupId`; the anchor crop drives offset math.
+  groupId: text('group_id'),
+  groupRole: text('group_role', { enum: ['anchor', 'companion'] }),
+  /** Days from anchor's plantingDate. Null on anchor; required on companion. */
+  groupOffsetDays: integer('group_offset_days'),
+  /** Origin of the grouping for UI labeling + future system-specific behavior. */
+  groupSystemKind: text('group_system_kind', {
+    enum: ['three-sisters', 'succession', 'manual']
+  })
 });
 
 /** @deprecated Renamed to `crops`. Re-exported here so a couple of legacy
  *  callers compile during the in-flight rename; remove once all imports
  *  switch to `crops`. The underlying table is `crops` either way. */
 export const plantingRecords = crops;
+
+// ─── Crop ↔ Equipment binding (Phase 13 / Phase 12E) ────────────────────
+//
+// Per-crop assignment of equipment (a sprayer to a corn crop, a baler to a
+// hay crop). Drives the Equipment tab on /plan and lets calendar-event
+// promotion auto-suggest the right equipment for a primary task.
+//
+// Composite uniqueness on (crop_id, equipment_id, role) so the same sprayer
+// can serve two roles only if you actually use it that way.
+export const cropEquipment = sqliteTable('crop_equipment', {
+  id: text('id').primaryKey(),
+  cropId: text('crop_id')
+    .notNull()
+    .references(() => crops.id),
+  equipmentId: text('equipment_id')
+    .notNull()
+    .references(() => equipment.id),
+  role: text('role', {
+    enum: [
+      'planter',
+      'sprayer',
+      'baler',
+      'mower',
+      'tedder',
+      'rake',
+      'irrigation',
+      'tractor',
+      'other'
+    ]
+  }).notNull(),
+  notes: text('notes'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
+});
 
 export const sprayers = sqliteTable('sprayers', {
   id: text('id').primaryKey(),
@@ -130,6 +276,8 @@ export const equipment = sqliteTable('equipment', {
       'other'
     ]
   }).notNull(),
+  /** Optional FK into taxonomyTerms. When set, replaces `type` for display. */
+  typeId: text('type_id'),
   label: text('label').notNull(),
   /** Free-form spec (capacity, working width, hp, nozzle count, etc.). */
   specJson: text('spec_json'),
@@ -215,7 +363,35 @@ export const stockItems = sqliteTable('stock_items', {
   defaultUnit: text('default_unit').notNull(),
   /** Reorder threshold in default-unit hundredths. */
   reorderThresholdHundredths: integer('reorder_threshold_hundredths'),
-  notes: text('notes')
+  notes: text('notes'),
+  /** UPC/EAN/QR value captured at receiving scan. Enables re-scan → direct nav. */
+  barcode: text('barcode'),
+  /** Optional FK into taxonomyTerms. Drives sub-categorization in /stock. */
+  typeId: text('type_id'),
+  /** Category-specific structured data from label scan (JSON).
+   *  For seeds: { daysToMaturity, plantingTempMinF, plantingTempMaxF,
+   *              spacingInches, depthInches, sunRequirement, seedsPerPacket,
+   *              guessed: string[] } */
+  metadataJson: text('metadata_json'),
+  /** Phase 15d — Haiku-generated short label (≤40 chars). Surfaced on the
+   *  schedule swim-lane and wizard cards so long marketing names like
+   *  "Pumpkin Cinderella Film Coated Treated" become "Cinderella Pumpkin".
+   *  Null until the operator clicks ✨ Generate short names on /stock; falls
+   *  back to displayName everywhere it's read. */
+  shortName: text('short_name'),
+  /** Phase 17 (Track 2) — AI-extracted active ingredients from label scan.
+   *  JSON shape: Array<{ name: string; concentrationPct?: number;
+   *  chemistryClass?: ChemistryClass; iracGroup?: string; fracCode?: string }>
+   *  Populated when the vision API returns ingredient data and the user
+   *  confirms in the inventory-add UI. Drives the data-augmented safety
+   *  hook (`userAddedRestrictions`) for user-added stock items that don't
+   *  match an existing herbicide/insecticide/fungicide plugin pluginId. */
+  activeIngredientsJson: text('active_ingredients_json'),
+  /** Phase 17 (Track 2) — AI-extracted formulation data from label scan.
+   *  JSON shape: { type?: 'granular'|'liquid'|'WP'|'EC'|'soluble'|'compost'|...;
+   *  npk?: { n: number; p: number; k: number };
+   *  productClass?: 'synthetic'|'organic'|'biocontrol' } */
+  formulationJson: text('formulation_json')
 });
 
 export const stockLots = sqliteTable('stock_lots', {
@@ -360,6 +536,9 @@ export const stockMovements = sqliteTable('stock_movements', {
   fertilityApplicationId: text('fertility_application_id').references(
     () => fertilityApplications.id
   ),
+  /** Phase 13: per-crop attribution for fast "what did this crop consume?"
+   *  rollups. Backfilled from the source event row at migration time. */
+  cropId: text('crop_id').references(() => crops.id),
   performedById: text('performed_by_id').references(() => users.id),
   notes: text('notes')
 });
@@ -403,6 +582,37 @@ export const hayCuttings = sqliteTable('hay_cuttings', {
   rulesVersion: text('rules_version').notNull(),
   notes: text('notes'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
+});
+
+// ─── Taxonomy terms (user-managed Type lists) ────────────────────────────
+//
+// Domain-scoped taxonomy: e.g., domain='inventory:seed' name='Pumpkin' for
+// inventory seed sub-categorization, domain='equipment' name='Tractor' for
+// equipment categorization. Pre-seeded with system defaults; users add
+// custom terms via the /settings UI or inline when adding inventory items.
+export const taxonomyTerms = sqliteTable('taxonomy_terms', {
+  id: text('id').primaryKey(),
+  /** 'inventory:<category>' or 'equipment'. */
+  domain: text('domain').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  /** True for system-seeded defaults. User-added terms are false. */
+  isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
+});
+
+// ─── App settings (owner-managed key-value store) ────────────────────────
+//
+// Stores operator-configured values like API keys that cannot live in env
+// vars in a deployed container. Owner-only reads and writes via /api/settings.
+export const appSettings = sqliteTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)
 });
@@ -470,7 +680,47 @@ export const tasks = sqliteTable('tasks', {
    *  lets `materializePluginPrePost` skip duplicates. */
   pluginTemplateKey: text('plugin_template_key'),
   recurrenceJson: text('recurrence_json'),
+  /** Phase 14 (hybrid drift): true if the user manually rescheduled this
+   *  task. When the source planting date moves, overridden tasks stay put
+   *  and get `staleAnchor=true` instead of being re-anchored. */
+  userOverridden: integer('user_overridden', { mode: 'boolean' }).notNull().default(false),
+  /** Phase 14 (hybrid drift): set when source `plantingDate` shifts after a
+   *  task is overridden — drives a yellow chip in the UI ("Source date
+   *  moved; click to re-anchor or keep"). */
+  staleAnchor: integer('stale_anchor', { mode: 'boolean' }).notNull().default(false),
+  /** Phase 14 (hybrid drift): set on the *old* task row when a crop swap
+   *  re-derives its template tasks. The new task points to it; UI hides
+   *  superseded rows by default. */
+  supersededByTaskId: text('superseded_by_task_id'),
   createdById: text('created_by_id').references(() => users.id),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`)
+});
+
+// ─── AI call log (Phase 14 — Plan-Schedule cost transparency) ────────────
+//
+// Every call to /api/plan/{suggest,succession,optimize} writes one row,
+// regardless of outcome. Powers per-day quotas + monthly USD cap and gives
+// the owner an audit trail of actual spend.
+export const aiCallLog = sqliteTable('ai_call_log', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id),
+  endpoint: text('endpoint', {
+    enum: ['suggest', 'succession', 'optimize', 'rationale', 'allocate', 'groups', 'shortNames']
+  }).notNull(),
+  model: text('model').notNull(),
+  inputTokens: integer('input_tokens').notNull().default(0),
+  cachedInputTokens: integer('cached_input_tokens').notNull().default(0),
+  outputTokens: integer('output_tokens').notNull().default(0),
+  /** Estimated USD spend for this call, computed at call time from the
+   *  current pricing in `aiPlanning.ts`. Stored alongside tokens so a
+   *  later pricing change doesn't invalidate the audit. */
+  usdEstimate: real('usd_estimate').notNull().default(0),
+  success: integer('success', { mode: 'boolean' }).notNull().default(true),
+  /** Optional error class when `success=false` (e.g. 'rate-limit',
+   *  'cap-exceeded', 'upstream-5xx', 'invalid-json'). */
+  errorClass: text('error_class'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)

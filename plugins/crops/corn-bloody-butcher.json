@@ -2,17 +2,165 @@
   "pluginId": "corn-bloody-butcher",
   "type": "crop",
   "displayName": "Bloody Butcher Dent Corn",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "cropFamily": "corn",
-  "daysToMaturity": { "min": 90, "max": 100 },
+  "cornType": "dual-purpose",
+  "daysToMaturity": {
+    "min": 90,
+    "max": 100
+  },
   "defaultRowSpacingInches": 36,
   "plantingGuide": {
     "soilTempMinF": 55,
     "rowSpacingIn": 36,
-    "inRowSpacingIn": { "min": 9, "max": 12 },
-    "seedDepthIn": { "min": 1.25, "max": 1.5 },
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 12
+    },
+    "seedDepthIn": {
+      "min": 1.25,
+      "max": 1.5
+    },
     "seedsPerAcre": 28000,
     "recommendedLbsPerAcre": 0.5
+  },
+  "growthStageTable": {
+    "system": "vr-corn",
+    "referenceDtmDays": 95,
+    "stages": [
+      {
+        "code": "VE",
+        "name": "Emergence",
+        "daysFromPlanting": {
+          "min": 5,
+          "max": 10
+        },
+        "bodyKind": "vegetative",
+        "inspect": "Coleoptile breaks soil; check stand uniformity."
+      },
+      {
+        "code": "V2",
+        "name": "2-leaf collar",
+        "daysFromPlanting": {
+          "min": 14,
+          "max": 21
+        },
+        "bodyKind": "vegetative",
+        "inspect": "POST broadleaf scout window opens."
+      },
+      {
+        "code": "V4",
+        "name": "4-leaf collar",
+        "daysFromPlanting": {
+          "min": 24,
+          "max": 32
+        },
+        "bodyKind": "vegetative",
+        "inspect": "Late POST grass + broadleaf window. Growing point near soil."
+      },
+      {
+        "code": "V6",
+        "name": "6-leaf collar",
+        "daysFromPlanting": {
+          "min": 32,
+          "max": 42
+        },
+        "bodyKind": "vegetative",
+        "inspect": "Sidedress nitrogen now. Ear shoot initiation."
+      },
+      {
+        "code": "V8",
+        "name": "8-leaf collar",
+        "daysFromPlanting": {
+          "min": 40,
+          "max": 50
+        },
+        "bodyKind": "vegetative",
+        "inspect": "Tassel initiation; lower leaves may be lost."
+      },
+      {
+        "code": "VT",
+        "name": "Tasseling",
+        "daysFromPlanting": {
+          "min": 55,
+          "max": 65
+        },
+        "bodyKind": "reproductive",
+        "inspect": "Last branch of tassel visible. Pollen shed begins ~2-3d later."
+      },
+      {
+        "code": "R1",
+        "name": "Silking",
+        "daysFromPlanting": {
+          "min": 60,
+          "max": 70
+        },
+        "bodyKind": "reproductive",
+        "inspect": "Silks emerge; critical pollination window. Drought stress now hurts most."
+      },
+      {
+        "code": "R2",
+        "name": "Blister",
+        "daysFromPlanting": {
+          "min": 70,
+          "max": 78
+        },
+        "bodyKind": "reproductive",
+        "inspect": "White blister kernels, ~85% moisture."
+      },
+      {
+        "code": "R3",
+        "name": "Milk",
+        "daysFromPlanting": {
+          "min": 78,
+          "max": 88
+        },
+        "bodyKind": "reproductive",
+        "inspect": "Sweet eating window \u2014 thumb-test for soft milky sap. Optional sweet-corn-style harvest for fresh meals."
+      },
+      {
+        "code": "R4",
+        "name": "Dough",
+        "daysFromPlanting": {
+          "min": 88,
+          "max": 98
+        },
+        "bodyKind": "ripening",
+        "inspect": "Past sweet eating; paste-like kernels at ~70% moisture."
+      },
+      {
+        "code": "R5",
+        "name": "Dent",
+        "daysFromPlanting": {
+          "min": 95,
+          "max": 110
+        },
+        "bodyKind": "ripening",
+        "inspect": "Dent forms at top; milk line descends."
+      },
+      {
+        "code": "R6",
+        "name": "Black layer / physiological maturity",
+        "daysFromPlanting": {
+          "min": 110,
+          "max": 130
+        },
+        "bodyKind": "ripening",
+        "inspect": "Black abscission layer at kernel base. Dent / cornmeal / ornamental harvest when field-dry."
+      }
+    ],
+    "harvestTargets": [
+      {
+        "stageCode": "R3",
+        "label": "Sweet",
+        "useCase": "fresh-eating"
+      },
+      {
+        "stageCode": "R6",
+        "label": "Dent",
+        "useCase": "milling"
+      }
+    ]
   },
   "harvestIndicators": [
     "Husks fully dry and papery",
@@ -21,9 +169,39 @@
   ],
   "postHarvestCuring": {
     "method": "Rack cure in dry, ventilated space",
-    "durationWeeks": { "min": 2, "max": 4 },
-    "targetMoisturePercent": { "min": 14, "max": 15 },
+    "durationWeeks": {
+      "min": 2,
+      "max": 4
+    },
+    "targetMoisturePercent": {
+      "min": 14,
+      "max": 15
+    },
     "storageLocation": "Cool dry barn; rodent-protected bins"
   },
-  "notes": "Heirloom dent. Keep isolated from sweet corn to prevent cross-pollination."
+  "notes": "Heirloom dent. Dual-purpose: pick at R3 milk for sweet eating, or leave to R6 for cornmeal / ornamental. Keep isolated from sweet corn to prevent cross-pollination.",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "synthetic-auxin",
+      "stageCode": "V2",
+      "anchor": "stage",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "POST broadleaf scout window (V2\u2013V3)",
+      "body": "Scout block; if \u22653 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted."
+    },
+    {
+      "chemistryClass": "hppd-inhibitor",
+      "stageCode": "V4",
+      "anchor": "stage",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "POST grass + late broadleaf window (V4\u2013V6)",
+      "body": "Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin."
+    }
+  ]
 }

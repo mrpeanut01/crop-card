@@ -1,0 +1,20 @@
+{
+  "pluginId": "strawflower-king-silvery-white",
+  "displayName": "Strawflower King Silvery White",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "herb-culinary",
+  "daysToMaturity": {
+    "min": 95,
+    "max": 95
+  },
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 14,
+    "seedDepthIn": {
+      "min": 0.1,
+      "max": 0.1
+    }
+  },
+  "notes": "Raw untreated. Annual. White blooms, 30-36\" tall, 12-16\" spread. Transplant 10-15 weeks. Packed for 2025. Lot 101996/258651."
+}

@@ -1,3 +1,5 @@
+name: crop-card
+
 services:
   web:
     build:
@@ -24,6 +26,8 @@ services:
       AUTH_TRUST_HOST: "true"
       AUTH_URL: http://localhost:5173
       AZURE_BLOB_CONTAINER: cropcard-dev
+      # Set in infra/.env.dev to enable Claude AI fallback for barcode lookup.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     depends_on:
       - azurite
 

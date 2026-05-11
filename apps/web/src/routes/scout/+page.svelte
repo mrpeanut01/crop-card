@@ -1,9 +1,10 @@
 <script lang="ts">
   import { evaluateScout, type ScoutSpot } from '$lib/safety/scout';
+  import { untrack } from 'svelte';
 
   let { data } = $props();
 
-  let selectedBlockId = $state(data.preselectedBlockId ?? data.blocks[0]?.id ?? '');
+  let selectedBlockId = $state(untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? ''));
 
   let spots = $state<ScoutSpot[]>([
     { weedsPer10SqFt: 0 },

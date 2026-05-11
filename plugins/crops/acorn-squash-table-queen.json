@@ -1,11 +1,37 @@
 {
   "pluginId": "acorn-squash-table-queen",
   "type": "crop",
-  "displayName": "Acorn Squash — Table Queen",
+  "displayName": "Acorn Squash \u2014 Table Queen",
   "version": "1.0.0",
   "cropFamily": "cucurbit",
-  "daysToMaturity": { "min": 80, "max": 90 },
+  "daysToMaturity": {
+    "min": 80,
+    "max": 90
+  },
   "defaultRowSpacingInches": 60,
-  "harvestIndicators": ["Dark green rind with tiny orange spot", "Hard rind"],
-  "notes": "Bush-type winter squash; less aggressive vining than butternut. Cure briefly (3–5 d) only."
+  "harvestIndicators": [
+    "Dark green rind with tiny orange spot",
+    "Hard rind"
+  ],
+  "notes": "Bush-type winter squash; less aggressive vining than butternut. Cure briefly (3\u20135 d) only.",
+  "plantingGuide": {
+    "vineSpreadFt": {
+      "min": 6,
+      "max": 10
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 30,
+      "offsetDaysMax": 60,
+      "title": "POST grass window (Clethodim)",
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+    }
+  ]
 }

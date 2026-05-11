@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { invalidateAll } from '$app/navigation';
   import type { PlantingHarvestStatus } from './+page.server';
 
   let { data } = $props();
 
-  let recordingFor = $state<string | null>(data.focusPlantingId ?? null);
+  let recordingFor = $state<string | null>(untrack(() => data.focusPlantingId ?? null));
   let quantity = $state('');
   let lotNumber = $state('');
   let recordError = $state<string | null>(null);
@@ -102,7 +102,7 @@
             {/if}
           </header>
           <div class="meta">
-            Planted {new Date(p.plantingDate).toLocaleDateString()} · Window {fmtRange(
+            {#if p.plantingDate}Planted {new Date(p.plantingDate).toLocaleDateString()} · {/if}Window {fmtRange(
               p.windowStartMs,
               p.windowEndMs
             )}

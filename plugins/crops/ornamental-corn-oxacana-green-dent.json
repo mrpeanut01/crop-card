@@ -1,0 +1,44 @@
+{
+  "pluginId": "ornamental-corn-oxacana-green-dent",
+  "displayName": "Ornamental Corn Oxacana Green Dent",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "corn",
+  "daysToMaturity": {
+    "min": 95,
+    "max": 95
+  },
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 9,
+    "seedDepthIn": {
+      "min": 1.375,
+      "max": 1.375
+    }
+  },
+  "notes": "Raw untreated, non-GMO. 97% germination. 8-10\" ear, green kernels. Edible/flour/feed use. Harris Seeds. Lot 107233.",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "synthetic-auxin",
+      "stageCode": "V2",
+      "anchor": "stage",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "POST broadleaf scout window (V2\u2013V3)",
+      "body": "Scout block; if \u22653 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted."
+    },
+    {
+      "chemistryClass": "hppd-inhibitor",
+      "stageCode": "V4",
+      "anchor": "stage",
+      "offsetDaysMin": 0,
+      "offsetDaysMax": 0,
+      "title": "POST grass + late broadleaf window (V4\u2013V6)",
+      "body": "Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin."
+    }
+  ]
+}

@@ -59,6 +59,78 @@ describe('eventsForPlanting', () => {
     expect(stages).toEqual(['V2-V3', 'V4-V6']);
   });
 
+  it('emits stage-window events for the corn V/R-stage table', () => {
+    const t0 = Date.UTC(2026, 4, 5);
+    const events = eventsForPlanting(planting(corn, t0), corn);
+    const stageEvents = events.filter((e) => e.kind === 'stage-window');
+    // Family default for corn carries 12 stages (VE..R6).
+    expect(stageEvents.length).toBeGreaterThanOrEqual(8);
+    const codes = stageEvents.map((e) => e.detail?.stageCode);
+    expect(codes).toContain('R1');
+    expect(codes).toContain('R3');
+    expect(codes).toContain('R6');
+    // Every stage-window detail carries `system: 'vr-corn'`.
+    for (const e of stageEvents) {
+      expect(e.detail?.system).toBe('vr-corn');
+    }
+  });
+
+  it('emits two harvest-window events for dual-purpose corn (R3 + R6)', () => {
+    const dualPurposeCorn: CropPlugin = {
+      pluginId: 'corn-dual',
+      type: 'crop',
+      displayName: 'Dual Corn',
+      version: '1.3.0',
+      cropFamily: 'corn',
+      cornType: 'dual-purpose',
+      daysToMaturity: { min: 90, max: 100 },
+      growthStageTable: {
+        system: 'vr-corn',
+        referenceDtmDays: 95,
+        stages: [
+          { code: 'R3', name: 'Milk', daysFromPlanting: { min: 78, max: 88 } },
+          { code: 'R6', name: 'Black layer', daysFromPlanting: { min: 110, max: 130 } }
+        ],
+        harvestTargets: [
+          { stageCode: 'R3', label: 'Sweet eating', useCase: 'fresh-eating' },
+          { stageCode: 'R6', label: 'Dent', useCase: 'milling' }
+        ]
+      }
+    };
+    const t0 = Date.UTC(2026, 4, 5);
+    const events = eventsForPlanting(planting(dualPurposeCorn, t0), dualPurposeCorn);
+    const harvests = events.filter((e) => e.kind === 'harvest-window');
+    expect(harvests).toHaveLength(2);
+    const stageCodes = harvests.map((e) => e.detail?.stageCode).sort();
+    expect(stageCodes).toEqual(['R3', 'R6']);
+    const r3 = harvests.find((e) => e.detail?.stageCode === 'R3')!;
+    const r6 = harvests.find((e) => e.detail?.stageCode === 'R6')!;
+    expect(r3.endMs).toBeLessThan(r6.startMs);
+  });
+
+  it('emits a single harvest-window when a sweet-only variety has only R3', () => {
+    const sweetCorn: CropPlugin = {
+      pluginId: 'corn-sweet',
+      type: 'crop',
+      displayName: 'Sweet',
+      version: '1.3.0',
+      cropFamily: 'corn',
+      cornType: 'sweet',
+      daysToMaturity: { min: 70, max: 80 },
+      growthStageTable: {
+        system: 'vr-corn',
+        referenceDtmDays: 75,
+        stages: [{ code: 'R3', name: 'Milk', daysFromPlanting: { min: 65, max: 75 } }],
+        harvestTargets: [{ stageCode: 'R3', label: 'Sweet eating', useCase: 'fresh-eating' }]
+      }
+    };
+    const t0 = Date.UTC(2026, 4, 5);
+    const events = eventsForPlanting(planting(sweetCorn, t0), sweetCorn);
+    const harvests = events.filter((e) => e.kind === 'harvest-window');
+    expect(harvests).toHaveLength(1);
+    expect(harvests[0].detail?.stageCode).toBe('R3');
+  });
+
   it('emits Three Sisters companion triggers only for corn plantings', () => {
     const cornEvents = eventsForPlanting(planting(corn, Date.UTC(2026, 4, 5)), corn);
     const pumpkinEvents = eventsForPlanting(planting(pumpkin, Date.UTC(2026, 4, 5)), pumpkin);

@@ -36,6 +36,11 @@ export class PluginRegistry {
       );
     }
 
+    const crossField = checkCropCrossFieldRules(parsed.data);
+    if (crossField.length > 0) {
+      throw new PluginRegistrationError('plugin failed cross-field validation', crossField);
+    }
+
     const bypass = detectBypass(parsed.data, {
       cropFamily: (id) => this.cropFamilyOf(id),
       cropTraits: (id) => this.cropTraitsOf(id)
@@ -98,6 +103,19 @@ export class PluginRegistry {
 
 function issuesFromZod(error: ZodError): { path: string; message: string }[] {
   return error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }));
+}
+
+/** Cross-field business rules that don't fit Zod's discriminated-union shape. */
+function checkCropCrossFieldRules(plugin: Plugin): { path: string; message: string }[] {
+  if (plugin.type !== 'crop') return [];
+  const issues: { path: string; message: string }[] = [];
+  if (plugin.cornType !== undefined && plugin.cropFamily !== 'corn') {
+    issues.push({
+      path: 'cornType',
+      message: `cornType is only valid when cropFamily === 'corn' (got '${plugin.cropFamily}')`
+    });
+  }
+  return issues;
 }
 
 function issuesFromBypass(errors: BypassError[]): { path: string; message: string }[] {

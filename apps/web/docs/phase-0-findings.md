@@ -1,0 +1,20 @@
+# Phase 0 — Pre-flight findings (Plan-Schedule swim-lane)
+
+## Verifications
+
+| Assumption | Result | Scope impact |
+|---|---|---|
+| `apps/web/src/lib/calendar/engine.ts` has formal rotation rules | ⚠️ **partial** — engine has `companion-trigger` (Three Sisters) only; no rotation rule | Add `apps/web/src/lib/calendar/rotation.ts` in Phase 3 with family-specific lookbacks |
+| `materializePluginPrePost(ctx)` accepts the shape we need for drift policy | ⚠️ **needs extension** — current `PluginPrePostContext` has `{primaryTaskId, scheduledFor, cropPlugin?, equipmentTemplate?, equipmentLastUsedAt?}`; no anchor-override for re-anchoring on date drift | Add a sibling `reanchorPluginPrePost(primaryTaskId, newScheduledFor, oldScheduledFor)` helper in Phase 3 (~half day; reuses the same key-skip logic) |
+| `svelte-dnd-action` keyboard accessibility | ❌ **not installed** | Install `svelte-dnd-action` in Phase 1; layer custom keyboard handler (Tab focus, Space grab, Arrow move, Enter drop, Esc cancel) since the library's keyboard support is limited |
+| NOAA Climate Normals available as static dataset | ✅ **bundle hand-curated** — full NCEI dataset is large + requires zip lookup; for v1 ship a single-region JSON keyed to Loudoun County, VA (the farm) with day-of-year soil temperature climatology. Schema supports adding more regions later. | No scope change |
+| `appSettings` key-value table + `getSetting`/`setSetting` helpers | ✅ confirmed at [schema.ts:513](../src/lib/db/schema.ts#L513) and [settings.ts](../src/lib/db/settings.ts) | No scope change |
+| `weatherForecastCache` table | ✅ confirmed at [schema.ts:523](../src/lib/db/schema.ts#L523) | Reuse for the 7-day forecast (not normals) |
+
+## Net-new scope from gates
+
+1. `rotation.ts` (Phase 3) — ~half day.
+2. `reanchorPluginPrePost` helper (Phase 3) — ~half day.
+3. Custom keyboard layer over `svelte-dnd-action` (Phase 2) — ~half day.
+
+Total: ~1.5 days additional vs. plan's optimistic estimate.

@@ -1,29 +1,28 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { tick } from 'svelte';
+  import { tick, untrack } from 'svelte';
 
   let { data } = $props();
 
   // Preselect from query params so deep-links from /today and /scout land on
   // a partially-filled form instead of a blank one.
-  const preselectedBlock =
+  let selectedBlockId = $state(untrack(() =>
     data.preselect.blockId && data.blocks.find((b) => b.id === data.preselect.blockId)
       ? data.preselect.blockId
-      : (data.blocks[0]?.id ?? '');
-
-  let selectedBlockId = $state(preselectedBlock);
-  let selectedHerbicideIds = $state<string[]>(
+      : (data.blocks[0]?.id ?? '')
+  ));
+  let selectedHerbicideIds = $state<string[]>(untrack(() =>
     data.preselect.productPluginIds.filter((id) =>
       data.allHerbicides.some((h) => h.pluginId === id)
     )
-  );
-  let selectedSprayerId = $state(data.sprayers[0]?.id ?? '');
+  ));
+  let selectedSprayerId = $state(untrack(() => data.sprayers[0]?.id ?? ''));
   let windMph = $state(5);
   let tempF = $state(70);
   let rainMm = $state(0);
   let cornHeightIn = $state<number | undefined>(6);
   let tankSizeGallons = $state(50);
-  let showAllHerbicides = $state(data.preselect.windowStage === null);
+  let showAllHerbicides = $state(untrack(() => data.preselect.windowStage === null));
 
   type SprayerPrefs = {
     tankSizeGallons: number;
@@ -669,24 +668,6 @@
     padding-left: 1.25rem;
     font-size: 0.85rem;
   }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 0.75rem;
-  }
-  .grid label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-  }
-  .grid input {
-    padding: 0.6rem;
-    border: 2px solid #d0d7d0;
-    border-radius: 4px;
-    font-size: 1.1rem;
-    min-height: 48px;
-  }
   .quick-picks {
     display: flex;
     gap: 0.5rem;
@@ -904,11 +885,6 @@
     padding: 0.1rem 0.4rem;
     border-radius: 3px;
     font-family: monospace;
-  }
-  .recorded a {
-    color: #1f5e3a;
-    text-decoration: underline;
-    margin-left: 0.5rem;
   }
   .recorded.queued {
     background: #fff3cd;

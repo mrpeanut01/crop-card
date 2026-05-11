@@ -11,10 +11,22 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeRatedDilution } from '$lib/dilution/calculator';
 import { insertInsecticideEvent, type ScoutObservation } from '$lib/db/insecticideEvents';
-import { decrementForUse, getStockItemByPluginId, type DecrementResult } from '$lib/db/stock';
+import {
+  decrementForUse,
+  getStockItem,
+  getStockItemByPluginId,
+  type DecrementResult,
+  type StockItem
+} from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
 import type { InsecticidePlugin } from '$lib/plugins/schemas';
 import { checkEnvironment } from '$lib/safety/environment';
+import type { HerbicideProduct, SafetyResult, SprayContext } from '$lib/safety';
+import { augmentSafetyResult } from '$lib/safety/userAddedRestrictions';
+import {
+  buildRestrictionsFromStockItems,
+  type StockPluginPair
+} from '$lib/safety/userAddedRestrictionsFromStock';
 import { RULES_VERSION } from '$lib/safety/version';
 import type { StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
@@ -27,6 +39,10 @@ const requestSchema = z.object({
   taskId: z.string().optional(),
   occurredAt: z.number().int().optional(),
   productPluginIds: z.array(z.string().min(1)).min(1),
+  /** Phase 17 (Track 2.4) — parallel to productPluginIds. Feeds the safety
+   *  augmenter so operator-confirmed label chemistry can block a spray when
+   *  it diverges from the plugin's declared ingredients. */
+  stockItemIds: z.array(z.string().min(1).nullable()).optional(),
   sprayerId: z.string().min(1).optional(),
   conditions: z.object({
     windMph: z.number().nonnegative(),
@@ -106,6 +122,71 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
+  // Phase 17 (Track 2.4) — resolve stock items once for the augmenter + decrement.
+  const stockByPluginId = new Map<string, StockItem>();
+  const stockPairs: StockPluginPair[] = [];
+  for (let i = 0; i < products.length; i++) {
+    const plugin = products[i];
+    const explicitId = parsed.data.stockItemIds?.[i] ?? undefined;
+    const stockItem = explicitId
+      ? getStockItem(explicitId)
+      : getStockItemByPluginId(plugin.pluginId);
+    if (!stockItem) continue;
+    stockByPluginId.set(plugin.pluginId, stockItem);
+    if (stockItem.activeIngredientsJson) {
+      stockPairs.push({
+        stockItem,
+        plugin: {
+          pluginId: plugin.pluginId,
+          displayName: plugin.displayName,
+          // Insecticide ingredients lack a kernel ChemistryClass; the augmenter
+          // only reads name + chemistryClass for diff detection and is
+          // tolerant of the missing field via the loose PluginIngredientView.
+          activeIngredients: plugin.activeIngredients.map((ai) => ({
+            name: ai.name
+          }))
+        }
+      });
+    }
+  }
+
+  if (stockPairs.length > 0) {
+    // The augmenter expects a SprayContext. Insecticide products don't carry
+    // a kernel ChemistryClass, but our emitted restrictions are universal
+    // (empty blocksWhenCropFamily) and key on productPluginId, so cropFamily
+    // and chemistry values are not consulted at this call site.
+    const augmenterCtx: SprayContext = {
+      occurredAt,
+      products: products.map(
+        (p) =>
+          ({
+            pluginId: p.pluginId,
+            displayName: p.displayName,
+            activeIngredients: []
+          }) as HerbicideProduct
+      ),
+      crop: { cropPluginId: parsed.data.cropId ?? 'unknown' },
+      sprayer: { id: parsed.data.sprayerId ?? 'unknown' },
+      conditions: parsed.data.conditions
+    };
+    const stub: SafetyResult = { ok: true, violations: [], requiresDecon: false };
+    const augmented = augmentSafetyResult(
+      stub,
+      augmenterCtx,
+      buildRestrictionsFromStockItems(stockPairs)
+    );
+    if (!augmented.ok) {
+      return json(
+        {
+          error: 'user-added stock restriction blocks spray; refusing to persist',
+          ...augmented,
+          ruleVersion: RULES_VERSION
+        },
+        { status: 422 }
+      );
+    }
+  }
+
   // Worst-case REI / PHI across the tank.
   const reiHours = Math.max(...products.map((p) => p.reEntryIntervalHours));
   const phiDays = Math.max(0, ...products.map((p) => p.preHarvestIntervalDays ?? 0));
@@ -149,7 +230,7 @@ export const POST: RequestHandler = async (event) => {
         },
         parsed.data.tankSizeGallons
       );
-      const stockItem = getStockItemByPluginId(p.pluginId);
+      const stockItem = stockByPluginId.get(p.pluginId);
       if (!stockItem) {
         stockWarnings.push(
           `${p.pluginId}: not tracked in stock — add a SKU on /stock to enable auto-decrement`

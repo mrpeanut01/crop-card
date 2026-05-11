@@ -2,7 +2,25 @@
   "pluginId": "three-sisters",
   "type": "companion",
   "displayName": "Three Sisters (Corn/Beans/Squash)",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "goodWith": ["corn", "beans", "squash"],
-  "badWith": []
+  "badWith": [],
+  "primaryFamily": "corn",
+  "benefit": "Beans fix nitrogen + climb cornstalks; squash/pumpkin vines suppress weeds at the ground layer.",
+  "members": [
+    {
+      "family": "legume",
+      "role": "trellis + n-fixer",
+      "plantingOffsetDays": 14,
+      "title": "Three Sisters: plant beans (corn at ~6 in)",
+      "body": "Plant pole beans 6 in from each cornstalk. Avoid before corn reaches 6 in."
+    },
+    {
+      "family": "cucurbit",
+      "role": "ground-cover",
+      "plantingOffsetDays": 35,
+      "title": "Three Sisters: plant pumpkins on outer hills",
+      "body": "Plant pumpkin hills at outer block edges so vines do not shade young corn or beans."
+    }
+  ]
 }

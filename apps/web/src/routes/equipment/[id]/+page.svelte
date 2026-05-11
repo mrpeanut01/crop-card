@@ -9,6 +9,64 @@
   let logging = $state(false);
   let logError = $state<string | null>(null);
 
+  let editingLabel = $state(false);
+  let labelDraft = $state('');
+  let savingLabel = $state(false);
+  let labelError = $state<string | null>(null);
+
+  function startEditLabel() {
+    labelDraft = eq.label;
+    labelError = null;
+    editingLabel = true;
+  }
+
+  function cancelEditLabel() {
+    editingLabel = false;
+    labelError = null;
+  }
+
+  async function saveLabel() {
+    const next = labelDraft.trim();
+    if (!next) {
+      labelError = 'Name cannot be empty';
+      return;
+    }
+    if (next === eq.label) {
+      editingLabel = false;
+      return;
+    }
+    savingLabel = true;
+    labelError = null;
+    try {
+      const res = await fetch(`/api/equipment/${encodeURIComponent(eq.id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: next })
+      });
+      const out = await res.json();
+      if (!res.ok) {
+        labelError = out.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      editingLabel = false;
+      await invalidateAll();
+    } catch (e) {
+      labelError = e instanceof Error ? e.message : String(e);
+    } finally {
+      savingLabel = false;
+    }
+  }
+
+  function onLabelKey(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveLabel();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEditLabel();
+    }
+  }
+
   async function appendLog() {
     if (!logNotes.trim()) return;
     logging = true;
@@ -40,7 +98,32 @@
 
 <header class="head">
   <a href="/equipment" class="back">← All equipment</a>
-  <h1>{eq.label}</h1>
+  {#if editingLabel}
+    <div class="label-edit">
+      <input
+        type="text"
+        bind:value={labelDraft}
+        onkeydown={onLabelKey}
+        disabled={savingLabel}
+        maxlength="120"
+        aria-label="Equipment name"
+      />
+      <button class="primary" onclick={saveLabel} disabled={savingLabel || !labelDraft.trim()}>
+        {savingLabel ? '…' : 'Save'}
+      </button>
+      <button class="btn" onclick={cancelEditLabel} disabled={savingLabel}>Cancel</button>
+    </div>
+    {#if labelError}<p class="error">{labelError}</p>{/if}
+  {:else}
+    <div class="label-row">
+      <h1>{eq.label}</h1>
+      {#if data.canRename}
+        <button class="rename-btn" onclick={startEditLabel} aria-label="Rename equipment">
+          Rename
+        </button>
+      {/if}
+    </div>
+  {/if}
   <p class="meta">
     <span class="type-badge">{eq.type}</span>
     <code>{eq.id}</code>
@@ -143,6 +226,42 @@
   }
   .head h1 {
     margin: 0 0 0.25rem;
+  }
+  .label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .label-row h1 {
+    margin: 0;
+  }
+  .rename-btn {
+    background: white;
+    color: #1f5e3a;
+    border: 2px solid #1f5e3a;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 36px;
+    font-size: 0.85rem;
+  }
+  .label-edit {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0 0 0.25rem;
+  }
+  .label-edit input {
+    flex: 1 1 240px;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid #1f5e3a;
+    border-radius: 6px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    min-height: 48px;
   }
   .meta {
     margin: 0 0 1.5rem;

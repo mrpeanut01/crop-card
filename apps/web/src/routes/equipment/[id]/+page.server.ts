@@ -9,6 +9,7 @@ export const load: PageServerLoad = ({ params, locals }) => {
   return {
     equipment,
     log: listEquipmentLog(params.id, { limit: 100 }),
-    canEdit: locals.user != null
+    canEdit: locals.user != null,
+    canRename: locals.user?.role === 'owner'
   };
 };

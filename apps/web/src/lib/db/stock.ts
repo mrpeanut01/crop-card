@@ -37,9 +37,25 @@ export interface StockItem {
   pluginId?: string;
   category: StockCategory;
   displayName: string;
+  /** Phase 15d — Haiku-generated short label (≤40 chars). Null until the
+   *  operator runs ✨ Generate short names on /stock; consumers fall back
+   *  to displayName. */
+  shortName?: string;
   defaultUnit: StockUnit;
   reorderThreshold?: number;
   notes?: string;
+  barcode?: string;
+  /** FK into taxonomy_terms for sub-categorization (Type). */
+  typeId?: string;
+  metadataJson?: string;
+  /** Phase 17 (Track 2) — JSON-serialized active ingredients captured by
+   *  the label scan and confirmed by the operator. Drives the
+   *  data-augmented safety hook for stock that doesn't match a kernel
+   *  herbicide/insecticide/fungicide plugin. */
+  activeIngredientsJson?: string;
+  /** Phase 17 (Track 2) — JSON-serialized formulation block (npk, type,
+   *  productClass) captured by the label scan. */
+  formulationJson?: string;
 }
 
 export interface StockLot {
@@ -63,6 +79,9 @@ export interface StockMovement {
   sprayEventId?: string;
   insecticideEventId?: string;
   fertilityApplicationId?: string;
+  /** Phase 13: per-crop attribution. Set on auto-decrement; nullable for
+   *  receipts and farm-wide adjustments. */
+  cropId?: string;
   performedById?: string;
   notes?: string;
 }
@@ -85,10 +104,21 @@ export interface LotWithBalance extends StockLot {
 export interface CreateItemInput {
   category: StockCategory;
   displayName: string;
+  shortName?: string;
   defaultUnit: StockUnit;
   pluginId?: string;
   reorderThreshold?: number;
   notes?: string;
+  barcode?: string;
+  typeId?: string;
+  metadataJson?: string;
+  /** Phase 17 (Track 2) — AI-extracted active ingredients from label scan,
+   *  user-confirmed before persistence. JSON-serialized
+   *  Array<{ name, concentrationPct?, chemistryClass?, iracGroup?, fracCode? }>. */
+  activeIngredientsJson?: string;
+  /** Phase 17 (Track 2) — AI-extracted formulation block. JSON-serialized
+   *  { type?, npk?, productClass? }. */
+  formulationJson?: string;
 }
 
 export function createStockItem(input: CreateItemInput): StockItem {
@@ -99,11 +129,17 @@ export function createStockItem(input: CreateItemInput): StockItem {
       id,
       category: input.category,
       displayName: input.displayName,
+      shortName: input.shortName?.trim() || null,
       defaultUnit: input.defaultUnit,
       pluginId: input.pluginId ?? null,
       reorderThresholdHundredths:
         input.reorderThreshold !== undefined ? toHundredths(input.reorderThreshold) : null,
-      notes: input.notes ?? null
+      notes: input.notes ?? null,
+      barcode: input.barcode ?? null,
+      typeId: input.typeId ?? null,
+      metadataJson: input.metadataJson ?? null,
+      activeIngredientsJson: input.activeIngredientsJson ?? null,
+      formulationJson: input.formulationJson ?? null
     })
     .returning()
     .get();
@@ -116,12 +152,18 @@ function rowToItem(row: typeof stockItems.$inferSelect): StockItem {
     pluginId: row.pluginId ?? undefined,
     category: row.category as StockCategory,
     displayName: row.displayName,
+    shortName: row.shortName ?? undefined,
     defaultUnit: row.defaultUnit as StockUnit,
     reorderThreshold:
       row.reorderThresholdHundredths !== null
         ? fromHundredths(row.reorderThresholdHundredths)
         : undefined,
-    notes: row.notes ?? undefined
+    notes: row.notes ?? undefined,
+    barcode: row.barcode ?? undefined,
+    typeId: row.typeId ?? undefined,
+    metadataJson: row.metadataJson ?? undefined,
+    activeIngredientsJson: row.activeIngredientsJson ?? undefined,
+    formulationJson: row.formulationJson ?? undefined
   };
 }
 
@@ -133,6 +175,56 @@ export function getStockItem(id: string): StockItem | undefined {
 export function getStockItemByPluginId(pluginId: string): StockItem | undefined {
   const row = db.select().from(stockItems).where(eq(stockItems.pluginId, pluginId)).get();
   return row ? rowToItem(row) : undefined;
+}
+
+export function getStockItemByBarcode(barcode: string): StockItem | undefined {
+  const row = db.select().from(stockItems).where(eq(stockItems.barcode, barcode)).get();
+  return row ? rowToItem(row) : undefined;
+}
+
+export type UpdateItemInput = {
+  displayName?: string;
+  shortName?: string | null;
+  category?: StockCategory;
+  defaultUnit?: StockUnit;
+  pluginId?: string | null;
+  reorderThreshold?: number | null;
+  notes?: string;
+  barcode?: string;
+  typeId?: string | null;
+  metadataJson?: string;
+  /** Phase 17 (Track 2 + AI Refresh) — confirmed active ingredients.
+   *  null clears the column (operator clicked Discard). */
+  activeIngredientsJson?: string | null;
+  /** Phase 17 (Track 2 + AI Refresh) — confirmed formulation block.
+   *  null clears the column (operator clicked Discard). */
+  formulationJson?: string | null;
+};
+
+export function updateStockItem(id: string, updates: UpdateItemInput): StockItem {
+  const set: Record<string, unknown> = {};
+  if ('displayName' in updates && updates.displayName !== undefined) set.displayName = updates.displayName;
+  if ('shortName' in updates) set.shortName = updates.shortName ?? null;
+  if ('category' in updates && updates.category !== undefined) set.category = updates.category;
+  if ('defaultUnit' in updates && updates.defaultUnit !== undefined) set.defaultUnit = updates.defaultUnit;
+  if ('pluginId' in updates) set.pluginId = updates.pluginId ?? null;
+  if ('reorderThreshold' in updates) {
+    set.reorderThresholdHundredths = updates.reorderThreshold != null
+      ? toHundredths(updates.reorderThreshold)
+      : null;
+  }
+  if ('notes' in updates) set.notes = updates.notes ?? null;
+  if ('barcode' in updates) set.barcode = updates.barcode ?? null;
+  if ('typeId' in updates) set.typeId = updates.typeId ?? null;
+  if ('metadataJson' in updates) set.metadataJson = updates.metadataJson ?? null;
+  if ('activeIngredientsJson' in updates)
+    set.activeIngredientsJson = updates.activeIngredientsJson ?? null;
+  if ('formulationJson' in updates) set.formulationJson = updates.formulationJson ?? null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const row = db.update(stockItems).set(set as any).where(eq(stockItems.id, id)).returning().get();
+  if (!row) throw new Error(`Stock item ${id} not found`);
+  return rowToItem(row);
 }
 
 /** All items, with on-hand balance + low-stock flag computed in one pass. */
@@ -279,6 +371,7 @@ export interface RecordMovementInput {
   unit: StockUnit;
   reason: MovementReason;
   sprayEventId?: string;
+  cropId?: string;
   performedById?: string;
   notes?: string;
   occurredAt?: number;
@@ -305,6 +398,7 @@ export function recordMovement(input: RecordMovementInput): StockMovement {
       deltaHundredths: sign * magnitude,
       reason: input.reason,
       sprayEventId: input.sprayEventId ?? null,
+      cropId: input.cropId ?? null,
       performedById: input.performedById ?? null,
       notes: input.notes ?? null
     })
@@ -323,6 +417,7 @@ function rowToMovement(row: typeof stockMovements.$inferSelect): StockMovement {
     sprayEventId: row.sprayEventId ?? undefined,
     insecticideEventId: row.insecticideEventId ?? undefined,
     fertilityApplicationId: row.fertilityApplicationId ?? undefined,
+    cropId: row.cropId ?? undefined,
     performedById: row.performedById ?? undefined,
     notes: row.notes ?? undefined
   };
@@ -344,6 +439,88 @@ export function listMovementsForItem(stockItemId: string, limit = 50): StockMove
     .limit(limit)
     .all()
     .map(rowToMovement);
+}
+
+export interface SetQuantityInput {
+  stockItemId: string;
+  /** Target on-hand in the item's default unit. Must be ≥ 0. */
+  targetQuantity: number;
+  performedById?: string;
+  notes?: string;
+}
+
+export interface SetQuantityResult {
+  itemId: string;
+  previousQuantity: number;
+  newQuantity: number;
+  delta: number;
+  /** New movement (if delta != 0 and a lot existed) or new lot (if first receipt). */
+  movement?: StockMovement;
+  lot?: StockLot;
+}
+
+/**
+ * Manually overwrite the on-hand quantity for a SKU. Use case: end-of-season
+ * physical count, audit reconciliation. Posts a single adjustment movement
+ * against the most-recently-received lot, or creates a fresh lot when the
+ * SKU has none yet.
+ */
+export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
+  const item = getStockItem(input.stockItemId);
+  if (!item) throw new Error(`unknown stock item: ${input.stockItemId}`);
+  if (input.targetQuantity < 0) throw new Error('targetQuantity must be ≥ 0');
+
+  const targetHundredths = toHundredths(input.targetQuantity);
+  const lots = db
+    .select()
+    .from(stockLots)
+    .where(eq(stockLots.stockItemId, item.id))
+    .orderBy(desc(stockLots.receivedAt))
+    .all();
+
+  let currentHundredths = 0;
+  for (const lot of lots) {
+    currentHundredths += lotBalanceHundredths(lot.id, lot.receivedQuantityHundredths);
+  }
+  const deltaHundredths = targetHundredths - currentHundredths;
+  const result: SetQuantityResult = {
+    itemId: item.id,
+    previousQuantity: fromHundredths(currentHundredths),
+    newQuantity: input.targetQuantity,
+    delta: fromHundredths(deltaHundredths)
+  };
+  if (deltaHundredths === 0) return result;
+
+  if (lots.length === 0) {
+    // First receipt for this SKU.
+    const lot = receiveLot({
+      stockItemId: item.id,
+      receivedQuantity: input.targetQuantity,
+      unit: item.defaultUnit,
+      performedById: input.performedById,
+      notes: input.notes ?? 'manual count'
+    });
+    result.lot = lot;
+    return result;
+  }
+
+  const targetLot = lots[0];
+  const movementId = randomUUID();
+  const row = db
+    .insert(stockMovements)
+    .values({
+      id: movementId,
+      stockLotId: targetLot.id,
+      occurredAt: new Date(),
+      deltaHundredths,
+      reason: 'adjustment',
+      performedById: input.performedById ?? null,
+      notes: input.notes ?? 'manual count'
+    })
+    .returning()
+    .get();
+  result.movement = rowToMovement(row);
+  return result;
 }
 
 export interface DecrementResult {
@@ -371,6 +548,8 @@ export function decrementForUse(input: {
   sprayEventId?: string;
   insecticideEventId?: string;
   fertilityApplicationId?: string;
+  /** Phase 13: per-crop attribution for fast "what did this crop consume?" rollups. */
+  cropId?: string;
   reason?: MovementReason;
   performedById?: string;
   occurredAt?: number;
@@ -431,6 +610,7 @@ export function decrementForUse(input: {
         sprayEventId: input.sprayEventId ?? null,
         insecticideEventId: input.insecticideEventId ?? null,
         fertilityApplicationId: input.fertilityApplicationId ?? null,
+        cropId: input.cropId ?? null,
         performedById: input.performedById ?? null,
         notes: `auto-decrement from ${reason}`
       })

@@ -1,0 +1,24 @@
+{
+  "pluginId": "watermelon-sugar-baby-standard-treated",
+  "displayName": "Watermelon Sugar Baby Standard Treated",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "vine-fruit",
+  "daysToMaturity": {
+    "min": 85,
+    "max": 85
+  },
+  "plantingGuide": {
+    "soilTempMinF": 85,
+    "rowSpacingIn": 30,
+    "seedDepthIn": {
+      "min": 0.625,
+      "max": 0.625
+    },
+    "vineSpreadFt": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "notes": "Treated with Thiram. 8-12 lb fruit, dark green rind, red crisp flesh. Packed for 2025. Harris Seeds SKU 00587STDTRT-25SDS."
+}

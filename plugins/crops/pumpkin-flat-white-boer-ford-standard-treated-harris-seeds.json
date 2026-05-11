@@ -1,0 +1,38 @@
+{
+  "pluginId": "pumpkin-flat-white-boer-ford-standard-treated-harris-seeds",
+  "displayName": "Pumpkin Flat White Boer Ford \u2014 Standard Treated (Harris Seeds)",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": {
+    "min": 115,
+    "max": 115
+  },
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 42,
+    "seedDepthIn": {
+      "min": 1.375,
+      "max": 1.375
+    },
+    "vineSpreadFt": {
+      "min": 10,
+      "max": 14
+    }
+  },
+  "notes": "Treated with Thiram. 10-17 lb flat scalloped fruit, bright orange flesh. Packed for 2025. SKU 11486STDTRT-25SDS.",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 30,
+      "offsetDaysMax": 60,
+      "title": "POST grass window (Clethodim)",
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+    }
+  ]
+}

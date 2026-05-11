@@ -1,0 +1,1 @@
+ALTER TABLE `stock_items` ADD `short_name` text;

@@ -8,7 +8,7 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { suggestCompanions } from '$lib/calendar/companions';
-import type { CropPlugin } from '$lib/plugins/schemas';
+import type { CropPlugin, CompanionPlugin } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 
 export const GET: RequestHandler = async ({ params, url }) => {
@@ -28,6 +28,16 @@ export const GET: RequestHandler = async ({ params, url }) => {
     .filter((r) => r.plugin.type === 'crop')
     .map((r) => r.plugin as CropPlugin);
 
-  const suggestions = suggestCompanions((planted.plugin as CropPlugin).cropFamily, availableCrops);
+  const companionSystems = registry
+    .all()
+    .filter((r) => r.plugin.type === 'companion')
+    .map((r) => r.plugin as CompanionPlugin)
+    .filter((p) => p.primaryFamily && p.members?.length);
+
+  const suggestions = suggestCompanions(
+    (planted.plugin as CropPlugin).cropFamily,
+    availableCrops,
+    companionSystems
+  );
   return json({ suggestions });
 };

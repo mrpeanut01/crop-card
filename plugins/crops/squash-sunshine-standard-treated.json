@@ -1,0 +1,38 @@
+{
+  "pluginId": "squash-sunshine-standard-treated",
+  "displayName": "Squash Sunshine Standard Treated",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "cucurbit",
+  "daysToMaturity": {
+    "min": 98,
+    "max": 98
+  },
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 42,
+    "seedDepthIn": {
+      "min": 0.875,
+      "max": 0.875
+    },
+    "vineSpreadFt": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "notes": "Winter squash, treated with Thiram. Red-orange rind, 3-4 lb fruit, short 8' vines. DO NOT USE FOR FOOD FEED OR OIL. Packed 2025.",
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "sprayWindows": [
+    {
+      "chemistryClass": "accase-inhibitor",
+      "anchor": "planting",
+      "offsetDaysMin": 30,
+      "offsetDaysMax": 60,
+      "title": "POST grass window (Clethodim)",
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+    }
+  ]
+}

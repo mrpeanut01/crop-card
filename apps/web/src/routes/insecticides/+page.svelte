@@ -1,11 +1,10 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
+
   let { data } = $props();
 
-  const blocks = data.blocks;
-  const insecticides = data.insecticides;
-
-  let selectedBlockId = $state<string>(data.preselectedBlockId ?? blocks[0]?.id ?? '');
-  let selectedPluginId = $state<string>(insecticides[0]?.pluginId ?? '');
+  let selectedBlockId = $state<string>(untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? ''));
+  let selectedPluginId = $state<string>(untrack(() => data.insecticides[0]?.pluginId ?? ''));
   let scoutPest = $state('');
   let scoutMetric = $state<'count-per-plant' | 'pct-defoliation' | 'pct-infested-plants'>(
     'count-per-plant'
@@ -17,6 +16,7 @@
   let tankSize = $state<number | null>(25);
   let result = $state<string | null>(null);
   let error = $state<string | null>(null);
+  let violations = $state<Array<{ code: string; message: string; detail?: Record<string, unknown> }>>([]);
   let busy = $state(false);
 
   async function recordSpray(ev: Event) {
@@ -24,6 +24,7 @@
     busy = true;
     error = null;
     result = null;
+    violations = [];
     try {
       const body: Record<string, unknown> = {
         blockId: selectedBlockId,
@@ -46,6 +47,7 @@
       const data = await res.json();
       if (!res.ok) {
         error = data.error ?? 'failed to record';
+        if (Array.isArray(data.violations)) violations = data.violations;
         return;
       }
       result = `Recorded — re-entry clear ${new Date(data.event.reEntryClearAt).toLocaleString()}.`;
@@ -80,13 +82,13 @@
 
 <section class="card">
   <h2>Library</h2>
-  {#if insecticides.length === 0}
+  {#if data.insecticides.length === 0}
     <p>
       No insecticide plugins installed. Add JSON files under <code>plugins/insecticides/</code>.
     </p>
   {:else}
     <ul class="library">
-      {#each insecticides as p (p.pluginId)}
+      {#each data.insecticides as p (p.pluginId)}
         <li>
           <strong>{p.displayName}</strong>
           {#if p.targetPests.length}
@@ -128,11 +130,11 @@
 
 <section class="card">
   <h2>Record an insecticide application</h2>
-  <form on:submit={recordSpray}>
+  <form onsubmit={recordSpray}>
     <label>
       Block
       <select bind:value={selectedBlockId}>
-        {#each blocks as b (b.id)}
+        {#each data.blocks as b (b.id)}
           <option value={b.id}>{b.name}</option>
         {/each}
       </select>
@@ -140,7 +142,7 @@
     <label>
       Insecticide
       <select bind:value={selectedPluginId}>
-        {#each insecticides as p (p.pluginId)}
+        {#each data.insecticides as p (p.pluginId)}
           <option value={p.pluginId}>{p.displayName}</option>
         {/each}
       </select>
@@ -179,7 +181,23 @@
       {busy ? 'Recording…' : 'Record application'}
     </button>
   </form>
-  {#if error}<p class="error">{error}</p>{/if}
+  {#if error}
+    <div class="error" aria-live="polite">
+      <p>{error}</p>
+      {#if violations.length > 0}
+        <ul>
+          {#each violations as v (v.message)}
+            <li>
+              <strong>{v.code}</strong> — {v.message}
+              {#if v.detail?.source === 'user-added'}
+                <span class="badge">stock label</span>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
+  {/if}
   {#if result}<p class="success">{result}</p>{/if}
 </section>
 
@@ -276,6 +294,19 @@
     background: #fce4e4;
     padding: 0.75rem;
     border-radius: 4px;
+  }
+  .error ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+  }
+  .badge {
+    display: inline-block;
+    background: #b00020;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    margin-left: 0.25rem;
   }
   .success {
     color: #1f5e3a;

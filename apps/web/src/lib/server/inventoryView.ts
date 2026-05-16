@@ -9,6 +9,13 @@
 import { listStockItems, type StockCategory } from '$lib/db/stock';
 import { getRegistry } from '$lib/server/registry';
 import { findTaxonomyTermByName, inventoryDomain, listTaxonomyTerms } from '$lib/db/taxonomy';
+import { getSetting } from '$lib/db/settings';
+import {
+  DEFAULT_DISPLAY_PLANTER_SETUP,
+  DEFAULT_DISPLAY_REORDER_LEVEL,
+  SETTINGS_KEYS,
+  parseBoolSetting
+} from '$lib/schedule/constants';
 
 const PLUGIN_TYPE_TO_CATEGORY: Record<string, StockCategory> = {
   crop: 'seed',
@@ -116,10 +123,22 @@ export async function loadInventoryView(opts: { canEdit: boolean }) {
     .filter((p): p is NonNullable<typeof p> => p !== null)
     .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
+  const display = {
+    reorderLevel: parseBoolSetting(
+      getSetting(SETTINGS_KEYS.displayReorderLevel),
+      DEFAULT_DISPLAY_REORDER_LEVEL
+    ),
+    planterSetup: parseBoolSetting(
+      getSetting(SETTINGS_KEYS.displayPlanterSetup),
+      DEFAULT_DISPLAY_PLANTER_SETUP
+    )
+  };
+
   return {
     items: itemsWithType,
     catalogPlugins,
     taxonomy,
-    canEdit: opts.canEdit
+    canEdit: opts.canEdit,
+    display
   };
 }

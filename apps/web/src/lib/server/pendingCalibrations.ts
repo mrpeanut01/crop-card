@@ -5,12 +5,16 @@
  * (FR-12 owner-only). They submit the result to this table; the owner reviews
  * and approves, which calls recordCalibration() on the equipment row and
  * deletes the pending entry. Reject = delete without applying.
+ *
+ * Phase 18a: tenant-scoped. Listings + writes go through the tenant helpers
+ * so a Helper at Farm A cannot stage a calibration that Owner B might see.
  */
 
 import { eq, desc } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { pendingCalibrations, users } from '$lib/db/schema';
 import { recordCalibration } from '$lib/db/sprayers';
+import { tenantValues, tenantWhere, withTenant } from '$lib/db/tenant';
 
 export interface PendingCalibration {
   id: string;
@@ -34,15 +38,17 @@ export function submitPendingCalibration(input: {
 }): PendingCalibration {
   const id = `pc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   db.insert(pendingCalibrations)
-    .values({
-      id,
-      equipmentId: input.equipmentId,
-      submittedById: input.submittedById,
-      calibratedGpa: input.calibratedGpa,
-      spreadInches: input.spreadInches,
-      ouncesCollected: input.ouncesCollected,
-      notes: input.notes
-    })
+    .values(
+      tenantValues({
+        id,
+        equipmentId: input.equipmentId,
+        submittedById: input.submittedById,
+        calibratedGpa: input.calibratedGpa,
+        spreadInches: input.spreadInches,
+        ouncesCollected: input.ouncesCollected,
+        notes: input.notes
+      })
+    )
     .run();
   return getPendingCalibration(id)!;
 }
@@ -62,6 +68,7 @@ export function listPendingCalibrations(): PendingCalibration[] {
     })
     .from(pendingCalibrations)
     .leftJoin(users, eq(users.id, pendingCalibrations.submittedById))
+    .where(tenantWhere(pendingCalibrations))
     .orderBy(desc(pendingCalibrations.submittedAt))
     .all();
   return rows.map((r) => ({
@@ -87,9 +94,13 @@ export function approvePendingCalibration(id: string): void {
   const pending = getPendingCalibration(id);
   if (!pending) return;
   recordCalibration(pending.equipmentId, pending.calibratedGpa);
-  db.delete(pendingCalibrations).where(eq(pendingCalibrations.id, id)).run();
+  db.delete(pendingCalibrations)
+    .where(withTenant(pendingCalibrations, eq(pendingCalibrations.id, id)))
+    .run();
 }
 
 export function rejectPendingCalibration(id: string): void {
-  db.delete(pendingCalibrations).where(eq(pendingCalibrations.id, id)).run();
+  db.delete(pendingCalibrations)
+    .where(withTenant(pendingCalibrations, eq(pendingCalibrations.id, id)))
+    .run();
 }

@@ -28,16 +28,26 @@ function fakeCookies(): Cookies & { _store: Map<string, string> } {
 describe('session HMAC cookie', () => {
   it('round-trips a written session through readSession', () => {
     const cookies = fakeCookies();
-    writeSession(cookies, { id: 'u1', email: 'owner@example.com', role: 'owner' });
+    writeSession(cookies, {
+      id: 'u1',
+      email: 'owner@example.com',
+      activeOwnerId: 'owner_home_farm',
+      activeRole: 'owner'
+    });
     const parsed = readSession(cookies);
     expect(parsed?.userId).toBe('u1');
-    expect(parsed?.role).toBe('owner');
+    expect(parsed?.activeRole).toBe('owner');
     expect(parsed?.email).toBe('owner@example.com');
   });
 
   it('rejects a tampered payload', () => {
     const cookies = fakeCookies();
-    writeSession(cookies, { id: 'u1', email: 'helper@example.com', role: 'helper' });
+    writeSession(cookies, {
+      id: 'u1',
+      email: 'helper@example.com',
+      activeOwnerId: 'owner_home_farm',
+      activeRole: 'helper'
+    });
     const original = cookies._store.get('cropcard.session')!;
     // Flip a byte in the payload portion (before the signature).
     const dot = original.lastIndexOf('.');
@@ -57,7 +67,12 @@ describe('session HMAC cookie', () => {
     const previous = process.env.AUTH_SECRET;
     try {
       process.env.AUTH_SECRET = 'secret-A';
-      writeSession(cookies, { id: 'u1', email: 'helper@example.com', role: 'helper' });
+      writeSession(cookies, {
+      id: 'u1',
+      email: 'helper@example.com',
+      activeOwnerId: 'owner_home_farm',
+      activeRole: 'helper'
+    });
       process.env.AUTH_SECRET = 'secret-B';
       expect(readSession(cookies)).toBeNull();
     } finally {
@@ -67,7 +82,12 @@ describe('session HMAC cookie', () => {
 
   it('clearSession deletes the cookie', () => {
     const cookies = fakeCookies();
-    writeSession(cookies, { id: 'u1', email: 'helper@example.com', role: 'helper' });
+    writeSession(cookies, {
+      id: 'u1',
+      email: 'helper@example.com',
+      activeOwnerId: 'owner_home_farm',
+      activeRole: 'helper'
+    });
     expect(cookies._store.has('cropcard.session')).toBe(true);
     clearSession(cookies);
     expect(cookies._store.has('cropcard.session')).toBe(false);
@@ -79,7 +99,12 @@ describe('session HMAC cookie', () => {
 
   it('rejects a session whose role is not owner|helper', () => {
     const cookies = fakeCookies();
-    writeSession(cookies, { id: 'u1', email: 'x@example.com', role: 'helper' });
+    writeSession(cookies, {
+      id: 'u1',
+      email: 'x@example.com',
+      activeOwnerId: 'owner_home_farm',
+      activeRole: 'helper'
+    });
     // Tamper into 'admin' — but tampering breaks the signature, so verify
     // that role-coverage rejects an unsigned 'admin' attempt too.
     const fakeBody = Buffer.from(

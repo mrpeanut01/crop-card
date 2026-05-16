@@ -17,7 +17,9 @@ const PLAIN_KEYS = [
   SETTINGS_KEYS.farmLatLon,
   SETTINGS_KEYS.lastFrost,
   SETTINGS_KEYS.firstFrost,
-  SETTINGS_KEYS.showShadeMarkers
+  SETTINGS_KEYS.showShadeMarkers,
+  SETTINGS_KEYS.displayReorderLevel,
+  SETTINGS_KEYS.displayPlanterSetup
 ] as const;
 const ALLOWED_KEYS = [...SECRET_KEYS, ...PLAIN_KEYS] as const;
 type SettingKey = (typeof ALLOWED_KEYS)[number];
@@ -57,7 +59,11 @@ function validateAndSerialize(key: SettingKey, value: unknown): string {
     const s = z.string().regex(mmDdRe, 'expected MM-DD').parse(value);
     return s;
   }
-  if (key === SETTINGS_KEYS.showShadeMarkers) {
+  if (
+    key === SETTINGS_KEYS.showShadeMarkers ||
+    key === SETTINGS_KEYS.displayReorderLevel ||
+    key === SETTINGS_KEYS.displayPlanterSetup
+  ) {
     const b = z.boolean().parse(value);
     return b ? 'true' : 'false';
   }

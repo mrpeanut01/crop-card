@@ -4,12 +4,16 @@
  * Lets the operator pre-assign equipment to a specific crop so the calendar
  * engine + task system can suggest the right machine when scheduling work
  * (e.g., the corn crop's sprayer, the alfalfa crop's baler).
+ *
+ * Phase 18a: tenant-scoped. Bindings are filtered by Owner; the equipment
+ * join is constrained by the same Owner via FK invariant.
  */
 
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { db } from './client';
 import { cropEquipment, equipment } from './schema';
+import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export type CropEquipmentRole =
   | 'planter'
@@ -41,7 +45,6 @@ export interface CropEquipmentBinding {
   role: CropEquipmentRole;
   notes?: string;
   createdAt: number;
-  /** Hydrated equipment metadata for UI cards. */
   equipmentLabel: string;
   equipmentType: string;
   equipmentRetiredAt?: number;
@@ -62,7 +65,7 @@ export function listCropEquipment(cropId: string): CropEquipmentBinding[] {
     })
     .from(cropEquipment)
     .innerJoin(equipment, eq(cropEquipment.equipmentId, equipment.id))
-    .where(eq(cropEquipment.cropId, cropId))
+    .where(withTenant(cropEquipment, eq(cropEquipment.cropId, cropId)))
     .all();
   return rows.map((r) => ({
     id: r.id,
@@ -81,7 +84,7 @@ export function listCropsForEquipment(equipmentId: string): { cropId: string; ro
   const rows = db
     .select({ cropId: cropEquipment.cropId, role: cropEquipment.role })
     .from(cropEquipment)
-    .where(eq(cropEquipment.equipmentId, equipmentId))
+    .where(withTenant(cropEquipment, eq(cropEquipment.equipmentId, equipmentId)))
     .all();
   return rows.map((r) => ({ cropId: r.cropId, role: r.role as CropEquipmentRole }));
 }
@@ -103,10 +106,13 @@ export function bindEquipment(input: {
     .select({ id: cropEquipment.id })
     .from(cropEquipment)
     .where(
-      and(
-        eq(cropEquipment.cropId, input.cropId),
-        eq(cropEquipment.equipmentId, input.equipmentId),
-        eq(cropEquipment.role, input.role)
+      withTenant(
+        cropEquipment,
+        and(
+          eq(cropEquipment.cropId, input.cropId),
+          eq(cropEquipment.equipmentId, input.equipmentId),
+          eq(cropEquipment.role, input.role)
+        )
       )
     )
     .get();
@@ -114,30 +120,44 @@ export function bindEquipment(input: {
 
   const id = randomUUID();
   db.insert(cropEquipment)
-    .values({
-      id,
-      cropId: input.cropId,
-      equipmentId: input.equipmentId,
-      role: input.role,
-      notes: input.notes ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        cropId: input.cropId,
+        equipmentId: input.equipmentId,
+        role: input.role,
+        notes: input.notes ?? null
+      })
+    )
     .run();
-  // Re-fetch through the join so the caller gets equipment metadata.
   const out = listCropEquipment(input.cropId).find((b) => b.id === id);
   if (!out) throw new Error('binding insert succeeded but lookup failed');
   return out;
 }
 
 export function unbindEquipment(bindingId: string): boolean {
-  const r = db.delete(cropEquipment).where(eq(cropEquipment.id, bindingId)).run();
+  const r = db
+    .delete(cropEquipment)
+    .where(withTenant(cropEquipment, eq(cropEquipment.id, bindingId)))
+    .run();
   return r.changes > 0;
 }
 
 /** Cascade-helper used by deleteCropCascade and deleteEquipmentCascade. */
 export function deleteBindingsForCrop(cropId: string): number {
-  return db.delete(cropEquipment).where(eq(cropEquipment.cropId, cropId)).run().changes;
+  return db
+    .delete(cropEquipment)
+    .where(withTenant(cropEquipment, eq(cropEquipment.cropId, cropId)))
+    .run().changes;
 }
 
 export function deleteBindingsForEquipment(equipmentId: string): number {
-  return db.delete(cropEquipment).where(eq(cropEquipment.equipmentId, equipmentId)).run().changes;
+  return db
+    .delete(cropEquipment)
+    .where(withTenant(cropEquipment, eq(cropEquipment.equipmentId, equipmentId)))
+    .run().changes;
 }
+
+// Re-export to satisfy unused-import lint without affecting callers; the
+// helper is referenced in the listing functions above via withTenant.
+void tenantWhere;

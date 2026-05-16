@@ -2,21 +2,17 @@
  * Fertility / soil-test repository (Phase 10).
  *
  * Per-block N / P / K budget. The math is intentionally trivial — the value
- * is in the data model + UI surface, not the calculations:
+ * is in the data model + UI surface, not the calculations.
  *
- *   delivered  = sum(fertility_applications.{n,p,k}_delivered_hundredths)
- *   credits    = sum(fertility_credits.{n,p,k}_lb_per_acre_hundredths)
- *   remaining  = (cropDemand × acres) - delivered - credits
- *
- * Quantities stored as integer hundredths to match stock-management
- * precision. cropDemand comes from the crop plugin (default tables) or
- * an explicit operator override on /fertility.
+ * Phase 18a: tenant-scoped. Soil tests, applications, and credits all
+ * filter by Owner; per-block budgets sum within the active tenant.
  */
 
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from './client';
 import { fertilityApplications, fertilityCredits, soilTests } from './schema';
+import { tenantValues, withTenant } from './tenant';
 
 // ─── soil_tests ──────────────────────────────────────────────────────────
 
@@ -60,21 +56,23 @@ export function insertSoilTest(input: SoilTestInput): SoilTest {
   const id = randomUUID();
   const row = db
     .insert(soilTests)
-    .values({
-      id,
-      blockId: input.blockId,
-      sampledAt: new Date(input.sampledAt),
-      lab: input.lab ?? null,
-      reportPdfUrl: input.reportPdfUrl ?? null,
-      ph: input.ph !== undefined ? Math.round(input.ph * 100) : null,
-      cecHundredths: input.cec !== undefined ? Math.round(input.cec * 100) : null,
-      organicMatterPctHundredths:
-        input.organicMatterPct !== undefined ? Math.round(input.organicMatterPct * 100) : null,
-      nitratePpm: input.nitratePpm ?? null,
-      phosphorusPpm: input.phosphorusPpm ?? null,
-      potassiumPpm: input.potassiumPpm ?? null,
-      notes: input.notes ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        sampledAt: new Date(input.sampledAt),
+        lab: input.lab ?? null,
+        reportPdfUrl: input.reportPdfUrl ?? null,
+        ph: input.ph !== undefined ? Math.round(input.ph * 100) : null,
+        cecHundredths: input.cec !== undefined ? Math.round(input.cec * 100) : null,
+        organicMatterPctHundredths:
+          input.organicMatterPct !== undefined ? Math.round(input.organicMatterPct * 100) : null,
+        nitratePpm: input.nitratePpm ?? null,
+        phosphorusPpm: input.phosphorusPpm ?? null,
+        potassiumPpm: input.potassiumPpm ?? null,
+        notes: input.notes ?? null
+      })
+    )
     .returning()
     .get();
   return rowToSoilTest(row);
@@ -84,7 +82,7 @@ export function listSoilTestsForBlock(blockId: string): SoilTest[] {
   return db
     .select()
     .from(soilTests)
-    .where(eq(soilTests.blockId, blockId))
+    .where(withTenant(soilTests, eq(soilTests.blockId, blockId)))
     .orderBy(desc(soilTests.sampledAt))
     .all()
     .map(rowToSoilTest);
@@ -94,14 +92,12 @@ export function listSoilTestsForBlock(blockId: string): SoilTest[] {
 
 export interface FertilityApplicationInput {
   blockId: string;
-  /** Phase 12: per-crop attribution. */
   cropId?: string;
   occurredAt: number;
   source: string;
   stockItemId?: string;
   ratePerAcre: number;
   rateUnit: string;
-  /** Pounds of nutrient delivered per acre. */
   nLbPerAcre?: number;
   pLbPerAcre?: number;
   kLbPerAcre?: number;
@@ -135,21 +131,23 @@ export function insertFertilityApplication(input: FertilityApplicationInput): Fe
   const id = randomUUID();
   const row = db
     .insert(fertilityApplications)
-    .values({
-      id,
-      blockId: input.blockId,
-      cropId: input.cropId ?? null,
-      occurredAt: new Date(input.occurredAt),
-      source: input.source,
-      stockItemId: input.stockItemId ?? null,
-      ratePerAcreHundredths: Math.round(input.ratePerAcre * 100),
-      rateUnit: input.rateUnit,
-      nDeliveredHundredths: Math.round((input.nLbPerAcre ?? 0) * 100),
-      pDeliveredHundredths: Math.round((input.pLbPerAcre ?? 0) * 100),
-      kDeliveredHundredths: Math.round((input.kLbPerAcre ?? 0) * 100),
-      performedById: input.performedById ?? null,
-      notes: input.notes ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        cropId: input.cropId ?? null,
+        occurredAt: new Date(input.occurredAt),
+        source: input.source,
+        stockItemId: input.stockItemId ?? null,
+        ratePerAcreHundredths: Math.round(input.ratePerAcre * 100),
+        rateUnit: input.rateUnit,
+        nDeliveredHundredths: Math.round((input.nLbPerAcre ?? 0) * 100),
+        pDeliveredHundredths: Math.round((input.pLbPerAcre ?? 0) * 100),
+        kDeliveredHundredths: Math.round((input.kLbPerAcre ?? 0) * 100),
+        performedById: input.performedById ?? null,
+        notes: input.notes ?? null
+      })
+    )
     .returning()
     .get();
   return rowToApplication(row);
@@ -159,7 +157,7 @@ export function listFertilityApplicationsForBlock(blockId: string): FertilityApp
   return db
     .select()
     .from(fertilityApplications)
-    .where(eq(fertilityApplications.blockId, blockId))
+    .where(withTenant(fertilityApplications, eq(fertilityApplications.blockId, blockId)))
     .orderBy(desc(fertilityApplications.occurredAt))
     .all()
     .map(rowToApplication);
@@ -202,17 +200,19 @@ export function insertFertilityCredit(input: FertilityCreditInput): FertilityCre
   const id = randomUUID();
   const row = db
     .insert(fertilityCredits)
-    .values({
-      id,
-      blockId: input.blockId,
-      appliesToYear: input.appliesToYear,
-      source: input.source,
-      cropPluginId: input.cropPluginId ?? null,
-      nLbPerAcreHundredths: Math.round((input.nLbPerAcre ?? 0) * 100),
-      pLbPerAcreHundredths: Math.round((input.pLbPerAcre ?? 0) * 100),
-      kLbPerAcreHundredths: Math.round((input.kLbPerAcre ?? 0) * 100),
-      notes: input.notes ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        appliesToYear: input.appliesToYear,
+        source: input.source,
+        cropPluginId: input.cropPluginId ?? null,
+        nLbPerAcreHundredths: Math.round((input.nLbPerAcre ?? 0) * 100),
+        pLbPerAcreHundredths: Math.round((input.pLbPerAcre ?? 0) * 100),
+        kLbPerAcreHundredths: Math.round((input.kLbPerAcre ?? 0) * 100),
+        notes: input.notes ?? null
+      })
+    )
     .returning()
     .get();
   return rowToCredit(row);
@@ -224,7 +224,7 @@ export function listFertilityCreditsForBlock(blockId: string, year?: number): Fe
   return db
     .select()
     .from(fertilityCredits)
-    .where(and(...conds))
+    .where(withTenant(fertilityCredits, and(...conds)))
     .orderBy(desc(fertilityCredits.createdAt))
     .all()
     .map(rowToCredit);

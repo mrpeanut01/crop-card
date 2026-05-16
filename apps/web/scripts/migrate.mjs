@@ -21,13 +21,27 @@ const migrationsFolder = process.env.MIGRATIONS_FOLDER ?? './drizzle';
 
 const sqlite = new Database(dbPath);
 sqlite.pragma('journal_mode = WAL');
-sqlite.pragma('foreign_keys = ON');
+
+// Phase 18 multi-tenant migrations (0020+, NOT NULL enforcement) need to
+// drop tables that are FK-referenced by other tables during the SQLite
+// table-rebuild dance. SQLite ignores `PRAGMA foreign_keys = OFF` inside
+// an active transaction, and drizzle wraps each migration file in one
+// transaction — so we disable FK enforcement at the connection level
+// before migrate() and re-enable + verify after.
+sqlite.pragma('foreign_keys = OFF');
 
 const db = drizzle(sqlite);
 
 console.log(`[migrate] applying migrations from ${migrationsFolder} to ${dbPath}`);
 migrate(db, { migrationsFolder });
 console.log('[migrate] done');
+
+sqlite.pragma('foreign_keys = ON');
+const fkViolations = sqlite.prepare('PRAGMA foreign_key_check').all();
+if (fkViolations.length > 0) {
+  console.error('[migrate] FK violations detected after migrate:', fkViolations);
+  process.exit(1);
+}
 
 backfillPhase13(sqlite);
 

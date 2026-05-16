@@ -6,12 +6,15 @@
  *
  * The shade engine (`apps/web/src/lib/calendar/shadeModel.ts`) consumes
  * these alongside crop emitters when projecting shadow impact onto blocks.
+ *
+ * Phase 18a: tenant-scoped per Owner.
  */
 
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db } from './client';
 import { shadeSources } from './schema';
+import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export type ShadeSourceKind =
   | 'tree-row'
@@ -32,9 +35,7 @@ export interface ShadeSource {
   heightFt: number;
   opacity: number;
   isDeciduous: boolean;
-  /** Day-of-year (1-366) when leaves emerge — only used when isDeciduous. */
   leafOnDayOfYear: number;
-  /** Day-of-year (1-366) when leaves drop — only used when isDeciduous. */
   leafOffDayOfYear: number;
   notes?: string;
   createdAt: number;
@@ -77,32 +78,38 @@ export function createShadeSource(input: CreateShadeSourceInput): ShadeSource {
   const now = new Date(Date.now());
   const inserted = db
     .insert(shadeSources)
-    .values({
-      id,
-      name: input.name,
-      kind: input.kind ?? 'tree-row',
-      geometryGeojson: input.geometryGeojson ?? null,
-      fieldId: input.fieldId ?? null,
-      heightFt: input.heightFt,
-      opacity: input.opacity ?? 0.7,
-      isDeciduous: input.isDeciduous ?? false,
-      leafOnDayOfYear: input.leafOnDayOfYear ?? 105,
-      leafOffDayOfYear: input.leafOffDayOfYear ?? 305,
-      notes: input.notes ?? null,
-      createdAt: now,
-      updatedAt: now
-    })
+    .values(
+      tenantValues({
+        id,
+        name: input.name,
+        kind: input.kind ?? 'tree-row',
+        geometryGeojson: input.geometryGeojson ?? null,
+        fieldId: input.fieldId ?? null,
+        heightFt: input.heightFt,
+        opacity: input.opacity ?? 0.7,
+        isDeciduous: input.isDeciduous ?? false,
+        leafOnDayOfYear: input.leafOnDayOfYear ?? 105,
+        leafOffDayOfYear: input.leafOffDayOfYear ?? 305,
+        notes: input.notes ?? null,
+        createdAt: now,
+        updatedAt: now
+      })
+    )
     .returning()
     .get();
   return rowToShadeSource(inserted);
 }
 
 export function listShadeSources(): ShadeSource[] {
-  return db.select().from(shadeSources).all().map(rowToShadeSource);
+  return db.select().from(shadeSources).where(tenantWhere(shadeSources)).all().map(rowToShadeSource);
 }
 
 export function getShadeSource(id: string): ShadeSource | undefined {
-  const row = db.select().from(shadeSources).where(eq(shadeSources.id, id)).get();
+  const row = db
+    .select()
+    .from(shadeSources)
+    .where(withTenant(shadeSources, eq(shadeSources.id, id)))
+    .get();
   return row ? rowToShadeSource(row) : undefined;
 }
 
@@ -131,11 +138,19 @@ export function updateShadeSource(id: string, patch: UpdateShadeSourceInput): Sh
   if (patch.leafOnDayOfYear !== undefined) set.leafOnDayOfYear = patch.leafOnDayOfYear;
   if (patch.leafOffDayOfYear !== undefined) set.leafOffDayOfYear = patch.leafOffDayOfYear;
   if (patch.notes !== undefined) set.notes = patch.notes;
-  const updated = db.update(shadeSources).set(set).where(eq(shadeSources.id, id)).returning().get();
+  const updated = db
+    .update(shadeSources)
+    .set(set)
+    .where(withTenant(shadeSources, eq(shadeSources.id, id)))
+    .returning()
+    .get();
   return updated ? rowToShadeSource(updated) : undefined;
 }
 
 export function deleteShadeSource(id: string): boolean {
-  const result = db.delete(shadeSources).where(eq(shadeSources.id, id)).run();
+  const result = db
+    .delete(shadeSources)
+    .where(withTenant(shadeSources, eq(shadeSources.id, id)))
+    .run();
   return result.changes > 0;
 }

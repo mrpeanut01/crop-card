@@ -5,15 +5,21 @@
  *   - inventory:<category>  → e.g., inventory:seed, inventory:herbicide
  *   - equipment             → tractor, sprayer, baler, …
  *
- * System defaults are seeded on migration (is_default=1). Owners may add,
- * edit, or delete custom terms; default terms can be edited (renamed /
- * described) but not deleted, to keep the seeded taxonomy stable.
+ * Phase 18a has mixed scope here:
+ *   - System defaults (is_default=1, owner_id IS NULL) are globally visible.
+ *   - User-added terms (is_default=0, owner_id=<owner>) are per-Owner.
+ *
+ * Reads must union both shapes via `WHERE owner_id = ? OR owner_id IS NULL`;
+ * writes always stamp the active Owner. Because of this hybrid semantics
+ * the table is intentionally NOT branded `TenantScoped` — `tenantWhere`
+ * would over-filter and hide the global defaults.
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, isNull, or, sql } from 'drizzle-orm';
 import { db } from './client';
 import { taxonomyTerms } from './schema';
+import { requireOwnerId, unscopedQueryNote } from './tenant';
 
 export interface TaxonomyTerm {
   id: string;
@@ -35,10 +41,22 @@ function rowToTerm(row: typeof taxonomyTerms.$inferSelect): TaxonomyTerm {
   };
 }
 
+/** Returns globally-visible defaults UNION the active Owner's user-added
+ *  terms. Owner filter is added inline (no tenantWhere helper because of
+ *  the OR clause). */
+function visibleTermsCondition() {
+  const ownerId = requireOwnerId();
+  return or(isNull(taxonomyTerms.ownerId), eq(taxonomyTerms.ownerId, ownerId))!;
+}
+
 export function listTaxonomyTerms(filter?: { domain?: string }): TaxonomyTerm[] {
-  const rows = filter?.domain
-    ? db.select().from(taxonomyTerms).where(eq(taxonomyTerms.domain, filter.domain)).all()
-    : db.select().from(taxonomyTerms).all();
+  const conds = [visibleTermsCondition()];
+  if (filter?.domain) conds.push(eq(taxonomyTerms.domain, filter.domain));
+  const rows = db
+    .select()
+    .from(taxonomyTerms)
+    .where(and(...conds))
+    .all();
   return rows.map(rowToTerm).sort((a, b) => {
     if (a.domain !== b.domain) return a.domain.localeCompare(b.domain);
     return a.name.localeCompare(b.name);
@@ -46,7 +64,11 @@ export function listTaxonomyTerms(filter?: { domain?: string }): TaxonomyTerm[] 
 }
 
 export function getTaxonomyTerm(id: string): TaxonomyTerm | undefined {
-  const row = db.select().from(taxonomyTerms).where(eq(taxonomyTerms.id, id)).get();
+  const row = db
+    .select()
+    .from(taxonomyTerms)
+    .where(and(eq(taxonomyTerms.id, id), visibleTermsCondition()))
+    .get();
   return row ? rowToTerm(row) : undefined;
 }
 
@@ -56,6 +78,7 @@ export function findTaxonomyTermByName(domain: string, name: string): TaxonomyTe
     .from(taxonomyTerms)
     .where(
       and(
+        visibleTermsCondition(),
         eq(taxonomyTerms.domain, domain),
         sql`lower(${taxonomyTerms.name}) = lower(${name})`
       )
@@ -83,10 +106,12 @@ export function createTaxonomyTerm(input: CreateTaxonomyTermInput): TaxonomyTerm
   const existing = findTaxonomyTermByName(input.domain, name);
   if (existing) throw new DuplicateTaxonomyTermError(input.domain, name);
   const id = randomUUID();
+  const ownerId = requireOwnerId();
   const row = db
     .insert(taxonomyTerms)
     .values({
       id,
+      ownerId,
       domain: input.domain,
       name,
       description: input.description?.trim() || null,
@@ -120,8 +145,16 @@ export function updateTaxonomyTerm(id: string, input: UpdateTaxonomyTermInput): 
     set.description = input.description?.trim() || null;
   }
   if (Object.keys(set).length === 0) return existing;
+  // Allow updates to either system defaults (ownerId IS NULL) or owner's
+  // own terms — but never to another tenant's. The visibleTermsCondition
+  // makes that distinction.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const row = db.update(taxonomyTerms).set(set as any).where(eq(taxonomyTerms.id, id)).returning().get();
+  const row = db
+    .update(taxonomyTerms)
+    .set(set as any)
+    .where(and(eq(taxonomyTerms.id, id), visibleTermsCondition()))
+    .returning()
+    .get();
   return rowToTerm(row);
 }
 
@@ -136,11 +169,13 @@ export function deleteTaxonomyTerm(id: string): void {
   const existing = getTaxonomyTerm(id);
   if (!existing) return;
   if (existing.isDefault) throw new DefaultTermDeleteError(existing.name);
-  db.delete(taxonomyTerms).where(eq(taxonomyTerms.id, id)).run();
+  const ownerId = requireOwnerId();
+  // User-added terms only deletable by their own Owner.
+  db.delete(taxonomyTerms)
+    .where(and(eq(taxonomyTerms.id, id), eq(taxonomyTerms.ownerId, ownerId)))
+    .run();
 }
 
-/** Best-effort lookup: match by id first, else case-insensitive name in the
- *  given domain. Returns the term if found, else undefined. */
 export function resolveTaxonomyTerm(
   domain: string,
   idOrName: string | null | undefined
@@ -151,15 +186,14 @@ export function resolveTaxonomyTerm(
   return findTaxonomyTermByName(domain, idOrName);
 }
 
-/** Build a domain key for an inventory category. */
 export function inventoryDomain(category: string): string {
   return `inventory:${category}`;
 }
 
 export const EQUIPMENT_DOMAIN = 'equipment';
 
-/** All canonical domains the UI iterates for the Settings page. */
 export function allDomains(): string[] {
+  unscopedQueryNote('listing all domains spans system defaults + per-owner terms by design');
   const rows = db
     .selectDistinct({ domain: taxonomyTerms.domain })
     .from(taxonomyTerms)

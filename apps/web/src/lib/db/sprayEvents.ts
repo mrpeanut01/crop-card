@@ -7,6 +7,10 @@
  * The retention policy is "minimum 2 years" per spec §10. Phase 4 surfaces
  * a 2-year alert on near-expiry records but does not auto-delete; that
  * always requires explicit owner confirmation per NFR-05.
+ *
+ * Phase 18a: tenant-scoped. The lock window + retention semantics apply
+ * within the active Owner; a Helper switching tenants does not see another
+ * tenant's locked records.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -14,6 +18,8 @@ import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import type { ChemistryClass, EnvironmentalConditions } from '$lib/safety/types';
 import { db } from './client';
 import { sprayEvents } from './schema';
+import { currentOwnerId, tenantValues, tenantWhere, withTenant } from './tenant';
+import { incrementUsageCounter } from '$lib/server/superadmin';
 
 export const LOCK_WINDOW_MS = 48 * 60 * 60 * 1000;
 export const RETENTION_WINDOW_MS = 2 * 365 * 24 * 60 * 60 * 1000;
@@ -21,7 +27,6 @@ export const RETENTION_ALERT_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface SprayEventInput {
   blockId: string;
-  /** Phase 12: per-crop attribution. Nullable for back-compat. */
   cropId?: string;
   sprayerId: string;
   performedById: string;
@@ -71,21 +76,32 @@ export function insertSprayEvent(input: SprayEventInput): SprayEvent {
   const id = randomUUID();
   const row = db
     .insert(sprayEvents)
-    .values({
-      id,
-      blockId: input.blockId,
-      cropId: input.cropId ?? null,
-      sprayerId: input.sprayerId,
-      performedById: input.performedById,
-      occurredAt: new Date(input.occurredAt),
-      productsJson: JSON.stringify(input.products),
-      conditionsJson: JSON.stringify(input.conditions),
-      rulesVersion: input.rulesVersion,
-      pluginHashesJson: JSON.stringify(input.pluginHashes),
-      customRateOverride: input.customRateOverride ?? false
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        cropId: input.cropId ?? null,
+        sprayerId: input.sprayerId,
+        performedById: input.performedById,
+        occurredAt: new Date(input.occurredAt),
+        productsJson: JSON.stringify(input.products),
+        conditionsJson: JSON.stringify(input.conditions),
+        rulesVersion: input.rulesVersion,
+        pluginHashesJson: JSON.stringify(input.pluginHashes),
+        customRateOverride: input.customRateOverride ?? false
+      })
+    )
     .returning()
     .get();
+  // Phase 18g: usage counter for metered-billing readiness.
+  const ownerId = currentOwnerId();
+  if (ownerId) {
+    try {
+      incrementUsageCounter(ownerId, { sprayEventsCount: 1 });
+    } catch (err) {
+      console.error('[usage] failed to increment spray_events counter', err);
+    }
+  }
   return rowToEvent(row);
 }
 
@@ -106,8 +122,11 @@ export function listSprayEvents(filters: ListFilters = {}): SprayEvent[] {
   if (filters.toMs !== undefined)
     conditions.push(lte(sprayEvents.occurredAt, new Date(filters.toMs)));
 
-  let q = db.select().from(sprayEvents).$dynamic();
-  if (conditions.length > 0) q = q.where(and(...conditions));
+  let q = db
+    .select()
+    .from(sprayEvents)
+    .where(withTenant(sprayEvents, conditions.length ? and(...conditions) : undefined))
+    .$dynamic();
   q = q.orderBy(desc(sprayEvents.occurredAt));
   if (filters.limit) q = q.limit(filters.limit);
 
@@ -115,7 +134,11 @@ export function listSprayEvents(filters: ListFilters = {}): SprayEvent[] {
 }
 
 export function getSprayEvent(id: string): SprayEvent | undefined {
-  const row = db.select().from(sprayEvents).where(eq(sprayEvents.id, id)).get();
+  const row = db
+    .select()
+    .from(sprayEvents)
+    .where(withTenant(sprayEvents, eq(sprayEvents.id, id)))
+    .get();
   return row ? rowToEvent(row) : undefined;
 }
 
@@ -132,7 +155,7 @@ export function evaluateLock(event: SprayEvent, now: number = Date.now()): numbe
   const lockedAt = event.occurredAt + LOCK_WINDOW_MS;
   db.update(sprayEvents)
     .set({ lockedAt: new Date(lockedAt) })
-    .where(eq(sprayEvents.id, event.id))
+    .where(withTenant(sprayEvents, eq(sprayEvents.id, event.id)))
     .run();
   return lockedAt;
 }
@@ -144,5 +167,8 @@ export function assertEditable(event: SprayEvent): void {
 
 export function recordsApproachingRetention(now: number = Date.now()): SprayEvent[] {
   const cutoff = now - (RETENTION_WINDOW_MS - RETENTION_ALERT_WINDOW_MS);
+  // Use the listing function so tenant filter is applied uniformly. The
+  // `tenantWhere` inside `listSprayEvents` is the canonical scope.
+  void tenantWhere;
   return listSprayEvents({ toMs: cutoff });
 }

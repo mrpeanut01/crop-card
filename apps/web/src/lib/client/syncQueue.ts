@@ -3,10 +3,17 @@
  *
  * Spray records confirmed while offline (or that fail to POST due to
  * transient network errors) are stashed in IndexedDB. On reconnect, the
- * queue drains by POSTing each pending payload to the same /api/spray/record
- * endpoint a normal client would call — server still re-runs the kernel, so
- * a record that was kernel-OK at queue time but is no longer (e.g., rules
- * changed) is rejected and stays flagged for the operator's review.
+ * queue drains by POSTing each pending payload to the same
+ * /api/spray/record endpoint a normal client would call — server still
+ * re-runs the kernel, so a record that was kernel-OK at queue time but is
+ * no longer (e.g., rules changed) is rejected and stays flagged for the
+ * operator's review.
+ *
+ * Phase 18h (multi-tenant): every pending record carries an `ownerId`. The
+ * queue drains ONLY rows matching the current active Owner so a helper
+ * switching tenants can't accidentally submit Farm A's offline records
+ * against Farm B's session. The cross-tenant pending count surfaces as a
+ * "N pending for other farm" badge instead of disappearing silently.
  */
 
 import { db, type PendingSprayRecord } from './dexie';
@@ -14,6 +21,7 @@ import { db, type PendingSprayRecord } from './dexie';
 export interface DrainResult {
   succeeded: string[];
   failed: { id: string; error: string }[];
+  skippedOtherOwner: number;
 }
 
 function uuid(): string {
@@ -22,10 +30,21 @@ function uuid(): string {
     : `pending_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function currentOwnerId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem('cropcard.activeOwnerId');
+  } catch {
+    return null;
+  }
+}
+
 export async function enqueueSprayRecord(payload: unknown): Promise<string> {
   const id = uuid();
+  const ownerId = currentOwnerId() ?? 'owner_home_farm';
   await db().pendingSprayRecords.put({
     id,
+    ownerId,
     occurredAt:
       payload && typeof payload === 'object' && 'occurredAt' in payload
         ? (payload as { occurredAt: number }).occurredAt
@@ -37,18 +56,32 @@ export async function enqueueSprayRecord(payload: unknown): Promise<string> {
   return id;
 }
 
+/** Total pending count across all tenants. The layout badge uses this so
+ *  the helper sees the full picture; drainQueue only submits the active
+ *  tenant's rows. */
 export async function pendingCount(): Promise<number> {
   return db().pendingSprayRecords.count();
+}
+
+/** Pending count for the active Owner only. */
+export async function pendingCountForActiveOwner(): Promise<number> {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return 0;
+  return db().pendingSprayRecords.where('ownerId').equals(ownerId).count();
+}
+
+/** Pending count for any Owner OTHER than the current — drives the
+ *  "queued at <other farm>" hint on the layout banner. */
+export async function pendingCountForOtherOwners(): Promise<number> {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return 0;
+  return db().pendingSprayRecords.where('ownerId').notEqual(ownerId).count();
 }
 
 export async function listPending(): Promise<PendingSprayRecord[]> {
   return db().pendingSprayRecords.orderBy('createdAt').toArray();
 }
 
-/**
- * Submit one pending record. Returns the server response if the POST
- * succeeded; throws if the network failed or the server returned non-2xx.
- */
 async function submitOne(rec: PendingSprayRecord): Promise<unknown> {
   const res = await fetch('/api/spray/record', {
     method: 'POST',
@@ -65,12 +98,18 @@ async function submitOne(rec: PendingSprayRecord): Promise<unknown> {
 
 export async function drainQueue(): Promise<DrainResult> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    return { succeeded: [], failed: [] };
+    return { succeeded: [], failed: [], skippedOtherOwner: 0 };
   }
-  const pending = await listPending();
+  const ownerId = currentOwnerId();
+  const allPending = await listPending();
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
-  for (const rec of pending) {
+  let skippedOtherOwner = 0;
+  for (const rec of allPending) {
+    if (ownerId && rec.ownerId !== ownerId) {
+      skippedOtherOwner++;
+      continue;
+    }
     try {
       await submitOne(rec);
       await db().pendingSprayRecords.delete(rec.id);
@@ -85,7 +124,7 @@ export async function drainQueue(): Promise<DrainResult> {
       failed.push({ id: rec.id, error: errMsg });
     }
   }
-  return { succeeded, failed };
+  return { succeeded, failed, skippedOtherOwner };
 }
 
 /** Auto-drain on reconnect. Call once during app init. */
@@ -97,7 +136,6 @@ export function watchOnline(): () => void {
     });
   };
   window.addEventListener('online', handler);
-  // Also try immediately, in case there's pending from a previous tab.
   handler();
   return () => window.removeEventListener('online', handler);
 }

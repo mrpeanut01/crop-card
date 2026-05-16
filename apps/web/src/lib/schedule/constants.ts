@@ -19,10 +19,19 @@ export const SETTINGS_KEYS = {
   aiMonthlyUsdCap: 'ai_monthly_usd_cap',
   aiDailyCallQuota: 'ai_daily_call_quota',
   /** Display: show shade-window markers on Plan→Schedule. Default true. */
-  showShadeMarkers: 'show_shade_markers'
+  showShadeMarkers: 'show_shade_markers',
+  /** Display: show the Reorder-level checkbox + threshold field on the
+   *  inventory edit modal. Default off — most operators rely on visual
+   *  inspection rather than per-item thresholds. */
+  displayReorderLevel: 'display_reorder_level',
+  /** Display: show the Planter setup subsection (plate + seed dims) on
+   *  the inventory edit modal for seed items. Default on. */
+  displayPlanterSetup: 'display_planter_setup'
 } as const;
 
 export const DEFAULT_SHOW_SHADE_MARKERS = true;
+export const DEFAULT_DISPLAY_REORDER_LEVEL = false;
+export const DEFAULT_DISPLAY_PLANTER_SETUP = true;
 
 export function parseBoolSetting(raw: string | undefined, fallback: boolean): boolean {
   if (raw == null) return fallback;

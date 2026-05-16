@@ -75,7 +75,7 @@ export interface ScanResult {
   formulation?: ScannedFormulation;
   /** Field names Claude inferred rather than read directly from the label/data. */
   guessed?: string[];
-  source: 'openfoodfacts' | 'claude' | 'claude-vision' | 'none';
+  source: 'openfoodfacts' | 'claude' | 'claude-vision' | 'claude-url' | 'none';
   barcode?: string;
   existingStockItemId?: string;
   cropPluginMatches?: CropPluginMatch[];
@@ -339,6 +339,316 @@ export async function claudeTextLookup(barcode: string, partialName?: string): P
     if (err instanceof AnthropicOverloadedError) throw err;
     return { found: false };
   }
+}
+
+export interface FetchedPageContent {
+  url: string;
+  title?: string;
+  metaDescription?: string;
+  /** og:* + twitter:* + product:* tags as a flat map (last write wins). */
+  metaTags: Record<string, string>;
+  /** Raw JSON-LD blocks (already parsed + re-serialized for size control). */
+  jsonLd: unknown[];
+  /** `<select>` dropdowns — variant/size pickers etc. */
+  selects: Array<{ name?: string; label?: string; options: string[] }>;
+  /** `<table>` rows — most seed-catalog spec sheets live here. */
+  tables: string[][][];
+  /** Heading hierarchy as `H1: text` / `H2: text` lines. */
+  headings: string[];
+  /** Definition-list pairs (`<dl>` term/desc). */
+  defList: Array<{ term: string; description: string }>;
+  /** Plain-text body (block-aware — newlines preserved between paragraphs). */
+  bodyText: string;
+}
+
+/** Fetch a product page and decompose the HTML into the structured signals
+ *  most relevant to filling an inventory record — JSON-LD product schemas,
+ *  meta/OG tags, `<select>` variant pickers, `<table>` spec sheets, headings,
+ *  and the body text. Seed-catalog and chemical-supply pages put critical
+ *  info (pack size, days-to-maturity, active ingredients) in dropdowns and
+ *  spec tables, so we surface those separately rather than collapsing
+ *  everything into one text run.
+ *
+ *  Caller is responsible for URL validation. Caps the read at ~2MB, times
+ *  out after 12s, and rejects non-HTML content-types. */
+export async function fetchPageContent(url: string): Promise<FetchedPageContent> {
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: {
+        'User-Agent': 'CropCard/1.0 (+farm inventory)',
+        Accept: 'text/html,application/xhtml+xml'
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(12_000)
+    });
+  } catch (e) {
+    throw new Error(`Could not load page: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  if (!res.ok) throw new Error(`Page returned HTTP ${res.status}`);
+  const ctype = res.headers.get('content-type') ?? '';
+  if (!/text\/html|application\/xhtml/.test(ctype)) {
+    throw new Error(`Unsupported content-type "${ctype || 'unknown'}" — expected HTML`);
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error('Empty response body');
+  const decoder = new TextDecoder('utf-8');
+  let html = '';
+  const MAX_BYTES = 2_000_000;
+  let bytes = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    bytes += value.byteLength;
+    html += decoder.decode(value, { stream: true });
+    if (bytes >= MAX_BYTES) { await reader.cancel(); break; }
+  }
+  html += decoder.decode();
+
+  // <title>
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const title = titleMatch ? cleanInline(titleMatch[1]) : undefined;
+
+  // <meta> — description + og:* / twitter:* / product:*
+  const metaTags: Record<string, string> = {};
+  let metaDescription: string | undefined;
+  const metaRe = /<meta\b([^>]*?)\/?>/gi;
+  for (const m of html.matchAll(metaRe)) {
+    const attrs = m[1];
+    const name = (attrs.match(/\b(?:name|property|itemprop)\s*=\s*["']([^"']+)["']/i) || [])[1];
+    const content = (attrs.match(/\bcontent\s*=\s*["']([^"']*)["']/i) || [])[1];
+    if (!name || content == null) continue;
+    const key = name.toLowerCase();
+    const value = decodeEntities(content).trim();
+    if (!value) continue;
+    if (key === 'description') metaDescription = value;
+    if (/^(og:|twitter:|product:|book:|article:)/.test(key) || key === 'keywords' || key === 'description') {
+      metaTags[key] = value;
+    }
+  }
+
+  // <script type="application/ld+json"> — highest-signal product data
+  const jsonLd: unknown[] = [];
+  const ldRe = /<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  for (const m of html.matchAll(ldRe)) {
+    const raw = m[1].trim();
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) jsonLd.push(...parsed);
+      else jsonLd.push(parsed);
+    } catch {
+      // Skip malformed JSON-LD silently — vendor pages sometimes include
+      // template placeholders that break parse; not worth surfacing.
+    }
+    if (jsonLd.length >= 20) break;
+  }
+
+  // <select> dropdowns — variant pickers (pack size, treatment, etc.).
+  const selects: FetchedPageContent['selects'] = [];
+  const selectRe = /<select\b([^>]*)>([\s\S]*?)<\/select>/gi;
+  for (const m of html.matchAll(selectRe)) {
+    const attrs = m[1];
+    const inner = m[2];
+    const name = (attrs.match(/\b(?:name|id)\s*=\s*["']([^"']+)["']/i) || [])[1];
+    const ariaLabel = (attrs.match(/\baria-label\s*=\s*["']([^"']+)["']/i) || [])[1];
+    const dataLabel = (attrs.match(/\bdata-(?:label|title)\s*=\s*["']([^"']+)["']/i) || [])[1];
+    const label = ariaLabel || dataLabel || undefined;
+    const options: string[] = [];
+    const optionRe = /<option\b[^>]*>([\s\S]*?)<\/option>/gi;
+    for (const o of inner.matchAll(optionRe)) {
+      const text = cleanInline(o[1]);
+      if (text && text.length <= 200) options.push(text);
+      if (options.length >= 50) break;
+    }
+    if (options.length > 0) selects.push({ name, label, options });
+    if (selects.length >= 20) break;
+  }
+
+  // <table> — spec sheets and growing-info tables.
+  const tables: string[][][] = [];
+  const tableRe = /<table\b[^>]*>([\s\S]*?)<\/table>/gi;
+  for (const m of html.matchAll(tableRe)) {
+    const rows: string[][] = [];
+    const rowRe = /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
+    for (const r of m[1].matchAll(rowRe)) {
+      const cells: string[] = [];
+      const cellRe = /<t[hd]\b[^>]*>([\s\S]*?)<\/t[hd]>/gi;
+      for (const c of r[1].matchAll(cellRe)) {
+        const text = cleanInline(c[1]);
+        cells.push(text);
+      }
+      if (cells.some((c) => c)) rows.push(cells);
+      if (rows.length >= 50) break;
+    }
+    if (rows.length > 0) tables.push(rows);
+    if (tables.length >= 10) break;
+  }
+
+  // Heading hierarchy.
+  const headings: string[] = [];
+  const headingRe = /<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi;
+  for (const m of html.matchAll(headingRe)) {
+    const text = cleanInline(m[2]);
+    if (text) headings.push(`H${m[1]}: ${text}`);
+    if (headings.length >= 40) break;
+  }
+
+  // <dl> definition lists — many seed pages stick growing info here.
+  const defList: FetchedPageContent['defList'] = [];
+  const dlRe = /<dl\b[^>]*>([\s\S]*?)<\/dl>/gi;
+  for (const m of html.matchAll(dlRe)) {
+    const inner = m[1];
+    const pairRe = /<dt\b[^>]*>([\s\S]*?)<\/dt>\s*<dd\b[^>]*>([\s\S]*?)<\/dd>/gi;
+    for (const p of inner.matchAll(pairRe)) {
+      const term = cleanInline(p[1]);
+      const description = cleanInline(p[2]);
+      if (term && description) defList.push({ term, description });
+      if (defList.length >= 40) break;
+    }
+    if (defList.length >= 40) break;
+  }
+
+  // Block-aware plain text — preserve paragraph breaks so growing
+  // instructions don't collapse into one wall.
+  const bodyText = htmlToBlockText(html).slice(0, 18_000);
+
+  return { url, title, metaDescription, metaTags, jsonLd, selects, tables, headings, defList, bodyText };
+}
+
+/** Strip an inline HTML fragment to a single-line text value. */
+function cleanInline(html: string): string {
+  return decodeEntities(html.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
+/** Reduce a full HTML document to plain text while preserving block-level
+ *  newlines so paragraphs, list items, and table cells stay legible. */
+function htmlToBlockText(html: string): string {
+  return decodeEntities(
+    html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+      .replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|li|h[1-6]|tr|section|article|header|footer|nav|aside|blockquote|pre)>/gi, '\n')
+      .replace(/<\/td>/gi, '\t')
+      .replace(/<[^>]+>/g, ' ')
+  )
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–')
+    .replace(/&hellip;/g, '…')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+}
+
+/** Render a FetchedPageContent into clearly delimited sections so Claude can
+ *  prioritize JSON-LD + selects + tables over noisy body copy. The total is
+ *  budgeted around 24KB; JSON-LD and structured sections always survive,
+ *  bodyText is the truncation target. */
+export function renderPageContentForPrompt(p: FetchedPageContent): string {
+  const parts: string[] = [];
+  parts.push(`URL: ${p.url}`);
+  if (p.title) parts.push(`TITLE: ${p.title}`);
+  if (p.metaDescription) parts.push(`META DESCRIPTION: ${p.metaDescription}`);
+  const ogKeys = Object.keys(p.metaTags).filter((k) => k !== 'description');
+  if (ogKeys.length > 0) {
+    const ogLines = ogKeys.slice(0, 25).map((k) => `  ${k}: ${truncate(p.metaTags[k], 300)}`);
+    parts.push(`META TAGS:\n${ogLines.join('\n')}`);
+  }
+  if (p.jsonLd.length > 0) {
+    const lines: string[] = [];
+    let used = 0;
+    for (let i = 0; i < p.jsonLd.length && used < 8000; i++) {
+      const blob = JSON.stringify(p.jsonLd[i]);
+      const trimmed = blob.length > 4000 ? blob.slice(0, 4000) + '…' : blob;
+      lines.push(`  [${i + 1}] ${trimmed}`);
+      used += trimmed.length;
+    }
+    parts.push(`JSON-LD (schema.org structured data):\n${lines.join('\n')}`);
+  }
+  if (p.selects.length > 0) {
+    const lines = p.selects.map((s, i) => {
+      const head = `  SELECT #${i + 1}${s.name ? ` name="${s.name}"` : ''}${s.label ? ` label="${s.label}"` : ''}:`;
+      const opts = s.options.map((o) => `    - ${truncate(o, 200)}`).join('\n');
+      return `${head}\n${opts}`;
+    });
+    parts.push(`DROPDOWNS / VARIANTS:\n${lines.join('\n')}`);
+  }
+  if (p.tables.length > 0) {
+    const lines = p.tables.map((rows, i) => {
+      const rendered = rows
+        .slice(0, 30)
+        .map((cells) => `    | ${cells.map((c) => truncate(c, 120)).join(' | ')} |`)
+        .join('\n');
+      return `  TABLE #${i + 1}:\n${rendered}`;
+    });
+    parts.push(`TABLES:\n${lines.join('\n\n')}`);
+  }
+  if (p.defList.length > 0) {
+    const lines = p.defList.slice(0, 40).map((d) => `  ${truncate(d.term, 80)} :: ${truncate(d.description, 240)}`);
+    parts.push(`DEFINITION LIST:\n${lines.join('\n')}`);
+  }
+  if (p.headings.length > 0) {
+    parts.push(`HEADINGS:\n${p.headings.map((h) => `  ${h}`).join('\n')}`);
+  }
+  if (p.bodyText) parts.push(`BODY TEXT:\n${p.bodyText}`);
+  return parts.join('\n\n');
+}
+
+function truncate(s: string, n: number): string {
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+
+/** Claude text call seeded with a product URL's structured page content.
+ *  Used by /api/scan-url to fill the Add-item form from a seed-catalog or
+ *  chemical-supply product page. The prompt surfaces JSON-LD, dropdowns,
+ *  tables, and headings as separate labeled sections so the model can read
+ *  pack sizes from the SELECT and DTM from the spec table instead of
+ *  hunting through prose. */
+export async function claudeUrlLookup(content: FetchedPageContent): Promise<Partial<ScanResult>> {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('No Anthropic API key configured. Add it on the Settings page.');
+  const client = new Anthropic({ apiKey });
+  const rendered = renderPageContentForPrompt(content);
+  const userMessage =
+    `Identify this farm-supply product from a vendor product page. The page has been ` +
+    `parsed into labeled sections. Treat JSON-LD and TABLES as authoritative; DROPDOWNS ` +
+    `enumerate available pack-size / variant choices and reveal the canonical "packageQuantity" ` +
+    `you should pick (prefer the smallest practical pack — e.g., "Packet" for seeds, the most ` +
+    `commonly stocked container for chems). When multiple variants appear, return one product ` +
+    `record using the smallest pack and note the others in "notes".\n\n` +
+    `${rendered}\n\n` +
+    `Return the structured JSON. Add any field you inferred rather than read directly from ` +
+    `the page to "guessed". If the page is clearly NOT a single product page (a category list, ` +
+    `a home page, an error page), return {"found": false}.`;
+  const msg = await withRetry(() =>
+    client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1500,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: userMessage }]
+    })
+  );
+  const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+  return parseClaudeJson(text);
 }
 
 // Claude vision call (for label photo).

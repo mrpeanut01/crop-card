@@ -4,6 +4,10 @@
  * Quantities stored as integer hundredths of the SKU's default unit so we
  * never lose precision through receipt → use → adjustment cycles. The
  * public API exposes decimal numbers; conversion happens at the boundary.
+ *
+ * Phase 18a: tenant-scoped. Items, lots, movements all carry an ownerId;
+ * decrement queries operate within the active Owner so FIFO ordering across
+ * tenants never crosses.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -11,6 +15,7 @@ import { and, asc, desc, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { fromHundredths, toHundredths, toStorage, type StockUnit } from '$lib/stock/units';
 import { db } from './client';
 import { stockItems, stockLots, stockMovements } from './schema';
+import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export type StockCategory =
   | 'herbicide'
@@ -37,25 +42,20 @@ export interface StockItem {
   pluginId?: string;
   category: StockCategory;
   displayName: string;
-  /** Phase 15d — Haiku-generated short label (≤40 chars). Null until the
-   *  operator runs ✨ Generate short names on /stock; consumers fall back
-   *  to displayName. */
   shortName?: string;
   defaultUnit: StockUnit;
   reorderThreshold?: number;
   notes?: string;
   barcode?: string;
-  /** FK into taxonomy_terms for sub-categorization (Type). */
   typeId?: string;
   metadataJson?: string;
-  /** Phase 17 (Track 2) — JSON-serialized active ingredients captured by
-   *  the label scan and confirmed by the operator. Drives the
-   *  data-augmented safety hook for stock that doesn't match a kernel
-   *  herbicide/insecticide/fungicide plugin. */
   activeIngredientsJson?: string;
-  /** Phase 17 (Track 2) — JSON-serialized formulation block (npk, type,
-   *  productClass) captured by the label scan. */
   formulationJson?: string;
+  /** Phase 17 follow-up — JSON-serialized pending AI Refresh suggestions
+   *  awaiting operator review. Survives modal close + page reload. */
+  pendingRefreshJson?: string;
+  /** When the pending refresh was captured (ms epoch). */
+  pendingRefreshAt?: number;
 }
 
 export interface StockLot {
@@ -79,8 +79,6 @@ export interface StockMovement {
   sprayEventId?: string;
   insecticideEventId?: string;
   fertilityApplicationId?: string;
-  /** Phase 13: per-crop attribution. Set on auto-decrement; nullable for
-   *  receipts and farm-wide adjustments. */
   cropId?: string;
   performedById?: string;
   notes?: string;
@@ -95,7 +93,6 @@ export interface StockItemWithBalance extends StockItem {
 
 export interface LotWithBalance extends StockLot {
   balance: number;
-  /** Days until expiry, or null if no expiry. Negative = already expired. */
   daysUntilExpiry: number | null;
 }
 
@@ -112,12 +109,7 @@ export interface CreateItemInput {
   barcode?: string;
   typeId?: string;
   metadataJson?: string;
-  /** Phase 17 (Track 2) — AI-extracted active ingredients from label scan,
-   *  user-confirmed before persistence. JSON-serialized
-   *  Array<{ name, concentrationPct?, chemistryClass?, iracGroup?, fracCode? }>. */
   activeIngredientsJson?: string;
-  /** Phase 17 (Track 2) — AI-extracted formulation block. JSON-serialized
-   *  { type?, npk?, productClass? }. */
   formulationJson?: string;
 }
 
@@ -125,22 +117,24 @@ export function createStockItem(input: CreateItemInput): StockItem {
   const id = randomUUID();
   const row = db
     .insert(stockItems)
-    .values({
-      id,
-      category: input.category,
-      displayName: input.displayName,
-      shortName: input.shortName?.trim() || null,
-      defaultUnit: input.defaultUnit,
-      pluginId: input.pluginId ?? null,
-      reorderThresholdHundredths:
-        input.reorderThreshold !== undefined ? toHundredths(input.reorderThreshold) : null,
-      notes: input.notes ?? null,
-      barcode: input.barcode ?? null,
-      typeId: input.typeId ?? null,
-      metadataJson: input.metadataJson ?? null,
-      activeIngredientsJson: input.activeIngredientsJson ?? null,
-      formulationJson: input.formulationJson ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        category: input.category,
+        displayName: input.displayName,
+        shortName: input.shortName?.trim() || null,
+        defaultUnit: input.defaultUnit,
+        pluginId: input.pluginId ?? null,
+        reorderThresholdHundredths:
+          input.reorderThreshold !== undefined ? toHundredths(input.reorderThreshold) : null,
+        notes: input.notes ?? null,
+        barcode: input.barcode ?? null,
+        typeId: input.typeId ?? null,
+        metadataJson: input.metadataJson ?? null,
+        activeIngredientsJson: input.activeIngredientsJson ?? null,
+        formulationJson: input.formulationJson ?? null
+      })
+    )
     .returning()
     .get();
   return rowToItem(row);
@@ -163,22 +157,39 @@ function rowToItem(row: typeof stockItems.$inferSelect): StockItem {
     typeId: row.typeId ?? undefined,
     metadataJson: row.metadataJson ?? undefined,
     activeIngredientsJson: row.activeIngredientsJson ?? undefined,
-    formulationJson: row.formulationJson ?? undefined
+    formulationJson: row.formulationJson ?? undefined,
+    pendingRefreshJson: row.pendingRefreshJson ?? undefined,
+    pendingRefreshAt:
+      row.pendingRefreshAt instanceof Date
+        ? row.pendingRefreshAt.getTime()
+        : (row.pendingRefreshAt as number | null | undefined) ?? undefined
   };
 }
 
 export function getStockItem(id: string): StockItem | undefined {
-  const row = db.select().from(stockItems).where(eq(stockItems.id, id)).get();
+  const row = db
+    .select()
+    .from(stockItems)
+    .where(withTenant(stockItems, eq(stockItems.id, id)))
+    .get();
   return row ? rowToItem(row) : undefined;
 }
 
 export function getStockItemByPluginId(pluginId: string): StockItem | undefined {
-  const row = db.select().from(stockItems).where(eq(stockItems.pluginId, pluginId)).get();
+  const row = db
+    .select()
+    .from(stockItems)
+    .where(withTenant(stockItems, eq(stockItems.pluginId, pluginId)))
+    .get();
   return row ? rowToItem(row) : undefined;
 }
 
 export function getStockItemByBarcode(barcode: string): StockItem | undefined {
-  const row = db.select().from(stockItems).where(eq(stockItems.barcode, barcode)).get();
+  const row = db
+    .select()
+    .from(stockItems)
+    .where(withTenant(stockItems, eq(stockItems.barcode, barcode)))
+    .get();
   return row ? rowToItem(row) : undefined;
 }
 
@@ -193,11 +204,7 @@ export type UpdateItemInput = {
   barcode?: string;
   typeId?: string | null;
   metadataJson?: string;
-  /** Phase 17 (Track 2 + AI Refresh) — confirmed active ingredients.
-   *  null clears the column (operator clicked Discard). */
   activeIngredientsJson?: string | null;
-  /** Phase 17 (Track 2 + AI Refresh) — confirmed formulation block.
-   *  null clears the column (operator clicked Discard). */
   formulationJson?: string | null;
 };
 
@@ -209,9 +216,8 @@ export function updateStockItem(id: string, updates: UpdateItemInput): StockItem
   if ('defaultUnit' in updates && updates.defaultUnit !== undefined) set.defaultUnit = updates.defaultUnit;
   if ('pluginId' in updates) set.pluginId = updates.pluginId ?? null;
   if ('reorderThreshold' in updates) {
-    set.reorderThresholdHundredths = updates.reorderThreshold != null
-      ? toHundredths(updates.reorderThreshold)
-      : null;
+    set.reorderThresholdHundredths =
+      updates.reorderThreshold != null ? toHundredths(updates.reorderThreshold) : null;
   }
   if ('notes' in updates) set.notes = updates.notes ?? null;
   if ('barcode' in updates) set.barcode = updates.barcode ?? null;
@@ -222,19 +228,85 @@ export function updateStockItem(id: string, updates: UpdateItemInput): StockItem
   if ('formulationJson' in updates) set.formulationJson = updates.formulationJson ?? null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const row = db.update(stockItems).set(set as any).where(eq(stockItems.id, id)).returning().get();
+  const row = db
+    .update(stockItems)
+    .set(set as any)
+    .where(withTenant(stockItems, eq(stockItems.id, id)))
+    .returning()
+    .get();
   if (!row) throw new Error(`Stock item ${id} not found`);
   return rowToItem(row);
 }
 
+/**
+ * Phase 17 follow-up — write or clear the pending AI Refresh blob.
+ * `payload === null` clears; otherwise stores the JSON + a timestamp so the
+ * UI can label staleness. Kept separate from `updateStockItem` so the
+ * refresh endpoints don't have to construct a full update set.
+ */
+export function setPendingRefresh(id: string, payload: string | null): StockItem {
+  const set: Record<string, unknown> = {
+    pendingRefreshJson: payload,
+    pendingRefreshAt: payload === null ? null : new Date()
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const row = db
+    .update(stockItems)
+    .set(set as any)
+    .where(withTenant(stockItems, eq(stockItems.id, id)))
+    .returning()
+    .get();
+  if (!row) throw new Error(`Stock item ${id} not found`);
+  return rowToItem(row);
+}
+
+/** Lightweight list — id + display name + pending-refresh metadata for any
+ *  item that currently has an unapplied AI Refresh suggestion. Powers a
+ *  "pending suggestions" view in Settings. */
+export function listItemsWithPendingRefresh(): Array<{
+  id: string;
+  displayName: string;
+  shortName?: string;
+  category: StockCategory;
+  pendingRefreshAt: number;
+}> {
+  return db
+    .select({
+      id: stockItems.id,
+      displayName: stockItems.displayName,
+      shortName: stockItems.shortName,
+      category: stockItems.category,
+      pendingRefreshAt: stockItems.pendingRefreshAt
+    })
+    .from(stockItems)
+    .where(
+      withTenant(stockItems, sql`${stockItems.pendingRefreshJson} IS NOT NULL`)
+    )
+    .all()
+    .map((row) => ({
+      id: row.id,
+      displayName: row.displayName,
+      shortName: row.shortName ?? undefined,
+      category: row.category as StockCategory,
+      pendingRefreshAt:
+        row.pendingRefreshAt instanceof Date
+          ? row.pendingRefreshAt.getTime()
+          : (row.pendingRefreshAt as unknown as number)
+    }));
+}
+
 /** All items, with on-hand balance + low-stock flag computed in one pass. */
 export function listStockItems(): StockItemWithBalance[] {
-  const items = db.select().from(stockItems).all().map(rowToItem);
+  const items = db.select().from(stockItems).where(tenantWhere(stockItems)).all().map(rowToItem);
   return items.map((item) => withBalance(item));
 }
 
 function withBalance(item: StockItem): StockItemWithBalance {
-  const lots = db.select().from(stockLots).where(eq(stockLots.stockItemId, item.id)).all();
+  const lots = db
+    .select()
+    .from(stockLots)
+    .where(withTenant(stockLots, eq(stockLots.stockItemId, item.id)))
+    .all();
   let totalHundredths = 0;
   let earliestExpiry: number | undefined;
   for (const lot of lots) {
@@ -261,7 +333,7 @@ function lotBalanceHundredths(lotId: string, receivedHundredths: number): number
   const sum = db
     .select({ total: sql<number>`coalesce(sum(${stockMovements.deltaHundredths}), 0)` })
     .from(stockMovements)
-    .where(eq(stockMovements.stockLotId, lotId))
+    .where(withTenant(stockMovements, eq(stockMovements.stockLotId, lotId)))
     .get();
   return receivedHundredths + (sum?.total ?? 0);
 }
@@ -271,7 +343,6 @@ function lotBalanceHundredths(lotId: string, receivedHundredths: number): number
 export interface ReceiveLotInput {
   stockItemId: string;
   receivedQuantity: number;
-  /** Unit the operator is reading off the bottle. Converted to default unit. */
   unit: StockUnit;
   lotNumber?: string;
   expiresAt?: number;
@@ -299,32 +370,34 @@ export function receiveLot(input: ReceiveLotInput): StockLot {
   const receivedAt = Date.now();
   const lotRow = db
     .insert(stockLots)
-    .values({
-      id: lotId,
-      stockItemId: input.stockItemId,
-      lotNumber: input.lotNumber ?? null,
-      expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
-      receivedAt: new Date(receivedAt),
-      receivedQuantityHundredths: hundredths,
-      receivedCostCents: input.receivedCostCents ?? null,
-      supplier: input.supplier ?? null,
-      notes: input.notes ?? null
-    })
+    .values(
+      tenantValues({
+        id: lotId,
+        stockItemId: input.stockItemId,
+        lotNumber: input.lotNumber ?? null,
+        expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+        receivedAt: new Date(receivedAt),
+        receivedQuantityHundredths: hundredths,
+        receivedCostCents: input.receivedCostCents ?? null,
+        supplier: input.supplier ?? null,
+        notes: input.notes ?? null
+      })
+    )
     .returning()
     .get();
 
-  // The receipt itself is a +0 movement so the audit trail shows when the
-  // lot landed; the actual quantity lives on stockLots.receivedQuantity.
   db.insert(stockMovements)
-    .values({
-      id: randomUUID(),
-      stockLotId: lotId,
-      occurredAt: new Date(receivedAt),
-      deltaHundredths: 0,
-      reason: 'receipt',
-      performedById: input.performedById ?? null,
-      notes: 'lot received'
-    })
+    .values(
+      tenantValues({
+        id: randomUUID(),
+        stockLotId: lotId,
+        occurredAt: new Date(receivedAt),
+        deltaHundredths: 0,
+        reason: 'receipt',
+        performedById: input.performedById ?? null,
+        notes: 'lot received'
+      })
+    )
     .run();
 
   return rowToLot(lotRow);
@@ -348,7 +421,7 @@ export function listLotsForItem(stockItemId: string): LotWithBalance[] {
   const lots = db
     .select()
     .from(stockLots)
-    .where(eq(stockLots.stockItemId, stockItemId))
+    .where(withTenant(stockLots, eq(stockLots.stockItemId, stockItemId)))
     .orderBy(asc(stockLots.receivedAt))
     .all();
   const now = Date.now();
@@ -378,12 +451,15 @@ export interface RecordMovementInput {
 }
 
 export function recordMovement(input: RecordMovementInput): StockMovement {
-  const lot = db.select().from(stockLots).where(eq(stockLots.id, input.stockLotId)).get();
+  const lot = db
+    .select()
+    .from(stockLots)
+    .where(withTenant(stockLots, eq(stockLots.id, input.stockLotId)))
+    .get();
   if (!lot) throw new Error(`unknown lot: ${input.stockLotId}`);
   const item = getStockItem(lot.stockItemId);
   if (!item) throw new Error(`stock item missing for lot ${input.stockLotId}`);
 
-  // Convert + preserve sign.
   const sign = input.delta < 0 ? -1 : 1;
   const magnitude = toStorage(Math.abs(input.delta), input.unit, item.defaultUnit);
   if (magnitude === null) throw new IncompatibleUnitError(input.unit, item.defaultUnit);
@@ -391,17 +467,19 @@ export function recordMovement(input: RecordMovementInput): StockMovement {
   const id = randomUUID();
   const row = db
     .insert(stockMovements)
-    .values({
-      id,
-      stockLotId: input.stockLotId,
-      occurredAt: new Date(input.occurredAt ?? Date.now()),
-      deltaHundredths: sign * magnitude,
-      reason: input.reason,
-      sprayEventId: input.sprayEventId ?? null,
-      cropId: input.cropId ?? null,
-      performedById: input.performedById ?? null,
-      notes: input.notes ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        stockLotId: input.stockLotId,
+        occurredAt: new Date(input.occurredAt ?? Date.now()),
+        deltaHundredths: sign * magnitude,
+        reason: input.reason,
+        sprayEventId: input.sprayEventId ?? null,
+        cropId: input.cropId ?? null,
+        performedById: input.performedById ?? null,
+        notes: input.notes ?? null
+      })
+    )
     .returning()
     .get();
   return rowToMovement(row);
@@ -427,14 +505,14 @@ export function listMovementsForItem(stockItemId: string, limit = 50): StockMove
   const lots = db
     .select({ id: stockLots.id })
     .from(stockLots)
-    .where(eq(stockLots.stockItemId, stockItemId))
+    .where(withTenant(stockLots, eq(stockLots.stockItemId, stockItemId)))
     .all();
   if (lots.length === 0) return [];
   const lotIds = lots.map((l) => l.id);
   return db
     .select()
     .from(stockMovements)
-    .where(or(...lotIds.map((id) => eq(stockMovements.stockLotId, id))))
+    .where(withTenant(stockMovements, or(...lotIds.map((id) => eq(stockMovements.stockLotId, id)))))
     .orderBy(desc(stockMovements.occurredAt))
     .limit(limit)
     .all()
@@ -443,7 +521,6 @@ export function listMovementsForItem(stockItemId: string, limit = 50): StockMove
 
 export interface SetQuantityInput {
   stockItemId: string;
-  /** Target on-hand in the item's default unit. Must be ≥ 0. */
   targetQuantity: number;
   performedById?: string;
   notes?: string;
@@ -454,17 +531,10 @@ export interface SetQuantityResult {
   previousQuantity: number;
   newQuantity: number;
   delta: number;
-  /** New movement (if delta != 0 and a lot existed) or new lot (if first receipt). */
   movement?: StockMovement;
   lot?: StockLot;
 }
 
-/**
- * Manually overwrite the on-hand quantity for a SKU. Use case: end-of-season
- * physical count, audit reconciliation. Posts a single adjustment movement
- * against the most-recently-received lot, or creates a fresh lot when the
- * SKU has none yet.
- */
 export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
   const item = getStockItem(input.stockItemId);
   if (!item) throw new Error(`unknown stock item: ${input.stockItemId}`);
@@ -474,7 +544,7 @@ export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
   const lots = db
     .select()
     .from(stockLots)
-    .where(eq(stockLots.stockItemId, item.id))
+    .where(withTenant(stockLots, eq(stockLots.stockItemId, item.id)))
     .orderBy(desc(stockLots.receivedAt))
     .all();
 
@@ -492,7 +562,6 @@ export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
   if (deltaHundredths === 0) return result;
 
   if (lots.length === 0) {
-    // First receipt for this SKU.
     const lot = receiveLot({
       stockItemId: item.id,
       receivedQuantity: input.targetQuantity,
@@ -508,15 +577,17 @@ export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
   const movementId = randomUUID();
   const row = db
     .insert(stockMovements)
-    .values({
-      id: movementId,
-      stockLotId: targetLot.id,
-      occurredAt: new Date(),
-      deltaHundredths,
-      reason: 'adjustment',
-      performedById: input.performedById ?? null,
-      notes: input.notes ?? 'manual count'
-    })
+    .values(
+      tenantValues({
+        id: movementId,
+        stockLotId: targetLot.id,
+        occurredAt: new Date(),
+        deltaHundredths,
+        reason: 'adjustment',
+        performedById: input.performedById ?? null,
+        notes: input.notes ?? 'manual count'
+      })
+    )
     .returning()
     .get();
   result.movement = rowToMovement(row);
@@ -532,15 +603,6 @@ export interface DecrementResult {
   notes: string[];
 }
 
-/**
- * FIFO-decrement against the oldest non-expired lots first.
- * If no lot has stock, creates a synthetic "shortfall" lot? No — we record
- * a negative movement against the most-recently-received lot if any exists,
- * and surface a shortfall amount the operator can reconcile later.
- *
- * If there are zero lots for the item entirely, we skip and report shortfall;
- * the spray-event endpoint surfaces this as a warning, not a block.
- */
 export function decrementForUse(input: {
   stockItemId: string;
   amount: number;
@@ -548,7 +610,6 @@ export function decrementForUse(input: {
   sprayEventId?: string;
   insecticideEventId?: string;
   fertilityApplicationId?: string;
-  /** Phase 13: per-crop attribution for fast "what did this crop consume?" rollups. */
   cropId?: string;
   reason?: MovementReason;
   performedById?: string;
@@ -571,15 +632,16 @@ export function decrementForUse(input: {
   if (requestedHundredths <= 0) return result;
 
   const now = input.occurredAt ?? Date.now();
-  // Pull lots oldest first; skip already-expired lots so we don't pretend
-  // they had usable product.
   const lots = db
     .select()
     .from(stockLots)
     .where(
-      and(
-        eq(stockLots.stockItemId, item.id),
-        or(isNull(stockLots.expiresAt), gt(stockLots.expiresAt, new Date(now)))
+      withTenant(
+        stockLots,
+        and(
+          eq(stockLots.stockItemId, item.id),
+          or(isNull(stockLots.expiresAt), gt(stockLots.expiresAt, new Date(now)))
+        )
       )
     )
     .orderBy(asc(stockLots.receivedAt))
@@ -601,19 +663,21 @@ export function decrementForUse(input: {
           : 'spray-event');
     const movement = db
       .insert(stockMovements)
-      .values({
-        id,
-        stockLotId: lot.id,
-        occurredAt: new Date(now),
-        deltaHundredths: -take,
-        reason,
-        sprayEventId: input.sprayEventId ?? null,
-        insecticideEventId: input.insecticideEventId ?? null,
-        fertilityApplicationId: input.fertilityApplicationId ?? null,
-        cropId: input.cropId ?? null,
-        performedById: input.performedById ?? null,
-        notes: `auto-decrement from ${reason}`
-      })
+      .values(
+        tenantValues({
+          id,
+          stockLotId: lot.id,
+          occurredAt: new Date(now),
+          deltaHundredths: -take,
+          reason,
+          sprayEventId: input.sprayEventId ?? null,
+          insecticideEventId: input.insecticideEventId ?? null,
+          fertilityApplicationId: input.fertilityApplicationId ?? null,
+          cropId: input.cropId ?? null,
+          performedById: input.performedById ?? null,
+          notes: `auto-decrement from ${reason}`
+        })
+      )
       .returning()
       .get();
     result.movements.push(rowToMovement(movement));

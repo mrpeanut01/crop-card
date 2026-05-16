@@ -15,7 +15,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import type { CropPlugin } from '$lib/plugins/schemas';
+import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { Crop } from '$lib/db/crops';
 import { rotationLookbackForFamily } from '$lib/calendar/rotation';
@@ -42,6 +42,14 @@ import { recordAiCall } from './aiCallStats';
 import { getDerivedSignal, setDerivedSignal } from './aiDerivedSignals';
 import { appendTurn, buildThreadedMessages } from './aiPlanningSession';
 import { getApiKey } from './scanResult';
+import {
+  buildPollinationLayer,
+  computePollinationConstraints,
+  renderPollinationPromptSection,
+  type PollinationLayer
+} from '$lib/plan/pollinationLayer';
+import { detectCompanionGroups } from '$lib/plan/companionOffsets';
+import type { CompanionGroupMarker, PollinationConstraint } from '$lib/plan/types';
 
 const MAX_OUTPUT_TOKENS = 4000;
 
@@ -87,6 +95,17 @@ export interface AllocationResult {
    *  rotation opportunities, etc. Each entry is one plain-English sentence.
    *  May be empty when nothing notable came up. */
   advisories: string[];
+  /** Phase 19 — cross-pollination constraints derived from the picked
+   *  assignments. Open (`must-stagger`) entries are carried forward into
+   *  the scheduler so it can pick planting dates that satisfy them. */
+  pollinationConstraints: PollinationConstraint[];
+  /** Block IDs whose geometry was missing — surfaced once as a banner. */
+  geometryMissingBlockIds: string[];
+  /** Phase 20 (B6) — companion groupings (three-sisters etc.) detected
+   *  from the finalized layout. Scheduler anchors planting dates on the
+   *  group's anchor and offsets companion members. Empty when no
+   *  companion system matched. */
+  companionGroups: CompanionGroupMarker[];
   meta: AiResultMeta & {
     /** When the AI failed twice or no API key was present, the engine's
      *  deterministic plan is returned and this is set. */
@@ -107,6 +126,11 @@ export interface AllocateOptions {
    *  derived-signal cache; when omitted, the candidacy matrix is recomputed
    *  every call (legacy behaviour). */
   contextVersion?: string;
+  /** Phase 20 (B6) — companion-system plugins (e.g., three-sisters) from
+   *  the registry. When supplied, the allocator detects groupings present
+   *  in the finalized assignments and emits `companionGroups[]` in the
+   *  result so the scheduler can anchor + offset planting dates. */
+  companionSystems?: ReadonlyArray<CompanionPlugin>;
 }
 
 // ─── Public API ──────────────────────────────────────────────────────────
@@ -150,7 +174,11 @@ export async function allocate(
   // Phase 17 (Track 3.2) — dual cache breakpoints (header + bulky catalog).
   const systemBlocks = buildFarmSystemBlocks(ctx);
 
-  const firstPrompt = buildAllocationPrompt(matrix, input);
+  // Phase 19 — cross-pollination layer. Skipped when no crossing pairs are
+  // in the selection; otherwise appended to the prompt so Claude can prefer
+  // spatially-isolated block pairings up to the plugin's isolation ceiling.
+  const pollinationLayer = buildPollinationLayer(input);
+  const firstPrompt = buildAllocationPrompt(matrix, input, pollinationLayer);
   const telemetry: TelemetryConfig = {
     planningSessionId: options.planningSessionId,
     contextCacheHit: !!options.contextCacheHit,
@@ -203,6 +231,12 @@ export async function allocate(
 
   if (!aiPlan) {
     const fallback = engineFallback(input, matrix, 'engine-only');
+    fallback.pollinationConstraints = computePollinationConstraints(
+      fallback.assignments,
+      input,
+      pollinationLayer
+    );
+    fallback.geometryMissingBlockIds = pollinationLayer.geometryMissingBlockIds;
     fallback.meta = {
       ...fallback.meta,
       ...totalMeta,
@@ -238,8 +272,356 @@ export async function allocate(
     sufficiency,
     rationale: aiPlan.rationale,
     perRowRationale,
+    pollinationConstraints: computePollinationConstraints(assignments, input, pollinationLayer),
+    geometryMissingBlockIds: pollinationLayer.geometryMissingBlockIds,
+    companionGroups: detectGroupsForAssignments(assignments, input, options.companionSystems),
     advisories: aiPlan.advisories,
     meta: { ...totalMeta, violationsOnFirstAttempt }
+  };
+}
+
+function detectGroupsForAssignments(
+  assignments: ReadonlyArray<Assignment>,
+  input: PlanInput,
+  systems: ReadonlyArray<CompanionPlugin> | undefined
+): CompanionGroupMarker[] {
+  if (!systems || systems.length === 0) return [];
+  return detectCompanionGroups(
+    assignments.map((a) => ({
+      stockItemId: a.stockItemId,
+      blockId: a.blockId,
+      cropPluginId: a.cropPluginId
+    })),
+    input.pluginIndex,
+    systems
+  );
+}
+
+// ─── Chat refinement (review-step "talk to the planner") ────────────────
+
+export interface AllocationChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface RefineInput {
+  /** The plan currently displayed to the farmer. Becomes the assistant's
+   *  echoed opening so Claude knows what state we're amending. */
+  previousAssignments: Array<{
+    stockItemId: string;
+    blockId: string;
+    plants: number;
+    rationale: string;
+  }>;
+  previousRationale: string;
+  previousAdvisories: string[];
+  /** Prior chat turns since the initial allocation. Last entry MUST be the
+   *  user's new message; the server uses everything before it as the
+   *  alternating user/assistant tail. */
+  transcript: AllocationChatTurn[];
+}
+
+export interface RefineResult extends AllocationResult {
+  /** Plain-English chat-bubble text from the assistant for this turn. */
+  reply: string;
+}
+
+const MAX_CHAT_TURNS = 30;
+
+export async function refineAllocation(
+  input: PlanInput,
+  ctx: FarmContext,
+  refine: RefineInput,
+  options: AllocateOptions = {}
+): Promise<RefineResult> {
+  const matrixSubKey = hashInputsForMatrix(input);
+  let derivedSignalHit = false;
+  let matrix: MatrixRow[];
+  if (options.contextVersion) {
+    const cached = getDerivedSignal<MatrixRow[]>(
+      options.contextVersion,
+      'candidacy-matrix',
+      matrixSubKey
+    );
+    if (cached) {
+      matrix = cached;
+      derivedSignalHit = true;
+    } else {
+      matrix = buildCandidacyMatrix(input);
+      setDerivedSignal(options.contextVersion, 'candidacy-matrix', matrix, matrixSubKey);
+    }
+  } else {
+    matrix = buildCandidacyMatrix(input);
+  }
+
+  if (refine.transcript.length === 0 || refine.transcript[refine.transcript.length - 1].role !== 'user') {
+    throw new Error('refine transcript must end with a user message');
+  }
+  if (refine.transcript.length > MAX_CHAT_TURNS) {
+    throw new Error(`refine transcript exceeds ${MAX_CHAT_TURNS} turns`);
+  }
+
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    return {
+      ...echoPreviousPlan(input, matrix, refine),
+      reply:
+        "I can't refine the plan without an Anthropic API key — add one on the Settings page and the chat will come back. The current plan is unchanged."
+    };
+  }
+
+  const choice = selectModel('allocate');
+  const client = new Anthropic({ apiKey });
+  const systemBlocks = buildFarmSystemBlocks(ctx);
+  const pollinationLayer = buildPollinationLayer(input);
+  const matrixPrompt = buildAllocationPrompt(matrix, input, pollinationLayer);
+
+  // The "initial assistant turn" is the plan that was already shown to the
+  // farmer. We stringify it so Claude grounds revisions on the same state
+  // the operator sees on screen — no drift between table and chat.
+  const initialAssistantJson = JSON.stringify(
+    {
+      rationale: refine.previousRationale,
+      assignments: refine.previousAssignments,
+      advisories: refine.previousAdvisories
+    },
+    null,
+    2
+  );
+
+  const messages: Array<{ role: 'user' | 'assistant'; content: { type: 'text'; text: string }[] }> = [
+    { role: 'user', content: [{ type: 'text', text: matrixPrompt }] },
+    { role: 'assistant', content: [{ type: 'text', text: initialAssistantJson }] }
+  ];
+
+  // Mid-conversation turns (everything except the new user message at tail).
+  const priorChat = refine.transcript.slice(0, -1);
+  for (const t of priorChat) {
+    messages.push({
+      role: t.role,
+      content: [{ type: 'text', text: t.content }]
+    });
+  }
+  const newUserMessage = refine.transcript[refine.transcript.length - 1].content;
+  messages.push({
+    role: 'user',
+    content: [{ type: 'text', text: buildRefinementUserMessage(newUserMessage) }]
+  });
+
+  const telemetry: TelemetryConfig = {
+    planningSessionId: options.planningSessionId,
+    contextCacheHit: !!options.contextCacheHit,
+    derivedSignalHit
+  };
+
+  let parsed: unknown = null;
+  let totalMeta: AiResultMeta = {
+    model: choice.model,
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    outputTokens: 0,
+    usdEstimate: 0
+  };
+  let rawText = '';
+  try {
+    const startMs = Date.now();
+    const msg = await client.messages.create({
+      model: choice.model,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      system: systemBlocks,
+      messages
+    });
+    const durationMs = Date.now() - startMs;
+    rawText = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+    const stripped = rawText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+    try {
+      parsed = JSON.parse(stripped);
+    } catch {
+      parsed = null;
+    }
+    const meta = computeMeta(msg.usage, choice.model);
+    recordAllocateTelemetry(meta, durationMs, telemetry);
+    appendAllocateTurn(telemetry.planningSessionId, newUserMessage, rawText, meta);
+    addMeta(totalMeta, meta);
+  } catch {
+    return {
+      ...echoPreviousPlan(input, matrix, refine),
+      reply:
+        "The AI request failed — the current plan is unchanged. Try again, or use the Regenerate button to start over."
+    };
+  }
+
+  const refinement = parseRefinementResponse(parsed);
+  if (!refinement) {
+    return {
+      ...echoPreviousPlan(input, matrix, refine),
+      reply:
+        "I couldn't read the AI response cleanly — the current plan is unchanged. Try rephrasing your request.",
+      meta: { ...totalMeta, fallback: 'engine-only' }
+    };
+  }
+
+  const validation = validateAiPlan(
+    { assignments: refinement.assignments, rationale: refinement.rationale, advisories: refinement.advisories },
+    input,
+    matrix
+  );
+  if (!validation.valid) {
+    return {
+      ...echoPreviousPlan(input, matrix, refine),
+      reply:
+        refinement.reply ||
+        "I tried to apply that change but it would break the block constraints (size, sun, rotation, or companions). The current plan is unchanged.",
+      meta: { ...totalMeta, violationsOnFirstAttempt: validation.violations }
+    };
+  }
+
+  const assignments: Assignment[] = validation.plan.assignments.map((a) => {
+    const seed = input.seeds.find((s) => s.stockItemId === a.stockItemId)!;
+    return {
+      stockItemId: a.stockItemId,
+      cropPluginId: seed.cropPluginId,
+      varietyDisplayName: seed.varietyDisplayName,
+      blockId: a.blockId,
+      plants: a.plants,
+      score: 0
+    };
+  });
+
+  const unplaced = computeUnplaced(input.seeds, assignments);
+  const sufficiency = computeSufficiencyByPair(assignments, input);
+  const perRowRationale: Record<string, string> = {};
+  for (const a of validation.plan.assignments) {
+    perRowRationale[`${a.stockItemId}:${a.blockId}`] = a.rationale;
+  }
+
+  return {
+    assignments,
+    unplaced,
+    sufficiency,
+    rationale: validation.plan.rationale || refine.previousRationale,
+    perRowRationale,
+    advisories: validation.plan.advisories,
+    pollinationConstraints: computePollinationConstraints(assignments, input, pollinationLayer),
+    geometryMissingBlockIds: pollinationLayer.geometryMissingBlockIds,
+    companionGroups: detectGroupsForAssignments(assignments, input, options.companionSystems),
+    reply: refinement.reply || 'Done — updated the plan above.',
+    meta: totalMeta
+  };
+}
+
+function buildRefinementUserMessage(message: string): string {
+  return [
+    'REFINEMENT TURN — the farmer is reviewing the plan and has new feedback.',
+    '',
+    'The candidacy matrix from the very first message in this conversation still defines what is feasible. Every constraint there (plantsFit, sufficiency, sunMatch, rotationOk, compBad, narrow, density caps) applies to your revised assignments. Do NOT invent (seed, block) pairs that are not in the matrix.',
+    '',
+    'Respond with VALID JSON only — no markdown, no code fences, no commentary outside the JSON:',
+    '{',
+    '  "reply": "1-3 plain-English sentences shown directly in the chat. Acknowledge what the farmer asked for and explain what you changed (or why you couldn\'t change it). Never quote column names like sufficiency, sunMatch, plantsFit, etc.",',
+    '  "rationale": "2-4 sentence updated overview of the whole plan. If nothing material changed, repeat the previous overview.",',
+    '  "assignments": [',
+    '    { "stockItemId": "...", "blockId": "...", "plants": <int>, "rationale": "1 plain-English sentence" }',
+    '  ],',
+    '  "advisories": ["0-4 short observations the farmer might want to consider — empty array is fine"]',
+    '}',
+    '',
+    'Hard rules:',
+    '- Always return the COMPLETE revised assignments array (not a diff). Include every row that should remain, even if unchanged.',
+    '- If the request would violate a hard cap (exceed plantsFit, place on a bad-companion block, exceed density caps, etc.), KEEP the previous assignments unchanged, set "reply" to a clear plain-English explanation of why it can\'t be done, and put a brief note in "advisories".',
+    '- If the request is unclear, ask for clarification in "reply" and keep the previous assignments unchanged.',
+    '- Never echo raw matrix values, column names, or JSON into "reply".',
+    '',
+    `Farmer's message: ${message}`
+  ].join('\n');
+}
+
+interface RefinementResponse {
+  reply: string;
+  rationale: string;
+  assignments: AiAssignment[];
+  advisories: string[];
+}
+
+function parseRefinementResponse(raw: unknown): RefinementResponse | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as {
+    reply?: unknown;
+    rationale?: unknown;
+    assignments?: unknown;
+    advisories?: unknown;
+  };
+  const reply = typeof r.reply === 'string' ? r.reply.trim() : '';
+  const rationale = typeof r.rationale === 'string' ? r.rationale : '';
+  if (!Array.isArray(r.assignments)) return null;
+  const assignments: AiAssignment[] = [];
+  for (const a of r.assignments) {
+    if (!a || typeof a !== 'object') continue;
+    const item = a as Partial<AiAssignment>;
+    if (
+      typeof item.stockItemId !== 'string' ||
+      typeof item.blockId !== 'string' ||
+      typeof item.plants !== 'number' ||
+      !Number.isFinite(item.plants) ||
+      item.plants <= 0
+    ) {
+      continue;
+    }
+    assignments.push({
+      stockItemId: item.stockItemId,
+      blockId: item.blockId,
+      plants: Math.floor(item.plants),
+      rationale: typeof item.rationale === 'string' ? item.rationale : ''
+    });
+  }
+  const advisories = Array.isArray(r.advisories)
+    ? r.advisories.filter((x): x is string => typeof x === 'string' && x.trim().length > 0).map((x) => x.trim()).slice(0, 6)
+    : [];
+  return { reply, rationale, assignments, advisories };
+}
+
+/** When refinement can't be applied (no API key, invalid response, etc.) we
+ *  hand the previous plan back unchanged so the table stays in sync with
+ *  what the operator was already looking at. */
+function echoPreviousPlan(input: PlanInput, matrix: MatrixRow[], refine: RefineInput): AllocationResult {
+  const assignments: Assignment[] = refine.previousAssignments.map((a) => {
+    const seed = input.seeds.find((s) => s.stockItemId === a.stockItemId);
+    const cropPluginId = seed?.cropPluginId ?? '';
+    const varietyDisplayName = seed?.varietyDisplayName ?? '';
+    return {
+      stockItemId: a.stockItemId,
+      cropPluginId,
+      varietyDisplayName,
+      blockId: a.blockId,
+      plants: Math.max(1, Math.floor(a.plants)),
+      score: 0
+    };
+  });
+  const sufficiency = computeSufficiencyByPair(assignments, input);
+  const unplaced = computeUnplaced(input.seeds, assignments);
+  const perRowRationale: Record<string, string> = {};
+  for (const a of refine.previousAssignments) {
+    perRowRationale[`${a.stockItemId}:${a.blockId}`] = a.rationale;
+  }
+  void matrix;
+  const layer = buildPollinationLayer(input);
+  return {
+    assignments,
+    unplaced,
+    sufficiency,
+    rationale: refine.previousRationale,
+    perRowRationale,
+    advisories: refine.previousAdvisories,
+    pollinationConstraints: computePollinationConstraints(assignments, input, layer),
+    geometryMissingBlockIds: layer.geometryMissingBlockIds,
+    companionGroups: [],
+    meta: {
+      model: 'echo',
+      inputTokens: 0,
+      cachedInputTokens: 0,
+      outputTokens: 0,
+      usdEstimate: 0
+    }
   };
 }
 
@@ -361,7 +743,11 @@ function sqrtAcresFt(block: BlockWithPlantings): number | null {
 
 // ─── Prompt building ─────────────────────────────────────────────────────
 
-export function buildAllocationPrompt(matrix: MatrixRow[], input: PlanInput): string {
+export function buildAllocationPrompt(
+  matrix: MatrixRow[],
+  input: PlanInput,
+  pollinationLayer?: PollinationLayer
+): string {
   const seedLines = input.seeds.map(
     (s) =>
       `- ${s.stockItemId} | ${s.varietyDisplayName} | plugin=${s.cropPluginId} | available_plants=${s.quantityPlants}`
@@ -402,6 +788,11 @@ export function buildAllocationPrompt(matrix: MatrixRow[], input: PlanInput): st
       r.threeSistersCandidate ? 'Y' : 'N'
     ].join(',')
   );
+
+  const pollinationSection =
+    pollinationLayer && pollinationLayer.pairs.length > 0
+      ? '\n\n' + renderPollinationPromptSection(pollinationLayer, input)
+      : '';
 
   return [
     'Allocate the following seed lots onto the given blocks.',
@@ -470,7 +861,7 @@ export function buildAllocationPrompt(matrix: MatrixRow[], input: PlanInput): st
     '  ],',
     '  "advisories": ["short observation", "another short observation"]',
     '}'
-  ].join('\n');
+  ].join('\n') + pollinationSection;
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────
@@ -702,6 +1093,7 @@ function engineFallback(
       ? engineRationale(row)
       : 'placed by deterministic engine';
   }
+  const layer = buildPollinationLayer(input);
   return {
     assignments: result.assignments,
     unplaced: result.unplaced,
@@ -712,6 +1104,9 @@ function engineFallback(
         : 'Plan generated by the deterministic engine after AI output failed validation twice.',
     perRowRationale,
     advisories: engineAdvisories(input, matrix, result.assignments, result.unplaced),
+    pollinationConstraints: computePollinationConstraints(result.assignments, input, layer),
+    geometryMissingBlockIds: layer.geometryMissingBlockIds,
+    companionGroups: [],
     meta: {
       model: 'engine-fallback',
       inputTokens: 0,

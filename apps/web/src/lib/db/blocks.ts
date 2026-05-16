@@ -9,6 +9,11 @@
  * Phase 14 (swim-lane): blocks carry `eastWestIndex` / `northSouthIndex`
  * dense ranks computed from `geometryGeojson` centroid. Convention is
  * documented in the schema (E increases east, N increases north).
+ *
+ * Phase 18a (multi-tenant): every read filters by the active Owner; every
+ * write stamps the active Owner. The axes recompute reads / writes only
+ * within the current tenant — cross-tenant blocks never compete for axis
+ * ranks.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -16,6 +21,7 @@ import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from './client';
 import { ensureHomeField } from './fields';
 import { blocks, plantingRecords } from './schema';
+import { tenantValues, tenantWhere, withTenant } from './tenant';
 import { geojsonAreaAcres } from '$lib/geo/area';
 
 export type TillageMethod = 'conventional' | 'reduced-till' | 'no-till';
@@ -30,18 +36,14 @@ export interface Block {
   /** GeoJSON Polygon or MultiPolygon (Phase 10 GPS stub). */
   geometryGeojson?: string;
   tillageMethod: TillageMethod;
-  /** Phase 14: increases going east; null for blocks without geometry
-   *  (caller falls back to alphabetical name). */
+  /** Phase 14: increases going east; null for blocks without geometry. */
   eastWestIndex?: number;
   /** Phase 14: increases going north. */
   northSouthIndex?: number;
-  /** Phase 14: when true, `inferBlockAxes` won't overwrite this row's
-   *  indices on subsequent writes. */
+  /** Phase 14: when true, `inferBlockAxes` won't overwrite this row's indices. */
   axesLocked: boolean;
   sunExposure?: SunExposure;
-  /** v1.3 shade model — slope steepness, percent (0–100). */
   slopePercent?: number;
-  /** v1.3 shade model — downhill-facing aspect (0–360 compass bearing). */
   slopeAspectDeg?: number;
 }
 
@@ -51,7 +53,6 @@ export interface PlantingRecord {
   cropPluginId: string;
   varietyDisplayName: string;
   plantingDate: number | null;
-  /** Phase 14a: quantity allocated to this planting (e.g. 0.5 lb of corn). */
   quantityPlanted?: number;
   quantityUnit?: string;
 }
@@ -60,15 +61,6 @@ export interface BlockWithPlantings extends Block {
   plantings: PlantingRecord[];
 }
 
-/**
- * Compute the canonical acres for a block: when geometry exists, the polygon
- * area wins over any manually-entered `acres` column value. Returns `null`
- * when geometry is absent or unparseable; callers fall back to `row.acres`.
- *
- * Centralised here so the manual-acres-then-draw-polygon case (Block created
- * in /plan?tab=layout, geometry drawn after) works in every consumer
- * without each page having to remember to call `geojsonAreaAcres` itself.
- */
 export function effectiveAcresFor(input: {
   acres: number | null | undefined;
   geometryGeojson: string | null | undefined;
@@ -97,9 +89,9 @@ function rowToBlock(row: typeof blocks.$inferSelect): Block {
 }
 
 export function listBlocks(): BlockWithPlantings[] {
-  const blockRows = db.select().from(blocks).all();
+  const blockRows = db.select().from(blocks).where(tenantWhere(blocks)).all();
   if (blockRows.length === 0) return [];
-  const all = db.select().from(plantingRecords).all();
+  const all = db.select().from(plantingRecords).where(tenantWhere(plantingRecords)).all();
   const grouped = new Map<string, PlantingRecord[]>();
   for (const p of all) {
     const list = grouped.get(p.blockId) ?? [];
@@ -122,12 +114,12 @@ export function listBlocks(): BlockWithPlantings[] {
 }
 
 export function getBlock(id: string): BlockWithPlantings | undefined {
-  const row = db.select().from(blocks).where(eq(blocks.id, id)).get();
+  const row = db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id))).get();
   if (!row) return undefined;
   const plantings = db
     .select()
     .from(plantingRecords)
-    .where(eq(plantingRecords.blockId, id))
+    .where(withTenant(plantingRecords, eq(plantingRecords.blockId, id)))
     .all()
     .map((p) => ({
       id: p.id,
@@ -160,34 +152,28 @@ export function createBlock(input: {
     effectiveAcresFor({ acres: input.acres, geometryGeojson: input.geometryGeojson }) ?? null;
   const row = db
     .insert(blocks)
-    .values({
-      id,
-      name: input.name,
-      acres: acresToPersist,
-      blockLabel: input.blockLabel ?? null,
-      fieldId,
-      geometryGeojson: input.geometryGeojson ?? null,
-      tillageMethod: input.tillageMethod ?? 'conventional',
-      sunExposure: input.sunExposure ?? null,
-      eastWestIndex: input.eastWestIndex ?? null,
-      northSouthIndex: input.northSouthIndex ?? null,
-      axesLocked: input.eastWestIndex !== undefined || input.northSouthIndex !== undefined
-    })
+    .values(
+      tenantValues({
+        id,
+        name: input.name,
+        acres: acresToPersist,
+        blockLabel: input.blockLabel ?? null,
+        fieldId,
+        geometryGeojson: input.geometryGeojson ?? null,
+        tillageMethod: input.tillageMethod ?? 'conventional',
+        sunExposure: input.sunExposure ?? null,
+        eastWestIndex: input.eastWestIndex ?? null,
+        northSouthIndex: input.northSouthIndex ?? null,
+        axesLocked: input.eastWestIndex !== undefined || input.northSouthIndex !== undefined
+      })
+    )
     .returning()
     .get();
-  // Recompute axes for any block that didn't get a manual override and isn't
-  // locked. Single batched UPDATE; safe to call after every write.
   recomputeBlockAxes();
-  // Re-read so the caller sees the (possibly updated) indices.
-  const fresh = db.select().from(blocks).where(eq(blocks.id, id)).get();
+  const fresh = db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id))).get();
   return fresh ? rowToBlock(fresh) : rowToBlock(row);
 }
 
-/** Update a block's GeoJSON geometry (Phase 10 GPS stub). When geometry is
- *  set, the `acres` column is recomputed to match the polygon area so raw
- *  SQL queries / exports / the sync queue all see a truthful value without
- *  having to call `geojsonAreaAcres` themselves. When geometry is cleared
- *  (`null`), the prior manual `acres` column is preserved. */
 export function setBlockGeometry(
   blockId: string,
   geometryGeojson: string | null
@@ -200,17 +186,19 @@ export function setBlockGeometry(
   const row = db
     .update(blocks)
     .set(update)
-    .where(eq(blocks.id, blockId))
+    .where(withTenant(blocks, eq(blocks.id, blockId)))
     .returning()
     .get();
   if (!row) return undefined;
   recomputeBlockAxes();
-  const fresh = db.select().from(blocks).where(eq(blocks.id, blockId)).get();
+  const fresh = db
+    .select()
+    .from(blocks)
+    .where(withTenant(blocks, eq(blocks.id, blockId)))
+    .get();
   return fresh ? rowToBlock(fresh) : rowToBlock(row);
 }
 
-/** Phase 13 / Phase 14: edit name/acres/blockLabel/fieldId/tillageMethod/
- *  sunExposure/axes. Manual axis edits set `axesLocked = true`. */
 export function updateBlock(
   id: string,
   patch: {
@@ -243,13 +231,18 @@ export function updateBlock(
   if (patch.axesLocked !== undefined) set.axesLocked = patch.axesLocked;
   else if (axisManualEdit) set.axesLocked = true;
   if (Object.keys(set).length === 0) {
-    const cur = db.select().from(blocks).where(eq(blocks.id, id)).get();
+    const cur = db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id))).get();
     return cur ? rowToBlock(cur) : undefined;
   }
-  const row = db.update(blocks).set(set).where(eq(blocks.id, id)).returning().get();
+  const row = db
+    .update(blocks)
+    .set(set)
+    .where(withTenant(blocks, eq(blocks.id, id)))
+    .returning()
+    .get();
   if (!row) return undefined;
   recomputeBlockAxes();
-  const fresh = db.select().from(blocks).where(eq(blocks.id, id)).get();
+  const fresh = db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id))).get();
   return fresh ? rowToBlock(fresh) : rowToBlock(row);
 }
 
@@ -261,10 +254,6 @@ export function addPlanting(input: {
   quantityPlanted?: number;
   quantityUnit?: string;
 }): PlantingRecord {
-  // If the new planting is a tray-bucket entry (planned status, no date),
-  // merge into an existing matching planned row on the same block instead of
-  // creating a duplicate. Same crop plugin + same unit = same bucket; we add
-  // quantities. Different units fall through to a fresh insert.
   if (input.plantingDate === null && input.quantityPlanted !== undefined) {
     const conds = [
       eq(plantingRecords.blockId, input.blockId),
@@ -280,7 +269,7 @@ export function addPlanting(input: {
     const existing = db
       .select()
       .from(plantingRecords)
-      .where(and(...conds))
+      .where(withTenant(plantingRecords, and(...conds)))
       .limit(1)
       .get();
     if (existing) {
@@ -290,7 +279,7 @@ export function addPlanting(input: {
         .set({
           quantityPlantedHundredths: sql`COALESCE(${plantingRecords.quantityPlantedHundredths}, 0) + ${addHundredths}`
         })
-        .where(eq(plantingRecords.id, existing.id))
+        .where(withTenant(plantingRecords, eq(plantingRecords.id, existing.id)))
         .returning()
         .get();
       return {
@@ -306,17 +295,19 @@ export function addPlanting(input: {
   const id = randomUUID();
   const row = db
     .insert(plantingRecords)
-    .values({
-      id,
-      blockId: input.blockId,
-      cropPluginId: input.cropPluginId,
-      varietyDisplayName: input.varietyDisplayName,
-      plantingDate: input.plantingDate !== null ? new Date(input.plantingDate) : null,
-      status: input.plantingDate === null ? 'planned' : 'active',
-      quantityPlantedHundredths:
-        input.quantityPlanted !== undefined ? Math.round(input.quantityPlanted * 100) : null,
-      quantityUnit: input.quantityUnit ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        cropPluginId: input.cropPluginId,
+        varietyDisplayName: input.varietyDisplayName,
+        plantingDate: input.plantingDate !== null ? new Date(input.plantingDate) : null,
+        status: input.plantingDate === null ? 'planned' : 'active',
+        quantityPlantedHundredths:
+          input.quantityPlanted !== undefined ? Math.round(input.quantityPlanted * 100) : null,
+        quantityUnit: input.quantityUnit ?? null
+      })
+    )
     .returning()
     .get();
   return {
@@ -330,17 +321,19 @@ export function addPlanting(input: {
 
 export function deleteBlock(id: string): boolean {
   // Plantings cascade only if FK ON DELETE CASCADE is set; we delete manually.
-  db.delete(plantingRecords).where(eq(plantingRecords.blockId, id)).run();
-  const result = db.delete(blocks).where(eq(blocks.id, id)).run();
+  db.delete(plantingRecords)
+    .where(withTenant(plantingRecords, eq(plantingRecords.blockId, id)))
+    .run();
+  const result = db
+    .delete(blocks)
+    .where(withTenant(blocks, eq(blocks.id, id)))
+    .run();
   recomputeBlockAxes();
   return result.changes > 0;
 }
 
 // ─── Phase 14: axis inference from geometry centroid ────────────────────
 
-/** Compute polygon-or-multipolygon centroid as a simple lon/lat mean of
- *  the outer ring vertices. Good enough for ranking; we never use it for
- *  area math. */
 export function geometryCentroid(geojson: string): { lon: number; lat: number } | null {
   let parsed: unknown;
   try {
@@ -383,9 +376,6 @@ function isLonLat(v: unknown): boolean {
   return Array.isArray(v) && v.length >= 2 && typeof v[0] === 'number' && typeof v[1] === 'number';
 }
 
-/** Pure: rank an array of blocks into dense E/N indices. Locked blocks
- *  keep whatever index they already had; unlocked blocks are re-ranked
- *  among themselves so the relative order matches centroid order. */
 export function inferBlockAxes(
   all: ReadonlyArray<Block>
 ): Map<string, { east: number | null; north: number | null }> {
@@ -418,10 +408,8 @@ export function inferBlockAxes(
   return out;
 }
 
-/** Read all blocks, compute axes via `inferBlockAxes`, persist any changed
- *  rows. Idempotent; safe to call after every block-mutating write. */
 export function recomputeBlockAxes(): void {
-  const rows = db.select().from(blocks).all().map(rowToBlock);
+  const rows = db.select().from(blocks).where(tenantWhere(blocks)).all().map(rowToBlock);
   const next = inferBlockAxes(rows);
   for (const b of rows) {
     if (b.axesLocked) continue;
@@ -430,7 +418,7 @@ export function recomputeBlockAxes(): void {
     if (want.east !== (b.eastWestIndex ?? null) || want.north !== (b.northSouthIndex ?? null)) {
       db.update(blocks)
         .set({ eastWestIndex: want.east, northSouthIndex: want.north })
-        .where(eq(blocks.id, b.id))
+        .where(withTenant(blocks, eq(blocks.id, b.id)))
         .run();
     }
   }

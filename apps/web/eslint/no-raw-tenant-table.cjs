@@ -1,0 +1,154 @@
+/**
+ * Custom ESLint rule: flag raw Drizzle queries against tenant-scoped tables.
+ *
+ * Tenant-scoped tables in `apps/web/src/lib/db/schema.ts` carry the
+ * TenantScoped brand. Reads/writes against them MUST go through the
+ * `tenantWhere`, `withTenant`, or `tenantValues` helpers from
+ * `apps/web/src/lib/db/tenant.ts` so the active Owner's filter / stamp
+ * is always applied. This rule catches the common forgetting pattern:
+ *
+ *   db.select().from(blocks).where(eq(blocks.id, id))    // ❌ flagged
+ *   db.insert(sprayEvents).values({...})                  // ❌ flagged
+ *
+ * Recommended:
+ *
+ *   db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id)))
+ *   db.insert(sprayEvents).values(tenantValues({...}))
+ *
+ * If you genuinely need an unscoped query (e.g. cross-tenant superadmin
+ * lookup or a global table like users), call `unscopedQueryNote('reason')`
+ * in the same function — the rule's heuristic allows the file when that
+ * import is present.
+ *
+ * This is a heuristic — it flags by table identifier name. Maintain the
+ * `TENANT_SCOPED_TABLE_NAMES` list when the schema gains a new branded
+ * table. The compile-time `TenantScoped` brand is the canonical gate;
+ * this rule is a secondary safety net to catch raw queries the brand
+ * cast doesn't.
+ */
+
+'use strict';
+
+const TENANT_SCOPED_TABLE_NAMES = new Set([
+  'fields',
+  'blocks',
+  'shadeSources',
+  'crops',
+  'plantingRecords',
+  'cropEquipment',
+  'sprayers',
+  'sprayEvents',
+  'harvestEvents',
+  'equipment',
+  'equipmentState',
+  'equipmentLog',
+  'pendingCalibrations',
+  'stockItems',
+  'stockLots',
+  'stockMovements',
+  'soilTests',
+  'fertilityApplications',
+  'fertilityCredits',
+  'insecticideEvents',
+  'hayCuttings',
+  'tasks',
+  'appSettings',
+  'aiCallLog',
+  'pluginOverrides'
+]);
+
+function isTenantTableIdentifier(node) {
+  return (
+    node &&
+    node.type === 'Identifier' &&
+    TENANT_SCOPED_TABLE_NAMES.has(node.name)
+  );
+}
+
+module.exports = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description:
+        'Disallow raw Drizzle reads/writes against tenant-scoped tables — funnel through tenantWhere/withTenant/tenantValues.',
+      category: 'Possible Errors',
+      recommended: true
+    },
+    messages: {
+      rawFrom:
+        "Raw `.from({{name}})` on a tenant-scoped table. Add `.where(tenantWhere({{name}}))` (or `withTenant({{name}}, ...)` to combine with other conditions). If this is intentionally cross-tenant, call `unscopedQueryNote('reason')` in this file.",
+      rawInsert:
+        "Raw `db.insert({{name}})` on a tenant-scoped table. Wrap the values payload in `tenantValues({...})`. If this is intentionally cross-tenant, call `unscopedQueryNote('reason')` in this file.",
+      rawUpdate:
+        "Raw `db.update({{name}})` on a tenant-scoped table. Combine your WHERE with `withTenant({{name}}, ...)`. If this is intentionally cross-tenant, call `unscopedQueryNote('reason')` in this file.",
+      rawDelete:
+        "Raw `db.delete({{name}})` on a tenant-scoped table. Combine your WHERE with `withTenant({{name}}, ...)`. If this is intentionally cross-tenant, call `unscopedQueryNote('reason')` in this file."
+    },
+    schema: []
+  },
+
+  create(context) {
+    let fileHasUnscopedNote = false;
+
+    return {
+      Program() {
+        // Scan once: look for an `unscopedQueryNote(...)` call anywhere in
+        // the file. If present, suppress this rule for the whole file.
+        const src = context.getSourceCode().getText();
+        fileHasUnscopedNote = /\bunscopedQueryNote\s*\(/.test(src);
+      },
+
+      // db.select(...).from(blocks)
+      'CallExpression[callee.property.name="from"]'(node) {
+        if (fileHasUnscopedNote) return;
+        const arg = node.arguments[0];
+        if (isTenantTableIdentifier(arg)) {
+          context.report({
+            node,
+            messageId: 'rawFrom',
+            data: { name: arg.name }
+          });
+        }
+      },
+
+      // db.insert(blocks).values({...})
+      'CallExpression[callee.property.name="insert"]'(node) {
+        if (fileHasUnscopedNote) return;
+        const arg = node.arguments[0];
+        if (isTenantTableIdentifier(arg)) {
+          context.report({
+            node,
+            messageId: 'rawInsert',
+            data: { name: arg.name }
+          });
+        }
+      },
+
+      // db.update(blocks).set({...}).where(...)
+      'CallExpression[callee.property.name="update"]'(node) {
+        if (fileHasUnscopedNote) return;
+        const arg = node.arguments[0];
+        if (isTenantTableIdentifier(arg)) {
+          context.report({
+            node,
+            messageId: 'rawUpdate',
+            data: { name: arg.name }
+          });
+        }
+      },
+
+      // db.delete(blocks).where(...)
+      'CallExpression[callee.property.name="delete"]'(node) {
+        if (fileHasUnscopedNote) return;
+        const arg = node.arguments[0];
+        if (isTenantTableIdentifier(arg)) {
+          context.report({
+            node,
+            messageId: 'rawDelete',
+            data: { name: arg.name }
+          });
+        }
+      }
+    };
+  }
+};

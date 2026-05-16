@@ -16,7 +16,12 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import { listStockItems, getStockItem } from '$lib/db/stock';
+import {
+  listStockItems,
+  getStockItem,
+  setPendingRefresh,
+  listItemsWithPendingRefresh
+} from '$lib/db/stock';
 import { requireOwner } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
 import { refreshStockItem, type StockRefreshResult } from '$lib/server/aiRefreshStock';
@@ -128,6 +133,7 @@ export const POST: RequestHandler = async (event) => {
     const r = await refreshStockItem({
       itemId: item.id,
       displayName: item.displayName,
+      shortName: item.shortName,
       category: item.category,
       pluginId: item.pluginId,
       cropFamily: cropFamilyOf(item.pluginId),
@@ -138,7 +144,18 @@ export const POST: RequestHandler = async (event) => {
 
     if (r.result) {
       results.push(r.result);
-      if (r.result.hasCitations) withCitations++;
+      if (r.result.hasCitations) {
+        withCitations++;
+        // Phase 17 follow-up — persist the per-item suggestion so the
+        // operator can review/apply later by opening that item in /stock.
+        // Without this, bulk results were one-shot list output that
+        // disappeared when the operator navigated away.
+        try {
+          setPendingRefresh(item.id, JSON.stringify(r.result));
+        } catch {
+          /* non-fatal */
+        }
+      }
     }
     totalInput += r.meta.inputTokens;
     totalCached += r.meta.cachedInputTokens;
@@ -175,6 +192,79 @@ export const POST: RequestHandler = async (event) => {
       diagnostics
     }
   });
+};
+
+/**
+ * GET /api/stock/refresh-ai
+ *
+ * Returns the list of stock items with unreviewed AI Refresh suggestions.
+ * Each entry summarizes what was captured (which fields, when) so the
+ * Settings → Pending Suggestions panel can render a scannable list.
+ */
+export const GET: RequestHandler = (event) => {
+  requireOwner(event);
+  const rows = listItemsWithPendingRefresh();
+  const summaries: Array<{
+    itemId: string;
+    displayName: string;
+    shortName?: string;
+    category: string;
+    pendingRefreshAt: number;
+    ageMs: number;
+    fieldCount: number;
+    citationCount: number;
+    fieldKeys: string[];
+  }> = [];
+  const now = Date.now();
+  for (const row of rows) {
+    const item = getStockItem(row.id);
+    if (!item?.pendingRefreshJson) continue;
+    let parsed: Record<string, unknown> | null = null;
+    try {
+      parsed = JSON.parse(item.pendingRefreshJson) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    if (!parsed || typeof parsed !== 'object') continue;
+    const fieldKeys = Object.keys(parsed).filter(
+      (k) => !['itemId', 'hasCitations', 'notes', 'citations'].includes(k)
+    );
+    const citations = Array.isArray(parsed.citations) ? parsed.citations : [];
+    summaries.push({
+      itemId: row.id,
+      displayName: row.displayName,
+      shortName: row.shortName,
+      category: row.category,
+      pendingRefreshAt: row.pendingRefreshAt,
+      ageMs: now - row.pendingRefreshAt,
+      fieldCount: fieldKeys.length,
+      citationCount: citations.length,
+      fieldKeys
+    });
+  }
+  summaries.sort((a, b) => b.pendingRefreshAt - a.pendingRefreshAt);
+  return json({ pending: summaries });
+};
+
+/**
+ * DELETE /api/stock/refresh-ai
+ *
+ * Clears the pending AI Refresh suggestion on every stock item the
+ * caller owns. Used by the Settings "Discard all" action.
+ */
+export const DELETE: RequestHandler = (event) => {
+  requireOwner(event);
+  const rows = listItemsWithPendingRefresh();
+  let cleared = 0;
+  for (const row of rows) {
+    try {
+      setPendingRefresh(row.id, null);
+      cleared++;
+    } catch {
+      /* per-row failure shouldn't abort the batch */
+    }
+  }
+  return json({ cleared });
 };
 
 /**

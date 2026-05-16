@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
+  import { page } from '$app/state';
   import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
   import BarcodeScanner from '$lib/components/BarcodeScanner.svelte';
   import LabelCapture from '$lib/components/LabelCapture.svelte';
@@ -21,6 +22,11 @@
     }>;
     taxonomy: TaxonomyTerm[];
     canEdit: boolean;
+    /** Owner-level display toggles, fetched from app settings. */
+    display?: {
+      reorderLevel: boolean;
+      planterSetup: boolean;
+    };
   }
 
   let { data }: { data: InventoryViewData } = $props();
@@ -142,7 +148,9 @@
   let scannerOpen = $state(false);
   let labelCaptureOpen = $state(false);
   let scanLoading = $state(false);
-  let scanSource = $state<'openfoodfacts' | 'claude' | 'claude-vision' | 'none' | null>(null);
+  let scanSource = $state<'openfoodfacts' | 'claude' | 'claude-vision' | 'claude-url' | 'none' | null>(null);
+  let urlPromptOpen = $state(false);
+  let urlInput = $state('');
   let scanError = $state<string | null>(null);
   let guessedFields = $state(new Set<string>());
   // Phase 17 (Track 2) — AI-extracted formulation data captured by the
@@ -272,6 +280,34 @@
     }
   }
 
+  async function onUrlSubmitted() {
+    const url = urlInput.trim();
+    if (!url) return;
+    scanLoading = true;
+    scanError = null;
+    guessedFields = new Set();
+    try {
+      const res = await fetch('/api/scan-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const result = await res.json();
+      if (!res.ok) { scanError = result.message ?? `URL read failed (${res.status})`; return; }
+      if (!result.found) { scanError = result.message ?? 'Could not extract product info from that page.'; return; }
+      if (result.existingStockItemId) {
+        if (handleExistingMatch(result.existingStockItemId)) return;
+      }
+      applyScanResult(result);
+      urlPromptOpen = false;
+      urlInput = '';
+    } catch (e) {
+      scanError = e instanceof Error ? e.message : 'URL read failed';
+    } finally {
+      scanLoading = false;
+    }
+  }
+
   /** When a scan resolves to an existing inventory SKU, ask the operator
    *  whether to open it (to add stock) or proceed with a new entry. Returns
    *  true if we routed away from the create flow. */
@@ -295,6 +331,27 @@
   type ModalMode = 'add' | 'edit' | null;
   let modalMode = $state<ModalMode>(null);
   let editTarget = $state<typeof data.items[0] | null>(null);
+
+  // Phase 17 follow-up — deep-link handler. When the page is opened with
+  // ?review=<itemId> (e.g., from the Settings → Pending AI Refresh
+  // Suggestions panel), auto-open the edit modal on that item once. The
+  // `consumedReviewId` guard prevents the effect from firing again after
+  // the operator closes the modal — we don't want to re-open every time
+  // they navigate within the page.
+  let consumedReviewId = $state<string | null>(null);
+  $effect(() => {
+    const reviewId = page.url.searchParams.get('review');
+    if (!reviewId || reviewId === consumedReviewId) return;
+    const target = data.items.find((i) => i.id === reviewId);
+    if (!target) return;
+    consumedReviewId = reviewId;
+    openEdit(target);
+    // Strip the query param so refreshing the page or hitting back doesn't
+    // re-open the modal repeatedly.
+    const next = new URL(page.url);
+    next.searchParams.delete('review');
+    void goto(next.pathname + next.search, { replaceState: true, keepFocus: true, noScroll: true });
+  });
 
   // ─── Quick inline "+" per row ─────────────────────────────────────────────
   let quickAddId = $state<string | null>(null);
@@ -334,12 +391,54 @@
   let newDepth = $state<number | undefined>(undefined);
   let newSun = $state('');
   let newSeedsPerPacket = $state<number | undefined>(undefined);
+  /** Phase 17 follow-up — mature plant height in feet. Originally only used
+   *  by the swim-lane shade model on crop plugins, but AI Refresh extracts
+   *  it from seed-catalog pages so we surface it as an editable seed
+   *  metadata field. Persisted under stockItems.metadataJson.matureHeightFt. */
+  let newMatureHeight = $state<number | undefined>(undefined);
+  // Phase 41 — extra seed-meta keys that don't have a form input. Tracked
+  // in state so applyRefreshSelection can update them and saveEdit can
+  // serialize them back into metadataJson alongside the form scalars.
+  // Without this, `saveEdit`'s hardcoded scalar set would clobber them.
+  let newSeedDimensionsMm = $state<{ L: number; D: number; T: number } | undefined>(undefined);
+  let newSeedShape = $state<'Round' | 'Flat' | undefined>(undefined);
+  let newPlanterPlateConfig = $state<Record<string, unknown> | undefined>(undefined);
+  // Any metadataJson keys we don't know about — preserved verbatim on save
+  // so future fields don't get silently dropped by an older modal session.
+  let newMetadataExtras = $state<Record<string, unknown>>({});
+  /** Phase 17 follow-up — track which fields the operator most recently
+   *  accepted via "🔍 Refresh from web → Apply selected" so the form can
+   *  badge them. Cleared on save (via resetForm) so the next edit starts
+   *  fresh. */
+  let recentlyRefreshedFields = $state<Set<string>>(new Set());
+  /** Per-field citation map for fields just applied from AI Refresh. Lets
+   *  the form render a click-through link next to each refreshed input
+   *  until the operator saves and the modal closes. */
+  let recentlyRefreshedCitations = $state<Record<string, { url: string; title?: string }>>({});
   let creating = $state(false);
   let createError = $state<string | null>(null);
   let cropPluginMatches = $state<Array<{ pluginId: string; displayName: string; score: number }>>([]);
   let catalogFields = $state(new Set<string>());
 
   const isSeed = $derived(newCategory === 'seed');
+
+  type PlateConfig = {
+    plateNumber: string;
+    series?: string;
+    cells?: number;
+    color?: string;
+    dimensions?: string;
+    shape?: string;
+  };
+  // Read planter-plate state from the live form vars (mutated by Apply
+  // selected) so the Planter setup card updates immediately, not only
+  // after Save + reload.
+  const editPlateConfig = $derived<PlateConfig | null>(
+    newPlanterPlateConfig
+      ? (newPlanterPlateConfig as unknown as PlateConfig)
+      : null
+  );
+  const editSeedDimsMm = $derived(newSeedDimensionsMm ?? null);
 
   type CatalogPlugin = typeof data.catalogPlugins[0];
   const linkedPlugin = $derived<CatalogPlugin | null>(
@@ -350,6 +449,17 @@
   );
 
   function isCatalogField(field: string) { return catalogFields.has(field); }
+
+  /** Drop a field from the catalog-source list — invoked from each input's
+   *  `oninput` handler. Once the operator types into a field OR an AI
+   *  Refresh writes a new value, the "FROM CATALOG" tag is misleading and
+   *  should disappear. */
+  function markFieldEdited(field: string): void {
+    if (!catalogFields.has(field)) return;
+    const next = new Set(catalogFields);
+    next.delete(field);
+    catalogFields = next;
+  }
 
   function applyCatalogMeta(p: CatalogPlugin) {
     const m = p.meta as Record<string, unknown>;
@@ -414,10 +524,16 @@
     newTypeName = ''; pendingNewTypeName = null;
     newDtm = undefined; newTempMin = undefined; newTempMax = undefined;
     newSpacing = undefined; newDepth = undefined; newSun = ''; newSeedsPerPacket = undefined;
+    newMatureHeight = undefined;
+    newSeedDimensionsMm = undefined; newSeedShape = undefined;
+    newPlanterPlateConfig = undefined; newMetadataExtras = {};
     scanSource = null; cropPluginMatches = []; guessedFields = new Set(); catalogFields = new Set();
     scannedActiveIngredients = null; scannedFormulation = null;
     activeIngredientsCleared = false; formulationCleared = false;
+    recentlyRefreshedFields = new Set();
+    recentlyRefreshedCitations = {};
     scanError = null; createError = null;
+    urlPromptOpen = false; urlInput = '';
   }
 
   function openAdd(category: Category) {
@@ -454,6 +570,32 @@
         newDepth = m.depthInches;
         newSun = m.sunRequirement ?? '';
         newSeedsPerPacket = m.seedsPerPacket;
+        newMatureHeight = typeof m.matureHeightFt === 'number' ? m.matureHeightFt : undefined;
+        // Phase 41 — load planter-plate sibling keys into their own state
+        // vars so apply/save can round-trip them.
+        if (m.seedDimensionsMm && typeof m.seedDimensionsMm === 'object'
+          && typeof m.seedDimensionsMm.L === 'number'
+          && typeof m.seedDimensionsMm.D === 'number'
+          && typeof m.seedDimensionsMm.T === 'number') {
+          newSeedDimensionsMm = { L: m.seedDimensionsMm.L, D: m.seedDimensionsMm.D, T: m.seedDimensionsMm.T };
+        }
+        if (m.seedShape === 'Round' || m.seedShape === 'Flat') newSeedShape = m.seedShape;
+        if (m.planterPlateConfig && typeof m.planterPlateConfig === 'object'
+          && typeof m.planterPlateConfig.plateNumber === 'string') {
+          newPlanterPlateConfig = m.planterPlateConfig as Record<string, unknown>;
+        }
+        // Preserve any unrecognized top-level keys so future fields
+        // don't get dropped by an older modal session.
+        const known = new Set([
+          'daysToMaturity', 'plantingTempMinF', 'plantingTempMaxF',
+          'spacingInches', 'depthInches', 'sunRequirement', 'seedsPerPacket',
+          'matureHeightFt', 'seedDimensionsMm', 'seedShape', 'planterPlateConfig'
+        ]);
+        const extras: Record<string, unknown> = {};
+        for (const k of Object.keys(m)) {
+          if (!known.has(k)) extras[k] = m[k];
+        }
+        newMetadataExtras = extras;
       } catch { /* ignore malformed JSON */ }
     }
     // Phase 17 (Track 2 + AI Refresh) — load existing AI-extracted formulation
@@ -470,6 +612,23 @@
       try {
         const f = JSON.parse(item.formulationJson);
         if (f && typeof f === 'object') scannedFormulation = f as Record<string, unknown>;
+      } catch { /* ignore malformed JSON */ }
+    }
+    // Phase 17 follow-up — restore any pending AI Refresh suggestion that
+    // was captured on a prior session (per-item or bulk from Settings).
+    // Without this, closing the modal lost the suggestion entirely.
+    if (item.pendingRefreshJson) {
+      try {
+        const result = JSON.parse(item.pendingRefreshJson) as Record<string, unknown>;
+        if (result && typeof result === 'object' && result.hasCitations) {
+          refreshAiResult = result;
+          const accept: Record<string, boolean> = {};
+          for (const k of Object.keys(result)) {
+            if (['itemId', 'hasCitations', 'notes', 'citations'].includes(k)) continue;
+            accept[k] = true;
+          }
+          refreshAiAccept = accept;
+        }
       } catch { /* ignore malformed JSON */ }
     }
     modalAddQty = 1;
@@ -594,9 +753,17 @@
       const typeRes = await resolveTypeId();
       if (!typeRes.ok) { creating = false; return; }
       const seedMeta = isSeed ? {
+        // Preserved unknown keys first, then form-controlled scalars,
+        // then the planter-plate sibling keys. Object-spread order ensures
+        // form scalars win on collision while extras don't get dropped.
+        ...newMetadataExtras,
         daysToMaturity: newDtm, plantingTempMinF: newTempMin, plantingTempMaxF: newTempMax,
         spacingInches: newSpacing, depthInches: newDepth,
-        sunRequirement: newSun || undefined, seedsPerPacket: newSeedsPerPacket
+        sunRequirement: newSun || undefined, seedsPerPacket: newSeedsPerPacket,
+        matureHeightFt: newMatureHeight,
+        seedDimensionsMm: newSeedDimensionsMm,
+        seedShape: newSeedShape,
+        planterPlateConfig: newPlanterPlateConfig
       } : undefined;
       // Phase 17 (Track 2) — only persist scanned formulation data on
       // chem + fertilizer categories; for seeds and parts these fields
@@ -669,9 +836,17 @@
       const typeRes = await resolveTypeId();
       if (!typeRes.ok) { creating = false; return; }
       const seedMeta = isSeed ? {
+        // Preserved unknown keys first, then form-controlled scalars,
+        // then the planter-plate sibling keys. Object-spread order ensures
+        // form scalars win on collision while extras don't get dropped.
+        ...newMetadataExtras,
         daysToMaturity: newDtm, plantingTempMinF: newTempMin, plantingTempMaxF: newTempMax,
         spacingInches: newSpacing, depthInches: newDepth,
-        sunRequirement: newSun || undefined, seedsPerPacket: newSeedsPerPacket
+        sunRequirement: newSun || undefined, seedsPerPacket: newSeedsPerPacket,
+        matureHeightFt: newMatureHeight,
+        seedDimensionsMm: newSeedDimensionsMm,
+        seedShape: newSeedShape,
+        planterPlateConfig: newPlanterPlateConfig
       } : undefined;
       // Phase 17 (Track 2 + AI Refresh) — chem + fertilizer items can carry
       // formulation JSON captured by either the original label scan or a
@@ -822,6 +997,69 @@
    *  operator opts OUT rather than IN. Citations make this safe-by-default. */
   let refreshAiAccept = $state<Record<string, boolean>>({});
 
+  /** Map the AI Refresh schema's camelCase field keys to short human-readable
+   *  labels used in the diff panel rows. Keeps the panel scannable instead of
+   *  showing raw API field names. */
+  function prettyFieldLabel(key: string): string {
+    switch (key) {
+      case 'daysToMaturity': return 'Days to maturity';
+      case 'plantingTempMinF': return 'Soil temp min (°F)';
+      case 'spacingInches': return 'Spacing (in)';
+      case 'depthInches': return 'Depth (in)';
+      case 'sunRequirement': return 'Sun';
+      case 'seedsPerPacket': return 'Seeds/packet';
+      case 'matureHeightFt': return 'Mature height (ft)';
+      case 'seedDimensionsMm': return 'Seed dimensions (mm)';
+      case 'seedShape': return 'Seed shape';
+      case 'planterPlateConfig': return 'Planter plate';
+      case 'activeIngredients': return 'Active ingredients';
+      case 'npk': return 'N-P-K';
+      case 'formulationType': return 'Formulation';
+      case 'productClass': return 'Product class';
+      default: return key;
+    }
+  }
+
+  /** Render an AI Refresh value compactly for the diff panel. Numbers + short
+   *  strings render plain; complex values (objects, arrays, npk blocks) get
+   *  JSON-stringified so the operator can still see them. */
+  function formatFieldValue(value: unknown): string {
+    if (value == null) return '—';
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value === 'string') return value;
+    if (Array.isArray(value)) {
+      // Active ingredients — show "Glyphosate 41%, ..." not the full JSON.
+      const parts = value.map((v) => {
+        if (v && typeof v === 'object' && 'name' in v) {
+          const r = v as { name: string; concentrationPct?: number };
+          return r.concentrationPct != null ? `${r.name} ${r.concentrationPct}%` : r.name;
+        }
+        return JSON.stringify(v);
+      });
+      return parts.join(', ');
+    }
+    if (typeof value === 'object') {
+      const v = value as Record<string, unknown>;
+      if ('n' in v && 'p' in v && 'k' in v) return `${v.n}-${v.p}-${v.k}`;
+      // Seed kernel dimensions (mm).
+      if ('L' in v && 'D' in v && 'T' in v && !('plateNumber' in v)) {
+        return `${v.L}×${v.D}×${v.T} mm`;
+      }
+      // Planter-plate suggestion — show "<plate#> — <color>, <dimensions>".
+      if ('plateNumber' in v && typeof v.plateNumber === 'string') {
+        const lc = v.lowConfidence === true ? ' ⚠️ low confidence' : '';
+        const color = typeof v.color === 'string' ? v.color : '';
+        const dim = typeof v.dimensions === 'string' ? v.dimensions : '';
+        const parts: string[] = [];
+        if (color) parts.push(color);
+        if (dim) parts.push(`${dim} (64ths in)`);
+        return `${v.plateNumber}${parts.length ? ' — ' + parts.join(', ') : ''}${lc}`;
+      }
+      return JSON.stringify(value);
+    }
+    return String(value);
+  }
+
   async function refreshFromWebForCurrent() {
     if (!editTarget || refreshAiBusy) return;
     refreshAiBusy = true;
@@ -840,12 +1078,22 @@
       }
       const result = j.result as Record<string, unknown> | null;
       if (!result || !result.hasCitations) {
-        refreshAiError =
-          j.meta?.fallback === 'no-citations'
-            ? 'No web sources found for this product. Try editing the display name first.'
-            : j.meta?.fallback === 'no-api-key'
-              ? 'No Anthropic API key configured (Settings).'
-              : 'No usable data returned.';
+        const fb = j.meta?.fallback as string | undefined;
+        const errMsg = j.meta?.errorMessage as string | undefined;
+        if (fb === 'no-citations') {
+          refreshAiError =
+            'Web search ran but returned nothing usable. Try setting a cleaner Short name (e.g. "Bloody Butcher Corn") and click Refresh again — long SKU strings with marketing terms ("Raw Untreated Non-GMO 1/2 lb") fail to match seed-catalog pages.';
+        } else if (fb === 'no-api-key') {
+          refreshAiError = 'No Anthropic API key configured (Settings → AI).';
+        } else if (fb === 'upstream-error') {
+          // Surface the actual Anthropic SDK error so we can debug
+          // (web_search not enabled on account, model not allowed, etc.).
+          refreshAiError = errMsg
+            ? `Claude refused: ${errMsg}`
+            : 'Claude refused with an unknown error. Check the dev container logs (`docker logs crop-card-web-1`) for [aiRefreshStock] entries.';
+        } else {
+          refreshAiError = `No usable data returned${fb ? ` (${fb})` : ''}.`;
+        }
         return;
       }
       refreshAiResult = result;
@@ -856,6 +1104,10 @@
         accept[k] = true;
       }
       refreshAiAccept = accept;
+      // Phase 17 follow-up — server already persisted the suggestion to
+      // stockItems.pendingRefreshJson; refresh local data so the item
+      // carries it on subsequent opens.
+      await invalidateAll();
     } catch (e) {
       refreshAiError = e instanceof Error ? e.message : 'request failed';
     } finally {
@@ -863,39 +1115,102 @@
     }
   }
 
+  /** Phase 17 follow-up — clear the server-persisted pending suggestion.
+   *  Called from Apply (after writing values into form state) and Discard. */
+  async function clearPendingRefreshOnServer(): Promise<void> {
+    if (!editTarget) return;
+    try {
+      await fetch(`/api/stock/${editTarget.id}/refresh-ai`, { method: 'DELETE' });
+      await invalidateAll();
+    } catch {
+      /* non-fatal — local state already cleared */
+    }
+  }
+
   /** Apply accepted fields to the form state (does NOT save — operator
-   *  still clicks the modal's Save button to PATCH /api/stock/[id]). */
+   *  still clicks the modal's Save button to PATCH /api/stock/[id]).
+   *  Tracks per-field provenance so the form can badge what just changed
+   *  and keep the citation links accessible until the next save. */
   function applyRefreshSelection() {
     if (!refreshAiResult) return;
-    const r = refreshAiResult as Record<string, { value: unknown } | unknown>;
-    const wrap = (key: string) => {
-      const v = (r as Record<string, { value: unknown } | undefined>)[key]?.value;
-      return refreshAiAccept[key] ? v : undefined;
+    type Wrapped = { value: unknown; sourceUrl?: string; sourceTitle?: string };
+    const r = refreshAiResult as Record<string, Wrapped | unknown>;
+    const applied: string[] = [];
+    const cites: Record<string, { url: string; title?: string }> = { ...recentlyRefreshedCitations };
+    const take = (key: string, formField: string): unknown => {
+      if (!refreshAiAccept[key]) return undefined;
+      const slot = (r as Record<string, Wrapped | undefined>)[key];
+      if (!slot || typeof slot !== 'object' || !('value' in slot)) return undefined;
+      applied.push(formField);
+      if (slot.sourceUrl) cites[formField] = { url: slot.sourceUrl, title: slot.sourceTitle };
+      return slot.value;
     };
-    const dtm = wrap('daysToMaturity');
+
+    const dtm = take('daysToMaturity', 'daysToMaturity');
     if (typeof dtm === 'number') newDtm = dtm;
-    const tempMin = wrap('plantingTempMinF');
+    const tempMin = take('plantingTempMinF', 'plantingTempMinF');
     if (typeof tempMin === 'number') newTempMin = tempMin;
-    const spacing = wrap('spacingInches');
+    const spacing = take('spacingInches', 'spacingInches');
     if (typeof spacing === 'number') newSpacing = spacing;
-    const depth = wrap('depthInches');
+    const depth = take('depthInches', 'depthInches');
     if (typeof depth === 'number') newDepth = depth;
-    const sun = wrap('sunRequirement');
+    const sun = take('sunRequirement', 'sunRequirement');
     if (typeof sun === 'string') newSun = sun;
-    const seedsPerPacket = wrap('seedsPerPacket');
+    const seedsPerPacket = take('seedsPerPacket', 'seedsPerPacket');
     if (typeof seedsPerPacket === 'number') newSeedsPerPacket = seedsPerPacket;
-    const ai = wrap('activeIngredients');
+    // Phase 17 follow-up — newMatureHeight was previously DROPPED here,
+    // so accepting AI Refresh's mature-height suggestion did nothing.
+    const matureHeight = take('matureHeightFt', 'matureHeightFt');
+    if (typeof matureHeight === 'number') newMatureHeight = matureHeight;
+
+    // Planter-plate suggestion + AI-supplied kernel dimensions / shape.
+    const sdm = take('seedDimensionsMm', 'seedDimensionsMm');
+    if (sdm && typeof sdm === 'object'
+      && typeof (sdm as { L?: unknown }).L === 'number'
+      && typeof (sdm as { D?: unknown }).D === 'number'
+      && typeof (sdm as { T?: unknown }).T === 'number') {
+      const v = sdm as { L: number; D: number; T: number };
+      newSeedDimensionsMm = { L: v.L, D: v.D, T: v.T };
+    }
+    const sshape = take('seedShape', 'seedShape');
+    if (sshape === 'Round' || sshape === 'Flat') newSeedShape = sshape;
+    const ppc = take('planterPlateConfig', 'planterPlateConfig');
+    if (ppc && typeof ppc === 'object' && typeof (ppc as { plateNumber?: unknown }).plateNumber === 'string') {
+      newPlanterPlateConfig = ppc as Record<string, unknown>;
+    }
+
+    const ai = take('activeIngredients', 'activeIngredients');
     if (Array.isArray(ai)) scannedActiveIngredients = ai;
-    const npk = wrap('npk');
-    const formType = wrap('formulationType');
-    const productClass = wrap('productClass');
+    const npk = take('npk', 'npk');
+    const formType = take('formulationType', 'formulationType');
+    const productClass = take('productClass', 'productClass');
     const formulation: Record<string, unknown> = scannedFormulation ? { ...scannedFormulation } : {};
     if (npk && typeof npk === 'object') formulation.npk = npk;
     if (typeof formType === 'string') formulation.type = formType;
     if (typeof productClass === 'string') formulation.productClass = productClass;
     if (Object.keys(formulation).length > 0) scannedFormulation = formulation;
+
+    // Update the recently-applied set so the form can badge each field with
+    // a "🔍 from web" tag + clickable citation until the next save. Clear
+    // any catalog-source flag on those fields — once AI Refresh writes,
+    // the value is no longer "from catalog" and the tag would be wrong.
+    const next = new Set(recentlyRefreshedFields);
+    for (const f of applied) next.add(f);
+    recentlyRefreshedFields = next;
+    recentlyRefreshedCitations = cites;
+    if (applied.length > 0) {
+      const nextCat = new Set(catalogFields);
+      for (const f of applied) nextCat.delete(f);
+      catalogFields = nextCat;
+    }
+
     refreshAiResult = null;
     refreshAiAccept = {};
+    // Phase 17 follow-up — clear the server-side pending suggestion now
+    // that the operator has accepted (some or all) fields. The actual
+    // value changes only commit when they click Save on the modal, but
+    // the pending column is "decision made" status, not "value written".
+    void clearPendingRefreshOnServer();
   }
 
   /** Run the short-name generator for just the current edit target — pulls
@@ -929,11 +1244,193 @@
   }
 </script>
 
+{#snippet refreshButtonInline()}
+  <button
+    type="button"
+    class="catalog-refresh-btn"
+    onclick={refreshFromWebForCurrent}
+    disabled={refreshAiBusy}
+    title="Use Claude with web search to look up canonical specs for this item"
+  >
+    {refreshAiBusy ? 'Searching…' : '🔍 Refresh from web'}
+  </button>
+{/snippet}
+
+{#snippet refreshResultsOnly()}
+  {#if refreshAiError}
+    <p class="ai-refresh-error">{refreshAiError}</p>
+  {/if}
+  {#if refreshAiResult}
+    {@const r = refreshAiResult as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string } | unknown>}
+    {@const fieldCount = Object.keys(refreshAiAccept).length}
+    {@const cites = (refreshAiResult as { citations?: Array<{ url: string; title?: string }> }).citations ?? []}
+    <div class="ai-refresh-diff">
+      {#if fieldCount > 0}
+        <p class="ai-refresh-diff-title">
+          AI returned {fieldCount} field{fieldCount === 1 ? '' : 's'} with citations. Uncheck any you don't trust, then Apply.
+        </p>
+        {#if (refreshAiResult as { notes?: string }).notes}
+          <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
+        {/if}
+        {#if (refreshAiResult as { planterPlatePickNote?: string }).planterPlatePickNote}
+          <p class="ai-refresh-plate-note">🔧 {(refreshAiResult as { planterPlatePickNote: string }).planterPlatePickNote}</p>
+        {/if}
+        <ul class="ai-refresh-list">
+          {#each Object.keys(refreshAiAccept) as key}
+            {@const field = (r as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string }>)[key]}
+            {#if field}
+              <li class="ai-refresh-row">
+                <label class="ai-refresh-check">
+                  <input type="checkbox" bind:checked={refreshAiAccept[key]} />
+                  <span class="ai-refresh-key">{prettyFieldLabel(key)}</span>
+                </label>
+                <span class="ai-refresh-value">{formatFieldValue(field.value)}</span>
+                {#if field.sourceUrl}
+                  {@render citeIconRaw(field.sourceUrl, field.sourceTitle)}
+                {/if}
+              </li>
+            {/if}
+          {/each}
+        </ul>
+        <div class="ai-refresh-actions">
+          <button type="button" class="primary" onclick={applyRefreshSelection}>Apply selected</button>
+          <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; void clearPendingRefreshOnServer(); }}>Discard</button>
+        </div>
+      {:else}
+        <p class="ai-refresh-diff-title">
+          Web search found {cites.length} page{cites.length === 1 ? '' : 's'}, but Claude couldn't extract structured specs from them.
+        </p>
+        {#if (refreshAiResult as { notes?: string }).notes}
+          <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
+        {/if}
+        {#if (refreshAiResult as { planterPlatePickNote?: string }).planterPlatePickNote}
+          <p class="ai-refresh-plate-note">🔧 {(refreshAiResult as { planterPlatePickNote: string }).planterPlatePickNote}</p>
+        {/if}
+        {#if cites.length > 0}
+          <p class="ai-refresh-notes">Sources Claude consulted — open these and add the data manually below:</p>
+          <ul class="ai-refresh-cite-list">
+            {#each cites as c}
+              <li>
+                <a href={c.url} target="_blank" rel="noopener noreferrer">{c.title ?? c.url}</a>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        <div class="ai-refresh-actions">
+          <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; void clearPendingRefreshOnServer(); }}>Close</button>
+        </div>
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet refreshBlock(compact: boolean)}
+  <div class="ai-refresh-block" class:ai-refresh-block--compact={compact}>
+    <button
+      type="button"
+      class="ai-refresh-btn"
+      onclick={refreshFromWebForCurrent}
+      disabled={refreshAiBusy}
+      title="Use Claude with web search to look up canonical specs for this item"
+    >
+      {refreshAiBusy ? 'Searching the web…' : '🔍 Refresh from web'}
+    </button>
+    {#if refreshAiError}
+      <p class="ai-refresh-error">{refreshAiError}</p>
+    {/if}
+    {#if refreshAiResult}
+      {@const r = refreshAiResult as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string } | unknown>}
+      {@const fieldCount = Object.keys(refreshAiAccept).length}
+      {@const cites = (refreshAiResult as { citations?: Array<{ url: string; title?: string }> }).citations ?? []}
+      <div class="ai-refresh-diff">
+        {#if fieldCount > 0}
+          <p class="ai-refresh-diff-title">
+            AI returned {fieldCount} field{fieldCount === 1 ? '' : 's'} with citations. Uncheck any you don't trust, then Apply.
+          </p>
+          {#if (refreshAiResult as { notes?: string }).notes}
+            <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
+          {/if}
+          <ul class="ai-refresh-list">
+            {#each Object.keys(refreshAiAccept) as key}
+              {@const field = (r as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string }>)[key]}
+              {#if field}
+                <li class="ai-refresh-row">
+                  <label class="ai-refresh-check">
+                    <input type="checkbox" bind:checked={refreshAiAccept[key]} />
+                    <span class="ai-refresh-key">{prettyFieldLabel(key)}</span>
+                  </label>
+                  <span class="ai-refresh-value">{formatFieldValue(field.value)}</span>
+                  {#if field.sourceUrl}
+                    {@render citeIconRaw(field.sourceUrl, field.sourceTitle)}
+                  {/if}
+                </li>
+              {/if}
+            {/each}
+          </ul>
+          <div class="ai-refresh-actions">
+            <button type="button" class="primary" onclick={applyRefreshSelection}>Apply selected</button>
+            <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; void clearPendingRefreshOnServer(); }}>Discard</button>
+          </div>
+        {:else}
+          <p class="ai-refresh-diff-title">
+            Web search found {cites.length} page{cites.length === 1 ? '' : 's'}, but Claude couldn't extract structured specs from them.
+          </p>
+          {#if (refreshAiResult as { notes?: string }).notes}
+            <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
+          {/if}
+          {#if cites.length > 0}
+            <p class="ai-refresh-notes">Sources Claude consulted — open these and add the data manually below:</p>
+            <ul class="ai-refresh-cite-list">
+              {#each cites as c}
+                <li>
+                  <a href={c.url} target="_blank" rel="noopener noreferrer">{c.title ?? c.url}</a>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+          <div class="ai-refresh-actions">
+            <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; void clearPendingRefreshOnServer(); }}>Close</button>
+          </div>
+        {/if}
+      </div>
+    {/if}
+  </div>
+{/snippet}
+
+{#snippet citationIcon(field: string)}
+  {#if recentlyRefreshedCitations[field]}
+    {@const c = recentlyRefreshedCitations[field]}
+    <a
+      class="cite-icon"
+      href={c.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={`Source: ${c.title ?? c.url}`}
+      aria-label="Open source for this value in a new tab"
+      onclick={(e) => e.stopPropagation()}
+    >i</a>
+  {/if}
+{/snippet}
+
+{#snippet citeIconRaw(url: string, title: string | undefined)}
+  <a
+    class="cite-icon"
+    href={url}
+    target="_blank"
+    rel="noopener noreferrer"
+    title={`Source: ${title ?? url}`}
+    aria-label="Open source in a new tab"
+    onclick={(e) => e.stopPropagation()}
+  >ⓘ</a>
+{/snippet}
+
 {#snippet inventoryRow(item: typeof data.items[0])}
   <li class="item-row" class:low={item.isLow}>
     <button class="item-btn" onclick={() => openEdit(item)} title={item.displayName}>
       <div class="item-info">
-        <span class="item-name">{item.shortName ?? item.displayName}</span>
+        <span class="item-name">{item.shortName ?? item.displayName}
+          {#if item.pendingRefreshJson}<span class="pending-refresh-badge" title="AI Refresh suggestion awaiting review">🔍</span>{/if}
+        </span>
         {#if item.shortName && item.shortName !== item.displayName}
           <span class="item-sub" title={item.displayName}>{item.displayName}</span>
         {:else if itemSubtitle(item)}
@@ -1069,14 +1566,40 @@
         <div class="scan-btns">
           <button class="scan-btn" onclick={() => (scannerOpen = true)} disabled={scanLoading}>📷 Barcode</button>
           <button class="scan-btn ai-btn" onclick={() => (labelCaptureOpen = true)} disabled={scanLoading}>✨ Scan label</button>
+          <button
+            class="scan-btn ai-btn"
+            onclick={() => { urlPromptOpen = !urlPromptOpen; scanError = null; }}
+            disabled={scanLoading}
+          >🌐 From URL</button>
           {#if scanLoading}<span class="scan-spinner"><span class="spin">⟳</span> Looking up…</span>{/if}
         </div>
+        {#if urlPromptOpen}
+          <form class="url-prompt-form" onsubmit={(e) => { e.preventDefault(); onUrlSubmitted(); }}>
+            <!-- svelte-ignore a11y_autofocus -->
+            <input
+              type="url"
+              class="url-prompt-input"
+              placeholder="https://www.johnnyseeds.com/…"
+              bind:value={urlInput}
+              autofocus
+              required
+              disabled={scanLoading}
+            />
+            <button type="submit" class="primary url-prompt-submit" disabled={scanLoading || !urlInput.trim()}>
+              {scanLoading ? '…' : 'Fetch'}
+            </button>
+            <button type="button" class="secondary" onclick={() => { urlPromptOpen = false; urlInput = ''; }}>
+              ✕
+            </button>
+          </form>
+        {/if}
         {#if scanError}<p class="scan-error" role="alert">{scanError}</p>{/if}
         {#if scanSource && scanSource !== 'none'}
           <p class="scan-notice" role="status">
             {#if scanSource === 'openfoodfacts'}✓ Open Food Facts
             {:else if scanSource === 'claude'}✓ AI lookup
             {:else if scanSource === 'claude-vision'}✓ Claude AI label read
+            {:else if scanSource === 'claude-url'}✓ Claude AI page read
             {/if}
             — review fields.
             {#if guessedFields.size > 0}<strong> Amber = estimated.</strong>{/if}
@@ -1208,75 +1731,32 @@
               {#each ALL_STOCK_UNITS as u}<option value={u}>{u}</option>{/each}
             </select>
           </label>
-          <label class:guessed={isGuessed('reorderThreshold')} class="reorder-label">
-            <span class="field-label">
-              <input type="checkbox" class="reorder-check" bind:checked={enableReorder} />
-              Reorder level
-              {#if isGuessed('reorderThreshold')}<em class="est-tag">estimated</em>{/if}
-            </span>
-            {#if enableReorder}
-              <input type="number" min="0" step="0.01" bind:value={newReorder} placeholder="e.g. 2" />
-            {:else}
-              <span class="reorder-off">not tracked</span>
-            {/if}
-          </label>
+          {#if data.display?.reorderLevel ?? false}
+            <label class:guessed={isGuessed('reorderThreshold')} class="reorder-label">
+              <span class="field-label">
+                <input type="checkbox" class="reorder-check" bind:checked={enableReorder} />
+                Reorder level
+                {#if isGuessed('reorderThreshold')}<em class="est-tag">estimated</em>{/if}
+              </span>
+              {#if enableReorder}
+                <input type="number" min="0" step="0.01" bind:value={newReorder} placeholder="e.g. 2" />
+              {:else}
+                <span class="reorder-off">not tracked</span>
+              {/if}
+            </label>
+          {/if}
           <label class="full-col">
             <span class="field-label">Notes</span>
             <input type="text" bind:value={newNotes} placeholder="Key facts (certifications, variety notes…)" />
           </label>
         </div>
 
-        <!-- Phase 17 follow-up — refresh from web via Claude + web_search.
-             Edit-mode only; never overwrites without operator confirm. -->
-        {#if modalMode === 'edit' && editTarget}
-          <div class="ai-refresh-block">
-            <button
-              type="button"
-              class="ai-refresh-btn"
-              onclick={refreshFromWebForCurrent}
-              disabled={refreshAiBusy}
-              title="Use Claude with web search to look up canonical specs for this item"
-            >
-              {refreshAiBusy ? 'Searching the web…' : '🔍 Refresh from web'}
-            </button>
-            {#if refreshAiError}
-              <p class="ai-refresh-error">{refreshAiError}</p>
-            {/if}
-            {#if refreshAiResult}
-              {@const r = refreshAiResult as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string } | unknown>}
-              <div class="ai-refresh-diff">
-                <p class="ai-refresh-diff-title">
-                  AI returned {Object.keys(refreshAiAccept).length} field{Object.keys(refreshAiAccept).length === 1 ? '' : 's'} with citations. Uncheck any you don't trust, then Apply.
-                </p>
-                {#if (refreshAiResult as { notes?: string }).notes}
-                  <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
-                {/if}
-                <ul class="ai-refresh-list">
-                  {#each Object.keys(refreshAiAccept) as key}
-                    {@const field = (r as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string }>)[key]}
-                    {#if field}
-                      <li class="ai-refresh-row">
-                        <label class="ai-refresh-check">
-                          <input type="checkbox" bind:checked={refreshAiAccept[key]} />
-                          <span class="ai-refresh-key">{key}</span>
-                        </label>
-                        <span class="ai-refresh-value">{JSON.stringify(field.value)}</span>
-                        {#if field.sourceUrl}
-                          <a class="ai-refresh-cite" href={field.sourceUrl} target="_blank" rel="noopener noreferrer">
-                            {field.sourceTitle ?? 'source'}
-                          </a>
-                        {/if}
-                      </li>
-                    {/if}
-                  {/each}
-                </ul>
-                <div class="ai-refresh-actions">
-                  <button type="button" class="primary" onclick={applyRefreshSelection}>Apply selected</button>
-                  <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; }}>Discard</button>
-                </div>
-              </div>
-            {/if}
-          </div>
+        <!-- Phase 17 follow-up — Refresh-from-web standalone block. Only
+             renders here when the item is NOT linked to a catalog plugin;
+             when linked, the same UI lives inside the catalog-link-section
+             below to consolidate "metadata source" controls in one box. -->
+        {#if modalMode === 'edit' && editTarget && !linkedPlugin}
+          {@render refreshBlock(false)}
         {/if}
 
         <!-- Save to catalog (for unlinked seed items) -->
@@ -1299,12 +1779,17 @@
         <!-- Linked catalog summary -->
         {#if linkedPlugin}
           <div class="catalog-link-section">
-            <div class="catalog-link-header">
-              <span class="catalog-link-label">
-                <span class="catalog-link-check">✓</span>
+            <div class="catalog-link-label">
+              <span class="catalog-link-check">✓</span>
+              <span class="catalog-link-text">
                 Linked to catalog: <strong>{linkedPlugin.displayName}</strong>
               </span>
+            </div>
+            <div class="catalog-link-actions">
               <button type="button" class="catalog-unlink-btn" onclick={onUnlinkClick}>Unlink</button>
+              {#if modalMode === 'edit' && editTarget}
+                {@render refreshButtonInline()}
+              {/if}
             </div>
             {#if linkedPlugin.category !== 'seed'}
               {@const m = linkedPlugin.meta as Record<string, unknown>}
@@ -1318,6 +1803,11 @@
                 </dl>
               {/if}
             {/if}
+            <!-- Phase 17 follow-up — Refresh-from-web result panel renders
+                 below the header (button moved to the header bar above). -->
+            {#if modalMode === 'edit' && editTarget}
+              {@render refreshResultsOnly()}
+            {/if}
           </div>
         {/if}
 
@@ -1329,52 +1819,110 @@
               {#if linkedPlugin}<span class="catalog-hint">Catalog values auto-filled — verify or adjust below</span>{/if}
             </div>
             <div class="grid">
-              <label class:guessed={isGuessed('daysToMaturity')} class:catalog={isCatalogField('daysToMaturity')}>
+              <label class:guessed={isGuessed('daysToMaturity')} class:catalog={isCatalogField('daysToMaturity')} class:refreshed={recentlyRefreshedFields.has('daysToMaturity')}>
                 <span class="field-label">Days to maturity
                   {#if isGuessed('daysToMaturity')}<em class="est-tag">estimated</em>
                   {:else if isCatalogField('daysToMaturity')}<em class="cat-tag">from catalog</em>{/if}
+                  {@render citationIcon('daysToMaturity')}
                 </span>
-                <input type="number" min="1" max="365" bind:value={newDtm} placeholder="e.g. 125" />
+                <input type="number" min="1" max="365" bind:value={newDtm} oninput={() => markFieldEdited('daysToMaturity')} placeholder="e.g. 125" />
               </label>
-              <label class:guessed={isGuessed('plantingTempMinF') || isGuessed('plantingTempMaxF')} class:catalog={isCatalogField('plantingTempMinF')}>
+              <label class:guessed={isGuessed('plantingTempMinF') || isGuessed('plantingTempMaxF')} class:catalog={isCatalogField('plantingTempMinF')} class:refreshed={recentlyRefreshedFields.has('plantingTempMinF')}>
                 <span class="field-label">Soil temp °F
                   {#if isGuessed('plantingTempMinF')}<em class="est-tag">estimated</em>
                   {:else if isCatalogField('plantingTempMinF')}<em class="cat-tag">from catalog</em>{/if}
+                  {@render citationIcon('plantingTempMinF')}
                 </span>
                 <div class="range-inputs">
-                  <input type="number" min="20" max="120" bind:value={newTempMin} placeholder="Min" />
+                  <input type="number" min="20" max="120" bind:value={newTempMin} oninput={() => markFieldEdited('plantingTempMinF')} placeholder="Min" />
                   <span class="range-sep">–</span>
-                  <input type="number" min="20" max="120" bind:value={newTempMax} placeholder="Max" />
+                  <input type="number" min="20" max="120" bind:value={newTempMax} oninput={() => markFieldEdited('plantingTempMinF')} placeholder="Max" />
                 </div>
               </label>
-              <label class:guessed={isGuessed('spacingInches')} class:catalog={isCatalogField('spacingInches')}>
+              <label class:guessed={isGuessed('spacingInches')} class:catalog={isCatalogField('spacingInches')} class:refreshed={recentlyRefreshedFields.has('spacingInches')}>
                 <span class="field-label">Spacing (in)
                   {#if isGuessed('spacingInches')}<em class="est-tag">estimated</em>
                   {:else if isCatalogField('spacingInches')}<em class="cat-tag">from catalog</em>{/if}
+                  {@render citationIcon('spacingInches')}
                 </span>
-                <input type="number" min="0.5" step="0.5" bind:value={newSpacing} placeholder="e.g. 48" />
+                <input type="number" min="0.5" step="0.5" bind:value={newSpacing} oninput={() => markFieldEdited('spacingInches')} placeholder="e.g. 48" />
               </label>
-              <label class:guessed={isGuessed('depthInches')} class:catalog={isCatalogField('depthInches')}>
+              <label class:guessed={isGuessed('depthInches')} class:catalog={isCatalogField('depthInches')} class:refreshed={recentlyRefreshedFields.has('depthInches')}>
                 <span class="field-label">Depth (in)
                   {#if isGuessed('depthInches')}<em class="est-tag">estimated</em>
                   {:else if isCatalogField('depthInches')}<em class="cat-tag">from catalog</em>{/if}
+                  {@render citationIcon('depthInches')}
                 </span>
-                <input type="number" min="0.1" step="0.1" bind:value={newDepth} placeholder="e.g. 1" />
+                <input type="number" min="0.1" step="0.1" bind:value={newDepth} oninput={() => markFieldEdited('depthInches')} placeholder="e.g. 1" />
               </label>
-              <label class:guessed={isGuessed('sunRequirement')}>
-                <span class="field-label">Sun {#if isGuessed('sunRequirement')}<em class="est-tag">estimated</em>{/if}</span>
-                <select bind:value={newSun}>
+              <label class:guessed={isGuessed('sunRequirement')} class:refreshed={recentlyRefreshedFields.has('sunRequirement')}>
+                <span class="field-label">Sun
+                  {#if isGuessed('sunRequirement')}<em class="est-tag">estimated</em>{/if}
+                  {@render citationIcon('sunRequirement')}
+                </span>
+                <select bind:value={newSun} onchange={() => markFieldEdited('sunRequirement')}>
                   <option value="">— unknown —</option>
                   <option value="full-sun">Full sun</option>
                   <option value="partial-shade">Partial shade</option>
                   <option value="full-shade">Full shade</option>
                 </select>
               </label>
-              <label class:guessed={isGuessed('seedsPerPacket')}>
-                <span class="field-label">Seeds/packet {#if isGuessed('seedsPerPacket')}<em class="est-tag">estimated</em>{/if}</span>
-                <input type="number" min="1" bind:value={newSeedsPerPacket} placeholder="e.g. 20" />
+              <label class:guessed={isGuessed('seedsPerPacket')} class:refreshed={recentlyRefreshedFields.has('seedsPerPacket')}>
+                <span class="field-label">Seeds/packet
+                  {#if isGuessed('seedsPerPacket')}<em class="est-tag">estimated</em>{/if}
+                  {@render citationIcon('seedsPerPacket')}
+                </span>
+                <input type="number" min="1" bind:value={newSeedsPerPacket} oninput={() => markFieldEdited('seedsPerPacket')} placeholder="e.g. 20" />
+              </label>
+              <label class:refreshed={recentlyRefreshedFields.has('matureHeightFt')}>
+                <span class="field-label">Mature height (ft)
+                  {@render citationIcon('matureHeightFt')}
+                </span>
+                <input type="number" min="0.1" step="0.1" bind:value={newMatureHeight} placeholder="e.g. 7" />
               </label>
             </div>
+
+            {#if modalMode === 'edit' && editTarget && (data.display?.planterSetup ?? true)}
+              <div class="planter-setup">
+                <div class="planter-setup-header">
+                  <span class="planter-setup-title">Planter setup</span>
+                  <a
+                    href="/tools/planter-plate-selector?stockId={editTarget.id}"
+                    class="planter-setup-action"
+                    onclick={() => (modalMode = null)}
+                  >
+                    {editPlateConfig ? 'Change plate →' : 'Find planter plate →'}
+                  </a>
+                </div>
+                {#if editPlateConfig}
+                  <div class="planter-setup-body">
+                    <div class="planter-setup-plate">
+                      <span class="planter-setup-num">{editPlateConfig.plateNumber}</span>
+                      {#if editPlateConfig.color}
+                        <span class="planter-setup-color">{editPlateConfig.color}</span>
+                      {/if}
+                    </div>
+                    <dl class="planter-setup-meta">
+                      {#if editPlateConfig.dimensions}
+                        <div><dt>Plate dims</dt><dd>{editPlateConfig.dimensions} <small>(64ths in)</small></dd></div>
+                      {/if}
+                      {#if editPlateConfig.cells !== undefined}
+                        <div><dt>Cells</dt><dd>{editPlateConfig.cells}</dd></div>
+                      {/if}
+                      {#if editSeedDimsMm}
+                        <div><dt>Seed dims</dt><dd>{editSeedDimsMm.L}×{editSeedDimsMm.D}×{editSeedDimsMm.T} <small>mm (L×D×T)</small></dd></div>
+                      {/if}
+                    </dl>
+                  </div>
+                {:else if editSeedDimsMm}
+                  <p class="planter-setup-empty">
+                    Seed dims known ({editSeedDimsMm.L}×{editSeedDimsMm.D}×{editSeedDimsMm.T} mm) but no plate matched. Open the selector to widen the search.
+                  </p>
+                {:else}
+                  <p class="planter-setup-empty">No plate set. Use the selector to match a Lincoln Ag plate to this seed.</p>
+                {/if}
+              </div>
+            {/if}
           </div>
           {#if cropPluginMatches.length > 0 && !linkedPlugin}
             <div class="form-section">
@@ -1562,6 +2110,13 @@
   .item-btn:hover { background: #f9fcf9; }
   .item-info { display: flex; flex-direction: column; gap: 0.05rem; flex: 1; }
   .item-name { font-weight: 600; font-size: 0.9rem; color: #1a1a1a; line-height: 1.2; }
+  .pending-refresh-badge {
+    display: inline-block;
+    margin-left: 0.3rem;
+    font-size: 0.75rem;
+    vertical-align: middle;
+    filter: saturate(1.2);
+  }
   .item-sub { font-size: 0.72rem; color: #777; line-height: 1.15; }
   .item-qty {
     font-family: monospace; font-weight: 700; font-size: 1rem; color: #1f5e3a;
@@ -1703,10 +2258,10 @@
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 0.75rem;
-    row-gap: 0.55rem;
+    column-gap: 0.6rem;
+    row-gap: 0.3rem;
     align-items: end;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
   }
   @media (max-width: 520px) {
     .grid { grid-template-columns: 1fr; }
@@ -1744,6 +2299,50 @@
     padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.4rem; vertical-align: middle;
   }
 
+  /* Phase 17 follow-up — per-field provenance: indigo background tints any
+   *  input that was just changed by AI Refresh; a small ⓘ icon next to the
+   *  label hovers to show the source page title and clicks to open it. */
+  label.refreshed > input,
+  label.refreshed > select,
+  label.refreshed .range-inputs input {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+  }
+  /* Phase 17 follow-up — citation indicator as a tiny superscript-style
+   *  link. No background circle (those were rendering huge despite pixel
+   *  caps because some ancestor anchor reset was inflating padding).
+   *  Just a small italic "i" in indigo, hover swaps to underline. */
+  a.cite-icon {
+    display: inline-block !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 1px !important;
+    margin: 0 0 0 2px !important;
+    border: none !important;
+    background: transparent !important;
+    color: #6366f1;
+    font-size: 0.7rem !important;
+    font-style: italic;
+    font-weight: 700;
+    font-family: serif;
+    line-height: 1;
+    text-decoration: none;
+    vertical-align: super;
+    cursor: help;
+    flex: 0 0 auto;
+    box-sizing: content-box;
+  }
+  a.cite-icon:hover {
+    color: #4338ca;
+    text-decoration: underline;
+  }
+  a.cite-icon:focus-visible {
+    outline: 1px solid #6366f1;
+    outline-offset: 1px;
+  }
+
   /* Phase 17 follow-up — AI Refresh from web */
   .ai-refresh-block {
     margin: 0.6rem 0 0.4rem;
@@ -1751,6 +2350,16 @@
     border-radius: 6px;
     padding: 0.6rem 0.75rem;
     background: #f8fafc;
+  }
+  /* Compact variant — used when the block lives INSIDE the linked-catalog
+   *  card so it doesn't carry its own background/border/heavy padding. */
+  .ai-refresh-block--compact {
+    margin: 0.5rem 0 0;
+    border: none;
+    border-top: 1px solid #cfdfd2;
+    border-radius: 0;
+    padding: 0.5rem 0 0;
+    background: transparent;
   }
   .ai-refresh-btn {
     background: #6366f1; color: #fff; border: none; border-radius: 4px;
@@ -1769,21 +2378,56 @@
   .ai-refresh-notes {
     margin: 0 0 0.5rem; font-size: 0.8rem; color: #475569; font-style: italic;
   }
+  .ai-refresh-plate-note {
+    margin: 0 0 0.5rem; padding: 0.35rem 0.55rem;
+    font-size: 0.82rem; color: #1f5e3a;
+    background: #f0f9f4; border-left: 3px solid #1f5e3a; border-radius: 4px;
+  }
   .ai-refresh-list { list-style: none; padding: 0; margin: 0 0 0.5rem; }
   .ai-refresh-row {
-    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-    padding: 0.3rem 0; border-bottom: 1px dashed #e2e8f0;
-    font-size: 0.85rem;
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.2rem 0; border-bottom: 1px dashed #e2e8f0;
+    font-size: 0.82rem;
+    min-height: 22px;
   }
   .ai-refresh-row:last-child { border-bottom: none; }
-  .ai-refresh-check { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
-  .ai-refresh-key { font-weight: 600; color: #1e293b; }
-  .ai-refresh-value { color: #475569; font-family: ui-monospace, monospace; font-size: 0.8rem; }
-  .ai-refresh-cite {
-    margin-left: auto; color: #2563eb; font-size: 0.78rem; text-decoration: underline;
+  /* Override the global label { flex-direction: column } so the checkbox
+   *  sits inline with the label text instead of stacking above it. */
+  .ai-refresh-check {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    flex: 0 0 auto;
+    margin: 0;
+    cursor: pointer;
+  }
+  .ai-refresh-check input[type='checkbox'] {
+    margin: 0;
+    flex: 0 0 auto;
+  }
+  .ai-refresh-key {
+    font-weight: 600; color: #1e293b; white-space: nowrap;
+  }
+  .ai-refresh-value {
+    flex: 1 1 auto;
+    color: #1e293b;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    text-align: right;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    padding-left: 0.4rem;
   }
   .ai-refresh-actions {
     display: flex; gap: 0.5rem; margin-top: 0.6rem;
+  }
+  .ai-refresh-cite-list {
+    list-style: disc; padding-left: 1.2rem; margin: 0.3rem 0 0.6rem;
+    font-size: 0.83rem;
+  }
+  .ai-refresh-cite-list a {
+    color: #2563eb; text-decoration: underline;
   }
 
   /* Catalog-save offer (unlinked seed items) */
@@ -1807,23 +2451,52 @@
     background: #f0f5f1; border: 1px solid #cfdfd2; border-radius: 6px;
     padding: 0.6rem 0.75rem; margin: 0.5rem 0 0.25rem;
   }
-  .catalog-link-header {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;
-  }
   .catalog-link-label {
-    font-size: 0.85rem; color: #1f5e3a; display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.85rem; color: #1f5e3a;
+    display: flex; align-items: center; gap: 0.4rem;
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin-bottom: 0.5rem;
+  }
+  .catalog-link-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    word-break: break-word;
   }
   .catalog-link-check {
     background: #1f5e3a; color: #fff; width: 20px; height: 20px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
     font-size: 0.75rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+  /* Buttons live on their own row beneath the link label. Both use the
+   *  same height + padding so they sit cleanly side-by-side; only the
+   *  fill colour distinguishes destructive Unlink from informational
+   *  Refresh. */
+  .catalog-link-actions {
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .catalog-unlink-btn,
+  .catalog-refresh-btn {
+    border-radius: 4px; padding: 0.35rem 0.7rem;
+    font-size: 0.8rem; line-height: 1.2;
+    cursor: pointer; font-family: inherit; font-weight: 600;
+    min-height: 32px; min-width: unset;
+    display: inline-flex; align-items: center; gap: 0.3rem;
   }
   .catalog-unlink-btn {
     background: transparent; color: #555; border: 1px solid #b8c4ba;
-    border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.78rem;
-    cursor: pointer; min-height: unset; min-width: unset; font-family: inherit;
   }
   .catalog-unlink-btn:hover { background: #fff; color: #b00020; border-color: #b00020; }
+  .catalog-refresh-btn {
+    background: #2563eb; color: #fff; border: 1px solid #2563eb;
+  }
+  .catalog-refresh-btn:hover:not(:disabled) {
+    background: #1d4ed8; border-color: #1d4ed8;
+  }
+  .catalog-refresh-btn:disabled {
+    opacity: 0.6; cursor: not-allowed;
+  }
   .catalog-meta {
     display: grid; grid-template-columns: max-content 1fr;
     gap: 0.15rem 0.75rem; margin: 0.5rem 0 0; font-size: 0.8rem;
@@ -1832,19 +2505,70 @@
   .catalog-meta dd { margin: 0; color: #1a1a1a; }
   .seed-section-header {
     display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem;
-    flex-wrap: wrap; margin-bottom: 0.4rem;
+    flex-wrap: wrap; margin-bottom: 0.25rem;
   }
   .catalog-hint { font-size: 0.75rem; color: #1f5e3a; font-style: italic; }
-  .field-label { display: flex; align-items: center; gap: 0.2rem; flex-wrap: wrap; }
+  .planter-setup {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem 0.6rem;
+    background: #f8fbf9;
+    border: 1px solid #d0d7d0;
+    border-left: 3px solid #4d8e36;
+    border-radius: 4px;
+  }
+  .planter-setup-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 0.5rem; margin-bottom: 0.4rem;
+  }
+  .planter-setup-title {
+    font-size: 0.75rem; color: #1f5e3a; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .planter-setup-action {
+    font-size: 0.8rem; color: #1f5e3a;
+    text-decoration: underline; font-weight: 600;
+  }
+  .planter-setup-body {
+    display: flex; align-items: flex-start; gap: 0.75rem; flex-wrap: wrap;
+  }
+  .planter-setup-plate {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: white; border: 1px solid #d0d7d0;
+    border-radius: 4px; padding: 0.25rem 0.5rem;
+  }
+  .planter-setup-num {
+    font-family: monospace; font-weight: 700; font-size: 0.95rem; color: #1f5e3a;
+  }
+  .planter-setup-color { color: #555; font-size: 0.8rem; }
+  .planter-setup-meta {
+    display: grid; grid-template-columns: max-content 1fr;
+    gap: 0.15rem 0.5rem; margin: 0; font-size: 0.8rem; flex: 1;
+  }
+  .planter-setup-meta > div { display: contents; }
+  .planter-setup-meta dt { color: #555; }
+  .planter-setup-meta dd { margin: 0; color: #1f5e3a; }
+  .planter-setup-meta dd small { color: #777; }
+  .planter-setup-empty {
+    margin: 0; color: #555; font-size: 0.85rem; font-style: italic;
+  }
+  /* Keep label text + tags + the cite-icon on one line; don't let the tiny
+   *  badge or icon force a wrap that doubles row height. Long labels
+   *  ellipsize instead. */
+  .field-label {
+    display: flex; align-items: center; gap: 0.2rem;
+    flex-wrap: nowrap;
+    line-height: 1.15;
+    margin-bottom: 0.15rem;
+  }
   .full-col { grid-column: 1 / -1; }
-  .form-section { padding-top: 0.6rem; margin-top: 0.25rem; border-top: 1px solid #e8ede8; }
+  .form-section { padding-top: 0.5rem; margin-top: 0.2rem; border-top: 1px solid #e8ede8; }
   .seed-section {
-    background: #f9fcf9; border-radius: 6px; padding: 0.6rem;
-    border: 1px solid #d0ddd0; margin-top: 0.5rem;
+    background: #f9fcf9; border-radius: 6px; padding: 0.5rem;
+    border: 1px solid #d0ddd0; margin-top: 0.4rem;
   }
   .subsection-title {
     font-size: 0.85rem; font-weight: 700; color: #1f5e3a; text-transform: uppercase;
-    letter-spacing: 0.5px; margin: 0 0 0.5rem;
+    letter-spacing: 0.5px; margin: 0 0 0.3rem;
   }
   .range-inputs { display: flex; align-items: center; gap: 0.4rem; }
   .range-inputs input { flex: 1; min-width: 0; }
@@ -1877,6 +2601,17 @@
   .scan-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .ai-btn { background: #f5f0ff; border-color: #7c3aed; color: #6d28d9; }
   .ai-btn:hover:not(:disabled) { background: #ede9fe; }
+  .url-prompt-form {
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    padding: 0.5rem 1.25rem 0;
+  }
+  .url-prompt-input {
+    flex: 1 1 240px; min-width: 0; min-height: 40px;
+    padding: 0.4rem 0.6rem; border: 1.5px solid #d0d7d0; border-radius: 6px;
+    font-family: inherit; font-size: 0.9rem;
+  }
+  .url-prompt-input:focus { outline: 2px solid #7c3aed; outline-offset: 1px; }
+  .url-prompt-submit { min-height: 40px; padding: 0.4rem 0.9rem; font-size: 0.9rem; }
   .scan-notice {
     font-size: 0.82rem; color: #2e7d32; background: #e7f1ea;
     border-left: 3px solid #1f5e3a; padding: 0.4rem 0.7rem; border-radius: 3px;

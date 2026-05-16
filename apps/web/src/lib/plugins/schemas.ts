@@ -412,6 +412,27 @@ export const cropPluginSchema = pluginBase.extend({
    *  math is driven by `growthStageTable.harvestTargets`. Cross-field check:
    *  only valid when cropFamily === 'corn'. */
   cornType: cornTypeSchema.optional(),
+  // ─── Phase 19 (cross-pollination advisory) ──────────────────────────
+  /** Other crop plugins (by pluginId) or family tags (`family:<name>`) this
+   *  cultivar cross-pollinates with. The allocator uses this to flag
+   *  conflicts when two crossing varieties land on the same field at the
+   *  same time. Family tags expand at load: `family:corn` matches every
+   *  crop plugin with cropFamily='corn'. Omit if cross-pollination doesn't
+   *  matter at home scale (most F1 hybrid vegetables). */
+  crossesWith: z
+    .array(z.string().regex(/^(family:)?[a-z0-9][a-z0-9-]{0,63}$/))
+    .max(40)
+    .optional(),
+  /** Minimum spatial isolation in feet to consider two crossing varieties
+   *  "isolated" (home-scale, not seed-saving production). When two varieties
+   *  fall closer than this, the allocator either resolves spatially when an
+   *  alternate block pairing achieves the distance OR emits an open
+   *  temporal-stagger constraint for the scheduler to enforce. Defaults to
+   *  the family-keyed table in `lib/plan/pollination.ts` if omitted. */
+  isolationFeet: z.number().positive().max(5280).optional(),
+  /** Minimum days between two crossing varieties' flowering windows when
+   *  spatial isolation can't be achieved. e.g., 14d for corn silking. */
+  isolationStaggerDays: z.number().int().positive().max(120).optional(),
   // ─── Phase 17 (Track 1) — agronomy block + per-crop spray windows ───
   /** Lifecycle, rotation, and termination-lead data the calendar engine
    *  used to derive from family-keyed lookup tables. Optional; missing

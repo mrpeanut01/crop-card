@@ -5,6 +5,8 @@
  * after the same 48-hour lock window so audit trails stay consistent across
  * herbicide / insecticide operations. Stores REI / PHI clear-by timestamps
  * computed from the plugin so the /today re-entry banner has a fast lookup.
+ *
+ * Phase 18a: tenant-scoped.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -12,6 +14,7 @@ import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import type { EnvironmentalConditions } from '$lib/safety/types';
 import { db } from './client';
 import { insecticideEvents } from './schema';
+import { tenantValues, withTenant } from './tenant';
 
 export const INSECTICIDE_LOCK_WINDOW_MS = 48 * 60 * 60 * 1000;
 
@@ -32,7 +35,6 @@ export interface ScoutObservation {
 
 export interface InsecticideEventInput {
   blockId: string;
-  /** Phase 12: per-crop attribution. */
   cropId?: string;
   sprayerId?: string;
   performedById: string;
@@ -74,21 +76,23 @@ export function insertInsecticideEvent(input: InsecticideEventInput): Insecticid
   const id = randomUUID();
   const row = db
     .insert(insecticideEvents)
-    .values({
-      id,
-      blockId: input.blockId,
-      cropId: input.cropId ?? null,
-      sprayerId: input.sprayerId ?? null,
-      performedById: input.performedById,
-      occurredAt: new Date(input.occurredAt),
-      productsJson: JSON.stringify(input.products),
-      scoutObservationJson: input.scoutObservation ? JSON.stringify(input.scoutObservation) : null,
-      conditionsJson: JSON.stringify(input.conditions),
-      reEntryClearAt: input.reEntryClearAt ? new Date(input.reEntryClearAt) : null,
-      preHarvestClearAt: input.preHarvestClearAt ? new Date(input.preHarvestClearAt) : null,
-      rulesVersion: input.rulesVersion,
-      pluginHashesJson: JSON.stringify(input.pluginHashes)
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        cropId: input.cropId ?? null,
+        sprayerId: input.sprayerId ?? null,
+        performedById: input.performedById,
+        occurredAt: new Date(input.occurredAt),
+        productsJson: JSON.stringify(input.products),
+        scoutObservationJson: input.scoutObservation ? JSON.stringify(input.scoutObservation) : null,
+        conditionsJson: JSON.stringify(input.conditions),
+        reEntryClearAt: input.reEntryClearAt ? new Date(input.reEntryClearAt) : null,
+        preHarvestClearAt: input.preHarvestClearAt ? new Date(input.preHarvestClearAt) : null,
+        rulesVersion: input.rulesVersion,
+        pluginHashesJson: JSON.stringify(input.pluginHashes)
+      })
+    )
     .returning()
     .get();
   return rowToEvent(row);
@@ -109,8 +113,11 @@ export function listInsecticideEvents(filters: ListFilters = {}): InsecticideEve
   if (filters.toMs !== undefined)
     conditions.push(lte(insecticideEvents.occurredAt, new Date(filters.toMs)));
 
-  let q = db.select().from(insecticideEvents).$dynamic();
-  if (conditions.length > 0) q = q.where(and(...conditions));
+  let q = db
+    .select()
+    .from(insecticideEvents)
+    .where(withTenant(insecticideEvents, conditions.length ? and(...conditions) : undefined))
+    .$dynamic();
   q = q.orderBy(desc(insecticideEvents.occurredAt));
   if (filters.limit) q = q.limit(filters.limit);
 
@@ -122,7 +129,7 @@ export function activeReEntryRestrictions(now: number = Date.now()): Insecticide
   const all = db
     .select()
     .from(insecticideEvents)
-    .where(gte(insecticideEvents.reEntryClearAt, new Date(now)))
+    .where(withTenant(insecticideEvents, gte(insecticideEvents.reEntryClearAt, new Date(now))))
     .all();
   return all.map(rowToEvent);
 }

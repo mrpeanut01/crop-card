@@ -6,23 +6,20 @@
  *   pre-task   — wraps a primary; fires before. (e.g., baler bearings check)
  *   post-task  — wraps a primary; fires after.  (e.g., sprayer decon)
  *
- * Tasks come from three sources:
- *   1. Operator manually scheduling something on /today.
- *   2. Promoting a calendar-engine plugin event to a real task.
- *   3. `materializePluginPrePost(primaryId)` — auto-attaches plugin
- *      templates (cropPlugin.preTasks + equipment.preTasks) whose
- *      conditions match. Idempotent on `pluginTemplateKey` so re-running
- *      doesn't duplicate.
- *
  * Closure: when a primary task's referenced operation lands (e.g. a spray
  * is recorded with `?taskId=<id>`), the event endpoint calls
  * `completeTask(taskId, eventTable, eventId)` to stamp the relation.
+ *
+ * Phase 18a: tenant-scoped. Pre/post-task materialization stays per-tenant
+ * automatically because the equipment + crop lookups it depends on filter
+ * by Owner.
  */
 
 import { randomUUID } from 'node:crypto';
 import { and, asc, eq, gte, isNull, lte, or } from 'drizzle-orm';
 import { db } from './client';
 import { equipment, equipmentState, tasks } from './schema';
+import { tenantValues, withTenant } from './tenant';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { EquipmentPreTaskTemplate, EquipmentTemplate } from '$lib/server/equipmentTemplates';
 import { SEED_EQUIPMENT_TEMPLATES } from '$lib/server/equipmentTemplates';
@@ -53,7 +50,6 @@ export interface Task {
   relatedEventId?: string;
   pluginTemplateKey?: string;
   recurrenceJson?: string;
-  /** Phase 14 hybrid drift. */
   userOverridden: boolean;
   staleAnchor: boolean;
   supersededByTaskId?: string;
@@ -116,15 +112,18 @@ export function listTasks(filters: ListFilters = {}): Task[] {
     conds.push(eq(tasks.abortedAt, tasks.abortedAt));
   }
 
-  let q = db.select().from(tasks).$dynamic();
-  if (conds.length > 0) q = q.where(and(...conds));
+  let q = db
+    .select()
+    .from(tasks)
+    .where(withTenant(tasks, conds.length ? and(...conds) : undefined))
+    .$dynamic();
   q = q.orderBy(asc(tasks.scheduledFor));
   if (filters.limit) q = q.limit(filters.limit);
   return q.all().map(rowToTask);
 }
 
 export function getTask(id: string): Task | undefined {
-  const row = db.select().from(tasks).where(eq(tasks.id, id)).get();
+  const row = db.select().from(tasks).where(withTenant(tasks, eq(tasks.id, id))).get();
   return row ? rowToTask(row) : undefined;
 }
 
@@ -134,7 +133,7 @@ export function getTaskWithLinked(id: string): { primary: Task; linked: Task[] }
   const linked = db
     .select()
     .from(tasks)
-    .where(eq(tasks.linkedToTaskId, id))
+    .where(withTenant(tasks, eq(tasks.linkedToTaskId, id)))
     .orderBy(asc(tasks.scheduledFor))
     .all()
     .map(rowToTask);
@@ -160,21 +159,23 @@ export function createTask(input: CreateTaskInput): Task {
   const id = randomUUID();
   const row = db
     .insert(tasks)
-    .values({
-      id,
-      title: input.title,
-      body: input.body ?? null,
-      kind: input.kind,
-      linkedToTaskId: input.linkedToTaskId ?? null,
-      cropId: input.cropId ?? null,
-      blockId: input.blockId ?? null,
-      equipmentId: input.equipmentId ?? null,
-      scheduledFor: new Date(input.scheduledFor),
-      relatedEventTable: input.relatedEventTable ?? null,
-      relatedEventId: input.relatedEventId ?? null,
-      pluginTemplateKey: input.pluginTemplateKey ?? null,
-      createdById: input.createdById ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        title: input.title,
+        body: input.body ?? null,
+        kind: input.kind,
+        linkedToTaskId: input.linkedToTaskId ?? null,
+        cropId: input.cropId ?? null,
+        blockId: input.blockId ?? null,
+        equipmentId: input.equipmentId ?? null,
+        scheduledFor: new Date(input.scheduledFor),
+        relatedEventTable: input.relatedEventTable ?? null,
+        relatedEventId: input.relatedEventId ?? null,
+        pluginTemplateKey: input.pluginTemplateKey ?? null,
+        createdById: input.createdById ?? null
+      })
+    )
     .returning()
     .get();
   return rowToTask(row);
@@ -184,9 +185,6 @@ export interface UpdateTaskInput {
   title?: string;
   body?: string;
   scheduledFor?: number;
-  /** Phase 14: a "user edit" — set when the operator manually edits a
-   *  derived/materialized task. Date shift, body annotate, retitle all
-   *  qualify. Opening a detail panel does NOT call updateTask. */
   isUserEdit?: boolean;
 }
 
@@ -195,10 +193,13 @@ export function updateTask(id: string, input: UpdateTaskInput): Task {
   if (input.title !== undefined) updates.title = input.title;
   if (input.body !== undefined) updates.body = input.body;
   if (input.scheduledFor !== undefined) updates.scheduledFor = new Date(input.scheduledFor);
-  // A user edit flips the override flag — drift logic then keeps this row
-  // anchored if the source planting moves.
   if (input.isUserEdit !== false) updates.userOverridden = true;
-  const row = db.update(tasks).set(updates).where(eq(tasks.id, id)).returning().get();
+  const row = db
+    .update(tasks)
+    .set(updates)
+    .where(withTenant(tasks, eq(tasks.id, id)))
+    .returning()
+    .get();
   if (!row) throw new Error(`unknown task id: ${id}`);
   return rowToTask(row);
 }
@@ -211,7 +212,12 @@ export function completeTask(
   const updates: Record<string, unknown> = { completedAt: new Date(now) };
   if (details?.eventTable) updates.relatedEventTable = details.eventTable;
   if (details?.eventId) updates.relatedEventId = details.eventId;
-  const row = db.update(tasks).set(updates).where(eq(tasks.id, id)).returning().get();
+  const row = db
+    .update(tasks)
+    .set(updates)
+    .where(withTenant(tasks, eq(tasks.id, id)))
+    .returning()
+    .get();
   if (!row) throw new Error(`unknown task id: ${id}`);
   return rowToTask(row);
 }
@@ -221,15 +227,19 @@ export function abortTask(id: string, reason?: string, cascade = true): Task {
   const row = db
     .update(tasks)
     .set({ abortedAt: new Date(now), abortReason: reason ?? null })
-    .where(eq(tasks.id, id))
+    .where(withTenant(tasks, eq(tasks.id, id)))
     .returning()
     .get();
   if (!row) throw new Error(`unknown task id: ${id}`);
   if (cascade) {
-    // Cascade abort to pre/post-tasks linked to this primary.
     db.update(tasks)
       .set({ abortedAt: new Date(now), abortReason: reason ?? null })
-      .where(and(eq(tasks.linkedToTaskId, id), isNull(tasks.abortedAt), isNull(tasks.completedAt)))
+      .where(
+        withTenant(
+          tasks,
+          and(eq(tasks.linkedToTaskId, id), isNull(tasks.abortedAt), isNull(tasks.completedAt))
+        )
+      )
       .run();
   }
   return rowToTask(row);
@@ -245,11 +255,6 @@ interface PluginPrePostContext {
   equipmentLastUsedAt?: number;
 }
 
-/**
- * Auto-attach plugin pre/post-task templates to a primary task, idempotent
- * on `pluginTemplateKey`. Returns the IDs of newly-created tasks so the
- * caller (typically a UI flow) can highlight them.
- */
 export function materializePluginPrePost(ctx: PluginPrePostContext): {
   preTaskIds: string[];
   postTaskIds: string[];
@@ -257,21 +262,16 @@ export function materializePluginPrePost(ctx: PluginPrePostContext): {
   const preIds: string[] = [];
   const postIds: string[] = [];
 
-  // Existing template keys for this primary — skip duplicates.
   const existingKeys = new Set(
     db
       .select({ key: tasks.pluginTemplateKey })
       .from(tasks)
-      .where(eq(tasks.linkedToTaskId, ctx.primaryTaskId))
+      .where(withTenant(tasks, eq(tasks.linkedToTaskId, ctx.primaryTaskId)))
       .all()
       .map((r) => r.key)
       .filter((k): k is string => !!k)
   );
 
-  // Crop-plugin pre-tasks. We don't know the precise dayBefore semantics
-  // without more context (planted-date vs phase anchor); use a simple
-  // "1 day before primary" default for v1, with the body documenting the
-  // anchor the plugin requested.
   if (ctx.cropPlugin?.preTasks) {
     for (const t of ctx.cropPlugin.preTasks) {
       const key = `crop:${ctx.cropPlugin.pluginId}:pre:${t.key}`;
@@ -289,7 +289,6 @@ export function materializePluginPrePost(ctx: PluginPrePostContext): {
     }
   }
 
-  // Equipment-template pre-tasks (condition-gated).
   if (ctx.equipmentTemplate?.preTasks) {
     for (const t of ctx.equipmentTemplate.preTasks) {
       if (!equipmentPreTaskMatches(t, ctx.equipmentLastUsedAt, ctx.scheduledFor)) continue;
@@ -307,7 +306,6 @@ export function materializePluginPrePost(ctx: PluginPrePostContext): {
     }
   }
 
-  // Crop-plugin post-tasks.
   if (ctx.cropPlugin?.postTasks) {
     for (const t of ctx.cropPlugin.postTasks) {
       const key = `crop:${ctx.cropPlugin.pluginId}:post:${t.key}`;
@@ -325,9 +323,6 @@ export function materializePluginPrePost(ctx: PluginPrePostContext): {
     }
   }
 
-  // Equipment-template post-tasks. Only 'always-after-use' fires
-  // unconditionally; 'after-restricted-use-chemistry' is wired in when the
-  // event endpoint knows the chemistry class.
   if (ctx.equipmentTemplate?.postTasks) {
     for (const t of ctx.equipmentTemplate.postTasks) {
       if (t.condition && t.condition !== 'always-after-use') continue;
@@ -348,14 +343,6 @@ export function materializePluginPrePost(ctx: PluginPrePostContext): {
   return { preTaskIds: preIds, postTaskIds: postIds };
 }
 
-/**
- * Phase 15: materialize a crop plugin's `seasonalTasks` array into standalone
- * primary tasks for one planting. Idempotent on `pluginTemplateKey`. For
- * `daysAfterPlanting` entries we anchor on the planting date; for `dayOfYear`
- * entries we use the same year as plantingDate (rolling forward to next year
- * if the DOY has already passed in the planting year — the task should land
- * in the upcoming season, not the past).
- */
 export function materializeSeasonalTasks(ctx: {
   cropId: string;
   blockId: string;
@@ -370,7 +357,7 @@ export function materializeSeasonalTasks(ctx: {
     db
       .select({ key: tasks.pluginTemplateKey })
       .from(tasks)
-      .where(eq(tasks.cropId, ctx.cropId))
+      .where(withTenant(tasks, eq(tasks.cropId, ctx.cropId)))
       .all()
       .map((r) => r.key)
       .filter((k): k is string => !!k)
@@ -407,7 +394,6 @@ export function materializeSeasonalTasks(ctx: {
 }
 
 function doyToMs(year: number, dayOfYear: number): number {
-  // dayOfYear is 1-indexed; Date.UTC takes 0-indexed days within month.
   return Date.UTC(year, 0, dayOfYear);
 }
 
@@ -422,7 +408,7 @@ function equipmentPreTaskMatches(
       return true;
     case 'last-used-gt-days': {
       if (!t.conditionDays) return false;
-      if (!lastUsedAt) return true; // never used → fire
+      if (!lastUsedAt) return true;
       const daysSince = (scheduledFor - lastUsedAt) / (24 * 60 * 60 * 1000);
       return daysSince > t.conditionDays;
     }
@@ -438,15 +424,7 @@ function equipmentPreTaskMatches(
 }
 
 // ─── Phase 14: hybrid task drift policy ─────────────────────────────────
-//
-// When a planting's date moves, materialized non-override tasks shift with
-// it; overridden ones flag `staleAnchor`. When a planting is deleted, tasks
-// cascade. When a planting's crop swaps, tasks supersede.
 
-/**
- * Re-anchor pre/post tasks of a primary task when the primary's
- * `scheduledFor` changes. Overridden rows stay put + get `staleAnchor`.
- */
 export function reanchorPluginPrePost(
   primaryTaskId: string,
   oldScheduledFor: number,
@@ -457,7 +435,7 @@ export function reanchorPluginPrePost(
   const linked = db
     .select()
     .from(tasks)
-    .where(eq(tasks.linkedToTaskId, primaryTaskId))
+    .where(withTenant(tasks, eq(tasks.linkedToTaskId, primaryTaskId)))
     .all()
     .map(rowToTask);
   let shifted = 0;
@@ -467,94 +445,87 @@ export function reanchorPluginPrePost(
     if (t.userOverridden) {
       db.update(tasks)
         .set({ staleAnchor: true })
-        .where(eq(tasks.id, t.id))
+        .where(withTenant(tasks, eq(tasks.id, t.id)))
         .run();
       flaggedStale++;
       continue;
     }
     db.update(tasks)
       .set({ scheduledFor: new Date(t.scheduledFor + delta) })
-      .where(eq(tasks.id, t.id))
+      .where(withTenant(tasks, eq(tasks.id, t.id)))
       .run();
     shifted++;
   }
   return { shifted, flaggedStale };
 }
 
-/**
- * Crop-swap supersession: mark the existing pre/post tasks as superseded
- * when the underlying plugin changes. Caller is responsible for then
- * calling `materializePluginPrePost` with the new plugin context to
- * generate the replacements; this function returns the IDs marked so the
- * UI can hide them by default.
- */
 export function supersedePluginPrePost(primaryTaskId: string): string[] {
   const linked = db
     .select()
     .from(tasks)
-    .where(eq(tasks.linkedToTaskId, primaryTaskId))
+    .where(withTenant(tasks, eq(tasks.linkedToTaskId, primaryTaskId)))
     .all();
   const ids: string[] = [];
   for (const t of linked) {
     if (t.completedAt || t.abortedAt) continue;
     db.update(tasks)
       .set({ supersededByTaskId: primaryTaskId })
-      .where(eq(tasks.id, t.id))
+      .where(withTenant(tasks, eq(tasks.id, t.id)))
       .run();
     ids.push(t.id);
   }
   return ids;
 }
 
-/**
- * Cascade delete every task linked (directly or transitively) to a crop.
- * Used by the deletion-confirmation modal's "Delete all" branch. Returns
- * count of deleted rows.
- */
 export function cascadeDeleteForCrop(cropId: string): number {
-  // 1. Find primary tasks for this crop.
   const primaries = db
     .select({ id: tasks.id })
     .from(tasks)
-    .where(eq(tasks.cropId, cropId))
+    .where(withTenant(tasks, eq(tasks.cropId, cropId)))
     .all()
     .map((r) => r.id);
   let total = 0;
   for (const pid of primaries) {
-    const r = db.delete(tasks).where(eq(tasks.linkedToTaskId, pid)).run();
+    const r = db
+      .delete(tasks)
+      .where(withTenant(tasks, eq(tasks.linkedToTaskId, pid)))
+      .run();
     total += r.changes;
   }
-  const r2 = db.delete(tasks).where(eq(tasks.cropId, cropId)).run();
+  const r2 = db
+    .delete(tasks)
+    .where(withTenant(tasks, eq(tasks.cropId, cropId)))
+    .run();
   total += r2.changes;
   return total;
 }
 
-/** Cascade soft-orphan: NULL the cropId on every task tied to this crop.
- *  Used by the "Detach tasks" branch of the deletion modal. */
 export function detachTasksFromCrop(cropId: string): number {
   const r = db
     .update(tasks)
     .set({ cropId: null })
-    .where(eq(tasks.cropId, cropId))
+    .where(withTenant(tasks, eq(tasks.cropId, cropId)))
     .run();
   return r.changes;
 }
 
-/** Convenience: load equipment + its template + lastUsedAt for a given equipmentId. */
 export function loadEquipmentContext(equipmentId: string): {
   template?: EquipmentTemplate;
   lastUsedAt?: number;
 } {
-  const eq_row = db.select().from(equipment).where(eq(equipment.id, equipmentId)).get();
+  const eq_row = db
+    .select()
+    .from(equipment)
+    .where(withTenant(equipment, eq(equipment.id, equipmentId)))
+    .get();
   if (!eq_row) return {};
-  // The current schema doesn't persist a templateId on equipment; map by type+label heuristic.
   const template = SEED_EQUIPMENT_TEMPLATES.find(
     (t) => t.type === eq_row.type && t.label === eq_row.label
   );
   const state = db
     .select()
     .from(equipmentState)
-    .where(eq(equipmentState.equipmentId, equipmentId))
+    .where(withTenant(equipmentState, eq(equipmentState.equipmentId, equipmentId)))
     .get();
   return {
     template,

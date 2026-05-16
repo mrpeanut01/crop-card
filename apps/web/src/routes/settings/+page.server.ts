@@ -9,6 +9,8 @@ import { listTaxonomyTerms } from '$lib/db/taxonomy';
 import {
   DEFAULT_AI_DAILY_QUOTA,
   DEFAULT_AI_MONTHLY_USD_CAP,
+  DEFAULT_DISPLAY_PLANTER_SETUP,
+  DEFAULT_DISPLAY_REORDER_LEVEL,
   DEFAULT_SHOW_SHADE_MARKERS,
   LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
   LOUDOUN_DEFAULT_LAST_FROST_MMDD,
@@ -61,6 +63,14 @@ export const load: PageServerLoad = ({ locals }) => {
       showShadeMarkers: parseBoolSetting(
         getSetting(SETTINGS_KEYS.showShadeMarkers),
         DEFAULT_SHOW_SHADE_MARKERS
+      ),
+      reorderLevel: parseBoolSetting(
+        getSetting(SETTINGS_KEYS.displayReorderLevel),
+        DEFAULT_DISPLAY_REORDER_LEVEL
+      ),
+      planterSetup: parseBoolSetting(
+        getSetting(SETTINGS_KEYS.displayPlanterSetup),
+        DEFAULT_DISPLAY_PLANTER_SETUP
       )
     },
     // Location & climate — surfaced for the weather + frost-date pipelines.

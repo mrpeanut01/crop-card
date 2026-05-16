@@ -11,6 +11,9 @@ declare global {
         id: string;
         email: string;
         role: 'owner' | 'helper' | 'inspector' | 'custom-operator';
+        activeOwnerId: string | null;
+        isSuperadmin?: boolean;
+        impersonating?: boolean;
       } | null;
     }
     // interface PageData {}

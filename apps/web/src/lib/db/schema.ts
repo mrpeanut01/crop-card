@@ -1,125 +1,189 @@
 /**
  * Drizzle SQLite schema (server-side).
  *
- * Mirrors the conceptual data model in spec §9. Phase 4 grows this; Phase 1
- * just establishes the table layout and lets drizzle-kit generate.
+ * Phase 18a (multi-tenant): every tenant-scoped operational table now carries
+ * an `ownerId` text column. The column is nullable in this migration set so
+ * the backfill (0022) can promote the legacy single-farm data into a "Home
+ * Farm" Owner before NOT NULL is enforced in 0023. Application code reads
+ * `requireOwnerId()` and writes go through `$lib/db/tenant.ts` helpers so a
+ * forgotten WHERE clause cannot leak cross-tenant.
+ *
+ * The `TenantScoped` brand is applied via the local `tenantScoped()` cast
+ * helper at the bottom of each branded table's definition. The cast itself
+ * is a no-op at runtime; its only purpose is to make `scopedSelect(globalT)`
+ * a type error.
+ *
+ * Mirrors the conceptual data model in spec §9 plus the multi-tenant
+ * additions documented in /Users/nrene/.claude/plans/the-application-is-set-eventual-hanrahan.md.
  */
 
 import { sql } from 'drizzle-orm';
-import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import type { TenantScoped } from './tenant';
+
+/** Marks a table as tenant-scoped at the type level. Pure type cast; emits
+ *  no runtime code. Pair with an `ownerId` column on the table definition. */
+function tenantScoped<T>(table: T): T & TenantScoped {
+  return table as T & TenantScoped;
+}
+
+// ─── Users (global identity) ─────────────────────────────────────────────
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
+  /** Legacy single-farm role. Multi-tenant promotes `helper_assignments.role_within_owner`
+   *  to the source of truth; this column survives one release for rollback safety
+   *  and is dropped in a follow-up migration. */
   role: text('role', { enum: ['owner', 'helper', 'inspector', 'custom-operator'] })
     .notNull()
     .default('helper'),
+  /** Cross-tenant support / abuse role. Boolean (not part of the role enum)
+   *  because roles describe in-tenant permissions; superadmin is *across*
+   *  tenants. Default false. */
+  isSuperadmin: integer('is_superadmin', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)
 });
 
-// ─── Fields → Blocks hierarchy (Phase 13) ───────────────────────────────
-//
-// A "Field" is a parent grouping for blocks. Larger growers may operate
-// multiple fields (e.g., "Home Field" + "North Field"); smaller growers
-// have a single auto-created "Home Field" that the UI hides. The migration
-// auto-creates one Home Field row and points every existing block at it.
-export const fields = sqliteTable('fields', {
+// ─── Multi-tenant core (Phase 18a) ──────────────────────────────────────
+
+/** One row per farm / tenant. Created on self-serve signup (`/onboarding`)
+ *  or by superadmin. `slug` is a URL-safe short id surfaced in the Owner
+ *  picker; `billingStatus` gates request handling in `hooks.server.ts`
+ *  (a 'suspended' tenant gets a 402-equivalent response). */
+export const owners = sqliteTable('owners', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  /** Optional reported acreage. Polygon-derived acres is informational only. */
-  acres: integer('acres'),
-  /** Free-form address / lat-lng paste; no geocoding. */
-  location: text('location'),
-  notes: text('notes'),
-  /** Optional field-level outline (GeoJSON Polygon). Block polygons remain
-   *  authoritative for the SVG renderer. */
-  geometryGeojson: text('geometry_geojson'),
+  slug: text('slug').notNull().unique(),
+  billingStatus: text('billing_status', {
+    enum: ['trial', 'active', 'past_due', 'canceled', 'suspended']
+  })
+    .notNull()
+    .default('trial'),
+  /** Bumped on every plugin_overrides write so the per-owner plugin registry
+   *  LRU can key on (ownerId, revision) for cache invalidation. */
+  pluginOverridesRevision: integer('plugin_overrides_revision').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)
 });
 
-export const blocks = sqliteTable('blocks', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  acres: integer('acres'),
-  blockLabel: text('block_label'),
-  /** Phase 13: parent field. Nullable in SQL for the migration backfill;
-   *  application code treats blocks as always-having a field after migrate. */
-  fieldId: text('field_id').references(() => fields.id),
-  /** GeoJSON Polygon / MultiPolygon (Phase 10 — GPS mapping stub).
-   *  Stored as text; never indexed. /map renders an SVG fallback if no PostGIS. */
-  geometryGeojson: text('geometry_geojson'),
-  /** Tillage practice for this block — drives pre-planting prep schedule. */
-  tillageMethod: text('tillage_method', {
-    enum: ['conventional', 'reduced-till', 'no-till']
+/** N-to-N between users and owners. A helper may belong to multiple owners
+ *  (contract scout, custom-operator serving several farms). The active
+ *  assignment lives in the session cookie's `activeOwnerId`. */
+export const helperAssignments = sqliteTable(
+  'helper_assignments',
+  {
+    ownerId: text('owner_id')
+      .notNull()
+      .references(() => owners.id),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** Per-tenant role. Replaces `users.role` once the legacy column drops. */
+    roleWithinOwner: text('role_within_owner', {
+      enum: ['owner', 'helper', 'inspector', 'custom-operator']
+    }).notNull(),
+    invitedByUserId: text('invited_by_user_id').references(() => users.id),
+    acceptedAt: integer('accepted_at', { mode: 'timestamp_ms' }),
+    /** 'active', 'revoked', or 'pending'. Owners can revoke assignments;
+     *  revoked rows survive for audit. */
+    status: text('status', { enum: ['active', 'pending', 'revoked'] })
+      .notNull()
+      .default('active'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.ownerId, table.userId] }),
+    userIdx: index('helper_assignments_user_idx').on(table.userId)
   })
-    .notNull()
-    .default('conventional'),
-  /** Phase 14 (swim-lane): column ordering. **Increases going east**
-   *  (column 0 = westmost). Auto-computed from `geometryGeojson` centroid
-   *  longitude rank when blocks are written; nullable for blocks without
-   *  geometry. Falls back to alphabetical `name` if both axis indices null. */
-  eastWestIndex: integer('east_west_index'),
-  /** Phase 14 (swim-lane): increases going north. Auto-computed from
-   *  centroid latitude rank. Tie-breaker for column ordering and shade
-   *  neighbor matching (a block only shades neighbors within ±1 N-S). */
-  northSouthIndex: integer('north_south_index'),
-  /** Phase 14 (swim-lane): if true, manual axis indices are not overwritten
-   *  by `inferBlockAxes` on subsequent writes. */
-  axesLocked: integer('axes_locked', { mode: 'boolean' }).notNull().default(false),
-  /** Phase 14 (swim-lane): user-tagged sun exposure. Used for AI suggestions
-   *  and as a UI hint; does not feed the shade engine. */
-  sunExposure: text('sun_exposure', {
-    enum: ['full', 'partial', 'shade']
-  }),
-  /** v1.3 shade model: slope steepness, percent (0–100). Optional. Used by
-   *  shadeModel.ts to elongate / shorten projected shadows along the
-   *  downhill axis. Null = treated as flat. */
-  slopePercent: real('slope_percent'),
-  /** v1.3 shade model: downhill aspect (compass bearing where the slope
-   *  faces, 0–360, 0=N, 90=E, etc.). Optional. Required for slopePercent
-   *  to take effect; null aspect → slope treated as flat. */
-  slopeAspectDeg: real('slope_aspect_deg')
-});
+);
 
-/**
- * v1.3 shade model — external shade emitters that aren't crops. Tree rows,
- * buildings, hedges, fences, and other tall stationary features that cast
- * shadows onto blocks. Modelled with the same height + opacity inputs as
- * shade-casting crops, but with a deciduous canopy gate (oaks bare in
- * winter, fully canopied summer through fall).
- */
-export const shadeSources = sqliteTable('shade_sources', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  /** Categorization for UI + reasonable defaults at form submit. */
-  kind: text('kind', {
-    enum: ['tree-row', 'tree-grove', 'tree-single', 'hedge', 'building', 'fence', 'structure', 'other']
+/** Pending invitations. Owners create rows here via /settings/helpers; the
+ *  helper redeems by visiting /invite/<token>. Token + email are hashed so
+ *  a DB compromise doesn't leak active invite URLs. */
+export const helperInvites = sqliteTable(
+  'helper_invites',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id')
+      .notNull()
+      .references(() => owners.id),
+    /** sha256(lowercased email). Lookup by email match during sign-in. */
+    emailHash: text('email_hash').notNull(),
+    /** sha256(plaintext token). Lookup by token from the invite URL. */
+    tokenHash: text('token_hash').notNull(),
+    roleWithinOwner: text('role_within_owner', {
+      enum: ['helper', 'inspector', 'custom-operator']
+    })
+      .notNull()
+      .default('helper'),
+    invitedByUserId: text('invited_by_user_id').references(() => users.id),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    acceptedAt: integer('accepted_at', { mode: 'timestamp_ms' }),
+    status: text('status', { enum: ['pending', 'accepted', 'revoked', 'expired'] })
+      .notNull()
+      .default('pending'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+  },
+  (table) => ({
+    ownerIdx: index('helper_invites_owner_idx').on(table.ownerId),
+    tokenIdx: index('helper_invites_token_idx').on(table.tokenHash),
+    emailIdx: index('helper_invites_email_idx').on(table.emailHash)
+  })
+);
+
+/** Per-Owner plugin overlays. The base plugin catalog lives on the
+ *  filesystem under /plugins/; this table layers per-Owner customizations
+ *  (full replacement per pluginId). Safety kernel never reads overrides. */
+export const pluginOverrides = tenantScoped(
+  sqliteTable(
+    'plugin_overrides',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      pluginId: text('plugin_id').notNull(),
+      kind: text('kind', {
+        enum: ['crop', 'herbicide', 'insecticide', 'fungicide', 'fertilizer', 'companion']
+      }).notNull(),
+      payloadJson: text('payload_json').notNull(),
+      /** sha256 of payloadJson, captured on insert for audit trail / cache key. */
+      hash: text('hash').notNull(),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerPluginIdx: index('plugin_overrides_owner_plugin_idx').on(
+        table.ownerId,
+        table.pluginId
+      )
+    })
+  )
+);
+
+/** Subscription state per Owner. Stripe IDs are nullable now — billing
+ *  hookup is a code-only change later (no migration). */
+export const ownerSubscriptions = sqliteTable('owner_subscriptions', {
+  ownerId: text('owner_id')
+    .primaryKey()
+    .references(() => owners.id),
+  planCode: text('plan_code').notNull().default('free'),
+  status: text('status', {
+    enum: ['trial', 'active', 'past_due', 'canceled', 'suspended']
   })
     .notNull()
-    .default('tree-row'),
-  /** GeoJSON Polygon, MultiPolygon, LineString, or Point. The shade model
-   *  uses the centroid for direction calculations and the polygon edges
-   *  for footprint. */
-  geometryGeojson: text('geometry_geojson'),
-  /** Optional scoping to a field; null = farm-wide. Future: shade-source
-   *  filtering by field on the schedule view. */
-  fieldId: text('field_id').references(() => fields.id),
-  /** Mature height in feet. Required for shadow projection. */
-  heightFt: real('height_ft').notNull(),
-  /** Opacity factor 0..1. 1 = solid (building / dense conifer hedge),
-   *  0.6 = leafed deciduous, 0.2 = bare deciduous, 0.0 = transparent. */
-  opacity: real('opacity').notNull().default(0.7),
-  /** When true, opacity is gated by leaf-on / leaf-off windows. */
-  isDeciduous: integer('is_deciduous', { mode: 'boolean' }).notNull().default(false),
-  /** Day-of-year leaves emerge (1-366). Defaults to 105 ≈ Apr 15 in N VA. */
-  leafOnDayOfYear: integer('leaf_on_day_of_year').notNull().default(105),
-  /** Day-of-year leaves drop (1-366). Defaults to 305 ≈ Nov 1 in N VA. */
-  leafOffDayOfYear: integer('leaf_off_day_of_year').notNull().default(305),
-  notes: text('notes'),
+    .default('trial'),
+  periodStart: integer('period_start', { mode: 'timestamp_ms' }),
+  periodEnd: integer('period_end', { mode: 'timestamp_ms' }),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
@@ -128,600 +192,826 @@ export const shadeSources = sqliteTable('shade_sources', {
     .default(sql`(unixepoch() * 1000)`)
 });
 
-// Phase 12: planting_records → crops. A "Crop" is an active instance of a
-// planting on a specific block — analogous to a Brewfather Batch. Lifecycle
-// status drives the dashboard (active vs harvested vs archived), and every
-// event table now FK's `crop_id` so per-crop timelines are first-class.
-export const crops = sqliteTable('crops', {
+/** Per-Owner per-month usage counters. AI-call writes (and any future
+ *  storage / spray-event counters) UPSERT here so a metered billing path
+ *  has data on day one. */
+export const ownerUsageCounters = sqliteTable(
+  'owner_usage_counters',
+  {
+    ownerId: text('owner_id')
+      .notNull()
+      .references(() => owners.id),
+    /** YYYYMM, e.g. 202605. Integer for fast range queries. */
+    periodYyyymm: integer('period_yyyymm').notNull(),
+    aiCalls: integer('ai_calls').notNull().default(0),
+    storageBytes: integer('storage_bytes').notNull().default(0),
+    sprayEventsCount: integer('spray_events_count').notNull().default(0),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.ownerId, table.periodYyyymm] })
+  })
+);
+
+/** Append-only audit log for any superadmin mutation. Read-by-default is
+ *  enforced in `hooks.server.ts`; impersonation writes a row here per
+ *  mutation. Survives Owner deletes for compliance. */
+export const superadminAudit = sqliteTable('superadmin_audit', {
   id: text('id').primaryKey(),
-  blockId: text('block_id')
+  superadminUserId: text('superadmin_user_id')
     .notNull()
-    .references(() => blocks.id),
-  cropPluginId: text('crop_plugin_id').notNull(),
-  varietyDisplayName: text('variety_display_name').notNull(),
-  plantingDate: integer('planting_date', { mode: 'timestamp_ms' }),
-  status: text('status', {
-    enum: ['planned', 'active', 'harvested', 'failed', 'archived']
-  })
+    .references(() => users.id),
+  action: text('action').notNull(),
+  // INTENTIONALLY NULLABLE: some superadmin actions are cross-tenant
+  // (e.g. grant_superadmin, exit_impersonation) and don't bind to a
+  // specific Owner.
+  ownerId: text('owner_id'),
+  targetTable: text('target_table'),
+  targetId: text('target_id'),
+  payloadJson: text('payload_json'),
+  at: integer('at', { mode: 'timestamp_ms' })
     .notNull()
-    .default('active'),
-  harvestedAt: integer('harvested_at', { mode: 'timestamp_ms' }),
-  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
-  quantityPlantedHundredths: integer('quantity_planted_hundredths'),
-  quantityUnit: text('quantity_unit'),
-  // Phase 15 — planting groups (e.g., Three Sisters trios, succession runs).
-  // Members of one group share `groupId`; the anchor crop drives offset math.
-  groupId: text('group_id'),
-  groupRole: text('group_role', { enum: ['anchor', 'companion'] }),
-  /** Days from anchor's plantingDate. Null on anchor; required on companion. */
-  groupOffsetDays: integer('group_offset_days'),
-  /** Origin of the grouping for UI labeling + future system-specific behavior. */
-  groupSystemKind: text('group_system_kind', {
-    enum: ['three-sisters', 'succession', 'manual']
-  })
+    .default(sql`(unixepoch() * 1000)`)
 });
+
+// ─── Fields → Blocks hierarchy (Phase 13, tenant-scoped in Phase 18a) ──
+
+export const fields = tenantScoped(
+  sqliteTable(
+    'fields',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      name: text('name').notNull(),
+      /** Optional reported acreage. Polygon-derived acres is informational only. */
+      acres: integer('acres'),
+      /** Free-form address / lat-lng paste; no geocoding. */
+      location: text('location'),
+      notes: text('notes'),
+      /** Optional field-level outline (GeoJSON Polygon). Block polygons remain
+       *  authoritative for the SVG renderer. */
+      geometryGeojson: text('geometry_geojson'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerIdx: index('fields_owner_idx').on(table.ownerId, table.createdAt)
+    })
+  )
+);
+
+export const blocks = tenantScoped(
+  sqliteTable(
+    'blocks',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      name: text('name').notNull(),
+      acres: integer('acres'),
+      blockLabel: text('block_label'),
+      /** Phase 13: parent field. Nullable in SQL for the migration backfill;
+       *  application code treats blocks as always-having a field after migrate. */
+      fieldId: text('field_id').references(() => fields.id),
+      /** GeoJSON Polygon / MultiPolygon (Phase 10 — GPS mapping stub). */
+      geometryGeojson: text('geometry_geojson'),
+      tillageMethod: text('tillage_method', {
+        enum: ['conventional', 'reduced-till', 'no-till']
+      })
+        .notNull()
+        .default('conventional'),
+      eastWestIndex: integer('east_west_index'),
+      northSouthIndex: integer('north_south_index'),
+      axesLocked: integer('axes_locked', { mode: 'boolean' }).notNull().default(false),
+      sunExposure: text('sun_exposure', { enum: ['full', 'partial', 'shade'] }),
+      slopePercent: real('slope_percent'),
+      slopeAspectDeg: real('slope_aspect_deg')
+    },
+    (table) => ({
+      ownerNameIdx: index('blocks_owner_name_idx').on(table.ownerId, table.name),
+      ownerFieldIdx: index('blocks_owner_field_idx').on(table.ownerId, table.fieldId)
+    })
+  )
+);
+
+export const shadeSources = tenantScoped(
+  sqliteTable(
+    'shade_sources',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      name: text('name').notNull(),
+      kind: text('kind', {
+        enum: ['tree-row', 'tree-grove', 'tree-single', 'hedge', 'building', 'fence', 'structure', 'other']
+      })
+        .notNull()
+        .default('tree-row'),
+      geometryGeojson: text('geometry_geojson'),
+      fieldId: text('field_id').references(() => fields.id),
+      heightFt: real('height_ft').notNull(),
+      opacity: real('opacity').notNull().default(0.7),
+      isDeciduous: integer('is_deciduous', { mode: 'boolean' }).notNull().default(false),
+      leafOnDayOfYear: integer('leaf_on_day_of_year').notNull().default(105),
+      leafOffDayOfYear: integer('leaf_off_day_of_year').notNull().default(305),
+      notes: text('notes'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerIdx: index('shade_sources_owner_idx').on(table.ownerId)
+    })
+  )
+);
+
+export const crops = tenantScoped(
+  sqliteTable(
+    'crops',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropPluginId: text('crop_plugin_id').notNull(),
+      varietyDisplayName: text('variety_display_name').notNull(),
+      plantingDate: integer('planting_date', { mode: 'timestamp_ms' }),
+      status: text('status', {
+        enum: ['planned', 'active', 'harvested', 'failed', 'archived']
+      })
+        .notNull()
+        .default('active'),
+      harvestedAt: integer('harvested_at', { mode: 'timestamp_ms' }),
+      archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
+      quantityPlantedHundredths: integer('quantity_planted_hundredths'),
+      quantityUnit: text('quantity_unit'),
+      groupId: text('group_id'),
+      groupRole: text('group_role', { enum: ['anchor', 'companion'] }),
+      groupOffsetDays: integer('group_offset_days'),
+      groupSystemKind: text('group_system_kind', {
+        enum: ['three-sisters', 'succession', 'manual']
+      })
+    },
+    (table) => ({
+      ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),
+      ownerStatusIdx: index('crops_owner_status_idx').on(table.ownerId, table.status)
+    })
+  )
+);
 
 /** @deprecated Renamed to `crops`. Re-exported here so a couple of legacy
  *  callers compile during the in-flight rename; remove once all imports
  *  switch to `crops`. The underlying table is `crops` either way. */
 export const plantingRecords = crops;
 
-// ─── Crop ↔ Equipment binding (Phase 13 / Phase 12E) ────────────────────
+export const cropEquipment = tenantScoped(
+  sqliteTable(
+    'crop_equipment',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      cropId: text('crop_id')
+        .notNull()
+        .references(() => crops.id),
+      equipmentId: text('equipment_id')
+        .notNull()
+        .references(() => equipment.id),
+      role: text('role', {
+        enum: [
+          'planter',
+          'sprayer',
+          'baler',
+          'mower',
+          'tedder',
+          'rake',
+          'irrigation',
+          'tractor',
+          'other'
+        ]
+      }).notNull(),
+      notes: text('notes'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerCropIdx: index('crop_equipment_owner_crop_idx').on(table.ownerId, table.cropId)
+    })
+  )
+);
+
+export const sprayers = tenantScoped(
+  sqliteTable(
+    'sprayers',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      label: text('label').notNull(),
+      calibratedGpa: integer('calibrated_gpa'),
+      calibrationDate: integer('calibration_date', { mode: 'timestamp_ms' }),
+      lastChemistryClass: text('last_chemistry_class'),
+      lastSprayedAt: integer('last_sprayed_at', { mode: 'timestamp_ms' }),
+      lastDeconAt: integer('last_decon_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerIdx: index('sprayers_owner_idx').on(table.ownerId)
+    })
+  )
+);
+
+export const sprayEvents = tenantScoped(
+  sqliteTable(
+    'spray_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      sprayerId: text('sprayer_id')
+        .notNull()
+        .references(() => sprayers.id),
+      performedById: text('performed_by_id')
+        .notNull()
+        .references(() => users.id),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      productsJson: text('products_json').notNull(),
+      conditionsJson: text('conditions_json').notNull(),
+      rulesVersion: text('rules_version').notNull(),
+      pluginHashesJson: text('plugin_hashes_json').notNull(),
+      customRateOverride: integer('custom_rate_override', { mode: 'boolean' })
+        .notNull()
+        .default(false),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerOccurredIdx: index('spray_events_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      ),
+      ownerBlockIdx: index('spray_events_owner_block_idx').on(table.ownerId, table.blockId)
+    })
+  )
+);
+
+export const harvestEvents = tenantScoped(
+  sqliteTable(
+    'harvest_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      cropPluginId: text('crop_plugin_id').notNull(),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      quantity: text('quantity'),
+      lotNumber: text('lot_number')
+    },
+    (table) => ({
+      ownerOccurredIdx: index('harvest_events_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      )
+    })
+  )
+);
+
+// ─── Equipment Management (Phase 8a, tenant-scoped in Phase 18a) ────────
+
+export const equipment = tenantScoped(
+  sqliteTable(
+    'equipment',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      type: text('type', {
+        enum: [
+          'sprayer',
+          'planter',
+          'drill',
+          'rake',
+          'baler',
+          'tractor',
+          'mower',
+          'irrigation',
+          'other'
+        ]
+      }).notNull(),
+      typeId: text('type_id'),
+      label: text('label').notNull(),
+      specJson: text('spec_json'),
+      notes: text('notes'),
+      retiredAt: integer('retired_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerTypeIdx: index('equipment_owner_type_idx').on(table.ownerId, table.type)
+    })
+  )
+);
+
+export const equipmentState = tenantScoped(
+  sqliteTable(
+    'equipment_state',
+    {
+      equipmentId: text('equipment_id')
+        .primaryKey()
+        .references(() => equipment.id),
+      ownerId: text('owner_id').notNull(),
+      hourMeter: integer('hour_meter'),
+      lastChemistryClass: text('last_chemistry_class'),
+      lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
+      lastDeconAt: integer('last_decon_at', { mode: 'timestamp_ms' }),
+      calibratedGpa: integer('calibrated_gpa'),
+      calibrationDate: integer('calibration_date', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerIdx: index('equipment_state_owner_idx').on(table.ownerId)
+    })
+  )
+);
+
+export const equipmentLog = tenantScoped(
+  sqliteTable(
+    'equipment_log',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      equipmentId: text('equipment_id')
+        .notNull()
+        .references(() => equipment.id),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      kind: text('kind', {
+        enum: ['use', 'maintenance', 'calibration', 'decon', 'inspection', 'note']
+      }).notNull(),
+      performedById: text('performed_by_id').references(() => users.id),
+      notes: text('notes'),
+      payloadJson: text('payload_json')
+    },
+    (table) => ({
+      ownerEquipIdx: index('equipment_log_owner_equip_idx').on(
+        table.ownerId,
+        table.equipmentId,
+        table.occurredAt
+      )
+    })
+  )
+);
+
+export const pendingCalibrations = tenantScoped(
+  sqliteTable(
+    'pending_calibrations',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      equipmentId: text('equipment_id')
+        .notNull()
+        .references(() => equipment.id),
+      submittedById: text('submitted_by_id')
+        .notNull()
+        .references(() => users.id),
+      submittedAt: integer('submitted_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      calibratedGpa: integer('calibrated_gpa').notNull(),
+      spreadInches: integer('spread_inches'),
+      ouncesCollected: integer('ounces_collected'),
+      notes: text('notes')
+    },
+    (table) => ({
+      ownerIdx: index('pending_calibrations_owner_idx').on(table.ownerId)
+    })
+  )
+);
+
+// ─── Stock Management (Phase 8b, tenant-scoped in Phase 18a) ───────────
+
+export const stockItems = tenantScoped(
+  sqliteTable(
+    'stock_items',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      pluginId: text('plugin_id'),
+      category: text('category', {
+        enum: [
+          'herbicide',
+          'insecticide',
+          'fungicide',
+          'fertilizer',
+          'seed',
+          'adjuvant',
+          'fuel',
+          'part'
+        ]
+      }).notNull(),
+      displayName: text('display_name').notNull(),
+      defaultUnit: text('default_unit').notNull(),
+      reorderThresholdHundredths: integer('reorder_threshold_hundredths'),
+      notes: text('notes'),
+      barcode: text('barcode'),
+      typeId: text('type_id'),
+      metadataJson: text('metadata_json'),
+      shortName: text('short_name'),
+      activeIngredientsJson: text('active_ingredients_json'),
+      formulationJson: text('formulation_json'),
+      /** Phase 17 follow-up — pending AI Refresh suggestions awaiting
+       *  operator review. JSON-serialized StockRefreshResult shape (the
+       *  same payload the /api/stock/[id]/refresh-ai endpoint returns).
+       *  Cleared when the operator clicks Apply or Discard. Survives
+       *  modal close, page reload, and is per-item so bulk Settings →
+       *  Refresh results can be reviewed individually later. */
+      pendingRefreshJson: text('pending_refresh_json'),
+      /** When pendingRefreshJson was written. Surfaced in the diff panel
+       *  ("AI suggestion from 12 minutes ago") so stale data is obvious. */
+      pendingRefreshAt: integer('pending_refresh_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerCategoryIdx: index('stock_items_owner_category_idx').on(
+        table.ownerId,
+        table.category
+      ),
+      ownerPluginIdx: index('stock_items_owner_plugin_idx').on(table.ownerId, table.pluginId),
+      ownerBarcodeIdx: index('stock_items_owner_barcode_idx').on(table.ownerId, table.barcode)
+    })
+  )
+);
+
+export const stockLots = tenantScoped(
+  sqliteTable(
+    'stock_lots',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      stockItemId: text('stock_item_id')
+        .notNull()
+        .references(() => stockItems.id),
+      lotNumber: text('lot_number'),
+      expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
+      receivedAt: integer('received_at', { mode: 'timestamp_ms' }).notNull(),
+      receivedQuantityHundredths: integer('received_quantity_hundredths').notNull(),
+      receivedCostCents: integer('received_cost_cents'),
+      supplier: text('supplier'),
+      notes: text('notes')
+    },
+    (table) => ({
+      ownerItemIdx: index('stock_lots_owner_item_idx').on(table.ownerId, table.stockItemId),
+      ownerExpiryIdx: index('stock_lots_owner_expiry_idx').on(table.ownerId, table.expiresAt)
+    })
+  )
+);
+
+// ─── Fertility / Soil Tests (Phase 10, tenant-scoped in Phase 18a) ─────
+
+export const soilTests = tenantScoped(
+  sqliteTable(
+    'soil_tests',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      sampledAt: integer('sampled_at', { mode: 'timestamp_ms' }).notNull(),
+      lab: text('lab'),
+      reportPdfUrl: text('report_pdf_url'),
+      ph: integer('ph_hundredths'),
+      cecHundredths: integer('cec_hundredths'),
+      organicMatterPctHundredths: integer('organic_matter_pct_hundredths'),
+      nitratePpm: integer('nitrate_ppm'),
+      phosphorusPpm: integer('phosphorus_ppm'),
+      potassiumPpm: integer('potassium_ppm'),
+      notes: text('notes')
+    },
+    (table) => ({
+      ownerBlockIdx: index('soil_tests_owner_block_idx').on(table.ownerId, table.blockId)
+    })
+  )
+);
+
+export const fertilityApplications = tenantScoped(
+  sqliteTable(
+    'fertility_applications',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      source: text('source').notNull(),
+      stockItemId: text('stock_item_id').references(() => stockItems.id),
+      ratePerAcreHundredths: integer('rate_per_acre_hundredths').notNull(),
+      rateUnit: text('rate_unit').notNull(),
+      nDeliveredHundredths: integer('n_delivered_hundredths').notNull().default(0),
+      pDeliveredHundredths: integer('p_delivered_hundredths').notNull().default(0),
+      kDeliveredHundredths: integer('k_delivered_hundredths').notNull().default(0),
+      performedById: text('performed_by_id').references(() => users.id),
+      notes: text('notes')
+    },
+    (table) => ({
+      ownerBlockIdx: index('fertility_applications_owner_block_idx').on(
+        table.ownerId,
+        table.blockId
+      )
+    })
+  )
+);
+
+export const fertilityCredits = tenantScoped(
+  sqliteTable(
+    'fertility_credits',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      appliesToYear: integer('applies_to_year').notNull(),
+      source: text('source').notNull(),
+      cropPluginId: text('crop_plugin_id'),
+      nLbPerAcreHundredths: integer('n_lb_per_acre_hundredths').notNull().default(0),
+      pLbPerAcreHundredths: integer('p_lb_per_acre_hundredths').notNull().default(0),
+      kLbPerAcreHundredths: integer('k_lb_per_acre_hundredths').notNull().default(0),
+      notes: text('notes'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerBlockYearIdx: index('fertility_credits_owner_block_year_idx').on(
+        table.ownerId,
+        table.blockId,
+        table.appliesToYear
+      )
+    })
+  )
+);
+
+export const insecticideEvents = tenantScoped(
+  sqliteTable(
+    'insecticide_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      sprayerId: text('sprayer_id').references(() => equipment.id),
+      performedById: text('performed_by_id')
+        .notNull()
+        .references(() => users.id),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      productsJson: text('products_json').notNull(),
+      scoutObservationJson: text('scout_observation_json'),
+      conditionsJson: text('conditions_json').notNull(),
+      reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' }),
+      preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
+      rulesVersion: text('rules_version').notNull(),
+      pluginHashesJson: text('plugin_hashes_json').notNull(),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerOccurredIdx: index('insecticide_events_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      ),
+      ownerBlockIdx: index('insecticide_events_owner_block_idx').on(table.ownerId, table.blockId)
+    })
+  )
+);
+
+export const stockMovements = tenantScoped(
+  sqliteTable(
+    'stock_movements',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      stockLotId: text('stock_lot_id')
+        .notNull()
+        .references(() => stockLots.id),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      deltaHundredths: integer('delta_hundredths').notNull(),
+      reason: text('reason', {
+        enum: [
+          'receipt',
+          'spray-event',
+          'insecticide-event',
+          'fertility-application',
+          'planting',
+          'adjustment',
+          'spill',
+          'expiry'
+        ]
+      }).notNull(),
+      sprayEventId: text('spray_event_id').references(() => sprayEvents.id),
+      insecticideEventId: text('insecticide_event_id').references(() => insecticideEvents.id),
+      fertilityApplicationId: text('fertility_application_id').references(
+        () => fertilityApplications.id
+      ),
+      cropId: text('crop_id').references(() => crops.id),
+      performedById: text('performed_by_id').references(() => users.id),
+      notes: text('notes')
+    },
+    (table) => ({
+      ownerLotIdx: index('stock_movements_owner_lot_idx').on(
+        table.ownerId,
+        table.stockLotId,
+        table.occurredAt
+      )
+    })
+  )
+);
+
+export const hayCuttings = tenantScoped(
+  sqliteTable(
+    'hay_cuttings',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      cropPluginId: text('crop_plugin_id').notNull(),
+      cuttingNumber: integer('cutting_number').notNull(),
+      year: integer('year').notNull(),
+      status: text('status', {
+        enum: ['mowing', 'tedding', 'raking', 'baling', 'storing', 'complete', 'aborted']
+      })
+        .notNull()
+        .default('mowing'),
+      mowAt: integer('mow_at', { mode: 'timestamp_ms' }),
+      tedAt: integer('ted_at', { mode: 'timestamp_ms' }),
+      rakeAt: integer('rake_at', { mode: 'timestamp_ms' }),
+      baleAt: integer('bale_at', { mode: 'timestamp_ms' }),
+      storedAt: integer('stored_at', { mode: 'timestamp_ms' }),
+      baleType: text('bale_type', { enum: ['small-square', 'large-round', 'large-square'] }),
+      balesQuantity: integer('bales_quantity'),
+      baleMoistureHundredths: integer('bale_moisture_hundredths'),
+      weatherForecastJson: text('weather_forecast_json'),
+      performedById: text('performed_by_id').references(() => users.id),
+      rulesVersion: text('rules_version').notNull(),
+      notes: text('notes'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerBlockYearIdx: index('hay_cuttings_owner_block_year_idx').on(
+        table.ownerId,
+        table.blockId,
+        table.year
+      )
+    })
+  )
+);
+
+// ─── Taxonomy terms (mixed scope) ───────────────────────────────────────
 //
-// Per-crop assignment of equipment (a sprayer to a corn crop, a baler to a
-// hay crop). Drives the Equipment tab on /plan and lets calendar-event
-// promotion auto-suggest the right equipment for a primary task.
-//
-// Composite uniqueness on (crop_id, equipment_id, role) so the same sprayer
-// can serve two roles only if you actually use it that way.
-export const cropEquipment = sqliteTable('crop_equipment', {
-  id: text('id').primaryKey(),
-  cropId: text('crop_id')
-    .notNull()
-    .references(() => crops.id),
-  equipmentId: text('equipment_id')
-    .notNull()
-    .references(() => equipment.id),
-  role: text('role', {
-    enum: [
-      'planter',
-      'sprayer',
-      'baler',
-      'mower',
-      'tedder',
-      'rake',
-      'irrigation',
-      'tractor',
-      'other'
-    ]
-  }).notNull(),
-  notes: text('notes'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`)
-});
-
-export const sprayers = sqliteTable('sprayers', {
-  id: text('id').primaryKey(),
-  label: text('label').notNull(),
-  calibratedGpa: integer('calibrated_gpa'),
-  calibrationDate: integer('calibration_date', { mode: 'timestamp_ms' }),
-  lastChemistryClass: text('last_chemistry_class'),
-  lastSprayedAt: integer('last_sprayed_at', { mode: 'timestamp_ms' }),
-  lastDeconAt: integer('last_decon_at', { mode: 'timestamp_ms' })
-});
-
-// F-M / UC-10: when a helper completes the 1/128-acre wizard they cannot
-// directly write to a sprayer's calibrated_gpa (owner-only per FR-12). They
-// stage the result here for owner review. Owner approval calls
-// recordCalibration() on the equipment row and deletes the pending entry.
-// FK targets `equipment` (Phase 8a unified table); legacy `sprayers` is
-// vestigial and never populated.
-
-export const sprayEvents = sqliteTable('spray_events', {
-  id: text('id').primaryKey(),
-  blockId: text('block_id')
-    .notNull()
-    .references(() => blocks.id),
-  /** Phase 12: per-crop attribution. Nullable for back-compat with old
-   *  rows that pre-date the rename; the migration backfill resolves most. */
-  cropId: text('crop_id').references(() => crops.id),
-  sprayerId: text('sprayer_id')
-    .notNull()
-    .references(() => sprayers.id),
-  performedById: text('performed_by_id')
-    .notNull()
-    .references(() => users.id),
-  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
-  productsJson: text('products_json').notNull(),
-  conditionsJson: text('conditions_json').notNull(),
-  rulesVersion: text('rules_version').notNull(),
-  pluginHashesJson: text('plugin_hashes_json').notNull(),
-  customRateOverride: integer('custom_rate_override', { mode: 'boolean' }).notNull().default(false),
-  lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
-});
-
-export const harvestEvents = sqliteTable('harvest_events', {
-  id: text('id').primaryKey(),
-  blockId: text('block_id')
-    .notNull()
-    .references(() => blocks.id),
-  cropId: text('crop_id').references(() => crops.id),
-  cropPluginId: text('crop_plugin_id').notNull(),
-  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
-  quantity: text('quantity'),
-  lotNumber: text('lot_number')
-});
-
-// ─── Equipment Management (Phase 8a) ─────────────────────────────────────
-//
-// Generic field equipment: planters, drills, rakes, balers, sprayers,
-// tractors, mowers, irrigation. Replaces the legacy `sprayers` table for
-// new code (sprayers stays as vestigial back-compat). Sprayer-typed
-// equipment carries the chemistry-history + decon + GPA-calibration state
-// the safety kernel reads on every spray.
-
-export const equipment = sqliteTable('equipment', {
-  id: text('id').primaryKey(),
-  type: text('type', {
-    enum: [
-      'sprayer',
-      'planter',
-      'drill',
-      'rake',
-      'baler',
-      'tractor',
-      'mower',
-      'irrigation',
-      'other'
-    ]
-  }).notNull(),
-  /** Optional FK into taxonomyTerms. When set, replaces `type` for display. */
-  typeId: text('type_id'),
-  label: text('label').notNull(),
-  /** Free-form spec (capacity, working width, hp, nozzle count, etc.). */
-  specJson: text('spec_json'),
-  notes: text('notes'),
-  retiredAt: integer('retired_at', { mode: 'timestamp_ms' })
-});
-
-export const equipmentState = sqliteTable('equipment_state', {
-  equipmentId: text('equipment_id')
-    .primaryKey()
-    .references(() => equipment.id),
-  hourMeter: integer('hour_meter'),
-  /** Sprayer-only: last chemistry class loaded; drives the decon gate. */
-  lastChemistryClass: text('last_chemistry_class'),
-  lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
-  lastDeconAt: integer('last_decon_at', { mode: 'timestamp_ms' }),
-  calibratedGpa: integer('calibrated_gpa'),
-  calibrationDate: integer('calibration_date', { mode: 'timestamp_ms' })
-});
-
-export const equipmentLog = sqliteTable('equipment_log', {
-  id: text('id').primaryKey(),
-  equipmentId: text('equipment_id')
-    .notNull()
-    .references(() => equipment.id),
-  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
-  kind: text('kind', {
-    enum: ['use', 'maintenance', 'calibration', 'decon', 'inspection', 'note']
-  }).notNull(),
-  performedById: text('performed_by_id').references(() => users.id),
-  notes: text('notes'),
-  payloadJson: text('payload_json')
-});
-
-// F-M / UC-10: helpers complete the 1/128-acre wizard but cannot write a
-// sprayer's calibrated_gpa directly (owner-only per FR-12). They stage the
-// result here. Owner approval calls recordCalibration() on the equipment row
-// and deletes the pending entry.
-export const pendingCalibrations = sqliteTable('pending_calibrations', {
-  id: text('id').primaryKey(),
-  equipmentId: text('equipment_id')
-    .notNull()
-    .references(() => equipment.id),
-  submittedById: text('submitted_by_id')
-    .notNull()
-    .references(() => users.id),
-  submittedAt: integer('submitted_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
-  calibratedGpa: integer('calibrated_gpa').notNull(),
-  spreadInches: integer('spread_inches'),
-  ouncesCollected: integer('ounces_collected'),
-  notes: text('notes')
-});
-
-// ─── Stock Management (Phase 8b) ─────────────────────────────────────────
-//
-// Inventory tracking for herbicides, insecticides, fungicides, fertilizer,
-// seed, adjuvants, fuel, and parts. Each SKU (stock_item) has zero or more
-// lots; each lot accumulates signed movements. On-hand = received_quantity
-// + sum of movements per lot. Spray events auto-decrement via FIFO oldest
-// non-expired lot. Quantities stored as integer hundredths of the default
-// unit so we don't lose precision (1.50 fl-oz → 150 stored).
-
-export const stockItems = sqliteTable('stock_items', {
-  id: text('id').primaryKey(),
-  /** Optional link to a herbicide/insecticide plugin. Drives auto-decrement. */
-  pluginId: text('plugin_id'),
-  category: text('category', {
-    enum: [
-      'herbicide',
-      'insecticide',
-      'fungicide',
-      'fertilizer',
-      'seed',
-      'adjuvant',
-      'fuel',
-      'part'
-    ]
-  }).notNull(),
-  displayName: text('display_name').notNull(),
-  /** Canonical unit for on-hand display + reorder threshold. */
-  defaultUnit: text('default_unit').notNull(),
-  /** Reorder threshold in default-unit hundredths. */
-  reorderThresholdHundredths: integer('reorder_threshold_hundredths'),
-  notes: text('notes'),
-  /** UPC/EAN/QR value captured at receiving scan. Enables re-scan → direct nav. */
-  barcode: text('barcode'),
-  /** Optional FK into taxonomyTerms. Drives sub-categorization in /stock. */
-  typeId: text('type_id'),
-  /** Category-specific structured data from label scan (JSON).
-   *  For seeds: { daysToMaturity, plantingTempMinF, plantingTempMaxF,
-   *              spacingInches, depthInches, sunRequirement, seedsPerPacket,
-   *              guessed: string[] } */
-  metadataJson: text('metadata_json'),
-  /** Phase 15d — Haiku-generated short label (≤40 chars). Surfaced on the
-   *  schedule swim-lane and wizard cards so long marketing names like
-   *  "Pumpkin Cinderella Film Coated Treated" become "Cinderella Pumpkin".
-   *  Null until the operator clicks ✨ Generate short names on /stock; falls
-   *  back to displayName everywhere it's read. */
-  shortName: text('short_name'),
-  /** Phase 17 (Track 2) — AI-extracted active ingredients from label scan.
-   *  JSON shape: Array<{ name: string; concentrationPct?: number;
-   *  chemistryClass?: ChemistryClass; iracGroup?: string; fracCode?: string }>
-   *  Populated when the vision API returns ingredient data and the user
-   *  confirms in the inventory-add UI. Drives the data-augmented safety
-   *  hook (`userAddedRestrictions`) for user-added stock items that don't
-   *  match an existing herbicide/insecticide/fungicide plugin pluginId. */
-  activeIngredientsJson: text('active_ingredients_json'),
-  /** Phase 17 (Track 2) — AI-extracted formulation data from label scan.
-   *  JSON shape: { type?: 'granular'|'liquid'|'WP'|'EC'|'soluble'|'compost'|...;
-   *  npk?: { n: number; p: number; k: number };
-   *  productClass?: 'synthetic'|'organic'|'biocontrol' } */
-  formulationJson: text('formulation_json')
-});
-
-export const stockLots = sqliteTable('stock_lots', {
-  id: text('id').primaryKey(),
-  stockItemId: text('stock_item_id')
-    .notNull()
-    .references(() => stockItems.id),
-  lotNumber: text('lot_number'),
-  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
-  receivedAt: integer('received_at', { mode: 'timestamp_ms' }).notNull(),
-  /** Initial quantity in default-unit hundredths. */
-  receivedQuantityHundredths: integer('received_quantity_hundredths').notNull(),
-  receivedCostCents: integer('received_cost_cents'),
-  supplier: text('supplier'),
-  notes: text('notes')
-});
-
-// ─── Fertility / Soil Tests (Phase 10) ───────────────────────────────────
-//
-// Per-block N/P/K budget. soil_tests holds lab results; fertility_applications
-// records anything applied (synthetic, manure, compost, fertigation);
-// fertility_credits stores cover-crop / legume credits the agronomist
-// computed (e.g., +40 lb-N/ac from a clover mulch). Per-block remaining
-// budget = sum of credits + applied − crop demand. Quantities stored in
-// hundredths of pounds-per-acre to match stock-management precision.
-
-export const soilTests = sqliteTable('soil_tests', {
-  id: text('id').primaryKey(),
-  blockId: text('block_id')
-    .notNull()
-    .references(() => blocks.id),
-  sampledAt: integer('sampled_at', { mode: 'timestamp_ms' }).notNull(),
-  lab: text('lab'),
-  reportPdfUrl: text('report_pdf_url'),
-  ph: integer('ph_hundredths'),
-  /** Cation Exchange Capacity (meq/100g × 100). */
-  cecHundredths: integer('cec_hundredths'),
-  organicMatterPctHundredths: integer('organic_matter_pct_hundredths'),
-  nitratePpm: integer('nitrate_ppm'),
-  phosphorusPpm: integer('phosphorus_ppm'),
-  potassiumPpm: integer('potassium_ppm'),
-  notes: text('notes')
-});
-
-export const fertilityApplications = sqliteTable('fertility_applications', {
-  id: text('id').primaryKey(),
-  blockId: text('block_id')
-    .notNull()
-    .references(() => blocks.id),
-  cropId: text('crop_id').references(() => crops.id),
-  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
-  /** Free-form source label: '10-10-10', 'composted chicken manure', 'urea 46-0-0'. */
-  source: text('source').notNull(),
-  /** Optional FK to a stock_item for fertilizer auto-decrement. */
-  stockItemId: text('stock_item_id').references(() => stockItems.id),
-  /** Quantity applied per acre, in hundredths of the unit. */
-  ratePerAcreHundredths: integer('rate_per_acre_hundredths').notNull(),
-  rateUnit: text('rate_unit').notNull(),
-  /** Pounds N / P2O5 / K2O delivered per acre (hundredths). Computed at write
-   *  time from source + rate so per-block budget queries are simple sums. */
-  nDeliveredHundredths: integer('n_delivered_hundredths').notNull().default(0),
-  pDeliveredHundredths: integer('p_delivered_hundredths').notNull().default(0),
-  kDeliveredHundredths: integer('k_delivered_hundredths').notNull().default(0),
-  performedById: text('performed_by_id').references(() => users.id),
-  notes: text('notes')
-});
-
-export const fertilityCredits = sqliteTable('fertility_credits', {
-  id: text('id').primaryKey(),
-  blockId: text('block_id')
-    .notNull()
-    .references(() => blocks.id),
-  /** Credit window the rotation expert assigned this credit to. */
-  appliesToYear: integer('applies_to_year').notNull(),
-  /** 'cover-crop:clover', 'cover-crop:hairy-vetch', 'manure-residual', 'compost-residual'. */
-  source: text('source').notNull(),
-  /** Plugin-anchored credit: which cover-crop or legume plugin produced it. */
-  cropPluginId: text('crop_plugin_id'),
-  /** Pounds N credit per acre (hundredths). */
-  nLbPerAcreHundredths: integer('n_lb_per_acre_hundredths').notNull().default(0),
-  /** P2O5 lb/ac (hundredths). */
-  pLbPerAcreHundredths: integer('p_lb_per_acre_hundredths').notNull().default(0),
-  /** K2O lb/ac (hundredths). */
-  kLbPerAcreHundredths: integer('k_lb_per_acre_hundredths').notNull().default(0),
-  notes: text('notes'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`)
-});
-
-// ─── Insecticide Events (Phase 10) ───────────────────────────────────────
-//
-// Mirror of spray_events but for the insecticide flow (UC-05 scout + spray).
-// Kept separate from spray_events so herbicide cross-contam queries stay
-// fast and so insecticide-specific fields (target pest, REI, PHI) live
-// natively. Re-uses the safety kernel for env gates + sprayer decon.
-
-export const insecticideEvents = sqliteTable('insecticide_events', {
-  id: text('id').primaryKey(),
-  blockId: text('block_id')
-    .notNull()
-    .references(() => blocks.id),
-  cropId: text('crop_id').references(() => crops.id),
-  sprayerId: text('sprayer_id').references(() => equipment.id),
-  performedById: text('performed_by_id')
-    .notNull()
-    .references(() => users.id),
-  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
-  productsJson: text('products_json').notNull(),
-  /** Triggering scout observation — pest counts / threshold reading. */
-  scoutObservationJson: text('scout_observation_json'),
-  conditionsJson: text('conditions_json').notNull(),
-  reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' }),
-  preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
-  rulesVersion: text('rules_version').notNull(),
-  pluginHashesJson: text('plugin_hashes_json').notNull(),
-  lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
-});
-
-export const stockMovements = sqliteTable('stock_movements', {
-  id: text('id').primaryKey(),
-  stockLotId: text('stock_lot_id')
-    .notNull()
-    .references(() => stockLots.id),
-  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
-  /** Signed delta in default-unit hundredths. +receipts, -consumption. */
-  deltaHundredths: integer('delta_hundredths').notNull(),
-  reason: text('reason', {
-    enum: [
-      'receipt',
-      'spray-event',
-      'insecticide-event',
-      'fertility-application',
-      'planting',
-      'adjustment',
-      'spill',
-      'expiry'
-    ]
-  }).notNull(),
-  sprayEventId: text('spray_event_id').references(() => sprayEvents.id),
-  insecticideEventId: text('insecticide_event_id').references(() => insecticideEvents.id),
-  fertilityApplicationId: text('fertility_application_id').references(
-    () => fertilityApplications.id
-  ),
-  /** Phase 13: per-crop attribution for fast "what did this crop consume?"
-   *  rollups. Backfilled from the source event row at migration time. */
-  cropId: text('crop_id').references(() => crops.id),
-  performedById: text('performed_by_id').references(() => users.id),
-  notes: text('notes')
-});
-
-// ─── Hay / Forage cuttings (Sprint E — FR-19, FR-21, FR-23) ─────────────
-//
-// One row per cutting per block per year. Tracks the multi-step workflow
-// (mow → ted → rake → bale → store) declared by the crop plugin's
-// `hayOperations.steps`. The bale step records moisture + bale-type so the
-// kernel can enforce the plugin's `baleMoistureGate` thresholds (FR-21);
-// >22% baled hay is the canonical fire-risk gate.
-
-export const hayCuttings = sqliteTable('hay_cuttings', {
-  id: text('id').primaryKey(),
-  blockId: text('block_id')
-    .notNull()
-    .references(() => blocks.id),
-  cropId: text('crop_id').references(() => crops.id),
-  cropPluginId: text('crop_plugin_id').notNull(),
-  /** Sequential within (block, year). Operator assigns; defaults to next. */
-  cuttingNumber: integer('cutting_number').notNull(),
-  year: integer('year').notNull(),
-  status: text('status', {
-    enum: ['mowing', 'tedding', 'raking', 'baling', 'storing', 'complete', 'aborted']
+// System defaults: `is_default=1`, `owner_id=null`. Visible to all owners.
+// User-added terms: `is_default=0`, `owner_id=<owner>`. Visible to that
+// owner only. Repo reads with `WHERE owner_id IS NULL OR owner_id = ?`.
+// Kept OUT of the TenantScoped brand because of this hybrid semantics —
+// repos must build their own conditions; `tenantWhere` would over-filter.
+export const taxonomyTerms = sqliteTable(
+  'taxonomy_terms',
+  {
+    id: text('id').primaryKey(),
+    // INTENTIONALLY NULLABLE: system-default terms have owner_id IS NULL and
+    // are globally visible. Per-owner additions stamp the active owner.
+    ownerId: text('owner_id'),
+    domain: text('domain').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+  },
+  (table) => ({
+    domainIdx: index('taxonomy_terms_domain_idx').on(table.domain),
+    ownerDomainIdx: index('taxonomy_terms_owner_domain_idx').on(table.ownerId, table.domain)
   })
-    .notNull()
-    .default('mowing'),
-  mowAt: integer('mow_at', { mode: 'timestamp_ms' }),
-  tedAt: integer('ted_at', { mode: 'timestamp_ms' }),
-  rakeAt: integer('rake_at', { mode: 'timestamp_ms' }),
-  baleAt: integer('bale_at', { mode: 'timestamp_ms' }),
-  storedAt: integer('stored_at', { mode: 'timestamp_ms' }),
-  baleType: text('bale_type', { enum: ['small-square', 'large-round', 'large-square'] }),
-  balesQuantity: integer('bales_quantity'),
-  /** Moisture % × 100 (so 17.5% → 1750). Enforced against plugin's
-   *  baleMoistureGate at the bale step. */
-  baleMoistureHundredths: integer('bale_moisture_hundredths'),
-  /** Canonical 3-day forecast captured at mow decision; immutable. */
-  weatherForecastJson: text('weather_forecast_json'),
-  performedById: text('performed_by_id').references(() => users.id),
-  rulesVersion: text('rules_version').notNull(),
-  notes: text('notes'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`)
-});
+);
 
-// ─── Taxonomy terms (user-managed Type lists) ────────────────────────────
+// ─── App settings (per-Owner KV store after Phase 18a) ──────────────────
 //
-// Domain-scoped taxonomy: e.g., domain='inventory:seed' name='Pumpkin' for
-// inventory seed sub-categorization, domain='equipment' name='Tractor' for
-// equipment categorization. Pre-seeded with system defaults; users add
-// custom terms via the /settings UI or inline when adding inventory items.
-export const taxonomyTerms = sqliteTable('taxonomy_terms', {
-  id: text('id').primaryKey(),
-  /** 'inventory:<category>' or 'equipment'. */
-  domain: text('domain').notNull(),
-  name: text('name').notNull(),
-  description: text('description'),
-  /** True for system-seeded defaults. User-added terms are false. */
-  isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`)
-});
+// PK becomes composite (owner_id, key) — table rebuild in migration 0021
+// because SQLite doesn't allow altering the PK in place.
+export const appSettings = tenantScoped(
+  sqliteTable(
+    'app_settings',
+    {
+      ownerId: text('owner_id').notNull(),
+      key: text('key').notNull(),
+      value: text('value').notNull(),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      pk: primaryKey({ columns: [table.ownerId, table.key] })
+    })
+  )
+);
 
-// ─── App settings (owner-managed key-value store) ────────────────────────
-//
-// Stores operator-configured values like API keys that cannot live in env
-// vars in a deployed container. Owner-only reads and writes via /api/settings.
-export const appSettings = sqliteTable('app_settings', {
-  key: text('key').primaryKey(),
-  value: text('value').notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`)
-});
-
-// Per-location NOAA NWS forecast cache. Reduces API calls; `expiresAt`
-// drives re-fetch (1 hr default per the NWS rate-limit guidance).
+// Per-location NOAA NWS forecast cache. Globally shared — immutable, keyed
+// by lat/lon, no PII. Kept OUT of the TenantScoped brand on purpose.
 export const weatherForecastCache = sqliteTable('weather_forecast_cache', {
   id: text('id').primaryKey(),
-  /** Lat/lon rounded to 4 decimals (≈11 m precision) — keys the cache. */
   cacheKey: text('cache_key').notNull().unique(),
   fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull(),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-  /** Raw NWS payload (the day-summary array). */
   payloadJson: text('payload_json').notNull()
 });
 
-// ─── Tasks (Phase 12 — /today as front door) ─────────────────────────────
-//
-// Forward-looking work items. A "primary" task is the operation itself
-// (spray, mow, harvest); pre-tasks and post-tasks wrap it (mower-check
-// before mow, decon after restricted-use spray). Tasks materialize:
-//   - manually by the operator ("schedule a spray for Thursday")
-//   - by promoting a calendar-engine event ("[+ Schedule]" on a derived
-//     spray-window suggestion)
-//   - automatically as pre/post-tasks attached to a primary, sourced from
-//     plugin templates (cropPlugin.preTasks, equipment.preTasks)
-//
-// Closure: when a primary task's referenced event lands (e.g. a spray
-// is recorded), the matching event endpoint stamps `completed_at` here.
-//
-// Self-FK: pre/post-tasks point at their primary via linkedToTaskId. We
-// declare it as a plain `text` column without a Drizzle FK constraint at
-// the type level (the migration adds the FK in SQL); this avoids a TS
-// circular-reference error from referencing tasks within its own table
-// definition. Application code enforces the relationship.
-export const tasks = sqliteTable('tasks', {
-  id: text('id').primaryKey(),
-  title: text('title').notNull(),
-  body: text('body'),
-  kind: text('kind', { enum: ['primary', 'pre-task', 'post-task'] }).notNull(),
-  /** For pre/post-tasks, the primary they wrap. */
-  linkedToTaskId: text('linked_to_task_id'),
-  /** Most tasks belong to a crop; block-level / equipment-level tasks
-   *  (e.g. winter equipment check) leave cropId null. */
-  cropId: text('crop_id').references(() => crops.id),
-  blockId: text('block_id').references(() => blocks.id),
-  equipmentId: text('equipment_id').references(() => equipment.id),
-  scheduledFor: integer('scheduled_for', { mode: 'timestamp_ms' }).notNull(),
-  completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
-  abortedAt: integer('aborted_at', { mode: 'timestamp_ms' }),
-  abortReason: text('abort_reason'),
-  /** When closure happens via an event row, point at it loosely (table + id
-   *  rather than a polymorphic FK). */
-  relatedEventTable: text('related_event_table', {
-    enum: [
-      'spray_event',
-      'harvest_event',
-      'insecticide_event',
-      'hay_cutting',
-      'fertility_application'
-    ]
-  }),
-  relatedEventId: text('related_event_id'),
-  /** Stable key when this task was materialized from a plugin template;
-   *  lets `materializePluginPrePost` skip duplicates. */
-  pluginTemplateKey: text('plugin_template_key'),
-  recurrenceJson: text('recurrence_json'),
-  /** Phase 14 (hybrid drift): true if the user manually rescheduled this
-   *  task. When the source planting date moves, overridden tasks stay put
-   *  and get `staleAnchor=true` instead of being re-anchored. */
-  userOverridden: integer('user_overridden', { mode: 'boolean' }).notNull().default(false),
-  /** Phase 14 (hybrid drift): set when source `plantingDate` shifts after a
-   *  task is overridden — drives a yellow chip in the UI ("Source date
-   *  moved; click to re-anchor or keep"). */
-  staleAnchor: integer('stale_anchor', { mode: 'boolean' }).notNull().default(false),
-  /** Phase 14 (hybrid drift): set on the *old* task row when a crop swap
-   *  re-derives its template tasks. The new task points to it; UI hides
-   *  superseded rows by default. */
-  supersededByTaskId: text('superseded_by_task_id'),
-  createdById: text('created_by_id').references(() => users.id),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`)
-});
+// ─── Tasks (Phase 12, tenant-scoped in Phase 18a) ───────────────────────
 
-// ─── AI call log (Phase 14 — Plan-Schedule cost transparency) ────────────
-//
-// Every call to /api/plan/{suggest,succession,optimize} writes one row,
-// regardless of outcome. Powers per-day quotas + monthly USD cap and gives
-// the owner an audit trail of actual spend.
-export const aiCallLog = sqliteTable('ai_call_log', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').references(() => users.id),
-  endpoint: text('endpoint', {
-    enum: ['suggest', 'succession', 'optimize', 'rationale', 'allocate', 'groups', 'shortNames']
-  }).notNull(),
-  model: text('model').notNull(),
-  inputTokens: integer('input_tokens').notNull().default(0),
-  cachedInputTokens: integer('cached_input_tokens').notNull().default(0),
-  outputTokens: integer('output_tokens').notNull().default(0),
-  /** Estimated USD spend for this call, computed at call time from the
-   *  current pricing in `aiPlanning.ts`. Stored alongside tokens so a
-   *  later pricing change doesn't invalidate the audit. */
-  usdEstimate: real('usd_estimate').notNull().default(0),
-  success: integer('success', { mode: 'boolean' }).notNull().default(true),
-  /** Optional error class when `success=false` (e.g. 'rate-limit',
-   *  'cap-exceeded', 'upstream-5xx', 'invalid-json'). */
-  errorClass: text('error_class'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`)
-});
+export const tasks = tenantScoped(
+  sqliteTable(
+    'tasks',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      title: text('title').notNull(),
+      body: text('body'),
+      kind: text('kind', { enum: ['primary', 'pre-task', 'post-task'] }).notNull(),
+      linkedToTaskId: text('linked_to_task_id'),
+      cropId: text('crop_id').references(() => crops.id),
+      blockId: text('block_id').references(() => blocks.id),
+      equipmentId: text('equipment_id').references(() => equipment.id),
+      scheduledFor: integer('scheduled_for', { mode: 'timestamp_ms' }).notNull(),
+      completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+      abortedAt: integer('aborted_at', { mode: 'timestamp_ms' }),
+      abortReason: text('abort_reason'),
+      relatedEventTable: text('related_event_table', {
+        enum: [
+          'spray_event',
+          'harvest_event',
+          'insecticide_event',
+          'hay_cutting',
+          'fertility_application'
+        ]
+      }),
+      relatedEventId: text('related_event_id'),
+      pluginTemplateKey: text('plugin_template_key'),
+      recurrenceJson: text('recurrence_json'),
+      userOverridden: integer('user_overridden', { mode: 'boolean' }).notNull().default(false),
+      staleAnchor: integer('stale_anchor', { mode: 'boolean' }).notNull().default(false),
+      supersededByTaskId: text('superseded_by_task_id'),
+      createdById: text('created_by_id').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerScheduledIdx: index('tasks_owner_scheduled_idx').on(
+        table.ownerId,
+        table.scheduledFor
+      ),
+      ownerCropIdx: index('tasks_owner_crop_idx').on(table.ownerId, table.cropId)
+    })
+  )
+);
+
+// ─── AI call log (Phase 14, tenant-scoped in Phase 18a) ─────────────────
+
+export const aiCallLog = tenantScoped(
+  sqliteTable(
+    'ai_call_log',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      userId: text('user_id').references(() => users.id),
+      endpoint: text('endpoint', {
+        enum: ['suggest', 'succession', 'optimize', 'rationale', 'allocate', 'groups', 'shortNames']
+      }).notNull(),
+      model: text('model').notNull(),
+      inputTokens: integer('input_tokens').notNull().default(0),
+      cachedInputTokens: integer('cached_input_tokens').notNull().default(0),
+      outputTokens: integer('output_tokens').notNull().default(0),
+      usdEstimate: real('usd_estimate').notNull().default(0),
+      success: integer('success', { mode: 'boolean' }).notNull().default(true),
+      errorClass: text('error_class'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(
+        table.ownerId,
+        table.createdAt
+      )
+    })
+  )
+);

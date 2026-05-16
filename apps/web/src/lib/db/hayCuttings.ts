@@ -5,18 +5,20 @@
  * step timestamps, and the decision artifacts (forecast captured at mow,
  * moisture + bale-type at bale). The runtime kernel (lib/hay/engine.ts)
  * decides what to do next; this module just persists.
+ *
+ * Phase 18a: tenant-scoped — cuttingNumber sequencing is per (owner, block, year).
  */
 
 import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, max } from 'drizzle-orm';
 import { db } from './client';
 import { hayCuttings } from './schema';
+import { tenantValues, withTenant } from './tenant';
 import type { BaleType, HayStatus } from '$lib/hay/types';
 
 export interface HayCutting {
   id: string;
   blockId: string;
-  /** Phase 12: per-crop attribution. */
   cropId?: string;
   cropPluginId: string;
   cuttingNumber: number;
@@ -80,7 +82,7 @@ export function nextCuttingNumber(blockId: string, year: number): number {
   const row = db
     .select({ n: max(hayCuttings.cuttingNumber) })
     .from(hayCuttings)
-    .where(and(eq(hayCuttings.blockId, blockId), eq(hayCuttings.year, year)))
+    .where(withTenant(hayCuttings, and(eq(hayCuttings.blockId, blockId), eq(hayCuttings.year, year))))
     .get();
   return (row?.n ?? 0) + 1;
 }
@@ -88,25 +90,24 @@ export function nextCuttingNumber(blockId: string, year: number): number {
 export function createCutting(input: CreateCuttingInput): HayCutting {
   const id = randomUUID();
   const cuttingNumber = input.cuttingNumber ?? nextCuttingNumber(input.blockId, input.year);
-  // mowAt is set at create time → cutting starts in `mowing` phase = "mow
-  // just done, drying underway". The kernel sees status=mowing and offers
-  // 'ted' (or whatever's next in steps[]) as the next advance.
   const row = db
     .insert(hayCuttings)
-    .values({
-      id,
-      blockId: input.blockId,
-      cropId: input.cropId ?? null,
-      cropPluginId: input.cropPluginId,
-      cuttingNumber,
-      year: input.year,
-      status: 'mowing',
-      mowAt: new Date(input.mowAt ?? Date.now()),
-      weatherForecastJson: input.weatherForecastJson ?? null,
-      performedById: input.performedById ?? null,
-      rulesVersion: input.rulesVersion,
-      notes: input.notes ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        cropId: input.cropId ?? null,
+        cropPluginId: input.cropPluginId,
+        cuttingNumber,
+        year: input.year,
+        status: 'mowing',
+        mowAt: new Date(input.mowAt ?? Date.now()),
+        weatherForecastJson: input.weatherForecastJson ?? null,
+        performedById: input.performedById ?? null,
+        rulesVersion: input.rulesVersion,
+        notes: input.notes ?? null
+      })
+    )
     .returning()
     .get();
   return rowToCutting(row);
@@ -115,24 +116,16 @@ export function createCutting(input: CreateCuttingInput): HayCutting {
 export interface AdvanceInput {
   status: HayStatus;
   occurredAt?: number;
-  /** Step-specific fields. Caller supplies whichever apply. */
   baleType?: BaleType;
   balesQuantity?: number;
   baleMoisturePct?: number;
   notes?: string;
 }
 
-/**
- * Stamp the timestamp matching whichever step the new status implies, then
- * write the new status. The kernel + endpoint validate the transition
- * before calling this.
- */
 export function advanceCutting(id: string, input: AdvanceInput): HayCutting {
   const occurredAt = input.occurredAt ?? Date.now();
   const updates: Record<string, unknown> = { status: input.status };
 
-  // Map status → which timestamp this transition just completed.
-  // mowing is set at create-time so it doesn't appear here.
   const stampField: Partial<Record<HayStatus, keyof typeof hayCuttings.$inferInsert>> = {
     tedding: 'tedAt',
     raking: 'rakeAt',
@@ -149,7 +142,12 @@ export function advanceCutting(id: string, input: AdvanceInput): HayCutting {
     updates.baleMoistureHundredths = Math.round(input.baleMoisturePct * 100);
   if (input.notes !== undefined) updates.notes = input.notes;
 
-  const row = db.update(hayCuttings).set(updates).where(eq(hayCuttings.id, id)).returning().get();
+  const row = db
+    .update(hayCuttings)
+    .set(updates)
+    .where(withTenant(hayCuttings, eq(hayCuttings.id, id)))
+    .returning()
+    .get();
   if (!row) throw new Error(`unknown cutting id: ${id}`);
   return rowToCutting(row);
 }
@@ -158,7 +156,7 @@ export function abortCutting(id: string, reason?: string): HayCutting {
   const row = db
     .update(hayCuttings)
     .set({ status: 'aborted', notes: reason ?? null })
-    .where(eq(hayCuttings.id, id))
+    .where(withTenant(hayCuttings, eq(hayCuttings.id, id)))
     .returning()
     .get();
   if (!row) throw new Error(`unknown cutting id: ${id}`);
@@ -166,7 +164,11 @@ export function abortCutting(id: string, reason?: string): HayCutting {
 }
 
 export function getCutting(id: string): HayCutting | undefined {
-  const row = db.select().from(hayCuttings).where(eq(hayCuttings.id, id)).get();
+  const row = db
+    .select()
+    .from(hayCuttings)
+    .where(withTenant(hayCuttings, eq(hayCuttings.id, id)))
+    .get();
   return row ? rowToCutting(row) : undefined;
 }
 
@@ -179,8 +181,11 @@ export function listCuttings(filters: {
   if (filters.blockId) conds.push(eq(hayCuttings.blockId, filters.blockId));
   if (filters.year !== undefined) conds.push(eq(hayCuttings.year, filters.year));
 
-  let q = db.select().from(hayCuttings).$dynamic();
-  if (conds.length > 0) q = q.where(and(...conds));
+  let q = db
+    .select()
+    .from(hayCuttings)
+    .where(withTenant(hayCuttings, conds.length ? and(...conds) : undefined))
+    .$dynamic();
   q = q.orderBy(desc(hayCuttings.year), asc(hayCuttings.cuttingNumber));
   if (filters.limit) q = q.limit(filters.limit);
   return q.all().map(rowToCutting);

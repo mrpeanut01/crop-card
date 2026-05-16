@@ -101,6 +101,7 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
       .values({
         id: cropId,
         blockId: block.id,
+        ownerId: 'owner_home_farm',
         cropPluginId: 'corn-feed-dent-pioneer',
         varietyDisplayName: 'Pioneer Corn (test)',
         plantingDate: new Date()
@@ -109,7 +110,7 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
 
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({ id: equipmentId, type: 'sprayer', label: 'Test sprayer 50gal' })
+      .values({ id: equipmentId, ownerId: 'owner_home_farm', type: 'sprayer', label: 'Test sprayer 50gal' })
       .run();
 
     const binding = bindEquipment({ cropId, equipmentId, role: 'sprayer' });
@@ -141,6 +142,7 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
       .values({
         id: cropId,
         blockId: block.id,
+        ownerId: 'owner_home_farm',
         cropPluginId: 'corn-feed-dent-pioneer',
         varietyDisplayName: 'Dup Corn',
         plantingDate: new Date()
@@ -148,7 +150,7 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
       .run();
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({ id: equipmentId, type: 'sprayer', label: 'Dup sprayer' })
+      .values({ id: equipmentId, ownerId: 'owner_home_farm', type: 'sprayer', label: 'Dup sprayer' })
       .run();
 
     bindEquipment({ cropId, equipmentId, role: 'sprayer' });
@@ -171,6 +173,7 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
       .values({
         id: cropId,
         blockId: block.id,
+        ownerId: 'owner_home_farm',
         cropPluginId: 'corn-feed-dent-pioneer',
         varietyDisplayName: 'Cascade Corn',
         plantingDate: new Date()
@@ -178,7 +181,7 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
       .run();
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({ id: equipmentId, type: 'sprayer', label: 'Cascade sprayer' })
+      .values({ id: equipmentId, ownerId: 'owner_home_farm', type: 'sprayer', label: 'Cascade sprayer' })
       .run();
     bindEquipment({ cropId, equipmentId, role: 'sprayer' });
 
@@ -200,6 +203,7 @@ describe('Phase 13 — stock_movements cropId', () => {
       .values({
         id: cropId,
         blockId: block.id,
+        ownerId: 'owner_home_farm',
         cropPluginId: 'corn-feed-dent-pioneer',
         varietyDisplayName: 'Stock Corn',
         plantingDate: new Date()

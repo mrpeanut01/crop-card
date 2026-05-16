@@ -141,6 +141,41 @@
 			"when": 1778463935979,
 			"tag": "0019_phase17_track2_stock_formulation",
 			"breakpoints": true
+		},
+		{
+			"idx": 20,
+			"version": "6",
+			"when": 1778500422624,
+			"tag": "0020_phase18a_multitenant_owners",
+			"breakpoints": true
+		},
+		{
+			"idx": 21,
+			"version": "6",
+			"when": 1778500422625,
+			"tag": "0021_phase18a_backfill_home_farm",
+			"breakpoints": true
+		},
+		{
+			"idx": 22,
+			"version": "6",
+			"when": 1778502725603,
+			"tag": "0022_phase18_ownerid_notnull",
+			"breakpoints": true
+		},
+		{
+			"idx": 23,
+			"version": "6",
+			"when": 1778503400000,
+			"tag": "0023_phase18_audit_owner_nullable",
+			"breakpoints": true
+		},
+		{
+			"idx": 24,
+			"version": "6",
+			"when": 1778506297155,
+			"tag": "0024_phase17_pending_refresh",
+			"breakpoints": true
 		}
 	]
 }

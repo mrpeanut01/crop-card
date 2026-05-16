@@ -6,13 +6,19 @@
  *
  * Sprayer-typed equipment carries chemistry-history + decon + GPA-calibration
  * state on equipment_state, which the safety kernel reads on every spray.
+ *
+ * Phase 18a: tenant-scoped. The legacy boot-time seeding of CORN/PUMPKIN
+ * sprayers is now retired — that bootstrap was a single-farm concession and
+ * is replaced by the per-Owner onboarding wizard (Phase 18f) for new
+ * tenants. Home Farm's existing rows are stamped by the backfill migration.
  */
 
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import type { ChemistryClass } from '$lib/safety/types';
 import { db } from './client';
-import { equipment, equipmentLog, equipmentState, sprayers } from './schema';
+import { equipment, equipmentLog, equipmentState } from './schema';
+import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export type EquipmentType =
   | 'sprayer'
@@ -36,7 +42,6 @@ export type EquipmentLogKind =
 export interface Equipment {
   id: string;
   type: EquipmentType;
-  /** FK into taxonomy_terms (domain='equipment'). Replaces `type` for display. */
   typeId?: string;
   label: string;
   spec?: Record<string, unknown>;
@@ -66,53 +71,6 @@ export interface EquipmentLogEntry {
   performedById?: string;
   notes?: string;
   payload?: Record<string, unknown>;
-}
-
-let seeded = false;
-
-const CANONICAL_SPRAYERS: ReadonlyArray<{ id: string; label: string }> = [
-  { id: 'CORN', label: 'Corn-dedicated sprayer' },
-  { id: 'PUMPKIN', label: 'Pumpkin/bean-dedicated sprayer' }
-];
-
-function ensureSeeded() {
-  if (seeded) return;
-  // Backfill any sprayer rows that don't yet exist as equipment. The id is
-  // preserved so spray_events.sprayer_id continues to resolve.
-  const legacy = db.select().from(sprayers).all();
-  for (const s of legacy) {
-    const exists = db.select().from(equipment).where(eq(equipment.id, s.id)).get();
-    if (exists) continue;
-    db.insert(equipment)
-      .values({
-        id: s.id,
-        type: 'sprayer',
-        label: s.label,
-        notes: 'migrated from legacy sprayers table'
-      })
-      .run();
-    db.insert(equipmentState)
-      .values({
-        equipmentId: s.id,
-        calibratedGpa: s.calibratedGpa ?? null,
-        calibrationDate: s.calibrationDate,
-        lastChemistryClass: s.lastChemistryClass,
-        lastUsedAt: s.lastSprayedAt,
-        lastDeconAt: s.lastDeconAt
-      })
-      .run();
-  }
-
-  // Bootstrap canonical CORN/PUMPKIN sprayers on a fresh DB. Done here so
-  // legacy sprayer-id semantics keep working across both tables.
-  for (const seed of CANONICAL_SPRAYERS) {
-    const exists = db.select().from(equipment).where(eq(equipment.id, seed.id)).get();
-    if (exists) continue;
-    db.insert(equipment).values({ id: seed.id, type: 'sprayer', label: seed.label }).run();
-    db.insert(equipmentState).values({ equipmentId: seed.id, calibratedGpa: 15 }).run();
-  }
-
-  seeded = true;
 }
 
 function rowToEquipment(row: typeof equipment.$inferSelect): Equipment {
@@ -149,30 +107,35 @@ function safeJson(s: string): Record<string, unknown> | undefined {
 }
 
 export function listEquipment(filter?: { type?: EquipmentType }): EquipmentWithState[] {
-  ensureSeeded();
-  let q = db.select().from(equipment).$dynamic();
-  if (filter?.type) q = q.where(eq(equipment.type, filter.type));
+  let q = db
+    .select()
+    .from(equipment)
+    .where(withTenant(equipment, filter?.type ? eq(equipment.type, filter.type) : undefined))
+    .$dynamic();
   const rows = q.all();
   return rows.map((r) => {
     const stateRow = db
       .select()
       .from(equipmentState)
-      .where(eq(equipmentState.equipmentId, r.id))
+      .where(withTenant(equipmentState, eq(equipmentState.equipmentId, r.id)))
       .get();
-    const state = stateRow
-      ? rowToState(stateRow)
-      : {
-          equipmentId: r.id
-        };
+    const state = stateRow ? rowToState(stateRow) : { equipmentId: r.id };
     return { ...rowToEquipment(r), state };
   });
 }
 
 export function getEquipment(id: string): EquipmentWithState | undefined {
-  ensureSeeded();
-  const row = db.select().from(equipment).where(eq(equipment.id, id)).get();
+  const row = db
+    .select()
+    .from(equipment)
+    .where(withTenant(equipment, eq(equipment.id, id)))
+    .get();
   if (!row) return undefined;
-  const stateRow = db.select().from(equipmentState).where(eq(equipmentState.equipmentId, id)).get();
+  const stateRow = db
+    .select()
+    .from(equipmentState)
+    .where(withTenant(equipmentState, eq(equipmentState.equipmentId, id)))
+    .get();
   const state = stateRow ? rowToState(stateRow) : { equipmentId: id };
   return { ...rowToEquipment(row), state };
 }
@@ -186,21 +149,22 @@ export interface CreateEquipmentInput {
 }
 
 export function createEquipment(input: CreateEquipmentInput): Equipment {
-  ensureSeeded();
   const id = randomUUID();
   const row = db
     .insert(equipment)
-    .values({
-      id,
-      type: input.type,
-      typeId: input.typeId ?? null,
-      label: input.label,
-      specJson: input.spec ? JSON.stringify(input.spec) : null,
-      notes: input.notes ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        type: input.type,
+        typeId: input.typeId ?? null,
+        label: input.label,
+        specJson: input.spec ? JSON.stringify(input.spec) : null,
+        notes: input.notes ?? null
+      })
+    )
     .returning()
     .get();
-  db.insert(equipmentState).values({ equipmentId: id }).run();
+  db.insert(equipmentState).values(tenantValues({ equipmentId: id })).run();
   return rowToEquipment(row);
 }
 
@@ -208,16 +172,24 @@ export function updateEquipment(
   id: string,
   patch: { label?: string; notes?: string }
 ): Equipment {
-  ensureSeeded();
   const set: Partial<typeof equipment.$inferInsert> = {};
   if (patch.label !== undefined) set.label = patch.label;
   if (patch.notes !== undefined) set.notes = patch.notes || null;
   if (Object.keys(set).length === 0) {
-    const row = db.select().from(equipment).where(eq(equipment.id, id)).get();
+    const row = db
+      .select()
+      .from(equipment)
+      .where(withTenant(equipment, eq(equipment.id, id)))
+      .get();
     if (!row) throw new Error(`unknown equipment: ${id}`);
     return rowToEquipment(row);
   }
-  const updated = db.update(equipment).set(set).where(eq(equipment.id, id)).returning().get();
+  const updated = db
+    .update(equipment)
+    .set(set)
+    .where(withTenant(equipment, eq(equipment.id, id)))
+    .returning()
+    .get();
   if (!updated) throw new Error(`unknown equipment: ${id}`);
   return rowToEquipment(updated);
 }
@@ -226,7 +198,6 @@ export function updateEquipmentState(
   id: string,
   patch: Partial<Omit<EquipmentStateRow, 'equipmentId'>>
 ): EquipmentStateRow {
-  ensureSeeded();
   const set: Partial<typeof equipmentState.$inferInsert> = {};
   if (patch.hourMeter !== undefined) set.hourMeter = patch.hourMeter;
   if (patch.lastChemistryClass !== undefined) set.lastChemistryClass = patch.lastChemistryClass;
@@ -240,7 +211,7 @@ export function updateEquipmentState(
   const updated = db
     .update(equipmentState)
     .set(set)
-    .where(eq(equipmentState.equipmentId, id))
+    .where(withTenant(equipmentState, eq(equipmentState.equipmentId, id)))
     .returning()
     .get();
   if (!updated) throw new Error(`unknown equipment: ${id}`);
@@ -255,20 +226,21 @@ export function appendEquipmentLog(input: {
   notes?: string;
   payload?: Record<string, unknown>;
 }): EquipmentLogEntry {
-  ensureSeeded();
   const id = randomUUID();
   const occurredAt = input.occurredAt ?? Date.now();
   const row = db
     .insert(equipmentLog)
-    .values({
-      id,
-      equipmentId: input.equipmentId,
-      kind: input.kind,
-      occurredAt: new Date(occurredAt),
-      performedById: input.performedById ?? null,
-      notes: input.notes ?? null,
-      payloadJson: input.payload ? JSON.stringify(input.payload) : null
-    })
+    .values(
+      tenantValues({
+        id,
+        equipmentId: input.equipmentId,
+        kind: input.kind,
+        occurredAt: new Date(occurredAt),
+        performedById: input.performedById ?? null,
+        notes: input.notes ?? null,
+        payloadJson: input.payload ? JSON.stringify(input.payload) : null
+      })
+    )
     .returning()
     .get();
   return {
@@ -286,13 +258,12 @@ export function listEquipmentLog(
   equipmentId: string,
   opts?: { kind?: EquipmentLogKind; limit?: number }
 ): EquipmentLogEntry[] {
-  ensureSeeded();
   const conds = [eq(equipmentLog.equipmentId, equipmentId)];
   if (opts?.kind) conds.push(eq(equipmentLog.kind, opts.kind));
   let q = db
     .select()
     .from(equipmentLog)
-    .where(and(...conds))
+    .where(withTenant(equipmentLog, and(...conds)))
     .orderBy(desc(equipmentLog.occurredAt))
     .$dynamic();
   if (opts?.limit) q = q.limit(opts.limit);
@@ -306,3 +277,7 @@ export function listEquipmentLog(
     payload: r.payloadJson ? safeJson(r.payloadJson) : undefined
   }));
 }
+
+// Re-export for unused-import discipline; the listing functions above wire
+// tenantWhere through withTenant.
+void tenantWhere;

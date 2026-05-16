@@ -50,6 +50,7 @@
   });
 </script>
 
+{#if data.user}
 <header class="app-header">
   <a href="/" class="brand">CropCard</a>
   <nav aria-label="Primary" class="primary-nav">
@@ -67,7 +68,53 @@
     <a href="/records">Records</a>
   </nav>
   <div class="top-right">
-    {#if data.user}
+    {#if data.user && data.activeOwner}
+      <details class="owner-chip">
+        <summary aria-label="Switch farm" title={data.activeOwner.name}>
+          <span class="owner-name">{data.activeOwner.name}</span>
+          <span class="owner-caret" aria-hidden="true">▾</span>
+        </summary>
+        <div class="owner-popover">
+          <ul class="owner-list">
+            {#each data.availableOwners as o}
+              <li>
+                <form
+                  method="POST"
+                  action="/api/session/switch-owner"
+                  enctype="application/x-www-form-urlencoded"
+                >
+                  <input type="hidden" name="ownerId" value={o.id} />
+                  <button
+                    type="button"
+                    class="owner-choice"
+                    class:active={o.id === data.activeOwner.id}
+                    onclick={async () => {
+                      const res = await fetch('/api/session/switch-owner', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ownerId: o.id })
+                      });
+                      if (res.ok) {
+                        try {
+                          const { resetTenantCaches } = await import('$lib/client/tenantSwitch');
+                          await resetTenantCaches(o.id);
+                        } catch {
+                          /* cache reset best-effort */
+                        }
+                        window.location.href = '/today';
+                      }
+                    }}
+                  >
+                    <span>{o.name}</span>
+                    <span class="owner-role">{o.role}</span>
+                  </button>
+                </form>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      </details>
+    {/if}
       <a href="/settings" class="gear-btn" aria-label="Settings" title="Settings">
         <svg
           viewBox="0 0 24 24"
@@ -100,11 +147,9 @@
           </form>
         </div>
       </details>
-    {:else}
-      <a class="signin" href="/signin">Sign in</a>
-    {/if}
   </div>
 </header>
+{/if}
 
 {#if !online || (pendingCount ?? 0) > 0}
   <div
@@ -120,6 +165,13 @@
     {#if pendingCount && pendingCount > 0}
       <span>{pendingCount} pending record{pendingCount === 1 ? '' : 's'} queued.</span>
     {/if}
+  </div>
+{/if}
+
+{#if data.user?.impersonating}
+  <div class="role-banner impersonation" role="status">
+    🔒 Impersonating <strong>{data.activeOwner?.name ?? 'this Owner'}</strong> as superadmin —
+    every mutation is audited. <a href="/admin/owners">Exit impersonation</a>
   </div>
 {/if}
 
@@ -492,5 +544,92 @@
       padding: 1rem;
       padding-bottom: 1rem;
     }
+  }
+
+  /* Phase 18d: top-nav Owner chip + impersonation banner */
+  .owner-chip {
+    margin-right: 0.5rem;
+  }
+  .owner-chip summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 0.875rem;
+    min-height: 32px;
+    min-width: 0;
+  }
+  .owner-chip summary::-webkit-details-marker {
+    display: none;
+  }
+  .owner-name {
+    font-weight: 600;
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .owner-caret {
+    opacity: 0.75;
+  }
+  .owner-popover {
+    position: absolute;
+    right: 1rem;
+    margin-top: 0.25rem;
+    background: white;
+    color: #1a1a1a;
+    border: 1px solid var(--divider, #ccc);
+    border-radius: 0.375rem;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+    min-width: 16rem;
+  }
+  .owner-list {
+    list-style: none;
+    padding: 0.25rem 0;
+    margin: 0;
+  }
+  .owner-choice {
+    background: transparent;
+    color: inherit;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 0.625rem 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    cursor: pointer;
+    font: inherit;
+    min-height: 40px;
+  }
+  .owner-choice:hover {
+    background: rgba(31, 94, 58, 0.08);
+  }
+  .owner-choice.active {
+    background: rgba(31, 94, 58, 0.16);
+    font-weight: 600;
+  }
+  .owner-role {
+    color: var(--fg-muted, #555);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .role-banner.impersonation {
+    background: #6b1717;
+    color: white;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-weight: 600;
+  }
+  .role-banner.impersonation a {
+    color: #ffd400;
+    margin-left: 0.5rem;
   }
 </style>

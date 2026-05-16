@@ -4,12 +4,18 @@
  * `requireUser` / `requireOwner` throw a SvelteKit error response that the
  * endpoint can re-throw to short-circuit. Use these on every endpoint that
  * mutates state (NFR-10 audit trail; FR-09 role-gated overrides).
+ *
+ * Phase 18c — the AuthenticatedUser shape now carries the active Owner
+ * context derived from the session cookie. Roles are checked against
+ * `activeRole` (the role within `activeOwnerId`), not the legacy
+ * `users.role` column.
  */
 
-import { error, type RequestEvent } from '@sveltejs/kit';
+import { error, redirect, type RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
+import { activeAssignmentsForUser } from '$lib/db/users';
 import {
   ALL_SESSION_ROLES,
   canMutate,
@@ -22,13 +28,26 @@ import {
 export interface AuthenticatedUser {
   id: string;
   email: string;
+  /** Role within the active Owner context. */
   role: SessionRole;
+  /** Active Owner id, or null when the session is partial (post-signin,
+   *  pre-picker) or when the user has no assignments yet (signup flow). */
+  activeOwnerId: string | null;
+  isSuperadmin: boolean;
+  impersonating: boolean;
 }
 
 export function currentUser(event: RequestEvent): AuthenticatedUser | null {
   const session = readSession(event.cookies);
   if (!session) return null;
-  return { id: session.userId, email: session.email, role: session.role };
+  return {
+    id: session.userId,
+    email: session.email,
+    role: session.activeRole,
+    activeOwnerId: session.activeOwnerId,
+    isSuperadmin: session.isSuperadmin,
+    impersonating: session.impersonating ?? false
+  };
 }
 
 export function requireUser(event: RequestEvent): AuthenticatedUser {
@@ -56,16 +75,31 @@ export function isInspectorSession(event: RequestEvent): boolean {
   return !!u && isReadOnly(u.role);
 }
 
+/** Superadmin gate for /admin/* endpoints. Distinct from `requireOwner` —
+ *  superadmins act across tenants. */
+export function requireSuperadmin(event: RequestEvent): AuthenticatedUser {
+  const u = requireUser(event);
+  if (!u.isSuperadmin) throw error(403, 'superadmin required');
+  return u;
+}
+
 /**
- * Look up or create a user by email. New emails default to helper role; the
- * `system` user is hard-coded as owner. Real magic-link flows would replace
- * this with a verified email confirmation step.
+ * Look up or create a user by email and mint a session. The returned value
+ * encodes a redirect target the caller should follow:
+ *   - 'onboarding' → no assignments yet, new Owner tenant creation flow
+ *   - 'picker'     → multiple active assignments, user picks which Owner
+ *   - 'today'      → single assignment, full session minted
  */
+export interface LoginResult {
+  user: AuthenticatedUser;
+  next: 'onboarding' | 'picker' | 'today';
+}
+
 export function loginByEmail(
   event: RequestEvent,
   email: string,
   desiredRole: SessionRole = 'helper'
-): AuthenticatedUser {
+): LoginResult {
   const normalized = email.trim().toLowerCase();
   if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
     throw error(400, 'invalid email');
@@ -75,27 +109,87 @@ export function loginByEmail(
   }
 
   const existing = db.select().from(users).where(eq(users.email, normalized)).get();
-  let user: AuthenticatedUser;
-  if (existing) {
-    user = {
-      id: existing.id,
-      email: existing.email,
-      role: existing.role as SessionRole
-    };
-  } else {
-    const id = `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const inserted = db
-      .insert(users)
-      .values({ id, email: normalized, role: desiredRole })
-      .returning()
-      .get();
-    user = {
-      id: inserted.id,
-      email: inserted.email,
-      role: inserted.role as SessionRole
+  const userId = existing
+    ? existing.id
+    : (() => {
+        const id = `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        db.insert(users).values({ id, email: normalized, role: desiredRole }).run();
+        return id;
+      })();
+
+  const userEmail = existing?.email ?? normalized;
+  const isSuperadmin = !!existing?.isSuperadmin;
+
+  const assignments = activeAssignmentsForUser(userId);
+  if (assignments.length === 0) {
+    // First-time signup: mint a partial session with no active Owner and
+    // redirect to /onboarding. The onboarding form completes the assignment.
+    writeSession(event.cookies, {
+      id: userId,
+      email: userEmail,
+      isSuperadmin,
+      activeOwnerId: null,
+      activeRole: 'owner'
+    });
+    return {
+      user: {
+        id: userId,
+        email: userEmail,
+        role: 'owner',
+        activeOwnerId: null,
+        isSuperadmin,
+        impersonating: false
+      },
+      next: 'onboarding'
     };
   }
 
-  writeSession(event.cookies, user);
-  return user;
+  if (assignments.length === 1) {
+    const a = assignments[0];
+    writeSession(event.cookies, {
+      id: userId,
+      email: userEmail,
+      isSuperadmin,
+      activeOwnerId: a.ownerId,
+      activeRole: a.roleWithinOwner
+    });
+    return {
+      user: {
+        id: userId,
+        email: userEmail,
+        role: a.roleWithinOwner,
+        activeOwnerId: a.ownerId,
+        isSuperadmin,
+        impersonating: false
+      },
+      next: 'today'
+    };
+  }
+
+  // Multiple assignments → partial session, Owner picker.
+  writeSession(event.cookies, {
+    id: userId,
+    email: userEmail,
+    isSuperadmin,
+    activeOwnerId: null,
+    activeRole: assignments[0].roleWithinOwner
+  });
+  return {
+    user: {
+      id: userId,
+      email: userEmail,
+      role: assignments[0].roleWithinOwner,
+      activeOwnerId: null,
+      isSuperadmin,
+      impersonating: false
+    },
+    next: 'picker'
+  };
+}
+
+/** Throws a SvelteKit redirect to the canonical next-step path. Centralizes
+ *  the routing so /signin actions don't have to duplicate the mapping. */
+export function redirectFromLogin(next: LoginResult['next']): never {
+  const path = next === 'onboarding' ? '/onboarding' : next === 'picker' ? '/owner-picker' : '/today';
+  throw redirect(303, path);
 }

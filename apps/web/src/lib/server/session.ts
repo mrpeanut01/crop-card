@@ -1,13 +1,19 @@
 /**
- * HMAC-signed cookie session for v1.
+ * HMAC-signed cookie session.
  *
- * Single-farm, low-stakes. Production should swap to Auth.js magic-link
- * (the @auth/sveltekit dep is already installed); the role plumbing
- * (`event.locals.user`) is unchanged across that swap.
+ * Phase 18c — multi-tenant: the payload now carries `activeOwnerId` (the
+ * Owner the user has selected for the current session) and `activeRole`
+ * (their role *within* that Owner). A partial session has
+ * `activeOwnerId=null` and lives just long enough for the Owner-picker
+ * page to mint a full one.
  *
- * Cookie format: `${base64url(payload)}.${base64url(hmac)}`. Payload is
- * `{ userId, email, role, exp }`. Server signs with AUTH_SECRET. Tampering
- * fails the HMAC check; expired sessions are rejected.
+ * The single global identity fields (`userId`, `email`, `isSuperadmin`)
+ * persist across owner switches; only the active tenant context is
+ * re-minted.
+ *
+ * Cookie format: `${base64url(payload)}.${base64url(hmac)}`. Server signs
+ * with AUTH_SECRET. Tampering fails the HMAC check; expired sessions are
+ * rejected.
  *
  * Server-only.
  */
@@ -28,15 +34,17 @@ export const ALL_SESSION_ROLES: ReadonlyArray<SessionRole> = [
 ];
 
 /**
- * Permission semantics:
+ * Permission semantics — applied WITHIN the active Owner context:
  *   owner            — full read/write across the farm
  *   helper           — read-only for plan/plugins/equipment, can record
  *                      sprays (kernel-validated), cannot apply custom rates
  *   inspector        — read-only across EVERYTHING incl. records, exports.
  *                      No mutations whatsoever. For audits + cost-share visits.
- *   custom-operator  — like helper but scoped to assigned blocks (assignment
- *                      table is phase-11; for now treats as helper). Cannot
+ *   custom-operator  — like helper but scoped to assigned blocks. Cannot
  *                      see /stock financial cost data.
+ *
+ * `isSuperadmin` is cross-tenant and orthogonal to role; it allows
+ * impersonating any Owner with a persistent banner + audit trail.
  */
 export function isReadOnly(role: SessionRole): boolean {
   return role === 'inspector';
@@ -53,7 +61,18 @@ export function isOwner(role: SessionRole): boolean {
 export interface SessionPayload {
   userId: string;
   email: string;
-  role: SessionRole;
+  /** Cross-tenant support / abuse role. Read-only by default; impersonation
+   *  requires a separate banner + audit trail. */
+  isSuperadmin: boolean;
+  /** The Owner this session is currently acting for. Null on a partial
+   *  session (issued before the Owner-picker) — repos refuse to run. */
+  activeOwnerId: string | null;
+  /** Role within `activeOwnerId`. Mirrors `users.role` for the legacy
+   *  single-Owner case (everyone's an "owner" on Home Farm). */
+  activeRole: SessionRole;
+  /** True when a superadmin is acting as `activeOwnerId`. UI surfaces a
+   *  red banner and the impersonation auto-expires. */
+  impersonating?: boolean;
   /** Expiry ms epoch. */
   exp: number;
 }
@@ -102,15 +121,28 @@ function verify(cookie: string): SessionPayload | null {
     typeof parsed !== 'object' ||
     !('userId' in parsed) ||
     !('email' in parsed) ||
-    !('role' in parsed) ||
     !('exp' in parsed)
   ) {
     return null;
   }
-  const p = parsed as SessionPayload;
+  const p = parsed as Partial<SessionPayload>;
   if (typeof p.exp !== 'number' || p.exp < Date.now()) return null;
-  if (!ALL_SESSION_ROLES.includes(p.role)) return null;
-  return p;
+  // Legacy cookies (pre Phase 18c) only carry `role`. Promote to the new
+  // shape with `activeRole = role`, `activeOwnerId = null` (the hooks
+  // layer falls back to Home Farm), `isSuperadmin = false`. This lets
+  // existing sessions survive the migration without forcing a re-login.
+  const legacyRole = (parsed as { role?: SessionRole }).role;
+  const activeRole = (p.activeRole as SessionRole) ?? legacyRole;
+  if (!activeRole || !ALL_SESSION_ROLES.includes(activeRole)) return null;
+  return {
+    userId: p.userId as string,
+    email: p.email as string,
+    isSuperadmin: p.isSuperadmin ?? false,
+    activeOwnerId: p.activeOwnerId ?? null,
+    activeRole,
+    impersonating: p.impersonating,
+    exp: p.exp
+  };
 }
 
 export function readSession(cookies: Cookies): SessionPayload | null {
@@ -118,14 +150,23 @@ export function readSession(cookies: Cookies): SessionPayload | null {
   return c ? verify(c) : null;
 }
 
-export function writeSession(
-  cookies: Cookies,
-  user: { id: string; email: string; role: SessionRole }
-): void {
+export interface WriteSessionInput {
+  id: string;
+  email: string;
+  isSuperadmin?: boolean;
+  activeOwnerId: string | null;
+  activeRole: SessionRole;
+  impersonating?: boolean;
+}
+
+export function writeSession(cookies: Cookies, user: WriteSessionInput): void {
   const payload: SessionPayload = {
     userId: user.id,
     email: user.email,
-    role: user.role,
+    isSuperadmin: user.isSuperadmin ?? false,
+    activeOwnerId: user.activeOwnerId,
+    activeRole: user.activeRole,
+    impersonating: user.impersonating,
     exp: Date.now() + SESSION_TTL_MS
   };
   cookies.set(COOKIE_NAME, sign(payload), {

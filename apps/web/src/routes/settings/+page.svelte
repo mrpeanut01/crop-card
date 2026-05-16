@@ -71,6 +71,239 @@
   let refreshDiagnostics = $state<Record<string, { total: number; eligible: number; reasonWhenZero?: string }> | null>(null);
   let refreshOverflowed = $state(false);
 
+  // Phase 17 follow-up — pending-suggestions panel state.
+  interface PendingSummary {
+    itemId: string;
+    displayName: string;
+    shortName?: string;
+    category: string;
+    pendingRefreshAt: number;
+    ageMs: number;
+    fieldCount: number;
+    citationCount: number;
+    fieldKeys: string[];
+  }
+  let pendingList = $state<PendingSummary[] | null>(null);
+  let pendingBusy = $state(false);
+  let pendingError = $state<string | null>(null);
+
+  async function loadPendingSuggestions() {
+    pendingBusy = true;
+    pendingError = null;
+    try {
+      const r = await fetch('/api/stock/refresh-ai', { method: 'GET' });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        pendingError = j.error ?? `Load failed (${r.status})`;
+        return;
+      }
+      const j = await r.json();
+      pendingList = (j.pending ?? []) as PendingSummary[];
+    } catch (e) {
+      pendingError = e instanceof Error ? e.message : 'request failed';
+    } finally {
+      pendingBusy = false;
+    }
+  }
+
+  async function discardPending(itemId: string) {
+    if (!confirm('Discard this pending AI Refresh suggestion?')) return;
+    try {
+      const r = await fetch(`/api/stock/${itemId}/refresh-ai`, { method: 'DELETE' });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        alert(`Discard failed: ${j.error ?? r.statusText}`);
+        return;
+      }
+      pendingList = pendingList?.filter((p) => p.itemId !== itemId) ?? null;
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'request failed');
+    }
+  }
+
+  async function discardAllPending() {
+    const count = pendingList?.length ?? 0;
+    if (count === 0) return;
+    if (!confirm(`Discard ALL ${count} pending AI Refresh suggestion${count === 1 ? '' : 's'}? This cannot be undone.`)) return;
+    try {
+      const r = await fetch('/api/stock/refresh-ai', { method: 'DELETE' });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        alert(`Discard failed: ${j.error ?? r.statusText}`);
+        return;
+      }
+      pendingList = [];
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'request failed');
+    }
+  }
+
+  function relativeAge(ms: number): string {
+    const sec = Math.round(ms / 1000);
+    if (sec < 60) return `${sec}s ago`;
+    const min = Math.round(sec / 60);
+    if (min < 60) return `${min}m ago`;
+    const hr = Math.round(min / 60);
+    if (hr < 24) return `${hr}h ago`;
+    const days = Math.round(hr / 24);
+    return `${days}d ago`;
+  }
+
+  // ─── Settings-page Review popup state ───────────────────────────────────
+  interface PendingResultField {
+    value: unknown;
+    sourceUrl?: string;
+    sourceTitle?: string;
+  }
+  interface PendingResult {
+    itemId: string;
+    hasCitations: boolean;
+    notes?: string;
+    citations?: Array<{ url: string; title?: string }>;
+    [k: string]: unknown;
+  }
+  let reviewing = $state<PendingSummary | null>(null);
+  let reviewResult = $state<PendingResult | null>(null);
+  let reviewAccept = $state<Record<string, boolean>>({});
+  let reviewBusy = $state(false);
+  let reviewError = $state<string | null>(null);
+
+  async function openReview(p: PendingSummary) {
+    reviewing = p;
+    reviewResult = null;
+    reviewError = null;
+    reviewAccept = {};
+    reviewBusy = true;
+    try {
+      const r = await fetch(`/api/stock/${p.itemId}/refresh-ai`, { method: 'GET' });
+      const j = await r.json();
+      if (!r.ok) {
+        reviewError = j.error ?? `Load failed (${r.status})`;
+        return;
+      }
+      const result = j.result as PendingResult | null;
+      if (!result) {
+        reviewError = 'This item no longer has a pending suggestion.';
+        return;
+      }
+      reviewResult = result;
+      const accept: Record<string, boolean> = {};
+      for (const k of Object.keys(result)) {
+        if (['itemId', 'hasCitations', 'notes', 'citations'].includes(k)) continue;
+        accept[k] = true;
+      }
+      reviewAccept = accept;
+    } catch (e) {
+      reviewError = e instanceof Error ? e.message : 'request failed';
+    } finally {
+      reviewBusy = false;
+    }
+  }
+
+  function closeReview() {
+    reviewing = null;
+    reviewResult = null;
+    reviewAccept = {};
+    reviewError = null;
+    reviewBusy = false;
+  }
+
+  async function applyReview() {
+    if (!reviewing || !reviewResult) return;
+    const acceptedKeys = Object.entries(reviewAccept)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+    reviewBusy = true;
+    reviewError = null;
+    try {
+      const r = await fetch(`/api/stock/${reviewing.itemId}/refresh-ai/apply`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ acceptedKeys })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        reviewError = j.error ?? `Apply failed (${r.status})`;
+        return;
+      }
+      // Remove from pending list + close popup.
+      const removedId = reviewing.itemId;
+      pendingList = pendingList?.filter((p) => p.itemId !== removedId) ?? null;
+      closeReview();
+    } catch (e) {
+      reviewError = e instanceof Error ? e.message : 'request failed';
+    } finally {
+      reviewBusy = false;
+    }
+  }
+
+  async function discardReview() {
+    if (!reviewing) return;
+    if (!confirm('Discard this pending AI Refresh suggestion?')) return;
+    reviewBusy = true;
+    try {
+      const r = await fetch(`/api/stock/${reviewing.itemId}/refresh-ai`, { method: 'DELETE' });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        reviewError = j.error ?? `Discard failed (${r.status})`;
+        return;
+      }
+      const removedId = reviewing.itemId;
+      pendingList = pendingList?.filter((p) => p.itemId !== removedId) ?? null;
+      closeReview();
+    } catch (e) {
+      reviewError = e instanceof Error ? e.message : 'request failed';
+    } finally {
+      reviewBusy = false;
+    }
+  }
+
+  function formatReviewValue(value: unknown): string {
+    if (value == null) return '—';
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value === 'string') return value;
+    if (Array.isArray(value)) {
+      const parts = value.map((v) => {
+        if (v && typeof v === 'object' && 'name' in v) {
+          const r = v as { name: string; concentrationPct?: number };
+          return r.concentrationPct != null ? `${r.name} ${r.concentrationPct}%` : r.name;
+        }
+        return JSON.stringify(v);
+      });
+      return parts.join(', ');
+    }
+    if (typeof value === 'object') {
+      const v = value as Record<string, unknown>;
+      if ('n' in v && 'p' in v && 'k' in v) return `${v.n}-${v.p}-${v.k}`;
+      return JSON.stringify(value);
+    }
+    return String(value);
+  }
+
+  function prettyKey(k: string): string {
+    switch (k) {
+      case 'daysToMaturity': return 'DTM';
+      case 'plantingTempMinF': return 'soil temp';
+      case 'spacingInches': return 'spacing';
+      case 'depthInches': return 'depth';
+      case 'sunRequirement': return 'sun';
+      case 'seedsPerPacket': return 'seeds/pkt';
+      case 'matureHeightFt': return 'height';
+      case 'activeIngredients': return 'ingredients';
+      case 'npk': return 'N-P-K';
+      case 'formulationType': return 'formulation';
+      case 'productClass': return 'class';
+      default: return k;
+    }
+  }
+
+  // Auto-load the pending list when the Inventory section becomes active.
+  $effect(() => {
+    if (active === 'inventory' && pendingList === null && !pendingBusy) {
+      void loadPendingSuggestions();
+    }
+  });
+
   async function refreshAllMissingMetadata(forceAll = false) {
     if (refreshBusy) return;
     refreshBusy = true;
@@ -105,6 +338,9 @@
         refreshStatus = `Looked up ${processed} item${processed === 1 ? '' : 's'}; ${cites} returned citations${usd}.${overflowNote} Open each in /stock to review and apply.`;
       }
       refreshLastResults = j.results ?? [];
+      // After a bulk run, reload the pending-suggestions panel so the
+      // newly captured items appear immediately without a manual click.
+      void loadPendingSuggestions();
     } catch (e) {
       refreshError = true;
       refreshStatus = e instanceof Error ? e.message : 'request failed';
@@ -530,37 +766,75 @@
   // ─── Display preferences ────────────────────────────────────────────────
   let displayBusy = $state(false);
   let displayMsg = $state<{ kind: 'ok' | 'err'; text: string } | null>(null);
-  /** Local mirror for optimistic update; falls back to server-loaded value. */
+  /** Local mirrors for optimistic updates; fall back to server-loaded values. */
   let showShadeMarkersOverride = $state<boolean | null>(null);
+  let reorderLevelOverride = $state<boolean | null>(null);
+  let planterSetupOverride = $state<boolean | null>(null);
   const showShadeMarkers = $derived(
     showShadeMarkersOverride ?? data.display?.showShadeMarkers ?? true
   );
+  const reorderLevelDisplay = $derived(
+    reorderLevelOverride ?? data.display?.reorderLevel ?? false
+  );
+  const planterSetupDisplay = $derived(
+    planterSetupOverride ?? data.display?.planterSetup ?? true
+  );
 
-
-  async function saveShowShadeMarkers(next: boolean) {
+  async function saveDisplayToggle(
+    key: 'show_shade_markers' | 'display_reorder_level' | 'display_planter_setup',
+    next: boolean,
+    okMsg: { on: string; off: string },
+    setOverride: (v: boolean | null) => void,
+    currentValue: boolean
+  ) {
     if (displayBusy) return;
     displayBusy = true;
     displayMsg = null;
-    showShadeMarkersOverride = next;
+    setOverride(next);
     try {
-      const r = await postSetting('show_shade_markers', next);
+      const r = await postSetting(key, next);
       if (!r.ok) {
         displayMsg = { kind: 'err', text: r.message ?? 'Failed to save.' };
-        showShadeMarkersOverride = !next;
+        setOverride(currentValue);
         return;
       }
-      displayMsg = {
-        kind: 'ok',
-        text: next ? 'Shade markers enabled.' : 'Shade markers hidden.'
-      };
+      displayMsg = { kind: 'ok', text: next ? okMsg.on : okMsg.off };
       await invalidateAll();
-      showShadeMarkersOverride = null;
+      setOverride(null);
     } catch (e) {
       displayMsg = { kind: 'err', text: e instanceof Error ? e.message : String(e) };
-      showShadeMarkersOverride = !next;
+      setOverride(currentValue);
     } finally {
       displayBusy = false;
     }
+  }
+
+  function saveShowShadeMarkers(next: boolean) {
+    return saveDisplayToggle(
+      'show_shade_markers',
+      next,
+      { on: 'Shade markers enabled.', off: 'Shade markers hidden.' },
+      (v) => (showShadeMarkersOverride = v),
+      showShadeMarkers
+    );
+  }
+  function saveReorderLevel(next: boolean) {
+    return saveDisplayToggle(
+      'display_reorder_level',
+      next,
+      { on: 'Reorder level field shown on inventory edit.', off: 'Reorder level field hidden.' },
+      (v) => (reorderLevelOverride = v),
+      reorderLevelDisplay
+    );
+  }
+  function savePlanterSetup(next: boolean) {
+    return saveDisplayToggle(
+      'display_planter_setup',
+      next,
+      { on: 'Planter setup section shown for seeds.', off: 'Planter setup section hidden.' },
+      (v) => (planterSetupOverride = v),
+      planterSetupDisplay
+    );
   }
 </script>
 
@@ -613,8 +887,51 @@
     {#if active === 'display'}
       <header class="detail-header">
         <h2>Display</h2>
-        <p class="lede">View preferences for the Plan→Schedule swim-lane.</p>
+        <p class="lede">View preferences for the Plan→Schedule swim-lane and the inventory edit modal.</p>
       </header>
+
+      <div class="card">
+        <h3>Inventory: Reorder level</h3>
+        <p class="muted">
+          Show the per-item Reorder-level checkbox + threshold field on the inventory edit
+          modal. Off by default — most operators rely on visual inspection rather than
+          per-SKU thresholds. Stored values are preserved when hidden.
+        </p>
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            checked={reorderLevelDisplay}
+            disabled={displayBusy || !data.isOwner}
+            onchange={(e) => saveReorderLevel((e.currentTarget as HTMLInputElement).checked)}
+          />
+          <span>Show Reorder level field on inventory edit</span>
+        </label>
+        {#if !data.isOwner}
+          <p class="muted">Owner-only setting.</p>
+        {/if}
+      </div>
+
+      <div class="card">
+        <h3>Inventory: Planter setup</h3>
+        <p class="muted">
+          Show the Planter setup subsection (plate number, color, dimensions, seed
+          dimensions in mm) on the inventory edit modal for seed items. On by default.
+          The data is still persisted in <code>metadataJson</code> when hidden — the toggle
+          only affects display.
+        </p>
+        <label class="checkbox">
+          <input
+            type="checkbox"
+            checked={planterSetupDisplay}
+            disabled={displayBusy || !data.isOwner}
+            onchange={(e) => savePlanterSetup((e.currentTarget as HTMLInputElement).checked)}
+          />
+          <span>Show Planter setup section for seed items</span>
+        </label>
+        {#if !data.isOwner}
+          <p class="muted">Owner-only setting.</p>
+        {/if}
+      </div>
 
       <div class="card">
         <h3>Shade markers</h3>
@@ -1038,6 +1355,64 @@
           Daily quota lives on the AI tab.
         </p>
       </div>
+
+      <div class="card">
+        <div class="pending-header">
+          <h3>Pending AI Refresh suggestions</h3>
+          <button
+            type="button"
+            class="secondary pending-refresh-btn"
+            onclick={loadPendingSuggestions}
+            disabled={pendingBusy}
+            title="Re-fetch the list of items with pending suggestions"
+          >
+            {pendingBusy ? '…' : '↻ Reload'}
+          </button>
+        </div>
+        <p class="lede">
+          Every item with an unreviewed AI Refresh suggestion sits here until you
+          Apply or Discard it from the stock edit modal. Click <strong>Review</strong>
+          to open the item; the diff panel pre-loads with the captured fields and
+          citations.
+        </p>
+        {#if pendingError}
+          <p class="status-line status-error">{pendingError}</p>
+        {/if}
+        {#if pendingList === null}
+          <p class="hint">{pendingBusy ? 'Loading…' : 'Click Reload to fetch.'}</p>
+        {:else if pendingList.length === 0}
+          <p class="hint">No pending suggestions. Run <strong>Look up missing metadata</strong> above, or click <strong>🔍 Refresh from web</strong> on any item in <a href="/stock">/stock</a>.</p>
+        {:else}
+          <div class="actions-row">
+            <span class="muted">{pendingList.length} item{pendingList.length === 1 ? '' : 's'} awaiting review</span>
+            <button type="button" class="secondary" onclick={discardAllPending}>Discard all</button>
+          </div>
+          <ul class="pending-list">
+            {#each pendingList as p (p.itemId)}
+              <li class="pending-row">
+                <div class="pending-row-main">
+                  <span class="pending-row-name">{p.shortName ?? p.displayName}</span>
+                  <span class="pending-row-meta">
+                    <span class="pending-pill">{p.category}</span>
+                    <span class="muted">{p.fieldCount} field{p.fieldCount === 1 ? '' : 's'}</span>
+                    <span class="muted">·</span>
+                    <span class="muted">{p.citationCount} citation{p.citationCount === 1 ? '' : 's'}</span>
+                    <span class="muted">·</span>
+                    <span class="muted">{relativeAge(p.ageMs)}</span>
+                  </span>
+                  {#if p.fieldKeys.length > 0}
+                    <span class="pending-row-fields">{p.fieldKeys.map(prettyKey).join(', ')}</span>
+                  {/if}
+                </div>
+                <div class="pending-row-actions">
+                  <button type="button" class="pending-review-btn" onclick={() => openReview(p)}>Review</button>
+                  <button type="button" class="secondary" onclick={() => discardPending(p.itemId)}>Discard</button>
+                </div>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
     {/if}
 
     {#if active === 'danger' && data.isOwner}
@@ -1094,6 +1469,101 @@
     {/if}
   </section>
 </div>
+
+<!-- Phase 17 follow-up — inline Review popup for pending AI Refresh
+     suggestions. Renders OVER the Settings page so the operator can
+     accept/reject without navigating to /stock. Closes back to the
+     pending list, which auto-removes the just-handled item. -->
+{#if reviewing}
+  <div
+    class="review-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="review-title"
+    onclick={(e) => { if (e.target === e.currentTarget) closeReview(); }}
+    onkeydown={(e) => { if (e.key === 'Escape') closeReview(); }}
+    tabindex="-1"
+  >
+    <div class="review-modal">
+      <div class="review-header">
+        <h3 id="review-title" class="review-title">
+          Review AI Refresh — <strong>{reviewing.shortName ?? reviewing.displayName}</strong>
+        </h3>
+        <button type="button" class="review-close" onclick={closeReview} aria-label="Close">✕</button>
+      </div>
+      {#if reviewError}
+        <p class="status-line status-error">{reviewError}</p>
+      {/if}
+      {#if reviewBusy && !reviewResult}
+        <p class="hint">Loading suggestion…</p>
+      {:else if reviewResult}
+        {@const r = reviewResult}
+        {@const fieldCount = Object.keys(reviewAccept).length}
+        {@const cites = r.citations ?? []}
+        {#if fieldCount > 0}
+          <p class="review-lede">
+            {fieldCount} field{fieldCount === 1 ? '' : 's'} returned with citations. Uncheck any you
+            don't trust; Apply writes the rest directly to this item.
+          </p>
+          {#if r.notes}<p class="review-notes">{r.notes}</p>{/if}
+          <ul class="review-list">
+            {#each Object.keys(reviewAccept) as key (key)}
+              {@const field = r[key] as PendingResultField | undefined}
+              {#if field}
+                <li class="review-row">
+                  <label class="review-check">
+                    <input type="checkbox" bind:checked={reviewAccept[key]} />
+                    <span class="review-key">{prettyKey(key)}</span>
+                  </label>
+                  <span class="review-value">{formatReviewValue(field.value)}</span>
+                  {#if field.sourceUrl}
+                    <a
+                      class="review-cite"
+                      href={field.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`Source: ${field.sourceTitle ?? field.sourceUrl}`}
+                      onclick={(e) => e.stopPropagation()}
+                    >i</a>
+                  {/if}
+                </li>
+              {/if}
+            {/each}
+          </ul>
+          <div class="review-actions">
+            <button type="button" class="primary" onclick={applyReview} disabled={reviewBusy}>
+              {reviewBusy ? 'Applying…' : 'Apply selected'}
+            </button>
+            <button type="button" class="secondary" onclick={discardReview} disabled={reviewBusy}>
+              Discard
+            </button>
+            <button type="button" class="secondary" onclick={closeReview} disabled={reviewBusy}>
+              Cancel
+            </button>
+          </div>
+        {:else}
+          <p class="review-lede">
+            Web search found {cites.length} page{cites.length === 1 ? '' : 's'} but couldn't extract structured specs.
+          </p>
+          {#if r.notes}<p class="review-notes">{r.notes}</p>{/if}
+          {#if cites.length > 0}
+            <ul class="review-cite-list">
+              {#each cites as c}
+                <li>
+                  <a href={c.url} target="_blank" rel="noopener noreferrer">{c.title ?? c.url}</a>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+          <div class="review-actions">
+            <button type="button" class="secondary" onclick={discardReview}>Discard</button>
+            <button type="button" class="secondary" onclick={closeReview}>Close</button>
+          </div>
+        {/if}
+      {/if}
+    </div>
+  </div>
+{/if}
 
 <style>
   .settings-shell {
@@ -1202,6 +1672,133 @@
   }
   .status-line.status-error { background: #fef2f2; color: #b91c1c; }
   .hint { color: #6b7280; font-size: 0.82rem; margin: 0.6rem 0 0; }
+
+  /* Pending AI Refresh suggestions panel */
+  .pending-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 0.5rem; margin-bottom: 0.25rem;
+  }
+  .pending-refresh-btn {
+    padding: 0.25rem 0.6rem; font-size: 0.78rem;
+    min-height: unset; min-width: unset;
+  }
+  .pending-list {
+    list-style: none; padding: 0; margin: 0.75rem 0 0;
+    border-top: 1px solid #e5e7eb;
+  }
+  .pending-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 0.75rem; padding: 0.6rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .pending-row:last-child { border-bottom: none; }
+  .pending-row-main {
+    display: flex; flex-direction: column; gap: 0.15rem;
+    min-width: 0; flex: 1 1 auto;
+  }
+  .pending-row-name {
+    font-weight: 600; color: #1f2937; font-size: 0.92rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pending-row-meta {
+    display: flex; align-items: center; gap: 0.35rem;
+    font-size: 0.78rem; flex-wrap: wrap;
+  }
+  .pending-row-meta .muted { margin: 0; font-size: 0.78rem; }
+  .pending-row-fields {
+    color: #4338ca; font-size: 0.78rem; font-style: italic;
+  }
+  .pending-pill {
+    display: inline-block;
+    background: #eef2ff; color: #4338ca;
+    padding: 0.05rem 0.45rem; border-radius: 999px;
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .pending-row-actions {
+    display: flex; gap: 0.4rem; flex-shrink: 0;
+  }
+  .pending-review-btn {
+    background: #2563eb; color: #fff; border: 1px solid #2563eb;
+    border-radius: 4px; padding: 0.3rem 0.7rem;
+    font-size: 0.82rem; font-weight: 600;
+    text-decoration: none; cursor: pointer; font-family: inherit;
+    min-height: unset; min-width: unset;
+  }
+  .pending-review-btn:hover { background: #1d4ed8; border-color: #1d4ed8; }
+
+  /* Inline review popup (overlay over Settings) */
+  .review-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(15, 23, 42, 0.55);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .review-modal {
+    background: #fff; border-radius: 10px;
+    width: min(560px, 100%); max-height: 85vh; overflow-y: auto;
+    padding: 1.1rem 1.25rem 1rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  }
+  .review-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 0.5rem; margin-bottom: 0.5rem;
+  }
+  .review-title { font-size: 1.0rem; color: #1f2937; margin: 0; line-height: 1.3; }
+  .review-close {
+    background: transparent; border: none; cursor: pointer;
+    font-size: 1.1rem; color: #6b7280; padding: 0.1rem 0.3rem;
+    min-height: unset; min-width: unset;
+  }
+  .review-lede { color: #1f2937; font-size: 0.88rem; margin: 0.25rem 0 0.4rem; }
+  .review-notes {
+    color: #475569; font-size: 0.82rem; font-style: italic;
+    margin: 0.25rem 0 0.5rem;
+  }
+  .review-list { list-style: none; padding: 0; margin: 0.5rem 0 0.75rem; }
+  .review-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.25rem 0; border-bottom: 1px dashed #e2e8f0;
+    font-size: 0.85rem;
+    min-height: 26px;
+  }
+  .review-row:last-child { border-bottom: none; }
+  .review-check {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    flex: 0 0 auto; cursor: pointer;
+  }
+  .review-check input { margin: 0; }
+  .review-key { font-weight: 600; color: #1f2937; white-space: nowrap; }
+  .review-value {
+    flex: 1 1 auto; text-align: right;
+    color: #1f2937;
+    font-family: ui-monospace, Menlo, monospace; font-size: 0.82rem;
+    padding-left: 0.4rem;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  a.review-cite {
+    display: inline-block;
+    padding: 0 1px;
+    margin: 0 0 0 2px;
+    color: #6366f1;
+    font-size: 0.7rem;
+    font-style: italic; font-weight: 700; font-family: serif;
+    line-height: 1;
+    text-decoration: none;
+    vertical-align: super;
+    cursor: help;
+    flex: 0 0 auto;
+  }
+  a.review-cite:hover { color: #4338ca; text-decoration: underline; }
+  .review-actions {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px solid #e5e7eb;
+  }
+  .review-cite-list {
+    list-style: disc; padding-left: 1.1rem;
+    margin: 0.3rem 0 0; font-size: 0.83rem;
+  }
+  .review-cite-list a { color: #2563eb; text-decoration: underline; }
 
   .card.warn {
     background: #fff8e1;

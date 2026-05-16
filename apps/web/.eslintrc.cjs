@@ -42,6 +42,10 @@ module.exports = {
       'error',
       { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
     ]
+    // TODO(phase-18b-2): wire eslint/no-raw-tenant-table.cjs as a custom rule
+    // to flag raw Drizzle queries against tenant-scoped tables. The rule
+    // body is already written; wiring needs eslint-plugin-rulesdir or
+    // promoting `./eslint` to a workspace package.
   },
   ignorePatterns: ['build/', '.svelte-kit/', 'node_modules/', 'drizzle/']
 };

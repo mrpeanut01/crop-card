@@ -5,13 +5,18 @@
  * several fields; single-field operators get an auto-created "Home Field"
  * via the migration backfill and the UI hides field controls until they
  * add a second.
+ *
+ * Phase 18a: tenant-scoped. Every read filters by active Owner; every write
+ * stamps the active Owner. `ensureHomeField()` is per-Owner — each tenant
+ * has its own "Home Field" row.
  */
 
 import { randomUUID } from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from './client';
 import { blocks, fields } from './schema';
 import { effectiveAcresFor } from './blocks';
+import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export interface Field {
   id: string;
@@ -42,11 +47,12 @@ function rowToField(row: typeof fields.$inferSelect): Field {
 }
 
 export function listFields(): FieldWithBlocks[] {
-  const fieldRows = db.select().from(fields).all();
+  const fieldRows = db.select().from(fields).where(tenantWhere(fields)).all();
   if (fieldRows.length === 0) return [];
   const blockRows = db
     .select({ fieldId: blocks.fieldId, acres: blocks.acres, geometryGeojson: blocks.geometryGeojson })
     .from(blocks)
+    .where(tenantWhere(blocks))
     .all();
   const counts = new Map<string, { count: number; acres: number }>();
   for (const b of blockRows) {
@@ -65,7 +71,11 @@ export function listFields(): FieldWithBlocks[] {
 }
 
 export function getField(id: string): Field | undefined {
-  const row = db.select().from(fields).where(eq(fields.id, id)).get();
+  const row = db
+    .select()
+    .from(fields)
+    .where(withTenant(fields, eq(fields.id, id)))
+    .get();
   return row ? rowToField(row) : undefined;
 }
 
@@ -81,14 +91,16 @@ export function createField(input: {
     effectiveAcresFor({ acres: input.acres, geometryGeojson: input.geometryGeojson }) ?? null;
   const row = db
     .insert(fields)
-    .values({
-      id,
-      name: input.name,
-      acres: acresToPersist,
-      location: input.location ?? null,
-      notes: input.notes ?? null,
-      geometryGeojson: input.geometryGeojson ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        name: input.name,
+        acres: acresToPersist,
+        location: input.location ?? null,
+        notes: input.notes ?? null,
+        geometryGeojson: input.geometryGeojson ?? null
+      })
+    )
     .returning()
     .get();
   return rowToField(row);
@@ -111,24 +123,27 @@ export function updateField(
   if (patch.notes !== undefined) set.notes = patch.notes;
   if (patch.geometryGeojson !== undefined) {
     set.geometryGeojson = patch.geometryGeojson;
-    // Mirror the blocks repo: when geometry changes, persist the
-    // geometry-derived acres so raw queries / exports stay truthful.
     const fromGeo = effectiveAcresFor({ acres: undefined, geometryGeojson: patch.geometryGeojson });
     if (fromGeo !== undefined) set.acres = fromGeo;
   }
   if (Object.keys(set).length === 0) return getField(id);
-  const row = db.update(fields).set(set).where(eq(fields.id, id)).returning().get();
+  const row = db
+    .update(fields)
+    .set(set)
+    .where(withTenant(fields, eq(fields.id, id)))
+    .returning()
+    .get();
   return row ? rowToField(row) : undefined;
 }
 
-/** Returns the auto-created "Home Field" id (creates one if missing).
- *  Application code calls this on first-block creation when the user has
- *  not yet picked a parent field. */
+/** Returns the auto-created "Home Field" id for the active Owner (creates
+ *  one if missing). Application code calls this on first-block creation
+ *  when the user has not yet picked a parent field. */
 export function ensureHomeField(): string {
   const existing = db
     .select({ id: fields.id })
     .from(fields)
-    .where(eq(fields.name, 'Home Field'))
+    .where(and(tenantWhere(fields), eq(fields.name, 'Home Field')))
     .get();
   if (existing) return existing.id;
   return createField({ name: 'Home Field' }).id;

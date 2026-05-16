@@ -2,12 +2,18 @@
  * Crops repository (Phase 12). A "Crop" = an active planting on a block,
  * analogous to a Brewfather Batch. The legacy `plantingRecords` export is
  * kept as a deprecated alias in schema.ts; new code uses `crops`.
+ *
+ * Phase 18a: tenant-scoped. Group operations and the seasonal-task
+ * materialization called via tasks.ts inherit the active Owner from the
+ * AsyncLocalStorage context — the inner repo calls don't need to thread it
+ * explicitly.
  */
 
 import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, gte, isNotNull, lte } from 'drizzle-orm';
 import { db } from './client';
 import { crops, tasks as tasksTable } from './schema';
+import { tenantValues, tenantWhere, withTenant } from './tenant';
 import {
   cascadeDeleteForCrop,
   createTask,
@@ -32,7 +38,6 @@ export interface Crop {
   archivedAt?: number;
   quantityPlanted?: number;
   quantityUnit?: string;
-  /** Phase 15: planting-group membership. */
   groupId?: string;
   groupRole?: GroupRole;
   groupOffsetDays?: number;
@@ -79,23 +84,21 @@ export function listCrops(filters: ListFilters = {}): Crop[] {
     conds.push(lte(crops.plantingDate, end));
   }
 
-  let q = db.select().from(crops).$dynamic();
-  if (conds.length > 0) q = q.where(and(...conds));
+  let q = db
+    .select()
+    .from(crops)
+    .where(withTenant(crops, conds.length ? and(...conds) : undefined))
+    .$dynamic();
   q = q.orderBy(desc(crops.plantingDate));
   if (filters.limit) q = q.limit(filters.limit);
   return q.all().map(rowToCrop);
 }
 
 export function getCrop(id: string): Crop | undefined {
-  const row = db.select().from(crops).where(eq(crops.id, id)).get();
+  const row = db.select().from(crops).where(withTenant(crops, eq(crops.id, id))).get();
   return row ? rowToCrop(row) : undefined;
 }
 
-/** Phase 14: drag-drop on swim-lane → set plantingDate (and optionally
- *  move to a different block). Setting plantingDate from null lifts the
- *  crop out of the "to schedule" tray and flips status to 'active'.
- *  Setting it to null returns the crop to the tray and flips back to
- *  'planned' so future drags can re-place it. */
 export function setSchedule(
   id: string,
   patch: { plantingDate: number | null; blockId?: string }
@@ -104,22 +107,23 @@ export function setSchedule(
     plantingDate: patch.plantingDate !== null ? new Date(patch.plantingDate) : null
   };
   if (patch.blockId) updates.blockId = patch.blockId;
-  // Status auto-transition: tray ↔ active.
-  const cur = db.select().from(crops).where(eq(crops.id, id)).get();
+  const cur = db.select().from(crops).where(withTenant(crops, eq(crops.id, id))).get();
   if (!cur) throw new Error(`unknown crop id: ${id}`);
   if (patch.plantingDate === null && cur.status === 'active') {
     updates.status = 'planned';
   } else if (patch.plantingDate !== null && cur.status === 'planned') {
     updates.status = 'active';
   }
-  const row = db.update(crops).set(updates).where(eq(crops.id, id)).returning().get();
+  const row = db
+    .update(crops)
+    .set(updates)
+    .where(withTenant(crops, eq(crops.id, id)))
+    .returning()
+    .get();
   if (!row) throw new Error(`unknown crop id: ${id}`);
   return rowToCrop(row);
 }
 
-/** Phase 15c — edit operator-visible details on a planting (variety name +
- *  quantity). Plugin id is intentionally NOT mutable here; that goes through
- *  the change-plugin guard on the API layer. */
 export function updateDetails(
   id: string,
   patch: { varietyDisplayName?: string; quantityPlanted?: number | null; quantityUnit?: string | null }
@@ -136,7 +140,12 @@ export function updateDetails(
     if (!cur) throw new Error(`unknown crop id: ${id}`);
     return cur;
   }
-  const row = db.update(crops).set(updates).where(eq(crops.id, id)).returning().get();
+  const row = db
+    .update(crops)
+    .set(updates)
+    .where(withTenant(crops, eq(crops.id, id)))
+    .returning()
+    .get();
   if (!row) throw new Error(`unknown crop id: ${id}`);
   return rowToCrop(row);
 }
@@ -146,38 +155,44 @@ export function updateStatus(id: string, status: CropStatus, occurredAt?: number
   const now = occurredAt ?? Date.now();
   if (status === 'harvested') updates.harvestedAt = new Date(now);
   if (status === 'archived') updates.archivedAt = new Date(now);
-  const row = db.update(crops).set(updates).where(eq(crops.id, id)).returning().get();
+  const row = db
+    .update(crops)
+    .set(updates)
+    .where(withTenant(crops, eq(crops.id, id)))
+    .returning()
+    .get();
   if (!row) throw new Error(`unknown crop id: ${id}`);
   return rowToCrop(row);
 }
 
-/**
- * Backfill helper used by the migration script and as an event-API fallback.
- * Picks the most-recently-planted active/harvested crop on `blockId` whose
- * `plantingDate <= occurredAt`. Returns undefined if no crop matches.
- */
 export function inferCropForEvent(blockId: string, occurredAt: number): Crop | undefined {
   const rows = db
     .select()
     .from(crops)
-    .where(and(eq(crops.blockId, blockId), lte(crops.plantingDate, new Date(occurredAt))))
+    .where(
+      withTenant(
+        crops,
+        and(eq(crops.blockId, blockId), lte(crops.plantingDate, new Date(occurredAt)))
+      )
+    )
     .orderBy(desc(crops.plantingDate))
     .limit(1)
     .all();
   return rows[0] ? rowToCrop(rows[0]) : undefined;
 }
 
-/** Year list for the filter dropdown. */
 export function listYearsWithCrops(): number[] {
-  const all = db.select().from(crops).orderBy(asc(crops.plantingDate)).all();
+  const all = db
+    .select()
+    .from(crops)
+    .where(tenantWhere(crops))
+    .orderBy(asc(crops.plantingDate))
+    .all();
   const years = new Set<number>();
   for (const r of all) if (r.plantingDate) years.add(new Date(r.plantingDate).getFullYear());
   return [...years].sort((a, b) => b - a);
 }
 
-/** Phase 14a: create a planned-status crop with no planting date. Used by the
- *  Schedule-tab seed-to-block auto-assign flow — committed crops land in the
- *  "To schedule" tray awaiting drag-drop to set a date. */
 export function createPlanned(input: {
   blockId: string;
   cropPluginId: string;
@@ -188,17 +203,19 @@ export function createPlanned(input: {
   const id = randomUUID();
   const row = db
     .insert(crops)
-    .values({
-      id,
-      blockId: input.blockId,
-      cropPluginId: input.cropPluginId,
-      varietyDisplayName: input.varietyDisplayName,
-      plantingDate: null,
-      status: 'planned',
-      quantityPlantedHundredths:
-        input.quantityPlanted !== undefined ? Math.round(input.quantityPlanted * 100) : null,
-      quantityUnit: input.quantityUnit ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        cropPluginId: input.cropPluginId,
+        varietyDisplayName: input.varietyDisplayName,
+        plantingDate: null,
+        status: 'planned',
+        quantityPlantedHundredths:
+          input.quantityPlanted !== undefined ? Math.round(input.quantityPlanted * 100) : null,
+        quantityUnit: input.quantityUnit ?? null
+      })
+    )
     .returning()
     .get();
   return rowToCrop(row);
@@ -212,14 +229,9 @@ const COMPANION_CHECK_LEAD_DAYS = 5;
 export interface GroupMemberInput {
   cropPluginId: string;
   varietyDisplayName: string;
-  /** Days from anchor's plantingDate. Set to 0 (or omit) on the anchor. */
   offsetDays?: number;
   quantityPlanted?: number;
   quantityUnit?: string;
-  /** Phase 15d — when set, promote the existing draft crop with this id
-   *  into a group member (UPDATE in place) instead of INSERTing a new row.
-   *  Used by the wizard + auto-schedule path so unscheduled drafts are
-   *  consumed rather than duplicated. */
   existingCropId?: string;
 }
 
@@ -227,10 +239,8 @@ export interface CreateGroupInput {
   blockId: string;
   anchor: GroupMemberInput;
   companions: GroupMemberInput[];
-  /** Anchor's plantingDate in ms epoch. Companions derive from offsetDays. */
   anchorPlantingDateMs: number;
   systemKind: GroupSystemKind;
-  /** Plugin lookup callback so this module stays free of registry I/O. */
   resolvePlugin: (pluginId: string) => CropPlugin | undefined;
 }
 
@@ -248,8 +258,6 @@ export interface GroupCommitResult {
   members: GroupMemberOutput[];
 }
 
-/** Insert a single crop row plus its primary "Plant" task and all template
- *  materialization. Internal helper shared by group commit + preview. */
 function materializeMember(
   groupId: string,
   blockId: string,
@@ -267,7 +275,7 @@ function materializeMember(
     const existing = db
       .select()
       .from(crops)
-      .where(eq(crops.id, member.existingCropId))
+      .where(withTenant(crops, eq(crops.id, member.existingCropId)))
       .get();
     if (!existing) throw new Error(`unknown crop id: ${member.existingCropId}`);
     if (existing.groupId) {
@@ -291,26 +299,33 @@ function materializeMember(
     if (member.quantityUnit !== undefined) {
       updates.quantityUnit = member.quantityUnit ?? null;
     }
-    cropRow = db.update(crops).set(updates).where(eq(crops.id, cropId)).returning().get();
+    cropRow = db
+      .update(crops)
+      .set(updates)
+      .where(withTenant(crops, eq(crops.id, cropId)))
+      .returning()
+      .get();
   } else {
     cropId = randomUUID();
     cropRow = db
       .insert(crops)
-      .values({
-        id: cropId,
-        blockId,
-        cropPluginId: member.cropPluginId,
-        varietyDisplayName: member.varietyDisplayName,
-        plantingDate: new Date(plantingDateMs),
-        status: 'active',
-        quantityPlantedHundredths:
-          member.quantityPlanted !== undefined ? Math.round(member.quantityPlanted * 100) : null,
-        quantityUnit: member.quantityUnit ?? null,
-        groupId,
-        groupRole: role,
-        groupOffsetDays: offsetDays,
-        groupSystemKind: systemKind
-      })
+      .values(
+        tenantValues({
+          id: cropId,
+          blockId,
+          cropPluginId: member.cropPluginId,
+          varietyDisplayName: member.varietyDisplayName,
+          plantingDate: new Date(plantingDateMs),
+          status: 'active',
+          quantityPlantedHundredths:
+            member.quantityPlanted !== undefined ? Math.round(member.quantityPlanted * 100) : null,
+          quantityUnit: member.quantityUnit ?? null,
+          groupId,
+          groupRole: role,
+          groupOffsetDays: offsetDays,
+          groupSystemKind: systemKind
+        })
+      )
       .returning()
       .get();
   }
@@ -347,10 +362,6 @@ function materializeMember(
   };
 }
 
-/** Commit a planting group in a single transaction. Each member gets a crop
- *  row, a primary "Plant" task, materialized pre/post + seasonal tasks, and
- *  (companions only) a "companion-check" advisory task scheduled
- *  COMPANION_CHECK_LEAD_DAYS before the companion's plantingDate. */
 export function createPlantingGroup(input: CreateGroupInput): GroupCommitResult {
   const groupId = randomUUID();
   return db.transaction(() => {
@@ -401,15 +412,11 @@ export function createPlantingGroup(input: CreateGroupInput): GroupCommitResult 
   });
 }
 
-/** Dry-run preview: runs the same materialization inside a transaction that
- *  always rolls back, so step 4 of the wizard can show the operator the full
- *  set of plantings + tasks before committing. */
 export function previewPlantingGroup(input: CreateGroupInput): GroupCommitResult {
   let result: GroupCommitResult | null = null;
   try {
     db.transaction(() => {
       result = createPlantingGroup(input);
-      // Force rollback by throwing a sentinel error after capture.
       throw PREVIEW_ROLLBACK;
     });
   } catch (err) {
@@ -420,15 +427,13 @@ export function previewPlantingGroup(input: CreateGroupInput): GroupCommitResult
 }
 const PREVIEW_ROLLBACK = Symbol('preview-rollback');
 
-/** List all crops in a group (anchor first, then companions ordered by offset). */
 export function listGroupMembers(groupId: string): Crop[] {
   const rows = db
     .select()
     .from(crops)
-    .where(eq(crops.groupId, groupId))
+    .where(withTenant(crops, eq(crops.groupId, groupId)))
     .orderBy(asc(crops.groupOffsetDays))
     .all();
-  // Drizzle nulls-first ordering varies by SQLite version; force anchor first.
   return rows
     .map(rowToCrop)
     .sort((a, b) => {
@@ -438,24 +443,15 @@ export function listGroupMembers(groupId: string): Crop[] {
     });
 }
 
-/** Disband a group: clear the four group fields on every member. The crop
- *  rows survive as singletons; their materialized tasks are untouched. */
 export function disbandGroup(groupId: string): number {
   const result = db
     .update(crops)
     .set({ groupId: null, groupRole: null, groupOffsetDays: null, groupSystemKind: null })
-    .where(eq(crops.groupId, groupId))
+    .where(withTenant(crops, eq(crops.groupId, groupId)))
     .run();
   return result.changes;
 }
 
-/** Phase 15 — companion nudge. Operator confirms anchor's stage in field
- *  and shifts the companion's planting date ±N days. Updates the crop row,
- *  shifts the companion's primary "Plant" task by the same delta, and runs
- *  reanchorPluginPrePost so all dependent pre/post/seasonal tasks follow
- *  (overridden ones flag staleAnchor instead). Operator-overridden tasks
- *  retain their dates with stale flags so the operator can resolve them
- *  manually on /today. */
 export function nudgeCompanionPlanting(
   companionCropId: string,
   deltaDays: number
@@ -467,7 +463,11 @@ export function nudgeCompanionPlanting(
     throw new Error('nudge requires non-zero deltaDays');
   }
   return db.transaction(() => {
-    const cropRow = db.select().from(crops).where(eq(crops.id, companionCropId)).get();
+    const cropRow = db
+      .select()
+      .from(crops)
+      .where(withTenant(crops, eq(crops.id, companionCropId)))
+      .get();
     if (!cropRow) throw new Error(`unknown crop: ${companionCropId}`);
     if (cropRow.groupRole !== 'companion') {
       throw new Error('only companion crops can be nudged');
@@ -478,17 +478,20 @@ export function nudgeCompanionPlanting(
     const newMs = oldMs + deltaDays * DAY_MS;
     db.update(crops)
       .set({ plantingDate: new Date(newMs) })
-      .where(eq(crops.id, companionCropId))
+      .where(withTenant(crops, eq(crops.id, companionCropId)))
       .run();
 
     const primaryRow = db
       .select()
       .from(tasksTable)
       .where(
-        and(
-          eq(tasksTable.cropId, companionCropId),
-          eq(tasksTable.kind, 'primary'),
-          eq(tasksTable.pluginTemplateKey, `crop:${cropRow.cropPluginId}:plant`)
+        withTenant(
+          tasksTable,
+          and(
+            eq(tasksTable.cropId, companionCropId),
+            eq(tasksTable.kind, 'primary'),
+            eq(tasksTable.pluginTemplateKey, `crop:${cropRow.cropPluginId}:plant`)
+          )
         )
       )
       .get();
@@ -499,7 +502,7 @@ export function nudgeCompanionPlanting(
       const newPrimaryMs = oldPrimaryMs + deltaDays * DAY_MS;
       db.update(tasksTable)
         .set({ scheduledFor: new Date(newPrimaryMs) })
-        .where(eq(tasksTable.id, primaryRow.id))
+        .where(withTenant(tasksTable, eq(tasksTable.id, primaryRow.id)))
         .run();
       reanchored = reanchorPluginPrePost(primaryRow.id, oldPrimaryMs, newPrimaryMs);
     }
@@ -508,35 +511,22 @@ export function nudgeCompanionPlanting(
   });
 }
 
-/** Phase 15 — anchor-swap guard. Returns true if cropId is the anchor of a
- *  multi-member group; the API/UI should reject plugin swaps in that case
- *  and ask the operator to disband the group first. */
 export function isGroupAnchorWithMembers(cropId: string): boolean {
-  const row = db.select().from(crops).where(eq(crops.id, cropId)).get();
+  const row = db.select().from(crops).where(withTenant(crops, eq(crops.id, cropId))).get();
   if (!row || row.groupRole !== 'anchor' || !row.groupId) return false;
   const siblings = db
     .select()
     .from(crops)
-    .where(and(eq(crops.groupId, row.groupId), isNotNull(crops.groupId)))
+    .where(withTenant(crops, and(eq(crops.groupId, row.groupId), isNotNull(crops.groupId))))
     .all();
   return siblings.length > 1;
 }
 
-/** Phase 15d — un-schedule a single crop. Mirrors `clearSchedule` but
- *  scoped to one row: cascade-deletes the crop's tasks, nulls plantingDate,
- *  clears its group binding, flips status back to 'planned'. The crop row
- *  itself stays attached to its block as a draft — operator can re-schedule
- *  it later via auto-schedule, the wizard, or drag-from-catalog.
- *
- *  Edge case: if the crop is part of a group, disband the *entire* group
- *  first so we don't leave companion rows pointing at a phantom anchor.
- *  Companions keep their plantingDates (they're real plantings); they just
- *  lose the group binding. */
 export function unscheduleCrop(
   cropId: string
 ): { tasksDeleted: number; disbandedGroupId?: string } {
   return db.transaction(() => {
-    const row = db.select().from(crops).where(eq(crops.id, cropId)).get();
+    const row = db.select().from(crops).where(withTenant(crops, eq(crops.id, cropId))).get();
     if (!row) throw new Error(`unknown crop: ${cropId}`);
 
     let disbandedGroupId: string | undefined;
@@ -544,7 +534,7 @@ export function unscheduleCrop(
       disbandedGroupId = row.groupId;
       db.update(crops)
         .set({ groupId: null, groupRole: null, groupOffsetDays: null, groupSystemKind: null })
-        .where(eq(crops.groupId, row.groupId))
+        .where(withTenant(crops, eq(crops.groupId, row.groupId)))
         .run();
     }
 
@@ -552,24 +542,18 @@ export function unscheduleCrop(
 
     db.update(crops)
       .set({ plantingDate: null, status: 'planned' })
-      .where(eq(crops.id, cropId))
+      .where(withTenant(crops, eq(crops.id, cropId)))
       .run();
 
     return { tasksDeleted, disbandedGroupId };
   });
 }
 
-/** Phase 15d — clear the entire season's schedule in one transaction. For
- *  every non-harvested crop with a planting date or group binding: cascade-
- *  delete its tasks (primary, pre/post, seasonal, companion-check), null the
- *  plantingDate, clear the four group columns, and flip status back to
- *  'planned' so it shows up as a draft. Crops themselves stay attached to
- *  their blocks for a fresh auto-schedule or wizard pass. */
 export function clearSchedule(
   blockIdFilter?: Set<string> | null
 ): { unscheduled: number; tasksDeleted: number } {
   return db.transaction(() => {
-    const rows = db.select().from(crops).all();
+    const rows = db.select().from(crops).where(tenantWhere(crops)).all();
     let unscheduled = 0;
     let tasksDeleted = 0;
     for (const row of rows) {
@@ -590,7 +574,7 @@ export function clearSchedule(
           groupSystemKind: null,
           status: 'planned'
         })
-        .where(eq(crops.id, row.id))
+        .where(withTenant(crops, eq(crops.id, row.id)))
         .run();
       unscheduled++;
     }
@@ -598,15 +582,13 @@ export function clearSchedule(
   });
 }
 
-/** List groups present on a block, with member counts. Used by the schedule
- *  read model to draw group brackets over the swim-lane. */
 export function listGroupsOnBlock(
   blockId: string
 ): Array<{ groupId: string; systemKind: GroupSystemKind; memberCount: number }> {
   const rows = db
     .select()
     .from(crops)
-    .where(and(eq(crops.blockId, blockId), isNotNull(crops.groupId)))
+    .where(withTenant(crops, and(eq(crops.blockId, blockId), isNotNull(crops.groupId))))
     .all();
   const byGroup = new Map<string, { systemKind: GroupSystemKind; memberCount: number }>();
   for (const r of rows) {

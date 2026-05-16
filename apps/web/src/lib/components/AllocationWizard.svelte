@@ -1,6 +1,7 @@
 <script lang="ts">
   import { seedsToPlants, type SeedPluginShape } from '$lib/seed/quantity';
   import type { CropPlugin } from '$lib/plugins/schemas';
+  import type { CompanionGroupMarker, PollinationConstraint } from '$lib/plan/types';
 
   type SeedStockEntry = {
     stockItemId: string;
@@ -49,6 +50,9 @@
     rationale: string;
     perRowRationale: Record<string, string>;
     advisories: string[];
+    pollinationConstraints?: PollinationConstraint[];
+    geometryMissingBlockIds?: string[];
+    companionGroups?: CompanionGroupMarker[];
     meta: {
       model: string;
       usdEstimate: number;
@@ -73,7 +77,7 @@
     onCommitted: () => void;
   } = $props();
 
-  type Step = 'seeds' | 'blocks' | 'review' | 'commit';
+  type Step = 'seeds' | 'blocks' | 'review' | 'schedule' | 'commit';
   let step: Step = $state('seeds');
 
   let seedSearch = $state('');
@@ -120,11 +124,202 @@
   let loading = $state(false);
   let error = $state<string | null>(null);
 
+  /** Phase 17 — chat refinement state. The transcript is the source of truth
+   *  for what's rendered in the bubble list and what gets sent to the refine
+   *  endpoint on each turn. Seeded with an assistant message synthesized
+   *  from the initial plan's advisories so the chat opens with the same
+   *  observations the old "Worth considering" block used to show. */
+  type ChatMsg = { role: 'user' | 'assistant'; content: string };
+  // Two separate transcripts — allocation chat lives with step 3 (Review),
+  // schedule chat lives with step 4. Switching steps preserves each
+  // transcript so the user can refine either independently, but the
+  // schedule chat doesn't carry over allocation-level pollination notes
+  // (those are already shown on the Review step).
+  let allocationChatMessages = $state<ChatMsg[]>([]);
+  let scheduleChatMessages = $state<ChatMsg[]>([]);
+  const chatMessages = $derived(
+    (step as Step) === 'schedule' ? scheduleChatMessages : allocationChatMessages
+  );
+  let chatDraft = $state('');
+  let chatBusy = $state(false);
+  let chatError = $state<string | null>(null);
+  let chatLogEl = $state<HTMLDivElement | null>(null);
+
+  function seedChatFromAdvisories(r: AllocationResponse) {
+    const lines: string[] = [];
+    const pollination = r.pollinationConstraints ?? [];
+    const mustStagger = pollination.filter((p) => p.kind === 'must-stagger');
+    const isolated = pollination.filter((p) => p.kind === 'isolated-spatially');
+    const geomMissing = (r.geometryMissingBlockIds ?? []).length;
+
+    if (mustStagger.length > 0 || isolated.length > 0 || geomMissing > 0) {
+      lines.push('Cross-pollination notes:');
+      for (const p of isolated) lines.push(`• ${p.note}`);
+      for (const p of mustStagger) lines.push(`• ⚠ ${p.note}`);
+      if (geomMissing > 0) {
+        lines.push(
+          `• Couldn't check ${geomMissing} block${geomMissing === 1 ? '' : 's'} without geometry — add field boundaries to enable the spatial check.`
+        );
+      }
+      lines.push('');
+    }
+
+    if (r.advisories.length > 0) {
+      lines.push('Other things worth thinking about:');
+      for (const a of r.advisories) lines.push(`• ${a}`);
+      lines.push('');
+    }
+
+    if (mustStagger.length > 0) {
+      lines.push(
+        "These crossing pairs will be carried into the schedule step as required planting offsets. Tell me anything you'd like to change before then — for example: \"swap the Bantam onto Block C to gain more isolation\" or \"split the brassicas onto two beds.\""
+      );
+    } else if (lines.length === 0) {
+      lines.push(
+        "Plan looks clean — nothing jumped out to flag. If you'd like to tweak it, just tell me what to change (e.g., \"move the corn off the narrow block\" or \"give the brassicas more room\")."
+      );
+    } else {
+      lines.push(
+        "Tell me anything you'd like to change — for example: \"move the corn off the narrow block\" or \"split the tomatoes onto two beds.\""
+      );
+    }
+
+    allocationChatMessages = [{ role: 'assistant', content: lines.join('\n') }];
+    chatDraft = '';
+    chatError = null;
+  }
+
+  /** Pollination chips for a single assignment row. Surfaces only the
+   *  unresolved (must-stagger) constraints so the table doesn't bloat. */
+  function pollinationChipsFor(stockItemId: string, blockId: string): PollinationConstraint[] {
+    const list = response?.pollinationConstraints ?? [];
+    return list.filter(
+      (p) =>
+        p.kind === 'must-stagger' &&
+        ((p.pair[0] === stockItemId && p.blockIds[0] === blockId) ||
+          (p.pair[1] === stockItemId && p.blockIds[1] === blockId))
+    );
+  }
+
+  function partnerStockId(p: PollinationConstraint, stockItemId: string): string {
+    return p.pair[0] === stockItemId ? p.pair[1] : p.pair[0];
+  }
+
+  /** Single compact stagger summary per row. Lists up to 3 partners by
+   *  shortName, "+N more" for the rest, and stuffs the full list into a
+   *  tooltip for hover. Returns null when no staggers apply. */
+  function pollinationSummary(
+    stockItemId: string,
+    blockId: string
+  ): { label: string; tooltip: string; days: number } | null {
+    const chips = pollinationChipsFor(stockItemId, blockId);
+    if (chips.length === 0) return null;
+    const days = Math.max(...chips.map((c) => c.staggerDays));
+    const partners = Array.from(
+      new Set(chips.map((c) => varietyDisplayFor(partnerStockId(c, stockItemId))))
+    );
+    const visible = partners.slice(0, 3);
+    const overflow = partners.length - visible.length;
+    const label =
+      `⚠ ${days}d stagger from ${visible.join(' · ')}` +
+      (overflow > 0 ? ` +${overflow} more` : '');
+    const tooltip = `Plant ≥${days} d apart from: ${partners.join(', ')}.`;
+    return { label, tooltip, days };
+  }
+
   let commitProgress = $state<{ done: number; total: number; failed: string[] }>({
     done: 0,
     total: 0,
     failed: []
   });
+
+  type ScheduledPlanting = {
+    stockItemId: string;
+    blockId: string;
+    cropPluginId: string;
+    varietyDisplayName: string;
+    plantingDateMs: number;
+    plants: number;
+    successionIndex?: { i: number; n: number };
+    rationale: string;
+  };
+  type ScheduleDiagnosis = { summary: string; suggestions: string[] };
+  type ScheduleResponse = {
+    scheduled: ScheduledPlanting[];
+    rationale: string;
+    advisories: string[];
+    meta: {
+      model: string;
+      usdEstimate: number;
+      fallback?: 'deterministic' | 'no-api-key';
+      violations?: string[];
+      diagnosis?: ScheduleDiagnosis;
+    };
+  };
+
+  let scheduleResponse = $state<ScheduleResponse | null>(null);
+  let scheduleLoading = $state(false);
+  let scheduleError = $state<string | null>(null);
+
+  function fmtDateMs(ms: number): string {
+    return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  // ─── AI progress heartbeat ──────────────────────────────────────────────
+  // Long Sonnet calls (allocator, scheduler, chat refinement) can run 30-120s.
+  // Without feedback "Generating…" reads as a hang. We track start time per
+  // operation and tick a shared `nowMs` state every 500ms so elapsed time
+  // + a rotating stage label can re-render. Stage labels are time-windowed
+  // narration — not real progress from the server, but plenty to communicate
+  // "the system is alive and working."
+  let nowMs = $state(Date.now());
+  let allocateStartMs = $state<number | null>(null);
+  let scheduleStartMs = $state<number | null>(null);
+  let chatStartMs = $state<number | null>(null);
+
+  $effect(() => {
+    const active = allocateStartMs != null || scheduleStartMs != null || chatStartMs != null;
+    if (!active) return;
+    const id = setInterval(() => {
+      nowMs = Date.now();
+    }, 500);
+    return () => clearInterval(id);
+  });
+
+  type ProgressStage = 'allocate' | 'schedule' | 'chat-allocate' | 'chat-schedule';
+  function aiProgressLabel(stage: ProgressStage, elapsedMs: number): string {
+    const s = Math.floor(elapsedMs / 1000);
+    if (stage === 'allocate') {
+      if (s < 3) return 'Building candidacy matrix…';
+      if (s < 12) return 'Asking Claude to allocate seeds across your blocks…';
+      if (s < 30) return 'Weighing sun, rotation, companions, and cross-pollination…';
+      if (s < 60) return 'Refining placements to maximize spacing…';
+      if (s < 120) return 'Still working — complex farms take a minute or two…';
+      return 'Almost there — the API is slower than usual right now…';
+    }
+    if (stage === 'schedule') {
+      if (s < 3) return 'Computing planting windows from frost dates and DTM…';
+      if (s < 12) return 'Asking Claude to pick planting dates…';
+      if (s < 30) return 'Honoring cross-pollination staggers and companion offsets…';
+      if (s < 60) return 'Checking succession spacing for fast-growing crops…';
+      if (s < 120) return 'Still scheduling — staggers across many varieties take time…';
+      return 'Almost there — the API is slower than usual right now…';
+    }
+    // Chat refinements are shorter prompts → quicker stages.
+    if (s < 2) return 'Reading your message…';
+    if (s < 8) return stage === 'chat-schedule' ? 'Reconsidering the dates…' : 'Reconsidering the plan…';
+    if (s < 20) return 'Validating against constraints…';
+    if (s < 45) return 'Still thinking — refinement turn taking longer than usual…';
+    return 'Almost there…';
+  }
+
+  function fmtElapsed(ms: number): string {
+    const s = Math.floor(ms / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${m}m ${String(rem).padStart(2, '0')}s`;
+  }
 
   function pluginShapeFor(stockItemId: string): SeedPluginShape | undefined {
     const entry = seedStock.find((s) => s.stockItemId === stockItemId);
@@ -144,6 +339,24 @@
       plugin: pluginShapeFor(stockItemId)
     });
     return result?.plants ?? null;
+  }
+
+  function selectAllInFamily(items: ReadonlyArray<SeedStockEntry>) {
+    for (const s of items) {
+      if (!selectedSeeds.has(s.stockItemId)) selectedSeeds.set(s.stockItemId, s.onHand);
+    }
+    selectedSeeds = new Map(selectedSeeds);
+  }
+
+  function clearFamily(items: ReadonlyArray<SeedStockEntry>) {
+    for (const s of items) selectedSeeds.delete(s.stockItemId);
+    selectedSeeds = new Map(selectedSeeds);
+  }
+
+  function familySelectedCount(items: ReadonlyArray<SeedStockEntry>): number {
+    let n = 0;
+    for (const s of items) if (selectedSeeds.has(s.stockItemId)) n++;
+    return n;
   }
 
   function toggleSeed(s: SeedStockEntry) {
@@ -177,6 +390,13 @@
     loading = true;
     error = null;
     response = null;
+    allocateStartMs = Date.now();
+    nowMs = Date.now();
+    // Advance to the Review step immediately so the operator sees the
+    // staged AI-progress indicator (label + spinner + elapsed time) from
+    // second 0, instead of staring at "Generating…" on the Blocks-step
+    // button for a minute.
+    step = 'review';
     try {
       const seedSelections = [...selectedSeeds.entries()]
         .filter(([, qty]) => qty > 0)
@@ -186,7 +406,11 @@
           return {
             stockItemId,
             cropPluginId: entry.cropPluginId!,
-            varietyDisplayName: entry.displayName,
+            // Prefer the curated shortName so Claude's rationale + chips
+            // surface "Bloody Butcher" instead of "Bloody Butcher
+            // Ornamental Corn — Raw Untreated Non-GMO (1/2 lb)". Falls back
+            // to displayName when no shortName is set.
+            varietyDisplayName: entry.shortName ?? entry.displayName,
             quantityPlants: Math.max(1, plants ?? Math.round(quantity))
           };
         });
@@ -205,11 +429,256 @@
         return;
       }
       response = body as AllocationResponse;
-      step = 'review';
+      seedChatFromAdvisories(response);
     } catch (err) {
       error = err instanceof Error ? err.message : 'request failed';
     } finally {
       loading = false;
+      allocateStartMs = null;
+    }
+  }
+
+  async function sendChat() {
+    const text = chatDraft.trim();
+    if (!text || chatBusy || !response) return;
+    chatError = null;
+    const userTurn: ChatMsg = { role: 'user', content: text };
+    // Append to the active step's transcript optimistically.
+    if (step === 'schedule') {
+      scheduleChatMessages = [...scheduleChatMessages, userTurn];
+    } else {
+      allocationChatMessages = [...allocationChatMessages, userTurn];
+    }
+    chatDraft = '';
+    chatBusy = true;
+    chatStartMs = Date.now();
+    nowMs = Date.now();
+    queueScrollChat();
+    try {
+      // Chat routes through schedule-refinement when in step 4, otherwise
+      // allocator-refinement. Each path mutates its own transcript.
+      if (step === 'schedule' && scheduleResponse) {
+        await sendScheduleChat(text);
+      } else {
+        await sendAllocationChat(text);
+      }
+      queueScrollChat();
+    } catch (err) {
+      chatError = err instanceof Error ? err.message : 'chat request failed';
+      // Roll back the optimistic user message on hard error.
+      if (step === 'schedule') {
+        scheduleChatMessages = scheduleChatMessages.slice(0, -1);
+      } else {
+        allocationChatMessages = allocationChatMessages.slice(0, -1);
+      }
+      chatDraft = text;
+    } finally {
+      chatBusy = false;
+      chatStartMs = null;
+    }
+  }
+
+  async function sendAllocationChat(text: string) {
+    if (!response) return;
+    const seedSelections = [...selectedSeeds.entries()]
+      .filter(([, qty]) => qty > 0)
+      .map(([stockItemId, quantity]) => {
+        const entry = seedStock.find((s) => s.stockItemId === stockItemId)!;
+        const plants = plantsFor(stockItemId, quantity);
+        return {
+          stockItemId,
+          cropPluginId: entry.cropPluginId!,
+          varietyDisplayName: entry.shortName ?? entry.displayName,
+          quantityPlants: Math.max(1, plants ?? Math.round(quantity))
+        };
+      });
+    const previousPlan = {
+      assignments: response.assignments.map((a) => ({
+        stockItemId: a.stockItemId,
+        blockId: a.blockId,
+        plants: a.plants,
+        rationale: response!.perRowRationale[`${a.stockItemId}:${a.blockId}`] ?? ''
+      })),
+      rationale: response.rationale,
+      advisories: response.advisories
+    };
+    const sendable = allocationChatMessages.slice(1);
+    const res = await fetch('/api/plan/allocate/refine', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        seedSelections,
+        blockIds: [...selectedBlockIds],
+        previousPlan,
+        transcript: sendable
+      })
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      chatError = body?.error ?? `HTTP ${res.status}`;
+      allocationChatMessages = allocationChatMessages.slice(0, -1);
+      chatDraft = text;
+      return;
+    }
+    const reply: string = typeof body.reply === 'string' && body.reply.trim().length > 0
+      ? body.reply
+      : 'Done — updated the plan above.';
+    allocationChatMessages = [...allocationChatMessages, { role: 'assistant', content: reply }];
+    response = {
+      assignments: body.assignments,
+      unplaced: body.unplaced ?? [],
+      sufficiency: body.sufficiency ?? {},
+      rationale: body.rationale ?? response.rationale,
+      perRowRationale: body.perRowRationale ?? {},
+      advisories: Array.isArray(body.advisories) ? body.advisories : [],
+      pollinationConstraints: Array.isArray(body.pollinationConstraints)
+        ? body.pollinationConstraints
+        : response.pollinationConstraints,
+      geometryMissingBlockIds: Array.isArray(body.geometryMissingBlockIds)
+        ? body.geometryMissingBlockIds
+        : response.geometryMissingBlockIds,
+      companionGroups: Array.isArray(body.companionGroups)
+        ? body.companionGroups
+        : response.companionGroups,
+      meta: body.meta ?? response.meta
+    };
+  }
+
+  async function sendScheduleChat(text: string) {
+    if (!response || !scheduleResponse) return;
+    const sendable = scheduleChatMessages.slice(1);
+    const res = await fetch('/api/plan/schedule/refine', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        assignments: response.assignments.map((a) => ({
+          stockItemId: a.stockItemId,
+          blockId: a.blockId,
+          cropPluginId: a.cropPluginId,
+          varietyDisplayName: a.varietyDisplayName,
+          plants: a.plants
+        })),
+        pollinationConstraints: response.pollinationConstraints ?? [],
+        companionGroups: response.companionGroups ?? [],
+        previousScheduled: scheduleResponse.scheduled,
+        previousRationale: scheduleResponse.rationale,
+        previousAdvisories: scheduleResponse.advisories,
+        transcript: sendable
+      })
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      chatError = body?.error ?? `HTTP ${res.status}`;
+      scheduleChatMessages = scheduleChatMessages.slice(0, -1);
+      chatDraft = text;
+      return;
+    }
+    const reply: string = typeof body.reply === 'string' && body.reply.trim().length > 0
+      ? body.reply
+      : 'Done — updated the dates above.';
+    scheduleChatMessages = [...scheduleChatMessages, { role: 'assistant', content: reply }];
+    scheduleResponse = {
+      scheduled: Array.isArray(body.scheduled) ? body.scheduled : scheduleResponse.scheduled,
+      rationale: typeof body.rationale === 'string' ? body.rationale : scheduleResponse.rationale,
+      advisories: Array.isArray(body.advisories) ? body.advisories : scheduleResponse.advisories,
+      meta: body.meta ?? scheduleResponse.meta
+    };
+  }
+
+  function queueScrollChat() {
+    requestAnimationFrame(() => {
+      if (chatLogEl) chatLogEl.scrollTop = chatLogEl.scrollHeight;
+    });
+  }
+
+  function onChatKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      void sendChat();
+    }
+  }
+
+  /** Phase B1 — "Accept all" no longer commits. It locks the spatial
+   *  allocation in place and advances to the Schedule step, where the
+   *  scheduler proposes planting dates (Phase B3+) before the operator
+   *  commits crops to the DB. The same chat panel continues in step 4. */
+  async function advanceToSchedule() {
+    if (!response) return;
+    step = 'schedule';
+    scheduleResponse = null;
+    scheduleError = null;
+    scheduleLoading = true;
+    scheduleStartMs = Date.now();
+    nowMs = Date.now();
+    try {
+      const res = await fetch('/api/plan/schedule', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          assignments: response.assignments,
+          pollinationConstraints: response.pollinationConstraints ?? [],
+          companionGroups: response.companionGroups ?? []
+        })
+      });
+      const body = (await res.json()) as ScheduleResponse | { error: string };
+      if (!res.ok) {
+        scheduleError = 'error' in body ? body.error : `HTTP ${res.status}`;
+        return;
+      }
+      scheduleResponse = body as ScheduleResponse;
+      const lines: string[] = [];
+      const fb = scheduleResponse.meta.fallback;
+      if (fb === 'no-api-key') {
+        lines.push('🛟 I picked dates with the deterministic scheduler (no Anthropic API key configured). Staggers and companion offsets are honored.');
+        if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
+        lines.push('');
+        lines.push('Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."');
+      } else if (fb === 'deterministic') {
+        // Help-seeking chat dialogue: the server's diagnosis names specific
+        // varieties + actionable suggestions in plain English. We don't show
+        // raw validator strings.
+        const dx = scheduleResponse.meta.diagnosis;
+        if (dx && (dx.summary || dx.suggestions.length > 0)) {
+          if (dx.summary) {
+            lines.push(`🛟 ${dx.summary}`);
+            lines.push('');
+            lines.push("I went with a safe-default plan above so you're not stuck — but you can probably do better. Here's what might help:");
+          } else {
+            lines.push("🛟 I couldn't fit your schedule cleanly. The deterministic plan above is a safe default, but here's what might help:");
+          }
+          if (dx.suggestions.length > 0) {
+            lines.push('');
+            for (const s of dx.suggestions) lines.push(`  • ${s}`);
+          }
+          lines.push('');
+          lines.push('What would you like me to try?');
+        } else {
+          // Diagnosis missing (older server, edge case) — keep a clean
+          // fallback message without the technical violation list.
+          lines.push("🛟 I couldn't fit your schedule cleanly, even after a retry. The deterministic plan above honors every hard constraint but isn't necessarily the most elegant arrangement.");
+          lines.push('');
+          lines.push("Tell me what to adjust — for example: \"drop one corn variety\", \"skip successions for sweet corn\", or \"just keep these dates and commit\".");
+        }
+      } else {
+        lines.push('📅 Planting dates proposed above.');
+        if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
+        if (scheduleResponse.advisories.length > 0) {
+          lines.push('');
+          for (const a of scheduleResponse.advisories) lines.push(`• ${a}`);
+        }
+        lines.push('');
+        lines.push('Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."');
+      }
+      // Start the schedule chat clean — don't carry allocation-step
+      // pollination notes or rationale into this conversation. Anything the
+      // user wants to revisit about the layout is on the Review step.
+      scheduleChatMessages = [{ role: 'assistant', content: lines.join('\n') }];
+      queueScrollChat();
+    } catch (e) {
+      scheduleError = e instanceof Error ? e.message : 'schedule request failed';
+    } finally {
+      scheduleLoading = false;
+      scheduleStartMs = null;
     }
   }
 
@@ -217,6 +686,15 @@
     if (!response) return;
     step = 'commit';
     error = null;
+
+    // Phase B5 — if the scheduler ran, commit one dated row per scheduled
+    // planting (successions are already split). Otherwise (no scheduler) fall
+    // back to the pre-B5 path that commits one undated row per assignment.
+    if (scheduleResponse && scheduleResponse.scheduled.length > 0) {
+      await commitScheduled(scheduleResponse.scheduled);
+      return;
+    }
+
     commitProgress = {
       done: 0,
       total: response.assignments.length,
@@ -244,6 +722,58 @@
         }
       } catch {
         commitProgress.failed.push(`${a.varietyDisplayName} → ${blockNameFor(a.blockId)}`);
+      }
+      commitProgress = { ...commitProgress, done: commitProgress.done + 1 };
+    }
+    if (commitProgress.failed.length === 0) {
+      onCommitted();
+    }
+  }
+
+  /** Phase B5 — dated commit. Walks the scheduler's `scheduled[]` and posts
+   *  one planting per dated row, including succession entries. Seed quantity
+   *  per row = (plants_i / total_plants_per_stock) × operator's original
+   *  selectedSeeds quantity so stock decrement matches what was actually
+   *  consumed. */
+  async function commitScheduled(plantings: ScheduledPlanting[]) {
+    commitProgress = {
+      done: 0,
+      total: plantings.length,
+      failed: []
+    };
+    // Pre-compute total plants per (stockItemId) and the operator's seed
+    // quantity so we can apportion per-row seed accurately.
+    const totalPlantsByStock = new Map<string, number>();
+    for (const p of plantings) {
+      totalPlantsByStock.set(p.stockItemId, (totalPlantsByStock.get(p.stockItemId) ?? 0) + p.plants);
+    }
+
+    for (const p of plantings) {
+      const seedEntry = seedStock.find((s) => s.stockItemId === p.stockItemId);
+      const unit = seedEntry?.defaultUnit ?? 'seeds';
+      const selectedQty = selectedSeeds.get(p.stockItemId) ?? 0;
+      const totalPlants = totalPlantsByStock.get(p.stockItemId) ?? 0;
+      const seedQty = totalPlants > 0 ? (p.plants / totalPlants) * selectedQty : 0;
+      const isInteger = unit === 'seeds' || unit === 'count' || unit === 'packets';
+      const quantityForCommit = isInteger ? Math.max(0, Math.round(seedQty)) : Number(seedQty.toFixed(3));
+      try {
+        const res = await fetch(`/api/blocks/${p.blockId}/plantings`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            cropPluginId: p.cropPluginId,
+            varietyDisplayName: p.varietyDisplayName,
+            quantityPlanted: quantityForCommit,
+            quantityUnit: unit,
+            stockItemId: p.stockItemId,
+            plantingDate: p.plantingDateMs
+          })
+        });
+        if (!res.ok) {
+          commitProgress.failed.push(`${p.varietyDisplayName} → ${blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`);
+        }
+      } catch {
+        commitProgress.failed.push(`${p.varietyDisplayName} → ${blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`);
       }
       commitProgress = { ...commitProgress, done: commitProgress.done + 1 };
     }
@@ -355,6 +885,63 @@
   }
 </script>
 
+{#snippet aiProgress(stage: ProgressStage, startMs: number | null)}
+  {@const elapsed = startMs == null ? 0 : Math.max(0, nowMs - startMs)}
+  <div class="ai-progress" role="status" aria-live="polite">
+    <span class="ai-spinner" aria-hidden="true"></span>
+    <div class="ai-progress-text">
+      <span class="ai-progress-label">{aiProgressLabel(stage, elapsed)}</span>
+      <span class="ai-progress-elapsed" aria-label="elapsed time">{fmtElapsed(elapsed)}</span>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet chatPanel()}
+  <section class="aw-chat" aria-label="Refine plan with AI">
+    <header class="aw-chat-header">
+      <h3>💬 Refine with AI</h3>
+      <span class="muted">
+        {#if step === 'schedule'}Ask for date changes; the schedule above updates each turn.
+        {:else}Ask for changes; the plan above updates each turn.
+        {/if}
+      </span>
+    </header>
+    <div class="aw-chat-log" bind:this={chatLogEl} role="log" aria-live="polite">
+      {#each chatMessages as msg, i (i)}
+        <div class={`chat-msg chat-${msg.role}`}>
+          <span class="chat-role" aria-hidden="true">{msg.role === 'assistant' ? '🌱' : '👤'}</span>
+          <pre class="chat-bubble">{msg.content}</pre>
+        </div>
+      {/each}
+      {#if chatBusy}
+        <div class="chat-msg chat-assistant">
+          <span class="chat-role" aria-hidden="true">🌱</span>
+          <span class="chat-bubble chat-thinking">
+            {aiProgressLabel(step === 'schedule' ? 'chat-schedule' : 'chat-allocate', chatStartMs == null ? 0 : Math.max(0, nowMs - chatStartMs))}
+            <span class="chat-elapsed">{fmtElapsed(chatStartMs == null ? 0 : Math.max(0, nowMs - chatStartMs))}</span>
+          </span>
+        </div>
+      {/if}
+    </div>
+    {#if chatError}<p class="aw-error chat-error" role="alert">{chatError}</p>{/if}
+    <form class="aw-chat-input" onsubmit={(e) => { e.preventDefault(); void sendChat(); }}>
+      <textarea
+        rows="2"
+        placeholder={step === 'schedule'
+          ? 'e.g. "Plant the corn the first week of May" or "Push brassicas two weeks later"'
+          : 'e.g. "Move the corn off the narrow block" or "Give the brassicas more room"'}
+        bind:value={chatDraft}
+        onkeydown={onChatKeydown}
+        disabled={chatBusy}
+        aria-label="Refinement request"
+      ></textarea>
+      <button type="submit" class="btn-primary chat-send" disabled={chatBusy || !chatDraft.trim()}>
+        {chatBusy ? '…' : 'Send'}
+      </button>
+    </form>
+  </section>
+{/snippet}
+
 <svelte:window on:keydown={onKeydown} />
 
 <div
@@ -366,7 +953,7 @@
 >
   <div class="aw-modal" role="dialog" aria-modal="true" aria-labelledby="aw-title">
     <header class="aw-header">
-      <h2 id="aw-title">✨ Suggest seed allocation</h2>
+      <h2 id="aw-title">✨ Plan Plantings</h2>
       <button class="aw-close" type="button" aria-label="Close" onclick={onClose}>✕</button>
     </header>
 
@@ -374,12 +961,19 @@
       <li class:active={step === 'seeds'} class:done={step !== 'seeds'}>1. Seeds</li>
       <li
         class:active={step === 'blocks'}
-        class:done={step === 'review' || step === 'commit'}
+        class:done={step === 'review' || step === 'schedule' || step === 'commit'}
       >
         2. Blocks
       </li>
-      <li class:active={step === 'review'} class:done={step === 'commit'}>3. Review</li>
-      <li class:active={step === 'commit'}>4. Commit</li>
+      <li
+        class:active={step === 'review'}
+        class:done={step === 'schedule' || step === 'commit'}
+      >3. Review</li>
+      <li
+        class:active={step === 'schedule'}
+        class:done={step === 'commit'}
+      >4. Schedule</li>
+      <li class:active={step === 'commit'}>5. Commit</li>
     </ol>
 
     {#if error && step !== 'commit' && step !== 'review'}
@@ -433,10 +1027,28 @@
               </thead>
               <tbody>
                 {#each seedFamilyGroups as g (g.family ?? '__unc__')}
+                  {@const famCount = familySelectedCount(g.items)}
                   <tr class="family-row">
                     <td colspan="5">
                       <span class="family-name">{g.family ?? 'Unclassified'}</span>
-                      <span class="muted">({g.items.length})</span>
+                      <span class="muted">({famCount} of {g.items.length} selected)</span>
+                      <span class="family-actions">
+                        <button
+                          type="button"
+                          class="family-action-btn"
+                          onclick={() => selectAllInFamily(g.items)}
+                          disabled={famCount === g.items.length}
+                          aria-label={`Select all ${g.family ?? 'unclassified'} seeds`}
+                        >Select all</button>
+                        {#if famCount > 0}
+                          <button
+                            type="button"
+                            class="family-action-btn family-action-clear"
+                            onclick={() => clearFamily(g.items)}
+                            aria-label={`Clear ${g.family ?? 'unclassified'} selection`}
+                          >Clear</button>
+                        {/if}
+                      </span>
                     </td>
                   </tr>
                   {#each g.items as s (s.stockItemId)}
@@ -525,7 +1137,7 @@
         </ul>
       {:else if step === 'review'}
         {#if loading}
-          <p class="aw-loading">Generating plan…</p>
+          {@render aiProgress('allocate', allocateStartMs)}
         {:else if error}
           <p class="aw-error">Error: {error}</p>
         {:else if response}
@@ -534,6 +1146,13 @@
               {response.meta.fallback === 'no-api-key'
                 ? 'No Anthropic API key configured — plan generated by the deterministic engine. Add a key on the Settings page to enable the AI rationale layer.'
                 : 'AI output failed validation; falling back to the deterministic engine.'}
+            </div>
+          {/if}
+          {#if (response.geometryMissingBlockIds ?? []).length > 0}
+            <div class="aw-banner info">
+              📐 Pollination check skipped for {response.geometryMissingBlockIds!.length} block{response.geometryMissingBlockIds!.length === 1 ? '' : 's'}
+              ({response.geometryMissingBlockIds!.map((id) => blockNameFor(id)).join(', ')})
+              — add field geometry on /fields to enable.
             </div>
           {/if}
           <p class="aw-rationale">{response.rationale}</p>
@@ -552,13 +1171,17 @@
                 {@const key = `${a.stockItemId}:${a.blockId}`}
                 {@const suff = response.sufficiency[key]}
                 {@const chip = suff ? sufficiencyChip(suff) : null}
+                {@const poll = pollinationSummary(a.stockItemId, a.blockId)}
                 <tr>
                   <td>{varietyDisplayFor(a.stockItemId)}</td>
                   <td>{blockNameFor(a.blockId)}</td>
                   <td>{a.plants.toLocaleString()}</td>
-                  <td>
+                  <td class="cell-fit">
                     {#if chip}
-                      <span class={`chip ${chip.cls}`} title={chip.tooltip}>{chip.label}</span>
+                      <span class={`chip chip-sm ${chip.cls}`} title={chip.tooltip}>{chip.label}</span>
+                    {/if}
+                    {#if poll}
+                      <span class="chip chip-sm chip-pollination" title={poll.tooltip}>{poll.label}</span>
                     {/if}
                   </td>
                   <td class="why">{response.perRowRationale[key] ?? ''}</td>
@@ -567,16 +1190,7 @@
             </tbody>
           </table>
 
-          {#if response.advisories && response.advisories.length > 0}
-            <section class="aw-advisories" aria-label="Things to consider">
-              <h3>Worth considering</h3>
-              <ul>
-                {#each response.advisories as a}
-                  <li>{a}</li>
-                {/each}
-              </ul>
-            </section>
-          {/if}
+          {@render chatPanel()}
 
           {#if response.unplaced.length > 0}
             <h3>Unplaced</h3>
@@ -593,6 +1207,62 @@
             <p class="aw-cost">
               Cost: ${response.meta.usdEstimate.toFixed(4)} ({response.meta.model})
             </p>
+          {/if}
+        {/if}
+      {:else if step === 'schedule'}
+        {#if response}
+          {#if scheduleLoading}
+            {@render aiProgress('schedule', scheduleStartMs)}
+          {:else if scheduleError}
+            <p class="aw-error">Error: {scheduleError}</p>
+            <button class="btn-secondary" onclick={advanceToSchedule}>Retry</button>
+          {:else if scheduleResponse}
+            {#if scheduleResponse.meta.fallback}
+              <div class="aw-banner info">
+                {scheduleResponse.meta.fallback === 'no-api-key'
+                  ? '🛟 Dates picked by the deterministic scheduler (no Anthropic API key). Staggers + companion offsets honored.'
+                  : '🛟 AI needed help — deterministic scheduler took over. See chat below for what tripped it up and refine from there.'}
+              </div>
+            {/if}
+            <p class="aw-rationale">{scheduleResponse.rationale}</p>
+            <table class="aw-table">
+              <thead>
+                <tr>
+                  <th>Seed</th>
+                  <th>Block</th>
+                  <th>Planting date</th>
+                  <th>Plants</th>
+                  <th>Why</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each scheduleResponse.scheduled as p, i (i)}
+                  <tr>
+                    <td>
+                      {p.varietyDisplayName}
+                      {#if p.successionIndex}
+                        <span class="chip chip-succession" title="Succession sowing">
+                          {p.successionIndex.i}/{p.successionIndex.n}
+                        </span>
+                      {/if}
+                    </td>
+                    <td>{blockNameFor(p.blockId)}</td>
+                    <td>{fmtDateMs(p.plantingDateMs)}</td>
+                    <td>{p.plants.toLocaleString()}</td>
+                    <td class="why">{p.rationale}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+            {#if scheduleResponse.advisories.length > 0}
+              <section class="aw-banner info">
+                <strong>Schedule notes:</strong>
+                <ul>
+                  {#each scheduleResponse.advisories as a}<li>{a}</li>{/each}
+                </ul>
+              </section>
+            {/if}
+            {@render chatPanel()}
           {/if}
         {/if}
       {:else if step === 'commit'}
@@ -635,10 +1305,25 @@
         <button class="btn-secondary" onclick={generatePlan} disabled={loading}>Regenerate</button>
         <button
           class="btn-primary"
-          onclick={commit}
+          onclick={advanceToSchedule}
           disabled={!response || response.assignments.length === 0}
+          title="Locks the layout above and moves on to picking planting dates."
         >
-          Accept all
+          Accept all → schedule
+        </button>
+      {:else if step === 'schedule'}
+        <button class="btn-secondary" onclick={() => (step = 'review')}>Back to allocation</button>
+        <button
+          class="btn-secondary"
+          onclick={advanceToSchedule}
+          disabled={scheduleLoading}
+        >Re-schedule</button>
+        <button
+          class="btn-primary"
+          onclick={commit}
+          disabled={scheduleLoading || !scheduleResponse || scheduleResponse.scheduled.length === 0}
+        >
+          Commit plantings ({scheduleResponse?.scheduled.length ?? 0})
         </button>
       {:else if step === 'commit'}
         <button
@@ -802,6 +1487,38 @@
   .family-row .family-name {
     margin-right: 0.4rem;
   }
+  .family-actions {
+    float: right;
+    display: inline-flex;
+    gap: 0.4rem;
+  }
+  .family-action-btn {
+    background: white;
+    color: #1f5e3a;
+    border: 1px solid #1f5e3a;
+    border-radius: 4px;
+    padding: 0.12rem 0.55rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+    min-height: 24px;
+  }
+  .family-action-btn:hover:not(:disabled) {
+    background: #f0f5f1;
+  }
+  .family-action-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .family-action-clear {
+    border-color: #b8860b;
+    color: #6a4f00;
+  }
+  .family-action-clear:hover {
+    background: #fff8e6;
+  }
   .aw-info {
     display: inline-block;
     margin-left: 0.25rem;
@@ -923,26 +1640,107 @@
     color: #1f5e3a;
     font-size: 0.95rem;
   }
-  .aw-advisories {
-    background: #fff8e6;
-    border-left: 3px solid #b8860b;
-    padding: 0.6rem 1rem 0.75rem;
-    margin: 0.75rem 0;
-    color: #6a4f00;
+  .aw-chat {
+    margin: 1rem 0 0.25rem;
+    border: 1px solid #cbd5cb;
+    border-radius: 10px;
+    background: #fafcfa;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
-  .aw-advisories h3 {
-    margin: 0 0 0.4rem;
-    font-size: 0.95rem;
-    color: #6a4f00;
+  .aw-chat-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.55rem 0.9rem;
+    background: #eef4ef;
+    border-bottom: 1px solid #d8e2d8;
+    gap: 0.75rem;
   }
-  .aw-advisories ul {
+  .aw-chat-header h3 {
     margin: 0;
-    padding-left: 1.2rem;
+    font-size: 0.95rem;
+    color: #1f5e3a;
   }
-  .aw-advisories li {
+  .aw-chat-log {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    max-height: 280px;
+    overflow-y: auto;
+    background: white;
+  }
+  .chat-msg {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+  .chat-msg.chat-user {
+    flex-direction: row-reverse;
+  }
+  .chat-role {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    flex-shrink: 0;
+  }
+  .chat-bubble {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
     font-size: 0.92rem;
     line-height: 1.4;
-    margin-bottom: 0.25rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-width: 80%;
+    font-family: inherit;
+  }
+  .chat-msg.chat-assistant .chat-bubble {
+    background: #f3f9f4;
+    color: #1f3a26;
+    border-top-left-radius: 4px;
+  }
+  .chat-msg.chat-user .chat-bubble {
+    background: #1f5e3a;
+    color: white;
+    border-top-right-radius: 4px;
+  }
+  .chat-thinking {
+    font-style: italic;
+    color: #4a5d4a;
+  }
+  .chat-error {
+    margin: 0.25rem 0.9rem 0;
+    font-size: 0.85rem;
+  }
+  .aw-chat-input {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem 0.75rem;
+    background: #fafcfa;
+    border-top: 1px solid #e4e9e4;
+  }
+  .aw-chat-input textarea {
+    flex: 1;
+    min-height: 44px;
+    max-height: 140px;
+    resize: vertical;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid #cbd5cb;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .aw-chat-input textarea:focus {
+    outline: 2px solid #1f5e3a;
+    outline-offset: 1px;
+  }
+  .chat-send {
+    align-self: stretch;
+    min-height: 44px;
+    padding: 0 1rem;
   }
   .aw-banner.warn {
     background: #fff8e6;
@@ -951,6 +1749,92 @@
     margin-bottom: 0.75rem;
     color: #6a4f00;
     font-size: 0.92rem;
+  }
+  .aw-banner.info {
+    background: #eaf3fb;
+    border-left: 3px solid #2e6dbf;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+    color: #1f4a85;
+    font-size: 0.92rem;
+  }
+  .chip-pollination {
+    background: #fbe7d8;
+    color: #8a3a00;
+    cursor: help;
+  }
+  .chip-sm {
+    padding: 0.08rem 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.35;
+    display: inline-block;
+    margin: 0 0.25rem 0.25rem 0;
+    max-width: 26rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  td.cell-fit {
+    max-width: 28rem;
+    min-width: 12rem;
+  }
+  .aw-schedule-coming-soon {
+    font-style: italic;
+    margin: 0.75rem 0 0;
+  }
+  .chip-succession {
+    background: #e6efff;
+    color: #1f4a85;
+    margin-left: 0.3rem;
+    font-weight: 600;
+  }
+  .ai-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #f3f9f4;
+    border: 1px solid #cbd5cb;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: #1f5e3a;
+  }
+  .ai-progress-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    line-height: 1.3;
+  }
+  .ai-progress-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .ai-progress-elapsed {
+    font-size: 0.78rem;
+    color: #4a5d4a;
+    font-variant-numeric: tabular-nums;
+  }
+  .ai-spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cbd5cb;
+    border-top-color: #1f5e3a;
+    border-radius: 50%;
+    animation: ai-spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes ai-spin {
+    to { transform: rotate(360deg); }
+  }
+  .chat-elapsed {
+    display: block;
+    font-size: 0.72rem;
+    color: #4a5d4a;
+    font-variant-numeric: tabular-nums;
+    margin-top: 0.15rem;
+    font-style: normal;
   }
   .aw-error {
     color: #b22222;

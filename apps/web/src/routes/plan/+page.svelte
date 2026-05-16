@@ -2866,9 +2866,9 @@
           type="button"
           class="ai-allocate-btn"
           onclick={() => (showAllocationWizard = true)}
-          title="Use AI to suggest seed-to-block placements"
+          title="Plan plantings from your seed stock — AI picks blocks and dates"
         >
-          ✨ Suggest allocation
+          ✨ Plan Plantings
         </button>
       {/if}
       {#if (data.seedStock ?? []).length === 0}

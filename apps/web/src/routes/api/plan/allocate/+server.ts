@@ -67,6 +67,7 @@ export const POST: RequestHandler = async (event) => {
 
   const registry = await getRegistry();
   const pluginIndex: Record<string, CropPlugin> = {};
+  const companionSystems: CompanionPlugin[] = [];
   const companionsBuilder: Record<string, { goodWith: Set<string>; badWith: Set<string> }> = {};
   const ensureCompanionEntry = (id: string) => {
     if (!companionsBuilder[id]) {
@@ -79,6 +80,7 @@ export const POST: RequestHandler = async (event) => {
       pluginIndex[r.plugin.pluginId] = r.plugin as CropPlugin;
     } else if (r.plugin.type === 'companion') {
       const c = r.plugin as CompanionPlugin;
+      companionSystems.push(c);
       for (const id of c.goodWith) {
         const entry = ensureCompanionEntry(id);
         for (const partner of c.goodWith) {
@@ -137,7 +139,8 @@ export const POST: RequestHandler = async (event) => {
     const result = await allocate(planInput, built.context, {
       planningSessionId: parsed.data.planningSessionId,
       contextCacheHit: built.cacheHit,
-      contextVersion: built.contextVersion
+      contextVersion: built.contextVersion,
+      companionSystems
     });
     recordCall({
       userId: user.id,
@@ -157,6 +160,9 @@ export const POST: RequestHandler = async (event) => {
       rationale: result.rationale,
       perRowRationale: result.perRowRationale,
       advisories: result.advisories,
+      pollinationConstraints: result.pollinationConstraints,
+      geometryMissingBlockIds: result.geometryMissingBlockIds,
+      companionGroups: result.companionGroups,
       meta: {
         model: result.meta.model,
         usdEstimate: result.meta.usdEstimate,

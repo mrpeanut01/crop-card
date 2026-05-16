@@ -97,6 +97,32 @@
   function lotLabel(lot: { lotNumber?: string; receivedAt: number }) {
     return lot.lotNumber ?? `received ${fmtDate(lot.receivedAt)}`;
   }
+
+  type PlateConfig = {
+    plateNumber: string;
+    series?: string;
+    brand?: string;
+    cells?: number;
+    color?: string;
+    dimensions?: string;
+    L?: number;
+    D?: number;
+    T?: number;
+    shape?: string;
+    seedType?: string;
+    gradeSize?: string;
+    seedDimensions?: { L?: number; D?: number; T?: number; tolerance?: number };
+    savedAt?: string;
+  };
+  const plateConfig = $derived.by<PlateConfig | null>(() => {
+    if (!item.metadataJson) return null;
+    try {
+      const parsed = JSON.parse(item.metadataJson);
+      return (parsed?.planterPlateConfig as PlateConfig) ?? null;
+    } catch {
+      return null;
+    }
+  });
 </script>
 
 <header class="head">
@@ -126,6 +152,49 @@
   </dl>
   {#if item.notes}<p class="notes">{item.notes}</p>{/if}
 </section>
+
+{#if item.category === 'seed'}
+  <section class="card planter-plate-card" aria-labelledby="plate-h">
+    <h2 id="plate-h">Planter plate</h2>
+    {#if plateConfig}
+      <dl class="plate-summary">
+        <dt>Plate</dt>
+        <dd><strong class="plate-num">{plateConfig.plateNumber}</strong></dd>
+        {#if plateConfig.color}
+          <dt>Color</dt>
+          <dd>{plateConfig.color}</dd>
+        {/if}
+        {#if plateConfig.dimensions}
+          <dt>Dimensions</dt>
+          <dd>{plateConfig.dimensions} <small>(L-D-T, 64ths in)</small></dd>
+        {/if}
+        {#if plateConfig.shape}
+          <dt>Shape</dt>
+          <dd>{plateConfig.shape}</dd>
+        {/if}
+        {#if plateConfig.cells !== undefined}
+          <dt>Cells</dt>
+          <dd>{plateConfig.cells}</dd>
+        {/if}
+        {#if plateConfig.series}
+          <dt>Series</dt>
+          <dd>{plateConfig.series === 'B' ? 'John Deere (B)' : 'IHC (C)'}</dd>
+        {/if}
+        {#if plateConfig.seedDimensions && (plateConfig.seedDimensions.L ?? plateConfig.seedDimensions.D ?? plateConfig.seedDimensions.T) !== undefined}
+          <dt>Seed dims used</dt>
+          <dd>
+            {plateConfig.seedDimensions.L ?? '—'}-{plateConfig.seedDimensions.D ?? '—'}-{plateConfig.seedDimensions.T ?? '—'}
+            (±{plateConfig.seedDimensions.tolerance ?? 0})
+          </dd>
+        {/if}
+      </dl>
+      <a class="secondary" href="/tools/planter-plate-selector?stockId={item.id}">Re-run plate selector</a>
+    {:else}
+      <p class="empty">No plate matched to this seed yet.</p>
+      <a class="primary" href="/tools/planter-plate-selector?stockId={item.id}">Find planter plate</a>
+    {/if}
+  </section>
+{/if}
 
 {#if data.canEdit}
   <section class="card">
@@ -334,6 +403,33 @@
   .summary {
     background: #f8fbf9;
     border-left: 4px solid #1f5e3a;
+  }
+  .planter-plate-card {
+    background: #f8fbf9;
+    border-left: 4px solid #4d8e36;
+  }
+  .planter-plate-card .plate-summary {
+    margin-bottom: 0.75rem;
+  }
+  .planter-plate-card .plate-num {
+    font-family: monospace;
+    font-size: 1.1rem;
+    color: #1f5e3a;
+  }
+  .planter-plate-card .secondary,
+  .planter-plate-card .primary {
+    display: inline-block;
+    text-decoration: none;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    min-height: 48px;
+    line-height: 1.6;
+  }
+  .planter-plate-card .secondary {
+    background: white;
+    color: #1f5e3a;
+    border: 2px solid #1f5e3a;
   }
   dl {
     display: grid;

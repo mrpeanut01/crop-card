@@ -19,6 +19,8 @@ import { db } from '$lib/db/client';
 import { aiCallLog } from '$lib/db/schema';
 import { type AiEndpointName } from '$lib/schedule/constants';
 import { getAiDailyCallQuota, getAiMonthlyUsdCap } from '$lib/schedule/settings';
+import { currentOwnerId } from '$lib/db/tenant';
+import { incrementUsageCounter } from './superadmin';
 
 export type GuardOutcome =
   | { ok: true; spend: { monthlyUsdSoFar: number; cap: number; warnAt80: boolean } }
@@ -107,9 +109,20 @@ export interface RecordCallInput {
 }
 
 export function recordCall(input: RecordCallInput): void {
+  // Phase 18a/g: aiCallLog is tenant-scoped; stamp the active owner alongside
+  // the audit row. Bump the usage counter for the (owner, current period) so
+  // metered-billing has data on day one. AI calls outside a tenant context
+  // are vanishingly rare (background jobs); when they happen, skip the log
+  // rather than write a NULL owner_id that violates the NOT NULL invariant.
+  const ownerId = currentOwnerId();
+  if (!ownerId) {
+    console.warn('[ai] recordCall outside tenant context; skipping ai_call_log entry');
+    return;
+  }
   db.insert(aiCallLog)
     .values({
       id: randomUUID(),
+      ownerId,
       userId: input.userId,
       endpoint: input.endpoint,
       model: input.model,
@@ -121,6 +134,11 @@ export function recordCall(input: RecordCallInput): void {
       errorClass: input.errorClass ?? null
     })
     .run();
+  try {
+    incrementUsageCounter(ownerId, { aiCalls: 1 });
+  } catch (err) {
+    console.error('[usage] failed to increment ai_calls counter', err);
+  }
 }
 
 /** Aggregate spend snapshot for the settings UI widget. */

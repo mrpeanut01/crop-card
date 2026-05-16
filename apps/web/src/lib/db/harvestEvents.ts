@@ -4,16 +4,18 @@
  * Records: variety, block, harvest date, quantity, lot number. Surfaces a
  * curing-status field so post-harvest tracking can update without re-entering
  * the row. Same retention + immutability semantics as spray records.
+ *
+ * Phase 18a: tenant-scoped.
  */
 
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import { db } from './client';
 import { harvestEvents } from './schema';
+import { tenantValues, withTenant } from './tenant';
 
 export interface HarvestEventInput {
   blockId: string;
-  /** Phase 12: per-crop attribution. Nullable for back-compat. */
   cropId?: string;
   cropPluginId: string;
   occurredAt: number;
@@ -29,15 +31,17 @@ export function insertHarvestEvent(input: HarvestEventInput): HarvestEvent {
   const id = randomUUID();
   const row = db
     .insert(harvestEvents)
-    .values({
-      id,
-      blockId: input.blockId,
-      cropId: input.cropId ?? null,
-      cropPluginId: input.cropPluginId,
-      occurredAt: new Date(input.occurredAt),
-      quantity: input.quantity ?? null,
-      lotNumber: input.lotNumber ?? null
-    })
+    .values(
+      tenantValues({
+        id,
+        blockId: input.blockId,
+        cropId: input.cropId ?? null,
+        cropPluginId: input.cropPluginId,
+        occurredAt: new Date(input.occurredAt),
+        quantity: input.quantity ?? null,
+        lotNumber: input.lotNumber ?? null
+      })
+    )
     .returning()
     .get();
   return rowToEvent(row);
@@ -59,8 +63,11 @@ export function listHarvestEvents(filters: ListFilters = {}): HarvestEvent[] {
   if (filters.toMs !== undefined)
     conditions.push(lte(harvestEvents.occurredAt, new Date(filters.toMs)));
 
-  let q = db.select().from(harvestEvents).$dynamic();
-  if (conditions.length > 0) q = q.where(and(...conditions));
+  let q = db
+    .select()
+    .from(harvestEvents)
+    .where(withTenant(harvestEvents, conditions.length ? and(...conditions) : undefined))
+    .$dynamic();
   q = q.orderBy(desc(harvestEvents.occurredAt));
   return q.all().map(rowToEvent);
 }

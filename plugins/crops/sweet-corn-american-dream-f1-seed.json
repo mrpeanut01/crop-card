@@ -1,0 +1,20 @@
+{
+  "pluginId": "sweet-corn-american-dream-f1-seed",
+  "displayName": "Sweet Corn American Dream F1 Seed",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "corn",
+  "daysToMaturity": {
+    "min": 75,
+    "max": 75
+  },
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 12,
+    "seedDepthIn": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  "notes": "Bicolor SE type; 7.5\" trim ears, 16-18 rows; 6' plants, ears at 26\"; intermediate resistance to NCLB. Isolation required. Raw/untreated."
+}

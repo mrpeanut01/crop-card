@@ -1,0 +1,20 @@
+{
+  "pluginId": "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed",
+  "displayName": "Bean Kentucky Blue Pole Seed – Standard Cruiser Treated (1,000 Seeds)",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "legume",
+  "daysToMaturity": {
+    "min": 63,
+    "max": 63
+  },
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 3,
+    "seedDepthIn": {
+      "min": 1.3,
+      "max": 1.3
+    }
+  },
+  "notes": "Cross of Kentucky Wonder x Blue Lake. 6-7\" pods on 6-8' vines. Cruiser (thiamethoxam) treated. Also avail: 100 seeds ($8.58), 10,000 seeds ($101.72)."
+}

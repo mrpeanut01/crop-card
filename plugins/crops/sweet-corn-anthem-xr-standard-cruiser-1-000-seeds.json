@@ -1,0 +1,20 @@
+{
+  "pluginId": "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds",
+  "displayName": "Sweet Corn Anthem XR Standard Cruiser — 1,000 Seeds",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "corn",
+  "daysToMaturity": {
+    "min": 73,
+    "max": 73
+  },
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 10,
+    "seedDepthIn": {
+      "min": 1.375,
+      "max": 1.375
+    }
+  },
+  "notes": "73-day sweet corn. Large 7–8\" ears, rust resistance (Rp1-G). Treated: Azoxystrobin, Difenoconazole, Fludioxonil, Mefenoxam, Sedaxane, Thiamethoxam, Thiophanate."
+}

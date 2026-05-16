@@ -1,0 +1,20 @@
+{
+  "pluginId": "carrot-scarlet-nantes-seed",
+  "displayName": "Carrot Scarlet Nantes Seed",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "root",
+  "daysToMaturity": {
+    "min": 68,
+    "max": 68
+  },
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 3,
+    "seedDepthIn": {
+      "min": 0.25,
+      "max": 0.25
+    }
+  },
+  "notes": "OP Nantes type; sweet, tender, crisp. Film coated/treated or raw/untreated. Also avail: 1/2 oz, 1 oz, 1/4 lb, 1 lb variants."
+}

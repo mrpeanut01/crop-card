@@ -1,0 +1,20 @@
+{
+  "pluginId": "popcorn-top-pop-f1-seed-standard-treated-100-seeds",
+  "displayName": "Popcorn Top Pop F1 Seed – Standard Treated, 100 Seeds",
+  "version": "1.0.0",
+  "type": "crop",
+  "cropFamily": "corn",
+  "daysToMaturity": {
+    "min": 95,
+    "max": 95
+  },
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 9,
+    "seedDepthIn": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  "notes": "F1 hybrid popcorn; yellow ears; deep kernels pop to large sunbursts. Also avail: 1,000 seeds ($14.73) and 10,000 seeds ($149.50). Standard Treated."
+}

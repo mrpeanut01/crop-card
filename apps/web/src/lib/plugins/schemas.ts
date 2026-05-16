@@ -291,6 +291,35 @@ export type Agronomy = z.infer<typeof agronomySchema>;
 
 export const SPRAY_WINDOW_ANCHORS = ['planting', 'emergence', 'stage'] as const;
 
+/**
+ * Phase 21 (B-25) — slot taxonomy + strategy gates on per-crop spray windows.
+ *
+ * `purpose` lets the Phase 21 inputs planner know which "slot" each window
+ * fills (burndown vs PRE vs POST herbicide; scheduled insecticide vs scout
+ * placeholder; sidedress-N; fungicide; cover-crop terminate). Without
+ * `purpose` tags, the planner cannot decide whether a `synthetic-auxin`
+ * window is for weeds or for something else.
+ *
+ * `weedStrategyGate` / `pestStrategyGate` are minimum-eligibility filters:
+ * a window with `pestStrategyGate: 'preventive'` is emitted ONLY when the
+ * Season Setup picks `pestStrategy === 'preventive'`. Absent gate = always
+ * emit (back-compat with v1 plugins that lack the field).
+ *
+ * All three fields are optional + additive — v1 plugins remain valid.
+ */
+export const SPRAY_WINDOW_PURPOSES = [
+  'burndown',
+  'pre-emergent',
+  'post-emergent',
+  'insecticide-prophylactic',
+  'insecticide-scouted',
+  'fungicide',
+  'sidedress-n',
+  'sidedress-other',
+  'cover-terminate'
+] as const;
+export type SprayWindowPurpose = (typeof SPRAY_WINDOW_PURPOSES)[number];
+
 export const cropSprayWindowSchema = z
   .object({
     /** Chemistry class the window applies to (matches kernel chemistry-class
@@ -305,7 +334,25 @@ export const cropSprayWindowSchema = z
     /** What the offset is measured from. */
     anchor: z.enum(SPRAY_WINDOW_ANCHORS),
     title: z.string().min(1).max(120),
-    body: z.string().max(500).optional()
+    body: z.string().max(500).optional(),
+    /** Phase 21 — slot the window fills. Consumed by the Phase 21 inputs
+     *  planner (`lib/plan/inputsPlan.ts`). Optional for back-compat with
+     *  v1 plugins; the planner emits a warning when missing rather than
+     *  inferring from chemistryClass + title (which is unreliable). */
+    purpose: z.enum(SPRAY_WINDOW_PURPOSES).optional(),
+    /** Phase 21 — minimum Season Setup `weedStrategy` that should emit
+     *  this window. Absent = always emit. Example: a `pre-emergent`
+     *  window with `weedStrategyGate: 'pre-emergence-ok'` is excluded
+     *  for `weedStrategy: 'cultivate-first'` users. */
+    weedStrategyGate: z
+      .enum(['cultivate-first', 'pre-emergence-ok', 'post-emergence-ok'])
+      .optional(),
+    /** Phase 21 — minimum Season Setup `pestStrategy` that should emit
+     *  this window. Absent = always emit. Example: an `insecticide-
+     *  prophylactic` window with `pestStrategyGate: 'preventive'` is
+     *  excluded for `pestStrategy: 'ipm'` users (who get scout tasks
+     *  instead). */
+    pestStrategyGate: z.enum(['preventive', 'ipm']).optional()
   })
   .refine((v) => v.offsetDaysMin <= v.offsetDaysMax, {
     message: 'offsetDaysMin must be ≤ offsetDaysMax'
@@ -476,6 +523,42 @@ const ratesPerZoneSchema = z.array(
   })
 );
 
+/**
+ * Phase 21 (B-25) — input-plugin compliance flags consumed by the
+ * `lib/season/philosophyFilter.ts` allow-deny matrix. Each flag is OPTIONAL
+ * and "absent = unknown". The planner treats unknown as excluded — a safe
+ * default that avoids retroactively breaking existing plugins (none of
+ * which have the flags set today). Authors tag flags conservatively (only
+ * mark `omriListed: true` when label-verified).
+ *
+ * Allow-deny matrix (per `philosophyFilter.ts`):
+ *   conventional               — all allowed (no flag check)
+ *   non-gmo                    — requires `nonGmoCompliant === true`
+ *   organic-transitioning      — requires `transitioningAllowed === true`
+ *                                  OR `omriListed === true`
+ *   certified-organic          — requires `omriListed === true`
+ *                                  AND `certifiedOrganicAllowed !== false`
+ */
+export const complianceFlagsSchema = z
+  .object({
+    /** OMRI-Listed for USDA-organic use (label-verified). */
+    omriListed: z.boolean().optional(),
+    /** Active ingredients are not GMO-derived. */
+    nonGmoCompliant: z.boolean().optional(),
+    /** Usable under National Organic Program rules. Authors set this to
+     *  false to actively exclude a product from certified-organic use
+     *  even if it would otherwise be OMRI-allowed (e.g., a recall). */
+    certifiedOrganicAllowed: z.boolean().optional(),
+    /** Usable during the 3-year organic transition window (slightly more
+     *  permissive than NOP — allows certain conventional inputs in the
+     *  early transition years). */
+    transitioningAllowed: z.boolean().optional(),
+    /** Author note explaining the compliance decision; surfaced in the
+     *  product picker tooltip on the Inputs Plan step. */
+    notes: z.string().max(500).optional()
+  })
+  .optional();
+
 export const herbicidePluginSchema = pluginBase.extend({
   type: z.literal('herbicide'),
   activeIngredients: z.array(activeIngredientSchema).min(1),
@@ -524,6 +607,8 @@ export const herbicidePluginSchema = pluginBase.extend({
       safeForCropPluginIds: z.array(z.string()).optional()
     })
     .optional(),
+  /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
+  complianceFlags: complianceFlagsSchema,
   notes: z.string().optional()
 });
 
@@ -600,6 +685,8 @@ export const insecticidePluginSchema = pluginBase.extend({
       safeForCropFamilies: z.array(z.enum(CROP_FAMILIES)).optional()
     })
     .optional(),
+  /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
+  complianceFlags: complianceFlagsSchema,
   notes: z.string().optional()
 });
 
@@ -643,6 +730,8 @@ export const fungicidePluginSchema = pluginBase.extend({
       safeForCropFamilies: z.array(z.enum(CROP_FAMILIES)).optional()
     })
     .optional(),
+  /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
+  complianceFlags: complianceFlagsSchema,
   notes: z.string().optional()
 });
 
@@ -676,6 +765,12 @@ export const fertilizerPluginSchema = pluginBase.extend({
     })
     .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
     .optional(),
+  /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. The
+   *  fertilizer plugin already carries `organic: boolean`; that flag is
+   *  the source of truth for "is this an organic-source amendment" while
+   *  `complianceFlags` adds the NOP / OMRI distinction (e.g., a manure
+   *  compost can be `organic: true` but `omriListed: false` if uncertified). */
+  complianceFlags: complianceFlagsSchema,
   notes: z.string().optional()
 });
 

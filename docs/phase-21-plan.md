@@ -109,7 +109,7 @@ Low. Pure additive. No migration. No safety-kernel touch. CLAUDE.md invariant #6
 
 ## Sub-task B — Plugin schema additions for input planning
 
-**Status:** pending.
+**Status:** ✓ shipped on `phase-21a-foundations` (pending commit). Schema + helper + tests + JSON-schema regen all landed. **Plugin-data backfill (tagging `complianceFlags` on input plugins + `purpose` on the 29 crop plugins that carry `sprayWindows[]`) is intentionally deferred to a follow-up commit** — the schema fields are all optional, B-26 (deterministic planner) uses hand-crafted fixtures in its tests, and untagged plugins simply surface as "no philosophy-compliant product" warnings in the UI. Backfill is content work that's separable from the schema change; it will be tracked as a new low-priority backlog item once the planner is live and the operator can see exactly which plugins need flagging.
 **Persona:** P1 (data consumer); plugin authors are the producers.
 **Ships:** additive plugin fields so the planner can filter by philosophy + know what slot each spray window fills. No breaking changes; v1 plugins remain valid.
 

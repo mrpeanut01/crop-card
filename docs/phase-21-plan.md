@@ -325,7 +325,7 @@ Medium. UI surface area is largest; risk is in glove-operable affordances and th
 
 ## Sub-task F — Remediation (parallel; ships any time)
 
-**Status:** pending.
+**Status:** ✓ shipped on `phase-21a-foundations` (F.1 in pending commit; F.2 no-op verified). F.1 added a `display_planter_setup` gate on `/tools` index + a redirect guard on `/tools/planter-plate-selector` (default off; opt-in via Settings → Display). F.2 was a no-op: the geometry-missing banner already uses `aw-banner info` (blue) not `aw-banner warn` (yellow), and the pollination panel already only renders when constraints exist — no code change needed.
 
 ### F.1 — Gate UC-41 planter-plate UI behind `display_planter_setup` setting
 

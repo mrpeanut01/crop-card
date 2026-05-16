@@ -1,6 +1,6 @@
 # Feature backlog — CropCard
 
-UC × functionality audit performed 2026-05-16. This file is the working backlog; it derives from [use-cases.md](./use-cases.md), [personas.md](./personas.md), and [CLAUDE.md](../CLAUDE.md) "open follow-ups". Update this list when items ship or scope changes.
+UC × functionality audit performed 2026-05-16. Refined 2026-05-16. This file is the working backlog; it derives from [use-cases.md](./use-cases.md), [personas.md](./personas.md), and [CLAUDE.md](../CLAUDE.md) "open follow-ups". Update this list when items ship or scope changes.
 
 Status conventions:
 
@@ -15,206 +15,218 @@ Priority conventions:
 - **P1** — documented gap with clear user impact; ship this season.
 - **P2** — polish, micro-improvement, or speculative; ship when convenient.
 
+Sprint state (post-2026-05-16 refinement):
+
+- **Sprint E** (hay + small grain, FR-19..FR-23) — effectively closed. Last gap was B-01 (UC-16 small-grain harvest moisture); demoted to P2 since no small grain is being planted in 2026. Reopen Sprint E if grain enters the rotation.
+- **Sprint D'** (UC-22 inspector export polish) — closes when B-04 ships (now P0).
+- **Phase 21** (Season Setup + AI Inputs Plan) — in progress; sub-task A active; tracker at [phase-21-plan.md](./phase-21-plan.md).
+
 ---
 
 ## 1 — Audit findings (status drift in `use-cases.md`)
 
-These are not feature work; they are corrections to the spec doc itself. The summary table at the bottom of [use-cases.md](./use-cases.md) still labels rows that have shipped as "Proposed".
+These are not feature work; they are corrections to the spec doc itself. **Being addressed in the same refinement pass** that produced this file — the table below is the closeout checklist.
 
 | UC | Doc status | Code reality | Action |
 | --- | --- | --- | --- |
 | UC-20 | "Proposed" | Implemented — [`/onboarding`](../apps/web/src/routes/onboarding/+page.svelte) creates an `owners` row + Home Field on first sign-in (Phase 18f) | Flip table row to **Implemented**; remove "Proposed primary path" from body |
 | UC-21 | "Proposed" | Implemented — [`/settings/helpers`](../apps/web/src/routes/settings/helpers/+page.svelte) issues SHA-256-hashed invite tokens via `lib/server/invites.ts` (Phase 18e) | Flip to **Implemented**; cross-link to UC-17 |
-| UC-35 | "Implemented (API only)" | Implemented — wipe UI lives in [`/settings/+page.svelte`](../apps/web/src/routes/settings/+page.svelte) Danger Zone (line ~1436, `WIPE-EVERYTHING` confirm) | Drop the "API only" qualifier |
-| Missing `/docs/usability-audit.md` | use-cases.md links to it from 5+ places | File is absent from the repo | Either restore the audit doc from a prior commit, or replace cross-references with this backlog + `clickthrough-reports/` |
-
-Cost: ~20 minutes of editing on `use-cases.md`. Defer the missing audit doc decision to the user.
+| UC-35 | "Implemented (API only)" | Implemented — wipe UI lives in [`/settings/+page.svelte`](../apps/web/src/routes/settings/+page.svelte) Danger Zone | Drop the "API only" qualifier |
+| `docs/usability-audit.md` | use-cases.md links to it from 5+ places | File retired per refinement decision | Replace cross-references with this backlog + `clickthrough-reports/` + `phase-21-plan.md` |
 
 ---
 
 ## 2 — P0 backlog (ship next)
 
-### B-01 · UC-16 small-grain harvest-moisture capture *(spec-defined, NOT implemented)*
+### B-24 · Phase 21 / Sub-task A — Season Setup form (UC-42) *(in progress)*
 
-- **Persona:** P3 (Hay Operator); P1 secondary.
-- **Why P0:** UC-16 is normative from HCD Guide §3.6 and is the only outstanding hay/small-grain gap after Sprint E. FR-21 (moisture gate) extends here.
-- **Scope:**
-  1. Add `moisturePercent` (hundredths) + `moistureReadingsJson` to `harvest_events`; Drizzle migration + `RULES_VERSION` bump.
-  2. Extend [`harvest/+page.svelte`](../apps/web/src/routes/harvest/+page.svelte) record form: when the active crop plugin has `moistureGates`, surface a daily-reading input + a target-band indicator and a "trend" sparkline.
-  3. Server-side gate: refuse to record harvest if measured moisture is outside the plugin's hard-fail band (mirrors the bale-moisture kernel rule at FR-21).
-  4. Export column added to CSV/PDF on `/records` (UC-09).
-  5. Vitest property tests for the kernel rule; integration test for the trend chart.
-- **Acceptance:**
-  - Wheat harvest record carries `moisturePercent`; inspector export shows the column.
-  - Plugin-declared `moistureGates.bandPct` outside-band attempts return 422 from the API regardless of UI.
-- **Estimate:** 1.5 days (kernel rule + migration + UI + tests).
+- **Persona:** P1.
+- **Why P0:** Foundational for Phase 21. Without a captured input philosophy, the downstream AI inputs planner has no signal and silently falls back to conventional defaults.
+- **Status:** In progress; see [phase-21-plan.md §A](./phase-21-plan.md#sub-task-a--season-setup-foundational) and issue #41.
+- **Estimate:** ~0.5 day.
 
-### B-02 · UC-15 stage-gated task auto-firing *(observation capture deferred)*
+### B-25 · Phase 21 / Sub-task B — Plugin schema additions for input planning
 
-- **Persona:** P1, P3.
-- **Why P0:** UC-15 is normative. Stage *projection* shipped in v1.3; the missing piece is auto-firing tasks (e.g., "Z30 — N topdress now") from `stage-window` engine events into the task table.
-- **Scope:**
-  1. Extend [`lib/tasks/`](../apps/web/src/lib/tasks/) materializer to subscribe to `stage-window` events from [`engine.ts`](../apps/web/src/lib/calendar/engine.ts).
-  2. Plugin schema add: optional `stageTasks[]` on `growthStageTable` rows (`stageId`, `taskKind`, `daysFromStageStart`).
-  3. Idempotent via `pluginTemplateKey` (mirrors UC-38 companion-check task pattern).
-- **Acceptance:** Z30 jointing fires a "N topdress" task once per planting; re-running the engine never duplicates it.
-- **Note:** Observed-stage capture (operator records "saw Z65 anthesis on May 14") stays deferred — needs the `crop_observations` table from the inspection-card slice; track separately under B-08.
-- **Estimate:** 1 day.
+- **Persona:** P1.
+- **Why P0:** Blocks B-26 (deterministic planner). Adds `complianceFlags` on input plugins + `purpose` / `*Gate` tags on crop `sprayWindows[]`.
+- **Scope addition (absorbed from former B-22):** as part of the same PR, regenerate the public author-facing JSON schemas under `/schemas/` via a one-shot `apps/web/scripts/gen-schemas.mjs` (uses `zod-to-json-schema`). Adds `pnpm gen:schemas` script. Walks the discriminated union in [`plugins/schemas.ts`](../apps/web/src/lib/plugins/schemas.ts) and writes all six `.schema.json` files. No runtime impact — Zod stays the source of truth. Without this, external plugin authors will see schemas that lag the runtime.
+- **See:** [phase-21-plan.md §B](./phase-21-plan.md#sub-task-b--plugin-schema-additions-for-input-planning), issue #42.
+- **Estimate:** ~1 day (schema bump + backfill + public-schema regen).
 
-### B-03 · Email transport (replace stdout stub)
+### B-29 · Phase 21 / Sub-task F — UI remediation polish
 
-- **Persona:** P1 (cannot invite helpers without an inbox); blocks UC-21 from being production-ready.
-- **Why P0:** [`lib/server/email.ts`](../apps/web/src/lib/server/email.ts) logs invite URLs to stdout. The UI tells helpers to "share the link if email delivery fails" — that's a launch blocker for non-developer owners.
-- **Scope:**
-  1. Pluggable adapter (Postmark / SES / Resend); pick one — recommend **Resend** for the smallest dependency footprint.
-  2. Wire `EMAIL_PROVIDER_KEY` through Bicep + GitHub Actions; document in `infra/azure/parameters.dev.bicepparam`.
-  3. Add a "test send" button in `/settings` (owner-only) that hits a sandbox endpoint.
-  4. Fallback: if env var missing, keep the stdout stub but flag in the UI ("dev mode — emails are not sent").
-- **Acceptance:** Invite email reaches a real inbox within ~30 s of the form submit.
-- **Estimate:** 0.5 day.
+- **Persona:** P1, P5.
+- **Why P0:** Parallel to other Phase 21 work; cheap; reduces noise for the target persona.
+- **See:** [phase-21-plan.md §F](./phase-21-plan.md#sub-task-f--remediation-parallel-ships-any-time), issue #46.
+- **Estimate:** ~0.5 day.
 
----
-
-## 3 — P1 backlog (ship this season)
-
-### B-04 · UC-22 inspector-export polish (Sprint D')
+### B-04 · UC-22 inspector-export polish (Sprint D' close)
 
 - **Persona:** P4 (Dale).
-- **Why P1:** Export is the only artifact P4 sees; the audit's quick wins T1/T2/T5/T9 are low-cost, high-trust improvements.
+- **Why P0 (promoted from P1):** Sprint D' has been open with quick-win scope for weeks. Half-day to close and remove a persona blocker. Export is the only artifact P4 sees.
   - **T1** — block name in CSV row (today only block ID).
   - **T2** — sprayer name in CSV row.
   - **T5** — farm context header on PDF first page (farm name, export date, owner email).
   - **T9** — exporter signature footer on PDF + CSV ("Generated by CropCard v{version} on {date}").
 - **Scope:** Single pass through the records export endpoint (search `apps/web/src/routes/records/` for the CSV/PDF generators). All four are layout-only changes, no schema or kernel involvement.
-- **Acceptance:** PDF and CSV exports each render the new fields; a fresh-eyed reader (run the playwright-clickthrough subagent against `/records?audit=true`) can identify block + sprayer without consulting the app.
-- **Estimate:** 0.5 day.
+- **Acceptance:** PDF and CSV exports each render the new fields; the playwright-clickthrough subagent on `/records?audit=true` can identify block + sprayer without consulting the app.
+- **Estimate:** 0.5 day. Issue #13.
+
+### T-05 · UC-03 STOP card 7:1 contrast (audit F-A)
+
+- **Persona:** P1, P2.
+- **Why P0 (promoted from tech debt):** Layer 0 safety surface; HCD §2.2 stop-screen spec mandates 7:1 AAA, currently 4.8:1 AA only. Safety surfaces are kernel invariants per CLAUDE.md.
+- **Scope:** Adjust foreground/background tokens on the STOP card surface in [`spray/+page.svelte:473`](../apps/web/src/routes/spray/+page.svelte#L473). Re-run contrast checker against the four state variants (engaged, warning, locked, override-pending).
+- **Estimate:** ~30 min. Issue #37.
+
+### T-06 · `/today` primary CTA min-height 48 dp (audit F-H)
+
+- **Persona:** P1, P2.
+- **Why P0 (promoted from tech debt):** Violates CLAUDE.md field-UI invariant ("≥48dp tap targets"). Currently 44 px at [today:241](../apps/web/src/routes/today/+page.svelte#L241).
+- **Estimate:** ~10 min. Issue #38.
+
+### B-26 · Phase 21 / Sub-task C — Deterministic inputs planner
+
+- **Persona:** P1.
+- **Why P0:** Source of truth for what to apply and when. Depends on B-24 + B-25.
+- **See:** [phase-21-plan.md §C](./phase-21-plan.md#sub-task-c--deterministic-inputs-planner), issue #43.
+- **Estimate:** ~1–1.5 days.
+
+### B-18 · `/spray/fungicide` UI route
+
+- **Persona:** P1.
+- **Why P0 (promoted from P1, Phase 21 dependency discovered):** B-28's commit step writes fungicide tasks that need to close into a `fungicide_events` table. Without B-18, B-28 ships with a fungicide-task gap.
+- **Scope:** Mirror `/spray/+page.svelte` against `registry.fungicides()`. Reuse dilution math (class-agnostic). Skip the cross-contamination kernel call — use FRAC rotation hints from [`agronomy/resistance.ts`](../apps/web/src/lib/agronomy/resistance.ts). Wire decon (UC-04) only when `deconRequired: true` on the plugin (rare — copper after Bordeaux mix). Add `fungicide_events` table + migration.
+- **Acceptance:** Owner records a copper-fungicide application against a tomato block; row lands in `fungicide_events`; export shows it on `/records`; B-28's commit can target this table.
+- **Estimate:** 1.5 days (new table + migration + endpoint + UI). Issue #18.
+
+### B-28 · Phase 21 / Sub-task E — Wizard step 5 UI + commit (UC-37d)
+
+- **Persona:** P1.
+- **Why P0:** User-visible payoff for Phase 21. Depends on B-26. Pairs with B-18 (fungicide task closure).
+- **See:** [phase-21-plan.md §E](./phase-21-plan.md#sub-task-e--wizard-step-5-ui--commit), issue #45.
+- **Estimate:** ~1.5 days.
+
+### B-27 · Phase 21 / Sub-task D — AI inputs plan refinement layer
+
+- **Persona:** P1.
+- **Why P0 (closes Phase 21):** Optional enhancement on top of B-26, but final Phase 21 acceptance work.
+- **See:** [phase-21-plan.md §D](./phase-21-plan.md#sub-task-d--ai-refinement-layer), issue #44.
+- **Estimate:** ~1 day.
+
+---
+
+## 3 — P1 backlog (ship this season)
+
+### B-02 · UC-15 stage-gated task auto-firing
+
+- **Persona:** P1, P3.
+- **Why P1:** UC-15 is normative. Stage *projection* shipped in v1.3; the missing piece is auto-firing tasks (e.g., "Z30 — N topdress now") from `stage-window` engine events into the task table.
+- **Scope:**
+  1. Extend [`lib/tasks/`](../apps/web/src/lib/tasks/) materializer to subscribe to `stage-window` events from [`engine.ts`](../apps/web/src/lib/calendar/engine.ts).
+  2. Plugin schema add: optional `stageTasks[]` on `growthStageTable` rows (`stageId`, `taskKind`, `daysFromStageStart`).
+  3. Idempotent via `pluginTemplateKey` (mirrors UC-38 companion-check task pattern).
+- **Acceptance:** Z30 jointing fires a "N topdress" task once per planting; re-running the engine never duplicates it.
+- **Note:** Observed-stage capture stays deferred under B-08.
+- **Estimate:** 1 day. Issue #11.
+
+### B-03 · Email transport (replace stdout stub)
+
+- **Persona:** P1.
+- **Why P1 (demoted from P0):** Stdout stub at [`lib/server/email.ts`](../apps/web/src/lib/server/email.ts) is fine for current single-farm dev use. Re-promote to P0 when invites start being mailed to external helpers (multi-tenant launch).
+- **Scope:** Pluggable adapter (recommend Resend); wire `EMAIL_PROVIDER_KEY` through Bicep + GitHub Actions; "test send" button in `/settings`; keep stdout fallback flagged in UI.
+- **Acceptance:** Invite email reaches a real inbox within ~30 s.
+- **Estimate:** 0.5 day. Issue #12.
 
 ### B-05 · UC-24 search records (brand / chemistry / date)
 
 - **Persona:** P1.
-- **Why P1:** With 2-year retention now live, brand search ("when did I last spray Roundup") becomes the dominant query. UC-19 filters cover only sprayer + block today.
-- **Scope:**
-  1. Add filter row above the records table in [`/records/+page.svelte`](../apps/web/src/routes/records/+page.svelte): text-input (brand / chemistry-class fuzzy), date-range (from / to).
-  2. Client-side filter against `data.records` — no new endpoint.
-  3. Persist filter state in the URL query so deep-links are shareable.
-- **Acceptance:** Typing "Roundup" filters in <1 s; date-range narrows further; URL reflects the filter state.
-- **Estimate:** ~30 LOC / 2 hours per UC-24.
-
-### B-06 · UC-23 device-loss mitigation (force-sync + boundary doc)
-
-- **Persona:** P1, P2.
-- **Why P1:** Marco's phone breaks before sync → those queued records are lost. Currently silent failure.
-- **Scope:**
-  1. "Force sync now" button on [`/records/pending`](../apps/web/src/routes/records/pending/+page.svelte) that calls `syncQueue.drainQueue()` and surfaces success/failure.
-  2. Banner on `/records/pending` explaining the durability boundary: server-persisted = safe (Litestream), queued = lost on device loss.
-  3. Add the boundary explainer to CLAUDE.md follow-ups → close on this branch.
-- **Out of scope:** Server-side draft-spray endpoint (the durable solution). Track under B-12.
-- **Acceptance:** Owner reads `/records/pending` and understands what's at risk before driving a tractor.
-- **Estimate:** 0.5 day.
-
-### B-07 · UC-26 sidebar navigation + footer (nav hierarchy)
-
-- **Persona:** P1, P2, P5.
-- **Why P1:** Nav already exceeds the 7-item bottom-tab limit; First-Run Sherry (P5) cannot orient. Scoped in UC-26 — single-file change confined to `+layout.svelte`.
-- **Scope:** As specified in UC-26 §"Implementation locus" — sidebar with collapsible sections (`Plan / Today / Operations / Field & Crop / Admin`), header identity strip, footer with `PUBLIC_APP_VERSION`.
-- **Acceptance:** UC-26 success-criteria checklist (5 items).
-- **Estimate:** 1.5 days (focus trap + a11y review + dev-tools env-var plumbing).
+- **Why P1:** With 2-year retention live, brand search ("when did I last spray Roundup") is the dominant query. UC-19 filters cover only sprayer + block today.
+- **Scope:** Filter row above the records table in [`/records/+page.svelte`](../apps/web/src/routes/records/+page.svelte): text-input (brand / chemistry-class fuzzy), date-range. Client-side filter against `data.records`. Persist filter state in the URL query.
+- **Acceptance:** Typing "Roundup" filters in <1 s; date-range narrows further; URL reflects state.
+- **Estimate:** ~2 hours. Issue #14.
 
 ### B-08 · UC-15 observation capture (`crop_observations` table)
 
 - **Persona:** P1, P3.
-- **Why P1:** Completes UC-15's "observed-stage capture" half. Foundation for inspection-card UX.
+- **Why P1:** Completes UC-15's "observed-stage capture" half. Foundation for inspection-card UX. Depends conceptually on B-02.
 - **Scope:**
   1. New table `crop_observations` with `cropId`, `observedAt`, `stageCode`, `stageBodyKind`, `notes`, `photoUrl?`.
-  2. Tenant-scoped via `tenantWhere`/`withTenant` (Phase 18 invariant).
+  2. Tenant-scoped via `tenantWhere` / `withTenant` (Phase 18 invariant).
   3. Surface on Plan→Schedule swim-lane bar hover tooltip; "Mark stage" inline action.
-- **Acceptance:** Operator records "Z65 anthesis on 2026-05-14"; tooltip shows observed vs. projected delta.
-- **Estimate:** 1 day.
+- **Acceptance:** Operator records "Z65 anthesis on 2026-05-14"; tooltip shows observed-vs-projected delta.
+- **Estimate:** 1 day. Issue #17.
+
+### B-19 · `/equipment/new` template picker UI
+
+- **Persona:** P5 First-Run.
+- **Why P1:** 30 seed templates in [`equipmentTemplates.ts`](../apps/web/src/lib/server/equipmentTemplates.ts) are inert without UI. First-Run Sherry hand-types every equipment row today.
+- **Scope:** New `GET /equipment/new` route — category-grouped picker; POST instantiates via existing `createEquipment()`; persist `spec` JSON; redirect to detail. ≥48 dp tap targets.
+- **Acceptance:** Sherry registers a 12-ft Lemken plough from a template in <30 s.
+- **Estimate:** 0.5 day. Issue #19.
+
+### B-21 · HRAC / IRAC / FRAC group-code badges
+
+- **Persona:** P1.
+- **Why P1 (promoted from P2):** Becomes more valuable once the Phase 21 inputs planner ships — resistance management is a planning concern, and visible group codes let the operator avoid back-to-back same-group passes when refining the AI's substitutions. All data is wired (`ChemistryProfile.hracGroup`, `activeIngredients.iracGroup`, `activeIngredients.fracCode`) — no consumer renders them.
+- **Scope:** Small color-coded badge next to each product in `/spray` herbicide list, `/spray/fungicide` (after B-18), and `/plugins`. Same palette as the kernel decon banner.
+- **Acceptance:** Owner sees an HRAC-2 badge next to all sulfonylureas and can plan rotation by eye.
+- **Estimate:** 0.5 day. Issue #30.
+
+### B-07 · UC-26 sidebar navigation + footer
+
+- **Persona:** P1, P2, P5.
+- **Why P1:** Nav exceeds the 7-item bottom-tab limit; First-Run Sherry cannot orient. **Schedule after Phase 21 closes** — touching `+layout.svelte` while Phase 21 wizard work is mid-flight risks merge conflicts.
+- **Scope:** As specified in UC-26 §"Implementation locus" — sidebar with collapsible sections (`Plan / Today / Operations / Field & Crop / Admin`), header identity strip, footer with `PUBLIC_APP_VERSION`.
+- **Acceptance:** UC-26 success-criteria checklist (5 items).
+- **Estimate:** 1.5 days (focus trap + a11y review + dev-tools env-var plumbing). Issue #16.
 
 ---
 
 ## 4 — P2 backlog (polish)
 
-| ID | Title | UC | Estimate |
-| --- | --- | --- | --- |
-| B-09 | Acreage hint text on block + field entry forms | UC-28 | 15 min |
-| B-10 | Bulk multi-field entry on Plan Overview | UC-27 | 2 hours |
-| B-11 | Auth.js magic-link upgrade (replace HMAC cookie) | UC-17 | 1 day |
-| B-12 | Server-side draft-spray endpoint (durable offline) | UC-23 | 1.5 days |
-| B-13 | Push notifications (NFR-06) | — | 1 day |
-| B-14 | Orchard-specific seasonal calendar (dormant spray, bloom fungicide) | UC-18 | 1 day plugin work + minor engine hook |
-| B-15 | Workbox per-tenant cache keys (avoid wipe on owner switch) | — | 0.5 day |
-| B-16 | Sync-queue conflict resolution beyond last-write-wins | UC-12 | 1.5 days |
-| B-17 | Orchard / vine-fruit growth-stage templates beyond annuals | UC-40 | 0.5 day |
+| ID | Title | UC | Estimate | Notes |
+| --- | --- | --- | --- | --- |
+| B-01 | UC-16 small-grain harvest-moisture capture | UC-16 | 1.5d | **Demoted from P0** — no small grain planted 2026; re-promote if grain enters rotation. Issue #10 |
+| B-06 | UC-23 device-loss mitigation (force-sync button + boundary doc) | UC-23 | 0.5d | Workaround for B-12; closing B-12 closes B-06. Issue #15 |
+| B-10 | Bulk multi-field entry on Plan Overview | UC-27 | 2h | Useful for P5 first-time setup. Issue #22 |
+| B-11 | Auth.js magic-link upgrade (replace HMAC cookie) | UC-17 | 1d | Bump to P1 alongside B-03 when multi-tenant launch nears. Issue #23 |
+| B-12 | Server-side draft-spray endpoint (durable offline) | UC-23 | 1.5d | Durable solution; closes B-06 on merge. Issue #24 |
+| B-13 | Push notifications (NFR-06) | — | 1d | Low value for single small-plot farm. Issue #25 |
+| B-14 | Orchard-specific seasonal calendar (dormant spray, bloom fungicide) | UC-18 | 1d | Only valuable if orchards added to operation. Issue #26 |
+| B-15 | Workbox per-tenant cache keys | — | 0.5d | Pure UX polish on owner-switching. Issue #27 |
+| B-16 | Sync-queue conflict resolution beyond last-write-wins | UC-12 | 1.5d | Single-farm scope per CLAUDE.md — defer. Issue #28 |
+| B-17 | Orchard / vine-fruit growth-stage templates | UC-40 | 0.5d | Pair with B-14. Issue #29 |
 
 ---
 
-## 5 — Tech debt (non-UC, from CLAUDE.md "open follow-ups")
+## 5 — Open decisions (blocked until resolved)
+
+### B-20 · Class-specific decon protocols (kernel design)
+
+- **Status:** Open decision deferred per 2026-05-16 refinement. No work scheduled.
+- **Question:** Bake per-class protocols (paraquat / glufosinate / copper) into the decon kernel + wizard, or document only and let users follow product-label SOPs?
+- **If baked in:** ~1d implementation after design decision — `deconProtocol` discriminated union on `cropFamilyLethality.ts`; extend [`spray/decon/+page.svelte`](../apps/web/src/routes/spray/decon/+page.svelte) to render alternate step lists; bump `RULES_VERSION`.
+- **Re-surface for decision when:** a relevant chemistry (paraquat / glufosinate / copper) enters the spray library and the operator hits a decon-procedure gap. Issue #20.
+
+---
+
+## 6 — Tech debt (non-UC, from CLAUDE.md "open follow-ups")
 
 | ID | Title | Notes |
 | --- | --- | --- |
-| T-01 | Wire `eslint/no-raw-tenant-table.cjs` as a custom ESLint rule | Phase 18b-LINT; needs `eslint-plugin-rulesdir` or workspace package promotion |
-| T-02 | Drop legacy `users.role` column | Once `helper_assignments.role_within_owner` is the only writer; new migration |
-| T-03 | Restore or retire `docs/usability-audit.md` | Referenced from `use-cases.md` and `design_docs_reference.md` memory but absent from disk |
-| T-04 | Replace remaining placeholder text inputs (audit F-F) | Scout's tallest-weed input; harvest's quantity/lot |
-| T-05 | UC-03 STOP card 7:1 contrast (audit F-A) | HCD §2.2 stop-screen spec; currently 4.8:1 AA only |
-| T-06 | `/today` primary CTA min-height bump to 48 px+ (audit F-H) | Currently 44 px ([today:241](../apps/web/src/routes/today/+page.svelte#L241)) |
-| T-07 | Promote `/` to redirect to `/today` (audit F-E) | Today is the workflow hub but the HTTP root still renders the tile grid |
-
----
-
-## 6 — Phase-9 follow-ups (plugin library expansion)
-
-Sourced from [phase-9-resume.md](./phase-9-resume.md). Verified against current code: rotation engine (Phase 0 item) + trait-gating (Phase 11 item) **shipped** — dropped from this list. The rest are still open.
-
-### B-18 · `/spray/fungicide` UI route *(P1)*
-
-- **Why:** 27 fungicide plugins ship in [`plugins/fungicides/`](../plugins/fungicides/) but no UI consumes them — they're inert. Mid-Atlantic vegetable growers need fungicide application records for organic certification and CSA member trust.
-- **Scope:** Mirror `/spray/+page.svelte` against `registry.fungicides()`. Reuse dilution math (class-agnostic). Skip the cross-contamination kernel call — use FRAC rotation hints from [`agronomy/resistance.ts`](../apps/web/src/lib/agronomy/resistance.ts). Wire decon (UC-04) only when `deconRequired: true` on the plugin (rare — copper after Bordeaux mix).
-- **Acceptance:** Owner records a copper-fungicide application against a tomato block; row lands in a new `fungicide_events` table; export shows it on `/records`.
-- **Estimate:** 1.5 days (new table + migration + endpoint + UI).
-
-### B-19 · `/equipment/new` template picker UI *(P1)*
-
-- **Why:** [`equipmentTemplates.ts`](../apps/web/src/lib/server/equipmentTemplates.ts) ships 30 seed templates across tractor / sprayer / tillage / planter / mower / hay / irrigation but no UI surfaces them. First-Run Sherry (P5) hand-types every equipment row.
-- **Scope:** New `GET /equipment/new` route — category-grouped picker; POST instantiates via existing `createEquipment()` at [`equipment.ts:184`](../apps/web/src/lib/db/equipment.ts#L184); persist `spec` JSON; redirect to detail page. ≥48 dp tap targets per CLAUDE.md field-UI invariant.
-- **Acceptance:** Sherry registers a 12-ft Lemken plough from a template in <30 s without retyping spec fields.
-- **Estimate:** 0.5 day.
-
-### B-20 · Class-specific decon protocols (kernel design) *(P1, design first)*
-
-- **Why:** The cross-contamination kernel at [`crossContamination.ts:18`](../apps/web/src/lib/safety/crossContamination.ts#L18) uses generic "previous class differs → standard decon" semantics. Several common chemistries need class-specific protocols the standard SOP misses:
-  - **Paraquat** — bipyridyl ion binds tank surfaces; needs 1 % bleach + 1 % TSP + 3 water rinses (not ammonia).
-  - **Glufosinate (Liberty)** — adsorbs to tank fittings; needs detergent + water.
-  - **Copper-based fungicides** — filter-screen residue damages next-pass crop; needs vinegar rinse.
-- **Open decision:** Bake per-class protocols into the decon kernel + wizard, OR document only and let users follow product-label SOPs? **Owner input needed before scoping.**
-- **If we bake them in:** Add `deconProtocol` discriminated union on `cropFamilyLethality.ts` chemistry profiles; extend [`spray/decon/+page.svelte`](../apps/web/src/routes/spray/decon/+page.svelte) to render alternate step lists; bump `RULES_VERSION`.
-- **Estimate:** 1 day after design decision.
-
-### B-21 · HRAC / IRAC / FRAC group-code badges *(P2)*
-
-- **Why:** All data is wired (`ChemistryProfile.hracGroup`, `activeIngredients.iracGroup`, `activeIngredients.fracCode`; labels at [`agronomy/resistance.ts`](../apps/web/src/lib/agronomy/resistance.ts) — `HRAC_LABELS`, `FRAC_LABELS`, `IRAC_LABELS`). No consumer renders them. Resistance-management is a real planning concern — visible group codes let the owner avoid back-to-back same-group passes.
-- **Scope:** Small color-coded badge next to each product in `/spray` herbicide list, `/spray/fungicide` (when B-18 lands), and `/plugins`. Same palette as the kernel decon banner.
-- **Acceptance:** Owner sees an HRAC-2 badge next to all sulfonylureas and can plan rotation by eye.
-- **Estimate:** 0.5 day.
-
-### B-22 · Refresh public JSON schemas under `/schemas/` *(P2, docs-only)*
-
-- **Why:** Author-facing JSON schemas at [`schemas/`](../schemas/) are stale: missing `fungicide.schema.json` + `fertilizer.schema.json`; existing `crop.schema.json` + `insecticide.schema.json` lack newer fields (`seasonalTasks`, `iracGroup`, `preHarvestIntervalDays`, `targetPests`, `pollinatorRisk`, `ratePerAcre`, `dilutionTable`, `labelClaims`, `crossesWith`, `isolationFeet`, `growthStageTable`).
-- **Scope:** One-shot `apps/web/scripts/gen-schemas.mjs` using `zod-to-json-schema` that walks the discriminated union in [`plugins/schemas.ts`](../apps/web/src/lib/plugins/schemas.ts) and writes all six files. Add `pnpm gen:schemas` script. No runtime impact — Zod stays the source of truth.
-- **Acceptance:** External plugin authors can read `schemas/*.schema.json` and have it match Zod validation 1:1.
-- **Estimate:** 2 hours.
-
-### B-23 · International / Canadian product equivalents *(P2, scope question)*
-
-- **Why:** Library is US-label-anchored. Same active ingredients ship in EU / CA with different brand names + formulations (Liberty 200 SL vs 280 SL; Roundup Transorb HC in Canada). Not blocking the primary Loudoun VA persona but flagged for completeness if CropCard ever leaves the single-farm scope.
-- **Open decision:** Scope CropCard to US-label only and reject EU/CA plugin contributions? Or accept a `region` field on each plugin and surface a region filter on `/plugins`? **No work until decided.**
+| T-01 | Wire `eslint/no-raw-tenant-table.cjs` as a custom ESLint rule | Phase 18b-LINT; needs `eslint-plugin-rulesdir` or workspace package promotion. Issue #33 |
+| T-02 | Drop legacy `users.role` column | Once `helper_assignments.role_within_owner` is the only writer; new migration. Issue #34 |
+| T-04 | Replace remaining placeholder text inputs (audit F-F) | Scout's tallest-weed input; harvest's quantity/lot. Issue #36 |
+| T-07 | Promote `/` to redirect to `/today` (audit F-E) | Today is the workflow hub but the HTTP root still renders the tile grid. Issue #39 |
+| T-08 | Audit: UC status drift in `use-cases.md` | Partially addressed in §1 above (UC-20 / UC-21 / UC-35 / usability-audit.md cross-refs being fixed in the refinement PR). Re-scan after Phase 21 closes. Issue #40 |
 
 ---
 
 ## How to use this file
 
 1. Pick the highest-priority **Open** item; spawn a Plan agent against the UC body in [use-cases.md](./use-cases.md) for the full spec.
-2. Branch name format: `feature/B-NN-short-slug` (e.g., `feature/B-01-uc16-harvest-moisture`).
+2. Branch name format: `feature/B-NN-short-slug` (e.g., `feature/B-26-deterministic-inputs-planner`).
 3. On merge: delete the row from this file in the same PR — keep the backlog short.
 4. When scoping a feature that adds or changes a UC, edit [use-cases.md](./use-cases.md) **in the same PR** (per memory `feedback_update_ucs.md`).
+5. Refinement cadence: re-audit this file end-of-phase. Promote/demote based on persona alignment + dependency discoveries (the Phase 21 + B-18 pairing was discovered in the 2026-05-16 pass).

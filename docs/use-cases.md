@@ -4,7 +4,7 @@ Catalogues all use cases CropCard supports or should support (currently 35).
 Status is one of:
 
 - **Implemented** — runs in the current build.
-- **Spec-defined, NOT implemented** — described in the upstream HCD Guide but no CropCard code exists. UC-15 and UC-16 fall here. See FR-19..FR-23 in [usability-audit.md](./usability-audit.md) for proposed implementation loci.
+- **Spec-defined, NOT implemented** — described in the upstream HCD Guide but no CropCard code exists. UC-15 and UC-16 fall here. See FR-19..FR-23 in [feature-backlog.md](./feature-backlog.md) for current status and implementation loci.
 - **Proposed** — implied by the persona but not in any spec. Audit recommends implementing.
 
 UC IDs UC-04, UC-05, UC-06, UC-10 are normative from [CLAUDE.md](../CLAUDE.md). UC-13..UC-16 are normative from the HCD Guide §3.6 — UC-13 and UC-14 shipped in Sprint E. The remaining IDs are assigned in this catalog.
@@ -267,31 +267,35 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
 - **Primary path:** Open `/records` → choose sprayer or block filter → list updates.
 - **Audit notes:** No text search; with 2-year retention, a brand search ("when did I last spray Roundup") becomes the dominant query — see UC-24.
 
-## UC-20 — First-run onboarding *(proposed)*
+## UC-20 — First-run onboarding
 
 - **Persona:** P5
-- **Status:** **Gap.** No guided empty-state journey.
-- **Trigger:** New user signs in for the first time. Database has no blocks, no plantings, no sprayers, only stock plugins.
-- **Current behavior:** `/` renders 11 tiles with one-line subtitles. None of them explain order or dependencies. `/today` empty-state at least directs to `/plan` ([today:78](../apps/web/src/routes/today/+page.svelte#L78)).
-- **Proposed primary path:**
-  1. First-time landing detects empty database (no blocks, no sprayers)
-  2. Show a 3-step bootstrap card: **(1) Add your first block & planting → (2) Register a sprayer → (3) Calibrate it (UC-10)**
-  3. Each step's CTA deep-links to the right page; the bootstrap card persists until all 3 are done
-- **Implementation locus (proposed):** New `OnboardingCard.svelte` consumed by `/+page.svelte` and `/today/+page.svelte`; checks `data.counts` from existing today loader.
-- **Success criteria:** A new user reaches "first calendar event visible on `/today`" in under 10 minutes.
+- **Status:** Implemented (Phase 18f). [`/onboarding`](../apps/web/src/routes/onboarding/+page.svelte) creates an `owners` row + Home Field on first sign-in; new users land there automatically via `hooks.server.ts`. Subsequent home-screen guidance is covered by the empty-state CTAs.
+- **Trigger:** New user signs in for the first time. `hooks.server.ts` detects no `helper_assignments` row for the session user and redirects to `/onboarding`.
+- **Primary path:**
+  1. New user signs in via the demo button on `/signin` (or magic-link when B-03 lands).
+  2. `/onboarding` form collects farm name + optional location.
+  3. Server action creates `owners` row, mints `helper_assignments(role='owner')`, creates an `owner_subscriptions(planCode='free', status='trial')` row, and seeds a Home Field.
+  4. Session cookie carries `activeOwnerId`; user lands on `/today`.
+  5. New: a one-line "Want to set up your season now?" link points to `/plan` for UC-42 Season Setup (Phase 21).
+- **Implementation locus:** [`/onboarding/+page.svelte`](../apps/web/src/routes/onboarding/+page.svelte) + `+page.server.ts`; hooks at [`hooks.server.ts`](../apps/web/src/hooks.server.ts).
+- **Success criteria:** A new user reaches "first farm context established" in under a minute and lands on `/today` with a usable empty-state.
 
-## UC-21 — Invite/provision a Helper *(proposed)*
+## UC-21 — Invite/provision a Helper
 
 - **Persona:** P1
-- **Status:** **Gap.** Demo signin exists; no real helper-add flow.
+- **Status:** Implemented (Phase 18e). [`/settings/helpers`](../apps/web/src/routes/settings/helpers/+page.svelte) issues SHA-256-hashed invite tokens stored in `helper_invites`; lifecycle managed via [`lib/server/invites.ts`](../apps/web/src/lib/server/invites.ts) (`issue` / `list` / `revoke` / `redeem`). Helper accepts via `/invite/[token]` which calls back through UC-17.
 - **Trigger:** Sherry hires Marco; needs him to log in.
-- **Current behavior:** Helper role exists in [auth.ts](../apps/web/src/lib/server/auth.ts), but only via demo button on `/signin`.
-- **Proposed primary path:**
-  1. Owner opens `/admin/helpers` (new)
-  2. Enters helper email → magic link sent (Auth.js — already installed per CLAUDE.md follow-up)
-  3. Helper clicks link → session created with `helper` role
-- **Implementation locus (proposed):** Wire the existing `@auth/sveltekit` per CLAUDE.md known-follow-up; new `/admin/helpers` route with owner-gated loader.
-- **Success criteria:** Owner can add a helper without dev intervention.
+- **Preconditions:** Owner role; helper not already assigned.
+- **Primary path:**
+  1. Owner opens `/settings/helpers` and clicks "Invite a helper".
+  2. Enters helper email → `POST /api/invites` mints a single-use invite token (SHA-256 hashed at rest in `helper_invites`).
+  3. Email is delivered via [`lib/server/email.ts`](../apps/web/src/lib/server/email.ts) — currently a stdout stub; replace with Resend / Postmark before production (tracked as B-03).
+  4. Helper opens the magic link → `/invite/[token]` validates + redeems → server creates `helper_assignments(role='helper')` row + signs in via UC-17.
+- **Implementation locus:** [`/settings/helpers/+page.svelte`](../apps/web/src/routes/settings/helpers/+page.svelte) + [`/api/invites`](../apps/web/src/routes/api/invites/) endpoint + [`/invite/[token]/+page.svelte`](../apps/web/src/routes/invite/) acceptance route.
+- **Open follow-up:** real email transport (B-03). Until then, owners share the invite URL out-of-band.
+- **Success criteria:** Owner adds a helper without dev intervention; helper signs in via the magic link and lands on `/today` with helper role.
+- **Cross-reference:** UC-17 (sign-in / role assumption).
 
 ## UC-22 — Inspector record review *(proposed; documents the export-receiver journey)*
 
@@ -304,7 +308,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   2. Audit the PDF rendering: fonts, page breaks, header/footer with farm name + export date, legend
   3. Audit the CSV column order for spreadsheet usability
   4. Add a one-line "if anything looks wrong, contact …" footer
-- **Implementation locus (proposed):** Audit pass in [usability-audit.md](./usability-audit.md). PDF generator location: search [records/](../apps/web/src/routes/records/) for the export endpoint.
+- **Implementation locus (proposed):** Audit pass scoped under [B-04 in feature-backlog.md](./feature-backlog.md) (Sprint D' polish — quick wins T1/T2/T5/T9). PDF generator location: search [records/](../apps/web/src/routes/records/) for the export endpoint.
 - **Success criteria:** Dale reads the export once, accepts the answer, no callback.
 
 ## UC-23 — Restore from device loss *(proposed)*
@@ -478,7 +482,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - **Preconditions:** Owner role for create/receive; spray/insecticide/fertility events auto-decrement.
 - **Primary path:**
   1. `/stock` groups items by category — herbicide / insecticide / fungicide / fertilizer / seed / adjuvant / fuel / part — each with a sub-category accordion (driven by taxonomy terms; UC-34).
-  2. Add a SKU with default unit + reorder threshold; optional barcode (scanned via [BarcodeScanner.svelte](../apps/web/src/lib/components/BarcodeScanner.svelte)) and label capture (Anthropic-extracted metadata for seed packets, etc.).
+  2. Add a SKU with default unit + reorder threshold; optional barcode (scanned via [BarcodeScanner.svelte](../apps/web/src/lib/components/BarcodeScanner.svelte)), label capture (Anthropic-extracted metadata for seed packets, etc.), or **Add From URL** — paste a seed-company / chemical-supply product page URL and the server fetches the page, strips HTML, and asks Claude to pre-fill the Add card (handler: [scan-url/+server.ts](../apps/web/src/routes/api/scan-url/+server.ts), reuses the same `SYSTEM_PROMPT` and `ScanResult` shape as label scan; `source: 'claude-url'`).
   3. Receive inventory as a lot (`stock_lots`) with `lotNumber`, `expiresAt`, received quantity, supplier, cost.
   4. On-hand per lot = `received_quantity_hundredths` + Σ `stock_movements.delta_hundredths`. Spray / insecticide / fertility events post negative movements via FIFO oldest non-expired lot.
 - **Success:** On-hand totals reflect every event; expired lots and below-reorder-threshold SKUs surface via the top-bar banner.
@@ -565,8 +569,9 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
   1. On `/plan?tab=crops` the seed-stock rail shows a **🤖 Suggest allocation** button. Click → fullscreen wizard opens.
   2. **Step 1 — Seeds.** Table of eligible seed lots with checkbox + per-row quantity input (default = on-hand). Plant-equivalents derived via `lib/seed/quantity.ts` from `plantingGuide.seedsPerAcre / recommendedLbsPerAcre`, with family-default fallbacks and a configurable germination % (default 0.85).
   3. **Step 2 — Blocks.** List of blocks with usable-area chip (geometry inset by 3 ft buffer when polygon present, otherwise `acres × 0.85`), sun exposure, and active-planting count. Multi-select.
-  4. **Step 3 — Review.** `POST /api/plan/allocate` returns assignments + per-row sufficiency + AI rationale. The server pre-computes a candidacy matrix (per (seed, block) pair: `plantsFit`, sufficiency tri-state, sunMatch, rotationOk, companion conflicts, narrow-block flag, three-sisters candidate) and feeds it to Claude Sonnet alongside the cached farm context. AI output is **validated** against the same constraints (capacity, seed availability, no-bad-companion); on failure the server retries once with violations prepended, then falls back to the deterministic `planLayout()`.
-  5. **Step 4 — Commit.** Each assignment posts to `POST /api/blocks/[id]/plantings` (existing endpoint — stock decrement + planting creation already wired). Progress bar + per-row error reporting.
+  4. **Step 3 — Review.** `POST /api/plan/allocate` returns assignments + per-row sufficiency + AI rationale. The server pre-computes a candidacy matrix (per (seed, block) pair: `plantsFit`, sufficiency tri-state, sunMatch, rotationOk, companion conflicts, narrow-block flag, three-sisters candidate) and feeds it to Claude Sonnet alongside the cached farm context. AI output is **validated** against the same constraints (capacity, seed availability, no-bad-companion); on failure the server retries once with violations prepended, then falls back to the deterministic `planLayout()`. The review step now also runs an inline **chat refinement** panel — the seed message lists the AI's advisories + any cross-pollination findings; subsequent turns hit `POST /api/plan/allocate/refine` which rebuilds the same candidacy matrix and applies the operator's request as a JSON-validated revision (see UC-37b for chat protocol; failure rolls back to the previous plan with a friendly reply).
+  5. **Step 4 — Schedule.** "Accept all → schedule" advances to the scheduling pane (see UC-37c) where Claude proposes planting dates. The same chat panel continues; refinement turns route to `POST /api/plan/schedule/refine`.
+  6. **Step 5 — Commit.** Each scheduled planting posts to `POST /api/blocks/[id]/plantings` with `plantingDate` populated (stock decrement + planting creation already wired). Succession plantings commit as separate dated rows. Progress bar + per-row error reporting.
 - **Decrement semantics:** the wizard apportions the **user's original seed quantity** (from step 1) across blocks by plant share, not the post-germination plant count. Example: 25 seeds → 21 plants (one assignment) decrements 25 seeds from stock, not 21. Integer-required units (`seeds`, `count`, `packets`) use largest-remainder rounding so the per-block values sum back to the original quantity exactly. Logic lives in `AllocationWizard.svelte:buildCommitQuantities`.
 - **Bucket merge:** when an assignment lands on a block that already has a planned (null-date) row for the same `cropPluginId` + `quantityUnit`, `addPlanting` increments the existing row instead of creating a duplicate (covers both the wizard commit and manual seed → block drag-drop).
 - **Sufficiency UI:** chips render `match · 99%`, `surplus · +123 plants`, `deficit · 55% used` based on `lib/layout/sufficiency.ts:sufficiencyOf` (10% tolerance band).
@@ -574,6 +579,69 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - **Cost guard:** routed through `aiGuard.checkGuard('allocate')` (default 5 calls/day, shared monthly USD cap with the other AI tasks); model is Claude Sonnet 4.6 with the prompt-cached farm-context system block. Per-call cost surfaced in the wizard footer.
 - **Success:** Owner picks N seed lots and N blocks, accepts the proposed plan, and lands N planted-status crops on the swimlane in seconds — with sufficiency feedback that calls out under/oversized seed buys and AI rationale that explains why the cucurbits ended up where they did.
 - **Audit notes:** Engine path is deterministic and unit-tested (`engine.test.ts`, new `sufficiency.test.ts`, new `quantity.test.ts`, new `aiAllocation.test.ts`). AI path is grounded — Claude only chooses among matrix rows; it cannot invent placements. Stock decrement is FIFO via the existing planting endpoint; no new commit endpoint introduced. Cross-references UC-36 (deterministic two-pass auto-assign).
+- **Phase 19 — cross-pollination spatial advisor:** the allocator now emits a `pollinationConstraints[]` payload describing crossing pairs in the selection (Zea mays varieties, B. oleracea brassicas, same-species Cucurbita squashes). Plugin metadata: optional `crossesWith[]` (pluginIds or `family:<name>` tags), `isolationFeet`, `isolationStaggerDays` ([schemas.ts](../apps/web/src/lib/plugins/schemas.ts)). Family defaults live in [lib/plan/pollination.ts](../apps/web/src/lib/plan/pollination.ts) (home-scale 250 ft + 14 d stagger for corn and brassica; cucurbit species peers via the C. pepo / moschata / maxima table). Pairwise block-distance computed by Haversine over `geometryGeojson` centroids ([lib/blocks/distance.ts](../apps/web/src/lib/blocks/distance.ts)); blocks missing geometry surface a banner ("📐 Pollination check skipped for N blocks — add field geometry to enable") and produce `kind: 'geometry-missing'` entries the chat carries through to the scheduler. The allocator prompt receives a labeled `CROSS-POLLINATION` section listing crossing pairs + a sorted block-pair distance grid + a "maximize spacing up to the isolation ceiling" instruction. Post-hoc the validator computes `isolated-spatially` (distance ≥ isolation) vs `must-stagger` (distance < isolation → open temporal constraint, carried into the scheduler) constraints from the final assignments. Review-step rows render a single compact summary chip `⚠ {days}d stagger from {partner1} · {partner2} +{N} more` (full list in tooltip).
+- **Chat refinement (Phase 19):** the review step has a dialogue panel under the table — the assistant opens with pollination findings + advisories; the operator types natural-language change requests ("move the corn off the narrow block"); each turn POSTs the full transcript + current plan to `/api/plan/allocate/refine`. The server threads it as `user[0]=matrix prompt`, `assistant[0]=stringified current plan`, alternating chat turns, and `user[final]=new request + refinement schema reminder`. Responses revalidate against the candidacy matrix; invalid plans roll back to the previous plan with a friendly chat reply. Same chat continues into the schedule step (UC-37c) via the shared `chatPanel` snippet.
+- **shortName preference:** Phase 19 propagated `entry.shortName ?? entry.displayName` through `seedSelections` so Claude sees the marketing-stripped name everywhere (e.g., "Bloody Butcher" not "Bloody Butcher Ornamental Corn — Raw Untreated Non-GMO (1/2 lb)"). Reduces chat-bubble + rationale clutter substantially.
+
+## UC-37c — Schedule pane + dated commit + succession sowing
+
+- **Persona:** P1
+- **Status:** Implemented (Phase 20). The seed-allocation wizard gains a 4th step that proposes planting dates honoring frost windows, DTM, cross-pollination staggers, companion offsets, and succession spacing. The chat panel from UC-37 continues here.
+- **Trigger:** Operator clicks **Accept all → schedule** at the end of the Review step (UC-37). Spatial layout is now locked; the wizard transitions to the Schedule step.
+- **Preconditions:** A finalized `AllocationResponse` with assignments, optional `pollinationConstraints[]` (UC-37 Phase 19), and optional `companionGroups[]` (3-sisters etc., detected by `lib/plan/companionOffsets.ts`). Owner role + `requireOwner()`. Optional `ANTHROPIC_API_KEY` — without it the deterministic fallback plants every assignment at its earliest feasible date.
+- **Primary path:**
+  1. **Step 4 — Schedule** opens. Wizard calls `POST /api/plan/schedule` with the accepted assignments + carry-forward constraints (pollinationConstraints + companionGroups). Loading spinner shows while the AI works.
+  2. Server module [aiSchedule.ts](../apps/web/src/lib/server/aiSchedule.ts) builds two layers:
+     - **`scheduleCandidacy()`** ([scheduleCandidacy.ts](../apps/web/src/lib/schedule/scheduleCandidacy.ts)) — per-assignment `{earliestMs, latestMs, hardiness, dtmDaysMax, freeSubWindows}`. Earliest = last-frost-relative anchor by hardiness class (tender +7d, half-hardy −14d, hardy −42d). Latest = `firstFallFrost − DTM − 14d` buffer. Free sub-windows account for `existingCrops` already occupying the block.
+     - **`evaluateSuccessionFit()`** ([succession.ts](../apps/web/src/lib/schedule/succession.ts)) — `{eligible, maxPlantings, suggestedIntervalDays, reason}` per assignment, derived from family-keyed intervals (leafy-green/legume 14d, brassica/alliums 21d, cucurbit/solanaceae none). `maxPlantings = floor((windowDays − cycleDays) / intervalDays) + 1`, clamped to 6.
+  3. Claude Sonnet 4.6 receives a prompt enumerating each assignment's window + hardiness + succession fit, plus must-stagger pollination pairs and companion-group anchor+offset rules. Returns one `scheduled[]` entry per dated planting — succession-eligible assignments may produce multiple rows with `successionIndex: {i, n}`.
+  4. Server validates: each `plantingDate` is inside its candidacy window; per-stock plant totals match the original assignment ±2 plants for rounding; succession intervals respected; cross-pollination staggers respected (calendar gap ≥ `staggerDays` between any pair); companion offsets respected (anchor + N days, ±3d tolerance). Invalid → deterministic fallback (plant-at-earliest + linear-spaced successions when eligible) with `meta.fallback='deterministic'` and `meta.violations` populated.
+  5. Wizard renders the dated table: Seed (with succession `1/3` chip when split), Block, Planting date, Plants, Why. Schedule advisories surface in an info banner. **Chat panel** (shared snippet) prepends an assistant transition message ("📅 Planting dates proposed above…") and routes subsequent turns to `POST /api/plan/schedule/refine`.
+  6. **Step 5 — Commit.** Each `scheduled[]` row posts to `POST /api/blocks/[id]/plantings` with `plantingDate: <ms>` populated. Seed quantity per row is apportioned by plant-ratio: `(plants_i / total_plants_per_stock) × selectedSeeds[stockId]`, rounded for integer-required units. Successions land as separate dated rows on the swim-lane.
+- **Cross-pollination carry-through:** open `must-stagger` constraints from UC-37 Phase 19 are enforced by the scheduler's validator — if Claude proposes two crossing varieties whose calendar gap is less than the required `staggerDays`, the validation fails and the deterministic fallback (or chat refinement reply) takes over. Spatially isolated pairs (`isolated-spatially`) require no action from the scheduler.
+- **Companion-group inheritance:** [companionOffsets.ts:detectCompanionGroups](../apps/web/src/lib/plan/companionOffsets.ts) walks the accepted allocation looking for sets matching a registered companion system (e.g., corn + legume + cucurbit on one block ⇒ three-sisters). When found, the scheduler honors the anchor + offset pattern (`beans +14d`, `squash +35d` for three-sisters) by validating that companion plantings are within ±3 d of `anchorDate + daysFromAnchor`. Reuses the same `plantingOffsetDays` data that `PlantingGroupWizard` consumes — no duplicated table.
+- **Succession sowing:** the scheduler may auto-split a single assignment into N successions when `evaluateSuccessionFit` flags eligibility. Quantity split is largest-remainder rounded ([splitQuantityForSuccession](../apps/web/src/lib/schedule/succession.ts)); the original seed quantity in stock is debited correctly across rows. Operator can override via chat ("just do one planting of the spinach"). Long-DTM fruiting crops (tomato, pepper, cucurbits, winter squash) never succession — family table sets `intervalDays: 0`.
+- **Hardiness classification:** [hardinessOf()](../apps/web/src/lib/schedule/scheduleCandidacy.ts) maps `plantingGuide.soilTempMinF` → tender (≥65°F), half-hardy (50–64°F), hardy (<50°F). Falls back to family-keyed defaults when soil-temp is absent. Drives the earliest-plantable date relative to the last-frost mark.
+- **Success:** A few clicks turn the spatial allocation into a dated plan with stock-decrement-correct successions; committing populates the existing swim-lane with already-dated crops so the operator never has to drag from the "To schedule" tray for these.
+- **Audit notes:** All scheduling logic is pure + unit-tested ([scheduleCandidacy.test.ts](../apps/web/src/lib/schedule/scheduleCandidacy.test.ts) 12 tests, [succession.test.ts](../apps/web/src/lib/schedule/succession.test.ts) 12 tests, [companionOffsets.test.ts](../apps/web/src/lib/plan/companionOffsets.test.ts) 6 tests, [pollination.test.ts](../apps/web/src/lib/plan/pollination.test.ts) 16 tests, [pollinationLayer.test.ts](../apps/web/src/lib/plan/pollinationLayer.test.ts) 10 tests, [distance.test.ts](../apps/web/src/lib/blocks/distance.test.ts) 9 tests). AI path is grounded — Claude only picks dates within the matrix-defined windows; cannot invent assignments or move plants. AI calls share the existing `aiGuard.checkGuard('allocate')` daily quota + monthly USD cap; per-call cost surfaced in the wizard footer.
+
+## UC-37d — AI Inputs Plan (5th wizard step)
+
+- **Persona:** P1
+- **Status:** Spec'd (Phase 21). 5th step of the seed-allocation wizard. Generates per-planting application timelines (weeds, pests, fertility, cover-crop terminate) from Season Setup answers (UC-42), crop plugin metadata (`sprayWindows[]`, `growthStageTable`, `agronomy`), soil tests (UC-33), and the existing safety kernel. Commits `tasks` rows pre-linked to `spray_event` / `insecticide_event` / `fertility_application`.
+- **Trigger:** Operator clicks **Accept all → Inputs** at the end of the Schedule step (UC-37c). Plantings are dated and stock is debited; the wizard transitions to the Inputs step.
+- **Preconditions:** A committed planting set (UC-37c step 5). Season Setup answered for the active year (UC-42) — if absent, the wizard routes back to UC-42 first. Owner role + `requireOwner()`. Optional `ANTHROPIC_API_KEY` — without it, the deterministic planner ships every recommendation directly.
+- **Primary path:**
+  1. **Step 5 — Inputs** opens. Wizard calls `POST /api/plan/inputs` with the committed plantings + active Season Setup ID. Loading spinner.
+  2. Server module `aiInputsPlan.ts` builds the deterministic `InputsPlan` via `lib/plan/inputsPlan.ts` (pure), then optionally hands it to Claude for substitution + tank-mix consolidation. Validator re-runs `safety/chemistry.ts`, `safety/cropCompatibility.ts`, `safety/tankMixOrder.ts`, `philosophyFilter.ts`, and the date-window check; invalid → deterministic plan ships with `meta.fallback='deterministic'`.
+  3. Wizard renders per-planting collapsible cards. Each card shows chronological `Application[]` rows: type (pre-plant fertility / burndown / PRE / POST / sidedress / scout / insecticide-prophylactic / fungicide / cover-terminate), date, product(s), rate, tank-mix grouping band. Inline product picker on each row filters by `philosophy` via `philosophyFilter.isProductAllowed()`.
+  4. Right rail: **shopping list** aggregated by `pluginId` with `haveOnHand` (from `stock.ts`) and `needToBuy` columns; low-stock badges link to `/stock/[id]` (UC-31).
+  5. Bottom: **warnings** — missing soil test (planner used generic removal-rate defaults), no philosophy-compliant product available for slot, geometry-missing pollination carry-over, etc. Each warning is dismissable but persists across reloads.
+  6. **Chat panel** continues from the prior steps (shared `chatPanel` snippet). Refinement turns POST to `/api/plan/inputs/refine` and route through the same validator-then-fallback path as UC-37/UC-37c.
+  7. **Step 6 — Commit.** "Accept all & schedule tasks" posts to `POST /api/plan/inputs/commit`. Server writes one `tasks` row per application with `relatedEventTable` pre-set, `pluginTemplateKey: 'inputs-plan'`, `scheduledFor: applicationDate`, `recurrenceJson` for IPM scout cadences, `cropId` + `blockId` from the planting. Idempotent: re-running the wizard replaces the prior plan's tasks (transactional delete + insert); modal confirm if any tasks are already completed.
+- **Philosophy gating:** every product the planner emits is filtered by `lib/season/philosophyFilter.ts:isProductAllowed(product, philosophy)`. Allow-deny matrix:
+  - `conventional` — all products allowed
+  - `non-gmo` — requires `complianceFlags.nonGmoCompliant === true`
+  - `organic-transitioning` — requires `transitioningAllowed === true` OR `omriListed === true`
+  - `certified-organic` — requires `omriListed === true` AND `certifiedOrganicAllowed !== false`
+  - Missing flags = "unknown" = excluded. Surfaces as a planner warning, never silently substituted.
+- **Pest strategy semantics:**
+  - `preventive` — emits scheduled insecticide applications from `sprayWindows[purpose='insecticide-prophylactic']`.
+  - `ipm` — emits **no** insecticide applications at plan time; emits recurring scout tasks at family-typical cadence (cucurbits weekly during fruit-set, brassicas every 5d during head formation, etc.).
+  - `minimal` / `no-spray` — emits scout tasks (minimal) or nothing (no-spray).
+- **Weed strategy semantics:** mirrors pest gating against `sprayWindows[].weedStrategyGate` per the schema in [phase-21-plan.md §B](./phase-21-plan.md). `cultivate-first` emits cultivation reminder tasks instead of herbicide applications.
+- **Fertility approach semantics:**
+  - `synthetic` — picks from synthetic NPK fertilizer plugins.
+  - `compost-amendments` — picks from compost / manure / amendment fertilizer plugins (filtered to organic-compatible when philosophy demands).
+  - `cover-crop-credits` — assumes prior cover crop; subtracts the `fertilityCredits` N contribution from required N before sizing; only emits supplemental fertility if deficit remains.
+  - `mixed` — uses the best available product per slot regardless of source, gated only by philosophy.
+- **Cover-crop terminate:** emitted only when `coverCropIntent !== 'none'` AND the block's prior-year history shows a cover crop that needs termination. Anchored to `crop.agronomy.terminationLeadDaysMin` before the main crop's `plantingDate`. Termination method follows philosophy (mechanical for organic, herbicide for conventional/non-GMO).
+- **Sidedress-N:** anchored to `growthStageTable.stages[code='V6']` for corn or equivalent stage code per crop family. Falls back to `daysAfterPlanting: 35` when no stage table present.
+- **Task closure semantics:** committed tasks carry `relatedEventTable` pointers so when the operator records the actual spray (UC-02), insecticide (UC-32), or fertility application (UC-33), the task closes automatically via the existing `tasks.relatedEventId` linkage. No new closure pathway needed.
+- **Helper visibility:** helpers see the resulting tasks on `/today` and can execute them, but cannot run the Inputs step itself. Server `requireOwner()` on `/api/plan/inputs*`.
+- **Cost guard:** routed through `aiGuard.checkGuard('inputs')`. Default quota 10 calls/day; shares the monthly USD cap with other AI tasks. Per-call cost surfaced in the wizard footer.
+- **Success:** From a committed schedule the operator gets a complete season's worth of dated, philosophy-compliant input tasks + a consolidated shopping list, in seconds. Tasks slot into Today / Calendar / Tasks views without further setup. The shopping list flags items to order before the season starts.
+- **Audit notes:** All planning logic lives in `lib/plan/inputsPlan.ts` (pure, 96-scenario test matrix per [phase-21-plan.md §C](./phase-21-plan.md#sub-task-c--deterministic-inputs-planner)). AI path is grounded — Claude only substitutes within the philosophy-allowed product set and consolidates same-day applications into tank-mix groups; cannot invent slots, change rates above ceiling, or break tank-mix compatibility. Falls back to deterministic plan on any validator failure. Safety kernel is untouched — it still gates the actual application at execution time. CLAUDE.md invariants honored: #1 (safety rules in TS, planner only proposes), #2 (plugins data-only, all gating via TS), #4 (planner cannot edit locked records), #5 (helper cannot commit), #6 (tenant isolation via existing helpers).
 
 ## UC-38 — Planting groups + companion wizard (Schedule tab v2)
 
@@ -631,6 +699,25 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - **Success criteria:** Every Plan→Schedule swim-lane bar with a resolved stage table renders a current-stage badge and at least one harvest-target footer. Sweet corn shows R3 only; dual-purpose corn shows both R3 and R6 with R6 ~3 weeks later. Tooltip carries inspect copy. Cover crops, broadleaf companions, and other simple-system crops show their stage names ("canopy-close", "harvest-size") rather than codes.
 - **Out of scope (deferred):** Per-record observed-stage capture (`crop_observations` table — lands with the inspection-card slice). GDD / heat-unit math. Weather-adjusted stage shifts. Stage-gated task auto-firing. Plugin authoring wizard fields for stage tables.
 
+## UC-41 — Planter plate matching for seed stock
+
+- **Persona:** P1 (Owner), P2 (Helper, view-only)
+- **Status:** Implemented. Three integration surfaces: auto-pick during AI Refresh, manual override from the inventory modal, and a generic Tools route.
+- **Trigger:** Owner planting from a seed lot (`stock_items.category = 'seed'`) needs a Lincoln Ag plate (John Deere "B" or IHC "C" series) for their mechanical planter.
+- **Preconditions:** Authenticated session with an `activeOwnerId`. Save endpoint is owner-only (`requireOwner`); Helper role can browse the tool but cannot persist.
+- **Primary paths:**
+  1. **Auto-pick via AI Refresh** (preferred). When the Owner clicks "🔍 Refresh from web" in the inventory modal, the AI is asked for approximate kernel dimensions (`seedDimensionsMm`) and shape (`seedShape`, corn/soybean only) alongside the existing seed fields. The server then runs the deterministic matcher in `lib/planterPlate/match.ts` against the AI-supplied dims and produces a `planterPlateConfig` suggestion (top match from the Lincoln Ag catalog), with a `lowConfidence` flag set when results are weak (no dims, ties at top, or top Δ > 6). The suggestion lands in the existing pending-review diff panel as three checkbox rows: "Seed dimensions (mm)", "Seed shape", "Planter plate". Operator approves with the existing "Apply selected" affordance, which merges them into `stock_items.metadata_json`.
+  2. **Manual override** from the inventory edit modal — the "Planter plate" row in the Growing Info section links to `/tools/planter-plate-selector?stockId=[id]`, which opens the tool pre-filled for this seed.
+  3. **Generic Tools route** — `/tools/planter-plate-selector` (linked from `/tools`) is accessible without any stock context. Explore plates by series / seed type / shape / cell count / optional L-D-T dimensions (mm or 64ths in.). A "Save to seed lot…" dropdown lists all of the Owner's seed inventory; submitting writes the chosen plate via `?/saveToStock` which calls `updateStockItem` tenant-scoped.
+- **Engine:** Pure functions in `apps/web/src/lib/planterPlate/match.ts` (`matchPlates`, `cellCountRecommendation`, `isLowConfidence`, `inferSeedTypeFromName`) with `getPlatesCatalog()` in `catalog.ts`. Plate data is a TypeScript-imported JSON at `lib/planterPlate/plates-data.json` (Vite-bundled — no static fetch). Tests in `match.test.ts` (18 cases: exact match, tolerance widening, ties, sparse vs typical density, type inference).
+- **Cell-count helper (Corn):** Computes plants/acre from in-row + row spacing (default 30") and suggests 16-cell (≤22k) or 24-cell (≥22k) with sprocket-headroom rationale in the middle band. Auto-applies on first load when no saved config exists.
+- **Persisted shape:** `stock_items.metadata_json.planterPlateConfig` = `{ plateNumber, series, brand, cells, color, dimensions, L, D, T, shape, seedType, gradeSize, seedDimensions?, density?, source: 'ai-suggested' | 'manual', lowConfidence?, confidenceReason?, savedAt }`. Sibling `metadata_json.seedDimensionsMm` and `metadata_json.seedShape` carry the AI-sourced dims for traceability.
+- **Edge cases:**
+  - Sugar Beet shows a warning banner; no catalog records.
+  - Low-confidence plate pick (ambiguous heirloom seed) → "⚠️ low confidence" label in the review panel; the Owner can still approve, or uncheck the plate and accept dimensions only.
+  - Cross-tenant: all reads/writes route through `getStockItem`/`updateStockItem` which are tenant-scoped via `withTenant`/`tenantValues`.
+- **Out of scope:** Per-planting overrides on `crops` rows; sugar-beet catalog; offline save (Owner must be online — could later queue via `syncQueue`).
+
 ## UC-35 — Comprehensive delete + wipe-everything reset
 
 - **Persona:** P1
@@ -643,6 +730,36 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
   2. **Wipe-everything** — owner posts to `/api/admin/wipe` with `{ confirm: "WIPE-EVERYTHING" }`. All event/state tables truncated; users and plugin library survive.
 - **Success:** Targeted deletes succeed when constraints allow; wipe leaves a clean slate ready for re-seeding (UC-20 onboarding still applies).
 - **Audit notes:** No UI affordance currently exposes the wipe endpoint — it's a hand-curl operation by design (matches CLAUDE.md invariant about safety-kernel destructive paths). Adding a guarded "Reset everything" button under `/settings` is reasonable future work; out of scope here.
+
+---
+
+## UC-42 — Season Setup ("This Planting Season" form)
+
+- **Persona:** P1
+- **Status:** Spec'd (Phase 21). First step of the Plan wizard. A short, persisted-per-year form that captures the operator's input philosophy. Without it, downstream AI input planning has no signal and falls back to conventional defaults. See [phase-21-plan.md §A](./phase-21-plan.md#sub-task-a--season-setup-foundational).
+- **Trigger:** Operator opens `/plan` and either (a) hasn't set up the current planting year, or (b) explicitly clicks "Edit season" on the summary chip. Also reachable directly via `/settings/season`.
+- **Preconditions:** Owner role + `requireOwner()`. Active tenant (Phase 18a). No other preconditions — this is intentionally the entry point to the planning year.
+- **Primary path:**
+  1. First visit to `/plan` in a new calendar year → wizard opens on Season Setup before the allocation step.
+  2. If `loadSeasonSetup(lastYear)` returns a record, render a banner: **"Use last year's answers"** — one click invokes `carryForward(lastYear, currentYear)` and advances to allocation.
+  3. Otherwise, render six labeled selects with ≥48dp tap targets:
+     - **Input philosophy** — `conventional` / `non-gmo` / `organic-transitioning` (year 1–3) / `certified-organic`. Drives the planner's allow-deny matrix on every product.
+     - **Weed strategy** — `cultivate-first` / `pre-emergence-ok` / `post-emergence-ok` / `no-spray`. Gates whether burndown / PRE / POST herbicide windows are emitted.
+     - **Pest strategy** — `preventive` / `ipm` / `minimal` / `no-spray`. IPM emits scout cadences instead of prophylactic insecticide tasks.
+     - **Fertility approach** — `synthetic` / `compost-amendments` / `cover-crop-credits` / `mixed`. Picks the product pool for pre-plant and sidedress fertility.
+     - **Cover crop intent** — `fall-cereal` / `vetch-clover` / `other` / `none`. Gates emission of post-harvest cover-seed tasks + spring termination.
+     - **Spray application capacity** — `backpack-4gal` / `handheld-25gal` / `boom-25-plus` / `none`. Filters tank-mix sizing and dilution UI defaults; pairs with the existing sprayer registry (UC-10).
+     - **Transitioning started** (conditional) — YYYY, shown only when `philosophy='organic-transitioning'`. Lets the UI surface "year 2 of 3" badges.
+  4. Submit → `saveSeasonSetup(year, formValues)` writes one `settings` row per key under `season_setup.<year>.*`. Wizard advances to allocation. Setup is now a SeasonSetup prop on every subsequent wizard step.
+  5. Subsequent wizard entries this year show a 1-line **summary chip** (e.g., `Organic · IPM · Compost-first · Backpack ≤4 gal · Cover: vetch · 2026`) + an **Edit** link. Click → re-opens the form.
+- **Year rollover:** the first time the operator opens `/plan` after the calendar year flips, the wizard prompts: *"Carry forward 2026 settings to 2027?"* — neither silent copy nor silent empty. If declined, the operator gets the empty form for the new year.
+- **Mid-season edits:** allowed any time via the chip's Edit link or `/settings/season`. Banner warning: *"Changing this won't re-write tasks already committed via UC-37d. Re-run the Inputs step to align."*
+- **Helper visibility:** chip is rendered read-only on `/today` so helpers see the active philosophy (relevant for which products they'll pick up at the shed). Server `requireOwner()` rejects helper mutations.
+- **Cross-tenant isolation:** each owner's setup is invisible to others by virtue of `settings.ts` tenant scoping (Phase 18b). Verified by `settings.crossTenant.test.ts` (extends the existing pattern).
+- **Onboarding interaction:** `/onboarding` does **not** ask these questions inline — onboarding stays lightweight per the P5 first-run design constraint. After onboarding completes, a one-line link points new owners to `/plan` to set up their first season.
+- **Defaults when never set:** the planner treats an absent setup as the default tuple `{ conventional, post-emergence-ok, ipm, mixed, none, backpack-4gal }`, but the Inputs endpoint (UC-37d) returns `409 { needsSeasonSetup: true }` so the UI routes the operator into the form rather than silently planning against a guess.
+- **Success:** Operator answers six questions in under 60 seconds on first farm-year setup; one click on every subsequent year. The chip stays visible across the wizard so the operator always knows what philosophy their plan is being built against. Downstream UC-37d emits philosophy-compliant tasks without further confirmation.
+- **Audit notes:** No new tables — all values stored in the existing `settings` table under the `season_setup.<year>.*` namespace. No migration. CLAUDE.md invariants honored: #2 (no executable plugin code touched), #5 (helper write rejected at server), #6 (tenant isolation via `settings.ts`). Round-trip + carry-forward + tenant-isolation tests live in `apps/web/src/lib/season/setup.test.ts`.
 
 ---
 
@@ -669,8 +786,8 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 | UC-17 | Implemented | All | [signin/+page.svelte](../apps/web/src/routes/signin/+page.svelte) |
 | UC-18 | Implemented | P1 | [plan/+page.svelte?tab=calendar](../apps/web/src/routes/plan/+page.svelte) |
 | UC-19 | Implemented | P1 | [records/+page.svelte](../apps/web/src/routes/records/+page.svelte) |
-| UC-20 | **Proposed** | P5 | New `OnboardingCard.svelte` |
-| UC-21 | **Proposed** | P1 | Wire `@auth/sveltekit`; new `/admin/helpers` |
+| UC-20 | Implemented | P5 | [/onboarding/+page.svelte](../apps/web/src/routes/onboarding/+page.svelte) (Phase 18f) |
+| UC-21 | Implemented | P1 | [/settings/helpers/+page.svelte](../apps/web/src/routes/settings/helpers/+page.svelte) + [lib/server/invites.ts](../apps/web/src/lib/server/invites.ts) (Phase 18e) |
 | UC-22 | **Proposed (audit only)** | P4 | Audit pass on existing PDF/CSV exports |
 | UC-23 | **Proposed (mitigation)** | P1 | Document loss boundary; force-sync button |
 | UC-24 | **Proposed** | P1 | Extend records filter |
@@ -684,7 +801,10 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 | UC-32 | Implemented | P1, P2 | [insecticides/+page.svelte](../apps/web/src/routes/insecticides/+page.svelte) (Phase 10) |
 | UC-33 | Implemented | P1 | [fertility/+page.svelte](../apps/web/src/routes/fertility/+page.svelte) (Phase 10) |
 | UC-34 | Implemented | P1 | [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) |
-| UC-35 | Implemented (API only) | P1 | `POST /api/admin/wipe` (Phase 12e) — no UI affordance yet |
+| UC-35 | Implemented | P1 | Per-entity deletes through each repo + `POST /api/admin/wipe` + Danger Zone UI in [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) (Phase 12e) |
 | UC-36 | Implemented | P1 | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 14a) — Schedule tab + `lib/layout/engine.ts` |
 | UC-37 | Implemented | P1 | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 14e) — Crops tab `🤖 Suggest allocation` → [`AllocationWizard.svelte`](../apps/web/src/lib/components/AllocationWizard.svelte) → [`/api/plan/allocate`](../apps/web/src/routes/api/plan/allocate/+server.ts) backed by [`aiAllocation.ts`](../apps/web/src/lib/server/aiAllocation.ts) + [`sufficiency.ts`](../apps/web/src/lib/layout/sufficiency.ts) |
 | UC-40 | Implemented | P1, P2, P3 | [BlockSwimlane.svelte](../apps/web/src/lib/components/BlockSwimlane.svelte) (v1.3) — stage badges + harvest-target footer; backed by [`growthStageTemplates.ts`](../apps/web/src/lib/plugins/growthStageTemplates.ts) + [`stageProjection.ts`](../apps/web/src/lib/calendar/stageProjection.ts) |
+| UC-41 | Implemented | P1, P2 | Engine + catalog in [lib/planterPlate/](../apps/web/src/lib/planterPlate/); tool at [tools/planter-plate-selector/+page.svelte](../apps/web/src/routes/tools/planter-plate-selector/+page.svelte); AI auto-pick wired into [aiRefreshStock.ts](../apps/web/src/lib/server/aiRefreshStock.ts). Persists `planterPlateConfig`, `seedDimensionsMm`, `seedShape` into `stock_items.metadata_json`. Phase 21 gates the UI behind the existing `display_planter_setup` setting (off by default for new owners). |
+| UC-37d | **Spec'd** (Phase 21) | P1 | New `lib/plan/inputsPlan.ts` + `lib/server/aiInputsPlan.ts` + `/api/plan/inputs/*` + step in [AllocationWizard.svelte](../apps/web/src/lib/components/AllocationWizard.svelte). See [phase-21-plan.md](./phase-21-plan.md). |
+| UC-42 | **Spec'd** (Phase 21) | P1 | New `lib/season/setup.ts` + `SeasonSetupStep.svelte` + `SeasonSetupChip.svelte` + `/settings/season/` route. Backed by `settings` table (no migration). See [phase-21-plan.md](./phase-21-plan.md). |

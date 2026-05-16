@@ -19,7 +19,7 @@ Canonical tracker for Phase 21. Future sessions should read this first before wo
 
 ## Sub-task A — Season Setup (foundational)
 
-**Status:** in progress.
+**Status:** ✓ shipped on `phase-21a-foundations` branch (commit `731a770`).
 **Persona:** P1.
 **Ships:** new first step of the Plan wizard; `settings.ts`-backed persistence per (owner, year); carry-forward across year boundaries; 1-line summary chip when set.
 

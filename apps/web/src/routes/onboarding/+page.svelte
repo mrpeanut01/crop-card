@@ -42,6 +42,12 @@
 
     <button class="submit" type="submit">Create farm →</button>
   </form>
+
+  <p class="next-step-hint">
+    💡 After you create your farm, head to <a href="/plan">Plan</a> to set up
+    this season's input philosophy (6 quick questions — drives what the planner
+    suggests).
+  </p>
 </main>
 
 <style>
@@ -110,5 +116,20 @@
   }
   .submit:hover {
     filter: brightness(1.1);
+  }
+  .next-step-hint {
+    margin-top: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: #f0f7f2;
+    border: 1px solid #c4d2c4;
+    border-radius: 0.375rem;
+    color: #1f5e3a;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  .next-step-hint a {
+    color: #1f5e3a;
+    font-weight: 600;
+    text-decoration: underline;
   }
 </style>

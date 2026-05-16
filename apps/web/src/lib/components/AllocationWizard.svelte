@@ -2,6 +2,10 @@
   import { seedsToPlants, type SeedPluginShape } from '$lib/seed/quantity';
   import type { CropPlugin } from '$lib/plugins/schemas';
   import type { CompanionGroupMarker, PollinationConstraint } from '$lib/plan/types';
+  import { untrack } from 'svelte';
+  import type { SeasonSetup } from '$lib/season/setup';
+  import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
+  import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
 
   type SeedStockEntry = {
     stockItemId: string;
@@ -66,6 +70,9 @@
     blocks,
     plantingGuides,
     cropCatalog,
+    seasonSetup = null,
+    lastYearSetup = null,
+    currentYear = new Date().getFullYear(),
     onClose,
     onCommitted
   }: {
@@ -73,12 +80,27 @@
     blocks: BlockEntry[];
     plantingGuides: Record<string, NonNullable<CropPlugin['plantingGuide']>>;
     cropCatalog: CropCatalogItem[];
+    seasonSetup?: SeasonSetup | null;
+    lastYearSetup?: SeasonSetup | null;
+    currentYear?: number;
     onClose: () => void;
     onCommitted: () => void;
   } = $props();
 
-  type Step = 'seeds' | 'blocks' | 'review' | 'schedule' | 'commit';
-  let step: Step = $state('seeds');
+  type Step = 'season-setup' | 'seeds' | 'blocks' | 'review' | 'schedule' | 'commit';
+  // Phase 21: when the operator has never set up the active year, gate the
+  // whole flow on the Season Setup form. Otherwise fall into the existing
+  // 'seeds' step and surface the saved setup as a chip in the header. The
+  // initial wizard state is read from props once at mount; subsequent
+  // changes are owned locally (handleSeasonSetupSaved updates `activeSetup`
+  // after a successful save).
+  let activeSetup = $state<SeasonSetup | null>(untrack(() => seasonSetup));
+  let step: Step = $state(untrack(() => (activeSetup ? 'seeds' : 'season-setup')));
+
+  function handleSeasonSetupSaved(saved: SeasonSetup) {
+    activeSetup = saved;
+    step = 'seeds';
+  }
 
   let seedSearch = $state('');
 
@@ -957,8 +979,18 @@
       <button class="aw-close" type="button" aria-label="Close" onclick={onClose}>✕</button>
     </header>
 
+    {#if activeSetup && step !== 'season-setup'}
+      <div class="aw-chip-row">
+        <SeasonSetupChip setup={activeSetup} onEdit={() => (step = 'season-setup')} />
+      </div>
+    {/if}
+
     <ol class="aw-stepper" aria-label="Wizard steps">
-      <li class:active={step === 'seeds'} class:done={step !== 'seeds'}>1. Seeds</li>
+      <li
+        class:active={step === 'season-setup'}
+        class:done={step !== 'season-setup'}
+      >0. Season</li>
+      <li class:active={step === 'seeds'} class:done={step !== 'season-setup' && step !== 'seeds'}>1. Seeds</li>
       <li
         class:active={step === 'blocks'}
         class:done={step === 'review' || step === 'schedule' || step === 'commit'}
@@ -976,14 +1008,21 @@
       <li class:active={step === 'commit'}>5. Commit</li>
     </ol>
 
-    {#if error && step !== 'commit' && step !== 'review'}
+    {#if error && step !== 'commit' && step !== 'review' && step !== 'season-setup'}
       <div class="aw-error-banner" role="alert">
         <strong>Couldn't generate plan:</strong> {error}
       </div>
     {/if}
 
     <div class="aw-body">
-      {#if step === 'seeds'}
+      {#if step === 'season-setup'}
+        <SeasonSetupStep
+          existing={activeSetup}
+          {lastYearSetup}
+          {currentYear}
+          onSave={handleSeasonSetupSaved}
+        />
+      {:else if step === 'seeds'}
         <p class="aw-intro">
           Pick the seed lots you want to plant. Adjust quantity per row — defaults to on-hand.
         </p>
@@ -1282,7 +1321,14 @@
     </div>
 
     <footer class="aw-footer">
-      {#if step === 'seeds'}
+      {#if step === 'season-setup'}
+        <button class="btn-secondary" onclick={onClose}>Cancel</button>
+        {#if activeSetup}
+          <button class="btn-secondary" onclick={() => (step = 'seeds')}>
+            Keep current & continue
+          </button>
+        {/if}
+      {:else if step === 'seeds'}
         <button class="btn-secondary" onclick={onClose}>Cancel</button>
         <button
           class="btn-primary"
@@ -1381,6 +1427,11 @@
     min-height: 48px;
     border-radius: 4px;
     cursor: pointer;
+  }
+  .aw-chip-row {
+    padding: 0.5rem 1.25rem 0;
+    background: #f8fbf9;
+    border-bottom: none;
   }
   .aw-stepper {
     display: flex;

@@ -3002,6 +3002,9 @@
     }))}
     plantingGuides={data.plantingGuides}
     cropCatalog={data.cropCatalog}
+    seasonSetup={data.seasonSetup ?? null}
+    lastYearSetup={data.lastYearSetup ?? null}
+    currentYear={data.currentYear ?? new Date().getFullYear()}
     onClose={() => { showAllocationWizard = false; }}
     onCommitted={async () => {
       showAllocationWizard = false;

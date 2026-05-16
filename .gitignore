@@ -40,3 +40,10 @@ test-results/
 # Azure
 *.bicepparam.local
 .azure/
+
+# Claude Code local agent / command state
+.claude/
+
+# Vite HMR scratch files
+vite.config.ts.timestamp-*.mjs
+*.vite.config.ts.timestamp-*.mjs

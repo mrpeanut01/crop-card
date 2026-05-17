@@ -1,4 +1,4 @@
-import { json, redirect, type Handle } from '@sveltejs/kit';
+import { json, redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';
@@ -6,6 +6,56 @@ import { runWithTenantAsync } from '$lib/db/tenant';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
+
+/**
+ * Phase 21a follow-up — error visibility (2026-05-17).
+ *
+ * SvelteKit's default `handleError` swallows server-side errors into a
+ * generic "Internal Error" body with no stack trace logged. That made the
+ * Phase 21a `/plan` 500 (server-only `lib/db/settings` leaking into the
+ * client bundle via `lib/season/setup.ts`) invisible in `docker logs` —
+ * we spent half a debugging session blind.
+ *
+ * This hook fixes that by:
+ *   1. Dumping a structured trace line for every server error (loader,
+ *      action, endpoint, SSR component throw) with method, path, user,
+ *      and full stack.
+ *   2. Returning a richer `message` field in dev mode so the inline 500
+ *      shows the actual error text (the browser still gets the generic
+ *      "Internal Error" body in prod for security).
+ *
+ * Add the same shape to client errors via `+error.svelte` if the need
+ * surfaces — for now server visibility is the priority.
+ */
+export const handleError: HandleServerError = ({ error, event, status, message }) => {
+  const summary = error instanceof Error ? error.message : String(error ?? 'unknown error');
+  const stack = error instanceof Error ? error.stack : undefined;
+  // ANSI red for visibility in the docker logs stream.
+  console.error(
+    '\x1b[1;31m[server-error]\x1b[0m',
+    JSON.stringify(
+      {
+        status,
+        method: event.request.method,
+        path: event.url.pathname,
+        search: event.url.search || undefined,
+        user: event.locals.user?.email ?? null,
+        activeOwnerId: event.locals.user?.activeOwnerId ?? null,
+        message: summary,
+        sveltekitMessage: message
+      },
+      null,
+      2
+    )
+  );
+  if (stack) console.error('\x1b[1;31m[server-error stack]\x1b[0m\n' + stack);
+  // Surface the actual message in dev so the browser overlay / inline 500
+  // shows it. In prod we keep the opaque default for security.
+  if (process.env.NODE_ENV !== 'production') {
+    return { message: `Server error: ${summary}` };
+  }
+  return undefined;
+};
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 

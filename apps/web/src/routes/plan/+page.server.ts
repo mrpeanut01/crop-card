@@ -25,7 +25,7 @@ import {
 } from '$lib/calendar/engine';
 import { listShadeSources } from '$lib/db/shadeSources';
 import { getFarmLatLon } from '$lib/schedule/settings';
-import { loadSeasonSetup } from '$lib/season/setup';
+import { loadSeasonSetup } from '$lib/season/setup.server';
 import {
   plantingBarEndMs,
   rotationConflicts,

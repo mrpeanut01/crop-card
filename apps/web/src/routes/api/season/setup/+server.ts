@@ -15,7 +15,7 @@ import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
 
 import { requireOwner } from '$lib/server/auth';
-import { saveSeasonSetup } from '$lib/season/setup';
+import { saveSeasonSetup } from '$lib/season/setup.server';
 
 const bodySchema = z.object({
   year: z.number().int().min(2000).max(3000),

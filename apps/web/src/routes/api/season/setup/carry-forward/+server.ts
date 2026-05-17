@@ -14,7 +14,7 @@ import { error, json } from '@sveltejs/kit';
 import { z } from 'zod';
 
 import { requireOwner } from '$lib/server/auth';
-import { carryForward } from '$lib/season/setup';
+import { carryForward } from '$lib/season/setup.server';
 
 const bodySchema = z.object({
   fromYear: z.number().int().min(2000).max(3000),

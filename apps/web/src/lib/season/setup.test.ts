@@ -16,14 +16,12 @@ import { runWithTenant } from '$lib/db/tenant';
 
 import {
   allowsSynthetics,
-  carryForward,
   isOrganicCompliant,
-  loadSeasonSetup,
-  saveSeasonSetup,
   summarizeSeasonSetup,
   SEASON_SETUP_DEFAULTS,
   type SeasonSetup
 } from './setup';
+import { carryForward, loadSeasonSetup, saveSeasonSetup } from './setup.server';
 
 const OWNER_A = 'season-setup-test-owner-a';
 const OWNER_B = 'season-setup-test-owner-b';

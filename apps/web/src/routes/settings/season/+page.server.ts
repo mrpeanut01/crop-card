@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 import { requireOwner } from '$lib/server/auth';
-import { loadSeasonSetup } from '$lib/season/setup';
+import { loadSeasonSetup } from '$lib/season/setup.server';
 
 export const load: PageServerLoad = (event) => {
   const u = requireOwner(event);

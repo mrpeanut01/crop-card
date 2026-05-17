@@ -46,7 +46,7 @@
  * so plugin authors can override family defaults.
  */
 
-import type { Block, PlantingRecord } from '$lib/db/blocks';
+import type { Block } from '$lib/db/blocks';
 import type { FertilityCredit, SoilTest } from '$lib/db/fertility';
 import type {
   CropPlugin,
@@ -361,8 +361,20 @@ export interface InputsPlanStockRef {
   onHand: number;
 }
 
+/** Lighter-weight planting shape accepted by the planner. The persisted
+ *  `PlantingRecord` from the DB satisfies it, but so does an in-memory
+ *  provisional planting carried by the wizard before the commit step
+ *  has persisted the underlying rows. */
+export interface InputsPlanProvisionalPlanting {
+  id: string;
+  blockId: string;
+  cropPluginId: string;
+  varietyDisplayName: string;
+  plantingDate: number | null;
+}
+
 export interface InputsPlanInput {
-  plantings: ReadonlyArray<PlantingRecord>;
+  plantings: ReadonlyArray<InputsPlanProvisionalPlanting>;
   blocks: ReadonlyArray<Block>;
   cropPlugins: Record<string, CropPlugin>;
   seasonSetup: SeasonSetup;
@@ -572,7 +584,7 @@ interface PerPlantingOutput {
 }
 
 function planForPlanting(
-  planting: PlantingRecord,
+  planting: InputsPlanProvisionalPlanting,
   block: Block,
   crop: CropPlugin,
   input: InputsPlanInput

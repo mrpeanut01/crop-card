@@ -6,6 +6,12 @@
   import type { SeasonSetup } from '$lib/season/setup';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
   import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
+  import InputsPlanStep from '$lib/components/InputsPlanStep.svelte';
+  import type {
+    InputsPlanApplication,
+    InputsPlanProvisionalPlanting,
+    InputsPlanScoutTask
+  } from '$lib/plan/inputsPlan';
 
   type SeedStockEntry = {
     stockItemId: string;
@@ -87,7 +93,14 @@
     onCommitted: () => void;
   } = $props();
 
-  type Step = 'season-setup' | 'seeds' | 'blocks' | 'review' | 'schedule' | 'commit';
+  type Step =
+    | 'season-setup'
+    | 'seeds'
+    | 'blocks'
+    | 'review'
+    | 'schedule'
+    | 'inputs'
+    | 'commit';
   // Phase 21: when the operator has never set up the active year, gate the
   // whole flow on the Season Setup form. Otherwise fall into the existing
   // 'seeds' step and surface the saved setup as a chip in the header. The
@@ -280,6 +293,17 @@
   };
 
   let scheduleResponse = $state<ScheduleResponse | null>(null);
+
+  // Phase 21b / B-28 — inputs plan state held across the inputs →
+  // commit transition. `acceptedInputs` is populated by
+  // InputsPlanStep.onCommit and consumed by `commit()` so the
+  // planting persistence + task materialization happen as one
+  // operator-visible action.
+  let acceptedInputs = $state<{
+    applications: InputsPlanApplication[];
+    scoutTasks: InputsPlanScoutTask[];
+  } | null>(null);
+  let inputsCommitError = $state<string | null>(null);
   let scheduleLoading = $state(false);
   let scheduleError = $state<string | null>(null);
 
@@ -704,6 +728,42 @@
     }
   }
 
+  /** Phase 21b / B-28 — between Schedule and Commit. Advances to the
+   *  Inputs Plan step where the deterministic planner proposes per-
+   *  planting product applications + IPM scout cadences against the
+   *  current season setup. The accept handler stashes the operator's
+   *  chosen subset and then calls `commit()` so plantings + tasks
+   *  persist as one action. */
+  function advanceToInputs() {
+    if (!response || !scheduleResponse) return;
+    step = 'inputs';
+    acceptedInputs = null;
+    inputsCommitError = null;
+  }
+
+  /** Provisional plantings (in-memory shape) handed to the Inputs Plan
+   *  step. The planner uses these as the basis for per-block work; the
+   *  underlying `crops` rows don't exist yet — they get persisted when
+   *  the operator clicks "Accept and commit" inside the step. */
+  function provisionalPlantings(): InputsPlanProvisionalPlanting[] {
+    if (!scheduleResponse) return [];
+    return scheduleResponse.scheduled.map((s, i) => ({
+      id: `${s.stockItemId}:${s.blockId}:${i}`,
+      blockId: s.blockId,
+      cropPluginId: s.cropPluginId,
+      varietyDisplayName: s.varietyDisplayName,
+      plantingDate: s.plantingDateMs
+    }));
+  }
+
+  async function handleInputsAccepted(accepted: {
+    applications: InputsPlanApplication[];
+    scoutTasks: InputsPlanScoutTask[];
+  }) {
+    acceptedInputs = accepted;
+    await commit();
+  }
+
   async function commit() {
     if (!response) return;
     step = 'commit';
@@ -748,6 +808,7 @@
       commitProgress = { ...commitProgress, done: commitProgress.done + 1 };
     }
     if (commitProgress.failed.length === 0) {
+      await commitAcceptedInputs();
       onCommitted();
     }
   }
@@ -800,7 +861,33 @@
       commitProgress = { ...commitProgress, done: commitProgress.done + 1 };
     }
     if (commitProgress.failed.length === 0) {
+      await commitAcceptedInputs();
       onCommitted();
+    }
+  }
+
+  /** POST the operator-accepted Inputs Plan rows as tasks (Phase 21 /
+   *  B-28). Runs after plantings persist so the commit endpoint can
+   *  resolve cropId via the (blockId, cropPluginId) lookup. A failure
+   *  here doesn't block the planting commit — the operator can rerun
+   *  the wizard or build tasks manually. */
+  async function commitAcceptedInputs(): Promise<void> {
+    if (!acceptedInputs) return;
+    if (acceptedInputs.applications.length === 0 && acceptedInputs.scoutTasks.length === 0) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/plan/inputs/commit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(acceptedInputs)
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        inputsCommitError = body.error ?? `HTTP ${res.status}`;
+      }
+    } catch (e) {
+      inputsCommitError = e instanceof Error ? e.message : String(e);
     }
   }
 
@@ -993,19 +1080,23 @@
       <li class:active={step === 'seeds'} class:done={step !== 'season-setup' && step !== 'seeds'}>1. Seeds</li>
       <li
         class:active={step === 'blocks'}
-        class:done={step === 'review' || step === 'schedule' || step === 'commit'}
+        class:done={step === 'review' || step === 'schedule' || step === 'inputs' || step === 'commit'}
       >
         2. Blocks
       </li>
       <li
         class:active={step === 'review'}
-        class:done={step === 'schedule' || step === 'commit'}
+        class:done={step === 'schedule' || step === 'inputs' || step === 'commit'}
       >3. Review</li>
       <li
         class:active={step === 'schedule'}
-        class:done={step === 'commit'}
+        class:done={step === 'inputs' || step === 'commit'}
       >4. Schedule</li>
-      <li class:active={step === 'commit'}>5. Commit</li>
+      <li
+        class:active={step === 'inputs'}
+        class:done={step === 'commit'}
+      >5. Inputs</li>
+      <li class:active={step === 'commit'}>6. Commit</li>
     </ol>
 
     {#if error && step !== 'commit' && step !== 'review' && step !== 'season-setup'}
@@ -1304,11 +1395,21 @@
             {@render chatPanel()}
           {/if}
         {/if}
+      {:else if step === 'inputs'}
+        <InputsPlanStep
+          plantings={provisionalPlantings()}
+          year={currentYear}
+          onCommit={handleInputsAccepted}
+          onBack={() => (step = 'schedule')}
+        />
       {:else if step === 'commit'}
         <p class="aw-loading">
           Committing… {commitProgress.done} / {commitProgress.total}
         </p>
         <progress value={commitProgress.done} max={commitProgress.total}></progress>
+        {#if inputsCommitError}
+          <p class="aw-error">Inputs plan tasks failed to commit: {inputsCommitError}</p>
+        {/if}
         {#if commitProgress.failed.length > 0}
           <p class="aw-error">Failed: {commitProgress.failed.length}</p>
           <ul>
@@ -1366,11 +1467,13 @@
         >Re-schedule</button>
         <button
           class="btn-primary"
-          onclick={commit}
+          onclick={advanceToInputs}
           disabled={scheduleLoading || !scheduleResponse || scheduleResponse.scheduled.length === 0}
         >
-          Commit plantings ({scheduleResponse?.scheduled.length ?? 0})
+          Accept dates → inputs plan ({scheduleResponse?.scheduled.length ?? 0})
         </button>
+      {:else if step === 'inputs'}
+        <!-- Footer actions live inside InputsPlanStep; no parent buttons here. -->
       {:else if step === 'commit'}
         <button
           class="btn-primary"

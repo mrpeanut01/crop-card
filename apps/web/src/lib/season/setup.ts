@@ -158,11 +158,21 @@ export const PHILOSOPHY_LABELS: Record<Philosophy, string> = {
   'certified-organic': 'Certified organic'
 };
 
+/**
+ * Cumulative tiers (Phase 21a polish, 2026-05-17): each tier adds the
+ * methods of the tier above it. A `post-emergence-ok` operator is also
+ * OK with pre-emergence and cultivation. `no-spray` is the off-ramp —
+ * the operator handles weeds without planner help (mulch / hand / cover
+ * crop). The `+ …` prefix on tiers 2 and 3 telegraphs accumulation in
+ * the dropdown without forcing a multi-select form.
+ */
 export const WEED_LABELS: Record<WeedStrategy, string> = {
-  'cultivate-first': 'Cultivate first',
-  'pre-emergence-ok': 'Pre-emergence OK',
-  'post-emergence-ok': 'Post-emergence OK',
-  'no-spray': 'No spray'
+  'cultivate-first': 'Cultivation only — no herbicides',
+  'pre-emergence-ok':
+    '+ Pre-emergence — early-season herbicide for known weed pressure',
+  'post-emergence-ok':
+    '+ Post-emergence — in-season herbicide for breakthrough weeds',
+  'no-spray': "No-spray (mulch / hand only) — I'll manage weeds without planner help"
 };
 
 export const PEST_LABELS: Record<PestStrategy, string> = {

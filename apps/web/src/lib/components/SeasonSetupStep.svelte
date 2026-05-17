@@ -200,8 +200,10 @@
         {/each}
       </select>
       <span class="ss-hint">
-        Drives whether the planner emits burndown / pre-emergence / post-emergence
-        herbicide windows.
+        Cumulative — picking <em>+ Post-emergence</em> means you're also OK
+        with pre-emergence + cultivation; picking <em>+ Pre-emergence</em>
+        means cultivation + pre-emergence (no post). Pick the deepest tier
+        you'd consider; the planner only suggests tools at or below it.
       </span>
     </label>
 

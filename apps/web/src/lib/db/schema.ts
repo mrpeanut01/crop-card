@@ -1040,7 +1040,16 @@ export const aiCallLog = tenantScoped(
       ownerId: text('owner_id').notNull(),
       userId: text('user_id').references(() => users.id),
       endpoint: text('endpoint', {
-        enum: ['suggest', 'succession', 'optimize', 'rationale', 'allocate', 'groups', 'shortNames']
+        enum: [
+          'suggest',
+          'succession',
+          'optimize',
+          'rationale',
+          'allocate',
+          'groups',
+          'shortNames',
+          'inputs'
+        ]
       }).notNull(),
       model: text('model').notNull(),
       inputTokens: integer('input_tokens').notNull().default(0),

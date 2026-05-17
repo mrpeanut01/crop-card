@@ -65,7 +65,12 @@ export const DEFAULT_AI_DAILY_QUOTA = {
   optimize: 2,
   allocate: 5,
   groups: 5,
-  shortNames: 5
+  shortNames: 5,
+  /** Phase 21 / B-27 — AI substitution + tank-mix consolidation on top
+   *  of the deterministic InputsPlan. Capped low because each refinement
+   *  is a non-trivial call; the deterministic baseline always works
+   *  when the quota's spent. */
+  inputs: 10
 } as const;
 
 export type AiEndpointName = keyof typeof DEFAULT_AI_DAILY_QUOTA;

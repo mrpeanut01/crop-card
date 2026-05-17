@@ -65,7 +65,8 @@ export function getAiDailyCallQuota(): typeof DEFAULT_AI_DAILY_QUOTA {
       allocate: typeof v.allocate === 'number' ? v.allocate : DEFAULT_AI_DAILY_QUOTA.allocate,
       groups: typeof v.groups === 'number' ? v.groups : DEFAULT_AI_DAILY_QUOTA.groups,
       shortNames:
-        typeof v.shortNames === 'number' ? v.shortNames : DEFAULT_AI_DAILY_QUOTA.shortNames
+        typeof v.shortNames === 'number' ? v.shortNames : DEFAULT_AI_DAILY_QUOTA.shortNames,
+      inputs: typeof v.inputs === 'number' ? v.inputs : DEFAULT_AI_DAILY_QUOTA.inputs
     };
   } catch {
     return DEFAULT_AI_DAILY_QUOTA;

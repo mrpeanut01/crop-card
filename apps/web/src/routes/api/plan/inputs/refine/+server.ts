@@ -1,15 +1,19 @@
 /**
- * POST /api/plan/inputs (Phase 21 / B-28 / UC-37d).
+ * POST /api/plan/inputs/refine (Phase 21 / B-27 / UC-37d).
  *
- * Server-side wrapper around the deterministic `planInputs()` (B-26).
- * Loads the world (blocks, soil tests, fertility credits, plugins,
- * stock) from the tenant-scoped repos, joins the in-memory provisional
- * plantings from the wizard's Schedule step, then runs the planner.
+ * Chat-style refinement on top of an already-loaded InputsPlan. The
+ * operator types a free-text request ("swap the pre-plant fertilizer
+ * for bone meal"), the AI proposes product substitutions, and the
+ * validator pyramid (philosophy → kernel → chemistry → rate ceiling)
+ * accepts or rejects.
  *
- * The AI substitution + tank-mix consolidation layer (B-27) wires in
- * on top of this endpoint via `/api/plan/inputs/refine` — the
- * deterministic path here is both the AI's fallback and the
- * out-of-box experience when ANTHROPIC_API_KEY is unset.
+ * Hard guardrails identical to `/api/plan/inputs`:
+ *   - Same quota guard (10 calls/day default, tracked under endpoint
+ *     'inputs').
+ *   - Same fallback semantics: rejection or missing key → return the
+ *     PREVIOUS plan unchanged with meta.fallback set.
+ *   - Same telemetry recording so the cost dashboard shows refinement
+ *     usage alongside initial planning.
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
@@ -18,39 +22,47 @@ import { z } from 'zod';
 import { listBlocks } from '$lib/db/blocks';
 import { listSoilTestsForBlock, listFertilityCreditsForBlock } from '$lib/db/fertility';
 import { listStockItems } from '$lib/db/stock';
-import { type InputsPlanInput } from '$lib/plan/inputsPlan';
 import type {
   FertilizerPlugin,
   FungicidePlugin,
   HerbicidePlugin,
   InsecticidePlugin
 } from '$lib/plugins/schemas';
+import type { InputsPlan, InputsPlanInput } from '$lib/plan/inputsPlan';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getRegistry } from '$lib/server/registry';
 import { currentUser } from '$lib/server/auth';
+import { canMutate } from '$lib/server/session';
 import { checkGuard, recordCall } from '$lib/server/aiGuard';
-import { planInputsWithAI } from '$lib/server/aiInputsPlan';
+import { refineInputs } from '$lib/server/aiInputsPlan';
 
 const provisionalPlantingSchema = z.object({
   id: z.string().min(1),
   blockId: z.string().min(1),
   cropPluginId: z.string().min(1),
   varietyDisplayName: z.string().min(1),
-  plantingDate: z.number().int().nullable(),
-  quantityPlanted: z.number().nonnegative().optional(),
-  quantityUnit: z.string().optional()
+  plantingDate: z.number().int().nullable()
+});
+
+const chatTurnSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().min(1)
 });
 
 const requestSchema = z.object({
   plantings: z.array(provisionalPlantingSchema).min(1),
-  year: z.number().int().positive()
+  year: z.number().int().positive(),
+  previousPlan: z.unknown(),
+  message: z.string().min(1).max(2000),
+  history: z.array(chatTurnSchema).default([])
 });
 
 export const POST: RequestHandler = async (event) => {
-  // Auth required so tenant scoping kicks in; read-only inspectors are
-  // fine — the endpoint only computes, never mutates.
   const auth = currentUser(event);
   if (!auth) return json({ error: 'authentication required' }, { status: 401 });
+  if (!canMutate(auth.role)) {
+    return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
 
   let body: unknown;
   try {
@@ -70,17 +82,14 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
-  const { plantings, year } = parsed.data;
-
-  const seasonSetup = loadSeasonSetup(year);
+  const seasonSetup = loadSeasonSetup(parsed.data.year);
   if (!seasonSetup) {
-    return json(
-      {
-        error: 'no season setup for year — complete the season setup step first',
-        year
-      },
-      { status: 409 }
-    );
+    return json({ error: 'no season setup for year', year: parsed.data.year }, { status: 409 });
+  }
+
+  const guard = checkGuard(auth.id, 'inputs');
+  if (!guard.ok) {
+    return json({ error: guard.message, reason: guard.reason }, { status: guard.status });
   }
 
   const registry = await getRegistry();
@@ -89,7 +98,6 @@ export const POST: RequestHandler = async (event) => {
   const insecticides: InsecticidePlugin[] = [];
   const fungicides: FungicidePlugin[] = [];
   const fertilizers: FertilizerPlugin[] = [];
-
   for (const r of registry.all()) {
     const p = r.plugin;
     if (p.type === 'crop') cropPlugins[p.pluginId] = p;
@@ -100,26 +108,20 @@ export const POST: RequestHandler = async (event) => {
   }
 
   const blocksFull = listBlocks();
-  // Strip plantings off Block before passing in — the planner only
-  // reads acres + geometry.
   const blocks = blocksFull.map(({ plantings: _drop, ...rest }) => rest);
 
-  // Soil tests + fertility credits are loaded per block referenced by
-  // any planting, then merged into flat lists.
-  const referencedBlockIds = new Set(plantings.map((p) => p.blockId));
+  const referencedBlockIds = new Set(parsed.data.plantings.map((p) => p.blockId));
   const soilTests = [];
   const fertilityCredits = [];
   for (const blockId of referencedBlockIds) {
     soilTests.push(...listSoilTestsForBlock(blockId));
-    fertilityCredits.push(...listFertilityCreditsForBlock(blockId, year));
+    fertilityCredits.push(...listFertilityCreditsForBlock(blockId, parsed.data.year));
   }
 
-  // Stock — pulled scoped to the four input categories; deliberately
-  // includes inactive/zero-balance rows so the planner can decide
-  // whether they cover the new plan.
   const existingStock = listStockItems()
-    .filter((s) =>
-      s.category === 'herbicide' ||
+    .filter(
+      (s) =>
+        s.category === 'herbicide' ||
         s.category === 'insecticide' ||
         s.category === 'fungicide' ||
         s.category === 'fertilizer'
@@ -132,8 +134,8 @@ export const POST: RequestHandler = async (event) => {
       onHand: s.onHand
     }));
 
-  const baseInput = {
-    plantings,
+  const baseInput: InputsPlanInput = {
+    plantings: parsed.data.plantings,
     blocks,
     cropPlugins,
     seasonSetup,
@@ -141,36 +143,16 @@ export const POST: RequestHandler = async (event) => {
     fertilityCredits,
     productPlugins: { herbicides, insecticides, fungicides, fertilizers },
     existingStock,
-    year
+    year: parsed.data.year
   };
 
-  // AI substitution pass — only attempts when API key + quota allow.
-  // Always returns a valid plan (deterministic fallback baked in).
-  const guard = checkGuard(auth.id, 'inputs');
-  if (!guard.ok) {
-    // Quota / cap exceeded — run the deterministic planner and stamp
-    // meta.fallback so the UI surfaces a banner.
-    const { planInputs } = await import('$lib/plan/inputsPlan');
-    const plan = planInputs(baseInput);
-    return json({
-      plan,
-      meta: {
-        model: 'no-call',
-        inputTokens: 0,
-        cachedInputTokens: 0,
-        outputTokens: 0,
-        usdEstimate: 0,
-        fallback: 'quota-exceeded',
-        violations: [guard.reason]
-      }
-    });
-  }
+  const result = await refineInputs({
+    base: baseInput,
+    previousPlan: parsed.data.previousPlan as InputsPlan,
+    message: parsed.data.message,
+    history: parsed.data.history
+  });
 
-  const result = await planInputsWithAI(baseInput);
-
-  // Record the call telemetry — even when the AI didn't actually run
-  // (no api key / fallback), we record a row tagged success=false so
-  // the call count is honest. This is consistent with aiSchedule.ts.
   recordCall({
     userId: auth.id,
     endpoint: 'inputs',

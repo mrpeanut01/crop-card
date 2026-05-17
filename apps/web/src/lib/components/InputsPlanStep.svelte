@@ -39,6 +39,10 @@
   let { plantings, year, onCommit, onBack }: Props = $props();
 
   let plan = $state<InputsPlan | null>(null);
+  let planMeta = $state<{
+    fallback?: 'no-api-key' | 'deterministic' | 'quota-exceeded';
+    violations?: string[];
+  } | null>(null);
   let loading = $state(true);
   let error = $state<string | null>(null);
 
@@ -75,6 +79,7 @@
         return;
       }
       plan = payload.plan as InputsPlan;
+      planMeta = payload.meta ?? null;
       // Expand the first planting by default so the operator sees
       // something concrete on entry.
       if (plantings[0]) expanded = new Set([plantings[0].id]);
@@ -180,6 +185,24 @@
       <button type="button" class="link-btn" onclick={loadPlan}>retry</button>
     </div>
   {:else if plan}
+    {#if planMeta?.fallback === 'deterministic'}
+      <div class="card warn" role="status">
+        <strong>AI substitution rejected.</strong> The proposed product changes failed validation
+        (philosophy filter, safety kernel or rate ceiling); falling back to the deterministic
+        plan. Edit a row above to substitute by hand.
+      </div>
+    {:else if planMeta?.fallback === 'quota-exceeded'}
+      <div class="card warn" role="status">
+        <strong>Daily AI quota reached.</strong> Showing the deterministic plan. Raise the
+        quota on Settings or try again tomorrow.
+      </div>
+    {:else if planMeta?.fallback === 'no-api-key'}
+      <div class="card info" role="status">
+        Showing the deterministic plan (no AI key configured). Add
+        <code>ANTHROPIC_API_KEY</code> to enable product substitutions.
+      </div>
+    {/if}
+
     <div class="layout">
       <main class="cards">
         {#each plantings as planting (planting.id)}
@@ -355,6 +378,11 @@
   .card.warn {
     background: #fff8e1;
     border-color: #f1c40f;
+  }
+  .card.info {
+    background: #e3f2fd;
+    border-color: #1565c0;
+    color: #1e3a5f;
   }
   .link-btn {
     background: none;

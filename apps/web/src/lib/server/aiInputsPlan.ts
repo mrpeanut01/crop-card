@@ -119,10 +119,12 @@ export async function planInputsWithAI(
 
   const substitutions = parseSubstitutions(aiCall.parsed);
   if (substitutions.length === 0) {
-    return {
-      plan: deterministic,
-      meta: { ...aiCall.meta, fallback: 'deterministic', violations: ['no-substitutions'] }
-    };
+    // AI looked at the deterministic plan and proposed no changes — that's
+    // a successful pass-through, not a fallback. The deterministic plan
+    // already satisfies philosophy + catalog constraints, the AI just
+    // didn't find anything to improve. No banner needed.
+    console.info('[aiInputsPlan] AI returned no substitutions — keeping deterministic plan as-is.');
+    return { plan: deterministic, meta: aiCall.meta };
   }
 
   const refined = applySubstitutions(deterministic, substitutions);

@@ -159,7 +159,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     frostDates,
     currentYear,
     seasonSetup,
-    lastYearSetup
+    lastYearSetup,
+    // Issue #48 follow-up: shadeSources must be visible on every tab that
+    // renders <BlockMap> (today: layout + crops). Pushing it into base
+    // closes that recurring class of bug — PR #49 fixed the UI side but
+    // missed that the Crops-tab loader branch wasn't returning the field.
+    shadeSources: listShadeSources()
   };
 
   if (tab === 'overview') {
@@ -167,10 +172,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   }
 
   if (tab === 'layout') {
-    return {
-      ...base,
-      shadeSources: listShadeSources()
-    };
+    return base;
   }
 
   if (tab === 'crops') {

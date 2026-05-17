@@ -80,7 +80,8 @@
     lastYearSetup = null,
     currentYear = new Date().getFullYear(),
     onClose,
-    onCommitted
+    onCommitted,
+    onRefreshParent
   }: {
     seedStock: SeedStockEntry[];
     blocks: BlockEntry[];
@@ -91,6 +92,12 @@
     currentYear?: number;
     onClose: () => void;
     onCommitted: () => void;
+    /** Optional — refresh parent data WITHOUT closing the wizard. Used by
+     *  the Start Over flow so the post-wipe seed/block list is fresh in
+     *  the modal. When omitted, Start Over still wipes the DB but the
+     *  wizard keeps its initial props until the next commit closes the
+     *  modal naturally. */
+    onRefreshParent?: () => void | Promise<void>;
   } = $props();
 
   type Step =
@@ -164,11 +171,18 @@
       }
       resetSummary = body.removed ?? {};
       resetConfirmOpen = false;
-      // Surface the wipe + advance to seeds. The parent's onCommitted is
-      // also fired here so the /plan loader refetches and the stale
-      // `blocks.plantings[]` props update on the next render.
+      // Advance to 'seeds'. We deliberately do NOT call onCommitted here
+      // (that's the parent's signal to CLOSE the wizard). Instead, refresh
+      // the parent's data in-place via onRefreshParent so the wizard stays
+      // open and the operator can immediately start a fresh plan.
       step = 'seeds';
-      onCommitted();
+      if (onRefreshParent) {
+        try {
+          await onRefreshParent();
+        } catch {
+          /* refresh failures are non-fatal — wizard keeps its initial props */
+        }
+      }
     } catch (e) {
       resetError = e instanceof Error ? e.message : String(e);
     } finally {
@@ -391,6 +405,12 @@
       nowMs = Date.now();
     }, 500);
     return () => clearInterval(id);
+  });
+
+  // Diagnostic: log every step transition so we can trace the wizard's
+  // path in the browser console. Cheap; only fires when `step` changes.
+  $effect(() => {
+    console.info('[AllocationWizard] step →', step);
   });
 
   type ProgressStage = 'allocate' | 'schedule' | 'chat-allocate' | 'chat-schedule';

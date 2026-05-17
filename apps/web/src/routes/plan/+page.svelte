@@ -3069,6 +3069,12 @@
       showAllocationWizard = false;
       await invalidateAll();
     }}
+    onRefreshParent={async () => {
+      // Reload /plan loader data without closing the wizard. Used by the
+      // Start Over flow inside the wizard so the cleared-plan state lands
+      // in the modal's props on the next render.
+      await invalidateAll();
+    }}
   />
 {/if}
 

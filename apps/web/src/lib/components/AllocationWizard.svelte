@@ -680,9 +680,32 @@
       chatDraft = text;
       return;
     }
-    const reply: string = typeof body.reply === 'string' && body.reply.trim().length > 0
-      ? body.reply
-      : 'Done — updated the dates above.';
+    // When the server fell back (validation failed, parse failed, no API
+    // key), the `scheduled` array is the PREVIOUS unchanged plan — the
+    // AI's reply may still confidently claim "I moved planting X to date
+    // Y", which is misleading. Prefix the chat message with a warning
+    // banner so the operator knows the table above did NOT update, and
+    // surface the violation list when available.
+    const fallback: string | undefined = body?.meta?.fallback;
+    const violations: string[] = Array.isArray(body?.meta?.violations)
+      ? body.meta.violations
+      : [];
+    const aiReply: string =
+      typeof body.reply === 'string' && body.reply.trim().length > 0
+        ? body.reply
+        : fallback
+          ? 'The schedule above is unchanged.'
+          : 'Done — updated the dates above.';
+    let reply = aiReply;
+    if (fallback) {
+      const header =
+        fallback === 'no-api-key'
+          ? '⚠ No Anthropic API key configured — the schedule above is unchanged.'
+          : '⚠ Could not apply the change — it would break a planting window, stagger, or companion offset. The schedule above is unchanged.';
+      const violationLine =
+        violations.length > 0 ? `\n\nValidator violations:\n• ${violations.join('\n• ')}` : '';
+      reply = `${header}${violationLine}\n\n${aiReply}`;
+    }
     scheduleChatMessages = [...scheduleChatMessages, { role: 'assistant', content: reply }];
     scheduleResponse = {
       scheduled: Array.isArray(body.scheduled) ? body.scheduled : scheduleResponse.scheduled,

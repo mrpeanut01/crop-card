@@ -46,6 +46,7 @@ import {
   selectModel,
   type AiResultMeta
 } from './aiPlanning';
+import { extractJsonObject } from './aiJsonExtract';
 
 const MAX_OUTPUT_TOKENS = 3000;
 
@@ -269,78 +270,6 @@ async function callInputsClaude(
   meta.usdEstimate = estimateUsd(meta, choice);
 
   return { parsed, meta };
-}
-
-/**
- * Best-effort JSON extraction from a Claude response.
- *
- * Handles, in order of attempts:
- *   1. The whole text parses as JSON (the ideal case the prompt asks for).
- *   2. The text is wrapped in a ```json ... ``` (or unlabelled ```) fence.
- *   3. The JSON object is preceded or followed by prose — extract from the
- *      first `{` to the matching last `}` and try to parse.
- *
- * Returns `null` when no JSON object can be recovered.
- */
-function extractJsonObject(text: string): unknown {
-  if (!text) return null;
-
-  // 1. Direct parse.
-  const trimmed = text.trim();
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    /* fallthrough */
-  }
-
-  // 2. Strip code-fence wrapper.
-  const fenceMatch = trimmed.match(/^```(?:json|JSON)?\s*([\s\S]*?)\s*```$/);
-  if (fenceMatch) {
-    try {
-      return JSON.parse(fenceMatch[1].trim());
-    } catch {
-      /* fallthrough */
-    }
-  }
-
-  // 3. First-{ to balanced last-} extraction. Walks the string tracking
-  //    bracket depth so we tolerate inline strings containing `{` or `}`
-  //    (e.g., a rationale string with curly braces). This is more
-  //    forgiving than a naive `text.indexOf('{')` + `text.lastIndexOf('}')`
-  //    slice.
-  const start = trimmed.indexOf('{');
-  if (start === -1) return null;
-  let depth = 0;
-  let inString = false;
-  let escape = false;
-  for (let i = start; i < trimmed.length; i++) {
-    const c = trimmed[i];
-    if (escape) {
-      escape = false;
-      continue;
-    }
-    if (c === '\\') {
-      escape = true;
-      continue;
-    }
-    if (c === '"') {
-      inString = !inString;
-      continue;
-    }
-    if (inString) continue;
-    if (c === '{') depth++;
-    else if (c === '}') {
-      depth--;
-      if (depth === 0) {
-        try {
-          return JSON.parse(trimmed.slice(start, i + 1));
-        } catch {
-          return null;
-        }
-      }
-    }
-  }
-  return null;
 }
 
 function buildSystemPrompt(): string {

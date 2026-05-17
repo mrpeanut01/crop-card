@@ -29,6 +29,7 @@ import {
   type FarmContext
 } from './aiPlanning';
 import { getApiKey } from './scanResult';
+import { extractJsonObject } from './aiJsonExtract';
 import {
   scheduleCandidacy,
   formatDateMs,
@@ -220,11 +221,10 @@ export async function refineSchedule(
     });
     usage = msg.usage as typeof usage;
     rawText = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
-    const stripped = rawText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-    try {
-      parsed = JSON.parse(stripped);
-    } catch {
-      parsed = null;
+    parsed = extractJsonObject(rawText);
+    if (parsed === null && rawText.length > 0) {
+      const preview = rawText.length > 800 ? `${rawText.slice(0, 800)}…` : rawText;
+      console.warn('[aiSchedule.refine] could not extract JSON from model response. Raw text:\n' + preview);
     }
   } catch {
     parsed = null;
@@ -470,12 +470,10 @@ async function callScheduleClaude(
     });
     const usage = (msg.usage as unknown as Record<string, number | undefined>) ?? {};
     const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
-    const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-    let parsed: unknown = null;
-    try {
-      parsed = JSON.parse(stripped);
-    } catch {
-      parsed = null;
+    const parsed = extractJsonObject(text);
+    if (parsed === null && text.length > 0) {
+      const preview = text.length > 800 ? `${text.slice(0, 800)}…` : text;
+      console.warn('[aiSchedule] could not extract JSON from model response. Raw text:\n' + preview);
     }
     return {
       parsed,

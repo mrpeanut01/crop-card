@@ -1,8 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { afterNavigate } from '$app/navigation';
+  import { page } from '$app/state';
 
   let { data, children } = $props();
+
+  function isActive(href: string): boolean {
+    const url = page.url;
+    if (!url) return false;
+    if (href === '/plan?tab=layout') {
+      return url.pathname === '/plan' && url.searchParams.get('tab') === 'layout';
+    }
+    if (href === '/plan') {
+      return url.pathname === '/plan' && url.searchParams.get('tab') !== 'layout';
+    }
+    return url.pathname === href;
+  }
 
   let pendingCount = $state<number | null>(null);
   let online = $state(true);
@@ -54,18 +67,18 @@
 <header class="app-header">
   <a href="/" class="brand">CropCard</a>
   <nav aria-label="Primary" class="primary-nav">
-    <a href="/today">Today</a>
-    <a href="/plan">Plan</a>
-    <a href="/stock">Stock</a>
-    <a href="/spray">Spray</a>
-    <a href="/insecticides">Insecticides</a>
-    <a href="/scout">Scout</a>
-    <a href="/harvest">Harvest</a>
-    <a href="/hay">Hay</a>
-    <a href="/fertility">Fertility</a>
-    <a href="/equipment">Equipment</a>
-    <a href="/plan?tab=layout">Map</a>
-    <a href="/records">Records</a>
+    <a href="/today" aria-current={isActive('/today') ? 'page' : undefined}>Today</a>
+    <a href="/plan" aria-current={isActive('/plan') ? 'page' : undefined}>Plan</a>
+    <a href="/stock" aria-current={isActive('/stock') ? 'page' : undefined}>Stock</a>
+    <a href="/spray" aria-current={isActive('/spray') ? 'page' : undefined}>Spray</a>
+    <a href="/insecticides" aria-current={isActive('/insecticides') ? 'page' : undefined}>Insecticides</a>
+    <a href="/scout" aria-current={isActive('/scout') ? 'page' : undefined}>Scout</a>
+    <a href="/harvest" aria-current={isActive('/harvest') ? 'page' : undefined}>Harvest</a>
+    <a href="/hay" aria-current={isActive('/hay') ? 'page' : undefined}>Hay</a>
+    <a href="/fertility" aria-current={isActive('/fertility') ? 'page' : undefined}>Fertility</a>
+    <a href="/equipment" aria-current={isActive('/equipment') ? 'page' : undefined}>Equipment</a>
+    <a href="/plan?tab=layout" aria-current={isActive('/plan?tab=layout') ? 'page' : undefined}>Map</a>
+    <a href="/records" aria-current={isActive('/records') ? 'page' : undefined}>Records</a>
   </nav>
   <div class="top-right">
     {#if data.user && data.activeOwner}
@@ -462,6 +475,18 @@
   .primary-nav > a:hover {
     background: rgba(255, 255, 255, 0.1);
   }
+  /* Active-tab styling (mobile bottom-nav): the selected page reads as a
+     graphical tab connecting upward into the content area. */
+  .primary-nav > a[aria-current='page'] {
+    background: #f5f7f4;
+    color: #1f5e3a;
+    border-top: 3px solid #f5f7f4;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.15);
+  }
+  .primary-nav > a[aria-current='page']:hover {
+    background: #f5f7f4;
+  }
 
   main {
     padding-block: 1rem;
@@ -539,6 +564,20 @@
       min-height: 48px;
       font-size: 1rem;
       border-top: none;
+    }
+    /* Active-tab styling (desktop top-nav): page-bg fill + rounded top
+       corners read as a folder tab sticking down from the header into
+       the content below. Display-only — no interaction change. */
+    .primary-nav > a[aria-current='page'] {
+      background: #f5f7f4;
+      color: #1f5e3a;
+      border-top: none;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.15);
+      margin-bottom: -1px;
+    }
+    .primary-nav > a[aria-current='page']:hover {
+      background: #f5f7f4;
     }
     main {
       padding: 1rem;

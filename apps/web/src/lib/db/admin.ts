@@ -27,6 +27,7 @@ import {
   fields,
   hayCuttings,
   harvestEvents,
+  fungicideEvents,
   insecticideEvents,
   pendingCalibrations,
   soilTests,
@@ -410,70 +411,79 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
 /**
  * Phase 21 (B-28 follow-up) — "Start over" reset for the Plan wizard.
  *
- * Deletes the *current plan* — every crop that's either still in the
- * planning stage (status='planned', no date) or scheduled-but-not-yet-
- * planted (status='active' with a future plantingDate). Historical
- * crops (past plantingDate, harvested, failed, archived) stay so the
- * audit trail and yield history aren't disturbed.
+ * Deletes the *current plan* — every crop that's still purely a
+ * planning artifact: status IN ('planned', 'active') AND no real-
+ * world events tied to it (no sprays, insecticide applications,
+ * fungicide applications, fertility applications, harvest events, or
+ * hay cuttings). Once a crop has been worked on it's part of the
+ * audit trail and survives the reset.
  *
- * The wizard's commit step writes `status='active'` (not 'planned')
- * whenever plantingDate is set, which it always is after the Schedule
- * step. Filtering only on `status='planned'` would silently match zero
- * rows — that was the original bug.
+ * Why not filter on plantingDate?
+ *   First attempt used "future or null plantingDate" as the signal
+ *   for "still in the plan." But the AI scheduler picks dates
+ *   relative to frost windows for the whole season, so some
+ *   plantings end up scheduled for the recent past (e.g. early-
+ *   April lettuce committed in mid-May) without the operator
+ *   actually having planted them. Date-based filters wrongly
+ *   excluded those rows. "Has the operator done anything with this
+ *   crop yet?" — i.e. event-presence — is the right signal.
  *
  * Specifically targets:
  *
- *   - crops with status='planned' (any date)
- *   - crops with status='active' AND (plantingDate IS NULL OR
- *     plantingDate >= today) — "scheduled but not yet planted"
+ *   - crops with status IN ('planned', 'active') AND no rows in any
+ *     of: spray_events, insecticide_events, fungicide_events,
+ *     fertility_applications, harvest_events, hay_cuttings
  *   - tasks tagged pluginTemplateKey='inputs-plan' AND status='open'
- *     (completed/aborted tasks survive)
+ *     (completed/aborted tasks survive — executed history stays)
  *
  * Tenant-scoped via every del() helper. Returns a per-table count
- * the UI can surface in the confirmation result. The cascade pulls
- * any tied spray/insecticide/fungicide/fertility/harvest events
- * along with the crops via deleteCropCascade — so the modal's "this
- * cannot be undone" copy is load-bearing.
+ * the UI can surface in the confirmation result.
  *
  * Note: `plantingRecords` from schema.ts is an alias for `crops` —
- * the wizard's addPlanting() writes to the same table. We only loop
- * once.
+ * the wizard's addPlanting() writes to the same table. We only need
+ * one pass.
  */
 export function wipeCurrentPlan(): DeleteSummary {
   const removed: Record<string, number> = {};
-  const startOfTodayMs = (() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.getTime();
-  })();
-  const startOfToday = new Date(startOfTodayMs);
 
-  // 1. Find every crop in the "current plan" bucket.
-  //    - status='planned' regardless of date
-  //    - status='active' AND (plantingDate IS NULL OR plantingDate >= today)
+  // 1. Collect crop IDs that already have events — those are "real"
+  //    and must survive the reset regardless of status.
+  const protectedCropIds = new Set<string>();
+  const eventTables = [
+    sprayEvents,
+    insecticideEvents,
+    harvestEvents,
+    fertilityApplications,
+    hayCuttings
+  ] as const;
+  for (const table of eventTables) {
+    const rows = db
+      .select({ cropId: table.cropId })
+      .from(table)
+      .where(withTenant(table, isNotNull(table.cropId)))
+      .all();
+    for (const r of rows) if (r.cropId) protectedCropIds.add(r.cropId);
+  }
+  // Fungicide events live on a separate table that's been added
+  // post-B-18; checked separately so the import list reads cleanly.
+  {
+    const rows = db
+      .select({ cropId: fungicideEvents.cropId })
+      .from(fungicideEvents)
+      .where(withTenant(fungicideEvents, isNotNull(fungicideEvents.cropId)))
+      .all();
+    for (const r of rows) if (r.cropId) protectedCropIds.add(r.cropId);
+  }
+
+  // 2. Find every crop in the candidate-for-wipe bucket: planning
+  //    statuses, minus the event-protected set.
   const planRowIds = db
-    .select({
-      id: crops.id,
-      status: crops.status,
-      plantingDate: crops.plantingDate
-    })
+    .select({ id: crops.id })
     .from(crops)
-    .where(
-      withTenant(
-        crops,
-        // SQLite supports inArray for the status filter; we post-filter
-        // the active rows by plantingDate in JS to keep the predicate
-        // readable + avoid a complex OR chain.
-        inArray(crops.status, ['planned', 'active'])
-      )
-    )
+    .where(withTenant(crops, inArray(crops.status, ['planned', 'active'])))
     .all()
-    .filter((r) => {
-      if (r.status === 'planned') return true;
-      if (!r.plantingDate) return true;
-      return r.plantingDate.getTime() >= startOfToday.getTime();
-    })
-    .map((r) => r.id);
+    .map((r) => r.id)
+    .filter((id) => !protectedCropIds.has(id));
 
   for (const cid of planRowIds) {
     const r = deleteCropCascade(cid);
@@ -481,9 +491,9 @@ export function wipeCurrentPlan(): DeleteSummary {
       removed[k] = (removed[k] ?? 0) + v;
     }
   }
-  removed.crops_current_plan = (removed.crops_current_plan ?? 0) + planRowIds.length;
+  removed.crops_current_plan = planRowIds.length;
 
-  // 2. Open inputs-plan tasks. Completed / aborted tasks survive —
+  // 3. Open inputs-plan tasks. Completed / aborted tasks survive —
   //    their executed history is load-bearing for the audit trail.
   removed.tasks_inputs_plan_open = db
     .delete(tasks)

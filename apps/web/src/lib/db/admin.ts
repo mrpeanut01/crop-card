@@ -29,7 +29,6 @@ import {
   harvestEvents,
   insecticideEvents,
   pendingCalibrations,
-  plantingRecords,
   soilTests,
   sprayEvents,
   sprayers,
@@ -411,46 +410,80 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
 /**
  * Phase 21 (B-28 follow-up) — "Start over" reset for the Plan wizard.
  *
- * Deletes only the *planning artifacts* — leaves blocks, fields, stock,
- * equipment, and historical (status='active'/'harvested'/etc.) crops
- * intact. Specifically targets:
+ * Deletes the *current plan* — every crop that's either still in the
+ * planning stage (status='planned', no date) or scheduled-but-not-yet-
+ * planted (status='active' with a future plantingDate). Historical
+ * crops (past plantingDate, harvested, failed, archived) stay so the
+ * audit trail and yield history aren't disturbed.
  *
- *   - planting_records rows with status='planned' (the wizard's
- *     commit output before a planting actually goes in the ground)
- *   - crops rows with status='planned' (and their cascading events,
- *     though planned crops typically have none)
+ * The wizard's commit step writes `status='active'` (not 'planned')
+ * whenever plantingDate is set, which it always is after the Schedule
+ * step. Filtering only on `status='planned'` would silently match zero
+ * rows — that was the original bug.
+ *
+ * Specifically targets:
+ *
+ *   - crops with status='planned' (any date)
+ *   - crops with status='active' AND (plantingDate IS NULL OR
+ *     plantingDate >= today) — "scheduled but not yet planted"
  *   - tasks tagged pluginTemplateKey='inputs-plan' AND status='open'
- *     (the Inputs Plan step's materialized tasks; completed ones
- *     stay so the executed history is preserved)
+ *     (completed/aborted tasks survive)
  *
  * Tenant-scoped via every del() helper. Returns a per-table count
- * the UI can surface in the confirmation result.
+ * the UI can surface in the confirmation result. The cascade pulls
+ * any tied spray/insecticide/fungicide/fertility/harvest events
+ * along with the crops via deleteCropCascade — so the modal's "this
+ * cannot be undone" copy is load-bearing.
+ *
+ * Note: `plantingRecords` from schema.ts is an alias for `crops` —
+ * the wizard's addPlanting() writes to the same table. We only loop
+ * once.
  */
 export function wipeCurrentPlan(): DeleteSummary {
   const removed: Record<string, number> = {};
+  const startOfTodayMs = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  })();
+  const startOfToday = new Date(startOfTodayMs);
 
-  // 1. Planned crops + their (rarely-present) cascading events.
-  const plannedCropIds = db
-    .select({ id: crops.id })
+  // 1. Find every crop in the "current plan" bucket.
+  //    - status='planned' regardless of date
+  //    - status='active' AND (plantingDate IS NULL OR plantingDate >= today)
+  const planRowIds = db
+    .select({
+      id: crops.id,
+      status: crops.status,
+      plantingDate: crops.plantingDate
+    })
     .from(crops)
-    .where(withTenant(crops, eq(crops.status, 'planned')))
+    .where(
+      withTenant(
+        crops,
+        // SQLite supports inArray for the status filter; we post-filter
+        // the active rows by plantingDate in JS to keep the predicate
+        // readable + avoid a complex OR chain.
+        inArray(crops.status, ['planned', 'active'])
+      )
+    )
     .all()
+    .filter((r) => {
+      if (r.status === 'planned') return true;
+      if (!r.plantingDate) return true;
+      return r.plantingDate.getTime() >= startOfToday.getTime();
+    })
     .map((r) => r.id);
-  for (const cid of plannedCropIds) {
+
+  for (const cid of planRowIds) {
     const r = deleteCropCascade(cid);
     for (const [k, v] of Object.entries(r.removed)) {
       removed[k] = (removed[k] ?? 0) + v;
     }
   }
+  removed.crops_current_plan = (removed.crops_current_plan ?? 0) + planRowIds.length;
 
-  // 2. Planning records with status='planned' — the wizard's commit
-  //    output before a planting goes in the ground.
-  removed.planting_records_planned = del(
-    plantingRecords,
-    eq(plantingRecords.status, 'planned')
-  );
-
-  // 3. Open inputs-plan tasks. Completed / aborted tasks survive —
+  // 2. Open inputs-plan tasks. Completed / aborted tasks survive —
   //    their executed history is load-bearing for the audit trail.
   removed.tasks_inputs_plan_open = db
     .delete(tasks)

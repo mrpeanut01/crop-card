@@ -207,39 +207,65 @@ export async function refineSchedule(
     content: [{ type: 'text', text: buildScheduleRefinementUserMessage(newUserMessage) }]
   });
 
-  let usage:
-    | { input_tokens?: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number; output_tokens?: number }
-    | undefined;
-  let parsed: unknown = null;
-  let rawText = '';
-  try {
-    const msg = await client.messages.create({
-      model: choice.model,
-      max_tokens: MAX_OUTPUT_TOKENS,
-      system: systemBlocks,
-      messages
-    });
-    usage = msg.usage as typeof usage;
-    rawText = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
-    parsed = extractJsonObject(rawText);
-    if (parsed === null && rawText.length > 0) {
-      const preview = rawText.length > 800 ? `${rawText.slice(0, 800)}…` : rawText;
-      console.warn('[aiSchedule.refine] could not extract JSON from model response. Raw text:\n' + preview);
+  // Wrapper around messages.create that returns parsed + raw text + usage,
+  // so the first attempt + the retry pass can share it.
+  async function callOnce(
+    convo: Array<{ role: 'user' | 'assistant'; content: { type: 'text'; text: string }[] }>
+  ): Promise<{
+    parsed: unknown;
+    rawText: string;
+    usage:
+      | { input_tokens?: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number; output_tokens?: number }
+      | undefined;
+  }> {
+    try {
+      const msg = await client.messages.create({
+        model: choice.model,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        system: systemBlocks,
+        messages: convo
+      });
+      const u = msg.usage as
+        | { input_tokens?: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number; output_tokens?: number }
+        | undefined;
+      const txt = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+      const p = extractJsonObject(txt);
+      if (p === null && txt.length > 0) {
+        const preview = txt.length > 800 ? `${txt.slice(0, 800)}…` : txt;
+        console.warn('[aiSchedule.refine] could not extract JSON from model response. Raw text:\n' + preview);
+      }
+      return { parsed: p, rawText: txt, usage: u };
+    } catch (err) {
+      console.warn(
+        '[aiSchedule.refine] Anthropic call failed:',
+        err instanceof Error ? err.message : String(err)
+      );
+      return { parsed: null, rawText: '', usage: undefined };
     }
-  } catch {
-    parsed = null;
   }
 
   const meta: AiResultMeta = {
     model: choice.model,
-    inputTokens: (usage?.input_tokens ?? 0) + (usage?.cache_creation_input_tokens ?? 0),
-    cachedInputTokens: usage?.cache_read_input_tokens ?? 0,
-    outputTokens: usage?.output_tokens ?? 0,
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    outputTokens: 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  function addUsage(
+    u: { input_tokens?: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number; output_tokens?: number } | undefined
+  ) {
+    if (!u) return;
+    meta.inputTokens += (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0);
+    meta.cachedInputTokens += u.cache_read_input_tokens ?? 0;
+    meta.outputTokens += u.output_tokens ?? 0;
+  }
 
-  if (!parsed || typeof parsed !== 'object') {
+  // ─── First attempt ────────────────────────────────────────────────
+  const first = await callOnce(messages);
+  addUsage(first.usage);
+
+  if (!first.parsed || typeof first.parsed !== 'object') {
+    meta.usdEstimate = estimateUsd(meta, choice);
     return {
       scheduled: input.previousScheduled,
       rationale: input.previousRationale,
@@ -250,22 +276,71 @@ export async function refineSchedule(
       meta: { ...meta, fallback: 'deterministic' }
     };
   }
-  const r = parsed as { reply?: unknown };
-  const reply = typeof r.reply === 'string' ? r.reply.trim() : '';
-  const validated = validateScheduleResponse(parsed, input, windowsByKey, successionFits);
+
+  let validated = validateScheduleResponse(first.parsed, input, windowsByKey, successionFits);
+  let lastParsed: unknown = first.parsed;
+  let lastRawText = first.rawText;
+  let lastReply = typeof (first.parsed as { reply?: unknown }).reply === 'string'
+    ? ((first.parsed as { reply: string }).reply).trim()
+    : '';
+
+  // ─── Corrective retry — mirrors the initial-schedule path. Echo the
+  //     model's first reply, list the violations, ask for a surgical
+  //     fix. Same prompt-engineering pattern that's already proven on
+  //     the allocator + scheduler initial calls. ──────────────────────
+  if (!validated.valid) {
+    console.warn(
+      `[aiSchedule.refine] first attempt failed validation (${validated.violations.length} violations); retrying.\n` +
+        `Violations: ${validated.violations.slice(0, 6).join(' | ')}`
+    );
+    const correction =
+      "Your previous response was rejected by the validator. Violations:\n" +
+      validated.violations.map((v) => `- ${v}`).join('\n') +
+      '\n\nReturn a CORRECTED schedule that fixes EVERY violation:' +
+      '\n- Keep dates inside the per-row window ranges from the original prompt.' +
+      '\n- Every assignment in the prompt must appear in scheduled[].' +
+      '\n- Companion offsets must be recalculated from the anchor planting.' +
+      "\n\nSame JSON shape as before — no prose, no code fences.";
+    const retry = await callOnce([
+      ...messages,
+      { role: 'assistant', content: [{ type: 'text', text: first.rawText }] },
+      { role: 'user', content: [{ type: 'text', text: correction }] }
+    ]);
+    addUsage(retry.usage);
+    if (retry.parsed && typeof retry.parsed === 'object') {
+      lastParsed = retry.parsed;
+      lastRawText = retry.rawText;
+      const retryReply = typeof (retry.parsed as { reply?: unknown }).reply === 'string'
+        ? ((retry.parsed as { reply: string }).reply).trim()
+        : '';
+      if (retryReply) lastReply = retryReply;
+      validated = validateScheduleResponse(retry.parsed, input, windowsByKey, successionFits);
+      if (!validated.valid) {
+        console.warn(
+          `[aiSchedule.refine] retry ALSO failed (${validated.violations.length} violations).`
+        );
+      }
+    }
+  }
+
+  meta.usdEstimate = estimateUsd(meta, choice);
+  void lastParsed;
+  void lastRawText;
+
   if (!validated.valid) {
     return {
       scheduled: input.previousScheduled,
       rationale: input.previousRationale,
       advisories: input.previousAdvisories,
       reply:
-        reply ||
+        lastReply ||
         "I tried to apply that change but it would break the planting windows or staggers. The schedule is unchanged.",
       windows,
       successionFits,
       meta: { ...meta, fallback: 'deterministic', violations: validated.violations }
     };
   }
+  const reply = lastReply;
 
   void options.planningSessionId;
   return {

@@ -249,12 +249,12 @@ async function callInputsClaude(
   });
   const usage = (msg.usage as unknown as Record<string, number | undefined>) ?? {};
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
-  const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-  let parsed: unknown = null;
-  try {
-    parsed = JSON.parse(stripped);
-  } catch {
-    parsed = null;
+  const parsed = extractJsonObject(text);
+  if (parsed === null && text.length > 0) {
+    // Log the raw text when extraction fails so we can iterate on the prompt
+    // or the extractor. Truncate to keep the log readable.
+    const preview = text.length > 800 ? `${text.slice(0, 800)}…` : text;
+    console.warn('[aiInputsPlan] could not extract JSON from model response. Raw text:\n' + preview);
   }
 
   const meta: AiResultMeta = {
@@ -269,6 +269,78 @@ async function callInputsClaude(
   return { parsed, meta };
 }
 
+/**
+ * Best-effort JSON extraction from a Claude response.
+ *
+ * Handles, in order of attempts:
+ *   1. The whole text parses as JSON (the ideal case the prompt asks for).
+ *   2. The text is wrapped in a ```json ... ``` (or unlabelled ```) fence.
+ *   3. The JSON object is preceded or followed by prose — extract from the
+ *      first `{` to the matching last `}` and try to parse.
+ *
+ * Returns `null` when no JSON object can be recovered.
+ */
+function extractJsonObject(text: string): unknown {
+  if (!text) return null;
+
+  // 1. Direct parse.
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    /* fallthrough */
+  }
+
+  // 2. Strip code-fence wrapper.
+  const fenceMatch = trimmed.match(/^```(?:json|JSON)?\s*([\s\S]*?)\s*```$/);
+  if (fenceMatch) {
+    try {
+      return JSON.parse(fenceMatch[1].trim());
+    } catch {
+      /* fallthrough */
+    }
+  }
+
+  // 3. First-{ to balanced last-} extraction. Walks the string tracking
+  //    bracket depth so we tolerate inline strings containing `{` or `}`
+  //    (e.g., a rationale string with curly braces). This is more
+  //    forgiving than a naive `text.indexOf('{')` + `text.lastIndexOf('}')`
+  //    slice.
+  const start = trimmed.indexOf('{');
+  if (start === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < trimmed.length; i++) {
+    const c = trimmed[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (c === '\\') {
+      escape = true;
+      continue;
+    }
+    if (c === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (c === '{') depth++;
+    else if (c === '}') {
+      depth--;
+      if (depth === 0) {
+        try {
+          return JSON.parse(trimmed.slice(start, i + 1));
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function buildSystemPrompt(): string {
   return `You are a farm-input substitution assistant. Given a deterministic input plan and the available product catalog, propose product substitutions that better match the operator's setup. You must NOT add, remove, or re-date applications. You may only:
 
@@ -280,7 +352,14 @@ Constraints — your output MUST satisfy all of:
 - The plugin is philosophy-compliant per the listed compliance flags.
 - Rate ≤ the plugin's ratePerAcre ceiling.
 
-Output format — JSON ONLY, no prose:
+CRITICAL — Output format:
+- Respond with a single raw JSON object. Nothing else.
+- No prose before or after the JSON.
+- No markdown, no \`\`\` code fences.
+- Do not start with phrases like "Here are…", "I'll suggest…", etc.
+- The first character of your response must be \`{\` and the last must be \`}\`.
+
+Schema:
 
 {
   "substitutions": [
@@ -295,7 +374,7 @@ Output format — JSON ONLY, no prose:
   ]
 }
 
-If no substitutions improve the plan, return {"substitutions": []}.`;
+If no substitutions improve the plan, return exactly: {"substitutions": []}`;
 }
 
 function buildInitialUserMessage(plan: InputsPlan, input: InputsPlanInput): string {

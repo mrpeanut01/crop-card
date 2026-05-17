@@ -197,6 +197,7 @@ These are not feature work; they are corrections to the spec doc itself. **Being
 | B-15 | Workbox per-tenant cache keys | — | 0.5d | Pure UX polish on owner-switching. Issue #27 |
 | B-16 | Sync-queue conflict resolution beyond last-write-wins | UC-12 | 1.5d | Single-farm scope per CLAUDE.md — defer. Issue #28 |
 | B-17 | Orchard / vine-fruit growth-stage templates | UC-40 | 0.5d | Pair with B-14. Issue #29 |
+| B-30 | Top-nav active-page tab styling (display-only) | UC-26 sibling | 1h | Visual-only: render the active route's nav item as a graphical "tab" wrapped around the button (rounded top corners, page-background fill, lifted shadow). No routing change. Current active style is a 3-px `border-top` accent at [`+layout.svelte:459`](../apps/web/src/routes/+layout.svelte#L459). Sits underneath UC-26 sidebar redesign (B-07) but valuable until that ships. Issue #47. |
 
 ---
 

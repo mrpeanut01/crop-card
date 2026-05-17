@@ -129,6 +129,16 @@ export async function planInputsWithAI(
   const validation = validateAiPlan(refined, input);
 
   if (!validation.ok) {
+    console.warn(
+      '[aiInputsPlan] AI substitutions failed validation — falling back to deterministic. ' +
+        `philosophy=${input.seasonSetup.philosophy}, ` +
+        `proposed=${substitutions.length}, violations=${validation.violations.length}`
+    );
+    console.warn('[aiInputsPlan] violations:', validation.violations);
+    console.warn(
+      '[aiInputsPlan] AI proposed substitutions:',
+      JSON.stringify(substitutions, null, 2)
+    );
     return {
       plan: deterministic,
       meta: { ...aiCall.meta, fallback: 'deterministic', violations: validation.violations }

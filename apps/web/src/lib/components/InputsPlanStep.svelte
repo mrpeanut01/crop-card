@@ -187,9 +187,25 @@
   {:else if plan}
     {#if planMeta?.fallback === 'deterministic'}
       <div class="card warn" role="status">
-        <strong>AI substitution rejected.</strong> The proposed product changes failed validation
-        (philosophy filter, safety kernel or rate ceiling); falling back to the deterministic
-        plan. Edit a row above to substitute by hand.
+        <strong>AI substitution rejected.</strong> The proposed product changes failed
+        validation; falling back to the deterministic plan. Edit a row above to substitute
+        by hand.
+        {#if planMeta.violations && planMeta.violations.length > 0}
+          <details class="violation-details">
+            <summary>Why? ({planMeta.violations.length} violation{planMeta.violations.length === 1 ? '' : 's'})</summary>
+            <ul class="violation-list">
+              {#each planMeta.violations as v, i (i)}
+                <li><code>{v}</code></li>
+              {/each}
+            </ul>
+            <p class="violation-hint">
+              Most common cause: plugins lack <code>complianceFlags</code> (omriListed,
+              nonGmoCompliant, etc.) so they can't satisfy a non-conventional philosophy.
+              Tag the plugins via Plugin Manager, or switch philosophy to
+              <code>conventional</code> to unblock substitutions.
+            </p>
+          </details>
+        {/if}
       </div>
     {:else if planMeta?.fallback === 'quota-exceeded'}
       <div class="card warn" role="status">
@@ -383,6 +399,35 @@
     background: #e3f2fd;
     border-color: #1565c0;
     color: #1e3a5f;
+  }
+  .violation-details {
+    margin-top: 0.6rem;
+  }
+  .violation-details summary {
+    cursor: pointer;
+    color: #5b3a00;
+    font-weight: 600;
+  }
+  .violation-list {
+    margin: 0.5rem 0 0.6rem 1.2rem;
+    padding: 0;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.85rem;
+    color: #5b3a00;
+  }
+  .violation-list li {
+    margin: 0.15rem 0;
+  }
+  .violation-hint {
+    margin: 0.4rem 0 0;
+    color: #5b3a00;
+    font-size: 0.9rem;
+  }
+  .violation-hint code {
+    font-size: 0.85rem;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0 0.25rem;
+    border-radius: 3px;
   }
   .link-btn {
     background: none;

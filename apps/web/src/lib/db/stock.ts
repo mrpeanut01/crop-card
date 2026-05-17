@@ -31,6 +31,7 @@ export type MovementReason =
   | 'receipt'
   | 'spray-event'
   | 'insecticide-event'
+  | 'fungicide-event'
   | 'fertility-application'
   | 'planting'
   | 'adjustment'
@@ -609,6 +610,7 @@ export function decrementForUse(input: {
   unit: StockUnit;
   sprayEventId?: string;
   insecticideEventId?: string;
+  fungicideEventId?: string;
   fertilityApplicationId?: string;
   cropId?: string;
   reason?: MovementReason;
@@ -658,9 +660,11 @@ export function decrementForUse(input: {
       input.reason ??
       (input.insecticideEventId
         ? 'insecticide-event'
-        : input.fertilityApplicationId
-          ? 'fertility-application'
-          : 'spray-event');
+        : input.fungicideEventId
+          ? 'fungicide-event'
+          : input.fertilityApplicationId
+            ? 'fertility-application'
+            : 'spray-event');
     const movement = db
       .insert(stockMovements)
       .values(
@@ -672,6 +676,7 @@ export function decrementForUse(input: {
           reason,
           sprayEventId: input.sprayEventId ?? null,
           insecticideEventId: input.insecticideEventId ?? null,
+          fungicideEventId: input.fungicideEventId ?? null,
           fertilityApplicationId: input.fertilityApplicationId ?? null,
           cropId: input.cropId ?? null,
           performedById: input.performedById ?? null,

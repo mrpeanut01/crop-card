@@ -30,6 +30,7 @@ export type RelatedEventTable =
   | 'spray_event'
   | 'harvest_event'
   | 'insecticide_event'
+  | 'fungicide_event'
   | 'hay_cutting'
   | 'fertility_application';
 

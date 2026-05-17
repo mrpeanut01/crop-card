@@ -790,6 +790,49 @@ export const insecticideEvents = tenantScoped(
   )
 );
 
+/**
+ * Phase 21 (B-18): fungicide application events. Mirrors `insecticideEvents`
+ * field-for-field — fungicides share REI/PHI semantics, the same 48-hour
+ * lock window, and the same scout-observation flow (a disease-density
+ * observation rather than a pest-count one). The product snapshot
+ * captures FRAC codes (analogous to IRAC for insecticides) so the
+ * agronomy/resistance rotation hint engine can warn about consecutive
+ * single-FRAC sprays.
+ */
+export const fungicideEvents = tenantScoped(
+  sqliteTable(
+    'fungicide_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      sprayerId: text('sprayer_id').references(() => equipment.id),
+      performedById: text('performed_by_id')
+        .notNull()
+        .references(() => users.id),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      productsJson: text('products_json').notNull(),
+      scoutObservationJson: text('scout_observation_json'),
+      conditionsJson: text('conditions_json').notNull(),
+      reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' }),
+      preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
+      rulesVersion: text('rules_version').notNull(),
+      pluginHashesJson: text('plugin_hashes_json').notNull(),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerOccurredIdx: index('fungicide_events_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      ),
+      ownerBlockIdx: index('fungicide_events_owner_block_idx').on(table.ownerId, table.blockId)
+    })
+  )
+);
+
 export const stockMovements = tenantScoped(
   sqliteTable(
     'stock_movements',
@@ -806,6 +849,7 @@ export const stockMovements = tenantScoped(
           'receipt',
           'spray-event',
           'insecticide-event',
+          'fungicide-event',
           'fertility-application',
           'planting',
           'adjustment',
@@ -815,6 +859,7 @@ export const stockMovements = tenantScoped(
       }).notNull(),
       sprayEventId: text('spray_event_id').references(() => sprayEvents.id),
       insecticideEventId: text('insecticide_event_id').references(() => insecticideEvents.id),
+      fungicideEventId: text('fungicide_event_id').references(() => fungicideEvents.id),
       fertilityApplicationId: text('fertility_application_id').references(
         () => fertilityApplications.id
       ),
@@ -959,6 +1004,7 @@ export const tasks = tenantScoped(
           'spray_event',
           'harvest_event',
           'insecticide_event',
+          'fungicide_event',
           'hay_cutting',
           'fertility_application'
         ]

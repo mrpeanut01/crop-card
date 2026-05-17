@@ -25,6 +25,7 @@ import {
 } from '$lib/calendar/engine';
 import { listShadeSources } from '$lib/db/shadeSources';
 import { getFarmLatLon } from '$lib/schedule/settings';
+import { loadSeasonSetup } from '$lib/season/setup';
 import {
   plantingBarEndMs,
   rotationConflicts,
@@ -141,7 +142,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   const fieldsByBlockId = blockToFieldMap(blocks, fields);
 
-  const frostDates = frostDatesForYear(new Date().getFullYear());
+  const currentYear = new Date().getFullYear();
+  const frostDates = frostDatesForYear(currentYear);
+  const seasonSetup = loadSeasonSetup(currentYear);
+  const lastYearSetup = loadSeasonSetup(currentYear - 1);
 
   const base = {
     tab,
@@ -152,7 +156,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     cropCatalog,
     plantingGuides,
     showFieldControls: fields.length > 1,
-    frostDates
+    frostDates,
+    currentYear,
+    seasonSetup,
+    lastYearSetup
   };
 
   if (tab === 'overview') {

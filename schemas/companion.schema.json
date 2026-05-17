@@ -1,35 +1,43 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "https://json-schema.org/draft/2019-09/schema#",
   "$id": "https://cropcard.dev/schemas/companion.schema.json",
   "title": "CropCard Companion Plugin",
-  "description": "Pairwise companion + multi-crop interplanting system (e.g., Three Sisters). Drives the companion advisor + the group-planning engine. Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema) — the Zod schema is the runtime source of truth; this file is documentation for plugin authors.",
+  "description": "Data-only companion-planting definition (goodWith / badWith / member-system). Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema).",
   "type": "object",
-  "required": ["pluginId", "type", "displayName", "version"],
-  "additionalProperties": true,
   "properties": {
     "pluginId": {
       "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9-]{0,127}$"
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
     },
-    "type": { "const": "companion" },
-    "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
     "version": {
       "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+([-+].+)?$"
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "const": "companion"
     },
     "goodWith": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "description": "Crop pluginIds that pair well with each other when interplanted on the same block."
+      "items": {
+        "type": "string"
+      },
+      "default": []
     },
     "badWith": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "description": "Crop pluginIds that should NOT be interplanted (allelopathy, shared disease vectors, etc.)."
+      "items": {
+        "type": "string"
+      },
+      "default": []
     },
     "primaryFamily": {
       "type": "string",
-      "description": "Anchor crop family for multi-crop systems (e.g., Three Sisters anchors on 'corn'). When present, members[] describes the other families and their planting offsets. Matches a CROP_FAMILIES enum value (see crop.schema.json cropFamily).",
       "enum": [
         "corn",
         "cucurbit",
@@ -55,11 +63,8 @@
     },
     "members": {
       "type": "array",
-      "description": "Phase 15 — declarative multi-crop system. Each entry describes a non-anchor member family and its planting offset from the anchor.",
       "items": {
         "type": "object",
-        "required": ["family", "role", "plantingOffsetDays"],
-        "additionalProperties": false,
         "properties": {
           "family": {
             "type": "string",
@@ -86,18 +91,44 @@
               "herb-culinary"
             ]
           },
-          "role": { "type": "string", "minLength": 1, "maxLength": 80 },
-          "plantingOffsetDays": { "type": "integer", "minimum": 0, "maximum": 365 },
-          "title": { "type": "string", "minLength": 1, "maxLength": 120 },
-          "body": { "type": "string", "maxLength": 500 }
-        }
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "plantingOffsetDays": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 365
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "family",
+          "role",
+          "plantingOffsetDays"
+        ],
+        "additionalProperties": false
       }
     },
     "benefit": {
       "type": "string",
-      "maxLength": 500,
-      "description": "One-paragraph explanation of why the system works (nitrogen fixation, weed suppression, pollinator attraction, etc.)."
-    },
-    "notes": { "type": "string" }
-  }
+      "maxLength": 500
+    }
+  },
+  "required": [
+    "pluginId",
+    "displayName",
+    "version",
+    "type"
+  ],
+  "additionalProperties": false
 }

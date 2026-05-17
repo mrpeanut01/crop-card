@@ -6,9 +6,17 @@ import { requireOwner, requireUser } from '$lib/server/auth';
 import { getPlatesCatalog } from '$lib/planterPlate/catalog';
 import { inferSeedTypeFromName } from '$lib/planterPlate/match';
 import type { PlateSeedType } from '$lib/planterPlate/types';
+import { getSetting } from '$lib/db/settings';
+import { SETTINGS_KEYS } from '$lib/schedule/constants';
 
 export const load: PageServerLoad = (event) => {
   requireUser(event);
+  // Phase 21 (B-29): planter-plate selector off by default for new owners.
+  // Opt-in via Settings → Display ("Show planter setup"). Redirect deep-
+  // links to /tools so the index renders without the now-hidden card.
+  if (getSetting(SETTINGS_KEYS.displayPlanterSetup) !== 'true') {
+    throw redirect(303, '/tools');
+  }
   const stockId = event.url.searchParams.get('stockId') ?? null;
 
   // Seed items the Owner can save to (typed as 'seed' only).

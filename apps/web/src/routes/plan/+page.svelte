@@ -2692,6 +2692,7 @@
       fields={data.fields}
       canEdit={false}
       blockBadges={blockBadges}
+      shadeSources={data.shadeSources ?? []}
       onSaveGeometry={saveGeometry}
       onCreateWithGeometry={createBlockWithGeometry}
       onSaveFieldGeometry={saveFieldGeometry}

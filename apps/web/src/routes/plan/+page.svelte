@@ -11,7 +11,16 @@
   import AllocationWizard from '$lib/components/AllocationWizard.svelte';
   import PlantingGroupWizard from '$lib/components/PlantingGroupWizard.svelte';
   import GroupInspector from '$lib/components/GroupInspector.svelte';
-  import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
+  import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
+  import {
+    type SeasonSetup,
+    PHILOSOPHY_LABELS,
+    WEED_LABELS,
+    PEST_LABELS,
+    FERTILITY_LABELS,
+    COVER_LABELS,
+    SPRAY_LABELS
+  } from '$lib/season/setup';
   import {
     applyBlockOrder,
     loadBlockOrder,
@@ -681,6 +690,16 @@
   let planning = $state(false);
   let committing = $state(false);
   let showAllocationWizard = $state(false);
+  // Phase 21a polish — when the Overview tab shows an existing Season
+  // Setup chip, this toggles back to the inline form so the operator can
+  // edit in place (no navigation to /settings/season).
+  let editingSeason = $state(false);
+  function handleSeasonSaved(setup: SeasonSetup) {
+    editingSeason = false;
+    void setup;
+    // Re-fetch the loader so the chip + downstream tabs see the new state.
+    invalidateAll();
+  }
   // Phase 15 — planting-group wizard + inspector state.
   let showGroupWizard = $state(false);
   let openGroupId = $state<string | null>(null);
@@ -2087,104 +2106,98 @@
   </section>
 {/if}
 
-<!-- ────────────────────────── OVERVIEW ────────────────────────── -->
+<!-- ────────────────────────── OVERVIEW (Season Setup, stage 1 of 5) ────────────────────────── -->
 {#if data.tab === 'overview'}
-  <!-- Phase 21a polish: Season Setup status + Planning Wizard entry. The
-       wizard was previously buried in the Crops-tab seed rail; surfacing
-       it here makes "what year am I planning + open the planner" the
-       first thing on Overview. -->
   <section class="card season-card">
-    <div class="season-header">
+    <header class="season-header">
       <div class="season-headline">
         <span class="season-year">{data.currentYear ?? new Date().getFullYear()}</span>
         <span class="season-title">Planting season</span>
       </div>
-      {#if data.canEdit}
-        <button
-          type="button"
-          class="open-wizard-btn"
-          onclick={() => (showAllocationWizard = true)}
-        >
-          ✨ Open planning wizard
-        </button>
-      {/if}
-    </div>
+      <span class="stage-pill">Stage 1 of 5 · Season setup</span>
+    </header>
 
-    {#if data.seasonSetup}
-      <div class="season-chip-row">
-        <SeasonSetupChip
-          setup={data.seasonSetup}
-          canEdit={data.canEdit}
-          onEdit={() => goto('/settings/season')}
-        />
+    {#if data.seasonSetup && !editingSeason}
+      <!-- Setup exists: show all 6 settings as a definition list + Edit
+           button to swap back to the inline form + Next CTA. -->
+      <dl class="season-summary">
+        <div class="season-row">
+          <dt>Input philosophy</dt>
+          <dd>{PHILOSOPHY_LABELS[data.seasonSetup.philosophy]}</dd>
+        </div>
+        {#if data.seasonSetup.philosophy === 'organic-transitioning' && data.seasonSetup.transitioningStartedYear}
+          <div class="season-row">
+            <dt>Transition started</dt>
+            <dd>{data.seasonSetup.transitioningStartedYear}</dd>
+          </div>
+        {/if}
+        <div class="season-row">
+          <dt>Weed strategy</dt>
+          <dd>{WEED_LABELS[data.seasonSetup.weedStrategy]}</dd>
+        </div>
+        <div class="season-row">
+          <dt>Pest strategy</dt>
+          <dd>{PEST_LABELS[data.seasonSetup.pestStrategy]}</dd>
+        </div>
+        <div class="season-row">
+          <dt>Fertility approach</dt>
+          <dd>{FERTILITY_LABELS[data.seasonSetup.fertilityApproach]}</dd>
+        </div>
+        <div class="season-row">
+          <dt>Cover crop intent</dt>
+          <dd>{COVER_LABELS[data.seasonSetup.coverCropIntent]}</dd>
+        </div>
+        <div class="season-row">
+          <dt>Spray application capacity</dt>
+          <dd>{SPRAY_LABELS[data.seasonSetup.sprayCapacity]}</dd>
+        </div>
+      </dl>
+      {#if data.canEdit}
+        <div class="season-meta-row">
+          <span class="season-meta">
+            Last updated {new Date(data.seasonSetup.setAt).toLocaleString()}
+          </span>
+          <button
+            type="button"
+            class="edit-season-btn"
+            onclick={() => (editingSeason = true)}
+          >
+            Edit season settings
+          </button>
+        </div>
+      {/if}
+      <div class="stage-cta-row">
+        <p class="stage-helper">
+          Your {data.currentYear ?? new Date().getFullYear()} season setup is captured.
+          Continue to the next stage — define where things are growing.
+        </p>
+        <a class="next-stage-btn" href={tabHref('layout')}>Next: Layout →</a>
       </div>
     {:else if data.canEdit}
-      <div class="season-cta-row">
-        <p class="season-empty">
-          Your input philosophy for {data.currentYear ?? new Date().getFullYear()} isn't
-          set yet. The planning wizard will walk you through 6 quick questions —
-          they drive which products and tasks get suggested for the rest of the
-          season.
+      <!-- No setup yet, or operator chose to edit: show the form inline. -->
+      <SeasonSetupStep
+        existing={data.seasonSetup ?? null}
+        lastYearSetup={data.lastYearSetup ?? null}
+        currentYear={data.currentYear ?? new Date().getFullYear()}
+        onSave={handleSeasonSaved}
+      />
+      {#if editingSeason}
+        <p class="stage-helper">
+          <button type="button" class="cancel-edit-link" onclick={() => (editingSeason = false)}
+            >Cancel edits</button
+          >
         </p>
-        <a class="season-setup-link" href="/settings/season"
-          >Or set up Season directly →</a
-        >
-      </div>
+      {/if}
+    {:else}
+      <!-- Helper / read-only viewer. -->
+      <p class="stage-helper">
+        The owner hasn't completed the season setup for {data.currentYear ??
+          new Date().getFullYear()} yet. The planner uses the setup to filter
+        which products and tasks to suggest, so downstream stages will fall
+        back to conventional defaults until it's set.
+      </p>
     {/if}
   </section>
-
-  {#if data.isFirstRun && data.canEdit}
-    <section class="card wizard">
-      <h2>👋 Welcome to CropCard</h2>
-      <p>Get started in three steps:</p>
-      <ol>
-        <li><a href={tabHref('layout')}>Layout</a> — draw fields and blocks on the map</li>
-        <li><a href={tabHref('crops')}>Crops</a> — assign crops to blocks with planting dates</li>
-        <li><a href={tabHref('schedule')}>Schedule</a> — auto-generate your season plan</li>
-      </ol>
-    </section>
-  {:else}
-    <section class="card">
-      <div class="overview-stats">
-        <div class="stat-box"><span class="stat-num">{data.fields.length}</span><span class="stat-label">Fields</span></div>
-        <div class="stat-box"><span class="stat-num">{data.blocks.length}</span><span class="stat-label">Blocks</span></div>
-        <div class="stat-box"><span class="stat-num">{data.blocks.reduce((n, b) => n + b.plantings.length, 0)}</span><span class="stat-label">Plantings</span></div>
-      </div>
-      {#each data.fields as f (f.id)}
-        {@const fieldBlocks = data.blocks.filter((b) => b.fieldId === f.id)}
-        <div class="field-group">
-          <div class="field-row">
-            <span class="field-icon">🌾</span>
-            <strong class="field-name">{f.name}</strong>
-            <span class="field-stats">{fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}</span>
-          </div>
-          <ul class="block-list-flat">
-            {#each fieldBlocks as b (b.id)}
-              <li class="ov-block-row">
-                <div class="block-summary-row">
-                  <span class="block-icon">▪</span>
-                  <span class="block-name">{b.name}</span>
-                  {#if b.acres}<span class="block-acres">{b.acres.toFixed(2)} ac</span>{/if}
-                </div>
-                {#if b.plantings.length > 0}
-                  <ul class="ov-planting-list">
-                    {#each b.plantings as p (p.id)}
-                      <li class="ov-planting-chip">
-                        <span class="ov-crop-name">{p.varietyDisplayName}</span>
-                        {#if p.plantingDate}
-                          <span class="ov-crop-date">{fmtShort(p.plantingDate)}</span>
-                        {/if}
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-              </li>
-            {/each}
-          </ul>
-        </div>
-      {/each}
-    </section>
-  {/if}
 {/if}
 
 <!-- ────────────────────────── LAYOUT ────────────────────────── -->
@@ -3999,13 +4012,6 @@
     border-left: 4px solid #1f5e3a;
     background: #f8fbf9;
   }
-  .wizard ol {
-    padding-left: 1.5rem;
-    margin: 0.5rem 0 0;
-  }
-  .wizard li {
-    margin: 0.5rem 0;
-  }
 
   /* Field cards */
   .field-card {
@@ -4864,7 +4870,7 @@
     color: white;
   }
 
-  /* Overview tab — Season Setup status + wizard entry (Phase 21a polish) */
+  /* Overview tab — Season Setup as stage 1 of the planning flow. */
   .season-card {
     border-left: 4px solid #1f5e3a;
     background: linear-gradient(180deg, #f8fbf9 0%, #ffffff 100%);
@@ -4875,6 +4881,7 @@
     justify-content: space-between;
     gap: 0.75rem;
     flex-wrap: wrap;
+    margin-bottom: 0.75rem;
   }
   .season-headline {
     display: flex;
@@ -4891,7 +4898,92 @@
     font-size: 1rem;
     color: #4a5a4a;
   }
-  .open-wizard-btn {
+  .stage-pill {
+    background: #1f5e3a;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+  }
+  .season-chip-row {
+    margin-top: 0.75rem;
+  }
+  .season-summary {
+    margin: 0 0 0.5rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(180px, max-content) 1fr;
+    column-gap: 1rem;
+    row-gap: 0.4rem;
+  }
+  .season-row {
+    display: contents;
+  }
+  .season-row dt {
+    color: #4a5a4a;
+    font-weight: 600;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    padding-top: 2px;
+  }
+  .season-row dd {
+    margin: 0;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+  .season-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #e4e9e4;
+  }
+  .season-meta {
+    color: #6a7d6a;
+    font-size: 0.82rem;
+  }
+  .edit-season-btn {
+    min-height: 36px;
+    padding: 0.35rem 0.85rem;
+    background: white;
+    color: #1f5e3a;
+    border: 1px solid #1f5e3a;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .edit-season-btn:hover {
+    background: #1f5e3a;
+    color: white;
+  }
+  .edit-season-btn:focus-visible {
+    outline: 2px solid #1f5e3a;
+    outline-offset: 2px;
+  }
+  .stage-cta-row {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e4e9e4;
+  }
+  .stage-helper {
+    margin: 0;
+    color: #4a5a4a;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+  .next-stage-btn {
+    align-self: flex-start;
     min-height: 48px;
     padding: 0.6rem 1.25rem;
     background: #1f5e3a;
@@ -4900,35 +4992,26 @@
     border-radius: 6px;
     font-weight: 700;
     font-size: 0.95rem;
+    text-decoration: none;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
   }
-  .open-wizard-btn:hover {
+  .next-stage-btn:hover {
     background: #174a2c;
   }
-  .open-wizard-btn:focus-visible {
+  .next-stage-btn:focus-visible {
     outline: 2px solid #1f5e3a;
     outline-offset: 2px;
   }
-  .season-chip-row {
-    margin-top: 0.75rem;
-  }
-  .season-cta-row {
-    margin-top: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .season-empty {
-    margin: 0;
-    color: #4a5a4a;
-    font-size: 0.95rem;
-    line-height: 1.45;
-  }
-  .season-setup-link {
-    align-self: flex-start;
+  .cancel-edit-link {
+    background: none;
+    border: none;
     color: #1f5e3a;
     font-size: 0.9rem;
     text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
   }
 
   /* Overview tab */

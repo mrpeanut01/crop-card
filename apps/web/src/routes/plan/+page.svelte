@@ -11,7 +11,6 @@
   import AllocationWizard from '$lib/components/AllocationWizard.svelte';
   import PlantingGroupWizard from '$lib/components/PlantingGroupWizard.svelte';
   import GroupInspector from '$lib/components/GroupInspector.svelte';
-  import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
   import {
     applyBlockOrder,
     loadBlockOrder,
@@ -2089,50 +2088,6 @@
 
 <!-- ────────────────────────── OVERVIEW ────────────────────────── -->
 {#if data.tab === 'overview'}
-  <!-- Phase 21a polish: Season Setup status + Planning Wizard entry. The
-       wizard was previously buried in the Crops-tab seed rail; surfacing
-       it here makes "what year am I planning + open the planner" the
-       first thing on Overview. -->
-  <section class="card season-card">
-    <div class="season-header">
-      <div class="season-headline">
-        <span class="season-year">{data.currentYear ?? new Date().getFullYear()}</span>
-        <span class="season-title">Planting season</span>
-      </div>
-      {#if data.canEdit}
-        <button
-          type="button"
-          class="open-wizard-btn"
-          onclick={() => (showAllocationWizard = true)}
-        >
-          ✨ Open planning wizard
-        </button>
-      {/if}
-    </div>
-
-    {#if data.seasonSetup}
-      <div class="season-chip-row">
-        <SeasonSetupChip
-          setup={data.seasonSetup}
-          canEdit={data.canEdit}
-          onEdit={() => goto('/settings/season')}
-        />
-      </div>
-    {:else if data.canEdit}
-      <div class="season-cta-row">
-        <p class="season-empty">
-          Your input philosophy for {data.currentYear ?? new Date().getFullYear()} isn't
-          set yet. The planning wizard will walk you through 6 quick questions —
-          they drive which products and tasks get suggested for the rest of the
-          season.
-        </p>
-        <a class="season-setup-link" href="/settings/season"
-          >Or set up Season directly →</a
-        >
-      </div>
-    {/if}
-  </section>
-
   {#if data.isFirstRun && data.canEdit}
     <section class="card wizard">
       <h2>👋 Welcome to CropCard</h2>
@@ -4862,73 +4817,6 @@
   .advisor-modal .actions .primary {
     background: #1f5e3a;
     color: white;
-  }
-
-  /* Overview tab — Season Setup status + wizard entry (Phase 21a polish) */
-  .season-card {
-    border-left: 4px solid #1f5e3a;
-    background: linear-gradient(180deg, #f8fbf9 0%, #ffffff 100%);
-  }
-  .season-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  .season-headline {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-  }
-  .season-year {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #1f5e3a;
-    line-height: 1;
-  }
-  .season-title {
-    font-size: 1rem;
-    color: #4a5a4a;
-  }
-  .open-wizard-btn {
-    min-height: 48px;
-    padding: 0.6rem 1.25rem;
-    background: #1f5e3a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-  }
-  .open-wizard-btn:hover {
-    background: #174a2c;
-  }
-  .open-wizard-btn:focus-visible {
-    outline: 2px solid #1f5e3a;
-    outline-offset: 2px;
-  }
-  .season-chip-row {
-    margin-top: 0.75rem;
-  }
-  .season-cta-row {
-    margin-top: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .season-empty {
-    margin: 0;
-    color: #4a5a4a;
-    font-size: 0.95rem;
-    line-height: 1.45;
-  }
-  .season-setup-link {
-    align-self: flex-start;
-    color: #1f5e3a;
-    font-size: 0.9rem;
-    text-decoration: underline;
   }
 
   /* Overview tab */

@@ -1061,13 +1061,17 @@
     background: #1f5e3a;
     color: white;
     padding: 0.5rem 0.9rem;
-    min-height: 44px;
+    /* T-06 (audit F-H): 44px violated the CLAUDE.md field-UI invariant
+     * (≥48 dp tap targets for glove-operability). Bumped to 48 px so
+     * Marco can hit the primary Today CTA reliably with gloves on. */
+    min-height: 48px;
   }
   .secondary {
     background: #f0f3f0;
     color: #1f5e3a;
     padding: 0.5rem 0.9rem;
-    min-height: 44px;
+    /* T-06 (audit F-H): see .primary above. */
+    min-height: 48px;
     border: 1px solid #1f5e3a;
   }
   .mini {

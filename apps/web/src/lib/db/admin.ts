@@ -12,7 +12,7 @@
  * cross-tenant wipes are an explicit, audited operation defined elsewhere.
  */
 
-import { type SQL, and, eq, inArray, isNotNull } from 'drizzle-orm';
+import { type SQL, and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import {
@@ -29,6 +29,7 @@ import {
   harvestEvents,
   insecticideEvents,
   pendingCalibrations,
+  plantingRecords,
   soilTests,
   sprayEvents,
   sprayers,
@@ -406,3 +407,65 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     .run();
   return { removed };
 }
+
+/**
+ * Phase 21 (B-28 follow-up) — "Start over" reset for the Plan wizard.
+ *
+ * Deletes only the *planning artifacts* — leaves blocks, fields, stock,
+ * equipment, and historical (status='active'/'harvested'/etc.) crops
+ * intact. Specifically targets:
+ *
+ *   - planting_records rows with status='planned' (the wizard's
+ *     commit output before a planting actually goes in the ground)
+ *   - crops rows with status='planned' (and their cascading events,
+ *     though planned crops typically have none)
+ *   - tasks tagged pluginTemplateKey='inputs-plan' AND status='open'
+ *     (the Inputs Plan step's materialized tasks; completed ones
+ *     stay so the executed history is preserved)
+ *
+ * Tenant-scoped via every del() helper. Returns a per-table count
+ * the UI can surface in the confirmation result.
+ */
+export function wipeCurrentPlan(): DeleteSummary {
+  const removed: Record<string, number> = {};
+
+  // 1. Planned crops + their (rarely-present) cascading events.
+  const plannedCropIds = db
+    .select({ id: crops.id })
+    .from(crops)
+    .where(withTenant(crops, eq(crops.status, 'planned')))
+    .all()
+    .map((r) => r.id);
+  for (const cid of plannedCropIds) {
+    const r = deleteCropCascade(cid);
+    for (const [k, v] of Object.entries(r.removed)) {
+      removed[k] = (removed[k] ?? 0) + v;
+    }
+  }
+
+  // 2. Planning records with status='planned' — the wizard's commit
+  //    output before a planting goes in the ground.
+  removed.planting_records_planned = del(
+    plantingRecords,
+    eq(plantingRecords.status, 'planned')
+  );
+
+  // 3. Open inputs-plan tasks. Completed / aborted tasks survive —
+  //    their executed history is load-bearing for the audit trail.
+  removed.tasks_inputs_plan_open = db
+    .delete(tasks)
+    .where(
+      withTenant(
+        tasks,
+        and(
+          eq(tasks.pluginTemplateKey, 'inputs-plan'),
+          isNull(tasks.completedAt),
+          isNull(tasks.abortedAt)
+        )!
+      )
+    )
+    .run().changes;
+
+  return { removed };
+}
+

@@ -95,6 +95,7 @@
 
   type Step =
     | 'season-setup'
+    | 'plan-state'
     | 'seeds'
     | 'blocks'
     | 'review'
@@ -107,12 +108,72 @@
   // initial wizard state is read from props once at mount; subsequent
   // changes are owned locally (handleSeasonSetupSaved updates `activeSetup`
   // after a successful save).
+  //
+  // Phase 21 follow-up: when an existing plan is detected (any block
+  // already has plantings), gate on the new 'plan-state' chooser so the
+  // operator can pick between "Continue planning (add more)" and "Start
+  // over (clear current plan)". Without this gate, clicking "Plan
+  // Plantings" with a plan in place silently dropped them into the
+  // additive flow with no way to reset.
   let activeSetup = $state<SeasonSetup | null>(untrack(() => seasonSetup));
-  let step: Step = $state(untrack(() => (activeSetup ? 'seeds' : 'season-setup')));
+  const hasExistingPlan = untrack(() =>
+    blocks.some((b) => b.plantings && b.plantings.length > 0)
+  );
+  let step: Step = $state(
+    untrack(() => {
+      if (!activeSetup) return 'season-setup';
+      if (hasExistingPlan) return 'plan-state';
+      return 'seeds';
+    })
+  );
 
   function handleSeasonSetupSaved(saved: SeasonSetup) {
     activeSetup = saved;
+    step = hasExistingPlan ? 'plan-state' : 'seeds';
+  }
+
+  // ─── Plan-state step handlers (Phase 21 follow-up) ───────────────────
+  let resetConfirmOpen = $state(false);
+  let resetting = $state(false);
+  let resetError = $state<string | null>(null);
+  let resetSummary = $state<Record<string, number> | null>(null);
+
+  function continueExistingPlan() {
     step = 'seeds';
+  }
+
+  function openResetConfirm() {
+    resetError = null;
+    resetSummary = null;
+    resetConfirmOpen = true;
+  }
+
+  function cancelReset() {
+    resetConfirmOpen = false;
+  }
+
+  async function confirmReset() {
+    resetting = true;
+    resetError = null;
+    try {
+      const res = await fetch('/api/plan/reset', { method: 'DELETE' });
+      const body = await res.json();
+      if (!res.ok) {
+        resetError = body.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      resetSummary = body.removed ?? {};
+      resetConfirmOpen = false;
+      // Surface the wipe + advance to seeds. The parent's onCommitted is
+      // also fired here so the /plan loader refetches and the stale
+      // `blocks.plantings[]` props update on the next render.
+      step = 'seeds';
+      onCommitted();
+    } catch (e) {
+      resetError = e instanceof Error ? e.message : String(e);
+    } finally {
+      resetting = false;
+    }
   }
 
   let seedSearch = $state('');
@@ -1113,6 +1174,80 @@
           {currentYear}
           onSave={handleSeasonSetupSaved}
         />
+      {:else if step === 'plan-state'}
+        <section class="aw-plan-state">
+          <h3>You have a plan in place</h3>
+          <p class="aw-plan-state-lede">
+            {#each blocks.filter((b) => b.plantings.length > 0) as b, i (b.id)}
+              {#if i > 0},
+              {/if}
+              <strong>{b.name}</strong>: {b.plantings.length} planting{b.plantings.length === 1
+                ? ''
+                : 's'}
+            {/each}
+          </p>
+          <p>Pick what to do next:</p>
+          <div class="aw-plan-state-actions">
+            <button
+              type="button"
+              class="aw-plan-state-btn aw-plan-state-continue"
+              onclick={continueExistingPlan}
+            >
+              <span class="aw-plan-state-icon" aria-hidden="true">✚</span>
+              <span class="aw-plan-state-title">Continue planning</span>
+              <span class="aw-plan-state-sub">Add more plantings to the current plan.</span>
+            </button>
+            <button
+              type="button"
+              class="aw-plan-state-btn aw-plan-state-reset"
+              onclick={openResetConfirm}
+            >
+              <span class="aw-plan-state-icon" aria-hidden="true">↻</span>
+              <span class="aw-plan-state-title">Start over</span>
+              <span class="aw-plan-state-sub">
+                Clear the current plan and start fresh. Historical (planted /
+                harvested) crops are preserved.
+              </span>
+            </button>
+          </div>
+          {#if resetError}
+            <p class="aw-error" role="alert">Reset failed: {resetError}</p>
+          {/if}
+
+          {#if resetConfirmOpen}
+            <div
+              class="aw-confirm-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="aw-reset-title"
+            >
+              <div class="aw-confirm-card">
+                <h4 id="aw-reset-title">Clear the current plan?</h4>
+                <p>
+                  This deletes every <strong>planned</strong> crop on your blocks and any
+                  open Inputs Plan tasks. Active and harvested crops are kept. This cannot
+                  be undone.
+                </p>
+                <div class="aw-confirm-actions">
+                  <button
+                    type="button"
+                    class="btn-secondary"
+                    onclick={cancelReset}
+                    disabled={resetting}>Cancel</button
+                  >
+                  <button
+                    type="button"
+                    class="btn-danger"
+                    onclick={confirmReset}
+                    disabled={resetting}
+                  >
+                    {resetting ? 'Clearing…' : 'Yes — clear the plan'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          {/if}
+        </section>
       {:else if step === 'seeds'}
         <p class="aw-intro">
           Pick the seed lots you want to plant. Adjust quantity per row — defaults to on-hand.
@@ -1425,10 +1560,12 @@
       {#if step === 'season-setup'}
         <button class="btn-secondary" onclick={onClose}>Cancel</button>
         {#if activeSetup}
-          <button class="btn-secondary" onclick={() => (step = 'seeds')}>
+          <button class="btn-secondary" onclick={() => (step = hasExistingPlan ? 'plan-state' : 'seeds')}>
             Keep current & continue
           </button>
         {/if}
+      {:else if step === 'plan-state'}
+        <button class="btn-secondary" onclick={onClose}>Cancel</button>
       {:else if step === 'seeds'}
         <button class="btn-secondary" onclick={onClose}>Cancel</button>
         <button
@@ -1565,6 +1702,113 @@
   .aw-intro {
     margin: 0 0 0.75rem;
     color: #4a5d4a;
+  }
+  .aw-plan-state {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .aw-plan-state h3 {
+    margin: 0;
+    color: #1f5e3a;
+  }
+  .aw-plan-state-lede {
+    margin: 0;
+    color: #555;
+    font-size: 0.95rem;
+  }
+  .aw-plan-state-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  @media (max-width: 600px) {
+    .aw-plan-state-actions {
+      grid-template-columns: 1fr;
+    }
+  }
+  .aw-plan-state-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-start;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    min-height: 96px;
+  }
+  .aw-plan-state-btn:hover {
+    border-color: #1f5e3a;
+    background: #f4f9f5;
+  }
+  .aw-plan-state-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  .aw-plan-state-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f5e3a;
+  }
+  .aw-plan-state-reset .aw-plan-state-title {
+    color: #b71c1c;
+  }
+  .aw-plan-state-reset:hover {
+    border-color: #b71c1c;
+    background: #fdecea;
+  }
+  .aw-plan-state-sub {
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: normal;
+  }
+  .aw-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .aw-confirm-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    max-width: 480px;
+    width: calc(100% - 2rem);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+  .aw-confirm-card h4 {
+    margin: 0 0 0.5rem;
+    color: #b71c1c;
+  }
+  .aw-confirm-card p {
+    margin: 0 0 1rem;
+    color: #333;
+  }
+  .aw-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  .btn-danger {
+    min-height: 48px;
+    padding: 0 1.25rem;
+    background: #b71c1c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
   .aw-table {
     width: 100%;

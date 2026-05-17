@@ -39,8 +39,8 @@ Persisted as `settings` rows keyed `season_setup.<year>.<field>`. Stored as JSON
 | Key | Type | Values | Default |
 |---|---|---|---|
 | `philosophy` | enum | `'conventional' \| 'non-gmo' \| 'organic-transitioning' \| 'certified-organic'` | `'conventional'` |
-| `weedStrategy` | enum | `'cultivate-first' \| 'pre-emergence-ok' \| 'post-emergence-ok' \| 'no-spray'` | `'post-emergence-ok'` |
-| `pestStrategy` | enum | `'preventive' \| 'ipm' \| 'minimal' \| 'no-spray'` | `'ipm'` |
+| `weedStrategy` | enum | `'cultivate-first' \| 'pre-emergence-ok' \| 'post-emergence-ok'` (cumulative tiers; each includes the methods above) | `'post-emergence-ok'` |
+| `pestStrategy` | enum | `'preventive' \| 'ipm' \| 'minimal'` | `'ipm'` |
 | `fertilityApproach` | enum | `'synthetic' \| 'compost-amendments' \| 'cover-crop-credits' \| 'mixed'` | `'mixed'` |
 | `coverCropIntent` | enum | `'fall-cereal' \| 'vetch-clover' \| 'other' \| 'none'` | `'none'` |
 | `sprayCapacity` | enum | `'backpack-4gal' \| 'handheld-25gal' \| 'boom-25-plus' \| 'none'` | `'backpack-4gal'` |
@@ -54,8 +54,8 @@ Persisted as `settings` rows keyed `season_setup.<year>.<field>`. Stored as JSON
   ```ts
   export interface SeasonSetup {
     philosophy: 'conventional' | 'non-gmo' | 'organic-transitioning' | 'certified-organic';
-    weedStrategy: 'cultivate-first' | 'pre-emergence-ok' | 'post-emergence-ok' | 'no-spray';
-    pestStrategy: 'preventive' | 'ipm' | 'minimal' | 'no-spray';
+    weedStrategy: 'cultivate-first' | 'pre-emergence-ok' | 'post-emergence-ok';
+    pestStrategy: 'preventive' | 'ipm' | 'minimal';
     fertilityApproach: 'synthetic' | 'compost-amendments' | 'cover-crop-credits' | 'mixed';
     coverCropIntent: 'fall-cereal' | 'vetch-clover' | 'other' | 'none';
     sprayCapacity: 'backpack-4gal' | 'handheld-25gal' | 'boom-25-plus' | 'none';
@@ -208,7 +208,7 @@ We **do not** need to tag every existing plugin in one shot. Triage:
 - Existing plugins load without errors under the new schema (back-compat).
 - New plugins with all fields populated round-trip correctly.
 - `philosophyFilter.isProductAllowed()` covers the 4×3 matrix (philosophy × {OMRI, non-GMO, neither}).
-- A plugin with `pestStrategyGate: 'preventive'` is included for `pestStrategy='preventive'` and excluded for `pestStrategy='ipm'` / `'minimal'` / `'no-spray'`.
+- A plugin with `pestStrategyGate: 'preventive'` is included for `pestStrategy='preventive'` and excluded for `pestStrategy='ipm'` / `'minimal'`.
 
 ### Risk
 

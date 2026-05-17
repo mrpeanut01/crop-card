@@ -199,12 +199,7 @@
           <option value={val}>{label}</option>
         {/each}
       </select>
-      <span class="ss-hint">
-        Cumulative — picking <em>+ Post-emergence</em> means you're also OK
-        with pre-emergence + cultivation; picking <em>+ Pre-emergence</em>
-        means cultivation + pre-emergence (no post). Pick the deepest tier
-        you'd consider; the planner only suggests tools at or below it.
-      </span>
+      <span class="ss-hint">Each tier includes the ones above it.</span>
     </label>
 
     <label class="ss-field">
@@ -215,7 +210,8 @@
         {/each}
       </select>
       <span class="ss-hint">
-        IPM schedules scout tasks at planning time; preventive schedules sprays.
+        Scout-then-spray (IPM) schedules field-check reminders instead of
+        calendar sprays.
       </span>
     </label>
 

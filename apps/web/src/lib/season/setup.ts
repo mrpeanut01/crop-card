@@ -39,10 +39,9 @@ export type Philosophy =
 export type WeedStrategy =
   | 'cultivate-first'
   | 'pre-emergence-ok'
-  | 'post-emergence-ok'
-  | 'no-spray';
+  | 'post-emergence-ok';
 
-export type PestStrategy = 'preventive' | 'ipm' | 'minimal' | 'no-spray';
+export type PestStrategy = 'preventive' | 'ipm' | 'minimal';
 
 export type FertilityApproach =
   | 'synthetic'
@@ -95,15 +94,9 @@ export const PHILOSOPHY_VALUES: readonly Philosophy[] = [
 export const WEED_VALUES: readonly WeedStrategy[] = [
   'cultivate-first',
   'pre-emergence-ok',
-  'post-emergence-ok',
-  'no-spray'
+  'post-emergence-ok'
 ];
-export const PEST_VALUES: readonly PestStrategy[] = [
-  'preventive',
-  'ipm',
-  'minimal',
-  'no-spray'
-];
+export const PEST_VALUES: readonly PestStrategy[] = ['preventive', 'ipm', 'minimal'];
 export const FERTILITY_VALUES: readonly FertilityApproach[] = [
   'synthetic',
   'compost-amendments',
@@ -137,13 +130,22 @@ export function allowsSynthetics(s: SeasonSetup): boolean {
   return s.philosophy === 'conventional' || s.philosophy === 'non-gmo';
 }
 
+/** Strip the explanatory tail from a label so the compact chip fits on a
+ *  phone screen. Labels with the shape "Short — long explanation" get the
+ *  short part only. Labels without " — " are returned as-is. */
+function chipForm(label: string): string {
+  const i = label.indexOf(' — ');
+  return i === -1 ? label : label.slice(0, i);
+}
+
 /** Compact human-readable summary used by `SeasonSetupChip.svelte`.
- *  Example: "Organic · IPM · Compost-first · Backpack ≤4 gal · Cover: vetch · 2026" */
+ *  Example: "Certified organic · Scout-then-spray · Compost & amendments
+ *  · Backpack ≤4 gal · Cover: Vetch / clover · 2026" */
 export function summarizeSeasonSetup(s: SeasonSetup): string {
-  const phil = PHILOSOPHY_LABELS[s.philosophy];
-  const pest = PEST_LABELS[s.pestStrategy];
-  const fert = FERTILITY_LABELS[s.fertilityApproach];
-  const cap = SPRAY_LABELS[s.sprayCapacity];
+  const phil = chipForm(PHILOSOPHY_LABELS[s.philosophy]);
+  const pest = chipForm(PEST_LABELS[s.pestStrategy]);
+  const fert = chipForm(FERTILITY_LABELS[s.fertilityApproach]);
+  const cap = chipForm(SPRAY_LABELS[s.sprayCapacity]);
   const cover =
     s.coverCropIntent === 'none' ? null : `Cover: ${COVER_LABELS[s.coverCropIntent]}`;
   return [phil, pest, fert, cap, cover, s.year].filter(Boolean).join(' · ');
@@ -160,26 +162,33 @@ export const PHILOSOPHY_LABELS: Record<Philosophy, string> = {
 
 /**
  * Cumulative tiers (Phase 21a polish, 2026-05-17): each tier adds the
- * methods of the tier above it. A `post-emergence-ok` operator is also
- * OK with pre-emergence and cultivation. `no-spray` is the off-ramp —
- * the operator handles weeds without planner help (mulch / hand / cover
- * crop). The `+ …` prefix on tiers 2 and 3 telegraphs accumulation in
- * the dropdown without forcing a multi-select form.
+ * methods of the tier above. A `post-emergence-ok` operator is also OK
+ * with pre-emergence and cultivation. The `+ …` prefix on tiers 2 and 3
+ * telegraphs accumulation in the dropdown without forcing a multi-select
+ * form. The former `no-spray` option was dropped — it was redundant with
+ * `cultivate-first` for operator intent (both mean "no herbicides"); an
+ * operator who mulches instead of cultivating just ignores the planner's
+ * cultivation reminders.
  */
 export const WEED_LABELS: Record<WeedStrategy, string> = {
-  'cultivate-first': 'Cultivation only — no herbicides',
+  'cultivate-first': 'No herbicides — cultivation / mulch / hand-weed',
   'pre-emergence-ok':
     '+ Pre-emergence — early-season herbicide for known weed pressure',
   'post-emergence-ok':
-    '+ Post-emergence — in-season herbicide for breakthrough weeds',
-  'no-spray': "No-spray (mulch / hand only) — I'll manage weeds without planner help"
+    '+ Post-emergence — in-season herbicide for breakthrough weeds'
 };
 
+/**
+ * Plain-language labels (Phase 21a polish, 2026-05-17): "IPM" is
+ * agronomic jargon — operators reading the dropdown for the first time
+ * don't necessarily know it stands for "Integrated Pest Management."
+ * Restate as "Scout, then spray if needed." Dropped `no-spray` (was
+ * redundant with `minimal`).
+ */
 export const PEST_LABELS: Record<PestStrategy, string> = {
-  preventive: 'Preventive',
-  ipm: 'IPM (scout-then-spray)',
-  minimal: 'Minimal',
-  'no-spray': 'No spray'
+  preventive: 'Preventive — scheduled sprays on a calendar',
+  ipm: 'Scout-then-spray — check fields first, spray only if pests cross a threshold',
+  minimal: 'Minimal — spray only on severe outbreaks'
 };
 
 export const FERTILITY_LABELS: Record<FertilityApproach, string> = {

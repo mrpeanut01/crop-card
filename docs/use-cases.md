@@ -628,7 +628,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - **Pest strategy semantics:**
   - `preventive` — emits scheduled insecticide applications from `sprayWindows[purpose='insecticide-prophylactic']`.
   - `ipm` — emits **no** insecticide applications at plan time; emits recurring scout tasks at family-typical cadence (cucurbits weekly during fruit-set, brassicas every 5d during head formation, etc.).
-  - `minimal` / `no-spray` — emits scout tasks (minimal) or nothing (no-spray).
+  - `minimal` — emits sparse scout tasks (only during high-pressure windows); no scheduled sprays.
 - **Weed strategy semantics:** mirrors pest gating against `sprayWindows[].weedStrategyGate` per the schema in [phase-21-plan.md §B](./phase-21-plan.md). `cultivate-first` emits cultivation reminder tasks instead of herbicide applications.
 - **Fertility approach semantics:**
   - `synthetic` — picks from synthetic NPK fertilizer plugins.
@@ -744,8 +744,8 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
   2. If `loadSeasonSetup(lastYear)` returns a record, render a banner: **"Use last year's answers"** — one click invokes `carryForward(lastYear, currentYear)` and advances to allocation.
   3. Otherwise, render six labeled selects with ≥48dp tap targets:
      - **Input philosophy** — `conventional` / `non-gmo` / `organic-transitioning` (year 1–3) / `certified-organic`. Drives the planner's allow-deny matrix on every product.
-     - **Weed strategy** — `cultivate-first` / `pre-emergence-ok` / `post-emergence-ok` / `no-spray`. Gates whether burndown / PRE / POST herbicide windows are emitted.
-     - **Pest strategy** — `preventive` / `ipm` / `minimal` / `no-spray`. IPM emits scout cadences instead of prophylactic insecticide tasks.
+     - **Weed strategy** — `cultivate-first` / `pre-emergence-ok` / `post-emergence-ok` (cumulative tiers; each includes the methods of the one above). Gates whether burndown / PRE / POST herbicide windows are emitted.
+     - **Pest strategy** — `preventive` / `ipm` / `minimal`. IPM (renders to operator as "Scout-then-spray") emits scout cadences instead of prophylactic insecticide tasks; `minimal` emits sparse scout reminders only.
      - **Fertility approach** — `synthetic` / `compost-amendments` / `cover-crop-credits` / `mixed`. Picks the product pool for pre-plant and sidedress fertility.
      - **Cover crop intent** — `fall-cereal` / `vetch-clover` / `other` / `none`. Gates emission of post-harvest cover-seed tasks + spring termination.
      - **Spray application capacity** — `backpack-4gal` / `handheld-25gal` / `boom-25-plus` / `none`. Filters tank-mix sizing and dilution UI defaults; pairs with the existing sprayer registry (UC-10).

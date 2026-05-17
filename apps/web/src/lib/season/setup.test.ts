@@ -213,7 +213,7 @@ describe('season setup repo', () => {
       };
       const summary = summarizeSeasonSetup(s);
       expect(summary).toContain('Certified organic');
-      expect(summary).toContain('IPM');
+      expect(summary).toContain('Scout-then-spray');
       expect(summary).toContain('Compost');
       expect(summary).toContain('Backpack');
       expect(summary).toContain('Vetch');

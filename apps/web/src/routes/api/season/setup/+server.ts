@@ -28,10 +28,9 @@ const bodySchema = z.object({
   weedStrategy: z.enum([
     'cultivate-first',
     'pre-emergence-ok',
-    'post-emergence-ok',
-    'no-spray'
+    'post-emergence-ok'
   ]),
-  pestStrategy: z.enum(['preventive', 'ipm', 'minimal', 'no-spray']),
+  pestStrategy: z.enum(['preventive', 'ipm', 'minimal']),
   fertilityApproach: z.enum([
     'synthetic',
     'compost-amendments',

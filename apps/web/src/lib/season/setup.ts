@@ -96,7 +96,10 @@ export const WEED_VALUES: readonly WeedStrategy[] = [
   'pre-emergence-ok',
   'post-emergence-ok'
 ];
-export const PEST_VALUES: readonly PestStrategy[] = ['preventive', 'ipm', 'minimal'];
+/** Order is least-spray → most-spray to mirror the WEED_VALUES tier
+ *  pattern. Dropdown rendering iterates `Object.entries(PEST_LABELS)`,
+ *  so the order in PEST_LABELS is what the operator actually sees. */
+export const PEST_VALUES: readonly PestStrategy[] = ['minimal', 'ipm', 'preventive'];
 export const FERTILITY_VALUES: readonly FertilityApproach[] = [
   'synthetic',
   'compost-amendments',
@@ -182,20 +185,29 @@ export const WEED_LABELS: Record<WeedStrategy, string> = {
  * Plain-language labels (Phase 21a polish, 2026-05-17): "IPM" is
  * agronomic jargon — operators reading the dropdown for the first time
  * don't necessarily know it stands for "Integrated Pest Management."
- * Restate as "Scout, then spray if needed." Dropped `no-spray` (was
- * redundant with `minimal`).
+ * Restate as "Scout-then-spray." Ordered least-spray → most-spray to
+ * mirror the WEED_LABELS tier pattern; key-insertion order drives the
+ * dropdown render order via Object.entries.
  */
 export const PEST_LABELS: Record<PestStrategy, string> = {
-  preventive: 'Preventive — scheduled sprays on a calendar',
+  minimal: 'Minimal — spray only on severe outbreaks',
   ipm: 'Scout-then-spray — check fields first, spray only if pests cross a threshold',
-  minimal: 'Minimal — spray only on severe outbreaks'
+  preventive: 'Preventive — scheduled sprays on a calendar'
 };
 
+/**
+ * Plain-language labels (Phase 21a polish, 2026-05-17): "NPK" is
+ * agronomic shorthand for the nitrogen-phosphorus-potassium analysis
+ * on a fertilizer bag (the three numbers like 10-10-10). Operators new
+ * to the term won't decode it from "Synthetic NPK." Restate around
+ * recognizable products instead — `10-10-10` and `urea` are the labels
+ * a small-plot operator actually sees at the farm store.
+ */
 export const FERTILITY_LABELS: Record<FertilityApproach, string> = {
-  synthetic: 'Synthetic NPK',
-  'compost-amendments': 'Compost & amendments',
-  'cover-crop-credits': 'Cover-crop credits',
-  mixed: 'Mixed'
+  synthetic: 'Bagged synthetic fertilizer — e.g., 10-10-10, urea, ammonium nitrate',
+  'compost-amendments': 'Compost, manure & natural amendments',
+  'cover-crop-credits': 'Cover-crop nitrogen credits — lean on legume cover from prior season',
+  mixed: 'Mix of the above — pick whichever fits each field'
 };
 
 export const COVER_LABELS: Record<CoverCropIntent, string> = {

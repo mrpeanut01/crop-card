@@ -820,14 +820,18 @@
   }
   .result.stop {
     background: #fff;
-    border: 3px solid #b71c1c;
+    /* T-05 (audit F-A): frame red bumped from #b71c1c to #8a0000 to match
+     * the AAA-contrast header band below. */
+    border: 3px solid #8a0000;
     padding: 0;
   }
   .result h2 {
     margin: 0 0 1rem;
   }
   .result.stop h2 {
-    background: #b71c1c;
+    /* T-05 (audit F-A): #fff-on-#b71c1c was ~5.94:1 (AA only). HCD §2.2
+     * stop-screen spec mandates AAA 7:1. #fff-on-#8a0000 ≈ 7.74:1. */
+    background: #8a0000;
     color: #fff;
     margin: 0 0 1rem;
     padding: 1rem 1.25rem;

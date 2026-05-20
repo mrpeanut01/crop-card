@@ -446,12 +446,18 @@
    *  `ev.offsetY` is target-relative — when the cursor sits over a bar the
    *  number reflects the bar's local origin, not the column's, which made
    *  the drop preview snap to the wrong day (or vanish). currentTarget +
-   *  getBoundingClientRect gives column-relative Y consistently. */
+   *  getBoundingClientRect gives column-relative Y consistently.
+   *
+   *  When dragging an existing bar (barGrabOffsetY set), subtract the
+   *  grab offset so the returned Y reflects where the TOP of the bar
+   *  would land. This makes the snap line + final drop point consistent
+   *  with the planting-date edge of the bar instead of the cursor. */
   function columnRelativeY(ev: DragEvent): number {
     const col = ev.currentTarget as HTMLElement | null;
     if (!col) return 0;
     const rect = col.getBoundingClientRect();
-    return ev.clientY - rect.top;
+    const raw = ev.clientY - rect.top;
+    return barGrabOffsetY != null ? raw - barGrabOffsetY : raw;
   }
 
   function onColumnDragOver(ev: DragEvent, blockId: string) {
@@ -600,6 +606,20 @@
   }
 
   // ─── Bar drag (move existing planting) ──────────────────────────────────
+  /**
+   * Where on the bar the user grabbed it (px from the bar's top). Used by
+   * `columnRelativeY` to subtract the grab offset so the drop preview
+   * line indicates where the bar's PLANTING-DATE edge (top) will land
+   * — not where the cursor literally is. Without this, grabbing a bar
+   * mid-way and dragging put the snap line under the cursor while the
+   * bar would actually anchor at the cursor's day too, leaving the
+   * impression that the line was an arbitrary cursor follower.
+   *
+   * Null when dragging a new bar from the rail (no source bar geometry),
+   * in which case the snap line falls back to the cursor's day.
+   */
+  let barGrabOffsetY: number | null = null;
+
   function onBarDragStart(ev: DragEvent, cropId: string, sourceBlockId: string) {
     ev.stopPropagation();
     if (ev.dataTransfer) {
@@ -607,9 +627,17 @@
       ev.dataTransfer.setData('application/x-cropcard-crop-id', cropId);
       ev.dataTransfer.setData('text/plain', cropId);
     }
+    const bar = ev.currentTarget as HTMLElement | null;
+    if (bar) {
+      const rect = bar.getBoundingClientRect();
+      barGrabOffsetY = ev.clientY - rect.top;
+    } else {
+      barGrabOffsetY = null;
+    }
     props.onBarDragStart?.(cropId, sourceBlockId);
   }
   function onBarDragEnd() {
+    barGrabOffsetY = null;
     props.onBarDragEnd?.();
   }
 

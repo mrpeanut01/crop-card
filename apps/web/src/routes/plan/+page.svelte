@@ -40,7 +40,6 @@
     { id: 'layout', label: 'Layout', icon: '🗺️' },
     { id: 'crops', label: 'Crops', icon: '🌱' },
     { id: 'schedule', label: 'Schedule', icon: '📋' },
-    { id: 'equipment', label: 'Equipment', icon: '🚜' },
     { id: 'calendar', label: 'Calendar', icon: '📅' }
   ];
 
@@ -477,41 +476,9 @@
     advisor = null;
   }
 
-  // ─── Equipment tab state ────────────────────────────────────────────────
-  let bindingError = $state<string | null>(null);
-  let pickerCropId = $state<string>('');
-  let pickerEquipmentId = $state<string>('');
-  let pickerRole = $state<string>('sprayer');
-
-  async function bindEquipmentToCrop(cropId: string, equipmentId: string, role: string) {
-    bindingError = null;
-    const res = await fetch(`/api/crops/${encodeURIComponent(cropId)}/equipment`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ equipmentId, role })
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      bindingError = out.error ?? `HTTP ${res.status}`;
-      return;
-    }
-    pickerCropId = '';
-    pickerEquipmentId = '';
-    await invalidateAll();
-  }
-
-  async function unbindEquipmentFromCrop(cropId: string, bindingId: string) {
-    const res = await fetch(
-      `/api/crops/${encodeURIComponent(cropId)}/equipment/${encodeURIComponent(bindingId)}`,
-      { method: 'DELETE' }
-    );
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      alert(`Unbind failed: ${out.error ?? res.status}`);
-      return;
-    }
-    await invalidateAll();
-  }
+  // Equipment-binding tab removed from /plan. Equipment management lives at
+  // /equipment (top nav). Per-crop equipment bindings are surfaced on the
+  // crop detail page (/crops/[id]).
 
   // ─── Schedule tab — wizard state ───────────────────────────────────────
   type PlanningMode = 'plant-on-date' | 'harvest-by-date' | 'staggered' | 'season-fill';
@@ -3399,90 +3366,7 @@
 
 {/if}
 
-<!-- ────────────────────────── EQUIPMENT ────────────────────────── -->
-{#if data.tab === 'equipment'}
-  {#if !data.equipment || data.equipment.length === 0}
-    <section class="card empty">
-      <p>
-        No equipment registered. Add some on
-        <a href="/equipment">/equipment</a> first, then come back to bind it to a crop.
-      </p>
-    </section>
-  {/if}
-
-  {#if data.cropEquipment && data.cropEquipment.length === 0}
-    <section class="card empty">
-      <p>No active crops to bind equipment to. Add a crop first.</p>
-    </section>
-  {/if}
-
-  {#if data.cropEquipment && data.cropEquipment.length > 0}
-    {#if bindingError}<p class="error">{bindingError}</p>{/if}
-    {#each data.cropEquipment as ce (ce.crop.id)}
-      <section class="card">
-        <header class="crop-header">
-          <h2>
-            <a href="/crops/{ce.crop.id}">{ce.crop.varietyDisplayName}</a>
-          </h2>
-          <small>{ce.fieldName} · {ce.blockName}</small>
-        </header>
-
-        {#if ce.bindings.length === 0}
-          <p class="empty-row">No equipment bound to this crop.</p>
-        {:else}
-          <ul class="bindings">
-            {#each ce.bindings as b (b.id)}
-              <li>
-                <span class="role-badge">{b.role}</span>
-                <a href="/equipment/{b.equipmentId}">
-                  <strong>{b.equipmentLabel}</strong>
-                </a>
-                <span class="eq-type">{b.equipmentType}</span>
-                {#if b.equipmentRetiredAt}
-                  <span class="retired">retired {fmt(b.equipmentRetiredAt)}</span>
-                {/if}
-                {#if data.canEdit}
-                  <button
-                    class="delete-btn"
-                    onclick={() => unbindEquipmentFromCrop(ce.crop.id, b.id)}
-                    title="Unbind"
-                    aria-label="Unbind {b.equipmentLabel}"
-                  >
-                    Unbind
-                  </button>
-                {/if}
-              </li>
-            {/each}
-          </ul>
-        {/if}
-
-        {#if data.canEdit && data.equipment && data.equipment.length > 0}
-          <div class="add-binding">
-            <h3>Bind equipment</h3>
-            <div class="row">
-              <select bind:value={pickerEquipmentId}>
-                <option value="">Select equipment…</option>
-                {#each data.equipment.filter((e) => !e.retiredAt) as e (e.id)}
-                  <option value={e.id}>{e.label} ({e.type})</option>
-                {/each}
-              </select>
-              <select bind:value={pickerRole}>
-                {#each data.roles ?? [] as r (r)}<option value={r}>{r}</option>{/each}
-              </select>
-              <button
-                class="primary"
-                disabled={!pickerEquipmentId}
-                onclick={() => bindEquipmentToCrop(ce.crop.id, pickerEquipmentId, pickerRole)}
-              >
-                Bind
-              </button>
-            </div>
-          </div>
-        {/if}
-      </section>
-    {/each}
-  {/if}
-{/if}
+<!-- Equipment tab removed from /plan — equipment management still lives at /equipment in the top nav. -->
 
 <!-- ────────────────────────── CALENDAR ────────────────────────── -->
 {#if data.tab === 'calendar'}

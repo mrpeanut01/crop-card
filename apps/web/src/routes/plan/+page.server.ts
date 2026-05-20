@@ -76,8 +76,8 @@ import { getRegistry } from '$lib/server/registry';
 import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/companions';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 
-export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'equipment' | 'calendar';
-const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'equipment', 'calendar'];
+export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
+const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calendar'];
 
 export interface ScheduleCatalogItem {
   pluginId: string;
@@ -635,22 +635,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   }
 
-  if (tab === 'equipment') {
-    const equipment = listEquipment();
-    const activeCrops = listCrops({ status: 'active' });
-    const cropEquipment: CropEquipmentForPlan[] = activeCrops.map((crop) => ({
-      crop,
-      blockName: blockName(blocks, crop.blockId),
-      fieldName: fieldName(fieldsByBlockId, crop.blockId, fields),
-      bindings: listCropEquipment(crop.id)
-    }));
-    return {
-      ...base,
-      equipment,
-      cropEquipment,
-      roles: CROP_EQUIPMENT_ROLES as readonly CropEquipmentRole[]
-    };
-  }
+  // Equipment-binding tab removed from /plan (2026-05-17). Equipment
+  // management lives at /equipment in the top nav; per-crop bindings stay
+  // accessible on the crop detail page (/crops/[id]).
 
   if (tab === 'calendar') {
     // Aggregate every event from every planting + every recorded harvest.

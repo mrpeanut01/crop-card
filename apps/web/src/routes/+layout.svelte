@@ -286,7 +286,9 @@
   .app-header {
     background: #1f5e3a;
     color: white;
-    padding: 0.75rem 1rem;
+    /* Zero bottom padding so the active tab's white fill connects to
+     * the page body without a green stripe in between. */
+    padding: 0.75rem 1rem 0;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -507,7 +509,10 @@
   }
 
   main {
-    padding-block: 1rem;
+    /* Tightened top padding so the active nav tab and the page content
+     * read as one continuous surface; the bottom keeps room for the
+     * fixed mobile nav + finger-reach margin. */
+    padding-block: 0.5rem 1rem;
     padding-inline: clamp(0.5rem, 2vw, 2rem);
     padding-bottom: calc(112px + env(safe-area-inset-bottom, 0) + 1rem);
     max-width: 1800px;
@@ -590,7 +595,9 @@
       background: rgba(255, 255, 255, 0.18);
     }
     .primary-nav > a[aria-current='page'] {
-      background: #f4f9f5;
+      /* Pure white so the tab's base color matches the page body and
+       * the bottom edge looks continuous with the content surface. */
+      background: #fff;
       color: #1f5e3a;
       font-weight: 700;
       cursor: default;
@@ -598,7 +605,7 @@
       z-index: 1;
     }
     .primary-nav > a[aria-current='page']:hover {
-      background: #f4f9f5;
+      background: #fff;
     }
     main {
       padding: 1rem;

@@ -3766,7 +3766,10 @@
   .plan-tabs {
     display: flex;
     gap: 0;
-    margin: 0.5rem 0 1.25rem;
+    /* Tightened top margin — the layout's main padding-block-start
+     * already supplies a small breathing strip; the page H1 used to
+     * occupy this space but is now sr-only. */
+    margin: 0 0 1rem;
     border-bottom: 2px solid #1f5e3a;
     overflow-x: auto;
   }

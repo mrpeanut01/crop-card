@@ -107,6 +107,12 @@
      *  paint `selected` on bars and emits toggle events. */
     selectedCropIds?: Set<string>;
     onToggleSelect?: (cropId: string, additive: boolean) => void;
+    /** Optional snap helper. When provided, the swim-lane runs the
+     *  drag-over candidate day through this fn before drawing the
+     *  drop-preview line so the line reflects the date the drop will
+     *  actually persist (e.g. clamped forward past the last-spring-frost
+     *  boundary). Without it the line shows the raw cursor day. */
+    snapDate?: (dayMs: number, payload: DropPayload) => number;
   }
 
   const props: Props = $props();
@@ -464,7 +470,14 @@
     if (!props.dragPayload) return;
     ev.preventDefault();
     const dayIdx = Math.max(0, Math.min(totalDays - 1, Math.floor(columnRelativeY(ev) / ROW_H)));
-    dropPreview = { blockId, dayMs: dayMsForCell(dayIdx) };
+    const rawMs = dayMsForCell(dayIdx);
+    // Run through the parent's snap helper (when provided) so the
+    // drop-preview line tracks the post-snap date — otherwise the
+    // line shows where the cursor is but the drop persists a different
+    // date (e.g. clamped forward past last-spring-frost), and the
+    // operator sees the bar land "a week after" where they aimed.
+    const snappedMs = props.snapDate ? props.snapDate(rawMs, props.dragPayload) : rawMs;
+    dropPreview = { blockId, dayMs: snappedMs };
   }
 
   function onColumnDragLeave() {
@@ -477,6 +490,10 @@
     const dayIdx = Math.max(0, Math.min(totalDays - 1, Math.floor(columnRelativeY(ev) / ROW_H)));
     const payload = props.dragPayload;
     dropPreview = null;
+    // Don't snap here — the parent's drop handler runs its own
+    // snapPlantingDate() and is the source of truth for the persisted
+    // value. The preview was snapped above only so the operator could
+    // SEE where the date would land.
     props.onDrop(blockId, dayMsForCell(dayIdx), payload);
   }
 

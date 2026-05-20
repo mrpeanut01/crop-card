@@ -3243,6 +3243,20 @@
           onBarDragEnd={() => (swimDragPayload = null)}
           selectedCropIds={swimSelection}
           onToggleSelect={data.canEdit ? toggleSwimSelect : undefined}
+          snapDate={(dayMs, payload) => {
+            // Mirror what the drop handler does so the preview line lands
+            // on the same day the persisted plantingDate will. Move
+            // payloads carry the cropId; we look up the pluginId from the
+            // existing planting. Palette payloads carry pluginId directly.
+            let pluginId: string | undefined;
+            if (payload.kind === 'palette') {
+              pluginId = payload.pluginId;
+            } else {
+              const p = data.swimPlantings?.find((x) => x.cropId === payload.cropId);
+              pluginId = p?.cropPluginId;
+            }
+            return pluginId ? snapPlantingDate(pluginId, dayMs) : dayMs;
+          }}
         />
       </div>
       {#if groupInspectorData && openGroupId}

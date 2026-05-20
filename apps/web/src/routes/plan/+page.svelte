@@ -10,6 +10,7 @@
   import SeedQuantityModal from '$lib/components/SeedQuantityModal.svelte';
   import AllocationWizard from '$lib/components/AllocationWizard.svelte';
   import PlantingGroupWizard from '$lib/components/PlantingGroupWizard.svelte';
+  import ScheduleOptimizerSidebar from '$lib/components/ScheduleOptimizerSidebar.svelte';
   import GroupInspector from '$lib/components/GroupInspector.svelte';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
   import {
@@ -688,6 +689,13 @@
   }
   // Phase 15 — planting-group wizard + inspector state.
   let showGroupWizard = $state(false);
+  /** Phase 21b follow-up — Optimize Schedule sidebar (right rail).
+   *  Replaces the previous "Auto Schedule / Optimize" modal as the
+   *  primary AI-driven schedule refinement surface. The group wizard
+   *  state is kept around because companion-group suggestion is still
+   *  useful, but it's no longer the default entry point. */
+  let showOptimizerSidebar = $state(false);
+  let optimizerApplyBusy = $state(false);
   let openGroupId = $state<string | null>(null);
 
   // Phase 15d — swim-lane selection lives at the parent so the schedule
@@ -1157,6 +1165,60 @@
       await invalidateAll();
     } finally {
       splitBusy = false;
+    }
+  }
+
+  /** Phase 21b follow-up — write each proposed-schedule row from the
+   *  optimizer sidebar to the DB. Reuses the existing per-row
+   *  set-schedule PATCH so the kernel snap + drift-policy code path
+   *  is identical to drag-and-drop. The sidebar diff badge already
+   *  warned the operator how many rows differ, so we don't double-
+   *  confirm here. */
+  async function applyOptimizerProposal(
+    rows: Array<{
+      stockItemId: string;
+      blockId: string;
+      cropPluginId: string;
+      plantingDateMs: number;
+    }>
+  ): Promise<void> {
+    optimizerApplyBusy = true;
+    try {
+      // Map (stockItemId, blockId) → cropId via the current
+      // swimPlantings. Rows that don't match a known planting are
+      // skipped (the AI sometimes proposes a slot for an assignment
+      // that's already been removed from the swim-lane).
+      const cropIdLookup = new Map<string, string>();
+      for (const p of data.swimPlantings ?? []) {
+        const key = `${p.stockItemId ?? p.cropId}:${p.blockId}`;
+        cropIdLookup.set(key, p.cropId);
+      }
+      const failures: string[] = [];
+      for (const r of rows) {
+        const cropId = cropIdLookup.get(`${r.stockItemId}:${r.blockId}`);
+        if (!cropId) continue;
+        const res = await fetch(`/api/crops/${encodeURIComponent(cropId)}`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            action: 'set-schedule',
+            plantingDate: r.plantingDateMs,
+            blockId: r.blockId
+          })
+        });
+        if (!res.ok) {
+          const e = await res.json().catch(() => ({}));
+          failures.push(e.error ?? `HTTP ${res.status}`);
+        }
+      }
+      if (failures.length > 0) {
+        throw new Error(
+          `${failures.length} row${failures.length === 1 ? '' : 's'} failed to apply: ${failures.slice(0, 3).join('; ')}`
+        );
+      }
+      await invalidateAll();
+    } finally {
+      optimizerApplyBusy = false;
     }
   }
 
@@ -3141,11 +3203,11 @@
           <button
             type="button"
             class="action-btn action-btn-primary"
-            onclick={() => (showGroupWizard = true)}
+            onclick={() => (showOptimizerSidebar = true)}
             disabled={autoScheduleBusy || clearBusy}
-            title="Open the AI wizard — proposes groups + singletons with rationale, you accept the cards you want"
+            title="Open the AI optimizer — chat to re-arrange dates, accept the proposal when you like it"
           >
-            ✨ Auto Schedule / Optimize
+            ✨ Optimize Schedule
           </button>
           {#if filteredUnscheduled.length > 0}
             <button
@@ -3349,6 +3411,37 @@
             await fetchGroupForInspector(committedGroupIds[0]);
           }
         }}
+      />
+    {/if}
+
+    {#if showOptimizerSidebar}
+      <ScheduleOptimizerSidebar
+        plantings={filteredSwimPlantings.map((p) => ({
+          cropId: p.cropId,
+          blockId: p.blockId,
+          cropPluginId: p.cropPluginId,
+          stockItemId: p.stockItemId,
+          varietyDisplayName: p.varietyDisplayName,
+          plantingDateMs: p.plantingDateMs,
+          endMs: p.endMs
+        }))}
+        blocks={filteredSwimBlocks.map((b) => ({
+          id: b.id,
+          name: b.blockLabel ?? b.name
+        }))}
+        extraFacts={(() => {
+          const f: string[] = [];
+          const counts = data.conflicts ?? null;
+          if (counts && counts.sameTime && counts.sameTime.length > 0) {
+            f.push(`${counts.sameTime.length} same-time overlap${counts.sameTime.length === 1 ? '' : 's'} flagged on the swim-lane.`);
+          }
+          if (counts && counts.rotation && counts.rotation.length > 0) {
+            f.push(`${counts.rotation.length} rotation conflict${counts.rotation.length === 1 ? '' : 's'} flagged.`);
+          }
+          return f;
+        })()}
+        onClose={() => (showOptimizerSidebar = false)}
+        onApply={applyOptimizerProposal}
       />
     {/if}
 

@@ -612,28 +612,38 @@
     return 'Group';
   }
 
+  /** Picture-emoji glyphs make the task type identifiable at a
+   *  glance on the swim-lane instead of the previous abstract
+   *  Unicode dots / diamonds. Sized 18×18 via .task-pip to keep
+   *  the rendered glyph legible without overwhelming the bar. */
   function pipGlyph(category: SwimTaskPip['category']): string {
     switch (category) {
-      case 'plant': return '●';
-      case 'till': return '◆';
-      case 'fertilize': return '✚';
-      case 'spray': return '✦';
-      case 'scout': return '◉';
-      case 'companion-check': return '⚑';
+      case 'plant': return '🌱';
+      case 'till': return '🚜';
+      case 'fertilize': return '💩';
+      case 'spray': return '💧';
+      case 'scout': return '🔍';
+      case 'companion-check': return '🤝';
       default: return '·';
     }
   }
-  function pipColor(category: SwimTaskPip['category']): string {
+  /** Human-readable label paired with each glyph in the bar tooltip
+   *  so operators learn the icon → task mapping over time. */
+  function pipLabel(category: SwimTaskPip['category']): string {
     switch (category) {
-      case 'plant': return '#1f5e3a';
-      case 'till': return '#92400e';
-      case 'fertilize': return '#0e7490';
-      case 'spray': return '#7c3aed';
-      case 'scout': return '#b91c1c';
-      case 'companion-check': return '#ca8a04';
-      default: return '#475569';
+      case 'plant': return 'Plant';
+      case 'till': return 'Till';
+      case 'fertilize': return 'Fertilize';
+      case 'spray': return 'Spray';
+      case 'scout': return 'Scout';
+      case 'companion-check': return 'Companion check';
+      default: return 'Task';
     }
   }
+  // pipColor() removed when pips switched to emoji rendering — the
+  // glyphs carry their own color now. Kept here as a marker so any
+  // future "fallback to typography" path knows where the palette
+  // lived (preserved in git history).
 
   // ─── Bar drag (move existing planting) ──────────────────────────────────
   /**
@@ -873,9 +883,9 @@
                 <div
                   class="task-pip"
                   class:stale={pip.stale}
-                  style="top: {pipTop}px; left: calc({pipLeftPct}% - 16px); color: {pipColor(pip.category)}"
-                  title={pip.title}
-                  aria-label={pip.title}
+                  style="top: {pipTop}px; left: calc({pipLeftPct}% - 16px);"
+                  title={`${pipLabel(pip.category)} — ${pip.title}`}
+                  aria-label={`${pipLabel(pip.category)}: ${pip.title}`}
                 >
                   {pipGlyph(pip.category)}
                 </div>
@@ -1271,20 +1281,29 @@
   .group-bracket-three-sisters .group-bracket-label { color: #b45309; }
   .group-bracket-succession .group-bracket-label { color: #0891b2; }
 
+  /** Phase 21b follow-up — task pips now use picture emojis (🌱 plant,
+   *  🚜 till, 💩 fertilize, 💧 spray, 🔍 scout, 🤝 companion). Bumped
+   *  size + light background ring so the glyphs are legible against
+   *  the colored bar behind them. */
   .task-pip {
     position: absolute;
     /* left set inline per-pip based on owning bar's lane */
-    width: 12px;
-    height: 12px;
-    line-height: 12px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
     text-align: center;
-    font-size: 0.65rem;
-    font-weight: 700;
+    font-size: 14px;
     pointer-events: none;
-    text-shadow: 0 0 2px #fff, 0 0 2px #fff;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+    /* Pull the icon up so its center sits on the scheduled day row
+     * (top-aligned by default since the pip is positioned at the
+     * row's top edge). */
+    margin-top: -3px;
   }
   .task-pip.stale {
     opacity: 0.45;
-    text-decoration: line-through;
+    filter: grayscale(0.7);
   }
 </style>

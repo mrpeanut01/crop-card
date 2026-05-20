@@ -959,6 +959,17 @@
     openEditCrop(cropId);
   }
 
+  /** Phase 21b follow-up — open the split-count popup for the
+   *  single-selected bar. Separate from the edit modal so the
+   *  operator can split without traversing the full edit form. */
+  function commitSelectionSplit() {
+    if (swimSelection.size !== 1) return;
+    const cropId = [...swimSelection][0];
+    splitTargetCropId = cropId;
+    splitCount = 2;
+    splitError = null;
+  }
+
   function commitSelectionDelete() {
     if (swimSelection.size === 0) return;
     openDeleteCrops([...swimSelection]);
@@ -988,10 +999,13 @@
   });
   let editBusy = $state(false);
   let editError = $state<string | null>(null);
-  // Phase 21b follow-up — split-into-N state lives alongside the edit
-  // modal's state since the button surfaces there. splitBusy guards
-  // against double-submit; commitSplit clears editCropId on success so
-  // the modal closes and the new bars become visible.
+  // Phase 21b follow-up — split-into-N popup state. Now a separate
+  // modal triggered from the selection action bar (Split… button next
+  // to Edit), so the operator can split without traversing the full
+  // edit form. splitBusy guards against double-submit; on success the
+  // popup closes and invalidateAll() refetches so the stacked bars
+  // become visible on the swim-lane.
+  let splitTargetCropId = $state<string | null>(null);
   let splitCount = $state(2);
   let splitBusy = $state(false);
   let splitError = $state<string | null>(null);
@@ -1020,8 +1034,6 @@
       quantityUnit: ''
     };
     editError = null;
-    splitCount = 2;
-    splitError = null;
   }
 
   async function commitEdit() {
@@ -1116,12 +1128,12 @@
     }
   }
 
-  /** Phase 21b follow-up — split the open edit-modal's crop into N
+  /** Phase 21b follow-up — split the popup's target crop into N
    *  copies on the same block + date. Hits PATCH /api/crops/[id]
-   *  with action='split'; on success closes the modal so the operator
+   *  with action='split'; on success closes the popup so the operator
    *  sees the N stacked bars and can drag each to its target date. */
   async function commitSplit() {
-    if (!editCropId) return;
+    if (!splitTargetCropId) return;
     splitError = null;
     if (!Number.isInteger(splitCount) || splitCount < 2 || splitCount > 12) {
       splitError = 'Parts must be an integer between 2 and 12.';
@@ -1129,7 +1141,7 @@
     }
     splitBusy = true;
     try {
-      const r = await fetch(`/api/crops/${encodeURIComponent(editCropId)}`, {
+      const r = await fetch(`/api/crops/${encodeURIComponent(splitTargetCropId)}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'split', parts: splitCount })
@@ -1139,10 +1151,9 @@
         splitError = e.error ?? `split failed (${r.status})`;
         return;
       }
-      // Close the modal + clear selection so the operator immediately
-      // sees the new stacked bars on the swim-lane.
-      editCropId = null;
+      splitTargetCropId = null;
       splitCount = 2;
+      clearSwimSelection();
       await invalidateAll();
     } finally {
       splitBusy = false;
@@ -3211,7 +3222,13 @@
           {swimSelection.size} bar{swimSelection.size === 1 ? '' : 's'} selected
         </span>
         {#if swimSelection.size === 1}
-          <button type="button" class="action-btn" onclick={commitSelectionEdit}>Edit</button>
+          <button type="button" class="action-btn action-btn-compact" onclick={commitSelectionEdit}>Edit</button>
+          <button
+            type="button"
+            class="action-btn action-btn-compact"
+            onclick={commitSelectionSplit}
+            title="Split this planting into N stacked copies; drag each to its target date."
+          >Split…</button>
         {/if}
         {#if groupableSwimSelection}
           <button type="button" class="action-btn action-btn-primary" onclick={commitSelectionGroup}>
@@ -3403,37 +3420,6 @@
               plugin, disband any group first and use the Crops tab.
             </p>
 
-            <section class="split-section" aria-label="Split planting">
-              <h4>Split into multiple successions</h4>
-              <p class="hint">
-                Creates N stacked copies on the same date + block. Seeds divide evenly across the
-                splits (largest-remainder rounding so totals match). Drag each new bar to its
-                target date once the modal closes.
-              </p>
-              <div class="split-row">
-                <label class="split-count">
-                  Parts
-                  <input
-                    type="number"
-                    min="2"
-                    max="12"
-                    step="1"
-                    bind:value={splitCount}
-                    disabled={editBusy || splitBusy}
-                  />
-                </label>
-                <button
-                  type="button"
-                  class="btn-secondary"
-                  onclick={commitSplit}
-                  disabled={editBusy || splitBusy || splitCount < 2 || splitCount > 12}
-                >
-                  {splitBusy ? 'Splitting…' : `Split into ${splitCount}`}
-                </button>
-              </div>
-              {#if splitError}<p class="bar-edit-error">{splitError}</p>{/if}
-            </section>
-
             {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
           </div>
           <footer class="bar-edit-foot">
@@ -3442,6 +3428,59 @@
             </button>
             <button type="button" class="btn-primary" onclick={commitEdit} disabled={editBusy}>
               {editBusy ? 'Saving…' : 'Save'}
+            </button>
+          </footer>
+        </div>
+      </div>
+    {/if}
+
+    {#if splitTargetCropId}
+      <div class="bar-edit-backdrop" role="dialog" aria-modal="true" aria-label="Split planting">
+        <div class="bar-edit bar-edit-compact">
+          <header class="bar-edit-head">
+            <h3>Split into N copies</h3>
+            <button
+              type="button"
+              class="close"
+              onclick={() => (splitTargetCropId = null)}
+              aria-label="Close"
+              disabled={splitBusy}
+            >×</button>
+          </header>
+          <div class="bar-edit-body">
+            <p class="hint">
+              Creates {splitCount} stacked copies on the same date + block. Seeds divide evenly
+              across the splits (largest-remainder rounding). Drag each new bar to its target
+              date once the popup closes.
+            </p>
+            <label class="split-count">
+              Parts (2–12)
+              <input
+                type="number"
+                min="2"
+                max="12"
+                step="1"
+                bind:value={splitCount}
+                disabled={splitBusy}
+                autofocus
+              />
+            </label>
+            {#if splitError}<p class="bar-edit-error">{splitError}</p>{/if}
+          </div>
+          <footer class="bar-edit-foot">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick={() => (splitTargetCropId = null)}
+              disabled={splitBusy}
+            >Cancel</button>
+            <button
+              type="button"
+              class="btn-primary"
+              onclick={commitSplit}
+              disabled={splitBusy || splitCount < 2 || splitCount > 12}
+            >
+              {splitBusy ? 'Splitting…' : `Split into ${splitCount}`}
             </button>
           </footer>
         </div>
@@ -5118,6 +5157,15 @@
     cursor: pointer;
     min-height: 40px;
   }
+  /** Tighter variant for the per-bar quick actions (Edit + Split…)
+   *  so the selection action row stays compact when a single bar is
+   *  picked. The bigger .action-btn footprint stays on the
+   *  multi-select destructive actions where the hit target matters. */
+  .action-btn-compact {
+    padding: 0.3rem 0.65rem;
+    font-size: 0.82rem;
+    min-height: 32px;
+  }
   .action-btn:hover { background: #eef2ff; }
   .action-btn-primary {
     background: #4338ca;
@@ -5572,21 +5620,11 @@
   .qty-row { display: flex; gap: 0.5rem; }
   .qty-row .qty-amount { flex: 2; }
   .qty-row .qty-unit { flex: 1; }
-  .split-section {
-    margin-top: 1rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #e4e9e4;
-  }
-  .split-section h4 {
-    margin: 0 0 0.25rem;
-    font-size: 1rem;
-    color: #1f5e3a;
-  }
-  .split-row {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-end;
-    margin-top: 0.5rem;
+  /** Split-popup compact modal — narrower than the edit modal since
+   *  it only carries a single number input. Same backdrop, smaller
+   *  card. */
+  .bar-edit-compact {
+    max-width: 360px;
   }
   .split-count {
     display: flex;
@@ -5595,12 +5633,12 @@
     color: #555;
   }
   .split-count input {
-    width: 5rem;
-    padding: 0.4rem;
+    width: 6rem;
+    padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 1rem;
-    margin-top: 0.2rem;
+    font-size: 1.05rem;
+    margin-top: 0.25rem;
   }
   .bar-edit-body .hint {
     margin: 0;

@@ -86,6 +86,22 @@ const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calen
 export type PlanView = 'swimlane' | 'grid';
 const VIEW_VALUES: PlanView[] = ['swimlane', 'grid'];
 
+/** Stable key for a harvest target. Plugin-author-tagged `useCase` is
+ *  the canonical identifier (it matches the HARVEST_USE_CASES enum so
+ *  cross-plugin grouping works); when the author hasn't set one (e.g.
+ *  the corn plugin's "Sweet" / "Dent" labels), fall back to a slug of
+ *  the label so the operator-facing filter still has something stable
+ *  to match against. The same function is used both when building the
+ *  picker's list AND when filtering the projected targets in the swim-
+ *  lane render, so the two stay in lockstep. */
+export function harvestTargetKey(useCase: string | undefined, label: string): string {
+  if (useCase) return useCase;
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export interface ScheduleCatalogItem {
   pluginId: string;
   displayName: string;
@@ -327,9 +343,14 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       /** Phase 21b follow-up — operator's chosen subset of harvest
        *  use cases. Null = show all (default). */
       harvestUseCases?: string[] | null;
-      /** Plugin-declared harvest use cases for this crop. Drives the
-       *  checkbox list in the edit modal. */
-      availableHarvestUseCases?: string[];
+      /** Plugin-declared harvest target options for this crop. Each
+       *  entry carries a stable `key` (the canonical useCase enum
+       *  value, or a slugified label when the plugin author didn't
+       *  tag one) plus the display `label`. Drives the checkbox list
+       *  in the edit modal so plugins that ship labels without
+       *  useCase tags (e.g. "Sweet" / "Dent" on dual-purpose corn)
+       *  still get a working picker. */
+      availableHarvestUseCases?: Array<{ key: string; label: string }>;
       /** Phase 21b follow-up — quantity planted + unit on the crop row,
        *  surfaced so the edit modal can pre-populate its Quantity /
        *  Unit fields instead of showing empty "unchanged" placeholders. */
@@ -389,15 +410,20 @@ export const load: PageServerLoad = async ({ url, locals }) => {
             };
           }
           harvestTargets = projectHarvestTargets(projected, stageTable);
-          // Phase 21b follow-up — operator-selected harvest use cases.
+          // Phase 21b follow-up — operator-selected harvest windows.
           // Filter the plugin's projected harvest targets so the
           // swim-lane bar only renders the windows the operator
-          // picked (e.g. "fresh-eating" only, hiding the dent/grain
-          // window on a dual-purpose corn). When the filter is null /
-          // undefined, every target the plugin declares is surfaced.
+          // picked. The filter matches against a stable key per
+          // target — useCase when the plugin author tagged one,
+          // otherwise a slugified version of the label so plugins
+          // that haven't been backfilled (e.g. "Sweet" / "Dent" on
+          // dual-purpose corn) still work end-to-end. Filter null /
+          // empty = surface everything.
           if (cropMeta?.harvestUseCases && cropMeta.harvestUseCases.length > 0 && harvestTargets) {
             const allowed = new Set(cropMeta.harvestUseCases);
-            harvestTargets = harvestTargets.filter((t) => !t.useCase || allowed.has(t.useCase));
+            harvestTargets = harvestTargets.filter((t) =>
+              allowed.has(harvestTargetKey(t.useCase, t.label))
+            );
           }
         } else if (perennial) {
           stageSystem = 'perennial-calendar';
@@ -454,18 +480,20 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           // record; the edit modal is read-only on this field.
           quantityPlanted: cropMeta?.quantityPlanted,
           quantityUnit: cropMeta?.quantityUnit,
-          // Surface the plugin's full set of harvest-target use cases so
-          // the edit modal can offer them as checkbox options without
-          // re-deriving from the catalog. Empty array when the plugin
-          // has no growth stage table or no use-cased targets.
+          // Surface every harvest target the plugin declares as a
+          // (key, label) pair the modal can render as a checkbox. key
+          // matches what the swim-lane filter compares against —
+          // useCase when set, otherwise the slugified label so plugins
+          // that haven't been backfilled with useCase tags still get
+          // a working picker (e.g. "Sweet"/"Dent" on Oxacana corn).
           availableHarvestUseCases: (() => {
-            const out: string[] = [];
+            const out: Array<{ key: string; label: string }> = [];
             const seen = new Set<string>();
             for (const t of plug.growthStageTable?.harvestTargets ?? []) {
-              if (t.useCase && !seen.has(t.useCase)) {
-                seen.add(t.useCase);
-                out.push(t.useCase);
-              }
+              const key = harvestTargetKey(t.useCase, t.label);
+              if (!key || seen.has(key)) continue;
+              seen.add(key);
+              out.push({ key, label: t.label });
             }
             return out;
           })()

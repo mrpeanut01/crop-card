@@ -995,12 +995,14 @@
     plantingDateOriginal: string;
     quantityPlanted: string;
     quantityUnit: string;
-    /** Phase 21b follow-up — operator's chosen harvest use cases.
+    /** Phase 21b follow-up — operator's chosen harvest target keys.
      *  Set inside openEditCrop from the planting's current filter
-     *  (defaults to every option when no filter is set). */
+     *  (defaults to every option when no filter is set). Each key
+     *  is either a HARVEST_USE_CASES enum value (when the plugin
+     *  tagged one) or a slugified label (when it didn't). */
     harvestUseCases: string[];
     harvestUseCasesOriginal: string[];
-    availableHarvestUseCases: string[];
+    availableHarvestUseCases: Array<{ key: string; label: string }>;
   }>({
     varietyDisplayName: '',
     shortName: '',
@@ -1042,10 +1044,12 @@
     editCropId = cropId;
     // Phase 21b follow-up — surface the operator's saved harvest-use-case
     // filter (default to every option the plugin offers) so the modal can
-    // pre-check the right boxes.
+    // pre-check the right boxes. The `available` list is now (key,label)
+    // pairs so plugins with un-tagged harvest targets still get a picker.
     const available = planting.availableHarvestUseCases ?? [];
+    const allKeys = available.map((o) => o.key);
     const saved = planting.harvestUseCases ?? null;
-    const currentSelection = saved && saved.length > 0 ? saved.slice() : available.slice();
+    const currentSelection = saved && saved.length > 0 ? saved.slice() : allKeys.slice();
     editForm = {
       varietyDisplayName: planting.varietyDisplayName,
       shortName: sn,
@@ -3600,26 +3604,26 @@
                   don't intend to harvest this season.
                 </p>
                 <div class="harvest-use-list">
-                  {#each editForm.availableHarvestUseCases as u (u)}
+                  {#each editForm.availableHarvestUseCases as opt (opt.key)}
                     <label class="harvest-use-pill">
                       <input
                         type="checkbox"
-                        checked={editForm.harvestUseCases.includes(u)}
+                        checked={editForm.harvestUseCases.includes(opt.key)}
                         onchange={(ev) => {
                           const target = ev.currentTarget as HTMLInputElement;
                           if (target.checked) {
-                            if (!editForm.harvestUseCases.includes(u)) {
-                              editForm.harvestUseCases = [...editForm.harvestUseCases, u];
+                            if (!editForm.harvestUseCases.includes(opt.key)) {
+                              editForm.harvestUseCases = [...editForm.harvestUseCases, opt.key];
                             }
                           } else {
                             editForm.harvestUseCases = editForm.harvestUseCases.filter(
-                              (x) => x !== u
+                              (x) => x !== opt.key
                             );
                           }
                         }}
                         disabled={editBusy}
                       />
-                      <span>{u.replace(/-/g, ' ')}</span>
+                      <span>{opt.label}</span>
                     </label>
                   {/each}
                 </div>

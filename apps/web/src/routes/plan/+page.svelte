@@ -57,6 +57,22 @@
     return `/plan?${sp.toString()}`;
   }
 
+  /** Build a /plan URL that flips the Calendar view between swimlane
+   *  and grid without leaving duplicate `view=` query params behind.
+   *  Naive string concatenation produced `?view=grid&view=swimlane`,
+   *  and URLSearchParams.get() returns the first match — so the
+   *  switch silently no-op'd. Use this helper any time the destination
+   *  URL needs an explicit view choice. */
+  function calendarHref(targetView: 'swimlane' | 'grid'): string {
+    const sp = new URLSearchParams($page.url.searchParams);
+    sp.set('tab', 'calendar');
+    sp.set('view', targetView);
+    sp.delete('ym');
+    sp.delete('fieldId');
+    sp.delete('blockId');
+    return `/plan?${sp.toString()}`;
+  }
+
   // ─── Layout — field / block management state ────────────────────────────
   let newFieldName = $state('');
   let newFieldAcres = $state<number | undefined>(undefined);
@@ -3055,7 +3071,7 @@
   {#if data.tab === 'calendar'}
     <nav class="calendar-view-toggle" aria-label="Calendar view">
       <span class="cv-link cv-active" aria-current="page">📋 Swimlane</span>
-      <a class="cv-link" href={tabHref('calendar') + '&view=grid'}>📅 Grid</a>
+      <a class="cv-link" href={calendarHref('grid')}>📅 Grid</a>
     </nav>
   {/if}
   <section class="card schedule-header-card">
@@ -3382,18 +3398,18 @@
 <!-- ────────────────────────── CALENDAR (grid view) ────────────────────────── -->
 {#if data.tab === 'calendar' && data.view === 'grid'}
   <nav class="calendar-view-toggle" aria-label="Calendar view">
-    <a class="cv-link" href={tabHref('calendar') + '&view=swimlane'}>📋 Swimlane</a>
+    <a class="cv-link" href={calendarHref('swimlane')}>📋 Swimlane</a>
     <span class="cv-link cv-active" aria-current="page">📅 Grid</span>
   </nav>
   <section class="card">
     <div class="calendar-toolbar">
       <nav class="month-nav" aria-label="Month navigation">
         {#if data.prev}
-          <a href={tabHref('calendar') + '&view=grid&ym=' + data.prev}>← Prev</a>
+          <a href={calendarHref('grid') + '&ym=' + data.prev}>← Prev</a>
         {/if}
         <strong>{data.monthLabel}</strong>
         {#if data.next}
-          <a href={tabHref('calendar') + '&view=grid&ym=' + data.next}>Next →</a>
+          <a href={calendarHref('grid') + '&ym=' + data.next}>Next →</a>
         {/if}
       </nav>
 

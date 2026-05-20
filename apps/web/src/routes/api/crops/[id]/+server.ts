@@ -18,7 +18,7 @@ import {
   updateDetails,
   updateStatus
 } from '$lib/db/crops';
-import { reanchorPluginPrePost } from '$lib/db/tasks';
+import { reanchorCropTasks } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
@@ -153,14 +153,17 @@ export const PATCH: RequestHandler = async (event) => {
       blockId: parsed.data.blockId
     });
     // Hybrid drift policy: when an active crop's planting date moves,
-    // re-anchor any linked tasks (overridden ones get staleAnchor instead).
+    // re-anchor every open task tied to this crop by the same delta —
+    // primary tasks (fertilize, spray, scout, till, etc.) AND their
+    // linked pre/post. User-overridden tasks don't move; they get
+    // `staleAnchor` so the UI can paint them faded. This is what
+    // keeps the swim-lane's task pips ("+" fertilizer markers, ✦ sprays,
+    // etc.) in sync with the new planting date as the operator drags
+    // bars around or accepts an AI optimization.
     const oldMs = before.plantingDate;
     const newMs = parsed.data.plantingDate;
     if (oldMs != null && newMs != null && oldMs !== newMs) {
-      // Find primary tasks for this crop and re-anchor their pre/post.
-      // For now we cover the case where the crop's primary tasks share the
-      // planting date as their `scheduledFor`; the helper is idempotent.
-      reanchorPluginPrePost(event.params.id, oldMs, newMs);
+      reanchorCropTasks(event.params.id, oldMs, newMs);
     }
     return json({ crop: result });
   }

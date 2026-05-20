@@ -79,6 +79,13 @@ import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
 const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calendar'];
 
+/** Phase 21b follow-up — Calendar tab supports a view toggle so the
+ *  swim-lane and the month-grid live behind one entry point. The
+ *  Schedule tab now shares the swim-lane renderer (legacy URLs still
+ *  work; the visible tab strip drops the standalone Schedule entry). */
+export type PlanView = 'swimlane' | 'grid';
+const VIEW_VALUES: PlanView[] = ['swimlane', 'grid'];
+
 export interface ScheduleCatalogItem {
   pluginId: string;
   displayName: string;
@@ -110,6 +117,14 @@ export interface CropEquipmentForPlan {
 export const load: PageServerLoad = async ({ url, locals }) => {
   const tabParam = url.searchParams.get('tab') ?? 'overview';
   const tab: PlanTab = (TAB_VALUES as string[]).includes(tabParam) ? (tabParam as PlanTab) : 'overview';
+
+  // Calendar tab view discriminator. Default = swimlane (because the
+  // schedule swim-lane has more interactive features and is the better
+  // default for "what's planted where, when"); ?view=grid switches to
+  // the month-grid view. Other tabs ignore the param.
+  const viewParam = url.searchParams.get('view');
+  const view: PlanView =
+    viewParam && (VIEW_VALUES as string[]).includes(viewParam) ? (viewParam as PlanView) : 'swimlane';
 
   const blocks = listBlocks();
   const fields = listFields();
@@ -164,7 +179,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // renders <BlockMap> (today: layout + crops). Pushing it into base
     // closes that recurring class of bug — PR #49 fixed the UI side but
     // missed that the Crops-tab loader branch wasn't returning the field.
-    shadeSources: listShadeSources()
+    shadeSources: listShadeSources(),
+    // Phase 21b follow-up — surface to template so the Calendar tab can
+    // toggle swim-lane vs grid. Ignored by other tabs.
+    view
   };
 
   if (tab === 'overview') {
@@ -214,7 +232,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   }
 
-  if (tab === 'schedule') {
+  // The swim-lane payload is shared between `tab=schedule` (legacy URL) and
+  // `tab=calendar&view=swimlane` (new toggle inside the Calendar tab).
+  if (tab === 'schedule' || (tab === 'calendar' && view === 'swimlane')) {
     // Phase 14 swim-lane payload — replaces the prior single-row season
     // timeline. Returns blocks ordered E→W, planting bars, shade markers,
     // conflict pairs, the "to schedule" tray, and snap boundaries.
@@ -639,7 +659,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   // management lives at /equipment in the top nav; per-crop bindings stay
   // accessible on the crop detail page (/crops/[id]).
 
-  if (tab === 'calendar') {
+  // The month-grid payload only runs for the explicit grid view of the
+  // Calendar tab; the swim-lane branch above already handles the default.
+  if (tab === 'calendar' && view === 'grid') {
     // Aggregate every event from every planting + every recorded harvest.
     const allEvents: CalendarEvent[] = [];
     for (const b of blocks) {

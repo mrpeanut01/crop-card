@@ -56,6 +56,7 @@
   <nav aria-label="Primary" class="primary-nav">
     <a href="/today">Today</a>
     <a href="/plan">Plan</a>
+    <a href="/calendar">Calendar</a>
     <a href="/stock">Stock</a>
     <a href="/spray">Spray</a>
     <a href="/insecticides">Insecticides</a>

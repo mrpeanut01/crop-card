@@ -35,11 +35,14 @@
 
   let { data } = $props();
 
+  // Schedule tab merged into Calendar (2026-05-17). Calendar tab now
+  // toggles between swimlane (Schedule's view) and grid (month view).
+  // Legacy /plan?tab=schedule URLs still load the swimlane payload so
+  // bookmarks don't break.
   const TABS: Array<{ id: PlanTab; label: string; icon: string }> = [
     { id: 'overview', label: 'Overview', icon: '🏠' },
     { id: 'layout', label: 'Layout', icon: '🗺️' },
     { id: 'crops', label: 'Crops', icon: '🌱' },
-    { id: 'schedule', label: 'Schedule', icon: '📋' },
     { id: 'calendar', label: 'Calendar', icon: '📅' }
   ];
 
@@ -3045,8 +3048,16 @@
   />
 {/if}
 
-<!-- ────────────────────────── SCHEDULE (Phase 14 swim-lane) ────────────────────────── -->
-{#if data.tab === 'schedule'}
+<!-- ──── SCHEDULE swim-lane payload (Phase 14) — renders under the
+     Schedule tab (legacy URL) OR under Calendar tab when view=swimlane
+     (Phase 21b follow-up). Shared template; same loader data. ───── -->
+{#if data.tab === 'schedule' || (data.tab === 'calendar' && data.view === 'swimlane')}
+  {#if data.tab === 'calendar'}
+    <nav class="calendar-view-toggle" aria-label="Calendar view">
+      <span class="cv-link cv-active" aria-current="page">📋 Swimlane</span>
+      <a class="cv-link" href={tabHref('calendar') + '&view=grid'}>📅 Grid</a>
+    </nav>
+  {/if}
   <section class="card schedule-header-card">
     <div class="schedule-action-row">
       {#if swimSelection.size === 0}
@@ -3368,17 +3379,21 @@
 
 <!-- Equipment tab removed from /plan — equipment management still lives at /equipment in the top nav. -->
 
-<!-- ────────────────────────── CALENDAR ────────────────────────── -->
-{#if data.tab === 'calendar'}
+<!-- ────────────────────────── CALENDAR (grid view) ────────────────────────── -->
+{#if data.tab === 'calendar' && data.view === 'grid'}
+  <nav class="calendar-view-toggle" aria-label="Calendar view">
+    <a class="cv-link" href={tabHref('calendar') + '&view=swimlane'}>📋 Swimlane</a>
+    <span class="cv-link cv-active" aria-current="page">📅 Grid</span>
+  </nav>
   <section class="card">
     <div class="calendar-toolbar">
       <nav class="month-nav" aria-label="Month navigation">
         {#if data.prev}
-          <a href={tabHref('calendar') + '&ym=' + data.prev}>← Prev</a>
+          <a href={tabHref('calendar') + '&view=grid&ym=' + data.prev}>← Prev</a>
         {/if}
         <strong>{data.monthLabel}</strong>
         {#if data.next}
-          <a href={tabHref('calendar') + '&ym=' + data.next}>Next →</a>
+          <a href={tabHref('calendar') + '&view=grid&ym=' + data.next}>Next →</a>
         {/if}
       </nav>
 
@@ -4523,6 +4538,34 @@
   }
 
   /* Calendar tab */
+  .calendar-view-toggle {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0 0 0.75rem;
+    padding: 0.25rem;
+    background: #f4f6fa;
+    border-radius: 8px;
+    width: fit-content;
+  }
+  .cv-link {
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #466;
+    font-weight: 500;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  .cv-link:hover {
+    background: #e6ebef;
+  }
+  .cv-link.cv-active {
+    background: #1f5e3a;
+    color: #fff;
+    cursor: default;
+  }
   .calendar-toolbar {
     display: flex;
     flex-direction: column;

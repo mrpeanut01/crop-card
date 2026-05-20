@@ -234,6 +234,99 @@
   let loading = $state(false);
   let error = $state<string | null>(null);
 
+  /** Phase 21b follow-up — the AI's last rejected proposal, captured from
+   *  refine fallback responses so we can offer "Apply anyway." Cleared on
+   *  successful refine or step transitions. */
+  let lastRejectedAssignments = $state<AllocationResponse['assignments'] | null>(null);
+  let lastRejectedRationale = $state<string>('');
+  let lastRejectedViolations = $state<string[]>([]);
+
+  /** Translate a raw validator violation string into operator-friendly
+   *  text. Replaces UUIDs with block/variety names from props and
+   *  rewrites the known "family density" pattern into plain English.
+   *  Anything we don't recognize falls through to UUID-replacement only —
+   *  the operator still gets readable names even when the rule wording
+   *  stays technical. */
+  function humanizeAllocationViolation(v: string): string {
+    const blockNames = new Map<string, string>();
+    for (const b of blocks) blockNames.set(b.id, b.name);
+    const seedNames = new Map<string, string>();
+    for (const s of seedStock) {
+      seedNames.set(s.stockItemId, s.shortName ?? s.displayName);
+    }
+    const UUID_RE =
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
+    const replaceIds = (str: string) =>
+      str.replace(UUID_RE, (id) => {
+        const b = blockNames.get(id);
+        if (b) return `“${b}”`;
+        const s = seedNames.get(id);
+        if (s) return `“${s}”`;
+        return id;
+      });
+
+    // Family-density pattern: "block <id> packs multiple <family>
+    // varieties: total N plants exceeds 1.25× the largest plantsFit (M)"
+    const familyMatch = v.match(
+      /^block ([0-9a-f-]{36}) packs multiple (\S+) varieties: total (\d+) plants exceeds 1\.25× the largest plantsFit \((\d+)\)/i
+    );
+    if (familyMatch) {
+      const [, blockId, family, totalStr, capStr] = familyMatch;
+      const blockName = blockNames.get(blockId) ?? blockId;
+      const total = Number(totalStr);
+      const cap = Number(capStr);
+      const overBy = total - cap;
+      const detail = replaceIds(v).replace(/^.*\(/, '(');
+      return (
+        `Too many ${family} varieties packed onto “${blockName}”: ${total} plants total, ` +
+        `but the block's largest single-variety capacity is ${cap}. That's ${overBy} plants ` +
+        `over the recommended density. Spread some varieties to another block, or reduce ` +
+        `plant counts. ${detail}`
+      );
+    }
+
+    // Per-assignment density pattern: "assignment X→Y packs N/M plants
+    // (R× capacity). Reduce or split..."
+    const perAssign = v.match(
+      /^assignment ([0-9a-f-]{36})→([0-9a-f-]{36}) packs (\d+)\/(\d+) plants \(([0-9.]+)× capacity\)/
+    );
+    if (perAssign) {
+      const [, sid, bid, plantsStr, capStr] = perAssign;
+      const seedName = seedNames.get(sid) ?? sid;
+      const blockName = blockNames.get(bid) ?? bid;
+      return (
+        `“${seedName}” is over-packed on “${blockName}” (${plantsStr} plants vs. ` +
+        `${capStr} recommended). This variety has other viable blocks — splitting or ` +
+        `reducing would clear the density check.`
+      );
+    }
+
+    // plantsFit cap pattern: "assignment[N] plants=X exceeds plantsFit=Y for (sid, bid)"
+    const plantsFit = v.match(
+      /plants=(\d+) exceeds plantsFit=(\d+) for \(([0-9a-f-]{36}), ([0-9a-f-]{36})\)/
+    );
+    if (plantsFit) {
+      const [, plantsStr, capStr, sid, bid] = plantsFit;
+      const seedName = seedNames.get(sid) ?? sid;
+      const blockName = blockNames.get(bid) ?? bid;
+      return `“${seedName}” on “${blockName}” has ${plantsStr} plants but the block only fits ${capStr}.`;
+    }
+
+    // Matrix-not-candidate pattern.
+    const notCand = v.match(
+      /assignment\[\d+\] \(([0-9a-f-]{36}) → ([0-9a-f-]{36})\) is not in the candidacy matrix/
+    );
+    if (notCand) {
+      const [, sid, bid] = notCand;
+      const seedName = seedNames.get(sid) ?? sid;
+      const blockName = blockNames.get(bid) ?? bid;
+      return `The AI proposed planting “${seedName}” on “${blockName}”, but this combination wasn't on the candidacy list (likely a sun, rotation, or capacity mismatch from the original blocks step).`;
+    }
+
+    // Default: UUID-replacement only.
+    return replaceIds(v);
+  }
+
   /** Phase 17 — chat refinement state. The transcript is the source of truth
    *  for what's rendered in the bubble list and what gets sent to the refine
    *  endpoint on each turn. Seeded with an assistant message synthesized
@@ -650,12 +743,14 @@
     // When the server fell back (validation failed both passes, parse
     // failed, etc.), body.assignments is the PREVIOUS unchanged plan
     // but the AI's reply may still confidently claim it made changes.
-    // Same pattern + fix as the schedule chat — prefix a warning so the
-    // operator sees the table didn't update, plus the violations list.
+    // Prefix a warning + humanized violations so the operator sees the
+    // table didn't update, then capture the AI's rejected proposal so
+    // the "Apply anyway" affordance can offer it.
     const fallback: string | undefined = body?.meta?.fallback;
-    const violations: string[] = Array.isArray(body?.meta?.violationsOnFirstAttempt)
+    const rawViolations: string[] = Array.isArray(body?.meta?.violationsOnFirstAttempt)
       ? body.meta.violationsOnFirstAttempt
       : [];
+    const violations = rawViolations.map(humanizeAllocationViolation);
     const aiReply: string =
       typeof body.reply === 'string' && body.reply.trim().length > 0
         ? body.reply
@@ -666,11 +761,35 @@
     if (fallback) {
       const header =
         fallback === 'engine-only'
-          ? '⚠ Could not apply the change — it would break a block constraint (size, sun, rotation, companion, or candidacy). The plan above is unchanged.'
+          ? '⚠ Could not apply the change cleanly — the planning rules flagged it. The plan above is unchanged.'
           : `⚠ The plan above is unchanged (${fallback}).`;
       const violationLine =
-        violations.length > 0 ? `\n\nValidator violations:\n• ${violations.join('\n• ')}` : '';
-      reply = `${header}${violationLine}\n\n${aiReply}`;
+        violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
+      const overrideHint =
+        Array.isArray(body?.meta?.rejectedAssignments) &&
+        body.meta.rejectedAssignments.length > 0
+          ? "\n\nIf you've reviewed and want to accept the AI's plan anyway, use “Apply anyway” below."
+          : '';
+      reply = `${header}${violationLine}${overrideHint}\n\n${aiReply}`;
+
+      // Capture the rejected proposal + a sticky violation list so the
+      // template can render the override button.
+      if (Array.isArray(body?.meta?.rejectedAssignments)) {
+        lastRejectedAssignments = body.meta.rejectedAssignments;
+        lastRejectedRationale = typeof body.meta.rejectedRationale === 'string'
+          ? body.meta.rejectedRationale
+          : '';
+        lastRejectedViolations = violations;
+      } else {
+        lastRejectedAssignments = null;
+        lastRejectedRationale = '';
+        lastRejectedViolations = [];
+      }
+    } else {
+      // Successful refine — clear any stale rejected proposal.
+      lastRejectedAssignments = null;
+      lastRejectedRationale = '';
+      lastRejectedViolations = [];
     }
     allocationChatMessages = [...allocationChatMessages, { role: 'assistant', content: reply }];
     response = {
@@ -691,6 +810,39 @@
         : response.companionGroups,
       meta: body.meta ?? response.meta
     };
+  }
+
+  /** Phase 21b follow-up — operator override. Swaps the response in
+   *  place with the AI's last rejected proposal so the planning grid
+   *  reflects the operator's accepted-anyway plan. Adds an assistant
+   *  message noting the override so the audit trail lives in the chat. */
+  function applyRejectedAnyway() {
+    if (!response || !lastRejectedAssignments) return;
+    const overridden = [...lastRejectedAssignments];
+    response = {
+      ...response,
+      assignments: overridden,
+      rationale: lastRejectedRationale || response.rationale,
+      // Per-row rationale is cleared — the detailed per-pair text lived
+      // only in the rejected proposal before validation stripped it.
+      perRowRationale: {},
+      // Unplaced + sufficiency are recomputed by the next refine; until
+      // then, clear them so the operator doesn't read stale numbers.
+      unplaced: [],
+      sufficiency: {}
+    };
+    allocationChatMessages = [
+      ...allocationChatMessages,
+      {
+        role: 'assistant',
+        content:
+          '✅ Applied the AI plan over the validator. The grid above shows the new layout. ' +
+          'Density / capacity checks were overridden — review the plant counts before committing.'
+      }
+    ];
+    lastRejectedAssignments = null;
+    lastRejectedRationale = '';
+    lastRejectedViolations = [];
   }
 
   async function sendScheduleChat(text: string) {
@@ -1159,6 +1311,21 @@
       {/if}
     </div>
     {#if chatError}<p class="aw-error chat-error" role="alert">{chatError}</p>{/if}
+    {#if step === 'review' && lastRejectedAssignments && lastRejectedAssignments.length > 0}
+      <div class="aw-override-row" role="region" aria-label="Override validators">
+        <button
+          type="button"
+          class="btn-secondary btn-override"
+          onclick={applyRejectedAnyway}
+          title="Apply the AI's proposed plan even though it failed agronomic validation."
+        >
+          🛠 Apply anyway ({lastRejectedAssignments.length} rows)
+        </button>
+        <span class="muted override-hint">
+          Bypasses density / capacity checks. Spray-time safety rules are NOT affected.
+        </span>
+      </div>
+    {/if}
     <form class="aw-chat-input" onsubmit={(e) => { e.preventDefault(); void sendChat(); }}>
       <textarea
         rows="2"
@@ -2176,6 +2343,35 @@
   .chat-error {
     margin: 0.25rem 0.9rem 0;
     font-size: 0.85rem;
+  }
+  .aw-override-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.75rem;
+    background: #fff8e1;
+    border: 1px solid #f1c40f;
+    border-radius: 6px;
+  }
+  .btn-override {
+    background: #fff;
+    color: #5b3a00;
+    border: 1px solid #f1c40f;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    min-height: 40px;
+    cursor: pointer;
+  }
+  .btn-override:hover {
+    background: #fff3c4;
+  }
+  .override-hint {
+    font-size: 0.85rem;
+    flex: 1;
+    min-width: 12rem;
   }
   .aw-chat-input {
     display: flex;

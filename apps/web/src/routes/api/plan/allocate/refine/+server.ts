@@ -203,7 +203,9 @@ export const POST: RequestHandler = async (event) => {
         model: result.meta.model,
         usdEstimate: result.meta.usdEstimate,
         fallback: result.meta.fallback,
-        violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt
+        violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt,
+        rejectedAssignments: result.meta.rejectedAssignments,
+        rejectedRationale: result.meta.rejectedRationale
       },
       spend: guard.spend
     });

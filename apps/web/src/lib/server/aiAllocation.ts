@@ -111,6 +111,18 @@ export interface AllocationResult {
      *  deterministic plan is returned and this is set. */
     fallback?: 'engine-only' | 'no-api-key';
     violationsOnFirstAttempt?: string[];
+    /** When fallback fires due to validator rejection, this carries the
+     *  AI's last (invalid) proposal so the wizard can offer an
+     *  "Apply anyway" override. The operator accepts agronomic risk
+     *  explicitly; spray-time safety still gates the kernel later. */
+    rejectedAssignments?: Array<{
+      stockItemId: string;
+      cropPluginId: string;
+      varietyDisplayName: string;
+      blockId: string;
+      plants: number;
+    }>;
+    rejectedRationale?: string;
   };
 }
 
@@ -538,6 +550,26 @@ export async function refineAllocation(
   }
 
   if (!validation.valid) {
+    // Capture the AI's last proposal so the wizard can offer
+    // "Apply anyway" — operator overrides agronomic validators when
+    // they know better. Stock metadata fills in cropPluginId +
+    // varietyDisplayName; if the AI invented a (seed, block) pair
+    // outside the matrix, the seed lookup may miss — we skip that
+    // assignment so the override doesn't propagate bogus rows.
+    const rejectedAssignments = lastRefinement.assignments
+      .map((a) => {
+        const seed = input.seeds.find((s) => s.stockItemId === a.stockItemId);
+        if (!seed) return null;
+        return {
+          stockItemId: a.stockItemId,
+          cropPluginId: seed.cropPluginId,
+          varietyDisplayName: seed.varietyDisplayName,
+          blockId: a.blockId,
+          plants: Math.max(1, Math.floor(a.plants))
+        };
+      })
+      .filter((a): a is NonNullable<typeof a> => a !== null);
+
     return {
       ...echoPreviousPlan(input, matrix, refine),
       reply:
@@ -546,7 +578,9 @@ export async function refineAllocation(
       meta: {
         ...totalMeta,
         fallback: 'engine-only',
-        violationsOnFirstAttempt: validation.violations
+        violationsOnFirstAttempt: validation.violations,
+        rejectedAssignments,
+        rejectedRationale: lastRefinement.rationale
       }
     };
   }

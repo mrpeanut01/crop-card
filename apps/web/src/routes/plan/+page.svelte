@@ -2206,6 +2206,22 @@
       <span>{t.label}</span>
     </a>
   {/each}
+  {#if data.tab === 'calendar'}
+    <!-- Calendar view toggle lives in the secondary nav rather than as a
+         banner above the content so flipping between Swimlane/Grid doesn't
+         shift the layout. Right-justified with a vertical rule that
+         separates it visually from the tab list. -->
+    <span class="plan-tabs-divider" aria-hidden="true"></span>
+    <nav class="plan-tabs-view-toggle" aria-label="Calendar view">
+      {#if data.view === 'swimlane'}
+        <span class="cv-link cv-active" aria-current="page">📋 Swimlane</span>
+        <a class="cv-link" href={calendarHref('grid')}>📅 Grid</a>
+      {:else}
+        <a class="cv-link" href={calendarHref('swimlane')}>📋 Swimlane</a>
+        <span class="cv-link cv-active" aria-current="page">📅 Grid</span>
+      {/if}
+    </nav>
+  {/if}
 </nav>
 
 {#if !data.canEdit}
@@ -3190,26 +3206,15 @@
      Schedule tab (legacy URL) OR under Calendar tab when view=swimlane
      (Phase 21b follow-up). Shared template; same loader data. ───── -->
 {#if data.tab === 'schedule' || (data.tab === 'calendar' && data.view === 'swimlane')}
-  {#if data.tab === 'calendar'}
-    <nav class="calendar-view-toggle" aria-label="Calendar view">
-      <span class="cv-link cv-active" aria-current="page">📋 Swimlane</span>
-      <a class="cv-link" href={calendarHref('grid')}>📅 Grid</a>
-    </nav>
-  {/if}
   <section class="card schedule-header-card">
     <div class="schedule-action-row">
-      {#if swimSelection.size === 0}
-        {#if data.canEdit}
-          <button
-            type="button"
-            class="action-btn action-btn-primary"
-            onclick={() => (showOptimizerSidebar = true)}
-            disabled={autoScheduleBusy || clearBusy}
-            title="Open the AI optimizer — chat to re-arrange dates, accept the proposal when you like it"
-          >
-            ✨ Optimize Schedule
-          </button>
-          {#if filteredUnscheduled.length > 0}
+      <!-- LEFT: bar-selection actions (Edit / Split / Group / Un-schedule)
+           when a bar is selected, OR the deterministic Auto-schedule
+           shortcut when there are unscheduled drafts. Always sits left
+           of the filters + Optimize stack on the right. -->
+      <div class="action-left">
+        {#if swimSelection.size === 0}
+          {#if data.canEdit && filteredUnscheduled.length > 0}
             <button
               type="button"
               class="action-btn"
@@ -3220,96 +3225,114 @@
               {autoScheduleBusy ? 'Scheduling…' : `Auto-schedule ${filteredUnscheduled.length} draft${filteredUnscheduled.length === 1 ? '' : 's'}`}
             </button>
           {/if}
-          {#if (data.fields?.length ?? 0) > 1 || (data.swimBlocks?.length ?? 0) > 4}
-            <span class="filter-divider" aria-hidden="true"></span>
-            <span class="filter-inline" role="group" aria-label="Field and block filter">
-              <span class="filter-line">
-                <span class="filter-label">Field:</span>
+        {:else}
+          <span class="action-counter">
+            {swimSelection.size} bar{swimSelection.size === 1 ? '' : 's'} selected
+          </span>
+          {#if swimSelection.size === 1}
+            <button type="button" class="action-btn action-btn-compact" onclick={commitSelectionEdit}>Edit</button>
+            <button
+              type="button"
+              class="action-btn action-btn-compact"
+              onclick={commitSelectionSplit}
+              title="Split this planting into N stacked copies; drag each to its target date."
+            >Split…</button>
+          {/if}
+          {#if groupableSwimSelection}
+            <button type="button" class="action-btn action-btn-primary action-btn-compact" onclick={commitSelectionGroup}>
+              {groupableSwimSelection.hint === 'three-sisters'
+                ? 'Group as Three Sisters'
+                : 'Group as planting'}
+            </button>
+          {/if}
+          <button
+            type="button"
+            class="action-btn action-btn-compact"
+            onclick={commitSelectionDelete}
+            title="Pull selected planting(s) off the schedule. Crops stay attached to their blocks as drafts; permanent deletion lives on the Crops tab."
+          >
+            Un-schedule
+          </button>
+          <button type="button" class="action-btn action-btn-cancel action-btn-compact" onclick={clearSwimSelection}>
+            Cancel
+          </button>
+        {/if}
+      </div>
+
+      <!-- CENTER: field + block filter chips. Always visible regardless
+           of selection state. Same chip styling shared with the grid
+           view so position + look match between view toggles. -->
+      {#if (data.fields?.length ?? 0) > 1 || (data.swimBlocks?.length ?? 0) > 4}
+        <span class="filter-inline" role="group" aria-label="Field and block filter">
+          <span class="filter-line">
+            <span class="filter-label">Field:</span>
+            <button
+              type="button"
+              class="chip-mini"
+              class:active={selectedFieldId === null}
+              onclick={() => toggleField(null)}
+              title="Show all fields"
+            >All</button>
+            {#each data.fields ?? [] as f (f.id)}
+              {@const fieldBlockCount = (data.blocks ?? []).filter((b) => b.fieldId === f.id).length}
+              {#if fieldBlockCount > 0}
                 <button
                   type="button"
                   class="chip-mini"
-                  class:active={selectedFieldId === null}
-                  onclick={() => toggleField(null)}
-                  title="Show all fields"
-                >All</button>
-                {#each data.fields ?? [] as f (f.id)}
-                  {@const fieldBlockCount = (data.blocks ?? []).filter((b) => b.fieldId === f.id).length}
-                  {#if fieldBlockCount > 0}
-                    <button
-                      type="button"
-                      class="chip-mini"
-                      class:active={selectedFieldId === f.id}
-                      onclick={() => toggleField(f.id)}
-                      title="Field: {f.name}"
-                    >{f.name}</button>
-                  {/if}
-                {/each}
-              </span>
-              {#if filterableBlocks.length > 1}
-                <span class="filter-line">
-                  <span class="filter-label">Blocks:</span>
-                  <button
-                    type="button"
-                    class="chip-mini chip-mini-block"
-                    class:active={selectedBlockIds.size === 0}
-                    onclick={clearBlockSelection}
-                    title="Show all blocks in this scope"
-                  >All</button>
-                  {#each filterableBlocks as b (b.id)}
-                    <button
-                      type="button"
-                      class="chip-mini chip-mini-block"
-                      class:active={selectedBlockIds.has(b.id)}
-                      onclick={() => toggleBlock(b.id)}
-                      title="Block: {b.blockLabel ?? b.name}"
-                    >{b.blockLabel ?? b.name}</button>
-                  {/each}
-                </span>
+                  class:active={selectedFieldId === f.id}
+                  onclick={() => toggleField(f.id)}
+                  title="Field: {f.name}"
+                >{f.name}</button>
               {/if}
+            {/each}
+          </span>
+          {#if filterableBlocks.length > 1}
+            <span class="filter-line">
+              <span class="filter-label">Blocks:</span>
+              <button
+                type="button"
+                class="chip-mini chip-mini-block"
+                class:active={selectedBlockIds.size === 0}
+                onclick={clearBlockSelection}
+                title="Show all blocks in this scope"
+              >All</button>
+              {#each filterableBlocks as b (b.id)}
+                <button
+                  type="button"
+                  class="chip-mini chip-mini-block"
+                  class:active={selectedBlockIds.has(b.id)}
+                  onclick={() => toggleBlock(b.id)}
+                  title="Block: {b.blockLabel ?? b.name}"
+                >{b.blockLabel ?? b.name}</button>
+              {/each}
             </span>
           {/if}
-          <span class="action-spacer"></span>
+        </span>
+      {/if}
+
+      <!-- RIGHT: stacked Optimize + Clear. Always right-justified, always
+           visible to canEdit operators regardless of selection state. -->
+      {#if data.canEdit}
+        <div class="action-right">
           <button
             type="button"
-            class="action-link"
+            class="action-btn action-btn-primary"
+            onclick={() => (showOptimizerSidebar = true)}
+            disabled={autoScheduleBusy || clearBusy}
+            title="Open the AI optimizer — chat to re-arrange dates, accept the proposal when you like it"
+          >
+            ✨ Optimize Schedule
+          </button>
+          <button
+            type="button"
+            class="action-link action-link-under"
             onclick={resetSchedule}
             disabled={autoScheduleBusy || clearBusy}
             title="Unschedule every crop, disband groups, remove materialized tasks, then immediately re-run the deterministic auto-schedule. Harvested / archived crops untouched."
           >
-            {clearBusy ? 'Resetting…' : 'Reset schedule'}
+            {clearBusy ? 'Resetting…' : 'Clear schedule'}
           </button>
-        {/if}
-      {:else}
-        <span class="action-counter">
-          {swimSelection.size} bar{swimSelection.size === 1 ? '' : 's'} selected
-        </span>
-        {#if swimSelection.size === 1}
-          <button type="button" class="action-btn action-btn-compact" onclick={commitSelectionEdit}>Edit</button>
-          <button
-            type="button"
-            class="action-btn action-btn-compact"
-            onclick={commitSelectionSplit}
-            title="Split this planting into N stacked copies; drag each to its target date."
-          >Split…</button>
-        {/if}
-        {#if groupableSwimSelection}
-          <button type="button" class="action-btn action-btn-primary" onclick={commitSelectionGroup}>
-            {groupableSwimSelection.hint === 'three-sisters'
-              ? 'Group as Three Sisters'
-              : 'Group as planting'}
-          </button>
-        {/if}
-        <button
-          type="button"
-          class="action-btn"
-          onclick={commitSelectionDelete}
-          title="Pull selected planting(s) off the schedule. Crops stay attached to their blocks as drafts; permanent deletion lives on the Crops tab."
-        >
-          Un-schedule
-        </button>
-        <button type="button" class="action-btn action-btn-cancel" onclick={clearSwimSelection}>
-          Cancel
-        </button>
+        </div>
       {/if}
     </div>
     {#if autoRanQuiet}
@@ -3624,34 +3647,34 @@
 
 <!-- ────────────────────────── CALENDAR (grid view) ────────────────────────── -->
 {#if data.tab === 'calendar' && data.view === 'grid'}
-  <nav class="calendar-view-toggle" aria-label="Calendar view">
-    <a class="cv-link" href={calendarHref('swimlane')}>📋 Swimlane</a>
-    <span class="cv-link cv-active" aria-current="page">📅 Grid</span>
-  </nav>
   <section class="card">
     <div class="calendar-toolbar">
+      <!-- Match the swimlane's field-chip styling + position so flipping
+           between views doesn't shuffle the filter affordance. -->
       {#if data.fields && data.fields.length > 0}
-        <div class="filter-chips">
-          <span class="chip-label">Field:</span>
-          <button
-            class="chip"
-            class:active={!data.filterFieldId}
-            onclick={() => changeCalendarFilter('', data.filterBlockId ?? '')}
-          >
-            All
-          </button>
-          {#each data.fields as f (f.id)}
+        <span class="filter-inline" role="group" aria-label="Field filter">
+          <span class="filter-line">
+            <span class="filter-label">Field:</span>
             <button
-              class="chip"
-              class:active={data.filterFieldId === f.id}
-              onclick={() => changeCalendarFilter(f.id, '')}
-            >
-              {f.name}
-            </button>
-          {/each}
-        </div>
+              type="button"
+              class="chip-mini"
+              class:active={!data.filterFieldId}
+              onclick={() => changeCalendarFilter('', data.filterBlockId ?? '')}
+              title="Show all fields"
+            >All</button>
+            {#each data.fields as f (f.id)}
+              <button
+                type="button"
+                class="chip-mini"
+                class:active={data.filterFieldId === f.id}
+                onclick={() => changeCalendarFilter(f.id, '')}
+                title="Field: {f.name}"
+              >{f.name}</button>
+            {/each}
+          </span>
+        </span>
       {:else}
-        <div class="filter-chips" aria-hidden="true"></div>
+        <span class="filter-inline" aria-hidden="true"></span>
       {/if}
 
       <nav class="month-nav" aria-label="Month navigation">
@@ -3985,6 +4008,7 @@
   }
   .plan-tabs {
     display: flex;
+    align-items: stretch;
     gap: 0;
     /* Tightened top margin — the layout's main padding-block-start
      * already supplies a small breathing strip; the page H1 used to
@@ -3992,6 +4016,34 @@
     margin: 0 0 1rem;
     border-bottom: 2px solid #1f5e3a;
     overflow-x: auto;
+  }
+  /* Calendar view toggle docked at the right edge of the tab row when
+   * the Calendar tab is active. The divider provides visual separation
+   * from the primary tabs so the toggle reads as a separate control. */
+  .plan-tabs-divider {
+    margin-left: auto;
+    align-self: center;
+    width: 1px;
+    height: 1.5rem;
+    background: #cbd5e1;
+    margin-right: 0.6rem;
+    flex: 0 0 auto;
+  }
+  .plan-tabs-view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    align-self: center;
+    padding: 0.2rem;
+    background: #f4f6fa;
+    border-radius: 8px;
+    flex: 0 0 auto;
+  }
+  .plan-tabs-view-toggle .cv-link {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.85rem;
+    min-height: 30px;
+    border-radius: 6px;
   }
   .plan-tabs a {
     padding: 0.75rem 1rem;
@@ -5224,16 +5276,47 @@
   /* Schedule tab */
   .schedule-header-card .schedule-action-row {
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
+    align-items: flex-start;
+    gap: 0.75rem;
     flex-wrap: wrap;
     min-height: 44px;
+  }
+  /* Three-section layout: action-left + filters in the middle + Optimize
+   * stack pinned right via margin-left: auto. */
+  .action-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    min-height: 40px;
+  }
+  /* Right-justified Optimize + Clear stack. Tight vertical rhythm so
+   * the block takes as little height as possible — the link sits flush
+   * under the primary button with just enough breathing room for the
+   * underline. */
+  .action-right {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.1rem;
+    margin-left: auto;
+    min-width: 10.5rem;
+    line-height: 1.1;
+  }
+  .action-right .action-btn {
+    text-align: center;
+    padding: 0.4rem 0.8rem;
+    min-height: 34px;
+  }
+  .action-link-under {
+    align-self: center;
+    padding: 0.05rem 0.3rem;
+    line-height: 1;
   }
   .action-counter {
     font-weight: 600;
     color: #312e81;
     font-size: 0.9rem;
-    margin-right: auto;
   }
   .action-hint {
     color: #6b7280;

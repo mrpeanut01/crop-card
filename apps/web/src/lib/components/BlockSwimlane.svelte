@@ -409,7 +409,15 @@
     return p.plantingDateMs >= yearStart && p.endMs <= yearEnd;
   }
 
-  let dropPreview: { blockId: string; dayMs: number } | null = $state(null);
+  /** `dayMs` is the date the bar would actually land on (post-snap).
+   *  `tooEarly` fires when the cursor is aimed at a day BEFORE that
+   *  — meaning the parent's snap helper clamped the date forward
+   *  (typically past last-spring-frost or the crop's soil-temp
+   *  minimum). The renderer uses it to paint the line red + tack on
+   *  a "Too early" label so the operator understands why the line
+   *  isn't tracking their cursor. */
+  let dropPreview: { blockId: string; dayMs: number; tooEarly: boolean } | null =
+    $state(null);
 
   // Phase 15d — on first mount, scroll the swim-lane so the first of the
   // current month sits right below the sticky header. Most planting work
@@ -477,7 +485,12 @@
     // date (e.g. clamped forward past last-spring-frost), and the
     // operator sees the bar land "a week after" where they aimed.
     const snappedMs = props.snapDate ? props.snapDate(rawMs, props.dragPayload) : rawMs;
-    dropPreview = { blockId, dayMs: snappedMs };
+    // tooEarly: cursor aimed at a date before the snap floor. Triggers
+    // the red line + "Too early" label so the operator understands why
+    // the line doesn't track their cursor — the soil-temp / frost
+    // boundary won't let them plant any earlier.
+    const tooEarly = snappedMs > rawMs;
+    dropPreview = { blockId, dayMs: snappedMs, tooEarly };
   }
 
   function onColumnDragLeave() {
@@ -872,7 +885,16 @@
 
           {#if dropPreview && dropPreview.blockId === b.id}
             {@const top = dayOffset(dropPreview.dayMs) * ROW_H}
-            <div class="drop-preview" style="top: {top}px"></div>
+            <div
+              class="drop-preview"
+              class:too-early={dropPreview.tooEarly}
+              style="top: {top}px"
+            ></div>
+            {#if dropPreview.tooEarly}
+              <div class="drop-preview-label too-early-label" style="top: {top}px">
+                ⚠ Too early — snapped to soil-temp / frost floor
+              </div>
+            {/if}
           {/if}
 
           {#if props.kbCarry && kbCellBlockId === b.id}
@@ -1081,6 +1103,32 @@
   .bar.rotation { border: 2px dashed #f59e0b; }
   .bar.ghost { opacity: 0.4; }
   .drop-preview { position: absolute; left: 0; right: 0; height: 2px; background: #4338ca; pointer-events: none; }
+  /** Snap-forward state — the cursor aimed at a date earlier than the
+   *  soil-temp / last-spring-frost floor, and the parent's snap helper
+   *  pushed the proposed planting date forward. The red line +
+   *  "Too early" label make the auto-correction visible so the
+   *  operator doesn't think the snap line is broken. */
+  .drop-preview.too-early {
+    background: #b91c1c;
+    height: 3px;
+    box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.25);
+  }
+  .drop-preview-label {
+    position: absolute;
+    left: 6px;
+    transform: translateY(-100%);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  .too-early-label {
+    background: #b91c1c;
+    color: #fff;
+  }
   .kb-cursor { position: absolute; left: 0; right: 0; height: 3px; background: #16a34a; pointer-events: none; }
 
   .bar.selected {

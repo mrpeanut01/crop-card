@@ -44,11 +44,17 @@ const patchSchema = z.discriminatedUnion('action', [
   }),
   z.object({
     /** Phase 15c: edit operator-visible details (variety name + quantity).
-     *  Plugin id is NOT editable here. */
+     *  Plugin id is NOT editable here. Phase 21b follow-up: also accepts
+     *  a harvestUseCases filter so the operator can pick which of the
+     *  plugin's harvest windows to surface on the swim-lane bar (e.g.
+     *  pick "fresh-eating" only to hide the dent/grain window on a
+     *  dual-purpose corn). null clears (show all); undefined leaves
+     *  the existing value. */
     action: z.literal('edit-details'),
     varietyDisplayName: z.string().min(1).max(160).optional(),
     quantityPlanted: z.number().nonnegative().nullable().optional(),
-    quantityUnit: z.string().min(1).max(16).nullable().optional()
+    quantityUnit: z.string().min(1).max(16).nullable().optional(),
+    harvestUseCases: z.array(z.string().min(1).max(40)).max(8).nullable().optional()
   }),
   z.object({
     /** Phase 15d: pull a single crop OFF the schedule without deleting the
@@ -127,7 +133,8 @@ export const PATCH: RequestHandler = async (event) => {
     const updated = updateDetails(event.params.id, {
       varietyDisplayName: parsed.data.varietyDisplayName,
       quantityPlanted: parsed.data.quantityPlanted ?? undefined,
-      quantityUnit: parsed.data.quantityUnit ?? undefined
+      quantityUnit: parsed.data.quantityUnit ?? undefined,
+      harvestUseCases: parsed.data.harvestUseCases
     });
     return json({ crop: updated });
   }

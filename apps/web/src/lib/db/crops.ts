@@ -43,6 +43,12 @@ export interface Crop {
   groupRole?: GroupRole;
   groupOffsetDays?: number;
   groupSystemKind?: GroupSystemKind;
+  /** Phase 21b follow-up — operator's chosen harvest use cases for
+   *  this planting. Used to filter the plugin's growthStageTable
+   *  harvestTargets in the swim-lane render (e.g. show only the
+   *  fresh-eating window, not the dent/grain window, for a dual-
+   *  purpose corn crop). Undefined / null = show all. */
+  harvestUseCases?: string[];
 }
 
 function rowToCrop(row: typeof crops.$inferSelect): Crop {
@@ -64,6 +70,16 @@ function rowToCrop(row: typeof crops.$inferSelect): Crop {
   if (row.groupRole) out.groupRole = row.groupRole as GroupRole;
   if (row.groupOffsetDays != null) out.groupOffsetDays = row.groupOffsetDays;
   if (row.groupSystemKind) out.groupSystemKind = row.groupSystemKind as GroupSystemKind;
+  if (row.harvestUseCases) {
+    try {
+      const parsed = JSON.parse(row.harvestUseCases);
+      if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
+        out.harvestUseCases = parsed;
+      }
+    } catch {
+      /* malformed JSON — treat as null (show all targets) */
+    }
+  }
   return out;
 }
 
@@ -127,7 +143,15 @@ export function setSchedule(
 
 export function updateDetails(
   id: string,
-  patch: { varietyDisplayName?: string; quantityPlanted?: number | null; quantityUnit?: string | null }
+  patch: {
+    varietyDisplayName?: string;
+    quantityPlanted?: number | null;
+    quantityUnit?: string | null;
+    /** Phase 21b follow-up — explicit `null` clears the filter
+     *  (show all harvest targets); an array writes the selection;
+     *  `undefined` (default) leaves the column untouched. */
+    harvestUseCases?: string[] | null;
+  }
 ): Crop {
   const updates: Record<string, unknown> = {};
   if (patch.varietyDisplayName !== undefined) updates.varietyDisplayName = patch.varietyDisplayName;
@@ -136,6 +160,10 @@ export function updateDetails(
       patch.quantityPlanted == null ? null : Math.round(patch.quantityPlanted * 100);
   }
   if (patch.quantityUnit !== undefined) updates.quantityUnit = patch.quantityUnit ?? null;
+  if (patch.harvestUseCases !== undefined) {
+    updates.harvestUseCases =
+      patch.harvestUseCases == null ? null : JSON.stringify(patch.harvestUseCases);
+  }
   if (Object.keys(updates).length === 0) {
     const cur = getCrop(id);
     if (!cur) throw new Error(`unknown crop id: ${id}`);

@@ -797,7 +797,6 @@
               (r) => r.blockId === b.id && r.candidateCropId === p.cropId
             )}
             {@const selected = selectedCropIds.has(p.cropId)}
-            {@const grouped = !!p.groupId}
             {@const laneIdx = laneIndexFor(p.cropId)}
             {@const laneLeftPct = (laneIdx / lanes) * 100}
             {@const laneWidthPct = (1 / lanes) * 100}
@@ -824,8 +823,6 @@
               class:rotation
               class:ghost={!inActiveYear(p)}
               class:selected
-              class:grouped
-              class:anchor={p.groupRole === 'anchor'}
               draggable={!!props.onBarDragStart}
               ondragstart={(ev) => onBarDragStart(ev, p.cropId, p.blockId)}
               ondragend={onBarDragEnd}
@@ -834,7 +831,14 @@
               onclick={(ev) => toggleSelect(ev, p.cropId)}
             >
               <span class="bar-label">
-                {#if p.groupRole === 'anchor'}<span class="role-tag" aria-hidden="true">⚓</span>{/if}
+                <!-- Phase 21b follow-up — anchor/companion role tags + the
+                     grouped-bar dotted left border were removed. The
+                     Primary/Secondary distinction wasn't legible to
+                     operators (no inline explanation, just visual flair).
+                     groupId stays on the data — group inspector + companion
+                     check flows continue to use it — only the per-bar
+                     visual indicator is gone. -->
+
                 {#if p.currentStage}
                   <span
                     class="stage-badge"
@@ -1145,19 +1149,10 @@
     outline: 3px solid #4338ca;
     outline-offset: 1px;
   }
-  .bar.grouped {
-    border-left-width: 3px;
-    border-left-style: solid;
-    border-left-color: #312e81;
-  }
-  .bar.anchor {
-    border-left-color: #b45309;
-    border-left-width: 4px;
-  }
-  .role-tag {
-    font-size: 0.7rem;
-    margin-right: 0.15rem;
-  }
+  /* Phase 21b follow-up — .bar.grouped, .bar.anchor, .role-tag CSS
+   * removed when the anchor/companion visual indicator was retired.
+   * groupId data + the GroupInspector flows are unaffected; only the
+   * per-bar visual cue is gone. */
   .stage-badge {
     display: inline-block;
     font-size: 0.65rem;

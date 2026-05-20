@@ -183,6 +183,13 @@
       "when": 1778985529370,
       "tag": "0025_phase21_fungicide_events",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1779314061451,
+      "tag": "0026_phase21_crops_harvest_filter",
+      "breakpoints": true
     }
   ]
 }

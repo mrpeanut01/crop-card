@@ -355,7 +355,15 @@ export const crops = tenantScoped(
       groupOffsetDays: integer('group_offset_days'),
       groupSystemKind: text('group_system_kind', {
         enum: ['three-sisters', 'succession', 'manual']
-      })
+      }),
+      /** Phase 21b follow-up — JSON-encoded string[] of HARVEST_USE_CASES
+       *  the operator wants surfaced for this planting. NULL = show all
+       *  harvest targets the plugin declares (default). Set this to,
+       *  e.g., `["fresh-eating"]` on a dual-purpose corn crop to hide
+       *  the dent/grain harvest window, or `["fresh-eating","dry-storage"]`
+       *  to keep both. The loader filters `growthStageTable.harvestTargets`
+       *  through this list before computing per-bar harvest windows. */
+      harvestUseCases: text('harvest_use_cases')
     },
     (table) => ({
       ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),

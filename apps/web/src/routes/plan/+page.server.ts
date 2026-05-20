@@ -324,6 +324,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       nextStage?: NextStageData;
       harvestTargets?: HarvestTargetWindow[];
       cornType?: CornType;
+      /** Phase 21b follow-up — operator's chosen subset of harvest
+       *  use cases. Null = show all (default). */
+      harvestUseCases?: string[] | null;
+      /** Plugin-declared harvest use cases for this crop. Drives the
+       *  checkbox list in the edit modal. */
+      availableHarvestUseCases?: string[];
     }
     const swimPlantings: SwimPlanting[] = [];
     // listCrops gives us the group fields; index by cropId so we can decorate
@@ -378,6 +384,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
             };
           }
           harvestTargets = projectHarvestTargets(projected, stageTable);
+          // Phase 21b follow-up — operator-selected harvest use cases.
+          // Filter the plugin's projected harvest targets so the
+          // swim-lane bar only renders the windows the operator
+          // picked (e.g. "fresh-eating" only, hiding the dent/grain
+          // window on a dual-purpose corn). When the filter is null /
+          // undefined, every target the plugin declares is surfaced.
+          if (cropMeta?.harvestUseCases && cropMeta.harvestUseCases.length > 0 && harvestTargets) {
+            const allowed = new Set(cropMeta.harvestUseCases);
+            harvestTargets = harvestTargets.filter((t) => !t.useCase || allowed.has(t.useCase));
+          }
         } else if (perennial) {
           stageSystem = 'perennial-calendar';
           const year = new Date(nowMs).getFullYear();
@@ -424,7 +440,25 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           currentStage,
           nextStage,
           harvestTargets,
-          cornType: plug.cornType
+          cornType: plug.cornType,
+          // Surface so the edit modal can pre-populate its harvest-use-case
+          // checkbox list.
+          harvestUseCases: cropMeta?.harvestUseCases ?? null,
+          // Surface the plugin's full set of harvest-target use cases so
+          // the edit modal can offer them as checkbox options without
+          // re-deriving from the catalog. Empty array when the plugin
+          // has no growth stage table or no use-cased targets.
+          availableHarvestUseCases: (() => {
+            const out: string[] = [];
+            const seen = new Set<string>();
+            for (const t of plug.growthStageTable?.harvestTargets ?? []) {
+              if (t.useCase && !seen.has(t.useCase)) {
+                seen.add(t.useCase);
+                out.push(t.useCase);
+              }
+            }
+            return out;
+          })()
         });
       }
     }

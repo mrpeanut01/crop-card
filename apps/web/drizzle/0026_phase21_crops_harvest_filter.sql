@@ -1,0 +1,1 @@
+ALTER TABLE `crops` ADD `harvest_use_cases` text;

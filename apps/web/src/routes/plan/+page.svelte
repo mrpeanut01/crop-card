@@ -995,6 +995,12 @@
     plantingDateOriginal: string;
     quantityPlanted: string;
     quantityUnit: string;
+    /** Phase 21b follow-up — operator's chosen harvest use cases.
+     *  Set inside openEditCrop from the planting's current filter
+     *  (defaults to every option when no filter is set). */
+    harvestUseCases: string[];
+    harvestUseCasesOriginal: string[];
+    availableHarvestUseCases: string[];
   }>({
     varietyDisplayName: '',
     shortName: '',
@@ -1003,7 +1009,10 @@
     plantingDate: '',
     plantingDateOriginal: '',
     quantityPlanted: '',
-    quantityUnit: ''
+    quantityUnit: '',
+    harvestUseCases: [],
+    harvestUseCasesOriginal: [],
+    availableHarvestUseCases: []
   });
   let editBusy = $state(false);
   let editError = $state<string | null>(null);
@@ -1031,6 +1040,12 @@
     const dateStr = msToDateInput(planting.plantingDateMs);
     const sn = planting.shortName ?? '';
     editCropId = cropId;
+    // Phase 21b follow-up — surface the operator's saved harvest-use-case
+    // filter (default to every option the plugin offers) so the modal can
+    // pre-check the right boxes.
+    const available = planting.availableHarvestUseCases ?? [];
+    const saved = planting.harvestUseCases ?? null;
+    const currentSelection = saved && saved.length > 0 ? saved.slice() : available.slice();
     editForm = {
       varietyDisplayName: planting.varietyDisplayName,
       shortName: sn,
@@ -1039,7 +1054,10 @@
       plantingDate: dateStr,
       plantingDateOriginal: dateStr,
       quantityPlanted: '',
-      quantityUnit: ''
+      quantityUnit: '',
+      harvestUseCases: currentSelection,
+      harvestUseCasesOriginal: currentSelection.slice(),
+      availableHarvestUseCases: available
     };
     editError = null;
   }
@@ -1097,6 +1115,24 @@
       }
       if (editForm.quantityUnit.trim()) {
         detailsBody.quantityUnit = editForm.quantityUnit.trim();
+        hasDetails = true;
+      }
+      // Phase 21b follow-up — harvest use case filter. Only PATCH when
+      // the selection changed from what was saved. Sending an empty
+      // array would persist as "show nothing" (semantically valid but
+      // never useful); we send null to clear when the operator's
+      // selection covers every available option.
+      const origUses = [...editForm.harvestUseCasesOriginal].sort();
+      const newUses = [...editForm.harvestUseCases].sort();
+      const usesChanged =
+        origUses.length !== newUses.length ||
+        origUses.some((u, i) => u !== newUses[i]);
+      if (usesChanged) {
+        // "Every option selected" → null (means: show all, no filter).
+        const allSelected =
+          newUses.length > 0 &&
+          newUses.length === editForm.availableHarvestUseCases.length;
+        detailsBody.harvestUseCases = allSelected ? null : newUses;
         hasDetails = true;
       }
       if (hasDetails) {
@@ -3208,60 +3244,8 @@
 {#if data.tab === 'schedule' || (data.tab === 'calendar' && data.view === 'swimlane')}
   <section class="card schedule-header-card">
     <div class="schedule-action-row">
-      <!-- LEFT: bar-selection actions (Edit / Split / Group / Un-schedule)
-           when a bar is selected, OR the deterministic Auto-schedule
-           shortcut when there are unscheduled drafts. Always sits left
-           of the filters + Optimize stack on the right. -->
-      <div class="action-left">
-        {#if swimSelection.size === 0}
-          {#if data.canEdit && filteredUnscheduled.length > 0}
-            <button
-              type="button"
-              class="action-btn"
-              onclick={autoScheduleDrafts}
-              disabled={autoScheduleBusy || clearBusy}
-              title="Deterministic engine — places every unscheduled draft on visible blocks at the earliest soil-temp + frost-safe date, no AI call"
-            >
-              {autoScheduleBusy ? 'Scheduling…' : `Auto-schedule ${filteredUnscheduled.length} draft${filteredUnscheduled.length === 1 ? '' : 's'}`}
-            </button>
-          {/if}
-        {:else}
-          <span class="action-counter">
-            {swimSelection.size} bar{swimSelection.size === 1 ? '' : 's'} selected
-          </span>
-          {#if swimSelection.size === 1}
-            <button type="button" class="action-btn action-btn-compact" onclick={commitSelectionEdit}>Edit</button>
-            <button
-              type="button"
-              class="action-btn action-btn-compact"
-              onclick={commitSelectionSplit}
-              title="Split this planting into N stacked copies; drag each to its target date."
-            >Split…</button>
-          {/if}
-          {#if groupableSwimSelection}
-            <button type="button" class="action-btn action-btn-primary action-btn-compact" onclick={commitSelectionGroup}>
-              {groupableSwimSelection.hint === 'three-sisters'
-                ? 'Group as Three Sisters'
-                : 'Group as planting'}
-            </button>
-          {/if}
-          <button
-            type="button"
-            class="action-btn action-btn-compact"
-            onclick={commitSelectionDelete}
-            title="Pull selected planting(s) off the schedule. Crops stay attached to their blocks as drafts; permanent deletion lives on the Crops tab."
-          >
-            Un-schedule
-          </button>
-          <button type="button" class="action-btn action-btn-cancel action-btn-compact" onclick={clearSwimSelection}>
-            Cancel
-          </button>
-        {/if}
-      </div>
-
-      <!-- CENTER: field + block filter chips. Always visible regardless
-           of selection state. Same chip styling shared with the grid
-           view so position + look match between view toggles. -->
+      <!-- LEFT: field + block filter chips. Same chips on swimlane + grid
+           views so toggling between them doesn't shuffle the affordance. -->
       {#if (data.fields?.length ?? 0) > 1 || (data.swimBlocks?.length ?? 0) > 4}
         <span class="filter-inline" role="group" aria-label="Field and block filter">
           <span class="filter-line">
@@ -3310,13 +3294,66 @@
         </span>
       {/if}
 
-      <!-- RIGHT: stacked Optimize + Clear. Always right-justified, always
-           visible to canEdit operators regardless of selection state. -->
+      <!-- MIDDLE: selection actions (Edit / Split / Un-schedule / Cancel)
+           when a bar is picked, OR the deterministic auto-schedule shortcut
+           when there are unscheduled drafts. Right-justified next to the
+           Optimize stack via `margin-left: auto`. Separator divider on both
+           sides so the section reads as a distinct group. -->
+      {#if swimSelection.size > 0 || (data.canEdit && filteredUnscheduled.length > 0)}
+        <span class="action-divider" aria-hidden="true"></span>
+        <div class="action-middle">
+          {#if swimSelection.size === 0}
+            <button
+              type="button"
+              class="action-btn action-btn-tight"
+              onclick={autoScheduleDrafts}
+              disabled={autoScheduleBusy || clearBusy}
+              title="Deterministic engine — places every unscheduled draft on visible blocks at the earliest soil-temp + frost-safe date, no AI call"
+            >
+              {autoScheduleBusy ? 'Scheduling…' : `Auto-schedule ${filteredUnscheduled.length} draft${filteredUnscheduled.length === 1 ? '' : 's'}`}
+            </button>
+          {:else}
+            <span class="action-counter">
+              {swimSelection.size} selected
+            </span>
+            {#if swimSelection.size === 1}
+              <button type="button" class="action-btn action-btn-tight" onclick={commitSelectionEdit}>Edit</button>
+              <button
+                type="button"
+                class="action-btn action-btn-tight"
+                onclick={commitSelectionSplit}
+                title="Split this planting into N stacked copies; drag each to its target date."
+              >Split…</button>
+            {/if}
+            {#if groupableSwimSelection}
+              <button type="button" class="action-btn action-btn-primary action-btn-tight" onclick={commitSelectionGroup}>
+                {groupableSwimSelection.hint === 'three-sisters' ? 'Group 3 Sisters' : 'Group'}
+              </button>
+            {/if}
+            <button
+              type="button"
+              class="action-btn action-btn-tight"
+              onclick={commitSelectionDelete}
+              title="Pull selected planting(s) off the schedule. Crops stay attached to their blocks as drafts; permanent deletion lives on the Crops tab."
+            >
+              Un-schedule
+            </button>
+            <button type="button" class="action-btn action-btn-cancel action-btn-tight" onclick={clearSwimSelection}>
+              Cancel
+            </button>
+          {/if}
+        </div>
+      {/if}
+
+      <!-- RIGHT: Optimize + Clear stack. Right-justified. The whole stack
+           is the same overall height as the Field / Blocks filter pair on
+           the left so the action row reads as one balanced strip. -->
       {#if data.canEdit}
+        <span class="action-divider" aria-hidden="true"></span>
         <div class="action-right">
           <button
             type="button"
-            class="action-btn action-btn-primary"
+            class="action-btn action-btn-primary action-btn-tight"
             onclick={() => (showOptimizerSidebar = true)}
             disabled={autoScheduleBusy || clearBusy}
             title="Open the AI optimizer — chat to re-arrange dates, accept the proposal when you like it"
@@ -3535,6 +3572,41 @@
               To move to a different block, drag the bar on the swim-lane. To change the crop
               plugin, disband any group first and use the Crops tab.
             </p>
+
+            {#if editForm.availableHarvestUseCases.length > 1}
+              <fieldset class="harvest-uses">
+                <legend>Harvest windows to surface</legend>
+                <p class="hint hint-tight">
+                  Tick which harvest windows you actually plan to take. The unticked windows are
+                  hidden from the bar so the swim-lane shows just the ones you care about (e.g.
+                  pick fresh-eating only on dual-purpose corn to hide the dent / grain window).
+                </p>
+                <div class="harvest-use-list">
+                  {#each editForm.availableHarvestUseCases as u (u)}
+                    <label class="harvest-use-pill">
+                      <input
+                        type="checkbox"
+                        checked={editForm.harvestUseCases.includes(u)}
+                        onchange={(ev) => {
+                          const target = ev.currentTarget as HTMLInputElement;
+                          if (target.checked) {
+                            if (!editForm.harvestUseCases.includes(u)) {
+                              editForm.harvestUseCases = [...editForm.harvestUseCases, u];
+                            }
+                          } else {
+                            editForm.harvestUseCases = editForm.harvestUseCases.filter(
+                              (x) => x !== u
+                            );
+                          }
+                        }}
+                        disabled={editBusy}
+                      />
+                      <span>{u.replace(/-/g, ' ')}</span>
+                    </label>
+                  {/each}
+                </div>
+              </fieldset>
+            {/if}
 
             {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
           </div>
@@ -5276,47 +5348,69 @@
   /* Schedule tab */
   .schedule-header-card .schedule-action-row {
     display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 0.6rem;
     flex-wrap: wrap;
     min-height: 44px;
   }
-  /* Three-section layout: action-left + filters in the middle + Optimize
-   * stack pinned right via margin-left: auto. */
-  .action-left {
+  /* Three-section layout: filters left, selection-actions middle
+   * (pinned right via margin-left: auto on .action-middle), Optimize
+   * stack rightmost. Both middle + right end up bunched on the right
+   * so the operator's gaze lands in one place; the filter group is
+   * anchored on the left. Vertical-rule .action-divider separates
+   * each section so they read as distinct groups. */
+  .action-middle {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.35rem;
     flex-wrap: wrap;
-    min-height: 40px;
+    margin-left: auto;
+    align-self: center;
   }
-  /* Right-justified Optimize + Clear stack. Tight vertical rhythm so
-   * the block takes as little height as possible — the link sits flush
-   * under the primary button with just enough breathing room for the
-   * underline. */
+  /* Optimize + Clear stack — same overall height as the Field/Blocks
+   * filter pair on the left so the whole row reads as a balanced
+   * strip. Vertical rhythm is tight: button + link sit flush with
+   * just enough air for the underline. */
   .action-right {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.1rem;
-    margin-left: auto;
-    min-width: 10.5rem;
+    justify-content: center;
+    gap: 0.05rem;
+    min-width: 9.5rem;
     line-height: 1.1;
+    align-self: center;
   }
   .action-right .action-btn {
     text-align: center;
-    padding: 0.4rem 0.8rem;
-    min-height: 34px;
   }
   .action-link-under {
     align-self: center;
-    padding: 0.05rem 0.3rem;
+    padding: 0 0.3rem;
     line-height: 1;
+    font-size: 0.75rem;
+  }
+  /* Vertical separator between action-row sections. */
+  .action-divider {
+    width: 1px;
+    height: 32px;
+    background: #d4d4d8;
+    flex: 0 0 1px;
+    align-self: center;
+  }
+  /* Tight button variant for the middle (selection-action) group and
+   * the Optimize stack — slimmer padding + smaller font so the whole
+   * row fits inside the height of the Field/Blocks filter on the left. */
+  .action-btn-tight {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.82rem;
+    min-height: 28px;
   }
   .action-counter {
     font-weight: 600;
     color: #312e81;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    padding-right: 0.15rem;
   }
   .action-hint {
     color: #6b7280;
@@ -5794,6 +5888,45 @@
     font-size: 0.9rem;
   }
   .qty-row { display: flex; gap: 0.5rem; }
+  .harvest-uses {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border: 1px solid #d4d4d8;
+    border-radius: 6px;
+  }
+  .harvest-uses legend {
+    padding: 0 0.4rem;
+    font-weight: 600;
+    color: #1f5e3a;
+    font-size: 0.95rem;
+  }
+  .hint-tight {
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+  .harvest-use-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .harvest-use-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: #f4f6fa;
+    font-size: 0.85rem;
+    text-transform: capitalize;
+    cursor: pointer;
+    user-select: none;
+  }
+  .harvest-use-pill input[type='checkbox'] {
+    margin: 0;
+  }
+  .harvest-use-pill:hover {
+    background: #e6ebef;
+  }
   .qty-row .qty-amount { flex: 2; }
   .qty-row .qty-unit { flex: 1; }
   /** Split-popup compact modal — narrower than the edit modal since

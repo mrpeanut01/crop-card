@@ -13,6 +13,7 @@ import {
   getCrop,
   isGroupAnchorWithMembers,
   setSchedule,
+  splitCrop,
   unscheduleCrop,
   updateDetails,
   updateStatus
@@ -54,6 +55,14 @@ const patchSchema = z.discriminatedUnion('action', [
      *  crop row. Cascade-deletes its materialized tasks, disbands its group
      *  (if any), nulls plantingDate, flips status to 'planned'. */
     action: z.literal('unschedule')
+  }),
+  z.object({
+    /** Phase 21b follow-up: split a crop into N stacked parts on the same
+     *  date / block. Seeds + plants distributed via largest-remainder
+     *  rounding. Caller is expected to drag the resulting bars to their
+     *  target dates afterwards. */
+    action: z.literal('split'),
+    parts: z.number().int().min(2).max(12)
   })
 ]);
 
@@ -98,6 +107,19 @@ export const PATCH: RequestHandler = async (event) => {
     if (!getCrop(event.params.id)) throw error(404, 'crop not found');
     const result = unscheduleCrop(event.params.id);
     return json({ ok: true, ...result });
+  }
+
+  if (parsed.data.action === 'split') {
+    if (!getCrop(event.params.id)) throw error(404, 'crop not found');
+    try {
+      const out = splitCrop(event.params.id, parsed.data.parts);
+      return json({ crops: out });
+    } catch (e) {
+      return json(
+        { error: e instanceof Error ? e.message : 'split failed' },
+        { status: 409 }
+      );
+    }
   }
 
   if (parsed.data.action === 'edit-details') {

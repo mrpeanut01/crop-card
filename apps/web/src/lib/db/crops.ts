@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, gte, isNotNull, lte } from 'drizzle-orm';
 import { db } from './client';
 import { crops, tasks as tasksTable } from './schema';
+import { splitQuantityForSuccession } from '$lib/schedule/succession';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
 import {
   cascadeDeleteForCrop,
@@ -191,6 +192,88 @@ export function listYearsWithCrops(): number[] {
   const years = new Set<number>();
   for (const r of all) if (r.plantingDate) years.add(new Date(r.plantingDate).getFullYear());
   return [...years].sort((a, b) => b - a);
+}
+
+/**
+ * Phase 21b follow-up — split a crop into N parts.
+ *
+ * Takes one existing crop and produces N total crops on the same
+ * block + plugin + variety + plantingDate, with the original's
+ * quantity divided evenly across the parts via largest-remainder
+ * rounding (so the sum exactly matches the input — no off-by-one
+ * losses for integer units like 'seeds' / 'count' / 'packets').
+ *
+ * The first part is the UPDATED original (id preserved), so any
+ * event already tied to that cropId stays linked. The remaining
+ * (N - 1) parts are fresh inserts that inherit the original's
+ * status + non-quantity metadata. Group fields (groupId, groupRole,
+ * etc.) are NOT propagated to the new parts — splitting a group
+ * anchor would break the companion offsets, so each new part starts
+ * as a standalone planting that the operator can join to a group
+ * separately if they want.
+ *
+ * Caller is expected to drag the new parts to their target dates
+ * (or blocks) afterwards. By default all parts share the source
+ * date so the UI stacks them on top of each other and the operator
+ * can spread them out via drag.
+ */
+export function splitCrop(id: string, parts: number): Crop[] {
+  if (parts < 2 || !Number.isInteger(parts)) {
+    throw new Error(`splitCrop requires parts >= 2 integer (got ${parts})`);
+  }
+  const original = getCrop(id);
+  if (!original) throw new Error(`unknown crop id: ${id}`);
+  if (original.status === 'harvested' || original.status === 'archived') {
+    throw new Error(`cannot split a ${original.status} crop`);
+  }
+
+  const totalHundredths = (() => {
+    const row = db
+      .select({ q: crops.quantityPlantedHundredths })
+      .from(crops)
+      .where(withTenant(crops, eq(crops.id, id)))
+      .get();
+    return row?.q ?? null;
+  })();
+  const shares =
+    totalHundredths != null
+      ? splitQuantityForSuccession(totalHundredths, parts)
+      : new Array(parts).fill(null);
+
+  // Update the original to its share.
+  const updated = db
+    .update(crops)
+    .set({ quantityPlantedHundredths: shares[0] as number | null })
+    .where(withTenant(crops, eq(crops.id, id)))
+    .returning()
+    .get();
+
+  const out: Crop[] = [rowToCrop(updated)];
+
+  for (let i = 1; i < parts; i++) {
+    const newId = randomUUID();
+    const row = db
+      .insert(crops)
+      .values(
+        tenantValues({
+          id: newId,
+          blockId: original.blockId,
+          cropPluginId: original.cropPluginId,
+          varietyDisplayName: original.varietyDisplayName,
+          plantingDate:
+            original.plantingDate != null ? new Date(original.plantingDate) : null,
+          status: original.status,
+          quantityPlantedHundredths: shares[i] as number | null,
+          quantityUnit: original.quantityUnit ?? null
+          // Intentionally NOT copying group fields — see docstring.
+        })
+      )
+      .returning()
+      .get();
+    out.push(rowToCrop(row));
+  }
+
+  return out;
 }
 
 export function createPlanned(input: {

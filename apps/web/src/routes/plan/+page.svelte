@@ -988,6 +988,13 @@
   });
   let editBusy = $state(false);
   let editError = $state<string | null>(null);
+  // Phase 21b follow-up — split-into-N state lives alongside the edit
+  // modal's state since the button surfaces there. splitBusy guards
+  // against double-submit; commitSplit clears editCropId on success so
+  // the modal closes and the new bars become visible.
+  let splitCount = $state(2);
+  let splitBusy = $state(false);
+  let splitError = $state<string | null>(null);
   let deleteCropIds = $state<string[]>([]);
   let deleteBusy = $state(false);
 
@@ -1013,6 +1020,8 @@
       quantityUnit: ''
     };
     editError = null;
+    splitCount = 2;
+    splitError = null;
   }
 
   async function commitEdit() {
@@ -1104,6 +1113,39 @@
       await invalidateAll();
     } finally {
       editBusy = false;
+    }
+  }
+
+  /** Phase 21b follow-up — split the open edit-modal's crop into N
+   *  copies on the same block + date. Hits PATCH /api/crops/[id]
+   *  with action='split'; on success closes the modal so the operator
+   *  sees the N stacked bars and can drag each to its target date. */
+  async function commitSplit() {
+    if (!editCropId) return;
+    splitError = null;
+    if (!Number.isInteger(splitCount) || splitCount < 2 || splitCount > 12) {
+      splitError = 'Parts must be an integer between 2 and 12.';
+      return;
+    }
+    splitBusy = true;
+    try {
+      const r = await fetch(`/api/crops/${encodeURIComponent(editCropId)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'split', parts: splitCount })
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        splitError = e.error ?? `split failed (${r.status})`;
+        return;
+      }
+      // Close the modal + clear selection so the operator immediately
+      // sees the new stacked bars on the swim-lane.
+      editCropId = null;
+      splitCount = 2;
+      await invalidateAll();
+    } finally {
+      splitBusy = false;
     }
   }
 
@@ -3360,6 +3402,38 @@
               To move to a different block, drag the bar on the swim-lane. To change the crop
               plugin, disband any group first and use the Crops tab.
             </p>
+
+            <section class="split-section" aria-label="Split planting">
+              <h4>Split into multiple successions</h4>
+              <p class="hint">
+                Creates N stacked copies on the same date + block. Seeds divide evenly across the
+                splits (largest-remainder rounding so totals match). Drag each new bar to its
+                target date once the modal closes.
+              </p>
+              <div class="split-row">
+                <label class="split-count">
+                  Parts
+                  <input
+                    type="number"
+                    min="2"
+                    max="12"
+                    step="1"
+                    bind:value={splitCount}
+                    disabled={editBusy || splitBusy}
+                  />
+                </label>
+                <button
+                  type="button"
+                  class="btn-secondary"
+                  onclick={commitSplit}
+                  disabled={editBusy || splitBusy || splitCount < 2 || splitCount > 12}
+                >
+                  {splitBusy ? 'Splitting…' : `Split into ${splitCount}`}
+                </button>
+              </div>
+              {#if splitError}<p class="bar-edit-error">{splitError}</p>{/if}
+            </section>
+
             {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
           </div>
           <footer class="bar-edit-foot">
@@ -5498,6 +5572,36 @@
   .qty-row { display: flex; gap: 0.5rem; }
   .qty-row .qty-amount { flex: 2; }
   .qty-row .qty-unit { flex: 1; }
+  .split-section {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e4e9e4;
+  }
+  .split-section h4 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    color: #1f5e3a;
+  }
+  .split-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+    margin-top: 0.5rem;
+  }
+  .split-count {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.85rem;
+    color: #555;
+  }
+  .split-count input {
+    width: 5rem;
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    margin-top: 0.2rem;
+  }
   .bar-edit-body .hint {
     margin: 0;
     font-size: 0.78rem;

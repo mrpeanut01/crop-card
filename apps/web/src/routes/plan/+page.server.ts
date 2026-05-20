@@ -469,16 +469,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           // record; the edit modal is read-only on this field.
           quantityPlanted: cropMeta?.quantityPlanted,
           quantityUnit: cropMeta?.quantityUnit,
-          // Surface every harvest target the plugin declares as a
-          // (key, label) pair the modal can render as a checkbox. key
-          // matches what the swim-lane filter compares against —
-          // useCase when set, otherwise the slugified label so plugins
-          // that haven't been backfilled with useCase tags still get
-          // a working picker (e.g. "Sweet"/"Dent" on Oxacana corn).
+          // Surface every harvest target as a (key, label) pair the modal
+          // renders as a checkbox. Pulled from the SAME source the swim-
+          // lane render uses — `stageTable` is `resolveGrowthStageTable(plug)`
+          // (already in scope from the projection above), which falls back
+          // to the corn / brassica / etc. family-default table when the
+          // plugin doesn't declare its own. Reading `plug.growthStageTable`
+          // directly silently returned [] for plugins like Oxacana corn
+          // that ship without a custom stage table but still get harvest
+          // bands via the family default.
           availableHarvestUseCases: (() => {
             const out: Array<{ key: string; label: string }> = [];
             const seen = new Set<string>();
-            for (const t of plug.growthStageTable?.harvestTargets ?? []) {
+            for (const t of stageTable?.harvestTargets ?? []) {
               const key = harvestTargetKey(t.useCase, t.label);
               if (!key || seen.has(key)) continue;
               seen.add(key);

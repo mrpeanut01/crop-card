@@ -647,9 +647,31 @@
       chatDraft = text;
       return;
     }
-    const reply: string = typeof body.reply === 'string' && body.reply.trim().length > 0
-      ? body.reply
-      : 'Done — updated the plan above.';
+    // When the server fell back (validation failed both passes, parse
+    // failed, etc.), body.assignments is the PREVIOUS unchanged plan
+    // but the AI's reply may still confidently claim it made changes.
+    // Same pattern + fix as the schedule chat — prefix a warning so the
+    // operator sees the table didn't update, plus the violations list.
+    const fallback: string | undefined = body?.meta?.fallback;
+    const violations: string[] = Array.isArray(body?.meta?.violationsOnFirstAttempt)
+      ? body.meta.violationsOnFirstAttempt
+      : [];
+    const aiReply: string =
+      typeof body.reply === 'string' && body.reply.trim().length > 0
+        ? body.reply
+        : fallback
+          ? 'The plan above is unchanged.'
+          : 'Done — updated the plan above.';
+    let reply = aiReply;
+    if (fallback) {
+      const header =
+        fallback === 'engine-only'
+          ? '⚠ Could not apply the change — it would break a block constraint (size, sun, rotation, companion, or candidacy). The plan above is unchanged.'
+          : `⚠ The plan above is unchanged (${fallback}).`;
+      const violationLine =
+        violations.length > 0 ? `\n\nValidator violations:\n• ${violations.join('\n• ')}` : '';
+      reply = `${header}${violationLine}\n\n${aiReply}`;
+    }
     allocationChatMessages = [...allocationChatMessages, { role: 'assistant', content: reply }];
     response = {
       assignments: body.assignments,

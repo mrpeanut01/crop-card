@@ -461,18 +461,93 @@ export async function refineAllocation(
     };
   }
 
-  const validation = validateAiPlan(
+  let validation = validateAiPlan(
     { assignments: refinement.assignments, rationale: refinement.rationale, advisories: refinement.advisories },
     input,
     matrix
   );
+  let lastRefinement = refinement;
+
+  // ─── Corrective retry — same pattern as refineSchedule + initial
+  //     scheduler. Echo the rejected plan + violation list, ask Claude
+  //     to patch the broken constraints surgically. ──────────────────
+  if (!validation.valid) {
+    console.warn(
+      `[aiAllocation.refine] first attempt failed validation (${validation.violations.length} violations); retrying.\n` +
+        `Violations: ${validation.violations.slice(0, 6).join(' | ')}`
+    );
+    const correction =
+      'Your previous response was rejected by the validator. Violations:\n' +
+      validation.violations.map((v) => `- ${v}`).join('\n') +
+      '\n\nReturn a CORRECTED allocation that fixes EVERY violation:' +
+      '\n- Every (stockItemId, blockId) pair MUST appear in the candidacy matrix from the first message.' +
+      '\n- Respect plantsFit caps; do not over-fill a block.' +
+      '\n- Honor sun, rotation, narrow, companion-bad, and pollination flags from the matrix.' +
+      '\n\nSame JSON shape as before — no prose, no code fences.';
+    try {
+      const retryMsgs = [
+        ...messages,
+        { role: 'assistant' as const, content: [{ type: 'text' as const, text: rawText }] },
+        { role: 'user' as const, content: [{ type: 'text' as const, text: correction }] }
+      ];
+      const retryStart = Date.now();
+      const retryResp = await client.messages.create({
+        model: choice.model,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        system: systemBlocks,
+        messages: retryMsgs
+      });
+      const retryDuration = Date.now() - retryStart;
+      const retryText = retryResp.content[0]?.type === 'text' ? retryResp.content[0].text : '';
+      let retryParsed: unknown = null;
+      try {
+        retryParsed = JSON.parse(retryText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim());
+      } catch {
+        retryParsed = null;
+      }
+      const retryMeta = computeMeta(retryResp.usage, choice.model);
+      recordAllocateTelemetry(retryMeta, retryDuration, telemetry);
+      addMeta(totalMeta, retryMeta);
+      const retryRefinement = parseRefinementResponse(retryParsed);
+      if (retryRefinement) {
+        const retryValidation = validateAiPlan(
+          {
+            assignments: retryRefinement.assignments,
+            rationale: retryRefinement.rationale,
+            advisories: retryRefinement.advisories
+          },
+          input,
+          matrix
+        );
+        if (retryValidation.valid) {
+          validation = retryValidation;
+          lastRefinement = retryRefinement;
+        } else {
+          console.warn(
+            `[aiAllocation.refine] retry ALSO failed (${retryValidation.violations.length} violations).`
+          );
+          validation = retryValidation;
+        }
+      }
+    } catch (err) {
+      console.warn(
+        '[aiAllocation.refine] retry Anthropic call failed:',
+        err instanceof Error ? err.message : String(err)
+      );
+    }
+  }
+
   if (!validation.valid) {
     return {
       ...echoPreviousPlan(input, matrix, refine),
       reply:
-        refinement.reply ||
+        lastRefinement.reply ||
         "I tried to apply that change but it would break the block constraints (size, sun, rotation, or companions). The current plan is unchanged.",
-      meta: { ...totalMeta, violationsOnFirstAttempt: validation.violations }
+      meta: {
+        ...totalMeta,
+        fallback: 'engine-only',
+        violationsOnFirstAttempt: validation.violations
+      }
     };
   }
 

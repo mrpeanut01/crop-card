@@ -3588,21 +3588,13 @@
             </p>
 
             <fieldset class="harvest-uses">
-              <legend>Harvest windows to surface</legend>
+              <legend>Harvest Window</legend>
               {#if editForm.availableHarvestUseCases.length === 0}
                 <p class="hint hint-tight">
                   This crop's plugin doesn't declare any tagged harvest windows yet, so there's
-                  nothing to filter. The swim-lane will surface every harvest target from the
-                  plugin's growth-stage table as-is.
+                  nothing to filter.
                 </p>
               {:else}
-                <p class="hint hint-tight">
-                  Tick which harvest windows you actually plan to take. Unticked windows are hidden
-                  from the swim-lane bar so it shows just the ones you care about (e.g. pick
-                  fresh-eating only on dual-purpose corn to hide the dent / grain window). Single-
-                  window crops still show the toggle so you can hide the window entirely if you
-                  don't intend to harvest this season.
-                </p>
                 <div class="harvest-use-list">
                   {#each editForm.availableHarvestUseCases as opt (opt.key)}
                     <label class="harvest-use-pill">
@@ -5931,18 +5923,23 @@
     margin-top: 0.25rem;
     margin-bottom: 0.5rem;
   }
+  /** Flat, horizontally-centered pill row — minimal visual weight so
+   *  the modal doesn't grow tall. No background fill, just an inline
+   *  outline that shows on the active state. */
   .harvest-use-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
+    gap: 0.6rem;
+    justify-content: center;
   }
   .harvest-use-pill {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.3rem 0.6rem;
+    padding: 0.25rem 0.65rem;
     border-radius: 999px;
-    background: #f4f6fa;
+    background: transparent;
+    border: 1px solid #d4d4d8;
     font-size: 0.85rem;
     text-transform: capitalize;
     cursor: pointer;
@@ -5951,8 +5948,13 @@
   .harvest-use-pill input[type='checkbox'] {
     margin: 0;
   }
+  .harvest-use-pill:has(input:checked) {
+    border-color: #1f5e3a;
+    color: #1f5e3a;
+    font-weight: 600;
+  }
   .harvest-use-pill:hover {
-    background: #e6ebef;
+    background: #f4f6fa;
   }
   .qty-row .qty-amount { flex: 2; }
   .qty-row .qty-unit { flex: 1; }

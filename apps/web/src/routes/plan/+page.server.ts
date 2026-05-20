@@ -41,6 +41,7 @@ import {
   type PlantingRecord
 } from '$lib/db/blocks';
 import { listCrops, type Crop } from '$lib/db/crops';
+import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import { getSetting } from '$lib/db/settings';
 import {
@@ -86,21 +87,9 @@ const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calen
 export type PlanView = 'swimlane' | 'grid';
 const VIEW_VALUES: PlanView[] = ['swimlane', 'grid'];
 
-/** Stable key for a harvest target. Plugin-author-tagged `useCase` is
- *  the canonical identifier (it matches the HARVEST_USE_CASES enum so
- *  cross-plugin grouping works); when the author hasn't set one (e.g.
- *  the corn plugin's "Sweet" / "Dent" labels), fall back to a slug of
- *  the label so the operator-facing filter still has something stable
- *  to match against. The same function is used both when building the
- *  picker's list AND when filtering the projected targets in the swim-
- *  lane render, so the two stay in lockstep. */
-export function harvestTargetKey(useCase: string | undefined, label: string): string {
-  if (useCase) return useCase;
-  return label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
+// harvestTargetKey moved to `$lib/plan/harvestTargetKey.ts` so it can
+// be exported from a non-route module — SvelteKit only allows
+// `load` / `actions` / `prerender` / etc. as named exports here.
 
 export interface ScheduleCatalogItem {
   pluginId: string;

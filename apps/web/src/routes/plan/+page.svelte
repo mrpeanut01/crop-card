@@ -2067,8 +2067,15 @@
   }
 </script>
 
-<h1>Plan</h1>
-<p class="lede">
+<!--
+  Page heading + lede are visually hidden — the active tab in the
+  primary top nav (Phase 21b follow-up styling) carries the same
+  information for sighted users. The h1 stays in the DOM so screen
+  readers + the document outline still find "Plan" as the page
+  heading.
+-->
+<h1 class="sr-only">Plan</h1>
+<p class="sr-only">
   Step 0 of the season — set up your fields, blocks, crops, equipment, and stock so /today knows
   what to surface.
 </p>
@@ -3403,16 +3410,6 @@
   </nav>
   <section class="card">
     <div class="calendar-toolbar">
-      <nav class="month-nav" aria-label="Month navigation">
-        {#if data.prev}
-          <a href={calendarHref('grid') + '&ym=' + data.prev}>← Prev</a>
-        {/if}
-        <strong>{data.monthLabel}</strong>
-        {#if data.next}
-          <a href={calendarHref('grid') + '&ym=' + data.next}>Next →</a>
-        {/if}
-      </nav>
-
       {#if data.fields && data.fields.length > 0}
         <div class="filter-chips">
           <span class="chip-label">Field:</span>
@@ -3433,12 +3430,20 @@
             </button>
           {/each}
         </div>
+      {:else}
+        <div class="filter-chips" aria-hidden="true"></div>
       {/if}
-    </div>
 
-    <p class="lede">
-      {data.eventCountTotal} event{data.eventCountTotal === 1 ? '' : 's'} in view.
-    </p>
+      <nav class="month-nav" aria-label="Month navigation">
+        {#if data.prev}
+          <a href={calendarHref('grid') + '&ym=' + data.prev}>← Prev</a>
+        {/if}
+        <strong>{data.monthLabel}</strong>
+        {#if data.next}
+          <a href={calendarHref('grid') + '&ym=' + data.next}>Next →</a>
+        {/if}
+      </nav>
+    </div>
 
     {#if data.eventCountTotal === 0}
       <p>Empty calendar. Add a crop to populate.</p>
@@ -4584,14 +4589,22 @@
   }
   .calendar-toolbar {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 0.75rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .calendar-toolbar .filter-chips {
+    flex: 1;
+    min-width: 12rem;
+  }
+  .calendar-toolbar .month-nav {
+    margin-left: auto;
   }
   .month-nav {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
   }
   .month-nav a {

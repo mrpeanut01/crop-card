@@ -330,6 +330,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       /** Plugin-declared harvest use cases for this crop. Drives the
        *  checkbox list in the edit modal. */
       availableHarvestUseCases?: string[];
+      /** Phase 21b follow-up — quantity planted + unit on the crop row,
+       *  surfaced so the edit modal can pre-populate its Quantity /
+       *  Unit fields instead of showing empty "unchanged" placeholders. */
+      quantityPlanted?: number;
+      quantityUnit?: string;
     }
     const swimPlantings: SwimPlanting[] = [];
     // listCrops gives us the group fields; index by cropId so we can decorate
@@ -444,6 +449,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           // Surface so the edit modal can pre-populate its harvest-use-case
           // checkbox list.
           harvestUseCases: cropMeta?.harvestUseCases ?? null,
+          // Quantity + unit so the edit modal pre-fills instead of showing
+          // "(unchanged)" placeholders. The unit is locked at the planting
+          // record; the edit modal is read-only on this field.
+          quantityPlanted: cropMeta?.quantityPlanted,
+          quantityUnit: cropMeta?.quantityUnit,
           // Surface the plugin's full set of harvest-target use cases so
           // the edit modal can offer them as checkbox options without
           // re-deriving from the catalog. Empty array when the plugin

@@ -1053,8 +1053,13 @@
       stockItemId: planting.stockItemId ?? null,
       plantingDate: dateStr,
       plantingDateOriginal: dateStr,
-      quantityPlanted: '',
-      quantityUnit: '',
+      // Pre-fill quantity + unit from the planting so the operator
+      // can see and tweak the current numbers. Unit is rendered
+      // read-only in the template — the unit is set at planting time
+      // by addPlanting() and shouldn't be retyped here.
+      quantityPlanted:
+        planting.quantityPlanted != null ? String(planting.quantityPlanted) : '',
+      quantityUnit: planting.quantityUnit ?? '',
       harvestUseCases: currentSelection,
       harvestUseCasesOriginal: currentSelection.slice(),
       availableHarvestUseCases: available
@@ -1110,13 +1115,16 @@
           editBusy = false;
           return;
         }
-        detailsBody.quantityPlanted = n;
-        hasDetails = true;
+        // Only send when the value actually changed from the
+        // pre-populated original (avoids no-op PATCHes).
+        const original = planting?.quantityPlanted;
+        if (original == null || Math.abs(original - n) > 1e-6) {
+          detailsBody.quantityPlanted = n;
+          hasDetails = true;
+        }
       }
-      if (editForm.quantityUnit.trim()) {
-        detailsBody.quantityUnit = editForm.quantityUnit.trim();
-        hasDetails = true;
-      }
+      // Unit is rendered read-only in the modal now (the value is set at
+      // planting time and locked here); never sent in the PATCH.
       // Phase 21b follow-up — harvest use case filter. Only PATCH when
       // the selection changed from what was saved. Sending an empty
       // array would persist as "show nothing" (semantically valid but
@@ -3553,17 +3561,19 @@
                   step="0.01"
                   bind:value={editForm.quantityPlanted}
                   disabled={editBusy}
-                  placeholder="(unchanged)"
+                  placeholder="(none recorded)"
                 />
               </label>
               <label class="qty-unit">
                 Unit
                 <input
                   type="text"
-                  bind:value={editForm.quantityUnit}
-                  disabled={editBusy}
-                  maxlength="16"
-                  placeholder="(unchanged)"
+                  value={editForm.quantityUnit || '—'}
+                  readonly
+                  tabindex="-1"
+                  aria-readonly="true"
+                  title="The unit was set when this planting was committed and isn't editable here. Change it on the Crops tab if you need a different unit."
+                  class="qty-unit-readonly"
                 />
               </label>
             </div>
@@ -3573,13 +3583,21 @@
               plugin, disband any group first and use the Crops tab.
             </p>
 
-            {#if editForm.availableHarvestUseCases.length > 1}
-              <fieldset class="harvest-uses">
-                <legend>Harvest windows to surface</legend>
+            <fieldset class="harvest-uses">
+              <legend>Harvest windows to surface</legend>
+              {#if editForm.availableHarvestUseCases.length === 0}
                 <p class="hint hint-tight">
-                  Tick which harvest windows you actually plan to take. The unticked windows are
-                  hidden from the bar so the swim-lane shows just the ones you care about (e.g.
-                  pick fresh-eating only on dual-purpose corn to hide the dent / grain window).
+                  This crop's plugin doesn't declare any tagged harvest windows yet, so there's
+                  nothing to filter. The swim-lane will surface every harvest target from the
+                  plugin's growth-stage table as-is.
+                </p>
+              {:else}
+                <p class="hint hint-tight">
+                  Tick which harvest windows you actually plan to take. Unticked windows are hidden
+                  from the swim-lane bar so it shows just the ones you care about (e.g. pick
+                  fresh-eating only on dual-purpose corn to hide the dent / grain window). Single-
+                  window crops still show the toggle so you can hide the window entirely if you
+                  don't intend to harvest this season.
                 </p>
                 <div class="harvest-use-list">
                   {#each editForm.availableHarvestUseCases as u (u)}
@@ -3605,8 +3623,8 @@
                     </label>
                   {/each}
                 </div>
-              </fieldset>
-            {/if}
+              {/if}
+            </fieldset>
 
             {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
           </div>
@@ -5888,6 +5906,11 @@
     font-size: 0.9rem;
   }
   .qty-row { display: flex; gap: 0.5rem; }
+  .qty-unit-readonly {
+    background: #f4f4f5;
+    color: #525252;
+    cursor: not-allowed;
+  }
   .harvest-uses {
     margin-top: 1rem;
     padding: 0.75rem;

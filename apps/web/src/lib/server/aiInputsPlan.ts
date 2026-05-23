@@ -41,11 +41,7 @@ import type { HerbicideProduct } from '$lib/safety';
 import type { ChemistryClass } from '$lib/safety/types';
 import { checkChemistryCompatibility } from '$lib/safety/chemistry';
 import { getApiKey } from './scanResult';
-import {
-  estimateUsd,
-  selectModel,
-  type AiResultMeta
-} from './aiPlanning';
+import { estimateUsd, selectModel, type AiResultMeta } from './aiPlanning';
 import { extractJsonObject } from './aiJsonExtract';
 
 const MAX_OUTPUT_TOKENS = 3000;
@@ -84,13 +80,10 @@ export interface AiInputsPlanInput extends InputsPlanInput {
  * AI-refined plan is returned. Otherwise the deterministic plan is
  * returned with `meta.fallback` set so the UI can surface the reason.
  */
-export async function planInputsWithAI(
-  input: AiInputsPlanInput
-): Promise<AiInputsPlanResult> {
+export async function planInputsWithAI(input: AiInputsPlanInput): Promise<AiInputsPlanResult> {
   const deterministic = planInputs(input);
 
-  const apiKey =
-    input.apiKeyOverride !== undefined ? input.apiKeyOverride : getApiKey();
+  const apiKey = input.apiKeyOverride !== undefined ? input.apiKeyOverride : getApiKey();
   if (!apiKey) {
     return {
       plan: deterministic,
@@ -167,8 +160,7 @@ export async function refineInputs(input: {
   history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>;
   apiKeyOverride?: string;
 }): Promise<AiInputsPlanResult> {
-  const apiKey =
-    input.apiKeyOverride !== undefined ? input.apiKeyOverride : getApiKey();
+  const apiKey = input.apiKeyOverride !== undefined ? input.apiKeyOverride : getApiKey();
   if (!apiKey) {
     return { plan: input.previousPlan, meta: makeNoApiKeyMeta() };
   }
@@ -257,7 +249,9 @@ async function callInputsClaude(
     // Log the raw text when extraction fails so we can iterate on the prompt
     // or the extractor. Truncate to keep the log readable.
     const preview = text.length > 800 ? `${text.slice(0, 800)}…` : text;
-    console.warn('[aiInputsPlan] could not extract JSON from model response. Raw text:\n' + preview);
+    console.warn(
+      '[aiInputsPlan] could not extract JSON from model response. Raw text:\n' + preview
+    );
   }
 
   const meta: AiResultMeta = {
@@ -333,17 +327,8 @@ function buildInitialUserMessage(plan: InputsPlan, input: InputsPlanInput): stri
   ].join('\n');
 }
 
-function buildRefineUserMessage(
-  plan: InputsPlan,
-  input: InputsPlanInput,
-  message: string
-): string {
-  return [
-    buildInitialUserMessage(plan, input),
-    '',
-    'Operator says:',
-    message
-  ].join('\n');
+function buildRefineUserMessage(plan: InputsPlan, input: InputsPlanInput, message: string): string {
+  return [buildInitialUserMessage(plan, input), '', 'Operator says:', message].join('\n');
 }
 
 function buildCatalogSummary(input: InputsPlanInput): {
@@ -411,7 +396,10 @@ function parseSubstitutions(raw: unknown): AiInputsSubstitution[] {
   return out;
 }
 
-function applySubstitutions(plan: InputsPlan, subs: ReadonlyArray<AiInputsSubstitution>): InputsPlan {
+function applySubstitutions(
+  plan: InputsPlan,
+  subs: ReadonlyArray<AiInputsSubstitution>
+): InputsPlan {
   if (subs.length === 0) return plan;
   const byId = new Map(subs.map((s) => [s.applicationId, s]));
   const applications = plan.applications.map((app) => {
@@ -437,10 +425,7 @@ interface ValidationResult {
   violations: string[];
 }
 
-export function validateAiPlan(
-  plan: InputsPlan,
-  input: InputsPlanInput
-): ValidationResult {
+export function validateAiPlan(plan: InputsPlan, input: InputsPlanInput): ValidationResult {
   const violations: string[] = [];
 
   const pluginById = new Map<string, unknown>();
@@ -459,10 +444,7 @@ export function validateAiPlan(
     }
 
     // 1. Philosophy filter.
-    if (
-      isFilterable(plugin) &&
-      !isProductAllowed(plugin, input.seasonSetup.philosophy)
-    ) {
+    if (isFilterable(plugin) && !isProductAllowed(plugin, input.seasonSetup.philosophy)) {
       violations.push(`philosophy-violation:${app.id}:${app.productPluginId}`);
     }
 
@@ -504,7 +486,10 @@ export function validateAiPlan(
 
   // 3. Tank-mix chemistry compatibility per planting + date (group
   //    sprays that fall on the same date for the same planting).
-  const tankGroups = new Map<string, Array<{ app: typeof plan.applications[number]; plugin: unknown }>>();
+  const tankGroups = new Map<
+    string,
+    Array<{ app: (typeof plan.applications)[number]; plugin: unknown }>
+  >();
   for (const app of plan.applications) {
     if (!app.productPluginId) continue;
     const plugin = pluginById.get(app.productPluginId);
@@ -517,7 +502,11 @@ export function validateAiPlan(
   for (const [, group] of tankGroups) {
     if (group.length < 2) continue;
     const products: HerbicideProduct[] = group.map(({ plugin }) => {
-      const h = plugin as { pluginId: string; displayName: string; activeIngredients: Array<{ name: string; chemistryClass: ChemistryClass }> };
+      const h = plugin as {
+        pluginId: string;
+        displayName: string;
+        activeIngredients: Array<{ name: string; chemistryClass: ChemistryClass }>;
+      };
       return {
         pluginId: h.pluginId,
         displayName: h.displayName,
@@ -557,7 +546,9 @@ function isHerbicidePlugin(p: unknown): p is {
 function hasRate(p: unknown): p is { ratePerAcre: { amount: number; unit: string } } {
   if (!p || typeof p !== 'object') return false;
   const rate = (p as { ratePerAcre?: unknown }).ratePerAcre;
-  return !!rate && typeof rate === 'object' && typeof (rate as { amount?: unknown }).amount === 'number';
+  return (
+    !!rate && typeof rate === 'object' && typeof (rate as { amount?: unknown }).amount === 'number'
+  );
 }
 
 function cropPluginFor(input: InputsPlanInput, cropPluginId: string) {

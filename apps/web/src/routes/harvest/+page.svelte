@@ -102,10 +102,8 @@
             {/if}
           </header>
           <div class="meta">
-            {#if p.plantingDate}Planted {new Date(p.plantingDate).toLocaleDateString()} · {/if}Window {fmtRange(
-              p.windowStartMs,
-              p.windowEndMs
-            )}
+            {#if p.plantingDate}Planted {new Date(p.plantingDate).toLocaleDateString()} ·
+            {/if}Window {fmtRange(p.windowStartMs, p.windowEndMs)}
             {#if p.status === 'too-early'}· {p.daysUntilWindow}d until window{/if}
             {#if p.status === 'in-window'}· {p.daysIntoWindow}d into window{/if}
             {#if p.status === 'past'}· {p.daysPastWindow}d past{/if}

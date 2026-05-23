@@ -124,7 +124,11 @@ export function listTasks(filters: ListFilters = {}): Task[] {
 }
 
 export function getTask(id: string): Task | undefined {
-  const row = db.select().from(tasks).where(withTenant(tasks, eq(tasks.id, id))).get();
+  const row = db
+    .select()
+    .from(tasks)
+    .where(withTenant(tasks, eq(tasks.id, id)))
+    .get();
   return row ? rowToTask(row) : undefined;
 }
 

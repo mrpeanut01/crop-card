@@ -421,7 +421,9 @@ export function eventsForPlanting(
     // B5 — perennial detection moved to resolveCropAgronomy(); plugins can
     // also explicitly declare `agronomy.lifecycle: 'perennial'` to opt in
     // outside the family default set.
-    const years = agronomy.isPerennial ? orchardSeasonYears(plant) : [new Date(plant).getFullYear()];
+    const years = agronomy.isPerennial
+      ? orchardSeasonYears(plant)
+      : [new Date(plant).getFullYear()];
     for (const year of years) {
       for (const task of crop.seasonalTasks) {
         const start = task.dayOfYear
@@ -685,8 +687,7 @@ function buildEmitterFromCrop(
     displayName: planting.varietyDisplayName,
     sourceBlockId: planting.blockId,
     sourceCropId: planting.id,
-    centroidLonLat: geojsonCentroid(block.geometryGeojson) ??
-      synthCentroidFromIndices(block),
+    centroidLonLat: geojsonCentroid(block.geometryGeojson) ?? synthCentroidFromIndices(block),
     footprint: null,
     heightFt,
     opacity: 0.85,
@@ -705,9 +706,7 @@ function buildEmitterFromShadeSource(source: ShadeSource, year: number): ShadeEm
   const canopyStartMs = source.isDeciduous
     ? dayOfYearToMs(year, source.leafOnDayOfYear)
     : undefined;
-  const canopyEndMs = source.isDeciduous
-    ? dayOfYearToMs(year, source.leafOffDayOfYear)
-    : undefined;
+  const canopyEndMs = source.isDeciduous ? dayOfYearToMs(year, source.leafOffDayOfYear) : undefined;
   return {
     id: `source:${source.id}`,
     kind: source.kind,
@@ -741,8 +740,11 @@ function buildShadeTarget(block: Block): ShadeTarget {
 
 function impactToEvent(i: ShadeImpact): ShadeImpactEvent {
   // Choose a primary slot for back-compat: AM if observed, else PM, else MID.
-  const slot: 'am' | 'mid' | 'pm' =
-    i.slots.includes('am') ? 'am' : i.slots.includes('pm') ? 'pm' : 'mid';
+  const slot: 'am' | 'mid' | 'pm' = i.slots.includes('am')
+    ? 'am'
+    : i.slots.includes('pm')
+      ? 'pm'
+      : 'mid';
   const intensityPct = Math.round(i.intensity * 100);
   return {
     kind: 'shade-window',
@@ -815,10 +817,7 @@ function cropDensityMultiplier(crop: CropPlugin): number {
  * Deciduous canopy fraction by date. Inside leaf-on..leaf-off window: 1.
  * Outside: 0.15 (bare branches still block ~15% of light).
  */
-function deciduousCanopyFor(
-  leafOnDoy: number,
-  leafOffDoy: number
-): (dateMs: number) => number {
+function deciduousCanopyFor(leafOnDoy: number, leafOffDoy: number): (dateMs: number) => number {
   return (dateMs: number) => {
     const doy = dayOfYear(dateMs);
     if (leafOnDoy <= leafOffDoy) {

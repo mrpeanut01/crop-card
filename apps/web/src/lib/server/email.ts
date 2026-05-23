@@ -32,9 +32,7 @@ export async function dispatchEmail(email: OutboundEmail): Promise<void> {
   const subject = subjectFor(email);
   const body = bodyFor(email);
   // eslint-disable-next-line no-console
-  console.log(
-    `[email] to=${email.to} subject="${subject}"\n${body}\n[/email]`
-  );
+  console.log(`[email] to=${email.to} subject="${subject}"\n${body}\n[/email]`);
 }
 
 function subjectFor(email: OutboundEmail): string {
@@ -47,7 +45,10 @@ function subjectFor(email: OutboundEmail): string {
 function bodyFor(email: OutboundEmail): string {
   switch (email.kind) {
     case 'helper-invite': {
-      const expiresIn = Math.max(0, Math.round((email.expiresAt - Date.now()) / (24 * 3600 * 1000)));
+      const expiresIn = Math.max(
+        0,
+        Math.round((email.expiresAt - Date.now()) / (24 * 3600 * 1000))
+      );
       return [
         `Hi,`,
         ``,

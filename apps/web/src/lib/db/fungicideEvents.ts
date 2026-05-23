@@ -72,9 +72,7 @@ function rowToEvent(row: typeof fungicideEvents.$inferSelect): FungicideEvent {
     performedById: row.performedById,
     occurredAt: row.occurredAt.getTime(),
     products: JSON.parse(row.productsJson),
-    diseaseObservation: row.scoutObservationJson
-      ? JSON.parse(row.scoutObservationJson)
-      : undefined,
+    diseaseObservation: row.scoutObservationJson ? JSON.parse(row.scoutObservationJson) : undefined,
     conditions: JSON.parse(row.conditionsJson),
     reEntryClearAt: row.reEntryClearAt?.getTime(),
     preHarvestClearAt: row.preHarvestClearAt?.getTime(),

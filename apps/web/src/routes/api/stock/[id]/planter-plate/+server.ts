@@ -25,7 +25,10 @@ export const POST: RequestHandler = async (event) => {
   if (!body?.planterPlateConfig || typeof body.planterPlateConfig !== 'object') {
     throw error(400, 'planterPlateConfig required');
   }
-  if (!('plateNumber' in body.planterPlateConfig) || typeof body.planterPlateConfig.plateNumber !== 'string') {
+  if (
+    !('plateNumber' in body.planterPlateConfig) ||
+    typeof body.planterPlateConfig.plateNumber !== 'string'
+  ) {
     throw error(400, 'planterPlateConfig.plateNumber required');
   }
 

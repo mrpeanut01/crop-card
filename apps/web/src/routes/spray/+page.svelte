@@ -26,11 +26,13 @@
       return new Set(initial ? [initial] : []);
     })
   );
-  let selectedHerbicideIds = $state<string[]>(untrack(() =>
-    data.preselect.productPluginIds.filter((id) =>
-      data.allHerbicides.some((h) => h.pluginId === id)
+  let selectedHerbicideIds = $state<string[]>(
+    untrack(() =>
+      data.preselect.productPluginIds.filter((id) =>
+        data.allHerbicides.some((h) => h.pluginId === id)
+      )
     )
-  ));
+  );
   let selectedSprayerId = $state(untrack(() => data.sprayers[0]?.id ?? ''));
   let windMph = $state(5);
   let tempF = $state(70);
@@ -134,9 +136,7 @@
 
   /** Phase 21b follow-up — array of currently-selected blocks. Driven
    *  by the `selectedBlockIds` Set so toggling is O(1) on the cards. */
-  const selectedBlocks = $derived(
-    data.blocks.filter((b) => selectedBlockIds.has(b.id))
-  );
+  const selectedBlocks = $derived(data.blocks.filter((b) => selectedBlockIds.has(b.id)));
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
   /** Corn-height input fires when ANY selected block has corn in the
    *  ground. The same height applies to all corn blocks in the pass —
@@ -156,9 +156,7 @@
    * any selected block is missing acres so the dilution math is
    * understood to be a lower bound.
    */
-  const totalAcres = $derived(
-    selectedBlocks.reduce((sum, b) => sum + (b.acres ?? 0), 0)
-  );
+  const totalAcres = $derived(selectedBlocks.reduce((sum, b) => sum + (b.acres ?? 0), 0));
   const blocksMissingAcres = $derived(
     selectedBlocks.filter((b) => b.acres == null || b.acres <= 0).map((b) => b.label)
   );
@@ -257,8 +255,7 @@
     // Read every input the kernel cares about so Svelte's reactivity
     // wires this effect to all of them. Order matters: declare in
     // dependency order so dead-code elimination can't drop them.
-    const inputsReady =
-      selectedBlocks.length > 0 && selectedHerbicideIds.length > 0 && !!sprayer;
+    const inputsReady = selectedBlocks.length > 0 && selectedHerbicideIds.length > 0 && !!sprayer;
     // touch shared form fields
     void tankSizeGallons;
     void cornHeightIn;
@@ -740,8 +737,8 @@
           type="button"
           class="print-btn no-print"
           onclick={() => window.print()}
-          aria-label="Print spray card"
-        >🖨 Print Spray Card</button>
+          aria-label="Print spray card">🖨 Print Spray Card</button
+        >
       </header>
 
       {#if result.dilutions}
@@ -770,8 +767,8 @@
         </div>
         {#if blocksMissingAcres.length > 0}
           <p class="dilution-warn-line">
-            ⚠ Acres unknown for {blocksMissingAcres.join(', ')} — totals exclude these blocks. Set
-            acres on the <a href="/plan?tab=layout">Layout tab</a> for accurate dilution.
+            ⚠ Acres unknown for {blocksMissingAcres.join(', ')} — totals exclude these blocks. Set acres
+            on the <a href="/plan?tab=layout">Layout tab</a> for accurate dilution.
           </p>
         {/if}
         {#if tanksNeeded > 1}
@@ -822,8 +819,7 @@
         <!-- Last-tank fill increments. Crystal-clear "pour this much
              water, then mix in this much chemical" with round-up/down
              options so the operator can fill to a sight-glass mark. -->
-        {@const remainingAcresLastTank =
-          totalAcres - (tanksNeeded - 1) * (tankSizeGallons / gpa)}
+        {@const remainingAcresLastTank = totalAcres - (tanksNeeded - 1) * (tankSizeGallons / gpa)}
         {#if remainingAcresLastTank > 0 && remainingAcresLastTank < tankSizeGallons / gpa}
           <h3>{tanksNeeded > 1 ? `Last (partial) tank` : `Tank fill`}</h3>
           <p class="fill-note">
@@ -833,12 +829,7 @@
           </p>
           {#each result.dilutions as d (d.pluginId)}
             {@const rate = d.productAmount / Math.max(0.0001, d.acresCovered)}
-            {@const fills = buildLastTankFills(
-              remainingAcresLastTank,
-              gpa,
-              rate,
-              tankSizeGallons
-            )}
+            {@const fills = buildLastTankFills(remainingAcresLastTank, gpa, rate, tankSizeGallons)}
             <table class="fill-table">
               <caption>{d.displayName}</caption>
               <thead>
@@ -850,10 +841,7 @@
               </thead>
               <tbody>
                 {#each fills as f (f.waterGallons)}
-                  {@const fillSecondary = secondaryUnits(
-                    f.chemicalAmount,
-                    d.unit as DilutionUnit
-                  )}
+                  {@const fillSecondary = secondaryUnits(f.chemicalAmount, d.unit as DilutionUnit)}
                   <tr class:recommended={f.recommended}>
                     <td>
                       <strong>{f.waterGallons.toFixed(f.recommended ? 2 : 0)} gal</strong>
@@ -908,8 +896,7 @@
               {:else if oc?.kind === 'failed'}
                 <span class="pb-tag pb-stop">⚠ failed: {oc.error}</span>
               {:else if pr?.ok}
-                <span class="pb-tag pb-ok"
-                  >✓ {b.existingEvent ? 'will update' : 'will record'}</span
+                <span class="pb-tag pb-ok">✓ {b.existingEvent ? 'will update' : 'will record'}</span
                 >
               {:else if pr && !pr.ok}
                 <span class="pb-tag pb-stop"
@@ -930,7 +917,12 @@
 
       {#if !recordedId}
         {@const okCount = [...perBlockResults.values()].filter((r) => r.ok).length}
-        <button type="button" class="primary" onclick={recordSpray} disabled={recording || okCount === 0}>
+        <button
+          type="button"
+          class="primary"
+          onclick={recordSpray}
+          disabled={recording || okCount === 0}
+        >
           {recording
             ? 'Recording…'
             : okCount > 1
@@ -1414,7 +1406,9 @@
     cursor: pointer;
     min-height: 40px;
   }
-  .print-btn:hover { background: #1e40af; }
+  .print-btn:hover {
+    background: #1e40af;
+  }
   .spray-card-summary {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1517,8 +1511,12 @@
     :global(.error) {
       display: none !important;
     }
-    .no-print { display: none !important; }
-    .step { display: none !important; }
+    .no-print {
+      display: none !important;
+    }
+    .step {
+      display: none !important;
+    }
     h1,
     .lede,
     .filter-hint {
@@ -1536,15 +1534,23 @@
       background: transparent;
       border: 1px solid #000;
     }
-    .sc-value { color: #000; }
+    .sc-value {
+      color: #000;
+    }
     .fill-table tr.recommended {
       background: #f3f4f6;
     }
     .fill-table caption,
     .dilution h3,
-    .spray-card h3 { color: #000; }
-    .audit { font-size: 0.7rem; }
-    .next-actions { display: none !important; }
+    .spray-card h3 {
+      color: #000;
+    }
+    .audit {
+      font-size: 0.7rem;
+    }
+    .next-actions {
+      display: none !important;
+    }
   }
   .audit {
     color: #666;

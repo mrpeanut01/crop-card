@@ -70,78 +70,62 @@
 </script>
 
 {#if data.user}
-<header class="app-header">
-  <a href="/" class="brand">CropCard</a>
-  <nav aria-label="Primary" class="primary-nav">
-    {#each [
-      { href: '/today', label: 'Today' },
-      { href: '/plan', label: 'Plan' },
-      { href: '/calendar', label: 'Calendar' },
-      { href: '/stock', label: 'Stock' },
-      { href: '/spray', label: 'Spray' },
-      { href: '/insecticides', label: 'Insecticides' },
-      { href: '/scout', label: 'Scout' },
-      { href: '/harvest', label: 'Harvest' },
-      { href: '/hay', label: 'Hay' },
-      { href: '/fertility', label: 'Fertility' },
-      { href: '/equipment', label: 'Equipment' },
-      { href: '/plan?tab=layout', label: 'Map' },
-      { href: '/records', label: 'Records' }
-    ] as item (item.href)}
-      <a
-        href={item.href}
-        aria-current={navActive(item.href) ? 'page' : undefined}
-      >{item.label}</a>
-    {/each}
-  </nav>
-  <div class="top-right">
-    {#if data.user && data.activeOwner}
-      <details class="owner-chip">
-        <summary aria-label="Switch farm" title={data.activeOwner.name}>
-          <span class="owner-name">{data.activeOwner.name}</span>
-          <span class="owner-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="owner-popover">
-          <ul class="owner-list">
-            {#each data.availableOwners as o}
-              <li>
-                <form
-                  method="POST"
-                  action="/api/session/switch-owner"
-                  enctype="application/x-www-form-urlencoded"
-                >
-                  <input type="hidden" name="ownerId" value={o.id} />
-                  <button
-                    type="button"
-                    class="owner-choice"
-                    class:active={o.id === data.activeOwner.id}
-                    onclick={async () => {
-                      const res = await fetch('/api/session/switch-owner', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ownerId: o.id })
-                      });
-                      if (res.ok) {
-                        try {
-                          const { resetTenantCaches } = await import('$lib/client/tenantSwitch');
-                          await resetTenantCaches(o.id);
-                        } catch {
-                          /* cache reset best-effort */
-                        }
-                        window.location.href = '/today';
-                      }
-                    }}
+  <header class="app-header">
+    <a href="/" class="brand">CropCard</a>
+    <nav aria-label="Primary" class="primary-nav">
+      {#each [{ href: '/today', label: 'Today' }, { href: '/plan', label: 'Plan' }, { href: '/calendar', label: 'Calendar' }, { href: '/stock', label: 'Stock' }, { href: '/spray', label: 'Spray' }, { href: '/insecticides', label: 'Insecticides' }, { href: '/scout', label: 'Scout' }, { href: '/harvest', label: 'Harvest' }, { href: '/hay', label: 'Hay' }, { href: '/fertility', label: 'Fertility' }, { href: '/equipment', label: 'Equipment' }, { href: '/plan?tab=layout', label: 'Map' }, { href: '/records', label: 'Records' }] as item (item.href)}
+        <a href={item.href} aria-current={navActive(item.href) ? 'page' : undefined}>{item.label}</a
+        >
+      {/each}
+    </nav>
+    <div class="top-right">
+      {#if data.user && data.activeOwner}
+        <details class="owner-chip">
+          <summary aria-label="Switch farm" title={data.activeOwner.name}>
+            <span class="owner-name">{data.activeOwner.name}</span>
+            <span class="owner-caret" aria-hidden="true">▾</span>
+          </summary>
+          <div class="owner-popover">
+            <ul class="owner-list">
+              {#each data.availableOwners as o}
+                <li>
+                  <form
+                    method="POST"
+                    action="/api/session/switch-owner"
+                    enctype="application/x-www-form-urlencoded"
                   >
-                    <span>{o.name}</span>
-                    <span class="owner-role">{o.role}</span>
-                  </button>
-                </form>
-              </li>
-            {/each}
-          </ul>
-        </div>
-      </details>
-    {/if}
+                    <input type="hidden" name="ownerId" value={o.id} />
+                    <button
+                      type="button"
+                      class="owner-choice"
+                      class:active={o.id === data.activeOwner.id}
+                      onclick={async () => {
+                        const res = await fetch('/api/session/switch-owner', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ ownerId: o.id })
+                        });
+                        if (res.ok) {
+                          try {
+                            const { resetTenantCaches } = await import('$lib/client/tenantSwitch');
+                            await resetTenantCaches(o.id);
+                          } catch {
+                            /* cache reset best-effort */
+                          }
+                          window.location.href = '/today';
+                        }
+                      }}
+                    >
+                      <span>{o.name}</span>
+                      <span class="owner-role">{o.role}</span>
+                    </button>
+                  </form>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        </details>
+      {/if}
       <a href="/settings" class="gear-btn" aria-label="Settings" title="Settings">
         <svg
           viewBox="0 0 24 24"
@@ -174,8 +158,8 @@
           </form>
         </div>
       </details>
-  </div>
-</header>
+    </div>
+  </header>
 {/if}
 
 {#if !online || (pendingCount ?? 0) > 0}
@@ -197,8 +181,8 @@
 
 {#if data.user?.impersonating}
   <div class="role-banner impersonation" role="status">
-    🔒 Impersonating <strong>{data.activeOwner?.name ?? 'this Owner'}</strong> as superadmin —
-    every mutation is audited. <a href="/admin/owners">Exit impersonation</a>
+    🔒 Impersonating <strong>{data.activeOwner?.name ?? 'this Owner'}</strong> as superadmin — every
+    mutation is audited. <a href="/admin/owners">Exit impersonation</a>
   </div>
 {/if}
 

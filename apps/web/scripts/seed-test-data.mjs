@@ -143,8 +143,22 @@ sqlite
 const insertBlock = sqlite.prepare(
   `INSERT INTO blocks (id, name, acres, block_label, field_id, tillage_method, axes_locked) VALUES (?, ?, ?, ?, ?, ?, 0)`
 );
-insertBlock.run(blockA.id, blockA.name, blockA.acres, blockA.blockLabel, blockA.fieldId, blockA.tillageMethod);
-insertBlock.run(blockB.id, blockB.name, blockB.acres, blockB.blockLabel, blockB.fieldId, blockB.tillageMethod);
+insertBlock.run(
+  blockA.id,
+  blockA.name,
+  blockA.acres,
+  blockA.blockLabel,
+  blockA.fieldId,
+  blockA.tillageMethod
+);
+insertBlock.run(
+  blockB.id,
+  blockB.name,
+  blockB.acres,
+  blockB.blockLabel,
+  blockB.fieldId,
+  blockB.tillageMethod
+);
 
 const insertCrop = sqlite.prepare(
   `INSERT INTO crops (id, block_id, crop_plugin_id, variety_display_name, planting_date, status) VALUES (?, ?, ?, ?, ?, ?)`
@@ -166,9 +180,7 @@ insertCrop.run(
   soyCrop.status
 );
 
-const insertEquipment = sqlite.prepare(
-  `INSERT INTO equipment (id, type, label) VALUES (?, ?, ?)`
-);
+const insertEquipment = sqlite.prepare(`INSERT INTO equipment (id, type, label) VALUES (?, ?, ?)`);
 insertEquipment.run(cleanSprayer.id, cleanSprayer.type, cleanSprayer.label);
 insertEquipment.run(dirtySprayer.id, dirtySprayer.type, dirtySprayer.label);
 
@@ -184,8 +196,12 @@ sqlite.close();
 console.log(`[seed] done`);
 console.log(`  users:     ${owner.email} (owner), ${helper.email} (helper)`);
 console.log(`  field:     ${homeField.name}`);
-console.log(`  blocks:    ${blockA.name} (corn, ${blockA.acres}ac), ${blockB.name} (soybean, ${blockB.acres}ac)`);
-console.log(`  equipment: ${cleanSprayer.label} (clean), ${dirtySprayer.label} (contaminated → UC-04 decon target)`);
+console.log(
+  `  blocks:    ${blockA.name} (corn, ${blockA.acres}ac), ${blockB.name} (soybean, ${blockB.acres}ac)`
+);
+console.log(
+  `  equipment: ${cleanSprayer.label} (clean), ${dirtySprayer.label} (contaminated → UC-04 decon target)`
+);
 console.log(``);
 console.log(`Now start the dev server against the same DB:`);
 console.log(`  DATABASE_URL=file:${dbPath} pnpm --filter web dev`);

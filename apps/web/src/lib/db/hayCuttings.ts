@@ -82,7 +82,9 @@ export function nextCuttingNumber(blockId: string, year: number): number {
   const row = db
     .select({ n: max(hayCuttings.cuttingNumber) })
     .from(hayCuttings)
-    .where(withTenant(hayCuttings, and(eq(hayCuttings.blockId, blockId), eq(hayCuttings.year, year))))
+    .where(
+      withTenant(hayCuttings, and(eq(hayCuttings.blockId, blockId), eq(hayCuttings.year, year)))
+    )
     .get();
   return (row?.n ?? 0) + 1;
 }

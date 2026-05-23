@@ -10,7 +10,11 @@
   type Candidate = {
     source: 'claude-vision' | 'web-search' | 'local';
     candidate: Record<string, unknown> | null;
-    validation: { ok: boolean; schemaIssues: { path: string; message: string }[]; bypassIssues: { path: string; message: string }[] };
+    validation: {
+      ok: boolean;
+      schemaIssues: { path: string; message: string }[];
+      bypassIssues: { path: string; message: string }[];
+    };
     confidence?: 'high' | 'medium' | 'low';
     guessed?: string[];
     citations?: { url: string; title?: string }[];
@@ -55,7 +59,8 @@
         return;
       }
       if (out.found === false || !out.candidate) {
-        scanError = 'Claude could not identify a product on this label. Try a clearer photo or the authoring form directly.';
+        scanError =
+          'Claude could not identify a product on this label. Try a clearer photo or the authoring form directly.';
         return;
       }
       scanCandidate = out.candidate;
@@ -181,7 +186,9 @@
     goto(`/plugins/new?prefill=${prefill}`);
   }
 
-  let typeFilter = $state<'all' | 'crop' | 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'companion'>('all');
+  let typeFilter = $state<
+    'all' | 'crop' | 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'companion'
+  >('all');
 
   const filtered = $derived(
     typeFilter === 'all' ? data.records : data.records.filter((r) => r.type === typeFilter)
@@ -192,9 +199,7 @@
   const allFilteredSelected = $derived(
     filtered.length > 0 && filtered.every((r) => selectedIds.has(r.pluginId))
   );
-  const someFilteredSelected = $derived(
-    filtered.some((r) => selectedIds.has(r.pluginId))
-  );
+  const someFilteredSelected = $derived(filtered.some((r) => selectedIds.has(r.pluginId)));
 
   function toggleSelect(id: string) {
     const next = new Set(selectedIds);
@@ -416,7 +421,9 @@
           onclick={() => (typeFilter = t as typeof typeFilter)}
         >
           {t}
-          {#if t === 'all'}<span class="tab-count">{data.records.length}</span>{:else}<span class="tab-count">{data.records.filter((r) => r.type === t).length}</span>{/if}
+          {#if t === 'all'}<span class="tab-count">{data.records.length}</span>{:else}<span
+              class="tab-count">{data.records.filter((r) => r.type === t).length}</span
+            >{/if}
         </button>
       {/each}
     </div>
@@ -461,7 +468,9 @@
             {/each}
             <span class="version">v{r.version}</span>
             {#if r.historyCount > 1}
-              <span class="history-chip" title="Number of versions on record">{r.historyCount} versions</span>
+              <span class="history-chip" title="Number of versions on record"
+                >{r.historyCount} versions</span
+              >
             {/if}
           </div>
           <div class="row-line2">
@@ -809,12 +818,24 @@
     letter-spacing: 0.5px;
     flex: 0 0 auto;
   }
-  .type-crop { background: #1f5e3a; }
-  .type-herbicide { background: #b00020; }
-  .type-insecticide { background: #b35900; }
-  .type-fungicide { background: #4a2c83; }
-  .type-fertilizer { background: #1c5fa6; }
-  .type-companion { background: #6b3fa0; }
+  .type-crop {
+    background: #1f5e3a;
+  }
+  .type-herbicide {
+    background: #b00020;
+  }
+  .type-insecticide {
+    background: #b35900;
+  }
+  .type-fungicide {
+    background: #4a2c83;
+  }
+  .type-fertilizer {
+    background: #1c5fa6;
+  }
+  .type-companion {
+    background: #6b3fa0;
+  }
   .version {
     color: #888;
     font-size: 0.75rem;
@@ -955,7 +976,9 @@
     font: inherit;
     font-weight: 600;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-    transition: filter 0.12s ease, box-shadow 0.12s ease;
+    transition:
+      filter 0.12s ease,
+      box-shadow 0.12s ease;
   }
   .search-input-row button.ai-lookup:hover {
     filter: brightness(1.08);
@@ -1007,7 +1030,9 @@
     flex: 0 0 auto;
   }
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
   details summary {
     cursor: pointer;

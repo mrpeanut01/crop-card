@@ -29,8 +29,12 @@ describe('effectiveAcresFor', () => {
   });
 
   it('returns geometry-derived acres when manual acres is null/undefined', () => {
-    expect(effectiveAcresFor({ acres: null, geometryGeojson: SQUARE_HALF_ACRE_GEO })).toBeGreaterThan(0);
-    expect(effectiveAcresFor({ acres: undefined, geometryGeojson: SQUARE_HALF_ACRE_GEO })).toBeGreaterThan(0);
+    expect(
+      effectiveAcresFor({ acres: null, geometryGeojson: SQUARE_HALF_ACRE_GEO })
+    ).toBeGreaterThan(0);
+    expect(
+      effectiveAcresFor({ acres: undefined, geometryGeojson: SQUARE_HALF_ACRE_GEO })
+    ).toBeGreaterThan(0);
   });
 
   it('falls back to manual acres when no geometry', () => {

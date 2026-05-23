@@ -16,10 +16,7 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
-import {
-  activeFungicideReEntryRestrictions,
-  listFungicideEvents
-} from '$lib/db/fungicideEvents';
+import { activeFungicideReEntryRestrictions, listFungicideEvents } from '$lib/db/fungicideEvents';
 import { getRegistry } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 

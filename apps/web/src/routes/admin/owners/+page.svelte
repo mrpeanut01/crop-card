@@ -11,7 +11,9 @@
 
 <main class="admin">
   <h1>All Owners</h1>
-  <p class="hint">Cross-tenant view. Every action you take is appended to the superadmin audit log.</p>
+  <p class="hint">
+    Cross-tenant view. Every action you take is appended to the superadmin audit log.
+  </p>
 
   {#if form?.error}
     <p class="error" role="alert">{form.error}</p>
@@ -33,12 +35,21 @@
             <td>
               <form method="POST" action="?/setBilling" use:enhance class="status-form">
                 <input type="hidden" name="ownerId" value={o.id} />
-                <select name="status" onchange={(e) => (e.currentTarget.form as HTMLFormElement).requestSubmit()}>
+                <select
+                  name="status"
+                  onchange={(e) => (e.currentTarget.form as HTMLFormElement).requestSubmit()}
+                >
                   <option value="trial" selected={o.billingStatus === 'trial'}>trial</option>
                   <option value="active" selected={o.billingStatus === 'active'}>active</option>
-                  <option value="past_due" selected={o.billingStatus === 'past_due'}>past_due</option>
-                  <option value="canceled" selected={o.billingStatus === 'canceled'}>canceled</option>
-                  <option value="suspended" selected={o.billingStatus === 'suspended'}>suspended</option>
+                  <option value="past_due" selected={o.billingStatus === 'past_due'}
+                    >past_due</option
+                  >
+                  <option value="canceled" selected={o.billingStatus === 'canceled'}
+                    >canceled</option
+                  >
+                  <option value="suspended" selected={o.billingStatus === 'suspended'}
+                    >suspended</option
+                  >
                 </select>
               </form>
             </td>
@@ -77,16 +88,58 @@
 </main>
 
 <style>
-  .admin { max-width: 80rem; margin: 1rem auto; padding: 1rem; }
-  .hint { color: var(--fg-muted, #555); }
-  .section { margin: 1.5rem 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--divider, #eee); vertical-align: top; }
-  th { background: rgba(0,0,0,0.04); font-weight: 600; }
-  .owners tr.suspended { background: #fde7e7; }
-  .status-form select, button { font: inherit; padding: 0.25rem 0.5rem; min-height: 32px; border: 1px solid var(--divider, #ccc); border-radius: 0.25rem; }
-  button { background: var(--accent, #1f5e3a); color: white; cursor: pointer; }
-  .impersonate { background: #b54a4a; }
-  .error { background: #fde7e7; padding: 0.75rem; border-radius: 0.25rem; }
-  code { font-size: 0.85em; }
+  .admin {
+    max-width: 80rem;
+    margin: 1rem auto;
+    padding: 1rem;
+  }
+  .hint {
+    color: var(--fg-muted, #555);
+  }
+  .section {
+    margin: 1.5rem 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  th,
+  td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--divider, #eee);
+    vertical-align: top;
+  }
+  th {
+    background: rgba(0, 0, 0, 0.04);
+    font-weight: 600;
+  }
+  .owners tr.suspended {
+    background: #fde7e7;
+  }
+  .status-form select,
+  button {
+    font: inherit;
+    padding: 0.25rem 0.5rem;
+    min-height: 32px;
+    border: 1px solid var(--divider, #ccc);
+    border-radius: 0.25rem;
+  }
+  button {
+    background: var(--accent, #1f5e3a);
+    color: white;
+    cursor: pointer;
+  }
+  .impersonate {
+    background: #b54a4a;
+  }
+  .error {
+    background: #fde7e7;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+  }
+  code {
+    font-size: 0.85em;
+  }
 </style>

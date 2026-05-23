@@ -26,9 +26,7 @@ export const load: PageServerLoad = async ({ url }) => {
         epaRegistrationNumber: p.epaRegistrationNumber ?? null,
         iracGroups: Array.from(
           new Set(
-            (p.activeIngredients ?? [])
-              .map((ai) => ai.iracGroup)
-              .filter((g): g is string => !!g)
+            (p.activeIngredients ?? []).map((ai) => ai.iracGroup).filter((g): g is string => !!g)
           )
         )
       };

@@ -84,9 +84,10 @@ export async function GET(event) {
 
 export async function POST(event) {
   requireOwner(event);
-  const body = (await event.request.json().catch(() => null)) as
-    | { key?: string; value?: unknown }
-    | null;
+  const body = (await event.request.json().catch(() => null)) as {
+    key?: string;
+    value?: unknown;
+  } | null;
   if (!body || typeof body.key !== 'string' || !ALLOWED_KEYS.includes(body.key as SettingKey)) {
     error(400, 'invalid key');
   }

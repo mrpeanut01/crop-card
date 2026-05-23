@@ -68,11 +68,11 @@ describe('session HMAC cookie', () => {
     try {
       process.env.AUTH_SECRET = 'secret-A';
       writeSession(cookies, {
-      id: 'u1',
-      email: 'helper@example.com',
-      activeOwnerId: 'owner_home_farm',
-      activeRole: 'helper'
-    });
+        id: 'u1',
+        email: 'helper@example.com',
+        activeOwnerId: 'owner_home_farm',
+        activeRole: 'helper'
+      });
       process.env.AUTH_SECRET = 'secret-B';
       expect(readSession(cookies)).toBeNull();
     } finally {

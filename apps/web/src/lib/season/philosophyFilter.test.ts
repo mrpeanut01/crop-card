@@ -24,10 +24,7 @@ import {
 // carry many more fields but `isProductAllowed` only reads
 // `complianceFlags` (+ `type` + `organic` for fertilizers), so a partial
 // shape is sufficient.
-function herbicide(
-  id: string,
-  flags?: HerbicidePlugin['complianceFlags']
-): HerbicidePlugin {
+function herbicide(id: string, flags?: HerbicidePlugin['complianceFlags']): HerbicidePlugin {
   return {
     pluginId: id,
     type: 'herbicide',
@@ -39,10 +36,7 @@ function herbicide(
   } as unknown as HerbicidePlugin;
 }
 
-function insecticide(
-  id: string,
-  flags?: InsecticidePlugin['complianceFlags']
-): InsecticidePlugin {
+function insecticide(id: string, flags?: InsecticidePlugin['complianceFlags']): InsecticidePlugin {
   return {
     pluginId: id,
     type: 'insecticide',
@@ -53,10 +47,7 @@ function insecticide(
   } as unknown as InsecticidePlugin;
 }
 
-function fungicide(
-  id: string,
-  flags?: FungicidePlugin['complianceFlags']
-): FungicidePlugin {
+function fungicide(id: string, flags?: FungicidePlugin['complianceFlags']): FungicidePlugin {
   return {
     pluginId: id,
     type: 'fungicide',
@@ -88,38 +79,27 @@ function fertilizer(
 describe('isProductAllowed — conventional', () => {
   it('allows every product regardless of flags', () => {
     expect(isProductAllowed(herbicide('roundup'), 'conventional')).toBe(true);
-    expect(
-      isProductAllowed(insecticide('spinosad', { omriListed: true }), 'conventional')
-    ).toBe(true);
-    expect(
-      isProductAllowed(fungicide('copper', { omriListed: false }), 'conventional')
-    ).toBe(true);
-    expect(
-      isProductAllowed(fertilizer('urea', { organic: false }), 'conventional')
-    ).toBe(true);
+    expect(isProductAllowed(insecticide('spinosad', { omriListed: true }), 'conventional')).toBe(
+      true
+    );
+    expect(isProductAllowed(fungicide('copper', { omriListed: false }), 'conventional')).toBe(true);
+    expect(isProductAllowed(fertilizer('urea', { organic: false }), 'conventional')).toBe(true);
   });
 });
 
 describe('isProductAllowed — non-gmo', () => {
   it('requires nonGmoCompliant === true', () => {
-    expect(
-      isProductAllowed(herbicide('h1', { nonGmoCompliant: true }), 'non-gmo')
-    ).toBe(true);
+    expect(isProductAllowed(herbicide('h1', { nonGmoCompliant: true }), 'non-gmo')).toBe(true);
   });
 
   it('rejects when flag is absent or false', () => {
     expect(isProductAllowed(herbicide('h2'), 'non-gmo')).toBe(false);
-    expect(
-      isProductAllowed(herbicide('h3', { nonGmoCompliant: false }), 'non-gmo')
-    ).toBe(false);
+    expect(isProductAllowed(herbicide('h3', { nonGmoCompliant: false }), 'non-gmo')).toBe(false);
   });
 
   it('does not accept OMRI as a substitute for non-GMO', () => {
     expect(
-      isProductAllowed(
-        herbicide('h4', { omriListed: true, nonGmoCompliant: false }),
-        'non-gmo'
-      )
+      isProductAllowed(herbicide('h4', { omriListed: true, nonGmoCompliant: false }), 'non-gmo')
     ).toBe(false);
   });
 });
@@ -132,9 +112,9 @@ describe('isProductAllowed — organic-transitioning', () => {
   });
 
   it('accepts omriListed === true', () => {
-    expect(
-      isProductAllowed(insecticide('i1', { omriListed: true }), 'organic-transitioning')
-    ).toBe(true);
+    expect(isProductAllowed(insecticide('i1', { omriListed: true }), 'organic-transitioning')).toBe(
+      true
+    );
   });
 
   it('rejects when both flags absent', () => {
@@ -148,24 +128,24 @@ describe('isProductAllowed — organic-transitioning', () => {
   });
 
   it('rejects fertilizer with organic: false and no flags', () => {
-    expect(
-      isProductAllowed(fertilizer('urea', { organic: false }), 'organic-transitioning')
-    ).toBe(false);
+    expect(isProductAllowed(fertilizer('urea', { organic: false }), 'organic-transitioning')).toBe(
+      false
+    );
   });
 });
 
 describe('isProductAllowed — certified-organic', () => {
   it('requires omriListed === true', () => {
-    expect(
-      isProductAllowed(insecticide('i1', { omriListed: true }), 'certified-organic')
-    ).toBe(true);
+    expect(isProductAllowed(insecticide('i1', { omriListed: true }), 'certified-organic')).toBe(
+      true
+    );
   });
 
   it('rejects when omriListed is absent or false', () => {
     expect(isProductAllowed(herbicide('h1'), 'certified-organic')).toBe(false);
-    expect(
-      isProductAllowed(herbicide('h2', { omriListed: false }), 'certified-organic')
-    ).toBe(false);
+    expect(isProductAllowed(herbicide('h2', { omriListed: false }), 'certified-organic')).toBe(
+      false
+    );
   });
 
   it('rejects even with omriListed when certifiedOrganicAllowed === false', () => {
@@ -178,9 +158,9 @@ describe('isProductAllowed — certified-organic', () => {
   });
 
   it('does not honor fertilizer organic flag alone (NOP-strict)', () => {
-    expect(
-      isProductAllowed(fertilizer('compost', { organic: true }), 'certified-organic')
-    ).toBe(false);
+    expect(isProductAllowed(fertilizer('compost', { organic: true }), 'certified-organic')).toBe(
+      false
+    );
   });
 });
 
@@ -196,12 +176,8 @@ describe('filterByPhilosophy', () => {
 
 describe('philosophyRejectionReason', () => {
   it('returns a non-empty reason for excluded products', () => {
-    expect(
-      philosophyRejectionReason(herbicide('h1'), 'non-gmo')
-    ).toContain('nonGmoCompliant');
-    expect(
-      philosophyRejectionReason(herbicide('h2'), 'certified-organic')
-    ).toContain('OMRI');
+    expect(philosophyRejectionReason(herbicide('h1'), 'non-gmo')).toContain('nonGmoCompliant');
+    expect(philosophyRejectionReason(herbicide('h2'), 'certified-organic')).toContain('OMRI');
     expect(
       philosophyRejectionReason(
         herbicide('h3', { omriListed: true, certifiedOrganicAllowed: false }),

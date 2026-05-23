@@ -101,7 +101,10 @@ describe('season setup repo', () => {
         coverCropIntent: 'fall-cereal'
       });
       // Edit only philosophy.
-      saveSeasonSetup(2026, { philosophy: 'organic-transitioning', transitioningStartedYear: 2025 });
+      saveSeasonSetup(2026, {
+        philosophy: 'organic-transitioning',
+        transitioningStartedYear: 2025
+      });
 
       const loaded = loadSeasonSetup(2026);
       expect(loaded?.philosophy).toBe('organic-transitioning');

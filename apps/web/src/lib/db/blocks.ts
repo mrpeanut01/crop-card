@@ -114,7 +114,11 @@ export function listBlocks(): BlockWithPlantings[] {
 }
 
 export function getBlock(id: string): BlockWithPlantings | undefined {
-  const row = db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id))).get();
+  const row = db
+    .select()
+    .from(blocks)
+    .where(withTenant(blocks, eq(blocks.id, id)))
+    .get();
   if (!row) return undefined;
   const plantings = db
     .select()
@@ -170,7 +174,11 @@ export function createBlock(input: {
     .returning()
     .get();
   recomputeBlockAxes();
-  const fresh = db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id))).get();
+  const fresh = db
+    .select()
+    .from(blocks)
+    .where(withTenant(blocks, eq(blocks.id, id)))
+    .get();
   return fresh ? rowToBlock(fresh) : rowToBlock(row);
 }
 
@@ -224,14 +232,17 @@ export function updateBlock(
   if (patch.sunExposure !== undefined) set.sunExposure = patch.sunExposure;
   if (patch.slopePercent !== undefined) set.slopePercent = patch.slopePercent;
   if (patch.slopeAspectDeg !== undefined) set.slopeAspectDeg = patch.slopeAspectDeg;
-  const axisManualEdit =
-    patch.eastWestIndex !== undefined || patch.northSouthIndex !== undefined;
+  const axisManualEdit = patch.eastWestIndex !== undefined || patch.northSouthIndex !== undefined;
   if (patch.eastWestIndex !== undefined) set.eastWestIndex = patch.eastWestIndex;
   if (patch.northSouthIndex !== undefined) set.northSouthIndex = patch.northSouthIndex;
   if (patch.axesLocked !== undefined) set.axesLocked = patch.axesLocked;
   else if (axisManualEdit) set.axesLocked = true;
   if (Object.keys(set).length === 0) {
-    const cur = db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id))).get();
+    const cur = db
+      .select()
+      .from(blocks)
+      .where(withTenant(blocks, eq(blocks.id, id)))
+      .get();
     return cur ? rowToBlock(cur) : undefined;
   }
   const row = db
@@ -242,7 +253,11 @@ export function updateBlock(
     .get();
   if (!row) return undefined;
   recomputeBlockAxes();
-  const fresh = db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id))).get();
+  const fresh = db
+    .select()
+    .from(blocks)
+    .where(withTenant(blocks, eq(blocks.id, id)))
+    .get();
   return fresh ? rowToBlock(fresh) : rowToBlock(row);
 }
 

@@ -31,9 +31,7 @@ export const GET: RequestHandler = (event) => {
   const events = listSprayEvents({ limit: 10_000, sprayerId, blockId });
 
   // T1 / T2 — id → name lookups.
-  const blockNameById = new Map(
-    listBlocks().map((b) => [b.id, b.blockLabel ?? b.name])
-  );
+  const blockNameById = new Map(listBlocks().map((b) => [b.id, b.blockLabel ?? b.name]));
   const sprayerNameById = new Map(listSprayers().map((s) => [s.id, s.label]));
 
   const rows = events.map((e) => ({

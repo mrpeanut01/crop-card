@@ -117,11 +117,7 @@ export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] 
     const naturalLatest = frostDates.firstFallFrostMs - dtmMax * ONE_DAY_MS - 14 * ONE_DAY_MS;
     const latestMs = Math.max(earliestMs + ONE_DAY_MS, naturalLatest);
 
-    const free = freeSubWindowsForBlock(
-      occupiedByBlock[a.blockId] ?? [],
-      earliestMs,
-      latestMs
-    );
+    const free = freeSubWindowsForBlock(occupiedByBlock[a.blockId] ?? [], earliestMs, latestMs);
 
     out.push({
       stockItemId: a.stockItemId,

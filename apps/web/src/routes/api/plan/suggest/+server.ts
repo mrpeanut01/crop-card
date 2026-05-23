@@ -88,9 +88,6 @@ export const POST: RequestHandler = async (event) => {
       success: false,
       errorClass: 'upstream-error'
     });
-    return json(
-      { error: err instanceof Error ? err.message : 'AI call failed' },
-      { status: 502 }
-    );
+    return json({ error: err instanceof Error ? err.message : 'AI call failed' }, { status: 502 });
   }
 };

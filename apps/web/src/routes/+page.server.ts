@@ -39,10 +39,7 @@ const DEMO_EMAIL: Record<SessionRole, string> = {
 
 /** Compute the post-auth redirect target. Honors `?invite=<token>` so the
  *  invite flow round-trips through sign-in cleanly. */
-function nextForLogin(
-  result: ReturnType<typeof loginByEmail>,
-  inviteToken: string | null
-): string {
+function nextForLogin(result: ReturnType<typeof loginByEmail>, inviteToken: string | null): string {
   if (inviteToken) return `/invite/${encodeURIComponent(inviteToken)}`;
   switch (result.next) {
     case 'onboarding':

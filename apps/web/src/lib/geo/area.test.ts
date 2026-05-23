@@ -5,11 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { geojsonCentroid, haversineMeters, bearingDeg } from './area';
-import {
-  geojsonAreaAcres,
-  metersSquaredToAcres,
-  polygonAreaSqMeters
-} from './area';
+import { geojsonAreaAcres, metersSquaredToAcres, polygonAreaSqMeters } from './area';
 
 const ACRES_PER_M2 = 0.000_247_105_381;
 
@@ -43,11 +39,11 @@ describe('polygonAreaSqMeters', () => {
 
   it('returns the same area regardless of winding order', () => {
     const ring: Array<[number, number]> = [
-      [-77.60, 39.10],
-      [-77.59, 39.10],
+      [-77.6, 39.1],
+      [-77.59, 39.1],
       [-77.59, 39.11],
-      [-77.60, 39.11],
-      [-77.60, 39.10]
+      [-77.6, 39.11],
+      [-77.6, 39.1]
     ];
     const reversed = [...ring].reverse();
     expect(polygonAreaSqMeters(ring)).toBeCloseTo(polygonAreaSqMeters(reversed), 1);
@@ -99,7 +95,15 @@ describe('geojsonCentroid', () => {
   it('returns the area-weighted centroid of a polygon', () => {
     const square = JSON.stringify({
       type: 'Polygon',
-      coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+      coordinates: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1],
+          [0, 0]
+        ]
+      ]
     });
     const c = geojsonCentroid(square)!;
     expect(c[0]).toBeCloseTo(0.5, 4);
@@ -109,7 +113,10 @@ describe('geojsonCentroid', () => {
   it('returns the midpoint of a 2-vertex LineString', () => {
     const line = JSON.stringify({
       type: 'LineString',
-      coordinates: [[0, 0], [10, 0]]
+      coordinates: [
+        [0, 0],
+        [10, 0]
+      ]
     });
     const c = geojsonCentroid(line)!;
     expect(c[0]).toBeCloseTo(5, 4);
@@ -120,7 +127,11 @@ describe('geojsonCentroid', () => {
     // 100 units along x, then 100 units along y → midpoint at (100, 0).
     const line = JSON.stringify({
       type: 'LineString',
-      coordinates: [[0, 0], [100, 0], [100, 100]]
+      coordinates: [
+        [0, 0],
+        [100, 0],
+        [100, 100]
+      ]
     });
     const c = geojsonCentroid(line)!;
     expect(c[0]).toBeCloseTo(100, 2);

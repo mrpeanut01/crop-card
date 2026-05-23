@@ -17,25 +17,25 @@ import { PluginAuthorError, writePluginFile } from '$lib/server/pluginFiles';
 import { requireOwner } from '$lib/server/auth';
 
 const TYPE_NAME_TO_CROP_FAMILY: Record<string, string> = {
-  'Corn': 'corn',
-  'Cucurbits': 'cucurbit',
-  'Legumes': 'legume',
+  Corn: 'corn',
+  Cucurbits: 'cucurbit',
+  Legumes: 'legume',
   'Broadleaf companion': 'broadleaf-companion',
-  'Orchard': 'orchard',
+  Orchard: 'orchard',
   'Cover crop — grass': 'cover-grass',
   'Cover crop — legume': 'cover-legume',
-  'Solanaceae': 'solanaceae',
-  'Brassicas': 'brassica',
-  'Alliums': 'allium',
+  Solanaceae: 'solanaceae',
+  Brassicas: 'brassica',
+  Alliums: 'allium',
   'Leafy greens': 'leafy-green',
   'Root crops': 'root',
-  'Apiaceae': 'apiaceae',
+  Apiaceae: 'apiaceae',
   'Small fruit': 'small-fruit',
-  'Brambles': 'bramble',
+  Brambles: 'bramble',
   'Vine fruit': 'vine-fruit',
   'Stone fruit': 'stone-fruit',
   'Cereal grain': 'cereal-grain',
-  'Forage': 'forage',
+  Forage: 'forage',
   'Culinary herbs': 'herb-culinary'
 };
 
@@ -66,7 +66,9 @@ export const POST: RequestHandler = async (event) => {
   const cropFamily = TYPE_NAME_TO_CROP_FAMILY[term.name];
   if (!cropFamily) {
     return json(
-      { error: `Type "${term.name}" doesn't map to a known crop family. Use one of the default seed Types or open a plugin authoring flow manually.` },
+      {
+        error: `Type "${term.name}" doesn't map to a known crop family. Use one of the default seed Types or open a plugin authoring flow manually.`
+      },
       { status: 400 }
     );
   }

@@ -71,7 +71,11 @@
   let acceptedIdx = $state<Set<number>>(new Set());
   let editedAnchorMs = $state<Map<number, number>>(new Map());
   let committing = $state(false);
-  let commitProgress = $state<{ done: number; total: number; failed: string[] }>({ done: 0, total: 0, failed: [] });
+  let commitProgress = $state<{ done: number; total: number; failed: string[] }>({
+    done: 0,
+    total: 0,
+    failed: []
+  });
 
   async function generate(blockId?: string) {
     loading = true;
@@ -184,7 +188,9 @@
           });
           if (!r.ok) {
             const e = await r.json().catch(() => ({}));
-            commitProgress.failed.push(`${plan.anchor.varietyDisplayName}: ${e.error ?? r.statusText}`);
+            commitProgress.failed.push(
+              `${plan.anchor.varietyDisplayName}: ${e.error ?? r.statusText}`
+            );
           } else {
             const j = await r.json();
             if (j.group?.groupId) committedGroupIds.push(j.group.groupId);
@@ -201,7 +207,9 @@
           });
           if (!r.ok) {
             const e = await r.json().catch(() => ({}));
-            commitProgress.failed.push(`${plan.anchor.varietyDisplayName}: ${e.error ?? r.statusText}`);
+            commitProgress.failed.push(
+              `${plan.anchor.varietyDisplayName}: ${e.error ?? r.statusText}`
+            );
           }
         }
       } catch (e) {
@@ -223,14 +231,18 @@
     <header class="wizard-head">
       <div class="head-text">
         <h2>✨ Plan a season</h2>
-        <p class="head-sub">AI proposes groups + singleton plantings from your unscheduled drafts.</p>
+        <p class="head-sub">
+          AI proposes groups + singleton plantings from your unscheduled drafts.
+        </p>
       </div>
       <button type="button" class="close" onclick={onClose} aria-label="Close wizard">×</button>
     </header>
 
     {#if response?.spend}
       <div class="spend-banner" class:warn={response.spend.warnAt80}>
-        AI spend this month: ${response.spend.monthlyUsdSoFar.toFixed(2)} of ${response.spend.cap.toFixed(2)}
+        AI spend this month: ${response.spend.monthlyUsdSoFar.toFixed(2)} of ${response.spend.cap.toFixed(
+          2
+        )}
         {#if response.meta?.usdEstimate}· this call ${response.meta.usdEstimate.toFixed(3)}{/if}
       </div>
     {/if}
@@ -264,8 +276,8 @@
             <strong>No plans to propose.</strong>
           </p>
           <p>
-            Either there are no unscheduled drafts (visit the <strong>Crops tab</strong> to add seed
-            to a block) or the AI couldn't find a viable date window for any draft this season.
+            Either there are no unscheduled drafts (visit the <strong>Crops tab</strong> to add seed to
+            a block) or the AI couldn't find a viable date window for any draft this season.
           </p>
         </div>
       {:else if response}
@@ -277,18 +289,16 @@
               <header class="plan-head">
                 <div class="plan-title">
                   {#if plan.kind === 'group'}
-                    <span class="badge badge-group">{plan.systemKind === 'three-sisters' ? '🌽 Three Sisters' : 'Group'}</span>
+                    <span class="badge badge-group"
+                      >{plan.systemKind === 'three-sisters' ? '🌽 Three Sisters' : 'Group'}</span
+                    >
                   {:else}
                     <span class="badge badge-single">Single planting</span>
                   {/if}
                   <span class="plan-block">on {blockLabelOf(plan.blockId)}</span>
                 </div>
                 <label class="accept-toggle">
-                  <input
-                    type="checkbox"
-                    checked={accepted}
-                    onchange={() => toggleAccept(idx)}
-                  />
+                  <input type="checkbox" checked={accepted} onchange={() => toggleAccept(idx)} />
                   {accepted ? 'Accepted' : 'Skipped'}
                 </label>
               </header>
@@ -334,9 +344,7 @@
                     oninput={(e) => setAnchorDate(idx, (e.currentTarget as HTMLInputElement).value)}
                   />
                 </label>
-                <p class="edit-hint">
-                  Companion dates auto-shift by their fixed offsets.
-                </p>
+                <p class="edit-hint">Companion dates auto-shift by their fixed offsets.</p>
               </details>
             </article>
           {/each}
@@ -344,7 +352,9 @@
 
         {#if response.unscheduled.length > 0}
           <details class="unscheduled-block">
-            <summary>{response.unscheduled.length} draft{response.unscheduled.length === 1 ? '' : 's'} not placed</summary>
+            <summary
+              >{response.unscheduled.length} draft{response.unscheduled.length === 1 ? '' : 's'} not placed</summary
+            >
             <ul>
               {#each response.unscheduled as u (u.cropId)}
                 <li>{u.reason}</li>
@@ -370,7 +380,12 @@
     </section>
 
     <footer class="wizard-foot">
-      <button type="button" class="btn-secondary" onclick={() => generate()} disabled={loading || committing}>
+      <button
+        type="button"
+        class="btn-secondary"
+        onclick={() => generate()}
+        disabled={loading || committing}
+      >
         Regenerate
       </button>
       <span class="counter">{acceptedCount} of {response?.proposed?.length ?? 0} accepted</span>
@@ -380,7 +395,9 @@
         onclick={commitAll}
         disabled={committing || loading || acceptedCount === 0}
       >
-        {committing ? 'Committing…' : `Commit ${acceptedCount} plan${acceptedCount === 1 ? '' : 's'}`}
+        {committing
+          ? 'Committing…'
+          : `Commit ${acceptedCount} plan${acceptedCount === 1 ? '' : 's'}`}
       </button>
     </footer>
   </div>
@@ -412,9 +429,18 @@
     padding: 0.8rem 1rem;
     border-bottom: 1px solid #e5e7eb;
   }
-  .head-text { flex: 1; }
-  .head-text h2 { margin: 0; font-size: 1.05rem; }
-  .head-sub { margin: 0.2rem 0 0; font-size: 0.8rem; color: #6b7280; }
+  .head-text {
+    flex: 1;
+  }
+  .head-text h2 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .head-sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
   .close {
     background: transparent;
     border: none;
@@ -430,7 +456,11 @@
     font-size: 0.78rem;
     border-bottom: 1px solid #d1fae5;
   }
-  .spend-banner.warn { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+  .spend-banner.warn {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+  }
   .fallback-banner {
     padding: 0.4rem 1rem;
     background: #f1f5f9;
@@ -459,7 +489,11 @@
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
   .error {
     background: #fef2f2;
     color: #b91c1c;
@@ -479,8 +513,12 @@
     color: #9a3412;
     font-size: 0.85rem;
   }
-  .empty-card p { margin: 0 0 0.4rem; }
-  .empty-card p:last-child { margin: 0; }
+  .empty-card p {
+    margin: 0 0 0.4rem;
+  }
+  .empty-card p:last-child {
+    margin: 0;
+  }
   .cards {
     display: flex;
     flex-direction: column;
@@ -491,10 +529,18 @@
     border-radius: 0.5rem;
     padding: 0.7rem 0.9rem;
     background: #fafafa;
-    transition: opacity 0.15s, border-color 0.15s;
+    transition:
+      opacity 0.15s,
+      border-color 0.15s;
   }
-  .plan-card.accepted { border-color: #4338ca; background: #fff; box-shadow: 0 1px 4px rgba(67, 56, 202, 0.1); }
-  .plan-card.skipped { opacity: 0.6; }
+  .plan-card.accepted {
+    border-color: #4338ca;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(67, 56, 202, 0.1);
+  }
+  .plan-card.skipped {
+    opacity: 0.6;
+  }
   .plan-head {
     display: flex;
     justify-content: space-between;
@@ -503,16 +549,30 @@
     margin-bottom: 0.4rem;
     flex-wrap: wrap;
   }
-  .plan-title { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  .plan-title {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
   .badge {
     padding: 0.15rem 0.5rem;
     border-radius: 999px;
     font-size: 0.78rem;
     font-weight: 600;
   }
-  .badge-group { background: #fef3c7; color: #92400e; }
-  .badge-single { background: #ede9fe; color: #5b21b6; }
-  .plan-block { color: #4b5563; font-size: 0.85rem; }
+  .badge-group {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  .badge-single {
+    background: #ede9fe;
+    color: #5b21b6;
+  }
+  .plan-block {
+    color: #4b5563;
+    font-size: 0.85rem;
+  }
   .accept-toggle {
     display: flex;
     align-items: center;
@@ -521,7 +581,11 @@
     font-size: 0.85rem;
     user-select: none;
   }
-  .accept-toggle input { width: 1.1rem; height: 1.1rem; cursor: pointer; }
+  .accept-toggle input {
+    width: 1.1rem;
+    height: 1.1rem;
+    cursor: pointer;
+  }
   .member-list {
     list-style: none;
     padding: 0;
@@ -541,10 +605,19 @@
     font-size: 0.85rem;
     flex-wrap: wrap;
   }
-  .member-anchor { border-left-color: #b45309; }
-  .member-companion { border-left-color: #312e81; }
-  .role-glyph { color: #b45309; font-size: 0.8rem; }
-  .member-name { font-weight: 500; }
+  .member-anchor {
+    border-left-color: #b45309;
+  }
+  .member-companion {
+    border-left-color: #312e81;
+  }
+  .role-glyph {
+    color: #b45309;
+    font-size: 0.8rem;
+  }
+  .member-name {
+    font-weight: 500;
+  }
   .family {
     font-size: 0.72rem;
     background: #ede9fe;
@@ -571,7 +644,11 @@
     font-size: 0.82rem;
     color: #4b5563;
   }
-  .rationale em { color: #6b7280; font-style: italic; margin-right: 0.25rem; }
+  .rationale em {
+    color: #6b7280;
+    font-style: italic;
+    margin-right: 0.25rem;
+  }
   .advisories {
     list-style: none;
     padding: 0.3rem 0.5rem;
@@ -616,8 +693,15 @@
     border-radius: 0.4rem;
     font-size: 0.82rem;
   }
-  .unscheduled-block summary { cursor: pointer; font-weight: 500; }
-  .unscheduled-block ul { margin: 0.4rem 0 0; padding-left: 1.2rem; color: #4b5563; }
+  .unscheduled-block summary {
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .unscheduled-block ul {
+    margin: 0.4rem 0 0;
+    padding-left: 1.2rem;
+    color: #4b5563;
+  }
   .commit-progress {
     margin-top: 1rem;
     padding: 0.7rem 0.9rem;
@@ -625,8 +709,16 @@
     border-radius: 0.4rem;
     font-size: 0.85rem;
   }
-  .commit-progress progress { width: 100%; height: 8px; }
-  .commit-fail { margin: 0.4rem 0 0; padding-left: 1.2rem; color: #b91c1c; font-size: 0.78rem; }
+  .commit-progress progress {
+    width: 100%;
+    height: 8px;
+  }
+  .commit-fail {
+    margin: 0.4rem 0 0;
+    padding-left: 1.2rem;
+    color: #b91c1c;
+    font-size: 0.78rem;
+  }
   .wizard-foot {
     display: flex;
     justify-content: space-between;
@@ -638,8 +730,14 @@
     border-bottom-left-radius: 0.5rem;
     border-bottom-right-radius: 0.5rem;
   }
-  .counter { font-size: 0.85rem; color: #4b5563; flex: 1; text-align: center; }
-  .btn-primary, .btn-secondary {
+  .counter {
+    font-size: 0.85rem;
+    color: #4b5563;
+    flex: 1;
+    text-align: center;
+  }
+  .btn-primary,
+  .btn-secondary {
     padding: 0.5rem 1rem;
     border-radius: 0.3rem;
     cursor: pointer;
@@ -647,8 +745,22 @@
     font-weight: 600;
     font-size: 0.88rem;
   }
-  .btn-primary { background: #4338ca; color: #fff; border: 1px solid #312e81; }
-  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-secondary { background: #fff; color: #4338ca; border: 1px solid #c7d2fe; }
-  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary {
+    background: #4338ca;
+    color: #fff;
+    border: 1px solid #312e81;
+  }
+  .btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: #fff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+  }
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 </style>

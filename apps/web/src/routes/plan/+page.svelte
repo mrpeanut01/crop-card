@@ -207,7 +207,16 @@
   // ─── Shade-source inline edit state (parallels block edit) ────────────────
   let editingShadeId = $state<string | null>(null);
   let editShadeName = $state('');
-  let editShadeKind = $state<'tree-row' | 'tree-grove' | 'tree-single' | 'hedge' | 'building' | 'fence' | 'structure' | 'other'>('tree-row');
+  let editShadeKind = $state<
+    | 'tree-row'
+    | 'tree-grove'
+    | 'tree-single'
+    | 'hedge'
+    | 'building'
+    | 'fence'
+    | 'structure'
+    | 'other'
+  >('tree-row');
   let editShadeFieldId = $state<string>('');
   let editShadeHeightFt = $state<number | undefined>(undefined);
   let editShadeOpacity = $state<number | undefined>(undefined);
@@ -218,7 +227,15 @@
   function startEditShade(s: {
     id: string;
     name: string;
-    kind: 'tree-row' | 'tree-grove' | 'tree-single' | 'hedge' | 'building' | 'fence' | 'structure' | 'other';
+    kind:
+      | 'tree-row'
+      | 'tree-grove'
+      | 'tree-single'
+      | 'hedge'
+      | 'building'
+      | 'fence'
+      | 'structure'
+      | 'other';
     fieldId?: string;
     heightFt: number;
     opacity: number;
@@ -265,14 +282,22 @@
 
   function shadeKindEmoji(kind: string): string {
     switch (kind) {
-      case 'tree-row': return '🌳';
-      case 'tree-grove': return '🌲';
-      case 'tree-single': return '🌳';
-      case 'hedge': return '🌿';
-      case 'building': return '🏠';
-      case 'fence': return '🧱';
-      case 'structure': return '🏗️';
-      default: return '🌑';
+      case 'tree-row':
+        return '🌳';
+      case 'tree-grove':
+        return '🌲';
+      case 'tree-single':
+        return '🌳';
+      case 'hedge':
+        return '🌿';
+      case 'building':
+        return '🏠';
+      case 'fence':
+        return '🧱';
+      case 'structure':
+        return '🏗️';
+      default:
+        return '🌑';
     }
   }
 
@@ -430,7 +455,11 @@
   } | null>(null);
   let advisorBusy = $state(false);
 
-  async function addPlanting(blockId: string, cropPluginId: string, plantingDateIso: string | null) {
+  async function addPlanting(
+    blockId: string,
+    cropPluginId: string,
+    plantingDateIso: string | null
+  ) {
     plantingError = null;
     try {
       const plantingDateMs = plantingDateIso ? new Date(plantingDateIso).getTime() : null;
@@ -515,7 +544,9 @@
   let wPhiMode = $state<'strict' | 'conservative'>('strict');
   let wBlockAssign = $state<'single' | 'round-robin'>('single');
   let wBusy = $state(false);
-  let wCommitResults = $state<Array<{ blockId: string; plantMs: number; ok: boolean; error?: string }>>([]);
+  let wCommitResults = $state<
+    Array<{ blockId: string; plantMs: number; ok: boolean; error?: string }>
+  >([]);
 
   function wMeta(): ScheduleCatalogItem | undefined {
     return data.scheduleCatalog?.find((c) => c.pluginId === wCropId);
@@ -577,7 +608,11 @@
         plantingDate: d.plantingDateMs
       };
       // Engine is pure TS with no server deps — safe to call in the browser
-      const engineEvents = eventsForPlanting(synth, meta as Parameters<typeof eventsForPlanting>[1], {});
+      const engineEvents = eventsForPlanting(
+        synth,
+        meta as Parameters<typeof eventsForPlanting>[1],
+        {}
+      );
       const prepActivities = prepTasksForPlanting(d.plantingDateMs, block.tillageMethod, blockId);
       const phiDays = (meta.preHarvestIntervalDays ?? 0) + (wPhiMode === 'conservative' ? 7 : 0);
       const phiConflict = phiDays > 0 && detectPhiConflict(engineEvents, phiDays);
@@ -886,7 +921,9 @@
     } finally {
       autoScheduleBusy = false;
       // Fade the banner after a short delay so the operator sees it.
-      setTimeout(() => { autoRanQuiet = false; }, 4000);
+      setTimeout(() => {
+        autoRanQuiet = false;
+      }, 4000);
     }
   }
 
@@ -923,7 +960,10 @@
       const unscheduled: { reason: string }[] = j.unscheduled ?? [];
       if (failures.length > 0 || unscheduled.length > 0) {
         const parts = [summary];
-        if (unscheduled.length > 0) parts.push(`${unscheduled.length} draft${unscheduled.length === 1 ? '' : 's'} not placed (no viable window).`);
+        if (unscheduled.length > 0)
+          parts.push(
+            `${unscheduled.length} draft${unscheduled.length === 1 ? '' : 's'} not placed (no viable window).`
+          );
         if (failures.length > 0) parts.push('Failures:\n' + failures.join('\n'));
         alert(parts.join('\n'));
       }
@@ -1061,8 +1101,7 @@
       // can see and tweak the current numbers. Unit is rendered
       // read-only in the template — the unit is set at planting time
       // by addPlanting() and shouldn't be retyped here.
-      quantityPlanted:
-        planting.quantityPlanted != null ? String(planting.quantityPlanted) : '',
+      quantityPlanted: planting.quantityPlanted != null ? String(planting.quantityPlanted) : '',
       quantityUnit: planting.quantityUnit ?? '',
       harvestUseCases: currentSelection,
       harvestUseCasesOriginal: currentSelection.slice(),
@@ -1137,13 +1176,11 @@
       const origUses = [...editForm.harvestUseCasesOriginal].sort();
       const newUses = [...editForm.harvestUseCases].sort();
       const usesChanged =
-        origUses.length !== newUses.length ||
-        origUses.some((u, i) => u !== newUses[i]);
+        origUses.length !== newUses.length || origUses.some((u, i) => u !== newUses[i]);
       if (usesChanged) {
         // "Every option selected" → null (means: show all, no filter).
         const allSelected =
-          newUses.length > 0 &&
-          newUses.length === editForm.availableHarvestUseCases.length;
+          newUses.length > 0 && newUses.length === editForm.availableHarvestUseCases.length;
         detailsBody.harvestUseCases = allSelected ? null : newUses;
         hasDetails = true;
       }
@@ -1339,25 +1376,27 @@
       return;
     }
     const j = await r.json();
-    const memberCrops: GroupInspectorData['members'] = (j.members ?? []).map((c: {
-      id: string;
-      cropPluginId: string;
-      varietyDisplayName: string;
-      plantingDate: number | null;
-      groupRole?: 'anchor' | 'companion';
-      groupOffsetDays?: number;
-    }) => {
-      const planting = data.swimPlantings?.find((p) => p.cropId === c.id);
-      return {
-        cropId: c.id,
-        cropPluginId: c.cropPluginId,
-        varietyDisplayName: c.varietyDisplayName,
-        cropFamily: planting?.cropFamily ?? '',
-        plantingDateMs: c.plantingDate,
-        role: c.groupRole ?? 'companion',
-        offsetDays: c.groupOffsetDays
-      };
-    });
+    const memberCrops: GroupInspectorData['members'] = (j.members ?? []).map(
+      (c: {
+        id: string;
+        cropPluginId: string;
+        varietyDisplayName: string;
+        plantingDate: number | null;
+        groupRole?: 'anchor' | 'companion';
+        groupOffsetDays?: number;
+      }) => {
+        const planting = data.swimPlantings?.find((p) => p.cropId === c.id);
+        return {
+          cropId: c.id,
+          cropPluginId: c.cropPluginId,
+          varietyDisplayName: c.varietyDisplayName,
+          cropFamily: planting?.cropFamily ?? '',
+          plantingDateMs: c.plantingDate,
+          role: c.groupRole ?? 'companion',
+          offsetDays: c.groupOffsetDays
+        };
+      }
+    );
     const memberCropIds = new Set(memberCrops.map((m) => m.cropId));
     const groupTasks = (data.taskPips ?? [])
       .filter((p) => p.cropId && memberCropIds.has(p.cropId))
@@ -1371,7 +1410,10 @@
       }));
     groupInspectorData = {
       groupId,
-      systemKind: (memberCrops[0] && data.swimPlantings?.find((p) => p.cropId === memberCrops[0].cropId)?.groupSystemKind) ?? 'manual',
+      systemKind:
+        (memberCrops[0] &&
+          data.swimPlantings?.find((p) => p.cropId === memberCrops[0].cropId)?.groupSystemKind) ??
+        'manual',
       members: memberCrops,
       tasks: groupTasks
     };
@@ -1408,7 +1450,11 @@
     await invalidateAll();
   }
 
-  async function handleManualGroup(blockId: string, cropIds: string[], hint: 'three-sisters' | 'manual') {
+  async function handleManualGroup(
+    blockId: string,
+    cropIds: string[],
+    hint: 'three-sisters' | 'manual'
+  ) {
     // Multi-select on the swim-lane → open inspector after server commits.
     // For v1 we route through the wizard's commit endpoint with an anchor
     // chosen by the operator; the simplest UX is to pre-fill the wizard.
@@ -1419,38 +1465,55 @@
     showGroupWizard = true;
   }
 
-  const seedStockData = $derived((data.seedStock ?? []) as Array<{
-    stockItemId: string;
-    cropPluginId: string | null;
-    displayName: string;
-    shortName?: string;
-    onHand: number;
-    defaultUnit: string;
-    cropFamily: string | null;
-  }>);
-
-  const seedStockById = $derived(
-    new Map(seedStockData.map((s) => [s.stockItemId, s]))
+  const seedStockData = $derived(
+    (data.seedStock ?? []) as Array<{
+      stockItemId: string;
+      cropPluginId: string | null;
+      displayName: string;
+      shortName?: string;
+      onHand: number;
+      defaultUnit: string;
+      cropFamily: string | null;
+    }>
   );
 
-  const pluginById = $derived(
-    new Map((data.cropCatalog ?? []).map((c) => [c.pluginId, c]))
-  );
+  const seedStockById = $derived(new Map(seedStockData.map((s) => [s.stockItemId, s])));
+
+  const pluginById = $derived(new Map((data.cropCatalog ?? []).map((c) => [c.pluginId, c])));
 
   const blockNameById = $derived(
-    new Map(((data.swimBlocks ?? data.blocks ?? []) as Array<{ id: string; name: string; blockLabel?: string | null }>).map((b) => [
-      b.id,
-      b.blockLabel ? `${b.name} (${b.blockLabel})` : b.name
-    ]))
+    new Map(
+      (
+        (data.swimBlocks ?? data.blocks ?? []) as Array<{
+          id: string;
+          name: string;
+          blockLabel?: string | null;
+        }>
+      ).map((b) => [b.id, b.blockLabel ? `${b.name} (${b.blockLabel})` : b.name])
+    )
   );
 
   const FAMILY_ICON: Record<string, string> = {
-    allium: '🧅', apiaceae: '🥕', bramble: '🫐', brassica: '🥦',
-    'broadleaf-companion': '🌸', 'cereal-grain': '🌾', corn: '🌽',
-    'cover-grass': '🌿', 'cover-legume': '🌿', cucurbit: '🎃',
-    forage: '🌾', 'herb-culinary': '🌿', 'leafy-green': '🥬',
-    legume: '🫘', orchard: '🍎', root: '🥕', 'small-fruit': '🍓',
-    solanaceae: '🍅', 'stone-fruit': '🍑', 'vine-fruit': '🍇'
+    allium: '🧅',
+    apiaceae: '🥕',
+    bramble: '🫐',
+    brassica: '🥦',
+    'broadleaf-companion': '🌸',
+    'cereal-grain': '🌾',
+    corn: '🌽',
+    'cover-grass': '🌿',
+    'cover-legume': '🌿',
+    cucurbit: '🎃',
+    forage: '🌾',
+    'herb-culinary': '🌿',
+    'leafy-green': '🥬',
+    legume: '🫘',
+    orchard: '🍎',
+    root: '🥕',
+    'small-fruit': '🍓',
+    solanaceae: '🍅',
+    'stone-fruit': '🍑',
+    'vine-fruit': '🍇'
   };
   function familyIconFor(stockItemId: string): string {
     const s = seedStockById.get(stockItemId);
@@ -1549,14 +1612,17 @@
     }
   }
 
-  function onSeedRailDragStart(ev: DragEvent, seed: {
-    stockItemId: string;
-    cropPluginId: string | null;
-    displayName: string;
-    onHand: number;
-    defaultUnit: string;
-    cropFamily: string | null;
-  }) {
+  function onSeedRailDragStart(
+    ev: DragEvent,
+    seed: {
+      stockItemId: string;
+      cropPluginId: string | null;
+      displayName: string;
+      onHand: number;
+      defaultUnit: string;
+      cropFamily: string | null;
+    }
+  ) {
     if (!seed.cropPluginId) {
       ev.preventDefault();
       return;
@@ -1629,9 +1695,7 @@
       const cropId = cropMoveDragId;
       cropMoveDragId = null;
       cropMoveOverBlockId = null;
-      const crop = data.blocks
-        .flatMap((b) => b.plantings)
-        .find((p) => p.id === cropId);
+      const crop = data.blocks.flatMap((b) => b.plantings).find((p) => p.id === cropId);
       if (!crop || crop.blockId === targetId) return;
       try {
         const r = await fetch(`/api/crops/${encodeURIComponent(cropId)}`, {
@@ -1797,7 +1861,11 @@
     activeSeedModal = { stockItemId };
   }
 
-  async function confirmSeedQuantity(input: { quantity: number; unit: string; quantityPlants: number }) {
+  async function confirmSeedQuantity(input: {
+    quantity: number;
+    unit: string;
+    quantityPlants: number;
+  }) {
     if (!activeSeedModal) return;
     const stock = seedStockById.get(activeSeedModal.stockItemId);
     if (!stock || !stock.cropPluginId) {
@@ -2009,9 +2077,10 @@
   }
 
   /** Create a brand-new block with a polygon drawn on the map. */
-  let blockMap = $state<{ currentDraftName: () => string; currentDraftFieldId: () => string } | null>(
-    null
-  );
+  let blockMap = $state<{
+    currentDraftName: () => string;
+    currentDraftFieldId: () => string;
+  } | null>(null);
   async function createBlockWithGeometry(geom: Geom, suggestedAcres: number | null) {
     const name = blockMap?.currentDraftName().trim() ?? '';
     if (!name) throw new Error('block name required');
@@ -2077,7 +2146,15 @@
   /** Create a shade source from the BlockMap draft. */
   async function createShadeSource(input: {
     name: string;
-    kind: 'tree-row' | 'tree-grove' | 'tree-single' | 'hedge' | 'building' | 'fence' | 'structure' | 'other';
+    kind:
+      | 'tree-row'
+      | 'tree-grove'
+      | 'tree-single'
+      | 'hedge'
+      | 'building'
+      | 'fence'
+      | 'structure'
+      | 'other';
     geometryGeojson: string;
     heightFt: number;
     opacity: number;
@@ -2149,7 +2226,10 @@
           body: JSON.stringify(parsed)
         });
         const out = await res.json();
-        if (!res.ok) { geomError = out.error ?? 'failed'; return; }
+        if (!res.ok) {
+          geomError = out.error ?? 'failed';
+          return;
+        }
         geomMessage = 'Geometry saved.';
         pasteText = '';
         await invalidateAll();
@@ -2162,32 +2242,50 @@
         return;
       }
       const results: typeof pasteResults = [];
-      for (const feat of parsed.features as Array<{ type: string; geometry: unknown; properties: Record<string, string> | null }>) {
+      for (const feat of parsed.features as Array<{
+        type: string;
+        geometry: unknown;
+        properties: Record<string, string> | null;
+      }>) {
         const props = feat.properties ?? {};
         const kind = props['type'];
         const name = props['name'];
-        if (!name) { results.push({ name: '(unnamed)', kind: kind ?? '?', status: 'skipped — no name' }); continue; }
+        if (!name) {
+          results.push({ name: '(unnamed)', kind: kind ?? '?', status: 'skipped — no name' });
+          continue;
+        }
         const geom = feat.geometry ?? feat;
 
         if (kind === 'field') {
           const field = data.fields.find((f) => f.name === name);
-          if (!field) { results.push({ name, kind: 'field', status: 'not found' }); continue; }
+          if (!field) {
+            results.push({ name, kind: 'field', status: 'not found' });
+            continue;
+          }
           const res = await fetch(`/api/fields/${encodeURIComponent(field.id)}/geometry`, {
-            method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(geom)
+            method: 'PUT',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(geom)
           });
           results.push({ name, kind: 'field', status: res.ok ? 'saved ✓' : `error ${res.status}` });
-
         } else if (kind === 'block') {
           const fieldName = props['field'];
           const block =
-            data.blocks.find((b) => b.name === name && (!fieldName || data.fields.find((f) => f.id === b.fieldId)?.name === fieldName)) ??
-            data.blocks.find((b) => b.name === name);
-          if (!block) { results.push({ name, kind: 'block', status: 'not found' }); continue; }
+            data.blocks.find(
+              (b) =>
+                b.name === name &&
+                (!fieldName || data.fields.find((f) => f.id === b.fieldId)?.name === fieldName)
+            ) ?? data.blocks.find((b) => b.name === name);
+          if (!block) {
+            results.push({ name, kind: 'block', status: 'not found' });
+            continue;
+          }
           const res = await fetch(`/api/blocks/${encodeURIComponent(block.id)}/geometry`, {
-            method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(geom)
+            method: 'PUT',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(geom)
           });
           results.push({ name, kind: 'block', status: res.ok ? 'saved ✓' : `error ${res.status}` });
-
         } else {
           results.push({ name, kind: kind ?? '?', status: 'skipped — unknown type' });
         }
@@ -2329,19 +2427,15 @@
           <span class="season-meta">
             Last updated {new Date(data.seasonSetup.setAt).toLocaleString()}
           </span>
-          <button
-            type="button"
-            class="edit-season-btn"
-            onclick={() => (editingSeason = true)}
-          >
+          <button type="button" class="edit-season-btn" onclick={() => (editingSeason = true)}>
             Edit season settings
           </button>
         </div>
       {/if}
       <div class="stage-cta-row">
         <p class="stage-helper">
-          Your {data.currentYear ?? new Date().getFullYear()} season setup is captured.
-          Continue to the next stage — define where things are growing.
+          Your {data.currentYear ?? new Date().getFullYear()} season setup is captured. Continue to the
+          next stage — define where things are growing.
         </p>
         <a class="next-stage-btn" href={tabHref('layout')}>Next: Layout →</a>
       </div>
@@ -2364,9 +2458,8 @@
       <!-- Helper / read-only viewer. -->
       <p class="stage-helper">
         The owner hasn't completed the season setup for {data.currentYear ??
-          new Date().getFullYear()} yet. The planner uses the setup to filter
-        which products and tasks to suggest, so downstream stages will fall
-        back to conventional defaults until it's set.
+          new Date().getFullYear()} yet. The planner uses the setup to filter which products and tasks
+        to suggest, so downstream stages will fall back to conventional defaults until it's set.
       </p>
     {/if}
   </section>
@@ -2377,7 +2470,11 @@
   {#if data.isFirstRun && data.canEdit}
     <section class="card wizard">
       <h2>👋 Welcome to CropCard</h2>
-      <p>Draw your first field on the map below, or use <strong>Add field or block without drawing</strong> at the bottom of this page to get started by name.</p>
+      <p>
+        Draw your first field on the map below, or use <strong
+          >Add field or block without drawing</strong
+        > at the bottom of this page to get started by name.
+      </p>
     </section>
   {/if}
 
@@ -2424,10 +2521,34 @@
               {#if fieldAcresDisplay !== null}· {fieldAcresDisplay.toFixed(1)} ac{/if}
             </span>
             {#if data.canEdit}
-              <button class="row-action" draggable="false" ondragstart={(e) => e.preventDefault()} onclick={() => { addingBlockForFieldId = addingBlockForFieldId === f.id ? null : f.id; newBlockName = ''; newBlockAcres = undefined; blockError = null; }} title="Add block"
-                aria-label="Add block to {f.name}">＋</button>
-              <button class="row-action" draggable="false" ondragstart={(e) => e.preventDefault()} onclick={() => startEditField(f)} title="Edit field">✏</button>
-              <button class="row-action danger" draggable="false" ondragstart={(e) => e.preventDefault()} onclick={() => deleteField(f.id, f.name, fieldBlocks.length)} aria-label="Delete {f.name}" title="Delete field">🗑</button>
+              <button
+                class="row-action"
+                draggable="false"
+                ondragstart={(e) => e.preventDefault()}
+                onclick={() => {
+                  addingBlockForFieldId = addingBlockForFieldId === f.id ? null : f.id;
+                  newBlockName = '';
+                  newBlockAcres = undefined;
+                  blockError = null;
+                }}
+                title="Add block"
+                aria-label="Add block to {f.name}">＋</button
+              >
+              <button
+                class="row-action"
+                draggable="false"
+                ondragstart={(e) => e.preventDefault()}
+                onclick={() => startEditField(f)}
+                title="Edit field">✏</button
+              >
+              <button
+                class="row-action danger"
+                draggable="false"
+                ondragstart={(e) => e.preventDefault()}
+                onclick={() => deleteField(f.id, f.name, fieldBlocks.length)}
+                aria-label="Delete {f.name}"
+                title="Delete field">🗑</button
+              >
             {/if}
           </div>
 
@@ -2435,7 +2556,14 @@
             <div class="inline-edit">
               <div class="grid2">
                 <label>Name<input type="text" bind:value={editFieldName} /></label>
-                <label>Acres<input type="number" min="0" step="0.1" bind:value={editFieldAcres} /></label>
+                <label
+                  >Acres<input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    bind:value={editFieldAcres}
+                  /></label
+                >
                 <label class="full">Notes<input type="text" bind:value={editFieldNotes} /></label>
               </div>
               <div class="row">
@@ -2457,12 +2585,19 @@
                 <li
                   class="block-row layout-block-row"
                   class:dragging={cropsReorderDragId === b.id}
-                  class:drop-target={cropsReorderOverId === b.id && cropsReorderDragId !== null && cropsReorderDragId !== b.id}
+                  class:drop-target={cropsReorderOverId === b.id &&
+                    cropsReorderDragId !== null &&
+                    cropsReorderDragId !== b.id}
                   draggable={data.canEdit !== false}
                   ondragstart={(e) => onCropsHeaderDragStart(e, b.id)}
                   ondragover={(e) => onCropsHeaderDragOver(e, b.id)}
                   ondragleave={() => onCropsHeaderDragLeave(b.id)}
-                  ondrop={(e) => onCropsHeaderDrop(e, b.id, fieldBlocks.map((x) => x.id))}
+                  ondrop={(e) =>
+                    onCropsHeaderDrop(
+                      e,
+                      b.id,
+                      fieldBlocks.map((x) => x.id)
+                    )}
                   ondragend={onCropsHeaderDragEnd}
                   title="Drag to reorder, or drop on another field row to move"
                 >
@@ -2473,14 +2608,30 @@
                     {#if acresDisplay}{acresDisplay}{/if}
                     {#if b.plantings.length > 0}
                       {acresDisplay ? ' · ' : ''}
-                      <span class="plantings-tip" data-tip={b.plantings.map((p) => p.varietyDisplayName).join(' · ')}
-                        >{b.plantings.length} planting{b.plantings.length === 1 ? '' : 's'}</span>
+                      <span
+                        class="plantings-tip"
+                        data-tip={b.plantings.map((p) => p.varietyDisplayName).join(' · ')}
+                        >{b.plantings.length} planting{b.plantings.length === 1 ? '' : 's'}</span
+                      >
                     {/if}
                     {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
                   </span>
                   {#if data.canEdit}
-                    <button class="row-action" draggable="false" ondragstart={(e) => e.preventDefault()} onclick={() => startEditBlock(b)} title="Edit block">✏</button>
-                    <button class="row-action danger" draggable="false" ondragstart={(e) => e.preventDefault()} onclick={() => deleteBlock(b.id, b.name, b.plantings.length)} aria-label="Delete {b.name}" title="Delete block">🗑</button>
+                    <button
+                      class="row-action"
+                      draggable="false"
+                      ondragstart={(e) => e.preventDefault()}
+                      onclick={() => startEditBlock(b)}
+                      title="Edit block">✏</button
+                    >
+                    <button
+                      class="row-action danger"
+                      draggable="false"
+                      ondragstart={(e) => e.preventDefault()}
+                      onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
+                      aria-label="Delete {b.name}"
+                      title="Delete block">🗑</button
+                    >
                   {/if}
                 </li>
                 {#if editingBlockId === b.id}
@@ -2488,22 +2639,34 @@
                     <div class="inline-edit">
                       <div class="grid2">
                         <label>Name<input type="text" bind:value={editBlockName} /></label>
-                        <label>Acres<input type="number" min="0" step="0.1" bind:value={editBlockAcres} /></label>
+                        <label
+                          >Acres<input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            bind:value={editBlockAcres}
+                          /></label
+                        >
                         {#if data.fields.length > 1}
-                          <label class="full">Move to field
+                          <label class="full"
+                            >Move to field
                             <select bind:value={editBlockFieldId}>
-                              {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
+                              {#each data.fields as ff (ff.id)}<option value={ff.id}
+                                  >{ff.name}</option
+                                >{/each}
                             </select>
                           </label>
                         {/if}
-                        <label class="full">Tillage method
+                        <label class="full"
+                          >Tillage method
                           <select bind:value={editBlockTillage}>
                             <option value="conventional">Conventional (plow/disk)</option>
                             <option value="reduced-till">Reduced-till (single pass)</option>
                             <option value="no-till">No-till (burndown only)</option>
                           </select>
                         </label>
-                        <label>Slope (%)
+                        <label
+                          >Slope (%)
                           <input
                             type="number"
                             min="0"
@@ -2513,7 +2676,8 @@
                             bind:value={editBlockSlopePercent}
                           />
                         </label>
-                        <label>Slope aspect (° downhill)
+                        <label
+                          >Slope aspect (° downhill)
                           <input
                             type="number"
                             min="0"
@@ -2525,9 +2689,9 @@
                         </label>
                       </div>
                       <p class="block-slope-hint">
-                        Slope inputs are optional. Leave both blank for flat
-                        terrain. The shade model uses these to lengthen / shorten
-                        projected shadows along the downhill axis.
+                        Slope inputs are optional. Leave both blank for flat terrain. The shade
+                        model uses these to lengthen / shorten projected shadows along the downhill
+                        axis.
                       </p>
                       <div class="row">
                         <button class="primary" onclick={saveEditBlock}>Save</button>
@@ -2543,11 +2707,29 @@
           {#if data.canEdit && addingBlockForFieldId === f.id}
             <div class="add-block-inline">
               <input type="text" placeholder="Block name" bind:value={newBlockName} />
-              <input type="number" placeholder="ac" min="0" step="0.1" bind:value={newBlockAcres} class="acres-input" />
-              <button class="primary small" onclick={() => createBlock(f.id)} disabled={creatingBlock || !newBlockName.trim()}>
+              <input
+                type="number"
+                placeholder="ac"
+                min="0"
+                step="0.1"
+                bind:value={newBlockAcres}
+                class="acres-input"
+              />
+              <button
+                class="primary small"
+                onclick={() => createBlock(f.id)}
+                disabled={creatingBlock || !newBlockName.trim()}
+              >
                 {creatingBlock ? '…' : 'Add'}
               </button>
-              <button class="small" onclick={() => { addingBlockForFieldId = null; newBlockName = ''; newBlockAcres = undefined; }}>✕</button>
+              <button
+                class="small"
+                onclick={() => {
+                  addingBlockForFieldId = null;
+                  newBlockName = '';
+                  newBlockAcres = undefined;
+                }}>✕</button
+              >
             </div>
             {#if blockError}<p class="error" style="padding-left:1.5rem">{blockError}</p>{/if}
           {/if}
@@ -2561,12 +2743,22 @@
                   <span class="block-name">{s.name}</span>
                   <span class="block-stats">
                     {s.kind} · {s.heightFt} ft
-                    {#if s.isDeciduous} · deciduous{/if}
+                    {#if s.isDeciduous}
+                      · deciduous{/if}
                     {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
                   </span>
                   {#if data.canEdit}
-                    <button class="row-action" onclick={() => startEditShade(s)} title="Edit shade source">✏</button>
-                    <button class="row-action danger" onclick={() => deleteShadeSource(s.id, s.name)} aria-label="Delete {s.name}" title="Delete shade source">🗑</button>
+                    <button
+                      class="row-action"
+                      onclick={() => startEditShade(s)}
+                      title="Edit shade source">✏</button
+                    >
+                    <button
+                      class="row-action danger"
+                      onclick={() => deleteShadeSource(s.id, s.name)}
+                      aria-label="Delete {s.name}"
+                      title="Delete shade source">🗑</button
+                    >
                   {/if}
                 </li>
                 {#if editingShadeId === s.id}
@@ -2574,7 +2766,8 @@
                     <div class="inline-edit">
                       <div class="grid2">
                         <label>Name<input type="text" bind:value={editShadeName} /></label>
-                        <label>Kind
+                        <label
+                          >Kind
                           <select bind:value={editShadeKind}>
                             <option value="tree-row">Tree row</option>
                             <option value="tree-grove">Tree grove</option>
@@ -2586,13 +2779,32 @@
                             <option value="other">Other</option>
                           </select>
                         </label>
-                        <label>Height (ft)<input type="number" min="1" max="200" step="1" bind:value={editShadeHeightFt} /></label>
-                        <label>Opacity (0–1)<input type="number" min="0" max="1" step="0.05" bind:value={editShadeOpacity} /></label>
+                        <label
+                          >Height (ft)<input
+                            type="number"
+                            min="1"
+                            max="200"
+                            step="1"
+                            bind:value={editShadeHeightFt}
+                          /></label
+                        >
+                        <label
+                          >Opacity (0–1)<input
+                            type="number"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            bind:value={editShadeOpacity}
+                          /></label
+                        >
                         {#if data.fields.length > 0}
-                          <label class="full">Field
+                          <label class="full"
+                            >Field
                             <select bind:value={editShadeFieldId}>
                               <option value="">— Farm-wide (no field) —</option>
-                              {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
+                              {#each data.fields as ff (ff.id)}<option value={ff.id}
+                                  >{ff.name}</option
+                                >{/each}
                             </select>
                           </label>
                         {/if}
@@ -2603,8 +2815,22 @@
                       </label>
                       {#if editShadeIsDeciduous}
                         <div class="grid2">
-                          <label>Leaf-on (day of year)<input type="number" min="1" max="366" bind:value={editShadeLeafOnDoy} /></label>
-                          <label>Leaf-off (day of year)<input type="number" min="1" max="366" bind:value={editShadeLeafOffDoy} /></label>
+                          <label
+                            >Leaf-on (day of year)<input
+                              type="number"
+                              min="1"
+                              max="366"
+                              bind:value={editShadeLeafOnDoy}
+                            /></label
+                          >
+                          <label
+                            >Leaf-off (day of year)<input
+                              type="number"
+                              min="1"
+                              max="366"
+                              bind:value={editShadeLeafOffDoy}
+                            /></label
+                          >
                         </div>
                       {/if}
                       <div class="row">
@@ -2621,12 +2847,16 @@
       {/each}
 
       {#if (data.shadeSources ?? []).some((s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId))}
-        {@const unscopedShades = (data.shadeSources ?? []).filter((s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId))}
+        {@const unscopedShades = (data.shadeSources ?? []).filter(
+          (s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId)
+        )}
         <div class="field-group">
           <div class="field-row">
             <span class="field-icon">🌐</span>
             <strong class="field-name">Farm-wide shade sources</strong>
-            <span class="field-stats">{unscopedShades.length} entr{unscopedShades.length === 1 ? 'y' : 'ies'}</span>
+            <span class="field-stats"
+              >{unscopedShades.length} entr{unscopedShades.length === 1 ? 'y' : 'ies'}</span
+            >
           </div>
           <ul class="block-list-flat">
             {#each unscopedShades as s (s.id)}
@@ -2635,12 +2865,22 @@
                 <span class="block-name">{s.name}</span>
                 <span class="block-stats">
                   {s.kind} · {s.heightFt} ft
-                  {#if s.isDeciduous} · deciduous{/if}
+                  {#if s.isDeciduous}
+                    · deciduous{/if}
                   {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
                 </span>
                 {#if data.canEdit}
-                  <button class="row-action" onclick={() => startEditShade(s)} title="Edit shade source">✏</button>
-                  <button class="row-action danger" onclick={() => deleteShadeSource(s.id, s.name)} aria-label="Delete {s.name}" title="Delete shade source">🗑</button>
+                  <button
+                    class="row-action"
+                    onclick={() => startEditShade(s)}
+                    title="Edit shade source">✏</button
+                  >
+                  <button
+                    class="row-action danger"
+                    onclick={() => deleteShadeSource(s.id, s.name)}
+                    aria-label="Delete {s.name}"
+                    title="Delete shade source">🗑</button
+                  >
                 {/if}
               </li>
               {#if editingShadeId === s.id}
@@ -2648,7 +2888,8 @@
                   <div class="inline-edit">
                     <div class="grid2">
                       <label>Name<input type="text" bind:value={editShadeName} /></label>
-                      <label>Kind
+                      <label
+                        >Kind
                         <select bind:value={editShadeKind}>
                           <option value="tree-row">Tree row</option>
                           <option value="tree-grove">Tree grove</option>
@@ -2660,13 +2901,31 @@
                           <option value="other">Other</option>
                         </select>
                       </label>
-                      <label>Height (ft)<input type="number" min="1" max="200" step="1" bind:value={editShadeHeightFt} /></label>
-                      <label>Opacity (0–1)<input type="number" min="0" max="1" step="0.05" bind:value={editShadeOpacity} /></label>
+                      <label
+                        >Height (ft)<input
+                          type="number"
+                          min="1"
+                          max="200"
+                          step="1"
+                          bind:value={editShadeHeightFt}
+                        /></label
+                      >
+                      <label
+                        >Opacity (0–1)<input
+                          type="number"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          bind:value={editShadeOpacity}
+                        /></label
+                      >
                       {#if data.fields.length > 0}
-                        <label class="full">Field
+                        <label class="full"
+                          >Field
                           <select bind:value={editShadeFieldId}>
                             <option value="">— Farm-wide (no field) —</option>
-                            {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
+                            {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option
+                              >{/each}
                           </select>
                         </label>
                       {/if}
@@ -2677,8 +2936,22 @@
                     </label>
                     {#if editShadeIsDeciduous}
                       <div class="grid2">
-                        <label>Leaf-on (day of year)<input type="number" min="1" max="366" bind:value={editShadeLeafOnDoy} /></label>
-                        <label>Leaf-off (day of year)<input type="number" min="1" max="366" bind:value={editShadeLeafOffDoy} /></label>
+                        <label
+                          >Leaf-on (day of year)<input
+                            type="number"
+                            min="1"
+                            max="366"
+                            bind:value={editShadeLeafOnDoy}
+                          /></label
+                        >
+                        <label
+                          >Leaf-off (day of year)<input
+                            type="number"
+                            min="1"
+                            max="366"
+                            bind:value={editShadeLeafOffDoy}
+                          /></label
+                        >
                       </div>
                     {/if}
                     <div class="row">
@@ -2693,7 +2966,9 @@
         </div>
       {/if}
       <!-- Blocks with no field assignment (shouldn't happen post-migration) -->
-      {@const orphans = data.blocks.filter((b) => !b.fieldId || !data.fields.some((f) => f.id === b.fieldId))}
+      {@const orphans = data.blocks.filter(
+        (b) => !b.fieldId || !data.fields.some((f) => f.id === b.fieldId)
+      )}
       {#if orphans.length > 0}
         <div class="field-group">
           <div class="field-row">
@@ -2710,7 +2985,11 @@
                   {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
                 </span>
                 {#if data.canEdit}
-                  <button class="row-action danger" onclick={() => deleteBlock(b.id, b.name, b.plantings.length)} aria-label="Delete {b.name}">🗑</button>
+                  <button
+                    class="row-action danger"
+                    onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
+                    aria-label="Delete {b.name}">🗑</button
+                  >
                 {/if}
               </li>
             {/each}
@@ -2724,8 +3003,8 @@
     <details class="card advanced">
       <summary>Add without drawing</summary>
       <p class="lede">
-        Add a field, block, tree row, grove, building, or other shade source by name only.
-        Geometry is optional — draw it later on the map above by selecting the matching tool.
+        Add a field, block, tree row, grove, building, or other shade source by name only. Geometry
+        is optional — draw it later on the map above by selecting the matching tool.
       </p>
 
       <label class="full">
@@ -2748,11 +3027,34 @@
       {#if addKind === 'field'}
         <div class="add-form-section">
           <div class="grid2">
-            <label>Name<input type="text" placeholder="e.g. North Field" bind:value={newFieldName} /></label>
-            <label>Acres (optional)<input type="number" min="0" step="0.1" bind:value={newFieldAcres} /></label>
-            <label class="full">Notes (optional)<input type="text" placeholder="Lease info, address, etc." bind:value={newFieldNotes} /></label>
+            <label
+              >Name<input
+                type="text"
+                placeholder="e.g. North Field"
+                bind:value={newFieldName}
+              /></label
+            >
+            <label
+              >Acres (optional)<input
+                type="number"
+                min="0"
+                step="0.1"
+                bind:value={newFieldAcres}
+              /></label
+            >
+            <label class="full"
+              >Notes (optional)<input
+                type="text"
+                placeholder="Lease info, address, etc."
+                bind:value={newFieldNotes}
+              /></label
+            >
           </div>
-          <button class="primary" onclick={createField} disabled={creatingField || !newFieldName.trim()}>
+          <button
+            class="primary"
+            onclick={createField}
+            disabled={creatingField || !newFieldName.trim()}
+          >
             {creatingField ? '…' : 'Add field'}
           </button>
           {#if fieldError}<p class="error">{fieldError}</p>{/if}
@@ -2763,15 +3065,33 @@
         {:else}
           <div class="add-form-section">
             <div class="grid2">
-              <label>Name<input type="text" placeholder="e.g. Corn Block A" bind:value={newBlockName} /></label>
-              <label>Acres (optional)<input type="number" min="0" step="0.1" bind:value={newBlockAcres} /></label>
-              <label class="full">Field
+              <label
+                >Name<input
+                  type="text"
+                  placeholder="e.g. Corn Block A"
+                  bind:value={newBlockName}
+                /></label
+              >
+              <label
+                >Acres (optional)<input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  bind:value={newBlockAcres}
+                /></label
+              >
+              <label class="full"
+                >Field
                 <select bind:value={newBlockFieldId}>
                   {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
                 </select>
               </label>
             </div>
-            <button class="primary" onclick={() => createBlock()} disabled={creatingBlock || !newBlockName.trim()}>
+            <button
+              class="primary"
+              onclick={() => createBlock()}
+              disabled={creatingBlock || !newBlockName.trim()}
+            >
               {creatingBlock ? '…' : 'Add block'}
             </button>
             {#if blockError}<p class="error">{blockError}</p>{/if}
@@ -2780,10 +3100,33 @@
       {:else}
         <div class="add-form-section">
           <div class="grid2">
-            <label>Name<input type="text" placeholder="e.g. North maple windbreak" bind:value={addShadeName} /></label>
-            <label>Height (ft)<input type="number" min="1" max="200" step="1" bind:value={addShadeHeightFt} /></label>
-            <label>Opacity (0–1)<input type="number" min="0" max="1" step="0.05" bind:value={addShadeOpacity} /></label>
-            <label class="full">Field (optional — leave blank for farm-wide)
+            <label
+              >Name<input
+                type="text"
+                placeholder="e.g. North maple windbreak"
+                bind:value={addShadeName}
+              /></label
+            >
+            <label
+              >Height (ft)<input
+                type="number"
+                min="1"
+                max="200"
+                step="1"
+                bind:value={addShadeHeightFt}
+              /></label
+            >
+            <label
+              >Opacity (0–1)<input
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                bind:value={addShadeOpacity}
+              /></label
+            >
+            <label class="full"
+              >Field (optional — leave blank for farm-wide)
               <select bind:value={addShadeFieldId}>
                 <option value="">— Farm-wide (no field) —</option>
                 {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
@@ -2796,16 +3139,35 @@
           </label>
           {#if addShadeIsDeciduous}
             <div class="grid2">
-              <label>Leaf-on (day of year)<input type="number" min="1" max="366" bind:value={addShadeLeafOnDoy} /></label>
-              <label>Leaf-off (day of year)<input type="number" min="1" max="366" bind:value={addShadeLeafOffDoy} /></label>
+              <label
+                >Leaf-on (day of year)<input
+                  type="number"
+                  min="1"
+                  max="366"
+                  bind:value={addShadeLeafOnDoy}
+                /></label
+              >
+              <label
+                >Leaf-off (day of year)<input
+                  type="number"
+                  min="1"
+                  max="366"
+                  bind:value={addShadeLeafOffDoy}
+                /></label
+              >
             </div>
           {/if}
-          <button class="primary" onclick={addShadeWithoutGeometry} disabled={addingShade || !addShadeName.trim()}>
+          <button
+            class="primary"
+            onclick={addShadeWithoutGeometry}
+            disabled={addingShade || !addShadeName.trim()}
+          >
             {addingShade ? '…' : `Add ${addKind}`}
           </button>
           {#if addShadeError}<p class="error">{addShadeError}</p>{/if}
           <p class="muted" style="margin-top:0.4rem">
-            Without geometry the shade source won't project shadows — draw it on the map after to wire up shading.
+            Without geometry the shade source won't project shadows — draw it on the map after to
+            wire up shading.
           </p>
         </div>
       {/if}
@@ -2817,50 +3179,60 @@
           Currently supports field + block features only.
         </p>
 
-      <div class="paste-mode-tabs">
-        <button
-          class:active={pasteMode === 'block'}
-          onclick={() => { pasteMode = 'block'; pasteResults = []; geomError = null; geomMessage = null; }}
-          type="button"
-        >Single block</button>
-        <button
-          class:active={pasteMode === 'collection'}
-          onclick={() => { pasteMode = 'collection'; geomError = null; geomMessage = null; }}
-          type="button"
-        >Fields + Blocks (FeatureCollection)</button>
-      </div>
+        <div class="paste-mode-tabs">
+          <button
+            class:active={pasteMode === 'block'}
+            onclick={() => {
+              pasteMode = 'block';
+              pasteResults = [];
+              geomError = null;
+              geomMessage = null;
+            }}
+            type="button">Single block</button
+          >
+          <button
+            class:active={pasteMode === 'collection'}
+            onclick={() => {
+              pasteMode = 'collection';
+              geomError = null;
+              geomMessage = null;
+            }}
+            type="button">Fields + Blocks (FeatureCollection)</button
+          >
+        </div>
 
-      <form onsubmit={savePaste}>
-        {#if pasteMode === 'block'}
-          <label>
-            Block
-            <select bind:value={pasteBlockId}>
-              {#each data.blocks as b (b.id)}
-                <option value={b.id}>
-                  {b.name}{b.geometryGeojson ? ' (has geometry)' : ''}
-                </option>
-              {/each}
-            </select>
-          </label>
-          <label>
-            GeoJSON (Polygon, MultiPolygon, Feature, or FeatureCollection)
-            <textarea
-              bind:value={pasteText}
-              rows="6"
-              placeholder={'{"type":"Polygon","coordinates":[[[-77.6,39.1],[-77.6,39.11],[-77.59,39.11],[-77.59,39.1],[-77.6,39.1]]]}'}
-            ></textarea>
-          </label>
-        {:else}
-          <p class="lede">
-            Paste a GeoJSON <code>FeatureCollection</code> where each Feature has
-            <code>properties.type</code> of <code>"field"</code> or <code>"block"</code>,
-            and <code>properties.name</code> matching an existing field or block name.
-            Block features may also include <code>properties.field</code> to disambiguate when
-            the same block name exists in multiple fields.
-          </p>
-          <details class="example-collapse">
-            <summary>Show example</summary>
-            <pre class="geojson-example">{`{
+        <form onsubmit={savePaste}>
+          {#if pasteMode === 'block'}
+            <label>
+              Block
+              <select bind:value={pasteBlockId}>
+                {#each data.blocks as b (b.id)}
+                  <option value={b.id}>
+                    {b.name}{b.geometryGeojson ? ' (has geometry)' : ''}
+                  </option>
+                {/each}
+              </select>
+            </label>
+            <label>
+              GeoJSON (Polygon, MultiPolygon, Feature, or FeatureCollection)
+              <textarea
+                bind:value={pasteText}
+                rows="6"
+                placeholder={'{"type":"Polygon","coordinates":[[[-77.6,39.1],[-77.6,39.11],[-77.59,39.11],[-77.59,39.1],[-77.6,39.1]]]}'}
+              ></textarea>
+            </label>
+          {:else}
+            <p class="lede">
+              Paste a GeoJSON <code>FeatureCollection</code> where each Feature has
+              <code>properties.type</code> of <code>"field"</code> or <code>"block"</code>, and
+              <code>properties.name</code>
+              matching an existing field or block name. Block features may also include
+              <code>properties.field</code> to disambiguate when the same block name exists in multiple
+              fields.
+            </p>
+            <details class="example-collapse">
+              <summary>Show example</summary>
+              <pre class="geojson-example">{`{
   "type": "FeatureCollection",
   "features": [
     {
@@ -2875,43 +3247,41 @@
     }
   ]
 }`}</pre>
-          </details>
-          <label>
-            FeatureCollection JSON
-            <textarea
-              bind:value={pasteText}
-              rows="10"
-              placeholder={'{"type":"FeatureCollection","features":[...]}'}
+            </details>
+            <label>
+              FeatureCollection JSON
+              <textarea
+                bind:value={pasteText}
+                rows="10"
+                placeholder={'{"type":"FeatureCollection","features":[...]}'}
+              ></textarea>
+            </label>
+          {/if}
 
-            ></textarea>
-          </label>
+          <button type="submit" class="primary" disabled={geomBusy || !pasteText.trim()}>
+            {geomBusy ? 'Saving…' : pasteMode === 'collection' ? 'Import all' : 'Save geometry'}
+          </button>
+        </form>
+
+        {#if geomMessage}<p class="success">{geomMessage}</p>{/if}
+        {#if geomError}<p class="error">{geomError}</p>{/if}
+        {#if pasteResults.length > 0}
+          <table class="paste-results">
+            <thead><tr><th>Name</th><th>Type</th><th>Result</th></tr></thead>
+            <tbody>
+              {#each pasteResults as r}
+                <tr class={r.status.startsWith('saved') ? 'result-ok' : 'result-warn'}>
+                  <td>{r.name}</td>
+                  <td>{r.kind}</td>
+                  <td>{r.status}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
         {/if}
-
-        <button type="submit" class="primary" disabled={geomBusy || !pasteText.trim()}>
-          {geomBusy ? 'Saving…' : pasteMode === 'collection' ? 'Import all' : 'Save geometry'}
-        </button>
-      </form>
-
-      {#if geomMessage}<p class="success">{geomMessage}</p>{/if}
-      {#if geomError}<p class="error">{geomError}</p>{/if}
-      {#if pasteResults.length > 0}
-        <table class="paste-results">
-          <thead><tr><th>Name</th><th>Type</th><th>Result</th></tr></thead>
-          <tbody>
-            {#each pasteResults as r}
-              <tr class={r.status.startsWith('saved') ? 'result-ok' : 'result-warn'}>
-                <td>{r.name}</td>
-                <td>{r.kind}</td>
-                <td>{r.status}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      {/if}
       </details>
     </details>
   {/if}
-
 {/if}
 
 <!-- ────────────────────────── CROPS ────────────────────────── -->
@@ -2921,7 +3291,7 @@
       blocks={data.blocks}
       fields={data.fields}
       canEdit={false}
-      blockBadges={blockBadges}
+      {blockBadges}
       shadeSources={data.shadeSources ?? []}
       onSaveGeometry={saveGeometry}
       onCreateWithGeometry={createBlockWithGeometry}
@@ -2936,231 +3306,291 @@
     </section>
   {:else}
     <div class="crops-tab-layout">
-    <section class="card crops-card">
-      {#each data.fields as f (f.id)}
-        {@const fieldBlocksRaw = data.blocks.filter((b) => b.fieldId === f.id)}
-        {@const fieldBlocks = applyBlockOrder(fieldBlocksRaw, cropsTabOrder)}
-        {@const fieldBlockIds = fieldBlocks.map((b) => b.id)}
-        {@const totalCrops = fieldBlocks.reduce((n, b) => n + b.plantings.length, 0)}
-        <div class="field-group">
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <div
-            class="field-row"
-            class:field-drop-target={fieldDropOverId === f.id && cropsReorderDragId !== null}
-            ondragover={(e) => onFieldRowDragOver(e, f.id)}
-            ondragleave={() => onFieldRowDragLeave(f.id)}
-            ondrop={(e) => onFieldRowDrop(e, f.id)}
-          >
-            <span class="field-icon">🌾</span>
-            <strong class="field-name">{f.name}</strong>
-            <span class="field-stats">
-              {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
-              {#if totalCrops > 0}· {totalCrops} crop{totalCrops === 1 ? '' : 's'}{/if}
-            </span>
-          </div>
+      <section class="card crops-card">
+        {#each data.fields as f (f.id)}
+          {@const fieldBlocksRaw = data.blocks.filter((b) => b.fieldId === f.id)}
+          {@const fieldBlocks = applyBlockOrder(fieldBlocksRaw, cropsTabOrder)}
+          {@const fieldBlockIds = fieldBlocks.map((b) => b.id)}
+          {@const totalCrops = fieldBlocks.reduce((n, b) => n + b.plantings.length, 0)}
+          <div class="field-group">
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
+              class="field-row"
+              class:field-drop-target={fieldDropOverId === f.id && cropsReorderDragId !== null}
+              ondragover={(e) => onFieldRowDragOver(e, f.id)}
+              ondragleave={() => onFieldRowDragLeave(f.id)}
+              ondrop={(e) => onFieldRowDrop(e, f.id)}
+            >
+              <span class="field-icon">🌾</span>
+              <strong class="field-name">{f.name}</strong>
+              <span class="field-stats">
+                {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
+                {#if totalCrops > 0}· {totalCrops} crop{totalCrops === 1 ? '' : 's'}{/if}
+              </span>
+            </div>
 
-          {#if fieldBlocks.length === 0}
-            <p class="empty-row-indent">No blocks — add them on the Layout tab.</p>
-          {:else}
-            {#each fieldBlocks as block (block.id)}
-              {@const blockAcresDisplay = block.acres !== undefined ? `${block.acres.toFixed(2)} ac` : null}
-              <div
-                class="crop-block"
-                class:dragging={cropsReorderDragId === block.id}
-                class:drop-target={cropsReorderOverId === block.id && cropsReorderDragId !== null && cropsReorderDragId !== block.id}
-                class:seed-drop-target={cropsSeedHoverBlockId === block.id && cropsSeedDrag !== null}
-                class:crop-drop-target={cropMoveOverBlockId === block.id && cropMoveDragId !== null}
-              >
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
+            {#if fieldBlocks.length === 0}
+              <p class="empty-row-indent">No blocks — add them on the Layout tab.</p>
+            {:else}
+              {#each fieldBlocks as block (block.id)}
+                {@const blockAcresDisplay =
+                  block.acres !== undefined ? `${block.acres.toFixed(2)} ac` : null}
                 <div
-                  class="block-row"
-                  draggable="true"
-                  ondragstart={(e) => onCropsHeaderDragStart(e, block.id)}
-                  ondragover={(e) => onCropsHeaderDragOver(e, block.id)}
-                  ondragleave={() => onCropsHeaderDragLeave(block.id)}
-                  ondrop={(e) => onCropsHeaderDrop(e, block.id, fieldBlockIds)}
-                  ondragend={onCropsHeaderDragEnd}
-                  title="Drag to reorder blocks in this field"
+                  class="crop-block"
+                  class:dragging={cropsReorderDragId === block.id}
+                  class:drop-target={cropsReorderOverId === block.id &&
+                    cropsReorderDragId !== null &&
+                    cropsReorderDragId !== block.id}
+                  class:seed-drop-target={cropsSeedHoverBlockId === block.id &&
+                    cropsSeedDrag !== null}
+                  class:crop-drop-target={cropMoveOverBlockId === block.id &&
+                    cropMoveDragId !== null}
                 >
-                  <span class="grip" aria-hidden="true">⋮⋮</span>
-                  <span class="block-icon">▪</span>
-                  <span class="block-name">{block.name}</span>
-                  <span class="block-stats">
-                    {block.plantings.length} crop{block.plantings.length === 1 ? '' : 's'}
-                    {#if blockAcresDisplay} · {blockAcresDisplay}{/if}
-                  </span>
-                  {#if data.canEdit}
-                    <button
-                      class="row-action crop-add-btn"
-                      draggable="false"
-                      ondragstart={(e) => e.preventDefault()}
-                      onclick={(e) => { e.stopPropagation(); pickerBlockId = block.id; }}
-                      title="Add crop to {block.name}"
-                    >＋ crop</button>
+                  <!-- svelte-ignore a11y_no_static_element_interactions -->
+                  <div
+                    class="block-row"
+                    draggable="true"
+                    ondragstart={(e) => onCropsHeaderDragStart(e, block.id)}
+                    ondragover={(e) => onCropsHeaderDragOver(e, block.id)}
+                    ondragleave={() => onCropsHeaderDragLeave(block.id)}
+                    ondrop={(e) => onCropsHeaderDrop(e, block.id, fieldBlockIds)}
+                    ondragend={onCropsHeaderDragEnd}
+                    title="Drag to reorder blocks in this field"
+                  >
+                    <span class="grip" aria-hidden="true">⋮⋮</span>
+                    <span class="block-icon">▪</span>
+                    <span class="block-name">{block.name}</span>
+                    <span class="block-stats">
+                      {block.plantings.length} crop{block.plantings.length === 1 ? '' : 's'}
+                      {#if blockAcresDisplay}
+                        · {blockAcresDisplay}{/if}
+                    </span>
+                    {#if data.canEdit}
+                      <button
+                        class="row-action crop-add-btn"
+                        draggable="false"
+                        ondragstart={(e) => e.preventDefault()}
+                        onclick={(e) => {
+                          e.stopPropagation();
+                          pickerBlockId = block.id;
+                        }}
+                        title="Add crop to {block.name}">＋ crop</button
+                      >
+                    {/if}
+                  </div>
+
+                  {#if block.plantings.length > 0}
+                    <ul class="crop-list">
+                      {#each block.plantings as p (p.id)}
+                        {@const guide = data.plantingGuides[p.cropPluginId]}
+                        {@const catalogItem = data.cropCatalog.find(
+                          (c) => c.pluginId === p.cropPluginId
+                        )}
+                        {@const cropDtm = catalogItem?.daysToMaturity}
+                        {@const fam = pluginById.get(p.cropPluginId)?.cropFamily}
+                        {@const familyEmoji = (fam && FAMILY_ICON[fam]) || '🌱'}
+                        {@const guideTip =
+                          [
+                            cropDtm
+                              ? 'DTM: ' +
+                                (cropDtm.min === cropDtm.max
+                                  ? cropDtm.min
+                                  : cropDtm.min + '–' + cropDtm.max) +
+                                ' d'
+                              : '',
+                            guide?.soilTempMinF !== undefined
+                              ? 'Soil min: ' + guide.soilTempMinF + '°F'
+                              : '',
+                            guide?.rowSpacingIn !== undefined
+                              ? 'Row spacing: ' + guide.rowSpacingIn + ' in'
+                              : '',
+                            guide?.inRowSpacingIn
+                              ? 'In-row: ' +
+                                guide.inRowSpacingIn.min +
+                                '–' +
+                                guide.inRowSpacingIn.max +
+                                ' in'
+                              : '',
+                            guide?.seedDepthIn
+                              ? 'Seed depth: ' +
+                                guide.seedDepthIn.min +
+                                '–' +
+                                guide.seedDepthIn.max +
+                                ' in'
+                              : '',
+                            guide?.seedsPerAcre !== undefined
+                              ? 'Seeds/acre: ' + guide.seedsPerAcre.toLocaleString()
+                              : ''
+                          ]
+                            .filter(Boolean)
+                            .join('\n') || 'No guide available'}
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                        <li
+                          class="crop-item"
+                          class:dragging={cropMoveDragId === p.id}
+                          draggable={data.canEdit !== false}
+                          ondragstart={(e) => onCropItemDragStart(e, p.id)}
+                          ondragend={onCropItemDragEnd}
+                          title="Drag onto another block to move this crop"
+                        >
+                          <div class="crop-item-row">
+                            <span class="grip" aria-hidden="true">⋮⋮</span>
+                            <span class="crop-name-group">
+                              <span class="crop-family-emoji" aria-hidden="true">{familyEmoji}</span
+                              >
+                              <a
+                                href="/crops/{p.id}"
+                                class="crop-name"
+                                draggable="false"
+                                ondragstart={(e) => e.preventDefault()}
+                                title={p.varietyDisplayName}
+                                >{data.seedShortNameByDisplay?.[p.varietyDisplayName] ??
+                                  p.varietyDisplayName}</a
+                              >
+                              {#if p.quantityPlanted !== undefined && p.quantityUnit}
+                                <span class="crop-qty">{p.quantityPlanted} {p.quantityUnit}</span>
+                              {/if}
+                              <button
+                                class="guide-tip"
+                                class:open={openGuides.has(p.id)}
+                                data-tip={guideTip}
+                                draggable="false"
+                                ondragstart={(e) => e.preventDefault()}
+                                onclick={(e) => {
+                                  e.stopPropagation();
+                                  toggleGuide(p.id);
+                                }}>ⓘ</button
+                              >
+                            </span>
+                            {#if p.plantingDate}
+                              <span class="crop-date"
+                                >{new Date(p.plantingDate).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}</span
+                              >
+                            {/if}
+                          </div>
+                          {#if openGuides.has(p.id)}
+                            <dl class="guide-dl">
+                              {#if catalogItem?.daysToMaturity}
+                                {@const dtm = catalogItem.daysToMaturity}
+                                <dt>Days to maturity</dt>
+                                <dd>{dtm.min === dtm.max ? dtm.min : `${dtm.min}–${dtm.max}`} d</dd>
+                              {/if}
+                              {#if guide?.soilTempMinF !== undefined}<dt>Soil temp min</dt>
+                                <dd>{guide.soilTempMinF}°F</dd>{/if}
+                              {#if guide?.rowSpacingIn !== undefined}<dt>Row spacing</dt>
+                                <dd>{guide.rowSpacingIn} in</dd>{/if}
+                              {#if guide?.inRowSpacingIn}<dt>In-row spacing</dt>
+                                <dd>
+                                  {guide.inRowSpacingIn.min}–{guide.inRowSpacingIn.max} in
+                                </dd>{/if}
+                              {#if guide?.seedDepthIn}<dt>Seed depth</dt>
+                                <dd>{guide.seedDepthIn.min}–{guide.seedDepthIn.max} in</dd>{/if}
+                              {#if guide?.seedsPerAcre !== undefined}<dt>Seeds / acre</dt>
+                                <dd>{guide.seedsPerAcre.toLocaleString()}</dd>{/if}
+                              {#if !catalogItem?.daysToMaturity && !guide}
+                                <dt>Info</dt>
+                                <dd>No guide available</dd>
+                              {/if}
+                            </dl>
+                          {/if}
+                        </li>
+                      {/each}
+                    </ul>
                   {/if}
                 </div>
+              {/each}
+            {/if}
+          </div>
+        {/each}
+      </section>
 
-                {#if block.plantings.length > 0}
-                  <ul class="crop-list">
-                    {#each block.plantings as p (p.id)}
-                      {@const guide = data.plantingGuides[p.cropPluginId]}
-                      {@const catalogItem = data.cropCatalog.find((c) => c.pluginId === p.cropPluginId)}
-                      {@const cropDtm = catalogItem?.daysToMaturity}
-                      {@const fam = pluginById.get(p.cropPluginId)?.cropFamily}
-                      {@const familyEmoji = (fam && FAMILY_ICON[fam]) || '🌱'}
-                      {@const guideTip = [
-                        cropDtm ? 'DTM: ' + (cropDtm.min === cropDtm.max ? cropDtm.min : cropDtm.min + '–' + cropDtm.max) + ' d' : '',
-                        guide?.soilTempMinF !== undefined ? 'Soil min: ' + guide.soilTempMinF + '°F' : '',
-                        guide?.rowSpacingIn !== undefined ? 'Row spacing: ' + guide.rowSpacingIn + ' in' : '',
-                        guide?.inRowSpacingIn ? 'In-row: ' + guide.inRowSpacingIn.min + '–' + guide.inRowSpacingIn.max + ' in' : '',
-                        guide?.seedDepthIn ? 'Seed depth: ' + guide.seedDepthIn.min + '–' + guide.seedDepthIn.max + ' in' : '',
-                        guide?.seedsPerAcre !== undefined ? 'Seeds/acre: ' + guide.seedsPerAcre.toLocaleString() : ''
-                      ].filter(Boolean).join('\n') || 'No guide available'}
-                      <!-- svelte-ignore a11y_no_static_element_interactions -->
-                      <li
-                        class="crop-item"
-                        class:dragging={cropMoveDragId === p.id}
-                        draggable={data.canEdit !== false}
-                        ondragstart={(e) => onCropItemDragStart(e, p.id)}
-                        ondragend={onCropItemDragEnd}
-                        title="Drag onto another block to move this crop"
-                      >
-                        <div class="crop-item-row">
-                          <span class="grip" aria-hidden="true">⋮⋮</span>
-                          <span class="crop-name-group">
-                            <span class="crop-family-emoji" aria-hidden="true">{familyEmoji}</span>
-                            <a
-                              href="/crops/{p.id}"
-                              class="crop-name"
-                              draggable="false"
-                              ondragstart={(e) => e.preventDefault()}
-                              title={p.varietyDisplayName}
-                            >{data.seedShortNameByDisplay?.[p.varietyDisplayName] ?? p.varietyDisplayName}</a>
-                            {#if p.quantityPlanted !== undefined && p.quantityUnit}
-                              <span class="crop-qty">{p.quantityPlanted} {p.quantityUnit}</span>
-                            {/if}
-                            <button
-                              class="guide-tip"
-                              class:open={openGuides.has(p.id)}
-                              data-tip={guideTip}
-                              draggable="false"
-                              ondragstart={(e) => e.preventDefault()}
-                              onclick={(e) => { e.stopPropagation(); toggleGuide(p.id); }}
-                            >ⓘ</button>
-                          </span>
-                          {#if p.plantingDate}
-                            <span class="crop-date">{new Date(p.plantingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                          {/if}
-                        </div>
-                        {#if openGuides.has(p.id)}
-                          <dl class="guide-dl">
-                            {#if catalogItem?.daysToMaturity}
-                              {@const dtm = catalogItem.daysToMaturity}
-                              <dt>Days to maturity</dt><dd>{dtm.min === dtm.max ? dtm.min : `${dtm.min}–${dtm.max}`} d</dd>
-                            {/if}
-                            {#if guide?.soilTempMinF !== undefined}<dt>Soil temp min</dt><dd>{guide.soilTempMinF}°F</dd>{/if}
-                            {#if guide?.rowSpacingIn !== undefined}<dt>Row spacing</dt><dd>{guide.rowSpacingIn} in</dd>{/if}
-                            {#if guide?.inRowSpacingIn}<dt>In-row spacing</dt><dd>{guide.inRowSpacingIn.min}–{guide.inRowSpacingIn.max} in</dd>{/if}
-                            {#if guide?.seedDepthIn}<dt>Seed depth</dt><dd>{guide.seedDepthIn.min}–{guide.seedDepthIn.max} in</dd>{/if}
-                            {#if guide?.seedsPerAcre !== undefined}<dt>Seeds / acre</dt><dd>{guide.seedsPerAcre.toLocaleString()}</dd>{/if}
-                            {#if !catalogItem?.daysToMaturity && !guide}
-                              <dt>Info</dt><dd>No guide available</dd>
-                            {/if}
-                          </dl>
-                        {/if}
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <aside
+        class="crops-seed-rail"
+        class:return-target={cropMoveOverRail && cropMoveDragId !== null}
+        ondragover={onRailDragOver}
+        ondragleave={onRailDragLeave}
+        ondrop={onRailDrop}
+        aria-label="Seed stock"
+      >
+        {#if cropMoveDragId !== null}
+          <div class="rail-drop-banner">↩ Drop here to remove the crop and restore stock</div>
+        {/if}
+        <h3>Seed Stock <span class="count">({(data.seedStock ?? []).length})</span></h3>
+        {#if data.canEdit && (data.seedStock ?? []).length > 0 && data.blocks.length > 0}
+          <button
+            type="button"
+            class="ai-allocate-btn"
+            onclick={() => (showAllocationWizard = true)}
+            title="Plan plantings from your seed stock — AI picks blocks and dates"
+          >
+            ✨ Plan Plantings
+          </button>
+        {/if}
+        {#if (data.seedStock ?? []).length === 0}
+          <p class="seed-rail-empty">
+            No seed stock with on-hand &gt; 0. Add seeds via <a href="/stock">Stock</a>.
+          </p>
+        {:else}
+          {@const groupsByFamily = (() => {
+            type SS = NonNullable<typeof data.seedStock>[number];
+            const seeds = (data.seedStock ?? []) as SS[];
+            const m = new Map<string, SS[]>();
+            for (const s of seeds) {
+              const key = s.cropFamily ?? '';
+              const list = m.get(key) ?? [];
+              list.push(s);
+              m.set(key, list);
+            }
+            return [...m.entries()]
+              .map(([family, items]) => ({
+                family: family || null,
+                items: [...items].sort((a, b) => a.displayName.localeCompare(b.displayName))
+              }))
+              .sort((a, b) => (a.family ?? 'zz').localeCompare(b.family ?? 'zz'));
+          })()}
+          {#each groupsByFamily as g (g.family ?? '__unc__')}
+            <div class="seed-family">
+              <div class="seed-family-head">
+                <span aria-hidden="true">{(g.family && FAMILY_ICON[g.family]) || '🌱'}</span>
+                <span>{g.family ?? 'Unclassified'}</span>
+                <span class="count">({g.items.length})</span>
               </div>
-            {/each}
-          {/if}
-        </div>
-      {/each}
-    </section>
-
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <aside
-      class="crops-seed-rail"
-      class:return-target={cropMoveOverRail && cropMoveDragId !== null}
-      ondragover={onRailDragOver}
-      ondragleave={onRailDragLeave}
-      ondrop={onRailDrop}
-      aria-label="Seed stock"
-    >
-      {#if cropMoveDragId !== null}
-        <div class="rail-drop-banner">↩ Drop here to remove the crop and restore stock</div>
-      {/if}
-      <h3>Seed Stock <span class="count">({(data.seedStock ?? []).length})</span></h3>
-      {#if data.canEdit && (data.seedStock ?? []).length > 0 && data.blocks.length > 0}
-        <button
-          type="button"
-          class="ai-allocate-btn"
-          onclick={() => (showAllocationWizard = true)}
-          title="Plan plantings from your seed stock — AI picks blocks and dates"
-        >
-          ✨ Plan Plantings
-        </button>
-      {/if}
-      {#if (data.seedStock ?? []).length === 0}
-        <p class="seed-rail-empty">No seed stock with on-hand &gt; 0. Add seeds via <a href="/stock">Stock</a>.</p>
-      {:else}
-        {@const groupsByFamily = (() => {
-          type SS = NonNullable<typeof data.seedStock>[number];
-          const seeds = (data.seedStock ?? []) as SS[];
-          const m = new Map<string, SS[]>();
-          for (const s of seeds) {
-            const key = s.cropFamily ?? '';
-            const list = m.get(key) ?? [];
-            list.push(s);
-            m.set(key, list);
-          }
-          return [...m.entries()]
-            .map(([family, items]) => ({
-              family: family || null,
-              items: [...items].sort((a, b) => a.displayName.localeCompare(b.displayName))
-            }))
-            .sort((a, b) => (a.family ?? 'zz').localeCompare(b.family ?? 'zz'));
-        })()}
-        {#each groupsByFamily as g (g.family ?? '__unc__')}
-          <div class="seed-family">
-            <div class="seed-family-head">
-              <span aria-hidden="true">{(g.family && FAMILY_ICON[g.family]) || '🌱'}</span>
-              <span>{g.family ?? 'Unclassified'}</span>
-              <span class="count">({g.items.length})</span>
-            </div>
-            <ul class="seed-list">
-              {#each g.items as s (s.stockItemId)}
-                {@const empty = s.onHand <= 0}
-                {@const canDrag = data.canEdit !== false && !!s.cropPluginId && !empty}
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <li
-                  class="seed-card"
-                  class:disabled={!canDrag}
-                  class:empty
-                  draggable={canDrag}
-                  ondragstart={(e) => onSeedRailDragStart(e, s)}
-                  ondragend={onSeedRailDragEnd}
-                  title={
-                    empty
+              <ul class="seed-list">
+                {#each g.items as s (s.stockItemId)}
+                  {@const empty = s.onHand <= 0}
+                  {@const canDrag = data.canEdit !== false && !!s.cropPluginId && !empty}
+                  <!-- svelte-ignore a11y_no_static_element_interactions -->
+                  <li
+                    class="seed-card"
+                    class:disabled={!canDrag}
+                    class:empty
+                    draggable={canDrag}
+                    ondragstart={(e) => onSeedRailDragStart(e, s)}
+                    ondragend={onSeedRailDragEnd}
+                    title={empty
                       ? `Out of stock — restock in /stock to plant\n${s.displayName}`
                       : !s.cropPluginId
                         ? `No crop plugin linked — set one in /stock\n${s.displayName}`
-                        : `Drag onto a block to plant\n${s.displayName}`
-                  }
-                >
-                  <span class="seed-name">{s.shortName ?? s.displayName}</span>
-                  <span class="seed-meta">
-                    {s.onHand} {s.defaultUnit}
-                    {#if empty} · empty{/if}
-                  </span>
-                </li>
-              {/each}
-            </ul>
-          </div>
-        {/each}
-      {/if}
-    </aside>
+                        : `Drag onto a block to plant\n${s.displayName}`}
+                  >
+                    <span class="seed-name">{s.shortName ?? s.displayName}</span>
+                    <span class="seed-meta">
+                      {s.onHand}
+                      {s.defaultUnit}
+                      {#if empty}
+                        · empty{/if}
+                    </span>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/each}
+        {/if}
+      </aside>
     </div>
     {#if plantingError}<p class="error">{plantingError}</p>{/if}
 
@@ -3171,8 +3601,14 @@
         <h2 class="livestock-title">Livestock</h2>
         <span class="coming-soon-badge">Coming soon</span>
       </div>
-      <p>Assign livestock to fields, track grazing rotations, and integrate pasture management with crop planning and spray buffer zones.</p>
-      <p class="feature-note">📋 Feature request: animal records, grazing schedules, pasture rotation, headcount tracking, and integration with spray buffer and field rest periods.</p>
+      <p>
+        Assign livestock to fields, track grazing rotations, and integrate pasture management with
+        crop planning and spray buffer zones.
+      </p>
+      <p class="feature-note">
+        📋 Feature request: animal records, grazing schedules, pasture rotation, headcount tracking,
+        and integration with spray buffer and field rest periods.
+      </p>
     </section>
   {/if}
 {/if}
@@ -3188,7 +3624,9 @@
         pickerBlockId = null;
         addPlanting(bid, pluginId, date);
       }}
-      onClose={() => { pickerBlockId = null; }}
+      onClose={() => {
+        pickerBlockId = null;
+      }}
     />
   {/if}
 {/if}
@@ -3205,9 +3643,14 @@
         cropPluginId: s.cropPluginId ?? '',
         cropFamily: s.cropFamily ?? null
       }}
-      plugin={s.cropPluginId ? (pluginById.get(s.cropPluginId) as unknown as import('$lib/plugins/schemas').CropPlugin) : undefined}
+      plugin={s.cropPluginId
+        ? (pluginById.get(s.cropPluginId) as unknown as import('$lib/plugins/schemas').CropPlugin)
+        : undefined}
       onConfirm={confirmSeedQuantity}
-      onClose={() => { activeSeedModal = null; manualDropBlockId = null; }}
+      onClose={() => {
+        activeSeedModal = null;
+        manualDropBlockId = null;
+      }}
     />
   {/if}
 {/if}
@@ -3236,7 +3679,9 @@
     seasonSetup={data.seasonSetup ?? null}
     lastYearSetup={data.lastYearSetup ?? null}
     currentYear={data.currentYear ?? new Date().getFullYear()}
-    onClose={() => { showAllocationWizard = false; }}
+    onClose={() => {
+      showAllocationWizard = false;
+    }}
     onCommitted={async () => {
       showAllocationWizard = false;
       await invalidateAll();
@@ -3267,18 +3712,20 @@
               class="chip-mini"
               class:active={selectedFieldId === null}
               onclick={() => toggleField(null)}
-              title="Show all fields"
-            >All</button>
+              title="Show all fields">All</button
+            >
             {#each data.fields ?? [] as f (f.id)}
-              {@const fieldBlockCount = (data.blocks ?? []).filter((b) => b.fieldId === f.id).length}
+              {@const fieldBlockCount = (data.blocks ?? []).filter(
+                (b) => b.fieldId === f.id
+              ).length}
               {#if fieldBlockCount > 0}
                 <button
                   type="button"
                   class="chip-mini"
                   class:active={selectedFieldId === f.id}
                   onclick={() => toggleField(f.id)}
-                  title="Field: {f.name}"
-                >{f.name}</button>
+                  title="Field: {f.name}">{f.name}</button
+                >
               {/if}
             {/each}
           </span>
@@ -3290,16 +3737,16 @@
                 class="chip-mini chip-mini-block"
                 class:active={selectedBlockIds.size === 0}
                 onclick={clearBlockSelection}
-                title="Show all blocks in this scope"
-              >All</button>
+                title="Show all blocks in this scope">All</button
+              >
               {#each filterableBlocks as b (b.id)}
                 <button
                   type="button"
                   class="chip-mini chip-mini-block"
                   class:active={selectedBlockIds.has(b.id)}
                   onclick={() => toggleBlock(b.id)}
-                  title="Block: {b.blockLabel ?? b.name}"
-                >{b.blockLabel ?? b.name}</button>
+                  title="Block: {b.blockLabel ?? b.name}">{b.blockLabel ?? b.name}</button
+                >
               {/each}
             </span>
           {/if}
@@ -3322,23 +3769,34 @@
               disabled={autoScheduleBusy || clearBusy}
               title="Deterministic engine — places every unscheduled draft on visible blocks at the earliest soil-temp + frost-safe date, no AI call"
             >
-              {autoScheduleBusy ? 'Scheduling…' : `Auto-schedule ${filteredUnscheduled.length} draft${filteredUnscheduled.length === 1 ? '' : 's'}`}
+              {autoScheduleBusy
+                ? 'Scheduling…'
+                : `Auto-schedule ${filteredUnscheduled.length} draft${filteredUnscheduled.length === 1 ? '' : 's'}`}
             </button>
           {:else}
             <span class="action-counter">
               {swimSelection.size} selected
             </span>
             {#if swimSelection.size === 1}
-              <button type="button" class="action-btn action-btn-tight" onclick={commitSelectionEdit}>Edit</button>
+              <button
+                type="button"
+                class="action-btn action-btn-tight"
+                onclick={commitSelectionEdit}>Edit</button
+              >
               <button
                 type="button"
                 class="action-btn action-btn-tight"
                 onclick={commitSelectionSplit}
                 title="Split this planting into N stacked copies; drag each to its target date."
-              >Split…</button>
+                >Split…</button
+              >
             {/if}
             {#if groupableSwimSelection}
-              <button type="button" class="action-btn action-btn-primary action-btn-tight" onclick={commitSelectionGroup}>
+              <button
+                type="button"
+                class="action-btn action-btn-primary action-btn-tight"
+                onclick={commitSelectionGroup}
+              >
                 {groupableSwimSelection.hint === 'three-sisters' ? 'Group 3 Sisters' : 'Group'}
               </button>
             {/if}
@@ -3350,7 +3808,11 @@
             >
               Un-schedule
             </button>
-            <button type="button" class="action-btn action-btn-cancel action-btn-tight" onclick={clearSwimSelection}>
+            <button
+              type="button"
+              class="action-btn action-btn-cancel action-btn-tight"
+              onclick={clearSwimSelection}
+            >
               Cancel
             </button>
           {/if}
@@ -3459,7 +3921,10 @@
             systemKind={groupInspectorData.systemKind}
             members={groupInspectorData.members}
             tasks={groupInspectorData.tasks}
-            onClose={() => { openGroupId = null; groupInspectorData = null; }}
+            onClose={() => {
+              openGroupId = null;
+              groupInspectorData = null;
+            }}
             onDisband={handleDisbandGroup}
             onNudgeCompanion={handleNudgeCompanion}
           />
@@ -3505,10 +3970,14 @@
           const f: string[] = [];
           const counts = data.conflicts ?? null;
           if (counts && counts.sameTime && counts.sameTime.length > 0) {
-            f.push(`${counts.sameTime.length} same-time overlap${counts.sameTime.length === 1 ? '' : 's'} flagged on the swim-lane.`);
+            f.push(
+              `${counts.sameTime.length} same-time overlap${counts.sameTime.length === 1 ? '' : 's'} flagged on the swim-lane.`
+            );
           }
           if (counts && counts.rotation && counts.rotation.length > 0) {
-            f.push(`${counts.rotation.length} rotation conflict${counts.rotation.length === 1 ? '' : 's'} flagged.`);
+            f.push(
+              `${counts.rotation.length} rotation conflict${counts.rotation.length === 1 ? '' : 's'} flagged.`
+            );
           }
           return f;
         })()}
@@ -3522,7 +3991,12 @@
         <div class="bar-edit">
           <header class="bar-edit-head">
             <h3>Edit planting</h3>
-            <button type="button" class="close" onclick={() => (editCropId = null)} aria-label="Close">×</button>
+            <button
+              type="button"
+              class="close"
+              onclick={() => (editCropId = null)}
+              aria-label="Close">×</button
+            >
           </header>
           <div class="bar-edit-body">
             <label>
@@ -3550,11 +4024,7 @@
             </label>
             <label>
               Start date
-              <input
-                type="date"
-                bind:value={editForm.plantingDate}
-                disabled={editBusy}
-              />
+              <input type="date" bind:value={editForm.plantingDate} disabled={editBusy} />
             </label>
             <div class="qty-row">
               <label class="qty-amount">
@@ -3625,7 +4095,12 @@
             {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
           </div>
           <footer class="bar-edit-foot">
-            <button type="button" class="btn-secondary" onclick={() => (editCropId = null)} disabled={editBusy}>
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick={() => (editCropId = null)}
+              disabled={editBusy}
+            >
               Cancel
             </button>
             <button type="button" class="btn-primary" onclick={commitEdit} disabled={editBusy}>
@@ -3646,14 +4121,14 @@
               class="close"
               onclick={() => (splitTargetCropId = null)}
               aria-label="Close"
-              disabled={splitBusy}
-            >×</button>
+              disabled={splitBusy}>×</button
+            >
           </header>
           <div class="bar-edit-body">
             <p class="hint">
-              Creates {splitCount} stacked copies on the same date + block. Seeds divide evenly
-              across the splits (largest-remainder rounding). Drag each new bar to its target
-              date once the popup closes.
+              Creates {splitCount} stacked copies on the same date + block. Seeds divide evenly across
+              the splits (largest-remainder rounding). Drag each new bar to its target date once the popup
+              closes.
             </p>
             <label class="split-count">
               Parts (2–12)
@@ -3674,8 +4149,8 @@
               type="button"
               class="btn-secondary"
               onclick={() => (splitTargetCropId = null)}
-              disabled={splitBusy}
-            >Cancel</button>
+              disabled={splitBusy}>Cancel</button
+            >
             <button
               type="button"
               class="btn-primary"
@@ -3690,16 +4165,25 @@
     {/if}
 
     {#if deleteCropIds.length > 0}
-      <div class="bar-edit-backdrop" role="dialog" aria-modal="true" aria-label="Un-schedule plantings">
+      <div
+        class="bar-edit-backdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Un-schedule plantings"
+      >
         <div class="bar-edit">
           <header class="bar-edit-head">
-            <h3>Un-schedule {deleteCropIds.length} planting{deleteCropIds.length === 1 ? '' : 's'}?</h3>
+            <h3>
+              Un-schedule {deleteCropIds.length} planting{deleteCropIds.length === 1 ? '' : 's'}?
+            </h3>
           </header>
           <div class="bar-edit-body">
             <p>
-              Pulls the selected planting{deleteCropIds.length === 1 ? '' : 's'} off the schedule
-              (clears the date, disbands any group binding, removes materialized tasks).
-              The crop record{deleteCropIds.length === 1 ? '' : 's'} stay{deleteCropIds.length === 1 ? 's' : ''}
+              Pulls the selected planting{deleteCropIds.length === 1 ? '' : 's'} off the schedule (clears
+              the date, disbands any group binding, removes materialized tasks). The crop record{deleteCropIds.length ===
+              1
+                ? ''
+                : 's'} stay{deleteCropIds.length === 1 ? 's' : ''}
               attached to {deleteCropIds.length === 1 ? 'its' : 'their'} block as a draft.
             </p>
             <ul class="delete-list">
@@ -3711,7 +4195,12 @@
             <p class="hint">To permanently delete a crop, use the Crops tab.</p>
           </div>
           <footer class="bar-edit-foot">
-            <button type="button" class="btn-secondary" onclick={() => (deleteCropIds = [])} disabled={deleteBusy}>
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick={() => (deleteCropIds = [])}
+              disabled={deleteBusy}
+            >
               Cancel
             </button>
             <button type="button" class="btn-primary" onclick={commitDelete} disabled={deleteBusy}>
@@ -3723,10 +4212,10 @@
     {/if}
 
     <p class="shade-footnote">
-      <strong>Shade model:</strong> simplified for v1 — morning shadow → west neighbor, afternoon shadow → east neighbor; north-south impact ignored. Proper sun-path math is deferred.
+      <strong>Shade model:</strong> simplified for v1 — morning shadow → west neighbor, afternoon shadow
+      → east neighbor; north-south impact ignored. Proper sun-path math is deferred.
     </p>
   {/if}
-
 {/if}
 
 <!-- Equipment tab removed from /plan — equipment management still lives at /equipment in the top nav. -->
@@ -3746,16 +4235,16 @@
               class="chip-mini"
               class:active={!data.filterFieldId}
               onclick={() => changeCalendarFilter('', data.filterBlockId ?? '')}
-              title="Show all fields"
-            >All</button>
+              title="Show all fields">All</button
+            >
             {#each data.fields as f (f.id)}
               <button
                 type="button"
                 class="chip-mini"
                 class:active={data.filterFieldId === f.id}
                 onclick={() => changeCalendarFilter(f.id, '')}
-                title="Field: {f.name}"
-              >{f.name}</button>
+                title="Field: {f.name}">{f.name}</button
+              >
             {/each}
           </span>
         </span>
@@ -3877,16 +4366,24 @@
         {#if wCropId && wMeta()}
           {@const m = wMeta()!}
           <dl class="wizard-meta">
-            {#if m.daysToMaturity}<dt>Days to maturity</dt><dd>{m.daysToMaturity.min}–{m.daysToMaturity.max} d</dd>{/if}
-            {#if m.preHarvestIntervalDays}<dt>Pre-harvest interval</dt><dd>{m.preHarvestIntervalDays} d</dd>{/if}
-            {#if m.soilTempMinF !== undefined}<dt>Min soil temp</dt><dd>{m.soilTempMinF}°F</dd>{/if}
+            {#if m.daysToMaturity}<dt>Days to maturity</dt>
+              <dd>{m.daysToMaturity.min}–{m.daysToMaturity.max} d</dd>{/if}
+            {#if m.preHarvestIntervalDays}<dt>Pre-harvest interval</dt>
+              <dd>{m.preHarvestIntervalDays} d</dd>{/if}
+            {#if m.soilTempMinF !== undefined}<dt>Min soil temp</dt>
+              <dd>{m.soilTempMinF}°F</dd>{/if}
           </dl>
         {/if}
         <div class="actions">
-          <button class="primary" disabled={!wCropId || !wMeta()?.daysToMaturity} onclick={() => { wizardStep = 'block'; }}>Next →</button>
+          <button
+            class="primary"
+            disabled={!wCropId || !wMeta()?.daysToMaturity}
+            onclick={() => {
+              wizardStep = 'block';
+            }}>Next →</button
+          >
           <button onclick={resetWizard}>Cancel</button>
         </div>
-
       {:else if wizardStep === 'block'}
         <h2 id="wizard-title">Generate Plan — Select Block</h2>
         <label class="wizard-label">
@@ -3900,10 +4397,19 @@
           </select>
         </label>
         <div class="actions">
-          <button class="primary" disabled={!wBlockId} onclick={() => { wizardStep = 'mode'; }}>Next →</button>
-          <button onclick={() => { wizardStep = 'crop'; }}>← Back</button>
+          <button
+            class="primary"
+            disabled={!wBlockId}
+            onclick={() => {
+              wizardStep = 'mode';
+            }}>Next →</button
+          >
+          <button
+            onclick={() => {
+              wizardStep = 'crop';
+            }}>← Back</button
+          >
         </div>
-
       {:else if wizardStep === 'mode'}
         <h2 id="wizard-title">Generate Plan — Planning Mode</h2>
         <div class="mode-options">
@@ -3929,35 +4435,57 @@
           </label>
         </div>
         <div class="actions">
-          <button class="primary" onclick={() => { wizardStep = 'params'; }}>Next →</button>
-          <button onclick={() => { wizardStep = 'block'; }}>← Back</button>
+          <button
+            class="primary"
+            onclick={() => {
+              wizardStep = 'params';
+            }}>Next →</button
+          >
+          <button
+            onclick={() => {
+              wizardStep = 'block';
+            }}>← Back</button
+          >
         </div>
-
       {:else if wizardStep === 'params'}
         <h2 id="wizard-title">Generate Plan — Parameters</h2>
         {#if wMode === 'plant-on-date'}
-          <label class="wizard-label">Planting date<input type="date" bind:value={wPlantDate} /></label>
+          <label class="wizard-label"
+            >Planting date<input type="date" bind:value={wPlantDate} /></label
+          >
         {:else if wMode === 'harvest-by-date'}
-          <label class="wizard-label">Target harvest date<input type="date" bind:value={wHarvestDate} /></label>
+          <label class="wizard-label"
+            >Target harvest date<input type="date" bind:value={wHarvestDate} /></label
+          >
         {:else if wMode === 'staggered'}
-          <label class="wizard-label">First harvest date<input type="date" bind:value={wHarvestDate} /></label>
+          <label class="wizard-label"
+            >First harvest date<input type="date" bind:value={wHarvestDate} /></label
+          >
           <div class="param-row">
-            <label class="wizard-label">Successions<input type="number" min="2" max="10" bind:value={wStaggerCount} /></label>
-            <label class="wizard-label">Days apart<input type="number" min="7" max="90" bind:value={wIntervalDays} /></label>
+            <label class="wizard-label"
+              >Successions<input type="number" min="2" max="10" bind:value={wStaggerCount} /></label
+            >
+            <label class="wizard-label"
+              >Days apart<input type="number" min="7" max="90" bind:value={wIntervalDays} /></label
+            >
           </div>
         {:else if wMode === 'season-fill'}
-          <p class="wizard-hint">Frost window: Apr 15 – Oct 15 (Loudoun County, VA). Successions computed automatically.</p>
+          <p class="wizard-hint">
+            Frost window: Apr 15 – Oct 15 (Loudoun County, VA). Successions computed automatically.
+          </p>
         {/if}
         <details class="wizard-advanced">
           <summary>Advanced options</summary>
-          <label class="wizard-label" style="margin-top:0.5rem">PHI enforcement
+          <label class="wizard-label" style="margin-top:0.5rem"
+            >PHI enforcement
             <select bind:value={wPhiMode}>
               <option value="strict">Strict (plugin PHI only)</option>
               <option value="conservative">Conservative (PHI + 7 day buffer)</option>
             </select>
           </label>
           {#if wMode === 'staggered' && wStaggerCount > 1}
-            <label class="wizard-label">Block assignment
+            <label class="wizard-label"
+              >Block assignment
               <select bind:value={wBlockAssign}>
                 <option value="single">All to selected block</option>
                 <option value="round-robin">Round-robin across all blocks</option>
@@ -3965,25 +4493,52 @@
             </label>
           {/if}
         </details>
-        {@const canPreview = (wMode === 'plant-on-date' && !!wPlantDate) || (wMode === 'harvest-by-date' && !!wHarvestDate) || (wMode === 'staggered' && !!wHarvestDate) || wMode === 'season-fill'}
+        {@const canPreview =
+          (wMode === 'plant-on-date' && !!wPlantDate) ||
+          (wMode === 'harvest-by-date' && !!wHarvestDate) ||
+          (wMode === 'staggered' && !!wHarvestDate) ||
+          wMode === 'season-fill'}
         <div class="actions">
-          <button class="primary" disabled={!canPreview} onclick={() => { wizardStep = 'preview'; }}>Preview →</button>
-          <button onclick={() => { wizardStep = 'mode'; }}>← Back</button>
+          <button
+            class="primary"
+            disabled={!canPreview}
+            onclick={() => {
+              wizardStep = 'preview';
+            }}>Preview →</button
+          >
+          <button
+            onclick={() => {
+              wizardStep = 'mode';
+            }}>← Back</button
+          >
         </div>
-
       {:else if wizardStep === 'preview'}
         <h2 id="wizard-title">Generate Plan — Preview</h2>
         {#if wPreviewRows.length === 0}
           <p class="wizard-hint">No successions could be computed. Check your crop and dates.</p>
         {:else}
-          <p class="wizard-hint">{wPreviewRows.length} succession{wPreviewRows.length === 1 ? '' : 's'} planned.</p>
+          <p class="wizard-hint">
+            {wPreviewRows.length} succession{wPreviewRows.length === 1 ? '' : 's'} planned.
+          </p>
           <div class="preview-rows">
             {#each wPreviewRows as row, i (i)}
               <div class="preview-card" class:has-conflict={row.phiConflict || row.soilTooEarly}>
                 <div class="preview-card-header">
                   <strong>Succession {i + 1}</strong>
-                  <span class="sched-chip chip-plant">Plant {new Date(row.plantingDateMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                  <span class="sched-chip chip-harvest">Harvest by {new Date(row.targetHarvestMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  <span class="sched-chip chip-plant"
+                    >Plant {new Date(row.plantingDateMs).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}</span
+                  >
+                  <span class="sched-chip chip-harvest"
+                    >Harvest by {new Date(row.targetHarvestMs).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}</span
+                  >
                   {#if row.phiConflict}<span class="phi-badge">⚠ PHI conflict</span>{/if}
                   {#if row.soilTooEarly}<span class="warn">⚠ Soil may be cold</span>{/if}
                 </div>
@@ -3991,7 +4546,15 @@
                   <ul class="prep-list compact">
                     {#each row.prepActivities as act (act.title)}
                       <li class="prep-item">
-                        <span class="prep-dates">{new Date(act.startMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}–{new Date(act.endMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <span class="prep-dates"
+                          >{new Date(act.startMs).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}–{new Date(act.endMs).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}</span
+                        >
                         <span class="prep-title">{act.title}</span>
                       </li>
                     {/each}
@@ -4002,7 +4565,15 @@
                     {#each sprayWindows(row.engineEvents) as s (s.startMs)}
                       <li class="sched-event">
                         <span class="sched-dot spray-window"></span>
-                        <span>{s.title}: {new Date(s.startMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}–{new Date(s.endMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <span
+                          >{s.title}: {new Date(s.startMs).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}–{new Date(s.endMs).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                          })}</span
+                        >
                       </li>
                     {/each}
                   </ul>
@@ -4012,11 +4583,16 @@
           </div>
         {/if}
         <div class="actions">
-          <button class="primary" disabled={wPreviewRows.length === 0} onclick={commitPlan}>Commit {wPreviewRows.length} planting{wPreviewRows.length === 1 ? '' : 's'}</button>
-          <button onclick={() => { wizardStep = 'params'; }}>← Back</button>
+          <button class="primary" disabled={wPreviewRows.length === 0} onclick={commitPlan}
+            >Commit {wPreviewRows.length} planting{wPreviewRows.length === 1 ? '' : 's'}</button
+          >
+          <button
+            onclick={() => {
+              wizardStep = 'params';
+            }}>← Back</button
+          >
           <button onclick={resetWizard}>Cancel</button>
         </div>
-
       {:else if wizardStep === 'committing'}
         <h2 id="wizard-title">Committing…</h2>
         {#if wBusy}<p class="wizard-hint">Saving plantings…</p>{/if}
@@ -4025,23 +4601,31 @@
             <li class={r.ok ? 'result-ok' : 'result-warn'}>
               {r.ok ? '✓' : '✗'}
               {data.blocks.find((b) => b.id === r.blockId)?.name ?? r.blockId}
-              — Plant {new Date(r.plantMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              — Plant {new Date(r.plantMs).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              })}
               {#if !r.ok && r.error}<span class="error"> ({r.error})</span>{/if}
             </li>
           {/each}
         </ul>
-
       {:else if wizardStep === 'done'}
         <h2 id="wizard-title">Plan Committed</h2>
         <p class="wizard-hint">
-          {wCommitResults.filter((r) => r.ok).length} of {wCommitResults.length} planting{wCommitResults.length === 1 ? '' : 's'} saved.
+          {wCommitResults.filter((r) => r.ok).length} of {wCommitResults.length} planting{wCommitResults.length ===
+          1
+            ? ''
+            : 's'} saved.
         </p>
         <ul class="commit-results">
           {#each wCommitResults as r, i (i)}
             <li class={r.ok ? 'result-ok' : 'result-warn'}>
               {r.ok ? '✓' : '✗'}
               {data.blocks.find((b) => b.id === r.blockId)?.name ?? r.blockId}
-              — Plant {new Date(r.plantMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              — Plant {new Date(r.plantMs).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+              })}
               {#if !r.ok && r.error}<span class="error"> ({r.error})</span>{/if}
             </li>
           {/each}
@@ -4369,7 +4953,9 @@
   }
 
   /* Layout tab — field-grouped block list */
-  .field-group { margin-bottom: 0.5rem; }
+  .field-group {
+    margin-bottom: 0.5rem;
+  }
 
   .field-row {
     display: flex;
@@ -4387,10 +4973,26 @@
     border-left-color: #2563eb;
     box-shadow: inset 0 0 0 2px #2563eb;
   }
-  .field-icon { font-size: 0.95rem; line-height: 1; }
-  .field-name { color: #1f5e3a; font-size: 0.95rem; line-height: 1.15; }
-  .field-stats { color: #4a7c5e; font-size: 0.8rem; flex: 1; line-height: 1.15; }
-  .field-notes { margin: 0.15rem 0.6rem 0.3rem 2rem; color: #666; font-size: 0.8rem; }
+  .field-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .field-name {
+    color: #1f5e3a;
+    font-size: 0.95rem;
+    line-height: 1.15;
+  }
+  .field-stats {
+    color: #4a7c5e;
+    font-size: 0.8rem;
+    flex: 1;
+    line-height: 1.15;
+  }
+  .field-notes {
+    margin: 0.15rem 0.6rem 0.3rem 2rem;
+    color: #666;
+    font-size: 0.8rem;
+  }
 
   .row-action {
     background: none;
@@ -4403,8 +5005,12 @@
     min-width: 26px;
     color: #555;
   }
-  .row-action:hover { background: rgba(0,0,0,0.06); }
-  .row-action.danger { color: #b00020; }
+  .row-action:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+  .row-action.danger {
+    color: #b00020;
+  }
 
   .inline-edit {
     background: #f7faf7;
@@ -4413,7 +5019,10 @@
     padding: 0.75rem;
     margin: 0.25rem 0 0.5rem;
   }
-  .inline-edit-row { list-style: none; padding: 0; }
+  .inline-edit-row {
+    list-style: none;
+    padding: 0;
+  }
 
   .add-block-inline {
     display: flex;
@@ -4422,13 +5031,32 @@
     padding: 0.3rem 0.6rem 0.4rem 1.5rem;
     border-top: 1px dashed #d0e8d4;
   }
-  .add-block-inline input[type='text'] { flex: 1; min-width: 0; }
-  .add-block-inline .acres-input { width: 5rem; }
-  .small { padding: 0.4rem 0.7rem; font-size: 0.85rem; min-height: 36px; }
+  .add-block-inline input[type='text'] {
+    flex: 1;
+    min-width: 0;
+  }
+  .add-block-inline .acres-input {
+    width: 5rem;
+  }
+  .small {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+    min-height: 36px;
+  }
 
-  .add-forms { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-  @media (max-width: 600px) { .add-forms { grid-template-columns: 1fr; } }
-  .add-form-section { margin: 0.5rem 0; }
+  .add-forms {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  @media (max-width: 600px) {
+    .add-forms {
+      grid-template-columns: 1fr;
+    }
+  }
+  .add-form-section {
+    margin: 0.5rem 0;
+  }
 
   .block-row {
     display: flex;
@@ -4443,9 +5071,16 @@
     margin-left: 0.5rem;
     font-size: 0.85rem;
   }
-  .layout-block-row { cursor: grab; user-select: none; }
-  .layout-block-row:active { cursor: grabbing; }
-  .layout-block-row.dragging { opacity: 0.4; }
+  .layout-block-row {
+    cursor: grab;
+    user-select: none;
+  }
+  .layout-block-row:active {
+    cursor: grabbing;
+  }
+  .layout-block-row.dragging {
+    opacity: 0.4;
+  }
   .layout-block-row.drop-target {
     background: #dbeafe;
     box-shadow: inset 3px 0 0 #2563eb;
@@ -4473,10 +5108,24 @@
     align-items: center;
     gap: 0.4rem;
   }
-  .block-icon { color: #888; font-size: 0.75rem; }
-  .block-name { font-weight: 500; font-size: 0.9rem; color: #333; }
-  .block-stats { color: #666; font-size: 0.82rem; flex: 1; }
-  .block-acres { color: #666; font-size: 0.82rem; }
+  .block-icon {
+    color: #888;
+    font-size: 0.75rem;
+  }
+  .block-name {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #333;
+  }
+  .block-stats {
+    color: #666;
+    font-size: 0.82rem;
+    flex: 1;
+  }
+  .block-acres {
+    color: #666;
+    font-size: 0.82rem;
+  }
 
   .plantings-tip {
     position: relative;
@@ -4501,7 +5150,9 @@
     line-height: 1.5;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
-  .plantings-tip:hover::after { opacity: 1; }
+  .plantings-tip:hover::after {
+    opacity: 1;
+  }
   .ov-planting-list {
     list-style: none;
     padding: 0;
@@ -4515,8 +5166,14 @@
     align-items: baseline;
     gap: 0.4rem;
   }
-  .ov-crop-name { font-size: 0.82rem; color: #2d5a3d; }
-  .ov-crop-date { font-size: 0.78rem; color: #6a8a75; }
+  .ov-crop-name {
+    font-size: 0.82rem;
+    color: #2d5a3d;
+  }
+  .ov-crop-date {
+    font-size: 0.78rem;
+    color: #6a8a75;
+  }
   .not-drawn {
     display: inline-block;
     background: #fff3cd;
@@ -4534,9 +5191,18 @@
     padding: 0.1rem 0.45rem;
     border-radius: 10px;
   }
-  .geo-badge-field { background: #c8e6c9; color: #1a5c2e; }
-  .geo-badge-none  { background: #f0f0f0; color: #777; }
-  .no-geo { color: #999; font-style: italic; }
+  .geo-badge-field {
+    background: #c8e6c9;
+    color: #1a5c2e;
+  }
+  .geo-badge-none {
+    background: #f0f0f0;
+    color: #777;
+  }
+  .no-geo {
+    color: #999;
+    font-style: italic;
+  }
   .empty-row-indent {
     margin: 0.25rem 0 0.5rem 0.75rem;
     color: #777;
@@ -4563,8 +5229,14 @@
     color: #2e7d32;
     font-weight: 600;
   }
-  .example-collapse { margin: 0.5rem 0; }
-  .example-collapse > summary { cursor: pointer; font-size: 0.85rem; color: #555; }
+  .example-collapse {
+    margin: 0.5rem 0;
+  }
+  .example-collapse > summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #555;
+  }
   .geojson-example {
     background: #f5f5f5;
     border: 1px solid #ddd;
@@ -4580,14 +5252,22 @@
     font-size: 0.875rem;
     margin-top: 0.75rem;
   }
-  .paste-results th, .paste-results td {
+  .paste-results th,
+  .paste-results td {
     text-align: left;
     padding: 0.3rem 0.5rem;
     border-bottom: 1px solid #eee;
   }
-  .paste-results th { font-weight: 600; background: #f5f5f5; }
-  .result-ok td { color: #1a5c2e; }
-  .result-warn td { color: #8a4800; }
+  .paste-results th {
+    font-weight: 600;
+    background: #f5f5f5;
+  }
+  .result-ok td {
+    color: #1a5c2e;
+  }
+  .result-warn td {
+    color: #8a4800;
+  }
   .input-hint {
     display: block;
     font-size: 0.8rem;
@@ -4596,14 +5276,18 @@
   }
 
   /* Crops tab */
-  .crops-card { padding-bottom: 0.25rem; }
+  .crops-card {
+    padding-bottom: 0.25rem;
+  }
 
   .crop-block {
     border-top: 1.5px solid #ddeee1;
     border-left: 3px solid #b8d9c0;
     margin-left: 0.5rem;
   }
-  .crop-block.dragging { opacity: 0.4; }
+  .crop-block.dragging {
+    opacity: 0.4;
+  }
   .crop-block.drop-target {
     background: #f0f7ff;
     box-shadow: inset 0 3px 0 #2563eb;
@@ -4620,8 +5304,12 @@
     cursor: grab;
     user-select: none;
   }
-  .crop-item:active { cursor: grabbing; }
-  .crop-item.dragging { opacity: 0.4; }
+  .crop-item:active {
+    cursor: grabbing;
+  }
+  .crop-item.dragging {
+    opacity: 0.4;
+  }
   .crop-item .crop-item-row .grip {
     color: #cbd5cb;
     font-weight: 700;
@@ -4634,7 +5322,10 @@
     align-items: flex-start;
     gap: 1rem;
   }
-  .crops-tab-layout > .crops-card { flex: 1; min-width: 0; }
+  .crops-tab-layout > .crops-card {
+    flex: 1;
+    min-width: 0;
+  }
   .crops-seed-rail {
     width: 240px;
     flex-shrink: 0;
@@ -4669,8 +5360,15 @@
     align-items: center;
     gap: 0.4rem;
   }
-  .crops-seed-rail h3 .count { color: #6b7280; font-weight: 400; font-size: 0.75rem; }
-  .seed-rail-empty { font-size: 0.8rem; color: #9ca3af; }
+  .crops-seed-rail h3 .count {
+    color: #6b7280;
+    font-weight: 400;
+    font-size: 0.75rem;
+  }
+  .seed-rail-empty {
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
   .ai-allocate-btn {
     display: block;
     width: 100%;
@@ -4685,8 +5383,12 @@
     cursor: pointer;
     text-align: center;
   }
-  .ai-allocate-btn:hover { background: #1a4f31; }
-  .seed-family { margin-bottom: 0.5rem; }
+  .ai-allocate-btn:hover {
+    background: #1a4f31;
+  }
+  .seed-family {
+    margin-bottom: 0.5rem;
+  }
   .seed-family-head {
     display: flex;
     align-items: center;
@@ -4696,8 +5398,18 @@
     text-transform: capitalize;
     padding: 0.2rem 0;
   }
-  .seed-family-head .count { color: #9ca3af; font-size: 0.7rem; }
-  .seed-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+  .seed-family-head .count {
+    color: #9ca3af;
+    font-size: 0.7rem;
+  }
+  .seed-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
   .seed-card {
     border: 1px solid #cbd5cb;
     border-left: 4px solid #1f5e3a;
@@ -4713,14 +5425,42 @@
     min-height: 48px;
     text-align: left;
   }
-  .seed-card:active { cursor: grabbing; }
-  .seed-card.disabled { opacity: 0.5; cursor: not-allowed; background: #f3f4f6; border-left-color: #9ca3af; }
-  .seed-card.empty { opacity: 0.45; background: #f3f4f6; border-left-color: #d1d5db; color: #6b7280; }
-  .seed-card .seed-name { font-size: 0.85rem; font-weight: 500; align-self: stretch; text-align: left; }
-  .seed-card .seed-meta { font-size: 0.7rem; color: #6b7280; align-self: stretch; text-align: left; }
+  .seed-card:active {
+    cursor: grabbing;
+  }
+  .seed-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f3f4f6;
+    border-left-color: #9ca3af;
+  }
+  .seed-card.empty {
+    opacity: 0.45;
+    background: #f3f4f6;
+    border-left-color: #d1d5db;
+    color: #6b7280;
+  }
+  .seed-card .seed-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    align-self: stretch;
+    text-align: left;
+  }
+  .seed-card .seed-meta {
+    font-size: 0.7rem;
+    color: #6b7280;
+    align-self: stretch;
+    text-align: left;
+  }
   @media (max-width: 720px) {
-    .crops-tab-layout { flex-direction: column; }
-    .crops-seed-rail { width: 100%; position: static; max-height: 320px; }
+    .crops-tab-layout {
+      flex-direction: column;
+    }
+    .crops-seed-rail {
+      width: 100%;
+      position: static;
+      max-height: 320px;
+    }
   }
   .crop-block .block-row {
     border-top: none;
@@ -4728,7 +5468,9 @@
     cursor: grab;
     user-select: none;
   }
-  .crop-block .block-row:active { cursor: grabbing; }
+  .crop-block .block-row:active {
+    cursor: grabbing;
+  }
   .crop-block .block-row .grip {
     color: #94a3b8;
     font-weight: 700;
@@ -4744,8 +5486,14 @@
     min-width: unset;
   }
 
-  .crop-list { list-style: none; padding: 0; margin: 0; }
-  .crop-item { border-top: 1.5px solid #ddeee1; }
+  .crop-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .crop-item {
+    border-top: 1.5px solid #ddeee1;
+  }
   .crop-item-row {
     display: flex;
     align-items: center;
@@ -4753,8 +5501,18 @@
     padding: 0.15rem 0.5rem 0.15rem 0.75rem;
     min-height: 28px;
   }
-  .crop-name-group { display: flex; align-items: center; gap: 0.3rem; flex: 1; min-width: 0; }
-  .crop-family-emoji { font-size: 0.9rem; line-height: 1; flex-shrink: 0; }
+  .crop-name-group {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .crop-family-emoji {
+    font-size: 0.9rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
   .crop-qty {
     font-size: 0.72rem;
     color: #4a5d4a;
@@ -4764,9 +5522,27 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .crop-name { color: #1f5e3a; text-decoration: none; font-size: 0.88rem; font-weight: 600; min-width: 0; min-height: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.3; }
-  .crop-name:hover { text-decoration: underline; }
-  .crop-date { color: #999; font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
+  .crop-name {
+    color: #1f5e3a;
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.3;
+  }
+  .crop-name:hover {
+    text-decoration: underline;
+  }
+  .crop-date {
+    color: #999;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 
   .livestock-placeholder {
     border-left: 4px solid #a0724a;
@@ -4778,8 +5554,14 @@
     gap: 0.5rem;
     margin-bottom: 0.5rem;
   }
-  .livestock-icon { font-size: 1.3rem; }
-  .livestock-title { margin: 0; font-size: 1rem; color: #6b4c2a; }
+  .livestock-icon {
+    font-size: 1.3rem;
+  }
+  .livestock-title {
+    margin: 0;
+    font-size: 1rem;
+    color: #6b4c2a;
+  }
   .coming-soon-badge {
     background: #f0e4d4;
     color: #8a5a30;
@@ -4834,8 +5616,14 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     text-align: left;
   }
-  .guide-tip:hover::after { opacity: 1; }
-  .guide-tip.open { color: #1f5e3a; border-bottom-color: #1f5e3a; font-weight: 600; }
+  .guide-tip:hover::after {
+    opacity: 1;
+  }
+  .guide-tip.open {
+    color: #1f5e3a;
+    border-bottom-color: #1f5e3a;
+    font-weight: 600;
+  }
   .guide-dl {
     display: grid;
     grid-template-columns: max-content 1fr;
@@ -4844,8 +5632,14 @@
     font-size: 0.78rem;
     padding: 0.2rem 0;
   }
-  .guide-dl dt { color: #888; }
-  .guide-dl dd { margin: 0; color: #1f5e3a; font-weight: 600; }
+  .guide-dl dt {
+    color: #888;
+  }
+  .guide-dl dd {
+    margin: 0;
+    color: #1f5e3a;
+    font-weight: 600;
+  }
 
   /* Equipment tab */
   .crop-header {
@@ -5356,8 +6150,18 @@
     align-items: flex-start;
     gap: 0.15rem;
   }
-  .stat-num { font-size: 1.75rem; font-weight: 700; color: #1f5e3a; line-height: 1; }
-  .stat-label { font-size: 0.75rem; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-num {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1f5e3a;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
 
   /* Schedule tab */
   .schedule-header-card .schedule-action-row {
@@ -5450,26 +6254,34 @@
     font-size: 0.82rem;
     min-height: 32px;
   }
-  .action-btn:hover { background: #eef2ff; }
+  .action-btn:hover {
+    background: #eef2ff;
+  }
   .action-btn-primary {
     background: #4338ca;
     border-color: #312e81;
     color: #fff;
   }
-  .action-btn-primary:hover { background: #312e81; }
+  .action-btn-primary:hover {
+    background: #312e81;
+  }
   .action-btn-danger {
     background: #fff;
     border-color: #fecaca;
     color: #b91c1c;
   }
-  .action-btn-danger:hover { background: #fee2e2; }
+  .action-btn-danger:hover {
+    background: #fee2e2;
+  }
   .action-btn-cancel {
     background: transparent;
     border-color: #cbd5e1;
     color: #475569;
     font-weight: 500;
   }
-  .action-spacer { flex: 1 1 auto; }
+  .action-spacer {
+    flex: 1 1 auto;
+  }
   .action-link {
     background: transparent;
     border: none;
@@ -5481,8 +6293,14 @@
     padding: 0.25rem 0.5rem;
     min-height: 28px;
   }
-  .action-link:hover { color: #b91c1c; }
-  .action-link:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: none; }
+  .action-link:hover {
+    color: #b91c1c;
+  }
+  .action-link:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
   .auto-run-banner {
     margin-top: 0.5rem;
     padding: 0.45rem 0.7rem;
@@ -5528,7 +6346,9 @@
     cursor: pointer;
     min-height: 22px;
   }
-  .chip-mini:hover { background: #f1f5f9; }
+  .chip-mini:hover {
+    background: #f1f5f9;
+  }
   .chip-mini.active {
     background: #4338ca;
     border-color: #312e81;
@@ -5552,7 +6372,11 @@
     padding: 0.2rem 0;
     margin-bottom: 0.25rem;
   }
-  .sched-block-name { font-weight: 600; font-size: 0.9rem; color: #333; }
+  .sched-block-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+  }
   .tillage-badge {
     font-size: 0.68rem;
     font-weight: 700;
@@ -5561,19 +6385,38 @@
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
-  .tillage-conventional { background: #e3f2fd; color: #0d4780; }
-  .tillage-reduced-till { background: #fff3e0; color: #7c4400; }
-  .tillage-no-till      { background: #e8f5e9; color: #1b5e20; }
+  .tillage-conventional {
+    background: #e3f2fd;
+    color: #0d4780;
+  }
+  .tillage-reduced-till {
+    background: #fff3e0;
+    color: #7c4400;
+  }
+  .tillage-no-till {
+    background: #e8f5e9;
+    color: #1b5e20;
+  }
 
-  .sched-planting { padding: 0.3rem 0 0.3rem 0.75rem; border-top: 1.5px solid #ddeee1; }
+  .sched-planting {
+    padding: 0.3rem 0 0.3rem 0.75rem;
+    border-top: 1.5px solid #ddeee1;
+  }
   .sched-planting-row {
     display: flex;
     align-items: center;
     gap: 0.35rem;
     flex-wrap: wrap;
   }
-  .sched-crop-name { color: #1f5e3a; text-decoration: none; font-weight: 600; font-size: 0.88rem; }
-  .sched-crop-name:hover { text-decoration: underline; }
+  .sched-crop-name {
+    color: #1f5e3a;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.88rem;
+  }
+  .sched-crop-name:hover {
+    text-decoration: underline;
+  }
   .sched-chip {
     font-size: 0.72rem;
     font-weight: 600;
@@ -5581,8 +6424,14 @@
     border-radius: 8px;
     white-space: nowrap;
   }
-  .chip-plant   { background: #e8f5e9; color: #1b5e20; }
-  .chip-harvest { background: #fce4ec; color: #880e4f; }
+  .chip-plant {
+    background: #e8f5e9;
+    color: #1b5e20;
+  }
+  .chip-harvest {
+    background: #fce4ec;
+    color: #880e4f;
+  }
   .phi-badge {
     background: #fff3cd;
     color: #7c4400;
@@ -5611,10 +6460,14 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
-  .sched-dot.spray-window { background: #b35900; }
+  .sched-dot.spray-window {
+    background: #b35900;
+  }
 
   /* Plan wizard */
-  .wizard-modal { max-width: 600px; }
+  .wizard-modal {
+    max-width: 600px;
+  }
   .wizard-modal .wizard-label {
     display: flex;
     flex-direction: column;
@@ -5643,10 +6496,21 @@
     font-size: 0.85rem;
     margin: 0.75rem 0;
   }
-  .wizard-meta dt { color: #888; }
-  .wizard-meta dd { margin: 0; color: #1f5e3a; font-weight: 600; }
+  .wizard-meta dt {
+    color: #888;
+  }
+  .wizard-meta dd {
+    margin: 0;
+    color: #1f5e3a;
+    font-weight: 600;
+  }
 
-  .mode-options { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1rem; }
+  .mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+  }
   .mode-option {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -5658,19 +6522,49 @@
     border: 2px solid #d0d7d0;
     cursor: pointer;
   }
-  .mode-option.selected { border-color: #1f5e3a; background: #f8fbf9; }
-  .mode-option input[type='radio'] { grid-row: 1 / 3; align-self: center; width: 18px; height: 18px; }
-  .mode-option strong { font-size: 0.9rem; color: #222; }
-  .mode-option span   { font-size: 0.8rem; color: #666; }
+  .mode-option.selected {
+    border-color: #1f5e3a;
+    background: #f8fbf9;
+  }
+  .mode-option input[type='radio'] {
+    grid-row: 1 / 3;
+    align-self: center;
+    width: 18px;
+    height: 18px;
+  }
+  .mode-option strong {
+    font-size: 0.9rem;
+    color: #222;
+  }
+  .mode-option span {
+    font-size: 0.8rem;
+    color: #666;
+  }
 
-  .param-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-  .param-row .wizard-label { flex: 1; min-width: 120px; }
-  .wizard-hint { color: #555; font-size: 0.88rem; margin: 0.5rem 0 1rem; }
+  .param-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .param-row .wizard-label {
+    flex: 1;
+    min-width: 120px;
+  }
+  .wizard-hint {
+    color: #555;
+    font-size: 0.88rem;
+    margin: 0.5rem 0 1rem;
+  }
   .wizard-advanced {
     margin: 0.5rem 0 1rem;
     font-size: 0.85rem;
   }
-  .wizard-advanced > summary { cursor: pointer; color: #555; padding: 0.25rem 0; list-style: revert; }
+  .wizard-advanced > summary {
+    cursor: pointer;
+    color: #555;
+    padding: 0.25rem 0;
+    list-style: revert;
+  }
 
   .preview-rows {
     display: flex;
@@ -5686,7 +6580,10 @@
     padding: 0.6rem 0.75rem;
     background: #fafffe;
   }
-  .preview-card.has-conflict { border-color: #f5c518; background: #fffef5; }
+  .preview-card.has-conflict {
+    border-color: #f5c518;
+    background: #fffef5;
+  }
   .preview-card-header {
     display: flex;
     align-items: center;
@@ -5694,7 +6591,9 @@
     gap: 0.35rem;
     margin-bottom: 0.35rem;
   }
-  .preview-card-header strong { font-size: 0.85rem; }
+  .preview-card-header strong {
+    font-size: 0.85rem;
+  }
 
   .commit-results {
     list-style: none;
@@ -5702,9 +6601,16 @@
     margin: 0.5rem 0;
     font-size: 0.9rem;
   }
-  .commit-results li { padding: 0.3rem 0; border-top: 1px solid #eee; }
-  .commit-results .result-ok   { color: #1a5c2e; }
-  .commit-results .result-warn { color: #8a4800; }
+  .commit-results li {
+    padding: 0.3rem 0;
+    border-top: 1px solid #eee;
+  }
+  .commit-results .result-ok {
+    color: #1a5c2e;
+  }
+  .commit-results .result-warn {
+    color: #8a4800;
+  }
 
   /* Phase 14 swim-lane layout */
   .swim-grid {
@@ -5798,14 +6704,20 @@
     border-radius: 4px;
     font-size: 0.8rem;
   }
-  .pending-row.unplaced { border-left-color: #d97706; background: #fef3c7; }
+  .pending-row.unplaced {
+    border-left-color: #d97706;
+    background: #fef3c7;
+  }
   .pending-head {
     display: flex;
     align-items: center;
     gap: 0.4rem;
     flex-wrap: wrap;
   }
-  .pending-qty { color: #6b7280; font-size: 0.7rem; }
+  .pending-qty {
+    color: #6b7280;
+    font-size: 0.7rem;
+  }
   .pending-remove {
     margin-left: auto;
     background: none;
@@ -5842,7 +6754,10 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .commit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .commit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
   /* Phase 15c — bar edit + delete modals. */
   .bar-edit-backdrop {
     position: fixed;
@@ -5868,7 +6783,10 @@
     padding: 0.7rem 1rem;
     border-bottom: 1px solid #e5e7eb;
   }
-  .bar-edit-head h3 { margin: 0; font-size: 1rem; }
+  .bar-edit-head h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
   .bar-edit-head .close {
     background: transparent;
     border: none;
@@ -5901,7 +6819,10 @@
     min-height: 40px;
     font-size: 0.9rem;
   }
-  .qty-row { display: flex; gap: 0.5rem; }
+  .qty-row {
+    display: flex;
+    gap: 0.5rem;
+  }
   .qty-unit-readonly {
     background: #f4f4f5;
     color: #525252;
@@ -5956,8 +6877,12 @@
   .harvest-use-pill:hover {
     background: #f4f6fa;
   }
-  .qty-row .qty-amount { flex: 2; }
-  .qty-row .qty-unit { flex: 1; }
+  .qty-row .qty-amount {
+    flex: 2;
+  }
+  .qty-row .qty-unit {
+    flex: 1;
+  }
   /** Split-popup compact modal — narrower than the edit modal since
    *  it only carries a single number input. Same backdrop, smaller
    *  card. */
@@ -6018,8 +6943,22 @@
     font-weight: 600;
     font-size: 0.88rem;
   }
-  .bar-edit-foot .btn-primary { background: #4338ca; color: #fff; border: 1px solid #312e81; }
-  .bar-edit-foot .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  .bar-edit-foot .btn-secondary { background: #fff; color: #4338ca; border: 1px solid #c7d2fe; }
-  .bar-edit-foot .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .bar-edit-foot .btn-primary {
+    background: #4338ca;
+    color: #fff;
+    border: 1px solid #312e81;
+  }
+  .bar-edit-foot .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .bar-edit-foot .btn-secondary {
+    background: #fff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+  }
+  .bar-edit-foot .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 </style>

@@ -34,9 +34,7 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
   const filter =
-    parsed.data.blockIds && parsed.data.blockIds.length > 0
-      ? new Set(parsed.data.blockIds)
-      : null;
+    parsed.data.blockIds && parsed.data.blockIds.length > 0 ? new Set(parsed.data.blockIds) : null;
   const result = clearSchedule(filter);
   return json(result);
 };

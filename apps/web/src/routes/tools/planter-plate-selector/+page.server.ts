@@ -34,7 +34,7 @@ export const load: PageServerLoad = (event) => {
   if (stockId) {
     const item = getStockItem(stockId);
     if (item && item.category === 'seed') {
-      const typeName = item.typeId ? getTaxonomyTerm(item.typeId)?.name ?? null : null;
+      const typeName = item.typeId ? (getTaxonomyTerm(item.typeId)?.name ?? null) : null;
       contextItem = {
         id: item.id,
         displayName: item.displayName,

@@ -20,7 +20,11 @@ export const GET: RequestHandler = ({ url }) => {
 };
 
 const createSchema = z.object({
-  domain: z.string().min(1).max(80).regex(/^[a-z0-9:_-]+$/i, 'domain must be slug-like'),
+  domain: z
+    .string()
+    .min(1)
+    .max(80)
+    .regex(/^[a-z0-9:_-]+$/i, 'domain must be slug-like'),
   name: z.string().min(1).max(80),
   description: z.string().max(500).optional()
 });

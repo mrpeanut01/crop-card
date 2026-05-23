@@ -131,12 +131,7 @@ export function appendVersion(input: InsertVersionInput): PluginVersionRow {
   return db.transaction((tx) => {
     tx.update(pluginVersions)
       .set({ supersededAt: new Date(Date.now()) })
-      .where(
-        and(
-          eq(pluginVersions.pluginId, input.pluginId),
-          isNull(pluginVersions.supersededAt)
-        )
-      )
+      .where(and(eq(pluginVersions.pluginId, input.pluginId), isNull(pluginVersions.supersededAt)))
       .run();
 
     const row = tx
@@ -164,9 +159,7 @@ export function retire(pluginId: string): boolean {
   const r = db
     .update(pluginVersions)
     .set({ retiredAt: new Date(Date.now()) })
-    .where(
-      and(eq(pluginVersions.pluginId, pluginId), isNull(pluginVersions.supersededAt))
-    )
+    .where(and(eq(pluginVersions.pluginId, pluginId), isNull(pluginVersions.supersededAt)))
     .run();
   return r.changes > 0;
 }
@@ -176,9 +169,7 @@ export function unretire(pluginId: string): boolean {
   const r = db
     .update(pluginVersions)
     .set({ retiredAt: null })
-    .where(
-      and(eq(pluginVersions.pluginId, pluginId), isNull(pluginVersions.supersededAt))
-    )
+    .where(and(eq(pluginVersions.pluginId, pluginId), isNull(pluginVersions.supersededAt)))
     .run();
   return r.changes > 0;
 }

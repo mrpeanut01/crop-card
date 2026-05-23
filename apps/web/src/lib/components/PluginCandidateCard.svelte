@@ -32,8 +32,7 @@
   );
   const hasIssues = $derived(
     !candidate.validation.ok &&
-      (candidate.validation.schemaIssues.length > 0 ||
-        candidate.validation.bypassIssues.length > 0)
+      (candidate.validation.schemaIssues.length > 0 || candidate.validation.bypassIssues.length > 0)
   );
   const issues = $derived([
     ...candidate.validation.bypassIssues.map((i) => ({ ...i, kind: 'bypass' as const })),
@@ -45,7 +44,9 @@
   <header>
     <span class="source">{sourceLabel}</span>
     {#if candidate.confidence}
-      <span class="confidence confidence-{candidate.confidence}">{candidate.confidence} confidence</span>
+      <span class="confidence confidence-{candidate.confidence}"
+        >{candidate.confidence} confidence</span
+      >
     {/if}
     {#if typeof candidate.score === 'number'}
       <span class="score" title="Fuzzy match score">{Math.round(candidate.score * 100)}%</span>
@@ -72,7 +73,11 @@
 
     {#if candidate.citations && candidate.citations.length > 0}
       <details>
-        <summary>{candidate.citations.length} citation{candidate.citations.length === 1 ? '' : 's'}</summary>
+        <summary
+          >{candidate.citations.length} citation{candidate.citations.length === 1
+            ? ''
+            : 's'}</summary
+        >
         <ul class="citations">
           {#each candidate.citations as c}
             <li><a href={c.url} target="_blank" rel="noopener">{c.title ?? c.url}</a></li>
@@ -123,7 +128,9 @@
         class="primary"
         disabled={hasIssues}
         onclick={() => onUse(plugin)}
-        title={hasIssues ? 'Fix the issues above before commit' : 'Open the authoring form pre-filled with this candidate'}
+        title={hasIssues
+          ? 'Fix the issues above before commit'
+          : 'Open the authoring form pre-filled with this candidate'}
       >
         {candidate.source === 'local' ? 'Open' : 'Review & save'} →
       </button>
@@ -164,9 +171,18 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .confidence-high { background: #d8f0d8; color: #1f5e3a; }
-  .confidence-medium { background: #fff4d8; color: #8a5a00; }
-  .confidence-low { background: #fce8e8; color: #b00020; }
+  .confidence-high {
+    background: #d8f0d8;
+    color: #1f5e3a;
+  }
+  .confidence-medium {
+    background: #fff4d8;
+    color: #8a5a00;
+  }
+  .confidence-low {
+    background: #fce8e8;
+    color: #b00020;
+  }
   .score {
     background: #eee;
     color: #555;
@@ -259,8 +275,14 @@
     text-transform: uppercase;
     margin-right: 0.3rem;
   }
-  .kind-pill.schema { background: #fff4d8; color: #8a5a00; }
-  .kind-pill.bypass { background: #fce8e8; color: #b00020; }
+  .kind-pill.schema {
+    background: #fff4d8;
+    color: #8a5a00;
+  }
+  .kind-pill.bypass {
+    background: #fce8e8;
+    color: #b00020;
+  }
   .empty {
     color: #888;
     font-style: italic;

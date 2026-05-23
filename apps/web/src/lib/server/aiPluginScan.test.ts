@@ -37,7 +37,7 @@ describe('validateCandidate', () => {
     expect(r.candidate).toBeNull();
   });
 
-  it("flags pluginId collision against a known existing plugin", async () => {
+  it('flags pluginId collision against a known existing plugin', async () => {
     const r = await validateCandidate({
       type: 'crop',
       pluginId: 'apple-orchard',

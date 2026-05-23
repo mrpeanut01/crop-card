@@ -35,11 +35,7 @@ import {
   type RotationConflict,
   type SameTimeOverlap
 } from '$lib/calendar/rotation';
-import {
-  listBlocks,
-  type BlockWithPlantings,
-  type PlantingRecord
-} from '$lib/db/blocks';
+import { listBlocks, type BlockWithPlantings, type PlantingRecord } from '$lib/db/blocks';
 import { listCrops, type Crop } from '$lib/db/crops';
 import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
 import { frostDatesForYear } from '$lib/schedule/settings';
@@ -121,7 +117,9 @@ export interface CropEquipmentForPlan {
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   const tabParam = url.searchParams.get('tab') ?? 'overview';
-  const tab: PlanTab = (TAB_VALUES as string[]).includes(tabParam) ? (tabParam as PlanTab) : 'overview';
+  const tab: PlanTab = (TAB_VALUES as string[]).includes(tabParam)
+    ? (tabParam as PlanTab)
+    : 'overview';
 
   // Calendar tab view discriminator. Default = swimlane (because the
   // schedule swim-lane has more interactive features and is the better
@@ -129,7 +127,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   // the month-grid view. Other tabs ignore the param.
   const viewParam = url.searchParams.get('view');
   const view: PlanView =
-    viewParam && (VIEW_VALUES as string[]).includes(viewParam) ? (viewParam as PlanView) : 'swimlane';
+    viewParam && (VIEW_VALUES as string[]).includes(viewParam)
+      ? (viewParam as PlanView)
+      : 'swimlane';
 
   const blocks = listBlocks();
   const fields = listFields();
@@ -204,8 +204,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     const allSeedStock = listStockItems().filter((s) => s.category === 'seed');
     const seedStock = allSeedStock.map((s) => {
       const plug = s.pluginId ? registry.get(s.pluginId)?.plugin : undefined;
-      const cropFamily =
-        plug && plug.type === 'crop' ? (plug as CropPlugin).cropFamily : null;
+      const cropFamily = plug && plug.type === 'crop' ? (plug as CropPlugin).cropFamily : null;
       return {
         stockItemId: s.id,
         displayName: s.displayName,
@@ -245,7 +244,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // conflict pairs, the "to schedule" tray, and snap boundaries.
 
     const yearParam = url.searchParams.get('year');
-    const year = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : new Date().getFullYear();
+    const year =
+      yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : new Date().getFullYear();
 
     const scheduleCatalog: ScheduleCatalogItem[] = registry
       .all()
@@ -518,7 +518,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     if (showShadeMarkers) {
       const farmLatLon = getFarmLatLon();
       const externalShadeSources = listShadeSources();
-      const shadeInputs: Array<{ planting: PlantingRecord; crop: CropPlugin; block: BlockWithPlantings }> = [];
+      const shadeInputs: Array<{
+        planting: PlantingRecord;
+        crop: CropPlugin;
+        block: BlockWithPlantings;
+      }> = [];
       for (const sp of swimPlantings) {
         if (!sp.shadeCasting) continue;
         const block = blockById.get(sp.blockId);
@@ -621,7 +625,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       if (t.startsWith('plant ') || t.includes(':plant')) return 'plant';
       if (t.includes('till')) return 'till';
       if (t.includes('fert') || t.includes('side-dress')) return 'fertilize';
-      if (t.includes('spray') || t.includes('herbicide') || t.includes('insecticide')) return 'spray';
+      if (t.includes('spray') || t.includes('herbicide') || t.includes('insecticide'))
+        return 'spray';
       if (t.includes('scout') || t.includes('inspect')) return 'scout';
       return 'other';
     }
@@ -680,10 +685,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       .map((s) => ({
         stockItemId: s.id,
         cropPluginId: s.pluginId ?? null,
-        cropFamily:
-          (s.pluginId
-            ? (registry.get(s.pluginId)?.plugin as CropPlugin | undefined)?.cropFamily ?? null
-            : null),
+        cropFamily: s.pluginId
+          ? ((registry.get(s.pluginId)?.plugin as CropPlugin | undefined)?.cropFamily ?? null)
+          : null,
         displayName: s.displayName,
         onHand: s.onHand,
         defaultUnit: s.defaultUnit
@@ -792,8 +796,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     }
     const prev = new Date(year, month - 1, 1);
     const next = new Date(year, month + 1, 1);
-    const fmtYM = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const fmtYM = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
     return {
       ...base,
@@ -834,4 +837,10 @@ function fieldName(
 }
 
 // Re-exported types for the +page.svelte. (Avoids importing across .svelte/.ts.)
-export type { EquipmentWithState, StockItemWithBalance, CropEquipmentBinding, CropEquipmentRole, Task };
+export type {
+  EquipmentWithState,
+  StockItemWithBalance,
+  CropEquipmentBinding,
+  CropEquipmentRole,
+  Task
+};

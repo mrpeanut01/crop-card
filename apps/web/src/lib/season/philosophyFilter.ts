@@ -53,10 +53,7 @@ export type FilterableInputPlugin =
  * Returns true iff `plugin` is allowed under `philosophy`. See file
  * docstring for the matrix.
  */
-export function isProductAllowed(
-  plugin: FilterableInputPlugin,
-  philosophy: Philosophy
-): boolean {
+export function isProductAllowed(plugin: FilterableInputPlugin, philosophy: Philosophy): boolean {
   if (philosophy === 'conventional') return true;
 
   const flags = plugin.complianceFlags;
@@ -76,8 +73,7 @@ export function isProductAllowed(
   }
 
   if (philosophy === 'certified-organic') {
-    if (flags?.omriListed === true && flags?.certifiedOrganicAllowed !== false)
-      return true;
+    if (flags?.omriListed === true && flags?.certifiedOrganicAllowed !== false) return true;
     return false;
   }
 

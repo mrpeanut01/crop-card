@@ -34,7 +34,11 @@
 
   /** Auto-derive a unique kebab-case key from a row's title, ensuring it
    *  doesn't collide with sibling rows. */
-  function resolveKey(row: PluginTaskRow, index: number, rows: ReadonlyArray<PluginTaskRow>): string {
+  function resolveKey(
+    row: PluginTaskRow,
+    index: number,
+    rows: ReadonlyArray<PluginTaskRow>
+  ): string {
     if (row.key && row.key.trim()) return row.key.trim();
     const base = slugify(row.title);
     if (!base) return '';
@@ -65,7 +69,15 @@
     daysBeforePhase?: number;
     daysAfterPhase?: number;
     /** seasonalTasks anchors. */
-    kind?: 'spray' | 'cultural' | 'pruning' | 'thinning' | 'fertilize' | 'irrigate' | 'scout' | 'harvest';
+    kind?:
+      | 'spray'
+      | 'cultural'
+      | 'pruning'
+      | 'thinning'
+      | 'fertilize'
+      | 'irrigate'
+      | 'scout'
+      | 'harvest';
     dayOfYear?: number;
     daysAfterPlanting?: number;
     windowDays?: number;
@@ -131,7 +143,9 @@
             <input
               type="text"
               bind:value={row.title}
-              oninput={() => { row.key = resolveKey(row, i, props.rows); }}
+              oninput={() => {
+                row.key = resolveKey(row, i, props.rows);
+              }}
               placeholder="e.g. Test germination"
             />
           </label>
@@ -139,8 +153,8 @@
             type="button"
             class="remove-btn"
             onclick={() => removeRow(i)}
-            aria-label="Remove task"
-          >×</button>
+            aria-label="Remove task">×</button
+          >
         </div>
 
         <div class="row-mid">
@@ -221,7 +235,9 @@
     padding: 0.85rem 1rem;
     margin-top: 1rem;
   }
-  .head { margin-bottom: 0.5rem; }
+  .head {
+    margin-bottom: 0.5rem;
+  }
   h3 {
     margin: 0;
     font-size: 0.95rem;
@@ -248,15 +264,27 @@
     display: grid;
     gap: 0.5rem;
   }
-  .row-top { display: flex; align-items: end; gap: 0.5rem; }
+  .row-top {
+    display: flex;
+    align-items: end;
+    gap: 0.5rem;
+  }
   .row-mid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 0.5rem;
   }
-  .field { display: grid; gap: 0.2rem; }
-  .field.flex-grow { flex: 1; }
-  .field.full { display: grid; gap: 0.2rem; }
+  .field {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .field.flex-grow {
+    flex: 1;
+  }
+  .field.full {
+    display: grid;
+    gap: 0.2rem;
+  }
   .label-text {
     font-size: 0.74rem;
     color: #475569;
@@ -279,7 +307,11 @@
     background: #fff;
     font-family: inherit;
   }
-  textarea { font-family: monospace; resize: vertical; min-height: auto; }
+  textarea {
+    font-family: monospace;
+    resize: vertical;
+    min-height: auto;
+  }
   .remove-btn {
     width: 36px;
     height: 36px;
@@ -291,7 +323,9 @@
     font-size: 1.1rem;
     line-height: 1;
   }
-  .remove-btn:hover { background: #fef2f2; }
+  .remove-btn:hover {
+    background: #fef2f2;
+  }
   .add-btn {
     padding: 0.5rem 0.85rem;
     border: 1px dashed #94a3b8;
@@ -303,5 +337,8 @@
     font-size: 0.85rem;
     min-height: 36px;
   }
-  .add-btn:hover { background: #f0f9ff; border-color: #1f5e3a; }
+  .add-btn:hover {
+    background: #f0f9ff;
+    border-color: #1f5e3a;
+  }
 </style>

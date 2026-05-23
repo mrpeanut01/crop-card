@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  projectShadeImpacts,
-  type ShadeEmitter,
-  type ShadeTarget
-} from './shadeModel';
+import { projectShadeImpacts, type ShadeEmitter, type ShadeTarget } from './shadeModel';
 
 const LAT = 39.09;
 const LON = -77.6;
@@ -13,7 +9,9 @@ const dNorthFor5m = 5 / 111_320;
 const may1 = new Date(2026, 4, 1).getTime();
 const aug1 = new Date(2026, 7, 1).getTime();
 
-function makeEmitter(opts: Partial<ShadeEmitter> & { id: string; centroid: [number, number]; height: number }): ShadeEmitter {
+function makeEmitter(
+  opts: Partial<ShadeEmitter> & { id: string; centroid: [number, number]; height: number }
+): ShadeEmitter {
   return {
     id: opts.id,
     displayName: opts.displayName ?? opts.id,
@@ -45,7 +43,11 @@ function target(id: string, dx: number, dy: number, opts: Partial<ShadeTarget> =
 
 describe('projectShadeImpacts — geometry + canopy + density', () => {
   it('emits no impact when emitter has no centroid', () => {
-    const noCentroid = makeEmitter({ id: 'src', centroid: null as unknown as [number, number], height: 8 });
+    const noCentroid = makeEmitter({
+      id: 'src',
+      centroid: null as unknown as [number, number],
+      height: 8
+    });
     noCentroid.centroidLonLat = null;
     const out = projectShadeImpacts({
       emitters: [noCentroid],
@@ -136,14 +138,35 @@ describe('projectShadeImpacts — geometry + canopy + density', () => {
   });
 
   it('density multiplier scales intensity linearly', () => {
-    const half = makeEmitter({ id: 'half', centroid: [LON, LAT], height: 8, densityMultiplier: 0.5 });
-    const full = makeEmitter({ id: 'full', centroid: [LON, LAT], height: 8, densityMultiplier: 1.0, sourceBlockId: 'src2' });
+    const half = makeEmitter({
+      id: 'half',
+      centroid: [LON, LAT],
+      height: 8,
+      densityMultiplier: 0.5
+    });
+    const full = makeEmitter({
+      id: 'full',
+      centroid: [LON, LAT],
+      height: 8,
+      densityMultiplier: 1.0,
+      sourceBlockId: 'src2'
+    });
     const t = target('east', 1, 0);
     const halfOut = projectShadeImpacts({
-      emitters: [half], targets: [t], farmLat: LAT, farmLon: LON, fromMs: may1, toMs: aug1
+      emitters: [half],
+      targets: [t],
+      farmLat: LAT,
+      farmLon: LON,
+      fromMs: may1,
+      toMs: aug1
     });
     const fullOut = projectShadeImpacts({
-      emitters: [full], targets: [t], farmLat: LAT, farmLon: LON, fromMs: may1, toMs: aug1
+      emitters: [full],
+      targets: [t],
+      farmLat: LAT,
+      farmLon: LON,
+      fromMs: may1,
+      toMs: aug1
     });
     expect(halfOut[0].intensity).toBeLessThan(fullOut[0].intensity);
   });

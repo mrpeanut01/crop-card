@@ -84,8 +84,14 @@ export interface ScanResult {
 }
 
 export const STOCK_CATEGORIES = [
-  'herbicide', 'insecticide', 'fungicide', 'fertilizer',
-  'seed', 'adjuvant', 'fuel', 'part'
+  'herbicide',
+  'insecticide',
+  'fungicide',
+  'fertilizer',
+  'seed',
+  'adjuvant',
+  'fuel',
+  'part'
 ] as const;
 
 // Matches a token-overlap fuzzy score ≥ 0.3 against all crop plugins.
@@ -93,11 +99,14 @@ export async function matchCropPlugins(displayName: string): Promise<CropPluginM
   try {
     const registry = await getRegistry();
     const tokA = new Set(displayName.toLowerCase().split(/\W+/).filter(Boolean));
-    return registry.crops()
+    return registry
+      .crops()
       .map((p) => {
         const tokB = new Set(p.displayName.toLowerCase().split(/\W+/).filter(Boolean));
         let shared = 0;
-        for (const t of tokA) { if (tokB.has(t)) shared++; }
+        for (const t of tokA) {
+          if (tokB.has(t)) shared++;
+        }
         const max = Math.max(tokA.size, tokB.size);
         return { pluginId: p.pluginId, displayName: p.displayName, score: max ? shared / max : 0 };
       })
@@ -163,39 +172,73 @@ If you cannot identify the product at all, return {"found": false}.`;
 
 // Parse and validate a raw Claude JSON string into a partial ScanResult.
 export function parseClaudeJson(raw: string): Partial<ScanResult> {
-  const cleaned = raw.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/, '').trim();
+  const cleaned = raw
+    .replace(/^```[a-z]*\n?/i, '')
+    .replace(/\n?```$/, '')
+    .trim();
   const data = JSON.parse(cleaned);
   if (data.found === false) return { found: false };
 
-  const cat = STOCK_CATEGORIES.includes(data.category) ? data.category as StockCategory : undefined;
-  const seedMeta: SeedMeta | undefined = cat === 'seed' && data.seedMeta
-    ? {
-        daysToMaturity: typeof data.seedMeta.daysToMaturity === 'number' ? data.seedMeta.daysToMaturity : undefined,
-        plantingTempMinF: typeof data.seedMeta.plantingTempMinF === 'number' ? data.seedMeta.plantingTempMinF : undefined,
-        plantingTempMaxF: typeof data.seedMeta.plantingTempMaxF === 'number' ? data.seedMeta.plantingTempMaxF : undefined,
-        spacingInches: typeof data.seedMeta.spacingInches === 'number' ? data.seedMeta.spacingInches : undefined,
-        depthInches: typeof data.seedMeta.depthInches === 'number' ? data.seedMeta.depthInches : undefined,
-        sunRequirement: ['full-sun','partial-shade','full-shade'].includes(data.seedMeta.sunRequirement) ? data.seedMeta.sunRequirement : undefined,
-        seedsPerPacket: typeof data.seedMeta.seedsPerPacket === 'number' ? data.seedMeta.seedsPerPacket : undefined,
-      }
+  const cat = STOCK_CATEGORIES.includes(data.category)
+    ? (data.category as StockCategory)
     : undefined;
+  const seedMeta: SeedMeta | undefined =
+    cat === 'seed' && data.seedMeta
+      ? {
+          daysToMaturity:
+            typeof data.seedMeta.daysToMaturity === 'number'
+              ? data.seedMeta.daysToMaturity
+              : undefined,
+          plantingTempMinF:
+            typeof data.seedMeta.plantingTempMinF === 'number'
+              ? data.seedMeta.plantingTempMinF
+              : undefined,
+          plantingTempMaxF:
+            typeof data.seedMeta.plantingTempMaxF === 'number'
+              ? data.seedMeta.plantingTempMaxF
+              : undefined,
+          spacingInches:
+            typeof data.seedMeta.spacingInches === 'number'
+              ? data.seedMeta.spacingInches
+              : undefined,
+          depthInches:
+            typeof data.seedMeta.depthInches === 'number' ? data.seedMeta.depthInches : undefined,
+          sunRequirement: ['full-sun', 'partial-shade', 'full-shade'].includes(
+            data.seedMeta.sunRequirement
+          )
+            ? data.seedMeta.sunRequirement
+            : undefined,
+          seedsPerPacket:
+            typeof data.seedMeta.seedsPerPacket === 'number'
+              ? data.seedMeta.seedsPerPacket
+              : undefined
+        }
+      : undefined;
 
   const shortNameRaw = typeof data.shortName === 'string' ? data.shortName.trim() : '';
   const shortName =
-    shortNameRaw && shortNameRaw.length > 0 && shortNameRaw.length <= 40 && !/[\x00-\x1f]/.test(shortNameRaw)
+    shortNameRaw &&
+    shortNameRaw.length > 0 &&
+    shortNameRaw.length <= 40 &&
+    !/[\x00-\x1f]/.test(shortNameRaw)
       ? shortNameRaw
       : undefined;
 
   // Phase 17 (Track 2) — active ingredients (chem products only).
   const activeIngredients: ScannedActiveIngredient[] | undefined =
-    Array.isArray(data.activeIngredients) && (cat === 'herbicide' || cat === 'insecticide' || cat === 'fungicide')
+    Array.isArray(data.activeIngredients) &&
+    (cat === 'herbicide' || cat === 'insecticide' || cat === 'fungicide')
       ? (data.activeIngredients as unknown[])
           .map((raw): ScannedActiveIngredient | null => {
             if (!raw || typeof raw !== 'object') return null;
             const r = raw as Record<string, unknown>;
             if (typeof r.name !== 'string' || !r.name.trim()) return null;
             const out: ScannedActiveIngredient = { name: r.name.trim().slice(0, 120) };
-            if (typeof r.concentrationPct === 'number' && r.concentrationPct > 0 && r.concentrationPct <= 100) {
+            if (
+              typeof r.concentrationPct === 'number' &&
+              r.concentrationPct > 0 &&
+              r.concentrationPct <= 100
+            ) {
               out.concentrationPct = r.concentrationPct;
             }
             if (typeof r.chemistryClass === 'string' && r.chemistryClass.trim()) {
@@ -204,7 +247,10 @@ export function parseClaudeJson(raw: string): Partial<ScanResult> {
             if (typeof r.iracGroup === 'string' && /^[A-Z0-9]{1,4}$/.test(r.iracGroup)) {
               out.iracGroup = r.iracGroup;
             }
-            if (typeof r.fracCode === 'string' && /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/.test(r.fracCode)) {
+            if (
+              typeof r.fracCode === 'string' &&
+              /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/.test(r.fracCode)
+            ) {
               out.fracCode = r.fracCode;
             }
             return out;
@@ -254,7 +300,9 @@ export function parseClaudeJson(raw: string): Partial<ScanResult> {
     seedMeta,
     activeIngredients,
     formulation,
-    guessed: Array.isArray(data.guessed) ? data.guessed.filter((g: unknown) => typeof g === 'string') : [],
+    guessed: Array.isArray(data.guessed)
+      ? data.guessed.filter((g: unknown) => typeof g === 'string')
+      : [],
     // The raw `type` from the Claude response is exposed via the catch-all
     // `__rawType` field below; the endpoint resolves it against the user's
     // taxonomy before returning a SuggestedType to the client.
@@ -315,7 +363,10 @@ async function withRetry<T>(
 }
 
 // Claude text-only call (for barcode lookup where we have no image).
-export async function claudeTextLookup(barcode: string, partialName?: string): Promise<Partial<ScanResult>> {
+export async function claudeTextLookup(
+  barcode: string,
+  partialName?: string
+): Promise<Partial<ScanResult>> {
   const apiKey = getApiKey();
   if (!apiKey) return { found: false };
   try {
@@ -326,10 +377,12 @@ export async function claudeTextLookup(barcode: string, partialName?: string): P
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 400,
         system: SYSTEM_PROMPT,
-        messages: [{
-          role: 'user',
-          content: `Identify this farm supply product. Barcode: ${barcode}.${nameHint}`
-        }]
+        messages: [
+          {
+            role: 'user',
+            content: `Identify this farm supply product. Barcode: ${barcode}.${nameHint}`
+          }
+        ]
       })
     );
     const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
@@ -402,7 +455,10 @@ export async function fetchPageContent(url: string): Promise<FetchedPageContent>
     if (done) break;
     bytes += value.byteLength;
     html += decoder.decode(value, { stream: true });
-    if (bytes >= MAX_BYTES) { await reader.cancel(); break; }
+    if (bytes >= MAX_BYTES) {
+      await reader.cancel();
+      break;
+    }
   }
   html += decoder.decode();
 
@@ -423,7 +479,11 @@ export async function fetchPageContent(url: string): Promise<FetchedPageContent>
     const value = decodeEntities(content).trim();
     if (!value) continue;
     if (key === 'description') metaDescription = value;
-    if (/^(og:|twitter:|product:|book:|article:)/.test(key) || key === 'keywords' || key === 'description') {
+    if (
+      /^(og:|twitter:|product:|book:|article:)/.test(key) ||
+      key === 'keywords' ||
+      key === 'description'
+    ) {
       metaTags[key] = value;
     }
   }
@@ -514,12 +574,25 @@ export async function fetchPageContent(url: string): Promise<FetchedPageContent>
   // instructions don't collapse into one wall.
   const bodyText = htmlToBlockText(html).slice(0, 18_000);
 
-  return { url, title, metaDescription, metaTags, jsonLd, selects, tables, headings, defList, bodyText };
+  return {
+    url,
+    title,
+    metaDescription,
+    metaTags,
+    jsonLd,
+    selects,
+    tables,
+    headings,
+    defList,
+    bodyText
+  };
 }
 
 /** Strip an inline HTML fragment to a single-line text value. */
 function cleanInline(html: string): string {
-  return decodeEntities(html.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+  return decodeEntities(html.replace(/<[^>]+>/g, ' '))
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** Reduce a full HTML document to plain text while preserving block-level
@@ -533,7 +606,10 @@ function htmlToBlockText(html: string): string {
       .replace(/<svg[\s\S]*?<\/svg>/gi, ' ')
       .replace(/<!--[\s\S]*?-->/g, ' ')
       .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/(p|div|li|h[1-6]|tr|section|article|header|footer|nav|aside|blockquote|pre)>/gi, '\n')
+      .replace(
+        /<\/(p|div|li|h[1-6]|tr|section|article|header|footer|nav|aside|blockquote|pre)>/gi,
+        '\n'
+      )
       .replace(/<\/td>/gi, '\t')
       .replace(/<[^>]+>/g, ' ')
   )
@@ -603,7 +679,9 @@ export function renderPageContentForPrompt(p: FetchedPageContent): string {
     parts.push(`TABLES:\n${lines.join('\n\n')}`);
   }
   if (p.defList.length > 0) {
-    const lines = p.defList.slice(0, 40).map((d) => `  ${truncate(d.term, 80)} :: ${truncate(d.description, 240)}`);
+    const lines = p.defList
+      .slice(0, 40)
+      .map((d) => `  ${truncate(d.term, 80)} :: ${truncate(d.description, 240)}`);
     parts.push(`DEFINITION LIST:\n${lines.join('\n')}`);
   }
   if (p.headings.length > 0) {
@@ -652,7 +730,10 @@ export async function claudeUrlLookup(content: FetchedPageContent): Promise<Part
 }
 
 // Claude vision call (for label photo).
-export async function claudeVisionLookup(base64jpeg: string, barcode?: string): Promise<Partial<ScanResult>> {
+export async function claudeVisionLookup(
+  base64jpeg: string,
+  barcode?: string
+): Promise<Partial<ScanResult>> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('No Anthropic API key configured. Add it on the Settings page.');
   const client = new Anthropic({ apiKey });
@@ -662,13 +743,21 @@ export async function claudeVisionLookup(base64jpeg: string, barcode?: string): 
       model: 'claude-sonnet-4-6',
       max_tokens: 600,
       system: SYSTEM_PROMPT,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64jpeg } },
-          { type: 'text', text: `Read this farm supply product label and return the structured JSON.${barcodeHint}` }
-        ]
-      }]
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: 'image/jpeg', data: base64jpeg }
+            },
+            {
+              type: 'text',
+              text: `Read this farm supply product label and return the structured JSON.${barcodeHint}`
+            }
+          ]
+        }
+      ]
     })
   );
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';

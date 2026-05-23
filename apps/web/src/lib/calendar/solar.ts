@@ -29,7 +29,7 @@ const RAD_TO_DEG = 180 / Math.PI;
  * Approximation: ±0.4° accuracy, sufficient for shade-model purposes.
  */
 export function solarDeclinationDeg(dayOfYear: number): number {
-  return 23.45 * Math.sin(((360 / 365) * (dayOfYear - 81)) * DEG_TO_RAD);
+  return 23.45 * Math.sin((360 / 365) * (dayOfYear - 81) * DEG_TO_RAD);
 }
 
 /**
@@ -37,7 +37,7 @@ export function solarDeclinationDeg(dayOfYear: number): number {
  * Earth's elliptical orbit + axial tilt; small but non-zero (±16 min).
  */
 export function equationOfTimeMinutes(dayOfYear: number): number {
-  const b = ((360 / 365) * (dayOfYear - 81)) * DEG_TO_RAD;
+  const b = (360 / 365) * (dayOfYear - 81) * DEG_TO_RAD;
   return 9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b);
 }
 
@@ -49,11 +49,7 @@ export function equationOfTimeMinutes(dayOfYear: number): number {
  * which matches the typical-meridian assumption baked into a clock without
  * needing a tz database.
  */
-export function localSolarHour(
-  lon: number,
-  clockHourLocal: number,
-  dayOfYear: number
-): number {
+export function localSolarHour(lon: number, clockHourLocal: number, dayOfYear: number): number {
   const standardMeridian = Math.round(lon / 15) * 15;
   const eotMin = equationOfTimeMinutes(dayOfYear);
   const correctionMin = 4 * (lon - standardMeridian) + eotMin;
@@ -87,7 +83,7 @@ export function solarPosition(
   const sinAzScaled = -Math.sin(ha) * Math.cos(decl) * Math.cos(phi);
   const cosAzScaled = Math.sin(decl) - Math.sin(elev) * Math.sin(phi);
   const azRad = Math.atan2(sinAzScaled, cosAzScaled);
-  const azDeg = ((azRad * RAD_TO_DEG) % 360 + 360) % 360;
+  const azDeg = (((azRad * RAD_TO_DEG) % 360) + 360) % 360;
   return {
     azimuthDeg: azDeg,
     elevationDeg: elev * RAD_TO_DEG

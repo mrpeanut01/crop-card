@@ -199,8 +199,8 @@
 
       {#if tankFracOverlap}
         <p class="warn-inline">
-          ⚠ FRAC {tankFracOverlap} is on two products in this tank. Consider rotating to a
-          different mode of action for resistance management.
+          ⚠ FRAC {tankFracOverlap} is on two products in this tank. Consider rotating to a different mode
+          of action for resistance management.
         </p>
       {/if}
     {/if}
@@ -209,12 +209,7 @@
   <section class="card">
     <h2>2 · Disease observation (optional)</h2>
     <label for="disease-name">Disease</label>
-    <input
-      id="disease-name"
-      type="text"
-      bind:value={diseaseName}
-      placeholder="e.g. early blight"
-    />
+    <input id="disease-name" type="text" bind:value={diseaseName} placeholder="e.g. early blight" />
     <label for="disease-metric">Metric</label>
     <select id="disease-metric" bind:value={diseaseMetric}>
       <option value="pct-leaf-area">% leaf area affected</option>
@@ -222,13 +217,7 @@
       <option value="plants-infected-pct">% plants infected</option>
     </select>
     <label for="disease-value">Value</label>
-    <input
-      id="disease-value"
-      type="number"
-      min="0"
-      step="any"
-      bind:value={diseaseValue}
-    />
+    <input id="disease-value" type="number" min="0" step="any" bind:value={diseaseValue} />
   </section>
 
   <section class="card">

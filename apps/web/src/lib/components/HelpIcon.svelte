@@ -24,8 +24,8 @@
     aria-label={label}
     aria-expanded={open}
     onclick={() => (open = !open)}
-    onblur={() => (open = false)}
-  >ⓘ</button>
+    onblur={() => (open = false)}>ⓘ</button
+  >
   <span class="help-popover" role="tooltip">{text}</span>
 </span>
 
@@ -82,7 +82,9 @@
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     visibility: hidden;
     opacity: 0;
-    transition: opacity 0.12s ease, visibility 0.12s ease;
+    transition:
+      opacity 0.12s ease,
+      visibility 0.12s ease;
     pointer-events: none;
     white-space: normal;
     font-weight: 400;

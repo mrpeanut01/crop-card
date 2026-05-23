@@ -23,7 +23,12 @@ export const load: PageServerLoad = ({ locals }) => {
   const ownerRows = db
     .select({ id: owners.id, name: owners.name, slug: owners.slug })
     .from(owners)
-    .where(inArray(owners.id, assignments.map((a) => a.ownerId)))
+    .where(
+      inArray(
+        owners.id,
+        assignments.map((a) => a.ownerId)
+      )
+    )
     .all();
   const byId = new Map(ownerRows.map((r) => [r.id, r]));
   const choices = assignments
@@ -32,7 +37,10 @@ export const load: PageServerLoad = ({ locals }) => {
       if (!o) return null;
       return { ownerId: o.id, name: o.name, slug: o.slug, roleWithinOwner: a.roleWithinOwner };
     })
-    .filter((c): c is { ownerId: string; name: string; slug: string; roleWithinOwner: SessionRole } => c !== null);
+    .filter(
+      (c): c is { ownerId: string; name: string; slug: string; roleWithinOwner: SessionRole } =>
+        c !== null
+    );
   return { choices, activeOwnerId: user.activeOwnerId };
 };
 

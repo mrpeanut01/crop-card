@@ -37,9 +37,7 @@ const pluginBase = z.object({
    *  absent is treated as '1.0'. Used by tooling (e.g., the migration
    *  script that backfills v1.1 fields) to know which plugins have been
    *  upgraded. Not consumed by the safety kernel. */
-  pluginSchemaVersion: z
-    .enum(['1.0', '1.1'])
-    .optional()
+  pluginSchemaVersion: z.enum(['1.0', '1.1']).optional()
 });
 
 /** Spacing guide values, surfaced inside the planting task view (FR-13). */
@@ -217,7 +215,10 @@ export const growthStageTableSchema = z
       .array(growthStageSchema)
       .min(1)
       .refine(
-        (arr) => arr.every((s, i, a) => i === 0 || s.daysFromPlanting.min >= a[i - 1].daysFromPlanting.min),
+        (arr) =>
+          arr.every(
+            (s, i, a) => i === 0 || s.daysFromPlanting.min >= a[i - 1].daysFromPlanting.min
+          ),
         'stages must be ordered by daysFromPlanting.min ascending'
       ),
     harvestTargets: z.array(harvestTargetSchema).min(1)
@@ -795,13 +796,7 @@ export const fertilizerPluginSchema = pluginBase.extend({
     .object({
       min: z.number().positive(),
       max: z.number().positive(),
-      unit: z.enum([
-        'lb-per-acre',
-        'gal-per-acre',
-        'ton-per-acre',
-        'qt-per-acre',
-        'fl-oz-per-acre'
-      ])
+      unit: z.enum(['lb-per-acre', 'gal-per-acre', 'ton-per-acre', 'qt-per-acre', 'fl-oz-per-acre'])
     })
     .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
     .optional(),

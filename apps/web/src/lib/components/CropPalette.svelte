@@ -90,9 +90,7 @@
     onPaletteDragStart?: (pluginId: string, cropFamily: string) => void;
     onSeedStockClick?: (stockItemId: string) => void;
     onDragEnd: () => void;
-    onKeyboardGrab: (
-      payload: { kind: 'palette'; pluginId: string; cropFamily: string }
-    ) => void;
+    onKeyboardGrab: (payload: { kind: 'palette'; pluginId: string; cropFamily: string }) => void;
   }
 
   const props: Props = $props();
@@ -137,7 +135,8 @@
                 >
                   <span class="card-title">{s.displayName}</span>
                   <span class="card-meta">
-                    {s.onHand} {s.defaultUnit}
+                    {s.onHand}
+                    {s.defaultUnit}
                     {#if !s.cropPluginId}· no plugin link{/if}
                   </span>
                 </button>
@@ -148,7 +147,6 @@
       {/each}
     </section>
   {/if}
-
 </div>
 
 <style>

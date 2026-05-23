@@ -92,7 +92,9 @@ export const load: PageServerLoad = async ({ url }) => {
     .map((r) => {
       if (r.plugin.type !== 'herbicide') throw new Error('unreachable');
       const h = r.plugin;
-      const chemistryClasses = Array.from(new Set(h.activeIngredients.map((ai) => ai.chemistryClass)));
+      const chemistryClasses = Array.from(
+        new Set(h.activeIngredients.map((ai) => ai.chemistryClass))
+      );
       const hracGroups = Array.from(
         new Set(chemistryClasses.map((c) => String(hracGroupOf(c))).filter((g) => g.length > 0))
       );

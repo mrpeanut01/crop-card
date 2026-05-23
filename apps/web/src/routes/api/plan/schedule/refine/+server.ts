@@ -115,7 +115,8 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: 'invalid JSON body' }, { status: 400 });
   }
   const parsed = bodySchema.safeParse(raw);
-  if (!parsed.success) return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+  if (!parsed.success)
+    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
 
   const lastTurn = parsed.data.transcript[parsed.data.transcript.length - 1];
   if (lastTurn.role !== 'user') {

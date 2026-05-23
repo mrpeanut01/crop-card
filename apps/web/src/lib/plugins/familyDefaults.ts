@@ -139,7 +139,8 @@ export function resolveCropAgronomy(crop: CropPlugin): ResolvedAgronomy {
     : PERENNIAL_FAMILIES.has(family)
       ? 'family'
       : 'default';
-  const lifecycle: CropLifecycle = ag?.lifecycle ?? (PERENNIAL_FAMILIES.has(family) ? 'perennial' : 'annual');
+  const lifecycle: CropLifecycle =
+    ag?.lifecycle ?? (PERENNIAL_FAMILIES.has(family) ? 'perennial' : 'annual');
 
   const rotationLookbackYears =
     ag?.rotationLookbackYears ?? ROTATION_LOOKBACK_YEARS_BY_FAMILY[family] ?? 1;
@@ -203,11 +204,7 @@ export function resolveSeedsPerLb(plugin: {
   if (guide?.seedsPerLb && guide.seedsPerLb > 0) {
     return { seedsPerLb: guide.seedsPerLb, seedsPerLbSource: 'plugin-direct' };
   }
-  if (
-    guide?.seedsPerAcre &&
-    guide?.recommendedLbsPerAcre &&
-    guide.recommendedLbsPerAcre > 0
-  ) {
+  if (guide?.seedsPerAcre && guide?.recommendedLbsPerAcre && guide.recommendedLbsPerAcre > 0) {
     return {
       seedsPerLb: guide.seedsPerAcre / guide.recommendedLbsPerAcre,
       seedsPerLbSource: 'plugin-derived'

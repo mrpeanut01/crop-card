@@ -26,7 +26,10 @@
 </script>
 
 {#if group !== undefined && group !== null && String(group).length > 0}
-  <span class="badge {kind.toLowerCase()}" title="Mode-of-action group — rotate across groups to slow resistance">
+  <span
+    class="badge {kind.toLowerCase()}"
+    title="Mode-of-action group — rotate across groups to slow resistance"
+  >
     {label ?? `${kind} ${group}`}
   </span>
 {/if}

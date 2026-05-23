@@ -123,9 +123,7 @@
   // Plantings" with a plan in place silently dropped them into the
   // additive flow with no way to reset.
   let activeSetup = $state<SeasonSetup | null>(untrack(() => seasonSetup));
-  const hasExistingPlan = untrack(() =>
-    blocks.some((b) => b.plantings && b.plantings.length > 0)
-  );
+  const hasExistingPlan = untrack(() => blocks.some((b) => b.plantings && b.plantings.length > 0));
   let step: Step = $state(
     untrack(() => {
       if (!activeSetup) return 'season-setup';
@@ -192,9 +190,7 @@
 
   let seedSearch = $state('');
 
-  const eligibleStock = $derived(
-    seedStock.filter((s) => !!s.cropPluginId && s.onHand > 0)
-  );
+  const eligibleStock = $derived(seedStock.filter((s) => !!s.cropPluginId && s.onHand > 0));
 
   const filteredEligibleStock = $derived.by(() => {
     const q = seedSearch.trim().toLowerCase();
@@ -254,8 +250,7 @@
     for (const s of seedStock) {
       seedNames.set(s.stockItemId, s.shortName ?? s.displayName);
     }
-    const UUID_RE =
-      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
+    const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
     const replaceIds = (str: string) =>
       str.replace(UUID_RE, (id) => {
         const b = blockNames.get(id);
@@ -375,15 +370,15 @@
 
     if (mustStagger.length > 0) {
       lines.push(
-        "These crossing pairs will be carried into the schedule step as required planting offsets. Tell me anything you'd like to change before then — for example: \"swap the Bantam onto Block C to gain more isolation\" or \"split the brassicas onto two beds.\""
+        'These crossing pairs will be carried into the schedule step as required planting offsets. Tell me anything you\'d like to change before then — for example: "swap the Bantam onto Block C to gain more isolation" or "split the brassicas onto two beds."'
       );
     } else if (lines.length === 0) {
       lines.push(
-        "Plan looks clean — nothing jumped out to flag. If you'd like to tweak it, just tell me what to change (e.g., \"move the corn off the narrow block\" or \"give the brassicas more room\")."
+        'Plan looks clean — nothing jumped out to flag. If you\'d like to tweak it, just tell me what to change (e.g., "move the corn off the narrow block" or "give the brassicas more room").'
       );
     } else {
       lines.push(
-        "Tell me anything you'd like to change — for example: \"move the corn off the narrow block\" or \"split the tomatoes onto two beds.\""
+        'Tell me anything you\'d like to change — for example: "move the corn off the narrow block" or "split the tomatoes onto two beds."'
       );
     }
 
@@ -424,8 +419,7 @@
     const visible = partners.slice(0, 3);
     const overflow = partners.length - visible.length;
     const label =
-      `⚠ ${days}d stagger from ${visible.join(' · ')}` +
-      (overflow > 0 ? ` +${overflow} more` : '');
+      `⚠ ${days}d stagger from ${visible.join(' · ')}` + (overflow > 0 ? ` +${overflow} more` : '');
     const tooltip = `Plant ≥${days} d apart from: ${partners.join(', ')}.`;
     return { label, tooltip, days };
   }
@@ -476,7 +470,11 @@
   let scheduleError = $state<string | null>(null);
 
   function fmtDateMs(ms: number): string {
-    return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(ms).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   }
 
   // ─── AI progress heartbeat ──────────────────────────────────────────────
@@ -527,7 +525,8 @@
     }
     // Chat refinements are shorter prompts → quicker stages.
     if (s < 2) return 'Reading your message…';
-    if (s < 8) return stage === 'chat-schedule' ? 'Reconsidering the dates…' : 'Reconsidering the plan…';
+    if (s < 8)
+      return stage === 'chat-schedule' ? 'Reconsidering the dates…' : 'Reconsidering the plan…';
     if (s < 20) return 'Validating against constraints…';
     if (s < 45) return 'Still thinking — refinement turn taking longer than usual…';
     return 'Almost there…';
@@ -763,11 +762,9 @@
         fallback === 'engine-only'
           ? '⚠ Could not apply the change cleanly — the planning rules flagged it. The plan above is unchanged.'
           : `⚠ The plan above is unchanged (${fallback}).`;
-      const violationLine =
-        violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
+      const violationLine = violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
       const overrideHint =
-        Array.isArray(body?.meta?.rejectedAssignments) &&
-        body.meta.rejectedAssignments.length > 0
+        Array.isArray(body?.meta?.rejectedAssignments) && body.meta.rejectedAssignments.length > 0
           ? "\n\nIf you've reviewed and want to accept the AI's plan anyway, use “Apply anyway” below."
           : '';
       reply = `${header}${violationLine}${overrideHint}\n\n${aiReply}`;
@@ -776,9 +773,8 @@
       // template can render the override button.
       if (Array.isArray(body?.meta?.rejectedAssignments)) {
         lastRejectedAssignments = body.meta.rejectedAssignments;
-        lastRejectedRationale = typeof body.meta.rejectedRationale === 'string'
-          ? body.meta.rejectedRationale
-          : '';
+        lastRejectedRationale =
+          typeof body.meta.rejectedRationale === 'string' ? body.meta.rejectedRationale : '';
         lastRejectedViolations = violations;
       } else {
         lastRejectedAssignments = null;
@@ -881,9 +877,7 @@
     // banner so the operator knows the table above did NOT update, and
     // surface the violation list when available.
     const fallback: string | undefined = body?.meta?.fallback;
-    const violations: string[] = Array.isArray(body?.meta?.violations)
-      ? body.meta.violations
-      : [];
+    const violations: string[] = Array.isArray(body?.meta?.violations) ? body.meta.violations : [];
     const aiReply: string =
       typeof body.reply === 'string' && body.reply.trim().length > 0
         ? body.reply
@@ -953,10 +947,14 @@
       const lines: string[] = [];
       const fb = scheduleResponse.meta.fallback;
       if (fb === 'no-api-key') {
-        lines.push('🛟 I picked dates with the deterministic scheduler (no Anthropic API key configured). Staggers and companion offsets are honored.');
+        lines.push(
+          '🛟 I picked dates with the deterministic scheduler (no Anthropic API key configured). Staggers and companion offsets are honored.'
+        );
         if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
         lines.push('');
-        lines.push('Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."');
+        lines.push(
+          'Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."'
+        );
       } else if (fb === 'deterministic') {
         // Help-seeking chat dialogue: the server's diagnosis names specific
         // varieties + actionable suggestions in plain English. We don't show
@@ -966,9 +964,13 @@
           if (dx.summary) {
             lines.push(`🛟 ${dx.summary}`);
             lines.push('');
-            lines.push("I went with a safe-default plan above so you're not stuck — but you can probably do better. Here's what might help:");
+            lines.push(
+              "I went with a safe-default plan above so you're not stuck — but you can probably do better. Here's what might help:"
+            );
           } else {
-            lines.push("🛟 I couldn't fit your schedule cleanly. The deterministic plan above is a safe default, but here's what might help:");
+            lines.push(
+              "🛟 I couldn't fit your schedule cleanly. The deterministic plan above is a safe default, but here's what might help:"
+            );
           }
           if (dx.suggestions.length > 0) {
             lines.push('');
@@ -979,9 +981,13 @@
         } else {
           // Diagnosis missing (older server, edge case) — keep a clean
           // fallback message without the technical violation list.
-          lines.push("🛟 I couldn't fit your schedule cleanly, even after a retry. The deterministic plan above honors every hard constraint but isn't necessarily the most elegant arrangement.");
+          lines.push(
+            "🛟 I couldn't fit your schedule cleanly, even after a retry. The deterministic plan above honors every hard constraint but isn't necessarily the most elegant arrangement."
+          );
           lines.push('');
-          lines.push("Tell me what to adjust — for example: \"drop one corn variety\", \"skip successions for sweet corn\", or \"just keep these dates and commit\".");
+          lines.push(
+            'Tell me what to adjust — for example: "drop one corn variety", "skip successions for sweet corn", or "just keep these dates and commit".'
+          );
         }
       } else {
         lines.push('📅 Planting dates proposed above.');
@@ -991,7 +997,9 @@
           for (const a of scheduleResponse.advisories) lines.push(`• ${a}`);
         }
         lines.push('');
-        lines.push('Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."');
+        lines.push(
+          'Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."'
+        );
       }
       // Start the schedule chat clean — don't carry allocation-step
       // pollination notes or rationale into this conversation. Anything the
@@ -1106,7 +1114,10 @@
     // quantity so we can apportion per-row seed accurately.
     const totalPlantsByStock = new Map<string, number>();
     for (const p of plantings) {
-      totalPlantsByStock.set(p.stockItemId, (totalPlantsByStock.get(p.stockItemId) ?? 0) + p.plants);
+      totalPlantsByStock.set(
+        p.stockItemId,
+        (totalPlantsByStock.get(p.stockItemId) ?? 0) + p.plants
+      );
     }
 
     for (const p of plantings) {
@@ -1116,7 +1127,9 @@
       const totalPlants = totalPlantsByStock.get(p.stockItemId) ?? 0;
       const seedQty = totalPlants > 0 ? (p.plants / totalPlants) * selectedQty : 0;
       const isInteger = unit === 'seeds' || unit === 'count' || unit === 'packets';
-      const quantityForCommit = isInteger ? Math.max(0, Math.round(seedQty)) : Number(seedQty.toFixed(3));
+      const quantityForCommit = isInteger
+        ? Math.max(0, Math.round(seedQty))
+        : Number(seedQty.toFixed(3));
       try {
         const res = await fetch(`/api/blocks/${p.blockId}/plantings`, {
           method: 'POST',
@@ -1131,10 +1144,14 @@
           })
         });
         if (!res.ok) {
-          commitProgress.failed.push(`${p.varietyDisplayName} → ${blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`);
+          commitProgress.failed.push(
+            `${p.varietyDisplayName} → ${blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`
+          );
         }
       } catch {
-        commitProgress.failed.push(`${p.varietyDisplayName} → ${blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`);
+        commitProgress.failed.push(
+          `${p.varietyDisplayName} → ${blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`
+        );
       }
       commitProgress = { ...commitProgress, done: commitProgress.done + 1 };
     }
@@ -1234,9 +1251,7 @@
     return entry?.shortName ?? entry?.displayName ?? stockItemId;
   }
 
-  function sufficiencyChip(
-    s: SufficiencyResult
-  ): { label: string; cls: string; tooltip: string } {
+  function sufficiencyChip(s: SufficiencyResult): { label: string; cls: string; tooltip: string } {
     const pct = Math.round(s.utilizationPct * 100);
     if (s.status === 'match') {
       return {
@@ -1304,8 +1319,13 @@
         <div class="chat-msg chat-assistant">
           <span class="chat-role" aria-hidden="true">🌱</span>
           <span class="chat-bubble chat-thinking">
-            {aiProgressLabel(step === 'schedule' ? 'chat-schedule' : 'chat-allocate', chatStartMs == null ? 0 : Math.max(0, nowMs - chatStartMs))}
-            <span class="chat-elapsed">{fmtElapsed(chatStartMs == null ? 0 : Math.max(0, nowMs - chatStartMs))}</span>
+            {aiProgressLabel(
+              step === 'schedule' ? 'chat-schedule' : 'chat-allocate',
+              chatStartMs == null ? 0 : Math.max(0, nowMs - chatStartMs)
+            )}
+            <span class="chat-elapsed"
+              >{fmtElapsed(chatStartMs == null ? 0 : Math.max(0, nowMs - chatStartMs))}</span
+            >
           </span>
         </div>
       {/if}
@@ -1326,7 +1346,13 @@
         </span>
       </div>
     {/if}
-    <form class="aw-chat-input" onsubmit={(e) => { e.preventDefault(); void sendChat(); }}>
+    <form
+      class="aw-chat-input"
+      onsubmit={(e) => {
+        e.preventDefault();
+        void sendChat();
+      }}
+    >
       <textarea
         rows="2"
         placeholder={step === 'schedule'
@@ -1366,35 +1392,36 @@
     {/if}
 
     <ol class="aw-stepper" aria-label="Wizard steps">
-      <li
-        class:active={step === 'season-setup'}
-        class:done={step !== 'season-setup'}
-      >0. Season</li>
-      <li class:active={step === 'seeds'} class:done={step !== 'season-setup' && step !== 'seeds'}>1. Seeds</li>
+      <li class:active={step === 'season-setup'} class:done={step !== 'season-setup'}>0. Season</li>
+      <li class:active={step === 'seeds'} class:done={step !== 'season-setup' && step !== 'seeds'}>
+        1. Seeds
+      </li>
       <li
         class:active={step === 'blocks'}
-        class:done={step === 'review' || step === 'schedule' || step === 'inputs' || step === 'commit'}
+        class:done={step === 'review' ||
+          step === 'schedule' ||
+          step === 'inputs' ||
+          step === 'commit'}
       >
         2. Blocks
       </li>
       <li
         class:active={step === 'review'}
         class:done={step === 'schedule' || step === 'inputs' || step === 'commit'}
-      >3. Review</li>
-      <li
-        class:active={step === 'schedule'}
-        class:done={step === 'inputs' || step === 'commit'}
-      >4. Schedule</li>
-      <li
-        class:active={step === 'inputs'}
-        class:done={step === 'commit'}
-      >5. Inputs</li>
+      >
+        3. Review
+      </li>
+      <li class:active={step === 'schedule'} class:done={step === 'inputs' || step === 'commit'}>
+        4. Schedule
+      </li>
+      <li class:active={step === 'inputs'} class:done={step === 'commit'}>5. Inputs</li>
       <li class:active={step === 'commit'}>6. Commit</li>
     </ol>
 
     {#if error && step !== 'commit' && step !== 'review' && step !== 'season-setup'}
       <div class="aw-error-banner" role="alert">
-        <strong>Couldn't generate plan:</strong> {error}
+        <strong>Couldn't generate plan:</strong>
+        {error}
       </div>
     {/if}
 
@@ -1437,8 +1464,8 @@
               <span class="aw-plan-state-icon" aria-hidden="true">↻</span>
               <span class="aw-plan-state-title">Start over</span>
               <span class="aw-plan-state-sub">
-                Clear the current plan and start fresh. Historical (planted /
-                harvested) crops are preserved.
+                Clear the current plan and start fresh. Historical (planted / harvested) crops are
+                preserved.
               </span>
             </button>
           </div>
@@ -1456,9 +1483,8 @@
               <div class="aw-confirm-card">
                 <h4 id="aw-reset-title">Clear the current plan?</h4>
                 <p>
-                  This deletes every <strong>planned</strong> crop on your blocks and any
-                  open Inputs Plan tasks. Active and harvested crops are kept. This cannot
-                  be undone.
+                  This deletes every <strong>planned</strong> crop on your blocks and any open Inputs
+                  Plan tasks. Active and harvested crops are kept. This cannot be undone.
                 </p>
                 <div class="aw-confirm-actions">
                   <button
@@ -1518,7 +1544,8 @@
                       class="aw-info"
                       aria-label="Why is this less than the seed count?"
                       title="Estimated plants the seed will yield, applying an 85% germination assumption.&#10;&#10;• Seeds: count × 0.85 (e.g. 25 seeds → ~21 plants)&#10;• lb / oz / g: converted to seeds via the crop's seeds-per-lb (from the plugin if known, else a family default), then × 0.85&#10;• Count: treated 1:1 (no germination discount — already discrete plants like transplants or plugs)&#10;&#10;Real germination varies by lot and conditions; treat this as a sizing estimate, not a guarantee."
-                    >ⓘ</button>
+                      >ⓘ</button
+                    >
                   </th>
                 </tr>
               </thead>
@@ -1536,14 +1563,16 @@
                           onclick={() => selectAllInFamily(g.items)}
                           disabled={famCount === g.items.length}
                           aria-label={`Select all ${g.family ?? 'unclassified'} seeds`}
-                        >Select all</button>
+                          >Select all</button
+                        >
                         {#if famCount > 0}
                           <button
                             type="button"
                             class="family-action-btn family-action-clear"
                             onclick={() => clearFamily(g.items)}
                             aria-label={`Clear ${g.family ?? 'unclassified'} selection`}
-                          >Clear</button>
+                            >Clear</button
+                          >
                         {/if}
                       </span>
                     </td>
@@ -1557,7 +1586,7 @@
                         <input
                           type="checkbox"
                           aria-label={`Select ${s.shortName ?? s.displayName}`}
-                          checked={checked}
+                          {checked}
                           onchange={() => toggleSeed(s)}
                         />
                       </td>
@@ -1579,7 +1608,10 @@
                           value={qty}
                           disabled={!checked}
                           oninput={(e) =>
-                            setSeedQuantity(s.stockItemId, Number((e.target as HTMLInputElement).value))}
+                            setSeedQuantity(
+                              s.stockItemId,
+                              Number((e.target as HTMLInputElement).value)
+                            )}
                         />
                         {s.defaultUnit}
                       </td>
@@ -1615,17 +1647,14 @@
                 : null}
             <li class:checked>
               <label>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onchange={() => toggleBlock(b.id)}
-                />
+                <input type="checkbox" {checked} onchange={() => toggleBlock(b.id)} />
                 <span class="aw-block-info">
                   <span class="aw-block-name">{b.blockLabel ?? b.name}</span>
                   <span class="aw-chips">
                     {#if acresText}<span class="aw-chip">{acresText}</span>{/if}
                     {#if sunText}<span class="aw-chip">☀ {sunText}</span>{/if}
-                    {#if plantingsText}<span class="aw-chip aw-chip-warn">🌱 {plantingsText}</span>{/if}
+                    {#if plantingsText}<span class="aw-chip aw-chip-warn">🌱 {plantingsText}</span
+                      >{/if}
                   </span>
                 </span>
               </label>
@@ -1647,9 +1676,12 @@
           {/if}
           {#if (response.geometryMissingBlockIds ?? []).length > 0}
             <div class="aw-banner info">
-              📐 Pollination check skipped for {response.geometryMissingBlockIds!.length} block{response.geometryMissingBlockIds!.length === 1 ? '' : 's'}
-              ({response.geometryMissingBlockIds!.map((id) => blockNameFor(id)).join(', ')})
-              — add field geometry on /fields to enable.
+              📐 Pollination check skipped for {response.geometryMissingBlockIds!.length} block{response
+                .geometryMissingBlockIds!.length === 1
+                ? ''
+                : 's'}
+              ({response.geometryMissingBlockIds!.map((id) => blockNameFor(id)).join(', ')}) — add
+              field geometry on /fields to enable.
             </div>
           {/if}
           <p class="aw-rationale">{response.rationale}</p>
@@ -1675,10 +1707,14 @@
                   <td>{a.plants.toLocaleString()}</td>
                   <td class="cell-fit">
                     {#if chip}
-                      <span class={`chip chip-sm ${chip.cls}`} title={chip.tooltip}>{chip.label}</span>
+                      <span class={`chip chip-sm ${chip.cls}`} title={chip.tooltip}
+                        >{chip.label}</span
+                      >
                     {/if}
                     {#if poll}
-                      <span class="chip chip-sm chip-pollination" title={poll.tooltip}>{poll.label}</span>
+                      <span class="chip chip-sm chip-pollination" title={poll.tooltip}
+                        >{poll.label}</span
+                      >
                     {/if}
                   </td>
                   <td class="why">{response.perRowRationale[key] ?? ''}</td>
@@ -1792,7 +1828,10 @@
       {#if step === 'season-setup'}
         <button class="btn-secondary" onclick={onClose}>Cancel</button>
         {#if activeSetup}
-          <button class="btn-secondary" onclick={() => (step = hasExistingPlan ? 'plan-state' : 'seeds')}>
+          <button
+            class="btn-secondary"
+            onclick={() => (step = hasExistingPlan ? 'plan-state' : 'seeds')}
+          >
             Keep current & continue
           </button>
         {/if}
@@ -1829,11 +1868,9 @@
         </button>
       {:else if step === 'schedule'}
         <button class="btn-secondary" onclick={() => (step = 'review')}>Back to allocation</button>
-        <button
-          class="btn-secondary"
-          onclick={advanceToSchedule}
-          disabled={scheduleLoading}
-        >Re-schedule</button>
+        <button class="btn-secondary" onclick={advanceToSchedule} disabled={scheduleLoading}
+          >Re-schedule</button
+        >
         <button
           class="btn-primary"
           onclick={advanceToInputs}
@@ -2194,7 +2231,9 @@
     border: 1px solid #cbd5cb;
     border-radius: 8px;
     background: white;
-    transition: border-color 0.1s, background 0.1s;
+    transition:
+      border-color 0.1s,
+      background 0.1s;
   }
   .aw-blocklist li:hover {
     border-color: #1f5e3a;
@@ -2485,7 +2524,9 @@
     flex-shrink: 0;
   }
   @keyframes ai-spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
   .chat-elapsed {
     display: block;

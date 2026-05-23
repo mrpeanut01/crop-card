@@ -32,11 +32,7 @@ import type {
   InsecticidePlugin
 } from '$lib/plugins/schemas';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
-import type {
-  FertilityApproach,
-  Philosophy,
-  SeasonSetup
-} from '$lib/season/setup';
+import type { FertilityApproach, Philosophy, SeasonSetup } from '$lib/season/setup';
 
 import { planInputs, type InputsPlanInput } from './inputsPlan';
 
@@ -86,7 +82,11 @@ function buildPlanting(id: string, blockId: string, cropPluginId: string): Plant
   };
 }
 
-function buildCrop(family: CropFamily, pluginId = `crop-${family}`, extras: Partial<CropPlugin> = {}): CropPlugin {
+function buildCrop(
+  family: CropFamily,
+  pluginId = `crop-${family}`,
+  extras: Partial<CropPlugin> = {}
+): CropPlugin {
   return {
     type: 'crop',
     pluginId,
@@ -326,9 +326,7 @@ describe('planInputs — 4×4×6 philosophy × approach × family matrix', () =>
           //     when soil credits are absent).
           //   - The chosen product (when one is chosen) must be
           //     philosophy-allowed.
-          const fertilityApp = result.applications.find(
-            (a) => a.slot === 'pre-plant-fertility'
-          );
+          const fertilityApp = result.applications.find((a) => a.slot === 'pre-plant-fertility');
 
           if (fertilityApp) {
             expect(fertilityApp.productCategory).toBe('fertilizer');
@@ -338,8 +336,7 @@ describe('planInputs — 4×4×6 philosophy × approach × family matrix', () =>
               // No product picked → must have a warning explaining why.
               expect(
                 result.warnings.some(
-                  (w) =>
-                    w.kind === 'no-compliant-product' && w.slot === 'pre-plant-fertility'
+                  (w) => w.kind === 'no-compliant-product' && w.slot === 'pre-plant-fertility'
                 )
               ).toBe(true);
             }
@@ -616,9 +613,7 @@ describe('planInputs — fertility budget arithmetic', () => {
 
     expect(result.applications.some((a) => a.slot === 'pre-plant-fertility')).toBe(false);
     expect(
-      result.warnings.some(
-        (w) => w.kind === 'missing-yield-goal' && w.cropFamily === 'small-fruit'
-      )
+      result.warnings.some((w) => w.kind === 'missing-yield-goal' && w.cropFamily === 'small-fruit')
     ).toBe(true);
   });
 });
@@ -626,10 +621,7 @@ describe('planInputs — fertility budget arithmetic', () => {
 describe('planInputs — shopping list', () => {
   it('aggregates application totals across plantings and subtracts on-hand stock', () => {
     const crop = buildCrop('corn', 'corn-1');
-    const plantings = [
-      buildPlanting('p1', 'b1', 'corn-1'),
-      buildPlanting('p2', 'b2', 'corn-1')
-    ];
+    const plantings = [buildPlanting('p1', 'b1', 'corn-1'), buildPlanting('p2', 'b2', 'corn-1')];
     const blocks = [buildBlock('b1', 2), buildBlock('b2', 3)];
 
     const result = planInputs(
@@ -709,9 +701,7 @@ describe('planInputs — warnings', () => {
 
     expect(
       result.warnings.some(
-        (w) =>
-          w.kind === 'missing-spray-window-purpose' &&
-          w.windowTitle === 'Some legacy window'
+        (w) => w.kind === 'missing-spray-window-purpose' && w.windowTitle === 'Some legacy window'
       )
     ).toBe(true);
   });

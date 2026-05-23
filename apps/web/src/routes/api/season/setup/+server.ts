@@ -19,34 +19,13 @@ import { saveSeasonSetup } from '$lib/season/setup.server';
 
 const bodySchema = z.object({
   year: z.number().int().min(2000).max(3000),
-  philosophy: z.enum([
-    'conventional',
-    'non-gmo',
-    'organic-transitioning',
-    'certified-organic'
-  ]),
-  weedStrategy: z.enum([
-    'cultivate-first',
-    'pre-emergence-ok',
-    'post-emergence-ok'
-  ]),
+  philosophy: z.enum(['conventional', 'non-gmo', 'organic-transitioning', 'certified-organic']),
+  weedStrategy: z.enum(['cultivate-first', 'pre-emergence-ok', 'post-emergence-ok']),
   pestStrategy: z.enum(['preventive', 'ipm', 'minimal']),
-  fertilityApproach: z.enum([
-    'synthetic',
-    'compost-amendments',
-    'cover-crop-credits',
-    'mixed'
-  ]),
+  fertilityApproach: z.enum(['synthetic', 'compost-amendments', 'cover-crop-credits', 'mixed']),
   coverCropIntent: z.enum(['fall-cereal', 'vetch-clover', 'other', 'none']),
-  sprayCapacity: z.enum([
-    'backpack-4gal',
-    'handheld-25gal',
-    'boom-25-plus',
-    'none'
-  ]),
-  transitioningStartedYear: z
-    .union([z.number().int().min(1900).max(3000), z.null()])
-    .optional()
+  sprayCapacity: z.enum(['backpack-4gal', 'handheld-25gal', 'boom-25-plus', 'none']),
+  transitioningStartedYear: z.union([z.number().int().min(1900).max(3000), z.null()]).optional()
 });
 
 export async function POST(event) {

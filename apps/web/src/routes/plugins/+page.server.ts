@@ -46,14 +46,16 @@ function summaryFor(plugin: Plugin): string {
       if (plugin.daysToMaturity) {
         parts.push(`${plugin.daysToMaturity.min}-${plugin.daysToMaturity.max}d to maturity`);
       }
-      if (plugin.preHarvestIntervalDays != null) parts.push(`PHI ${plugin.preHarvestIntervalDays}d`);
+      if (plugin.preHarvestIntervalDays != null)
+        parts.push(`PHI ${plugin.preHarvestIntervalDays}d`);
       return parts.join(' · ');
     }
     case 'herbicide': {
       const parts: string[] = [];
       const ai = plugin.activeIngredients.map((x) => x.name).join(' + ');
       if (ai) parts.push(ai);
-      if (plugin.ratePerAcre) parts.push(`${plugin.ratePerAcre.amount} ${plugin.ratePerAcre.unit}/A`);
+      if (plugin.ratePerAcre)
+        parts.push(`${plugin.ratePerAcre.amount} ${plugin.ratePerAcre.unit}/A`);
       if (plugin.applicationTiming) parts.push(plugin.applicationTiming);
       if (plugin.deconRequired) parts.push('decon required');
       return parts.join(' · ');
@@ -62,9 +64,12 @@ function summaryFor(plugin: Plugin): string {
       const parts: string[] = [];
       const ai = (plugin.activeIngredients ?? []).map((x) => x.name).join(' + ');
       if (ai) parts.push(ai);
-      if (plugin.preHarvestIntervalDays != null) parts.push(`PHI ${plugin.preHarvestIntervalDays}d`);
+      if (plugin.preHarvestIntervalDays != null)
+        parts.push(`PHI ${plugin.preHarvestIntervalDays}d`);
       if (plugin.targetPests?.length) {
-        parts.push(`vs ${plugin.targetPests.slice(0, 2).join(', ')}${plugin.targetPests.length > 2 ? '…' : ''}`);
+        parts.push(
+          `vs ${plugin.targetPests.slice(0, 2).join(', ')}${plugin.targetPests.length > 2 ? '…' : ''}`
+        );
       }
       return parts.join(' · ');
     }
@@ -74,7 +79,9 @@ function summaryFor(plugin: Plugin): string {
       if (ai) parts.push(ai);
       if (plugin.applicationTiming) parts.push(plugin.applicationTiming);
       if (plugin.targetDiseases?.length) {
-        parts.push(`vs ${plugin.targetDiseases.slice(0, 2).join(', ')}${plugin.targetDiseases.length > 2 ? '…' : ''}`);
+        parts.push(
+          `vs ${plugin.targetDiseases.slice(0, 2).join(', ')}${plugin.targetDiseases.length > 2 ? '…' : ''}`
+        );
       }
       return parts.join(' · ');
     }
@@ -87,7 +94,8 @@ function summaryFor(plugin: Plugin): string {
     case 'companion': {
       const parts: string[] = [];
       if (plugin.primaryFamily) parts.push(`anchor: ${plugin.primaryFamily}`);
-      if (plugin.members?.length) parts.push(`${plugin.members.length} member${plugin.members.length === 1 ? '' : 's'}`);
+      if (plugin.members?.length)
+        parts.push(`${plugin.members.length} member${plugin.members.length === 1 ? '' : 's'}`);
       if (plugin.goodWith?.length) parts.push(`${plugin.goodWith.length} good-with`);
       return parts.join(' · ');
     }

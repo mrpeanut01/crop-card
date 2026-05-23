@@ -2,12 +2,7 @@ import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
-import {
-  fields,
-  helperAssignments,
-  ownerSubscriptions,
-  owners
-} from '$lib/db/schema';
+import { fields, helperAssignments, ownerSubscriptions, owners } from '$lib/db/schema';
 import { currentUser } from '$lib/server/auth';
 import { writeSession } from '$lib/server/session';
 import { runWithTenant, unscopedQueryNote } from '$lib/db/tenant';

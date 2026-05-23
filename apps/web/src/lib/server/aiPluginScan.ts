@@ -21,12 +21,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import {
-  PluginRegistrationError,
-  PluginRegistry,
-  pluginSchema,
-  type Plugin
-} from '$lib/plugins';
+import { PluginRegistrationError, PluginRegistry, pluginSchema, type Plugin } from '$lib/plugins';
 import { getRegistry } from './registry';
 import { AnthropicOverloadedError, getApiKey } from './scanResult';
 import { selectModel, estimateUsd, type AiResultMeta } from './aiPlanning';
@@ -229,7 +224,10 @@ const searchResponseSchema = z.object({
 
 function extractJsonObject(raw: string): unknown | null {
   if (!raw) return null;
-  const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const stripped = raw
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
   try {
     return JSON.parse(stripped);
   } catch {
@@ -381,11 +379,14 @@ export async function validateCandidate(rawCandidate: unknown): Promise<{
   }
 }
 
-function collectCitations(content: Anthropic.Messages.ContentBlock[]): Array<{ url: string; title?: string }> {
+function collectCitations(
+  content: Anthropic.Messages.ContentBlock[]
+): Array<{ url: string; title?: string }> {
   const out = new Map<string, { url: string; title?: string }>();
   for (const block of content) {
     if (block.type !== 'text') continue;
-    const cites = (block as unknown as { citations?: Array<{ url?: string; title?: string }> }).citations;
+    const cites = (block as unknown as { citations?: Array<{ url?: string; title?: string }> })
+      .citations;
     if (!Array.isArray(cites)) continue;
     for (const c of cites) {
       if (typeof c.url !== 'string') continue;
@@ -416,7 +417,7 @@ function buildSearchUserPrompt(query: string, hintType?: PluginKindHint): string
     '',
     'Authoritative sources, in priority order:',
     '  - Pesticides: EPA label PDF, manufacturer label, CDMS / Greenbook',
-    '  - Seeds: Johnny\'s Selected Seeds, Baker Creek, High Mowing, Botanical Interests, university extension',
+    "  - Seeds: Johnny's Selected Seeds, Baker Creek, High Mowing, Botanical Interests, university extension",
     '  - Fertilizers: manufacturer guaranteed-analysis label, OMRI listings',
     '',
     '## Output',
@@ -513,7 +514,11 @@ export async function claudeVisionPluginLookup(
 export async function claudePluginSearchByName(
   query: string,
   hintType?: PluginKindHint
-): Promise<{ candidates: PluginCandidate[]; citations: Array<{ url: string; title?: string }>; meta: AiResultMeta }> {
+): Promise<{
+  candidates: PluginCandidate[];
+  citations: Array<{ url: string; title?: string }>;
+  meta: AiResultMeta;
+}> {
   const apiKey = getApiKey();
   if (!apiKey) {
     return {
@@ -573,7 +578,11 @@ export async function claudePluginSearchByName(
     return { candidates: [], citations, meta };
   }
 
-  const rawCandidates: Array<{ confidence?: 'high' | 'medium' | 'low'; guessed?: string[]; plugin: unknown }> = [];
+  const rawCandidates: Array<{
+    confidence?: 'high' | 'medium' | 'low';
+    guessed?: string[];
+    plugin: unknown;
+  }> = [];
   if (Array.isArray(parsed.data.candidates) && parsed.data.candidates.length > 0) {
     for (const c of parsed.data.candidates.slice(0, MAX_CANDIDATES)) {
       rawCandidates.push({ confidence: c.confidence, guessed: c.guessed, plugin: c.plugin });
@@ -730,7 +739,10 @@ export async function claudePluginSearchByNameStreaming(
         const count = Array.isArray(results) ? results.length : 0;
         send({
           phase: 'results',
-          message: count > 0 ? `Got ${count} source${count === 1 ? '' : 's'} back; continuing…` : 'No matches on that query; trying another…',
+          message:
+            count > 0
+              ? `Got ${count} source${count === 1 ? '' : 's'} back; continuing…`
+              : 'No matches on that query; trying another…',
           resultCount: count
         });
       } else if (block.type === 'text') {

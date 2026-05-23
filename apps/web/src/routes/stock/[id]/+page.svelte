@@ -183,15 +183,20 @@
         {#if plateConfig.seedDimensions && (plateConfig.seedDimensions.L ?? plateConfig.seedDimensions.D ?? plateConfig.seedDimensions.T) !== undefined}
           <dt>Seed dims used</dt>
           <dd>
-            {plateConfig.seedDimensions.L ?? '—'}-{plateConfig.seedDimensions.D ?? '—'}-{plateConfig.seedDimensions.T ?? '—'}
+            {plateConfig.seedDimensions.L ?? '—'}-{plateConfig.seedDimensions.D ?? '—'}-{plateConfig
+              .seedDimensions.T ?? '—'}
             (±{plateConfig.seedDimensions.tolerance ?? 0})
           </dd>
         {/if}
       </dl>
-      <a class="secondary" href="/tools/planter-plate-selector?stockId={item.id}">Re-run plate selector</a>
+      <a class="secondary" href="/tools/planter-plate-selector?stockId={item.id}"
+        >Re-run plate selector</a
+      >
     {:else}
       <p class="empty">No plate matched to this seed yet.</p>
-      <a class="primary" href="/tools/planter-plate-selector?stockId={item.id}">Find planter plate</a>
+      <a class="primary" href="/tools/planter-plate-selector?stockId={item.id}"
+        >Find planter plate</a
+      >
     {/if}
   </section>
 {/if}

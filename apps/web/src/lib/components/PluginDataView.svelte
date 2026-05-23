@@ -25,7 +25,11 @@
 
   const entries = $derived(
     Object.entries(plugin).filter(
-      ([k, v]) => !HEADER_KEYS.has(k) && v !== null && v !== undefined && !(Array.isArray(v) && v.length === 0)
+      ([k, v]) =>
+        !HEADER_KEYS.has(k) &&
+        v !== null &&
+        v !== undefined &&
+        !(Array.isArray(v) && v.length === 0)
     )
   );
 

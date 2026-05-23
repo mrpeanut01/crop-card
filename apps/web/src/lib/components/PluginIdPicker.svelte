@@ -124,8 +124,8 @@
             type="button"
             class="remove"
             aria-label={`Remove ${p.displayName}`}
-            onclick={() => remove(p.pluginId)}
-          >×</button>
+            onclick={() => remove(p.pluginId)}>×</button
+          >
         </span>
       {/each}
     </div>

@@ -121,10 +121,7 @@ export const PATCH: RequestHandler = async (event) => {
       const out = splitCrop(event.params.id, parsed.data.parts);
       return json({ crops: out });
     } catch (e) {
-      return json(
-        { error: e instanceof Error ? e.message : 'split failed' },
-        { status: 409 }
-      );
+      return json({ error: e instanceof Error ? e.message : 'split failed' }, { status: 409 });
     }
   }
 

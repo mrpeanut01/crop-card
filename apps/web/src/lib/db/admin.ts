@@ -104,10 +104,7 @@ export function deleteHayCutting(id: string): DeleteSummary {
 export function deleteFertilityApplication(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
   removed.stock_movements = del(stockMovements, eq(stockMovements.fertilityApplicationId, id));
-  removed.fertility_applications = del(
-    fertilityApplications,
-    eq(fertilityApplications.id, id)
-  );
+  removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.id, id));
   return { removed };
 }
 
@@ -155,30 +152,20 @@ export function deleteCropCascade(id: string): DeleteSummary {
   if (sprayIds.length) {
     removed.stock_movements_spray = db
       .delete(stockMovements)
-      .where(
-        withTenant(stockMovements, inArray(stockMovements.sprayEventId, sprayIds))
-      )
+      .where(withTenant(stockMovements, inArray(stockMovements.sprayEventId, sprayIds)))
       .run().changes;
   }
   if (insecticideIds.length) {
     removed.stock_movements_insecticide = db
       .delete(stockMovements)
-      .where(
-        withTenant(
-          stockMovements,
-          inArray(stockMovements.insecticideEventId, insecticideIds)
-        )
-      )
+      .where(withTenant(stockMovements, inArray(stockMovements.insecticideEventId, insecticideIds)))
       .run().changes;
   }
   if (fertilityIds.length) {
     removed.stock_movements_fertility = db
       .delete(stockMovements)
       .where(
-        withTenant(
-          stockMovements,
-          inArray(stockMovements.fertilityApplicationId, fertilityIds)
-        )
+        withTenant(stockMovements, inArray(stockMovements.fertilityApplicationId, fertilityIds))
       )
       .run().changes;
   }
@@ -202,10 +189,7 @@ export function deleteCropCascade(id: string): DeleteSummary {
 
   removed.spray_events = del(sprayEvents, eq(sprayEvents.cropId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.cropId, id));
-  removed.fertility_applications = del(
-    fertilityApplications,
-    eq(fertilityApplications.cropId, id)
-  );
+  removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.cropId, id));
   removed.harvest_events = del(harvestEvents, eq(harvestEvents.cropId, id));
   removed.hay_cuttings = del(hayCuttings, eq(hayCuttings.cropId, id));
 
@@ -253,10 +237,7 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
 export function deleteEquipmentCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
-  removed.pending_calibrations = del(
-    pendingCalibrations,
-    eq(pendingCalibrations.equipmentId, id)
-  );
+  removed.pending_calibrations = del(pendingCalibrations, eq(pendingCalibrations.equipmentId, id));
   removed.equipment_log = del(equipmentLog, eq(equipmentLog.equipmentId, id));
   removed.equipment_state = del(equipmentState, eq(equipmentState.equipmentId, id));
   removed.crop_equipment = del(cropEquipment, eq(cropEquipment.equipmentId, id));
@@ -332,9 +313,7 @@ export function deleteStockItemCascade(id: string): DeleteSummary {
   removed.stock_lots = del(stockLots, eq(stockLots.stockItemId, id));
   db.update(fertilityApplications)
     .set({ stockItemId: null })
-    .where(
-      withTenant(fertilityApplications, eq(fertilityApplications.stockItemId, id))
-    )
+    .where(withTenant(fertilityApplications, eq(fertilityApplications.stockItemId, id)))
     .run();
   removed.stock_items = del(stockItems, eq(stockItems.id, id));
   return { removed };
@@ -378,16 +357,10 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
   removed.harvest_events = del(harvestEvents, isNotNull(harvestEvents.id));
   removed.insecticide_events = del(insecticideEvents, isNotNull(insecticideEvents.id));
   removed.hay_cuttings = del(hayCuttings, isNotNull(hayCuttings.id));
-  removed.fertility_applications = del(
-    fertilityApplications,
-    isNotNull(fertilityApplications.id)
-  );
+  removed.fertility_applications = del(fertilityApplications, isNotNull(fertilityApplications.id));
   removed.fertility_credits = del(fertilityCredits, isNotNull(fertilityCredits.id));
   removed.soil_tests = del(soilTests, isNotNull(soilTests.id));
-  removed.pending_calibrations = del(
-    pendingCalibrations,
-    isNotNull(pendingCalibrations.id)
-  );
+  removed.pending_calibrations = del(pendingCalibrations, isNotNull(pendingCalibrations.id));
   removed.stock_lots = del(stockLots, isNotNull(stockLots.id));
   removed.stock_items = del(stockItems, isNotNull(stockItems.id));
   removed.crops = del(crops, isNotNull(crops.id));
@@ -511,4 +484,3 @@ export function wipeCurrentPlan(): DeleteSummary {
 
   return { removed };
 }
-

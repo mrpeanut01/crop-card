@@ -263,9 +263,10 @@ export async function planWithAI(
   // the next call sees it in the threaded message history.
   if (options.planningSessionId) {
     appendTurn(options.planningSessionId, {
-      endpoint: task === 'allocate' || task === 'groups' || task === 'optimize' || task === 'suggest'
-        ? task
-        : 'suggest',
+      endpoint:
+        task === 'allocate' || task === 'groups' || task === 'optimize' || task === 'suggest'
+          ? task
+          : 'suggest',
       userPrompt,
       assistantResponse: text,
       inputTokens,

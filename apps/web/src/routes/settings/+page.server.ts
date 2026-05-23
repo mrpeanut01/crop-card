@@ -18,11 +18,7 @@ import {
   SETTINGS_KEYS,
   parseBoolSetting
 } from '$lib/schedule/constants';
-import {
-  getAiDailyCallQuota,
-  getAiMonthlyUsdCap,
-  getFarmLatLon
-} from '$lib/schedule/settings';
+import { getAiDailyCallQuota, getAiMonthlyUsdCap, getFarmLatLon } from '$lib/schedule/settings';
 import { spendSnapshot } from '$lib/server/aiGuard';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -78,11 +74,9 @@ export const load: PageServerLoad = ({ locals }) => {
       ? {
           farmLatLon: getFarmLatLon(),
           farmLatLonDefault: LOUDOUN_DEFAULT_LAT_LON,
-          lastFrostMmDd:
-            getSetting(SETTINGS_KEYS.lastFrost) ?? LOUDOUN_DEFAULT_LAST_FROST_MMDD,
+          lastFrostMmDd: getSetting(SETTINGS_KEYS.lastFrost) ?? LOUDOUN_DEFAULT_LAST_FROST_MMDD,
           lastFrostDefault: LOUDOUN_DEFAULT_LAST_FROST_MMDD,
-          firstFrostMmDd:
-            getSetting(SETTINGS_KEYS.firstFrost) ?? LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
+          firstFrostMmDd: getSetting(SETTINGS_KEYS.firstFrost) ?? LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
           firstFrostDefault: LOUDOUN_DEFAULT_FIRST_FROST_MMDD
         }
       : null

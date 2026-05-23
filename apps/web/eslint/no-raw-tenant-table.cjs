@@ -58,11 +58,7 @@ const TENANT_SCOPED_TABLE_NAMES = new Set([
 ]);
 
 function isTenantTableIdentifier(node) {
-  return (
-    node &&
-    node.type === 'Identifier' &&
-    TENANT_SCOPED_TABLE_NAMES.has(node.name)
-  );
+  return node && node.type === 'Identifier' && TENANT_SCOPED_TABLE_NAMES.has(node.name);
 }
 
 module.exports = {

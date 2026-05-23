@@ -68,7 +68,10 @@
   let refreshStatus = $state<string | null>(null);
   let refreshError = $state(false);
   let refreshLastResults = $state<Array<Record<string, unknown>> | null>(null);
-  let refreshDiagnostics = $state<Record<string, { total: number; eligible: number; reasonWhenZero?: string }> | null>(null);
+  let refreshDiagnostics = $state<Record<
+    string,
+    { total: number; eligible: number; reasonWhenZero?: string }
+  > | null>(null);
   let refreshOverflowed = $state(false);
 
   // Phase 17 follow-up — pending-suggestions panel state.
@@ -124,7 +127,12 @@
   async function discardAllPending() {
     const count = pendingList?.length ?? 0;
     if (count === 0) return;
-    if (!confirm(`Discard ALL ${count} pending AI Refresh suggestion${count === 1 ? '' : 's'}? This cannot be undone.`)) return;
+    if (
+      !confirm(
+        `Discard ALL ${count} pending AI Refresh suggestion${count === 1 ? '' : 's'}? This cannot be undone.`
+      )
+    )
+      return;
     try {
       const r = await fetch('/api/stock/refresh-ai', { method: 'DELETE' });
       if (!r.ok) {
@@ -282,18 +290,30 @@
 
   function prettyKey(k: string): string {
     switch (k) {
-      case 'daysToMaturity': return 'DTM';
-      case 'plantingTempMinF': return 'soil temp';
-      case 'spacingInches': return 'spacing';
-      case 'depthInches': return 'depth';
-      case 'sunRequirement': return 'sun';
-      case 'seedsPerPacket': return 'seeds/pkt';
-      case 'matureHeightFt': return 'height';
-      case 'activeIngredients': return 'ingredients';
-      case 'npk': return 'N-P-K';
-      case 'formulationType': return 'formulation';
-      case 'productClass': return 'class';
-      default: return k;
+      case 'daysToMaturity':
+        return 'DTM';
+      case 'plantingTempMinF':
+        return 'soil temp';
+      case 'spacingInches':
+        return 'spacing';
+      case 'depthInches':
+        return 'depth';
+      case 'sunRequirement':
+        return 'sun';
+      case 'seedsPerPacket':
+        return 'seeds/pkt';
+      case 'matureHeightFt':
+        return 'height';
+      case 'activeIngredients':
+        return 'ingredients';
+      case 'npk':
+        return 'N-P-K';
+      case 'formulationType':
+        return 'formulation';
+      case 'productClass':
+        return 'class';
+      default:
+        return k;
     }
   }
 
@@ -350,7 +370,10 @@
   }
 
   // ─── Generic settings helpers ────────────────────────────────────────────
-  async function postSetting(key: string, value: unknown): Promise<{ ok: boolean; message?: string }> {
+  async function postSetting(
+    key: string,
+    value: unknown
+  ): Promise<{ ok: boolean; message?: string }> {
     const res = await fetch('/api/settings', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -369,7 +392,7 @@
   }
 
   // ─── Types (taxonomy) ────────────────────────────────────────────────────
-  type TaxonomyTerm = typeof data.taxonomy[0];
+  type TaxonomyTerm = (typeof data.taxonomy)[0];
 
   const DOMAIN_LABELS: Record<string, string> = {
     'inventory:seed': '🌱 Inventory — Seed types',
@@ -384,9 +407,15 @@
   };
 
   const KNOWN_DOMAINS = [
-    'inventory:seed', 'inventory:herbicide', 'inventory:insecticide',
-    'inventory:fungicide', 'inventory:fertilizer', 'inventory:adjuvant',
-    'inventory:fuel', 'inventory:part', 'equipment'
+    'inventory:seed',
+    'inventory:herbicide',
+    'inventory:insecticide',
+    'inventory:fungicide',
+    'inventory:fertilizer',
+    'inventory:adjuvant',
+    'inventory:fuel',
+    'inventory:part',
+    'equipment'
   ];
 
   const termsByDomain = $derived.by(() => {
@@ -419,7 +448,8 @@
 
   async function saveNewTerm(domain: string) {
     if (!newTermName.trim()) return;
-    typesBusy = true; typesError = null;
+    typesBusy = true;
+    typesError = null;
     try {
       const res = await fetch('/api/types', {
         method: 'POST',
@@ -431,13 +461,19 @@
         })
       });
       const out = await res.json();
-      if (!res.ok) { typesError = out.error ?? 'Save failed'; return; }
-      newTermName = ''; newTermDescription = '';
+      if (!res.ok) {
+        typesError = out.error ?? 'Save failed';
+        return;
+      }
+      newTermName = '';
+      newTermDescription = '';
       openDomain = null;
       await invalidateAll();
     } catch (e) {
       typesError = e instanceof Error ? e.message : String(e);
-    } finally { typesBusy = false; }
+    } finally {
+      typesBusy = false;
+    }
   }
 
   function startEdit(term: TaxonomyTerm) {
@@ -449,7 +485,8 @@
 
   async function saveEditTerm() {
     if (!editingId) return;
-    typesBusy = true; typesError = null;
+    typesBusy = true;
+    typesError = null;
     try {
       const res = await fetch(`/api/types/${editingId}`, {
         method: 'PATCH',
@@ -460,25 +497,41 @@
         })
       });
       const out = await res.json();
-      if (!res.ok) { typesError = out.error ?? 'Save failed'; return; }
+      if (!res.ok) {
+        typesError = out.error ?? 'Save failed';
+        return;
+      }
       editingId = null;
       await invalidateAll();
     } catch (e) {
       typesError = e instanceof Error ? e.message : String(e);
-    } finally { typesBusy = false; }
+    } finally {
+      typesBusy = false;
+    }
   }
 
   async function deleteTerm(term: TaxonomyTerm) {
-    if (!confirm(`Delete the Type "${term.name}"? Items currently linked to it keep their data but lose the Type label.`)) return;
-    typesBusy = true; typesError = null;
+    if (
+      !confirm(
+        `Delete the Type "${term.name}"? Items currently linked to it keep their data but lose the Type label.`
+      )
+    )
+      return;
+    typesBusy = true;
+    typesError = null;
     try {
       const res = await fetch(`/api/types/${term.id}`, { method: 'DELETE' });
       const out = await res.json();
-      if (!res.ok) { typesError = out.error ?? 'Delete failed'; return; }
+      if (!res.ok) {
+        typesError = out.error ?? 'Delete failed';
+        return;
+      }
       await invalidateAll();
     } catch (e) {
       typesError = e instanceof Error ? e.message : String(e);
-    } finally { typesBusy = false; }
+    } finally {
+      typesBusy = false;
+    }
   }
 
   // ─── API key form ────────────────────────────────────────────────────────
@@ -493,7 +546,11 @@
     apiKeyResult = null;
     apiKeyError = null;
     const r = await postSetting('anthropic_api_key', apiKeyInput.trim());
-    if (!r.ok) { apiKeyError = r.message ?? 'Save failed'; apiKeyBusy = false; return; }
+    if (!r.ok) {
+      apiKeyError = r.message ?? 'Save failed';
+      apiKeyBusy = false;
+      return;
+    }
     apiKeyResult = 'API key saved.';
     apiKeyInput = '';
     apiKeyBusy = false;
@@ -505,7 +562,11 @@
     apiKeyResult = null;
     apiKeyError = null;
     const r = await deleteSetting('anthropic_api_key');
-    if (!r.ok) { apiKeyError = r.message ?? 'Clear failed'; apiKeyBusy = false; return; }
+    if (!r.ok) {
+      apiKeyError = r.message ?? 'Clear failed';
+      apiKeyBusy = false;
+      return;
+    }
     apiKeyResult = 'API key cleared.';
     apiKeyBusy = false;
     await invalidateAll();
@@ -546,7 +607,10 @@
     if (!r.ok) {
       monthlyCapMsg = { kind: 'err', text: r.message ?? 'Reset failed' };
     } else {
-      monthlyCapMsg = { kind: 'ok', text: `Reset to default $${data.ai?.monthlyUsdCapDefault.toFixed(2)}.` };
+      monthlyCapMsg = {
+        kind: 'ok',
+        text: `Reset to default $${data.ai?.monthlyUsdCapDefault.toFixed(2)}.`
+      };
       await invalidateAll();
     }
     monthlyCapBusy = false;
@@ -593,7 +657,10 @@
     for (const k of ['suggest', 'succession', 'optimize', 'allocate'] as QuotaKind[]) {
       const v = Number(quotaInputs[k]);
       if (!Number.isInteger(v) || v < 0) {
-        quotaMsg = { kind: 'err', text: `${QUOTA_LABELS[k].label}: must be a non-negative whole number.` };
+        quotaMsg = {
+          kind: 'err',
+          text: `${QUOTA_LABELS[k].label}: must be a non-negative whole number.`
+        };
         quotaBusy = false;
         return;
       }
@@ -773,12 +840,8 @@
   const showShadeMarkers = $derived(
     showShadeMarkersOverride ?? data.display?.showShadeMarkers ?? true
   );
-  const reorderLevelDisplay = $derived(
-    reorderLevelOverride ?? data.display?.reorderLevel ?? false
-  );
-  const planterSetupDisplay = $derived(
-    planterSetupOverride ?? data.display?.planterSetup ?? true
-  );
+  const reorderLevelDisplay = $derived(reorderLevelOverride ?? data.display?.reorderLevel ?? false);
+  const planterSetupDisplay = $derived(planterSetupOverride ?? data.display?.planterSetup ?? true);
 
   async function saveDisplayToggle(
     key: 'show_shade_markers' | 'display_reorder_level' | 'display_planter_setup',
@@ -887,15 +950,17 @@
     {#if active === 'display'}
       <header class="detail-header">
         <h2>Display</h2>
-        <p class="lede">View preferences for the Plan→Schedule swim-lane and the inventory edit modal.</p>
+        <p class="lede">
+          View preferences for the Plan→Schedule swim-lane and the inventory edit modal.
+        </p>
       </header>
 
       <div class="card">
         <h3>Inventory: Reorder level</h3>
         <p class="muted">
-          Show the per-item Reorder-level checkbox + threshold field on the inventory edit
-          modal. Off by default — most operators rely on visual inspection rather than
-          per-SKU thresholds. Stored values are preserved when hidden.
+          Show the per-item Reorder-level checkbox + threshold field on the inventory edit modal.
+          Off by default — most operators rely on visual inspection rather than per-SKU thresholds.
+          Stored values are preserved when hidden.
         </p>
         <label class="checkbox">
           <input
@@ -914,10 +979,10 @@
       <div class="card">
         <h3>Inventory: Planter setup</h3>
         <p class="muted">
-          Show the Planter setup subsection (plate number, color, dimensions, seed
-          dimensions in mm) on the inventory edit modal for seed items. On by default.
-          The data is still persisted in <code>metadataJson</code> when hidden — the toggle
-          only affects display.
+          Show the Planter setup subsection (plate number, color, dimensions, seed dimensions in mm)
+          on the inventory edit modal for seed items. On by default. The data is still persisted in <code
+            >metadataJson</code
+          > when hidden — the toggle only affects display.
         </p>
         <label class="checkbox">
           <input
@@ -936,12 +1001,11 @@
       <div class="card">
         <h3>Shade markers</h3>
         <p class="muted">
-          Shows where tall crops (corn, sunflower, sorghum, anything with mature
-          height ≥ 5 ft) project shadow onto adjacent blocks during the second
-          half of their growing window. Computed from each block's physical
-          east-west index — independent of the swim-lane column visual order, so
-          dragging a column to a new position does not change the underlying
-          field shading.
+          Shows where tall crops (corn, sunflower, sorghum, anything with mature height ≥ 5 ft)
+          project shadow onto adjacent blocks during the second half of their growing window.
+          Computed from each block's physical east-west index — independent of the swim-lane column
+          visual order, so dragging a column to a new position does not change the underlying field
+          shading.
         </p>
         <label class="checkbox">
           <input
@@ -953,7 +1017,9 @@
           <span>Show shade markers on schedule</span>
         </label>
         {#if !data.isOwner}
-          <p class="muted">Owner-only setting. Helpers see the current state but cannot change it.</p>
+          <p class="muted">
+            Owner-only setting. Helpers see the current state but cannot change it.
+          </p>
         {/if}
         {#if displayMsg}
           <p class={displayMsg.kind === 'ok' ? 'success' : 'error'}>{displayMsg.text}</p>
@@ -963,10 +1029,10 @@
       <div class="card">
         <h3>Shade sources</h3>
         <p class="muted">
-          Tree rows, groves, hedges, fences, and buildings are managed on the
-          Plan→Layout tab where they can be drawn directly on the map.
-          Right-click a row on the map to remove it; the toolbar above the
-          map exposes <strong>🌳 Tree row</strong> and <strong>⬛ Grove/building</strong>
+          Tree rows, groves, hedges, fences, and buildings are managed on the Plan→Layout tab where
+          they can be drawn directly on the map. Right-click a row on the map to remove it; the
+          toolbar above the map exposes <strong>🌳 Tree row</strong> and
+          <strong>⬛ Grove/building</strong>
           draw buttons.
         </p>
         <p>
@@ -979,16 +1045,16 @@
       <header class="detail-header">
         <h2>AI</h2>
         <p class="lede">
-          Configure the Anthropic key, the monthly USD cap, and per-endpoint daily call
-          quotas. The guard rejects calls that would exceed either limit.
+          Configure the Anthropic key, the monthly USD cap, and per-endpoint daily call quotas. The
+          guard rejects calls that would exceed either limit.
         </p>
       </header>
 
       <div class="card">
         <h3>Anthropic API key</h3>
         <p class="muted">
-          Used by the barcode label reader and the Plan-Schedule AI features. The key is
-          stored in the local database; it never leaves the server.
+          Used by the barcode label reader and the Plan-Schedule AI features. The key is stored in
+          the local database; it never leaves the server.
           {#if data.anthropicKeyFromEnv}
             <strong>An environment-variable key is active</strong> — the stored value below is a fallback.
           {:else if data.anthropicKeySet}
@@ -1002,7 +1068,9 @@
           <input
             type="password"
             bind:value={apiKeyInput}
-            placeholder={data.anthropicKeySet ? '••••••••  (key stored — paste to replace)' : 'sk-ant-…'}
+            placeholder={data.anthropicKeySet
+              ? '••••••••  (key stored — paste to replace)'
+              : 'sk-ant-…'}
             autocomplete="off"
             spellcheck="false"
           />
@@ -1024,8 +1092,8 @@
       <div class="card">
         <h3>Monthly USD cap</h3>
         <p class="muted">
-          Hard ceiling on AI spend per calendar month (UTC). Once spend reaches the cap,
-          all AI endpoints return 402 until the next month rolls over.
+          Hard ceiling on AI spend per calendar month (UTC). Once spend reaches the cap, all AI
+          endpoints return 402 until the next month rolls over.
         </p>
 
         <div class="spend-widget" aria-label="Monthly spend so far">
@@ -1073,8 +1141,8 @@
       <div class="card">
         <h3>Daily call quotas</h3>
         <p class="muted">
-          Per-user, per-endpoint, per-UTC-day request budget. Calls beyond the budget
-          return 429 until the next day. Set to 0 to disable an endpoint entirely.
+          Per-user, per-endpoint, per-UTC-day request budget. Calls beyond the budget return 429
+          until the next day. Set to 0 to disable an endpoint entirely.
         </p>
 
         {#each ['suggest', 'succession', 'optimize', 'allocate'] as kind (kind)}
@@ -1115,16 +1183,17 @@
       <header class="detail-header">
         <h2>Location & Climate</h2>
         <p class="lede">
-          Farm coordinates feed the NOAA NWS forecast (Hay tab + Plan-Schedule). Frost
-          dates anchor the season calendar engine and seed-suggestion windows.
+          Farm coordinates feed the NOAA NWS forecast (Hay tab + Plan-Schedule). Frost dates anchor
+          the season calendar engine and seed-suggestion windows.
         </p>
       </header>
 
       <div class="card">
         <h3>Farm coordinates</h3>
         <p class="muted">
-          Used as the cache key for the NOAA forecast. Defaults to Loudoun County, VA
-          ({data.location.farmLatLonDefault.lat.toFixed(2)},
+          Used as the cache key for the NOAA forecast. Defaults to Loudoun County, VA ({data.location.farmLatLonDefault.lat.toFixed(
+            2
+          )},
           {data.location.farmLatLonDefault.lon.toFixed(2)}).
         </p>
         <div class="grid-2">
@@ -1150,17 +1219,27 @@
       <div class="card">
         <h3>Frost dates</h3>
         <p class="muted">
-          Average last spring frost and first fall frost as <code>MM-DD</code>. Defaults
-          are Loudoun County (04-15 / 10-15).
+          Average last spring frost and first fall frost as <code>MM-DD</code>. Defaults are Loudoun
+          County (04-15 / 10-15).
         </p>
         <div class="grid-2">
           <label class="field">
             <span class="field-label">Last spring frost (MM-DD)</span>
-            <input type="text" bind:value={lastFrostInput} placeholder="04-15" inputmode="numeric" />
+            <input
+              type="text"
+              bind:value={lastFrostInput}
+              placeholder="04-15"
+              inputmode="numeric"
+            />
           </label>
           <label class="field">
             <span class="field-label">First fall frost (MM-DD)</span>
-            <input type="text" bind:value={firstFrostInput} placeholder="10-15" inputmode="numeric" />
+            <input
+              type="text"
+              bind:value={firstFrostInput}
+              placeholder="10-15"
+              inputmode="numeric"
+            />
           </label>
         </div>
         <div class="actions">
@@ -1182,10 +1261,9 @@
       <header class="detail-header">
         <h2>Types</h2>
         <p class="lede">
-          Configurable Type lists drive the sub-categorization on Inventory and the type
-          chips on Equipment. Default Types are seeded from the canonical agronomy
-          taxonomy and can be renamed but not deleted; user-added Types can be edited or
-          removed at any time.
+          Configurable Type lists drive the sub-categorization on Inventory and the type chips on
+          Equipment. Default Types are seeded from the canonical agronomy taxonomy and can be
+          renamed but not deleted; user-added Types can be edited or removed at any time.
         </p>
       </header>
 
@@ -1209,9 +1287,19 @@
                     {#if editingId === term.id}
                       <div class="type-edit">
                         <input type="text" bind:value={editName} placeholder="Name" />
-                        <input type="text" bind:value={editDescription} placeholder="Description (optional)" />
-                        <button class="primary tiny" onclick={saveEditTerm} disabled={typesBusy || !editName.trim()}>Save</button>
-                        <button class="secondary tiny" onclick={() => (editingId = null)}>Cancel</button>
+                        <input
+                          type="text"
+                          bind:value={editDescription}
+                          placeholder="Description (optional)"
+                        />
+                        <button
+                          class="primary tiny"
+                          onclick={saveEditTerm}
+                          disabled={typesBusy || !editName.trim()}>Save</button
+                        >
+                        <button class="secondary tiny" onclick={() => (editingId = null)}
+                          >Cancel</button
+                        >
                       </div>
                     {:else}
                       <div class="type-info">
@@ -1222,7 +1310,9 @@
                       <div class="type-actions">
                         <button class="secondary tiny" onclick={() => startEdit(term)}>Edit</button>
                         {#if !term.isDefault}
-                          <button class="danger-btn tiny" onclick={() => deleteTerm(term)}>Delete</button>
+                          <button class="danger-btn tiny" onclick={() => deleteTerm(term)}
+                            >Delete</button
+                          >
                         {/if}
                       </div>
                     {/if}
@@ -1234,12 +1324,22 @@
             {#if openDomain === domain}
               <div class="add-form">
                 <input type="text" bind:value={newTermName} placeholder="New Type name" />
-                <input type="text" bind:value={newTermDescription} placeholder="Description (optional)" />
-                <button class="primary tiny" onclick={() => saveNewTerm(domain)} disabled={typesBusy || !newTermName.trim()}>Add</button>
+                <input
+                  type="text"
+                  bind:value={newTermDescription}
+                  placeholder="Description (optional)"
+                />
+                <button
+                  class="primary tiny"
+                  onclick={() => saveNewTerm(domain)}
+                  disabled={typesBusy || !newTermName.trim()}>Add</button
+                >
                 <button class="secondary tiny" onclick={() => (openDomain = null)}>Cancel</button>
               </div>
             {:else}
-              <button class="secondary tiny add-type-btn" onclick={() => startAdd(domain)}>+ Add Type</button>
+              <button class="secondary tiny add-type-btn" onclick={() => startAdd(domain)}
+                >+ Add Type</button
+              >
             {/if}
           </details>
         {/each}
@@ -1250,18 +1350,18 @@
       <header class="detail-header">
         <h2>Inventory</h2>
         <p class="lede">
-          Maintenance actions for the stock catalog. Run these occasionally to keep the
-          schedule UI tidy.
+          Maintenance actions for the stock catalog. Run these occasionally to keep the schedule UI
+          tidy.
         </p>
       </header>
 
       <div class="card">
         <h3>Short names</h3>
         <p class="lede">
-          The schedule swim-lane and group wizard render a short label per stock item to
-          keep bars readable. New items get one automatically from the AI label scan; this
-          action regenerates short names for items that don't have one (or, with the second
-          button, replaces ALL short names — including manual edits).
+          The schedule swim-lane and group wizard render a short label per stock item to keep bars
+          readable. New items get one automatically from the AI label scan; this action regenerates
+          short names for items that don't have one (or, with the second button, replaces ALL short
+          names — including manual edits).
         </p>
         <div class="actions-row">
           <button
@@ -1270,7 +1370,9 @@
             onclick={() => regenerateShortNames(false)}
             disabled={shortNamesBusy}
           >
-            {shortNamesBusy ? 'Generating…' : `✨ Generate missing (${data.shortNamesMissing ?? 0})`}
+            {shortNamesBusy
+              ? 'Generating…'
+              : `✨ Generate missing (${data.shortNamesMissing ?? 0})`}
           </button>
           <button
             type="button"
@@ -1285,21 +1387,21 @@
           <p class="status-line" class:status-error={shortNamesError}>{shortNamesStatus}</p>
         {/if}
         <p class="hint">
-          Uses Haiku 4.5 (~$0.001 per 50 items). Daily quota lives on the AI tab.
-          Manual edits via the Stock edit modal stay; the second button overwrites them.
+          Uses Haiku 4.5 (~$0.001 per 50 items). Daily quota lives on the AI tab. Manual edits via
+          the Stock edit modal stay; the second button overwrites them.
         </p>
       </div>
 
       <div class="card">
         <h3>Refresh metadata from web</h3>
         <p class="lede">
-          Look up canonical specs for stock items missing metadata — DTM and
-          plant spacing for seeds, active ingredients for chems, N-P-K for
-          fertilizers. Uses Claude Sonnet with the web search tool so every
-          field comes back with a citation. Capped at 25 items per click.
-          Returned data is staged for review; nothing persists until you
-          open each item in <code>/stock</code> and click <strong>Apply
-          selected</strong>.
+          Look up canonical specs for stock items missing metadata — DTM and plant spacing for
+          seeds, active ingredients for chems, N-P-K for fertilizers. Uses Claude Sonnet with the
+          web search tool so every field comes back with a citation. Capped at 25 items per click.
+          Returned data is staged for review; nothing persists until you open each item in <code
+            >/stock</code
+          >
+          and click <strong>Apply selected</strong>.
         </p>
         <div class="actions-row">
           <button
@@ -1342,17 +1444,20 @@
             <ul>
               {#each refreshLastResults as r}
                 {@const id = (r as { itemId: string }).itemId}
-                {@const cites = (r as { citations?: Array<{ url: string; title?: string }> }).citations ?? []}
+                {@const cites =
+                  (r as { citations?: Array<{ url: string; title?: string }> }).citations ?? []}
                 <li>
-                  <a href={`/stock/${id}`}>{id}</a> — {cites.length} citation{cites.length === 1 ? '' : 's'}
+                  <a href={`/stock/${id}`}>{id}</a> — {cites.length} citation{cites.length === 1
+                    ? ''
+                    : 's'}
                 </li>
               {/each}
             </ul>
           </details>
         {/if}
         <p class="hint">
-          Sonnet + web_search runs ~$0.02–0.05 per item depending on search count.
-          Daily quota lives on the AI tab.
+          Sonnet + web_search runs ~$0.02–0.05 per item depending on search count. Daily quota lives
+          on the AI tab.
         </p>
       </div>
 
@@ -1370,10 +1475,9 @@
           </button>
         </div>
         <p class="lede">
-          Every item with an unreviewed AI Refresh suggestion sits here until you
-          Apply or Discard it from the stock edit modal. Click <strong>Review</strong>
-          to open the item; the diff panel pre-loads with the captured fields and
-          citations.
+          Every item with an unreviewed AI Refresh suggestion sits here until you Apply or Discard
+          it from the stock edit modal. Click <strong>Review</strong>
+          to open the item; the diff panel pre-loads with the captured fields and citations.
         </p>
         {#if pendingError}
           <p class="status-line status-error">{pendingError}</p>
@@ -1381,10 +1485,16 @@
         {#if pendingList === null}
           <p class="hint">{pendingBusy ? 'Loading…' : 'Click Reload to fetch.'}</p>
         {:else if pendingList.length === 0}
-          <p class="hint">No pending suggestions. Run <strong>Look up missing metadata</strong> above, or click <strong>🔍 Refresh from web</strong> on any item in <a href="/stock">/stock</a>.</p>
+          <p class="hint">
+            No pending suggestions. Run <strong>Look up missing metadata</strong> above, or click
+            <strong>🔍 Refresh from web</strong>
+            on any item in <a href="/stock">/stock</a>.
+          </p>
         {:else}
           <div class="actions-row">
-            <span class="muted">{pendingList.length} item{pendingList.length === 1 ? '' : 's'} awaiting review</span>
+            <span class="muted"
+              >{pendingList.length} item{pendingList.length === 1 ? '' : 's'} awaiting review</span
+            >
             <button type="button" class="secondary" onclick={discardAllPending}>Discard all</button>
           </div>
           <ul class="pending-list">
@@ -1396,7 +1506,9 @@
                     <span class="pending-pill">{p.category}</span>
                     <span class="muted">{p.fieldCount} field{p.fieldCount === 1 ? '' : 's'}</span>
                     <span class="muted">·</span>
-                    <span class="muted">{p.citationCount} citation{p.citationCount === 1 ? '' : 's'}</span>
+                    <span class="muted"
+                      >{p.citationCount} citation{p.citationCount === 1 ? '' : 's'}</span
+                    >
                     <span class="muted">·</span>
                     <span class="muted">{relativeAge(p.ageMs)}</span>
                   </span>
@@ -1405,8 +1517,12 @@
                   {/if}
                 </div>
                 <div class="pending-row-actions">
-                  <button type="button" class="pending-review-btn" onclick={() => openReview(p)}>Review</button>
-                  <button type="button" class="secondary" onclick={() => discardPending(p.itemId)}>Discard</button>
+                  <button type="button" class="pending-review-btn" onclick={() => openReview(p)}
+                    >Review</button
+                  >
+                  <button type="button" class="secondary" onclick={() => discardPending(p.itemId)}
+                    >Discard</button
+                  >
                 </div>
               </li>
             {/each}
@@ -1419,18 +1535,17 @@
       <header class="detail-header">
         <h2>Danger Zone</h2>
         <p class="lede">
-          Destructive operations. These cannot be undone — Litestream replicates the
-          delete to the cloud as well.
+          Destructive operations. These cannot be undone — Litestream replicates the delete to the
+          cloud as well.
         </p>
       </header>
 
       <div class="card danger-card">
         <h3>Wipe all farm data</h3>
         <p class="muted">
-          Deletes every block, crop, event (spray / harvest / insecticide / hay /
-          fertility), task, soil test, fertility credit, stock SKU + lot + movement,
-          and (by default) every equipment row + sprayer. Plugins on disk and your user
-          account are preserved.
+          Deletes every block, crop, event (spray / harvest / insecticide / hay / fertility), task,
+          soil test, fertility credit, stock SKU + lot + movement, and (by default) every equipment
+          row + sprayer. Plugins on disk and your user account are preserved.
         </p>
         <p class="muted">
           Type <code>WIPE-EVERYTHING</code> below to enable the button.
@@ -1480,8 +1595,12 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="review-title"
-    onclick={(e) => { if (e.target === e.currentTarget) closeReview(); }}
-    onkeydown={(e) => { if (e.key === 'Escape') closeReview(); }}
+    onclick={(e) => {
+      if (e.target === e.currentTarget) closeReview();
+    }}
+    onkeydown={(e) => {
+      if (e.key === 'Escape') closeReview();
+    }}
     tabindex="-1"
   >
     <div class="review-modal">
@@ -1489,7 +1608,9 @@
         <h3 id="review-title" class="review-title">
           Review AI Refresh — <strong>{reviewing.shortName ?? reviewing.displayName}</strong>
         </h3>
-        <button type="button" class="review-close" onclick={closeReview} aria-label="Close">✕</button>
+        <button type="button" class="review-close" onclick={closeReview} aria-label="Close"
+          >✕</button
+        >
       </div>
       {#if reviewError}
         <p class="status-line status-error">{reviewError}</p>
@@ -1502,8 +1623,8 @@
         {@const cites = r.citations ?? []}
         {#if fieldCount > 0}
           <p class="review-lede">
-            {fieldCount} field{fieldCount === 1 ? '' : 's'} returned with citations. Uncheck any you
-            don't trust; Apply writes the rest directly to this item.
+            {fieldCount} field{fieldCount === 1 ? '' : 's'} returned with citations. Uncheck any you don't
+            trust; Apply writes the rest directly to this item.
           </p>
           {#if r.notes}<p class="review-notes">{r.notes}</p>{/if}
           <ul class="review-list">
@@ -1523,8 +1644,8 @@
                       target="_blank"
                       rel="noopener noreferrer"
                       title={`Source: ${field.sourceTitle ?? field.sourceUrl}`}
-                      onclick={(e) => e.stopPropagation()}
-                    >i</a>
+                      onclick={(e) => e.stopPropagation()}>i</a
+                    >
                   {/if}
                 </li>
               {/if}
@@ -1543,7 +1664,8 @@
           </div>
         {:else}
           <p class="review-lede">
-            Web search found {cites.length} page{cites.length === 1 ? '' : 's'} but couldn't extract structured specs.
+            Web search found {cites.length} page{cites.length === 1 ? '' : 's'} but couldn't extract structured
+            specs.
           </p>
           {#if r.notes}<p class="review-notes">{r.notes}</p>{/if}
           {#if cites.length > 0}
@@ -1612,12 +1734,16 @@
     cursor: pointer;
     min-height: 40px;
   }
-  .nav-item:hover { background: #f0f3f0; }
+  .nav-item:hover {
+    background: #f0f3f0;
+  }
   .nav-item.active {
     background: #1f5e3a;
     color: white;
   }
-  .nav-item.active:hover { background: #1f5e3a; }
+  .nav-item.active:hover {
+    background: #1f5e3a;
+  }
   a.nav-item.nav-link {
     text-decoration: none;
     color: #1a1a1a;
@@ -1628,7 +1754,9 @@
     text-align: center;
     flex-shrink: 0;
   }
-  .nav-label { flex: 1; }
+  .nav-label {
+    flex: 1;
+  }
 
   /* ── Detail pane ─────────────────────────────────────────────────────── */
   .detail {
@@ -1660,8 +1788,18 @@
     font-size: 1.05rem;
     color: #1f5e3a;
   }
-  .muted { color: #555; font-size: 0.9rem; line-height: 1.4; margin: 0 0 1rem; }
-  .actions-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.5rem 0; }
+  .muted {
+    color: #555;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0 0 1rem;
+  }
+  .actions-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 0.5rem 0;
+  }
   .status-line {
     margin: 0.6rem 0 0;
     padding: 0.5rem 0.7rem;
@@ -1670,111 +1808,209 @@
     border-radius: 6px;
     font-size: 0.88rem;
   }
-  .status-line.status-error { background: #fef2f2; color: #b91c1c; }
-  .hint { color: #6b7280; font-size: 0.82rem; margin: 0.6rem 0 0; }
+  .status-line.status-error {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+  .hint {
+    color: #6b7280;
+    font-size: 0.82rem;
+    margin: 0.6rem 0 0;
+  }
 
   /* Pending AI Refresh suggestions panel */
   .pending-header {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 0.5rem; margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
   }
   .pending-refresh-btn {
-    padding: 0.25rem 0.6rem; font-size: 0.78rem;
-    min-height: unset; min-width: unset;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.78rem;
+    min-height: unset;
+    min-width: unset;
   }
   .pending-list {
-    list-style: none; padding: 0; margin: 0.75rem 0 0;
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0 0;
     border-top: 1px solid #e5e7eb;
   }
   .pending-row {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 0.75rem; padding: 0.6rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
     border-bottom: 1px solid #f1f5f9;
   }
-  .pending-row:last-child { border-bottom: none; }
+  .pending-row:last-child {
+    border-bottom: none;
+  }
   .pending-row-main {
-    display: flex; flex-direction: column; gap: 0.15rem;
-    min-width: 0; flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    flex: 1 1 auto;
   }
   .pending-row-name {
-    font-weight: 600; color: #1f2937; font-size: 0.92rem;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .pending-row-meta {
-    display: flex; align-items: center; gap: 0.35rem;
-    font-size: 0.78rem; flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    flex-wrap: wrap;
   }
-  .pending-row-meta .muted { margin: 0; font-size: 0.78rem; }
+  .pending-row-meta .muted {
+    margin: 0;
+    font-size: 0.78rem;
+  }
   .pending-row-fields {
-    color: #4338ca; font-size: 0.78rem; font-style: italic;
+    color: #4338ca;
+    font-size: 0.78rem;
+    font-style: italic;
   }
   .pending-pill {
     display: inline-block;
-    background: #eef2ff; color: #4338ca;
-    padding: 0.05rem 0.45rem; border-radius: 999px;
-    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    background: #eef2ff;
+    color: #4338ca;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
     letter-spacing: 0.3px;
   }
   .pending-row-actions {
-    display: flex; gap: 0.4rem; flex-shrink: 0;
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
   }
   .pending-review-btn {
-    background: #2563eb; color: #fff; border: 1px solid #2563eb;
-    border-radius: 4px; padding: 0.3rem 0.7rem;
-    font-size: 0.82rem; font-weight: 600;
-    text-decoration: none; cursor: pointer; font-family: inherit;
-    min-height: unset; min-width: unset;
+    background: #2563eb;
+    color: #fff;
+    border: 1px solid #2563eb;
+    border-radius: 4px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: unset;
+    min-width: unset;
   }
-  .pending-review-btn:hover { background: #1d4ed8; border-color: #1d4ed8; }
+  .pending-review-btn:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+  }
 
   /* Inline review popup (overlay over Settings) */
   .review-overlay {
-    position: fixed; inset: 0; z-index: 100;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
     background: rgba(15, 23, 42, 0.55);
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 1rem;
   }
   .review-modal {
-    background: #fff; border-radius: 10px;
-    width: min(560px, 100%); max-height: 85vh; overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+    width: min(560px, 100%);
+    max-height: 85vh;
+    overflow-y: auto;
     padding: 1.1rem 1.25rem 1rem;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
   }
   .review-header {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    gap: 0.5rem; margin-bottom: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
   }
-  .review-title { font-size: 1.0rem; color: #1f2937; margin: 0; line-height: 1.3; }
+  .review-title {
+    font-size: 1rem;
+    color: #1f2937;
+    margin: 0;
+    line-height: 1.3;
+  }
   .review-close {
-    background: transparent; border: none; cursor: pointer;
-    font-size: 1.1rem; color: #6b7280; padding: 0.1rem 0.3rem;
-    min-height: unset; min-width: unset;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #6b7280;
+    padding: 0.1rem 0.3rem;
+    min-height: unset;
+    min-width: unset;
   }
-  .review-lede { color: #1f2937; font-size: 0.88rem; margin: 0.25rem 0 0.4rem; }
+  .review-lede {
+    color: #1f2937;
+    font-size: 0.88rem;
+    margin: 0.25rem 0 0.4rem;
+  }
   .review-notes {
-    color: #475569; font-size: 0.82rem; font-style: italic;
+    color: #475569;
+    font-size: 0.82rem;
+    font-style: italic;
     margin: 0.25rem 0 0.5rem;
   }
-  .review-list { list-style: none; padding: 0; margin: 0.5rem 0 0.75rem; }
+  .review-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0.75rem;
+  }
   .review-row {
-    display: flex; align-items: center; gap: 0.5rem;
-    padding: 0.25rem 0; border-bottom: 1px dashed #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px dashed #e2e8f0;
     font-size: 0.85rem;
     min-height: 26px;
   }
-  .review-row:last-child { border-bottom: none; }
-  .review-check {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    flex: 0 0 auto; cursor: pointer;
+  .review-row:last-child {
+    border-bottom: none;
   }
-  .review-check input { margin: 0; }
-  .review-key { font-weight: 600; color: #1f2937; white-space: nowrap; }
-  .review-value {
-    flex: 1 1 auto; text-align: right;
+  .review-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+    cursor: pointer;
+  }
+  .review-check input {
+    margin: 0;
+  }
+  .review-key {
+    font-weight: 600;
     color: #1f2937;
-    font-family: ui-monospace, Menlo, monospace; font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .review-value {
+    flex: 1 1 auto;
+    text-align: right;
+    color: #1f2937;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 0.82rem;
     padding-left: 0.4rem;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   a.review-cite {
     display: inline-block;
@@ -1782,23 +2018,37 @@
     margin: 0 0 0 2px;
     color: #6366f1;
     font-size: 0.7rem;
-    font-style: italic; font-weight: 700; font-family: serif;
+    font-style: italic;
+    font-weight: 700;
+    font-family: serif;
     line-height: 1;
     text-decoration: none;
     vertical-align: super;
     cursor: help;
     flex: 0 0 auto;
   }
-  a.review-cite:hover { color: #4338ca; text-decoration: underline; }
+  a.review-cite:hover {
+    color: #4338ca;
+    text-decoration: underline;
+  }
   .review-actions {
-    display: flex; gap: 0.5rem; flex-wrap: wrap;
-    margin-top: 0.75rem; padding-top: 0.6rem; border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid #e5e7eb;
   }
   .review-cite-list {
-    list-style: disc; padding-left: 1.1rem;
-    margin: 0.3rem 0 0; font-size: 0.83rem;
+    list-style: disc;
+    padding-left: 1.1rem;
+    margin: 0.3rem 0 0;
+    font-size: 0.83rem;
   }
-  .review-cite-list a { color: #2563eb; text-decoration: underline; }
+  .review-cite-list a {
+    color: #2563eb;
+    text-decoration: underline;
+  }
 
   .card.warn {
     background: #fff8e1;
@@ -1817,7 +2067,10 @@
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
   }
-  .field-label { font-weight: 600; color: #333; }
+  .field-label {
+    font-weight: 600;
+    color: #333;
+  }
   .field input[type='text'],
   .field input[type='password'],
   .field input[type='number'] {
@@ -1861,7 +2114,10 @@
     font-size: 0.95rem;
     font-family: inherit;
   }
-  button.primary:disabled { background: #999; cursor: not-allowed; }
+  button.primary:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
   button.secondary {
     background: white;
     color: #1f5e3a;
@@ -1874,8 +2130,14 @@
     font-size: 0.95rem;
     font-family: inherit;
   }
-  button.secondary:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.secondary.danger-text { color: #b00020; border-color: #b00020; }
+  button.secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  button.secondary.danger-text {
+    color: #b00020;
+    border-color: #b00020;
+  }
   button.primary.danger {
     background: #b00020;
     color: white;
@@ -1888,7 +2150,10 @@
     font-size: 1rem;
     margin-top: 0.5rem;
   }
-  button.primary.danger:disabled { background: #999; cursor: not-allowed; }
+  button.primary.danger:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
 
   /* ── Spend widget ────────────────────────────────────────────────────── */
   .spend-widget {
@@ -1903,8 +2168,14 @@
     align-items: baseline;
     padding: 0.15rem 0;
   }
-  .spend-label { color: #555; font-size: 0.85rem; }
-  .spend-value { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .spend-label {
+    color: #555;
+    font-size: 0.85rem;
+  }
+  .spend-value {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
   .spend-bar {
     margin-top: 0.5rem;
     height: 8px;
@@ -1918,7 +2189,9 @@
     border-radius: 4px;
     transition: width 0.2s;
   }
-  .spend-bar-fill.warn { background: #b35900; }
+  .spend-bar-fill.warn {
+    background: #b35900;
+  }
   .spend-meta {
     margin-top: 0.35rem;
     font-size: 0.78rem;
@@ -1934,11 +2207,27 @@
     padding: 0.7rem 0;
     border-top: 1px solid #f0f3f0;
   }
-  .quota-row:first-of-type { border-top: none; padding-top: 0; }
-  .quota-info { flex: 1; min-width: 0; }
-  .quota-name { font-weight: 600; }
-  .quota-help { font-size: 0.83rem; color: #555; margin-top: 0.15rem; }
-  .quota-default { font-size: 0.78rem; color: #888; margin-top: 0.2rem; }
+  .quota-row:first-of-type {
+    border-top: none;
+    padding-top: 0;
+  }
+  .quota-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .quota-name {
+    font-weight: 600;
+  }
+  .quota-help {
+    font-size: 0.83rem;
+    color: #555;
+    margin-top: 0.15rem;
+  }
+  .quota-default {
+    font-size: 0.78rem;
+    color: #888;
+    margin-top: 0.2rem;
+  }
   .quota-input {
     width: 5.5rem;
     padding: 0.5rem 0.6rem;
@@ -1958,15 +2247,25 @@
     gap: 0.5rem 1.25rem;
     margin: 0;
   }
-  dl.counts dt { color: #666; font-size: 0.9rem; }
-  dl.counts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+  dl.counts dt {
+    color: #666;
+    font-size: 0.9rem;
+  }
+  dl.counts dd {
+    margin: 0;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
 
   /* ── Types section ───────────────────────────────────────────────────── */
   .types-domain {
     border-top: 1px solid #e8ede8;
     padding: 0.4rem 0;
   }
-  .types-domain:first-of-type { border-top: none; padding-top: 0; }
+  .types-domain:first-of-type {
+    border-top: none;
+    padding-top: 0;
+  }
   .types-domain summary {
     cursor: pointer;
     display: flex;
@@ -1977,7 +2276,9 @@
     padding: 0.4rem 0;
     list-style: none;
   }
-  .types-domain summary::-webkit-details-marker { display: none; }
+  .types-domain summary::-webkit-details-marker {
+    display: none;
+  }
   .types-domain summary::before {
     content: '▸';
     font-size: 0.8rem;
@@ -1985,50 +2286,131 @@
     width: 0.8rem;
     transition: transform 0.15s;
   }
-  .types-domain[open] summary::before { transform: rotate(90deg); }
-  .domain-label { flex: 1; }
-  .domain-count {
-    background: #e7f1ea; color: #1f5e3a; border-radius: 10px;
-    font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.5rem;
+  .types-domain[open] summary::before {
+    transform: rotate(90deg);
   }
-  .empty-types { font-size: 0.85rem; color: #888; margin: 0.4rem 0 0.4rem 1rem; }
+  .domain-label {
+    flex: 1;
+  }
+  .domain-count {
+    background: #e7f1ea;
+    color: #1f5e3a;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.1rem 0.5rem;
+  }
+  .empty-types {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0.4rem 0 0.4rem 1rem;
+  }
   .type-list {
-    list-style: none; padding: 0; margin: 0.4rem 0 0.5rem 0;
+    list-style: none;
+    padding: 0;
+    margin: 0.4rem 0 0.5rem 0;
   }
   .type-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0.35rem 0.5rem; gap: 0.5rem; flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.5rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
     border-bottom: 1px solid #f0f3f0;
   }
-  .type-row:last-child { border-bottom: none; }
-  .type-info { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex: 1; min-width: 0; }
-  .type-name { font-weight: 600; font-size: 0.92rem; }
-  .type-desc { color: #666; font-size: 0.82rem; }
+  .type-row:last-child {
+    border-bottom: none;
+  }
+  .type-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+  }
+  .type-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+  .type-desc {
+    color: #666;
+    font-size: 0.82rem;
+  }
   .badge.default {
-    background: #e7f1ea; color: #1f5e3a;
-    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
-    padding: 0.1rem 0.4rem; border-radius: 3px; letter-spacing: 0.4px;
+    background: #e7f1ea;
+    color: #1f5e3a;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    letter-spacing: 0.4px;
   }
-  .type-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
-  .type-edit, .add-form {
-    display: flex; gap: 0.4rem; flex-wrap: wrap; flex: 1; align-items: center;
+  .type-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
   }
-  .type-edit input, .add-form input {
-    flex: 1 1 140px; padding: 0.4rem 0.6rem; border: 1.5px solid #d0d7d0;
-    border-radius: 4px; font-size: 0.9rem; min-height: 36px; font-family: inherit;
+  .type-edit,
+  .add-form {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    flex: 1;
+    align-items: center;
   }
-  .add-form { margin-top: 0.4rem; }
-  .add-type-btn { margin-top: 0.4rem; }
+  .type-edit input,
+  .add-form input {
+    flex: 1 1 140px;
+    padding: 0.4rem 0.6rem;
+    border: 1.5px solid #d0d7d0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-height: 36px;
+    font-family: inherit;
+  }
+  .add-form {
+    margin-top: 0.4rem;
+  }
+  .add-type-btn {
+    margin-top: 0.4rem;
+  }
   .tiny {
-    padding: 0.35rem 0.7rem; font-size: 0.82rem; min-height: 32px;
-    border-radius: 4px; font-family: inherit; font-weight: 600; cursor: pointer;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.82rem;
+    min-height: 32px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
   }
-  .tiny.primary { background: #1f5e3a; color: #fff; border: none; }
-  .tiny.primary:disabled { background: #999; cursor: not-allowed; }
-  .tiny.secondary { background: #fff; color: #555; border: 1.5px solid #d0d7d0; }
-  .tiny.secondary:hover { background: #f5f7f4; }
-  .tiny.danger-btn { background: #fff; color: #b00020; border: 1.5px solid #b00020; }
-  .tiny.danger-btn:hover { background: #fce4e4; }
+  .tiny.primary {
+    background: #1f5e3a;
+    color: #fff;
+    border: none;
+  }
+  .tiny.primary:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  .tiny.secondary {
+    background: #fff;
+    color: #555;
+    border: 1.5px solid #d0d7d0;
+  }
+  .tiny.secondary:hover {
+    background: #f5f7f4;
+  }
+  .tiny.danger-btn {
+    background: #fff;
+    color: #b00020;
+    border: 1.5px solid #b00020;
+  }
+  .tiny.danger-btn:hover {
+    background: #fce4e4;
+  }
 
   /* ── Status messages ─────────────────────────────────────────────────── */
   .success {
@@ -2077,6 +2459,8 @@
       min-width: 80px;
       font-size: 0.8rem;
     }
-    .grid-2 { grid-template-columns: 1fr; }
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

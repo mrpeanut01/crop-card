@@ -54,20 +54,12 @@ export const POST: RequestHandler = async (event) => {
   }
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
-    return json(
-      { error: 'invalid request', issues: parsed.error.issues },
-      { status: 400 }
-    );
+    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
   const { query, hintType, skipWebSearch } = parsed.data;
 
-  const localMatches = await localFuzzyMatchPlugins(
-    query,
-    hintType as PluginKindHint | undefined
-  );
-  const hasConfidentLocal = localMatches.some(
-    (m) => (m.score ?? 0) >= LOCAL_CONFIDENT_THRESHOLD
-  );
+  const localMatches = await localFuzzyMatchPlugins(query, hintType as PluginKindHint | undefined);
+  const hasConfidentLocal = localMatches.some((m) => (m.score ?? 0) >= LOCAL_CONFIDENT_THRESHOLD);
 
   if (skipWebSearch || hasConfidentLocal) {
     return json({
@@ -90,10 +82,7 @@ export const POST: RequestHandler = async (event) => {
   }
 
   try {
-    const ai = await claudePluginSearchByName(
-      query,
-      hintType as PluginKindHint | undefined
-    );
+    const ai = await claudePluginSearchByName(query, hintType as PluginKindHint | undefined);
     recordCall({
       userId: session.id,
       endpoint: 'plugin-search',

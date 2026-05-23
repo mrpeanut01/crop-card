@@ -160,10 +160,7 @@ export const pluginOverrides = tenantScoped(
         .default(sql`(unixepoch() * 1000)`)
     },
     (table) => ({
-      ownerPluginIdx: index('plugin_overrides_owner_plugin_idx').on(
-        table.ownerId,
-        table.pluginId
-      )
+      ownerPluginIdx: index('plugin_overrides_owner_plugin_idx').on(table.ownerId, table.pluginId)
     })
   )
 );
@@ -361,7 +358,16 @@ export const shadeSources = tenantScoped(
       ownerId: text('owner_id').notNull(),
       name: text('name').notNull(),
       kind: text('kind', {
-        enum: ['tree-row', 'tree-grove', 'tree-single', 'hedge', 'building', 'fence', 'structure', 'other']
+        enum: [
+          'tree-row',
+          'tree-grove',
+          'tree-single',
+          'hedge',
+          'building',
+          'fence',
+          'structure',
+          'other'
+        ]
       })
         .notNull()
         .default('tree-row'),
@@ -699,10 +705,7 @@ export const stockItems = tenantScoped(
       pendingRefreshAt: integer('pending_refresh_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
-      ownerCategoryIdx: index('stock_items_owner_category_idx').on(
-        table.ownerId,
-        table.category
-      ),
+      ownerCategoryIdx: index('stock_items_owner_category_idx').on(table.ownerId, table.category),
       ownerPluginIdx: index('stock_items_owner_plugin_idx').on(table.ownerId, table.pluginId),
       ownerBarcodeIdx: index('stock_items_owner_barcode_idx').on(table.ownerId, table.barcode)
     })
@@ -1104,10 +1107,7 @@ export const tasks = tenantScoped(
         .default(sql`(unixepoch() * 1000)`)
     },
     (table) => ({
-      ownerScheduledIdx: index('tasks_owner_scheduled_idx').on(
-        table.ownerId,
-        table.scheduledFor
-      ),
+      ownerScheduledIdx: index('tasks_owner_scheduled_idx').on(table.ownerId, table.scheduledFor),
       ownerCropIdx: index('tasks_owner_crop_idx').on(table.ownerId, table.cropId),
       categoryIdx: index('tasks_category_idx').on(table.category)
     })
@@ -1150,10 +1150,7 @@ export const aiCallLog = tenantScoped(
         .default(sql`(unixepoch() * 1000)`)
     },
     (table) => ({
-      ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(
-        table.ownerId,
-        table.createdAt
-      )
+      ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(table.ownerId, table.createdAt)
     })
   )
 );

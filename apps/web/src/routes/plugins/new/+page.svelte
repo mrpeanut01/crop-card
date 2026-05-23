@@ -27,11 +27,7 @@
    *  When `keepSlug` is provided (edit flow), passes that through unchanged
    *  so the upload endpoint correctly maps to the existing plugin and
    *  auto-bumps the version instead of creating a new row. */
-  function uniqueSlug(
-    base: string,
-    existing: ReadonlyArray<string>,
-    keepSlug?: string
-  ): string {
+  function uniqueSlug(base: string, existing: ReadonlyArray<string>, keepSlug?: string): string {
     if (keepSlug && existing.includes(keepSlug)) return keepSlug;
     const seed = slugify(base);
     if (!seed) return '';
@@ -48,7 +44,14 @@
   // ─── Plugin kind dropdown ─────────────────────────────────────────────
 
   type Mode = 'crop' | 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'companion';
-  const MODES: Mode[] = ['crop', 'herbicide', 'insecticide', 'fungicide', 'fertilizer', 'companion'];
+  const MODES: Mode[] = [
+    'crop',
+    'herbicide',
+    'insecticide',
+    'fungicide',
+    'fertilizer',
+    'companion'
+  ];
   const MODE_LABELS: Record<Mode, string> = {
     crop: 'Crop variety',
     herbicide: 'Herbicide',
@@ -148,7 +151,9 @@
   let fReEntryHours = $state<number | undefined>(undefined);
   let fPhiDays = $state<number | undefined>(undefined);
   let fPollinatorRisk = $state<'none' | 'low' | 'moderate' | 'high'>('low');
-  let fApplicationTiming = $state<'' | 'DORMANT' | 'PRE-BLOOM' | 'BLOOM' | 'POST-BLOOM' | 'COVER' | 'PRE-HARVEST'>('');
+  let fApplicationTiming = $state<
+    '' | 'DORMANT' | 'PRE-BLOOM' | 'BLOOM' | 'POST-BLOOM' | 'COVER' | 'PRE-HARVEST'
+  >('');
   let fTargetDiseases = $state('');
   let fNotes = $state('');
 
@@ -159,7 +164,9 @@
   let ftN = $state<number | undefined>(undefined);
   let ftP = $state<number | undefined>(undefined);
   let ftK = $state<number | undefined>(undefined);
-  let ftForm = $state<'granular' | 'liquid' | 'soluble' | 'compost' | 'slow-release' | 'meal'>('granular');
+  let ftForm = $state<'granular' | 'liquid' | 'soluble' | 'compost' | 'slow-release' | 'meal'>(
+    'granular'
+  );
   let ftOrganic = $state(false);
   let ftNotes = $state('');
 
@@ -183,15 +190,9 @@
   const cropResolvedPluginId = $derived(
     uniqueSlug(cropDisplayName, existingIds, cropPluginId || undefined)
   );
-  const hResolvedPluginId = $derived(
-    uniqueSlug(hDisplayName, existingIds, hPluginId || undefined)
-  );
-  const iResolvedPluginId = $derived(
-    uniqueSlug(iDisplayName, existingIds, iPluginId || undefined)
-  );
-  const fResolvedPluginId = $derived(
-    uniqueSlug(fDisplayName, existingIds, fPluginId || undefined)
-  );
+  const hResolvedPluginId = $derived(uniqueSlug(hDisplayName, existingIds, hPluginId || undefined));
+  const iResolvedPluginId = $derived(uniqueSlug(iDisplayName, existingIds, iPluginId || undefined));
+  const fResolvedPluginId = $derived(uniqueSlug(fDisplayName, existingIds, fPluginId || undefined));
   const ftResolvedPluginId = $derived(
     uniqueSlug(ftDisplayName, existingIds, ftPluginId || undefined)
   );
@@ -246,14 +247,22 @@
       typeof r[k] === 'number' ? (r[k] as number) : undefined;
     const str = (k: string): string | undefined =>
       typeof r[k] === 'string' && (r[k] as string).length > 0 ? (r[k] as string) : undefined;
-    const SEASONAL_KINDS = ['spray', 'cultural', 'pruning', 'thinning', 'fertilize', 'irrigate', 'scout', 'harvest'];
+    const SEASONAL_KINDS = [
+      'spray',
+      'cultural',
+      'pruning',
+      'thinning',
+      'fertilize',
+      'irrigate',
+      'scout',
+      'harvest'
+    ];
     const kindRaw = str('kind');
     return {
       key: typeof r.key === 'string' ? r.key : '',
       title: typeof r.title === 'string' ? r.title : '',
       body: typeof r.body === 'string' ? r.body : '',
-      category:
-        typeof r.category === 'string' ? (r.category as PluginTaskRow['category']) : '',
+      category: typeof r.category === 'string' ? (r.category as PluginTaskRow['category']) : '',
       daysBeforePlant: num('daysBeforePlant'),
       daysBeforeFirstHarvest: num('daysBeforeFirstHarvest'),
       daysBeforePhase: num('daysBeforePhase'),
@@ -261,7 +270,10 @@
       daysAfterHarvest: num('daysAfterHarvest'),
       daysAfterPhase: num('daysAfterPhase'),
       phaseKey: str('phaseKey'),
-      kind: kindRaw && SEASONAL_KINDS.includes(kindRaw) ? (kindRaw as PluginTaskRow['kind']) : undefined,
+      kind:
+        kindRaw && SEASONAL_KINDS.includes(kindRaw)
+          ? (kindRaw as PluginTaskRow['kind'])
+          : undefined,
       dayOfYear: num('dayOfYear'),
       daysAfterPlanting: num('daysAfterPlanting'),
       windowDays: num('windowDays')
@@ -271,7 +283,10 @@
   function hydrateCrop(o: Record<string, unknown>) {
     cropPluginId = String(o.pluginId ?? '');
     cropDisplayName = String(o.displayName ?? '');
-    if (typeof o.cropFamily === 'string' && (CROP_FAMILIES as readonly string[]).includes(o.cropFamily)) {
+    if (
+      typeof o.cropFamily === 'string' &&
+      (CROP_FAMILIES as readonly string[]).includes(o.cropFamily)
+    ) {
       cropFamily = o.cropFamily as CropFamily;
     }
     const dtm = o.daysToMaturity as { min?: number; max?: number } | undefined;
@@ -279,7 +294,8 @@
     if (typeof dtm?.max === 'number') cropDtmMax = dtm.max;
     if (typeof o.defaultRowSpacingInches === 'number') cropRowSpacing = o.defaultRowSpacingInches;
     if (typeof o.preHarvestIntervalDays === 'number') cropPHI = o.preHarvestIntervalDays;
-    if (Array.isArray(o.harvestIndicators)) cropIndicators = (o.harvestIndicators as string[]).join('\n');
+    if (Array.isArray(o.harvestIndicators))
+      cropIndicators = (o.harvestIndicators as string[]).join('\n');
     if (typeof o.notes === 'string') cropNotes = o.notes;
     if (Array.isArray(o.preTasks)) {
       preTasks = (o.preTasks as unknown[])
@@ -297,19 +313,33 @@
         .filter((r): r is PluginTaskRow => r !== null);
     }
     setExtras(o, [
-      'pluginId', 'type', 'displayName', 'version', 'pluginSchemaVersion',
-      'cropFamily', 'daysToMaturity', 'defaultRowSpacingInches',
-      'preHarvestIntervalDays', 'harvestIndicators', 'notes',
-      'preTasks', 'postTasks', 'seasonalTasks'
+      'pluginId',
+      'type',
+      'displayName',
+      'version',
+      'pluginSchemaVersion',
+      'cropFamily',
+      'daysToMaturity',
+      'defaultRowSpacingInches',
+      'preHarvestIntervalDays',
+      'harvestIndicators',
+      'notes',
+      'preTasks',
+      'postTasks',
+      'seasonalTasks'
     ]);
   }
 
   function hydrateHerbicide(o: Record<string, unknown>) {
     hPluginId = String(o.pluginId ?? '');
     hDisplayName = String(o.displayName ?? '');
-    const ais = (o.activeIngredients as Array<{ name?: string; chemistryClass?: string }> | undefined) ?? [];
+    const ais =
+      (o.activeIngredients as Array<{ name?: string; chemistryClass?: string }> | undefined) ?? [];
     if (ais[0]?.name) hActiveName = String(ais[0].name);
-    if (ais[0]?.chemistryClass && (CHEMISTRY_CLASSES as readonly string[]).includes(ais[0].chemistryClass)) {
+    if (
+      ais[0]?.chemistryClass &&
+      (CHEMISTRY_CLASSES as readonly string[]).includes(ais[0].chemistryClass)
+    ) {
       hChemistryClass = ais[0].chemistryClass as ChemistryClass;
     }
     const rate = o.ratePerAcre as { amount?: number; unit?: string } | undefined;
@@ -332,17 +362,27 @@
     }
     if (typeof o.notes === 'string') hNotes = o.notes;
     setExtras(o, [
-      'pluginId', 'type', 'displayName', 'version', 'pluginSchemaVersion',
-      'activeIngredients', 'ratePerAcre', 'gpaCalibration',
-      'requiresAMS', 'deconRequired', 'applicationTiming',
-      'labelClaims', 'notes'
+      'pluginId',
+      'type',
+      'displayName',
+      'version',
+      'pluginSchemaVersion',
+      'activeIngredients',
+      'ratePerAcre',
+      'gpaCalibration',
+      'requiresAMS',
+      'deconRequired',
+      'applicationTiming',
+      'labelClaims',
+      'notes'
     ]);
   }
 
   function hydrateInsecticide(o: Record<string, unknown>) {
     iPluginId = String(o.pluginId ?? '');
     iDisplayName = String(o.displayName ?? '');
-    const ais = (o.activeIngredients as Array<{ name?: string; iracGroup?: string }> | undefined) ?? [];
+    const ais =
+      (o.activeIngredients as Array<{ name?: string; iracGroup?: string }> | undefined) ?? [];
     if (ais[0]?.name) iActiveName = String(ais[0].name);
     if (ais[0]?.iracGroup) iIracGroup = String(ais[0].iracGroup);
     const rate = o.ratePerAcre as { amount?: number; unit?: string } | undefined;
@@ -361,16 +401,26 @@
     if (Array.isArray(o.targetPests)) iTargetPests = (o.targetPests as string[]).join(', ');
     if (typeof o.notes === 'string') iNotes = o.notes;
     setExtras(o, [
-      'pluginId', 'type', 'displayName', 'version', 'pluginSchemaVersion',
-      'activeIngredients', 'ratePerAcre', 'reEntryIntervalHours',
-      'preHarvestIntervalDays', 'pollinatorRisk', 'targetPests', 'notes'
+      'pluginId',
+      'type',
+      'displayName',
+      'version',
+      'pluginSchemaVersion',
+      'activeIngredients',
+      'ratePerAcre',
+      'reEntryIntervalHours',
+      'preHarvestIntervalDays',
+      'pollinatorRisk',
+      'targetPests',
+      'notes'
     ]);
   }
 
   function hydrateFungicide(o: Record<string, unknown>) {
     fPluginId = String(o.pluginId ?? '');
     fDisplayName = String(o.displayName ?? '');
-    const ais = (o.activeIngredients as Array<{ name?: string; fracCode?: string }> | undefined) ?? [];
+    const ais =
+      (o.activeIngredients as Array<{ name?: string; fracCode?: string }> | undefined) ?? [];
     if (ais[0]?.name) fActiveName = String(ais[0].name);
     if (ais[0]?.fracCode) fFracCode = String(ais[0].fracCode);
     const rate = o.ratePerAcre as { amount?: number; unit?: string } | undefined;
@@ -388,17 +438,29 @@
     }
     if (
       typeof o.applicationTiming === 'string' &&
-      ['DORMANT', 'PRE-BLOOM', 'BLOOM', 'POST-BLOOM', 'COVER', 'PRE-HARVEST'].includes(o.applicationTiming)
+      ['DORMANT', 'PRE-BLOOM', 'BLOOM', 'POST-BLOOM', 'COVER', 'PRE-HARVEST'].includes(
+        o.applicationTiming
+      )
     ) {
       fApplicationTiming = o.applicationTiming as typeof fApplicationTiming;
     }
-    if (Array.isArray(o.targetDiseases)) fTargetDiseases = (o.targetDiseases as string[]).join(', ');
+    if (Array.isArray(o.targetDiseases))
+      fTargetDiseases = (o.targetDiseases as string[]).join(', ');
     if (typeof o.notes === 'string') fNotes = o.notes;
     setExtras(o, [
-      'pluginId', 'type', 'displayName', 'version', 'pluginSchemaVersion',
-      'activeIngredients', 'ratePerAcre', 'reEntryIntervalHours',
-      'preHarvestIntervalDays', 'pollinatorRisk', 'applicationTiming',
-      'targetDiseases', 'notes'
+      'pluginId',
+      'type',
+      'displayName',
+      'version',
+      'pluginSchemaVersion',
+      'activeIngredients',
+      'ratePerAcre',
+      'reEntryIntervalHours',
+      'preHarvestIntervalDays',
+      'pollinatorRisk',
+      'applicationTiming',
+      'targetDiseases',
+      'notes'
     ]);
   }
 
@@ -418,8 +480,15 @@
     if (typeof o.organic === 'boolean') ftOrganic = o.organic;
     if (typeof o.notes === 'string') ftNotes = o.notes;
     setExtras(o, [
-      'pluginId', 'type', 'displayName', 'version', 'pluginSchemaVersion',
-      'analysis', 'form', 'organic', 'notes'
+      'pluginId',
+      'type',
+      'displayName',
+      'version',
+      'pluginSchemaVersion',
+      'analysis',
+      'form',
+      'organic',
+      'notes'
     ]);
   }
 
@@ -436,8 +505,15 @@
     if (Array.isArray(o.badWith)) cmpBadWith = [...(o.badWith as string[])];
     if (typeof o.benefit === 'string') cmpBenefit = o.benefit;
     setExtras(o, [
-      'pluginId', 'type', 'displayName', 'version', 'pluginSchemaVersion',
-      'primaryFamily', 'goodWith', 'badWith', 'benefit'
+      'pluginId',
+      'type',
+      'displayName',
+      'version',
+      'pluginSchemaVersion',
+      'primaryFamily',
+      'goodWith',
+      'badWith',
+      'benefit'
     ]);
   }
 
@@ -455,7 +531,8 @@
     if (row.category) out.category = row.category;
     if (variant === 'preTasks') {
       if (row.daysBeforePlant != null) out.daysBeforePlant = row.daysBeforePlant;
-      if (row.daysBeforeFirstHarvest != null) out.daysBeforeFirstHarvest = row.daysBeforeFirstHarvest;
+      if (row.daysBeforeFirstHarvest != null)
+        out.daysBeforeFirstHarvest = row.daysBeforeFirstHarvest;
       if (row.daysBeforePhase != null) out.daysBeforePhase = row.daysBeforePhase;
       if (row.phaseKey?.trim()) out.phaseKey = row.phaseKey.trim();
     } else if (variant === 'postTasks') {
@@ -473,14 +550,26 @@
   }
 
   function commaList(s: string): string[] {
-    return s.split(',').map((x) => x.trim()).filter(Boolean);
+    return s
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean);
   }
 
   function buildCropPayload() {
-    const indicators = cropIndicators.split('\n').map((s) => s.trim()).filter(Boolean);
-    const pre = preTasks.map((r) => compactTaskRow(r, 'preTasks')).filter((x): x is Record<string, unknown> => x !== null);
-    const post = postTasks.map((r) => compactTaskRow(r, 'postTasks')).filter((x): x is Record<string, unknown> => x !== null);
-    const seasonal = seasonalTasks.map((r) => compactTaskRow(r, 'seasonalTasks')).filter((x): x is Record<string, unknown> => x !== null);
+    const indicators = cropIndicators
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const pre = preTasks
+      .map((r) => compactTaskRow(r, 'preTasks'))
+      .filter((x): x is Record<string, unknown> => x !== null);
+    const post = postTasks
+      .map((r) => compactTaskRow(r, 'postTasks'))
+      .filter((x): x is Record<string, unknown> => x !== null);
+    const seasonal = seasonalTasks
+      .map((r) => compactTaskRow(r, 'seasonalTasks'))
+      .filter((x): x is Record<string, unknown> => x !== null);
     return {
       ...extras,
       pluginId: cropResolvedPluginId,
@@ -597,13 +686,20 @@
 
   const preview = $derived.by(() => {
     switch (mode) {
-      case 'crop': return buildCropPayload();
-      case 'herbicide': return buildHerbicidePayload();
-      case 'insecticide': return buildInsecticidePayload();
-      case 'fungicide': return buildFungicidePayload();
-      case 'fertilizer': return buildFertilizerPayload();
-      case 'companion': return buildCompanionPayload();
-      default: return null;
+      case 'crop':
+        return buildCropPayload();
+      case 'herbicide':
+        return buildHerbicidePayload();
+      case 'insecticide':
+        return buildInsecticidePayload();
+      case 'fungicide':
+        return buildFungicidePayload();
+      case 'fertilizer':
+        return buildFertilizerPayload();
+      case 'companion':
+        return buildCompanionPayload();
+      default:
+        return null;
     }
   });
 
@@ -666,15 +762,19 @@
       <h2>Prefill payload could not be read</h2>
       <div class="reject">
         <strong>⛔ {prefillParse.message}</strong>
-        <p>Pick a type below and fill in the form manually, or go back to <a href="/plugins">/plugins</a> and rerun the scan or search.</p>
+        <p>
+          Pick a type below and fill in the form manually, or go back to <a href="/plugins"
+            >/plugins</a
+          > and rerun the scan or search.
+        </p>
       </div>
     </section>
   {/if}
 
   <p class="lede">
     {#if prefillParse.kind === 'ok'}
-      Pre-filled from a {prefillParse.obj.type ?? 'plugin'} candidate. Review the fields below, edit
-      anything that's wrong, then save. The kernel validates schema + bypass attempts at registration.
+      Pre-filled from a {prefillParse.obj.type ?? 'plugin'} candidate. Review the fields below, edit anything
+      that's wrong, then save. The kernel validates schema + bypass attempts at registration.
     {:else}
       Pick the plugin type, fill in the fields, then save. The kernel validates schema + bypass
       attempts at registration.
@@ -988,7 +1088,11 @@
               text="Pests the label claims efficacy against. Used to nudge the operator from /scout into /insecticides when a scouting threshold is crossed."
             />
           </span>
-          <input type="text" bind:value={iTargetPests} placeholder="e.g. aphid, thrips, corn-earworm" />
+          <input
+            type="text"
+            bind:value={iTargetPests}
+            placeholder="e.g. aphid, thrips, corn-earworm"
+          />
         </label>
       </div>
       <label class="full">
@@ -1105,7 +1209,11 @@
               text="Diseases the label claims efficacy against. Used to suggest products on /scout when a disease pressure is observed."
             />
           </span>
-          <input type="text" bind:value={fTargetDiseases} placeholder="e.g. early-blight, anthracnose" />
+          <input
+            type="text"
+            bind:value={fTargetDiseases}
+            placeholder="e.g. early-blight, anthracnose"
+          />
         </label>
       </div>
       <label class="full">
@@ -1236,7 +1344,10 @@
         <textarea rows="3" bind:value={cmpBenefit}></textarea>
       </label>
       {#if extras.members}
-        <p class="muted">Member companions (from the prefill) will be preserved on save; edit via the JSON expansion below if needed.</p>
+        <p class="muted">
+          Member companions (from the prefill) will be preserved on save; edit via the JSON
+          expansion below if needed.
+        </p>
       {/if}
     </section>
   {/if}
@@ -1261,7 +1372,10 @@
       <strong>⛔ {submitReject.title}</strong>
       <ul>
         {#each submitReject.issues as i}
-          <li>{#if i.path}<code>{i.path}</code>{/if} {i.message}</li>
+          <li>
+            {#if i.path}<code>{i.path}</code>{/if}
+            {i.message}
+          </li>
         {/each}
       </ul>
     </div>

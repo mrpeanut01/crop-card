@@ -6,11 +6,14 @@
 
   let blockId = $state(untrack(() => data.selectedBlockId));
   let year = $state(untrack(() => data.year));
-  let cropPluginId = $state<string>(untrack(() =>
-    data.blocks.find((b) => b.id === data.selectedBlockId)?.hayPlanting?.cropPluginId ??
-      data.hayCrops[0]?.pluginId ??
-      ''
-  ));
+  let cropPluginId = $state<string>(
+    untrack(
+      () =>
+        data.blocks.find((b) => b.id === data.selectedBlockId)?.hayPlanting?.cropPluginId ??
+        data.hayCrops[0]?.pluginId ??
+        ''
+    )
+  );
 
   let busy = $state(false);
   let error = $state<string | null>(null);
@@ -176,7 +179,13 @@
   moisture thresholds at the bale step.
 </p>
 
-<form class="filter" onsubmit={(e) => { e.preventDefault(); reload(); }}>
+<form
+  class="filter"
+  onsubmit={(e) => {
+    e.preventDefault();
+    reload();
+  }}
+>
   <label>
     Block
     <select bind:value={blockId}>

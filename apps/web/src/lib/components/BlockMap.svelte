@@ -49,7 +49,15 @@
   export type ShadeSourceLite = {
     id: string;
     name: string;
-    kind: 'tree-row' | 'tree-grove' | 'tree-single' | 'hedge' | 'building' | 'fence' | 'structure' | 'other';
+    kind:
+      | 'tree-row'
+      | 'tree-grove'
+      | 'tree-single'
+      | 'hedge'
+      | 'building'
+      | 'fence'
+      | 'structure'
+      | 'other';
     geometryGeojson?: string;
     heightFt: number;
     opacity: number;
@@ -111,8 +119,14 @@
 
   // ── Per-field color palette (index cycles for farms with >8 fields) ──────
   const FIELD_COLORS = [
-    '#1f5e3a', '#2980b9', '#8e44ad', '#c0392b',
-    '#d35400', '#16a085', '#2c3e50', '#a67c00'
+    '#1f5e3a',
+    '#2980b9',
+    '#8e44ad',
+    '#c0392b',
+    '#d35400',
+    '#16a085',
+    '#2c3e50',
+    '#a67c00'
   ];
   const fieldColorMap = new Map<string, string>();
 
@@ -130,7 +144,7 @@
   // ── Map state ────────────────────────────────────────────────────────────
   let mapEl: HTMLDivElement;
   let map: LMap | null = null;
-  let fieldLayer: LayerGroup | null = null;  // rendered below blockLayer
+  let fieldLayer: LayerGroup | null = null; // rendered below blockLayer
   let blockLayer: LayerGroup | null = null;
   /** v1.3 — shade-source layer renders above blocks. */
   let shadeLayer: LayerGroup | null = null;
@@ -169,8 +183,12 @@
   // ── Geometry helpers ─────────────────────────────────────────────────────
 
   function polygonCentroid(ring: Array<[number, number]>): [number, number] {
-    let x = 0, y = 0;
-    for (const [lng, lat] of ring) { x += lng; y += lat; }
+    let x = 0,
+      y = 0;
+    for (const [lng, lat] of ring) {
+      x += lng;
+      y += lat;
+    }
     return [x / ring.length, y / ring.length];
   }
 
@@ -178,9 +196,9 @@
     const [px, py] = pt;
     let inside = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const [xi, yi] = ring[i], [xj, yj] = ring[j];
-      if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi)
-        inside = !inside;
+      const [xi, yi] = ring[i],
+        [xj, yj] = ring[j];
+      if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
     }
     return inside;
   }
@@ -188,19 +206,35 @@
   function centroidInField(drawnGeom: Geom, field: FieldWithBlocks): boolean {
     if (!field.geometryGeojson) return false;
     let fg: unknown;
-    try { fg = JSON.parse(field.geometryGeojson); } catch { return false; }
-    const outerRing = drawnGeom.type === 'Polygon'
-      ? (drawnGeom.coordinates as number[][][])[0] as Array<[number, number]>
-      : ((drawnGeom.coordinates as number[][][][])[0][0]) as Array<[number, number]>;
+    try {
+      fg = JSON.parse(field.geometryGeojson);
+    } catch {
+      return false;
+    }
+    const outerRing =
+      drawnGeom.type === 'Polygon'
+        ? ((drawnGeom.coordinates as number[][][])[0] as Array<[number, number]>)
+        : ((drawnGeom.coordinates as number[][][][])[0][0] as Array<[number, number]>);
     const centroid = polygonCentroid(outerRing);
-    const g = fg as { type: string; coordinates?: unknown; geometry?: { type: string; coordinates: unknown }; features?: Array<{ geometry: { type: string; coordinates: unknown } }> };
+    const g = fg as {
+      type: string;
+      coordinates?: unknown;
+      geometry?: { type: string; coordinates: unknown };
+      features?: Array<{ geometry: { type: string; coordinates: unknown } }>;
+    };
     const checkCoords = (type: string, coords: unknown): boolean => {
-      if (type === 'Polygon') return pointInRing(centroid, (coords as number[][][])[0] as Array<[number, number]>);
-      if (type === 'MultiPolygon') return (coords as number[][][][]).some(p => pointInRing(centroid, p[0] as Array<[number, number]>));
+      if (type === 'Polygon')
+        return pointInRing(centroid, (coords as number[][][])[0] as Array<[number, number]>);
+      if (type === 'MultiPolygon')
+        return (coords as number[][][][]).some((p) =>
+          pointInRing(centroid, p[0] as Array<[number, number]>)
+        );
       return false;
     };
-    if (g.type === 'Feature' && g.geometry) return checkCoords(g.geometry.type, g.geometry.coordinates);
-    if (g.type === 'FeatureCollection' && g.features) return g.features.some(f => checkCoords(f.geometry.type, f.geometry.coordinates));
+    if (g.type === 'Feature' && g.geometry)
+      return checkCoords(g.geometry.type, g.geometry.coordinates);
+    if (g.type === 'FeatureCollection' && g.features)
+      return g.features.some((f) => checkCoords(f.geometry.type, f.geometry.coordinates));
     return checkCoords(g.type, g.coordinates);
   }
 
@@ -245,7 +279,9 @@
     });
     satellite.addTo(map);
     if (!thumbnail) {
-      L.control.layers({ Satellite: satellite, Streets: streets }, undefined, { position: 'topright' }).addTo(map);
+      L.control
+        .layers({ Satellite: satellite, Streets: streets }, undefined, { position: 'topright' })
+        .addTo(map);
     }
 
     // Fields layer first so it renders beneath blocks.
@@ -291,7 +327,10 @@
 
       // Click on empty map space → deselect. Suppress when a layer click just fired.
       map.on('click', () => {
-        if (_suppressNextMapClick) { _suppressNextMapClick = false; return; }
+        if (_suppressNextMapClick) {
+          _suppressNextMapClick = false;
+          return;
+        }
         if (editingActive) stopEditing();
       });
 
@@ -340,7 +379,9 @@
         const containingField = fields.find((f) => centroidInField(geojson, f));
 
         if (containingField) {
-          const unmapped = blocks.filter((b) => !b.geometryGeojson && b.fieldId === containingField.id);
+          const unmapped = blocks.filter(
+            (b) => !b.geometryGeojson && b.fieldId === containingField.id
+          );
           const allUnmapped = blocks.filter((b) => !b.geometryGeojson);
           const choices = (unmapped.length > 0 ? unmapped : allUnmapped).map((b) => ({
             id: b.id,
@@ -387,7 +428,10 @@
   });
 
   onDestroy(() => {
-    if (map) { map.remove(); map = null; }
+    if (map) {
+      map.remove();
+      map = null;
+    }
   });
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -399,12 +443,20 @@
     for (const f of fields) {
       if (!f.geometryGeojson) continue;
       let parsed: unknown;
-      try { parsed = JSON.parse(f.geometryGeojson); } catch { continue; }
+      try {
+        parsed = JSON.parse(f.geometryGeojson);
+      } catch {
+        continue;
+      }
       const color = fieldColorMap.get(f.id) ?? FIELD_COLORS[0];
       const layer = L.geoJSON(parsed as never, {
         style: () => ({ color, weight: 2, dashArray: '7 5', fillColor: color, fillOpacity: 0.07 })
       });
-      layer.bindTooltip(f.name, { permanent: true, direction: 'center', className: 'field-label-tip' });
+      layer.bindTooltip(f.name, {
+        permanent: true,
+        direction: 'center',
+        className: 'field-label-tip'
+      });
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
       polygonToFieldId.set(id, f.id);
       if (canEdit) {
@@ -432,7 +484,11 @@
     for (const b of blocks) {
       if (!b.geometryGeojson) continue;
       let parsed: unknown;
-      try { parsed = JSON.parse(b.geometryGeojson); } catch { continue; }
+      try {
+        parsed = JSON.parse(b.geometryGeojson);
+      } catch {
+        continue;
+      }
       const color = blockColor(b.fieldId);
       const layer = L.geoJSON(parsed as never, {
         style: () => ({ color, weight: 2, fillColor: color, fillOpacity: 0.22 })
@@ -493,12 +549,15 @@
     for (const s of shadeSources) {
       if (!s.geometryGeojson) continue;
       let parsed: unknown;
-      try { parsed = JSON.parse(s.geometryGeojson); } catch { continue; }
+      try {
+        parsed = JSON.parse(s.geometryGeojson);
+      } catch {
+        continue;
+      }
       const isLine = isLineGeometry(parsed);
       // Distinct visual: dashed gray-green for tree-rows; dashed dark-amber
       // for buildings/structures so they don't compete with field/block colors.
-      const isStructure =
-        s.kind === 'building' || s.kind === 'structure' || s.kind === 'fence';
+      const isStructure = s.kind === 'building' || s.kind === 'structure' || s.kind === 'fence';
       const stroke = isStructure ? '#92400e' : '#15803d';
       const fill = isStructure ? '#fbbf24' : '#86efac';
       const layer = L.geoJSON(parsed as never, {
@@ -564,7 +623,9 @@
   }
 
   $effect(() => {
-    void blocks; void fields; void shadeSources;
+    void blocks;
+    void fields;
+    void shadeSources;
     if (!browser || !map) return;
     import('leaflet').then((mod) => {
       buildFieldColorMap();
@@ -591,22 +652,34 @@
   function debouncedSave(blockId: string, poly: LPolygon) {
     const prev = blockEditTimers.get(blockId);
     if (prev) clearTimeout(prev);
-    blockEditTimers.set(blockId, setTimeout(async () => {
-      const geojson = (poly.toGeoJSON() as { geometry: Geom }).geometry;
-      try { await onSaveGeometry(blockId, geojson); }
-      catch (e) { drawError = e instanceof Error ? e.message : String(e); }
-    }, 800));
+    blockEditTimers.set(
+      blockId,
+      setTimeout(async () => {
+        const geojson = (poly.toGeoJSON() as { geometry: Geom }).geometry;
+        try {
+          await onSaveGeometry(blockId, geojson);
+        } catch (e) {
+          drawError = e instanceof Error ? e.message : String(e);
+        }
+      }, 800)
+    );
   }
 
   const fieldEditTimers = new Map<string, ReturnType<typeof setTimeout>>();
   function debouncedFieldSave(fieldId: string, poly: LPolygon) {
     const prev = fieldEditTimers.get(fieldId);
     if (prev) clearTimeout(prev);
-    fieldEditTimers.set(fieldId, setTimeout(async () => {
-      const geojson = (poly.toGeoJSON() as { geometry: Geom }).geometry;
-      try { await onSaveFieldGeometry(fieldId, geojson); }
-      catch (e) { drawError = e instanceof Error ? e.message : String(e); }
-    }, 800));
+    fieldEditTimers.set(
+      fieldId,
+      setTimeout(async () => {
+        const geojson = (poly.toGeoJSON() as { geometry: Geom }).geometry;
+        try {
+          await onSaveFieldGeometry(fieldId, geojson);
+        } catch (e) {
+          drawError = e instanceof Error ? e.message : String(e);
+        }
+      }, 800)
+    );
   }
 
   const shadeEditTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -614,23 +687,35 @@
     if (!onUpdateShadeGeometry) return;
     const prev = shadeEditTimers.get(shadeId);
     if (prev) clearTimeout(prev);
-    shadeEditTimers.set(shadeId, setTimeout(async () => {
-      const geojson = (poly.toGeoJSON() as { geometry: Geom }).geometry;
-      try { await onUpdateShadeGeometry!(shadeId, JSON.stringify(geojson)); }
-      catch (e) { drawError = e instanceof Error ? e.message : String(e); }
-    }, 800));
+    shadeEditTimers.set(
+      shadeId,
+      setTimeout(async () => {
+        const geojson = (poly.toGeoJSON() as { geometry: Geom }).geometry;
+        try {
+          await onUpdateShadeGeometry!(shadeId, JSON.stringify(geojson));
+        } catch (e) {
+          drawError = e instanceof Error ? e.message : String(e);
+        }
+      }, 800)
+    );
   }
 
   async function removeGeometry(blockId: string, name: string) {
     if (!confirm(`Remove polygon for block "${name}"?`)) return;
-    try { await onSaveGeometry(blockId, null); }
-    catch (e) { drawError = e instanceof Error ? e.message : String(e); }
+    try {
+      await onSaveGeometry(blockId, null);
+    } catch (e) {
+      drawError = e instanceof Error ? e.message : String(e);
+    }
   }
 
   async function removeFieldGeometry(fieldId: string, name: string) {
     if (!confirm(`Remove boundary for field "${name}"?`)) return;
-    try { await onSaveFieldGeometry(fieldId, null); }
-    catch (e) { drawError = e instanceof Error ? e.message : String(e); }
+    try {
+      await onSaveFieldGeometry(fieldId, null);
+    } catch (e) {
+      drawError = e instanceof Error ? e.message : String(e);
+    }
   }
 
   // ── Draw controls ─────────────────────────────────────────────────────────
@@ -644,7 +729,9 @@
   function startDraw() {
     if (!map || !canEdit) return;
     stopEditing();
-    drawError = null; drawing = true; drawMode = 'auto';
+    drawError = null;
+    drawing = true;
+    drawMode = 'auto';
     map.pm.enableDraw('Polygon');
   }
 
@@ -658,10 +745,17 @@
 
   function locateMe() {
     if (!map) return;
-    if (!('geolocation' in navigator)) { drawError = 'Geolocation not available'; return; }
+    if (!('geolocation' in navigator)) {
+      drawError = 'Geolocation not available';
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
-      (pos) => { map?.flyTo([pos.coords.latitude, pos.coords.longitude], 17); },
-      (err) => { drawError = `Location: ${err.message}`; },
+      (pos) => {
+        map?.flyTo([pos.coords.latitude, pos.coords.longitude], 17);
+      },
+      (err) => {
+        drawError = `Location: ${err.message}`;
+      },
       { enableHighAccuracy: true, timeout: 8000 }
     );
   }
@@ -739,34 +833,98 @@
   } {
     switch (kind) {
       case 'tree-row':
-        return { heightFt: '30', opacity: '0.7', isDeciduous: true, leafOnDayOfYear: '105', leafOffDayOfYear: '305', geomKind: 'LineString' };
+        return {
+          heightFt: '30',
+          opacity: '0.7',
+          isDeciduous: true,
+          leafOnDayOfYear: '105',
+          leafOffDayOfYear: '305',
+          geomKind: 'LineString'
+        };
       case 'hedge':
-        return { heightFt: '6', opacity: '0.7', isDeciduous: true, leafOnDayOfYear: '105', leafOffDayOfYear: '305', geomKind: 'LineString' };
+        return {
+          heightFt: '6',
+          opacity: '0.7',
+          isDeciduous: true,
+          leafOnDayOfYear: '105',
+          leafOffDayOfYear: '305',
+          geomKind: 'LineString'
+        };
       case 'fence':
-        return { heightFt: '6', opacity: '0.95', isDeciduous: false, leafOnDayOfYear: '105', leafOffDayOfYear: '305', geomKind: 'LineString' };
+        return {
+          heightFt: '6',
+          opacity: '0.95',
+          isDeciduous: false,
+          leafOnDayOfYear: '105',
+          leafOffDayOfYear: '305',
+          geomKind: 'LineString'
+        };
       case 'tree-grove':
-        return { heightFt: '40', opacity: '0.7', isDeciduous: true, leafOnDayOfYear: '105', leafOffDayOfYear: '305', geomKind: 'Polygon' };
+        return {
+          heightFt: '40',
+          opacity: '0.7',
+          isDeciduous: true,
+          leafOnDayOfYear: '105',
+          leafOffDayOfYear: '305',
+          geomKind: 'Polygon'
+        };
       case 'tree-single':
-        return { heightFt: '25', opacity: '0.7', isDeciduous: true, leafOnDayOfYear: '105', leafOffDayOfYear: '305', geomKind: 'Polygon' };
+        return {
+          heightFt: '25',
+          opacity: '0.7',
+          isDeciduous: true,
+          leafOnDayOfYear: '105',
+          leafOffDayOfYear: '305',
+          geomKind: 'Polygon'
+        };
       case 'building':
-        return { heightFt: '20', opacity: '1.0', isDeciduous: false, leafOnDayOfYear: '105', leafOffDayOfYear: '305', geomKind: 'Polygon' };
+        return {
+          heightFt: '20',
+          opacity: '1.0',
+          isDeciduous: false,
+          leafOnDayOfYear: '105',
+          leafOffDayOfYear: '305',
+          geomKind: 'Polygon'
+        };
       case 'structure':
-        return { heightFt: '15', opacity: '0.9', isDeciduous: false, leafOnDayOfYear: '105', leafOffDayOfYear: '305', geomKind: 'Polygon' };
+        return {
+          heightFt: '15',
+          opacity: '0.9',
+          isDeciduous: false,
+          leafOnDayOfYear: '105',
+          leafOffDayOfYear: '305',
+          geomKind: 'Polygon'
+        };
       default:
-        return { heightFt: '20', opacity: '0.7', isDeciduous: false, leafOnDayOfYear: '105', leafOffDayOfYear: '305', geomKind: 'Polygon' };
+        return {
+          heightFt: '20',
+          opacity: '0.7',
+          isDeciduous: false,
+          leafOnDayOfYear: '105',
+          leafOffDayOfYear: '305',
+          geomKind: 'Polygon'
+        };
     }
   }
 
   function shadeKindEmoji(kind: ShadeKind): string {
     switch (kind) {
-      case 'tree-row': return '🌳';
-      case 'tree-grove': return '🌲';
-      case 'tree-single': return '🌳';
-      case 'hedge': return '🌿';
-      case 'building': return '🏠';
-      case 'fence': return '🧱';
-      case 'structure': return '🏗️';
-      default: return '🌑';
+      case 'tree-row':
+        return '🌳';
+      case 'tree-grove':
+        return '🌲';
+      case 'tree-single':
+        return '🌳';
+      case 'hedge':
+        return '🌿';
+      case 'building':
+        return '🏠';
+      case 'fence':
+        return '🧱';
+      case 'structure':
+        return '🏗️';
+      default:
+        return '🌑';
     }
   }
 
@@ -824,12 +982,17 @@
     }
   }
 
-  function dismissDraft() { pendingDraft = null; }
+  function dismissDraft() {
+    pendingDraft = null;
+  }
 
   // Expose block name/fieldId for parent's createBlockWithGeometry.
-  export function currentDraftName(): string { return pendingDraft?.newBlockName.trim() ?? ''; }
-  export function currentDraftFieldId(): string { return pendingDraft?.newBlockFieldId ?? ''; }
-
+  export function currentDraftName(): string {
+    return pendingDraft?.newBlockName.trim() ?? '';
+  }
+  export function currentDraftFieldId(): string {
+    return pendingDraft?.newBlockFieldId ?? '';
+  }
 </script>
 
 <div class="map-shell" class:map-thumbnail={thumbnail}>
@@ -857,7 +1020,12 @@
           ✓ Done editing
         </button>
       {:else}
-        <button type="button" class="tool primary" onclick={startDraw} title="Draw a field or block polygon">
+        <button
+          type="button"
+          class="tool primary"
+          onclick={startDraw}
+          title="Draw a field or block polygon"
+        >
           🌾 Field / Block
         </button>
         {#if onCreateShadeSource}
@@ -866,22 +1034,52 @@
             class="tool"
             class:active={shadePickerOpen}
             onclick={toggleShadePicker}
-            title="Add a shade source — pick a kind, then draw"
-          >🌑 Shade ▾</button>
+            title="Add a shade source — pick a kind, then draw">🌑 Shade ▾</button
+          >
           {#if shadePickerOpen && !drawing}
             <div class="shade-picker" role="menu" aria-label="Pick shade source kind">
               <p class="shade-picker-hint">Pick a kind to draw:</p>
               <div class="shade-picker-row"><strong>Lines</strong></div>
-              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('tree-row')}>🌳 Tree row</button>
-              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('hedge')}>🌿 Hedge</button>
-              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('fence')}>🧱 Fence</button>
+              <button
+                type="button"
+                class="shade-picker-btn"
+                onclick={() => startDrawShade('tree-row')}>🌳 Tree row</button
+              >
+              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('hedge')}
+                >🌿 Hedge</button
+              >
+              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('fence')}
+                >🧱 Fence</button
+              >
               <div class="shade-picker-row"><strong>Areas</strong></div>
-              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('tree-grove')}>🌲 Tree grove</button>
-              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('tree-single')}>🌳 Single tree</button>
-              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('building')}>🏠 Building</button>
-              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('structure')}>🏗️ Structure</button>
-              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('other')}>🌑 Other</button>
-              <button type="button" class="shade-picker-cancel" onclick={() => (shadePickerOpen = false)}>Cancel</button>
+              <button
+                type="button"
+                class="shade-picker-btn"
+                onclick={() => startDrawShade('tree-grove')}>🌲 Tree grove</button
+              >
+              <button
+                type="button"
+                class="shade-picker-btn"
+                onclick={() => startDrawShade('tree-single')}>🌳 Single tree</button
+              >
+              <button
+                type="button"
+                class="shade-picker-btn"
+                onclick={() => startDrawShade('building')}>🏠 Building</button
+              >
+              <button
+                type="button"
+                class="shade-picker-btn"
+                onclick={() => startDrawShade('structure')}>🏗️ Structure</button
+              >
+              <button type="button" class="shade-picker-btn" onclick={() => startDrawShade('other')}
+                >🌑 Other</button
+              >
+              <button
+                type="button"
+                class="shade-picker-cancel"
+                onclick={() => (shadePickerOpen = false)}>Cancel</button
+              >
             </div>
           {/if}
         {/if}
@@ -900,8 +1098,9 @@
       {:else if drawMode === 'shade-polygon'}
         Click points to outline the grove / building footprint. Double-click to finish.
       {:else}
-        Click points to outline an area. Double-click to finish.
-        Draw <strong>inside a field</strong> to create a block; draw <strong>outside</strong> to create a field.
+        Click points to outline an area. Double-click to finish. Draw <strong>inside a field</strong
+        >
+        to create a block; draw <strong>outside</strong> to create a field.
       {/if}
     </p>
   {/if}
@@ -919,10 +1118,19 @@
   >
     <div class="draft-modal">
       <h2 id="shade-draft-title">Add shade source</h2>
-      <p class="acres-hint">{shadeDraft.geomKind === 'LineString' ? 'Tree row / fence line' : 'Grove / building footprint'}</p>
+      <p class="acres-hint">
+        {shadeDraft.geomKind === 'LineString'
+          ? 'Tree row / fence line'
+          : 'Grove / building footprint'}
+      </p>
       <label>
         Name
-        <input type="text" bind:value={shadeDraft.name} placeholder="North maple windbreak" maxlength="120" />
+        <input
+          type="text"
+          bind:value={shadeDraft.name}
+          placeholder="North maple windbreak"
+          maxlength="120"
+        />
       </label>
       <label>
         Kind
@@ -983,7 +1191,12 @@
       {/if}
       {#if shadeDraft.error}<p class="map-error">{shadeDraft.error}</p>{/if}
       <div class="actions">
-        <button type="button" class="primary" onclick={submitShadeDraft} disabled={!shadeDraftReady}>
+        <button
+          type="button"
+          class="primary"
+          onclick={submitShadeDraft}
+          disabled={!shadeDraftReady}
+        >
           {shadeDraft.busy ? '…' : 'Save shade source'}
         </button>
         <button type="button" onclick={dismissShadeDraft}>Discard</button>
@@ -1036,7 +1249,11 @@
         {:else}
           <label>
             Block name
-            <input type="text" bind:value={pendingDraft.newBlockName} placeholder="e.g. Corn Block A" />
+            <input
+              type="text"
+              bind:value={pendingDraft.newBlockName}
+              placeholder="e.g. Corn Block A"
+            />
           </label>
           {#if fields.length > 1}
             <label>
@@ -1049,7 +1266,6 @@
             </label>
           {/if}
         {/if}
-
       {:else}
         <!-- ── Field mode ── -->
         <h2 id="draft-title">Assign field boundary</h2>
@@ -1079,7 +1295,11 @@
         {:else}
           <label>
             Field name
-            <input type="text" bind:value={pendingDraft.newFieldName} placeholder="e.g. North Field" />
+            <input
+              type="text"
+              bind:value={pendingDraft.newFieldName}
+              placeholder="e.g. North Field"
+            />
           </label>
         {/if}
       {/if}
@@ -1087,12 +1307,7 @@
       {#if pendingDraft.error}<p class="map-error">{pendingDraft.error}</p>{/if}
 
       <div class="actions">
-        <button
-          type="button"
-          class="primary"
-          onclick={submitDraft}
-          disabled={!draftReady}
-        >
+        <button type="button" class="primary" onclick={submitDraft} disabled={!draftReady}>
           {#if pendingDraft.busy}…
           {:else if pendingDraft.mode === 'block'}
             {pendingDraft.assignMode === 'existing' ? 'Assign geometry' : 'Save block'}
@@ -1154,7 +1369,9 @@
     height: 480px;
     background: #f5f7f4;
   }
-  .map-thumbnail .map { height: 200px; }
+  .map-thumbnail .map {
+    height: 200px;
+  }
   .thumbnail-overlay {
     position: absolute;
     inset: 0;
@@ -1166,7 +1383,7 @@
     padding: 0.5rem;
   }
   .thumbnail-hint {
-    background: rgba(0,0,0,0.55);
+    background: rgba(0, 0, 0, 0.55);
     color: #fff;
     font-size: 0.75rem;
     padding: 0.2rem 0.6rem;
@@ -1195,14 +1412,42 @@
     font: inherit;
     text-align: left;
   }
-  .tool:hover { background: #f8fbf9; }
-  .tool.primary { background: #1f5e3a; color: white; }
-  .tool.primary:hover { background: #2a7849; }
-  .tool.danger { background: #b00020; color: white; border-color: #b00020; }
-  .tool.done { background: #1a5276; color: white; border-color: #1a5276; }
-  .tool.done:hover { background: #1f6391; }
-  .map-error { color: #b00020; padding: 0.5rem 0.75rem; margin: 0; background: #fce4e4; }
-  .hint { background: #fff3cd; color: #b35900; padding: 0.5rem 0.75rem; margin: 0; font-size: 0.9rem; }
+  .tool:hover {
+    background: #f8fbf9;
+  }
+  .tool.primary {
+    background: #1f5e3a;
+    color: white;
+  }
+  .tool.primary:hover {
+    background: #2a7849;
+  }
+  .tool.danger {
+    background: #b00020;
+    color: white;
+    border-color: #b00020;
+  }
+  .tool.done {
+    background: #1a5276;
+    color: white;
+    border-color: #1a5276;
+  }
+  .tool.done:hover {
+    background: #1f6391;
+  }
+  .map-error {
+    color: #b00020;
+    padding: 0.5rem 0.75rem;
+    margin: 0;
+    background: #fce4e4;
+  }
+  .hint {
+    background: #fff3cd;
+    color: #b35900;
+    padding: 0.5rem 0.75rem;
+    margin: 0;
+    font-size: 0.9rem;
+  }
 
   /* Draft modal */
   .draft-backdrop {
@@ -1224,7 +1469,11 @@
     border-top: 6px solid #1f5e3a;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   }
-  .draft-modal h2 { margin: 0 0 0.75rem; color: #1f5e3a; font-size: 1.2rem; }
+  .draft-modal h2 {
+    margin: 0 0 0.75rem;
+    color: #1f5e3a;
+    font-size: 1.2rem;
+  }
   .draft-modal label {
     display: flex;
     flex-direction: column;
@@ -1241,7 +1490,11 @@
     min-height: 48px;
     font-family: inherit;
   }
-  .acres-hint { color: #555; margin: 0 0 0.75rem; font-size: 0.95rem; }
+  .acres-hint {
+    color: #555;
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+  }
 
   /* Assign / create radio toggle */
   .mode-radio {
@@ -1261,9 +1514,16 @@
     margin: 0;
     cursor: pointer;
   }
-  .mode-radio input[type='radio'] { margin: 0; accent-color: #1f5e3a; }
+  .mode-radio input[type='radio'] {
+    margin: 0;
+    accent-color: #1f5e3a;
+  }
 
-  .draft-modal .actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+  .draft-modal .actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
   .draft-modal .actions button {
     flex: 1;
     padding: 0.75rem;
@@ -1276,7 +1536,10 @@
     min-height: 48px;
     font: inherit;
   }
-  .draft-modal .actions button.primary { background: #1f5e3a; color: white; }
+  .draft-modal .actions button.primary {
+    background: #1f5e3a;
+    color: white;
+  }
   .draft-modal .actions button:disabled {
     background: #999;
     border-color: #999;
@@ -1302,7 +1565,7 @@
     background: white;
     border: 1px solid #cbd5e1;
     border-radius: 0.5rem;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.2rem 0.35rem;
@@ -1339,7 +1602,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .shade-picker-btn:hover { background: #f3f4f6; border-color: #15803d; }
+  .shade-picker-btn:hover {
+    background: #f3f4f6;
+    border-color: #15803d;
+  }
   .shade-picker-cancel {
     grid-column: 1 / -1;
     margin-top: 0.25rem;
@@ -1363,5 +1629,8 @@
     margin: 0.5rem 0;
     font-size: 0.95rem;
   }
-  .shade-checkbox input { width: auto; accent-color: #15803d; }
+  .shade-checkbox input {
+    width: auto;
+    accent-color: #15803d;
+  }
 </style>

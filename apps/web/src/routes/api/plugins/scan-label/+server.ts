@@ -51,10 +51,7 @@ export const POST: RequestHandler = async (event) => {
   }
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) {
-    return json(
-      { error: 'invalid request', issues: parsed.error.issues },
-      { status: 400 }
-    );
+    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
 
   try {
@@ -73,18 +70,12 @@ export const POST: RequestHandler = async (event) => {
       success: result.candidate !== null
     });
     if (!result.candidate) {
-      return json(
-        { found: false, meta: result.meta },
-        { status: 200 }
-      );
+      return json({ found: false, meta: result.meta }, { status: 200 });
     }
     return json({ found: true, candidate: result.candidate, meta: result.meta });
   } catch (err) {
     if (err instanceof AnthropicOverloadedError) {
-      return json(
-        { error: err.message, retryable: true },
-        { status: 503 }
-      );
+      return json({ error: err.message, retryable: true }, { status: 503 });
     }
     recordCall({
       userId: session.id,
@@ -97,9 +88,6 @@ export const POST: RequestHandler = async (event) => {
       success: false,
       errorClass: err instanceof Error ? err.name : 'unknown'
     });
-    return json(
-      { error: err instanceof Error ? err.message : String(err) },
-      { status: 500 }
-    );
+    return json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 };

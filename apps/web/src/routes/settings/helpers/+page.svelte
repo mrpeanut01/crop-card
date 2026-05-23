@@ -11,7 +11,10 @@
 
 <main class="helpers">
   <h1>Helpers</h1>
-  <p class="hint">Invite people to your farm. Helpers can record sprays and other field events; inspectors are read-only; custom-operators are scoped to specific blocks.</p>
+  <p class="hint">
+    Invite people to your farm. Helpers can record sprays and other field events; inspectors are
+    read-only; custom-operators are scoped to specific blocks.
+  </p>
 
   <section class="section">
     <h2>Invite a helper</h2>
@@ -92,21 +95,69 @@
 </main>
 
 <style>
-  .helpers { max-width: 64rem; margin: 2rem auto; padding: 1rem; }
-  .hint { color: var(--fg-muted, #555); }
-  .section { margin: 2rem 0; }
-  h2 { margin-bottom: 0.75rem; }
-  .form-row { display: flex; gap: 0.5rem; align-items: center; }
-  .form-row input, .form-row select, button {
-    font: inherit; padding: 0.5rem 0.75rem; min-height: 40px;
-    border: 1px solid var(--divider, #ccc); border-radius: 0.25rem;
+  .helpers {
+    max-width: 64rem;
+    margin: 2rem auto;
+    padding: 1rem;
   }
-  button { background: var(--accent, #1f5e3a); color: white; cursor: pointer; }
-  .revoke { background: #b54a4a; }
-  .error { background: #fde7e7; padding: 0.75rem; border-radius: 0.25rem; }
-  .success { background: #e7fde7; padding: 0.75rem; border-radius: 0.25rem; }
-  .success code { display: block; word-break: break-all; margin-top: 0.5rem; font-size: 0.875rem; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--divider, #eee); }
-  .empty { color: var(--fg-muted, #777); }
+  .hint {
+    color: var(--fg-muted, #555);
+  }
+  .section {
+    margin: 2rem 0;
+  }
+  h2 {
+    margin-bottom: 0.75rem;
+  }
+  .form-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .form-row input,
+  .form-row select,
+  button {
+    font: inherit;
+    padding: 0.5rem 0.75rem;
+    min-height: 40px;
+    border: 1px solid var(--divider, #ccc);
+    border-radius: 0.25rem;
+  }
+  button {
+    background: var(--accent, #1f5e3a);
+    color: white;
+    cursor: pointer;
+  }
+  .revoke {
+    background: #b54a4a;
+  }
+  .error {
+    background: #fde7e7;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+  }
+  .success {
+    background: #e7fde7;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+  }
+  .success code {
+    display: block;
+    word-break: break-all;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th,
+  td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--divider, #eee);
+  }
+  .empty {
+    color: var(--fg-muted, #777);
+  }
 </style>

@@ -165,7 +165,7 @@ describe('cross-tenant isolation', () => {
     });
   });
 
-  it('getBlock cannot fetch another tenant\'s block', () => {
+  it("getBlock cannot fetch another tenant's block", () => {
     const aBlocks = runWithTenant(OWNER_A, () => blocksRepo.listBlocks());
     const aBlockId = aBlocks[0].id;
 

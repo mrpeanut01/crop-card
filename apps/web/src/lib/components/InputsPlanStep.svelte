@@ -171,8 +171,8 @@
     <h2>Inputs plan</h2>
     <p class="lede">
       Deterministic plan derived from your season setup, the crop family defaults and the
-      compliance-filtered product catalog. Toggle rows off to skip them; the right rail
-      aggregates everything you keep.
+      compliance-filtered product catalog. Toggle rows off to skip them; the right rail aggregates
+      everything you keep.
     </p>
   </header>
 
@@ -187,12 +187,15 @@
   {:else if plan}
     {#if planMeta?.fallback === 'deterministic'}
       <div class="card warn" role="status">
-        <strong>AI substitution rejected.</strong> The proposed product changes failed
-        validation; falling back to the deterministic plan. Edit a row above to substitute
-        by hand.
+        <strong>AI substitution rejected.</strong> The proposed product changes failed validation;
+        falling back to the deterministic plan. Edit a row above to substitute by hand.
         {#if planMeta.violations && planMeta.violations.length > 0}
           <details class="violation-details">
-            <summary>Why? ({planMeta.violations.length} violation{planMeta.violations.length === 1 ? '' : 's'})</summary>
+            <summary
+              >Why? ({planMeta.violations.length} violation{planMeta.violations.length === 1
+                ? ''
+                : 's'})</summary
+            >
             <ul class="violation-list">
               {#each planMeta.violations as v, i (i)}
                 <li><code>{v}</code></li>
@@ -200,8 +203,8 @@
             </ul>
             <p class="violation-hint">
               Most common cause: plugins lack <code>complianceFlags</code> (omriListed,
-              nonGmoCompliant, etc.) so they can't satisfy a non-conventional philosophy.
-              Tag the plugins via Plugin Manager, or switch philosophy to
+              nonGmoCompliant, etc.) so they can't satisfy a non-conventional philosophy. Tag the
+              plugins via Plugin Manager, or switch philosophy to
               <code>conventional</code> to unblock substitutions.
             </p>
           </details>
@@ -209,8 +212,8 @@
       </div>
     {:else if planMeta?.fallback === 'quota-exceeded'}
       <div class="card warn" role="status">
-        <strong>Daily AI quota reached.</strong> Showing the deterministic plan. Raise the
-        quota on Settings or try again tomorrow.
+        <strong>Daily AI quota reached.</strong> Showing the deterministic plan. Raise the quota on Settings
+        or try again tomorrow.
       </div>
     {:else if planMeta?.fallback === 'no-api-key'}
       <div class="card info" role="status">
@@ -224,7 +227,8 @@
         {#each plantings as planting (planting.id)}
           {@const apps = appsByPlanting.get(planting.id) ?? []}
           {@const scouts = scoutsByPlanting.get(planting.id) ?? []}
-          {@const acceptedHere = apps.filter((a) => !rejectedAppIds.has(a.id)).length +
+          {@const acceptedHere =
+            apps.filter((a) => !rejectedAppIds.has(a.id)).length +
             scouts.filter((s) => !rejectedScoutIds.has(s.id)).length}
           <article class="planting" class:expanded={expanded.has(planting.id)}>
             <button
@@ -269,8 +273,10 @@
                       <p class="rationale">{app.rationale}</p>
                       {#if app.rateAmount != null && app.rateUnit}
                         <p class="rate-line">
-                          {app.rateAmount} {app.rateUnit}/ac × {app.acres.toFixed(2)} ac =
-                          {app.totalAmount} {app.rateUnit}
+                          {app.rateAmount}
+                          {app.rateUnit}/ac × {app.acres.toFixed(2)} ac =
+                          {app.totalAmount}
+                          {app.rateUnit}
                         </p>
                       {/if}
                     </div>

@@ -5,7 +5,9 @@
 
   let { data } = $props();
 
-  let selectedBlockId = $state<string>(untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? ''));
+  let selectedBlockId = $state<string>(
+    untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? '')
+  );
   let selectedPluginId = $state<string>(untrack(() => data.insecticides[0]?.pluginId ?? ''));
   let scoutPest = $state('');
   let scoutMetric = $state<'count-per-plant' | 'pct-defoliation' | 'pct-infested-plants'>(
@@ -18,7 +20,9 @@
   let tankSize = $state<number | null>(25);
   let result = $state<string | null>(null);
   let error = $state<string | null>(null);
-  let violations = $state<Array<{ code: string; message: string; detail?: Record<string, unknown> }>>([]);
+  let violations = $state<
+    Array<{ code: string; message: string; detail?: Record<string, unknown> }>
+  >([]);
   let busy = $state(false);
 
   async function recordSpray(ev: Event) {

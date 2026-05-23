@@ -26,8 +26,7 @@ export function frostDatesForYear(year: number) {
   const last =
     parseMmDd(getSetting(SETTINGS_KEYS.lastFrost)) ?? parseMmDd(LOUDOUN_DEFAULT_LAST_FROST_MMDD)!;
   const first =
-    parseMmDd(getSetting(SETTINGS_KEYS.firstFrost)) ??
-    parseMmDd(LOUDOUN_DEFAULT_FIRST_FROST_MMDD)!;
+    parseMmDd(getSetting(SETTINGS_KEYS.firstFrost)) ?? parseMmDd(LOUDOUN_DEFAULT_FIRST_FROST_MMDD)!;
   return {
     lastSpringFrostMs: new Date(year, last.month, last.day).getTime(),
     firstFallFrostMs: new Date(year, first.month, first.day).getTime()

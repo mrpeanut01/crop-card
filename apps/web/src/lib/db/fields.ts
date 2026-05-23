@@ -50,7 +50,11 @@ export function listFields(): FieldWithBlocks[] {
   const fieldRows = db.select().from(fields).where(tenantWhere(fields)).all();
   if (fieldRows.length === 0) return [];
   const blockRows = db
-    .select({ fieldId: blocks.fieldId, acres: blocks.acres, geometryGeojson: blocks.geometryGeojson })
+    .select({
+      fieldId: blocks.fieldId,
+      acres: blocks.acres,
+      geometryGeojson: blocks.geometryGeojson
+    })
     .from(blocks)
     .where(tenantWhere(blocks))
     .all();

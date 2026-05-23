@@ -22,7 +22,12 @@ function corn(id: string, dtmMax = 90): CropPlugin {
   } as unknown as CropPlugin;
 }
 
-function staggerPair(a: string, b: string, displayA: string, displayB: string): PollinationConstraint {
+function staggerPair(
+  a: string,
+  b: string,
+  displayA: string,
+  displayB: string
+): PollinationConstraint {
   return {
     kind: 'must-stagger',
     pair: [a, b],
@@ -115,8 +120,20 @@ describe('diagnoseScheduleProblem', () => {
 
   it('does not flag pressure when family count is low (e.g. 2 corn varieties)', () => {
     const assignments = [
-      { stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn-1', varietyDisplayName: 'A', plants: 100 },
-      { stockItemId: 's2', blockId: 'b2', cropPluginId: 'corn-2', varietyDisplayName: 'B', plants: 100 }
+      {
+        stockItemId: 's1',
+        blockId: 'b1',
+        cropPluginId: 'corn-1',
+        varietyDisplayName: 'A',
+        plants: 100
+      },
+      {
+        stockItemId: 's2',
+        blockId: 'b2',
+        cropPluginId: 'corn-2',
+        varietyDisplayName: 'B',
+        plants: 100
+      }
     ];
     const input: ScheduleInput = {
       assignments,

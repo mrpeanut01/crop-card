@@ -38,9 +38,7 @@
   // this step; subsequent prop changes from the parent are intentionally
   // ignored (a re-mount happens when the wizard step changes). `untrack`
   // makes this acknowledgement explicit so Svelte 5 doesn't warn.
-  const seed = untrack(
-    () => existing ?? lastYearSetup ?? { ...SEASON_SETUP_DEFAULTS }
-  );
+  const seed = untrack(() => existing ?? lastYearSetup ?? { ...SEASON_SETUP_DEFAULTS });
 
   let philosophy = $state(seed.philosophy);
   let weedStrategy = $state(seed.weedStrategy);
@@ -51,9 +49,8 @@
   let transitioningStartedYear = $state<number | null>(
     untrack(() =>
       seed.philosophy === 'organic-transitioning'
-        ? ('transitioningStartedYear' in seed
-            ? seed.transitioningStartedYear
-            : null) ?? currentYear - 1
+        ? (('transitioningStartedYear' in seed ? seed.transitioningStartedYear : null) ??
+          currentYear - 1)
         : null
     )
   );
@@ -138,17 +135,13 @@
   <header class="ss-header">
     <h3>Set up your {currentYear} planting season</h3>
     <p class="ss-intro">
-      Six quick questions tell the planner what kinds of products + practices
-      fit your operation. Your answers carry forward year over year — you can
-      change them any time from <a href="/settings/season">Settings → Season</a>.
+      Six quick questions tell the planner what kinds of products + practices fit your operation.
+      Your answers carry forward year over year — you can change them any time from <a
+        href="/settings/season">Settings → Season</a
+      >.
     </p>
     {#if lastYearSetup && !existing}
-      <button
-        type="button"
-        class="ss-carry"
-        disabled={saving}
-        onclick={useLastYear}
-      >
+      <button type="button" class="ss-carry" disabled={saving} onclick={useLastYear}>
         ↻ Use my {lastYearSetup.year} answers
       </button>
     {/if}
@@ -186,8 +179,7 @@
           required
         />
         <span class="ss-hint">
-          Used to surface "year N of 3" badges and to time the certification
-          eligibility milestone.
+          Used to surface "year N of 3" badges and to time the certification eligibility milestone.
         </span>
       </label>
     {/if}
@@ -210,8 +202,7 @@
         {/each}
       </select>
       <span class="ss-hint">
-        Scout-then-spray (IPM) schedules field-check reminders instead of
-        calendar sprays.
+        Scout-then-spray (IPM) schedules field-check reminders instead of calendar sprays.
       </span>
     </label>
 
@@ -223,8 +214,8 @@
         {/each}
       </select>
       <span class="ss-hint">
-        Picks the fertility product pool. Cover-crop credits subtract legume N
-        from required N before sizing.
+        Picks the fertility product pool. Cover-crop credits subtract legume N from required N
+        before sizing.
       </span>
     </label>
 
@@ -235,9 +226,7 @@
           <option value={val}>{label}</option>
         {/each}
       </select>
-      <span class="ss-hint">
-        Gates post-harvest cover-seed tasks + spring termination tasks.
-      </span>
+      <span class="ss-hint"> Gates post-harvest cover-seed tasks + spring termination tasks. </span>
     </label>
 
     <label class="ss-field">
@@ -248,8 +237,7 @@
         {/each}
       </select>
       <span class="ss-hint">
-        Filters tank-mix sizing + dilution defaults. Pairs with the sprayer
-        registry (UC-10).
+        Filters tank-mix sizing + dilution defaults. Pairs with the sprayer registry (UC-10).
       </span>
     </label>
 

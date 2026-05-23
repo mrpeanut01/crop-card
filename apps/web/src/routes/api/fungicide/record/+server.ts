@@ -15,10 +15,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeRatedDilution } from '$lib/dilution/calculator';
-import {
-  insertFungicideEvent,
-  type DiseaseObservation
-} from '$lib/db/fungicideEvents';
+import { insertFungicideEvent, type DiseaseObservation } from '$lib/db/fungicideEvents';
 import {
   decrementForUse,
   getStockItem,

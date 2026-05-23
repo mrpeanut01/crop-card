@@ -1,14 +1,27 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { deleteStockItemCascade } from '$lib/db/admin';
-import { getStockItem, listLotsForItem, listMovementsForItem, updateStockItem, type StockCategory } from '$lib/db/stock';
+import {
+  getStockItem,
+  listLotsForItem,
+  listMovementsForItem,
+  updateStockItem,
+  type StockCategory
+} from '$lib/db/stock';
 import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { requireOwner } from '$lib/server/auth';
 
 const CATEGORIES: StockCategory[] = [
-  'herbicide', 'insecticide', 'fungicide', 'fertilizer', 'seed', 'adjuvant', 'fuel', 'part'
+  'herbicide',
+  'insecticide',
+  'fungicide',
+  'fertilizer',
+  'seed',
+  'adjuvant',
+  'fuel',
+  'part'
 ];
 
 const updateSchema = z.object({
@@ -48,9 +61,14 @@ export const PATCH: RequestHandler = async (event) => {
   if (!event.params.id) return json({ error: 'id required' }, { status: 400 });
   if (!getStockItem(event.params.id)) return json({ error: 'not found' }, { status: 404 });
   let body: unknown;
-  try { body = await event.request.json(); } catch { return json({ error: 'invalid JSON' }, { status: 400 }); }
+  try {
+    body = await event.request.json();
+  } catch {
+    return json({ error: 'invalid JSON' }, { status: 400 });
+  }
   const parsed = updateSchema.safeParse(body);
-  if (!parsed.success) return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+  if (!parsed.success)
+    return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   return json({ item: updateStockItem(event.params.id, parsed.data) });
 };
 

@@ -82,8 +82,6 @@ export function diffPlugins(prev: unknown, next: unknown): PluginDiff {
 
 export function isEmptyDiff(diff: PluginDiff): boolean {
   return (
-    diff.addedKeys.length === 0 &&
-    diff.removedKeys.length === 0 &&
-    diff.changedKeys.length === 0
+    diff.addedKeys.length === 0 && diff.removedKeys.length === 0 && diff.changedKeys.length === 0
   );
 }

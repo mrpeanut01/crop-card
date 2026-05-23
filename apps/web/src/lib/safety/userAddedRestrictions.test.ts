@@ -158,7 +158,9 @@ const chemistryClassArb = fc.constantFrom(...CHEMISTRY_CLASSES);
 const cropFamilyArb = fc.constantFrom(...CROP_FAMILIES);
 
 const productArb = fc.record({
-  pluginId: fc.string({ minLength: 1, maxLength: 12 }).filter((s) => /^[a-z0-9-]+$/.test(s) && s.length > 0),
+  pluginId: fc
+    .string({ minLength: 1, maxLength: 12 })
+    .filter((s) => /^[a-z0-9-]+$/.test(s) && s.length > 0),
   displayName: fc.string({ minLength: 1, maxLength: 24 }),
   activeIngredients: fc.array(
     fc.record({
@@ -192,11 +194,21 @@ const ctxArb: fc.Arbitrary<SprayContext> = fc.record({
 });
 
 const restrictionArb: fc.Arbitrary<UserAddedRestriction> = fc.record({
-  kind: fc.constantFrom('chemistry-not-on-crop' as const, 'product-not-on-crop' as const, 'pollinator-risk' as const),
+  kind: fc.constantFrom(
+    'chemistry-not-on-crop' as const,
+    'product-not-on-crop' as const,
+    'pollinator-risk' as const
+  ),
   match: fc.oneof(
     fc.record({ type: fc.constant('chemistryClass' as const), value: chemistryClassArb }),
-    fc.record({ type: fc.constant('productPluginId' as const), value: fc.string({ minLength: 1, maxLength: 12 }) }),
-    fc.record({ type: fc.constant('productActiveIngredientName' as const), value: fc.string({ minLength: 1, maxLength: 24 }) })
+    fc.record({
+      type: fc.constant('productPluginId' as const),
+      value: fc.string({ minLength: 1, maxLength: 12 })
+    }),
+    fc.record({
+      type: fc.constant('productActiveIngredientName' as const),
+      value: fc.string({ minLength: 1, maxLength: 24 })
+    })
   ),
   blocksWhenCropFamily: fc.array(cropFamilyArb, { minLength: 0, maxLength: 4 }),
   source: fc.constantFrom('user-stock' as const, 'plugin' as const, 'system-default' as const),

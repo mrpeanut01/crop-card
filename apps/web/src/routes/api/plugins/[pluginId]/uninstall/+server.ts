@@ -44,10 +44,7 @@ export const POST: RequestHandler = async (event) => {
   } catch (e) {
     if (e instanceof PluginLifecycleError) {
       const status = e.code === 'still-referenced' ? 409 : e.code === 'not-found' ? 404 : 500;
-      return json(
-        { error: e.message, code: e.code, references: e.references },
-        { status }
-      );
+      return json({ error: e.message, code: e.code, references: e.references }, { status });
     }
     return json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }

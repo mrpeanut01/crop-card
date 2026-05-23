@@ -493,7 +493,9 @@
       {#each data.activeCrops as c (c.id)}
         <li>
           <strong>{c.varietyDisplayName}</strong>
-          — block {c.blockId.slice(0, 8)} — {c.plantingDate ? `planted ${fmtDate(c.plantingDate)}` : 'planned'}
+          — block {c.blockId.slice(0, 8)} — {c.plantingDate
+            ? `planted ${fmtDate(c.plantingDate)}`
+            : 'planned'}
           <span class="status status-{c.status}">{c.status}</span>
         </li>
       {/each}

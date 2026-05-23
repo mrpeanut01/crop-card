@@ -139,7 +139,13 @@
   delivered total. Crop demand comes from the planting plugin or operator override.
 </p>
 
-<form class="filter" onsubmit={(e) => { e.preventDefault(); reload(); }}>
+<form
+  class="filter"
+  onsubmit={(e) => {
+    e.preventDefault();
+    reload();
+  }}
+>
   <label>
     Block
     <select bind:value={blockId}>

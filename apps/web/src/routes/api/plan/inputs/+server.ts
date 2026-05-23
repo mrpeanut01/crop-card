@@ -118,8 +118,9 @@ export const POST: RequestHandler = async (event) => {
   // includes inactive/zero-balance rows so the planner can decide
   // whether they cover the new plan.
   const existingStock = listStockItems()
-    .filter((s) =>
-      s.category === 'herbicide' ||
+    .filter(
+      (s) =>
+        s.category === 'herbicide' ||
         s.category === 'insecticide' ||
         s.category === 'fungicide' ||
         s.category === 'fertilizer'

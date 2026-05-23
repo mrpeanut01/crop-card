@@ -132,10 +132,7 @@ export const POST: RequestHandler = async (event) => {
     .filter((s) => !pluginIndex[s.cropPluginId])
     .map((s) => s.cropPluginId);
   if (unknownPlugins.length > 0) {
-    return json(
-      { error: 'unknown crop plugin(s)', plugins: unknownPlugins },
-      { status: 400 }
-    );
+    return json({ error: 'unknown crop plugin(s)', plugins: unknownPlugins }, { status: 400 });
   }
 
   const planInput: PlanInput = {

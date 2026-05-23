@@ -200,10 +200,9 @@ export const POST: RequestHandler = async (event) => {
     const cropId = cropByBlockAndPluginId.get(`${scout.blockId}:${scout.cropPluginId}`);
     const task = createTask({
       title: scout.title,
-      body:
-        `${scout.body}\n\nRepeats every ${scout.recurrenceDays} days through ${new Date(
-          scout.windowEndMs
-        ).toLocaleDateString()}.`,
+      body: `${scout.body}\n\nRepeats every ${scout.recurrenceDays} days through ${new Date(
+        scout.windowEndMs
+      ).toLocaleDateString()}.`,
       kind: 'primary',
       blockId: scout.blockId,
       cropId,

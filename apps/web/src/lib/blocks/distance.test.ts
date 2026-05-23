@@ -36,7 +36,7 @@ describe('haversineFt', () => {
   });
   it('matches known small distance — 0.001 deg lat at 39N is ~365ft', () => {
     // 1 degree of lat is ~364,000 ft; 0.001 deg is ~364 ft.
-    const d = haversineFt(39.000, -77.6, 39.001, -77.6);
+    const d = haversineFt(39.0, -77.6, 39.001, -77.6);
     expect(d).toBeGreaterThan(360);
     expect(d).toBeLessThan(370);
   });
@@ -58,7 +58,7 @@ describe('blockDistanceFt', () => {
     expect(blockDistanceFt(b, a)).toBeNull();
   });
   it('returns ~365ft between two centroids 0.001 deg lat apart at 39N', () => {
-    const a = { id: 'a', geometryGeojson: squareAt(39.000, -77.6) };
+    const a = { id: 'a', geometryGeojson: squareAt(39.0, -77.6) };
     const b = { id: 'b', geometryGeojson: squareAt(39.001, -77.6) };
     const d = blockDistanceFt(a, b)!;
     expect(d).toBeGreaterThan(360);
@@ -66,7 +66,7 @@ describe('blockDistanceFt', () => {
   });
   it('returns ~250ft between centroids spaced ~0.000687 deg lat apart', () => {
     // ~250 / ~364,000 ft/deg ≈ 0.000687 deg lat
-    const a = { id: 'a', geometryGeojson: squareAt(39.000, -77.6) };
+    const a = { id: 'a', geometryGeojson: squareAt(39.0, -77.6) };
     const b = { id: 'b', geometryGeojson: squareAt(39.000687, -77.6) };
     const d = blockDistanceFt(a, b)!;
     expect(d).toBeGreaterThan(245);

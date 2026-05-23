@@ -3,7 +3,12 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import type { Crop } from '$lib/db/crops';
 import { hardinessOf, scheduleCandidacy, formatDateMs } from './scheduleCandidacy';
 
-function fakePlugin(opts: { id: string; family: string; soilTempMinF?: number; dtm?: [number, number] }): CropPlugin {
+function fakePlugin(opts: {
+  id: string;
+  family: string;
+  soilTempMinF?: number;
+  dtm?: [number, number];
+}): CropPlugin {
   return {
     pluginId: opts.id,
     type: 'crop',
@@ -31,10 +36,14 @@ describe('hardinessOf', () => {
     expect(hardinessOf(fakePlugin({ id: 'p', family: 'corn', soilTempMinF: 80 }))).toBe('tender');
   });
   it('half-hardy when soilTempMinF in [50, 65)', () => {
-    expect(hardinessOf(fakePlugin({ id: 'p', family: 'brassica', soilTempMinF: 55 }))).toBe('half-hardy');
+    expect(hardinessOf(fakePlugin({ id: 'p', family: 'brassica', soilTempMinF: 55 }))).toBe(
+      'half-hardy'
+    );
   });
   it('hardy when soilTempMinF < 50', () => {
-    expect(hardinessOf(fakePlugin({ id: 'p', family: 'leafy-green', soilTempMinF: 40 }))).toBe('hardy');
+    expect(hardinessOf(fakePlugin({ id: 'p', family: 'leafy-green', soilTempMinF: 40 }))).toBe(
+      'hardy'
+    );
   });
   it('falls back to family default when soil temp missing', () => {
     expect(hardinessOf(fakePlugin({ id: 'p', family: 'cucurbit' }))).toBe('tender');
@@ -57,7 +66,15 @@ describe('scheduleCandidacy windows', () => {
   it('tender variety plants 7d after last frost', () => {
     const plug = fakePlugin({ id: 'corn1', family: 'corn', soilTempMinF: 70, dtm: [85, 95] });
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn1', varietyDisplayName: 'Bantam', plants: 100 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Bantam',
+          plants: 100
+        }
+      ],
       pluginIndex: { corn1: plug },
       existingCrops: [],
       frostDates: frost,
@@ -72,9 +89,22 @@ describe('scheduleCandidacy windows', () => {
   });
 
   it('hardy variety plants 42d before last frost', () => {
-    const plug = fakePlugin({ id: 'spin1', family: 'leafy-green', soilTempMinF: 40, dtm: [40, 50] });
+    const plug = fakePlugin({
+      id: 'spin1',
+      family: 'leafy-green',
+      soilTempMinF: 40,
+      dtm: [40, 50]
+    });
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'spin1', varietyDisplayName: 'Spinach', plants: 200 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'spin1',
+          varietyDisplayName: 'Spinach',
+          plants: 200
+        }
+      ],
       pluginIndex: { spin1: plug },
       existingCrops: [],
       frostDates: frost,
@@ -89,7 +119,15 @@ describe('scheduleCandidacy windows', () => {
   it('latestMs = firstFallFrost - DTM - 14d buffer', () => {
     const plug = fakePlugin({ id: 'corn1', family: 'corn', dtm: [80, 95] });
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn1', varietyDisplayName: 'Corn', plants: 100 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Corn',
+          plants: 100
+        }
+      ],
       pluginIndex: { corn1: plug },
       existingCrops: [],
       frostDates: frost,
@@ -105,7 +143,15 @@ describe('scheduleCandidacy windows', () => {
   it('produces empty freeSubWindows when block is unoccupied', () => {
     const plug = fakePlugin({ id: 'corn1', family: 'corn', dtm: [80, 90] });
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn1', varietyDisplayName: 'Corn', plants: 100 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Corn',
+          plants: 100
+        }
+      ],
       pluginIndex: { corn1: plug },
       existingCrops: [],
       frostDates: frost,
@@ -127,7 +173,15 @@ describe('scheduleCandidacy windows', () => {
     } as unknown as Crop;
     const otherPlug = fakePlugin({ id: 'other', family: 'leafy-green', dtm: [40, 60] });
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn1', varietyDisplayName: 'Corn', plants: 100 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Corn',
+          plants: 100
+        }
+      ],
       pluginIndex: { corn1: plug, other: otherPlug },
       existingCrops: [existing],
       frostDates: frost,
@@ -149,7 +203,15 @@ describe('scheduleCandidacy windows', () => {
       status: 'harvested'
     } as unknown as Crop;
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn1', varietyDisplayName: 'Corn', plants: 100 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Corn',
+          plants: 100
+        }
+      ],
       pluginIndex: { corn1: plug, other: plug },
       existingCrops: [existing],
       frostDates: frost,
@@ -169,7 +231,15 @@ describe('today-floor — earliestMs never falls in the past', () => {
     // Simulate "today" = May 10 of the plan year (past last frost + 7d tender buffer).
     const todayMs = new Date(PLAN_YEAR, 4, 10).getTime();
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn1', varietyDisplayName: 'Corn', plants: 100 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Corn',
+          plants: 100
+        }
+      ],
       pluginIndex: { corn1: plug },
       existingCrops: [],
       frostDates: frost,
@@ -184,7 +254,15 @@ describe('today-floor — earliestMs never falls in the past', () => {
     const plug = fakePlugin({ id: 'corn1', family: 'corn', soilTempMinF: 65, dtm: [80, 90] });
     const todayMs = new Date(PLAN_YEAR, 2, 1).getTime(); // Mar 1 of plan year
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn1', varietyDisplayName: 'Corn', plants: 100 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Corn',
+          plants: 100
+        }
+      ],
       pluginIndex: { corn1: plug },
       existingCrops: [],
       frostDates: frost,
@@ -200,7 +278,15 @@ describe('today-floor — earliestMs never falls in the past', () => {
     const plug = fakePlugin({ id: 'corn1', family: 'corn', soilTempMinF: 65, dtm: [80, 90] });
     const todayMs = new Date(PLAN_YEAR, 10, 1).getTime(); // Nov 1 of plan year — past first fall frost
     const windows = scheduleCandidacy({
-      assignments: [{ stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn1', varietyDisplayName: 'Corn', plants: 100 }],
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Corn',
+          plants: 100
+        }
+      ],
       pluginIndex: { corn1: plug },
       existingCrops: [],
       frostDates: frost,

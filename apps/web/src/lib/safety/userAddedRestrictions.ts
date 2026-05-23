@@ -75,9 +75,7 @@ export function augmentSafetyResult(
     // Universal block (empty list) OR family intersection.
     const families = r.blocksWhenCropFamily;
     const universal = families.length === 0;
-    const matchedFamily = universal
-      ? null
-      : families.find((f) => cropFamilies.has(f));
+    const matchedFamily = universal ? null : families.find((f) => cropFamilies.has(f));
     if (!universal && !matchedFamily) continue;
 
     if (r.kind === 'chemistry-not-on-crop' || r.kind === 'pollinator-risk') {

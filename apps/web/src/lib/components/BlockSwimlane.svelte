@@ -14,7 +14,12 @@
 <script lang="ts">
   import type { ShadeImpactEvent } from '$lib/calendar/engine';
   import type { RotationConflict, SameTimeOverlap } from '$lib/calendar/rotation';
-  import { applyBlockOrder, loadBlockOrder, reorderOnDrop, saveBlockOrder } from '$lib/client/blockOrder';
+  import {
+    applyBlockOrder,
+    loadBlockOrder,
+    reorderOnDrop,
+    saveBlockOrder
+  } from '$lib/client/blockOrder';
 
   export interface SwimBlock {
     id: string;
@@ -131,7 +136,9 @@
   const yearStart = $derived(new Date(props.year, 0, 1).getTime());
   const yearEnd = $derived(new Date(props.year + 1, 0, 1).getTime());
   const visibleStart = $derived.by(() => {
-    const candidates = props.plantings.filter((p) => p.endMs >= yearStart).map((p) => p.plantingDateMs);
+    const candidates = props.plantings
+      .filter((p) => p.endMs >= yearStart)
+      .map((p) => p.plantingDateMs);
     return candidates.length === 0 ? yearStart : Math.min(yearStart, ...candidates);
   });
   const visibleEnd = $derived.by(() => {
@@ -237,7 +244,11 @@
     const sourceId = reorderDragId;
     reorderDragId = null;
     reorderOverId = null;
-    const next = reorderOnDrop(orderedBlocks.map((b) => b.id), sourceId, targetId);
+    const next = reorderOnDrop(
+      orderedBlocks.map((b) => b.id),
+      sourceId,
+      targetId
+    );
     if (!next) return;
     customOrder = next;
     saveBlockOrder(next);
@@ -269,12 +280,18 @@
    *  reproductive (flowering), amber = ripening, gray = dormant, teal = transition. */
   function stageBadgeColors(bodyKind: StageBodyKind | undefined): { bg: string; fg: string } {
     switch (bodyKind) {
-      case 'vegetative': return { bg: '#16a34a', fg: '#fff' };
-      case 'reproductive': return { bg: '#eab308', fg: '#1f2937' };
-      case 'ripening': return { bg: '#d97706', fg: '#fff' };
-      case 'dormant': return { bg: '#6b7280', fg: '#fff' };
-      case 'transition': return { bg: '#0891b2', fg: '#fff' };
-      default: return { bg: '#374151', fg: '#fff' };
+      case 'vegetative':
+        return { bg: '#16a34a', fg: '#fff' };
+      case 'reproductive':
+        return { bg: '#eab308', fg: '#1f2937' };
+      case 'ripening':
+        return { bg: '#d97706', fg: '#fff' };
+      case 'dormant':
+        return { bg: '#6b7280', fg: '#fff' };
+      case 'transition':
+        return { bg: '#0891b2', fg: '#fff' };
+      default:
+        return { bg: '#374151', fg: '#fff' };
     }
   }
 
@@ -370,8 +387,7 @@
       // Bucket by source × time-window so AM+PM from the same source on the
       // same neighbor collapse into a single band.
       const k = `${sourceId}:${e.startMs}:${e.endMs}`;
-      const eventSlots: ReadonlyArray<'am' | 'mid' | 'pm'> =
-        e.detail.slots ?? [e.detail.slot];
+      const eventSlots: ReadonlyArray<'am' | 'mid' | 'pm'> = e.detail.slots ?? [e.detail.slot];
       let slots = slotAcc.get(k);
       if (!slots) {
         slots = new Set();
@@ -416,8 +432,7 @@
    *  minimum). The renderer uses it to paint the line red + tack on
    *  a "Too early" label so the operator understands why the line
    *  isn't tracking their cursor. */
-  let dropPreview: { blockId: string; dayMs: number; tooEarly: boolean } | null =
-    $state(null);
+  let dropPreview: { blockId: string; dayMs: number; tooEarly: boolean } | null = $state(null);
 
   // Phase 15d — on first mount, scroll the swim-lane so the first of the
   // current month sits right below the sticky header. Most planting work
@@ -429,10 +444,7 @@
     if (!swimRoot || didInitialScroll) return;
     const now = new Date();
     const monthStartUtc = Date.UTC(now.getFullYear(), now.getMonth(), 1);
-    const monthStartDayIdx = Math.max(
-      0,
-      Math.floor((monthStartUtc - visibleStart) / DAY_MS)
-    );
+    const monthStartDayIdx = Math.max(0, Math.floor((monthStartUtc - visibleStart) / DAY_MS));
     swimRoot.scrollTop = monthStartDayIdx * ROW_H;
     didInitialScroll = true;
   });
@@ -618,26 +630,40 @@
    *  the rendered glyph legible without overwhelming the bar. */
   function pipGlyph(category: SwimTaskPip['category']): string {
     switch (category) {
-      case 'plant': return '🌱';
-      case 'till': return '🚜';
-      case 'fertilize': return '💩';
-      case 'spray': return '💧';
-      case 'scout': return '🔍';
-      case 'companion-check': return '🤝';
-      default: return '·';
+      case 'plant':
+        return '🌱';
+      case 'till':
+        return '🚜';
+      case 'fertilize':
+        return '💩';
+      case 'spray':
+        return '💧';
+      case 'scout':
+        return '🔍';
+      case 'companion-check':
+        return '🤝';
+      default:
+        return '·';
     }
   }
   /** Human-readable label paired with each glyph in the bar tooltip
    *  so operators learn the icon → task mapping over time. */
   function pipLabel(category: SwimTaskPip['category']): string {
     switch (category) {
-      case 'plant': return 'Plant';
-      case 'till': return 'Till';
-      case 'fertilize': return 'Fertilize';
-      case 'spray': return 'Spray';
-      case 'scout': return 'Scout';
-      case 'companion-check': return 'Companion check';
-      default: return 'Task';
+      case 'plant':
+        return 'Plant';
+      case 'till':
+        return 'Till';
+      case 'fertilize':
+        return 'Fertilize';
+      case 'spray':
+        return 'Spray';
+      case 'scout':
+        return 'Scout';
+      case 'companion-check':
+        return 'Companion check';
+      default:
+        return 'Task';
     }
   }
   // pipColor() removed when pips switched to emoji rendering — the
@@ -711,7 +737,9 @@
       <div
         class="block-header"
         class:dragging={reorderDragId === b.id}
-        class:drop-target={reorderOverId === b.id && reorderDragId !== null && reorderDragId !== b.id}
+        class:drop-target={reorderOverId === b.id &&
+          reorderDragId !== null &&
+          reorderDragId !== b.id}
         style="flex: {colFlexFor(b.id)};"
         draggable="true"
         ondragstart={(e) => onHeaderDragStart(e, b.id)}
@@ -731,7 +759,11 @@
     {/each}
   </div>
 
-  <div class="body" style="--row-h: {ROW_H}px; --total-h: {totalDays * ROW_H}px; --mon-offset-days: {firstMondayOffsetDays};">
+  <div
+    class="body"
+    style="--row-h: {ROW_H}px; --total-h: {totalDays *
+      ROW_H}px; --mon-offset-days: {firstMondayOffsetDays};"
+  >
     <div class="time-axis">
       {#each weekTicks.filter((w) => w.monDayIdx >= 0) as wt (wt.monDayIdx)}
         <div class="week-tick mon" style="top: {wt.monDayIdx * ROW_H}px">M {wt.monLabel}</div>
@@ -757,7 +789,7 @@
             {@const top = dayOffset(band.startMs) * ROW_H}
             {@const height = ((band.endMs - band.startMs) / DAY_MS) * ROW_H}
             {@const bandBg = 0.04 + 0.06 * band.intensity}
-            {@const bandStripe = 0.06 + 0.10 * band.intensity}
+            {@const bandStripe = 0.06 + 0.1 * band.intensity}
             {@const bandBorder = 0.12 + 0.18 * band.intensity}
             <div
               class="shade-band"
@@ -767,7 +799,8 @@
             >
               {#if height >= 22}
                 <span class="shade-band-label">
-                  🌑 {band.sourceLabel}{#if band.slotsLabel} · {band.slotsLabel}{/if}
+                  🌑 {band.sourceLabel}{#if band.slotsLabel}
+                    · {band.slotsLabel}{/if}
                 </span>
               {/if}
             </div>
@@ -801,9 +834,10 @@
             {@const laneLeftPct = (laneIdx / lanes) * 100}
             {@const laneWidthPct = (1 / lanes) * 100}
             {@const stageColor = stageBadgeColors(p.currentStage?.bodyKind)}
-            {@const tailEndMs = p.harvestTargets && p.harvestTargets.length > 0
-              ? Math.max(p.endMs, ...p.harvestTargets.map((t) => t.endMs))
-              : p.endMs}
+            {@const tailEndMs =
+              p.harvestTargets && p.harvestTargets.length > 0
+                ? Math.max(p.endMs, ...p.harvestTargets.map((t) => t.endMs))
+                : p.endMs}
             {@const hasTail = tailEndMs > p.endMs}
             {#if hasTail}
               {@const tailTop = dayOffset(p.endMs) * ROW_H}
@@ -811,7 +845,8 @@
               <div
                 class="bar-tail"
                 class:ghost={!inActiveYear(p)}
-                style="top: {tailTop}px; height: {tailHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX * 2}px); background: {familyColor(p.cropFamily)};"
+                style="top: {tailTop}px; height: {tailHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *
+                  2}px); background: {familyColor(p.cropFamily)};"
                 aria-hidden="true"
               ></div>
             {/if}
@@ -826,7 +861,8 @@
               draggable={!!props.onBarDragStart}
               ondragstart={(ev) => onBarDragStart(ev, p.cropId, p.blockId)}
               ondragend={onBarDragEnd}
-              style="top: {top}px; height: {height}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX * 2}px); background: {familyColor(p.cropFamily)};"
+              style="top: {top}px; height: {height}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *
+                2}px); background: {familyColor(p.cropFamily)};"
               title={barTooltip(p, lanes, laneIdx)}
               onclick={(ev) => toggleSelect(ev, p.cropId)}
             >
@@ -844,15 +880,21 @@
                     class="stage-badge"
                     style="background: {stageColor.bg}; color: {stageColor.fg};"
                     aria-label="Current stage: {p.currentStage.code} {p.currentStage.name}"
-                  >{p.currentStage.code}</span>
+                    >{p.currentStage.code}</span
+                  >
                 {/if}
                 {#if p.cornType}
-                  <span class="corn-type-chip" aria-label="Corn type: {p.cornType}">{p.cornType}</span>
+                  <span class="corn-type-chip" aria-label="Corn type: {p.cornType}"
+                    >{p.cornType}</span
+                  >
                 {/if}
                 {p.shortName ?? p.varietyDisplayName}
               </span>
               {#if height >= 24}
-                {@const plantDate = new Date(p.plantingDateMs).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                {@const plantDate = new Date(p.plantingDateMs).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric'
+                })}
                 <span class="plant-line" aria-label="Planted {plantDate}">
                   <span class="ht-leader">Plant</span>
                   <span class="ht-date">{plantDate}</span>
@@ -864,11 +906,18 @@
               {#each p.harvestTargets as t, ti (p.cropId + ':' + t.stageCode + ':' + ti)}
                 {@const htTop = dayOffset(t.startMs) * ROW_H}
                 {@const htHeight = Math.max(28, ((t.endMs - t.startMs) / DAY_MS) * ROW_H)}
-                {@const htStart = new Date(t.startMs).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                {@const htEnd = new Date(t.endMs).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                {@const htStart = new Date(t.startMs).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric'
+                })}
+                {@const htEnd = new Date(t.endMs).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric'
+                })}
                 <div
                   class="harvest-target-box"
-                  style="top: {htTop}px; height: {htHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX * 2}px);"
+                  style="top: {htTop}px; height: {htHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *
+                    2}px);"
                   title="Harvest — {t.label} ({t.stageCode}): {htStart} – {htEnd}"
                   aria-label="Harvest window {t.label} from {htStart} to {htEnd}"
                 >
@@ -965,7 +1014,9 @@
     cursor: grab;
     user-select: none;
   }
-  .block-header:active { cursor: grabbing; }
+  .block-header:active {
+    cursor: grabbing;
+  }
   .block-header.dragging {
     opacity: 0.4;
   }
@@ -973,7 +1024,9 @@
     background: #dbeafe;
     box-shadow: inset 3px 0 0 #2563eb;
   }
-  .block-name { font-weight: 600; }
+  .block-name {
+    font-weight: 600;
+  }
   .block-meta {
     display: flex;
     gap: 0.4rem;
@@ -981,10 +1034,22 @@
     color: #6b7280;
     flex-wrap: wrap;
   }
-  .sun { padding: 0 0.3rem; border-radius: 0.25rem; background: #fef3c7; }
-  .sun-partial { background: #fde68a; }
-  .sun-shade { background: #d1d5db; }
-  .axis { background: #ddd6fe; padding: 0 0.3rem; border-radius: 0.25rem; }
+  .sun {
+    padding: 0 0.3rem;
+    border-radius: 0.25rem;
+    background: #fef3c7;
+  }
+  .sun-partial {
+    background: #fde68a;
+  }
+  .sun-shade {
+    background: #d1d5db;
+  }
+  .axis {
+    background: #ddd6fe;
+    padding: 0 0.3rem;
+    border-radius: 0.25rem;
+  }
   .body {
     display: flex;
     position: relative;
@@ -1041,7 +1106,12 @@
     color: #475569;
     font-weight: 500;
   }
-  .columns { display: flex; flex: 1 1 auto; height: var(--total-h); min-width: 0; }
+  .columns {
+    display: flex;
+    flex: 1 1 auto;
+    height: var(--total-h);
+    min-width: 0;
+  }
   .column {
     /* flex set inline per block: `<lanes> 1 <lanes × MIN_LANE_W>px` */
     position: relative;
@@ -1103,7 +1173,11 @@
     border: 1px solid rgba(0, 0, 0, 0.15);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   }
-  .bar-label { display: block; line-height: 1.1; word-break: break-word; }
+  .bar-label {
+    display: block;
+    line-height: 1.1;
+    word-break: break-word;
+  }
   .bar.overlap {
     background-image: repeating-linear-gradient(
       45deg,
@@ -1114,9 +1188,20 @@
     );
     border-color: #dc2626;
   }
-  .bar.rotation { border: 2px dashed #f59e0b; }
-  .bar.ghost { opacity: 0.4; }
-  .drop-preview { position: absolute; left: 0; right: 0; height: 2px; background: #4338ca; pointer-events: none; }
+  .bar.rotation {
+    border: 2px dashed #f59e0b;
+  }
+  .bar.ghost {
+    opacity: 0.4;
+  }
+  .drop-preview {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #4338ca;
+    pointer-events: none;
+  }
   /** Snap-forward state — the cursor aimed at a date earlier than the
    *  soil-temp / last-spring-frost floor, and the parent's snap helper
    *  pushed the proposed planting date forward. The red line +
@@ -1143,7 +1228,14 @@
     background: #b91c1c;
     color: #fff;
   }
-  .kb-cursor { position: absolute; left: 0; right: 0; height: 3px; background: #16a34a; pointer-events: none; }
+  .kb-cursor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #16a34a;
+    pointer-events: none;
+  }
 
   .bar.selected {
     outline: 3px solid #4338ca;
@@ -1183,11 +1275,17 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 0 0 0.25rem 0.25rem;
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.08) 100%);
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.08) 100%);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.08) 100%
+    );
     pointer-events: none;
     z-index: 0;
   }
-  .bar-tail.ghost { opacity: 0.4; }
+  .bar-tail.ghost {
+    opacity: 0.4;
+  }
   .harvest-target-box {
     position: absolute;
     border: 2px dashed #16a34a;
@@ -1255,8 +1353,12 @@
     border-bottom: 3px solid #312e81;
     border-radius: 4px 0 0 4px;
   }
-  .group-bracket-three-sisters::before { border-color: #b45309; }
-  .group-bracket-succession::before { border-color: #0891b2; }
+  .group-bracket-three-sisters::before {
+    border-color: #b45309;
+  }
+  .group-bracket-succession::before {
+    border-color: #0891b2;
+  }
   .group-bracket:focus-visible {
     outline: 2px solid #4338ca;
     outline-offset: 2px;
@@ -1273,8 +1375,12 @@
     white-space: nowrap;
     pointer-events: none;
   }
-  .group-bracket-three-sisters .group-bracket-label { color: #b45309; }
-  .group-bracket-succession .group-bracket-label { color: #0891b2; }
+  .group-bracket-three-sisters .group-bracket-label {
+    color: #b45309;
+  }
+  .group-bracket-succession .group-bracket-label {
+    color: #0891b2;
+  }
 
   /** Phase 21b follow-up — task pips now use picture emojis (🌱 plant,
    *  🚜 till, 💩 fertilize, 💧 spray, 🔍 scout, 🤝 companion). Bumped

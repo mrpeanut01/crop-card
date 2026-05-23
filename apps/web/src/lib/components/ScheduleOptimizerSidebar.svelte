@@ -78,7 +78,9 @@
 
   const facts = $derived.by(() => {
     if (plantings.length === 0) {
-      return ['No plantings on the swim-lane yet. Schedule some first, then come back here to optimize.'];
+      return [
+        'No plantings on the swim-lane yet. Schedule some first, then come back here to optimize.'
+      ];
     }
     const blockNames = new Map(blocks.map((b) => [b.id, b.name]));
     const byBlock = new Map<string, number>();
@@ -118,7 +120,7 @@
       {
         role: 'assistant',
         content:
-          "Hi — I can re-arrange planting dates to honor cross-pollination staggers, companion offsets, and succession spacing. Tell me what you want to change. Examples:\n\n• \"Plant all the corn the first week of May\"\n• \"Push the brassicas two weeks later so I'm not behind on the sweet corn\"\n• \"I want the squash spread out, not all on the same day\"\n• \"Optimize the schedule for the longest possible harvest window\"\n\nI'll propose new dates above and you can hit \"Apply to grid\" if you like what I came up with."
+          'Hi — I can re-arrange planting dates to honor cross-pollination staggers, companion offsets, and succession spacing. Tell me what you want to change. Examples:\n\n• "Plant all the corn the first week of May"\n• "Push the brassicas two weeks later so I\'m not behind on the sweet corn"\n• "I want the squash spread out, not all on the same day"\n• "Optimize the schedule for the longest possible harvest window"\n\nI\'ll propose new dates above and you can hit "Apply to grid" if you like what I came up with.'
       }
     ];
     queueScrollChat();
@@ -187,15 +189,16 @@
           ? body.reply
           : 'Done — proposed new dates. Click "Apply to grid" when you\'re ready.';
       const fallback: string | undefined = body?.meta?.fallback;
-      const violations: string[] = Array.isArray(body?.meta?.violations) ? body.meta.violations : [];
+      const violations: string[] = Array.isArray(body?.meta?.violations)
+        ? body.meta.violations
+        : [];
       let display = reply;
       if (fallback) {
         const header =
           fallback === 'no-api-key'
             ? '⚠ No Anthropic API key configured — proposal unchanged.'
             : '⚠ Could not apply that change cleanly. Validators rejected the proposal; the schedule above stays as it is.';
-        const violationLine =
-          violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
+        const violationLine = violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
         display = `${header}${violationLine}\n\n${reply}`;
         // Don't buffer a proposed schedule when the AI's output failed
         // validation — Apply would just write the previous dates back.
@@ -233,7 +236,11 @@
       proposedRationale = '';
       messages = [
         ...messages,
-        { role: 'assistant', content: '✅ Applied to the grid. Check the swim-lane behind this sidebar — the new dates are live.' }
+        {
+          role: 'assistant',
+          content:
+            '✅ Applied to the grid. Check the swim-lane behind this sidebar — the new dates are live.'
+        }
       ];
       queueScrollChat();
     } catch (e) {
@@ -248,7 +255,9 @@
    *  proposed change before committing. */
   const proposedDiffCount = $derived.by(() => {
     if (!proposed) return 0;
-    const cur = new Map(plantings.map((p) => [`${p.stockItemId ?? p.cropId}:${p.blockId}`, p.plantingDateMs]));
+    const cur = new Map(
+      plantings.map((p) => [`${p.stockItemId ?? p.cropId}:${p.blockId}`, p.plantingDateMs])
+    );
     let n = 0;
     for (const r of proposed) {
       const k = `${r.stockItemId}:${r.blockId}`;
@@ -262,7 +271,8 @@
 <div class="optimizer-sidebar" role="dialog" aria-modal="false" aria-label="Schedule optimizer">
   <header class="opt-head">
     <h3>✨ Optimize schedule</h3>
-    <button type="button" class="opt-close" onclick={onClose} aria-label="Close optimizer">×</button>
+    <button type="button" class="opt-close" onclick={onClose} aria-label="Close optimizer">×</button
+    >
   </header>
 
   <section class="opt-facts">
@@ -281,17 +291,14 @@
     <section class="opt-proposal" aria-live="polite">
       <h4>
         Proposed changes
-        <span class="diff-badge">{proposedDiffCount} row{proposedDiffCount === 1 ? '' : 's'} differ</span>
+        <span class="diff-badge"
+          >{proposedDiffCount} row{proposedDiffCount === 1 ? '' : 's'} differ</span
+        >
       </h4>
       {#if proposedRationale}
         <p class="proposal-rationale">{proposedRationale}</p>
       {/if}
-      <button
-        type="button"
-        class="apply-btn"
-        onclick={handleApply}
-        disabled={applying}
-      >
+      <button type="button" class="apply-btn" onclick={handleApply} disabled={applying}>
         {applying ? 'Applying…' : 'Apply to grid'}
       </button>
       {#if applyError}
@@ -316,7 +323,13 @@
       {/if}
     </div>
     {#if chatError}<p class="opt-error" role="alert">{chatError}</p>{/if}
-    <form class="chat-input" onsubmit={(e) => { e.preventDefault(); void sendChat(); }}>
+    <form
+      class="chat-input"
+      onsubmit={(e) => {
+        e.preventDefault();
+        void sendChat();
+      }}
+    >
       <textarea
         rows="2"
         placeholder="Describe what to change, or paste a plan you have in mind…"

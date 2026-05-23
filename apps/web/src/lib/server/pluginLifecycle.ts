@@ -26,7 +26,13 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { eq, like, sql } from 'drizzle-orm';
 import { db } from '$lib/db/client';
-import { pluginVersions, sprayEvents, insecticideEvents, fungicideEvents, crops } from '$lib/db/schema';
+import {
+  pluginVersions,
+  sprayEvents,
+  insecticideEvents,
+  fungicideEvents,
+  crops
+} from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import {
   currentVersionOf,
@@ -64,12 +70,18 @@ function pluginsRoot(): string {
 
 function subdirFor(kind: PluginKind): string {
   switch (kind) {
-    case 'crop': return 'crops';
-    case 'herbicide': return 'herbicides';
-    case 'insecticide': return 'insecticides';
-    case 'fungicide': return 'fungicides';
-    case 'fertilizer': return 'fertilizers';
-    case 'companion': return 'companions';
+    case 'crop':
+      return 'crops';
+    case 'herbicide':
+      return 'herbicides';
+    case 'insecticide':
+      return 'insecticides';
+    case 'fungicide':
+      return 'fungicides';
+    case 'fertilizer':
+      return 'fertilizers';
+    case 'companion':
+      return 'companions';
   }
 }
 
@@ -116,11 +128,11 @@ export function countReferences(pluginId: string, kind: PluginKind): ReferenceSu
   // for the 'crop' kind. Filtering by kind keeps the count tight.
   const cropCount =
     kind === 'crop'
-      ? db
+      ? (db
           .select({ n: sql<number>`count(*)` })
           .from(crops)
           .where(eq(crops.cropPluginId, pluginId))
-          .get()?.n ?? 0
+          .get()?.n ?? 0)
       : 0;
   const sprayN = Number(spray?.n ?? 0);
   const insecN = Number(insec?.n ?? 0);
@@ -229,10 +241,7 @@ export async function uninstallPlugin(
   }
 
   // Hard-delete payload-bearing rows; write tombstone.
-  const removed = db
-    .delete(pluginVersions)
-    .where(eq(pluginVersions.pluginId, pluginId))
-    .run();
+  const removed = db.delete(pluginVersions).where(eq(pluginVersions.pluginId, pluginId)).run();
 
   const tombstoneId = randomUUID();
   db.insert(pluginVersions)

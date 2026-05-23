@@ -91,10 +91,7 @@ function weedGateAllows(gate: WeedStrategy | undefined, setup: WeedStrategy): bo
   return WEED_TIER[setup] >= WEED_TIER[gate];
 }
 
-function pestGateAllows(
-  gate: 'preventive' | 'ipm' | undefined,
-  setup: PestStrategy
-): boolean {
+function pestGateAllows(gate: 'preventive' | 'ipm' | undefined, setup: PestStrategy): boolean {
   if (!gate) return true;
   return PEST_TIER[setup] >= PEST_TIER[gate];
 }
@@ -437,10 +434,7 @@ function sumCredits(
 /** Latest soil test for a block, regardless of year — soil chemistry
  *  changes slowly enough that an older test is still useful. The UI
  *  warns when the test is >3y old. */
-function latestSoilTest(
-  tests: ReadonlyArray<SoilTest>,
-  blockId: string
-): SoilTest | undefined {
+function latestSoilTest(tests: ReadonlyArray<SoilTest>, blockId: string): SoilTest | undefined {
   let best: SoilTest | undefined;
   for (const t of tests) {
     if (t.blockId !== blockId) continue;
@@ -538,9 +532,7 @@ function pickFertilizer(
   if (emphasis === 'n') {
     return [...pool2].sort((a, b) => b.analysis.n - a.analysis.n)[0] ?? null;
   }
-  return (
-    pool2.find((p) => p.analysis.n > 0 && p.analysis.p > 0 && p.analysis.k > 0) ?? pool2[0]
-  );
+  return pool2.find((p) => p.analysis.n > 0 && p.analysis.p > 0 && p.analysis.k > 0) ?? pool2[0];
 }
 
 /** Pre-plant fertilizer rate in lb/acre derived from the dominant
@@ -744,9 +736,7 @@ function planForPlanting(
         windowEndMs: windowEnd,
         applicationDateMs: windowStart,
         rateAmount: ratePerAcre || null,
-        rateUnit: fert
-          ? fert.applicationRange?.unit?.replace('-per-acre', '') ?? 'lb'
-          : null,
+        rateUnit: fert ? (fert.applicationRange?.unit?.replace('-per-acre', '') ?? 'lb') : null,
         acres,
         totalAmount: ratePerAcre > 0 ? Math.round(ratePerAcre * acres * 100) / 100 : null,
         rationale:
@@ -792,7 +782,8 @@ function planForPlanting(
 
     const sidedressDateMs = plantingDateMs + anchorDays * DAY_MS;
     const sidedressRate = 40; // lb-N/acre conservative split application
-    const productLbPerAcre = fert && fert.analysis.n > 0 ? Math.ceil(sidedressRate / (fert.analysis.n / 100)) : 0;
+    const productLbPerAcre =
+      fert && fert.analysis.n > 0 ? Math.ceil(sidedressRate / (fert.analysis.n / 100)) : 0;
 
     applications.push({
       id: applicationId(planting.id, 'sidedress-n', 0),
@@ -842,7 +833,8 @@ function planForPlanting(
       cropPluginId: planting.cropPluginId,
       slot: 'cover-terminate',
       productPluginId: picked?.pluginId ?? null,
-      productDisplayName: picked?.displayName ?? useHerbicide ? null : 'Mow + incorporate (no herbicide)',
+      productDisplayName:
+        (picked?.displayName ?? useHerbicide) ? null : 'Mow + incorporate (no herbicide)',
       productCategory: 'herbicide',
       windowStartMs: terminateDateMs - 7 * DAY_MS,
       windowEndMs: terminateDateMs + 7 * DAY_MS,
@@ -889,12 +881,7 @@ function planForPlanting(
 
 interface PickedProduct {
   category: 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer';
-  picked:
-    | HerbicidePlugin
-    | InsecticidePlugin
-    | FungicidePlugin
-    | FertilizerPlugin
-    | null;
+  picked: HerbicidePlugin | InsecticidePlugin | FungicidePlugin | FertilizerPlugin | null;
 }
 
 function pickProductForPurpose(
@@ -934,7 +921,10 @@ function reasonForEmptyPool(
   philosophy: Philosophy
 ): string {
   const family =
-    slot === 'burndown' || slot === 'pre-emergent' || slot === 'post-emergent' || slot === 'cover-terminate'
+    slot === 'burndown' ||
+    slot === 'pre-emergent' ||
+    slot === 'post-emergent' ||
+    slot === 'cover-terminate'
       ? 'herbicide'
       : slot === 'insecticide-prophylactic' || slot === 'insecticide-scouted'
         ? 'insecticide'
@@ -987,7 +977,14 @@ function buildShoppingList(
   }
 
   const items: InputsPlanShoppingItem[] = [];
-  for (const { pluginId, category, displayName, unit, totalNeeded, appliesToPlantingIds } of byPlugin.values()) {
+  for (const {
+    pluginId,
+    category,
+    displayName,
+    unit,
+    totalNeeded,
+    appliesToPlantingIds
+  } of byPlugin.values()) {
     const onHand = onHandByPlugin.get(pluginId) ?? 0;
     const shortfall = Math.max(0, Math.round((totalNeeded - onHand) * 100) / 100);
     items.push({

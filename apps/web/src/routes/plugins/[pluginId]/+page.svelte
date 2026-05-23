@@ -98,9 +98,7 @@
    *  Plugin; we cast through `Record<string, unknown>` here so the
    *  rendering blocks can `.field` without TypeScript complaining about
    *  every cross-kind field absence. */
-  const plugin = $derived(
-    data.live?.plugin as unknown as Record<string, unknown> | null
-  );
+  const plugin = $derived(data.live?.plugin as unknown as Record<string, unknown> | null);
   const kind = $derived(plugin?.type as string | undefined);
 
   const groupBadges = $derived.by(() => {
@@ -131,7 +129,10 @@
   });
 
   async function rollback(version: string) {
-    if (!confirm(`Roll ${data.pluginId} back to v${version}? A new forward version will be created.`)) return;
+    if (
+      !confirm(`Roll ${data.pluginId} back to v${version}? A new forward version will be created.`)
+    )
+      return;
     rollingBack = version;
     rollbackError = null;
     rollbackSuccess = null;
@@ -174,7 +175,9 @@
     return typeof v === 'boolean' ? v : undefined;
   }
   function asObj(v: unknown): Record<string, unknown> | undefined {
-    return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : undefined;
+    return v && typeof v === 'object' && !Array.isArray(v)
+      ? (v as Record<string, unknown>)
+      : undefined;
   }
 </script>
 
@@ -201,21 +204,31 @@
     </div>
     <div class="header-actions">
       {#if data.canEdit}
-        <button class="action primary" onclick={startEdit} disabled={retireBusy}>
-          ✎ Edit
-        </button>
+        <button class="action primary" onclick={startEdit} disabled={retireBusy}> ✎ Edit </button>
       {/if}
-      <a class="action subtle" href="/api/plugins/{encodeURIComponent(data.pluginId)}/export" download>
+      <a
+        class="action subtle"
+        href="/api/plugins/{encodeURIComponent(data.pluginId)}/export"
+        download
+      >
         ↓ Download
       </a>
       {#if data.canEdit}
         <span class="action-divider" aria-hidden="true"></span>
         {#if isRetired}
-          <button class="action warn" onclick={() => lifecycleAction('unretire')} disabled={retireBusy}>
+          <button
+            class="action warn"
+            onclick={() => lifecycleAction('unretire')}
+            disabled={retireBusy}
+          >
             ⤴ Unretire
           </button>
         {:else}
-          <button class="action warn" onclick={() => lifecycleAction('retire')} disabled={retireBusy}>
+          <button
+            class="action warn"
+            onclick={() => lifecycleAction('retire')}
+            disabled={retireBusy}
+          >
             ⤵ Retire
           </button>
         {/if}
@@ -226,8 +239,8 @@
     </div>
     {#if isRetired}
       <p class="retired-banner">
-        ⚠ This plugin is <strong>retired</strong>. It's hidden from spray pickers but still
-        resolves for historical event records. Unretire to make it available again.
+        ⚠ This plugin is <strong>retired</strong>. It's hidden from spray pickers but still resolves
+        for historical event records. Unretire to make it available again.
       </p>
     {/if}
   </section>
@@ -235,8 +248,8 @@
   <section class="card">
     <h1>{data.pluginId}</h1>
     <p class="retired-notice">
-      No live registry entry. This plugin is either retired or has been removed from disk;
-      version history below.
+      No live registry entry. This plugin is either retired or has been removed from disk; version
+      history below.
     </p>
   </section>
 {/if}
@@ -249,10 +262,23 @@
     <div class="ref-summary">
       <strong>Referenced by:</strong>
       <ul>
-        {#if uninstallRefs.sprayEvents}<li>{uninstallRefs.sprayEvents} spray event{uninstallRefs.sprayEvents === 1 ? '' : 's'}</li>{/if}
-        {#if uninstallRefs.insecticideEvents}<li>{uninstallRefs.insecticideEvents} insecticide event{uninstallRefs.insecticideEvents === 1 ? '' : 's'}</li>{/if}
-        {#if uninstallRefs.fungicideEvents}<li>{uninstallRefs.fungicideEvents} fungicide event{uninstallRefs.fungicideEvents === 1 ? '' : 's'}</li>{/if}
-        {#if uninstallRefs.cropRows}<li>{uninstallRefs.cropRows} crop row{uninstallRefs.cropRows === 1 ? '' : 's'}</li>{/if}
+        {#if uninstallRefs.sprayEvents}<li>
+            {uninstallRefs.sprayEvents} spray event{uninstallRefs.sprayEvents === 1 ? '' : 's'}
+          </li>{/if}
+        {#if uninstallRefs.insecticideEvents}<li>
+            {uninstallRefs.insecticideEvents} insecticide event{uninstallRefs.insecticideEvents ===
+            1
+              ? ''
+              : 's'}
+          </li>{/if}
+        {#if uninstallRefs.fungicideEvents}<li>
+            {uninstallRefs.fungicideEvents} fungicide event{uninstallRefs.fungicideEvents === 1
+              ? ''
+              : 's'}
+          </li>{/if}
+        {#if uninstallRefs.cropRows}<li>
+            {uninstallRefs.cropRows} crop row{uninstallRefs.cropRows === 1 ? '' : 's'}
+          </li>{/if}
       </ul>
       <p class="muted">Retire instead — that keeps the audit trail intact.</p>
     </div>
@@ -292,7 +318,9 @@
         />
       </label>
       <div class="modal-actions">
-        <button class="secondary" onclick={closeUninstallConfirm} disabled={retireBusy}>Cancel</button>
+        <button class="secondary" onclick={closeUninstallConfirm} disabled={retireBusy}
+          >Cancel</button
+        >
         <button
           class="danger"
           onclick={uninstall}
@@ -317,27 +345,51 @@
     <section class="card">
       <h2>Key facts</h2>
       <dl class="grid-dl">
-        <div class="stat"><dt>Family</dt><dd>{plugin.cropFamily}</dd></div>
+        <div class="stat">
+          <dt>Family</dt>
+          <dd>{plugin.cropFamily}</dd>
+        </div>
         {#if dtm}
-          <div class="stat"><dt>Days to maturity</dt><dd>{dtm.min}-{dtm.max} d</dd></div>
+          <div class="stat">
+            <dt>Days to maturity</dt>
+            <dd>{dtm.min}-{dtm.max} d</dd>
+          </div>
         {/if}
         {#if asNum(plugin.defaultRowSpacingInches) !== undefined}
-          <div class="stat"><dt>Row spacing</dt><dd>{plugin.defaultRowSpacingInches}″</dd></div>
+          <div class="stat">
+            <dt>Row spacing</dt>
+            <dd>{plugin.defaultRowSpacingInches}″</dd>
+          </div>
         {/if}
         {#if asNum(plugin.preHarvestIntervalDays) !== undefined}
-          <div class="stat"><dt>Default PHI</dt><dd>{plugin.preHarvestIntervalDays} d</dd></div>
+          <div class="stat">
+            <dt>Default PHI</dt>
+            <dd>{plugin.preHarvestIntervalDays} d</dd>
+          </div>
         {/if}
         {#if asStr(plugin.cornType)}
-          <div class="stat"><dt>Corn type</dt><dd>{plugin.cornType}</dd></div>
+          <div class="stat">
+            <dt>Corn type</dt>
+            <dd>{plugin.cornType}</dd>
+          </div>
         {/if}
         {#if agronomy?.lifecycle}
-          <div class="stat"><dt>Lifecycle</dt><dd>{agronomy.lifecycle}</dd></div>
+          <div class="stat">
+            <dt>Lifecycle</dt>
+            <dd>{agronomy.lifecycle}</dd>
+          </div>
         {/if}
         {#if asNum(agronomy?.rotationLookbackYears) !== undefined}
-          <div class="stat"><dt>Rotation lookback</dt><dd>{agronomy?.rotationLookbackYears} years</dd></div>
+          <div class="stat">
+            <dt>Rotation lookback</dt>
+            <dd>{agronomy?.rotationLookbackYears} years</dd>
+          </div>
         {/if}
         {#if asNum(planting?.soilTempMinF) !== undefined}
-          <div class="stat"><dt>Soil temp min</dt><dd>{planting?.soilTempMinF}°F</dd></div>
+          <div class="stat">
+            <dt>Soil temp min</dt>
+            <dd>{planting?.soilTempMinF}°F</dd>
+          </div>
         {/if}
       </dl>
       {#if traits.length > 0}
@@ -358,9 +410,10 @@
         <div class="bullet-list">
           <strong class="row-label">Post-harvest curing</strong>
           <p class="muted">
-            {curing.method as string ?? ''}
+            {(curing.method as string) ?? ''}
             {#if curing.durationWeeks != null}· {curing.durationWeeks} weeks{/if}
-            {#if curing.targetMoisturePercent != null}· target {curing.targetMoisturePercent}% moisture{/if}
+            {#if curing.targetMoisturePercent != null}· target {curing.targetMoisturePercent}%
+              moisture{/if}
             {#if curing.storageLocation}· store at {curing.storageLocation}{/if}
           </p>
         </div>
@@ -388,19 +441,37 @@
           </div>
         {/each}
         {#if rate}
-          <div class="stat"><dt>Rate / acre</dt><dd>{rate.amount} {rate.unit}</dd></div>
+          <div class="stat">
+            <dt>Rate / acre</dt>
+            <dd>{rate.amount} {rate.unit}</dd>
+          </div>
         {/if}
         {#if asNum(plugin.gpaCalibration) !== undefined}
-          <div class="stat"><dt>GPA calibration</dt><dd>{plugin.gpaCalibration}</dd></div>
+          <div class="stat">
+            <dt>GPA calibration</dt>
+            <dd>{plugin.gpaCalibration}</dd>
+          </div>
         {/if}
         {#if asStr(plugin.applicationTiming)}
-          <div class="stat"><dt>Application timing</dt><dd>{plugin.applicationTiming}</dd></div>
+          <div class="stat">
+            <dt>Application timing</dt>
+            <dd>{plugin.applicationTiming}</dd>
+          </div>
         {/if}
         {#if asStr(plugin.epaRegistrationNumber)}
-          <div class="stat"><dt>EPA reg #</dt><dd>{plugin.epaRegistrationNumber}</dd></div>
+          <div class="stat">
+            <dt>EPA reg #</dt>
+            <dd>{plugin.epaRegistrationNumber}</dd>
+          </div>
         {/if}
-        <div class="stat"><dt>Requires AMS</dt><dd>{asBool(plugin.requiresAMS) ? 'Yes' : 'No'}</dd></div>
-        <div class="stat"><dt>Decon required</dt><dd>{asBool(plugin.deconRequired) ? 'Yes' : 'No'}</dd></div>
+        <div class="stat">
+          <dt>Requires AMS</dt>
+          <dd>{asBool(plugin.requiresAMS) ? 'Yes' : 'No'}</dd>
+        </div>
+        <div class="stat">
+          <dt>Decon required</dt>
+          <dd>{asBool(plugin.deconRequired) ? 'Yes' : 'No'}</dd>
+        </div>
       </dl>
       {#if safeFor.length > 0}
         <div class="chip-row">
@@ -430,7 +501,8 @@
           {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
           {#if flags.nonGmoCompliant}<span class="chip ok">non-GMO</span>{/if}
           {#if flags.transitioningAllowed}<span class="chip ok">transition OK</span>{/if}
-          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span>{/if}
+          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span
+            >{/if}
         </div>
       {/if}
       {#if asStr(plugin.notes)}<p class="notes">{plugin.notes}</p>{/if}
@@ -451,23 +523,40 @@
         {#each ais as ai, i (i)}
           <div class="stat">
             <dt>Active ingredient {ais.length > 1 ? i + 1 : ''}</dt>
-            <dd>{ai.name}{#if ai.iracGroup}<span class="muted"> (IRAC {ai.iracGroup})</span>{/if}</dd>
+            <dd>
+              {ai.name}{#if ai.iracGroup}<span class="muted"> (IRAC {ai.iracGroup})</span>{/if}
+            </dd>
           </div>
         {/each}
         {#if rate}
-          <div class="stat"><dt>Rate / acre</dt><dd>{rate.amount} {rate.unit}</dd></div>
+          <div class="stat">
+            <dt>Rate / acre</dt>
+            <dd>{rate.amount} {rate.unit}</dd>
+          </div>
         {/if}
         {#if asNum(plugin.reEntryIntervalHours) !== undefined}
-          <div class="stat"><dt>REI</dt><dd>{plugin.reEntryIntervalHours} h</dd></div>
+          <div class="stat">
+            <dt>REI</dt>
+            <dd>{plugin.reEntryIntervalHours} h</dd>
+          </div>
         {/if}
         {#if asNum(plugin.preHarvestIntervalDays) !== undefined}
-          <div class="stat"><dt>PHI</dt><dd>{plugin.preHarvestIntervalDays} d</dd></div>
+          <div class="stat">
+            <dt>PHI</dt>
+            <dd>{plugin.preHarvestIntervalDays} d</dd>
+          </div>
         {/if}
         {#if asStr(plugin.pollinatorRisk)}
-          <div class="stat"><dt>Pollinator risk</dt><dd>{plugin.pollinatorRisk}</dd></div>
+          <div class="stat">
+            <dt>Pollinator risk</dt>
+            <dd>{plugin.pollinatorRisk}</dd>
+          </div>
         {/if}
         {#if asStr(plugin.epaRegistrationNumber)}
-          <div class="stat"><dt>EPA reg #</dt><dd>{plugin.epaRegistrationNumber}</dd></div>
+          <div class="stat">
+            <dt>EPA reg #</dt>
+            <dd>{plugin.epaRegistrationNumber}</dd>
+          </div>
         {/if}
       </dl>
       {#if pests.length > 0}
@@ -488,7 +577,8 @@
           <ul>
             {#each thresholds as t}
               <li>
-                <strong>{t.pest}</strong>: spray at {t.threshold} {t.metric}
+                <strong>{t.pest}</strong>: spray at {t.threshold}
+                {t.metric}
                 {#if t.warnAt}· warn at {t.warnAt}{/if}
               </li>
             {/each}
@@ -501,7 +591,8 @@
           {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
           {#if flags.nonGmoCompliant}<span class="chip ok">non-GMO</span>{/if}
           {#if flags.transitioningAllowed}<span class="chip ok">transition OK</span>{/if}
-          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span>{/if}
+          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span
+            >{/if}
         </div>
       {/if}
       {#if asStr(plugin.notes)}<p class="notes">{plugin.notes}</p>{/if}
@@ -521,28 +612,51 @@
         {#each ais as ai, i (i)}
           <div class="stat">
             <dt>Active ingredient {ais.length > 1 ? i + 1 : ''}</dt>
-            <dd>{ai.name}{#if ai.fracCode}<span class="muted"> (FRAC {ai.fracCode})</span>{/if}</dd>
+            <dd>
+              {ai.name}{#if ai.fracCode}<span class="muted"> (FRAC {ai.fracCode})</span>{/if}
+            </dd>
           </div>
         {/each}
         {#if rate}
-          <div class="stat"><dt>Rate / acre</dt><dd>{rate.amount} {rate.unit}</dd></div>
+          <div class="stat">
+            <dt>Rate / acre</dt>
+            <dd>{rate.amount} {rate.unit}</dd>
+          </div>
         {/if}
         {#if asNum(plugin.gpaCalibration) !== undefined}
-          <div class="stat"><dt>GPA calibration</dt><dd>{plugin.gpaCalibration}</dd></div>
+          <div class="stat">
+            <dt>GPA calibration</dt>
+            <dd>{plugin.gpaCalibration}</dd>
+          </div>
         {/if}
         {#if asNum(plugin.reEntryIntervalHours) !== undefined}
-          <div class="stat"><dt>REI</dt><dd>{plugin.reEntryIntervalHours} h</dd></div>
+          <div class="stat">
+            <dt>REI</dt>
+            <dd>{plugin.reEntryIntervalHours} h</dd>
+          </div>
         {/if}
         {#if asNum(plugin.preHarvestIntervalDays) !== undefined}
-          <div class="stat"><dt>PHI</dt><dd>{plugin.preHarvestIntervalDays} d</dd></div>
+          <div class="stat">
+            <dt>PHI</dt>
+            <dd>{plugin.preHarvestIntervalDays} d</dd>
+          </div>
         {/if}
         {#if asStr(plugin.applicationTiming)}
-          <div class="stat"><dt>Application timing</dt><dd>{plugin.applicationTiming}</dd></div>
+          <div class="stat">
+            <dt>Application timing</dt>
+            <dd>{plugin.applicationTiming}</dd>
+          </div>
         {/if}
         {#if asStr(plugin.pollinatorRisk)}
-          <div class="stat"><dt>Pollinator risk</dt><dd>{plugin.pollinatorRisk}</dd></div>
+          <div class="stat">
+            <dt>Pollinator risk</dt>
+            <dd>{plugin.pollinatorRisk}</dd>
+          </div>
         {/if}
-        <div class="stat"><dt>Decon required</dt><dd>{asBool(plugin.deconRequired) ? 'Yes' : 'No'}</dd></div>
+        <div class="stat">
+          <dt>Decon required</dt>
+          <dd>{asBool(plugin.deconRequired) ? 'Yes' : 'No'}</dd>
+        </div>
       </dl>
       {#if diseases.length > 0}
         <div class="chip-row">
@@ -576,12 +690,21 @@
       <h2>Key facts</h2>
       <dl class="grid-dl">
         {#if analysis}
-          <div class="stat"><dt>N-P-K</dt><dd>{analysis.n}-{analysis.p}-{analysis.k}</dd></div>
+          <div class="stat">
+            <dt>N-P-K</dt>
+            <dd>{analysis.n}-{analysis.p}-{analysis.k}</dd>
+          </div>
         {/if}
         {#if asStr(plugin.form)}
-          <div class="stat"><dt>Form</dt><dd>{plugin.form}</dd></div>
+          <div class="stat">
+            <dt>Form</dt>
+            <dd>{plugin.form}</dd>
+          </div>
         {/if}
-        <div class="stat"><dt>Organic</dt><dd>{asBool(plugin.organic) ? 'Yes' : 'No'}</dd></div>
+        <div class="stat">
+          <dt>Organic</dt>
+          <dd>{asBool(plugin.organic) ? 'Yes' : 'No'}</dd>
+        </div>
         {#if range}
           <div class="stat">
             <dt>Application range</dt>
@@ -602,7 +725,8 @@
           <span class="row-label">Compliance</span>
           {#if flags.omriListed}<span class="chip ok">OMRI-listed</span>{/if}
           {#if flags.transitioningAllowed}<span class="chip ok">transition OK</span>{/if}
-          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span>{/if}
+          {#if flags.certifiedOrganicAllowed === false}<span class="chip neg">not organic</span
+            >{/if}
         </div>
       {/if}
       {#if asStr(plugin.notes)}<p class="notes">{plugin.notes}</p>{/if}
@@ -617,10 +741,16 @@
       <h2>Key facts</h2>
       <dl class="grid-dl">
         {#if asStr(plugin.primaryFamily)}
-          <div class="stat"><dt>Anchor family</dt><dd>{plugin.primaryFamily}</dd></div>
+          <div class="stat">
+            <dt>Anchor family</dt>
+            <dd>{plugin.primaryFamily}</dd>
+          </div>
         {/if}
         {#if members.length > 0}
-          <div class="stat"><dt>Companion members</dt><dd>{members.length}</dd></div>
+          <div class="stat">
+            <dt>Companion members</dt>
+            <dd>{members.length}</dd>
+          </div>
         {/if}
       </dl>
       {#if asStr(plugin.benefit)}
@@ -680,8 +810,12 @@
                 <li>
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
-                  {#if t.daysBeforePlant != null}<span class="muted">· {t.daysBeforePlant}d before plant</span>{/if}
-                  {#if t.daysBeforeFirstHarvest != null}<span class="muted">· {t.daysBeforeFirstHarvest}d before first harvest</span>{/if}
+                  {#if t.daysBeforePlant != null}<span class="muted"
+                      >· {t.daysBeforePlant}d before plant</span
+                    >{/if}
+                  {#if t.daysBeforeFirstHarvest != null}<span class="muted"
+                      >· {t.daysBeforeFirstHarvest}d before first harvest</span
+                    >{/if}
                   {#if asStr(t.body)}<p class="body">{t.body}</p>{/if}
                 </li>
               {/each}
@@ -696,8 +830,12 @@
                 <li>
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
-                  {#if t.daysAfterPlant != null}<span class="muted">· {t.daysAfterPlant}d after plant</span>{/if}
-                  {#if t.daysAfterHarvest != null}<span class="muted">· {t.daysAfterHarvest}d after harvest</span>{/if}
+                  {#if t.daysAfterPlant != null}<span class="muted"
+                      >· {t.daysAfterPlant}d after plant</span
+                    >{/if}
+                  {#if t.daysAfterHarvest != null}<span class="muted"
+                      >· {t.daysAfterHarvest}d after harvest</span
+                    >{/if}
                   {#if asStr(t.body)}<p class="body">{t.body}</p>{/if}
                 </li>
               {/each}
@@ -713,9 +851,13 @@
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
                   {#if t.kind}<span class="muted">· {t.kind}</span>{/if}
-                  {#if t.dayOfYear != null}<span class="muted">· day-of-year {t.dayOfYear}</span>{/if}
-                  {#if t.daysAfterPlanting != null}<span class="muted">· +{t.daysAfterPlanting}d after planting</span>{/if}
-                  {#if t.windowDays != null}<span class="muted">· ±{t.windowDays}d window</span>{/if}
+                  {#if t.dayOfYear != null}<span class="muted">· day-of-year {t.dayOfYear}</span
+                    >{/if}
+                  {#if t.daysAfterPlanting != null}<span class="muted"
+                      >· +{t.daysAfterPlanting}d after planting</span
+                    >{/if}
+                  {#if t.windowDays != null}<span class="muted">· ±{t.windowDays}d window</span
+                    >{/if}
                   {#if asStr(t.body)}<p class="body">{t.body}</p>{/if}
                 </li>
               {/each}
@@ -739,7 +881,8 @@
               <span class="muted">· {sw.chemistryClass}</span>
               {#if sw.purpose}<span class="chip neutral small">{sw.purpose}</span>{/if}
               <div class="muted">
-                {sw.offsetDaysMin}-{sw.offsetDaysMax} days from {sw.anchor}{#if sw.stageCode} (stage {sw.stageCode}){/if}
+                {sw.offsetDaysMin}-{sw.offsetDaysMax} days from {sw.anchor}{#if sw.stageCode}
+                  (stage {sw.stageCode}){/if}
               </div>
               {#if asStr(sw.body)}<p class="body">{sw.body}</p>{/if}
             </li>
@@ -807,12 +950,24 @@
     color: white;
     letter-spacing: 0.5px;
   }
-  .type-crop { background: #1f5e3a; }
-  .type-herbicide { background: #b00020; }
-  .type-insecticide { background: #b35900; }
-  .type-fungicide { background: #4a2c83; }
-  .type-fertilizer { background: #1c5fa6; }
-  .type-companion { background: #6b3fa0; }
+  .type-crop {
+    background: #1f5e3a;
+  }
+  .type-herbicide {
+    background: #b00020;
+  }
+  .type-insecticide {
+    background: #b35900;
+  }
+  .type-fungicide {
+    background: #4a2c83;
+  }
+  .type-fertilizer {
+    background: #1c5fa6;
+  }
+  .type-companion {
+    background: #6b3fa0;
+  }
   .version {
     color: #888;
     font-size: 0.85rem;

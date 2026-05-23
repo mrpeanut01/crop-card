@@ -11,7 +11,9 @@ import {
 } from './familyDefaults';
 import type { CropPlugin } from './schemas';
 
-function crop(overrides: Partial<CropPlugin> & { cropFamily: CropPlugin['cropFamily'] }): CropPlugin {
+function crop(
+  overrides: Partial<CropPlugin> & { cropFamily: CropPlugin['cropFamily'] }
+): CropPlugin {
   return {
     pluginId: 'test-crop',
     type: 'crop',

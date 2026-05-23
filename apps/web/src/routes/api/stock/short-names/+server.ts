@@ -56,9 +56,8 @@ export const POST: RequestHandler = async (event) => {
   }
 
   const allItems = listStockItems();
-  const filtered = (parsed.data.itemIds
-    ? allItems.filter((i) => parsed.data.itemIds!.includes(i.id))
-    : allItems
+  const filtered = (
+    parsed.data.itemIds ? allItems.filter((i) => parsed.data.itemIds!.includes(i.id)) : allItems
   ).filter((i) => parsed.data.force === true || !i.shortName);
 
   if (filtered.length === 0) {

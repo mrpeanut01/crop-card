@@ -64,11 +64,12 @@ export const POST: RequestHandler = async (event) => {
 
   const year = parsed.data.year ?? new Date().getFullYear();
   const allBlocks = listBlocks();
-  const idFilter = parsed.data.blockIds && parsed.data.blockIds.length > 0
-    ? new Set(parsed.data.blockIds)
-    : parsed.data.blockId
-      ? new Set([parsed.data.blockId])
-      : null;
+  const idFilter =
+    parsed.data.blockIds && parsed.data.blockIds.length > 0
+      ? new Set(parsed.data.blockIds)
+      : parsed.data.blockId
+        ? new Set([parsed.data.blockId])
+        : null;
   const blocks = idFilter ? allBlocks.filter((b) => idFilter.has(b.id)) : allBlocks;
   if (blocks.length === 0) {
     return json({ error: 'no blocks available' }, { status: 400 });

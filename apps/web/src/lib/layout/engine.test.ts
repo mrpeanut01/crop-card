@@ -51,7 +51,9 @@ function axis(blockId: string, east: number | null, north: number | null): Block
   return { blockId, east, north };
 }
 
-function seed(over: Partial<SeedRequest> & { stockItemId: string; cropPluginId: string }): SeedRequest {
+function seed(
+  over: Partial<SeedRequest> & { stockItemId: string; cropPluginId: string }
+): SeedRequest {
   return {
     stockItemId: over.stockItemId,
     cropPluginId: over.cropPluginId,
@@ -72,9 +74,7 @@ function buildInput(parts: {
   return {
     seeds: parts.seeds,
     blocks: parts.blocks,
-    axes:
-      parts.axes ??
-      parts.blocks.map((b, i) => axis(b.id, i, 0)),
+    axes: parts.axes ?? parts.blocks.map((b, i) => axis(b.id, i, 0)),
     existingCrops: parts.existingCrops ?? [],
     pluginIndex: parts.pluginIndex,
     companions: parts.companions ?? {}
@@ -113,10 +113,7 @@ describe('layout engine — capacity split', () => {
     // capacity ≈ 4356. We'll request 6000 → must split.
     const input = buildInput({
       seeds: [seed({ stockItemId: 's', cropPluginId: 'lettuce-tight', quantityPlants: 6000 })],
-      blocks: [
-        block({ id: 'A', acres: 0.05 }),
-        block({ id: 'B', acres: 0.05 })
-      ],
+      blocks: [block({ id: 'A', acres: 0.05 }), block({ id: 'B', acres: 0.05 })],
       pluginIndex: { 'lettuce-tight': lettuce }
     });
     const result = planLayout(input);
@@ -251,10 +248,7 @@ describe('layout engine — footprint tightness', () => {
         seed({ stockItemId: 's-c', cropPluginId: 'corn-wide', quantityPlants: 20 })
       ],
       // Single block big enough for both, so first-placed wins block 'A'.
-      blocks: [
-        block({ id: 'A', acres: 1.0 }),
-        block({ id: 'B', acres: 1.0 })
-      ],
+      blocks: [block({ id: 'A', acres: 1.0 }), block({ id: 'B', acres: 1.0 })],
       pluginIndex: { 'corn-wide': corn, 'lettuce-narrow': lettuce }
     });
     const result = planLayout(input);

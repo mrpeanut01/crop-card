@@ -27,13 +27,7 @@
   <section class="hero">
     <div class="hero-inner">
       <a href="/" class="brand" aria-label="CropCard home">
-        <svg
-          class="brand-mark"
-          viewBox="0 0 32 32"
-          width="40"
-          height="40"
-          aria-hidden="true"
-        >
+        <svg class="brand-mark" viewBox="0 0 32 32" width="40" height="40" aria-hidden="true">
           <!-- Stylized seedling — two leaves on a stem. -->
           <path
             d="M16 28 V18"
@@ -42,14 +36,8 @@
             stroke-linecap="round"
             fill="none"
           />
-          <path
-            d="M16 18 C 10 18, 6 14, 6 8 C 12 8, 16 12, 16 18 Z"
-            fill="#4a8b54"
-          />
-          <path
-            d="M16 18 C 22 18, 26 14, 26 8 C 20 8, 16 12, 16 18 Z"
-            fill="#6db367"
-          />
+          <path d="M16 18 C 10 18, 6 14, 6 8 C 12 8, 16 12, 16 18 Z" fill="#4a8b54" />
+          <path d="M16 18 C 22 18, 26 14, 26 8 C 20 8, 16 12, 16 18 Z" fill="#6db367" />
         </svg>
         <span class="brand-text">CropCard</span>
       </a>
@@ -59,9 +47,9 @@
         <span class="hero-accent">modernized.</span>
       </h1>
       <p class="lede">
-        Plan sprays, record harvests, calibrate equipment — offline-first, glove-friendly,
-        compliant with the 2-year retention rule. Built for small-plot growers who keep
-        notes on the truck dash.
+        Plan sprays, record harvests, calibrate equipment — offline-first, glove-friendly, compliant
+        with the 2-year retention rule. Built for small-plot growers who keep notes on the truck
+        dash.
       </p>
 
       <ul class="bullets" aria-label="What CropCard does">
@@ -173,9 +161,7 @@
   <section class="auth" aria-labelledby="signin-title">
     <div class="auth-card">
       <h2 id="signin-title">Sign in</h2>
-      <p class="auth-hint">
-        Enter your email. New here? We'll set up your farm in the next step.
-      </p>
+      <p class="auth-hint">Enter your email. New here? We'll set up your farm in the next step.</p>
 
       {#if form?.error}
         <p class="error" role="alert">{form.error}</p>
@@ -244,8 +230,8 @@
 
     <footer class="auth-footer">
       <small>
-        CropCard is offline-first — your records live on your device first, sync to the
-        cloud second.
+        CropCard is offline-first — your records live on your device first, sync to the cloud
+        second.
       </small>
     </footer>
   </section>

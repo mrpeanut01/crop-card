@@ -48,17 +48,15 @@
   let commitSummary = $state<string | null>(null);
   let commitErrors = $state<Array<{ lineIndex: number; message: string }>>([]);
 
-  const acceptedCount = $derived(proposals.filter((p) => p.accepted && p.candidate?.candidate).length);
+  const acceptedCount = $derived(
+    proposals.filter((p) => p.accepted && p.candidate?.candidate).length
+  );
 
   function handleFile(e: Event) {
     const input = e.target as HTMLInputElement;
     const f = input.files?.[0];
     if (!f) return;
-    if (
-      f.type !== 'image/jpeg' &&
-      f.type !== 'image/png' &&
-      f.type !== 'application/pdf'
-    ) {
+    if (f.type !== 'image/jpeg' && f.type !== 'image/png' && f.type !== 'application/pdf') {
       scanError = `Unsupported file type "${f.type}". Use JPEG, PNG, or PDF.`;
       return;
     }
@@ -148,9 +146,7 @@
       // Mark accepted by default when the candidate validates cleanly.
       const acceptedByDefault = !!(candidate?.candidate && candidate.validation.ok);
       proposals = proposals.map((p) =>
-        p.lineIndex === i
-          ? { ...p, candidate, accepted: acceptedByDefault }
-          : p
+        p.lineIndex === i ? { ...p, candidate, accepted: acceptedByDefault } : p
       );
     } else if (phase === 'complete') {
       scanStatus = (event.message as string) ?? null;
@@ -162,9 +158,7 @@
   }
 
   function toggleAccept(i: number) {
-    proposals = proposals.map((p) =>
-      p.lineIndex === i ? { ...p, accepted: !p.accepted } : p
-    );
+    proposals = proposals.map((p) => (p.lineIndex === i ? { ...p, accepted: !p.accepted } : p));
   }
 
   async function commitAccepted() {
@@ -232,15 +226,17 @@
   <div class="receipt-modal">
     <header>
       <h2 id="receipt-scan-title">Receipt / manifest scan</h2>
-      <button class="close" onclick={onClose} aria-label="Close" disabled={scanBusy || commitBusy}>✕</button>
+      <button class="close" onclick={onClose} aria-label="Close" disabled={scanBusy || commitBusy}
+        >✕</button
+      >
     </header>
 
     {#if proposals.length === 0 && !scanBusy}
       <div class="upload-area">
         <p class="lede">
           Upload a vendor receipt, invoice, packing list, or order confirmation. Claude extracts the
-          line items and looks each one up online; you review and accept the ones you want to install
-          as plugins.
+          line items and looks each one up online; you review and accept the ones you want to
+          install as plugins.
         </p>
         <input
           type="file"
@@ -253,9 +249,7 @@
         {/if}
         {#if scanError}<p class="error">{scanError}</p>{/if}
         <div class="actions">
-          <button class="primary" disabled={!file} onclick={startScan}>
-            ✦ Scan with AI
-          </button>
+          <button class="primary" disabled={!file} onclick={startScan}> ✦ Scan with AI </button>
           <button class="link" onclick={onClose}>Cancel</button>
         </div>
       </div>
@@ -310,15 +304,19 @@
                   <div class="row-name">
                     {#if cand}
                       <strong>{cand.displayName as string}</strong>
-                      <span class="type-pill type-{cand.type as string}">{cand.type as string}</span>
-                      {#if c?.confidence}<span class="conf conf-{c.confidence}">{c.confidence}</span>{/if}
+                      <span class="type-pill type-{cand.type as string}">{cand.type as string}</span
+                      >
+                      {#if c?.confidence}<span class="conf conf-{c.confidence}">{c.confidence}</span
+                        >{/if}
                     {:else}
                       <em class="muted">No match for: {p.line.rawText}</em>
                     {/if}
                   </div>
                   <div class="row-raw">
                     <code>{p.line.rawText}</code>
-                    {#if p.line.qty != null}<span class="qty">× {p.line.qty}{p.line.unit ? ' ' + p.line.unit : ''}</span>{/if}
+                    {#if p.line.qty != null}<span class="qty"
+                        >× {p.line.qty}{p.line.unit ? ' ' + p.line.unit : ''}</span
+                      >{/if}
                   </div>
                   {#if hasIssues}
                     <div class="issues">
@@ -351,8 +349,14 @@
         {/if}
 
         <div class="actions">
-          <button class="primary" disabled={commitBusy || acceptedCount === 0} onclick={commitAccepted}>
-            {commitBusy ? 'Saving…' : `Save ${acceptedCount} plugin${acceptedCount === 1 ? '' : 's'}`}
+          <button
+            class="primary"
+            disabled={commitBusy || acceptedCount === 0}
+            onclick={commitAccepted}
+          >
+            {commitBusy
+              ? 'Saving…'
+              : `Save ${acceptedCount} plugin${acceptedCount === 1 ? '' : 's'}`}
           </button>
           <button class="secondary" disabled={commitBusy} onclick={reset}>Start over</button>
           <button class="link" disabled={commitBusy} onclick={onClose}>Done</button>
@@ -493,7 +497,9 @@
     border-width: 2px;
   }
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
   .proposals {
     list-style: none;
@@ -562,12 +568,24 @@
     color: white;
     letter-spacing: 0.5px;
   }
-  .type-crop { background: #1f5e3a; }
-  .type-herbicide { background: #b00020; }
-  .type-insecticide { background: #b35900; }
-  .type-fungicide { background: #4a2c83; }
-  .type-fertilizer { background: #1c5fa6; }
-  .type-companion { background: #6b3fa0; }
+  .type-crop {
+    background: #1f5e3a;
+  }
+  .type-herbicide {
+    background: #b00020;
+  }
+  .type-insecticide {
+    background: #b35900;
+  }
+  .type-fungicide {
+    background: #4a2c83;
+  }
+  .type-fertilizer {
+    background: #1c5fa6;
+  }
+  .type-companion {
+    background: #6b3fa0;
+  }
   .conf {
     padding: 0.05rem 0.4rem;
     border-radius: 3px;
@@ -575,9 +593,18 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .conf-high { background: #d8f0d8; color: #1f5e3a; }
-  .conf-medium { background: #fff4d8; color: #8a5a00; }
-  .conf-low { background: #fce8e8; color: #b00020; }
+  .conf-high {
+    background: #d8f0d8;
+    color: #1f5e3a;
+  }
+  .conf-medium {
+    background: #fff4d8;
+    color: #8a5a00;
+  }
+  .conf-low {
+    background: #fce8e8;
+    color: #b00020;
+  }
   .row-raw {
     color: #777;
     font-size: 0.78rem;
@@ -607,8 +634,14 @@
     padding: 0.15rem 0.4rem;
     border-radius: 3px;
   }
-  .issue.bypass { background: #fce8e8; color: #b00020; }
-  .issue.schema { background: #fff4d8; color: #8a5a00; }
+  .issue.bypass {
+    background: #fce8e8;
+    color: #b00020;
+  }
+  .issue.schema {
+    background: #fff4d8;
+    color: #8a5a00;
+  }
   .no-candidate {
     opacity: 0.6;
   }

@@ -251,7 +251,7 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = {
           // First boot pulls ~150 MB of signatures via freshclam; allow up
           // to 15 min of warmup before health checks pressure the pod.
           name: 'clamav'
-          image: 'clamav/clamav:1.3'
+          image: 'clamav/clamav:stable'
           resources: {
             cpu: json('0.5')
             memory: '2Gi'

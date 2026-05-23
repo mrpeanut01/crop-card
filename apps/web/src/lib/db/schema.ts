@@ -139,6 +139,50 @@ export const helperInvites = sqliteTable(
   })
 );
 
+// ─── Phase 24 — External Agent API tokens ───────────────────────────────
+
+/** Bearer-token credentials for external Claude agents (Phase 24, UC-43).
+ *  Mirrors helper_invites: only the SHA-256 hash of the plaintext token
+ *  lands here, plaintext shown once on mint. Unlike helper_invites this
+ *  table is NOT branded `tenantScoped` because the Bearer lookup path is
+ *  cross-tenant by definition (we resolve which Owner the token belongs
+ *  to from the lookup result) — but every WRITE goes through composite
+ *  (owner_id, id) keys via tenant-aware helpers in apiTokens.ts.
+ *
+ *  The `is_service_account` + `daily_quota_*` columns gate Sub-task D's
+ *  per-token rate-limit branching in aiGuard.ts. A null quota column means
+ *  "use the endpoint-default daily quota". */
+export const apiTokens = sqliteTable(
+  'api_tokens',
+  {
+    id: text('id').primaryKey(),
+    ownerId: text('owner_id')
+      .notNull()
+      .references(() => owners.id),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    label: text('label').notNull(),
+    /** sha256(plaintext). UNIQUE — constant-time match in apiTokens.ts. */
+    tokenHash: text('token_hash').notNull(),
+    isServiceAccount: integer('is_service_account', { mode: 'boolean' }).notNull().default(false),
+    dailyQuotaAllocate: integer('daily_quota_allocate'),
+    dailyQuotaSchedule: integer('daily_quota_schedule'),
+    dailyQuotaInputs: integer('daily_quota_inputs'),
+    dailyQuotaStockRefresh: integer('daily_quota_stock_refresh'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
+    requestCount: integer('request_count').notNull().default(0),
+    revokedAt: integer('revoked_at', { mode: 'timestamp_ms' })
+  },
+  (table) => ({
+    tokenHashIdx: index('api_tokens_token_hash_idx').on(table.tokenHash),
+    ownerIdx: index('api_tokens_owner_idx').on(table.ownerId, table.createdAt)
+  })
+);
+
 /** Per-Owner plugin overlays. The base plugin catalog lives on the
  *  filesystem under /plugins/; this table layers per-Owner customizations
  *  (full replacement per pluginId). Safety kernel never reads overrides. */
@@ -1123,6 +1167,12 @@ export const aiCallLog = tenantScoped(
       id: text('id').primaryKey(),
       ownerId: text('owner_id').notNull(),
       userId: text('user_id').references(() => users.id),
+      /** Phase 24 — set when the call originated from a Bearer-authed
+       *  service-account token. aiGuard keys rate-limit on (tokenId,
+       *  endpoint, UTC-day) when present, so a runaway agent can't drain
+       *  the human owner's daily quota. Null for cookie sessions and
+       *  personal-use (non-service-account) Bearer tokens. */
+      tokenId: text('token_id'),
       endpoint: text('endpoint', {
         enum: [
           'suggest',

@@ -38,6 +38,8 @@ import * as fertilityRepo from './fertility';
 import * as stockRepo from './stock';
 import * as tasksRepo from './tasks';
 import * as settingsRepo from './settings';
+import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
+import { users, helperAssignments } from './schema';
 
 const OWNER_A = 'cross-tenant-test-owner-a';
 const OWNER_B = 'cross-tenant-test-owner-b';
@@ -191,6 +193,57 @@ describe('cross-tenant isolation', () => {
       // owner property below.
       expect(Array.isArray(events)).toBe(true);
     });
+  });
+
+  // Phase 24 — Bearer-authed code path. A token issued for Owner A
+  // resolves with ownerId === A; wrapping the request inside
+  // runWithTenant(A, …) means subsequent repo reads see only A's data.
+  // Owner B's token never resolves to A's ownerId regardless of which
+  // user mints it.
+  it('Bearer token resolves to the issuing Owner and only that Owner', () => {
+    const userA = `bearer-test-user-a-${randomUUID().slice(0, 8)}`;
+    const userB = `bearer-test-user-b-${randomUUID().slice(0, 8)}`;
+    db.insert(users)
+      .values({ id: userA, email: `${userA}@test`, role: 'owner' })
+      .run();
+    db.insert(users)
+      .values({ id: userB, email: `${userB}@test`, role: 'owner' })
+      .run();
+    db.insert(helperAssignments)
+      .values({ ownerId: OWNER_A, userId: userA, roleWithinOwner: 'owner', status: 'active' })
+      .run();
+    db.insert(helperAssignments)
+      .values({ ownerId: OWNER_B, userId: userB, roleWithinOwner: 'owner', status: 'active' })
+      .run();
+
+    const a = issueToken({ ownerId: OWNER_A, userId: userA, label: 'crosstest-a' });
+    const b = issueToken({ ownerId: OWNER_B, userId: userB, label: 'crosstest-b' });
+
+    const ra = lookupByPlaintext(a.token);
+    const rb = lookupByPlaintext(b.token);
+    expect(ra?.ownerId).toBe(OWNER_A);
+    expect(rb?.ownerId).toBe(OWNER_B);
+
+    // Each token, when used to scope a repo read, sees only its own Owner.
+    const aBlockIds = runWithTenant(
+      ra!.ownerId,
+      () => new Set(blocksRepo.listBlocks().map((b) => b.id))
+    );
+    const bBlockIds = runWithTenant(
+      rb!.ownerId,
+      () => new Set(blocksRepo.listBlocks().map((b) => b.id))
+    );
+    for (const id of aBlockIds) expect(bBlockIds.has(id)).toBe(false);
+    for (const id of bBlockIds) expect(aBlockIds.has(id)).toBe(false);
+  });
+
+  it('Bearer token cannot impersonate the OTHER Owner via crafted plaintext', () => {
+    // Without the database, the only way to "make" a token resolve is to
+    // hit the SHA-256 of a real row. Random plaintext never matches.
+    for (let i = 0; i < 50; i++) {
+      const fake = 'cck_' + randomUUID().replace(/-/g, '').padEnd(43, 'a').slice(0, 43);
+      expect(lookupByPlaintext(fake)).toBeNull();
+    }
   });
 
   // Quiet noise — these imports exist so the test refuses to compile when a

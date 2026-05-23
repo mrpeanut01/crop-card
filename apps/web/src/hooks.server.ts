@@ -1,11 +1,12 @@
 import { json, redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
-import { canMutate } from '$lib/server/session';
+import { canMutate, type SessionRole } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';
 import { runWithTenantAsync } from '$lib/db/tenant';
 import { db } from '$lib/db/client';
-import { owners } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { owners, users, helperAssignments } from '$lib/db/schema';
+import { and, eq } from 'drizzle-orm';
+import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
 
 /**
  * Phase 21a follow-up — error visibility (2026-05-17).
@@ -63,7 +64,13 @@ const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 // renders normally; everywhere else redirects to `/` (the landing/signin).
 // Keep this list tight — every new public surface is a potential
 // pre-auth attack surface.
-const ANONYMOUS_PATHS = new Set(['/', '/signin', '/signout', '/api/health']);
+const ANONYMOUS_PATHS = new Set([
+  '/',
+  '/signin',
+  '/signout',
+  '/api/health',
+  '/api/openapi.json' // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
+]);
 const ANONYMOUS_PATH_PREFIXES = ['/invite/', '/api/health/'];
 const ANONYMOUS_STATIC_PATHS = new Set([
   '/manifest.webmanifest',
@@ -110,7 +117,56 @@ function allowsPartialSession(pathname: string): boolean {
 }
 
 /**
- * Request boundary (Phase 18 final):
+ * Phase 24 — CSRF / Origin guard decision.
+ *
+ * Returns one of:
+ *   - 'allow'                  — let the request through
+ *   - 'block-cross-origin'     — Origin host mismatches the app host → 403
+ *   - 'malformed-origin'       — Origin header isn't a parseable URL → 400
+ *
+ * Policy:
+ *   - Mutation under /api/** with Bearer auth → allow regardless of Origin
+ *     (external agents call from arbitrary origins by design).
+ *   - Mutation under a non-/api/** path → enforce same-origin even when
+ *     Bearer is set. Form-actions belong to the cookie-session UI and
+ *     should never accept cross-origin POSTs.
+ *   - Cookie-authed mutations under /api/** → enforce same-origin when
+ *     an Origin header is present (browser-style request).
+ *   - Mutations with no Origin header at all → allow. Origin is browser-
+ *     only; curl / server-to-server cookie POSTs lack it by definition.
+ *
+ * Exported so the integration test can exercise the matrix directly
+ * without spinning up SvelteKit.
+ */
+export type CsrfDecision = 'allow' | 'block-cross-origin' | 'malformed-origin';
+export function csrfDecision(input: {
+  method: string;
+  pathname: string;
+  origin: string | null;
+  host: string;
+  authVia?: 'cookie' | 'bearer';
+}): CsrfDecision {
+  if (!MUTATION_METHODS.has(input.method)) return 'allow';
+  const underApi = input.pathname.startsWith('/api/');
+  const skipForBearer = input.authVia === 'bearer' && underApi;
+  if (skipForBearer) return 'allow';
+  if (!input.origin) return 'allow';
+  let originHost: string;
+  try {
+    originHost = new URL(input.origin).host;
+  } catch {
+    return 'malformed-origin';
+  }
+  if (originHost !== input.host) return 'block-cross-origin';
+  return 'allow';
+}
+
+/**
+ * Request boundary (Phase 18 final + Phase 24 Bearer auth):
+ *   0. (Phase 24) Resolve `Authorization: Bearer cck_…` BEFORE cookie
+ *      lookup. Hit → mint an AuthenticatedUser-shaped record from the
+ *      token's (ownerId, userId, role). Miss → return 401 JSON
+ *      immediately. Absent → fall through to cookie path.
  *   1. Decorate `event.locals.user` so downstream loads can render.
  *   2. Inspector role can't mutate via /api/*.
  *   3. Unauthenticated requests to non-public paths redirect to `/` so
@@ -124,9 +180,70 @@ function allowsPartialSession(pathname: string): boolean {
  *      tenant-scoped repos see the right Owner.
  */
 export const handle: Handle = async ({ event, resolve }) => {
-  const user = currentUser(event);
-  if (user) event.locals.user = user;
+  // Phase 24 — Bearer-first auth resolution.
+  const authHeader = event.request.headers.get('authorization');
+  let user: ReturnType<typeof currentUser> = null;
+  if (authHeader && /^bearer\s+/i.test(authHeader)) {
+    const plaintext = authHeader.replace(/^bearer\s+/i, '').trim();
+    const resolved = lookupByPlaintext(plaintext);
+    if (!resolved) {
+      return json(
+        { error: 'invalid or revoked Bearer token' },
+        { status: 401, headers: { 'cache-control': 'no-store' } }
+      );
+    }
+    const built = buildBearerUser(resolved);
+    if (!built) {
+      // Token is valid but its underlying assignment was revoked. Treat
+      // as a revoked token so the agent retries with a fresh credential.
+      return json(
+        { error: 'token user no longer has an active assignment for this owner' },
+        { status: 401, headers: { 'cache-control': 'no-store' } }
+      );
+    }
+    user = built;
+    event.locals.user = built;
+    event.locals.authVia = 'bearer';
+    event.locals.tokenId = resolved.tokenId;
+    event.locals.isServiceAccountToken = resolved.isServiceAccount;
+    touchToken(resolved.tokenId);
+  } else {
+    user = currentUser(event);
+    if (user) {
+      event.locals.user = user;
+      event.locals.authVia = 'cookie';
+    }
+  }
   const path = event.url.pathname;
+
+  // Phase 24 — CSRF / Origin bridge. SvelteKit's built-in check is
+  // disabled globally in svelte.config.js; we replace it with the
+  // targeted guard in csrfDecision() above so external Bearer agents
+  // can call /api/** from arbitrary origins while cookie sessions stay
+  // strictly same-origin.
+  if (MUTATION_METHODS.has(event.request.method)) {
+    const decision = csrfDecision({
+      method: event.request.method,
+      pathname: path,
+      origin: event.request.headers.get('origin'),
+      host: event.url.host,
+      authVia: event.locals.authVia
+    });
+    if (decision !== 'allow') {
+      return json(
+        {
+          error:
+            decision === 'block-cross-origin'
+              ? 'cross-origin request blocked'
+              : 'malformed Origin header'
+        },
+        {
+          status: decision === 'block-cross-origin' ? 403 : 400,
+          headers: { 'cache-control': 'no-store' }
+        }
+      );
+    }
+  }
 
   if (
     user &&
@@ -169,6 +286,52 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   return runWithTenantAsync(user.activeOwnerId, () => Promise.resolve(resolve(event)));
 };
+
+/**
+ * Build an AuthenticatedUser from a Bearer-resolved token. Looks up the
+ * email + role-within-owner so downstream code (which keys on `user.role`
+ * and `user.email`) is identical to the cookie-session path.
+ *
+ * Returns null when the underlying helper_assignment has been revoked —
+ * the token must die with its assignment.
+ */
+function buildBearerUser(resolved: {
+  tokenId: string;
+  ownerId: string;
+  userId: string;
+}): import('$lib/server/auth').AuthenticatedUser | null {
+  try {
+    const userRow = db
+      .select({ email: users.email, isSuperadmin: users.isSuperadmin })
+      .from(users)
+      .where(eq(users.id, resolved.userId))
+      .get();
+    if (!userRow) return null;
+    const assignment = db
+      .select({ roleWithinOwner: helperAssignments.roleWithinOwner })
+      .from(helperAssignments)
+      .where(
+        and(
+          eq(helperAssignments.userId, resolved.userId),
+          eq(helperAssignments.ownerId, resolved.ownerId),
+          eq(helperAssignments.status, 'active')
+        )
+      )
+      .get();
+    if (!assignment) return null;
+    return {
+      id: resolved.userId,
+      email: userRow.email,
+      role: assignment.roleWithinOwner as SessionRole,
+      activeOwnerId: resolved.ownerId,
+      isSuperadmin: userRow.isSuperadmin,
+      impersonating: false
+    };
+  } catch (err) {
+    console.error('[bearer-auth] failed to build user from token', err);
+    return null;
+  }
+}
 
 function pickRedirectForPartialSession(userId: string): string {
   try {

@@ -16,3 +16,18 @@ dbs:
         retention: 168h          # 7 days of WAL retention
         snapshot-interval: 24h
         sync-interval: 1s
+
+  # Phase 23 — marketplace catalog. Same Azure storage account, separate
+  # bucket (AZURE_BLOB_CONTAINER differs per app — see infra/azure/main.bicep
+  # and infra/docker-compose.yml). Litestream sees both dbs and the
+  # entrypoint only restores / replicates the one matching DB_PATH.
+  - path: /data/marketplace.db
+    replicas:
+      - type: abs
+        account-name: ${AZURE_STORAGE_ACCOUNT}
+        account-key: ${AZURE_STORAGE_KEY}
+        bucket: ${AZURE_BLOB_CONTAINER}
+        path: marketplace.db
+        retention: 168h
+        snapshot-interval: 24h
+        sync-interval: 1s

@@ -1,0 +1,39 @@
+{
+  "name": "@cropcard/marketplace",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --host 0.0.0.0 --port 5174",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 5174",
+    "start": "node build/index.js",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node scripts/migrate.mjs",
+    "import-catalog": "tsx scripts/import-catalog.ts"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^5.2.9",
+    "@sveltejs/kit": "^2.8.0",
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.9.0",
+    "drizzle-kit": "^0.28.1",
+    "svelte": "^5.1.16",
+    "svelte-check": "^4.0.7",
+    "tsx": "^4.22.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  },
+  "dependencies": {
+    "@cropcard/plugin-validation": "workspace:*",
+    "better-sqlite3": "^11.5.0",
+    "drizzle-orm": "^0.36.4",
+    "zod": "^3.23.8"
+  }
+}

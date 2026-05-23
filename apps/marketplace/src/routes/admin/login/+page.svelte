@@ -18,14 +18,15 @@
 </form>
 
 {#if form?.sent}
-  <p class="muted">Magic-link issued. Check the server logs (stdout email stub) for the URL.</p>
+  <p class="muted">
+    Magic-link issued. Check the server logs (stdout email stub) for the URL.
+  </p>
+  {#if form.hint}
+    <p class="muted" style="word-break: break-all;">{form.hint}</p>
+  {/if}
 {:else if form?.error}
   <p class="warn">{form.error}</p>
 {/if}
-
-<p class="todo">
-  <em>Stub — Sub-task C wires the real magic-link flow.</em>
-</p>
 
 <style>
   form {
@@ -43,9 +44,5 @@
   }
   .warn {
     color: #b00020;
-  }
-  .todo {
-    margin-top: 2rem;
-    color: #666;
   }
 </style>

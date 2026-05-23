@@ -1,19 +1,23 @@
-import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import { fail, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { loginByEmail } from '$lib/server/adminAuth';
 
-/**
- * Stub action. Sub-task C replaces this with `loginByEmail()` from
- * lib/server/adminAuth.ts (writes a row to admin_login_tokens and emails
- * the magic link via lib/server/email.ts).
- */
+/** If already signed in, skip the form. */
+export const load: PageServerLoad = async ({ locals, url }) => {
+  if (locals.admin) {
+    throw redirect(303, url.searchParams.get('next') ?? '/admin');
+  }
+  return {};
+};
+
 export const actions: Actions = {
-  login: async ({ request }) => {
+  login: async ({ request, url }) => {
     const data = await request.formData();
     const email = String(data.get('email') ?? '').trim().toLowerCase();
     if (!email || !email.includes('@')) {
       return fail(400, { error: 'invalid email' });
     }
-    console.log(`[admin/login stub] would issue magic-link for ${email}`);
-    return { sent: true };
+    const result = await loginByEmail({ email, origin: url.origin });
+    return { sent: true, hint: result.loginUrl ? `(dev: ${result.loginUrl})` : undefined };
   }
 };

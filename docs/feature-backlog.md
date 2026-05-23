@@ -130,11 +130,11 @@ These are not feature work; they are corrections to the spec doc itself. **Being
 - **Acceptance:** standalone marketplace serves CropCard-shipped plugins via authenticated `/api/v1/`; community-tier uploads quarantine in `pending_review`; injection / bypass payloads rejected with audit trail; CropCard's existing 680 tests still pass under the shared-package refactor.
 - **Estimate:** ~9.75 days across 7 PRs. Branch `phase-23-marketplace` off `main` (NOT off `phase-21b-planner`).
 
-### B-30 · Phase 22 — External Agent API (UC-43)
+### B-30 · Phase 24 — External Agent API (UC-43)
 
 - **Persona:** P6 (new — Integrator / automation owner; add to `personas.md` in Sub-task A).
 - **Why P0:** Backend audit (2026-05-22) confirmed the JSON API is already coherent and server-side safety re-validation is robust. The only blockers to external Claude-agent orchestration are auth, CSRF, discoverability, and per-user AI quota. Four small additions unlock farm-scale automation (scheduling, scouting drone uploads, accounting bridges) without re-hardening the safety surface.
-- **Epic:** #59. Tracker: [phase-22-agent-api.md](./phase-22-agent-api.md).
+- **Epic:** #59. Tracker: [phase-24-agent-api.md](./phase-24-agent-api.md).
 - **Scope:** Four sub-tasks:
   - **A** issue #55 — API token auth: `api_tokens` table + `POST /api/auth/token` + Bearer middleware in `hooks.server.ts`.
   - **B** issue #56 — CSRF / Origin bridge: Bearer-authed requests bypass SvelteKit's same-origin check; cookie-session requests still enforce it.

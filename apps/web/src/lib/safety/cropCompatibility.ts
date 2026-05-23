@@ -15,10 +15,21 @@
  * makes the matrix-default unsafe call wrong for this cultivar — e.g.,
  * dicamba (synthetic-auxin → kills legumes) on Xtend-traited soybean.
  * Without `requiresTraits`, the gate behaves exactly as before.
+ *
+ * Issue #53 (half 1): emits ONE violation per (product, chemistryClass)
+ * instead of one per (product, crop). The detail carries `crops[]` so the
+ * UI can render a single STOP card listing every affected crop.
+ * Pre/post-emergent awareness is half 2 and not in this pass.
  */
 
 import { killsFamily, type CropFamily } from './cropFamilyLethality';
-import type { ChemistryClass, CropStage, HerbicideProduct, SafetyViolation } from './types';
+import type {
+  ChemistryClass,
+  CropIncompatibilityCrop,
+  CropStage,
+  HerbicideProduct,
+  SafetyViolation
+} from './types';
 
 function traitOverrideActive(product: HerbicideProduct, crop: CropStage): boolean {
   const claim = product.traitGatedSafeFor?.find((c) => c.cropPluginId === crop.cropPluginId);
@@ -36,27 +47,37 @@ export function checkCropCompatibility(
   const allCrops = [primary, ...coPlanted];
 
   for (const product of products) {
+    const grouped = new Map<ChemistryClass, CropIncompatibilityCrop[]>();
+
     for (const crop of allCrops) {
       if (!crop.cropFamily) continue;
-      // Layer 0: trait override skips the family-kill check for this pair.
       if (traitOverrideActive(product, crop)) continue;
 
       const killing = uniqueClasses(product).filter((cls) =>
         killsFamily(cls, crop.cropFamily as CropFamily)
       );
       for (const cls of killing) {
-        violations.push({
-          code: 'CROP_INCOMPATIBLE',
-          message: `${product.pluginId} (${cls}) is lethal to ${crop.cropFamily} crops`,
-          detail: {
-            product: product.pluginId,
-            chemistryClass: cls,
-            cropPluginId: crop.cropPluginId,
-            cropFamily: crop.cropFamily,
-            isCoPlanted: crop !== primary
-          }
+        const list = grouped.get(cls) ?? [];
+        list.push({
+          cropPluginId: crop.cropPluginId,
+          cropFamily: crop.cropFamily as CropFamily,
+          isCoPlanted: crop !== primary
         });
+        grouped.set(cls, list);
       }
+    }
+
+    for (const [cls, crops] of grouped) {
+      const families = uniqueFamilies(crops);
+      violations.push({
+        code: 'CROP_INCOMPATIBLE',
+        message: `${product.pluginId} (${cls}) is lethal to ${families.join(', ')} crops`,
+        detail: {
+          product: product.pluginId,
+          chemistryClass: cls,
+          crops
+        }
+      });
     }
   }
   return violations;
@@ -64,4 +85,8 @@ export function checkCropCompatibility(
 
 function uniqueClasses(product: HerbicideProduct): ChemistryClass[] {
   return Array.from(new Set(product.activeIngredients.map((ai) => ai.chemistryClass)));
+}
+
+function uniqueFamilies(crops: ReadonlyArray<CropIncompatibilityCrop>): CropFamily[] {
+  return Array.from(new Set(crops.map((c) => c.cropFamily))).sort();
 }

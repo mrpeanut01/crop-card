@@ -29,8 +29,15 @@ describe('seed plugin library', () => {
     expect(families.has('legume')).toBe(true);
     expect(families.has('broadleaf-companion')).toBe(true);
     expect(families.has('orchard')).toBe(true);
-    expect(families.has('cover-grass')).toBe(true);
-    expect(families.has('cover-legume')).toBe(true);
+    // Cover crops are catalogued under their botanical families (e.g.
+    // cereal-rye → cereal-grain, hairy-vetch → legume, daikon-cover → brassica)
+    // so the safety kernel treats grass / legume / brassica covers identically
+    // to their cash-crop counterparts. `cover-grass` and `cover-legume` stay
+    // in the kernel enum + kill matrix for back-compat with historical spray
+    // records but are no longer authoring choices.
+    expect(families.has('cereal-grain')).toBe(true);
+    expect(families.has('forage')).toBe(true);
+    expect(families.has('brassica')).toBe(true);
 
     const classes = new Set(
       registry.herbicides().flatMap((h) => h.activeIngredients.map((ai) => ai.chemistryClass))

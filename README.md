@@ -4,6 +4,10 @@ Offline-first PWA replacing the paper Field Card for small-plot row crop herbici
 
 > The upstream HCD Guide refers to this product as **"RowWise"**. This repository's name is **CropCard**; both names refer to the same product.
 
+<!-- separator to keep MD028 happy: two distinct blockquotes -->
+
+> Contributions are welcome, but the most helpful input right now is product feedback: functionality, UX, workflow ideas, edge cases, and feature suggestions. Please check the [contributing guidance](./CONTRIBUTING.md) before opening a pull request.
+
 ## Design documentation
 
 - [docs/personas.md](./docs/personas.md) — ISO 9241-210 *Context of Use* for the 5 personas (Owner, Helper, Hay Operator, Inspector, First-Run user)

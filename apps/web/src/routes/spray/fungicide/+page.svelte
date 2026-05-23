@@ -162,7 +162,7 @@
     <select id="block-select" bind:value={selectedBlockId} required>
       <option value="">— pick a block —</option>
       {#each data.blocks as b (b.id)}
-        <option value={b.id}>{b.name}{b.acres ? ` · ${b.acres} acres` : ''}</option>
+        <option value={b.id}>{b.name}{b.acres ? ` · ${b.acres.toFixed(2)} acres` : ''}</option>
       {/each}
     </select>
 

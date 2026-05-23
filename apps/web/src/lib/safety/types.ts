@@ -117,6 +117,18 @@ export interface SafetyViolation {
   detail?: Record<string, unknown>;
 }
 
+/**
+ * Shape of an individual crop entry inside a consolidated CROP_INCOMPATIBLE
+ * violation's `detail.crops[]`. Phase 23 #53-half-1 collapses the historical
+ * one-violation-per-(product × crop) emission into one violation per
+ * (product × chemistryClass) carrying this list.
+ */
+export interface CropIncompatibilityCrop {
+  cropPluginId: string;
+  cropFamily: import('./cropFamilyLethality').CropFamily;
+  isCoPlanted: boolean;
+}
+
 export interface SafetyResult {
   ok: boolean;
   violations: SafetyViolation[];

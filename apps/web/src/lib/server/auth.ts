@@ -5,10 +5,10 @@
  * endpoint can re-throw to short-circuit. Use these on every endpoint that
  * mutates state (NFR-10 audit trail; FR-09 role-gated overrides).
  *
- * Phase 18c — the AuthenticatedUser shape now carries the active Owner
+ * Phase 18c — the AuthenticatedUser shape carries the active Owner
  * context derived from the session cookie. Roles are checked against
- * `activeRole` (the role within `activeOwnerId`), not the legacy
- * `users.role` column.
+ * `activeRole` (the role within `activeOwnerId`); the per-(owner, user)
+ * source of truth is `helper_assignments.role_within_owner`.
  */
 
 import { error, redirect, type RequestEvent } from '@sveltejs/kit';
@@ -113,7 +113,7 @@ export function loginByEmail(
     ? existing.id
     : (() => {
         const id = `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        db.insert(users).values({ id, email: normalized, role: desiredRole }).run();
+        db.insert(users).values({ id, email: normalized }).run();
         return id;
       })();
 

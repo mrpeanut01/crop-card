@@ -83,7 +83,7 @@ function seedOwnerWithSpray(
 
 function ensureUser(id: string): void {
   db.insert(users)
-    .values({ id, email: `${id}@test.local`, role: 'owner' })
+    .values({ id, email: `${id}@test.local` })
     .onConflictDoNothing()
     .run();
 }

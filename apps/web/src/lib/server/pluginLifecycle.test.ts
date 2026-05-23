@@ -77,7 +77,7 @@ beforeAll(() => {
   // in the fresh /tmp/cropcard-test.db. onConflictDoNothing is fine for the
   // owner-home-farm row that migrations already create.
   db.insert(users)
-    .values({ id: SYSTEM_USER_ID, email: 'system@cropcard.local', role: 'owner' })
+    .values({ id: SYSTEM_USER_ID, email: 'system@cropcard.local' })
     .onConflictDoNothing()
     .run();
   db.insert(fields)

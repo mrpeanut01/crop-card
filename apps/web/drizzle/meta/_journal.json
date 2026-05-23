@@ -211,6 +211,13 @@
       "when": 1779894000000,
       "tag": "0029_phase24_api_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1779576549491,
+      "tag": "0030_phase18_drop_users_role",
+      "breakpoints": true
     }
   ]
 }

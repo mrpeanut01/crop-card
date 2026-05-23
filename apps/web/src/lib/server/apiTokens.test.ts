@@ -28,7 +28,7 @@ function seedOwnerAndUser(): { ownerId: string; userId: string } {
   const userId = uniq('user');
   db.insert(owners).values({ id: ownerId, name: ownerId, slug: ownerId }).run();
   db.insert(users)
-    .values({ id: userId, email: `${userId}@example.test`, role: 'owner' })
+    .values({ id: userId, email: `${userId}@example.test` })
     .run();
   db.insert(helperAssignments)
     .values({

@@ -67,8 +67,8 @@ export interface SessionPayload {
   /** The Owner this session is currently acting for. Null on a partial
    *  session (issued before the Owner-picker) — repos refuse to run. */
   activeOwnerId: string | null;
-  /** Role within `activeOwnerId`. Mirrors `users.role` for the legacy
-   *  single-Owner case (everyone's an "owner" on Home Farm). */
+  /** Role within `activeOwnerId`. Sourced from
+   *  `helper_assignments.role_within_owner` at login / Owner-switch time. */
   activeRole: SessionRole;
   /** True when a superadmin is acting as `activeOwnerId`. UI surfaces a
    *  red banner and the impersonation auto-expires. */

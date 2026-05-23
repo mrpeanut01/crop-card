@@ -10,7 +10,7 @@ The upstream HCD Guide refers to the product as "RowWise"; this repository's nam
 
 Paste the **review framing** below as the first message in a Claude Code session whose goal is to review or improve usability. Claude will apply the framing to every component, screen, and flow it examines until told otherwise.
 
-For follow-up sessions targeting a specific finding ID (F-A through F-S in [usability-audit.md](./usability-audit.md)), append the review checklist (§3) and a one-line task — e.g. "Apply the field UX checklist to F-A and propose the contrast-palette fix."
+For follow-up sessions targeting a specific finding, reference the relevant backlog item (`B-NN` / `T-NN` in [feature-backlog.md](./feature-backlog.md)) or a prior clickthrough report under [clickthrough-reports/](./clickthrough-reports/), append the review checklist (§3), and a one-line task — e.g. "Apply the field UX checklist to T-05 and propose the contrast-palette fix."
 
 ---
 
@@ -146,7 +146,8 @@ FOR EACH COMPONENT, CHECK:
 
 - [personas.md](./personas.md) — P1–P5 with ISO 9241-210 *Context of Use* attributes
 - [use-cases.md](./use-cases.md) — UC-01..UC-24 with route refs
-- [usability-audit.md](./usability-audit.md) — current findings F-A through F-S, prioritized
+- [feature-backlog.md](./feature-backlog.md) — current backlog items (B-NN / T-NN), with priority, persona, and acceptance criteria; the canonical home for audit-derived findings
+- [clickthrough-reports/](./clickthrough-reports/) — per-session P0/P1/P2 findings from the playwright-clickthrough subagent
 - [../CLAUDE.md](../CLAUDE.md) — invariants, phase status, where things live
 - HCD Guide — companion document held outside this repo; defines RowWise/CropCard product context, plugin schema v1.1, FR-19..FR-23
 
@@ -156,9 +157,9 @@ FOR EACH COMPONENT, CHECK:
 
 A full audit pass should produce, in this order:
 
-1. Updated hypothesis verdicts (use [usability-audit.md §2](./usability-audit.md#2-hypothesis-verdicts) as the seed; add new ones)
-2. New findings appended to [usability-audit.md §3](./usability-audit.md#3-findings--prioritized-fix-list) with the same shape (ID, severity, persona, ISO/Nielsen labels, evidence with file:line, fix proposal)
-3. Updated remediation roadmap if priorities have shifted
+1. A dated clickthrough report under [clickthrough-reports/](./clickthrough-reports/) (P0/P1/P2 shape per the `playwright-clickthrough` subagent template), with persona, ISO/Nielsen labels, and evidence as `file:line` refs
+2. New entries appended to [feature-backlog.md](./feature-backlog.md) for any finding that warrants a code change, using the existing `B-NN` / `T-NN` numbering and priority conventions
+3. Updated priorities on existing backlog rows if the audit shifts the order
 4. List of *what the audit did not cover* — explicit non-claims
 
 Do not produce code in a review session unless the user asks. Reviews end with a fix proposal; implementation is a separate task with its own approval.

@@ -18,13 +18,20 @@
  * If you genuinely need an unscoped query (e.g. cross-tenant superadmin
  * lookup or a global table like users), call `unscopedQueryNote('reason')`
  * in the same function — the rule's heuristic allows the file when that
- * import is present.
+ * call is present.
  *
- * This is a heuristic — it flags by table identifier name. Maintain the
- * `TENANT_SCOPED_TABLE_NAMES` list when the schema gains a new branded
- * table. The compile-time `TenantScoped` brand is the canonical gate;
- * this rule is a secondary safety net to catch raw queries the brand
- * cast doesn't.
+ * Heuristic: the rule operates at FILE granularity, not call-chain
+ * granularity — chasing `.from(X).where(tenantWhere(X))` through the
+ * Drizzle fluent API across nodes is fragile. If the file references
+ * ANY of `tenantWhere`, `withTenant`, `tenantValues`, or
+ * `unscopedQueryNote`, it is treated as tenant-aware and the rule
+ * suppresses. The real value of the rule is catching new files that
+ * touch a tenant-scoped table without importing any of the helpers —
+ * the "forgot to wire tenant scoping at all" case.
+ *
+ * Maintain the `TENANT_SCOPED_TABLE_NAMES` list when the schema gains a
+ * new branded table. The compile-time `TenantScoped` brand in
+ * `schema.ts` is the canonical gate; this rule is a secondary safety net.
  */
 
 'use strict';
@@ -84,19 +91,22 @@ module.exports = {
   },
 
   create(context) {
-    let fileHasUnscopedNote = false;
+    let fileIsTenantAware = false;
 
     return {
       Program() {
-        // Scan once: look for an `unscopedQueryNote(...)` call anywhere in
-        // the file. If present, suppress this rule for the whole file.
+        // Scan once: if the file references any tenant helper (tenant
+        // accessors or an explicit cross-tenant note), treat it as
+        // tenant-aware and suppress this rule file-wide. See the file
+        // header for the why.
         const src = context.getSourceCode().getText();
-        fileHasUnscopedNote = /\bunscopedQueryNote\s*\(/.test(src);
+        fileIsTenantAware =
+          /\b(tenantWhere|withTenant|tenantValues|unscopedQueryNote)\s*\(/.test(src);
       },
 
       // db.select(...).from(blocks)
       'CallExpression[callee.property.name="from"]'(node) {
-        if (fileHasUnscopedNote) return;
+        if (fileIsTenantAware) return;
         const arg = node.arguments[0];
         if (isTenantTableIdentifier(arg)) {
           context.report({
@@ -109,7 +119,7 @@ module.exports = {
 
       // db.insert(blocks).values({...})
       'CallExpression[callee.property.name="insert"]'(node) {
-        if (fileHasUnscopedNote) return;
+        if (fileIsTenantAware) return;
         const arg = node.arguments[0];
         if (isTenantTableIdentifier(arg)) {
           context.report({
@@ -122,7 +132,7 @@ module.exports = {
 
       // db.update(blocks).set({...}).where(...)
       'CallExpression[callee.property.name="update"]'(node) {
-        if (fileHasUnscopedNote) return;
+        if (fileIsTenantAware) return;
         const arg = node.arguments[0];
         if (isTenantTableIdentifier(arg)) {
           context.report({
@@ -135,7 +145,7 @@ module.exports = {
 
       // db.delete(blocks).where(...)
       'CallExpression[callee.property.name="delete"]'(node) {
-        if (fileHasUnscopedNote) return;
+        if (fileIsTenantAware) return;
         const arg = node.arguments[0];
         if (isTenantTableIdentifier(arg)) {
           context.report({

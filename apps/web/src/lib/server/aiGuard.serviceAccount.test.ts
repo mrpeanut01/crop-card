@@ -43,7 +43,7 @@ function seedServiceAccountToken(): SeedResult {
     .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
     .run();
   db.insert(users)
-    .values({ id: userId, email: `${userId}@test`, role: 'owner' })
+    .values({ id: userId, email: `${userId}@test` })
     .run();
   db.insert(helperAssignments)
     .values({ ownerId, userId, roleWithinOwner: 'owner', status: 'active' })
@@ -64,7 +64,7 @@ function seedPersonalToken(): SeedResult {
     .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
     .run();
   db.insert(users)
-    .values({ id: userId, email: `${userId}@test`, role: 'owner' })
+    .values({ id: userId, email: `${userId}@test` })
     .run();
   db.insert(helperAssignments)
     .values({ ownerId, userId, roleWithinOwner: 'owner', status: 'active' })

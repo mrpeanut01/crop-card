@@ -18,20 +18,19 @@ import { unscopedQueryNote } from './tenant';
 
 const SYSTEM_USER_ID = 'system';
 
-export async function ensureSystemUser(): Promise<{ id: string; email: string; role: string }> {
+export async function ensureSystemUser(): Promise<{ id: string; email: string }> {
   unscopedQueryNote('users table is global identity, not tenant-scoped');
   const existing = db.select().from(users).where(eq(users.id, SYSTEM_USER_ID)).get();
-  if (existing) return existing;
+  if (existing) return { id: existing.id, email: existing.email };
   const inserted = db
     .insert(users)
     .values({
       id: SYSTEM_USER_ID,
-      email: 'system@cropcard.local',
-      role: 'owner'
+      email: 'system@cropcard.local'
     })
     .returning()
     .get();
-  return inserted;
+  return { id: inserted.id, email: inserted.email };
 }
 
 // ─── Helper assignments (Phase 18a) ─────────────────────────────────────

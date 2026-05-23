@@ -10,7 +10,7 @@
     "start": "node build/index.js",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "lint": "eslint . && prettier --check .",
+    "lint": "eslint --rulesdir ./eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "pnpm test:unit && pnpm test:e2e",
     "test:unit": "vitest run",

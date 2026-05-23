@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:unit": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "import-catalog": "tsx scripts/import-catalog.ts"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.2.9",

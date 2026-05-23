@@ -19,11 +19,11 @@
 </script>
 
 {#if meta}
-  <a class="ref-chip" href="/plugins/{encodeURIComponent(pluginId)}" title={pluginId}>
+  <a class="ref-chip" href="/plugins/{encodeURIComponent(pluginId)}">
     {meta.displayName}
   </a>
 {:else}
-  <span class="ref-chip missing" title="pluginId not found in registry">{pluginId}</span>
+  <span class="ref-chip missing">{pluginId}</span>
 {/if}
 
 <style>

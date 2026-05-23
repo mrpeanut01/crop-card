@@ -1,0 +1,20 @@
+{
+  "pluginId": "banker-plant-wheat-aphid-greenhouse",
+  "type": "companion",
+  "displayName": "Wheat + Bird Cherry-Oat Aphid (greenhouse banker plant)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "solanaceae",
+  "goodWith": ["tomato-cherokee-purple", "tomato-celebrity-f1", "pepper-bell-california-wonder", "asian-eggplant-ping-tung-long"],
+  "badWith": [],
+  "benefit": "Wheat plants infested with bird cherry-oat aphid (Rhopalosiphum padi) serve as a reproduction site for Aphidius colemani parasitoids. The aphid only feeds on cereal grasses, so it cannot move to the cash crop, but the wasp it produces moves freely and attacks crop aphids preventively.",
+  "members": [
+    {
+      "family": "cereal-grain",
+      "role": "greenhouse banker plant",
+      "plantingOffsetDays": -28,
+      "title": "Wheat banker pots 4 weeks before transplant",
+      "body": "Sow wheat in 6 inch pots 28 days before greenhouse crop transplant. Inoculate with bird cherry-oat aphid. Release Aphidius colemani onto banker pots 7 days later. Maintain 1 banker pot per 1000 sq ft."
+    }
+  ]
+}

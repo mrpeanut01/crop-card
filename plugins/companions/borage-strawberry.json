@@ -1,0 +1,20 @@
+{
+  "pluginId": "borage-strawberry",
+  "type": "companion",
+  "displayName": "Borage + Strawberry (pollinator + flavor)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "small-fruit",
+  "goodWith": ["strawberry-jewel", "strawberry-albion-day-neutral", "strawberry-earliglow-june-bearing"],
+  "badWith": [],
+  "benefit": "Borage (Borago officinalis) attracts honeybees and bumble bees that improve strawberry pollination and fruit set. Field reports also cite improved fruit flavor and reduced hornworm pressure on adjacent solanaceae.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "pollinator magnet",
+      "plantingOffsetDays": 0,
+      "title": "Borage at strawberry block edges",
+      "body": "Direct-sow borage at the corners and edges of the strawberry planting after final frost. One plant per 25 to 50 sq ft of bed."
+    }
+  ]
+}

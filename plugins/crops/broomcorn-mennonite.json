@@ -1,0 +1,30 @@
+{
+  "pluginId": "broomcorn-mennonite",
+  "type": "crop",
+  "displayName": "Broomcorn Mennonite (heirloom craft)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cereal-grain",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 100,
+    "max": 120
+  },
+  "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 30,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "harvestIndicators": [
+    "Seed heads tan, before seed shed"
+  ],
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Sorghum bicolor (broomcorn type). Long fibrous panicles used in handmade-broom craft and natural floral arrangements. Strong farmstand sale at fall harvest. Open-pollinated. Sold by Baker Creek, Sand Hill Preservation."
+}

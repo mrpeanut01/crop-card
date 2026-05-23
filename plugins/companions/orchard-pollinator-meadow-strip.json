@@ -1,0 +1,20 @@
+{
+  "pluginId": "orchard-pollinator-meadow-strip",
+  "type": "companion",
+  "displayName": "Wildflower Meadow Strip + Orchard (NRCS-style pollinator habitat)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "orchard",
+  "goodWith": ["apple-orchard", "apple-honeycrisp", "apple-gala", "pear-bartlett", "peach-redhaven", "plum-stanley"],
+  "badWith": [],
+  "benefit": "Wildflower meadow strips along orchard headlands provide season-long bloom for native pollinators and host parasitoid wasps that suppress codling moth and oriental fruit moth. NRCS CP42 conservation practice supports the planting financially.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "season-long pollinator habitat",
+      "plantingOffsetDays": 0,
+      "title": "Drill regional pollinator mix on headlands",
+      "body": "Drill a regional native pollinator seed mix at the rate suggested by NRCS Conservation Practice 327 or 420 in a 20 to 30 ft headland strip. Mow once in late fall, leave standing through winter for nesting habitat."
+    }
+  ]
+}

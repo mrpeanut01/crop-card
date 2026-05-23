@@ -134,7 +134,9 @@
           "enum": [
             "lb-per-acre",
             "gal-per-acre",
-            "ton-per-acre"
+            "ton-per-acre",
+            "qt-per-acre",
+            "fl-oz-per-acre"
           ]
         }
       },

@@ -1,0 +1,20 @@
+{
+  "pluginId": "chives-rose-aphid",
+  "type": "companion",
+  "displayName": "Chives + Rose (aphid + black spot deterrent)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "broadleaf-companion",
+  "goodWith": ["chives-common"],
+  "badWith": [],
+  "benefit": "Chives in rose under-plantings discourage aphid colonization through allium-volatile masking and may reduce black spot incidence through sulfur compound deposition during rainfall. Common practice in commercial rose nurseries and ornamental beds.",
+  "members": [
+    {
+      "family": "allium",
+      "role": "rose understory aphid deterrent",
+      "plantingOffsetDays": 0,
+      "title": "Chive ring at rose bush base",
+      "body": "Plant chive divisions in a 12 inch ring at the base of each rose. Allow occasional bloom for additional pollinator support."
+    }
+  ]
+}

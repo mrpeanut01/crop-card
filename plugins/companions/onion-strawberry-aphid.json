@@ -1,0 +1,20 @@
+{
+  "pluginId": "onion-strawberry-aphid",
+  "type": "companion",
+  "displayName": "Onion + Strawberry (aphid repellent intercrop)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "small-fruit",
+  "goodWith": ["strawberry-jewel", "strawberry-albion-day-neutral", "strawberry-earliglow-june-bearing"],
+  "badWith": [],
+  "benefit": "Onion plantings between strawberry rows or at row ends discourage strawberry aphid (Chaetosiphon fragaefolii) and reduce strawberry mottle virus transmission. Strong fit in small-acreage matted-row systems.",
+  "members": [
+    {
+      "family": "allium",
+      "role": "aphid deterrent intercrop",
+      "plantingOffsetDays": 0,
+      "title": "Onion sets between strawberry rows",
+      "body": "Set onions every 12 inches between strawberry rows at strawberry planting time. Pull onions before they bolt to limit competition."
+    }
+  ]
+}

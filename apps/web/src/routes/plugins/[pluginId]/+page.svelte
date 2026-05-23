@@ -201,22 +201,25 @@
     </div>
     <div class="header-actions">
       {#if data.canEdit}
-        <button class="primary" onclick={startEdit} disabled={retireBusy}>✎ Edit</button>
+        <button class="action primary" onclick={startEdit} disabled={retireBusy}>
+          ✎ Edit
+        </button>
       {/if}
-      <a class="link" href="/api/plugins/{encodeURIComponent(data.pluginId)}/export" download>
+      <a class="action subtle" href="/api/plugins/{encodeURIComponent(data.pluginId)}/export" download>
         ↓ Download
       </a>
       {#if data.canEdit}
+        <span class="action-divider" aria-hidden="true"></span>
         {#if isRetired}
-          <button class="link warn" onclick={() => lifecycleAction('unretire')} disabled={retireBusy}>
+          <button class="action warn" onclick={() => lifecycleAction('unretire')} disabled={retireBusy}>
             ⤴ Unretire
           </button>
         {:else}
-          <button class="link warn" onclick={() => lifecycleAction('retire')} disabled={retireBusy}>
+          <button class="action warn" onclick={() => lifecycleAction('retire')} disabled={retireBusy}>
             ⤵ Retire
           </button>
         {/if}
-        <button class="link danger" onclick={openUninstallConfirm} disabled={retireBusy}>
+        <button class="action danger" onclick={openUninstallConfirm} disabled={retireBusy}>
           ✕ Uninstall…
         </button>
       {/if}
@@ -616,8 +619,6 @@
         {#if asStr(plugin.primaryFamily)}
           <div class="stat"><dt>Anchor family</dt><dd>{plugin.primaryFamily}</dd></div>
         {/if}
-        <div class="stat"><dt>Good-with</dt><dd>{goodWith.length} crop{goodWith.length === 1 ? '' : 's'}</dd></div>
-        <div class="stat"><dt>Bad-with</dt><dd>{badWith.length} crop{badWith.length === 1 ? '' : 's'}</dd></div>
         {#if members.length > 0}
           <div class="stat"><dt>Companion members</dt><dd>{members.length}</dd></div>
         {/if}
@@ -633,7 +634,15 @@
               <li>
                 <strong>{m.role}</strong>
                 <span class="muted">({m.family})</span>
-                {#if m.plantingOffsetDays != null}· plant +{m.plantingOffsetDays}d after anchor{/if}
+                {#if m.plantingOffsetDays != null}
+                  {#if (m.plantingOffsetDays as number) < 0}
+                    · plant {Math.abs(m.plantingOffsetDays as number)}d BEFORE anchor
+                  {:else if (m.plantingOffsetDays as number) === 0}
+                    · plant same day as anchor
+                  {:else}
+                    · plant +{m.plantingOffsetDays as number}d after anchor
+                  {/if}
+                {/if}
                 {#if asStr(m.title)}— {m.title}{/if}
               </li>
             {/each}
@@ -818,41 +827,62 @@
   }
   .header-actions {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.4rem;
+    margin-top: 0.85rem;
     align-items: center;
+    flex-wrap: wrap;
   }
-  .primary {
+  .action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 5px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f5e3a;
+    background: transparent;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    min-height: 32px;
+    line-height: 1.2;
+    transition: background-color 0.1s ease;
+  }
+  .action.primary {
     background: #1f5e3a;
     color: white;
-    border: 0;
-    padding: 0.45rem 1rem;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 0.9rem;
   }
-  .primary:hover {
+  .action.primary:hover:not(:disabled) {
     background: #174d2f;
   }
-  .link {
-    color: #1f5e3a;
-    text-decoration: underline;
-    font-size: 0.9rem;
-    background: none;
-    border: 0;
-    cursor: pointer;
-    font: inherit;
-    padding: 0;
+  .action.subtle:hover {
+    background: #e7f1ea;
   }
-  .link.warn {
+  .action.warn {
     color: #8a5a00;
   }
-  .link.danger {
+  .action.warn:hover:not(:disabled) {
+    background: #fff4d8;
+  }
+  .action.danger {
     color: #b00020;
   }
-  .link:disabled {
-    color: #aaa;
+  .action.danger:hover:not(:disabled) {
+    background: #fce8e8;
+  }
+  .action:disabled {
+    opacity: 0.45;
     cursor: not-allowed;
+  }
+  .action-divider {
+    display: inline-block;
+    width: 1px;
+    height: 20px;
+    background: #d8e0db;
+    margin: 0 0.3rem;
+    vertical-align: middle;
   }
   .retired-banner {
     margin: 0.75rem 0 0;

@@ -1,0 +1,25 @@
+{
+  "pluginId": "clover-living-mulch-brassica",
+  "type": "companion",
+  "displayName": "White Clover + Brassica (living mulch)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "brassica",
+  "goodWith": [
+    "broccoli-de-cicco",
+    "cabbage-savoy-king",
+    "cauliflower-snowball-y",
+    "kale-lacinato"
+  ],
+  "badWith": [],
+  "benefit": "White clover undersown into brassicas after establishment fixes 30 to 80 lb of nitrogen per acre while masking the dark soil that attracts adult cabbage root fly. Mow to 4 inches mid-season to keep clover from crowding the crop.",
+  "members": [
+    {
+      "family": "cover-legume",
+      "role": "living mulch + n-fixer",
+      "plantingOffsetDays": 21,
+      "title": "Frost-seed white clover into established brassica",
+      "body": "Three weeks after brassica transplant, drill or broadcast white clover at 6 to 8 lb per acre between rows. Avoid pre-emergent herbicide carryover."
+    }
+  ]
+}

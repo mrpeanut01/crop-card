@@ -602,7 +602,7 @@ export const herbicidePluginSchema = pluginBase.extend({
     unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
   }),
   /** GPA the dilutionTable values are calibrated for (default 15 per FR-02). */
-  gpaCalibration: z.number().int().positive().default(15),
+  gpaCalibration: z.number().int().nonnegative().default(15),
   dilutionTable: dilutionTableSchema.optional(),
   acresPerTank: z.record(z.string().regex(/^\d+gal$/), z.number().positive()).optional(),
   requiresAMS: z.boolean().optional(),
@@ -700,7 +700,7 @@ export const insecticidePluginSchema = pluginBase.extend({
       unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
     })
     .optional(),
-  gpaCalibration: z.number().int().positive().default(15).optional(),
+  gpaCalibration: z.number().int().nonnegative().default(15).optional(),
   dilutionTable: dilutionTableSchema.optional(),
   targetPests: z.array(z.string().min(1)).optional(),
   pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),
@@ -735,8 +735,8 @@ const fungicideIngredientSchema = z.object({
   fracCode: z
     .string()
     .regex(
-      /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/,
-      'fracCode must look like M03, P01, U06, BM01, or a number'
+      /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|NC|\d{1,3})$/,
+      'fracCode must look like M03, P01, U06, BM01, NC, or a number'
     )
 });
 
@@ -750,7 +750,7 @@ export const fungicidePluginSchema = pluginBase.extend({
     amount: z.number().positive(),
     unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
   }),
-  gpaCalibration: z.number().int().positive().default(15),
+  gpaCalibration: z.number().int().nonnegative().default(15),
   dilutionTable: dilutionTableSchema.optional(),
   reEntryIntervalHours: z.number().int().nonnegative(),
   preHarvestIntervalDays: z.number().int().nonnegative(),
@@ -795,7 +795,13 @@ export const fertilizerPluginSchema = pluginBase.extend({
     .object({
       min: z.number().positive(),
       max: z.number().positive(),
-      unit: z.enum(['lb-per-acre', 'gal-per-acre', 'ton-per-acre'])
+      unit: z.enum([
+        'lb-per-acre',
+        'gal-per-acre',
+        'ton-per-acre',
+        'qt-per-acre',
+        'fl-oz-per-acre'
+      ])
     })
     .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
     .optional(),
@@ -825,8 +831,13 @@ export const companionSystemMemberSchema = z.object({
   family: z.enum(CROP_FAMILIES),
   /** Free-form role label surfaced in the suggestion UI ("trellis", "ground-cover"). */
   role: z.string().min(1).max(80),
-  /** Days after the primary planting when this member should go in. */
-  plantingOffsetDays: z.number().int().nonnegative().max(365),
+  /** Days from the primary planting when this member should go in.
+   *  Positive = AFTER the anchor (e.g. squash +35d when corn is up).
+   *  Negative = BEFORE the anchor (e.g. alyssum -14d so hoverflies
+   *    are established when lettuce transplants in; banker plants
+   *    seeded weeks before the cash crop). The engine emits the
+   *    member's plant-by-this-date task either way. */
+  plantingOffsetDays: z.number().int().min(-365).max(365),
   /** Optional title override for the engine's companion-trigger event. */
   title: z.string().min(1).max(120).optional(),
   /** Optional body override. */

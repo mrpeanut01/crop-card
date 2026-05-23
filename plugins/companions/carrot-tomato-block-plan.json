@@ -1,0 +1,20 @@
+{
+  "pluginId": "carrot-tomato-block-plan",
+  "type": "companion",
+  "displayName": "Carrot + Tomato (pre-transplant intercrop)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "solanaceae",
+  "goodWith": ["tomato-cherokee-purple", "tomato-roma-vf", "tomato-better-boy-f1", "tomato-celebrity-f1", "carrot-nantes-half-long", "carrot-scarlet-nantes-seed", "carrot-danvers-126"],
+  "badWith": [],
+  "benefit": "Carrots direct-sown between tomato rows occupy the bed during the slow early-tomato growth period and are mostly harvested before tomatoes shade them out. Maximizes square-foot productivity for small-acreage growers.",
+  "members": [
+    {
+      "family": "root",
+      "role": "early-season intercrop",
+      "plantingOffsetDays": -14,
+      "title": "Carrot sown 2 weeks before tomato transplant",
+      "body": "Direct-sow carrots in the bed two weeks before tomato transplant. Harvest most by mid-tomato season. Leave a few for fall pull."
+    }
+  ]
+}

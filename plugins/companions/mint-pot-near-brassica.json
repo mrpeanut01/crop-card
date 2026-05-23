@@ -1,0 +1,20 @@
+{
+  "pluginId": "mint-pot-near-brassica",
+  "type": "companion",
+  "displayName": "Mint (in pots) + Brassica (cabbage moth deterrent)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "brassica",
+  "goodWith": ["broccoli-de-cicco", "cabbage-savoy-king", "cabbage-red-acre", "kale-lacinato", "kale-red-russian", "brussels-sprouts-long-island", "cauliflower-snowball-y"],
+  "badWith": [],
+  "benefit": "Mint volatiles disrupt the host-finding behavior of imported cabbage moth (Pieris rapae) and diamondback moth. Mint grown in pots placed in the row keeps the plant from running and overtaking the bed.",
+  "members": [
+    {
+      "family": "herb-culinary",
+      "role": "moth-deterrent border (containerized)",
+      "plantingOffsetDays": 0,
+      "title": "Potted mint at brassica row ends and corners",
+      "body": "Place mint pots every 8 to 10 ft along the brassica block edges. Trim plants to keep aromatic foliage active. Do not plant directly in the bed; mint becomes invasive."
+    }
+  ]
+}

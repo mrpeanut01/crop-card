@@ -1,0 +1,20 @@
+{
+  "pluginId": "yarrow-orchard-beneficials",
+  "type": "companion",
+  "displayName": "Yarrow + Orchard (beneficial insectary strip)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "orchard",
+  "goodWith": ["apple-orchard", "pear-bartlett", "pear-asian-shinseiki", "peach-redhaven", "plum-stanley"],
+  "badWith": [],
+  "benefit": "Yarrow (Achillea millefolium) hosts predatory wasps, lady beetles, and lacewings that target codling moth eggs and aphid colonies. Drought-tolerant once established and tolerates orchard floor mowing.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "perennial insectary",
+      "plantingOffsetDays": 0,
+      "title": "Yarrow alley strip in orchard floor",
+      "body": "Plant yarrow plugs 18 inches apart in a single row down the alley between fruit-tree rows. Mow at 6 inches once flowers brown."
+    }
+  ]
+}

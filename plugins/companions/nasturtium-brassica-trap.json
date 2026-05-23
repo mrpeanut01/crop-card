@@ -1,0 +1,20 @@
+{
+  "pluginId": "nasturtium-brassica-trap",
+  "type": "companion",
+  "displayName": "Nasturtium + Brassica (aphid trap crop)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "brassica",
+  "goodWith": ["broccoli-de-cicco", "broccoli-romanesco", "cabbage-savoy-king", "cabbage-red-acre", "cauliflower-snowball-y", "cauliflower-cheddar-f1", "kale-lacinato", "brussels-sprouts-long-island"],
+  "badWith": [],
+  "benefit": "Nasturtium is a strong trap crop for black bean aphid and green peach aphid. Heavily infested nasturtiums can be removed or sprayed to break the pest cycle while keeping the brassica clean.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "aphid trap crop",
+      "plantingOffsetDays": -14,
+      "title": "Nasturtium border 2 weeks before brassica transplant",
+      "body": "Direct-sow nasturtium on the border of the brassica block two weeks ahead of transplant so the trap is established and attractive when aphids arrive."
+    }
+  ]
+}

@@ -135,7 +135,9 @@ Minimum viable crop plugin:
 
 **Required:** `pluginId`, `type`, `displayName`, `version`, `cropFamily`.
 
-**`cropFamily`** is an enum drawn from [`apps/web/src/lib/safety/cropFamilyLethality.ts`](../apps/web/src/lib/safety/cropFamilyLethality.ts). Current values: `corn`, `cucurbit`, `solanaceae`, `brassica`, `allium`, `leafy-green`, `legume`, `root`, `small-fruit`, `cane-fruit`, `orchard`, `stone-fruit`, `vine-fruit`, `apiaceae`, `cereal-grain`, `forage`, `cover-crop`, `culinary-herb`, `broadleaf-companion`.
+**`cropFamily`** is an enum drawn from [`apps/web/src/lib/safety/cropFamilyLethality.ts`](../apps/web/src/lib/safety/cropFamilyLethality.ts). Current values: `corn`, `cucurbit`, `legume`, `broadleaf-companion`, `orchard`, `cover-grass`, `cover-legume`, `solanaceae`, `brassica`, `allium`, `leafy-green`, `root`, `apiaceae`, `small-fruit`, `bramble`, `vine-fruit`, `stone-fruit`, `cereal-grain`, `forage`, `herb-culinary`.
+
+Common gotchas: `bramble` (NOT `cane-fruit`) for raspberry / blackberry; `herb-culinary` (NOT `culinary-herb`) for basil / oregano / etc.; cover crops split into `cover-grass` and `cover-legume` — there is **no** generic `cover-crop` family.
 
 **Common optional fields:**
 
@@ -221,7 +223,7 @@ Minimum viable:
 
 ```jsonc
 {
-  "gpaCalibration": 15,
+  "gpaCalibration": 15,                 // 0 = granular / bait / non-sprayed product (skips dilution math)
   "applicationTiming": "PRE",           // BURNDOWN | PRE | POST | POST-DIRECTED
   "requiresAMS": false,
   "deconRequired": false,
@@ -296,7 +298,7 @@ Minimum viable:
 
 **Required:** base + `activeIngredients[]` (≥1) + `ratePerAcre` + `reEntryIntervalHours` + `preHarvestIntervalDays`.
 
-**`fracCode`** matches `/^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/` — e.g. `M01` (copper), `P01` (host defense), `11` (strobilurins), `7` (SDHIs), `BM01` (biologicals). Drives resistance-rotation hints. **Required** on every fungicide ingredient (unlike IRAC on insecticides, which is optional).
+**`fracCode`** matches `/^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|NC|\d{1,3})$/` — e.g. `M01` (copper), `P01` (host defense), `11` (strobilurins), `7` (SDHIs), `BM01` (biologicals), `NC` (not classified — for products like potassium bicarbonate or hydrogen peroxide that have no assigned MoA group). Drives resistance-rotation hints. **Required** on every fungicide ingredient (unlike IRAC on insecticides, which is optional).
 
 **Common optional:** `applicationTiming` (`DORMANT | PRE-BLOOM | BLOOM | POST-BLOOM | COVER | PRE-HARVEST`), `pollinatorRisk`, `deconRequired`, `targetDiseases[]`, `labelClaims`, `complianceFlags`, `notes`.
 
@@ -324,6 +326,8 @@ Minimum viable:
 **`form`** enum: `granular | liquid | soluble | compost | slow-release | meal`.
 
 **Common optional:** `organic` (boolean, default false), `secondaryNutrients` (Ca, Mg, S, B, Zn, Mn, Cu, Fe), `applicationRange { min, max, unit }`, `complianceFlags`, `notes`.
+
+`applicationRange.unit` enum: `lb-per-acre | gal-per-acre | qt-per-acre | fl-oz-per-acre | ton-per-acre`. Use `fl-oz-per-acre` or `qt-per-acre` for foliar liquids, `gal-per-acre` for fertigation, `lb-per-acre` for granular/meal, `ton-per-acre` for compost.
 
 ### 5.6 Companion
 
@@ -365,7 +369,13 @@ Two shapes share the same `type: 'companion'`:
 - **Pairwise affinity**: just `goodWith[]` + `badWith[]` (lists of cropPluginIds) + `benefit`. Surfaced as ✓/✗ chips in the companion advisor.
 - **Companion-system**: adds `primaryFamily` + `members[]`. Engine emits `companion-trigger` events for each member when the primary crop plants.
 
-`members[i]` shape: `family` (cropFamily enum), `role` (free text ≤80 chars), `plantingOffsetDays` (0-365), optional `title` (≤120 chars) + `body` (≤500 chars).
+`members[i]` shape: `family` (cropFamily enum), `role` (free text ≤80 chars), `plantingOffsetDays` (**signed**, -365 to 365), optional `title` (≤120 chars) + `body` (≤500 chars).
+
+**Signed `plantingOffsetDays`**:
+- **Positive** = plant N days *after* the anchor. Example: Three Sisters squash at `+35` after the corn.
+- **Negative** = plant N days *before* the anchor. Example: sweet alyssum at `-14` so the hoverfly insectary is established by the time lettuce transplants in; banker plants at `-21` to mature aphid biocontrols before the cash crop arrives.
+- **Zero** = plant same day as the anchor (e.g. basil interplanted with asparagus).
+The engine handles the sign — for negative offsets it emits the member's plant-by-this-date task in the past or near future relative to the anchor's planted date, so the operator sees a heads-up rather than a retroactive nag.
 
 ---
 
@@ -531,7 +541,7 @@ The on-disk JSON under `plugins/<kind>s/<pluginId>.json` always reflects the **c
     { "name": "atrazine", "chemistryClass": "photosystem-ii-triazine" }
   ],
   "ratePerAcre": { "amount": 2.0, "unit": "qt" },
-  "gpaCalibration": 15,
+  "gpaCalibration": 15,                 // 0 = granular / bait / non-sprayed product (skips dilution math)
   "applicationTiming": "PRE",
   "requiresAMS": false,
   "deconRequired": false,
@@ -675,5 +685,5 @@ v1.0 plugins remain valid against v1.1+ for the foreseeable future — every new
 
 ---
 
-**Last updated:** 2026-05-22.
+**Last updated:** 2026-05-23 (added: signed `plantingOffsetDays`, `fracCode: NC`, `gpaCalibration: 0` for granular/bait, `qt-per-acre` + `fl-oz-per-acre` in `applicationRange.unit`, corrected the `cropFamily` enum gotchas).
 **Source of truth:** [`apps/web/src/lib/plugins/schemas.ts`](../apps/web/src/lib/plugins/schemas.ts).

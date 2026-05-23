@@ -1,0 +1,20 @@
+{
+  "pluginId": "basil-asparagus",
+  "type": "companion",
+  "displayName": "Basil + Asparagus (beetle deterrent)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "allium",
+  "goodWith": ["asparagus-jersey-knight"],
+  "badWith": [],
+  "benefit": "Basil intercropped between asparagus rows masks host-finding cues used by common and spotted asparagus beetles. Tomato volatiles produce a similar effect; basil is the more practical understory.",
+  "members": [
+    {
+      "family": "herb-culinary",
+      "role": "olfactory masking",
+      "plantingOffsetDays": 0,
+      "title": "Basil between asparagus rows",
+      "body": "Transplant basil 18 inches apart in the alleys between established asparagus rows after final frost."
+    }
+  ]
+}

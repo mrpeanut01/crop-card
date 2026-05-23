@@ -1,0 +1,20 @@
+{
+  "pluginId": "asparagus-strawberry-perennial-bed",
+  "type": "companion",
+  "displayName": "Asparagus + Strawberry (perennial polyculture bed)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "allium",
+  "goodWith": ["asparagus-jersey-knight", "strawberry-jewel", "strawberry-earliglow-june-bearing"],
+  "badWith": [],
+  "benefit": "Strawberries interplanted between asparagus rows occupy the soil surface while asparagus crowns are deep and dormant for most of the year. Strawberries shade out asparagus beetle pupation sites and bear an early crop before asparagus fronds fill in.",
+  "members": [
+    {
+      "family": "small-fruit",
+      "role": "ground-cover perennial intercrop",
+      "plantingOffsetDays": 365,
+      "title": "Plant strawberries the year after asparagus establishment",
+      "body": "After asparagus crowns establish for one season, plant strawberries 12 inches apart between rows. Replace strawberries on a 4-year cycle as productivity declines."
+    }
+  ]
+}

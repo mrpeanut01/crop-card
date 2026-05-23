@@ -1,0 +1,20 @@
+{
+  "pluginId": "blue-hubbard-squash-bug-trap",
+  "type": "companion",
+  "displayName": "Blue Hubbard + Cucurbit Block (squash bug trap crop)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "cucurbit",
+  "goodWith": ["zucchini-black-beauty", "summer-squash-yellow-crookneck", "cucumber-marketmore-76", "winter-squash-delicata", "butternut-squash-waltham"],
+  "badWith": [],
+  "benefit": "Blue Hubbard borders pull squash bugs, squash vine borers, and cucumber beetles off the cash cucurbit block. Penn State and UMass research shows 60 to 90 percent reduction in pest pressure with a 10 to 15 foot Hubbard border. Spray or destroy the trap when pests aggregate.",
+  "members": [
+    {
+      "family": "cucurbit",
+      "role": "perimeter trap crop",
+      "plantingOffsetDays": -7,
+      "title": "Blue Hubbard border one week before cash cucurbit planting",
+      "body": "Plant Blue Hubbard squash on the windward border at 1 plant per 24 inches, 7 to 10 days before transplanting the cash crop. Scout twice weekly and treat the trap, not the cash block, when pests aggregate."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "pluginId": "comfrey-fruit-tree-mulch",
+  "type": "companion",
+  "displayName": "Comfrey + Fruit Trees (deep dynamic accumulator)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "orchard",
+  "goodWith": ["apple-orchard", "apple-honeycrisp", "apple-gala", "pear-bartlett", "pear-asian-shinseiki", "fig-celeste"],
+  "badWith": [],
+  "benefit": "Russian comfrey (Bocking 14 cultivar) deep tap roots mine potassium, magnesium, and trace minerals from the subsoil. Chop-and-drop mulch around fruit trees three to five times per season returns 4 to 6 percent K and 2 to 3 percent N back to the tree zone.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "perennial mulch source",
+      "plantingOffsetDays": 0,
+      "title": "Comfrey plug ring at fruit tree drip line",
+      "body": "Plant 3 to 4 Bocking 14 comfrey crowns just outside the tree drip line. Chop with a sharp shovel to 4 inches when 12 to 18 inches tall, leave foliage as mulch."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "raspberry-caroline-primocane",
+  "type": "crop",
+  "displayName": "Raspberry Caroline (primocane)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "bramble",
+  "preHarvestIntervalDays": 2,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 365
+  },
+  "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 96,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "harvestIndicators": [
+    "Large red fruit slides off easily without core"
+  ],
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Primocane-fruiting red raspberry. Bears on first-year canes in late summer through frost. Mow canes to ground each winter for simple management. Strong flavor and sturdy berry. Sold by Nourse Farms, Stark Bro's, Indiana Berry."
+}

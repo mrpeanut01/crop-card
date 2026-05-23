@@ -1,0 +1,30 @@
+{
+  "pluginId": "winter-pea-vns-cover",
+  "type": "crop",
+  "displayName": "Winter Field Pea VNS (cover)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cover-legume",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 180,
+    "max": 240
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 7,
+    "seedDepthIn": {
+      "min": 1.0,
+      "max": 2.0
+    }
+  },
+  "harvestIndicators": [
+    "Full bloom before termination for max N"
+  ],
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Pisum sativum arvense, fall-sown legume cover. Fixes 80 to 150 lb N per acre. Often mixed with cereal rye or triticale for biomass. Inoculate with pea/vetch Rhizobium at sowing. Sold by Albert Lea Seed, Green Cover Seed, Welter."
+}

@@ -1,0 +1,27 @@
+{
+  "pluginId": "fava-bean-spring-cover-vegetable",
+  "type": "companion",
+  "displayName": "Fava Bean + Heavy Feeders (spring N-fixing cover)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "brassica",
+  "goodWith": [
+    "broccoli-de-cicco",
+    "cabbage-savoy-king",
+    "cauliflower-snowball-y",
+    "tomato-cherokee-purple",
+    "tomato-celebrity-f1",
+    "pepper-bell-california-wonder"
+  ],
+  "badWith": [],
+  "benefit": "Fall- or early-spring-sown fava bean cover crop (Vicia faba) provides 100 to 200 lb N per acre when terminated at flowering. Ideal preceding heavy-feeding brassicas or solanaceae the same season.",
+  "members": [
+    {
+      "family": "cover-legume",
+      "role": "spring N-fixing cover",
+      "plantingOffsetDays": -60,
+      "title": "Fava bean cover 60 days before cash crop",
+      "body": "Sow fava bean at 120 to 150 lb per acre. Terminate by mowing at full bloom, 60 days before cash crop planting. Inoculate with vetch-pea Rhizobium."
+    }
+  ]
+}

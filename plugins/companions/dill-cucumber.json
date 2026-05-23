@@ -1,0 +1,20 @@
+{
+  "pluginId": "dill-cucumber",
+  "type": "companion",
+  "displayName": "Dill + Cucumber (parasitoid host plant)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "cucurbit",
+  "goodWith": ["cucumber-marketmore-76", "cucumber-regal-f1-seed", "cucumber-suyo-long", "cucumber-boston-pickling", "cucumber-lemon"],
+  "badWith": [],
+  "benefit": "Dill (Anethum graveolens) provides nectar and pollen for hoverflies, lacewings, and parasitic wasps that suppress cucumber beetles, aphids, and squash bugs. Flowers also draw bees during cucumber bloom for improved fruit set.",
+  "members": [
+    {
+      "family": "apiaceae",
+      "role": "beneficial insectary",
+      "plantingOffsetDays": 0,
+      "title": "Dill on cucumber row ends",
+      "body": "Direct-sow dill at the ends and middle of cucumber rows. Allow some plants to flower for full beneficial-insect support."
+    }
+  ]
+}

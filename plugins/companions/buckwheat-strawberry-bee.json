@@ -1,0 +1,24 @@
+{
+  "pluginId": "buckwheat-strawberry-bee",
+  "type": "companion",
+  "displayName": "Buckwheat + Strawberry (pollinator bloom relay)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "small-fruit",
+  "goodWith": [
+    "strawberry-jewel",
+    "strawberry-albion-day-neutral",
+    "strawberry-earliglow-june-bearing"
+  ],
+  "badWith": [],
+  "benefit": "Buckwheat sown adjacent to strawberry blocks extends pollinator availability beyond the short strawberry bloom and supports lacewing and minute pirate bug populations that suppress lygus and tarnished plant bugs.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "pollinator relay strip",
+      "plantingOffsetDays": -21,
+      "title": "Buckwheat strip 3 weeks before strawberry bloom",
+      "body": "Drill buckwheat at 60 lb per acre in a 12 ft strip beside the strawberry block, three weeks before bloom. Mow before seed-set to avoid volunteers."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "pluginId": "sweet-corn-clover-undersown",
+  "type": "companion",
+  "displayName": "Sweet Corn + White Clover Undersown (living mulch)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "corn",
+  "goodWith": [
+    "corn-bantam-sweet",
+    "corn-sweet-bodacious",
+    "sweet-corn-american-dream-f1-seed"
+  ],
+  "badWith": [],
+  "benefit": "Dutch white clover undersown into corn at V4 to V6 establishes after canopy closure, suppresses weeds, fixes 40 to 60 lb N per acre, and provides erosion protection after harvest. Strong fit in sweet corn rotation.",
+  "members": [
+    {
+      "family": "cover-legume",
+      "role": "living mulch N-fixer",
+      "plantingOffsetDays": 30,
+      "title": "Frost-seed white clover at corn V4 to V6",
+      "body": "Broadcast Dutch white clover at 6 to 8 lb per acre when corn is 12 to 18 inches tall. Light cultivation to set seed. Clover establishes under canopy."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "pluginId": "zinnia-tomato-pollinator",
+  "type": "companion",
+  "displayName": "Zinnia + Tomato (pollinator + farmstand appeal)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "solanaceae",
+  "goodWith": ["tomato-cherokee-purple", "tomato-celebrity-f1", "tomato-big-beef-f1", "tomato-iron-lady-f1", "tomato-mountain-merit-f1"],
+  "badWith": [],
+  "benefit": "Zinnia row ends increase bumble bee visits to tomato flowers and host parasitic wasps that target hornworm. Strong farmstand appeal at u-pick operations, doubles as cut-flower market crop.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "pollinator + bonus cut crop",
+      "plantingOffsetDays": 0,
+      "title": "Zinnia at every tomato row end",
+      "body": "Transplant 3 to 5 zinnias at the head and foot of each tomato row at tomato transplant time. Pinch tops for branching."
+    }
+  ]
+}

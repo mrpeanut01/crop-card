@@ -85,7 +85,6 @@
     },
     "gpaCalibration": {
       "type": "integer",
-      "exclusiveMinimum": true,
       "minimum": 0,
       "default": 15
     },

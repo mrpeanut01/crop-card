@@ -1,0 +1,20 @@
+{
+  "pluginId": "garlic-stone-fruit",
+  "type": "companion",
+  "displayName": "Garlic + Stone Fruit (peach borer + aphid suppression)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "stone-fruit",
+  "goodWith": ["peach-redhaven", "cherry-bing-sweet", "cherry-tart-montmorency", "plum-stanley", "apricot-moorpark"],
+  "badWith": [],
+  "benefit": "Garlic planted in a 24 inch ring around stone-fruit trunks repels peach tree borer and reduces aphid colonization on lower scaffolds. Sulfur compounds in garlic foliage disrupt host-finding by adult clearwing moths.",
+  "members": [
+    {
+      "family": "allium",
+      "role": "trunk-zone borer repellent",
+      "plantingOffsetDays": 0,
+      "title": "Garlic ring at fruit-tree base",
+      "body": "Plant hardneck garlic cloves in fall in a 24 inch ring around each tree, 6 inches between cloves. Leave in place each year."
+    }
+  ]
+}

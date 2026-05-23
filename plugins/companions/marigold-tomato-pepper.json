@@ -1,0 +1,20 @@
+{
+  "pluginId": "marigold-tomato-pepper",
+  "type": "companion",
+  "displayName": "Marigold + Tomato/Pepper (nematode + thrip deterrent)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "solanaceae",
+  "goodWith": ["tomato-cherokee-purple", "tomato-roma-vf", "tomato-brandywine-pink", "tomato-better-boy-f1", "pepper-bell-california-wonder", "pepper-jalapeno", "pepper-habanero-orange"],
+  "badWith": [],
+  "benefit": "French marigold (Tagetes patula) root exudates suppress root-knot nematodes when planted as a full-season cover ahead of solanaceae. Interplanted, marigolds attract hoverflies and parasitic wasps that take down thrips and aphids.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "pest deterrent + beneficial insectary",
+      "plantingOffsetDays": 0,
+      "title": "Marigold border at tomato/pepper transplant",
+      "body": "Plant French marigold transplants on the row edges at the same time as solanaceae transplants. Use one marigold per 4 to 6 ft of row."
+    }
+  ]
+}

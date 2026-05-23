@@ -20,7 +20,8 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:reset": "rm -f /data/cropcard.db && pnpm db:migrate",
     "seed:test": "node scripts/seed-test-data.mjs",
-    "gen:schemas": "tsx scripts/gen-schemas.mjs"
+    "gen:schemas": "tsx scripts/gen-schemas.mjs",
+    "gen:openapi": "node scripts/gen-openapi.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

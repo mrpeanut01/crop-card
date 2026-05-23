@@ -1,0 +1,315 @@
+#!/usr/bin/env node
+/**
+ * Regenerate apps/web/static/openapi.json from a hand-curated registry of
+ * representative `/api/**` endpoints (Phase 24, Sub-task C / #57).
+ *
+ * Phase 24 ships an INITIAL OpenAPI surface covering the endpoints external
+ * agents need most: auth-token mint/list/revoke, the openapi self-reference,
+ * the safety-kernel-gated /api/spray/record, the block list, and the health
+ * probe. Adding endpoints is intentionally incremental — each route's request
+ * schema lives inline today, and bulk-promoting all 95 to exported consts is
+ * a separate domain-batched effort tracked as a Phase 24 follow-up.
+ *
+ * To add a new endpoint:
+ *   1. Append a `paths['/api/...'] = { get|post|... : {...} }` block in
+ *      ROUTES below.
+ *   2. (Optional) Promote the route's inline `const schema = z.object(...)`
+ *      to `export const requestSchema = ...` and `import` it here for
+ *      machine-checked drift. Today the registry uses hand-written OpenAPI
+ *      shapes — a deliberate v1 tradeoff to ship the contract without
+ *      blocking on a 95-file refactor.
+ *
+ * The generated artifact is served by `apps/web/src/routes/api/openapi.json/+server.ts`
+ * and checked-in so external agents can fetch it without a build step. CI
+ * runs `pnpm gen:openapi && git diff --exit-code apps/web/static/openapi.json`
+ * to catch drift between source intent and the served file.
+ *
+ * Usage:
+ *   pnpm gen:openapi
+ */
+
+import { fileURLToPath } from 'node:url';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const APP_ROOT = resolve(__dirname, '..');
+const OUT_PATH = resolve(APP_ROOT, 'static/openapi.json');
+
+mkdirSync(dirname(OUT_PATH), { recursive: true });
+
+// ─── Reusable component schemas ─────────────────────────────────────────
+
+const ERROR_SCHEMA = {
+  type: 'object',
+  required: ['error'],
+  properties: {
+    error: { type: 'string', description: 'Human-readable error message.' }
+  }
+};
+
+const TOKEN_SUMMARY_SCHEMA = {
+  type: 'object',
+  required: ['id', 'ownerId', 'userId', 'label', 'isServiceAccount', 'dailyQuota', 'createdAt', 'requestCount'],
+  properties: {
+    id: { type: 'string' },
+    ownerId: { type: 'string' },
+    userId: { type: 'string' },
+    label: { type: 'string', maxLength: 64 },
+    isServiceAccount: { type: 'boolean' },
+    dailyQuota: {
+      type: 'object',
+      properties: {
+        allocate: { type: ['integer', 'null'] },
+        schedule: { type: ['integer', 'null'] },
+        inputs: { type: ['integer', 'null'] },
+        stockRefresh: { type: ['integer', 'null'] }
+      }
+    },
+    createdAt: { type: 'integer', description: 'Unix epoch ms.' },
+    lastUsedAt: { type: ['integer', 'null'], description: 'Unix epoch ms; debounced 1/minute.' },
+    requestCount: { type: 'integer' },
+    revokedAt: { type: ['integer', 'null'] }
+  }
+};
+
+// ─── Path registry ──────────────────────────────────────────────────────
+
+const paths = {
+  '/api/health': {
+    get: {
+      summary: 'Liveness probe',
+      description: 'Public; no auth required. Returns the running safety-kernel rules version + uptime.',
+      security: [],
+      responses: {
+        200: {
+          description: 'Service is up.',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status', 'rulesVersion', 'uptime'],
+                properties: {
+                  status: { type: 'string', enum: ['ok'] },
+                  rulesVersion: { type: 'string', example: '0.4.0-safety-kernel' },
+                  uptime: { type: 'number', description: 'Process uptime in seconds.' }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  '/api/openapi.json': {
+    get: {
+      summary: 'This document',
+      description: 'Public; no auth required. Returns the OpenAPI 3.1 description of the agent-facing surface.',
+      security: [],
+      responses: {
+        200: {
+          description: 'OpenAPI 3.1 document.',
+          content: { 'application/json': { schema: { type: 'object' } } }
+        }
+      }
+    }
+  },
+
+  '/api/auth/token': {
+    post: {
+      summary: 'Mint a new owner-scoped Bearer token',
+      description:
+        'Cookie-session ONLY (a Bearer token cannot mint another Bearer — closes the bootstrap loop on a leaked credential). Plaintext is returned **once** in the response; the DB only sees sha256(plaintext).',
+      security: [{ cookieSession: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['label'],
+              properties: {
+                label: { type: 'string', maxLength: 64, example: 'scouting-drone-1' },
+                isServiceAccount: {
+                  type: 'boolean',
+                  default: false,
+                  description:
+                    'When true, AI rate-limit keys on (tokenId, endpoint) instead of (userId, endpoint) — protects the human owner from a runaway agent.'
+                }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'Token minted. Plaintext returned ONCE.',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['id', 'token', 'label', 'isServiceAccount', 'createdAt'],
+                properties: {
+                  id: { type: 'string' },
+                  token: {
+                    type: 'string',
+                    description: 'Bearer token. Format: `cck_<base64url-32-bytes>`.',
+                    pattern: '^cck_[A-Za-z0-9_-]+$'
+                  },
+                  label: { type: 'string' },
+                  isServiceAccount: { type: 'boolean' },
+                  createdAt: { type: 'integer' }
+                }
+              }
+            }
+          }
+        },
+        400: { description: 'Invalid label.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        403: { description: 'Bearer-authed sessions cannot mint.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    },
+    get: {
+      summary: "List the active Owner's tokens",
+      description: 'Never returns plaintext (the DB does not have it). Owner role required.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Token list.',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['tokens'],
+                properties: {
+                  tokens: { type: 'array', items: { $ref: '#/components/schemas/TokenSummary' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  '/api/auth/token/{id}': {
+    delete: {
+      summary: 'Revoke a Bearer token',
+      description: 'Composite (owner_id, id) gate — an Owner cannot revoke another Owner\'s token. Immediate: next Bearer request → 401.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
+      ],
+      responses: {
+        200: {
+          description: 'Revoked.',
+          content: { 'application/json': { schema: { type: 'object', properties: { ok: { const: true } } } } }
+        },
+        404: { description: 'Token not found.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    }
+  },
+
+  '/api/spray/record': {
+    post: {
+      summary: 'Record a spray event (safety-kernel re-validated)',
+      description:
+        'Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 400 with kernel violations on safety failure.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              description:
+                'Spray-event payload. Exact shape is enforced inline in apps/web/src/routes/api/spray/record/+server.ts via Zod; promoting to exported `requestSchema` is a Phase 24 follow-up (see gen-openapi.mjs header).',
+              properties: {
+                blockId: { type: 'string' },
+                products: { type: 'array', items: { type: 'object' } },
+                occurredAt: { type: 'integer', description: 'Unix epoch ms.' }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        200: { description: 'Spray recorded.', content: { 'application/json': { schema: { type: 'object' } } } },
+        400: { description: 'Safety kernel rejected the spray.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        401: { description: 'Authentication required.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+        403: { description: 'Cross-origin blocked, or read-only role.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+      }
+    }
+  },
+
+  '/api/blocks': {
+    get: {
+      summary: 'List blocks for the active Owner',
+      description: 'Tenant-scoped via `runWithTenantAsync(activeOwnerId, …)`. Bearer tokens see only the Owner they were minted under.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Block list.',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  blocks: { type: 'array', items: { type: 'object' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+// ─── Document composition ──────────────────────────────────────────────
+
+const doc = {
+  openapi: '3.1.0',
+  info: {
+    title: 'CropCard External Agent API',
+    version: '0.1.0',
+    description:
+      'Owner-scoped JSON API for external Claude agents and SaaS integrations (Phase 24, UC-43). Bearer tokens minted at `/settings/api-tokens`. Safety kernel re-runs on every state-changing call — agents cannot bypass tenant isolation, the 48h spray lock, helper custom-rate restrictions, or kernel violations regardless of which endpoint they hit.\n\nCoverage is incremental: Phase 24 ships an initial surface (auth + health + spray/record + blocks). Additional endpoints adopt the OpenAPI registry in domain batches — track open work in [docs/phase-24-agent-api.md](https://github.com/mrpeanut01/crop-card/blob/main/docs/phase-24-agent-api.md).',
+    contact: { name: 'CropCard' }
+  },
+  servers: [
+    {
+      url: '/',
+      description:
+        'Relative to wherever CropCard is hosted. The same path works against `localhost:5173` in dev and the deployed Azure Container App in prod.'
+    }
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'cck_<base64url-32-bytes>',
+        description:
+          'Owner-scoped Bearer token. Mint at `/settings/api-tokens`. CSRF Origin check is bypassed for `/api/**` Bearer requests; cookie sessions still enforce same-origin.'
+      },
+      cookieSession: {
+        type: 'apiKey',
+        in: 'cookie',
+        name: 'cropcard.session',
+        description: 'HMAC-signed session cookie set by `/signin`. Cookie mutations under `/api/**` require matching Origin.'
+      }
+    },
+    schemas: {
+      Error: ERROR_SCHEMA,
+      TokenSummary: TOKEN_SUMMARY_SCHEMA
+    }
+  },
+  // Default security: Bearer OR cookie. Endpoints that override security
+  // (e.g., `security: []` for public endpoints) win locally.
+  security: [{ cookieSession: [] }, { bearerAuth: [] }],
+  paths
+};
+
+writeFileSync(OUT_PATH, JSON.stringify(doc, null, 2) + '\n');
+console.log(`wrote ${OUT_PATH} (${Object.keys(paths).length} paths)`);

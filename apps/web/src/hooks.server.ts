@@ -64,7 +64,13 @@ const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 // renders normally; everywhere else redirects to `/` (the landing/signin).
 // Keep this list tight — every new public surface is a potential
 // pre-auth attack surface.
-const ANONYMOUS_PATHS = new Set(['/', '/signin', '/signout', '/api/health']);
+const ANONYMOUS_PATHS = new Set([
+  '/',
+  '/signin',
+  '/signout',
+  '/api/health',
+  '/api/openapi.json' // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
+]);
 const ANONYMOUS_PATH_PREFIXES = ['/invite/', '/api/health/'];
 const ANONYMOUS_STATIC_PATHS = new Set([
   '/manifest.webmanifest',

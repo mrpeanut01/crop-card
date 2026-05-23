@@ -29,6 +29,14 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Phase 24 — fail PRs where the OpenAPI artifact has drifted from
+      # the registry in apps/web/scripts/gen-openapi.mjs. Regenerate
+      # locally with `pnpm --filter @cropcard/web gen:openapi` and commit.
+      - name: OpenAPI artifact in sync with source
+        run: |
+          pnpm --filter @cropcard/web gen:openapi
+          git diff --exit-code apps/web/static/openapi.json
+
       - name: Unit tests
         run: pnpm test:unit
 

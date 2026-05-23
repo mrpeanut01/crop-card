@@ -166,9 +166,7 @@ describe('runtime cropCompatibility — trait override', () => {
     const violations = checkCropCompatibility([engeniaProduct], xtendStage, [peas]);
     expect(violations).toHaveLength(1);
     const affected = violations[0].detail?.crops as Array<{ cropPluginId: string }>;
-    expect(affected).toEqual([
-      expect.objectContaining({ cropPluginId: 'pea-conv' })
-    ]);
+    expect(affected).toEqual([expect.objectContaining({ cropPluginId: 'pea-conv' })]);
   });
 
   it('requires every listed trait, not just one', () => {

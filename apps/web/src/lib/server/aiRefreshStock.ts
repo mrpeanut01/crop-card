@@ -278,7 +278,10 @@ export async function refreshStockItem(input: StockRefreshInput): Promise<StockR
  *  Returns null when no balanced object can be found. */
 function extractJsonObject(raw: string): unknown {
   if (!raw) return null;
-  const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  const stripped = raw
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
 
   // Fast path — well-formed JSON.
   try {
@@ -332,7 +335,10 @@ function stripMarketingNoise(s: string): string {
   return s
     .replace(/—.*$/, '') // anything after an em-dash (usually packaging)
     .replace(/\([^)]*\)/g, '') // parenthetical (1/2 lb), (Treated), etc.
-    .replace(/\b(film coated|film-coated|raw|untreated|treated|non[- ]?gmo|organic|heirloom|hybrid|f1|seed packet)\b/gi, '')
+    .replace(
+      /\b(film coated|film-coated|raw|untreated|treated|non[- ]?gmo|organic|heirloom|hybrid|f1|seed packet)\b/gi,
+      ''
+    )
     .replace(/\b\d+\/\d+\s*(lb|oz|g|kg)\b/gi, '')
     .replace(/\b\d+\s*(lb|oz|g|kg|seeds|count)\b/gi, '')
     .replace(/\bSKU[\s:]+[A-Z0-9-]+/gi, '')
@@ -369,9 +375,7 @@ function buildPrompt(input: StockRefreshInput): string {
   // SKU strings ("Bloody Butcher Ornamental Corn — Raw Untreated Non-GMO
   // (1/2 lb)") return zero useful results. Prefer the short name when
   // present; otherwise strip common marketing tokens from displayName.
-  const searchName =
-    input.shortName?.trim() ||
-    stripMarketingNoise(input.displayName);
+  const searchName = input.shortName?.trim() || stripMarketingNoise(input.displayName);
 
   const lines: string[] = [
     `You MUST use the web_search tool. Refresh canonical metadata for this farm-supply stock item.`,
@@ -412,7 +416,7 @@ function buildPrompt(input: StockRefreshInput): string {
     `  - Acceptable fallback sources for kernel size: USDA / land-grant university grain-grade charts (e.g., "corn flat dent kernel dimensions mm"), Lincoln Ag plate-selection charts, seed-conditioning equipment vendors. Use these even if they describe the seed CLASS rather than the specific variety — note in seedDimensionsMm.sourceTitle that it's a class-level estimate.`,
     '',
     'Authoritative sources, in priority order:',
-    '  - Seeds: Johnny\'s Selected Seeds, Baker Creek (Rareseeds.com), High Mowing, Botanical Interests, Sow True Seed, Seed Savers Exchange, university extension fact sheets',
+    "  - Seeds: Johnny's Selected Seeds, Baker Creek (Rareseeds.com), High Mowing, Botanical Interests, Sow True Seed, Seed Savers Exchange, university extension fact sheets",
     '  - Pesticides: EPA label PDF, manufacturer label page, CDMS / Greenbook label database',
     '  - Fertilizers: manufacturer guaranteed-analysis label, OMRI listing pages',
     '',
@@ -533,7 +537,11 @@ function validateResponse(
 
   // sunRequirement enum (wrapped or raw)
   const sunNorm = normalizeWrapped(o.sunRequirement, defaultCite);
-  if (sunNorm && typeof sunNorm.value === 'string' && ['full-sun', 'partial-shade', 'full-shade'].includes(sunNorm.value)) {
+  if (
+    sunNorm &&
+    typeof sunNorm.value === 'string' &&
+    ['full-sun', 'partial-shade', 'full-shade'].includes(sunNorm.value)
+  ) {
     result.sunRequirement = {
       value: sunNorm.value as 'full-sun' | 'partial-shade' | 'full-shade',
       sourceUrl: sunNorm.sourceUrl,
@@ -550,18 +558,28 @@ function validateResponse(
         const r = row as Record<string, unknown>;
         if (typeof r.name !== 'string' || !r.name.trim()) return null;
         const out: Record<string, unknown> = { name: r.name.trim().slice(0, 120) };
-        if (typeof r.concentrationPct === 'number' && r.concentrationPct > 0 && r.concentrationPct <= 100) {
+        if (
+          typeof r.concentrationPct === 'number' &&
+          r.concentrationPct > 0 &&
+          r.concentrationPct <= 100
+        ) {
           out.concentrationPct = r.concentrationPct;
         }
-        if (typeof r.chemistryClass === 'string') out.chemistryClass = r.chemistryClass.trim().slice(0, 64);
-        if (typeof r.iracGroup === 'string' && /^[A-Z0-9]{1,4}$/.test(r.iracGroup)) out.iracGroup = r.iracGroup;
-        if (typeof r.fracCode === 'string' && /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/.test(r.fracCode)) out.fracCode = r.fracCode;
+        if (typeof r.chemistryClass === 'string')
+          out.chemistryClass = r.chemistryClass.trim().slice(0, 64);
+        if (typeof r.iracGroup === 'string' && /^[A-Z0-9]{1,4}$/.test(r.iracGroup))
+          out.iracGroup = r.iracGroup;
+        if (
+          typeof r.fracCode === 'string' &&
+          /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/.test(r.fracCode)
+        )
+          out.fracCode = r.fracCode;
         return out;
       })
       .filter((x): x is Record<string, unknown> => x !== null);
     if (cleaned.length > 0) {
       result.activeIngredients = {
-        value: cleaned as StockRefreshResult['activeIngredients']['value'],
+        value: cleaned as NonNullable<StockRefreshResult['activeIngredients']>['value'],
         sourceUrl: aiNorm.sourceUrl,
         sourceTitle: aiNorm.sourceTitle
       };
@@ -573,9 +591,15 @@ function validateResponse(
   if (npkNorm && npkNorm.value && typeof npkNorm.value === 'object') {
     const v = npkNorm.value as { n?: unknown; p?: unknown; k?: unknown };
     if (
-      typeof v.n === 'number' && v.n >= 0 && v.n <= 100 &&
-      typeof v.p === 'number' && v.p >= 0 && v.p <= 100 &&
-      typeof v.k === 'number' && v.k >= 0 && v.k <= 100
+      typeof v.n === 'number' &&
+      v.n >= 0 &&
+      v.n <= 100 &&
+      typeof v.p === 'number' &&
+      v.p >= 0 &&
+      v.p <= 100 &&
+      typeof v.k === 'number' &&
+      v.k >= 0 &&
+      v.k <= 100
     ) {
       result.npk = {
         value: { n: v.n, p: v.p, k: v.k },
@@ -595,7 +619,11 @@ function validateResponse(
   }
 
   const pcNorm = normalizeWrapped(o.productClass, defaultCite);
-  if (pcNorm && typeof pcNorm.value === 'string' && ['synthetic', 'organic', 'biocontrol'].includes(pcNorm.value)) {
+  if (
+    pcNorm &&
+    typeof pcNorm.value === 'string' &&
+    ['synthetic', 'organic', 'biocontrol'].includes(pcNorm.value)
+  ) {
     result.productClass = {
       value: pcNorm.value as 'synthetic' | 'organic' | 'biocontrol',
       sourceUrl: pcNorm.sourceUrl,
@@ -642,7 +670,11 @@ function validateResponse(
 
   // Seed shape enum (corn/soybean).
   const shapeNorm = normalizeWrapped(o.seedShape, defaultCite);
-  if (shapeNorm && typeof shapeNorm.value === 'string' && ['Round', 'Flat'].includes(shapeNorm.value)) {
+  if (
+    shapeNorm &&
+    typeof shapeNorm.value === 'string' &&
+    ['Round', 'Flat'].includes(shapeNorm.value)
+  ) {
     result.seedShape = {
       value: shapeNorm.value as 'Round' | 'Flat',
       sourceUrl: shapeNorm.sourceUrl,
@@ -764,11 +796,12 @@ function applyPlatePick(result: StockRefreshResult, input: StockRefreshInput): v
   const conf = isLowConfidence(matches, true);
   const effectiveLowConfidence = conf.lowConfidence || dimSource === 'class-default';
   const top = matches[0];
-  const sourceLabel = dimSource === 'ai'
-    ? `AI-supplied dimensions L=${L}mm D=${D}mm T=${T}mm`
-    : `class-level estimate (${dimNote}): L=${L}mm D=${D}mm T=${T}mm — no variety-specific kernel size found, so this is a starting point. Verify against your actual seed lot before committing.`;
+  const sourceLabel =
+    dimSource === 'ai'
+      ? `AI-supplied dimensions L=${L}mm D=${D}mm T=${T}mm`
+      : `class-level estimate (${dimNote}): L=${L}mm D=${D}mm T=${T}mm — no variety-specific kernel size found, so this is a starting point. Verify against your actual seed lot before committing.`;
   result.planterPlatePickNote = effectiveLowConfidence
-    ? `Auto-picked ${top.plateNumber} (low confidence — ${dimSource === 'class-default' ? 'class-level estimate' : conf.reason ?? 'see notes'}) using ${sourceLabel}. Verify with the manual selector before committing.`
+    ? `Auto-picked ${top.plateNumber} (low confidence — ${dimSource === 'class-default' ? 'class-level estimate' : (conf.reason ?? 'see notes')}) using ${sourceLabel}. Verify with the manual selector before committing.`
     : `Auto-picked ${top.plateNumber} (${top.color}, ${top.dimensions} in 64ths) using ${sourceLabel}.`;
   console.log('[aiRefreshStock] applyPlatePick picked', {
     itemId: input.itemId,
@@ -799,9 +832,8 @@ function applyPlatePick(result: StockRefreshResult, input: StockRefreshInput): v
       seedType: top.seedType,
       gradeSize: top.gradeSize,
       lowConfidence: effectiveLowConfidence,
-      confidenceReason: dimSource === 'class-default'
-        ? `class-level estimate: ${dimNote}`
-        : conf.reason,
+      confidenceReason:
+        dimSource === 'class-default' ? `class-level estimate: ${dimNote}` : conf.reason,
       source: 'ai-suggested'
     },
     sourceUrl: result.seedDimensionsMm?.sourceUrl,

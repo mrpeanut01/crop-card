@@ -14,11 +14,16 @@ export const load: PageServerLoad = (event) => {
   if (!u.activeOwnerId) throw redirect(303, '/owner-picker');
 
   const assignments = usersForOwner(u.activeOwnerId);
-  unscopedQueryNote('hydrate user emails for the active Owner\'s assignment list');
+  unscopedQueryNote("hydrate user emails for the active Owner's assignment list");
   const userRows = db
     .select({ id: users.id, email: users.email })
     .from(users)
-    .where(inArray(users.id, assignments.map((a) => a.userId)))
+    .where(
+      inArray(
+        users.id,
+        assignments.map((a) => a.userId)
+      )
+    )
     .all();
   const byId = new Map(userRows.map((r) => [r.id, r.email]));
 

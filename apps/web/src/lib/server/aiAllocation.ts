@@ -19,12 +19,7 @@ import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { Crop } from '$lib/db/crops';
 import { rotationLookbackForFamily } from '$lib/calendar/rotation';
-import {
-  planLayout,
-  type PlanInput,
-  type SeedRequest,
-  type Assignment
-} from '$lib/layout/engine';
+import { planLayout, type PlanInput, type SeedRequest, type Assignment } from '$lib/layout/engine';
 import {
   plantsFitUsable,
   sufficiencyOf,
@@ -111,6 +106,18 @@ export interface AllocationResult {
      *  deterministic plan is returned and this is set. */
     fallback?: 'engine-only' | 'no-api-key';
     violationsOnFirstAttempt?: string[];
+    /** When fallback fires due to validator rejection, this carries the
+     *  AI's last (invalid) proposal so the wizard can offer an
+     *  "Apply anyway" override. The operator accepts agronomic risk
+     *  explicitly; spray-time safety still gates the kernel later. */
+    rejectedAssignments?: Array<{
+      stockItemId: string;
+      cropPluginId: string;
+      varietyDisplayName: string;
+      blockId: string;
+      plants: number;
+    }>;
+    rejectedRationale?: string;
   };
 }
 
@@ -185,7 +192,8 @@ export async function allocate(
     derivedSignalHit
   };
 
-  let aiPlan: { assignments: AiAssignment[]; rationale: string; advisories: string[] } | null = null;
+  let aiPlan: { assignments: AiAssignment[]; rationale: string; advisories: string[] } | null =
+    null;
   let totalMeta: AiResultMeta = {
     model: choice.model,
     inputTokens: 0,
@@ -354,7 +362,10 @@ export async function refineAllocation(
     matrix = buildCandidacyMatrix(input);
   }
 
-  if (refine.transcript.length === 0 || refine.transcript[refine.transcript.length - 1].role !== 'user') {
+  if (
+    refine.transcript.length === 0 ||
+    refine.transcript[refine.transcript.length - 1].role !== 'user'
+  ) {
     throw new Error('refine transcript must end with a user message');
   }
   if (refine.transcript.length > MAX_CHAT_TURNS) {
@@ -389,10 +400,11 @@ export async function refineAllocation(
     2
   );
 
-  const messages: Array<{ role: 'user' | 'assistant'; content: { type: 'text'; text: string }[] }> = [
-    { role: 'user', content: [{ type: 'text', text: matrixPrompt }] },
-    { role: 'assistant', content: [{ type: 'text', text: initialAssistantJson }] }
-  ];
+  const messages: Array<{ role: 'user' | 'assistant'; content: { type: 'text'; text: string }[] }> =
+    [
+      { role: 'user', content: [{ type: 'text', text: matrixPrompt }] },
+      { role: 'assistant', content: [{ type: 'text', text: initialAssistantJson }] }
+    ];
 
   // Mid-conversation turns (everything except the new user message at tail).
   const priorChat = refine.transcript.slice(0, -1);
@@ -447,7 +459,7 @@ export async function refineAllocation(
     return {
       ...echoPreviousPlan(input, matrix, refine),
       reply:
-        "The AI request failed — the current plan is unchanged. Try again, or use the Regenerate button to start over."
+        'The AI request failed — the current plan is unchanged. Try again, or use the Regenerate button to start over.'
     };
   }
 
@@ -461,18 +473,119 @@ export async function refineAllocation(
     };
   }
 
-  const validation = validateAiPlan(
-    { assignments: refinement.assignments, rationale: refinement.rationale, advisories: refinement.advisories },
+  let validation = validateAiPlan(
+    {
+      assignments: refinement.assignments,
+      rationale: refinement.rationale,
+      advisories: refinement.advisories
+    },
     input,
     matrix
   );
+  let lastRefinement = refinement;
+
+  // ─── Corrective retry — same pattern as refineSchedule + initial
+  //     scheduler. Echo the rejected plan + violation list, ask Claude
+  //     to patch the broken constraints surgically. ──────────────────
   if (!validation.valid) {
+    console.warn(
+      `[aiAllocation.refine] first attempt failed validation (${validation.violations.length} violations); retrying.\n` +
+        `Violations: ${validation.violations.slice(0, 6).join(' | ')}`
+    );
+    const correction =
+      'Your previous response was rejected by the validator. Violations:\n' +
+      validation.violations.map((v) => `- ${v}`).join('\n') +
+      '\n\nReturn a CORRECTED allocation that fixes EVERY violation:' +
+      '\n- Every (stockItemId, blockId) pair MUST appear in the candidacy matrix from the first message.' +
+      '\n- Respect plantsFit caps; do not over-fill a block.' +
+      '\n- Honor sun, rotation, narrow, companion-bad, and pollination flags from the matrix.' +
+      '\n\nSame JSON shape as before — no prose, no code fences.';
+    try {
+      const retryMsgs = [
+        ...messages,
+        { role: 'assistant' as const, content: [{ type: 'text' as const, text: rawText }] },
+        { role: 'user' as const, content: [{ type: 'text' as const, text: correction }] }
+      ];
+      const retryStart = Date.now();
+      const retryResp = await client.messages.create({
+        model: choice.model,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        system: systemBlocks,
+        messages: retryMsgs
+      });
+      const retryDuration = Date.now() - retryStart;
+      const retryText = retryResp.content[0]?.type === 'text' ? retryResp.content[0].text : '';
+      let retryParsed: unknown = null;
+      try {
+        retryParsed = JSON.parse(retryText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim());
+      } catch {
+        retryParsed = null;
+      }
+      const retryMeta = computeMeta(retryResp.usage, choice.model);
+      recordAllocateTelemetry(retryMeta, retryDuration, telemetry);
+      addMeta(totalMeta, retryMeta);
+      const retryRefinement = parseRefinementResponse(retryParsed);
+      if (retryRefinement) {
+        const retryValidation = validateAiPlan(
+          {
+            assignments: retryRefinement.assignments,
+            rationale: retryRefinement.rationale,
+            advisories: retryRefinement.advisories
+          },
+          input,
+          matrix
+        );
+        if (retryValidation.valid) {
+          validation = retryValidation;
+          lastRefinement = retryRefinement;
+        } else {
+          console.warn(
+            `[aiAllocation.refine] retry ALSO failed (${retryValidation.violations.length} violations).`
+          );
+          validation = retryValidation;
+        }
+      }
+    } catch (err) {
+      console.warn(
+        '[aiAllocation.refine] retry Anthropic call failed:',
+        err instanceof Error ? err.message : String(err)
+      );
+    }
+  }
+
+  if (!validation.valid) {
+    // Capture the AI's last proposal so the wizard can offer
+    // "Apply anyway" — operator overrides agronomic validators when
+    // they know better. Stock metadata fills in cropPluginId +
+    // varietyDisplayName; if the AI invented a (seed, block) pair
+    // outside the matrix, the seed lookup may miss — we skip that
+    // assignment so the override doesn't propagate bogus rows.
+    const rejectedAssignments = lastRefinement.assignments
+      .map((a) => {
+        const seed = input.seeds.find((s) => s.stockItemId === a.stockItemId);
+        if (!seed) return null;
+        return {
+          stockItemId: a.stockItemId,
+          cropPluginId: seed.cropPluginId,
+          varietyDisplayName: seed.varietyDisplayName,
+          blockId: a.blockId,
+          plants: Math.max(1, Math.floor(a.plants))
+        };
+      })
+      .filter((a): a is NonNullable<typeof a> => a !== null);
+
     return {
       ...echoPreviousPlan(input, matrix, refine),
       reply:
-        refinement.reply ||
-        "I tried to apply that change but it would break the block constraints (size, sun, rotation, or companions). The current plan is unchanged.",
-      meta: { ...totalMeta, violationsOnFirstAttempt: validation.violations }
+        lastRefinement.reply ||
+        'I tried to apply that change but it would break the block constraints (size, sun, rotation, or companions). The current plan is unchanged.',
+      meta: {
+        ...totalMeta,
+        fallback: 'engine-only',
+        violationsOnFirstAttempt: validation.violations,
+        rejectedAssignments,
+        rejectedRationale: lastRefinement.rationale
+      }
     };
   }
 
@@ -575,7 +688,10 @@ function parseRefinementResponse(raw: unknown): RefinementResponse | null {
     });
   }
   const advisories = Array.isArray(r.advisories)
-    ? r.advisories.filter((x): x is string => typeof x === 'string' && x.trim().length > 0).map((x) => x.trim()).slice(0, 6)
+    ? r.advisories
+        .filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+        .map((x) => x.trim())
+        .slice(0, 6)
     : [];
   return { reply, rationale, assignments, advisories };
 }
@@ -583,7 +699,11 @@ function parseRefinementResponse(raw: unknown): RefinementResponse | null {
 /** When refinement can't be applied (no API key, invalid response, etc.) we
  *  hand the previous plan back unchanged so the table stays in sync with
  *  what the operator was already looking at. */
-function echoPreviousPlan(input: PlanInput, matrix: MatrixRow[], refine: RefineInput): AllocationResult {
+function echoPreviousPlan(
+  input: PlanInput,
+  matrix: MatrixRow[],
+  refine: RefineInput
+): AllocationResult {
   const assignments: Assignment[] = refine.previousAssignments.map((a) => {
     const seed = input.seeds.find((s) => s.stockItemId === a.stockItemId);
     const cropPluginId = seed?.cropPluginId ?? '';
@@ -673,8 +793,7 @@ export function buildCandidacyMatrix(input: PlanInput): MatrixRow[] {
       const narrow = minDimFt != null && minDimFt < (2 * rowIn) / 12;
 
       const fam = plugin.cropFamily;
-      const threeSistersCandidate =
-        fam === 'corn' || fam === 'legume' || fam === 'cucurbit';
+      const threeSistersCandidate = fam === 'corn' || fam === 'legume' || fam === 'cucurbit';
 
       out.push({
         stockItemId: seed.stockItemId,
@@ -794,74 +913,76 @@ export function buildAllocationPrompt(
       ? '\n\n' + renderPollinationPromptSection(pollinationLayer, input)
       : '';
 
-  return [
-    'Allocate the following seed lots onto the given blocks.',
-    '',
-    'SEEDS:',
-    ...seedLines,
-    '',
-    'BLOCKS:',
-    ...blockLines,
-    '',
-    'CANDIDACY MATRIX (one row per seed × block):',
-    matrixHeader,
-    ...matrixRows,
-    '',
-    'Column meanings (use these in plain English when writing rationale — NEVER quote the column names back to the user):',
-    '- plantsFit = how many plants the block can physically hold at this crop\'s row + plant spacing',
-    '- plantsAvailable = how many plants the farmer\'s seed quantity will produce',
-    '- sufficiency: "match" = seed quantity fills the block (within ±10%); "surplus" = farmer has more seed than the block can hold (some left over); "deficit" = farmer doesn\'t have enough seed to fill the block',
-    '- utilization = plantsAvailable / plantsFit (e.g. 0.55 means only 55% of the block would be planted)',
-    '- sunMatch: "full" = block sun exactly matches what the crop wants; "partial" = acceptable but not ideal; "none" = wrong sun for this crop',
-    '- rotationOk: Y = no same-family crop planted recently on this block; N = recent same-family planting (rotation rule violated)',
-    '- compGood / compBad = neighbouring crops already on the block that pair well or badly with this seed',
-    '- narrow: Y = the block is physically too narrow for this crop\'s row spacing (rows wouldn\'t fit cleanly)',
-    '- threeSisters: Y = the seed is corn / legume / or cucurbit (the three-sisters trio bonuses if grouped)',
-    '',
-    'Rules (selection):',
-    '- Total plants assigned for each stockItemId must equal its plantsAvailable (or as close as possible).',
-    '- For each (seed, block) pick: plants must be ≤ plantsFit and > 0.',
-    '- A seed may be split across multiple blocks; sum across blocks ≤ plantsAvailable.',
-    '- Never select a row where compBad is non-empty unless no other option exists.',
-    '',
-    'HARD CAPS (a violation here will be rejected by the validator):',
-    '- DENSITY CAP: never propose an assignment with utilizationPct > 1.25 ("badly surplus") when the same seed has any other viable block (sunMatch ≠ none AND narrow=N) where utilizationPct ≤ 1.25 is achievable. Split or reduce the assignment to avoid jamming a block.',
-    '- COMBINED-FAMILY DENSITY CAP: when multiple varieties of the same family (e.g., several cucurbits, several brassicas) land on the same block, the SUM of their assigned plants across that block must not exceed plantsFit by more than 25% of the largest single-variety plantsFit on that block. If it does, REDUCE the smaller varieties or move them to other blocks. Cucurbits especially: a vining cultivar (vine_spread ≥ 10 ft) effectively claims the whole block — flag others for displacement.',
-    '- Prefer sufficiency=match > surplus > deficit, but never push surplus past 1.25× when alternatives exist.',
-    '',
-    'Soft preferences:',
-    '- Prefer sunMatch=full > partial > none.',
-    '- Prefer rotationOk=Y. Only use rotationOk=N when no Y options remain.',
-    '- When threeSisters=Y for corn+legume+cucurbit, group them on the same block when capacity allows.',
-    '- Avoid blocks with narrow=Y for that crop.',
-    '',
-    'Rationale style (READ CAREFULLY — the rationale text is shown directly to a non-technical farmer):',
-    '- Write in plain English. Translate every column meaning above into normal language.',
-    '- BAD: "All rows show deficit sufficiency and partial sun match equally, and narrow=Y applies to all options"',
-    '- GOOD: "You only have enough seed to plant about half this block, and every option has only partial sun for this crop, so I picked the block with the best soil-rotation history."',
-    '- Mention concrete numbers when helpful: "0.5 lb of seed = ~1,400 plants but the block fits ~2,800, so you\'d use about half the bed".',
-    '- Never use the words "sufficiency", "utilization", "sunMatch", "rotationOk", "compGood", "compBad", "narrow", "threeSisters", "matrix", "row", "column", or "Y/N" in your output.',
-    '- For the top-level "rationale" field: 2-4 sentences explaining the overall strategy in farmer-friendly language.',
-    '- For each assignment\'s "rationale": one sentence saying *why* this seed went on this block, again in plain English.',
-    '',
-    'ADVISORIES — flag things the farmer might want to reconsider:',
-    'You are allocating seeds onto blocks the farmer already laid out. Treat the farmer as the expert on what those blocks should look like, BUT they may have overlooked something. After producing the assignments, look at the result and surface 0–4 short advisories — each one a single plain-English sentence — for issues the farmer might want to address. Quality matters more than quantity; if nothing notable comes up, return an empty array. Examples of useful advisories:',
-    '- "Block <name> has more than twice the capacity of your <crop> seed — you might want to reorder more seed or split it with a fast-growing companion like radishes."',
-    '- "All four of your cucurbit varieties ended up on Block <name>; consider splitting two onto Block <other> next year so a single squash-borer outbreak doesn\'t wipe out the lot."',
-    '- "Block <name> is too narrow for <crop>\'s recommended row spacing; widening it by a few feet or pairing it with a smaller-spaced crop would let you plant more efficiently."',
-    '- "You have leftover seed but no remaining blocks; consider carving a new bed out of available field space, or planning a succession sowing in 4–6 weeks."',
-    '- "<Crop A> and <Crop B> are good companions and together would fit on one block — you could free up a whole block for a different crop."',
-    'Do NOT repeat what is already in the per-row rationale. Advisories are for things ABOVE the per-pairing decision: block sizing, companion-planting opportunities, missed succession options, leftover-seed strategy, disease-risk concentration, etc. Be concrete (name specific blocks and crops). Do not lecture; assume the farmer knows their land. Do not invent observations to fill the array — empty is fine.',
-    '',
-    'Respond with VALID JSON only — no markdown, no commentary outside the JSON. Schema:',
-    '{',
-    '  "rationale": "2-4 sentence plain-English overview",',
-    '  "assignments": [',
-    '    { "stockItemId": "...", "blockId": "...", "plants": <int>, "rationale": "1 plain-English sentence" }',
-    '  ],',
-    '  "advisories": ["short observation", "another short observation"]',
-    '}'
-  ].join('\n') + pollinationSection;
+  return (
+    [
+      'Allocate the following seed lots onto the given blocks.',
+      '',
+      'SEEDS:',
+      ...seedLines,
+      '',
+      'BLOCKS:',
+      ...blockLines,
+      '',
+      'CANDIDACY MATRIX (one row per seed × block):',
+      matrixHeader,
+      ...matrixRows,
+      '',
+      'Column meanings (use these in plain English when writing rationale — NEVER quote the column names back to the user):',
+      "- plantsFit = how many plants the block can physically hold at this crop's row + plant spacing",
+      "- plantsAvailable = how many plants the farmer's seed quantity will produce",
+      '- sufficiency: "match" = seed quantity fills the block (within ±10%); "surplus" = farmer has more seed than the block can hold (some left over); "deficit" = farmer doesn\'t have enough seed to fill the block',
+      '- utilization = plantsAvailable / plantsFit (e.g. 0.55 means only 55% of the block would be planted)',
+      '- sunMatch: "full" = block sun exactly matches what the crop wants; "partial" = acceptable but not ideal; "none" = wrong sun for this crop',
+      '- rotationOk: Y = no same-family crop planted recently on this block; N = recent same-family planting (rotation rule violated)',
+      '- compGood / compBad = neighbouring crops already on the block that pair well or badly with this seed',
+      "- narrow: Y = the block is physically too narrow for this crop's row spacing (rows wouldn't fit cleanly)",
+      '- threeSisters: Y = the seed is corn / legume / or cucurbit (the three-sisters trio bonuses if grouped)',
+      '',
+      'Rules (selection):',
+      '- Total plants assigned for each stockItemId must equal its plantsAvailable (or as close as possible).',
+      '- For each (seed, block) pick: plants must be ≤ plantsFit and > 0.',
+      '- A seed may be split across multiple blocks; sum across blocks ≤ plantsAvailable.',
+      '- Never select a row where compBad is non-empty unless no other option exists.',
+      '',
+      'HARD CAPS (a violation here will be rejected by the validator):',
+      '- DENSITY CAP: never propose an assignment with utilizationPct > 1.25 ("badly surplus") when the same seed has any other viable block (sunMatch ≠ none AND narrow=N) where utilizationPct ≤ 1.25 is achievable. Split or reduce the assignment to avoid jamming a block.',
+      '- COMBINED-FAMILY DENSITY CAP: when multiple varieties of the same family (e.g., several cucurbits, several brassicas) land on the same block, the SUM of their assigned plants across that block must not exceed plantsFit by more than 25% of the largest single-variety plantsFit on that block. If it does, REDUCE the smaller varieties or move them to other blocks. Cucurbits especially: a vining cultivar (vine_spread ≥ 10 ft) effectively claims the whole block — flag others for displacement.',
+      '- Prefer sufficiency=match > surplus > deficit, but never push surplus past 1.25× when alternatives exist.',
+      '',
+      'Soft preferences:',
+      '- Prefer sunMatch=full > partial > none.',
+      '- Prefer rotationOk=Y. Only use rotationOk=N when no Y options remain.',
+      '- When threeSisters=Y for corn+legume+cucurbit, group them on the same block when capacity allows.',
+      '- Avoid blocks with narrow=Y for that crop.',
+      '',
+      'Rationale style (READ CAREFULLY — the rationale text is shown directly to a non-technical farmer):',
+      '- Write in plain English. Translate every column meaning above into normal language.',
+      '- BAD: "All rows show deficit sufficiency and partial sun match equally, and narrow=Y applies to all options"',
+      '- GOOD: "You only have enough seed to plant about half this block, and every option has only partial sun for this crop, so I picked the block with the best soil-rotation history."',
+      '- Mention concrete numbers when helpful: "0.5 lb of seed = ~1,400 plants but the block fits ~2,800, so you\'d use about half the bed".',
+      '- Never use the words "sufficiency", "utilization", "sunMatch", "rotationOk", "compGood", "compBad", "narrow", "threeSisters", "matrix", "row", "column", or "Y/N" in your output.',
+      '- For the top-level "rationale" field: 2-4 sentences explaining the overall strategy in farmer-friendly language.',
+      '- For each assignment\'s "rationale": one sentence saying *why* this seed went on this block, again in plain English.',
+      '',
+      'ADVISORIES — flag things the farmer might want to reconsider:',
+      'You are allocating seeds onto blocks the farmer already laid out. Treat the farmer as the expert on what those blocks should look like, BUT they may have overlooked something. After producing the assignments, look at the result and surface 0–4 short advisories — each one a single plain-English sentence — for issues the farmer might want to address. Quality matters more than quantity; if nothing notable comes up, return an empty array. Examples of useful advisories:',
+      '- "Block <name> has more than twice the capacity of your <crop> seed — you might want to reorder more seed or split it with a fast-growing companion like radishes."',
+      '- "All four of your cucurbit varieties ended up on Block <name>; consider splitting two onto Block <other> next year so a single squash-borer outbreak doesn\'t wipe out the lot."',
+      '- "Block <name> is too narrow for <crop>\'s recommended row spacing; widening it by a few feet or pairing it with a smaller-spaced crop would let you plant more efficiently."',
+      '- "You have leftover seed but no remaining blocks; consider carving a new bed out of available field space, or planning a succession sowing in 4–6 weeks."',
+      '- "<Crop A> and <Crop B> are good companions and together would fit on one block — you could free up a whole block for a different crop."',
+      'Do NOT repeat what is already in the per-row rationale. Advisories are for things ABOVE the per-pairing decision: block sizing, companion-planting opportunities, missed succession options, leftover-seed strategy, disease-risk concentration, etc. Be concrete (name specific blocks and crops). Do not lecture; assume the farmer knows their land. Do not invent observations to fill the array — empty is fine.',
+      '',
+      'Respond with VALID JSON only — no markdown, no commentary outside the JSON. Schema:',
+      '{',
+      '  "rationale": "2-4 sentence plain-English overview",',
+      '  "assignments": [',
+      '    { "stockItemId": "...", "blockId": "...", "plants": <int>, "rationale": "1 plain-English sentence" }',
+      '  ],',
+      '  "advisories": ["short observation", "another short observation"]',
+      '}'
+    ].join('\n') + pollinationSection
+  );
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────
@@ -870,11 +991,7 @@ export type ValidatedPlan =
   | { valid: true; plan: { assignments: AiAssignment[]; rationale: string; advisories: string[] } }
   | { valid: false; violations: string[] };
 
-export function validateAiPlan(
-  raw: unknown,
-  input: PlanInput,
-  matrix: MatrixRow[]
-): ValidatedPlan {
+export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow[]): ValidatedPlan {
   const violations: string[] = [];
   if (!raw || typeof raw !== 'object') {
     return { valid: false, violations: ['response was not an object'] };
@@ -970,9 +1087,7 @@ export function validateAiPlan(
   // Per (block, plugin) sum cannot exceed plantsFit (capacity is shared).
   for (const [key, total] of sumPerBlockPerPlugin) {
     const [blockId, pluginId] = key.split(':');
-    const matrixRow = matrix.find(
-      (r) => r.blockId === blockId && r.cropPluginId === pluginId
-    );
+    const matrixRow = matrix.find((r) => r.blockId === blockId && r.cropPluginId === pluginId);
     if (matrixRow && total > matrixRow.plantsFit) {
       violations.push(
         `total plants on block ${blockId} for ${pluginId} = ${total} exceeds plantsFit ${matrixRow.plantsFit}`
@@ -1086,9 +1201,7 @@ function engineFallback(
   const sufficiency = computeSufficiencyByPair(result.assignments, input);
   const perRowRationale: Record<string, string> = {};
   for (const a of result.assignments) {
-    const row = matrix.find(
-      (r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId
-    );
+    const row = matrix.find((r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId);
     perRowRationale[`${a.stockItemId}:${a.blockId}`] = row
       ? engineRationale(row)
       : 'placed by deterministic engine';
@@ -1138,9 +1251,7 @@ function engineAdvisories(
   // 1) Block significantly underused (deficit > 50%) — farmer should
   //    consider more seed, a companion, or a smaller bed.
   for (const a of assignments) {
-    const row = matrix.find(
-      (r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId
-    );
+    const row = matrix.find((r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId);
     if (!row) continue;
     if (row.plantsFit > 0 && a.plants / row.plantsFit < 0.5) {
       out.push(
@@ -1175,9 +1286,7 @@ function engineAdvisories(
 
   // 3) Narrow-block warning — a chosen block is too narrow for its crop.
   for (const a of assignments) {
-    const row = matrix.find(
-      (r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId
-    );
+    const row = matrix.find((r) => r.stockItemId === a.stockItemId && r.blockId === a.blockId);
     if (row?.narrowBlock) {
       out.push(
         `${blockNameOf(a.blockId)} is on the narrow side for ${seedNameOf(a.stockItemId)} — widening it by a few feet, or pairing with a tighter-spaced crop, would let you plant more cleanly.`
@@ -1189,7 +1298,10 @@ function engineAdvisories(
   // 4) Unplaced leftover seed — point the farmer at adding a bed or
   //    succession sowing rather than just dropping it on the floor.
   if (unplaced.length > 0) {
-    const names = unplaced.map((u) => seedNameOf(u.stockItemId)).slice(0, 3).join(', ');
+    const names = unplaced
+      .map((u) => seedNameOf(u.stockItemId))
+      .slice(0, 3)
+      .join(', ');
     out.push(
       `Some seed couldn\'t be placed (${names}${unplaced.length > 3 ? ', …' : ''}) — consider carving out a new bed, planning a succession sowing in a few weeks, or trading/storing the surplus.`
     );
@@ -1220,7 +1332,8 @@ function engineRationale(row: MatrixRow): string {
   if (row.narrowBlock) {
     bits.push("the block is narrow for this crop's row spacing");
   }
-  if (row.threeSistersCandidate) bits.push('part of a three-sisters grouping (corn / beans / squash)');
+  if (row.threeSistersCandidate)
+    bits.push('part of a three-sisters grouping (corn / beans / squash)');
   return bits.length > 0 ? bits.join('. ') + '.' : 'placed by the deterministic engine.';
 }
 
@@ -1322,7 +1435,11 @@ async function retryWithSemanticContext(
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
   const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
   let parsed: unknown = null;
-  try { parsed = JSON.parse(stripped); } catch { parsed = null; }
+  try {
+    parsed = JSON.parse(stripped);
+  } catch {
+    parsed = null;
+  }
   const meta = computeMeta(msg.usage, model);
   recordAllocateTelemetry(meta, durationMs, telemetry);
   appendAllocateTurn(telemetry.planningSessionId, correctionText, text, meta);
@@ -1364,12 +1481,13 @@ async function callClaude(
 }
 
 function computeMeta(rawUsage: unknown, model: string): AiResultMeta {
-  const usage = (rawUsage as {
-    input_tokens?: number;
-    cache_creation_input_tokens?: number;
-    cache_read_input_tokens?: number;
-    output_tokens?: number;
-  }) ?? {};
+  const usage =
+    (rawUsage as {
+      input_tokens?: number;
+      cache_creation_input_tokens?: number;
+      cache_read_input_tokens?: number;
+      output_tokens?: number;
+    }) ?? {};
   const choice = selectModel('allocate');
   const meta: AiResultMeta = {
     model,

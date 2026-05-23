@@ -1,181 +1,209 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1778114602740,
-			"tag": "0000_aspiring_joystick",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "6",
-			"when": 1778121597118,
-			"tag": "0001_colorful_cargill",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "6",
-			"when": 1778122459662,
-			"tag": "0002_sparkling_red_skull",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "6",
-			"when": 1778125011415,
-			"tag": "0003_special_devos",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "6",
-			"when": 1778125716472,
-			"tag": "0004_rare_whiplash",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "6",
-			"when": 1778160418148,
-			"tag": "0005_clean_zodiak",
-			"breakpoints": true
-		},
-		{
-			"idx": 6,
-			"version": "6",
-			"when": 1778169945747,
-			"tag": "0006_strong_ultimo",
-			"breakpoints": true
-		},
-		{
-			"idx": 7,
-			"version": "6",
-			"when": 1778176725934,
-			"tag": "0007_tense_rictor",
-			"breakpoints": true
-		},
-		{
-			"idx": 8,
-			"version": "6",
-			"when": 1778201619534,
-			"tag": "0008_absurd_robin_chapel",
-			"breakpoints": true
-		},
-		{
-			"idx": 9,
-			"version": "6",
-			"when": 1778211502604,
-			"tag": "0009_greedy_leopardon",
-			"breakpoints": true
-		},
-		{
-			"idx": 10,
-			"version": "6",
-			"when": 1746648000000,
-			"tag": "0010_schedule_tillage",
-			"breakpoints": true
-		},
-		{
-			"idx": 11,
-			"version": "6",
-			"when": 1778242499572,
-			"tag": "0011_moaning_vanisher",
-			"breakpoints": true
-		},
-		{
-			"idx": 12,
-			"version": "6",
-			"when": 1778243637779,
-			"tag": "0012_chemical_captain_britain",
-			"breakpoints": true
-		},
-		{
-			"idx": 13,
-			"version": "6",
-			"when": 1778262825923,
-			"tag": "0013_empty_beyonder",
-			"breakpoints": true
-		},
-		{
-			"idx": 14,
-			"version": "6",
-			"when": 1778272032697,
-			"tag": "0014_foamy_vulture",
-			"breakpoints": true
-		},
-		{
-			"idx": 15,
-			"version": "6",
-			"when": 1778350138255,
-			"tag": "0015_warm_silvermane",
-			"breakpoints": true
-		},
-		{
-			"idx": 16,
-			"version": "6",
-			"when": 1778379567084,
-			"tag": "0016_dapper_night_nurse",
-			"breakpoints": true
-		},
-		{
-			"idx": 17,
-			"version": "6",
-			"when": 1778421559813,
-			"tag": "0017_spotty_romulus",
-			"breakpoints": true
-		},
-		{
-			"idx": 18,
-			"version": "6",
-			"when": 1778436036987,
-			"tag": "0018_brave_squadron_sinister",
-			"breakpoints": true
-		},
-		{
-			"idx": 19,
-			"version": "6",
-			"when": 1778463935979,
-			"tag": "0019_phase17_track2_stock_formulation",
-			"breakpoints": true
-		},
-		{
-			"idx": 20,
-			"version": "6",
-			"when": 1778500422624,
-			"tag": "0020_phase18a_multitenant_owners",
-			"breakpoints": true
-		},
-		{
-			"idx": 21,
-			"version": "6",
-			"when": 1778500422625,
-			"tag": "0021_phase18a_backfill_home_farm",
-			"breakpoints": true
-		},
-		{
-			"idx": 22,
-			"version": "6",
-			"when": 1778502725603,
-			"tag": "0022_phase18_ownerid_notnull",
-			"breakpoints": true
-		},
-		{
-			"idx": 23,
-			"version": "6",
-			"when": 1778503400000,
-			"tag": "0023_phase18_audit_owner_nullable",
-			"breakpoints": true
-		},
-		{
-			"idx": 24,
-			"version": "6",
-			"when": 1778506297155,
-			"tag": "0024_phase17_pending_refresh",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1778114602740,
+      "tag": "0000_aspiring_joystick",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1778121597118,
+      "tag": "0001_colorful_cargill",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1778122459662,
+      "tag": "0002_sparkling_red_skull",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1778125011415,
+      "tag": "0003_special_devos",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1778125716472,
+      "tag": "0004_rare_whiplash",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1778160418148,
+      "tag": "0005_clean_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1778169945747,
+      "tag": "0006_strong_ultimo",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1778176725934,
+      "tag": "0007_tense_rictor",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1778201619534,
+      "tag": "0008_absurd_robin_chapel",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1778211502604,
+      "tag": "0009_greedy_leopardon",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1746648000000,
+      "tag": "0010_schedule_tillage",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1778242499572,
+      "tag": "0011_moaning_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1778243637779,
+      "tag": "0012_chemical_captain_britain",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1778262825923,
+      "tag": "0013_empty_beyonder",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1778272032697,
+      "tag": "0014_foamy_vulture",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1778350138255,
+      "tag": "0015_warm_silvermane",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1778379567084,
+      "tag": "0016_dapper_night_nurse",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1778421559813,
+      "tag": "0017_spotty_romulus",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1778436036987,
+      "tag": "0018_brave_squadron_sinister",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1778463935979,
+      "tag": "0019_phase17_track2_stock_formulation",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1778500422624,
+      "tag": "0020_phase18a_multitenant_owners",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1778500422625,
+      "tag": "0021_phase18a_backfill_home_farm",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1778502725603,
+      "tag": "0022_phase18_ownerid_notnull",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1778503400000,
+      "tag": "0023_phase18_audit_owner_nullable",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1778506297155,
+      "tag": "0024_phase17_pending_refresh",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1778985529370,
+      "tag": "0025_phase21_fungicide_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1779314061451,
+      "tag": "0026_phase21_crops_harvest_filter",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1779320338919,
+      "tag": "0027_phase21b_tasks_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "6",
+      "when": 1779462067151,
+      "tag": "0028_phase22_plugin_versions",
+      "breakpoints": true
+    }
+  ]
 }

@@ -69,9 +69,7 @@
   let selectedPluginId = $state<string | null>(null);
   let plantingDate = $state('');
 
-  const families = $derived(
-    [...new Set(catalog.map((c) => c.cropFamily ?? 'other'))].sort()
-  );
+  const families = $derived([...new Set(catalog.map((c) => c.cropFamily ?? 'other'))].sort());
 
   const filtered = $derived(
     catalog.filter((c) => {
@@ -96,7 +94,7 @@
   });
 
   const selectedItem = $derived(
-    selectedPluginId ? catalog.find((c) => c.pluginId === selectedPluginId) ?? null : null
+    selectedPluginId ? (catalog.find((c) => c.pluginId === selectedPluginId) ?? null) : null
   );
 
   function dtLabel(dtm: { min: number; max: number }): string {
@@ -427,7 +425,10 @@
     color: #555;
   }
 
-  .optional { color: #888; font-weight: 400; }
+  .optional {
+    color: #888;
+    font-weight: 400;
+  }
 
   .date-label input[type='date'] {
     padding: 0.5rem 0.6rem;

@@ -4,7 +4,20 @@
   "displayName": "2,4-D Amine",
   "version": "1.0.0",
   "activeIngredients": [
-    { "name": "2,4-D", "chemistryClass": "synthetic-auxin" }
+    {
+      "name": "2,4-D",
+      "chemistryClass": "synthetic-auxin"
+    }
   ],
-  "ratePerAcre": { "amount": 16, "unit": "fl-oz" }
+  "ratePerAcre": {
+    "amount": 16,
+    "unit": "fl-oz"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

@@ -31,7 +31,8 @@ export function buildPlanInput(
       const c = rec.plugin as CompanionPlugin;
       for (const a of c.goodWith ?? []) {
         const entry = (companions[a] ??= { goodWith: [], badWith: [] });
-        for (const b of c.goodWith ?? []) if (b !== a && !entry.goodWith.includes(b)) entry.goodWith.push(b);
+        for (const b of c.goodWith ?? [])
+          if (b !== a && !entry.goodWith.includes(b)) entry.goodWith.push(b);
         for (const b of c.badWith ?? []) if (!entry.badWith.includes(b)) entry.badWith.push(b);
       }
       for (const a of c.badWith ?? []) {

@@ -1,7 +1,7 @@
 {
   "pluginId": "summer-squash-yellow-crookneck",
   "type": "crop",
-  "displayName": "Summer Squash \u2014 Yellow Crookneck",
+  "displayName": "Summer Squash — Yellow Crookneck",
   "version": "1.0.0",
   "cropFamily": "cucurbit",
   "daysToMaturity": {
@@ -10,11 +10,11 @@
   },
   "defaultRowSpacingInches": 36,
   "harvestIndicators": [
-    "6\u20137 in length",
+    "6–7 in length",
     "Tender skin",
     "Crookneck pronounced"
   ],
-  "notes": "Pick young + frequently. Bush type \u2014 minimal trellising.",
+  "notes": "Pick young + frequently. Bush type — minimal trellising.",
   "plantingGuide": {
     "vineSpreadFt": {
       "min": 4,
@@ -32,7 +32,9 @@
       "offsetDaysMin": 30,
       "offsetDaysMax": 60,
       "title": "POST grass window (Clethodim)",
-      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon.",
+      "purpose": "post-emergent"
     }
-  ]
+  ],
+  "pluginSchemaVersion": "1.1"
 }

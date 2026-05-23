@@ -186,10 +186,7 @@ function tightnessOf(seed: SeedRequest, input: PlanInput): number {
   return t;
 }
 
-function companionEdgeCount(
-  pluginId: string,
-  companions: PlanInput['companions']
-): number {
+function companionEdgeCount(pluginId: string, companions: PlanInput['companions']): number {
   const entry = companions[pluginId];
   if (!entry) return 0;
   return entry.goodWith.length + entry.badWith.length;
@@ -197,12 +194,7 @@ function companionEdgeCount(
 
 function defaultSunForFamily(family: string): SunExposure {
   if (family === 'brassica') return 'partial';
-  if (
-    family === 'corn' ||
-    family === 'solanaceae' ||
-    family === 'legume' ||
-    family === 'cucurbit'
-  )
+  if (family === 'corn' || family === 'solanaceae' || family === 'legume' || family === 'cucurbit')
     return 'full';
   return 'full';
 }
@@ -338,11 +330,7 @@ function bestBlock(
     if (fit <= 0) continue;
     const score = scoreBlock(seed, plugin, block, remainingPlants, fit, state, input);
     if (score < floor) continue;
-    if (
-      !best ||
-      score > best.score ||
-      (score === best.score && block.id < best.blockId)
-    ) {
+    if (!best || score > best.score || (score === best.score && block.id < best.blockId)) {
       best = { blockId: block.id, score, fit };
     }
   }

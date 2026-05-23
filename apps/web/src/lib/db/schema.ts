@@ -160,12 +160,66 @@ export const pluginOverrides = tenantScoped(
         .default(sql`(unixepoch() * 1000)`)
     },
     (table) => ({
-      ownerPluginIdx: index('plugin_overrides_owner_plugin_idx').on(
-        table.ownerId,
-        table.pluginId
-      )
+      ownerPluginIdx: index('plugin_overrides_owner_plugin_idx').on(table.ownerId, table.pluginId)
     })
   )
+);
+
+/** Append-only version history for the global plugin catalog (Phase 22).
+ *  Each upload that changes a plugin's payload writes a new row + supersedes
+ *  the prior current row (`superseded_at = now`). The on-disk JSON under
+ *  `plugins/{kind}s/{pluginId}.json` always reflects the current row.
+ *
+ *  Replay safety: `spray_events.pluginHashesJson` resolves to a row here by
+ *  (pluginId, hash) even after the on-disk file is rotated or retired.
+ *
+ *  Retire/uninstall use the same table:
+ *  - retire sets `retiredAt` on the current row (reversible via unretire).
+ *  - uninstall hard-deletes payload-bearing rows for a pluginId AFTER a
+ *    server-side referencing-events check, then writes one tombstone row
+ *    with `payloadJson = ''` and `changeReason = 'uninstall'`.
+ *
+ *  GLOBAL: no `owner_id` column. Plugins are a single catalog per
+ *  CLAUDE.md invariant #2; per-tenant customization lives in
+ *  `plugin_overrides`. B-31 (marketplace) will introduce per-owner
+ *  installed-plugin state when multi-tenant requires it. */
+export const pluginVersions = sqliteTable(
+  'plugin_versions',
+  {
+    id: text('id').primaryKey(),
+    pluginId: text('plugin_id').notNull(),
+    /** Semver string. Server auto-bumps the patch on every payload change;
+     *  authors can override to a minor / major bump via the form. */
+    version: text('version').notNull(),
+    kind: text('kind', {
+      enum: ['crop', 'herbicide', 'insecticide', 'fungicide', 'fertilizer', 'companion']
+    }).notNull(),
+    /** SHA-256 of `payloadJson`. Matches the values stored in event rows'
+     *  `pluginHashesJson` so `getPluginByHash` can resolve historical
+     *  plugin state for export / replay. */
+    hash: text('hash').notNull(),
+    /** Full plugin JSON at this version. Empty string ('') on uninstall
+     *  tombstone rows. */
+    payloadJson: text('payload_json').notNull(),
+    changedByUserId: text('changed_by_user_id').references(() => users.id),
+    /** Free-text. Common values: 'initial-import', 'manual-edit',
+     *  'rollback to {version}', 'retire', 'unretire', 'uninstall'. */
+    changeReason: text('change_reason'),
+    /** {addedKeys[], removedKeys[], changedKeys[]} captured at write time
+     *  so the timeline UI does not need to re-diff on every render. */
+    diffSummaryJson: text('diff_summary_json'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    /** NULL = current. Non-null when a newer version row has been written. */
+    supersededAt: integer('superseded_at', { mode: 'timestamp_ms' }),
+    /** Soft-delete timestamp. NULL = active; set by retire / uninstall. */
+    retiredAt: integer('retired_at', { mode: 'timestamp_ms' })
+  },
+  (table) => ({
+    pluginIdx: index('plugin_versions_plugin_idx').on(table.pluginId, table.createdAt),
+    hashIdx: index('plugin_versions_hash_idx').on(table.pluginId, table.hash)
+  })
 );
 
 /** Subscription state per Owner. Stripe IDs are nullable now — billing
@@ -304,7 +358,16 @@ export const shadeSources = tenantScoped(
       ownerId: text('owner_id').notNull(),
       name: text('name').notNull(),
       kind: text('kind', {
-        enum: ['tree-row', 'tree-grove', 'tree-single', 'hedge', 'building', 'fence', 'structure', 'other']
+        enum: [
+          'tree-row',
+          'tree-grove',
+          'tree-single',
+          'hedge',
+          'building',
+          'fence',
+          'structure',
+          'other'
+        ]
       })
         .notNull()
         .default('tree-row'),
@@ -355,7 +418,15 @@ export const crops = tenantScoped(
       groupOffsetDays: integer('group_offset_days'),
       groupSystemKind: text('group_system_kind', {
         enum: ['three-sisters', 'succession', 'manual']
-      })
+      }),
+      /** Phase 21b follow-up — JSON-encoded string[] of HARVEST_USE_CASES
+       *  the operator wants surfaced for this planting. NULL = show all
+       *  harvest targets the plugin declares (default). Set this to,
+       *  e.g., `["fresh-eating"]` on a dual-purpose corn crop to hide
+       *  the dent/grain harvest window, or `["fresh-eating","dry-storage"]`
+       *  to keep both. The loader filters `growthStageTable.harvestTargets`
+       *  through this list before computing per-bar harvest windows. */
+      harvestUseCases: text('harvest_use_cases')
     },
     (table) => ({
       ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),
@@ -634,10 +705,7 @@ export const stockItems = tenantScoped(
       pendingRefreshAt: integer('pending_refresh_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
-      ownerCategoryIdx: index('stock_items_owner_category_idx').on(
-        table.ownerId,
-        table.category
-      ),
+      ownerCategoryIdx: index('stock_items_owner_category_idx').on(table.ownerId, table.category),
       ownerPluginIdx: index('stock_items_owner_plugin_idx').on(table.ownerId, table.pluginId),
       ownerBarcodeIdx: index('stock_items_owner_barcode_idx').on(table.ownerId, table.barcode)
     })
@@ -790,6 +858,49 @@ export const insecticideEvents = tenantScoped(
   )
 );
 
+/**
+ * Phase 21 (B-18): fungicide application events. Mirrors `insecticideEvents`
+ * field-for-field — fungicides share REI/PHI semantics, the same 48-hour
+ * lock window, and the same scout-observation flow (a disease-density
+ * observation rather than a pest-count one). The product snapshot
+ * captures FRAC codes (analogous to IRAC for insecticides) so the
+ * agronomy/resistance rotation hint engine can warn about consecutive
+ * single-FRAC sprays.
+ */
+export const fungicideEvents = tenantScoped(
+  sqliteTable(
+    'fungicide_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      sprayerId: text('sprayer_id').references(() => equipment.id),
+      performedById: text('performed_by_id')
+        .notNull()
+        .references(() => users.id),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      productsJson: text('products_json').notNull(),
+      scoutObservationJson: text('scout_observation_json'),
+      conditionsJson: text('conditions_json').notNull(),
+      reEntryClearAt: integer('re_entry_clear_at', { mode: 'timestamp_ms' }),
+      preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
+      rulesVersion: text('rules_version').notNull(),
+      pluginHashesJson: text('plugin_hashes_json').notNull(),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerOccurredIdx: index('fungicide_events_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      ),
+      ownerBlockIdx: index('fungicide_events_owner_block_idx').on(table.ownerId, table.blockId)
+    })
+  )
+);
+
 export const stockMovements = tenantScoped(
   sqliteTable(
     'stock_movements',
@@ -806,6 +917,7 @@ export const stockMovements = tenantScoped(
           'receipt',
           'spray-event',
           'insecticide-event',
+          'fungicide-event',
           'fertility-application',
           'planting',
           'adjustment',
@@ -815,6 +927,7 @@ export const stockMovements = tenantScoped(
       }).notNull(),
       sprayEventId: text('spray_event_id').references(() => sprayEvents.id),
       insecticideEventId: text('insecticide_event_id').references(() => insecticideEvents.id),
+      fungicideEventId: text('fungicide_event_id').references(() => fungicideEvents.id),
       fertilityApplicationId: text('fertility_application_id').references(
         () => fertilityApplications.id
       ),
@@ -959,6 +1072,7 @@ export const tasks = tenantScoped(
           'spray_event',
           'harvest_event',
           'insecticide_event',
+          'fungicide_event',
           'hay_cutting',
           'fertility_application'
         ]
@@ -970,16 +1084,32 @@ export const tasks = tenantScoped(
       staleAnchor: integer('stale_anchor', { mode: 'boolean' }).notNull().default(false),
       supersededByTaskId: text('superseded_by_task_id'),
       createdById: text('created_by_id').references(() => users.id),
+      // Phase 21b follow-up — authoritative task type for the swim-lane
+      // pip glyph + popover category dropdown. Plugin pre/post/seasonal
+      // task schemas, the inputs-plan commit, and manual entry surfaces
+      // all stamp this. Nullable for v1 plugin / legacy row back-compat.
+      category: text('category', {
+        enum: [
+          'plant',
+          'till',
+          'fertilize',
+          'spray',
+          'scout',
+          'companion-check',
+          'prune',
+          'harvest',
+          'hay-cutting',
+          'other'
+        ]
+      }),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
         .default(sql`(unixepoch() * 1000)`)
     },
     (table) => ({
-      ownerScheduledIdx: index('tasks_owner_scheduled_idx').on(
-        table.ownerId,
-        table.scheduledFor
-      ),
-      ownerCropIdx: index('tasks_owner_crop_idx').on(table.ownerId, table.cropId)
+      ownerScheduledIdx: index('tasks_owner_scheduled_idx').on(table.ownerId, table.scheduledFor),
+      ownerCropIdx: index('tasks_owner_crop_idx').on(table.ownerId, table.cropId),
+      categoryIdx: index('tasks_category_idx').on(table.category)
     })
   )
 );
@@ -994,7 +1124,19 @@ export const aiCallLog = tenantScoped(
       ownerId: text('owner_id').notNull(),
       userId: text('user_id').references(() => users.id),
       endpoint: text('endpoint', {
-        enum: ['suggest', 'succession', 'optimize', 'rationale', 'allocate', 'groups', 'shortNames']
+        enum: [
+          'suggest',
+          'succession',
+          'optimize',
+          'rationale',
+          'allocate',
+          'groups',
+          'shortNames',
+          'inputs',
+          'plugin-scan',
+          'plugin-search',
+          'plugin-batch-scan'
+        ]
       }).notNull(),
       model: text('model').notNull(),
       inputTokens: integer('input_tokens').notNull().default(0),
@@ -1008,10 +1150,7 @@ export const aiCallLog = tenantScoped(
         .default(sql`(unixepoch() * 1000)`)
     },
     (table) => ({
-      ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(
-        table.ownerId,
-        table.createdAt
-      )
+      ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(table.ownerId, table.createdAt)
     })
   )
 );

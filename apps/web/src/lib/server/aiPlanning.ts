@@ -26,7 +26,11 @@ export type AiTask =
   | 'rationale'
   | 'allocate'
   | 'groups'
-  | 'shortNames';
+  | 'shortNames'
+  /** Phase 21 / B-27 — input substitution + tank-mix consolidation
+   *  pass on top of the deterministic InputsPlan. Uses Haiku
+   *  (substitution lookup is comparatively simple). */
+  | 'inputs';
 
 export interface ModelChoice {
   model: string;
@@ -179,7 +183,8 @@ const MAX_TOKENS_BY_TASK: Record<AiTask, number> = {
   rationale: 600,
   allocate: 4000,
   groups: 4000,
-  shortNames: 1500
+  shortNames: 1500,
+  inputs: 3000
 };
 
 export interface PlanWithAIOptions {
@@ -258,9 +263,10 @@ export async function planWithAI(
   // the next call sees it in the threaded message history.
   if (options.planningSessionId) {
     appendTurn(options.planningSessionId, {
-      endpoint: task === 'allocate' || task === 'groups' || task === 'optimize' || task === 'suggest'
-        ? task
-        : 'suggest',
+      endpoint:
+        task === 'allocate' || task === 'groups' || task === 'optimize' || task === 'suggest'
+          ? task
+          : 'suggest',
       userPrompt,
       assistantResponse: text,
       inputTokens,

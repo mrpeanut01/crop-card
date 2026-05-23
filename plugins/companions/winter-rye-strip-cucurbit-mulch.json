@@ -1,0 +1,26 @@
+{
+  "pluginId": "winter-rye-strip-cucurbit-mulch",
+  "type": "companion",
+  "displayName": "Winter Rye Mulch Strip + Cucurbit (roller-crimped no-till)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "cucurbit",
+  "goodWith": [
+    "pumpkin-howden",
+    "pumpkin-small-sugar",
+    "winter-squash-delicata",
+    "butternut-squash-waltham",
+    "watermelon-crimson-sweet"
+  ],
+  "badWith": [],
+  "benefit": "Cereal rye drilled the previous fall and roller-crimped at anthesis produces a thick weed-suppressing mat for direct transplant or seed of warm-season cucurbits. Rodale Institute field trials show 60 to 80 percent weed reduction without herbicide.",
+  "members": [
+    {
+      "family": "cover-grass",
+      "role": "roller-crimped weed mulch",
+      "plantingOffsetDays": -240,
+      "title": "Drill rye in fall, crimp at anthesis next May/June",
+      "body": "Drill cereal rye at 150 lb per acre in early September. Roller-crimp when rye reaches anthesis (pollen shed). Transplant or no-till seed cucurbits through the crimped residue within 7 days."
+    }
+  ]
+}

@@ -14,7 +14,12 @@
 <script lang="ts">
   import type { ShadeImpactEvent } from '$lib/calendar/engine';
   import type { RotationConflict, SameTimeOverlap } from '$lib/calendar/rotation';
-  import { applyBlockOrder, loadBlockOrder, reorderOnDrop, saveBlockOrder } from '$lib/client/blockOrder';
+  import {
+    applyBlockOrder,
+    loadBlockOrder,
+    reorderOnDrop,
+    saveBlockOrder
+  } from '$lib/client/blockOrder';
 
   export interface SwimBlock {
     id: string;
@@ -107,6 +112,12 @@
      *  paint `selected` on bars and emits toggle events. */
     selectedCropIds?: Set<string>;
     onToggleSelect?: (cropId: string, additive: boolean) => void;
+    /** Optional snap helper. When provided, the swim-lane runs the
+     *  drag-over candidate day through this fn before drawing the
+     *  drop-preview line so the line reflects the date the drop will
+     *  actually persist (e.g. clamped forward past the last-spring-frost
+     *  boundary). Without it the line shows the raw cursor day. */
+    snapDate?: (dayMs: number, payload: DropPayload) => number;
   }
 
   const props: Props = $props();
@@ -125,7 +136,9 @@
   const yearStart = $derived(new Date(props.year, 0, 1).getTime());
   const yearEnd = $derived(new Date(props.year + 1, 0, 1).getTime());
   const visibleStart = $derived.by(() => {
-    const candidates = props.plantings.filter((p) => p.endMs >= yearStart).map((p) => p.plantingDateMs);
+    const candidates = props.plantings
+      .filter((p) => p.endMs >= yearStart)
+      .map((p) => p.plantingDateMs);
     return candidates.length === 0 ? yearStart : Math.min(yearStart, ...candidates);
   });
   const visibleEnd = $derived.by(() => {
@@ -231,7 +244,11 @@
     const sourceId = reorderDragId;
     reorderDragId = null;
     reorderOverId = null;
-    const next = reorderOnDrop(orderedBlocks.map((b) => b.id), sourceId, targetId);
+    const next = reorderOnDrop(
+      orderedBlocks.map((b) => b.id),
+      sourceId,
+      targetId
+    );
     if (!next) return;
     customOrder = next;
     saveBlockOrder(next);
@@ -263,12 +280,18 @@
    *  reproductive (flowering), amber = ripening, gray = dormant, teal = transition. */
   function stageBadgeColors(bodyKind: StageBodyKind | undefined): { bg: string; fg: string } {
     switch (bodyKind) {
-      case 'vegetative': return { bg: '#16a34a', fg: '#fff' };
-      case 'reproductive': return { bg: '#eab308', fg: '#1f2937' };
-      case 'ripening': return { bg: '#d97706', fg: '#fff' };
-      case 'dormant': return { bg: '#6b7280', fg: '#fff' };
-      case 'transition': return { bg: '#0891b2', fg: '#fff' };
-      default: return { bg: '#374151', fg: '#fff' };
+      case 'vegetative':
+        return { bg: '#16a34a', fg: '#fff' };
+      case 'reproductive':
+        return { bg: '#eab308', fg: '#1f2937' };
+      case 'ripening':
+        return { bg: '#d97706', fg: '#fff' };
+      case 'dormant':
+        return { bg: '#6b7280', fg: '#fff' };
+      case 'transition':
+        return { bg: '#0891b2', fg: '#fff' };
+      default:
+        return { bg: '#374151', fg: '#fff' };
     }
   }
 
@@ -364,8 +387,7 @@
       // Bucket by source × time-window so AM+PM from the same source on the
       // same neighbor collapse into a single band.
       const k = `${sourceId}:${e.startMs}:${e.endMs}`;
-      const eventSlots: ReadonlyArray<'am' | 'mid' | 'pm'> =
-        e.detail.slots ?? [e.detail.slot];
+      const eventSlots: ReadonlyArray<'am' | 'mid' | 'pm'> = e.detail.slots ?? [e.detail.slot];
       let slots = slotAcc.get(k);
       if (!slots) {
         slots = new Set();
@@ -403,7 +425,14 @@
     return p.plantingDateMs >= yearStart && p.endMs <= yearEnd;
   }
 
-  let dropPreview: { blockId: string; dayMs: number } | null = $state(null);
+  /** `dayMs` is the date the bar would actually land on (post-snap).
+   *  `tooEarly` fires when the cursor is aimed at a day BEFORE that
+   *  — meaning the parent's snap helper clamped the date forward
+   *  (typically past last-spring-frost or the crop's soil-temp
+   *  minimum). The renderer uses it to paint the line red + tack on
+   *  a "Too early" label so the operator understands why the line
+   *  isn't tracking their cursor. */
+  let dropPreview: { blockId: string; dayMs: number; tooEarly: boolean } | null = $state(null);
 
   // Phase 15d — on first mount, scroll the swim-lane so the first of the
   // current month sits right below the sticky header. Most planting work
@@ -415,10 +444,7 @@
     if (!swimRoot || didInitialScroll) return;
     const now = new Date();
     const monthStartUtc = Date.UTC(now.getFullYear(), now.getMonth(), 1);
-    const monthStartDayIdx = Math.max(
-      0,
-      Math.floor((monthStartUtc - visibleStart) / DAY_MS)
-    );
+    const monthStartDayIdx = Math.max(0, Math.floor((monthStartUtc - visibleStart) / DAY_MS));
     swimRoot.scrollTop = monthStartDayIdx * ROW_H;
     didInitialScroll = true;
   });
@@ -446,19 +472,37 @@
    *  `ev.offsetY` is target-relative — when the cursor sits over a bar the
    *  number reflects the bar's local origin, not the column's, which made
    *  the drop preview snap to the wrong day (or vanish). currentTarget +
-   *  getBoundingClientRect gives column-relative Y consistently. */
+   *  getBoundingClientRect gives column-relative Y consistently.
+   *
+   *  When dragging an existing bar (barGrabOffsetY set), subtract the
+   *  grab offset so the returned Y reflects where the TOP of the bar
+   *  would land. This makes the snap line + final drop point consistent
+   *  with the planting-date edge of the bar instead of the cursor. */
   function columnRelativeY(ev: DragEvent): number {
     const col = ev.currentTarget as HTMLElement | null;
     if (!col) return 0;
     const rect = col.getBoundingClientRect();
-    return ev.clientY - rect.top;
+    const raw = ev.clientY - rect.top;
+    return barGrabOffsetY != null ? raw - barGrabOffsetY : raw;
   }
 
   function onColumnDragOver(ev: DragEvent, blockId: string) {
     if (!props.dragPayload) return;
     ev.preventDefault();
     const dayIdx = Math.max(0, Math.min(totalDays - 1, Math.floor(columnRelativeY(ev) / ROW_H)));
-    dropPreview = { blockId, dayMs: dayMsForCell(dayIdx) };
+    const rawMs = dayMsForCell(dayIdx);
+    // Run through the parent's snap helper (when provided) so the
+    // drop-preview line tracks the post-snap date — otherwise the
+    // line shows where the cursor is but the drop persists a different
+    // date (e.g. clamped forward past last-spring-frost), and the
+    // operator sees the bar land "a week after" where they aimed.
+    const snappedMs = props.snapDate ? props.snapDate(rawMs, props.dragPayload) : rawMs;
+    // tooEarly: cursor aimed at a date before the snap floor. Triggers
+    // the red line + "Too early" label so the operator understands why
+    // the line doesn't track their cursor — the soil-temp / frost
+    // boundary won't let them plant any earlier.
+    const tooEarly = snappedMs > rawMs;
+    dropPreview = { blockId, dayMs: snappedMs, tooEarly };
   }
 
   function onColumnDragLeave() {
@@ -471,6 +515,10 @@
     const dayIdx = Math.max(0, Math.min(totalDays - 1, Math.floor(columnRelativeY(ev) / ROW_H)));
     const payload = props.dragPayload;
     dropPreview = null;
+    // Don't snap here — the parent's drop handler runs its own
+    // snapPlantingDate() and is the source of truth for the persisted
+    // value. The preview was snapped above only so the operator could
+    // SEE where the date would land.
     props.onDrop(blockId, dayMsForCell(dayIdx), payload);
   }
 
@@ -576,30 +624,68 @@
     return 'Group';
   }
 
+  /** Picture-emoji glyphs make the task type identifiable at a
+   *  glance on the swim-lane instead of the previous abstract
+   *  Unicode dots / diamonds. Sized 18×18 via .task-pip to keep
+   *  the rendered glyph legible without overwhelming the bar. */
   function pipGlyph(category: SwimTaskPip['category']): string {
     switch (category) {
-      case 'plant': return '●';
-      case 'till': return '◆';
-      case 'fertilize': return '✚';
-      case 'spray': return '✦';
-      case 'scout': return '◉';
-      case 'companion-check': return '⚑';
-      default: return '·';
+      case 'plant':
+        return '🌱';
+      case 'till':
+        return '🚜';
+      case 'fertilize':
+        return '💩';
+      case 'spray':
+        return '💧';
+      case 'scout':
+        return '🔍';
+      case 'companion-check':
+        return '🤝';
+      default:
+        return '·';
     }
   }
-  function pipColor(category: SwimTaskPip['category']): string {
+  /** Human-readable label paired with each glyph in the bar tooltip
+   *  so operators learn the icon → task mapping over time. */
+  function pipLabel(category: SwimTaskPip['category']): string {
     switch (category) {
-      case 'plant': return '#1f5e3a';
-      case 'till': return '#92400e';
-      case 'fertilize': return '#0e7490';
-      case 'spray': return '#7c3aed';
-      case 'scout': return '#b91c1c';
-      case 'companion-check': return '#ca8a04';
-      default: return '#475569';
+      case 'plant':
+        return 'Plant';
+      case 'till':
+        return 'Till';
+      case 'fertilize':
+        return 'Fertilize';
+      case 'spray':
+        return 'Spray';
+      case 'scout':
+        return 'Scout';
+      case 'companion-check':
+        return 'Companion check';
+      default:
+        return 'Task';
     }
   }
+  // pipColor() removed when pips switched to emoji rendering — the
+  // glyphs carry their own color now. Kept here as a marker so any
+  // future "fallback to typography" path knows where the palette
+  // lived (preserved in git history).
 
   // ─── Bar drag (move existing planting) ──────────────────────────────────
+  /**
+   * Where on the bar the user grabbed it (px from the bar's top). Used by
+   * `columnRelativeY` to subtract the grab offset so the drop preview
+   * line indicates where the bar's PLANTING-DATE edge (top) will land
+   * — not where the cursor literally is. Without this, grabbing a bar
+   * mid-way and dragging put the snap line under the cursor while the
+   * bar would actually anchor at the cursor's day too, leaving the
+   * impression that the line was an arbitrary cursor follower.
+   *
+   * Null when dragging a new bar from the rail (no source bar geometry),
+   * in which case the snap line falls back to the cursor's day.
+   */
+  let barGrabOffsetY: number | null = null;
+
   function onBarDragStart(ev: DragEvent, cropId: string, sourceBlockId: string) {
     ev.stopPropagation();
     if (ev.dataTransfer) {
@@ -607,9 +693,17 @@
       ev.dataTransfer.setData('application/x-cropcard-crop-id', cropId);
       ev.dataTransfer.setData('text/plain', cropId);
     }
+    const bar = ev.currentTarget as HTMLElement | null;
+    if (bar) {
+      const rect = bar.getBoundingClientRect();
+      barGrabOffsetY = ev.clientY - rect.top;
+    } else {
+      barGrabOffsetY = null;
+    }
     props.onBarDragStart?.(cropId, sourceBlockId);
   }
   function onBarDragEnd() {
+    barGrabOffsetY = null;
     props.onBarDragEnd?.();
   }
 
@@ -643,7 +737,9 @@
       <div
         class="block-header"
         class:dragging={reorderDragId === b.id}
-        class:drop-target={reorderOverId === b.id && reorderDragId !== null && reorderDragId !== b.id}
+        class:drop-target={reorderOverId === b.id &&
+          reorderDragId !== null &&
+          reorderDragId !== b.id}
         style="flex: {colFlexFor(b.id)};"
         draggable="true"
         ondragstart={(e) => onHeaderDragStart(e, b.id)}
@@ -663,7 +759,11 @@
     {/each}
   </div>
 
-  <div class="body" style="--row-h: {ROW_H}px; --total-h: {totalDays * ROW_H}px; --mon-offset-days: {firstMondayOffsetDays};">
+  <div
+    class="body"
+    style="--row-h: {ROW_H}px; --total-h: {totalDays *
+      ROW_H}px; --mon-offset-days: {firstMondayOffsetDays};"
+  >
     <div class="time-axis">
       {#each weekTicks.filter((w) => w.monDayIdx >= 0) as wt (wt.monDayIdx)}
         <div class="week-tick mon" style="top: {wt.monDayIdx * ROW_H}px">M {wt.monLabel}</div>
@@ -689,7 +789,7 @@
             {@const top = dayOffset(band.startMs) * ROW_H}
             {@const height = ((band.endMs - band.startMs) / DAY_MS) * ROW_H}
             {@const bandBg = 0.04 + 0.06 * band.intensity}
-            {@const bandStripe = 0.06 + 0.10 * band.intensity}
+            {@const bandStripe = 0.06 + 0.1 * band.intensity}
             {@const bandBorder = 0.12 + 0.18 * band.intensity}
             <div
               class="shade-band"
@@ -699,7 +799,8 @@
             >
               {#if height >= 22}
                 <span class="shade-band-label">
-                  🌑 {band.sourceLabel}{#if band.slotsLabel} · {band.slotsLabel}{/if}
+                  🌑 {band.sourceLabel}{#if band.slotsLabel}
+                    · {band.slotsLabel}{/if}
                 </span>
               {/if}
             </div>
@@ -729,14 +830,14 @@
               (r) => r.blockId === b.id && r.candidateCropId === p.cropId
             )}
             {@const selected = selectedCropIds.has(p.cropId)}
-            {@const grouped = !!p.groupId}
             {@const laneIdx = laneIndexFor(p.cropId)}
             {@const laneLeftPct = (laneIdx / lanes) * 100}
             {@const laneWidthPct = (1 / lanes) * 100}
             {@const stageColor = stageBadgeColors(p.currentStage?.bodyKind)}
-            {@const tailEndMs = p.harvestTargets && p.harvestTargets.length > 0
-              ? Math.max(p.endMs, ...p.harvestTargets.map((t) => t.endMs))
-              : p.endMs}
+            {@const tailEndMs =
+              p.harvestTargets && p.harvestTargets.length > 0
+                ? Math.max(p.endMs, ...p.harvestTargets.map((t) => t.endMs))
+                : p.endMs}
             {@const hasTail = tailEndMs > p.endMs}
             {#if hasTail}
               {@const tailTop = dayOffset(p.endMs) * ROW_H}
@@ -744,7 +845,8 @@
               <div
                 class="bar-tail"
                 class:ghost={!inActiveYear(p)}
-                style="top: {tailTop}px; height: {tailHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX * 2}px); background: {familyColor(p.cropFamily)};"
+                style="top: {tailTop}px; height: {tailHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *
+                  2}px); background: {familyColor(p.cropFamily)};"
                 aria-hidden="true"
               ></div>
             {/if}
@@ -756,31 +858,43 @@
               class:rotation
               class:ghost={!inActiveYear(p)}
               class:selected
-              class:grouped
-              class:anchor={p.groupRole === 'anchor'}
               draggable={!!props.onBarDragStart}
               ondragstart={(ev) => onBarDragStart(ev, p.cropId, p.blockId)}
               ondragend={onBarDragEnd}
-              style="top: {top}px; height: {height}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX * 2}px); background: {familyColor(p.cropFamily)};"
+              style="top: {top}px; height: {height}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *
+                2}px); background: {familyColor(p.cropFamily)};"
               title={barTooltip(p, lanes, laneIdx)}
               onclick={(ev) => toggleSelect(ev, p.cropId)}
             >
               <span class="bar-label">
-                {#if p.groupRole === 'anchor'}<span class="role-tag" aria-hidden="true">⚓</span>{/if}
+                <!-- Phase 21b follow-up — anchor/companion role tags + the
+                     grouped-bar dotted left border were removed. The
+                     Primary/Secondary distinction wasn't legible to
+                     operators (no inline explanation, just visual flair).
+                     groupId stays on the data — group inspector + companion
+                     check flows continue to use it — only the per-bar
+                     visual indicator is gone. -->
+
                 {#if p.currentStage}
                   <span
                     class="stage-badge"
                     style="background: {stageColor.bg}; color: {stageColor.fg};"
                     aria-label="Current stage: {p.currentStage.code} {p.currentStage.name}"
-                  >{p.currentStage.code}</span>
+                    >{p.currentStage.code}</span
+                  >
                 {/if}
                 {#if p.cornType}
-                  <span class="corn-type-chip" aria-label="Corn type: {p.cornType}">{p.cornType}</span>
+                  <span class="corn-type-chip" aria-label="Corn type: {p.cornType}"
+                    >{p.cornType}</span
+                  >
                 {/if}
                 {p.shortName ?? p.varietyDisplayName}
               </span>
               {#if height >= 24}
-                {@const plantDate = new Date(p.plantingDateMs).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                {@const plantDate = new Date(p.plantingDateMs).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric'
+                })}
                 <span class="plant-line" aria-label="Planted {plantDate}">
                   <span class="ht-leader">Plant</span>
                   <span class="ht-date">{plantDate}</span>
@@ -792,11 +906,18 @@
               {#each p.harvestTargets as t, ti (p.cropId + ':' + t.stageCode + ':' + ti)}
                 {@const htTop = dayOffset(t.startMs) * ROW_H}
                 {@const htHeight = Math.max(28, ((t.endMs - t.startMs) / DAY_MS) * ROW_H)}
-                {@const htStart = new Date(t.startMs).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                {@const htEnd = new Date(t.endMs).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                {@const htStart = new Date(t.startMs).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric'
+                })}
+                {@const htEnd = new Date(t.endMs).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric'
+                })}
                 <div
                   class="harvest-target-box"
-                  style="top: {htTop}px; height: {htHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX * 2}px);"
+                  style="top: {htTop}px; height: {htHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *
+                    2}px);"
                   title="Harvest — {t.label} ({t.stageCode}): {htStart} – {htEnd}"
                   aria-label="Harvest window {t.label} from {htStart} to {htEnd}"
                 >
@@ -815,9 +936,9 @@
                 <div
                   class="task-pip"
                   class:stale={pip.stale}
-                  style="top: {pipTop}px; left: calc({pipLeftPct}% - 16px); color: {pipColor(pip.category)}"
-                  title={pip.title}
-                  aria-label={pip.title}
+                  style="top: {pipTop}px; left: calc({pipLeftPct}% - 16px);"
+                  title={`${pipLabel(pip.category)} — ${pip.title}`}
+                  aria-label={`${pipLabel(pip.category)}: ${pip.title}`}
                 >
                   {pipGlyph(pip.category)}
                 </div>
@@ -827,7 +948,16 @@
 
           {#if dropPreview && dropPreview.blockId === b.id}
             {@const top = dayOffset(dropPreview.dayMs) * ROW_H}
-            <div class="drop-preview" style="top: {top}px"></div>
+            <div
+              class="drop-preview"
+              class:too-early={dropPreview.tooEarly}
+              style="top: {top}px"
+            ></div>
+            {#if dropPreview.tooEarly}
+              <div class="drop-preview-label too-early-label" style="top: {top}px">
+                ⚠ Too early — snapped to soil-temp / frost floor
+              </div>
+            {/if}
           {/if}
 
           {#if props.kbCarry && kbCellBlockId === b.id}
@@ -884,7 +1014,9 @@
     cursor: grab;
     user-select: none;
   }
-  .block-header:active { cursor: grabbing; }
+  .block-header:active {
+    cursor: grabbing;
+  }
   .block-header.dragging {
     opacity: 0.4;
   }
@@ -892,7 +1024,9 @@
     background: #dbeafe;
     box-shadow: inset 3px 0 0 #2563eb;
   }
-  .block-name { font-weight: 600; }
+  .block-name {
+    font-weight: 600;
+  }
   .block-meta {
     display: flex;
     gap: 0.4rem;
@@ -900,10 +1034,22 @@
     color: #6b7280;
     flex-wrap: wrap;
   }
-  .sun { padding: 0 0.3rem; border-radius: 0.25rem; background: #fef3c7; }
-  .sun-partial { background: #fde68a; }
-  .sun-shade { background: #d1d5db; }
-  .axis { background: #ddd6fe; padding: 0 0.3rem; border-radius: 0.25rem; }
+  .sun {
+    padding: 0 0.3rem;
+    border-radius: 0.25rem;
+    background: #fef3c7;
+  }
+  .sun-partial {
+    background: #fde68a;
+  }
+  .sun-shade {
+    background: #d1d5db;
+  }
+  .axis {
+    background: #ddd6fe;
+    padding: 0 0.3rem;
+    border-radius: 0.25rem;
+  }
   .body {
     display: flex;
     position: relative;
@@ -960,7 +1106,12 @@
     color: #475569;
     font-weight: 500;
   }
-  .columns { display: flex; flex: 1 1 auto; height: var(--total-h); min-width: 0; }
+  .columns {
+    display: flex;
+    flex: 1 1 auto;
+    height: var(--total-h);
+    min-width: 0;
+  }
   .column {
     /* flex set inline per block: `<lanes> 1 <lanes × MIN_LANE_W>px` */
     position: relative;
@@ -1022,7 +1173,11 @@
     border: 1px solid rgba(0, 0, 0, 0.15);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   }
-  .bar-label { display: block; line-height: 1.1; word-break: break-word; }
+  .bar-label {
+    display: block;
+    line-height: 1.1;
+    word-break: break-word;
+  }
   .bar.overlap {
     background-image: repeating-linear-gradient(
       45deg,
@@ -1033,28 +1188,63 @@
     );
     border-color: #dc2626;
   }
-  .bar.rotation { border: 2px dashed #f59e0b; }
-  .bar.ghost { opacity: 0.4; }
-  .drop-preview { position: absolute; left: 0; right: 0; height: 2px; background: #4338ca; pointer-events: none; }
-  .kb-cursor { position: absolute; left: 0; right: 0; height: 3px; background: #16a34a; pointer-events: none; }
+  .bar.rotation {
+    border: 2px dashed #f59e0b;
+  }
+  .bar.ghost {
+    opacity: 0.4;
+  }
+  .drop-preview {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #4338ca;
+    pointer-events: none;
+  }
+  /** Snap-forward state — the cursor aimed at a date earlier than the
+   *  soil-temp / last-spring-frost floor, and the parent's snap helper
+   *  pushed the proposed planting date forward. The red line +
+   *  "Too early" label make the auto-correction visible so the
+   *  operator doesn't think the snap line is broken. */
+  .drop-preview.too-early {
+    background: #b91c1c;
+    height: 3px;
+    box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.25);
+  }
+  .drop-preview-label {
+    position: absolute;
+    left: 6px;
+    transform: translateY(-100%);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  .too-early-label {
+    background: #b91c1c;
+    color: #fff;
+  }
+  .kb-cursor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #16a34a;
+    pointer-events: none;
+  }
 
   .bar.selected {
     outline: 3px solid #4338ca;
     outline-offset: 1px;
   }
-  .bar.grouped {
-    border-left-width: 3px;
-    border-left-style: solid;
-    border-left-color: #312e81;
-  }
-  .bar.anchor {
-    border-left-color: #b45309;
-    border-left-width: 4px;
-  }
-  .role-tag {
-    font-size: 0.7rem;
-    margin-right: 0.15rem;
-  }
+  /* Phase 21b follow-up — .bar.grouped, .bar.anchor, .role-tag CSS
+   * removed when the anchor/companion visual indicator was retired.
+   * groupId data + the GroupInspector flows are unaffected; only the
+   * per-bar visual cue is gone. */
   .stage-badge {
     display: inline-block;
     font-size: 0.65rem;
@@ -1085,11 +1275,17 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 0 0 0.25rem 0.25rem;
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.08) 100%);
-    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.08) 100%);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.08) 100%
+    );
     pointer-events: none;
     z-index: 0;
   }
-  .bar-tail.ghost { opacity: 0.4; }
+  .bar-tail.ghost {
+    opacity: 0.4;
+  }
   .harvest-target-box {
     position: absolute;
     border: 2px dashed #16a34a;
@@ -1157,8 +1353,12 @@
     border-bottom: 3px solid #312e81;
     border-radius: 4px 0 0 4px;
   }
-  .group-bracket-three-sisters::before { border-color: #b45309; }
-  .group-bracket-succession::before { border-color: #0891b2; }
+  .group-bracket-three-sisters::before {
+    border-color: #b45309;
+  }
+  .group-bracket-succession::before {
+    border-color: #0891b2;
+  }
   .group-bracket:focus-visible {
     outline: 2px solid #4338ca;
     outline-offset: 2px;
@@ -1175,23 +1375,36 @@
     white-space: nowrap;
     pointer-events: none;
   }
-  .group-bracket-three-sisters .group-bracket-label { color: #b45309; }
-  .group-bracket-succession .group-bracket-label { color: #0891b2; }
+  .group-bracket-three-sisters .group-bracket-label {
+    color: #b45309;
+  }
+  .group-bracket-succession .group-bracket-label {
+    color: #0891b2;
+  }
 
+  /** Phase 21b follow-up — task pips now use picture emojis (🌱 plant,
+   *  🚜 till, 💩 fertilize, 💧 spray, 🔍 scout, 🤝 companion). Bumped
+   *  size + light background ring so the glyphs are legible against
+   *  the colored bar behind them. */
   .task-pip {
     position: absolute;
     /* left set inline per-pip based on owning bar's lane */
-    width: 12px;
-    height: 12px;
-    line-height: 12px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
     text-align: center;
-    font-size: 0.65rem;
-    font-weight: 700;
+    font-size: 14px;
     pointer-events: none;
-    text-shadow: 0 0 2px #fff, 0 0 2px #fff;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+    /* Pull the icon up so its center sits on the scheduled day row
+     * (top-aligned by default since the pip is positioned at the
+     * row's top edge). */
+    margin-top: -3px;
   }
   .task-pip.stale {
     opacity: 0.45;
-    text-decoration: line-through;
+    filter: grayscale(0.7);
   }
 </style>

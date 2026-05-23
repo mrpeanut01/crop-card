@@ -58,23 +58,52 @@ describe('computeShadeWindowEvents (v2 shade model)', () => {
       const dN = 5 / 111_320 / 2;
       return JSON.stringify({
         type: 'Polygon',
-        coordinates: [[
-          [cLon - half, cLat - dN],
-          [cLon + half, cLat - dN],
-          [cLon + half, cLat + dN],
-          [cLon - half, cLat + dN],
-          [cLon - half, cLat - dN]
-        ]]
+        coordinates: [
+          [
+            [cLon - half, cLat - dN],
+            [cLon + half, cLat - dN],
+            [cLon + half, cLat + dN],
+            [cLon - half, cLat + dN],
+            [cLon - half, cLat - dN]
+          ]
+        ]
       });
     };
     return [
-      { id: 'b0', name: 'B0', tillageMethod: 'conventional', axesLocked: false, eastWestIndex: 0, northSouthIndex: 0, geometryGeojson: ringAt(lon - dEastFor5m, lat) },
-      { id: 'b1', name: 'B1', tillageMethod: 'conventional', axesLocked: false, eastWestIndex: 1, northSouthIndex: 0, geometryGeojson: ringAt(lon, lat) },
-      { id: 'b2', name: 'B2', tillageMethod: 'conventional', axesLocked: false, eastWestIndex: 2, northSouthIndex: 0, geometryGeojson: ringAt(lon + dEastFor5m, lat) }
+      {
+        id: 'b0',
+        name: 'B0',
+        tillageMethod: 'conventional',
+        axesLocked: false,
+        eastWestIndex: 0,
+        northSouthIndex: 0,
+        geometryGeojson: ringAt(lon - dEastFor5m, lat)
+      },
+      {
+        id: 'b1',
+        name: 'B1',
+        tillageMethod: 'conventional',
+        axesLocked: false,
+        eastWestIndex: 1,
+        northSouthIndex: 0,
+        geometryGeojson: ringAt(lon, lat)
+      },
+      {
+        id: 'b2',
+        name: 'B2',
+        tillageMethod: 'conventional',
+        axesLocked: false,
+        eastWestIndex: 2,
+        northSouthIndex: 0,
+        geometryGeojson: ringAt(lon + dEastFor5m, lat)
+      }
     ];
   }
 
-  function compute(plantings: ReadonlyArray<{ planting: PlantingRecord; crop: CropPlugin; block: Block }>, blocks: Block[]) {
+  function compute(
+    plantings: ReadonlyArray<{ planting: PlantingRecord; crop: CropPlugin; block: Block }>,
+    blocks: Block[]
+  ) {
     const yearStart = new Date(2026, 0, 1).getTime();
     const yearEnd = new Date(2027, 0, 1).getTime() - 1;
     return computeShadeWindowEvents({
@@ -90,7 +119,10 @@ describe('computeShadeWindowEvents (v2 shade model)', () => {
 
   it('produces shade events on neighbour blocks for tall corn', () => {
     const blocks = makeBlocks();
-    const events = compute([{ planting: makePlanting('b1'), crop: corn, block: blocks[1] }], blocks);
+    const events = compute(
+      [{ planting: makePlanting('b1'), crop: corn, block: blocks[1] }],
+      blocks
+    );
     expect(events.length).toBeGreaterThan(0);
     const targets = new Set(events.map((e) => e.blockId));
     expect(targets.has('b0') || targets.has('b2')).toBe(true);
@@ -108,7 +140,10 @@ describe('computeShadeWindowEvents (v2 shade model)', () => {
 
   it('intensity is bounded in [0, 1]', () => {
     const blocks = makeBlocks();
-    const events = compute([{ planting: makePlanting('b1'), crop: corn, block: blocks[1] }], blocks);
+    const events = compute(
+      [{ planting: makePlanting('b1'), crop: corn, block: blocks[1] }],
+      blocks
+    );
     for (const e of events) {
       const intensity = e.detail.intensity as number;
       expect(intensity).toBeGreaterThan(0);
@@ -118,7 +153,10 @@ describe('computeShadeWindowEvents (v2 shade model)', () => {
 
   it('attribution includes source crop id + variety', () => {
     const blocks = makeBlocks();
-    const events = compute([{ planting: makePlanting('b1'), crop: corn, block: blocks[1] }], blocks);
+    const events = compute(
+      [{ planting: makePlanting('b1'), crop: corn, block: blocks[1] }],
+      blocks
+    );
     expect(events.length).toBeGreaterThan(0);
     expect(events[0].detail.shadingCropId).toBe('p-b1');
     expect(events[0].detail.shadingVariety).toBeDefined();

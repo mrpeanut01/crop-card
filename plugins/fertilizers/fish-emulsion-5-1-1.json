@@ -3,9 +3,23 @@
   "type": "fertilizer",
   "displayName": "Fish Emulsion (5-1-1, OMRI)",
   "version": "1.0.0",
-  "analysis": { "n": 5, "p": 1, "k": 1 },
+  "analysis": {
+    "n": 5,
+    "p": 1,
+    "k": 1
+  },
   "form": "liquid",
   "organic": true,
-  "applicationRange": { "min": 1, "max": 5, "unit": "gal-per-acre" },
-  "notes": "Quick organic foliar / fertigation. Strong odor — neighbors. Dilute 1:50 to 1:100 with water before applying."
+  "applicationRange": {
+    "min": 1,
+    "max": 5,
+    "unit": "gal-per-acre"
+  },
+  "notes": "Quick organic foliar / fertigation. Strong odor — neighbors. Dilute 1:50 to 1:100 with water before applying.",
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": true
+  },
+  "pluginSchemaVersion": "1.1"
 }

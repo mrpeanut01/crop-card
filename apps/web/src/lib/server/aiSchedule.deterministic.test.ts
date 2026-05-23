@@ -7,7 +7,12 @@ import type { PollinationConstraint } from '$lib/plan/types';
 
 const ONE_DAY_MS = 86_400_000;
 
-function plug(id: string, family: string, dtm: [number, number] = [80, 90], soilTempMinF = 65): CropPlugin {
+function plug(
+  id: string,
+  family: string,
+  dtm: [number, number] = [80, 90],
+  soilTempMinF = 65
+): CropPlugin {
   return {
     pluginId: id,
     type: 'crop',
@@ -36,9 +41,27 @@ describe('buildDeterministicSchedule — must-stagger enforcement', () => {
     'corn-c': plug('corn-c', 'corn')
   };
   const assignments = [
-    { stockItemId: 's1', blockId: 'b1', cropPluginId: 'corn-a', varietyDisplayName: 'A', plants: 100 },
-    { stockItemId: 's2', blockId: 'b2', cropPluginId: 'corn-b', varietyDisplayName: 'B', plants: 100 },
-    { stockItemId: 's3', blockId: 'b3', cropPluginId: 'corn-c', varietyDisplayName: 'C', plants: 100 }
+    {
+      stockItemId: 's1',
+      blockId: 'b1',
+      cropPluginId: 'corn-a',
+      varietyDisplayName: 'A',
+      plants: 100
+    },
+    {
+      stockItemId: 's2',
+      blockId: 'b2',
+      cropPluginId: 'corn-b',
+      varietyDisplayName: 'B',
+      plants: 100
+    },
+    {
+      stockItemId: 's3',
+      blockId: 'b3',
+      cropPluginId: 'corn-c',
+      varietyDisplayName: 'C',
+      plants: 100
+    }
   ];
   const pollinationConstraints: PollinationConstraint[] = [
     {
@@ -91,7 +114,10 @@ describe('buildDeterministicSchedule — must-stagger enforcement', () => {
     const fits = windows.map((w) =>
       evaluateSuccessionFit(
         w,
-        pluginIndex[assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)!.cropPluginId],
+        pluginIndex[
+          assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)!
+            .cropPluginId
+        ],
         w.blockId,
         w.stockItemId
       )
@@ -116,7 +142,10 @@ describe('buildDeterministicSchedule — must-stagger enforcement', () => {
     const fits = windows.map((w) =>
       evaluateSuccessionFit(
         w,
-        pluginIndex[assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)!.cropPluginId],
+        pluginIndex[
+          assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)!
+            .cropPluginId
+        ],
         w.blockId,
         w.stockItemId
       )
@@ -132,9 +161,27 @@ describe('buildDeterministicSchedule — must-stagger enforcement', () => {
     const squash = plug('squash-helper', 'cucurbit');
     const input: ScheduleInput = {
       assignments: [
-        { stockItemId: 's-corn', blockId: 'b1', cropPluginId: 'corn-anchor', varietyDisplayName: 'Corn', plants: 100 },
-        { stockItemId: 's-bean', blockId: 'b1', cropPluginId: 'bean-helper', varietyDisplayName: 'Bean', plants: 100 },
-        { stockItemId: 's-squash', blockId: 'b1', cropPluginId: 'squash-helper', varietyDisplayName: 'Squash', plants: 100 }
+        {
+          stockItemId: 's-corn',
+          blockId: 'b1',
+          cropPluginId: 'corn-anchor',
+          varietyDisplayName: 'Corn',
+          plants: 100
+        },
+        {
+          stockItemId: 's-bean',
+          blockId: 'b1',
+          cropPluginId: 'bean-helper',
+          varietyDisplayName: 'Bean',
+          plants: 100
+        },
+        {
+          stockItemId: 's-squash',
+          blockId: 'b1',
+          cropPluginId: 'squash-helper',
+          varietyDisplayName: 'Squash',
+          plants: 100
+        }
       ],
       pluginIndex: {
         'corn-anchor': corn,
@@ -161,7 +208,10 @@ describe('buildDeterministicSchedule — must-stagger enforcement', () => {
     const fits = windows.map((w) =>
       evaluateSuccessionFit(
         w,
-        input.pluginIndex[input.assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)!.cropPluginId],
+        input.pluginIndex[
+          input.assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)!
+            .cropPluginId
+        ],
         w.blockId,
         w.stockItemId
       )

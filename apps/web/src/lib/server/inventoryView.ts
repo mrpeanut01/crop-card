@@ -92,8 +92,7 @@ export async function loadInventoryView(opts: { canEdit: boolean }) {
       if (p.type === 'crop') {
         const dtm = p.daysToMaturity as { min: number; max: number } | undefined;
         if (dtm) {
-          meta.daysToMaturity =
-            dtm.min === dtm.max ? dtm.min : Math.round((dtm.min + dtm.max) / 2);
+          meta.daysToMaturity = dtm.min === dtm.max ? dtm.min : Math.round((dtm.min + dtm.max) / 2);
           meta.daysToMaturityRange = dtm;
         }
         const pg = p.plantingGuide as Record<string, unknown> | undefined;

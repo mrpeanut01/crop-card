@@ -43,7 +43,10 @@ export const POLLINATION_DEFAULTS: Record<
  *  zucchini plugins. The plugin file can override with explicit `crossesWith`
  *  but listing species here keeps the data layer narrow. Plugin IDs follow
  *  the existing kebab-case convention in `plugins/crops/`. */
-export const CUCURBIT_SPECIES: Record<'pepo' | 'moschata' | 'maxima' | 'argyrosperma' | 'lagenaria', string[]> = {
+export const CUCURBIT_SPECIES: Record<
+  'pepo' | 'moschata' | 'maxima' | 'argyrosperma' | 'lagenaria',
+  string[]
+> = {
   pepo: [
     'zucchini-black-beauty',
     'summer-squash-yellow-crookneck',
@@ -56,10 +59,7 @@ export const CUCURBIT_SPECIES: Record<'pepo' | 'moschata' | 'maxima' | 'argyrosp
     'fairytale-pumpkin-film-coated-treated-seed',
     'squash-sunshine-standard-treated'
   ],
-  moschata: [
-    'butternut-squash-waltham',
-    'squash-butterkin-film-coated-farmore'
-  ],
+  moschata: ['butternut-squash-waltham', 'squash-butterkin-film-coated-farmore'],
   maxima: [
     'pumpkin-cinderella-film-coated-treated',
     'pumpkin-jarrahdale-film-coat-treated',
@@ -73,10 +73,9 @@ export const CUCURBIT_SPECIES: Record<'pepo' | 'moschata' | 'maxima' | 'argyrosp
 
 /** Reverse lookup — pluginId → species. */
 export function cucurbitSpeciesOf(pluginId: string): keyof typeof CUCURBIT_SPECIES | null {
-  for (const [species, ids] of Object.entries(CUCURBIT_SPECIES) as Array<[
-    keyof typeof CUCURBIT_SPECIES,
-    string[]
-  ]>) {
+  for (const [species, ids] of Object.entries(CUCURBIT_SPECIES) as Array<
+    [keyof typeof CUCURBIT_SPECIES, string[]]
+  >) {
     if (ids.includes(pluginId)) return species;
   }
   return null;

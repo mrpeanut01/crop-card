@@ -30,12 +30,19 @@ async function tryOpenFoodFacts(barcode: string) {
     if (!res.ok) return {};
     const data = await res.json();
     if (data.status !== 1 || !data.product) return {};
-    const name: string | undefined = data.product.product_name_en || data.product.product_name || undefined;
-    const tags: string[] = [...(data.product.categories_tags ?? []), ...(data.product.labels_tags ?? [])];
+    const name: string | undefined =
+      data.product.product_name_en || data.product.product_name || undefined;
+    const tags: string[] = [
+      ...(data.product.categories_tags ?? []),
+      ...(data.product.labels_tags ?? [])
+    ];
     const joined = tags.join(' ');
     let category: ScanResult['category'] | undefined;
     for (const [re, cat] of OFF_CATEGORY_MAP) {
-      if (re.test(joined)) { category = cat; break; }
+      if (re.test(joined)) {
+        category = cat;
+        break;
+      }
     }
     return { name, category };
   } catch {
@@ -51,21 +58,38 @@ export async function POST({ request }) {
 
   const existing = getStockItemByBarcode(barcode);
   if (existing) {
-    return json({ existingStockItemId: existing.id, found: true, barcode, source: 'none' } satisfies ScanResult);
+    return json({
+      existingStockItemId: existing.id,
+      found: true,
+      barcode,
+      source: 'none'
+    } satisfies ScanResult);
   }
 
   const off = await tryOpenFoodFacts(barcode);
   let result: Partial<ScanResult> = {};
 
   if (off.name && off.category) {
-    result = { found: true, displayName: off.name, category: off.category, source: 'openfoodfacts', guessed: [] };
+    result = {
+      found: true,
+      displayName: off.name,
+      category: off.category,
+      source: 'openfoodfacts',
+      guessed: []
+    };
   } else {
     try {
       result = await claudeTextLookup(barcode, off.name);
     } catch (e) {
       if (e instanceof AnthropicOverloadedError) {
         return json(
-          { found: false, source: 'none', message: e.message, retryable: true, barcode } satisfies ScanResult & { message: string; retryable: boolean },
+          {
+            found: false,
+            source: 'none',
+            message: e.message,
+            retryable: true,
+            barcode
+          } satisfies ScanResult & { message: string; retryable: boolean },
           { status: 503 }
         );
       }
@@ -90,7 +114,10 @@ export async function POST({ request }) {
   }
 
   if (result.found && result.category && result.suggestedType?.name) {
-    const match = findTaxonomyTermByName(inventoryDomain(result.category), result.suggestedType.name);
+    const match = findTaxonomyTermByName(
+      inventoryDomain(result.category),
+      result.suggestedType.name
+    );
     result.suggestedType = match
       ? { matchedTypeId: match.id, name: match.name, isNew: false }
       : { name: result.suggestedType.name, isNew: true };

@@ -307,7 +307,9 @@ export function buildGroupCandidacyMatrix(input: GroupPlanningInput): MatrixCand
     //    has a draft on this block, check if every member family also has
     //    a draft on this block. If yes, propose the group.
     for (const system of SYSTEMS) {
-      const anchorDrafts = drafts.filter((d) => familyOf(d, input.pluginIndex) === system.primaryFamily);
+      const anchorDrafts = drafts.filter(
+        (d) => familyOf(d, input.pluginIndex) === system.primaryFamily
+      );
       if (anchorDrafts.length === 0) continue;
       const memberCrops = system.members.map((m) => ({
         family: m.family,
@@ -318,10 +320,7 @@ export function buildGroupCandidacyMatrix(input: GroupPlanningInput): MatrixCand
 
       // For each viable anchor draft (typically one), produce a candidate.
       for (const anchor of anchorDrafts) {
-        const memberCropIds = [
-          anchor.id,
-          ...memberCrops.map((m) => m.draft!.id)
-        ];
+        const memberCropIds = [anchor.id, ...memberCrops.map((m) => m.draft!.id)];
         const window = computeAnchorWindow(anchor, memberCrops, input);
         if (!window) continue;
         out.push({
@@ -631,8 +630,7 @@ function computeUnscheduled(
       }
       return {
         cropId: d.id,
-        reason:
-          'No viable plan found; adjust soil-temp window or attach to a different block.',
+        reason: 'No viable plan found; adjust soil-temp window or attach to a different block.',
         kind: 'window-conflict' as const
       };
     });
@@ -704,9 +702,9 @@ function buildGroupPrompt(matrix: MatrixCandidate[], input: GroupPlanningInput):
     '- For multiple same-family same-block drafts (e.g., 7 cucurbit varieties on one block), schedule them as either:',
     '    (a) a SUCCESSION — stagger anchor dates by 7 days within the viable window, OR',
     '    (b) a SIMULTANEOUS mixed-cultivar planting — same date for all — when the window is too tight to stagger.',
-    '  Pick whichever fits the intersection of every variety\'s window. Cucurbits (≥120 DTM) usually go simultaneous; quick crops (lettuce/radish, ≤45 DTM) usually go succession.',
+    "  Pick whichever fits the intersection of every variety's window. Cucurbits (≥120 DTM) usually go simultaneous; quick crops (lettuce/radish, ≤45 DTM) usually go succession.",
     '- Prefer group plans (e.g., Three Sisters) over singletons when the group is available on a block.',
-    '- Anchor plant date MUST be within the candidate\'s window (earliest..latest).',
+    "- Anchor plant date MUST be within the candidate's window (earliest..latest).",
     '- Companion offsets are FIXED by the system definition — do not change them.',
     '- Plant dates should default to the recommended date unless soil/frost or stagger rationale says otherwise.',
     '',
@@ -730,7 +728,9 @@ function buildGroupPrompt(matrix: MatrixCandidate[], input: GroupPlanningInput):
     '  ]',
     '}',
     'No other top-level keys, no prose, no code fences. displacedDrafts may be an empty array.'
-  ].filter((line) => line !== '' || true).join('\n');
+  ]
+    .filter((line) => line !== '' || true)
+    .join('\n');
 }
 
 function isoDay(ms: number): string {
@@ -936,7 +936,11 @@ async function retryWithSemanticContext(
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
   const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
   let parsed: unknown = null;
-  try { parsed = JSON.parse(stripped); } catch { parsed = null; }
+  try {
+    parsed = JSON.parse(stripped);
+  } catch {
+    parsed = null;
+  }
   const meta = computeMeta(msg.usage, model);
   recordGroupsTelemetry(meta, durationMs, telemetry);
   appendGroupsTurn(telemetry.planningSessionId, correctionText, text, meta);
@@ -978,12 +982,13 @@ async function callClaude(
 }
 
 function computeMeta(rawUsage: unknown, model: string): AiResultMeta {
-  const usage = (rawUsage as {
-    input_tokens?: number;
-    cache_creation_input_tokens?: number;
-    cache_read_input_tokens?: number;
-    output_tokens?: number;
-  }) ?? {};
+  const usage =
+    (rawUsage as {
+      input_tokens?: number;
+      cache_creation_input_tokens?: number;
+      cache_read_input_tokens?: number;
+      output_tokens?: number;
+    }) ?? {};
   const choice = selectModel('groups');
   const meta: AiResultMeta = {
     model,

@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { BlockWithPlantings } from '$lib/db/blocks';
 import type { PlanInput } from '$lib/layout/engine';
-import {
-  buildAllocationPrompt,
-  buildCandidacyMatrix,
-  validateAiPlan
-} from './aiAllocation';
+import { buildAllocationPrompt, buildCandidacyMatrix, validateAiPlan } from './aiAllocation';
 
 function plugin(over: Partial<CropPlugin> & { pluginId: string }): CropPlugin {
   return {
@@ -24,7 +20,11 @@ function plugin(over: Partial<CropPlugin> & { pluginId: string }): CropPlugin {
   } as CropPlugin;
 }
 
-function block(id: string, acres = 0.5, sun: 'full' | 'partial' | 'shade' = 'full'): BlockWithPlantings {
+function block(
+  id: string,
+  acres = 0.5,
+  sun: 'full' | 'partial' | 'shade' = 'full'
+): BlockWithPlantings {
   return {
     id,
     name: id,

@@ -1,0 +1,20 @@
+{
+  "pluginId": "sweet-alyssum-stone-fruit-banker",
+  "type": "companion",
+  "displayName": "Sweet Alyssum + Stone Fruit (orchard floor banker plant)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "stone-fruit",
+  "goodWith": ["peach-redhaven", "peach-elberta", "cherry-bing-sweet", "cherry-rainier-sweet", "plum-stanley", "plum-methley", "apricot-moorpark"],
+  "badWith": [],
+  "benefit": "Sweet alyssum in orchard floor strips supports syrphid flies and parasitic wasps that suppress aphid colonies on stone fruit and host braconid wasps that attack oriental fruit moth larvae.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "orchard floor insectary",
+      "plantingOffsetDays": 0,
+      "title": "Alyssum strip on tree row centerline",
+      "body": "Direct-sow sweet alyssum in a 12 to 18 inch strip down the tree row centerline after bloom. Refresh seeding annually."
+    }
+  ]
+}

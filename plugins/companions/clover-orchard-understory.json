@@ -1,0 +1,25 @@
+{
+  "pluginId": "clover-orchard-understory",
+  "type": "companion",
+  "displayName": "Dutch White Clover + Orchard (understory N-fixer)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "orchard",
+  "goodWith": [
+    "apple-orchard",
+    "pear-bartlett",
+    "peach-redhaven",
+    "plum-stanley"
+  ],
+  "badWith": [],
+  "benefit": "Dutch white clover understory fixes 50 to 100 lb N per acre annually, supports orchard pollinators, and forms a low-growing sward that tolerates orchard floor traffic. Keep a 24 inch herbicide-free strip at each trunk to prevent vole damage.",
+  "members": [
+    {
+      "family": "cover-legume",
+      "role": "perennial n-fixer understory",
+      "plantingOffsetDays": 0,
+      "title": "Clover frost-seed into alley",
+      "body": "Frost-seed Dutch white clover into the orchard alley at 6 to 8 lb per acre in late winter. Mow 3 to 4 times per season to maintain a 4 to 6 inch height."
+    }
+  ]
+}

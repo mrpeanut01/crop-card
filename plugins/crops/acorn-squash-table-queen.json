@@ -1,7 +1,7 @@
 {
   "pluginId": "acorn-squash-table-queen",
   "type": "crop",
-  "displayName": "Acorn Squash \u2014 Table Queen",
+  "displayName": "Acorn Squash — Table Queen",
   "version": "1.0.0",
   "cropFamily": "cucurbit",
   "daysToMaturity": {
@@ -13,7 +13,7 @@
     "Dark green rind with tiny orange spot",
     "Hard rind"
   ],
-  "notes": "Bush-type winter squash; less aggressive vining than butternut. Cure briefly (3\u20135 d) only.",
+  "notes": "Bush-type winter squash; less aggressive vining than butternut. Cure briefly (3–5 d) only.",
   "plantingGuide": {
     "vineSpreadFt": {
       "min": 6,
@@ -31,7 +31,9 @@
       "offsetDaysMin": 30,
       "offsetDaysMax": 60,
       "title": "POST grass window (Clethodim)",
-      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon.",
+      "purpose": "post-emergent"
     }
-  ]
+  ],
+  "pluginSchemaVersion": "1.1"
 }

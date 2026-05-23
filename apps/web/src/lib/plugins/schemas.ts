@@ -1,6 +1,15 @@
 import { z } from 'zod';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 import { CHEMISTRY_CLASSES } from '$lib/safety/types';
+import { TASK_CATEGORY_VALUES } from '$lib/plan/taskCategory';
+
+/**
+ * Phase 21b follow-up — shared Zod schema for the task category enum.
+ * Used by preTask / postTask / seasonal task entries so the plugin
+ * registry rejects unknown values at registration time, and so the
+ * swim-lane pip + popover dropdown have an authoritative source.
+ */
+export const taskCategorySchema = z.enum(TASK_CATEGORY_VALUES);
 
 /**
  * Zod source-of-truth for plugin shapes. JSON Schemas in /schemas/ are
@@ -10,10 +19,25 @@ import { CHEMISTRY_CLASSES } from '$lib/safety/types';
 
 const pluginIdRegex = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
+/**
+ * Plugin schema major.minor. Phase 21 (B-25) shipped the optional v1.1
+ * fields — `complianceFlags`, sprayWindow `purpose` + `*Gate` tags,
+ * `cropOperationModel`, `hayOperations`, `zadoksStages`, `moistureGates`.
+ * Authors should set `pluginSchemaVersion: '1.1'` when they populate any
+ * of these; back-compat is preserved (a v1.0 plugin without the flag is
+ * still valid because every v1.1 field is optional).
+ */
+export const PLUGIN_SCHEMA_VERSION = '1.1' as const;
+
 const pluginBase = z.object({
   pluginId: z.string().regex(pluginIdRegex, 'pluginId must be kebab-case ≤64 chars'),
   displayName: z.string().min(1).max(120),
-  version: z.string().min(1)
+  version: z.string().min(1),
+  /** Plugin author's declared schema version. Optional for back-compat —
+   *  absent is treated as '1.0'. Used by tooling (e.g., the migration
+   *  script that backfills v1.1 fields) to know which plugins have been
+   *  upgraded. Not consumed by the safety kernel. */
+  pluginSchemaVersion: z.enum(['1.0', '1.1']).optional()
 });
 
 /** Spacing guide values, surfaced inside the planting task view (FR-13). */
@@ -191,7 +215,10 @@ export const growthStageTableSchema = z
       .array(growthStageSchema)
       .min(1)
       .refine(
-        (arr) => arr.every((s, i, a) => i === 0 || s.daysFromPlanting.min >= a[i - 1].daysFromPlanting.min),
+        (arr) =>
+          arr.every(
+            (s, i, a) => i === 0 || s.daysFromPlanting.min >= a[i - 1].daysFromPlanting.min
+          ),
         'stages must be ordered by daysFromPlanting.min ascending'
       ),
     harvestTargets: z.array(harvestTargetSchema).min(1)
@@ -228,7 +255,9 @@ export const orchardSeasonalTaskSchema = z.object({
   dayOfYear: z.number().int().min(1).max(366),
   windowDays: z.number().int().min(1).max(60).default(7),
   title: z.string().min(1),
-  body: z.string().optional()
+  body: z.string().optional(),
+  /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
+  category: taskCategorySchema.optional()
 });
 
 /**
@@ -257,7 +286,9 @@ export const seasonalTaskSchema = z
     daysAfterPlanting: z.number().int().min(0).max(3650).optional(),
     windowDays: z.number().int().min(1).max(120).default(7),
     title: z.string().min(1),
-    body: z.string().optional()
+    body: z.string().optional(),
+    /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
+    category: taskCategorySchema.optional()
   })
   .refine((v) => v.dayOfYear !== undefined || v.daysAfterPlanting !== undefined, {
     message: 'seasonalTask requires either dayOfYear or daysAfterPlanting'
@@ -421,7 +452,9 @@ export const cropPluginSchema = pluginBase.extend({
         daysBeforePlant: z.number().int().nonnegative().optional(),
         daysBeforeFirstHarvest: z.number().int().nonnegative().optional(),
         phaseKey: z.string().min(1).max(80).optional(),
-        daysBeforePhase: z.number().int().nonnegative().optional()
+        daysBeforePhase: z.number().int().nonnegative().optional(),
+        /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
+        category: taskCategorySchema.optional()
       })
     )
     .optional(),
@@ -435,7 +468,9 @@ export const cropPluginSchema = pluginBase.extend({
         daysAfterPlant: z.number().int().nonnegative().optional(),
         daysAfterHarvest: z.number().int().nonnegative().optional(),
         phaseKey: z.string().min(1).max(80).optional(),
-        daysAfterPhase: z.number().int().nonnegative().optional()
+        daysAfterPhase: z.number().int().nonnegative().optional(),
+        /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
+        category: taskCategorySchema.optional()
       })
     )
     .optional(),
@@ -568,7 +603,7 @@ export const herbicidePluginSchema = pluginBase.extend({
     unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
   }),
   /** GPA the dilutionTable values are calibrated for (default 15 per FR-02). */
-  gpaCalibration: z.number().int().positive().default(15),
+  gpaCalibration: z.number().int().nonnegative().default(15),
   dilutionTable: dilutionTableSchema.optional(),
   acresPerTank: z.record(z.string().regex(/^\d+gal$/), z.number().positive()).optional(),
   requiresAMS: z.boolean().optional(),
@@ -666,7 +701,7 @@ export const insecticidePluginSchema = pluginBase.extend({
       unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
     })
     .optional(),
-  gpaCalibration: z.number().int().positive().default(15).optional(),
+  gpaCalibration: z.number().int().nonnegative().default(15).optional(),
   dilutionTable: dilutionTableSchema.optional(),
   targetPests: z.array(z.string().min(1)).optional(),
   pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),
@@ -701,8 +736,8 @@ const fungicideIngredientSchema = z.object({
   fracCode: z
     .string()
     .regex(
-      /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|\d{1,3})$/,
-      'fracCode must look like M03, P01, U06, BM01, or a number'
+      /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|NC|\d{1,3})$/,
+      'fracCode must look like M03, P01, U06, BM01, NC, or a number'
     )
 });
 
@@ -716,7 +751,7 @@ export const fungicidePluginSchema = pluginBase.extend({
     amount: z.number().positive(),
     unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
   }),
-  gpaCalibration: z.number().int().positive().default(15),
+  gpaCalibration: z.number().int().nonnegative().default(15),
   dilutionTable: dilutionTableSchema.optional(),
   reEntryIntervalHours: z.number().int().nonnegative(),
   preHarvestIntervalDays: z.number().int().nonnegative(),
@@ -761,7 +796,7 @@ export const fertilizerPluginSchema = pluginBase.extend({
     .object({
       min: z.number().positive(),
       max: z.number().positive(),
-      unit: z.enum(['lb-per-acre', 'gal-per-acre', 'ton-per-acre'])
+      unit: z.enum(['lb-per-acre', 'gal-per-acre', 'ton-per-acre', 'qt-per-acre', 'fl-oz-per-acre'])
     })
     .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
     .optional(),
@@ -791,8 +826,13 @@ export const companionSystemMemberSchema = z.object({
   family: z.enum(CROP_FAMILIES),
   /** Free-form role label surfaced in the suggestion UI ("trellis", "ground-cover"). */
   role: z.string().min(1).max(80),
-  /** Days after the primary planting when this member should go in. */
-  plantingOffsetDays: z.number().int().nonnegative().max(365),
+  /** Days from the primary planting when this member should go in.
+   *  Positive = AFTER the anchor (e.g. squash +35d when corn is up).
+   *  Negative = BEFORE the anchor (e.g. alyssum -14d so hoverflies
+   *    are established when lettuce transplants in; banker plants
+   *    seeded weeks before the cash crop). The engine emits the
+   *    member's plant-by-this-date task either way. */
+  plantingOffsetDays: z.number().int().min(-365).max(365),
   /** Optional title override for the engine's companion-trigger event. */
   title: z.string().min(1).max(120).optional(),
   /** Optional body override. */

@@ -3,9 +3,23 @@
   "type": "fertilizer",
   "displayName": "Kelp Meal (1-0-2, OMRI)",
   "version": "1.0.0",
-  "analysis": { "n": 1, "p": 0, "k": 2 },
+  "analysis": {
+    "n": 1,
+    "p": 0,
+    "k": 2
+  },
   "form": "meal",
   "organic": true,
-  "applicationRange": { "min": 100, "max": 400, "unit": "lb-per-acre" },
-  "notes": "Mineral + plant-hormone amendment. Macro-nutrient value low; valued for trace elements + alginic acid soil structure benefit."
+  "applicationRange": {
+    "min": 100,
+    "max": 400,
+    "unit": "lb-per-acre"
+  },
+  "notes": "Mineral + plant-hormone amendment. Macro-nutrient value low; valued for trace elements + alginic acid soil structure benefit.",
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": true
+  },
+  "pluginSchemaVersion": "1.1"
 }

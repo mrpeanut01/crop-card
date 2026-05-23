@@ -31,12 +31,35 @@
 
   let { data }: { data: InventoryViewData } = $props();
 
-  type Category = 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'seed' | 'adjuvant' | 'fuel' | 'part';
-  const allCategories: Category[] = ['herbicide','insecticide','fungicide','fertilizer','seed','adjuvant','fuel','part'];
+  type Category =
+    | 'herbicide'
+    | 'insecticide'
+    | 'fungicide'
+    | 'fertilizer'
+    | 'seed'
+    | 'adjuvant'
+    | 'fuel'
+    | 'part';
+  const allCategories: Category[] = [
+    'herbicide',
+    'insecticide',
+    'fungicide',
+    'fertilizer',
+    'seed',
+    'adjuvant',
+    'fuel',
+    'part'
+  ];
 
   const CATEGORY_ICON: Record<Category, string> = {
-    seed: '🌱', herbicide: '🧪', insecticide: '🐛', fungicide: '🍄',
-    fertilizer: '🌿', adjuvant: '💧', fuel: '⛽', part: '🔧'
+    seed: '🌱',
+    herbicide: '🧪',
+    insecticide: '🐛',
+    fungicide: '🍄',
+    fertilizer: '🌿',
+    adjuvant: '💧',
+    fuel: '⛽',
+    part: '🔧'
   };
 
   /** Icon per taxonomy Type name. Mirrors the FAMILY_ICON in CropPalette
@@ -84,15 +107,19 @@
 
   function toggleCategory(cat: string) {
     const next = new Set(openCategories);
-    if (next.has(cat)) next.delete(cat); else next.add(cat);
+    if (next.has(cat)) next.delete(cat);
+    else next.add(cat);
     openCategories = next;
   }
 
-  function isSubcatOpen(key: string) { return !closedSubcats.has(key); }
+  function isSubcatOpen(key: string) {
+    return !closedSubcats.has(key);
+  }
 
   function toggleSubcat(key: string) {
     const next = new Set(closedSubcats);
-    if (next.has(key)) next.delete(key); else next.add(key);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
     closedSubcats = next;
   }
 
@@ -123,7 +150,9 @@
 
   const searchFiltered = $derived(
     searchQuery.trim()
-      ? data.items.filter((i) => i.displayName.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+      ? data.items.filter((i) =>
+          i.displayName.toLowerCase().includes(searchQuery.trim().toLowerCase())
+        )
       : data.items
   );
 
@@ -131,7 +160,7 @@
     return searchFiltered.filter((i) => i.category === cat);
   }
 
-  function itemSubtitle(item: typeof data.items[0]): string {
+  function itemSubtitle(item: (typeof data.items)[0]): string {
     if (item.category === 'seed' && item.metadataJson) {
       try {
         const m = JSON.parse(item.metadataJson);
@@ -139,7 +168,9 @@
         if (m.daysToMaturity) parts.push(`${m.daysToMaturity} DTM`);
         if (m.sunRequirement) parts.push((m.sunRequirement as string).replace(/-/g, ' '));
         return parts.join(' · ');
-      } catch { /* fall through */ }
+      } catch {
+        /* fall through */
+      }
     }
     return item.notes ? item.notes.slice(0, 60) : '';
   }
@@ -148,7 +179,9 @@
   let scannerOpen = $state(false);
   let labelCaptureOpen = $state(false);
   let scanLoading = $state(false);
-  let scanSource = $state<'openfoodfacts' | 'claude' | 'claude-vision' | 'claude-url' | 'none' | null>(null);
+  let scanSource = $state<
+    'openfoodfacts' | 'claude' | 'claude-vision' | 'claude-url' | 'none' | null
+  >(null);
   let urlPromptOpen = $state(false);
   let urlInput = $state('');
   let scanError = $state<string | null>(null);
@@ -164,7 +197,9 @@
   let activeIngredientsCleared = $state(false);
   let formulationCleared = $state(false);
 
-  function isGuessed(field: string) { return guessedFields.has(field); }
+  function isGuessed(field: string) {
+    return guessedFields.has(field);
+  }
 
   function hasScannedFormulationData(): boolean {
     return (scannedActiveIngredients?.length ?? 0) > 0 || scannedFormulation !== null;
@@ -191,8 +226,8 @@
     }
     // Package quantity from the label drives Initial qty. Fall back to
     // seedsPerPacket for seeds when packageQuantity wasn't read directly.
-    const pkgQty = (result.packageQuantity as number | undefined)
-      ?? (m?.seedsPerPacket as number | undefined);
+    const pkgQty =
+      (result.packageQuantity as number | undefined) ?? (m?.seedsPerPacket as number | undefined);
     if (pkgQty != null && pkgQty > 0) newInitialQty = pkgQty;
     // Phase 17 (Track 2) — capture AI-extracted formulation data; surface
     // a read-only summary in the form (block below) and persist to the
@@ -205,7 +240,11 @@
         ? (result.formulation as Record<string, unknown>)
         : null;
     guessedFields = new Set(Array.isArray(result.guessed) ? (result.guessed as string[]) : []);
-    const matches = (result.cropPluginMatches ?? []) as Array<{ pluginId: string; displayName: string; score: number }>;
+    const matches = (result.cropPluginMatches ?? []) as Array<{
+      pluginId: string;
+      displayName: string;
+      score: number;
+    }>;
     cropPluginMatches = matches;
     // Only auto-link when the top match is high confidence. Below that, show
     // the suggestion dropdown but let the user pick — fuzzy token overlap
@@ -219,7 +258,9 @@
       : undefined;
     const linkedFamily = linked?.meta?.cropFamily as string | undefined;
     const familyTypeName = linkedFamily ? CROP_FAMILY_TO_TYPE_NAME[linkedFamily] : undefined;
-    const sugg = result.suggestedType as { name?: string; isNew?: boolean; matchedTypeId?: string } | undefined;
+    const sugg = result.suggestedType as
+      | { name?: string; isNew?: boolean; matchedTypeId?: string }
+      | undefined;
     if (familyTypeName) {
       newTypeName = familyTypeName;
     } else if (sugg?.name) {
@@ -242,13 +283,17 @@
         body: JSON.stringify({ barcode: rawValue })
       });
       const result = await res.json();
-      if (!res.ok) { scanError = result.message ?? `Lookup failed (${res.status})`; return; }
+      if (!res.ok) {
+        scanError = result.message ?? `Lookup failed (${res.status})`;
+        return;
+      }
       if (result.existingStockItemId) {
         if (handleExistingMatch(result.existingStockItemId)) return;
       }
       newBarcode = rawValue;
       applyScanResult(result);
-      if (!result.found) scanError = 'Barcode not found — try "✨ Scan label" to read the packaging.';
+      if (!result.found)
+        scanError = 'Barcode not found — try "✨ Scan label" to read the packaging.';
     } catch (e) {
       scanError = e instanceof Error ? e.message : 'Scan lookup failed';
     } finally {
@@ -267,8 +312,14 @@
         body: JSON.stringify({ image: base64jpeg, barcode: newBarcode || undefined })
       });
       const result = await res.json();
-      if (!res.ok) { scanError = result.message ?? `Label read failed (${res.status})`; return; }
-      if (!result.found) { scanError = 'Could not read the label clearly — try again with better lighting.'; return; }
+      if (!res.ok) {
+        scanError = result.message ?? `Label read failed (${res.status})`;
+        return;
+      }
+      if (!result.found) {
+        scanError = 'Could not read the label clearly — try again with better lighting.';
+        return;
+      }
       if (result.existingStockItemId) {
         if (handleExistingMatch(result.existingStockItemId)) return;
       }
@@ -293,8 +344,14 @@
         body: JSON.stringify({ url })
       });
       const result = await res.json();
-      if (!res.ok) { scanError = result.message ?? `URL read failed (${res.status})`; return; }
-      if (!result.found) { scanError = result.message ?? 'Could not extract product info from that page.'; return; }
+      if (!res.ok) {
+        scanError = result.message ?? `URL read failed (${res.status})`;
+        return;
+      }
+      if (!result.found) {
+        scanError = result.message ?? 'Could not extract product info from that page.';
+        return;
+      }
       if (result.existingStockItemId) {
         if (handleExistingMatch(result.existingStockItemId)) return;
       }
@@ -316,9 +373,9 @@
     if (!existing) return false;
     const ok = confirm(
       `You already have "${existing.displayName}" in inventory ` +
-      `(${existing.onHand} ${existing.defaultUnit} on hand).\n\n` +
-      `OK = open it and add stock\n` +
-      `Cancel = keep filling out a new entry`
+        `(${existing.onHand} ${existing.defaultUnit} on hand).\n\n` +
+        `OK = open it and add stock\n` +
+        `Cancel = keep filling out a new entry`
     );
     if (!ok) return false;
     modalMode = null;
@@ -330,7 +387,7 @@
   // ─── Modal state ─────────────────────────────────────────────────────────
   type ModalMode = 'add' | 'edit' | null;
   let modalMode = $state<ModalMode>(null);
-  let editTarget = $state<typeof data.items[0] | null>(null);
+  let editTarget = $state<(typeof data.items)[0] | null>(null);
 
   // Phase 17 follow-up — deep-link handler. When the page is opened with
   // ?review=<itemId> (e.g., from the Settings → Pending AI Refresh
@@ -417,7 +474,9 @@
   let recentlyRefreshedCitations = $state<Record<string, { url: string; title?: string }>>({});
   let creating = $state(false);
   let createError = $state<string | null>(null);
-  let cropPluginMatches = $state<Array<{ pluginId: string; displayName: string; score: number }>>([]);
+  let cropPluginMatches = $state<Array<{ pluginId: string; displayName: string; score: number }>>(
+    []
+  );
   let catalogFields = $state(new Set<string>());
 
   const isSeed = $derived(newCategory === 'seed');
@@ -434,21 +493,21 @@
   // selected) so the Planter setup card updates immediately, not only
   // after Save + reload.
   const editPlateConfig = $derived<PlateConfig | null>(
-    newPlanterPlateConfig
-      ? (newPlanterPlateConfig as unknown as PlateConfig)
-      : null
+    newPlanterPlateConfig ? (newPlanterPlateConfig as unknown as PlateConfig) : null
   );
   const editSeedDimsMm = $derived(newSeedDimensionsMm ?? null);
 
-  type CatalogPlugin = typeof data.catalogPlugins[0];
+  type CatalogPlugin = (typeof data.catalogPlugins)[0];
   const linkedPlugin = $derived<CatalogPlugin | null>(
-    newPluginId ? data.catalogPlugins.find((p) => p.pluginId === newPluginId) ?? null : null
+    newPluginId ? (data.catalogPlugins.find((p) => p.pluginId === newPluginId) ?? null) : null
   );
   const catalogSuggestions = $derived(
     data.catalogPlugins.filter((p) => p.category === newCategory)
   );
 
-  function isCatalogField(field: string) { return catalogFields.has(field); }
+  function isCatalogField(field: string) {
+    return catalogFields.has(field);
+  }
 
   /** Drop a field from the catalog-source list — invoked from each input's
    *  `oninput` handler. Once the operator types into a field OR an AI
@@ -464,10 +523,22 @@
   function applyCatalogMeta(p: CatalogPlugin) {
     const m = p.meta as Record<string, unknown>;
     const filled = new Set<string>();
-    if (m.daysToMaturity != null) { newDtm = m.daysToMaturity as number; filled.add('daysToMaturity'); }
-    if (m.plantingTempMinF != null) { newTempMin = m.plantingTempMinF as number; filled.add('plantingTempMinF'); }
-    if (m.spacingInches != null) { newSpacing = m.spacingInches as number; filled.add('spacingInches'); }
-    if (m.depthInches != null) { newDepth = m.depthInches as number; filled.add('depthInches'); }
+    if (m.daysToMaturity != null) {
+      newDtm = m.daysToMaturity as number;
+      filled.add('daysToMaturity');
+    }
+    if (m.plantingTempMinF != null) {
+      newTempMin = m.plantingTempMinF as number;
+      filled.add('plantingTempMinF');
+    }
+    if (m.spacingInches != null) {
+      newSpacing = m.spacingInches as number;
+      filled.add('spacingInches');
+    }
+    if (m.depthInches != null) {
+      newDepth = m.depthInches as number;
+      filled.add('depthInches');
+    }
     catalogFields = filled;
   }
 
@@ -506,7 +577,10 @@
 
   function onProductNameInput() {
     const trimmed = newDisplayName.trim().toLowerCase();
-    if (!trimmed) { unlinkCatalog(); return; }
+    if (!trimmed) {
+      unlinkCatalog();
+      return;
+    }
     const match = data.catalogPlugins.find(
       (p) => p.category === newCategory && p.displayName.toLowerCase() === trimmed
     );
@@ -519,21 +593,42 @@
   }
 
   function resetForm() {
-    newDisplayName = ''; newShortName = ''; newPluginId = ''; newBarcode = ''; newNotes = '';
-    enableReorder = false; newReorder = 2; newInitialQty = '';
-    newTypeName = ''; pendingNewTypeName = null;
-    newDtm = undefined; newTempMin = undefined; newTempMax = undefined;
-    newSpacing = undefined; newDepth = undefined; newSun = ''; newSeedsPerPacket = undefined;
+    newDisplayName = '';
+    newShortName = '';
+    newPluginId = '';
+    newBarcode = '';
+    newNotes = '';
+    enableReorder = false;
+    newReorder = 2;
+    newInitialQty = '';
+    newTypeName = '';
+    pendingNewTypeName = null;
+    newDtm = undefined;
+    newTempMin = undefined;
+    newTempMax = undefined;
+    newSpacing = undefined;
+    newDepth = undefined;
+    newSun = '';
+    newSeedsPerPacket = undefined;
     newMatureHeight = undefined;
-    newSeedDimensionsMm = undefined; newSeedShape = undefined;
-    newPlanterPlateConfig = undefined; newMetadataExtras = {};
-    scanSource = null; cropPluginMatches = []; guessedFields = new Set(); catalogFields = new Set();
-    scannedActiveIngredients = null; scannedFormulation = null;
-    activeIngredientsCleared = false; formulationCleared = false;
+    newSeedDimensionsMm = undefined;
+    newSeedShape = undefined;
+    newPlanterPlateConfig = undefined;
+    newMetadataExtras = {};
+    scanSource = null;
+    cropPluginMatches = [];
+    guessedFields = new Set();
+    catalogFields = new Set();
+    scannedActiveIngredients = null;
+    scannedFormulation = null;
+    activeIngredientsCleared = false;
+    formulationCleared = false;
     recentlyRefreshedFields = new Set();
     recentlyRefreshedCitations = {};
-    scanError = null; createError = null;
-    urlPromptOpen = false; urlInput = '';
+    scanError = null;
+    createError = null;
+    urlPromptOpen = false;
+    urlInput = '';
   }
 
   function openAdd(category: Category) {
@@ -543,7 +638,7 @@
     modalMode = 'add';
   }
 
-  function openEdit(item: typeof data.items[0]) {
+  function openEdit(item: (typeof data.items)[0]) {
     resetForm();
     editTarget = item;
     newCategory = item.category as Category;
@@ -573,30 +668,50 @@
         newMatureHeight = typeof m.matureHeightFt === 'number' ? m.matureHeightFt : undefined;
         // Phase 41 — load planter-plate sibling keys into their own state
         // vars so apply/save can round-trip them.
-        if (m.seedDimensionsMm && typeof m.seedDimensionsMm === 'object'
-          && typeof m.seedDimensionsMm.L === 'number'
-          && typeof m.seedDimensionsMm.D === 'number'
-          && typeof m.seedDimensionsMm.T === 'number') {
-          newSeedDimensionsMm = { L: m.seedDimensionsMm.L, D: m.seedDimensionsMm.D, T: m.seedDimensionsMm.T };
+        if (
+          m.seedDimensionsMm &&
+          typeof m.seedDimensionsMm === 'object' &&
+          typeof m.seedDimensionsMm.L === 'number' &&
+          typeof m.seedDimensionsMm.D === 'number' &&
+          typeof m.seedDimensionsMm.T === 'number'
+        ) {
+          newSeedDimensionsMm = {
+            L: m.seedDimensionsMm.L,
+            D: m.seedDimensionsMm.D,
+            T: m.seedDimensionsMm.T
+          };
         }
         if (m.seedShape === 'Round' || m.seedShape === 'Flat') newSeedShape = m.seedShape;
-        if (m.planterPlateConfig && typeof m.planterPlateConfig === 'object'
-          && typeof m.planterPlateConfig.plateNumber === 'string') {
+        if (
+          m.planterPlateConfig &&
+          typeof m.planterPlateConfig === 'object' &&
+          typeof m.planterPlateConfig.plateNumber === 'string'
+        ) {
           newPlanterPlateConfig = m.planterPlateConfig as Record<string, unknown>;
         }
         // Preserve any unrecognized top-level keys so future fields
         // don't get dropped by an older modal session.
         const known = new Set([
-          'daysToMaturity', 'plantingTempMinF', 'plantingTempMaxF',
-          'spacingInches', 'depthInches', 'sunRequirement', 'seedsPerPacket',
-          'matureHeightFt', 'seedDimensionsMm', 'seedShape', 'planterPlateConfig'
+          'daysToMaturity',
+          'plantingTempMinF',
+          'plantingTempMaxF',
+          'spacingInches',
+          'depthInches',
+          'sunRequirement',
+          'seedsPerPacket',
+          'matureHeightFt',
+          'seedDimensionsMm',
+          'seedShape',
+          'planterPlateConfig'
         ]);
         const extras: Record<string, unknown> = {};
         for (const k of Object.keys(m)) {
           if (!known.has(k)) extras[k] = m[k];
         }
         newMetadataExtras = extras;
-      } catch { /* ignore malformed JSON */ }
+      } catch {
+        /* ignore malformed JSON */
+      }
     }
     // Phase 17 (Track 2 + AI Refresh) — load existing AI-extracted formulation
     // data into the same state vars the summary card reads, so opening an
@@ -606,13 +721,17 @@
       try {
         const a = JSON.parse(item.activeIngredientsJson);
         if (Array.isArray(a)) scannedActiveIngredients = a;
-      } catch { /* ignore malformed JSON */ }
+      } catch {
+        /* ignore malformed JSON */
+      }
     }
     if (item.formulationJson) {
       try {
         const f = JSON.parse(item.formulationJson);
         if (f && typeof f === 'object') scannedFormulation = f as Record<string, unknown>;
-      } catch { /* ignore malformed JSON */ }
+      } catch {
+        /* ignore malformed JSON */
+      }
     }
     // Phase 17 follow-up — restore any pending AI Refresh suggestion that
     // was captured on a prior session (per-item or bulk from Settings).
@@ -629,7 +748,9 @@
           }
           refreshAiAccept = accept;
         }
-      } catch { /* ignore malformed JSON */ }
+      } catch {
+        /* ignore malformed JSON */
+      }
     }
     modalAddQty = 1;
     modalAddStockOpen = false;
@@ -643,25 +764,25 @@
   // Map default seed Type names → cropFamily enum required by the plugin
   // schema. Used to gate the "Save to catalog" prompt.
   const TYPE_NAME_TO_CROP_FAMILY: Record<string, string> = {
-    'Corn': 'corn',
-    'Cucurbits': 'cucurbit',
-    'Legumes': 'legume',
+    Corn: 'corn',
+    Cucurbits: 'cucurbit',
+    Legumes: 'legume',
     'Broadleaf companion': 'broadleaf-companion',
-    'Orchard': 'orchard',
+    Orchard: 'orchard',
     'Cover crop — grass': 'cover-grass',
     'Cover crop — legume': 'cover-legume',
-    'Solanaceae': 'solanaceae',
-    'Brassicas': 'brassica',
-    'Alliums': 'allium',
+    Solanaceae: 'solanaceae',
+    Brassicas: 'brassica',
+    Alliums: 'allium',
     'Leafy greens': 'leafy-green',
     'Root crops': 'root',
-    'Apiaceae': 'apiaceae',
+    Apiaceae: 'apiaceae',
     'Small fruit': 'small-fruit',
-    'Brambles': 'bramble',
+    Brambles: 'bramble',
     'Vine fruit': 'vine-fruit',
     'Stone fruit': 'stone-fruit',
     'Cereal grain': 'cereal-grain',
-    'Forage': 'forage',
+    Forage: 'forage',
     'Culinary herbs': 'herb-culinary'
   };
 
@@ -736,9 +857,9 @@
       if (dup) {
         const ok = confirm(
           `"${dup.displayName}" is already in your inventory ` +
-          `(${dup.onHand} ${dup.defaultUnit} on hand).\n\n` +
-          `OK = open it and add stock\n` +
-          `Cancel = create a separate entry anyway`
+            `(${dup.onHand} ${dup.defaultUnit} on hand).\n\n` +
+            `OK = open it and add stock\n` +
+            `Cancel = create a separate entry anyway`
         );
         if (ok) {
           modalMode = null;
@@ -748,23 +869,33 @@
         }
       }
     }
-    creating = true; createError = null;
+    creating = true;
+    createError = null;
     try {
       const typeRes = await resolveTypeId();
-      if (!typeRes.ok) { creating = false; return; }
-      const seedMeta = isSeed ? {
-        // Preserved unknown keys first, then form-controlled scalars,
-        // then the planter-plate sibling keys. Object-spread order ensures
-        // form scalars win on collision while extras don't get dropped.
-        ...newMetadataExtras,
-        daysToMaturity: newDtm, plantingTempMinF: newTempMin, plantingTempMaxF: newTempMax,
-        spacingInches: newSpacing, depthInches: newDepth,
-        sunRequirement: newSun || undefined, seedsPerPacket: newSeedsPerPacket,
-        matureHeightFt: newMatureHeight,
-        seedDimensionsMm: newSeedDimensionsMm,
-        seedShape: newSeedShape,
-        planterPlateConfig: newPlanterPlateConfig
-      } : undefined;
+      if (!typeRes.ok) {
+        creating = false;
+        return;
+      }
+      const seedMeta = isSeed
+        ? {
+            // Preserved unknown keys first, then form-controlled scalars,
+            // then the planter-plate sibling keys. Object-spread order ensures
+            // form scalars win on collision while extras don't get dropped.
+            ...newMetadataExtras,
+            daysToMaturity: newDtm,
+            plantingTempMinF: newTempMin,
+            plantingTempMaxF: newTempMax,
+            spacingInches: newSpacing,
+            depthInches: newDepth,
+            sunRequirement: newSun || undefined,
+            seedsPerPacket: newSeedsPerPacket,
+            matureHeightFt: newMatureHeight,
+            seedDimensionsMm: newSeedDimensionsMm,
+            seedShape: newSeedShape,
+            planterPlateConfig: newPlanterPlateConfig
+          }
+        : undefined;
       // Phase 17 (Track 2) — only persist scanned formulation data on
       // chem + fertilizer categories; for seeds and parts these fields
       // are meaningless and would just bloat the row.
@@ -773,22 +904,25 @@
         newCategory === 'insecticide' ||
         newCategory === 'fungicide' ||
         newCategory === 'fertilizer';
-      const aiJson = persistFormulation && (scannedActiveIngredients?.length ?? 0) > 0
-        ? JSON.stringify(scannedActiveIngredients)
-        : undefined;
-      const formJson = persistFormulation && scannedFormulation
-        ? JSON.stringify(scannedFormulation)
-        : undefined;
+      const aiJson =
+        persistFormulation && (scannedActiveIngredients?.length ?? 0) > 0
+          ? JSON.stringify(scannedActiveIngredients)
+          : undefined;
+      const formJson =
+        persistFormulation && scannedFormulation ? JSON.stringify(scannedFormulation) : undefined;
 
       const res = await fetch('/api/stock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          category: newCategory, displayName: newDisplayName.trim(),
+          category: newCategory,
+          displayName: newDisplayName.trim(),
           shortName: newShortName.trim() || undefined,
           defaultUnit: newDefaultUnit,
-          pluginId: newPluginId || undefined, reorderThreshold: enableReorder ? newReorder : undefined,
-          notes: newNotes || undefined, barcode: newBarcode || undefined,
+          pluginId: newPluginId || undefined,
+          reorderThreshold: enableReorder ? newReorder : undefined,
+          notes: newNotes || undefined,
+          barcode: newBarcode || undefined,
           typeId: typeRes.typeId || undefined,
           metadataJson: seedMeta ? JSON.stringify(seedMeta) : undefined,
           activeIngredientsJson: aiJson,
@@ -796,7 +930,10 @@
         })
       });
       const out = await res.json();
-      if (!res.ok) { createError = out.error ?? `HTTP ${res.status}`; return; }
+      if (!res.ok) {
+        createError = out.error ?? `HTTP ${res.status}`;
+        return;
+      }
       const newId = out.item.id as string;
       const initialQty = Number(newInitialQty);
       if (!isNaN(initialQty) && initialQty > 0) {
@@ -826,28 +963,40 @@
       }
     } catch (e) {
       createError = e instanceof Error ? e.message : String(e);
-    } finally { creating = false; }
+    } finally {
+      creating = false;
+    }
   }
 
   async function saveEdit() {
     if (!editTarget || !newDisplayName.trim()) return;
-    creating = true; createError = null;
+    creating = true;
+    createError = null;
     try {
       const typeRes = await resolveTypeId();
-      if (!typeRes.ok) { creating = false; return; }
-      const seedMeta = isSeed ? {
-        // Preserved unknown keys first, then form-controlled scalars,
-        // then the planter-plate sibling keys. Object-spread order ensures
-        // form scalars win on collision while extras don't get dropped.
-        ...newMetadataExtras,
-        daysToMaturity: newDtm, plantingTempMinF: newTempMin, plantingTempMaxF: newTempMax,
-        spacingInches: newSpacing, depthInches: newDepth,
-        sunRequirement: newSun || undefined, seedsPerPacket: newSeedsPerPacket,
-        matureHeightFt: newMatureHeight,
-        seedDimensionsMm: newSeedDimensionsMm,
-        seedShape: newSeedShape,
-        planterPlateConfig: newPlanterPlateConfig
-      } : undefined;
+      if (!typeRes.ok) {
+        creating = false;
+        return;
+      }
+      const seedMeta = isSeed
+        ? {
+            // Preserved unknown keys first, then form-controlled scalars,
+            // then the planter-plate sibling keys. Object-spread order ensures
+            // form scalars win on collision while extras don't get dropped.
+            ...newMetadataExtras,
+            daysToMaturity: newDtm,
+            plantingTempMinF: newTempMin,
+            plantingTempMaxF: newTempMax,
+            spacingInches: newSpacing,
+            depthInches: newDepth,
+            sunRequirement: newSun || undefined,
+            seedsPerPacket: newSeedsPerPacket,
+            matureHeightFt: newMatureHeight,
+            seedDimensionsMm: newSeedDimensionsMm,
+            seedShape: newSeedShape,
+            planterPlateConfig: newPlanterPlateConfig
+          }
+        : undefined;
       // Phase 17 (Track 2 + AI Refresh) — chem + fertilizer items can carry
       // formulation JSON captured by either the original label scan or a
       // subsequent AI Refresh from the edit modal.
@@ -881,9 +1030,12 @@
         body: JSON.stringify({
           displayName: newDisplayName.trim(),
           shortName: newShortName.trim() ? newShortName.trim() : null,
-          category: newCategory, defaultUnit: newDefaultUnit,
-          pluginId: newPluginId || null, reorderThreshold: enableReorder ? newReorder : null,
-          notes: newNotes || undefined, barcode: newBarcode || undefined,
+          category: newCategory,
+          defaultUnit: newDefaultUnit,
+          pluginId: newPluginId || null,
+          reorderThreshold: enableReorder ? newReorder : null,
+          notes: newNotes || undefined,
+          barcode: newBarcode || undefined,
           typeId: typeRes.typeId,
           metadataJson: seedMeta ? JSON.stringify(seedMeta) : undefined,
           activeIngredientsJson: aiJson,
@@ -891,22 +1043,30 @@
         })
       });
       const out = await res.json();
-      if (!res.ok) { createError = out.error ?? `HTTP ${res.status}`; return; }
+      if (!res.ok) {
+        createError = out.error ?? `HTTP ${res.status}`;
+        return;
+      }
       modalMode = null;
       await invalidateAll();
     } catch (e) {
       createError = e instanceof Error ? e.message : String(e);
-    } finally { creating = false; }
+    } finally {
+      creating = false;
+    }
   }
 
   async function deleteCurrentItem() {
     if (!editTarget) return;
-    const msg = editTarget.lotCount > 0
-      ? `Delete "${editTarget.displayName}"? This removes the item plus all ${editTarget.lotCount} lot(s) and movement history.`
-      : `Delete "${editTarget.displayName}"?`;
+    const msg =
+      editTarget.lotCount > 0
+        ? `Delete "${editTarget.displayName}"? This removes the item plus all ${editTarget.lotCount} lot(s) and movement history.`
+        : `Delete "${editTarget.displayName}"?`;
     if (!confirm(msg)) return;
     try {
-      const res = await fetch(`/api/stock/${encodeURIComponent(editTarget.id)}`, { method: 'DELETE' });
+      const res = await fetch(`/api/stock/${encodeURIComponent(editTarget.id)}`, {
+        method: 'DELETE'
+      });
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
         alert(`Delete failed: ${out.error ?? res.status}`);
@@ -914,14 +1074,20 @@
       }
       modalMode = null;
       await invalidateAll();
-    } catch (e) { alert(`Delete failed: ${e instanceof Error ? e.message : String(e)}`); }
+    } catch (e) {
+      alert(`Delete failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   async function setOnHandFromModal() {
     if (!editTarget) return;
     const qty = Number(modalSetQty);
-    if (isNaN(qty) || qty < 0) { modalSetQtyError = 'Enter a number ≥ 0'; return; }
-    modalSettingQty = true; modalSetQtyError = null;
+    if (isNaN(qty) || qty < 0) {
+      modalSetQtyError = 'Enter a number ≥ 0';
+      return;
+    }
+    modalSettingQty = true;
+    modalSetQtyError = null;
     try {
       const res = await fetch(`/api/stock/${editTarget.id}/set-quantity`, {
         method: 'POST',
@@ -929,21 +1095,27 @@
         body: JSON.stringify({ quantity: qty })
       });
       const out = await res.json();
-      if (!res.ok) { modalSetQtyError = out.error ?? 'Failed'; return; }
+      if (!res.ok) {
+        modalSetQtyError = out.error ?? 'Failed';
+        return;
+      }
       modalSetQtyOpen = false;
       await invalidateAll();
       const refreshed = data.items.find((i) => i.id === editTarget!.id);
       if (refreshed) editTarget = refreshed;
     } catch (e) {
       modalSetQtyError = e instanceof Error ? e.message : String(e);
-    } finally { modalSettingQty = false; }
+    } finally {
+      modalSettingQty = false;
+    }
   }
 
   async function addStockFromModal() {
     if (!editTarget) return;
     const qty = Number(modalAddQty);
     if (isNaN(qty) || qty <= 0) return;
-    modalAddingLot = true; modalLotError = null;
+    modalAddingLot = true;
+    modalLotError = null;
     try {
       const res = await fetch(`/api/stock/${editTarget.id}/lots`, {
         method: 'POST',
@@ -951,20 +1123,26 @@
         body: JSON.stringify({ receivedQuantity: qty, unit: editTarget.defaultUnit })
       });
       const out = await res.json();
-      if (!res.ok) { modalLotError = out.error ?? 'Failed'; return; }
+      if (!res.ok) {
+        modalLotError = out.error ?? 'Failed';
+        return;
+      }
       modalAddStockOpen = false;
       await invalidateAll();
       const refreshed = data.items.find((i) => i.id === editTarget!.id);
       if (refreshed) editTarget = refreshed;
     } catch (e) {
       modalLotError = e instanceof Error ? e.message : String(e);
-    } finally { modalAddingLot = false; }
+    } finally {
+      modalAddingLot = false;
+    }
   }
 
   async function quickAdd(itemId: string, defaultUnit: string) {
     const qty = Number(quickAddQty);
     if (isNaN(qty) || qty <= 0) return;
-    quickAdding = true; quickAddError = null;
+    quickAdding = true;
+    quickAddError = null;
     try {
       const res = await fetch(`/api/stock/${itemId}/lots`, {
         method: 'POST',
@@ -972,12 +1150,17 @@
         body: JSON.stringify({ receivedQuantity: qty, unit: defaultUnit })
       });
       const out = await res.json();
-      if (!res.ok) { quickAddError = out.error ?? 'Failed'; return; }
+      if (!res.ok) {
+        quickAddError = out.error ?? 'Failed';
+        return;
+      }
       quickAddId = null;
       await invalidateAll();
     } catch (e) {
       quickAddError = e instanceof Error ? e.message : String(e);
-    } finally { quickAdding = false; }
+    } finally {
+      quickAdding = false;
+    }
   }
 
   // ─── Phase 15d — short names via Haiku ───────────────────────────────────
@@ -1002,21 +1185,36 @@
    *  showing raw API field names. */
   function prettyFieldLabel(key: string): string {
     switch (key) {
-      case 'daysToMaturity': return 'Days to maturity';
-      case 'plantingTempMinF': return 'Soil temp min (°F)';
-      case 'spacingInches': return 'Spacing (in)';
-      case 'depthInches': return 'Depth (in)';
-      case 'sunRequirement': return 'Sun';
-      case 'seedsPerPacket': return 'Seeds/packet';
-      case 'matureHeightFt': return 'Mature height (ft)';
-      case 'seedDimensionsMm': return 'Seed dimensions (mm)';
-      case 'seedShape': return 'Seed shape';
-      case 'planterPlateConfig': return 'Planter plate';
-      case 'activeIngredients': return 'Active ingredients';
-      case 'npk': return 'N-P-K';
-      case 'formulationType': return 'Formulation';
-      case 'productClass': return 'Product class';
-      default: return key;
+      case 'daysToMaturity':
+        return 'Days to maturity';
+      case 'plantingTempMinF':
+        return 'Soil temp min (°F)';
+      case 'spacingInches':
+        return 'Spacing (in)';
+      case 'depthInches':
+        return 'Depth (in)';
+      case 'sunRequirement':
+        return 'Sun';
+      case 'seedsPerPacket':
+        return 'Seeds/packet';
+      case 'matureHeightFt':
+        return 'Mature height (ft)';
+      case 'seedDimensionsMm':
+        return 'Seed dimensions (mm)';
+      case 'seedShape':
+        return 'Seed shape';
+      case 'planterPlateConfig':
+        return 'Planter plate';
+      case 'activeIngredients':
+        return 'Active ingredients';
+      case 'npk':
+        return 'N-P-K';
+      case 'formulationType':
+        return 'Formulation';
+      case 'productClass':
+        return 'Product class';
+      default:
+        return key;
     }
   }
 
@@ -1136,7 +1334,9 @@
     type Wrapped = { value: unknown; sourceUrl?: string; sourceTitle?: string };
     const r = refreshAiResult as Record<string, Wrapped | unknown>;
     const applied: string[] = [];
-    const cites: Record<string, { url: string; title?: string }> = { ...recentlyRefreshedCitations };
+    const cites: Record<string, { url: string; title?: string }> = {
+      ...recentlyRefreshedCitations
+    };
     const take = (key: string, formField: string): unknown => {
       if (!refreshAiAccept[key]) return undefined;
       const slot = (r as Record<string, Wrapped | undefined>)[key];
@@ -1165,17 +1365,24 @@
 
     // Planter-plate suggestion + AI-supplied kernel dimensions / shape.
     const sdm = take('seedDimensionsMm', 'seedDimensionsMm');
-    if (sdm && typeof sdm === 'object'
-      && typeof (sdm as { L?: unknown }).L === 'number'
-      && typeof (sdm as { D?: unknown }).D === 'number'
-      && typeof (sdm as { T?: unknown }).T === 'number') {
+    if (
+      sdm &&
+      typeof sdm === 'object' &&
+      typeof (sdm as { L?: unknown }).L === 'number' &&
+      typeof (sdm as { D?: unknown }).D === 'number' &&
+      typeof (sdm as { T?: unknown }).T === 'number'
+    ) {
       const v = sdm as { L: number; D: number; T: number };
       newSeedDimensionsMm = { L: v.L, D: v.D, T: v.T };
     }
     const sshape = take('seedShape', 'seedShape');
     if (sshape === 'Round' || sshape === 'Flat') newSeedShape = sshape;
     const ppc = take('planterPlateConfig', 'planterPlateConfig');
-    if (ppc && typeof ppc === 'object' && typeof (ppc as { plateNumber?: unknown }).plateNumber === 'string') {
+    if (
+      ppc &&
+      typeof ppc === 'object' &&
+      typeof (ppc as { plateNumber?: unknown }).plateNumber === 'string'
+    ) {
       newPlanterPlateConfig = ppc as Record<string, unknown>;
     }
 
@@ -1184,7 +1391,9 @@
     const npk = take('npk', 'npk');
     const formType = take('formulationType', 'formulationType');
     const productClass = take('productClass', 'productClass');
-    const formulation: Record<string, unknown> = scannedFormulation ? { ...scannedFormulation } : {};
+    const formulation: Record<string, unknown> = scannedFormulation
+      ? { ...scannedFormulation }
+      : {};
     if (npk && typeof npk === 'object') formulation.npk = npk;
     if (typeof formType === 'string') formulation.type = formType;
     if (typeof productClass === 'string') formulation.productClass = productClass;
@@ -1261,23 +1470,32 @@
     <p class="ai-refresh-error">{refreshAiError}</p>
   {/if}
   {#if refreshAiResult}
-    {@const r = refreshAiResult as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string } | unknown>}
+    {@const r = refreshAiResult as Record<
+      string,
+      { value: unknown; sourceUrl?: string; sourceTitle?: string } | unknown
+    >}
     {@const fieldCount = Object.keys(refreshAiAccept).length}
-    {@const cites = (refreshAiResult as { citations?: Array<{ url: string; title?: string }> }).citations ?? []}
+    {@const cites =
+      (refreshAiResult as { citations?: Array<{ url: string; title?: string }> }).citations ?? []}
     <div class="ai-refresh-diff">
       {#if fieldCount > 0}
         <p class="ai-refresh-diff-title">
-          AI returned {fieldCount} field{fieldCount === 1 ? '' : 's'} with citations. Uncheck any you don't trust, then Apply.
+          AI returned {fieldCount} field{fieldCount === 1 ? '' : 's'} with citations. Uncheck any you
+          don't trust, then Apply.
         </p>
         {#if (refreshAiResult as { notes?: string }).notes}
           <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
         {/if}
         {#if (refreshAiResult as { planterPlatePickNote?: string }).planterPlatePickNote}
-          <p class="ai-refresh-plate-note">🔧 {(refreshAiResult as { planterPlatePickNote: string }).planterPlatePickNote}</p>
+          <p class="ai-refresh-plate-note">
+            🔧 {(refreshAiResult as { planterPlatePickNote: string }).planterPlatePickNote}
+          </p>
         {/if}
         <ul class="ai-refresh-list">
           {#each Object.keys(refreshAiAccept) as key}
-            {@const field = (r as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string }>)[key]}
+            {@const field = (
+              r as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string }>
+            )[key]}
             {#if field}
               <li class="ai-refresh-row">
                 <label class="ai-refresh-check">
@@ -1293,21 +1511,36 @@
           {/each}
         </ul>
         <div class="ai-refresh-actions">
-          <button type="button" class="primary" onclick={applyRefreshSelection}>Apply selected</button>
-          <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; void clearPendingRefreshOnServer(); }}>Discard</button>
+          <button type="button" class="primary" onclick={applyRefreshSelection}
+            >Apply selected</button
+          >
+          <button
+            type="button"
+            class="secondary"
+            onclick={() => {
+              refreshAiResult = null;
+              refreshAiAccept = {};
+              void clearPendingRefreshOnServer();
+            }}>Discard</button
+          >
         </div>
       {:else}
         <p class="ai-refresh-diff-title">
-          Web search found {cites.length} page{cites.length === 1 ? '' : 's'}, but Claude couldn't extract structured specs from them.
+          Web search found {cites.length} page{cites.length === 1 ? '' : 's'}, but Claude couldn't
+          extract structured specs from them.
         </p>
         {#if (refreshAiResult as { notes?: string }).notes}
           <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
         {/if}
         {#if (refreshAiResult as { planterPlatePickNote?: string }).planterPlatePickNote}
-          <p class="ai-refresh-plate-note">🔧 {(refreshAiResult as { planterPlatePickNote: string }).planterPlatePickNote}</p>
+          <p class="ai-refresh-plate-note">
+            🔧 {(refreshAiResult as { planterPlatePickNote: string }).planterPlatePickNote}
+          </p>
         {/if}
         {#if cites.length > 0}
-          <p class="ai-refresh-notes">Sources Claude consulted — open these and add the data manually below:</p>
+          <p class="ai-refresh-notes">
+            Sources Claude consulted — open these and add the data manually below:
+          </p>
           <ul class="ai-refresh-cite-list">
             {#each cites as c}
               <li>
@@ -1317,7 +1550,15 @@
           </ul>
         {/if}
         <div class="ai-refresh-actions">
-          <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; void clearPendingRefreshOnServer(); }}>Close</button>
+          <button
+            type="button"
+            class="secondary"
+            onclick={() => {
+              refreshAiResult = null;
+              refreshAiAccept = {};
+              void clearPendingRefreshOnServer();
+            }}>Close</button
+          >
         </div>
       {/if}
     </div>
@@ -1339,20 +1580,27 @@
       <p class="ai-refresh-error">{refreshAiError}</p>
     {/if}
     {#if refreshAiResult}
-      {@const r = refreshAiResult as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string } | unknown>}
+      {@const r = refreshAiResult as Record<
+        string,
+        { value: unknown; sourceUrl?: string; sourceTitle?: string } | unknown
+      >}
       {@const fieldCount = Object.keys(refreshAiAccept).length}
-      {@const cites = (refreshAiResult as { citations?: Array<{ url: string; title?: string }> }).citations ?? []}
+      {@const cites =
+        (refreshAiResult as { citations?: Array<{ url: string; title?: string }> }).citations ?? []}
       <div class="ai-refresh-diff">
         {#if fieldCount > 0}
           <p class="ai-refresh-diff-title">
-            AI returned {fieldCount} field{fieldCount === 1 ? '' : 's'} with citations. Uncheck any you don't trust, then Apply.
+            AI returned {fieldCount} field{fieldCount === 1 ? '' : 's'} with citations. Uncheck any you
+            don't trust, then Apply.
           </p>
           {#if (refreshAiResult as { notes?: string }).notes}
             <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
           {/if}
           <ul class="ai-refresh-list">
             {#each Object.keys(refreshAiAccept) as key}
-              {@const field = (r as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string }>)[key]}
+              {@const field = (
+                r as Record<string, { value: unknown; sourceUrl?: string; sourceTitle?: string }>
+              )[key]}
               {#if field}
                 <li class="ai-refresh-row">
                   <label class="ai-refresh-check">
@@ -1368,18 +1616,31 @@
             {/each}
           </ul>
           <div class="ai-refresh-actions">
-            <button type="button" class="primary" onclick={applyRefreshSelection}>Apply selected</button>
-            <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; void clearPendingRefreshOnServer(); }}>Discard</button>
+            <button type="button" class="primary" onclick={applyRefreshSelection}
+              >Apply selected</button
+            >
+            <button
+              type="button"
+              class="secondary"
+              onclick={() => {
+                refreshAiResult = null;
+                refreshAiAccept = {};
+                void clearPendingRefreshOnServer();
+              }}>Discard</button
+            >
           </div>
         {:else}
           <p class="ai-refresh-diff-title">
-            Web search found {cites.length} page{cites.length === 1 ? '' : 's'}, but Claude couldn't extract structured specs from them.
+            Web search found {cites.length} page{cites.length === 1 ? '' : 's'}, but Claude couldn't
+            extract structured specs from them.
           </p>
           {#if (refreshAiResult as { notes?: string }).notes}
             <p class="ai-refresh-notes">{(refreshAiResult as { notes: string }).notes}</p>
           {/if}
           {#if cites.length > 0}
-            <p class="ai-refresh-notes">Sources Claude consulted — open these and add the data manually below:</p>
+            <p class="ai-refresh-notes">
+              Sources Claude consulted — open these and add the data manually below:
+            </p>
             <ul class="ai-refresh-cite-list">
               {#each cites as c}
                 <li>
@@ -1389,7 +1650,15 @@
             </ul>
           {/if}
           <div class="ai-refresh-actions">
-            <button type="button" class="secondary" onclick={() => { refreshAiResult = null; refreshAiAccept = {}; void clearPendingRefreshOnServer(); }}>Close</button>
+            <button
+              type="button"
+              class="secondary"
+              onclick={() => {
+                refreshAiResult = null;
+                refreshAiAccept = {};
+                void clearPendingRefreshOnServer();
+              }}>Close</button
+            >
           </div>
         {/if}
       </div>
@@ -1407,8 +1676,8 @@
       rel="noopener noreferrer"
       title={`Source: ${c.title ?? c.url}`}
       aria-label="Open source for this value in a new tab"
-      onclick={(e) => e.stopPropagation()}
-    >i</a>
+      onclick={(e) => e.stopPropagation()}>i</a
+    >
   {/if}
 {/snippet}
 
@@ -1420,16 +1689,20 @@
     rel="noopener noreferrer"
     title={`Source: ${title ?? url}`}
     aria-label="Open source in a new tab"
-    onclick={(e) => e.stopPropagation()}
-  >ⓘ</a>
+    onclick={(e) => e.stopPropagation()}>ⓘ</a
+  >
 {/snippet}
 
-{#snippet inventoryRow(item: typeof data.items[0])}
+{#snippet inventoryRow(item: (typeof data.items)[0])}
   <li class="item-row" class:low={item.isLow}>
     <button class="item-btn" onclick={() => openEdit(item)} title={item.displayName}>
       <div class="item-info">
-        <span class="item-name">{item.shortName ?? item.displayName}
-          {#if item.pendingRefreshJson}<span class="pending-refresh-badge" title="AI Refresh suggestion awaiting review">🔍</span>{/if}
+        <span class="item-name"
+          >{item.shortName ?? item.displayName}
+          {#if item.pendingRefreshJson}<span
+              class="pending-refresh-badge"
+              title="AI Refresh suggestion awaiting review">🔍</span
+            >{/if}
         </span>
         {#if item.shortName && item.shortName !== item.displayName}
           <span class="item-sub" title={item.displayName}>{item.displayName}</span>
@@ -1444,31 +1717,59 @@
     </button>
     {#if data.canEdit}
       {#if quickAddId === item.id}
-        <form class="quick-add-form" onsubmit={(e) => { e.preventDefault(); quickAdd(item.id, item.defaultUnit); }}>
+        <form
+          class="quick-add-form"
+          onsubmit={(e) => {
+            e.preventDefault();
+            quickAdd(item.id, item.defaultUnit);
+          }}
+        >
           <!-- svelte-ignore a11y_autofocus -->
-          <input type="number" min="0.01" step="any" bind:value={quickAddQty} class="quick-qty" placeholder="qty" autofocus />
+          <input
+            type="number"
+            min="0.01"
+            step="any"
+            bind:value={quickAddQty}
+            class="quick-qty"
+            placeholder="qty"
+            autofocus
+          />
           <span class="quick-unit">{item.defaultUnit}</span>
           <button type="submit" class="quick-confirm" disabled={quickAdding}>✓</button>
           <button type="button" class="quick-cancel" onclick={() => (quickAddId = null)}>✕</button>
         </form>
       {:else}
-        <button class="plus-btn" onclick={() => { quickAddId = item.id; quickAddQty = 1; }} title="Add stock">+</button>
+        <button
+          class="plus-btn"
+          onclick={() => {
+            quickAddId = item.id;
+            quickAddQty = 1;
+          }}
+          title="Add stock">+</button
+        >
       {/if}
     {/if}
   </li>
 {/snippet}
 
 <h1>Inventory</h1>
-<p class="lede">Farm supply inventory — seeds, herbicides, fertilizer, adjuvants, fuel, parts. Spray events auto-decrement linked items.</p>
+<p class="lede">
+  Farm supply inventory — seeds, herbicides, fertilizer, adjuvants, fuel, parts. Spray events
+  auto-decrement linked items.
+</p>
 
 {#if lowItems.length > 0}
   <section class="alert" role="status" aria-live="polite">
-    <strong>⚠ {lowItems.length} item{lowItems.length === 1 ? '' : 's'} at or below reorder threshold:</strong>
+    <strong
+      >⚠ {lowItems.length} item{lowItems.length === 1 ? '' : 's'} at or below reorder threshold:</strong
+    >
     <ul>
       {#each lowItems as i (i.id)}
         <li>
           <button class="alert-link" onclick={() => openEdit(i)}>{i.displayName}</button>
-          — {i.onHand} {i.defaultUnit} on hand (threshold {i.reorderThreshold} {i.defaultUnit})
+          — {i.onHand}
+          {i.defaultUnit} on hand (threshold {i.reorderThreshold}
+          {i.defaultUnit})
         </li>
       {/each}
     </ul>
@@ -1476,7 +1777,12 @@
 {/if}
 
 <div class="search-row">
-  <input class="search-bar" type="search" bind:value={searchQuery} placeholder="Search inventory…" />
+  <input
+    class="search-bar"
+    type="search"
+    bind:value={searchQuery}
+    placeholder="Search inventory…"
+  />
   {#if data.canEdit}
     <button class="primary add-global-btn" onclick={() => openAdd('seed')}>+ Add item</button>
   {/if}
@@ -1491,7 +1797,11 @@
   {#if catItems.length > 0}
     <section class="cat-group card">
       <div class="cat-header">
-        <button class="cat-toggle" onclick={() => toggleCategory(cat)} aria-expanded={openCategories.has(cat)}>
+        <button
+          class="cat-toggle"
+          onclick={() => toggleCategory(cat)}
+          aria-expanded={openCategories.has(cat)}
+        >
           <span class="cat-title">
             <span class="chevron" aria-hidden="true">{openCategories.has(cat) ? '▾' : '▸'}</span>
             <span class="cat-icon">{CATEGORY_ICON[cat]}</span>
@@ -1507,8 +1817,13 @@
           {#each groups as group (group.key)}
             {@const subKey = `${cat}:${group.key}`}
             <div class="subcat">
-              <button class="subcat-toggle" onclick={() => toggleSubcat(subKey)} aria-expanded={isSubcatOpen(subKey)}>
-                <span class="chevron-sm" aria-hidden="true">{isSubcatOpen(subKey) ? '▾' : '▸'}</span>
+              <button
+                class="subcat-toggle"
+                onclick={() => toggleSubcat(subKey)}
+                aria-expanded={isSubcatOpen(subKey)}
+              >
+                <span class="chevron-sm" aria-hidden="true">{isSubcatOpen(subKey) ? '▾' : '▸'}</span
+                >
                 {#if TYPE_ICON[group.typeName]}
                   <span class="subcat-icon" aria-hidden="true">{TYPE_ICON[group.typeName]}</span>
                 {/if}
@@ -1538,7 +1853,10 @@
 
 {#if data.items.length === 0 && !searchQuery.trim()}
   <section class="card empty">
-    <p>No inventory yet.{#if data.canEdit} Use "+ Add item" or scan a barcode to get started.{/if}</p>
+    <p>
+      No inventory yet.{#if data.canEdit}
+        Use "+ Add item" or scan a barcode to get started.{/if}
+    </p>
   </section>
 {/if}
 
@@ -1549,11 +1867,16 @@
 <!-- ── Unified Add / Edit Modal ──────────────────────────────────────────── -->
 {#if modalMode}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <div class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="inv-modal-title"
-       tabindex="-1" onclick={() => (modalMode = null)}>
+  <div
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="inv-modal-title"
+    tabindex="-1"
+    onclick={() => (modalMode = null)}
+  >
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events -->
     <div class="modal-box wide" role="document" tabindex="-1" onclick={(e) => e.stopPropagation()}>
-
       <div class="modal-header">
         <h3 id="inv-modal-title">
           {modalMode === 'add' ? 'Add to Inventory' : `Edit — ${editTarget?.displayName}`}
@@ -1564,17 +1887,33 @@
       {#if modalMode === 'add'}
         <!-- Scan row -->
         <div class="scan-btns">
-          <button class="scan-btn" onclick={() => (scannerOpen = true)} disabled={scanLoading}>📷 Barcode</button>
-          <button class="scan-btn ai-btn" onclick={() => (labelCaptureOpen = true)} disabled={scanLoading}>✨ Scan label</button>
+          <button class="scan-btn" onclick={() => (scannerOpen = true)} disabled={scanLoading}
+            >📷 Barcode</button
+          >
           <button
             class="scan-btn ai-btn"
-            onclick={() => { urlPromptOpen = !urlPromptOpen; scanError = null; }}
-            disabled={scanLoading}
-          >🌐 From URL</button>
-          {#if scanLoading}<span class="scan-spinner"><span class="spin">⟳</span> Looking up…</span>{/if}
+            onclick={() => (labelCaptureOpen = true)}
+            disabled={scanLoading}>✨ Scan label</button
+          >
+          <button
+            class="scan-btn ai-btn"
+            onclick={() => {
+              urlPromptOpen = !urlPromptOpen;
+              scanError = null;
+            }}
+            disabled={scanLoading}>🌐 From URL</button
+          >
+          {#if scanLoading}<span class="scan-spinner"><span class="spin">⟳</span> Looking up…</span
+            >{/if}
         </div>
         {#if urlPromptOpen}
-          <form class="url-prompt-form" onsubmit={(e) => { e.preventDefault(); onUrlSubmitted(); }}>
+          <form
+            class="url-prompt-form"
+            onsubmit={(e) => {
+              e.preventDefault();
+              onUrlSubmitted();
+            }}
+          >
             <!-- svelte-ignore a11y_autofocus -->
             <input
               type="url"
@@ -1585,10 +1924,21 @@
               required
               disabled={scanLoading}
             />
-            <button type="submit" class="primary url-prompt-submit" disabled={scanLoading || !urlInput.trim()}>
+            <button
+              type="submit"
+              class="primary url-prompt-submit"
+              disabled={scanLoading || !urlInput.trim()}
+            >
               {scanLoading ? '…' : 'Fetch'}
             </button>
-            <button type="button" class="secondary" onclick={() => { urlPromptOpen = false; urlInput = ''; }}>
+            <button
+              type="button"
+              class="secondary"
+              onclick={() => {
+                urlPromptOpen = false;
+                urlInput = '';
+              }}
+            >
               ✕
             </button>
           </form>
@@ -1605,7 +1955,6 @@
             {#if guessedFields.size > 0}<strong> Amber = estimated.</strong>{/if}
           </p>
         {/if}
-
       {:else}
         <!-- Edit mode: on-hand amount + quick add + set-quantity -->
         <div class="modal-amount-section">
@@ -1613,7 +1962,11 @@
             {#if !modalSetQtyOpen}
               <button
                 class="amount-display"
-                onclick={() => { modalSetQty = editTarget?.onHand ?? 0; modalSetQtyOpen = true; modalAddStockOpen = false; }}
+                onclick={() => {
+                  modalSetQty = editTarget?.onHand ?? 0;
+                  modalSetQtyOpen = true;
+                  modalAddStockOpen = false;
+                }}
                 title="Click to overwrite the on-hand quantity"
               >
                 <span class="amount-big">{editTarget?.onHand ?? 0}</span>
@@ -1622,11 +1975,26 @@
               </button>
               {#if editTarget?.isLow}<span class="low-badge">⚠ low</span>{/if}
             {:else}
-              <form class="modal-set-qty-form" onsubmit={(e) => { e.preventDefault(); setOnHandFromModal(); }}>
+              <form
+                class="modal-set-qty-form"
+                onsubmit={(e) => {
+                  e.preventDefault();
+                  setOnHandFromModal();
+                }}
+              >
                 <!-- svelte-ignore a11y_autofocus -->
-                <input type="number" min="0" step="any" bind:value={modalSetQty} class="modal-stock-qty set-qty-input" autofocus />
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  bind:value={modalSetQty}
+                  class="modal-stock-qty set-qty-input"
+                  autofocus
+                />
                 <span class="modal-stock-unit">{editTarget?.defaultUnit}</span>
-                <button type="submit" class="modal-add-confirm" disabled={modalSettingQty}>{modalSettingQty ? '…' : 'Set total'}</button>
+                <button type="submit" class="modal-add-confirm" disabled={modalSettingQty}
+                  >{modalSettingQty ? '…' : 'Set total'}</button
+                >
                 <button type="button" onclick={() => (modalSetQtyOpen = false)}>✕</button>
               </form>
             {/if}
@@ -1634,17 +2002,40 @@
           {#if modalSetQtyError}<p class="error">{modalSetQtyError}</p>{/if}
           <div class="modal-amount-actions">
             {#if !modalAddStockOpen}
-              <button class="green-plus-btn" onclick={() => { modalAddStockOpen = true; modalSetQtyOpen = false; }}>+ Add stock</button>
+              <button
+                class="green-plus-btn"
+                onclick={() => {
+                  modalAddStockOpen = true;
+                  modalSetQtyOpen = false;
+                }}>+ Add stock</button
+              >
             {:else}
-              <form class="modal-add-stock-form" onsubmit={(e) => { e.preventDefault(); addStockFromModal(); }}>
+              <form
+                class="modal-add-stock-form"
+                onsubmit={(e) => {
+                  e.preventDefault();
+                  addStockFromModal();
+                }}
+              >
                 <!-- svelte-ignore a11y_autofocus -->
-                <input type="number" min="0.01" step="any" bind:value={modalAddQty} class="modal-stock-qty" autofocus />
+                <input
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  bind:value={modalAddQty}
+                  class="modal-stock-qty"
+                  autofocus
+                />
                 <span class="modal-stock-unit">{editTarget?.defaultUnit}</span>
-                <button type="submit" class="modal-add-confirm" disabled={modalAddingLot}>{modalAddingLot ? '…' : 'Add'}</button>
+                <button type="submit" class="modal-add-confirm" disabled={modalAddingLot}
+                  >{modalAddingLot ? '…' : 'Add'}</button
+                >
                 <button type="button" onclick={() => (modalAddStockOpen = false)}>✕</button>
               </form>
             {/if}
-            <a href="/stock/{editTarget?.id}" class="lots-link" onclick={() => (modalMode = null)}>Manage lots →</a>
+            <a href="/stock/{editTarget?.id}" class="lots-link" onclick={() => (modalMode = null)}
+              >Manage lots →</a
+            >
           </div>
           {#if modalLotError}<p class="error">{modalLotError}</p>{/if}
         </div>
@@ -1666,7 +2057,9 @@
 
         <div class="grid">
           <label class:guessed={isGuessed('category')}>
-            <span class="field-label">Category {#if isGuessed('category')}<em class="est-tag">estimated</em>{/if}</span>
+            <span class="field-label"
+              >Category {#if isGuessed('category')}<em class="est-tag">estimated</em>{/if}</span
+            >
             <select bind:value={newCategory} onchange={onCategoryChange}>
               {#each allCategories as c}<option value={c}>{CATEGORY_ICON[c]} {c}</option>{/each}
             </select>
@@ -1674,11 +2067,18 @@
           <label>
             <span class="field-label">
               Type
-              {#if newTypeName.trim() && !data.taxonomy.find((t) => t.domain === `inventory:${newCategory}` && t.name.toLowerCase() === newTypeName.trim().toLowerCase())}
+              {#if newTypeName.trim() && !data.taxonomy.find((t) => t.domain === `inventory:${newCategory}` && t.name.toLowerCase() === newTypeName
+                        .trim()
+                        .toLowerCase())}
                 <em class="new-tag" title="Will prompt to add as a new Type when you save">new</em>
               {/if}
             </span>
-            <input type="text" list="type-suggestions" bind:value={newTypeName} placeholder="Pick or type a new Type…" />
+            <input
+              type="text"
+              list="type-suggestions"
+              bind:value={newTypeName}
+              placeholder="Pick or type a new Type…"
+            />
           </label>
           <label class:guessed={isGuessed('displayName')}>
             <span class="field-label">
@@ -1722,11 +2122,19 @@
           {#if modalMode === 'add'}
             <label>
               <span class="field-label">Initial qty</span>
-              <input type="number" min="0" step="0.01" bind:value={newInitialQty} placeholder="0 = skip" />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                bind:value={newInitialQty}
+                placeholder="0 = skip"
+              />
             </label>
           {/if}
           <label class:guessed={isGuessed('defaultUnit')}>
-            <span class="field-label">Unit {#if isGuessed('defaultUnit')}<em class="est-tag">estimated</em>{/if}</span>
+            <span class="field-label"
+              >Unit {#if isGuessed('defaultUnit')}<em class="est-tag">estimated</em>{/if}</span
+            >
             <select bind:value={newDefaultUnit}>
               {#each ALL_STOCK_UNITS as u}<option value={u}>{u}</option>{/each}
             </select>
@@ -1739,7 +2147,13 @@
                 {#if isGuessed('reorderThreshold')}<em class="est-tag">estimated</em>{/if}
               </span>
               {#if enableReorder}
-                <input type="number" min="0" step="0.01" bind:value={newReorder} placeholder="e.g. 2" />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  bind:value={newReorder}
+                  placeholder="e.g. 2"
+                />
               {:else}
                 <span class="reorder-off">not tracked</span>
               {/if}
@@ -1747,7 +2161,11 @@
           {/if}
           <label class="full-col">
             <span class="field-label">Notes</span>
-            <input type="text" bind:value={newNotes} placeholder="Key facts (certifications, variety notes…)" />
+            <input
+              type="text"
+              bind:value={newNotes}
+              placeholder="Key facts (certifications, variety notes…)"
+            />
           </label>
         </div>
 
@@ -1786,7 +2204,9 @@
               </span>
             </div>
             <div class="catalog-link-actions">
-              <button type="button" class="catalog-unlink-btn" onclick={onUnlinkClick}>Unlink</button>
+              <button type="button" class="catalog-unlink-btn" onclick={onUnlinkClick}
+                >Unlink</button
+              >
               {#if modalMode === 'edit' && editTarget}
                 {@render refreshButtonInline()}
               {/if}
@@ -1795,11 +2215,17 @@
               {@const m = linkedPlugin.meta as Record<string, unknown>}
               {#if m.activeIngredients || m.ratePerAcre || m.reEntryIntervalHours != null || m.preHarvestIntervalDays != null || m.epaRegistrationNumber}
                 <dl class="catalog-meta">
-                  {#if m.activeIngredients}<dt>Active ingredients</dt><dd>{(m.activeIngredients as string[]).join(', ')}</dd>{/if}
-                  {#if m.ratePerAcre}{@const r = m.ratePerAcre as { amount: number; unit: string }}<dt>Rate / acre</dt><dd>{r.amount} {r.unit}</dd>{/if}
-                  {#if m.reEntryIntervalHours != null}<dt>Re-entry</dt><dd>{m.reEntryIntervalHours} h</dd>{/if}
-                  {#if m.preHarvestIntervalDays != null}<dt>Pre-harvest interval</dt><dd>{m.preHarvestIntervalDays} d</dd>{/if}
-                  {#if m.epaRegistrationNumber}<dt>EPA reg #</dt><dd>{m.epaRegistrationNumber}</dd>{/if}
+                  {#if m.activeIngredients}<dt>Active ingredients</dt>
+                    <dd>{(m.activeIngredients as string[]).join(', ')}</dd>{/if}
+                  {#if m.ratePerAcre}{@const r = m.ratePerAcre as { amount: number; unit: string }}
+                    <dt>Rate / acre</dt>
+                    <dd>{r.amount} {r.unit}</dd>{/if}
+                  {#if m.reEntryIntervalHours != null}<dt>Re-entry</dt>
+                    <dd>{m.reEntryIntervalHours} h</dd>{/if}
+                  {#if m.preHarvestIntervalDays != null}<dt>Pre-harvest interval</dt>
+                    <dd>{m.preHarvestIntervalDays} d</dd>{/if}
+                  {#if m.epaRegistrationNumber}<dt>EPA reg #</dt>
+                    <dd>{m.epaRegistrationNumber}</dd>{/if}
                 </dl>
               {/if}
             {/if}
@@ -1816,47 +2242,111 @@
           <div class="form-section seed-section">
             <div class="seed-section-header">
               <h4 class="subsection-title">Growing info</h4>
-              {#if linkedPlugin}<span class="catalog-hint">Catalog values auto-filled — verify or adjust below</span>{/if}
+              {#if linkedPlugin}<span class="catalog-hint"
+                  >Catalog values auto-filled — verify or adjust below</span
+                >{/if}
             </div>
             <div class="grid">
-              <label class:guessed={isGuessed('daysToMaturity')} class:catalog={isCatalogField('daysToMaturity')} class:refreshed={recentlyRefreshedFields.has('daysToMaturity')}>
-                <span class="field-label">Days to maturity
+              <label
+                class:guessed={isGuessed('daysToMaturity')}
+                class:catalog={isCatalogField('daysToMaturity')}
+                class:refreshed={recentlyRefreshedFields.has('daysToMaturity')}
+              >
+                <span class="field-label"
+                  >Days to maturity
                   {#if isGuessed('daysToMaturity')}<em class="est-tag">estimated</em>
-                  {:else if isCatalogField('daysToMaturity')}<em class="cat-tag">from catalog</em>{/if}
+                  {:else if isCatalogField('daysToMaturity')}<em class="cat-tag">from catalog</em
+                    >{/if}
                   {@render citationIcon('daysToMaturity')}
                 </span>
-                <input type="number" min="1" max="365" bind:value={newDtm} oninput={() => markFieldEdited('daysToMaturity')} placeholder="e.g. 125" />
+                <input
+                  type="number"
+                  min="1"
+                  max="365"
+                  bind:value={newDtm}
+                  oninput={() => markFieldEdited('daysToMaturity')}
+                  placeholder="e.g. 125"
+                />
               </label>
-              <label class:guessed={isGuessed('plantingTempMinF') || isGuessed('plantingTempMaxF')} class:catalog={isCatalogField('plantingTempMinF')} class:refreshed={recentlyRefreshedFields.has('plantingTempMinF')}>
-                <span class="field-label">Soil temp °F
+              <label
+                class:guessed={isGuessed('plantingTempMinF') || isGuessed('plantingTempMaxF')}
+                class:catalog={isCatalogField('plantingTempMinF')}
+                class:refreshed={recentlyRefreshedFields.has('plantingTempMinF')}
+              >
+                <span class="field-label"
+                  >Soil temp °F
                   {#if isGuessed('plantingTempMinF')}<em class="est-tag">estimated</em>
-                  {:else if isCatalogField('plantingTempMinF')}<em class="cat-tag">from catalog</em>{/if}
+                  {:else if isCatalogField('plantingTempMinF')}<em class="cat-tag">from catalog</em
+                    >{/if}
                   {@render citationIcon('plantingTempMinF')}
                 </span>
                 <div class="range-inputs">
-                  <input type="number" min="20" max="120" bind:value={newTempMin} oninput={() => markFieldEdited('plantingTempMinF')} placeholder="Min" />
+                  <input
+                    type="number"
+                    min="20"
+                    max="120"
+                    bind:value={newTempMin}
+                    oninput={() => markFieldEdited('plantingTempMinF')}
+                    placeholder="Min"
+                  />
                   <span class="range-sep">–</span>
-                  <input type="number" min="20" max="120" bind:value={newTempMax} oninput={() => markFieldEdited('plantingTempMinF')} placeholder="Max" />
+                  <input
+                    type="number"
+                    min="20"
+                    max="120"
+                    bind:value={newTempMax}
+                    oninput={() => markFieldEdited('plantingTempMinF')}
+                    placeholder="Max"
+                  />
                 </div>
               </label>
-              <label class:guessed={isGuessed('spacingInches')} class:catalog={isCatalogField('spacingInches')} class:refreshed={recentlyRefreshedFields.has('spacingInches')}>
-                <span class="field-label">Spacing (in)
+              <label
+                class:guessed={isGuessed('spacingInches')}
+                class:catalog={isCatalogField('spacingInches')}
+                class:refreshed={recentlyRefreshedFields.has('spacingInches')}
+              >
+                <span class="field-label"
+                  >Spacing (in)
                   {#if isGuessed('spacingInches')}<em class="est-tag">estimated</em>
-                  {:else if isCatalogField('spacingInches')}<em class="cat-tag">from catalog</em>{/if}
+                  {:else if isCatalogField('spacingInches')}<em class="cat-tag">from catalog</em
+                    >{/if}
                   {@render citationIcon('spacingInches')}
                 </span>
-                <input type="number" min="0.5" step="0.5" bind:value={newSpacing} oninput={() => markFieldEdited('spacingInches')} placeholder="e.g. 48" />
+                <input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  bind:value={newSpacing}
+                  oninput={() => markFieldEdited('spacingInches')}
+                  placeholder="e.g. 48"
+                />
               </label>
-              <label class:guessed={isGuessed('depthInches')} class:catalog={isCatalogField('depthInches')} class:refreshed={recentlyRefreshedFields.has('depthInches')}>
-                <span class="field-label">Depth (in)
+              <label
+                class:guessed={isGuessed('depthInches')}
+                class:catalog={isCatalogField('depthInches')}
+                class:refreshed={recentlyRefreshedFields.has('depthInches')}
+              >
+                <span class="field-label"
+                  >Depth (in)
                   {#if isGuessed('depthInches')}<em class="est-tag">estimated</em>
                   {:else if isCatalogField('depthInches')}<em class="cat-tag">from catalog</em>{/if}
                   {@render citationIcon('depthInches')}
                 </span>
-                <input type="number" min="0.1" step="0.1" bind:value={newDepth} oninput={() => markFieldEdited('depthInches')} placeholder="e.g. 1" />
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  bind:value={newDepth}
+                  oninput={() => markFieldEdited('depthInches')}
+                  placeholder="e.g. 1"
+                />
               </label>
-              <label class:guessed={isGuessed('sunRequirement')} class:refreshed={recentlyRefreshedFields.has('sunRequirement')}>
-                <span class="field-label">Sun
+              <label
+                class:guessed={isGuessed('sunRequirement')}
+                class:refreshed={recentlyRefreshedFields.has('sunRequirement')}
+              >
+                <span class="field-label"
+                  >Sun
                   {#if isGuessed('sunRequirement')}<em class="est-tag">estimated</em>{/if}
                   {@render citationIcon('sunRequirement')}
                 </span>
@@ -1867,18 +2357,35 @@
                   <option value="full-shade">Full shade</option>
                 </select>
               </label>
-              <label class:guessed={isGuessed('seedsPerPacket')} class:refreshed={recentlyRefreshedFields.has('seedsPerPacket')}>
-                <span class="field-label">Seeds/packet
+              <label
+                class:guessed={isGuessed('seedsPerPacket')}
+                class:refreshed={recentlyRefreshedFields.has('seedsPerPacket')}
+              >
+                <span class="field-label"
+                  >Seeds/packet
                   {#if isGuessed('seedsPerPacket')}<em class="est-tag">estimated</em>{/if}
                   {@render citationIcon('seedsPerPacket')}
                 </span>
-                <input type="number" min="1" bind:value={newSeedsPerPacket} oninput={() => markFieldEdited('seedsPerPacket')} placeholder="e.g. 20" />
+                <input
+                  type="number"
+                  min="1"
+                  bind:value={newSeedsPerPacket}
+                  oninput={() => markFieldEdited('seedsPerPacket')}
+                  placeholder="e.g. 20"
+                />
               </label>
               <label class:refreshed={recentlyRefreshedFields.has('matureHeightFt')}>
-                <span class="field-label">Mature height (ft)
+                <span class="field-label"
+                  >Mature height (ft)
                   {@render citationIcon('matureHeightFt')}
                 </span>
-                <input type="number" min="0.1" step="0.1" bind:value={newMatureHeight} placeholder="e.g. 7" />
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  bind:value={newMatureHeight}
+                  placeholder="e.g. 7"
+                />
               </label>
             </div>
 
@@ -1904,22 +2411,37 @@
                     </div>
                     <dl class="planter-setup-meta">
                       {#if editPlateConfig.dimensions}
-                        <div><dt>Plate dims</dt><dd>{editPlateConfig.dimensions} <small>(64ths in)</small></dd></div>
+                        <div>
+                          <dt>Plate dims</dt>
+                          <dd>{editPlateConfig.dimensions} <small>(64ths in)</small></dd>
+                        </div>
                       {/if}
                       {#if editPlateConfig.cells !== undefined}
-                        <div><dt>Cells</dt><dd>{editPlateConfig.cells}</dd></div>
+                        <div>
+                          <dt>Cells</dt>
+                          <dd>{editPlateConfig.cells}</dd>
+                        </div>
                       {/if}
                       {#if editSeedDimsMm}
-                        <div><dt>Seed dims</dt><dd>{editSeedDimsMm.L}×{editSeedDimsMm.D}×{editSeedDimsMm.T} <small>mm (L×D×T)</small></dd></div>
+                        <div>
+                          <dt>Seed dims</dt>
+                          <dd>
+                            {editSeedDimsMm.L}×{editSeedDimsMm.D}×{editSeedDimsMm.T}
+                            <small>mm (L×D×T)</small>
+                          </dd>
+                        </div>
                       {/if}
                     </dl>
                   </div>
                 {:else if editSeedDimsMm}
                   <p class="planter-setup-empty">
-                    Seed dims known ({editSeedDimsMm.L}×{editSeedDimsMm.D}×{editSeedDimsMm.T} mm) but no plate matched. Open the selector to widen the search.
+                    Seed dims known ({editSeedDimsMm.L}×{editSeedDimsMm.D}×{editSeedDimsMm.T} mm) but
+                    no plate matched. Open the selector to widen the search.
                   </p>
                 {:else}
-                  <p class="planter-setup-empty">No plate set. Use the selector to match a Lincoln Ag plate to this seed.</p>
+                  <p class="planter-setup-empty">
+                    No plate set. Use the selector to match a Lincoln Ag plate to this seed.
+                  </p>
                 {/if}
               </div>
             {/if}
@@ -1928,14 +2450,18 @@
             <div class="form-section">
               <label class="full">
                 <span class="field-label">Suggested catalog match</span>
-                <select onchange={(e) => {
-                  const id = (e.target as HTMLSelectElement).value;
-                  const c = data.catalogPlugins.find((p) => p.pluginId === id);
-                  if (c) linkCatalog(c);
-                }}>
+                <select
+                  onchange={(e) => {
+                    const id = (e.target as HTMLSelectElement).value;
+                    const c = data.catalogPlugins.find((p) => p.pluginId === id);
+                    if (c) linkCatalog(c);
+                  }}
+                >
                   <option value="">— skip —</option>
                   {#each cropPluginMatches as m (m.pluginId)}
-                    <option value={m.pluginId}>{m.displayName} ({Math.round(m.score * 100)}% match)</option>
+                    <option value={m.pluginId}
+                      >{m.displayName} ({Math.round(m.score * 100)}% match)</option
+                    >
                   {/each}
                 </select>
               </label>
@@ -1946,7 +2472,9 @@
         {#if hasScannedFormulationData() && (newCategory === 'herbicide' || newCategory === 'insecticide' || newCategory === 'fungicide' || newCategory === 'fertilizer')}
           <div class="form-section ai-formulation">
             <p class="ai-formulation-label">
-              <em class="est-tag">{modalMode === 'edit' ? 'AI-extracted (saved)' : 'AI-extracted from label'}</em>
+              <em class="est-tag"
+                >{modalMode === 'edit' ? 'AI-extracted (saved)' : 'AI-extracted from label'}</em
+              >
               <button
                 type="button"
                 class="link-btn"
@@ -1957,13 +2485,19 @@
                   if (scannedFormulation) formulationCleared = true;
                   scannedActiveIngredients = null;
                   scannedFormulation = null;
-                }}
-              >Discard</button>
+                }}>Discard</button
+              >
             </p>
             {#if scannedActiveIngredients?.length}
               <ul class="ai-ingredient-list">
                 {#each scannedActiveIngredients as ing}
-                  {@const i = ing as { name?: string; concentrationPct?: number; chemistryClass?: string; iracGroup?: string; fracCode?: string }}
+                  {@const i = ing as {
+                    name?: string;
+                    concentrationPct?: number;
+                    chemistryClass?: string;
+                    iracGroup?: string;
+                    fracCode?: string;
+                  }}
                   <li>
                     <strong>{i.name ?? 'unknown'}</strong>
                     {#if i.concentrationPct != null}<span> · {i.concentrationPct}%</span>{/if}
@@ -1977,11 +2511,14 @@
             {#if scannedFormulation}
               <p class="ai-formulation-meta">
                 {#if scannedFormulation.npk}
-                  {@const n = (scannedFormulation.npk as { n: number; p: number; k: number })}
+                  {@const n = scannedFormulation.npk as { n: number; p: number; k: number }}
                   <span class="ai-chip">N-P-K {n.n}-{n.p}-{n.k}</span>
                 {/if}
-                {#if scannedFormulation.type}<span class="ai-chip">{scannedFormulation.type}</span>{/if}
-                {#if scannedFormulation.productClass}<span class="ai-chip">{scannedFormulation.productClass}</span>{/if}
+                {#if scannedFormulation.type}<span class="ai-chip">{scannedFormulation.type}</span
+                  >{/if}
+                {#if scannedFormulation.productClass}<span class="ai-chip"
+                    >{scannedFormulation.productClass}</span
+                  >{/if}
               </p>
             {/if}
           </div>
@@ -2000,18 +2537,25 @@
         <div class="modal-footer-right">
           <button class="secondary" onclick={() => (modalMode = null)}>Cancel</button>
           {#if modalMode === 'add'}
-            <button class="primary" onclick={createItem} disabled={creating || !newDisplayName.trim()}>
+            <button
+              class="primary"
+              onclick={createItem}
+              disabled={creating || !newDisplayName.trim()}
+            >
               {creating ? '…' : 'Add to Inventory'}
             </button>
           {:else}
-            <button class="primary" onclick={saveEdit} disabled={creating || !newDisplayName.trim()}>
+            <button
+              class="primary"
+              onclick={saveEdit}
+              disabled={creating || !newDisplayName.trim()}
+            >
               {creating ? '…' : 'Save'}
             </button>
           {/if}
         </div>
       </div>
       {#if createError}<p class="error modal-error">{createError}</p>{/if}
-
     </div>
   </div>
 {/if}
@@ -2025,91 +2569,232 @@
 {/if}
 
 <style>
-  h1 { margin: 0 0 0.25rem; }
-  .lede { color: #555; margin: 0 0 1rem; font-size: 0.9rem; }
+  h1 {
+    margin: 0 0 0.25rem;
+  }
+  .lede {
+    color: #555;
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+  }
 
   /* ── Alert ─────────────────────────────────────────────────────────────── */
   .alert {
-    background: #fff3cd; color: #b35900; padding: 0.75rem 1rem;
-    border-radius: 4px; border-left: 4px solid #b35900; margin-bottom: 1rem;
+    background: #fff3cd;
+    color: #b35900;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    border-left: 4px solid #b35900;
+    margin-bottom: 1rem;
   }
-  .alert ul { margin: 0.4rem 0 0 1.25rem; padding: 0; }
+  .alert ul {
+    margin: 0.4rem 0 0 1.25rem;
+    padding: 0;
+  }
   .alert-link {
-    background: none; border: none; color: #b35900; text-decoration: underline;
-    cursor: pointer; padding: 0; font: inherit; font-weight: 600;
+    background: none;
+    border: none;
+    color: #b35900;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
   }
 
   /* ── Search row ─────────────────────────────────────────────────────────── */
   .search-row {
-    display: flex; gap: 0.6rem; align-items: center; margin-bottom: 0.75rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
   }
   .search-bar {
-    flex: 1; padding: 0.6rem 1rem; border: 2px solid #d0d7d0; border-radius: 24px;
-    font-size: 1rem; font-family: inherit; min-height: 48px;
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border: 2px solid #d0d7d0;
+    border-radius: 24px;
+    font-size: 1rem;
+    font-family: inherit;
+    min-height: 48px;
   }
-  .search-bar:focus { outline: none; border-color: #1f5e3a; }
-  .add-global-btn { white-space: nowrap; }
+  .search-bar:focus {
+    outline: none;
+    border-color: #1f5e3a;
+  }
+  .add-global-btn {
+    white-space: nowrap;
+  }
 
   /* ── Category accordion ─────────────────────────────────────────────────── */
   .card {
-    background: white; border-radius: 8px; padding: 0;
-    margin-bottom: 0.6rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden;
+    background: white;
+    border-radius: 8px;
+    padding: 0;
+    margin-bottom: 0.6rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
   }
   .cat-header {
-    display: flex; align-items: center; justify-content: space-between; padding-right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 0.75rem;
   }
-  .cat-header:has(.cat-toggle:hover) { background: #f5f7f4; }
+  .cat-header:has(.cat-toggle:hover) {
+    background: #f5f7f4;
+  }
   .cat-toggle {
-    flex: 1; display: flex; align-items: center; justify-content: space-between;
-    background: none; border: none; cursor: pointer;
-    padding: 0.75rem 0.5rem 0.75rem 1rem; font: inherit; text-align: left; min-height: 52px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.75rem 0.5rem 0.75rem 1rem;
+    font: inherit;
+    text-align: left;
+    min-height: 52px;
   }
-  .cat-toggle:hover { background: transparent; }
-  .cat-title { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.95rem; }
-  .cat-icon { font-size: 1.1rem; }
-  .cat-name { text-transform: capitalize; color: #1f5e3a; }
+  .cat-toggle:hover {
+    background: transparent;
+  }
+  .cat-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .cat-icon {
+    font-size: 1.1rem;
+  }
+  .cat-name {
+    text-transform: capitalize;
+    color: #1f5e3a;
+  }
   .cat-count {
-    background: #e7f1ea; color: #1f5e3a; border-radius: 12px;
-    font-size: 0.75rem; font-weight: 700; padding: 0.1rem 0.5rem;
+    background: #e7f1ea;
+    color: #1f5e3a;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.1rem 0.5rem;
   }
 
-  .chevron { font-size: 0.95rem; color: #1f5e3a; width: 1rem; display: inline-block; text-align: center; }
+  .chevron {
+    font-size: 0.95rem;
+    color: #1f5e3a;
+    width: 1rem;
+    display: inline-block;
+    text-align: center;
+  }
 
   /* Seed sub-category accordion */
-  .subcat { border-top: 1px solid #eef1ee; }
-  .subcat:first-of-type { border-top: none; }
+  .subcat {
+    border-top: 1px solid #eef1ee;
+  }
+  .subcat:first-of-type {
+    border-top: none;
+  }
   .subcat-toggle {
-    width: 100%; display: flex; align-items: center; gap: 0.4rem;
-    background: #f5f7f4; border: none; cursor: pointer;
-    padding: 0.45rem 0.75rem 0.45rem 1.5rem; font: inherit; text-align: left;
-    min-height: unset; min-width: unset; color: #3a5a44;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #f5f7f4;
+    border: none;
+    cursor: pointer;
+    padding: 0.45rem 0.75rem 0.45rem 1.5rem;
+    font: inherit;
+    text-align: left;
+    min-height: unset;
+    min-width: unset;
+    color: #3a5a44;
   }
-  .subcat-toggle:hover { background: #e7f1ea; }
-  .chevron-sm { font-size: 0.8rem; color: #6a8a75; width: 0.85rem; display: inline-block; text-align: center; }
-  .subcat-icon { font-size: 0.95rem; line-height: 1; }
-  .subcat-name { font-size: 0.82rem; font-weight: 600; flex: 1; }
+  .subcat-toggle:hover {
+    background: #e7f1ea;
+  }
+  .chevron-sm {
+    font-size: 0.8rem;
+    color: #6a8a75;
+    width: 0.85rem;
+    display: inline-block;
+    text-align: center;
+  }
+  .subcat-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .subcat-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    flex: 1;
+  }
   .subcat-count {
-    background: #e0eae3; color: #3a5a44; border-radius: 10px;
-    font-size: 0.7rem; font-weight: 700; padding: 0.05rem 0.45rem;
+    background: #e0eae3;
+    color: #3a5a44;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.05rem 0.45rem;
   }
-  .item-list.nested { border-top: 1px solid #eef1ee; }
-  .item-list.nested .item-btn { padding-left: 2rem; }
+  .item-list.nested {
+    border-top: 1px solid #eef1ee;
+  }
+  .item-list.nested .item-btn {
+    padding-left: 2rem;
+  }
 
   /* ── Item list rows ─────────────────────────────────────────────────────── */
-  .item-list { list-style: none; padding: 0; margin: 0; border-top: 1px solid #eef1ee; }
+  .item-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid #eef1ee;
+  }
   .item-row {
-    display: flex; align-items: center; border-bottom: 1px solid #f0f3f0; min-height: 44px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #f0f3f0;
+    min-height: 44px;
   }
-  .item-row:last-child { border-bottom: none; }
-  .item-row.low { border-left: 3px solid #b35900; }
+  .item-row:last-child {
+    border-bottom: none;
+  }
+  .item-row.low {
+    border-left: 3px solid #b35900;
+  }
   .item-btn {
-    flex: 1; display: flex; align-items: center; justify-content: space-between;
-    background: none; border: none; cursor: pointer; padding: 0.35rem 0.75rem 0.35rem 1rem;
-    text-align: left; font: inherit; min-height: 44px; gap: 0.5rem;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.35rem 0.75rem 0.35rem 1rem;
+    text-align: left;
+    font: inherit;
+    min-height: 44px;
+    gap: 0.5rem;
   }
-  .item-btn:hover { background: #f9fcf9; }
-  .item-info { display: flex; flex-direction: column; gap: 0.05rem; flex: 1; }
-  .item-name { font-weight: 600; font-size: 0.9rem; color: #1a1a1a; line-height: 1.2; }
+  .item-btn:hover {
+    background: #f9fcf9;
+  }
+  .item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    flex: 1;
+  }
+  .item-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1a1a1a;
+    line-height: 1.2;
+  }
   .pending-refresh-badge {
     display: inline-block;
     margin-left: 0.3rem;
@@ -2117,27 +2802,68 @@
     vertical-align: middle;
     filter: saturate(1.2);
   }
-  .item-sub { font-size: 0.72rem; color: #777; line-height: 1.15; }
-  .item-qty {
-    font-family: monospace; font-weight: 700; font-size: 1rem; color: #1f5e3a;
-    white-space: nowrap; display: flex; align-items: center; gap: 0.35rem;
+  .item-sub {
+    font-size: 0.72rem;
+    color: #777;
+    line-height: 1.15;
   }
-  .item-unit { font-weight: 400; font-size: 0.8rem; color: #555; }
-  .qty-low { color: #b35900; }
+  .item-qty {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1f5e3a;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .item-unit {
+    font-weight: 400;
+    font-size: 0.8rem;
+    color: #555;
+  }
+  .qty-low {
+    color: #b35900;
+  }
   .low-badge {
-    background: #fff3cd; color: #b35900; padding: 0.05rem 0.35rem;
-    border-radius: 3px; font-size: 0.7rem; font-weight: 700;
+    background: #fff3cd;
+    color: #b35900;
+    padding: 0.05rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 700;
   }
 
   /* ── Plus button + quick-add form ──────────────────────────────────────── */
   .plus-btn {
-    width: 36px; height: 36px; border-radius: 50%; background: #1f5e3a; color: white;
-    border: none; font-size: 1.3rem; font-weight: 400; cursor: pointer; flex-shrink: 0;
-    margin: 0 0.6rem; display: flex; align-items: center; justify-content: center; line-height: 1;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #1f5e3a;
+    color: white;
+    border: none;
+    font-size: 1.3rem;
+    font-weight: 400;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
-  .plus-btn:hover { background: #17492d; }
-  .short-name-row { display: flex; gap: 0.4rem; align-items: stretch; }
-  .short-name-row input { flex: 1 1 auto; min-width: 0; }
+  .plus-btn:hover {
+    background: #17492d;
+  }
+  .short-name-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: stretch;
+  }
+  .short-name-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
   .ai-mini-btn {
     flex: 0 0 auto;
     width: 48px;
@@ -2150,109 +2876,284 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .ai-mini-btn:hover { background: #e0e7ff; }
-  .ai-mini-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ai-mini-btn:hover {
+    background: #e0e7ff;
+  }
+  .ai-mini-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
   .quick-add-form {
-    display: flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
     flex-shrink: 0;
   }
   .quick-qty {
-    width: 64px; padding: 0.3rem 0.4rem; border: 2px solid #1f5e3a;
-    border-radius: 4px; font-size: 0.9rem; min-height: 36px; font-family: inherit;
+    width: 64px;
+    padding: 0.3rem 0.4rem;
+    border: 2px solid #1f5e3a;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-height: 36px;
+    font-family: inherit;
   }
-  .quick-unit { font-size: 0.78rem; color: #555; }
+  .quick-unit {
+    font-size: 0.78rem;
+    color: #555;
+  }
   .quick-confirm {
-    background: #1f5e3a; color: white; border: none; border-radius: 4px;
-    padding: 0.3rem 0.6rem; cursor: pointer; font-size: 0.9rem; min-height: 36px;
+    background: #1f5e3a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    min-height: 36px;
   }
-  .quick-confirm:disabled { opacity: 0.6; }
+  .quick-confirm:disabled {
+    opacity: 0.6;
+  }
   .quick-cancel {
-    background: none; border: 1px solid #d0d7d0; border-radius: 4px;
-    padding: 0.3rem 0.5rem; cursor: pointer; color: #555; min-height: 36px;
+    background: none;
+    border: 1px solid #d0d7d0;
+    border-radius: 4px;
+    padding: 0.3rem 0.5rem;
+    cursor: pointer;
+    color: #555;
+    min-height: 36px;
   }
 
   /* ── Empty state ────────────────────────────────────────────────────────── */
-  .empty { padding: 2rem 1rem; text-align: center; color: #555; }
+  .empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #555;
+  }
 
   /* ── Modal ──────────────────────────────────────────────────────────────── */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-    display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 1rem;
   }
   .modal-box {
-    background: white; border-radius: 10px; width: 100%; max-width: 480px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18); display: flex; flex-direction: column;
-    max-height: 90vh; overflow: hidden;
+    background: white;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    overflow: hidden;
   }
-  .modal-box.wide { max-width: 540px; }
+  .modal-box.wide {
+    max-width: 540px;
+  }
   .modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 1rem 1.25rem 0.75rem; border-bottom: 1px solid #e8ede8; flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid #e8ede8;
+    flex-shrink: 0;
   }
-  .modal-header h3 { margin: 0; font-size: 1.05rem; color: #1f5e3a; }
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #1f5e3a;
+  }
   .modal-close {
-    background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #555;
-    padding: 0.2rem 0.4rem; border-radius: 4px; line-height: 1;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #555;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    line-height: 1;
   }
-  .modal-close:hover { background: #f0f3f0; }
+  .modal-close:hover {
+    background: #f0f3f0;
+  }
 
   /* Edit mode: amount section */
   .modal-amount-section {
-    padding: 1rem 1.25rem 0.75rem; background: #f5f7f4;
-    border-bottom: 1px solid #e8ede8; flex-shrink: 0;
+    padding: 1rem 1.25rem 0.75rem;
+    background: #f5f7f4;
+    border-bottom: 1px solid #e8ede8;
+    flex-shrink: 0;
   }
-  .modal-amount { display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+  .modal-amount {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+  }
   .amount-display {
-    display: inline-flex; align-items: baseline; gap: 0.4rem;
-    background: none; border: none; padding: 0.2rem 0.4rem; margin: -0.2rem -0.4rem;
-    border-radius: 6px; cursor: pointer; font: inherit; color: inherit;
-    min-height: unset; min-width: unset;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    background: none;
+    border: none;
+    padding: 0.2rem 0.4rem;
+    margin: -0.2rem -0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    min-height: unset;
+    min-width: unset;
   }
-  .amount-display:hover { background: #e7f1ea; }
-  .amount-display:hover .amount-edit-icon { opacity: 1; }
-  .amount-big { font-size: 2.2rem; font-weight: 800; color: #1f5e3a; font-family: monospace; line-height: 1; }
-  .amount-unit { font-size: 1rem; color: #555; }
-  .amount-edit-icon { font-size: 0.95rem; color: #1f5e3a; opacity: 0.55; transition: opacity 0.15s; align-self: center; }
-  .modal-set-qty-form { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-  .set-qty-input { font-size: 1.6rem; font-weight: 800; width: 110px; }
-  .modal-amount-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+  .amount-display:hover {
+    background: #e7f1ea;
+  }
+  .amount-display:hover .amount-edit-icon {
+    opacity: 1;
+  }
+  .amount-big {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #1f5e3a;
+    font-family: monospace;
+    line-height: 1;
+  }
+  .amount-unit {
+    font-size: 1rem;
+    color: #555;
+  }
+  .amount-edit-icon {
+    font-size: 0.95rem;
+    color: #1f5e3a;
+    opacity: 0.55;
+    transition: opacity 0.15s;
+    align-self: center;
+  }
+  .modal-set-qty-form {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .set-qty-input {
+    font-size: 1.6rem;
+    font-weight: 800;
+    width: 110px;
+  }
+  .modal-amount-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
   .green-plus-btn {
-    background: #1f5e3a; color: white; border: none; border-radius: 6px;
-    padding: 0.5rem 1rem; font-weight: 600; cursor: pointer; min-height: 40px; font-family: inherit;
+    background: #1f5e3a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 40px;
+    font-family: inherit;
   }
-  .green-plus-btn:hover { background: #17492d; }
-  .modal-add-stock-form { display: flex; align-items: center; gap: 0.4rem; }
+  .green-plus-btn:hover {
+    background: #17492d;
+  }
+  .modal-add-stock-form {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
   .modal-stock-qty {
-    width: 80px; padding: 0.4rem 0.5rem; border: 2px solid #1f5e3a;
-    border-radius: 4px; font-size: 1.1rem; font-weight: 700; min-height: 40px; font-family: monospace;
+    width: 80px;
+    padding: 0.4rem 0.5rem;
+    border: 2px solid #1f5e3a;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    min-height: 40px;
+    font-family: monospace;
   }
-  .modal-stock-unit { font-size: 0.85rem; color: #555; }
+  .modal-stock-unit {
+    font-size: 0.85rem;
+    color: #555;
+  }
   .modal-add-confirm {
-    background: #1f5e3a; color: white; border: none; border-radius: 4px;
-    padding: 0.4rem 0.75rem; cursor: pointer; font-weight: 600; min-height: 40px;
+    background: #1f5e3a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    font-weight: 600;
+    min-height: 40px;
   }
-  .modal-add-confirm:disabled { opacity: 0.6; }
-  .lots-link { font-size: 0.82rem; color: #1f5e3a; text-decoration: underline; }
-  .modal-divider { border: none; border-top: 1px solid #e8ede8; margin: 0; }
+  .modal-add-confirm:disabled {
+    opacity: 0.6;
+  }
+  .lots-link {
+    font-size: 0.82rem;
+    color: #1f5e3a;
+    text-decoration: underline;
+  }
+  .modal-divider {
+    border: none;
+    border-top: 1px solid #e8ede8;
+    margin: 0;
+  }
 
   /* Modal form + scrollable area */
   .modal-form {
-    flex: 1; overflow-y: auto; padding: 0.75rem 1.25rem; display: flex; flex-direction: column; gap: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
 
   /* Modal footer */
   .modal-footer {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-    padding: 0.75rem 1.25rem; border-top: 1px solid #e8ede8; flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid #e8ede8;
+    flex-shrink: 0;
   }
-  .modal-footer-right { display: flex; gap: 0.5rem; }
-  .modal-error { padding: 0 1.25rem 0.5rem; margin: 0; }
+  .modal-footer-right {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .modal-error {
+    padding: 0 1.25rem 0.5rem;
+    margin: 0;
+  }
   .danger-btn {
-    background: white; color: #b00020; border: 1.5px solid #b00020;
-    border-radius: 6px; padding: 0.6rem 0.9rem; cursor: pointer; min-height: 44px;
-    font-family: inherit; font-size: 0.9rem;
+    background: white;
+    color: #b00020;
+    border: 1.5px solid #b00020;
+    border-radius: 6px;
+    padding: 0.6rem 0.9rem;
+    cursor: pointer;
+    min-height: 44px;
+    font-family: inherit;
+    font-size: 0.9rem;
   }
-  .danger-btn:hover { background: #fce4e4; }
+  .danger-btn:hover {
+    background: #fce4e4;
+  }
 
   /* ── Form fields (inside modal) ─────────────────────────────────────────── */
   .grid {
@@ -2264,39 +3165,83 @@
     margin-bottom: 0.15rem;
   }
   @media (max-width: 520px) {
-    .grid { grid-template-columns: 1fr; }
+    .grid {
+      grid-template-columns: 1fr;
+    }
   }
   label {
-    display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
     justify-content: flex-end;
   }
-  label.full { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
-  input[type='text'], input[type='number'], select {
-    padding: 0.6rem; border: 2px solid #d0d7d0; border-radius: 4px;
-    font-size: 1rem; min-height: 48px; font-family: inherit;
+  label.full {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+  }
+  input[type='text'],
+  input[type='number'],
+  select {
+    padding: 0.6rem;
+    border: 2px solid #d0d7d0;
+    border-radius: 4px;
+    font-size: 1rem;
+    min-height: 48px;
+    font-family: inherit;
   }
   label.guessed {
-    border-left: 3px solid #e6a817; padding-left: 0.6rem;
-    background: #fffbf0; border-radius: 0 4px 4px 0;
+    border-left: 3px solid #e6a817;
+    padding-left: 0.6rem;
+    background: #fffbf0;
+    border-radius: 0 4px 4px 0;
   }
   label.catalog {
-    border-left: 3px solid #1f5e3a; padding-left: 0.6rem;
-    background: #f3f9f4; border-radius: 0 4px 4px 0;
+    border-left: 3px solid #1f5e3a;
+    padding-left: 0.6rem;
+    background: #f3f9f4;
+    border-radius: 0 4px 4px 0;
   }
   .est-tag {
-    font-style: normal; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.4px; background: #e6a817; color: #fff;
-    padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.4rem; vertical-align: middle;
+    font-style: normal;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: #e6a817;
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    vertical-align: middle;
   }
   .cat-tag {
-    font-style: normal; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.4px; background: #1f5e3a; color: #fff;
-    padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.4rem; vertical-align: middle;
+    font-style: normal;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: #1f5e3a;
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    vertical-align: middle;
   }
   .new-tag {
-    font-style: normal; font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.4px; background: #2563eb; color: #fff;
-    padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.4rem; vertical-align: middle;
+    font-style: normal;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: #2563eb;
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    vertical-align: middle;
   }
 
   /* Phase 17 follow-up — per-field provenance: indigo background tints any
@@ -2362,35 +3307,70 @@
     background: transparent;
   }
   .ai-refresh-btn {
-    background: #6366f1; color: #fff; border: none; border-radius: 4px;
-    padding: 0.45rem 0.85rem; font-size: 0.85rem; font-weight: 600;
-    cursor: pointer; min-height: unset; font-family: inherit;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: unset;
+    font-family: inherit;
   }
-  .ai-refresh-btn:hover { background: #4f46e5; }
-  .ai-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ai-refresh-btn:hover {
+    background: #4f46e5;
+  }
+  .ai-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
   .ai-refresh-error {
-    margin: 0.5rem 0 0; color: #b00020; font-size: 0.85rem;
+    margin: 0.5rem 0 0;
+    color: #b00020;
+    font-size: 0.85rem;
   }
-  .ai-refresh-diff { margin-top: 0.6rem; }
+  .ai-refresh-diff {
+    margin-top: 0.6rem;
+  }
   .ai-refresh-diff-title {
-    margin: 0 0 0.4rem; font-size: 0.85rem; color: #1e293b; font-weight: 600;
+    margin: 0 0 0.4rem;
+    font-size: 0.85rem;
+    color: #1e293b;
+    font-weight: 600;
   }
   .ai-refresh-notes {
-    margin: 0 0 0.5rem; font-size: 0.8rem; color: #475569; font-style: italic;
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    color: #475569;
+    font-style: italic;
   }
   .ai-refresh-plate-note {
-    margin: 0 0 0.5rem; padding: 0.35rem 0.55rem;
-    font-size: 0.82rem; color: #1f5e3a;
-    background: #f0f9f4; border-left: 3px solid #1f5e3a; border-radius: 4px;
+    margin: 0 0 0.5rem;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.82rem;
+    color: #1f5e3a;
+    background: #f0f9f4;
+    border-left: 3px solid #1f5e3a;
+    border-radius: 4px;
   }
-  .ai-refresh-list { list-style: none; padding: 0; margin: 0 0 0.5rem; }
+  .ai-refresh-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.5rem;
+  }
   .ai-refresh-row {
-    display: flex; align-items: center; gap: 0.4rem;
-    padding: 0.2rem 0; border-bottom: 1px dashed #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0;
+    border-bottom: 1px dashed #e2e8f0;
     font-size: 0.82rem;
     min-height: 22px;
   }
-  .ai-refresh-row:last-child { border-bottom: none; }
+  .ai-refresh-row:last-child {
+    border-bottom: none;
+  }
   /* Override the global label { flex-direction: column } so the checkbox
    *  sits inline with the label text instead of stacking above it. */
   .ai-refresh-check {
@@ -2408,7 +3388,9 @@
     flex: 0 0 auto;
   }
   .ai-refresh-key {
-    font-weight: 600; color: #1e293b; white-space: nowrap;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
   }
   .ai-refresh-value {
     flex: 1 1 auto;
@@ -2416,44 +3398,87 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.8rem;
     text-align: right;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     padding-left: 0.4rem;
   }
   .ai-refresh-actions {
-    display: flex; gap: 0.5rem; margin-top: 0.6rem;
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
   }
   .ai-refresh-cite-list {
-    list-style: disc; padding-left: 1.2rem; margin: 0.3rem 0 0.6rem;
+    list-style: disc;
+    padding-left: 1.2rem;
+    margin: 0.3rem 0 0.6rem;
     font-size: 0.83rem;
   }
   .ai-refresh-cite-list a {
-    color: #2563eb; text-decoration: underline;
+    color: #2563eb;
+    text-decoration: underline;
   }
 
   /* Catalog-save offer (unlinked seed items) */
   .catalog-offer {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
-    background: #eff5ff; border: 1px solid #bcd4f5; border-radius: 6px;
-    padding: 0.6rem 0.75rem; margin: 0.5rem 0 0.25rem; flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: #eff5ff;
+    border: 1px solid #bcd4f5;
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+    margin: 0.5rem 0 0.25rem;
+    flex-wrap: wrap;
   }
-  .catalog-offer-text { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; min-width: 200px; }
-  .catalog-offer-text strong { color: #1e40af; font-size: 0.9rem; }
-  .catalog-offer-text span { color: #475569; font-size: 0.8rem; }
+  .catalog-offer-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+    min-width: 200px;
+  }
+  .catalog-offer-text strong {
+    color: #1e40af;
+    font-size: 0.9rem;
+  }
+  .catalog-offer-text span {
+    color: #475569;
+    font-size: 0.8rem;
+  }
   .catalog-offer-btn {
-    background: #2563eb; color: #fff; border: none; border-radius: 4px;
-    padding: 0.4rem 0.85rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;
-    min-height: unset; min-width: unset; font-family: inherit; flex-shrink: 0;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: unset;
+    min-width: unset;
+    font-family: inherit;
+    flex-shrink: 0;
   }
-  .catalog-offer-btn:hover { background: #1d4ed8; }
+  .catalog-offer-btn:hover {
+    background: #1d4ed8;
+  }
 
   /* Linked-catalog summary */
   .catalog-link-section {
-    background: #f0f5f1; border: 1px solid #cfdfd2; border-radius: 6px;
-    padding: 0.6rem 0.75rem; margin: 0.5rem 0 0.25rem;
+    background: #f0f5f1;
+    border: 1px solid #cfdfd2;
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+    margin: 0.5rem 0 0.25rem;
   }
   .catalog-link-label {
-    font-size: 0.85rem; color: #1f5e3a;
-    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.85rem;
+    color: #1f5e3a;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     flex-wrap: nowrap;
     min-width: 0;
     margin-bottom: 0.5rem;
@@ -2464,9 +3489,16 @@
     word-break: break-word;
   }
   .catalog-link-check {
-    background: #1f5e3a; color: #fff; width: 20px; height: 20px; border-radius: 50%;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 0.75rem; font-weight: 700;
+    background: #1f5e3a;
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
     flex-shrink: 0;
   }
   /* Buttons live on their own row beneath the link label. Both use the
@@ -2474,40 +3506,76 @@
    *  fill colour distinguishes destructive Unlink from informational
    *  Refresh. */
   .catalog-link-actions {
-    display: flex; align-items: center; gap: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   .catalog-unlink-btn,
   .catalog-refresh-btn {
-    border-radius: 4px; padding: 0.35rem 0.7rem;
-    font-size: 0.8rem; line-height: 1.2;
-    cursor: pointer; font-family: inherit; font-weight: 600;
-    min-height: 32px; min-width: unset;
-    display: inline-flex; align-items: center; gap: 0.3rem;
+    border-radius: 4px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    min-height: 32px;
+    min-width: unset;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
   }
   .catalog-unlink-btn {
-    background: transparent; color: #555; border: 1px solid #b8c4ba;
+    background: transparent;
+    color: #555;
+    border: 1px solid #b8c4ba;
   }
-  .catalog-unlink-btn:hover { background: #fff; color: #b00020; border-color: #b00020; }
+  .catalog-unlink-btn:hover {
+    background: #fff;
+    color: #b00020;
+    border-color: #b00020;
+  }
   .catalog-refresh-btn {
-    background: #2563eb; color: #fff; border: 1px solid #2563eb;
+    background: #2563eb;
+    color: #fff;
+    border: 1px solid #2563eb;
   }
   .catalog-refresh-btn:hover:not(:disabled) {
-    background: #1d4ed8; border-color: #1d4ed8;
+    background: #1d4ed8;
+    border-color: #1d4ed8;
   }
   .catalog-refresh-btn:disabled {
-    opacity: 0.6; cursor: not-allowed;
+    opacity: 0.6;
+    cursor: not-allowed;
   }
   .catalog-meta {
-    display: grid; grid-template-columns: max-content 1fr;
-    gap: 0.15rem 0.75rem; margin: 0.5rem 0 0; font-size: 0.8rem;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.15rem 0.75rem;
+    margin: 0.5rem 0 0;
+    font-size: 0.8rem;
   }
-  .catalog-meta dt { color: #6a7a6c; font-weight: 600; }
-  .catalog-meta dd { margin: 0; color: #1a1a1a; }
+  .catalog-meta dt {
+    color: #6a7a6c;
+    font-weight: 600;
+  }
+  .catalog-meta dd {
+    margin: 0;
+    color: #1a1a1a;
+  }
   .seed-section-header {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem;
-    flex-wrap: wrap; margin-bottom: 0.25rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.25rem;
   }
-  .catalog-hint { font-size: 0.75rem; color: #1f5e3a; font-style: italic; }
+  .catalog-hint {
+    font-size: 0.75rem;
+    color: #1f5e3a;
+    font-style: italic;
+  }
   .planter-setup {
     margin-top: 0.75rem;
     padding: 0.5rem 0.75rem 0.6rem;
@@ -2517,64 +3585,137 @@
     border-radius: 4px;
   }
   .planter-setup-header {
-    display: flex; align-items: baseline; justify-content: space-between;
-    gap: 0.5rem; margin-bottom: 0.4rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
   }
   .planter-setup-title {
-    font-size: 0.75rem; color: #1f5e3a; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 0.75rem;
+    color: #1f5e3a;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
   .planter-setup-action {
-    font-size: 0.8rem; color: #1f5e3a;
-    text-decoration: underline; font-weight: 600;
+    font-size: 0.8rem;
+    color: #1f5e3a;
+    text-decoration: underline;
+    font-weight: 600;
   }
   .planter-setup-body {
-    display: flex; align-items: flex-start; gap: 0.75rem; flex-wrap: wrap;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
   }
   .planter-setup-plate {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    background: white; border: 1px solid #d0d7d0;
-    border-radius: 4px; padding: 0.25rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: white;
+    border: 1px solid #d0d7d0;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
   }
   .planter-setup-num {
-    font-family: monospace; font-weight: 700; font-size: 0.95rem; color: #1f5e3a;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1f5e3a;
   }
-  .planter-setup-color { color: #555; font-size: 0.8rem; }
+  .planter-setup-color {
+    color: #555;
+    font-size: 0.8rem;
+  }
   .planter-setup-meta {
-    display: grid; grid-template-columns: max-content 1fr;
-    gap: 0.15rem 0.5rem; margin: 0; font-size: 0.8rem; flex: 1;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.15rem 0.5rem;
+    margin: 0;
+    font-size: 0.8rem;
+    flex: 1;
   }
-  .planter-setup-meta > div { display: contents; }
-  .planter-setup-meta dt { color: #555; }
-  .planter-setup-meta dd { margin: 0; color: #1f5e3a; }
-  .planter-setup-meta dd small { color: #777; }
+  .planter-setup-meta > div {
+    display: contents;
+  }
+  .planter-setup-meta dt {
+    color: #555;
+  }
+  .planter-setup-meta dd {
+    margin: 0;
+    color: #1f5e3a;
+  }
+  .planter-setup-meta dd small {
+    color: #777;
+  }
   .planter-setup-empty {
-    margin: 0; color: #555; font-size: 0.85rem; font-style: italic;
+    margin: 0;
+    color: #555;
+    font-size: 0.85rem;
+    font-style: italic;
   }
   /* Keep label text + tags + the cite-icon on one line; don't let the tiny
    *  badge or icon force a wrap that doubles row height. Long labels
    *  ellipsize instead. */
   .field-label {
-    display: flex; align-items: center; gap: 0.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
     flex-wrap: nowrap;
     line-height: 1.15;
     margin-bottom: 0.15rem;
   }
-  .full-col { grid-column: 1 / -1; }
-  .form-section { padding-top: 0.5rem; margin-top: 0.2rem; border-top: 1px solid #e8ede8; }
+  .full-col {
+    grid-column: 1 / -1;
+  }
+  .form-section {
+    padding-top: 0.5rem;
+    margin-top: 0.2rem;
+    border-top: 1px solid #e8ede8;
+  }
   .seed-section {
-    background: #f9fcf9; border-radius: 6px; padding: 0.5rem;
-    border: 1px solid #d0ddd0; margin-top: 0.4rem;
+    background: #f9fcf9;
+    border-radius: 6px;
+    padding: 0.5rem;
+    border: 1px solid #d0ddd0;
+    margin-top: 0.4rem;
   }
   .subsection-title {
-    font-size: 0.85rem; font-weight: 700; color: #1f5e3a; text-transform: uppercase;
-    letter-spacing: 0.5px; margin: 0 0 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1f5e3a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 0.3rem;
   }
-  .range-inputs { display: flex; align-items: center; gap: 0.4rem; }
-  .range-inputs input { flex: 1; min-width: 0; }
-  .range-sep { font-size: 1.1rem; color: #555; flex-shrink: 0; }
-  .reorder-label .field-label { align-items: center; }
-  .reorder-check { width: 18px; height: 18px; min-height: unset; padding: 0; border: none; margin: 0; cursor: pointer; }
+  .range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .range-inputs input {
+    flex: 1;
+    min-width: 0;
+  }
+  .range-sep {
+    font-size: 1.1rem;
+    color: #555;
+    flex-shrink: 0;
+  }
+  .reorder-label .field-label {
+    align-items: center;
+  }
+  .reorder-check {
+    width: 18px;
+    height: 18px;
+    min-height: unset;
+    padding: 0;
+    border: none;
+    margin: 0;
+    cursor: pointer;
+  }
   .reorder-off {
     font-size: 0.85rem;
     color: #888;
@@ -2585,58 +3726,144 @@
     padding: 0 0.6rem;
   }
   .barcode-hint {
-    font-size: 0.78rem; color: #666; font-family: monospace; background: #f5f7f4;
-    padding: 0.2rem 0.5rem; border-radius: 3px; border: 1px solid #d0d7d0; margin-top: 0.5rem;
+    font-size: 0.78rem;
+    color: #666;
+    font-family: monospace;
+    background: #f5f7f4;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    border: 1px solid #d0d7d0;
+    margin-top: 0.5rem;
   }
 
   /* ── Scan buttons + notices (inside add modal) ──────────────────────────── */
-  .scan-btns { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.6rem 1.25rem 0; }
-  .scan-spinner { font-size: 0.82rem; color: #555; }
-  .scan-btn {
-    padding: 0.4rem 0.9rem; border: 1.5px solid #1f5e3a; background: #fff;
-    color: #1f5e3a; border-radius: 6px; font-size: 0.85rem; font-weight: 600;
-    cursor: pointer; min-height: 40px; font-family: inherit;
+  .scan-btns {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.6rem 1.25rem 0;
   }
-  .scan-btn:hover:not(:disabled) { background: #f0f5f1; }
-  .scan-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .ai-btn { background: #f5f0ff; border-color: #7c3aed; color: #6d28d9; }
-  .ai-btn:hover:not(:disabled) { background: #ede9fe; }
+  .scan-spinner {
+    font-size: 0.82rem;
+    color: #555;
+  }
+  .scan-btn {
+    padding: 0.4rem 0.9rem;
+    border: 1.5px solid #1f5e3a;
+    background: #fff;
+    color: #1f5e3a;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 40px;
+    font-family: inherit;
+  }
+  .scan-btn:hover:not(:disabled) {
+    background: #f0f5f1;
+  }
+  .scan-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .ai-btn {
+    background: #f5f0ff;
+    border-color: #7c3aed;
+    color: #6d28d9;
+  }
+  .ai-btn:hover:not(:disabled) {
+    background: #ede9fe;
+  }
   .url-prompt-form {
-    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
     padding: 0.5rem 1.25rem 0;
   }
   .url-prompt-input {
-    flex: 1 1 240px; min-width: 0; min-height: 40px;
-    padding: 0.4rem 0.6rem; border: 1.5px solid #d0d7d0; border-radius: 6px;
-    font-family: inherit; font-size: 0.9rem;
+    flex: 1 1 240px;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0.4rem 0.6rem;
+    border: 1.5px solid #d0d7d0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.9rem;
   }
-  .url-prompt-input:focus { outline: 2px solid #7c3aed; outline-offset: 1px; }
-  .url-prompt-submit { min-height: 40px; padding: 0.4rem 0.9rem; font-size: 0.9rem; }
+  .url-prompt-input:focus {
+    outline: 2px solid #7c3aed;
+    outline-offset: 1px;
+  }
+  .url-prompt-submit {
+    min-height: 40px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.9rem;
+  }
   .scan-notice {
-    font-size: 0.82rem; color: #2e7d32; background: #e7f1ea;
-    border-left: 3px solid #1f5e3a; padding: 0.4rem 0.7rem; border-radius: 3px;
+    font-size: 0.82rem;
+    color: #2e7d32;
+    background: #e7f1ea;
+    border-left: 3px solid #1f5e3a;
+    padding: 0.4rem 0.7rem;
+    border-radius: 3px;
     margin: 0.4rem 1.25rem 0;
   }
   .scan-error {
-    font-size: 0.85rem; color: #b00020; background: #fce4e4;
-    border-left: 3px solid #b00020; padding: 0.4rem 0.7rem; border-radius: 3px;
+    font-size: 0.85rem;
+    color: #b00020;
+    background: #fce4e4;
+    border-left: 3px solid #b00020;
+    padding: 0.4rem 0.7rem;
+    border-radius: 3px;
     margin: 0.4rem 1.25rem 0;
   }
 
   /* ── Shared buttons ─────────────────────────────────────────────────────── */
   .primary {
-    background: #1f5e3a; color: white; border: none; border-radius: 6px;
-    padding: 0.6rem 1.1rem; font-weight: 600; cursor: pointer; min-height: 44px; font-family: inherit;
+    background: #1f5e3a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    font-family: inherit;
   }
-  .primary:disabled { background: #999; cursor: not-allowed; }
+  .primary:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
   .secondary {
-    background: white; color: #555; border: 1.5px solid #d0d7d0; border-radius: 6px;
-    padding: 0.6rem 1rem; font-size: 0.9rem; cursor: pointer; min-height: 44px; font-family: inherit;
+    background: white;
+    color: #555;
+    border: 1.5px solid #d0d7d0;
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-height: 44px;
+    font-family: inherit;
   }
-  .secondary:hover { background: #f5f7f4; }
-  .error { color: #b00020; font-size: 0.85rem; margin: 0; }
+  .secondary:hover {
+    background: #f5f7f4;
+  }
+  .error {
+    color: #b00020;
+    font-size: 0.85rem;
+    margin: 0;
+  }
 
   /* ── Spinner ────────────────────────────────────────────────────────────── */
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .spin {
+    display: inline-block;
+    animation: spin 0.8s linear infinite;
+  }
 </style>

@@ -10,7 +10,13 @@
 
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/db/client';
-import { owners, ownerSubscriptions, ownerUsageCounters, superadminAudit, users } from '$lib/db/schema';
+import {
+  owners,
+  ownerSubscriptions,
+  ownerUsageCounters,
+  superadminAudit,
+  users
+} from '$lib/db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
 import { unscopedQueryNote } from '$lib/db/tenant';
 
@@ -114,7 +120,10 @@ export function writeAuditRow(input: AuditRowInput): void {
       ownerId: input.ownerId,
       targetTable: input.targetTable ?? null,
       targetId: input.targetId ?? null,
-      payloadJson: input.payload === undefined || input.payload === null ? null : JSON.stringify(input.payload),
+      payloadJson:
+        input.payload === undefined || input.payload === null
+          ? null
+          : JSON.stringify(input.payload),
       at: new Date(Date.now())
     })
     .run();

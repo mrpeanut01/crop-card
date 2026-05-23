@@ -125,7 +125,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   - **Authoring:** `/plugins/new` → form-driven crop-or-herbicide builder → save → registry validates Zod schema + bypass check → loaded.
   - **Upload:** `/plugins` → upload JSON file → registry validates → loaded or rejection with structured error.
 - **Success:** New plugin appears in `/spray` herbicide list or `/plan` crop list.
-- **Audit notes:** Plugin schema is **v1.0**; HCD Guide §4 specifies v1.1 (cropOperationModel, hayOperations, zadoksStages, moistureGates). FR-19..FR-23 cannot register without v1.1 support. See F-C.
+- **Audit notes:** Plugin schema is **v1.1** as of Phase 22 (T-08 / #40 closed). The Zod source declares `pluginSchemaVersion` ([schemas.ts:32](../apps/web/src/lib/plugins/schemas.ts)); v1.1 fields (`complianceFlags`, sprayWindow `purpose` + `*Gate` tags, `cropOperationModel`, `hayOperations`, `zadoksStages`, `moistureGates`) are all optional + additive, so v1.0 plugins remain valid. The Phase 21 deferred data backfill (38 crop `sprayWindows[]` got a `purpose`; 102 input plugins got `complianceFlags`) ran via [apps/web/scripts/plugin-data-backfill.mjs](../apps/web/scripts/plugin-data-backfill.mjs).
 
 ## UC-09 — Review & export records (CSV/PDF)
 

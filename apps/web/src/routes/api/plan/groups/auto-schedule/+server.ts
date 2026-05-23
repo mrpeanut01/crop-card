@@ -13,18 +13,10 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { listBlocks } from '$lib/db/blocks';
-import {
-  createPlantingGroup,
-  listCrops,
-  setSchedule,
-  type CreateGroupInput
-} from '$lib/db/crops';
+import { createPlantingGroup, listCrops, setSchedule, type CreateGroupInput } from '$lib/db/crops';
 import { requireOwner } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
-import {
-  proposePlansEngineOnly,
-  type GroupPlanningInput
-} from '$lib/server/aiGroupPlanning';
+import { proposePlansEngineOnly, type GroupPlanningInput } from '$lib/server/aiGroupPlanning';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import { LOUDOUN_VA, soilTempEarliestDayMs } from '$lib/weather/normals';
 import type { CropPlugin } from '$lib/plugins/schemas';
@@ -54,11 +46,12 @@ export const POST: RequestHandler = async (event) => {
 
   const year = parsed.data.year ?? new Date().getFullYear();
   const allBlocks = listBlocks();
-  const idFilter = parsed.data.blockIds && parsed.data.blockIds.length > 0
-    ? new Set(parsed.data.blockIds)
-    : parsed.data.blockId
-      ? new Set([parsed.data.blockId])
-      : null;
+  const idFilter =
+    parsed.data.blockIds && parsed.data.blockIds.length > 0
+      ? new Set(parsed.data.blockIds)
+      : parsed.data.blockId
+        ? new Set([parsed.data.blockId])
+        : null;
   const blocks = idFilter ? allBlocks.filter((b) => idFilter.has(b.id)) : allBlocks;
   if (blocks.length === 0) {
     return json({ error: 'no blocks available' }, { status: 400 });

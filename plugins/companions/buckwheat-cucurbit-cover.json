@@ -1,0 +1,26 @@
+{
+  "pluginId": "buckwheat-cucurbit-cover",
+  "type": "companion",
+  "displayName": "Buckwheat + Cucurbit (insectary cover)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "cucurbit",
+  "goodWith": [
+    "cucumber-marketmore-76",
+    "winter-squash-delicata",
+    "butternut-squash-waltham",
+    "zucchini-black-beauty",
+    "watermelon-crimson-sweet"
+  ],
+  "badWith": [],
+  "benefit": "Buckwheat strips between cucurbit rows host hoverflies, parasitic wasps, and minute pirate bugs that suppress squash bug eggs and cucumber beetle larvae. Buckwheat blooms in 30 days for sustained nectar.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "beneficial insectary",
+      "plantingOffsetDays": 0,
+      "title": "Buckwheat alley between cucurbit rows",
+      "body": "Drill buckwheat at 60 lb per acre in 30 inch alleys between cucurbit rows at vining. Mow before seed-set to prevent volunteers."
+    }
+  ]
+}

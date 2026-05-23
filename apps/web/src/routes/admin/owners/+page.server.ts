@@ -24,11 +24,7 @@ export const actions: Actions = {
     if (!(allowed as readonly string[]).includes(status)) {
       return fail(400, { error: 'invalid status' });
     }
-    setBillingStatus(
-      ownerId,
-      status as (typeof allowed)[number],
-      u.id
-    );
+    setBillingStatus(ownerId, status as (typeof allowed)[number], u.id);
     return { ok: true };
   },
   impersonate: async (event) => {

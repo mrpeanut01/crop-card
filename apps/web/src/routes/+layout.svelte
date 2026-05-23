@@ -1,8 +1,27 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { afterNavigate } from '$app/navigation';
+  import { page } from '$app/state';
 
   let { data, children } = $props();
+
+  /** True when the current URL "belongs to" the nav link's href —
+   *  exact match OR pathname is a subroute of the link path. Special-
+   *  cases /plan?tab=layout (Map link) since the pathname is shared
+   *  with the Plan link; we discriminate on the tab query param. */
+  function navActive(href: string): boolean {
+    const path = page.url.pathname;
+    const tabParam = page.url.searchParams.get('tab');
+    if (href === '/plan?tab=layout') {
+      return path === '/plan' && tabParam === 'layout';
+    }
+    if (href === '/plan') {
+      return path === '/plan' && tabParam !== 'layout';
+    }
+    if (href === '/') return path === '/';
+    // Sub-paths count (e.g., /spray/fungicide highlights /spray).
+    return path === href || path.startsWith(`${href}/`);
+  }
 
   let pendingCount = $state<number | null>(null);
   let online = $state(true);
@@ -51,70 +70,62 @@
 </script>
 
 {#if data.user}
-<header class="app-header">
-  <a href="/" class="brand">CropCard</a>
-  <nav aria-label="Primary" class="primary-nav">
-    <a href="/today">Today</a>
-    <a href="/plan">Plan</a>
-    <a href="/stock">Stock</a>
-    <a href="/spray">Spray</a>
-    <a href="/insecticides">Insecticides</a>
-    <a href="/scout">Scout</a>
-    <a href="/harvest">Harvest</a>
-    <a href="/hay">Hay</a>
-    <a href="/fertility">Fertility</a>
-    <a href="/equipment">Equipment</a>
-    <a href="/plan?tab=layout">Map</a>
-    <a href="/records">Records</a>
-  </nav>
-  <div class="top-right">
-    {#if data.user && data.activeOwner}
-      <details class="owner-chip">
-        <summary aria-label="Switch farm" title={data.activeOwner.name}>
-          <span class="owner-name">{data.activeOwner.name}</span>
-          <span class="owner-caret" aria-hidden="true">▾</span>
-        </summary>
-        <div class="owner-popover">
-          <ul class="owner-list">
-            {#each data.availableOwners as o}
-              <li>
-                <form
-                  method="POST"
-                  action="/api/session/switch-owner"
-                  enctype="application/x-www-form-urlencoded"
-                >
-                  <input type="hidden" name="ownerId" value={o.id} />
-                  <button
-                    type="button"
-                    class="owner-choice"
-                    class:active={o.id === data.activeOwner.id}
-                    onclick={async () => {
-                      const res = await fetch('/api/session/switch-owner', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ownerId: o.id })
-                      });
-                      if (res.ok) {
-                        try {
-                          const { resetTenantCaches } = await import('$lib/client/tenantSwitch');
-                          await resetTenantCaches(o.id);
-                        } catch {
-                          /* cache reset best-effort */
-                        }
-                        window.location.href = '/today';
-                      }
-                    }}
+  <header class="app-header">
+    <a href="/" class="brand">CropCard</a>
+    <nav aria-label="Primary" class="primary-nav">
+      {#each [{ href: '/today', label: 'Today' }, { href: '/plan', label: 'Plan' }, { href: '/calendar', label: 'Calendar' }, { href: '/stock', label: 'Stock' }, { href: '/spray', label: 'Spray' }, { href: '/insecticides', label: 'Insecticides' }, { href: '/scout', label: 'Scout' }, { href: '/harvest', label: 'Harvest' }, { href: '/hay', label: 'Hay' }, { href: '/fertility', label: 'Fertility' }, { href: '/equipment', label: 'Equipment' }, { href: '/plan?tab=layout', label: 'Map' }, { href: '/records', label: 'Records' }] as item (item.href)}
+        <a href={item.href} aria-current={navActive(item.href) ? 'page' : undefined}>{item.label}</a
+        >
+      {/each}
+    </nav>
+    <div class="top-right">
+      {#if data.user && data.activeOwner}
+        <details class="owner-chip">
+          <summary aria-label="Switch farm" title={data.activeOwner.name}>
+            <span class="owner-name">{data.activeOwner.name}</span>
+            <span class="owner-caret" aria-hidden="true">▾</span>
+          </summary>
+          <div class="owner-popover">
+            <ul class="owner-list">
+              {#each data.availableOwners as o}
+                <li>
+                  <form
+                    method="POST"
+                    action="/api/session/switch-owner"
+                    enctype="application/x-www-form-urlencoded"
                   >
-                    <span>{o.name}</span>
-                    <span class="owner-role">{o.role}</span>
-                  </button>
-                </form>
-              </li>
-            {/each}
-          </ul>
-        </div>
-      </details>
-    {/if}
+                    <input type="hidden" name="ownerId" value={o.id} />
+                    <button
+                      type="button"
+                      class="owner-choice"
+                      class:active={o.id === data.activeOwner.id}
+                      onclick={async () => {
+                        const res = await fetch('/api/session/switch-owner', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ ownerId: o.id })
+                        });
+                        if (res.ok) {
+                          try {
+                            const { resetTenantCaches } = await import('$lib/client/tenantSwitch');
+                            await resetTenantCaches(o.id);
+                          } catch {
+                            /* cache reset best-effort */
+                          }
+                          window.location.href = '/today';
+                        }
+                      }}
+                    >
+                      <span>{o.name}</span>
+                      <span class="owner-role">{o.role}</span>
+                    </button>
+                  </form>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        </details>
+      {/if}
       <a href="/settings" class="gear-btn" aria-label="Settings" title="Settings">
         <svg
           viewBox="0 0 24 24"
@@ -147,8 +158,8 @@
           </form>
         </div>
       </details>
-  </div>
-</header>
+    </div>
+  </header>
 {/if}
 
 {#if !online || (pendingCount ?? 0) > 0}
@@ -170,8 +181,8 @@
 
 {#if data.user?.impersonating}
   <div class="role-banner impersonation" role="status">
-    🔒 Impersonating <strong>{data.activeOwner?.name ?? 'this Owner'}</strong> as superadmin —
-    every mutation is audited. <a href="/admin/owners">Exit impersonation</a>
+    🔒 Impersonating <strong>{data.activeOwner?.name ?? 'this Owner'}</strong> as superadmin — every
+    mutation is audited. <a href="/admin/owners">Exit impersonation</a>
   </div>
 {/if}
 
@@ -259,7 +270,9 @@
   .app-header {
     background: #1f5e3a;
     color: white;
-    padding: 0.75rem 1rem;
+    /* Zero bottom padding so the active tab's white fill connects to
+     * the page body without a green stripe in between. */
+    padding: 0.75rem 1rem 0;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -431,6 +444,22 @@
     background: rgba(255, 255, 255, 0.3);
   }
 
+  /** Visually-hidden helper, available app-wide. Pages now hide their
+   *  H1/lede behind this — the active top-nav tab carries the page
+   *  identity for sighted users while keeping the heading in the DOM
+   *  for assistive tech. */
+  :global(.sr-only) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .primary-nav {
     position: fixed;
     bottom: 0;
@@ -464,7 +493,10 @@
   }
 
   main {
-    padding-block: 1rem;
+    /* Tightened top padding so the active nav tab and the page content
+     * read as one continuous surface; the bottom keeps room for the
+     * fixed mobile nav + finger-reach margin. */
+    padding-block: 0.5rem 1rem;
     padding-inline: clamp(0.5rem, 2vw, 2rem);
     padding-bottom: calc(112px + env(safe-area-inset-bottom, 0) + 1rem);
     max-width: 1800px;
@@ -533,16 +565,43 @@
       grid-template-columns: none;
     }
     .primary-nav > a {
-      padding: 0.5rem 0.75rem;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      min-height: 48px;
+      padding: 0.55rem 1rem 0.6rem;
+      border-radius: 10px 10px 0 0;
+      background: rgba(255, 255, 255, 0.08);
+      min-height: 44px;
       font-size: 1rem;
       border-top: none;
+      position: relative;
+      bottom: -1px;
+      transition: background-color 0.12s ease;
+    }
+    .primary-nav > a:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+    .primary-nav > a[aria-current='page'] {
+      /* Pure white so the tab's base color matches the page body and
+       * the bottom edge looks continuous with the content surface. */
+      background: #fff;
+      color: #1f5e3a;
+      font-weight: 700;
+      cursor: default;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.08);
+      z-index: 1;
+    }
+    .primary-nav > a[aria-current='page']:hover {
+      background: #fff;
     }
     main {
       padding: 1rem;
       padding-bottom: 1rem;
+    }
+  }
+  /* Mobile (bottom nav): tab metaphor doesn't work upside-down. Use a
+   * solid pill fill for the active item instead. */
+  @media (max-width: 767.98px) {
+    .primary-nav > a[aria-current='page'] {
+      background: rgba(255, 255, 255, 0.22);
+      border-top: 3px solid #fff;
     }
   }
 

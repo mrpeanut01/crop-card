@@ -3,11 +3,33 @@
   "type": "insecticide",
   "displayName": "Admire Pro (Bayer imidacloprid)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "imidacloprid", "iracGroup": "4A" }],
+  "activeIngredients": [
+    {
+      "name": "imidacloprid",
+      "iracGroup": "4A"
+    }
+  ],
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
-  "ratePerAcre": { "amount": 7, "unit": "fl-oz" },
-  "targetPests": ["aphid", "Colorado potato beetle", "whitefly", "cucumber beetle", "flea beetle", "leafhopper"],
+  "ratePerAcre": {
+    "amount": 7,
+    "unit": "fl-oz"
+  },
+  "targetPests": [
+    "aphid",
+    "Colorado potato beetle",
+    "whitefly",
+    "cucumber beetle",
+    "flea beetle",
+    "leafhopper"
+  ],
   "pollinatorRisk": "high",
-  "notes": "Neonicotinoid IRAC 4A. Soil-applied + foliar. Highly bee-toxic — never apply during bloom; soil application before bloom only."
+  "notes": "Neonicotinoid IRAC 4A. Soil-applied + foliar. Highly bee-toxic — never apply during bloom; soil application before bloom only.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

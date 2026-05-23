@@ -1,10 +1,4 @@
-import type {
-  CellRecommendation,
-  MatchInput,
-  MatchResult,
-  Plate,
-  PlateSeedType
-} from './types';
+import type { CellRecommendation, MatchInput, MatchResult, Plate, PlateSeedType } from './types';
 import { MM_TO_64THS } from './types';
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -23,7 +17,14 @@ export function internalToMm(internal: number): number {
  * by plateNumber.
  */
 export function matchPlates(plates: Plate[], input: MatchInput): MatchResult[] {
-  const { seedType, series = 'Both', shape = 'Either', cells = 'Either', dimensions, limit = 20 } = input;
+  const {
+    seedType,
+    series = 'Both',
+    shape = 'Either',
+    cells = 'Either',
+    dimensions,
+    limit = 20
+  } = input;
 
   const isShapeFilterable = seedType === 'Corn' || seedType === 'Soybean';
   const toleranceInternal = input.toleranceInternal ?? 0;
@@ -104,7 +105,8 @@ export function isLowConfidence(
   const top = results[0];
   const second = results[1];
   if (top.delta === undefined) return { lowConfidence: true, reason: 'top result has no score' };
-  if (top.delta > 6) return { lowConfidence: true, reason: `top match Δ=${top.delta} > 6 (poor fit)` };
+  if (top.delta > 6)
+    return { lowConfidence: true, reason: `top match Δ=${top.delta} > 6 (poor fit)` };
   if (second && second.delta !== undefined && second.delta === top.delta) {
     return { lowConfidence: true, reason: 'multiple candidates tied for top' };
   }
@@ -128,12 +130,30 @@ export const CLASS_DEFAULT_DIMS_MM: Record<
 > = {
   // Most field/dent/flour corn is medium-flat with these proportions. Sweet
   // and popcorn run smaller but the same plate family generally works.
-  Corn: { L: 11, D: 9, T: 5, shape: 'Flat', note: 'class-level estimate: medium-flat dent/flour corn' },
+  Corn: {
+    L: 11,
+    D: 9,
+    T: 5,
+    shape: 'Flat',
+    note: 'class-level estimate: medium-flat dent/flour corn'
+  },
   // Sorghum kernels are small and round; the 30/60-cell sorghum plates target
   // these dims with high precision.
-  Sorghum: { L: 4, D: 4, T: 3, shape: 'Round', note: 'class-level estimate: typical grain sorghum' },
+  Sorghum: {
+    L: 4,
+    D: 4,
+    T: 3,
+    shape: 'Round',
+    note: 'class-level estimate: typical grain sorghum'
+  },
   // Soybeans are roughly spherical and large.
-  Soybean: { L: 7, D: 7, T: 6, shape: 'Round', note: 'class-level estimate: typical commercial soybean' },
+  Soybean: {
+    L: 7,
+    D: 7,
+    T: 6,
+    shape: 'Round',
+    note: 'class-level estimate: typical commercial soybean'
+  },
   // Sunflower kernels are elongated; confectionary is larger, oilseed smaller.
   // Mid-size is a reasonable default.
   Sunflower: { L: 12, D: 6, T: 4, note: 'class-level estimate: mid-size sunflower kernel' },

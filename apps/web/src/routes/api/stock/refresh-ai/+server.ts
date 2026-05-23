@@ -51,12 +51,11 @@ export const POST: RequestHandler = async (event) => {
 
   const onlyMissing = parsed.data.onlyMissing !== false;
   const all = listStockItems();
-  let pool = parsed.data.itemIds
-    ? all.filter((i) => parsed.data.itemIds!.includes(i.id))
-    : all;
+  let pool = parsed.data.itemIds ? all.filter((i) => parsed.data.itemIds!.includes(i.id)) : all;
 
   // Track diagnostics so a 0-processed response can explain WHY.
-  const diagnostics: Record<string, { total: number; eligible: number; reasonWhenZero?: string }> = {};
+  const diagnostics: Record<string, { total: number; eligible: number; reasonWhenZero?: string }> =
+    {};
   for (const i of pool) {
     const cat = i.category;
     const slot = (diagnostics[cat] ??= { total: 0, eligible: 0 });

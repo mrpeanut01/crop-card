@@ -3,9 +3,23 @@
   "type": "fertilizer",
   "displayName": "Alfalfa Pellets (3-1-2, OMRI)",
   "version": "1.0.0",
-  "analysis": { "n": 3, "p": 1, "k": 2 },
+  "analysis": {
+    "n": 3,
+    "p": 1,
+    "k": 2
+  },
   "form": "compost",
   "organic": true,
-  "applicationRange": { "min": 200, "max": 800, "unit": "lb-per-acre" },
-  "notes": "Slow-release organic N + biological tonic. Triacontanol growth-promoter content. Excellent garlic + perennial side-dress."
+  "applicationRange": {
+    "min": 200,
+    "max": 800,
+    "unit": "lb-per-acre"
+  },
+  "notes": "Slow-release organic N + biological tonic. Triacontanol growth-promoter content. Excellent garlic + perennial side-dress.",
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": true
+  },
+  "pluginSchemaVersion": "1.1"
 }

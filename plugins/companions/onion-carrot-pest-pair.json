@@ -1,0 +1,20 @@
+{
+  "pluginId": "onion-carrot-pest-pair",
+  "type": "companion",
+  "displayName": "Onion + Carrot (mutual pest suppression)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "apiaceae",
+  "goodWith": ["carrot-nantes-half-long", "carrot-scarlet-nantes-seed", "carrot-danvers-126", "onion-walla-walla", "onion-storage-yellow-stuttgarter", "onion-red-burgundy"],
+  "badWith": [],
+  "benefit": "Onion volatiles disrupt host-finding by carrot rust fly. Carrot foliage in turn masks onions from onion fly. Plant alternating rows or as alternating bands to maintain canopy density of both.",
+  "members": [
+    {
+      "family": "allium",
+      "role": "carrot rust fly deterrent",
+      "plantingOffsetDays": 0,
+      "title": "Alternating onion and carrot rows",
+      "body": "Plant onions and carrots in alternating rows or 2-row bands. Maintain through harvest; do not pull onions too early or carrot fly protection drops."
+    }
+  ]
+}

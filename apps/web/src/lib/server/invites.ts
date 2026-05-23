@@ -54,7 +54,9 @@ export function issueInvite(input: {
   roleWithinOwner: InviteRoleWithinOwner;
   invitedByUserId: string;
 }): IssuedInvite {
-  unscopedQueryNote('helper invite is keyed by ownerId + email_hash, scope is the Owner the inviter selected');
+  unscopedQueryNote(
+    'helper invite is keyed by ownerId + email_hash, scope is the Owner the inviter selected'
+  );
   const id = `inv_${Date.now()}_${randomBytes(4).toString('hex')}`;
   const token = generateToken();
   const now = Date.now();

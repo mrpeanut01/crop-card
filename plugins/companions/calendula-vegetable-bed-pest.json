@@ -1,0 +1,20 @@
+{
+  "pluginId": "calendula-vegetable-bed-pest",
+  "type": "companion",
+  "displayName": "Calendula + Vegetable Beds (general beneficial insectary)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "broadleaf-companion",
+  "goodWith": ["lettuce-buttercrunch", "broccoli-de-cicco", "cabbage-savoy-king", "tomato-cherokee-purple", "pepper-bell-california-wonder"],
+  "badWith": [],
+  "benefit": "Calendula's resinous open flowers attract hoverflies, lacewings, and parasitic wasps. A row of calendula at every 30 to 40 ft of bed length supplies beneficials across the season. Strong dual-purpose for herbal-product growers.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "general insectary",
+      "plantingOffsetDays": 0,
+      "title": "Calendula plug every 30 to 40 ft of bed",
+      "body": "Transplant calendula plugs every 30 to 40 ft along bed centerlines. Deadhead weekly through season for continuous bloom."
+    }
+  ]
+}

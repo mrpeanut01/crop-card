@@ -44,9 +44,8 @@
   </form>
 
   <p class="next-step-hint">
-    💡 After you create your farm, head to <a href="/plan">Plan</a> to set up
-    this season's input philosophy (6 quick questions — drives what the planner
-    suggests).
+    💡 After you create your farm, head to <a href="/plan">Plan</a> to set up this season's input philosophy
+    (6 quick questions — drives what the planner suggests).
   </p>
 </main>
 

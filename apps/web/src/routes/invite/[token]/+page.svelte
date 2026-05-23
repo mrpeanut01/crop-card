@@ -13,8 +13,8 @@
   {#if data.status === 'invalid'}
     <h1>Invite no longer valid</h1>
     <p class="hint">
-      This invite link has expired, been revoked, or doesn't match your email. Ask the farm
-      owner to send a fresh invite.
+      This invite link has expired, been revoked, or doesn't match your email. Ask the farm owner to
+      send a fresh invite.
     </p>
     <a href="/today" class="back">← Back</a>
   {:else}

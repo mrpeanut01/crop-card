@@ -1,0 +1,30 @@
+{
+  "pluginId": "mustard-tillage-cover",
+  "type": "crop",
+  "displayName": "Mustard Caliente Biofumigant (cover)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 7,
+    "seedDepthIn": {
+      "min": 0.25,
+      "max": 0.5
+    }
+  },
+  "harvestIndicators": [
+    "Plants 3 to 4 ft at early bloom for incorporation"
+  ],
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 0
+  },
+  "notes": "High-glucosinolate mustard (Brassica juncea / Sinapis alba blend, e.g. Caliente 199). Flail-mow at early bloom and incorporate within 20 minutes to release isothiocyanates for biofumigation against soil nematodes and pathogens. Do not follow with brassica cash crops. Sold by High Performance Seeds, Green Cover Seed."
+}

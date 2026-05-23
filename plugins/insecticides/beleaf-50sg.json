@@ -3,11 +3,30 @@
   "type": "insecticide",
   "displayName": "Beleaf 50SG (FMC flonicamid)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "flonicamid", "iracGroup": "29" }],
+  "activeIngredients": [
+    {
+      "name": "flonicamid",
+      "iracGroup": "29"
+    }
+  ],
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 0,
-  "ratePerAcre": { "amount": 2.8, "unit": "oz" },
-  "targetPests": ["aphid", "tarnished plant bug", "whitefly (suppression)"],
+  "ratePerAcre": {
+    "amount": 2.8,
+    "unit": "oz"
+  },
+  "targetPests": [
+    "aphid",
+    "tarnished plant bug",
+    "whitefly (suppression)"
+  ],
   "pollinatorRisk": "low",
-  "notes": "IRAC 29 selective feeding inhibitor. Aphid + plant bug specialist; very low non-target impact."
+  "notes": "IRAC 29 selective feeding inhibitor. Aphid + plant bug specialist; very low non-target impact.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

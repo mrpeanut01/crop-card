@@ -80,7 +80,9 @@ export function listCropEquipment(cropId: string): CropEquipmentBinding[] {
   }));
 }
 
-export function listCropsForEquipment(equipmentId: string): { cropId: string; role: CropEquipmentRole }[] {
+export function listCropsForEquipment(
+  equipmentId: string
+): { cropId: string; role: CropEquipmentRole }[] {
   const rows = db
     .select({ cropId: cropEquipment.cropId, role: cropEquipment.role })
     .from(cropEquipment)

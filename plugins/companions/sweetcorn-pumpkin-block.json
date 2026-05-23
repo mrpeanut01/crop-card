@@ -1,0 +1,20 @@
+{
+  "pluginId": "sweetcorn-pumpkin-block",
+  "type": "companion",
+  "displayName": "Sweet Corn + Pumpkin (block interplant)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "corn",
+  "goodWith": ["corn-bantam-sweet", "corn-sweet-bodacious", "sweet-corn-american-dream-f1-seed", "pumpkin-howden", "pumpkin-small-sugar", "winter-squash-spaghetti"],
+  "badWith": [],
+  "benefit": "Pumpkin vines interplanted between sweet corn rows provide living mulch that suppresses weeds, conserves moisture, and yields a second cash crop in the same footprint. Common pattern for pick-your-own and roadside-stand operations.",
+  "members": [
+    {
+      "family": "cucurbit",
+      "role": "understory living mulch + second crop",
+      "plantingOffsetDays": 21,
+      "title": "Pumpkin hill in alternate corn rows",
+      "body": "Plant pumpkin hills 6 ft apart in every third corn row, three weeks after corn planting. Vines run under canopy and out into the alleys."
+    }
+  ]
+}

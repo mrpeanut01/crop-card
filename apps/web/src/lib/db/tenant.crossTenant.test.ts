@@ -30,6 +30,7 @@ import * as shadeRepo from './shadeSources';
 import * as sprayRepo from './sprayEvents';
 import * as harvestRepo from './harvestEvents';
 import * as insecticideRepo from './insecticideEvents';
+import * as fungicideRepo from './fungicideEvents';
 import * as hayRepo from './hayCuttings';
 import * as equipmentRepo from './equipment';
 import * as cropEquipmentRepo from './cropEquipment';
@@ -164,7 +165,7 @@ describe('cross-tenant isolation', () => {
     });
   });
 
-  it('getBlock cannot fetch another tenant\'s block', () => {
+  it("getBlock cannot fetch another tenant's block", () => {
     const aBlocks = runWithTenant(OWNER_A, () => blocksRepo.listBlocks());
     const aBlockId = aBlocks[0].id;
 
@@ -204,6 +205,7 @@ describe('cross-tenant isolation', () => {
       sprayRepo,
       harvestRepo,
       insecticideRepo,
+      fungicideRepo,
       hayRepo,
       equipmentRepo,
       cropEquipmentRepo,

@@ -28,12 +28,7 @@ import {
   metersSquaredToAcres,
   polygonAreaSqMeters
 } from '$lib/geo/area';
-import {
-  feetToMeters,
-  shadowDirectionDeg,
-  shadowLengthMeters,
-  solarPosition
-} from './solar';
+import { feetToMeters, shadowDirectionDeg, shadowLengthMeters, solarPosition } from './solar';
 
 /** Sample hours (clock-local) used to assess shadow projections across the
  *  diurnal arc. Clock time → solar time conversion happens inside solar.ts.
@@ -74,7 +69,16 @@ export interface ShadeEmitter {
   /** Free-form display label used for attribution (`shade from <name>`). */
   displayName: string;
   /** What kind of emitter this is — drives UI grouping + tooltip wording. */
-  kind: 'crop' | 'tree-row' | 'tree-grove' | 'tree-single' | 'hedge' | 'building' | 'fence' | 'structure' | 'other';
+  kind:
+    | 'crop'
+    | 'tree-row'
+    | 'tree-grove'
+    | 'tree-single'
+    | 'hedge'
+    | 'building'
+    | 'fence'
+    | 'structure'
+    | 'other';
   /** Source block id when the emitter is a crop, else null. */
   sourceBlockId: string | null;
   /** Source crop id when the emitter is a crop, else null. */
@@ -176,8 +180,9 @@ function projectOneToOne(
 
   // Sample the active window at its midpoint for sun position. Shadow
   // length swings ~30% across a season, so midpoint is a good summary.
-  const midMs = (Math.max(ctx.fromMs, e.canopyStartMs ?? ctx.fromMs) +
-    Math.min(ctx.toMs, e.canopyEndMs ?? ctx.toMs)) /
+  const midMs =
+    (Math.max(ctx.fromMs, e.canopyStartMs ?? ctx.fromMs) +
+      Math.min(ctx.toMs, e.canopyEndMs ?? ctx.toMs)) /
     2;
   // The sample dates we evaluate canopy fraction at: midpoint — sufficient
   // since the engine bakes the active window via fromMs/toMs already.
@@ -238,8 +243,7 @@ function projectOneToOne(
     // density.
     const lateralFalloff = Math.cos((azDelta * Math.PI) / 180);
     const distFalloff = Math.max(0, 1 - edgeGapM / Math.max(reachM, 1));
-    const intensity =
-      e.opacity * canopy * e.densityMultiplier * lateralFalloff * distFalloff;
+    const intensity = e.opacity * canopy * e.densityMultiplier * lateralFalloff * distFalloff;
     if (intensity < 0.05) continue;
     totalIntensity += intensity;
     hits += 1;
@@ -272,10 +276,7 @@ function projectOneToOne(
  * the emitter (set in the engine when constructing emitters); when absent,
  * fall back to the model window.
  */
-function clampWindow(
-  e: ShadeEmitter,
-  ctx: ShadeModelInput
-): { startMs: number; endMs: number } {
+function clampWindow(e: ShadeEmitter, ctx: ShadeModelInput): { startMs: number; endMs: number } {
   const start = Math.max(ctx.fromMs, e.canopyStartMs ?? ctx.fromMs);
   const end = Math.min(ctx.toMs, e.canopyEndMs ?? ctx.toMs);
   return { startMs: start, endMs: Math.max(start, end) };

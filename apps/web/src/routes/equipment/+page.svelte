@@ -28,9 +28,7 @@
 
   let typeFilter = $state<'all' | string>('all');
   const filtered = $derived(
-    typeFilter === 'all'
-      ? data.equipment
-      : data.equipment.filter((e) => e.typeName === typeFilter)
+    typeFilter === 'all' ? data.equipment : data.equipment.filter((e) => e.typeName === typeFilter)
   );
 
   let newTypeName = $state('');
@@ -42,7 +40,11 @@
   /** Resolve newTypeName → typeId, prompting to add a new term if it doesn't
    *  match an existing equipment type. Returns { ok: false } when the user
    *  cancels the prompt or the create fails. */
-  async function resolveTypeId(): Promise<{ ok: boolean; typeId: string | null; legacyType: EquipmentType }> {
+  async function resolveTypeId(): Promise<{
+    ok: boolean;
+    typeId: string | null;
+    legacyType: EquipmentType;
+  }> {
     const name = newTypeName.trim();
     if (!name) {
       createError = 'Type is required';
@@ -83,7 +85,10 @@
     createError = null;
     try {
       const typeRes = await resolveTypeId();
-      if (!typeRes.ok) { creating = false; return; }
+      if (!typeRes.ok) {
+        creating = false;
+        return;
+      }
       const res = await fetch('/api/equipment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -187,12 +192,20 @@
       />
       <input type="text" placeholder="e.g. John Deere 4020" bind:value={newLabel} />
       <input type="text" placeholder="notes (optional)" bind:value={newNotes} />
-      <button class="primary" onclick={createEquipment} disabled={creating || !newLabel.trim() || !newTypeName.trim()}>
+      <button
+        class="primary"
+        onclick={createEquipment}
+        disabled={creating || !newLabel.trim() || !newTypeName.trim()}
+      >
         {creating ? '…' : 'Add'}
       </button>
     </div>
-    {#if newTypeName.trim() && !data.types.find((t) => t.name.toLowerCase() === newTypeName.trim().toLowerCase())}
-      <p class="hint-new-type">"{newTypeName.trim()}" is new — you'll be asked to confirm adding it on save.</p>
+    {#if newTypeName.trim() && !data.types.find((t) => t.name.toLowerCase() === newTypeName
+            .trim()
+            .toLowerCase())}
+      <p class="hint-new-type">
+        "{newTypeName.trim()}" is new — you'll be asked to confirm adding it on save.
+      </p>
     {/if}
     {#if createError}<p class="error">{createError}</p>{/if}
   </section>

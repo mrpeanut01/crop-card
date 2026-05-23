@@ -39,11 +39,16 @@ export const load: LayoutServerLoad = ({ locals }) => {
     try {
       const assignments = activeAssignmentsForUser(locals.user.id);
       if (assignments.length > 0) {
-        unscopedQueryNote('top-nav hydrates owner names for the user\'s assigned tenants');
+        unscopedQueryNote("top-nav hydrates owner names for the user's assigned tenants");
         const ownerRows = db
           .select({ id: owners.id, name: owners.name, slug: owners.slug })
           .from(owners)
-          .where(inArray(owners.id, assignments.map((a) => a.ownerId)))
+          .where(
+            inArray(
+              owners.id,
+              assignments.map((a) => a.ownerId)
+            )
+          )
           .all();
         const byId = new Map(ownerRows.map((r) => [r.id, r]));
         availableOwners = assignments

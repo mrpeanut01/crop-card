@@ -1,0 +1,30 @@
+{
+  "pluginId": "millet-japanese-cover",
+  "type": "crop",
+  "displayName": "Japanese Millet (cover/forage)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cover-grass",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 75
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 7,
+    "seedDepthIn": {
+      "min": 0.5,
+      "max": 1.0
+    }
+  },
+  "harvestIndicators": [
+    "Seed heads filled and turning tan, before shatter"
+  ],
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Echinochloa esculenta. Warm-season smother crop and emergency forage. Establishes in 5 to 7 days, ready to terminate or graze at 45 days. Tolerates flooded ground. Sold by Albert Lea Seed, Green Cover Seed, Welter."
+}

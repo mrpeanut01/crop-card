@@ -3,11 +3,34 @@
   "type": "insecticide",
   "displayName": "Asana XL (Valent esfenvalerate)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "esfenvalerate", "iracGroup": "3A" }],
+  "activeIngredients": [
+    {
+      "name": "esfenvalerate",
+      "iracGroup": "3A"
+    }
+  ],
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
-  "ratePerAcre": { "amount": 5.8, "unit": "fl-oz" },
-  "targetPests": ["plum curculio", "codling moth", "oriental fruit moth", "tarnished plant bug", "Lygus", "stink bug", "cabbage looper"],
+  "ratePerAcre": {
+    "amount": 5.8,
+    "unit": "fl-oz"
+  },
+  "targetPests": [
+    "plum curculio",
+    "codling moth",
+    "oriental fruit moth",
+    "tarnished plant bug",
+    "Lygus",
+    "stink bug",
+    "cabbage looper"
+  ],
   "pollinatorRisk": "high",
-  "notes": "Pyrethroid IRAC 3A. Orchard + vegetable workhorse. Bee-toxic — apply at sunset, never on open bloom."
+  "notes": "Pyrethroid IRAC 3A. Orchard + vegetable workhorse. Bee-toxic — apply at sunset, never on open bloom.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

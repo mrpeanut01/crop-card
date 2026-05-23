@@ -101,7 +101,12 @@ export function createShadeSource(input: CreateShadeSourceInput): ShadeSource {
 }
 
 export function listShadeSources(): ShadeSource[] {
-  return db.select().from(shadeSources).where(tenantWhere(shadeSources)).all().map(rowToShadeSource);
+  return db
+    .select()
+    .from(shadeSources)
+    .where(tenantWhere(shadeSources))
+    .all()
+    .map(rowToShadeSource);
 }
 
 export function getShadeSource(id: string): ShadeSource | undefined {
@@ -126,7 +131,10 @@ export interface UpdateShadeSourceInput {
   notes?: string | null;
 }
 
-export function updateShadeSource(id: string, patch: UpdateShadeSourceInput): ShadeSource | undefined {
+export function updateShadeSource(
+  id: string,
+  patch: UpdateShadeSourceInput
+): ShadeSource | undefined {
   const set: Record<string, unknown> = { updatedAt: new Date(Date.now()) };
   if (patch.name !== undefined) set.name = patch.name;
   if (patch.kind !== undefined) set.kind = patch.kind;

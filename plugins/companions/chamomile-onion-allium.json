@@ -1,0 +1,20 @@
+{
+  "pluginId": "chamomile-onion-allium",
+  "type": "companion",
+  "displayName": "German Chamomile + Allium (yield + flavor lift)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "allium",
+  "goodWith": ["onion-walla-walla", "onion-storage-yellow-stuttgarter", "onion-red-burgundy", "garlic-music-hardneck", "leek-american-flag"],
+  "badWith": [],
+  "benefit": "German chamomile interplanted with alliums is reported to improve bulb sulfur content and onion flavor. Chamomile flowers attract hoverflies that suppress onion thrips populations. Traditional European garden pattern with field-confirmed beneficial-insect benefit.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "allium insectary intercrop",
+      "plantingOffsetDays": 0,
+      "title": "Chamomile every fifth allium row",
+      "body": "Transplant chamomile every fifth row in allium blocks. Cut for tea harvest before plants shade alliums."
+    }
+  ]
+}

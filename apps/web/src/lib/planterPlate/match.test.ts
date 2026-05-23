@@ -224,7 +224,10 @@ describe('CLASS_DEFAULT_DIMS_MM', () => {
         toleranceInternal,
         limit: 5
       });
-      expect(matches.length, `No plates within tolerance for ${seedType} class defaults`).toBeGreaterThan(0);
+      expect(
+        matches.length,
+        `No plates within tolerance for ${seedType} class defaults`
+      ).toBeGreaterThan(0);
     }
   });
 

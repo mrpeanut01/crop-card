@@ -62,11 +62,7 @@ export function loadSeasonSetup(year: number): SeasonSetup | null {
   const setAt = setAtRaw ? Number.parseInt(setAtRaw, 10) : Date.now();
 
   return {
-    philosophy: parseEnum(
-      philosophyRaw,
-      PHILOSOPHY_VALUES,
-      SEASON_SETUP_DEFAULTS.philosophy
-    ),
+    philosophy: parseEnum(philosophyRaw, PHILOSOPHY_VALUES, SEASON_SETUP_DEFAULTS.philosophy),
     weedStrategy: parseEnum(
       getSetting(settingKey(year, 'weedStrategy')),
       WEED_VALUES,
@@ -130,10 +126,7 @@ export function saveSeasonSetup(
   setSetting(settingKey(year, 'coverCropIntent'), merged.coverCropIntent);
   setSetting(settingKey(year, 'sprayCapacity'), merged.sprayCapacity);
 
-  if (
-    merged.philosophy === 'organic-transitioning' &&
-    merged.transitioningStartedYear !== null
-  ) {
+  if (merged.philosophy === 'organic-transitioning' && merged.transitioningStartedYear !== null) {
     setSetting(
       settingKey(year, 'transitioningStartedYear'),
       String(merged.transitioningStartedYear)
@@ -150,9 +143,7 @@ export function saveSeasonSetup(
   return {
     ...merged,
     transitioningStartedYear:
-      merged.philosophy === 'organic-transitioning'
-        ? merged.transitioningStartedYear
-        : null,
+      merged.philosophy === 'organic-transitioning' ? merged.transitioningStartedYear : null,
     year,
     setAt
   };

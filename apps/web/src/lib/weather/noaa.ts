@@ -113,16 +113,14 @@ function aggregateDays(periods: NwsForecastPeriod[]): ForecastDay[] {
   const byDate = new Map<string, ForecastDay>();
   for (const p of periods) {
     const date = p.startTime.slice(0, 10);
-    const cur =
-      byDate.get(date) ??
-      {
-        date,
-        popPct: 0,
-        highF: -Infinity,
-        lowF: Infinity,
-        windMph: 0,
-        shortForecast: ''
-      };
+    const cur = byDate.get(date) ?? {
+      date,
+      popPct: 0,
+      highF: -Infinity,
+      lowF: Infinity,
+      windMph: 0,
+      shortForecast: ''
+    };
     if (p.isDaytime) {
       cur.highF = Math.max(cur.highF, p.temperature);
       cur.shortForecast = p.shortForecast ?? cur.shortForecast;
@@ -153,7 +151,8 @@ export async function fetchForecast(opts?: {
   bypassCache?: boolean;
 }): Promise<ForecastDay[]> {
   const { lat: latIn, lon: lonIn, bypassCache } = opts ?? {};
-  const { lat, lon } = latIn !== undefined && lonIn !== undefined ? { lat: latIn, lon: lonIn } : getFarmLatLon();
+  const { lat, lon } =
+    latIn !== undefined && lonIn !== undefined ? { lat: latIn, lon: lonIn } : getFarmLatLon();
   const key = cacheKeyFor(lat, lon);
 
   if (!bypassCache) {
@@ -175,6 +174,9 @@ export async function fetchForecast(opts?: {
 
 /** Find a single ForecastDay by ISO date (`YYYY-MM-DD`). Used for the
  *  "low of X°F on this day" near-term confirmation chip in the drop UI. */
-export function lookupForecastDay(forecast: ForecastDay[], dateISO: string): ForecastDay | undefined {
+export function lookupForecastDay(
+  forecast: ForecastDay[],
+  dateISO: string
+): ForecastDay | undefined {
   return forecast.find((d) => d.date === dateISO);
 }

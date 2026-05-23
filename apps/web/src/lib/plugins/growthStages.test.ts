@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  cropPluginSchema,
-  growthStageTableSchema,
-  type CropPlugin
-} from './schemas';
+import { cropPluginSchema, growthStageTableSchema, type CropPlugin } from './schemas';
 import {
   resolveGrowthStageTable,
   resolvePerennialTemplate,
@@ -73,9 +69,7 @@ describe('cropPluginSchema with v1.3 fields', () => {
       cornType: 'sweet',
       growthStageTable: {
         system: 'vr-corn',
-        stages: [
-          { code: 'R3', name: 'Milk', daysFromPlanting: { min: 65, max: 75 } }
-        ],
+        stages: [{ code: 'R3', name: 'Milk', daysFromPlanting: { min: 65, max: 75 } }],
         harvestTargets: [{ stageCode: 'R3', label: 'Sweet eating' }]
       }
     });

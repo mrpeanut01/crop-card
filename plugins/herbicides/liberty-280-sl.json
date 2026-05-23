@@ -4,18 +4,48 @@
   "displayName": "Liberty 280 SL (BASF)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "glufosinate ammonium", "chemistryClass": "glufosinate" }],
-  "ratePerAcre": { "amount": 32, "unit": "fl-oz" },
+  "activeIngredients": [
+    {
+      "name": "glufosinate ammonium",
+      "chemistryClass": "glufosinate"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 32,
+    "unit": "fl-oz"
+  },
   "gpaCalibration": 15,
   "dilutionTable": {
-    "10gal":  { "amount": 21.3, "unit": "fl-oz" },
-    "25gal":  { "amount": 53.3, "unit": "fl-oz" },
-    "50gal":  { "amount": 106.7, "unit": "fl-oz" },
-    "75gal":  { "amount": 160,   "unit": "fl-oz" },
-    "100gal": { "amount": 213.3, "unit": "fl-oz" }
+    "10gal": {
+      "amount": 21.3,
+      "unit": "fl-oz"
+    },
+    "25gal": {
+      "amount": 53.3,
+      "unit": "fl-oz"
+    },
+    "50gal": {
+      "amount": 106.7,
+      "unit": "fl-oz"
+    },
+    "75gal": {
+      "amount": 160,
+      "unit": "fl-oz"
+    },
+    "100gal": {
+      "amount": 213.3,
+      "unit": "fl-oz"
+    }
   },
   "requiresAMS": true,
   "deconRequired": true,
   "tankMixOrder": 4,
-  "notes": "POST contact non-selective. Use only on LibertyLink-traited crops. Triple-rinse before next non-tolerant crop."
+  "notes": "POST contact non-selective. Use only on LibertyLink-traited crops. Triple-rinse before next non-tolerant crop.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

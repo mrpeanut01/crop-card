@@ -1,0 +1,25 @@
+{
+  "pluginId": "clover-relay-corn",
+  "type": "companion",
+  "displayName": "Red Clover + Corn (relay cropping)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "corn",
+  "goodWith": [
+    "corn-feed-dent-pioneer",
+    "corn-bantam-sweet",
+    "sweet-corn-american-dream-f1-seed",
+    "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds"
+  ],
+  "badWith": [],
+  "benefit": "Red clover interseeded into corn at V4 to V6 establishes under the canopy without competing during pollination. Provides 40 to 80 lb N per acre for the following crop, plus weed suppression after corn harvest.",
+  "members": [
+    {
+      "family": "cover-legume",
+      "role": "relay N-fixer under corn canopy",
+      "plantingOffsetDays": 35,
+      "title": "Frost-seed red clover at corn V4 to V6",
+      "body": "Broadcast red clover at 8 to 12 lb per acre between corn rows at V4 to V6. Cultivate lightly to set seed. Cover establishes after final canopy close-in."
+    }
+  ]
+}

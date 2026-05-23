@@ -3,11 +3,34 @@
   "type": "insecticide",
   "displayName": "Exirel (FMC cyantraniliprole)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "cyantraniliprole", "iracGroup": "28" }],
+  "activeIngredients": [
+    {
+      "name": "cyantraniliprole",
+      "iracGroup": "28"
+    }
+  ],
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 1,
-  "ratePerAcre": { "amount": 13.5, "unit": "fl-oz" },
-  "targetPests": ["aphids", "thrips", "whitefly", "leafminer", "Colorado potato beetle", "flea beetle", "cabbage looper"],
+  "ratePerAcre": {
+    "amount": 13.5,
+    "unit": "fl-oz"
+  },
+  "targetPests": [
+    "aphids",
+    "thrips",
+    "whitefly",
+    "leafminer",
+    "Colorado potato beetle",
+    "flea beetle",
+    "cabbage looper"
+  ],
   "pollinatorRisk": "moderate",
-  "notes": "Second-generation diamide — sucking + chewing pest spectrum. Rotate with non-Group-28 to slow resistance."
+  "notes": "Second-generation diamide — sucking + chewing pest spectrum. Rotate with non-Group-28 to slow resistance.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

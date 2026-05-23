@@ -72,7 +72,8 @@
     <p class="meta">
       Block <strong>{data.block.name}</strong>
       {#if data.block.acres}— {data.block.acres} ac{/if}
-      {#if data.crop.plantingDate}· Planted {fmt(data.crop.plantingDate)}{:else}· Planned — no date set{/if}
+      {#if data.crop.plantingDate}· Planted {fmt(data.crop.plantingDate)}{:else}· Planned — no date
+        set{/if}
     </p>
   </div>
   <div class="status-row">

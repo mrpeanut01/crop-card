@@ -186,9 +186,7 @@ export function haversineMeters(a: [number, number], b: [number, number]): numbe
   const dLon = toRad(lon2 - lon1);
   const sinDLat = Math.sin(dLat / 2);
   const sinDLon = Math.sin(dLon / 2);
-  const h =
-    sinDLat * sinDLat +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * sinDLon * sinDLon;
+  const h = sinDLat * sinDLat + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * sinDLon * sinDLon;
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
@@ -204,9 +202,7 @@ export function bearingDeg(a: [number, number], b: [number, number]): number {
   const phi2 = toRad(lat2);
   const dLambda = toRad(lon2 - lon1);
   const y = Math.sin(dLambda) * Math.cos(phi2);
-  const x =
-    Math.cos(phi1) * Math.sin(phi2) -
-    Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLambda);
+  const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLambda);
   const theta = Math.atan2(y, x);
   return ((theta * 180) / Math.PI + 360) % 360;
 }

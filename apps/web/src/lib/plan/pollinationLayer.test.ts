@@ -27,7 +27,11 @@ function squareAt(lat: number, lon: number, sideDeg = 0.0005): string {
   });
 }
 
-function fakeBlock(id: string, name: string, opts: { geom?: string | null; acres?: number } = {}): BlockWithPlantings {
+function fakeBlock(
+  id: string,
+  name: string,
+  opts: { geom?: string | null; acres?: number } = {}
+): BlockWithPlantings {
   return {
     id,
     fieldId: 'f1',
@@ -72,7 +76,11 @@ function fakeSeed(stockItemId: string, cropPluginId: string, name: string): Seed
   };
 }
 
-function fakePlanInput(opts: { seeds: SeedRequest[]; blocks: BlockWithPlantings[]; pluginIndex: Record<string, CropPlugin> }): PlanInput {
+function fakePlanInput(opts: {
+  seeds: SeedRequest[];
+  blocks: BlockWithPlantings[];
+  pluginIndex: Record<string, CropPlugin>;
+}): PlanInput {
   return {
     seeds: opts.seeds,
     blocks: opts.blocks,
@@ -88,7 +96,10 @@ describe('buildPollinationLayer', () => {
     const corn = fakeCornPlugin('corn-bantam-sweet');
     const zucchini = fakeSquashPlugin('zucchini-black-beauty');
     const input = fakePlanInput({
-      seeds: [fakeSeed('s1', 'corn-bantam-sweet', 'Bantam'), fakeSeed('s2', 'zucchini-black-beauty', 'Zucchini')],
+      seeds: [
+        fakeSeed('s1', 'corn-bantam-sweet', 'Bantam'),
+        fakeSeed('s2', 'zucchini-black-beauty', 'Zucchini')
+      ],
       blocks: [fakeBlock('b1', 'Block A'), fakeBlock('b2', 'Block B')],
       pluginIndex: { 'corn-bantam-sweet': corn, 'zucchini-black-beauty': zucchini }
     });
@@ -154,8 +165,22 @@ describe('computePollinationConstraints', () => {
     });
     const layer = buildPollinationLayer(input);
     const assignments: Assignment[] = [
-      { stockItemId: 's1', cropPluginId: 'corn-bantam-sweet', varietyDisplayName: 'Bantam Sweet', blockId: 'b1', plants: 100, score: 0 },
-      { stockItemId: 's2', cropPluginId: 'corn-bloody-butcher', varietyDisplayName: 'Bloody Butcher', blockId: 'b2', plants: 100, score: 0 }
+      {
+        stockItemId: 's1',
+        cropPluginId: 'corn-bantam-sweet',
+        varietyDisplayName: 'Bantam Sweet',
+        blockId: 'b1',
+        plants: 100,
+        score: 0
+      },
+      {
+        stockItemId: 's2',
+        cropPluginId: 'corn-bloody-butcher',
+        varietyDisplayName: 'Bloody Butcher',
+        blockId: 'b2',
+        plants: 100,
+        score: 0
+      }
     ];
     return { input, layer, assignments };
   }
@@ -193,8 +218,22 @@ describe('computePollinationConstraints', () => {
     });
     const layer = buildPollinationLayer(input);
     const assignments: Assignment[] = [
-      { stockItemId: 's1', cropPluginId: 'corn-bantam-sweet', varietyDisplayName: 'Bantam Sweet', blockId: 'b1', plants: 100, score: 0 },
-      { stockItemId: 's2', cropPluginId: 'corn-bloody-butcher', varietyDisplayName: 'Bloody Butcher', blockId: 'b2', plants: 100, score: 0 }
+      {
+        stockItemId: 's1',
+        cropPluginId: 'corn-bantam-sweet',
+        varietyDisplayName: 'Bantam Sweet',
+        blockId: 'b1',
+        plants: 100,
+        score: 0
+      },
+      {
+        stockItemId: 's2',
+        cropPluginId: 'corn-bloody-butcher',
+        varietyDisplayName: 'Bloody Butcher',
+        blockId: 'b2',
+        plants: 100,
+        score: 0
+      }
     ];
     const constraints = computePollinationConstraints(assignments, input, layer);
     expect(constraints[0].kind).toBe('geometry-missing');
@@ -212,8 +251,22 @@ describe('computePollinationConstraints', () => {
     });
     const layer = buildPollinationLayer(input);
     const assignments: Assignment[] = [
-      { stockItemId: 's1', cropPluginId: 'corn-bantam-sweet', varietyDisplayName: 'Bantam', blockId: 'b1', plants: 50, score: 0 },
-      { stockItemId: 's2', cropPluginId: 'corn-bloody-butcher', varietyDisplayName: 'Bloody Butcher', blockId: 'b1', plants: 50, score: 0 }
+      {
+        stockItemId: 's1',
+        cropPluginId: 'corn-bantam-sweet',
+        varietyDisplayName: 'Bantam',
+        blockId: 'b1',
+        plants: 50,
+        score: 0
+      },
+      {
+        stockItemId: 's2',
+        cropPluginId: 'corn-bloody-butcher',
+        varietyDisplayName: 'Bloody Butcher',
+        blockId: 'b1',
+        plants: 50,
+        score: 0
+      }
     ];
     const constraints = computePollinationConstraints(assignments, input, layer);
     expect(constraints).toHaveLength(1);

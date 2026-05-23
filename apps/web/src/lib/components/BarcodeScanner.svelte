@@ -21,14 +21,25 @@
   type BarcodeDetectorLike = {
     detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string; format: string }>>;
   };
-  const nativeSupported =
-    typeof window !== 'undefined' && 'BarcodeDetector' in window;
+  const nativeSupported = typeof window !== 'undefined' && 'BarcodeDetector' in window;
 
   function getNativeDetector(): BarcodeDetectorLike {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Ctor = (window as any).BarcodeDetector as new (opts: { formats: string[] }) => BarcodeDetectorLike;
+    const Ctor = (window as any).BarcodeDetector as new (opts: {
+      formats: string[];
+    }) => BarcodeDetectorLike;
     return new Ctor({
-      formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code', 'data_matrix', 'code_128', 'code_39', 'itf']
+      formats: [
+        'ean_13',
+        'ean_8',
+        'upc_a',
+        'upc_e',
+        'qr_code',
+        'data_matrix',
+        'code_128',
+        'code_39',
+        'itf'
+      ]
     });
   }
 
@@ -58,15 +69,18 @@
     const detector = getNativeDetector();
     function loop() {
       if (!videoEl || status === 'done') return;
-      detector.detect(videoEl).then((results) => {
-        if (results.length > 0) {
-          finish(results[0].rawValue, String(results[0].format));
-        } else {
+      detector
+        .detect(videoEl)
+        .then((results) => {
+          if (results.length > 0) {
+            finish(results[0].rawValue, String(results[0].format));
+          } else {
+            rafId = requestAnimationFrame(loop);
+          }
+        })
+        .catch(() => {
           rafId = requestAnimationFrame(loop);
-        }
-      }).catch(() => {
-        rafId = requestAnimationFrame(loop);
-      });
+        });
     }
     rafId = requestAnimationFrame(loop);
   }
@@ -98,8 +112,12 @@
     stream = undefined;
   }
 
-  onMount(() => { startCamera(); });
-  onDestroy(() => { stopCamera(); });
+  onMount(() => {
+    startCamera();
+  });
+  onDestroy(() => {
+    stopCamera();
+  });
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
@@ -186,7 +204,9 @@
     border-radius: 50%;
   }
 
-  .close-btn:hover { background: #f0f0f0; }
+  .close-btn:hover {
+    background: #f0f0f0;
+  }
 
   .viewfinder-wrap {
     position: relative;
@@ -233,7 +253,9 @@
     padding: 1rem;
   }
 
-  .status-msg.error-msg { background: rgba(176, 0, 32, 0.75); }
+  .status-msg.error-msg {
+    background: rgba(176, 0, 32, 0.75);
+  }
 
   .hint {
     font-size: 0.8rem;
@@ -261,5 +283,7 @@
     min-height: 44px;
   }
 
-  button.secondary:hover { background: #f0f5f1; }
+  button.secondary:hover {
+    background: #f0f5f1;
+  }
 </style>

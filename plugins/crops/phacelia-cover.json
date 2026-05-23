@@ -1,0 +1,30 @@
+{
+  "pluginId": "phacelia-cover",
+  "type": "crop",
+  "displayName": "Phacelia (cover/insectary)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 7,
+    "seedDepthIn": {
+      "min": 0.25,
+      "max": 0.5
+    }
+  },
+  "harvestIndicators": [
+    "Lavender bee-loaded blooms before frost"
+  ],
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Phacelia tanacetifolia. Cool-season smother and pollinator cover. Not in any common crop family, so it fits any rotation. Excellent bee attractor. Frost-killed in northern winters; mow at flowering further south. Sold by Green Cover Seed, Albert Lea Seed."
+}

@@ -2,7 +2,7 @@
 
 Canonical tracker for Phase 21. Future sessions should read this first before working on anything in this scope so we don't re-derive context. Mirror format: [phase-9-resume.md](./phase-9-resume.md).
 
-**Status (2026-05-16):** planning complete; A in progress. Sub-tasks A→F sized to ship individually.
+**Status (2026-05-16):** all six sub-tasks shipped. Sprint 1 (A + B + F) on `phase-21a-foundations` (merged); Sprint 2 (C + D + E + B-18 fungicide route) on `phase-21b-planner`. Plugin-data backfill (compliance flags + spray-window purpose tags on existing input/crop plugins) intentionally deferred to a follow-up content pass — the schema fields are all optional.
 
 **Why this phase exists.** The Plan wizard currently decides *what + where + when to plant* (UC-37 allocation → UC-37c schedule). It does not decide *what to apply, when, and what to buy*. Phase 21 closes that gap with two coupled additions:
 
@@ -224,7 +224,7 @@ Low. Additive Zod schema; tested validator. CLAUDE.md invariant #2 (plugins are 
 
 ## Sub-task C — Deterministic inputs planner
 
-**Status:** pending.
+**Status:** ✓ shipped on `phase-21b-planner` branch (commit `2465c8f`). Pure function `planInputs()` in `lib/plan/inputsPlan.ts` (660 lines) + 111 tests covering the 96-scenario philosophy × fertility-approach × family matrix + 15 targeted edge-case tests. Family yield + N/P/K removal defaults hardcoded in `FAMILY_REMOVAL_DEFAULTS` (Penn State + UMD Extension small-plot guidelines) with a Phase 22 TODO to lift onto optional cropPlugin fields. `InputsPlanProvisionalPlanting` type extracted so the wizard and the planner share one duck-typed shape.
 **Files:** `apps/web/src/lib/plan/inputsPlan.ts` (new), `inputsPlan.test.ts` (new).
 
 Pure function. Signature:
@@ -265,7 +265,7 @@ Medium. Most of the agronomic judgment lives here. Catching errors requires fixt
 
 ## Sub-task D — AI refinement layer
 
-**Status:** pending.
+**Status:** ✓ shipped on `phase-21b-planner` branch (commit `cb3902c`). `lib/server/aiInputsPlan.ts` wraps `planInputs()` with a substitution-only AI pass: AI can swap `productPluginId` + tune rate but cannot add/remove slots, change dates, or bypass the validator pyramid (philosophyFilter → cropCompatibility → chemistry → rate ceiling). Deterministic fallback baked in for missing key, quota exhausted, JSON parse failure, or validator rejection. `/api/plan/inputs/refine` adds chat-style refinement. `aiGuard` endpoint enum + DEFAULT_AI_DAILY_QUOTA both gain `inputs: 10`; `ai_call_log.endpoint` schema enum widened (no migration needed — SQLite doesn't enforce text enums at runtime). InputsPlanStep surfaces `meta.fallback` as a banner. The exact AI prompt is deliberately minimal (substitution-only contract) and can be tuned in a follow-up iteration without changing the validator surface.
 **Files:** `apps/web/src/lib/server/aiInputsPlan.ts` (new), `apps/web/src/routes/api/plan/inputs/+server.ts` (new), `apps/web/src/routes/api/plan/inputs/refine/+server.ts` (new), `apps/web/src/lib/server/aiGuard.ts` (modify — add `'inputs'` endpoint key + default quota 10/day).
 
 Mirror `aiSchedule.ts` exactly. AI's job is **substitution and tank-mix consolidation**, not initial planning. Deterministic planner from sub-task C is the source of truth and the fallback.
@@ -289,7 +289,9 @@ Low. Established pattern; deterministic fallback means AI bugs can't break the w
 
 ## Sub-task E — Wizard step 5 UI + commit
 
-**Status:** pending.
+**Status:** ✓ shipped on `phase-21b-planner` branch (commit `7d1e0fa`). `InputsPlanStep.svelte` renders per-planting collapsible cards with accept-checkboxes (rejection is the affirmative gesture), FRAC-style category pills, sticky right-rail shopping list with shortfall badges, and a warnings panel keyed by `PlannerWarning.kind`. `/api/plan/inputs` + `/api/plan/inputs/commit` endpoints persist the operator's accepted subset as `tasks` rows tagged `pluginTemplateKey='inputs-plan'` with the right `relatedEventTable` per category. Idempotency: deletes OPEN inputs-plan tasks for affected blocks before re-insertion (completed/aborted survive). `AllocationWizard.svelte` rewired with `'inputs'` step between schedule and commit; planting commit + task commit run as one operator-visible action.
+
+B-18 fungicide_events shipped on the same branch (commit `48e4f09`): full mirror of `insecticide_events` with FRAC-coded product snapshots; new `lib/db/fungicideEvents.ts` repo, migration `0025_phase21_fungicide_events.sql`, `/api/fungicide/record` endpoint, `/spray/fungicide` UI route with tank-mix FRAC-grouping + resistance warning, and the `tasks.related_event_table` enum + `RelatedEventTable` union both gain `'fungicide_event'` so inputs-plan commits can pre-set the link.
 **Files:** `apps/web/src/lib/components/InputsPlanStep.svelte` (new), `apps/web/src/routes/api/plan/inputs/commit/+server.ts` (new), `AllocationWizard.svelte` (modify — wire step after Companion Groups).
 
 Layout per parent plan §E. Key behavioral requirements:

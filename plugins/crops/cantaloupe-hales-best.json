@@ -1,7 +1,7 @@
 {
   "pluginId": "cantaloupe-hales-best",
   "type": "crop",
-  "displayName": "Cantaloupe \u2014 Hale's Best Jumbo",
+  "displayName": "Cantaloupe — Hale's Best Jumbo",
   "version": "1.0.0",
   "cropFamily": "cucurbit",
   "daysToMaturity": {
@@ -14,7 +14,7 @@
     "Net-pattern fully expressed",
     "Floral aroma at blossom end"
   ],
-  "notes": "Heat-loving \u2014 wait for stable warm soil. Susceptible to bacterial wilt (cucumber beetle vectored).",
+  "notes": "Heat-loving — wait for stable warm soil. Susceptible to bacterial wilt (cucumber beetle vectored).",
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2
@@ -26,7 +26,9 @@
       "offsetDaysMin": 30,
       "offsetDaysMax": 60,
       "title": "POST grass window (Clethodim)",
-      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon.",
+      "purpose": "post-emergent"
     }
-  ]
+  ],
+  "pluginSchemaVersion": "1.1"
 }

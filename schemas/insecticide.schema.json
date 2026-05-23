@@ -18,6 +18,13 @@
       "type": "string",
       "minLength": 1
     },
+    "pluginSchemaVersion": {
+      "type": "string",
+      "enum": [
+        "1.0",
+        "1.1"
+      ]
+    },
     "type": {
       "type": "string",
       "const": "insecticide"
@@ -78,7 +85,6 @@
     },
     "gpaCalibration": {
       "type": "integer",
-      "exclusiveMinimum": true,
       "minimum": 0,
       "default": 15
     },

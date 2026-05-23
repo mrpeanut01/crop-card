@@ -17,7 +17,14 @@ const baseContext = (overrides: Partial<FarmContext> = {}): FarmContext => ({
     { id: 'b1', label: 'B1', eastWestIndex: 0, northSouthIndex: 0, acres: 0.5, sunExposure: 'full' }
   ],
   cropCatalog: [
-    { pluginId: 'corn-bb', family: 'corn', dtmMin: 95, dtmMax: 110, shadeCasting: true, matureHeightFt: 7 }
+    {
+      pluginId: 'corn-bb',
+      family: 'corn',
+      dtmMin: 95,
+      dtmMax: 110,
+      shadeCasting: true,
+      matureHeightFt: 7
+    }
   ],
   ...overrides
 });
@@ -42,14 +49,42 @@ describe('aiContextCache', () => {
   it('block ordering does not change the version hash', () => {
     const a: FarmContext = baseContext({
       blocks: [
-        { id: 'b1', label: 'B1', eastWestIndex: 0, northSouthIndex: 0, acres: 1, sunExposure: 'full' },
-        { id: 'b2', label: 'B2', eastWestIndex: 1, northSouthIndex: 0, acres: 2, sunExposure: 'full' }
+        {
+          id: 'b1',
+          label: 'B1',
+          eastWestIndex: 0,
+          northSouthIndex: 0,
+          acres: 1,
+          sunExposure: 'full'
+        },
+        {
+          id: 'b2',
+          label: 'B2',
+          eastWestIndex: 1,
+          northSouthIndex: 0,
+          acres: 2,
+          sunExposure: 'full'
+        }
       ]
     });
     const b: FarmContext = baseContext({
       blocks: [
-        { id: 'b2', label: 'B2', eastWestIndex: 1, northSouthIndex: 0, acres: 2, sunExposure: 'full' },
-        { id: 'b1', label: 'B1', eastWestIndex: 0, northSouthIndex: 0, acres: 1, sunExposure: 'full' }
+        {
+          id: 'b2',
+          label: 'B2',
+          eastWestIndex: 1,
+          northSouthIndex: 0,
+          acres: 2,
+          sunExposure: 'full'
+        },
+        {
+          id: 'b1',
+          label: 'B1',
+          eastWestIndex: 0,
+          northSouthIndex: 0,
+          acres: 1,
+          sunExposure: 'full'
+        }
       ]
     });
     expect(computeContextVersion(a)).toBe(computeContextVersion(b));
@@ -59,7 +94,14 @@ describe('aiContextCache', () => {
     const a = baseContext();
     const b = baseContext({
       blocks: [
-        { id: 'b1', label: 'B1', eastWestIndex: 0, northSouthIndex: 0, acres: 0.6, sunExposure: 'full' }
+        {
+          id: 'b1',
+          label: 'B1',
+          eastWestIndex: 0,
+          northSouthIndex: 0,
+          acres: 0.6,
+          sunExposure: 'full'
+        }
       ]
     });
     expect(computeContextVersion(a)).not.toBe(computeContextVersion(b));

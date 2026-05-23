@@ -1,0 +1,26 @@
+{
+  "pluginId": "triple-strip-cover-rotation",
+  "type": "companion",
+  "displayName": "Triple-Species Cover Crop Mix (rye + vetch + radish)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "cover-grass",
+  "goodWith": [
+    "cereal-rye-cover",
+    "hairy-vetch-cover",
+    "hairy-vetch-purple-bounty",
+    "tillage-radish-driller",
+    "daikon-radish-cover"
+  ],
+  "badWith": [],
+  "benefit": "Three-species cover crop combining a grass (cereal rye), a legume (hairy vetch), and a brassica (tillage radish) outperforms any single species on biomass, weed suppression, and nutrient cycling. Standard rotation cover ahead of vegetable cash crops.",
+  "members": [
+    {
+      "family": "cover-grass",
+      "role": "grass + legume + brassica blend",
+      "plantingOffsetDays": 0,
+      "title": "Drill triple mix in late summer",
+      "body": "Drill rye at 60 lb, hairy vetch at 25 lb, and tillage radish at 5 lb per acre in late August. Inoculate vetch with proper Rhizobium. Roller-crimp at vetch full bloom the following spring."
+    }
+  ]
+}

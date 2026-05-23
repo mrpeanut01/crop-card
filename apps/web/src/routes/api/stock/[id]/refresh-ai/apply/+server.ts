@@ -19,7 +19,12 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import { getStockItem, setPendingRefresh, updateStockItem, type UpdateItemInput } from '$lib/db/stock';
+import {
+  getStockItem,
+  setPendingRefresh,
+  updateStockItem,
+  type UpdateItemInput
+} from '$lib/db/stock';
 import { requireOwner } from '$lib/server/auth';
 
 const bodySchema = z.object({
@@ -129,7 +134,11 @@ function safeParseObject(raw: string | undefined): Record<string, unknown> | nul
 
 function unwrap(field: unknown): unknown {
   if (field === null || field === undefined) return undefined;
-  if (typeof field === 'object' && !Array.isArray(field) && 'value' in (field as Record<string, unknown>)) {
+  if (
+    typeof field === 'object' &&
+    !Array.isArray(field) &&
+    'value' in (field as Record<string, unknown>)
+  ) {
     return (field as { value: unknown }).value;
   }
   return field;

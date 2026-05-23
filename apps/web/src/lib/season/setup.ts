@@ -30,32 +30,17 @@ export const SEASON_SETUP_FIELDS = [
 
 export type SeasonSetupField = (typeof SEASON_SETUP_FIELDS)[number];
 
-export type Philosophy =
-  | 'conventional'
-  | 'non-gmo'
-  | 'organic-transitioning'
-  | 'certified-organic';
+export type Philosophy = 'conventional' | 'non-gmo' | 'organic-transitioning' | 'certified-organic';
 
-export type WeedStrategy =
-  | 'cultivate-first'
-  | 'pre-emergence-ok'
-  | 'post-emergence-ok';
+export type WeedStrategy = 'cultivate-first' | 'pre-emergence-ok' | 'post-emergence-ok';
 
 export type PestStrategy = 'preventive' | 'ipm' | 'minimal';
 
-export type FertilityApproach =
-  | 'synthetic'
-  | 'compost-amendments'
-  | 'cover-crop-credits'
-  | 'mixed';
+export type FertilityApproach = 'synthetic' | 'compost-amendments' | 'cover-crop-credits' | 'mixed';
 
 export type CoverCropIntent = 'fall-cereal' | 'vetch-clover' | 'other' | 'none';
 
-export type SprayCapacity =
-  | 'backpack-4gal'
-  | 'handheld-25gal'
-  | 'boom-25-plus'
-  | 'none';
+export type SprayCapacity = 'backpack-4gal' | 'handheld-25gal' | 'boom-25-plus' | 'none';
 
 export interface SeasonSetup {
   philosophy: Philosophy;
@@ -149,8 +134,7 @@ export function summarizeSeasonSetup(s: SeasonSetup): string {
   const pest = chipForm(PEST_LABELS[s.pestStrategy]);
   const fert = chipForm(FERTILITY_LABELS[s.fertilityApproach]);
   const cap = chipForm(SPRAY_LABELS[s.sprayCapacity]);
-  const cover =
-    s.coverCropIntent === 'none' ? null : `Cover: ${COVER_LABELS[s.coverCropIntent]}`;
+  const cover = s.coverCropIntent === 'none' ? null : `Cover: ${COVER_LABELS[s.coverCropIntent]}`;
   return [phil, pest, fert, cap, cover, s.year].filter(Boolean).join(' · ');
 }
 
@@ -175,10 +159,8 @@ export const PHILOSOPHY_LABELS: Record<Philosophy, string> = {
  */
 export const WEED_LABELS: Record<WeedStrategy, string> = {
   'cultivate-first': 'No herbicides — cultivation / mulch / hand-weed',
-  'pre-emergence-ok':
-    '+ Pre-emergence — early-season herbicide for known weed pressure',
-  'post-emergence-ok':
-    '+ Post-emergence — in-season herbicide for breakthrough weeds'
+  'pre-emergence-ok': '+ Pre-emergence — early-season herbicide for known weed pressure',
+  'post-emergence-ok': '+ Post-emergence — in-season herbicide for breakthrough weeds'
 };
 
 /**

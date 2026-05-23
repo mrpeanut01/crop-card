@@ -39,11 +39,7 @@ function countPlantedRowsFor(blockId: string, cropPluginId: string): number {
 }
 
 function quantityFor(plantingId: string): number | null {
-  const row = db
-    .select()
-    .from(plantingRecords)
-    .where(eq(plantingRecords.id, plantingId))
-    .get();
+  const row = db.select().from(plantingRecords).where(eq(plantingRecords.id, plantingId)).get();
   return row?.quantityPlantedHundredths ?? null;
 }
 

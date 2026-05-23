@@ -54,7 +54,9 @@ export const POST: RequestHandler = async (event) => {
 
   const year =
     harvestApprox?.getFullYear() ??
-    (prior.plantingDate != null ? new Date(prior.plantingDate).getFullYear() : new Date().getFullYear());
+    (prior.plantingDate != null
+      ? new Date(prior.plantingDate).getFullYear()
+      : new Date().getFullYear());
   const ctx = await buildFarmContext(year);
 
   const userPrompt = [
@@ -92,9 +94,6 @@ export const POST: RequestHandler = async (event) => {
       success: false,
       errorClass: 'upstream-error'
     });
-    return json(
-      { error: err instanceof Error ? err.message : 'AI call failed' },
-      { status: 502 }
-    );
+    return json({ error: err instanceof Error ? err.message : 'AI call failed' }, { status: 502 });
   }
 };

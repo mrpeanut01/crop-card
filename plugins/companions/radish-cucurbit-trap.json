@@ -1,0 +1,20 @@
+{
+  "pluginId": "radish-cucurbit-trap",
+  "type": "companion",
+  "displayName": "Radish + Cucurbit (striped cucumber beetle trap)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "cucurbit",
+  "goodWith": ["cucumber-marketmore-76", "cucumber-regal-f1-seed", "winter-squash-delicata", "summer-squash-yellow-crookneck", "zucchini-black-beauty"],
+  "badWith": [],
+  "benefit": "Radish flowers strongly attract striped cucumber beetle adults and can be flame-killed or pulled when beetles arrive in numbers. Reduces direct feeding pressure and bacterial wilt vectoring on cucurbit foliage.",
+  "members": [
+    {
+      "family": "brassica",
+      "role": "cucumber beetle trap crop",
+      "plantingOffsetDays": -21,
+      "title": "Bolted radish trap at cucurbit emergence",
+      "body": "Direct-sow radish 3 weeks before cucurbit planting at the row ends. Let the radish bolt and bloom; pull or torch heavily-infested plants before seed-set."
+    }
+  ]
+}

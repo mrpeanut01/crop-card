@@ -31,6 +31,7 @@ export type MovementReason =
   | 'receipt'
   | 'spray-event'
   | 'insecticide-event'
+  | 'fungicide-event'
   | 'fertility-application'
   | 'planting'
   | 'adjustment'
@@ -162,7 +163,7 @@ function rowToItem(row: typeof stockItems.$inferSelect): StockItem {
     pendingRefreshAt:
       row.pendingRefreshAt instanceof Date
         ? row.pendingRefreshAt.getTime()
-        : (row.pendingRefreshAt as number | null | undefined) ?? undefined
+        : ((row.pendingRefreshAt as number | null | undefined) ?? undefined)
   };
 }
 
@@ -210,10 +211,12 @@ export type UpdateItemInput = {
 
 export function updateStockItem(id: string, updates: UpdateItemInput): StockItem {
   const set: Record<string, unknown> = {};
-  if ('displayName' in updates && updates.displayName !== undefined) set.displayName = updates.displayName;
+  if ('displayName' in updates && updates.displayName !== undefined)
+    set.displayName = updates.displayName;
   if ('shortName' in updates) set.shortName = updates.shortName ?? null;
   if ('category' in updates && updates.category !== undefined) set.category = updates.category;
-  if ('defaultUnit' in updates && updates.defaultUnit !== undefined) set.defaultUnit = updates.defaultUnit;
+  if ('defaultUnit' in updates && updates.defaultUnit !== undefined)
+    set.defaultUnit = updates.defaultUnit;
   if ('pluginId' in updates) set.pluginId = updates.pluginId ?? null;
   if ('reorderThreshold' in updates) {
     set.reorderThresholdHundredths =
@@ -279,9 +282,7 @@ export function listItemsWithPendingRefresh(): Array<{
       pendingRefreshAt: stockItems.pendingRefreshAt
     })
     .from(stockItems)
-    .where(
-      withTenant(stockItems, sql`${stockItems.pendingRefreshJson} IS NOT NULL`)
-    )
+    .where(withTenant(stockItems, sql`${stockItems.pendingRefreshJson} IS NOT NULL`))
     .all()
     .map((row) => ({
       id: row.id,
@@ -609,6 +610,7 @@ export function decrementForUse(input: {
   unit: StockUnit;
   sprayEventId?: string;
   insecticideEventId?: string;
+  fungicideEventId?: string;
   fertilityApplicationId?: string;
   cropId?: string;
   reason?: MovementReason;
@@ -658,9 +660,11 @@ export function decrementForUse(input: {
       input.reason ??
       (input.insecticideEventId
         ? 'insecticide-event'
-        : input.fertilityApplicationId
-          ? 'fertility-application'
-          : 'spray-event');
+        : input.fungicideEventId
+          ? 'fungicide-event'
+          : input.fertilityApplicationId
+            ? 'fertility-application'
+            : 'spray-event');
     const movement = db
       .insert(stockMovements)
       .values(
@@ -672,6 +676,7 @@ export function decrementForUse(input: {
           reason,
           sprayEventId: input.sprayEventId ?? null,
           insecticideEventId: input.insecticideEventId ?? null,
+          fungicideEventId: input.fungicideEventId ?? null,
           fertilityApplicationId: input.fertilityApplicationId ?? null,
           cropId: input.cropId ?? null,
           performedById: input.performedById ?? null,

@@ -3,11 +3,31 @@
   "type": "insecticide",
   "displayName": "JMS Stylet Oil (paraffinic horticultural oil)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "paraffinic oil", "iracGroup": "UN" }],
+  "activeIngredients": [
+    {
+      "name": "paraffinic oil",
+      "iracGroup": "UN"
+    }
+  ],
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
-  "ratePerAcre": { "amount": 3, "unit": "qt" },
-  "targetPests": ["aphid (anti-feedant against virus vectors)", "spider mite", "scale", "powdery mildew (suppression)"],
+  "ratePerAcre": {
+    "amount": 3,
+    "unit": "qt"
+  },
+  "targetPests": [
+    "aphid (anti-feedant against virus vectors)",
+    "spider mite",
+    "scale",
+    "powdery mildew (suppression)"
+  ],
   "pollinatorRisk": "low",
-  "notes": "Highly refined hort oil — used as virus-vector blocker for aphid-transmitted virus management. Phytotox risk during heat stress; avoid >85 °F."
+  "notes": "Highly refined hort oil — used as virus-vector blocker for aphid-transmitted virus management. Phytotox risk during heat stress; avoid >85 °F.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

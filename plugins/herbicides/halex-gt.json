@@ -5,11 +5,23 @@
   "version": "1.0.0",
   "applicationTiming": "POST",
   "activeIngredients": [
-    { "name": "glyphosate", "chemistryClass": "glyphosate" },
-    { "name": "S-metolachlor", "chemistryClass": "chloroacetamide" },
-    { "name": "mesotrione", "chemistryClass": "hppd-inhibitor" }
+    {
+      "name": "glyphosate",
+      "chemistryClass": "glyphosate"
+    },
+    {
+      "name": "S-metolachlor",
+      "chemistryClass": "chloroacetamide"
+    },
+    {
+      "name": "mesotrione",
+      "chemistryClass": "hppd-inhibitor"
+    }
   ],
-  "ratePerAcre": { "amount": 3.6, "unit": "pt" },
+  "ratePerAcre": {
+    "amount": 3.6,
+    "unit": "pt"
+  },
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": true,
@@ -17,8 +29,17 @@
   "traitGatedSafeFor": [
     {
       "cropPluginId": "corn-feed-dent-pioneer",
-      "requiresTraits": ["glyphosate-tolerant-rr2"]
+      "requiresTraits": [
+        "glyphosate-tolerant-rr2"
+      ]
     }
   ],
-  "notes": "Total POST corn package: glyphosate (RR-traited) + chloroacetamide residual + HPPD broadleaf. Tank-mix with AMS. Phase 11 trait override: kernel allows halex-gt on the RR2-traited dent corn cultivar; without the trait the glyphosate AI would be lethal."
+  "notes": "Total POST corn package: glyphosate (RR-traited) + chloroacetamide residual + HPPD broadleaf. Tank-mix with AMS. Phase 11 trait override: kernel allows halex-gt on the RR2-traited dent corn cultivar; without the trait the glyphosate AI would be lethal.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

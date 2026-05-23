@@ -45,9 +45,7 @@ export function haversineFt(lat1: number, lon1: number, lat2: number, lon2: numb
   const phi2 = toRad(lat2);
   const dPhi = toRad(lat2 - lat1);
   const dLambda = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dPhi / 2) ** 2 +
-    Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda / 2) ** 2;
+  const a = Math.sin(dPhi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return EARTH_RADIUS_FT * c;
 }
@@ -61,12 +59,24 @@ export function hasGeometry(b: BlockGeometryRef): boolean {
 }
 
 const COMPASS_16 = [
-  'N', 'NNE', 'NE', 'ENE',
-  'E', 'ESE', 'SE', 'SSE',
-  'S', 'SSW', 'SW', 'WSW',
-  'W', 'WNW', 'NW', 'NNW'
+  'N',
+  'NNE',
+  'NE',
+  'ENE',
+  'E',
+  'ESE',
+  'SE',
+  'SSE',
+  'S',
+  'SSW',
+  'SW',
+  'WSW',
+  'W',
+  'WNW',
+  'NW',
+  'NNW'
 ] as const;
-export type CompassDirection = typeof COMPASS_16[number];
+export type CompassDirection = (typeof COMPASS_16)[number];
 
 /** Forward bearing from point A to point B in degrees (0=N, 90=E, 180=S, 270=W). */
 export function bearingDegrees(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -89,7 +99,10 @@ export function degreesToCompass16(deg: number): CompassDirection {
 
 /** Convenience wrapper: compass bearing FROM block A TO block B, or null
  *  if either block lacks geometry. Returns 16-point label. */
-export function compassBearingFromTo(a: BlockGeometryRef, b: BlockGeometryRef): CompassDirection | null {
+export function compassBearingFromTo(
+  a: BlockGeometryRef,
+  b: BlockGeometryRef
+): CompassDirection | null {
   if (!a.geometryGeojson || !b.geometryGeojson) return null;
   const ca = geometryCentroid(a.geometryGeojson);
   const cb = geometryCentroid(b.geometryGeojson);

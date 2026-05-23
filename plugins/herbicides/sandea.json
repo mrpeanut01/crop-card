@@ -4,16 +4,47 @@
   "displayName": "Sandea (Gowan halosulfuron-methyl)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "halosulfuron-methyl", "chemistryClass": "sulfonylurea" }],
-  "ratePerAcre": { "amount": 0.66, "unit": "oz" },
+  "activeIngredients": [
+    {
+      "name": "halosulfuron-methyl",
+      "chemistryClass": "sulfonylurea"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 0.66,
+    "unit": "oz"
+  },
   "gpaCalibration": 15,
   "requiresAMS": false,
   "deconRequired": true,
   "tankMixOrder": 4,
-  "labelClaims": { "safeForCropPluginIds": ["pumpkin-ez-gro-monster", "butternut-squash-waltham", "corn-feed-dent-pioneer"] },
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "pumpkin-ez-gro-monster",
+      "butternut-squash-waltham",
+      "corn-feed-dent-pioneer"
+    ]
+  },
   "traitGatedSafeFor": [
-    { "cropPluginId": "tomato-roma-vf", "requiresTraits": ["native-halosulfuron-tolerant"] },
-    { "cropPluginId": "tomato-cherokee-purple", "requiresTraits": ["native-halosulfuron-tolerant"] }
+    {
+      "cropPluginId": "tomato-roma-vf",
+      "requiresTraits": [
+        "native-halosulfuron-tolerant"
+      ]
+    },
+    {
+      "cropPluginId": "tomato-cherokee-purple",
+      "requiresTraits": [
+        "native-halosulfuron-tolerant"
+      ]
+    }
   ],
-  "notes": "Vegetable + cucurbit nutsedge specialist. POST or PRE; very small rate. Phase 11 trait override: tomato cultivars carry the native-halosulfuron-tolerant trait, exempting them from the sulfonylurea → solanaceae family-kill default. Verify rotation interval before next crop."
+  "notes": "Vegetable + cucurbit nutsedge specialist. POST or PRE; very small rate. Phase 11 trait override: tomato cultivars carry the native-halosulfuron-tolerant trait, exempting them from the sulfonylurea → solanaceae family-kill default. Verify rotation interval before next crop.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

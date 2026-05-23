@@ -190,6 +190,7 @@ export function loginByEmail(
 /** Throws a SvelteKit redirect to the canonical next-step path. Centralizes
  *  the routing so /signin actions don't have to duplicate the mapping. */
 export function redirectFromLogin(next: LoginResult['next']): never {
-  const path = next === 'onboarding' ? '/onboarding' : next === 'picker' ? '/owner-picker' : '/today';
+  const path =
+    next === 'onboarding' ? '/onboarding' : next === 'picker' ? '/owner-picker' : '/today';
   throw redirect(303, path);
 }

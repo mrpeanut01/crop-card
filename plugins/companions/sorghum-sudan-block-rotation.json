@@ -1,0 +1,27 @@
+{
+  "pluginId": "sorghum-sudan-block-rotation",
+  "type": "companion",
+  "displayName": "Sorghum-Sudangrass + Solanaceae Rotation (nematode suppression)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "solanaceae",
+  "goodWith": [
+    "tomato-roma-vf",
+    "tomato-cherokee-purple",
+    "tomato-san-marzano",
+    "pepper-bell-california-wonder",
+    "pepper-jalapeno",
+    "eggplant-black-beauty"
+  ],
+  "badWith": [],
+  "benefit": "Sorghum-sudangrass cover crop in the rotation year before solanaceae suppresses root-knot nematode and lesion nematode populations through allelopathic dhurrin compounds. Best when sown in summer, mowed at 4 to 5 ft, and incorporated.",
+  "members": [
+    {
+      "family": "cover-grass",
+      "role": "biofumigation cover before solanaceae",
+      "plantingOffsetDays": -365,
+      "title": "Sorghum-sudan cover the year before solanaceae block",
+      "body": "Drill sorghum-sudangrass at 40 to 50 lb per acre in June. Mow once at 4 ft, allow regrowth, then mow and incorporate in late August. Follow with a winter cover before the solanaceae year."
+    }
+  ]
+}

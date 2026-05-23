@@ -3,10 +3,27 @@
   "type": "fertilizer",
   "displayName": "Sulfate of Potash / SOP (0-0-50, +18S)",
   "version": "1.0.0",
-  "analysis": { "n": 0, "p": 0, "k": 50 },
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 50
+  },
   "form": "granular",
   "organic": false,
-  "secondaryNutrients": { "s": 18 },
-  "applicationRange": { "min": 50, "max": 250, "unit": "lb-per-acre" },
-  "notes": "K + S without chloride. For chloride-sensitive crops (potato, tobacco, vegetables, tree fruit). More expensive than MOP."
+  "secondaryNutrients": {
+    "s": 18
+  },
+  "applicationRange": {
+    "min": 50,
+    "max": 250,
+    "unit": "lb-per-acre"
+  },
+  "notes": "K + S without chloride. For chloride-sensitive crops (potato, tobacco, vegetables, tree fruit). More expensive than MOP.",
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

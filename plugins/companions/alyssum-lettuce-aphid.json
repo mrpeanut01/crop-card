@@ -1,0 +1,20 @@
+{
+  "pluginId": "alyssum-lettuce-aphid",
+  "type": "companion",
+  "displayName": "Sweet Alyssum + Lettuce (aphid biocontrol)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "leafy-green",
+  "goodWith": ["lettuce-buttercrunch", "lettuce-romaine-paris-island-cos", "lettuce-red-sails", "lettuce-little-gem", "lettuce-salanova-mix"],
+  "badWith": [],
+  "benefit": "Sweet alyssum (Lobularia maritima) supports hoverfly populations that suppress lettuce aphid. UC Davis trials in coastal California show aphid populations dropping 50 to 75 percent with alyssum interplanted every 5 to 8 lettuce rows.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "hoverfly insectary",
+      "plantingOffsetDays": -14,
+      "title": "Alyssum strip every 6 lettuce rows",
+      "body": "Transplant alyssum 2 weeks before lettuce transplant in a single row every 5 to 8 lettuce rows. Trim back if it grows over the lettuce canopy."
+    }
+  ]
+}

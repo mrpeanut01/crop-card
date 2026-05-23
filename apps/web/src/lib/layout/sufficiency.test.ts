@@ -29,7 +29,12 @@ function squareGeoJson(sideFt: number, anchorLat = 39, anchorLon = -77): string 
   });
 }
 
-function rectangleGeoJson(widthFt: number, heightFt: number, anchorLat = 39, anchorLon = -77): string {
+function rectangleGeoJson(
+  widthFt: number,
+  heightFt: number,
+  anchorLat = 39,
+  anchorLon = -77
+): string {
   const ftPerLon = FT_PER_DEGREE_LAT * Math.cos((anchorLat * Math.PI) / 180);
   const dLat = heightFt / FT_PER_DEGREE_LAT;
   const dLon = widthFt / ftPerLon;

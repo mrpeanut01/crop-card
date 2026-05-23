@@ -35,12 +35,9 @@ import {
   type RotationConflict,
   type SameTimeOverlap
 } from '$lib/calendar/rotation';
-import {
-  listBlocks,
-  type BlockWithPlantings,
-  type PlantingRecord
-} from '$lib/db/blocks';
+import { listBlocks, type BlockWithPlantings, type PlantingRecord } from '$lib/db/blocks';
 import { listCrops, type Crop } from '$lib/db/crops';
+import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import { getSetting } from '$lib/db/settings';
 import {
@@ -76,8 +73,19 @@ import { getRegistry } from '$lib/server/registry';
 import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/companions';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 
-export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'equipment' | 'calendar';
-const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'equipment', 'calendar'];
+export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
+const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calendar'];
+
+/** Phase 21b follow-up — Calendar tab supports a view toggle so the
+ *  swim-lane and the month-grid live behind one entry point. The
+ *  Schedule tab now shares the swim-lane renderer (legacy URLs still
+ *  work; the visible tab strip drops the standalone Schedule entry). */
+export type PlanView = 'swimlane' | 'grid';
+const VIEW_VALUES: PlanView[] = ['swimlane', 'grid'];
+
+// harvestTargetKey moved to `$lib/plan/harvestTargetKey.ts` so it can
+// be exported from a non-route module — SvelteKit only allows
+// `load` / `actions` / `prerender` / etc. as named exports here.
 
 export interface ScheduleCatalogItem {
   pluginId: string;
@@ -109,7 +117,19 @@ export interface CropEquipmentForPlan {
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   const tabParam = url.searchParams.get('tab') ?? 'overview';
-  const tab: PlanTab = (TAB_VALUES as string[]).includes(tabParam) ? (tabParam as PlanTab) : 'overview';
+  const tab: PlanTab = (TAB_VALUES as string[]).includes(tabParam)
+    ? (tabParam as PlanTab)
+    : 'overview';
+
+  // Calendar tab view discriminator. Default = swimlane (because the
+  // schedule swim-lane has more interactive features and is the better
+  // default for "what's planted where, when"); ?view=grid switches to
+  // the month-grid view. Other tabs ignore the param.
+  const viewParam = url.searchParams.get('view');
+  const view: PlanView =
+    viewParam && (VIEW_VALUES as string[]).includes(viewParam)
+      ? (viewParam as PlanView)
+      : 'swimlane';
 
   const blocks = listBlocks();
   const fields = listFields();
@@ -164,7 +184,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // renders <BlockMap> (today: layout + crops). Pushing it into base
     // closes that recurring class of bug — PR #49 fixed the UI side but
     // missed that the Crops-tab loader branch wasn't returning the field.
-    shadeSources: listShadeSources()
+    shadeSources: listShadeSources(),
+    // Phase 21b follow-up — surface to template so the Calendar tab can
+    // toggle swim-lane vs grid. Ignored by other tabs.
+    view
   };
 
   if (tab === 'overview') {
@@ -181,8 +204,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     const allSeedStock = listStockItems().filter((s) => s.category === 'seed');
     const seedStock = allSeedStock.map((s) => {
       const plug = s.pluginId ? registry.get(s.pluginId)?.plugin : undefined;
-      const cropFamily =
-        plug && plug.type === 'crop' ? (plug as CropPlugin).cropFamily : null;
+      const cropFamily = plug && plug.type === 'crop' ? (plug as CropPlugin).cropFamily : null;
       return {
         stockItemId: s.id,
         displayName: s.displayName,
@@ -214,13 +236,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   }
 
-  if (tab === 'schedule') {
+  // The swim-lane payload is shared between `tab=schedule` (legacy URL) and
+  // `tab=calendar&view=swimlane` (new toggle inside the Calendar tab).
+  if (tab === 'schedule' || (tab === 'calendar' && view === 'swimlane')) {
     // Phase 14 swim-lane payload — replaces the prior single-row season
     // timeline. Returns blocks ordered E→W, planting bars, shade markers,
     // conflict pairs, the "to schedule" tray, and snap boundaries.
 
     const yearParam = url.searchParams.get('year');
-    const year = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : new Date().getFullYear();
+    const year =
+      yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : new Date().getFullYear();
 
     const scheduleCatalog: ScheduleCatalogItem[] = registry
       .all()
@@ -304,6 +329,22 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       nextStage?: NextStageData;
       harvestTargets?: HarvestTargetWindow[];
       cornType?: CornType;
+      /** Phase 21b follow-up — operator's chosen subset of harvest
+       *  use cases. Null = show all (default). */
+      harvestUseCases?: string[] | null;
+      /** Plugin-declared harvest target options for this crop. Each
+       *  entry carries a stable `key` (the canonical useCase enum
+       *  value, or a slugified label when the plugin author didn't
+       *  tag one) plus the display `label`. Drives the checkbox list
+       *  in the edit modal so plugins that ship labels without
+       *  useCase tags (e.g. "Sweet" / "Dent" on dual-purpose corn)
+       *  still get a working picker. */
+      availableHarvestUseCases?: Array<{ key: string; label: string }>;
+      /** Phase 21b follow-up — quantity planted + unit on the crop row,
+       *  surfaced so the edit modal can pre-populate its Quantity /
+       *  Unit fields instead of showing empty "unchanged" placeholders. */
+      quantityPlanted?: number;
+      quantityUnit?: string;
     }
     const swimPlantings: SwimPlanting[] = [];
     // listCrops gives us the group fields; index by cropId so we can decorate
@@ -358,6 +399,21 @@ export const load: PageServerLoad = async ({ url, locals }) => {
             };
           }
           harvestTargets = projectHarvestTargets(projected, stageTable);
+          // Phase 21b follow-up — operator-selected harvest windows.
+          // Filter the plugin's projected harvest targets so the
+          // swim-lane bar only renders the windows the operator
+          // picked. The filter matches against a stable key per
+          // target — useCase when the plugin author tagged one,
+          // otherwise a slugified version of the label so plugins
+          // that haven't been backfilled (e.g. "Sweet" / "Dent" on
+          // dual-purpose corn) still work end-to-end. Filter null /
+          // empty = surface everything.
+          if (cropMeta?.harvestUseCases && cropMeta.harvestUseCases.length > 0 && harvestTargets) {
+            const allowed = new Set(cropMeta.harvestUseCases);
+            harvestTargets = harvestTargets.filter((t) =>
+              allowed.has(harvestTargetKey(t.useCase, t.label))
+            );
+          }
         } else if (perennial) {
           stageSystem = 'perennial-calendar';
           const year = new Date(nowMs).getFullYear();
@@ -404,7 +460,35 @@ export const load: PageServerLoad = async ({ url, locals }) => {
           currentStage,
           nextStage,
           harvestTargets,
-          cornType: plug.cornType
+          cornType: plug.cornType,
+          // Surface so the edit modal can pre-populate its harvest-use-case
+          // checkbox list.
+          harvestUseCases: cropMeta?.harvestUseCases ?? null,
+          // Quantity + unit so the edit modal pre-fills instead of showing
+          // "(unchanged)" placeholders. The unit is locked at the planting
+          // record; the edit modal is read-only on this field.
+          quantityPlanted: cropMeta?.quantityPlanted,
+          quantityUnit: cropMeta?.quantityUnit,
+          // Surface every harvest target as a (key, label) pair the modal
+          // renders as a checkbox. Pulled from the SAME source the swim-
+          // lane render uses — `stageTable` is `resolveGrowthStageTable(plug)`
+          // (already in scope from the projection above), which falls back
+          // to the corn / brassica / etc. family-default table when the
+          // plugin doesn't declare its own. Reading `plug.growthStageTable`
+          // directly silently returned [] for plugins like Oxacana corn
+          // that ship without a custom stage table but still get harvest
+          // bands via the family default.
+          availableHarvestUseCases: (() => {
+            const out: Array<{ key: string; label: string }> = [];
+            const seen = new Set<string>();
+            for (const t of stageTable?.harvestTargets ?? []) {
+              const key = harvestTargetKey(t.useCase, t.label);
+              if (!key || seen.has(key)) continue;
+              seen.add(key);
+              out.push({ key, label: t.label });
+            }
+            return out;
+          })()
         });
       }
     }
@@ -434,7 +518,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     if (showShadeMarkers) {
       const farmLatLon = getFarmLatLon();
       const externalShadeSources = listShadeSources();
-      const shadeInputs: Array<{ planting: PlantingRecord; crop: CropPlugin; block: BlockWithPlantings }> = [];
+      const shadeInputs: Array<{
+        planting: PlantingRecord;
+        crop: CropPlugin;
+        block: BlockWithPlantings;
+      }> = [];
       for (const sp of swimPlantings) {
         if (!sp.shadeCasting) continue;
         const block = blockById.get(sp.blockId);
@@ -537,7 +625,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       if (t.startsWith('plant ') || t.includes(':plant')) return 'plant';
       if (t.includes('till')) return 'till';
       if (t.includes('fert') || t.includes('side-dress')) return 'fertilize';
-      if (t.includes('spray') || t.includes('herbicide') || t.includes('insecticide')) return 'spray';
+      if (t.includes('spray') || t.includes('herbicide') || t.includes('insecticide'))
+        return 'spray';
       if (t.includes('scout') || t.includes('inspect')) return 'scout';
       return 'other';
     }
@@ -596,10 +685,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       .map((s) => ({
         stockItemId: s.id,
         cropPluginId: s.pluginId ?? null,
-        cropFamily:
-          (s.pluginId
-            ? (registry.get(s.pluginId)?.plugin as CropPlugin | undefined)?.cropFamily ?? null
-            : null),
+        cropFamily: s.pluginId
+          ? ((registry.get(s.pluginId)?.plugin as CropPlugin | undefined)?.cropFamily ?? null)
+          : null,
         displayName: s.displayName,
         onHand: s.onHand,
         defaultUnit: s.defaultUnit
@@ -635,24 +723,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     };
   }
 
-  if (tab === 'equipment') {
-    const equipment = listEquipment();
-    const activeCrops = listCrops({ status: 'active' });
-    const cropEquipment: CropEquipmentForPlan[] = activeCrops.map((crop) => ({
-      crop,
-      blockName: blockName(blocks, crop.blockId),
-      fieldName: fieldName(fieldsByBlockId, crop.blockId, fields),
-      bindings: listCropEquipment(crop.id)
-    }));
-    return {
-      ...base,
-      equipment,
-      cropEquipment,
-      roles: CROP_EQUIPMENT_ROLES as readonly CropEquipmentRole[]
-    };
-  }
+  // Equipment-binding tab removed from /plan (2026-05-17). Equipment
+  // management lives at /equipment in the top nav; per-crop bindings stay
+  // accessible on the crop detail page (/crops/[id]).
 
-  if (tab === 'calendar') {
+  // The month-grid payload only runs for the explicit grid view of the
+  // Calendar tab; the swim-lane branch above already handles the default.
+  if (tab === 'calendar' && view === 'grid') {
     // Aggregate every event from every planting + every recorded harvest.
     const allEvents: CalendarEvent[] = [];
     for (const b of blocks) {
@@ -719,8 +796,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     }
     const prev = new Date(year, month - 1, 1);
     const next = new Date(year, month + 1, 1);
-    const fmtYM = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const fmtYM = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
     return {
       ...base,
@@ -761,4 +837,10 @@ function fieldName(
 }
 
 // Re-exported types for the +page.svelte. (Avoids importing across .svelte/.ts.)
-export type { EquipmentWithState, StockItemWithBalance, CropEquipmentBinding, CropEquipmentRole, Task };
+export type {
+  EquipmentWithState,
+  StockItemWithBalance,
+  CropEquipmentBinding,
+  CropEquipmentRole,
+  Task
+};

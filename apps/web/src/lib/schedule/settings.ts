@@ -26,8 +26,7 @@ export function frostDatesForYear(year: number) {
   const last =
     parseMmDd(getSetting(SETTINGS_KEYS.lastFrost)) ?? parseMmDd(LOUDOUN_DEFAULT_LAST_FROST_MMDD)!;
   const first =
-    parseMmDd(getSetting(SETTINGS_KEYS.firstFrost)) ??
-    parseMmDd(LOUDOUN_DEFAULT_FIRST_FROST_MMDD)!;
+    parseMmDd(getSetting(SETTINGS_KEYS.firstFrost)) ?? parseMmDd(LOUDOUN_DEFAULT_FIRST_FROST_MMDD)!;
   return {
     lastSpringFrostMs: new Date(year, last.month, last.day).getTime(),
     firstFallFrostMs: new Date(year, first.month, first.day).getTime()
@@ -57,16 +56,18 @@ export function getAiDailyCallQuota(): typeof DEFAULT_AI_DAILY_QUOTA {
   if (!raw) return DEFAULT_AI_DAILY_QUOTA;
   try {
     const v = JSON.parse(raw) as Partial<typeof DEFAULT_AI_DAILY_QUOTA>;
-    return {
-      suggest: typeof v.suggest === 'number' ? v.suggest : DEFAULT_AI_DAILY_QUOTA.suggest,
-      succession:
-        typeof v.succession === 'number' ? v.succession : DEFAULT_AI_DAILY_QUOTA.succession,
-      optimize: typeof v.optimize === 'number' ? v.optimize : DEFAULT_AI_DAILY_QUOTA.optimize,
-      allocate: typeof v.allocate === 'number' ? v.allocate : DEFAULT_AI_DAILY_QUOTA.allocate,
-      groups: typeof v.groups === 'number' ? v.groups : DEFAULT_AI_DAILY_QUOTA.groups,
-      shortNames:
-        typeof v.shortNames === 'number' ? v.shortNames : DEFAULT_AI_DAILY_QUOTA.shortNames
-    };
+    // Merge per-key so any owner overrides apply on top of the canonical
+    // defaults. Iterating Object.keys keeps us in sync as new quota
+    // endpoints land — no need to hand-extend this list every time
+    // (rationale, plugin-scan, plugin-search, plugin-batch-scan, …).
+    const out = { ...DEFAULT_AI_DAILY_QUOTA };
+    for (const key of Object.keys(out) as Array<keyof typeof DEFAULT_AI_DAILY_QUOTA>) {
+      const override = v[key];
+      if (typeof override === 'number') {
+        (out as Record<string, number>)[key] = override;
+      }
+    }
+    return out;
   } catch {
     return DEFAULT_AI_DAILY_QUOTA;
   }

@@ -134,19 +134,14 @@
             type="button"
             class="nudge-toggle"
             onclick={() => startNudge(c.cropId)}
-            aria-label="Nudge {c.varietyDisplayName} planting date"
-          >Nudge ±days</button>
+            aria-label="Nudge {c.varietyDisplayName} planting date">Nudge ±days</button
+          >
         </p>
         {#if nudgeOpenForCropId === c.cropId}
           <div class="nudge-form">
             <label>
               Δ days
-              <input
-                type="number"
-                min="-30"
-                max="30"
-                bind:value={nudgeDelta}
-              />
+              <input type="number" min="-30" max="30" bind:value={nudgeDelta} />
             </label>
             <button type="button" class="btn-primary" onclick={commitNudge}>Apply</button>
             <button type="button" class="btn-secondary" onclick={cancelNudge}>Cancel</button>
@@ -154,7 +149,11 @@
         {/if}
         <ul class="task-list">
           {#each tasksForCrop(c.cropId) as t (t.id)}
-            <li class:done={!!t.completedAtMs} class:stale={t.staleAnchor} class:check={t.isCompanionCheck}>
+            <li
+              class:done={!!t.completedAtMs}
+              class:stale={t.staleAnchor}
+              class:check={t.isCompanionCheck}
+            >
               <span class="task-date">{fmtDate(t.scheduledForMs)}</span>
               <span class="task-title">
                 {#if t.isCompanionCheck}<span class="check-glyph" aria-hidden="true">⚑</span>{/if}
@@ -203,8 +202,16 @@
     border-bottom: 1px solid #e5e7eb;
     background: #f9fafb;
   }
-  .head h3 { margin: 0; font-size: 0.95rem; color: #312e81; }
-  .group-id { margin: 0; font-size: 0.7rem; color: #6b7280; }
+  .head h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #312e81;
+  }
+  .group-id {
+    margin: 0;
+    font-size: 0.7rem;
+    color: #6b7280;
+  }
   .close {
     background: transparent;
     border: none;
@@ -225,8 +232,12 @@
     background: #fafafa;
     border-radius: 0 0.3rem 0.3rem 0;
   }
-  .member-anchor { border-left-color: #b45309; }
-  .member-companion { border-left-color: #312e81; }
+  .member-anchor {
+    border-left-color: #b45309;
+  }
+  .member-companion {
+    border-left-color: #312e81;
+  }
   .member header {
     display: flex;
     gap: 0.4rem;
@@ -248,7 +259,14 @@
     border-radius: 2px;
     font-size: 0.72rem;
   }
-  .meta { margin: 0.3rem 0; font-size: 0.78rem; color: #4b5563; display: flex; align-items: center; gap: 0.4rem; }
+  .meta {
+    margin: 0.3rem 0;
+    font-size: 0.78rem;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
   .nudge-toggle {
     margin-left: auto;
     border: 1px solid #cbd5e1;
@@ -273,7 +291,12 @@
     font-size: 0.72rem;
     gap: 0.15rem;
   }
-  .nudge-form input { width: 70px; padding: 0.25rem; border: 1px solid #cbd5e1; border-radius: 2px; }
+  .nudge-form input {
+    width: 70px;
+    padding: 0.25rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 2px;
+  }
   .task-list {
     list-style: none;
     padding: 0;
@@ -290,15 +313,41 @@
     border-radius: 2px;
     font-size: 0.78rem;
   }
-  .task-list li.check { background: #fef3c7; }
-  .task-list li.done { color: #6b7280; text-decoration: line-through; }
-  .task-list li.stale { opacity: 0.6; }
-  .task-date { color: #6b7280; min-width: 70px; font-variant-numeric: tabular-nums; }
-  .task-title { flex: 1; }
-  .check-glyph { color: #ca8a04; margin-right: 0.15rem; }
-  .badge { padding: 0 0.3rem; border-radius: 2px; font-size: 0.65rem; }
-  .done-badge { background: #d1fae5; color: #065f46; }
-  .stale-badge { background: #fee2e2; color: #b91c1c; }
+  .task-list li.check {
+    background: #fef3c7;
+  }
+  .task-list li.done {
+    color: #6b7280;
+    text-decoration: line-through;
+  }
+  .task-list li.stale {
+    opacity: 0.6;
+  }
+  .task-date {
+    color: #6b7280;
+    min-width: 70px;
+    font-variant-numeric: tabular-nums;
+  }
+  .task-title {
+    flex: 1;
+  }
+  .check-glyph {
+    color: #ca8a04;
+    margin-right: 0.15rem;
+  }
+  .badge {
+    padding: 0 0.3rem;
+    border-radius: 2px;
+    font-size: 0.65rem;
+  }
+  .done-badge {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  .stale-badge {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
   .foot {
     padding: 0.6rem 0.8rem;
     border-top: 1px solid #e5e7eb;
@@ -307,7 +356,9 @@
     flex-direction: column;
     gap: 0.4rem;
   }
-  .btn-primary, .btn-secondary, .btn-danger {
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
     padding: 0.4rem 0.7rem;
     border-radius: 0.25rem;
     cursor: pointer;
@@ -315,8 +366,24 @@
     font-size: 0.85rem;
     font-weight: 600;
   }
-  .btn-primary { background: #4338ca; color: #fff; border: 1px solid #312e81; }
-  .btn-secondary { background: #fff; color: #4338ca; border: 1px solid #c7d2fe; }
-  .btn-danger { background: #b91c1c; color: #fff; border: 1px solid #991b1b; }
-  .disband-warn { margin: 0; font-size: 0.78rem; color: #b91c1c; }
+  .btn-primary {
+    background: #4338ca;
+    color: #fff;
+    border: 1px solid #312e81;
+  }
+  .btn-secondary {
+    background: #fff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+  }
+  .btn-danger {
+    background: #b91c1c;
+    color: #fff;
+    border: 1px solid #991b1b;
+  }
+  .disband-warn {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #b91c1c;
+  }
 </style>

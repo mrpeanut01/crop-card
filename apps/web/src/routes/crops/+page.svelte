@@ -80,7 +80,11 @@
     const sourceId = reorderDragId;
     reorderDragId = null;
     reorderOverId = null;
-    const next = reorderOnDrop(orderedSections.map((s) => s.id), sourceId, targetId);
+    const next = reorderOnDrop(
+      orderedSections.map((s) => s.id),
+      sourceId,
+      targetId
+    );
     if (!next) return;
     customOrder = next;
     saveBlockOrder(next);
@@ -147,7 +151,9 @@
         <div
           class="block-section"
           class:dragging={reorderDragId === s.id}
-          class:drop-target={reorderOverId === s.id && reorderDragId !== null && reorderDragId !== s.id}
+          class:drop-target={reorderOverId === s.id &&
+            reorderDragId !== null &&
+            reorderDragId !== s.id}
         >
           <div
             class="block-section-head"
@@ -291,7 +297,9 @@
     background: #fff;
     overflow: hidden;
   }
-  .block-section.dragging { opacity: 0.4; }
+  .block-section.dragging {
+    opacity: 0.4;
+  }
   .block-section.drop-target {
     box-shadow: inset 0 3px 0 #2563eb;
     background: #f0f7ff;
@@ -307,7 +315,9 @@
     cursor: grab;
     user-select: none;
   }
-  .block-section-head:active { cursor: grabbing; }
+  .block-section-head:active {
+    cursor: grabbing;
+  }
   .block-section-head .grip {
     color: #94a3b8;
     font-weight: 700;

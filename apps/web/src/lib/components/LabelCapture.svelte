@@ -50,8 +50,12 @@
     stream = undefined;
   }
 
-  onMount(() => { startCamera(); });
-  onDestroy(() => { stopCamera(); });
+  onMount(() => {
+    startCamera();
+  });
+  onDestroy(() => {
+    stopCamera();
+  });
 </script>
 
 <div class="capture-backdrop" role="dialog" aria-modal="true" aria-label="Photograph product label">
@@ -76,9 +80,7 @@
 
     <div class="capture-footer">
       <button class="secondary" onclick={onClose}>Cancel</button>
-      <button class="primary" onclick={capture} disabled={!ready}>
-        📸 Capture
-      </button>
+      <button class="primary" onclick={capture} disabled={!ready}> 📸 Capture </button>
     </div>
   </div>
 </div>
@@ -132,7 +134,9 @@
     justify-content: center;
     border-radius: 50%;
   }
-  .close-btn:hover { background: #f0f0f0; }
+  .close-btn:hover {
+    background: #f0f0f0;
+  }
 
   .viewfinder-wrap {
     position: relative;
@@ -161,7 +165,9 @@
     text-align: center;
     padding: 1rem;
   }
-  .overlay-msg.error { background: rgba(176, 0, 32, 0.75); }
+  .overlay-msg.error {
+    background: rgba(176, 0, 32, 0.75);
+  }
 
   .hint {
     font-size: 0.8rem;
@@ -189,7 +195,9 @@
     cursor: pointer;
     min-height: 48px;
   }
-  button.secondary:hover { background: #f0f5f1; }
+  button.secondary:hover {
+    background: #f0f5f1;
+  }
 
   button.primary {
     padding: 0.5rem 1.5rem;
@@ -202,6 +210,11 @@
     cursor: pointer;
     min-height: 48px;
   }
-  button.primary:disabled { background: #999; cursor: not-allowed; }
-  button.primary:not(:disabled):hover { background: #174d2f; }
+  button.primary:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  button.primary:not(:disabled):hover {
+    background: #174d2f;
+  }
 </style>

@@ -164,14 +164,13 @@ export function createEquipment(input: CreateEquipmentInput): Equipment {
     )
     .returning()
     .get();
-  db.insert(equipmentState).values(tenantValues({ equipmentId: id })).run();
+  db.insert(equipmentState)
+    .values(tenantValues({ equipmentId: id }))
+    .run();
   return rowToEquipment(row);
 }
 
-export function updateEquipment(
-  id: string,
-  patch: { label?: string; notes?: string }
-): Equipment {
+export function updateEquipment(id: string, patch: { label?: string; notes?: string }): Equipment {
   const set: Partial<typeof equipment.$inferInsert> = {};
   if (patch.label !== undefined) set.label = patch.label;
   if (patch.notes !== undefined) set.notes = patch.notes || null;

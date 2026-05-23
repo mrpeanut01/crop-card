@@ -1,0 +1,30 @@
+{
+  "pluginId": "tillage-radish-driller",
+  "type": "crop",
+  "displayName": "Tillage Radish Driller (cover)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 7,
+    "seedDepthIn": {
+      "min": 0.25,
+      "max": 0.5
+    }
+  },
+  "harvestIndicators": [
+    "Tap root 12 to 24 inches deep before hard freeze"
+  ],
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Raphanus sativus, deep tap-root daikon-type cover for compaction relief. Winter-kills below 20 F, leaving channels for root growth and water infiltration in the following crop. Drill at 8 to 12 lb per acre. Sold by Green Cover Seed, King's AgriSeed."
+}

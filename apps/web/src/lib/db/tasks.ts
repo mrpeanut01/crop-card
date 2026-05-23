@@ -30,6 +30,7 @@ export type RelatedEventTable =
   | 'spray_event'
   | 'harvest_event'
   | 'insecticide_event'
+  | 'fungicide_event'
   | 'hay_cutting'
   | 'fertility_application';
 
@@ -123,7 +124,11 @@ export function listTasks(filters: ListFilters = {}): Task[] {
 }
 
 export function getTask(id: string): Task | undefined {
-  const row = db.select().from(tasks).where(withTenant(tasks, eq(tasks.id, id))).get();
+  const row = db
+    .select()
+    .from(tasks)
+    .where(withTenant(tasks, eq(tasks.id, id)))
+    .get();
   return row ? rowToTask(row) : undefined;
 }
 
@@ -424,6 +429,62 @@ function equipmentPreTaskMatches(
 }
 
 // ─── Phase 14: hybrid task drift policy ─────────────────────────────────
+
+/**
+ * Phase 21b follow-up — shift every open task tied to a crop by the
+ * (new - old) planting-date delta. Used when a crop's planting date
+ * moves on the swim-lane (drag/drop, chat refine, Optimize-sidebar
+ * apply): every primary task hung off the crop (fertilize, spray,
+ * scout, till, etc.) moves by the same delta so the bar's task pips
+ * stay in sync with the new planting date.
+ *
+ * Userspace-overridden tasks (`userOverridden = true`) don't shift;
+ * they get `staleAnchor = true` instead so the UI can paint them
+ * faded — the operator explicitly chose that date and we respect it,
+ * but we flag that the surrounding context drifted.
+ *
+ * Pre/post tasks linked via `linkedToTaskId` ride along automatically
+ * once the primary moves — call `reanchorPluginPrePost` for each
+ * primary that shifts.
+ */
+export function reanchorCropTasks(
+  cropId: string,
+  oldScheduledFor: number,
+  newScheduledFor: number
+): { shifted: number; flaggedStale: number } {
+  const delta = newScheduledFor - oldScheduledFor;
+  if (delta === 0) return { shifted: 0, flaggedStale: 0 };
+  const primary = db
+    .select()
+    .from(tasks)
+    .where(withTenant(tasks, eq(tasks.cropId, cropId)))
+    .all()
+    .map(rowToTask);
+  let shifted = 0;
+  let flaggedStale = 0;
+  for (const t of primary) {
+    if (t.completedAt || t.abortedAt) continue;
+    if (t.userOverridden) {
+      db.update(tasks)
+        .set({ staleAnchor: true })
+        .where(withTenant(tasks, eq(tasks.id, t.id)))
+        .run();
+      flaggedStale++;
+      continue;
+    }
+    const newFor = t.scheduledFor + delta;
+    db.update(tasks)
+      .set({ scheduledFor: new Date(newFor) })
+      .where(withTenant(tasks, eq(tasks.id, t.id)))
+      .run();
+    shifted++;
+    // Cascade through pre/post tasks linked to this primary.
+    const pre = reanchorPluginPrePost(t.id, t.scheduledFor, newFor);
+    shifted += pre.shifted;
+    flaggedStale += pre.flaggedStale;
+  }
+  return { shifted, flaggedStale };
+}
 
 export function reanchorPluginPrePost(
   primaryTaskId: string,

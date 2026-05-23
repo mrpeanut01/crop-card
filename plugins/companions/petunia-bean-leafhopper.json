@@ -1,0 +1,20 @@
+{
+  "pluginId": "petunia-bean-leafhopper",
+  "type": "companion",
+  "displayName": "Petunia + Bean (leafhopper repellent)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "legume",
+  "goodWith": ["bush-bean-provider", "bush-bean-blue-lake-274", "bush-bean-roma-ii", "pole-bean-kentucky-wonder"],
+  "badWith": [],
+  "benefit": "Trailing petunias planted on bean row edges deter potato leafhopper, a major cause of 'hopper burn' in bush beans. Petunia volatiles disrupt leafhopper host orientation.",
+  "members": [
+    {
+      "family": "solanaceae",
+      "role": "leafhopper repellent",
+      "plantingOffsetDays": 0,
+      "title": "Petunia border at bean planting",
+      "body": "Transplant trailing petunias every 36 inches along the windward edge of bean rows at planting time. Refresh if heat kills plants midseason."
+    }
+  ]
+}

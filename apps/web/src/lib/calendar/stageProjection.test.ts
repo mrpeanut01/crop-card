@@ -15,14 +15,34 @@ const cornVRTable: GrowthStageTable = {
   system: 'vr-corn',
   referenceDtmDays: 95,
   stages: [
-    { code: 'VE', name: 'Emergence', daysFromPlanting: { min: 5, max: 10 }, bodyKind: 'vegetative' },
+    {
+      code: 'VE',
+      name: 'Emergence',
+      daysFromPlanting: { min: 5, max: 10 },
+      bodyKind: 'vegetative'
+    },
     { code: 'V2', name: '2-leaf', daysFromPlanting: { min: 14, max: 21 }, bodyKind: 'vegetative' },
     { code: 'V4', name: '4-leaf', daysFromPlanting: { min: 24, max: 32 }, bodyKind: 'vegetative' },
     { code: 'V6', name: '6-leaf', daysFromPlanting: { min: 32, max: 42 }, bodyKind: 'vegetative' },
-    { code: 'VT', name: 'Tasseling', daysFromPlanting: { min: 55, max: 65 }, bodyKind: 'reproductive' },
-    { code: 'R1', name: 'Silking', daysFromPlanting: { min: 60, max: 70 }, bodyKind: 'reproductive' },
+    {
+      code: 'VT',
+      name: 'Tasseling',
+      daysFromPlanting: { min: 55, max: 65 },
+      bodyKind: 'reproductive'
+    },
+    {
+      code: 'R1',
+      name: 'Silking',
+      daysFromPlanting: { min: 60, max: 70 },
+      bodyKind: 'reproductive'
+    },
     { code: 'R3', name: 'Milk', daysFromPlanting: { min: 78, max: 88 }, bodyKind: 'reproductive' },
-    { code: 'R6', name: 'Black layer', daysFromPlanting: { min: 110, max: 130 }, bodyKind: 'ripening' }
+    {
+      code: 'R6',
+      name: 'Black layer',
+      daysFromPlanting: { min: 110, max: 130 },
+      bodyKind: 'ripening'
+    }
   ],
   harvestTargets: [
     { stageCode: 'R3', label: 'Sweet eating', useCase: 'fresh-eating' },
@@ -142,10 +162,34 @@ describe('projectHarvestTargets', () => {
 describe('projectPerennialStages', () => {
   const grapeTemplate = {
     stages: [
-      { code: 'dormant', name: 'Dormant', dayOfYearStart: 1, dayOfYearEnd: 60, bodyKind: 'dormant' as const },
-      { code: 'bud-break', name: 'Bud break', dayOfYearStart: 90, dayOfYearEnd: 120, bodyKind: 'vegetative' as const },
-      { code: 'bloom', name: 'Bloom', dayOfYearStart: 140, dayOfYearEnd: 165, bodyKind: 'reproductive' as const },
-      { code: 'harvest', name: 'Harvest', dayOfYearStart: 240, dayOfYearEnd: 290, bodyKind: 'ripening' as const }
+      {
+        code: 'dormant',
+        name: 'Dormant',
+        dayOfYearStart: 1,
+        dayOfYearEnd: 60,
+        bodyKind: 'dormant' as const
+      },
+      {
+        code: 'bud-break',
+        name: 'Bud break',
+        dayOfYearStart: 90,
+        dayOfYearEnd: 120,
+        bodyKind: 'vegetative' as const
+      },
+      {
+        code: 'bloom',
+        name: 'Bloom',
+        dayOfYearStart: 140,
+        dayOfYearEnd: 165,
+        bodyKind: 'reproductive' as const
+      },
+      {
+        code: 'harvest',
+        name: 'Harvest',
+        dayOfYearStart: 240,
+        dayOfYearEnd: 290,
+        bodyKind: 'ripening' as const
+      }
     ],
     harvestStageCode: 'harvest',
     harvestLabel: 'Juice'
@@ -169,15 +213,12 @@ describe('projectPerennialStages', () => {
 describe('projectStages — fast-check properties', () => {
   it('output entries are ordered by startMs ascending', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: Date.UTC(2020, 0, 1), max: Date.UTC(2030, 0, 1) }),
-        (plant) => {
-          const stages = projectStages(plant, cornVRTable);
-          for (let i = 1; i < stages.length; i++) {
-            expect(stages[i].startMs).toBeGreaterThanOrEqual(stages[i - 1].startMs);
-          }
+      fc.property(fc.integer({ min: Date.UTC(2020, 0, 1), max: Date.UTC(2030, 0, 1) }), (plant) => {
+        const stages = projectStages(plant, cornVRTable);
+        for (let i = 1; i < stages.length; i++) {
+          expect(stages[i].startMs).toBeGreaterThanOrEqual(stages[i - 1].startMs);
         }
-      )
+      })
     );
   });
 

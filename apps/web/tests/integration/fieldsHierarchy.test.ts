@@ -110,7 +110,12 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
 
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({ id: equipmentId, ownerId: 'owner_home_farm', type: 'sprayer', label: 'Test sprayer 50gal' })
+      .values({
+        id: equipmentId,
+        ownerId: 'owner_home_farm',
+        type: 'sprayer',
+        label: 'Test sprayer 50gal'
+      })
       .run();
 
     const binding = bindEquipment({ cropId, equipmentId, role: 'sprayer' });
@@ -150,7 +155,12 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
       .run();
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({ id: equipmentId, ownerId: 'owner_home_farm', type: 'sprayer', label: 'Dup sprayer' })
+      .values({
+        id: equipmentId,
+        ownerId: 'owner_home_farm',
+        type: 'sprayer',
+        label: 'Dup sprayer'
+      })
       .run();
 
     bindEquipment({ cropId, equipmentId, role: 'sprayer' });
@@ -181,7 +191,12 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
       .run();
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({ id: equipmentId, ownerId: 'owner_home_farm', type: 'sprayer', label: 'Cascade sprayer' })
+      .values({
+        id: equipmentId,
+        ownerId: 'owner_home_farm',
+        type: 'sprayer',
+        label: 'Cascade sprayer'
+      })
       .run();
     bindEquipment({ cropId, equipmentId, role: 'sprayer' });
 

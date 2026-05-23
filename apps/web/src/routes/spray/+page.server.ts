@@ -27,17 +27,64 @@ export const load: PageServerLoad = async ({ url }) => {
       ])
   );
 
+  const { findRecentEditableEventForBlock } = await import('$lib/db/sprayEvents');
   const dbBlocks = listBlocks();
+  // Phase 21b follow-up — pre-plant detection. A block is "pre-plant"
+  // when none of its plantings are CURRENTLY IN THE GROUND
+  // (plantingDate is null or > now). The crop kill-matrix check
+  // (CROP_INCOMPATIBLE STOP) should not fire on a block that has no
+  // crop in the ground yet — that's exactly the burndown use case
+  // (Glyphosate before planting corn, etc.). When pre-plant, the UI
+  // surfaces a banner and the request body omits the crop tox check.
+  const now = Date.now();
   const blocks = dbBlocks
     .filter((b) => b.plantings.length > 0)
-    .map((b) => ({
-      id: b.id,
-      label: b.name,
-      description: b.acres ? `${b.acres} acres` : '',
-      crops: b.plantings
+    .map((b) => {
+      const activePlantings = b.plantings.filter(
+        (p) => p.plantingDate != null && p.plantingDate <= now
+      );
+      const isPreplant = activePlantings.length === 0;
+      // Crops list reflects ONLY plantings already in the ground.
+      // The kernel evaluates against this set, so a pre-plant block
+      // has an empty `crops` list and the form sends a burndown body.
+      const crops = activePlantings
         .map((p) => cropById.get(p.cropPluginId))
-        .filter((c): c is NonNullable<typeof c> => c !== undefined)
-    }));
+        .filter((c): c is NonNullable<typeof c> => c !== undefined);
+      // Future-planted varieties still show in a hint banner so the
+      // operator knows what's planned — important context for choosing
+      // a burndown product that won't leave residue affecting them.
+      const plannedCropNames = b.plantings
+        .filter((p) => p.plantingDate == null || p.plantingDate > now)
+        .map((p) => p.varietyDisplayName);
+      // Phase 21b follow-up — find a still-editable (within 48h lock
+      // window) spray_event on this block. When set, the multi-block
+      // record loop PATCHes that event instead of POSTing a new one,
+      // so the operator can refine a recent record without creating a
+      // duplicate.
+      const editable = findRecentEditableEventForBlock(b.id);
+      return {
+        id: b.id,
+        label: b.name,
+        description: b.acres ? `${b.acres} acres` : '',
+        // Phase 21b follow-up — surface numeric acres so the dilution
+        // calculator can scale to the FULL pass (all selected blocks),
+        // not just one tank-load. `b.acres` is already the effective
+        // acres (geometry-derived when present, else stored value).
+        acres: b.acres ?? null,
+        crops,
+        preplant: isPreplant,
+        plannedCropNames,
+        existingEvent: editable
+          ? {
+              id: editable.id,
+              occurredAt: editable.occurredAt,
+              productPluginIds: editable.products.map((p) => p.pluginId)
+            }
+          : null
+      };
+    });
+
+  const { hracGroupOf } = await import('$lib/safety/cropFamilyLethality');
 
   const allHerbicides = registry
     .all()
@@ -45,11 +92,18 @@ export const load: PageServerLoad = async ({ url }) => {
     .map((r) => {
       if (r.plugin.type !== 'herbicide') throw new Error('unreachable');
       const h = r.plugin;
+      const chemistryClasses = Array.from(
+        new Set(h.activeIngredients.map((ai) => ai.chemistryClass))
+      );
+      const hracGroups = Array.from(
+        new Set(chemistryClasses.map((c) => String(hracGroupOf(c))).filter((g) => g.length > 0))
+      );
       return {
         pluginId: h.pluginId,
         displayName: h.displayName,
         applicationTiming: h.applicationTiming,
-        chemistryClasses: Array.from(new Set(h.activeIngredients.map((ai) => ai.chemistryClass))),
+        chemistryClasses,
+        hracGroups,
         ratePerAcre: h.ratePerAcre,
         gpaCalibration: h.gpaCalibration,
         requiresAMS: h.requiresAMS ?? false,
@@ -70,6 +124,10 @@ export const load: PageServerLoad = async ({ url }) => {
   const requestedProducts = url.searchParams.getAll('product');
   const windowStage = url.searchParams.get('windowStage');
   const fromScout = url.searchParams.get('fromScout') === '1';
+  // Phase 21b follow-up — deep-link from the swim-lane pip popover.
+  // On a successful record, the page redirects back to /plan and the
+  // POST sets the task's completedAt + relatedEventId.
+  const taskId = url.searchParams.get('task');
 
   // Filter herbicides by stage when the calendar deep-link tells us which window
   // we're in. V2-V3 corn = POST broadleaf; V4-V6 = POST + sulfonylurea/HPPD;
@@ -111,7 +169,8 @@ export const load: PageServerLoad = async ({ url }) => {
       cropId: requestedCropId,
       productPluginIds: requestedProducts,
       windowStage: filteredByStage,
-      fromScout
+      fromScout,
+      taskId
     }
   };
 };

@@ -34,8 +34,8 @@
     <a class="back-link" href="/settings">← Settings</a>
     <h1>Season setup</h1>
     <p class="hint">
-      Your input philosophy for the {data.currentYear} planting year. Drives what
-      products and tasks the Plan wizard suggests.
+      Your input philosophy for the {data.currentYear} planting year. Drives what products and tasks the
+      Plan wizard suggests.
     </p>
   </header>
 
@@ -52,9 +52,7 @@
     />
     {#if existing}
       <p class="actions-row">
-        <button type="button" class="link-btn" onclick={() => (editing = false)}
-          >Cancel</button
-        >
+        <button type="button" class="link-btn" onclick={() => (editing = false)}>Cancel</button>
       </p>
     {/if}
   {:else if existing}
@@ -65,9 +63,7 @@
         Last updated {new Date(existing.setAt).toLocaleString()}.
       </p>
       <p class="actions-row">
-        <button type="button" onclick={() => goto('/plan')}
-          >Go to Plan wizard →</button
-        >
+        <button type="button" onclick={() => goto('/plan')}>Go to Plan wizard →</button>
       </p>
     </section>
   {/if}

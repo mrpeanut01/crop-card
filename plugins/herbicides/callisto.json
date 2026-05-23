@@ -4,12 +4,33 @@
   "displayName": "Callisto (Syngenta mesotrione)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "mesotrione", "chemistryClass": "hppd-inhibitor" }],
-  "ratePerAcre": { "amount": 3, "unit": "fl-oz" },
+  "activeIngredients": [
+    {
+      "name": "mesotrione",
+      "chemistryClass": "hppd-inhibitor"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 3,
+    "unit": "fl-oz"
+  },
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": false,
   "tankMixOrder": 5,
-  "labelClaims": { "safeForCropPluginIds": ["corn-bloody-butcher", "corn-sweet-bodacious", "corn-feed-dent-pioneer"] },
-  "notes": "Brand-name mesotrione. POST corn V4–V6 only. Tank-mix with COC/MSO + AMS."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "corn-bloody-butcher",
+      "corn-sweet-bodacious",
+      "corn-feed-dent-pioneer"
+    ]
+  },
+  "notes": "Brand-name mesotrione. POST corn V4–V6 only. Tank-mix with COC/MSO + AMS.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

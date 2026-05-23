@@ -27,7 +27,12 @@ export async function POST({ request }) {
   } catch (e) {
     if (e instanceof AnthropicOverloadedError) {
       return json(
-        { found: false, source: 'none', message: e.message, retryable: true } satisfies ScanResult & { message: string; retryable: boolean },
+        {
+          found: false,
+          source: 'none',
+          message: e.message,
+          retryable: true
+        } satisfies ScanResult & { message: string; retryable: boolean },
         { status: 503 }
       );
     }
@@ -53,7 +58,10 @@ export async function POST({ request }) {
   }
 
   if (result.found && result.category && result.suggestedType?.name) {
-    const match = findTaxonomyTermByName(inventoryDomain(result.category), result.suggestedType.name);
+    const match = findTaxonomyTermByName(
+      inventoryDomain(result.category),
+      result.suggestedType.name
+    );
     result.suggestedType = match
       ? { matchedTypeId: match.id, name: match.name, isNew: false }
       : { name: result.suggestedType.name, isNew: true };

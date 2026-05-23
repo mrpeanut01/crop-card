@@ -3,11 +3,32 @@
   "type": "insecticide",
   "displayName": "Mustang Maxx (FMC zeta-cypermethrin)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "zeta-cypermethrin", "iracGroup": "3A" }],
+  "activeIngredients": [
+    {
+      "name": "zeta-cypermethrin",
+      "iracGroup": "3A"
+    }
+  ],
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 1,
-  "ratePerAcre": { "amount": 4, "unit": "fl-oz" },
-  "targetPests": ["stink bug", "armyworm", "cutworm", "leafhopper", "aphid"],
+  "ratePerAcre": {
+    "amount": 4,
+    "unit": "fl-oz"
+  },
+  "targetPests": [
+    "stink bug",
+    "armyworm",
+    "cutworm",
+    "leafhopper",
+    "aphid"
+  ],
   "pollinatorRisk": "high",
-  "notes": "Pyrethroid IRAC 3A. Restricted-use. Tank-mix with diamides for resistance management."
+  "notes": "Pyrethroid IRAC 3A. Restricted-use. Tank-mix with diamides for resistance management.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

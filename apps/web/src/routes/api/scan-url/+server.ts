@@ -16,7 +16,11 @@ const requestSchema = z.object({
 
 function isPublicHttpUrl(raw: string): boolean {
   let u: URL;
-  try { u = new URL(raw); } catch { return false; }
+  try {
+    u = new URL(raw);
+  } catch {
+    return false;
+  }
   if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
   const host = u.hostname.toLowerCase();
   if (host === 'localhost' || host.endsWith('.localhost')) return false;
@@ -41,7 +45,10 @@ export async function POST({ request }) {
     content = await fetchPageContent(url);
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Could not load page';
-    return json({ found: false, source: 'none', message: msg } satisfies ScanResult & { message: string }, { status: 502 });
+    return json(
+      { found: false, source: 'none', message: msg } satisfies ScanResult & { message: string },
+      { status: 502 }
+    );
   }
 
   const hasSignal =
@@ -51,7 +58,11 @@ export async function POST({ request }) {
     content.tables.length > 0;
   if (!hasSignal) {
     return json(
-      { found: false, source: 'none', message: 'Page contained no readable product info — try a different URL.' } satisfies ScanResult & { message: string },
+      {
+        found: false,
+        source: 'none',
+        message: 'Page contained no readable product info — try a different URL.'
+      } satisfies ScanResult & { message: string },
       { status: 422 }
     );
   }
@@ -62,7 +73,12 @@ export async function POST({ request }) {
   } catch (e) {
     if (e instanceof AnthropicOverloadedError) {
       return json(
-        { found: false, source: 'none', message: e.message, retryable: true } satisfies ScanResult & { message: string; retryable: boolean },
+        {
+          found: false,
+          source: 'none',
+          message: e.message,
+          retryable: true
+        } satisfies ScanResult & { message: string; retryable: boolean },
         { status: 503 }
       );
     }
@@ -85,7 +101,10 @@ export async function POST({ request }) {
   }
 
   if (result.found && result.category && result.suggestedType?.name) {
-    const match = findTaxonomyTermByName(inventoryDomain(result.category), result.suggestedType.name);
+    const match = findTaxonomyTermByName(
+      inventoryDomain(result.category),
+      result.suggestedType.name
+    );
     result.suggestedType = match
       ? { matchedTypeId: match.id, name: match.name, isNew: false }
       : { name: result.suggestedType.name, isNew: true };

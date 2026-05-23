@@ -60,22 +60,16 @@ export function buildRestrictionsFromStockItems(
     const parsed = parseActiveIngredients(stockItem.activeIngredientsJson);
     if (parsed.length === 0) continue;
 
-    const pluginNames = new Set(
-      plugin.activeIngredients.map((ai) => ai.name.toLowerCase())
-    );
+    const pluginNames = new Set(plugin.activeIngredients.map((ai) => ai.name.toLowerCase()));
     const pluginChemistries = new Set(
-      plugin.activeIngredients
-        .map((ai) => ai.chemistryClass)
-        .filter((c): c is string => Boolean(c))
+      plugin.activeIngredients.map((ai) => ai.chemistryClass).filter((c): c is string => Boolean(c))
     );
 
     for (const ai of parsed) {
       if (!ai.name) continue;
 
       const knownName = pluginNames.has(ai.name.toLowerCase());
-      const knownChemistry = ai.chemistryClass
-        ? pluginChemistries.has(ai.chemistryClass)
-        : true;
+      const knownChemistry = ai.chemistryClass ? pluginChemistries.has(ai.chemistryClass) : true;
 
       if (knownName && knownChemistry) continue;
 

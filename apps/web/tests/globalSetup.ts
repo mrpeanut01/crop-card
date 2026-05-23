@@ -32,6 +32,10 @@ export function setup() {
 export function teardown() {
   for (const suffix of ['', '-wal', '-shm']) {
     const p = TEST_DB + suffix;
-    try { unlinkSync(p); } catch { /* already gone */ }
+    try {
+      unlinkSync(p);
+    } catch {
+      /* already gone */
+    }
   }
 }

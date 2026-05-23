@@ -12,7 +12,7 @@
  * cross-tenant wipes are an explicit, audited operation defined elsewhere.
  */
 
-import { type SQL, and, eq, inArray, isNotNull } from 'drizzle-orm';
+import { type SQL, and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import {
@@ -27,6 +27,7 @@ import {
   fields,
   hayCuttings,
   harvestEvents,
+  fungicideEvents,
   insecticideEvents,
   pendingCalibrations,
   soilTests,
@@ -103,10 +104,7 @@ export function deleteHayCutting(id: string): DeleteSummary {
 export function deleteFertilityApplication(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
   removed.stock_movements = del(stockMovements, eq(stockMovements.fertilityApplicationId, id));
-  removed.fertility_applications = del(
-    fertilityApplications,
-    eq(fertilityApplications.id, id)
-  );
+  removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.id, id));
   return { removed };
 }
 
@@ -154,30 +152,20 @@ export function deleteCropCascade(id: string): DeleteSummary {
   if (sprayIds.length) {
     removed.stock_movements_spray = db
       .delete(stockMovements)
-      .where(
-        withTenant(stockMovements, inArray(stockMovements.sprayEventId, sprayIds))
-      )
+      .where(withTenant(stockMovements, inArray(stockMovements.sprayEventId, sprayIds)))
       .run().changes;
   }
   if (insecticideIds.length) {
     removed.stock_movements_insecticide = db
       .delete(stockMovements)
-      .where(
-        withTenant(
-          stockMovements,
-          inArray(stockMovements.insecticideEventId, insecticideIds)
-        )
-      )
+      .where(withTenant(stockMovements, inArray(stockMovements.insecticideEventId, insecticideIds)))
       .run().changes;
   }
   if (fertilityIds.length) {
     removed.stock_movements_fertility = db
       .delete(stockMovements)
       .where(
-        withTenant(
-          stockMovements,
-          inArray(stockMovements.fertilityApplicationId, fertilityIds)
-        )
+        withTenant(stockMovements, inArray(stockMovements.fertilityApplicationId, fertilityIds))
       )
       .run().changes;
   }
@@ -201,10 +189,7 @@ export function deleteCropCascade(id: string): DeleteSummary {
 
   removed.spray_events = del(sprayEvents, eq(sprayEvents.cropId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.cropId, id));
-  removed.fertility_applications = del(
-    fertilityApplications,
-    eq(fertilityApplications.cropId, id)
-  );
+  removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.cropId, id));
   removed.harvest_events = del(harvestEvents, eq(harvestEvents.cropId, id));
   removed.hay_cuttings = del(hayCuttings, eq(hayCuttings.cropId, id));
 
@@ -252,10 +237,7 @@ export function deleteBlockCascade(id: string): DeleteSummary {
 
 export function deleteEquipmentCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
-  removed.pending_calibrations = del(
-    pendingCalibrations,
-    eq(pendingCalibrations.equipmentId, id)
-  );
+  removed.pending_calibrations = del(pendingCalibrations, eq(pendingCalibrations.equipmentId, id));
   removed.equipment_log = del(equipmentLog, eq(equipmentLog.equipmentId, id));
   removed.equipment_state = del(equipmentState, eq(equipmentState.equipmentId, id));
   removed.crop_equipment = del(cropEquipment, eq(cropEquipment.equipmentId, id));
@@ -331,9 +313,7 @@ export function deleteStockItemCascade(id: string): DeleteSummary {
   removed.stock_lots = del(stockLots, eq(stockLots.stockItemId, id));
   db.update(fertilityApplications)
     .set({ stockItemId: null })
-    .where(
-      withTenant(fertilityApplications, eq(fertilityApplications.stockItemId, id))
-    )
+    .where(withTenant(fertilityApplications, eq(fertilityApplications.stockItemId, id)))
     .run();
   removed.stock_items = del(stockItems, eq(stockItems.id, id));
   return { removed };
@@ -377,16 +357,10 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
   removed.harvest_events = del(harvestEvents, isNotNull(harvestEvents.id));
   removed.insecticide_events = del(insecticideEvents, isNotNull(insecticideEvents.id));
   removed.hay_cuttings = del(hayCuttings, isNotNull(hayCuttings.id));
-  removed.fertility_applications = del(
-    fertilityApplications,
-    isNotNull(fertilityApplications.id)
-  );
+  removed.fertility_applications = del(fertilityApplications, isNotNull(fertilityApplications.id));
   removed.fertility_credits = del(fertilityCredits, isNotNull(fertilityCredits.id));
   removed.soil_tests = del(soilTests, isNotNull(soilTests.id));
-  removed.pending_calibrations = del(
-    pendingCalibrations,
-    isNotNull(pendingCalibrations.id)
-  );
+  removed.pending_calibrations = del(pendingCalibrations, isNotNull(pendingCalibrations.id));
   removed.stock_lots = del(stockLots, isNotNull(stockLots.id));
   removed.stock_items = del(stockItems, isNotNull(stockItems.id));
   removed.crops = del(crops, isNotNull(crops.id));
@@ -404,5 +378,109 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     .set({ linkedToTaskId: null })
     .where(withTenant(tasks, and(isNotNull(tasks.linkedToTaskId))!))
     .run();
+  return { removed };
+}
+
+/**
+ * Phase 21 (B-28 follow-up) — "Start over" reset for the Plan wizard.
+ *
+ * Deletes the *current plan* — every crop that's still purely a
+ * planning artifact: status IN ('planned', 'active') AND no real-
+ * world events tied to it (no sprays, insecticide applications,
+ * fungicide applications, fertility applications, harvest events, or
+ * hay cuttings). Once a crop has been worked on it's part of the
+ * audit trail and survives the reset.
+ *
+ * Why not filter on plantingDate?
+ *   First attempt used "future or null plantingDate" as the signal
+ *   for "still in the plan." But the AI scheduler picks dates
+ *   relative to frost windows for the whole season, so some
+ *   plantings end up scheduled for the recent past (e.g. early-
+ *   April lettuce committed in mid-May) without the operator
+ *   actually having planted them. Date-based filters wrongly
+ *   excluded those rows. "Has the operator done anything with this
+ *   crop yet?" — i.e. event-presence — is the right signal.
+ *
+ * Specifically targets:
+ *
+ *   - crops with status IN ('planned', 'active') AND no rows in any
+ *     of: spray_events, insecticide_events, fungicide_events,
+ *     fertility_applications, harvest_events, hay_cuttings
+ *   - tasks tagged pluginTemplateKey='inputs-plan' AND status='open'
+ *     (completed/aborted tasks survive — executed history stays)
+ *
+ * Tenant-scoped via every del() helper. Returns a per-table count
+ * the UI can surface in the confirmation result.
+ *
+ * Note: `plantingRecords` from schema.ts is an alias for `crops` —
+ * the wizard's addPlanting() writes to the same table. We only need
+ * one pass.
+ */
+export function wipeCurrentPlan(): DeleteSummary {
+  const removed: Record<string, number> = {};
+
+  // 1. Collect crop IDs that already have events — those are "real"
+  //    and must survive the reset regardless of status.
+  const protectedCropIds = new Set<string>();
+  const eventTables = [
+    sprayEvents,
+    insecticideEvents,
+    harvestEvents,
+    fertilityApplications,
+    hayCuttings
+  ] as const;
+  for (const table of eventTables) {
+    const rows = db
+      .select({ cropId: table.cropId })
+      .from(table)
+      .where(withTenant(table, isNotNull(table.cropId)))
+      .all();
+    for (const r of rows) if (r.cropId) protectedCropIds.add(r.cropId);
+  }
+  // Fungicide events live on a separate table that's been added
+  // post-B-18; checked separately so the import list reads cleanly.
+  {
+    const rows = db
+      .select({ cropId: fungicideEvents.cropId })
+      .from(fungicideEvents)
+      .where(withTenant(fungicideEvents, isNotNull(fungicideEvents.cropId)))
+      .all();
+    for (const r of rows) if (r.cropId) protectedCropIds.add(r.cropId);
+  }
+
+  // 2. Find every crop in the candidate-for-wipe bucket: planning
+  //    statuses, minus the event-protected set.
+  const planRowIds = db
+    .select({ id: crops.id })
+    .from(crops)
+    .where(withTenant(crops, inArray(crops.status, ['planned', 'active'])))
+    .all()
+    .map((r) => r.id)
+    .filter((id) => !protectedCropIds.has(id));
+
+  for (const cid of planRowIds) {
+    const r = deleteCropCascade(cid);
+    for (const [k, v] of Object.entries(r.removed)) {
+      removed[k] = (removed[k] ?? 0) + v;
+    }
+  }
+  removed.crops_current_plan = planRowIds.length;
+
+  // 3. Open inputs-plan tasks. Completed / aborted tasks survive —
+  //    their executed history is load-bearing for the audit trail.
+  removed.tasks_inputs_plan_open = db
+    .delete(tasks)
+    .where(
+      withTenant(
+        tasks,
+        and(
+          eq(tasks.pluginTemplateKey, 'inputs-plan'),
+          isNull(tasks.completedAt),
+          isNull(tasks.abortedAt)
+        )!
+      )
+    )
+    .run().changes;
+
   return { removed };
 }

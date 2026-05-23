@@ -114,10 +114,7 @@ export function distanceBetweenBlocks(
  * Kept terse — every line costs prompt tokens, and the matrix prompt is
  * already 3-4k. Skips entirely when there are no crossing pairs.
  */
-export function renderPollinationPromptSection(
-  layer: PollinationLayer,
-  input: PlanInput
-): string {
+export function renderPollinationPromptSection(layer: PollinationLayer, input: PlanInput): string {
   if (layer.pairs.length === 0) return '';
 
   const blockNameOf = (id: string) =>
@@ -126,7 +123,9 @@ export function renderPollinationPromptSection(
     id;
 
   const lines: string[] = [];
-  lines.push('CROSS-POLLINATION (only for the pairs listed below — every other pair is independent):');
+  lines.push(
+    'CROSS-POLLINATION (only for the pairs listed below — every other pair is independent):'
+  );
   for (const p of layer.pairs) {
     lines.push(
       `- pair ${p.pair[0]} ⟷ ${p.pair[1]} (${p.pairDisplayNames[0]} × ${p.pairDisplayNames[1]}): ` +
@@ -160,11 +159,14 @@ export function renderPollinationPromptSection(
                 { id: blockB.id, geometryGeojson: blockB.geometryGeojson }
               )
             : null;
-        const bearingNote = bearing ? ` (${blockNameOf(x.blockB)} is to the ${bearing} of ${blockNameOf(x.blockA)})` : '';
+        const bearingNote = bearing
+          ? ` (${blockNameOf(x.blockB)} is to the ${bearing} of ${blockNameOf(x.blockA)})`
+          : '';
         if (x.d === null) {
           return `    ${blockNameOf(x.blockA)} ↔ ${blockNameOf(x.blockB)}: geometry missing — can't measure${bearingNote}`;
         }
-        const ok = x.d >= isol ? '✓ isolated' : `needs +${Math.ceil(isol - x.d)} ft (or temporal stagger)`;
+        const ok =
+          x.d >= isol ? '✓ isolated' : `needs +${Math.ceil(isol - x.d)} ft (or temporal stagger)`;
         return `    ${blockNameOf(x.blockA)} ↔ ${blockNameOf(x.blockB)}: ${Math.round(x.d)} ft — ${ok}${bearingNote}`;
       });
     if (grid.length > 0) {
@@ -179,7 +181,7 @@ export function renderPollinationPromptSection(
     );
   }
   lines.push(
-    'Preference: when assigning a crossing pair to blocks, pick the pair-of-blocks that MAXIMIZES distance up to the isolation ceiling. If no pair reaches the ceiling, you may still place them — but include them in the response\'s open temporal-stagger constraints so the scheduler can resolve them with planting-date offsets.'
+    "Preference: when assigning a crossing pair to blocks, pick the pair-of-blocks that MAXIMIZES distance up to the isolation ceiling. If no pair reaches the ceiling, you may still place them — but include them in the response's open temporal-stagger constraints so the scheduler can resolve them with planting-date offsets."
   );
   lines.push(
     'IMPORTANT — do NOT reason about wind direction or "upwind/downwind" placement. The home-scale isolation distances above are OMNIDIRECTIONAL: a 250 ft separation works equally well whether the second block is north, south, east, or west of the first. Distance + temporal stagger together fully resolve the cross-pollination constraint at this scale; commercial seed-saving wind-direction rules do NOT apply. Bearings are provided only so you can describe layout truthfully ("Block B is 75 ft east of Block A"), not so you can model pollen drift. Cardinal hints in block NAMES (e.g., "East A", "North-3") are operator labels — they may not match actual cardinal geography. Use the bearings above as the source of truth, not the names.'

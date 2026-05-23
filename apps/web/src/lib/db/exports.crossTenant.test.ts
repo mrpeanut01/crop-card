@@ -29,7 +29,10 @@ import { insertInsecticideEvent, listInsecticideEvents } from './insecticideEven
 const OWNER_X = 'export-test-owner-x';
 const OWNER_Y = 'export-test-owner-y';
 
-function seedOwnerWithSpray(ownerId: string, performedById: string): {
+function seedOwnerWithSpray(
+  ownerId: string,
+  performedById: string
+): {
   blockId: string;
   sprayId: string;
   insecticideId: string;
@@ -69,9 +72,7 @@ function seedOwnerWithSpray(ownerId: string, performedById: string): {
       blockId: block.id,
       performedById,
       occurredAt: Date.now() - 30_000,
-      products: [
-        { pluginId: 'pest:test', displayName: 'TestPest', iracGroups: ['1A'] }
-      ],
+      products: [{ pluginId: 'pest:test', displayName: 'TestPest', iracGroups: ['1A'] }],
       conditions: { tempF: 70, windMph: 5, rainForecastMmNext24h: 0 },
       rulesVersion: 'test',
       pluginHashes: { 'pest:test': 'def' }
@@ -153,7 +154,10 @@ describe('export endpoints cross-tenant isolation', () => {
     // Y inserts a new event.
     runWithTenant(OWNER_Y, () => {
       const field = createField({ name: `iso-field-${randomUUID().slice(0, 6)}` });
-      const block = createBlock({ name: `iso-block-${randomUUID().slice(0, 6)}`, fieldId: field.id });
+      const block = createBlock({
+        name: `iso-block-${randomUUID().slice(0, 6)}`,
+        fieldId: field.id
+      });
       const isoSprayerId = `iso-sprayer-${randomUUID().slice(0, 6)}`;
       db.insert(sprayers)
         .values({ id: isoSprayerId, ownerId: OWNER_Y, label: 'iso sprayer', calibratedGpa: 15 })

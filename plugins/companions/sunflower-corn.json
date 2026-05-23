@@ -1,0 +1,20 @@
+{
+  "pluginId": "sunflower-corn",
+  "type": "companion",
+  "displayName": "Sunflower + Corn (border trap + pollinator)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "corn",
+  "goodWith": ["corn-bantam-sweet", "corn-sweet-bodacious", "sweet-corn-american-dream-f1-seed"],
+  "badWith": [],
+  "benefit": "Mammoth sunflower borders draw pollinators and beneficials away from the corn block while providing late-season seed for birds. Use as a trap planting for stink bugs.",
+  "members": [
+    {
+      "family": "broadleaf-companion",
+      "role": "border trap + pollinator support",
+      "plantingOffsetDays": -7,
+      "title": "Sunflower border, 1 week before corn",
+      "body": "Direct-sow sunflowers on the windward border one week before corn planting. Spacing 12 to 18 inches in a single row."
+    }
+  ]
+}

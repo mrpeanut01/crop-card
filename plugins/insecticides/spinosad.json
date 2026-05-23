@@ -8,5 +8,12 @@
       "name": "spinosyn"
     }
   ],
-  "reEntryIntervalHours": 4
+  "reEntryIntervalHours": 4,
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

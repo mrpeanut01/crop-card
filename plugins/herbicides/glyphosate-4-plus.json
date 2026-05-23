@@ -4,18 +4,48 @@
   "displayName": "Glyphosate 4 Plus",
   "version": "1.0.0",
   "applicationTiming": "BURNDOWN",
-  "activeIngredients": [{ "name": "glyphosate IPA salt", "chemistryClass": "glyphosate" }],
-  "ratePerAcre": { "amount": 32, "unit": "fl-oz" },
+  "activeIngredients": [
+    {
+      "name": "glyphosate IPA salt",
+      "chemistryClass": "glyphosate"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 32,
+    "unit": "fl-oz"
+  },
   "gpaCalibration": 15,
   "dilutionTable": {
-    "10gal":  { "amount": 21.3, "unit": "fl-oz" },
-    "25gal":  { "amount": 53.3, "unit": "fl-oz" },
-    "50gal":  { "amount": 106.7, "unit": "fl-oz" },
-    "75gal":  { "amount": 160,   "unit": "fl-oz" },
-    "100gal": { "amount": 213.3, "unit": "fl-oz" }
+    "10gal": {
+      "amount": 21.3,
+      "unit": "fl-oz"
+    },
+    "25gal": {
+      "amount": 53.3,
+      "unit": "fl-oz"
+    },
+    "50gal": {
+      "amount": 106.7,
+      "unit": "fl-oz"
+    },
+    "75gal": {
+      "amount": 160,
+      "unit": "fl-oz"
+    },
+    "100gal": {
+      "amount": 213.3,
+      "unit": "fl-oz"
+    }
   },
   "requiresAMS": true,
   "deconRequired": false,
   "tankMixOrder": 3,
-  "notes": "Non-selective burndown. Pre-plant only — never over standing crop. AMS-first for hard water."
+  "notes": "Non-selective burndown. Pre-plant only — never over standing crop. AMS-first for hard water.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

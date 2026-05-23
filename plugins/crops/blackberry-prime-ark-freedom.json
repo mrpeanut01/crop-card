@@ -1,0 +1,30 @@
+{
+  "pluginId": "blackberry-prime-ark-freedom",
+  "type": "crop",
+  "displayName": "Blackberry Prime-Ark Freedom (primocane, thornless)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "bramble",
+  "preHarvestIntervalDays": 2,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
+  "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 96,
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    }
+  },
+  "harvestIndicators": [
+    "Fully black, dull (not glossy), easy release from receptacle"
+  ],
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "University of Arkansas thornless primocane-fruiting blackberry. Fruits on first-year canes from August through frost. Cold-hardy to zone 6. Sold by Nourse Farms, Indiana Berry, Stark Bro's."
+}

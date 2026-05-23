@@ -23,7 +23,12 @@ export const load: PageServerLoad = async ({ url }) => {
         reEntryIntervalHours: p.reEntryIntervalHours,
         preHarvestIntervalDays: p.preHarvestIntervalDays,
         pollinatorRisk: p.pollinatorRisk ?? 'unknown',
-        epaRegistrationNumber: p.epaRegistrationNumber ?? null
+        epaRegistrationNumber: p.epaRegistrationNumber ?? null,
+        iracGroups: Array.from(
+          new Set(
+            (p.activeIngredients ?? []).map((ai) => ai.iracGroup).filter((g): g is string => !!g)
+          )
+        )
       };
     })
     .filter((p): p is NonNullable<typeof p> => p !== null);
@@ -38,6 +43,8 @@ export const load: PageServerLoad = async ({ url }) => {
     recentEvents: listInsecticideEvents({ limit: 20 }),
     activeREI: activeReEntryRestrictions(),
     preselectedBlockId: crop?.blockId ?? url.searchParams.get('block') ?? null,
-    preselectedCropId: crop?.id ?? null
+    preselectedCropId: crop?.id ?? null,
+    // Phase 21b follow-up — deep-link from the swim-lane pip popover.
+    taskId: url.searchParams.get('task')
   };
 };

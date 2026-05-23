@@ -1,0 +1,20 @@
+{
+  "pluginId": "lavender-orchard-floor",
+  "type": "companion",
+  "displayName": "Lavender + Orchard (drought-tolerant insectary)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "orchard",
+  "goodWith": ["apple-orchard", "peach-redhaven", "plum-stanley", "apricot-moorpark", "fig-celeste"],
+  "badWith": [],
+  "benefit": "English lavender (Lavandula angustifolia) thrives on dry orchard headlands, drawing honeybees and bumble bees during long mid-summer bloom. Strong dual-use as cut-stem and dried-flower crop.",
+  "members": [
+    {
+      "family": "herb-culinary",
+      "role": "perennial insectary + value-added crop",
+      "plantingOffsetDays": 0,
+      "title": "Lavender row at orchard headland",
+      "body": "Plant lavender plugs 24 inches apart on a free-draining orchard headland. Mulch heavily for the first year, then drought-grown."
+    }
+  ]
+}

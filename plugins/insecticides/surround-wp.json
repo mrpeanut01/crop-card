@@ -3,11 +3,31 @@
   "type": "insecticide",
   "displayName": "Surround WP Crop Protectant (kaolin clay — OMRI)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "kaolin clay", "iracGroup": "UN" }],
+  "activeIngredients": [
+    {
+      "name": "kaolin clay",
+      "iracGroup": "UN"
+    }
+  ],
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
-  "ratePerAcre": { "amount": 25, "unit": "lb" },
-  "targetPests": ["plum curculio", "Japanese beetle", "leafhopper (suppression)", "thrips (suppression)"],
+  "ratePerAcre": {
+    "amount": 25,
+    "unit": "lb"
+  },
+  "targetPests": [
+    "plum curculio",
+    "Japanese beetle",
+    "leafhopper (suppression)",
+    "thrips (suppression)"
+  ],
   "pollinatorRisk": "none",
-  "notes": "Kaolin clay film barrier — physical pest deterrent. OMRI organic. Re-apply after rain. Apple / pear orchard standard."
+  "notes": "Kaolin clay film barrier — physical pest deterrent. OMRI organic. Re-apply after rain. Apple / pear orchard standard.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

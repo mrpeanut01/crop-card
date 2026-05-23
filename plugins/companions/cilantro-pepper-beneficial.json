@@ -1,0 +1,20 @@
+{
+  "pluginId": "cilantro-pepper-beneficial",
+  "type": "companion",
+  "displayName": "Cilantro/Coriander + Pepper (parasitoid host)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "primaryFamily": "solanaceae",
+  "goodWith": ["pepper-bell-california-wonder", "pepper-jalapeno", "pepper-serrano-tampiqueno", "pepper-poblano-ancho", "pepper-shishito"],
+  "badWith": [],
+  "benefit": "Cilantro left to bolt produces umbel flowers heavily worked by parasitic wasps that target pepper weevil and aphid colonies. The umbel architecture is more accessible than tomato or pepper flowers to small parasitoids.",
+  "members": [
+    {
+      "family": "apiaceae",
+      "role": "parasitoid host plant",
+      "plantingOffsetDays": -14,
+      "title": "Cilantro at pepper row ends, allow to bolt",
+      "body": "Direct-sow cilantro 2 weeks before pepper transplant at every other row end. Let alternate plants bolt for continuous bloom."
+    }
+  ]
+}

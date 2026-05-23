@@ -119,9 +119,14 @@ describe('fetchPageContent', () => {
   it('rejects non-HTML responses', async () => {
     const original = globalThis.fetch;
     globalThis.fetch = (async () =>
-      new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })) as typeof fetch;
+      new Response('{}', {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      })) as typeof fetch;
     try {
-      await expect(fetchPageContent('https://example.test/x.json')).rejects.toThrow(/content-type/i);
+      await expect(fetchPageContent('https://example.test/x.json')).rejects.toThrow(
+        /content-type/i
+      );
     } finally {
       globalThis.fetch = original;
     }
@@ -130,7 +135,10 @@ describe('fetchPageContent', () => {
   it('throws on upstream HTTP errors', async () => {
     const original = globalThis.fetch;
     globalThis.fetch = (async () =>
-      new Response('not found', { status: 404, headers: { 'content-type': 'text/html' } })) as typeof fetch;
+      new Response('not found', {
+        status: 404,
+        headers: { 'content-type': 'text/html' }
+      })) as typeof fetch;
     try {
       await expect(fetchPageContent('https://example.test/missing')).rejects.toThrow(/HTTP 404/);
     } finally {

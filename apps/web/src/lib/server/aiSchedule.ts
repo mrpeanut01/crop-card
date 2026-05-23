@@ -29,6 +29,7 @@ import {
   type FarmContext
 } from './aiPlanning';
 import { getApiKey } from './scanResult';
+import { extractJsonObject } from './aiJsonExtract';
 import {
   scheduleCandidacy,
   formatDateMs,
@@ -135,7 +136,10 @@ export async function refineSchedule(
   ctx: FarmContext,
   options: ScheduleOptions = {}
 ): Promise<ScheduleRefineResult> {
-  if (input.transcript.length === 0 || input.transcript[input.transcript.length - 1].role !== 'user') {
+  if (
+    input.transcript.length === 0 ||
+    input.transcript[input.transcript.length - 1].role !== 'user'
+  ) {
     throw new Error('schedule transcript must end with a user message');
   }
   if (input.transcript.length > MAX_CHAT_TURNS) {
@@ -154,7 +158,10 @@ export async function refineSchedule(
   const successionFits = windows.map((w) =>
     evaluateSuccessionFit(
       w,
-      input.pluginIndex[input.assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)?.cropPluginId ?? ''],
+      input.pluginIndex[
+        input.assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)
+          ?.cropPluginId ?? ''
+      ],
       w.blockId,
       w.stockItemId
     )
@@ -166,10 +173,18 @@ export async function refineSchedule(
       scheduled: input.previousScheduled,
       rationale: input.previousRationale,
       advisories: input.previousAdvisories,
-      reply: "I can't refine the schedule without an Anthropic API key. The current dates are unchanged.",
+      reply:
+        "I can't refine the schedule without an Anthropic API key. The current dates are unchanged.",
       windows,
       successionFits,
-      meta: { model: 'no-api-key', inputTokens: 0, cachedInputTokens: 0, outputTokens: 0, usdEstimate: 0, fallback: 'no-api-key' }
+      meta: {
+        model: 'no-api-key',
+        inputTokens: 0,
+        cachedInputTokens: 0,
+        outputTokens: 0,
+        usdEstimate: 0,
+        fallback: 'no-api-key'
+      }
     };
   }
 
@@ -194,78 +209,176 @@ export async function refineSchedule(
     2
   );
 
-  const messages: Array<{ role: 'user' | 'assistant'; content: { type: 'text'; text: string }[] }> = [
-    { role: 'user', content: [{ type: 'text', text: initialPrompt }] },
-    { role: 'assistant', content: [{ type: 'text', text: previousAssistantJson }] }
-  ];
+  const messages: Array<{ role: 'user' | 'assistant'; content: { type: 'text'; text: string }[] }> =
+    [
+      { role: 'user', content: [{ type: 'text', text: initialPrompt }] },
+      { role: 'assistant', content: [{ type: 'text', text: previousAssistantJson }] }
+    ];
   const priorChat = input.transcript.slice(0, -1);
-  for (const t of priorChat) messages.push({ role: t.role, content: [{ type: 'text', text: t.content }] });
+  for (const t of priorChat)
+    messages.push({ role: t.role, content: [{ type: 'text', text: t.content }] });
   const newUserMessage = input.transcript[input.transcript.length - 1].content;
   messages.push({
     role: 'user',
     content: [{ type: 'text', text: buildScheduleRefinementUserMessage(newUserMessage) }]
   });
 
-  let usage:
-    | { input_tokens?: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number; output_tokens?: number }
-    | undefined;
-  let parsed: unknown = null;
-  let rawText = '';
-  try {
-    const msg = await client.messages.create({
-      model: choice.model,
-      max_tokens: MAX_OUTPUT_TOKENS,
-      system: systemBlocks,
-      messages
-    });
-    usage = msg.usage as typeof usage;
-    rawText = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
-    const stripped = rawText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+  // Wrapper around messages.create that returns parsed + raw text + usage,
+  // so the first attempt + the retry pass can share it.
+  async function callOnce(
+    convo: Array<{ role: 'user' | 'assistant'; content: { type: 'text'; text: string }[] }>
+  ): Promise<{
+    parsed: unknown;
+    rawText: string;
+    usage:
+      | {
+          input_tokens?: number;
+          cache_creation_input_tokens?: number;
+          cache_read_input_tokens?: number;
+          output_tokens?: number;
+        }
+      | undefined;
+  }> {
     try {
-      parsed = JSON.parse(stripped);
-    } catch {
-      parsed = null;
+      const msg = await client.messages.create({
+        model: choice.model,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        system: systemBlocks,
+        messages: convo
+      });
+      const u = msg.usage as
+        | {
+            input_tokens?: number;
+            cache_creation_input_tokens?: number;
+            cache_read_input_tokens?: number;
+            output_tokens?: number;
+          }
+        | undefined;
+      const txt = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
+      const p = extractJsonObject(txt);
+      if (p === null && txt.length > 0) {
+        const preview = txt.length > 800 ? `${txt.slice(0, 800)}…` : txt;
+        console.warn(
+          '[aiSchedule.refine] could not extract JSON from model response. Raw text:\n' + preview
+        );
+      }
+      return { parsed: p, rawText: txt, usage: u };
+    } catch (err) {
+      console.warn(
+        '[aiSchedule.refine] Anthropic call failed:',
+        err instanceof Error ? err.message : String(err)
+      );
+      return { parsed: null, rawText: '', usage: undefined };
     }
-  } catch {
-    parsed = null;
   }
 
   const meta: AiResultMeta = {
     model: choice.model,
-    inputTokens: (usage?.input_tokens ?? 0) + (usage?.cache_creation_input_tokens ?? 0),
-    cachedInputTokens: usage?.cache_read_input_tokens ?? 0,
-    outputTokens: usage?.output_tokens ?? 0,
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    outputTokens: 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  function addUsage(
+    u:
+      | {
+          input_tokens?: number;
+          cache_creation_input_tokens?: number;
+          cache_read_input_tokens?: number;
+          output_tokens?: number;
+        }
+      | undefined
+  ) {
+    if (!u) return;
+    meta.inputTokens += (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0);
+    meta.cachedInputTokens += u.cache_read_input_tokens ?? 0;
+    meta.outputTokens += u.output_tokens ?? 0;
+  }
 
-  if (!parsed || typeof parsed !== 'object') {
+  // ─── First attempt ────────────────────────────────────────────────
+  const first = await callOnce(messages);
+  addUsage(first.usage);
+
+  if (!first.parsed || typeof first.parsed !== 'object') {
+    meta.usdEstimate = estimateUsd(meta, choice);
     return {
       scheduled: input.previousScheduled,
       rationale: input.previousRationale,
       advisories: input.previousAdvisories,
-      reply: "I couldn't read the AI response cleanly — the schedule is unchanged. Try rephrasing your request.",
+      reply:
+        "I couldn't read the AI response cleanly — the schedule is unchanged. Try rephrasing your request.",
       windows,
       successionFits,
       meta: { ...meta, fallback: 'deterministic' }
     };
   }
-  const r = parsed as { reply?: unknown };
-  const reply = typeof r.reply === 'string' ? r.reply.trim() : '';
-  const validated = validateScheduleResponse(parsed, input, windowsByKey, successionFits);
+
+  let validated = validateScheduleResponse(first.parsed, input, windowsByKey, successionFits);
+  let lastParsed: unknown = first.parsed;
+  let lastRawText = first.rawText;
+  let lastReply =
+    typeof (first.parsed as { reply?: unknown }).reply === 'string'
+      ? (first.parsed as { reply: string }).reply.trim()
+      : '';
+
+  // ─── Corrective retry — mirrors the initial-schedule path. Echo the
+  //     model's first reply, list the violations, ask for a surgical
+  //     fix. Same prompt-engineering pattern that's already proven on
+  //     the allocator + scheduler initial calls. ──────────────────────
+  if (!validated.valid) {
+    console.warn(
+      `[aiSchedule.refine] first attempt failed validation (${validated.violations.length} violations); retrying.\n` +
+        `Violations: ${validated.violations.slice(0, 6).join(' | ')}`
+    );
+    const correction =
+      'Your previous response was rejected by the validator. Violations:\n' +
+      validated.violations.map((v) => `- ${v}`).join('\n') +
+      '\n\nReturn a CORRECTED schedule that fixes EVERY violation:' +
+      '\n- Keep dates inside the per-row window ranges from the original prompt.' +
+      '\n- Every assignment in the prompt must appear in scheduled[].' +
+      '\n- Companion offsets must be recalculated from the anchor planting.' +
+      '\n\nSame JSON shape as before — no prose, no code fences.';
+    const retry = await callOnce([
+      ...messages,
+      { role: 'assistant', content: [{ type: 'text', text: first.rawText }] },
+      { role: 'user', content: [{ type: 'text', text: correction }] }
+    ]);
+    addUsage(retry.usage);
+    if (retry.parsed && typeof retry.parsed === 'object') {
+      lastParsed = retry.parsed;
+      lastRawText = retry.rawText;
+      const retryReply =
+        typeof (retry.parsed as { reply?: unknown }).reply === 'string'
+          ? (retry.parsed as { reply: string }).reply.trim()
+          : '';
+      if (retryReply) lastReply = retryReply;
+      validated = validateScheduleResponse(retry.parsed, input, windowsByKey, successionFits);
+      if (!validated.valid) {
+        console.warn(
+          `[aiSchedule.refine] retry ALSO failed (${validated.violations.length} violations).`
+        );
+      }
+    }
+  }
+
+  meta.usdEstimate = estimateUsd(meta, choice);
+  void lastParsed;
+  void lastRawText;
+
   if (!validated.valid) {
     return {
       scheduled: input.previousScheduled,
       rationale: input.previousRationale,
       advisories: input.previousAdvisories,
       reply:
-        reply ||
-        "I tried to apply that change but it would break the planting windows or staggers. The schedule is unchanged.",
+        lastReply ||
+        'I tried to apply that change but it would break the planting windows or staggers. The schedule is unchanged.',
       windows,
       successionFits,
       meta: { ...meta, fallback: 'deterministic', violations: validated.violations }
     };
   }
+  const reply = lastReply;
 
   void options.planningSessionId;
   return {
@@ -324,7 +437,10 @@ export async function schedulePlantings(
   const successionFits = windows.map((w) =>
     evaluateSuccessionFit(
       w,
-      input.pluginIndex[input.assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)?.cropPluginId ?? ''],
+      input.pluginIndex[
+        input.assignments.find((a) => a.stockItemId === w.stockItemId && a.blockId === w.blockId)
+          ?.cropPluginId ?? ''
+      ],
       w.blockId,
       w.stockItemId
     )
@@ -335,7 +451,8 @@ export async function schedulePlantings(
     const det = buildDeterministicSchedule(input, windows, successionFits);
     return {
       scheduled: det,
-      rationale: 'No Anthropic API key configured — defaulted every planting to its earliest feasible date.',
+      rationale:
+        'No Anthropic API key configured — defaulted every planting to its earliest feasible date.',
       advisories: [],
       windows,
       successionFits,
@@ -394,9 +511,9 @@ export async function schedulePlantings(
         `Raw text (first 400): ${first.rawText.slice(0, 400)}`
     );
     const correction =
-      "Your previous response was rejected by the validator. Violations:\n" +
+      'Your previous response was rejected by the validator. Violations:\n' +
       validated.violations.map((v) => `- ${v}`).join('\n') +
-      "\n\nReturn a CORRECTED schedule. Keep what was already valid; change only what the violations require. Same JSON shape as before — no prose, no code fences.";
+      '\n\nReturn a CORRECTED schedule. Keep what was already valid; change only what the violations require. Same JSON shape as before — no prose, no code fences.';
     const retry = await callScheduleClaude(client, choice.model, systemBlocks, [
       { role: 'user', content: [{ type: 'text', text: prompt }] },
       { role: 'assistant', content: [{ type: 'text', text: first.rawText }] },
@@ -452,7 +569,12 @@ export async function schedulePlantings(
 interface ScheduleClaudeCall {
   parsed: unknown;
   rawText: string;
-  meta: { input_tokens: number; cache_creation_input_tokens: number; cache_read_input_tokens: number; output_tokens: number };
+  meta: {
+    input_tokens: number;
+    cache_creation_input_tokens: number;
+    cache_read_input_tokens: number;
+    output_tokens: number;
+  };
 }
 
 async function callScheduleClaude(
@@ -470,12 +592,12 @@ async function callScheduleClaude(
     });
     const usage = (msg.usage as unknown as Record<string, number | undefined>) ?? {};
     const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
-    const stripped = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-    let parsed: unknown = null;
-    try {
-      parsed = JSON.parse(stripped);
-    } catch {
-      parsed = null;
+    const parsed = extractJsonObject(text);
+    if (parsed === null && text.length > 0) {
+      const preview = text.length > 800 ? `${text.slice(0, 800)}…` : text;
+      console.warn(
+        '[aiSchedule] could not extract JSON from model response. Raw text:\n' + preview
+      );
     }
     return {
       parsed,
@@ -488,11 +610,18 @@ async function callScheduleClaude(
       }
     };
   } catch (err) {
-    console.warn(`[aiSchedule] Anthropic call failed: ${err instanceof Error ? err.message : String(err)}`);
+    console.warn(
+      `[aiSchedule] Anthropic call failed: ${err instanceof Error ? err.message : String(err)}`
+    );
     return {
       parsed: null,
       rawText: '',
-      meta: { input_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 0 }
+      meta: {
+        input_tokens: 0,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        output_tokens: 0
+      }
     };
   }
 }
@@ -531,12 +660,14 @@ export function diagnoseScheduleProblem(
   const familyStaggerDays = new Map<string, number>();
   for (const p of input.pollinationConstraints) {
     if (p.kind !== 'must-stagger') continue;
-    const plugA = input.pluginIndex[
-      input.assignments.find((a) => a.stockItemId === p.pair[0])?.cropPluginId ?? ''
-    ];
-    const plugB = input.pluginIndex[
-      input.assignments.find((a) => a.stockItemId === p.pair[1])?.cropPluginId ?? ''
-    ];
+    const plugA =
+      input.pluginIndex[
+        input.assignments.find((a) => a.stockItemId === p.pair[0])?.cropPluginId ?? ''
+      ];
+    const plugB =
+      input.pluginIndex[
+        input.assignments.find((a) => a.stockItemId === p.pair[1])?.cropPluginId ?? ''
+      ];
     for (const plug of [plugA, plugB]) {
       if (!plug) continue;
       const cur = familyStaggerDays.get(plug.cropFamily) ?? 0;
@@ -565,14 +696,12 @@ export function diagnoseScheduleProblem(
       if (w.latestMs > latest) latest = w.latestMs;
     }
     if (!Number.isFinite(earliest) || !Number.isFinite(latest)) continue;
-    const available = Math.max(0, Math.round((latest - earliest) / (86_400_000)));
+    const available = Math.max(0, Math.round((latest - earliest) / 86_400_000));
     if (available <= 0) continue;
     const pressureRatio = required / available;
     if (pressureRatio < 0.8) continue; // Comfortable fit, skip.
 
-    const varietyNames = assignments
-      .map((a) => a.varietyDisplayName)
-      .sort();
+    const varietyNames = assignments.map((a) => a.varietyDisplayName).sort();
     const overflow = required - available;
     const phrase =
       pressureRatio >= 1
@@ -629,7 +758,12 @@ export function diagnoseScheduleProblem(
 
 function addScheduleMeta(
   total: AiResultMeta,
-  call: { input_tokens: number; cache_creation_input_tokens: number; cache_read_input_tokens: number; output_tokens: number },
+  call: {
+    input_tokens: number;
+    cache_creation_input_tokens: number;
+    cache_read_input_tokens: number;
+    output_tokens: number;
+  },
   choice: Parameters<typeof estimateUsd>[1]
 ): void {
   total.inputTokens += call.input_tokens + call.cache_creation_input_tokens;
@@ -652,7 +786,9 @@ function buildSchedulePrompt(
 
   const assignmentLines = input.assignments.map((a) => {
     const w = windows.find((x) => x.stockItemId === a.stockItemId && x.blockId === a.blockId);
-    const fit = successionFits.find((x) => x.stockItemId === a.stockItemId && x.blockId === a.blockId);
+    const fit = successionFits.find(
+      (x) => x.stockItemId === a.stockItemId && x.blockId === a.blockId
+    );
     const earliest = w ? formatDateMs(w.earliestMs) : '?';
     const latest = w ? formatDateMs(w.latestMs) : '?';
     const hardiness = w?.hardiness ?? '?';
@@ -681,7 +817,9 @@ function buildSchedulePrompt(
     ];
     for (const m of g.members) {
       if (m.role === 'anchor') continue;
-      lines.push(`    ${m.stockItemId} (${stockNameOf(m.stockItemId)}) = anchor + ${m.daysFromAnchor} d`);
+      lines.push(
+        `    ${m.stockItemId} (${stockNameOf(m.stockItemId)}) = anchor + ${m.daysFromAnchor} d`
+      );
     }
     return lines;
   });
@@ -728,12 +866,14 @@ function buildSchedulePrompt(
         ]
       : []),
     'RULES:',
-    '- Every dated planting must fall within the assignment\'s window (earliest..latest).',
+    "- Every dated planting must fall within the assignment's window (earliest..latest).",
     '- Tender crops: prefer 7-10 days after the last-frost mark, BUT when many must-stagger pairs apply (see CROSS-POLLINATION above), USE THE FULL WINDOW — pack early-clustered dates will violate the staggers and produce an unschedulable plan.',
     '- Hardy crops: planting earlier is normally better unless the block is occupied.',
     '- For cross-pollination stagger pairs, the calendar gap between the two pickings must be ≥ the listed days. With N crossing varieties, you need at minimum (N-1) × stagger_days of total spread; spread them evenly across the window when possible.',
     hasDenseStagger
-      ? '- This farm has DENSE cross-pollination constraints (' + pollinationLines.length + ' must-stagger pairs). DO NOT split assignments into successions unless absolutely necessary — successions consume window space and compound the stagger problem. Single-planting per (seed, block) is the right default here.'
+      ? '- This farm has DENSE cross-pollination constraints (' +
+        pollinationLines.length +
+        ' must-stagger pairs). DO NOT split assignments into successions unless absolutely necessary — successions consume window space and compound the stagger problem. Single-planting per (seed, block) is the right default here.'
       : '- When succession is eligible AND the operator clearly benefits (long DTM window, fast-growing crop), split the assignment into multiple dated plantings — return one record per planting, with `successionIndex: {i, n}` and the plants summed correctly across rows. When in doubt, keep it as a single planting (over-splitting frustrates field operations).',
     '- For companion groups, the anchor and companions all share the same blockId by construction; just apply the day offsets to the chosen anchor date.',
     '',
@@ -770,9 +910,11 @@ function validateScheduleResponse(
   successionFits: SuccessionFit[]
 ): ValidatedSchedule | InvalidSchedule {
   const violations: string[] = [];
-  if (!raw || typeof raw !== 'object') return { valid: false, violations: ['response was not an object'] };
+  if (!raw || typeof raw !== 'object')
+    return { valid: false, violations: ['response was not an object'] };
   const obj = raw as { scheduled?: unknown; rationale?: unknown; advisories?: unknown };
-  if (!Array.isArray(obj.scheduled)) return { valid: false, violations: ['scheduled must be an array'] };
+  if (!Array.isArray(obj.scheduled))
+    return { valid: false, violations: ['scheduled must be an array'] };
 
   const assignByKey = new Map<string, ScheduleAssignmentInput>();
   for (const a of input.assignments) assignByKey.set(`${a.stockItemId}:${a.blockId}`, a);
@@ -827,7 +969,13 @@ function validateScheduleResponse(
     let successionIndex: ScheduledPlanting['successionIndex'];
     if (r.successionIndex && typeof r.successionIndex === 'object') {
       const si = r.successionIndex as { i?: unknown; n?: unknown };
-      if (typeof si.i === 'number' && typeof si.n === 'number' && si.n >= 1 && si.i >= 1 && si.i <= si.n) {
+      if (
+        typeof si.i === 'number' &&
+        typeof si.n === 'number' &&
+        si.n >= 1 &&
+        si.i >= 1 &&
+        si.i <= si.n
+      ) {
         successionIndex = { i: Math.floor(si.i), n: Math.floor(si.n) };
       }
     }
@@ -851,7 +999,9 @@ function validateScheduleResponse(
   for (const [key, assignment] of assignByKey) {
     const total = plantsByKey.get(key) ?? 0;
     if (total === 0) {
-      violations.push(`no scheduled planting for assignment ${key} (${assignment.varietyDisplayName})`);
+      violations.push(
+        `no scheduled planting for assignment ${key} (${assignment.varietyDisplayName})`
+      );
       continue;
     }
     // Plant-total tolerance: ±max(3, 1% of total). Tight check was rejecting
@@ -923,7 +1073,10 @@ function validateScheduleResponse(
 
   const rationale = typeof obj.rationale === 'string' ? obj.rationale : '';
   const advisories = Array.isArray(obj.advisories)
-    ? obj.advisories.filter((x): x is string => typeof x === 'string' && x.trim().length > 0).map((x) => x.trim()).slice(0, 6)
+    ? obj.advisories
+        .filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+        .map((x) => x.trim())
+        .slice(0, 6)
     : [];
   return { valid: true, scheduled, rationale, advisories };
 }

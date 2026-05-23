@@ -115,7 +115,11 @@ export function seedsToPlants(input: SeedsToPlantsInput): SeedsToPlantsResult | 
   };
 }
 
-export function plantsToLbs(plants: number, plugin: SeedPluginShape | CropPlugin | undefined, germinationPct?: number): number | null {
+export function plantsToLbs(
+  plants: number,
+  plugin: SeedPluginShape | CropPlugin | undefined,
+  germinationPct?: number
+): number | null {
   const sPerLb = seedsPerLb(plugin);
   if (sPerLb === null || sPerLb <= 0) return null;
   const germ = clampGermination(germinationPct);

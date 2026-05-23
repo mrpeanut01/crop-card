@@ -13,11 +13,12 @@ import {
   getCrop,
   isGroupAnchorWithMembers,
   setSchedule,
+  splitCrop,
   unscheduleCrop,
   updateDetails,
   updateStatus
 } from '$lib/db/crops';
-import { reanchorPluginPrePost } from '$lib/db/tasks';
+import { reanchorCropTasks } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
@@ -43,17 +44,31 @@ const patchSchema = z.discriminatedUnion('action', [
   }),
   z.object({
     /** Phase 15c: edit operator-visible details (variety name + quantity).
-     *  Plugin id is NOT editable here. */
+     *  Plugin id is NOT editable here. Phase 21b follow-up: also accepts
+     *  a harvestUseCases filter so the operator can pick which of the
+     *  plugin's harvest windows to surface on the swim-lane bar (e.g.
+     *  pick "fresh-eating" only to hide the dent/grain window on a
+     *  dual-purpose corn). null clears (show all); undefined leaves
+     *  the existing value. */
     action: z.literal('edit-details'),
     varietyDisplayName: z.string().min(1).max(160).optional(),
     quantityPlanted: z.number().nonnegative().nullable().optional(),
-    quantityUnit: z.string().min(1).max(16).nullable().optional()
+    quantityUnit: z.string().min(1).max(16).nullable().optional(),
+    harvestUseCases: z.array(z.string().min(1).max(40)).max(8).nullable().optional()
   }),
   z.object({
     /** Phase 15d: pull a single crop OFF the schedule without deleting the
      *  crop row. Cascade-deletes its materialized tasks, disbands its group
      *  (if any), nulls plantingDate, flips status to 'planned'. */
     action: z.literal('unschedule')
+  }),
+  z.object({
+    /** Phase 21b follow-up: split a crop into N stacked parts on the same
+     *  date / block. Seeds + plants distributed via largest-remainder
+     *  rounding. Caller is expected to drag the resulting bars to their
+     *  target dates afterwards. */
+    action: z.literal('split'),
+    parts: z.number().int().min(2).max(12)
   })
 ]);
 
@@ -100,12 +115,23 @@ export const PATCH: RequestHandler = async (event) => {
     return json({ ok: true, ...result });
   }
 
+  if (parsed.data.action === 'split') {
+    if (!getCrop(event.params.id)) throw error(404, 'crop not found');
+    try {
+      const out = splitCrop(event.params.id, parsed.data.parts);
+      return json({ crops: out });
+    } catch (e) {
+      return json({ error: e instanceof Error ? e.message : 'split failed' }, { status: 409 });
+    }
+  }
+
   if (parsed.data.action === 'edit-details') {
     if (!getCrop(event.params.id)) throw error(404, 'crop not found');
     const updated = updateDetails(event.params.id, {
       varietyDisplayName: parsed.data.varietyDisplayName,
       quantityPlanted: parsed.data.quantityPlanted ?? undefined,
-      quantityUnit: parsed.data.quantityUnit ?? undefined
+      quantityUnit: parsed.data.quantityUnit ?? undefined,
+      harvestUseCases: parsed.data.harvestUseCases
     });
     return json({ crop: updated });
   }
@@ -131,14 +157,17 @@ export const PATCH: RequestHandler = async (event) => {
       blockId: parsed.data.blockId
     });
     // Hybrid drift policy: when an active crop's planting date moves,
-    // re-anchor any linked tasks (overridden ones get staleAnchor instead).
+    // re-anchor every open task tied to this crop by the same delta —
+    // primary tasks (fertilize, spray, scout, till, etc.) AND their
+    // linked pre/post. User-overridden tasks don't move; they get
+    // `staleAnchor` so the UI can paint them faded. This is what
+    // keeps the swim-lane's task pips ("+" fertilizer markers, ✦ sprays,
+    // etc.) in sync with the new planting date as the operator drags
+    // bars around or accepts an AI optimization.
     const oldMs = before.plantingDate;
     const newMs = parsed.data.plantingDate;
     if (oldMs != null && newMs != null && oldMs !== newMs) {
-      // Find primary tasks for this crop and re-anchor their pre/post.
-      // For now we cover the case where the crop's primary tasks share the
-      // planting date as their `scheduledFor`; the helper is idempotent.
-      reanchorPluginPrePost(event.params.id, oldMs, newMs);
+      reanchorCropTasks(event.params.id, oldMs, newMs);
     }
     return json({ crop: result });
   }

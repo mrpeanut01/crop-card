@@ -18,9 +18,7 @@ export function detectPhiConflict(events: CalendarEvent[], phiDays: number): boo
 }
 
 /** Returns the harvest-window event if present, undefined otherwise. */
-export function harvestWindow(
-  events: CalendarEvent[]
-): CalendarEvent | undefined {
+export function harvestWindow(events: CalendarEvent[]): CalendarEvent | undefined {
   return events.find((e) => e.kind === 'harvest-window');
 }
 
@@ -32,6 +30,7 @@ export function sprayWindows(events: CalendarEvent[]): CalendarEvent[] {
 /** Returns all fertility-related seasonal tasks. */
 export function fertilityTasks(events: CalendarEvent[]): CalendarEvent[] {
   return events.filter(
-    (e) => e.kind === 'seasonal-task' && (e.detail?.kind === 'fertilize' || e.detail?.kind === 'spray')
+    (e) =>
+      e.kind === 'seasonal-task' && (e.detail?.kind === 'fertilize' || e.detail?.kind === 'spray')
   );
 }

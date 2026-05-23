@@ -13,7 +13,7 @@
     "Silks brown and dry at tip",
     "Kernels milky when tested"
   ],
-  "notes": "Sugar-enhanced (SE) sweet corn. Plant \u2265250 ft from dent corn to prevent cross-pollination.",
+  "notes": "Sugar-enhanced (SE) sweet corn. Plant ≥250 ft from dent corn to prevent cross-pollination.",
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 1
@@ -25,8 +25,9 @@
       "anchor": "stage",
       "offsetDaysMin": 0,
       "offsetDaysMax": 0,
-      "title": "POST broadleaf scout window (V2\u2013V3)",
-      "body": "Scout block; if \u22653 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted."
+      "title": "POST broadleaf scout window (V2–V3)",
+      "body": "Scout block; if ≥3 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted.",
+      "purpose": "post-emergent"
     },
     {
       "chemistryClass": "hppd-inhibitor",
@@ -34,8 +35,10 @@
       "anchor": "stage",
       "offsetDaysMin": 0,
       "offsetDaysMax": 0,
-      "title": "POST grass + late broadleaf window (V4\u2013V6)",
-      "body": "Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin."
+      "title": "POST grass + late broadleaf window (V4–V6)",
+      "body": "Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin.",
+      "purpose": "post-emergent"
     }
-  ]
+  ],
+  "pluginSchemaVersion": "1.1"
 }

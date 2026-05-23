@@ -3,11 +3,33 @@
   "type": "insecticide",
   "displayName": "Avaunt eVo (FMC indoxacarb)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "indoxacarb", "iracGroup": "22A" }],
+  "activeIngredients": [
+    {
+      "name": "indoxacarb",
+      "iracGroup": "22A"
+    }
+  ],
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 3,
-  "ratePerAcre": { "amount": 6, "unit": "oz" },
-  "targetPests": ["plum curculio", "codling moth", "oriental fruit moth", "armyworm", "cabbage looper", "diamondback moth"],
+  "ratePerAcre": {
+    "amount": 6,
+    "unit": "oz"
+  },
+  "targetPests": [
+    "plum curculio",
+    "codling moth",
+    "oriental fruit moth",
+    "armyworm",
+    "cabbage looper",
+    "diamondback moth"
+  ],
   "pollinatorRisk": "moderate",
-  "notes": "Oxadiazine IRAC 22. Apple / pear orchard + vegetable. Pro-insecticide — slow gut activity."
+  "notes": "Oxadiazine IRAC 22. Apple / pear orchard + vegetable. Pro-insecticide — slow gut activity.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

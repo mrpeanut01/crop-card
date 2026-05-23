@@ -3,10 +3,26 @@
   "type": "fertilizer",
   "displayName": "Calcitic Ag Lime (CaCO3, ENM 100)",
   "version": "1.0.0",
-  "analysis": { "n": 0, "p": 0, "k": 0 },
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
   "form": "granular",
   "organic": true,
-  "secondaryNutrients": { "ca": 38 },
-  "applicationRange": { "min": 1, "max": 4, "unit": "ton-per-acre" },
-  "notes": "Standard ag lime for pH correction. Soil-test based rate (lb / acre per pH point). Apply 6 mo before crop establishment for full reactivity."
+  "secondaryNutrients": {
+    "ca": 38
+  },
+  "applicationRange": {
+    "min": 1,
+    "max": 4,
+    "unit": "ton-per-acre"
+  },
+  "notes": "Standard ag lime for pH correction. Soil-test based rate (lb / acre per pH point). Apply 6 mo before crop establishment for full reactivity.",
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": true
+  },
+  "pluginSchemaVersion": "1.1"
 }

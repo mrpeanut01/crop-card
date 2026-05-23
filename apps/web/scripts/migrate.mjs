@@ -11,7 +11,9 @@
  *   - backfill stock_movements.crop_id from the source event row
  */
 
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import path from 'node:path';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
@@ -44,6 +46,7 @@ if (fkViolations.length > 0) {
 }
 
 backfillPhase13(sqlite);
+backfillPhase22PluginVersions(sqlite);
 
 sqlite.close();
 
@@ -60,9 +63,7 @@ function backfillPhase13(db) {
     .get();
   if (!hasFields) return;
 
-  const orphanCount = db
-    .prepare(`SELECT COUNT(*) AS n FROM blocks WHERE field_id IS NULL`)
-    .get().n;
+  const orphanCount = db.prepare(`SELECT COUNT(*) AS n FROM blocks WHERE field_id IS NULL`).get().n;
   if (orphanCount > 0) {
     let homeField = db
       .prepare(`SELECT id FROM fields WHERE name = 'Home Field' ORDER BY created_at LIMIT 1`)
@@ -75,9 +76,7 @@ function backfillPhase13(db) {
       homeField = { id };
       console.log(`[migrate] created Home Field ${id}`);
     }
-    const r = db
-      .prepare(`UPDATE blocks SET field_id = ? WHERE field_id IS NULL`)
-      .run(homeField.id);
+    const r = db.prepare(`UPDATE blocks SET field_id = ? WHERE field_id IS NULL`).run(homeField.id);
     console.log(`[migrate] migrated ${r.changes} block(s) to Home Field`);
   }
 
@@ -116,5 +115,77 @@ function backfillPhase13(db) {
         `[migrate] backfilled stock_movements.crop_id: spray=${sprayBackfill.changes} insec=${insecBackfill.changes} fert=${fertBackfill.changes}`
       );
     }
+  }
+}
+
+/**
+ * Phase 22 backfill — seed one `plugin_versions` row per on-disk plugin
+ * file. Idempotent: existing rows (same pluginId) are skipped. The hash is
+ * computed identically to `pluginFiles.ts` (canonical JSON of the parsed
+ * payload), so a subsequent `pluginHashesJson` lookup from an event row
+ * matches the seeded row.
+ */
+function backfillPhase22PluginVersions(db) {
+  const hasTable = db
+    .prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='plugin_versions'`)
+    .get();
+  if (!hasTable) return;
+
+  const pluginsRoot = process.env.PLUGINS_DIR ?? path.resolve(process.cwd(), '..', '..', 'plugins');
+  if (!safeStat(pluginsRoot)?.isDirectory()) return;
+
+  const subdirToKind = {
+    crops: 'crop',
+    herbicides: 'herbicide',
+    insecticides: 'insecticide',
+    fungicides: 'fungicide',
+    fertilizers: 'fertilizer',
+    companions: 'companion'
+  };
+
+  const exists = db.prepare(
+    `SELECT 1 FROM plugin_versions WHERE plugin_id = ? AND superseded_at IS NULL`
+  );
+  const insertStmt = db.prepare(
+    `INSERT INTO plugin_versions
+       (id, plugin_id, version, kind, hash, payload_json, change_reason, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'initial-import', unixepoch() * 1000)`
+  );
+
+  let inserted = 0;
+  for (const [subdir, kind] of Object.entries(subdirToKind)) {
+    const dir = path.join(pluginsRoot, subdir);
+    const stat = safeStat(dir);
+    if (!stat?.isDirectory()) continue;
+    for (const name of readdirSync(dir)) {
+      if (!name.endsWith('.json')) continue;
+      const file = path.join(dir, name);
+      let parsed;
+      try {
+        parsed = JSON.parse(readFileSync(file, 'utf-8'));
+      } catch (e) {
+        console.warn(`[migrate] skipping unparseable ${file}: ${e.message}`);
+        continue;
+      }
+      const pluginId = parsed.pluginId;
+      if (!pluginId) continue;
+      if (exists.get(pluginId)) continue;
+
+      const canonical = JSON.stringify(parsed);
+      const hash = createHash('sha256').update(canonical).digest('hex');
+      insertStmt.run(randomUUID(), pluginId, parsed.version ?? '1.0.0', kind, hash, canonical);
+      inserted++;
+    }
+  }
+  if (inserted > 0) {
+    console.log(`[migrate] seeded ${inserted} plugin_versions row(s) from on-disk catalog`);
+  }
+}
+
+function safeStat(p) {
+  try {
+    return statSync(p);
+  } catch {
+    return null;
   }
 }

@@ -4,16 +4,33 @@
   "displayName": "Engenia (BASF dicamba BAPMA salt)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "dicamba BAPMA salt", "chemistryClass": "synthetic-auxin" }],
-  "ratePerAcre": { "amount": 12.8, "unit": "fl-oz" },
+  "activeIngredients": [
+    {
+      "name": "dicamba BAPMA salt",
+      "chemistryClass": "synthetic-auxin"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 12.8,
+    "unit": "fl-oz"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,
   "traitGatedSafeFor": [
     {
       "cropPluginId": "soybean-asgrow-roundup-ready-2-xtend",
-      "requiresTraits": ["dicamba-tolerant-xtend"]
+      "requiresTraits": [
+        "dicamba-tolerant-xtend"
+      ]
     }
   ],
-  "notes": "RESTRICTED-USE. Use ONLY on Xtend-traited soybeans + cotton. Phase 11 trait override: the kernel allows engenia on the Xtend-traited soybean cultivar; dicamba (synthetic-auxin) would otherwise be lethal to the legume family. Strict label requirements: TTI nozzles, ≤10 mph wind, no tank mix outside approved list, sensitive-crop downwind buffer."
+  "notes": "RESTRICTED-USE. Use ONLY on Xtend-traited soybeans + cotton. Phase 11 trait override: the kernel allows engenia on the Xtend-traited soybean cultivar; dicamba (synthetic-auxin) would otherwise be lethal to the legume family. Strict label requirements: TTI nozzles, ≤10 mph wind, no tank mix outside approved list, sensitive-crop downwind buffer.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

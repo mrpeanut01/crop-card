@@ -6,9 +6,14 @@ import { requireOwner } from '$lib/server/auth';
 
 const nudgeSchema = z.object({
   companionCropId: z.string().min(1),
-  deltaDays: z.number().int().min(-30).max(30).refine((v) => v !== 0, {
-    message: 'deltaDays must be non-zero'
-  }),
+  deltaDays: z
+    .number()
+    .int()
+    .min(-30)
+    .max(30)
+    .refine((v) => v !== 0, {
+      message: 'deltaDays must be non-zero'
+    }),
   /** Optional: complete the companion-check task in the same call. */
   completeCheckTaskId: z.string().min(1).optional()
 });

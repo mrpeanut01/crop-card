@@ -12,12 +12,26 @@
   };
 
   const FAMILY_ICON: Record<string, string> = {
-    allium: '🧅', apiaceae: '🥕', bramble: '🫐', brassica: '🥦',
-    'broadleaf-companion': '🌸', 'cereal-grain': '🌾', corn: '🌽',
-    'cover-grass': '🌿', 'cover-legume': '🌿', cucurbit: '🎃',
-    forage: '🌾', 'herb-culinary': '🌿', 'leafy-green': '🥬',
-    legume: '🫘', orchard: '🍎', root: '🥕', 'small-fruit': '🍓',
-    solanaceae: '🍅', 'stone-fruit': '🍑', 'vine-fruit': '🍇'
+    allium: '🧅',
+    apiaceae: '🥕',
+    bramble: '🫐',
+    brassica: '🥦',
+    'broadleaf-companion': '🌸',
+    'cereal-grain': '🌾',
+    corn: '🌽',
+    'cover-grass': '🌿',
+    'cover-legume': '🌿',
+    cucurbit: '🎃',
+    forage: '🌾',
+    'herb-culinary': '🌿',
+    'leafy-green': '🥬',
+    legume: '🫘',
+    orchard: '🍎',
+    root: '🥕',
+    'small-fruit': '🍓',
+    solanaceae: '🍅',
+    'stone-fruit': '🍑',
+    'vine-fruit': '🍇'
   };
 
   let {
@@ -96,7 +110,9 @@
   <div class="qm-modal" role="dialog" aria-modal="true" aria-labelledby="qm-title">
     <div class="qm-header">
       <h2 id="qm-title">
-        <span class="qm-family" aria-hidden="true">{stock.cropFamily ? (FAMILY_ICON[stock.cropFamily] ?? '🌱') : '🌱'}</span>
+        <span class="qm-family" aria-hidden="true"
+          >{stock.cropFamily ? (FAMILY_ICON[stock.cropFamily] ?? '🌱') : '🌱'}</span
+        >
         {stock.displayName}
       </h2>
       <button class="qm-close" type="button" aria-label="Close" onclick={onClose}>✕</button>
@@ -107,10 +123,20 @@
 
       <label class="qm-label" for="qm-input">How much to plant?</label>
       <div class="qm-input-row">
-        <button type="button" class="qm-step" onclick={() => bump(-stepOptions.coarse)} aria-label="Decrease by {stepOptions.coarse}">
+        <button
+          type="button"
+          class="qm-step"
+          onclick={() => bump(-stepOptions.coarse)}
+          aria-label="Decrease by {stepOptions.coarse}"
+        >
           −−
         </button>
-        <button type="button" class="qm-step" onclick={() => bump(-stepOptions.fine)} aria-label="Decrease by {stepOptions.fine}">
+        <button
+          type="button"
+          class="qm-step"
+          onclick={() => bump(-stepOptions.fine)}
+          aria-label="Decrease by {stepOptions.fine}"
+        >
           −
         </button>
         <input
@@ -124,10 +150,20 @@
           bind:value={quantity}
         />
         <span class="qm-unit">{stock.defaultUnit}</span>
-        <button type="button" class="qm-step" onclick={() => bump(stepOptions.fine)} aria-label="Increase by {stepOptions.fine}">
+        <button
+          type="button"
+          class="qm-step"
+          onclick={() => bump(stepOptions.fine)}
+          aria-label="Increase by {stepOptions.fine}"
+        >
           +
         </button>
-        <button type="button" class="qm-step" onclick={() => bump(stepOptions.coarse)} aria-label="Increase by {stepOptions.coarse}">
+        <button
+          type="button"
+          class="qm-step"
+          onclick={() => bump(stepOptions.coarse)}
+          aria-label="Increase by {stepOptions.coarse}"
+        >
           ++
         </button>
       </div>
@@ -185,7 +221,10 @@
     align-items: center;
     gap: 0.5rem;
   }
-  .qm-family { font-size: 1.4rem; line-height: 1; }
+  .qm-family {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
 
   .qm-close {
     background: none;

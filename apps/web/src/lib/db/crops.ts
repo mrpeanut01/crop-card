@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, gte, isNotNull, lte } from 'drizzle-orm';
 import { db } from './client';
 import { crops, tasks as tasksTable } from './schema';
+import { splitQuantityForSuccession } from '$lib/schedule/succession';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
 import {
   cascadeDeleteForCrop,
@@ -42,6 +43,12 @@ export interface Crop {
   groupRole?: GroupRole;
   groupOffsetDays?: number;
   groupSystemKind?: GroupSystemKind;
+  /** Phase 21b follow-up — operator's chosen harvest use cases for
+   *  this planting. Used to filter the plugin's growthStageTable
+   *  harvestTargets in the swim-lane render (e.g. show only the
+   *  fresh-eating window, not the dent/grain window, for a dual-
+   *  purpose corn crop). Undefined / null = show all. */
+  harvestUseCases?: string[];
 }
 
 function rowToCrop(row: typeof crops.$inferSelect): Crop {
@@ -63,6 +70,16 @@ function rowToCrop(row: typeof crops.$inferSelect): Crop {
   if (row.groupRole) out.groupRole = row.groupRole as GroupRole;
   if (row.groupOffsetDays != null) out.groupOffsetDays = row.groupOffsetDays;
   if (row.groupSystemKind) out.groupSystemKind = row.groupSystemKind as GroupSystemKind;
+  if (row.harvestUseCases) {
+    try {
+      const parsed = JSON.parse(row.harvestUseCases);
+      if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
+        out.harvestUseCases = parsed;
+      }
+    } catch {
+      /* malformed JSON — treat as null (show all targets) */
+    }
+  }
   return out;
 }
 
@@ -95,7 +112,11 @@ export function listCrops(filters: ListFilters = {}): Crop[] {
 }
 
 export function getCrop(id: string): Crop | undefined {
-  const row = db.select().from(crops).where(withTenant(crops, eq(crops.id, id))).get();
+  const row = db
+    .select()
+    .from(crops)
+    .where(withTenant(crops, eq(crops.id, id)))
+    .get();
   return row ? rowToCrop(row) : undefined;
 }
 
@@ -107,7 +128,11 @@ export function setSchedule(
     plantingDate: patch.plantingDate !== null ? new Date(patch.plantingDate) : null
   };
   if (patch.blockId) updates.blockId = patch.blockId;
-  const cur = db.select().from(crops).where(withTenant(crops, eq(crops.id, id))).get();
+  const cur = db
+    .select()
+    .from(crops)
+    .where(withTenant(crops, eq(crops.id, id)))
+    .get();
   if (!cur) throw new Error(`unknown crop id: ${id}`);
   if (patch.plantingDate === null && cur.status === 'active') {
     updates.status = 'planned';
@@ -126,7 +151,15 @@ export function setSchedule(
 
 export function updateDetails(
   id: string,
-  patch: { varietyDisplayName?: string; quantityPlanted?: number | null; quantityUnit?: string | null }
+  patch: {
+    varietyDisplayName?: string;
+    quantityPlanted?: number | null;
+    quantityUnit?: string | null;
+    /** Phase 21b follow-up — explicit `null` clears the filter
+     *  (show all harvest targets); an array writes the selection;
+     *  `undefined` (default) leaves the column untouched. */
+    harvestUseCases?: string[] | null;
+  }
 ): Crop {
   const updates: Record<string, unknown> = {};
   if (patch.varietyDisplayName !== undefined) updates.varietyDisplayName = patch.varietyDisplayName;
@@ -135,6 +168,10 @@ export function updateDetails(
       patch.quantityPlanted == null ? null : Math.round(patch.quantityPlanted * 100);
   }
   if (patch.quantityUnit !== undefined) updates.quantityUnit = patch.quantityUnit ?? null;
+  if (patch.harvestUseCases !== undefined) {
+    updates.harvestUseCases =
+      patch.harvestUseCases == null ? null : JSON.stringify(patch.harvestUseCases);
+  }
   if (Object.keys(updates).length === 0) {
     const cur = getCrop(id);
     if (!cur) throw new Error(`unknown crop id: ${id}`);
@@ -191,6 +228,87 @@ export function listYearsWithCrops(): number[] {
   const years = new Set<number>();
   for (const r of all) if (r.plantingDate) years.add(new Date(r.plantingDate).getFullYear());
   return [...years].sort((a, b) => b - a);
+}
+
+/**
+ * Phase 21b follow-up — split a crop into N parts.
+ *
+ * Takes one existing crop and produces N total crops on the same
+ * block + plugin + variety + plantingDate, with the original's
+ * quantity divided evenly across the parts via largest-remainder
+ * rounding (so the sum exactly matches the input — no off-by-one
+ * losses for integer units like 'seeds' / 'count' / 'packets').
+ *
+ * The first part is the UPDATED original (id preserved), so any
+ * event already tied to that cropId stays linked. The remaining
+ * (N - 1) parts are fresh inserts that inherit the original's
+ * status + non-quantity metadata. Group fields (groupId, groupRole,
+ * etc.) are NOT propagated to the new parts — splitting a group
+ * anchor would break the companion offsets, so each new part starts
+ * as a standalone planting that the operator can join to a group
+ * separately if they want.
+ *
+ * Caller is expected to drag the new parts to their target dates
+ * (or blocks) afterwards. By default all parts share the source
+ * date so the UI stacks them on top of each other and the operator
+ * can spread them out via drag.
+ */
+export function splitCrop(id: string, parts: number): Crop[] {
+  if (parts < 2 || !Number.isInteger(parts)) {
+    throw new Error(`splitCrop requires parts >= 2 integer (got ${parts})`);
+  }
+  const original = getCrop(id);
+  if (!original) throw new Error(`unknown crop id: ${id}`);
+  if (original.status === 'harvested' || original.status === 'archived') {
+    throw new Error(`cannot split a ${original.status} crop`);
+  }
+
+  const totalHundredths = (() => {
+    const row = db
+      .select({ q: crops.quantityPlantedHundredths })
+      .from(crops)
+      .where(withTenant(crops, eq(crops.id, id)))
+      .get();
+    return row?.q ?? null;
+  })();
+  const shares =
+    totalHundredths != null
+      ? splitQuantityForSuccession(totalHundredths, parts)
+      : new Array(parts).fill(null);
+
+  // Update the original to its share.
+  const updated = db
+    .update(crops)
+    .set({ quantityPlantedHundredths: shares[0] as number | null })
+    .where(withTenant(crops, eq(crops.id, id)))
+    .returning()
+    .get();
+
+  const out: Crop[] = [rowToCrop(updated)];
+
+  for (let i = 1; i < parts; i++) {
+    const newId = randomUUID();
+    const row = db
+      .insert(crops)
+      .values(
+        tenantValues({
+          id: newId,
+          blockId: original.blockId,
+          cropPluginId: original.cropPluginId,
+          varietyDisplayName: original.varietyDisplayName,
+          plantingDate: original.plantingDate != null ? new Date(original.plantingDate) : null,
+          status: original.status,
+          quantityPlantedHundredths: shares[i] as number | null,
+          quantityUnit: original.quantityUnit ?? null
+          // Intentionally NOT copying group fields — see docstring.
+        })
+      )
+      .returning()
+      .get();
+    out.push(rowToCrop(row));
+  }
+
+  return out;
 }
 
 export function createPlanned(input: {
@@ -434,13 +552,11 @@ export function listGroupMembers(groupId: string): Crop[] {
     .where(withTenant(crops, eq(crops.groupId, groupId)))
     .orderBy(asc(crops.groupOffsetDays))
     .all();
-  return rows
-    .map(rowToCrop)
-    .sort((a, b) => {
-      if (a.groupRole === 'anchor') return -1;
-      if (b.groupRole === 'anchor') return 1;
-      return (a.groupOffsetDays ?? 0) - (b.groupOffsetDays ?? 0);
-    });
+  return rows.map(rowToCrop).sort((a, b) => {
+    if (a.groupRole === 'anchor') return -1;
+    if (b.groupRole === 'anchor') return 1;
+    return (a.groupOffsetDays ?? 0) - (b.groupOffsetDays ?? 0);
+  });
 }
 
 export function disbandGroup(groupId: string): number {
@@ -512,7 +628,11 @@ export function nudgeCompanionPlanting(
 }
 
 export function isGroupAnchorWithMembers(cropId: string): boolean {
-  const row = db.select().from(crops).where(withTenant(crops, eq(crops.id, cropId))).get();
+  const row = db
+    .select()
+    .from(crops)
+    .where(withTenant(crops, eq(crops.id, cropId)))
+    .get();
   if (!row || row.groupRole !== 'anchor' || !row.groupId) return false;
   const siblings = db
     .select()
@@ -522,11 +642,16 @@ export function isGroupAnchorWithMembers(cropId: string): boolean {
   return siblings.length > 1;
 }
 
-export function unscheduleCrop(
-  cropId: string
-): { tasksDeleted: number; disbandedGroupId?: string } {
+export function unscheduleCrop(cropId: string): {
+  tasksDeleted: number;
+  disbandedGroupId?: string;
+} {
   return db.transaction(() => {
-    const row = db.select().from(crops).where(withTenant(crops, eq(crops.id, cropId))).get();
+    const row = db
+      .select()
+      .from(crops)
+      .where(withTenant(crops, eq(crops.id, cropId)))
+      .get();
     if (!row) throw new Error(`unknown crop: ${cropId}`);
 
     let disbandedGroupId: string | undefined;
@@ -549,9 +674,10 @@ export function unscheduleCrop(
   });
 }
 
-export function clearSchedule(
-  blockIdFilter?: Set<string> | null
-): { unscheduled: number; tasksDeleted: number } {
+export function clearSchedule(blockIdFilter?: Set<string> | null): {
+  unscheduled: number;
+  tasksDeleted: number;
+} {
   return db.transaction(() => {
     const rows = db.select().from(crops).where(tenantWhere(crops)).all();
     let unscheduled = 0;

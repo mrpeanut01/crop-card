@@ -119,9 +119,7 @@ export function revokeAssignment(ownerId: string, userId: string): boolean {
   const r = db
     .update(helperAssignments)
     .set({ status: 'revoked' })
-    .where(
-      and(eq(helperAssignments.ownerId, ownerId), eq(helperAssignments.userId, userId))
-    )
+    .where(and(eq(helperAssignments.ownerId, ownerId), eq(helperAssignments.userId, userId)))
     .run();
   return r.changes > 0;
 }

@@ -14,12 +14,18 @@
   {#if data.showPlanterPlate}
     <a class="tool-card" href="/tools/planter-plate-selector">
       <h2>Planter plate selector</h2>
-      <p>Look up Lincoln Ag plate numbers (John Deere "B" / IHC "C") by seed type, dimensions, and target planting density. Optionally save the chosen plate to a seed inventory record.</p>
+      <p>
+        Look up Lincoln Ag plate numbers (John Deere "B" / IHC "C") by seed type, dimensions, and
+        target planting density. Optionally save the chosen plate to a seed inventory record.
+      </p>
     </a>
   {/if}
   <a class="tool-card" href="/calibrate">
     <h2>Sprayer calibration (1/128 acre)</h2>
-    <p>Calibrate boom sprayer GPA from a 1/128-acre stride collection. Records to the sprayer's calibration history.</p>
+    <p>
+      Calibrate boom sprayer GPA from a 1/128-acre stride collection. Records to the sprayer's
+      calibration history.
+    </p>
   </a>
 </section>
 

@@ -17,6 +17,7 @@
     "typecheck": "pnpm -r typecheck",
     "db:generate": "pnpm --filter @cropcard/web db:generate",
     "db:migrate": "pnpm --filter @cropcard/web db:migrate",
-    "db:reset": "pnpm --filter @cropcard/web db:reset"
+    "db:reset": "pnpm --filter @cropcard/web db:reset",
+    "gen:safety-snapshot": "pnpm --filter @cropcard/plugin-validation gen:safety-snapshot"
   }
 }

@@ -8,3 +8,4 @@ export {
   type CropFamily,
   type ChemistryProfile
 } from './safetySnapshot';
+export { TASK_CATEGORY_VALUES, type TaskCategory } from './taskCategory';

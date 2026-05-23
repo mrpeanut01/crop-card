@@ -561,7 +561,7 @@ function validateResponse(
       .filter((x): x is Record<string, unknown> => x !== null);
     if (cleaned.length > 0) {
       result.activeIngredients = {
-        value: cleaned as StockRefreshResult['activeIngredients']['value'],
+        value: cleaned as NonNullable<StockRefreshResult['activeIngredients']>['value'],
         sourceUrl: aiNorm.sourceUrl,
         sourceTitle: aiNorm.sourceTitle
       };

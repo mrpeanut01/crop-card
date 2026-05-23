@@ -165,6 +165,83 @@ export function assertEditable(event: SprayEvent): void {
   if (lockedAt !== undefined) throw new RecordLockedError(lockedAt);
 }
 
+/**
+ * Phase 21b follow-up — find the most recent spray_event for the block
+ * that's still inside the 48h edit lock window. Used by /spray to
+ * decide whether a multi-block record should PATCH an existing row or
+ * POST a new one. Returns undefined when no editable event exists.
+ *
+ * Scope is tenant-scoped via `tenantWhere`; same-day cross-tenant
+ * leakage is impossible by construction.
+ */
+export function findRecentEditableEventForBlock(
+  blockId: string,
+  now: number = Date.now()
+): SprayEvent | undefined {
+  const cutoff = now - LOCK_WINDOW_MS;
+  const row = db
+    .select()
+    .from(sprayEvents)
+    .where(
+      withTenant(
+        sprayEvents,
+        and(eq(sprayEvents.blockId, blockId), gte(sprayEvents.occurredAt, new Date(cutoff)))
+      )
+    )
+    .orderBy(desc(sprayEvents.occurredAt))
+    .get();
+  if (!row) return undefined;
+  const event = rowToEvent(row);
+  // Treat any pre-stamped lockedAt as authoritative (race-free per
+  // evaluateLock semantics). A row inside the time window but with
+  // lockedAt set has been frozen; refuse the edit path.
+  if (event.lockedAt) return undefined;
+  // Re-check the clock — covers the boundary where occurredAt is
+  // inside the cutoff per the SQL filter but the lock window expires
+  // between SELECT and the UPDATE that PATCH will attempt.
+  if (now - event.occurredAt >= LOCK_WINDOW_MS) return undefined;
+  return event;
+}
+
+/**
+ * Phase 21b follow-up — replace the editable fields on a spray event.
+ * Refuses if the row is locked (assertEditable throws RecordLockedError).
+ * Does NOT touch blockId / sprayerId / performedById — those are
+ * row-identity fields. Callers needing to change those should abort +
+ * insert a new event.
+ */
+export function updateSprayEvent(
+  id: string,
+  input: {
+    occurredAt?: number;
+    products?: SprayEventInput['products'];
+    conditions?: SprayEventInput['conditions'];
+    pluginHashes?: Record<string, string>;
+    customRateOverride?: boolean;
+    cropId?: string | null;
+  }
+): SprayEvent {
+  const existing = getSprayEvent(id);
+  if (!existing) throw new Error(`unknown spray event: ${id}`);
+  assertEditable(existing);
+  const updates: Record<string, unknown> = {};
+  if (input.occurredAt !== undefined) updates.occurredAt = new Date(input.occurredAt);
+  if (input.products !== undefined) updates.productsJson = JSON.stringify(input.products);
+  if (input.conditions !== undefined) updates.conditionsJson = JSON.stringify(input.conditions);
+  if (input.pluginHashes !== undefined)
+    updates.pluginHashesJson = JSON.stringify(input.pluginHashes);
+  if (input.customRateOverride !== undefined) updates.customRateOverride = input.customRateOverride;
+  if (input.cropId !== undefined) updates.cropId = input.cropId;
+  const row = db
+    .update(sprayEvents)
+    .set(updates)
+    .where(withTenant(sprayEvents, eq(sprayEvents.id, id)))
+    .returning()
+    .get();
+  if (!row) throw new Error(`spray event row vanished during update: ${id}`);
+  return rowToEvent(row);
+}
+
 export function recordsApproachingRetention(now: number = Date.now()): SprayEvent[] {
   const cutoff = now - (RETENTION_WINDOW_MS - RETENTION_ALERT_WINDOW_MS);
   // Use the listing function so tenant filter is applied uniformly. The

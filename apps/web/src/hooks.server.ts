@@ -1,11 +1,12 @@
 import { json, redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
-import { canMutate } from '$lib/server/session';
+import { canMutate, type SessionRole } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';
 import { runWithTenantAsync } from '$lib/db/tenant';
 import { db } from '$lib/db/client';
-import { owners } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { owners, users, helperAssignments } from '$lib/db/schema';
+import { and, eq } from 'drizzle-orm';
+import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
 
 /**
  * Phase 21a follow-up — error visibility (2026-05-17).
@@ -110,7 +111,11 @@ function allowsPartialSession(pathname: string): boolean {
 }
 
 /**
- * Request boundary (Phase 18 final):
+ * Request boundary (Phase 18 final + Phase 24 Bearer auth):
+ *   0. (Phase 24) Resolve `Authorization: Bearer cck_…` BEFORE cookie
+ *      lookup. Hit → mint an AuthenticatedUser-shaped record from the
+ *      token's (ownerId, userId, role). Miss → return 401 JSON
+ *      immediately. Absent → fall through to cookie path.
  *   1. Decorate `event.locals.user` so downstream loads can render.
  *   2. Inspector role can't mutate via /api/*.
  *   3. Unauthenticated requests to non-public paths redirect to `/` so
@@ -124,8 +129,40 @@ function allowsPartialSession(pathname: string): boolean {
  *      tenant-scoped repos see the right Owner.
  */
 export const handle: Handle = async ({ event, resolve }) => {
-  const user = currentUser(event);
-  if (user) event.locals.user = user;
+  // Phase 24 — Bearer-first auth resolution.
+  const authHeader = event.request.headers.get('authorization');
+  let user: ReturnType<typeof currentUser> = null;
+  if (authHeader && /^bearer\s+/i.test(authHeader)) {
+    const plaintext = authHeader.replace(/^bearer\s+/i, '').trim();
+    const resolved = lookupByPlaintext(plaintext);
+    if (!resolved) {
+      return json(
+        { error: 'invalid or revoked Bearer token' },
+        { status: 401, headers: { 'cache-control': 'no-store' } }
+      );
+    }
+    const built = buildBearerUser(resolved);
+    if (!built) {
+      // Token is valid but its underlying assignment was revoked. Treat
+      // as a revoked token so the agent retries with a fresh credential.
+      return json(
+        { error: 'token user no longer has an active assignment for this owner' },
+        { status: 401, headers: { 'cache-control': 'no-store' } }
+      );
+    }
+    user = built;
+    event.locals.user = built;
+    event.locals.authVia = 'bearer';
+    event.locals.tokenId = resolved.tokenId;
+    event.locals.isServiceAccountToken = resolved.isServiceAccount;
+    touchToken(resolved.tokenId);
+  } else {
+    user = currentUser(event);
+    if (user) {
+      event.locals.user = user;
+      event.locals.authVia = 'cookie';
+    }
+  }
   const path = event.url.pathname;
 
   if (
@@ -169,6 +206,52 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   return runWithTenantAsync(user.activeOwnerId, () => Promise.resolve(resolve(event)));
 };
+
+/**
+ * Build an AuthenticatedUser from a Bearer-resolved token. Looks up the
+ * email + role-within-owner so downstream code (which keys on `user.role`
+ * and `user.email`) is identical to the cookie-session path.
+ *
+ * Returns null when the underlying helper_assignment has been revoked —
+ * the token must die with its assignment.
+ */
+function buildBearerUser(resolved: {
+  tokenId: string;
+  ownerId: string;
+  userId: string;
+}): import('$lib/server/auth').AuthenticatedUser | null {
+  try {
+    const userRow = db
+      .select({ email: users.email, isSuperadmin: users.isSuperadmin })
+      .from(users)
+      .where(eq(users.id, resolved.userId))
+      .get();
+    if (!userRow) return null;
+    const assignment = db
+      .select({ roleWithinOwner: helperAssignments.roleWithinOwner })
+      .from(helperAssignments)
+      .where(
+        and(
+          eq(helperAssignments.userId, resolved.userId),
+          eq(helperAssignments.ownerId, resolved.ownerId),
+          eq(helperAssignments.status, 'active')
+        )
+      )
+      .get();
+    if (!assignment) return null;
+    return {
+      id: resolved.userId,
+      email: userRow.email,
+      role: assignment.roleWithinOwner as SessionRole,
+      activeOwnerId: resolved.ownerId,
+      isSuperadmin: userRow.isSuperadmin,
+      impersonating: false
+    };
+  } catch (err) {
+    console.error('[bearer-auth] failed to build user from token', err);
+    return null;
+  }
+}
 
 function pickRedirectForPartialSession(userId: string): string {
   try {

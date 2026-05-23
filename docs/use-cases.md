@@ -763,6 +763,28 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 
 ---
 
+## UC-43 — External agent orchestration via API token
+
+- **Persona:** P6 (Integrator / automation owner).
+- **Status:** Spec'd (Phase 24). The CropCard JSON API is already coherent and safety-gated server-side; this UC opens it to external Claude agents (or future SaaS integrations like FarmOS sync, accounting bridges, scouting drone uploads) via Bearer-token auth. Safety invariants stay enforced — an agent with a valid token cannot violate the 48h spray lock, helper custom-rate restriction, tenant isolation, or kernel re-evaluation on POST. See `docs/phase-24-agent-api.md`.
+- **Trigger:** Owner navigates to `/settings/api-tokens` and clicks **Mint token**. Alternatively `POST /api/auth/token` directly from another cookie-authed session (e.g., a setup script).
+- **Preconditions:** Owner role + cookie session (helpers cannot mint; Bearer cannot mint another Bearer — closes the bootstrap loop on a leaked token). Active tenant.
+- **Primary path:**
+  1. Owner enters a human label (e.g., `scouting-drone-1`) and optionally marks the token as a **service account** (independent AI quota per UC-43 Sub-task D).
+  2. Server mints `cck_<base64url-32-bytes>` plaintext + stores `sha256(plaintext)` in `api_tokens`. Plaintext is returned **once** in a copy-once modal — never recoverable from the DB.
+  3. External script sets `Authorization: Bearer cck_…` on every request. `hooks.server.ts` resolves the Bearer header **before** cookie lookup, mints an `AuthenticatedUser` shaped record from the token's `(ownerId, userId, role)`, and wraps `resolve(event)` in `runWithTenantAsync(ownerId, …)`.
+  4. Cookie-session CSRF Origin check is bypassed for Bearer requests (agents call from arbitrary origins by design); cookie sessions still enforce same-origin (UC-43 Sub-task B).
+  5. Agent fetches `/api/openapi.json` (public, no auth) for tool-catalog discovery; reads `/api/today`, posts `/api/spray/record`, etc. (UC-43 Sub-task C).
+  6. `aiGuard` keys rate-limit on `(tokenId, endpoint, UTC-day)` for service-account tokens so a runaway agent can't drain the human owner's daily AI quota (UC-43 Sub-task D).
+- **Owner can:** list active + revoked tokens at `/settings/api-tokens`, see per-token `lastUsedAt` + `requestCount` (debounced 1/minute writes), revoke at any time. Revocation is immediate — next Bearer request → 401 JSON.
+- **Token cannot:** mint another token (cookie-session-only surface), switch owners (owner-scoped at issuance; `POST /api/session/switch-owner` returns 403 for `authVia === 'bearer'`).
+- **Cross-tenant isolation:** every endpoint reachable under the Bearer path runs inside `runWithTenantAsync(tokenOwnerId, …)`. Cross-tenant property test extended with a Bearer-authed code path at `apps/web/src/lib/db/tenant.crossTenant.test.ts`.
+- **Service-account quota policy:** UI controls per-token `daily_quota_*` columns (defaults 100/100/100/50 — 10× the per-user defaults). Monthly USD cap stays global as the safety brake against a runaway agent.
+- **Helper visibility:** none. Tokens are listed only to the issuing Owner via `requireOwner()`.
+- **Audit notes:** New table `api_tokens` (migration 0029). Bearer middleware in `hooks.server.ts`. CSRF bypass in `svelte.config.js` + manual Origin guard in hooks. OpenAPI generator at `apps/web/scripts/gen-openapi.mjs` + served from `/api/openapi.json`. `is_service_account` + `daily_quota_*` columns wire `aiGuard.checkGuard()` to branch per-token. CLAUDE.md invariants honored: #2 (no plugin executable code touched), #5 (helper cannot mint), #6 (tenant isolation via composite `(owner_id, id)` keys on every write + cross-tenant test).
+
+---
+
 ## Summary table
 
 | ID | Status | Persona | Implementation locus |
@@ -808,3 +830,4 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 | UC-41 | Implemented | P1, P2 | Engine + catalog in [lib/planterPlate/](../apps/web/src/lib/planterPlate/); tool at [tools/planter-plate-selector/+page.svelte](../apps/web/src/routes/tools/planter-plate-selector/+page.svelte); AI auto-pick wired into [aiRefreshStock.ts](../apps/web/src/lib/server/aiRefreshStock.ts). Persists `planterPlateConfig`, `seedDimensionsMm`, `seedShape` into `stock_items.metadata_json`. Phase 21 gates the UI behind the existing `display_planter_setup` setting (off by default for new owners). |
 | UC-37d | **Spec'd** (Phase 21) | P1 | New `lib/plan/inputsPlan.ts` + `lib/server/aiInputsPlan.ts` + `/api/plan/inputs/*` + step in [AllocationWizard.svelte](../apps/web/src/lib/components/AllocationWizard.svelte). See [phase-21-plan.md](./phase-21-plan.md). |
 | UC-42 | **Spec'd** (Phase 21) | P1 | New `lib/season/setup.ts` + `SeasonSetupStep.svelte` + `SeasonSetupChip.svelte` + `/settings/season/` route. Backed by `settings` table (no migration). See [phase-21-plan.md](./phase-21-plan.md). |
+| UC-43 | **Spec'd** (Phase 24) | P6 | `api_tokens` table (migration 0029) + [apiTokens.ts](../apps/web/src/lib/server/apiTokens.ts) + Bearer middleware in [hooks.server.ts](../apps/web/src/hooks.server.ts) + `/settings/api-tokens/` route + `/api/auth/token/*` endpoints + CSRF Origin bridge + `/api/openapi.json` + per-token quota in [aiGuard.ts](../apps/web/src/lib/server/aiGuard.ts). See [phase-24-agent-api.md](./phase-24-agent-api.md). |

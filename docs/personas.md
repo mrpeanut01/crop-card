@@ -102,6 +102,25 @@ This persona is the strongest argument for an explicit onboarding flow (UC-20) �
 
 ---
 
+## P6 — Integrator / automation owner *(proposed, Phase 24)*
+
+This is the same person as P1 (Sherry) wearing a different hat, OR a future SaaS integration (FarmOS sync, accounting bridge, scouting drone uploads) acting on a farm's behalf via API credentials.
+
+| Dimension | Value |
+|---|---|
+| Role | Owner mints Bearer tokens on `/settings/api-tokens`. The token *is* the integrator. |
+| Physical context | Server-side: no field environment, no glove operation, no offline constraint. Calls `/api/**` from arbitrary origins (CSRF Origin check bypassed for Bearer-authed requests). |
+| Toolchain | Anthropic SDK / Claude Code / FarmOS connector / custom Python script. Reads `/api/openapi.json` to build a tool catalog without parsing TypeScript. |
+| Cognitive context | Treats CropCard as a stateful JSON API. Reasons in terms of routes + request shapes + 401/403/409 responses, not buttons + forms. |
+| Safety posture | Cannot bypass the safety kernel — every POST re-runs `evaluateSpray()`. Cannot violate tenant isolation — token is owner-scoped at issuance and rejects `POST /api/session/switch-owner`. Cannot mint another token — closes bootstrap loop on a leaked credential. |
+| Quota posture | When marked as a **service account** in the UI, gets its own per-`(tokenId, endpoint, UTC-day)` AI quota so a runaway drone can't drain the human owner's daily allowance. Monthly USD cap stays global as the safety brake. |
+| Constraints | Token grants the underlying user's role within the issuing Owner. No token sub-scopes (read-only / spray-only) in Phase 24 — deferred to a future phase per epic #59. |
+| Success criteria | An external Python script with `Authorization: Bearer cck_…` can read `/api/today`, post `/api/spray/record`, and walk `/api/plan/inputs/refine` without touching the browser UI. Cross-tenant property test extended with a Bearer path passes. |
+
+Primary use case: **UC-43** (External agent orchestration via API token). See [docs/phase-24-agent-api.md](./phase-24-agent-api.md).
+
+---
+
 ## Mapping — personas to roles to use cases
 
 | Persona | Auth role | Primary use cases |
@@ -111,5 +130,6 @@ This persona is the strongest argument for an explicit onboarding flow (UC-20) �
 | P3 Hay Operator | both | UC-13, UC-14, UC-15, UC-16 |
 | P4 Dale | n/a (export receiver) | UC-22 |
 | P5 First-Run | `owner` (new) | UC-20 |
+| P6 Integrator | Bearer (inherits role of underlying user) | UC-43 |
 
 Cross-reference: every implemented use case names its primary persona in [use-cases.md](./use-cases.md), and every audit finding in [usability-audit.md](./usability-audit.md) names the persona affected.

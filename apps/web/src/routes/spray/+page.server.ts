@@ -65,7 +65,7 @@ export const load: PageServerLoad = async ({ url }) => {
       return {
         id: b.id,
         label: b.name,
-        description: b.acres ? `${b.acres} acres` : '',
+        description: b.acres ? `${b.acres.toFixed(2)} acres` : '',
         // Phase 21b follow-up — surface numeric acres so the dilution
         // calculator can scale to the FULL pass (all selected blocks),
         // not just one tank-load. `b.acres` is already the effective

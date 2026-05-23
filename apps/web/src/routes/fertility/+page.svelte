@@ -150,7 +150,7 @@
     Block
     <select bind:value={blockId}>
       {#each data.blocks as b (b.id)}
-        <option value={b.id}>{b.name}{b.acres ? ` — ${b.acres} ac` : ''}</option>
+        <option value={b.id}>{b.name}{b.acres ? ` — ${b.acres.toFixed(2)} ac` : ''}</option>
       {/each}
     </select>
   </label>

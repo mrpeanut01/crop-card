@@ -124,7 +124,7 @@
       <option value="">All blocks</option>
       {#each data.blocks as b (b.id)}
         <option value={b.id} selected={b.id === data.blockId}>
-          {b.name}{b.acres ? ` — ${b.acres} ac` : ''}
+          {b.name}{b.acres ? ` — ${b.acres.toFixed(2)} ac` : ''}
         </option>
       {/each}
     </select>

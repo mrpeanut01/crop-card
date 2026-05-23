@@ -63,9 +63,7 @@ function backfillPhase13(db) {
     .get();
   if (!hasFields) return;
 
-  const orphanCount = db
-    .prepare(`SELECT COUNT(*) AS n FROM blocks WHERE field_id IS NULL`)
-    .get().n;
+  const orphanCount = db.prepare(`SELECT COUNT(*) AS n FROM blocks WHERE field_id IS NULL`).get().n;
   if (orphanCount > 0) {
     let homeField = db
       .prepare(`SELECT id FROM fields WHERE name = 'Home Field' ORDER BY created_at LIMIT 1`)
@@ -78,9 +76,7 @@ function backfillPhase13(db) {
       homeField = { id };
       console.log(`[migrate] created Home Field ${id}`);
     }
-    const r = db
-      .prepare(`UPDATE blocks SET field_id = ? WHERE field_id IS NULL`)
-      .run(homeField.id);
+    const r = db.prepare(`UPDATE blocks SET field_id = ? WHERE field_id IS NULL`).run(homeField.id);
     console.log(`[migrate] migrated ${r.changes} block(s) to Home Field`);
   }
 
@@ -135,8 +131,7 @@ function backfillPhase22PluginVersions(db) {
     .get();
   if (!hasTable) return;
 
-  const pluginsRoot =
-    process.env.PLUGINS_DIR ?? path.resolve(process.cwd(), '..', '..', 'plugins');
+  const pluginsRoot = process.env.PLUGINS_DIR ?? path.resolve(process.cwd(), '..', '..', 'plugins');
   if (!safeStat(pluginsRoot)?.isDirectory()) return;
 
   const subdirToKind = {
@@ -178,14 +173,7 @@ function backfillPhase22PluginVersions(db) {
 
       const canonical = JSON.stringify(parsed);
       const hash = createHash('sha256').update(canonical).digest('hex');
-      insertStmt.run(
-        randomUUID(),
-        pluginId,
-        parsed.version ?? '1.0.0',
-        kind,
-        hash,
-        canonical
-      );
+      insertStmt.run(randomUUID(), pluginId, parsed.version ?? '1.0.0', kind, hash, canonical);
       inserted++;
     }
   }

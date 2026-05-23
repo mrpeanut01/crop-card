@@ -194,6 +194,4 @@ for (const subdir of KINDS) {
   }
 }
 
-console.log(
-  JSON.stringify({ ...stats, dryRun, pluginsRoot }, null, 2)
-);
+console.log(JSON.stringify({ ...stats, dryRun, pluginsRoot }, null, 2));

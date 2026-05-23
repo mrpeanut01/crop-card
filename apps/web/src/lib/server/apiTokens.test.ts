@@ -27,7 +27,9 @@ function seedOwnerAndUser(): { ownerId: string; userId: string } {
   const ownerId = uniq('owner');
   const userId = uniq('user');
   db.insert(owners).values({ id: ownerId, name: ownerId, slug: ownerId }).run();
-  db.insert(users).values({ id: userId, email: `${userId}@example.test`, role: 'owner' }).run();
+  db.insert(users)
+    .values({ id: userId, email: `${userId}@example.test`, role: 'owner' })
+    .run();
   db.insert(helperAssignments)
     .values({
       ownerId,
@@ -103,7 +105,7 @@ describe('lookupByPlaintext negative paths', () => {
 });
 
 describe('revokeToken is owner-scoped', () => {
-  it('refuses to revoke another Owner\'s token', () => {
+  it("refuses to revoke another Owner's token", () => {
     const a = seedOwnerAndUser();
     const b = seedOwnerAndUser();
     const issuedForA = issueToken({ ownerId: a.ownerId, userId: a.userId, label: 'a-token' });
@@ -125,7 +127,7 @@ describe('revokeToken is owner-scoped', () => {
 });
 
 describe('listTokensForOwner is tenant-scoped', () => {
-  it('returns only the calling Owner\'s tokens, never anyone else\'s', () => {
+  it("returns only the calling Owner's tokens, never anyone else's", () => {
     const a = seedOwnerAndUser();
     const b = seedOwnerAndUser();
     issueToken({ ownerId: a.ownerId, userId: a.userId, label: 'a-1' });

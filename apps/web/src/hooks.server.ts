@@ -231,7 +231,12 @@ export const handle: Handle = async ({ event, resolve }) => {
     });
     if (decision !== 'allow') {
       return json(
-        { error: decision === 'block-cross-origin' ? 'cross-origin request blocked' : 'malformed Origin header' },
+        {
+          error:
+            decision === 'block-cross-origin'
+              ? 'cross-origin request blocked'
+              : 'malformed Origin header'
+        },
         {
           status: decision === 'block-cross-origin' ? 403 : 400,
           headers: { 'cache-control': 'no-store' }

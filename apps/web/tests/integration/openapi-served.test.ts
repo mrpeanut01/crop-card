@@ -71,7 +71,8 @@ describe('openapi.json artifact', () => {
   });
 
   it('POST /api/auth/token response describes the cck_ token format', () => {
-    const schema = doc.paths['/api/auth/token'].post.responses[201].content['application/json'].schema;
+    const schema =
+      doc.paths['/api/auth/token'].post.responses[201].content['application/json'].schema;
     expect(schema.properties.token.pattern).toBe('^cck_[A-Za-z0-9_-]+$');
   });
 

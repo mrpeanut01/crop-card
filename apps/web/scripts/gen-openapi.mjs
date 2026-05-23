@@ -50,7 +50,16 @@ const ERROR_SCHEMA = {
 
 const TOKEN_SUMMARY_SCHEMA = {
   type: 'object',
-  required: ['id', 'ownerId', 'userId', 'label', 'isServiceAccount', 'dailyQuota', 'createdAt', 'requestCount'],
+  required: [
+    'id',
+    'ownerId',
+    'userId',
+    'label',
+    'isServiceAccount',
+    'dailyQuota',
+    'createdAt',
+    'requestCount'
+  ],
   properties: {
     id: { type: 'string' },
     ownerId: { type: 'string' },
@@ -79,7 +88,8 @@ const paths = {
   '/api/health': {
     get: {
       summary: 'Liveness probe',
-      description: 'Public; no auth required. Returns the running safety-kernel rules version + uptime.',
+      description:
+        'Public; no auth required. Returns the running safety-kernel rules version + uptime.',
       security: [],
       responses: {
         200: {
@@ -105,7 +115,8 @@ const paths = {
   '/api/openapi.json': {
     get: {
       summary: 'This document',
-      description: 'Public; no auth required. Returns the OpenAPI 3.1 description of the agent-facing surface.',
+      description:
+        'Public; no auth required. Returns the OpenAPI 3.1 description of the agent-facing surface.',
       security: [],
       responses: {
         200: {
@@ -165,8 +176,14 @@ const paths = {
             }
           }
         },
-        400: { description: 'Invalid label.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        403: { description: 'Bearer-authed sessions cannot mint.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        400: {
+          description: 'Invalid label.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+        },
+        403: {
+          description: 'Bearer-authed sessions cannot mint.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+        }
       }
     },
     get: {
@@ -195,17 +212,21 @@ const paths = {
   '/api/auth/token/{id}': {
     delete: {
       summary: 'Revoke a Bearer token',
-      description: 'Composite (owner_id, id) gate — an Owner cannot revoke another Owner\'s token. Immediate: next Bearer request → 401.',
+      description:
+        "Composite (owner_id, id) gate — an Owner cannot revoke another Owner's token. Immediate: next Bearer request → 401.",
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
-      parameters: [
-        { name: 'id', in: 'path', required: true, schema: { type: 'string' } }
-      ],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
         200: {
           description: 'Revoked.',
-          content: { 'application/json': { schema: { type: 'object', properties: { ok: { const: true } } } } }
+          content: {
+            'application/json': { schema: { type: 'object', properties: { ok: { const: true } } } }
+          }
         },
-        404: { description: 'Token not found.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        404: {
+          description: 'Token not found.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+        }
       }
     }
   },
@@ -234,10 +255,22 @@ const paths = {
         }
       },
       responses: {
-        200: { description: 'Spray recorded.', content: { 'application/json': { schema: { type: 'object' } } } },
-        400: { description: 'Safety kernel rejected the spray.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        401: { description: 'Authentication required.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-        403: { description: 'Cross-origin blocked, or read-only role.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } }
+        200: {
+          description: 'Spray recorded.',
+          content: { 'application/json': { schema: { type: 'object' } } }
+        },
+        400: {
+          description: 'Safety kernel rejected the spray.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+        },
+        401: {
+          description: 'Authentication required.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+        },
+        403: {
+          description: 'Cross-origin blocked, or read-only role.',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+        }
       }
     }
   },
@@ -245,7 +278,8 @@ const paths = {
   '/api/blocks': {
     get: {
       summary: 'List blocks for the active Owner',
-      description: 'Tenant-scoped via `runWithTenantAsync(activeOwnerId, …)`. Bearer tokens see only the Owner they were minted under.',
+      description:
+        'Tenant-scoped via `runWithTenantAsync(activeOwnerId, …)`. Bearer tokens see only the Owner they were minted under.',
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       responses: {
         200: {
@@ -297,7 +331,8 @@ const doc = {
         type: 'apiKey',
         in: 'cookie',
         name: 'cropcard.session',
-        description: 'HMAC-signed session cookie set by `/signin`. Cookie mutations under `/api/**` require matching Origin.'
+        description:
+          'HMAC-signed session cookie set by `/signin`. Cookie mutations under `/api/**` require matching Origin.'
       }
     },
     schemas: {

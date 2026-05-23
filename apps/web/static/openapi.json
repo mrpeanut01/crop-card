@@ -32,9 +32,7 @@
     "schemas": {
       "Error": {
         "type": "object",
-        "required": [
-          "error"
-        ],
+        "required": ["error"],
         "properties": {
           "error": {
             "type": "string",
@@ -75,28 +73,16 @@
             "type": "object",
             "properties": {
               "allocate": {
-                "type": [
-                  "integer",
-                  "null"
-                ]
+                "type": ["integer", "null"]
               },
               "schedule": {
-                "type": [
-                  "integer",
-                  "null"
-                ]
+                "type": ["integer", "null"]
               },
               "inputs": {
-                "type": [
-                  "integer",
-                  "null"
-                ]
+                "type": ["integer", "null"]
               },
               "stockRefresh": {
-                "type": [
-                  "integer",
-                  "null"
-                ]
+                "type": ["integer", "null"]
               }
             }
           },
@@ -105,20 +91,14 @@
             "description": "Unix epoch ms."
           },
           "lastUsedAt": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "description": "Unix epoch ms; debounced 1/minute."
           },
           "requestCount": {
             "type": "integer"
           },
           "revokedAt": {
-            "type": [
-              "integer",
-              "null"
-            ]
+            "type": ["integer", "null"]
           }
         }
       }
@@ -145,17 +125,11 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "status",
-                    "rulesVersion",
-                    "uptime"
-                  ],
+                  "required": ["status", "rulesVersion", "uptime"],
                   "properties": {
                     "status": {
                       "type": "string",
-                      "enum": [
-                        "ok"
-                      ]
+                      "enum": ["ok"]
                     },
                     "rulesVersion": {
                       "type": "string",
@@ -207,9 +181,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "label"
-                ],
+                "required": ["label"],
                 "properties": {
                   "label": {
                     "type": "string",
@@ -233,13 +205,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "id",
-                    "token",
-                    "label",
-                    "isServiceAccount",
-                    "createdAt"
-                  ],
+                  "required": ["id", "token", "label", "isServiceAccount", "createdAt"],
                   "properties": {
                     "id": {
                       "type": "string"
@@ -303,9 +269,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": [
-                    "tokens"
-                  ],
+                  "required": ["tokens"],
                   "properties": {
                     "tokens": {
                       "type": "array",

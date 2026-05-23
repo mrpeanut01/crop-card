@@ -203,8 +203,12 @@ describe('cross-tenant isolation', () => {
   it('Bearer token resolves to the issuing Owner and only that Owner', () => {
     const userA = `bearer-test-user-a-${randomUUID().slice(0, 8)}`;
     const userB = `bearer-test-user-b-${randomUUID().slice(0, 8)}`;
-    db.insert(users).values({ id: userA, email: `${userA}@test`, role: 'owner' }).run();
-    db.insert(users).values({ id: userB, email: `${userB}@test`, role: 'owner' }).run();
+    db.insert(users)
+      .values({ id: userA, email: `${userA}@test`, role: 'owner' })
+      .run();
+    db.insert(users)
+      .values({ id: userB, email: `${userB}@test`, role: 'owner' })
+      .run();
     db.insert(helperAssignments)
       .values({ ownerId: OWNER_A, userId: userA, roleWithinOwner: 'owner', status: 'active' })
       .run();
@@ -221,11 +225,13 @@ describe('cross-tenant isolation', () => {
     expect(rb?.ownerId).toBe(OWNER_B);
 
     // Each token, when used to scope a repo read, sees only its own Owner.
-    const aBlockIds = runWithTenant(ra!.ownerId, () =>
-      new Set(blocksRepo.listBlocks().map((b) => b.id))
+    const aBlockIds = runWithTenant(
+      ra!.ownerId,
+      () => new Set(blocksRepo.listBlocks().map((b) => b.id))
     );
-    const bBlockIds = runWithTenant(rb!.ownerId, () =>
-      new Set(blocksRepo.listBlocks().map((b) => b.id))
+    const bBlockIds = runWithTenant(
+      rb!.ownerId,
+      () => new Set(blocksRepo.listBlocks().map((b) => b.id))
     );
     for (const id of aBlockIds) expect(bBlockIds.has(id)).toBe(false);
     for (const id of bBlockIds) expect(aBlockIds.has(id)).toBe(false);

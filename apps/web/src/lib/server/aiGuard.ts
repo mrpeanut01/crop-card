@@ -82,7 +82,9 @@ function callsToday(userId: string, endpoint: AiEndpointName): number {
 
 function callsTodayByToken(tokenId: string, endpoint: AiEndpointName): number {
   const dayStart = utcDayStart();
-  unscopedQueryNote('per-token quota lookup keys on token id, not owner — branch lives in service-account path');
+  unscopedQueryNote(
+    'per-token quota lookup keys on token id, not owner — branch lives in service-account path'
+  );
   const rows = db
     .select({ id: aiCallLog.id })
     .from(aiCallLog)
@@ -100,12 +102,10 @@ function callsTodayByToken(tokenId: string, endpoint: AiEndpointName): number {
 function perTokenQuota(tokenId: string, endpoint: AiEndpointName): number | null {
   const column = TOKEN_QUOTA_COLUMN[endpoint];
   if (!column) return null;
-  unscopedQueryNote('read per-token quota override; row is owner-scoped so this is safe by composite key on id');
-  const row = db
-    .select()
-    .from(apiTokens)
-    .where(eq(apiTokens.id, tokenId))
-    .get();
+  unscopedQueryNote(
+    'read per-token quota override; row is owner-scoped so this is safe by composite key on id'
+  );
+  const row = db.select().from(apiTokens).where(eq(apiTokens.id, tokenId)).get();
   if (!row) return null;
   const v = row[column];
   return typeof v === 'number' ? v : null;

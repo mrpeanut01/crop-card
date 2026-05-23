@@ -42,7 +42,9 @@ function seedServiceAccountToken(): SeedResult {
   db.insert(owners)
     .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
     .run();
-  db.insert(users).values({ id: userId, email: `${userId}@test`, role: 'owner' }).run();
+  db.insert(users)
+    .values({ id: userId, email: `${userId}@test`, role: 'owner' })
+    .run();
   db.insert(helperAssignments)
     .values({ ownerId, userId, roleWithinOwner: 'owner', status: 'active' })
     .run();
@@ -61,7 +63,9 @@ function seedPersonalToken(): SeedResult {
   db.insert(owners)
     .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
     .run();
-  db.insert(users).values({ id: userId, email: `${userId}@test`, role: 'owner' }).run();
+  db.insert(users)
+    .values({ id: userId, email: `${userId}@test`, role: 'owner' })
+    .run();
   db.insert(helperAssignments)
     .values({ ownerId, userId, roleWithinOwner: 'owner', status: 'active' })
     .run();
@@ -110,7 +114,7 @@ function seedCalls(opts: {
 }
 
 describe('Phase 24 — service-account quota independence', () => {
-  it('a runaway service-account token does NOT drain the underlying user\'s daily quota', () => {
+  it("a runaway service-account token does NOT drain the underlying user's daily quota", () => {
     const { ownerId, userId, tokenId } = seedServiceAccountToken();
     // Saturate the SERVICE-ACCOUNT path with hundreds of `allocate` calls.
     seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: 200 });
@@ -140,10 +144,7 @@ describe('Phase 24 — service-account quota independence', () => {
   it('respects a per-token daily_quota_* override when set', () => {
     const { ownerId, userId, tokenId } = seedServiceAccountToken();
     // Bump the token's allocate quota to 1000 via Drizzle.
-    db.update(apiTokens)
-      .set({ dailyQuotaAllocate: 1000 })
-      .where(eq(apiTokens.id, tokenId))
-      .run();
+    db.update(apiTokens).set({ dailyQuotaAllocate: 1000 }).where(eq(apiTokens.id, tokenId)).run();
 
     // Log 100 calls under the token — well under 1000 but well over the
     // default of 5.

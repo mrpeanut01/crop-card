@@ -20,11 +20,10 @@
 <main class="api-tokens">
   <h1>API tokens</h1>
   <p class="hint">
-    Bearer credentials for external Claude agents that act on this farm's behalf
-    (UC-43). Each token is scoped to this Owner and inherits your role's
-    permissions. Tokens cannot mint other tokens or switch Owners. Revoke
-    immediately if leaked — the plaintext is shown <strong>once</strong> on
-    mint and never recoverable.
+    Bearer credentials for external Claude agents that act on this farm's behalf (UC-43). Each token
+    is scoped to this Owner and inherits your role's permissions. Tokens cannot mint other tokens or
+    switch Owners. Revoke immediately if leaked — the plaintext is shown <strong>once</strong> on mint
+    and never recoverable.
   </p>
 
   <section class="section">
@@ -40,19 +39,12 @@
           {copied ? 'Copied ✓' : 'Copy to clipboard'}
         </button>
         <p class="hint">
-          Stored as <code>sha256(plaintext)</code> in the DB. If you lose it,
-          revoke and mint a new one.
+          Stored as <code>sha256(plaintext)</code> in the DB. If you lose it, revoke and mint a new one.
         </p>
       </div>
     {/if}
     <form method="POST" action="?/mint" use:enhance class="form-row">
-      <input
-        type="text"
-        name="label"
-        placeholder="e.g. scouting-drone-1"
-        maxlength="64"
-        required
-      />
+      <input type="text" name="label" placeholder="e.g. scouting-drone-1" maxlength="64" required />
       <label class="checkbox">
         <input type="checkbox" name="isServiceAccount" />
         Service account (independent AI quota)

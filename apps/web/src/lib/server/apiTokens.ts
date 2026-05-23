@@ -90,7 +90,9 @@ export function issueToken(input: {
   label: string;
   isServiceAccount?: boolean;
 }): IssuedToken {
-  unscopedQueryNote('apiTokens insert is owner-scoped via ownerId column; lookup path is by token_hash');
+  unscopedQueryNote(
+    'apiTokens insert is owner-scoped via ownerId column; lookup path is by token_hash'
+  );
   const id = `tok_${Date.now()}_${randomBytes(4).toString('hex')}`;
   const token = generatePlaintext();
   const now = new Date();
@@ -120,7 +122,9 @@ export function issueToken(input: {
  */
 export function lookupByPlaintext(plaintext: string): ResolvedApiToken | null {
   if (!plaintext.startsWith(TOKEN_PREFIX)) return null;
-  unscopedQueryNote('Bearer lookup is cross-tenant by definition; result establishes tenant context');
+  unscopedQueryNote(
+    'Bearer lookup is cross-tenant by definition; result establishes tenant context'
+  );
   const hash = sha256Hex(plaintext);
   const rows = db.select().from(apiTokens).where(eq(apiTokens.tokenHash, hash)).all();
   if (rows.length === 0) return null;
@@ -157,7 +161,9 @@ export function touchToken(id: string): void {
   const delta = pendingDeltaByTokenId.get(id) ?? 0;
   pendingDeltaByTokenId.set(id, 0);
   try {
-    unscopedQueryNote('touchToken is keyed by token primary key; safe to update without ownerId guard');
+    unscopedQueryNote(
+      'touchToken is keyed by token primary key; safe to update without ownerId guard'
+    );
     const row = db
       .select({ requestCount: apiTokens.requestCount })
       .from(apiTokens)
@@ -179,12 +185,7 @@ export function touchToken(id: string): void {
  *  have it). Owner-only endpoint gates against helpers in the route. */
 export function listTokensForOwner(ownerId: string): ApiTokenSummary[] {
   unscopedQueryNote('owner-admin endpoint already gates by role; this lists their tenant only');
-  return db
-    .select()
-    .from(apiTokens)
-    .where(eq(apiTokens.ownerId, ownerId))
-    .all()
-    .map(rowToSummary);
+  return db.select().from(apiTokens).where(eq(apiTokens.ownerId, ownerId)).all().map(rowToSummary);
 }
 
 /** Revoke uses composite (owner_id, id) so an Owner cannot revoke

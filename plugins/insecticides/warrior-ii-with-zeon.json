@@ -3,11 +3,34 @@
   "type": "insecticide",
   "displayName": "Warrior II with Zeon (Syngenta lambda-cyhalothrin)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "lambda-cyhalothrin", "iracGroup": "3A" }],
+  "activeIngredients": [
+    {
+      "name": "lambda-cyhalothrin",
+      "iracGroup": "3A"
+    }
+  ],
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 1,
-  "ratePerAcre": { "amount": 1.92, "unit": "fl-oz" },
-  "targetPests": ["stink bug", "aphid", "leafhopper", "spider mite (suppression)", "European corn borer", "armyworm", "cabbage looper"],
+  "ratePerAcre": {
+    "amount": 1.92,
+    "unit": "fl-oz"
+  },
+  "targetPests": [
+    "stink bug",
+    "aphid",
+    "leafhopper",
+    "spider mite (suppression)",
+    "European corn borer",
+    "armyworm",
+    "cabbage looper"
+  ],
   "pollinatorRisk": "high",
-  "notes": "Pyrethroid IRAC 3A. Restricted-use. NOT during bloom — pollinator-toxic. Contact + residual."
+  "notes": "Pyrethroid IRAC 3A. Restricted-use. NOT during bloom — pollinator-toxic. Contact + residual.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

@@ -168,6 +168,63 @@ export const pluginOverrides = tenantScoped(
   )
 );
 
+/** Append-only version history for the global plugin catalog (Phase 22).
+ *  Each upload that changes a plugin's payload writes a new row + supersedes
+ *  the prior current row (`superseded_at = now`). The on-disk JSON under
+ *  `plugins/{kind}s/{pluginId}.json` always reflects the current row.
+ *
+ *  Replay safety: `spray_events.pluginHashesJson` resolves to a row here by
+ *  (pluginId, hash) even after the on-disk file is rotated or retired.
+ *
+ *  Retire/uninstall use the same table:
+ *  - retire sets `retiredAt` on the current row (reversible via unretire).
+ *  - uninstall hard-deletes payload-bearing rows for a pluginId AFTER a
+ *    server-side referencing-events check, then writes one tombstone row
+ *    with `payloadJson = ''` and `changeReason = 'uninstall'`.
+ *
+ *  GLOBAL: no `owner_id` column. Plugins are a single catalog per
+ *  CLAUDE.md invariant #2; per-tenant customization lives in
+ *  `plugin_overrides`. B-31 (marketplace) will introduce per-owner
+ *  installed-plugin state when multi-tenant requires it. */
+export const pluginVersions = sqliteTable(
+  'plugin_versions',
+  {
+    id: text('id').primaryKey(),
+    pluginId: text('plugin_id').notNull(),
+    /** Semver string. Server auto-bumps the patch on every payload change;
+     *  authors can override to a minor / major bump via the form. */
+    version: text('version').notNull(),
+    kind: text('kind', {
+      enum: ['crop', 'herbicide', 'insecticide', 'fungicide', 'fertilizer', 'companion']
+    }).notNull(),
+    /** SHA-256 of `payloadJson`. Matches the values stored in event rows'
+     *  `pluginHashesJson` so `getPluginByHash` can resolve historical
+     *  plugin state for export / replay. */
+    hash: text('hash').notNull(),
+    /** Full plugin JSON at this version. Empty string ('') on uninstall
+     *  tombstone rows. */
+    payloadJson: text('payload_json').notNull(),
+    changedByUserId: text('changed_by_user_id').references(() => users.id),
+    /** Free-text. Common values: 'initial-import', 'manual-edit',
+     *  'rollback to {version}', 'retire', 'unretire', 'uninstall'. */
+    changeReason: text('change_reason'),
+    /** {addedKeys[], removedKeys[], changedKeys[]} captured at write time
+     *  so the timeline UI does not need to re-diff on every render. */
+    diffSummaryJson: text('diff_summary_json'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    /** NULL = current. Non-null when a newer version row has been written. */
+    supersededAt: integer('superseded_at', { mode: 'timestamp_ms' }),
+    /** Soft-delete timestamp. NULL = active; set by retire / uninstall. */
+    retiredAt: integer('retired_at', { mode: 'timestamp_ms' })
+  },
+  (table) => ({
+    pluginIdx: index('plugin_versions_plugin_idx').on(table.pluginId, table.createdAt),
+    hashIdx: index('plugin_versions_hash_idx').on(table.pluginId, table.hash)
+  })
+);
+
 /** Subscription state per Owner. Stripe IDs are nullable now — billing
  *  hookup is a code-only change later (no migration). */
 export const ownerSubscriptions = sqliteTable('owner_subscriptions', {
@@ -1024,6 +1081,24 @@ export const tasks = tenantScoped(
       staleAnchor: integer('stale_anchor', { mode: 'boolean' }).notNull().default(false),
       supersededByTaskId: text('superseded_by_task_id'),
       createdById: text('created_by_id').references(() => users.id),
+      // Phase 21b follow-up — authoritative task type for the swim-lane
+      // pip glyph + popover category dropdown. Plugin pre/post/seasonal
+      // task schemas, the inputs-plan commit, and manual entry surfaces
+      // all stamp this. Nullable for v1 plugin / legacy row back-compat.
+      category: text('category', {
+        enum: [
+          'plant',
+          'till',
+          'fertilize',
+          'spray',
+          'scout',
+          'companion-check',
+          'prune',
+          'harvest',
+          'hay-cutting',
+          'other'
+        ]
+      }),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
         .default(sql`(unixepoch() * 1000)`)
@@ -1033,7 +1108,8 @@ export const tasks = tenantScoped(
         table.ownerId,
         table.scheduledFor
       ),
-      ownerCropIdx: index('tasks_owner_crop_idx').on(table.ownerId, table.cropId)
+      ownerCropIdx: index('tasks_owner_crop_idx').on(table.ownerId, table.cropId),
+      categoryIdx: index('tasks_category_idx').on(table.category)
     })
   )
 );
@@ -1056,7 +1132,10 @@ export const aiCallLog = tenantScoped(
           'allocate',
           'groups',
           'shortNames',
-          'inputs'
+          'inputs',
+          'plugin-scan',
+          'plugin-search',
+          'plugin-batch-scan'
         ]
       }).notNull(),
       model: text('model').notNull(),

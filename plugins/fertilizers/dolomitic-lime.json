@@ -3,10 +3,27 @@
   "type": "fertilizer",
   "displayName": "Dolomitic Lime (Ca + Mg carbonate)",
   "version": "1.0.0",
-  "analysis": { "n": 0, "p": 0, "k": 0 },
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
   "form": "granular",
   "organic": true,
-  "secondaryNutrients": { "ca": 22, "mg": 11 },
-  "applicationRange": { "min": 1, "max": 4, "unit": "ton-per-acre" },
-  "notes": "Lime + magnesium correction. Use when soil-test Mg is low. Slow reactivity vs calcitic — apply 6 mo ahead."
+  "secondaryNutrients": {
+    "ca": 22,
+    "mg": 11
+  },
+  "applicationRange": {
+    "min": 1,
+    "max": 4,
+    "unit": "ton-per-acre"
+  },
+  "notes": "Lime + magnesium correction. Use when soil-test Mg is low. Slow reactivity vs calcitic — apply 6 mo ahead.",
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": true
+  },
+  "pluginSchemaVersion": "1.1"
 }

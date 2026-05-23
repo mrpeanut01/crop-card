@@ -5,15 +5,41 @@
   "version": "1.0.0",
   "applicationTiming": "PRE",
   "activeIngredients": [
-    { "name": "atrazine", "chemistryClass": "photosystem-ii-triazine" },
-    { "name": "S-metolachlor", "chemistryClass": "chloroacetamide" },
-    { "name": "mesotrione", "chemistryClass": "hppd-inhibitor" },
-    { "name": "bicyclopyrone", "chemistryClass": "hppd-inhibitor" }
+    {
+      "name": "atrazine",
+      "chemistryClass": "photosystem-ii-triazine"
+    },
+    {
+      "name": "S-metolachlor",
+      "chemistryClass": "chloroacetamide"
+    },
+    {
+      "name": "mesotrione",
+      "chemistryClass": "hppd-inhibitor"
+    },
+    {
+      "name": "bicyclopyrone",
+      "chemistryClass": "hppd-inhibitor"
+    }
   ],
-  "ratePerAcre": { "amount": 2.5, "unit": "qt" },
+  "ratePerAcre": {
+    "amount": 2.5,
+    "unit": "qt"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 6,
-  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer"] },
-  "notes": "Four-mode-of-action corn premix. PRE / early POST. Restricted-use due to atrazine."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "corn-feed-dent-pioneer"
+    ]
+  },
+  "notes": "Four-mode-of-action corn premix. PRE / early POST. Restricted-use due to atrazine.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

@@ -4,18 +4,51 @@
   "displayName": "Aatrex 4L (Syngenta atrazine)",
   "version": "1.0.0",
   "applicationTiming": "PRE",
-  "activeIngredients": [{ "name": "atrazine", "chemistryClass": "photosystem-ii-triazine" }],
-  "ratePerAcre": { "amount": 2, "unit": "qt" },
+  "activeIngredients": [
+    {
+      "name": "atrazine",
+      "chemistryClass": "photosystem-ii-triazine"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 2,
+    "unit": "qt"
+  },
   "gpaCalibration": 15,
   "dilutionTable": {
-    "10gal":  { "amount": 42.7, "unit": "fl-oz" },
-    "25gal":  { "amount": 106.7, "unit": "fl-oz" },
-    "50gal":  { "amount": 213.3, "unit": "fl-oz" },
-    "100gal": { "amount": 426.7, "unit": "fl-oz" }
+    "10gal": {
+      "amount": 42.7,
+      "unit": "fl-oz"
+    },
+    "25gal": {
+      "amount": 106.7,
+      "unit": "fl-oz"
+    },
+    "50gal": {
+      "amount": 213.3,
+      "unit": "fl-oz"
+    },
+    "100gal": {
+      "amount": 426.7,
+      "unit": "fl-oz"
+    }
   },
   "requiresAMS": false,
   "deconRequired": true,
   "tankMixOrder": 6,
-  "labelClaims": { "safeForCropPluginIds": ["corn-bloody-butcher", "corn-feed-dent-pioneer", "sorghum-grain-pioneer"] },
-  "notes": "Restricted-use; groundwater-protection setbacks apply. PRE / early POST corn + sorghum only. Long soil residual (12-mo rotation to broadleaves)."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "corn-bloody-butcher",
+      "corn-feed-dent-pioneer",
+      "sorghum-grain-pioneer"
+    ]
+  },
+  "notes": "Restricted-use; groundwater-protection setbacks apply. PRE / early POST corn + sorghum only. Long soil residual (12-mo rotation to broadleaves).",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

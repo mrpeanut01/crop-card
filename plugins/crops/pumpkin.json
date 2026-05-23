@@ -23,7 +23,9 @@
       "offsetDaysMin": 30,
       "offsetDaysMax": 60,
       "title": "POST grass window (Clethodim)",
-      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon."
+      "body": "For grass escapes in the cucurbit block. Verify sprayer never carried auxin without decon.",
+      "purpose": "post-emergent"
     }
-  ]
+  ],
+  "pluginSchemaVersion": "1.1"
 }

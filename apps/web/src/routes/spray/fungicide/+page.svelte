@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
+  import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
 
   let { data } = $props();
 
@@ -117,6 +119,12 @@
         : 'n/a';
       result = `Recorded — REI clear ${reiClear} · PHI clear ${phiClear}.`;
       if (Array.isArray(payload.stockWarnings)) warnings = payload.stockWarnings;
+      // Phase 21b follow-up — hop back to the swim-lane so the pip
+      // flips to green (server set completedAt + relatedEventId).
+      if (data.preselect.taskId) {
+        goto('/plan?tab=schedule&view=swimlane');
+        return;
+      }
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
     } finally {
@@ -167,7 +175,7 @@
         <legend>Tank-mix products</legend>
         {#each productsByFrac as [frac, items] (frac)}
           <div class="frac-row">
-            <span class="frac-pill" title="FRAC group {frac}">FRAC {frac}</span>
+            <GroupCodeBadge kind="FRAC" group={frac} />
             <ul class="frac-items">
               {#each items as f (f.pluginId)}
                 <li>
@@ -365,15 +373,6 @@
     padding: 0.5rem;
     border: 1px solid #eee;
     border-radius: 6px;
-  }
-  .frac-pill {
-    flex: 0 0 auto;
-    padding: 0.25rem 0.5rem;
-    background: #eef2ff;
-    color: #3730a3;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 0.85rem;
   }
   .frac-items {
     list-style: none;

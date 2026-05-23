@@ -5,12 +5,28 @@
   "version": "1.0.0",
   "applicationTiming": "POST",
   "activeIngredients": [
-    { "name": "2,4-D 2-ethylhexyl ester", "chemistryClass": "synthetic-auxin" },
-    { "name": "triclopyr butoxyethyl ester", "chemistryClass": "synthetic-auxin" }
+    {
+      "name": "2,4-D 2-ethylhexyl ester",
+      "chemistryClass": "synthetic-auxin"
+    },
+    {
+      "name": "triclopyr butoxyethyl ester",
+      "chemistryClass": "synthetic-auxin"
+    }
   ],
-  "ratePerAcre": { "amount": 1.5, "unit": "qt" },
+  "ratePerAcre": {
+    "amount": 1.5,
+    "unit": "qt"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 5,
-  "notes": "Brush + woody species control on pasture / fence-line / hay. Highly drift-prone over broadleaves and orchards. Hay PHI applies."
+  "notes": "Brush + woody species control on pasture / fence-line / hay. Highly drift-prone over broadleaves and orchards. Hay PHI applies.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

@@ -3,9 +3,24 @@
   "type": "fertilizer",
   "displayName": "DAP — Diammonium Phosphate (18-46-0)",
   "version": "1.0.0",
-  "analysis": { "n": 18, "p": 46, "k": 0 },
+  "analysis": {
+    "n": 18,
+    "p": 46,
+    "k": 0
+  },
   "form": "granular",
   "organic": false,
-  "applicationRange": { "min": 50, "max": 200, "unit": "lb-per-acre" },
-  "notes": "Higher-N phosphate than MAP. Some seed-row injury risk on direct-band; offset by 2 in or use MAP for in-furrow."
+  "applicationRange": {
+    "min": 50,
+    "max": 200,
+    "unit": "lb-per-acre"
+  },
+  "notes": "Higher-N phosphate than MAP. Some seed-row injury risk on direct-band; offset by 2 in or use MAP for in-furrow.",
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

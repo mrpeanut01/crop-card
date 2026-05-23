@@ -1,15 +1,42 @@
 {
   "pluginId": "blackberry-triple-crown",
   "type": "crop",
-  "displayName": "Blackberry — Triple Crown (thornless)",
+  "displayName": "Blackberry \u2014 Triple Crown (thornless)",
   "version": "1.0.0",
   "cropFamily": "bramble",
   "defaultRowSpacingInches": 96,
   "seasonalTasks": [
-    { "key": "post-harvest-prune", "kind": "pruning", "dayOfYear": 240, "windowDays": 30, "title": "Remove fruited floricanes", "body": "Prune out fruited canes to ground after harvest; train current-year primocanes to wires." },
-    { "key": "tip-primocanes", "kind": "pruning", "dayOfYear": 175, "windowDays": 21, "title": "Tip primocanes at 4 ft", "body": "Encourages lateral branching for next year's crop." },
-    { "key": "harvest", "kind": "harvest", "dayOfYear": 200, "windowDays": 35, "title": "Blackberry harvest", "body": "Pick fully black + dull (not glossy). Glossy = not ripe." }
+    {
+      "key": "post-harvest-prune",
+      "kind": "pruning",
+      "dayOfYear": 240,
+      "windowDays": 30,
+      "title": "Remove fruited floricanes",
+      "body": "Prune out fruited canes to ground after harvest; train current-year primocanes to wires.",
+      "category": "prune"
+    },
+    {
+      "key": "tip-primocanes",
+      "kind": "pruning",
+      "dayOfYear": 175,
+      "windowDays": 21,
+      "title": "Tip primocanes at 4 ft",
+      "body": "Encourages lateral branching for next year's crop.",
+      "category": "prune"
+    },
+    {
+      "key": "harvest",
+      "kind": "harvest",
+      "dayOfYear": 200,
+      "windowDays": 35,
+      "title": "Blackberry harvest",
+      "body": "Pick fully black + dull (not glossy). Glossy = not ripe.",
+      "category": "harvest"
+    }
   ],
-  "harvestIndicators": ["Fully black, slightly soft", "Easy pull"],
-  "notes": "Thornless semi-erect blackberry. Hardy to -10 °F; trellis at 4 ft + 6 ft wires."
+  "harvestIndicators": [
+    "Fully black, slightly soft",
+    "Easy pull"
+  ],
+  "notes": "Thornless semi-erect blackberry. Hardy to -10 \u00b0F; trellis at 4 ft + 6 ft wires."
 }

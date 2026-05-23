@@ -70,7 +70,26 @@ export const DEFAULT_AI_DAILY_QUOTA = {
    *  of the deterministic InputsPlan. Capped low because each refinement
    *  is a non-trivial call; the deterministic baseline always works
    *  when the quota's spent. */
-  inputs: 10
+  inputs: 10,
+  /** Stock metadata refresh — enriches a stock-item row from product
+   *  label + web sources (chemistry / FRAC / IRAC / NPK / planter-plate
+   *  spec). Per-item one-shot; the user triggers manually via the
+   *  Refresh AI button on Stock. */
+  rationale: 20,
+  /** Phase 22 / PR3 — Plugin Manager label scan. One AI call per photo;
+   *  produces a single plugin candidate that the operator confirms before
+   *  commit. */
+  'plugin-scan': 10,
+  /** Phase 22 / PR3 — Plugin Manager name search. Types a partial product
+   *  name and gets ≤3 ranked candidates via web_search. Local fuzzy
+   *  matches against the live registry do NOT consume quota. */
+  'plugin-search': 15,
+  /** Phase 22 / PR4 — Plugin Manager receipt / manifest scan. ONE quota
+   *  call per receipt regardless of how many line items it contains. The
+   *  per-line enrichment that follows uses the existing 'plugin-search'
+   *  quota since each line item triggers a web_search to fill the plugin
+   *  shape. Cap intentionally low — a receipt is a high-leverage import. */
+  'plugin-batch-scan': 5
 } as const;
 
 export type AiEndpointName = keyof typeof DEFAULT_AI_DAILY_QUOTA;

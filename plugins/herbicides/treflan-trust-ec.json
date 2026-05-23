@@ -4,11 +4,32 @@
   "displayName": "Treflan / Trust HFP (trifluralin EC)",
   "version": "1.0.0",
   "applicationTiming": "PRE",
-  "activeIngredients": [{ "name": "trifluralin", "chemistryClass": "microtubule-inhibitor" }],
-  "ratePerAcre": { "amount": 1.5, "unit": "pt" },
+  "activeIngredients": [
+    {
+      "name": "trifluralin",
+      "chemistryClass": "microtubule-inhibitor"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1.5,
+    "unit": "pt"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 5,
-  "labelClaims": { "safeForCropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend", "carrot-nantes-half-long", "lettuce-romaine-paris-island-cos"] },
-  "notes": "Pre-plant incorporated dinitroaniline. Soybean / cole crops / carrot label. Must mechanically incorporate within 24 h."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "soybean-asgrow-roundup-ready-2-xtend",
+      "carrot-nantes-half-long",
+      "lettuce-romaine-paris-island-cos"
+    ]
+  },
+  "notes": "Pre-plant incorporated dinitroaniline. Soybean / cole crops / carrot label. Must mechanically incorporate within 24 h.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

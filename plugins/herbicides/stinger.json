@@ -4,14 +4,40 @@
   "displayName": "Stinger (Corteva clopyralid)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "clopyralid", "chemistryClass": "synthetic-auxin" }],
-  "ratePerAcre": { "amount": 0.25, "unit": "pt" },
+  "activeIngredients": [
+    {
+      "name": "clopyralid",
+      "chemistryClass": "synthetic-auxin"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 0.25,
+    "unit": "pt"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,
-  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "wheat-soft-red-winter", "barley-grain-thoroughbred"] },
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "corn-feed-dent-pioneer",
+      "wheat-soft-red-winter",
+      "barley-grain-thoroughbred"
+    ]
+  },
   "traitGatedSafeFor": [
-    { "cropPluginId": "strawberry-jewel", "requiresTraits": ["native-clopyralid-tolerant"] }
+    {
+      "cropPluginId": "strawberry-jewel",
+      "requiresTraits": [
+        "native-clopyralid-tolerant"
+      ]
+    }
   ],
-  "notes": "Clopyralid is uniquely-narrow synthetic auxin — controls Asteraceae (thistles, ragweed) without harming grass crops. Phase 11 trait override: the strawberry establishment label is honored because strawberry-jewel declares native-clopyralid-tolerant; without that trait the synthetic-auxin → small-fruit kernel rule still blocks."
+  "notes": "Clopyralid is uniquely-narrow synthetic auxin — controls Asteraceae (thistles, ragweed) without harming grass crops. Phase 11 trait override: the strawberry establishment label is honored because strawberry-jewel declares native-clopyralid-tolerant; without that trait the synthetic-auxin → small-fruit kernel rule still blocks.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

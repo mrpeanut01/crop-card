@@ -4,11 +4,31 @@
   "displayName": "Warrant (Bayer encapsulated acetochlor)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "acetochlor (encapsulated)", "chemistryClass": "chloroacetamide" }],
-  "ratePerAcre": { "amount": 3, "unit": "pt" },
+  "activeIngredients": [
+    {
+      "name": "acetochlor (encapsulated)",
+      "chemistryClass": "chloroacetamide"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 3,
+    "unit": "pt"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 3,
-  "labelClaims": { "safeForCropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend", "corn-feed-dent-pioneer"] },
-  "notes": "Microencapsulated POST chloroacetamide — overlapping residual on soybeans + corn. Tank-mix with glyphosate or Liberty."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "soybean-asgrow-roundup-ready-2-xtend",
+      "corn-feed-dent-pioneer"
+    ]
+  },
+  "notes": "Microencapsulated POST chloroacetamide — overlapping residual on soybeans + corn. Tank-mix with glyphosate or Liberty.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

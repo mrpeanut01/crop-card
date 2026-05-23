@@ -3,11 +3,33 @@
   "type": "insecticide",
   "displayName": "Brigade 2EC (FMC bifenthrin)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "bifenthrin", "iracGroup": "3A" }],
+  "activeIngredients": [
+    {
+      "name": "bifenthrin",
+      "iracGroup": "3A"
+    }
+  ],
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
-  "ratePerAcre": { "amount": 6.4, "unit": "fl-oz" },
-  "targetPests": ["spider mite", "stink bug", "thrips", "aphid", "armyworm", "cucumber beetle"],
+  "ratePerAcre": {
+    "amount": 6.4,
+    "unit": "fl-oz"
+  },
+  "targetPests": [
+    "spider mite",
+    "stink bug",
+    "thrips",
+    "aphid",
+    "armyworm",
+    "cucumber beetle"
+  ],
   "pollinatorRisk": "high",
-  "notes": "Pyrethroid IRAC 3A. Mite-suppression activity. Restricted-use; no bloom application."
+  "notes": "Pyrethroid IRAC 3A. Mite-suppression activity. Restricted-use; no bloom application.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

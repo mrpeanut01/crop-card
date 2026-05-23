@@ -4,11 +4,34 @@
   "displayName": "Clethodim 2EC (generic — Volunteer / Select Max equivalents)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "clethodim", "chemistryClass": "accase-inhibitor" }],
-  "ratePerAcre": { "amount": 8, "unit": "fl-oz" },
+  "activeIngredients": [
+    {
+      "name": "clethodim",
+      "chemistryClass": "accase-inhibitor"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 8,
+    "unit": "fl-oz"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,
-  "labelClaims": { "safeForCropPluginIds": ["soybean-asgrow-roundup-ready-2-xtend", "pumpkin-ez-gro-monster", "tomato-roma-vf", "potato-yukon-gold", "snap-pea-sugar-snap"] },
-  "notes": "Generic clethodim 2 lb a.i./gal EC. Selective grass killer — soybean / vegetable POST. NEVER over corn or cereals."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "soybean-asgrow-roundup-ready-2-xtend",
+      "pumpkin-ez-gro-monster",
+      "tomato-roma-vf",
+      "potato-yukon-gold",
+      "snap-pea-sugar-snap"
+    ]
+  },
+  "notes": "Generic clethodim 2 lb a.i./gal EC. Selective grass killer — soybean / vegetable POST. NEVER over corn or cereals.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

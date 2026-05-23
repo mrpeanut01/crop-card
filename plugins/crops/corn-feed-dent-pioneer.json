@@ -1,7 +1,7 @@
 {
   "pluginId": "corn-feed-dent-pioneer",
   "type": "crop",
-  "displayName": "Field Corn \u2014 Pioneer P1257AM (RR2 + YGCB, dent)",
+  "displayName": "Field Corn — Pioneer P1257AM (RR2 + YGCB, dent)",
   "version": "1.0.0",
   "cropFamily": "corn",
   "daysToMaturity": {
@@ -27,7 +27,7 @@
   ],
   "harvestIndicators": [
     "Black layer at kernel base",
-    "Grain moisture 25\u201330% (high-moisture corn) or 15\u201318% (dry corn)"
+    "Grain moisture 25–30% (high-moisture corn) or 15–18% (dry corn)"
   ],
   "notes": "Standard Mid-Atlantic dent corn. Roundup Ready 2 + YieldGard CB (corn borer) traited. 110 d maturity fits Loudoun County. Phase 11 trait override: halex-gt + roundup-powermax-3 are tolerated thanks to the RR2 trait.",
   "agronomy": {
@@ -41,8 +41,9 @@
       "anchor": "stage",
       "offsetDaysMin": 0,
       "offsetDaysMax": 0,
-      "title": "POST broadleaf scout window (V2\u2013V3)",
-      "body": "Scout block; if \u22653 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted."
+      "title": "POST broadleaf scout window (V2–V3)",
+      "body": "Scout block; if ≥3 broadleaves per 10 sq ft, plan a 2,4-D spray. Block-level lockout if companions are co-planted.",
+      "purpose": "post-emergent"
     },
     {
       "chemistryClass": "hppd-inhibitor",
@@ -50,8 +51,10 @@
       "anchor": "stage",
       "offsetDaysMin": 0,
       "offsetDaysMax": 0,
-      "title": "POST grass + late broadleaf window (V4\u2013V6)",
-      "body": "Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin."
+      "title": "POST grass + late broadleaf window (V4–V6)",
+      "body": "Window for Mesotrione + Stadia. Verify decon if sprayer last ran auxin.",
+      "purpose": "post-emergent"
     }
-  ]
+  ],
+  "pluginSchemaVersion": "1.1"
 }

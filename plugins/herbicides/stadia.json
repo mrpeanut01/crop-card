@@ -4,7 +4,20 @@
   "displayName": "Stadia",
   "version": "1.0.0",
   "activeIngredients": [
-    { "name": "rimsulfuron", "chemistryClass": "sulfonylurea" }
+    {
+      "name": "rimsulfuron",
+      "chemistryClass": "sulfonylurea"
+    }
   ],
-  "ratePerAcre": { "amount": 1, "unit": "oz" }
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "oz"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

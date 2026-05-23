@@ -114,6 +114,35 @@ These are not feature work; they are corrections to the spec doc itself. **Being
 - **See:** [phase-21-plan.md §D](./phase-21-plan.md#sub-task-d--ai-refinement-layer), issue #44.
 - **Estimate:** ~1 day.
 
+### B-31 · Phase 23 — Standalone Plugin Marketplace (UC-44, UC-45)
+
+- **Persona:** P7 (new — Plugin maintainer / marketplace operator; add to `personas.md` in Sub-task A).
+- **Why P0:** Today, plugin sharing is filesystem-only (zip + email per the [/plugins/community](../apps/web/src/routes/plugins/community/+page.svelte) stub). Multi-farm scenarios are blocked. This phase ships a standalone server (separate Container App, separate SQLite + Litestream) hosting plugin JSON with authenticated uploads, malware + injection scanning, and an admin review queue.
+- **Epic:** Phase 23. Tracker: [phase-23-marketplace.md](./phase-23-marketplace.md).
+- **Scope:** Seven sub-tasks:
+  - **A** Shared validation package (`packages/plugin-validation/`) + safety snapshot — lifts Zod schemas + bypass check; CropCard re-exports for back-compat.
+  - **B** Marketplace skeleton + DB + infra — `apps/marketplace/`, Drizzle schema, multi-target Dockerfile, second Container App in Bicep, second Litestream `dbs[]` entry.
+  - **C** Auth — Bearer (`ccm_…`) for consuming apps; magic-link HMAC sessions for admin UI.
+  - **D** Read API — list / get / by-hash / feed under `/api/v1/`.
+  - **E** Upload pipeline + scan — size cap, JSON structural, injection sweep, prompt-injection heuristics, ClamAV sidecar, schema, bypass, dedup.
+  - **F** Admin UI — dashboard, sources, review queue, audit log.
+  - **G** Bulk import — CLI + `/admin/import` to seed the marketplace from the repo's existing ~60 plugins.
+- **Acceptance:** standalone marketplace serves CropCard-shipped plugins via authenticated `/api/v1/`; community-tier uploads quarantine in `pending_review`; injection / bypass payloads rejected with audit trail; CropCard's existing 680 tests still pass under the shared-package refactor.
+- **Estimate:** ~9.75 days across 7 PRs. Branch `phase-23-marketplace` off `main` (NOT off `phase-21b-planner`).
+
+### B-30 · Phase 22 — External Agent API (UC-43)
+
+- **Persona:** P6 (new — Integrator / automation owner; add to `personas.md` in Sub-task A).
+- **Why P0:** Backend audit (2026-05-22) confirmed the JSON API is already coherent and server-side safety re-validation is robust. The only blockers to external Claude-agent orchestration are auth, CSRF, discoverability, and per-user AI quota. Four small additions unlock farm-scale automation (scheduling, scouting drone uploads, accounting bridges) without re-hardening the safety surface.
+- **Epic:** #59. Tracker: [phase-22-agent-api.md](./phase-22-agent-api.md).
+- **Scope:** Four sub-tasks:
+  - **A** issue #55 — API token auth: `api_tokens` table + `POST /api/auth/token` + Bearer middleware in `hooks.server.ts`.
+  - **B** issue #56 — CSRF / Origin bridge: Bearer-authed requests bypass SvelteKit's same-origin check; cookie-session requests still enforce it.
+  - **C** issue #57 — OpenAPI schema: generate from existing Zod schemas, serve at `/api/openapi.json`.
+  - **D** issue #58 — Service-account quota policy: per-token `aiGuard` counter so a scouting drone doesn't eat the human owner's daily quota.
+- **Acceptance:** an external Python script with `Authorization: Bearer cck_…` can read `/api/today`, POST `/api/spray/record`, and walk `/api/plan/inputs/refine` without touching the browser UI; cross-tenant test extended with a Bearer path passes.
+- **Estimate:** ~3.75 days across 4 PRs.
+
 ---
 
 ## 3 — P1 backlog (ship this season)
@@ -165,14 +194,6 @@ These are not feature work; they are corrections to the spec doc itself. **Being
 - **Acceptance:** Sherry registers a 12-ft Lemken plough from a template in <30 s.
 - **Estimate:** 0.5 day. Issue #19.
 
-### B-21 · HRAC / IRAC / FRAC group-code badges
-
-- **Persona:** P1.
-- **Why P1 (promoted from P2):** Becomes more valuable once the Phase 21 inputs planner ships — resistance management is a planning concern, and visible group codes let the operator avoid back-to-back same-group passes when refining the AI's substitutions. All data is wired (`ChemistryProfile.hracGroup`, `activeIngredients.iracGroup`, `activeIngredients.fracCode`) — no consumer renders them.
-- **Scope:** Small color-coded badge next to each product in `/spray` herbicide list, `/spray/fungicide` (after B-18), and `/plugins`. Same palette as the kernel decon banner.
-- **Acceptance:** Owner sees an HRAC-2 badge next to all sulfonylureas and can plan rotation by eye.
-- **Estimate:** 0.5 day. Issue #30.
-
 ### B-07 · UC-26 sidebar navigation + footer
 
 - **Persona:** P1, P2, P5.
@@ -198,6 +219,19 @@ These are not feature work; they are corrections to the spec doc itself. **Being
 | B-16 | Sync-queue conflict resolution beyond last-write-wins | UC-12 | 1.5d | Single-farm scope per CLAUDE.md — defer. Issue #28 |
 | B-17 | Orchard / vine-fruit growth-stage templates | UC-40 | 0.5d | Pair with B-14. Issue #29 |
 | B-30 | Top-nav active-page tab styling (display-only) | UC-26 sibling | 1h | Visual-only: render the active route's nav item as a graphical "tab" wrapped around the button (rounded top corners, page-background fill, lifted shadow). No routing change. Current active style is a 3-px `border-top` accent at [`+layout.svelte:459`](../apps/web/src/routes/+layout.svelte#L459). Sits underneath UC-26 sidebar redesign (B-07) but valuable until that ships. Issue #47. |
+
+### B-31 · Signed plugins + community marketplace
+
+- **Persona:** P1 (consumer) + future plugin authors.
+- **Why P2:** Trust + discovery. Today every uploaded plugin is implicitly trusted by the receiving farm; a public marketplace needs author attestation, content-addressable storage, and a moderation queue. Per-owner installed-plugin state also has to replace the current global retire/uninstall (CLAUDE.md note: plugin retire is global today; multi-tenant launch will hit this).
+- **Scope sketch:**
+  - Plugin manifest gains `author: { name, email, publicKey }` + `signature: ed25519(hash)`.
+  - Marketplace fetch endpoint returns signed manifests; verify against a trusted-author keyring before `register()`.
+  - `/plugins/community` route ([apps/web/src/routes/plugins/community/+page.svelte](../apps/web/src/routes/plugins/community/+page.svelte) stub already exists) becomes a real catalog with search, ratings, install button.
+  - Per-owner trust list — owner explicitly opts in to authors.
+  - Per-owner installed state — `plugin_overrides` table (already present in Phase 18) carries the per-tenant "installed" flag; retire/uninstall stop being global.
+- **Estimate:** 3-5 days; not blocking any persona's core journey today.
+- **Depends on:** Phase 22 versioning + diff infra (PR1) — the marketplace install flow is just a remote `POST /api/plugins/upload` with a signed payload.
 
 ---
 

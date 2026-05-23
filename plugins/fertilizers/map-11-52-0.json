@@ -3,9 +3,24 @@
   "type": "fertilizer",
   "displayName": "MAP — Monoammonium Phosphate (11-52-0)",
   "version": "1.0.0",
-  "analysis": { "n": 11, "p": 52, "k": 0 },
+  "analysis": {
+    "n": 11,
+    "p": 52,
+    "k": 0
+  },
   "form": "granular",
   "organic": false,
-  "applicationRange": { "min": 50, "max": 200, "unit": "lb-per-acre" },
-  "notes": "Phosphate starter — soil-band at planting. Less ammonia volatility than DAP. Soil-test based rate."
+  "applicationRange": {
+    "min": 50,
+    "max": 200,
+    "unit": "lb-per-acre"
+  },
+  "notes": "Phosphate starter — soil-band at planting. Less ammonia volatility than DAP. Soil-test based rate.",
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

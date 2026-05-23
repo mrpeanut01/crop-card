@@ -4,11 +4,26 @@
   "displayName": "Touchdown HiTech (Syngenta)",
   "version": "1.0.0",
   "applicationTiming": "BURNDOWN",
-  "activeIngredients": [{ "name": "glyphosate potassium salt", "chemistryClass": "glyphosate" }],
-  "ratePerAcre": { "amount": 24, "unit": "fl-oz" },
+  "activeIngredients": [
+    {
+      "name": "glyphosate potassium salt",
+      "chemistryClass": "glyphosate"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 24,
+    "unit": "fl-oz"
+  },
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": false,
   "tankMixOrder": 3,
-  "notes": "Syngenta brand glyphosate K-salt; equivalent burndown spectrum to Roundup PowerMAX. AMS recommended."
+  "notes": "Syngenta brand glyphosate K-salt; equivalent burndown spectrum to Roundup PowerMAX. AMS recommended.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

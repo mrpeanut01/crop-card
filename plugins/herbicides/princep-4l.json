@@ -4,11 +4,32 @@
   "displayName": "Princep 4L (Syngenta simazine)",
   "version": "1.0.0",
   "applicationTiming": "PRE",
-  "activeIngredients": [{ "name": "simazine", "chemistryClass": "photosystem-ii-triazine" }],
-  "ratePerAcre": { "amount": 1.6, "unit": "qt" },
+  "activeIngredients": [
+    {
+      "name": "simazine",
+      "chemistryClass": "photosystem-ii-triazine"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1.6,
+    "unit": "qt"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 6,
-  "labelClaims": { "safeForCropPluginIds": ["apple-orchard", "grape-concord", "grape-cabernet-franc"] },
-  "notes": "PRE soil-active triazine for orchard floor + vineyard row weed control. Long residual; do not use over young establishment."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "apple-orchard",
+      "grape-concord",
+      "grape-cabernet-franc"
+    ]
+  },
+  "notes": "PRE soil-active triazine for orchard floor + vineyard row weed control. Long residual; do not use over young establishment.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

@@ -4,13 +4,40 @@
   "displayName": "Microthiol Disperss (UPL sulfur — OMRI)",
   "version": "1.0.0",
   "applicationTiming": "COVER",
-  "activeIngredients": [{ "name": "sulfur", "fracCode": "M02" }],
-  "ratePerAcre": { "amount": 8, "unit": "lb" },
+  "activeIngredients": [
+    {
+      "name": "sulfur",
+      "fracCode": "M02"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 8,
+    "unit": "lb"
+  },
   "gpaCalibration": 50,
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "none",
-  "targetDiseases": ["powdery mildew", "rust", "scab (suppression)", "apple rust mite (incidental)"],
-  "labelClaims": { "safeForCropFamilies": ["orchard", "vine-fruit", "small-fruit", "solanaceae", "cucurbit"] },
-  "notes": "OMRI organic micronized sulfur. Multi-site M02. Phytotox >85 °F; do NOT tank-mix with oil within 14 d."
+  "targetDiseases": [
+    "powdery mildew",
+    "rust",
+    "scab (suppression)",
+    "apple rust mite (incidental)"
+  ],
+  "labelClaims": {
+    "safeForCropFamilies": [
+      "orchard",
+      "vine-fruit",
+      "small-fruit",
+      "solanaceae",
+      "cucurbit"
+    ]
+  },
+  "notes": "OMRI organic micronized sulfur. Multi-site M02. Phytotox >85 °F; do NOT tank-mix with oil within 14 d.",
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": true
+  },
+  "pluginSchemaVersion": "1.1"
 }

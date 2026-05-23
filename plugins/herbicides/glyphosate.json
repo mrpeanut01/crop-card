@@ -4,7 +4,20 @@
   "displayName": "Glyphosate 41%",
   "version": "1.0.0",
   "activeIngredients": [
-    { "name": "glyphosate", "chemistryClass": "glyphosate" }
+    {
+      "name": "glyphosate",
+      "chemistryClass": "glyphosate"
+    }
   ],
-  "ratePerAcre": { "amount": 32, "unit": "fl-oz" }
+  "ratePerAcre": {
+    "amount": 32,
+    "unit": "fl-oz"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

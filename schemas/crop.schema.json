@@ -18,6 +18,13 @@
       "type": "string",
       "minLength": 1
     },
+    "pluginSchemaVersion": {
+      "type": "string",
+      "enum": [
+        "1.0",
+        "1.1"
+      ]
+    },
     "type": {
       "type": "string",
       "const": "crop"
@@ -278,6 +285,21 @@
           },
           "body": {
             "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "plant",
+              "till",
+              "fertilize",
+              "spray",
+              "scout",
+              "companion-check",
+              "prune",
+              "harvest",
+              "hay-cutting",
+              "other"
+            ]
           }
         },
         "required": [
@@ -334,6 +356,21 @@
           },
           "body": {
             "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "plant",
+              "till",
+              "fertilize",
+              "spray",
+              "scout",
+              "companion-check",
+              "prune",
+              "harvest",
+              "hay-cutting",
+              "other"
+            ]
           }
         },
         "required": [
@@ -640,6 +677,21 @@
           "daysBeforePhase": {
             "type": "integer",
             "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "plant",
+              "till",
+              "fertilize",
+              "spray",
+              "scout",
+              "companion-check",
+              "prune",
+              "harvest",
+              "hay-cutting",
+              "other"
+            ]
           }
         },
         "required": [
@@ -684,6 +736,21 @@
           "daysAfterPhase": {
             "type": "integer",
             "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "plant",
+              "till",
+              "fertilize",
+              "spray",
+              "scout",
+              "companion-check",
+              "prune",
+              "harvest",
+              "hay-cutting",
+              "other"
+            ]
           }
         },
         "required": [

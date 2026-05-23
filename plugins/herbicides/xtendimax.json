@@ -4,16 +4,33 @@
   "displayName": "XtendiMax with VaporGrip (Bayer)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "dicamba diglycolamine salt", "chemistryClass": "synthetic-auxin" }],
-  "ratePerAcre": { "amount": 22, "unit": "fl-oz" },
+  "activeIngredients": [
+    {
+      "name": "dicamba diglycolamine salt",
+      "chemistryClass": "synthetic-auxin"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 22,
+    "unit": "fl-oz"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 4,
   "traitGatedSafeFor": [
     {
       "cropPluginId": "soybean-asgrow-roundup-ready-2-xtend",
-      "requiresTraits": ["dicamba-tolerant-xtend"]
+      "requiresTraits": [
+        "dicamba-tolerant-xtend"
+      ]
     }
   ],
-  "notes": "RESTRICTED-USE. Xtend-traited soybeans + cotton only. Phase 11 trait override: kernel allows xtendimax on Xtend-traited soybean. Same label restrictions as Engenia (TTI nozzles, ≤10 mph wind, sensitive-crop buffer)."
+  "notes": "RESTRICTED-USE. Xtend-traited soybeans + cotton only. Phase 11 trait override: kernel allows xtendimax on Xtend-traited soybean. Same label restrictions as Engenia (TTI nozzles, ≤10 mph wind, sensitive-crop buffer).",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

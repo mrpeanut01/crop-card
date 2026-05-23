@@ -4,11 +4,35 @@
   "displayName": "Command 3ME (FMC clomazone)",
   "version": "1.0.0",
   "applicationTiming": "PRE",
-  "activeIngredients": [{ "name": "clomazone", "chemistryClass": "clomazone" }],
-  "ratePerAcre": { "amount": 1.33, "unit": "pt" },
+  "activeIngredients": [
+    {
+      "name": "clomazone",
+      "chemistryClass": "clomazone"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1.33,
+    "unit": "pt"
+  },
   "gpaCalibration": 15,
   "deconRequired": true,
   "tankMixOrder": 3,
-  "labelClaims": { "safeForCropPluginIds": ["pumpkin-ez-gro-monster", "butternut-squash-waltham", "soybean-asgrow-roundup-ready-2-xtend", "tomato-roma-vf", "pepper-bell-california-wonder", "snap-pea-sugar-snap"] },
-  "notes": "Microencapsulated clomazone. Pumpkin / soybean / tomato / pepper / pea PRE. Severe bleaching on neighboring corn or broadleaves — drift care."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "pumpkin-ez-gro-monster",
+      "butternut-squash-waltham",
+      "soybean-asgrow-roundup-ready-2-xtend",
+      "tomato-roma-vf",
+      "pepper-bell-california-wonder",
+      "snap-pea-sugar-snap"
+    ]
+  },
+  "notes": "Microencapsulated clomazone. Pumpkin / soybean / tomato / pepper / pea PRE. Severe bleaching on neighboring corn or broadleaves — drift care.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

@@ -1,6 +1,15 @@
 import { z } from 'zod';
 import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 import { CHEMISTRY_CLASSES } from '$lib/safety/types';
+import { TASK_CATEGORY_VALUES } from '$lib/plan/taskCategory';
+
+/**
+ * Phase 21b follow-up — shared Zod schema for the task category enum.
+ * Used by preTask / postTask / seasonal task entries so the plugin
+ * registry rejects unknown values at registration time, and so the
+ * swim-lane pip + popover dropdown have an authoritative source.
+ */
+export const taskCategorySchema = z.enum(TASK_CATEGORY_VALUES);
 
 /**
  * Zod source-of-truth for plugin shapes. JSON Schemas in /schemas/ are
@@ -10,10 +19,27 @@ import { CHEMISTRY_CLASSES } from '$lib/safety/types';
 
 const pluginIdRegex = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
+/**
+ * Plugin schema major.minor. Phase 21 (B-25) shipped the optional v1.1
+ * fields — `complianceFlags`, sprayWindow `purpose` + `*Gate` tags,
+ * `cropOperationModel`, `hayOperations`, `zadoksStages`, `moistureGates`.
+ * Authors should set `pluginSchemaVersion: '1.1'` when they populate any
+ * of these; back-compat is preserved (a v1.0 plugin without the flag is
+ * still valid because every v1.1 field is optional).
+ */
+export const PLUGIN_SCHEMA_VERSION = '1.1' as const;
+
 const pluginBase = z.object({
   pluginId: z.string().regex(pluginIdRegex, 'pluginId must be kebab-case ≤64 chars'),
   displayName: z.string().min(1).max(120),
-  version: z.string().min(1)
+  version: z.string().min(1),
+  /** Plugin author's declared schema version. Optional for back-compat —
+   *  absent is treated as '1.0'. Used by tooling (e.g., the migration
+   *  script that backfills v1.1 fields) to know which plugins have been
+   *  upgraded. Not consumed by the safety kernel. */
+  pluginSchemaVersion: z
+    .enum(['1.0', '1.1'])
+    .optional()
 });
 
 /** Spacing guide values, surfaced inside the planting task view (FR-13). */
@@ -228,7 +254,9 @@ export const orchardSeasonalTaskSchema = z.object({
   dayOfYear: z.number().int().min(1).max(366),
   windowDays: z.number().int().min(1).max(60).default(7),
   title: z.string().min(1),
-  body: z.string().optional()
+  body: z.string().optional(),
+  /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
+  category: taskCategorySchema.optional()
 });
 
 /**
@@ -257,7 +285,9 @@ export const seasonalTaskSchema = z
     daysAfterPlanting: z.number().int().min(0).max(3650).optional(),
     windowDays: z.number().int().min(1).max(120).default(7),
     title: z.string().min(1),
-    body: z.string().optional()
+    body: z.string().optional(),
+    /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
+    category: taskCategorySchema.optional()
   })
   .refine((v) => v.dayOfYear !== undefined || v.daysAfterPlanting !== undefined, {
     message: 'seasonalTask requires either dayOfYear or daysAfterPlanting'
@@ -421,7 +451,9 @@ export const cropPluginSchema = pluginBase.extend({
         daysBeforePlant: z.number().int().nonnegative().optional(),
         daysBeforeFirstHarvest: z.number().int().nonnegative().optional(),
         phaseKey: z.string().min(1).max(80).optional(),
-        daysBeforePhase: z.number().int().nonnegative().optional()
+        daysBeforePhase: z.number().int().nonnegative().optional(),
+        /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
+        category: taskCategorySchema.optional()
       })
     )
     .optional(),
@@ -435,7 +467,9 @@ export const cropPluginSchema = pluginBase.extend({
         daysAfterPlant: z.number().int().nonnegative().optional(),
         daysAfterHarvest: z.number().int().nonnegative().optional(),
         phaseKey: z.string().min(1).max(80).optional(),
-        daysAfterPhase: z.number().int().nonnegative().optional()
+        daysAfterPhase: z.number().int().nonnegative().optional(),
+        /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
+        category: taskCategorySchema.optional()
       })
     )
     .optional(),

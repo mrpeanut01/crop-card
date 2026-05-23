@@ -1,18 +1,61 @@
 {
   "pluginId": "blueberry-bluecrop",
   "type": "crop",
-  "displayName": "Blueberry — Bluecrop (highbush)",
+  "displayName": "Blueberry \u2014 Bluecrop (highbush)",
   "version": "1.0.0",
   "cropFamily": "small-fruit",
   "preHarvestIntervalDays": 1,
   "defaultRowSpacingInches": 60,
   "seasonalTasks": [
-    { "key": "winter-prune", "kind": "pruning", "dayOfYear": 45, "windowDays": 30, "title": "Winter pruning (dormant)", "body": "Remove 1/6 oldest canes; thin twiggy growth. Aim for 6–8 productive canes per mature bush." },
-    { "key": "mummy-berry-cover", "kind": "spray", "dayOfYear": 95, "windowDays": 14, "title": "Mummy berry primary infection cover", "body": "FRAC 3 (myclobutanil) or FRAC 11 — alternate per stewardship. Begin at green-tip stage." },
-    { "key": "anthracnose-pre-bloom", "kind": "spray", "dayOfYear": 115, "windowDays": 14, "title": "Anthracnose pre-bloom", "body": "Captan or chlorothalonil. Critical for fruit-rot prevention." },
-    { "key": "swd-monitoring", "kind": "scout", "dayOfYear": 165, "windowDays": 60, "title": "Spotted-wing drosophila trap monitoring", "body": "Apple cider vinegar + yeast traps; 7-d insecticide intervals once SWD detected." },
-    { "key": "harvest", "kind": "harvest", "dayOfYear": 195, "windowDays": 35, "title": "Harvest window", "body": "Pick every 5–7 d; berries fully blue + drop into hand without pull." }
+    {
+      "key": "winter-prune",
+      "kind": "pruning",
+      "dayOfYear": 45,
+      "windowDays": 30,
+      "title": "Winter pruning (dormant)",
+      "body": "Remove 1/6 oldest canes; thin twiggy growth. Aim for 6\u20138 productive canes per mature bush.",
+      "category": "prune"
+    },
+    {
+      "key": "mummy-berry-cover",
+      "kind": "spray",
+      "dayOfYear": 95,
+      "windowDays": 14,
+      "title": "Mummy berry primary infection cover",
+      "body": "FRAC 3 (myclobutanil) or FRAC 11 \u2014 alternate per stewardship. Begin at green-tip stage.",
+      "category": "spray"
+    },
+    {
+      "key": "anthracnose-pre-bloom",
+      "kind": "spray",
+      "dayOfYear": 115,
+      "windowDays": 14,
+      "title": "Anthracnose pre-bloom",
+      "body": "Captan or chlorothalonil. Critical for fruit-rot prevention.",
+      "category": "spray"
+    },
+    {
+      "key": "swd-monitoring",
+      "kind": "scout",
+      "dayOfYear": 165,
+      "windowDays": 60,
+      "title": "Spotted-wing drosophila trap monitoring",
+      "body": "Apple cider vinegar + yeast traps; 7-d insecticide intervals once SWD detected.",
+      "category": "scout"
+    },
+    {
+      "key": "harvest",
+      "kind": "harvest",
+      "dayOfYear": 195,
+      "windowDays": 35,
+      "title": "Harvest window",
+      "body": "Pick every 5\u20137 d; berries fully blue + drop into hand without pull.",
+      "category": "harvest"
+    }
   ],
-  "harvestIndicators": ["Fully blue with bloom", "Easy detach (drop into hand)"],
-  "notes": "Mid-season highbush; needs cross-pollinator (Patriot, Duke, Jersey). Soil pH 4.5–5.0 mandatory — sulfur-down at planting."
+  "harvestIndicators": [
+    "Fully blue with bloom",
+    "Easy detach (drop into hand)"
+  ],
+  "notes": "Mid-season highbush; needs cross-pollinator (Patriot, Duke, Jersey). Soil pH 4.5\u20135.0 mandatory \u2014 sulfur-down at planting."
 }

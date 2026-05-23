@@ -4,12 +4,32 @@
   "displayName": "Laudis (Bayer tembotrione)",
   "version": "1.0.0",
   "applicationTiming": "POST",
-  "activeIngredients": [{ "name": "tembotrione", "chemistryClass": "hppd-inhibitor" }],
-  "ratePerAcre": { "amount": 3, "unit": "fl-oz" },
+  "activeIngredients": [
+    {
+      "name": "tembotrione",
+      "chemistryClass": "hppd-inhibitor"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 3,
+    "unit": "fl-oz"
+  },
   "gpaCalibration": 15,
   "requiresAMS": true,
   "deconRequired": false,
   "tankMixOrder": 5,
-  "labelClaims": { "safeForCropPluginIds": ["corn-feed-dent-pioneer", "corn-bloody-butcher"] },
-  "notes": "POST HPPD for corn V2–V8. Stronger broadleaf activity than mesotrione."
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "corn-feed-dent-pioneer",
+      "corn-bloody-butcher"
+    ]
+  },
+  "notes": "POST HPPD for corn V2–V8. Stronger broadleaf activity than mesotrione.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

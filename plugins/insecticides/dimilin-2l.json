@@ -3,11 +3,30 @@
   "type": "insecticide",
   "displayName": "Dimilin 2L (UPL diflubenzuron)",
   "version": "1.0.0",
-  "activeIngredients": [{ "name": "diflubenzuron", "iracGroup": "15" }],
+  "activeIngredients": [
+    {
+      "name": "diflubenzuron",
+      "iracGroup": "15"
+    }
+  ],
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 14,
-  "ratePerAcre": { "amount": 8, "unit": "fl-oz" },
-  "targetPests": ["European corn borer", "alfalfa weevil", "gypsy moth"],
+  "ratePerAcre": {
+    "amount": 8,
+    "unit": "fl-oz"
+  },
+  "targetPests": [
+    "European corn borer",
+    "alfalfa weevil",
+    "gypsy moth"
+  ],
   "pollinatorRisk": "low",
-  "notes": "Insect growth regulator IRAC 15 — chitin synthesis inhibitor. Slow but selective; bee-friendlier."
+  "notes": "Insect growth regulator IRAC 15 — chitin synthesis inhibitor. Slow but selective; bee-friendlier.",
+  "complianceFlags": {
+    "omriListed": false,
+    "certifiedOrganicAllowed": false,
+    "nonGmoCompliant": true,
+    "transitioningAllowed": false
+  },
+  "pluginSchemaVersion": "1.1"
 }

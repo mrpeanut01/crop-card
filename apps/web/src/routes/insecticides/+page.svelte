@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
+  import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
 
   let { data } = $props();
 
@@ -39,18 +41,25 @@
         body.scout = { pest: scoutPest, metric: scoutMetric, value: scoutValue };
       }
       if (tankSize) body.tankSizeGallons = tankSize;
+      // Phase 21b follow-up — close the swim-lane pip when deep-linked.
+      if (data.preselectedCropId) body.cropId = data.preselectedCropId;
+      if (data.taskId) body.taskId = data.taskId;
       const res = await fetch('/api/insecticide/record', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await res.json();
+      const respData = await res.json();
       if (!res.ok) {
-        error = data.error ?? 'failed to record';
-        if (Array.isArray(data.violations)) violations = data.violations;
+        error = respData.error ?? 'failed to record';
+        if (Array.isArray(respData.violations)) violations = respData.violations;
         return;
       }
-      result = `Recorded — re-entry clear ${new Date(data.event.reEntryClearAt).toLocaleString()}.`;
+      result = `Recorded — re-entry clear ${new Date(respData.event.reEntryClearAt).toLocaleString()}.`;
+      if (data.taskId) {
+        goto('/plan?tab=schedule&view=swimlane');
+        return;
+      }
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
     } finally {
@@ -91,6 +100,9 @@
       {#each data.insecticides as p (p.pluginId)}
         <li>
           <strong>{p.displayName}</strong>
+          {#each p.iracGroups as g}
+            <GroupCodeBadge kind="IRAC" group={g} />
+          {/each}
           {#if p.targetPests.length}
             <span class="pests">— {p.targetPests.join(', ')}</span>
           {/if}

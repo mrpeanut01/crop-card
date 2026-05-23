@@ -14,8 +14,6 @@ import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { requireOwner } from '$lib/server/auth';
 import { issueToken, listTokensForOwner } from '$lib/server/apiTokens';
 
-export const requestSchema = undefined; // see below — declared inline; Sub-task C will lift
-
 export const GET: RequestHandler = (event) => {
   const u = requireOwner(event);
   if (!u.activeOwnerId) throw error(400, 'no active owner');

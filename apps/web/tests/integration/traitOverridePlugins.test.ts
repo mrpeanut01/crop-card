@@ -120,9 +120,11 @@ describe('Phase 11 — trait-gated brand plugins', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(
-        result.violations.some(
-          (v) => v.code === 'CROP_INCOMPATIBLE' && v.detail?.cropFamily === 'legume'
-        )
+        result.violations.some((v) => {
+          if (v.code !== 'CROP_INCOMPATIBLE') return false;
+          const affected = (v.detail?.crops as Array<{ cropFamily: string }>) ?? [];
+          return affected.some((c) => c.cropFamily === 'legume');
+        })
       ).toBe(true);
     }
   });

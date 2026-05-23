@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { checkCropCompatibility } from './cropCompatibility';
-import type { CropStage, HerbicideProduct } from './types';
+import type { CropIncompatibilityCrop, CropStage, HerbicideProduct } from './types';
+
+function crops(v: { detail?: Record<string, unknown> } | undefined): CropIncompatibilityCrop[] {
+  return (v?.detail?.crops as CropIncompatibilityCrop[]) ?? [];
+}
 
 const corn: CropStage = { cropPluginId: 'corn-bb', cropFamily: 'corn', heightInches: 6 };
 const pumpkin: CropStage = { cropPluginId: 'pumpkin-ezg', cropFamily: 'cucurbit' };
@@ -41,14 +45,15 @@ describe('cropCompatibility', () => {
     const out = checkCropCompatibility([auxin], corn, [pumpkin]);
     expect(out).toHaveLength(1);
     expect(out[0].code).toBe('CROP_INCOMPATIBLE');
-    expect(out[0].detail?.cropFamily).toBe('cucurbit');
-    expect(out[0].detail?.isCoPlanted).toBe(true);
+    expect(crops(out[0])).toEqual([
+      { cropPluginId: 'pumpkin-ezg', cropFamily: 'cucurbit', isCoPlanted: true }
+    ]);
   });
 
   it('blocks 2,4-D when primary crop is a broadleaf companion', () => {
     const out = checkCropCompatibility([auxin], pumpkin);
     expect(out).toHaveLength(1);
-    expect(out[0].detail?.isCoPlanted).toBe(false);
+    expect(crops(out[0])[0].isCoPlanted).toBe(false);
   });
 
   it('blocks Clethodim over corn (kills grasses including corn)', () => {
@@ -68,11 +73,15 @@ describe('cropCompatibility', () => {
     expect(checkCropCompatibility([gly], orchard)).toHaveLength(1);
   });
 
-  it('emits one violation per (product × killed crop) pair', () => {
+  it('emits one consolidated violation per (product × chemistry class) listing every affected crop', () => {
     const out = checkCropCompatibility([auxin], corn, [pumpkin, beans, orchard]);
-    expect(out).toHaveLength(3);
-    const families = out.map((v) => v.detail?.cropFamily).sort();
+    expect(out).toHaveLength(1);
+    expect(out[0].detail?.chemistryClass).toBe('synthetic-auxin');
+    const families = crops(out[0])
+      .map((c) => c.cropFamily)
+      .sort();
     expect(families).toEqual(['cucurbit', 'legume', 'orchard']);
+    expect(out[0].message).toContain('cucurbit, legume, orchard');
   });
 
   it('skips crops with no cropFamily declared (back-compat)', () => {
@@ -211,8 +220,10 @@ describe('Phase 9 — new crop families × chemistry kill matrix', () => {
   });
 
   it('reports raspberry / peach / blueberry families correctly in violation detail', () => {
-    expect(checkCropCompatibility([atrazine], raspberry)[0].detail?.cropFamily).toBe('bramble');
-    expect(checkCropCompatibility([atrazine], peach)[0].detail?.cropFamily).toBe('stone-fruit');
-    expect(checkCropCompatibility([atrazine], blueberry)[0].detail?.cropFamily).toBe('small-fruit');
+    expect(crops(checkCropCompatibility([atrazine], raspberry)[0])[0].cropFamily).toBe('bramble');
+    expect(crops(checkCropCompatibility([atrazine], peach)[0])[0].cropFamily).toBe('stone-fruit');
+    expect(crops(checkCropCompatibility([atrazine], blueberry)[0])[0].cropFamily).toBe(
+      'small-fruit'
+    );
   });
 });

@@ -165,7 +165,10 @@ describe('runtime cropCompatibility — trait override', () => {
     // Block has Xtend soy AS PRIMARY + conventional peas co-planted.
     const violations = checkCropCompatibility([engeniaProduct], xtendStage, [peas]);
     expect(violations).toHaveLength(1);
-    expect(violations[0].detail?.cropPluginId).toBe('pea-conv');
+    const affected = violations[0].detail?.crops as Array<{ cropPluginId: string }>;
+    expect(affected).toEqual([
+      expect.objectContaining({ cropPluginId: 'pea-conv' })
+    ]);
   });
 
   it('requires every listed trait, not just one', () => {

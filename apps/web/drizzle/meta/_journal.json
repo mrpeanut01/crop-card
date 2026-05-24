@@ -246,6 +246,13 @@
       "when": 1779996600000,
       "tag": "0034_phase25d_plan_revisions",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1779997500000,
+      "tag": "0035_phase25d_wizard_chat",
+      "breakpoints": true
     }
   ]
 }

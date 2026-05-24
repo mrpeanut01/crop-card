@@ -1360,3 +1360,81 @@ export const kernelDryRunLog = tenantScoped(
     })
   )
 );
+
+// ─── Phase 25d (#89) — wizard chat server-persistence ───────────────────
+//
+// Pre-#89, the AllocationWizard kept chat transcripts in $state. Reload
+// or tab switch lost them. These two tables move the source of truth to
+// the server so wizard chat survives reloads and is auditable later.
+//
+// One `wizard_sessions` row per (ownerId, planId) active wizard run. One
+// `wizard_chat_messages` row per turn, append-only, scoped to a session +
+// step ('allocation' | 'schedule' | 'inputs').
+//
+// Both tenant-scoped per CLAUDE.md invariant 6. The cross-tenant property
+// test gets extended in the same commit.
+
+export const wizardSessions = tenantScoped(
+  sqliteTable(
+    'wizard_sessions',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      /** Same scheme as plan_revisions.plan_id — `season-${year}`. Lets a
+       *  single active session resume across reloads scoped to the active
+       *  plan. */
+      planId: text('plan_id').notNull(),
+      /** 'active' — chat-eligible session. 'completed' — wizard reached
+       *  commit, session sealed; new wizard runs spawn a new session.
+       *  'abandoned' — session timed out / user reset; preserved for
+       *  audit but not resumed. */
+      status: text('status', { enum: ['active', 'completed', 'abandoned'] }).notNull(),
+      createdByUserId: text('created_by_user_id').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      /** Bumped on every appended message so the loader can pick the
+       *  most-recently-active session when more than one exists. */
+      lastActiveAt: integer('last_active_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      completedAt: integer('completed_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerPlanIdx: index('wizard_sessions_owner_plan_idx').on(table.ownerId, table.planId),
+      ownerStatusIdx: index('wizard_sessions_owner_status_idx').on(table.ownerId, table.status)
+    })
+  )
+);
+
+export const wizardChatMessages = tenantScoped(
+  sqliteTable(
+    'wizard_chat_messages',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      sessionId: text('session_id')
+        .notNull()
+        .references(() => wizardSessions.id, { onDelete: 'cascade' }),
+      /** Which wizard step the message belongs to. Allocation chat lives
+       *  with the Review step; schedule chat lives with the Schedule
+       *  step. Inputs chat is reserved (no in-step refinement loop
+       *  shipped yet) but the enum is open so future inputs-step
+       *  refinement plugs in without a migration. */
+      step: text('step', { enum: ['allocation', 'schedule', 'inputs'] }).notNull(),
+      role: text('role', { enum: ['user', 'assistant', 'system'] }).notNull(),
+      content: text('content').notNull(),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerSessionStepIdx: index('wizard_chat_messages_owner_session_step_idx').on(
+        table.ownerId,
+        table.sessionId,
+        table.step,
+        table.createdAt
+      )
+    })
+  )
+);

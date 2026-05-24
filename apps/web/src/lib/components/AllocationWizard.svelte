@@ -82,6 +82,8 @@
     lastYearSetup = null,
     currentYear = new Date().getFullYear(),
     aiEnabled = false,
+    wizardPlanId,
+    initialChatMessages = [],
     onClose,
     onCommitted,
     onRefreshParent
@@ -97,6 +99,20 @@
      *  step's AI-on/off variant. Step 2 (Schedule) shows the deterministic
      *  planner chat instead of the Gantt chat when off. */
     aiEnabled?: boolean;
+    /** Phase 25d (#89) — identifies the plan whose chat history this
+     *  wizard run-through belongs to. Convention: `season-${year}`. When
+     *  omitted, chat persistence is disabled (silent fallback to the
+     *  pre-#89 in-memory behavior). */
+    wizardPlanId?: string;
+    /** Phase 25d (#89) — server-loaded chat messages, hydrated into the
+     *  per-step transcripts on mount. The loader runs the GET before
+     *  showing the wizard so the operator sees the resumed conversation
+     *  without a flash of empty state. */
+    initialChatMessages?: Array<{
+      step: 'allocation' | 'schedule' | 'inputs';
+      role: 'user' | 'assistant' | 'system';
+      content: string;
+    }>;
     onClose: () => void;
     onCommitted: () => void;
     /** Optional — refresh parent data WITHOUT closing the wizard. Used by
@@ -334,14 +350,54 @@
    *  endpoint on each turn. Seeded with an assistant message synthesized
    *  from the initial plan's advisories so the chat opens with the same
    *  observations the old "Worth considering" block used to show. */
-  type ChatMsg = { role: 'user' | 'assistant'; content: string };
+  // Phase 25d (#89) — `kind: 'seed'` marks the deterministic intro
+  // synthesized from advisories. Stripped before sending to refine
+  // (the seed isn't a conversational turn) and never persisted to the
+  // server (regenerated locally on each wizard open from the fresh
+  // allocation). Real conversation turns omit the kind field.
+  type ChatMsg = { role: 'user' | 'assistant'; content: string; kind?: 'seed' };
   // Two separate transcripts — allocation chat lives with step 3 (Review),
   // schedule chat lives with step 4. Switching steps preserves each
   // transcript so the user can refine either independently, but the
   // schedule chat doesn't carry over allocation-level pollination notes
   // (those are already shown on the Review step).
-  let allocationChatMessages = $state<ChatMsg[]>([]);
-  let scheduleChatMessages = $state<ChatMsg[]>([]);
+  // Phase 25d (#89) — hydrate from server-loaded history when present.
+  // `system` rows are dropped from the rendered transcripts since the
+  // UI only renders user/assistant bubbles; they may be reintroduced
+  // later if we add tool-call traces.
+  const seededAllocation: ChatMsg[] = untrack(() =>
+    initialChatMessages
+      .filter((m) => m.step === 'allocation' && (m.role === 'user' || m.role === 'assistant'))
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+  );
+  const seededSchedule: ChatMsg[] = untrack(() =>
+    initialChatMessages
+      .filter((m) => m.step === 'schedule' && (m.role === 'user' || m.role === 'assistant'))
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+  );
+  let allocationChatMessages = $state<ChatMsg[]>(seededAllocation);
+  let scheduleChatMessages = $state<ChatMsg[]>(seededSchedule);
+
+  /** Phase 25d (#89) — fire-and-forget append to /api/wizard/chat. The
+   *  in-memory transcript stays authoritative for rendering; this just
+   *  mirrors writes so reload restores them. Failures are logged but
+   *  never break the chat UX. `wizardPlanId` not set → disabled. */
+  async function persistChatMessage(
+    chatStep: 'allocation' | 'schedule' | 'inputs',
+    role: 'user' | 'assistant',
+    content: string
+  ): Promise<void> {
+    if (!wizardPlanId) return;
+    try {
+      await fetch('/api/wizard/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ planId: wizardPlanId, step: chatStep, role, content })
+      });
+    } catch (err) {
+      console.warn('[wizard-chat] persist failed', err);
+    }
+  }
   const chatMessages = $derived(
     (step as Step) === 'schedule' ? scheduleChatMessages : allocationChatMessages
   );
@@ -389,7 +445,17 @@
       );
     }
 
-    allocationChatMessages = [{ role: 'assistant', content: lines.join('\n') }];
+    // Seed message is NOT persisted — it's deterministic from the
+    // current advisories. On resume from a server-hydrated transcript,
+    // we skip re-seeding entirely so the prior conversation renders
+    // intact. Persisting the seed would double-seed on the second
+    // wizard open; replacing the transcript with the seed would erase
+    // the resumed chat. Keeping in-memory only is the right balance.
+    if (allocationChatMessages.length === 0) {
+      allocationChatMessages = [
+        { role: 'assistant', content: lines.join('\n'), kind: 'seed' }
+      ];
+    }
     chatDraft = '';
     chatError = null;
   }
@@ -671,11 +737,14 @@
     chatError = null;
     const userTurn: ChatMsg = { role: 'user', content: text };
     // Append to the active step's transcript optimistically.
-    if (step === 'schedule') {
+    const chatStepKey: 'allocation' | 'schedule' = step === 'schedule' ? 'schedule' : 'allocation';
+    if (chatStepKey === 'schedule') {
       scheduleChatMessages = [...scheduleChatMessages, userTurn];
     } else {
       allocationChatMessages = [...allocationChatMessages, userTurn];
     }
+    // Phase 25d (#89) — fire-and-forget server persist; doesn't block UI.
+    void persistChatMessage(chatStepKey, 'user', text);
     chatDraft = '';
     chatBusy = true;
     chatStartMs = Date.now();
@@ -729,7 +798,9 @@
       rationale: response.rationale,
       advisories: response.advisories
     };
-    const sendable = allocationChatMessages.slice(1);
+    const sendable = allocationChatMessages
+      .filter((m) => m.kind !== 'seed')
+      .map((m) => ({ role: m.role, content: m.content }));
     const res = await fetch('/api/plan/allocate/refine', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -796,6 +867,7 @@
       lastRejectedViolations = [];
     }
     allocationChatMessages = [...allocationChatMessages, { role: 'assistant', content: reply }];
+    void persistChatMessage('allocation', 'assistant', reply);
     response = {
       assignments: body.assignments,
       unplaced: body.unplaced ?? [],
@@ -851,7 +923,9 @@
 
   async function sendScheduleChat(text: string) {
     if (!response || !scheduleResponse) return;
-    const sendable = scheduleChatMessages.slice(1);
+    const sendable = scheduleChatMessages
+      .filter((m) => m.kind !== 'seed')
+      .map((m) => ({ role: m.role, content: m.content }));
     const res = await fetch('/api/plan/schedule/refine', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -903,6 +977,7 @@
       reply = `${header}${violationLine}\n\n${aiReply}`;
     }
     scheduleChatMessages = [...scheduleChatMessages, { role: 'assistant', content: reply }];
+    void persistChatMessage('schedule', 'assistant', reply);
     scheduleResponse = {
       scheduled: Array.isArray(body.scheduled) ? body.scheduled : scheduleResponse.scheduled,
       rationale: typeof body.rationale === 'string' ? body.rationale : scheduleResponse.rationale,
@@ -1012,7 +1087,13 @@
       // Start the schedule chat clean — don't carry allocation-step
       // pollination notes or rationale into this conversation. Anything the
       // user wants to revisit about the layout is on the Review step.
-      scheduleChatMessages = [{ role: 'assistant', content: lines.join('\n') }];
+      // Phase 25d (#89) — preserve resumed turns; only insert the seed
+      // when starting fresh.
+      if (scheduleChatMessages.length === 0) {
+        scheduleChatMessages = [
+          { role: 'assistant', content: lines.join('\n'), kind: 'seed' }
+        ];
+      }
       queueScrollChat();
     } catch (e) {
       scheduleError = e instanceof Error ? e.message : 'schedule request failed';

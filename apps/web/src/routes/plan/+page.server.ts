@@ -29,6 +29,7 @@ import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { deriveSeasonWorkflow } from '$lib/plan/seasonWorkflow';
 import { listPlanRevisions } from '$lib/plan/revisions';
+import { getActiveSession, listMessages } from '$lib/db/wizardChat';
 import {
   plantingBarEndMs,
   rotationConflicts,
@@ -211,6 +212,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       note: typeof r.payload?.note === 'string' ? r.payload.note : undefined
     })),
     planLabel: `${currentYear} plan`,
+    // Phase 25d (#89) — wizard chat server-persistence. Pass the
+    // wizard the planId + any prior chat turns so resume restores the
+    // conversation instead of dropping it on the floor.
+    wizardPlanId: `season-${currentYear}`,
+    wizardChatMessages: (() => {
+      const session = getActiveSession(`season-${currentYear}`);
+      if (!session) return [];
+      return listMessages(session.id).map((m) => ({
+        step: m.step,
+        role: m.role,
+        content: m.content
+      }));
+    })(),
     // Issue #48 follow-up: shadeSources must be visible on every tab that
     // renders <BlockMap> (today: layout + crops). Pushing it into base
     // closes that recurring class of bug — PR #49 fixed the UI side but

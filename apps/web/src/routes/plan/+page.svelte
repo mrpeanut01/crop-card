@@ -3714,6 +3714,8 @@
     lastYearSetup={data.lastYearSetup ?? null}
     currentYear={data.currentYear ?? new Date().getFullYear()}
     aiEnabled={data.aiEnabled ?? false}
+    wizardPlanId={data.wizardPlanId}
+    initialChatMessages={data.wizardChatMessages ?? []}
     onClose={() => {
       showAllocationWizard = false;
     }}

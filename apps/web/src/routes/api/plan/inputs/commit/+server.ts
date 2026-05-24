@@ -45,6 +45,7 @@ import { withTenant } from '$lib/db/tenant';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { insertPlanRevision } from '$lib/plan/revisions';
+import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
 
 const INPUTS_PLAN_TEMPLATE_KEY = 'inputs-plan';
 
@@ -246,6 +247,18 @@ export const POST: RequestHandler = async (event) => {
     });
   } catch (err) {
     console.error('[plan-revisions] failed to write wizard revision', err);
+  }
+
+  // Phase 25d (#89) — seal the active wizard chat session so the next
+  // wizard open spawns a fresh conversation rather than continuing the
+  // committed one. Failure to mark completed is non-fatal — the next
+  // open will still see the stale active session, but the commit
+  // succeeded and the data is sound.
+  try {
+    const session = getActiveSession(`season-${year}`);
+    if (session) markSessionCompleted(session.id);
+  } catch (err) {
+    console.error('[wizard-chat] failed to mark session completed', err);
   }
 
   return json({

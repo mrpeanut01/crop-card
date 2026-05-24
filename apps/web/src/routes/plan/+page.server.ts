@@ -26,6 +26,7 @@ import {
 import { listShadeSources } from '$lib/db/shadeSources';
 import { getFarmLatLon } from '$lib/schedule/settings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
+import { getUserAiEnabled } from '$lib/server/aiTry';
 import {
   plantingBarEndMs,
   rotationConflicts,
@@ -180,6 +181,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     currentYear,
     seasonSetup,
     lastYearSetup,
+    // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the
+    // schedule step of the AllocationWizard.
+    aiEnabled: getUserAiEnabled(locals.user?.id),
     // Issue #48 follow-up: shadeSources must be visible on every tab that
     // renders <BlockMap> (today: layout + crops). Pushing it into base
     // closes that recurring class of bug — PR #49 fixed the UI side but

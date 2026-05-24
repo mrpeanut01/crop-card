@@ -7,6 +7,8 @@
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
   import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
   import InputsPlanStep from '$lib/components/InputsPlanStep.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   import type {
     InputsPlanApplication,
     InputsPlanProvisionalPlanting,
@@ -79,6 +81,7 @@
     seasonSetup = null,
     lastYearSetup = null,
     currentYear = new Date().getFullYear(),
+    aiEnabled = false,
     onClose,
     onCommitted,
     onRefreshParent
@@ -90,6 +93,10 @@
     seasonSetup?: SeasonSetup | null;
     lastYearSetup?: SeasonSetup | null;
     currentYear?: number;
+    /** Phase 25d v2-addendum (#82 partial / #89) — drives the schedule
+     *  step's AI-on/off variant. Step 2 (Schedule) shows the deterministic
+     *  planner chat instead of the Gantt chat when off. */
+    aiEnabled?: boolean;
     onClose: () => void;
     onCommitted: () => void;
     /** Optional — refresh parent data WITHOUT closing the wizard. Used by
@@ -1744,6 +1751,19 @@
         {/if}
       {:else if step === 'schedule'}
         {#if response}
+          <!-- Phase 25 v2-addendum (#82 partial) — AI-on/off legend strip
+               at the top of the schedule step. Per the addendum spec,
+               AI on/off is a real product mode, not an error state —
+               the operator sees the provenance map for the dates they're
+               about to commit. -->
+          <ProvenanceLegend
+            shown={aiEnabled
+              ? ['plugin', 'data', 'ai', 'manual']
+              : ['plugin', 'data', 'fallback', 'manual']}
+            note={aiEnabled
+              ? 'Dates AI-proposed within plugin-derived windows · all editable'
+              : 'AI off · deterministic scheduler · plugin windows + your records'}
+          />
           {#if scheduleLoading}
             {@render aiProgress('schedule', scheduleStartMs)}
           {:else if scheduleError}
@@ -1757,7 +1777,14 @@
                   : '🛟 AI needed help — deterministic scheduler took over. See chat below for what tripped it up and refine from there.'}
               </div>
             {/if}
-            <p class="aw-rationale">{scheduleResponse.rationale}</p>
+            <p class="aw-rationale">
+              {scheduleResponse.rationale}
+              <Provenance
+                source={scheduleResponse.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+                detail={scheduleResponse.meta.fallback ? 'deterministic scheduler' : undefined}
+                compact
+              />
+            </p>
             <table class="aw-table">
               <thead>
                 <tr>

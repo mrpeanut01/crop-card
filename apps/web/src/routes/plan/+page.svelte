@@ -3690,6 +3690,7 @@
     seasonSetup={data.seasonSetup ?? null}
     lastYearSetup={data.lastYearSetup ?? null}
     currentYear={data.currentYear ?? new Date().getFullYear()}
+    aiEnabled={data.aiEnabled ?? false}
     onClose={() => {
       showAllocationWizard = false;
     }}

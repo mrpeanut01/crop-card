@@ -4,6 +4,7 @@
   import MethodTabs from '$lib/components/stock/add/MethodTabs.svelte';
   import ManualForm from '$lib/components/stock/add/ManualForm.svelte';
   import SearchPanel from '$lib/components/stock/add/SearchPanel.svelte';
+  import BarcodePanel from '$lib/components/stock/add/BarcodePanel.svelte';
   import { normalizeStockEntry, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
   import { METHOD_META, type StockAddMethod } from '$lib/stock/addMethods';
 
@@ -95,10 +96,7 @@
   {:else if active === 'search'}
     <SearchPanel onSubmit={submitDraft} busy={submitBusy} />
   {:else if active === 'barcode'}
-    <p class="placeholder">
-      Barcode scanner — coming after Search. For now, use the existing inventory modal's
-      barcode flow.
-    </p>
+    <BarcodePanel onSubmit={submitDraft} busy={submitBusy} />
   {:else if active === 'label'}
     <p class="placeholder">
       Label OCR — coming after Barcode. For now, use the existing inventory modal's label

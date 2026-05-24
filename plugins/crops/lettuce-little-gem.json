@@ -1,0 +1,30 @@
+{
+  "pluginId": "lettuce-little-gem",
+  "type": "crop",
+  "displayName": "Lettuce Little Gem (mini romaine)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 30,
+    "max": 50
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 8
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Compact mini-romaine. Single-serving size that markets well in CSA shares and restaurant accounts.",
+  "harvestIndicators": [
+    "Dense 5 to 6 inch romaine head, firm to the touch"
+  ]
+}

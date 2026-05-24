@@ -1,0 +1,30 @@
+{
+  "pluginId": "walnut-carpathian-english",
+  "type": "crop",
+  "displayName": "Walnut Carpathian English",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 1825,
+    "max": 2920
+  },
+  "defaultRowSpacingInches": 360,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 360,
+    "inRowSpacingIn": {
+      "min": 300,
+      "max": 420
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Cold-hardy Carpathian strain of Juglans regia. Hardy to zone 5. Thin-shelled, easier crack than black walnut.",
+  "harvestIndicators": [
+    "Husks split, nuts drop to ground in fall"
+  ]
+}

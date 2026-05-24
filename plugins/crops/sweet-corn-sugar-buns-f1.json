@@ -1,0 +1,31 @@
+{
+  "pluginId": "sweet-corn-sugar-buns-f1",
+  "type": "crop",
+  "displayName": "Sweet Corn Sugar Buns F1 (sugary enhanced)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "corn",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 70,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 30,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Yellow sugary enhanced (se) sweet corn hybrid. Excellent flavor with moderate shelf life. Strong farmstand crop.",
+  "harvestIndicators": [
+    "Silks brown and dry, kernel milky when popped with thumbnail"
+  ],
+  "cornType": "sweet"
+}

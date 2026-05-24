@@ -1,0 +1,27 @@
+{
+  "pluginId": "onager-hexythiazox",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Onager 1EC (hexythiazox)",
+  "activeIngredients": [
+    {
+      "name": "hexythiazox",
+      "iracGroup": "10A"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 24,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 28,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "10163-277",
+  "targetPests": [
+    "twospotted spider mite eggs and immatures",
+    "European red mite eggs and immatures"
+  ],
+  "notes": "Gowan IRAC 10A mite growth inhibitor. Ovicidal and larvicidal; no activity on adult mites."
+}

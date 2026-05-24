@@ -1,0 +1,30 @@
+{
+  "pluginId": "daikon-radish-april-cross",
+  "type": "crop",
+  "displayName": "Daikon Radish April Cross F1 (storage)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 55,
+    "max": 70
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Slow-bolting hybrid daikon for spring or fall planting. Mild, juicy flesh suited for fresh and kimchi markets.",
+  "harvestIndicators": [
+    "14 to 18 inch white tapered root, smooth shoulders"
+  ]
+}

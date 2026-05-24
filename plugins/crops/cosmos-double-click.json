@@ -1,0 +1,30 @@
+{
+  "pluginId": "cosmos-double-click",
+  "type": "crop",
+  "displayName": "Cosmos Double Click (cut flower)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Double-flowered cosmos series. 24 to 36 inch stems, vase life 5 to 7 days. Pinch at 8 to 10 inches for branching.",
+  "harvestIndicators": [
+    "Buds beginning to open with color visible"
+  ]
+}

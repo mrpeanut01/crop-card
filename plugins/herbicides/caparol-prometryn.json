@@ -1,0 +1,23 @@
+{
+  "pluginId": "caparol-prometryn",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Caparol 4L (prometryn)",
+  "activeIngredients": [
+    {
+      "name": "prometryn",
+      "chemistryClass": "photosystem-ii-triazine"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 2.4,
+    "unit": "pt"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "PRE",
+  "requiresAMS": false,
+  "deconRequired": false,
+  "epaRegistrationNumber": "100-620",
+  "notes": "Syngenta Group 5 PSII triazine PRE for cotton, celery, dill, parsley, fennel, pigeon pea."
+}

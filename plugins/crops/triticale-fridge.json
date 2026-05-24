@@ -1,0 +1,30 @@
+{
+  "pluginId": "triticale-fridge",
+  "type": "crop",
+  "displayName": "Triticale Fridge (forage/grain)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cereal-grain",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 230,
+    "max": 280
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 7,
+    "inRowSpacingIn": {
+      "min": 7,
+      "max": 7
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Wheat-rye hybrid (xTriticosecale). Drill 80 to 100 lb per acre. Dual-purpose for forage and grain.",
+  "harvestIndicators": [
+    "Heads tan, kernels at 14% moisture for grain harvest"
+  ]
+}

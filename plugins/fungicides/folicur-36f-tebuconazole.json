@@ -1,0 +1,30 @@
+{
+  "pluginId": "folicur-36f-tebuconazole",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Folicur 3.6 F (tebuconazole)",
+  "applicationTiming": "PRE-BLOOM",
+  "activeIngredients": [
+    {
+      "name": "tebuconazole",
+      "fracCode": "3"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 4,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 15,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 30,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "264-985",
+  "targetDiseases": [
+    "soybean rust",
+    "wheat scab (Fusarium head blight)",
+    "white mold (Sclerotinia)",
+    "cereal rust"
+  ],
+  "notes": "Bayer FRAC 3 DMI. Workhorse triazole for wheat scab, soybean rust, white mold."
+}

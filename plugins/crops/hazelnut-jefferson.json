@@ -1,0 +1,30 @@
+{
+  "pluginId": "hazelnut-jefferson",
+  "type": "crop",
+  "displayName": "Hazelnut Jefferson (filbert)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 1460,
+    "max": 2190
+  },
+  "defaultRowSpacingInches": 240,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 240,
+    "inRowSpacingIn": {
+      "min": 180,
+      "max": 240
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Oregon State 2009 release. Eastern filbert blight resistance. Self-incompatible; plant with Theta or Yamhill pollinizer.",
+  "harvestIndicators": [
+    "Husks fully tan, nuts dropping when shaken"
+  ]
+}

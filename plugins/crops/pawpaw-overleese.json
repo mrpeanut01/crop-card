@@ -1,0 +1,30 @@
+{
+  "pluginId": "pawpaw-overleese",
+  "type": "crop",
+  "displayName": "Pawpaw Overleese (native fruit)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 1825,
+    "max": 2555
+  },
+  "defaultRowSpacingInches": 144,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 144,
+    "inRowSpacingIn": {
+      "min": 96,
+      "max": 120
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Asimina triloba native to eastern US. Tropical-flavored fruit with custard texture. Plant two unrelated cultivars 20 ft apart.",
+  "harvestIndicators": [
+    "Yellow-green skin, soft to gentle pressure, drops easily"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "pluginId": "curzate-60df-cymoxanil",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Curzate 60DF (cymoxanil)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "cymoxanil",
+      "fracCode": "27"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 5,
+    "unit": "oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 3,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "352-580",
+  "targetDiseases": [
+    "late blight",
+    "downy mildew"
+  ],
+  "notes": "Corteva FRAC 27 cyanoacetamide-oxime. Strong kickback on Phytophthora and downy mildew. Always tank-mix with protectant."
+}

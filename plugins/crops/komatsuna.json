@@ -1,0 +1,30 @@
+{
+  "pluginId": "komatsuna",
+  "type": "crop",
+  "displayName": "Komatsuna (Japanese mustard spinach)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 35,
+    "max": 45
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Brassica rapa var. perviridis. Cold-hardy Japanese green eaten raw or stir-fried. More heat-tolerant than spinach.",
+  "harvestIndicators": [
+    "Tender upright leaves at 6 to 10 inches"
+  ]
+}

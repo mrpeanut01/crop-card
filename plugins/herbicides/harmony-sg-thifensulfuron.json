@@ -1,0 +1,23 @@
+{
+  "pluginId": "harmony-sg-thifensulfuron",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Harmony SG (thifensulfuron)",
+  "activeIngredients": [
+    {
+      "name": "thifensulfuron-methyl",
+      "chemistryClass": "sulfonylurea"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 0.5,
+    "unit": "oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": true,
+  "epaRegistrationNumber": "432-1559",
+  "notes": "FMC POST broadleaf herbicide for soybeans, cereals, corn, pasture. Group 2 ALS-inhibitor."
+}

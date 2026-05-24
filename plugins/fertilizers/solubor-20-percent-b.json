@@ -1,0 +1,29 @@
+{
+  "pluginId": "solubor-20-percent-b",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
+  "form": "soluble",
+  "displayName": "Solubor (sodium tetraborate, 20.5% B)",
+  "organic": false,
+  "secondaryNutrients": {
+    "b": 20
+  },
+  "applicationRange": {
+    "min": 1,
+    "max": 5,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "U.S. Borax soluble sodium tetraborate. Standard B source for alfalfa, brassica, beet, tree fruit. Narrow B sufficiency window; verify need via tissue test."
+}

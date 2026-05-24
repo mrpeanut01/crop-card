@@ -1,0 +1,30 @@
+{
+  "pluginId": "gooseberry-hinnonmaki-red",
+  "type": "crop",
+  "displayName": "Gooseberry Hinnonmaki Red",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 60,
+    "inRowSpacingIn": {
+      "min": 48,
+      "max": 60
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Finnish heirloom. Heavy yielding, mildew-resistant gooseberry. Cold-hardy to zone 3. Self-fertile.",
+  "harvestIndicators": [
+    "Deep red translucent fruit, soft to gentle pressure"
+  ]
+}

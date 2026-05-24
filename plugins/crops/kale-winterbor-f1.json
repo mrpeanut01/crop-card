@@ -1,0 +1,30 @@
+{
+  "pluginId": "kale-winterbor-f1",
+  "type": "crop",
+  "displayName": "Kale Winterbor F1 (curly)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 55,
+    "max": 65
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Curly-leaf hybrid bred for cold tolerance. Standard commercial bunching kale. Heavy producer over a long season.",
+  "harvestIndicators": [
+    "Densely curled blue-green leaves, 8 to 10 inches long"
+  ]
+}

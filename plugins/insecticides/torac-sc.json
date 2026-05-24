@@ -1,0 +1,30 @@
+{
+  "pluginId": "torac-sc",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Torac SC (tolfenpyrad)",
+  "activeIngredients": [
+    {
+      "name": "tolfenpyrad",
+      "iracGroup": "21A"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 21,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 14,
+  "pollinatorRisk": "high",
+  "epaRegistrationNumber": "71711-32",
+  "targetPests": [
+    "whitefly",
+    "psyllid",
+    "thrips",
+    "leafhopper",
+    "lepidopteran larvae"
+  ],
+  "notes": "Nichino IRAC 21A METI complex I inhibitor. Strong on whitefly. Toxic to bees."
+}

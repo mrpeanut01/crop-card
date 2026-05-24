@@ -1,0 +1,31 @@
+{
+  "pluginId": "sulfate-potash-magnesia-langbeinite",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 22
+  },
+  "form": "granular",
+  "displayName": "Langbeinite Sul-Po-Mag (0-0-22-22S-11Mg, OMRI)",
+  "organic": true,
+  "secondaryNutrients": {
+    "ca": 0,
+    "mg": 11,
+    "s": 22
+  },
+  "applicationRange": {
+    "min": 50,
+    "max": 400,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Mined langbeinite. 22% K, 22% S, 11% Mg in one product. Chloride-free, suited to chloride-sensitive crops like potato and tobacco."
+}

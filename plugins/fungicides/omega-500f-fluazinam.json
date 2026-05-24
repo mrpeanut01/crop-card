@@ -1,0 +1,30 @@
+{
+  "pluginId": "omega-500f-fluazinam",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Omega 500F (fluazinam)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "fluazinam",
+      "fracCode": "29"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 5.5,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 48,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "71512-3",
+  "targetDiseases": [
+    "late blight",
+    "white mold (Sclerotinia)",
+    "club root",
+    "downy mildew suppression"
+  ],
+  "notes": "Syngenta FRAC 29 uncoupler. Strong on Sclerotinia. Avoid drift to non-target apple foliage."
+}

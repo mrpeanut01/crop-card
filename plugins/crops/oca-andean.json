@@ -1,0 +1,30 @@
+{
+  "pluginId": "oca-andean",
+  "type": "crop",
+  "displayName": "Oca (Oxalis tuberosa)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 180,
+    "max": 240
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Andean tuber. Short-day flowering, tubers form October to November in northern climates. Sun-cure 3 to 5 days.",
+  "harvestIndicators": [
+    "Tubers form after fall day-length shortens, harvest after frost"
+  ]
+}

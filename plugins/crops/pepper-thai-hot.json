@@ -1,0 +1,30 @@
+{
+  "pluginId": "pepper-thai-hot",
+  "type": "crop",
+  "displayName": "Pepper Thai Hot (bird chile)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 70,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Capsicum annuum, 50000 to 100000 SHU. Compact ornamental plants loaded with upright pods. Dries easily for year-round use.",
+  "harvestIndicators": [
+    "Slender upright fruit, deep red when fully ripe"
+  ]
+}

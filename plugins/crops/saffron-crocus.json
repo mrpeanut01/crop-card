@@ -1,0 +1,30 @@
+{
+  "pluginId": "saffron-crocus",
+  "type": "crop",
+  "displayName": "Saffron Crocus (Crocus sativus)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 120
+  },
+  "defaultRowSpacingInches": 8,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 8,
+    "inRowSpacingIn": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Worlds most expensive spice. Fall-blooming corms; plant in August. Each flower yields three red stigmas. Roughly 150 flowers per gram of dried saffron.",
+  "harvestIndicators": [
+    "Three red stigmas in fresh open flowers - harvest at dawn"
+  ]
+}

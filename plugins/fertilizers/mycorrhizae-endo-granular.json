@@ -1,0 +1,26 @@
+{
+  "pluginId": "mycorrhizae-endo-granular",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
+  "form": "granular",
+  "displayName": "Mycorrhizal Inoculant (endomycorrhizae, OMRI)",
+  "organic": true,
+  "applicationRange": {
+    "min": 10,
+    "max": 50,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Granular endo-mycorrhizal inoculant (Glomus, Rhizophagus). Apply in planting furrow. Improves P uptake, drought tolerance, root architecture. Brassicaceae do not form mycorrhizal associations; skip on those rotations."
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "pole-bean-kentucky-wonder",
+  "type": "crop",
+  "displayName": "Pole Bean Kentucky Wonder",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "legume",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 70
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Heirloom pole snap bean (Old Homestead). Bean rust resistance. Strong continuous picker over 6 to 8 weeks. Trellis at 6 ft.",
+  "harvestIndicators": [
+    "7 to 9 inch silvery green pod with full bean shape"
+  ]
+}

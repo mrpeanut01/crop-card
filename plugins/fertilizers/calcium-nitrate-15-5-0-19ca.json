@@ -1,0 +1,29 @@
+{
+  "pluginId": "calcium-nitrate-15-5-0-19ca",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 15,
+    "p": 0,
+    "k": 0
+  },
+  "form": "soluble",
+  "displayName": "Calcium Nitrate (15.5-0-0 + 19% Ca)",
+  "organic": false,
+  "secondaryNutrients": {
+    "ca": 19
+  },
+  "applicationRange": {
+    "min": 50,
+    "max": 300,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "Fully soluble calcium-nitrate fertilizer. Standard tool for blossom-end rot prevention on tomato, pepper, cucurbit."
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "potato-russet-burbank",
+  "type": "crop",
+  "displayName": "Potato Russet Burbank (storage)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 110,
+    "max": 130
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 10,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Standard US baker and processing russet. Long-day storage variety. Late blight susceptible. Cure 7 to 10 days at 60 F.",
+  "harvestIndicators": [
+    "Vines fully dead and brown, skins set firm with no slip"
+  ]
+}

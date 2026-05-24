@@ -1,0 +1,26 @@
+{
+  "pluginId": "biochar",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
+  "form": "granular",
+  "displayName": "Biochar Soil Amendment",
+  "organic": true,
+  "applicationRange": {
+    "min": 1000,
+    "max": 8000,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Charred biomass used as long-term soil amendment. Adds carbon, improves CEC, supports microbial habitat. Charge with compost or fish hydrolysate before incorporation to avoid nutrient lockup."
+}

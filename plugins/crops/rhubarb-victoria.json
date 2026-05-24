@@ -1,0 +1,30 @@
+{
+  "pluginId": "rhubarb-victoria",
+  "type": "crop",
+  "displayName": "Rhubarb Victoria",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
+  "defaultRowSpacingInches": 48,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 48,
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Heritage rhubarb dating to 1837. Mostly green stalks with red blush at base. Hardy to zone 3. Do not harvest in establishment year.",
+  "harvestIndicators": [
+    "Stalks 12 to 18 inches, twist and pull from the crown"
+  ]
+}

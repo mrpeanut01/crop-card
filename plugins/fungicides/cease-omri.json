@@ -1,0 +1,36 @@
+{
+  "pluginId": "cease-omri",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Cease (Bacillus subtilis QST 713, OMRI)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "Bacillus subtilis QST 713",
+      "fracCode": "BM02"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 4,
+    "unit": "qt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "none",
+  "epaRegistrationNumber": "264-1155",
+  "targetDiseases": [
+    "Botrytis",
+    "powdery mildew",
+    "bacterial leaf spot",
+    "Xanthomonas"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "BioWorks biological for greenhouse and field. Lipopeptide-producing strain. Apply preventively on a 7 to 14 day rotation."
+}

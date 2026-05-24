@@ -1,0 +1,30 @@
+{
+  "pluginId": "black-bean-black-turtle",
+  "type": "crop",
+  "displayName": "Black Bean Black Turtle (dry)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "legume",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 105
+  },
+  "defaultRowSpacingInches": 22,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 22,
+    "inRowSpacingIn": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Heirloom dry black bean. Half-runner habit. Excellent storage.",
+  "harvestIndicators": [
+    "Pods dry beige, beans hard and uniformly black"
+  ]
+}

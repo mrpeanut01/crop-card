@@ -1,0 +1,30 @@
+{
+  "pluginId": "garlic-german-extra-hardy",
+  "type": "crop",
+  "displayName": "Garlic German Extra Hardy (hardneck)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 240,
+    "max": 270
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 5,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 4
+  },
+  "notes": "Porcelain-type hardneck. Cold-hardy, well-adapted to zones 3 to 6. Plant cloves 4 to 6 weeks before ground freeze.",
+  "harvestIndicators": [
+    "Lower 3 to 4 leaves brown, upper leaves still green"
+  ]
+}

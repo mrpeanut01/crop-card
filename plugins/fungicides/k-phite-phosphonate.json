@@ -1,0 +1,30 @@
+{
+  "pluginId": "k-phite-phosphonate",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "K-Phite 7LP (mono- and di-potassium phosphite)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "mono- and di-potassium salts of phosphorous acid",
+      "fracCode": "33"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 3,
+    "unit": "pt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "73806-3",
+  "targetDiseases": [
+    "Phytophthora",
+    "downy mildew",
+    "Pythium",
+    "bacterial speck suppression"
+  ],
+  "notes": "Plant Food Systems FRAC 33 phosphonate. Same chemistry as ProPhyt with different formulation."
+}

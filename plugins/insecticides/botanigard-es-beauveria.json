@@ -1,0 +1,36 @@
+{
+  "pluginId": "botanigard-es-beauveria",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "BotaniGard ES (Beauveria bassiana GHA, OMRI)",
+  "activeIngredients": [
+    {
+      "name": "Beauveria bassiana strain GHA",
+      "iracGroup": "UNF"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "qt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "82074-2",
+  "targetPests": [
+    "whitefly",
+    "aphid",
+    "thrips",
+    "psyllid",
+    "spider mite suppression"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "LAM International emulsifiable suspension B. bassiana GHA. Sister to Mycotrol with different formulation."
+}

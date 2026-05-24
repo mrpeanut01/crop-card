@@ -1,0 +1,30 @@
+{
+  "pluginId": "potato-kennebec",
+  "type": "crop",
+  "displayName": "Potato Kennebec (all-purpose)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 100
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 10,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "USDA-Maine 1948 release. Mid-season white-fleshed all-purpose potato. Late blight tolerance better than Russet Burbank.",
+  "harvestIndicators": [
+    "Tubers 8 to 10 inches deep, skins firm"
+  ]
+}

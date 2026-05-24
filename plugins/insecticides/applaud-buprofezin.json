@@ -1,0 +1,29 @@
+{
+  "pluginId": "applaud-buprofezin",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Applaud 70DF (buprofezin)",
+  "activeIngredients": [
+    {
+      "name": "buprofezin",
+      "iracGroup": "16"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 9,
+    "unit": "oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "59639-94",
+  "targetPests": [
+    "whitefly nymphs",
+    "scale",
+    "mealybug",
+    "leafhopper nymphs"
+  ],
+  "notes": "Nichino IRAC 16 chitin biosynthesis inhibitor. Targets juvenile stages."
+}

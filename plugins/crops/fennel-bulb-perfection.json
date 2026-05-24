@@ -1,0 +1,30 @@
+{
+  "pluginId": "fennel-bulb-perfection",
+  "type": "crop",
+  "displayName": "Fennel Bulb Perfection F1 (Florence)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "apiaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Slow-bolting Florence fennel hybrid. Hill base of bulb to blanch and sweeten. Best as fall crop.",
+  "harvestIndicators": [
+    "Bulb 3 to 4 inch tennis-ball size, firm and white"
+  ]
+}

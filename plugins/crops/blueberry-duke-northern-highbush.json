@@ -1,0 +1,30 @@
+{
+  "pluginId": "blueberry-duke-northern-highbush",
+  "type": "crop",
+  "displayName": "Blueberry Duke (northern highbush)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 120,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 120,
+    "inRowSpacingIn": {
+      "min": 48,
+      "max": 60
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Early-season northern highbush. USDA-ARS release. Firm, mild-sweet fruit, machine-harvestable. Requires acid soil pH 4.5 to 5.5.",
+  "harvestIndicators": [
+    "Fully blue with grey waxy bloom, easy release"
+  ]
+}

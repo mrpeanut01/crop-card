@@ -1,0 +1,30 @@
+{
+  "pluginId": "echinacea-purpurea",
+  "type": "crop",
+  "displayName": "Echinacea purpurea (purple coneflower)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
+  "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Native North American medicinal perennial. Hardy to zone 3. Pollinator powerhouse. Cold-stratify seed 30 days.",
+  "harvestIndicators": [
+    "Roots harvested in third year fall; flowers and tops in second year"
+  ]
+}

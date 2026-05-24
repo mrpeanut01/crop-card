@@ -1,0 +1,30 @@
+{
+  "pluginId": "carrot-chantenay-red-cored",
+  "type": "crop",
+  "displayName": "Carrot Chantenay Red Cored",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 65,
+    "max": 70
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 3
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "French heirloom Chantenay type. Tolerates heavier soils than Nantes or Imperator. Excellent for juicing and storage.",
+  "harvestIndicators": [
+    "5 to 6 inch stocky tapered root with broad shoulders"
+  ]
+}

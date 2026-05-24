@@ -1,0 +1,30 @@
+{
+  "pluginId": "plum-methley",
+  "type": "crop",
+  "displayName": "Plum Methley (Japanese)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "stone-fruit",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1460
+  },
+  "defaultRowSpacingInches": 192,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 192,
+    "inRowSpacingIn": {
+      "min": 120,
+      "max": 180
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Self-fertile Japanese plum (Prunus salicina). Early bloom, productive in mild winters. Strong choice for southern and mid-Atlantic growers.",
+  "harvestIndicators": [
+    "Reddish-purple skin, sweet red-fleshed interior, soft at full ripe"
+  ]
+}

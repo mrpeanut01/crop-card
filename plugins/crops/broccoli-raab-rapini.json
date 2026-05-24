@@ -1,0 +1,31 @@
+{
+  "pluginId": "broccoli-raab-rapini",
+  "type": "crop",
+  "displayName": "Broccoli Raab (Rapini) Sorrento",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 40,
+    "max": 50
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Italian heirloom rapini grown for buds, leaves, and stems together. Strong mustard flavor. Plant succession every 2 weeks.",
+  "harvestIndicators": [
+    "Buds tight before flowering opens",
+    "Stems 8 to 12 inches"
+  ]
+}

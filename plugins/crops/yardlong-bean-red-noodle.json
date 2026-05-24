@@ -1,0 +1,30 @@
+{
+  "pluginId": "yardlong-bean-red-noodle",
+  "type": "crop",
+  "displayName": "Yardlong Bean Red Noodle",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "legume",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Asparagus bean (Vigna unguiculata sesquipedalis). Pole habit. Heat-loving where bush snap beans fail. Strong Asian-market crop.",
+  "harvestIndicators": [
+    "Deep burgundy 18 to 30 inch pods, still pencil-thick"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "pluginId": "azaguard",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "AzaGuard (Azadirachtin 3%, OMRI)",
+  "activeIngredients": [
+    {
+      "name": "azadirachtin",
+      "iracGroup": "UN"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 16,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "70051-9",
+  "targetPests": [
+    "aphid",
+    "whitefly",
+    "thrips",
+    "leafminer",
+    "fungus gnat",
+    "Colorado potato beetle"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "BioSafe Systems neem-derived insect growth regulator. Disrupts molting, repels feeding, suppresses oviposition."
+}

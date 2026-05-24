@@ -1,0 +1,28 @@
+{
+  "pluginId": "acramite-bifenazate",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Acramite 50WS (bifenazate)",
+  "activeIngredients": [
+    {
+      "name": "bifenazate",
+      "iracGroup": "20D"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "lb"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "400-503",
+  "targetPests": [
+    "twospotted spider mite",
+    "European red mite",
+    "Pacific spider mite"
+  ],
+  "notes": "ADAMA selective miticide. IRAC 20D METI complex III inhibitor. Long residual on motile stages; weaker on eggs."
+}

@@ -1,0 +1,26 @@
+{
+  "pluginId": "worm-castings-1-0-0",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 1,
+    "p": 0,
+    "k": 0
+  },
+  "form": "compost",
+  "displayName": "Worm Castings (1-0-0, OMRI)",
+  "organic": true,
+  "applicationRange": {
+    "min": 200,
+    "max": 1000,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Vermicompost from earthworm digestion. Low N-P-K but high microbial activity, humic acids, and chitinase enzymes. Use as transplant amendment or band-applied at side-dress."
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "beet-chioggia",
+  "type": "crop",
+  "displayName": "Beet Chioggia (Italian heirloom)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 55,
+    "max": 60
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Italian heirloom from Chioggia (pre-1840). Striking ringed cross-section. Mild flavor.",
+  "harvestIndicators": [
+    "2 to 3 inch round root, alternating pink and white rings when sliced"
+  ]
+}

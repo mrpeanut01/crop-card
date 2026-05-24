@@ -1,0 +1,30 @@
+{
+  "pluginId": "turnip-hakurei",
+  "type": "crop",
+  "displayName": "Turnip Hakurei F1 (Japanese salad)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 38,
+    "max": 50
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Sweet-mild Japanese salad turnip. Eaten raw or lightly cooked. Strong CSA and restaurant-market crop.",
+  "harvestIndicators": [
+    "1 to 2 inch round white root, tender skin"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "ranunculus-tecolote",
+  "type": "crop",
+  "displayName": "Ranunculus Tecolote (cut flower corms)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 120
+  },
+  "defaultRowSpacingInches": 9,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 9,
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 9
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Premium cool-season cut flower from claw-shaped corms. Pre-soak corms 4 hours before planting in fall or early spring with frost protection.",
+  "harvestIndicators": [
+    "Buds beginning to crack open with color visible"
+  ]
+}

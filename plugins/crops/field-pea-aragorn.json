@@ -1,0 +1,30 @@
+{
+  "pluginId": "field-pea-aragorn",
+  "type": "crop",
+  "displayName": "Field Pea Aragorn (dry/grain)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "legume",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 110
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 7,
+    "inRowSpacingIn": {
+      "min": 7,
+      "max": 7
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Spring-sown dry yellow field pea. Semi-leafless type stands well for direct combining. Drill at 200 to 250 lb per acre. Inoculate.",
+  "harvestIndicators": [
+    "Pods dry and rattle, plants tan-brown"
+  ]
+}

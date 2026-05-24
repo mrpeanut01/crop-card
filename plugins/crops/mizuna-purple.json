@@ -1,0 +1,30 @@
+{
+  "pluginId": "mizuna-purple",
+  "type": "crop",
+  "displayName": "Mizuna Purple",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 25,
+    "max": 40
+  },
+  "defaultRowSpacingInches": 6,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 6,
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Japanese mustard green with mild, peppery flavor. Heat-tolerant for shoulder seasons. Excellent in salad mixes.",
+  "harvestIndicators": [
+    "Deeply lobed purple-green leaves at 4 to 6 inches"
+  ]
+}

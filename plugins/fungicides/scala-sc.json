@@ -1,0 +1,29 @@
+{
+  "pluginId": "scala-sc",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Scala SC (pyrimethanil)",
+  "applicationTiming": "PRE-BLOOM",
+  "activeIngredients": [
+    {
+      "name": "pyrimethanil",
+      "fracCode": "9"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 18,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 1,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "264-788",
+  "targetDiseases": [
+    "Botrytis",
+    "early blight",
+    "apple scab"
+  ],
+  "notes": "Bayer FRAC 9 anilinopyrimidine. Botrytis specialist for grape, strawberry, vegetable."
+}

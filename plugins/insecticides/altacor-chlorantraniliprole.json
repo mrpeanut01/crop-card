@@ -1,0 +1,30 @@
+{
+  "pluginId": "altacor-chlorantraniliprole",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Altacor (chlorantraniliprole, fruit/vegetable)",
+  "activeIngredients": [
+    {
+      "name": "chlorantraniliprole",
+      "iracGroup": "28"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 4.5,
+    "unit": "oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 5,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "352-730",
+  "targetPests": [
+    "codling moth",
+    "oriental fruit moth",
+    "leafroller",
+    "fruitworm",
+    "armyworm"
+  ],
+  "notes": "FMC IRAC 28 diamide. Sister to Coragen with fruit/tree-focused label."
+}

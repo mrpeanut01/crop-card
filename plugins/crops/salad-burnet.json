@@ -1,0 +1,30 @@
+{
+  "pluginId": "salad-burnet",
+  "type": "crop",
+  "displayName": "Salad Burnet (Sanguisorba minor)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 70,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 10
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Hardy perennial European salad herb. Cool-season harvest of tender young leaves with cucumber notes.",
+  "harvestIndicators": [
+    "Fern-like leaves with mild cucumber flavor"
+  ]
+}

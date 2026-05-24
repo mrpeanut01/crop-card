@@ -1,0 +1,30 @@
+{
+  "pluginId": "currant-black-titania",
+  "type": "crop",
+  "displayName": "Black Currant Titania",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 72,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 72,
+    "inRowSpacingIn": {
+      "min": 48,
+      "max": 60
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Swedish black currant cultivar. Mildew, leaf spot, and white pine blister rust resistance. Hardy to zone 3.",
+  "harvestIndicators": [
+    "Glossy black berries on full clusters, easy strigging at full ripeness"
+  ]
+}

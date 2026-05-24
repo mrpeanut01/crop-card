@@ -1,0 +1,37 @@
+{
+  "pluginId": "double-nickel-55",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Double Nickel 55 (Bacillus amyloliquefaciens D747, OMRI)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "Bacillus amyloliquefaciens strain D747",
+      "fracCode": "BM02"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 0.5,
+    "unit": "lb"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "none",
+  "epaRegistrationNumber": "70051-107",
+  "targetDiseases": [
+    "Botrytis",
+    "powdery mildew",
+    "downy mildew",
+    "Pythium",
+    "Rhizoctonia"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Certis USA biological. Suited to soil drench and foliar. Excellent rotation partner with copper or sulfur."
+}

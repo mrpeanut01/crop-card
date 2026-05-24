@@ -1,0 +1,28 @@
+{
+  "pluginId": "fulfill-pymetrozine",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Fulfill 50WG (pymetrozine)",
+  "activeIngredients": [
+    {
+      "name": "pymetrozine",
+      "iracGroup": "9B"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 2.75,
+    "unit": "oz"
+  },
+  "gpaCalibration": 20,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "100-912",
+  "targetPests": [
+    "aphid",
+    "whitefly",
+    "leafhopper"
+  ],
+  "notes": "Syngenta IRAC 9B selective feeding blocker. Aphids stop feeding within hours, die within days from starvation."
+}

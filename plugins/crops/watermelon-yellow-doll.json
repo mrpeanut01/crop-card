@@ -1,0 +1,31 @@
+{
+  "pluginId": "watermelon-yellow-doll",
+  "type": "crop",
+  "displayName": "Watermelon Yellow Doll F1 (icebox)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 65,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 72,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 72,
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Bright yellow-fleshed icebox hybrid. Sweet, light flavor. 6 to 7 lb single-serve size.",
+  "harvestIndicators": [
+    "Tendril nearest fruit dry, ground spot creamy yellow",
+    "Yellow-fleshed 6 to 7 lb fruit"
+  ]
+}

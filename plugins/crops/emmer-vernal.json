@@ -1,0 +1,30 @@
+{
+  "pluginId": "emmer-vernal",
+  "type": "crop",
+  "displayName": "Emmer Vernal (farro)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cereal-grain",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 100,
+    "max": 130
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 7,
+    "inRowSpacingIn": {
+      "min": 7,
+      "max": 7
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Triticum dicoccum, spring-sown ancient hulled wheat. Marketed as farro. Drought-tolerant. Strong nutty flavor.",
+  "harvestIndicators": [
+    "Heads tan, kernels hard, hulls retained"
+  ]
+}

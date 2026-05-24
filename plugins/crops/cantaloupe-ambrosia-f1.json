@@ -1,0 +1,30 @@
+{
+  "pluginId": "cantaloupe-ambrosia-f1",
+  "type": "crop",
+  "displayName": "Cantaloupe Ambrosia F1",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 60,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "5 lb peach-fleshed muskmelon, hybrid bred by Harris Moran in 1986. Excellent eating quality. Powdery mildew resistance.",
+  "harvestIndicators": [
+    "Full slip from vine, deeply netted rind, fragrant blossom end"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "pluginId": "potassium-nitrate-13-0-44",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 13,
+    "p": 0,
+    "k": 44
+  },
+  "form": "soluble",
+  "displayName": "Potassium Nitrate (13-0-44)",
+  "organic": false,
+  "applicationRange": {
+    "min": 50,
+    "max": 300,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "Fully soluble K and N source. Chloride-free, suited to chloride-sensitive crops (potato, tobacco, fruit tree)."
+}

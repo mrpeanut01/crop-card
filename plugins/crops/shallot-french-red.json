@@ -1,0 +1,30 @@
+{
+  "pluginId": "shallot-french-red",
+  "type": "crop",
+  "displayName": "Shallot French Red (from sets)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 110
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 8
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Standard French red shallot. Plant sets in early spring. Each planted bulb divides into 4 to 8. Cure 2 to 3 weeks for long storage.",
+  "harvestIndicators": [
+    "Tops fall over, bulbs cluster fully formed"
+  ]
+}

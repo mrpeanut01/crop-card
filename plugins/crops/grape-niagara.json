@@ -1,0 +1,30 @@
+{
+  "pluginId": "grape-niagara",
+  "type": "crop",
+  "displayName": "Grape Niagara (Vitis labrusca table/juice)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "vine-fruit",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 1460,
+    "max": 2190
+  },
+  "defaultRowSpacingInches": 108,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 108,
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 84
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "American Concord-style white slip-skin grape. Hardy zones 4 to 8. Standard for juice and farmstand sales in the eastern US.",
+  "harvestIndicators": [
+    "Pale yellow-green slip-skin fruit at full sweetness"
+  ]
+}

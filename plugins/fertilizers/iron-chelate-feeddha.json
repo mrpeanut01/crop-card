@@ -1,0 +1,26 @@
+{
+  "pluginId": "iron-chelate-feeddha",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
+  "form": "soluble",
+  "displayName": "Iron Chelate FeEDDHA (6% Fe)",
+  "organic": false,
+  "applicationRange": {
+    "min": 1,
+    "max": 5,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "Sequestered iron chelate stable in soil pH 7 to 9. Standard treatment for iron chlorosis on calcareous soils."
+}

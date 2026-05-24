@@ -1,0 +1,36 @@
+{
+  "pluginId": "m-pede-organic",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "M-Pede Organic (potassium salts of fatty acids, OMRI)",
+  "activeIngredients": [
+    {
+      "name": "potassium salts of fatty acids",
+      "iracGroup": "UN"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 2,
+    "unit": "qt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "53219-6",
+  "targetPests": [
+    "aphid",
+    "whitefly",
+    "spider mite",
+    "thrips",
+    "psyllid"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Gowan insecticidal soap, OMRI-formulated alternative to conventional M-Pede."
+}

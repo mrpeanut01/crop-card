@@ -1,0 +1,31 @@
+{
+  "pluginId": "turmeric-yellow",
+  "type": "crop",
+  "displayName": "Turmeric Yellow (Curcuma longa)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 270,
+    "max": 330
+  },
+  "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Tropical rhizome, treated as annual outside zones 9 to 11. Higher curcumin content with longer growing season.",
+  "harvestIndicators": [
+    "Foliage dies back after frost",
+    "Bright orange-yellow flesh on rhizome cut"
+  ]
+}

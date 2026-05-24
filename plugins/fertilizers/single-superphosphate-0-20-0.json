@@ -1,0 +1,30 @@
+{
+  "pluginId": "single-superphosphate-0-20-0",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 20,
+    "k": 0
+  },
+  "form": "granular",
+  "displayName": "Single Superphosphate (0-20-0 + 12S + 20Ca)",
+  "organic": false,
+  "secondaryNutrients": {
+    "ca": 20,
+    "s": 12
+  },
+  "applicationRange": {
+    "min": 100,
+    "max": 600,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "Lower-analysis P than TSP but carries 12% S and 20% Ca. Strong fit on sulfur-deficient ground."
+}

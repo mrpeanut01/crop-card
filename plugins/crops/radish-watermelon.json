@@ -1,0 +1,30 @@
+{
+  "pluginId": "radish-watermelon",
+  "type": "crop",
+  "displayName": "Radish Watermelon (Chinese Red Meat)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 55,
+    "max": 65
+  },
+  "defaultRowSpacingInches": 10,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 10,
+    "inRowSpacingIn": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Chinese heirloom storage radish. Plant in late summer for fall harvest, color sets best in cool weather.",
+  "harvestIndicators": [
+    "3 to 4 inch round root, green shoulders with pink-magenta interior"
+  ]
+}

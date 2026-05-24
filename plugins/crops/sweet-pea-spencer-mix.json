@@ -1,0 +1,30 @@
+{
+  "pluginId": "sweet-pea-spencer-mix",
+  "type": "crop",
+  "displayName": "Sweet Pea Spencer Mix (cut flower)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "legume",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 120
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Lathrus odoratus, fragrant English sweet pea mix. Cool-season annual. Soak seeds 24 hours before sowing. Trellis to 6 ft.",
+  "harvestIndicators": [
+    "Stems 8 to 12 inches with 2 to 3 buds open"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "strawberry-earliglow-june-bearing",
+  "type": "crop",
+  "displayName": "Strawberry Earliglow (June-bearing)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 2,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 365
+  },
+  "defaultRowSpacingInches": 42,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 42,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 4
+  },
+  "notes": "Early-season June-bearer. USDA-ARS Beltsville release. Strong red color, classic strawberry flavor.",
+  "harvestIndicators": [
+    "Deep red conical fruit, uniform shoulders"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "pluginId": "method-aminocyclopyrachlor",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Method 240SL (aminocyclopyrachlor)",
+  "activeIngredients": [
+    {
+      "name": "aminocyclopyrachlor",
+      "chemistryClass": "synthetic-auxin"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 5,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": true,
+  "epaRegistrationNumber": "81880-25",
+  "notes": "Bayer Group 4 synthetic auxin for non-cropland, industrial, and roadside vegetation. Long soil residual; do not use on cropland."
+}

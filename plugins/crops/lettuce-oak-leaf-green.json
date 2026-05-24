@@ -1,0 +1,30 @@
+{
+  "pluginId": "lettuce-oak-leaf-green",
+  "type": "crop",
+  "displayName": "Lettuce Green Oakleaf",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 45,
+    "max": 50
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 10
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "French heirloom. Heat-tolerant loose-leaf. Excellent baby-leaf cut for mesclun mixes.",
+  "harvestIndicators": [
+    "Lobed oak-shaped leaves, tender at base"
+  ]
+}

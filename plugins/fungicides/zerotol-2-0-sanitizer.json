@@ -1,0 +1,40 @@
+{
+  "pluginId": "zerotol-2-0-sanitizer",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "ZeroTol 2.0 (hydrogen peroxide + peroxyacetic acid, OMRI)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "hydrogen peroxide",
+      "fracCode": "NC"
+    },
+    {
+      "name": "peroxyacetic acid",
+      "fracCode": "NC"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "qt"
+  },
+  "gpaCalibration": 50,
+  "reEntryIntervalHours": 1,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "70299-12",
+  "targetDiseases": [
+    "bacterial leaf spot",
+    "downy mildew",
+    "powdery mildew",
+    "post-harvest decay"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "BioSafe Systems contact sanitizer/fungicide. Higher concentration than OxiDate. Greenhouse and irrigation-line sanitation."
+}

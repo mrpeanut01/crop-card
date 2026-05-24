@@ -1,0 +1,30 @@
+{
+  "pluginId": "summer-squash-pattypan-yellow",
+  "type": "crop",
+  "displayName": "Summer Squash Yellow Patty Pan (Sunburst F1)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 50,
+    "max": 55
+  },
+  "defaultRowSpacingInches": 48,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 48,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "1985 AAS-winning yellow pattypan summer squash. Pick young and often. Strong farmstand seller.",
+  "harvestIndicators": [
+    "3 inch scalloped disk, tender skin"
+  ]
+}

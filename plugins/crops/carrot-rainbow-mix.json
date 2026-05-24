@@ -1,0 +1,30 @@
+{
+  "pluginId": "carrot-rainbow-mix",
+  "type": "crop",
+  "displayName": "Carrot Rainbow Mix (mixed colors)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 75
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 3
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Open-pollinated mixed-color carrot blend. Strong farmstand and farmers market crop.",
+  "harvestIndicators": [
+    "Roots fully colored; mix of orange, yellow, white, red, purple"
+  ]
+}

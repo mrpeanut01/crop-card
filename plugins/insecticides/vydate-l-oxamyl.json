@@ -1,0 +1,30 @@
+{
+  "pluginId": "vydate-l-oxamyl",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Vydate L (oxamyl)",
+  "activeIngredients": [
+    {
+      "name": "oxamyl",
+      "iracGroup": "1A"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 2,
+    "unit": "qt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 48,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "moderate",
+  "epaRegistrationNumber": "352-372",
+  "targetPests": [
+    "root-knot nematode",
+    "lesion nematode",
+    "aphid",
+    "thrips",
+    "leafminer"
+  ],
+  "notes": "Corteva carbamate (IRAC 1A) systemic insecticide and nematicide. Restricted Use Pesticide."
+}

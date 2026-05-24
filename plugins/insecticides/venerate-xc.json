@@ -1,0 +1,36 @@
+{
+  "pluginId": "venerate-xc",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Venerate XC (Burkholderia spp. A396, OMRI)",
+  "activeIngredients": [
+    {
+      "name": "Burkholderia spp. strain A396 heat-killed cells",
+      "iracGroup": "UN"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 4,
+    "unit": "qt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "84059-15",
+  "targetPests": [
+    "aphid",
+    "whitefly",
+    "spider mite",
+    "lepidopteran larvae",
+    "leafhopper"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Pro-Farm Group biological. Contact + ingestion. Spent fermentation broth with inactivated cells plus secondary metabolites."
+}

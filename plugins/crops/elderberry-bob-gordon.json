@@ -1,0 +1,30 @@
+{
+  "pluginId": "elderberry-bob-gordon",
+  "type": "crop",
+  "displayName": "Elderberry Bob Gordon (American)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 96,
+    "inRowSpacingIn": {
+      "min": 48,
+      "max": 72
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Sambucus canadensis cultivar discovered in Missouri. Downward-facing cymes resist bird damage. Heavy producer.",
+  "harvestIndicators": [
+    "Deep purple-black cymes, fully ripe across the cluster"
+  ]
+}

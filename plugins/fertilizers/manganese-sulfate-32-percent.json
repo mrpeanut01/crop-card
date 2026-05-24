@@ -1,0 +1,26 @@
+{
+  "pluginId": "manganese-sulfate-32-percent",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
+  "form": "soluble",
+  "displayName": "Manganese Sulfate (32% Mn)",
+  "organic": false,
+  "applicationRange": {
+    "min": 5,
+    "max": 20,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "Standard Mn source. Foliar application preferred for correcting Mn deficiency on soybean, sugar beet, citrus, tree fruit."
+}

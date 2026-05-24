@@ -1,0 +1,23 @@
+{
+  "pluginId": "sencor-metribuzin",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Sencor 75 DF (metribuzin)",
+  "activeIngredients": [
+    {
+      "name": "metribuzin",
+      "chemistryClass": "photosystem-ii-triazine"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 0.66,
+    "unit": "lb"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "PRE",
+  "requiresAMS": false,
+  "deconRequired": false,
+  "epaRegistrationNumber": "264-816",
+  "notes": "Bayer Group 5 PSII triazine for potato, soybean, tomato (transplant), wheat, asparagus. PRE and early POST."
+}

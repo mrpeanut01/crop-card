@@ -1,0 +1,26 @@
+{
+  "pluginId": "copper-sulfate-pentahydrate",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
+  "form": "soluble",
+  "displayName": "Copper Sulfate Pentahydrate (25% Cu)",
+  "organic": false,
+  "applicationRange": {
+    "min": 2,
+    "max": 8,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "Common Cu source for soil deficiency correction. Standard on muck soils growing onion, carrot, lettuce. Monitor accumulation over time."
+}

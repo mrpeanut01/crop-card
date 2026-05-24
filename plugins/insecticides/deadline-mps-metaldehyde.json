@@ -1,0 +1,26 @@
+{
+  "pluginId": "deadline-mps-metaldehyde",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Deadline M-Ps (metaldehyde slug/snail bait)",
+  "activeIngredients": [
+    {
+      "name": "metaldehyde",
+      "iracGroup": "UN"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 20,
+    "unit": "lb"
+  },
+  "reEntryIntervalHours": 24,
+  "preHarvestIntervalDays": 21,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "70506-130",
+  "targetPests": [
+    "gray field slug",
+    "European brown garden snail"
+  ],
+  "notes": "AMVAC conventional slug and snail bait. Faster knockdown than iron phosphate. Toxic to dogs."
+}

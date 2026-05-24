@@ -1,0 +1,30 @@
+{
+  "pluginId": "asparagus-millennium",
+  "type": "crop",
+  "displayName": "Asparagus Millennium F1 (all-male, cold-hardy)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 60,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "University of Guelph all-male hybrid. Exceptional cold hardiness for the Upper Midwest and Canadian Prairies.",
+  "harvestIndicators": [
+    "Spears 7 to 9 inches, tight tips"
+  ]
+}

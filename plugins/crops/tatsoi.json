@@ -1,0 +1,30 @@
+{
+  "pluginId": "tatsoi",
+  "type": "crop",
+  "displayName": "Tatsoi (spoon mustard)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 21,
+    "max": 45
+  },
+  "defaultRowSpacingInches": 6,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 6,
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Asian green forming a flat rosette ideal for cool-season tunnels. Cold-hardy below 15 F. Excellent baby-leaf.",
+  "harvestIndicators": [
+    "Dark green spoon-shaped leaves arranged in flat rosette"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "pluginId": "grazonnext-hl",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "GrazonNext HL (aminopyralid + 2,4-D)",
+  "activeIngredients": [
+    {
+      "name": "aminopyralid",
+      "chemistryClass": "synthetic-auxin"
+    },
+    {
+      "name": "2,4-D choline",
+      "chemistryClass": "synthetic-auxin"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 2,
+    "unit": "pt"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": true,
+  "epaRegistrationNumber": "62719-635",
+  "notes": "Corteva Group 4 premix for pasture, hay, rangeland, CRP. Aminopyralid carries over in manure, hay, and compost for years; do not use forage from treated fields for sensitive vegetable mulch."
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "okra-clemson-spineless",
+  "type": "crop",
+  "displayName": "Okra Clemson Spineless (AAS Winner)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 55,
+    "max": 60
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "1939 AAS-winning okra. Standard southern variety. Pick every 2 to 3 days to keep pods tender.",
+  "harvestIndicators": [
+    "3 to 4 inch pod, snaps easily off the plant"
+  ]
+}

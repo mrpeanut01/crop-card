@@ -1,0 +1,29 @@
+{
+  "pluginId": "presidio-fluopicolide",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Presidio (fluopicolide)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "fluopicolide",
+      "fracCode": "43"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 4,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 2,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "59639-140",
+  "targetDiseases": [
+    "downy mildew",
+    "late blight",
+    "Phytophthora root and crown rot"
+  ],
+  "notes": "Valent FRAC 43 benzamide. Oomycete specialist. Label requires tank-mix with non-FRAC-43 partner."
+}

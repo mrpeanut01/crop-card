@@ -1,0 +1,30 @@
+{
+  "pluginId": "mulberry-illinois-everbearing",
+  "type": "crop",
+  "displayName": "Mulberry Illinois Everbearing",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 168,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 168,
+    "inRowSpacingIn": {
+      "min": 144,
+      "max": 192
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Morus alba x rubra hybrid. Self-fertile. Bears over 6 to 8 weeks. Cold-hardy to zone 4. Fruit stains; plant away from sidewalks.",
+  "harvestIndicators": [
+    "Deep purple-black fruit drops easily when ripe; harvest by shaking onto tarp"
+  ]
+}

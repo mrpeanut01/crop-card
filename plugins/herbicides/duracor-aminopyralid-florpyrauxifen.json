@@ -1,0 +1,27 @@
+{
+  "pluginId": "duracor-aminopyralid-florpyrauxifen",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "DuraCor (aminopyralid + florpyrauxifen-benzyl)",
+  "activeIngredients": [
+    {
+      "name": "aminopyralid",
+      "chemistryClass": "synthetic-auxin"
+    },
+    {
+      "name": "florpyrauxifen-benzyl",
+      "chemistryClass": "synthetic-auxin"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 16,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": true,
+  "epaRegistrationNumber": "62719-728",
+  "notes": "Corteva Group 4 premix with Rinskor (florpyrauxifen) for pasture and rangeland. Same aminopyralid carryover concerns as GrazonNext."
+}

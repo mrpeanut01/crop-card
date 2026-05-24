@@ -1,0 +1,31 @@
+{
+  "pluginId": "ginger-yellow-hawaiian",
+  "type": "crop",
+  "displayName": "Ginger Yellow Hawaiian (Zingiber officinale)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 240,
+    "max": 300
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Tropical rhizome, treated as annual outside zones 9 to 11. Start seed pieces indoors. Strong tunnel crop.",
+  "harvestIndicators": [
+    "Foliage yellows and dies back in late fall",
+    "Rhizomes plump and fragrant"
+  ]
+}

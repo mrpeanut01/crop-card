@@ -5,9 +5,23 @@
   "version": "1.0.0",
   "cropFamily": "brassica",
   "preHarvestIntervalDays": 1,
-  "daysToMaturity": { "min": 55, "max": 65 },
+  "daysToMaturity": {
+    "min": 55,
+    "max": 65
+  },
   "defaultRowSpacingInches": 24,
-  "plantingGuide": { "soilTempMinF": 50, "rowSpacingIn": 24, "inRowSpacingIn": { "min": 12, "max": 18 } },
-  "harvestIndicators": ["Tight bead head 4–6 in", "Cut before any yellow flower opens"],
-  "notes": "Side-shoot producer — keep harvesting after main head. Cabbage worm + diamondback moth control via Bt or Spinosad."
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "harvestIndicators": [
+    "Tight bead head 4–6 in",
+    "Cut before any yellow flower opens"
+  ],
+  "notes": "Side-shoot producer — keep harvesting after main head. Cabbage worm + diamondback moth control via Bt or Spinosad.",
+  "harvestStyle": "single-event"
 }

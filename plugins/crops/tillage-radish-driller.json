@@ -26,5 +26,11 @@
     "lifecycle": "annual",
     "rotationLookbackYears": 1
   },
-  "notes": "Raphanus sativus, deep tap-root daikon-type cover for compaction relief. Winter-kills below 20 F, leaving channels for root growth and water infiltration in the following crop. Drill at 8 to 12 lb per acre. Sold by Green Cover Seed, King's AgriSeed."
+  "notes": "Raphanus sativus, deep tap-root daikon-type cover for compaction relief. Winter-kills below 20 F, leaving channels for root growth and water infiltration in the following crop. Drill at 8 to 12 lb per acre. Sold by Green Cover Seed, King's AgriSeed.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "daysFromPlantingMin": 70,
+    "daysFromPlantingMax": 100,
+    "beeAttractive": true
+  }
 }

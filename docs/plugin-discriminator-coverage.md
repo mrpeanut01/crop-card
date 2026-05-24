@@ -1,6 +1,6 @@
 # Plugin discriminator coverage (Phase 25c.0)
 
-Generated: 2026-05-24T19:40:27.306Z
+Generated: 2026-05-24T21:34:21.936Z
 
 Tracks coverage of the Phase 25c renderer-dispatch + Phase 25d gate-evaluator
 discriminator fields across the plugin corpus. Per the [#87 plan](https://github.com/mrpeanut01/crop-card/issues/87),
@@ -15,9 +15,9 @@ Regenerate with: `pnpm audit:plugins`
 | Plugin type | Total | Field | Coverage |
 | --- | ---: | --- | ---: |
 | Crop | 376 | growthStageTable.system | 0.8% (3/376) |
-| Crop | 376 | harvestStyle | 63.6% (239/376) |
+| Crop | 376 | harvestStyle | 71.8% (270/376) |
 | Crop | 376 | postHarvestCuring (presence) | 2.4% (9/376) |
-| Crop | 376 | bloomWindow | 20.5% (77/376) |
+| Crop | 376 | bloomWindow | 21.0% (79/376) |
 | Insecticide | 70 | scoutingThresholds | 0.0% (0/70) |
 | Fungicide | 64 | activeIngredients[].fracCode (all set) | 100.0% (64/64) |
 
@@ -28,7 +28,7 @@ Regenerate with: `pnpm audit:plugins`
 | allium | 21 | 0.0% | 100.0% | 9.5% | 0.0% |
 | apiaceae | 10 | 0.0% | 0.0% | 0.0% | 0.0% |
 | bramble | 4 | 0.0% | 100.0% | 0.0% | 0.0% |
-| brassica | 33 | 0.0% | 0.0% | 0.0% | 0.0% |
+| brassica | 33 | 0.0% | 93.9% | 0.0% | 6.1% |
 | broadleaf-companion | 26 | 0.0% | 0.0% | 0.0% | 0.0% |
 | cereal-grain | 17 | 5.9% | 100.0% | 0.0% | 0.0% |
 | corn | 17 | 11.8% | 100.0% | 5.9% | 0.0% |
@@ -51,22 +51,13 @@ Regenerate with: `pnpm audit:plugins`
 
 - `acorn-squash-table-queen.json` (cucurbit)
 - `amaranth-burgundy.json` (broadleaf-companion)
-- `arugula-astro.json` (brassica)
 - `bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed.json` (legume)
 - `bmr-sorghum-sudan.json` (forage)
-- `broccoli-de-cicco.json` (brassica)
-- `broccoli-raab-rapini.json` (brassica)
-- `brussels-sprouts-jade-cross-f1.json` (brassica)
-- `brussels-sprouts-long-island.json` (brassica)
 - `bush-bean-provider.json` (legume)
 - `bush-bean-roma-ii.json` (legume)
-- `cabbage-early-jersey-wakefield.json` (brassica)
-- `cabbage-savoy-king.json` (brassica)
-- `cabbage-storage-no-4-f1.json` (brassica)
 - `calendula-resina.json` (broadleaf-companion)
 - `cantaloupe-ambrosia-f1.json` (cucurbit)
 - `cantaloupe-hales-best.json` (cucurbit)
-- `cauliflower-snowball-y.json` (brassica)
 - `celeriac-brilliant.json` (apiaceae)
 - `celery-tall-utah-52-70.json` (apiaceae)
 - `chamomile-german.json` (broadleaf-companion)
@@ -76,7 +67,6 @@ Regenerate with: `pnpm audit:plugins`
 - `collards-georgia-southern.json` (brassica)
 - `cosmos-double-click.json` (broadleaf-companion)
 - `dahlia-cafe-au-lait.json` (broadleaf-companion)
-- `daikon-radish-april-cross.json` (brassica)
 - `dill-mammoth.json` (apiaceae)
 - `echinacea-purpurea.json` (broadleaf-companion)
 - `edamame-tohya.json` (legume)
@@ -88,18 +78,28 @@ Regenerate with: `pnpm audit:plugins`
 - `flax-grain-omega.json` (broadleaf-companion)
 - `ground-cherry-aunt-mollys.json` (solanaceae)
 - `hyssop-officinalis.json` (culinary-herb)
-- `kale-lacinato.json` (brassica)
-- `kale-red-russian.json` (brassica)
-- `kale-winterbor-f1.json` (brassica)
-- `kohlrabi-azur-star.json` (brassica)
-- `kohlrabi-early-white-vienna.json` (brassica)
-- `komatsuna.json` (brassica)
 - `lavender-english-munstead.json` (culinary-herb)
 - `lemon-balm.json` (culinary-herb)
 - `lemon-verbena.json` (culinary-herb)
 - `lemongrass-east-indian.json` (culinary-herb)
 - `lentil-pardina.json` (legume)
-- _…and 87 more_
+- `lisianthus-arena.json` (broadleaf-companion)
+- `lovage.json` (apiaceae)
+- `luffa-gourd.json` (cucurbit)
+- `madder-dye.json` (broadleaf-companion)
+- `marjoram-sweet.json` (culinary-herb)
+- `marshmallow-althaea.json` (broadleaf-companion)
+- `melon-charentais-savor.json` (cucurbit)
+- `melon-galia.json` (cucurbit)
+- `melon-honeydew-tam-dew.json` (cucurbit)
+- `microgreens-pea-shoots.json` (legume)
+- `microgreens-sunflower-shoots.json` (broadleaf-companion)
+- `milk-thistle-medicinal.json` (broadleaf-companion)
+- `mountain-mint.json` (culinary-herb)
+- `mustard-greens-southern-giant-curled.json` (brassica)
+- `nasturtium-companion.json` (broadleaf-companion)
+- `okra-clemson-spineless.json` (broadleaf-companion)
+- _…and 56 more_
 
 ## Missing coverage — crop bloomWindow (top 50)
 
@@ -153,7 +153,7 @@ Regenerate with: `pnpm audit:plugins`
 - `corn-bloody-butcher.json` (corn)
 - `corn-feed-dent-pioneer.json` (corn)
 - `corn-sweet-bodacious.json` (corn)
-- _…and 249 more_
+- _…and 247 more_
 
 ## Missing coverage — insecticide scoutingThresholds
 

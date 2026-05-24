@@ -26,5 +26,6 @@
   "notes": "1850s American heirloom early pointed cabbage. Resists splitting better than round types. Strong for spring tunnel.",
   "harvestIndicators": [
     "2 to 3 lb conical pointed head, firm and tight"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

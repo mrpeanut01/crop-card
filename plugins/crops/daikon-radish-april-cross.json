@@ -26,5 +26,6 @@
   "notes": "Slow-bolting hybrid daikon for spring or fall planting. Mild, juicy flesh suited for fresh and kimchi markets.",
   "harvestIndicators": [
     "14 to 18 inch white tapered root, smooth shoulders"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

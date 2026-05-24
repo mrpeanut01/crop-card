@@ -4,8 +4,15 @@
   "displayName": "Kale — Lacinato (Dinosaur / Tuscan)",
   "version": "1.0.0",
   "cropFamily": "brassica",
-  "daysToMaturity": { "min": 55, "max": 65 },
+  "daysToMaturity": {
+    "min": 55,
+    "max": 65
+  },
   "defaultRowSpacingInches": 18,
-  "harvestIndicators": ["Leaves 8–10 in", "Bottom-up harvest leaves crown"],
-  "notes": "Cold-hardy to 10 °F; flavor sweetens after frost. Continuous-harvest crop into November."
+  "harvestIndicators": [
+    "Leaves 8–10 in",
+    "Bottom-up harvest leaves crown"
+  ],
+  "notes": "Cold-hardy to 10 °F; flavor sweetens after frost. Continuous-harvest crop into November.",
+  "harvestStyle": "cut-and-come-again"
 }

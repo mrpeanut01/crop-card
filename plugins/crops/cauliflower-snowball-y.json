@@ -4,8 +4,15 @@
   "displayName": "Cauliflower — Snowball Y",
   "version": "1.0.0",
   "cropFamily": "brassica",
-  "daysToMaturity": { "min": 65, "max": 75 },
+  "daysToMaturity": {
+    "min": 65,
+    "max": 75
+  },
   "defaultRowSpacingInches": 24,
-  "harvestIndicators": ["Curd 6–8 in", "Compact + smooth"],
-  "notes": "Self-blanching variety. Best as a fall crop in Mid-Atlantic — heat causes ricing."
+  "harvestIndicators": [
+    "Curd 6–8 in",
+    "Compact + smooth"
+  ],
+  "notes": "Self-blanching variety. Best as a fall crop in Mid-Atlantic — heat causes ricing.",
+  "harvestStyle": "single-event"
 }

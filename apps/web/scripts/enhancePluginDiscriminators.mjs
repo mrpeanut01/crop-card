@@ -103,9 +103,31 @@ function deriveHarvestStyle(plugin) {
     case 'herb-culinary':
       return 'cut-and-come-again';
     case 'brassica':
+      // Phase 25c.0 #87 brassicas batch: name-pattern split. Order
+      // matters — cover-crop check first so `tillage-radish-driller`
+      // doesn't get mis-tagged by the `radish` rule below.
+      if (/\b(tillage|cover)\b/.test(name)) return 'cover-crop-termination';
+      // Heads / roots (single dig at maturity): cabbage, broccoli,
+      // cauliflower, brussels-sprouts, kohlrabi, napa-cabbage, turnip,
+      // radish, woad.
+      if (
+        /\b(cabbage|broccoli|cauliflower|brussels|kohlrabi|napa|turnip|radish|woad)\b/.test(name)
+      ) {
+        return 'single-event';
+      }
+      // Cut-and-come-again leafy brassicas: kale, collards, mustard-greens,
+      // mizuna, tatsoi, sea-kale, komatsuna, watercress, arugula, microgreens.
+      if (
+        /\b(kale|collard|mustard-greens|mizuna|tatsoi|komatsuna|watercress|arugula|microgreens)\b/.test(
+          name
+        )
+      ) {
+        return 'cut-and-come-again';
+      }
+      return null;
     case 'apiaceae':
     case 'broadleaf-companion':
-      // Ambiguous within family (e.g. cabbage single-cut vs kale cut-and-come).
+      // Ambiguous within family — defer to AI gap-fill.
       return null;
     default:
       return null;
@@ -117,6 +139,7 @@ function deriveHarvestStyle(plugin) {
  * where the bloom timing + bee-attractiveness are unambiguous family-wide.
  */
 function deriveBloomWindow(plugin) {
+  const name = (plugin.displayName ?? plugin.pluginId ?? '').toLowerCase();
   switch (plugin.cropFamily) {
     case 'orchard':
       return { monthsOfYear: [4, 5], beeAttractive: true };
@@ -126,6 +149,17 @@ function deriveBloomWindow(plugin) {
       return { continuous: true, beeAttractive: true };
     case 'cover-legume':
       return { continuous: true, beeAttractive: true };
+    case 'brassica':
+      // Cover-crop brassicas allowed to flower carry honeybee + native
+      // bee value before kill — flag them as bee-attractive with a wide
+      // mid-season window. Tillage radish in particular blooms cream-
+      // yellow ~70-90 DAP if not terminated.
+      if (/\b(tillage|cover)\b/.test(name)) {
+        return { daysFromPlantingMin: 70, daysFromPlantingMax: 100, beeAttractive: true };
+      }
+      // Head + leafy brassicas typically harvested before bolt — no
+      // bloom window declared, AI gap-fill can revisit for biennials.
+      return null;
     default:
       return null;
   }

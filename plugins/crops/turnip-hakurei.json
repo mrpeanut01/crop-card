@@ -26,5 +26,6 @@
   "notes": "Sweet-mild Japanese salad turnip. Eaten raw or lightly cooked. Strong CSA and restaurant-market crop.",
   "harvestIndicators": [
     "1 to 2 inch round white root, tender skin"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

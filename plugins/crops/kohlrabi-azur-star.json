@@ -26,5 +26,6 @@
   "notes": "Open-pollinated purple kohlrabi. Sweet and crisp when harvested young. Strong farmstand seller.",
   "harvestIndicators": [
     "Round 2 to 3 inch purple stem, harvest before woody"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

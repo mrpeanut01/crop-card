@@ -26,5 +26,6 @@
   "notes": "Tall barrel-shaped Chinese cabbage. Mild, tender leaves for kimchi, salads, stir fries. Best planted for fall harvest.",
   "harvestIndicators": [
     "18 inch tall cylindrical head, firm to the touch"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

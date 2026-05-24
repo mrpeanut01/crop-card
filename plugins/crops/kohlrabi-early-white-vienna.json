@@ -4,8 +4,14 @@
   "displayName": "Kohlrabi — Early White Vienna",
   "version": "1.0.0",
   "cropFamily": "brassica",
-  "daysToMaturity": { "min": 50, "max": 60 },
+  "daysToMaturity": {
+    "min": 50,
+    "max": 60
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["Bulb 2–3 in (anything bigger goes woody)"],
-  "notes": "Quick-maturing brassica. Spring + fall plantings work; avoid mid-summer."
+  "harvestIndicators": [
+    "Bulb 2–3 in (anything bigger goes woody)"
+  ],
+  "notes": "Quick-maturing brassica. Spring + fall plantings work; avoid mid-summer.",
+  "harvestStyle": "single-event"
 }

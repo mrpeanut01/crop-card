@@ -1,6 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import Banner from '$lib/components/ui/Banner.svelte';
   let { data } = $props();
 
   let pendingCount = $state<number | null>(null);
@@ -47,12 +49,13 @@
   }
 </script>
 
-<header class="head">
-  <h1>Spray records</h1>
+<header class="page-header">
+  <Kicker>FR-09 · 48h lock · NFR-05 · 2yr retention</Kicker>
+  <h1 class="serif">Spray records</h1>
   <p class="lede">
     {data.records.length} record{data.records.length === 1 ? '' : 's'}
     {data.activeSprayerId || data.activeBlockId ? 'matching filter' : 'on file'}. Records lock 48
-    hours after occurrence (FR-09). Retention 2 years (NFR-05).
+    hours after occurrence; retention 2 years.
   </p>
   <div class="filters" role="group" aria-label="Filters">
     <label>
@@ -178,7 +181,7 @@
   }
   .btn {
     display: inline-block;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     padding: 0.75rem 1.25rem;
     border-radius: 6px;
@@ -193,8 +196,8 @@
     align-items: center;
     gap: 0.5rem;
     background: white;
-    color: #1f5e3a;
-    border: 2px solid #1f5e3a;
+    color: var(--color-forest);
+    border: 2px solid var(--color-forest);
     padding: 0.6rem 1.1rem;
     border-radius: 6px;
     text-decoration: none;
@@ -203,12 +206,12 @@
     line-height: 1.4;
   }
   .btn-secondary.has-pending {
-    background: #fff3cd;
+    background: var(--pill-wheat-bg);
     border-color: #4a2900;
     color: #4a2900;
   }
   .pending-badge {
-    background: #b71c1c;
+    background: var(--color-rust);
     color: white;
     border-radius: 999px;
     padding: 0.1rem 0.55rem;
@@ -232,19 +235,19 @@
   }
   .filters select {
     padding: 0.5rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     font-size: 1rem;
     min-height: 44px;
     font-family: inherit;
   }
   .alert {
-    background: #fff3cd;
-    color: #b35900;
+    background: var(--pill-wheat-bg);
+    color: var(--color-wheat);
     padding: 0.75rem 1rem;
     border-radius: 4px;
     margin-bottom: 1rem;
-    border-left: 4px solid #b35900;
+    border-left: 4px solid var(--color-wheat);
   }
   .empty {
     background: white;
@@ -268,8 +271,8 @@
     vertical-align: top;
   }
   th {
-    background: #f5f7f4;
-    color: #1f5e3a;
+    background: var(--color-cream);
+    color: var(--color-forest);
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
@@ -285,15 +288,15 @@
     font-size: 0.85rem;
   }
   .locked {
-    color: #b00020;
+    color: var(--color-rust);
     font-weight: 600;
   }
   .mutable {
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .override {
-    background: #fff3cd;
-    color: #b35900;
+    background: var(--pill-wheat-bg);
+    color: var(--color-wheat);
     padding: 0.05rem 0.4rem;
     border-radius: 3px;
     font-size: 0.75rem;

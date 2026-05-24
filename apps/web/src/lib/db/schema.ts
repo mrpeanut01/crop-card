@@ -36,6 +36,12 @@ export const users = sqliteTable('users', {
    *  because roles describe in-tenant permissions; superadmin is *across*
    *  tenants. Default false. */
   isSuperadmin: integer('is_superadmin', { mode: 'boolean' }).notNull().default(false),
+  /** Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant on
+   *  every AI-touchable screen. Flips true when the user validates a
+   *  Claude API key in Settings → AI. Defaults false so the safe AI-off
+   *  product mode is the first-paint baseline for new users + inspectors
+   *  (Dale persona) who will never paste a key. */
+  aiEnabled: integer('ai_enabled', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)
@@ -560,7 +566,13 @@ export const sprayEvents = tenantScoped(
       customRateOverride: integer('custom_rate_override', { mode: 'boolean' })
         .notNull()
         .default(false),
-      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      /** Phase 25d (#89) v2-addendum — per-field provenance map keyed by
+       *  field name; values are objects {source, detail?, confidence?,
+       *  fallbackReason?, attemptedAiAt?}. See AI_PROVENANCE_ADDENDUM.md
+       *  "Field-by-field map" for the canonical field set. Single
+       *  column (not N per-field columns) for query simplicity. */
+      provenanceJson: text('provenance_json')
     },
     (table) => ({
       ownerOccurredIdx: index('spray_events_owner_occurred_idx').on(
@@ -585,7 +597,9 @@ export const harvestEvents = tenantScoped(
       cropPluginId: text('crop_plugin_id').notNull(),
       occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
       quantity: text('quantity'),
-      lotNumber: text('lot_number')
+      lotNumber: text('lot_number'),
+      /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
+      provenanceJson: text('provenance_json')
     },
     (table) => ({
       ownerOccurredIdx: index('harvest_events_owner_occurred_idx').on(
@@ -887,7 +901,9 @@ export const insecticideEvents = tenantScoped(
       preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
       rulesVersion: text('rules_version').notNull(),
       pluginHashesJson: text('plugin_hashes_json').notNull(),
-      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
+      provenanceJson: text('provenance_json')
     },
     (table) => ({
       ownerOccurredIdx: index('insecticide_events_owner_occurred_idx').on(
@@ -930,7 +946,9 @@ export const fungicideEvents = tenantScoped(
       preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
       rulesVersion: text('rules_version').notNull(),
       pluginHashesJson: text('plugin_hashes_json').notNull(),
-      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
+      provenanceJson: text('provenance_json')
     },
     (table) => ({
       ownerOccurredIdx: index('fungicide_events_owner_occurred_idx').on(
@@ -1194,10 +1212,68 @@ export const aiCallLog = tenantScoped(
       errorClass: text('error_class'),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
-        .default(sql`(unixepoch() * 1000)`)
+        .default(sql`(unixepoch() * 1000)`),
+      // ─── Phase 25d v2-addendum (#93, rolled into #89) ─────────────
+      /** 'ai' for a successful Claude call, 'fallback' for a row that
+       *  EXISTS because aiTry() picked the deterministic path (no key /
+       *  over-cap / offline / rate-limit / timeout). Nullable on rows
+       *  that pre-date the migration. */
+      provenance: text('provenance', { enum: ['ai', 'fallback'] }),
+      /** Claude self-reported confidence (0..1) for `provenance='ai'`. */
+      confidence: real('confidence'),
+      /** Why the deterministic path ran instead of AI. Populated only
+       *  when `provenance='fallback'`. */
+      fallbackReason: text('fallback_reason', {
+        enum: ['no-key', 'over-cap', 'offline', 'rate-limit', 'timeout']
+      }),
+      /** Wall time the (failed/skipped) AI call would have happened.
+       *  Used by /api/audit/re-ask-ai to re-run fallback rows once a
+       *  key is configured. */
+      attemptedAiAt: integer('attempted_ai_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
       ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(table.ownerId, table.createdAt)
+    })
+  )
+);
+
+// ─── Phase 25c.0 step 6 (#87) / Phase 25d (#89) — dry-run kernel log ──
+//
+// When env KERNEL_DRY_RUN=1, the new evaluators (fracRotation,
+// ipmThreshold, pollinatorBloom) write what-would-have-happened verdicts
+// here INSTEAD of failing the spray. After 14 days of clean rows post-
+// 25d ship the flag flips off and gates go live.
+//
+// Tenant-scoped (CLAUDE.md invariant 6) — every row carries owner_id,
+// and the cross-tenant property test gets extended in a follow-up.
+
+export const kernelDryRunLog = tenantScoped(
+  sqliteTable(
+    'kernel_dry_run_log',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      rulesVersion: text('rules_version').notNull(),
+      evaluator: text('evaluator', {
+        enum: ['fracRotation', 'ipmThreshold', 'pollinatorBloom']
+      }).notNull(),
+      verdict: text('verdict', { enum: ['ok', 'warn', 'block'] }).notNull(),
+      reasonsJson: text('reasons_json').notNull(),
+      plannedSprayJson: text('planned_spray_json').notNull(),
+      blockId: text('block_id'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerCreatedIdx: index('kernel_dry_run_log_owner_created_idx').on(
+        table.ownerId,
+        table.createdAt
+      ),
+      ownerEvaluatorIdx: index('kernel_dry_run_log_owner_evaluator_idx').on(
+        table.ownerId,
+        table.evaluator
+      )
     })
   )
 );

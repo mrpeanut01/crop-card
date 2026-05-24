@@ -174,6 +174,31 @@ export function unretire(pluginId: string): boolean {
   return r.changes > 0;
 }
 
+/** Delete a single version row by id. Server-only — used by the rescan
+ *  cleanup pass to collapse adjacent Zod-canonically-equal rows that the
+ *  initial table seed produced before canonicalization was hardened. */
+export function deleteVersion(id: string): boolean {
+  unscopedQueryNote('plugin catalog is global by design');
+  const r = db.delete(pluginVersions).where(eq(pluginVersions.id, id)).run();
+  return r.changes > 0;
+}
+
+/** Override the supersededAt timestamp on a specific row by id. Paired
+ *  with deleteVersion in the collapse pass: when a newer duplicate row
+ *  is deleted, the older row inherits whatever supersededAt the newer
+ *  had (null if it was still current) so the current-row pointer stays
+ *  consistent. Pass `null` to clear (mark the row current again). */
+export function setSupersededAt(id: string, supersededAt: number | null): boolean {
+  unscopedQueryNote('plugin catalog is global by design');
+  const value = supersededAt === null ? null : new Date(supersededAt);
+  const r = db
+    .update(pluginVersions)
+    .set({ supersededAt: value })
+    .where(eq(pluginVersions.id, id))
+    .run();
+  return r.changes > 0;
+}
+
 /** Bump the patch segment of a semver string. Treats malformed input as
  *  `1.0.0` so a hand-edited plugin without a proper version still gets a
  *  monotonic forward-bump. */

@@ -20,6 +20,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
+import { getApiKey } from './scanResult';
 
 export type FallbackReason =
   | 'no-key'
@@ -119,11 +120,18 @@ export async function aiTry<T>(args: AiTryArgs<T>): Promise<AiTryResult<T>> {
  * user validates a key in Settings → AI — re-reading per-request keeps
  * the session lean and the flag fresh.
  *
+ * Resolves to TRUE when BOTH:
+ *   1. A Claude API key is configured (env var OR per-owner setting)
+ *   2. The user hasn't explicitly opted out (`users.ai_enabled === false`)
+ *
+ * The opt-out column is future-proofing for per-user AI disable; today
+ * the natural flow flips it true when the user saves a key on /settings/ai.
  * Returns false when the user is unknown (defensive — matches the safe
  * AI-off baseline rather than throwing).
  */
 export function getUserAiEnabled(userId: string | null | undefined): boolean {
   if (!userId) return false;
+  if (!getApiKey()) return false;
   // Cross-tenant lookup — users is a global identity table per the
   // Phase 18a multi-tenant design. unscopedQueryNote documents the
   // intentional bypass of tenant scoping for this column read.

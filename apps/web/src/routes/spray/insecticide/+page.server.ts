@@ -3,8 +3,9 @@ import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { listInsecticideEvents, activeReEntryRestrictions } from '$lib/db/insecticideEvents';
 import { getRegistry } from '$lib/server/registry';
+import { getUserAiEnabled } from '$lib/server/aiTry';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
   const crop = cropId ? getCrop(cropId) : undefined;
   const registry = await getRegistry();
@@ -45,6 +46,8 @@ export const load: PageServerLoad = async ({ url }) => {
     preselectedBlockId: crop?.blockId ?? url.searchParams.get('block') ?? null,
     preselectedCropId: crop?.id ?? null,
     // Phase 21b follow-up — deep-link from the swim-lane pip popover.
-    taskId: url.searchParams.get('task')
+    taskId: url.searchParams.get('task'),
+    // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
+    aiEnabled: getUserAiEnabled(locals.user?.id)
   };
 };

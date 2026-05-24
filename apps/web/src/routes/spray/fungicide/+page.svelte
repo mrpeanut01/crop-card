@@ -8,9 +8,10 @@
 
   let { data } = $props();
 
-  // v2 addendum (#90 / #89): hard-coded false until #89 wires
-  // `user.ai_enabled` into the loader. AI-off is the safe baseline.
-  const aiEnabled = false;
+  // v2 addendum (#89): sourced from `user.ai_enabled` via
+  // getUserAiEnabled() in the loader. $derived so the variant
+  // re-paints on loader re-run.
+  const aiEnabled = $derived(data.aiEnabled);
 
   let selectedBlockId = $state<string>(
     untrack(() => data.preselect.blockId ?? data.blocks[0]?.id ?? '')

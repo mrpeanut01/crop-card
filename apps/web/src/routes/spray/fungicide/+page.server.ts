@@ -19,8 +19,9 @@ import { getCrop } from '$lib/db/crops';
 import { activeFungicideReEntryRestrictions, listFungicideEvents } from '$lib/db/fungicideEvents';
 import { getRegistry } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
+import { getUserAiEnabled } from '$lib/server/aiTry';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
   const crop = cropId ? getCrop(cropId) : undefined;
   const registry = await getRegistry();
@@ -65,6 +66,8 @@ export const load: PageServerLoad = async ({ url }) => {
       cropId: crop?.id ?? null,
       taskId: url.searchParams.get('task') ?? null,
       productPluginIds: url.searchParams.getAll('product')
-    }
+    },
+    // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
+    aiEnabled: getUserAiEnabled(locals.user?.id)
   };
 };

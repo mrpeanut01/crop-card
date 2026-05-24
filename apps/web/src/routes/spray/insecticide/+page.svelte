@@ -8,12 +8,12 @@
 
   let { data } = $props();
 
-  // v2 addendum (#90 / #89): drives AI-on vs AI-off variant of the
-  // SprayDecisionPage shell. Hard-coded false until #89 lands the
-  // `user.ai_enabled` column + loader threading; the AI-off variant is
-  // the safe baseline per the v2 spec (see AI_PROVENANCE_ADDENDUM.md
-  // "AI assists, never gates").
-  const aiEnabled = false;
+  // v2 addendum (#89): drives AI-on vs AI-off variant of the
+  // SprayDecisionPage shell. Sourced from `user.ai_enabled` via
+  // getUserAiEnabled() in the loader — flips true when the user
+  // validates a Claude API key in Settings → AI. $derived so the
+  // variant re-paints when the loader re-runs (e.g., on key save).
+  const aiEnabled = $derived(data.aiEnabled);
 
   let selectedBlockId = $state<string>(
     untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? '')

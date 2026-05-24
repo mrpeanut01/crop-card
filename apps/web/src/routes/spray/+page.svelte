@@ -2,6 +2,9 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import Banner from '$lib/components/ui/Banner.svelte';
+  import Pill from '$lib/components/ui/Pill.svelte';
   import {
     buildLastTankFills,
     fmtAmount as fmtUnitAmount,
@@ -539,20 +542,28 @@
   }
 </script>
 
-<h1>Plan a spray</h1>
-<p class="lede">
-  Pick a block, herbicide(s), sprayer, and conditions. The safety kernel decides whether the
-  dilution table renders or you get a STOP card.
-</p>
+<header class="page-header">
+  <Kicker>Spray · Herbicide · Kernel-gated</Kicker>
+  <h1 class="serif">Plan a spray</h1>
+  <p class="lede">
+    Pick a block, herbicide(s), sprayer, and conditions. The safety kernel decides whether the
+    dilution table renders or you get a STOP card.
+  </p>
+</header>
+
+<div class="gate-slot">
+  <Pill tone="sky">IPM threshold gate — Phase 25d</Pill>
+  <Pill tone="sky">Pollinator-bloom gate — Phase 25d</Pill>
+</div>
 
 {#if data.preselect.fromScout || data.preselect.blockId}
-  <div class="prefill-banner" role="status">
+  <Banner tone="forest">
     {#if data.preselect.fromScout}
-      ↳ Continuing from scout — block pre-selected.
+      Continuing from scout — block pre-selected.
     {:else}
-      ↳ Pre-filled from <a href="/today">today's calendar</a>.
+      Pre-filled from <a href="/today">today's calendar</a>.
     {/if}
-  </div>
+  </Banner>
 {/if}
 
 {#if data.blocks.length === 0}
@@ -732,7 +743,7 @@
 {/if}
 
 {#if lastError}
-  <p class="error" role="alert">Error: {lastError}</p>
+  <Banner tone="rust" urgent>Error: {lastError}</Banner>
 {/if}
 
 {#if result}
@@ -1000,16 +1011,16 @@
     margin: 0 0 1.5rem;
   }
   .prefill-banner {
-    background: #e7f1ea;
-    color: #1f5e3a;
+    background: var(--pill-forest-bg);
+    color: var(--color-forest);
     padding: 0.6rem 0.9rem;
     border-radius: 6px;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest);
   }
   .prefill-banner a {
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: underline;
   }
   .empty-state {
@@ -1017,12 +1028,12 @@
     padding: 2rem;
   }
   .empty-state a {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
   }
   .filter-hint {
     background: #fff8ec;
-    color: #b35900;
+    color: var(--color-wheat);
     padding: 0.5rem 0.75rem;
     border-radius: 4px;
     margin: 0 0 0.75rem;
@@ -1031,7 +1042,7 @@
   .link-button {
     background: none;
     border: none;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: underline;
     cursor: pointer;
     font: inherit;
@@ -1049,7 +1060,7 @@
   .step h2 {
     margin: 0 0 0.75rem;
     font-size: 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -1061,7 +1072,7 @@
   .card {
     text-align: left;
     padding: 0.75rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 6px;
     background: white;
     cursor: pointer;
@@ -1073,11 +1084,11 @@
     font: inherit;
   }
   .card:hover {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .card.selected {
-    border-color: #1f5e3a;
-    background: #e7f1ea;
+    border-color: var(--color-forest);
+    background: var(--pill-forest-bg);
   }
   /* Phase 21b follow-up — pre-plant block visual cue. Soft amber so
      the operator notices it's a burndown context, not a regular
@@ -1109,7 +1120,7 @@
   .card-check {
     font-size: 1.05rem;
     line-height: 1;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .existing-event-tag {
     margin: 0.3rem 0 0;
@@ -1161,11 +1172,11 @@
     font-size: 0.8rem;
   }
   .card .warn {
-    color: #b35900;
+    color: var(--color-wheat);
     font-weight: 600;
   }
   .card .ok {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
   }
   .card ul {
@@ -1183,8 +1194,8 @@
     min-width: 70px;
     min-height: 64px;
     background: white;
-    color: #1f5e3a;
-    border: 2px solid #d0d7d0;
+    color: var(--color-forest);
+    border: 2px solid var(--color-divider);
     border-radius: 6px;
     font-weight: 700;
     font-size: 1.4rem;
@@ -1201,9 +1212,9 @@
     margin-top: 0.1rem;
   }
   .pick.selected {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .pick.selected span {
     color: rgba(255, 255, 255, 0.85);
@@ -1224,15 +1235,15 @@
   }
   .stepper-label {
     font-weight: 600;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 0.95rem;
   }
   .stepper button {
     width: 56px;
     height: 56px;
-    border: 2px solid #1f5e3a;
+    border: 2px solid var(--color-forest);
     background: white;
-    color: #1f5e3a;
+    color: var(--color-forest);
     border-radius: 6px;
     font-size: 1.6rem;
     font-weight: 700;
@@ -1240,7 +1251,7 @@
     line-height: 1;
   }
   .stepper button:active {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
   }
   .stepper output {
@@ -1248,7 +1259,7 @@
     font-family: monospace;
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
     padding: 0.4rem;
   }
   .stepper output small {
@@ -1276,8 +1287,8 @@
     flex: 1 1 calc(33% - 0.5rem);
     min-width: 120px;
     background: white;
-    color: #1f5e3a;
-    border: 2px solid #1f5e3a;
+    color: var(--color-forest);
+    border: 2px solid var(--color-forest);
     border-radius: 6px;
     text-decoration: none;
     text-align: center;
@@ -1295,7 +1306,7 @@
     margin: 0 0 0.75rem;
   }
   .primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border: none;
     border-radius: 6px;
@@ -1312,7 +1323,7 @@
     cursor: not-allowed;
   }
   .error {
-    color: #b00020;
+    color: var(--color-rust);
   }
   .result {
     margin-top: 1.5rem;
@@ -1320,12 +1331,12 @@
     border-radius: 8px;
   }
   .result.ok {
-    background: #e7f1ea;
-    border: 2px solid #1f5e3a;
+    background: var(--pill-forest-bg);
+    border: 2px solid var(--color-forest);
   }
   .result.stop {
     background: #fff;
-    /* T-05 (audit F-A): frame red bumped from #b71c1c to #8a0000 to match
+    /* T-05 (audit F-A): frame red bumped from var(--color-rust) to #8a0000 to match
      * the AAA-contrast header band below. */
     border: 3px solid #8a0000;
     padding: 0;
@@ -1334,7 +1345,7 @@
     margin: 0 0 1rem;
   }
   .result.stop h2 {
-    /* T-05 (audit F-A): #fff-on-#b71c1c was ~5.94:1 (AA only). HCD §2.2
+    /* T-05 (audit F-A): #fff-on-var(--color-rust) was ~5.94:1 (AA only). HCD §2.2
      * stop-screen spec mandates AAA 7:1. #fff-on-#8a0000 ≈ 7.74:1. */
     background: #8a0000;
     color: #fff;
@@ -1367,7 +1378,7 @@
   }
   .dilution td strong {
     font-size: 1.75rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-family: monospace;
   }
   /* Phase 21b follow-up — total/per-tank dilution layout. */
@@ -1478,7 +1489,7 @@
     caption-side: top;
     text-align: left;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
     margin-bottom: 0.2rem;
   }
   .fill-table th,
@@ -1592,8 +1603,8 @@
   }
   .recorded.queued {
     background: #fff3cd;
-    color: #b35900;
-    border-left: 4px solid #b35900;
+    color: var(--color-wheat);
+    border-left: 4px solid var(--color-wheat);
     padding-left: 0.75rem;
   }
   .violations {
@@ -1605,10 +1616,10 @@
     padding: 0.75rem;
     border-radius: 4px;
     margin-bottom: 0.5rem;
-    border-left: 4px solid #b00020;
+    border-left: 4px solid var(--color-rust);
   }
   .violations li strong {
-    color: #b00020;
+    color: var(--color-rust);
   }
   .violations p {
     margin: 0.25rem 0;

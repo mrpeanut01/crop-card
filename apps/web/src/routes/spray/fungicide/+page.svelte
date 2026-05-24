@@ -2,6 +2,9 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import Banner from '$lib/components/ui/Banner.svelte';
+  import Pill from '$lib/components/ui/Pill.svelte';
 
   let { data } = $props();
 
@@ -133,25 +136,32 @@
   }
 </script>
 
-<h1>Fungicide application</h1>
-<p class="lede">
-  Records an immutable fungicide event with REI / PHI lockouts. FRAC code rotation hints help
-  prevent resistance — avoid two consecutive sprays sharing the same code on the same block.
-</p>
+<header class="page-header">
+  <Kicker>Spray · FRAC-rotated · Phase 25d gate stub</Kicker>
+  <h1 class="serif">Fungicide application</h1>
+  <p class="lede">
+    Records an immutable fungicide event with REI / PHI lockouts. FRAC code rotation hints help
+    prevent resistance — avoid two consecutive sprays sharing the same code on the same block.
+  </p>
+</header>
+
+<div class="gate-slot">
+  <Pill tone="sky">FRAC rotation evaluator — Phase 25d</Pill>
+  <Pill tone="sky">Disease forecast (NEWA / FHB) — Phase 26</Pill>
+  <Pill tone="sky">Rain/dew dry-hours gate — Phase 25d</Pill>
+</div>
 
 {#if data.activeREI.length > 0}
-  <section class="card warn" role="status">
-    <h2>Active fungicide re-entry intervals</h2>
-    <ul>
+  <Banner tone="wheat">
+    <strong>Active fungicide re-entry intervals:</strong>
+    <ul class="rei-list">
       {#each data.activeREI as e (e.id)}
         <li>
-          <strong>Block {e.blockId}</strong> — re-entry clear {new Date(
-            e.reEntryClearAt ?? 0
-          ).toLocaleString()}
+          Block {e.blockId} — re-entry clear {new Date(e.reEntryClearAt ?? 0).toLocaleString()}
         </li>
       {/each}
     </ul>
-  </section>
+  </Banner>
 {/if}
 
 <form onsubmit={recordSpray}>
@@ -243,30 +253,29 @@
 </form>
 
 {#if result}
-  <section class="card ok" role="status">{result}</section>
+  <Banner tone="forest">{result}</Banner>
 {/if}
 {#if error}
-  <section class="card err" role="alert">
-    <strong>Error:</strong>
-    {error}
+  <Banner tone="rust" urgent>
+    <strong>Error:</strong> {error}
     {#if violations.length > 0}
-      <ul>
+      <ul class="violations">
         {#each violations as v (v.code)}
           <li><code>{v.code}</code> — {v.message}</li>
         {/each}
       </ul>
     {/if}
-  </section>
+  </Banner>
 {/if}
 {#if warnings.length > 0}
-  <section class="card warn">
+  <Banner tone="wheat">
     <strong>Warnings:</strong>
-    <ul>
+    <ul class="violations">
       {#each warnings as w, i (i)}
         <li>{w}</li>
       {/each}
     </ul>
-  </section>
+  </Banner>
 {/if}
 
 {#if data.recentEvents.length > 0}
@@ -296,22 +305,22 @@
   }
   .card {
     background: #fff;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-divider);
     border-radius: 8px;
     padding: 1rem 1.25rem;
     margin: 0 0 1rem;
   }
   .card.warn {
-    background: #fff8e1;
+    background: var(--pill-wheat-bg);
     border-color: #f1c40f;
   }
   .card.err {
-    background: #fdecea;
-    border-color: #b71c1c;
+    background: var(--pill-rust-bg);
+    border-color: var(--color-rust);
   }
   .card.ok {
-    background: #e8f5e9;
-    border-color: #2e7d32;
+    background: var(--pill-forest-bg);
+    border-color: var(--color-forest);
   }
   label {
     display: block;
@@ -333,7 +342,7 @@
     padding: 0 1.5rem;
     font-size: 1rem;
     font-weight: 600;
-    background: #1565c0;
+    background: var(--color-sky);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -360,7 +369,7 @@
     gap: 0.75rem;
     margin: 0.5rem 0;
     padding: 0.5rem;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-divider-soft);
     border-radius: 6px;
   }
   .frac-items {
@@ -392,7 +401,7 @@
   .warn-inline {
     margin: 0.75rem 0 0;
     padding: 0.6rem;
-    background: #fff8e1;
+    background: var(--pill-wheat-bg);
     border-left: 4px solid #f1c40f;
     border-radius: 4px;
   }
@@ -407,13 +416,13 @@
   }
   .recent li {
     padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-divider-soft);
   }
   .recent li:last-child {
     border-bottom: none;
   }
   .phi {
-    color: #b71c1c;
+    color: var(--color-rust);
     margin-left: 0.5rem;
   }
 </style>

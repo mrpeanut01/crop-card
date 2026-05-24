@@ -2,6 +2,9 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import Banner from '$lib/components/ui/Banner.svelte';
+  import Button from '$lib/components/ui/Button.svelte';
 
   let { data } = $props();
 
@@ -72,25 +75,26 @@
   }
 </script>
 
-<h1>Insecticides</h1>
-<p class="lede">
-  IRAC-grouped insecticide library. The kernel enforces environmental gates + REI / PHI; safety
-  rules for crop tolerance live in the herbicide kill matrix and don't apply to insecticides.
-</p>
+<header class="page-header">
+  <Kicker>IPM · IRAC-grouped library</Kicker>
+  <h1 class="serif">Insecticides</h1>
+  <p class="lede">
+    The kernel enforces environmental gates + REI / PHI; safety rules for crop tolerance live in
+    the herbicide kill matrix and don't apply to insecticides.
+  </p>
+</header>
 
 {#if data.activeREI.length > 0}
-  <section class="card warn">
-    <h2>Active re-entry intervals</h2>
-    <ul>
+  <Banner tone="wheat">
+    <strong>Active re-entry intervals:</strong>
+    <ul class="rei-list">
       {#each data.activeREI as e (e.id)}
         <li>
-          <strong>Block {e.blockId}</strong> — re-entry clear {new Date(
-            e.reEntryClearAt ?? 0
-          ).toLocaleString()}
+          Block {e.blockId} — re-entry clear {new Date(e.reEntryClearAt ?? 0).toLocaleString()}
         </li>
       {/each}
     </ul>
-  </section>
+  </Banner>
 {/if}
 
 <section class="card">
@@ -193,28 +197,37 @@
       <label>Tank size (gal) <input type="number" min="1" bind:value={tankSize} /></label>
     </fieldset>
 
-    <button type="submit" class="primary" disabled={busy || !selectedBlockId || !selectedPluginId}>
+    <Button
+      type="submit"
+      variant="primary"
+      loading={busy}
+      disabled={!selectedBlockId || !selectedPluginId}
+    >
       {busy ? 'Recording…' : 'Record application'}
-    </button>
+    </Button>
   </form>
   {#if error}
-    <div class="error" aria-live="polite">
-      <p>{error}</p>
-      {#if violations.length > 0}
-        <ul>
-          {#each violations as v (v.message)}
-            <li>
-              <strong>{v.code}</strong> — {v.message}
-              {#if v.detail?.source === 'user-added'}
-                <span class="badge">stock label</span>
-              {/if}
-            </li>
-          {/each}
-        </ul>
-      {/if}
+    <div class="error-wrap">
+      <Banner tone="rust" urgent>
+        <p>{error}</p>
+        {#if violations.length > 0}
+          <ul class="violations">
+            {#each violations as v (v.message)}
+              <li>
+                <strong>{v.code}</strong> — {v.message}
+                {#if v.detail?.source === 'user-added'}
+                  <span class="badge">stock label</span>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </Banner>
     </div>
   {/if}
-  {#if result}<p class="success">{result}</p>{/if}
+  {#if result}
+    <div class="success-wrap"><Banner tone="forest">{result}</Banner></div>
+  {/if}
 </section>
 
 <section class="card">
@@ -246,21 +259,21 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
   .card.warn {
-    background: #fff3cd;
-    border-left: 4px solid #b35900;
+    background: var(--pill-wheat-bg);
+    border-left: 4px solid var(--color-wheat);
   }
   .lede {
     color: #555;
   }
   fieldset {
-    border: 1px solid #d0d7d0;
+    border: 1px solid var(--color-divider);
     border-radius: 6px;
     padding: 0.75rem;
     margin: 0 0 1rem;
   }
   legend {
     padding: 0 0.5rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
   }
   label {
@@ -273,7 +286,7 @@
   input,
   select {
     padding: 0.55rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     font-size: 1rem;
     min-height: 48px;
@@ -292,7 +305,7 @@
     margin-top: 0.25rem;
   }
   .primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border: none;
     border-radius: 6px;
@@ -306,8 +319,8 @@
     cursor: not-allowed;
   }
   .error {
-    color: #b00020;
-    background: #fce4e4;
+    color: var(--color-rust);
+    background: var(--pill-rust-bg);
     padding: 0.75rem;
     border-radius: 4px;
   }
@@ -317,7 +330,7 @@
   }
   .badge {
     display: inline-block;
-    background: #b00020;
+    background: var(--color-rust);
     color: white;
     font-size: 0.75rem;
     padding: 0.1rem 0.4rem;
@@ -325,8 +338,8 @@
     margin-left: 0.25rem;
   }
   .success {
-    color: #1f5e3a;
-    background: #e7f1ea;
+    color: var(--color-forest);
+    background: var(--pill-forest-bg);
     padding: 0.75rem;
     border-radius: 4px;
   }

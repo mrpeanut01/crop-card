@@ -26,5 +26,6 @@
   "notes": "Open-pollinated mixed-color carrot blend. Strong farmstand and farmers market crop.",
   "harvestIndicators": [
     "Roots fully colored; mix of orange, yellow, white, red, purple"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

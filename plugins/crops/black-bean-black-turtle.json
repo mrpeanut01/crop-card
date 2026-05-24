@@ -26,5 +26,6 @@
   "notes": "Heirloom dry black bean. Half-runner habit. Excellent storage.",
   "harvestIndicators": [
     "Pods dry beige, beans hard and uniformly black"
-  ]
+  ],
+  "harvestStyle": "dry-seed-legume"
 }

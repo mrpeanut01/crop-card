@@ -26,5 +26,6 @@
   "notes": "American Concord-style white slip-skin grape. Hardy zones 4 to 8. Standard for juice and farmstand sales in the eastern US.",
   "harvestIndicators": [
     "Pale yellow-green slip-skin fruit at full sweetness"
-  ]
+  ],
+  "harvestStyle": "perennial-vine"
 }

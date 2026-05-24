@@ -26,5 +26,13 @@
   "notes": "Georgia heirloom from 1875. Freestone yellow peach. Self-fertile. Mid to late season. Susceptible to brown rot and peach leaf curl.",
   "harvestIndicators": [
     "Yellow ground color with red blush, slight give at suture"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      3,
+      4
+    ],
+    "beeAttractive": true
+  }
 }

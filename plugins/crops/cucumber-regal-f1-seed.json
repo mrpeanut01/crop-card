@@ -16,5 +16,10 @@
       "max": 0.5
     }
   },
-  "notes": "Gynoecious hybrid pickle type; film coated/treated (50sd) is smallest pack. Also avail: Raw/Untreated 50sd, FC/Treated 500sd, 1Ksd, 5Ksd, 10Ksd; Raw 5Ksd."
+  "notes": "Gynoecious hybrid pickle type; film coated/treated (50sd) is smallest pack. Also avail: Raw/Untreated 50sd, FC/Treated 500sd, 1Ksd, 5Ksd, 10Ksd; Raw 5Ksd.",
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Bright tangerine-orange color",
     "Easy release from cluster"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

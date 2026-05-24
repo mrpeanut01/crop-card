@@ -26,5 +26,6 @@
   "notes": "Capsicum annuum, 1000 to 2000 SHU. Heart-shaped chile used fresh as poblano or dried as ancho.",
   "harvestIndicators": [
     "Deep glossy green for chile rellenos, dried red-brown for ancho"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

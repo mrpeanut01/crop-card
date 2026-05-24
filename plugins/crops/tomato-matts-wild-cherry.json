@@ -26,5 +26,6 @@
   "notes": "Indeterminate wild-type cherry. Disease-tolerant, prolific. Strong late blight tolerance. Self-seeds in mild winters.",
   "harvestIndicators": [
     "Half-inch red fruit dropping easily from cluster"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

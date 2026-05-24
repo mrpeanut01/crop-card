@@ -1,7 +1,7 @@
 {
   "pluginId": "grape-concord",
   "type": "crop",
-  "displayName": "Grape \u2014 Concord (American)",
+  "displayName": "Grape — Concord (American)",
   "version": "1.0.0",
   "cropFamily": "vine-fruit",
   "preHarvestIntervalDays": 14,
@@ -40,7 +40,7 @@
       "dayOfYear": 165,
       "windowDays": 14,
       "title": "Post-bloom cover",
-      "body": "FRAC 11 strobilurin or FRAC 7 SDHI \u2014 alternate from M03.",
+      "body": "FRAC 11 strobilurin or FRAC 7 SDHI — alternate from M03.",
       "category": "spray"
     },
     {
@@ -58,14 +58,15 @@
       "dayOfYear": 250,
       "windowDays": 28,
       "title": "Concord harvest",
-      "body": "Brix \u2265 16 + characteristic foxy aroma. Single-pass mechanical or hand.",
+      "body": "Brix ≥ 16 + characteristic foxy aroma. Single-pass mechanical or hand.",
       "category": "harvest"
     }
   ],
   "harvestIndicators": [
     "Deep blue-black with bloom",
-    "Brix \u226516",
+    "Brix ≥16",
     "Easy stem release"
   ],
-  "notes": "Slip-skin American grape \u2014 juice + jam. Most disease-tolerant of common cultivars."
+  "notes": "Slip-skin American grape — juice + jam. Most disease-tolerant of common cultivars.",
+  "harvestStyle": "perennial-vine"
 }

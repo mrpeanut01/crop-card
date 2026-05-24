@@ -26,5 +26,6 @@
   "notes": "Determinate processing paste tomato with VFN disease package. Concentrated set supports once-over harvest for canning.",
   "harvestIndicators": [
     "Pear-shaped fruit fully red, dry feel"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

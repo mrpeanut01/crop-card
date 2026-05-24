@@ -5,6 +5,10 @@
   "version": "1.0.0",
   "cropFamily": "small-fruit",
   "defaultRowSpacingInches": 60,
-  "harvestIndicators": ["Whole cluster turns deep red", "Pick whole strigs"],
-  "notes": "Easy-care small fruit. Note: white pine blister rust host — check state planting restrictions."
+  "harvestIndicators": [
+    "Whole cluster turns deep red",
+    "Pick whole strigs"
+  ],
+  "notes": "Easy-care small fruit. Note: white pine blister rust host — check state planting restrictions.",
+  "harvestStyle": "perennial-vine"
 }

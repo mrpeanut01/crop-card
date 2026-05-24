@@ -26,5 +26,6 @@
   "notes": "Italian-derived purple asparagus. Sweeter than green types, with 20 percent more sugar. Color cooks out to green.",
   "harvestIndicators": [
     "Deep purple spears 7 to 9 inches, tight tips"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

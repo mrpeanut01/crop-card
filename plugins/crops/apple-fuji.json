@@ -26,5 +26,13 @@
   "notes": "Japanese cultivar (Red Delicious x Ralls Janet) released 1962. Crisp, very sweet, excellent storage to spring. Long season requirement.",
   "harvestIndicators": [
     "Pink-red blush over yellow, fully developed by late October"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

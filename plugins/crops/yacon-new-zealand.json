@@ -26,5 +26,6 @@
   "notes": "Andean tuber tasting like sweet apple or jicama. Crisp raw or syrup-processed. Plant from crown divisions after frost.",
   "harvestIndicators": [
     "Tubers cluster below crown after first frost"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

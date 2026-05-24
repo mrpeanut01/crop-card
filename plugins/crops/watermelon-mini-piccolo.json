@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Striped rind firm, tendril dry, ground spot yellow",
     "4 to 6 lb personal size"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

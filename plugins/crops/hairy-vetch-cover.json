@@ -5,5 +5,10 @@
   "version": "1.0.0",
   "cropFamily": "cover-legume",
   "defaultRowSpacingInches": 6,
-  "notes": "Overwinter N-fixer; up to 90 lbs N/acre. Terminate 14 days before corn plant date via burndown."
+  "notes": "Overwinter N-fixer; up to 90 lbs N/acre. Terminate 14 days before corn plant date via burndown.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

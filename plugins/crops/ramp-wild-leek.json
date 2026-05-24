@@ -26,5 +26,6 @@
   "notes": "Native North American woodland allium. Plant bulbs in shaded mixed-hardwood understory. Slow to mature (5 to 7 years from seed). Premium chef-market crop.",
   "harvestIndicators": [
     "Two broad green leaves emerge in early spring under deciduous canopy"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

@@ -26,5 +26,9 @@
   "notes": "French Charentais melon. 2 lb personal-size fruit with intensely aromatic orange flesh. Pick at full slip, no later.",
   "harvestIndicators": [
     "Light tan rind with green sutures, full slip at maturity"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

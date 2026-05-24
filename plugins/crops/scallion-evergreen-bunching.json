@@ -4,8 +4,15 @@
   "displayName": "Scallion — Evergreen Bunching",
   "version": "1.0.0",
   "cropFamily": "allium",
-  "daysToMaturity": { "min": 60, "max": 75 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 75
+  },
   "defaultRowSpacingInches": 8,
-  "harvestIndicators": ["Pencil-thick shaft (3/8 in)", "Bright green tops"],
-  "notes": "Non-bulbing bunching onion. Continuous succession every 21 d."
+  "harvestIndicators": [
+    "Pencil-thick shaft (3/8 in)",
+    "Bright green tops"
+  ],
+  "notes": "Non-bulbing bunching onion. Continuous succession every 21 d.",
+  "harvestStyle": "single-event"
 }

@@ -4,5 +4,6 @@
   "version": "1.0.0",
   "pluginSchemaVersion": "1.1",
   "type": "crop",
-  "cropFamily": "corn"
+  "cropFamily": "corn",
+  "harvestStyle": "row-grain-pollinated"
 }

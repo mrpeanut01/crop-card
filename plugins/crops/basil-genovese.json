@@ -4,8 +4,15 @@
   "displayName": "Basil — Genovese",
   "version": "1.0.0",
   "cropFamily": "herb-culinary",
-  "daysToMaturity": { "min": 60, "max": 80 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 80
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["8–10 in plant", "Pinch flowers to extend leaf production"],
-  "notes": "Heat-loving annual. Downy mildew (BDM) is the big threat — DMR varieties (Prospera, Amazel) are alternatives."
+  "harvestIndicators": [
+    "8–10 in plant",
+    "Pinch flowers to extend leaf production"
+  ],
+  "notes": "Heat-loving annual. Downy mildew (BDM) is the big threat — DMR varieties (Prospera, Amazel) are alternatives.",
+  "harvestStyle": "cut-and-come-again"
 }

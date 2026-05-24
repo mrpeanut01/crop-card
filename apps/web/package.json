@@ -21,7 +21,9 @@
     "db:reset": "rm -f /data/cropcard.db && pnpm db:migrate",
     "seed:test": "node scripts/seed-test-data.mjs",
     "gen:schemas": "tsx scripts/gen-schemas.mjs",
-    "gen:openapi": "node scripts/gen-openapi.mjs"
+    "gen:openapi": "node scripts/gen-openapi.mjs",
+    "audit:plugins": "node scripts/auditPluginDiscriminators.mjs",
+    "enhance:plugins": "node scripts/enhancePluginDiscriminators.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

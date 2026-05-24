@@ -26,5 +26,6 @@
   "notes": "Italian heirloom (Bulls Horn). Long, slightly curved sweet pepper for frying, roasting, and fresh eating.",
   "harvestIndicators": [
     "8 to 10 inch curved fruit, full red color"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

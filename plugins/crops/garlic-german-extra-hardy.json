@@ -26,5 +26,6 @@
   "notes": "Porcelain-type hardneck. Cold-hardy, well-adapted to zones 3 to 6. Plant cloves 4 to 6 weeks before ground freeze.",
   "harvestIndicators": [
     "Lower 3 to 4 leaves brown, upper leaves still green"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

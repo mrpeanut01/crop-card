@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Topsets form on stems in summer",
     "Lower bulbs harvested fall through spring"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

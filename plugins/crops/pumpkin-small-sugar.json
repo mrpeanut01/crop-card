@@ -26,5 +26,9 @@
   "notes": "Heirloom New England pie pumpkin. 6 to 8 lb fruit with sweet dense flesh ideal for canning.",
   "harvestIndicators": [
     "6 to 8 inch orange fruit, deep color, hard rind"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

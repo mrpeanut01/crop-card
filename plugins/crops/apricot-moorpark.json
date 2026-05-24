@@ -5,6 +5,17 @@
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
   "defaultRowSpacingInches": 216,
-  "harvestIndicators": ["Orange ground color", "Slight give at pit end"],
-  "notes": "Late-blooming variety best for Mid-Atlantic — early bloom apricots routinely lose to spring frost."
+  "harvestIndicators": [
+    "Orange ground color",
+    "Slight give at pit end"
+  ],
+  "notes": "Late-blooming variety best for Mid-Atlantic — early bloom apricots routinely lose to spring frost.",
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      3,
+      4
+    ],
+    "beeAttractive": true
+  }
 }

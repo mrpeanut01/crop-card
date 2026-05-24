@@ -26,5 +26,10 @@
     "lifecycle": "annual",
     "rotationLookbackYears": 1
   },
-  "notes": "Medicago lupulina. Low-mat-forming self-seeding legume. Useful as living mulch under taller cash crops and in orchard understories. Tolerates traffic. Inoculate with alfalfa/medic Rhizobium. Sold by Albert Lea Seed, Welter."
+  "notes": "Medicago lupulina. Low-mat-forming self-seeding legume. Useful as living mulch under taller cash crops and in orchard understories. Tolerates traffic. Inoculate with alfalfa/medic Rhizobium. Sold by Albert Lea Seed, Welter.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

@@ -26,5 +26,6 @@
     "lifecycle": "annual",
     "rotationLookbackYears": 1
   },
-  "notes": "Sorghum bicolor (broomcorn type). Long fibrous panicles used in handmade-broom craft and natural floral arrangements. Strong farmstand sale at fall harvest. Open-pollinated. Sold by Baker Creek, Sand Hill Preservation."
+  "notes": "Sorghum bicolor (broomcorn type). Long fibrous panicles used in handmade-broom craft and natural floral arrangements. Strong farmstand sale at fall harvest. Open-pollinated. Sold by Baker Creek, Sand Hill Preservation.",
+  "harvestStyle": "single-cut-grain"
 }

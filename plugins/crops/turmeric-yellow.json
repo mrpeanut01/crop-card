@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Foliage dies back after frost",
     "Bright orange-yellow flesh on rhizome cut"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

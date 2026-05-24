@@ -26,5 +26,6 @@
   "notes": "Finnish heirloom. Heavy yielding, mildew-resistant gooseberry. Cold-hardy to zone 3. Self-fertile.",
   "harvestIndicators": [
     "Deep red translucent fruit, soft to gentle pressure"
-  ]
+  ],
+  "harvestStyle": "perennial-vine"
 }

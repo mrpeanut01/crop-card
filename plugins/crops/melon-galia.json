@@ -26,5 +26,9 @@
   "notes": "Galia-type green-fleshed melon. 3 to 4 lb fruit with rich aromatic flesh. Long shelf-life after harvest.",
   "harvestIndicators": [
     "Rind turns yellow under green netting; full slip"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

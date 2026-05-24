@@ -8,14 +8,14 @@
     "Variety-specific color break",
     "Seeds dark brown",
     "Easy stem release",
-    "Brix \u2265 12 (refractometer)"
+    "Brix ≥ 12 (refractometer)"
   ],
   "plantingGuide": {
     "rowSpacingIn": 240,
     "soilTempMinF": 50
   },
   "postHarvestCuring": {
-    "method": "Cool to 32\u201336\u00b0F within 24 hr; stage in cold room before long-term storage",
+    "method": "Cool to 32–36°F within 24 hr; stage in cold room before long-term storage",
     "durationWeeks": {
       "min": 1,
       "max": 2
@@ -32,14 +32,14 @@
       "dayOfYear": 75,
       "windowDays": 14,
       "title": "Dormant oil spray window",
-      "body": "Apply horticultural oil before bud-break to smother overwintering scale + mites. Temp \u2265 40\u00b0F for 24 h after spray.",
+      "body": "Apply horticultural oil before bud-break to smother overwintering scale + mites. Temp ≥ 40°F for 24 h after spray.",
       "category": "spray"
     },
     {
       "key": "pre-bloom-fungicide",
       "dayOfYear": 105,
       "windowDays": 10,
-      "title": "Pre-bloom fungicide (silver-tip \u2192 green-tip)",
+      "title": "Pre-bloom fungicide (silver-tip → green-tip)",
       "body": "Scab + powdery mildew protectant. Captan / sulfur per label.",
       "category": "spray"
     },
@@ -47,8 +47,8 @@
       "key": "bloom-fungicide",
       "dayOfYear": 120,
       "windowDays": 14,
-      "title": "Bloom fungicide (pink \u2192 petal-fall)",
-      "body": "Critical scab + fire blight window. NO insecticides during open bloom \u2014 protect pollinators.",
+      "title": "Bloom fungicide (pink → petal-fall)",
+      "body": "Critical scab + fire blight window. NO insecticides during open bloom — protect pollinators.",
       "category": "spray"
     },
     {
@@ -56,7 +56,7 @@
       "dayOfYear": 140,
       "windowDays": 14,
       "title": "Hand or chemical fruit thinning",
-      "body": "Thin to one fruit per cluster at 10\u201315 mm fruit size for size + return-bloom.",
+      "body": "Thin to one fruit per cluster at 10–15 mm fruit size for size + return-bloom.",
       "category": "prune"
     },
     {
@@ -64,7 +64,7 @@
       "dayOfYear": 180,
       "windowDays": 21,
       "title": "Summer cover spray (codling moth + apple maggot)",
-      "body": "Pheromone trap counts drive timing. Avoid pollinator activity \u2014 spray after sunset.",
+      "body": "Pheromone trap counts drive timing. Avoid pollinator activity — spray after sunset.",
       "category": "spray"
     },
     {
@@ -84,5 +84,13 @@
       "category": "harvest"
     }
   ],
-  "notes": "Perennial. Treat orchard boundary as a no-spray buffer for residual corn/pumpkin herbicides."
+  "notes": "Perennial. Treat orchard boundary as a no-spray buffer for residual corn/pumpkin herbicides.",
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

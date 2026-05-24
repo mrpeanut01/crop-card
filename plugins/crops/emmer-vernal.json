@@ -26,5 +26,6 @@
   "notes": "Triticum dicoccum, spring-sown ancient hulled wheat. Marketed as farro. Drought-tolerant. Strong nutty flavor.",
   "harvestIndicators": [
     "Heads tan, kernels hard, hulls retained"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain"
 }

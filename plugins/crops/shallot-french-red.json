@@ -26,5 +26,6 @@
   "notes": "Standard French red shallot. Plant sets in early spring. Each planted bulb divides into 4 to 8. Cure 2 to 3 weeks for long storage.",
   "harvestIndicators": [
     "Tops fall over, bulbs cluster fully formed"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

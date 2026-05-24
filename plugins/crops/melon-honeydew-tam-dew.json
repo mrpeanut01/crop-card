@@ -26,5 +26,9 @@
   "notes": "Open-pollinated honeydew. 6 to 8 lb fruit with pale green flesh. Heat-tolerant Texas A&M release.",
   "harvestIndicators": [
     "Rind cream-white with slight wax bloom, blossom end softens"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

@@ -16,7 +16,7 @@
     "rowSpacingIn": 7,
     "seedDepthIn": {
       "min": 0.5,
-      "max": 1.0
+      "max": 1
     }
   },
   "harvestIndicators": [
@@ -26,5 +26,10 @@
     "lifecycle": "annual",
     "rotationLookbackYears": 1
   },
-  "notes": "Crotalaria juncea, tropical legume. Heat-loving. Fixes 100 to 150 lb N per acre in 60 to 90 days. Suppresses root-knot nematode populations. Frost-killed in northern winters. Inoculate with cowpea-type Rhizobium. Sold by Hancock Seed, Green Cover Seed."
+  "notes": "Crotalaria juncea, tropical legume. Heat-loving. Fixes 100 to 150 lb N per acre in 60 to 90 days. Suppresses root-knot nematode populations. Frost-killed in northern winters. Inoculate with cowpea-type Rhizobium. Sold by Hancock Seed, Green Cover Seed.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

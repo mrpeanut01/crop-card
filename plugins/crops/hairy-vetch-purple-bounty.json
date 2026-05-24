@@ -26,5 +26,10 @@
     "lifecycle": "biennial",
     "rotationLookbackYears": 1
   },
-  "notes": "USDA-ARS Beltsville earlier-flowering hairy vetch (Vicia villosa). Allows roller-crimped no-till termination 7 to 14 days before standard hairy vetch. Pairs with cereal rye for organic no-till. Sold by King's AgriSeed, Green Cover Seed."
+  "notes": "USDA-ARS Beltsville earlier-flowering hairy vetch (Vicia villosa). Allows roller-crimped no-till termination 7 to 14 days before standard hairy vetch. Pairs with cereal rye for organic no-till. Sold by King's AgriSeed, Green Cover Seed.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

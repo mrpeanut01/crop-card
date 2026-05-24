@@ -26,5 +26,10 @@
   "notes": "1985 AAS-winning yellow pattypan summer squash. Pick young and often. Strong farmstand seller.",
   "harvestIndicators": [
     "3 inch scalloped disk, tender skin"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

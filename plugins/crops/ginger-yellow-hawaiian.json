@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Foliage yellows and dies back in late fall",
     "Rhizomes plump and fragrant"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

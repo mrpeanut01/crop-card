@@ -26,5 +26,6 @@
   "notes": "Indeterminate striped cherry from Wild Boar Farms breeding. Strong visual appeal in mixed cherry packs. Sweet flavor.",
   "harvestIndicators": [
     "Pink fruit with yellow vertical stripes, firm to thumb"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

@@ -26,5 +26,13 @@
   "notes": "Asimina triloba native to eastern US. Tropical-flavored fruit with custard texture. Plant two unrelated cultivars 20 ft apart.",
   "harvestIndicators": [
     "Yellow-green skin, soft to gentle pressure, drops easily"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

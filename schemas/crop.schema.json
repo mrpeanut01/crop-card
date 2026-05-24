@@ -1040,6 +1040,56 @@
         "additionalProperties": false
       }
     },
+    "harvestStyle": {
+      "type": "string",
+      "enum": [
+        "single-cut-grain",
+        "row-grain-pollinated",
+        "dry-seed-legume",
+        "cure-then-store",
+        "continuous-fruit",
+        "cut-and-come-again",
+        "cover-crop-termination",
+        "forage-cutting-cycle",
+        "perennial-vine",
+        "tree-fruit-multi-pick",
+        "single-event"
+      ]
+    },
+    "bloomWindow": {
+      "type": "object",
+      "properties": {
+        "daysFromPlantingMin": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "daysFromPlantingMax": {
+          "type": "integer",
+          "exclusiveMinimum": true,
+          "minimum": 0
+        },
+        "monthsOfYear": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "maxItems": 12
+        },
+        "continuous": {
+          "type": "boolean"
+        },
+        "beeAttractive": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 280
+        }
+      },
+      "additionalProperties": false
+    },
     "planting": {
       "type": "object",
       "additionalProperties": {}

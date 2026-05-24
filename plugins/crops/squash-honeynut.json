@@ -26,5 +26,9 @@
   "notes": "Cornell-bred mini butternut. Dense, very sweet flesh. CSA and chef-market favorite.",
   "harvestIndicators": [
     "Rind fully orange-tan, 6 to 8 inch single-serve fruit"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

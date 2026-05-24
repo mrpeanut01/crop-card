@@ -26,5 +26,6 @@
   "notes": "University of Minnesota cold-hardy red wine cultivar (Pinot Noir x Frontenac descent). Hardy to minus 36 F. Resistant to downy mildew, powdery mildew, black rot.",
   "harvestIndicators": [
     "Brix at 24 to 26, dark blue-black fruit"
-  ]
+  ],
+  "harvestStyle": "perennial-vine"
 }

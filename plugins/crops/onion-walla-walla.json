@@ -4,8 +4,15 @@
   "displayName": "Onion — Walla Walla (sweet)",
   "version": "1.0.0",
   "cropFamily": "allium",
-  "daysToMaturity": { "min": 110, "max": 130 },
+  "daysToMaturity": {
+    "min": 110,
+    "max": 130
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["Tops fall", "Bulbs ~3–4 in"],
-  "notes": "Sweet onion — short storage life. Use within 4–6 wk of curing."
+  "harvestIndicators": [
+    "Tops fall",
+    "Bulbs ~3–4 in"
+  ],
+  "notes": "Sweet onion — short storage life. Use within 4–6 wk of curing.",
+  "harvestStyle": "single-event"
 }

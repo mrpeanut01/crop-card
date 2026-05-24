@@ -26,5 +26,6 @@
   "notes": "Indeterminate campari-style cocktail tomato. NCSU-bred with strong late and early blight resistance. Excellent CSA and high tunnel performer.",
   "harvestIndicators": [
     "2 oz round red fruit, crack-free even after rain"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

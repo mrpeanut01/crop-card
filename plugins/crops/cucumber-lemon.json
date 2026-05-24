@@ -26,5 +26,10 @@
   "notes": "1894 heirloom. Round yellow cucumber with mild, never-bitter flesh. Decorative at farmstand. Heat-tolerant.",
   "harvestIndicators": [
     "Round yellow fruit at tennis-ball size, before seeds harden"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

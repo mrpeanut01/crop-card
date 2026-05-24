@@ -26,5 +26,13 @@
   "notes": "Long, tapered Belgian heirloom (1807). Dense, spicy-sweet flesh. Excellent for baking and cold storage. Requires cross-pollinator.",
   "harvestIndicators": [
     "Cinnamon russet skin, fruit firm at harvest, ripens after picking"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

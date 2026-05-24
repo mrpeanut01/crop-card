@@ -26,5 +26,6 @@
   "notes": "Indeterminate dark-fruited cherry. Rich, sweet, complex flavor. Heavy producer on long trusses.",
   "harvestIndicators": [
     "Mahogany-purple skin, slight softness at full ripeness"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

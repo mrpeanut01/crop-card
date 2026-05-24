@@ -4,13 +4,20 @@
   "displayName": "Grain Sorghum / Milo — Pioneer 84G62",
   "version": "1.0.0",
   "cropFamily": "cereal-grain",
-  "daysToMaturity": { "min": 100, "max": 115 },
+  "daysToMaturity": {
+    "min": 100,
+    "max": 115
+  },
   "defaultRowSpacingInches": 30,
   "plantingGuide": {
     "soilTempMinF": 65,
     "rowSpacingIn": 30,
     "recommendedLbsPerAcre": 8
   },
-  "harvestIndicators": ["Black layer at seed base", "Grain moisture 13–14%"],
-  "notes": "Drought-tolerant grain alternative to corn. Atrazine-tolerant rotation crop."
+  "harvestIndicators": [
+    "Black layer at seed base",
+    "Grain moisture 13–14%"
+  ],
+  "notes": "Drought-tolerant grain alternative to corn. Atrazine-tolerant rotation crop.",
+  "harvestStyle": "single-cut-grain"
 }

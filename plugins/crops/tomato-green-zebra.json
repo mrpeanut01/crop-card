@@ -26,5 +26,6 @@
   "notes": "Indeterminate striped slicer bred by Tom Wagner in the 1980s. Tart-sweet flavor. Strong farmstand and chef-market seller.",
   "harvestIndicators": [
     "Yellow background with dark green stripes, slight blossom-end give"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

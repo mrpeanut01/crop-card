@@ -26,5 +26,6 @@
   "notes": "Orange-ripening bell hybrid. Sweet flavor at full ripeness. Premium farmstand and CSA color.",
   "harvestIndicators": [
     "Deep tangerine-orange thick-walled fruit"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

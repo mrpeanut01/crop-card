@@ -26,5 +26,6 @@
   "notes": "Indeterminate Amish heirloom prized for large rose-pink beefsteak fruit averaging 1 to 2 lb. Potato-leaf foliage. Requires sturdy caging or staking. Late-blight susceptible.",
   "harvestIndicators": [
     "Deep pink shoulders with slight give at blossom end"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

@@ -26,5 +26,6 @@
   "notes": "Eragrostis tef, Ethiopian small-grained cereal. Used for injera bread and gluten-free baking. Drought-tolerant.",
   "harvestIndicators": [
     "Heads light brown, seeds shed when rubbed between palms"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain"
 }

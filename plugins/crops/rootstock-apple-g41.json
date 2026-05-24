@@ -23,5 +23,13 @@
     "lifecycle": "perennial",
     "rotationLookbackYears": 0
   },
-  "notes": "Cornell Geneva 41 dwarfing rootstock. Comparable vigor to M.9 with strong fire blight, crown rot, and woolly apple aphid resistance. Brittle graft union."
+  "notes": "Cornell Geneva 41 dwarfing rootstock. Comparable vigor to M.9 with strong fire blight, crown rot, and woolly apple aphid resistance. Brittle graft union.",
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

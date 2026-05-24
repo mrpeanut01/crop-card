@@ -26,5 +26,6 @@
   "notes": "Bejo long-day storage onion (14+ hour photoperiod). Standard for northern US commercial storage programs.",
   "harvestIndicators": [
     "Tops fall, bulbs cured at 4 inch diameter"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

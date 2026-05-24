@@ -26,5 +26,9 @@
   "notes": "Heirloom Cucurbita pepo squash dating to 1894. Single-serve size, edible skin. Strong CSA seller. Cure 10 days at 80F.",
   "harvestIndicators": [
     "Cream rind with deep green stripes, hardened skin resists thumbnail"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

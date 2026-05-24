@@ -26,5 +26,6 @@
   "notes": "Premier white wine grape of Burgundy and Champagne origins. Hardy zones 6 to 9. Susceptible to powdery mildew, downy mildew, Botrytis.",
   "harvestIndicators": [
     "Brix at 22 to 24, pH 3.3 to 3.5 for sparkling or still wine targets"
-  ]
+  ],
+  "harvestStyle": "perennial-vine"
 }

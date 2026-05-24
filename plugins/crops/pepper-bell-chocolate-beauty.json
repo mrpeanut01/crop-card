@@ -26,5 +26,6 @@
   "notes": "Open-pollinated chocolate-colored bell. Mature fruit deep brown over red flesh.",
   "harvestIndicators": [
     "Deep mahogany-brown skin with brick-red interior"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

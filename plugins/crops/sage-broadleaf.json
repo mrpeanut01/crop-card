@@ -4,8 +4,14 @@
   "displayName": "Sage — Broadleaf (Salvia officinalis)",
   "version": "1.0.0",
   "cropFamily": "herb-culinary",
-  "daysToMaturity": { "min": 90, "max": 180 },
+  "daysToMaturity": {
+    "min": 90,
+    "max": 180
+  },
   "defaultRowSpacingInches": 18,
-  "harvestIndicators": ["Pre-flower for best flavor"],
-  "notes": "Hardy perennial; replace every 3–4 yr."
+  "harvestIndicators": [
+    "Pre-flower for best flavor"
+  ],
+  "notes": "Hardy perennial; replace every 3–4 yr.",
+  "harvestStyle": "cut-and-come-again"
 }

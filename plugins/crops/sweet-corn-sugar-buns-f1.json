@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Silks brown and dry, kernel milky when popped with thumbnail"
   ],
-  "cornType": "sweet"
+  "cornType": "sweet",
+  "harvestStyle": "row-grain-pollinated"
 }

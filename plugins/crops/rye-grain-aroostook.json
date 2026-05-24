@@ -26,5 +26,6 @@
   "notes": "USDA-Aroostook release. Cold-hardy winter cereal rye for grain in northern climates. Sow late summer through early fall.",
   "harvestIndicators": [
     "Heads tan, kernels hard at 13% moisture"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain"
 }

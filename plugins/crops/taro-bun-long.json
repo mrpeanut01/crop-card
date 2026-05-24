@@ -26,5 +26,6 @@
   "notes": "Chinese taro variety used for taro chips and Hawaiian poi. Requires constantly moist soil. Hardy zone 8+; treated as annual elsewhere.",
   "harvestIndicators": [
     "Leaves yellow at maturity; corms firm at 1 to 2 lb each"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Yellow speckles scattered on dark green rind",
     "Ground spot yellow"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

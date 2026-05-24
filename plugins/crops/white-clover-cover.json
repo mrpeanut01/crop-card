@@ -4,10 +4,18 @@
   "displayName": "White Clover — Ladino (perennial cover / living mulch)",
   "version": "1.0.0",
   "cropFamily": "cover-legume",
-  "daysToMaturity": { "min": 90, "max": 365 },
+  "daysToMaturity": {
+    "min": 90,
+    "max": 365
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "recommendedLbsPerAcre": 4
   },
-  "notes": "Low-growing perennial — works as a living mulch in orchard alleyways or vegetable interplant. N-fixer + pollinator-friendly."
+  "notes": "Low-growing perennial — works as a living mulch in orchard alleyways or vegetable interplant. N-fixer + pollinator-friendly.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

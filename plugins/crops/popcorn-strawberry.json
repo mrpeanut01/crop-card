@@ -41,5 +41,6 @@
       "purpose": "post-emergent"
     }
   ],
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "harvestStyle": "row-grain-pollinated"
 }

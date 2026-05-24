@@ -4,19 +4,35 @@
   "displayName": "Onion — Stuttgarter (yellow storage)",
   "version": "1.0.0",
   "cropFamily": "allium",
-  "daysToMaturity": { "min": 100, "max": 120 },
+  "daysToMaturity": {
+    "min": 100,
+    "max": 120
+  },
   "defaultRowSpacingInches": 12,
   "plantingGuide": {
     "soilTempMinF": 35,
     "rowSpacingIn": 12,
-    "inRowSpacingIn": { "min": 4, "max": 5 },
-    "seedDepthIn": { "min": 0.5, "max": 1 }
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 5
+    },
+    "seedDepthIn": {
+      "min": 0.5,
+      "max": 1
+    }
   },
   "postHarvestCuring": {
     "method": "Cure 2–3 wk in shade with airflow until necks fully dry",
-    "durationWeeks": { "min": 2, "max": 3 },
+    "durationWeeks": {
+      "min": 2,
+      "max": 3
+    },
     "storageLocation": "Cool, dry, dark"
   },
-  "harvestIndicators": ["Tops fall over (~50% of stand)", "Necks soften"],
-  "notes": "Long-day storage onion (Mid-Atlantic threshold). Set transplants in early spring."
+  "harvestIndicators": [
+    "Tops fall over (~50% of stand)",
+    "Necks soften"
+  ],
+  "notes": "Long-day storage onion (Mid-Atlantic threshold). Set transplants in early spring.",
+  "harvestStyle": "single-event"
 }

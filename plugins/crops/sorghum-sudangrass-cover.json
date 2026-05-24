@@ -4,11 +4,15 @@
   "displayName": "Sorghum-Sudangrass (warm-season cover)",
   "version": "1.0.0",
   "cropFamily": "cover-grass",
-  "daysToMaturity": { "min": 60, "max": 90 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 65,
     "recommendedLbsPerAcre": 35
   },
-  "notes": "Massive summer biomass for soil-building. Mow at 4 ft to encourage rooting + regrowth. Allelopathic — wait 2 wk before planting small-seeded crops."
+  "notes": "Massive summer biomass for soil-building. Mow at 4 ft to encourage rooting + regrowth. Allelopathic — wait 2 wk before planting small-seeded crops.",
+  "harvestStyle": "cover-crop-termination"
 }

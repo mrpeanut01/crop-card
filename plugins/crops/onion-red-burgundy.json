@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Tops fall over and yellow",
     "Bulb deep red with thin neck"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

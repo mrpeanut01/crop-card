@@ -26,5 +26,6 @@
   "notes": "Panicum miliaceum. Short-season grain for human consumption (hulled millet) and birdseed market. Drought-tolerant.",
   "harvestIndicators": [
     "Open panicle, seeds firm and creamy white"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain"
 }

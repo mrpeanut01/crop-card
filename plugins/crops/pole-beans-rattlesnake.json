@@ -4,8 +4,15 @@
   "displayName": "Rattlesnake Pole Beans",
   "version": "1.0.0",
   "cropFamily": "legume",
-  "daysToMaturity": { "min": 65, "max": 75 },
+  "daysToMaturity": {
+    "min": 65,
+    "max": 75
+  },
   "defaultRowSpacingInches": 36,
-  "harvestIndicators": ["Pods firm and snap cleanly", "Beans visible through pod"],
-  "notes": "Heirloom pole bean. Three Sisters companion: plant 14 days after corn reaches 6 in height."
+  "harvestIndicators": [
+    "Pods firm and snap cleanly",
+    "Beans visible through pod"
+  ],
+  "notes": "Heirloom pole bean. Three Sisters companion: plant 14 days after corn reaches 6 in height.",
+  "harvestStyle": "continuous-fruit"
 }

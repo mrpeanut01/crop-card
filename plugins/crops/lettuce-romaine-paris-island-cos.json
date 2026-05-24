@@ -4,8 +4,15 @@
   "displayName": "Lettuce — Romaine, Paris Island Cos",
   "version": "1.0.0",
   "cropFamily": "leafy-green",
-  "daysToMaturity": { "min": 60, "max": 75 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 75
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["Tight head 8–12 in tall", "Heart firm"],
-  "notes": "Standard romaine. Drip irrigation only — avoid overhead in head-up phase to reduce tipburn."
+  "harvestIndicators": [
+    "Tight head 8–12 in tall",
+    "Heart firm"
+  ],
+  "notes": "Standard romaine. Drip irrigation only — avoid overhead in head-up phase to reduce tipburn.",
+  "harvestStyle": "cut-and-come-again"
 }

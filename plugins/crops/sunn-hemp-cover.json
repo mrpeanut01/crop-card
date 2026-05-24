@@ -4,11 +4,19 @@
   "displayName": "Sunn Hemp (warm-season N-fixing cover)",
   "version": "1.0.0",
   "cropFamily": "cover-legume",
-  "daysToMaturity": { "min": 60, "max": 90 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 65,
     "recommendedLbsPerAcre": 30
   },
-  "notes": "Tropical legume — heat-loving N-fixer. Excellent summer rotation crop in vegetable systems. Frost-kills."
+  "notes": "Tropical legume — heat-loving N-fixer. Excellent summer rotation crop in vegetable systems. Frost-kills.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

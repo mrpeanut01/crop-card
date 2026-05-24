@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Deep red, firm sides",
     "Drops easily off the truss"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

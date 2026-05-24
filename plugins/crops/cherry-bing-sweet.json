@@ -5,6 +5,17 @@
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
   "defaultRowSpacingInches": 240,
-  "harvestIndicators": ["Deep mahogany red", "Firm flesh"],
-  "notes": "Requires pollinizer (Rainier, Stella). Cherry fruit fly + spotted-wing drosophila monitoring critical pre-harvest."
+  "harvestIndicators": [
+    "Deep mahogany red",
+    "Firm flesh"
+  ],
+  "notes": "Requires pollinizer (Rainier, Stella). Cherry fruit fly + spotted-wing drosophila monitoring critical pre-harvest.",
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      3,
+      4
+    ],
+    "beeAttractive": true
+  }
 }

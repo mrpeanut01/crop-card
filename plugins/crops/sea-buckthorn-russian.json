@@ -26,5 +26,6 @@
   "notes": "Cold-hardy nitrogen-fixing shrub native to Eurasia. Dioecious; plant one male per 6 to 8 females. Tart fruit high in vitamin C.",
   "harvestIndicators": [
     "Dense clusters of orange-yellow fruit, fully colored"
-  ]
+  ],
+  "harvestStyle": "perennial-vine"
 }

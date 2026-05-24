@@ -26,5 +26,10 @@
   "notes": "Chinese heirloom burpless slicer. Sweet, never bitter. Best trellised so fruit hangs straight.",
   "harvestIndicators": [
     "18 inch deeply ridged dark green fruit"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

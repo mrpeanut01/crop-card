@@ -1,7 +1,7 @@
 {
   "pluginId": "peach-redhaven",
   "type": "crop",
-  "displayName": "Peach \u2014 Redhaven",
+  "displayName": "Peach — Redhaven",
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
   "preHarvestIntervalDays": 7,
@@ -13,7 +13,7 @@
       "dayOfYear": 60,
       "windowDays": 14,
       "title": "Dormant copper + oil",
-      "body": "Peach leaf curl preventive \u2014 must be applied before bud swell.",
+      "body": "Peach leaf curl preventive — must be applied before bud swell.",
       "category": "spray"
     },
     {
@@ -30,7 +30,7 @@
       "kind": "spray",
       "dayOfYear": 165,
       "windowDays": 28,
-      "title": "Summer cover sprays (10\u201314 d intervals)",
+      "title": "Summer cover sprays (10–14 d intervals)",
       "body": "Brown rot, oriental fruit moth. Adjust by trap counts.",
       "category": "spray"
     },
@@ -57,5 +57,13 @@
     "Ground color shifts yellow-orange",
     "Flesh gives slightly under thumb"
   ],
-  "notes": "Standard yellow-flesh freestone peach. Bacterial spot susceptibility \u2014 copper bactericides mid-summer."
+  "notes": "Standard yellow-flesh freestone peach. Bacterial spot susceptibility — copper bactericides mid-summer.",
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      3,
+      4
+    ],
+    "beeAttractive": true
+  }
 }

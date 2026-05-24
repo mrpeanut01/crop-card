@@ -26,5 +26,6 @@
   "notes": "Capsicum annuum, 10000 to 25000 SHU. Heavy-bearing standard for fresh salsa. Tall upright plants.",
   "harvestIndicators": [
     "Glossy green for fresh salsa, deep red for full ripening"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

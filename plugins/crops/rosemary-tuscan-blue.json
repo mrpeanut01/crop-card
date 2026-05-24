@@ -4,8 +4,14 @@
   "displayName": "Rosemary — Tuscan Blue",
   "version": "1.0.0",
   "cropFamily": "herb-culinary",
-  "daysToMaturity": { "min": 365, "max": 730 },
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
   "defaultRowSpacingInches": 36,
-  "harvestIndicators": ["Year-round cuts (light tipping)"],
-  "notes": "Tender perennial — winter-kill below 15 °F. Container or high-tunnel in Mid-Atlantic."
+  "harvestIndicators": [
+    "Year-round cuts (light tipping)"
+  ],
+  "notes": "Tender perennial — winter-kill below 15 °F. Container or high-tunnel in Mid-Atlantic.",
+  "harvestStyle": "cut-and-come-again"
 }

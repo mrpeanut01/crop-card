@@ -26,5 +26,6 @@
   "notes": "Humulus lupulus. USDA-ARS 1972 release. Standard American craft-brewing aroma hop. Bines trained on 18 ft trellis. Cold-hardy zones 4 to 8.",
   "harvestIndicators": [
     "Cones papery, lupulin yellow when split, alpha acid 5 to 7%"
-  ]
+  ],
+  "harvestStyle": "perennial-vine"
 }

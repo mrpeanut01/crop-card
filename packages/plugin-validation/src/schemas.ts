@@ -206,6 +206,85 @@ export const harvestTargetSchema = z.object({
 });
 export type HarvestTarget = z.infer<typeof harvestTargetSchema>;
 
+// ─── Phase 25c.0 — harvest archetype discriminator ──────────────────────
+//
+// Drives `HarvestRouter` dispatch (Phase 25c renderers). Optional initially
+// so the existing 513 crop plugins still validate; promoted to required at
+// ≥95% coverage per the dry-run window in #87. The FallbackHarvestRenderer
+// is defensive — it should never fire once the corpus is fully tagged.
+export const HARVEST_STYLES = [
+  /** Single mechanized cut — wheat, barley, oats. Driven by Zadoks stages. */
+  'single-cut-grain',
+  /** Row grain with V/R staging — corn (sweet, dent, popcorn, etc.). */
+  'row-grain-pollinated',
+  /** Dry seed at full senescence — cherokee bean, cowpea, soup beans. */
+  'dry-seed-legume',
+  /** Cure-then-store winter cucurbits — butternut, seminole, kabocha. */
+  'cure-then-store',
+  /** Multiple harvests over weeks — tomato, pepper, eggplant, summer squash. */
+  'continuous-fruit',
+  /** Repeat-cut leafy — head lettuce, leaf lettuce, spinach, arugula. */
+  'cut-and-come-again',
+  /** Cover-crop kill-and-roll — rye+vetch, buckwheat, sorghum-sudan. */
+  'cover-crop-termination',
+  /** Perennial multi-cut hay — alfalfa, mixed grasses. (See hayOperations.) */
+  'forage-cutting-cycle',
+  /** Perennial vine — grape, hops, kiwi. Quality at single harvest window. */
+  'perennial-vine',
+  /** Tree fruit with multiple ripening passes — apple, pear, stone fruit. */
+  'tree-fruit-multi-pick',
+  /** Catch-all for crops outside the 10 specialized archetypes. */
+  'single-event'
+] as const;
+export const harvestStyleSchema = z.enum(HARVEST_STYLES);
+export type HarvestStyle = (typeof HARVEST_STYLES)[number];
+
+// ─── Phase 25c.0 — bloom window (pollinator-bloom gate input, 25d) ──────
+//
+// Consumed by `lib/safety/pollinatorBloom.ts` (Phase 25d) to decide whether
+// a sprayed block is in bloom when a bee-toxic product is applied. Three
+// declaration shapes — annuals use day-from-planting, perennials use
+// monthsOfYear, continuous bloomers set `continuous: true`. At least one
+// of those three MUST be populated when `bloomWindow` is present.
+export const bloomWindowSchema = z
+  .object({
+    /** Days from planting until first bloom (annuals). e.g., 35 for cucurbits. */
+    daysFromPlantingMin: z.number().int().nonnegative().optional(),
+    /** Days from planting until last bloom (annuals). e.g., 50 for cucurbits. */
+    daysFromPlantingMax: z.number().int().positive().optional(),
+    /** Calendar months the crop blooms in (perennials, 1=Jan..12=Dec).
+     *  e.g., apple → [4, 5]; clover cover crop → [5, 6, 7]. */
+    monthsOfYear: z.array(z.number().int().min(1).max(12)).max(12).optional(),
+    /** True for crops that bloom continuously through the growing season
+     *  (e.g., tomato, pepper, summer squash). Gate blocks bee-toxic sprays
+     *  any time the crop is in the field past first-flower. */
+    continuous: z.boolean().optional(),
+    /** Is the flower bee-attractive (forager visits)? When false, the
+     *  pollinator gate skips this crop regardless of bloom timing. Default
+     *  treated as true when omitted (conservative — most crop flowers
+     *  attract some pollinator). */
+    beeAttractive: z.boolean().optional(),
+    notes: z.string().max(280).optional()
+  })
+  .refine(
+    (v) =>
+      v.continuous === true ||
+      v.daysFromPlantingMin !== undefined ||
+      (v.monthsOfYear?.length ?? 0) > 0,
+    {
+      message:
+        'bloomWindow must declare at least one of: continuous, daysFromPlantingMin, monthsOfYear'
+    }
+  )
+  .refine(
+    (v) =>
+      v.daysFromPlantingMin === undefined ||
+      v.daysFromPlantingMax === undefined ||
+      v.daysFromPlantingMin <= v.daysFromPlantingMax,
+    { message: 'daysFromPlantingMin must be ≤ daysFromPlantingMax' }
+  );
+export type BloomWindow = z.infer<typeof bloomWindowSchema>;
+
 export const growthStageTableSchema = z
   .object({
     system: stageSystemSchema,
@@ -500,7 +579,12 @@ export const cropPluginSchema = pluginBase.extend({
    *  When omitted, the calendar engine falls back to the family default in
    *  `growthStageTemplates.ts`. Dual-purpose varieties (e.g., Bloody Butcher
    *  corn, harvestable as sweet eating at R3 or as dent at R6) list multiple
-   *  `harvestTargets` and downstream UI / AI auto-schedule picks among them. */
+   *  `harvestTargets` and downstream UI / AI auto-schedule picks among them.
+   *
+   *  Phase 25c.0 — `growthStageTable.system` is one of the harvest renderer
+   *  dispatch discriminators (#87). Backfill drives small-grains to 'zadoks'
+   *  and corn to 'vr-corn' so SmallGrainZadoks + RowGrainPollinated find a
+   *  populated stage table. Tracked in docs/plugin-discriminator-coverage.md. */
   growthStageTable: growthStageTableSchema.optional(),
   /** Corn-family classifier: 'sweet' | 'popcorn' | 'dent' | 'flour' | 'flint'
    *  | 'dual-purpose'. UI filter + AI auto-schedule sugar; the actual harvest
@@ -537,6 +621,16 @@ export const cropPluginSchema = pluginBase.extend({
    *  application tasks. Replaces the corn V2/V3 + V4/V6 and cucurbit
    *  Clethodim windows previously hardcoded in `calendar/engine.ts`. */
   sprayWindows: z.array(cropSprayWindowSchema).optional(),
+  // ─── Phase 25c.0 — discriminators for harvest renderers + pollinator gate ──
+  /** Harvest archetype — drives `HarvestRouter` dispatch in Phase 25c
+   *  (one of 11 renderers under `lib/components/harvest/renderers/`).
+   *  Optional initially; promoted to required at ≥95% coverage per #87
+   *  after the deterministic + AI-assisted backfill PRs land. */
+  harvestStyle: harvestStyleSchema.optional(),
+  /** When does this crop bloom + is it bee-attractive? Phase 25d
+   *  pollinator-bloom gate blocks bee-toxic spray applications during
+   *  the declared window. See `bloomWindowSchema` JSDoc. */
+  bloomWindow: bloomWindowSchema.optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),
@@ -672,7 +766,12 @@ const insecticideIngredientSchema = z.object({
 /** Phase 10: declarative scouting threshold. The /scout flow renders an
  *  observation form with the listed metric; if the recorded value crosses
  *  the threshold, the UI nudges the operator into the spray flow with this
- *  insecticide pre-selected. The kernel never auto-sprays. */
+ *  insecticide pre-selected. The kernel never auto-sprays.
+ *
+ *  Phase 25c.0 / 25d — this IS the IPM threshold gate input (#87, #89).
+ *  No new field needed; the 25d `lib/safety/ipmThreshold.ts` evaluator
+ *  reads `scoutingThresholds` directly and blocks sprays when the most
+ *  recent scout count for the targeted pest is below the threshold. */
 const scoutingThresholdSchema = z.object({
   /** Pest the threshold is observing (free-form; matches targetPests). */
   pest: z.string().min(1),
@@ -743,6 +842,11 @@ export const insecticidePluginSchema = pluginBase.extend({
  * NOT consumed by the safety kernel kill-matrix; used by
  * `agronomy/resistance.ts` for rotation hints (don't apply same FRAC group
  * twice in a row).
+ *
+ * Phase 25c.0 / 25d — this IS the FRAC group input for the rotation gate
+ * (#87, #89). No plugin-level `fracGroup` field needed; the 25d
+ * `lib/safety/fracRotation.ts` evaluator derives the tank-mix groups by
+ * reading `activeIngredients[].fracCode` across the selected products.
  */
 const fungicideIngredientSchema = z.object({
   name: z.string().min(1),

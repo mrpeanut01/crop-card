@@ -26,5 +26,6 @@
   "notes": "Mini sweet snacking pepper mix. Lunchbox and retail clamshell size. Heavy producer over a long window.",
   "harvestIndicators": [
     "3 inch tapered fruit, thick walls, fully colored"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

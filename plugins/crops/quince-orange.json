@@ -26,5 +26,13 @@
   "notes": "Standard culinary quince. Self-fertile, hardy to zone 5. Fruit requires cooking; not eaten fresh. Fire blight susceptible.",
   "harvestIndicators": [
     "Deep yellow, highly fragrant, hard skin"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

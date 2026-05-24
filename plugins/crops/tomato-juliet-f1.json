@@ -26,5 +26,6 @@
   "notes": "Indeterminate grape tomato. 1999 AAS winner. Strong late blight tolerance. Holds well after picking.",
   "harvestIndicators": [
     "1 oz oblong red fruit, crack-resistant"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

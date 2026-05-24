@@ -4,8 +4,14 @@
   "displayName": "Mint — Spearmint",
   "version": "1.0.0",
   "cropFamily": "herb-culinary",
-  "daysToMaturity": { "min": 60, "max": 90 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
   "defaultRowSpacingInches": 18,
-  "harvestIndicators": ["Pre-flower for peak flavor"],
-  "notes": "Aggressive runner — confine to dedicated bed or containers. Cut hard mid-summer to refresh."
+  "harvestIndicators": [
+    "Pre-flower for peak flavor"
+  ],
+  "notes": "Aggressive runner — confine to dedicated bed or containers. Cut hard mid-summer to refresh.",
+  "harvestStyle": "cut-and-come-again"
 }

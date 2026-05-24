@@ -26,5 +26,6 @@
   "notes": "Colorado State release. Hard white winter wheat for whole-wheat baking with lighter color than red wheats.",
   "harvestIndicators": [
     "Heads tan, kernels at 13 to 14% moisture"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain"
 }

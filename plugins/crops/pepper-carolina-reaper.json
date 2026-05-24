@@ -26,5 +26,6 @@
   "notes": "Capsicum chinense, 1.5 to 2.2 million SHU. Bred by PuckerButt Pepper Company. Long, hot season required. Handle with gloves and eye protection.",
   "harvestIndicators": [
     "Wrinkled scorpion-tail red pod, firm and glossy"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

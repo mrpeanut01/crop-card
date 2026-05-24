@@ -26,5 +26,13 @@
   "notes": "New Zealand-bred (Kidds Orange Red x Golden Delicious). Mid-season harvest, sweet and aromatic. Top-five US-grown apple.",
   "harvestIndicators": [
     "Red striping over orange-yellow base, firm to thumb"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

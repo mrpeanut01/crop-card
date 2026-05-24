@@ -26,5 +26,6 @@
   "notes": "Capsicum annuum, 50000 to 100000 SHU. Compact ornamental plants loaded with upright pods. Dries easily for year-round use.",
   "harvestIndicators": [
     "Slender upright fruit, deep red when fully ripe"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

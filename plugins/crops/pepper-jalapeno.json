@@ -5,8 +5,15 @@
   "version": "1.0.0",
   "cropFamily": "solanaceae",
   "preHarvestIntervalDays": 1,
-  "daysToMaturity": { "min": 70, "max": 80 },
+  "daysToMaturity": {
+    "min": 70,
+    "max": 80
+  },
   "defaultRowSpacingInches": 24,
-  "harvestIndicators": ["Dark green firm fruit (4 in)", "Or red-ripe stage for sauce"],
-  "notes": "Hot pepper. Transplant after last frost + 2 wk. Heat units are key — harvest can extend into October."
+  "harvestIndicators": [
+    "Dark green firm fruit (4 in)",
+    "Or red-ripe stage for sauce"
+  ],
+  "notes": "Hot pepper. Transplant after last frost + 2 wk. Heat units are key — harvest can extend into October.",
+  "harvestStyle": "continuous-fruit"
 }

@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Silks brown, white kernels milk-stage on thumbnail test"
   ],
-  "cornType": "sweet"
+  "cornType": "sweet",
+  "harvestStyle": "row-grain-pollinated"
 }

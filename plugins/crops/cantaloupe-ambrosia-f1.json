@@ -26,5 +26,9 @@
   "notes": "5 lb peach-fleshed muskmelon, hybrid bred by Harris Moran in 1986. Excellent eating quality. Powdery mildew resistance.",
   "harvestIndicators": [
     "Full slip from vine, deeply netted rind, fragrant blossom end"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

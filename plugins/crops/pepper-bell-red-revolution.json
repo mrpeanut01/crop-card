@@ -26,5 +26,6 @@
   "notes": "Standard commercial red bell hybrid. Strong upright plant for ease of harvest. Bacterial leaf spot resistance.",
   "harvestIndicators": [
     "Thick-walled 4-lobe blocky fruit, full deep red"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

@@ -4,8 +4,15 @@
   "displayName": "Beet — Detroit Dark Red",
   "version": "1.0.0",
   "cropFamily": "root",
-  "daysToMaturity": { "min": 55, "max": 65 },
+  "daysToMaturity": {
+    "min": 55,
+    "max": 65
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["Roots 2–3 in (table)", "Tops dual-purpose as greens"],
-  "notes": "Standard table beet. Multiseed — thin to 3 in for full size."
+  "harvestIndicators": [
+    "Roots 2–3 in (table)",
+    "Tops dual-purpose as greens"
+  ],
+  "notes": "Standard table beet. Multiseed — thin to 3 in for full size.",
+  "harvestStyle": "single-event"
 }

@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Bright yellow-white bicolor kernels at milk stage"
   ],
-  "cornType": "sweet"
+  "cornType": "sweet",
+  "harvestStyle": "row-grain-pollinated"
 }

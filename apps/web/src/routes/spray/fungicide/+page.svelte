@@ -2,9 +2,8 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
-  import Pill from '$lib/components/ui/Pill.svelte';
+  import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
 
   let { data } = $props();
 
@@ -136,33 +135,7 @@
   }
 </script>
 
-<header class="page-header">
-  <Kicker>Spray · FRAC-rotated · Phase 25d gate stub</Kicker>
-  <h1 class="serif">Fungicide application</h1>
-  <p class="lede">
-    Records an immutable fungicide event with REI / PHI lockouts. FRAC code rotation hints help
-    prevent resistance — avoid two consecutive sprays sharing the same code on the same block.
-  </p>
-</header>
-
-<div class="gate-slot">
-  <Pill tone="sky">FRAC rotation evaluator — Phase 25d</Pill>
-  <Pill tone="sky">Disease forecast (NEWA / FHB) — Phase 26</Pill>
-  <Pill tone="sky">Rain/dew dry-hours gate — Phase 25d</Pill>
-</div>
-
-{#if data.activeREI.length > 0}
-  <Banner tone="wheat">
-    <strong>Active fungicide re-entry intervals:</strong>
-    <ul class="rei-list">
-      {#each data.activeREI as e (e.id)}
-        <li>
-          Block {e.blockId} — re-entry clear {new Date(e.reEntryClearAt ?? 0).toLocaleString()}
-        </li>
-      {/each}
-    </ul>
-  </Banner>
-{/if}
+<SprayPageHeader chemistry="fungicide" activeREI={data.activeREI} />
 
 <form onsubmit={recordSpray}>
   <section class="card">

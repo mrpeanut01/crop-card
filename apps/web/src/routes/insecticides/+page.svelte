@@ -2,9 +2,9 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import Button from '$lib/components/ui/Button.svelte';
+  import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
 
   let { data } = $props();
 
@@ -75,27 +75,7 @@
   }
 </script>
 
-<header class="page-header">
-  <Kicker>IPM · IRAC-grouped library</Kicker>
-  <h1 class="serif">Insecticides</h1>
-  <p class="lede">
-    The kernel enforces environmental gates + REI / PHI; safety rules for crop tolerance live in
-    the herbicide kill matrix and don't apply to insecticides.
-  </p>
-</header>
-
-{#if data.activeREI.length > 0}
-  <Banner tone="wheat">
-    <strong>Active re-entry intervals:</strong>
-    <ul class="rei-list">
-      {#each data.activeREI as e (e.id)}
-        <li>
-          Block {e.blockId} — re-entry clear {new Date(e.reEntryClearAt ?? 0).toLocaleString()}
-        </li>
-      {/each}
-    </ul>
-  </Banner>
-{/if}
+<SprayPageHeader chemistry="insecticide" activeREI={data.activeREI} />
 
 <section class="card">
   <h2>Library</h2>

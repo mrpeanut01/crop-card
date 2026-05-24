@@ -2,9 +2,8 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
-  import Pill from '$lib/components/ui/Pill.svelte';
+  import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
   import {
     buildLastTankFills,
     fmtAmount as fmtUnitAmount,
@@ -542,19 +541,7 @@
   }
 </script>
 
-<header class="page-header">
-  <Kicker>Spray · Herbicide · Kernel-gated</Kicker>
-  <h1 class="serif">Plan a spray</h1>
-  <p class="lede">
-    Pick a block, herbicide(s), sprayer, and conditions. The safety kernel decides whether the
-    dilution table renders or you get a STOP card.
-  </p>
-</header>
-
-<div class="gate-slot">
-  <Pill tone="sky">IPM threshold gate — Phase 25d</Pill>
-  <Pill tone="sky">Pollinator-bloom gate — Phase 25d</Pill>
-</div>
+<SprayPageHeader chemistry="herbicide" />
 
 {#if data.preselect.fromScout || data.preselect.blockId}
   <Banner tone="forest">

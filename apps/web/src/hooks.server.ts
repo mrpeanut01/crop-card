@@ -95,6 +95,12 @@ function isAnonymous(pathname: string): boolean {
   if (pathname.startsWith('/@')) return true;
   if (pathname.startsWith('/node_modules/')) return true;
   if (pathname === '/service-worker.js' || pathname.startsWith('/workbox-')) return true;
+  // /_dev/* routes (visual references, primitives playground) are gated
+  // by the route's own load function (dev || superadmin || ENABLE_DEV_ROUTES).
+  // Letting them through the global auth funnel here means the route gate
+  // is the only gate — and Playwright's visual baseline doesn't need an
+  // auth cookie just to render the primitives page.
+  if (pathname.startsWith('/_dev/')) return true;
   return false;
 }
 

@@ -28,6 +28,7 @@ import { getFarmLatLon } from '$lib/schedule/settings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { deriveSeasonWorkflow } from '$lib/plan/seasonWorkflow';
+import { listPlanRevisions } from '$lib/plan/revisions';
 import {
   plantingBarEndMs,
   rotationConflicts,
@@ -197,8 +198,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       lastYearSetup,
       crops: listCrops({ year: currentYear }).map((c) => ({ plantingDate: c.plantingDate })),
       inputsTaskCount: listTasks({ kind: 'primary' }).length,
-      hasPlanRevision: null
+      hasPlanRevision: listPlanRevisions(`season-${currentYear}`, 1).length > 0
     }),
+    // Phase 25d (#89) — ProvenancePanel data. planId is the season-year
+    // identifier; revisions chain wizard-commit + AI-refinement + manual
+    // edits so the operator can audit "where this plan came from".
+    planRevisions: listPlanRevisions(`season-${currentYear}`).map((r) => ({
+      id: r.id,
+      revisionNumber: r.revisionNumber,
+      source: r.source,
+      createdAt: r.createdAt,
+      note: typeof r.payload?.note === 'string' ? r.payload.note : undefined
+    })),
+    planLabel: `${currentYear} plan`,
     // Issue #48 follow-up: shadeSources must be visible on every tab that
     // renders <BlockMap> (today: layout + crops). Pushing it into base
     // closes that recurring class of bug — PR #49 fixed the UI side but

@@ -471,6 +471,7 @@
   let acceptedInputs = $state<{
     applications: InputsPlanApplication[];
     scoutTasks: InputsPlanScoutTask[];
+    aiRefined: boolean;
   } | null>(null);
   let inputsCommitError = $state<string | null>(null);
   let scheduleLoading = $state(false);
@@ -1052,6 +1053,7 @@
   async function handleInputsAccepted(accepted: {
     applications: InputsPlanApplication[];
     scoutTasks: InputsPlanScoutTask[];
+    aiRefined: boolean;
   }) {
     acceptedInputs = accepted;
     await commit();
@@ -1182,7 +1184,11 @@
       const res = await fetch('/api/plan/inputs/commit', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(acceptedInputs)
+        body: JSON.stringify({
+          applications: acceptedInputs.applications,
+          scoutTasks: acceptedInputs.scoutTasks,
+          aiRefined: acceptedInputs.aiRefined
+        })
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));

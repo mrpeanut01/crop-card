@@ -44,6 +44,7 @@ import { createTask, type RelatedEventTable } from '$lib/db/tasks';
 import { withTenant } from '$lib/db/tenant';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { insertPlanRevision } from '$lib/plan/revisions';
 
 const INPUTS_PLAN_TEMPLATE_KEY = 'inputs-plan';
 
@@ -78,7 +79,12 @@ const scoutTaskSchema = z.object({
 
 const requestSchema = z.object({
   applications: z.array(applicationSchema).default([]),
-  scoutTasks: z.array(scoutTaskSchema).default([])
+  scoutTasks: z.array(scoutTaskSchema).default([]),
+  /** Phase 25d (#89) — wizard tells the server whether the committed
+   *  plan came from a deterministic-only run (`false`) or from an
+   *  AI-refinement chain (`true`). Drives the `source` field on the
+   *  `plan_revisions` row so ProvenancePanel renders the right badge. */
+  aiRefined: z.boolean().optional()
 });
 
 /** Map a slot category to the RelatedEventTable union value that
@@ -211,6 +217,35 @@ export const POST: RequestHandler = async (event) => {
       createdById: auth.id
     });
     created.push(task.id);
+  }
+
+  // Phase 25d (#89) — write a `plan_revisions` row so the
+  // ProvenancePanel on Plan v2 surfaces this wizard commit in the
+  // revision chain. planId is the season-year identifier; payload is
+  // the commit summary (kept small — full applications array would
+  // bloat the audit log without adding diff value beyond the task
+  // table itself).
+  const year = new Date().getUTCFullYear();
+  try {
+    insertPlanRevision({
+      planId: `season-${year}`,
+      source: parsed.data.aiRefined ? 'ai-refinement' : 'wizard',
+      createdByUserId: auth.id,
+      payload: {
+        kind: 'inputs-plan-commit',
+        applications: parsed.data.applications.length,
+        scoutTasks: parsed.data.scoutTasks.length,
+        blocksTouched: Array.from(blockIds),
+        createdTaskIds: created.length,
+        replacedTaskIds: deletedIds.length,
+        note:
+          parsed.data.applications.length === 0 && parsed.data.scoutTasks.length === 0
+            ? 'Cleared inputs plan'
+            : `Committed ${parsed.data.applications.length} applications + ${parsed.data.scoutTasks.length} scout tasks across ${blockIds.size} block${blockIds.size === 1 ? '' : 's'}`
+      }
+    });
+  } catch (err) {
+    console.error('[plan-revisions] failed to write wizard revision', err);
   }
 
   return json({

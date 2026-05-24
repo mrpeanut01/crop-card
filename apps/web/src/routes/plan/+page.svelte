@@ -10,6 +10,7 @@
   import SeedQuantityModal from '$lib/components/SeedQuantityModal.svelte';
   import AllocationWizard from '$lib/components/AllocationWizard.svelte';
   import WorkflowStrip from '$lib/components/plan/WorkflowStrip.svelte';
+  import ProvenancePanel from '$lib/components/plan/ProvenancePanel.svelte';
   import PlantingGroupWizard from '$lib/components/PlantingGroupWizard.svelte';
   import ScheduleOptimizerSidebar from '$lib/components/ScheduleOptimizerSidebar.svelte';
   import GroupInspector from '$lib/components/GroupInspector.svelte';
@@ -2363,6 +2364,15 @@
     steps={data.seasonWorkflow}
     onOpenWizard={() => (showAllocationWizard = true)}
   />
+{/if}
+
+<!-- Phase 25d (#89) — provenance chain for the active plan. Empty state
+     is the resting state for plans built pre-#89; new wizard commits +
+     manual edits push revisions into `plan_revisions` and surface here. -->
+{#if data.tab === 'overview' && data.planRevisions}
+  <div class="provenance-mount">
+    <ProvenancePanel revisions={data.planRevisions} planLabel={data.planLabel} />
+  </div>
 {/if}
 
 <nav class="plan-tabs" aria-label="Plan tabs">
@@ -4731,6 +4741,9 @@
     background: #cbd5e1;
     margin-right: 0.6rem;
     flex: 0 0 auto;
+  }
+  .provenance-mount {
+    margin: 0 0 16px;
   }
   .plan-tabs-view-toggle {
     display: flex;

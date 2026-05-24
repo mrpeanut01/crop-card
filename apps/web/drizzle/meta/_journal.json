@@ -239,6 +239,13 @@
       "when": 1779995700000,
       "tag": "0033_phase25d_scout_observations",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1779996600000,
+      "tag": "0034_phase25d_plan_revisions",
+      "breakpoints": true
     }
   ]
 }

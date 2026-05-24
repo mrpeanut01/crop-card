@@ -1237,6 +1237,42 @@ export const aiCallLog = tenantScoped(
   )
 );
 
+// ─── Phase 25d (#89) — plan_revisions table ─────────────────────────
+//
+// Every plan-commit / wizard-commit / manual edit writes a revision
+// row so the ProvenancePanel can show where the current plan came
+// from + audit the chain. `payload_json` is a coarse-grained snapshot
+// (full plan at commit time); finer-grained per-field provenance lives
+// on the operational event tables (sprayEvents.provenanceJson etc.).
+
+export const planRevisions = tenantScoped(
+  sqliteTable(
+    'plan_revisions',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      /** Logical plan ID — typically the year + farm identifier; lets
+       *  successive revisions of the same plan chain via revisionNumber. */
+      planId: text('plan_id').notNull(),
+      revisionNumber: integer('revision_number').notNull(),
+      source: text('source', { enum: ['wizard', 'manual', 'ai-refinement'] }).notNull(),
+      payloadJson: text('payload_json').notNull(),
+      parentRevisionId: text('parent_revision_id'),
+      createdByUserId: text('created_by_user_id').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerPlanIdx: index('plan_revisions_owner_plan_idx').on(table.ownerId, table.planId),
+      ownerCreatedIdx: index('plan_revisions_owner_created_idx').on(
+        table.ownerId,
+        table.createdAt
+      )
+    })
+  )
+);
+
 // ─── Phase 25d (#95) — dedicated scout observations table ─────────────
 //
 // Standalone observation table so pre-spray scouting + multi-pest field

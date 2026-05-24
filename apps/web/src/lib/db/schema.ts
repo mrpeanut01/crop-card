@@ -1237,6 +1237,53 @@ export const aiCallLog = tenantScoped(
   )
 );
 
+// ─── Phase 25d (#95) — dedicated scout observations table ─────────────
+//
+// Standalone observation table so pre-spray scouting + multi-pest field
+// walks + the 5-week-sparkline can read real data (was: embedded only
+// in insecticide_events.scoutObservationJson). Tenant-scoped per
+// CLAUDE.md invariant 6.
+
+export const scoutObservations = tenantScoped(
+  sqliteTable(
+    'scout_observations',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      performedById: text('performed_by_id')
+        .notNull()
+        .references(() => users.id),
+      pest: text('pest').notNull(),
+      metric: text('metric').notNull(),
+      value: real('value').notNull(),
+      notes: text('notes'),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerOccurredIdx: index('scout_observations_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      ),
+      ownerBlockIdx: index('scout_observations_owner_block_idx').on(
+        table.ownerId,
+        table.blockId
+      ),
+      ownerPestMetricIdx: index('scout_observations_owner_pest_metric_idx').on(
+        table.ownerId,
+        table.pest,
+        table.metric
+      )
+    })
+  )
+);
+
 // ─── Phase 25c.0 step 6 (#87) / Phase 25d (#89) — dry-run kernel log ──
 //
 // When env KERNEL_DRY_RUN=1, the new evaluators (fracRotation,

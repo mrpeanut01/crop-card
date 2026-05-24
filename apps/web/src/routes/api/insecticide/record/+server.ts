@@ -15,6 +15,7 @@ import {
   listInsecticideEvents,
   type ScoutObservation as InsectScoutObs
 } from '$lib/db/insecticideEvents';
+import { listScoutObservations } from '$lib/db/scoutObservations';
 import { getBlock } from '$lib/db/blocks';
 import {
   decrementForUse,
@@ -138,11 +139,27 @@ export const POST: RequestHandler = async (event) => {
   // follow-up; see #87 + future scout-table issue). The current-spray
   // scout observation (if the operator entered one) is also included.
 
+  // Phase 25d (#95) — primary path: dedicated scout_observations table.
+  // Backfill: legacy embedded payloads from past insecticide events on
+  // this block (pre-#95 data). Plus the current spray's scout obs if
+  // provided.
+  const recentScout: ScoutObservation[] = [];
+  for (const o of listScoutObservations({
+    blockId: parsed.data.blockId,
+    fromMs: occurredAt - 35 * 86_400_000,
+    limit: 50
+  })) {
+    recentScout.push({
+      pest: o.pest,
+      metric: o.metric,
+      value: o.value,
+      occurredAt: o.occurredAt
+    });
+  }
   const priorInsectOnBlock = listInsecticideEvents({
     blockId: parsed.data.blockId,
     limit: 20
   });
-  const recentScout: ScoutObservation[] = [];
   for (const e of priorInsectOnBlock) {
     if (e.scoutObservation) {
       recentScout.push({
@@ -153,8 +170,6 @@ export const POST: RequestHandler = async (event) => {
       });
     }
   }
-  // Include the current spray's scout observation if the operator
-  // entered one — fresh data shouldn't require a separate roundtrip.
   if (parsed.data.scout) {
     recentScout.push({
       pest: parsed.data.scout.pest,

@@ -2,20 +2,22 @@ import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { listInsecticideEvents, activeReEntryRestrictions } from '$lib/db/insecticideEvents';
+import { scoutLogByBlock as scoutLogFromTable } from '$lib/db/scoutObservations';
 import { getRegistry } from '$lib/server/registry';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 
 /**
- * Phase 25d (#89) — flatten the most recent N scout observations across
- * all blocks so the IPM-gate slot can render the v2 threshold dial +
- * 5-week sparkline without an extra roundtrip when the operator picks
- * a block. Keyed by `blockId` so the page filters client-side on
- * selection.
+ * Phase 25d (#95) — IPM-gate scout data. Primary path reads from the
+ * dedicated `scout_observations` table; falls back to embedded
+ * `insecticide_events.scoutObservationJson` payloads for pre-#95 data.
+ * The union keeps the v2 5-week sparkline accurate even before the
+ * scout-record UI ships.
  */
 function scoutLogByBlock(): Record<string, Array<{ pest: string; metric: string; value: number; occurredAt: number }>> {
-  const all = listInsecticideEvents({ limit: 50 });
-  const out: Record<string, Array<{ pest: string; metric: string; value: number; occurredAt: number }>> = {};
-  for (const e of all) {
+  const out = scoutLogFromTable(35 * 86_400_000);
+  // Backfill legacy embedded observations not yet migrated.
+  const legacy = listInsecticideEvents({ limit: 50 });
+  for (const e of legacy) {
     if (!e.scoutObservation) continue;
     const list = (out[e.blockId] ??= []);
     list.push({

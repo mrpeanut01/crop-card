@@ -625,15 +625,13 @@ export const cropPluginSchema = pluginBase.extend({
   /** Harvest archetype — drives `HarvestRouter` dispatch in Phase 25c
    *  (one of 11 renderers under `lib/components/harvest/renderers/`).
    *
-   *  Phase 25c.0 #87 — coverage at 100% (376/376) after the
-   *  deterministic family-batched backfill in
-   *  `scripts/enhancePluginDiscriminators.mjs`. PROMOTION TO REQUIRED
-   *  is its own follow-up PR — flipping `.optional()` off here breaks
-   *  ~21 back-compat fixture tests that construct minimal v1.0
-   *  plugins without `harvestStyle`. Update those fixtures + the
-   *  loader's "valid plugins from nested subdirectories" suite +
-   *  re-verify all 513 catalog files before flipping. */
-  harvestStyle: harvestStyleSchema.optional(),
+   *  Phase 25c.0 #87 — PROMOTED TO REQUIRED (#99) after coverage hit
+   *  100% (376/376) via the deterministic family-batched backfill in
+   *  `scripts/enhancePluginDiscriminators.mjs`. New plugin uploads
+   *  now MUST declare `harvestStyle`. `FallbackHarvestRenderer`
+   *  (Phase 25c #88) becomes defensive-only — primary path always
+   *  finds a renderer. */
+  harvestStyle: harvestStyleSchema,
   /** When does this crop bloom + is it bee-attractive? Phase 25d
    *  pollinator-bloom gate blocks bee-toxic spray applications during
    *  the declared window. See `bloomWindowSchema` JSDoc. */

@@ -10,16 +10,29 @@ import { describe, expect, it } from 'vitest';
 import { cropPluginSchema } from './schemas';
 
 describe('cropPluginSchema v1.1 additive fields', () => {
-  it('still accepts a v1.0 minimal crop plugin (backward compatible)', () => {
+  it('accepts a v1.0 minimal crop plugin with the required harvestStyle (Phase 25c.0 #99)', () => {
     const v10 = {
+      pluginId: 'corn',
+      type: 'crop' as const,
+      displayName: 'Corn',
+      version: '1.0.0',
+      cropFamily: 'corn' as const,
+      harvestStyle: 'row-grain-pollinated' as const
+    };
+    const parsed = cropPluginSchema.safeParse(v10);
+    expect(parsed.success).toBe(true);
+  });
+
+  it('rejects a pre-25c.0 plugin missing the now-required harvestStyle (#99)', () => {
+    const pre25c0 = {
       pluginId: 'corn',
       type: 'crop' as const,
       displayName: 'Corn',
       version: '1.0.0',
       cropFamily: 'corn' as const
     };
-    const parsed = cropPluginSchema.safeParse(v10);
-    expect(parsed.success).toBe(true);
+    const parsed = cropPluginSchema.safeParse(pre25c0);
+    expect(parsed.success).toBe(false);
   });
 
   it('accepts a hay plugin with hayOperations + cropOperationModel', () => {
@@ -29,6 +42,7 @@ describe('cropPluginSchema v1.1 additive fields', () => {
       displayName: 'Alfalfa (Hay)',
       version: '1.1.0',
       cropFamily: 'forage' as const,
+      harvestStyle: 'forage-cutting-cycle' as const,
       cropOperationModel: 'perennial-multi-cut' as const,
       hayOperations: {
         steps: ['mow', 'ted', 'rake', 'bale', 'store'] as const,
@@ -69,6 +83,7 @@ describe('cropPluginSchema v1.1 additive fields', () => {
       displayName: 'Spring Malt Barley',
       version: '1.1.0',
       cropFamily: 'cereal-grain' as const,
+      harvestStyle: 'single-cut-grain' as const,
       cropOperationModel: 'single-event' as const,
       zadoksStages: [
         { stage: 'Z00-Z09', name: 'Germination', daysFromPlanting: { min: 0, max: 10 } },

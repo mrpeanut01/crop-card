@@ -17,7 +17,8 @@ describe('validateCandidate', () => {
     const r = await validateCandidate({
       type: 'crop',
       displayName: 'Some Brand New Crop',
-      cropFamily: 'corn'
+      cropFamily: 'corn',
+      harvestStyle: 'row-grain-pollinated'
     });
     expect(r.validation.ok).toBe(true);
     expect(r.candidate).not.toBeNull();
@@ -42,7 +43,8 @@ describe('validateCandidate', () => {
       type: 'crop',
       pluginId: 'apple-orchard',
       displayName: 'Pretend Apple',
-      cropFamily: 'orchard'
+      cropFamily: 'orchard',
+      harvestStyle: 'tree-fruit-multi-pick'
     });
     expect(r.validation.ok).toBe(false);
     expect(r.validation.schemaIssues.some((i) => i.path === 'pluginId')).toBe(true);

@@ -27,13 +27,25 @@ describe('Phase 25c.0 — harvestStyle', () => {
     expect(harvestStyleSchema.safeParse('cucumber-blossom-pinch').success).toBe(false);
   });
 
-  it('attaches to cropPluginSchema as optional (v1.0 plugin still validates)', () => {
+  it('rejects a v1.0 plugin missing the now-required harvestStyle (Phase 25c.0 #99)', () => {
     const v10 = {
       pluginId: 'corn-bloody-butcher',
       type: 'crop' as const,
       displayName: 'Bloody Butcher Dent Corn',
       version: '1.0.0',
       cropFamily: 'corn' as const
+    };
+    expect(cropPluginSchema.safeParse(v10).success).toBe(false);
+  });
+
+  it('accepts a minimal crop plugin when harvestStyle is declared', () => {
+    const v10 = {
+      pluginId: 'corn-bloody-butcher',
+      type: 'crop' as const,
+      displayName: 'Bloody Butcher Dent Corn',
+      version: '1.0.0',
+      cropFamily: 'corn' as const,
+      harvestStyle: 'row-grain-pollinated' as const
     };
     expect(cropPluginSchema.safeParse(v10).success).toBe(true);
   });
@@ -114,14 +126,15 @@ describe('Phase 25c.0 — bloomWindow', () => {
   });
 });
 
-describe('Phase 25c.0 — back-compat sanity', () => {
-  it('a typical existing crop plugin (no 25c.0 fields) still validates', () => {
+describe('Phase 25c.0 — back-compat sanity (post-#99 promotion)', () => {
+  it('a typical existing crop plugin validates when harvestStyle is declared', () => {
     const existing = {
       pluginId: 'acorn-squash-table-queen',
       type: 'crop' as const,
       displayName: 'Acorn Squash — Table Queen',
       version: '1.0.0',
       cropFamily: 'cucurbit' as const,
+      harvestStyle: 'cure-then-store' as const,
       daysToMaturity: { min: 80, max: 90 },
       defaultRowSpacingInches: 60,
       harvestIndicators: ['Dark green rind with tiny orange spot'],
@@ -129,5 +142,17 @@ describe('Phase 25c.0 — back-compat sanity', () => {
       agronomy: { lifecycle: 'annual' as const, rotationLookbackYears: 2 }
     };
     expect(cropPluginSchema.safeParse(existing).success).toBe(true);
+  });
+
+  it('the same plugin WITHOUT harvestStyle fails — the #99 cut-over guard', () => {
+    const pre99 = {
+      pluginId: 'acorn-squash-table-queen',
+      type: 'crop' as const,
+      displayName: 'Acorn Squash — Table Queen',
+      version: '1.0.0',
+      cropFamily: 'cucurbit' as const,
+      daysToMaturity: { min: 80, max: 90 }
+    };
+    expect(cropPluginSchema.safeParse(pre99).success).toBe(false);
   });
 });

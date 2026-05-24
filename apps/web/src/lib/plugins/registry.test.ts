@@ -72,7 +72,8 @@ describe('PluginRegistry', () => {
       type: 'crop',
       displayName: 'EZ Gro Monster',
       version: '1.0.0',
-      cropFamily: 'cucurbit'
+      cropFamily: 'cucurbit',
+      harvestStyle: 'cure-then-store'
     });
     let caught: PluginRegistrationError | null = null;
     try {
@@ -99,7 +100,8 @@ describe('PluginRegistry', () => {
       type: 'crop',
       displayName: 'Corn',
       version: '1.0.0',
-      cropFamily: 'corn'
+      cropFamily: 'corn',
+      harvestStyle: 'row-grain-pollinated'
     });
     r.register({
       pluginId: 'gly',
@@ -123,7 +125,8 @@ describe('PluginRegistry', () => {
       type: 'crop',
       displayName: 'Corn',
       version: '1.0.0',
-      cropFamily: 'corn'
+      cropFamily: 'corn',
+      harvestStyle: 'row-grain-pollinated'
     };
     expect(a.register(input).hash).toBe(b.register(input).hash);
     const other = a.register({ ...input, pluginId: 'corn-sweet', displayName: 'Sweet Corn' });

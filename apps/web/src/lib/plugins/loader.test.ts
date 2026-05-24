@@ -25,7 +25,8 @@ describe('loadPluginsFromDirectory', () => {
         type: 'crop',
         displayName: 'Corn',
         version: '1.0.0',
-        cropFamily: 'corn'
+        cropFamily: 'corn',
+        harvestStyle: 'row-grain-pollinated'
       })
     );
     await mkdir(path.join(tmp, 'herbicides'));
@@ -58,7 +59,8 @@ describe('loadPluginsFromDirectory', () => {
         type: 'crop',
         displayName: 'Good',
         version: '1.0.0',
-        cropFamily: 'corn'
+        cropFamily: 'corn',
+        harvestStyle: 'row-grain-pollinated'
       })
     );
 

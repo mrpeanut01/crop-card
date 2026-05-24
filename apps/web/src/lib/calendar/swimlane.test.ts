@@ -17,6 +17,7 @@ const corn: CropPlugin = {
   displayName: 'Field Corn',
   version: '1.0.0',
   cropFamily: 'corn',
+  harvestStyle: 'row-grain-pollinated',
   daysToMaturity: { min: 90, max: 100 },
   shadeCasting: true,
   matureHeightFt: 8
@@ -28,6 +29,7 @@ const lettuce: CropPlugin = {
   displayName: 'Buttercrunch',
   version: '1.0.0',
   cropFamily: 'leafy-green',
+  harvestStyle: 'cut-and-come-again',
   daysToMaturity: { min: 50, max: 60 }
 };
 

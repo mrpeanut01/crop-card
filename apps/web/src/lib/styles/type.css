@@ -1,0 +1,16 @@
+/* Phase 25 Almanac typography utility classes.
+
+   Font files themselves come from Fontsource packages, imported in
+   apps/web/src/routes/+layout.svelte (which side-effect-loads the @font-face
+   declarations and bundles the woff2 files). This file holds only the
+   utility classes the design uses to opt into a non-default family. */
+
+.serif {
+  font-family: "Source Serif 4", "Source Serif Pro", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: var(--letter-tight);
+}
+
+.mono {
+  font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}

@@ -12,7 +12,7 @@ export default defineConfig({
         name: 'CropCard',
         short_name: 'CropCard',
         description: 'Field-card herbicide planning, planting, and harvest tracking.',
-        theme_color: '#1f5e3a',
+        theme_color: '#2c5237',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',

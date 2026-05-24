@@ -61,6 +61,7 @@
     "dexie": "^4.0.10",
     "drizzle-orm": "^0.36.4",
     "leaflet": "^1.9.4",
+    "lucide-svelte": "^1.0.1",
     "papaparse": "^5.4.1",
     "pdfmake": "^0.2.15",
     "zod": "^3.23.8"

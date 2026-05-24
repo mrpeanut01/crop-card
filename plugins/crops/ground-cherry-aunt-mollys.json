@@ -26,5 +26,6 @@
   "notes": "Heirloom husk cherry. Pineapple-sweet small yellow fruit ideal for jams, pies, fresh eating. Pick from ground daily.",
   "harvestIndicators": [
     "Husk tan and papery, fruit drops to ground"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

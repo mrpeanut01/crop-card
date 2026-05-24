@@ -4,11 +4,17 @@
   "displayName": "Timothy — Climax (cool-season grass hay)",
   "version": "1.0.0",
   "cropFamily": "forage",
-  "daysToMaturity": { "min": 365, "max": 1825 },
+  "daysToMaturity": {
+    "min": 365,
+    "max": 1825
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "recommendedLbsPerAcre": 8
   },
-  "harvestIndicators": ["Boot stage to early head emergence"],
-  "notes": "Premium horse hay grass. Single first-cutting + lighter regrowth. Often blended with red clover."
+  "harvestIndicators": [
+    "Boot stage to early head emergence"
+  ],
+  "notes": "Premium horse hay grass. Single first-cutting + lighter regrowth. Often blended with red clover.",
+  "harvestStyle": "forage-cutting-cycle"
 }

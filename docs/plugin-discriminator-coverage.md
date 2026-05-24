@@ -1,6 +1,6 @@
 # Plugin discriminator coverage (Phase 25c.0)
 
-Generated: 2026-05-24T21:39:12.415Z
+Generated: 2026-05-24T21:43:10.573Z
 
 Tracks coverage of the Phase 25c renderer-dispatch + Phase 25d gate-evaluator
 discriminator fields across the plugin corpus. Per the [#87 plan](https://github.com/mrpeanut01/crop-card/issues/87),
@@ -15,7 +15,7 @@ Regenerate with: `pnpm audit:plugins`
 | Plugin type | Total | Field | Coverage |
 | --- | ---: | --- | ---: |
 | Crop | 376 | growthStageTable.system | 0.8% (3/376) |
-| Crop | 376 | harvestStyle | 86.4% (325/376) |
+| Crop | 376 | harvestStyle | 99.7% (375/376) |
 | Crop | 376 | postHarvestCuring (presence) | 2.4% (9/376) |
 | Crop | 376 | bloomWindow | 21.0% (79/376) |
 | Insecticide | 70 | scoutingThresholds | 0.0% (0/70) |
@@ -29,77 +29,27 @@ Regenerate with: `pnpm audit:plugins`
 | apiaceae | 10 | 0.0% | 100.0% | 0.0% | 0.0% |
 | bramble | 4 | 0.0% | 100.0% | 0.0% | 0.0% |
 | brassica | 33 | 0.0% | 100.0% | 0.0% | 6.1% |
-| broadleaf-companion | 26 | 0.0% | 0.0% | 0.0% | 0.0% |
+| broadleaf-companion | 26 | 0.0% | 100.0% | 0.0% | 0.0% |
 | cereal-grain | 17 | 5.9% | 100.0% | 0.0% | 0.0% |
 | corn | 17 | 11.8% | 100.0% | 5.9% | 0.0% |
 | cover-grass | 6 | 0.0% | 100.0% | 0.0% | 0.0% |
 | cover-legume | 11 | 0.0% | 100.0% | 0.0% | 100.0% |
-| cucurbit | 41 | 0.0% | 90.2% | 4.9% | 100.0% |
-| culinary-herb | 12 | 0.0% | 0.0% | 0.0% | 0.0% |
-| forage | 7 | 0.0% | 14.3% | 0.0% | 0.0% |
+| cucurbit | 41 | 0.0% | 100.0% | 4.9% | 100.0% |
+| culinary-herb | 12 | 0.0% | 100.0% | 0.0% | 0.0% |
+| forage | 7 | 0.0% | 100.0% | 0.0% | 0.0% |
 | herb-culinary | 8 | 0.0% | 100.0% | 0.0% | 0.0% |
 | leafy-green | 19 | 0.0% | 100.0% | 0.0% | 0.0% |
-| legume | 20 | 0.0% | 90.0% | 0.0% | 0.0% |
+| legume | 20 | 0.0% | 95.0% | 0.0% | 0.0% |
 | orchard | 18 | 0.0% | 100.0% | 11.1% | 100.0% |
 | root | 15 | 0.0% | 100.0% | 6.7% | 0.0% |
 | small-fruit | 18 | 0.0% | 100.0% | 0.0% | 0.0% |
-| solanaceae | 58 | 0.0% | 98.3% | 1.7% | 0.0% |
+| solanaceae | 58 | 0.0% | 100.0% | 1.7% | 0.0% |
 | stone-fruit | 7 | 0.0% | 100.0% | 0.0% | 100.0% |
 | vine-fruit | 8 | 0.0% | 100.0% | 0.0% | 0.0% |
 
 ## Missing coverage — crop harvestStyle (top 50)
 
-- `amaranth-burgundy.json` (broadleaf-companion)
-- `bmr-sorghum-sudan.json` (forage)
-- `calendula-resina.json` (broadleaf-companion)
-- `chamomile-german.json` (broadleaf-companion)
-- `clover-red-mammoth.json` (forage)
-- `cosmos-double-click.json` (broadleaf-companion)
-- `dahlia-cafe-au-lait.json` (broadleaf-companion)
-- `echinacea-purpurea.json` (broadleaf-companion)
-- `eucalyptus-silver-dollar.json` (broadleaf-companion)
-- `flax-grain-omega.json` (broadleaf-companion)
-- `ground-cherry-aunt-mollys.json` (solanaceae)
-- `hyssop-officinalis.json` (culinary-herb)
-- `lavender-english-munstead.json` (culinary-herb)
-- `lemon-balm.json` (culinary-herb)
-- `lemon-verbena.json` (culinary-herb)
-- `lemongrass-east-indian.json` (culinary-herb)
-- `lisianthus-arena.json` (broadleaf-companion)
-- `madder-dye.json` (broadleaf-companion)
-- `marjoram-sweet.json` (culinary-herb)
-- `marshmallow-althaea.json` (broadleaf-companion)
-- `microgreens-pea-shoots.json` (legume)
-- `microgreens-sunflower-shoots.json` (broadleaf-companion)
-- `milk-thistle-medicinal.json` (broadleaf-companion)
-- `mountain-mint.json` (culinary-herb)
-- `nasturtium-companion.json` (broadleaf-companion)
-- `okra-clemson-spineless.json` (broadleaf-companion)
-- `orchard-grass-potomac.json` (forage)
-- `perilla-shiso-green.json` (culinary-herb)
-- `phacelia-cover.json` (broadleaf-companion)
-- `quinoa-cherry-vanilla.json` (broadleaf-companion)
-- `ranunculus-tecolote.json` (broadleaf-companion)
-- `red-clover-medium-mammoth.json` (forage)
-- `rhubarb-victoria.json` (broadleaf-companion)
-- `snapdragon-rocket-mix.json` (broadleaf-companion)
-- `squash-butterkin-film-coated-farmore.json` (cucurbit)
-- `squash-marina-de-chioggia-film-coated-treated.json` (cucurbit)
-- `squash-queensland-blue-raw-untreated-non-gmo.json` (cucurbit)
-- `squash-sunshine-standard-treated.json` (cucurbit)
-- `statice-qis-mix.json` (broadleaf-companion)
-- `stevia-sweetleaf.json` (culinary-herb)
-- `strawflower-monstrosa-mix.json` (broadleaf-companion)
-- `sudangrass-piper.json` (forage)
-- `summer-savory.json` (culinary-herb)
-- `sunflower-mammoth-russian.json` (broadleaf-companion)
-- `sunflower-procut-orange.json` (broadleaf-companion)
 - `sweet-pea-spencer-mix.json` (legume)
-- `tarragon-french.json` (culinary-herb)
-- `timothy-climax.json` (forage)
-- `tulsi-holy-basil-rama.json` (culinary-herb)
-- `valerian-medicinal.json` (broadleaf-companion)
-- _…and 1 more_
 
 ## Missing coverage — crop bloomWindow (top 50)
 

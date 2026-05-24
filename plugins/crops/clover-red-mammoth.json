@@ -4,12 +4,19 @@
   "displayName": "Red Clover — Mammoth (forage)",
   "version": "1.0.0",
   "cropFamily": "forage",
-  "daysToMaturity": { "min": 90, "max": 365 },
+  "daysToMaturity": {
+    "min": 90,
+    "max": 365
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 40,
     "recommendedLbsPerAcre": 12
   },
-  "harvestIndicators": ["10% bloom for hay", "Pre-bloom for highest protein"],
-  "notes": "Short-lived perennial (2 yr). Frost-seed into wheat in Feb–Mar; hay or graze in summer."
+  "harvestIndicators": [
+    "10% bloom for hay",
+    "Pre-bloom for highest protein"
+  ],
+  "notes": "Short-lived perennial (2 yr). Frost-seed into wheat in Feb–Mar; hay or graze in summer.",
+  "harvestStyle": "forage-cutting-cycle"
 }

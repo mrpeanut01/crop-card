@@ -4,8 +4,16 @@
   "displayName": "Sunflower — Mammoth Russian",
   "version": "1.0.0",
   "cropFamily": "broadleaf-companion",
-  "daysToMaturity": { "min": 90, "max": 110 },
+  "daysToMaturity": {
+    "min": 90,
+    "max": 110
+  },
   "defaultRowSpacingInches": 30,
-  "harvestIndicators": ["Back of head turns brown", "Seeds plump", "Bracts dry"],
-  "notes": "Single-stem giant. Plant 1 ft apart for max head size. Birds will get the seeds — bag heads if harvesting for human use."
+  "harvestIndicators": [
+    "Back of head turns brown",
+    "Seeds plump",
+    "Bracts dry"
+  ],
+  "notes": "Single-stem giant. Plant 1 ft apart for max head size. Birds will get the seeds — bag heads if harvesting for human use.",
+  "harvestStyle": "single-event"
 }

@@ -26,5 +26,6 @@
   "notes": "Annual medicinal herb. Seeds harvested for silymarin used in liver-support preparations. Spiny stems; wear gloves.",
   "harvestIndicators": [
     "Seed heads brown and dry, fluff beginning to release"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

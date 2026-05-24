@@ -26,5 +26,6 @@
   "notes": "Medicinal perennial root crop. Hardy to zone 3. Dig roots in second-year fall, wash, and dry at 100 F. Strong characteristic odor.",
   "harvestIndicators": [
     "Roots dug second-year fall after foliage dies back"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

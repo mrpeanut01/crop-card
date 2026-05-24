@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Roots dug second-year fall",
     "Leaves harvested in summer"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

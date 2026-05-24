@@ -47,7 +47,11 @@ function loadCrops() {
  * the mapping isn't unambiguous (AI gap-fill handles those).
  */
 function deriveHarvestStyle(plugin) {
-  const fam = plugin.cropFamily;
+  // Phase 25c.0 #87 — the loader/Zod schema aliases `culinary-herb` →
+  // `herb-culinary` at registration time. The on-disk JSON may carry
+  // either spelling, so we normalize in the script too.
+  const FAMILY_ALIASES = { 'culinary-herb': 'herb-culinary', 'cane-fruit': 'bramble' };
+  const fam = FAMILY_ALIASES[plugin.cropFamily] ?? plugin.cropFamily;
   const name = (plugin.displayName ?? plugin.pluginId ?? '').toLowerCase();
   const hasCuring = plugin.postHarvestCuring != null;
   const dtmMin = plugin.daysToMaturity?.min;
@@ -58,7 +62,18 @@ function deriveHarvestStyle(plugin) {
     case 'corn':
       return 'row-grain-pollinated';
     case 'forage':
-      return plugin.hayOperations ? 'forage-cutting-cycle' : null;
+      // Phase 25c.0 #87 — primary path: hayOperations declared explicitly.
+      if (plugin.hayOperations) return 'forage-cutting-cycle';
+      // Name-pattern fallback for forage plugins that don't carry
+      // hayOperations metadata yet (most pre-#87 plugins). Perennials
+      // → multi-cut; annual summer-grazing crops → cover-crop kill.
+      if (/clover|timothy|orchard[ -]grass|orchardgrass/.test(name)) {
+        return 'forage-cutting-cycle';
+      }
+      if (/sudangrass|sorghum[ -]sudan|sudan[ -]grass|bmr/.test(name)) {
+        return 'cover-crop-termination';
+      }
+      return null;
     case 'cover-grass':
     case 'cover-legume':
       return 'cover-crop-termination';
@@ -85,9 +100,12 @@ function deriveHarvestStyle(plugin) {
       // Winter cucurbits stored for months: pumpkin (all variants),
       // acorn squash, butternut, kabocha, hubbard, spaghetti squash,
       // delicata, sweet dumpling, sugar pie. Luffa gourd ripens hard
-      // for sponge use and stores like winter squash.
+      // for sponge use and stores like winter squash. Generic "squash"
+      // catches the named-variety-only display strings ("Squash Butterkin",
+      // "Squash Queensland Blue") — by this point in the switch we've
+      // already filtered out summer squash via the regex above.
       if (
-        /\b(pumpkin|acorn|butternut|kabocha|hubbard|delicata|hubbard|spaghetti|sugar pie|sweet dumpling|luffa)\b/.test(
+        /\b(pumpkin|acorn|butternut|kabocha|hubbard|delicata|spaghetti|sugar pie|sweet dumpling|luffa|squash)\b/.test(
           name
         )
       ) {
@@ -104,9 +122,12 @@ function deriveHarvestStyle(plugin) {
     case 'solanaceae':
       // Phase 25c.0 #87 solanaceae batch: tubers (potato) are single-event
       // dig-at-maturity; tomato/pepper/eggplant + tomatillo + ground-cherry
-      // all bear over weeks → continuous-fruit.
+      // all bear over weeks → continuous-fruit. ground[ -]cherry covers
+      // both display-name ("Ground Cherry") and pluginId ("ground-cherry").
       if (/\bpotato\b/.test(name)) return 'single-event';
-      if (/tomato|pepper|eggplant|tomatillo|ground-cherry/.test(name)) return 'continuous-fruit';
+      if (/tomato|pepper|eggplant|tomatillo|ground[ -]cherry/.test(name)) {
+        return 'continuous-fruit';
+      }
       return null;
     case 'leafy-green':
       return 'cut-and-come-again';
@@ -137,7 +158,9 @@ function deriveHarvestStyle(plugin) {
         return 'continuous-fruit';
       }
       // Pea-shoots = microgreens → cut-and-come-again.
-      if (/microgreens-pea|pea-shoots/.test(name)) return 'cut-and-come-again';
+      if (/microgreens?[ -]pea|pea[ -]shoots?|pea[ -]shoot[ -]microgreens?/.test(name)) {
+        return 'cut-and-come-again';
+      }
       // Ornamental sweet pea — defer (not edible, harvest model doesn't apply).
       return null;
     case 'apiaceae':
@@ -178,9 +201,35 @@ function deriveHarvestStyle(plugin) {
         return 'cut-and-come-again';
       }
       return null;
-    case 'apiaceae':
     case 'broadleaf-companion':
-      // Ambiguous within family — defer to AI gap-fill.
+      // Phase 25c.0 #87 broadleaf-companion batch. This family is the
+      // catch-all for non-vegetable companions + cut flowers + grains
+      // + medicinals. Name-pattern split:
+      // - Cover crops first (so phacelia-cover doesn't match anything else)
+      if (/\bcover\b|phacelia/.test(name)) return 'cover-crop-termination';
+      // - Microgreens → cut-and-come-again
+      if (/microgreens?/.test(name)) return 'cut-and-come-again';
+      // - Cut flowers (picked over weeks, cut-and-come-again pattern)
+      if (
+        /calendula|chamomile|cosmos|dahlia|echinacea|lisianthus|ranunculus|snapdragon|statice|strawflower|zinnia|nasturtium/.test(
+          name
+        )
+      ) {
+        return 'cut-and-come-again';
+      }
+      // - Rhubarb stalks are cut repeatedly through the season
+      if (/rhubarb/.test(name)) return 'cut-and-come-again';
+      // - Continuous-fruit: okra bears for weeks; pick before pods harden
+      if (/okra/.test(name)) return 'continuous-fruit';
+      // - Single-cut grains + seed crops + dye plants + medicinals harvested
+      //   once at maturity
+      if (
+        /sunflower|amaranth|quinoa|flax|madder|marshmallow|milk[ -]thistle|valerian|eucalyptus/.test(
+          name
+        )
+      ) {
+        return 'single-event';
+      }
       return null;
     default:
       return null;

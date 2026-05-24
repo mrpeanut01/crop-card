@@ -26,5 +26,6 @@
   "notes": "High-resin calendula bred for herbalist use. Pick flowers daily through the season. Strong pollinator attractor.",
   "harvestIndicators": [
     "Sticky orange-yellow blooms fully open at midday"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again"
 }

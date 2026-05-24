@@ -27,5 +27,6 @@
   "harvestIndicators": [
     "Seed heads burgundy, kernels rub free",
     "Young leaves at 6 to 10 inches for greens"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

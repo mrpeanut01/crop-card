@@ -1,0 +1,30 @@
+{
+  "pluginId": "napa-cabbage-michihili",
+  "type": "crop",
+  "displayName": "Napa Cabbage Michihili",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 70,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 14,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Tall barrel-shaped Chinese cabbage. Mild, tender leaves for kimchi, salads, stir fries. Best planted for fall harvest.",
+  "harvestIndicators": [
+    "18 inch tall cylindrical head, firm to the touch"
+  ]
+}

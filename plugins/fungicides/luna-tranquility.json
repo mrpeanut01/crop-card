@@ -1,0 +1,34 @@
+{
+  "pluginId": "luna-tranquility",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Luna Tranquility (fluopyram + pyrimethanil)",
+  "applicationTiming": "PRE-BLOOM",
+  "activeIngredients": [
+    {
+      "name": "fluopyram",
+      "fracCode": "7"
+    },
+    {
+      "name": "pyrimethanil",
+      "fracCode": "9"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 16,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 14,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "264-1115",
+  "targetDiseases": [
+    "apple scab",
+    "powdery mildew",
+    "Botrytis",
+    "early blight"
+  ],
+  "notes": "Bayer premix SDHI plus AP fungicide. Multi-site rotation tool for apple, grape, vegetable."
+}

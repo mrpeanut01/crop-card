@@ -1,0 +1,29 @@
+{
+  "pluginId": "calcium-chloride-foliar",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
+  "form": "soluble",
+  "displayName": "Calcium Chloride (foliar 28% Ca)",
+  "organic": false,
+  "secondaryNutrients": {
+    "ca": 28
+  },
+  "applicationRange": {
+    "min": 2,
+    "max": 8,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "High-purity calcium chloride for foliar Ca correction. Standard for blossom-end rot when soil Ca adequate but uptake limited."
+}

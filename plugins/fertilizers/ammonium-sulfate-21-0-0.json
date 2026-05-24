@@ -1,0 +1,29 @@
+{
+  "pluginId": "ammonium-sulfate-21-0-0",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 21,
+    "p": 0,
+    "k": 0
+  },
+  "form": "granular",
+  "displayName": "Ammonium Sulfate (21-0-0 + 24S)",
+  "organic": false,
+  "secondaryNutrients": {
+    "s": 24
+  },
+  "applicationRange": {
+    "min": 100,
+    "max": 500,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "AMS, 21% N ammoniacal plus 24% S. Mildly acidifying. Common tank-mix partner with glyphosate."
+}

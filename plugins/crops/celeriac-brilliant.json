@@ -1,0 +1,30 @@
+{
+  "pluginId": "celeriac-brilliant",
+  "type": "crop",
+  "displayName": "Celeriac Brilliant",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "apiaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 100,
+    "max": 110
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 10,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Smooth-rooted celeriac hybrid. Slow to start; transplant after frost. Side-dress nitrogen mid-season. Excellent winter storage.",
+  "harvestIndicators": [
+    "3 to 4 inch knobbly root, dense and creamy white interior"
+  ]
+}

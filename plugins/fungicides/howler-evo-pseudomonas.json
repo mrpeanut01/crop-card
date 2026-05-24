@@ -1,0 +1,38 @@
+{
+  "pluginId": "howler-evo-pseudomonas",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Howler EVO (Pseudomonas chlororaphis AFS009, OMRI)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "Pseudomonas chlororaphis strain AFS009",
+      "fracCode": "BM02"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "lb"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "none",
+  "epaRegistrationNumber": "91473-1",
+  "targetDiseases": [
+    "Pythium",
+    "Rhizoctonia",
+    "Phytophthora",
+    "Fusarium",
+    "Botrytis",
+    "powdery mildew"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "AgBiome biological. Lipopeptide and phenazine producer. Broad foliar and soilborne activity."
+}

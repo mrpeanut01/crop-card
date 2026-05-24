@@ -1,0 +1,27 @@
+{
+  "pluginId": "chaparral-aminopyralid-metsulfuron",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Chaparral (aminopyralid + metsulfuron-methyl)",
+  "activeIngredients": [
+    {
+      "name": "aminopyralid",
+      "chemistryClass": "synthetic-auxin"
+    },
+    {
+      "name": "metsulfuron-methyl",
+      "chemistryClass": "sulfonylurea"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 3.3,
+    "unit": "oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": true,
+  "epaRegistrationNumber": "62719-595",
+  "notes": "Corteva premix for pasture, rangeland, CRP, non-cropland. Group 4 auxin paired with Group 2 sulfonylurea."
+}

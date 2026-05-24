@@ -1,0 +1,27 @@
+{
+  "pluginId": "corn-gluten-meal-pre",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Corn Gluten Meal (organic PRE)",
+  "activeIngredients": [
+    {
+      "name": "corn gluten meal",
+      "chemistryClass": "microtubule-inhibitor"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 20,
+    "unit": "lb"
+  },
+  "applicationTiming": "PRE",
+  "requiresAMS": false,
+  "deconRequired": false,
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": false,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Dried corn gluten as pre-emergent organic herbicide. Suppresses seedling root growth of germinating weeds via dipeptides. Apply 20 lb per 1000 sq ft on established beds 1 to 2 weeks before weed flush. Adds 10% N. NonGMO compliance depends on source corn."
+}

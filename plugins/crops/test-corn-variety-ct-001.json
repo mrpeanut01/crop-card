@@ -1,0 +1,8 @@
+{
+  "pluginId": "test-corn-variety-ct-001",
+  "displayName": "Test Corn Variety CT-001",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "type": "crop",
+  "cropFamily": "corn"
+}

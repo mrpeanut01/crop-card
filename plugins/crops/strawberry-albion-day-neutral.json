@@ -1,0 +1,30 @@
+{
+  "pluginId": "strawberry-albion-day-neutral",
+  "type": "crop",
+  "displayName": "Strawberry Albion (day-neutral)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 2,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 110
+  },
+  "defaultRowSpacingInches": 42,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 42,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 4
+  },
+  "notes": "Day-neutral cultivar from UC Davis. Bears continuously from June through frost in year one. Verticillium wilt and Phytophthora resistance.",
+  "harvestIndicators": [
+    "Conical fruit, deep red through to the calyx"
+  ]
+}

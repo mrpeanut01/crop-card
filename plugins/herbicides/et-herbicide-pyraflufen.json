@@ -1,0 +1,23 @@
+{
+  "pluginId": "et-herbicide-pyraflufen",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "ET Herbicide (pyraflufen-ethyl)",
+  "activeIngredients": [
+    {
+      "name": "pyraflufen-ethyl",
+      "chemistryClass": "ppo-inhibitor"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1.5,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": false,
+  "epaRegistrationNumber": "71711-9",
+  "notes": "Nichino POST contact burndown PPO inhibitor. Tank-mix partner with glyphosate for fast desiccation of small annual broadleaves."
+}

@@ -1,0 +1,29 @@
+{
+  "pluginId": "aliette-wdg-fosetyl-al",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Aliette WDG (fosetyl-aluminum)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "fosetyl-aluminum",
+      "fracCode": "33"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 5,
+    "unit": "lb"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 1,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "264-516",
+  "targetDiseases": [
+    "Phytophthora",
+    "downy mildew",
+    "Pythium"
+  ],
+  "notes": "Bayer FRAC 33 phosphonate. True systemic, moves up and down. Standard for citrus and avocado root rot."
+}

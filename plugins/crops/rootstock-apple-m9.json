@@ -1,0 +1,27 @@
+{
+  "pluginId": "rootstock-apple-m9",
+  "type": "crop",
+  "displayName": "Apple Rootstock M.9 (dwarfing)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 144,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 144,
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 60
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "East Malling 9 dwarfing apple rootstock. 25 to 35% of standard tree size. Standard for tall-spindle high-density orchards. Requires permanent trellis."
+}

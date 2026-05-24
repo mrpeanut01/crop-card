@@ -1,0 +1,30 @@
+{
+  "pluginId": "woad-dye",
+  "type": "crop",
+  "displayName": "Woad (Isatis tinctoria, blue dye)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 120
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "European blue dye plant predating indigo. Biennial; harvest first-year leaves for indigotin. Considered invasive in parts of the western US.",
+  "harvestIndicators": [
+    "Lower leaves dark green in first year; harvest for dye"
+  ]
+}

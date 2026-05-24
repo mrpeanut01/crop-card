@@ -1,0 +1,30 @@
+{
+  "pluginId": "good-king-henry",
+  "type": "crop",
+  "displayName": "Good King Henry (Blitum bonus-henricus)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "European medieval perennial vegetable. Hardy to zone 3. Mild spinach-like flavor when cooked. Cold-stratify seed.",
+  "harvestIndicators": [
+    "Tender spring shoots cut like asparagus, mature leaves used like spinach"
+  ]
+}

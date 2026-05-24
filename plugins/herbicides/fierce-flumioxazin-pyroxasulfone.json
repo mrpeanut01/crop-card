@@ -1,0 +1,27 @@
+{
+  "pluginId": "fierce-flumioxazin-pyroxasulfone",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Fierce (flumioxazin + pyroxasulfone)",
+  "activeIngredients": [
+    {
+      "name": "flumioxazin",
+      "chemistryClass": "ppo-inhibitor"
+    },
+    {
+      "name": "pyroxasulfone",
+      "chemistryClass": "vlcfa-pyroxasulfone"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 3.5,
+    "unit": "oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "PRE",
+  "requiresAMS": false,
+  "deconRequired": false,
+  "epaRegistrationNumber": "59639-189",
+  "notes": "Valent PRE premix for soybean and field corn. PPO plus VLCFA for broad residual on waterhemp, Palmer amaranth, grasses."
+}

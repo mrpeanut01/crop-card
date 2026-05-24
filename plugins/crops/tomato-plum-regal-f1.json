@@ -1,0 +1,30 @@
+{
+  "pluginId": "tomato-plum-regal-f1",
+  "type": "crop",
+  "displayName": "Tomato Plum Regal F1 (paste, late blight resistant)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 75,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 48,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 48,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 30
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Determinate processing paste with intermediate late blight resistance. NCSU release. Concentrated set, strong for canning operations.",
+  "harvestIndicators": [
+    "4 oz plum-shaped fruit, full red, dry feel"
+  ]
+}

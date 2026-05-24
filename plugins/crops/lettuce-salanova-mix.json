@@ -1,0 +1,30 @@
+{
+  "pluginId": "lettuce-salanova-mix",
+  "type": "crop",
+  "displayName": "Salanova One-Cut Lettuce Mix",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 55,
+    "max": 60
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 10
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Patented one-cut head lettuce series from Johnnys. Multiple types sized for retail clamshell. Strong market grower seller.",
+  "harvestIndicators": [
+    "Full rosette head, leaves separate uniformly with one cut at base"
+  ]
+}

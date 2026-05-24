@@ -1,0 +1,29 @@
+{
+  "pluginId": "phostrol-phosphonate",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Phostrol (mono-, di-, and tribasic phosphite blend)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "sodium, ammonium and potassium phosphites",
+      "fracCode": "33"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 4.5,
+    "unit": "pt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "55146-83",
+  "targetDiseases": [
+    "downy mildew",
+    "Phytophthora",
+    "Pythium"
+  ],
+  "notes": "Nufarm tri-salt phosphite blend. Standard for cucurbit and brassica downy mildew programs."
+}

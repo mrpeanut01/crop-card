@@ -1,0 +1,30 @@
+{
+  "pluginId": "watermelon-crimson-sweet",
+  "type": "crop",
+  "displayName": "Watermelon Crimson Sweet",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 88
+  },
+  "defaultRowSpacingInches": 84,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 84,
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Standard 20 to 25 lb commercial picnic watermelon. Anthracnose and fusarium resistance.",
+  "harvestIndicators": [
+    "Curly tendril nearest fruit is dry; ground spot creamy yellow"
+  ]
+}

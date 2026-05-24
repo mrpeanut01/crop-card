@@ -1,0 +1,31 @@
+{
+  "pluginId": "sweet-corn-honey-select-f1",
+  "type": "crop",
+  "displayName": "Sweet Corn Honey Select F1 (AAS Winner, triple-sweet)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "corn",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 75,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 30,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "2001 AAS-winning triple-sweet (synergistic, sy) yellow corn. Extended shelf life, tender kernels. Isolate from other corn types.",
+  "harvestIndicators": [
+    "Silks brown, kernels milk-stage on thumbnail test"
+  ],
+  "cornType": "sweet"
+}

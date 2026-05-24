@@ -1,0 +1,32 @@
+{
+  "pluginId": "cyd-x-codling-moth-virus",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Cyd-X (codling moth granulovirus, OMRI)",
+  "activeIngredients": [
+    {
+      "name": "Cydia pomonella granulovirus",
+      "iracGroup": "31"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 100,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "70051-32",
+  "targetPests": [
+    "codling moth"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Certis baculovirus narrowly targeting Cydia pomonella on apple, pear, walnut. Highly host-specific."
+}

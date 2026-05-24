@@ -1,0 +1,30 @@
+{
+  "pluginId": "pepper-bell-red-revolution",
+  "type": "crop",
+  "displayName": "Pepper Bell Revolution F1 (red)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 73,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Standard commercial red bell hybrid. Strong upright plant for ease of harvest. Bacterial leaf spot resistance.",
+  "harvestIndicators": [
+    "Thick-walled 4-lobe blocky fruit, full deep red"
+  ]
+}

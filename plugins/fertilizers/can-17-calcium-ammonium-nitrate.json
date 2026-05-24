@@ -1,0 +1,29 @@
+{
+  "pluginId": "can-17-calcium-ammonium-nitrate",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 17,
+    "p": 0,
+    "k": 0
+  },
+  "form": "liquid",
+  "displayName": "Calcium Ammonium Nitrate (CAN-17)",
+  "organic": false,
+  "secondaryNutrients": {
+    "ca": 8
+  },
+  "applicationRange": {
+    "min": 50,
+    "max": 300,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "17% N (50:50 nitrate:ammonium) plus 8% Ca. Standard fertigation N for tomato, pepper, cucurbit programs targeting blossom-end rot prevention."
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "garlic-inchelium-red-softneck",
+  "type": "crop",
+  "displayName": "Garlic Inchelium Red (artichoke softneck)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 240,
+    "max": 270
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 5,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 4
+  },
+  "notes": "Artichoke-type softneck. Discovered on Colville Indian Reservation in Washington. Stores 9 to 12 months. Mild flavor. Braidable.",
+  "harvestIndicators": [
+    "Lower 3 to 4 leaves brown, upper leaves still green"
+  ]
+}

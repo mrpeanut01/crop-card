@@ -1,0 +1,30 @@
+{
+  "pluginId": "pumpkin-small-sugar",
+  "type": "crop",
+  "displayName": "Pumpkin Small Sugar (pie)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 100,
+    "max": 105
+  },
+  "defaultRowSpacingInches": 72,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 72,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Heirloom New England pie pumpkin. 6 to 8 lb fruit with sweet dense flesh ideal for canning.",
+  "harvestIndicators": [
+    "6 to 8 inch orange fruit, deep color, hard rind"
+  ]
+}

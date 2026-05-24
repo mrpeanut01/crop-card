@@ -1,0 +1,30 @@
+{
+  "pluginId": "asparagus-jersey-knight",
+  "type": "crop",
+  "displayName": "Asparagus Jersey Knight F1 (all-male)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 60,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Rutgers all-male hybrid. Higher yields than seeded female types. Strong rust and crown-rot tolerance. Light harvest year 3, full harvest year 4+.",
+  "harvestIndicators": [
+    "Spears 7 to 9 inches, tight tips before fern-out"
+  ]
+}

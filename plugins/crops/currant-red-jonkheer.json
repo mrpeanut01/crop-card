@@ -1,0 +1,30 @@
+{
+  "pluginId": "currant-red-jonkheer",
+  "type": "crop",
+  "displayName": "Red Currant Jonkheer van Tets",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 72,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 72,
+    "inRowSpacingIn": {
+      "min": 48,
+      "max": 60
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Dutch heirloom red currant. Reliable heavy producer. Excellent for jelly and dried fruit. Hardy to zone 3.",
+  "harvestIndicators": [
+    "Bright red translucent berries on long clusters"
+  ]
+}

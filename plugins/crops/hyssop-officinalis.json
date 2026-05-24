@@ -1,0 +1,30 @@
+{
+  "pluginId": "hyssop-officinalis",
+  "type": "crop",
+  "displayName": "Hyssop (Hyssopus officinalis)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "culinary-herb",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Mediterranean perennial mint-family herb hardy to zone 3. Strong bee plant. Tolerates poor soils and drought.",
+  "harvestIndicators": [
+    "Blue flower spikes opening, leaves at full essential-oil expression"
+  ]
+}

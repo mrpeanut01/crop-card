@@ -1,0 +1,30 @@
+{
+  "pluginId": "melon-honeydew-tam-dew",
+  "type": "crop",
+  "displayName": "Melon Honeydew Tam Dew Improved",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 60,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Open-pollinated honeydew. 6 to 8 lb fruit with pale green flesh. Heat-tolerant Texas A&M release.",
+  "harvestIndicators": [
+    "Rind cream-white with slight wax bloom, blossom end softens"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "pluginId": "marshmallow-althaea",
+  "type": "crop",
+  "displayName": "Marshmallow (Althaea officinalis)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
+  "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "European medicinal perennial. Soothing mucilage from roots used for tea, syrups, lozenges. Hardy to zone 3.",
+  "harvestIndicators": [
+    "Roots dug second-year fall",
+    "Leaves harvested in summer"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "microgreens-radish-rambo",
+  "type": "crop",
+  "displayName": "Radish Microgreens Rambo (purple stem)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 7,
+    "max": 12
+  },
+  "defaultRowSpacingInches": 1,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 1,
+    "inRowSpacingIn": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Purple-stemmed daikon-type radish microgreen. Strong peppery flavor, striking visual. Quick turnaround for chef accounts.",
+  "harvestIndicators": [
+    "Stems 2 to 3 inches, cotyledons fully expanded"
+  ]
+}

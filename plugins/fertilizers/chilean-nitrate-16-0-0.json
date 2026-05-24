@@ -1,0 +1,27 @@
+{
+  "pluginId": "chilean-nitrate-16-0-0",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 16,
+    "p": 0,
+    "k": 0
+  },
+  "form": "granular",
+  "displayName": "Chilean Nitrate (16-0-0, restricted-use NOP)",
+  "organic": true,
+  "applicationRange": {
+    "min": 50,
+    "max": 200,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true,
+    "notes": "NOP restricts to 20% of total N requirement when used under organic certification."
+  },
+  "notes": "Mined sodium nitrate (caliche) from Chile. Fast-release nitrate N. Permitted under NOP up to 20% of crop N budget. Useful as cool-soil starter."
+}

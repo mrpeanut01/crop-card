@@ -1,0 +1,30 @@
+{
+  "pluginId": "fig-celeste",
+  "type": "crop",
+  "displayName": "Fig Celeste (Sugar Fig)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 144,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 144,
+    "inRowSpacingIn": {
+      "min": 120,
+      "max": 180
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Cold-hardy fig for zones 6 to 9. Closed eye limits split and souring in humid climates. Self-fertile. Single annual main crop.",
+  "harvestIndicators": [
+    "Small bronze-purple fruit hangs down, drop of nectar at eye"
+  ]
+}

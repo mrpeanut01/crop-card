@@ -1,0 +1,23 @@
+{
+  "pluginId": "eptam-eptc",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Eptam 7E (EPTC)",
+  "activeIngredients": [
+    {
+      "name": "EPTC",
+      "chemistryClass": "vlcfa-pyroxasulfone"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 3.5,
+    "unit": "pt"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "PRE",
+  "requiresAMS": false,
+  "deconRequired": false,
+  "epaRegistrationNumber": "10163-280",
+  "notes": "Gowan Group 15 thiocarbamate VLCFA inhibitor. Incorporate within 30 min to avoid volatility loss. Strong on yellow nutsedge. chemistryClass tag is the nearest enum match; EPTC is technically Group 15 thiocarbamate, not pyroxasulfone family."
+}

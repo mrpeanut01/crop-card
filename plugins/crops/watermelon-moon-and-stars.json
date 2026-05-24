@@ -1,0 +1,31 @@
+{
+  "pluginId": "watermelon-moon-and-stars",
+  "type": "crop",
+  "displayName": "Watermelon Moon and Stars (heirloom)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 100
+  },
+  "defaultRowSpacingInches": 84,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 84,
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "1926 heirloom rediscovered by Kent Whealy in 1980. Dark green rind with yellow polka-dot stars. 15 to 30 lb fruit, red flesh.",
+  "harvestIndicators": [
+    "Yellow speckles scattered on dark green rind",
+    "Ground spot yellow"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "pluginId": "alldown-acetic-citric",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "AllDown (acetic + citric acid, OMRI)",
+  "activeIngredients": [
+    {
+      "name": "acetic acid",
+      "chemistryClass": "synthetic-auxin"
+    },
+    {
+      "name": "citric acid",
+      "chemistryClass": "synthetic-auxin"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 10,
+    "unit": "qt"
+  },
+  "gpaCalibration": 50,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": false,
+  "epaRegistrationNumber": "67702-25",
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Summerset Products contact organic herbicide. Burndown only, no residual or systemic activity. Best on young broadleaf weeds under 4 inches in full sun. High water volume and good coverage essential. Note: chemistryClass tag is nominal; actual mechanism is non-selective contact cell-membrane disruption, not auxin mimicry. The spec enum does not currently include a contact-disruptor class."
+}

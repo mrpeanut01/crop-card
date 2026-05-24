@@ -1,0 +1,30 @@
+{
+  "pluginId": "melon-charentais-savor",
+  "type": "crop",
+  "displayName": "Melon Savor F1 (French Charentais)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 75,
+    "max": 85
+  },
+  "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 60,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "French Charentais melon. 2 lb personal-size fruit with intensely aromatic orange flesh. Pick at full slip, no later.",
+  "harvestIndicators": [
+    "Light tan rind with green sutures, full slip at maturity"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "new-zealand-spinach",
+  "type": "crop",
+  "displayName": "New Zealand Spinach (Tetragonia)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 55,
+    "max": 65
+  },
+  "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Tetragonia tetragonioides. Heat-tolerant warm-season spinach substitute. Bottomless tip harvest through summer.",
+  "harvestIndicators": [
+    "Tender tip growth 4 to 6 inches, pinch above lower nodes"
+  ]
+}

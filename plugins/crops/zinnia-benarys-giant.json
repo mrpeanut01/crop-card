@@ -1,0 +1,30 @@
+{
+  "pluginId": "zinnia-benarys-giant",
+  "type": "crop",
+  "displayName": "Zinnia Benarys Giant (cut flower)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 75,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Industry standard cut flower zinnia. 4 to 5 inch dahlia-form blooms on long straight stems. Pinch first bud for branching.",
+  "harvestIndicators": [
+    "Stems pass the wiggle test - rigid, not floppy below the bloom"
+  ]
+}

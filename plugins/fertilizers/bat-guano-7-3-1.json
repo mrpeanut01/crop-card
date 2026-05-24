@@ -1,0 +1,26 @@
+{
+  "pluginId": "bat-guano-7-3-1",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 7,
+    "p": 3,
+    "k": 1
+  },
+  "form": "meal",
+  "displayName": "Bat Guano (7-3-1, OMRI)",
+  "organic": true,
+  "applicationRange": {
+    "min": 100,
+    "max": 300,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Fresh insectivorous bat guano. High-N organic source. Side-dress or incorporate. Source-verify to avoid cave-ecology damage and confirm pathogen-free product."
+}

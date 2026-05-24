@@ -1,0 +1,27 @@
+{
+  "pluginId": "capreno-thiencarbazone-tembotrione",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Capreno (thiencarbazone + tembotrione)",
+  "activeIngredients": [
+    {
+      "name": "thiencarbazone-methyl",
+      "chemistryClass": "sulfonylurea"
+    },
+    {
+      "name": "tembotrione",
+      "chemistryClass": "hppd-inhibitor"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 3,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": true,
+  "deconRequired": true,
+  "epaRegistrationNumber": "264-1083",
+  "notes": "Bayer POST corn premix combining Group 2 ALS with Group 27 HPPD. Add AMS and methylated seed oil."
+}

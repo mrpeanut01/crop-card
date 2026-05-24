@@ -1,0 +1,30 @@
+{
+  "pluginId": "jostaberry",
+  "type": "crop",
+  "displayName": "Jostaberry (currant-gooseberry hybrid)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 72,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 72,
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 72
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Ribes x nidigrolaria, German hybrid (black currant x gooseberry). Thornless. Self-fertile. Vigorous shrub to 6 ft.",
+  "harvestIndicators": [
+    "Dark purple-black fruit larger than blueberry, easy release at full ripe"
+  ]
+}

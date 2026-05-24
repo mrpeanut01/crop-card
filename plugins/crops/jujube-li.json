@@ -1,0 +1,30 @@
+{
+  "pluginId": "jujube-li",
+  "type": "crop",
+  "displayName": "Jujube Li (Chinese date)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1460
+  },
+  "defaultRowSpacingInches": 144,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 144,
+    "inRowSpacingIn": {
+      "min": 120,
+      "max": 180
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Ziziphus jujuba. Large-fruited Chinese cultivar. Self-fertile but yields better with cross-pollinator (Lang). Drought-tolerant, hardy zones 6 to 9.",
+  "harvestIndicators": [
+    "Red-brown skin, crisp apple-like texture for fresh eating"
+  ]
+}

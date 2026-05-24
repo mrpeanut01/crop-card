@@ -1,0 +1,30 @@
+{
+  "pluginId": "tilt-36ec-propiconazole",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Tilt 3.6 EC (propiconazole)",
+  "applicationTiming": "PRE-BLOOM",
+  "activeIngredients": [
+    {
+      "name": "propiconazole",
+      "fracCode": "3"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 4,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 15,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 21,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "100-617",
+  "targetDiseases": [
+    "wheat leaf rust",
+    "stripe rust",
+    "Septoria",
+    "powdery mildew"
+  ],
+  "notes": "Syngenta FRAC 3 DMI systemic triazole. Standard for cereal rust and leaf spot."
+}

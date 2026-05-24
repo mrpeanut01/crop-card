@@ -1,0 +1,30 @@
+{
+  "pluginId": "honeyberry-haskap-aurora",
+  "type": "crop",
+  "displayName": "Honeyberry Haskap Aurora",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 84,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 84,
+    "inRowSpacingIn": {
+      "min": 48,
+      "max": 60
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Lonicera caerulea, Saskatchewan-bred large-fruited haskap. Bears two weeks before strawberries. Cold-hardy to zone 2.",
+  "harvestIndicators": [
+    "Deep blue-purple oblong fruit, easily falls when shaken"
+  ]
+}

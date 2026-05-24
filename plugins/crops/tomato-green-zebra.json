@@ -1,0 +1,30 @@
+{
+  "pluginId": "tomato-green-zebra",
+  "type": "crop",
+  "displayName": "Tomato Green Zebra (heirloom)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 75,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 48,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 48,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Indeterminate striped slicer bred by Tom Wagner in the 1980s. Tart-sweet flavor. Strong farmstand and chef-market seller.",
+  "harvestIndicators": [
+    "Yellow background with dark green stripes, slight blossom-end give"
+  ]
+}

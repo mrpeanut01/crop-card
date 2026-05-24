@@ -1,0 +1,31 @@
+{
+  "pluginId": "isomate-c-plus-pheromone",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Isomate-C Plus (codling moth mating disruption, OMRI)",
+  "activeIngredients": [
+    {
+      "name": "codlemone (E,E-8,10-dodecadienol)",
+      "iracGroup": "UN"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 400,
+    "unit": "oz"
+  },
+  "reEntryIntervalHours": 0,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "53575-31",
+  "targetPests": [
+    "codling moth"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Pacific Biocontrol pheromone hand-applied dispenser. 400 dispensers per acre on upper third of canopy in pome fruit before first flight. Saturates orchard with codling moth sex pheromone, preventing mate-finding."
+}

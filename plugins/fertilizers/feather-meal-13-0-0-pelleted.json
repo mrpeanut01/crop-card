@@ -1,0 +1,26 @@
+{
+  "pluginId": "feather-meal-13-0-0-pelleted",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 13,
+    "p": 0,
+    "k": 0
+  },
+  "form": "granular",
+  "displayName": "Pelleted Feather Meal (13-0-0, OMRI)",
+  "organic": true,
+  "applicationRange": {
+    "min": 150,
+    "max": 500,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Pelleted feather meal formulated for drill application through standard spreaders. Slower release than fish meal, suited to longer-cycle crops."
+}

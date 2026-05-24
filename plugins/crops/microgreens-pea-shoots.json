@@ -1,0 +1,30 @@
+{
+  "pluginId": "microgreens-pea-shoots",
+  "type": "crop",
+  "displayName": "Pea Shoot Microgreens (Speckled Pea)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "legume",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 10,
+    "max": 14
+  },
+  "defaultRowSpacingInches": 1,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 1,
+    "inRowSpacingIn": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Speckled or Austrian field pea sown densely on a tray. Pre-soak 8 to 12 hours. Cut shoots at 4 to 6 inches with one true leaf and tendrils.",
+  "harvestIndicators": [
+    "Tendrils forming on 4 to 6 inch shoots"
+  ]
+}

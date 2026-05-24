@@ -1,0 +1,30 @@
+{
+  "pluginId": "luffa-gourd",
+  "type": "crop",
+  "displayName": "Luffa Gourd (sponge)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 150,
+    "max": 200
+  },
+  "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 60,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Luffa aegyptiaca. Long-season vining crop. Trellis vertical for clean straight fruit. Start indoors 6 weeks before last frost.",
+  "harvestIndicators": [
+    "Fruit dry and light, skin tan and rattling seeds"
+  ]
+}

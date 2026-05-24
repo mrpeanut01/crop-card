@@ -1,0 +1,23 @@
+{
+  "pluginId": "express-tribenuron",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Express (tribenuron-methyl)",
+  "activeIngredients": [
+    {
+      "name": "tribenuron-methyl",
+      "chemistryClass": "sulfonylurea"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 0.33,
+    "unit": "oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": true,
+  "epaRegistrationNumber": "432-1542",
+  "notes": "FMC POST broadleaf sulfonylurea for wheat, barley, oats, triticale (Group 2)."
+}

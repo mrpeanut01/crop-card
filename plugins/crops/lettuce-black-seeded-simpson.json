@@ -1,0 +1,31 @@
+{
+  "pluginId": "lettuce-black-seeded-simpson",
+  "type": "crop",
+  "displayName": "Lettuce Black Seeded Simpson (leaf)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 42,
+    "max": 45
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 10
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Heat-tolerant loose-leaf heirloom dating to 1850. Cut-and-come-again or single harvest.",
+  "harvestIndicators": [
+    "Frilled light-green leaves 4 to 6 inches",
+    "Pre-bolt firmness"
+  ]
+}

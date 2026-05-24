@@ -1,0 +1,30 @@
+{
+  "pluginId": "citrus-meyer-lemon",
+  "type": "crop",
+  "displayName": "Meyer Lemon (improved)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 144,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 144,
+    "inRowSpacingIn": {
+      "min": 96,
+      "max": 144
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Lemon-mandarin hybrid. Improved virus-free clone replaces the original Meyer that was banned in 1960s. Self-fertile. Hardy to about 24 F established.",
+  "harvestIndicators": [
+    "Deep yellow-orange fruit, slight give when squeezed"
+  ]
+}

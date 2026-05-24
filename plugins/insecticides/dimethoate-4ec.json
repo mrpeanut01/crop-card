@@ -1,0 +1,29 @@
+{
+  "pluginId": "dimethoate-4ec",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Dimethoate 4EC (organophosphate)",
+  "activeIngredients": [
+    {
+      "name": "dimethoate",
+      "iracGroup": "1B"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "pt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 48,
+  "preHarvestIntervalDays": 14,
+  "pollinatorRisk": "high",
+  "epaRegistrationNumber": "5905-368",
+  "targetPests": [
+    "aphid",
+    "leafminer",
+    "mite suppression",
+    "thrips"
+  ],
+  "notes": "Loveland Products organophosphate (IRAC 1B). Systemic activity. Restricted Use in some states."
+}

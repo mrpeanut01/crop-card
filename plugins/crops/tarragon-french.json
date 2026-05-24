@@ -1,0 +1,30 @@
+{
+  "pluginId": "tarragon-french",
+  "type": "crop",
+  "displayName": "Tarragon French (Artemisia dracunculus sativa)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "culinary-herb",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "French tarragon is sterile and must be propagated by division or cuttings, not seed. Hardy to zone 4.",
+  "harvestIndicators": [
+    "Cut soft tip growth before flower stalks form"
+  ]
+}

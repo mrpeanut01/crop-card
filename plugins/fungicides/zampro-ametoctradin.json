@@ -1,0 +1,33 @@
+{
+  "pluginId": "zampro-ametoctradin",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Zampro (ametoctradin + dimethomorph)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "ametoctradin",
+      "fracCode": "45"
+    },
+    {
+      "name": "dimethomorph",
+      "fracCode": "40"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 14,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 4,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "7969-310",
+  "targetDiseases": [
+    "downy mildew",
+    "late blight",
+    "Phytophthora"
+  ],
+  "notes": "BASF premix combining FRAC 45 QoSI with FRAC 40 CAA. Built-in resistance management."
+}

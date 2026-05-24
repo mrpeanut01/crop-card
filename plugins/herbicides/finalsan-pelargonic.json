@@ -1,0 +1,29 @@
+{
+  "pluginId": "finalsan-pelargonic",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Finalsan (pelargonic acid)",
+  "activeIngredients": [
+    {
+      "name": "pelargonic acid",
+      "chemistryClass": "synthetic-auxin"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "qt"
+  },
+  "gpaCalibration": 30,
+  "applicationTiming": "POST",
+  "requiresAMS": false,
+  "deconRequired": false,
+  "epaRegistrationNumber": "67702-26",
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": true
+  },
+  "notes": "W. Neudorff fatty-acid contact herbicide. Faster knockdown than acetic acid products. Apply in full sun at 70+ F. chemistryClass tag is nominal."
+}

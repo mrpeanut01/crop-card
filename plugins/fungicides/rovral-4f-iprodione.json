@@ -1,0 +1,30 @@
+{
+  "pluginId": "rovral-4f-iprodione",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Rovral 4F (iprodione)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "iprodione",
+      "fracCode": "2"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 2,
+    "unit": "pt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 24,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "264-481",
+  "targetDiseases": [
+    "Botrytis",
+    "Sclerotinia (white mold)",
+    "Alternaria",
+    "early blight"
+  ],
+  "notes": "Bayer FRAC 2 dicarboximide. Strong on Botrytis and Sclerotinia."
+}

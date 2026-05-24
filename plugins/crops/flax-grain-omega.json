@@ -1,0 +1,30 @@
+{
+  "pluginId": "flax-grain-omega",
+  "type": "crop",
+  "displayName": "Flax Grain (Omega)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 110
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 7,
+    "inRowSpacingIn": {
+      "min": 7,
+      "max": 7
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 4
+  },
+  "notes": "Linum usitatissimum, golden seed type for omega-3 milling. NDSU Omega release. Plant 40 to 50 lb per acre.",
+  "harvestIndicators": [
+    "Bolls brown, seed rattles inside, stems still green at swathing"
+  ]
+}

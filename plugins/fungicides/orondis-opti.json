@@ -1,0 +1,33 @@
+{
+  "pluginId": "orondis-opti",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Orondis Opti (oxathiapiprolin + chlorothalonil)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "oxathiapiprolin",
+      "fracCode": "49"
+    },
+    {
+      "name": "chlorothalonil",
+      "fracCode": "M05"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1.75,
+    "unit": "pt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 12,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "100-1591",
+  "targetDiseases": [
+    "late blight",
+    "downy mildew",
+    "Phytophthora"
+  ],
+  "notes": "Syngenta premix: FRAC 49 oxathiapiprolin with multi-site FRAC M05 chlorothalonil for oomycete control."
+}

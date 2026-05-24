@@ -1,0 +1,30 @@
+{
+  "pluginId": "summer-savory",
+  "type": "crop",
+  "displayName": "Summer Savory (Satureja hortensis)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "culinary-herb",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 70
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 10
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Annual cousin of winter savory. Peppery thyme-like flavor classic with beans. Easy direct-sow herb.",
+  "harvestIndicators": [
+    "Tender tips at 6 to 10 inches before flowering"
+  ]
+}

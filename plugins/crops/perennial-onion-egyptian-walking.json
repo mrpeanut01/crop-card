@@ -1,0 +1,31 @@
+{
+  "pluginId": "perennial-onion-egyptian-walking",
+  "type": "crop",
+  "displayName": "Egyptian Walking Onion (perennial)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 365
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 8
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Allium proliferum, perennial topsetting onion. Stems flop over when topsets get heavy and replant themselves. Hardy to zone 3.",
+  "harvestIndicators": [
+    "Topsets form on stems in summer",
+    "Lower bulbs harvested fall through spring"
+  ]
+}

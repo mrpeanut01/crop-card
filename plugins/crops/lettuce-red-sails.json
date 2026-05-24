@@ -1,0 +1,31 @@
+{
+  "pluginId": "lettuce-red-sails",
+  "type": "crop",
+  "displayName": "Lettuce Red Sails (AAS Winner)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 45,
+    "max": 55
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "1985 AAS-winning loose-leaf type. Slow to bolt, strong red color holds in heat.",
+  "harvestIndicators": [
+    "Crinkled red-bronze outer leaves",
+    "Heart still loose"
+  ]
+}

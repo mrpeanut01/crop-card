@@ -1,0 +1,29 @@
+{
+  "pluginId": "ridomil-gold-sl",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Ridomil Gold SL (mefenoxam)",
+  "applicationTiming": "PRE-BLOOM",
+  "activeIngredients": [
+    {
+      "name": "mefenoxam",
+      "fracCode": "4"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "pt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 48,
+  "preHarvestIntervalDays": 7,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "100-1202",
+  "targetDiseases": [
+    "Pythium",
+    "Phytophthora",
+    "downy mildew"
+  ],
+  "notes": "Syngenta phenylamide systemic fungicide. FRAC 4. Effective on oomycete pathogens only. Resistance well-documented; rotate strictly."
+}

@@ -1,0 +1,23 @@
+{
+  "pluginId": "accent-q-nicosulfuron",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Accent Q (nicosulfuron)",
+  "activeIngredients": [
+    {
+      "name": "nicosulfuron",
+      "chemistryClass": "sulfonylurea"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 0.9,
+    "unit": "oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "POST",
+  "requiresAMS": true,
+  "deconRequired": true,
+  "epaRegistrationNumber": "352-768",
+  "notes": "Corteva field corn POST grass and broadleaf product. ALS-inhibitor sulfonylurea. Add AMS and methylated seed oil per label. Apply to corn V1 through V6."
+}

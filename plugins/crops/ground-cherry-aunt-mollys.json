@@ -1,0 +1,30 @@
+{
+  "pluginId": "ground-cherry-aunt-mollys",
+  "type": "crop",
+  "displayName": "Ground Cherry Aunt Mollys (Physalis pruinosa)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 70,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Heirloom husk cherry. Pineapple-sweet small yellow fruit ideal for jams, pies, fresh eating. Pick from ground daily.",
+  "harvestIndicators": [
+    "Husk tan and papery, fruit drops to ground"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "pluginId": "zinc-sulfate-monohydrate",
+  "type": "fertilizer",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "analysis": {
+    "n": 0,
+    "p": 0,
+    "k": 0
+  },
+  "form": "soluble",
+  "displayName": "Zinc Sulfate Monohydrate (35.5% Zn)",
+  "organic": false,
+  "applicationRange": {
+    "min": 5,
+    "max": 25,
+    "unit": "lb-per-acre"
+  },
+  "complianceFlags": {
+    "omriListed": false,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": false,
+    "transitioningAllowed": false
+  },
+  "notes": "Granular zinc fertilizer. Standard corrective for Zn deficiency in corn, edible bean, pecan on alkaline or sandy soils."
+}

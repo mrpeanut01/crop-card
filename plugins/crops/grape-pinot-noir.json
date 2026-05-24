@@ -1,0 +1,30 @@
+{
+  "pluginId": "grape-pinot-noir",
+  "type": "crop",
+  "displayName": "Grape Pinot Noir (Vitis vinifera wine)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "vine-fruit",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 1460,
+    "max": 2190
+  },
+  "defaultRowSpacingInches": 108,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 108,
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 72
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Burgundy thin-skinned red wine grape. Cool-climate variety. Highly disease-prone in humid summers; demanding canopy management.",
+  "harvestIndicators": [
+    "Brix at 23 to 25, fully colored loose-cluster berries"
+  ]
+}

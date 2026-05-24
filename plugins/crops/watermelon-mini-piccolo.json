@@ -1,0 +1,31 @@
+{
+  "pluginId": "watermelon-mini-piccolo",
+  "type": "crop",
+  "displayName": "Watermelon Mini Piccolo F1 (personal seedless)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 72,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 72,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Triploid seedless mini watermelon. Requires diploid pollinizer planted at 1 row per 3. Strong retail value.",
+  "harvestIndicators": [
+    "Striped rind firm, tendril dry, ground spot yellow",
+    "4 to 6 lb personal size"
+  ]
+}

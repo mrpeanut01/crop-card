@@ -1,0 +1,33 @@
+{
+  "pluginId": "trichogramma-egg-parasitoid",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Trichogramma brassicae (egg parasitoid release)",
+  "activeIngredients": [
+    {
+      "name": "Trichogramma brassicae parasitized eggs",
+      "iracGroup": "UNF"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 100000,
+    "unit": "oz"
+  },
+  "reEntryIntervalHours": 0,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "targetPests": [
+    "European corn borer eggs",
+    "tomato hornworm eggs",
+    "fruitworm eggs",
+    "leafroller eggs"
+  ],
+  "complianceFlags": {
+    "omriListed": true,
+    "nonGmoCompliant": true,
+    "certifiedOrganicAllowed": true,
+    "transitioningAllowed": true
+  },
+  "notes": "Live beneficial egg parasitoid wasp. Release 50000 to 200000 per acre per cycle, timed to lepidopteran egg lay. Sold by IPM Labs, BioBest, ARBICO. Rate-unit oz is a placeholder; actual quantity is count of parasitized eggs, see label."
+}

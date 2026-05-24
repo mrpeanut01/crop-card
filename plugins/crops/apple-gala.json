@@ -1,0 +1,30 @@
+{
+  "pluginId": "apple-gala",
+  "type": "crop",
+  "displayName": "Apple Gala",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1825
+  },
+  "defaultRowSpacingInches": 168,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 168,
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 120
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "New Zealand-bred (Kidds Orange Red x Golden Delicious). Mid-season harvest, sweet and aromatic. Top-five US-grown apple.",
+  "harvestIndicators": [
+    "Red striping over orange-yellow base, firm to thumb"
+  ]
+}

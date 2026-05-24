@@ -1,0 +1,30 @@
+{
+  "pluginId": "elephant-garlic",
+  "type": "crop",
+  "displayName": "Elephant Garlic (Allium ampeloprasum)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 240,
+    "max": 280
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 10
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 4
+  },
+  "notes": "Botanically a leek, not a true garlic. Forms 1 lb bulbs with 4 to 6 large cloves. Mild garlic flavor. Premium farmstand crop.",
+  "harvestIndicators": [
+    "Lower 4 to 5 leaves brown, scape removed earlier"
+  ]
+}

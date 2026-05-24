@@ -1,0 +1,30 @@
+{
+  "pluginId": "spinach-space-f1",
+  "type": "crop",
+  "displayName": "Spinach Space F1 (downy mildew resistant)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 35,
+    "max": 45
+  },
+  "defaultRowSpacingInches": 6,
+  "plantingGuide": {
+    "soilTempMinF": 35,
+    "rowSpacingIn": 6,
+    "inRowSpacingIn": {
+      "min": 1,
+      "max": 2
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Slow-bolting hybrid baby-leaf spinach with downy mildew resistance (Pfs 1 to 12). Wide adaptation.",
+  "harvestIndicators": [
+    "Semi-savoyed leaves 4 to 6 inches"
+  ]
+}

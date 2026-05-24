@@ -1,0 +1,30 @@
+{
+  "pluginId": "kale-red-russian",
+  "type": "crop",
+  "displayName": "Kale Red Russian",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 50,
+    "max": 60
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Open-pollinated Siberian heirloom. Tender flat leaves, sweetens after frost. Cut-and-come-again over a long season.",
+  "harvestIndicators": [
+    "Flat oak-shaped leaves with purple veins, snap cleanly at petiole"
+  ]
+}

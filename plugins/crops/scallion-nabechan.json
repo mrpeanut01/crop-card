@@ -1,0 +1,30 @@
+{
+  "pluginId": "scallion-nabechan",
+  "type": "crop",
+  "displayName": "Scallion Nabechan F1 (Japanese bunching)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 75
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Premium Japanese bunching onion. Sweet, tender, suited to fresh culinary markets. Plant succession every 3 weeks.",
+  "harvestIndicators": [
+    "10 to 14 inch tops with crisp white base"
+  ]
+}

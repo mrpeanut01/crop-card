@@ -1,0 +1,30 @@
+{
+  "pluginId": "cucumber-suyo-long",
+  "type": "crop",
+  "displayName": "Cucumber Suyo Long (Asian slicing)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 65
+  },
+  "defaultRowSpacingInches": 48,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 48,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Chinese heirloom burpless slicer. Sweet, never bitter. Best trellised so fruit hangs straight.",
+  "harvestIndicators": [
+    "18 inch deeply ridged dark green fruit"
+  ]
+}

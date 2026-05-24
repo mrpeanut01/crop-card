@@ -1,0 +1,30 @@
+{
+  "pluginId": "microgreens-sunflower-shoots",
+  "type": "crop",
+  "displayName": "Sunflower Shoot Microgreens (black-oil sunflower)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 8,
+    "max": 12
+  },
+  "defaultRowSpacingInches": 1,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 1,
+    "inRowSpacingIn": {
+      "min": 1,
+      "max": 1
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Untreated black-oil sunflower seed for microgreen production. Pre-soak 6 to 12 hours. Cut at cotyledon stage.",
+  "harvestIndicators": [
+    "Cotyledons fully open at 4 to 5 inches tall, before true leaves"
+  ]
+}

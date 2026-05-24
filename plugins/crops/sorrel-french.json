@@ -1,0 +1,30 @@
+{
+  "pluginId": "sorrel-french",
+  "type": "crop",
+  "displayName": "Sorrel French (Rumex acetosa)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Hardy perennial cooking green. Bright lemon-tart flavor classic in sorrel soup. Hardy to zone 3.",
+  "harvestIndicators": [
+    "Spear-shaped leaves 6 to 10 inches, tart lemon flavor"
+  ]
+}

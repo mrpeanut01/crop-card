@@ -1,0 +1,30 @@
+{
+  "pluginId": "sea-buckthorn-russian",
+  "type": "crop",
+  "displayName": "Sea Buckthorn Russian Orange (Hippophae rhamnoides)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1460
+  },
+  "defaultRowSpacingInches": 120,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 120,
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 96
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Cold-hardy nitrogen-fixing shrub native to Eurasia. Dioecious; plant one male per 6 to 8 females. Tart fruit high in vitamin C.",
+  "harvestIndicators": [
+    "Dense clusters of orange-yellow fruit, fully colored"
+  ]
+}

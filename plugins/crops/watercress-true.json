@@ -1,0 +1,30 @@
+{
+  "pluginId": "watercress-true",
+  "type": "crop",
+  "displayName": "Watercress (Nasturtium officinale)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 50,
+    "max": 60
+  },
+  "defaultRowSpacingInches": 8,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 8,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Cool-season aquatic perennial. Grows in flowing water or constantly saturated soil. Strong peppery flavor.",
+  "harvestIndicators": [
+    "Tender tips 4 to 6 inches above water line or in saturated bed"
+  ]
+}

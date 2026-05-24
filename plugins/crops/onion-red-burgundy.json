@@ -1,0 +1,31 @@
+{
+  "pluginId": "onion-red-burgundy",
+  "type": "crop",
+  "displayName": "Onion Red Burgundy (short-day)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 95,
+    "max": 105
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Short-day red onion (10 to 12 hour photoperiod). Suited to USDA zones 7 and south. Mild and sweet.",
+  "harvestIndicators": [
+    "Tops fall over and yellow",
+    "Bulb deep red with thin neck"
+  ]
+}

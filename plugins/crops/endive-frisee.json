@@ -1,0 +1,30 @@
+{
+  "pluginId": "endive-frisee",
+  "type": "crop",
+  "displayName": "Endive Frisee Fine de Louviers",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "leafy-green",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 50,
+    "max": 65
+  },
+  "defaultRowSpacingInches": 14,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 14,
+    "inRowSpacingIn": {
+      "min": 10,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Curly endive (Cichorium endivia). Blanch by tying outer leaves over the crown for 7 to 10 days before harvest.",
+  "harvestIndicators": [
+    "Curly outer leaves, blanched pale heart"
+  ]
+}

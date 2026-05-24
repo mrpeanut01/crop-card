@@ -1,0 +1,29 @@
+{
+  "pluginId": "confirm-2f-tebufenozide",
+  "type": "insecticide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Confirm 2F (tebufenozide)",
+  "activeIngredients": [
+    {
+      "name": "tebufenozide",
+      "iracGroup": "18"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 16,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 14,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "62719-481",
+  "targetPests": [
+    "lepidopteran larvae",
+    "armyworm",
+    "leafroller",
+    "loopers"
+  ],
+  "notes": "Corteva ecdysone receptor agonist (IRAC 18 IGR). Selective for Lepidoptera."
+}

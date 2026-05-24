@@ -1,0 +1,30 @@
+{
+  "pluginId": "chamomile-german",
+  "type": "crop",
+  "displayName": "Chamomile German (Matricaria recutita)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 80
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 1
+  },
+  "notes": "Standard tea chamomile. Cool-season annual. Strong pollinator and beneficial-insect plant.",
+  "harvestIndicators": [
+    "Disk flowers cone-shaped and fully white-petaled"
+  ]
+}

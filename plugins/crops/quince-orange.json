@@ -1,0 +1,30 @@
+{
+  "pluginId": "quince-orange",
+  "type": "crop",
+  "displayName": "Quince Orange (Cydonia oblonga)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "orchard",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1460
+  },
+  "defaultRowSpacingInches": 144,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 144,
+    "inRowSpacingIn": {
+      "min": 120,
+      "max": 180
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Standard culinary quince. Self-fertile, hardy to zone 5. Fruit requires cooking; not eaten fresh. Fire blight susceptible.",
+  "harvestIndicators": [
+    "Deep yellow, highly fragrant, hard skin"
+  ]
+}

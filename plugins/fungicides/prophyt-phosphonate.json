@@ -1,0 +1,29 @@
+{
+  "pluginId": "prophyt-phosphonate",
+  "type": "fungicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "ProPhyt (potassium phosphite)",
+  "applicationTiming": "COVER",
+  "activeIngredients": [
+    {
+      "name": "mono- and di-potassium salts of phosphorous acid",
+      "fracCode": "33"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 4,
+    "unit": "pt"
+  },
+  "gpaCalibration": 30,
+  "reEntryIntervalHours": 4,
+  "preHarvestIntervalDays": 0,
+  "pollinatorRisk": "low",
+  "epaRegistrationNumber": "70299-12",
+  "targetDiseases": [
+    "Phytophthora",
+    "downy mildew",
+    "Pythium"
+  ],
+  "notes": "Helena Agri-Enterprises FRAC 33 phosphonate. Systemic. Strong oomycete defense activator."
+}

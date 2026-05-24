@@ -1,0 +1,30 @@
+{
+  "pluginId": "cabbage-early-jersey-wakefield",
+  "type": "crop",
+  "displayName": "Cabbage Early Jersey Wakefield (heirloom pointed)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 75
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 14
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "1850s American heirloom early pointed cabbage. Resists splitting better than round types. Strong for spring tunnel.",
+  "harvestIndicators": [
+    "2 to 3 lb conical pointed head, firm and tight"
+  ]
+}

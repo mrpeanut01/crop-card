@@ -1,0 +1,30 @@
+{
+  "pluginId": "onion-candy-sweet-f1",
+  "type": "crop",
+  "displayName": "Onion Candy F1 (day-neutral sweet)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "allium",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 85,
+    "max": 105
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Day-neutral (intermediate-day) sweet hybrid suited to a wide latitude range. Mild Vidalia-style flavor.",
+  "harvestIndicators": [
+    "Tops fall over and yellow, bulb fully sized"
+  ]
+}

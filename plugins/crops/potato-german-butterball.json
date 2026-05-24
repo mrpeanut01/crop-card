@@ -1,0 +1,30 @@
+{
+  "pluginId": "potato-german-butterball",
+  "type": "crop",
+  "displayName": "Potato German Butterball (yellow-flesh)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 110
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 10,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Late-maturing yellow-flesh storage potato. Buttery texture. Strong cellar storage.",
+  "harvestIndicators": [
+    "Russeted yellow skin, yellow flesh, mature size at vine die-down"
+  ]
+}

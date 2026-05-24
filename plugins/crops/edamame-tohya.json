@@ -1,0 +1,30 @@
+{
+  "pluginId": "edamame-tohya",
+  "type": "crop",
+  "displayName": "Edamame Tohya",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "legume",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 75,
+    "max": 85
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Mid-early edamame variety with concentrated pod set for once-over harvest. Strong yields in Mid-Atlantic and Midwest.",
+  "harvestIndicators": [
+    "Pods plump and fuzzy, beans visible, before yellowing"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "pluginId": "eucalyptus-silver-dollar",
+  "type": "crop",
+  "displayName": "Eucalyptus Silver Dollar (cut foliage)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "broadleaf-companion",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 120,
+    "max": 180
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Eucalyptus cinerea grown as annual cut foliage outside zone 9. Round juvenile leaves preferred in arrangement. Strong wedding-market crop.",
+  "harvestIndicators": [
+    "Stems 18 to 24 inches with mature round juvenile leaves"
+  ]
+}

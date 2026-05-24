@@ -1,0 +1,30 @@
+{
+  "pluginId": "taro-bun-long",
+  "type": "crop",
+  "displayName": "Taro Bun Long (Colocasia esculenta)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 240,
+    "max": 365
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Chinese taro variety used for taro chips and Hawaiian poi. Requires constantly moist soil. Hardy zone 8+; treated as annual elsewhere.",
+  "harvestIndicators": [
+    "Leaves yellow at maturity; corms firm at 1 to 2 lb each"
+  ]
+}

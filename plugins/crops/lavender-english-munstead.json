@@ -1,0 +1,30 @@
+{
+  "pluginId": "lavender-english-munstead",
+  "type": "crop",
+  "displayName": "Lavender English Munstead",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "culinary-herb",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 730
+  },
+  "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "soilTempMinF": 60,
+    "rowSpacingIn": 24,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Lavandula angustifolia, compact English type to 18 inches. Hardy to zone 5. Requires fast-drained soil; rots in heavy clay.",
+  "harvestIndicators": [
+    "Flower spikes showing first color but mostly buds still closed"
+  ]
+}

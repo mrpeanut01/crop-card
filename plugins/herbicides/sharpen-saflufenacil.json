@@ -1,0 +1,23 @@
+{
+  "pluginId": "sharpen-saflufenacil",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Sharpen (saflufenacil)",
+  "activeIngredients": [
+    {
+      "name": "saflufenacil",
+      "chemistryClass": "ppo-inhibitor"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 1,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "BURNDOWN",
+  "requiresAMS": true,
+  "deconRequired": false,
+  "epaRegistrationNumber": "7969-278",
+  "notes": "BASF Group 14 PPO-inhibitor burndown for corn, soybean, wheat. Strong on glyphosate-resistant marestail and pigweed."
+}

@@ -1,0 +1,27 @@
+{
+  "pluginId": "verdict-saflufenacil-dimethenamid",
+  "type": "herbicide",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "displayName": "Verdict (saflufenacil + dimethenamid-P)",
+  "activeIngredients": [
+    {
+      "name": "saflufenacil",
+      "chemistryClass": "ppo-inhibitor"
+    },
+    {
+      "name": "dimethenamid-P",
+      "chemistryClass": "chloroacetamide"
+    }
+  ],
+  "ratePerAcre": {
+    "amount": 13,
+    "unit": "fl-oz"
+  },
+  "gpaCalibration": 15,
+  "applicationTiming": "PRE",
+  "requiresAMS": true,
+  "deconRequired": false,
+  "epaRegistrationNumber": "7969-330",
+  "notes": "BASF PRE plus burndown premix. PPO for emerged broadleaves and Group 15 residual for grass and waterhemp."
+}

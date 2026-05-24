@@ -1,0 +1,30 @@
+{
+  "pluginId": "sunchoke-stampede",
+  "type": "crop",
+  "displayName": "Sunchoke Stampede (Jerusalem artichoke)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 110,
+    "max": 150
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Helianthus tuberosus, North American native tuber. Early-maturing Stampede cultivar suited to short-season growers. Spreads aggressively.",
+  "harvestIndicators": [
+    "Tubers harvested after fall frost kills tops"
+  ]
+}

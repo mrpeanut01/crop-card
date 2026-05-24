@@ -1,0 +1,30 @@
+{
+  "pluginId": "peach-elberta",
+  "type": "crop",
+  "displayName": "Peach Elberta (heirloom)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "stone-fruit",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1460
+  },
+  "defaultRowSpacingInches": 192,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 192,
+    "inRowSpacingIn": {
+      "min": 144,
+      "max": 192
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Georgia heirloom from 1875. Freestone yellow peach. Self-fertile. Mid to late season. Susceptible to brown rot and peach leaf curl.",
+  "harvestIndicators": [
+    "Yellow ground color with red blush, slight give at suture"
+  ]
+}

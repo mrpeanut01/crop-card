@@ -1,0 +1,30 @@
+{
+  "pluginId": "spelt-oberkulmer",
+  "type": "crop",
+  "displayName": "Spelt Oberkulmer (heritage)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cereal-grain",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 240,
+    "max": 290
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 7,
+    "inRowSpacingIn": {
+      "min": 7,
+      "max": 7
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Triticum spelta. Heritage hulled winter wheat. Drill 100 to 120 lb per acre in fall. Excellent for artisan bakers.",
+  "harvestIndicators": [
+    "Heads tan, hulls still tight to kernels at threshing"
+  ]
+}

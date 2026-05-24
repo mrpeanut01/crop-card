@@ -1,0 +1,30 @@
+{
+  "pluginId": "lovage",
+  "type": "crop",
+  "displayName": "Lovage (Levisticum officinale)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "apiaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 120
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Hardy perennial to zone 3. Celery-flavored leaves and stems used in soups. Single plant supplies a household.",
+  "harvestIndicators": [
+    "Tender young stems and leaves at 12 to 18 inches"
+  ]
+}

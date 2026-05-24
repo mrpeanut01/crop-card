@@ -1,0 +1,30 @@
+{
+  "pluginId": "potato-french-fingerling",
+  "type": "crop",
+  "displayName": "Potato French Fingerling (Nosebag)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 90,
+    "max": 110
+  },
+  "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 36,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 10
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Heirloom French fingerling. Premium farmstand and restaurant-market crop. Heavy yields once established.",
+  "harvestIndicators": [
+    "3 to 4 inch finger-shaped tubers, rose-pink skin and yellow flesh"
+  ]
+}

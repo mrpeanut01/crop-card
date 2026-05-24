@@ -100,8 +100,9 @@ module.exports = {
         // tenant-aware and suppress this rule file-wide. See the file
         // header for the why.
         const src = context.getSourceCode().getText();
-        fileIsTenantAware =
-          /\b(tenantWhere|withTenant|tenantValues|unscopedQueryNote)\s*\(/.test(src);
+        fileIsTenantAware = /\b(tenantWhere|withTenant|tenantValues|unscopedQueryNote)\s*\(/.test(
+          src
+        );
       },
 
       // db.select(...).from(blocks)

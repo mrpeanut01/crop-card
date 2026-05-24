@@ -1,6 +1,8 @@
 <script lang="ts">
   import { evaluateScout, type ScoutSpot } from '$lib/safety/scout';
   import { untrack } from 'svelte';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import Banner from '$lib/components/ui/Banner.svelte';
 
   let { data } = $props();
 
@@ -33,11 +35,14 @@
   }
 </script>
 
-<h1>Scout & spray decision</h1>
-<p class="lede">
-  Walk the block, count broadleaves in 4–5 random 10 sq ft spots, and note the tallest weed. The
-  threshold (FR-07): ≥ 3 weeds / 10 sq ft on average, or any weed taller than 2 inches → spray.
-</p>
+<header class="page-header">
+  <Kicker>FR-07 · Threshold-driven scouting</Kicker>
+  <h1 class="serif">Scout &amp; spray decision</h1>
+  <p class="lede">
+    Walk the block, count broadleaves in 4–5 random 10 sq ft spots, and note the tallest weed. The
+    threshold: ≥ 3 weeds / 10 sq ft on average, or any weed taller than 2 inches → spray.
+  </p>
+</header>
 
 {#if data.blocks.length > 0}
   <section class="card">
@@ -119,7 +124,7 @@
   .card h2 {
     margin: 0 0 0.75rem;
     font-size: 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -132,14 +137,14 @@
   }
   .spot input {
     padding: 0.6rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     font-size: 1.1rem;
     min-height: 48px;
   }
   .remove {
-    background: #fce8e8;
-    color: #b00020;
+    background: var(--pill-rust-bg);
+    color: var(--color-rust);
     border: none;
     width: 48px;
     height: 48px;
@@ -149,8 +154,8 @@
   }
   button {
     background: white;
-    color: #1f5e3a;
-    border: 2px solid #1f5e3a;
+    color: var(--color-forest);
+    border: 2px solid var(--color-forest);
     border-radius: 6px;
     padding: 0.6rem 1rem;
     font-weight: 600;
@@ -159,7 +164,7 @@
   }
   .card input[type='number'] {
     padding: 0.6rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     font-size: 1.1rem;
     min-height: 48px;
@@ -177,18 +182,18 @@
     margin-top: 1rem;
   }
   .result.spray {
-    background: #fce8e8;
-    border: 2px solid #b00020;
+    background: var(--pill-rust-bg);
+    border: 2px solid var(--color-rust);
   }
   .result.spray h2 {
-    color: #b00020;
+    color: var(--color-rust);
   }
   .result.skip {
-    background: #e7f1ea;
-    border: 2px solid #1f5e3a;
+    background: var(--pill-forest-bg);
+    border: 2px solid var(--color-forest);
   }
   .result.skip h2 {
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .result h2 {
     margin: 0;
@@ -206,7 +211,7 @@
   .primary {
     display: inline-block;
     margin-top: 1rem;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     padding: 0.9rem 1.5rem;
     border-radius: 6px;

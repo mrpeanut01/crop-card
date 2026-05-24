@@ -14,6 +14,12 @@ services:
       - ..:/app
       - web-node-modules:/app/node_modules
       - web-app-node-modules:/app/apps/web/node_modules
+      # SvelteKit writes ~40+ small files into .svelte-kit/generated/ on
+      # startup; Docker Desktop's macOS bind mount drops some of those bursts
+      # and produces zero-byte or missing files, which surfaces as
+      # "Failed to resolve import './nodes/NN'" overlays. Keep it on a
+      # named volume so writes are fast + consistent.
+      - web-svelte-kit:/app/apps/web/.svelte-kit
       - web-data:/data
     # Azurite well-known dev credentials are sourced from infra/.env.dev
     # (gitignored). Run `cp infra/.env.dev.example infra/.env.dev` once.
@@ -47,6 +53,7 @@ services:
       - ..:/app
       - marketplace-node-modules:/app/node_modules
       - marketplace-app-node-modules:/app/apps/marketplace/node_modules
+      - marketplace-svelte-kit:/app/apps/marketplace/.svelte-kit
       - marketplace-data:/data
     env_file:
       # MARKETPLACE_SEED_CREDENTIAL, MARKETPLACE_ADMIN_EMAILS, and
@@ -96,9 +103,11 @@ services:
 volumes:
   web-node-modules:
   web-app-node-modules:
+  web-svelte-kit:
   web-data:
   marketplace-node-modules:
   marketplace-app-node-modules:
+  marketplace-svelte-kit:
   marketplace-data:
   clamav-signatures:
   azurite-data:

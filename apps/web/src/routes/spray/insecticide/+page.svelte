@@ -3,13 +3,31 @@
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   let { data } = $props();
+
+  // v2 addendum (#90 / #89): drives AI-on vs AI-off variant of the
+  // SprayDecisionPage shell. Hard-coded false until #89 lands the
+  // `user.ai_enabled` column + loader threading; the AI-off variant is
+  // the safe baseline per the v2 spec (see AI_PROVENANCE_ADDENDUM.md
+  // "AI assists, never gates").
+  const aiEnabled = false;
 
   let selectedBlockId = $state<string>(
     untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? '')
   );
   let selectedPluginId = $state<string>(untrack(() => data.insecticides[0]?.pluginId ?? ''));
+
+  // v2 addendum (#90): selected product drives the IPM-gate slot copy.
+  // Picks the first scouting threshold the plugin declares (if any) for
+  // the panel's "this week vs threshold" display. Real wiring (scout-log
+  // count, evaluator verdict) lands in #89.
+  const selectedInsecticide = $derived(
+    data.insecticides.find((p) => p.pluginId === selectedPluginId) ?? null
+  );
+  const primaryThreshold = $derived(selectedInsecticide?.scoutingThresholds[0] ?? null);
   let scoutPest = $state('');
   let scoutMetric = $state<'count-per-plant' | 'pct-defoliation' | 'pct-infested-plants'>(
     'count-per-plant'
@@ -137,6 +155,7 @@
   {result}
   {error}
   {violations}
+  {aiEnabled}
   canSubmit={!!selectedBlockId && !!selectedPluginId}
   submitLabel="Record application"
   onSubmit={recordSpray}
@@ -189,6 +208,66 @@
       {/if}
     </section>
   {/snippet}
+
+  <!-- ─── v2 addendum (#90) ────────────────────────────────────────── -->
+
+  {#snippet legendStrip()}
+    <ProvenanceLegend
+      shown={aiEnabled
+        ? ['plugin', 'data', 'ai', 'manual']
+        : ['plugin', 'data', 'fallback', 'manual']}
+      note={aiEnabled
+        ? 'Mix and rates pre-populated · all editable'
+        : 'AI off · plugin defaults filled · all editable'}
+    />
+  {/snippet}
+
+  {#snippet tankMixProvenance()}
+    <!-- Stub badges per the v2 spec: row-1 product is always plugin
+         (safety-kernel rotation); subsequent products are ai/fallback.
+         Single-product UI today renders just the plugin badge; real
+         per-row wiring lands when the tank-mix calculator is on this
+         shell (deferred to a follow-up). -->
+    <Provenance source="plugin" detail="rotation kernel" compact />
+    {#if aiEnabled}
+      <Provenance source="ai" confidence={0.84} compact />
+    {:else}
+      <Provenance source="fallback" detail="deterministic default" compact />
+    {/if}
+  {/snippet}
+
+  {#snippet ipmGate()}
+    <header class="gate-header">
+      <h2>IPM threshold gate</h2>
+      <Provenance source="data" detail="your scout log" compact />
+      {#if primaryThreshold}
+        <Provenance
+          source="plugin"
+          detail={`${selectedInsecticide?.pluginId} · ${primaryThreshold.threshold} ${primaryThreshold.metric}`}
+          compact
+        />
+      {:else}
+        <Provenance source="plugin" detail="no threshold declared" compact />
+      {/if}
+    </header>
+    <p class="gate-body">
+      Insecticide sprays require a scout count that exceeds the action threshold for
+      <strong>{primaryThreshold?.pest ?? 'the target pest'}</strong>. Full evaluator + this-week
+      sparkline land with the IPM gate kernel in Phase 25d.
+    </p>
+  {/snippet}
+
+  {#snippet pollinatorGate()}
+    <header class="gate-header">
+      <h2>Pollinator-protection gate</h2>
+      <Provenance source="plugin" detail="bloom-window" compact />
+      <Provenance source="data" detail="local weather feed" compact />
+    </header>
+    <p class="gate-body">
+      Blocks bee-toxic applications when any selected block is in its declared bloom window AND the
+      product carries a bee-toxicity flag. Full evaluator lands in Phase 25d.
+    </p>
+  {/snippet}
 </SprayDecisionPage>
 
 <style>
@@ -237,5 +316,22 @@
     border: 1px solid var(--color-divider);
     border-radius: var(--radius-input, 6px);
     background: var(--color-paper, #fff);
+  }
+  .gate-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+  }
+  .gate-header h2 {
+    margin: 0;
+    margin-right: 0.25rem;
+  }
+  .gate-body {
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: 0.875rem;
+    line-height: 1.5;
   }
 </style>

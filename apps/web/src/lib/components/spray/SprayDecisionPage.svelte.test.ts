@@ -142,4 +142,63 @@ describe('SprayDecisionPage', () => {
     await fireEvent.submit(form);
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
+
+  // ─── v2 addendum (#90) slot tests ─────────────────────────────────────
+
+  it('accepts aiEnabled prop (defaults to false; render unaffected without slots)', () => {
+    render(SprayDecisionPage, { ...baseProps, aiEnabled: true });
+    // Without slots provided, aiEnabled is consumed by the page-level
+    // snippets — shell still renders the standard form.
+    expect(screen.getByRole('heading', { level: 1, name: 'Insecticides' })).toBeInTheDocument();
+  });
+
+  it('renders legendStrip slot above the form', () => {
+    render(SprayDecisionPage, {
+      ...baseProps,
+      legendStrip: createRawSnippet(() => ({
+        render: () => '<div data-testid="legend-slot">where this came from</div>'
+      }))
+    });
+    expect(screen.getByTestId('legend-slot')).toBeInTheDocument();
+  });
+
+  it('renders tankMixProvenance slot inside the block+product card', () => {
+    render(SprayDecisionPage, {
+      ...baseProps,
+      tankMixProvenance: createRawSnippet(() => ({
+        render: () => '<span data-testid="tank-prov">prov</span>'
+      }))
+    });
+    expect(screen.getByTestId('tank-prov')).toBeInTheDocument();
+  });
+
+  it('renders ipmGate slot as its own card when provided', () => {
+    render(SprayDecisionPage, {
+      ...baseProps,
+      ipmGate: createRawSnippet(() => ({
+        render: () => '<h2 data-testid="ipm-card">IPM threshold gate</h2>'
+      }))
+    });
+    expect(screen.getByTestId('ipm-card')).toBeInTheDocument();
+  });
+
+  it('renders pollinatorGate slot as its own card when provided', () => {
+    render(SprayDecisionPage, {
+      ...baseProps,
+      pollinatorGate: createRawSnippet(() => ({
+        render: () => '<h2 data-testid="poll-card">Pollinator gate</h2>'
+      }))
+    });
+    expect(screen.getByTestId('poll-card')).toBeInTheDocument();
+  });
+
+  it('omits all v2 slots when not provided (no empty cards)', () => {
+    const { container } = render(SprayDecisionPage, { ...baseProps });
+    // legend-strip + tank-mix-provenance + gate-card containers should be
+    // absent when their snippets are unbound — confirms the shell
+    // degrades cleanly for pre-#89 surfaces.
+    expect(container.querySelector('.legend-strip')).toBeNull();
+    expect(container.querySelector('.tank-mix-provenance')).toBeNull();
+    expect(container.querySelector('.gate-card')).toBeNull();
+  });
 });

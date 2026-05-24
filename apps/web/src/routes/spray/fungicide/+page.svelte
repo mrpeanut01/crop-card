@@ -3,8 +3,14 @@
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   let { data } = $props();
+
+  // v2 addendum (#90 / #89): hard-coded false until #89 wires
+  // `user.ai_enabled` into the loader. AI-off is the safe baseline.
+  const aiEnabled = false;
 
   let selectedBlockId = $state<string>(
     untrack(() => data.preselect.blockId ?? data.blocks[0]?.id ?? '')
@@ -148,6 +154,7 @@
   {error}
   {violations}
   {warnings}
+  {aiEnabled}
   canSubmit={!!selectedBlockId && selectedPluginIds.length > 0}
   submitLabel="Record fungicide application"
   onSubmit={recordSpray}
@@ -209,6 +216,36 @@
     </select>
     <label for="disease-value">Value</label>
     <input id="disease-value" type="number" min="0" step="any" bind:value={diseaseValue} />
+  {/snippet}
+
+  <!-- ─── v2 addendum (#90) ────────────────────────────────────────── -->
+
+  {#snippet legendStrip()}
+    <ProvenanceLegend
+      shown={aiEnabled
+        ? ['plugin', 'data', 'ai', 'manual']
+        : ['plugin', 'data', 'fallback', 'manual']}
+      note={aiEnabled
+        ? 'FRAC groups + rates pre-populated · all editable'
+        : 'AI off · FRAC groups from plugins · all editable'}
+    />
+  {/snippet}
+
+  {#snippet tankMixProvenance()}
+    <!-- FRAC groups come from plugin JSON (activeIngredients[].fracCode) —
+         always a `plugin` badge. If the operator added a second product
+         the AI tier could propose a rotation-safe pairing; until #89
+         lands that, the second-product badge defaults to fallback. -->
+    {#if selectedFungicides.length > 0}
+      <Provenance source="plugin" detail="FRAC kernel" compact />
+      {#if selectedFungicides.length > 1}
+        {#if aiEnabled}
+          <Provenance source="ai" confidence={0.84} compact />
+        {:else}
+          <Provenance source="fallback" detail="deterministic rotation hint" compact />
+        {/if}
+      {/if}
+    {/if}
   {/snippet}
 
   {#snippet recentEvents()}

@@ -13,6 +13,14 @@
    *  Herbicide (`/spray`) is NOT consumed by this shell — its review-
    *  then-record flow with multi-block tank-mix calculator and STOP
    *  card is a different UX. See gh #83 for the herbicide deferral.
+   *
+   *  v2 addendum (#90, lands fully in #89): `aiEnabled` prop drives
+   *  AI-on vs AI-off variant on first paint per the "AI assists, never
+   *  gates" invariant. Slot snippets (`legendStrip`, `tankMixProvenance`,
+   *  `ipmGate`, `pollinatorGate`) are render-passthroughs — the shell
+   *  positions them; the page provides the content using `<Provenance>`
+   *  + `<ProvenanceLegend>` primitives. Each slot is optional so the
+   *  pre-#89 wiring degrades to "no badges yet" gracefully.
    */
 
   type Chemistry = 'herbicide' | 'insecticide' | 'fungicide';
@@ -57,6 +65,11 @@
     submitLabel: string;
     onSubmit: (ev: Event) => void | Promise<void>;
 
+    /** v2 addendum — drives AI-on vs AI-off variant. Sourced from
+     *  `user.ai_enabled` (real column lands in #89). Defaults to false
+     *  so the AI-off variant is the safe pre-#89 baseline. */
+    aiEnabled?: boolean;
+
     /** Optional override for header gate pills. */
     gates?: Snippet;
     /** Chemistry-specific product picker rendered inside card 1. */
@@ -65,6 +78,24 @@
     observation?: Snippet;
     /** Optional recent-events list (rendered below the banner stack). */
     recentEvents?: Snippet;
+
+    // ─── v2 addendum slot snippets (#90 / #89) ─────────────────────────
+    /** `<ProvenanceLegend shown={...} note={...} />` strip rendered
+     *  immediately after the header. Caller toggles `shown` based on
+     *  `aiEnabled` per the v2 spec. */
+    legendStrip?: Snippet;
+    /** Per-tank-row provenance badges. Renders inside the productSection
+     *  card after the product list. Pages place `<Provenance>` per row;
+     *  row 1 is always `plugin` (rotation kernel), rows 2+ are
+     *  `ai`/`fallback` depending on aiEnabled. */
+    tankMixProvenance?: Snippet;
+    /** IPM threshold gate panel (insecticide-only). Pages render a card
+     *  containing the threshold dial + 5-wk history + `<Provenance>`
+     *  badges (`data` from traps + `plugin` from threshold). */
+    ipmGate?: Snippet;
+    /** Pollinator-protection gate panel. Pages render bloom-stage +
+     *  bee-forecast + `<Provenance>` (`plugin` + `data`). */
+    pollinatorGate?: Snippet;
   }
 
   let {
@@ -86,11 +117,20 @@
     canSubmit,
     submitLabel,
     onSubmit,
+    aiEnabled = false,
     gates,
     productSection,
     observation,
-    recentEvents
+    recentEvents,
+    legendStrip,
+    tankMixProvenance,
+    ipmGate,
+    pollinatorGate
   }: Props = $props();
+
+  // `aiEnabled` is destructured for the page-level snippets that read it
+  // via props passthrough; the shell itself doesn't branch on it until
+  // #89 lands the variant-specific chrome.
 
   const blockFieldId = $derived(`${chemistry}-block`);
   const windFieldId = $derived(`${chemistry}-wind`);
@@ -101,6 +141,10 @@
 </script>
 
 <SprayPageHeader {chemistry} {title} {lede} {activeREI} {gates} />
+
+{#if legendStrip}
+  <div class="legend-strip">{@render legendStrip()}</div>
+{/if}
 
 <form onsubmit={onSubmit}>
   <section class="card">
@@ -115,7 +159,19 @@
     </select>
 
     {@render productSection()}
+
+    {#if tankMixProvenance}
+      <div class="tank-mix-provenance">{@render tankMixProvenance()}</div>
+    {/if}
   </section>
+
+  {#if ipmGate}
+    <section class="card gate-card">{@render ipmGate()}</section>
+  {/if}
+
+  {#if pollinatorGate}
+    <section class="card gate-card">{@render pollinatorGate()}</section>
+  {/if}
 
   {#if observation}
     <section class="card">
@@ -231,4 +287,16 @@
     border-radius: 3px;
     margin-left: 0.25rem;
   }
+  .legend-strip {
+    margin: 0 0 1rem;
+  }
+  .tank-mix-provenance {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  /* .gate-card uses the same .card chrome today; class kept distinct so
+     #89 can swap the background/border treatment per the v2 IPM gate
+     mockup without touching every page. */
 </style>

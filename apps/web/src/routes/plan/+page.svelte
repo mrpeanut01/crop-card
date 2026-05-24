@@ -466,7 +466,9 @@
       // parses as UTC midnight; in a western-hemisphere zone that displays
       // back as the *previous* day. Append a local-midnight time so the
       // stored ms matches the operator's calendar date.
-      const plantingDateMs = plantingDateIso ? new Date(`${plantingDateIso}T00:00:00`).getTime() : null;
+      const plantingDateMs = plantingDateIso
+        ? new Date(`${plantingDateIso}T00:00:00`).getTime()
+        : null;
       const res = await fetch(`/api/blocks/${encodeURIComponent(blockId)}/plantings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

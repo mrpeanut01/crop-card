@@ -193,6 +193,22 @@ export interface RecordCallInput {
   usdEstimate: number;
   success: boolean;
   errorClass?: string;
+  // ─── Phase 25d (#89 / #93) — v2 addendum provenance fields ────────
+  /** 'ai' for a successful Claude call routed via aiTry();
+   *  'fallback' when aiTry() picked the deterministic path; null/absent
+   *  for legacy callers (pre-25d AI sites that still call recordCall
+   *  directly without going through aiTry). */
+  provenance?: 'ai' | 'fallback' | null;
+  /** Claude self-reported confidence (0..1); populated only for
+   *  `provenance='ai'`. */
+  confidence?: number | null;
+  /** Why the deterministic path ran; populated only for
+   *  `provenance='fallback'`. */
+  fallbackReason?: 'no-key' | 'over-cap' | 'offline' | 'rate-limit' | 'timeout' | null;
+  /** Wall time the (failed/skipped) AI call would have happened. Used
+   *  by /api/audit/re-ask-ai to re-run fallback rows once a key is
+   *  configured (Phase 26 follow-up). */
+  attemptedAiAt?: number | null;
 }
 
 export function recordCall(input: RecordCallInput): void {
@@ -219,7 +235,14 @@ export function recordCall(input: RecordCallInput): void {
       outputTokens: input.outputTokens,
       usdEstimate: input.usdEstimate,
       success: input.success,
-      errorClass: input.errorClass ?? null
+      errorClass: input.errorClass ?? null,
+      // Phase 25d (#89 / #93) — provenance fields. All nullable so
+      // legacy call sites don't need updating; they write null for now
+      // and migrate to populate when they're moved onto aiTry().
+      provenance: input.provenance ?? null,
+      confidence: input.confidence ?? null,
+      fallbackReason: input.fallbackReason ?? null,
+      attemptedAiAt: input.attemptedAiAt != null ? new Date(input.attemptedAiAt) : null
     })
     .run();
   try {

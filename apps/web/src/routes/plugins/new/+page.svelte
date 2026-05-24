@@ -1085,7 +1085,7 @@
             Target pests (comma-separated)
             <HelpIcon
               label="What are target pests?"
-              text="Pests the label claims efficacy against. Used to nudge the operator from /scout into /insecticides when a scouting threshold is crossed."
+              text="Pests the label claims efficacy against. Used to nudge the operator from /scout into /spray/insecticide when a scouting threshold is crossed."
             />
           </span>
           <input

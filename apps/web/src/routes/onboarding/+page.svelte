@@ -3,6 +3,14 @@
   import type { ActionData } from './$types';
 
   let { form }: { form: ActionData } = $props();
+
+  // First-field focus on a freshly-loaded setup form is intentional — but
+  // `autofocus` is flagged by Svelte's a11y lint as a jarring shift for
+  // screen readers. Use bind:this + $effect to call focus() after mount.
+  let farmNameInput = $state<HTMLInputElement | null>(null);
+  $effect(() => {
+    farmNameInput?.focus();
+  });
 </script>
 
 <svelte:head>
@@ -26,7 +34,7 @@
         required
         autocomplete="organization"
         placeholder="e.g., Hilltop Acres"
-        autofocus
+        bind:this={farmNameInput}
       />
     </label>
 

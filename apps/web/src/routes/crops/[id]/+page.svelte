@@ -200,7 +200,7 @@
 <section class="card section">
   <header>
     <h2>Insecticide events ({data.insecticides.length})</h2>
-    <a class="add" href={deepLink('/insecticides')}>+ Record</a>
+    <a class="add" href={deepLink('/spray/insecticide')}>+ Record</a>
   </header>
   {#if data.insecticides.length === 0}
     <p class="hint">No insecticide events.</p>

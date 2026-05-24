@@ -990,14 +990,8 @@
 {/if}
 
 <style>
-  h1 {
-    margin: 0 0 0.25rem;
-  }
-  .lede {
-    color: #555;
-    margin: 0 0 1.5rem;
-  }
-  /* .prefill-banner superseded by Banner primitive. */
+  /* h1 + .lede now owned by SprayPageHeader (Phase 25b).
+     .prefill-banner superseded by Banner primitive. */
   .empty-state {
     text-align: center;
     padding: 2rem;
@@ -1495,8 +1489,6 @@
     .step {
       display: none !important;
     }
-    h1,
-    .lede,
     .filter-hint {
       display: none !important;
     }

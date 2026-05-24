@@ -2,8 +2,7 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
-  import Banner from '$lib/components/ui/Banner.svelte';
-  import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
+  import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
 
   let { data } = $props();
 
@@ -135,20 +134,25 @@
   }
 </script>
 
-<SprayPageHeader chemistry="fungicide" activeREI={data.activeREI} />
-
-<form onsubmit={recordSpray}>
-  <section class="card">
-    <h2>1 · Block + product</h2>
-
-    <label for="block-select">Block</label>
-    <select id="block-select" bind:value={selectedBlockId} required>
-      <option value="">— pick a block —</option>
-      {#each data.blocks as b (b.id)}
-        <option value={b.id}>{b.name}{b.acres ? ` · ${b.acres.toFixed(2)} acres` : ''}</option>
-      {/each}
-    </select>
-
+<SprayDecisionPage
+  chemistry="fungicide"
+  blocks={data.blocks}
+  activeREI={data.activeREI}
+  bind:blockId={selectedBlockId}
+  bind:windMph
+  bind:tempF
+  bind:rainPct
+  bind:tankSize
+  {busy}
+  {result}
+  {error}
+  {violations}
+  {warnings}
+  canSubmit={!!selectedBlockId && selectedPluginIds.length > 0}
+  submitLabel="Record fungicide application"
+  onSubmit={recordSpray}
+>
+  {#snippet productSection()}
     {#if data.fungicides.length === 0}
       <p class="empty">
         No fungicide plugins installed. Add JSON files under <code>plugins/fungicides/</code>.
@@ -182,17 +186,21 @@
 
       {#if tankFracOverlap}
         <p class="warn-inline">
-          ⚠ FRAC {tankFracOverlap} is on two products in this tank. Consider rotating to a different mode
-          of action for resistance management.
+          ⚠ FRAC {tankFracOverlap} is on two products in this tank. Consider rotating to a different
+          mode of action for resistance management.
         </p>
       {/if}
     {/if}
-  </section>
+  {/snippet}
 
-  <section class="card">
-    <h2>2 · Disease observation (optional)</h2>
+  {#snippet observation()}
     <label for="disease-name">Disease</label>
-    <input id="disease-name" type="text" bind:value={diseaseName} placeholder="e.g. early blight" />
+    <input
+      id="disease-name"
+      type="text"
+      bind:value={diseaseName}
+      placeholder="e.g. early blight"
+    />
     <label for="disease-metric">Metric</label>
     <select id="disease-metric" bind:value={diseaseMetric}>
       <option value="pct-leaf-area">% leaf area affected</option>
@@ -201,97 +209,32 @@
     </select>
     <label for="disease-value">Value</label>
     <input id="disease-value" type="number" min="0" step="any" bind:value={diseaseValue} />
-  </section>
+  {/snippet}
 
-  <section class="card">
-    <h2>3 · Conditions</h2>
-    <label for="wind">Wind (mph)</label>
-    <input id="wind" type="number" min="0" step="0.5" bind:value={windMph} required />
-
-    <label for="temp">Temperature (°F)</label>
-    <input id="temp" type="number" step="0.5" bind:value={tempF} required />
-
-    <label for="rain">Rain forecast next 24h (%)</label>
-    <input id="rain" type="number" min="0" max="100" step="1" bind:value={rainPct} required />
-
-    <label for="tank">Tank size (gal, optional — enables stock decrement)</label>
-    <input id="tank" type="number" min="0" step="0.5" bind:value={tankSize} />
-  </section>
-
-  <section class="card actions">
-    <button type="submit" disabled={busy || selectedPluginIds.length === 0 || !selectedBlockId}>
-      {busy ? 'Recording…' : 'Record fungicide application'}
-    </button>
-  </section>
-</form>
-
-{#if result}
-  <Banner tone="forest">{result}</Banner>
-{/if}
-{#if error}
-  <Banner tone="rust" urgent>
-    <strong>Error:</strong> {error}
-    {#if violations.length > 0}
-      <ul class="violations">
-        {#each violations as v (v.code)}
-          <li><code>{v.code}</code> — {v.message}</li>
-        {/each}
-      </ul>
+  {#snippet recentEvents()}
+    {#if data.recentEvents.length > 0}
+      <section class="card recent">
+        <h2>Recent fungicide events</h2>
+        <ul class="recent-list">
+          {#each data.recentEvents as e (e.id)}
+            <li>
+              <strong>{new Date(e.occurredAt).toLocaleString()}</strong> — block {e.blockId}
+              · {e.products.map((p) => p.displayName).join(', ')}
+              {#if e.preHarvestClearAt}
+                <span class="phi">· PHI clear {new Date(e.preHarvestClearAt).toLocaleString()}</span>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      </section>
     {/if}
-  </Banner>
-{/if}
-{#if warnings.length > 0}
-  <Banner tone="wheat">
-    <strong>Warnings:</strong>
-    <ul class="violations">
-      {#each warnings as w, i (i)}
-        <li>{w}</li>
-      {/each}
-    </ul>
-  </Banner>
-{/if}
-
-{#if data.recentEvents.length > 0}
-  <section class="card">
-    <h2>Recent fungicide events</h2>
-    <ul class="recent">
-      {#each data.recentEvents as e (e.id)}
-        <li>
-          <strong>{new Date(e.occurredAt).toLocaleString()}</strong> — block {e.blockId}
-          · {e.products.map((p) => p.displayName).join(', ')}
-          {#if e.preHarvestClearAt}
-            <span class="phi">· PHI clear {new Date(e.preHarvestClearAt).toLocaleString()}</span>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  </section>
-{/if}
+  {/snippet}
+</SprayDecisionPage>
 
 <style>
-  h1 {
-    margin: 0 0 0.5rem;
-  }
-  .lede {
-    color: #555;
-    margin: 0 0 1.5rem;
-  }
-  .card {
-    background: #fff;
-    border: 1px solid var(--color-divider);
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    margin: 0 0 1rem;
-  }
-  /* .card.warn / .err / .ok superseded by Banner primitive. */
-  .violations {
-    margin: 0.5rem 0 0;
-    padding-left: 1.25rem;
-  }
-  .rei-list {
-    margin: 0.4rem 0 0 1.25rem;
-    padding: 0;
-  }
+  /* Snippet-scoped styles for productSection / observation form controls
+     and the recent-events list. The shell can't reach into snippet
+     content (scoped to this component), so re-declare what's needed. */
   label {
     display: block;
     margin: 0.75rem 0 0.25rem;
@@ -303,27 +246,9 @@
     padding: 0.6rem;
     font-size: 1rem;
     min-height: 48px;
-    border: 1px solid #aaa;
-    border-radius: 6px;
-    background: #fff;
-  }
-  button {
-    min-height: 48px;
-    padding: 0 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    background: var(--color-sky);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  .actions {
-    text-align: right;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    background: var(--color-paper, #fff);
   }
   .product-grid {
     border: none;
@@ -364,7 +289,7 @@
     margin: 0;
   }
   .prod-meta {
-    color: #666;
+    color: var(--color-ink-muted);
     font-size: 0.85rem;
     margin-left: auto;
   }
@@ -372,23 +297,33 @@
     margin: 0.75rem 0 0;
     padding: 0.6rem;
     background: var(--pill-wheat-bg);
-    border-left: 4px solid #f1c40f;
+    border-left: 4px solid var(--color-wheat);
     border-radius: 4px;
   }
   .empty {
-    color: #777;
+    color: var(--color-ink-muted);
     font-style: italic;
   }
-  .recent {
+  .card {
+    background: var(--color-paper, #fff);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card, 8px);
+    padding: 1rem 1.25rem;
+    margin: 0 0 1rem;
+  }
+  .recent h2 {
+    margin: 0 0 0.5rem;
+  }
+  .recent-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  .recent li {
+  .recent-list li {
     padding: 0.5rem 0;
     border-bottom: 1px solid var(--color-divider-soft);
   }
-  .recent li:last-child {
+  .recent-list li:last-child {
     border-bottom: none;
   }
   .phi {

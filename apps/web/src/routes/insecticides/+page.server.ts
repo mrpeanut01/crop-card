@@ -1,50 +1,12 @@
+/**
+ * Phase 25b: `/insecticides` was folded into `/spray/insecticide` as part
+ * of the 13→7 nav collapse. Keep the old path as a 308 redirect so any
+ * bookmarked deep-links (block=, crop=, task=) survive the move.
+ */
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { listBlocks } from '$lib/db/blocks';
-import { getCrop } from '$lib/db/crops';
-import { listInsecticideEvents, activeReEntryRestrictions } from '$lib/db/insecticideEvents';
-import { getRegistry } from '$lib/server/registry';
 
-export const load: PageServerLoad = async ({ url }) => {
-  const cropId = url.searchParams.get('crop');
-  const crop = cropId ? getCrop(cropId) : undefined;
-  const registry = await getRegistry();
-  const insecticidePlugins = registry
-    .all()
-    .filter((r) => r.plugin.type === 'insecticide')
-    .map((r) => {
-      const p = r.plugin;
-      if (p.type !== 'insecticide') return null;
-      return {
-        pluginId: p.pluginId,
-        displayName: p.displayName,
-        targetPests: p.targetPests ?? [],
-        scoutingThresholds: p.scoutingThresholds ?? [],
-        applicationProtocol: p.applicationProtocol ?? [],
-        reEntryIntervalHours: p.reEntryIntervalHours,
-        preHarvestIntervalDays: p.preHarvestIntervalDays,
-        pollinatorRisk: p.pollinatorRisk ?? 'unknown',
-        epaRegistrationNumber: p.epaRegistrationNumber ?? null,
-        iracGroups: Array.from(
-          new Set(
-            (p.activeIngredients ?? []).map((ai) => ai.iracGroup).filter((g): g is string => !!g)
-          )
-        )
-      };
-    })
-    .filter((p): p is NonNullable<typeof p> => p !== null);
-
-  return {
-    insecticides: insecticidePlugins,
-    blocks: listBlocks().map((b) => ({
-      id: b.id,
-      name: b.name,
-      cropPluginIds: b.plantings.map((p) => p.cropPluginId)
-    })),
-    recentEvents: listInsecticideEvents({ limit: 20 }),
-    activeREI: activeReEntryRestrictions(),
-    preselectedBlockId: crop?.blockId ?? url.searchParams.get('block') ?? null,
-    preselectedCropId: crop?.id ?? null,
-    // Phase 21b follow-up — deep-link from the swim-lane pip popover.
-    taskId: url.searchParams.get('task')
-  };
+export const load: PageServerLoad = ({ url }) => {
+  const target = `/spray/insecticide${url.search}`;
+  redirect(308, target);
 };

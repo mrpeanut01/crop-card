@@ -1074,6 +1074,11 @@
   let splitCount = $state(2);
   let splitBusy = $state(false);
   let splitError = $state<string | null>(null);
+  // Modal-open focus on the parts input — replaces autofocus (a11y lint).
+  let splitInput = $state<HTMLInputElement | null>(null);
+  $effect(() => {
+    if (splitTargetCropId && splitInput) splitInput.focus();
+  });
   let deleteCropIds = $state<string[]>([]);
   let deleteBusy = $state(false);
 
@@ -4144,8 +4149,8 @@
                 max="12"
                 step="1"
                 bind:value={splitCount}
+                bind:this={splitInput}
                 disabled={splitBusy}
-                autofocus
               />
             </label>
             {#if splitError}<p class="bar-edit-error">{splitError}</p>{/if}

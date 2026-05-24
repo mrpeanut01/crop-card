@@ -491,7 +491,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 ## UC-32 — Insecticide scout-and-spray
 
 - **Persona:** P1, P2
-- **Status:** Implemented at [insecticides/+page.svelte](../apps/web/src/routes/insecticides/+page.svelte) (Phase 10). Distinct from the herbicide flow (UC-02 / UC-05) so REI / PHI logic stays first-class and herbicide cross-contam queries stay fast.
+- **Status:** Implemented at [spray/insecticide/+page.svelte](../apps/web/src/routes/spray/insecticide/+page.svelte) (Phase 10; relocated from `/insecticides` in Phase 25b nav collapse — 308 redirect kept). Distinct from the herbicide flow (UC-02 / UC-05) so REI / PHI logic stays first-class and herbicide cross-contam queries stay fast.
 - **Trigger:** Pest threshold reached during scouting; calendar event "insecticide window"; or ad-hoc.
 - **Preconditions:** ≥1 block with crop; ≥1 insecticide plugin loaded; owner or helper role.
 - **Primary path:**
@@ -819,7 +819,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 | UC-29 | Implemented | P1 | [crops/+page.svelte](../apps/web/src/routes/crops/+page.svelte) (Phase 12d) |
 | UC-30 | Implemented | P1, P2 | [equipment/+page.svelte](../apps/web/src/routes/equipment/+page.svelte) (Phase 8a) |
 | UC-31 | Implemented | P1 | [stock/+page.svelte](../apps/web/src/routes/stock/+page.svelte) (Phase 8b) |
-| UC-32 | Implemented | P1, P2 | [insecticides/+page.svelte](../apps/web/src/routes/insecticides/+page.svelte) (Phase 10) |
+| UC-32 | Implemented | P1, P2 | [spray/insecticide/+page.svelte](../apps/web/src/routes/spray/insecticide/+page.svelte) (Phase 10; relocated Phase 25b) |
 | UC-33 | Implemented | P1 | [fertility/+page.svelte](../apps/web/src/routes/fertility/+page.svelte) (Phase 10) |
 | UC-34 | Implemented | P1 | [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) |
 | UC-35 | Implemented | P1 | Per-entity deletes through each repo + `POST /api/admin/wipe` + Danger Zone UI in [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) (Phase 12e) |

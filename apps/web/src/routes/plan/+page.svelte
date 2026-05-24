@@ -4698,7 +4698,7 @@
      * already supplies a small breathing strip; the page H1 used to
      * occupy this space but is now sr-only. */
     margin: 0 0 1rem;
-    border-bottom: 2px solid #1f5e3a;
+    border-bottom: 2px solid var(--color-forest);
     overflow-x: auto;
   }
   /* Calendar view toggle docked at the right edge of the tab row when
@@ -4743,12 +4743,12 @@
     white-space: nowrap;
   }
   .plan-tabs a:hover {
-    color: #1f5e3a;
+    color: var(--color-forest);
     background: #f8fbf9;
   }
   .plan-tabs a.active {
-    color: #1f5e3a;
-    border-bottom-color: #1f5e3a;
+    color: var(--color-forest);
+    border-bottom-color: var(--color-forest);
   }
   .card {
     background: white;
@@ -4760,7 +4760,7 @@
   .card h2 {
     margin: 0 0 0.75rem;
     font-size: 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -4785,7 +4785,7 @@
   }
   details.advanced > summary {
     cursor: pointer;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
     font-size: 0.95rem;
     padding: 0.5rem 0;
@@ -4814,7 +4814,7 @@
   .row select {
     flex: 1;
     padding: 0.6rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     font-size: 1rem;
     min-height: 48px;
@@ -4837,13 +4837,13 @@
   .grid2 input,
   .grid2 select {
     padding: 0.6rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     min-height: 48px;
     font-size: 1rem;
   }
   .primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border: none;
     border-radius: 6px;
@@ -4858,8 +4858,8 @@
   }
   .ghost {
     background: white;
-    border: 1px solid #d0d7d0;
-    color: #1f5e3a;
+    border: 1px solid var(--color-divider);
+    color: var(--color-forest);
     padding: 0.4rem 0.6rem;
     border-radius: 4px;
     cursor: pointer;
@@ -4868,7 +4868,7 @@
   }
   .delete-btn {
     background: transparent;
-    border: 1px solid #d0d7d0;
+    border: 1px solid var(--color-divider);
     color: #b00020;
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
@@ -4886,7 +4886,7 @@
   }
   .success {
     background: #e7f1ea;
-    color: #1f5e3a;
+    color: var(--color-forest);
     padding: 0.6rem;
     border-radius: 4px;
     margin-top: 0.5rem;
@@ -4894,13 +4894,13 @@
 
   /* Wizard */
   .wizard {
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest);
     background: #f8fbf9;
   }
 
   /* Field cards */
   .field-card {
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest);
   }
   .field-header {
     display: flex;
@@ -4935,7 +4935,7 @@
   .inline-edit input,
   .inline-edit select {
     padding: 0.5rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     min-height: 44px;
   }
@@ -4952,7 +4952,7 @@
   /* Layout (port from /map) */
   textarea {
     padding: 0.55rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     font-size: 0.95rem;
     font-family: ui-monospace, Menlo, Monaco, monospace;
@@ -4978,7 +4978,7 @@
     padding: 0.25rem 0.6rem;
     min-height: 32px;
     background: #eaf4ee;
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest);
     border-radius: 0 6px 6px 0;
     margin-bottom: 0.1rem;
   }
@@ -4992,7 +4992,7 @@
     line-height: 1;
   }
   .field-name {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 0.95rem;
     line-height: 1.15;
   }
@@ -5080,7 +5080,7 @@
     flex-wrap: wrap;
     padding: 0.2rem 0.5rem;
     min-height: 28px;
-    border-top: 1.5px solid #ddeee1;
+    border-top: 1.5px solid var(--pill-forest-bg);
     border-left: 3px solid #b8d9c0;
     margin-left: 0.5rem;
     font-size: 0.85rem;
@@ -5113,7 +5113,7 @@
     align-items: flex-start;
     gap: 0.18rem;
     padding: 0.38rem 0.5rem 0.38rem 0.75rem;
-    border-top: 1.5px solid #ddeee1;
+    border-top: 1.5px solid var(--pill-forest-bg);
     border-left: 3px solid #b8d9c0;
     margin-left: 0.5rem;
   }
@@ -5295,7 +5295,7 @@
   }
 
   .crop-block {
-    border-top: 1.5px solid #ddeee1;
+    border-top: 1.5px solid var(--pill-forest-bg);
     border-left: 3px solid #b8d9c0;
     margin-left: 0.5rem;
   }
@@ -5369,7 +5369,7 @@
   .crops-seed-rail h3 {
     margin: 0 0 0.5rem;
     font-size: 0.85rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -5388,9 +5388,9 @@
     width: 100%;
     margin: 0.25rem 0 0.6rem;
     padding: 0.55rem 0.75rem;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
-    border: 1px solid #1f5e3a;
+    border: 1px solid var(--color-forest);
     border-radius: 6px;
     font-size: 0.85rem;
     font-weight: 600;
@@ -5426,7 +5426,7 @@
   }
   .seed-card {
     border: 1px solid #cbd5cb;
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest);
     border-radius: 4px;
     background: #f0f7f3;
     padding: 0.4rem 0.5rem;
@@ -5506,7 +5506,7 @@
     margin: 0;
   }
   .crop-item {
-    border-top: 1.5px solid #ddeee1;
+    border-top: 1.5px solid var(--pill-forest-bg);
   }
   .crop-item-row {
     display: flex;
@@ -5537,7 +5537,7 @@
     flex-shrink: 0;
   }
   .crop-name {
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: none;
     font-size: 0.88rem;
     font-weight: 600;
@@ -5634,8 +5634,8 @@
     opacity: 1;
   }
   .guide-tip.open {
-    color: #1f5e3a;
-    border-bottom-color: #1f5e3a;
+    color: var(--color-forest);
+    border-bottom-color: var(--color-forest);
     font-weight: 600;
   }
   .guide-dl {
@@ -5651,7 +5651,7 @@
   }
   .guide-dl dd {
     margin: 0;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
   }
 
@@ -5670,7 +5670,7 @@
     font-size: 1.1rem;
   }
   .crop-header h2 a {
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: none;
   }
   .crop-header small {
@@ -5686,13 +5686,13 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.4rem 0 0.4rem 0.75rem;
-    border-top: 1.5px solid #ddeee1;
+    border-top: 1.5px solid var(--pill-forest-bg);
     border-left: 3px solid #b8d9c0;
     margin-left: 0.5rem;
     flex-wrap: wrap;
   }
   .role-badge {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     padding: 0.1rem 0.5rem;
     border-radius: 3px;
@@ -5752,7 +5752,7 @@
     background: #e6ebef;
   }
   .cv-link.cv-active {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: #fff;
     cursor: default;
   }
@@ -5777,11 +5777,11 @@
     flex-wrap: wrap;
   }
   .month-nav a {
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: none;
     font-weight: 600;
     padding: 0.5rem 0.75rem;
-    border: 2px solid #1f5e3a;
+    border: 2px solid var(--color-forest);
     border-radius: 4px;
     min-height: 44px;
     display: inline-flex;
@@ -5789,7 +5789,7 @@
   }
   .month-nav strong {
     font-size: 1.1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .filter-chips {
     display: flex;
@@ -5804,7 +5804,7 @@
   }
   .chip {
     background: white;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     padding: 0.3rem 0.6rem;
     border-radius: 4px;
     cursor: pointer;
@@ -5813,21 +5813,21 @@
     font-size: 0.85rem;
   }
   .chip.active {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
-    background: #d0d7d0;
-    border: 1px solid #d0d7d0;
+    background: var(--color-divider);
+    border: 1px solid var(--color-divider);
     border-radius: 6px;
     overflow: hidden;
   }
   .day-label {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     padding: 0.4rem;
     text-align: center;
@@ -5891,7 +5891,7 @@
     flex-shrink: 0;
   }
   .planting .dot {
-    background: #1f5e3a;
+    background: var(--color-forest);
   }
   .emergence .dot {
     background: #4d8e36;
@@ -5937,7 +5937,7 @@
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    border-top: 6px solid #1f5e3a;
+    border-top: 6px solid var(--color-forest);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     position: relative;
   }
@@ -5962,12 +5962,12 @@
   }
   .advisor-modal h2 {
     margin: 0 0 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 1.3rem;
   }
   .suggestion h3 {
     margin: 0 0 0.5rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .benefit {
     color: #555;
@@ -5996,7 +5996,7 @@
   }
   .members .offset {
     font-family: monospace;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 700;
     background: white;
     padding: 0.1rem 0.5rem;
@@ -6011,21 +6011,21 @@
     flex: 1 1 auto;
     padding: 0.9rem;
     border-radius: 6px;
-    border: 2px solid #1f5e3a;
+    border: 2px solid var(--color-forest);
     background: white;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
     cursor: pointer;
     min-height: 56px;
   }
   .advisor-modal .actions .primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
   }
 
   /* Overview tab — Season Setup as stage 1 of the planning flow. */
   .season-card {
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest);
     background: linear-gradient(180deg, #f8fbf9 0%, #ffffff 100%);
   }
   .season-header {
@@ -6044,7 +6044,7 @@
   .season-year {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
     line-height: 1;
   }
   .season-title {
@@ -6052,7 +6052,7 @@
     color: #4a5a4a;
   }
   .stage-pill {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     font-size: 0.75rem;
     font-weight: 600;
@@ -6106,19 +6106,19 @@
     min-height: 36px;
     padding: 0.35rem 0.85rem;
     background: white;
-    color: #1f5e3a;
-    border: 1px solid #1f5e3a;
+    color: var(--color-forest);
+    border: 1px solid var(--color-forest);
     border-radius: 6px;
     font-weight: 600;
     font-size: 0.85rem;
     cursor: pointer;
   }
   .edit-season-btn:hover {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
   }
   .edit-season-btn:focus-visible {
-    outline: 2px solid #1f5e3a;
+    outline: 2px solid var(--color-forest);
     outline-offset: 2px;
   }
   .stage-cta-row {
@@ -6139,7 +6139,7 @@
     align-self: flex-start;
     min-height: 48px;
     padding: 0.6rem 1.25rem;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border: none;
     border-radius: 6px;
@@ -6154,13 +6154,13 @@
     background: #174a2c;
   }
   .next-stage-btn:focus-visible {
-    outline: 2px solid #1f5e3a;
+    outline: 2px solid var(--color-forest);
     outline-offset: 2px;
   }
   .cancel-edit-link {
     background: none;
     border: none;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 0.9rem;
     text-decoration: underline;
     cursor: pointer;
@@ -6189,7 +6189,7 @@
   .stat-num {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
     line-height: 1;
   }
   .stat-label {
@@ -6391,12 +6391,12 @@
     color: #fff;
   }
   .chip-mini-block.active {
-    background: #1f5e3a;
+    background: var(--color-forest);
     border-color: #14532d;
     color: #fff;
   }
   .sched-block {
-    border-top: 1.5px solid #ddeee1;
+    border-top: 1.5px solid var(--pill-forest-bg);
     border-left: 3px solid #b8d9c0;
     margin-left: 0.5rem;
     padding: 0.5rem 0 0.5rem 0.75rem;
@@ -6436,7 +6436,7 @@
 
   .sched-planting {
     padding: 0.3rem 0 0.3rem 0.75rem;
-    border-top: 1.5px solid #ddeee1;
+    border-top: 1.5px solid var(--pill-forest-bg);
   }
   .sched-planting-row {
     display: flex;
@@ -6445,7 +6445,7 @@
     flex-wrap: wrap;
   }
   .sched-crop-name {
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: none;
     font-weight: 600;
     font-size: 0.88rem;
@@ -6518,7 +6518,7 @@
   .wizard-modal .wizard-label select {
     width: 100%;
     padding: 0.6rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 4px;
     font-size: 1rem;
     min-height: 48px;
@@ -6537,7 +6537,7 @@
   }
   .wizard-meta dd {
     margin: 0;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
   }
 
@@ -6555,11 +6555,11 @@
     align-items: center;
     padding: 0.5rem 0.75rem;
     border-radius: 6px;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     cursor: pointer;
   }
   .mode-option.selected {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
     background: #f8fbf9;
   }
   .mode-option input[type='radio'] {
@@ -6734,7 +6734,7 @@
     gap: 0.5rem;
   }
   .pending-row {
-    border-left: 3px solid #1f5e3a;
+    border-left: 3px solid var(--color-forest);
     padding: 0.4rem 0.5rem;
     background: white;
     border-radius: 4px;
@@ -6785,7 +6785,7 @@
     padding: 0 1rem;
     border-radius: 6px;
     border: 0;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     font-weight: 600;
     cursor: pointer;
@@ -6873,7 +6873,7 @@
   .harvest-uses legend {
     padding: 0 0.4rem;
     font-weight: 600;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 0.95rem;
   }
   .hint-tight {
@@ -6906,8 +6906,8 @@
     margin: 0;
   }
   .harvest-use-pill:has(input:checked) {
-    border-color: #1f5e3a;
-    color: #1f5e3a;
+    border-color: var(--color-forest);
+    color: var(--color-forest);
     font-weight: 600;
   }
   .harvest-use-pill:hover {

@@ -1913,7 +1913,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-top: 6px solid #1f5e3a;
+    border-top: 6px solid var(--color-forest);
   }
   .aw-header {
     display: flex;
@@ -1925,7 +1925,7 @@
   .aw-header h2 {
     margin: 0;
     font-size: 1.15rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .aw-close {
     background: none;
@@ -1956,11 +1956,11 @@
     font-size: 0.95rem;
   }
   .aw-stepper li.active {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 700;
   }
   .aw-stepper li.done {
-    color: #1f5e3a;
+    color: var(--color-forest);
     opacity: 0.6;
   }
   .aw-body {
@@ -1979,7 +1979,7 @@
   }
   .aw-plan-state h3 {
     margin: 0;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .aw-plan-state-lede {
     margin: 0;
@@ -2010,7 +2010,7 @@
     min-height: 96px;
   }
   .aw-plan-state-btn:hover {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
     background: #f4f9f5;
   }
   .aw-plan-state-icon {
@@ -2020,13 +2020,13 @@
   .aw-plan-state-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .aw-plan-state-reset .aw-plan-state-title {
-    color: #b71c1c;
+    color: var(--color-rust);
   }
   .aw-plan-state-reset:hover {
-    border-color: #b71c1c;
+    border-color: var(--color-rust);
     background: #fdecea;
   }
   .aw-plan-state-sub {
@@ -2053,7 +2053,7 @@
   }
   .aw-confirm-card h4 {
     margin: 0 0 0.5rem;
-    color: #b71c1c;
+    color: var(--color-rust);
   }
   .aw-confirm-card p {
     margin: 0 0 1rem;
@@ -2067,7 +2067,7 @@
   .btn-danger {
     min-height: 48px;
     padding: 0 1.25rem;
-    background: #b71c1c;
+    background: var(--color-rust);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -2092,7 +2092,7 @@
   }
   .aw-table th {
     background: #f8fbf9;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 700;
     font-size: 0.9rem;
   }
@@ -2145,7 +2145,7 @@
   }
   .family-row td {
     background: #eef4ef;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 700;
     font-size: 0.85rem;
     text-transform: capitalize;
@@ -2161,8 +2161,8 @@
   }
   .family-action-btn {
     background: white;
-    color: #1f5e3a;
-    border: 1px solid #1f5e3a;
+    color: var(--color-forest);
+    border: 1px solid var(--color-forest);
     border-radius: 4px;
     padding: 0.12rem 0.55rem;
     font-size: 0.78rem;
@@ -2200,7 +2200,7 @@
   }
   .aw-info:hover,
   .aw-info:focus {
-    color: #1f5e3a;
+    color: var(--color-forest);
     outline: none;
   }
   .aw-blocks-header {
@@ -2236,10 +2236,10 @@
       background 0.1s;
   }
   .aw-blocklist li:hover {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .aw-blocklist li.checked {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
     background: #f3f9f4;
   }
   .aw-blocklist label {
@@ -2255,7 +2255,7 @@
     width: 18px;
     height: 18px;
     flex-shrink: 0;
-    accent-color: #1f5e3a;
+    accent-color: var(--color-forest);
   }
   .aw-block-info {
     display: flex;
@@ -2295,7 +2295,7 @@
   .aw-link {
     background: none;
     border: none;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: underline;
     cursor: pointer;
     font-size: inherit;
@@ -2303,10 +2303,10 @@
   }
   .aw-rationale {
     background: #f3f9f4;
-    border-left: 3px solid #1f5e3a;
+    border-left: 3px solid var(--color-forest);
     padding: 0.75rem 1rem;
     margin: 0 0 0.75rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 0.95rem;
   }
   .aw-chat {
@@ -2330,7 +2330,7 @@
   .aw-chat-header h3 {
     margin: 0;
     font-size: 0.95rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .aw-chat-log {
     display: flex;
@@ -2371,7 +2371,7 @@
     border-top-left-radius: 4px;
   }
   .chat-msg.chat-user .chat-bubble {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border-top-right-radius: 4px;
   }
@@ -2432,7 +2432,7 @@
     line-height: 1.4;
   }
   .aw-chat-input textarea:focus {
-    outline: 2px solid #1f5e3a;
+    outline: 2px solid var(--color-forest);
     outline-offset: 1px;
   }
   .chat-send {
@@ -2496,7 +2496,7 @@
     border: 1px solid #cbd5cb;
     border-radius: 8px;
     padding: 0.75rem 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .ai-progress-text {
     display: flex;
@@ -2518,7 +2518,7 @@
     width: 18px;
     height: 18px;
     border: 2px solid #cbd5cb;
-    border-top-color: #1f5e3a;
+    border-top-color: var(--color-forest);
     border-radius: 50%;
     animation: ai-spin 0.8s linear infinite;
     flex-shrink: 0;
@@ -2553,7 +2553,7 @@
     color: #6a1414;
   }
   .aw-loading {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 1rem;
   }
   .chip {
@@ -2565,7 +2565,7 @@
   }
   .chip-match {
     background: #d6efdc;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .chip-surplus {
     background: #fff1cc;
@@ -2604,9 +2604,9 @@
     border: 1px solid #cbd5cb;
   }
   .btn-primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .btn-primary:disabled {
     opacity: 0.5;

@@ -310,17 +310,14 @@
     padding: 1rem 1.25rem;
     margin: 0 0 1rem;
   }
-  .card.warn {
-    background: var(--pill-wheat-bg);
-    border-color: #f1c40f;
+  /* .card.warn / .err / .ok superseded by Banner primitive. */
+  .violations {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
   }
-  .card.err {
-    background: var(--pill-rust-bg);
-    border-color: var(--color-rust);
-  }
-  .card.ok {
-    background: var(--pill-forest-bg);
-    border-color: var(--color-forest);
+  .rei-list {
+    margin: 0.4rem 0 0 1.25rem;
+    padding: 0;
   }
   label {
     display: block;

@@ -258,10 +258,7 @@
     margin-bottom: 1rem;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
-  .card.warn {
-    background: var(--pill-wheat-bg);
-    border-left: 4px solid var(--color-wheat);
-  }
+  /* .card.warn was the bespoke active-REI section — now rendered as Banner. */
   .lede {
     color: #555;
   }
@@ -304,43 +301,23 @@
     font-size: 0.8rem;
     margin-top: 0.25rem;
   }
-  .primary {
-    background: var(--color-forest);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 0.9rem 1.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 56px;
-  }
-  .primary:disabled {
-    background: #999;
-    cursor: not-allowed;
-  }
-  .error {
-    color: var(--color-rust);
-    background: var(--pill-rust-bg);
-    padding: 0.75rem;
-    border-radius: 4px;
-  }
-  .error ul {
-    margin: 0.5rem 0 0;
-    padding-left: 1.25rem;
-  }
+  /* .primary, .primary:disabled, .error, .error ul, .success — all
+     superseded by Button + Banner primitives. .badge still used. */
   .badge {
     display: inline-block;
     background: var(--color-rust);
-    color: white;
+    color: var(--color-cream);
     font-size: 0.75rem;
     padding: 0.1rem 0.4rem;
     border-radius: 3px;
     margin-left: 0.25rem;
   }
-  .success {
-    color: var(--color-forest);
-    background: var(--pill-forest-bg);
-    padding: 0.75rem;
-    border-radius: 4px;
+  .violations {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+  }
+  .rei-list {
+    margin: 0.4rem 0 0 1.25rem;
+    padding: 0;
   }
 </style>

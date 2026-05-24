@@ -1095,34 +1095,15 @@
     border-radius: 4px;
     margin: 0.5rem 0;
   }
-  .stock-alerts {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  .stock-alert {
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    border-left: 4px solid var(--color-wheat);
-    background: var(--pill-wheat-bg);
-    color: var(--color-wheat);
-  }
-  .stock-alert.expiring {
-    background: #fff8ec;
-    border-left-color: var(--color-rust);
-    color: var(--color-rust);
-  }
-  .stock-alert ul {
+  /* .alert-list is the <ul> inside the Banner low-stock / expiring lists
+     (replaced .stock-alert / .stock-alert ul / .stock-alert code that
+     backed the old bespoke <section class="stock-alerts">). */
+  .alert-list {
     margin: 0.4rem 0 0 1.25rem;
     padding: 0;
   }
-  .stock-alert a {
-    color: inherit;
-    text-decoration: underline;
-  }
-  .stock-alert code {
-    background: white;
+  .alert-list code {
+    background: var(--color-paper);
     padding: 0.05rem 0.4rem;
     border-radius: 3px;
     font-size: 0.85rem;
@@ -1305,15 +1286,11 @@
     margin: 0;
     padding-left: 1.25rem;
   }
-  .bootstrap {
-    background: #f8fbf9;
-    border: 2px solid var(--color-forest);
-  }
-  .bootstrap h2 {
-    color: var(--color-forest);
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: 1.2rem;
+  /* .bootstrap section is now the Card primitive — its own wrapper
+     styles are gone. .bootstrap-title is the serif h2 inside Card. */
+  .bootstrap-title {
+    margin-top: 4px;
+    margin-bottom: 0.75rem;
   }
   .bootstrap-lede {
     color: #555;

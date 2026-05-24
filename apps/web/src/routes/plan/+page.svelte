@@ -4764,13 +4764,6 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .card h3 {
-    font-size: 0.85rem;
-    color: #555;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 1rem 0 0.5rem;
-  }
   .role-notice {
     border-left: 4px solid #b35900;
     background: #fff8ec;
@@ -4810,14 +4803,6 @@
   }
   .row.inline {
     margin-top: 0.5rem;
-  }
-  .row select {
-    flex: 1;
-    padding: 0.6rem;
-    border: 2px solid var(--color-divider);
-    border-radius: 4px;
-    font-size: 1rem;
-    min-height: 48px;
   }
   .grid2 {
     display: grid;
@@ -5663,33 +5648,10 @@
     flex-wrap: wrap;
     margin-bottom: 0.5rem;
   }
-  .crop-header h2 {
-    margin: 0;
-    text-transform: none;
-    letter-spacing: normal;
-    font-size: 1.1rem;
-  }
-  .crop-header h2 a {
-    color: var(--color-forest);
-    text-decoration: none;
-  }
-  .crop-header small {
-    color: #666;
-  }
   .bindings {
     list-style: none;
     padding: 0;
     margin: 0;
-  }
-  .bindings li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0 0.4rem 0.75rem;
-    border-top: 1.5px solid var(--pill-forest-bg);
-    border-left: 3px solid #b8d9c0;
-    margin-left: 0.5rem;
-    flex-wrap: wrap;
   }
   .role-badge {
     background: var(--color-forest);
@@ -5708,9 +5670,6 @@
     color: #888;
     font-style: italic;
     font-size: 0.85rem;
-  }
-  .bindings .delete-btn {
-    margin-left: auto;
   }
   .add-binding {
     margin-top: 0.75rem;
@@ -5762,10 +5721,6 @@
     gap: 0.75rem;
     margin-bottom: 0.75rem;
     flex-wrap: wrap;
-  }
-  .calendar-toolbar .filter-chips {
-    flex: 1;
-    min-width: 12rem;
   }
   .calendar-toolbar .month-nav {
     margin-left: auto;

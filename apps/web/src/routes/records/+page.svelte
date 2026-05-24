@@ -169,9 +169,8 @@
 {/if}
 
 <style>
-  .head h1 {
-    margin: 0;
-  }
+  /* .head h1 superseded — header is now <header class="page-header">
+     with Kicker + serif H1 inheriting global h1 styles from almanac-base. */
   .lede {
     color: #555;
     margin: 0.25rem 0 1rem;

@@ -1010,19 +1010,7 @@
     color: #555;
     margin: 0 0 1.5rem;
   }
-  .prefill-banner {
-    background: var(--pill-forest-bg);
-    color: var(--color-forest);
-    padding: 0.6rem 0.9rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    border-left: 4px solid var(--color-forest);
-  }
-  .prefill-banner a {
-    color: var(--color-forest);
-    text-decoration: underline;
-  }
+  /* .prefill-banner superseded by Banner primitive. */
   .empty-state {
     text-align: center;
     padding: 2rem;
@@ -1269,14 +1257,9 @@
     font-weight: 500;
     margin-left: 0.2rem;
   }
-  .sticky-cta {
-    position: sticky;
-    bottom: 0;
-    background: linear-gradient(180deg, transparent, #f5f7f4 30%);
-    padding: 1rem 0 0.5rem;
-    margin: 0 -0.25rem;
-    z-index: 50;
-  }
+  /* .sticky-cta was for a sticky bottom CTA bar that's no longer rendered
+     after the multi-block selection refactor — the "Apply" button lives
+     inline in the result card instead. */
   .next-actions {
     display: flex;
     gap: 0.5rem;
@@ -1322,9 +1305,7 @@
     background: #999;
     cursor: not-allowed;
   }
-  .error {
-    color: var(--color-rust);
-  }
+  /* .error superseded by Banner tone=rust urgent. */
   .result {
     margin-top: 1.5rem;
     padding: 1.25rem;
@@ -1381,16 +1362,10 @@
     color: var(--color-forest);
     font-family: monospace;
   }
-  /* Phase 21b follow-up — total/per-tank dilution layout. */
-  .dilution-summary {
-    margin: 0 0 0.5rem;
-    color: #0f172a;
-    font-size: 0.95rem;
-  }
-  .dilution-warn {
-    color: #b45309;
-    font-weight: 600;
-  }
+  /* .dilution-summary, .dilution-warn, .dilution td small.exceeds —
+     dropped in the Phase 21b multi-tank refactor; the per-tank rows
+     now carry their own warning markup. .dilution-warn-line retained
+     since it still backs the alongside-table rate-warning. */
   .dilution-warn-line {
     margin: 0 0 0.5rem;
     padding: 0.45rem 0.6rem;
@@ -1399,14 +1374,6 @@
     border-radius: 0.25rem;
     color: #78350f;
     font-size: 0.85rem;
-  }
-  .dilution td small.exceeds {
-    display: block;
-    color: #b45309;
-    font-family: inherit;
-    font-size: 0.78rem;
-    font-weight: 600;
-    margin-top: 0.1rem;
   }
   /* Phase 21b follow-up — Spray Card layout. */
   .spray-card-head {
@@ -1565,7 +1532,6 @@
       background: #f3f4f6;
     }
     .fill-table caption,
-    .dilution h3,
     .spray-card h3 {
       color: #000;
     }

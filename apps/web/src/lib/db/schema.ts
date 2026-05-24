@@ -32,13 +32,7 @@ function tenantScoped<T>(table: T): T & TenantScoped {
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
-  /** Legacy single-farm role. Multi-tenant promotes `helper_assignments.role_within_owner`
-   *  to the source of truth; this column survives one release for rollback safety
-   *  and is dropped in a follow-up migration. */
-  role: text('role', { enum: ['owner', 'helper', 'inspector', 'custom-operator'] })
-    .notNull()
-    .default('helper'),
-  /** Cross-tenant support / abuse role. Boolean (not part of the role enum)
+  /** Cross-tenant support / abuse role. Boolean (not part of any role enum)
    *  because roles describe in-tenant permissions; superadmin is *across*
    *  tenants. Default false. */
   isSuperadmin: integer('is_superadmin', { mode: 'boolean' }).notNull().default(false),

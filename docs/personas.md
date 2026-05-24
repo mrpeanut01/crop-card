@@ -46,7 +46,7 @@ The two roles enforced by [auth.ts](../apps/web/src/lib/server/auth.ts) — `own
 
 ## P3 — Mixed Crop & Hay Operator
 
-**Source:** HCD Guide §3.5. **Implementation status:** UC-13 / UC-14 hay flow shipped (Sprint E). UC-15 stage projection shipped in v1.3 (`growthStageTable` + Plan→Schedule stage badges). UC-16 small-grain harvest-moisture capture still gap. See UC-13..UC-16 and FR-19..FR-23 in [use-cases.md](./use-cases.md) and [usability-audit.md](./usability-audit.md).
+**Source:** HCD Guide §3.5. **Implementation status:** UC-13 / UC-14 hay flow shipped (Sprint E). UC-15 stage projection shipped in v1.3 (`growthStageTable` + Plan→Schedule stage badges). UC-16 small-grain harvest-moisture capture still gap. See UC-13..UC-16 and FR-19..FR-23 in [use-cases.md](./use-cases.md); outstanding gaps tracked in [feature-backlog.md](./feature-backlog.md).
 
 | Context-of-Use attribute | Detail |
 |---|---|
@@ -84,7 +84,7 @@ This persona is the silent driver behind FR-09's 48-hour lock and the PDF-export
 
 ## P5 — First-Run Sherry *(proposed)*
 
-**Source:** Implied. Same person as P1 on day one with an empty database. The current home screen `/` is an 11-tile grid with no guidance for an empty database — see [usability-audit.md](./usability-audit.md) finding F-L.
+**Source:** Implied. Same person as P1 on day one with an empty database. The current home screen `/` is an 11-tile grid with no guidance for an empty database — first-run guidance is being reworked under UC-26 sidebar nav + landing redesign (tracked in [feature-backlog.md](./feature-backlog.md)).
 
 | Context-of-Use attribute | Detail |
 |---|---|
@@ -132,4 +132,4 @@ Primary use case: **UC-43** (External agent orchestration via API token). See [d
 | P5 First-Run | `owner` (new) | UC-20 |
 | P6 Integrator | Bearer (inherits role of underlying user) | UC-43 |
 
-Cross-reference: every implemented use case names its primary persona in [use-cases.md](./use-cases.md), and every audit finding in [usability-audit.md](./usability-audit.md) names the persona affected.
+Cross-reference: every implemented use case names its primary persona in [use-cases.md](./use-cases.md); audit-derived gaps are tracked persona-tagged in [feature-backlog.md](./feature-backlog.md), with ongoing clickthrough findings under [clickthrough-reports/](./clickthrough-reports/).

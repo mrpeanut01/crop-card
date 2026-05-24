@@ -204,10 +204,10 @@ describe('cross-tenant isolation', () => {
     const userA = `bearer-test-user-a-${randomUUID().slice(0, 8)}`;
     const userB = `bearer-test-user-b-${randomUUID().slice(0, 8)}`;
     db.insert(users)
-      .values({ id: userA, email: `${userA}@test`, role: 'owner' })
+      .values({ id: userA, email: `${userA}@test` })
       .run();
     db.insert(users)
-      .values({ id: userB, email: `${userB}@test`, role: 'owner' })
+      .values({ id: userB, email: `${userB}@test` })
       .run();
     db.insert(helperAssignments)
       .values({ ownerId: OWNER_A, userId: userA, roleWithinOwner: 'owner', status: 'active' })

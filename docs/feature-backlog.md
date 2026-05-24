@@ -15,28 +15,16 @@ Priority conventions:
 - **P1** — documented gap with clear user impact; ship this season.
 - **P2** — polish, micro-improvement, or speculative; ship when convenient.
 
-Sprint state (post-2026-05-16 refinement):
+Sprint state (post-2026-05-23 issue-queue cleanup):
 
-- **Sprint E** (hay + small grain, FR-19..FR-23) — effectively closed. Last gap was B-01 (UC-16 small-grain harvest moisture); demoted to P2 since no small grain is being planted in 2026. Reopen Sprint E if grain enters the rotation.
+- **Sprint E** (hay + small grain, FR-19..FR-23) — closed. B-01 (UC-16 small-grain harvest moisture) issue closed without work; no small grain in 2026 rotation. Reopen Sprint E if grain enters the rotation.
 - **Sprint D'** (UC-22 inspector export polish) — closes when B-04 ships (now P0).
-- **Phase 21** (Season Setup + AI Inputs Plan) — in progress; sub-task A active; tracker at [phase-21-plan.md](./phase-21-plan.md).
+- **Phase 21** (Season Setup + AI Inputs Plan) — shipped (21a + 21b); see CLAUDE.md phase status.
+- **UI layout overhaul** (UC-26 sidebar nav + IA rework) — about to start; subsumed P0/P1/P2 items closed (records search, equipment picker, Plan bulk-entry, root redirect, placeholder inputs).
 
 ---
 
-## 1 — Audit findings (status drift in `use-cases.md`)
-
-These are not feature work; they are corrections to the spec doc itself. **Being addressed in the same refinement pass** that produced this file — the table below is the closeout checklist.
-
-| UC | Doc status | Code reality | Action |
-| --- | --- | --- | --- |
-| UC-20 | "Proposed" | Implemented — [`/onboarding`](../apps/web/src/routes/onboarding/+page.svelte) creates an `owners` row + Home Field on first sign-in (Phase 18f) | Flip table row to **Implemented**; remove "Proposed primary path" from body |
-| UC-21 | "Proposed" | Implemented — [`/settings/helpers`](../apps/web/src/routes/settings/helpers/+page.svelte) issues SHA-256-hashed invite tokens via `lib/server/invites.ts` (Phase 18e) | Flip to **Implemented**; cross-link to UC-17 |
-| UC-35 | "Implemented (API only)" | Implemented — wipe UI lives in [`/settings/+page.svelte`](../apps/web/src/routes/settings/+page.svelte) Danger Zone | Drop the "API only" qualifier |
-| `docs/usability-audit.md` | use-cases.md links to it from 5+ places | File retired per refinement decision | Replace cross-references with this backlog + `clickthrough-reports/` + `phase-21-plan.md` |
-
----
-
-## 2 — P0 backlog (ship next)
+## 1 — P0 backlog (ship next)
 
 ### B-24 · Phase 21 / Sub-task A — Season Setup form (UC-42) *(in progress)*
 
@@ -145,79 +133,10 @@ These are not feature work; they are corrections to the spec doc itself. **Being
 
 ---
 
-## 3 — P1 backlog (ship this season)
-
-### B-02 · UC-15 stage-gated task auto-firing
-
-- **Persona:** P1, P3.
-- **Why P1:** UC-15 is normative. Stage *projection* shipped in v1.3; the missing piece is auto-firing tasks (e.g., "Z30 — N topdress now") from `stage-window` engine events into the task table.
-- **Scope:**
-  1. Extend [`lib/tasks/`](../apps/web/src/lib/tasks/) materializer to subscribe to `stage-window` events from [`engine.ts`](../apps/web/src/lib/calendar/engine.ts).
-  2. Plugin schema add: optional `stageTasks[]` on `growthStageTable` rows (`stageId`, `taskKind`, `daysFromStageStart`).
-  3. Idempotent via `pluginTemplateKey` (mirrors UC-38 companion-check task pattern).
-- **Acceptance:** Z30 jointing fires a "N topdress" task once per planting; re-running the engine never duplicates it.
-- **Note:** Observed-stage capture stays deferred under B-08.
-- **Estimate:** 1 day. Issue #11.
-
-### B-03 · Email transport (replace stdout stub)
-
-- **Persona:** P1.
-- **Why P1 (demoted from P0):** Stdout stub at [`lib/server/email.ts`](../apps/web/src/lib/server/email.ts) is fine for current single-farm dev use. Re-promote to P0 when invites start being mailed to external helpers (multi-tenant launch).
-- **Scope:** Pluggable adapter (recommend Resend); wire `EMAIL_PROVIDER_KEY` through Bicep + GitHub Actions; "test send" button in `/settings`; keep stdout fallback flagged in UI.
-- **Acceptance:** Invite email reaches a real inbox within ~30 s.
-- **Estimate:** 0.5 day. Issue #12.
-
-### B-05 · UC-24 search records (brand / chemistry / date)
-
-- **Persona:** P1.
-- **Why P1:** With 2-year retention live, brand search ("when did I last spray Roundup") is the dominant query. UC-19 filters cover only sprayer + block today.
-- **Scope:** Filter row above the records table in [`/records/+page.svelte`](../apps/web/src/routes/records/+page.svelte): text-input (brand / chemistry-class fuzzy), date-range. Client-side filter against `data.records`. Persist filter state in the URL query.
-- **Acceptance:** Typing "Roundup" filters in <1 s; date-range narrows further; URL reflects state.
-- **Estimate:** ~2 hours. Issue #14.
-
-### B-08 · UC-15 observation capture (`crop_observations` table)
-
-- **Persona:** P1, P3.
-- **Why P1:** Completes UC-15's "observed-stage capture" half. Foundation for inspection-card UX. Depends conceptually on B-02.
-- **Scope:**
-  1. New table `crop_observations` with `cropId`, `observedAt`, `stageCode`, `stageBodyKind`, `notes`, `photoUrl?`.
-  2. Tenant-scoped via `tenantWhere` / `withTenant` (Phase 18 invariant).
-  3. Surface on Plan→Schedule swim-lane bar hover tooltip; "Mark stage" inline action.
-- **Acceptance:** Operator records "Z65 anthesis on 2026-05-14"; tooltip shows observed-vs-projected delta.
-- **Estimate:** 1 day. Issue #17.
-
-### B-19 · `/equipment/new` template picker UI
-
-- **Persona:** P5 First-Run.
-- **Why P1:** 30 seed templates in [`equipmentTemplates.ts`](../apps/web/src/lib/server/equipmentTemplates.ts) are inert without UI. First-Run Sherry hand-types every equipment row today.
-- **Scope:** New `GET /equipment/new` route — category-grouped picker; POST instantiates via existing `createEquipment()`; persist `spec` JSON; redirect to detail. ≥48 dp tap targets.
-- **Acceptance:** Sherry registers a 12-ft Lemken plough from a template in <30 s.
-- **Estimate:** 0.5 day. Issue #19.
-
-### B-07 · UC-26 sidebar navigation + footer
-
-- **Persona:** P1, P2, P5.
-- **Why P1:** Nav exceeds the 7-item bottom-tab limit; First-Run Sherry cannot orient. **Schedule after Phase 21 closes** — touching `+layout.svelte` while Phase 21 wizard work is mid-flight risks merge conflicts.
-- **Scope:** As specified in UC-26 §"Implementation locus" — sidebar with collapsible sections (`Plan / Today / Operations / Field & Crop / Admin`), header identity strip, footer with `PUBLIC_APP_VERSION`.
-- **Acceptance:** UC-26 success-criteria checklist (5 items).
-- **Estimate:** 1.5 days (focus trap + a11y review + dev-tools env-var plumbing). Issue #16.
-
----
-
-## 4 — P2 backlog (polish)
+## 2 — P2 backlog (polish)
 
 | ID | Title | UC | Estimate | Notes |
 | --- | --- | --- | --- | --- |
-| B-01 | UC-16 small-grain harvest-moisture capture | UC-16 | 1.5d | **Demoted from P0** — no small grain planted 2026; re-promote if grain enters rotation. Issue #10 |
-| B-06 | UC-23 device-loss mitigation (force-sync button + boundary doc) | UC-23 | 0.5d | Workaround for B-12; closing B-12 closes B-06. Issue #15 |
-| B-10 | Bulk multi-field entry on Plan Overview | UC-27 | 2h | Useful for P5 first-time setup. Issue #22 |
-| B-11 | Auth.js magic-link upgrade (replace HMAC cookie) | UC-17 | 1d | Bump to P1 alongside B-03 when multi-tenant launch nears. Issue #23 |
-| B-12 | Server-side draft-spray endpoint (durable offline) | UC-23 | 1.5d | Durable solution; closes B-06 on merge. Issue #24 |
-| B-13 | Push notifications (NFR-06) | — | 1d | Low value for single small-plot farm. Issue #25 |
-| B-14 | Orchard-specific seasonal calendar (dormant spray, bloom fungicide) | UC-18 | 1d | Only valuable if orchards added to operation. Issue #26 |
-| B-15 | Workbox per-tenant cache keys | — | 0.5d | Pure UX polish on owner-switching. Issue #27 |
-| B-16 | Sync-queue conflict resolution beyond last-write-wins | UC-12 | 1.5d | Single-farm scope per CLAUDE.md — defer. Issue #28 |
-| B-17 | Orchard / vine-fruit growth-stage templates | UC-40 | 0.5d | Pair with B-14. Issue #29 |
 | B-30 | Top-nav active-page tab styling (display-only) | UC-26 sibling | 1h | Visual-only: render the active route's nav item as a graphical "tab" wrapped around the button (rounded top corners, page-background fill, lifted shadow). No routing change. Current active style is a 3-px `border-top` accent at [`+layout.svelte:459`](../apps/web/src/routes/+layout.svelte#L459). Sits underneath UC-26 sidebar redesign (B-07) but valuable until that ships. Issue #47. |
 
 ### B-31 · Signed plugins + community marketplace
@@ -232,29 +151,6 @@ These are not feature work; they are corrections to the spec doc itself. **Being
   - Per-owner installed state — `plugin_overrides` table (already present in Phase 18) carries the per-tenant "installed" flag; retire/uninstall stop being global.
 - **Estimate:** 3-5 days; not blocking any persona's core journey today.
 - **Depends on:** Phase 22 versioning + diff infra (PR1) — the marketplace install flow is just a remote `POST /api/plugins/upload` with a signed payload.
-
----
-
-## 5 — Open decisions (blocked until resolved)
-
-### B-20 · Class-specific decon protocols (kernel design)
-
-- **Status:** Open decision deferred per 2026-05-16 refinement. No work scheduled.
-- **Question:** Bake per-class protocols (paraquat / glufosinate / copper) into the decon kernel + wizard, or document only and let users follow product-label SOPs?
-- **If baked in:** ~1d implementation after design decision — `deconProtocol` discriminated union on `cropFamilyLethality.ts`; extend [`spray/decon/+page.svelte`](../apps/web/src/routes/spray/decon/+page.svelte) to render alternate step lists; bump `RULES_VERSION`.
-- **Re-surface for decision when:** a relevant chemistry (paraquat / glufosinate / copper) enters the spray library and the operator hits a decon-procedure gap. Issue #20.
-
----
-
-## 6 — Tech debt (non-UC, from CLAUDE.md "open follow-ups")
-
-| ID | Title | Notes |
-| --- | --- | --- |
-| T-01 | Wire `eslint/no-raw-tenant-table.cjs` as a custom ESLint rule | Phase 18b-LINT; needs `eslint-plugin-rulesdir` or workspace package promotion. Issue #33 |
-| T-02 | Drop legacy `users.role` column | Once `helper_assignments.role_within_owner` is the only writer; new migration. Issue #34 |
-| T-04 | Replace remaining placeholder text inputs (audit F-F) | Scout's tallest-weed input; harvest's quantity/lot. Issue #36 |
-| T-07 | Promote `/` to redirect to `/today` (audit F-E) | Today is the workflow hub but the HTTP root still renders the tile grid. Issue #39 |
-| T-08 | Audit: UC status drift in `use-cases.md` | Partially addressed in §1 above (UC-20 / UC-21 / UC-35 / usability-audit.md cross-refs being fixed in the refinement PR). Re-scan after Phase 21 closes. Issue #40 |
 
 ---
 

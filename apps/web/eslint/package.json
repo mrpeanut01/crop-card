@@ -1,0 +1,7 @@
+{
+  "name": "@cropcard/web-eslint-rules",
+  "private": true,
+  "version": "0.0.0",
+  "type": "commonjs",
+  "main": "no-raw-tenant-table.js"
+}

@@ -69,11 +69,14 @@ module.exports = {
     // Same Phase 22 transition rationale — prefer-const fires on a few
     // in-progress sites in the swimlane / scan code where the const-ness
     // hasn't been audited yet. Warn-only until those modules stabilize.
-    'prefer-const': 'warn'
-    // TODO(phase-18b-2): wire eslint/no-raw-tenant-table.cjs as a custom rule
-    // to flag raw Drizzle queries against tenant-scoped tables. The rule
-    // body is already written; wiring needs eslint-plugin-rulesdir or
-    // promoting `./eslint` to a workspace package.
+    'prefer-const': 'warn',
+    // Phase 18b custom rule. Loaded via `--rulesdir ./eslint` in the lint
+    // script; flags raw Drizzle reads/writes against tenant-scoped tables
+    // that bypass tenantWhere/withTenant/tenantValues. Warn-level for now
+    // so existing intentional unscoped query sites don't break CI before
+    // they're audited and annotated with `unscopedQueryNote('reason')`;
+    // promote to 'error' once the sweep is done.
+    'no-raw-tenant-table': 'warn'
   },
   ignorePatterns: [
     'build/',

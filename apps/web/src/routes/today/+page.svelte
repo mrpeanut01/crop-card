@@ -1,6 +1,11 @@
 <script lang="ts">
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
+  import Card from '$lib/components/ui/Card.svelte';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import Pill from '$lib/components/ui/Pill.svelte';
+  import Banner from '$lib/components/ui/Banner.svelte';
+  import Button from '$lib/components/ui/Button.svelte';
 
   let { data } = $props();
 
@@ -236,8 +241,8 @@
 </script>
 
 <header class="today">
-  <h1>Today</h1>
-  <p class="date">{data.today}</p>
+  <Kicker>{data.today}</Kicker>
+  <h1 class="serif">Today</h1>
 </header>
 
 <div class="tab-row">
@@ -275,7 +280,7 @@
 </div>
 
 {#if actionError}
-  <p class="error" role="alert">{actionError}</p>
+  <Banner tone="rust" urgent>{actionError}</Banner>
 {/if}
 
 {#if data.view === 'calendar'}
@@ -496,7 +501,7 @@
           — block {c.blockId.slice(0, 8)} — {c.plantingDate
             ? `planted ${fmtDate(c.plantingDate)}`
             : 'planned'}
-          <span class="status status-{c.status}">{c.status}</span>
+          <Pill tone={c.status === 'active' ? 'forest' : 'neutral'}>{c.status}</Pill>
         </li>
       {/each}
     </ul>
@@ -504,8 +509,9 @@
 </section>
 
 {#if !data.bootstrapDone}
-  <section class="card bootstrap" aria-labelledby="bootstrap-title">
-    <h2 id="bootstrap-title">Get started — UC-20</h2>
+  <Card loose>
+    <Kicker>UC-20 · One-time setup</Kicker>
+    <h2 class="serif bootstrap-title">Get started</h2>
     <p class="bootstrap-lede">
       A few one-time setup steps. CropCard plans, calibrates, and records around blocks + sprayers —
       once these three are in place, the calendar drives the rest.
@@ -527,7 +533,7 @@
             {/if}
           </small>
           {#if !(data.bootstrap.hasBlock && data.bootstrap.hasPlanting)}
-            <a class="cta" href="/plan">Open Plan →</a>
+            <a href="/plan" class="bootstrap-cta"><Button variant="primary" size="sm">Open Plan →</Button></a>
           {/if}
         </div>
       </li>
@@ -545,7 +551,7 @@
             {/if}
           </small>
           {#if !data.bootstrap.hasSprayer}
-            <a class="cta" href="/equipment">Open Equipment →</a>
+            <a href="/equipment" class="bootstrap-cta"><Button variant="primary" size="sm">Open Equipment →</Button></a>
           {/if}
         </div>
       </li>
@@ -563,52 +569,40 @@
             {/if}
           </small>
           {#if data.bootstrap.hasSprayer && !data.bootstrap.hasCalibration}
-            <a class="cta" href="/calibrate">Open Calibrate →</a>
+            <a href="/calibrate" class="bootstrap-cta"><Button variant="primary" size="sm">Open Calibrate →</Button></a>
           {/if}
         </div>
       </li>
     </ol>
-  </section>
+  </Card>
 {/if}
 
-{#if data.lowStock.length > 0 || data.expiringStock.length > 0}
-  <section class="stock-alerts" role="status" aria-live="polite">
-    {#if data.lowStock.length > 0}
-      <div class="stock-alert low">
-        <strong
-          >⚠ {data.lowStock.length} SKU{data.lowStock.length === 1 ? '' : 's'} low on stock:</strong
-        >
-        <ul>
-          {#each data.lowStock as i (i.id)}
-            <li>
-              <a href="/stock/{i.id}">{i.displayName}</a>
-              — {i.onHand}
-              {i.defaultUnit} on hand (reorder at {i.reorderThreshold}
-              {i.defaultUnit})
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-    {#if data.expiringStock.length > 0}
-      <div class="stock-alert expiring">
-        <strong
-          >⏳ {data.expiringStock.length} lot{data.expiringStock.length === 1 ? '' : 's'} expiring within
-          30 days:</strong
-        >
-        <ul>
-          {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
-            <li>
-              <a href="/stock/{e.itemId}">{e.itemName}</a>
-              {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}
-              — {e.balance}
-              {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-  </section>
+{#if data.lowStock.length > 0}
+  <Banner tone="wheat">
+    <strong>{data.lowStock.length} SKU{data.lowStock.length === 1 ? '' : 's'} low on stock:</strong>
+    <ul class="alert-list">
+      {#each data.lowStock as i (i.id)}
+        <li>
+          <a href="/stock/{i.id}">{i.displayName}</a>
+          — {i.onHand} {i.defaultUnit} on hand (reorder at {i.reorderThreshold} {i.defaultUnit})
+        </li>
+      {/each}
+    </ul>
+  </Banner>
+{/if}
+{#if data.expiringStock.length > 0}
+  <Banner tone="wheat">
+    <strong>{data.expiringStock.length} lot{data.expiringStock.length === 1 ? '' : 's'} expiring within 30 days:</strong>
+    <ul class="alert-list">
+      {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
+        <li>
+          <a href="/stock/{e.itemId}">{e.itemName}</a>
+          {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}
+          — {e.balance} {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left
+        </li>
+      {/each}
+    </ul>
+  </Banner>
 {/if}
 
 {#if data.eventsToday.length > 0}
@@ -718,7 +712,7 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     margin: 0 0 1rem;
-    border-bottom: 2px solid #d0d7d0;
+    border-bottom: 2px solid var(--color-divider);
   }
   .tabs {
     display: flex;
@@ -738,9 +732,9 @@
     align-items: center;
   }
   .tab.active {
-    color: #1f5e3a;
-    border-bottom-color: #1f5e3a;
-    background: #f5f7f4;
+    color: var(--color-forest);
+    border-bottom-color: var(--color-forest);
+    background: var(--color-cream);
   }
   .view-toggle {
     display: flex;
@@ -751,7 +745,7 @@
     padding: 0.4rem 0.75rem;
     color: #555;
     text-decoration: none;
-    border: 1px solid #d0d7d0;
+    border: 1px solid var(--color-divider);
     border-radius: 4px;
     font-size: 0.85rem;
     font-weight: 600;
@@ -761,9 +755,9 @@
     align-items: center;
   }
   .view.active {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .calendar-panel {
     background: white;
@@ -781,18 +775,18 @@
     display: flex;
     gap: 0.6rem;
     padding: 0.6rem;
-    border-left: 3px solid #d0d7d0;
+    border-left: 3px solid var(--color-divider);
     margin-bottom: 0.3rem;
-    background: #f5f7f4;
+    background: var(--color-cream);
     border-radius: 0 4px 4px 0;
     align-items: baseline;
     flex-wrap: wrap;
   }
   .day-strip li.kind-primary {
-    border-left-color: #1f5e3a;
+    border-left-color: var(--color-forest);
   }
   .day-strip li.kind-pre-task {
-    border-left-color: #b35900;
+    border-left-color: var(--color-wheat);
   }
   .day-strip li.kind-post-task {
     border-left-color: #4a6ea3;
@@ -807,7 +801,7 @@
     border-radius: 3px;
     font-size: 0.7rem;
     text-transform: uppercase;
-    border: 1px solid #d0d7d0;
+    border: 1px solid var(--color-divider);
   }
   .week-grid {
     display: grid;
@@ -815,16 +809,16 @@
     gap: 0.4rem;
   }
   .day-cell {
-    border: 1px solid #d0d7d0;
+    border: 1px solid var(--color-divider);
     border-radius: 6px;
     min-height: 110px;
     padding: 0.4rem;
-    background: #f5f7f4;
+    background: var(--color-cream);
   }
   .day-cell header {
     font-size: 0.75rem;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
     margin-bottom: 0.3rem;
     text-transform: uppercase;
   }
@@ -834,13 +828,13 @@
     padding: 0.2rem 0.35rem;
     margin-bottom: 0.2rem;
     font-size: 0.78rem;
-    border-left: 3px solid #d0d7d0;
+    border-left: 3px solid var(--color-divider);
   }
   .cell-item.kind-primary {
-    border-left-color: #1f5e3a;
+    border-left-color: var(--color-forest);
   }
   .cell-item.kind-pre-task {
-    border-left-color: #b35900;
+    border-left-color: var(--color-wheat);
   }
   .cell-item.kind-post-task {
     border-left-color: #4a6ea3;
@@ -855,7 +849,7 @@
   }
   .month-cell {
     aspect-ratio: 1;
-    background: #f5f7f4;
+    background: var(--color-cream);
     border-radius: 4px;
     display: flex;
     flex-direction: column;
@@ -865,14 +859,14 @@
   }
   .month-cell.has-items {
     background: #e7f1ea;
-    border: 1px solid #1f5e3a;
+    border: 1px solid var(--color-forest);
   }
   .month-day {
     color: #888;
     font-weight: 600;
   }
   .month-cell .dot {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border-radius: 999px;
     text-align: center;
@@ -910,7 +904,7 @@
   .gantt-label {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #1f5e3a;
+    color: var(--color-forest);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -918,7 +912,7 @@
   .gantt-track {
     position: relative;
     height: 1.6rem;
-    background: #f5f7f4;
+    background: var(--color-cream);
     border-radius: 4px;
   }
   .gantt-span {
@@ -948,7 +942,7 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
   .primary-task {
-    border: 1px solid #d0d7d0;
+    border: 1px solid var(--color-divider);
     border-radius: 6px;
     padding: 0.75rem;
     margin-bottom: 0.75rem;
@@ -987,7 +981,7 @@
   }
   details summary {
     cursor: pointer;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
     margin: 0.4rem 0;
   }
@@ -1039,11 +1033,11 @@
   }
   .status-active {
     background: #e7f1ea;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .status-harvested {
     background: #fff8e1;
-    color: #b35900;
+    color: var(--color-wheat);
   }
   .row {
     display: flex;
@@ -1060,7 +1054,7 @@
     font-weight: 600;
   }
   .primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     padding: 0.5rem 0.9rem;
     /* T-06 (audit F-H): 44px violated the CLAUDE.md field-UI invariant
@@ -1070,14 +1064,14 @@
   }
   .secondary {
     background: #f0f3f0;
-    color: #1f5e3a;
+    color: var(--color-forest);
     padding: 0.5rem 0.9rem;
     /* T-06 (audit F-H): see .primary above. */
     min-height: 48px;
-    border: 1px solid #1f5e3a;
+    border: 1px solid var(--color-forest);
   }
   .mini {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     font-size: 0.8rem;
     padding: 0.25rem 0.6rem;
@@ -1096,7 +1090,7 @@
   }
   .error {
     background: #fce4e4;
-    color: #b00020;
+    color: var(--color-rust);
     padding: 0.6rem;
     border-radius: 4px;
     margin: 0.5rem 0;
@@ -1110,14 +1104,14 @@
   .stock-alert {
     padding: 0.75rem 1rem;
     border-radius: 6px;
-    border-left: 4px solid #b35900;
-    background: #fff3cd;
-    color: #b35900;
+    border-left: 4px solid var(--color-wheat);
+    background: var(--pill-wheat-bg);
+    color: var(--color-wheat);
   }
   .stock-alert.expiring {
     background: #fff8ec;
-    border-left-color: #b00020;
-    color: #b00020;
+    border-left-color: var(--color-rust);
+    color: var(--color-rust);
   }
   .stock-alert ul {
     margin: 0.4rem 0 0 1.25rem;
@@ -1148,7 +1142,7 @@
   .card h2 {
     margin: 0 0 0.75rem;
     font-size: 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -1161,7 +1155,7 @@
   }
   .primary {
     display: inline-block;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     padding: 0.9rem 1.5rem;
     border-radius: 6px;
@@ -1180,7 +1174,7 @@
   .today-actions li,
   .upcoming li {
     padding: 0.6rem 0.75rem;
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest);
     background: #f8fbf9;
     margin: 0.4rem 0;
     border-radius: 0 4px 4px 0;
@@ -1191,7 +1185,7 @@
     font-family: monospace;
   }
   .event.spray-window {
-    border-left-color: #b35900;
+    border-left-color: var(--color-wheat);
     background: #fff8ec;
   }
   .event.companion-trigger {
@@ -1212,7 +1206,7 @@
     display: inline-flex;
     align-items: center;
     margin-top: 0.5rem;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     text-decoration: none;
     padding: 0.9rem 1.25rem;
@@ -1224,12 +1218,12 @@
   }
   .cta-small {
     margin-left: auto;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: none;
     font-weight: 600;
     font-size: 0.85rem;
     padding: 0.3rem 0.6rem;
-    border: 1px solid #1f5e3a;
+    border: 1px solid var(--color-forest);
     border-radius: 4px;
   }
   .upcoming li {
@@ -1265,8 +1259,8 @@
     font-size: 0.85rem;
   }
   .sprayers .warn {
-    background: #fff3cd;
-    color: #b35900;
+    background: var(--pill-wheat-bg);
+    color: var(--color-wheat);
     padding: 0.15rem 0.5rem;
     border-radius: 3px;
     font-size: 0.85rem;
@@ -1274,7 +1268,7 @@
   }
   .sprayers .ok {
     background: #e7f1ea;
-    color: #1f5e3a;
+    color: var(--color-forest);
     padding: 0.15rem 0.5rem;
     border-radius: 3px;
     font-size: 0.85rem;
@@ -1286,7 +1280,7 @@
   }
   .sprayers .link {
     margin-left: auto;
-    color: #b00020;
+    color: var(--color-rust);
     text-decoration: none;
     font-weight: 600;
   }
@@ -1313,10 +1307,10 @@
   }
   .bootstrap {
     background: #f8fbf9;
-    border: 2px solid #1f5e3a;
+    border: 2px solid var(--color-forest);
   }
   .bootstrap h2 {
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-transform: none;
     letter-spacing: 0;
     font-size: 1.2rem;
@@ -1340,7 +1334,7 @@
     padding: 0.75rem;
     border-radius: 6px;
     background: white;
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest);
   }
   .bootstrap-steps li.done {
     opacity: 0.65;
@@ -1350,7 +1344,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     display: flex;
     align-items: center;
@@ -1374,7 +1368,7 @@
     align-items: center;
     margin-top: 0.4rem;
     padding: 0.7rem 1rem;
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     text-decoration: none;
     border-radius: 4px;

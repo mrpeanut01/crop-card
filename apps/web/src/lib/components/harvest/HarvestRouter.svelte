@@ -4,6 +4,8 @@
   import SmallGrainZadoks from './renderers/SmallGrainZadoks.svelte';
   import ContinuousHarvestFruit from './renderers/ContinuousHarvestFruit.svelte';
   import ForageCuttingCycle from './renderers/ForageCuttingCycle.svelte';
+  import RowGrainPollinated from './renderers/RowGrainPollinated.svelte';
+  import CutAndComeAgainLeafy from './renderers/CutAndComeAgainLeafy.svelte';
 
   /**
    * Phase 25c (#88) — HarvestRouter.
@@ -89,6 +91,38 @@
   />
 {:else if props.harvestStyle === 'forage-cutting-cycle'}
   <ForageCuttingCycle
+    plantingId={props.plantingId}
+    blockId={props.blockId}
+    blockName={props.blockName}
+    cropPluginId={props.cropPluginId}
+    varietyDisplayName={props.varietyDisplayName}
+    cropFamily={props.cropFamily}
+    plantingDate={props.plantingDate}
+    windowStartMs={props.windowStartMs}
+    windowEndMs={props.windowEndMs}
+    harvestIndicators={props.harvestIndicators}
+    onCommit={props.onCommit}
+    error={props.error}
+    onCancel={props.onCancel}
+  />
+{:else if props.harvestStyle === 'row-grain-pollinated'}
+  <RowGrainPollinated
+    plantingId={props.plantingId}
+    blockId={props.blockId}
+    blockName={props.blockName}
+    cropPluginId={props.cropPluginId}
+    varietyDisplayName={props.varietyDisplayName}
+    cropFamily={props.cropFamily}
+    plantingDate={props.plantingDate}
+    windowStartMs={props.windowStartMs}
+    windowEndMs={props.windowEndMs}
+    harvestIndicators={props.harvestIndicators}
+    onCommit={props.onCommit}
+    error={props.error}
+    onCancel={props.onCancel}
+  />
+{:else if props.harvestStyle === 'cut-and-come-again'}
+  <CutAndComeAgainLeafy
     plantingId={props.plantingId}
     blockId={props.blockId}
     blockName={props.blockName}

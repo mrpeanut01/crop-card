@@ -38,26 +38,28 @@ describe('Phase 25c.0 — harvestStyle', () => {
     expect(cropPluginSchema.safeParse(v10).success).toBe(false);
   });
 
-  it('accepts a minimal crop plugin when harvestStyle is declared', () => {
+  it('accepts a minimal crop plugin when harvestStyle + bloomWindow are declared', () => {
     const v10 = {
       pluginId: 'corn-bloody-butcher',
       type: 'crop' as const,
       displayName: 'Bloody Butcher Dent Corn',
       version: '1.0.0',
       cropFamily: 'corn' as const,
-      harvestStyle: 'row-grain-pollinated' as const
+      harvestStyle: 'row-grain-pollinated' as const,
+      bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
     };
     expect(cropPluginSchema.safeParse(v10).success).toBe(true);
   });
 
-  it('attaches to cropPluginSchema with harvestStyle set', () => {
+  it('attaches to cropPluginSchema with harvestStyle + bloomWindow set', () => {
     const tagged = {
       pluginId: 'apple-fuji',
       type: 'crop' as const,
       displayName: 'Apple Fuji',
       version: '1.0.0',
       cropFamily: 'orchard' as const,
-      harvestStyle: 'tree-fruit-multi-pick' as const
+      harvestStyle: 'tree-fruit-multi-pick' as const,
+      bloomWindow: { monthsOfYear: [4, 5], beeAttractive: true }
     };
     const parsed = cropPluginSchema.safeParse(tagged);
     expect(parsed.success).toBe(true);
@@ -126,8 +128,8 @@ describe('Phase 25c.0 — bloomWindow', () => {
   });
 });
 
-describe('Phase 25c.0 — back-compat sanity (post-#99 promotion)', () => {
-  it('a typical existing crop plugin validates when harvestStyle is declared', () => {
+describe('Phase 25c.0 — back-compat sanity (post-#99 promotion + bloomWindow required)', () => {
+  it('a typical existing crop plugin validates when both 25c.0 discriminators are declared', () => {
     const existing = {
       pluginId: 'acorn-squash-table-queen',
       type: 'crop' as const,
@@ -135,6 +137,7 @@ describe('Phase 25c.0 — back-compat sanity (post-#99 promotion)', () => {
       version: '1.0.0',
       cropFamily: 'cucurbit' as const,
       harvestStyle: 'cure-then-store' as const,
+      bloomWindow: { continuous: true, beeAttractive: true },
       daysToMaturity: { min: 80, max: 90 },
       defaultRowSpacingInches: 60,
       harvestIndicators: ['Dark green rind with tiny orange spot'],
@@ -151,8 +154,22 @@ describe('Phase 25c.0 — back-compat sanity (post-#99 promotion)', () => {
       displayName: 'Acorn Squash — Table Queen',
       version: '1.0.0',
       cropFamily: 'cucurbit' as const,
+      bloomWindow: { continuous: true, beeAttractive: true },
       daysToMaturity: { min: 80, max: 90 }
     };
     expect(cropPluginSchema.safeParse(pre99).success).toBe(false);
+  });
+
+  it('the same plugin WITHOUT bloomWindow fails — the #87 cut-over guard', () => {
+    const preBloomGate = {
+      pluginId: 'acorn-squash-table-queen',
+      type: 'crop' as const,
+      displayName: 'Acorn Squash — Table Queen',
+      version: '1.0.0',
+      cropFamily: 'cucurbit' as const,
+      harvestStyle: 'cure-then-store' as const,
+      daysToMaturity: { min: 80, max: 90 }
+    };
+    expect(cropPluginSchema.safeParse(preBloomGate).success).toBe(false);
   });
 });

@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "7 inch tapered root, deep purple skin and orange core"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

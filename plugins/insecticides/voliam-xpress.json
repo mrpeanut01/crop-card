@@ -30,5 +30,22 @@
     "stink bug",
     "western bean cutworm"
   ],
-  "notes": "Syngenta premix combining Group 28 diamide with Group 3A pyrethroid. Restricted Use."
+  "notes": "Syngenta premix combining Group 28 diamide with Group 3A pyrethroid. Restricted Use.",
+  "scoutingThresholds": [
+    {
+      "pest": "corn earworm",
+      "metric": "count-per-trap-per-week",
+      "threshold": 10
+    },
+    {
+      "pest": "European corn borer",
+      "metric": "count-per-trap-per-week",
+      "threshold": 7
+    },
+    {
+      "pest": "stink bug",
+      "metric": "count-per-plant",
+      "threshold": 1
+    }
+  ]
 }

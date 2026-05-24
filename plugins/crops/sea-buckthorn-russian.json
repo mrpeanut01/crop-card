@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Dense clusters of orange-yellow fruit, fully colored"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

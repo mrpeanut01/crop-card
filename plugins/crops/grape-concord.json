@@ -68,5 +68,12 @@
     "Easy stem release"
   ],
   "notes": "Slip-skin American grape — juice + jam. Most disease-tolerant of common cultivars.",
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

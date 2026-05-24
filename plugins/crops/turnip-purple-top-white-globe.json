@@ -14,5 +14,10 @@
     "Tops can be eaten as greens"
   ],
   "notes": "Dual-use: roots + greens. Fall crop is sweetest after a frost.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

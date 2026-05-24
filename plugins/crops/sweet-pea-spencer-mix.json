@@ -27,5 +27,10 @@
   "notes": "Lathrus odoratus, fragrant English sweet pea mix. Cool-season annual. Soak seeds 24 hours before sowing. Trellis to 6 ft.",
   "harvestIndicators": [
     "Stems 8 to 12 inches with 2 to 3 buds open"
-  ]
+  ],
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

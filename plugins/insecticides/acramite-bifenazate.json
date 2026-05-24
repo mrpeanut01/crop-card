@@ -24,5 +24,25 @@
     "European red mite",
     "Pacific spider mite"
   ],
-  "notes": "ADAMA selective miticide. IRAC 20D METI complex III inhibitor. Long residual on motile stages; weaker on eggs."
+  "notes": "ADAMA selective miticide. IRAC 20D METI complex III inhibitor. Long residual on motile stages; weaker on eggs.",
+  "scoutingThresholds": [
+    {
+      "pest": "twospotted spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "European red mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "Pacific spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    }
+  ]
 }

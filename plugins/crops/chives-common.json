@@ -14,5 +14,10 @@
     "Multiple cuts per season"
   ],
   "notes": "Hardy perennial. Edible flowers — cut before bloom to keep tender.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

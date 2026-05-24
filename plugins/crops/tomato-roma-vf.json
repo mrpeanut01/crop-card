@@ -31,5 +31,9 @@
     "Easy stem release"
   ],
   "notes": "Determinate paste tomato. VF disease resistance package. Source: 2026/2027 Mid-Atlantic Commercial Vegetable Production Recommendations (VCE 456-420). Native species-level tolerance to halosulfuron (Sandea) is declared as a trait so the kernel's family-kill rule (sulfonylurea → solanaceae) is overridden when sandea is the spray product.",
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

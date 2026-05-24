@@ -634,8 +634,13 @@ export const cropPluginSchema = pluginBase.extend({
   harvestStyle: harvestStyleSchema,
   /** When does this crop bloom + is it bee-attractive? Phase 25d
    *  pollinator-bloom gate blocks bee-toxic spray applications during
-   *  the declared window. See `bloomWindowSchema` JSDoc. */
-  bloomWindow: bloomWindowSchema.optional(),
+   *  the declared window. See `bloomWindowSchema` JSDoc.
+   *
+   *  Phase 25c.0 #87 — PROMOTED TO REQUIRED after coverage hit 100%
+   *  (376/376) via family-batched defaults in `enhancePluginDiscriminators.mjs`.
+   *  Wind- and self-pollinated crops carry `beeAttractive: false` so the
+   *  gate skips them regardless of timing. */
+  bloomWindow: bloomWindowSchema,
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),

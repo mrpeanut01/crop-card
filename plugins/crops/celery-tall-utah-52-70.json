@@ -14,5 +14,12 @@
     "Solid (not pithy)"
   ],
   "notes": "Heavy water + N feeder. Self-blanching stalks. Long-season — start indoors 10 wk before transplant.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

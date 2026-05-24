@@ -27,5 +27,10 @@
     "Seeds visible but not bulging"
   ],
   "notes": "Reliable early bush bean. Succession-plant every 14 d for continuous harvest.",
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

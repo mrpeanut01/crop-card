@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Tender upright leaves at 6 to 10 inches"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

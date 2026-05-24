@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Lobed oak-shaped leaves, tender at base"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -14,5 +14,10 @@
     "Cut whole or harvest outer leaves"
   ],
   "notes": "Heat-tolerant Bibb. Best below 80 °F — bolts in mid-summer.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

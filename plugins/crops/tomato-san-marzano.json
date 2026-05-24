@@ -28,5 +28,9 @@
     "Deep red, firm sides",
     "Drops easily off the truss"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

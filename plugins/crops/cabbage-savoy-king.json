@@ -15,5 +15,10 @@
     "Wrinkled outer leaves with mid-green color"
   ],
   "notes": "Crinkled-leaf cabbage. Better cold tolerance than smooth cabbage.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

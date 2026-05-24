@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Spears 7 to 9 inches, tight tips before fern-out"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

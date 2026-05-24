@@ -27,5 +27,12 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Pacific Biocontrol pheromone hand-applied dispenser. 400 dispensers per acre on upper third of canopy in pome fruit before first flight. Saturates orchard with codling moth sex pheromone, preventing mate-finding."
+  "notes": "Pacific Biocontrol pheromone hand-applied dispenser. 400 dispensers per acre on upper third of canopy in pome fruit before first flight. Saturates orchard with codling moth sex pheromone, preventing mate-finding.",
+  "scoutingThresholds": [
+    {
+      "pest": "codling moth",
+      "metric": "count-per-trap-per-week",
+      "threshold": 5
+    }
+  ]
 }

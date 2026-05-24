@@ -57,5 +57,9 @@
     "Stems still green"
   ],
   "notes": "Perennial 4–5 yr stand. Roundup Ready alfalfa requires trait-resistant variety. Potato leafhopper monitoring essential June–Aug.",
-  "harvestStyle": "forage-cutting-cycle"
+  "harvestStyle": "forage-cutting-cycle",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

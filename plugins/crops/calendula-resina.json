@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Sticky orange-yellow blooms fully open at midday"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

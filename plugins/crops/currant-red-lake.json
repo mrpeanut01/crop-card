@@ -10,5 +10,12 @@
     "Pick whole strigs"
   ],
   "notes": "Easy-care small fruit. Note: white pine blister rust host — check state planting restrictions.",
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

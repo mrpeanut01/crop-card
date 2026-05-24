@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Plants 24 to 30 inches before first cut to avoid prussic acid risk"
   ],
-  "harvestStyle": "cover-crop-termination"
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "monthsOfYear": [
+      7,
+      8
+    ],
+    "beeAttractive": false
+  }
 }

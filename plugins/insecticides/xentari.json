@@ -27,5 +27,12 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "diamondback moth (Bt-kurstaki resistant strains)",
+      "metric": "count-per-plant",
+      "threshold": 0.3
+    }
+  ]
 }

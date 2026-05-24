@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "2 to 3 inch round root, alternating pink and white rings when sliced"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

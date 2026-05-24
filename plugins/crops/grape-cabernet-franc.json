@@ -11,5 +11,12 @@
     "Seeds brown"
   ],
   "notes": "Vinifera wine grape — Mid-Atlantic favorite. Higher disease pressure than Concord; FRAC rotation critical.",
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

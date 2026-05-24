@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Pods dry and rattle, plants tan-brown"
   ],
-  "harvestStyle": "dry-seed-legume"
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Brix at 24 to 26, dark blue-black fruit"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

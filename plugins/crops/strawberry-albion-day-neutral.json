@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Conical fruit, deep red through to the calyx"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

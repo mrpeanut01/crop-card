@@ -13,5 +13,10 @@
     "Pre-flower harvest for peak essential oils"
   ],
   "notes": "Hardy perennial in zones 5+. Cut hard 2–3× per season.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

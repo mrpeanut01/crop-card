@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "2 oz round red fruit, crack-free even after rain"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

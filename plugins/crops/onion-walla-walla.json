@@ -14,5 +14,12 @@
     "Bulbs ~3–4 in"
   ],
   "notes": "Sweet onion — short storage life. Use within 4–6 wk of curing.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

@@ -5,5 +5,10 @@
   "pluginSchemaVersion": "1.1",
   "type": "crop",
   "cropFamily": "corn",
-  "harvestStyle": "row-grain-pollinated"
+  "harvestStyle": "row-grain-pollinated",
+  "bloomWindow": {
+    "daysFromPlantingMin": 55,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": false
+  }
 }

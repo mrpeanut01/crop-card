@@ -27,5 +27,13 @@
   "harvestIndicators": [
     "Stems 18 to 24 inches with mature round juvenile leaves"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7,
+      8
+    ],
+    "beeAttractive": true
+  }
 }

@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Early to mid-bloom for forage cut"
   ],
-  "harvestStyle": "forage-cutting-cycle"
+  "harvestStyle": "forage-cutting-cycle",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

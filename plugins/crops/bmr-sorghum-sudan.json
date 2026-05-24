@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Plants 30 to 40 inches before first cut for high quality"
   ],
-  "harvestStyle": "cover-crop-termination"
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "monthsOfYear": [
+      7,
+      8
+    ],
+    "beeAttractive": false
+  }
 }

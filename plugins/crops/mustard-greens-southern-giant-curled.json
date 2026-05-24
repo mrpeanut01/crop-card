@@ -14,5 +14,10 @@
     "Before bolt"
   ],
   "notes": "Pungent Southern green. Bolts in heat — succession-plant for spring + fall.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -24,5 +24,19 @@
     "whitefly",
     "tomato psyllid"
   ],
-  "notes": "Bayer IRAC 23 tetronic acid for spider mites and whitefly. Egg and immature activity dominates."
+  "notes": "Bayer IRAC 23 tetronic acid for spider mites and whitefly. Egg and immature activity dominates.",
+  "scoutingThresholds": [
+    {
+      "pest": "twospotted spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    }
+  ]
 }

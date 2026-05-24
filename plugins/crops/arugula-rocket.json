@@ -14,5 +14,10 @@
     "Pre-bolt for milder flavor"
   ],
   "notes": "Quick-turn green. Succession-plant every 14 d for continuous harvest.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

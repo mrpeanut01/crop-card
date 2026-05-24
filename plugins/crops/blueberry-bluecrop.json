@@ -58,5 +58,12 @@
     "Easy detach (drop into hand)"
   ],
   "notes": "Mid-season highbush; needs cross-pollinator (Patriot, Duke, Jersey). Soil pH 4.5–5.0 mandatory — sulfur-down at planting.",
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

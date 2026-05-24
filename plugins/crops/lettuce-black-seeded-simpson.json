@@ -28,5 +28,10 @@
     "Frilled light-green leaves 4 to 6 inches",
     "Pre-bolt firmness"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

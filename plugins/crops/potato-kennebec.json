@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Tubers 8 to 10 inches deep, skins firm"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

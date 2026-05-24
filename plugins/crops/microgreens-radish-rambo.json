@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Stems 2 to 3 inches, cotyledons fully expanded"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

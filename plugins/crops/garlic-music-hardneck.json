@@ -54,5 +54,12 @@
     "Upper leaves still green"
   ],
   "notes": "Plant in fall, harvest July. 5 lb seed / 100 ft row. Brand variety from Filaree Farm.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

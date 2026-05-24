@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Heads tan, kernels at 14% moisture for grain harvest"
   ],
-  "harvestStyle": "single-cut-grain"
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

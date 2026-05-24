@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Deep mahogany-brown skin with brick-red interior"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

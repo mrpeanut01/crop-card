@@ -25,5 +25,27 @@
     "leafroller",
     "loopers"
   ],
-  "notes": "Corteva ecdysone receptor agonist (IRAC 18 IGR). Selective for Lepidoptera."
+  "notes": "Corteva ecdysone receptor agonist (IRAC 18 IGR). Selective for Lepidoptera.",
+  "scoutingThresholds": [
+    {
+      "pest": "lepidopteran larvae",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "armyworm",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "leafroller",
+      "metric": "count-per-plant",
+      "threshold": 2
+    },
+    {
+      "pest": "loopers",
+      "metric": "count-per-plant",
+      "threshold": 0.5
+    }
+  ]
 }

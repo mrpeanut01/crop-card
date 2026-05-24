@@ -127,5 +127,12 @@
     "Heads bend at neck"
   ],
   "notes": "Mid-Atlantic standard winter wheat — pastry/cookie-grade. Plant after Hessian-fly-free date (Sep 15 in N VA). Source: VCE Small Grains Production Guide.",
-  "harvestStyle": "single-cut-grain"
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

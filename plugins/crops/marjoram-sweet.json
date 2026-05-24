@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Tight knot-like buds about to open, strongest oil"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Deep purple spears 7 to 9 inches, tight tips"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

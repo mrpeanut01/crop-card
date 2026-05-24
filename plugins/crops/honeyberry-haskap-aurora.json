@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Deep blue-purple oblong fruit, easily falls when shaken"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

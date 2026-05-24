@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Deep tangerine-orange thick-walled fruit"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

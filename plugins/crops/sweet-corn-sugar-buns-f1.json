@@ -28,5 +28,10 @@
     "Silks brown and dry, kernel milky when popped with thumbnail"
   ],
   "cornType": "sweet",
-  "harvestStyle": "row-grain-pollinated"
+  "harvestStyle": "row-grain-pollinated",
+  "bloomWindow": {
+    "daysFromPlantingMin": 55,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": false
+  }
 }

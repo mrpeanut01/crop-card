@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Heart-shaped serrated leaves at 3 to 4 inches"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

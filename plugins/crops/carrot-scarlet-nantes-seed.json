@@ -17,5 +17,12 @@
     }
   },
   "notes": "OP Nantes type; sweet, tender, crisp. Film coated/treated or raw/untreated. Also avail: 1/2 oz, 1 oz, 1/4 lb, 1 lb variants.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

@@ -11,6 +11,7 @@ const corn: CropPlugin = {
   version: '1.0.0',
   cropFamily: 'corn',
   harvestStyle: 'row-grain-pollinated',
+  bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false },
   daysToMaturity: { min: 90, max: 100 }
 };
 
@@ -21,6 +22,7 @@ const pumpkin: CropPlugin = {
   version: '1.0.0',
   cropFamily: 'cucurbit',
   harvestStyle: 'cure-then-store',
+  bloomWindow: { continuous: true, beeAttractive: true },
   daysToMaturity: { min: 120, max: 130 }
 };
 
@@ -30,7 +32,8 @@ const cover: CropPlugin = {
   displayName: 'Cereal Rye',
   version: '1.0.0',
   cropFamily: 'cover-grass',
-  harvestStyle: 'cover-crop-termination'
+  harvestStyle: 'cover-crop-termination',
+  bloomWindow: { monthsOfYear: [5, 6], beeAttractive: false }
 };
 
 function planting(crop: CropPlugin, plantingDate: number): PlantingRecord {
@@ -86,6 +89,7 @@ describe('eventsForPlanting', () => {
       version: '1.3.0',
       cropFamily: 'corn',
       harvestStyle: 'row-grain-pollinated',
+      bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false },
       cornType: 'dual-purpose',
       daysToMaturity: { min: 90, max: 100 },
       growthStageTable: {
@@ -120,6 +124,7 @@ describe('eventsForPlanting', () => {
       version: '1.3.0',
       cropFamily: 'corn',
       harvestStyle: 'row-grain-pollinated',
+      bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false },
       cornType: 'sweet',
       daysToMaturity: { min: 70, max: 80 },
       growthStageTable: {
@@ -195,6 +200,7 @@ describe('FR-10 orchard seasonal tasks', () => {
     version: '1.0.0',
     cropFamily: 'orchard',
     harvestStyle: 'tree-fruit-multi-pick',
+    bloomWindow: { monthsOfYear: [4, 5], beeAttractive: true },
     orchardSeasonalTasks: [
       {
         key: 'dormant-oil',

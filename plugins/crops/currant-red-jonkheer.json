@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Bright red translucent berries on long clusters"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Deep red conical fruit, uniform shoulders"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

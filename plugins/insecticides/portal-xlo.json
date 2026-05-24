@@ -24,5 +24,25 @@
     "twospotted spider mite",
     "rust mite"
   ],
-  "notes": "Nichino miticide. IRAC 21A. Fast knockdown of motile stages."
+  "notes": "Nichino miticide. IRAC 21A. Fast knockdown of motile stages.",
+  "scoutingThresholds": [
+    {
+      "pest": "European red mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "twospotted spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "rust mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    }
+  ]
 }

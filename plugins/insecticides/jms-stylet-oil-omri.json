@@ -31,5 +31,25 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "JMS Flower Farms OMRI horticultural oil. Suppresses sucking insects on contact and disrupts virus transmission. Avoid sulfur tank-mix or above 90 F."
+  "notes": "JMS Flower Farms OMRI horticultural oil. Suppresses sucking insects on contact and disrupts virus transmission. Avoid sulfur tank-mix or above 90 F.",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    }
+  ]
 }

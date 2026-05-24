@@ -26,7 +26,8 @@ describe('loadPluginsFromDirectory', () => {
         displayName: 'Corn',
         version: '1.0.0',
         cropFamily: 'corn',
-        harvestStyle: 'row-grain-pollinated'
+        harvestStyle: 'row-grain-pollinated',
+        bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
       })
     );
     await mkdir(path.join(tmp, 'herbicides'));
@@ -60,7 +61,8 @@ describe('loadPluginsFromDirectory', () => {
         displayName: 'Good',
         version: '1.0.0',
         cropFamily: 'corn',
-        harvestStyle: 'row-grain-pollinated'
+        harvestStyle: 'row-grain-pollinated',
+        bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
       })
     );
 

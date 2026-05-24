@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "18 inch tall cylindrical head, firm to the touch"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

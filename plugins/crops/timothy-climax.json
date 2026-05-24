@@ -16,5 +16,9 @@
     "Boot stage to early head emergence"
   ],
   "notes": "Premium horse hay grass. Single first-cutting + lighter regrowth. Often blended with red clover.",
-  "harvestStyle": "forage-cutting-cycle"
+  "harvestStyle": "forage-cutting-cycle",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

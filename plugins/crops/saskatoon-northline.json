@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Dark purple-blue fruit, easy release from cluster"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

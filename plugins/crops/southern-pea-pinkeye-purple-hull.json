@@ -14,5 +14,10 @@
     "Peas firm but not dry"
   ],
   "notes": "Cowpea — heat-tolerant, drought-tolerant. Excellent N-fixer; doubles as a summer cover crop after harvest.",
-  "harvestStyle": "dry-seed-legume"
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Fully red, slight blossom-end give"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Russeted yellow skin, yellow flesh, mature size at vine die-down"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

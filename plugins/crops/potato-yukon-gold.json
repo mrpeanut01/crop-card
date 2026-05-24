@@ -35,5 +35,10 @@
     "Skin set (does not rub off)"
   ],
   "notes": "Early-maturing yellow-flesh potato. Hill 2× during season. Colorado potato beetle is the dominant pest; rotate Coragen/Spinosad/Bt per IRAC stewardship.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

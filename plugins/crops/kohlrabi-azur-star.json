@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Round 2 to 3 inch purple stem, harvest before woody"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

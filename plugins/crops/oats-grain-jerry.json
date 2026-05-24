@@ -19,5 +19,12 @@
     "Grain moisture 13–14%"
   ],
   "notes": "Spring oats for grain production. Crown rust + leaf blotch are main pests. Often nurse-cropped with alfalfa seeding.",
-  "harvestStyle": "single-cut-grain"
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

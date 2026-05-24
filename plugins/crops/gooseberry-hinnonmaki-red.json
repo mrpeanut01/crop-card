@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Deep red translucent fruit, soft to gentle pressure"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

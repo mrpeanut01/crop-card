@@ -28,5 +28,10 @@
     "Bright yellow-white bicolor kernels at milk stage"
   ],
   "cornType": "sweet",
-  "harvestStyle": "row-grain-pollinated"
+  "harvestStyle": "row-grain-pollinated",
+  "bloomWindow": {
+    "daysFromPlantingMin": 55,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": false
+  }
 }

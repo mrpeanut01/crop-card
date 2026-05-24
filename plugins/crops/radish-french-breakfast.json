@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "3 inch oblong root, scarlet top with white tip"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

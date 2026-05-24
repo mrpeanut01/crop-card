@@ -14,5 +14,10 @@
     "Continue cut-and-come"
   ],
   "notes": "Continuous-harvest crop spring → frost. Mixed-color stems (red, yellow, white, pink).",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

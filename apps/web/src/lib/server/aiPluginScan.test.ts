@@ -18,7 +18,8 @@ describe('validateCandidate', () => {
       type: 'crop',
       displayName: 'Some Brand New Crop',
       cropFamily: 'corn',
-      harvestStyle: 'row-grain-pollinated'
+      harvestStyle: 'row-grain-pollinated',
+      bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
     });
     expect(r.validation.ok).toBe(true);
     expect(r.candidate).not.toBeNull();
@@ -44,7 +45,8 @@ describe('validateCandidate', () => {
       pluginId: 'apple-orchard',
       displayName: 'Pretend Apple',
       cropFamily: 'orchard',
-      harvestStyle: 'tree-fruit-multi-pick'
+      harvestStyle: 'tree-fruit-multi-pick',
+      bloomWindow: { monthsOfYear: [4, 5], beeAttractive: true }
     });
     expect(r.validation.ok).toBe(false);
     expect(r.validation.schemaIssues.some((i) => i.path === 'pluginId')).toBe(true);

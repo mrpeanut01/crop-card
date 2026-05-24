@@ -17,5 +17,10 @@
     }
   },
   "notes": "73-day sweet corn. Large 7–8\" ears, rust resistance (Rp1-G). Treated: Azoxystrobin, Difenoconazole, Fludioxonil, Mefenoxam, Sedaxane, Thiamethoxam, Thiophanate.",
-  "harvestStyle": "row-grain-pollinated"
+  "harvestStyle": "row-grain-pollinated",
+  "bloomWindow": {
+    "daysFromPlantingMin": 55,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": false
+  }
 }

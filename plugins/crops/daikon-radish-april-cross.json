@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "14 to 18 inch white tapered root, smooth shoulders"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -13,5 +13,12 @@
     "Shaft 1 in diameter, 8+ in long"
   ],
   "notes": "Hill 2× during season for white shaft. Cold-hardy — overwinters under mulch.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

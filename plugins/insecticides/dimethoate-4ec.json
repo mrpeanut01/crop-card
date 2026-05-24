@@ -25,5 +25,31 @@
     "mite suppression",
     "thrips"
   ],
-  "notes": "Loveland Products organophosphate (IRAC 1B). Systemic activity. Restricted Use in some states."
+  "notes": "Loveland Products organophosphate (IRAC 1B). Systemic activity. Restricted Use in some states.",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "leafminer",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "mite suppression",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    }
+  ]
 }

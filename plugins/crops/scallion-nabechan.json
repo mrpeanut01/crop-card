@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "10 to 14 inch tops with crisp white base"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

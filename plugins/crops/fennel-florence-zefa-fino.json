@@ -14,5 +14,10 @@
     "Pre-bolt"
   ],
   "notes": "Bulbing fennel — cool-season; bolts in heat. Plant late summer for fall harvest.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": true
+  }
 }

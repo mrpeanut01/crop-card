@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Yellow elongated 1 inch fruit, easy stem release"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

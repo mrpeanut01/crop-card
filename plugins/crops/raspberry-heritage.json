@@ -40,5 +40,12 @@
     "Bright uniform red"
   ],
   "notes": "Fall-bearing red raspberry. Primocane mow-down management — single 1.5 mo harvest, no summer crop.",
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": true
+  }
 }

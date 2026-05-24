@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Glossy black berries on full clusters, easy strigging at full ripeness"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

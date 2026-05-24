@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "8 to 10 inch curved fruit, full red color"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

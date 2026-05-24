@@ -13,5 +13,10 @@
     "Roots ~1 in diameter"
   ],
   "notes": "Quick-turn cool-season radish. Excellent succession crop or row marker.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

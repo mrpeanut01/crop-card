@@ -25,5 +25,13 @@
     "psyllid",
     "mealybug"
   ],
-  "notes": "Nichino juvenile hormone mimic IGR. Disrupts molting and adult emergence. Best at early life stages."
+  "notes": "Nichino juvenile hormone mimic IGR. Disrupts molting and adult emergence. Best at early life stages.",
+  "scoutingThresholds": [
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    }
+  ]
 }

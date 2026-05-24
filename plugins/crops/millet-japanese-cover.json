@@ -27,5 +27,12 @@
     "rotationLookbackYears": 1
   },
   "notes": "Echinochloa esculenta. Warm-season smother crop and emergency forage. Establishes in 5 to 7 days, ready to terminate or graze at 45 days. Tolerates flooded ground. Sold by Albert Lea Seed, Green Cover Seed, Welter.",
-  "harvestStyle": "cover-crop-termination"
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

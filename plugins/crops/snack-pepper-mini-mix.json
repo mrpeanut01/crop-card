@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "3 inch tapered fruit, thick walls, fully colored"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

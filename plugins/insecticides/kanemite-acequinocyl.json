@@ -24,5 +24,25 @@
     "European red mite",
     "broad mite"
   ],
-  "notes": "Arysta IRAC 20B METI complex III inhibitor. Works on all life stages including eggs."
+  "notes": "Arysta IRAC 20B METI complex III inhibitor. Works on all life stages including eggs.",
+  "scoutingThresholds": [
+    {
+      "pest": "twospotted spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "European red mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "broad mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    }
+  ]
 }

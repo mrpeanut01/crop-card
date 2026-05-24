@@ -28,5 +28,10 @@
     "Buds tight before flowering opens",
     "Stems 8 to 12 inches"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

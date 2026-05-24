@@ -28,5 +28,12 @@
     "Tops fall over and yellow",
     "Bulb deep red with thin neck"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

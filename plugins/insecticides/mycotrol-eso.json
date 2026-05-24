@@ -32,5 +32,30 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Entomopathogenic fungus formulated in oil. Conidial spores germinate on insect cuticle and kill within 3 to 7 days. Apply early morning or late evening; UV degrades spores."
+  "notes": "Entomopathogenic fungus formulated in oil. Conidial spores germinate on insect cuticle and kill within 3 to 7 days. Apply early morning or late evening; UV degrades spores.",
+  "scoutingThresholds": [
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    }
+  ]
 }

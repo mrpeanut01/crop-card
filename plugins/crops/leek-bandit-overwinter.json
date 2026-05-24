@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "1 to 1.5 inch white shaft, hard core, blue-green flag"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

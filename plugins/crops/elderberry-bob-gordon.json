@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Deep purple-black cymes, fully ripe across the cluster"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

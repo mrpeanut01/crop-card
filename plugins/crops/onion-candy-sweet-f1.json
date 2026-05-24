@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Tops fall over and yellow, bulb fully sized"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

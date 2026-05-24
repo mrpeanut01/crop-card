@@ -14,5 +14,10 @@
     "Before bolt"
   ],
   "notes": "Cold-hardy savoy spinach. Spring + fall + overwintering crops; not summer.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

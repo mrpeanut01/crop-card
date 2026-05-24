@@ -13,5 +13,10 @@
     "Stems 6–8 in"
   ],
   "notes": "Biennial — bolts year 2. Outer-leaf cutting extends harvest 6 mo.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": true
+  }
 }

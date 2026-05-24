@@ -6,5 +6,12 @@
   "cropFamily": "cover-grass",
   "defaultRowSpacingInches": 6,
   "notes": "Overwinter weed-suppressing cover. Terminate at early joint stage, ≥14 days before corn plant date.",
-  "harvestStyle": "cover-crop-termination"
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

@@ -27,5 +27,13 @@
   "harvestIndicators": [
     "Seed heads brown and dry, fluff beginning to release"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7,
+      8
+    ],
+    "beeAttractive": true
+  }
 }

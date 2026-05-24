@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Tops fall over, bulbs cluster fully formed"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

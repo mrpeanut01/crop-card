@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Deep purple skin and flesh, hard-set at harvest"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

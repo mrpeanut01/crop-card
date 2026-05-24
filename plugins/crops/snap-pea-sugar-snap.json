@@ -26,5 +26,10 @@
     "Eat pod and pea together"
   ],
   "notes": "Cool-season; plant as early as soil works. Trellis required (5–6 ft).",
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Glossy deep purple bell shape, thick walls"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

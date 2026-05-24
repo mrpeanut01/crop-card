@@ -29,5 +29,17 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Live beneficial egg parasitoid wasp. Release 50000 to 200000 per acre per cycle, timed to lepidopteran egg lay. Sold by IPM Labs, BioBest, ARBICO. Rate-unit oz is a placeholder; actual quantity is count of parasitized eggs, see label."
+  "notes": "Live beneficial egg parasitoid wasp. Release 50000 to 200000 per acre per cycle, timed to lepidopteran egg lay. Sold by IPM Labs, BioBest, ARBICO. Rate-unit oz is a placeholder; actual quantity is count of parasitized eggs, see label.",
+  "scoutingThresholds": [
+    {
+      "pest": "European corn borer eggs",
+      "metric": "count-per-trap-per-week",
+      "threshold": 7
+    },
+    {
+      "pest": "tomato hornworm eggs",
+      "metric": "count-per-plant",
+      "threshold": 1
+    }
+  ]
 }

@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Pale yellow-green for frying, red at full sweetness"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

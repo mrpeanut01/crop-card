@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Vines fully dead and brown, skins set firm with no slip"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

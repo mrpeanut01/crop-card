@@ -14,5 +14,10 @@
     "Compact + smooth"
   ],
   "notes": "Self-blanching variety. Best as a fall crop in Mid-Atlantic — heat causes ricing.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

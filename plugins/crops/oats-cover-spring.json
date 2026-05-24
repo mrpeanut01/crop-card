@@ -13,5 +13,12 @@
     "recommendedLbsPerAcre": 96
   },
   "notes": "Winter-kills below ~20 °F — clean spring residue, no termination spray needed. Plant Aug–Sep for vegetable-bed prep.",
-  "harvestStyle": "cover-crop-termination"
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

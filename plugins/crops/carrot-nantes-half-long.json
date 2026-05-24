@@ -26,5 +26,12 @@
     "Shoulders 1 in diameter"
   ],
   "notes": "Cylindrical sweet carrot. Loose, deep soil essential — work in compost + remove rocks.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

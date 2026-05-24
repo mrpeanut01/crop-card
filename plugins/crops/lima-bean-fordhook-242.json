@@ -14,5 +14,10 @@
     "Seeds firm"
   ],
   "notes": "Heat-tolerant butter bean. Pick before pods turn yellow.",
-  "harvestStyle": "dry-seed-legume"
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

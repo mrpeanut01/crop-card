@@ -15,5 +15,10 @@
     "Bracts dry"
   ],
   "notes": "Single-stem giant. Plant 1 ft apart for max head size. Birds will get the seeds — bag heads if harvesting for human use.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

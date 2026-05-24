@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Disk flowers cone-shaped and fully white-petaled"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

@@ -13,5 +13,10 @@
     "Year-round cuts (light tipping)"
   ],
   "notes": "Tender perennial — winter-kill below 15 °F. Container or high-tunnel in Mid-Atlantic.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

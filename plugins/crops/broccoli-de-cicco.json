@@ -23,5 +23,10 @@
     "Cut before any yellow flower opens"
   ],
   "notes": "Side-shoot producer — keep harvesting after main head. Cabbage worm + diamondback moth control via Bt or Spinosad.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

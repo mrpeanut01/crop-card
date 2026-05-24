@@ -19,5 +19,12 @@
     "Grain moisture <14%"
   ],
   "notes": "Winter feed barley. Earlier harvest than wheat (~2 wk earlier) — fits double-crop rotation with soybeans.",
-  "harvestStyle": "single-cut-grain"
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Blanched young shoots 6 to 8 inches under forcing pot in early spring"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Dark purple-black fruit larger than blueberry, easy release at full ripe"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

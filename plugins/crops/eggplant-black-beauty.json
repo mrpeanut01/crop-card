@@ -15,5 +15,9 @@
     "Firm — no thumb-press indent"
   ],
   "notes": "Heat-loving — wait until soil ≥65 °F. Flea-beetle damage typical at transplant; row cover until flowering.",
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

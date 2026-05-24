@@ -10,14 +10,15 @@ import { describe, expect, it } from 'vitest';
 import { cropPluginSchema } from './schemas';
 
 describe('cropPluginSchema v1.1 additive fields', () => {
-  it('accepts a v1.0 minimal crop plugin with the required harvestStyle (Phase 25c.0 #99)', () => {
+  it('accepts a v1.0 minimal crop plugin with the now-required harvestStyle + bloomWindow (Phase 25c.0 #87/#99)', () => {
     const v10 = {
       pluginId: 'corn',
       type: 'crop' as const,
       displayName: 'Corn',
       version: '1.0.0',
       cropFamily: 'corn' as const,
-      harvestStyle: 'row-grain-pollinated' as const
+      harvestStyle: 'row-grain-pollinated' as const,
+      bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
     };
     const parsed = cropPluginSchema.safeParse(v10);
     expect(parsed.success).toBe(true);
@@ -43,6 +44,7 @@ describe('cropPluginSchema v1.1 additive fields', () => {
       version: '1.1.0',
       cropFamily: 'forage' as const,
       harvestStyle: 'forage-cutting-cycle' as const,
+      bloomWindow: { continuous: true, beeAttractive: true } as const,
       cropOperationModel: 'perennial-multi-cut' as const,
       hayOperations: {
         steps: ['mow', 'ted', 'rake', 'bale', 'store'] as const,
@@ -84,6 +86,7 @@ describe('cropPluginSchema v1.1 additive fields', () => {
       version: '1.1.0',
       cropFamily: 'cereal-grain' as const,
       harvestStyle: 'single-cut-grain' as const,
+      bloomWindow: { monthsOfYear: [5, 6], beeAttractive: false } as const,
       cropOperationModel: 'single-event' as const,
       zadoksStages: [
         { stage: 'Z00-Z09', name: 'Germination', daysFromPlanting: { min: 0, max: 10 } },

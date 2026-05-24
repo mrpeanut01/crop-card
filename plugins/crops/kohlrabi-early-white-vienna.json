@@ -13,5 +13,10 @@
     "Bulb 2–3 in (anything bigger goes woody)"
   ],
   "notes": "Quick-maturing brassica. Spring + fall plantings work; avoid mid-summer.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

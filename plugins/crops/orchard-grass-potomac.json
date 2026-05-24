@@ -16,5 +16,9 @@
     "Boot to early-head"
   ],
   "notes": "Mid-Atlantic standard cool-season grass. Pairs well with red clover or alfalfa for mixed hay.",
-  "harvestStyle": "forage-cutting-cycle"
+  "harvestStyle": "forage-cutting-cycle",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

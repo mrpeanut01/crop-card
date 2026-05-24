@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Tender young stems and leaves at 12 to 18 inches"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": true
+  }
 }

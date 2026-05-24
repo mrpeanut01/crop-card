@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Tubers harvested after fall frost kills tops"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

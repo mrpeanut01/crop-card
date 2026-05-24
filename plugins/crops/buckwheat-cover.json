@@ -14,5 +14,10 @@
     "recommendedLbsPerAcre": 60
   },
   "notes": "Quick-cycling 30–45 day summer smother crop. Fits between spring + fall cash crops. NOT a true grass family — but kernel-grouped under cover-grass for termination semantics.",
-  "harvestStyle": "cover-crop-termination"
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "daysFromPlantingMin": 30,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": true
+  }
 }

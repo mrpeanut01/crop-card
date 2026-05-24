@@ -14,5 +14,12 @@
     "Roots 8–12 in"
   ],
   "notes": "Long-season root. Requires fresh seed every year (rapid viability loss). Harvest after first hard frost or overwinter.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

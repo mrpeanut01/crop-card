@@ -25,5 +25,18 @@
     "mealybug",
     "leafhopper nymphs"
   ],
-  "notes": "Nichino IRAC 16 chitin biosynthesis inhibitor. Targets juvenile stages."
+  "notes": "Nichino IRAC 16 chitin biosynthesis inhibitor. Targets juvenile stages.",
+  "scoutingThresholds": [
+    {
+      "pest": "whitefly nymphs",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "leafhopper nymphs",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    }
+  ]
 }

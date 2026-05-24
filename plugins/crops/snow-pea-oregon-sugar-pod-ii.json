@@ -14,5 +14,10 @@
     "Peas just visible inside"
   ],
   "notes": "Edible-pod variety, cool-season. PM resistant.",
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

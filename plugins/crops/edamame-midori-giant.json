@@ -14,5 +14,10 @@
     "Beans fill 80–90% of pod"
   ],
   "notes": "Vegetable soybean. Harvest entire plant once 75% pods are filled — short window.",
-  "harvestStyle": "dry-seed-legume"
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 40,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

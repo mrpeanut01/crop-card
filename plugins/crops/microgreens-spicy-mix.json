@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "First true leaves emerging, stems 1.5 to 2 inches"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

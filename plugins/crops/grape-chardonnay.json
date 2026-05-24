@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Brix at 22 to 24, pH 3.3 to 3.5 for sparkling or still wine targets"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

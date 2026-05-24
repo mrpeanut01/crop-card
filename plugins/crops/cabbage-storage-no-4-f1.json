@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "8 to 12 lb round dense head, very hard to fingernail"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

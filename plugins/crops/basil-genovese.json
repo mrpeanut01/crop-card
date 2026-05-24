@@ -14,5 +14,10 @@
     "Pinch flowers to extend leaf production"
   ],
   "notes": "Heat-loving annual. Downy mildew (BDM) is the big threat — DMR varieties (Prospera, Amazel) are alternatives.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

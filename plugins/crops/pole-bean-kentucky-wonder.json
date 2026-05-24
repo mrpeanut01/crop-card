@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "7 to 9 inch silvery green pod with full bean shape"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

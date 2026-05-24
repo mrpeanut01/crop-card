@@ -24,5 +24,24 @@
     "whitefly",
     "leafhopper"
   ],
-  "notes": "Syngenta IRAC 9B selective feeding blocker. Aphids stop feeding within hours, die within days from starvation."
+  "notes": "Syngenta IRAC 9B selective feeding blocker. Aphids stop feeding within hours, die within days from starvation.",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    }
+  ]
 }

@@ -24,5 +24,9 @@
     "Color break (green→red)"
   ],
   "notes": "Bell pepper. Transplant only — direct-seed not reliable in Mid-Atlantic. Phytophthora-susceptible; rotate 3-yr min from solanaceae or cucurbits.",
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

@@ -57,5 +57,12 @@
     "No white shoulders"
   ],
   "notes": "Standard June-bearing matted-row variety. 3-yr productive life; renovate annually. Native species-level tolerance to clopyralid (Stinger) is declared as a trait so the kernel's family-kill rule (synthetic-auxin → small-fruit) is overridden when stinger is the spray product.",
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

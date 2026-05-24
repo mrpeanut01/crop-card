@@ -14,5 +14,12 @@
     "Bright green tops"
   ],
   "notes": "Non-bulbing bunching onion. Continuous succession every 21 d.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

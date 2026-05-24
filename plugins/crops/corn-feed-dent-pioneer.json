@@ -57,5 +57,10 @@
     }
   ],
   "pluginSchemaVersion": "1.1",
-  "harvestStyle": "row-grain-pollinated"
+  "harvestStyle": "row-grain-pollinated",
+  "bloomWindow": {
+    "daysFromPlantingMin": 55,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": false
+  }
 }

@@ -13,5 +13,10 @@
     "Pre-flower for peak flavor"
   ],
   "notes": "Aggressive runner — confine to dedicated bed or containers. Cut hard mid-summer to refresh.",
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

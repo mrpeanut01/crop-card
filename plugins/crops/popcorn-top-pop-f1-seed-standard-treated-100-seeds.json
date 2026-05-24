@@ -17,5 +17,10 @@
     }
   },
   "notes": "F1 hybrid popcorn; yellow ears; deep kernels pop to large sunbursts. Also avail: 1,000 seeds ($14.73) and 10,000 seeds ($149.50). Standard Treated.",
-  "harvestStyle": "row-grain-pollinated"
+  "harvestStyle": "row-grain-pollinated",
+  "bloomWindow": {
+    "daysFromPlantingMin": 55,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": false
+  }
 }

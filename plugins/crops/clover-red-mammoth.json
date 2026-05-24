@@ -18,5 +18,9 @@
     "Pre-bloom for highest protein"
   ],
   "notes": "Short-lived perennial (2 yr). Frost-seed into wheat in Feb–Mar; hay or graze in summer.",
-  "harvestStyle": "forage-cutting-cycle"
+  "harvestStyle": "forage-cutting-cycle",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

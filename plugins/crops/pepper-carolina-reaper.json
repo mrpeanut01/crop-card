@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "Wrinkled scorpion-tail red pod, firm and glossy"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

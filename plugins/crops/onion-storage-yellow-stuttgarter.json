@@ -34,5 +34,12 @@
     "Necks soften"
   ],
   "notes": "Long-day storage onion (Mid-Atlantic threshold). Set transplants in early spring.",
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

@@ -27,5 +27,9 @@
   "harvestIndicators": [
     "4 oz plum-shaped fruit, full red, dry feel"
   ],
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

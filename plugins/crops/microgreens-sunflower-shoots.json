@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Cotyledons fully open at 4 to 5 inches tall, before true leaves"
   ],
-  "harvestStyle": "cut-and-come-again"
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

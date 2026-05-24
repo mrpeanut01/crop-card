@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Fully blue with grey waxy bloom, easy release"
   ],
-  "harvestStyle": "perennial-vine"
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

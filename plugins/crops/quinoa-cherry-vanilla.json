@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Heads dry and rattle, seeds slip free when rubbed"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 100,
+    "beeAttractive": true
+  }
 }

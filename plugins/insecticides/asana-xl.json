@@ -32,5 +32,32 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "plum curculio",
+      "metric": "pct-infested-plants",
+      "threshold": 2
+    },
+    {
+      "pest": "codling moth",
+      "metric": "count-per-trap-per-week",
+      "threshold": 5
+    },
+    {
+      "pest": "tarnished plant bug",
+      "metric": "count-per-plant",
+      "threshold": 2
+    },
+    {
+      "pest": "stink bug",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "cabbage looper",
+      "metric": "count-per-plant",
+      "threshold": 0.5
+    }
+  ]
 }

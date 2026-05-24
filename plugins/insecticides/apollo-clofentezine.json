@@ -23,5 +23,19 @@
     "European red mite eggs",
     "twospotted spider mite eggs"
   ],
-  "notes": "ADAMA IRAC 10A ovicide. Strictly ovicidal; pair with adulticide for established infestation."
+  "notes": "ADAMA IRAC 10A ovicide. Strictly ovicidal; pair with adulticide for established infestation.",
+  "scoutingThresholds": [
+    {
+      "pest": "European red mite eggs",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "twospotted spider mite eggs",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    }
+  ]
 }

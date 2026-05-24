@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Vines yellow at frost, roots fully colored under hill"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

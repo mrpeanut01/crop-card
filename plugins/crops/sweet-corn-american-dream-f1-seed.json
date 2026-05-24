@@ -17,5 +17,10 @@
     }
   },
   "notes": "Bicolor SE type; 7.5\" trim ears, 16-18 rows; 6' plants, ears at 26\"; intermediate resistance to NCLB. Isolation required. Raw/untreated.",
-  "harvestStyle": "row-grain-pollinated"
+  "harvestStyle": "row-grain-pollinated",
+  "bloomWindow": {
+    "daysFromPlantingMin": 55,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": false
+  }
 }

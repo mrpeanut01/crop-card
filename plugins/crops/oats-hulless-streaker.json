@@ -27,5 +27,12 @@
   "harvestIndicators": [
     "Panicles gold, kernels naked and free-threshing"
   ],
-  "harvestStyle": "single-cut-grain"
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

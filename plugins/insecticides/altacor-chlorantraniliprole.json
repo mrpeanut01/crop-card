@@ -26,5 +26,12 @@
     "fruitworm",
     "armyworm"
   ],
-  "notes": "FMC IRAC 28 diamide. Sister to Coragen with fruit/tree-focused label."
+  "notes": "FMC IRAC 28 diamide. Sister to Coragen with fruit/tree-focused label.",
+  "scoutingThresholds": [
+    {
+      "pest": "codling moth",
+      "metric": "count-per-trap-per-week",
+      "threshold": 5
+    }
+  ]
 }

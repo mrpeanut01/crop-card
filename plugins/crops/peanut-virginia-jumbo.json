@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Pods plump and dark at vine die-down, kernels firm"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 40,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

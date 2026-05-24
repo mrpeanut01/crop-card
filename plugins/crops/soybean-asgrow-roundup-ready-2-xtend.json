@@ -31,5 +31,10 @@
     "Seed moisture 13–14%"
   ],
   "notes": "Roundup Ready 2 Xtend trait — tolerant to glyphosate + dicamba. Brand-name commodity soybean. Maturity Group 3.5 fits Mid-Atlantic; adjust by region. Phase 11 trait override: when planted, the kernel allows engenia, xtendimax, and roundup-powermax-3 to be sprayed despite the synthetic-auxin / glyphosate family-kill rule.",
-  "harvestStyle": "dry-seed-legume"
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 40,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

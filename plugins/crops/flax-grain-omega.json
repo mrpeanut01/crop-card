@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Bolls brown, seed rattles inside, stems still green at swathing"
   ],
-  "harvestStyle": "single-event"
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 100,
+    "beeAttractive": true
+  }
 }

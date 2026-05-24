@@ -27,6 +27,7 @@ import { listShadeSources } from '$lib/db/shadeSources';
 import { getFarmLatLon } from '$lib/schedule/settings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getUserAiEnabled } from '$lib/server/aiTry';
+import { deriveSeasonWorkflow } from '$lib/plan/seasonWorkflow';
 import {
   plantingBarEndMs,
   rotationConflicts,
@@ -184,6 +185,20 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the
     // schedule step of the AllocationWizard.
     aiEnabled: getUserAiEnabled(locals.user?.id),
+    // Phase 25b (#98) — WorkflowStrip data. Derived from season-setup
+    // presence + active crops + inputs-plan task count (proxied via
+    // total primary-kind tasks since the category enum doesn't have a
+    // ListFilters surface yet — widens to a real category filter in a
+    // follow-up). Plan-revisions proxy is null today (table lands in
+    // Phase 25d follow-up) → commit step auto-marks done when the four
+    // priors are done.
+    seasonWorkflow: deriveSeasonWorkflow({
+      seasonSetup: seasonSetup ? { modifiedAt: seasonSetup.setAt } : null,
+      lastYearSetup,
+      crops: listCrops({ year: currentYear }).map((c) => ({ plantingDate: c.plantingDate })),
+      inputsTaskCount: listTasks({ kind: 'primary' }).length,
+      hasPlanRevision: null
+    }),
     // Issue #48 follow-up: shadeSources must be visible on every tab that
     // renders <BlockMap> (today: layout + crops). Pushing it into base
     // closes that recurring class of bug — PR #49 fixed the UI side but

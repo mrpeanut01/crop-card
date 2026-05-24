@@ -9,6 +9,7 @@
   import CropPalette from '$lib/components/CropPalette.svelte';
   import SeedQuantityModal from '$lib/components/SeedQuantityModal.svelte';
   import AllocationWizard from '$lib/components/AllocationWizard.svelte';
+  import WorkflowStrip from '$lib/components/plan/WorkflowStrip.svelte';
   import PlantingGroupWizard from '$lib/components/PlantingGroupWizard.svelte';
   import ScheduleOptimizerSidebar from '$lib/components/ScheduleOptimizerSidebar.svelte';
   import GroupInspector from '$lib/components/GroupInspector.svelte';
@@ -2351,6 +2352,18 @@
   Step 0 of the season — set up your fields, blocks, crops, equipment, and stock so /today knows
   what to surface.
 </p>
+
+<!-- Phase 25b (#98) — season-workflow strip mapping the planning
+     workflow back to the wizard. Read-only stepper today; deep-link
+     onSelectStep wiring lands when the wizard accepts an initial-step
+     prop (follow-up). -->
+{#if data.seasonWorkflow && data.seasonWorkflow.length > 0}
+  <WorkflowStrip
+    seasonYear={data.currentYear ?? new Date().getFullYear()}
+    steps={data.seasonWorkflow}
+    onOpenWizard={() => (showAllocationWizard = true)}
+  />
+{/if}
 
 <nav class="plan-tabs" aria-label="Plan tabs">
   {#each TABS as t (t.id)}

@@ -20,14 +20,48 @@
   );
   let selectedPluginId = $state<string>(untrack(() => data.insecticides[0]?.pluginId ?? ''));
 
-  // v2 addendum (#90): selected product drives the IPM-gate slot copy.
-  // Picks the first scouting threshold the plugin declares (if any) for
-  // the panel's "this week vs threshold" display. Real wiring (scout-log
-  // count, evaluator verdict) lands in #89.
+  // v2 addendum (#89): selected product + block drive the IPM-gate
+  // slot — threshold from the plugin, scout history from the operator's
+  // past insecticide events on the selected block (see
+  // `scoutLogByBlock()` in the loader).
   const selectedInsecticide = $derived(
     data.insecticides.find((p) => p.pluginId === selectedPluginId) ?? null
   );
   const primaryThreshold = $derived(selectedInsecticide?.scoutingThresholds[0] ?? null);
+
+  /** 5-week bucketed scout history for the selected (block, pest, metric).
+   *  Each bucket sums all observations in the week ending at `now − N×7d`.
+   *  Oldest-first so the bars left-to-right read chronologically. */
+  const sparkline = $derived.by(() => {
+    if (!primaryThreshold) return [] as Array<{ weekLabel: string; count: number; triggered: boolean }>;
+    const obs = (data.scoutLogByBlock[selectedBlockId] ?? []).filter(
+      (o) => o.pest === primaryThreshold.pest && o.metric === primaryThreshold.metric
+    );
+    const now = Date.now();
+    const WEEK_MS = 7 * 86_400_000;
+    const buckets: Array<{ weekLabel: string; count: number; triggered: boolean }> = [];
+    for (let i = 4; i >= 0; i--) {
+      const startMs = now - (i + 1) * WEEK_MS;
+      const endMs = now - i * WEEK_MS;
+      const inBucket = obs.filter((o) => o.occurredAt >= startMs && o.occurredAt < endMs);
+      const sum = inBucket.reduce((acc, o) => acc + o.value, 0);
+      buckets.push({
+        weekLabel: i === 0 ? 'now' : `−${i}w`,
+        count: sum,
+        triggered: sum >= primaryThreshold.threshold
+      });
+    }
+    return buckets;
+  });
+
+  const thisWeekCount = $derived(sparkline[sparkline.length - 1]?.count ?? 0);
+  const overBy = $derived(
+    primaryThreshold ? Math.max(0, thisWeekCount - primaryThreshold.threshold) : 0
+  );
+  const ipmTriggered = $derived(overBy > 0);
+  const sparklineMax = $derived(
+    Math.max(1, ...sparkline.map((b) => b.count), primaryThreshold?.threshold ?? 0)
+  );
   let scoutPest = $state('');
   let scoutMetric = $state<'count-per-plant' | 'pct-defoliation' | 'pct-infested-plants'>(
     'count-per-plant'
@@ -239,22 +273,70 @@
   {#snippet ipmGate()}
     <header class="gate-header">
       <h2>IPM threshold gate</h2>
+      {#if ipmTriggered}
+        <span class="pill-triggered">Triggered</span>
+      {:else if primaryThreshold}
+        <span class="pill-pending">Below threshold</span>
+      {/if}
       <Provenance source="data" detail="your scout log" compact />
       {#if primaryThreshold}
         <Provenance
           source="plugin"
-          detail={`${selectedInsecticide?.pluginId} · ${primaryThreshold.threshold} ${primaryThreshold.metric}`}
+          detail={`${selectedInsecticide?.pluginId} · ≥${primaryThreshold.threshold} ${primaryThreshold.metric}`}
           compact
         />
       {:else}
         <Provenance source="plugin" detail="no threshold declared" compact />
       {/if}
     </header>
-    <p class="gate-body">
-      Insecticide sprays require a scout count that exceeds the action threshold for
-      <strong>{primaryThreshold?.pest ?? 'the target pest'}</strong>. Full evaluator + this-week
-      sparkline land with the IPM gate kernel in Phase 25d.
-    </p>
+
+    {#if primaryThreshold}
+      <div class="ipm-grid">
+        <div class="ipm-dial">
+          <div class="dial-kicker">This week</div>
+          <div class="dial-row">
+            <span class="dial-num serif" class:over={ipmTriggered}>{thisWeekCount}</span>
+            <span class="dial-unit">{primaryThreshold.metric.replace(/-/g, ' ')}</span>
+          </div>
+          <div class="dial-sub">
+            Action threshold <span class="mono">≥{primaryThreshold.threshold}</span>
+            {#if ipmTriggered}
+              · <span class="over">+{overBy} over</span>
+            {:else}
+              · {primaryThreshold.threshold - thisWeekCount} below
+            {/if}
+          </div>
+        </div>
+        <div class="ipm-sparkline">
+          <div class="spark-kicker">5-week history</div>
+          <div class="spark-bars">
+            {#each sparkline as b (b.weekLabel)}
+              <div class="spark-col" title={`${b.weekLabel}: ${b.count}`}>
+                <div class="spark-bar-wrap">
+                  <div
+                    class="spark-bar"
+                    class:triggered={b.triggered}
+                    style:height={`${Math.max(8, (b.count / sparklineMax) * 100)}%`}
+                  ></div>
+                </div>
+                <span class="spark-count mono" class:triggered={b.triggered}>{b.count}</span>
+                <span class="spark-week mono">{b.weekLabel}</span>
+              </div>
+            {/each}
+            <div class="spark-divider" aria-hidden="true"></div>
+            <div class="spark-threshold">
+              <span class="spark-threshold-label">threshold</span>
+              <span class="mono spark-threshold-value">{primaryThreshold.threshold}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    {:else}
+      <p class="gate-body">
+        Selected product declares no scouting thresholds. AI-assisted gap-fill (#87) brings this to
+        ≥95% coverage before promotion.
+      </p>
+    {/if}
   {/snippet}
 
   {#snippet pollinatorGate()}
@@ -333,5 +415,141 @@
     color: var(--color-ink-soft);
     font-size: 0.875rem;
     line-height: 1.5;
+  }
+  .pill-triggered {
+    display: inline-flex;
+    padding: 2px 8px;
+    background: var(--pill-wheat-bg);
+    color: var(--pill-wheat-fg);
+    border: 1px solid var(--pill-wheat-bd);
+    border-radius: var(--radius-pill);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pill-pending {
+    display: inline-flex;
+    padding: 2px 8px;
+    background: var(--pill-neutral-bg);
+    color: var(--pill-neutral-fg);
+    border: 1px solid var(--pill-neutral-bd);
+    border-radius: var(--radius-pill);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .ipm-grid {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) 2fr;
+    gap: 20px;
+    align-items: center;
+    margin-top: 0.5rem;
+  }
+  .dial-kicker,
+  .spark-kicker {
+    font-size: 10.5px;
+    color: var(--color-ink-muted);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .dial-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .dial-num {
+    font-size: 42px;
+    color: var(--color-forest-deep);
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .dial-num.over {
+    color: var(--color-rust);
+  }
+  .dial-unit {
+    font-size: 13px;
+    color: var(--color-ink-soft);
+  }
+  .dial-sub {
+    font-size: 12px;
+    color: var(--color-ink-muted);
+    margin-top: 4px;
+  }
+  .dial-sub .mono {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .dial-sub .over {
+    color: var(--color-rust);
+    font-weight: 600;
+  }
+  .spark-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 80px;
+    padding: 0 4px;
+  }
+  .spark-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .spark-bar-wrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+  }
+  .spark-bar {
+    width: 100%;
+    background: var(--color-wheat);
+    opacity: 0.55;
+    border-radius: 3px 3px 0 0;
+  }
+  .spark-bar.triggered {
+    background: var(--color-rust);
+    opacity: 1;
+  }
+  .spark-count {
+    font-size: 10px;
+    color: var(--color-ink-muted);
+    font-weight: 700;
+  }
+  .spark-count.triggered {
+    color: var(--color-rust);
+  }
+  .spark-week {
+    font-size: 9.5px;
+    color: var(--color-ink-muted);
+  }
+  .spark-divider {
+    width: 1px;
+    align-self: stretch;
+    border-left: 1px dashed var(--color-divider);
+    margin: 0 4px;
+  }
+  .spark-threshold {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .spark-threshold-label {
+    font-size: 9.5px;
+    color: var(--color-ink-muted);
+  }
+  .spark-threshold-value {
+    font-size: 13px;
+    color: var(--color-ink);
+    font-weight: 700;
   }
 </style>

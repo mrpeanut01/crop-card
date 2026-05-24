@@ -5,6 +5,29 @@ import { listInsecticideEvents, activeReEntryRestrictions } from '$lib/db/insect
 import { getRegistry } from '$lib/server/registry';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 
+/**
+ * Phase 25d (#89) — flatten the most recent N scout observations across
+ * all blocks so the IPM-gate slot can render the v2 threshold dial +
+ * 5-week sparkline without an extra roundtrip when the operator picks
+ * a block. Keyed by `blockId` so the page filters client-side on
+ * selection.
+ */
+function scoutLogByBlock(): Record<string, Array<{ pest: string; metric: string; value: number; occurredAt: number }>> {
+  const all = listInsecticideEvents({ limit: 50 });
+  const out: Record<string, Array<{ pest: string; metric: string; value: number; occurredAt: number }>> = {};
+  for (const e of all) {
+    if (!e.scoutObservation) continue;
+    const list = (out[e.blockId] ??= []);
+    list.push({
+      pest: e.scoutObservation.pest,
+      metric: e.scoutObservation.metric,
+      value: e.scoutObservation.value,
+      occurredAt: e.occurredAt
+    });
+  }
+  return out;
+}
+
 export const load: PageServerLoad = async ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
   const crop = cropId ? getCrop(cropId) : undefined;
@@ -48,6 +71,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // Phase 21b follow-up — deep-link from the swim-lane pip popover.
     taskId: url.searchParams.get('task'),
     // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
-    aiEnabled: getUserAiEnabled(locals.user?.id)
+    aiEnabled: getUserAiEnabled(locals.user?.id),
+    // Phase 25d (#89) — feeds the IPM threshold gate dial + sparkline.
+    // Read from past insecticide events' scoutObservationJson until a
+    // dedicated scout-events table lands (TODO future PR).
+    scoutLogByBlock: scoutLogByBlock()
   };
 };

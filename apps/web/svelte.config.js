@@ -8,15 +8,18 @@ const config = {
     adapter: adapter({ out: 'build' }),
     alias: {
       $lib: 'src/lib'
-    },
-    // Phase 24 — disable SvelteKit's built-in same-origin CSRF check.
-    // We replace it with a smarter guard in hooks.server.ts that lets
-    // Bearer-authed requests through (external agents call from
-    // arbitrary origins by design) while keeping cookie-session mutations
-    // strictly same-origin.
-    csrf: {
-      checkOrigin: false
     }
+    // Phase 24 CSRF posture (verified Phase 25, #94):
+    // SvelteKit's built-in `kit.csrf.checkOrigin` check only fires for
+    // FORM-encoded cross-origin mutations — JSON-encoded /api/** requests
+    // (the Bearer-authed agent surface) sail through by default. We rely
+    // on the per-request `csrfDecision()` helper in hooks.server.ts as
+    // the additional defensive layer that also vets cookie-session JSON
+    // mutations against Origin. Keeping SvelteKit's default ENABLED
+    // (no `csrf` block) preserves form-action protection for cookie
+    // sessions; removing the deprecated `checkOrigin: false` flag.
+    // Reference: kit/src/runtime/server/respond.js — `is_form_content_type`
+    // guard around the csrf check confirms the JSON path is unaffected.
   }
 };
 

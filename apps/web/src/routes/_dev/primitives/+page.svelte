@@ -9,6 +9,8 @@
   import Textarea from '$lib/components/ui/Textarea.svelte';
   import Modal from '$lib/components/ui/Modal.svelte';
   import OfflineIndicator from '$lib/components/ui/OfflineIndicator.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   let modalOpen = $state(false);
   let inputValue = $state('');
@@ -120,6 +122,44 @@
       <OfflineIndicator online={false} pendingCount={5} />
     </div>
   </section>
+
+  <section>
+    <h2 class="serif">Provenance — 5 sources (Phase 25d v2 addendum)</h2>
+    <div class="row">
+      <Provenance source="plugin" detail="corn-bb · v1.4" />
+      <Provenance source="data" detail="your scout · May 24" />
+      <Provenance source="ai" confidence={0.92} />
+      <Provenance source="manual" detail="edited 2 min ago" />
+      <Provenance source="fallback" detail="AI was off" />
+    </div>
+    <div class="row">
+      <span class="row-label">Compact</span>
+      <Provenance source="plugin" compact />
+      <Provenance source="data" compact />
+      <Provenance source="ai" compact confidence={0.81} />
+      <Provenance source="manual" compact />
+      <Provenance source="fallback" compact />
+    </div>
+    <div class="row">
+      <span class="row-label">Confidence bands</span>
+      <Provenance source="ai" confidence={0.95} detail="high" />
+      <Provenance source="ai" confidence={0.83} detail="medium" />
+      <Provenance source="ai" confidence={0.68} detail="low" />
+    </div>
+  </section>
+
+  <section>
+    <h2 class="serif">ProvenanceLegend</h2>
+    <ProvenanceLegend
+      shown={['plugin', 'data', 'ai', 'manual']}
+      note="AI on · mix and rates pre-populated · all editable"
+    />
+    <ProvenanceLegend
+      shown={['plugin', 'data', 'fallback', 'manual']}
+      note="AI off · plugin defaults filled · all editable"
+    />
+    <ProvenanceLegend shown={['plugin', 'data']} />
+  </section>
 </div>
 
 <style>
@@ -142,6 +182,13 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+  .row-label {
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
   }
   section h2 {
     font-size: var(--font-size-screen-title);

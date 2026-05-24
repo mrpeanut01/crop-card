@@ -50,6 +50,37 @@
   --pill-sky-fg: #3a586e;
   --pill-sky-bd: #bdcdd9;
 
+  /* Provenance source tokens (Phase 25 v2 addendum)
+     Per direction-almanac-ai-provenance.jsx PROV_SOURCES. Four of the
+     five sources alias the existing pill tones (plugin→forest,
+     data→sky, manual→neutral, fallback→rust); the `ai` source uses a
+     distinct soft-beige that pill-wheat doesn't cover. Swatches drive
+     the legend-strip dots. */
+  --prov-plugin-bg: var(--pill-forest-bg);
+  --prov-plugin-fg: var(--pill-forest-fg);
+  --prov-plugin-bd: var(--pill-forest-bd);
+  --prov-plugin-swatch: var(--color-forest);
+
+  --prov-data-bg: var(--pill-sky-bg);
+  --prov-data-fg: var(--pill-sky-fg);
+  --prov-data-bd: var(--pill-sky-bd);
+  --prov-data-swatch: var(--color-sky);
+
+  --prov-ai-bg: #efe6cc;
+  --prov-ai-fg: #8a6722;
+  --prov-ai-bd: #d9c18f;
+  --prov-ai-swatch: var(--color-wheat);
+
+  --prov-manual-bg: var(--pill-neutral-bg);
+  --prov-manual-fg: var(--pill-neutral-fg);
+  --prov-manual-bd: var(--pill-neutral-bd);
+  --prov-manual-swatch: #7a7f75;
+
+  --prov-fallback-bg: var(--pill-rust-bg);
+  --prov-fallback-fg: var(--pill-rust-fg);
+  --prov-fallback-bd: var(--pill-rust-bd);
+  --prov-fallback-swatch: var(--color-rust);
+
   /* Radii */
   --radius-input: 6px;
   --radius-card: 8px;

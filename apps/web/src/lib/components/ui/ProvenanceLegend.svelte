@@ -1,16 +1,16 @@
 <script lang="ts">
   /**
-   * Phase 25 v2-addendum stub (#90, fully implemented in #89).
+   * Phase 25 v2 addendum (#89, prop contract first shipped under #90).
    *
    * Horizontal legend strip for screens that mix provenance sources —
    * Today recommendations, every Spray flow, Plan v2, Wizard schedule.
    * Mirrors `A_ProvenanceLegend` in
-   * `docs/design/almanac/direction-almanac-ai-provenance.jsx`.
+   * [`direction-almanac-ai-provenance.jsx`](../../../../../docs/design/almanac/direction-almanac-ai-provenance.jsx).
    *
    * Prop contract:
-   *   shown: which sources to surface (caller decides — typically
+   *   shown: which sources to surface — typically
    *          `aiEnabled ? ['plugin','data','ai','manual']
-   *                     : ['plugin','data','fallback','manual']`)
+   *                     : ['plugin','data','fallback','manual']`
    *   note:  optional right-aligned italic context line
    */
 
@@ -23,12 +23,12 @@
 
   const { shown = ['plugin', 'data', 'ai', 'manual'], note }: Props = $props();
 
-  const META: Record<ProvenanceSource, { label: string; swatch: string }> = {
-    plugin: { label: 'Plugin', swatch: 'var(--color-forest)' },
-    data: { label: 'Your data', swatch: 'var(--color-sky)' },
-    ai: { label: 'AI', swatch: 'var(--color-wheat)' },
-    manual: { label: 'You typed', swatch: 'var(--pill-neutral-fg)' },
-    fallback: { label: 'Fallback', swatch: 'var(--color-rust)' }
+  const META: Record<ProvenanceSource, { label: string; swatchVar: string }> = {
+    plugin: { label: 'Plugin', swatchVar: '--prov-plugin-swatch' },
+    data: { label: 'Your data', swatchVar: '--prov-data-swatch' },
+    ai: { label: 'AI', swatchVar: '--prov-ai-swatch' },
+    manual: { label: 'You typed', swatchVar: '--prov-manual-swatch' },
+    fallback: { label: 'Fallback', swatchVar: '--prov-fallback-swatch' }
   };
 </script>
 
@@ -38,7 +38,7 @@
   {#each shown as src (src)}
     {@const m = META[src]}
     <span class="item">
-      <span class="swatch" style:background={m.swatch} aria-hidden="true"></span>
+      <span class="swatch" style:background="var({m.swatchVar})" aria-hidden="true"></span>
       <span>{m.label}</span>
     </span>
   {/each}

@@ -2,16 +2,19 @@
   import { Lock, FileText, Sparkles, Pencil, RefreshCw } from 'lucide-svelte';
 
   /**
-   * Phase 25 v2-addendum stub (#90, fully implemented in #89).
+   * Phase 25 v2 addendum (#89, prop contract first shipped under #90).
    *
    * Single-line badge indicating where a pre-populated value came from.
-   * Five sources, fixed contract — see
-   * `docs/design/almanac/AI_PROVENANCE_ADDENDUM.md` and the canonical JSX
-   * at `docs/design/almanac/direction-almanac-ai-provenance.jsx`
-   * (PROV_SOURCES token table + A_Provenance component).
+   * 1:1 port of the canonical `A_Provenance` component at
+   * [`direction-almanac-ai-provenance.jsx`](../../../../../docs/design/almanac/direction-almanac-ai-provenance.jsx)
+   * using `--prov-*` design tokens.
    *
-   * Prop contract MUST match the spec so designer-shipped markup pastes
-   * cleanly in #89. Do not rename or repurpose props.
+   * Five sources per `PROV_SOURCES`:
+   *   plugin   → forest tone, Lock      icon — deterministic plugin/kernel
+   *   data     → sky tone,    FileText  icon — owner's records
+   *   ai       → wheat tone,  Sparkles  icon — Claude proposal (+confidence)
+   *   manual   → neutral,     Pencil    icon — user typed/edited
+   *   fallback → rust tone,   RefreshCw icon — AI would-have, deterministic ran
    */
 
   type ProvenanceSource = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
@@ -31,37 +34,32 @@
   type LucideIcon = typeof Lock;
   const META: Record<
     ProvenanceSource,
-    { label: string; long: string; icon: LucideIcon; tone: string }
+    { label: string; long: string; icon: LucideIcon }
   > = {
     plugin: {
       label: 'Plugin',
       long: 'From a crop, input, or safety-kernel plugin',
-      icon: Lock,
-      tone: 'forest'
+      icon: Lock
     },
     data: {
       label: 'Your data',
       long: 'Derived from your records — scout, calibration, prior season',
-      icon: FileText,
-      tone: 'sky'
+      icon: FileText
     },
     ai: {
       label: 'AI',
       long: 'Claude proposed this · always editable · falls back when off',
-      icon: Sparkles,
-      tone: 'wheat'
+      icon: Sparkles
     },
     manual: {
       label: 'You typed',
       long: 'Entered or edited by you · the safety kernel still checks it',
-      icon: Pencil,
-      tone: 'neutral'
+      icon: Pencil
     },
     fallback: {
       label: 'Fallback',
       long: 'AI was off or unavailable — used the deterministic default',
-      icon: RefreshCw,
-      tone: 'rust'
+      icon: RefreshCw
     }
   };
 
@@ -78,7 +76,7 @@
   );
 </script>
 
-<span class="prov {meta.tone}" class:compact title={titleText}>
+<span class="prov src-{source}" class:compact title={titleText}>
   <Icon size={compact ? 9 : 10} strokeWidth={1.75} />
   {#if !compact}<span class="label">{meta.label}</span>{/if}
   {#if showConf}<span class="conf mono">{confPct}</span>{/if}
@@ -106,30 +104,30 @@
     padding: 1px 5px;
     font-size: 10px;
   }
-  .forest {
-    background: var(--pill-forest-bg);
-    color: var(--pill-forest-fg);
-    border-color: var(--pill-forest-bd);
+  .src-plugin {
+    background: var(--prov-plugin-bg);
+    color: var(--prov-plugin-fg);
+    border-color: var(--prov-plugin-bd);
   }
-  .sky {
-    background: var(--pill-sky-bg);
-    color: var(--pill-sky-fg);
-    border-color: var(--pill-sky-bd);
+  .src-data {
+    background: var(--prov-data-bg);
+    color: var(--prov-data-fg);
+    border-color: var(--prov-data-bd);
   }
-  .wheat {
-    background: var(--pill-wheat-bg);
-    color: var(--pill-wheat-fg);
-    border-color: var(--pill-wheat-bd);
+  .src-ai {
+    background: var(--prov-ai-bg);
+    color: var(--prov-ai-fg);
+    border-color: var(--prov-ai-bd);
   }
-  .neutral {
-    background: var(--pill-neutral-bg);
-    color: var(--pill-neutral-fg);
-    border-color: var(--pill-neutral-bd);
+  .src-manual {
+    background: var(--prov-manual-bg);
+    color: var(--prov-manual-fg);
+    border-color: var(--prov-manual-bd);
   }
-  .rust {
-    background: var(--pill-rust-bg);
-    color: var(--pill-rust-fg);
-    border-color: var(--pill-rust-bd);
+  .src-fallback {
+    background: var(--prov-fallback-bg);
+    color: var(--prov-fallback-fg);
+    border-color: var(--prov-fallback-bd);
   }
   .conf {
     font-size: 10px;

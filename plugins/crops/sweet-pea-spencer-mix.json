@@ -5,6 +5,7 @@
   "version": "1.0.0",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "legume",
+  "harvestStyle": "cut-and-come-again",
   "preHarvestIntervalDays": 1,
   "daysToMaturity": {
     "min": 90,

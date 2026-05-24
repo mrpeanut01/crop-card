@@ -4,8 +4,15 @@
   "displayName": "Mustard Greens — Southern Giant Curled",
   "version": "1.0.0",
   "cropFamily": "brassica",
-  "daysToMaturity": { "min": 40, "max": 50 },
+  "daysToMaturity": {
+    "min": 40,
+    "max": 50
+  },
   "defaultRowSpacingInches": 18,
-  "harvestIndicators": ["Outer leaves 8–10 in", "Before bolt"],
-  "notes": "Pungent Southern green. Bolts in heat — succession-plant for spring + fall."
+  "harvestIndicators": [
+    "Outer leaves 8–10 in",
+    "Before bolt"
+  ],
+  "notes": "Pungent Southern green. Bolts in heat — succession-plant for spring + fall.",
+  "harvestStyle": "cut-and-come-again"
 }

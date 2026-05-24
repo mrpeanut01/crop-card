@@ -82,6 +82,23 @@ function deriveHarvestStyle(plugin) {
       if (/zucchini|summer squash|yellow squash|pattypan|cucumber/.test(name)) {
         return 'continuous-fruit';
       }
+      // Winter cucurbits stored for months: pumpkin (all variants),
+      // acorn squash, butternut, kabocha, hubbard, spaghetti squash,
+      // delicata, sweet dumpling, sugar pie. Luffa gourd ripens hard
+      // for sponge use and stores like winter squash.
+      if (
+        /\b(pumpkin|acorn|butternut|kabocha|hubbard|delicata|hubbard|spaghetti|sugar pie|sweet dumpling|luffa)\b/.test(
+          name
+        )
+      ) {
+        return 'cure-then-store';
+      }
+      // Cantaloupe / muskmelon / honeydew / charentais / galia / watermelon
+      // — picked over 2-3 weeks at full slip. Each fruit is one harvest
+      // but the plant produces continuously through the window.
+      if (/cantaloupe|muskmelon|honeydew|charentais|galia|\bmelon\b|watermelon/.test(name)) {
+        return 'continuous-fruit';
+      }
       if (dtmMin != null && dtmMin < 70) return 'continuous-fruit';
       return null;
     case 'solanaceae':
@@ -150,8 +167,11 @@ function deriveHarvestStyle(plugin) {
       }
       // Cut-and-come-again leafy brassicas: kale, collards, mustard-greens,
       // mizuna, tatsoi, sea-kale, komatsuna, watercress, arugula, microgreens.
+      // `collards?` matches both "collard" + "collards"; `mustard[ -]greens`
+      // matches both display-name format ("Mustard Greens") and pluginId
+      // ("mustard-greens").
       if (
-        /\b(kale|collard|mustard-greens|mizuna|tatsoi|komatsuna|watercress|arugula|microgreens)\b/.test(
+        /\b(kale|collards?|mustard[ -]greens|mizuna|tatsoi|komatsuna|watercress|arugula|microgreens)\b/.test(
           name
         )
       ) {

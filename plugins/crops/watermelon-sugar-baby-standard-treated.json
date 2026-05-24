@@ -24,5 +24,6 @@
   "bloomWindow": {
     "continuous": true,
     "beeAttractive": true
-  }
+  },
+  "harvestStyle": "continuous-fruit"
 }

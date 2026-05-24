@@ -108,7 +108,14 @@ export type ViolationCode =
   | 'CROSS_CONTAMINATION'
   | 'ENV_WIND'
   | 'ENV_TEMP'
-  | 'ENV_RAIN';
+  | 'ENV_RAIN'
+  // Phase 25d (#89) — three new evaluators driven by plugin discriminators
+  // backfilled in 25c.0 (#87). Wired into insecticide + fungicide record
+  // endpoints behind KERNEL_DRY_RUN until the 14-day false-positive window
+  // closes.
+  | 'FRAC_ROTATION_BLOCK'
+  | 'IPM_THRESHOLD_NOT_MET'
+  | 'POLLINATOR_BLOOM_BLOCK';
 
 export interface SafetyViolation {
   code: ViolationCode;

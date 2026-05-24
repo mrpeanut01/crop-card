@@ -16,6 +16,7 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry, getRegistryStats } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 import { RULES_VERSION } from '$lib/safety/version';
+import { getUserAiEnabled } from '$lib/server/aiTry';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 type Tab = 'today' | '7d' | '30d' | 'season';
@@ -36,9 +37,12 @@ function clampView(raw: string | null): View {
   return raw === 'calendar' ? 'calendar' : 'list';
 }
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const tab = clampTab(url.searchParams.get('tab'));
   const view = clampView(url.searchParams.get('view'));
+  // Phase 25d v2-addendum (#89 / #80 partial) — drives AI-on vs AI-off
+  // variant on /today's recommendations card + provenance legend strip.
+  const aiEnabled = getUserAiEnabled(locals.user?.id);
   const registry = await getRegistry();
   const stats = getRegistryStats();
   const blocks = listBlocks();
@@ -132,6 +136,7 @@ export const load: PageServerLoad = async ({ url }) => {
     view,
     tabFromMs,
     tabToMs,
+    aiEnabled,
     rulesVersion: RULES_VERSION,
     counts: {
       crops: registry.crops().length,

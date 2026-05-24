@@ -6,8 +6,14 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import Button from '$lib/components/ui/Button.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   let { data } = $props();
+
+  // Phase 25 v2 addendum (#80 partial / #89) — drives AI-on vs AI-off
+  // variant. $derived so the variant re-paints on loader re-run.
+  const aiEnabled = $derived(data.aiEnabled);
 
   type Tab = 'today' | '7d' | '30d' | 'season';
   type View = 'list' | 'calendar';
@@ -243,7 +249,22 @@
 <header class="today">
   <Kicker>{data.today}</Kicker>
   <h1 class="serif">Today</h1>
+  <p class="today-sub">
+    <Provenance source="data" detail="your tasks + calendar" compact />
+    <span>Tasks + windows derived from your records and plugin calendar.</span>
+  </p>
 </header>
+
+<div class="today-legend-strip">
+  <ProvenanceLegend
+    shown={aiEnabled
+      ? ['plugin', 'data', 'ai', 'manual']
+      : ['plugin', 'data', 'fallback', 'manual']}
+    note={aiEnabled
+      ? 'AI on · recommendations Claude-ranked · all editable'
+      : 'AI off · plugin + your records · all editable'}
+  />
+</div>
 
 <div class="tab-row">
   <div class="tabs" role="tablist" aria-label="Calendar window">
@@ -700,10 +721,22 @@
 
 <style>
   .today {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
   .today h1 {
     margin: 0;
+  }
+  .today-sub {
+    margin: 6px 0 0;
+    color: var(--color-ink-soft);
+    font-size: var(--font-size-body);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .today-legend-strip {
+    margin: 0 0 1rem;
   }
   .tab-row {
     display: flex;

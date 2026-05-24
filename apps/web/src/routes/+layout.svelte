@@ -1,17 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-
-  // Fontsource self-hosts these woff2 files in the bundle (offline-first PWA
-  // shouldn't depend on Google CDN). Each import side-effects an @font-face
-  // declaration.
-  import '@fontsource/source-serif-4/400.css';
-  import '@fontsource/source-serif-4/500.css';
-  import '@fontsource/source-serif-4/600.css';
-  import '@fontsource/ibm-plex-sans/400.css';
-  import '@fontsource/ibm-plex-sans/500.css';
-  import '@fontsource/ibm-plex-sans/600.css';
-  import '@fontsource/ibm-plex-mono/400.css';
-  import '@fontsource/ibm-plex-mono/500.css';
+  // Fonts: `@font-face` declarations in $lib/styles/type.css use a local()
+  // → CDN fallback chain so a missing font asset never crashes a route.
+  // No npm dep on fontsource intentionally — the static `import` from
+  // node_modules was a single point of failure on container/lockfile drift.
   import '$lib/styles/index.css';
 
   import TopBar from '$lib/components/ui/TopBar.svelte';

@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import MethodTabs from '$lib/components/stock/add/MethodTabs.svelte';
   import ManualForm from '$lib/components/stock/add/ManualForm.svelte';
+  import SearchPanel from '$lib/components/stock/add/SearchPanel.svelte';
   import { normalizeStockEntry, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
   import { METHOD_META, type StockAddMethod } from '$lib/stock/addMethods';
 
@@ -92,10 +93,7 @@
   {#if active === 'manual'}
     <ManualForm onSubmit={submitDraft} busy={submitBusy} />
   {:else if active === 'search'}
-    <p class="placeholder">
-      Search method — coming in the next commit. For now, use the Manual tab or the existing
-      inventory modal.
-    </p>
+    <SearchPanel onSubmit={submitDraft} busy={submitBusy} />
   {:else if active === 'barcode'}
     <p class="placeholder">
       Barcode scanner — coming after Search. For now, use the existing inventory modal's

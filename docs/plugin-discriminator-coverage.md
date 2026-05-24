@@ -1,6 +1,6 @@
 # Plugin discriminator coverage (Phase 25c.0)
 
-Generated: 2026-05-24T21:34:21.936Z
+Generated: 2026-05-24T21:37:04.975Z
 
 Tracks coverage of the Phase 25c renderer-dispatch + Phase 25d gate-evaluator
 discriminator fields across the plugin corpus. Per the [#87 plan](https://github.com/mrpeanut01/crop-card/issues/87),
@@ -15,7 +15,7 @@ Regenerate with: `pnpm audit:plugins`
 | Plugin type | Total | Field | Coverage |
 | --- | ---: | --- | ---: |
 | Crop | 376 | growthStageTable.system | 0.8% (3/376) |
-| Crop | 376 | harvestStyle | 71.8% (270/376) |
+| Crop | 376 | harvestStyle | 79.0% (297/376) |
 | Crop | 376 | postHarvestCuring (presence) | 2.4% (9/376) |
 | Crop | 376 | bloomWindow | 21.0% (79/376) |
 | Insecticide | 70 | scoutingThresholds | 0.0% (0/70) |
@@ -26,7 +26,7 @@ Regenerate with: `pnpm audit:plugins`
 | Family | Total | growthStageTable | harvestStyle | postHarvestCuring | bloomWindow |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | allium | 21 | 0.0% | 100.0% | 9.5% | 0.0% |
-| apiaceae | 10 | 0.0% | 0.0% | 0.0% | 0.0% |
+| apiaceae | 10 | 0.0% | 100.0% | 0.0% | 0.0% |
 | bramble | 4 | 0.0% | 100.0% | 0.0% | 0.0% |
 | brassica | 33 | 0.0% | 93.9% | 0.0% | 6.1% |
 | broadleaf-companion | 26 | 0.0% | 0.0% | 0.0% | 0.0% |
@@ -39,11 +39,11 @@ Regenerate with: `pnpm audit:plugins`
 | forage | 7 | 0.0% | 14.3% | 0.0% | 0.0% |
 | herb-culinary | 8 | 0.0% | 100.0% | 0.0% | 0.0% |
 | leafy-green | 19 | 0.0% | 100.0% | 0.0% | 0.0% |
-| legume | 20 | 0.0% | 40.0% | 0.0% | 0.0% |
+| legume | 20 | 0.0% | 90.0% | 0.0% | 0.0% |
 | orchard | 18 | 0.0% | 100.0% | 11.1% | 100.0% |
 | root | 15 | 0.0% | 100.0% | 6.7% | 0.0% |
 | small-fruit | 18 | 0.0% | 100.0% | 0.0% | 0.0% |
-| solanaceae | 58 | 0.0% | 86.2% | 1.7% | 0.0% |
+| solanaceae | 58 | 0.0% | 98.3% | 1.7% | 0.0% |
 | stone-fruit | 7 | 0.0% | 100.0% | 0.0% | 100.0% |
 | vine-fruit | 8 | 0.0% | 100.0% | 0.0% | 0.0% |
 
@@ -51,30 +51,18 @@ Regenerate with: `pnpm audit:plugins`
 
 - `acorn-squash-table-queen.json` (cucurbit)
 - `amaranth-burgundy.json` (broadleaf-companion)
-- `bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed.json` (legume)
 - `bmr-sorghum-sudan.json` (forage)
-- `bush-bean-provider.json` (legume)
-- `bush-bean-roma-ii.json` (legume)
 - `calendula-resina.json` (broadleaf-companion)
 - `cantaloupe-ambrosia-f1.json` (cucurbit)
 - `cantaloupe-hales-best.json` (cucurbit)
-- `celeriac-brilliant.json` (apiaceae)
-- `celery-tall-utah-52-70.json` (apiaceae)
 - `chamomile-german.json` (broadleaf-companion)
-- `chervil.json` (apiaceae)
-- `cilantro-santo.json` (apiaceae)
 - `clover-red-mammoth.json` (forage)
 - `collards-georgia-southern.json` (brassica)
 - `cosmos-double-click.json` (broadleaf-companion)
 - `dahlia-cafe-au-lait.json` (broadleaf-companion)
-- `dill-mammoth.json` (apiaceae)
 - `echinacea-purpurea.json` (broadleaf-companion)
-- `edamame-tohya.json` (legume)
 - `eucalyptus-silver-dollar.json` (broadleaf-companion)
 - `fairytale-pumpkin-film-coated-treated-seed.json` (cucurbit)
-- `fennel-bulb-perfection.json` (apiaceae)
-- `fennel-florence-zefa-fino.json` (apiaceae)
-- `field-pea-aragorn.json` (legume)
 - `flax-grain-omega.json` (broadleaf-companion)
 - `ground-cherry-aunt-mollys.json` (solanaceae)
 - `hyssop-officinalis.json` (culinary-herb)
@@ -82,9 +70,7 @@ Regenerate with: `pnpm audit:plugins`
 - `lemon-balm.json` (culinary-herb)
 - `lemon-verbena.json` (culinary-herb)
 - `lemongrass-east-indian.json` (culinary-herb)
-- `lentil-pardina.json` (legume)
 - `lisianthus-arena.json` (broadleaf-companion)
-- `lovage.json` (apiaceae)
 - `luffa-gourd.json` (cucurbit)
 - `madder-dye.json` (broadleaf-companion)
 - `marjoram-sweet.json` (culinary-herb)
@@ -99,7 +85,21 @@ Regenerate with: `pnpm audit:plugins`
 - `mustard-greens-southern-giant-curled.json` (brassica)
 - `nasturtium-companion.json` (broadleaf-companion)
 - `okra-clemson-spineless.json` (broadleaf-companion)
-- _…and 56 more_
+- `orchard-grass-potomac.json` (forage)
+- `perilla-shiso-green.json` (culinary-herb)
+- `phacelia-cover.json` (broadleaf-companion)
+- `pumpkin-cinderella-film-coated-treated.json` (cucurbit)
+- `pumpkin-flat-white-boer-ford-standard-treated-harris-seeds.json` (cucurbit)
+- `pumpkin-grizzly-bear-film-coated-farmore-harris-seeds.json` (cucurbit)
+- `pumpkin-howden.json` (cucurbit)
+- `pumpkin-jarrahdale-film-coat-treated.json` (cucurbit)
+- `pumpkin-rouge-vif-d-etampes-film-coated-treated.json` (cucurbit)
+- `pumpkin-silver-moon-film-coated-treated.json` (cucurbit)
+- `pumpkin-small-sugar.json` (cucurbit)
+- `pumpkin.json` (cucurbit)
+- `quinoa-cherry-vanilla.json` (broadleaf-companion)
+- `ranunculus-tecolote.json` (broadleaf-companion)
+- _…and 29 more_
 
 ## Missing coverage — crop bloomWindow (top 50)
 

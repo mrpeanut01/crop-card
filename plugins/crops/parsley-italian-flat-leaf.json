@@ -4,8 +4,14 @@
   "displayName": "Parsley — Italian Flat-Leaf",
   "version": "1.0.0",
   "cropFamily": "apiaceae",
-  "daysToMaturity": { "min": 70, "max": 85 },
+  "daysToMaturity": {
+    "min": 70,
+    "max": 85
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["Stems 6–8 in"],
-  "notes": "Biennial — bolts year 2. Outer-leaf cutting extends harvest 6 mo."
+  "harvestIndicators": [
+    "Stems 6–8 in"
+  ],
+  "notes": "Biennial — bolts year 2. Outer-leaf cutting extends harvest 6 mo.",
+  "harvestStyle": "cut-and-come-again"
 }

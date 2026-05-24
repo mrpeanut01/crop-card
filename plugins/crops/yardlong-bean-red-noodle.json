@@ -26,5 +26,6 @@
   "notes": "Asparagus bean (Vigna unguiculata sesquipedalis). Pole habit. Heat-loving where bush snap beans fail. Strong Asian-market crop.",
   "harvestIndicators": [
     "Deep burgundy 18 to 30 inch pods, still pencil-thick"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit"
 }

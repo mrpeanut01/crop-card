@@ -4,8 +4,15 @@
   "displayName": "Dill — Mammoth",
   "version": "1.0.0",
   "cropFamily": "apiaceae",
-  "daysToMaturity": { "min": 50, "max": 70 },
+  "daysToMaturity": {
+    "min": 50,
+    "max": 70
+  },
   "defaultRowSpacingInches": 18,
-  "harvestIndicators": ["Foliage cut as needed", "Seed heads at full bloom→drying"],
-  "notes": "Dual-purpose: dill weed (foliage) + dill seed. Direct-seed; transplants poorly."
+  "harvestIndicators": [
+    "Foliage cut as needed",
+    "Seed heads at full bloom→drying"
+  ],
+  "notes": "Dual-purpose: dill weed (foliage) + dill seed. Direct-seed; transplants poorly.",
+  "harvestStyle": "cut-and-come-again"
 }

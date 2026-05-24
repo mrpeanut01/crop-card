@@ -26,5 +26,6 @@
   "notes": "Heirloom French fingerling. Premium farmstand and restaurant-market crop. Heavy yields once established.",
   "harvestIndicators": [
     "3 to 4 inch finger-shaped tubers, rose-pink skin and yellow flesh"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

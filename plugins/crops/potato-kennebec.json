@@ -26,5 +26,6 @@
   "notes": "USDA-Maine 1948 release. Mid-season white-fleshed all-purpose potato. Late blight tolerance better than Russet Burbank.",
   "harvestIndicators": [
     "Tubers 8 to 10 inches deep, skins firm"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

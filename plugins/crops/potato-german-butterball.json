@@ -26,5 +26,6 @@
   "notes": "Late-maturing yellow-flesh storage potato. Buttery texture. Strong cellar storage.",
   "harvestIndicators": [
     "Russeted yellow skin, yellow flesh, mature size at vine die-down"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

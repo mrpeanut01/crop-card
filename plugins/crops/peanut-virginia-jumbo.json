@@ -26,5 +26,6 @@
   "notes": "Large-podded Virginia-type peanut. Heat-loving, suited to mid-Atlantic and southern growers. Inoculate with peanut Rhizobium.",
   "harvestIndicators": [
     "Pods plump and dark at vine die-down, kernels firm"
-  ]
+  ],
+  "harvestStyle": "single-event"
 }

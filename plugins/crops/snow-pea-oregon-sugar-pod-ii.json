@@ -4,8 +4,15 @@
   "displayName": "Snow Pea — Oregon Sugar Pod II",
   "version": "1.0.0",
   "cropFamily": "legume",
-  "daysToMaturity": { "min": 60, "max": 70 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 70
+  },
   "defaultRowSpacingInches": 18,
-  "harvestIndicators": ["Flat pods 3–4 in", "Peas just visible inside"],
-  "notes": "Edible-pod variety, cool-season. PM resistant."
+  "harvestIndicators": [
+    "Flat pods 3–4 in",
+    "Peas just visible inside"
+  ],
+  "notes": "Edible-pod variety, cool-season. PM resistant.",
+  "harvestStyle": "continuous-fruit"
 }

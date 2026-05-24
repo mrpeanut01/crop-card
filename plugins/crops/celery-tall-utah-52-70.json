@@ -4,8 +4,15 @@
   "displayName": "Celery — Tall Utah 52-70",
   "version": "1.0.0",
   "cropFamily": "apiaceae",
-  "daysToMaturity": { "min": 100, "max": 120 },
+  "daysToMaturity": {
+    "min": 100,
+    "max": 120
+  },
   "defaultRowSpacingInches": 24,
-  "harvestIndicators": ["Stalks 12–18 in", "Solid (not pithy)"],
-  "notes": "Heavy water + N feeder. Self-blanching stalks. Long-season — start indoors 10 wk before transplant."
+  "harvestIndicators": [
+    "Stalks 12–18 in",
+    "Solid (not pithy)"
+  ],
+  "notes": "Heavy water + N feeder. Self-blanching stalks. Long-season — start indoors 10 wk before transplant.",
+  "harvestStyle": "single-event"
 }

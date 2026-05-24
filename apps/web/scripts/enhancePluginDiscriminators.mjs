@@ -85,7 +85,11 @@ function deriveHarvestStyle(plugin) {
       if (dtmMin != null && dtmMin < 70) return 'continuous-fruit';
       return null;
     case 'solanaceae':
-      if (/tomato|pepper|eggplant/.test(name)) return 'continuous-fruit';
+      // Phase 25c.0 #87 solanaceae batch: tubers (potato) are single-event
+      // dig-at-maturity; tomato/pepper/eggplant + tomatillo + ground-cherry
+      // all bear over weeks → continuous-fruit.
+      if (/\bpotato\b/.test(name)) return 'single-event';
+      if (/tomato|pepper|eggplant|tomatillo|ground-cherry/.test(name)) return 'continuous-fruit';
       return null;
     case 'leafy-green':
       return 'cut-and-come-again';
@@ -93,12 +97,41 @@ function deriveHarvestStyle(plugin) {
     case 'root':
       return 'single-event';
     case 'legume':
-      if (/cowpea|cherokee|black bean|kidney|navy|pinto|dry bean|soybean|lima/.test(name)) {
+      // Phase 25c.0 #87 legume batch extension.
+      // Single dig at full senescence (peanut).
+      if (/\bpeanut\b/.test(name)) return 'single-event';
+      // Dry-seed legumes (mature pods, single threshing): cowpea, cherokee,
+      // dry/storage beans, lentil, soybean/edamame (harvested at R6 fresh
+      // is technically continuous but commodity edamame is single-event
+      // since plants come out together), field pea, southern pea.
+      if (
+        /cowpea|cherokee|black bean|kidney|navy|pinto|dry bean|soybean|edamame|lima|lentil|field pea|southern pea/.test(
+          name
+        )
+      ) {
         return 'dry-seed-legume';
       }
-      if (/snap|green bean|pole bean|wax bean|string bean/.test(name)) {
+      // Snap / pole / bush / yardlong / snow / sugar — picked over weeks.
+      if (
+        /snap|green bean|pole|wax bean|string bean|bush bean|yardlong|snow pea|sugar pea/.test(
+          name
+        )
+      ) {
         return 'continuous-fruit';
       }
+      // Pea-shoots = microgreens → cut-and-come-again.
+      if (/microgreens-pea|pea-shoots/.test(name)) return 'cut-and-come-again';
+      // Ornamental sweet pea — defer (not edible, harvest model doesn't apply).
+      return null;
+    case 'apiaceae':
+      // Phase 25c.0 #87 apiaceae batch. Two flavors:
+      // 1. Root + stem vegetables (single dig at maturity): carrot, parsnip,
+      //    celery (cut at base), celeriac (dig).
+      if (/parsnip|celery|celeriac|carrot/.test(name)) return 'single-event';
+      // 2. Cut-and-come-again herbs: parsley, cilantro, dill, fennel-leaf,
+      //    chervil, lovage. Note fennel-bulb is single-event.
+      if (/fennel-bulb/.test(name)) return 'single-event';
+      if (/parsley|cilantro|dill|fennel|chervil|lovage/.test(name)) return 'cut-and-come-again';
       return null;
     case 'herb-culinary':
       return 'cut-and-come-again';

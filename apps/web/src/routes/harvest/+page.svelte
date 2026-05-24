@@ -4,13 +4,15 @@
   import type { PlantingHarvestStatus } from './+page.server';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
+  import HarvestRouter from '$lib/components/harvest/HarvestRouter.svelte';
 
   let { data } = $props();
 
   let recordingFor = $state<string | null>(untrack(() => data.focusPlantingId ?? null));
-  let quantity = $state('');
-  let lotNumber = $state('');
-  let recordError = $state<string | null>(null);
+  // Phase 25c (#88) — HarvestRouter owns the in-form state now; we
+  // keep recordingFor + lastError at this level so the parent decides
+  // which planting's renderer is active and surfaces error state.
+  let lastError = $state<string | null>(null);
 
   onMount(async () => {
     if (data.focusPlantingId) {
@@ -22,17 +24,22 @@
 
   function startRecord(plantingId: string) {
     recordingFor = plantingId;
-    quantity = '';
-    lotNumber = '';
-    recordError = null;
+    lastError = null;
   }
 
   function cancelRecord() {
     recordingFor = null;
   }
 
-  async function submitRecord(planting: PlantingHarvestStatus) {
-    recordError = null;
+  /** Phase 25c (#88) — HarvestRouter renderer commit hook. Builds the
+   *  POST body, surfaces the new event id on success, reloads, and
+   *  routes the error message through `lastError` so the active
+   *  renderer can render it. */
+  async function commitFromRenderer(
+    planting: PlantingHarvestStatus,
+    input: { quantity?: string; lotNumber?: string }
+  ): Promise<string | null> {
+    lastError = null;
     try {
       const res = await fetch('/api/harvest/record', {
         method: 'POST',
@@ -40,19 +47,21 @@
         body: JSON.stringify({
           blockId: planting.blockId,
           cropPluginId: planting.cropPluginId,
-          quantity: quantity || undefined,
-          lotNumber: lotNumber || undefined
+          quantity: input.quantity,
+          lotNumber: input.lotNumber
         })
       });
       const out = await res.json();
       if (!res.ok) {
-        recordError = out.error ?? `HTTP ${res.status}`;
-        return;
+        lastError = out.error ?? `HTTP ${res.status}`;
+        return null;
       }
       recordingFor = null;
       await invalidateAll();
+      return (out?.event?.id as string | undefined) ?? null;
     } catch (e) {
-      recordError = e instanceof Error ? e.message : String(e);
+      lastError = e instanceof Error ? e.message : String(e);
+      return null;
     }
   }
 
@@ -137,27 +146,24 @@
           {/if}
 
           {#if recordingFor === p.plantingId}
-            <form
-              class="record-form"
-              onsubmit={(e) => {
-                e.preventDefault();
-                submitRecord(p);
-              }}
-            >
-              <label>
-                Quantity (e.g. 14 bushels)
-                <input type="text" bind:value={quantity} />
-              </label>
-              <label>
-                Lot number (e.g. 2026-A-7)
-                <input type="text" bind:value={lotNumber} />
-              </label>
-              <div class="actions">
-                <button type="submit" class="primary">Record harvest</button>
-                <button type="button" onclick={cancelRecord}>Cancel</button>
-              </div>
-              {#if recordError}<p class="error">{recordError}</p>{/if}
-            </form>
+            <div class="renderer-mount">
+              <HarvestRouter
+                harvestStyle={p.harvestStyle}
+                plantingId={p.plantingId}
+                blockId={p.blockId}
+                blockName={p.blockName}
+                cropPluginId={p.cropPluginId}
+                varietyDisplayName={p.varietyDisplayName}
+                cropFamily={p.cropFamily}
+                plantingDate={p.plantingDate}
+                windowStartMs={p.windowStartMs}
+                windowEndMs={p.windowEndMs}
+                harvestIndicators={p.harvestIndicators}
+                onCommit={(input) => commitFromRenderer(p, input)}
+                error={lastError}
+                onCancel={cancelRecord}
+              />
+            </div>
           {:else if !p.alreadyHarvested}
             <button class="primary" onclick={() => startRecord(p.plantingId)}>
               Record harvest
@@ -453,29 +459,10 @@
     margin: 0.4rem 0 0 1.25rem;
     padding: 0;
   }
-  .record-form {
+  .renderer-mount {
     margin-top: 0.75rem;
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: 1fr 1fr;
-  }
-  .record-form .actions {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 0.5rem;
-  }
-  .record-form label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-  }
-  .record-form input {
-    padding: 0.6rem;
-    border: 2px solid var(--color-divider);
-    border-radius: 4px;
-    font-size: 1rem;
-    min-height: 48px;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-divider-soft, var(--color-divider));
   }
   .primary {
     background: var(--color-forest);

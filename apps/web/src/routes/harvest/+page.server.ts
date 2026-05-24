@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
-import type { CropPlugin } from '$lib/plugins/schemas';
+import type { CropPlugin, HarvestStyle } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -15,6 +15,8 @@ export interface PlantingHarvestStatus {
   cropPluginId: string;
   varietyDisplayName: string;
   cropFamily?: string;
+  /** Phase 25c.0 #87 — drives the Phase 25c HarvestRouter dispatch. */
+  harvestStyle?: HarvestStyle;
   plantingDate: number | null;
   windowStartMs?: number;
   windowEndMs?: number;
@@ -73,6 +75,7 @@ export const load: PageServerLoad = async ({ url }) => {
         cropPluginId: p.cropPluginId,
         varietyDisplayName: p.varietyDisplayName,
         cropFamily: crop?.cropFamily,
+        harvestStyle: crop?.harvestStyle,
         plantingDate: p.plantingDate,
         windowStartMs,
         windowEndMs,

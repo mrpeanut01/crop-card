@@ -518,6 +518,19 @@
     } else if (successes.length > 1) {
       recordedId = `multi:${successes.length}`;
     }
+
+    // If every attempt failed, surface the failure messages at the top-level
+    // error banner. Without this the single-block UI shows nothing on
+    // server 5xx — the operator clicks "Confirm", sees no state change,
+    // and walks away believing the spray was recorded.
+    if (successes.length === 0) {
+      const failures = [...outcomes.values()]
+        .filter((o): o is RecordOutcome & { kind: 'failed'; error: string } => o.kind === 'failed')
+        .map((o) => o.error);
+      if (failures.length > 0) {
+        lastError = failures.join(' • ');
+      }
+    }
     recording = false;
 
     if (postedTaskRedirect) {
@@ -967,7 +980,7 @@
             <p>{v.message}</p>
             {#if v.detail}
               <details>
-                <summary>detail</summary>
+                <summary>Show kernel evaluation detail</summary>
                 <pre>{JSON.stringify(v.detail, null, 2)}</pre>
               </details>
             {/if}

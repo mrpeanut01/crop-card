@@ -62,6 +62,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>Harvest — CropCard</title>
+</svelte:head>
+
 <h1>Harvest</h1>
 <p class="lede">
   Each planting's harvest window is computed from the crop plugin's days-to-maturity. Walk the
@@ -226,7 +230,7 @@
         {#each data.recordedHarvests as h (h.id)}
           <tr>
             <td>{new Date(h.occurredAt).toLocaleDateString()}</td>
-            <td><code>{h.blockId.slice(0, 8)}…</code></td>
+            <td>{h.blockName ?? `(deleted block)`}</td>
             <td><code>{h.cropPluginId}</code></td>
             <td>{h.quantity ?? '—'}</td>
             <td>{h.lotNumber ?? '—'}</td>

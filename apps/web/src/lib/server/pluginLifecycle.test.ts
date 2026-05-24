@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
-import { blocks, fields, pluginVersions, sprayEvents, sprayers, users } from '$lib/db/schema';
+import { blocks, equipment, fields, pluginVersions, sprayEvents, users } from '$lib/db/schema';
 import {
   PluginLifecycleError,
   countReferences,
@@ -97,10 +97,11 @@ beforeAll(() => {
     })
     .onConflictDoNothing()
     .run();
-  db.insert(sprayers)
+  db.insert(equipment)
     .values({
       id: TEST_SPRAYER_ID,
       ownerId: TEST_OWNER_ID,
+      type: 'sprayer',
       label: 'Lifecycle Test Sprayer'
     })
     .onConflictDoNothing()

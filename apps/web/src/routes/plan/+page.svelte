@@ -462,7 +462,11 @@
   ) {
     plantingError = null;
     try {
-      const plantingDateMs = plantingDateIso ? new Date(plantingDateIso).getTime() : null;
+      // HTML `<input type="date">` returns YYYY-MM-DD which `new Date(...)`
+      // parses as UTC midnight; in a western-hemisphere zone that displays
+      // back as the *previous* day. Append a local-midnight time so the
+      // stored ms matches the operator's calendar date.
+      const plantingDateMs = plantingDateIso ? new Date(`${plantingDateIso}T00:00:00`).getTime() : null;
       const res = await fetch(`/api/blocks/${encodeURIComponent(blockId)}/plantings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4310,6 +4314,14 @@
     tabindex="-1"
   >
     <div class="advisor-modal">
+      <button
+        type="button"
+        class="advisor-close"
+        aria-label="Close companion advisor"
+        onclick={dismissAdvisor}
+      >
+        ✕
+      </button>
       <h2 id="advisor-title">🌽 Companion Advisor</h2>
       {#each advisor.suggestions as s (s.systemName)}
         <div class="suggestion">
@@ -5921,8 +5933,30 @@
     padding: 1.5rem;
     max-width: 540px;
     width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
     border-top: 6px solid #1f5e3a;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    position: relative;
+  }
+  .advisor-modal .advisor-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #555;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .advisor-modal .advisor-close:hover,
+  .advisor-modal .advisor-close:focus-visible {
+    background: #f0f0f0;
+    color: #000;
   }
   .advisor-modal h2 {
     margin: 0 0 1rem;

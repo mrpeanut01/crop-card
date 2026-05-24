@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
 
   let { data } = $props();
 
@@ -113,6 +113,9 @@
         return;
       }
       completed = true;
+      // Refresh the parent layout's dirty-sprayer list so the top-bar
+      // contamination banner clears on this same SPA navigation.
+      await invalidateAll();
     } catch (e) {
       submitError = e instanceof Error ? e.message : String(e);
     } finally {

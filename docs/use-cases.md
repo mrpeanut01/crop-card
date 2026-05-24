@@ -39,15 +39,14 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   3. Select herbicide(s) (window-stage filtered when deep-linked) (2)
   4. Select sprayer (3)
   5. Pick tank size from quick-picks (4)
-  6. Adjust conditions via steppers — wind, temp, rain, optional corn height (5)
-  7. **Check safety** (sticky CTA at bottom)
-  8. If OK: review tank-mix order + dilution table → **Confirm — record this spray**
-  9. Land on success card with next-actions: Today / Records / Plan another
+  6. Kernel re-evaluates automatically as selections change (Phase 21b removed the explicit wind/temp/rain steppers + "Check safety" CTA; defaults of 5 mph / 70°F / 0 mm rain are used. A future revision will wire condition inputs into the autosave loop.)
+  7. If OK: review tank-mix order + dilution table → **Confirm — record this spray**
+  8. Land on success card with next-actions: Today / Records / Plan another
 - **Alt paths:**
-  - Offline: record is queued via Dexie ([spray:142-198](../apps/web/src/routes/spray/+page.svelte#L142)) and confirmed with "queued" banner.
+  - Offline: record is queued via Dexie and confirmed with "queued" banner.
   - Bypass: jump to UC-03.
 - **Success:** Spray record persisted (server or queue) within 48-hour lock window.
-- **Click count from `/today`:** ≈11 distinct clicks (block + ≥1 herbicide + sprayer + tank + 4 stepper interactions + check + confirm). With pre-fill: ≈8 clicks.
+- **Click count from `/today`:** ≈5 distinct clicks (block + ≥1 herbicide + sprayer + tank + confirm). With pre-fill: ≈3 clicks.
 
 ## UC-03 — Resolve a safety bypass (STOP card)
 

@@ -11,6 +11,24 @@
   import OfflineIndicator from '$lib/components/ui/OfflineIndicator.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
+  import WorkflowStrip, {
+    type WorkflowStep
+  } from '$lib/components/plan/WorkflowStrip.svelte';
+
+  const WIZARD_STEPS: WorkflowStep[] = [
+    { id: 'season-setup', label: 'Season setup', state: 'done', when: 'Apr 2' },
+    { id: 'allocation', label: 'Allocation', state: 'done', when: 'Apr 8' },
+    { id: 'schedule', label: 'Schedule', state: 'in-progress', when: 'Apr 14' },
+    { id: 'inputs', label: 'Inputs plan', state: 'pending' },
+    { id: 'commit', label: 'Commit', state: 'pending' }
+  ];
+  const WIZARD_STEPS_WITH_STALE: WorkflowStep[] = [
+    { id: 'season-setup', label: 'Season setup', state: 'done', when: 'Mar 20' },
+    { id: 'allocation', label: 'Allocation', state: 'done', when: 'Mar 28' },
+    { id: 'schedule', label: 'Schedule', state: 'stale', note: 'Frost dates updated' },
+    { id: 'inputs', label: 'Inputs plan', state: 'pending' },
+    { id: 'commit', label: 'Commit', state: 'pending' }
+  ];
 
   let modalOpen = $state(false);
   let inputValue = $state('');
@@ -159,6 +177,13 @@
       note="AI off · plugin defaults filled · all editable"
     />
     <ProvenanceLegend shown={['plugin', 'data']} />
+  </section>
+
+  <section>
+    <h2 class="serif">WorkflowStrip — Plan v2 (Phase 25b #81 primitive)</h2>
+    <WorkflowStrip seasonYear={2026} steps={WIZARD_STEPS} onOpenWizard={() => {}} />
+    <WorkflowStrip seasonYear={2026} steps={WIZARD_STEPS_WITH_STALE} onOpenWizard={() => {}} />
+    <WorkflowStrip seasonYear={2026} steps={WIZARD_STEPS} />
   </section>
 </div>
 

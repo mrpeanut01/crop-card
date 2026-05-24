@@ -543,9 +543,12 @@ export const sprayEvents = tenantScoped(
         .notNull()
         .references(() => blocks.id),
       cropId: text('crop_id').references(() => crops.id),
+      // FK targets `equipment(id)` since Phase 8a unified gear under
+      // equipment. The legacy `sprayers` table is now write-frozen and only
+      // survives for the cross-tenant delete in admin.ts.
       sprayerId: text('sprayer_id')
         .notNull()
-        .references(() => sprayers.id),
+        .references(() => equipment.id),
       performedById: text('performed_by_id')
         .notNull()
         .references(() => users.id),

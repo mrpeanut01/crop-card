@@ -63,7 +63,7 @@ export function recordSpray(id: string, chemistry: ChemistryClass, occurredAt: n
 }
 
 export function recordDecon(id: string, completedAt: number): Sprayer {
-  updateEquipmentState(id, { lastDeconAt: completedAt });
+  updateEquipmentState(id, { lastDeconAt: completedAt, lastChemistryClass: null });
   appendEquipmentLog({
     equipmentId: id,
     kind: 'decon',

@@ -519,6 +519,14 @@
         {uploading ? 'Uploading…' : 'Upload'}
       </button>
       {#if uploadSuccess}<p class="success">{uploadSuccess}</p>{/if}
+      {#if reject}
+        <p class="error" role="alert" aria-live="assertive">
+          {reject.title}{#if reject.issues.length > 0}: {reject.issues
+              .slice(0, 3)
+              .map((i) => (i.path ? `${i.path} — ${i.message}` : i.message))
+              .join('; ')}{/if}
+        </p>
+      {/if}
     </details>
   </section>
 {/if}

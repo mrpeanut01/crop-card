@@ -1466,6 +1466,17 @@
     gap: 1rem;
     align-items: center;
     margin-top: 1rem;
+    /* Stick the Save row above the fixed primary nav at the mobile viewport
+     * so the CTA is always tap-reachable regardless of how long the form
+     * scroll body is. The nav is ~112px + safe-area; sit just above it. */
+    position: sticky;
+    bottom: calc(112px + env(safe-area-inset-bottom, 0) + 0.5rem);
+    background: white;
+    padding: 0.75rem;
+    border-top: 1px solid #e0e0e0;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    z-index: 50;
   }
   .grid {
     display: grid;

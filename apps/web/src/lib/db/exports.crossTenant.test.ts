@@ -20,7 +20,7 @@ import { eq } from 'drizzle-orm';
 
 import { runWithTenant } from './tenant';
 import { db } from './client';
-import { owners, sprayers, users } from './schema';
+import { equipment, owners, users } from './schema';
 import { createField } from './fields';
 import { createBlock } from './blocks';
 import { insertSprayEvent, listSprayEvents } from './sprayEvents';
@@ -51,11 +51,11 @@ function seedOwnerWithSpray(
   return runWithTenant(ownerId, () => {
     const field = createField({ name: `${ownerId}-field` });
     const block = createBlock({ name: `${ownerId}-block`, fieldId: field.id, acres: 1 });
-    // Each tenant gets its own sprayer row so the spray-event FK resolves
-    // within the same Owner.
+    // Each tenant gets its own sprayer row (in equipment, post-Phase-8a) so
+    // the spray-event FK resolves within the same Owner.
     const sprayerId = `${ownerId}-sprayer`;
-    db.insert(sprayers)
-      .values({ id: sprayerId, ownerId, label: `${ownerId} sprayer`, calibratedGpa: 15 })
+    db.insert(equipment)
+      .values({ id: sprayerId, ownerId, type: 'sprayer', label: `${ownerId} sprayer` })
       .onConflictDoNothing()
       .run();
     const spray = insertSprayEvent({
@@ -159,8 +159,8 @@ describe('export endpoints cross-tenant isolation', () => {
         fieldId: field.id
       });
       const isoSprayerId = `iso-sprayer-${randomUUID().slice(0, 6)}`;
-      db.insert(sprayers)
-        .values({ id: isoSprayerId, ownerId: OWNER_Y, label: 'iso sprayer', calibratedGpa: 15 })
+      db.insert(equipment)
+        .values({ id: isoSprayerId, ownerId: OWNER_Y, type: 'sprayer', label: 'iso sprayer' })
         .run();
       insertSprayEvent({
         blockId: block.id,

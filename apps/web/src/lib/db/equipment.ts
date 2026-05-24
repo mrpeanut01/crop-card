@@ -195,7 +195,12 @@ export function updateEquipment(id: string, patch: { label?: string; notes?: str
 
 export function updateEquipmentState(
   id: string,
-  patch: Partial<Omit<EquipmentStateRow, 'equipmentId'>>
+  // `lastChemistryClass: null` clears the chemistry flag — needed so the
+  // decon flow can actually mark a sprayer clean. Other fields use the
+  // same undefined-means-skip convention.
+  patch: Partial<Omit<EquipmentStateRow, 'equipmentId' | 'lastChemistryClass'>> & {
+    lastChemistryClass?: ChemistryClass | null;
+  }
 ): EquipmentStateRow {
   const set: Partial<typeof equipmentState.$inferInsert> = {};
   if (patch.hourMeter !== undefined) set.hourMeter = patch.hourMeter;

@@ -99,12 +99,14 @@ export const load: PageServerLoad = async ({ url }) => {
 
   // FR-08: enrich each recorded harvest with curing-status from the crop
   // plugin's postHarvestCuring data so the operator sees countdown to ready.
+  const blockNameById = new Map(blocks.map((b) => [b.id, b.name]));
   const recordedHarvests = all.map((h) => {
     const rec = registry.get(h.cropPluginId);
     const crop = rec?.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : undefined;
     const curing = crop?.postHarvestCuring;
+    const blockName = blockNameById.get(h.blockId) ?? null;
     if (!curing) {
-      return { ...h, curing: null };
+      return { ...h, blockName, curing: null };
     }
     const minMs = h.occurredAt + curing.durationWeeks.min * 7 * DAY_MS;
     const maxMs = h.occurredAt + curing.durationWeeks.max * 7 * DAY_MS;
@@ -122,6 +124,7 @@ export const load: PageServerLoad = async ({ url }) => {
     }
     return {
       ...h,
+      blockName,
       curing: {
         method: curing.method,
         minWeeks: curing.durationWeeks.min,

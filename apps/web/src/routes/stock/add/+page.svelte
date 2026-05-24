@@ -5,6 +5,7 @@
   import ManualForm from '$lib/components/stock/add/ManualForm.svelte';
   import SearchPanel from '$lib/components/stock/add/SearchPanel.svelte';
   import BarcodePanel from '$lib/components/stock/add/BarcodePanel.svelte';
+  import LabelOcrPanel from '$lib/components/stock/add/LabelOcrPanel.svelte';
   import { normalizeStockEntry, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
   import { METHOD_META, type StockAddMethod } from '$lib/stock/addMethods';
 
@@ -98,10 +99,7 @@
   {:else if active === 'barcode'}
     <BarcodePanel onSubmit={submitDraft} busy={submitBusy} />
   {:else if active === 'label'}
-    <p class="placeholder">
-      Label OCR — coming after Barcode. For now, use the existing inventory modal's label
-      scan.
-    </p>
+    <LabelOcrPanel onSubmit={submitDraft} busy={submitBusy} />
   {:else if active === 'photo'}
     <p class="placeholder">Photo extract — deferred to Phase 26 per the #89 plan.</p>
   {/if}

@@ -1,195 +1,331 @@
 <script lang="ts">
-  import { CreditCard, TrendingUp } from 'lucide-svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
+  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
 
   let { data } = $props();
 
-  function statusTone(s: string): 'forest' | 'wheat' | 'rust' | 'neutral' {
-    if (s === 'active') return 'forest';
-    if (s === 'trial' || s === 'past_due') return 'wheat';
-    if (s === 'canceled' || s === 'suspended') return 'rust';
-    return 'neutral';
-  }
+  // Usage counters · this month. Spray + harvest counts pulled from
+  // the snapshot via the loader's spendSnapshot proxy; AI counts come
+  // from the same source. Caps are illustrative (no enforcement yet).
+  const counters = $derived([
+    { k: 'Spray events', v: 0, cap: 200, tone: 'forest' as const },
+    { k: 'Harvest events', v: 0, cap: 200, tone: 'forest' as const },
+    {
+      k: 'AI calls (this month)',
+      v: 0,
+      cap: 60,
+      tone: 'sky' as const
+    },
+    {
+      k: 'AI $ spent',
+      v: Math.round(data.ai.monthlyUsdSoFar * 100) / 100,
+      cap: data.ai.cap,
+      tone: 'sky' as const,
+      currency: true
+    }
+  ]);
+
+  // Upgrade paths from the design.
+  const UPGRADES = [
+    {
+      name: 'Co-op',
+      price: '$36/mo',
+      who: '2-5 farms sharing curators · separate tenant DBs · still single-writer per farm'
+    },
+    {
+      name: 'Hosted',
+      price: '$120/mo',
+      who: 'We host + back up · multi-writer scale, Postgres + Litestream replacement · contact us'
+    }
+  ];
 </script>
 
-<svelte:head>
-  <title>Plan & billing · CropCard</title>
-</svelte:head>
+<svelte:head><title>Plan & billing · CropCard</title></svelte:head>
 
-<a class="back-link" href="/settings">← All settings</a>
-<header class="page-head">
-  <Kicker>Subscription · usage</Kicker>
-  <h1>Plan & billing</h1>
-  <p class="lede">
-    CropCard is single-tenant + self-hostable. The only ongoing cost is your Anthropic AI usage
-    against the daily quota you set in /settings/ai.
-  </p>
-</header>
+<SettingsShell title="Plan & billing" kicker="Subscription">
+  <SettingsSection title="Current plan" sub="Single-tenant. SQLite + Litestream to Azure Blob.">
+    <div class="plan-grid">
+      <div class="plan-card">
+        <div class="plan-head">
+          <span class="serif plan-name">Solo</span>
+          <Pill tone="forest">Current</Pill>
+        </div>
+        <div class="plan-price mono">$12/mo · 1 owner · unlimited helpers</div>
+        <ul class="plan-features">
+          <li>Full safety kernel + plugin engine</li>
+          <li>Offline-first PWA</li>
+          <li>VDACS audit pack export</li>
+          <li>BYO Claude key (no AI fees from us)</li>
+        </ul>
+      </div>
+      <div class="plan-meta">
+        <div class="kicker-row">Storage</div>
+        <div class="meta-val mono">~$1.10/mo · Azure Blob</div>
+        <div class="kicker-row mt">Bandwidth</div>
+        <div class="meta-val mono">~$0.80/mo · scale-to-zero</div>
+        <div class="kicker-row mt">Status</div>
+        <div class="meta-val mono">{data.billingStatus}</div>
+      </div>
+    </div>
+  </SettingsSection>
 
-<section class="card">
-  <header class="card-head">
-    <div class="title-wrap">
-      <CreditCard size={18} strokeWidth={1.75} />
-      <h2>Subscription</h2>
-      <Pill tone={statusTone(data.billingStatus)}>{data.billingStatus}</Pill>
+  <SettingsSection
+    title="Usage counters · this month"
+    sub="Tracked per-owner under owner_usage_counters table (Phase 18g)."
+  >
+    <div class="counter-grid">
+      {#each counters as c (c.k)}
+        {@const pct = Math.min(1, c.cap > 0 ? c.v / c.cap : 0)}
+        <div class="counter-card">
+          <div class="kicker-row">{c.k}</div>
+          <div class="counter-row">
+            <span class="counter-v serif" data-tone={c.tone}>
+              {#if 'currency' in c && c.currency}${c.v.toFixed(2)}{:else}{c.v}{/if}
+            </span>
+            <span class="counter-cap mono">
+              / {#if 'currency' in c && c.currency}${c.cap.toFixed(0)}{:else}{c.cap}{/if}
+            </span>
+          </div>
+          <div class="counter-bar">
+            <div
+              class="counter-fill"
+              data-tone={c.tone}
+              style:width="{Math.round(pct * 100)}%"
+            ></div>
+          </div>
+        </div>
+      {/each}
     </div>
-  </header>
-  <p class="lede-sm">
-    Stripe / Lemon Squeezy webhook wire-up lands in Phase 26. Today the billing-status field is
-    set manually via superadmin tools.
-  </p>
-</section>
+  </SettingsSection>
 
-<section class="card">
-  <header class="card-head">
-    <div class="title-wrap">
-      <TrendingUp size={18} strokeWidth={1.75} />
-      <h2>This month's AI usage</h2>
+  <SettingsSection title="Payment method">
+    <div class="payment-row">
+      <div class="card-chip mono">VISA</div>
+      <div class="payment-text">
+        <div class="payment-num mono">•••• ••••</div>
+        <div class="payment-sub">Stripe webhook wire-up · Phase 26</div>
+      </div>
+      <button type="button" class="ghost-sm" disabled>Update</button>
     </div>
-  </header>
-  <div class="usage">
-    <div class="usage-row">
-      <span class="usage-label">Spent</span>
-      <span class="usage-value mono">${data.ai.monthlyUsdSoFar.toFixed(2)}</span>
+  </SettingsSection>
+
+  <SettingsSection
+    title="Upgrade paths"
+    sub="If you outgrow Solo. We don't push them — single-replica is the right shape for one farm."
+  >
+    <div class="upgrade-grid">
+      {#each UPGRADES as p (p.name)}
+        <div class="upgrade-card">
+          <div class="upgrade-head">
+            <span class="serif upgrade-name">{p.name}</span>
+            <span class="upgrade-price mono">{p.price}</span>
+          </div>
+          <p class="upgrade-blurb">{p.who}</p>
+        </div>
+      {/each}
     </div>
-    <div class="usage-row">
-      <span class="usage-label">Cap</span>
-      <span class="usage-value mono">${data.ai.cap.toFixed(2)}</span>
-    </div>
-    <div class="usage-bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(data.ai.pctUsed * 100)}>
-      <div
-        class="usage-fill"
-        class:warn={data.ai.warnAt80}
-        class:cap={data.ai.pctUsed >= 1}
-        style:width="{Math.min(100, Math.round(data.ai.pctUsed * 100))}%"
-      ></div>
-    </div>
-    <p class="usage-sub">
-      {Math.round(data.ai.pctUsed * 100)}% of monthly cap used.
-      {#if data.ai.warnAt80 && data.ai.pctUsed < 1}
-        Within 20% of cap — AI features will start degrading to deterministic fallback once the
-        cap is hit.
-      {:else if data.ai.pctUsed >= 1}
-        Cap reached. AI calls now degrade to deterministic fallback through the aiTry() helper.
-      {/if}
-    </p>
-  </div>
-  <a class="action-link" href="/settings/ai">Adjust monthly cap →</a>
-</section>
+  </SettingsSection>
+</SettingsShell>
 
 <style>
-  .back-link {
-    display: inline-block;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: var(--color-forest-deep);
-    text-decoration: none;
+  .plan-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 18px;
   }
-  .back-link:hover {
-    text-decoration: underline;
+  .plan-card {
+    padding: 16px 18px;
+    background: rgba(141, 174, 138, 0.18);
+    border: 1.5px solid var(--color-forest-deep);
+    border-radius: 10px;
   }
-  .page-head h1 {
-    margin: 4px 0 8px;
-    font-family: var(--font-serif, serif);
-    font-size: 26px;
-    color: var(--color-forest-deep);
-  }
-  .lede {
-    margin: 0 0 18px;
-    font-size: 13.5px;
-    color: var(--color-ink-soft);
-    line-height: 1.5;
-    max-width: 60ch;
-  }
-  .card {
-    background: var(--color-paper);
-    border: 1px solid var(--color-divider);
-    border-radius: var(--radius-card, 8px);
-    padding: 18px;
-    margin-bottom: 16px;
-  }
-  .card-head {
-    margin-bottom: 12px;
-  }
-  .title-wrap {
+  .plan-head {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  .title-wrap h2 {
-    margin: 0;
-    font-size: 15px;
-    color: var(--color-ink);
-  }
-  .title-wrap :global(svg) {
+  .plan-name {
+    font-family: var(--font-serif, serif);
+    font-size: 20px;
     color: var(--color-forest-deep);
+    letter-spacing: -0.015em;
   }
-  .lede-sm {
-    margin: 0;
+  .plan-price {
+    margin-top: 6px;
     font-size: 13px;
-    color: var(--color-ink-soft);
-    line-height: 1.45;
+    color: var(--color-forest-deep);
+    font-weight: 600;
   }
-  .usage {
+  .plan-features {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    color: var(--color-ink-soft);
+    font-size: 12.5px;
+    line-height: 1.7;
+  }
+
+  .plan-meta {
     display: flex;
     flex-direction: column;
-    gap: 8px;
   }
-  .usage-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+  .meta-val {
     font-size: 13px;
-  }
-  .usage-label {
-    color: var(--color-ink-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 700;
-    font-size: 11px;
-  }
-  .usage-value {
-    font-size: 16px;
     color: var(--color-ink);
+    margin-top: 4px;
+  }
+  .kicker-row {
+    font-size: 11px;
     font-weight: 700;
+    color: var(--color-ink-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
-  .mono {
-    font-family: var(--font-mono, monospace);
+  .mt {
+    margin-top: 12px;
   }
-  .usage-bar {
-    height: 8px;
+
+  .counter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .counter-card {
+    padding: 10px 12px;
     background: var(--color-cream);
+    border: 1px solid var(--color-divider-soft, var(--color-divider));
+    border-radius: 8px;
+  }
+  .counter-row {
+    margin-top: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .counter-v {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-family: var(--font-serif, serif);
+  }
+  .counter-v[data-tone='forest'] {
+    color: var(--color-forest-deep);
+  }
+  .counter-v[data-tone='sky'] {
+    color: #6f8fa8;
+  }
+  .counter-cap {
+    font-size: 11.5px;
+    color: var(--color-ink-muted);
+  }
+  .counter-bar {
+    margin-top: 6px;
+    height: 5px;
+    background: var(--color-divider-soft, var(--color-divider));
     border-radius: 999px;
     overflow: hidden;
-    margin: 4px 0;
   }
-  .usage-fill {
+  .counter-fill {
     height: 100%;
+  }
+  .counter-fill[data-tone='forest'] {
     background: var(--color-forest-deep);
-    transition: width 0.3s ease;
   }
-  .usage-fill.warn {
-    background: var(--color-wheat, #d4a75c);
+  .counter-fill[data-tone='sky'] {
+    background: #6f8fa8;
   }
-  .usage-fill.cap {
-    background: var(--color-rust, #ba4b38);
+
+  .payment-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-divider-soft, var(--color-divider));
+    border-radius: 8px;
   }
-  .usage-sub {
-    margin: 4px 0 0;
+  .card-chip {
+    width: 40px;
+    height: 28px;
+    border-radius: 4px;
+    background: var(--color-forest-deep);
+    color: var(--color-cream, #f8f3e8);
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .payment-text {
+    flex: 1;
+  }
+  .payment-num {
     font-size: 12.5px;
-    color: var(--color-ink-soft);
-    line-height: 1.4;
-  }
-  .action-link {
-    display: inline-block;
-    margin-top: 12px;
-    color: var(--color-forest-deep);
-    text-decoration: none;
+    color: var(--color-ink);
     font-weight: 600;
-    font-size: 13.5px;
   }
-  .action-link:hover {
-    text-decoration: underline;
+  .payment-sub {
+    font-size: 11.5px;
+    color: var(--color-ink-muted);
+    margin-top: 2px;
+  }
+  .ghost-sm {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 1px solid var(--color-divider);
+    padding: 5px 10px;
+    border-radius: var(--radius-input, 6px);
+    font-family: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+  }
+  .ghost-sm:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .ghost-sm:hover:not(:disabled) {
+    border-color: var(--color-forest-deep);
+  }
+
+  .upgrade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .upgrade-card {
+    padding: 12px 14px;
+    border: 1px solid var(--color-divider-soft, var(--color-divider));
+    border-radius: 8px;
+  }
+  .upgrade-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .upgrade-name {
+    font-family: var(--font-serif, serif);
+    font-size: 16px;
+    color: var(--color-forest-deep);
+  }
+  .upgrade-price {
+    font-size: 12.5px;
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .upgrade-blurb {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: var(--color-ink-soft);
+    line-height: 1.5;
+  }
+  .mono {
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+  @media (max-width: 760px) {
+    .plan-grid,
+    .upgrade-grid {
+      grid-template-columns: 1fr;
+    }
+    .counter-grid {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 </style>

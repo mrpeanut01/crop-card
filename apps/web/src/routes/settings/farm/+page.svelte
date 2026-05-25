@@ -1,208 +1,313 @@
 <script lang="ts">
-  import Kicker from '$lib/components/ui/Kicker.svelte';
-  import Pill from '$lib/components/ui/Pill.svelte';
+  import { ChevronRight, Plus, Map } from 'lucide-svelte';
+  import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
+  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
+  import SettingsField from '$lib/components/settings/SettingsField.svelte';
 
   let { data } = $props();
+
+  function fmtDate(ms: number): string {
+    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // Per-block tile color — cycle through a forest/wheat/rust/sky palette
+  // so the map preview chips look distinct. Stable across renders by
+  // hashing the block id.
+  const PALETTE = ['#4F7A52', '#A64A2A', '#9C8147', '#6F8FA8', '#8A5A2C', '#5F8045', '#B8893C'];
+  function colorFor(id: string): string {
+    let h = 0;
+    for (const c of id) h = (h * 31 + c.charCodeAt(0)) % PALETTE.length;
+    return PALETTE[h] ?? PALETTE[0];
+  }
+
+  const total = $derived(data.blocks.reduce((s, b) => s + (b.acres ?? 0), 0));
 </script>
 
-<svelte:head>
-  <title>Farm & blocks · CropCard</title>
-</svelte:head>
+<svelte:head><title>Farm & blocks · CropCard</title></svelte:head>
 
-<a class="back-link" href="/settings">← All settings</a>
-<header class="page-head">
-  <Kicker>Farm geometry · season config</Kicker>
-  <h1>Farm & blocks</h1>
-  <p class="lede">
-    {data.fields.length} field{data.fields.length === 1 ? '' : 's'} · {data.blocks.length} block{data
-      .blocks.length === 1
-      ? ''
-      : 's'} · Loudoun County, VA defaults applied where unset.
-  </p>
-</header>
+<SettingsShell title="Farm & blocks" kicker="Field geometry">
+  <SettingsSection
+    title="Farm details"
+    sub="Used by frost-date lookup, weather, and inspector links."
+  >
+    <div class="grid grid-3">
+      <SettingsField label="Farm name">
+        <input class="s-input" value="Loudoun Home Farm" />
+      </SettingsField>
+      <SettingsField label="County">
+        <input class="s-input" value="Loudoun, VA" />
+      </SettingsField>
+      <SettingsField label="USDA hardiness">
+        <select class="s-input"><option>7a</option><option>7b</option></select>
+      </SettingsField>
+    </div>
+    <div class="grid grid-3 second-row">
+      <SettingsField label="Lat / Long" hint="for frost + GDD">
+        <input
+          class="s-input mono"
+          value={`${data.farmLatLon.lat.toFixed(4)}, ${data.farmLatLon.lon.toFixed(4)}`}
+        />
+      </SettingsField>
+      <SettingsField label="Last frost · spring">
+        <input class="s-input" value={fmtDate(data.frostDates.lastSpringFrostMs)} />
+      </SettingsField>
+      <SettingsField label="First frost · fall">
+        <input class="s-input" value={fmtDate(data.frostDates.firstFallFrostMs)} />
+      </SettingsField>
+    </div>
+  </SettingsSection>
 
-<section class="card">
-  <h2>Blocks</h2>
-  {#if data.blocks.length === 0}
-    <p class="empty">
-      No blocks yet. <a href="/plan">Go to /plan</a> to add the first one.
-    </p>
-  {:else}
-    <ul class="block-list">
-      {#each data.blocks as b (b.id)}
-        <li class="block-row">
-          <div class="block-name">
-            {#if b.blockLabel}<span class="label-chip">{b.blockLabel}</span>{/if}
-            {b.name}
+  <SettingsSection
+    title={`Blocks · ${data.blocks.length} · ${total.toFixed(1)} ac total`}
+    sub="Click a block to edit boundary, soil zone, irrigation, or rotation history."
+  >
+    {#snippet right()}
+      <a class="primary-sm" href="/plan?tab=layout">
+        <Plus size={11} /> New block
+      </a>
+    {/snippet}
+
+    <div class="grid grid-2">
+      <!-- Map placeholder — gradient bg + per-block tinted tiles in
+           rough proportional layout. Real BlockMap lives at /plan. -->
+      <div class="map">
+        {#each data.blocks.slice(0, 7) as b, i (b.id)}
+          {@const positions = [
+            { x: 12, y: 14, w: 26, h: 22 },
+            { x: 40, y: 14, w: 16, h: 14 },
+            { x: 58, y: 12, w: 26, h: 26 },
+            { x: 12, y: 40, w: 14, h: 14 },
+            { x: 28, y: 40, w: 18, h: 16 },
+            { x: 50, y: 42, w: 26, h: 24 },
+            { x: 20, y: 60, w: 22, h: 18 }
+          ]}
+          {@const p = positions[i]}
+          <div
+            class="map-tile"
+            style:left="{p.x}%"
+            style:top="{p.y}%"
+            style:width="{p.w}%"
+            style:height="{p.h}%"
+            style:background={colorFor(b.id)}
+            style:border-color={colorFor(b.id)}
+          >
+            {b.blockLabel ?? b.name.charAt(0)}
           </div>
-          <div class="block-meta">
-            {b.acres} ac · {b.fieldName ?? '(no field)'} · {b.plantingCount} planting{b.plantingCount ===
-            1
-              ? ''
-              : 's'}
-          </div>
-        </li>
-      {/each}
-    </ul>
-    <p class="hint">
-      Block CRUD lives at <a href="/plan?tab=layout">/plan (Layout tab)</a> where you can also
-      paint geometry on the map.
-    </p>
-  {/if}
-</section>
+        {/each}
+        <div class="map-legend mono">map view · {total.toFixed(1)} ac</div>
+        <a class="map-edit" href="/plan?tab=layout">
+          <Map size={11} /> Edit boundaries
+        </a>
+      </div>
 
-<section class="card">
-  <h2>Location & climate</h2>
-  <dl class="kv">
-    <dt>Lat / lon</dt>
-    <dd class="mono">
-      {data.farmLatLon.lat.toFixed(4)}, {data.farmLatLon.lon.toFixed(4)}
-    </dd>
-    <dt>Last spring frost (avg)</dt>
-    <dd>{new Date(data.frostDates.lastSpringFrostMs).toLocaleDateString()}</dd>
-    <dt>First fall frost (avg)</dt>
-    <dd>{new Date(data.frostDates.firstFallFrostMs).toLocaleDateString()}</dd>
-  </dl>
-  <p class="hint">
-    Edit lat/lon and frost dates from <a href="/settings/system">Power tools → Location & Climate</a>.
-    A dedicated form here lands when the structural rebuild finishes.
-  </p>
-</section>
+      <!-- Block list -->
+      <div class="block-list">
+        {#if data.blocks.length === 0}
+          <p class="empty">No blocks yet. <a href="/plan">Add one in /plan</a>.</p>
+        {/if}
+        {#each data.blocks as b (b.id)}
+          <a class="block-row" href="/plan?tab=layout&block={b.id}">
+            <div class="block-chip" style:background={colorFor(b.id)}>
+              {b.blockLabel ?? b.name.charAt(0)}
+            </div>
+            <div class="block-text">
+              <div class="block-name">{b.name}</div>
+              <div class="block-sub mono">{b.fieldName ?? '(no field)'}</div>
+            </div>
+            <span class="block-acres mono">{(b.acres ?? 0).toFixed(1)} ac</span>
+            <ChevronRight size={13} />
+          </a>
+        {/each}
+      </div>
+    </div>
+  </SettingsSection>
 
-<section class="card">
-  <h2>Season {data.currentYear} setup</h2>
-  {#if data.activeSeasonSetup}
-    <dl class="kv">
-      <dt>Philosophy</dt>
-      <dd><Pill tone="forest">{data.activeSeasonSetup.philosophy ?? 'unset'}</Pill></dd>
-      <dt>Fertility approach</dt>
-      <dd><Pill tone="wheat">{data.activeSeasonSetup.fertilityApproach ?? 'unset'}</Pill></dd>
-      <dt>Weed strategy</dt>
-      <dd>{data.activeSeasonSetup.weedStrategy ?? '—'}</dd>
-      <dt>Pest strategy</dt>
-      <dd>{data.activeSeasonSetup.pestStrategy ?? '—'}</dd>
-    </dl>
-    <a class="action-link" href="/settings/season">Edit season setup →</a>
-  {:else}
-    <p class="empty">
-      No setup recorded for {data.currentYear} yet.
-      <a href="/settings/season">Set it up now →</a>
+  <SettingsSection title={`Season ${data.currentYear} setup`}>
+    <p class="lede">
+      Season setup is wizard-synced — edit at
+      <a href="/settings/season">/settings/season</a> or via the planning wizard.
     </p>
-  {/if}
-</section>
+  </SettingsSection>
+</SettingsShell>
 
 <style>
-  .back-link {
-    display: inline-block;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: var(--color-forest-deep);
-    text-decoration: none;
+  .grid {
+    display: grid;
+    gap: 12px;
   }
-  .back-link:hover {
-    text-decoration: underline;
+  .grid-3 {
+    grid-template-columns: 1.4fr 1fr 1fr;
   }
-  .page-head h1 {
-    margin: 4px 0 8px;
-    font-family: var(--font-serif, serif);
-    font-size: 26px;
-    color: var(--color-forest-deep);
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
-  .lede {
-    margin: 0 0 18px;
-    font-size: 13.5px;
-    color: var(--color-ink-soft);
-    line-height: 1.45;
+  .second-row {
+    grid-template-columns: 1fr 1fr 1fr;
+    margin-top: 12px;
   }
-  .card {
-    background: var(--color-paper);
+  .s-input {
     border: 1px solid var(--color-divider);
-    border-radius: var(--radius-card, 8px);
-    padding: 18px;
-    margin-bottom: 16px;
-  }
-  .card h2 {
-    margin: 0 0 12px;
-    font-size: 16px;
+    background: var(--color-paper);
     color: var(--color-ink);
-  }
-  .empty {
-    margin: 0;
-    color: var(--color-ink-soft);
-    font-size: 13.5px;
-    font-style: italic;
-  }
-  .block-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .block-row {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 12px;
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider-soft);
+    padding: 8px 10px;
     border-radius: var(--radius-input, 6px);
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+    width: 100%;
   }
-  .block-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-ink);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .s-input.mono {
+    font-family: var(--font-mono, ui-monospace, monospace);
   }
-  .label-chip {
-    background: var(--color-forest-deep);
-    color: var(--color-paper);
+  .s-input:focus {
+    border-color: var(--color-forest-deep);
+    box-shadow: 0 0 0 2px rgba(44, 82, 55, 0.15);
+  }
+
+  /* ── Map ── */
+  .map {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #dce6cf 0%, #c5d4b6 100%);
+    border: 1px solid var(--color-divider);
+    overflow: hidden;
+  }
+  .map-tile {
+    position: absolute;
+    opacity: 0.78;
+    border-radius: 4px;
+    border-width: 1.5px;
+    border-style: solid;
+    display: grid;
+    place-items: center;
+    color: var(--color-cream, #f8f3e8);
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .map-legend {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    font-size: 10px;
+    color: var(--color-forest-deep);
+    background: rgba(255, 255, 255, 0.7);
     padding: 2px 7px;
     border-radius: 4px;
+  }
+  .map-edit {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 1px solid var(--color-divider);
+    padding: 4px 8px;
+    border-radius: var(--radius-input, 6px);
+    text-decoration: none;
+    font-family: inherit;
     font-size: 11px;
-    font-family: var(--font-mono, monospace);
-    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
-  .block-meta {
-    font-size: 12px;
-    color: var(--color-ink-muted);
+  .map-edit:hover {
+    border-color: var(--color-forest-deep);
   }
-  .hint {
-    margin: 12px 0 0;
-    font-size: 12.5px;
-    color: var(--color-ink-muted);
+
+  /* ── Block list ── */
+  .block-list {
+    border: 1px solid var(--color-divider-soft, var(--color-divider));
+    border-radius: 8px;
+    overflow: hidden;
   }
-  .kv {
-    margin: 0;
+  .empty {
+    margin: 12px 16px;
+    color: var(--color-ink-soft);
+    font-size: 13px;
+    font-style: italic;
+  }
+  .block-row {
+    padding: 10px 14px;
     display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 8px 16px;
-    font-size: 13.5px;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    border-top: 1px solid var(--color-divider-soft, var(--color-divider));
   }
-  .kv dt {
-    color: var(--color-ink-muted);
+  .block-row:first-child {
+    border-top: 0;
+  }
+  .block-row:hover {
+    background: var(--color-cream);
+  }
+  .block-chip {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    color: var(--color-cream, #f8f3e8);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .block-name {
+    font-size: 12.5px;
+    color: var(--color-ink);
     font-weight: 600;
   }
-  .kv dd {
-    margin: 0;
-    color: var(--color-ink);
+  .block-sub {
+    font-size: 10.5px;
+    color: var(--color-ink-muted);
+    margin-top: 2px;
+  }
+  .block-acres {
+    font-size: 11.5px;
+    color: var(--color-ink-soft);
   }
   .mono {
-    font-family: var(--font-mono, monospace);
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+
+  /* ── Buttons ── */
+  .primary-sm {
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
+    padding: 6px 12px;
+    border-radius: var(--radius-input, 6px);
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .primary-sm:hover {
+    filter: brightness(1.08);
+  }
+
+  .lede {
+    margin: 0;
+    color: var(--color-ink-soft);
     font-size: 13px;
   }
-  .action-link {
-    display: inline-block;
-    margin-top: 12px;
+  .lede a {
     color: var(--color-forest-deep);
-    text-decoration: none;
     font-weight: 600;
-    font-size: 13.5px;
+    text-decoration: none;
   }
-  .action-link:hover {
+  .lede a:hover {
     text-decoration: underline;
+  }
+  @media (max-width: 760px) {
+    .grid-3,
+    .grid-2,
+    .second-row {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

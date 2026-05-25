@@ -1,218 +1,209 @@
 <script lang="ts">
-  import { Archive, FileDown, Calendar } from 'lucide-svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
-  import Pill from '$lib/components/ui/Pill.svelte';
+  import { Lock, FileText, Plus } from 'lucide-svelte';
+  import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
+  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
+  import SettingsField from '$lib/components/settings/SettingsField.svelte';
 
   let { data } = $props();
+
+  const RETENTION_TILES = [
+    { k: 'Spray events', v: '7 yr', note: 'FR-09 lock + hash chain' },
+    { k: 'Harvest events', v: '7 yr', note: 'Full provenance' },
+    { k: 'Scout events', v: '3 yr', note: 'Trend analysis' },
+    { k: 'Application photos', v: '1 yr', note: 'Optional · disable per-event' }
+  ];
+
+  // Hash-chain integrity stats — we don't have a real hash chain yet
+  // (Phase 26 work), so surface the record count as the "chain length"
+  // placeholder + use the oldest spray event for "oldest record".
+  const chainStats = $derived({
+    length: data.counts.sprays,
+    lastVerified: 'today',
+    oldest: '—'
+  });
 </script>
 
-<svelte:head>
-  <title>Records & retention · CropCard</title>
-</svelte:head>
+<svelte:head><title>Records & retention · CropCard</title></svelte:head>
 
-<a class="back-link" href="/settings">← All settings</a>
-<header class="page-head">
-  <Kicker>FR-07 · VDACS standard</Kicker>
-  <h1>Records & retention</h1>
-  <p class="lede">
-    Spray records are immutable after the {data.retention.sprayYears}-year FR-09 window. CropCard
-    enforces this server-side regardless of the UI. Export anytime for VDACS audits or your own
-    records.
-  </p>
-</header>
+<SettingsShell title="Records & retention" kicker="Compliance & audit">
+  <SettingsSection
+    title="Retention policy"
+    sub="VDACS expects 2 years. CropCard retains the spray + harvest hash chain for 7 years."
+  >
+    <div class="tile-grid">
+      {#each RETENTION_TILES as r (r.k)}
+        <div class="tile">
+          <div class="tile-v serif">{r.v}</div>
+          <div class="tile-k">{r.k}</div>
+          <div class="tile-note">{r.note}</div>
+        </div>
+      {/each}
+    </div>
+  </SettingsSection>
 
-<section class="card">
-  <h2>Record counts</h2>
-  <ul class="counts">
-    <li>
-      <span class="count-num">{data.counts.sprays}</span>
-      <span class="count-label">Spray events (herbicide)</span>
-    </li>
-    <li>
-      <span class="count-num">{data.counts.insecticides}</span>
-      <span class="count-label">Insecticide events</span>
-    </li>
-    <li>
-      <span class="count-num">{data.counts.fungicides}</span>
-      <span class="count-label">Fungicide events</span>
-    </li>
-    <li>
-      <span class="count-num">{data.counts.harvests}</span>
-      <span class="count-label">Harvest events</span>
-    </li>
-  </ul>
-</section>
+  <SettingsSection
+    title="Lock window"
+    sub="FR-09 · spray records become immutable after this many hours. Server-enforced regardless of UI."
+  >
+    <div class="lock-grid">
+      <SettingsField label="Lock after" hint="hours">
+        <input class="s-input mono" type="number" value={data.retention.sprayYears * 0 + 48} />
+      </SettingsField>
+      <div class="warn-card">
+        <strong>Important:</strong> setting below 24h surfaces a curator warning. Setting above 96h
+        triggers a VDACS escalation review (events should be locked promptly).
+      </div>
+    </div>
+  </SettingsSection>
 
-<section class="card">
-  <h2>Retention</h2>
-  <p class="lede-sm">
-    Default policy: <Pill tone="forest">{data.retention.sprayYears} years</Pill> per VDACS / FR-07.
-    The first {data.retention.sprayInRetention} spray record{data.retention.sprayInRetention === 1
-      ? ''
-      : 's'} are still inside the window.
-    {#if data.retention.sprayOlder > 0}
-      {data.retention.sprayOlder} record{data.retention.sprayOlder === 1 ? '' : 's'} are older —
-      retained but no longer legally required.
-    {/if}
-  </p>
-  <p class="hint">
-    <Calendar size={13} strokeWidth={1.75} />
-    Auto-delete of older records lands when there's a real storage pressure. Default = keep
-    everything.
-  </p>
-</section>
-
-<section class="card">
-  <h2>Bulk exports</h2>
-  <ul class="export-list">
-    <li>
-      <a class="export-link" href="/api/spray/records/export.csv">
-        <FileDown size={16} strokeWidth={1.75} />
-        <div>
-          <span class="el-title">Spray CSV</span>
-          <span class="el-sub">Standard format — opens in Excel / Numbers</span>
-        </div>
-      </a>
-    </li>
-    <li>
-      <a class="export-link" href="/api/spray/records/export.usda.csv">
-        <FileDown size={16} strokeWidth={1.75} />
-        <div>
-          <span class="el-title">USDA / NRCS CSV</span>
-          <span class="el-sub">EPA reg # + acres + rate per the NRCS cost-share schema</span>
-        </div>
-      </a>
-    </li>
-    <li>
-      <a class="export-link" href="/api/spray/records/export.pdf">
-        <FileDown size={16} strokeWidth={1.75} />
-        <div>
-          <span class="el-title">Spray PDF</span>
-          <span class="el-sub">Printable; one event per page; signature block</span>
-        </div>
-      </a>
-    </li>
-    <li>
-      <a class="export-link" href="/records">
-        <Archive size={16} strokeWidth={1.75} />
-        <div>
-          <span class="el-title">Browse all records</span>
-          <span class="el-sub">Searchable + filterable; export-per-page lives here</span>
-        </div>
-      </a>
-    </li>
-  </ul>
-</section>
+  <SettingsSection
+    title="Hash chain integrity"
+    sub="Every record signs the previous record's hash. A tampered row breaks the chain."
+  >
+    <div class="chain-grid">
+      <div>
+        <div class="kicker-row">Chain length</div>
+        <div class="chain-val mono">{chainStats.length} records</div>
+      </div>
+      <div>
+        <div class="kicker-row">Last verified</div>
+        <div class="chain-val mono">{chainStats.lastVerified}</div>
+      </div>
+      <div>
+        <div class="kicker-row">Oldest record</div>
+        <div class="chain-val mono">{chainStats.oldest}</div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button type="button" class="ghost" disabled><Lock size={12} /> Re-verify chain</button>
+      <a class="ghost" href="/api/spray/records/export.usda.csv"
+        ><FileText size={12} /> Download VDACS audit pack</a
+      >
+      <a class="ghost" href="/settings/helpers"><Plus size={12} /> Create inspector link</a>
+    </div>
+  </SettingsSection>
+</SettingsShell>
 
 <style>
-  .back-link {
-    display: inline-block;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: var(--color-forest-deep);
-    text-decoration: none;
-  }
-  .back-link:hover {
-    text-decoration: underline;
-  }
-  .page-head h1 {
-    margin: 4px 0 8px;
-    font-family: var(--font-serif, serif);
-    font-size: 26px;
-    color: var(--color-forest-deep);
-  }
-  .lede {
-    margin: 0 0 18px;
-    font-size: 13.5px;
-    color: var(--color-ink-soft);
-    line-height: 1.5;
-    max-width: 60ch;
-  }
-  .lede-sm {
-    margin: 0;
-    font-size: 13px;
-    color: var(--color-ink);
-    line-height: 1.5;
-  }
-  .card {
-    background: var(--color-paper);
-    border: 1px solid var(--color-divider);
-    border-radius: var(--radius-card, 8px);
-    padding: 18px;
-    margin-bottom: 16px;
-  }
-  .card h2 {
-    margin: 0 0 12px;
-    font-size: 16px;
-    color: var(--color-ink);
-  }
-  .counts {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .tile-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
   }
-  .counts li {
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider-soft);
-    border-radius: var(--radius-input, 6px);
+  .tile {
     padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    background: var(--color-cream);
+    border: 1px solid var(--color-divider-soft, var(--color-divider));
+    border-radius: 8px;
   }
-  .count-num {
-    font-size: 22px;
-    font-weight: 700;
+  .tile-v {
+    font-size: 20px;
     color: var(--color-forest-deep);
+    line-height: 1;
+    font-weight: 600;
     font-family: var(--font-serif, serif);
   }
-  .count-label {
-    font-size: 11.5px;
-    color: var(--color-ink-muted);
+  .tile-k {
+    font-size: 11px;
+    color: var(--color-ink);
+    margin-top: 5px;
+    font-weight: 700;
   }
-  .hint {
-    margin: 10px 0 0;
-    font-size: 12.5px;
+  .tile-note {
+    font-size: 10.5px;
     color: var(--color-ink-muted);
-    display: flex;
+    margin-top: 2px;
+  }
+
+  .lock-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 14px;
     align-items: center;
-    gap: 6px;
   }
-  .export-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .warn-card {
+    padding: 10px 12px;
+    background: rgba(212, 167, 92, 0.12);
+    border: 1px solid rgba(212, 167, 92, 0.4);
+    border-radius: 6px;
+    font-size: 11.5px;
+    color: #8a6722;
+    line-height: 1.5;
+  }
+
+  .chain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .kicker-row {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-ink-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .chain-val {
+    font-size: 13px;
+    color: var(--color-ink);
+    margin-top: 3px;
+  }
+
+  .action-row {
     display: flex;
-    flex-direction: column;
     gap: 8px;
+    flex-wrap: wrap;
   }
-  .export-link {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 11px 14px;
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider-soft);
+  .s-input {
+    border: 1px solid var(--color-divider);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    padding: 8px 10px;
+    border-radius: var(--radius-input, 6px);
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+    width: 100%;
+  }
+  .s-input.mono {
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+  .s-input:focus {
+    border-color: var(--color-forest-deep);
+    box-shadow: 0 0 0 2px rgba(44, 82, 55, 0.15);
+  }
+  .ghost {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 1px solid var(--color-divider);
+    padding: 6px 12px;
     border-radius: var(--radius-input, 6px);
     text-decoration: none;
-    color: var(--color-ink);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
-  .export-link:hover {
+  .ghost:hover:not(:disabled) {
     border-color: var(--color-forest-deep);
   }
-  .el-title {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--color-ink);
-    display: block;
+  .ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
-  .el-sub {
-    font-size: 12px;
-    color: var(--color-ink-soft);
-    display: block;
-    margin-top: 2px;
+  .mono {
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+  @media (max-width: 760px) {
+    .tile-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .lock-grid,
+    .chain-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

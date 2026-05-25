@@ -7,10 +7,11 @@
  * deep-links into the full management UI).
  */
 
-import { error, redirect, type ServerLoad } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { getRegistry } from '$lib/server/registry';
+import type { PageServerLoad } from './$types';
 
-export const load: ServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
   if (locals.user.role !== 'owner') throw error(403, 'owner-only');
 
@@ -22,10 +23,21 @@ export const load: ServerLoad = async ({ locals }) => {
     byType.set(r.plugin.type, (byType.get(r.plugin.type) ?? 0) + 1);
   }
 
+  // Ordered list matching the design mockup tile order.
+  const TYPE_ORDER = [
+    'crop',
+    'herbicide',
+    'insecticide',
+    'fungicide',
+    'fertilizer',
+    'companion'
+  ] as const;
+  const orderedByType = TYPE_ORDER.map((t) => ({ type: t, count: byType.get(t) ?? 0 }));
+
   return {
     total: all.length,
-    byType: Array.from(byType.entries())
-      .map(([type, count]) => ({ type, count }))
-      .sort((a, b) => b.count - a.count)
+    byType: orderedByType,
+    pluginFailures: 0,
+    updatesAvailable: 0
   };
 };

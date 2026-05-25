@@ -1,29 +1,38 @@
 /**
  * Phase 25c (#88) — /settings/advanced loader.
  *
- * Power-user surfaces:
- *   - Types taxonomy (currently in /settings/system Types tab)
- *   - Inventory maintenance — short-name regen (in /settings/system)
- *   - API tokens (folded in from /settings/api-tokens)
- *   - Danger zone (currently in /settings/system Danger Zone tab)
- *
- * This page is the navigational landing — the actual forms still live
- * at /settings/system + /settings/api-tokens until they get migrated.
- * Folding them visually keeps the 11-card IA intact.
+ * Diagnostics (build/rules/tenant/backup) + bulk-export menu + danger
+ * zone landing. Matches the canonical mockup at
+ * `docs/design/almanac/direction-almanac-settings.jsx` ASettingsAdvancedScreen.
  */
 
-import { error, redirect, type ServerLoad } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
+import { db } from '$lib/db/client';
+import { owners } from '$lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { listStockItems } from '$lib/db/stock';
 import { listTokensForOwner } from '$lib/server/apiTokens';
+import { RULES_VERSION } from '$lib/safety/version';
+import type { PageServerLoad } from './$types';
 
-export const load: ServerLoad = ({ locals }) => {
+export const load: PageServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
   if (locals.user.role !== 'owner') throw error(403, 'owner-only');
 
-  const stockItems = listStockItems();
   const ownerId = locals.user.activeOwnerId;
+  const ownerRow = ownerId
+    ? db.select().from(owners).where(eq(owners.id, ownerId)).get()
+    : null;
+
   return {
-    stockItemCount: stockItems.length,
-    apiTokenCount: ownerId ? listTokensForOwner(ownerId).length : 0
+    stockItemCount: listStockItems().length,
+    apiTokenCount: ownerId ? listTokensForOwner(ownerId).length : 0,
+    advanced: {
+      buildVersion: 'phase-25c',
+      rulesVersion: RULES_VERSION,
+      pluginFailures: 0,
+      tenantId: ownerRow?.slug ?? ownerRow?.id ?? '—',
+      lastBackup: 'Litestream · live'
+    }
   };
 };

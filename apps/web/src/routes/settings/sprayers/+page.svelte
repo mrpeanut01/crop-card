@@ -1,211 +1,233 @@
 <script lang="ts">
-  import { Wrench, AlertTriangle, CheckCircle2 } from 'lucide-svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import { Plus, Wrench } from 'lucide-svelte';
+  import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
+  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
 
   let { data } = $props();
 
   function fmtDate(ms: number | null): string {
-    if (!ms) return '—';
-    return new Date(ms).toLocaleDateString();
+    if (!ms) return 'never';
+    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  type SprayerRow = (typeof data.equipment)[number];
-  const dirtyCount = $derived(data.equipment.filter((e: SprayerRow) => e.requiresDecon).length);
-  const uncalibratedCount = $derived(
-    data.equipment.filter((e: SprayerRow) => e.calibratedGpa == null).length
-  );
+  function statusFor(e: (typeof data.equipment)[number]): {
+    label: string;
+    tone: 'forest' | 'wheat' | 'rust';
+    action: string;
+    actionHref: string;
+  } {
+    if (e.requiresDecon) {
+      return {
+        label: 'Decon required',
+        tone: 'rust',
+        action: 'Decon wizard',
+        actionHref: `/equipment/${e.id}`
+      };
+    }
+    if (e.calibratedGpa == null) {
+      return {
+        label: 'Re-calibrate',
+        tone: 'wheat',
+        action: 'Re-calibrate',
+        actionHref: `/calibrate?sprayerId=${e.id}`
+      };
+    }
+    return {
+      label: 'Calibrated · OK',
+      tone: 'forest',
+      action: 'Manage',
+      actionHref: `/equipment/${e.id}`
+    };
+  }
+
+  const dirtyCount = $derived(data.equipment.filter((e) => e.requiresDecon).length);
 </script>
 
-<svelte:head>
-  <title>Sprayers & calibration · CropCard</title>
-</svelte:head>
+<svelte:head><title>Sprayers & calibration · CropCard</title></svelte:head>
 
-<a class="back-link" href="/settings">← All settings</a>
-<header class="page-head">
-  <Kicker>Sprayer hygiene · GPA calibration</Kicker>
-  <h1>Sprayers & calibration</h1>
-  <p class="lede">
-    {data.equipment.length} sprayer{data.equipment.length === 1 ? '' : 's'} ·
-    {dirtyCount} need{dirtyCount === 1 ? 's' : ''} decon · {uncalibratedCount} uncalibrated
-  </p>
-</header>
+<SettingsShell title="Sprayers & calibration" kicker="Equipment">
+  {#snippet badge()}
+    {#if dirtyCount > 0}
+      <Pill tone="rust">{dirtyCount} decon needed</Pill>
+    {/if}
+  {/snippet}
 
-<section class="card">
-  <header class="card-head">
-    <h2>Roster</h2>
-    <a class="action-link" href="/equipment">+ Add sprayer</a>
-  </header>
+  <SettingsSection
+    title="UC-10 · 1/128-acre calibration"
+    sub="Re-calibrate quarterly or after a nozzle swap. Locks the dilution table for that sprayer until done."
+  >
+    <div class="explainer">
+      <p>
+        <strong>How it works:</strong> spray water into a 18.5 × 18.5 ft square (1/128 ac) at
+        your typical pace. The ounces caught = your GPA. CropCard locks the dilution math against
+        this GPA until you re-calibrate.
+      </p>
+      <a class="primary-sm with-icon" href="/calibrate">
+        <Wrench size={12} />
+        Open calibration wizard
+      </a>
+    </div>
+  </SettingsSection>
 
-  {#if data.equipment.length === 0}
-    <p class="empty">
-      No sprayers configured. Add one at <a href="/equipment">/equipment</a> first; this page
-      lists each unit's calibration + contamination state.
-    </p>
-  {:else}
-    <ul class="sprayer-list">
+  <SettingsSection title={`Sprayers · ${data.equipment.length}`}>
+    {#snippet right()}
+      <a class="primary-sm" href="/equipment">
+        <Plus size={11} /> Add sprayer
+      </a>
+    {/snippet}
+
+    {#if data.equipment.length === 0}
+      <p class="empty">
+        No sprayers configured. <a href="/equipment">Add one</a> to start tracking calibration +
+        decon.
+      </p>
+    {/if}
+
+    <div class="sprayer-list">
       {#each data.equipment as e (e.id)}
-        <li class="sprayer">
-          <header>
-            <div class="title">
-              <Wrench size={16} strokeWidth={1.75} />
-              {e.label}
+        {@const s = statusFor(e)}
+        <div class="sprayer">
+          <div class="sprayer-text">
+            <div class="sprayer-name">
+              <span class="serif">{e.label}</span>
+              <span class="sid mono">· {e.id.slice(-4)}</span>
             </div>
-            <div class="badges">
-              {#if e.requiresDecon}
-                <Pill tone="rust">
-                  <AlertTriangle size={11} />
-                  decon
-                </Pill>
-              {/if}
+            <div class="sprayer-meta">
+              Last calibrated · <span class="mono">{fmtDate(e.calibrationDate)}</span>
               {#if e.calibratedGpa != null}
-                <Pill tone="forest">
-                  <CheckCircle2 size={11} />
-                  {e.calibratedGpa} GPA
-                </Pill>
-              {:else}
-                <Pill tone="wheat">uncalibrated</Pill>
+                · GPA <span class="mono accent">{e.calibratedGpa}</span>
+              {/if}
+              {#if e.lastChemistryClass}
+                · last spray
+                <span class="mono" class:rust={e.requiresDecon}>{e.lastChemistryClass}</span>
               {/if}
             </div>
-          </header>
-          <dl class="kv">
-            <dt>Last calibrated</dt>
-            <dd>{fmtDate(e.calibrationDate)}</dd>
-            <dt>Last used</dt>
-            <dd>{fmtDate(e.lastUsedAt)} {e.lastChemistryClass ? `(${e.lastChemistryClass})` : ''}</dd>
-          </dl>
-          <div class="actions">
-            <a class="ghost" href="/calibrate?sprayerId={e.id}">Calibrate (1/128-acre)</a>
-            <a class="ghost" href="/equipment/{e.id}">Details / decon log</a>
           </div>
-        </li>
+          <Pill tone={s.tone}>{s.label}</Pill>
+          <a class="ghost-sm" href={s.actionHref}>
+            {#if s.tone !== 'forest'}<Wrench size={11} />{/if}
+            {s.action}
+          </a>
+        </div>
       {/each}
-    </ul>
-  {/if}
-</section>
+    </div>
+  </SettingsSection>
+</SettingsShell>
 
 <style>
-  .back-link {
-    display: inline-block;
-    margin-bottom: 12px;
-    font-size: 13px;
+  .explainer {
+    padding: 12px 14px;
+    background: rgba(141, 174, 138, 0.18);
+    border: 1px solid #c9dbc0;
+    border-radius: 8px;
+    font-size: 12.5px;
     color: var(--color-forest-deep);
-    text-decoration: none;
+    line-height: 1.55;
   }
-  .back-link:hover {
-    text-decoration: underline;
+  .explainer p {
+    margin: 0 0 8px;
   }
-  .page-head h1 {
-    margin: 4px 0 8px;
-    font-family: var(--font-serif, serif);
-    font-size: 26px;
-    color: var(--color-forest-deep);
-  }
-  .lede {
-    margin: 0 0 16px;
-    font-size: 13.5px;
-    color: var(--color-ink-soft);
-  }
-  .card {
-    background: var(--color-paper);
-    border: 1px solid var(--color-divider);
-    border-radius: var(--radius-card, 8px);
-    padding: 18px;
-  }
-  .card-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  .card-head h2 {
-    margin: 0;
-    font-size: 16px;
-    color: var(--color-ink);
-  }
-  .action-link {
-    font-size: 13px;
-    color: var(--color-forest-deep);
-    text-decoration: none;
-    font-weight: 600;
-  }
-  .action-link:hover {
-    text-decoration: underline;
-  }
+
   .empty {
     margin: 0;
     color: var(--color-ink-soft);
-    font-size: 13.5px;
+    font-size: 13px;
     font-style: italic;
   }
+  .empty a {
+    color: var(--color-forest-deep);
+    font-weight: 600;
+  }
+
   .sprayer-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
   .sprayer {
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider-soft);
-    border-radius: var(--radius-input, 6px);
     padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .sprayer header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-ink);
-  }
-  .badges {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .kv {
-    margin: 0;
+    border: 1px solid var(--color-divider-soft, var(--color-divider));
+    border-radius: 8px;
     display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 4px 12px;
-    font-size: 12.5px;
+    grid-template-columns: 1fr auto auto;
+    gap: 14px;
+    align-items: center;
   }
-  .kv dt {
-    color: var(--color-ink-muted);
+  .sprayer-text {
+    min-width: 0;
+  }
+  .sprayer-name {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .sprayer-name .serif {
+    font-family: var(--font-serif, serif);
+    font-size: 15px;
+    color: var(--color-ink);
     font-weight: 600;
   }
-  .kv dd {
-    margin: 0;
+  .sid {
+    font-size: 11px;
+    color: var(--color-ink-muted);
+  }
+  .sprayer-meta {
+    font-size: 11.5px;
+    color: var(--color-ink-muted);
+    margin-top: 4px;
+  }
+  .sprayer-meta .accent {
     color: var(--color-ink);
+    font-weight: 600;
   }
-  .actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+  .sprayer-meta .rust {
+    color: var(--color-rust, #ba4b38);
   }
-  .ghost {
+  .mono {
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+  .primary-sm {
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
     padding: 6px 12px;
+    border-radius: var(--radius-input, 6px);
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+  }
+  .primary-sm.with-icon {
+    gap: 6px;
+  }
+  .primary-sm:hover {
+    filter: brightness(1.08);
+  }
+  .ghost-sm {
     background: var(--color-paper);
     color: var(--color-ink);
     border: 1px solid var(--color-divider);
+    padding: 6px 10px;
     border-radius: var(--radius-input, 6px);
+    font-family: inherit;
+    font-size: 11.5px;
     text-decoration: none;
-    font-size: 12.5px;
-    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
   }
-  .ghost:hover {
+  .ghost-sm:hover {
     border-color: var(--color-forest-deep);
+  }
+  @media (max-width: 700px) {
+    .sprayer {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

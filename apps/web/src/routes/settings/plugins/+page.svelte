@@ -1,157 +1,135 @@
 <script lang="ts">
-  import { Box, Upload, Search } from 'lucide-svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import { Search, Plus, FileText } from 'lucide-svelte';
+  import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
+  import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
+  import Pill from '$lib/components/ui/Pill.svelte';
 
   let { data } = $props();
+
+  const TYPE_LABEL: Record<string, string> = {
+    crop: 'Crops',
+    herbicide: 'Herbicides',
+    insecticide: 'Insecticides',
+    fungicide: 'Fungicides',
+    fertilizer: 'Fertilizers',
+    companion: 'Companions'
+  };
 </script>
 
-<svelte:head>
-  <title>Plugins & crop library · CropCard</title>
-</svelte:head>
+<svelte:head><title>Plugins & crop library · CropCard</title></svelte:head>
 
-<a class="back-link" href="/settings">← All settings</a>
-<header class="page-head">
-  <Kicker>Plugin library · data-only</Kicker>
-  <h1>Plugins & crop library</h1>
-  <p class="lede">
-    {data.total} plugin{data.total === 1 ? '' : 's'} loaded · all data-only, schema-validated at
-    registration. Browse, upload, or diff at the dedicated routes below.
-  </p>
-</header>
+<SettingsShell title="Plugins & crop library" kicker="Catalog">
+  {#snippet badge()}
+    {#if data.updatesAvailable > 0}
+      <Pill tone="wheat">{data.updatesAvailable} updates</Pill>
+    {/if}
+  {/snippet}
 
-<section class="card">
-  <h2>By type</h2>
-  <ul class="type-grid">
-    {#each data.byType as t (t.type)}
-      <li class="type-card">
-        <span class="type-name">{t.type}</span>
-        <span class="type-count">{t.count}</span>
-      </li>
-    {/each}
-  </ul>
-</section>
+  <SettingsSection
+    title="Plugin inventory"
+    sub="All data-only. Plugin engine validates on registration; no JS executes from plugin files."
+  >
+    <div class="tile-grid">
+      {#each data.byType as t (t.type)}
+        <div class="tile">
+          <div class="tile-count serif">{t.count}</div>
+          <div class="tile-label">{TYPE_LABEL[t.type] ?? t.type}</div>
+        </div>
+      {/each}
+    </div>
+    <div class="action-row">
+      <a class="ghost" href="/plugins/community"><Search size={13} /> Browse marketplace</a>
+      <a class="ghost" href="/plugins/new"><Plus size={13} /> Upload plugin JSON</a>
+      <a class="ghost" href="/plugins"><FileText size={13} /> All plugins</a>
+    </div>
+  </SettingsSection>
 
-<section class="card">
-  <h2>Actions</h2>
-  <ul class="action-list">
-    <li>
-      <a class="action" href="/plugins">
-        <Box size={16} strokeWidth={1.75} />
-        Browse all plugins
-        <span class="sub">{data.total} loaded</span>
-      </a>
-    </li>
-    <li>
-      <a class="action" href="/plugins/new">
-        <Upload size={16} strokeWidth={1.75} />
-        Upload a new plugin
-        <span class="sub">JSON file or paste</span>
-      </a>
-    </li>
-    <li>
-      <a class="action" href="/plugins/community">
-        <Search size={16} strokeWidth={1.75} />
-        Community marketplace
-        <span class="sub">Search shared plugins</span>
-      </a>
-    </li>
-  </ul>
-</section>
+  <SettingsSection
+    title={`Pending draft plugins · ${data.pluginFailures}`}
+    sub="Stock entries that aren't EPA-registered yet. Curator review before safety-kernel eligibility."
+  >
+    {#if data.pluginFailures === 0}
+      <p class="empty">No drafts pending review. New stock entries appear here when uploaded with missing fields.</p>
+    {/if}
+  </SettingsSection>
+
+  <SettingsSection
+    title={`Updates available · ${data.updatesAvailable}`}
+    sub="Plugin maintainers occasionally push label corrections."
+  >
+    {#if data.updatesAvailable === 0}
+      <p class="empty">No updates pending. New plugin versions surface here when the marketplace sync runs.</p>
+    {/if}
+  </SettingsSection>
+</SettingsShell>
 
 <style>
-  .back-link {
-    display: inline-block;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: var(--color-forest-deep);
-    text-decoration: none;
-  }
-  .back-link:hover {
-    text-decoration: underline;
-  }
-  .page-head h1 {
-    margin: 4px 0 8px;
-    font-family: var(--font-serif, serif);
-    font-size: 26px;
-    color: var(--color-forest-deep);
-  }
-  .lede {
-    margin: 0 0 18px;
-    font-size: 13.5px;
-    color: var(--color-ink-soft);
-    line-height: 1.45;
-    max-width: 60ch;
-  }
-  .card {
-    background: var(--color-paper);
-    border: 1px solid var(--color-divider);
-    border-radius: var(--radius-card, 8px);
-    padding: 18px;
-    margin-bottom: 16px;
-  }
-  .card h2 {
-    margin: 0 0 12px;
-    font-size: 16px;
-    color: var(--color-ink);
-  }
-  .type-grid {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .tile-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
   }
-  .type-card {
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider-soft);
-    border-radius: var(--radius-input, 6px);
+  .tile {
     padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    background: var(--color-cream);
+    border: 1px solid var(--color-divider-soft, var(--color-divider));
+    border-radius: 8px;
   }
-  .type-name {
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-ink-muted);
-    font-weight: 700;
-  }
-  .type-count {
+  .tile-count {
     font-size: 22px;
-    font-weight: 700;
     color: var(--color-forest-deep);
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
     font-family: var(--font-serif, serif);
   }
-  .action-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  .tile-label {
+    font-size: 10.5px;
+    color: var(--color-ink-muted);
+    margin-top: 4px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
-  .action {
+  .action-row {
+    margin-top: 12px;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider-soft);
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ghost {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 1px solid var(--color-divider);
+    padding: 8px 14px;
     border-radius: var(--radius-input, 6px);
     text-decoration: none;
-    color: var(--color-ink);
-    font-size: 13.5px;
+    font-family: inherit;
+    font-size: 13px;
     font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
   }
-  .action:hover {
+  .ghost:hover {
     border-color: var(--color-forest-deep);
   }
-  .sub {
-    margin-left: auto;
-    color: var(--color-ink-muted);
-    font-size: 12px;
-    font-weight: 400;
+  .empty {
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: 13px;
+    font-style: italic;
+  }
+  @media (max-width: 760px) {
+    .tile-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (max-width: 480px) {
+    .tile-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 </style>

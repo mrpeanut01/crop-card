@@ -26,5 +26,13 @@
   "notes": "University of Guelph all-male hybrid. Exceptional cold hardiness for the Upper Midwest and Canadian Prairies.",
   "harvestIndicators": [
     "Spears 7 to 9 inches, tight tips"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

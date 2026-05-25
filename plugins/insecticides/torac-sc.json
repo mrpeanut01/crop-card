@@ -26,5 +26,24 @@
     "leafhopper",
     "lepidopteran larvae"
   ],
-  "notes": "Nichino IRAC 21A METI complex I inhibitor. Strong on whitefly. Toxic to bees."
+  "notes": "Nichino IRAC 21A METI complex I inhibitor. Strong on whitefly. Toxic to bees.",
+  "scoutingThresholds": [
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    }
+  ]
 }

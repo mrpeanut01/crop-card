@@ -72,7 +72,9 @@ describe('PluginRegistry', () => {
       type: 'crop',
       displayName: 'EZ Gro Monster',
       version: '1.0.0',
-      cropFamily: 'cucurbit'
+      cropFamily: 'cucurbit',
+      harvestStyle: 'cure-then-store',
+      bloomWindow: { continuous: true, beeAttractive: true }
     });
     let caught: PluginRegistrationError | null = null;
     try {
@@ -99,7 +101,9 @@ describe('PluginRegistry', () => {
       type: 'crop',
       displayName: 'Corn',
       version: '1.0.0',
-      cropFamily: 'corn'
+      cropFamily: 'corn',
+      harvestStyle: 'row-grain-pollinated',
+      bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
     });
     r.register({
       pluginId: 'gly',
@@ -123,7 +127,9 @@ describe('PluginRegistry', () => {
       type: 'crop',
       displayName: 'Corn',
       version: '1.0.0',
-      cropFamily: 'corn'
+      cropFamily: 'corn',
+      harvestStyle: 'row-grain-pollinated',
+      bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
     };
     expect(a.register(input).hash).toBe(b.register(input).hash);
     const other = a.register({ ...input, pluginId: 'corn-sweet', displayName: 'Sweet Corn' });

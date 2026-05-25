@@ -26,5 +26,13 @@
   "notes": "Worlds most expensive spice. Fall-blooming corms; plant in August. Each flower yields three red stigmas. Roughly 150 flowers per gram of dried saffron.",
   "harvestIndicators": [
     "Three red stigmas in fresh open flowers - harvest at dawn"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

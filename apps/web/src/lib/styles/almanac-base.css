@@ -1,0 +1,49 @@
+/* Ports global element styles from design_handoff_cropcard_overhaul/direction-almanac-today.jsx
+   (the almanacBase template literal). Element selectors only — component-scoped
+   styles live in the components themselves. */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+  font-weight: 500;
+  letter-spacing: var(--letter-tight);
+  color: var(--color-forest-deep);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--font-size-display);
+  letter-spacing: var(--letter-tighter);
+  line-height: 1.05;
+}
+
+h2 {
+  font-size: var(--font-size-hero);
+  letter-spacing: var(--letter-tight);
+}
+
+h3 {
+  font-size: var(--font-size-screen-title);
+}
+
+h4 {
+  font-size: var(--font-size-card-title);
+}
+
+p {
+  margin: 0;
+  color: var(--color-ink-soft);
+  line-height: 1.55;
+}
+
+/* Tabular numerals on numeric-heavy elements (dates, EPA #s, quantities).
+   Components reach for .mono when they want monospace; this just ensures
+   numbers line up in tables / list rows without spacing jitter. */
+table,
+.tabnums {
+  font-variant-numeric: tabular-nums;
+}

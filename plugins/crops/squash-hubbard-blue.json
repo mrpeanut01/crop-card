@@ -26,5 +26,10 @@
   "notes": "Cucurbita maxima heirloom from the 1700s. Strong squash bug trap crop for cucurbit blocks. Sweet deep-orange flesh.",
   "harvestIndicators": [
     "Bumpy blue-grey rind, 12 to 20 lb fruit, hardened skin"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  },
+  "harvestStyle": "cure-then-store"
 }

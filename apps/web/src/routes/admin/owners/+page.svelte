@@ -94,7 +94,7 @@
     padding: 1rem;
   }
   .hint {
-    color: var(--fg-muted, #555);
+    color: var(--color-ink-muted);
   }
   .section {
     margin: 1.5rem 0;
@@ -108,36 +108,38 @@
   td {
     padding: 0.5rem;
     text-align: left;
-    border-bottom: 1px solid var(--divider, #eee);
+    border-bottom: 1px solid var(--color-divider);
     vertical-align: top;
   }
   th {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--color-cream);
     font-weight: 600;
+    color: var(--color-ink);
   }
   .owners tr.suspended {
-    background: #fde7e7;
+    background: rgba(186, 75, 56, 0.08);
   }
   .status-form select,
   button {
     font: inherit;
     padding: 0.25rem 0.5rem;
     min-height: 32px;
-    border: 1px solid var(--divider, #ccc);
-    border-radius: 0.25rem;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
   }
   button {
-    background: var(--accent, #1f5e3a);
-    color: white;
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
     cursor: pointer;
   }
   .impersonate {
-    background: #b54a4a;
+    background: var(--color-rust, #ba4b38);
   }
   .error {
-    background: #fde7e7;
+    background: rgba(186, 75, 56, 0.08);
+    color: var(--color-rust, #ba4b38);
     padding: 0.75rem;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-input, 6px);
   }
   code {
     font-size: 0.85em;

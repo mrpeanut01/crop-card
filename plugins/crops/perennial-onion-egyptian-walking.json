@@ -27,5 +27,13 @@
   "harvestIndicators": [
     "Topsets form on stems in summer",
     "Lower bulbs harvested fall through spring"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

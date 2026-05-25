@@ -32,5 +32,22 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Vestaron novel peptide insecticide. IRAC 32. Selective for Lepidoptera; safe on beneficials."
+  "notes": "Vestaron novel peptide insecticide. IRAC 32. Selective for Lepidoptera; safe on beneficials.",
+  "scoutingThresholds": [
+    {
+      "pest": "corn earworm",
+      "metric": "count-per-trap-per-week",
+      "threshold": 10
+    },
+    {
+      "pest": "tomato hornworm",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "diamondback moth",
+      "metric": "count-per-plant",
+      "threshold": 0.3
+    }
+  ]
 }

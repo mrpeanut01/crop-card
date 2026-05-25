@@ -26,5 +26,13 @@
   "notes": "Open-pollinated purple-skinned carrot. Color holds when raw but bleeds in cooking. CSA and farmstand favorite.",
   "harvestIndicators": [
     "7 inch tapered root, deep purple skin and orange core"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

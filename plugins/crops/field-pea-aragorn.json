@@ -26,5 +26,11 @@
   "notes": "Spring-sown dry yellow field pea. Semi-leafless type stands well for direct combining. Drill at 200 to 250 lb per acre. Inoculate.",
   "harvestIndicators": [
     "Pods dry and rattle, plants tan-brown"
-  ]
+  ],
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

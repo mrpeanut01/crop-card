@@ -2,6 +2,52 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
+  import Banner from '$lib/components/ui/Banner.svelte';
+  import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
+  // Phase 25b (#85) — Almanac chrome (stepper + context strip) on top
+  // of the existing herbicide flow. 1:1 with ASprayScreen.
+  import SprayStepper, { type StepState } from '$lib/components/spray/SprayStepper.svelte';
+  import SprayContextStrip, {
+    type SprayContextBlock,
+    type CompatibilityState
+  } from '$lib/components/spray/SprayContextStrip.svelte';
+
+  // Stepper + context-strip $derived inputs computed below the rest of
+  // the herbicide flow's state (selectedBlocks / sprayer / herbicides /
+  // perBlockResults). Centralised here so the template stays clean.
+  function deriveStepperData(): Array<{ label: string; state: StepState }> {
+    const hasBlocks = selectedBlocks.length > 0;
+    const hasSprayer = !!sprayer;
+    const hasMix = selectedHerbicideIds.length > 0;
+    const verdicts = [...perBlockResults.values()];
+    const safetyDone = verdicts.length > 0 && verdicts.every((r) => r.ok);
+    return [
+      { label: 'Block & crop', state: hasBlocks ? 'done' : 'active' },
+      {
+        label: 'Sprayer & tank',
+        state: !hasSprayer ? (hasBlocks ? 'active' : 'pending') : 'done'
+      },
+      {
+        label: 'Mix',
+        state: !hasMix ? (hasBlocks && hasSprayer ? 'active' : 'pending') : 'done'
+      },
+      {
+        label: 'Safety check',
+        state:
+          verdicts.length === 0
+            ? hasMix && hasBlocks && hasSprayer
+              ? 'active'
+              : 'pending'
+            : safetyDone
+              ? 'done'
+              : 'active'
+      },
+      {
+        label: 'Confirm & record',
+        state: safetyDone ? 'active' : 'pending'
+      }
+    ];
+  }
   import {
     buildLastTankFills,
     fmtAmount as fmtUnitAmount,
@@ -537,22 +583,81 @@
       goto('/plan?tab=schedule&view=swimlane');
     }
   }
+
+  // Phase 25b (#85) — Almanac chrome derived state.
+  const sprayStepperData = $derived(deriveStepperData());
+  const ctxBlocks = $derived<SprayContextBlock[]>(
+    selectedBlocks.map((b) => ({ id: b.id, label: b.label, acres: b.acres ?? 0 }))
+  );
+  const cropFamilies = $derived(
+    Array.from(
+      new Set(
+        selectedBlocks
+          .flatMap((b) => b.crops.map((c) => c.cropFamily))
+          .filter((f): f is NonNullable<typeof f> => f !== undefined)
+      )
+    )
+  );
+  const ctxCropLabel = $derived(
+    cropFamilies.length === 0
+      ? '—'
+      : cropFamilies.length === 1
+        ? cropFamilies[0]
+        : `${cropFamilies.length} crop families`
+  );
+  const ctxCropSubtitle = $derived(
+    selectedBlocks.length === 0
+      ? undefined
+      : selectedBlocks
+          .flatMap((b) => b.crops)
+          .slice(0, 3)
+          .map((c) => c.displayName)
+          .join(' · ')
+  );
+  const ctxCompatibility = $derived<CompatibilityState | undefined>(
+    perBlockResults.size === 0
+      ? undefined
+      : [...perBlockResults.values()].every((r) => r.ok)
+        ? {
+            label:
+              cropFamilies.length === 1
+                ? `${cropFamilies[0]} blocks compatible`
+                : `${selectedBlocks.length} block${selectedBlocks.length === 1 ? '' : 's'} compatible`,
+            reason: 'Kernel verified each selected block against the chosen products.',
+            tone: 'forest'
+          }
+        : {
+            label: 'Block / product combination flagged',
+            reason: 'One or more blocks failed the kernel check. Review below.',
+            tone: 'rust'
+          }
+  );
 </script>
 
-<h1>Plan a spray</h1>
-<p class="lede">
-  Pick a block, herbicide(s), sprayer, and conditions. The safety kernel decides whether the
-  dilution table renders or you get a STOP card.
-</p>
+<SprayPageHeader chemistry="herbicide" />
+
+<!-- Phase 25b (#85) — Almanac stepper + context strip. 1:1 with the
+     header in ASprayScreen at docs/design/almanac/direction-almanac-rest.jsx
+     (lines 236–342). Derives step + compatibility state from the
+     existing flow's selections; the rich legacy form continues below. -->
+<div class="spray-almanac-chrome">
+  <SprayStepper steps={sprayStepperData} />
+  <SprayContextStrip
+    blocks={ctxBlocks}
+    cropLabel={ctxCropLabel}
+    cropSubtitle={ctxCropSubtitle}
+    compatibility={ctxCompatibility}
+  />
+</div>
 
 {#if data.preselect.fromScout || data.preselect.blockId}
-  <div class="prefill-banner" role="status">
+  <Banner tone="forest">
     {#if data.preselect.fromScout}
-      ↳ Continuing from scout — block pre-selected.
+      Continuing from scout — block pre-selected.
     {:else}
-      ↳ Pre-filled from <a href="/today">today's calendar</a>.
+      Pre-filled from <a href="/today">today's calendar</a>.
     {/if}
-  </div>
+  </Banner>
 {/if}
 
 {#if data.blocks.length === 0}
@@ -732,7 +837,7 @@
 {/if}
 
 {#if lastError}
-  <p class="error" role="alert">Error: {lastError}</p>
+  <Banner tone="rust" urgent>Error: {lastError}</Banner>
 {/if}
 
 {#if result}
@@ -992,37 +1097,24 @@
 {/if}
 
 <style>
-  h1 {
-    margin: 0 0 0.25rem;
+  /* Phase 25b (#85) — Almanac chrome layout. The new stepper + context
+     strip sit above the legacy flow with a small spacing buffer. */
+  .spray-almanac-chrome {
+    margin-bottom: 22px;
   }
-  .lede {
-    color: #555;
-    margin: 0 0 1.5rem;
-  }
-  .prefill-banner {
-    background: #e7f1ea;
-    color: #1f5e3a;
-    padding: 0.6rem 0.9rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    border-left: 4px solid #1f5e3a;
-  }
-  .prefill-banner a {
-    color: #1f5e3a;
-    text-decoration: underline;
-  }
+  /* h1 + .lede now owned by SprayPageHeader (Phase 25b).
+     .prefill-banner superseded by Banner primitive. */
   .empty-state {
     text-align: center;
     padding: 2rem;
   }
   .empty-state a {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
   }
   .filter-hint {
     background: #fff8ec;
-    color: #b35900;
+    color: var(--color-wheat);
     padding: 0.5rem 0.75rem;
     border-radius: 4px;
     margin: 0 0 0.75rem;
@@ -1031,7 +1123,7 @@
   .link-button {
     background: none;
     border: none;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: underline;
     cursor: pointer;
     font: inherit;
@@ -1049,7 +1141,7 @@
   .step h2 {
     margin: 0 0 0.75rem;
     font-size: 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -1061,7 +1153,7 @@
   .card {
     text-align: left;
     padding: 0.75rem;
-    border: 2px solid #d0d7d0;
+    border: 2px solid var(--color-divider);
     border-radius: 6px;
     background: white;
     cursor: pointer;
@@ -1073,11 +1165,11 @@
     font: inherit;
   }
   .card:hover {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .card.selected {
-    border-color: #1f5e3a;
-    background: #e7f1ea;
+    border-color: var(--color-forest);
+    background: var(--pill-forest-bg);
   }
   /* Phase 21b follow-up — pre-plant block visual cue. Soft amber so
      the operator notices it's a burndown context, not a regular
@@ -1109,7 +1201,7 @@
   .card-check {
     font-size: 1.05rem;
     line-height: 1;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .existing-event-tag {
     margin: 0.3rem 0 0;
@@ -1161,11 +1253,11 @@
     font-size: 0.8rem;
   }
   .card .warn {
-    color: #b35900;
+    color: var(--color-wheat);
     font-weight: 600;
   }
   .card .ok {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 600;
   }
   .card ul {
@@ -1183,8 +1275,8 @@
     min-width: 70px;
     min-height: 64px;
     background: white;
-    color: #1f5e3a;
-    border: 2px solid #d0d7d0;
+    color: var(--color-forest);
+    border: 2px solid var(--color-divider);
     border-radius: 6px;
     font-weight: 700;
     font-size: 1.4rem;
@@ -1201,9 +1293,9 @@
     margin-top: 0.1rem;
   }
   .pick.selected {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .pick.selected span {
     color: rgba(255, 255, 255, 0.85);
@@ -1224,15 +1316,15 @@
   }
   .stepper-label {
     font-weight: 600;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 0.95rem;
   }
   .stepper button {
     width: 56px;
     height: 56px;
-    border: 2px solid #1f5e3a;
+    border: 2px solid var(--color-forest);
     background: white;
-    color: #1f5e3a;
+    color: var(--color-forest);
     border-radius: 6px;
     font-size: 1.6rem;
     font-weight: 700;
@@ -1240,7 +1332,7 @@
     line-height: 1;
   }
   .stepper button:active {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
   }
   .stepper output {
@@ -1248,7 +1340,7 @@
     font-family: monospace;
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
     padding: 0.4rem;
   }
   .stepper output small {
@@ -1258,14 +1350,9 @@
     font-weight: 500;
     margin-left: 0.2rem;
   }
-  .sticky-cta {
-    position: sticky;
-    bottom: 0;
-    background: linear-gradient(180deg, transparent, #f5f7f4 30%);
-    padding: 1rem 0 0.5rem;
-    margin: 0 -0.25rem;
-    z-index: 50;
-  }
+  /* .sticky-cta was for a sticky bottom CTA bar that's no longer rendered
+     after the multi-block selection refactor — the "Apply" button lives
+     inline in the result card instead. */
   .next-actions {
     display: flex;
     gap: 0.5rem;
@@ -1276,8 +1363,8 @@
     flex: 1 1 calc(33% - 0.5rem);
     min-width: 120px;
     background: white;
-    color: #1f5e3a;
-    border: 2px solid #1f5e3a;
+    color: var(--color-forest);
+    border: 2px solid var(--color-forest);
     border-radius: 6px;
     text-decoration: none;
     text-align: center;
@@ -1295,7 +1382,7 @@
     margin: 0 0 0.75rem;
   }
   .primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border: none;
     border-radius: 6px;
@@ -1311,21 +1398,19 @@
     background: #999;
     cursor: not-allowed;
   }
-  .error {
-    color: #b00020;
-  }
+  /* .error superseded by Banner tone=rust urgent. */
   .result {
     margin-top: 1.5rem;
     padding: 1.25rem;
     border-radius: 8px;
   }
   .result.ok {
-    background: #e7f1ea;
-    border: 2px solid #1f5e3a;
+    background: var(--pill-forest-bg);
+    border: 2px solid var(--color-forest);
   }
   .result.stop {
     background: #fff;
-    /* T-05 (audit F-A): frame red bumped from #b71c1c to #8a0000 to match
+    /* T-05 (audit F-A): frame red bumped from var(--color-rust) to #8a0000 to match
      * the AAA-contrast header band below. */
     border: 3px solid #8a0000;
     padding: 0;
@@ -1334,7 +1419,7 @@
     margin: 0 0 1rem;
   }
   .result.stop h2 {
-    /* T-05 (audit F-A): #fff-on-#b71c1c was ~5.94:1 (AA only). HCD §2.2
+    /* T-05 (audit F-A): #fff-on-var(--color-rust) was ~5.94:1 (AA only). HCD §2.2
      * stop-screen spec mandates AAA 7:1. #fff-on-#8a0000 ≈ 7.74:1. */
     background: #8a0000;
     color: #fff;
@@ -1367,19 +1452,13 @@
   }
   .dilution td strong {
     font-size: 1.75rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-family: monospace;
   }
-  /* Phase 21b follow-up — total/per-tank dilution layout. */
-  .dilution-summary {
-    margin: 0 0 0.5rem;
-    color: #0f172a;
-    font-size: 0.95rem;
-  }
-  .dilution-warn {
-    color: #b45309;
-    font-weight: 600;
-  }
+  /* .dilution-summary, .dilution-warn, .dilution td small.exceeds —
+     dropped in the Phase 21b multi-tank refactor; the per-tank rows
+     now carry their own warning markup. .dilution-warn-line retained
+     since it still backs the alongside-table rate-warning. */
   .dilution-warn-line {
     margin: 0 0 0.5rem;
     padding: 0.45rem 0.6rem;
@@ -1388,14 +1467,6 @@
     border-radius: 0.25rem;
     color: #78350f;
     font-size: 0.85rem;
-  }
-  .dilution td small.exceeds {
-    display: block;
-    color: #b45309;
-    font-family: inherit;
-    font-size: 0.78rem;
-    font-weight: 600;
-    margin-top: 0.1rem;
   }
   /* Phase 21b follow-up — Spray Card layout. */
   .spray-card-head {
@@ -1478,7 +1549,7 @@
     caption-side: top;
     text-align: left;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
     margin-bottom: 0.2rem;
   }
   .fill-table th,
@@ -1530,8 +1601,6 @@
     .step {
       display: none !important;
     }
-    h1,
-    .lede,
     .filter-hint {
       display: none !important;
     }
@@ -1554,7 +1623,6 @@
       background: #f3f4f6;
     }
     .fill-table caption,
-    .dilution h3,
     .spray-card h3 {
       color: #000;
     }
@@ -1592,8 +1660,8 @@
   }
   .recorded.queued {
     background: #fff3cd;
-    color: #b35900;
-    border-left: 4px solid #b35900;
+    color: var(--color-wheat);
+    border-left: 4px solid var(--color-wheat);
     padding-left: 0.75rem;
   }
   .violations {
@@ -1605,10 +1673,10 @@
     padding: 0.75rem;
     border-radius: 4px;
     margin-bottom: 0.5rem;
-    border-left: 4px solid #b00020;
+    border-left: 4px solid var(--color-rust);
   }
   .violations li strong {
-    color: #b00020;
+    color: var(--color-rust);
   }
   .violations p {
     margin: 0.25rem 0;

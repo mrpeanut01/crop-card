@@ -29,5 +29,12 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Andermatt Biocontrol Mexican-strain granulovirus. Suppresses CpGV-resistant populations."
+  "notes": "Andermatt Biocontrol Mexican-strain granulovirus. Suppresses CpGV-resistant populations.",
+  "scoutingThresholds": [
+    {
+      "pest": "codling moth",
+      "metric": "count-per-trap-per-week",
+      "threshold": 5
+    }
+  ]
 }

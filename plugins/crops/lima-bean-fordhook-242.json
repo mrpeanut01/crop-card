@@ -4,8 +4,20 @@
   "displayName": "Lima Bean — Fordhook 242",
   "version": "1.0.0",
   "cropFamily": "legume",
-  "daysToMaturity": { "min": 75, "max": 85 },
+  "daysToMaturity": {
+    "min": 75,
+    "max": 85
+  },
   "defaultRowSpacingInches": 30,
-  "harvestIndicators": ["Pods plump and bright green", "Seeds firm"],
-  "notes": "Heat-tolerant butter bean. Pick before pods turn yellow."
+  "harvestIndicators": [
+    "Pods plump and bright green",
+    "Seeds firm"
+  ],
+  "notes": "Heat-tolerant butter bean. Pick before pods turn yellow.",
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

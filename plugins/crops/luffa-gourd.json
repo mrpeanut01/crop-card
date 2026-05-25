@@ -26,5 +26,10 @@
   "notes": "Luffa aegyptiaca. Long-season vining crop. Trellis vertical for clean straight fruit. Start indoors 6 weeks before last frost.",
   "harvestIndicators": [
     "Fruit dry and light, skin tan and rattling seeds"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  },
+  "harvestStyle": "cure-then-store"
 }

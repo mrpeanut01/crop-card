@@ -26,5 +26,11 @@
   "notes": "Limonium sinuatum Quick Improved Sortable series for cut and dried use. Strong stem strength. Bracts hold color through drying.",
   "harvestIndicators": [
     "Stems with most florets open before main spike yellows"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

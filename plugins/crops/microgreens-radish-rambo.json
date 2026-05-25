@@ -26,5 +26,11 @@
   "notes": "Purple-stemmed daikon-type radish microgreen. Strong peppery flavor, striking visual. Quick turnaround for chef accounts.",
   "harvestIndicators": [
     "Stems 2 to 3 inches, cotyledons fully expanded"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

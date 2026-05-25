@@ -4,32 +4,135 @@
   "displayName": "Wheat — Soft Red Winter",
   "version": "1.3.0",
   "cropFamily": "cereal-grain",
-  "daysToMaturity": { "min": 240, "max": 270 },
+  "daysToMaturity": {
+    "min": 240,
+    "max": 270
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 50,
     "rowSpacingIn": 7,
-    "seedDepthIn": { "min": 1, "max": 1.5 },
+    "seedDepthIn": {
+      "min": 1,
+      "max": 1.5
+    },
     "recommendedLbsPerAcre": 120
   },
   "growthStageTable": {
     "system": "zadoks",
     "referenceDtmDays": 240,
     "stages": [
-      { "code": "Z10", "name": "Coleoptile through soil", "daysFromPlanting": { "min": 5, "max": 14 }, "bodyKind": "vegetative", "inspect": "First leaf through coleoptile." },
-      { "code": "Z20", "name": "Tillering begins", "daysFromPlanting": { "min": 30, "max": 60 }, "bodyKind": "vegetative", "inspect": "Main shoot + first tiller. Stand-count window." },
-      { "code": "Z30", "name": "Stem extension / jointing", "daysFromPlanting": { "min": 90, "max": 130 }, "bodyKind": "vegetative", "inspect": "First node detectable. N topdress + fungicide window opens." },
-      { "code": "Z39", "name": "Flag leaf fully emerged", "daysFromPlanting": { "min": 130, "max": 160 }, "bodyKind": "vegetative", "inspect": "Critical fungicide timing for septoria/rust." },
-      { "code": "Z55", "name": "Heading", "daysFromPlanting": { "min": 150, "max": 180 }, "bodyKind": "reproductive", "inspect": "Half of inflorescence emerged." },
-      { "code": "Z65", "name": "Anthesis (flowering)", "daysFromPlanting": { "min": 160, "max": 190 }, "bodyKind": "reproductive", "inspect": "Mid-flowering. Fusarium head-blight watch — fungicide window for FHB." },
-      { "code": "Z75", "name": "Milk development", "daysFromPlanting": { "min": 180, "max": 210 }, "bodyKind": "ripening", "inspect": "Kernel content milky." },
-      { "code": "Z83", "name": "Early dough", "daysFromPlanting": { "min": 200, "max": 225 }, "bodyKind": "ripening", "inspect": "Begin harvest moisture watch." },
-      { "code": "Z89", "name": "Fully ripe", "daysFromPlanting": { "min": 215, "max": 245 }, "bodyKind": "ripening", "inspect": "Kernel hard. Target moisture 13-14% for soft red winter wheat." }
+      {
+        "code": "Z10",
+        "name": "Coleoptile through soil",
+        "daysFromPlanting": {
+          "min": 5,
+          "max": 14
+        },
+        "bodyKind": "vegetative",
+        "inspect": "First leaf through coleoptile."
+      },
+      {
+        "code": "Z20",
+        "name": "Tillering begins",
+        "daysFromPlanting": {
+          "min": 30,
+          "max": 60
+        },
+        "bodyKind": "vegetative",
+        "inspect": "Main shoot + first tiller. Stand-count window."
+      },
+      {
+        "code": "Z30",
+        "name": "Stem extension / jointing",
+        "daysFromPlanting": {
+          "min": 90,
+          "max": 130
+        },
+        "bodyKind": "vegetative",
+        "inspect": "First node detectable. N topdress + fungicide window opens."
+      },
+      {
+        "code": "Z39",
+        "name": "Flag leaf fully emerged",
+        "daysFromPlanting": {
+          "min": 130,
+          "max": 160
+        },
+        "bodyKind": "vegetative",
+        "inspect": "Critical fungicide timing for septoria/rust."
+      },
+      {
+        "code": "Z55",
+        "name": "Heading",
+        "daysFromPlanting": {
+          "min": 150,
+          "max": 180
+        },
+        "bodyKind": "reproductive",
+        "inspect": "Half of inflorescence emerged."
+      },
+      {
+        "code": "Z65",
+        "name": "Anthesis (flowering)",
+        "daysFromPlanting": {
+          "min": 160,
+          "max": 190
+        },
+        "bodyKind": "reproductive",
+        "inspect": "Mid-flowering. Fusarium head-blight watch — fungicide window for FHB."
+      },
+      {
+        "code": "Z75",
+        "name": "Milk development",
+        "daysFromPlanting": {
+          "min": 180,
+          "max": 210
+        },
+        "bodyKind": "ripening",
+        "inspect": "Kernel content milky."
+      },
+      {
+        "code": "Z83",
+        "name": "Early dough",
+        "daysFromPlanting": {
+          "min": 200,
+          "max": 225
+        },
+        "bodyKind": "ripening",
+        "inspect": "Begin harvest moisture watch."
+      },
+      {
+        "code": "Z89",
+        "name": "Fully ripe",
+        "daysFromPlanting": {
+          "min": 215,
+          "max": 245
+        },
+        "bodyKind": "ripening",
+        "inspect": "Kernel hard. Target moisture 13-14% for soft red winter wheat."
+      }
     ],
     "harvestTargets": [
-      { "stageCode": "Z89", "label": "Dry-storage grain", "useCase": "dry-storage" }
+      {
+        "stageCode": "Z89",
+        "label": "Dry-storage grain",
+        "useCase": "dry-storage"
+      }
     ]
   },
-  "harvestIndicators": ["Hard dough stage", "Grain moisture 13–15%", "Heads bend at neck"],
-  "notes": "Mid-Atlantic standard winter wheat — pastry/cookie-grade. Plant after Hessian-fly-free date (Sep 15 in N VA). Source: VCE Small Grains Production Guide."
+  "harvestIndicators": [
+    "Hard dough stage",
+    "Grain moisture 13–15%",
+    "Heads bend at neck"
+  ],
+  "notes": "Mid-Atlantic standard winter wheat — pastry/cookie-grade. Plant after Hessian-fly-free date (Sep 15 in N VA). Source: VCE Small Grains Production Guide.",
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

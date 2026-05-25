@@ -25,5 +25,30 @@
     "rust mite",
     "pear psylla"
   ],
-  "notes": "Bayer IRAC 23 tetronic acid lipid biosynthesis inhibitor. Strong on egg and larval stages."
+  "notes": "Bayer IRAC 23 tetronic acid lipid biosynthesis inhibitor. Strong on egg and larval stages.",
+  "scoutingThresholds": [
+    {
+      "pest": "twospotted spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "European red mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "rust mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "pear psylla",
+      "metric": "count-per-leaf",
+      "threshold": 3
+    }
+  ]
 }

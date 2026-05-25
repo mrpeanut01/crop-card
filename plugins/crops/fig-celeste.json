@@ -26,5 +26,13 @@
   "notes": "Cold-hardy fig for zones 6 to 9. Closed eye limits split and souring in humid climates. Self-fertile. Single annual main crop.",
   "harvestIndicators": [
     "Small bronze-purple fruit hangs down, drop of nectar at eye"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

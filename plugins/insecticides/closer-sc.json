@@ -26,5 +26,24 @@
     "psyllid",
     "leafhopper"
   ],
-  "notes": "Corteva IRAC 4C sulfoxamine. Distinct from neonicotinoids while sharing nAChR target. Apply after bloom to limit bee exposure."
+  "notes": "Corteva IRAC 4C sulfoxamine. Distinct from neonicotinoids while sharing nAChR target. Apply after bloom to limit bee exposure.",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    }
+  ]
 }

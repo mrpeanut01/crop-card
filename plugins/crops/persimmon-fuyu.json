@@ -26,5 +26,13 @@
   "notes": "Non-astringent Japanese persimmon (Diospyros kaki). Eaten firm like an apple. Self-fertile. Hardy to zone 7.",
   "harvestIndicators": [
     "Flat round orange fruit, firm and crisp at harvest"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

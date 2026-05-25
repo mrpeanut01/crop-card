@@ -26,5 +26,13 @@
   "notes": "Sorghum bicolor sudangrass cultivar. Warm-season annual forage. Multi-cut with regrowth. Do not graze under 18 inches due to prussic acid.",
   "harvestIndicators": [
     "Plants 24 to 30 inches before first cut to avoid prussic acid risk"
-  ]
+  ],
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "monthsOfYear": [
+      7,
+      8
+    ],
+    "beeAttractive": false
+  }
 }

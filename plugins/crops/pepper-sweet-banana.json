@@ -26,5 +26,10 @@
   "notes": "Capsicum annuum, 0 SHU. 1941 All-America Selections winner. 6 inch tapered sweet pepper. Prolific.",
   "harvestIndicators": [
     "Pale yellow for fresh use, orange-red at full ripeness"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

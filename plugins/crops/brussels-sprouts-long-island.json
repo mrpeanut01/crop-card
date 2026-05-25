@@ -4,8 +4,20 @@
   "displayName": "Brussels Sprouts — Long Island Improved",
   "version": "1.0.0",
   "cropFamily": "brassica",
-  "daysToMaturity": { "min": 90, "max": 110 },
+  "daysToMaturity": {
+    "min": 90,
+    "max": 110
+  },
   "defaultRowSpacingInches": 30,
-  "harvestIndicators": ["Sprouts 1–1.5 in firm", "Bottom-up after first frost"],
-  "notes": "Long-season fall crop. Top the plant 30 d before harvest to push sprout size."
+  "harvestIndicators": [
+    "Sprouts 1–1.5 in firm",
+    "Bottom-up after first frost"
+  ],
+  "notes": "Long-season fall crop. Top the plant 30 d before harvest to push sprout size.",
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

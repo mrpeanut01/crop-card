@@ -26,5 +26,11 @@
   "notes": "Improved bolt-resistant arugula. Faster regrowth than Rocket, milder peppery flavor. Excellent for cut-and-come-again.",
   "harvestIndicators": [
     "Lobed leaves 4 to 6 inches before flower stalk emerges"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,10 @@
   "notes": "Capsicum annuum, mostly mild with the occasional hot one. High-margin restaurant crop. Heavy producer over a long window.",
   "harvestIndicators": [
     "Pick green at 2 to 3 inches for blistering"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

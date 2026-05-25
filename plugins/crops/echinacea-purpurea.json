@@ -26,5 +26,11 @@
   "notes": "Native North American medicinal perennial. Hardy to zone 3. Pollinator powerhouse. Cold-stratify seed 30 days.",
   "harvestIndicators": [
     "Roots harvested in third year fall; flowers and tops in second year"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

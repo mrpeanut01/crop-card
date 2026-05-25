@@ -26,5 +26,10 @@
   "notes": "Indeterminate cherry. Heavy producer on long trusses, sometimes 100 fruit per cluster. High sugar content. VF resistance.",
   "harvestIndicators": [
     "1 inch ruby-red fruit, full color on the truss"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

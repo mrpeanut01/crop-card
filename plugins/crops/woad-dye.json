@@ -26,5 +26,11 @@
   "notes": "European blue dye plant predating indigo. Biennial; harvest first-year leaves for indigotin. Considered invasive in parts of the western US.",
   "harvestIndicators": [
     "Lower leaves dark green in first year; harvest for dye"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

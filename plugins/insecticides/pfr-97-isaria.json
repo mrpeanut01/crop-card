@@ -32,5 +32,31 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Certis USA biological. Distinct entomopathogenic fungus from Beauveria."
+  "notes": "Certis USA biological. Distinct entomopathogenic fungus from Beauveria.",
+  "scoutingThresholds": [
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "spider mite suppression",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    }
+  ]
 }

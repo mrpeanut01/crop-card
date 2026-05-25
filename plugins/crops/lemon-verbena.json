@@ -26,5 +26,11 @@
   "notes": "Tender South American perennial, treated as annual outside zone 8. Strongest lemon scent of any culinary herb.",
   "harvestIndicators": [
     "Cut stems with leaves still firm, before flowering for strongest oil"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

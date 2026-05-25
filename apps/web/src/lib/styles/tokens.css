@@ -1,0 +1,128 @@
+/* Phase 25 Almanac design tokens
+   Source of truth: design_handoff_cropcard_overhaul/direction-almanac-today.jsx (const A)
+   and design_handoff_cropcard_overhaul/README.md (Design tokens table).
+
+   These are intentionally raw values, not semantic aliases — semantic intent
+   (e.g., "danger button bg") is encoded in the components that read them. */
+
+:root {
+  /* Surfaces */
+  --color-cream: #f8f3e8; /* page background */
+  --color-paper: #fdfaf2; /* cards, top bar, raised surfaces */
+
+  /* Text */
+  --color-ink: #1a1f1a; /* primary text */
+  --color-ink-soft: #4a4f46; /* body copy */
+  --color-ink-muted: #7a7f75; /* captions, metadata, kicker labels */
+
+  /* Brand */
+  --color-forest: #2c5237; /* primary brand, primary buttons, success */
+  --color-forest-deep: #1f3a28; /* display headings, brand-deep */
+
+  /* Semantic */
+  --color-wheat: #b8893c; /* warning, in-progress states */
+  --color-wheat-soft: #e8d9b5; /* warning pill bg */
+  --color-rust: #a64a2a; /* errors, blocks, RUP, danger zone */
+  --color-sky: #6f8fa8; /* informational, fungicide accent */
+
+  /* Lines + borders */
+  --color-divider: #d9cfb7; /* hard dividers, input borders, card stroke */
+  --color-divider-soft: #e9dfcc; /* soft dividers, hover bg */
+
+  /* Pill tones — { bg, fg, bd } per tone */
+  --pill-neutral-bg: #e9dfcc;
+  --pill-neutral-fg: #4a4f46;
+  --pill-neutral-bd: #d9cfb7;
+
+  --pill-forest-bg: #e5eedf;
+  --pill-forest-fg: #1f3a28;
+  --pill-forest-bd: #c9dbc0;
+
+  --pill-wheat-bg: #e8d9b5;
+  --pill-wheat-fg: #8a6722;
+  --pill-wheat-bd: #d9c18f;
+
+  --pill-rust-bg: #f1d9ce;
+  --pill-rust-fg: #8a341b;
+  --pill-rust-bd: #e2b69e;
+
+  --pill-sky-bg: #dee7ef;
+  --pill-sky-fg: #3a586e;
+  --pill-sky-bd: #bdcdd9;
+
+  /* Provenance source tokens (Phase 25 v2 addendum)
+     Per direction-almanac-ai-provenance.jsx PROV_SOURCES. Four of the
+     five sources alias the existing pill tones (plugin→forest,
+     data→sky, manual→neutral, fallback→rust); the `ai` source uses a
+     distinct soft-beige that pill-wheat doesn't cover. Swatches drive
+     the legend-strip dots. */
+  --prov-plugin-bg: var(--pill-forest-bg);
+  --prov-plugin-fg: var(--pill-forest-fg);
+  --prov-plugin-bd: var(--pill-forest-bd);
+  --prov-plugin-swatch: var(--color-forest);
+
+  --prov-data-bg: var(--pill-sky-bg);
+  --prov-data-fg: var(--pill-sky-fg);
+  --prov-data-bd: var(--pill-sky-bd);
+  --prov-data-swatch: var(--color-sky);
+
+  --prov-ai-bg: #efe6cc;
+  --prov-ai-fg: #8a6722;
+  --prov-ai-bd: #d9c18f;
+  --prov-ai-swatch: var(--color-wheat);
+
+  --prov-manual-bg: var(--pill-neutral-bg);
+  --prov-manual-fg: var(--pill-neutral-fg);
+  --prov-manual-bd: var(--pill-neutral-bd);
+  --prov-manual-swatch: #7a7f75;
+
+  --prov-fallback-bg: var(--pill-rust-bg);
+  --prov-fallback-fg: var(--pill-rust-fg);
+  --prov-fallback-bd: var(--pill-rust-bd);
+  --prov-fallback-swatch: var(--color-rust);
+
+  /* Radii */
+  --radius-input: 6px;
+  --radius-card: 8px;
+  --radius-hero: 10px;
+  --radius-pill: 999px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 22px;
+  --space-6: 28px;
+
+  /* Card padding (12–18px per spec; pick 14 as default) */
+  --card-padding: 14px;
+  --card-padding-loose: 18px;
+
+  /* Page padding */
+  --page-padding: 28px;
+
+  /* Buttons */
+  --btn-height-primary: 42px;
+  --btn-height-ghost: 36px;
+  --btn-height-min-tap: 44px;
+
+  /* Type scale */
+  --font-size-meta: 11px;
+  --font-size-kicker: 11px;
+  --font-size-caption: 12px;
+  --font-size-body: 14px;
+  --font-size-body-lg: 14.5px;
+  --font-size-card-title: 17px;
+  --font-size-screen-title: 22px;
+  --font-size-hero: 28px;
+  --font-size-display: 36px;
+
+  /* Letter spacing for serif */
+  --letter-tight: -0.01em;
+  --letter-tighter: -0.02em;
+
+  /* Focus ring (clickthrough audit found missing focus-visible — bake in here) */
+  --focus-ring: 0 0 0 2px var(--color-forest);
+  --focus-ring-offset: 2px;
+}

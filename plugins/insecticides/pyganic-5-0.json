@@ -32,5 +32,36 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "MGK higher-concentration pyrethrin. Quick knockdown with no residual. Apply early morning or late evening to protect pollinators. UV-sensitive."
+  "notes": "MGK higher-concentration pyrethrin. Quick knockdown with no residual. Apply early morning or late evening to protect pollinators. UV-sensitive.",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    },
+    {
+      "pest": "Colorado potato beetle",
+      "metric": "count-per-plant",
+      "threshold": 2,
+      "warnAt": 1
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "flea beetle",
+      "metric": "pct-defoliation",
+      "threshold": 20,
+      "warnAt": 10
+    }
+  ]
 }

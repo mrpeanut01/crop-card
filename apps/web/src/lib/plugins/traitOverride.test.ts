@@ -26,6 +26,12 @@ const xtendSoy = {
   displayName: 'Soybean Xtend',
   version: '1.0.0',
   cropFamily: 'legume' as const,
+  harvestStyle: 'dry-seed-legume' as const,
+  bloomWindow: {
+    daysFromPlantingMin: 40,
+    daysFromPlantingMax: 70,
+    beeAttractive: false
+  } as const,
   traits: ['dicamba-tolerant-xtend']
 };
 
@@ -34,7 +40,13 @@ const conventionalSoy = {
   type: 'crop' as const,
   displayName: 'Soybean Conventional',
   version: '1.0.0',
-  cropFamily: 'legume' as const
+  cropFamily: 'legume' as const,
+  harvestStyle: 'dry-seed-legume' as const,
+  bloomWindow: {
+    daysFromPlantingMin: 40,
+    daysFromPlantingMax: 70,
+    beeAttractive: false
+  } as const
 };
 
 const engenia = {

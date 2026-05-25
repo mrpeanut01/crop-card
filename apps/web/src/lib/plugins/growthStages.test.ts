@@ -14,6 +14,12 @@ const baseCorn = {
   displayName: 'Test Corn',
   version: '1.3.0',
   cropFamily: 'corn' as const,
+  harvestStyle: 'row-grain-pollinated' as const,
+  bloomWindow: {
+    daysFromPlantingMin: 55,
+    daysFromPlantingMax: 75,
+    beeAttractive: false
+  } as const,
   daysToMaturity: { min: 90, max: 100 }
 };
 
@@ -83,6 +89,8 @@ describe('cropPluginSchema with v1.3 fields', () => {
       displayName: 'Test Tomato',
       version: '1.3.0',
       cropFamily: 'solanaceae',
+      harvestStyle: 'continuous-fruit',
+      bloomWindow: { continuous: true, beeAttractive: false },
       cornType: 'sweet'
     });
     // Schema-level allows; the registry layer enforces cropFamily==='corn'.
@@ -100,6 +108,8 @@ describe('PluginRegistry cross-field validation', () => {
         displayName: 'Bad Tomato',
         version: '1.3.0',
         cropFamily: 'solanaceae',
+        harvestStyle: 'continuous-fruit',
+        bloomWindow: { continuous: true, beeAttractive: false },
         cornType: 'sweet'
       })
     ).toThrow(PluginRegistrationError);
@@ -146,6 +156,8 @@ describe('resolveGrowthStageTable', () => {
       displayName: 'Legacy Wheat',
       version: '1.1.0',
       cropFamily: 'cereal-grain',
+      harvestStyle: 'single-cut-grain',
+      bloomWindow: { monthsOfYear: [5, 6], beeAttractive: false },
       zadoksStages: [
         { stage: 'Z20', name: 'Tillering', daysFromPlanting: { min: 30, max: 60 } },
         { stage: 'Z89', name: 'Ripe', daysFromPlanting: { min: 215, max: 245 } }
@@ -163,7 +175,9 @@ describe('resolveGrowthStageTable', () => {
       type: 'crop',
       displayName: 'Apple',
       version: '1.0.0',
-      cropFamily: 'orchard'
+      cropFamily: 'orchard',
+      harvestStyle: 'tree-fruit-multi-pick',
+      bloomWindow: { monthsOfYear: [4, 5], beeAttractive: true }
     };
     expect(resolveGrowthStageTable(apple)).toBeNull();
     expect(resolvePerennialTemplate(apple)).not.toBeNull();

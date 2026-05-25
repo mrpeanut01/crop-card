@@ -23,5 +23,19 @@
     "twospotted spider mite eggs and immatures",
     "European red mite eggs and immatures"
   ],
-  "notes": "Gowan IRAC 10A mite growth inhibitor. Ovicidal and larvicidal; no activity on adult mites."
+  "notes": "Gowan IRAC 10A mite growth inhibitor. Ovicidal and larvicidal; no activity on adult mites.",
+  "scoutingThresholds": [
+    {
+      "pest": "twospotted spider mite eggs and immatures",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "European red mite eggs and immatures",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    }
+  ]
 }

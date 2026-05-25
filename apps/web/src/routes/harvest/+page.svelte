@@ -2,13 +2,17 @@
   import { onMount, tick, untrack } from 'svelte';
   import { invalidateAll } from '$app/navigation';
   import type { PlantingHarvestStatus } from './+page.server';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
+  import Banner from '$lib/components/ui/Banner.svelte';
+  import HarvestRouter from '$lib/components/harvest/HarvestRouter.svelte';
 
   let { data } = $props();
 
   let recordingFor = $state<string | null>(untrack(() => data.focusPlantingId ?? null));
-  let quantity = $state('');
-  let lotNumber = $state('');
-  let recordError = $state<string | null>(null);
+  // Phase 25c (#88) — HarvestRouter owns the in-form state now; we
+  // keep recordingFor + lastError at this level so the parent decides
+  // which planting's renderer is active and surfaces error state.
+  let lastError = $state<string | null>(null);
 
   onMount(async () => {
     if (data.focusPlantingId) {
@@ -20,17 +24,22 @@
 
   function startRecord(plantingId: string) {
     recordingFor = plantingId;
-    quantity = '';
-    lotNumber = '';
-    recordError = null;
+    lastError = null;
   }
 
   function cancelRecord() {
     recordingFor = null;
   }
 
-  async function submitRecord(planting: PlantingHarvestStatus) {
-    recordError = null;
+  /** Phase 25c (#88) — HarvestRouter renderer commit hook. Builds the
+   *  POST body, surfaces the new event id on success, reloads, and
+   *  routes the error message through `lastError` so the active
+   *  renderer can render it. */
+  async function commitFromRenderer(
+    planting: PlantingHarvestStatus,
+    input: { quantity?: string; lotNumber?: string }
+  ): Promise<string | null> {
+    lastError = null;
     try {
       const res = await fetch('/api/harvest/record', {
         method: 'POST',
@@ -38,19 +47,21 @@
         body: JSON.stringify({
           blockId: planting.blockId,
           cropPluginId: planting.cropPluginId,
-          quantity: quantity || undefined,
-          lotNumber: lotNumber || undefined
+          quantity: input.quantity,
+          lotNumber: input.lotNumber
         })
       });
       const out = await res.json();
       if (!res.ok) {
-        recordError = out.error ?? `HTTP ${res.status}`;
-        return;
+        lastError = out.error ?? `HTTP ${res.status}`;
+        return null;
       }
       recordingFor = null;
       await invalidateAll();
+      return (out?.event?.id as string | undefined) ?? null;
     } catch (e) {
-      recordError = e instanceof Error ? e.message : String(e);
+      lastError = e instanceof Error ? e.message : String(e);
+      return null;
     }
   }
 
@@ -66,12 +77,15 @@
   <title>Harvest — CropCard</title>
 </svelte:head>
 
-<h1>Harvest</h1>
-<p class="lede">
-  Each planting's harvest window is computed from the crop plugin's days-to-maturity. Walk the
-  block, check readiness against the indicators, and record the harvest with optional lot number for
-  traceability.
-</p>
+<header class="page-header">
+  <Kicker>Harvest · DTM-driven readiness</Kicker>
+  <h1 class="serif">Harvest</h1>
+  <p class="lede">
+    Each planting's harvest window is computed from the crop plugin's days-to-maturity. Walk the
+    block, check readiness against the indicators, and record the harvest with optional lot number
+    for traceability.
+  </p>
+</header>
 
 {#if data.plantings.length === 0}
   <section class="card empty">
@@ -132,27 +146,24 @@
           {/if}
 
           {#if recordingFor === p.plantingId}
-            <form
-              class="record-form"
-              onsubmit={(e) => {
-                e.preventDefault();
-                submitRecord(p);
-              }}
-            >
-              <label>
-                Quantity (e.g. 14 bushels)
-                <input type="text" bind:value={quantity} />
-              </label>
-              <label>
-                Lot number (e.g. 2026-A-7)
-                <input type="text" bind:value={lotNumber} />
-              </label>
-              <div class="actions">
-                <button type="submit" class="primary">Record harvest</button>
-                <button type="button" onclick={cancelRecord}>Cancel</button>
-              </div>
-              {#if recordError}<p class="error">{recordError}</p>{/if}
-            </form>
+            <div class="renderer-mount">
+              <HarvestRouter
+                harvestStyle={p.harvestStyle}
+                plantingId={p.plantingId}
+                blockId={p.blockId}
+                blockName={p.blockName}
+                cropPluginId={p.cropPluginId}
+                varietyDisplayName={p.varietyDisplayName}
+                cropFamily={p.cropFamily}
+                plantingDate={p.plantingDate}
+                windowStartMs={p.windowStartMs}
+                windowEndMs={p.windowEndMs}
+                harvestIndicators={p.harvestIndicators}
+                onCommit={(input) => commitFromRenderer(p, input)}
+                error={lastError}
+                onCancel={cancelRecord}
+              />
+            </div>
           {:else if !p.alreadyHarvested}
             <button class="primary" onclick={() => startRecord(p.plantingId)}>
               Record harvest
@@ -282,7 +293,7 @@
     border-left: 3px solid #d4a017;
   }
   .curing-item.phase-ready {
-    border-left-color: #2e7d32;
+    border-left-color: var(--color-forest);
     background: #f0f8f0;
   }
   .curing-item header {
@@ -305,16 +316,16 @@
     margin-left: auto;
   }
   .phase-badge.phase-in-progress {
-    background: #fff3cd;
+    background: var(--pill-wheat-bg);
     color: #6b4f00;
   }
   .phase-badge.phase-ready {
-    background: #e7f1ea;
-    color: #2e7d32;
+    background: var(--pill-forest-bg);
+    color: var(--color-forest);
   }
   .phase-badge.phase-overdue {
-    background: #fce8e8;
-    color: #b00020;
+    background: var(--pill-rust-bg);
+    color: var(--color-rust);
   }
   .curing-item .meta {
     color: #555;
@@ -326,7 +337,7 @@
     font-size: 0.95rem;
   }
   .countdown.ready {
-    color: #2e7d32;
+    color: var(--color-forest);
     font-weight: 600;
   }
   .muted {
@@ -344,7 +355,7 @@
   .card h2 {
     margin: 0 0 0.75rem;
     font-size: 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -365,11 +376,11 @@
     border-radius: 0 4px 4px 0;
   }
   .planting.status-in-window {
-    border-left-color: #1f5e3a;
+    border-left-color: var(--color-forest);
     background: #f0f8f3;
   }
   .planting.status-past {
-    border-left-color: #b35900;
+    border-left-color: var(--color-wheat);
     background: #fff8ec;
   }
   .planting.status-too-early {
@@ -394,8 +405,8 @@
   }
   .family {
     font-size: 0.75rem;
-    color: #1f5e3a;
-    background: #e7f1ea;
+    color: var(--color-forest);
+    background: var(--pill-forest-bg);
     padding: 0.05rem 0.4rem;
     border-radius: 3px;
   }
@@ -407,12 +418,12 @@
     font-weight: 600;
   }
   .badge.in-window {
-    background: #e7f1ea;
-    color: #1f5e3a;
+    background: var(--pill-forest-bg);
+    color: var(--color-forest);
   }
   .badge.past {
-    background: #fff3cd;
-    color: #b35900;
+    background: var(--pill-wheat-bg);
+    color: var(--color-wheat);
   }
   .badge.too-early {
     background: #eaeaea;
@@ -435,11 +446,11 @@
     margin-top: 0.5rem;
     padding: 0.5rem 0.75rem;
     background: #fff;
-    border-left: 3px solid #1f5e3a;
+    border-left: 3px solid var(--color-forest);
     border-radius: 0 4px 4px 0;
   }
   .indicators-inline strong {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -448,32 +459,13 @@
     margin: 0.4rem 0 0 1.25rem;
     padding: 0;
   }
-  .record-form {
+  .renderer-mount {
     margin-top: 0.75rem;
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: 1fr 1fr;
-  }
-  .record-form .actions {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 0.5rem;
-  }
-  .record-form label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-  }
-  .record-form input {
-    padding: 0.6rem;
-    border: 2px solid #d0d7d0;
-    border-radius: 4px;
-    font-size: 1rem;
-    min-height: 48px;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-divider-soft, var(--color-divider));
   }
   .primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border: none;
     border-radius: 6px;
@@ -485,8 +477,8 @@
   }
   button {
     background: white;
-    border: 2px solid #1f5e3a;
-    color: #1f5e3a;
+    border: 2px solid var(--color-forest);
+    color: var(--color-forest);
     border-radius: 6px;
     padding: 0.75rem 1.25rem;
     font-weight: 600;
@@ -494,12 +486,12 @@
     min-height: 48px;
   }
   button.primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .error {
-    color: #b00020;
+    color: var(--color-rust);
     grid-column: 1 / -1;
     margin: 0;
   }
@@ -515,8 +507,8 @@
     border-bottom: 1px solid #eee;
   }
   th {
-    background: #f5f7f4;
-    color: #1f5e3a;
+    background: var(--color-cream);
+    color: var(--color-forest);
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.5px;

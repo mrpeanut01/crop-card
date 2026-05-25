@@ -7,7 +7,9 @@ const corn: CropPlugin = {
   type: 'crop',
   displayName: 'Bloody Butcher',
   version: '1.0.0',
-  cropFamily: 'corn'
+  cropFamily: 'corn',
+  harvestStyle: 'row-grain-pollinated',
+  bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
 };
 
 const beans: CropPlugin = {
@@ -15,7 +17,9 @@ const beans: CropPlugin = {
   type: 'crop',
   displayName: 'Rattlesnake Beans',
   version: '1.0.0',
-  cropFamily: 'legume'
+  cropFamily: 'legume',
+  harvestStyle: 'continuous-fruit',
+  bloomWindow: { daysFromPlantingMin: 35, daysFromPlantingMax: 70, beeAttractive: true }
 };
 
 const pumpkin: CropPlugin = {
@@ -23,7 +27,9 @@ const pumpkin: CropPlugin = {
   type: 'crop',
   displayName: 'EZ Gro',
   version: '1.0.0',
-  cropFamily: 'cucurbit'
+  cropFamily: 'cucurbit',
+  harvestStyle: 'cure-then-store',
+  bloomWindow: { continuous: true, beeAttractive: true }
 };
 
 describe('suggestCompanions', () => {

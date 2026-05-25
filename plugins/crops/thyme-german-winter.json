@@ -4,8 +4,19 @@
   "displayName": "Thyme — German Winter",
   "version": "1.0.0",
   "cropFamily": "herb-culinary",
-  "daysToMaturity": { "min": 90, "max": 120 },
+  "daysToMaturity": {
+    "min": 90,
+    "max": 120
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["Pre-flower for peak flavor"],
-  "notes": "Drought-tolerant perennial. Replace plants every 3–4 yr — woody decline."
+  "harvestIndicators": [
+    "Pre-flower for peak flavor"
+  ],
+  "notes": "Drought-tolerant perennial. Replace plants every 3–4 yr — woody decline.",
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

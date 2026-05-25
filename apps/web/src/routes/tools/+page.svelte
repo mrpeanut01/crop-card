@@ -34,7 +34,7 @@
     margin: 0 0 0.25rem;
   }
   .subtitle {
-    color: #555;
+    color: var(--color-ink-muted);
     margin: 0 0 1rem;
   }
   .tools-grid {
@@ -44,25 +44,25 @@
   }
   .tool-card {
     display: block;
-    background: white;
-    border-radius: 8px;
+    background: var(--color-paper);
+    border-radius: var(--radius-card, 8px);
     padding: 1rem 1.25rem;
     text-decoration: none;
     color: inherit;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    border-left: 4px solid #1f5e3a;
+    border-left: 4px solid var(--color-forest-deep);
   }
   .tool-card:hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   }
   .tool-card h2 {
     margin: 0 0 0.4rem;
-    color: #1f5e3a;
+    color: var(--color-forest-deep);
     font-size: 1.1rem;
   }
   .tool-card p {
     margin: 0;
-    color: #555;
+    color: var(--color-ink-muted);
     font-size: 0.9rem;
   }
 </style>

@@ -26,5 +26,10 @@
   "notes": "1880s heirloom pickling cucumber. Heavy producer. Pick frequently to maintain yield.",
   "harvestIndicators": [
     "Bright green spined fruit 3 to 7 inches depending on pickling style"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

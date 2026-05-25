@@ -26,5 +26,13 @@
   "notes": "Andean tuber. Short-day flowering, tubers form October to November in northern climates. Sun-cure 3 to 5 days.",
   "harvestIndicators": [
     "Tubers form after fall day-length shortens, harvest after frost"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

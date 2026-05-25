@@ -26,5 +26,11 @@
   "notes": "Lens culinaris brown lentil. Cool-season legume for the Palouse and northern Plains. Direct combine after pods rattle.",
   "harvestIndicators": [
     "Pods dry, plants tan, lower leaves dropped"
-  ]
+  ],
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

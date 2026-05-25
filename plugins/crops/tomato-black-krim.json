@@ -26,5 +26,10 @@
   "notes": "Indeterminate Crimean heirloom from the Black Sea. 10 to 12 oz purple-black beefsteak. Smoky-sweet flavor. Performs best in hotter zones.",
   "harvestIndicators": [
     "Mahogany-purple shoulders, green-bronze blush"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

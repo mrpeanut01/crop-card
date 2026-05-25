@@ -26,5 +26,13 @@
   "notes": "Botanically a leek, not a true garlic. Forms 1 lb bulbs with 4 to 6 large cloves. Mild garlic flavor. Premium farmstand crop.",
   "harvestIndicators": [
     "Lower 4 to 5 leaves brown, scape removed earlier"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

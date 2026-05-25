@@ -32,5 +32,48 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "aphids",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "leafminer",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "Colorado potato beetle",
+      "metric": "count-per-plant",
+      "threshold": 2,
+      "warnAt": 1
+    },
+    {
+      "pest": "flea beetle",
+      "metric": "pct-defoliation",
+      "threshold": 20,
+      "warnAt": 10
+    },
+    {
+      "pest": "cabbage looper",
+      "metric": "count-per-plant",
+      "threshold": 0.5
+    }
+  ]
 }

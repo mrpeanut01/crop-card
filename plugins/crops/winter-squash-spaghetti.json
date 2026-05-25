@@ -26,5 +26,10 @@
   "notes": "Cucurbita pepo with stringy flesh that pulls into noodles after baking. Cures and stores 4 to 6 months.",
   "harvestIndicators": [
     "Cream-yellow oblong fruit at 3 to 5 lbs, rind firm"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  },
+  "harvestStyle": "cure-then-store"
 }

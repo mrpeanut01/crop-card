@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Deep red, firm sides",
     "Drops easily off the truss"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

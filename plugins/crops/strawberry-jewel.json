@@ -1,7 +1,7 @@
 {
   "pluginId": "strawberry-jewel",
   "type": "crop",
-  "displayName": "Strawberry \u2014 Jewel (June-bearing)",
+  "displayName": "Strawberry — Jewel (June-bearing)",
   "version": "1.0.0",
   "cropFamily": "small-fruit",
   "preHarvestIntervalDays": 1,
@@ -26,7 +26,7 @@
       "dayOfYear": 335,
       "windowDays": 21,
       "title": "Apply straw winter mulch",
-      "body": "3 in straw after 2\u20133 hard frosts but before sustained cold.",
+      "body": "3 in straw after 2–3 hard frosts but before sustained cold.",
       "category": "fertilize"
     },
     {
@@ -44,7 +44,7 @@
       "dayOfYear": 105,
       "windowDays": 30,
       "title": "Bloom frost watch",
-      "body": "Open blossoms freeze at 30 \u00b0F; row cover + irrigation can save a crop.",
+      "body": "Open blossoms freeze at 30 °F; row cover + irrigation can save a crop.",
       "category": "scout"
     }
   ],
@@ -56,5 +56,13 @@
     "Bright glossy red",
     "No white shoulders"
   ],
-  "notes": "Standard June-bearing matted-row variety. 3-yr productive life; renovate annually. Native species-level tolerance to clopyralid (Stinger) is declared as a trait so the kernel's family-kill rule (synthetic-auxin \u2192 small-fruit) is overridden when stinger is the spray product."
+  "notes": "Standard June-bearing matted-row variety. 3-yr productive life; renovate annually. Native species-level tolerance to clopyralid (Stinger) is declared as a trait so the kernel's family-kill rule (synthetic-auxin → small-fruit) is overridden when stinger is the spray product.",
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

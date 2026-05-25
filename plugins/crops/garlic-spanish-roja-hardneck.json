@@ -26,5 +26,13 @@
   "notes": "Rocambole-type hardneck. Classic culinary garlic of the Pacific Northwest. Bold flavor, easy-peeling cloves. Storage 4 to 6 months.",
   "harvestIndicators": [
     "Lower 3 to 4 leaves brown, upper leaves still green"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

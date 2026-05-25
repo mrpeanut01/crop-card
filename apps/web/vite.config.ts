@@ -12,7 +12,7 @@ export default defineConfig({
         name: 'CropCard',
         short_name: 'CropCard',
         description: 'Field-card herbicide planning, planting, and harvest tracking.',
-        theme_color: '#1f5e3a',
+        theme_color: '#2c5237',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
@@ -85,13 +85,33 @@ export default defineConfig({
       usePolling: true
     }
   },
+  resolve: {
+    // Resolve Svelte to its browser/client build during tests so
+    // @testing-library/svelte's mount() works. Without 'browser' in the
+    // conditions, Vite picks Svelte's server export (only render(), no
+    // mount()) and component tests fail with `lifecycle_function_unavailable`.
+    // The runtime SvelteKit server build still resolves SSR via its own
+    // build pipeline, so this only affects the vitest run.
+    conditions: process.env.VITEST ? ['browser'] : []
+  },
   test: {
     include: [
       'src/**/*.{test,spec}.{js,ts}',
+      'src/**/*.svelte.{test,spec}.{js,ts}',
       'tests/unit/**/*.{test,spec}.{js,ts}',
       'tests/integration/**/*.{test,spec}.{js,ts}'
     ],
-    environment: 'node',
-    globalSetup: ['./tests/globalSetup.ts']
+    // jsdom default so component tests get window/document. Pure-logic
+    // tests work in jsdom too (~50ms startup tax per file).
+    environment: 'jsdom',
+    setupFiles: ['./tests/vitestSetup.ts'],
+    globalSetup: ['./tests/globalSetup.ts'],
+    server: {
+      deps: {
+        // Force Svelte to be inlined so Vite (not Node) resolves it,
+        // honoring the `conditions: ['browser']` setting above.
+        inline: ['svelte', /^@testing-library\//]
+      }
+    }
   }
 });

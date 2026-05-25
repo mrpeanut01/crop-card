@@ -26,5 +26,10 @@
   "notes": "Indeterminate hybrid opens the season with 4 to 6 oz slicers in 50 to 60 days. VFF resistance. Dry-farmed widely on the West Coast for concentrated flavor.",
   "harvestIndicators": [
     "Fully red, slight blossom-end give"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

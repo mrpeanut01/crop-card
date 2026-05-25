@@ -26,5 +26,11 @@
   "notes": "Premium cool-season cut flower from claw-shaped corms. Pre-soak corms 4 hours before planting in fall or early spring with frost protection.",
   "harvestIndicators": [
     "Buds beginning to crack open with color visible"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

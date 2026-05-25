@@ -30,5 +30,13 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    }
+  ]
 }

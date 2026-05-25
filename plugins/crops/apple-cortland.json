@@ -26,5 +26,13 @@
   "notes": "1898 NY State Ag Experiment Station release (Ben Davis x McIntosh). White flesh resists browning, valued for salads and cider. Cold-hardy to zone 4.",
   "harvestIndicators": [
     "Deep red over green, bright white flesh slow to brown"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

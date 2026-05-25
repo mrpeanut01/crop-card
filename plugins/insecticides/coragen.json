@@ -42,5 +42,39 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "Colorado potato beetle",
+      "metric": "count-per-plant",
+      "threshold": 2,
+      "warnAt": 1
+    },
+    {
+      "pest": "European corn borer",
+      "metric": "count-per-trap-per-week",
+      "threshold": 7
+    },
+    {
+      "pest": "diamondback moth",
+      "metric": "count-per-plant",
+      "threshold": 0.3
+    },
+    {
+      "pest": "tomato hornworm",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "cabbage looper",
+      "metric": "count-per-plant",
+      "threshold": 0.5
+    },
+    {
+      "pest": "leafminer larvae",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    }
+  ]
 }

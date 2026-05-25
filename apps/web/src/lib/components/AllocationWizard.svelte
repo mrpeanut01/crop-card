@@ -7,6 +7,15 @@
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
   import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
   import InputsPlanStep from '$lib/components/InputsPlanStep.svelte';
+  // Phase 25b (#96) — Almanac wizard chrome. Shared header + stepper +
+  // footer matching `direction-almanac-wizard.jsx` so every step renders
+  // with consistent chrome. Per-step component-file extraction is a
+  // separate tracked follow-up.
+  import WizardHeader, {
+    type WizardStepDescriptor
+  } from '$lib/components/wizard/WizardHeader.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   import type {
     InputsPlanApplication,
     InputsPlanProvisionalPlanting,
@@ -79,6 +88,9 @@
     seasonSetup = null,
     lastYearSetup = null,
     currentYear = new Date().getFullYear(),
+    aiEnabled = false,
+    wizardPlanId,
+    initialChatMessages = [],
     onClose,
     onCommitted,
     onRefreshParent
@@ -90,6 +102,24 @@
     seasonSetup?: SeasonSetup | null;
     lastYearSetup?: SeasonSetup | null;
     currentYear?: number;
+    /** Phase 25d v2-addendum (#82 partial / #89) — drives the schedule
+     *  step's AI-on/off variant. Step 2 (Schedule) shows the deterministic
+     *  planner chat instead of the Gantt chat when off. */
+    aiEnabled?: boolean;
+    /** Phase 25d (#89) — identifies the plan whose chat history this
+     *  wizard run-through belongs to. Convention: `season-${year}`. When
+     *  omitted, chat persistence is disabled (silent fallback to the
+     *  pre-#89 in-memory behavior). */
+    wizardPlanId?: string;
+    /** Phase 25d (#89) — server-loaded chat messages, hydrated into the
+     *  per-step transcripts on mount. The loader runs the GET before
+     *  showing the wizard so the operator sees the resumed conversation
+     *  without a flash of empty state. */
+    initialChatMessages?: Array<{
+      step: 'allocation' | 'schedule' | 'inputs';
+      role: 'user' | 'assistant' | 'system';
+      content: string;
+    }>;
     onClose: () => void;
     onCommitted: () => void;
     /** Optional — refresh parent data WITHOUT closing the wizard. Used by
@@ -135,6 +165,49 @@
   function handleSeasonSetupSaved(saved: SeasonSetup) {
     activeSetup = saved;
     step = hasExistingPlan ? 'plan-state' : 'seeds';
+  }
+
+  // Phase 25b (#96) — derived wizard step descriptors for the Almanac
+  // header. Ordered: season → seeds → blocks → review → schedule →
+  // inputs → commit. `plan-state` is a transient gate that doesn't get
+  // its own header slot (the chip-row above carries it visually). State
+  // per step: done = past, active = current (header applies this),
+  // pending = future, stale = data drifted (Phase 26 follow-up).
+  const STEP_ORDER: Step[] = [
+    'season-setup',
+    'seeds',
+    'blocks',
+    'review',
+    'schedule',
+    'inputs',
+    'commit'
+  ];
+  const STEP_LABELS: Record<Step, string> = {
+    'season-setup': '0. Season',
+    'plan-state': 'Plan state',
+    seeds: '1. Seeds',
+    blocks: '2. Blocks',
+    review: '3. Review',
+    schedule: '4. Schedule',
+    inputs: '5. Inputs',
+    commit: '6. Commit'
+  };
+  const wizardSteps = $derived.by<WizardStepDescriptor[]>(() => {
+    const currentIdx = STEP_ORDER.indexOf(step === 'plan-state' ? 'seeds' : (step as Step));
+    return STEP_ORDER.map((sid, i) => ({
+      id: sid,
+      label: STEP_LABELS[sid],
+      state: i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'pending'
+    }));
+  });
+
+  /** Allow the user to click a prior (done) step to jump back. Future steps
+   *  stay locked — the wizard's forward gates haven't been satisfied yet. */
+  function canJumpToStep(stepId: string) {
+    const currentIdx = STEP_ORDER.indexOf(step === 'plan-state' ? 'seeds' : (step as Step));
+    const targetIdx = STEP_ORDER.indexOf(stepId as Step);
+    if (targetIdx < 0 || targetIdx >= currentIdx) return;
+    step = stepId as Step;
   }
 
   // ─── Plan-state step handlers (Phase 21 follow-up) ───────────────────
@@ -327,14 +400,54 @@
    *  endpoint on each turn. Seeded with an assistant message synthesized
    *  from the initial plan's advisories so the chat opens with the same
    *  observations the old "Worth considering" block used to show. */
-  type ChatMsg = { role: 'user' | 'assistant'; content: string };
+  // Phase 25d (#89) — `kind: 'seed'` marks the deterministic intro
+  // synthesized from advisories. Stripped before sending to refine
+  // (the seed isn't a conversational turn) and never persisted to the
+  // server (regenerated locally on each wizard open from the fresh
+  // allocation). Real conversation turns omit the kind field.
+  type ChatMsg = { role: 'user' | 'assistant'; content: string; kind?: 'seed' };
   // Two separate transcripts — allocation chat lives with step 3 (Review),
   // schedule chat lives with step 4. Switching steps preserves each
   // transcript so the user can refine either independently, but the
   // schedule chat doesn't carry over allocation-level pollination notes
   // (those are already shown on the Review step).
-  let allocationChatMessages = $state<ChatMsg[]>([]);
-  let scheduleChatMessages = $state<ChatMsg[]>([]);
+  // Phase 25d (#89) — hydrate from server-loaded history when present.
+  // `system` rows are dropped from the rendered transcripts since the
+  // UI only renders user/assistant bubbles; they may be reintroduced
+  // later if we add tool-call traces.
+  const seededAllocation: ChatMsg[] = untrack(() =>
+    initialChatMessages
+      .filter((m) => m.step === 'allocation' && (m.role === 'user' || m.role === 'assistant'))
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+  );
+  const seededSchedule: ChatMsg[] = untrack(() =>
+    initialChatMessages
+      .filter((m) => m.step === 'schedule' && (m.role === 'user' || m.role === 'assistant'))
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+  );
+  let allocationChatMessages = $state<ChatMsg[]>(seededAllocation);
+  let scheduleChatMessages = $state<ChatMsg[]>(seededSchedule);
+
+  /** Phase 25d (#89) — fire-and-forget append to /api/wizard/chat. The
+   *  in-memory transcript stays authoritative for rendering; this just
+   *  mirrors writes so reload restores them. Failures are logged but
+   *  never break the chat UX. `wizardPlanId` not set → disabled. */
+  async function persistChatMessage(
+    chatStep: 'allocation' | 'schedule' | 'inputs',
+    role: 'user' | 'assistant',
+    content: string
+  ): Promise<void> {
+    if (!wizardPlanId) return;
+    try {
+      await fetch('/api/wizard/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ planId: wizardPlanId, step: chatStep, role, content })
+      });
+    } catch (err) {
+      console.warn('[wizard-chat] persist failed', err);
+    }
+  }
   const chatMessages = $derived(
     (step as Step) === 'schedule' ? scheduleChatMessages : allocationChatMessages
   );
@@ -382,7 +495,15 @@
       );
     }
 
-    allocationChatMessages = [{ role: 'assistant', content: lines.join('\n') }];
+    // Seed message is NOT persisted — it's deterministic from the
+    // current advisories. On resume from a server-hydrated transcript,
+    // we skip re-seeding entirely so the prior conversation renders
+    // intact. Persisting the seed would double-seed on the second
+    // wizard open; replacing the transcript with the seed would erase
+    // the resumed chat. Keeping in-memory only is the right balance.
+    if (allocationChatMessages.length === 0) {
+      allocationChatMessages = [{ role: 'assistant', content: lines.join('\n'), kind: 'seed' }];
+    }
     chatDraft = '';
     chatError = null;
   }
@@ -464,6 +585,7 @@
   let acceptedInputs = $state<{
     applications: InputsPlanApplication[];
     scoutTasks: InputsPlanScoutTask[];
+    aiRefined: boolean;
   } | null>(null);
   let inputsCommitError = $state<string | null>(null);
   let scheduleLoading = $state(false);
@@ -663,11 +785,14 @@
     chatError = null;
     const userTurn: ChatMsg = { role: 'user', content: text };
     // Append to the active step's transcript optimistically.
-    if (step === 'schedule') {
+    const chatStepKey: 'allocation' | 'schedule' = step === 'schedule' ? 'schedule' : 'allocation';
+    if (chatStepKey === 'schedule') {
       scheduleChatMessages = [...scheduleChatMessages, userTurn];
     } else {
       allocationChatMessages = [...allocationChatMessages, userTurn];
     }
+    // Phase 25d (#89) — fire-and-forget server persist; doesn't block UI.
+    void persistChatMessage(chatStepKey, 'user', text);
     chatDraft = '';
     chatBusy = true;
     chatStartMs = Date.now();
@@ -721,7 +846,9 @@
       rationale: response.rationale,
       advisories: response.advisories
     };
-    const sendable = allocationChatMessages.slice(1);
+    const sendable = allocationChatMessages
+      .filter((m) => m.kind !== 'seed')
+      .map((m) => ({ role: m.role, content: m.content }));
     const res = await fetch('/api/plan/allocate/refine', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -788,6 +915,7 @@
       lastRejectedViolations = [];
     }
     allocationChatMessages = [...allocationChatMessages, { role: 'assistant', content: reply }];
+    void persistChatMessage('allocation', 'assistant', reply);
     response = {
       assignments: body.assignments,
       unplaced: body.unplaced ?? [],
@@ -843,7 +971,9 @@
 
   async function sendScheduleChat(text: string) {
     if (!response || !scheduleResponse) return;
-    const sendable = scheduleChatMessages.slice(1);
+    const sendable = scheduleChatMessages
+      .filter((m) => m.kind !== 'seed')
+      .map((m) => ({ role: m.role, content: m.content }));
     const res = await fetch('/api/plan/schedule/refine', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -895,6 +1025,7 @@
       reply = `${header}${violationLine}\n\n${aiReply}`;
     }
     scheduleChatMessages = [...scheduleChatMessages, { role: 'assistant', content: reply }];
+    void persistChatMessage('schedule', 'assistant', reply);
     scheduleResponse = {
       scheduled: Array.isArray(body.scheduled) ? body.scheduled : scheduleResponse.scheduled,
       rationale: typeof body.rationale === 'string' ? body.rationale : scheduleResponse.rationale,
@@ -1004,7 +1135,11 @@
       // Start the schedule chat clean — don't carry allocation-step
       // pollination notes or rationale into this conversation. Anything the
       // user wants to revisit about the layout is on the Review step.
-      scheduleChatMessages = [{ role: 'assistant', content: lines.join('\n') }];
+      // Phase 25d (#89) — preserve resumed turns; only insert the seed
+      // when starting fresh.
+      if (scheduleChatMessages.length === 0) {
+        scheduleChatMessages = [{ role: 'assistant', content: lines.join('\n'), kind: 'seed' }];
+      }
       queueScrollChat();
     } catch (e) {
       scheduleError = e instanceof Error ? e.message : 'schedule request failed';
@@ -1045,6 +1180,7 @@
   async function handleInputsAccepted(accepted: {
     applications: InputsPlanApplication[];
     scoutTasks: InputsPlanScoutTask[];
+    aiRefined: boolean;
   }) {
     acceptedInputs = accepted;
     await commit();
@@ -1175,7 +1311,11 @@
       const res = await fetch('/api/plan/inputs/commit', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(acceptedInputs)
+        body: JSON.stringify({
+          applications: acceptedInputs.applications,
+          scoutTasks: acceptedInputs.scoutTasks,
+          aiRefined: acceptedInputs.aiRefined
+        })
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
@@ -1380,43 +1520,19 @@
   }}
 >
   <div class="aw-modal" role="dialog" aria-modal="true" aria-labelledby="aw-title">
-    <header class="aw-header">
-      <h2 id="aw-title">✨ Plan Plantings</h2>
-      <button class="aw-close" type="button" aria-label="Close" onclick={onClose}>✕</button>
-    </header>
+    <WizardHeader
+      seasonYear={currentYear}
+      activeStepId={step}
+      steps={wizardSteps}
+      onExit={onClose}
+      onStepClick={canJumpToStep}
+    />
 
     {#if activeSetup && step !== 'season-setup'}
       <div class="aw-chip-row">
         <SeasonSetupChip setup={activeSetup} onEdit={() => (step = 'season-setup')} />
       </div>
     {/if}
-
-    <ol class="aw-stepper" aria-label="Wizard steps">
-      <li class:active={step === 'season-setup'} class:done={step !== 'season-setup'}>0. Season</li>
-      <li class:active={step === 'seeds'} class:done={step !== 'season-setup' && step !== 'seeds'}>
-        1. Seeds
-      </li>
-      <li
-        class:active={step === 'blocks'}
-        class:done={step === 'review' ||
-          step === 'schedule' ||
-          step === 'inputs' ||
-          step === 'commit'}
-      >
-        2. Blocks
-      </li>
-      <li
-        class:active={step === 'review'}
-        class:done={step === 'schedule' || step === 'inputs' || step === 'commit'}
-      >
-        3. Review
-      </li>
-      <li class:active={step === 'schedule'} class:done={step === 'inputs' || step === 'commit'}>
-        4. Schedule
-      </li>
-      <li class:active={step === 'inputs'} class:done={step === 'commit'}>5. Inputs</li>
-      <li class:active={step === 'commit'}>6. Commit</li>
-    </ol>
 
     {#if error && step !== 'commit' && step !== 'review' && step !== 'season-setup'}
       <div class="aw-error-banner" role="alert">
@@ -1744,6 +1860,19 @@
         {/if}
       {:else if step === 'schedule'}
         {#if response}
+          <!-- Phase 25 v2-addendum (#82 partial) — AI-on/off legend strip
+               at the top of the schedule step. Per the addendum spec,
+               AI on/off is a real product mode, not an error state —
+               the operator sees the provenance map for the dates they're
+               about to commit. -->
+          <ProvenanceLegend
+            shown={aiEnabled
+              ? ['plugin', 'data', 'ai', 'manual']
+              : ['plugin', 'data', 'fallback', 'manual']}
+            note={aiEnabled
+              ? 'Dates AI-proposed within plugin-derived windows · all editable'
+              : 'AI off · deterministic scheduler · plugin windows + your records'}
+          />
           {#if scheduleLoading}
             {@render aiProgress('schedule', scheduleStartMs)}
           {:else if scheduleError}
@@ -1757,7 +1886,14 @@
                   : '🛟 AI needed help — deterministic scheduler took over. See chat below for what tripped it up and refine from there.'}
               </div>
             {/if}
-            <p class="aw-rationale">{scheduleResponse.rationale}</p>
+            <p class="aw-rationale">
+              {scheduleResponse.rationale}
+              <Provenance
+                source={scheduleResponse.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+                detail={scheduleResponse.meta.fallback ? 'deterministic scheduler' : undefined}
+                compact
+              />
+            </p>
             <table class="aw-table">
               <thead>
                 <tr>
@@ -1913,55 +2049,15 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-top: 6px solid #1f5e3a;
+    border-top: 6px solid var(--color-forest);
   }
-  .aw-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.9rem 1.25rem;
-    border-bottom: 1px solid #e4e9e4;
-  }
-  .aw-header h2 {
-    margin: 0;
-    font-size: 1.15rem;
-    color: #1f5e3a;
-  }
-  .aw-close {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: #666;
-    min-width: 48px;
-    min-height: 48px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
+  /* Phase 25b (#96) — `.aw-header` / `.aw-stepper` superseded by
+     `WizardHeader.svelte` (Almanac chrome). The chip-row stays for
+     SeasonSetupChip. */
   .aw-chip-row {
     padding: 0.5rem 1.25rem 0;
-    background: #f8fbf9;
-    border-bottom: none;
-  }
-  .aw-stepper {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0.6rem 1.25rem;
-    gap: 0.75rem;
-    border-bottom: 1px solid #e4e9e4;
-    background: #f8fbf9;
-    color: #6a7d6a;
-  }
-  .aw-stepper li {
-    font-size: 0.95rem;
-  }
-  .aw-stepper li.active {
-    color: #1f5e3a;
-    font-weight: 700;
-  }
-  .aw-stepper li.done {
-    color: #1f5e3a;
-    opacity: 0.6;
+    background: var(--color-cream);
+    border-bottom: 1px solid var(--color-divider-soft, var(--color-divider));
   }
   .aw-body {
     padding: 1rem 1.25rem;
@@ -1979,7 +2075,7 @@
   }
   .aw-plan-state h3 {
     margin: 0;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .aw-plan-state-lede {
     margin: 0;
@@ -2010,7 +2106,7 @@
     min-height: 96px;
   }
   .aw-plan-state-btn:hover {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
     background: #f4f9f5;
   }
   .aw-plan-state-icon {
@@ -2020,13 +2116,13 @@
   .aw-plan-state-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .aw-plan-state-reset .aw-plan-state-title {
-    color: #b71c1c;
+    color: var(--color-rust);
   }
   .aw-plan-state-reset:hover {
-    border-color: #b71c1c;
+    border-color: var(--color-rust);
     background: #fdecea;
   }
   .aw-plan-state-sub {
@@ -2053,7 +2149,7 @@
   }
   .aw-confirm-card h4 {
     margin: 0 0 0.5rem;
-    color: #b71c1c;
+    color: var(--color-rust);
   }
   .aw-confirm-card p {
     margin: 0 0 1rem;
@@ -2067,7 +2163,7 @@
   .btn-danger {
     min-height: 48px;
     padding: 0 1.25rem;
-    background: #b71c1c;
+    background: var(--color-rust);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -2092,7 +2188,7 @@
   }
   .aw-table th {
     background: #f8fbf9;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 700;
     font-size: 0.9rem;
   }
@@ -2145,7 +2241,7 @@
   }
   .family-row td {
     background: #eef4ef;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-weight: 700;
     font-size: 0.85rem;
     text-transform: capitalize;
@@ -2161,8 +2257,8 @@
   }
   .family-action-btn {
     background: white;
-    color: #1f5e3a;
-    border: 1px solid #1f5e3a;
+    color: var(--color-forest);
+    border: 1px solid var(--color-forest);
     border-radius: 4px;
     padding: 0.12rem 0.55rem;
     font-size: 0.78rem;
@@ -2200,7 +2296,7 @@
   }
   .aw-info:hover,
   .aw-info:focus {
-    color: #1f5e3a;
+    color: var(--color-forest);
     outline: none;
   }
   .aw-blocks-header {
@@ -2236,10 +2332,10 @@
       background 0.1s;
   }
   .aw-blocklist li:hover {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .aw-blocklist li.checked {
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
     background: #f3f9f4;
   }
   .aw-blocklist label {
@@ -2255,7 +2351,7 @@
     width: 18px;
     height: 18px;
     flex-shrink: 0;
-    accent-color: #1f5e3a;
+    accent-color: var(--color-forest);
   }
   .aw-block-info {
     display: flex;
@@ -2295,7 +2391,7 @@
   .aw-link {
     background: none;
     border: none;
-    color: #1f5e3a;
+    color: var(--color-forest);
     text-decoration: underline;
     cursor: pointer;
     font-size: inherit;
@@ -2303,10 +2399,10 @@
   }
   .aw-rationale {
     background: #f3f9f4;
-    border-left: 3px solid #1f5e3a;
+    border-left: 3px solid var(--color-forest);
     padding: 0.75rem 1rem;
     margin: 0 0 0.75rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 0.95rem;
   }
   .aw-chat {
@@ -2330,7 +2426,7 @@
   .aw-chat-header h3 {
     margin: 0;
     font-size: 0.95rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .aw-chat-log {
     display: flex;
@@ -2371,7 +2467,7 @@
     border-top-left-radius: 4px;
   }
   .chat-msg.chat-user .chat-bubble {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
     border-top-right-radius: 4px;
   }
@@ -2432,7 +2528,7 @@
     line-height: 1.4;
   }
   .aw-chat-input textarea:focus {
-    outline: 2px solid #1f5e3a;
+    outline: 2px solid var(--color-forest);
     outline-offset: 1px;
   }
   .chat-send {
@@ -2496,7 +2592,7 @@
     border: 1px solid #cbd5cb;
     border-radius: 8px;
     padding: 0.75rem 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .ai-progress-text {
     display: flex;
@@ -2518,7 +2614,7 @@
     width: 18px;
     height: 18px;
     border: 2px solid #cbd5cb;
-    border-top-color: #1f5e3a;
+    border-top-color: var(--color-forest);
     border-radius: 50%;
     animation: ai-spin 0.8s linear infinite;
     flex-shrink: 0;
@@ -2553,7 +2649,7 @@
     color: #6a1414;
   }
   .aw-loading {
-    color: #1f5e3a;
+    color: var(--color-forest);
     font-size: 1rem;
   }
   .chip {
@@ -2565,7 +2661,7 @@
   }
   .chip-match {
     background: #d6efdc;
-    color: #1f5e3a;
+    color: var(--color-forest);
   }
   .chip-surplus {
     background: #fff1cc;
@@ -2604,9 +2700,9 @@
     border: 1px solid #cbd5cb;
   }
   .btn-primary {
-    background: #1f5e3a;
+    background: var(--color-forest);
     color: white;
-    border-color: #1f5e3a;
+    border-color: var(--color-forest);
   }
   .btn-primary:disabled {
     opacity: 0.5;

@@ -29,5 +29,22 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "Japanese beetle",
+      "metric": "count-per-plant",
+      "threshold": 5
+    },
+    {
+      "pest": "Mexican bean beetle",
+      "metric": "count-per-plant",
+      "threshold": 1.5
+    },
+    {
+      "pest": "tarnished plant bug",
+      "metric": "count-per-plant",
+      "threshold": 2
+    }
+  ]
 }

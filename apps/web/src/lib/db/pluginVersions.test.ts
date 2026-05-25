@@ -16,10 +16,12 @@ import {
   appendVersion,
   bumpPatch,
   currentVersionOf,
+  deleteVersion,
   getByHash,
   historyOf,
   isVersionAhead,
   retire,
+  setSupersededAt,
   unretire
 } from './pluginVersions';
 
@@ -148,5 +150,49 @@ describe('retire / unretire', () => {
 
   it('returns false when no rows exist for the plugin', () => {
     expect(retire(`does-not-exist-${randomUUID().slice(0, 6)}`)).toBe(false);
+  });
+});
+
+describe('deleteVersion + setSupersededAt', () => {
+  it('deleteVersion removes the row by id and returns true; missing id returns false', () => {
+    const id = uniqId();
+    const v = appendVersion({
+      pluginId: id,
+      version: '1.0.0',
+      kind: 'crop',
+      hash: fakeHash('d1'),
+      payloadJson: '{}'
+    });
+    expect(deleteVersion(v.id)).toBe(true);
+    expect(currentVersionOf(id)).toBeUndefined();
+    expect(deleteVersion(`missing-${randomUUID()}`)).toBe(false);
+  });
+
+  it('setSupersededAt overrides the value on a specific row, including back-to-null', () => {
+    const id = uniqId();
+    appendVersion({
+      pluginId: id,
+      version: '1.0.0',
+      kind: 'crop',
+      hash: fakeHash('s1'),
+      payloadJson: '{}'
+    });
+    const v2 = appendVersion({
+      pluginId: id,
+      version: '1.0.1',
+      kind: 'crop',
+      hash: fakeHash('s2'),
+      payloadJson: '{}'
+    });
+    // v2 is now current (supersededAt = null on it, defined on v1)
+    expect(currentVersionOf(id)?.id).toBe(v2.id);
+    // Mark v2 superseded as of an arbitrary timestamp
+    const t = Date.now();
+    expect(setSupersededAt(v2.id, t)).toBe(true);
+    // Both rows now have a supersededAt → no current row
+    expect(currentVersionOf(id)).toBeUndefined();
+    // Clear v2 back to null — it becomes current again
+    expect(setSupersededAt(v2.id, null)).toBe(true);
+    expect(currentVersionOf(id)?.id).toBe(v2.id);
   });
 });

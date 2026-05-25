@@ -26,5 +26,13 @@
   "notes": "Rutgers all-male hybrid. Higher yields than seeded female types. Strong rust and crown-rot tolerance. Light harvest year 3, full harvest year 4+.",
   "harvestIndicators": [
     "Spears 7 to 9 inches, tight tips before fern-out"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

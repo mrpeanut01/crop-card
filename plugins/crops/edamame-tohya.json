@@ -26,5 +26,11 @@
   "notes": "Mid-early edamame variety with concentrated pod set for once-over harvest. Strong yields in Mid-Atlantic and Midwest.",
   "harvestIndicators": [
     "Pods plump and fuzzy, beans visible, before yellowing"
-  ]
+  ],
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 40,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

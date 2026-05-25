@@ -32,5 +32,39 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "stink bug",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    },
+    {
+      "pest": "spider mite (suppression)",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "European corn borer",
+      "metric": "count-per-trap-per-week",
+      "threshold": 7
+    },
+    {
+      "pest": "cabbage looper",
+      "metric": "count-per-plant",
+      "threshold": 0.5
+    }
+  ]
 }

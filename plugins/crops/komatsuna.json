@@ -26,5 +26,11 @@
   "notes": "Brassica rapa var. perviridis. Cold-hardy Japanese green eaten raw or stir-fried. More heat-tolerant than spinach.",
   "harvestIndicators": [
     "Tender upright leaves at 6 to 10 inches"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

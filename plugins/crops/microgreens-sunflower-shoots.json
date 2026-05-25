@@ -26,5 +26,11 @@
   "notes": "Untreated black-oil sunflower seed for microgreen production. Pre-soak 6 to 12 hours. Cut at cotyledon stage.",
   "harvestIndicators": [
     "Cotyledons fully open at 4 to 5 inches tall, before true leaves"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

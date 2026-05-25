@@ -4,7 +4,10 @@
   "displayName": "Alfalfa — Vernema (perennial hay)",
   "version": "1.0.0",
   "cropFamily": "forage",
-  "daysToMaturity": { "min": 365, "max": 1825 },
+  "daysToMaturity": {
+    "min": 365,
+    "max": 1825
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 50,
@@ -13,24 +16,50 @@
   },
   "cropOperationModel": "perennial-multi-cut",
   "hayOperations": {
-    "steps": ["mow", "ted", "rake", "bale", "store"],
-    "cuttingsPerSeason": { "min": 3, "max": 4 },
-    "cutIntervalDays": { "min": 28, "max": 35 },
+    "steps": [
+      "mow",
+      "ted",
+      "rake",
+      "bale",
+      "store"
+    ],
+    "cuttingsPerSeason": {
+      "min": 3,
+      "max": 4
+    },
+    "cutIntervalDays": {
+      "min": 28,
+      "max": 35
+    },
     "mowTrigger": "10% bloom or 28 d after previous cut",
     "weatherWindowDays": 3,
     "baleMoistureGate": {
       "small-square": {
         "warnAbovePct": 18,
         "dangerAbovePct": 22,
-        "optimumPercent": { "min": 14, "max": 18 }
+        "optimumPercent": {
+          "min": 14,
+          "max": 18
+        }
       },
       "large-round": {
         "warnAbovePct": 16,
         "dangerAbovePct": 20,
-        "optimumPercent": { "min": 12, "max": 16 }
+        "optimumPercent": {
+          "min": 12,
+          "max": 16
+        }
       }
     }
   },
-  "harvestIndicators": ["10% bloom (early-bud for premium)", "Stems still green"],
-  "notes": "Perennial 4–5 yr stand. Roundup Ready alfalfa requires trait-resistant variety. Potato leafhopper monitoring essential June–Aug."
+  "harvestIndicators": [
+    "10% bloom (early-bud for premium)",
+    "Stems still green"
+  ],
+  "notes": "Perennial 4–5 yr stand. Roundup Ready alfalfa requires trait-resistant variety. Potato leafhopper monitoring essential June–Aug.",
+  "harvestStyle": "forage-cutting-cycle",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

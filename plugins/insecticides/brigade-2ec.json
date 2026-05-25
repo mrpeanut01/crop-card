@@ -31,5 +31,35 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "stink bug",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "cucumber beetle",
+      "metric": "count-per-plant",
+      "threshold": 1
+    }
+  ]
 }

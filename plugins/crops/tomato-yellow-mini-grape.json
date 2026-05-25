@@ -26,5 +26,10 @@
   "notes": "Indeterminate yellow grape-type tomato. Crack-resistant, holds on the truss. Strong CSA and chef-market crop.",
   "harvestIndicators": [
     "Yellow elongated 1 inch fruit, easy stem release"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,11 @@
   "notes": "Ocimum tenuiflorum, sacred basil of Ayurveda. Clove-and-mint flavor. Strong tea, tincture, adaptogen market.",
   "harvestIndicators": [
     "Stems cut just before bloom, leaves fully formed"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

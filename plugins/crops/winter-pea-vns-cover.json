@@ -15,8 +15,8 @@
     "soilTempMinF": 45,
     "rowSpacingIn": 7,
     "seedDepthIn": {
-      "min": 1.0,
-      "max": 2.0
+      "min": 1,
+      "max": 2
     }
   },
   "harvestIndicators": [
@@ -26,5 +26,10 @@
     "lifecycle": "biennial",
     "rotationLookbackYears": 1
   },
-  "notes": "Pisum sativum arvense, fall-sown legume cover. Fixes 80 to 150 lb N per acre. Often mixed with cereal rye or triticale for biomass. Inoculate with pea/vetch Rhizobium at sowing. Sold by Albert Lea Seed, Green Cover Seed, Welter."
+  "notes": "Pisum sativum arvense, fall-sown legume cover. Fixes 80 to 150 lb N per acre. Often mixed with cereal rye or triticale for biomass. Inoculate with pea/vetch Rhizobium at sowing. Sold by Albert Lea Seed, Green Cover Seed, Welter.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

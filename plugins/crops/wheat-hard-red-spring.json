@@ -26,5 +26,13 @@
   "notes": "NDSU release. High-protein bread wheat for northern Plains. Plant at 100 to 120 lb per acre. Strong Fusarium head blight tolerance.",
   "harvestIndicators": [
     "Heads tan-gold and brittle, kernels hard at 14% moisture"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

@@ -5,6 +5,17 @@
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
   "defaultRowSpacingInches": 216,
-  "harvestIndicators": ["Dusty-blue waxy bloom", "Slight give"],
-  "notes": "Self-fertile European plum. Black knot (Apiosporina morbosa) is the main disease — winter prune + burn knots."
+  "harvestIndicators": [
+    "Dusty-blue waxy bloom",
+    "Slight give"
+  ],
+  "notes": "Self-fertile European plum. Black knot (Apiosporina morbosa) is the main disease — winter prune + burn knots.",
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      3,
+      4
+    ],
+    "beeAttractive": true
+  }
 }

@@ -5,6 +5,17 @@
   "version": "1.0.0",
   "cropFamily": "small-fruit",
   "defaultRowSpacingInches": 96,
-  "harvestIndicators": ["Whole cluster turns deep purple-black", "Berries soft + fragrant"],
-  "notes": "Mid-size native shrub. Two cultivars needed for cross-pollination (e.g., Adams + York)."
+  "harvestIndicators": [
+    "Whole cluster turns deep purple-black",
+    "Berries soft + fragrant"
+  ],
+  "notes": "Mid-size native shrub. Two cultivars needed for cross-pollination (e.g., Adams + York).",
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

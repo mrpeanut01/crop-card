@@ -26,5 +26,11 @@
   "notes": "Standard US baker and processing russet. Long-day storage variety. Late blight susceptible. Cure 7 to 10 days at 60 F.",
   "harvestIndicators": [
     "Vines fully dead and brown, skins set firm with no slip"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

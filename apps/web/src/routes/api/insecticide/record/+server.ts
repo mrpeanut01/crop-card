@@ -10,7 +10,13 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeRatedDilution } from '$lib/dilution/calculator';
-import { insertInsecticideEvent, type ScoutObservation } from '$lib/db/insecticideEvents';
+import {
+  insertInsecticideEvent,
+  listInsecticideEvents,
+  type ScoutObservation as InsectScoutObs
+} from '$lib/db/insecticideEvents';
+import { listScoutObservations } from '$lib/db/scoutObservations';
+import { getBlock } from '$lib/db/blocks';
 import {
   decrementForUse,
   getStockItem,
@@ -19,7 +25,7 @@ import {
   type StockItem
 } from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
-import type { InsecticidePlugin } from '$lib/plugins/schemas';
+import type { InsecticidePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { checkEnvironment } from '$lib/safety/environment';
 import type { HerbicideProduct, SafetyResult, SprayContext } from '$lib/safety';
 import { augmentSafetyResult } from '$lib/safety/userAddedRestrictions';
@@ -28,6 +34,9 @@ import {
   type StockPluginPair
 } from '$lib/safety/userAddedRestrictionsFromStock';
 import { RULES_VERSION } from '$lib/safety/version';
+import { checkIpmThreshold, type ScoutObservation } from '$lib/safety/ipmThreshold';
+import { checkPollinatorBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
+import { runEvaluator } from '$lib/safety/dryRunRunner';
 import type { StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
@@ -116,6 +125,116 @@ export const POST: RequestHandler = async (event) => {
       {
         error: 'environmental conditions failed',
         violations: envViolations,
+        ruleVersion: RULES_VERSION
+      },
+      { status: 422 }
+    );
+  }
+
+  // ─── Phase 25d (#89) — IPM threshold + pollinator-bloom gates ──────
+  // Both short-circuit through runEvaluator() which respects
+  // KERNEL_DRY_RUN; during the 14-day window violations log instead of
+  // blocking. Scout observations are read from past insecticide events'
+  // scoutObservationJson (no dedicated scout-events table yet — that's a
+  // follow-up; see #87 + future scout-table issue). The current-spray
+  // scout observation (if the operator entered one) is also included.
+
+  // Phase 25d (#95) — primary path: dedicated scout_observations table.
+  // Backfill: legacy embedded payloads from past insecticide events on
+  // this block (pre-#95 data). Plus the current spray's scout obs if
+  // provided.
+  const recentScout: ScoutObservation[] = [];
+  for (const o of listScoutObservations({
+    blockId: parsed.data.blockId,
+    fromMs: occurredAt - 35 * 86_400_000,
+    limit: 50
+  })) {
+    recentScout.push({
+      pest: o.pest,
+      metric: o.metric,
+      value: o.value,
+      occurredAt: o.occurredAt
+    });
+  }
+  const priorInsectOnBlock = listInsecticideEvents({
+    blockId: parsed.data.blockId,
+    limit: 20
+  });
+  for (const e of priorInsectOnBlock) {
+    if (e.scoutObservation) {
+      recentScout.push({
+        pest: e.scoutObservation.pest,
+        metric: e.scoutObservation.metric,
+        value: e.scoutObservation.value,
+        occurredAt: e.occurredAt
+      });
+    }
+  }
+  if (parsed.data.scout) {
+    recentScout.push({
+      pest: parsed.data.scout.pest,
+      metric: parsed.data.scout.metric,
+      value: parsed.data.scout.value,
+      occurredAt
+    });
+  }
+
+  const ipmViolations = runEvaluator(
+    'ipmThreshold',
+    () =>
+      checkIpmThreshold(
+        products.map((p) => ({
+          pluginId: p.pluginId,
+          scoutingThresholds: (p.scoutingThresholds ?? []).map((t) => ({
+            pest: t.pest,
+            metric: t.metric,
+            threshold: t.threshold
+          }))
+        })),
+        recentScout
+      ),
+    {
+      plannedSpray: { productPluginIds: parsed.data.productPluginIds },
+      blockId: parsed.data.blockId
+    }
+  );
+
+  const block = getBlock(parsed.data.blockId);
+  const cropsInBlock: CropInBlock[] = (block?.plantings ?? [])
+    .filter((p): p is typeof p & { plantingDate: number } => p.plantingDate != null)
+    .map((p) => {
+      const rec = registry.get(p.cropPluginId);
+      const cropPlugin: CropPlugin | null =
+        rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
+      return {
+        cropPluginId: p.cropPluginId,
+        plantedAt: p.plantingDate,
+        bloomWindow: cropPlugin?.bloomWindow
+      };
+    });
+  const pollinatorViolations = runEvaluator(
+    'pollinatorBloom',
+    () =>
+      checkPollinatorBloom(
+        products.map((p) => ({
+          pluginId: p.pluginId,
+          pollinatorRisk: p.pollinatorRisk ?? 'unknown'
+        })),
+        cropsInBlock,
+        occurredAt
+      ),
+    {
+      plannedSpray: { productPluginIds: parsed.data.productPluginIds },
+      blockId: parsed.data.blockId
+    }
+  );
+
+  const gateViolations = [...ipmViolations, ...pollinatorViolations];
+  if (gateViolations.length > 0) {
+    return json(
+      {
+        error: 'safety-kernel gate(s) failed',
+        violations: gateViolations,
         ruleVersion: RULES_VERSION
       },
       { status: 422 }

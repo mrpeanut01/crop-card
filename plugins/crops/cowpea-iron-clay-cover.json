@@ -15,8 +15,8 @@
     "soilTempMinF": 65,
     "rowSpacingIn": 18,
     "seedDepthIn": {
-      "min": 1.0,
-      "max": 2.0
+      "min": 1,
+      "max": 2
     }
   },
   "harvestIndicators": [
@@ -26,5 +26,10 @@
     "lifecycle": "annual",
     "rotationLookbackYears": 1
   },
-  "notes": "Vigna unguiculata. Warm-season legume cover. Fixes 80 to 130 lb N per acre. Heat- and drought-tolerant. Terminate at bloom for max N. Inoculate with cowpea-type Rhizobium at sowing. Sold by Hancock Seed, Green Cover Seed, Welter."
+  "notes": "Vigna unguiculata. Warm-season legume cover. Fixes 80 to 130 lb N per acre. Heat- and drought-tolerant. Terminate at bloom for max N. Inoculate with cowpea-type Rhizobium at sowing. Sold by Hancock Seed, Green Cover Seed, Welter.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

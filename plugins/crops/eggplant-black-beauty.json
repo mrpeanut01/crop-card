@@ -5,8 +5,19 @@
   "version": "1.0.0",
   "cropFamily": "solanaceae",
   "preHarvestIntervalDays": 1,
-  "daysToMaturity": { "min": 70, "max": 85 },
+  "daysToMaturity": {
+    "min": 70,
+    "max": 85
+  },
   "defaultRowSpacingInches": 30,
-  "harvestIndicators": ["Glossy purple-black skin", "Firm — no thumb-press indent"],
-  "notes": "Heat-loving — wait until soil ≥65 °F. Flea-beetle damage typical at transplant; row cover until flowering."
+  "harvestIndicators": [
+    "Glossy purple-black skin",
+    "Firm — no thumb-press indent"
+  ],
+  "notes": "Heat-loving — wait until soil ≥65 °F. Flea-beetle damage typical at transplant; row cover until flowering.",
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,11 @@
   "notes": "Cool-season French culinary herb. Mild anise-parsley flavor. Bolts quickly in heat; plant for spring and fall.",
   "harvestIndicators": [
     "Lacy bright-green leaves before flowering"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": true
+  }
 }

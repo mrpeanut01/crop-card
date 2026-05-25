@@ -26,5 +26,13 @@
   "notes": "Swedish black currant cultivar. Mildew, leaf spot, and white pine blister rust resistance. Hardy to zone 3.",
   "harvestIndicators": [
     "Glossy black berries on full clusters, easy strigging at full ripeness"
-  ]
+  ],
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

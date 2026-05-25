@@ -26,5 +26,10 @@
   "notes": "Standard 20 to 25 lb commercial jack-o-lantern pumpkin. Strong handle. Bred by John Howden in Massachusetts.",
   "harvestIndicators": [
     "Bright orange rind, fingernail will not scratch easily, stem dry"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  },
+  "harvestStyle": "cure-then-store"
 }

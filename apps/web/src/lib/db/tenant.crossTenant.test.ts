@@ -38,6 +38,9 @@ import * as fertilityRepo from './fertility';
 import * as stockRepo from './stock';
 import * as tasksRepo from './tasks';
 import * as settingsRepo from './settings';
+import * as planRevisionsRepo from '$lib/plan/revisions';
+import * as scoutObservationsRepo from './scoutObservations';
+import * as wizardChatRepo from './wizardChat';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
 import { users, helperAssignments } from './schema';
 
@@ -85,6 +88,34 @@ function seedOwner(ownerId: string): SeedFixtures {
 
     settingsRepo.setSetting('greeting', `hello-from-${ownerId}`);
 
+    // Phase 25d (#89) — seed a plan_revisions row + a scout_observations
+    // row so the cross-tenant test sees both tables. Each owner gets one
+    // of each, then we verify Owner B cannot read Owner A's rows.
+    const systemUserId = ensureCrossTenantTestUser(ownerId);
+    planRevisionsRepo.insertPlanRevision({
+      planId: `season-2026`,
+      source: 'wizard',
+      payload: { kind: 'cross-tenant-test', greeting: `hello-from-${ownerId}` },
+      createdByUserId: systemUserId
+    });
+    scoutObservationsRepo.insertScoutObservation({
+      blockId: b1.id,
+      performedById: systemUserId,
+      pest: 'aphid',
+      metric: 'count-per-leaf',
+      value: 12,
+      occurredAt: Date.now()
+    });
+    // Phase 25d (#89) — seed a wizard chat session + message so the
+    // cross-tenant test covers the new tables.
+    const session = wizardChatRepo.getOrCreateActiveSession(`season-2026`, systemUserId);
+    wizardChatRepo.appendMessage({
+      sessionId: session.id,
+      step: 'allocation',
+      role: 'user',
+      content: `chat from ${ownerId}`
+    });
+
     return {
       blockIds: new Set([b1.id, b2.id]),
       fieldIds: new Set([f1.id, f2.id]),
@@ -107,6 +138,18 @@ function seedOwnerRow(ownerId: string): void {
     })
     .onConflictDoNothing()
     .run();
+}
+
+/** Phase 25d (#89) — seed-user helper for plan_revisions.created_by_user_id
+ *  + scout_observations.performed_by_id FK targets. Each test owner gets
+ *  a deterministic system user so the seed step is idempotent. */
+function ensureCrossTenantTestUser(ownerId: string): string {
+  const userId = `${ownerId}-system-user`;
+  db.insert(users)
+    .values({ id: userId, email: `${userId}@cross-tenant.test` })
+    .onConflictDoNothing()
+    .run();
+  return userId;
 }
 
 describe('cross-tenant isolation', () => {
@@ -246,6 +289,47 @@ describe('cross-tenant isolation', () => {
     }
   });
 
+  it('listPlanRevisions is owner-scoped', () => {
+    const aRevs = runWithTenant(OWNER_A, () => planRevisionsRepo.listPlanRevisions(`season-2026`));
+    const bRevs = runWithTenant(OWNER_B, () => planRevisionsRepo.listPlanRevisions(`season-2026`));
+    const aIds = new Set(aRevs.map((r) => r.id));
+    for (const r of bRevs) expect(aIds.has(r.id)).toBe(false);
+    // Sanity: each owner sees their own seeded row.
+    expect(aRevs.length).toBeGreaterThan(0);
+    expect(bRevs.length).toBeGreaterThan(0);
+  });
+
+  it('listScoutObservations is owner-scoped', () => {
+    const aObs = runWithTenant(OWNER_A, () => scoutObservationsRepo.listScoutObservations());
+    const bObs = runWithTenant(OWNER_B, () => scoutObservationsRepo.listScoutObservations());
+    const aIds = new Set(aObs.map((o) => o.id));
+    for (const o of bObs) expect(aIds.has(o.id)).toBe(false);
+    expect(aObs.length).toBeGreaterThan(0);
+    expect(bObs.length).toBeGreaterThan(0);
+  });
+
+  it('wizardChat sessions + messages are owner-scoped', () => {
+    const aSession = runWithTenant(OWNER_A, () => wizardChatRepo.getActiveSession(`season-2026`));
+    const bSession = runWithTenant(OWNER_B, () => wizardChatRepo.getActiveSession(`season-2026`));
+    expect(aSession).not.toBeNull();
+    expect(bSession).not.toBeNull();
+    expect(aSession!.id).not.toBe(bSession!.id);
+
+    // Owner A reading messages by Owner B's sessionId returns []
+    // because tenantWhere filters by current ownerId regardless of the
+    // sessionId predicate.
+    const aReadsBsSession = runWithTenant(OWNER_A, () => wizardChatRepo.listMessages(bSession!.id));
+    expect(aReadsBsSession).toEqual([]);
+
+    // Each owner's own session has its seeded message.
+    const aMessages = runWithTenant(OWNER_A, () => wizardChatRepo.listMessages(aSession!.id));
+    const bMessages = runWithTenant(OWNER_B, () => wizardChatRepo.listMessages(bSession!.id));
+    expect(aMessages.length).toBeGreaterThan(0);
+    expect(bMessages.length).toBeGreaterThan(0);
+    expect(aMessages[0].content).toContain(OWNER_A);
+    expect(bMessages[0].content).toContain(OWNER_B);
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -265,7 +349,10 @@ describe('cross-tenant isolation', () => {
       fertilityRepo,
       stockRepo,
       tasksRepo,
-      settingsRepo
+      settingsRepo,
+      planRevisionsRepo,
+      scoutObservationsRepo,
+      wizardChatRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

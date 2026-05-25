@@ -26,5 +26,13 @@
     "lifecycle": "perennial",
     "rotationLookbackYears": 0
   },
-  "notes": "University of Arkansas thornless primocane-fruiting blackberry. Fruits on first-year canes from August through frost. Cold-hardy to zone 6. Sold by Nourse Farms, Indiana Berry, Stark Bro's."
+  "notes": "University of Arkansas thornless primocane-fruiting blackberry. Fruits on first-year canes from August through frost. Cold-hardy to zone 6. Sold by Nourse Farms, Indiana Berry, Stark Bro's.",
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": true
+  }
 }

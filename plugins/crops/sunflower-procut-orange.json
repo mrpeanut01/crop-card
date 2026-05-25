@@ -26,5 +26,11 @@
   "notes": "Pollenless single-stem cut sunflower. Day-length neutral. 5 to 6 inch bright orange blooms on 5 to 6 ft stems.",
   "harvestIndicators": [
     "Ray petals open but disk still tight; cut at sunrise"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 120,
+    "beeAttractive": true
+  }
 }

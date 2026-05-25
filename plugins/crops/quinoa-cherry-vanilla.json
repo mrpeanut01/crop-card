@@ -26,5 +26,11 @@
   "notes": "Chenopodium quinoa, multi-colored open-pollinated grain. Cool-loving. Rinse seeds to remove saponins before cooking.",
   "harvestIndicators": [
     "Heads dry and rattle, seeds slip free when rubbed"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 100,
+    "beeAttractive": true
+  }
 }

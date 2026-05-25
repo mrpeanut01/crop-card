@@ -26,5 +26,13 @@
   "notes": "Naked (hulless) oat. Drops the hull at threshing, eliminating the dehulling step. Strong for direct human consumption.",
   "harvestIndicators": [
     "Panicles gold, kernels naked and free-threshing"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

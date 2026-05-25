@@ -26,5 +26,10 @@
   "notes": "Capsicum annuum, 500 to 2500 SHU. Mild chile workhorse for green roasting and stuffing. New Mexico State College 64 release.",
   "harvestIndicators": [
     "7 to 8 inch dark green pods for roasting, red at full ripeness"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

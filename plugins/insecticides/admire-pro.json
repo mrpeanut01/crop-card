@@ -31,5 +31,41 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "Colorado potato beetle",
+      "metric": "count-per-plant",
+      "threshold": 2,
+      "warnAt": 1
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "cucumber beetle",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "flea beetle",
+      "metric": "pct-defoliation",
+      "threshold": 20,
+      "warnAt": 10
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    }
+  ]
 }

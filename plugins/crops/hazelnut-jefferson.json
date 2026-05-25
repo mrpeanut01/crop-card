@@ -26,5 +26,13 @@
   "notes": "Oregon State 2009 release. Eastern filbert blight resistance. Self-incompatible; plant with Theta or Yamhill pollinizer.",
   "harvestIndicators": [
     "Husks fully tan, nuts dropping when shaken"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

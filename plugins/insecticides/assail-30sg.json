@@ -31,5 +31,39 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    },
+    {
+      "pest": "plum curculio",
+      "metric": "pct-infested-plants",
+      "threshold": 2
+    },
+    {
+      "pest": "codling moth",
+      "metric": "count-per-trap-per-week",
+      "threshold": 5
+    },
+    {
+      "pest": "apple maggot",
+      "metric": "count-per-trap-per-week",
+      "threshold": 5
+    }
+  ]
 }

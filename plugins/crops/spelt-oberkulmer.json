@@ -26,5 +26,13 @@
   "notes": "Triticum spelta. Heritage hulled winter wheat. Drill 100 to 120 lb per acre in fall. Excellent for artisan bakers.",
   "harvestIndicators": [
     "Heads tan, hulls still tight to kernels at threshing"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

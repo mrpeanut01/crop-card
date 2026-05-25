@@ -1,7 +1,10 @@
 import type { PageServerLoad } from './$types';
-import { listBlocks } from '$lib/db/blocks';
+import { listBlocks, geometryCentroid } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
+import { listSprayEvents } from '$lib/db/sprayEvents';
+import { listInsecticideEvents } from '$lib/db/insecticideEvents';
+import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
 import { listTasks, type Task } from '$lib/db/tasks';
 import {
@@ -16,6 +19,11 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import { getRegistry, getRegistryStats } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 import { RULES_VERSION } from '$lib/safety/version';
+import { getUserAiEnabled } from '$lib/server/aiTry';
+import { getForecast, WeatherFetchError } from '$lib/server/weather';
+import { derivePriorityAction } from '$lib/today/priorityAction';
+import { summarizeForecastSafely } from '$lib/today/weatherSummary';
+import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 type Tab = 'today' | '7d' | '30d' | 'season';
@@ -36,9 +44,12 @@ function clampView(raw: string | null): View {
   return raw === 'calendar' ? 'calendar' : 'list';
 }
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const tab = clampTab(url.searchParams.get('tab'));
   const view = clampView(url.searchParams.get('view'));
+  // Phase 25d v2-addendum (#89 / #80 partial) — drives AI-on vs AI-off
+  // variant on /today's recommendations card + provenance legend strip.
+  const aiEnabled = getUserAiEnabled(locals.user?.id);
   const registry = await getRegistry();
   const stats = getRegistryStats();
   const blocks = listBlocks();
@@ -126,12 +137,69 @@ export const load: PageServerLoad = async ({ url }) => {
       (!t.linkedToTaskId || !primariesInWindow.find((p) => p.id === t.linkedToTaskId))
   );
 
+  // Phase 25e (#97) — priorityAction + weatherSummary + seasonGlance.
+  const blockNameById = new Map(blocks.map((b) => [b.id, b.name]));
+  // Re-fetch the broader open-primary list (last 30d → +14d) so the
+  // hero card never shows null just because the user is on the "season"
+  // tab where the window starts later.
+  const allOpenPrimaries = listTasks({
+    fromMs: now - 30 * DAY_MS,
+    toMs: now + 14 * DAY_MS,
+    status: 'open',
+    kind: 'primary'
+  });
+  const priorityAction = derivePriorityAction({
+    openPrimaries: allOpenPrimaries,
+    derivedEvents: allEvents,
+    blockNameById,
+    now
+  });
+
+  // Best-effort weather call. Use the first block with geometry as the
+  // farm centroid. Empty array = no geometry, returns null upstream.
+  let forecast: Awaited<ReturnType<typeof getForecast>> | null = null;
+  const geomBlock = blocks.find((b) => b.geometryGeojson);
+  if (geomBlock?.geometryGeojson) {
+    const centroid = geometryCentroid(geomBlock.geometryGeojson);
+    if (centroid) {
+      try {
+        forecast = await getForecast(centroid.lat, centroid.lon);
+      } catch (e) {
+        // Best-effort: NWS rate-limit, DB cache write race, or a Vite/HMR
+        // module-resolution blip — none should crash the entire /today
+        // render. Swallow + hide the weather strip.
+        if (e instanceof WeatherFetchError) {
+          forecast = null;
+        } else {
+          console.error('[today/loader] weather fetch failed:', e);
+          forecast = null;
+        }
+      }
+    }
+  }
+  const weatherSummary = summarizeForecastSafely(forecast);
+
+  // YTD spray count = spray + insecticide + fungicide events since Jan 1.
+  const yearStart = startOfYear(now);
+  const spraysYTD =
+    listSprayEvents({ fromMs: yearStart, toMs: now }).length +
+    listInsecticideEvents({ fromMs: yearStart, toMs: now }).length +
+    listFungicideEvents({ fromMs: yearStart, toMs: now }).length;
+  const seasonGlance = deriveSeasonGlance({
+    activePlantings: totalPlantings,
+    spraysYTD,
+    pluginsLoaded: registry.all().length,
+    derivedEvents: allEvents,
+    now
+  });
+
   return {
     today: new Date().toISOString().slice(0, 10),
     tab,
     view,
     tabFromMs,
     tabToMs,
+    aiEnabled,
     rulesVersion: RULES_VERSION,
     counts: {
       crops: registry.crops().length,
@@ -169,6 +237,10 @@ export const load: PageServerLoad = async ({ url }) => {
       balance: e.lot.balance,
       unit: e.item.defaultUnit,
       daysUntilExpiry: e.lot.daysUntilExpiry ?? 0
-    }))
+    })),
+    // Phase 25e (#97) — Almanac hero / weather strip / season glance.
+    priorityAction,
+    weatherSummary,
+    seasonGlance
   };
 };

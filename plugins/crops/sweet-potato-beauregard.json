@@ -4,13 +4,30 @@
   "displayName": "Sweet Potato — Beauregard",
   "version": "1.0.0",
   "cropFamily": "root",
-  "daysToMaturity": { "min": 95, "max": 110 },
+  "daysToMaturity": {
+    "min": 95,
+    "max": 110
+  },
   "defaultRowSpacingInches": 36,
   "postHarvestCuring": {
     "method": "Cure 7–10 d at 85 °F, 90% RH; store 55–60 °F, 80% RH",
-    "durationWeeks": { "min": 1, "max": 2 },
+    "durationWeeks": {
+      "min": 1,
+      "max": 2
+    },
     "storageLocation": "Warm-storage room, NOT a fridge"
   },
-  "harvestIndicators": ["Roots full size", "Before vines die from frost"],
-  "notes": "Standard orange-flesh sweet potato. Plant slips after soil ≥65 °F. Common Mid-Atlantic high tunnel + black-plastic field crop."
+  "harvestIndicators": [
+    "Roots full size",
+    "Before vines die from frost"
+  ],
+  "notes": "Standard orange-flesh sweet potato. Plant slips after soil ≥65 °F. Common Mid-Atlantic high tunnel + black-plastic field crop.",
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

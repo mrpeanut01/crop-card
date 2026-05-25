@@ -26,5 +26,11 @@
   "notes": "1879 French heirloom. Mild, crisp. Strong farmstand seller. Classed brassica family for rotation and pest planning.",
   "harvestIndicators": [
     "3 inch oblong root, scarlet top with white tip"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

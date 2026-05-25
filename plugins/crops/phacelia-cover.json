@@ -26,5 +26,11 @@
     "lifecycle": "annual",
     "rotationLookbackYears": 0
   },
-  "notes": "Phacelia tanacetifolia. Cool-season smother and pollinator cover. Not in any common crop family, so it fits any rotation. Excellent bee attractor. Frost-killed in northern winters; mow at flowering further south. Sold by Green Cover Seed, Albert Lea Seed."
+  "notes": "Phacelia tanacetifolia. Cool-season smother and pollinator cover. Not in any common crop family, so it fits any rotation. Excellent bee attractor. Frost-killed in northern winters; mow at flowering further south. Sold by Green Cover Seed, Albert Lea Seed.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "daysFromPlantingMin": 45,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": true
+  }
 }

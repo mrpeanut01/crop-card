@@ -28,5 +28,12 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Certis baculovirus narrowly targeting Cydia pomonella on apple, pear, walnut. Highly host-specific."
+  "notes": "Certis baculovirus narrowly targeting Cydia pomonella on apple, pear, walnut. Highly host-specific.",
+  "scoutingThresholds": [
+    {
+      "pest": "codling moth",
+      "metric": "count-per-trap-per-week",
+      "threshold": 5
+    }
+  ]
 }

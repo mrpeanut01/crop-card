@@ -4,11 +4,19 @@
   "displayName": "Crimson Clover (cover crop)",
   "version": "1.0.0",
   "cropFamily": "cover-legume",
-  "daysToMaturity": { "min": 180, "max": 240 },
+  "daysToMaturity": {
+    "min": 180,
+    "max": 240
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "soilTempMinF": 50,
     "recommendedLbsPerAcre": 22
   },
-  "notes": "Winter-annual N-fixing cover. Drill Aug–Sep; terminate at full bloom for max biomass + N. Excellent rye / vetch alternative for vegetable systems."
+  "notes": "Winter-annual N-fixing cover. Drill Aug–Sep; terminate at full bloom for max biomass + N. Excellent rye / vetch alternative for vegetable systems.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

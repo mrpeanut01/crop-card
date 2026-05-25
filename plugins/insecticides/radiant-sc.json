@@ -31,5 +31,29 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "leafminer",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "diamondback moth",
+      "metric": "count-per-plant",
+      "threshold": 0.3
+    },
+    {
+      "pest": "cabbage looper",
+      "metric": "count-per-plant",
+      "threshold": 0.5
+    }
+  ]
 }

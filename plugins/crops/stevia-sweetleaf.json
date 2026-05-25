@@ -26,5 +26,11 @@
   "notes": "South American perennial grown as annual outside zone 8. Highest steviol-glycoside content just before bloom.",
   "harvestIndicators": [
     "Leaves at peak sweetness just before flowering"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

@@ -26,5 +26,10 @@
   "notes": "Capsicum chinense, 100000 to 350000 SHU. Open-pollinated. Long, warm season required. Wear gloves at harvest.",
   "harvestIndicators": [
     "Bright orange skin, fully colored from stem to tip"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

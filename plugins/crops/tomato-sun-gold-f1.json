@@ -27,5 +27,10 @@
   "harvestIndicators": [
     "Bright tangerine-orange color",
     "Easy release from cluster"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

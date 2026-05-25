@@ -26,5 +26,10 @@
   "notes": "Standard 20 to 25 lb commercial picnic watermelon. Anthracnose and fusarium resistance.",
   "harvestIndicators": [
     "Curly tendril nearest fruit is dry; ground spot creamy yellow"
-  ]
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  },
+  "harvestStyle": "continuous-fruit"
 }

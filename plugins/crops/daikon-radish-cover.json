@@ -4,10 +4,21 @@
   "displayName": "Daikon Radish (Tillage Radish) (cover crop)",
   "version": "1.0.0",
   "cropFamily": "cover-grass",
-  "daysToMaturity": { "min": 60, "max": 90 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "recommendedLbsPerAcre": 8
   },
-  "notes": "Bio-tillage radish — long taproot breaks compaction. Winter-kills, leaving holes for spring water infiltration. Brassica family — counts toward 3-yr rotation against brassica diseases."
+  "notes": "Bio-tillage radish — long taproot breaks compaction. Winter-kills, leaving holes for spring water infiltration. Brassica family — counts toward 3-yr rotation against brassica diseases.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

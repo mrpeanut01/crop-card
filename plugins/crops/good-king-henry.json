@@ -26,5 +26,11 @@
   "notes": "European medieval perennial vegetable. Hardy to zone 3. Mild spinach-like flavor when cooked. Cold-stratify seed.",
   "harvestIndicators": [
     "Tender spring shoots cut like asparagus, mature leaves used like spinach"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,11 @@
   "notes": "French heirloom. Heat-tolerant loose-leaf. Excellent baby-leaf cut for mesclun mixes.",
   "harvestIndicators": [
     "Lobed oak-shaped leaves, tender at base"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

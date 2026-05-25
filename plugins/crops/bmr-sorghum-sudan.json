@@ -26,5 +26,13 @@
   "notes": "Brown midrib (BMR) sorghum-sudangrass hybrid. Lower lignin than conventional sorghum-sudan, higher digestibility for dairy and beef.",
   "harvestIndicators": [
     "Plants 30 to 40 inches before first cut for high quality"
-  ]
+  ],
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "monthsOfYear": [
+      7,
+      8
+    ],
+    "beeAttractive": false
+  }
 }

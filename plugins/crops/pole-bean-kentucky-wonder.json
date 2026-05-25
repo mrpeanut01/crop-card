@@ -26,5 +26,11 @@
   "notes": "Heirloom pole snap bean (Old Homestead). Bean rust resistance. Strong continuous picker over 6 to 8 weeks. Trellis at 6 ft.",
   "harvestIndicators": [
     "7 to 9 inch silvery green pod with full bean shape"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

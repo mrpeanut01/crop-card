@@ -26,5 +26,11 @@
   "notes": "Colorado State University 2006 release. High anthocyanin content. Color holds through cooking.",
   "harvestIndicators": [
     "Deep purple skin and flesh, hard-set at harvest"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": false
+  }
 }

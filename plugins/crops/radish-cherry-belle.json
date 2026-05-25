@@ -4,8 +4,19 @@
   "displayName": "Radish — Cherry Belle",
   "version": "1.0.0",
   "cropFamily": "brassica",
-  "daysToMaturity": { "min": 22, "max": 28 },
+  "daysToMaturity": {
+    "min": 22,
+    "max": 28
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["Roots ~1 in diameter"],
-  "notes": "Quick-turn cool-season radish. Excellent succession crop or row marker."
+  "harvestIndicators": [
+    "Roots ~1 in diameter"
+  ],
+  "notes": "Quick-turn cool-season radish. Excellent succession crop or row marker.",
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,13 @@
   "notes": "Pennisetum glaucum hybrid from University of Georgia. Heat- and drought-tolerant warm-season cereal. Drill at 8 to 12 lb per acre.",
   "harvestIndicators": [
     "Heads gold-yellow with hard kernels at 14% moisture"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

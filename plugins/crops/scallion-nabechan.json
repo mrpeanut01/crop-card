@@ -26,5 +26,13 @@
   "notes": "Premium Japanese bunching onion. Sweet, tender, suited to fresh culinary markets. Plant succession every 3 weeks.",
   "harvestIndicators": [
     "10 to 14 inch tops with crisp white base"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

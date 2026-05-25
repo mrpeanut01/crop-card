@@ -26,5 +26,11 @@
   "notes": "Curly endive (Cichorium endivia). Blanch by tying outer leaves over the crown for 7 to 10 days before harvest.",
   "harvestIndicators": [
     "Curly outer leaves, blanched pale heart"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

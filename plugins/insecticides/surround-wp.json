@@ -29,5 +29,28 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "plum curculio",
+      "metric": "pct-infested-plants",
+      "threshold": 2
+    },
+    {
+      "pest": "Japanese beetle",
+      "metric": "count-per-plant",
+      "threshold": 5
+    },
+    {
+      "pest": "leafhopper (suppression)",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    },
+    {
+      "pest": "thrips (suppression)",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    }
+  ]
 }

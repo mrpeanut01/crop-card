@@ -30,5 +30,23 @@
     "western bean cutworm",
     "thrips"
   ],
-  "notes": "Corteva premix: IGR (Group 18) plus spinosyn (Group 5). Strong on Lepidoptera plus thrips."
+  "notes": "Corteva premix: IGR (Group 18) plus spinosyn (Group 5). Strong on Lepidoptera plus thrips.",
+  "scoutingThresholds": [
+    {
+      "pest": "corn earworm",
+      "metric": "count-per-trap-per-week",
+      "threshold": 10
+    },
+    {
+      "pest": "European corn borer",
+      "metric": "count-per-trap-per-week",
+      "threshold": 7
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    }
+  ]
 }

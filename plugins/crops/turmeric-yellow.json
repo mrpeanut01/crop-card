@@ -27,5 +27,13 @@
   "harvestIndicators": [
     "Foliage dies back after frost",
     "Bright orange-yellow flesh on rhizome cut"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

@@ -30,5 +30,19 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Live beneficial entomopathogenic nematode product. Refrigerate; apply at dusk on damp soil."
+  "notes": "Live beneficial entomopathogenic nematode product. Refrigerate; apply at dusk on damp soil.",
+  "scoutingThresholds": [
+    {
+      "pest": "thrips pupae",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "leafminer pupae",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    }
+  ]
 }

@@ -26,5 +26,11 @@
   "notes": "Traditional red natural dye source. Hardy to zone 5. Tap roots dug after 3 years for alizarin content. Spreads by rhizome.",
   "harvestIndicators": [
     "Roots harvested in third autumn for maximum alizarin"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 100,
+    "beeAttractive": true
+  }
 }

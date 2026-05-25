@@ -5,8 +5,19 @@
   "version": "1.0.0",
   "cropFamily": "solanaceae",
   "preHarvestIntervalDays": 1,
-  "daysToMaturity": { "min": 75, "max": 90 },
+  "daysToMaturity": {
+    "min": 75,
+    "max": 90
+  },
   "defaultRowSpacingInches": 36,
-  "harvestIndicators": ["Husk filled and starting to split", "Fruit firm"],
-  "notes": "Self-incompatible — plant ≥2 plants for pollination. Lower disease pressure than tomato; same family rotation rules apply."
+  "harvestIndicators": [
+    "Husk filled and starting to split",
+    "Fruit firm"
+  ],
+  "notes": "Self-incompatible — plant ≥2 plants for pollination. Lower disease pressure than tomato; same family rotation rules apply.",
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

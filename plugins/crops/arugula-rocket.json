@@ -4,8 +4,20 @@
   "displayName": "Arugula — Rocket (standard)",
   "version": "1.0.0",
   "cropFamily": "leafy-green",
-  "daysToMaturity": { "min": 30, "max": 45 },
+  "daysToMaturity": {
+    "min": 30,
+    "max": 45
+  },
   "defaultRowSpacingInches": 6,
-  "harvestIndicators": ["3–4 in leaves", "Pre-bolt for milder flavor"],
-  "notes": "Quick-turn green. Succession-plant every 14 d for continuous harvest."
+  "harvestIndicators": [
+    "3–4 in leaves",
+    "Pre-bolt for milder flavor"
+  ],
+  "notes": "Quick-turn green. Succession-plant every 14 d for continuous harvest.",
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

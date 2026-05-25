@@ -491,7 +491,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 ## UC-32 — Insecticide scout-and-spray
 
 - **Persona:** P1, P2
-- **Status:** Implemented at [insecticides/+page.svelte](../apps/web/src/routes/insecticides/+page.svelte) (Phase 10). Distinct from the herbicide flow (UC-02 / UC-05) so REI / PHI logic stays first-class and herbicide cross-contam queries stay fast.
+- **Status:** Implemented at [spray/insecticide/+page.svelte](../apps/web/src/routes/spray/insecticide/+page.svelte) (Phase 10; relocated from `/insecticides` in Phase 25b nav collapse — 308 redirect kept). Distinct from the herbicide flow (UC-02 / UC-05) so REI / PHI logic stays first-class and herbicide cross-contam queries stay fast.
 - **Trigger:** Pest threshold reached during scouting; calendar event "insecticide window"; or ad-hoc.
 - **Preconditions:** ≥1 block with crop; ≥1 insecticide plugin loaded; owner or helper role.
 - **Primary path:**
@@ -628,7 +628,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
   - `preventive` — emits scheduled insecticide applications from `sprayWindows[purpose='insecticide-prophylactic']`.
   - `ipm` — emits **no** insecticide applications at plan time; emits recurring scout tasks at family-typical cadence (cucurbits weekly during fruit-set, brassicas every 5d during head formation, etc.).
   - `minimal` — emits sparse scout tasks (only during high-pressure windows); no scheduled sprays.
-- **Weed strategy semantics:** mirrors pest gating against `sprayWindows[].weedStrategyGate` per the schema in [phase-21-plan.md §B](./phase-21-plan.md). `cultivate-first` emits cultivation reminder tasks instead of herbicide applications.
+- **Weed strategy semantics:** mirrors pest gating against `sprayWindows[].weedStrategyGate`. `cultivate-first` emits cultivation reminder tasks instead of herbicide applications.
 - **Fertility approach semantics:**
   - `synthetic` — picks from synthetic NPK fertilizer plugins.
   - `compost-amendments` — picks from compost / manure / amendment fertilizer plugins (filtered to organic-compatible when philosophy demands).
@@ -640,7 +640,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - **Helper visibility:** helpers see the resulting tasks on `/today` and can execute them, but cannot run the Inputs step itself. Server `requireOwner()` on `/api/plan/inputs*`.
 - **Cost guard:** routed through `aiGuard.checkGuard('inputs')`. Default quota 10 calls/day; shares the monthly USD cap with other AI tasks. Per-call cost surfaced in the wizard footer.
 - **Success:** From a committed schedule the operator gets a complete season's worth of dated, philosophy-compliant input tasks + a consolidated shopping list, in seconds. Tasks slot into Today / Calendar / Tasks views without further setup. The shopping list flags items to order before the season starts.
-- **Audit notes:** All planning logic lives in `lib/plan/inputsPlan.ts` (pure, 96-scenario test matrix per [phase-21-plan.md §C](./phase-21-plan.md#sub-task-c--deterministic-inputs-planner)). AI path is grounded — Claude only substitutes within the philosophy-allowed product set and consolidates same-day applications into tank-mix groups; cannot invent slots, change rates above ceiling, or break tank-mix compatibility. Falls back to deterministic plan on any validator failure. Safety kernel is untouched — it still gates the actual application at execution time. CLAUDE.md invariants honored: #1 (safety rules in TS, planner only proposes), #2 (plugins data-only, all gating via TS), #4 (planner cannot edit locked records), #5 (helper cannot commit), #6 (tenant isolation via existing helpers).
+- **Audit notes:** All planning logic lives in `lib/plan/inputsPlan.ts` (pure, 96-scenario test matrix). AI path is grounded — Claude only substitutes within the philosophy-allowed product set and consolidates same-day applications into tank-mix groups; cannot invent slots, change rates above ceiling, or break tank-mix compatibility. Falls back to deterministic plan on any validator failure. Safety kernel is untouched — it still gates the actual application at execution time. CLAUDE.md invariants honored: #1 (safety rules in TS, planner only proposes), #2 (plugins data-only, all gating via TS), #4 (planner cannot edit locked records), #5 (helper cannot commit), #6 (tenant isolation via existing helpers).
 
 ## UC-38 — Planting groups + companion wizard (Schedule tab v2)
 
@@ -735,7 +735,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 ## UC-42 — Season Setup ("This Planting Season" form)
 
 - **Persona:** P1
-- **Status:** Spec'd (Phase 21). First step of the Plan wizard. A short, persisted-per-year form that captures the operator's input philosophy. Without it, downstream AI input planning has no signal and falls back to conventional defaults. See [phase-21-plan.md §A](./phase-21-plan.md#sub-task-a--season-setup-foundational).
+- **Status:** Shipped (Phase 21a). First step of the Plan wizard. A short, persisted-per-year form that captures the operator's input philosophy. Without it, downstream AI input planning has no signal and falls back to conventional defaults.
 - **Trigger:** Operator opens `/plan` and either (a) hasn't set up the current planting year, or (b) explicitly clicks "Edit season" on the summary chip. Also reachable directly via `/settings/season`.
 - **Preconditions:** Owner role + `requireOwner()`. Active tenant (Phase 18a). No other preconditions — this is intentionally the entry point to the planning year.
 - **Primary path:**
@@ -765,7 +765,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 ## UC-43 — External agent orchestration via API token
 
 - **Persona:** P6 (Integrator / automation owner).
-- **Status:** Spec'd (Phase 24). The CropCard JSON API is already coherent and safety-gated server-side; this UC opens it to external Claude agents (or future SaaS integrations like FarmOS sync, accounting bridges, scouting drone uploads) via Bearer-token auth. Safety invariants stay enforced — an agent with a valid token cannot violate the 48h spray lock, helper custom-rate restriction, tenant isolation, or kernel re-evaluation on POST. See `docs/phase-24-agent-api.md`.
+- **Status:** Shipped (Phase 24). The CropCard JSON API is already coherent and safety-gated server-side; this UC opens it to external Claude agents (or future SaaS integrations like FarmOS sync, accounting bridges, scouting drone uploads) via Bearer-token auth. Safety invariants stay enforced — an agent with a valid token cannot violate the 48h spray lock, helper custom-rate restriction, tenant isolation, or kernel re-evaluation on POST.
 - **Trigger:** Owner navigates to `/settings/api-tokens` and clicks **Mint token**. Alternatively `POST /api/auth/token` directly from another cookie-authed session (e.g., a setup script).
 - **Preconditions:** Owner role + cookie session (helpers cannot mint; Bearer cannot mint another Bearer — closes the bootstrap loop on a leaked token). Active tenant.
 - **Primary path:**
@@ -819,7 +819,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 | UC-29 | Implemented | P1 | [crops/+page.svelte](../apps/web/src/routes/crops/+page.svelte) (Phase 12d) |
 | UC-30 | Implemented | P1, P2 | [equipment/+page.svelte](../apps/web/src/routes/equipment/+page.svelte) (Phase 8a) |
 | UC-31 | Implemented | P1 | [stock/+page.svelte](../apps/web/src/routes/stock/+page.svelte) (Phase 8b) |
-| UC-32 | Implemented | P1, P2 | [insecticides/+page.svelte](../apps/web/src/routes/insecticides/+page.svelte) (Phase 10) |
+| UC-32 | Implemented | P1, P2 | [spray/insecticide/+page.svelte](../apps/web/src/routes/spray/insecticide/+page.svelte) (Phase 10; relocated Phase 25b) |
 | UC-33 | Implemented | P1 | [fertility/+page.svelte](../apps/web/src/routes/fertility/+page.svelte) (Phase 10) |
 | UC-34 | Implemented | P1 | [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) |
 | UC-35 | Implemented | P1 | Per-entity deletes through each repo + `POST /api/admin/wipe` + Danger Zone UI in [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) (Phase 12e) |
@@ -827,6 +827,6 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 | UC-37 | Implemented | P1 | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 14e) — Crops tab `🤖 Suggest allocation` → [`AllocationWizard.svelte`](../apps/web/src/lib/components/AllocationWizard.svelte) → [`/api/plan/allocate`](../apps/web/src/routes/api/plan/allocate/+server.ts) backed by [`aiAllocation.ts`](../apps/web/src/lib/server/aiAllocation.ts) + [`sufficiency.ts`](../apps/web/src/lib/layout/sufficiency.ts) |
 | UC-40 | Implemented | P1, P2, P3 | [BlockSwimlane.svelte](../apps/web/src/lib/components/BlockSwimlane.svelte) (v1.3) — stage badges + harvest-target footer; backed by [`growthStageTemplates.ts`](../apps/web/src/lib/plugins/growthStageTemplates.ts) + [`stageProjection.ts`](../apps/web/src/lib/calendar/stageProjection.ts) |
 | UC-41 | Implemented | P1, P2 | Engine + catalog in [lib/planterPlate/](../apps/web/src/lib/planterPlate/); tool at [tools/planter-plate-selector/+page.svelte](../apps/web/src/routes/tools/planter-plate-selector/+page.svelte); AI auto-pick wired into [aiRefreshStock.ts](../apps/web/src/lib/server/aiRefreshStock.ts). Persists `planterPlateConfig`, `seedDimensionsMm`, `seedShape` into `stock_items.metadata_json`. Phase 21 gates the UI behind the existing `display_planter_setup` setting (off by default for new owners). |
-| UC-37d | **Spec'd** (Phase 21) | P1 | New `lib/plan/inputsPlan.ts` + `lib/server/aiInputsPlan.ts` + `/api/plan/inputs/*` + step in [AllocationWizard.svelte](../apps/web/src/lib/components/AllocationWizard.svelte). See [phase-21-plan.md](./phase-21-plan.md). |
-| UC-42 | **Spec'd** (Phase 21) | P1 | New `lib/season/setup.ts` + `SeasonSetupStep.svelte` + `SeasonSetupChip.svelte` + `/settings/season/` route. Backed by `settings` table (no migration). See [phase-21-plan.md](./phase-21-plan.md). |
-| UC-43 | **Spec'd** (Phase 24) | P6 | `api_tokens` table (migration 0029) + [apiTokens.ts](../apps/web/src/lib/server/apiTokens.ts) + Bearer middleware in [hooks.server.ts](../apps/web/src/hooks.server.ts) + `/settings/api-tokens/` route + `/api/auth/token/*` endpoints + CSRF Origin bridge + `/api/openapi.json` + per-token quota in [aiGuard.ts](../apps/web/src/lib/server/aiGuard.ts). See [phase-24-agent-api.md](./phase-24-agent-api.md). |
+| UC-37d | **Shipped** (Phase 21b) | P1 | `lib/plan/inputsPlan.ts` + `lib/server/aiInputsPlan.ts` + `/api/plan/inputs/*` + step in [AllocationWizard.svelte](../apps/web/src/lib/components/AllocationWizard.svelte). |
+| UC-42 | **Shipped** (Phase 21a) | P1 | `lib/season/setup.ts` + `SeasonSetupStep.svelte` + `SeasonSetupChip.svelte` + `/settings/season/` route. Backed by `settings` table (no migration). |
+| UC-43 | **Shipped** (Phase 24) | P6 | `api_tokens` table (migration 0029) + [apiTokens.ts](../apps/web/src/lib/server/apiTokens.ts) + Bearer middleware in [hooks.server.ts](../apps/web/src/hooks.server.ts) + `/settings/api-tokens/` route + `/api/auth/token/*` endpoints + CSRF Origin bridge + `/api/openapi.json` + per-token quota in [aiGuard.ts](../apps/web/src/lib/server/aiGuard.ts). |

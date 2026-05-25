@@ -32,5 +32,31 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Novozymes (now Pro-Farm) entomopathogenic fungus. Strong on thrips and soil-dwelling pests."
+  "notes": "Novozymes (now Pro-Farm) entomopathogenic fungus. Strong on thrips and soil-dwelling pests.",
+  "scoutingThresholds": [
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "flea beetle",
+      "metric": "pct-defoliation",
+      "threshold": 20,
+      "warnAt": 10
+    }
+  ]
 }

@@ -26,5 +26,11 @@
   "notes": "Hardy perennial European salad herb. Cool-season harvest of tender young leaves with cucumber notes.",
   "harvestIndicators": [
     "Fern-like leaves with mild cucumber flavor"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

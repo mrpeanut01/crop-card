@@ -26,5 +26,11 @@
   "notes": "Hardy perennial cooking green. Bright lemon-tart flavor classic in sorrel soup. Hardy to zone 3.",
   "harvestIndicators": [
     "Spear-shaped leaves 6 to 10 inches, tart lemon flavor"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

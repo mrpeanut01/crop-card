@@ -26,5 +26,13 @@
   "notes": "Day-neutral (intermediate-day) sweet hybrid suited to a wide latitude range. Mild Vidalia-style flavor.",
   "harvestIndicators": [
     "Tops fall over and yellow, bulb fully sized"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,11 @@
   "notes": "Patented one-cut head lettuce series from Johnnys. Multiple types sized for retail clamshell. Strong market grower seller.",
   "harvestIndicators": [
     "Full rosette head, leaves separate uniformly with one cut at base"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

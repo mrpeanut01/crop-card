@@ -1,7 +1,7 @@
 {
   "pluginId": "blackberry-triple-crown",
   "type": "crop",
-  "displayName": "Blackberry \u2014 Triple Crown (thornless)",
+  "displayName": "Blackberry — Triple Crown (thornless)",
   "version": "1.0.0",
   "cropFamily": "bramble",
   "defaultRowSpacingInches": 96,
@@ -38,5 +38,13 @@
     "Fully black, slightly soft",
     "Easy pull"
   ],
-  "notes": "Thornless semi-erect blackberry. Hardy to -10 \u00b0F; trellis at 4 ft + 6 ft wires."
+  "notes": "Thornless semi-erect blackberry. Hardy to -10 °F; trellis at 4 ft + 6 ft wires.",
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": true
+  }
 }

@@ -32,6 +32,11 @@
     onCommit: (accepted: {
       applications: InputsPlanApplication[];
       scoutTasks: InputsPlanScoutTask[];
+      /** Phase 25d (#89) — true when the served plan came from the AI
+       *  layer (no fallback). Forwarded to the inputs-commit endpoint
+       *  so the `plan_revisions` row gets `source: 'ai-refinement'`
+       *  vs `'wizard'` for the ProvenancePanel. */
+      aiRefined: boolean;
     }) => void | Promise<void>;
     onBack: () => void;
   }
@@ -148,7 +153,8 @@
     try {
       await onCommit({
         applications: plan.applications.filter((a) => !rejectedAppIds.has(a.id)),
-        scoutTasks: plan.scoutTasks.filter((s) => !rejectedScoutIds.has(s.id))
+        scoutTasks: plan.scoutTasks.filter((s) => !rejectedScoutIds.has(s.id)),
+        aiRefined: planMeta != null && !planMeta.fallback
       });
     } catch (e) {
       commitError = e instanceof Error ? e.message : String(e);

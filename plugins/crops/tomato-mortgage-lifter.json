@@ -26,5 +26,10 @@
   "notes": "Indeterminate West Virginia heirloom developed by M.C. Byles in the 1930s. 1 to 2 lb pink beefsteak fruit, mild and meaty. Strong farmstand seller.",
   "harvestIndicators": [
     "Deep pink-red, soft to firm-light pressure"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,11 @@
   "notes": "Linum usitatissimum, golden seed type for omega-3 milling. NDSU Omega release. Plant 40 to 50 lb per acre.",
   "harvestIndicators": [
     "Bolls brown, seed rattles inside, stems still green at swathing"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 100,
+    "beeAttractive": true
+  }
 }

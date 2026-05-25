@@ -33,5 +33,37 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "BioSafe Systems neem-derived insect growth regulator. Disrupts molting, repels feeding, suppresses oviposition."
+  "notes": "BioSafe Systems neem-derived insect growth regulator. Disrupts molting, repels feeding, suppresses oviposition.",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "leafminer",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    },
+    {
+      "pest": "Colorado potato beetle",
+      "metric": "count-per-plant",
+      "threshold": 2,
+      "warnAt": 1
+    }
+  ]
 }

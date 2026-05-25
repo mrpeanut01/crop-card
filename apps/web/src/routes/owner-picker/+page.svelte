@@ -40,7 +40,7 @@
     margin-top: 0;
   }
   .hint {
-    color: var(--fg-muted, #555);
+    color: var(--color-ink-muted);
     margin-bottom: 1.5rem;
   }
   .choices {
@@ -57,22 +57,23 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    background: var(--bg-card, white);
-    border: 1px solid var(--divider, #ccc);
-    border-radius: 0.5rem;
+    background: var(--color-paper);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card, 8px);
     font: inherit;
     color: inherit;
     cursor: pointer;
     min-height: 56px;
   }
   .choice:hover {
-    border-color: var(--accent, #1f5e3a);
+    border-color: var(--color-forest-deep);
   }
   .name {
     font-weight: 600;
+    color: var(--color-ink);
   }
   .role {
-    color: var(--fg-muted, #555);
+    color: var(--color-ink-muted);
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;

@@ -4,8 +4,19 @@
   "displayName": "Collards — Georgia Southern",
   "version": "1.0.0",
   "cropFamily": "brassica",
-  "daysToMaturity": { "min": 60, "max": 80 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 80
+  },
   "defaultRowSpacingInches": 24,
-  "harvestIndicators": ["Outer leaves 10 in"],
-  "notes": "Heat- and cold-tolerant Southern staple. Continuous harvest spring → fall."
+  "harvestIndicators": [
+    "Outer leaves 10 in"
+  ],
+  "notes": "Heat- and cold-tolerant Southern staple. Continuous harvest spring → fall.",
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

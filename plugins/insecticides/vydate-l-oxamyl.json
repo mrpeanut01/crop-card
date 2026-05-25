@@ -26,5 +26,25 @@
     "thrips",
     "leafminer"
   ],
-  "notes": "Corteva carbamate (IRAC 1A) systemic insecticide and nematicide. Restricted Use Pesticide."
+  "notes": "Corteva carbamate (IRAC 1A) systemic insecticide and nematicide. Restricted Use Pesticide.",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "leafminer",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    }
+  ]
 }

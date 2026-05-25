@@ -26,5 +26,13 @@
   "notes": "English green gooseberry. Strong mildew resistance. Heavy yields. Spines on stems; use gloves for hand harvest.",
   "harvestIndicators": [
     "Pale green firm berries, slight give for fresh eating"
-  ]
+  ],
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

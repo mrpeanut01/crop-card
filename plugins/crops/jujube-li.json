@@ -26,5 +26,13 @@
   "notes": "Ziziphus jujuba. Large-fruited Chinese cultivar. Self-fertile but yields better with cross-pollinator (Lang). Drought-tolerant, hardy zones 6 to 9.",
   "harvestIndicators": [
     "Red-brown skin, crisp apple-like texture for fresh eating"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

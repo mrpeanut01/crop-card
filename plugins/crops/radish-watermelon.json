@@ -26,5 +26,11 @@
   "notes": "Chinese heirloom storage radish. Plant in late summer for fall harvest, color sets best in cool weather.",
   "harvestIndicators": [
     "3 to 4 inch round root, green shoulders with pink-magenta interior"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

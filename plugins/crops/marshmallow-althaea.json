@@ -27,5 +27,11 @@
   "harvestIndicators": [
     "Roots dug second-year fall",
     "Leaves harvested in summer"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 100,
+    "beeAttractive": true
+  }
 }

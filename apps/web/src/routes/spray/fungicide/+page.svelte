@@ -2,8 +2,16 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
+  import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   let { data } = $props();
+
+  // v2 addendum (#89): sourced from `user.ai_enabled` via
+  // getUserAiEnabled() in the loader. $derived so the variant
+  // re-paints on loader re-run.
+  const aiEnabled = $derived(data.aiEnabled);
 
   let selectedBlockId = $state<string>(
     untrack(() => data.preselect.blockId ?? data.blocks[0]?.id ?? '')
@@ -133,39 +141,26 @@
   }
 </script>
 
-<h1>Fungicide application</h1>
-<p class="lede">
-  Records an immutable fungicide event with REI / PHI lockouts. FRAC code rotation hints help
-  prevent resistance — avoid two consecutive sprays sharing the same code on the same block.
-</p>
-
-{#if data.activeREI.length > 0}
-  <section class="card warn" role="status">
-    <h2>Active fungicide re-entry intervals</h2>
-    <ul>
-      {#each data.activeREI as e (e.id)}
-        <li>
-          <strong>Block {e.blockId}</strong> — re-entry clear {new Date(
-            e.reEntryClearAt ?? 0
-          ).toLocaleString()}
-        </li>
-      {/each}
-    </ul>
-  </section>
-{/if}
-
-<form onsubmit={recordSpray}>
-  <section class="card">
-    <h2>1 · Block + product</h2>
-
-    <label for="block-select">Block</label>
-    <select id="block-select" bind:value={selectedBlockId} required>
-      <option value="">— pick a block —</option>
-      {#each data.blocks as b (b.id)}
-        <option value={b.id}>{b.name}{b.acres ? ` · ${b.acres.toFixed(2)} acres` : ''}</option>
-      {/each}
-    </select>
-
+<SprayDecisionPage
+  chemistry="fungicide"
+  blocks={data.blocks}
+  activeREI={data.activeREI}
+  bind:blockId={selectedBlockId}
+  bind:windMph
+  bind:tempF
+  bind:rainPct
+  bind:tankSize
+  {busy}
+  {result}
+  {error}
+  {violations}
+  {warnings}
+  {aiEnabled}
+  canSubmit={!!selectedBlockId && selectedPluginIds.length > 0}
+  submitLabel="Record fungicide application"
+  onSubmit={recordSpray}
+>
+  {#snippet productSection()}
     {#if data.fungicides.length === 0}
       <p class="empty">
         No fungicide plugins installed. Add JSON files under <code>plugins/fungicides/</code>.
@@ -204,10 +199,9 @@
         </p>
       {/if}
     {/if}
-  </section>
+  {/snippet}
 
-  <section class="card">
-    <h2>2 · Disease observation (optional)</h2>
+  {#snippet observation()}
     <label for="disease-name">Disease</label>
     <input id="disease-name" type="text" bind:value={diseaseName} placeholder="e.g. early blight" />
     <label for="disease-metric">Metric</label>
@@ -218,101 +212,63 @@
     </select>
     <label for="disease-value">Value</label>
     <input id="disease-value" type="number" min="0" step="any" bind:value={diseaseValue} />
-  </section>
+  {/snippet}
 
-  <section class="card">
-    <h2>3 · Conditions</h2>
-    <label for="wind">Wind (mph)</label>
-    <input id="wind" type="number" min="0" step="0.5" bind:value={windMph} required />
+  <!-- ─── v2 addendum (#90) ────────────────────────────────────────── -->
 
-    <label for="temp">Temperature (°F)</label>
-    <input id="temp" type="number" step="0.5" bind:value={tempF} required />
+  {#snippet legendStrip()}
+    <ProvenanceLegend
+      shown={aiEnabled
+        ? ['plugin', 'data', 'ai', 'manual']
+        : ['plugin', 'data', 'fallback', 'manual']}
+      note={aiEnabled
+        ? 'FRAC groups + rates pre-populated · all editable'
+        : 'AI off · FRAC groups from plugins · all editable'}
+    />
+  {/snippet}
 
-    <label for="rain">Rain forecast next 24h (%)</label>
-    <input id="rain" type="number" min="0" max="100" step="1" bind:value={rainPct} required />
-
-    <label for="tank">Tank size (gal, optional — enables stock decrement)</label>
-    <input id="tank" type="number" min="0" step="0.5" bind:value={tankSize} />
-  </section>
-
-  <section class="card actions">
-    <button type="submit" disabled={busy || selectedPluginIds.length === 0 || !selectedBlockId}>
-      {busy ? 'Recording…' : 'Record fungicide application'}
-    </button>
-  </section>
-</form>
-
-{#if result}
-  <section class="card ok" role="status">{result}</section>
-{/if}
-{#if error}
-  <section class="card err" role="alert">
-    <strong>Error:</strong>
-    {error}
-    {#if violations.length > 0}
-      <ul>
-        {#each violations as v (v.code)}
-          <li><code>{v.code}</code> — {v.message}</li>
-        {/each}
-      </ul>
+  {#snippet tankMixProvenance()}
+    <!-- FRAC groups come from plugin JSON (activeIngredients[].fracCode) —
+         always a `plugin` badge. If the operator added a second product
+         the AI tier could propose a rotation-safe pairing; until #89
+         lands that, the second-product badge defaults to fallback. -->
+    {#if selectedFungicides.length > 0}
+      <Provenance source="plugin" detail="FRAC kernel" compact />
+      {#if selectedFungicides.length > 1}
+        {#if aiEnabled}
+          <Provenance source="ai" confidence={0.84} compact />
+        {:else}
+          <Provenance source="fallback" detail="deterministic rotation hint" compact />
+        {/if}
+      {/if}
     {/if}
-  </section>
-{/if}
-{#if warnings.length > 0}
-  <section class="card warn">
-    <strong>Warnings:</strong>
-    <ul>
-      {#each warnings as w, i (i)}
-        <li>{w}</li>
-      {/each}
-    </ul>
-  </section>
-{/if}
+  {/snippet}
 
-{#if data.recentEvents.length > 0}
-  <section class="card">
-    <h2>Recent fungicide events</h2>
-    <ul class="recent">
-      {#each data.recentEvents as e (e.id)}
-        <li>
-          <strong>{new Date(e.occurredAt).toLocaleString()}</strong> — block {e.blockId}
-          · {e.products.map((p) => p.displayName).join(', ')}
-          {#if e.preHarvestClearAt}
-            <span class="phi">· PHI clear {new Date(e.preHarvestClearAt).toLocaleString()}</span>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  </section>
-{/if}
+  {#snippet recentEvents()}
+    {#if data.recentEvents.length > 0}
+      <section class="card recent">
+        <h2>Recent fungicide events</h2>
+        <ul class="recent-list">
+          {#each data.recentEvents as e (e.id)}
+            <li>
+              <strong>{new Date(e.occurredAt).toLocaleString()}</strong> — block {e.blockId}
+              · {e.products.map((p) => p.displayName).join(', ')}
+              {#if e.preHarvestClearAt}
+                <span class="phi">· PHI clear {new Date(e.preHarvestClearAt).toLocaleString()}</span
+                >
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+  {/snippet}
+</SprayDecisionPage>
 
 <style>
-  h1 {
-    margin: 0 0 0.5rem;
-  }
-  .lede {
-    color: #555;
-    margin: 0 0 1.5rem;
-  }
-  .card {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    margin: 0 0 1rem;
-  }
-  .card.warn {
-    background: #fff8e1;
-    border-color: #f1c40f;
-  }
-  .card.err {
-    background: #fdecea;
-    border-color: #b71c1c;
-  }
-  .card.ok {
-    background: #e8f5e9;
-    border-color: #2e7d32;
-  }
+  /* Snippet-scoped styles for productSection / observation form controls
+     and the recent-events list. The shell can't reach into snippet
+     content (scoped to this component), so re-declare what's needed. */
   label {
     display: block;
     margin: 0.75rem 0 0.25rem;
@@ -324,27 +280,9 @@
     padding: 0.6rem;
     font-size: 1rem;
     min-height: 48px;
-    border: 1px solid #aaa;
-    border-radius: 6px;
-    background: #fff;
-  }
-  button {
-    min-height: 48px;
-    padding: 0 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    background: #1565c0;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  .actions {
-    text-align: right;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    background: var(--color-paper, #fff);
   }
   .product-grid {
     border: none;
@@ -360,7 +298,7 @@
     gap: 0.75rem;
     margin: 0.5rem 0;
     padding: 0.5rem;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-divider-soft);
     border-radius: 6px;
   }
   .frac-items {
@@ -385,35 +323,45 @@
     margin: 0;
   }
   .prod-meta {
-    color: #666;
+    color: var(--color-ink-muted);
     font-size: 0.85rem;
     margin-left: auto;
   }
   .warn-inline {
     margin: 0.75rem 0 0;
     padding: 0.6rem;
-    background: #fff8e1;
-    border-left: 4px solid #f1c40f;
+    background: var(--pill-wheat-bg);
+    border-left: 4px solid var(--color-wheat);
     border-radius: 4px;
   }
   .empty {
-    color: #777;
+    color: var(--color-ink-muted);
     font-style: italic;
   }
-  .recent {
+  .card {
+    background: var(--color-paper, #fff);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card, 8px);
+    padding: 1rem 1.25rem;
+    margin: 0 0 1rem;
+  }
+  .recent h2 {
+    margin: 0 0 0.5rem;
+  }
+  .recent-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-  .recent li {
+  .recent-list li {
     padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-divider-soft);
   }
-  .recent li:last-child {
+  .recent-list li:last-child {
     border-bottom: none;
   }
   .phi {
-    color: #b71c1c;
+    color: var(--color-rust);
     margin-left: 0.5rem;
   }
 </style>

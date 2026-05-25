@@ -26,5 +26,13 @@
   "notes": "Quick-cycle warm-season grain. Strong fit as summer catch crop or emergency forage. Birds favor the seed; net at maturity.",
   "harvestIndicators": [
     "Heads tan-gold, seeds shed when rubbed"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,13 @@
   "notes": "Wheat-rye hybrid (xTriticosecale). Drill 80 to 100 lb per acre. Dual-purpose for forage and grain.",
   "harvestIndicators": [
     "Heads tan, kernels at 14% moisture for grain harvest"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

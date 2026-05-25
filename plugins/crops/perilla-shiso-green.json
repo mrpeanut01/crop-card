@@ -26,5 +26,11 @@
   "notes": "Perilla frutescens. Japanese culinary herb (ohba). Cinnamon-mint flavor. Self-seeds aggressively. High-margin restaurant herb.",
   "harvestIndicators": [
     "Heart-shaped serrated leaves at 3 to 4 inches"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

@@ -1,7 +1,7 @@
 {
   "pluginId": "raspberry-heritage",
   "type": "crop",
-  "displayName": "Raspberry \u2014 Heritage (red, primocane-fruiting)",
+  "displayName": "Raspberry — Heritage (red, primocane-fruiting)",
   "version": "1.0.0",
   "cropFamily": "bramble",
   "preHarvestIntervalDays": 1,
@@ -22,7 +22,7 @@
       "dayOfYear": 195,
       "windowDays": 90,
       "title": "SWD trap + spray decision",
-      "body": "Spotted-wing drosophila is the dominant ripe-fruit pest. Pyrethroids on 5\u20137 d intervals during ripening.",
+      "body": "Spotted-wing drosophila is the dominant ripe-fruit pest. Pyrethroids on 5–7 d intervals during ripening.",
       "category": "scout"
     },
     {
@@ -31,7 +31,7 @@
       "dayOfYear": 225,
       "windowDays": 60,
       "title": "Fall raspberry harvest",
-      "body": "Pick every 2\u20133 d. Cool berries to 32\u201334 \u00b0F within 1 h.",
+      "body": "Pick every 2–3 d. Cool berries to 32–34 °F within 1 h.",
       "category": "harvest"
     }
   ],
@@ -39,5 +39,13 @@
     "Berry pulls free easily",
     "Bright uniform red"
   ],
-  "notes": "Fall-bearing red raspberry. Primocane mow-down management \u2014 single 1.5 mo harvest, no summer crop."
+  "notes": "Fall-bearing red raspberry. Primocane mow-down management — single 1.5 mo harvest, no summer crop.",
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": true
+  }
 }

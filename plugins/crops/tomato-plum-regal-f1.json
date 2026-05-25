@@ -26,5 +26,10 @@
   "notes": "Determinate processing paste with intermediate late blight resistance. NCSU release. Concentrated set, strong for canning operations.",
   "harvestIndicators": [
     "4 oz plum-shaped fruit, full red, dry feel"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,11 @@
   "notes": "Open-pollinated Siberian heirloom. Tender flat leaves, sweetens after frost. Cut-and-come-again over a long season.",
   "harvestIndicators": [
     "Flat oak-shaped leaves with purple veins, snap cleanly at petiole"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,13 @@
   "notes": "Improved goji cultivar with larger sweeter fruit than common seedlings. Hardy to zone 4. Self-fertile. Long bearing season July to frost.",
   "harvestIndicators": [
     "Bright red elongated fruit, full color and firm to pressure"
-  ]
+  ],
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

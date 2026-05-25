@@ -26,5 +26,13 @@
   "notes": "Helianthus tuberosus, North American native tuber. Early-maturing Stampede cultivar suited to short-season growers. Spreads aggressively.",
   "harvestIndicators": [
     "Tubers harvested after fall frost kills tops"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

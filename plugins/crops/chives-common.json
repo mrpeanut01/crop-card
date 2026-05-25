@@ -4,8 +4,20 @@
   "displayName": "Chives — Common",
   "version": "1.0.0",
   "cropFamily": "herb-culinary",
-  "daysToMaturity": { "min": 60, "max": 90 },
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
   "defaultRowSpacingInches": 12,
-  "harvestIndicators": ["Cut at 6 in", "Multiple cuts per season"],
-  "notes": "Hardy perennial. Edible flowers — cut before bloom to keep tender."
+  "harvestIndicators": [
+    "Cut at 6 in",
+    "Multiple cuts per season"
+  ],
+  "notes": "Hardy perennial. Edible flowers — cut before bloom to keep tender.",
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

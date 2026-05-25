@@ -26,5 +26,13 @@
   "notes": "Early-maturing orange-flesh sweet potato suited to northern growers. Plant from slips after soil reaches 65 F. Cure 7 to 10 days at 80 to 85 F.",
   "harvestIndicators": [
     "Vines yellow at frost, roots fully colored under hill"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

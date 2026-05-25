@@ -26,5 +26,11 @@
   "notes": "Italian flat-pod (romano) bush bean. Bean Common Mosaic resistance. Strong farmstand seller.",
   "harvestIndicators": [
     "Flat 5 inch romano pod, tender snap"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

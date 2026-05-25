@@ -26,5 +26,10 @@
   "notes": "Determinate-vigorous hybrid. 1984 AAS winner. VFFNT resistance plus tobacco mosaic virus tolerance. 8 to 10 oz globe fruit. Reliable across regions.",
   "harvestIndicators": [
     "Full red color across crown, firm to thumb pressure"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

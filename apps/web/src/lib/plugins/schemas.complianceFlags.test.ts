@@ -63,6 +63,8 @@ const BASE_CROP = {
   displayName: 'Test Crop',
   version: '1',
   cropFamily: 'leafy-green' as const,
+  harvestStyle: 'cut-and-come-again' as const,
+  bloomWindow: { daysFromPlantingMin: 60, daysFromPlantingMax: 90, beeAttractive: false } as const,
   daysToMaturity: { min: 30, max: 45 }
 };
 

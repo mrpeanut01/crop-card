@@ -26,5 +26,13 @@
   "notes": "Saskatchewan-bred Saskatoon serviceberry. Blueberry-like flavor with almond note from the seed. Cold-hardy to zone 2. Self-fertile.",
   "harvestIndicators": [
     "Dark purple-blue fruit, easy release from cluster"
-  ]
+  ],
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

@@ -26,5 +26,10 @@
   "notes": "Open-pollinated purple bell pepper. Ripens to red if left on plant. Tobacco mosaic virus resistance.",
   "harvestIndicators": [
     "Glossy deep purple bell shape, thick walls"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

@@ -4,8 +4,20 @@
   "displayName": "Southern Pea — Pinkeye Purple Hull",
   "version": "1.0.0",
   "cropFamily": "legume",
-  "daysToMaturity": { "min": 65, "max": 75 },
+  "daysToMaturity": {
+    "min": 65,
+    "max": 75
+  },
   "defaultRowSpacingInches": 30,
-  "harvestIndicators": ["Pods turn purple", "Peas firm but not dry"],
-  "notes": "Cowpea — heat-tolerant, drought-tolerant. Excellent N-fixer; doubles as a summer cover crop after harvest."
+  "harvestIndicators": [
+    "Pods turn purple",
+    "Peas firm but not dry"
+  ],
+  "notes": "Cowpea — heat-tolerant, drought-tolerant. Excellent N-fixer; doubles as a summer cover crop after harvest.",
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

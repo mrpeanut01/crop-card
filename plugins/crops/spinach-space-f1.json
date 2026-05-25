@@ -26,5 +26,11 @@
   "notes": "Slow-bolting hybrid baby-leaf spinach with downy mildew resistance (Pfs 1 to 12). Wide adaptation.",
   "harvestIndicators": [
     "Semi-savoyed leaves 4 to 6 inches"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

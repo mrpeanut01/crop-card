@@ -26,5 +26,13 @@
   "notes": "Smooth-rooted celeriac hybrid. Slow to start; transplant after frost. Side-dress nitrogen mid-season. Excellent winter storage.",
   "harvestIndicators": [
     "3 to 4 inch knobbly root, dense and creamy white interior"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

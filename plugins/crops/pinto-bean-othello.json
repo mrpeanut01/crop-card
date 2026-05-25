@@ -26,5 +26,11 @@
   "notes": "Upright bush dry pinto. Standard commercial variety from USDA-ARS Prosser program. BCMV resistance.",
   "harvestIndicators": [
     "Pods dry and rattle; bean inside hard"
-  ]
+  ],
+  "harvestStyle": "dry-seed-legume",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

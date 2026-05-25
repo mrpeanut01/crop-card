@@ -26,5 +26,13 @@
   "notes": "Burgundy thin-skinned red wine grape. Cool-climate variety. Highly disease-prone in humid summers; demanding canopy management.",
   "harvestIndicators": [
     "Brix at 23 to 25, fully colored loose-cluster berries"
-  ]
+  ],
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

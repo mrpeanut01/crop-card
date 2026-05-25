@@ -26,5 +26,13 @@
   "notes": "Self-fertile Japanese plum (Prunus salicina). Early bloom, productive in mild winters. Strong choice for southern and mid-Atlantic growers.",
   "harvestIndicators": [
     "Reddish-purple skin, sweet red-fleshed interior, soft at full ripe"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      3,
+      4
+    ],
+    "beeAttractive": true
+  }
 }

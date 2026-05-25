@@ -225,6 +225,34 @@
       "when": 1779993600000,
       "tag": "0031_phase8a_spray_events_sprayer_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1779994800000,
+      "tag": "0032_phase25d_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1779995700000,
+      "tag": "0033_phase25d_scout_observations",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1779996600000,
+      "tag": "0034_phase25d_plan_revisions",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1779997500000,
+      "tag": "0035_phase25d_wizard_chat",
+      "breakpoints": true
     }
   ]
 }

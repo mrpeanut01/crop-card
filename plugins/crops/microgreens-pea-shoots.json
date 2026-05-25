@@ -26,5 +26,11 @@
   "notes": "Speckled or Austrian field pea sown densely on a tray. Pre-soak 8 to 12 hours. Cut shoots at 4 to 6 inches with one true leaf and tendrils.",
   "harvestIndicators": [
     "Tendrils forming on 4 to 6 inch shoots"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 35,
+    "daysFromPlantingMax": 70,
+    "beeAttractive": true
+  }
 }

@@ -149,6 +149,19 @@
   });
 </script>
 
+<!--
+  Phase 25c (#88) — soft-redirect banner. /equipment kept at its URL
+  (the form here is still the canonical CRUD surface), but the new
+  Settings IA surfaces sprayer-specific summary + decon status at
+  /settings/sprayers. Banner lets the operator discover the new
+  Settings landing without breaking bookmarks.
+-->
+<p class="redirect-banner">
+  Looking for sprayer calibration + decon status?
+  <a href="/settings/sprayers">→ /settings/sprayers</a>
+  is the new Settings landing. This page stays for CRUD across all equipment types.
+</p>
+
 <h1>Equipment</h1>
 <p class="lede">
   Field gear: planters, drills, rakes, balers, sprayers, tractors, mowers, irrigation. Sprayer-typed
@@ -264,13 +277,31 @@
   h1 {
     margin: 0 0 0.25rem;
   }
+  .redirect-banner {
+    padding: 10px 14px;
+    background: var(--color-cream);
+    border-left: 3px solid var(--color-forest-deep);
+    border-radius: 4px;
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: var(--color-ink);
+    line-height: 1.45;
+  }
+  .redirect-banner a {
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .redirect-banner a:hover {
+    text-decoration: underline;
+  }
   .lede {
-    color: #555;
+    color: var(--color-ink-muted);
     margin: 0 0 1.5rem;
   }
   .card {
-    background: white;
-    border-radius: 8px;
+    background: var(--color-paper);
+    border-radius: var(--radius-card, 8px);
     padding: 1rem 1.25rem;
     margin-bottom: 1rem;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -278,7 +309,7 @@
   .card h2 {
     margin: 0 0 0.75rem;
     font-size: 1rem;
-    color: #1f5e3a;
+    color: var(--color-forest-deep);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -288,26 +319,27 @@
     flex-wrap: wrap;
   }
   .chip {
-    background: white;
-    border: 2px solid #d0d7d0;
+    background: var(--color-paper);
+    border: 2px solid var(--color-divider);
     padding: 0.4rem 0.75rem;
-    border-radius: 4px;
+    border-radius: var(--radius-input, 6px);
     cursor: pointer;
     text-transform: capitalize;
     font: inherit;
     min-height: 40px;
+    color: var(--color-ink);
   }
   .chip.active {
-    background: #1f5e3a;
-    color: white;
-    border-color: #1f5e3a;
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
+    border-color: var(--color-forest-deep);
   }
   .role-notice {
-    border-left: 4px solid #b35900;
-    background: #fff8ec;
+    border-left: 4px solid var(--color-wheat, #d4a75c);
+    background: rgba(212, 167, 92, 0.12);
   }
   .role-notice h2 {
-    color: #b35900;
+    color: var(--color-wheat, #d4a75c);
   }
   .row {
     display: flex;
@@ -316,39 +348,41 @@
   }
   .hint-new-type {
     font-size: 0.82rem;
-    color: #2563eb;
+    color: var(--color-ink-soft);
     margin: 0.4rem 0 0;
     font-style: italic;
   }
   .row input {
     flex: 1 1 120px;
     padding: 0.6rem;
-    border: 2px solid #d0d7d0;
-    border-radius: 4px;
+    border: 2px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
     font-size: 1rem;
     min-height: 48px;
+    background: var(--color-paper);
+    color: var(--color-ink);
   }
   .primary {
-    background: #1f5e3a;
-    color: white;
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-input, 6px);
     padding: 0.75rem 1.25rem;
     font-weight: 600;
     cursor: pointer;
     min-height: 48px;
   }
   .primary:disabled {
-    background: #999;
+    background: var(--color-ink-muted);
     cursor: not-allowed;
   }
   .error {
-    color: #b00020;
+    color: var(--color-rust, #ba4b38);
   }
   .empty {
     text-align: center;
     padding: 2rem;
-    color: #555;
+    color: var(--color-ink-muted);
   }
   .equipment-list {
     list-style: none;
@@ -363,7 +397,7 @@
     margin-bottom: 0.5rem;
   }
   .item header a {
-    color: #1f5e3a;
+    color: var(--color-forest-deep);
     text-decoration: none;
     font-weight: 700;
     font-size: 1.1rem;
@@ -372,8 +406,8 @@
     text-decoration: underline;
   }
   .type-badge {
-    background: #e7f1ea;
-    color: #1f5e3a;
+    background: rgba(44, 82, 55, 0.1);
+    color: var(--color-forest-deep);
     padding: 0.1rem 0.5rem;
     border-radius: 3px;
     font-size: 0.75rem;
@@ -381,25 +415,25 @@
     text-transform: uppercase;
   }
   .retired {
-    color: #888;
+    color: var(--color-ink-muted);
     font-style: italic;
     font-size: 0.85rem;
   }
   .delete-btn {
     margin-left: auto;
     background: transparent;
-    border: 1px solid #d0d7d0;
-    color: #b00020;
+    border: 1px solid var(--color-divider);
+    color: var(--color-rust, #ba4b38);
     padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    border-radius: var(--radius-input, 6px);
     cursor: pointer;
     font-size: 0.9rem;
     min-height: 32px;
     min-width: 36px;
   }
   .delete-btn:hover {
-    background: #fce4e4;
-    border-color: #b00020;
+    background: rgba(186, 75, 56, 0.08);
+    border-color: var(--color-rust, #ba4b38);
   }
   dl {
     display: grid;
@@ -409,35 +443,36 @@
     font-size: 0.9rem;
   }
   dt {
-    color: #666;
+    color: var(--color-ink-muted);
   }
   dd {
     margin: 0;
+    color: var(--color-ink);
   }
   .warn {
-    background: #fff3cd;
-    color: #b35900;
+    background: rgba(212, 167, 92, 0.18);
+    color: var(--color-ink);
     padding: 0.05rem 0.4rem;
     border-radius: 3px;
     font-weight: 600;
     font-size: 0.85rem;
   }
   .ok {
-    background: #e7f1ea;
-    color: #1f5e3a;
+    background: rgba(44, 82, 55, 0.1);
+    color: var(--color-forest-deep);
     padding: 0.05rem 0.4rem;
     border-radius: 3px;
     font-weight: 600;
     font-size: 0.85rem;
   }
   .link {
-    color: #b00020;
+    color: var(--color-rust, #ba4b38);
     text-decoration: none;
     font-weight: 600;
     margin-left: 0.5rem;
   }
   .notes {
-    color: #555;
+    color: var(--color-ink-muted);
     font-size: 0.9rem;
     margin: 0.5rem 0 0;
   }

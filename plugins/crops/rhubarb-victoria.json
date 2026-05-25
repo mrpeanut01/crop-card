@@ -26,5 +26,13 @@
   "notes": "Heritage rhubarb dating to 1837. Mostly green stalks with red blush at base. Hardy to zone 3. Do not harvest in establishment year.",
   "harvestIndicators": [
     "Stalks 12 to 18 inches, twist and pull from the crown"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

@@ -26,5 +26,11 @@
   "notes": "Compact mini-romaine. Single-serving size that markets well in CSA shares and restaurant accounts.",
   "harvestIndicators": [
     "Dense 5 to 6 inch romaine head, firm to the touch"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

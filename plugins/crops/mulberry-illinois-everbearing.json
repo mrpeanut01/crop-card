@@ -26,5 +26,13 @@
   "notes": "Morus alba x rubra hybrid. Self-fertile. Bears over 6 to 8 weeks. Cold-hardy to zone 4. Fruit stains; plant away from sidewalks.",
   "harvestIndicators": [
     "Deep purple-black fruit drops easily when ripe; harvest by shaking onto tarp"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

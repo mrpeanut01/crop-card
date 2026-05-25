@@ -29,5 +29,25 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Multi-use elemental sulfur. Strong miticide and powdery mildew suppressant. Do not apply within 14 days of oil sprays or above 90 F."
+  "notes": "Multi-use elemental sulfur. Strong miticide and powdery mildew suppressant. Do not apply within 14 days of oil sprays or above 90 F.",
+  "scoutingThresholds": [
+    {
+      "pest": "spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "rust mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "broad mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    }
+  ]
 }

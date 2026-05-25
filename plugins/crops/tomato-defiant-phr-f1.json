@@ -26,5 +26,10 @@
   "notes": "Determinate hybrid with intermediate late blight resistance (Ph2/Ph3 genes) and Verticillium/Fusarium 1, 2. NCSU bred.",
   "harvestIndicators": [
     "Deep red 8 oz globe fruit, smooth shoulders"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

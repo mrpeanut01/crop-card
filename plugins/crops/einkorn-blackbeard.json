@@ -26,5 +26,13 @@
   "notes": "Triticum monococcum, the oldest cultivated wheat. Hulled grain. Higher protein than modern wheats.",
   "harvestIndicators": [
     "Black-bearded heads turning tan, kernels hard"
-  ]
+  ],
+  "harvestStyle": "single-cut-grain",
+  "bloomWindow": {
+    "monthsOfYear": [
+      5,
+      6
+    ],
+    "beeAttractive": false
+  }
 }

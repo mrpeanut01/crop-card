@@ -1,13 +1,13 @@
 {
   "pluginId": "pear-bartlett",
   "type": "crop",
-  "displayName": "Pear \u2014 Bartlett (European)",
+  "displayName": "Pear — Bartlett (European)",
   "version": "1.0.0",
   "cropFamily": "orchard",
   "preHarvestIntervalDays": 14,
   "defaultRowSpacingInches": 240,
   "postHarvestCuring": {
-    "method": "Pick green; ripen 5\u20137 d at 65\u201370 \u00b0F or store 30\u201332 \u00b0F",
+    "method": "Pick green; ripen 5–7 d at 65–70 °F or store 30–32 °F",
     "durationWeeks": {
       "min": 1,
       "max": 8
@@ -29,7 +29,7 @@
       "kind": "spray",
       "dayOfYear": 110,
       "windowDays": 10,
-      "title": "Bloom \u2014 Streptomycin/Apogee fire-blight gate",
+      "title": "Bloom — Streptomycin/Apogee fire-blight gate",
       "body": "MaryBlyt or Cougar Blight model triggers; never apply broad-spectrum insecticide during open bloom.",
       "category": "spray"
     },
@@ -53,9 +53,17 @@
     }
   ],
   "harvestIndicators": [
-    "Color break (deep green\u2192light green)",
+    "Color break (deep green→light green)",
     "Stem releases when fruit lifted + twisted",
     "Starch test"
   ],
-  "notes": "Susceptible to fire blight (Erwinia amylovora) \u2014 DO NOT prune in wet weather; sterilize tools 70% alcohol between cuts."
+  "notes": "Susceptible to fire blight (Erwinia amylovora) — DO NOT prune in wet weather; sterilize tools 70% alcohol between cuts.",
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

@@ -26,5 +26,11 @@
   "notes": "Slow-bolting Florence fennel hybrid. Hill base of bulb to blanch and sweeten. Best as fall crop.",
   "harvestIndicators": [
     "Bulb 3 to 4 inch tennis-ball size, firm and white"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 50,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": true
+  }
 }

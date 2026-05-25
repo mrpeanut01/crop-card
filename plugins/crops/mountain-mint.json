@@ -26,5 +26,11 @@
   "notes": "North American native perennial. Top-tier native bee plant in field studies. Hardy to zone 3.",
   "harvestIndicators": [
     "Silver-bracted flower heads fully developed, intense aroma"
-  ]
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  }
 }

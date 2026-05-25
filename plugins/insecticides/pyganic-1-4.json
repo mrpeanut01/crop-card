@@ -30,5 +30,34 @@
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
-  "pluginSchemaVersion": "1.1"
+  "pluginSchemaVersion": "1.1",
+  "scoutingThresholds": [
+    {
+      "pest": "aphid",
+      "metric": "count-per-leaf",
+      "threshold": 50,
+      "warnAt": 30
+    },
+    {
+      "pest": "flea beetle",
+      "metric": "pct-defoliation",
+      "threshold": 20,
+      "warnAt": 10
+    },
+    {
+      "pest": "leafhopper",
+      "metric": "count-per-leaf",
+      "threshold": 1
+    },
+    {
+      "pest": "cucumber beetle",
+      "metric": "count-per-plant",
+      "threshold": 1
+    },
+    {
+      "pest": "stink bug (knockdown only)",
+      "metric": "count-per-plant",
+      "threshold": 1
+    }
+  ]
 }

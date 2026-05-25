@@ -26,5 +26,13 @@
   "notes": "Cold-hardy Carpathian strain of Juglans regia. Hardy to zone 5. Thin-shelled, easier crack than black walnut.",
   "harvestIndicators": [
     "Husks split, nuts drop to ground in fall"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

@@ -26,5 +26,10 @@
   "notes": "Yellow bell pepper hybrid for high tunnel and field. Heavy producer of thick-walled blocky fruit.",
   "harvestIndicators": [
     "Bright yellow blocky fruit, full coloring shoulders to tip"
-  ]
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  }
 }

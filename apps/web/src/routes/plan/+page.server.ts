@@ -26,6 +26,10 @@ import {
 import { listShadeSources } from '$lib/db/shadeSources';
 import { getFarmLatLon } from '$lib/schedule/settings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
+import { getUserAiEnabled } from '$lib/server/aiTry';
+import { deriveSeasonWorkflow } from '$lib/plan/seasonWorkflow';
+import { listPlanRevisions } from '$lib/plan/revisions';
+import { getActiveSession, listMessages } from '$lib/db/wizardChat';
 import {
   plantingBarEndMs,
   rotationConflicts,
@@ -180,6 +184,68 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     currentYear,
     seasonSetup,
     lastYearSetup,
+    // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the
+    // schedule step of the AllocationWizard.
+    aiEnabled: getUserAiEnabled(locals.user?.id),
+    // Phase 25b (#98) — WorkflowStrip data. Derived from season-setup
+    // presence + active crops + inputs-plan task count (proxied via
+    // total primary-kind tasks since the category enum doesn't have a
+    // ListFilters surface yet — widens to a real category filter in a
+    // follow-up). Plan-revisions proxy is null today (table lands in
+    // Phase 25d follow-up) → commit step auto-marks done when the four
+    // priors are done.
+    seasonWorkflow: deriveSeasonWorkflow({
+      seasonSetup: seasonSetup ? { modifiedAt: seasonSetup.setAt } : null,
+      lastYearSetup,
+      crops: listCrops({ year: currentYear }).map((c) => ({ plantingDate: c.plantingDate })),
+      inputsTaskCount: listTasks({ kind: 'primary' }).length,
+      hasPlanRevision: listPlanRevisions(`season-${currentYear}`, 1).length > 0
+    }),
+    // Phase 25d (#89) — ProvenancePanel data. planId is the season-year
+    // identifier; revisions chain wizard-commit + AI-refinement + manual
+    // edits so the operator can audit "where this plan came from".
+    planRevisions: listPlanRevisions(`season-${currentYear}`).map((r) => ({
+      id: r.id,
+      revisionNumber: r.revisionNumber,
+      source: r.source,
+      createdAt: r.createdAt,
+      note: typeof r.payload?.note === 'string' ? r.payload.note : undefined
+    })),
+    planLabel: `${currentYear} plan`,
+    // Phase 25b (#81) — Plan v2 shell needs open primary tasks for the
+    // ScheduledTasksCard. Window: next 30 days + overdue from last 14
+    // days so the table never silently drops a forgotten task.
+    planV2Tasks: listTasks({
+      fromMs: Date.now() - 14 * DAY_MS,
+      toMs: Date.now() + 30 * DAY_MS,
+      status: 'open',
+      kind: 'primary'
+    }).map((t) => ({
+      id: t.id,
+      title: t.title,
+      kind: t.kind,
+      scheduledFor: t.scheduledFor,
+      blockId: t.blockId,
+      cropId: t.cropId,
+      pluginTemplateKey: t.pluginTemplateKey,
+      relatedEventTable: t.relatedEventTable,
+      userOverridden: t.userOverridden,
+      staleAnchor: t.staleAnchor,
+      createdAt: t.createdAt
+    })),
+    // Phase 25d (#89) — wizard chat server-persistence. Pass the
+    // wizard the planId + any prior chat turns so resume restores the
+    // conversation instead of dropping it on the floor.
+    wizardPlanId: `season-${currentYear}`,
+    wizardChatMessages: (() => {
+      const session = getActiveSession(`season-${currentYear}`);
+      if (!session) return [];
+      return listMessages(session.id).map((m) => ({
+        step: m.step,
+        role: m.role,
+        content: m.content
+      }));
+    })(),
     // Issue #48 follow-up: shadeSources must be visible on every tab that
     // renders <BlockMap> (today: layout + crops). Pushing it into base
     // closes that recurring class of bug — PR #49 fixed the UI side but

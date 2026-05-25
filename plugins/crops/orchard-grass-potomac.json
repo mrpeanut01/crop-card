@@ -4,11 +4,21 @@
   "displayName": "Orchard-Grass — Potomac (cool-season grass)",
   "version": "1.0.0",
   "cropFamily": "forage",
-  "daysToMaturity": { "min": 365, "max": 1825 },
+  "daysToMaturity": {
+    "min": 365,
+    "max": 1825
+  },
   "defaultRowSpacingInches": 7,
   "plantingGuide": {
     "recommendedLbsPerAcre": 14
   },
-  "harvestIndicators": ["Boot to early-head"],
-  "notes": "Mid-Atlantic standard cool-season grass. Pairs well with red clover or alfalfa for mixed hay."
+  "harvestIndicators": [
+    "Boot to early-head"
+  ],
+  "notes": "Mid-Atlantic standard cool-season grass. Pairs well with red clover or alfalfa for mixed hay.",
+  "harvestStyle": "forage-cutting-cycle",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  }
 }

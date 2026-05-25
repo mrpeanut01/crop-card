@@ -26,5 +26,11 @@
     "lifecycle": "annual",
     "rotationLookbackYears": 0
   },
-  "notes": "High-glucosinolate mustard (Brassica juncea / Sinapis alba blend, e.g. Caliente 199). Flail-mow at early bloom and incorporate within 20 minutes to release isothiocyanates for biofumigation against soil nematodes and pathogens. Do not follow with brassica cash crops. Sold by High Performance Seeds, Green Cover Seed."
+  "notes": "High-glucosinolate mustard (Brassica juncea / Sinapis alba blend, e.g. Caliente 199). Flail-mow at early bloom and incorporate within 20 minutes to release isothiocyanates for biofumigation against soil nematodes and pathogens. Do not follow with brassica cash crops. Sold by High Performance Seeds, Green Cover Seed.",
+  "harvestStyle": "cover-crop-termination",
+  "bloomWindow": {
+    "daysFromPlantingMin": 70,
+    "daysFromPlantingMax": 100,
+    "beeAttractive": true
+  }
 }

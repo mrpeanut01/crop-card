@@ -1,7 +1,7 @@
 /**
  * GET /api/insecticide
  *
- * Lists recent insecticide events for /insecticides + /today re-entry banner.
+ * Lists recent insecticide events for /spray/insecticide + /today re-entry banner.
  * Read-only — accessible to every signed-in role including inspector.
  */
 

@@ -26,5 +26,13 @@
   "notes": "Lemon-mandarin hybrid. Improved virus-free clone replaces the original Meyer that was banned in 1960s. Self-fertile. Hardy to about 24 F established.",
   "harvestIndicators": [
     "Deep yellow-orange fruit, slight give when squeezed"
-  ]
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  }
 }

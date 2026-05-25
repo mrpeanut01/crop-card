@@ -26,5 +26,13 @@
   "notes": "Italian heirloom from Chioggia (pre-1840). Striking ringed cross-section. Mild flavor.",
   "harvestIndicators": [
     "2 to 3 inch round root, alternating pink and white rings when sliced"
-  ]
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  }
 }

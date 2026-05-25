@@ -27,5 +27,11 @@
   "harvestIndicators": [
     "Silks brown, white kernels milk-stage on thumbnail test"
   ],
-  "cornType": "sweet"
+  "cornType": "sweet",
+  "harvestStyle": "row-grain-pollinated",
+  "bloomWindow": {
+    "daysFromPlantingMin": 55,
+    "daysFromPlantingMax": 75,
+    "beeAttractive": false
+  }
 }

@@ -32,5 +32,25 @@
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true
   },
-  "notes": "Marrone Bio Innovations biological. Multiple modes: repellency, reduced feeding, reduced fecundity."
+  "notes": "Marrone Bio Innovations biological. Multiple modes: repellency, reduced feeding, reduced fecundity.",
+  "scoutingThresholds": [
+    {
+      "pest": "spider mite",
+      "metric": "count-per-leaf",
+      "threshold": 10,
+      "warnAt": 5
+    },
+    {
+      "pest": "thrips",
+      "metric": "count-per-leaf",
+      "threshold": 4,
+      "warnAt": 2
+    },
+    {
+      "pest": "whitefly",
+      "metric": "count-per-leaf",
+      "threshold": 5,
+      "warnAt": 3
+    }
+  ]
 }

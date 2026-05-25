@@ -5,8 +5,20 @@
   "version": "1.0.0",
   "cropFamily": "brassica",
   "preHarvestIntervalDays": 1,
-  "daysToMaturity": { "min": 70, "max": 85 },
+  "daysToMaturity": {
+    "min": 70,
+    "max": 85
+  },
   "defaultRowSpacingInches": 24,
-  "harvestIndicators": ["Firm head", "Wrinkled outer leaves with mid-green color"],
-  "notes": "Crinkled-leaf cabbage. Better cold tolerance than smooth cabbage."
+  "harvestIndicators": [
+    "Firm head",
+    "Wrinkled outer leaves with mid-green color"
+  ],
+  "notes": "Crinkled-leaf cabbage. Better cold tolerance than smooth cabbage.",
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  }
 }

@@ -36,6 +36,12 @@ export const users = sqliteTable('users', {
    *  because roles describe in-tenant permissions; superadmin is *across*
    *  tenants. Default false. */
   isSuperadmin: integer('is_superadmin', { mode: 'boolean' }).notNull().default(false),
+  /** Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant on
+   *  every AI-touchable screen. Flips true when the user validates a
+   *  Claude API key in Settings → AI. Defaults false so the safe AI-off
+   *  product mode is the first-paint baseline for new users + inspectors
+   *  (Dale persona) who will never paste a key. */
+  aiEnabled: integer('ai_enabled', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)
@@ -560,7 +566,13 @@ export const sprayEvents = tenantScoped(
       customRateOverride: integer('custom_rate_override', { mode: 'boolean' })
         .notNull()
         .default(false),
-      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      /** Phase 25d (#89) v2-addendum — per-field provenance map keyed by
+       *  field name; values are objects {source, detail?, confidence?,
+       *  fallbackReason?, attemptedAiAt?}. See AI_PROVENANCE_ADDENDUM.md
+       *  "Field-by-field map" for the canonical field set. Single
+       *  column (not N per-field columns) for query simplicity. */
+      provenanceJson: text('provenance_json')
     },
     (table) => ({
       ownerOccurredIdx: index('spray_events_owner_occurred_idx').on(
@@ -585,7 +597,9 @@ export const harvestEvents = tenantScoped(
       cropPluginId: text('crop_plugin_id').notNull(),
       occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
       quantity: text('quantity'),
-      lotNumber: text('lot_number')
+      lotNumber: text('lot_number'),
+      /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
+      provenanceJson: text('provenance_json')
     },
     (table) => ({
       ownerOccurredIdx: index('harvest_events_owner_occurred_idx').on(
@@ -887,7 +901,9 @@ export const insecticideEvents = tenantScoped(
       preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
       rulesVersion: text('rules_version').notNull(),
       pluginHashesJson: text('plugin_hashes_json').notNull(),
-      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
+      provenanceJson: text('provenance_json')
     },
     (table) => ({
       ownerOccurredIdx: index('insecticide_events_owner_occurred_idx').on(
@@ -930,7 +946,9 @@ export const fungicideEvents = tenantScoped(
       preHarvestClearAt: integer('pre_harvest_clear_at', { mode: 'timestamp_ms' }),
       rulesVersion: text('rules_version').notNull(),
       pluginHashesJson: text('plugin_hashes_json').notNull(),
-      lockedAt: integer('locked_at', { mode: 'timestamp_ms' })
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
+      provenanceJson: text('provenance_json')
     },
     (table) => ({
       ownerOccurredIdx: index('fungicide_events_owner_occurred_idx').on(
@@ -1194,10 +1212,223 @@ export const aiCallLog = tenantScoped(
       errorClass: text('error_class'),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
-        .default(sql`(unixepoch() * 1000)`)
+        .default(sql`(unixepoch() * 1000)`),
+      // ─── Phase 25d v2-addendum (#93, rolled into #89) ─────────────
+      /** 'ai' for a successful Claude call, 'fallback' for a row that
+       *  EXISTS because aiTry() picked the deterministic path (no key /
+       *  over-cap / offline / rate-limit / timeout). Nullable on rows
+       *  that pre-date the migration. */
+      provenance: text('provenance', { enum: ['ai', 'fallback'] }),
+      /** Claude self-reported confidence (0..1) for `provenance='ai'`. */
+      confidence: real('confidence'),
+      /** Why the deterministic path ran instead of AI. Populated only
+       *  when `provenance='fallback'`. */
+      fallbackReason: text('fallback_reason', {
+        enum: ['no-key', 'over-cap', 'offline', 'rate-limit', 'timeout']
+      }),
+      /** Wall time the (failed/skipped) AI call would have happened.
+       *  Used by /api/audit/re-ask-ai to re-run fallback rows once a
+       *  key is configured. */
+      attemptedAiAt: integer('attempted_ai_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
       ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(table.ownerId, table.createdAt)
+    })
+  )
+);
+
+// ─── Phase 25d (#89) — plan_revisions table ─────────────────────────
+//
+// Every plan-commit / wizard-commit / manual edit writes a revision
+// row so the ProvenancePanel can show where the current plan came
+// from + audit the chain. `payload_json` is a coarse-grained snapshot
+// (full plan at commit time); finer-grained per-field provenance lives
+// on the operational event tables (sprayEvents.provenanceJson etc.).
+
+export const planRevisions = tenantScoped(
+  sqliteTable(
+    'plan_revisions',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      /** Logical plan ID — typically the year + farm identifier; lets
+       *  successive revisions of the same plan chain via revisionNumber. */
+      planId: text('plan_id').notNull(),
+      revisionNumber: integer('revision_number').notNull(),
+      source: text('source', { enum: ['wizard', 'manual', 'ai-refinement'] }).notNull(),
+      payloadJson: text('payload_json').notNull(),
+      parentRevisionId: text('parent_revision_id'),
+      createdByUserId: text('created_by_user_id').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerPlanIdx: index('plan_revisions_owner_plan_idx').on(table.ownerId, table.planId),
+      ownerCreatedIdx: index('plan_revisions_owner_created_idx').on(table.ownerId, table.createdAt)
+    })
+  )
+);
+
+// ─── Phase 25d (#95) — dedicated scout observations table ─────────────
+//
+// Standalone observation table so pre-spray scouting + multi-pest field
+// walks + the 5-week-sparkline can read real data (was: embedded only
+// in insecticide_events.scoutObservationJson). Tenant-scoped per
+// CLAUDE.md invariant 6.
+
+export const scoutObservations = tenantScoped(
+  sqliteTable(
+    'scout_observations',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id),
+      cropId: text('crop_id').references(() => crops.id),
+      performedById: text('performed_by_id')
+        .notNull()
+        .references(() => users.id),
+      pest: text('pest').notNull(),
+      metric: text('metric').notNull(),
+      value: real('value').notNull(),
+      notes: text('notes'),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerOccurredIdx: index('scout_observations_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      ),
+      ownerBlockIdx: index('scout_observations_owner_block_idx').on(table.ownerId, table.blockId),
+      ownerPestMetricIdx: index('scout_observations_owner_pest_metric_idx').on(
+        table.ownerId,
+        table.pest,
+        table.metric
+      )
+    })
+  )
+);
+
+// ─── Phase 25c.0 step 6 (#87) / Phase 25d (#89) — dry-run kernel log ──
+//
+// When env KERNEL_DRY_RUN=1, the new evaluators (fracRotation,
+// ipmThreshold, pollinatorBloom) write what-would-have-happened verdicts
+// here INSTEAD of failing the spray. After 14 days of clean rows post-
+// 25d ship the flag flips off and gates go live.
+//
+// Tenant-scoped (CLAUDE.md invariant 6) — every row carries owner_id,
+// and the cross-tenant property test gets extended in a follow-up.
+
+export const kernelDryRunLog = tenantScoped(
+  sqliteTable(
+    'kernel_dry_run_log',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      rulesVersion: text('rules_version').notNull(),
+      evaluator: text('evaluator', {
+        enum: ['fracRotation', 'ipmThreshold', 'pollinatorBloom']
+      }).notNull(),
+      verdict: text('verdict', { enum: ['ok', 'warn', 'block'] }).notNull(),
+      reasonsJson: text('reasons_json').notNull(),
+      plannedSprayJson: text('planned_spray_json').notNull(),
+      blockId: text('block_id'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerCreatedIdx: index('kernel_dry_run_log_owner_created_idx').on(
+        table.ownerId,
+        table.createdAt
+      ),
+      ownerEvaluatorIdx: index('kernel_dry_run_log_owner_evaluator_idx').on(
+        table.ownerId,
+        table.evaluator
+      )
+    })
+  )
+);
+
+// ─── Phase 25d (#89) — wizard chat server-persistence ───────────────────
+//
+// Pre-#89, the AllocationWizard kept chat transcripts in $state. Reload
+// or tab switch lost them. These two tables move the source of truth to
+// the server so wizard chat survives reloads and is auditable later.
+//
+// One `wizard_sessions` row per (ownerId, planId) active wizard run. One
+// `wizard_chat_messages` row per turn, append-only, scoped to a session +
+// step ('allocation' | 'schedule' | 'inputs').
+//
+// Both tenant-scoped per CLAUDE.md invariant 6. The cross-tenant property
+// test gets extended in the same commit.
+
+export const wizardSessions = tenantScoped(
+  sqliteTable(
+    'wizard_sessions',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      /** Same scheme as plan_revisions.plan_id — `season-${year}`. Lets a
+       *  single active session resume across reloads scoped to the active
+       *  plan. */
+      planId: text('plan_id').notNull(),
+      /** 'active' — chat-eligible session. 'completed' — wizard reached
+       *  commit, session sealed; new wizard runs spawn a new session.
+       *  'abandoned' — session timed out / user reset; preserved for
+       *  audit but not resumed. */
+      status: text('status', { enum: ['active', 'completed', 'abandoned'] }).notNull(),
+      createdByUserId: text('created_by_user_id').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      /** Bumped on every appended message so the loader can pick the
+       *  most-recently-active session when more than one exists. */
+      lastActiveAt: integer('last_active_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      completedAt: integer('completed_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerPlanIdx: index('wizard_sessions_owner_plan_idx').on(table.ownerId, table.planId),
+      ownerStatusIdx: index('wizard_sessions_owner_status_idx').on(table.ownerId, table.status)
+    })
+  )
+);
+
+export const wizardChatMessages = tenantScoped(
+  sqliteTable(
+    'wizard_chat_messages',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      sessionId: text('session_id')
+        .notNull()
+        .references(() => wizardSessions.id, { onDelete: 'cascade' }),
+      /** Which wizard step the message belongs to. Allocation chat lives
+       *  with the Review step; schedule chat lives with the Schedule
+       *  step. Inputs chat is reserved (no in-step refinement loop
+       *  shipped yet) but the enum is open so future inputs-step
+       *  refinement plugs in without a migration. */
+      step: text('step', { enum: ['allocation', 'schedule', 'inputs'] }).notNull(),
+      role: text('role', { enum: ['user', 'assistant', 'system'] }).notNull(),
+      content: text('content').notNull(),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerSessionStepIdx: index('wizard_chat_messages_owner_session_step_idx').on(
+        table.ownerId,
+        table.sessionId,
+        table.step,
+        table.createdAt
+      )
     })
   )
 );

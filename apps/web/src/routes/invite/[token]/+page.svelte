@@ -42,16 +42,16 @@
     margin-top: 0;
   }
   .hint {
-    color: var(--fg-muted, #555);
+    color: var(--color-ink-muted);
     margin-bottom: 1.5rem;
   }
   .accept {
     min-height: 48px;
     padding: 0.75rem 1.25rem;
-    background: var(--accent, #1f5e3a);
-    color: white;
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
     border: none;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-input, 6px);
     font: inherit;
     font-weight: 600;
     cursor: pointer;
@@ -60,11 +60,11 @@
     filter: brightness(1.1);
   }
   .expires {
-    color: var(--fg-muted, #555);
+    color: var(--color-ink-muted);
     font-size: 0.875rem;
     margin-top: 1rem;
   }
   .back {
-    color: var(--accent, #1f5e3a);
+    color: var(--color-forest-deep);
   }
 </style>

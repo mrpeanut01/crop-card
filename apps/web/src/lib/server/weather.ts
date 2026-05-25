@@ -141,26 +141,27 @@ export async function getForecast(lat: number, lon: number): Promise<ForecastDay
   const days = periodsToDays(forecast.properties.periods);
 
   const expiresAt = new Date(now + CACHE_TTL_MS);
-  if (cached) {
-    db.update(weatherForecastCache)
-      .set({
+  // INSERT … ON CONFLICT UPDATE so two parallel uncached fetches don't
+  // collide on the unique cache_key. Before this guard the second writer
+  // crashed the page with "UNIQUE constraint failed" — surfacing on /today
+  // any time two tabs hit a cold cache concurrently.
+  db.insert(weatherForecastCache)
+    .values({
+      id: randomUUID(),
+      cacheKey: key,
+      fetchedAt: new Date(now),
+      expiresAt,
+      payloadJson: JSON.stringify(days)
+    })
+    .onConflictDoUpdate({
+      target: weatherForecastCache.cacheKey,
+      set: {
         fetchedAt: new Date(now),
         expiresAt,
         payloadJson: JSON.stringify(days)
-      })
-      .where(eq(weatherForecastCache.cacheKey, key))
-      .run();
-  } else {
-    db.insert(weatherForecastCache)
-      .values({
-        id: randomUUID(),
-        cacheKey: key,
-        fetchedAt: new Date(now),
-        expiresAt,
-        payloadJson: JSON.stringify(days)
-      })
-      .run();
-  }
+      }
+    })
+    .run();
   return days;
 }
 

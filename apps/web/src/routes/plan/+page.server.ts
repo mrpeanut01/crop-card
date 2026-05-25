@@ -212,6 +212,27 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       note: typeof r.payload?.note === 'string' ? r.payload.note : undefined
     })),
     planLabel: `${currentYear} plan`,
+    // Phase 25b (#81) — Plan v2 shell needs open primary tasks for the
+    // ScheduledTasksCard. Window: next 30 days + overdue from last 14
+    // days so the table never silently drops a forgotten task.
+    planV2Tasks: listTasks({
+      fromMs: Date.now() - 14 * DAY_MS,
+      toMs: Date.now() + 30 * DAY_MS,
+      status: 'open',
+      kind: 'primary'
+    }).map((t) => ({
+      id: t.id,
+      title: t.title,
+      kind: t.kind,
+      scheduledFor: t.scheduledFor,
+      blockId: t.blockId,
+      cropId: t.cropId,
+      pluginTemplateKey: t.pluginTemplateKey,
+      relatedEventTable: t.relatedEventTable,
+      userOverridden: t.userOverridden,
+      staleAnchor: t.staleAnchor,
+      createdAt: t.createdAt
+    })),
     // Phase 25d (#89) — wizard chat server-persistence. Pass the
     // wizard the planId + any prior chat turns so resume restores the
     // conversation instead of dropping it on the floor.

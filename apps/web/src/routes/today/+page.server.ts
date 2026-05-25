@@ -165,8 +165,15 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       try {
         forecast = await getForecast(centroid.lat, centroid.lon);
       } catch (e) {
-        if (!(e instanceof WeatherFetchError)) throw e;
-        forecast = null;
+        // Best-effort: NWS rate-limit, DB cache write race, or a Vite/HMR
+        // module-resolution blip — none should crash the entire /today
+        // render. Swallow + hide the weather strip.
+        if (e instanceof WeatherFetchError) {
+          forecast = null;
+        } else {
+          console.error('[today/loader] weather fetch failed:', e);
+          forecast = null;
+        }
       }
     }
   }

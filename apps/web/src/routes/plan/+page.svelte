@@ -11,6 +11,14 @@
   import AllocationWizard from '$lib/components/AllocationWizard.svelte';
   import WorkflowStrip from '$lib/components/plan/WorkflowStrip.svelte';
   import ProvenancePanel from '$lib/components/plan/ProvenancePanel.svelte';
+  // Phase 25b (#81) — Plan v2 Almanac shell. Renders the new IA (left
+  // rail + block header + plantings tabs/grid + timeline + scheduled
+  // tasks) on top of the legacy tabbed editor (now in a <details>).
+  import PlanV2Shell from '$lib/components/plan/PlanV2Shell.svelte';
+  // Phase 25b (#81) — controls the legacy <details> open state. The
+  // mutation callbacks emitted from PlanV2Shell flip this true so the
+  // user lands on the right legacy tab.
+  let detailOpen = $state(false);
   import PlantingGroupWizard from '$lib/components/PlantingGroupWizard.svelte';
   import ScheduleOptimizerSidebar from '$lib/components/ScheduleOptimizerSidebar.svelte';
   import GroupInspector from '$lib/components/GroupInspector.svelte';
@@ -2375,6 +2383,50 @@
   </div>
 {/if}
 
+<!-- Phase 25b (#81) — Plan v2 Almanac shell.
+     1:1 with direction-almanac-plan-v2.jsx. Block list rail + block
+     header + plantings tabs/grid + season timeline + scheduled tasks
+     table + Map overlay (?map=open). Mutations defer to the legacy
+     tabbed editor below for now — clicking "Edit block" / "Add planting"
+     / "Refine with AI" routes the operator into the existing flows.
+-->
+<PlanV2Shell
+  blocks={data.blocks}
+  tasks={data.planV2Tasks ?? []}
+  farmLabel={data.fields[0]?.name}
+  cropMeta={Object.fromEntries(
+    data.cropCatalog.map((c) => [
+      c.pluginId,
+      {
+        displayName: c.displayName,
+        daysToMaturity: c.daysToMaturity
+          ? Math.round((c.daysToMaturity.min + c.daysToMaturity.max) / 2)
+          : undefined,
+        cropFamily: c.cropFamily
+      }
+    ])
+  )}
+  onOpenWizard={() => (showAllocationWizard = true)}
+  onAddBlock={() => {
+    detailOpen = true;
+    setTimeout(() => location.hash = '#legacy-plan', 50);
+    return goto(tabHref('layout'));
+  }}
+  onEditBlock={() => {
+    detailOpen = true;
+    setTimeout(() => location.hash = '#legacy-plan', 50);
+    return goto(tabHref('layout'));
+  }}
+  onAddPlanting={() => {
+    detailOpen = true;
+    setTimeout(() => location.hash = '#legacy-plan', 50);
+    return goto(tabHref('crops'));
+  }}
+/>
+
+<details class="legacy-detail" id="legacy-plan" bind:open={detailOpen}>
+  <summary>Full plan editor — fields · layout · crops · calendar · schedule</summary>
+
 <nav class="plan-tabs" aria-label="Plan tabs">
   {#each TABS as t (t.id)}
     <a
@@ -4683,7 +4735,30 @@
   </div>
 {/if}
 
+</details>
+
 <style>
+  /* Phase 25b (#81) — legacy /plan tabbed editor lives inside a
+     <details>, collapsed by default. PlanV2Shell above is the
+     Almanac IA; this block preserves every existing flow until
+     each tab is individually migrated. */
+  .legacy-detail {
+    margin-top: 16px;
+    border-top: 1px solid var(--color-divider-soft, var(--color-divider));
+    padding-top: 14px;
+  }
+  .legacy-detail > summary {
+    cursor: pointer;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    font-size: 13px;
+    list-style: revert;
+    margin-bottom: 12px;
+    padding: 6px 0;
+  }
+  .legacy-detail > summary:hover {
+    color: var(--color-forest);
+  }
   .block-slope-hint {
     font-size: 0.75rem;
     color: #6b7280;

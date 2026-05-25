@@ -11,7 +11,7 @@
     FileText,
     Search,
     Bell,
-    Settings,
+    Settings
   } from 'lucide-svelte';
   import IconButton from './IconButton.svelte';
   import OfflineIndicator from './OfflineIndicator.svelte';
@@ -50,7 +50,7 @@
     availableOwners = [],
     online,
     pendingCount,
-    onSwitchOwner,
+    onSwitchOwner
   }: Props = $props();
 
   // 7-item nav per design (collapsed from 13). Map / Calendar fold into Plan,
@@ -63,7 +63,7 @@
     { href: '/scout', label: 'Scout', icon: Eye },
     { href: '/harvest', label: 'Harvest', icon: Wheat },
     { href: '/stock', label: 'Stock', icon: Box },
-    { href: '/records', label: 'Records', icon: FileText },
+    { href: '/records', label: 'Records', icon: FileText }
   ];
 
   function isActive(href: string): boolean {

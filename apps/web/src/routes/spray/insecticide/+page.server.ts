@@ -13,7 +13,10 @@ import { getUserAiEnabled } from '$lib/server/aiTry';
  * The union keeps the v2 5-week sparkline accurate even before the
  * scout-record UI ships.
  */
-function scoutLogByBlock(): Record<string, Array<{ pest: string; metric: string; value: number; occurredAt: number }>> {
+function scoutLogByBlock(): Record<
+  string,
+  Array<{ pest: string; metric: string; value: number; occurredAt: number }>
+> {
   const out = scoutLogFromTable(35 * 86_400_000);
   // Backfill legacy embedded observations not yet migrated.
   const legacy = listInsecticideEvents({ limit: 50 });

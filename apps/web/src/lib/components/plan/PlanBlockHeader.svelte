@@ -94,7 +94,11 @@
       </button>
     {/if}
     {#if onRefineWithAi}
-      <button class="ghost" onclick={onRefineWithAi} title="Open the season-plan chat with this block in context">
+      <button
+        class="ghost"
+        onclick={onRefineWithAi}
+        title="Open the season-plan chat with this block in context"
+      >
         <Sprout size={14} strokeWidth={1.75} /> Refine with AI
       </button>
     {/if}

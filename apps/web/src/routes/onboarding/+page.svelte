@@ -68,8 +68,8 @@
   </form>
 
   <p class="next-step-hint">
-    💡 After you create your farm, head to <a href="/plan">Plan</a> to set up this season's input
-    philosophy (6 quick questions — drives what the planner suggests).
+    💡 After you create your farm, head to <a href="/plan">Plan</a> to set up this season's input philosophy
+    (6 quick questions — drives what the planner suggests).
   </p>
 
   <!-- ─── v2 addendum (#91) — AI offer card ─────────────────────────────
@@ -92,8 +92,8 @@
       </div>
 
       <p class="offer-body">
-        Paste an API key in Settings → AI to enable proposals across the spray, plan, and
-        stock-add flows. Every screen works fully without one.
+        Paste an API key in Settings → AI to enable proposals across the spray, plan, and stock-add
+        flows. Every screen works fully without one.
       </p>
 
       <div class="offer-info">
@@ -110,9 +110,7 @@
           <Sprout size={14} strokeWidth={1.75} aria-hidden="true" />
           Add Claude key now
         </a>
-        <a class="cta-ghost" href="/today">
-          Skip · I'll add a key later (or never)
-        </a>
+        <a class="cta-ghost" href="/today"> Skip · I'll add a key later (or never) </a>
       </div>
     </Card>
   </section>
@@ -120,8 +118,8 @@
   <div class="footer-reassurance">
     <Lock size={11} strokeWidth={1.75} aria-hidden="true" />
     <span>
-      Your data lives on your device first; sync to the cloud is opt-in. Delete the sample plan
-      any time from Settings.
+      Your data lives on your device first; sync to the cloud is opt-in. Delete the sample plan any
+      time from Settings.
     </span>
   </div>
 </main>

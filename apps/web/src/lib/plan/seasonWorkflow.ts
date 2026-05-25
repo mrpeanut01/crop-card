@@ -48,7 +48,20 @@ function fmtDate(ms: number): string {
   // UTC date methods so the format is timezone-stable for both server
   // rendering and test assertions (Date.UTC(...) → "Apr 2" everywhere).
   const d = new Date(ms);
-  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONTHS = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ];
   return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
 }
 

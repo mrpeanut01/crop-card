@@ -28,7 +28,7 @@
     gap: 6px;
     font-size: var(--font-size-meta);
     color: var(--color-ink-muted);
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
   }
   .dot {
     width: 7px;

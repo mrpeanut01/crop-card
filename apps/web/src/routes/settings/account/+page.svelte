@@ -46,7 +46,10 @@
     </div>
   </SettingsSection>
 
-  <SettingsSection title="Sign-in security" sub="Magic-link (no password) · optional 2FA when shipped.">
+  <SettingsSection
+    title="Sign-in security"
+    sub="Magic-link (no password) · optional 2FA when shipped."
+  >
     <div class="security-grid">
       <SettingsField label="Sign-in method">
         <select class="s-input">

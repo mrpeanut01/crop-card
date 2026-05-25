@@ -27,11 +27,23 @@
 </script>
 
 {#if href}
-  <a {href} class="icon-btn {tone}" aria-label={ariaLabel} title={ariaLabel} {...rest as HTMLAnchorAttributes}>
+  <a
+    {href}
+    class="icon-btn {tone}"
+    aria-label={ariaLabel}
+    title={ariaLabel}
+    {...rest as HTMLAnchorAttributes}
+  >
     {@render icon()}
   </a>
 {:else}
-  <button type="button" class="icon-btn {tone}" aria-label={ariaLabel} title={ariaLabel} {...rest as HTMLButtonAttributes}>
+  <button
+    type="button"
+    class="icon-btn {tone}"
+    aria-label={ariaLabel}
+    title={ariaLabel}
+    {...rest as HTMLButtonAttributes}
+  >
     {@render icon()}
   </button>
 {/if}
@@ -49,7 +61,10 @@
     display: inline-grid;
     place-items: center;
     cursor: pointer;
-    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    transition:
+      background 0.12s,
+      color 0.12s,
+      border-color 0.12s;
   }
   .icon-btn:hover {
     background: var(--color-divider-soft);

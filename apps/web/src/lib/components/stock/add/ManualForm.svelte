@@ -1,9 +1,6 @@
 <script lang="ts">
   import Provenance from '$lib/components/ui/Provenance.svelte';
-  import {
-    normalizeStockEntry,
-    type StockEntryDraft
-  } from '$lib/stock/normalizeStockEntry';
+  import { normalizeStockEntry, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
   import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
   import type { StockCategory } from '$lib/db/stock';
 

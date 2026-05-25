@@ -110,7 +110,10 @@ export function scoutLogByBlock(
 ): Record<string, Array<{ pest: string; metric: string; value: number; occurredAt: number }>> {
   const since = Date.now() - windowMs;
   const all = listScoutObservations({ fromMs: since, limit: 200 });
-  const out: Record<string, Array<{ pest: string; metric: string; value: number; occurredAt: number }>> = {};
+  const out: Record<
+    string,
+    Array<{ pest: string; metric: string; value: number; occurredAt: number }>
+  > = {};
   for (const o of all) {
     const list = (out[o.blockId] ??= []);
     list.push({

@@ -13,14 +13,7 @@
     closeOnBackdrop?: boolean;
   }
 
-  let {
-    open,
-    onClose,
-    title,
-    children,
-    footer,
-    closeOnBackdrop = true,
-  }: Props = $props();
+  let { open, onClose, title, children, footer, closeOnBackdrop = true }: Props = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
   let previouslyFocused: HTMLElement | null = null;
@@ -56,7 +49,12 @@
   });
 </script>
 
-<dialog bind:this={dialog} oncancel={onCancel} onclick={onBackdropClick} aria-labelledby="modal-title">
+<dialog
+  bind:this={dialog}
+  oncancel={onCancel}
+  onclick={onBackdropClick}
+  aria-labelledby="modal-title"
+>
   <div class="shell" role="document">
     <header>
       <h2 id="modal-title" class="serif">{title}</h2>

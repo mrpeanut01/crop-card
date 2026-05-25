@@ -1265,10 +1265,7 @@ export const planRevisions = tenantScoped(
     },
     (table) => ({
       ownerPlanIdx: index('plan_revisions_owner_plan_idx').on(table.ownerId, table.planId),
-      ownerCreatedIdx: index('plan_revisions_owner_created_idx').on(
-        table.ownerId,
-        table.createdAt
-      )
+      ownerCreatedIdx: index('plan_revisions_owner_created_idx').on(table.ownerId, table.createdAt)
     })
   )
 );
@@ -1307,10 +1304,7 @@ export const scoutObservations = tenantScoped(
         table.ownerId,
         table.occurredAt
       ),
-      ownerBlockIdx: index('scout_observations_owner_block_idx').on(
-        table.ownerId,
-        table.blockId
-      ),
+      ownerBlockIdx: index('scout_observations_owner_block_idx').on(table.ownerId, table.blockId),
       ownerPestMetricIdx: index('scout_observations_owner_pest_metric_idx').on(
         table.ownerId,
         table.pest,

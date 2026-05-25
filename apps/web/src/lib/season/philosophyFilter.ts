@@ -13,7 +13,7 @@
  *     inline product picker so the operator can't substitute a non-
  *     compliant alternative.
  *
- * Allow-deny matrix (mirrors `docs/phase-21-plan.md §B`):
+ * Allow-deny matrix:
  *
  *   conventional               — all products allowed
  *   non-gmo                    — requires `complianceFlags.nonGmoCompliant === true`

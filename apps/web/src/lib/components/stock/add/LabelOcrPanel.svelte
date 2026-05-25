@@ -1,10 +1,7 @@
 <script lang="ts">
   import { Image as ImageIcon, X } from 'lucide-svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
-  import {
-    draftFromScanResult,
-    type StockEntryDraft
-  } from '$lib/stock/normalizeStockEntry';
+  import { draftFromScanResult, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
 
   /**
    * Phase 25d (#89) — Method 4 of the 5-method add waterfall.
@@ -100,8 +97,8 @@
 
 <div class="ocr-panel">
   <p class="lede">
-    Snap the front of the package or the ingredient block. Claude Vision extracts the
-    structured fields — every output gets a provenance tag so you can spot-check before save.
+    Snap the front of the package or the ingredient block. Claude Vision extracts the structured
+    fields — every output gets a provenance tag so you can spot-check before save.
   </p>
 
   {#if !preview}
@@ -179,7 +176,9 @@
     color: var(--color-ink-soft);
     cursor: pointer;
     text-align: center;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
   }
   .upload-tile:hover {
     border-color: var(--color-forest-deep);

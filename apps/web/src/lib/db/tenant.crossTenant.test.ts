@@ -108,10 +108,7 @@ function seedOwner(ownerId: string): SeedFixtures {
     });
     // Phase 25d (#89) — seed a wizard chat session + message so the
     // cross-tenant test covers the new tables.
-    const session = wizardChatRepo.getOrCreateActiveSession(
-      `season-2026`,
-      systemUserId
-    );
+    const session = wizardChatRepo.getOrCreateActiveSession(`season-2026`, systemUserId);
     wizardChatRepo.appendMessage({
       sessionId: session.id,
       step: 'allocation',
@@ -293,12 +290,8 @@ describe('cross-tenant isolation', () => {
   });
 
   it('listPlanRevisions is owner-scoped', () => {
-    const aRevs = runWithTenant(OWNER_A, () =>
-      planRevisionsRepo.listPlanRevisions(`season-2026`)
-    );
-    const bRevs = runWithTenant(OWNER_B, () =>
-      planRevisionsRepo.listPlanRevisions(`season-2026`)
-    );
+    const aRevs = runWithTenant(OWNER_A, () => planRevisionsRepo.listPlanRevisions(`season-2026`));
+    const bRevs = runWithTenant(OWNER_B, () => planRevisionsRepo.listPlanRevisions(`season-2026`));
     const aIds = new Set(aRevs.map((r) => r.id));
     for (const r of bRevs) expect(aIds.has(r.id)).toBe(false);
     // Sanity: each owner sees their own seeded row.
@@ -325,9 +318,7 @@ describe('cross-tenant isolation', () => {
     // Owner A reading messages by Owner B's sessionId returns []
     // because tenantWhere filters by current ownerId regardless of the
     // sessionId predicate.
-    const aReadsBsSession = runWithTenant(OWNER_A, () =>
-      wizardChatRepo.listMessages(bSession!.id)
-    );
+    const aReadsBsSession = runWithTenant(OWNER_A, () => wizardChatRepo.listMessages(bSession!.id));
     expect(aReadsBsSession).toEqual([]);
 
     // Each owner's own session has its seeded message.

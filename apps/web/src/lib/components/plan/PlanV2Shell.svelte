@@ -93,9 +93,7 @@
     }
     return isPoly ? -1 : 0;
   });
-  const activePlanting = $derived(
-    activePlantingIdx >= 0 ? plantings[activePlantingIdx] : null
-  );
+  const activePlanting = $derived(activePlantingIdx >= 0 ? plantings[activePlantingIdx] : null);
 
   // ── Derived data ──────────────────────────────────────────────────
   /** All calendar-engine events for the selected block, oldest-first. */
@@ -132,7 +130,7 @@
     return tasks
       .filter((t) => t.kind === 'primary')
       .filter((t) => t.blockId === selectedBlock.id)
-      .filter((t) => activePlanting ? t.cropId === activePlanting.id : true)
+      .filter((t) => (activePlanting ? t.cropId === activePlanting.id : true))
       .filter((t) => t.scheduledFor < window)
       .sort((a, b) => a.scheduledFor - b.scheduledFor)
       .map((t) => {
@@ -158,7 +156,16 @@
   });
 
   function plantingColor(plantingId: string): string {
-    const PALETTE = ['#7a8f5a', '#c9961f', '#6f8fa8', '#a85a1f', '#4a8b54', '#a23a3a', '#8a6722', '#7a3a4d'];
+    const PALETTE = [
+      '#7a8f5a',
+      '#c9961f',
+      '#6f8fa8',
+      '#a85a1f',
+      '#4a8b54',
+      '#a23a3a',
+      '#8a6722',
+      '#7a3a4d'
+    ];
     let h = 0;
     for (let i = 0; i < plantingId.length; i++) h = (h * 31 + plantingId.charCodeAt(i)) >>> 0;
     return PALETTE[h % PALETTE.length];
@@ -201,17 +208,16 @@
 </script>
 
 <div class="pv2">
-  <PlanLeftRail
-    {blocks}
-    selectedId={selectedBlockId}
-    onSelect={selectBlock}
-    {onAddBlock}
-  />
+  <PlanLeftRail {blocks} selectedId={selectedBlockId} onSelect={selectBlock} {onAddBlock} />
 
   <div class="pv2-main">
     {#if !selectedBlock}
       <div class="pv2-empty">
-        <p>No blocks yet. <button type="button" class="link" onclick={() => onAddBlock?.()}>Add your first block</button>.</p>
+        <p>
+          No blocks yet. <button type="button" class="link" onclick={() => onAddBlock?.()}
+            >Add your first block</button
+          >.
+        </p>
       </div>
     {:else}
       <PlanBlockHeader
@@ -223,11 +229,7 @@
       />
 
       {#if isPoly}
-        <PlantingsTabStrip
-          {plantings}
-          activeIdx={activePlantingIdx}
-          onSelect={selectPlanting}
-        />
+        <PlantingsTabStrip {plantings} activeIdx={activePlantingIdx} onSelect={selectPlanting} />
       {/if}
 
       {#if plantings.length === 0}
@@ -265,11 +267,7 @@
       {/if}
 
       {#if plantings.length > 0}
-        <SeasonTimelineCard
-          {plantings}
-          events={blockEvents}
-          {daysToMaturityById}
-        />
+        <SeasonTimelineCard {plantings} events={blockEvents} {daysToMaturityById} />
 
         <ScheduledTasksCard
           rows={scheduledRows}
@@ -285,7 +283,7 @@
     open={mapOpen}
     onClose={closeMap}
     {blocks}
-    selectedBlockId={selectedBlockId}
+    {selectedBlockId}
     {farmLabel}
     onSelect={selectBlock}
   />

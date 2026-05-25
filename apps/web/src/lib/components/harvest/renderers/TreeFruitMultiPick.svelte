@@ -38,8 +38,8 @@
     <div>
       <span class="archetype-name">Tree-fruit multi-pick harvest</span>
       <span class="archetype-sub">
-        Multiple ripening passes — pick only what's at color/firmness target each pass. Record
-        this pass's yield; the planting stays open across the 2-3 week window.
+        Multiple ripening passes — pick only what's at color/firmness target each pass. Record this
+        pass's yield; the planting stays open across the 2-3 week window.
       </span>
     </div>
   </header>

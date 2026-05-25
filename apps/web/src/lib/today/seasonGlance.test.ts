@@ -39,10 +39,7 @@ describe('deriveSeasonGlance', () => {
       spraysYTD: 0,
       pluginsLoaded: 0,
       now: NOW,
-      derivedEvents: [
-        ev({ startMs: NOW + 14 * DAY }),
-        ev({ startMs: NOW + 3 * DAY })
-      ]
+      derivedEvents: [ev({ startMs: NOW + 14 * DAY }), ev({ startMs: NOW + 3 * DAY })]
     });
     expect(out.daysToNextHarvest).toBe(3);
   });
@@ -53,10 +50,7 @@ describe('deriveSeasonGlance', () => {
       spraysYTD: 0,
       pluginsLoaded: 0,
       now: NOW,
-      derivedEvents: [
-        ev({ startMs: NOW - 5 * DAY }),
-        ev({ startMs: NOW + 10 * DAY })
-      ]
+      derivedEvents: [ev({ startMs: NOW - 5 * DAY }), ev({ startMs: NOW + 10 * DAY })]
     });
     expect(out.daysToNextHarvest).toBe(10);
   });

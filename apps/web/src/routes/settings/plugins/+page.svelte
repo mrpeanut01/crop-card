@@ -49,7 +49,9 @@
     sub="Stock entries that aren't EPA-registered yet. Curator review before safety-kernel eligibility."
   >
     {#if data.pluginFailures === 0}
-      <p class="empty">No drafts pending review. New stock entries appear here when uploaded with missing fields.</p>
+      <p class="empty">
+        No drafts pending review. New stock entries appear here when uploaded with missing fields.
+      </p>
     {/if}
   </SettingsSection>
 
@@ -58,7 +60,9 @@
     sub="Plugin maintainers occasionally push label corrections."
   >
     {#if data.updatesAvailable === 0}
-      <p class="empty">No updates pending. New plugin versions surface here when the marketplace sync runs.</p>
+      <p class="empty">
+        No updates pending. New plugin versions surface here when the marketplace sync runs.
+      </p>
     {/if}
   </SettingsSection>
 </SettingsShell>

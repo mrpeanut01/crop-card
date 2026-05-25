@@ -38,8 +38,8 @@
     <div>
       <span class="archetype-name">Cure-then-store harvest</span>
       <span class="archetype-sub">
-        Field-cure 10-14 days at 80-85°F before storing at 50-55°F. Record field-pick weight
-        here; log cull + cured weight separately.
+        Field-cure 10-14 days at 80-85°F before storing at 50-55°F. Record field-pick weight here;
+        log cull + cured weight separately.
       </span>
     </div>
   </header>

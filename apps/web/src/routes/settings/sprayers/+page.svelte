@@ -59,9 +59,9 @@
   >
     <div class="explainer">
       <p>
-        <strong>How it works:</strong> spray water into a 18.5 × 18.5 ft square (1/128 ac) at
-        your typical pace. The ounces caught = your GPA. CropCard locks the dilution math against
-        this GPA until you re-calibrate.
+        <strong>How it works:</strong> spray water into a 18.5 × 18.5 ft square (1/128 ac) at your typical
+        pace. The ounces caught = your GPA. CropCard locks the dilution math against this GPA until you
+        re-calibrate.
       </p>
       <a class="primary-sm with-icon" href="/calibrate">
         <Wrench size={12} />
@@ -79,8 +79,7 @@
 
     {#if data.equipment.length === 0}
       <p class="empty">
-        No sprayers configured. <a href="/equipment">Add one</a> to start tracking calibration +
-        decon.
+        No sprayers configured. <a href="/equipment">Add one</a> to start tracking calibration + decon.
       </p>
     {/if}
 

@@ -50,8 +50,8 @@
         <input class="s-input mono" type="number" value={data.retention.sprayYears * 0 + 48} />
       </SettingsField>
       <div class="warn-card">
-        <strong>Important:</strong> setting below 24h surfaces a curator warning. Setting above 96h
-        triggers a VDACS escalation review (events should be locked promptly).
+        <strong>Important:</strong> setting below 24h surfaces a curator warning. Setting above 96h triggers
+        a VDACS escalation review (events should be locked promptly).
       </div>
     </div>
   </SettingsSection>

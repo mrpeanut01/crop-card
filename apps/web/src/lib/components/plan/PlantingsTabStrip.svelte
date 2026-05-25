@@ -19,7 +19,16 @@
   const { plantings, activeIdx, onSelect }: Props = $props();
 
   function plantingColor(plantingId: string): string {
-    const PALETTE = ['#7a8f5a', '#c9961f', '#6f8fa8', '#a85a1f', '#4a8b54', '#a23a3a', '#8a6722', '#7a3a4d'];
+    const PALETTE = [
+      '#7a8f5a',
+      '#c9961f',
+      '#6f8fa8',
+      '#a85a1f',
+      '#4a8b54',
+      '#a23a3a',
+      '#8a6722',
+      '#7a3a4d'
+    ];
     let h = 0;
     for (let i = 0; i < plantingId.length; i++) h = (h * 31 + plantingId.charCodeAt(i)) >>> 0;
     return PALETTE[h % PALETTE.length];
@@ -31,22 +40,12 @@
 </script>
 
 <nav class="tabs" aria-label="Plantings">
-  <button
-    type="button"
-    class="tab"
-    class:active={activeIdx === -1}
-    onclick={() => onSelect(-1)}
-  >
+  <button type="button" class="tab" class:active={activeIdx === -1} onclick={() => onSelect(-1)}>
     All plantings
     <span class="count" class:on={activeIdx === -1}>{plantings.length}</span>
   </button>
   {#each plantings as p, i (p.id)}
-    <button
-      type="button"
-      class="tab"
-      class:active={activeIdx === i}
-      onclick={() => onSelect(i)}
-    >
+    <button type="button" class="tab" class:active={activeIdx === i} onclick={() => onSelect(i)}>
       <span class="swatch" style:background={plantingColor(p.id)}></span>
       {shortName(p.varietyDisplayName)}
     </button>

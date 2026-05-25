@@ -5,10 +5,7 @@ const NOW = Date.UTC(2026, 4, 24); // May 24, 2026
 
 describe('checkFracRotation', () => {
   it('returns no violations when block has no prior fungicide history', () => {
-    const v = checkFracRotation(
-      [{ pluginId: 'manzate', fracCodes: ['M03'] }],
-      []
-    );
+    const v = checkFracRotation([{ pluginId: 'manzate', fracCodes: ['M03'] }], []);
     expect(v).toEqual([]);
   });
 

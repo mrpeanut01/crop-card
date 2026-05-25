@@ -138,8 +138,8 @@
 
 <div class="search-panel">
   <p class="lede">
-    Search your plugin library first. If we don't find a match, we'll ask Claude (uses your
-    daily AI quota — see /settings/ai).
+    Search your plugin library first. If we don't find a match, we'll ask Claude (uses your daily AI
+    quota — see /settings/ai).
   </p>
 
   <div class="search-row">
@@ -165,8 +165,8 @@
 
   {#if searchMeta?.quotaBlocked}
     <p class="hint" aria-live="polite">
-      Daily AI quota exhausted — only library matches shown. Try again tomorrow or upgrade
-      from /settings/ai.
+      Daily AI quota exhausted — only library matches shown. Try again tomorrow or upgrade from
+      /settings/ai.
     </p>
   {/if}
   {#if searchMeta?.upstreamOverloaded}
@@ -177,8 +177,8 @@
 
   {#if candidates.length === 0 && searchSource && !searching}
     <p class="empty">
-      Nothing found in your library{searchedWeb ? ' or on the web' : ''}. Try a different name
-      or use the Manual tab.
+      Nothing found in your library{searchedWeb ? ' or on the web' : ''}. Try a different name or
+      use the Manual tab.
     </p>
   {/if}
 
@@ -237,9 +237,7 @@
 
   {#if candidates.length > 0 && !hasConfidentLocal && !searchedWeb}
     <div class="web-prompt">
-      <p>
-        Nothing in your library matched confidently. Want to ask Claude to search the web?
-      </p>
+      <p>Nothing in your library matched confidently. Want to ask Claude to search the web?</p>
       <button type="button" onclick={() => runSearch(true)} disabled={busy || searching}>
         {#if searching}
           <Loader2 size={14} class="spin" /> Searching…

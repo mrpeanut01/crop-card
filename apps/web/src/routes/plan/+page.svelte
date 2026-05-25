@@ -2409,17 +2409,17 @@
   onOpenWizard={() => (showAllocationWizard = true)}
   onAddBlock={() => {
     detailOpen = true;
-    setTimeout(() => location.hash = '#legacy-plan', 50);
+    setTimeout(() => (location.hash = '#legacy-plan'), 50);
     return goto(tabHref('layout'));
   }}
   onEditBlock={() => {
     detailOpen = true;
-    setTimeout(() => location.hash = '#legacy-plan', 50);
+    setTimeout(() => (location.hash = '#legacy-plan'), 50);
     return goto(tabHref('layout'));
   }}
   onAddPlanting={() => {
     detailOpen = true;
-    setTimeout(() => location.hash = '#legacy-plan', 50);
+    setTimeout(() => (location.hash = '#legacy-plan'), 50);
     return goto(tabHref('crops'));
   }}
 />
@@ -2427,403 +2427,527 @@
 <details class="legacy-detail" id="legacy-plan" bind:open={detailOpen}>
   <summary>Full plan editor — fields · layout · crops · calendar · schedule</summary>
 
-<nav class="plan-tabs" aria-label="Plan tabs">
-  {#each TABS as t (t.id)}
-    <a
-      aria-current={data.tab === t.id ? 'page' : undefined}
-      class:active={data.tab === t.id}
-      href={tabHref(t.id)}
-    >
-      <span aria-hidden="true">{t.icon}</span>
-      <span>{t.label}</span>
-    </a>
-  {/each}
-  {#if data.tab === 'calendar'}
-    <!-- Calendar view toggle lives in the secondary nav rather than as a
+  <nav class="plan-tabs" aria-label="Plan tabs">
+    {#each TABS as t (t.id)}
+      <a
+        aria-current={data.tab === t.id ? 'page' : undefined}
+        class:active={data.tab === t.id}
+        href={tabHref(t.id)}
+      >
+        <span aria-hidden="true">{t.icon}</span>
+        <span>{t.label}</span>
+      </a>
+    {/each}
+    {#if data.tab === 'calendar'}
+      <!-- Calendar view toggle lives in the secondary nav rather than as a
          banner above the content so flipping between Swimlane/Grid doesn't
          shift the layout. Right-justified with a vertical rule that
          separates it visually from the tab list. -->
-    <span class="plan-tabs-divider" aria-hidden="true"></span>
-    <nav class="plan-tabs-view-toggle" aria-label="Calendar view">
-      {#if data.view === 'swimlane'}
-        <span class="cv-link cv-active" aria-current="page">📋 Swimlane</span>
-        <a class="cv-link" href={calendarHref('grid')}>📅 Grid</a>
-      {:else}
-        <a class="cv-link" href={calendarHref('swimlane')}>📋 Swimlane</a>
-        <span class="cv-link cv-active" aria-current="page">📅 Grid</span>
-      {/if}
-    </nav>
-  {/if}
-</nav>
-
-{#if !data.canEdit}
-  <section class="card role-notice">
-    <p>📚 View only — helper role can browse Plan but cannot create or edit. Sign in as Owner.</p>
-  </section>
-{/if}
-
-<!-- ────────────────────────── OVERVIEW (Season Setup, stage 1 of 5) ────────────────────────── -->
-{#if data.tab === 'overview'}
-  <section class="card season-card">
-    <header class="season-header">
-      <div class="season-headline">
-        <span class="season-year">{data.currentYear ?? new Date().getFullYear()}</span>
-        <span class="season-title">Planting season</span>
-      </div>
-      <span class="stage-pill">Stage 1 of 5 · Season setup</span>
-    </header>
-
-    {#if data.seasonSetup && !editingSeason}
-      <!-- Setup exists: show all 6 settings as a definition list + Edit
-           button to swap back to the inline form + Next CTA. -->
-      <dl class="season-summary">
-        <div class="season-row">
-          <dt>Input philosophy</dt>
-          <dd>{PHILOSOPHY_LABELS[data.seasonSetup.philosophy]}</dd>
-        </div>
-        {#if data.seasonSetup.philosophy === 'organic-transitioning' && data.seasonSetup.transitioningStartedYear}
-          <div class="season-row">
-            <dt>Transition started</dt>
-            <dd>{data.seasonSetup.transitioningStartedYear}</dd>
-          </div>
+      <span class="plan-tabs-divider" aria-hidden="true"></span>
+      <nav class="plan-tabs-view-toggle" aria-label="Calendar view">
+        {#if data.view === 'swimlane'}
+          <span class="cv-link cv-active" aria-current="page">📋 Swimlane</span>
+          <a class="cv-link" href={calendarHref('grid')}>📅 Grid</a>
+        {:else}
+          <a class="cv-link" href={calendarHref('swimlane')}>📋 Swimlane</a>
+          <span class="cv-link cv-active" aria-current="page">📅 Grid</span>
         {/if}
-        <div class="season-row">
-          <dt>Weed strategy</dt>
-          <dd>{WEED_LABELS[data.seasonSetup.weedStrategy]}</dd>
-        </div>
-        <div class="season-row">
-          <dt>Pest strategy</dt>
-          <dd>{PEST_LABELS[data.seasonSetup.pestStrategy]}</dd>
-        </div>
-        <div class="season-row">
-          <dt>Fertility approach</dt>
-          <dd>{FERTILITY_LABELS[data.seasonSetup.fertilityApproach]}</dd>
-        </div>
-        <div class="season-row">
-          <dt>Cover crop intent</dt>
-          <dd>{COVER_LABELS[data.seasonSetup.coverCropIntent]}</dd>
-        </div>
-        <div class="season-row">
-          <dt>Spray application capacity</dt>
-          <dd>{SPRAY_LABELS[data.seasonSetup.sprayCapacity]}</dd>
-        </div>
-      </dl>
-      {#if data.canEdit}
-        <div class="season-meta-row">
-          <span class="season-meta">
-            Last updated {new Date(data.seasonSetup.setAt).toLocaleString()}
-          </span>
-          <button type="button" class="edit-season-btn" onclick={() => (editingSeason = true)}>
-            Edit season settings
-          </button>
-        </div>
-      {/if}
-      <div class="stage-cta-row">
-        <p class="stage-helper">
-          Your {data.currentYear ?? new Date().getFullYear()} season setup is captured. Continue to the
-          next stage — define where things are growing.
-        </p>
-        <a class="next-stage-btn" href={tabHref('layout')}>Next: Layout →</a>
-      </div>
-    {:else if data.canEdit}
-      <!-- No setup yet, or operator chose to edit: show the form inline. -->
-      <SeasonSetupStep
-        existing={data.seasonSetup ?? null}
-        lastYearSetup={data.lastYearSetup ?? null}
-        currentYear={data.currentYear ?? new Date().getFullYear()}
-        onSave={handleSeasonSaved}
-      />
-      {#if editingSeason}
-        <p class="stage-helper">
-          <button type="button" class="cancel-edit-link" onclick={() => (editingSeason = false)}
-            >Cancel edits</button
-          >
-        </p>
-      {/if}
-    {:else}
-      <!-- Helper / read-only viewer. -->
-      <p class="stage-helper">
-        The owner hasn't completed the season setup for {data.currentYear ??
-          new Date().getFullYear()} yet. The planner uses the setup to filter which products and tasks
-        to suggest, so downstream stages will fall back to conventional defaults until it's set.
-      </p>
+      </nav>
     {/if}
-  </section>
-{/if}
+  </nav>
 
-<!-- ────────────────────────── LAYOUT ────────────────────────── -->
-{#if data.tab === 'layout'}
-  {#if data.isFirstRun && data.canEdit}
-    <section class="card wizard">
-      <h2>👋 Welcome to CropCard</h2>
-      <p>
-        Draw your first field on the map below, or use <strong
-          >Add field or block without drawing</strong
-        > at the bottom of this page to get started by name.
-      </p>
+  {#if !data.canEdit}
+    <section class="card role-notice">
+      <p>📚 View only — helper role can browse Plan but cannot create or edit. Sign in as Owner.</p>
     </section>
   {/if}
 
-  {#if browser}
-    <BlockMap
-      bind:this={blockMap}
-      blocks={data.blocks}
-      fields={data.fields}
-      canEdit={data.canEdit}
-      onSaveGeometry={saveGeometry}
-      onCreateWithGeometry={createBlockWithGeometry}
-      onSaveFieldGeometry={saveFieldGeometry}
-      onCreateFieldWithGeometry={createFieldWithGeometry}
-      shadeSources={data.shadeSources ?? []}
-      onCreateShadeSource={createShadeSource}
-      onDeleteShadeSource={deleteShadeSource}
-      onUpdateShadeGeometry={updateShadeGeometry}
-    />
-  {:else}
-    <section class="card empty"><p>Loading map…</p></section>
+  <!-- ────────────────────────── OVERVIEW (Season Setup, stage 1 of 5) ────────────────────────── -->
+  {#if data.tab === 'overview'}
+    <section class="card season-card">
+      <header class="season-header">
+        <div class="season-headline">
+          <span class="season-year">{data.currentYear ?? new Date().getFullYear()}</span>
+          <span class="season-title">Planting season</span>
+        </div>
+        <span class="stage-pill">Stage 1 of 5 · Season setup</span>
+      </header>
+
+      {#if data.seasonSetup && !editingSeason}
+        <!-- Setup exists: show all 6 settings as a definition list + Edit
+           button to swap back to the inline form + Next CTA. -->
+        <dl class="season-summary">
+          <div class="season-row">
+            <dt>Input philosophy</dt>
+            <dd>{PHILOSOPHY_LABELS[data.seasonSetup.philosophy]}</dd>
+          </div>
+          {#if data.seasonSetup.philosophy === 'organic-transitioning' && data.seasonSetup.transitioningStartedYear}
+            <div class="season-row">
+              <dt>Transition started</dt>
+              <dd>{data.seasonSetup.transitioningStartedYear}</dd>
+            </div>
+          {/if}
+          <div class="season-row">
+            <dt>Weed strategy</dt>
+            <dd>{WEED_LABELS[data.seasonSetup.weedStrategy]}</dd>
+          </div>
+          <div class="season-row">
+            <dt>Pest strategy</dt>
+            <dd>{PEST_LABELS[data.seasonSetup.pestStrategy]}</dd>
+          </div>
+          <div class="season-row">
+            <dt>Fertility approach</dt>
+            <dd>{FERTILITY_LABELS[data.seasonSetup.fertilityApproach]}</dd>
+          </div>
+          <div class="season-row">
+            <dt>Cover crop intent</dt>
+            <dd>{COVER_LABELS[data.seasonSetup.coverCropIntent]}</dd>
+          </div>
+          <div class="season-row">
+            <dt>Spray application capacity</dt>
+            <dd>{SPRAY_LABELS[data.seasonSetup.sprayCapacity]}</dd>
+          </div>
+        </dl>
+        {#if data.canEdit}
+          <div class="season-meta-row">
+            <span class="season-meta">
+              Last updated {new Date(data.seasonSetup.setAt).toLocaleString()}
+            </span>
+            <button type="button" class="edit-season-btn" onclick={() => (editingSeason = true)}>
+              Edit season settings
+            </button>
+          </div>
+        {/if}
+        <div class="stage-cta-row">
+          <p class="stage-helper">
+            Your {data.currentYear ?? new Date().getFullYear()} season setup is captured. Continue to
+            the next stage — define where things are growing.
+          </p>
+          <a class="next-stage-btn" href={tabHref('layout')}>Next: Layout →</a>
+        </div>
+      {:else if data.canEdit}
+        <!-- No setup yet, or operator chose to edit: show the form inline. -->
+        <SeasonSetupStep
+          existing={data.seasonSetup ?? null}
+          lastYearSetup={data.lastYearSetup ?? null}
+          currentYear={data.currentYear ?? new Date().getFullYear()}
+          onSave={handleSeasonSaved}
+        />
+        {#if editingSeason}
+          <p class="stage-helper">
+            <button type="button" class="cancel-edit-link" onclick={() => (editingSeason = false)}
+              >Cancel edits</button
+            >
+          </p>
+        {/if}
+      {:else}
+        <!-- Helper / read-only viewer. -->
+        <p class="stage-helper">
+          The owner hasn't completed the season setup for {data.currentYear ??
+            new Date().getFullYear()} yet. The planner uses the setup to filter which products and tasks
+          to suggest, so downstream stages will fall back to conventional defaults until it's set.
+        </p>
+      {/if}
+    </section>
   {/if}
 
-  <section class="card">
-    {#if data.fields.length === 0}
-      <p class="empty-row">No fields yet. Use ➕ Draw field on the map above.</p>
+  <!-- ────────────────────────── LAYOUT ────────────────────────── -->
+  {#if data.tab === 'layout'}
+    {#if data.isFirstRun && data.canEdit}
+      <section class="card wizard">
+        <h2>👋 Welcome to CropCard</h2>
+        <p>
+          Draw your first field on the map below, or use <strong
+            >Add field or block without drawing</strong
+          > at the bottom of this page to get started by name.
+        </p>
+      </section>
+    {/if}
+
+    {#if browser}
+      <BlockMap
+        bind:this={blockMap}
+        blocks={data.blocks}
+        fields={data.fields}
+        canEdit={data.canEdit}
+        onSaveGeometry={saveGeometry}
+        onCreateWithGeometry={createBlockWithGeometry}
+        onSaveFieldGeometry={saveFieldGeometry}
+        onCreateFieldWithGeometry={createFieldWithGeometry}
+        shadeSources={data.shadeSources ?? []}
+        onCreateShadeSource={createShadeSource}
+        onDeleteShadeSource={deleteShadeSource}
+        onUpdateShadeGeometry={updateShadeGeometry}
+      />
     {:else}
-      {#each data.fields as f (f.id)}
-        {@const fieldBlocksRaw = data.blocks.filter((b) => b.fieldId === f.id)}
-        {@const fieldBlocks = applyBlockOrder(fieldBlocksRaw, cropsTabOrder)}
-        {@const fieldAcresDisplay = f.acres ?? (f.blockAcresTotal > 0 ? f.blockAcresTotal : null)}
-        <div class="field-group">
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
-          <div
-            class="field-row"
-            class:field-drop-target={fieldDropOverId === f.id && cropsReorderDragId !== null}
-            ondragover={(e) => onFieldRowDragOver(e, f.id)}
-            ondragleave={() => onFieldRowDragLeave(f.id)}
-            ondrop={(e) => onFieldRowDrop(e, f.id)}
-          >
-            <span class="field-icon">🌾</span>
-            <strong class="field-name">{f.name}</strong>
-            <span class="field-stats">
-              {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
-              {#if fieldAcresDisplay !== null}· {fieldAcresDisplay.toFixed(1)} ac{/if}
-            </span>
-            {#if data.canEdit}
-              <button
-                class="row-action"
-                draggable="false"
-                ondragstart={(e) => e.preventDefault()}
-                onclick={() => {
-                  addingBlockForFieldId = addingBlockForFieldId === f.id ? null : f.id;
-                  newBlockName = '';
-                  newBlockAcres = undefined;
-                  blockError = null;
-                }}
-                title="Add block"
-                aria-label="Add block to {f.name}">＋</button
-              >
-              <button
-                class="row-action"
-                draggable="false"
-                ondragstart={(e) => e.preventDefault()}
-                onclick={() => startEditField(f)}
-                title="Edit field">✏</button
-              >
-              <button
-                class="row-action danger"
-                draggable="false"
-                ondragstart={(e) => e.preventDefault()}
-                onclick={() => deleteField(f.id, f.name, fieldBlocks.length)}
-                aria-label="Delete {f.name}"
-                title="Delete field">🗑</button
-              >
-            {/if}
-          </div>
+      <section class="card empty"><p>Loading map…</p></section>
+    {/if}
 
-          {#if editingFieldId === f.id}
-            <div class="inline-edit">
-              <div class="grid2">
-                <label>Name<input type="text" bind:value={editFieldName} /></label>
-                <label
-                  >Acres<input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    bind:value={editFieldAcres}
-                  /></label
+    <section class="card">
+      {#if data.fields.length === 0}
+        <p class="empty-row">No fields yet. Use ➕ Draw field on the map above.</p>
+      {:else}
+        {#each data.fields as f (f.id)}
+          {@const fieldBlocksRaw = data.blocks.filter((b) => b.fieldId === f.id)}
+          {@const fieldBlocks = applyBlockOrder(fieldBlocksRaw, cropsTabOrder)}
+          {@const fieldAcresDisplay = f.acres ?? (f.blockAcresTotal > 0 ? f.blockAcresTotal : null)}
+          <div class="field-group">
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
+              class="field-row"
+              class:field-drop-target={fieldDropOverId === f.id && cropsReorderDragId !== null}
+              ondragover={(e) => onFieldRowDragOver(e, f.id)}
+              ondragleave={() => onFieldRowDragLeave(f.id)}
+              ondrop={(e) => onFieldRowDrop(e, f.id)}
+            >
+              <span class="field-icon">🌾</span>
+              <strong class="field-name">{f.name}</strong>
+              <span class="field-stats">
+                {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
+                {#if fieldAcresDisplay !== null}· {fieldAcresDisplay.toFixed(1)} ac{/if}
+              </span>
+              {#if data.canEdit}
+                <button
+                  class="row-action"
+                  draggable="false"
+                  ondragstart={(e) => e.preventDefault()}
+                  onclick={() => {
+                    addingBlockForFieldId = addingBlockForFieldId === f.id ? null : f.id;
+                    newBlockName = '';
+                    newBlockAcres = undefined;
+                    blockError = null;
+                  }}
+                  title="Add block"
+                  aria-label="Add block to {f.name}">＋</button
                 >
-                <label class="full">Notes<input type="text" bind:value={editFieldNotes} /></label>
-              </div>
-              <div class="row">
-                <button class="primary" onclick={saveEditField}>Save</button>
-                <button onclick={() => (editingFieldId = null)}>Cancel</button>
-              </div>
+                <button
+                  class="row-action"
+                  draggable="false"
+                  ondragstart={(e) => e.preventDefault()}
+                  onclick={() => startEditField(f)}
+                  title="Edit field">✏</button
+                >
+                <button
+                  class="row-action danger"
+                  draggable="false"
+                  ondragstart={(e) => e.preventDefault()}
+                  onclick={() => deleteField(f.id, f.name, fieldBlocks.length)}
+                  aria-label="Delete {f.name}"
+                  title="Delete field">🗑</button
+                >
+              {/if}
             </div>
-          {/if}
 
-          {#if f.notes && editingFieldId !== f.id}<p class="field-notes">{f.notes}</p>{/if}
+            {#if editingFieldId === f.id}
+              <div class="inline-edit">
+                <div class="grid2">
+                  <label>Name<input type="text" bind:value={editFieldName} /></label>
+                  <label
+                    >Acres<input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      bind:value={editFieldAcres}
+                    /></label
+                  >
+                  <label class="full">Notes<input type="text" bind:value={editFieldNotes} /></label>
+                </div>
+                <div class="row">
+                  <button class="primary" onclick={saveEditField}>Save</button>
+                  <button onclick={() => (editingFieldId = null)}>Cancel</button>
+                </div>
+              </div>
+            {/if}
 
-          {#if fieldBlocks.length === 0}
-            <p class="empty-row-indent">No blocks yet — draw on the map above or add one below.</p>
-          {:else}
-            <ul class="block-list-flat">
-              {#each fieldBlocks as b (b.id)}
-                {@const acresDisplay = b.acres !== undefined ? `${b.acres.toFixed(1)} ac` : null}
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <li
-                  class="block-row layout-block-row"
-                  class:dragging={cropsReorderDragId === b.id}
-                  class:drop-target={cropsReorderOverId === b.id &&
-                    cropsReorderDragId !== null &&
-                    cropsReorderDragId !== b.id}
-                  draggable={data.canEdit !== false}
-                  ondragstart={(e) => onCropsHeaderDragStart(e, b.id)}
-                  ondragover={(e) => onCropsHeaderDragOver(e, b.id)}
-                  ondragleave={() => onCropsHeaderDragLeave(b.id)}
-                  ondrop={(e) =>
-                    onCropsHeaderDrop(
-                      e,
-                      b.id,
-                      fieldBlocks.map((x) => x.id)
-                    )}
-                  ondragend={onCropsHeaderDragEnd}
-                  title="Drag to reorder, or drop on another field row to move"
-                >
-                  <span class="grip" aria-hidden="true">⋮⋮</span>
-                  <span class="block-icon">▪</span>
-                  <span class="block-name">{b.name}</span>
-                  <span class="block-stats">
-                    {#if acresDisplay}{acresDisplay}{/if}
-                    {#if b.plantings.length > 0}
-                      {acresDisplay ? ' · ' : ''}
-                      <span
-                        class="plantings-tip"
-                        data-tip={b.plantings.map((p) => p.varietyDisplayName).join(' · ')}
-                        >{b.plantings.length} planting{b.plantings.length === 1 ? '' : 's'}</span
+            {#if f.notes && editingFieldId !== f.id}<p class="field-notes">{f.notes}</p>{/if}
+
+            {#if fieldBlocks.length === 0}
+              <p class="empty-row-indent">
+                No blocks yet — draw on the map above or add one below.
+              </p>
+            {:else}
+              <ul class="block-list-flat">
+                {#each fieldBlocks as b (b.id)}
+                  {@const acresDisplay = b.acres !== undefined ? `${b.acres.toFixed(1)} ac` : null}
+                  <!-- svelte-ignore a11y_no_static_element_interactions -->
+                  <li
+                    class="block-row layout-block-row"
+                    class:dragging={cropsReorderDragId === b.id}
+                    class:drop-target={cropsReorderOverId === b.id &&
+                      cropsReorderDragId !== null &&
+                      cropsReorderDragId !== b.id}
+                    draggable={data.canEdit !== false}
+                    ondragstart={(e) => onCropsHeaderDragStart(e, b.id)}
+                    ondragover={(e) => onCropsHeaderDragOver(e, b.id)}
+                    ondragleave={() => onCropsHeaderDragLeave(b.id)}
+                    ondrop={(e) =>
+                      onCropsHeaderDrop(
+                        e,
+                        b.id,
+                        fieldBlocks.map((x) => x.id)
+                      )}
+                    ondragend={onCropsHeaderDragEnd}
+                    title="Drag to reorder, or drop on another field row to move"
+                  >
+                    <span class="grip" aria-hidden="true">⋮⋮</span>
+                    <span class="block-icon">▪</span>
+                    <span class="block-name">{b.name}</span>
+                    <span class="block-stats">
+                      {#if acresDisplay}{acresDisplay}{/if}
+                      {#if b.plantings.length > 0}
+                        {acresDisplay ? ' · ' : ''}
+                        <span
+                          class="plantings-tip"
+                          data-tip={b.plantings.map((p) => p.varietyDisplayName).join(' · ')}
+                          >{b.plantings.length} planting{b.plantings.length === 1 ? '' : 's'}</span
+                        >
+                      {/if}
+                      {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
+                    </span>
+                    {#if data.canEdit}
+                      <button
+                        class="row-action"
+                        draggable="false"
+                        ondragstart={(e) => e.preventDefault()}
+                        onclick={() => startEditBlock(b)}
+                        title="Edit block">✏</button
+                      >
+                      <button
+                        class="row-action danger"
+                        draggable="false"
+                        ondragstart={(e) => e.preventDefault()}
+                        onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
+                        aria-label="Delete {b.name}"
+                        title="Delete block">🗑</button
                       >
                     {/if}
-                    {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
-                  </span>
-                  {#if data.canEdit}
-                    <button
-                      class="row-action"
-                      draggable="false"
-                      ondragstart={(e) => e.preventDefault()}
-                      onclick={() => startEditBlock(b)}
-                      title="Edit block">✏</button
-                    >
-                    <button
-                      class="row-action danger"
-                      draggable="false"
-                      ondragstart={(e) => e.preventDefault()}
-                      onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
-                      aria-label="Delete {b.name}"
-                      title="Delete block">🗑</button
-                    >
-                  {/if}
-                </li>
-                {#if editingBlockId === b.id}
-                  <li class="inline-edit-row">
-                    <div class="inline-edit">
-                      <div class="grid2">
-                        <label>Name<input type="text" bind:value={editBlockName} /></label>
-                        <label
-                          >Acres<input
-                            type="number"
-                            min="0"
-                            step="0.1"
-                            bind:value={editBlockAcres}
-                          /></label
-                        >
-                        {#if data.fields.length > 1}
+                  </li>
+                  {#if editingBlockId === b.id}
+                    <li class="inline-edit-row">
+                      <div class="inline-edit">
+                        <div class="grid2">
+                          <label>Name<input type="text" bind:value={editBlockName} /></label>
+                          <label
+                            >Acres<input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              bind:value={editBlockAcres}
+                            /></label
+                          >
+                          {#if data.fields.length > 1}
+                            <label class="full"
+                              >Move to field
+                              <select bind:value={editBlockFieldId}>
+                                {#each data.fields as ff (ff.id)}<option value={ff.id}
+                                    >{ff.name}</option
+                                  >{/each}
+                              </select>
+                            </label>
+                          {/if}
                           <label class="full"
-                            >Move to field
-                            <select bind:value={editBlockFieldId}>
-                              {#each data.fields as ff (ff.id)}<option value={ff.id}
-                                  >{ff.name}</option
-                                >{/each}
+                            >Tillage method
+                            <select bind:value={editBlockTillage}>
+                              <option value="conventional">Conventional (plow/disk)</option>
+                              <option value="reduced-till">Reduced-till (single pass)</option>
+                              <option value="no-till">No-till (burndown only)</option>
                             </select>
                           </label>
-                        {/if}
-                        <label class="full"
-                          >Tillage method
-                          <select bind:value={editBlockTillage}>
-                            <option value="conventional">Conventional (plow/disk)</option>
-                            <option value="reduced-till">Reduced-till (single pass)</option>
-                            <option value="no-till">No-till (burndown only)</option>
-                          </select>
-                        </label>
-                        <label
-                          >Slope (%)
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.5"
-                            placeholder="0"
-                            bind:value={editBlockSlopePercent}
-                          />
-                        </label>
-                        <label
-                          >Slope aspect (° downhill)
-                          <input
-                            type="number"
-                            min="0"
-                            max="360"
-                            step="1"
-                            placeholder="0=N, 90=E, 180=S, 270=W"
-                            bind:value={editBlockSlopeAspectDeg}
-                          />
-                        </label>
+                          <label
+                            >Slope (%)
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.5"
+                              placeholder="0"
+                              bind:value={editBlockSlopePercent}
+                            />
+                          </label>
+                          <label
+                            >Slope aspect (° downhill)
+                            <input
+                              type="number"
+                              min="0"
+                              max="360"
+                              step="1"
+                              placeholder="0=N, 90=E, 180=S, 270=W"
+                              bind:value={editBlockSlopeAspectDeg}
+                            />
+                          </label>
+                        </div>
+                        <p class="block-slope-hint">
+                          Slope inputs are optional. Leave both blank for flat terrain. The shade
+                          model uses these to lengthen / shorten projected shadows along the
+                          downhill axis.
+                        </p>
+                        <div class="row">
+                          <button class="primary" onclick={saveEditBlock}>Save</button>
+                          <button onclick={() => (editingBlockId = null)}>Cancel</button>
+                        </div>
                       </div>
-                      <p class="block-slope-hint">
-                        Slope inputs are optional. Leave both blank for flat terrain. The shade
-                        model uses these to lengthen / shorten projected shadows along the downhill
-                        axis.
-                      </p>
-                      <div class="row">
-                        <button class="primary" onclick={saveEditBlock}>Save</button>
-                        <button onclick={() => (editingBlockId = null)}>Cancel</button>
-                      </div>
-                    </div>
-                  </li>
-                {/if}
-              {/each}
-            </ul>
-          {/if}
+                    </li>
+                  {/if}
+                {/each}
+              </ul>
+            {/if}
 
-          {#if data.canEdit && addingBlockForFieldId === f.id}
-            <div class="add-block-inline">
-              <input type="text" placeholder="Block name" bind:value={newBlockName} />
-              <input
-                type="number"
-                placeholder="ac"
-                min="0"
-                step="0.1"
-                bind:value={newBlockAcres}
-                class="acres-input"
-              />
-              <button
-                class="primary small"
-                onclick={() => createBlock(f.id)}
-                disabled={creatingBlock || !newBlockName.trim()}
-              >
-                {creatingBlock ? '…' : 'Add'}
-              </button>
-              <button
-                class="small"
-                onclick={() => {
-                  addingBlockForFieldId = null;
-                  newBlockName = '';
-                  newBlockAcres = undefined;
-                }}>✕</button
+            {#if data.canEdit && addingBlockForFieldId === f.id}
+              <div class="add-block-inline">
+                <input type="text" placeholder="Block name" bind:value={newBlockName} />
+                <input
+                  type="number"
+                  placeholder="ac"
+                  min="0"
+                  step="0.1"
+                  bind:value={newBlockAcres}
+                  class="acres-input"
+                />
+                <button
+                  class="primary small"
+                  onclick={() => createBlock(f.id)}
+                  disabled={creatingBlock || !newBlockName.trim()}
+                >
+                  {creatingBlock ? '…' : 'Add'}
+                </button>
+                <button
+                  class="small"
+                  onclick={() => {
+                    addingBlockForFieldId = null;
+                    newBlockName = '';
+                    newBlockAcres = undefined;
+                  }}>✕</button
+                >
+              </div>
+              {#if blockError}<p class="error" style="padding-left:1.5rem">{blockError}</p>{/if}
+            {/if}
+
+            {#if (data.shadeSources ?? []).some((s) => s.fieldId === f.id)}
+              {@const fieldShades = (data.shadeSources ?? []).filter((s) => s.fieldId === f.id)}
+              <ul class="block-list-flat">
+                {#each fieldShades as s (s.id)}
+                  <li class="block-row shade-row">
+                    <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
+                    <span class="block-name">{s.name}</span>
+                    <span class="block-stats">
+                      {s.kind} · {s.heightFt} ft
+                      {#if s.isDeciduous}
+                        · deciduous{/if}
+                      {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
+                    </span>
+                    {#if data.canEdit}
+                      <button
+                        class="row-action"
+                        onclick={() => startEditShade(s)}
+                        title="Edit shade source">✏</button
+                      >
+                      <button
+                        class="row-action danger"
+                        onclick={() => deleteShadeSource(s.id, s.name)}
+                        aria-label="Delete {s.name}"
+                        title="Delete shade source">🗑</button
+                      >
+                    {/if}
+                  </li>
+                  {#if editingShadeId === s.id}
+                    <li class="inline-edit-row">
+                      <div class="inline-edit">
+                        <div class="grid2">
+                          <label>Name<input type="text" bind:value={editShadeName} /></label>
+                          <label
+                            >Kind
+                            <select bind:value={editShadeKind}>
+                              <option value="tree-row">Tree row</option>
+                              <option value="tree-grove">Tree grove</option>
+                              <option value="tree-single">Single tree</option>
+                              <option value="hedge">Hedge</option>
+                              <option value="building">Building</option>
+                              <option value="fence">Fence</option>
+                              <option value="structure">Structure</option>
+                              <option value="other">Other</option>
+                            </select>
+                          </label>
+                          <label
+                            >Height (ft)<input
+                              type="number"
+                              min="1"
+                              max="200"
+                              step="1"
+                              bind:value={editShadeHeightFt}
+                            /></label
+                          >
+                          <label
+                            >Opacity (0–1)<input
+                              type="number"
+                              min="0"
+                              max="1"
+                              step="0.05"
+                              bind:value={editShadeOpacity}
+                            /></label
+                          >
+                          {#if data.fields.length > 0}
+                            <label class="full"
+                              >Field
+                              <select bind:value={editShadeFieldId}>
+                                <option value="">— Farm-wide (no field) —</option>
+                                {#each data.fields as ff (ff.id)}<option value={ff.id}
+                                    >{ff.name}</option
+                                  >{/each}
+                              </select>
+                            </label>
+                          {/if}
+                        </div>
+                        <label class="checkbox-line">
+                          <input type="checkbox" bind:checked={editShadeIsDeciduous} />
+                          Deciduous (leaves drop in winter)
+                        </label>
+                        {#if editShadeIsDeciduous}
+                          <div class="grid2">
+                            <label
+                              >Leaf-on (day of year)<input
+                                type="number"
+                                min="1"
+                                max="366"
+                                bind:value={editShadeLeafOnDoy}
+                              /></label
+                            >
+                            <label
+                              >Leaf-off (day of year)<input
+                                type="number"
+                                min="1"
+                                max="366"
+                                bind:value={editShadeLeafOffDoy}
+                              /></label
+                            >
+                          </div>
+                        {/if}
+                        <div class="row">
+                          <button class="primary" onclick={saveEditShade}>Save</button>
+                          <button onclick={() => (editingShadeId = null)}>Cancel</button>
+                        </div>
+                      </div>
+                    </li>
+                  {/if}
+                {/each}
+              </ul>
+            {/if}
+          </div>
+        {/each}
+
+        {#if (data.shadeSources ?? []).some((s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId))}
+          {@const unscopedShades = (data.shadeSources ?? []).filter(
+            (s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId)
+          )}
+          <div class="field-group">
+            <div class="field-row">
+              <span class="field-icon">🌐</span>
+              <strong class="field-name">Farm-wide shade sources</strong>
+              <span class="field-stats"
+                >{unscopedShades.length} entr{unscopedShades.length === 1 ? 'y' : 'ies'}</span
               >
             </div>
-            {#if blockError}<p class="error" style="padding-left:1.5rem">{blockError}</p>{/if}
-          {/if}
-
-          {#if (data.shadeSources ?? []).some((s) => s.fieldId === f.id)}
-            {@const fieldShades = (data.shadeSources ?? []).filter((s) => s.fieldId === f.id)}
             <ul class="block-list-flat">
-              {#each fieldShades as s (s.id)}
+              {#each unscopedShades as s (s.id)}
                 <li class="block-row shade-row">
                   <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
                   <span class="block-name">{s.name}</span>
@@ -2928,234 +3052,75 @@
                 {/if}
               {/each}
             </ul>
-          {/if}
-        </div>
-      {/each}
-
-      {#if (data.shadeSources ?? []).some((s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId))}
-        {@const unscopedShades = (data.shadeSources ?? []).filter(
-          (s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId)
+          </div>
+        {/if}
+        <!-- Blocks with no field assignment (shouldn't happen post-migration) -->
+        {@const orphans = data.blocks.filter(
+          (b) => !b.fieldId || !data.fields.some((f) => f.id === b.fieldId)
         )}
-        <div class="field-group">
-          <div class="field-row">
-            <span class="field-icon">🌐</span>
-            <strong class="field-name">Farm-wide shade sources</strong>
-            <span class="field-stats"
-              >{unscopedShades.length} entr{unscopedShades.length === 1 ? 'y' : 'ies'}</span
-            >
-          </div>
-          <ul class="block-list-flat">
-            {#each unscopedShades as s (s.id)}
-              <li class="block-row shade-row">
-                <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
-                <span class="block-name">{s.name}</span>
-                <span class="block-stats">
-                  {s.kind} · {s.heightFt} ft
-                  {#if s.isDeciduous}
-                    · deciduous{/if}
-                  {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
-                </span>
-                {#if data.canEdit}
-                  <button
-                    class="row-action"
-                    onclick={() => startEditShade(s)}
-                    title="Edit shade source">✏</button
-                  >
-                  <button
-                    class="row-action danger"
-                    onclick={() => deleteShadeSource(s.id, s.name)}
-                    aria-label="Delete {s.name}"
-                    title="Delete shade source">🗑</button
-                  >
-                {/if}
-              </li>
-              {#if editingShadeId === s.id}
-                <li class="inline-edit-row">
-                  <div class="inline-edit">
-                    <div class="grid2">
-                      <label>Name<input type="text" bind:value={editShadeName} /></label>
-                      <label
-                        >Kind
-                        <select bind:value={editShadeKind}>
-                          <option value="tree-row">Tree row</option>
-                          <option value="tree-grove">Tree grove</option>
-                          <option value="tree-single">Single tree</option>
-                          <option value="hedge">Hedge</option>
-                          <option value="building">Building</option>
-                          <option value="fence">Fence</option>
-                          <option value="structure">Structure</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </label>
-                      <label
-                        >Height (ft)<input
-                          type="number"
-                          min="1"
-                          max="200"
-                          step="1"
-                          bind:value={editShadeHeightFt}
-                        /></label
-                      >
-                      <label
-                        >Opacity (0–1)<input
-                          type="number"
-                          min="0"
-                          max="1"
-                          step="0.05"
-                          bind:value={editShadeOpacity}
-                        /></label
-                      >
-                      {#if data.fields.length > 0}
-                        <label class="full"
-                          >Field
-                          <select bind:value={editShadeFieldId}>
-                            <option value="">— Farm-wide (no field) —</option>
-                            {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option
-                              >{/each}
-                          </select>
-                        </label>
-                      {/if}
-                    </div>
-                    <label class="checkbox-line">
-                      <input type="checkbox" bind:checked={editShadeIsDeciduous} />
-                      Deciduous (leaves drop in winter)
-                    </label>
-                    {#if editShadeIsDeciduous}
-                      <div class="grid2">
-                        <label
-                          >Leaf-on (day of year)<input
-                            type="number"
-                            min="1"
-                            max="366"
-                            bind:value={editShadeLeafOnDoy}
-                          /></label
-                        >
-                        <label
-                          >Leaf-off (day of year)<input
-                            type="number"
-                            min="1"
-                            max="366"
-                            bind:value={editShadeLeafOffDoy}
-                          /></label
-                        >
-                      </div>
-                    {/if}
-                    <div class="row">
-                      <button class="primary" onclick={saveEditShade}>Save</button>
-                      <button onclick={() => (editingShadeId = null)}>Cancel</button>
-                    </div>
-                  </div>
+        {#if orphans.length > 0}
+          <div class="field-group">
+            <div class="field-row">
+              <span class="field-icon">⚠️</span>
+              <strong class="field-name">Unassigned</strong>
+            </div>
+            <ul class="block-list-flat">
+              {#each orphans as b (b.id)}
+                <li class="block-row">
+                  <span class="block-icon">▪</span>
+                  <span class="block-name">{b.name}</span>
+                  <span class="block-stats">
+                    {#if b.acres !== undefined}{b.acres.toFixed(1)} ac{/if}
+                    {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
+                  </span>
+                  {#if data.canEdit}
+                    <button
+                      class="row-action danger"
+                      onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
+                      aria-label="Delete {b.name}">🗑</button
+                    >
+                  {/if}
                 </li>
-              {/if}
-            {/each}
-          </ul>
-        </div>
-      {/if}
-      <!-- Blocks with no field assignment (shouldn't happen post-migration) -->
-      {@const orphans = data.blocks.filter(
-        (b) => !b.fieldId || !data.fields.some((f) => f.id === b.fieldId)
-      )}
-      {#if orphans.length > 0}
-        <div class="field-group">
-          <div class="field-row">
-            <span class="field-icon">⚠️</span>
-            <strong class="field-name">Unassigned</strong>
+              {/each}
+            </ul>
           </div>
-          <ul class="block-list-flat">
-            {#each orphans as b (b.id)}
-              <li class="block-row">
-                <span class="block-icon">▪</span>
-                <span class="block-name">{b.name}</span>
-                <span class="block-stats">
-                  {#if b.acres !== undefined}{b.acres.toFixed(1)} ac{/if}
-                  {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
-                </span>
-                {#if data.canEdit}
-                  <button
-                    class="row-action danger"
-                    onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
-                    aria-label="Delete {b.name}">🗑</button
-                  >
-                {/if}
-              </li>
-            {/each}
-          </ul>
-        </div>
+        {/if}
       {/if}
-    {/if}
-  </section>
+    </section>
 
-  {#if data.canEdit}
-    <details class="card advanced">
-      <summary>Add without drawing</summary>
-      <p class="lede">
-        Add a field, block, tree row, grove, building, or other shade source by name only. Geometry
-        is optional — draw it later on the map above by selecting the matching tool.
-      </p>
+    {#if data.canEdit}
+      <details class="card advanced">
+        <summary>Add without drawing</summary>
+        <p class="lede">
+          Add a field, block, tree row, grove, building, or other shade source by name only.
+          Geometry is optional — draw it later on the map above by selecting the matching tool.
+        </p>
 
-      <label class="full">
-        What are you adding?
-        <select bind:value={addKind}>
-          <option value="field">Field</option>
-          <option value="block">Block</option>
-          <option disabled>──────────────</option>
-          <option value="tree-row">🌳 Tree row</option>
-          <option value="tree-grove">🌲 Tree grove</option>
-          <option value="tree-single">🌳 Single tree</option>
-          <option value="hedge">🌿 Hedge</option>
-          <option value="building">🏠 Building</option>
-          <option value="fence">🧱 Fence</option>
-          <option value="structure">🏗️ Structure</option>
-          <option value="other">🌑 Other</option>
-        </select>
-      </label>
+        <label class="full">
+          What are you adding?
+          <select bind:value={addKind}>
+            <option value="field">Field</option>
+            <option value="block">Block</option>
+            <option disabled>──────────────</option>
+            <option value="tree-row">🌳 Tree row</option>
+            <option value="tree-grove">🌲 Tree grove</option>
+            <option value="tree-single">🌳 Single tree</option>
+            <option value="hedge">🌿 Hedge</option>
+            <option value="building">🏠 Building</option>
+            <option value="fence">🧱 Fence</option>
+            <option value="structure">🏗️ Structure</option>
+            <option value="other">🌑 Other</option>
+          </select>
+        </label>
 
-      {#if addKind === 'field'}
-        <div class="add-form-section">
-          <div class="grid2">
-            <label
-              >Name<input
-                type="text"
-                placeholder="e.g. North Field"
-                bind:value={newFieldName}
-              /></label
-            >
-            <label
-              >Acres (optional)<input
-                type="number"
-                min="0"
-                step="0.1"
-                bind:value={newFieldAcres}
-              /></label
-            >
-            <label class="full"
-              >Notes (optional)<input
-                type="text"
-                placeholder="Lease info, address, etc."
-                bind:value={newFieldNotes}
-              /></label
-            >
-          </div>
-          <button
-            class="primary"
-            onclick={createField}
-            disabled={creatingField || !newFieldName.trim()}
-          >
-            {creatingField ? '…' : 'Add field'}
-          </button>
-          {#if fieldError}<p class="error">{fieldError}</p>{/if}
-        </div>
-      {:else if addKind === 'block'}
-        {#if data.fields.length === 0}
-          <p class="error">Add a field first — every block belongs to one.</p>
-        {:else}
+        {#if addKind === 'field'}
           <div class="add-form-section">
             <div class="grid2">
               <label
                 >Name<input
                   type="text"
-                  placeholder="e.g. Corn Block A"
-                  bind:value={newBlockName}
+                  placeholder="e.g. North Field"
+                  bind:value={newFieldName}
                 /></label
               >
               <label
@@ -3163,162 +3128,200 @@
                   type="number"
                   min="0"
                   step="0.1"
-                  bind:value={newBlockAcres}
+                  bind:value={newFieldAcres}
                 /></label
               >
               <label class="full"
-                >Field
-                <select bind:value={newBlockFieldId}>
+                >Notes (optional)<input
+                  type="text"
+                  placeholder="Lease info, address, etc."
+                  bind:value={newFieldNotes}
+                /></label
+              >
+            </div>
+            <button
+              class="primary"
+              onclick={createField}
+              disabled={creatingField || !newFieldName.trim()}
+            >
+              {creatingField ? '…' : 'Add field'}
+            </button>
+            {#if fieldError}<p class="error">{fieldError}</p>{/if}
+          </div>
+        {:else if addKind === 'block'}
+          {#if data.fields.length === 0}
+            <p class="error">Add a field first — every block belongs to one.</p>
+          {:else}
+            <div class="add-form-section">
+              <div class="grid2">
+                <label
+                  >Name<input
+                    type="text"
+                    placeholder="e.g. Corn Block A"
+                    bind:value={newBlockName}
+                  /></label
+                >
+                <label
+                  >Acres (optional)<input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    bind:value={newBlockAcres}
+                  /></label
+                >
+                <label class="full"
+                  >Field
+                  <select bind:value={newBlockFieldId}>
+                    {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
+                  </select>
+                </label>
+              </div>
+              <button
+                class="primary"
+                onclick={() => createBlock()}
+                disabled={creatingBlock || !newBlockName.trim()}
+              >
+                {creatingBlock ? '…' : 'Add block'}
+              </button>
+              {#if blockError}<p class="error">{blockError}</p>{/if}
+            </div>
+          {/if}
+        {:else}
+          <div class="add-form-section">
+            <div class="grid2">
+              <label
+                >Name<input
+                  type="text"
+                  placeholder="e.g. North maple windbreak"
+                  bind:value={addShadeName}
+                /></label
+              >
+              <label
+                >Height (ft)<input
+                  type="number"
+                  min="1"
+                  max="200"
+                  step="1"
+                  bind:value={addShadeHeightFt}
+                /></label
+              >
+              <label
+                >Opacity (0–1)<input
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  bind:value={addShadeOpacity}
+                /></label
+              >
+              <label class="full"
+                >Field (optional — leave blank for farm-wide)
+                <select bind:value={addShadeFieldId}>
+                  <option value="">— Farm-wide (no field) —</option>
                   {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
                 </select>
               </label>
             </div>
+            <label class="checkbox-line">
+              <input type="checkbox" bind:checked={addShadeIsDeciduous} />
+              Deciduous (leaves drop in winter)
+            </label>
+            {#if addShadeIsDeciduous}
+              <div class="grid2">
+                <label
+                  >Leaf-on (day of year)<input
+                    type="number"
+                    min="1"
+                    max="366"
+                    bind:value={addShadeLeafOnDoy}
+                  /></label
+                >
+                <label
+                  >Leaf-off (day of year)<input
+                    type="number"
+                    min="1"
+                    max="366"
+                    bind:value={addShadeLeafOffDoy}
+                  /></label
+                >
+              </div>
+            {/if}
             <button
               class="primary"
-              onclick={() => createBlock()}
-              disabled={creatingBlock || !newBlockName.trim()}
+              onclick={addShadeWithoutGeometry}
+              disabled={addingShade || !addShadeName.trim()}
             >
-              {creatingBlock ? '…' : 'Add block'}
+              {addingShade ? '…' : `Add ${addKind}`}
             </button>
-            {#if blockError}<p class="error">{blockError}</p>{/if}
+            {#if addShadeError}<p class="error">{addShadeError}</p>{/if}
+            <p class="muted" style="margin-top:0.4rem">
+              Without geometry the shade source won't project shadows — draw it on the map after to
+              wire up shading.
+            </p>
           </div>
         {/if}
-      {:else}
-        <div class="add-form-section">
-          <div class="grid2">
-            <label
-              >Name<input
-                type="text"
-                placeholder="e.g. North maple windbreak"
-                bind:value={addShadeName}
-              /></label
-            >
-            <label
-              >Height (ft)<input
-                type="number"
-                min="1"
-                max="200"
-                step="1"
-                bind:value={addShadeHeightFt}
-              /></label
-            >
-            <label
-              >Opacity (0–1)<input
-                type="number"
-                min="0"
-                max="1"
-                step="0.05"
-                bind:value={addShadeOpacity}
-              /></label
-            >
-            <label class="full"
-              >Field (optional — leave blank for farm-wide)
-              <select bind:value={addShadeFieldId}>
-                <option value="">— Farm-wide (no field) —</option>
-                {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
-              </select>
-            </label>
-          </div>
-          <label class="checkbox-line">
-            <input type="checkbox" bind:checked={addShadeIsDeciduous} />
-            Deciduous (leaves drop in winter)
-          </label>
-          {#if addShadeIsDeciduous}
-            <div class="grid2">
-              <label
-                >Leaf-on (day of year)<input
-                  type="number"
-                  min="1"
-                  max="366"
-                  bind:value={addShadeLeafOnDoy}
-                /></label
-              >
-              <label
-                >Leaf-off (day of year)<input
-                  type="number"
-                  min="1"
-                  max="366"
-                  bind:value={addShadeLeafOffDoy}
-                /></label
-              >
-            </div>
-          {/if}
-          <button
-            class="primary"
-            onclick={addShadeWithoutGeometry}
-            disabled={addingShade || !addShadeName.trim()}
-          >
-            {addingShade ? '…' : `Add ${addKind}`}
-          </button>
-          {#if addShadeError}<p class="error">{addShadeError}</p>{/if}
-          <p class="muted" style="margin-top:0.4rem">
-            Without geometry the shade source won't project shadows — draw it on the map after to
-            wire up shading.
+
+        <details class="nested-advanced">
+          <summary>Advanced — paste GeoJSON</summary>
+          <p class="lede">
+            Power-user import path: paste GeoJSON exported from QGIS, ArcGIS, or a county GIS
+            portal. Currently supports field + block features only.
           </p>
-        </div>
-      {/if}
 
-      <details class="nested-advanced">
-        <summary>Advanced — paste GeoJSON</summary>
-        <p class="lede">
-          Power-user import path: paste GeoJSON exported from QGIS, ArcGIS, or a county GIS portal.
-          Currently supports field + block features only.
-        </p>
+          <div class="paste-mode-tabs">
+            <button
+              class:active={pasteMode === 'block'}
+              onclick={() => {
+                pasteMode = 'block';
+                pasteResults = [];
+                geomError = null;
+                geomMessage = null;
+              }}
+              type="button">Single block</button
+            >
+            <button
+              class:active={pasteMode === 'collection'}
+              onclick={() => {
+                pasteMode = 'collection';
+                geomError = null;
+                geomMessage = null;
+              }}
+              type="button">Fields + Blocks (FeatureCollection)</button
+            >
+          </div>
 
-        <div class="paste-mode-tabs">
-          <button
-            class:active={pasteMode === 'block'}
-            onclick={() => {
-              pasteMode = 'block';
-              pasteResults = [];
-              geomError = null;
-              geomMessage = null;
-            }}
-            type="button">Single block</button
-          >
-          <button
-            class:active={pasteMode === 'collection'}
-            onclick={() => {
-              pasteMode = 'collection';
-              geomError = null;
-              geomMessage = null;
-            }}
-            type="button">Fields + Blocks (FeatureCollection)</button
-          >
-        </div>
-
-        <form onsubmit={savePaste}>
-          {#if pasteMode === 'block'}
-            <label>
-              Block
-              <select bind:value={pasteBlockId}>
-                {#each data.blocks as b (b.id)}
-                  <option value={b.id}>
-                    {b.name}{b.geometryGeojson ? ' (has geometry)' : ''}
-                  </option>
-                {/each}
-              </select>
-            </label>
-            <label>
-              GeoJSON (Polygon, MultiPolygon, Feature, or FeatureCollection)
-              <textarea
-                bind:value={pasteText}
-                rows="6"
-                placeholder={'{"type":"Polygon","coordinates":[[[-77.6,39.1],[-77.6,39.11],[-77.59,39.11],[-77.59,39.1],[-77.6,39.1]]]}'}
-              ></textarea>
-            </label>
-          {:else}
-            <p class="lede">
-              Paste a GeoJSON <code>FeatureCollection</code> where each Feature has
-              <code>properties.type</code> of <code>"field"</code> or <code>"block"</code>, and
-              <code>properties.name</code>
-              matching an existing field or block name. Block features may also include
-              <code>properties.field</code> to disambiguate when the same block name exists in multiple
-              fields.
-            </p>
-            <details class="example-collapse">
-              <summary>Show example</summary>
-              <pre class="geojson-example">{`{
+          <form onsubmit={savePaste}>
+            {#if pasteMode === 'block'}
+              <label>
+                Block
+                <select bind:value={pasteBlockId}>
+                  {#each data.blocks as b (b.id)}
+                    <option value={b.id}>
+                      {b.name}{b.geometryGeojson ? ' (has geometry)' : ''}
+                    </option>
+                  {/each}
+                </select>
+              </label>
+              <label>
+                GeoJSON (Polygon, MultiPolygon, Feature, or FeatureCollection)
+                <textarea
+                  bind:value={pasteText}
+                  rows="6"
+                  placeholder={'{"type":"Polygon","coordinates":[[[-77.6,39.1],[-77.6,39.11],[-77.59,39.11],[-77.59,39.1],[-77.6,39.1]]]}'}
+                ></textarea>
+              </label>
+            {:else}
+              <p class="lede">
+                Paste a GeoJSON <code>FeatureCollection</code> where each Feature has
+                <code>properties.type</code> of <code>"field"</code> or <code>"block"</code>, and
+                <code>properties.name</code>
+                matching an existing field or block name. Block features may also include
+                <code>properties.field</code> to disambiguate when the same block name exists in multiple
+                fields.
+              </p>
+              <details class="example-collapse">
+                <summary>Show example</summary>
+                <pre class="geojson-example">{`{
   "type": "FeatureCollection",
   "features": [
     {
@@ -3333,1408 +3336,1435 @@
     }
   ]
 }`}</pre>
-            </details>
-            <label>
-              FeatureCollection JSON
-              <textarea
-                bind:value={pasteText}
-                rows="10"
-                placeholder={'{"type":"FeatureCollection","features":[...]}'}
-              ></textarea>
-            </label>
+              </details>
+              <label>
+                FeatureCollection JSON
+                <textarea
+                  bind:value={pasteText}
+                  rows="10"
+                  placeholder={'{"type":"FeatureCollection","features":[...]}'}
+                ></textarea>
+              </label>
+            {/if}
+
+            <button type="submit" class="primary" disabled={geomBusy || !pasteText.trim()}>
+              {geomBusy ? 'Saving…' : pasteMode === 'collection' ? 'Import all' : 'Save geometry'}
+            </button>
+          </form>
+
+          {#if geomMessage}<p class="success">{geomMessage}</p>{/if}
+          {#if geomError}<p class="error">{geomError}</p>{/if}
+          {#if pasteResults.length > 0}
+            <table class="paste-results">
+              <thead><tr><th>Name</th><th>Type</th><th>Result</th></tr></thead>
+              <tbody>
+                {#each pasteResults as r}
+                  <tr class={r.status.startsWith('saved') ? 'result-ok' : 'result-warn'}>
+                    <td>{r.name}</td>
+                    <td>{r.kind}</td>
+                    <td>{r.status}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
           {/if}
-
-          <button type="submit" class="primary" disabled={geomBusy || !pasteText.trim()}>
-            {geomBusy ? 'Saving…' : pasteMode === 'collection' ? 'Import all' : 'Save geometry'}
-          </button>
-        </form>
-
-        {#if geomMessage}<p class="success">{geomMessage}</p>{/if}
-        {#if geomError}<p class="error">{geomError}</p>{/if}
-        {#if pasteResults.length > 0}
-          <table class="paste-results">
-            <thead><tr><th>Name</th><th>Type</th><th>Result</th></tr></thead>
-            <tbody>
-              {#each pasteResults as r}
-                <tr class={r.status.startsWith('saved') ? 'result-ok' : 'result-warn'}>
-                  <td>{r.name}</td>
-                  <td>{r.kind}</td>
-                  <td>{r.status}</td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        {/if}
+        </details>
       </details>
-    </details>
+    {/if}
   {/if}
-{/if}
 
-<!-- ────────────────────────── CROPS ────────────────────────── -->
-{#if data.tab === 'crops'}
-  {#if browser && (data.fields.some((f) => f.geometryGeojson) || data.blocks.some((b) => b.geometryGeojson))}
-    <BlockMap
-      blocks={data.blocks}
-      fields={data.fields}
-      canEdit={false}
-      {blockBadges}
-      shadeSources={data.shadeSources ?? []}
-      onSaveGeometry={saveGeometry}
-      onCreateWithGeometry={createBlockWithGeometry}
-      onSaveFieldGeometry={saveFieldGeometry}
-      onCreateFieldWithGeometry={createFieldWithGeometry}
+  <!-- ────────────────────────── CROPS ────────────────────────── -->
+  {#if data.tab === 'crops'}
+    {#if browser && (data.fields.some((f) => f.geometryGeojson) || data.blocks.some((b) => b.geometryGeojson))}
+      <BlockMap
+        blocks={data.blocks}
+        fields={data.fields}
+        canEdit={false}
+        {blockBadges}
+        shadeSources={data.shadeSources ?? []}
+        onSaveGeometry={saveGeometry}
+        onCreateWithGeometry={createBlockWithGeometry}
+        onSaveFieldGeometry={saveFieldGeometry}
+        onCreateFieldWithGeometry={createFieldWithGeometry}
+      />
+    {/if}
+
+    {#if data.fields.length === 0}
+      <section class="card empty">
+        <p>Add a field on the Layout tab to get started.</p>
+      </section>
+    {:else}
+      <div class="crops-tab-layout">
+        <section class="card crops-card">
+          {#each data.fields as f (f.id)}
+            {@const fieldBlocksRaw = data.blocks.filter((b) => b.fieldId === f.id)}
+            {@const fieldBlocks = applyBlockOrder(fieldBlocksRaw, cropsTabOrder)}
+            {@const fieldBlockIds = fieldBlocks.map((b) => b.id)}
+            {@const totalCrops = fieldBlocks.reduce((n, b) => n + b.plantings.length, 0)}
+            <div class="field-group">
+              <!-- svelte-ignore a11y_no_static_element_interactions -->
+              <div
+                class="field-row"
+                class:field-drop-target={fieldDropOverId === f.id && cropsReorderDragId !== null}
+                ondragover={(e) => onFieldRowDragOver(e, f.id)}
+                ondragleave={() => onFieldRowDragLeave(f.id)}
+                ondrop={(e) => onFieldRowDrop(e, f.id)}
+              >
+                <span class="field-icon">🌾</span>
+                <strong class="field-name">{f.name}</strong>
+                <span class="field-stats">
+                  {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
+                  {#if totalCrops > 0}· {totalCrops} crop{totalCrops === 1 ? '' : 's'}{/if}
+                </span>
+              </div>
+
+              {#if fieldBlocks.length === 0}
+                <p class="empty-row-indent">No blocks — add them on the Layout tab.</p>
+              {:else}
+                {#each fieldBlocks as block (block.id)}
+                  {@const blockAcresDisplay =
+                    block.acres !== undefined ? `${block.acres.toFixed(2)} ac` : null}
+                  <div
+                    class="crop-block"
+                    class:dragging={cropsReorderDragId === block.id}
+                    class:drop-target={cropsReorderOverId === block.id &&
+                      cropsReorderDragId !== null &&
+                      cropsReorderDragId !== block.id}
+                    class:seed-drop-target={cropsSeedHoverBlockId === block.id &&
+                      cropsSeedDrag !== null}
+                    class:crop-drop-target={cropMoveOverBlockId === block.id &&
+                      cropMoveDragId !== null}
+                  >
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <div
+                      class="block-row"
+                      draggable="true"
+                      ondragstart={(e) => onCropsHeaderDragStart(e, block.id)}
+                      ondragover={(e) => onCropsHeaderDragOver(e, block.id)}
+                      ondragleave={() => onCropsHeaderDragLeave(block.id)}
+                      ondrop={(e) => onCropsHeaderDrop(e, block.id, fieldBlockIds)}
+                      ondragend={onCropsHeaderDragEnd}
+                      title="Drag to reorder blocks in this field"
+                    >
+                      <span class="grip" aria-hidden="true">⋮⋮</span>
+                      <span class="block-icon">▪</span>
+                      <span class="block-name">{block.name}</span>
+                      <span class="block-stats">
+                        {block.plantings.length} crop{block.plantings.length === 1 ? '' : 's'}
+                        {#if blockAcresDisplay}
+                          · {blockAcresDisplay}{/if}
+                      </span>
+                      {#if data.canEdit}
+                        <button
+                          class="row-action crop-add-btn"
+                          draggable="false"
+                          ondragstart={(e) => e.preventDefault()}
+                          onclick={(e) => {
+                            e.stopPropagation();
+                            pickerBlockId = block.id;
+                          }}
+                          title="Add crop to {block.name}">＋ crop</button
+                        >
+                      {/if}
+                    </div>
+
+                    {#if block.plantings.length > 0}
+                      <ul class="crop-list">
+                        {#each block.plantings as p (p.id)}
+                          {@const guide = data.plantingGuides[p.cropPluginId]}
+                          {@const catalogItem = data.cropCatalog.find(
+                            (c) => c.pluginId === p.cropPluginId
+                          )}
+                          {@const cropDtm = catalogItem?.daysToMaturity}
+                          {@const fam = pluginById.get(p.cropPluginId)?.cropFamily}
+                          {@const familyEmoji = (fam && FAMILY_ICON[fam]) || '🌱'}
+                          {@const guideTip =
+                            [
+                              cropDtm
+                                ? 'DTM: ' +
+                                  (cropDtm.min === cropDtm.max
+                                    ? cropDtm.min
+                                    : cropDtm.min + '–' + cropDtm.max) +
+                                  ' d'
+                                : '',
+                              guide?.soilTempMinF !== undefined
+                                ? 'Soil min: ' + guide.soilTempMinF + '°F'
+                                : '',
+                              guide?.rowSpacingIn !== undefined
+                                ? 'Row spacing: ' + guide.rowSpacingIn + ' in'
+                                : '',
+                              guide?.inRowSpacingIn
+                                ? 'In-row: ' +
+                                  guide.inRowSpacingIn.min +
+                                  '–' +
+                                  guide.inRowSpacingIn.max +
+                                  ' in'
+                                : '',
+                              guide?.seedDepthIn
+                                ? 'Seed depth: ' +
+                                  guide.seedDepthIn.min +
+                                  '–' +
+                                  guide.seedDepthIn.max +
+                                  ' in'
+                                : '',
+                              guide?.seedsPerAcre !== undefined
+                                ? 'Seeds/acre: ' + guide.seedsPerAcre.toLocaleString()
+                                : ''
+                            ]
+                              .filter(Boolean)
+                              .join('\n') || 'No guide available'}
+                          <!-- svelte-ignore a11y_no_static_element_interactions -->
+                          <li
+                            class="crop-item"
+                            class:dragging={cropMoveDragId === p.id}
+                            draggable={data.canEdit !== false}
+                            ondragstart={(e) => onCropItemDragStart(e, p.id)}
+                            ondragend={onCropItemDragEnd}
+                            title="Drag onto another block to move this crop"
+                          >
+                            <div class="crop-item-row">
+                              <span class="grip" aria-hidden="true">⋮⋮</span>
+                              <span class="crop-name-group">
+                                <span class="crop-family-emoji" aria-hidden="true"
+                                  >{familyEmoji}</span
+                                >
+                                <a
+                                  href="/crops/{p.id}"
+                                  class="crop-name"
+                                  draggable="false"
+                                  ondragstart={(e) => e.preventDefault()}
+                                  title={p.varietyDisplayName}
+                                  >{data.seedShortNameByDisplay?.[p.varietyDisplayName] ??
+                                    p.varietyDisplayName}</a
+                                >
+                                {#if p.quantityPlanted !== undefined && p.quantityUnit}
+                                  <span class="crop-qty">{p.quantityPlanted} {p.quantityUnit}</span>
+                                {/if}
+                                <button
+                                  class="guide-tip"
+                                  class:open={openGuides.has(p.id)}
+                                  data-tip={guideTip}
+                                  draggable="false"
+                                  ondragstart={(e) => e.preventDefault()}
+                                  onclick={(e) => {
+                                    e.stopPropagation();
+                                    toggleGuide(p.id);
+                                  }}>ⓘ</button
+                                >
+                              </span>
+                              {#if p.plantingDate}
+                                <span class="crop-date"
+                                  >{new Date(p.plantingDate).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })}</span
+                                >
+                              {/if}
+                            </div>
+                            {#if openGuides.has(p.id)}
+                              <dl class="guide-dl">
+                                {#if catalogItem?.daysToMaturity}
+                                  {@const dtm = catalogItem.daysToMaturity}
+                                  <dt>Days to maturity</dt>
+                                  <dd>
+                                    {dtm.min === dtm.max ? dtm.min : `${dtm.min}–${dtm.max}`} d
+                                  </dd>
+                                {/if}
+                                {#if guide?.soilTempMinF !== undefined}<dt>Soil temp min</dt>
+                                  <dd>{guide.soilTempMinF}°F</dd>{/if}
+                                {#if guide?.rowSpacingIn !== undefined}<dt>Row spacing</dt>
+                                  <dd>{guide.rowSpacingIn} in</dd>{/if}
+                                {#if guide?.inRowSpacingIn}<dt>In-row spacing</dt>
+                                  <dd>
+                                    {guide.inRowSpacingIn.min}–{guide.inRowSpacingIn.max} in
+                                  </dd>{/if}
+                                {#if guide?.seedDepthIn}<dt>Seed depth</dt>
+                                  <dd>{guide.seedDepthIn.min}–{guide.seedDepthIn.max} in</dd>{/if}
+                                {#if guide?.seedsPerAcre !== undefined}<dt>Seeds / acre</dt>
+                                  <dd>{guide.seedsPerAcre.toLocaleString()}</dd>{/if}
+                                {#if !catalogItem?.daysToMaturity && !guide}
+                                  <dt>Info</dt>
+                                  <dd>No guide available</dd>
+                                {/if}
+                              </dl>
+                            {/if}
+                          </li>
+                        {/each}
+                      </ul>
+                    {/if}
+                  </div>
+                {/each}
+              {/if}
+            </div>
+          {/each}
+        </section>
+
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <aside
+          class="crops-seed-rail"
+          class:return-target={cropMoveOverRail && cropMoveDragId !== null}
+          ondragover={onRailDragOver}
+          ondragleave={onRailDragLeave}
+          ondrop={onRailDrop}
+          aria-label="Seed stock"
+        >
+          {#if cropMoveDragId !== null}
+            <div class="rail-drop-banner">↩ Drop here to remove the crop and restore stock</div>
+          {/if}
+          <h3>Seed Stock <span class="count">({(data.seedStock ?? []).length})</span></h3>
+          {#if data.canEdit && (data.seedStock ?? []).length > 0 && data.blocks.length > 0}
+            <button
+              type="button"
+              class="ai-allocate-btn"
+              onclick={() => (showAllocationWizard = true)}
+              title="Plan plantings from your seed stock — AI picks blocks and dates"
+            >
+              ✨ Plan Plantings
+            </button>
+          {/if}
+          {#if (data.seedStock ?? []).length === 0}
+            <p class="seed-rail-empty">
+              No seed stock with on-hand &gt; 0. Add seeds via <a href="/stock">Stock</a>.
+            </p>
+          {:else}
+            {@const groupsByFamily = (() => {
+              type SS = NonNullable<typeof data.seedStock>[number];
+              const seeds = (data.seedStock ?? []) as SS[];
+              const m = new Map<string, SS[]>();
+              for (const s of seeds) {
+                const key = s.cropFamily ?? '';
+                const list = m.get(key) ?? [];
+                list.push(s);
+                m.set(key, list);
+              }
+              return [...m.entries()]
+                .map(([family, items]) => ({
+                  family: family || null,
+                  items: [...items].sort((a, b) => a.displayName.localeCompare(b.displayName))
+                }))
+                .sort((a, b) => (a.family ?? 'zz').localeCompare(b.family ?? 'zz'));
+            })()}
+            {#each groupsByFamily as g (g.family ?? '__unc__')}
+              <div class="seed-family">
+                <div class="seed-family-head">
+                  <span aria-hidden="true">{(g.family && FAMILY_ICON[g.family]) || '🌱'}</span>
+                  <span>{g.family ?? 'Unclassified'}</span>
+                  <span class="count">({g.items.length})</span>
+                </div>
+                <ul class="seed-list">
+                  {#each g.items as s (s.stockItemId)}
+                    {@const empty = s.onHand <= 0}
+                    {@const canDrag = data.canEdit !== false && !!s.cropPluginId && !empty}
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <li
+                      class="seed-card"
+                      class:disabled={!canDrag}
+                      class:empty
+                      draggable={canDrag}
+                      ondragstart={(e) => onSeedRailDragStart(e, s)}
+                      ondragend={onSeedRailDragEnd}
+                      title={empty
+                        ? `Out of stock — restock in /stock to plant\n${s.displayName}`
+                        : !s.cropPluginId
+                          ? `No crop plugin linked — set one in /stock\n${s.displayName}`
+                          : `Drag onto a block to plant\n${s.displayName}`}
+                    >
+                      <span class="seed-name">{s.shortName ?? s.displayName}</span>
+                      <span class="seed-meta">
+                        {s.onHand}
+                        {s.defaultUnit}
+                        {#if empty}
+                          · empty{/if}
+                      </span>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
+            {/each}
+          {/if}
+        </aside>
+      </div>
+      {#if plantingError}<p class="error">{plantingError}</p>{/if}
+
+      <!-- Livestock placeholder -->
+      <section class="card livestock-placeholder">
+        <div class="livestock-header">
+          <span class="livestock-icon">🐄</span>
+          <h2 class="livestock-title">Livestock</h2>
+          <span class="coming-soon-badge">Coming soon</span>
+        </div>
+        <p>
+          Assign livestock to fields, track grazing rotations, and integrate pasture management with
+          crop planning and spray buffer zones.
+        </p>
+        <p class="feature-note">
+          📋 Feature request: animal records, grazing schedules, pasture rotation, headcount
+          tracking, and integration with spray buffer and field rest periods.
+        </p>
+      </section>
+    {/if}
+  {/if}
+
+  {#if pickerBlockId}
+    {@const pickerBlock = data.blocks.find((b) => b.id === pickerBlockId)}
+    {#if pickerBlock}
+      <CropPickerModal
+        catalog={data.cropCatalog}
+        blockName={pickerBlock.name}
+        onSelect={(pluginId, date) => {
+          const bid = pickerBlockId!;
+          pickerBlockId = null;
+          addPlanting(bid, pluginId, date);
+        }}
+        onClose={() => {
+          pickerBlockId = null;
+        }}
+      />
+    {/if}
+  {/if}
+
+  {#if activeSeedModal}
+    {@const s = seedStockById.get(activeSeedModal.stockItemId)}
+    {#if s}
+      <SeedQuantityModal
+        stock={{
+          stockItemId: s.stockItemId,
+          displayName: s.displayName,
+          onHand: s.onHand,
+          defaultUnit: s.defaultUnit,
+          cropPluginId: s.cropPluginId ?? '',
+          cropFamily: s.cropFamily ?? null
+        }}
+        plugin={s.cropPluginId
+          ? (pluginById.get(s.cropPluginId) as unknown as import('$lib/plugins/schemas').CropPlugin)
+          : undefined}
+        onConfirm={confirmSeedQuantity}
+        onClose={() => {
+          activeSeedModal = null;
+          manualDropBlockId = null;
+        }}
+      />
+    {/if}
+  {/if}
+
+  {#if showAllocationWizard}
+    <AllocationWizard
+      seedStock={(data.seedStock ?? []).map((s) => ({
+        stockItemId: s.stockItemId,
+        displayName: s.displayName,
+        shortName: s.shortName,
+        onHand: s.onHand,
+        defaultUnit: s.defaultUnit,
+        cropPluginId: s.cropPluginId,
+        cropFamily: s.cropFamily ?? null
+      }))}
+      blocks={data.blocks.map((b) => ({
+        id: b.id,
+        name: b.name,
+        blockLabel: b.blockLabel,
+        acres: b.acres,
+        sunExposure: b.sunExposure,
+        plantings: b.plantings.map((p) => ({ varietyDisplayName: p.varietyDisplayName }))
+      }))}
+      plantingGuides={data.plantingGuides}
+      cropCatalog={data.cropCatalog}
+      seasonSetup={data.seasonSetup ?? null}
+      lastYearSetup={data.lastYearSetup ?? null}
+      currentYear={data.currentYear ?? new Date().getFullYear()}
+      aiEnabled={data.aiEnabled ?? false}
+      wizardPlanId={data.wizardPlanId}
+      initialChatMessages={data.wizardChatMessages ?? []}
+      onClose={() => {
+        showAllocationWizard = false;
+      }}
+      onCommitted={async () => {
+        showAllocationWizard = false;
+        await invalidateAll();
+      }}
+      onRefreshParent={async () => {
+        // Reload /plan loader data without closing the wizard. Used by the
+        // Start Over flow inside the wizard so the cleared-plan state lands
+        // in the modal's props on the next render.
+        await invalidateAll();
+      }}
     />
   {/if}
 
-  {#if data.fields.length === 0}
-    <section class="card empty">
-      <p>Add a field on the Layout tab to get started.</p>
-    </section>
-  {:else}
-    <div class="crops-tab-layout">
-      <section class="card crops-card">
-        {#each data.fields as f (f.id)}
-          {@const fieldBlocksRaw = data.blocks.filter((b) => b.fieldId === f.id)}
-          {@const fieldBlocks = applyBlockOrder(fieldBlocksRaw, cropsTabOrder)}
-          {@const fieldBlockIds = fieldBlocks.map((b) => b.id)}
-          {@const totalCrops = fieldBlocks.reduce((n, b) => n + b.plantings.length, 0)}
-          <div class="field-group">
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
-              class="field-row"
-              class:field-drop-target={fieldDropOverId === f.id && cropsReorderDragId !== null}
-              ondragover={(e) => onFieldRowDragOver(e, f.id)}
-              ondragleave={() => onFieldRowDragLeave(f.id)}
-              ondrop={(e) => onFieldRowDrop(e, f.id)}
-            >
-              <span class="field-icon">🌾</span>
-              <strong class="field-name">{f.name}</strong>
-              <span class="field-stats">
-                {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
-                {#if totalCrops > 0}· {totalCrops} crop{totalCrops === 1 ? '' : 's'}{/if}
-              </span>
-            </div>
-
-            {#if fieldBlocks.length === 0}
-              <p class="empty-row-indent">No blocks — add them on the Layout tab.</p>
-            {:else}
-              {#each fieldBlocks as block (block.id)}
-                {@const blockAcresDisplay =
-                  block.acres !== undefined ? `${block.acres.toFixed(2)} ac` : null}
-                <div
-                  class="crop-block"
-                  class:dragging={cropsReorderDragId === block.id}
-                  class:drop-target={cropsReorderOverId === block.id &&
-                    cropsReorderDragId !== null &&
-                    cropsReorderDragId !== block.id}
-                  class:seed-drop-target={cropsSeedHoverBlockId === block.id &&
-                    cropsSeedDrag !== null}
-                  class:crop-drop-target={cropMoveOverBlockId === block.id &&
-                    cropMoveDragId !== null}
-                >
-                  <!-- svelte-ignore a11y_no_static_element_interactions -->
-                  <div
-                    class="block-row"
-                    draggable="true"
-                    ondragstart={(e) => onCropsHeaderDragStart(e, block.id)}
-                    ondragover={(e) => onCropsHeaderDragOver(e, block.id)}
-                    ondragleave={() => onCropsHeaderDragLeave(block.id)}
-                    ondrop={(e) => onCropsHeaderDrop(e, block.id, fieldBlockIds)}
-                    ondragend={onCropsHeaderDragEnd}
-                    title="Drag to reorder blocks in this field"
+  <!-- ──── SCHEDULE swim-lane payload (Phase 14) — renders under the
+     Schedule tab (legacy URL) OR under Calendar tab when view=swimlane
+     (Phase 21b follow-up). Shared template; same loader data. ───── -->
+  {#if data.tab === 'schedule' || (data.tab === 'calendar' && data.view === 'swimlane')}
+    <section class="card schedule-header-card">
+      <div class="schedule-action-row">
+        <!-- LEFT: field + block filter chips. Same chips on swimlane + grid
+           views so toggling between them doesn't shuffle the affordance. -->
+        {#if (data.fields?.length ?? 0) > 1 || (data.swimBlocks?.length ?? 0) > 4}
+          <span class="filter-inline" role="group" aria-label="Field and block filter">
+            <span class="filter-line">
+              <span class="filter-label">Field:</span>
+              <button
+                type="button"
+                class="chip-mini"
+                class:active={selectedFieldId === null}
+                onclick={() => toggleField(null)}
+                title="Show all fields">All</button
+              >
+              {#each data.fields ?? [] as f (f.id)}
+                {@const fieldBlockCount = (data.blocks ?? []).filter(
+                  (b) => b.fieldId === f.id
+                ).length}
+                {#if fieldBlockCount > 0}
+                  <button
+                    type="button"
+                    class="chip-mini"
+                    class:active={selectedFieldId === f.id}
+                    onclick={() => toggleField(f.id)}
+                    title="Field: {f.name}">{f.name}</button
                   >
-                    <span class="grip" aria-hidden="true">⋮⋮</span>
-                    <span class="block-icon">▪</span>
-                    <span class="block-name">{block.name}</span>
-                    <span class="block-stats">
-                      {block.plantings.length} crop{block.plantings.length === 1 ? '' : 's'}
-                      {#if blockAcresDisplay}
-                        · {blockAcresDisplay}{/if}
-                    </span>
-                    {#if data.canEdit}
-                      <button
-                        class="row-action crop-add-btn"
-                        draggable="false"
-                        ondragstart={(e) => e.preventDefault()}
-                        onclick={(e) => {
-                          e.stopPropagation();
-                          pickerBlockId = block.id;
-                        }}
-                        title="Add crop to {block.name}">＋ crop</button
-                      >
-                    {/if}
-                  </div>
+                {/if}
+              {/each}
+            </span>
+            {#if filterableBlocks.length > 1}
+              <span class="filter-line">
+                <span class="filter-label">Blocks:</span>
+                <button
+                  type="button"
+                  class="chip-mini chip-mini-block"
+                  class:active={selectedBlockIds.size === 0}
+                  onclick={clearBlockSelection}
+                  title="Show all blocks in this scope">All</button
+                >
+                {#each filterableBlocks as b (b.id)}
+                  <button
+                    type="button"
+                    class="chip-mini chip-mini-block"
+                    class:active={selectedBlockIds.has(b.id)}
+                    onclick={() => toggleBlock(b.id)}
+                    title="Block: {b.blockLabel ?? b.name}">{b.blockLabel ?? b.name}</button
+                  >
+                {/each}
+              </span>
+            {/if}
+          </span>
+        {/if}
 
-                  {#if block.plantings.length > 0}
-                    <ul class="crop-list">
-                      {#each block.plantings as p (p.id)}
-                        {@const guide = data.plantingGuides[p.cropPluginId]}
-                        {@const catalogItem = data.cropCatalog.find(
-                          (c) => c.pluginId === p.cropPluginId
-                        )}
-                        {@const cropDtm = catalogItem?.daysToMaturity}
-                        {@const fam = pluginById.get(p.cropPluginId)?.cropFamily}
-                        {@const familyEmoji = (fam && FAMILY_ICON[fam]) || '🌱'}
-                        {@const guideTip =
-                          [
-                            cropDtm
-                              ? 'DTM: ' +
-                                (cropDtm.min === cropDtm.max
-                                  ? cropDtm.min
-                                  : cropDtm.min + '–' + cropDtm.max) +
-                                ' d'
-                              : '',
-                            guide?.soilTempMinF !== undefined
-                              ? 'Soil min: ' + guide.soilTempMinF + '°F'
-                              : '',
-                            guide?.rowSpacingIn !== undefined
-                              ? 'Row spacing: ' + guide.rowSpacingIn + ' in'
-                              : '',
-                            guide?.inRowSpacingIn
-                              ? 'In-row: ' +
-                                guide.inRowSpacingIn.min +
-                                '–' +
-                                guide.inRowSpacingIn.max +
-                                ' in'
-                              : '',
-                            guide?.seedDepthIn
-                              ? 'Seed depth: ' +
-                                guide.seedDepthIn.min +
-                                '–' +
-                                guide.seedDepthIn.max +
-                                ' in'
-                              : '',
-                            guide?.seedsPerAcre !== undefined
-                              ? 'Seeds/acre: ' + guide.seedsPerAcre.toLocaleString()
-                              : ''
-                          ]
-                            .filter(Boolean)
-                            .join('\n') || 'No guide available'}
-                        <!-- svelte-ignore a11y_no_static_element_interactions -->
-                        <li
-                          class="crop-item"
-                          class:dragging={cropMoveDragId === p.id}
-                          draggable={data.canEdit !== false}
-                          ondragstart={(e) => onCropItemDragStart(e, p.id)}
-                          ondragend={onCropItemDragEnd}
-                          title="Drag onto another block to move this crop"
-                        >
-                          <div class="crop-item-row">
-                            <span class="grip" aria-hidden="true">⋮⋮</span>
-                            <span class="crop-name-group">
-                              <span class="crop-family-emoji" aria-hidden="true">{familyEmoji}</span
-                              >
-                              <a
-                                href="/crops/{p.id}"
-                                class="crop-name"
-                                draggable="false"
-                                ondragstart={(e) => e.preventDefault()}
-                                title={p.varietyDisplayName}
-                                >{data.seedShortNameByDisplay?.[p.varietyDisplayName] ??
-                                  p.varietyDisplayName}</a
-                              >
-                              {#if p.quantityPlanted !== undefined && p.quantityUnit}
-                                <span class="crop-qty">{p.quantityPlanted} {p.quantityUnit}</span>
-                              {/if}
-                              <button
-                                class="guide-tip"
-                                class:open={openGuides.has(p.id)}
-                                data-tip={guideTip}
-                                draggable="false"
-                                ondragstart={(e) => e.preventDefault()}
-                                onclick={(e) => {
-                                  e.stopPropagation();
-                                  toggleGuide(p.id);
-                                }}>ⓘ</button
-                              >
-                            </span>
-                            {#if p.plantingDate}
-                              <span class="crop-date"
-                                >{new Date(p.plantingDate).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}</span
-                              >
-                            {/if}
-                          </div>
-                          {#if openGuides.has(p.id)}
-                            <dl class="guide-dl">
-                              {#if catalogItem?.daysToMaturity}
-                                {@const dtm = catalogItem.daysToMaturity}
-                                <dt>Days to maturity</dt>
-                                <dd>{dtm.min === dtm.max ? dtm.min : `${dtm.min}–${dtm.max}`} d</dd>
-                              {/if}
-                              {#if guide?.soilTempMinF !== undefined}<dt>Soil temp min</dt>
-                                <dd>{guide.soilTempMinF}°F</dd>{/if}
-                              {#if guide?.rowSpacingIn !== undefined}<dt>Row spacing</dt>
-                                <dd>{guide.rowSpacingIn} in</dd>{/if}
-                              {#if guide?.inRowSpacingIn}<dt>In-row spacing</dt>
-                                <dd>
-                                  {guide.inRowSpacingIn.min}–{guide.inRowSpacingIn.max} in
-                                </dd>{/if}
-                              {#if guide?.seedDepthIn}<dt>Seed depth</dt>
-                                <dd>{guide.seedDepthIn.min}–{guide.seedDepthIn.max} in</dd>{/if}
-                              {#if guide?.seedsPerAcre !== undefined}<dt>Seeds / acre</dt>
-                                <dd>{guide.seedsPerAcre.toLocaleString()}</dd>{/if}
-                              {#if !catalogItem?.daysToMaturity && !guide}
-                                <dt>Info</dt>
-                                <dd>No guide available</dd>
-                              {/if}
-                            </dl>
-                          {/if}
+        <!-- MIDDLE: selection actions (Edit / Split / Un-schedule / Cancel)
+           when a bar is picked, OR the deterministic auto-schedule shortcut
+           when there are unscheduled drafts. Right-justified next to the
+           Optimize stack via `margin-left: auto`. Separator divider on both
+           sides so the section reads as a distinct group. -->
+        {#if swimSelection.size > 0 || (data.canEdit && filteredUnscheduled.length > 0)}
+          <span class="action-divider" aria-hidden="true"></span>
+          <div class="action-middle">
+            {#if swimSelection.size === 0}
+              <button
+                type="button"
+                class="action-btn action-btn-tight"
+                onclick={autoScheduleDrafts}
+                disabled={autoScheduleBusy || clearBusy}
+                title="Deterministic engine — places every unscheduled draft on visible blocks at the earliest soil-temp + frost-safe date, no AI call"
+              >
+                {autoScheduleBusy
+                  ? 'Scheduling…'
+                  : `Auto-schedule ${filteredUnscheduled.length} draft${filteredUnscheduled.length === 1 ? '' : 's'}`}
+              </button>
+            {:else}
+              <span class="action-counter">
+                {swimSelection.size} selected
+              </span>
+              {#if swimSelection.size === 1}
+                <button
+                  type="button"
+                  class="action-btn action-btn-tight"
+                  onclick={commitSelectionEdit}>Edit</button
+                >
+                <button
+                  type="button"
+                  class="action-btn action-btn-tight"
+                  onclick={commitSelectionSplit}
+                  title="Split this planting into N stacked copies; drag each to its target date."
+                  >Split…</button
+                >
+              {/if}
+              {#if groupableSwimSelection}
+                <button
+                  type="button"
+                  class="action-btn action-btn-primary action-btn-tight"
+                  onclick={commitSelectionGroup}
+                >
+                  {groupableSwimSelection.hint === 'three-sisters' ? 'Group 3 Sisters' : 'Group'}
+                </button>
+              {/if}
+              <button
+                type="button"
+                class="action-btn action-btn-tight"
+                onclick={commitSelectionDelete}
+                title="Pull selected planting(s) off the schedule. Crops stay attached to their blocks as drafts; permanent deletion lives on the Crops tab."
+              >
+                Un-schedule
+              </button>
+              <button
+                type="button"
+                class="action-btn action-btn-cancel action-btn-tight"
+                onclick={clearSwimSelection}
+              >
+                Cancel
+              </button>
+            {/if}
+          </div>
+        {/if}
+
+        <!-- RIGHT: Optimize + Clear stack. Right-justified. The whole stack
+           is the same overall height as the Field / Blocks filter pair on
+           the left so the action row reads as one balanced strip. -->
+        {#if data.canEdit}
+          <span class="action-divider" aria-hidden="true"></span>
+          <div class="action-right">
+            <button
+              type="button"
+              class="action-btn action-btn-primary action-btn-tight"
+              onclick={() => (showOptimizerSidebar = true)}
+              disabled={autoScheduleBusy || clearBusy}
+              title="Open the AI optimizer — chat to re-arrange dates, accept the proposal when you like it"
+            >
+              ✨ Optimize Schedule
+            </button>
+            <button
+              type="button"
+              class="action-link action-link-under"
+              onclick={resetSchedule}
+              disabled={autoScheduleBusy || clearBusy}
+              title="Unschedule every crop, disband groups, remove materialized tasks, then immediately re-run the deterministic auto-schedule. Harvested / archived crops untouched."
+            >
+              {clearBusy ? 'Resetting…' : 'Clear schedule'}
+            </button>
+          </div>
+        {/if}
+      </div>
+      {#if autoRanQuiet}
+        <div class="auto-run-banner" role="status" aria-live="polite">
+          ✨ Auto-scheduled drafts on the earliest soil-safe + frost-safe dates. Drag bars to
+          adjust.
+        </div>
+      {/if}
+      {#if aiSpendBanner}
+        <div
+          class="ai-spend-banner"
+          class:warn={aiSpendBanner.warn}
+          role="status"
+          aria-live="polite"
+        >
+          AI spend this month: ${aiSpendBanner.spent.toFixed(2)} of ${aiSpendBanner.cap.toFixed(2)}.
+          {#if aiSpendBanner.warn}<strong>Approaching cap — adjust on Settings.</strong>{/if}
+        </div>
+      {/if}
+    </section>
+
+    {#if !data.swimBlocks || data.swimBlocks.length === 0}
+      <section class="card empty">
+        <p>
+          No blocks yet. Add one on the
+          <a href={tabHref('layout')}>Layout tab</a>, then return here.
+        </p>
+      </section>
+    {:else}
+      <section class="card swim-grid">
+        <div class="swim-pane">
+          <BlockSwimlane
+            blocks={filteredSwimBlocks}
+            plantings={filteredSwimPlantings}
+            shadeMarkers={data.shadeMarkers ?? []}
+            overlaps={data.conflicts?.sameTime ?? []}
+            rotations={data.conflicts?.rotation ?? []}
+            year={data.year ?? new Date().getFullYear()}
+            dragPayload={swimDragPayload}
+            kbCarry={swimKbCarry}
+            onDrop={(blockId, dayMs, payload) => {
+              swimDragPayload = null;
+              handleSwimDrop(blockId, dayMs, payload);
+            }}
+            onKbCommit={(blockId, dayMs, payload) => {
+              swimKbCarry = null;
+              handleSwimDrop(blockId, dayMs, payload);
+            }}
+            onKbCancel={() => (swimKbCarry = null)}
+            taskPips={data.taskPips ?? []}
+            onGroupOpen={(gid) => {
+              openGroupId = gid;
+              fetchGroupForInspector(gid);
+            }}
+            onBarDragStart={data.canEdit
+              ? (cropId, sourceBlockId) =>
+                  (swimDragPayload = { kind: 'move', cropId, sourceBlockId })
+              : undefined}
+            onBarDragEnd={() => (swimDragPayload = null)}
+            selectedCropIds={swimSelection}
+            onToggleSelect={data.canEdit ? toggleSwimSelect : undefined}
+            snapDate={(dayMs, payload) => {
+              // Mirror what the drop handler does so the preview line lands
+              // on the same day the persisted plantingDate will. Move
+              // payloads carry the cropId; we look up the pluginId from the
+              // existing planting. Palette payloads carry pluginId directly.
+              let pluginId: string | undefined;
+              if (payload.kind === 'palette') {
+                pluginId = payload.pluginId;
+              } else {
+                const p = data.swimPlantings?.find((x) => x.cropId === payload.cropId);
+                pluginId = p?.cropPluginId;
+              }
+              return pluginId ? snapPlantingDate(pluginId, dayMs) : dayMs;
+            }}
+          />
+        </div>
+        {#if groupInspectorData && openGroupId}
+          <div class="palette-pane">
+            <GroupInspector
+              groupId={groupInspectorData.groupId}
+              systemKind={groupInspectorData.systemKind}
+              members={groupInspectorData.members}
+              tasks={groupInspectorData.tasks}
+              onClose={() => {
+                openGroupId = null;
+                groupInspectorData = null;
+              }}
+              onDisband={handleDisbandGroup}
+              onNudgeCompanion={handleNudgeCompanion}
+            />
+          </div>
+        {/if}
+      </section>
+
+      {#if showGroupWizard}
+        <PlantingGroupWizard
+          blockLabels={filteredSwimBlocks.map((b) => ({
+            id: b.id,
+            label: b.blockLabel ?? b.name
+          }))}
+          blockIds={[...visibleBlockIds]}
+          onClose={() => (showGroupWizard = false)}
+          onCommitted={async (committedGroupIds) => {
+            showGroupWizard = false;
+            await invalidateAll();
+            if (committedGroupIds.length > 0) {
+              openGroupId = committedGroupIds[0];
+              await fetchGroupForInspector(committedGroupIds[0]);
+            }
+          }}
+        />
+      {/if}
+
+      {#if showOptimizerSidebar}
+        <ScheduleOptimizerSidebar
+          plantings={filteredSwimPlantings.map((p) => ({
+            cropId: p.cropId,
+            blockId: p.blockId,
+            cropPluginId: p.cropPluginId,
+            stockItemId: p.stockItemId,
+            varietyDisplayName: p.varietyDisplayName,
+            plantingDateMs: p.plantingDateMs,
+            endMs: p.endMs
+          }))}
+          blocks={filteredSwimBlocks.map((b) => ({
+            id: b.id,
+            name: b.blockLabel ?? b.name
+          }))}
+          extraFacts={(() => {
+            const f: string[] = [];
+            const counts = data.conflicts ?? null;
+            if (counts && counts.sameTime && counts.sameTime.length > 0) {
+              f.push(
+                `${counts.sameTime.length} same-time overlap${counts.sameTime.length === 1 ? '' : 's'} flagged on the swim-lane.`
+              );
+            }
+            if (counts && counts.rotation && counts.rotation.length > 0) {
+              f.push(
+                `${counts.rotation.length} rotation conflict${counts.rotation.length === 1 ? '' : 's'} flagged.`
+              );
+            }
+            return f;
+          })()}
+          onClose={() => (showOptimizerSidebar = false)}
+          onApply={applyOptimizerProposal}
+        />
+      {/if}
+
+      {#if editCropId}
+        <div class="bar-edit-backdrop" role="dialog" aria-modal="true" aria-label="Edit planting">
+          <div class="bar-edit">
+            <header class="bar-edit-head">
+              <h3>Edit planting</h3>
+              <button
+                type="button"
+                class="close"
+                onclick={() => (editCropId = null)}
+                aria-label="Close">×</button
+              >
+            </header>
+            <div class="bar-edit-body">
+              <label>
+                Short name
+                <small class="field-hint">Shown on schedule bars. Persists on the stock item.</small
+                >
+                <input
+                  type="text"
+                  bind:value={editForm.shortName}
+                  disabled={editBusy || !editForm.stockItemId}
+                  maxlength="40"
+                  placeholder={editForm.stockItemId
+                    ? 'e.g., Cinderella Pumpkin (≤40 chars)'
+                    : 'No matching stock item — edit on Crops tab'}
+                />
+              </label>
+              <label>
+                Variety name
+                <small class="field-hint">Full label stored on the planting record.</small>
+                <input
+                  type="text"
+                  bind:value={editForm.varietyDisplayName}
+                  disabled={editBusy}
+                  maxlength="160"
+                />
+              </label>
+              <label>
+                Start date
+                <input type="date" bind:value={editForm.plantingDate} disabled={editBusy} />
+              </label>
+              <div class="qty-row">
+                <label class="qty-amount">
+                  Quantity planted
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    bind:value={editForm.quantityPlanted}
+                    disabled={editBusy}
+                    placeholder="(none recorded)"
+                  />
+                </label>
+                <label class="qty-unit">
+                  Unit
+                  <input
+                    type="text"
+                    value={editForm.quantityUnit || '—'}
+                    readonly
+                    tabindex="-1"
+                    aria-readonly="true"
+                    title="The unit was set when this planting was committed and isn't editable here. Change it on the Crops tab if you need a different unit."
+                    class="qty-unit-readonly"
+                  />
+                </label>
+              </div>
+              <p class="hint">
+                Date changes snap to the soil-temp + last-frost floor and re-anchor dependent tasks.
+                To move to a different block, drag the bar on the swim-lane. To change the crop
+                plugin, disband any group first and use the Crops tab.
+              </p>
+
+              <fieldset class="harvest-uses">
+                <legend>Harvest Window</legend>
+                {#if editForm.availableHarvestUseCases.length === 0}
+                  <p class="hint hint-tight">
+                    This crop's plugin doesn't declare any tagged harvest windows yet, so there's
+                    nothing to filter.
+                  </p>
+                {:else}
+                  <div class="harvest-use-list">
+                    {#each editForm.availableHarvestUseCases as opt (opt.key)}
+                      <label class="harvest-use-pill">
+                        <input
+                          type="checkbox"
+                          checked={editForm.harvestUseCases.includes(opt.key)}
+                          onchange={(ev) => {
+                            const target = ev.currentTarget as HTMLInputElement;
+                            if (target.checked) {
+                              if (!editForm.harvestUseCases.includes(opt.key)) {
+                                editForm.harvestUseCases = [...editForm.harvestUseCases, opt.key];
+                              }
+                            } else {
+                              editForm.harvestUseCases = editForm.harvestUseCases.filter(
+                                (x) => x !== opt.key
+                              );
+                            }
+                          }}
+                          disabled={editBusy}
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    {/each}
+                  </div>
+                {/if}
+              </fieldset>
+
+              {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
+            </div>
+            <footer class="bar-edit-foot">
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick={() => (editCropId = null)}
+                disabled={editBusy}
+              >
+                Cancel
+              </button>
+              <button type="button" class="btn-primary" onclick={commitEdit} disabled={editBusy}>
+                {editBusy ? 'Saving…' : 'Save'}
+              </button>
+            </footer>
+          </div>
+        </div>
+      {/if}
+
+      {#if splitTargetCropId}
+        <div class="bar-edit-backdrop" role="dialog" aria-modal="true" aria-label="Split planting">
+          <div class="bar-edit bar-edit-compact">
+            <header class="bar-edit-head">
+              <h3>Split into N copies</h3>
+              <button
+                type="button"
+                class="close"
+                onclick={() => (splitTargetCropId = null)}
+                aria-label="Close"
+                disabled={splitBusy}>×</button
+              >
+            </header>
+            <div class="bar-edit-body">
+              <p class="hint">
+                Creates {splitCount} stacked copies on the same date + block. Seeds divide evenly across
+                the splits (largest-remainder rounding). Drag each new bar to its target date once the
+                popup closes.
+              </p>
+              <label class="split-count">
+                Parts (2–12)
+                <input
+                  type="number"
+                  min="2"
+                  max="12"
+                  step="1"
+                  bind:value={splitCount}
+                  bind:this={splitInput}
+                  disabled={splitBusy}
+                />
+              </label>
+              {#if splitError}<p class="bar-edit-error">{splitError}</p>{/if}
+            </div>
+            <footer class="bar-edit-foot">
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick={() => (splitTargetCropId = null)}
+                disabled={splitBusy}>Cancel</button
+              >
+              <button
+                type="button"
+                class="btn-primary"
+                onclick={commitSplit}
+                disabled={splitBusy || splitCount < 2 || splitCount > 12}
+              >
+                {splitBusy ? 'Splitting…' : `Split into ${splitCount}`}
+              </button>
+            </footer>
+          </div>
+        </div>
+      {/if}
+
+      {#if deleteCropIds.length > 0}
+        <div
+          class="bar-edit-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Un-schedule plantings"
+        >
+          <div class="bar-edit">
+            <header class="bar-edit-head">
+              <h3>
+                Un-schedule {deleteCropIds.length} planting{deleteCropIds.length === 1 ? '' : 's'}?
+              </h3>
+            </header>
+            <div class="bar-edit-body">
+              <p>
+                Pulls the selected planting{deleteCropIds.length === 1 ? '' : 's'} off the schedule (clears
+                the date, disbands any group binding, removes materialized tasks). The crop record{deleteCropIds.length ===
+                1
+                  ? ''
+                  : 's'} stay{deleteCropIds.length === 1 ? 's' : ''}
+                attached to {deleteCropIds.length === 1 ? 'its' : 'their'} block as a draft.
+              </p>
+              <ul class="delete-list">
+                {#each deleteCropIds as id (id)}
+                  {@const planting = data.swimPlantings?.find((p) => p.cropId === id)}
+                  <li>{planting?.varietyDisplayName ?? id}</li>
+                {/each}
+              </ul>
+              <p class="hint">To permanently delete a crop, use the Crops tab.</p>
+            </div>
+            <footer class="bar-edit-foot">
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick={() => (deleteCropIds = [])}
+                disabled={deleteBusy}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn-primary"
+                onclick={commitDelete}
+                disabled={deleteBusy}
+              >
+                {deleteBusy ? 'Un-scheduling…' : `Un-schedule ${deleteCropIds.length}`}
+              </button>
+            </footer>
+          </div>
+        </div>
+      {/if}
+
+      <p class="shade-footnote">
+        <strong>Shade model:</strong> simplified for v1 — morning shadow → west neighbor, afternoon shadow
+        → east neighbor; north-south impact ignored. Proper sun-path math is deferred.
+      </p>
+    {/if}
+  {/if}
+
+  <!-- Equipment tab removed from /plan — equipment management still lives at /equipment in the top nav. -->
+
+  <!-- ────────────────────────── CALENDAR (grid view) ────────────────────────── -->
+  {#if data.tab === 'calendar' && data.view === 'grid'}
+    <section class="card">
+      <div class="calendar-toolbar">
+        <!-- Match the swimlane's field-chip styling + position so flipping
+           between views doesn't shuffle the filter affordance. -->
+        {#if data.fields && data.fields.length > 0}
+          <span class="filter-inline" role="group" aria-label="Field filter">
+            <span class="filter-line">
+              <span class="filter-label">Field:</span>
+              <button
+                type="button"
+                class="chip-mini"
+                class:active={!data.filterFieldId}
+                onclick={() => changeCalendarFilter('', data.filterBlockId ?? '')}
+                title="Show all fields">All</button
+              >
+              {#each data.fields as f (f.id)}
+                <button
+                  type="button"
+                  class="chip-mini"
+                  class:active={data.filterFieldId === f.id}
+                  onclick={() => changeCalendarFilter(f.id, '')}
+                  title="Field: {f.name}">{f.name}</button
+                >
+              {/each}
+            </span>
+          </span>
+        {:else}
+          <span class="filter-inline" aria-hidden="true"></span>
+        {/if}
+
+        <nav class="month-nav" aria-label="Month navigation">
+          {#if data.prev}
+            <a href={calendarHref('grid') + '&ym=' + data.prev}>← Prev</a>
+          {/if}
+          <strong>{data.monthLabel}</strong>
+          {#if data.next}
+            <a href={calendarHref('grid') + '&ym=' + data.next}>Next →</a>
+          {/if}
+        </nav>
+      </div>
+
+      {#if data.eventCountTotal === 0}
+        <p>Empty calendar. Add a crop to populate.</p>
+      {:else}
+        <div class="cal-grid" role="grid" aria-label={data.monthLabel}>
+          {#each dayLabels as d (d)}
+            <div class="day-label" role="columnheader">{d}</div>
+          {/each}
+          {#each data.calendarGrid ?? [] as cell (cell.iso)}
+            <div
+              class="cell"
+              class:in-month={cell.inMonth}
+              class:out-of-month={!cell.inMonth}
+              class:today={cell.isToday}
+              role="gridcell"
+            >
+              <div class="num">{dayNum(cell.iso)}</div>
+              {#if cell.events.length > 0}
+                <ul class="events">
+                  {#each cell.events.slice(0, 3) as e (e.kind + e.cropPluginId + e.startMs)}
+                    <li class="event {e.kind}" title="{e.title} — {e.varietyDisplayName}">
+                      <span class="dot" aria-hidden="true"></span>
+                      <span class="label">{e.title}</span>
+                    </li>
+                  {/each}
+                  {#if cell.events.length > 3}
+                    <li class="event more">+{cell.events.length - 3} more</li>
+                  {/if}
+                </ul>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </section>
+  {/if}
+
+  {#if advisor}
+    <div
+      class="advisor-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="advisor-title"
+      onclick={(e) => e.target === e.currentTarget && dismissAdvisor()}
+      onkeydown={(e) => e.key === 'Escape' && dismissAdvisor()}
+      tabindex="-1"
+    >
+      <div class="advisor-modal">
+        <button
+          type="button"
+          class="advisor-close"
+          aria-label="Close companion advisor"
+          onclick={dismissAdvisor}
+        >
+          ✕
+        </button>
+        <h2 id="advisor-title">🌽 Companion Advisor</h2>
+        {#each advisor.suggestions as s (s.systemName)}
+          <div class="suggestion">
+            <h3>Add {s.systemName} companions?</h3>
+            <p class="benefit">{s.systemBenefit}</p>
+            <ul class="members">
+              {#each s.members as m (m.cropPluginId)}
+                <li>
+                  <strong>{m.displayName}</strong>
+                  <span class="role">{m.role}</span>
+                  <span class="offset">+{m.plantingOffsetDays} days</span>
+                </li>
+              {/each}
+            </ul>
+            <div class="actions">
+              <button
+                type="button"
+                class="primary"
+                disabled={advisorBusy}
+                onclick={() => acceptCompanions(s)}
+              >
+                {advisorBusy ? 'Adding…' : `Add all ${s.members.length} companions`}
+              </button>
+              <button type="button" onclick={dismissAdvisor}>No thanks</button>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
+
+  {#if wizardStep !== null}
+    <div
+      class="advisor-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wizard-title"
+      onclick={(e) => e.target === e.currentTarget && resetWizard()}
+      onkeydown={(e) => e.key === 'Escape' && resetWizard()}
+      tabindex="-1"
+    >
+      <div class="advisor-modal wizard-modal">
+        {#if wizardStep === 'crop'}
+          <h2 id="wizard-title">Generate Plan — Select Crop</h2>
+          <label class="wizard-label">
+            Crop
+            <select bind:value={wCropId} class="wizard-select">
+              <option value="">Choose…</option>
+              {#each data.scheduleCatalog ?? [] as c (c.pluginId)}
+                <option value={c.pluginId}>{c.displayName} ({c.cropFamily})</option>
+              {/each}
+            </select>
+          </label>
+          {#if wCropId && wMeta()}
+            {@const m = wMeta()!}
+            <dl class="wizard-meta">
+              {#if m.daysToMaturity}<dt>Days to maturity</dt>
+                <dd>{m.daysToMaturity.min}–{m.daysToMaturity.max} d</dd>{/if}
+              {#if m.preHarvestIntervalDays}<dt>Pre-harvest interval</dt>
+                <dd>{m.preHarvestIntervalDays} d</dd>{/if}
+              {#if m.soilTempMinF !== undefined}<dt>Min soil temp</dt>
+                <dd>{m.soilTempMinF}°F</dd>{/if}
+            </dl>
+          {/if}
+          <div class="actions">
+            <button
+              class="primary"
+              disabled={!wCropId || !wMeta()?.daysToMaturity}
+              onclick={() => {
+                wizardStep = 'block';
+              }}>Next →</button
+            >
+            <button onclick={resetWizard}>Cancel</button>
+          </div>
+        {:else if wizardStep === 'block'}
+          <h2 id="wizard-title">Generate Plan — Select Block</h2>
+          <label class="wizard-label">
+            Block
+            <select bind:value={wBlockId} class="wizard-select">
+              <option value="">Choose…</option>
+              {#each data.blocks as b (b.id)}
+                {@const bf = data.fields.find((f) => f.id === b.fieldId)}
+                <option value={b.id}>{bf ? bf.name + ' › ' : ''}{b.name} [{b.tillageMethod}]</option
+                >
+              {/each}
+            </select>
+          </label>
+          <div class="actions">
+            <button
+              class="primary"
+              disabled={!wBlockId}
+              onclick={() => {
+                wizardStep = 'mode';
+              }}>Next →</button
+            >
+            <button
+              onclick={() => {
+                wizardStep = 'crop';
+              }}>← Back</button
+            >
+          </div>
+        {:else if wizardStep === 'mode'}
+          <h2 id="wizard-title">Generate Plan — Planning Mode</h2>
+          <div class="mode-options">
+            <label class="mode-option" class:selected={wMode === 'plant-on-date'}>
+              <input type="radio" bind:group={wMode} value="plant-on-date" />
+              <strong>Plant on date</strong>
+              <span>Set a planting date; harvest window computed from DTM.</span>
+            </label>
+            <label class="mode-option" class:selected={wMode === 'harvest-by-date'}>
+              <input type="radio" bind:group={wMode} value="harvest-by-date" />
+              <strong>Harvest by date</strong>
+              <span>Set a target harvest date; planting date back-computed from DTM.</span>
+            </label>
+            <label class="mode-option" class:selected={wMode === 'staggered'}>
+              <input type="radio" bind:group={wMode} value="staggered" />
+              <strong>Staggered harvest</strong>
+              <span>Multiple successions spaced apart for continuous harvest.</span>
+            </label>
+            <label class="mode-option" class:selected={wMode === 'season-fill'}>
+              <input type="radio" bind:group={wMode} value="season-fill" />
+              <strong>Season fill</strong>
+              <span>Auto-fill Apr 15–Oct 15 with back-to-back successions.</span>
+            </label>
+          </div>
+          <div class="actions">
+            <button
+              class="primary"
+              onclick={() => {
+                wizardStep = 'params';
+              }}>Next →</button
+            >
+            <button
+              onclick={() => {
+                wizardStep = 'block';
+              }}>← Back</button
+            >
+          </div>
+        {:else if wizardStep === 'params'}
+          <h2 id="wizard-title">Generate Plan — Parameters</h2>
+          {#if wMode === 'plant-on-date'}
+            <label class="wizard-label"
+              >Planting date<input type="date" bind:value={wPlantDate} /></label
+            >
+          {:else if wMode === 'harvest-by-date'}
+            <label class="wizard-label"
+              >Target harvest date<input type="date" bind:value={wHarvestDate} /></label
+            >
+          {:else if wMode === 'staggered'}
+            <label class="wizard-label"
+              >First harvest date<input type="date" bind:value={wHarvestDate} /></label
+            >
+            <div class="param-row">
+              <label class="wizard-label"
+                >Successions<input
+                  type="number"
+                  min="2"
+                  max="10"
+                  bind:value={wStaggerCount}
+                /></label
+              >
+              <label class="wizard-label"
+                >Days apart<input
+                  type="number"
+                  min="7"
+                  max="90"
+                  bind:value={wIntervalDays}
+                /></label
+              >
+            </div>
+          {:else if wMode === 'season-fill'}
+            <p class="wizard-hint">
+              Frost window: Apr 15 – Oct 15 (Loudoun County, VA). Successions computed
+              automatically.
+            </p>
+          {/if}
+          <details class="wizard-advanced">
+            <summary>Advanced options</summary>
+            <label class="wizard-label" style="margin-top:0.5rem"
+              >PHI enforcement
+              <select bind:value={wPhiMode}>
+                <option value="strict">Strict (plugin PHI only)</option>
+                <option value="conservative">Conservative (PHI + 7 day buffer)</option>
+              </select>
+            </label>
+            {#if wMode === 'staggered' && wStaggerCount > 1}
+              <label class="wizard-label"
+                >Block assignment
+                <select bind:value={wBlockAssign}>
+                  <option value="single">All to selected block</option>
+                  <option value="round-robin">Round-robin across all blocks</option>
+                </select>
+              </label>
+            {/if}
+          </details>
+          {@const canPreview =
+            (wMode === 'plant-on-date' && !!wPlantDate) ||
+            (wMode === 'harvest-by-date' && !!wHarvestDate) ||
+            (wMode === 'staggered' && !!wHarvestDate) ||
+            wMode === 'season-fill'}
+          <div class="actions">
+            <button
+              class="primary"
+              disabled={!canPreview}
+              onclick={() => {
+                wizardStep = 'preview';
+              }}>Preview →</button
+            >
+            <button
+              onclick={() => {
+                wizardStep = 'mode';
+              }}>← Back</button
+            >
+          </div>
+        {:else if wizardStep === 'preview'}
+          <h2 id="wizard-title">Generate Plan — Preview</h2>
+          {#if wPreviewRows.length === 0}
+            <p class="wizard-hint">No successions could be computed. Check your crop and dates.</p>
+          {:else}
+            <p class="wizard-hint">
+              {wPreviewRows.length} succession{wPreviewRows.length === 1 ? '' : 's'} planned.
+            </p>
+            <div class="preview-rows">
+              {#each wPreviewRows as row, i (i)}
+                <div class="preview-card" class:has-conflict={row.phiConflict || row.soilTooEarly}>
+                  <div class="preview-card-header">
+                    <strong>Succession {i + 1}</strong>
+                    <span class="sched-chip chip-plant"
+                      >Plant {new Date(row.plantingDateMs).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}</span
+                    >
+                    <span class="sched-chip chip-harvest"
+                      >Harvest by {new Date(row.targetHarvestMs).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}</span
+                    >
+                    {#if row.phiConflict}<span class="phi-badge">⚠ PHI conflict</span>{/if}
+                    {#if row.soilTooEarly}<span class="warn">⚠ Soil may be cold</span>{/if}
+                  </div>
+                  {#if row.prepActivities.length > 0}
+                    <ul class="prep-list compact">
+                      {#each row.prepActivities as act (act.title)}
+                        <li class="prep-item">
+                          <span class="prep-dates"
+                            >{new Date(act.startMs).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}–{new Date(act.endMs).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}</span
+                          >
+                          <span class="prep-title">{act.title}</span>
+                        </li>
+                      {/each}
+                    </ul>
+                  {/if}
+                  {#if sprayWindows(row.engineEvents).length > 0}
+                    <ul class="sched-events">
+                      {#each sprayWindows(row.engineEvents) as s (s.startMs)}
+                        <li class="sched-event">
+                          <span class="sched-dot spray-window"></span>
+                          <span
+                            >{s.title}: {new Date(s.startMs).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}–{new Date(s.endMs).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })}</span
+                          >
                         </li>
                       {/each}
                     </ul>
                   {/if}
                 </div>
               {/each}
-            {/if}
+            </div>
+          {/if}
+          <div class="actions">
+            <button class="primary" disabled={wPreviewRows.length === 0} onclick={commitPlan}
+              >Commit {wPreviewRows.length} planting{wPreviewRows.length === 1 ? '' : 's'}</button
+            >
+            <button
+              onclick={() => {
+                wizardStep = 'params';
+              }}>← Back</button
+            >
+            <button onclick={resetWizard}>Cancel</button>
           </div>
-        {/each}
-      </section>
-
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
-      <aside
-        class="crops-seed-rail"
-        class:return-target={cropMoveOverRail && cropMoveDragId !== null}
-        ondragover={onRailDragOver}
-        ondragleave={onRailDragLeave}
-        ondrop={onRailDrop}
-        aria-label="Seed stock"
-      >
-        {#if cropMoveDragId !== null}
-          <div class="rail-drop-banner">↩ Drop here to remove the crop and restore stock</div>
-        {/if}
-        <h3>Seed Stock <span class="count">({(data.seedStock ?? []).length})</span></h3>
-        {#if data.canEdit && (data.seedStock ?? []).length > 0 && data.blocks.length > 0}
-          <button
-            type="button"
-            class="ai-allocate-btn"
-            onclick={() => (showAllocationWizard = true)}
-            title="Plan plantings from your seed stock — AI picks blocks and dates"
-          >
-            ✨ Plan Plantings
-          </button>
-        {/if}
-        {#if (data.seedStock ?? []).length === 0}
-          <p class="seed-rail-empty">
-            No seed stock with on-hand &gt; 0. Add seeds via <a href="/stock">Stock</a>.
+        {:else if wizardStep === 'committing'}
+          <h2 id="wizard-title">Committing…</h2>
+          {#if wBusy}<p class="wizard-hint">Saving plantings…</p>{/if}
+          <ul class="commit-results">
+            {#each wCommitResults as r, i (i)}
+              <li class={r.ok ? 'result-ok' : 'result-warn'}>
+                {r.ok ? '✓' : '✗'}
+                {data.blocks.find((b) => b.id === r.blockId)?.name ?? r.blockId}
+                — Plant {new Date(r.plantMs).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric'
+                })}
+                {#if !r.ok && r.error}<span class="error"> ({r.error})</span>{/if}
+              </li>
+            {/each}
+          </ul>
+        {:else if wizardStep === 'done'}
+          <h2 id="wizard-title">Plan Committed</h2>
+          <p class="wizard-hint">
+            {wCommitResults.filter((r) => r.ok).length} of {wCommitResults.length} planting{wCommitResults.length ===
+            1
+              ? ''
+              : 's'} saved.
           </p>
-        {:else}
-          {@const groupsByFamily = (() => {
-            type SS = NonNullable<typeof data.seedStock>[number];
-            const seeds = (data.seedStock ?? []) as SS[];
-            const m = new Map<string, SS[]>();
-            for (const s of seeds) {
-              const key = s.cropFamily ?? '';
-              const list = m.get(key) ?? [];
-              list.push(s);
-              m.set(key, list);
-            }
-            return [...m.entries()]
-              .map(([family, items]) => ({
-                family: family || null,
-                items: [...items].sort((a, b) => a.displayName.localeCompare(b.displayName))
-              }))
-              .sort((a, b) => (a.family ?? 'zz').localeCompare(b.family ?? 'zz'));
-          })()}
-          {#each groupsByFamily as g (g.family ?? '__unc__')}
-            <div class="seed-family">
-              <div class="seed-family-head">
-                <span aria-hidden="true">{(g.family && FAMILY_ICON[g.family]) || '🌱'}</span>
-                <span>{g.family ?? 'Unclassified'}</span>
-                <span class="count">({g.items.length})</span>
-              </div>
-              <ul class="seed-list">
-                {#each g.items as s (s.stockItemId)}
-                  {@const empty = s.onHand <= 0}
-                  {@const canDrag = data.canEdit !== false && !!s.cropPluginId && !empty}
-                  <!-- svelte-ignore a11y_no_static_element_interactions -->
-                  <li
-                    class="seed-card"
-                    class:disabled={!canDrag}
-                    class:empty
-                    draggable={canDrag}
-                    ondragstart={(e) => onSeedRailDragStart(e, s)}
-                    ondragend={onSeedRailDragEnd}
-                    title={empty
-                      ? `Out of stock — restock in /stock to plant\n${s.displayName}`
-                      : !s.cropPluginId
-                        ? `No crop plugin linked — set one in /stock\n${s.displayName}`
-                        : `Drag onto a block to plant\n${s.displayName}`}
-                  >
-                    <span class="seed-name">{s.shortName ?? s.displayName}</span>
-                    <span class="seed-meta">
-                      {s.onHand}
-                      {s.defaultUnit}
-                      {#if empty}
-                        · empty{/if}
-                    </span>
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/each}
-        {/if}
-      </aside>
-    </div>
-    {#if plantingError}<p class="error">{plantingError}</p>{/if}
-
-    <!-- Livestock placeholder -->
-    <section class="card livestock-placeholder">
-      <div class="livestock-header">
-        <span class="livestock-icon">🐄</span>
-        <h2 class="livestock-title">Livestock</h2>
-        <span class="coming-soon-badge">Coming soon</span>
-      </div>
-      <p>
-        Assign livestock to fields, track grazing rotations, and integrate pasture management with
-        crop planning and spray buffer zones.
-      </p>
-      <p class="feature-note">
-        📋 Feature request: animal records, grazing schedules, pasture rotation, headcount tracking,
-        and integration with spray buffer and field rest periods.
-      </p>
-    </section>
-  {/if}
-{/if}
-
-{#if pickerBlockId}
-  {@const pickerBlock = data.blocks.find((b) => b.id === pickerBlockId)}
-  {#if pickerBlock}
-    <CropPickerModal
-      catalog={data.cropCatalog}
-      blockName={pickerBlock.name}
-      onSelect={(pluginId, date) => {
-        const bid = pickerBlockId!;
-        pickerBlockId = null;
-        addPlanting(bid, pluginId, date);
-      }}
-      onClose={() => {
-        pickerBlockId = null;
-      }}
-    />
-  {/if}
-{/if}
-
-{#if activeSeedModal}
-  {@const s = seedStockById.get(activeSeedModal.stockItemId)}
-  {#if s}
-    <SeedQuantityModal
-      stock={{
-        stockItemId: s.stockItemId,
-        displayName: s.displayName,
-        onHand: s.onHand,
-        defaultUnit: s.defaultUnit,
-        cropPluginId: s.cropPluginId ?? '',
-        cropFamily: s.cropFamily ?? null
-      }}
-      plugin={s.cropPluginId
-        ? (pluginById.get(s.cropPluginId) as unknown as import('$lib/plugins/schemas').CropPlugin)
-        : undefined}
-      onConfirm={confirmSeedQuantity}
-      onClose={() => {
-        activeSeedModal = null;
-        manualDropBlockId = null;
-      }}
-    />
-  {/if}
-{/if}
-
-{#if showAllocationWizard}
-  <AllocationWizard
-    seedStock={(data.seedStock ?? []).map((s) => ({
-      stockItemId: s.stockItemId,
-      displayName: s.displayName,
-      shortName: s.shortName,
-      onHand: s.onHand,
-      defaultUnit: s.defaultUnit,
-      cropPluginId: s.cropPluginId,
-      cropFamily: s.cropFamily ?? null
-    }))}
-    blocks={data.blocks.map((b) => ({
-      id: b.id,
-      name: b.name,
-      blockLabel: b.blockLabel,
-      acres: b.acres,
-      sunExposure: b.sunExposure,
-      plantings: b.plantings.map((p) => ({ varietyDisplayName: p.varietyDisplayName }))
-    }))}
-    plantingGuides={data.plantingGuides}
-    cropCatalog={data.cropCatalog}
-    seasonSetup={data.seasonSetup ?? null}
-    lastYearSetup={data.lastYearSetup ?? null}
-    currentYear={data.currentYear ?? new Date().getFullYear()}
-    aiEnabled={data.aiEnabled ?? false}
-    wizardPlanId={data.wizardPlanId}
-    initialChatMessages={data.wizardChatMessages ?? []}
-    onClose={() => {
-      showAllocationWizard = false;
-    }}
-    onCommitted={async () => {
-      showAllocationWizard = false;
-      await invalidateAll();
-    }}
-    onRefreshParent={async () => {
-      // Reload /plan loader data without closing the wizard. Used by the
-      // Start Over flow inside the wizard so the cleared-plan state lands
-      // in the modal's props on the next render.
-      await invalidateAll();
-    }}
-  />
-{/if}
-
-<!-- ──── SCHEDULE swim-lane payload (Phase 14) — renders under the
-     Schedule tab (legacy URL) OR under Calendar tab when view=swimlane
-     (Phase 21b follow-up). Shared template; same loader data. ───── -->
-{#if data.tab === 'schedule' || (data.tab === 'calendar' && data.view === 'swimlane')}
-  <section class="card schedule-header-card">
-    <div class="schedule-action-row">
-      <!-- LEFT: field + block filter chips. Same chips on swimlane + grid
-           views so toggling between them doesn't shuffle the affordance. -->
-      {#if (data.fields?.length ?? 0) > 1 || (data.swimBlocks?.length ?? 0) > 4}
-        <span class="filter-inline" role="group" aria-label="Field and block filter">
-          <span class="filter-line">
-            <span class="filter-label">Field:</span>
-            <button
-              type="button"
-              class="chip-mini"
-              class:active={selectedFieldId === null}
-              onclick={() => toggleField(null)}
-              title="Show all fields">All</button
-            >
-            {#each data.fields ?? [] as f (f.id)}
-              {@const fieldBlockCount = (data.blocks ?? []).filter(
-                (b) => b.fieldId === f.id
-              ).length}
-              {#if fieldBlockCount > 0}
-                <button
-                  type="button"
-                  class="chip-mini"
-                  class:active={selectedFieldId === f.id}
-                  onclick={() => toggleField(f.id)}
-                  title="Field: {f.name}">{f.name}</button
-                >
-              {/if}
-            {/each}
-          </span>
-          {#if filterableBlocks.length > 1}
-            <span class="filter-line">
-              <span class="filter-label">Blocks:</span>
-              <button
-                type="button"
-                class="chip-mini chip-mini-block"
-                class:active={selectedBlockIds.size === 0}
-                onclick={clearBlockSelection}
-                title="Show all blocks in this scope">All</button
-              >
-              {#each filterableBlocks as b (b.id)}
-                <button
-                  type="button"
-                  class="chip-mini chip-mini-block"
-                  class:active={selectedBlockIds.has(b.id)}
-                  onclick={() => toggleBlock(b.id)}
-                  title="Block: {b.blockLabel ?? b.name}">{b.blockLabel ?? b.name}</button
-                >
-              {/each}
-            </span>
-          {/if}
-        </span>
-      {/if}
-
-      <!-- MIDDLE: selection actions (Edit / Split / Un-schedule / Cancel)
-           when a bar is picked, OR the deterministic auto-schedule shortcut
-           when there are unscheduled drafts. Right-justified next to the
-           Optimize stack via `margin-left: auto`. Separator divider on both
-           sides so the section reads as a distinct group. -->
-      {#if swimSelection.size > 0 || (data.canEdit && filteredUnscheduled.length > 0)}
-        <span class="action-divider" aria-hidden="true"></span>
-        <div class="action-middle">
-          {#if swimSelection.size === 0}
-            <button
-              type="button"
-              class="action-btn action-btn-tight"
-              onclick={autoScheduleDrafts}
-              disabled={autoScheduleBusy || clearBusy}
-              title="Deterministic engine — places every unscheduled draft on visible blocks at the earliest soil-temp + frost-safe date, no AI call"
-            >
-              {autoScheduleBusy
-                ? 'Scheduling…'
-                : `Auto-schedule ${filteredUnscheduled.length} draft${filteredUnscheduled.length === 1 ? '' : 's'}`}
-            </button>
-          {:else}
-            <span class="action-counter">
-              {swimSelection.size} selected
-            </span>
-            {#if swimSelection.size === 1}
-              <button
-                type="button"
-                class="action-btn action-btn-tight"
-                onclick={commitSelectionEdit}>Edit</button
-              >
-              <button
-                type="button"
-                class="action-btn action-btn-tight"
-                onclick={commitSelectionSplit}
-                title="Split this planting into N stacked copies; drag each to its target date."
-                >Split…</button
-              >
-            {/if}
-            {#if groupableSwimSelection}
-              <button
-                type="button"
-                class="action-btn action-btn-primary action-btn-tight"
-                onclick={commitSelectionGroup}
-              >
-                {groupableSwimSelection.hint === 'three-sisters' ? 'Group 3 Sisters' : 'Group'}
-              </button>
-            {/if}
-            <button
-              type="button"
-              class="action-btn action-btn-tight"
-              onclick={commitSelectionDelete}
-              title="Pull selected planting(s) off the schedule. Crops stay attached to their blocks as drafts; permanent deletion lives on the Crops tab."
-            >
-              Un-schedule
-            </button>
-            <button
-              type="button"
-              class="action-btn action-btn-cancel action-btn-tight"
-              onclick={clearSwimSelection}
-            >
-              Cancel
-            </button>
-          {/if}
-        </div>
-      {/if}
-
-      <!-- RIGHT: Optimize + Clear stack. Right-justified. The whole stack
-           is the same overall height as the Field / Blocks filter pair on
-           the left so the action row reads as one balanced strip. -->
-      {#if data.canEdit}
-        <span class="action-divider" aria-hidden="true"></span>
-        <div class="action-right">
-          <button
-            type="button"
-            class="action-btn action-btn-primary action-btn-tight"
-            onclick={() => (showOptimizerSidebar = true)}
-            disabled={autoScheduleBusy || clearBusy}
-            title="Open the AI optimizer — chat to re-arrange dates, accept the proposal when you like it"
-          >
-            ✨ Optimize Schedule
-          </button>
-          <button
-            type="button"
-            class="action-link action-link-under"
-            onclick={resetSchedule}
-            disabled={autoScheduleBusy || clearBusy}
-            title="Unschedule every crop, disband groups, remove materialized tasks, then immediately re-run the deterministic auto-schedule. Harvested / archived crops untouched."
-          >
-            {clearBusy ? 'Resetting…' : 'Clear schedule'}
-          </button>
-        </div>
-      {/if}
-    </div>
-    {#if autoRanQuiet}
-      <div class="auto-run-banner" role="status" aria-live="polite">
-        ✨ Auto-scheduled drafts on the earliest soil-safe + frost-safe dates. Drag bars to adjust.
-      </div>
-    {/if}
-    {#if aiSpendBanner}
-      <div class="ai-spend-banner" class:warn={aiSpendBanner.warn} role="status" aria-live="polite">
-        AI spend this month: ${aiSpendBanner.spent.toFixed(2)} of ${aiSpendBanner.cap.toFixed(2)}.
-        {#if aiSpendBanner.warn}<strong>Approaching cap — adjust on Settings.</strong>{/if}
-      </div>
-    {/if}
-  </section>
-
-  {#if !data.swimBlocks || data.swimBlocks.length === 0}
-    <section class="card empty">
-      <p>
-        No blocks yet. Add one on the
-        <a href={tabHref('layout')}>Layout tab</a>, then return here.
-      </p>
-    </section>
-  {:else}
-    <section class="card swim-grid">
-      <div class="swim-pane">
-        <BlockSwimlane
-          blocks={filteredSwimBlocks}
-          plantings={filteredSwimPlantings}
-          shadeMarkers={data.shadeMarkers ?? []}
-          overlaps={data.conflicts?.sameTime ?? []}
-          rotations={data.conflicts?.rotation ?? []}
-          year={data.year ?? new Date().getFullYear()}
-          dragPayload={swimDragPayload}
-          kbCarry={swimKbCarry}
-          onDrop={(blockId, dayMs, payload) => {
-            swimDragPayload = null;
-            handleSwimDrop(blockId, dayMs, payload);
-          }}
-          onKbCommit={(blockId, dayMs, payload) => {
-            swimKbCarry = null;
-            handleSwimDrop(blockId, dayMs, payload);
-          }}
-          onKbCancel={() => (swimKbCarry = null)}
-          taskPips={data.taskPips ?? []}
-          onGroupOpen={(gid) => {
-            openGroupId = gid;
-            fetchGroupForInspector(gid);
-          }}
-          onBarDragStart={data.canEdit
-            ? (cropId, sourceBlockId) => (swimDragPayload = { kind: 'move', cropId, sourceBlockId })
-            : undefined}
-          onBarDragEnd={() => (swimDragPayload = null)}
-          selectedCropIds={swimSelection}
-          onToggleSelect={data.canEdit ? toggleSwimSelect : undefined}
-          snapDate={(dayMs, payload) => {
-            // Mirror what the drop handler does so the preview line lands
-            // on the same day the persisted plantingDate will. Move
-            // payloads carry the cropId; we look up the pluginId from the
-            // existing planting. Palette payloads carry pluginId directly.
-            let pluginId: string | undefined;
-            if (payload.kind === 'palette') {
-              pluginId = payload.pluginId;
-            } else {
-              const p = data.swimPlantings?.find((x) => x.cropId === payload.cropId);
-              pluginId = p?.cropPluginId;
-            }
-            return pluginId ? snapPlantingDate(pluginId, dayMs) : dayMs;
-          }}
-        />
-      </div>
-      {#if groupInspectorData && openGroupId}
-        <div class="palette-pane">
-          <GroupInspector
-            groupId={groupInspectorData.groupId}
-            systemKind={groupInspectorData.systemKind}
-            members={groupInspectorData.members}
-            tasks={groupInspectorData.tasks}
-            onClose={() => {
-              openGroupId = null;
-              groupInspectorData = null;
-            }}
-            onDisband={handleDisbandGroup}
-            onNudgeCompanion={handleNudgeCompanion}
-          />
-        </div>
-      {/if}
-    </section>
-
-    {#if showGroupWizard}
-      <PlantingGroupWizard
-        blockLabels={filteredSwimBlocks.map((b) => ({
-          id: b.id,
-          label: b.blockLabel ?? b.name
-        }))}
-        blockIds={[...visibleBlockIds]}
-        onClose={() => (showGroupWizard = false)}
-        onCommitted={async (committedGroupIds) => {
-          showGroupWizard = false;
-          await invalidateAll();
-          if (committedGroupIds.length > 0) {
-            openGroupId = committedGroupIds[0];
-            await fetchGroupForInspector(committedGroupIds[0]);
-          }
-        }}
-      />
-    {/if}
-
-    {#if showOptimizerSidebar}
-      <ScheduleOptimizerSidebar
-        plantings={filteredSwimPlantings.map((p) => ({
-          cropId: p.cropId,
-          blockId: p.blockId,
-          cropPluginId: p.cropPluginId,
-          stockItemId: p.stockItemId,
-          varietyDisplayName: p.varietyDisplayName,
-          plantingDateMs: p.plantingDateMs,
-          endMs: p.endMs
-        }))}
-        blocks={filteredSwimBlocks.map((b) => ({
-          id: b.id,
-          name: b.blockLabel ?? b.name
-        }))}
-        extraFacts={(() => {
-          const f: string[] = [];
-          const counts = data.conflicts ?? null;
-          if (counts && counts.sameTime && counts.sameTime.length > 0) {
-            f.push(
-              `${counts.sameTime.length} same-time overlap${counts.sameTime.length === 1 ? '' : 's'} flagged on the swim-lane.`
-            );
-          }
-          if (counts && counts.rotation && counts.rotation.length > 0) {
-            f.push(
-              `${counts.rotation.length} rotation conflict${counts.rotation.length === 1 ? '' : 's'} flagged.`
-            );
-          }
-          return f;
-        })()}
-        onClose={() => (showOptimizerSidebar = false)}
-        onApply={applyOptimizerProposal}
-      />
-    {/if}
-
-    {#if editCropId}
-      <div class="bar-edit-backdrop" role="dialog" aria-modal="true" aria-label="Edit planting">
-        <div class="bar-edit">
-          <header class="bar-edit-head">
-            <h3>Edit planting</h3>
-            <button
-              type="button"
-              class="close"
-              onclick={() => (editCropId = null)}
-              aria-label="Close">×</button
-            >
-          </header>
-          <div class="bar-edit-body">
-            <label>
-              Short name
-              <small class="field-hint">Shown on schedule bars. Persists on the stock item.</small>
-              <input
-                type="text"
-                bind:value={editForm.shortName}
-                disabled={editBusy || !editForm.stockItemId}
-                maxlength="40"
-                placeholder={editForm.stockItemId
-                  ? 'e.g., Cinderella Pumpkin (≤40 chars)'
-                  : 'No matching stock item — edit on Crops tab'}
-              />
-            </label>
-            <label>
-              Variety name
-              <small class="field-hint">Full label stored on the planting record.</small>
-              <input
-                type="text"
-                bind:value={editForm.varietyDisplayName}
-                disabled={editBusy}
-                maxlength="160"
-              />
-            </label>
-            <label>
-              Start date
-              <input type="date" bind:value={editForm.plantingDate} disabled={editBusy} />
-            </label>
-            <div class="qty-row">
-              <label class="qty-amount">
-                Quantity planted
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  bind:value={editForm.quantityPlanted}
-                  disabled={editBusy}
-                  placeholder="(none recorded)"
-                />
-              </label>
-              <label class="qty-unit">
-                Unit
-                <input
-                  type="text"
-                  value={editForm.quantityUnit || '—'}
-                  readonly
-                  tabindex="-1"
-                  aria-readonly="true"
-                  title="The unit was set when this planting was committed and isn't editable here. Change it on the Crops tab if you need a different unit."
-                  class="qty-unit-readonly"
-                />
-              </label>
-            </div>
-            <p class="hint">
-              Date changes snap to the soil-temp + last-frost floor and re-anchor dependent tasks.
-              To move to a different block, drag the bar on the swim-lane. To change the crop
-              plugin, disband any group first and use the Crops tab.
-            </p>
-
-            <fieldset class="harvest-uses">
-              <legend>Harvest Window</legend>
-              {#if editForm.availableHarvestUseCases.length === 0}
-                <p class="hint hint-tight">
-                  This crop's plugin doesn't declare any tagged harvest windows yet, so there's
-                  nothing to filter.
-                </p>
-              {:else}
-                <div class="harvest-use-list">
-                  {#each editForm.availableHarvestUseCases as opt (opt.key)}
-                    <label class="harvest-use-pill">
-                      <input
-                        type="checkbox"
-                        checked={editForm.harvestUseCases.includes(opt.key)}
-                        onchange={(ev) => {
-                          const target = ev.currentTarget as HTMLInputElement;
-                          if (target.checked) {
-                            if (!editForm.harvestUseCases.includes(opt.key)) {
-                              editForm.harvestUseCases = [...editForm.harvestUseCases, opt.key];
-                            }
-                          } else {
-                            editForm.harvestUseCases = editForm.harvestUseCases.filter(
-                              (x) => x !== opt.key
-                            );
-                          }
-                        }}
-                        disabled={editBusy}
-                      />
-                      <span>{opt.label}</span>
-                    </label>
-                  {/each}
-                </div>
-              {/if}
-            </fieldset>
-
-            {#if editError}<p class="bar-edit-error">{editError}</p>{/if}
-          </div>
-          <footer class="bar-edit-foot">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick={() => (editCropId = null)}
-              disabled={editBusy}
-            >
-              Cancel
-            </button>
-            <button type="button" class="btn-primary" onclick={commitEdit} disabled={editBusy}>
-              {editBusy ? 'Saving…' : 'Save'}
-            </button>
-          </footer>
-        </div>
-      </div>
-    {/if}
-
-    {#if splitTargetCropId}
-      <div class="bar-edit-backdrop" role="dialog" aria-modal="true" aria-label="Split planting">
-        <div class="bar-edit bar-edit-compact">
-          <header class="bar-edit-head">
-            <h3>Split into N copies</h3>
-            <button
-              type="button"
-              class="close"
-              onclick={() => (splitTargetCropId = null)}
-              aria-label="Close"
-              disabled={splitBusy}>×</button
-            >
-          </header>
-          <div class="bar-edit-body">
-            <p class="hint">
-              Creates {splitCount} stacked copies on the same date + block. Seeds divide evenly across
-              the splits (largest-remainder rounding). Drag each new bar to its target date once the popup
-              closes.
-            </p>
-            <label class="split-count">
-              Parts (2–12)
-              <input
-                type="number"
-                min="2"
-                max="12"
-                step="1"
-                bind:value={splitCount}
-                bind:this={splitInput}
-                disabled={splitBusy}
-              />
-            </label>
-            {#if splitError}<p class="bar-edit-error">{splitError}</p>{/if}
-          </div>
-          <footer class="bar-edit-foot">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick={() => (splitTargetCropId = null)}
-              disabled={splitBusy}>Cancel</button
-            >
-            <button
-              type="button"
-              class="btn-primary"
-              onclick={commitSplit}
-              disabled={splitBusy || splitCount < 2 || splitCount > 12}
-            >
-              {splitBusy ? 'Splitting…' : `Split into ${splitCount}`}
-            </button>
-          </footer>
-        </div>
-      </div>
-    {/if}
-
-    {#if deleteCropIds.length > 0}
-      <div
-        class="bar-edit-backdrop"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Un-schedule plantings"
-      >
-        <div class="bar-edit">
-          <header class="bar-edit-head">
-            <h3>
-              Un-schedule {deleteCropIds.length} planting{deleteCropIds.length === 1 ? '' : 's'}?
-            </h3>
-          </header>
-          <div class="bar-edit-body">
-            <p>
-              Pulls the selected planting{deleteCropIds.length === 1 ? '' : 's'} off the schedule (clears
-              the date, disbands any group binding, removes materialized tasks). The crop record{deleteCropIds.length ===
-              1
-                ? ''
-                : 's'} stay{deleteCropIds.length === 1 ? 's' : ''}
-              attached to {deleteCropIds.length === 1 ? 'its' : 'their'} block as a draft.
-            </p>
-            <ul class="delete-list">
-              {#each deleteCropIds as id (id)}
-                {@const planting = data.swimPlantings?.find((p) => p.cropId === id)}
-                <li>{planting?.varietyDisplayName ?? id}</li>
-              {/each}
-            </ul>
-            <p class="hint">To permanently delete a crop, use the Crops tab.</p>
-          </div>
-          <footer class="bar-edit-foot">
-            <button
-              type="button"
-              class="btn-secondary"
-              onclick={() => (deleteCropIds = [])}
-              disabled={deleteBusy}
-            >
-              Cancel
-            </button>
-            <button type="button" class="btn-primary" onclick={commitDelete} disabled={deleteBusy}>
-              {deleteBusy ? 'Un-scheduling…' : `Un-schedule ${deleteCropIds.length}`}
-            </button>
-          </footer>
-        </div>
-      </div>
-    {/if}
-
-    <p class="shade-footnote">
-      <strong>Shade model:</strong> simplified for v1 — morning shadow → west neighbor, afternoon shadow
-      → east neighbor; north-south impact ignored. Proper sun-path math is deferred.
-    </p>
-  {/if}
-{/if}
-
-<!-- Equipment tab removed from /plan — equipment management still lives at /equipment in the top nav. -->
-
-<!-- ────────────────────────── CALENDAR (grid view) ────────────────────────── -->
-{#if data.tab === 'calendar' && data.view === 'grid'}
-  <section class="card">
-    <div class="calendar-toolbar">
-      <!-- Match the swimlane's field-chip styling + position so flipping
-           between views doesn't shuffle the filter affordance. -->
-      {#if data.fields && data.fields.length > 0}
-        <span class="filter-inline" role="group" aria-label="Field filter">
-          <span class="filter-line">
-            <span class="filter-label">Field:</span>
-            <button
-              type="button"
-              class="chip-mini"
-              class:active={!data.filterFieldId}
-              onclick={() => changeCalendarFilter('', data.filterBlockId ?? '')}
-              title="Show all fields">All</button
-            >
-            {#each data.fields as f (f.id)}
-              <button
-                type="button"
-                class="chip-mini"
-                class:active={data.filterFieldId === f.id}
-                onclick={() => changeCalendarFilter(f.id, '')}
-                title="Field: {f.name}">{f.name}</button
-              >
-            {/each}
-          </span>
-        </span>
-      {:else}
-        <span class="filter-inline" aria-hidden="true"></span>
-      {/if}
-
-      <nav class="month-nav" aria-label="Month navigation">
-        {#if data.prev}
-          <a href={calendarHref('grid') + '&ym=' + data.prev}>← Prev</a>
-        {/if}
-        <strong>{data.monthLabel}</strong>
-        {#if data.next}
-          <a href={calendarHref('grid') + '&ym=' + data.next}>Next →</a>
-        {/if}
-      </nav>
-    </div>
-
-    {#if data.eventCountTotal === 0}
-      <p>Empty calendar. Add a crop to populate.</p>
-    {:else}
-      <div class="cal-grid" role="grid" aria-label={data.monthLabel}>
-        {#each dayLabels as d (d)}
-          <div class="day-label" role="columnheader">{d}</div>
-        {/each}
-        {#each data.calendarGrid ?? [] as cell (cell.iso)}
-          <div
-            class="cell"
-            class:in-month={cell.inMonth}
-            class:out-of-month={!cell.inMonth}
-            class:today={cell.isToday}
-            role="gridcell"
-          >
-            <div class="num">{dayNum(cell.iso)}</div>
-            {#if cell.events.length > 0}
-              <ul class="events">
-                {#each cell.events.slice(0, 3) as e (e.kind + e.cropPluginId + e.startMs)}
-                  <li class="event {e.kind}" title="{e.title} — {e.varietyDisplayName}">
-                    <span class="dot" aria-hidden="true"></span>
-                    <span class="label">{e.title}</span>
-                  </li>
-                {/each}
-                {#if cell.events.length > 3}
-                  <li class="event more">+{cell.events.length - 3} more</li>
-                {/if}
-              </ul>
-            {/if}
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </section>
-{/if}
-
-{#if advisor}
-  <div
-    class="advisor-backdrop"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="advisor-title"
-    onclick={(e) => e.target === e.currentTarget && dismissAdvisor()}
-    onkeydown={(e) => e.key === 'Escape' && dismissAdvisor()}
-    tabindex="-1"
-  >
-    <div class="advisor-modal">
-      <button
-        type="button"
-        class="advisor-close"
-        aria-label="Close companion advisor"
-        onclick={dismissAdvisor}
-      >
-        ✕
-      </button>
-      <h2 id="advisor-title">🌽 Companion Advisor</h2>
-      {#each advisor.suggestions as s (s.systemName)}
-        <div class="suggestion">
-          <h3>Add {s.systemName} companions?</h3>
-          <p class="benefit">{s.systemBenefit}</p>
-          <ul class="members">
-            {#each s.members as m (m.cropPluginId)}
-              <li>
-                <strong>{m.displayName}</strong>
-                <span class="role">{m.role}</span>
-                <span class="offset">+{m.plantingOffsetDays} days</span>
+          <ul class="commit-results">
+            {#each wCommitResults as r, i (i)}
+              <li class={r.ok ? 'result-ok' : 'result-warn'}>
+                {r.ok ? '✓' : '✗'}
+                {data.blocks.find((b) => b.id === r.blockId)?.name ?? r.blockId}
+                — Plant {new Date(r.plantMs).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric'
+                })}
+                {#if !r.ok && r.error}<span class="error"> ({r.error})</span>{/if}
               </li>
             {/each}
           </ul>
           <div class="actions">
-            <button
-              type="button"
-              class="primary"
-              disabled={advisorBusy}
-              onclick={() => acceptCompanions(s)}
-            >
-              {advisorBusy ? 'Adding…' : `Add all ${s.members.length} companions`}
-            </button>
-            <button type="button" onclick={dismissAdvisor}>No thanks</button>
+            <button class="primary" onclick={resetWizard}>Close</button>
           </div>
-        </div>
-      {/each}
+        {/if}
+      </div>
     </div>
-  </div>
-{/if}
-
-{#if wizardStep !== null}
-  <div
-    class="advisor-backdrop"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="wizard-title"
-    onclick={(e) => e.target === e.currentTarget && resetWizard()}
-    onkeydown={(e) => e.key === 'Escape' && resetWizard()}
-    tabindex="-1"
-  >
-    <div class="advisor-modal wizard-modal">
-      {#if wizardStep === 'crop'}
-        <h2 id="wizard-title">Generate Plan — Select Crop</h2>
-        <label class="wizard-label">
-          Crop
-          <select bind:value={wCropId} class="wizard-select">
-            <option value="">Choose…</option>
-            {#each data.scheduleCatalog ?? [] as c (c.pluginId)}
-              <option value={c.pluginId}>{c.displayName} ({c.cropFamily})</option>
-            {/each}
-          </select>
-        </label>
-        {#if wCropId && wMeta()}
-          {@const m = wMeta()!}
-          <dl class="wizard-meta">
-            {#if m.daysToMaturity}<dt>Days to maturity</dt>
-              <dd>{m.daysToMaturity.min}–{m.daysToMaturity.max} d</dd>{/if}
-            {#if m.preHarvestIntervalDays}<dt>Pre-harvest interval</dt>
-              <dd>{m.preHarvestIntervalDays} d</dd>{/if}
-            {#if m.soilTempMinF !== undefined}<dt>Min soil temp</dt>
-              <dd>{m.soilTempMinF}°F</dd>{/if}
-          </dl>
-        {/if}
-        <div class="actions">
-          <button
-            class="primary"
-            disabled={!wCropId || !wMeta()?.daysToMaturity}
-            onclick={() => {
-              wizardStep = 'block';
-            }}>Next →</button
-          >
-          <button onclick={resetWizard}>Cancel</button>
-        </div>
-      {:else if wizardStep === 'block'}
-        <h2 id="wizard-title">Generate Plan — Select Block</h2>
-        <label class="wizard-label">
-          Block
-          <select bind:value={wBlockId} class="wizard-select">
-            <option value="">Choose…</option>
-            {#each data.blocks as b (b.id)}
-              {@const bf = data.fields.find((f) => f.id === b.fieldId)}
-              <option value={b.id}>{bf ? bf.name + ' › ' : ''}{b.name} [{b.tillageMethod}]</option>
-            {/each}
-          </select>
-        </label>
-        <div class="actions">
-          <button
-            class="primary"
-            disabled={!wBlockId}
-            onclick={() => {
-              wizardStep = 'mode';
-            }}>Next →</button
-          >
-          <button
-            onclick={() => {
-              wizardStep = 'crop';
-            }}>← Back</button
-          >
-        </div>
-      {:else if wizardStep === 'mode'}
-        <h2 id="wizard-title">Generate Plan — Planning Mode</h2>
-        <div class="mode-options">
-          <label class="mode-option" class:selected={wMode === 'plant-on-date'}>
-            <input type="radio" bind:group={wMode} value="plant-on-date" />
-            <strong>Plant on date</strong>
-            <span>Set a planting date; harvest window computed from DTM.</span>
-          </label>
-          <label class="mode-option" class:selected={wMode === 'harvest-by-date'}>
-            <input type="radio" bind:group={wMode} value="harvest-by-date" />
-            <strong>Harvest by date</strong>
-            <span>Set a target harvest date; planting date back-computed from DTM.</span>
-          </label>
-          <label class="mode-option" class:selected={wMode === 'staggered'}>
-            <input type="radio" bind:group={wMode} value="staggered" />
-            <strong>Staggered harvest</strong>
-            <span>Multiple successions spaced apart for continuous harvest.</span>
-          </label>
-          <label class="mode-option" class:selected={wMode === 'season-fill'}>
-            <input type="radio" bind:group={wMode} value="season-fill" />
-            <strong>Season fill</strong>
-            <span>Auto-fill Apr 15–Oct 15 with back-to-back successions.</span>
-          </label>
-        </div>
-        <div class="actions">
-          <button
-            class="primary"
-            onclick={() => {
-              wizardStep = 'params';
-            }}>Next →</button
-          >
-          <button
-            onclick={() => {
-              wizardStep = 'block';
-            }}>← Back</button
-          >
-        </div>
-      {:else if wizardStep === 'params'}
-        <h2 id="wizard-title">Generate Plan — Parameters</h2>
-        {#if wMode === 'plant-on-date'}
-          <label class="wizard-label"
-            >Planting date<input type="date" bind:value={wPlantDate} /></label
-          >
-        {:else if wMode === 'harvest-by-date'}
-          <label class="wizard-label"
-            >Target harvest date<input type="date" bind:value={wHarvestDate} /></label
-          >
-        {:else if wMode === 'staggered'}
-          <label class="wizard-label"
-            >First harvest date<input type="date" bind:value={wHarvestDate} /></label
-          >
-          <div class="param-row">
-            <label class="wizard-label"
-              >Successions<input type="number" min="2" max="10" bind:value={wStaggerCount} /></label
-            >
-            <label class="wizard-label"
-              >Days apart<input type="number" min="7" max="90" bind:value={wIntervalDays} /></label
-            >
-          </div>
-        {:else if wMode === 'season-fill'}
-          <p class="wizard-hint">
-            Frost window: Apr 15 – Oct 15 (Loudoun County, VA). Successions computed automatically.
-          </p>
-        {/if}
-        <details class="wizard-advanced">
-          <summary>Advanced options</summary>
-          <label class="wizard-label" style="margin-top:0.5rem"
-            >PHI enforcement
-            <select bind:value={wPhiMode}>
-              <option value="strict">Strict (plugin PHI only)</option>
-              <option value="conservative">Conservative (PHI + 7 day buffer)</option>
-            </select>
-          </label>
-          {#if wMode === 'staggered' && wStaggerCount > 1}
-            <label class="wizard-label"
-              >Block assignment
-              <select bind:value={wBlockAssign}>
-                <option value="single">All to selected block</option>
-                <option value="round-robin">Round-robin across all blocks</option>
-              </select>
-            </label>
-          {/if}
-        </details>
-        {@const canPreview =
-          (wMode === 'plant-on-date' && !!wPlantDate) ||
-          (wMode === 'harvest-by-date' && !!wHarvestDate) ||
-          (wMode === 'staggered' && !!wHarvestDate) ||
-          wMode === 'season-fill'}
-        <div class="actions">
-          <button
-            class="primary"
-            disabled={!canPreview}
-            onclick={() => {
-              wizardStep = 'preview';
-            }}>Preview →</button
-          >
-          <button
-            onclick={() => {
-              wizardStep = 'mode';
-            }}>← Back</button
-          >
-        </div>
-      {:else if wizardStep === 'preview'}
-        <h2 id="wizard-title">Generate Plan — Preview</h2>
-        {#if wPreviewRows.length === 0}
-          <p class="wizard-hint">No successions could be computed. Check your crop and dates.</p>
-        {:else}
-          <p class="wizard-hint">
-            {wPreviewRows.length} succession{wPreviewRows.length === 1 ? '' : 's'} planned.
-          </p>
-          <div class="preview-rows">
-            {#each wPreviewRows as row, i (i)}
-              <div class="preview-card" class:has-conflict={row.phiConflict || row.soilTooEarly}>
-                <div class="preview-card-header">
-                  <strong>Succession {i + 1}</strong>
-                  <span class="sched-chip chip-plant"
-                    >Plant {new Date(row.plantingDateMs).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}</span
-                  >
-                  <span class="sched-chip chip-harvest"
-                    >Harvest by {new Date(row.targetHarvestMs).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}</span
-                  >
-                  {#if row.phiConflict}<span class="phi-badge">⚠ PHI conflict</span>{/if}
-                  {#if row.soilTooEarly}<span class="warn">⚠ Soil may be cold</span>{/if}
-                </div>
-                {#if row.prepActivities.length > 0}
-                  <ul class="prep-list compact">
-                    {#each row.prepActivities as act (act.title)}
-                      <li class="prep-item">
-                        <span class="prep-dates"
-                          >{new Date(act.startMs).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}–{new Date(act.endMs).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}</span
-                        >
-                        <span class="prep-title">{act.title}</span>
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-                {#if sprayWindows(row.engineEvents).length > 0}
-                  <ul class="sched-events">
-                    {#each sprayWindows(row.engineEvents) as s (s.startMs)}
-                      <li class="sched-event">
-                        <span class="sched-dot spray-window"></span>
-                        <span
-                          >{s.title}: {new Date(s.startMs).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}–{new Date(s.endMs).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                          })}</span
-                        >
-                      </li>
-                    {/each}
-                  </ul>
-                {/if}
-              </div>
-            {/each}
-          </div>
-        {/if}
-        <div class="actions">
-          <button class="primary" disabled={wPreviewRows.length === 0} onclick={commitPlan}
-            >Commit {wPreviewRows.length} planting{wPreviewRows.length === 1 ? '' : 's'}</button
-          >
-          <button
-            onclick={() => {
-              wizardStep = 'params';
-            }}>← Back</button
-          >
-          <button onclick={resetWizard}>Cancel</button>
-        </div>
-      {:else if wizardStep === 'committing'}
-        <h2 id="wizard-title">Committing…</h2>
-        {#if wBusy}<p class="wizard-hint">Saving plantings…</p>{/if}
-        <ul class="commit-results">
-          {#each wCommitResults as r, i (i)}
-            <li class={r.ok ? 'result-ok' : 'result-warn'}>
-              {r.ok ? '✓' : '✗'}
-              {data.blocks.find((b) => b.id === r.blockId)?.name ?? r.blockId}
-              — Plant {new Date(r.plantMs).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-              })}
-              {#if !r.ok && r.error}<span class="error"> ({r.error})</span>{/if}
-            </li>
-          {/each}
-        </ul>
-      {:else if wizardStep === 'done'}
-        <h2 id="wizard-title">Plan Committed</h2>
-        <p class="wizard-hint">
-          {wCommitResults.filter((r) => r.ok).length} of {wCommitResults.length} planting{wCommitResults.length ===
-          1
-            ? ''
-            : 's'} saved.
-        </p>
-        <ul class="commit-results">
-          {#each wCommitResults as r, i (i)}
-            <li class={r.ok ? 'result-ok' : 'result-warn'}>
-              {r.ok ? '✓' : '✗'}
-              {data.blocks.find((b) => b.id === r.blockId)?.name ?? r.blockId}
-              — Plant {new Date(r.plantMs).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-              })}
-              {#if !r.ok && r.error}<span class="error"> ({r.error})</span>{/if}
-            </li>
-          {/each}
-        </ul>
-        <div class="actions">
-          <button class="primary" onclick={resetWizard}>Close</button>
-        </div>
-      {/if}
-    </div>
-  </div>
-{/if}
-
+  {/if}
 </details>
 
 <style>

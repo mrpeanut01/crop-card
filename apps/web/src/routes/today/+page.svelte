@@ -40,7 +40,7 @@
       const wk = data.derivedEvents.length + data.primariesInWindow.length;
       return `One thing to do today. · ${wk} item${wk === 1 ? '' : 's'} this week.`;
     }
-    return 'Nothing scheduled today. Check the week strip for what\'s coming.';
+    return "Nothing scheduled today. Check the week strip for what's coming.";
   });
 
   // Phase 25e (#97) — week-strip items map (YYYY-MM-DD → [{title, kind}]).
@@ -97,7 +97,8 @@
     for (const e of data.derivedEvents) {
       if (e.startMs < todayStartMs || e.startMs >= weekEndMs) continue;
       // Skip passive events that pollute the strip (stage transitions, emergence).
-      if (e.kind === 'emergence' || e.kind === 'stage-window' || e.kind === 'shade-window') continue;
+      if (e.kind === 'emergence' || e.kind === 'stage-window' || e.kind === 'shade-window')
+        continue;
       const key = isoDay(e.startMs);
       (out[key] ??= []).push({ title: e.title, kind: weekKindForEvent(e) });
     }
@@ -352,12 +353,7 @@
 <!-- Phase 25e (#97) — Almanac /today shell. Greeting + weather strip,
      hero card + quick actions, week strip + recommendations + glance.
      1:1 with `direction-almanac-today.jsx` ATodayScreen. -->
-<WeatherStrip
-  dateLabel={todayDateLabel}
-  {greeting}
-  {subtitle}
-  weather={data.weatherSummary}
-/>
+<WeatherStrip dateLabel={todayDateLabel} {greeting} {subtitle} weather={data.weatherSummary} />
 
 <div class="t-grid">
   <TodayHero action={data.priorityAction} {aiEnabled} />
@@ -385,458 +381,478 @@
 
 <details class="legacy-detail" bind:open={detailOpen}>
   <summary>Full schedule view — tasks · calendar · sprayers · kernel info</summary>
-<div class="tab-row">
-  <div class="tabs" role="tablist" aria-label="Calendar window">
-    {#each TABS as t (t.id)}
+  <div class="tab-row">
+    <div class="tabs" role="tablist" aria-label="Calendar window">
+      {#each TABS as t (t.id)}
+        <a
+          class="tab"
+          class:active={data.tab === t.id}
+          role="tab"
+          aria-selected={data.tab === t.id}
+          href={urlFor({ tab: t.id })}
+        >
+          {t.label}
+        </a>
+      {/each}
+    </div>
+    <nav class="view-toggle" aria-label="View mode">
       <a
-        class="tab"
-        class:active={data.tab === t.id}
-        role="tab"
-        aria-selected={data.tab === t.id}
-        href={urlFor({ tab: t.id })}
+        class="view"
+        class:active={data.view === 'list'}
+        href={urlFor({ view: 'list' })}
+        aria-current={data.view === 'list' ? 'page' : undefined}
       >
-        {t.label}
+        ☰ List
       </a>
-    {/each}
+      <a
+        class="view"
+        class:active={data.view === 'calendar'}
+        href={urlFor({ view: 'calendar' })}
+        aria-current={data.view === 'calendar' ? 'page' : undefined}
+      >
+        ▦ Calendar
+      </a>
+    </nav>
   </div>
-  <nav class="view-toggle" aria-label="View mode">
-    <a
-      class="view"
-      class:active={data.view === 'list'}
-      href={urlFor({ view: 'list' })}
-      aria-current={data.view === 'list' ? 'page' : undefined}
-    >
-      ☰ List
-    </a>
-    <a
-      class="view"
-      class:active={data.view === 'calendar'}
-      href={urlFor({ view: 'calendar' })}
-      aria-current={data.view === 'calendar' ? 'page' : undefined}
-    >
-      ▦ Calendar
-    </a>
-  </nav>
-</div>
 
-{#if actionError}
-  <Banner tone="rust" urgent>{actionError}</Banner>
-{/if}
+  {#if actionError}
+    <Banner tone="rust" urgent>{actionError}</Banner>
+  {/if}
 
-{#if data.view === 'calendar'}
-  <section class="card calendar-panel" aria-label="Calendar view">
-    {#if data.tab === 'today'}
-      {@const today = gridDays('today', data.tabFromMs)[0]}
-      {@const items = calendarBuckets.get(today.date) ?? []}
-      <h2>{dayLabel(today.ms)}</h2>
-      {#if items.length === 0}
-        <p class="hint">Nothing scheduled today.</p>
-      {:else}
-        <ul class="day-strip">
-          {#each items.sort((a, b) => (a.kind === 'task' ? a.scheduledFor : a.startMs) - (b.kind === 'task' ? b.scheduledFor : b.startMs)) as item, i (i)}
-            <li class="day-item kind-{item.kind === 'task' ? item.taskKind : item.derivedKind}">
-              <span class="when">
-                {#if item.kind === 'task'}
-                  {new Date(item.scheduledFor).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                {:else}
-                  {new Date(item.startMs).toLocaleDateString()}
-                {/if}
-              </span>
-              <strong>{item.title}</strong>
-              {#if item.kind === 'derived'}
-                <span class="kind-chip">{item.derivedKind}</span>
-              {:else}
-                <span class="kind-chip">{item.taskKind}</span>
-              {/if}
-            </li>
-          {/each}
-        </ul>
-      {/if}
-    {:else if data.tab === '7d'}
-      <h2>Next 7 days</h2>
-      <div class="week-grid">
-        {#each gridDays('7d', data.tabFromMs) as d (d.date)}
-          <div class="day-cell">
-            <header>{dayLabel(d.ms)}</header>
-            {#each calendarBuckets.get(d.date) ?? [] as item, i (i)}
-              <div class="cell-item kind-{item.kind === 'task' ? item.taskKind : item.derivedKind}">
+  {#if data.view === 'calendar'}
+    <section class="card calendar-panel" aria-label="Calendar view">
+      {#if data.tab === 'today'}
+        {@const today = gridDays('today', data.tabFromMs)[0]}
+        {@const items = calendarBuckets.get(today.date) ?? []}
+        <h2>{dayLabel(today.ms)}</h2>
+        {#if items.length === 0}
+          <p class="hint">Nothing scheduled today.</p>
+        {:else}
+          <ul class="day-strip">
+            {#each items.sort((a, b) => (a.kind === 'task' ? a.scheduledFor : a.startMs) - (b.kind === 'task' ? b.scheduledFor : b.startMs)) as item, i (i)}
+              <li class="day-item kind-{item.kind === 'task' ? item.taskKind : item.derivedKind}">
+                <span class="when">
+                  {#if item.kind === 'task'}
+                    {new Date(item.scheduledFor).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  {:else}
+                    {new Date(item.startMs).toLocaleDateString()}
+                  {/if}
+                </span>
                 <strong>{item.title}</strong>
-              </div>
+                {#if item.kind === 'derived'}
+                  <span class="kind-chip">{item.derivedKind}</span>
+                {:else}
+                  <span class="kind-chip">{item.taskKind}</span>
+                {/if}
+              </li>
             {/each}
-          </div>
-        {/each}
-      </div>
-    {:else if data.tab === '30d'}
-      <h2>Next 30 days</h2>
-      <div class="month-grid">
-        {#each gridDays('30d', data.tabFromMs) as d (d.date)}
-          {@const items = calendarBuckets.get(d.date) ?? []}
-          <div class="month-cell" class:has-items={items.length > 0}>
-            <span class="month-day">{new Date(d.ms).getDate()}</span>
-            {#if items.length > 0}
-              <span class="dot" title={items.map((it) => it.title).join('\n')}>{items.length}</span>
-            {/if}
-          </div>
-        {/each}
-      </div>
-      <p class="hint">
-        Each cell shows the count of scheduled tasks + plugin events. Switch to List to drill in.
-      </p>
-    {:else if data.tab === 'season'}
-      <h2>Season — active crops</h2>
-      {#if data.activeCrops.length === 0}
-        <p class="hint">No active crops yet. Plant a crop on /plan to see a season strip here.</p>
-      {:else}
-        <div class="gantt">
-          <div class="gantt-axis">
-            {#each gridDays('season', data.tabFromMs).filter((_, i) => i % 7 === 0) as d (d.date)}
-              <span class="gantt-week"
-                >{new Date(d.ms).toLocaleDateString(undefined, {
-                  month: 'short',
-                  day: 'numeric'
-                })}</span
-              >
-            {/each}
-          </div>
-          {#each data.activeCrops as crop (crop.id)}
-            <div class="gantt-row">
-              <span class="gantt-label">{crop.varietyDisplayName}</span>
-              <div class="gantt-track">
-                {#each data.derivedEvents.filter((e) => e.blockId === crop.blockId) as e, i (i)}
-                  {@const startPct =
-                    ((e.startMs - data.tabFromMs) / (data.tabToMs - data.tabFromMs)) * 100}
-                  {@const widthPct =
-                    ((e.endMs - e.startMs) / (data.tabToMs - data.tabFromMs)) * 100}
-                  <span
-                    class="gantt-span kind-{e.kind}"
-                    style="left:{Math.max(0, startPct)}%; width:{Math.max(1, widthPct)}%"
-                    title="{e.title} — {new Date(e.startMs).toLocaleDateString()}"
-                  ></span>
-                {/each}
-              </div>
+          </ul>
+        {/if}
+      {:else if data.tab === '7d'}
+        <h2>Next 7 days</h2>
+        <div class="week-grid">
+          {#each gridDays('7d', data.tabFromMs) as d (d.date)}
+            <div class="day-cell">
+              <header>{dayLabel(d.ms)}</header>
+              {#each calendarBuckets.get(d.date) ?? [] as item, i (i)}
+                <div
+                  class="cell-item kind-{item.kind === 'task' ? item.taskKind : item.derivedKind}"
+                >
+                  <strong>{item.title}</strong>
+                </div>
+              {/each}
             </div>
           {/each}
         </div>
-      {/if}
-    {/if}
-  </section>
-{/if}
-
-<section
-  class="card task-panel"
-  aria-label="Scheduled tasks in window"
-  class:hidden={data.view === 'calendar' && data.tab !== 'today'}
->
-  <h2>
-    {#if data.tab === 'today'}Today's tasks{:else if data.tab === '7d'}Next 7 days{:else if data.tab === '30d'}Next
-      30 days{:else}Season{/if}
-  </h2>
-
-  {#if data.primariesInWindow.length === 0 && data.derivedEvents.length === 0}
-    <p class="hint">
-      Nothing scheduled in this window. Plugin suggestions below will appear once a crop is planted.
-    </p>
-  {/if}
-
-  {#each data.primariesInWindow as primary (primary.id)}
-    {@const pre = preTasksFor(primary.id).filter((t) => t.kind === 'pre-task')}
-    {@const post = preTasksFor(primary.id).filter((t) => t.kind === 'post-task')}
-    <article class="primary-task">
-      <header>
-        <span class="when">{fmtDateTime(primary.scheduledFor)}</span>
-        <strong class="title">{primary.title}</strong>
-      </header>
-      {#if primary.body}<p class="body">{primary.body}</p>{/if}
-      {#if pre.length > 0}
-        <details open>
-          <summary>{pre.length} pre-task{pre.length === 1 ? '' : 's'}</summary>
-          <ul class="linked">
-            {#each pre as t (t.id)}
-              <li>
-                <span class="when">{fmtDateTime(t.scheduledFor)}</span>
-                <strong>{t.title}</strong>
-                {#if t.body}<span class="body">— {t.body}</span>{/if}
-                <button
-                  class="mini"
-                  onclick={() => patchTask(t.id, { action: 'complete' })}
-                  disabled={busy}
+      {:else if data.tab === '30d'}
+        <h2>Next 30 days</h2>
+        <div class="month-grid">
+          {#each gridDays('30d', data.tabFromMs) as d (d.date)}
+            {@const items = calendarBuckets.get(d.date) ?? []}
+            <div class="month-cell" class:has-items={items.length > 0}>
+              <span class="month-day">{new Date(d.ms).getDate()}</span>
+              {#if items.length > 0}
+                <span class="dot" title={items.map((it) => it.title).join('\n')}
+                  >{items.length}</span
                 >
-                  ✓ Done
-                </button>
-              </li>
-            {/each}
-          </ul>
-        </details>
-      {/if}
-      {#if post.length > 0}
-        <details>
-          <summary>{post.length} post-task{post.length === 1 ? '' : 's'}</summary>
-          <ul class="linked">
-            {#each post as t (t.id)}
-              <li>
-                <span class="when">{fmtDateTime(t.scheduledFor)}</span>
-                <strong>{t.title}</strong>
-                {#if t.body}<span class="body">— {t.body}</span>{/if}
-                <button
-                  class="mini"
-                  onclick={() => patchTask(t.id, { action: 'complete' })}
-                  disabled={busy}
-                >
-                  ✓ Done
-                </button>
-              </li>
-            {/each}
-          </ul>
-        </details>
-      {/if}
-      <div class="row">
-        <button
-          class="primary"
-          onclick={() => patchTask(primary.id, { action: 'complete' })}
-          disabled={busy}
-        >
-          ✓ Mark primary complete
-        </button>
-        <button
-          class="secondary"
-          onclick={() => patchTask(primary.id, { action: 'abort', reason: 'aborted from /today' })}
-          disabled={busy}
-        >
-          Abort
-        </button>
-      </div>
-    </article>
-  {/each}
-
-  {#if data.derivedEvents.length > 0}
-    <h3 class="suggestions-heading">Plugin suggestions</h3>
-    <p class="hint">
-      Calendar engine derived these from your active crops. Click <strong>Schedule</strong> to promote
-      one to a task you can attach pre/post-tasks to.
-    </p>
-    <ul class="suggestions">
-      {#each data.derivedEvents as e (e.kind + e.blockId + e.startMs + e.title)}
-        <li>
-          <span class="when">{fmtDate(e.startMs)}</span>
-          <strong>{e.title}</strong>
-          <span class="kind">{e.kind}</span>
-          {#if e.body}<span class="body">— {e.body}</span>{/if}
-          <button class="mini" onclick={() => scheduleFromEvent(e)} disabled={busy}>
-            + Schedule
-          </button>
-        </li>
-      {/each}
-    </ul>
-  {/if}
-
-  {#if data.tab === 'season' && data.activeCrops.length > 0}
-    <h3 class="suggestions-heading">Active crops</h3>
-    <ul class="active-crops">
-      {#each data.activeCrops as c (c.id)}
-        <li>
-          <strong>{c.varietyDisplayName}</strong>
-          — block {c.blockId.slice(0, 8)} — {c.plantingDate
-            ? `planted ${fmtDate(c.plantingDate)}`
-            : 'planned'}
-          <Pill tone={c.status === 'active' ? 'forest' : 'neutral'}>{c.status}</Pill>
-        </li>
-      {/each}
-    </ul>
-  {/if}
-</section>
-
-{#if !data.bootstrapDone}
-  <Card loose>
-    <Kicker>UC-20 · One-time setup</Kicker>
-    <h2 class="serif bootstrap-title">Get started</h2>
-    <p class="bootstrap-lede">
-      A few one-time setup steps. CropCard plans, calibrates, and records around blocks + sprayers —
-      once these three are in place, the calendar drives the rest.
-    </p>
-    <ol class="bootstrap-steps">
-      <li class:done={data.bootstrap.hasBlock && data.bootstrap.hasPlanting}>
-        <span class="step-num" aria-hidden="true">
-          {data.bootstrap.hasBlock && data.bootstrap.hasPlanting ? '✓' : '1'}
-        </span>
-        <div class="step-body">
-          <strong>Add your first block & planting</strong>
-          <small>
-            {#if data.bootstrap.hasBlock && data.bootstrap.hasPlanting}
-              Done.
-            {:else if data.bootstrap.hasBlock}
-              Block added. Now record a planting in it.
-            {:else}
-              A block is your field; a planting is what's growing in it.
-            {/if}
-          </small>
-          {#if !(data.bootstrap.hasBlock && data.bootstrap.hasPlanting)}
-            <a href="/plan" class="bootstrap-cta"><Button variant="primary" size="sm">Open Plan →</Button></a>
-          {/if}
+              {/if}
+            </div>
+          {/each}
         </div>
-      </li>
-      <li class:done={data.bootstrap.hasSprayer}>
-        <span class="step-num" aria-hidden="true">
-          {data.bootstrap.hasSprayer ? '✓' : '2'}
-        </span>
-        <div class="step-body">
-          <strong>Register a sprayer</strong>
-          <small>
-            {#if data.bootstrap.hasSprayer}
-              Done.
-            {:else}
-              The kernel won't let you spray without one — it tracks chemistry & decon state.
-            {/if}
-          </small>
-          {#if !data.bootstrap.hasSprayer}
-            <a href="/equipment" class="bootstrap-cta"><Button variant="primary" size="sm">Open Equipment →</Button></a>
-          {/if}
-        </div>
-      </li>
-      <li class:done={data.bootstrap.hasCalibration}>
-        <span class="step-num" aria-hidden="true">
-          {data.bootstrap.hasCalibration ? '✓' : '3'}
-        </span>
-        <div class="step-body">
-          <strong>Calibrate the sprayer</strong>
-          <small>
-            {#if data.bootstrap.hasCalibration}
-              Done.
-            {:else}
-              UC-10 1/128-acre method. The dilution calculator scales every product rate by GPA.
-            {/if}
-          </small>
-          {#if data.bootstrap.hasSprayer && !data.bootstrap.hasCalibration}
-            <a href="/calibrate" class="bootstrap-cta"><Button variant="primary" size="sm">Open Calibrate →</Button></a>
-          {/if}
-        </div>
-      </li>
-    </ol>
-  </Card>
-{/if}
-
-{#if data.lowStock.length > 0}
-  <Banner tone="wheat">
-    <strong>{data.lowStock.length} SKU{data.lowStock.length === 1 ? '' : 's'} low on stock:</strong>
-    <ul class="alert-list">
-      {#each data.lowStock as i (i.id)}
-        <li>
-          <a href="/stock/{i.id}">{i.displayName}</a>
-          — {i.onHand} {i.defaultUnit} on hand (reorder at {i.reorderThreshold} {i.defaultUnit})
-        </li>
-      {/each}
-    </ul>
-  </Banner>
-{/if}
-{#if data.expiringStock.length > 0}
-  <Banner tone="wheat">
-    <strong>{data.expiringStock.length} lot{data.expiringStock.length === 1 ? '' : 's'} expiring within 30 days:</strong>
-    <ul class="alert-list">
-      {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
-        <li>
-          <a href="/stock/{e.itemId}">{e.itemName}</a>
-          {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}
-          — {e.balance} {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left
-        </li>
-      {/each}
-    </ul>
-  </Banner>
-{/if}
-
-{#if data.eventsToday.length > 0}
-  <section class="card today-actions">
-    <h2>Today's actions</h2>
-    <ul>
-      {#each data.eventsToday as e (e.cropPluginId + e.title + e.startMs)}
-        {@const cta = ctaFor(e)}
-        <li class="event {e.kind}">
-          <strong>{e.title}</strong>
-          <small>{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName}</small>
-          {#if e.body}<p>{e.body}</p>{/if}
-          {#if cta}
-            <a class="cta" href={cta.href}>{cta.label}</a>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  </section>
-{:else}
-  <section class="card empty">
-    <h2>No scheduled action today</h2>
-    <p>
-      {#if data.counts.blocks === 0}
-        Add a block on <a href="/plan">/plan</a> with a planting record to see calendar-driven actions
-        here.
-      {:else}
-        Calendar engine has nothing for today. Plan a one-off spray on <a href="/spray">/spray</a> if
-        needed.
-      {/if}
-    </p>
-    <a href="/spray" class="primary">Plan a spray</a>
-  </section>
-{/if}
-
-{#if data.upcoming.length > 0}
-  <section class="card">
-    <h2>Next 14 days</h2>
-    <ul class="upcoming">
-      {#each data.upcoming.slice(0, 12) as e (e.cropPluginId + e.title + e.startMs)}
-        {@const cta = ctaFor(e)}
-        <li class="event {e.kind}">
-          <span class="when">{fmtRange(e.startMs, e.endMs)}</span>
-          <strong>{e.title}</strong>
-          <small>{e.varietyDisplayName}</small>
-          {#if cta}<a class="cta-small" href={cta.href}>{cta.label}</a>{/if}
-        </li>
-      {/each}
-    </ul>
-  </section>
-{/if}
-
-<section class="card">
-  <h2>Sprayers</h2>
-  <ul class="sprayers">
-    {#each data.sprayers as s (s.id)}
-      <li>
-        <strong>{s.label}</strong>
-        <span class="id">{s.id}</span>
-        {#if s.lastChemistryClass}
-          <span class="warn">last load: {s.lastChemistryClass}</span>
-          <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}" class="link">Decon →</a>
+        <p class="hint">
+          Each cell shows the count of scheduled tasks + plugin events. Switch to List to drill in.
+        </p>
+      {:else if data.tab === 'season'}
+        <h2>Season — active crops</h2>
+        {#if data.activeCrops.length === 0}
+          <p class="hint">No active crops yet. Plant a crop on /plan to see a season strip here.</p>
         {:else}
-          <span class="ok">clean</span>
+          <div class="gantt">
+            <div class="gantt-axis">
+              {#each gridDays('season', data.tabFromMs).filter((_, i) => i % 7 === 0) as d (d.date)}
+                <span class="gantt-week"
+                  >{new Date(d.ms).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric'
+                  })}</span
+                >
+              {/each}
+            </div>
+            {#each data.activeCrops as crop (crop.id)}
+              <div class="gantt-row">
+                <span class="gantt-label">{crop.varietyDisplayName}</span>
+                <div class="gantt-track">
+                  {#each data.derivedEvents.filter((e) => e.blockId === crop.blockId) as e, i (i)}
+                    {@const startPct =
+                      ((e.startMs - data.tabFromMs) / (data.tabToMs - data.tabFromMs)) * 100}
+                    {@const widthPct =
+                      ((e.endMs - e.startMs) / (data.tabToMs - data.tabFromMs)) * 100}
+                    <span
+                      class="gantt-span kind-{e.kind}"
+                      style="left:{Math.max(0, startPct)}%; width:{Math.max(1, widthPct)}%"
+                      title="{e.title} — {new Date(e.startMs).toLocaleDateString()}"
+                    ></span>
+                  {/each}
+                </div>
+              </div>
+            {/each}
+          </div>
         {/if}
-        {#if s.lastDeconAt}
-          <span class="meta">decon {new Date(s.lastDeconAt).toLocaleString()}</span>
-        {/if}
-      </li>
-    {/each}
-  </ul>
-</section>
+      {/if}
+    </section>
+  {/if}
 
-<section class="card audit">
-  <h2>Kernel</h2>
-  <dl>
-    <dt>Rules version</dt>
-    <dd><code>{data.rulesVersion}</code></dd>
-    <dt>Crops registered</dt>
-    <dd>{data.counts.crops}</dd>
-    <dt>Herbicides registered</dt>
-    <dd>{data.counts.herbicides}</dd>
-    <dt>Blocks defined</dt>
-    <dd>{data.counts.blocks}</dd>
-    {#if data.pluginFailures.length > 0}
-      <dt>Plugin load failures</dt>
-      <dd class="warn">
-        <ul>
-          {#each data.pluginFailures as f}<li>{f}</li>{/each}
-        </ul>
-      </dd>
+  <section
+    class="card task-panel"
+    aria-label="Scheduled tasks in window"
+    class:hidden={data.view === 'calendar' && data.tab !== 'today'}
+  >
+    <h2>
+      {#if data.tab === 'today'}Today's tasks{:else if data.tab === '7d'}Next 7 days{:else if data.tab === '30d'}Next
+        30 days{:else}Season{/if}
+    </h2>
+
+    {#if data.primariesInWindow.length === 0 && data.derivedEvents.length === 0}
+      <p class="hint">
+        Nothing scheduled in this window. Plugin suggestions below will appear once a crop is
+        planted.
+      </p>
     {/if}
-  </dl>
-</section>
+
+    {#each data.primariesInWindow as primary (primary.id)}
+      {@const pre = preTasksFor(primary.id).filter((t) => t.kind === 'pre-task')}
+      {@const post = preTasksFor(primary.id).filter((t) => t.kind === 'post-task')}
+      <article class="primary-task">
+        <header>
+          <span class="when">{fmtDateTime(primary.scheduledFor)}</span>
+          <strong class="title">{primary.title}</strong>
+        </header>
+        {#if primary.body}<p class="body">{primary.body}</p>{/if}
+        {#if pre.length > 0}
+          <details open>
+            <summary>{pre.length} pre-task{pre.length === 1 ? '' : 's'}</summary>
+            <ul class="linked">
+              {#each pre as t (t.id)}
+                <li>
+                  <span class="when">{fmtDateTime(t.scheduledFor)}</span>
+                  <strong>{t.title}</strong>
+                  {#if t.body}<span class="body">— {t.body}</span>{/if}
+                  <button
+                    class="mini"
+                    onclick={() => patchTask(t.id, { action: 'complete' })}
+                    disabled={busy}
+                  >
+                    ✓ Done
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          </details>
+        {/if}
+        {#if post.length > 0}
+          <details>
+            <summary>{post.length} post-task{post.length === 1 ? '' : 's'}</summary>
+            <ul class="linked">
+              {#each post as t (t.id)}
+                <li>
+                  <span class="when">{fmtDateTime(t.scheduledFor)}</span>
+                  <strong>{t.title}</strong>
+                  {#if t.body}<span class="body">— {t.body}</span>{/if}
+                  <button
+                    class="mini"
+                    onclick={() => patchTask(t.id, { action: 'complete' })}
+                    disabled={busy}
+                  >
+                    ✓ Done
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          </details>
+        {/if}
+        <div class="row">
+          <button
+            class="primary"
+            onclick={() => patchTask(primary.id, { action: 'complete' })}
+            disabled={busy}
+          >
+            ✓ Mark primary complete
+          </button>
+          <button
+            class="secondary"
+            onclick={() =>
+              patchTask(primary.id, { action: 'abort', reason: 'aborted from /today' })}
+            disabled={busy}
+          >
+            Abort
+          </button>
+        </div>
+      </article>
+    {/each}
+
+    {#if data.derivedEvents.length > 0}
+      <h3 class="suggestions-heading">Plugin suggestions</h3>
+      <p class="hint">
+        Calendar engine derived these from your active crops. Click <strong>Schedule</strong> to promote
+        one to a task you can attach pre/post-tasks to.
+      </p>
+      <ul class="suggestions">
+        {#each data.derivedEvents as e (e.kind + e.blockId + e.startMs + e.title)}
+          <li>
+            <span class="when">{fmtDate(e.startMs)}</span>
+            <strong>{e.title}</strong>
+            <span class="kind">{e.kind}</span>
+            {#if e.body}<span class="body">— {e.body}</span>{/if}
+            <button class="mini" onclick={() => scheduleFromEvent(e)} disabled={busy}>
+              + Schedule
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if data.tab === 'season' && data.activeCrops.length > 0}
+      <h3 class="suggestions-heading">Active crops</h3>
+      <ul class="active-crops">
+        {#each data.activeCrops as c (c.id)}
+          <li>
+            <strong>{c.varietyDisplayName}</strong>
+            — block {c.blockId.slice(0, 8)} — {c.plantingDate
+              ? `planted ${fmtDate(c.plantingDate)}`
+              : 'planned'}
+            <Pill tone={c.status === 'active' ? 'forest' : 'neutral'}>{c.status}</Pill>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </section>
+
+  {#if !data.bootstrapDone}
+    <Card loose>
+      <Kicker>UC-20 · One-time setup</Kicker>
+      <h2 class="serif bootstrap-title">Get started</h2>
+      <p class="bootstrap-lede">
+        A few one-time setup steps. CropCard plans, calibrates, and records around blocks + sprayers
+        — once these three are in place, the calendar drives the rest.
+      </p>
+      <ol class="bootstrap-steps">
+        <li class:done={data.bootstrap.hasBlock && data.bootstrap.hasPlanting}>
+          <span class="step-num" aria-hidden="true">
+            {data.bootstrap.hasBlock && data.bootstrap.hasPlanting ? '✓' : '1'}
+          </span>
+          <div class="step-body">
+            <strong>Add your first block & planting</strong>
+            <small>
+              {#if data.bootstrap.hasBlock && data.bootstrap.hasPlanting}
+                Done.
+              {:else if data.bootstrap.hasBlock}
+                Block added. Now record a planting in it.
+              {:else}
+                A block is your field; a planting is what's growing in it.
+              {/if}
+            </small>
+            {#if !(data.bootstrap.hasBlock && data.bootstrap.hasPlanting)}
+              <a href="/plan" class="bootstrap-cta"
+                ><Button variant="primary" size="sm">Open Plan →</Button></a
+              >
+            {/if}
+          </div>
+        </li>
+        <li class:done={data.bootstrap.hasSprayer}>
+          <span class="step-num" aria-hidden="true">
+            {data.bootstrap.hasSprayer ? '✓' : '2'}
+          </span>
+          <div class="step-body">
+            <strong>Register a sprayer</strong>
+            <small>
+              {#if data.bootstrap.hasSprayer}
+                Done.
+              {:else}
+                The kernel won't let you spray without one — it tracks chemistry & decon state.
+              {/if}
+            </small>
+            {#if !data.bootstrap.hasSprayer}
+              <a href="/equipment" class="bootstrap-cta"
+                ><Button variant="primary" size="sm">Open Equipment →</Button></a
+              >
+            {/if}
+          </div>
+        </li>
+        <li class:done={data.bootstrap.hasCalibration}>
+          <span class="step-num" aria-hidden="true">
+            {data.bootstrap.hasCalibration ? '✓' : '3'}
+          </span>
+          <div class="step-body">
+            <strong>Calibrate the sprayer</strong>
+            <small>
+              {#if data.bootstrap.hasCalibration}
+                Done.
+              {:else}
+                UC-10 1/128-acre method. The dilution calculator scales every product rate by GPA.
+              {/if}
+            </small>
+            {#if data.bootstrap.hasSprayer && !data.bootstrap.hasCalibration}
+              <a href="/calibrate" class="bootstrap-cta"
+                ><Button variant="primary" size="sm">Open Calibrate →</Button></a
+              >
+            {/if}
+          </div>
+        </li>
+      </ol>
+    </Card>
+  {/if}
+
+  {#if data.lowStock.length > 0}
+    <Banner tone="wheat">
+      <strong
+        >{data.lowStock.length} SKU{data.lowStock.length === 1 ? '' : 's'} low on stock:</strong
+      >
+      <ul class="alert-list">
+        {#each data.lowStock as i (i.id)}
+          <li>
+            <a href="/stock/{i.id}">{i.displayName}</a>
+            — {i.onHand}
+            {i.defaultUnit} on hand (reorder at {i.reorderThreshold}
+            {i.defaultUnit})
+          </li>
+        {/each}
+      </ul>
+    </Banner>
+  {/if}
+  {#if data.expiringStock.length > 0}
+    <Banner tone="wheat">
+      <strong
+        >{data.expiringStock.length} lot{data.expiringStock.length === 1 ? '' : 's'} expiring within 30
+        days:</strong
+      >
+      <ul class="alert-list">
+        {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
+          <li>
+            <a href="/stock/{e.itemId}">{e.itemName}</a>
+            {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}
+            — {e.balance}
+            {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left
+          </li>
+        {/each}
+      </ul>
+    </Banner>
+  {/if}
+
+  {#if data.eventsToday.length > 0}
+    <section class="card today-actions">
+      <h2>Today's actions</h2>
+      <ul>
+        {#each data.eventsToday as e (e.cropPluginId + e.title + e.startMs)}
+          {@const cta = ctaFor(e)}
+          <li class="event {e.kind}">
+            <strong>{e.title}</strong>
+            <small>{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName}</small>
+            {#if e.body}<p>{e.body}</p>{/if}
+            {#if cta}
+              <a class="cta" href={cta.href}>{cta.label}</a>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    </section>
+  {:else}
+    <section class="card empty">
+      <h2>No scheduled action today</h2>
+      <p>
+        {#if data.counts.blocks === 0}
+          Add a block on <a href="/plan">/plan</a> with a planting record to see calendar-driven actions
+          here.
+        {:else}
+          Calendar engine has nothing for today. Plan a one-off spray on <a href="/spray">/spray</a> if
+          needed.
+        {/if}
+      </p>
+      <a href="/spray" class="primary">Plan a spray</a>
+    </section>
+  {/if}
+
+  {#if data.upcoming.length > 0}
+    <section class="card">
+      <h2>Next 14 days</h2>
+      <ul class="upcoming">
+        {#each data.upcoming.slice(0, 12) as e (e.cropPluginId + e.title + e.startMs)}
+          {@const cta = ctaFor(e)}
+          <li class="event {e.kind}">
+            <span class="when">{fmtRange(e.startMs, e.endMs)}</span>
+            <strong>{e.title}</strong>
+            <small>{e.varietyDisplayName}</small>
+            {#if cta}<a class="cta-small" href={cta.href}>{cta.label}</a>{/if}
+          </li>
+        {/each}
+      </ul>
+    </section>
+  {/if}
+
+  <section class="card">
+    <h2>Sprayers</h2>
+    <ul class="sprayers">
+      {#each data.sprayers as s (s.id)}
+        <li>
+          <strong>{s.label}</strong>
+          <span class="id">{s.id}</span>
+          {#if s.lastChemistryClass}
+            <span class="warn">last load: {s.lastChemistryClass}</span>
+            <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}" class="link">Decon →</a>
+          {:else}
+            <span class="ok">clean</span>
+          {/if}
+          {#if s.lastDeconAt}
+            <span class="meta">decon {new Date(s.lastDeconAt).toLocaleString()}</span>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
+
+  <section class="card audit">
+    <h2>Kernel</h2>
+    <dl>
+      <dt>Rules version</dt>
+      <dd><code>{data.rulesVersion}</code></dd>
+      <dt>Crops registered</dt>
+      <dd>{data.counts.crops}</dd>
+      <dt>Herbicides registered</dt>
+      <dd>{data.counts.herbicides}</dd>
+      <dt>Blocks defined</dt>
+      <dd>{data.counts.blocks}</dd>
+      {#if data.pluginFailures.length > 0}
+        <dt>Plugin load failures</dt>
+        <dd class="warn">
+          <ul>
+            {#each data.pluginFailures as f}<li>{f}</li>{/each}
+          </ul>
+        </dd>
+      {/if}
+    </dl>
+  </section>
 </details>
 
 <style>

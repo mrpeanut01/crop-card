@@ -22,12 +22,7 @@ import { users } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { getApiKey } from './scanResult';
 
-export type FallbackReason =
-  | 'no-key'
-  | 'over-cap'
-  | 'offline'
-  | 'rate-limit'
-  | 'timeout';
+export type FallbackReason = 'no-key' | 'over-cap' | 'offline' | 'rate-limit' | 'timeout';
 
 export type AiTryResult<T> = {
   value: T;
@@ -135,7 +130,9 @@ export function getUserAiEnabled(userId: string | null | undefined): boolean {
   // Cross-tenant lookup — users is a global identity table per the
   // Phase 18a multi-tenant design. unscopedQueryNote documents the
   // intentional bypass of tenant scoping for this column read.
-  unscopedQueryNote('users.ai_enabled drives client-side AI variant rendering; global identity column');
+  unscopedQueryNote(
+    'users.ai_enabled drives client-side AI variant rendering; global identity column'
+  );
   try {
     const row = db
       .select({ aiEnabled: users.aiEnabled })

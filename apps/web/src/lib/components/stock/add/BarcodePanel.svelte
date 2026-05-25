@@ -2,10 +2,7 @@
   import { ScanBarcode } from 'lucide-svelte';
   import BarcodeScanner from '$lib/components/BarcodeScanner.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
-  import {
-    draftFromScanResult,
-    type StockEntryDraft
-  } from '$lib/stock/normalizeStockEntry';
+  import { draftFromScanResult, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
 
   /**
    * Phase 25d (#89) — Method 3 of the 5-method add waterfall.
@@ -84,8 +81,8 @@
 
 <div class="barcode-panel">
   <p class="lede">
-    Point your camera at the package barcode (UPC / EAN). The lookup uses OpenFoodFacts first
-    (free, deterministic) and falls back to Claude when the product isn't in their database.
+    Point your camera at the package barcode (UPC / EAN). The lookup uses OpenFoodFacts first (free,
+    deterministic) and falls back to Claude when the product isn't in their database.
   </p>
 
   {#if !scannerOpen && !lookingUp && !lastBarcode}
@@ -114,9 +111,7 @@
         <Provenance source="data" compact />
       </p>
       <div class="existing-actions">
-        <a class="primary" href="/stock/{existingItemId}?added-lot=1">
-          Add a lot to that item →
-        </a>
+        <a class="primary" href="/stock/{existingItemId}?added-lot=1"> Add a lot to that item → </a>
         <button type="button" class="ghost" onclick={startOver}>Scan another</button>
       </div>
     </div>

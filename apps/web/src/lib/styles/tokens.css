@@ -7,26 +7,26 @@
 
 :root {
   /* Surfaces */
-  --color-cream: #f8f3e8;       /* page background */
-  --color-paper: #fdfaf2;       /* cards, top bar, raised surfaces */
+  --color-cream: #f8f3e8; /* page background */
+  --color-paper: #fdfaf2; /* cards, top bar, raised surfaces */
 
   /* Text */
-  --color-ink: #1a1f1a;         /* primary text */
-  --color-ink-soft: #4a4f46;    /* body copy */
-  --color-ink-muted: #7a7f75;   /* captions, metadata, kicker labels */
+  --color-ink: #1a1f1a; /* primary text */
+  --color-ink-soft: #4a4f46; /* body copy */
+  --color-ink-muted: #7a7f75; /* captions, metadata, kicker labels */
 
   /* Brand */
-  --color-forest: #2c5237;      /* primary brand, primary buttons, success */
+  --color-forest: #2c5237; /* primary brand, primary buttons, success */
   --color-forest-deep: #1f3a28; /* display headings, brand-deep */
 
   /* Semantic */
-  --color-wheat: #b8893c;       /* warning, in-progress states */
-  --color-wheat-soft: #e8d9b5;  /* warning pill bg */
-  --color-rust: #a64a2a;        /* errors, blocks, RUP, danger zone */
-  --color-sky: #6f8fa8;         /* informational, fungicide accent */
+  --color-wheat: #b8893c; /* warning, in-progress states */
+  --color-wheat-soft: #e8d9b5; /* warning pill bg */
+  --color-rust: #a64a2a; /* errors, blocks, RUP, danger zone */
+  --color-sky: #6f8fa8; /* informational, fungicide accent */
 
   /* Lines + borders */
-  --color-divider: #d9cfb7;     /* hard dividers, input borders, card stroke */
+  --color-divider: #d9cfb7; /* hard dividers, input borders, card stroke */
   --color-divider-soft: #e9dfcc; /* soft dividers, hover bg */
 
   /* Pill tones — { bg, fg, bd } per tone */

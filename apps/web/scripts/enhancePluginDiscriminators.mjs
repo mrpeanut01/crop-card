@@ -160,9 +160,7 @@ function deriveHarvestStyle(plugin) {
       }
       // Snap / pole / bush / yardlong / snow / sugar — picked over weeks.
       if (
-        /snap|green bean|pole|wax bean|string bean|bush bean|yardlong|snow pea|sugar pea/.test(
-          name
-        )
+        /snap|green bean|pole|wax bean|string bean|bush bean|yardlong|snow pea|sugar pea/.test(name)
       ) {
         return 'continuous-fruit';
       }
@@ -553,7 +551,9 @@ if (!quiet) {
 }
 
 console.log('');
-console.log(`${apply ? 'Applied' : 'Would apply'} changes to ${touched} plugin${touched === 1 ? '' : 's'}:`);
+console.log(
+  `${apply ? 'Applied' : 'Would apply'} changes to ${touched} plugin${touched === 1 ? '' : 's'}:`
+);
 console.log(`  harvestStyle:        ${summary.harvestStyle} plugins`);
 console.log(`  bloomWindow:         ${summary.bloomWindow} plugins`);
 console.log(`  scoutingThresholds:  ${summary.scoutingThresholds} plugins`);

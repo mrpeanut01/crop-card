@@ -33,7 +33,8 @@
    *  Each bucket sums all observations in the week ending at `now − N×7d`.
    *  Oldest-first so the bars left-to-right read chronologically. */
   const sparkline = $derived.by(() => {
-    if (!primaryThreshold) return [] as Array<{ weekLabel: string; count: number; triggered: boolean }>;
+    if (!primaryThreshold)
+      return [] as Array<{ weekLabel: string; count: number; triggered: boolean }>;
     const obs = (data.scoutLogByBlock[selectedBlockId] ?? []).filter(
       (o) => o.pest === primaryThreshold.pest && o.metric === primaryThreshold.metric
     );
@@ -205,12 +206,7 @@
 
   {#snippet observation()}
     <label for="scout-pest">Pest</label>
-    <input
-      id="scout-pest"
-      type="text"
-      bind:value={scoutPest}
-      placeholder="e.g. squash bug, ECB"
-    />
+    <input id="scout-pest" type="text" bind:value={scoutPest} placeholder="e.g. squash bug, ECB" />
     <label for="scout-metric">Metric</label>
     <select id="scout-metric" bind:value={scoutMetric}>
       <option value="count-per-plant">count per plant</option>

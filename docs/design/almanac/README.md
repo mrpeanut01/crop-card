@@ -1,4 +1,15 @@
-# Handoff: CropCard design overhaul (Direction A — Almanac)
+# CropCard design reference — Direction A (Almanac)
+
+> **Implementation source-of-truth** for the Phase 25 UI overhaul (shipped). See the Phase 25 entry in [`../../../CLAUDE.md`](../../../CLAUDE.md) "Phase status" for the sub-phase / GitHub-issue map.
+
+## Status (2026-05-24)
+
+This folder is the merged **v1 + v2** Almanac design handoff:
+
+- **v1** — 47 artboards × 9 sections (cover · entry · today · spray · harvest+stock · records+settings · plan · wizard · 10 archetype renderers).
+- **v2 addendum** — cross-cutting AI-provenance layer. Supersedes 6 v1 files (`CropCard Modernization.html`, `data.js`, `direction-almanac-today.jsx`, `direction-almanac-insecticide.jsx`, `direction-almanac-onboarding.jsx`, `icons.jsx`); adds the `<Provenance>` component pair, the `aiTry()` server contract, the AI-on/off variant of every AI-touchable screen, and three new artboards (`00 · ai-philosophy`, `02 · today-aioff`, `03 · spray-insect-aioff`). **Read [`AI_PROVENANCE_ADDENDUM.md`](./AI_PROVENANCE_ADDENDUM.md) before plumbing any AI-touchable screen** — the addendum's "AI assists, never gates" principle is now a top-level invariant alongside the safety kernel, tenant isolation, and offline-first.
+
+The v1 versions of the six superseded files are preserved under [`v1-archive/`](./v1-archive/) for diff reference; the top-level files are canonical.
 
 ## Overview
 This handoff packages the canonical design spec for **CropCard** — an offline-first PWA replacing the paper Field Card for small-plot row-crop herbicide planning, planting, spraying, harvest, and records. The repo lives at **mrpeanut01/crop-card**. This bundle is the design layer that ships against the existing SvelteKit + TypeScript + SQLite + Litestream foundation already in `main`.
@@ -51,6 +62,10 @@ Pulled from `CLAUDE.md` at `mrpeanut01/crop-card@main`. Every screen below respe
 | `direction-almanac-stock-add.jsx` | 5-method add-to-stock flow (barcode · label OCR · AI photo · textual search · manual). |
 | `direction-almanac-settings.jsx` | All 10 Settings sub-pages. |
 | `data.js` (again — listed twice on purpose) | Worth a second pass before you start coding. The shape of every screen's props is here. |
+| `AI_PROVENANCE_ADDENDUM.md` | **v2 spec doc.** Cross-cutting AI-provenance principle, degradation matrix, component contract, field-by-field map, server-side checklist. Read before plumbing any AI-touchable screen. |
+| `AI_PROVENANCE_README.md` | Quick-orient guide to what the v2 export changed. |
+| `direction-almanac-ai-provenance.jsx` | **v2 NEW.** `A_Provenance` + `A_ProvenanceLegend` + `A_DataPhilosophyArtboard` reference page. Port to `Provenance.svelte` + `ProvenanceLegend.svelte` 1:1. |
+| `v1-archive/` | Pre-v2 versions of the 6 files the addendum supersedes. Reference-only; **don't implement against these**. |
 
 ---
 

@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    Check,
-    ChevronRight,
-    TriangleAlert,
-    Sprout,
-    ArrowRight
-  } from 'lucide-svelte';
+  import { Check, ChevronRight, TriangleAlert, Sprout, ArrowRight } from 'lucide-svelte';
 
   /**
    * Phase 25 v2 (#81 partial) — horizontal workflow strip mapping the
@@ -127,18 +121,19 @@
           </span>
         </button>
         {#if i < steps.length - 1}
-          <span
-            class="trail-bar"
-            class:done={s.state === 'done'}
-            aria-hidden="true"
-          ></span>
+          <span class="trail-bar" class:done={s.state === 'done'} aria-hidden="true"></span>
         {/if}
       </li>
     {/each}
   </ol>
 
   {#if onOpenWizard}
-    <button class="cta" type="button" onclick={onOpenWizard} title="Re-run any step or chat with the planning assistant">
+    <button
+      class="cta"
+      type="button"
+      onclick={onOpenWizard}
+      title="Re-run any step or chat with the planning assistant"
+    >
       <ArrowRight size={13} strokeWidth={1.75} aria-hidden="true" />
       Open wizard
     </button>

@@ -2,7 +2,7 @@
    Import from apps/web/src/routes/+layout.svelte (top of <style> block or via
    <link rel="stylesheet">) so tokens are available globally. */
 
-@import "./tokens.css";
-@import "./type.css";
-@import "./reset.css";
-@import "./almanac-base.css";
+@import './tokens.css';
+@import './type.css';
+@import './reset.css';
+@import './almanac-base.css';

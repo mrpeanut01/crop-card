@@ -35,7 +35,16 @@
   // Stable color hash per planting so the rail bars match the planting
   // grid + season-timeline colors elsewhere.
   function plantingColor(plantingId: string): string {
-    const PALETTE = ['#7a8f5a', '#c9961f', '#6f8fa8', '#a85a1f', '#4a8b54', '#a23a3a', '#8a6722', '#7a3a4d'];
+    const PALETTE = [
+      '#7a8f5a',
+      '#c9961f',
+      '#6f8fa8',
+      '#a85a1f',
+      '#4a8b54',
+      '#a23a3a',
+      '#8a6722',
+      '#7a3a4d'
+    ];
     let h = 0;
     for (let i = 0; i < plantingId.length; i++) h = (h * 31 + plantingId.charCodeAt(i)) >>> 0;
     return PALETTE[h % PALETTE.length];
@@ -71,21 +80,13 @@
   {:else}
     {#each filtered as b (b.id)}
       {@const poly = b.plantings.length > 1}
-      <button
-        class="row"
-        class:selected={b.id === selectedId}
-        onclick={() => onSelect(b.id)}
-      >
+      <button class="row" class:selected={b.id === selectedId} onclick={() => onSelect(b.id)}>
         <div class="bars">
           {#if b.plantings.length === 0}
             <span class="bar single" style:background="var(--color-divider)"></span>
           {:else}
             {#each b.plantings.slice(0, 3) as p (p.id)}
-              <span
-                class="bar"
-                class:single={!poly}
-                style:background={plantingColor(p.id)}
-              ></span>
+              <span class="bar" class:single={!poly} style:background={plantingColor(p.id)}></span>
             {/each}
           {/if}
         </div>

@@ -84,10 +84,7 @@ export function getActiveSession(planId: string): WizardSession | null {
   return row ? sessionRowToDomain(row) : null;
 }
 
-export function getOrCreateActiveSession(
-  planId: string,
-  createdByUserId?: string
-): WizardSession {
+export function getOrCreateActiveSession(planId: string, createdByUserId?: string): WizardSession {
   const existing = getActiveSession(planId);
   if (existing) return existing;
   const row = db

@@ -35,7 +35,9 @@
       task: 'Task'
     }[tag];
   }
-  function tonePillTone(tag: PriorityAction['toneTag']): 'forest' | 'wheat' | 'rust' | 'sky' | 'neutral' {
+  function tonePillTone(
+    tag: PriorityAction['toneTag']
+  ): 'forest' | 'wheat' | 'rust' | 'sky' | 'neutral' {
     return {
       scout: 'forest',
       spray: 'rust',
@@ -99,9 +101,8 @@
       </div>
       <h2 class="serif action-title">All caught up.</h2>
       <p class="action-body">
-        Nothing's overdue, nothing's scheduled today, and no spray or harvest
-        windows open in the next 24 hours. Browse the week strip below for
-        what's coming.
+        Nothing's overdue, nothing's scheduled today, and no spray or harvest windows open in the
+        next 24 hours. Browse the week strip below for what's coming.
       </p>
     </div>
   {/if}

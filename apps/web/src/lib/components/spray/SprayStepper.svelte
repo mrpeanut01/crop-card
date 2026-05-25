@@ -26,11 +26,7 @@
 <nav class="stepper" aria-label="Spray flow progress">
   {#each steps as s, i (s.label)}
     <div class="step" class:done={s.state === 'done'} class:active={s.state === 'active'}>
-      <div
-        class="circle"
-        class:done={s.state === 'done'}
-        class:active={s.state === 'active'}
-      >
+      <div class="circle" class:done={s.state === 'done'} class:active={s.state === 'active'}>
         {#if s.state === 'done'}
           <Check size={11} strokeWidth={2.5} />
         {:else}

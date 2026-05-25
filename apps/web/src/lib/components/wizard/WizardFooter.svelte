@@ -37,12 +37,7 @@
   {#if summary}
     <div class="summary">{summary}</div>
   {/if}
-  <button
-    type="button"
-    class="primary"
-    onclick={onContinue}
-    disabled={!canContinue || !onContinue}
-  >
+  <button type="button" class="primary" onclick={onContinue} disabled={!canContinue || !onContinue}>
     {nextLabel}
     <ArrowRight size={14} strokeWidth={1.75} />
   </button>

@@ -31,7 +31,8 @@
   const roleCounts = $derived(
     ROLE_META.map((r) => ({
       ...r,
-      count: data.members.filter((m) => m.roleWithinOwner === r.role && m.status === 'active').length
+      count: data.members.filter((m) => m.roleWithinOwner === r.role && m.status === 'active')
+        .length
     }))
   );
 

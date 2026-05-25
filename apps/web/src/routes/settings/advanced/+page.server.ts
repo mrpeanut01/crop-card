@@ -20,9 +20,7 @@ export const load: PageServerLoad = ({ locals }) => {
   if (locals.user.role !== 'owner') throw error(403, 'owner-only');
 
   const ownerId = locals.user.activeOwnerId;
-  const ownerRow = ownerId
-    ? db.select().from(owners).where(eq(owners.id, ownerId)).get()
-    : null;
+  const ownerRow = ownerId ? db.select().from(owners).where(eq(owners.id, ownerId)).get() : null;
 
   return {
     stockItemCount: listStockItems().length,

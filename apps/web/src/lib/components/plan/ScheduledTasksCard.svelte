@@ -35,7 +35,13 @@
   const { rows, titleSuffix = '· next 30 days', onAddTask }: Props = $props();
 
   function statusTone(s: ScheduledRow['status']): 'wheat' | 'rust' | 'neutral' | 'forest' {
-    return s === 'window-open' ? 'wheat' : s === 'today' ? 'rust' : s === 'overdue' ? 'rust' : 'neutral';
+    return s === 'window-open'
+      ? 'wheat'
+      : s === 'today'
+        ? 'rust'
+        : s === 'overdue'
+          ? 'rust'
+          : 'neutral';
   }
 </script>
 
@@ -71,7 +77,10 @@
             <td>
               {#if row.plantingLabel}
                 <span class="planting-chip">
-                  <span class="swatch" style:background={row.plantingColor ?? 'var(--color-divider)'}></span>
+                  <span
+                    class="swatch"
+                    style:background={row.plantingColor ?? 'var(--color-divider)'}
+                  ></span>
                   {row.plantingLabel}
                 </span>
               {/if}

@@ -80,10 +80,7 @@
       icon: SprayCan,
       label: 'Sprayers & calibration',
       sub: `${data.counts.equipment} registered${data.counts.dirtySprayers > 0 ? ` · ${data.counts.dirtySprayers} needs decon` : ''}`,
-      badge:
-        data.counts.dirtySprayers > 0
-          ? { tone: 'rust', text: 'Decon needed' }
-          : undefined,
+      badge: data.counts.dirtySprayers > 0 ? { tone: 'rust', text: 'Decon needed' } : undefined,
       ownerOnly: true
     },
     {
@@ -157,7 +154,9 @@
   <div class="identity-meta">
     <div class="meta-label">Last sign-in</div>
     <div class="meta-value mono">{data.user.lastLogin}</div>
-    <div class="meta-sub">{data.user.sessions} active session{data.user.sessions === 1 ? '' : 's'}</div>
+    <div class="meta-sub">
+      {data.user.sessions} active session{data.user.sessions === 1 ? '' : 's'}
+    </div>
   </div>
 </section>
 
@@ -178,7 +177,9 @@
           {/if}
         </div>
         <div class="ai-meta">
-          Claude {data.ai.model} · monthly cap ${data.ai.monthlyCapUSD.toFixed(0)} · ${data.ai.spendThisMonth.toFixed(2)}
+          Claude {data.ai.model} · monthly cap ${data.ai.monthlyCapUSD.toFixed(0)} · ${data.ai.spendThisMonth.toFixed(
+            2
+          )}
           spent this month · {data.ai.callsThisMonth} call{data.ai.callsThisMonth === 1 ? '' : 's'}
         </div>
       </div>
@@ -288,12 +289,30 @@
 <section class="card advanced-footer">
   <Kicker>Advanced · diagnostics</Kicker>
   <dl class="diag-grid">
-    <div><dt>Build version</dt><dd class="mono">{data.advanced.buildVersion}</dd></div>
-    <div><dt>Rules version</dt><dd class="mono">{data.advanced.rulesVersion}</dd></div>
-    <div><dt>Plugin failures</dt><dd class="mono">{data.advanced.pluginFailures}</dd></div>
-    <div><dt>Tenant ID</dt><dd class="mono">{data.advanced.tenantId}</dd></div>
-    <div><dt>Last backup</dt><dd class="mono">{data.advanced.lastBackup}</dd></div>
-    <div><dt>Storage tier</dt><dd class="mono">SQLite · Litestream → Azure Blob</dd></div>
+    <div>
+      <dt>Build version</dt>
+      <dd class="mono">{data.advanced.buildVersion}</dd>
+    </div>
+    <div>
+      <dt>Rules version</dt>
+      <dd class="mono">{data.advanced.rulesVersion}</dd>
+    </div>
+    <div>
+      <dt>Plugin failures</dt>
+      <dd class="mono">{data.advanced.pluginFailures}</dd>
+    </div>
+    <div>
+      <dt>Tenant ID</dt>
+      <dd class="mono">{data.advanced.tenantId}</dd>
+    </div>
+    <div>
+      <dt>Last backup</dt>
+      <dd class="mono">{data.advanced.lastBackup}</dd>
+    </div>
+    <div>
+      <dt>Storage tier</dt>
+      <dd class="mono">SQLite · Litestream → Azure Blob</dd>
+    </div>
   </dl>
 </section>
 

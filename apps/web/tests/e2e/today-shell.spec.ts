@@ -23,8 +23,6 @@ test('today renders Almanac shell after sign-in', async ({ page }) => {
 
   // Only flag console errors that aren't pre-existing 404s for fonts/manifest
   // (Phase 25a self-host work still pending).
-  const real = consoleErrors.filter(
-    (m) => !/Failed to load resource.*404/.test(m)
-  );
+  const real = consoleErrors.filter((m) => !/Failed to load resource.*404/.test(m));
   expect(real).toEqual([]);
 });

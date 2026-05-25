@@ -13,7 +13,15 @@
    * on the page. The "+ Add block" button on the Blocks cell emits
    * `onAddBlock` so the parent can scroll to its block selector.
    */
-  import { Sprout, Layers, Compass, CheckCircle2, AlertTriangle, Map as MapIcon, Plus } from 'lucide-svelte';
+  import {
+    Sprout,
+    Layers,
+    Compass,
+    CheckCircle2,
+    AlertTriangle,
+    Map as MapIcon,
+    Plus
+  } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
 
   export type CompatibilityTone = 'forest' | 'wheat' | 'rust';
@@ -127,7 +135,8 @@
     <div class="cs-cell">
       <div class="cs-k">
         <Compass size={12} strokeWidth={1.75} />
-        Target weeds{#if targets.length > 0} · {targets.length}{/if}
+        Target weeds{#if targets.length > 0}
+          · {targets.length}{/if}
       </div>
       {#if targets.length === 0}
         <div class="cs-empty">—</div>

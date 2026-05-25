@@ -69,7 +69,13 @@
       Quantity (optional)
       <Provenance source="manual" compact />
     </label>
-    <input id="fb-qty" type="text" bind:value={quantity} disabled={busy} placeholder="e.g., 12 lb" />
+    <input
+      id="fb-qty"
+      type="text"
+      bind:value={quantity}
+      disabled={busy}
+      placeholder="e.g., 12 lb"
+    />
   </div>
 
   <div class="row">

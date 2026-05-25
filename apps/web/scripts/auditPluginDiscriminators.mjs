@@ -123,7 +123,9 @@ function auditFungicides(plugins) {
   const missing = [];
   for (const { file, plugin } of plugins) {
     const ais = plugin.activeIngredients ?? [];
-    const allTagged = ais.length > 0 && ais.every((ai) => typeof ai.fracCode === 'string' && ai.fracCode.length > 0);
+    const allTagged =
+      ais.length > 0 &&
+      ais.every((ai) => typeof ai.fracCode === 'string' && ai.fracCode.length > 0);
     if (allTagged) withFracCodes += 1;
     else missing.push({ file });
   }
@@ -142,7 +144,9 @@ function renderReport({ crops, insect, fung, generatedAt }) {
   lines.push(`Generated: ${generatedAt}`);
   lines.push('');
   lines.push('Tracks coverage of the Phase 25c renderer-dispatch + Phase 25d gate-evaluator');
-  lines.push('discriminator fields across the plugin corpus. Per the [#87 plan](https://github.com/mrpeanut01/crop-card/issues/87),');
+  lines.push(
+    'discriminator fields across the plugin corpus. Per the [#87 plan](https://github.com/mrpeanut01/crop-card/issues/87),'
+  );
   lines.push('Zod fields stay **optional** until coverage reaches ≥95%, then they are promoted');
   lines.push('to required so future uploads must declare them. `FallbackHarvestRenderer` becomes');
   lines.push('defensive-only after the promotion.');
@@ -154,17 +158,31 @@ function renderReport({ crops, insect, fung, generatedAt }) {
   lines.push('');
   lines.push('| Plugin type | Total | Field | Coverage |');
   lines.push('| --- | ---: | --- | ---: |');
-  lines.push(`| Crop | ${crops.total} | growthStageTable.system | ${pct(crops.counts.growthStageTable, crops.total)} (${crops.counts.growthStageTable}/${crops.total}) |`);
-  lines.push(`| Crop | ${crops.total} | harvestStyle | ${pct(crops.counts.harvestStyle, crops.total)} (${crops.counts.harvestStyle}/${crops.total}) |`);
-  lines.push(`| Crop | ${crops.total} | postHarvestCuring (presence) | ${pct(crops.counts.postHarvestCuring, crops.total)} (${crops.counts.postHarvestCuring}/${crops.total}) |`);
-  lines.push(`| Crop | ${crops.total} | bloomWindow | ${pct(crops.counts.bloomWindow, crops.total)} (${crops.counts.bloomWindow}/${crops.total}) |`);
-  lines.push(`| Insecticide | ${insect.total} | scoutingThresholds | ${pct(insect.withThresholds, insect.total)} (${insect.withThresholds}/${insect.total}) |`);
-  lines.push(`| Fungicide | ${fung.total} | activeIngredients[].fracCode (all set) | ${pct(fung.withFracCodes, fung.total)} (${fung.withFracCodes}/${fung.total}) |`);
+  lines.push(
+    `| Crop | ${crops.total} | growthStageTable.system | ${pct(crops.counts.growthStageTable, crops.total)} (${crops.counts.growthStageTable}/${crops.total}) |`
+  );
+  lines.push(
+    `| Crop | ${crops.total} | harvestStyle | ${pct(crops.counts.harvestStyle, crops.total)} (${crops.counts.harvestStyle}/${crops.total}) |`
+  );
+  lines.push(
+    `| Crop | ${crops.total} | postHarvestCuring (presence) | ${pct(crops.counts.postHarvestCuring, crops.total)} (${crops.counts.postHarvestCuring}/${crops.total}) |`
+  );
+  lines.push(
+    `| Crop | ${crops.total} | bloomWindow | ${pct(crops.counts.bloomWindow, crops.total)} (${crops.counts.bloomWindow}/${crops.total}) |`
+  );
+  lines.push(
+    `| Insecticide | ${insect.total} | scoutingThresholds | ${pct(insect.withThresholds, insect.total)} (${insect.withThresholds}/${insect.total}) |`
+  );
+  lines.push(
+    `| Fungicide | ${fung.total} | activeIngredients[].fracCode (all set) | ${pct(fung.withFracCodes, fung.total)} (${fung.withFracCodes}/${fung.total}) |`
+  );
   lines.push('');
 
   lines.push('## Crop coverage by family');
   lines.push('');
-  lines.push('| Family | Total | growthStageTable | harvestStyle | postHarvestCuring | bloomWindow |');
+  lines.push(
+    '| Family | Total | growthStageTable | harvestStyle | postHarvestCuring | bloomWindow |'
+  );
   lines.push('| --- | ---: | ---: | ---: | ---: | ---: |');
   const sortedFams = [...crops.families.entries()].sort(([a], [b]) => a.localeCompare(b));
   for (const [fam, f] of sortedFams) {
@@ -249,10 +267,20 @@ console.log(`Wrote ${OUT_PATH}`);
 console.log('');
 console.log('Summary:');
 console.log(`  Crops:        ${crops.total} total`);
-console.log(`    growthStageTable: ${pct(crops.counts.growthStageTable, crops.total)} (${crops.counts.growthStageTable}/${crops.total})`);
-console.log(`    harvestStyle:     ${pct(crops.counts.harvestStyle, crops.total)} (${crops.counts.harvestStyle}/${crops.total})`);
-console.log(`    bloomWindow:      ${pct(crops.counts.bloomWindow, crops.total)} (${crops.counts.bloomWindow}/${crops.total})`);
+console.log(
+  `    growthStageTable: ${pct(crops.counts.growthStageTable, crops.total)} (${crops.counts.growthStageTable}/${crops.total})`
+);
+console.log(
+  `    harvestStyle:     ${pct(crops.counts.harvestStyle, crops.total)} (${crops.counts.harvestStyle}/${crops.total})`
+);
+console.log(
+  `    bloomWindow:      ${pct(crops.counts.bloomWindow, crops.total)} (${crops.counts.bloomWindow}/${crops.total})`
+);
 console.log(`  Insecticides: ${insect.total} total`);
-console.log(`    scoutingThresholds: ${pct(insect.withThresholds, insect.total)} (${insect.withThresholds}/${insect.total})`);
+console.log(
+  `    scoutingThresholds: ${pct(insect.withThresholds, insect.total)} (${insect.withThresholds}/${insect.total})`
+);
 console.log(`  Fungicides:   ${fung.total} total`);
-console.log(`    fracCode coverage:  ${pct(fung.withFracCodes, fung.total)} (${fung.withFracCodes}/${fung.total})`);
+console.log(
+  `    fracCode coverage:  ${pct(fung.withFracCodes, fung.total)} (${fung.withFracCodes}/${fung.total})`
+);

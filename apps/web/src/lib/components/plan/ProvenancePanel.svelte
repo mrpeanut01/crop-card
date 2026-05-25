@@ -74,7 +74,8 @@
 <section class="panel" aria-labelledby="provenance-heading">
   <header>
     <div class="kicker">
-      Where this plan came from{#if planLabel} · {planLabel}{/if}
+      Where this plan came from{#if planLabel}
+        · {planLabel}{/if}
     </div>
     <h3 id="provenance-heading" class="serif">Revisions</h3>
   </header>

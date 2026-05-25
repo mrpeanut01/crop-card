@@ -36,7 +36,16 @@
   const DAY_MS = 24 * 60 * 60 * 1000;
 
   function plantingColor(plantingId: string): string {
-    const PALETTE = ['#7a8f5a', '#c9961f', '#6f8fa8', '#a85a1f', '#4a8b54', '#a23a3a', '#8a6722', '#7a3a4d'];
+    const PALETTE = [
+      '#7a8f5a',
+      '#c9961f',
+      '#6f8fa8',
+      '#a85a1f',
+      '#4a8b54',
+      '#a23a3a',
+      '#8a6722',
+      '#7a3a4d'
+    ];
     let h = 0;
     for (let i = 0; i < plantingId.length; i++) h = (h * 31 + plantingId.charCodeAt(i)) >>> 0;
     return PALETTE[h % PALETTE.length];
@@ -51,7 +60,10 @@
   }
   const bounds = $derived(axisBounds());
   const todayPct = $derived(
-    Math.min(100, Math.max(0, ((Date.now() - bounds.startMs) / (bounds.endMs - bounds.startMs)) * 100))
+    Math.min(
+      100,
+      Math.max(0, ((Date.now() - bounds.startMs) / (bounds.endMs - bounds.startMs)) * 100)
+    )
   );
   const computedYearLabel = $derived(yearLabel ?? `${bounds.year} · Apr → Oct`);
 
@@ -99,7 +111,10 @@
   }
 
   function pct(ms: number): number {
-    return Math.max(0, Math.min(100, ((ms - bounds.startMs) / (bounds.endMs - bounds.startMs)) * 100));
+    return Math.max(
+      0,
+      Math.min(100, ((ms - bounds.startMs) / (bounds.endMs - bounds.startMs)) * 100)
+    );
   }
   function widthPct(start: number, end: number): number {
     return Math.max(1, pct(end) - pct(start));

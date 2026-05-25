@@ -9,12 +9,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import {
-  cropPluginSchema,
-  bloomWindowSchema,
-  HARVEST_STYLES,
-  harvestStyleSchema
-} from './schemas';
+import { cropPluginSchema, bloomWindowSchema, HARVEST_STYLES, harvestStyleSchema } from './schemas';
 
 describe('Phase 25c.0 — harvestStyle', () => {
   it('accepts every declared HARVEST_STYLES value', () => {

@@ -37,7 +37,7 @@ export const GET: RequestHandler = (event) => {
     return json(
       {
         error: 'no API key configured',
-        hint: 'Save a key on /settings/ai first; the audit re-run can\'t fire without one.'
+        hint: "Save a key on /settings/ai first; the audit re-run can't fire without one."
       },
       { status: 412 }
     );
@@ -111,8 +111,7 @@ export const POST: RequestHandler = async (event) => {
         endpoint: row.endpoint,
         rowId: row.id,
         plannedPhase: 26,
-        hint:
-          'Endpoint-specific re-issue logic ships in Phase 26 once each AI endpoint records its full re-runnable context in ai_call_log. The /settings/ai panel still surfaces the fallback breakdown today.'
+        hint: 'Endpoint-specific re-issue logic ships in Phase 26 once each AI endpoint records its full re-runnable context in ai_call_log. The /settings/ai panel still surfaces the fallback breakdown today.'
       },
       { status: 501 }
     );
@@ -122,8 +121,7 @@ export const POST: RequestHandler = async (event) => {
     {
       error: 'bulk re-run not yet implemented',
       plannedPhase: 26,
-      hint:
-        'Future: { all: true } will iterate the candidate list returned by GET. Today, both single-row and bulk re-runs return 501.'
+      hint: 'Future: { all: true } will iterate the candidate list returned by GET. Today, both single-row and bulk re-runs return 501.'
     },
     { status: 501 }
   );

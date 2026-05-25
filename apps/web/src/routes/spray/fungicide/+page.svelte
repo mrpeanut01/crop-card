@@ -194,8 +194,8 @@
 
       {#if tankFracOverlap}
         <p class="warn-inline">
-          ⚠ FRAC {tankFracOverlap} is on two products in this tank. Consider rotating to a different
-          mode of action for resistance management.
+          ⚠ FRAC {tankFracOverlap} is on two products in this tank. Consider rotating to a different mode
+          of action for resistance management.
         </p>
       {/if}
     {/if}
@@ -203,12 +203,7 @@
 
   {#snippet observation()}
     <label for="disease-name">Disease</label>
-    <input
-      id="disease-name"
-      type="text"
-      bind:value={diseaseName}
-      placeholder="e.g. early blight"
-    />
+    <input id="disease-name" type="text" bind:value={diseaseName} placeholder="e.g. early blight" />
     <label for="disease-metric">Metric</label>
     <select id="disease-metric" bind:value={diseaseMetric}>
       <option value="pct-leaf-area">% leaf area affected</option>
@@ -259,7 +254,8 @@
               <strong>{new Date(e.occurredAt).toLocaleString()}</strong> — block {e.blockId}
               · {e.products.map((p) => p.displayName).join(', ')}
               {#if e.preHarvestClearAt}
-                <span class="phi">· PHI clear {new Date(e.preHarvestClearAt).toLocaleString()}</span>
+                <span class="phi">· PHI clear {new Date(e.preHarvestClearAt).toLocaleString()}</span
+                >
               {/if}
             </li>
           {/each}

@@ -35,9 +35,7 @@ export const load: ServerLoad = async ({ locals }) => {
   const ownerId = locals.user.activeOwnerId;
 
   const userRow = db.select().from(users).where(eq(users.id, locals.user.id)).get();
-  const ownerRow = ownerId
-    ? db.select().from(owners).where(eq(owners.id, ownerId)).get()
-    : null;
+  const ownerRow = ownerId ? db.select().from(owners).where(eq(owners.id, ownerId)).get() : null;
 
   // ─── Counts for the section subtitles ───────────────────────────────
   const blocks = listBlocks();
@@ -114,7 +112,9 @@ export const load: ServerLoad = async ({ locals }) => {
     },
     ai: ai && {
       enabled: aiKey != null,
-      keyMasked: aiKey ? `${aiKey.slice(0, 8)}${'•'.repeat(Math.max(0, aiKey.length - 12))}${aiKey.slice(-4)}` : null,
+      keyMasked: aiKey
+        ? `${aiKey.slice(0, 8)}${'•'.repeat(Math.max(0, aiKey.length - 12))}${aiKey.slice(-4)}`
+        : null,
       model: 'claude-haiku-4-5',
       spendThisMonth: ai.monthlyUsdSoFar,
       monthlyCapUSD: ai.cap,

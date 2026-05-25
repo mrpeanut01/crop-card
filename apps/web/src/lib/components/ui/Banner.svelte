@@ -19,7 +19,7 @@
     dismissible = false,
     onDismiss,
     children,
-    action,
+    action
   }: Props = $props();
 
   // Banners get either status or alert per WCAG: alert for blocking errors,

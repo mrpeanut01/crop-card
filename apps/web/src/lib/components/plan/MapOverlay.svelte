@@ -77,7 +77,16 @@
   // Compute pictorial positions: try geometry centroids first (normalise
   // to 0..1 across the farm), fall back to a grid layout for blocks
   // without geometry. The output is `{id, leftPct, topPct, wPct, hPct}`.
-  type Pos = { id: string; leftPct: number; topPct: number; wPct: number; hPct: number; color: string; label: string; plantingCount: number };
+  type Pos = {
+    id: string;
+    leftPct: number;
+    topPct: number;
+    wPct: number;
+    hPct: number;
+    color: string;
+    label: string;
+    plantingCount: number;
+  };
   const positions = $derived.by<Pos[]>(() => {
     const withGeom: Array<{ b: BlockWithPlantings; c: { lat: number; lon: number } }> = [];
     const noGeom: BlockWithPlantings[] = [];
@@ -87,7 +96,10 @@
       else noGeom.push(b);
     }
 
-    let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+    let minLon = Infinity,
+      maxLon = -Infinity,
+      minLat = Infinity,
+      maxLat = -Infinity;
     for (const { c } of withGeom) {
       minLon = Math.min(minLon, c.lon);
       maxLon = Math.max(maxLon, c.lon);
@@ -183,8 +195,8 @@
         <Info size={13} />
         <p>
           Click any block to jump there in Plan. The dedicated
-          <a href="/plan?tab=layout">layout editor</a> has soil zones, irrigation, and
-          pesticide-buffer overlays.
+          <a href="/plan?tab=layout">layout editor</a> has soil zones, irrigation, and pesticide-buffer
+          overlays.
         </p>
       </div>
     {/if}
@@ -254,7 +266,9 @@
     align-items: flex-start;
     justify-content: flex-start;
     opacity: 0.6;
-    transition: opacity 80ms ease, transform 80ms ease;
+    transition:
+      opacity 80ms ease,
+      transform 80ms ease;
     min-width: 60px;
     min-height: 40px;
     text-align: left;

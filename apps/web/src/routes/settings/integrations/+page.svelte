@@ -228,7 +228,7 @@
     .row {
       grid-template-columns: auto 1fr;
     }
-    .row > :nth-child(n+3) {
+    .row > :nth-child(n + 3) {
       grid-column: 1 / -1;
       justify-self: start;
     }

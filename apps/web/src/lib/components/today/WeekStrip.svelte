@@ -28,7 +28,13 @@
 
   const DAY_MS = 24 * 60 * 60 * 1000;
   const days = $derived.by(() => {
-    const out: Array<{ iso: string; weekday: string; day: number; isToday: boolean; items: WeekItem[] }> = [];
+    const out: Array<{
+      iso: string;
+      weekday: string;
+      day: number;
+      isToday: boolean;
+      items: WeekItem[];
+    }> = [];
     for (let i = 0; i < 7; i++) {
       const ms = todayStartMs + i * DAY_MS;
       const d = new Date(ms);

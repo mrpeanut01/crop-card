@@ -39,13 +39,7 @@
     gates?: Snippet;
   }
 
-  const {
-    chemistry,
-    title,
-    lede,
-    activeREI = [],
-    gates
-  }: Props = $props();
+  const { chemistry, title, lede, activeREI = [], gates }: Props = $props();
 
   const KICKER: Record<Chemistry, string> = {
     herbicide: 'Spray · Herbicide · Kernel-gated',

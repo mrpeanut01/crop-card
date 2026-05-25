@@ -8,35 +8,35 @@
 
 export const tokens = {
   // Surfaces
-  cream: "#F8F3E8",
-  paper: "#FDFAF2",
+  cream: '#F8F3E8',
+  paper: '#FDFAF2',
 
   // Text
-  ink: "#1A1F1A",
-  inkSoft: "#4A4F46",
-  inkMuted: "#7A7F75",
+  ink: '#1A1F1A',
+  inkSoft: '#4A4F46',
+  inkMuted: '#7A7F75',
 
   // Brand
-  forest: "#2C5237",
-  forestDeep: "#1F3A28",
+  forest: '#2C5237',
+  forestDeep: '#1F3A28',
 
   // Semantic
-  wheat: "#B8893C",
-  wheatSoft: "#E8D9B5",
-  rust: "#A64A2A",
-  sky: "#6F8FA8",
+  wheat: '#B8893C',
+  wheatSoft: '#E8D9B5',
+  rust: '#A64A2A',
+  sky: '#6F8FA8',
 
   // Lines
-  divider: "#D9CFB7",
-  dividerSoft: "#E9DFCC",
+  divider: '#D9CFB7',
+  dividerSoft: '#E9DFCC'
 } as const;
 
 export const pillTones = {
-  neutral: { bg: "#E9DFCC", fg: "#4A4F46", bd: "#D9CFB7" },
-  forest: { bg: "#E5EEDF", fg: "#1F3A28", bd: "#C9DBC0" },
-  wheat: { bg: "#E8D9B5", fg: "#8A6722", bd: "#D9C18F" },
-  rust: { bg: "#F1D9CE", fg: "#8A341B", bd: "#E2B69E" },
-  sky: { bg: "#DEE7EF", fg: "#3A586E", bd: "#BDCDD9" },
+  neutral: { bg: '#E9DFCC', fg: '#4A4F46', bd: '#D9CFB7' },
+  forest: { bg: '#E5EEDF', fg: '#1F3A28', bd: '#C9DBC0' },
+  wheat: { bg: '#E8D9B5', fg: '#8A6722', bd: '#D9C18F' },
+  rust: { bg: '#F1D9CE', fg: '#8A341B', bd: '#E2B69E' },
+  sky: { bg: '#DEE7EF', fg: '#3A586E', bd: '#BDCDD9' }
 } as const;
 
 export type PillTone = keyof typeof pillTones;
@@ -48,17 +48,17 @@ export type PillTone = keyof typeof pillTones;
  */
 export function kindColor(kind: string): string {
   switch (kind) {
-    case "scout":
+    case 'scout':
       return tokens.sky;
-    case "spray":
+    case 'spray':
       return tokens.rust;
-    case "fertility":
+    case 'fertility':
       return tokens.wheat;
-    case "planting":
+    case 'planting':
       return tokens.forest;
-    case "harvest":
-      return "#8A6722";
-    case "task":
+    case 'harvest':
+      return '#8A6722';
+    case 'task':
       return tokens.inkMuted;
     default:
       return tokens.divider;

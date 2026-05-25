@@ -24,9 +24,7 @@ export interface WeatherSummary {
 
 function dayLabel(iso: string): string {
   const d = new Date(`${iso}T12:00:00`);
-  return d
-    .toLocaleDateString('en-US', { weekday: 'short' })
-    .toLowerCase();
+  return d.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
 }
 
 export function summarizeForecast(days: ForecastDay[]): WeatherSummary | null {
@@ -47,7 +45,9 @@ export function summarizeForecast(days: ForecastDay[]): WeatherSummary | null {
 }
 
 /** Wrap `summarizeForecast` so any error → null and never crashes the page. */
-export function summarizeForecastSafely(days: ForecastDay[] | null | undefined): WeatherSummary | null {
+export function summarizeForecastSafely(
+  days: ForecastDay[] | null | undefined
+): WeatherSummary | null {
   if (!days || days.length === 0) return null;
   try {
     return summarizeForecast(days);

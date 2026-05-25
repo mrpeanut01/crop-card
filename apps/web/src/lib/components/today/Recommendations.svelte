@@ -60,13 +60,16 @@
     <Provenance source="plugin" detail="crop guides + companion library" compact />
   </div>
   {#if visible.length === 0}
-    <div class="empty">No recommendations in the next 2 weeks. Add a planting or run a wizard pass.</div>
+    <div class="empty">
+      No recommendations in the next 2 weeks. Add a planting or run a wizard pass.
+    </div>
   {:else}
     {#each visible as s (s.id)}
       <div class="item">
         <div class="title">{s.title}</div>
         <div class="meta">
-          {#if s.crop}{s.crop} · {/if}<span class="mono">{s.window}</span>
+          {#if s.crop}{s.crop} ·
+          {/if}<span class="mono">{s.window}</span>
         </div>
         <button type="button" class="schedule">+ Schedule task</button>
       </div>

@@ -125,9 +125,7 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
   if (top) {
     const cta = ctaForTask(top);
     const overdueDays =
-      top.scheduledFor < dayStart
-        ? Math.floor((dayStart - top.scheduledFor) / DAY_MS)
-        : undefined;
+      top.scheduledFor < dayStart ? Math.floor((dayStart - top.scheduledFor) / DAY_MS) : undefined;
     const blockName = top.blockId ? inputs.blockNameById.get(top.blockId) : undefined;
     const scope: Array<[string, string]> = [];
     if (blockName) scope.push(['Block', blockName]);

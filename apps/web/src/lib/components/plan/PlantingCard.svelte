@@ -54,7 +54,16 @@
   }: Props = $props();
 
   function plantingColor(plantingId: string): string {
-    const PALETTE = ['#7a8f5a', '#c9961f', '#6f8fa8', '#a85a1f', '#4a8b54', '#a23a3a', '#8a6722', '#7a3a4d'];
+    const PALETTE = [
+      '#7a8f5a',
+      '#c9961f',
+      '#6f8fa8',
+      '#a85a1f',
+      '#4a8b54',
+      '#a23a3a',
+      '#8a6722',
+      '#7a3a4d'
+    ];
     let h = 0;
     for (let i = 0; i < plantingId.length; i++) h = (h * 31 + plantingId.charCodeAt(i)) >>> 0;
     return PALETTE[h % PALETTE.length];
@@ -96,10 +105,25 @@
     if (!sourceTag) return null;
     return {
       'AI plan': { color: 'var(--color-forest)', bg: '#e5eedf', bd: '#c9dbc0', icon: Sprout },
-      'Companion AI': { color: 'var(--color-wheat-deep, #8a6722)', bg: 'var(--color-wheat-soft, #e8d9b5)', bd: '#d9c18f', icon: Layers },
-      'Carry-forward': { color: 'var(--color-sky, #6f8fa8)', bg: '#dee7ef', bd: '#bdcdd9', icon: ArrowRight },
-      'Manual': { color: 'var(--color-ink-soft)', bg: 'var(--color-divider-soft, var(--color-divider))', bd: 'var(--color-divider)', icon: User },
-      'Perennial': { color: 'var(--color-rust)', bg: '#f1d9ce', bd: '#e2b69e', icon: Sprout }
+      'Companion AI': {
+        color: 'var(--color-wheat-deep, #8a6722)',
+        bg: 'var(--color-wheat-soft, #e8d9b5)',
+        bd: '#d9c18f',
+        icon: Layers
+      },
+      'Carry-forward': {
+        color: 'var(--color-sky, #6f8fa8)',
+        bg: '#dee7ef',
+        bd: '#bdcdd9',
+        icon: ArrowRight
+      },
+      Manual: {
+        color: 'var(--color-ink-soft)',
+        bg: 'var(--color-divider-soft, var(--color-divider))',
+        bd: 'var(--color-divider)',
+        icon: User
+      },
+      Perennial: { color: 'var(--color-rust)', bg: '#f1d9ce', bd: '#e2b69e', icon: Sprout }
     }[sourceTag];
   });
 </script>

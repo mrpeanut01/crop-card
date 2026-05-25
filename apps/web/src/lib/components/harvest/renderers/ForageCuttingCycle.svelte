@@ -41,7 +41,8 @@
     <div>
       <span class="archetype-name">Forage cutting cycle</span>
       <span class="archetype-sub">
-        Multi-cut perennial. Check the 3-day weather window before mowing — wet hay molds in the bale.
+        Multi-cut perennial. Check the 3-day weather window before mowing — wet hay molds in the
+        bale.
       </span>
     </div>
   </header>

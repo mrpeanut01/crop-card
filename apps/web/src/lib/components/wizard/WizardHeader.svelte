@@ -37,15 +37,8 @@
     onExit?: () => void;
     onSaveAndResume?: () => void;
   }
-  const {
-    seasonYear,
-    steps,
-    activeStepId,
-    title,
-    onStepClick,
-    onExit,
-    onSaveAndResume
-  }: Props = $props();
+  const { seasonYear, steps, activeStepId, title, onStepClick, onExit, onSaveAndResume }: Props =
+    $props();
 
   const activeTitle = $derived(
     title ?? steps.find((s) => s.id === activeStepId)?.label ?? 'Season plan'

@@ -36,7 +36,7 @@ for (const vp of VIEWPORTS) {
         // Season timeline rows (vary with current date + plantings).
         page.locator('.gantt-row'),
         // Scheduled-tasks rows.
-        page.locator('table tbody'),
+        page.locator('table tbody')
         // Legacy details summary (stable so don't mask).
       ],
       maxDiffPixelRatio: 0.01

@@ -50,7 +50,10 @@
     border: 1px solid transparent;
     min-height: var(--btn-height-min-tap);
     padding: 0 18px;
-    transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+    transition:
+      background 0.12s,
+      border-color 0.12s,
+      opacity 0.12s;
   }
   .btn:disabled {
     opacity: 0.5;

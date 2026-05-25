@@ -1,9 +1,6 @@
 <script lang="ts">
   import { Pencil, Search, ScanBarcode, Camera, Image } from 'lucide-svelte';
-  import {
-    METHOD_META,
-    type StockAddMethod
-  } from '$lib/stock/addMethods';
+  import { METHOD_META, type StockAddMethod } from '$lib/stock/addMethods';
 
   /**
    * Phase 25d (#89) — tab switcher for the Stock 5-method add waterfall.

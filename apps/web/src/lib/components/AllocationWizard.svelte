@@ -197,8 +197,7 @@
     return STEP_ORDER.map((sid, i) => ({
       id: sid,
       label: STEP_LABELS[sid],
-      state:
-        i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'pending'
+      state: i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'pending'
     }));
   });
 
@@ -503,9 +502,7 @@
     // wizard open; replacing the transcript with the seed would erase
     // the resumed chat. Keeping in-memory only is the right balance.
     if (allocationChatMessages.length === 0) {
-      allocationChatMessages = [
-        { role: 'assistant', content: lines.join('\n'), kind: 'seed' }
-      ];
+      allocationChatMessages = [{ role: 'assistant', content: lines.join('\n'), kind: 'seed' }];
     }
     chatDraft = '';
     chatError = null;
@@ -1141,9 +1138,7 @@
       // Phase 25d (#89) — preserve resumed turns; only insert the seed
       // when starting fresh.
       if (scheduleChatMessages.length === 0) {
-        scheduleChatMessages = [
-          { role: 'assistant', content: lines.join('\n'), kind: 'seed' }
-        ];
+        scheduleChatMessages = [{ role: 'assistant', content: lines.join('\n'), kind: 'seed' }];
       }
       queueScrollChat();
     } catch (e) {

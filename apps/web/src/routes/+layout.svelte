@@ -53,7 +53,7 @@
     const res = await fetch('/api/session/switch-owner', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ownerId }),
+      body: JSON.stringify({ ownerId })
     });
     if (res.ok) {
       try {
@@ -113,7 +113,8 @@
       ? 's'
       : ''} decontamination —
     {#each data.dirtySprayers as s, i (s.id)}
-      {#if i > 0}, {/if}
+      {#if i > 0},
+      {/if}
       <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}">
         <strong>{s.label}</strong> ({s.lastChemistryClass})
       </a>

@@ -32,12 +32,18 @@
   </div>
   {#if weather}
     <div class="weather" aria-label="Local weather">
-      <div class="w-cell"><Sun size={16} strokeWidth={1.75} /><span class="mono">{weather.tempF}°F</span></div>
+      <div class="w-cell">
+        <Sun size={16} strokeWidth={1.75} /><span class="mono">{weather.tempF}°F</span>
+      </div>
       {#if weather.windMph !== undefined}
-        <div class="w-cell"><Wind size={16} strokeWidth={1.75} /><span class="mono">{weather.windMph} mph</span></div>
+        <div class="w-cell">
+          <Wind size={16} strokeWidth={1.75} /><span class="mono">{weather.windMph} mph</span>
+        </div>
       {/if}
       {#if weather.rainHint}
-        <div class="w-cell"><CloudRain size={16} strokeWidth={1.75} /><span class="mono">{weather.rainHint}</span></div>
+        <div class="w-cell">
+          <CloudRain size={16} strokeWidth={1.75} /><span class="mono">{weather.rainHint}</span>
+        </div>
       {/if}
     </div>
   {/if}

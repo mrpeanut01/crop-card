@@ -117,7 +117,7 @@ This is the same person as P1 (Sherry) wearing a different hat, OR a future SaaS
 | Constraints | Token grants the underlying user's role within the issuing Owner. No token sub-scopes (read-only / spray-only) in Phase 24 — deferred to a future phase per epic #59. |
 | Success criteria | An external Python script with `Authorization: Bearer cck_…` can read `/api/today`, post `/api/spray/record`, and walk `/api/plan/inputs/refine` without touching the browser UI. Cross-tenant property test extended with a Bearer path passes. |
 
-Primary use case: **UC-43** (External agent orchestration via API token). See [docs/phase-24-agent-api.md](./phase-24-agent-api.md).
+Primary use case: **UC-43** (External agent orchestration via API token). See the Phase 24 summary in [CLAUDE.md](../CLAUDE.md).
 
 ---
 

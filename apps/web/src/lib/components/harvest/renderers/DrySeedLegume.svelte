@@ -37,8 +37,8 @@
     <div>
       <span class="archetype-name">Dry-seed legume harvest</span>
       <span class="archetype-sub">
-        Threshing pass at full senescence. Test seed moisture (target 13-15%) before storage —
-        wet beans heat + rot.
+        Threshing pass at full senescence. Test seed moisture (target 13-15%) before storage — wet
+        beans heat + rot.
       </span>
     </div>
   </header>

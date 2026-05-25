@@ -18,7 +18,10 @@
   const cells = $derived([
     [String(glance.activePlantings), 'active plantings'],
     [String(glance.spraysYTD), 'sprays YTD'],
-    [glance.daysToNextHarvest === null ? '—' : String(glance.daysToNextHarvest), 'days to next harvest'],
+    [
+      glance.daysToNextHarvest === null ? '—' : String(glance.daysToNextHarvest),
+      'days to next harvest'
+    ],
     [String(glance.pluginsLoaded), 'plugins loaded']
   ] as const);
 </script>

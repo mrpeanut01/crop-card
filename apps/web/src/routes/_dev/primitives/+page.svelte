@@ -11,9 +11,7 @@
   import OfflineIndicator from '$lib/components/ui/OfflineIndicator.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
-  import WorkflowStrip, {
-    type WorkflowStep
-  } from '$lib/components/plan/WorkflowStrip.svelte';
+  import WorkflowStrip, { type WorkflowStep } from '$lib/components/plan/WorkflowStrip.svelte';
 
   const WIZARD_STEPS: WorkflowStep[] = [
     { id: 'season-setup', label: 'Season setup', state: 'done', when: 'Apr 2' },
@@ -44,7 +42,10 @@
   <header>
     <Kicker>Phase 25a · Dev only</Kicker>
     <h1 class="serif">Primitives</h1>
-    <p>Visual + a11y baseline for the Almanac design system. Used by the Playwright screenshot baseline.</p>
+    <p>
+      Visual + a11y baseline for the Almanac design system. Used by the Playwright screenshot
+      baseline.
+    </p>
   </header>
 
   <section>
@@ -75,8 +76,10 @@
         <p>18px padding variant.</p>
       </Card>
       <Card padded={false}>
-        <div style="padding: 14px"><Kicker>Padded=false</Kicker>
-        <p>Caller controls padding (e.g., for divided rows).</p></div>
+        <div style="padding: 14px">
+          <Kicker>Padded=false</Kicker>
+          <p>Caller controls padding (e.g., for divided rows).</p>
+        </div>
       </Card>
     </div>
   </section>
@@ -115,7 +118,11 @@
         <option value="b">Painted Mountain</option>
         <option value="c">Silver Queen F1</option>
       </Select>
-      <Textarea label="Notes" placeholder="Anything worth recording..." bind:value={textareaValue} />
+      <Textarea
+        label="Notes"
+        placeholder="Anything worth recording..."
+        bind:value={textareaValue}
+      />
     </div>
   </section>
 
@@ -123,7 +130,10 @@
     <h2 class="serif">Modal</h2>
     <Button onclick={() => (modalOpen = true)}>Open modal</Button>
     <Modal open={modalOpen} title="Confirm spray" onClose={() => (modalOpen = false)}>
-      <p>The kernel verdict will be re-checked at submit. This modal demonstrates focus trap, Esc, and backdrop click — all default behaviors of the primitive.</p>
+      <p>
+        The kernel verdict will be re-checked at submit. This modal demonstrates focus trap, Esc,
+        and backdrop click — all default behaviors of the primitive.
+      </p>
       {#snippet footer()}
         <Button variant="ghost" onclick={() => (modalOpen = false)}>Cancel</Button>
         <Button variant="primary" onclick={() => (modalOpen = false)}>Confirm</Button>

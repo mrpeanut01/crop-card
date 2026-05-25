@@ -79,7 +79,11 @@ describe('derivePriorityAction', () => {
     const result = derivePriorityAction({
       openPrimaries: [],
       derivedEvents: [
-        ev({ kind: 'spray-window', startMs: dayStart + 3 * 60 * 60 * 1000, title: 'Herbicide window opens' })
+        ev({
+          kind: 'spray-window',
+          startMs: dayStart + 3 * 60 * 60 * 1000,
+          title: 'Herbicide window opens'
+        })
       ],
       blockNameById: blocks,
       now: NOW
@@ -105,7 +109,12 @@ describe('derivePriorityAction', () => {
   it('routes spray-flavored tasks to /spray flow with the right tone', () => {
     const result = derivePriorityAction({
       openPrimaries: [
-        task({ id: 't', title: 'Apply Roundup', relatedEventTable: 'spray_event', blockId: 'block-1' })
+        task({
+          id: 't',
+          title: 'Apply Roundup',
+          relatedEventTable: 'spray_event',
+          blockId: 'block-1'
+        })
       ],
       derivedEvents: [],
       blockNameById: blocks,

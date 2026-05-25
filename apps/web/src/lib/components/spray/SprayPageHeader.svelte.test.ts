@@ -50,9 +50,7 @@ describe('SprayPageHeader', () => {
   it('renders activeREI banner when intervals provided', () => {
     render(SprayPageHeader, {
       chemistry: 'insecticide',
-      activeREI: [
-        { id: 'rei-1', blockId: 'block-abc', reEntryClearAt: Date.now() + 3_600_000 }
-      ]
+      activeREI: [{ id: 'rei-1', blockId: 'block-abc', reEntryClearAt: Date.now() + 3_600_000 }]
     });
     expect(screen.getByText(/Active insecticide re-entry intervals/)).toBeInTheDocument();
     expect(screen.getByText(/Block block-abc/)).toBeInTheDocument();

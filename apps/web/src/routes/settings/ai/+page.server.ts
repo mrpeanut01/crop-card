@@ -99,7 +99,8 @@ export const actions: Actions = {
     if (!raw) return fail(400, { error: 'API key cannot be empty' });
     if (!raw.startsWith('sk-ant-')) {
       return fail(400, {
-        error: 'expected an Anthropic key (starts with "sk-ant-"). Paste from console.anthropic.com.'
+        error:
+          'expected an Anthropic key (starts with "sk-ant-"). Paste from console.anthropic.com.'
       });
     }
     setSetting(KEY_SETTING, raw);

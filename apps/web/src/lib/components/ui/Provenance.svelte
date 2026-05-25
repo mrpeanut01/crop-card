@@ -32,10 +32,7 @@
   const { source, detail, compact = false, confidence }: Props = $props();
 
   type LucideIcon = typeof Lock;
-  const META: Record<
-    ProvenanceSource,
-    { label: string; long: string; icon: LucideIcon }
-  > = {
+  const META: Record<ProvenanceSource, { label: string; long: string; icon: LucideIcon }> = {
     plugin: {
       label: 'Plugin',
       long: 'From a crop, input, or safety-kernel plugin',
@@ -70,9 +67,7 @@
   );
   const Icon = $derived(meta.icon);
   const titleText = $derived(
-    `${meta.label} · ${meta.long}${detail ? ' · ' + detail : ''}${
-      showConf ? ' · ' + confPct : ''
-    }`
+    `${meta.label} · ${meta.long}${detail ? ' · ' + detail : ''}${showConf ? ' · ' + confPct : ''}`
   );
 </script>
 

@@ -28,9 +28,7 @@ describe('runEvaluator (KERNEL_DRY_RUN wrapper)', () => {
   });
 
   it('returns violations directly when KERNEL_DRY_RUN is unset', () => {
-    const v: SafetyViolation[] = [
-      { code: 'FRAC_ROTATION_BLOCK', message: 'overlap' }
-    ];
+    const v: SafetyViolation[] = [{ code: 'FRAC_ROTATION_BLOCK', message: 'overlap' }];
     const result = runEvaluator('fracRotation', () => v, {
       plannedSpray: { foo: 'bar' },
       blockId: 'b1'
@@ -40,9 +38,7 @@ describe('runEvaluator (KERNEL_DRY_RUN wrapper)', () => {
 
   it('swallows violations + returns [] when KERNEL_DRY_RUN=1', () => {
     env.KERNEL_DRY_RUN = '1';
-    const v: SafetyViolation[] = [
-      { code: 'IPM_THRESHOLD_NOT_MET', message: 'not met' }
-    ];
+    const v: SafetyViolation[] = [{ code: 'IPM_THRESHOLD_NOT_MET', message: 'not met' }];
     const result = runEvaluator('ipmThreshold', () => v, {
       plannedSpray: {},
       blockId: 'b1'

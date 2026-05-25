@@ -35,8 +35,9 @@ export async function signInAsDemoOwner(page: Page): Promise<void> {
   // deprecated `kit.csrf.checkOrigin: false` flag was removed.
   // Spoofing Origin to the resolved baseURL keeps the fixture passing
   // both locally and in CI.
-  const baseURL = (page.context() as unknown as { _options?: { baseURL?: string } })._options?.baseURL
-    ?? 'http://localhost:5173';
+  const baseURL =
+    (page.context() as unknown as { _options?: { baseURL?: string } })._options?.baseURL ??
+    'http://localhost:5173';
   const res = await page.request.post('/?/demo', {
     form: { role: 'owner' },
     headers: {

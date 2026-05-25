@@ -4,6 +4,13 @@ const TEST_DB_PATH = './.playwright-data/test.db';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Phase 25b (#86) — visual baselines are captured locally on macOS
+  // (file names suffixed `-darwin.png`). Linux baselines don't exist
+  // yet — generating them requires a fonts-pinned headless Linux
+  // runner and a deterministic capture pipeline. Until that lands,
+  // skip the `visual/` specs in CI. Locally on macOS the full suite
+  // (smoke + visual) runs as expected. Tracker: future #100-followup.
+  testIgnore: process.env.CI ? ['**/visual/**'] : [],
   webServer: {
     // Build + migrate + start, all pinned to a workspace-local SQLite file
     // so the test runner doesn't need write access to /data.

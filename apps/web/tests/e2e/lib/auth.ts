@@ -25,9 +25,24 @@ export async function signInAsDemoOwner(page: Page): Promise<void> {
   // to /today (or /onboarding for fresh users; seeded data short-
   // circuits to /today). Playwright follows the redirect by default
   // and the Set-Cookie header is captured in the page's context.
+  //
+  // CI fix (2026-05-25): `page.request.post()` uses Playwright's
+  // APIRequestContext, which does NOT auto-set the `Origin` header
+  // the way a browser-context fetch would. Form-encoded posts that
+  // arrive Origin-less get rejected by SvelteKit's built-in CSRF
+  // check ("Cross-site POST form submissions are forbidden") — that
+  // check was re-armed for form actions in Phase 25 (#94) after the
+  // deprecated `kit.csrf.checkOrigin: false` flag was removed.
+  // Spoofing Origin to the resolved baseURL keeps the fixture passing
+  // both locally and in CI.
+  const baseURL = (page.context() as unknown as { _options?: { baseURL?: string } })._options?.baseURL
+    ?? 'http://localhost:5173';
   const res = await page.request.post('/?/demo', {
     form: { role: 'owner' },
-    headers: { 'x-sveltekit-action': 'true' },
+    headers: {
+      'x-sveltekit-action': 'true',
+      origin: baseURL
+    },
     maxRedirects: 5
   });
   if (!res.ok()) {

@@ -4,6 +4,50 @@
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
+  // Phase 25b (#85) — Almanac chrome (stepper + context strip) on top
+  // of the existing herbicide flow. 1:1 with ASprayScreen.
+  import SprayStepper, { type StepState } from '$lib/components/spray/SprayStepper.svelte';
+  import SprayContextStrip, {
+    type SprayContextBlock,
+    type CompatibilityState
+  } from '$lib/components/spray/SprayContextStrip.svelte';
+
+  // Stepper + context-strip $derived inputs computed below the rest of
+  // the herbicide flow's state (selectedBlocks / sprayer / herbicides /
+  // perBlockResults). Centralised here so the template stays clean.
+  function deriveStepperData(): Array<{ label: string; state: StepState }> {
+    const hasBlocks = selectedBlocks.length > 0;
+    const hasSprayer = !!sprayer;
+    const hasMix = selectedHerbicideIds.length > 0;
+    const verdicts = [...perBlockResults.values()];
+    const safetyDone = verdicts.length > 0 && verdicts.every((r) => r.ok);
+    return [
+      { label: 'Block & crop', state: hasBlocks ? 'done' : 'active' },
+      {
+        label: 'Sprayer & tank',
+        state: !hasSprayer ? (hasBlocks ? 'active' : 'pending') : 'done'
+      },
+      {
+        label: 'Mix',
+        state: !hasMix ? (hasBlocks && hasSprayer ? 'active' : 'pending') : 'done'
+      },
+      {
+        label: 'Safety check',
+        state:
+          verdicts.length === 0
+            ? hasMix && hasBlocks && hasSprayer
+              ? 'active'
+              : 'pending'
+            : safetyDone
+              ? 'done'
+              : 'active'
+      },
+      {
+        label: 'Confirm & record',
+        state: safetyDone ? 'active' : 'pending'
+      }
+    ];
+  }
   import {
     buildLastTankFills,
     fmtAmount as fmtUnitAmount,
@@ -539,9 +583,72 @@
       goto('/plan?tab=schedule&view=swimlane');
     }
   }
+
+  // Phase 25b (#85) — Almanac chrome derived state.
+  const sprayStepperData = $derived(deriveStepperData());
+  const ctxBlocks = $derived<SprayContextBlock[]>(
+    selectedBlocks.map((b) => ({ id: b.id, label: b.label, acres: b.acres ?? 0 }))
+  );
+  const cropFamilies = $derived(
+    Array.from(
+      new Set(
+        selectedBlocks
+          .flatMap((b) => b.crops.map((c) => c.cropFamily))
+          .filter((f): f is NonNullable<typeof f> => f !== undefined)
+      )
+    )
+  );
+  const ctxCropLabel = $derived(
+    cropFamilies.length === 0
+      ? '—'
+      : cropFamilies.length === 1
+        ? cropFamilies[0]
+        : `${cropFamilies.length} crop families`
+  );
+  const ctxCropSubtitle = $derived(
+    selectedBlocks.length === 0
+      ? undefined
+      : selectedBlocks
+          .flatMap((b) => b.crops)
+          .slice(0, 3)
+          .map((c) => c.displayName)
+          .join(' · ')
+  );
+  const ctxCompatibility = $derived<CompatibilityState | undefined>(
+    perBlockResults.size === 0
+      ? undefined
+      : [...perBlockResults.values()].every((r) => r.ok)
+        ? {
+            label:
+              cropFamilies.length === 1
+                ? `${cropFamilies[0]} blocks compatible`
+                : `${selectedBlocks.length} block${selectedBlocks.length === 1 ? '' : 's'} compatible`,
+            reason: 'Kernel verified each selected block against the chosen products.',
+            tone: 'forest'
+          }
+        : {
+            label: 'Block / product combination flagged',
+            reason: 'One or more blocks failed the kernel check. Review below.',
+            tone: 'rust'
+          }
+  );
 </script>
 
 <SprayPageHeader chemistry="herbicide" />
+
+<!-- Phase 25b (#85) — Almanac stepper + context strip. 1:1 with the
+     header in ASprayScreen at docs/design/almanac/direction-almanac-rest.jsx
+     (lines 236–342). Derives step + compatibility state from the
+     existing flow's selections; the rich legacy form continues below. -->
+<div class="spray-almanac-chrome">
+  <SprayStepper steps={sprayStepperData} />
+  <SprayContextStrip
+    blocks={ctxBlocks}
+    cropLabel={ctxCropLabel}
+    cropSubtitle={ctxCropSubtitle}
+    compatibility={ctxCompatibility}
+  />
+</div>
 
 {#if data.preselect.fromScout || data.preselect.blockId}
   <Banner tone="forest">
@@ -990,6 +1097,11 @@
 {/if}
 
 <style>
+  /* Phase 25b (#85) — Almanac chrome layout. The new stepper + context
+     strip sit above the legacy flow with a small spacing buffer. */
+  .spray-almanac-chrome {
+    margin-bottom: 22px;
+  }
   /* h1 + .lede now owned by SprayPageHeader (Phase 25b).
      .prefill-banner superseded by Banner primitive. */
   .empty-state {

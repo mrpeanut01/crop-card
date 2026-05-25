@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CropCard — canonical design spec (v1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  html, body { margin: 0; padding: 0; background: #15170F; }
+  body { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 99px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  [title]:hover { cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel" src="direction-almanac-today.jsx"></script>
+<script type="text/babel" src="direction-almanac-ai-provenance.jsx"></script>
+<script type="text/babel" src="direction-almanac-rest.jsx"></script>
+<script type="text/babel" src="direction-almanac-plan-v2.jsx"></script>
+<script type="text/babel" src="direction-almanac-wizard.jsx"></script>
+<script type="text/babel" src="direction-almanac-wizard-rest.jsx"></script>
+<script type="text/babel" src="direction-almanac-insecticide.jsx"></script>
+<script type="text/babel" src="direction-almanac-fungicide.jsx"></script>
+<script type="text/babel" src="direction-almanac-onboarding.jsx"></script>
+<script type="text/babel" src="direction-almanac-pages.jsx"></script>
+<script type="text/babel" src="direction-almanac-crops.jsx"></script>
+<script type="text/babel" src="direction-almanac-rowcrops.jsx"></script>
+<script type="text/babel" src="direction-almanac-archetype-matrix.jsx"></script>
+<script type="text/babel" src="direction-almanac-stock-add.jsx"></script>
+<script type="text/babel" src="direction-almanac-settings.jsx"></script>
+
+<script type="text/babel">
+const A = window.A_tokens;
+
+/* Inject the Almanac base CSS once (was previously gated behind a per-direction
+   useEffect that also handled palette tweaks; the palette tweaks are gone). */
+function useAlmanacBaseCss() {
+  React.useEffect(() => {
+    let style = document.getElementById("dir-styles");
+    if (!style) {
+      style = document.createElement("style");
+      style.id = "dir-styles";
+      document.head.appendChild(style);
+    }
+    style.textContent = window.A_baseCss || "";
+  }, []);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Cover card — engineering handoff context.
+   Sits at the top of the canvas so anyone landing on this file knows
+   what they're looking at and where to wire each screen in the repo.
+   ───────────────────────────────────────────────────────────────────── */
+function CoverCard() {
+  const sections = [
+    { num: "01", title: "Entry", screens: "Login · Onboarding" },
+    { num: "02", title: "Today", screens: "Dashboard" },
+    { num: "03", title: "Spray", screens: "Herbicide · Insecticide · Fungicide" },
+    { num: "04", title: "Harvest, Stock & add flow", screens: "Harvest · Stock · 5-method add" },
+    { num: "05", title: "Records & Settings", screens: "Records · Settings index · 10 sub-pages" },
+    { num: "06", title: "Plan", screens: "Multi-planting blocks" },
+    { num: "07", title: "Season wizard", screens: "Setup · Allocate · Schedule · Inputs · Commit" },
+    { num: "08", title: "Crop archetypes", screens: "Coverage matrix · 10 renderers · 137 plugins" },
+  ];
+
+  return (
+    <div className="dir-a" style={{
+      width: 1280, height: 820, padding: "56px 64px",
+      display: "flex", flexDirection: "column", gap: 32,
+      background: `linear-gradient(180deg, ${A.paper} 0%, ${A.cream} 100%)`
+    }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 32 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 8, background: A.forest,
+              display: "grid", placeItems: "center", color: A.cream
+            }}>
+              <Icon.Leaf size={22} />
+            </div>
+            <div>
+              <div className="serif" style={{
+                fontSize: 36, color: A.forestDeep, letterSpacing: "-0.025em", lineHeight: 1
+              }}>CropCard</div>
+              <div style={{ fontSize: 12, color: A.inkMuted, marginTop: 6, letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600 }}>
+                Canonical design spec · v1
+              </div>
+            </div>
+          </div>
+          <div className="serif" style={{
+            fontSize: 22, color: A.ink, letterSpacing: "-0.015em", lineHeight: 1.35, maxWidth: 820,
+            marginTop: 6
+          }}>
+            Offline-first PWA for small-plot row-crop planning, spraying, harvest and records — built around a hard-locked safety kernel and data-only crop/input plugins.
+          </div>
+        </div>
+        <div style={{
+          display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end",
+          padding: "10px 14px", border: `1px solid ${A.divider}`, borderRadius: 8,
+          background: A.paper, minWidth: 220
+        }}>
+          <div style={{ fontSize: 10, color: A.inkMuted, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>Repo</div>
+          <div className="mono" style={{ fontSize: 13, color: A.forestDeep, fontWeight: 600 }}>mrpeanut01/crop-card</div>
+          <div style={{ fontSize: 11, color: A.inkSoft, marginTop: 4 }}>SvelteKit · TypeScript · SQLite + Litestream</div>
+          <div style={{ fontSize: 11, color: A.inkSoft }}>Phase 24 — agent API shipped</div>
+        </div>
+      </div>
+
+      {/* Invariants */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14,
+        padding: "18px 22px", background: "rgba(44,82,55,0.04)",
+        border: `1px solid ${A.dividerSoft}`, borderRadius: 10
+      }}>
+        {[
+          { k: "Safety kernel", v: "Compiled rules. Plugins cannot override. RULES_VERSION-gated." },
+          { k: "AI assists, never gates", v: "Data pre-populates from plugins + your records. AI proposes; manual entry is always the floor." },
+          { k: "Plugins are data-only", v: "JSON files. Zod-validated at registration. No JS." },
+          { k: "Tenant isolation", v: "Row-level via owner_id. tenantWhere / withTenant / tenantValues." },
+          { k: "48h spray lock", v: "Records immutable after lock window. Server-enforced." },
+          { k: "One-glove ops", v: "≥48dp tap targets, high contrast, offline-first." }
+        ].map((inv) => (
+          <div key={inv.k} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ fontSize: 11, color: A.forestDeep, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>{inv.k}</div>
+            <div style={{ fontSize: 12.5, color: A.inkSoft, lineHeight: 1.45 }}>{inv.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* TOC */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 0 }}>
+        <div style={{ fontSize: 11, color: A.inkMuted, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>
+          What's in this canvas
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+          {sections.map((s) => (
+            <div key={s.num} style={{
+              padding: "14px 16px", background: A.paper,
+              border: `1px solid ${A.divider}`, borderRadius: 8,
+              display: "flex", flexDirection: "column", gap: 6
+            }}>
+              <div className="mono" style={{ fontSize: 11, color: A.wheat, fontWeight: 600, letterSpacing: "0.04em" }}>{s.num}</div>
+              <div className="serif" style={{ fontSize: 17, color: A.forestDeep, letterSpacing: "-0.01em", lineHeight: 1.15 }}>{s.title}</div>
+              <div style={{ fontSize: 11.5, color: A.inkMuted, lineHeight: 1.4 }}>{s.screens}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        paddingTop: 14, borderTop: `1px solid ${A.dividerSoft}`,
+        fontSize: 11.5, color: A.inkMuted
+      }}>
+        <div>Direction · <span style={{ color: A.forestDeep, fontWeight: 600 }}>Almanac (editorial)</span></div>
+        <div className="mono">Source Serif 4 · IBM Plex Sans · IBM Plex Mono</div>
+        <div>Drag canvas to pan · ⌘/Ctrl-scroll to zoom · click any artboard to focus</div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  useAlmanacBaseCss();
+
+  return (
+    <DesignCanvas
+      title="CropCard — canonical design spec (v1)"
+      subtitle="One direction (Almanac), every screen polished to a single spec. Drag empty canvas to pan; ⌘/Ctrl-scroll to zoom; click an artboard to focus."
+    >
+      {/* ─── Cover ──────────────────────────────────────────────── */}
+      <DCSection id="cover" title="00 · Overview" subtitle="Engineering handoff context — repo, invariants, what's in here.">
+        <DCArtboard id="cover" label="Spec cover" width={1280} height={820}>
+          <CoverCard />
+        </DCArtboard>
+        <DCArtboard id="ai-philosophy" label="Data provenance — AI · programmatic · manual (read this second)" width={1440} height={920}>
+          <A_DataPhilosophyArtboard />
+        </DCArtboard>
+      </DCSection>
+
+      {/* ─── 01 Entry ──────────────────────────────────────────── */}
+      <DCSection id="entry" title="01 · Entry" subtitle="Sign-in and first-run onboarding. Routes through magic-link → /owner-picker | /onboarding | /today (Phase 18c).">
+        <DCArtboard id="login" label="Login — magic link + invite + demo" width={1280} height={820}>
+          <A_LoginScreen />
+        </DCArtboard>
+        <DCArtboard id="onboarding" label="Onboarding — Sherry day 1 (Phase 18f self-serve)" width={1280} height={900}>
+          <A_OnboardingScreen />
+        </DCArtboard>
+      </DCSection>
+
+      {/* ─── 02 Today ──────────────────────────────────────────── */}
+      <DCSection id="today" title="02 · Today" subtitle="Dashboard. The owner's morning glance — what to do today, what's blocked, weather. Same data; different ranking when AI is on vs off.">
+        <DCArtboard id="today" label="Today — dashboard (AI on)" width={1280} height={820}>
+          <A_TodayScreen aiEnabled={true} />
+        </DCArtboard>
+        <DCArtboard id="today-aioff" label="Today — dashboard (AI off · plugin defaults)" width={1280} height={820}>
+          <A_TodayScreen aiEnabled={false} />
+        </DCArtboard>
+      </DCSection>
+
+      {/* ─── 03 Spray ──────────────────────────────────────────── */}
+      <DCSection id="spray" title="03 · Spray" subtitle="Safety-aware mix builder. Server-enforced safety kernel routes incompatible mixes to decon, never to dilution. Three variants — same chrome, different decision payload.">
+        <DCArtboard id="spray-herb" label="Herbicide — multi-block, multi-tank" width={1280} height={820}>
+          <A_SprayScreen />
+        </DCArtboard>
+        <DCArtboard id="spray-insect" label="Insecticide — IPM threshold + pollinator gate" width={1280} height={820}>
+          <A_InsecticideScreen />
+        </DCArtboard>
+        <DCArtboard id="spray-insect-aioff" label="Insecticide — same flow with AI off (plugin defaults)" width={1280} height={820}>
+          <A_InsecticideScreen aiEnabled={false} />
+        </DCArtboard>
+        <DCArtboard id="spray-fungi" label="Fungicide — disease forecast + FRAC rotation + rain/dew gate" width={1280} height={820}>
+          <A_FungicideScreen />
+        </DCArtboard>
+      </DCSection>
+
+      {/* ─── 04 Harvest & Stock ─────────────────────────────────── */}
+      <DCSection id="harvest-stock" title="04 · Harvest & Stock" subtitle="Ready-now picking, upcoming windows, lot-tracked inventory, and the 4-method add-to-stock flow (barcode · label OCR · search · manual).">
+        <DCArtboard id="harvest" label="Harvest — ready-now + upcoming + log" width={1280} height={820}>
+          <A_HarvestScreen />
+        </DCArtboard>
+        <DCArtboard id="stock" label="Stock — inventory + low-stock + lot tracking" width={1280} height={820}>
+          <A_StockScreen />
+        </DCArtboard>
+        <DCArtboard id="stock-add-barcode" label="Add to stock — 1. Scan barcode (detected)" width={1280} height={900}>
+          <A_StockAddScreen mode="barcode" phase="detected" />
+        </DCArtboard>
+        <DCArtboard id="stock-add-barcode-aim" label="Add to stock — 1a. Scan barcode (aiming · pre-detect)" width={1280} height={900}>
+          <A_StockAddScreen mode="barcode" phase="aiming" />
+        </DCArtboard>
+        <DCArtboard id="stock-add-label" label="Add to stock — 2. Scan label (OCR · 6 fields)" width={1280} height={900}>
+          <A_StockAddScreen mode="label" />
+        </DCArtboard>
+        <DCArtboard id="stock-add-ai" label="Add to stock — 3. AI photo (Claude vision · angled jug)" width={1280} height={900}>
+          <A_StockAddScreen mode="ai" />
+        </DCArtboard>
+        <DCArtboard id="stock-add-search" label="Add to stock — 4. Textual search (library → marketplace → AI)" width={1280} height={900}>
+          <A_StockAddScreen mode="search" />
+        </DCArtboard>
+        <DCArtboard id="stock-add-manual" label="Add to stock — 5. Manual entry (last-resort form)" width={1280} height={900}>
+          <A_StockAddScreen mode="manual" />
+        </DCArtboard>
+      </DCSection>
+
+      {/* ─── 05 Records & Settings ──────────────────────────────── */}
+      <DCSection id="records-settings" title="05 · Records & Settings" subtitle="Audit trail (2-yr retention, VDACS-export) plus the 11 Settings sub-pages — account, farm, helpers, sprayers, plugins, records, AI, integrations, billing, danger zone.">
+        <DCArtboard id="records" label="Records — audit trail + VDACS export (Dale view)" width={1280} height={820}>
+          <A_RecordsScreen />
+        </DCArtboard>
+        <DCArtboard id="settings" label="Settings — index (11 sections)" width={1280} height={820}>
+          <A_SettingsScreen />
+        </DCArtboard>
+        <DCArtboard id="settings-account" label="Settings · Account & sign-in" width={1280} height={900}>
+          <A_SettingsAccount />
+        </DCArtboard>
+        <DCArtboard id="settings-farm" label="Settings · Farm & blocks (map editor)" width={1280} height={900}>
+          <A_SettingsFarm />
+        </DCArtboard>
+        <DCArtboard id="settings-helpers" label="Settings · Helpers & invites (1 active, 1 pending)" width={1280} height={900}>
+          <A_SettingsHelpers />
+        </DCArtboard>
+        <DCArtboard id="settings-sprayers" label="Settings · Sprayers & calibration (decon needed)" width={1280} height={900}>
+          <A_SettingsSprayers />
+        </DCArtboard>
+        <DCArtboard id="settings-plugins" label="Settings · Plugins & crop library (308 loaded · 3 drafts)" width={1280} height={900}>
+          <A_SettingsPlugins />
+        </DCArtboard>
+        <DCArtboard id="settings-records" label="Settings · Records & retention (hash chain + VDACS)" width={1280} height={900}>
+          <A_SettingsRecords />
+        </DCArtboard>
+        <DCArtboard id="settings-ai" label="Settings · AI assistant (Claude key + quotas)" width={1280} height={900}>
+          <A_SettingsAI />
+        </DCArtboard>
+        <DCArtboard id="settings-integrations" label="Settings · Integrations (4 active, 3 planned)" width={1280} height={900}>
+          <A_SettingsIntegrations />
+        </DCArtboard>
+        <DCArtboard id="settings-billing" label="Settings · Plan & billing (Solo · usage counters)" width={1280} height={900}>
+          <A_SettingsBilling />
+        </DCArtboard>
+        <DCArtboard id="settings-advanced" label="Settings · Advanced & export-all (danger zone)" width={1280} height={900}>
+          <A_SettingsAdvanced />
+        </DCArtboard>
+      </DCSection>
+
+      {/* ─── 06 Plan ───────────────────────────────────────────── */}
+      <DCSection id="plan" title="06 · Plan" subtitle="Multi-planting block detail with workflow strip + provenance. Canonical view + two sub-states (map overlay, focused planting).">
+        <DCArtboard id="plan-three-sisters" label="Block A — Three Sisters polyculture (canonical)" width={1280} height={820}>
+          <A_PlanV2Screen initialBlockId="a" initialPlantingIdx={-1} />
+        </DCArtboard>
+        <DCArtboard id="plan-mapopen" label="Sub-state — map overlay open" width={1280} height={820}>
+          <A_PlanV2Screen initialBlockId="a" initialPlantingIdx={-1} mapOpen={true} />
+        </DCArtboard>
+        <DCArtboard id="plan-focused" label="Sub-state — focused on bean planting" width={1280} height={820}>
+          <A_PlanV2Screen initialBlockId="a" initialPlantingIdx={1} />
+        </DCArtboard>
+      </DCSection>
+
+      {/* ─── 07 Wizard ─────────────────────────────────────────── */}
+      <DCSection id="wizard" title="07 · Season planning wizard" subtitle="Five-step flow. AI proposals on every step with deterministic fallback; chat panel persists across steps. Phase 20 (schedule) + Phase 21a/b (setup + inputs) shipped.">
+        <DCArtboard id="wiz-setup" label="Step 0 — Season setup (philosophy + tillage + guardrails)" width={1440} height={900}>
+          <A_WizardSetupScreen />
+        </DCArtboard>
+        <DCArtboard id="wiz-alloc" label="Step 1 — Allocation (AI proposals + unallocated)" width={1440} height={900}>
+          <A_WizardAllocationScreen />
+        </DCArtboard>
+        <DCArtboard id="wiz-schedule" label="Step 2 — Schedule (AI proposals + Gantt)" width={1440} height={900}>
+          <A_WizardScheduleScreen />
+        </DCArtboard>
+        <DCArtboard id="wiz-schedule-noai" label="Step 2 — Schedule (AI off · manual chat panel)" width={1440} height={900}>
+          <A_WizardScheduleScreen aiEnabled={false} />
+        </DCArtboard>
+        <DCArtboard id="wiz-inputs" label="Step 3 — Inputs plan (applications + shopping list)" width={1440} height={900}>
+          <A_WizardInputsScreen />
+        </DCArtboard>
+        <DCArtboard id="wiz-commit" label="Step 4 — Commit / review" width={1440} height={900}>
+          <A_WizardCommitScreen />
+        </DCArtboard>
+      </DCSection>
+
+      {/* ─── 08 Crop archetypes ─────────────────────────────────── */}
+      <DCSection id="crops" title="08 · Crop archetypes" subtitle="Renderers, not crop screens. Each artboard below is one archetype keyed off plugin JSON fields — every crop plugin that matches the discriminator inherits the renderer for free. Coverage matrix lists which of the 137 crop plugins map to which renderer.">
+        <DCArtboard id="archetype-matrix" label="→ Coverage matrix — read this first" width={1440} height={920}>
+          <A_ArchetypeMatrix />
+        </DCArtboard>
+        <DCArtboard id="arch-small-grain" label="Small-grain (Zadoks) — wheat, barley, oats" width={1280} height={900}>
+          <A_WheatPlanScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-row-grain" label="Row-grain w/ pollination (V/R) — corn (Bloody Butcher + Painted Mtn + sweet)" width={1280} height={900}>
+          <A_CornPlanScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-dry-legume" label="Dry-seed legume — Cherokee bean, cowpea, dry-bean" width={1280} height={900}>
+          <A_BeanPlanScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-winter-squash" label="Winter squash + cure — Seminole, butternut, acorn, buttercup" width={1280} height={900}>
+          <A_PumpkinPlanScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-cont-fruit" label="Continuous-harvest fruit — tomato, pepper, eggplant, cucumber" width={1280} height={900}>
+          <A_TomatoPlanScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-cut-leafy" label="Cut-and-come-again leafy — lettuce, spinach, arugula, chard" width={1280} height={900}>
+          <A_LettucePlanScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-cover" label="Cover crop · termination — rye+vetch, clover, buckwheat" width={1280} height={900}>
+          <A_CoverCropPlanScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-forage" label="Forage cutting cycle — alfalfa, orchardgrass, hay mix" width={1280} height={900}>
+          <A_HayFlowScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-perennial-vine" label="Perennial vine + quality decision — grape, hops" width={1280} height={900}>
+          <A_GrapeHarvestScreen />
+        </DCArtboard>
+        <DCArtboard id="arch-tree-fruit" label="Tree fruit · multi-pick — apple, pear (Goldrush etc.)" width={1280} height={900}>
+          <A_TreeFruitHarvestScreen />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

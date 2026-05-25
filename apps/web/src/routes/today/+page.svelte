@@ -8,12 +8,115 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
+  // Phase 25e (#97) — Almanac /today shell components.
+  import WeatherStrip from '$lib/components/today/WeatherStrip.svelte';
+  import TodayHero from '$lib/components/today/TodayHero.svelte';
+  import QuickActions from '$lib/components/today/QuickActions.svelte';
+  import WeekStrip, { type WeekItem, type WeekKind } from '$lib/components/today/WeekStrip.svelte';
+  import Recommendations, {
+    type RecommendationItem
+  } from '$lib/components/today/Recommendations.svelte';
+  import SeasonGlance from '$lib/components/today/SeasonGlance.svelte';
 
   let { data } = $props();
 
   // Phase 25 v2 addendum (#80 partial / #89) — drives AI-on vs AI-off
   // variant. $derived so the variant re-paints on loader re-run.
   const aiEnabled = $derived(data.aiEnabled);
+
+  // Phase 25e (#97) — header strip data.
+  const todayDateLabel = $derived(
+    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  );
+  // Use first letter of the user email as a friendly hello when no name is
+  // wired up. The full session has display name once Phase 26 lands.
+  const greeting = $derived.by(() => {
+    const hour = new Date().getHours();
+    const part = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+    return `Good ${part}.`;
+  });
+  const subtitle = $derived.by(() => {
+    if (data.priorityAction) {
+      const wk = data.derivedEvents.length + data.primariesInWindow.length;
+      return `One thing to do today. · ${wk} item${wk === 1 ? '' : 's'} this week.`;
+    }
+    return 'Nothing scheduled today. Check the week strip for what\'s coming.';
+  });
+
+  // Phase 25e (#97) — week-strip items map (YYYY-MM-DD → [{title, kind}]).
+  const DAY_MS_LOCAL = 24 * 60 * 60 * 1000;
+  function todayMidnight(): number {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
+  const todayStartMs = $derived(todayMidnight());
+  function weekKindForTask(t: Task): WeekKind {
+    switch (t.relatedEventTable) {
+      case 'spray_event':
+      case 'insecticide_event':
+      case 'fungicide_event':
+        return 'spray';
+      case 'harvest_event':
+      case 'hay_cutting':
+        return 'harvest';
+      case 'fertility_application':
+        return 'fertility';
+      default:
+        return 'task';
+    }
+  }
+  function weekKindForEvent(e: CalendarEvent): WeekKind {
+    switch (e.kind) {
+      case 'spray-window':
+        return 'spray';
+      case 'harvest-window':
+      case 'curing-ready':
+        return 'harvest';
+      case 'planting':
+      case 'cover-termination':
+        return 'planting';
+      case 'orchard-task':
+      case 'seasonal-task':
+        return 'task';
+      default:
+        return 'task';
+    }
+  }
+  function isoDay(ms: number): string {
+    return new Date(ms).toISOString().slice(0, 10);
+  }
+  const weekItemsByDay = $derived.by(() => {
+    const out: Record<string, WeekItem[]> = {};
+    const weekEndMs = todayStartMs + 7 * DAY_MS_LOCAL;
+    for (const t of data.primariesInWindow) {
+      if (t.scheduledFor < todayStartMs || t.scheduledFor >= weekEndMs) continue;
+      const key = isoDay(t.scheduledFor);
+      (out[key] ??= []).push({ title: t.title, kind: weekKindForTask(t) });
+    }
+    for (const e of data.derivedEvents) {
+      if (e.startMs < todayStartMs || e.startMs >= weekEndMs) continue;
+      // Skip passive events that pollute the strip (stage transitions, emergence).
+      if (e.kind === 'emergence' || e.kind === 'stage-window' || e.kind === 'shade-window') continue;
+      const key = isoDay(e.startMs);
+      (out[key] ??= []).push({ title: e.title, kind: weekKindForEvent(e) });
+    }
+    return out;
+  });
+
+  // Phase 25e (#97) — recommendations card items (next-14-day plugin events).
+  const recommendationItems = $derived.by<RecommendationItem[]>(() => {
+    return data.upcoming.slice(0, 8).map((e: CalendarEvent, i: number) => ({
+      id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
+      title: e.title,
+      crop: e.varietyDisplayName,
+      window: new Date(e.startMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }));
+  });
+
+  // Whether to show the legacy schedule view. URL-driven so power users can
+  // bookmark e.g. /today?detail=open to default-open.
+  let detailOpen = $state(false);
 
   type Tab = 'today' | '7d' | '30d' | 'season';
   type View = 'list' | 'calendar';
@@ -246,16 +349,30 @@
   }
 </script>
 
-<header class="today">
-  <Kicker>{data.today}</Kicker>
-  <h1 class="serif">Today</h1>
-  <p class="today-sub">
-    <Provenance source="data" detail="your tasks + calendar" compact />
-    <span>Tasks + windows derived from your records and plugin calendar.</span>
-  </p>
-</header>
+<!-- Phase 25e (#97) — Almanac /today shell. Greeting + weather strip,
+     hero card + quick actions, week strip + recommendations + glance.
+     1:1 with `direction-almanac-today.jsx` ATodayScreen. -->
+<WeatherStrip
+  dateLabel={todayDateLabel}
+  {greeting}
+  {subtitle}
+  weather={data.weatherSummary}
+/>
 
-<div class="today-legend-strip">
+<div class="t-grid">
+  <TodayHero action={data.priorityAction} {aiEnabled} />
+  <QuickActions />
+</div>
+
+<div class="t-grid t-grid-second">
+  <WeekStrip {todayStartMs} items={weekItemsByDay} />
+  <div class="t-side-stack">
+    <Recommendations {aiEnabled} items={recommendationItems} />
+    <SeasonGlance glance={data.seasonGlance} />
+  </div>
+</div>
+
+<div class="legend-tail">
   <ProvenanceLegend
     shown={aiEnabled
       ? ['plugin', 'data', 'ai', 'manual']
@@ -266,6 +383,8 @@
   />
 </div>
 
+<details class="legacy-detail" bind:open={detailOpen}>
+  <summary>Full schedule view — tasks · calendar · sprayers · kernel info</summary>
 <div class="tab-row">
   <div class="tabs" role="tablist" aria-label="Calendar window">
     {#each TABS as t (t.id)}
@@ -718,25 +837,49 @@
     {/if}
   </dl>
 </section>
+</details>
 
 <style>
-  .today {
-    margin-bottom: 0.75rem;
+  /* Phase 25e (#97) — Almanac /today shell layout. */
+  .t-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
   }
-  .today h1 {
-    margin: 0;
+  .t-grid-second {
+    margin-bottom: 22px;
   }
-  .today-sub {
-    margin: 6px 0 0;
-    color: var(--color-ink-soft);
-    font-size: var(--font-size-body);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+  .t-side-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
   }
-  .today-legend-strip {
-    margin: 0 0 1rem;
+  .legend-tail {
+    margin: 0 0 22px;
+  }
+  .legacy-detail {
+    margin-top: 8px;
+    border-top: 1px solid var(--color-divider-soft, var(--color-divider));
+    padding-top: 14px;
+  }
+  .legacy-detail > summary {
+    cursor: pointer;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    font-size: 13px;
+    list-style: revert;
+    margin-bottom: 12px;
+    padding: 6px 0;
+  }
+  .legacy-detail > summary:hover {
+    color: var(--color-forest);
+  }
+  @media (max-width: 900px) {
+    .t-grid,
+    .t-grid-second {
+      grid-template-columns: 1fr;
+    }
   }
   .tab-row {
     display: flex;

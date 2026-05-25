@@ -7,6 +7,13 @@
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
   import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
   import InputsPlanStep from '$lib/components/InputsPlanStep.svelte';
+  // Phase 25b (#96) — Almanac wizard chrome. Shared header + stepper +
+  // footer matching `direction-almanac-wizard.jsx` so every step renders
+  // with consistent chrome. Per-step component-file extraction is a
+  // separate tracked follow-up.
+  import WizardHeader, {
+    type WizardStepDescriptor
+  } from '$lib/components/wizard/WizardHeader.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   import type {
@@ -158,6 +165,50 @@
   function handleSeasonSetupSaved(saved: SeasonSetup) {
     activeSetup = saved;
     step = hasExistingPlan ? 'plan-state' : 'seeds';
+  }
+
+  // Phase 25b (#96) — derived wizard step descriptors for the Almanac
+  // header. Ordered: season → seeds → blocks → review → schedule →
+  // inputs → commit. `plan-state` is a transient gate that doesn't get
+  // its own header slot (the chip-row above carries it visually). State
+  // per step: done = past, active = current (header applies this),
+  // pending = future, stale = data drifted (Phase 26 follow-up).
+  const STEP_ORDER: Step[] = [
+    'season-setup',
+    'seeds',
+    'blocks',
+    'review',
+    'schedule',
+    'inputs',
+    'commit'
+  ];
+  const STEP_LABELS: Record<Step, string> = {
+    'season-setup': '0. Season',
+    'plan-state': 'Plan state',
+    seeds: '1. Seeds',
+    blocks: '2. Blocks',
+    review: '3. Review',
+    schedule: '4. Schedule',
+    inputs: '5. Inputs',
+    commit: '6. Commit'
+  };
+  const wizardSteps = $derived.by<WizardStepDescriptor[]>(() => {
+    const currentIdx = STEP_ORDER.indexOf(step === 'plan-state' ? 'seeds' : (step as Step));
+    return STEP_ORDER.map((sid, i) => ({
+      id: sid,
+      label: STEP_LABELS[sid],
+      state:
+        i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'pending'
+    }));
+  });
+
+  /** Allow the user to click a prior (done) step to jump back. Future steps
+   *  stay locked — the wizard's forward gates haven't been satisfied yet. */
+  function canJumpToStep(stepId: string) {
+    const currentIdx = STEP_ORDER.indexOf(step === 'plan-state' ? 'seeds' : (step as Step));
+    const targetIdx = STEP_ORDER.indexOf(stepId as Step);
+    if (targetIdx < 0 || targetIdx >= currentIdx) return;
+    step = stepId as Step;
   }
 
   // ─── Plan-state step handlers (Phase 21 follow-up) ───────────────────
@@ -1474,43 +1525,19 @@
   }}
 >
   <div class="aw-modal" role="dialog" aria-modal="true" aria-labelledby="aw-title">
-    <header class="aw-header">
-      <h2 id="aw-title">✨ Plan Plantings</h2>
-      <button class="aw-close" type="button" aria-label="Close" onclick={onClose}>✕</button>
-    </header>
+    <WizardHeader
+      seasonYear={currentYear}
+      activeStepId={step}
+      steps={wizardSteps}
+      onExit={onClose}
+      onStepClick={canJumpToStep}
+    />
 
     {#if activeSetup && step !== 'season-setup'}
       <div class="aw-chip-row">
         <SeasonSetupChip setup={activeSetup} onEdit={() => (step = 'season-setup')} />
       </div>
     {/if}
-
-    <ol class="aw-stepper" aria-label="Wizard steps">
-      <li class:active={step === 'season-setup'} class:done={step !== 'season-setup'}>0. Season</li>
-      <li class:active={step === 'seeds'} class:done={step !== 'season-setup' && step !== 'seeds'}>
-        1. Seeds
-      </li>
-      <li
-        class:active={step === 'blocks'}
-        class:done={step === 'review' ||
-          step === 'schedule' ||
-          step === 'inputs' ||
-          step === 'commit'}
-      >
-        2. Blocks
-      </li>
-      <li
-        class:active={step === 'review'}
-        class:done={step === 'schedule' || step === 'inputs' || step === 'commit'}
-      >
-        3. Review
-      </li>
-      <li class:active={step === 'schedule'} class:done={step === 'inputs' || step === 'commit'}>
-        4. Schedule
-      </li>
-      <li class:active={step === 'inputs'} class:done={step === 'commit'}>5. Inputs</li>
-      <li class:active={step === 'commit'}>6. Commit</li>
-    </ol>
 
     {#if error && step !== 'commit' && step !== 'review' && step !== 'season-setup'}
       <div class="aw-error-banner" role="alert">
@@ -2029,53 +2056,13 @@
     overflow: hidden;
     border-top: 6px solid var(--color-forest);
   }
-  .aw-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.9rem 1.25rem;
-    border-bottom: 1px solid #e4e9e4;
-  }
-  .aw-header h2 {
-    margin: 0;
-    font-size: 1.15rem;
-    color: var(--color-forest);
-  }
-  .aw-close {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: #666;
-    min-width: 48px;
-    min-height: 48px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
+  /* Phase 25b (#96) — `.aw-header` / `.aw-stepper` superseded by
+     `WizardHeader.svelte` (Almanac chrome). The chip-row stays for
+     SeasonSetupChip. */
   .aw-chip-row {
     padding: 0.5rem 1.25rem 0;
-    background: #f8fbf9;
-    border-bottom: none;
-  }
-  .aw-stepper {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0.6rem 1.25rem;
-    gap: 0.75rem;
-    border-bottom: 1px solid #e4e9e4;
-    background: #f8fbf9;
-    color: #6a7d6a;
-  }
-  .aw-stepper li {
-    font-size: 0.95rem;
-  }
-  .aw-stepper li.active {
-    color: var(--color-forest);
-    font-weight: 700;
-  }
-  .aw-stepper li.done {
-    color: var(--color-forest);
-    opacity: 0.6;
+    background: var(--color-cream);
+    border-bottom: 1px solid var(--color-divider-soft, var(--color-divider));
   }
   .aw-body {
     padding: 1rem 1.25rem;

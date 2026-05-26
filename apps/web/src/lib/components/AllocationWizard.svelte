@@ -284,6 +284,108 @@
 
   const eligibleStock = $derived(seedStock.filter((s) => !!s.cropPluginId && s.onHand > 0));
 
+  // #252 / CT-W-007 — surface seeds the operator added without a crop
+  // plugin (Manual entry path; or Search/Barcode/Label where the
+  // confidence threshold rejected the auto-link). They have on-hand
+  // quantity but no plugin link, so the eligibleStock filter rejects
+  // them. We don't drop them — we render them in a "Needs crop plugin"
+  // section with an inline picker that hits /api/plugins/search-by-name
+  // and PATCHes /api/stock/[id] with the chosen pluginId. The seed
+  // then migrates to eligibleStock on the next render.
+  const noPluginStock = $derived(seedStock.filter((s) => !s.cropPluginId && s.onHand > 0));
+
+  type PluginCandidate = {
+    pluginId: string;
+    displayName: string;
+    score: number;
+    source: 'local' | 'web-search' | 'mixed';
+  };
+  let linkPickerOpenFor = $state<string | null>(null);
+  let linkQuery = $state('');
+  let linkResults = $state<PluginCandidate[]>([]);
+  let linkSearching = $state(false);
+  let linkError = $state<string | null>(null);
+  let linkAssigningId = $state<string | null>(null);
+  let linkDebounceHandle: ReturnType<typeof setTimeout> | null = null;
+
+  function openLinkPicker(stockItemId: string): void {
+    linkPickerOpenFor = stockItemId;
+    linkQuery = '';
+    linkResults = [];
+    linkError = null;
+  }
+  function closeLinkPicker(): void {
+    linkPickerOpenFor = null;
+    linkQuery = '';
+    linkResults = [];
+    linkError = null;
+    if (linkDebounceHandle) {
+      clearTimeout(linkDebounceHandle);
+      linkDebounceHandle = null;
+    }
+  }
+  function onLinkQueryChange(): void {
+    if (linkDebounceHandle) clearTimeout(linkDebounceHandle);
+    const q = linkQuery.trim();
+    if (q.length < 2) {
+      linkResults = [];
+      return;
+    }
+    linkDebounceHandle = setTimeout(() => {
+      void runLinkSearch(q);
+    }, 200);
+  }
+  async function runLinkSearch(q: string): Promise<void> {
+    linkSearching = true;
+    linkError = null;
+    try {
+      // skipWebSearch=true → local fuzzy match only, no AI quota
+      // consumption while the operator types. Honors Invariant 7
+      // (AI assists, never gates) — picker works without an Anthropic
+      // key for any plugin already in the operator's library.
+      const res = await fetch('/api/plugins/search-by-name', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: q, hintType: 'crop', skipWebSearch: true })
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        linkError = body.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      linkResults = (body.candidates ?? []) as PluginCandidate[];
+    } catch (err) {
+      linkError = err instanceof Error ? err.message : String(err);
+    } finally {
+      linkSearching = false;
+    }
+  }
+  async function assignPluginToStock(stockItemId: string, pluginId: string): Promise<void> {
+    if (linkAssigningId) return;
+    linkAssigningId = stockItemId;
+    linkError = null;
+    try {
+      const res = await fetch(`/api/stock/${stockItemId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ pluginId })
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        linkError = body.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      closeLinkPicker();
+      // Refresh so the seed migrates from noPluginStock → eligibleStock.
+      // refreshSeedStock guards against double-fire via seedStockRefreshing.
+      await refreshSeedStock();
+    } catch (err) {
+      linkError = err instanceof Error ? err.message : String(err);
+    } finally {
+      linkAssigningId = null;
+    }
+  }
+
   const filteredEligibleStock = $derived.by(() => {
     const q = seedSearch.trim().toLowerCase();
     const matches = q
@@ -1645,7 +1747,101 @@
         <p class="aw-intro">
           Pick the seed lots you want to plant. Adjust quantity per row — defaults to on-hand.
         </p>
-        {#if eligibleStock.length === 0}
+
+        <!-- #252 / CT-W-007 — surface no-plugin seeds so the operator
+             can link them inline without leaving the wizard. Hits
+             /api/plugins/search-by-name with skipWebSearch=true (no AI
+             quota), then PATCHes /api/stock/[id] with the chosen
+             pluginId. On 200 the seed migrates from noPluginStock →
+             eligibleStock via the existing onRefreshParent path. -->
+        {#if noPluginStock.length > 0}
+          <div class="needs-plugin-section" data-empty-state="needs-plugin">
+            <h3 class="needs-plugin-title">
+              {noPluginStock.length} seed{noPluginStock.length === 1 ? '' : 's'} need a crop plugin
+            </h3>
+            <p class="needs-plugin-lede">
+              These seed lots are in your inventory but aren’t linked to a crop plugin yet. Link
+              each one to a known crop so the planner can match planting guides, days-to-maturity,
+              and companion rules. Picking a plugin is local-only — no Anthropic key needed.
+            </p>
+            <ul class="needs-plugin-list">
+              {#each noPluginStock as s (s.stockItemId)}
+                <li class="needs-plugin-row">
+                  <div class="needs-plugin-name">
+                    <strong>{s.shortName ?? s.displayName}</strong>
+                    <span class="muted"> · {s.onHand} {s.defaultUnit}</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn-secondary needs-plugin-btn"
+                    onclick={() => openLinkPicker(s.stockItemId)}
+                    disabled={!!linkAssigningId}
+                    data-action="open-link-picker"
+                  >
+                    {linkPickerOpenFor === s.stockItemId ? 'Picking…' : 'Link to crop plugin →'}
+                  </button>
+                  {#if linkPickerOpenFor === s.stockItemId}
+                    <div class="link-picker" role="dialog" aria-label="Pick a crop plugin">
+                      <input
+                        type="search"
+                        class="aw-search"
+                        placeholder="Search by crop name (e.g. corn, lettuce, basil)…"
+                        bind:value={linkQuery}
+                        oninput={onLinkQueryChange}
+                        aria-label="Search crop plugin library"
+                      />
+                      {#if linkSearching}
+                        <p class="muted">Searching plugin library…</p>
+                      {:else if linkError}
+                        <p class="error" role="alert">{linkError}</p>
+                      {:else if linkQuery.trim().length < 2}
+                        <p class="muted">
+                          Type at least 2 characters to search your local plugin library.
+                        </p>
+                      {:else if linkResults.length === 0}
+                        <p class="muted">
+                          No matches in your plugin library. Try a different search, or open
+                          <a href="/plugins" target="_blank" rel="noopener">/plugins</a> to add a new
+                          crop plugin first.
+                        </p>
+                      {:else}
+                        <ul class="link-results">
+                          {#each linkResults as r (r.pluginId)}
+                            <li>
+                              <button
+                                type="button"
+                                class="link-result"
+                                onclick={() => assignPluginToStock(s.stockItemId, r.pluginId)}
+                                disabled={!!linkAssigningId}
+                              >
+                                <span class="link-result-name">{r.displayName}</span>
+                                <span class="muted link-result-score"
+                                  >{Math.round(r.score * 100)}% match</span
+                                >
+                              </button>
+                            </li>
+                          {/each}
+                        </ul>
+                      {/if}
+                      <div class="link-picker-footer">
+                        <button
+                          type="button"
+                          class="btn-secondary"
+                          onclick={closeLinkPicker}
+                          disabled={linkAssigningId === s.stockItemId}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+
+        {#if eligibleStock.length === 0 && noPluginStock.length === 0}
           <!-- #175 (CT-W-006) — empty-state card replaces the previous
                dead-end `<p>`. The Sprint-1 link-out path opens
                /stock/add in a new tab so the wizard modal + step state
@@ -1690,6 +1886,8 @@
               </button>
             </div>
           </div>
+        {:else if eligibleStock.length === 0 && noPluginStock.length > 0}
+          <p class="empty">Link a crop plugin to a seed above to make it available for planning.</p>
         {:else}
           <div class="aw-search-row">
             <input
@@ -2832,5 +3030,105 @@
     text-decoration: none;
     display: inline-flex;
     align-items: center;
+  }
+
+  /* #252 / CT-W-007 — needs-plugin section. Same visual register as
+     the wizard-Seeds empty-state (#175) so the operator reads the
+     two empty-states as a consistent "data is incomplete; here's how
+     to recover" pattern. */
+  .needs-plugin-section {
+    border: 1px solid var(--color-wheat-deep, #c98e2e);
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+    background: #fff7e6;
+    margin-block: 1rem;
+  }
+  .needs-plugin-title {
+    margin: 0 0 0.4rem 0;
+    font-size: 1.05rem;
+    color: var(--color-forest-deep, #1f3522);
+  }
+  .needs-plugin-lede {
+    margin: 0 0 1rem 0;
+    color: #4a5a4a;
+    line-height: 1.45;
+  }
+  .needs-plugin-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .needs-plugin-row {
+    background: var(--color-cream, #fbfaf3);
+    border: 1px solid var(--color-divider, #d8dcd1);
+    border-radius: 8px;
+    padding: 0.75rem 0.875rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+  }
+  .needs-plugin-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .needs-plugin-btn {
+    min-height: 38px;
+    white-space: nowrap;
+  }
+  /* Inline picker spans both grid columns so the search input has room. */
+  .link-picker {
+    grid-column: 1 / -1;
+    border-top: 1px dashed var(--color-divider);
+    padding-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .link-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .link-result {
+    width: 100%;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--color-divider);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 44px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--color-ink);
+  }
+  .link-result:hover:not(:disabled) {
+    border-color: var(--color-forest-deep);
+    background: var(--color-paper);
+  }
+  .link-result:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .link-result-name {
+    font-weight: 500;
+  }
+  .link-result-score {
+    font-size: 12px;
+  }
+  .link-picker-footer {
+    display: flex;
+    justify-content: flex-end;
   }
 </style>

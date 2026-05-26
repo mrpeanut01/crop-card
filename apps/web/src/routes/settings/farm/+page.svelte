@@ -25,14 +25,14 @@
 
 <svelte:head><title>Farm & blocks · CropCard</title></svelte:head>
 
-<SettingsShell title="Farm & blocks" kicker="Field geometry">
+<SettingsShell title="Farm & blocks" kicker="Field geometry" saveAction="?/save">
   <SettingsSection
     title="Farm details"
     sub="Used by frost-date lookup, weather, and inspector links."
   >
     <div class="grid grid-3">
       <SettingsField label="Farm name">
-        <input class="s-input" value="Loudoun Home Farm" />
+        <input class="s-input" name="farmName" value={data.farmName || 'Loudoun Home Farm'} />
       </SettingsField>
       <SettingsField label="County">
         <input class="s-input" value="Loudoun, VA" />

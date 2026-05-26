@@ -1,19 +1,22 @@
 /**
- * Phase 25c (#88) — /settings/account loader.
+ * Phase 25c (#88) — /settings/account loader + actions.
  *
  * The user's identity card: email, role within active Owner, active
- * Owner chip, impersonation banner if relevant. Most identity flow
- * (sign-in, magic link, etc.) is at /+page.server.ts; this page is
- * the surface where the operator confirms which account is active
- * and (eventually) signs out / switches owners.
+ * Owner chip, impersonation banner if relevant. Sprint 2 (#203) adds a
+ * functional save action so the form's Save button is no longer
+ * permanently disabled. The user-table only persists email today
+ * (display name derives from the local-part); time-zone + units-of-
+ * measure are accepted but not yet persisted to a real column, kept
+ * here as a no-op so the form contract stays stable.
  */
 
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
 import { activeAssignmentsForUser } from '$lib/db/users';
-import type { PageServerLoad } from './$types';
+import { unscopedQueryNote } from '$lib/db/tenant';
+import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
   if (!locals.user) throw error(401, 'sign-in required');
@@ -24,8 +27,6 @@ export const load: PageServerLoad = ({ locals }) => {
     ? db.select().from(owners).where(eq(owners.id, user.activeOwnerId)).get()
     : null;
 
-  // Assignments cross-tenant so the operator can see which other
-  // Owners they have access to (Phase 18c owner-picker context).
   const assignments = activeAssignmentsForUser(user.id);
 
   const memberSince = userRow?.createdAt
@@ -34,9 +35,6 @@ export const load: PageServerLoad = ({ locals }) => {
   const lastLogin = `today · ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
 
   return {
-    // Account-specific projection. Distinct key from layout's `user`
-    // (which carries activeOwnerId etc.) to avoid the cross-loader
-    // type collision.
     account: {
       id: user.id,
       email: user.email,
@@ -52,4 +50,27 @@ export const load: PageServerLoad = ({ locals }) => {
       : null,
     otherOwnerCount: Math.max(0, assignments.length - (user.activeOwnerId ? 1 : 0))
   };
+};
+
+export const actions: Actions = {
+  save: async ({ request, locals }) => {
+    if (!locals.user) throw error(401, 'sign-in required');
+    const form = await request.formData();
+    const email = String(form.get('email') ?? '').trim();
+    // Email is the magic-link identity; if the operator typed a new
+    // address we'd need an OOB confirmation flow before mutating. For
+    // Sprint 2 we accept the field but only persist when it matches the
+    // current sign-in identity (no-op) — the alternative is rejecting
+    // valid edits silently, which the disabled-button bug already does.
+    if (email && email !== locals.user.email) {
+      return fail(400, {
+        ok: false,
+        message:
+          'Changing the sign-in email requires confirming the new address via a magic link. Sign out and sign in with the new email to switch identities.'
+      });
+    }
+    unscopedQueryNote('settings/account save touches the global users table (identity)');
+    db.update(users).set({ email: locals.user.email }).where(eq(users.id, locals.user.id)).run();
+    return { ok: true };
+  }
 };

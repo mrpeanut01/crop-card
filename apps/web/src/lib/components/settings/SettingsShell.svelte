@@ -62,23 +62,37 @@
     {/if}
   </header>
 
-  <div class="body">
-    <div class="body-inner">
-      {@render children()}
+  {#if saveAction && !hideFooter}
+    <!--
+      #203 — when a saveAction is provided we wrap the body in the form so
+      every input the page renders is submitted on Save, and the button is
+      live (not perma-disabled). The legacy disabled-button path is kept
+      for hideFooter pages (danger-zone only) and for pages that don't
+      know their saveAction yet.
+    -->
+    <form method="POST" action={saveAction} class="settings-form">
+      <div class="body">
+        <div class="body-inner">
+          {@render children()}
+        </div>
+      </div>
+      <footer class="footer">
+        <a class="ghost" href={backHref}>Cancel</a>
+        <button type="submit" class="primary">Save changes</button>
+      </footer>
+    </form>
+  {:else}
+    <div class="body">
+      <div class="body-inner">
+        {@render children()}
+      </div>
     </div>
-  </div>
-
-  {#if !hideFooter}
-    <footer class="footer">
-      <a class="ghost" href={backHref}>Cancel</a>
-      {#if saveAction}
-        <form method="POST" action={saveAction}>
-          <button type="submit" class="primary">Save changes</button>
-        </form>
-      {:else}
+    {#if !hideFooter}
+      <footer class="footer">
+        <a class="ghost" href={backHref}>Cancel</a>
         <button type="button" class="primary" disabled>Save changes</button>
-      {/if}
-    </footer>
+      </footer>
+    {/if}
   {/if}
 </div>
 
@@ -152,6 +166,9 @@
   .body-inner {
     max-width: 1100px;
     margin: 0 auto;
+  }
+  .settings-form {
+    display: contents;
   }
   .footer {
     border-top: 1px solid var(--color-divider);

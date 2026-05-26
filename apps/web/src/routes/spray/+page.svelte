@@ -771,7 +771,11 @@
           onclick={() => (selectedSprayerId = s.id)}
         >
           <strong>{s.label}</strong>
-          <small>id: {s.id} • {s.calibratedGpa} GPA</small>
+          <small
+            >id: {s.id} • {s.calibratedGpa != null
+              ? `${s.calibratedGpa} GPA`
+              : 'Uncalibrated'}</small
+          >
           {#if s.lastChemistryClass}
             <small class="warn">last load: {s.lastChemistryClass}</small>
           {:else}

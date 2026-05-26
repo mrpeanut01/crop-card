@@ -75,7 +75,7 @@
     meta: {
       model: string;
       usdEstimate: number;
-      fallback?: 'engine-only' | 'no-api-key';
+      fallback?: 'engine-only' | 'no-api-key' | 'over-cap' | 'quota-exceeded';
       violationsOnFirstAttempt?: string[];
     };
   };
@@ -263,7 +263,128 @@
 
   let seedSearch = $state('');
 
+  // #175 / CT-W-006 (Sprint 1 link-out, Sprint 3 embed) — Seeds step
+  // dead-end recovery. When `eligibleStock` is empty, the empty-state
+  // card below lets the user open /stock/add in a new tab and then
+  // refresh the wizard data in place. `seedStockRefreshing` debounces
+  // the refresh button so a slow loader doesn't double-fire.
+  // Spec: docs/design/almanac/direction-almanac-wizard.jsx §seeds-fallback.
+  let seedStockRefreshing = $state(false);
+  async function refreshSeedStock() {
+    if (!onRefreshParent || seedStockRefreshing) return;
+    seedStockRefreshing = true;
+    try {
+      await onRefreshParent();
+    } catch {
+      /* non-fatal; the wizard keeps its prior seedStock prop */
+    } finally {
+      seedStockRefreshing = false;
+    }
+  }
+
   const eligibleStock = $derived(seedStock.filter((s) => !!s.cropPluginId && s.onHand > 0));
+
+  // #252 / CT-W-007 — surface seeds the operator added without a crop
+  // plugin (Manual entry path; or Search/Barcode/Label where the
+  // confidence threshold rejected the auto-link). They have on-hand
+  // quantity but no plugin link, so the eligibleStock filter rejects
+  // them. We don't drop them — we render them in a "Needs crop plugin"
+  // section with an inline picker that hits /api/plugins/search-by-name
+  // and PATCHes /api/stock/[id] with the chosen pluginId. The seed
+  // then migrates to eligibleStock on the next render.
+  const noPluginStock = $derived(seedStock.filter((s) => !s.cropPluginId && s.onHand > 0));
+
+  type PluginCandidate = {
+    pluginId: string;
+    displayName: string;
+    score: number;
+    source: 'local' | 'web-search' | 'mixed';
+  };
+  let linkPickerOpenFor = $state<string | null>(null);
+  let linkQuery = $state('');
+  let linkResults = $state<PluginCandidate[]>([]);
+  let linkSearching = $state(false);
+  let linkError = $state<string | null>(null);
+  let linkAssigningId = $state<string | null>(null);
+  let linkDebounceHandle: ReturnType<typeof setTimeout> | null = null;
+
+  function openLinkPicker(stockItemId: string): void {
+    linkPickerOpenFor = stockItemId;
+    linkQuery = '';
+    linkResults = [];
+    linkError = null;
+  }
+  function closeLinkPicker(): void {
+    linkPickerOpenFor = null;
+    linkQuery = '';
+    linkResults = [];
+    linkError = null;
+    if (linkDebounceHandle) {
+      clearTimeout(linkDebounceHandle);
+      linkDebounceHandle = null;
+    }
+  }
+  function onLinkQueryChange(): void {
+    if (linkDebounceHandle) clearTimeout(linkDebounceHandle);
+    const q = linkQuery.trim();
+    if (q.length < 2) {
+      linkResults = [];
+      return;
+    }
+    linkDebounceHandle = setTimeout(() => {
+      void runLinkSearch(q);
+    }, 200);
+  }
+  async function runLinkSearch(q: string): Promise<void> {
+    linkSearching = true;
+    linkError = null;
+    try {
+      // skipWebSearch=true → local fuzzy match only, no AI quota
+      // consumption while the operator types. Honors Invariant 7
+      // (AI assists, never gates) — picker works without an Anthropic
+      // key for any plugin already in the operator's library.
+      const res = await fetch('/api/plugins/search-by-name', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query: q, hintType: 'crop', skipWebSearch: true })
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        linkError = body.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      linkResults = (body.candidates ?? []) as PluginCandidate[];
+    } catch (err) {
+      linkError = err instanceof Error ? err.message : String(err);
+    } finally {
+      linkSearching = false;
+    }
+  }
+  async function assignPluginToStock(stockItemId: string, pluginId: string): Promise<void> {
+    if (linkAssigningId) return;
+    linkAssigningId = stockItemId;
+    linkError = null;
+    try {
+      const res = await fetch(`/api/stock/${stockItemId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ pluginId })
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        linkError = body.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      closeLinkPicker();
+      // Refresh so the seed migrates from noPluginStock → eligibleStock.
+      // refreshSeedStock guards against double-fire via seedStockRefreshing.
+      await refreshSeedStock();
+    } catch (err) {
+      linkError = err instanceof Error ? err.message : String(err);
+    } finally {
+      linkAssigningId = null;
+    }
+  }
 
   const filteredEligibleStock = $derived.by(() => {
     const q = seedSearch.trim().toLowerCase();
@@ -1626,8 +1747,147 @@
         <p class="aw-intro">
           Pick the seed lots you want to plant. Adjust quantity per row — defaults to on-hand.
         </p>
-        {#if eligibleStock.length === 0}
-          <p class="empty">No seed stock with a known crop plugin and on-hand &gt; 0.</p>
+
+        <!-- #252 / CT-W-007 — surface no-plugin seeds so the operator
+             can link them inline without leaving the wizard. Hits
+             /api/plugins/search-by-name with skipWebSearch=true (no AI
+             quota), then PATCHes /api/stock/[id] with the chosen
+             pluginId. On 200 the seed migrates from noPluginStock →
+             eligibleStock via the existing onRefreshParent path. -->
+        {#if noPluginStock.length > 0}
+          <div class="needs-plugin-section" data-empty-state="needs-plugin">
+            <h3 class="needs-plugin-title">
+              {noPluginStock.length} seed{noPluginStock.length === 1 ? '' : 's'} need a crop plugin
+            </h3>
+            <p class="needs-plugin-lede">
+              These seed lots are in your inventory but aren’t linked to a crop plugin yet. Link
+              each one to a known crop so the planner can match planting guides, days-to-maturity,
+              and companion rules. Picking a plugin is local-only — no Anthropic key needed.
+            </p>
+            <ul class="needs-plugin-list">
+              {#each noPluginStock as s (s.stockItemId)}
+                <li class="needs-plugin-row">
+                  <div class="needs-plugin-name">
+                    <strong>{s.shortName ?? s.displayName}</strong>
+                    <span class="muted"> · {s.onHand} {s.defaultUnit}</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn-secondary needs-plugin-btn"
+                    onclick={() => openLinkPicker(s.stockItemId)}
+                    disabled={!!linkAssigningId}
+                    data-action="open-link-picker"
+                  >
+                    {linkPickerOpenFor === s.stockItemId ? 'Picking…' : 'Link to crop plugin →'}
+                  </button>
+                  {#if linkPickerOpenFor === s.stockItemId}
+                    <div class="link-picker" role="dialog" aria-label="Pick a crop plugin">
+                      <input
+                        type="search"
+                        class="aw-search"
+                        placeholder="Search by crop name (e.g. corn, lettuce, basil)…"
+                        bind:value={linkQuery}
+                        oninput={onLinkQueryChange}
+                        aria-label="Search crop plugin library"
+                      />
+                      {#if linkSearching}
+                        <p class="muted">Searching plugin library…</p>
+                      {:else if linkError}
+                        <p class="error" role="alert">{linkError}</p>
+                      {:else if linkQuery.trim().length < 2}
+                        <p class="muted">
+                          Type at least 2 characters to search your local plugin library.
+                        </p>
+                      {:else if linkResults.length === 0}
+                        <p class="muted">
+                          No matches in your plugin library. Try a different search, or open
+                          <a href="/plugins" target="_blank" rel="noopener">/plugins</a> to add a new
+                          crop plugin first.
+                        </p>
+                      {:else}
+                        <ul class="link-results">
+                          {#each linkResults as r (r.pluginId)}
+                            <li>
+                              <button
+                                type="button"
+                                class="link-result"
+                                onclick={() => assignPluginToStock(s.stockItemId, r.pluginId)}
+                                disabled={!!linkAssigningId}
+                              >
+                                <span class="link-result-name">{r.displayName}</span>
+                                <span class="muted link-result-score"
+                                  >{Math.round(r.score * 100)}% match</span
+                                >
+                              </button>
+                            </li>
+                          {/each}
+                        </ul>
+                      {/if}
+                      <div class="link-picker-footer">
+                        <button
+                          type="button"
+                          class="btn-secondary"
+                          onclick={closeLinkPicker}
+                          disabled={linkAssigningId === s.stockItemId}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+
+        {#if eligibleStock.length === 0 && noPluginStock.length === 0}
+          <!-- #175 (CT-W-006) — empty-state card replaces the previous
+               dead-end `<p>`. The Sprint-1 link-out path opens
+               /stock/add in a new tab so the wizard modal + step state
+               stay mounted while the user adds inventory; the Sprint-3
+               follow-up extends this same `.aw-seed-empty` block with
+               an inline embedded form (toggle pattern) without changing
+               the CTAs below. Touch this block, not its callers. -->
+          <div class="aw-seed-empty" data-empty-state="seed-stock">
+            <h3 class="aw-seed-empty-title">No seed stock yet</h3>
+            <p class="aw-seed-empty-lede">
+              Seed lots are tracked in Inventory — packets, bulk orders, and saved seed all belong
+              there. Add at least one lot with a known crop plugin and on-hand greater than zero,
+              then come back here to plan the season.
+            </p>
+            <div class="aw-seed-empty-actions">
+              <a
+                class="btn-primary"
+                href="/stock/add"
+                target="_blank"
+                rel="noopener"
+                data-action="add-seed-stock"
+              >
+                Add seed stock ↗
+              </a>
+              <a
+                class="btn-secondary"
+                href="/stock"
+                target="_blank"
+                rel="noopener"
+                data-action="open-stock"
+              >
+                Open Stock ↗
+              </a>
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick={refreshSeedStock}
+                disabled={seedStockRefreshing || !onRefreshParent}
+                data-action="refresh-seed-stock"
+              >
+                {seedStockRefreshing ? 'Refreshing…' : 'I’ve added stock — refresh'}
+              </button>
+            </div>
+          </div>
+        {:else if eligibleStock.length === 0 && noPluginStock.length > 0}
+          <p class="empty">Link a crop plugin to a seed above to make it available for planning.</p>
         {:else}
           <div class="aw-search-row">
             <input
@@ -1784,10 +2044,14 @@
           <p class="aw-error">Error: {error}</p>
         {:else if response}
           {#if response.meta.fallback}
-            <div class="aw-banner warn">
+            <div class="aw-banner warn" role="status" aria-live="polite">
               {response.meta.fallback === 'no-api-key'
-                ? 'No Anthropic API key configured — plan generated by the deterministic engine. Add a key on the Settings page to enable the AI rationale layer.'
-                : 'AI output failed validation; falling back to the deterministic engine.'}
+                ? 'No Anthropic API key configured — plan generated by the deterministic engine. Add a key on /settings/ai to enable the AI rationale layer.'
+                : response.meta.fallback === 'over-cap'
+                  ? 'Monthly AI cap reached — plan generated by the deterministic engine. Raise the cap on /settings/ai to restore AI refinement.'
+                  : response.meta.fallback === 'quota-exceeded'
+                    ? 'Today’s AI quota reached — plan generated by the deterministic engine. Retry tomorrow or raise the quota on /settings/ai.'
+                    : 'AI output failed validation; falling back to the deterministic engine.'}
             </div>
           {/if}
           {#if (response.geometryMissingBlockIds ?? []).length > 0}
@@ -1800,7 +2064,19 @@
               field geometry on /fields to enable.
             </div>
           {/if}
-          <p class="aw-rationale">{response.rationale}</p>
+          <!-- #209 / CT-PP-007 — on fallback the AI's stale narrative is
+               discarded and replaced with a deterministic engine handoff
+               so chat narrative cannot contradict the per-row table below.
+               Server already swaps response.rationale; this is the
+               defence-in-depth render-side check. -->
+          {#if response.meta.fallback}
+            <p class="aw-rationale">
+              {response.rationale ||
+                'Deterministic engine plan — see the "Why" column for per-row reasoning.'}
+            </p>
+          {:else}
+            <p class="aw-rationale">{response.rationale}</p>
+          {/if}
           <table class="aw-table">
             <thead>
               <tr>
@@ -2720,5 +2996,139 @@
   .empty {
     color: #6a7d6a;
     font-style: italic;
+  }
+
+  /* #175 (CT-W-006) — Seeds step empty-state card. Sized to feel like
+     a "next step" card rather than an error. Sprint 3 extends this
+     block with an inline embedded stock-add form; keep the class
+     names stable so that work doesn't need to re-style. */
+  .aw-seed-empty {
+    border: 1px solid var(--color-divider, #d8dcd1);
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+    background: var(--color-cream, #fbfaf3);
+    margin-block: 1rem 0.5rem;
+  }
+  .aw-seed-empty-title {
+    margin: 0 0 0.4rem 0;
+    font-size: 1.05rem;
+    color: var(--color-forest-deep, #1f3522);
+  }
+  .aw-seed-empty-lede {
+    margin: 0 0 1rem 0;
+    color: #4a5a4a;
+    line-height: 1.45;
+  }
+  .aw-seed-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+  }
+  .aw-seed-empty-actions .btn-primary,
+  .aw-seed-empty-actions .btn-secondary {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* #252 / CT-W-007 — needs-plugin section. Same visual register as
+     the wizard-Seeds empty-state (#175) so the operator reads the
+     two empty-states as a consistent "data is incomplete; here's how
+     to recover" pattern. */
+  .needs-plugin-section {
+    border: 1px solid var(--color-wheat-deep, #c98e2e);
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+    background: #fff7e6;
+    margin-block: 1rem;
+  }
+  .needs-plugin-title {
+    margin: 0 0 0.4rem 0;
+    font-size: 1.05rem;
+    color: var(--color-forest-deep, #1f3522);
+  }
+  .needs-plugin-lede {
+    margin: 0 0 1rem 0;
+    color: #4a5a4a;
+    line-height: 1.45;
+  }
+  .needs-plugin-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .needs-plugin-row {
+    background: var(--color-cream, #fbfaf3);
+    border: 1px solid var(--color-divider, #d8dcd1);
+    border-radius: 8px;
+    padding: 0.75rem 0.875rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+  }
+  .needs-plugin-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .needs-plugin-btn {
+    min-height: 38px;
+    white-space: nowrap;
+  }
+  /* Inline picker spans both grid columns so the search input has room. */
+  .link-picker {
+    grid-column: 1 / -1;
+    border-top: 1px dashed var(--color-divider);
+    padding-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .link-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .link-result {
+    width: 100%;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--color-divider);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 44px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--color-ink);
+  }
+  .link-result:hover:not(:disabled) {
+    border-color: var(--color-forest-deep);
+    background: var(--color-paper);
+  }
+  .link-result:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .link-result-name {
+    font-weight: 500;
+  }
+  .link-result-score {
+    font-size: 12px;
+  }
+  .link-picker-footer {
+    display: flex;
+    justify-content: flex-end;
   }
 </style>

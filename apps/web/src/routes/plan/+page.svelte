@@ -3747,49 +3747,6 @@
     {/if}
   {/if}
 
-  {#if showAllocationWizard}
-    <AllocationWizard
-      seedStock={(data.seedStock ?? []).map((s) => ({
-        stockItemId: s.stockItemId,
-        displayName: s.displayName,
-        shortName: s.shortName,
-        onHand: s.onHand,
-        defaultUnit: s.defaultUnit,
-        cropPluginId: s.cropPluginId,
-        cropFamily: s.cropFamily ?? null
-      }))}
-      blocks={data.blocks.map((b) => ({
-        id: b.id,
-        name: b.name,
-        blockLabel: b.blockLabel,
-        acres: b.acres,
-        sunExposure: b.sunExposure,
-        plantings: b.plantings.map((p) => ({ varietyDisplayName: p.varietyDisplayName }))
-      }))}
-      plantingGuides={data.plantingGuides}
-      cropCatalog={data.cropCatalog}
-      seasonSetup={data.seasonSetup ?? null}
-      lastYearSetup={data.lastYearSetup ?? null}
-      currentYear={data.currentYear ?? new Date().getFullYear()}
-      aiEnabled={data.aiEnabled ?? false}
-      wizardPlanId={data.wizardPlanId}
-      initialChatMessages={data.wizardChatMessages ?? []}
-      onClose={() => {
-        showAllocationWizard = false;
-      }}
-      onCommitted={async () => {
-        showAllocationWizard = false;
-        await invalidateAll();
-      }}
-      onRefreshParent={async () => {
-        // Reload /plan loader data without closing the wizard. Used by the
-        // Start Over flow inside the wizard so the cleared-plan state lands
-        // in the modal's props on the next render.
-        await invalidateAll();
-      }}
-    />
-  {/if}
-
   <!-- ──── SCHEDULE swim-lane payload (Phase 14) — renders under the
      Schedule tab (legacy URL) OR under Calendar tab when view=swimlane
      (Phase 21b follow-up). Shared template; same loader data. ───── -->
@@ -4766,6 +4723,51 @@
     </div>
   {/if}
 </details>
+
+<!-- #170 (CT-W-001) — AllocationWizard is a position:fixed modal and
+     MUST live outside the legacy <details>. A fixed child of a closed
+     <details> is excluded from layout, so the wizard rendered invisible
+     when "Open wizard" was clicked from the Almanac shell above.
+     See docs/design/almanac/direction-almanac-wizard.jsx. -->
+{#if showAllocationWizard}
+  <AllocationWizard
+    seedStock={(data.seedStock ?? []).map((s) => ({
+      stockItemId: s.stockItemId,
+      displayName: s.displayName,
+      shortName: s.shortName,
+      onHand: s.onHand,
+      defaultUnit: s.defaultUnit,
+      cropPluginId: s.cropPluginId,
+      cropFamily: s.cropFamily ?? null
+    }))}
+    blocks={data.blocks.map((b) => ({
+      id: b.id,
+      name: b.name,
+      blockLabel: b.blockLabel,
+      acres: b.acres,
+      sunExposure: b.sunExposure,
+      plantings: b.plantings.map((p) => ({ varietyDisplayName: p.varietyDisplayName }))
+    }))}
+    plantingGuides={data.plantingGuides}
+    cropCatalog={data.cropCatalog}
+    seasonSetup={data.seasonSetup ?? null}
+    lastYearSetup={data.lastYearSetup ?? null}
+    currentYear={data.currentYear ?? new Date().getFullYear()}
+    aiEnabled={data.aiEnabled ?? false}
+    wizardPlanId={data.wizardPlanId}
+    initialChatMessages={data.wizardChatMessages ?? []}
+    onClose={() => {
+      showAllocationWizard = false;
+    }}
+    onCommitted={async () => {
+      showAllocationWizard = false;
+      await invalidateAll();
+    }}
+    onRefreshParent={async () => {
+      await invalidateAll();
+    }}
+  />
+{/if}
 
 <style>
   /* Phase 25b (#81) — legacy /plan tabbed editor lives inside a

@@ -171,6 +171,36 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const seasonSetup = loadSeasonSetup(currentYear);
   const lastYearSetup = loadSeasonSetup(currentYear - 1);
 
+  // #185 / FP-003 — seed stock MUST be available on every tab. Previously
+  // the load was inside the `tab === 'crops'` branch, which made the
+  // AllocationWizard (mounted from /plan?tab=overview by default) read
+  // `data.seedStock === undefined` → its Seeds step rendered the empty
+  // state regardless of inventory. Lift to base so:
+  //   - the wizard sees the current stock from any entry tab, and
+  //   - the Sprint-1 "I've added stock — refresh" CTA from #175 actually
+  //     surfaces newly-added seeds after the operator returns from
+  //     /stock/add.
+  // The legacy Seed Stock rail (Phase 14c) on the Crops tab also reads
+  // data.seedStock, so it continues to render unchanged.
+  const allSeedStock = listStockItems().filter((s) => s.category === 'seed');
+  const seedStock = allSeedStock.map((s) => {
+    const plug = s.pluginId ? registry.get(s.pluginId)?.plugin : undefined;
+    const cropFamily = plug && plug.type === 'crop' ? (plug as CropPlugin).cropFamily : null;
+    return {
+      stockItemId: s.id,
+      displayName: s.displayName,
+      shortName: s.shortName,
+      onHand: s.onHand,
+      defaultUnit: s.defaultUnit,
+      cropPluginId: s.pluginId ?? null,
+      cropFamily
+    };
+  });
+  const seedShortNameByDisplay: Record<string, string> = {};
+  for (const s of allSeedStock) {
+    if (s.shortName) seedShortNameByDisplay[s.displayName] = s.shortName;
+  }
+
   const base = {
     tab,
     blocks,
@@ -253,7 +283,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     shadeSources: listShadeSources(),
     // Phase 21b follow-up — surface to template so the Calendar tab can
     // toggle swim-lane vs grid. Ignored by other tabs.
-    view
+    view,
+    // #185 / FP-003 — seed stock + shortName lookup live on every tab
+    // (see comment above the const declaration for why).
+    seedStock,
+    seedShortNameByDisplay
   };
 
   if (tab === 'overview') {
@@ -265,35 +299,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   }
 
   if (tab === 'crops') {
-    // Phase 14c: Seed Stock rail moved here from Schedule. Drag a seed
-    // entry onto a block row to create a planned-status crop on that block.
-    const allSeedStock = listStockItems().filter((s) => s.category === 'seed');
-    const seedStock = allSeedStock.map((s) => {
-      const plug = s.pluginId ? registry.get(s.pluginId)?.plugin : undefined;
-      const cropFamily = plug && plug.type === 'crop' ? (plug as CropPlugin).cropFamily : null;
-      return {
-        stockItemId: s.id,
-        displayName: s.displayName,
-        shortName: s.shortName,
-        onHand: s.onHand,
-        defaultUnit: s.defaultUnit,
-        cropPluginId: s.pluginId ?? null,
-        cropFamily
-      };
-    });
-
-    // Phase 15d — lookup so each crop pill can render shortName when the
-    // matching stock item has one. Crops are bound by `varietyDisplayName`
-    // copied from the stock item at planting time.
-    const seedShortNameByDisplay: Record<string, string> = {};
-    for (const s of allSeedStock) {
-      if (s.shortName) seedShortNameByDisplay[s.displayName] = s.shortName;
-    }
-
+    // #185 / FP-003 — seedStock + seedShortNameByDisplay are now part
+    // of `base` (see lift above). Crops tab adds the cropsList overlay
+    // for the Seed Stock rail's drag-onto-block flow (Phase 14c).
     return {
       ...base,
-      seedStock,
-      seedShortNameByDisplay,
       cropsList: listCrops().map((c) => ({
         ...c,
         blockName: blockName(blocks, c.blockId),

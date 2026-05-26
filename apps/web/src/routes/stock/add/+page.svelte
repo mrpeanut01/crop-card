@@ -99,7 +99,12 @@
   {:else if active === 'barcode'}
     <BarcodePanel onSubmit={submitDraft} busy={submitBusy} />
   {:else if active === 'label'}
-    <LabelOcrPanel onSubmit={submitDraft} busy={submitBusy} />
+    <LabelOcrPanel
+      onSubmit={submitDraft}
+      busy={submitBusy}
+      aiEnabled={data.aiEnabled ?? false}
+      onSwitchToManual={() => (active = 'manual')}
+    />
   {:else if active === 'photo'}
     <p class="placeholder">Photo extract — deferred to Phase 26 per the #89 plan.</p>
   {/if}

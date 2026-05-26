@@ -111,7 +111,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     hasBlock: blocks.length > 0,
     hasPlanting: totalPlantings > 0,
     hasSprayer: sprayers.length > 0,
-    hasCalibration: sprayers.some((s) => (s.calibratedGpa ?? 0) > 0)
+    // #190 / F-02 — predicate must require a real recorded calibration.
+    // Previously `s.calibratedGpa ?? 0 > 0` always passed because
+    // sprayers.ts silently substituted 15 when the value was null, so
+    // the UC-10 step auto-ticked the moment a sprayer was added.
+    hasCalibration: sprayers.some((s) => s.calibratedGpa != null && s.calibratedGpa > 0)
   };
   const bootstrapDone =
     bootstrap.hasBlock && bootstrap.hasPlanting && bootstrap.hasSprayer && bootstrap.hasCalibration;

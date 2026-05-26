@@ -6,6 +6,7 @@
   // node_modules was a single point of failure on container/lockfile drift.
   import '$lib/styles/index.css';
 
+  import { enhance } from '$app/forms';
   import TopBar from '$lib/components/ui/TopBar.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
 
@@ -93,7 +94,19 @@
     Impersonating <strong>{data.activeOwner?.name ?? 'this Owner'}</strong> as superadmin — every
     mutation is audited.
     {#snippet action()}
-      <a href="/admin/owners">Exit impersonation</a>
+      <!-- #221 / CT-ADM-002 — must be a form POST so the server-side
+           exitImpersonation action runs (clears the session impersonation
+           flag and writes the superadmin_audit row). Previously a plain
+           anchor GET, which navigated without invoking the action — the
+           session stayed impersonated and the audit trail was missing. -->
+      <form
+        method="POST"
+        action="/admin/owners?/exitImpersonation"
+        use:enhance
+        style="display:contents"
+      >
+        <button type="submit" class="banner-link-btn">Exit impersonation</button>
+      </form>
     {/snippet}
   </Banner>
 {/if}
@@ -165,6 +178,24 @@
     main {
       padding-bottom: calc(72px + env(safe-area-inset-bottom, 0));
     }
+  }
+
+  /* #221 / CT-ADM-002 — banner action that needs to POST (form button)
+     styled to read like the prior anchor link. Inherits the Banner's
+     foreground colour + underlined affordance. */
+  .banner-link-btn {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    text-decoration: underline;
+    font: inherit;
+    cursor: pointer;
+  }
+  .banner-link-btn:hover,
+  .banner-link-btn:focus-visible {
+    text-decoration: none;
   }
 
   /* Visually-hidden helper used app-wide for screen-reader-only labels. */

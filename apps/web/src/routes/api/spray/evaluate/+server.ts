@@ -181,7 +181,10 @@ export const POST: RequestHandler = async ({ request }) => {
     const tankSize = parsed.data.tankSizeGallons ?? 50;
     // Caller-supplied GPA wins; otherwise fall back to the sprayer's saved
     // calibration so spray dilutions reflect real-world rig performance.
-    const effectiveGpa = parsed.data.calibratedGpa ?? (stored ? stored.calibratedGpa : undefined);
+    // #190 / F-02 — stored.calibratedGpa may be null when the sprayer is
+    // uncalibrated; coalesce to undefined so computeTankMixDilutions falls
+    // back to the herbicide-plugin default rather than treating null as 0.
+    const effectiveGpa = parsed.data.calibratedGpa ?? stored?.calibratedGpa ?? undefined;
     dilutions = computeTankMixDilutions(fullProducts, tankSize, effectiveGpa);
     tankMixOrder = buildTankMixSteps(fullProducts);
   }

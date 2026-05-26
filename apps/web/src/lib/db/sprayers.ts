@@ -14,7 +14,12 @@ import type { ChemistryClass } from '$lib/safety/types';
 export interface Sprayer {
   id: string;
   label: string;
-  calibratedGpa: number;
+  /** #190 / F-02 — null when the sprayer has never been calibrated.
+   *  Previously this defaulted to 15 GPA, which silently satisfied the
+   *  /today bootstrap check and let users skip UC-10. Callers MUST
+   *  treat null as "no calibration on file" and either degrade or
+   *  prompt the user; consult docs/use-cases.md UC-10 for the wizard. */
+  calibratedGpa: number | null;
   calibrationDate?: number;
   lastChemistryClass?: ChemistryClass;
   lastSprayedAt?: number;
@@ -25,7 +30,7 @@ function toSprayer(eq: ReturnType<typeof listEquipment>[number]): Sprayer {
   return {
     id: eq.id,
     label: eq.label,
-    calibratedGpa: eq.state.calibratedGpa ?? 15,
+    calibratedGpa: eq.state.calibratedGpa ?? null,
     calibrationDate: eq.state.calibrationDate,
     lastChemistryClass: eq.state.lastChemistryClass,
     lastSprayedAt: eq.state.lastUsedAt,

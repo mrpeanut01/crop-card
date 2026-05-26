@@ -330,13 +330,23 @@ function withBalance(item: StockItem): StockItemWithBalance {
   };
 }
 
-function lotBalanceHundredths(lotId: string, receivedHundredths: number): number {
+/** Per-lot on-hand balance derived purely from `stock_movements`. Sprint 4
+ *  (#200 / CT-HS-004) — until this commit the receipt was written as a
+ *  delta=0 row and the lot's `received_quantity_hundredths` was added on
+ *  top, which made the movement ledger show "0 gal received" while the
+ *  balance still summed correctly. After the Sprint 4 backfill + receipt
+ *  write fix, every receipt is a positive-delta movement and
+ *  `received_quantity_hundredths` is the denormalized cache that
+ *  initialized the lot — no longer added at read time. `receivedHundredths`
+ *  is left in the signature for call-site clarity but not folded into the
+ *  total. */
+function lotBalanceHundredths(lotId: string, _receivedHundredths: number): number {
   const sum = db
     .select({ total: sql<number>`coalesce(sum(${stockMovements.deltaHundredths}), 0)` })
     .from(stockMovements)
     .where(withTenant(stockMovements, eq(stockMovements.stockLotId, lotId)))
     .get();
-  return receivedHundredths + (sum?.total ?? 0);
+  return sum?.total ?? 0;
 }
 
 // ─── Lots ────────────────────────────────────────────────────────────────
@@ -387,13 +397,17 @@ export function receiveLot(input: ReceiveLotInput): StockLot {
     .returning()
     .get();
 
+  // Sprint 4 (#200 / CT-HS-004) — the receipt movement now carries the
+  // POSITIVE received quantity, not 0. The movement ledger on /stock/[id]
+  // accordingly shows "Receipt: +N gal" instead of the previous (correct
+  // balance, misleading ledger) "Receipt: 0 gal" line.
   db.insert(stockMovements)
     .values(
       tenantValues({
         id: randomUUID(),
         stockLotId: lotId,
         occurredAt: new Date(receivedAt),
-        deltaHundredths: 0,
+        deltaHundredths: hundredths,
         reason: 'receipt',
         performedById: input.performedById ?? null,
         notes: 'lot received'

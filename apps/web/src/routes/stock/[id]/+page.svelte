@@ -125,6 +125,10 @@
   });
 </script>
 
+<svelte:head>
+  <title>{item.displayName} · Stock · CropCard</title>
+</svelte:head>
+
 <header class="head">
   <a href="/stock" class="back">← Inventory</a>
   <h1>{item.displayName}</h1>

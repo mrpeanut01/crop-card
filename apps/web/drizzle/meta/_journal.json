@@ -267,6 +267,13 @@
       "when": 1780013701000,
       "tag": "0037_sprint3_wizard_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "6",
+      "when": 1780018800000,
+      "tag": "0038_sprint4_stock_receipt_backfill",
+      "breakpoints": true
     }
   ]
 }

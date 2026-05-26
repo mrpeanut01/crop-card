@@ -71,12 +71,20 @@
   );
 </script>
 
-<span class="prov src-{source}" class:compact title={titleText} data-provenance={source}>
+<span
+  class="prov src-{source}"
+  class:compact
+  title={titleText}
+  data-provenance={source}
+  role="img"
+  aria-label={titleText}
+>
   <Icon size={compact ? 9 : 10} strokeWidth={1.75} />
-  {#if !compact}<span class="label">{meta.label}</span>{/if}
-  {#if showConf}<span class="conf mono">{confPct}</span>{/if}
-  {#if !compact && detail}<span class="sep" aria-hidden="true">·</span><span class="detail"
-      >{detail}</span
+  {#if !compact}<span class="label" aria-hidden="true">{meta.label}</span>{/if}
+  {#if showConf}<span class="conf mono" aria-hidden="true">{confPct}</span>{/if}
+  {#if !compact && detail}<span class="sep" aria-hidden="true">·</span><span
+      class="detail"
+      aria-hidden="true">{detail}</span
     >{/if}
 </span>
 

@@ -71,6 +71,29 @@
     const b = new Date(endMs).toLocaleDateString();
     return `${a} – ${b}`;
   }
+
+  /** Sprint 4 (#197 / CT-HS-001) — archetypes that yield multiple
+   *  picks over the season. For these the "Record harvest" form stays
+   *  visible after the first pick so the operator can log 2nd, 3rd,
+   *  Nth cut/pick. The other archetypes (single-cut-grain, dry-seed,
+   *  cure-then-store, etc.) keep the original gate. */
+  const RE_HARVEST_ARCHETYPES = new Set([
+    'cut-and-come-again',
+    'continuous-fruit',
+    'tree-fruit-multi-pick'
+  ]);
+  function allowsReHarvest(p: PlantingHarvestStatus): boolean {
+    return p.harvestStyle ? RE_HARVEST_ARCHETYPES.has(p.harvestStyle) : false;
+  }
+
+  /** Sprint 4 (#198 / CT-HS-002) — the form is rendered for too-early
+   *  + in-window + past plantings so operators can both jump the gun
+   *  (weather-shortened seasons) and backfill records weeks late.
+   *  Banner copy on the renderer distinguishes the three states. */
+  function showHarvestForm(p: PlantingHarvestStatus): boolean {
+    if (p.alreadyHarvested && !allowsReHarvest(p)) return false;
+    return p.status === 'in-window' || p.status === 'too-early' || p.status === 'past';
+  }
 </script>
 
 <svelte:head>
@@ -145,29 +168,76 @@
             {/if}
           {/if}
 
-          {#if recordingFor === p.plantingId}
-            <div class="renderer-mount">
-              <HarvestRouter
-                harvestStyle={p.harvestStyle}
-                plantingId={p.plantingId}
-                blockId={p.blockId}
-                blockName={p.blockName}
-                cropPluginId={p.cropPluginId}
-                varietyDisplayName={p.varietyDisplayName}
-                cropFamily={p.cropFamily}
-                plantingDate={p.plantingDate}
-                windowStartMs={p.windowStartMs}
-                windowEndMs={p.windowEndMs}
-                harvestIndicators={p.harvestIndicators}
-                onCommit={(input) => commitFromRenderer(p, input)}
-                error={lastError}
-                onCancel={cancelRecord}
-              />
+          <!-- #230 — forage plantings live on /hay's cutting workflow,
+               not /harvest. Surface the cross-link so a forage operator
+               who clicks through to /harvest can find the right surface
+               without bouncing back to primary nav. -->
+          {#if p.harvestStyle === 'forage-cutting-cycle'}
+            <div class="forage-banner">
+              <Banner tone="sky">
+                Hay &amp; forage plantings use the cutting workflow.
+                <a href="/hay?block={p.blockId}">Open /hay for this block →</a>
+              </Banner>
             </div>
-          {:else if !p.alreadyHarvested}
-            <button class="primary" onclick={() => startRecord(p.plantingId)}>
-              Record harvest
-            </button>
+          {:else if showHarvestForm(p)}
+            <!-- #198 — pre-window + past-window banners so the operator
+                 knows they're recording outside the calendar-derived
+                 window. The form still submits; the banner is the
+                 acknowledgement, not a block. -->
+            {#if p.status === 'too-early'}
+              <div class="window-banner">
+                <Banner tone="wheat">
+                  Plugin DTM suggests this isn't ready yet ({p.daysUntilWindow}d to window). Record
+                  anyway?
+                </Banner>
+              </div>
+            {:else if p.status === 'past'}
+              <div class="window-banner">
+                <Banner tone="sky">
+                  Window closed {p.daysPastWindow}d ago — logging late?
+                </Banner>
+              </div>
+            {/if}
+            <!-- #197 — re-harvest archetypes keep the form available
+                 even after the first pick so cut-and-come-again leafies,
+                 continuous-fruit (tomato, pepper) and tree-fruit-multi-
+                 pick (apple, peach) can log 2nd, 3rd, Nth picks. -->
+            {#if p.alreadyHarvested && allowsReHarvest(p)}
+              <div class="window-banner">
+                <Banner tone="sky">
+                  This {p.harvestStyle === 'cut-and-come-again'
+                    ? 'cut-and-come-again'
+                    : p.harvestStyle === 'continuous-fruit'
+                      ? 'continuous-fruit'
+                      : 'tree-fruit-multi-pick'} planting supports repeat harvest — log additional picks
+                  here.
+                </Banner>
+              </div>
+            {/if}
+            {#if recordingFor === p.plantingId}
+              <div class="renderer-mount">
+                <HarvestRouter
+                  harvestStyle={p.harvestStyle}
+                  plantingId={p.plantingId}
+                  blockId={p.blockId}
+                  blockName={p.blockName}
+                  cropPluginId={p.cropPluginId}
+                  varietyDisplayName={p.varietyDisplayName}
+                  cropFamily={p.cropFamily}
+                  plantingDate={p.plantingDate}
+                  windowStartMs={p.windowStartMs}
+                  windowEndMs={p.windowEndMs}
+                  harvestIndicators={p.harvestIndicators}
+                  onCommit={(input) => commitFromRenderer(p, input)}
+                  error={lastError}
+                  onCancel={cancelRecord}
+                />
+              </div>
+            {:else}
+              <button class="primary" onclick={() => startRecord(p.plantingId)}>
+                {p.alreadyHarvested ? 'Record another pick' : 'Record harvest'}
+              </button>
+            {/if}
           {/if}
         </li>
       {/each}
@@ -463,6 +533,10 @@
     margin-top: 0.75rem;
     padding-top: 0.5rem;
     border-top: 1px solid var(--color-divider-soft, var(--color-divider));
+  }
+  .window-banner,
+  .forage-banner {
+    margin-top: 0.6rem;
   }
   .primary {
     background: var(--color-forest);

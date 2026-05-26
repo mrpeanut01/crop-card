@@ -15,7 +15,11 @@ const plantingSchema = z.object({
   /** Phase 14c: when the planting was sourced from a specific seed stock
    *  entry (manual drag-drop on /plan?tab=crops), pass it so we decrement
    *  on-hand FIFO and link the stock movement to the new crop. */
-  stockItemId: z.string().min(1).optional()
+  stockItemId: z.string().min(1).optional(),
+  /** Sprint 3 (#212 / CT-PP-004) — wizard-driven commits send `'ai'` or
+   *  `'fallback'` so PlantingCard renders the correct source badge.
+   *  Manual drag-drop omits this and the column stays NULL. */
+  sourceProvenance: z.enum(['ai', 'fallback']).optional()
 });
 
 export const POST: RequestHandler = async (event) => {
@@ -49,7 +53,8 @@ export const POST: RequestHandler = async (event) => {
     varietyDisplayName: parsed.data.varietyDisplayName ?? plugin.plugin.displayName,
     plantingDate: parsed.data.plantingDate ?? null,
     quantityPlanted: parsed.data.quantityPlanted,
-    quantityUnit: parsed.data.quantityUnit
+    quantityUnit: parsed.data.quantityUnit,
+    sourceProvenance: parsed.data.sourceProvenance
   });
 
   // Decrement seed stock if a stock item + quantity were supplied (manual

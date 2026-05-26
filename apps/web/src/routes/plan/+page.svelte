@@ -15,10 +15,19 @@
   // rail + block header + plantings tabs/grid + timeline + scheduled
   // tasks) on top of the legacy tabbed editor (now in a <details>).
   import PlanV2Shell from '$lib/components/plan/PlanV2Shell.svelte';
+  import NewBlockModal from '$lib/components/plan/NewBlockModal.svelte';
+  import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
   // Phase 25b (#81) — controls the legacy <details> open state. The
   // mutation callbacks emitted from PlanV2Shell flip this true so the
   // user lands on the right legacy tab.
   let detailOpen = $state(false);
+  // Sprint 3 (#186) — inline modal state for "+ New block" / "+ Add
+  // planting". Routes that used to redirect into the legacy editor now
+  // open these modals in-place so the user stays in the Almanac shell.
+  let showNewBlockModal = $state(false);
+  let showNewPlantingModal = $state(false);
+  let addPlantingTargetBlockId = $state<string | null>(null);
+  let addPlantingTargetBlockName = $state<string>('');
   import PlantingGroupWizard from '$lib/components/PlantingGroupWizard.svelte';
   import ScheduleOptimizerSidebar from '$lib/components/ScheduleOptimizerSidebar.svelte';
   import GroupInspector from '$lib/components/GroupInspector.svelte';
@@ -2408,19 +2417,44 @@
   )}
   onOpenWizard={() => (showAllocationWizard = true)}
   onAddBlock={() => {
-    detailOpen = true;
-    setTimeout(() => (location.hash = '#legacy-plan'), 50);
-    return goto(tabHref('layout'));
+    showNewBlockModal = true;
   }}
   onEditBlock={() => {
     detailOpen = true;
     setTimeout(() => (location.hash = '#legacy-plan'), 50);
     return goto(tabHref('layout'));
   }}
-  onAddPlanting={() => {
-    detailOpen = true;
-    setTimeout(() => (location.hash = '#legacy-plan'), 50);
-    return goto(tabHref('crops'));
+  onAddPlanting={(blockId) => {
+    const block = data.blocks.find((b) => b.id === blockId);
+    addPlantingTargetBlockId = blockId;
+    addPlantingTargetBlockName = block?.name ?? 'this block';
+    showNewPlantingModal = true;
+  }}
+/>
+
+<NewBlockModal
+  open={showNewBlockModal}
+  onClose={() => (showNewBlockModal = false)}
+  onCreated={async (newBlockId: string) => {
+    showNewBlockModal = false;
+    await invalidateAll();
+    await goto(`?block=${newBlockId}`, { keepFocus: true, noScroll: true });
+  }}
+/>
+
+<NewPlantingModal
+  open={showNewPlantingModal}
+  blockId={addPlantingTargetBlockId}
+  blockName={addPlantingTargetBlockName}
+  cropCatalog={data.cropCatalog.map((c) => ({
+    pluginId: c.pluginId,
+    displayName: c.displayName,
+    cropFamily: c.cropFamily ?? undefined
+  }))}
+  onClose={() => (showNewPlantingModal = false)}
+  onCreated={async () => {
+    showNewPlantingModal = false;
+    await invalidateAll();
   }}
 />
 

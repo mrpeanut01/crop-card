@@ -55,6 +55,12 @@ export interface PlantingRecord {
   plantingDate: number | null;
   quantityPlanted?: number;
   quantityUnit?: string;
+  /** Sprint 3 (#212) — provenance tag set by the wizard at commit time
+   *  (`'ai'` / `'fallback'`). NULL when the planting was created via the
+   *  manual /plan?tab=crops drag-drop. PlanV2Shell maps this to the
+   *  PlantingCard `sourceTag` prop so the footer renders the right
+   *  badge instead of the catch-all "Manual entry". */
+  sourceProvenance?: 'ai' | 'fallback' | null;
 }
 
 export interface BlockWithPlantings extends Block {
@@ -103,7 +109,8 @@ export function listBlocks(): BlockWithPlantings[] {
       plantingDate: p.plantingDate?.getTime() ?? null,
       quantityPlanted:
         p.quantityPlantedHundredths != null ? p.quantityPlantedHundredths / 100 : undefined,
-      quantityUnit: p.quantityUnit ?? undefined
+      quantityUnit: p.quantityUnit ?? undefined,
+      sourceProvenance: p.sourceProvenance ?? null
     });
     grouped.set(p.blockId, list);
   }
@@ -133,7 +140,8 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
       plantingDate: p.plantingDate?.getTime() ?? null,
       quantityPlanted:
         p.quantityPlantedHundredths != null ? p.quantityPlantedHundredths / 100 : undefined,
-      quantityUnit: p.quantityUnit ?? undefined
+      quantityUnit: p.quantityUnit ?? undefined,
+      sourceProvenance: p.sourceProvenance ?? null
     }));
   return { ...rowToBlock(row), plantings };
 }
@@ -268,6 +276,10 @@ export function addPlanting(input: {
   plantingDate: number | null;
   quantityPlanted?: number;
   quantityUnit?: string;
+  /** Sprint 3 (#212) — provenance tag the wizard threads through to the
+   *  endpoint so PlantingCard renders the correct source footer. NULL =
+   *  manual drag-drop. */
+  sourceProvenance?: 'ai' | 'fallback';
 }): PlantingRecord {
   if (input.plantingDate === null && input.quantityPlanted !== undefined) {
     const conds = [
@@ -302,7 +314,8 @@ export function addPlanting(input: {
         blockId: updated.blockId,
         cropPluginId: updated.cropPluginId,
         varietyDisplayName: updated.varietyDisplayName,
-        plantingDate: updated.plantingDate?.getTime() ?? null
+        plantingDate: updated.plantingDate?.getTime() ?? null,
+        sourceProvenance: updated.sourceProvenance ?? null
       };
     }
   }
@@ -320,7 +333,8 @@ export function addPlanting(input: {
         status: input.plantingDate === null ? 'planned' : 'active',
         quantityPlantedHundredths:
           input.quantityPlanted !== undefined ? Math.round(input.quantityPlanted * 100) : null,
-        quantityUnit: input.quantityUnit ?? null
+        quantityUnit: input.quantityUnit ?? null,
+        sourceProvenance: input.sourceProvenance ?? null
       })
     )
     .returning()
@@ -330,7 +344,8 @@ export function addPlanting(input: {
     blockId: row.blockId,
     cropPluginId: row.cropPluginId,
     varietyDisplayName: row.varietyDisplayName,
-    plantingDate: row.plantingDate?.getTime() ?? null
+    plantingDate: row.plantingDate?.getTime() ?? null,
+    sourceProvenance: row.sourceProvenance ?? null
   };
 }
 

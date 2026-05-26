@@ -253,6 +253,20 @@
       "when": 1779997500000,
       "tag": "0035_phase25d_wizard_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1780013700000,
+      "tag": "0036_sprint3_crops_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1780013701000,
+      "tag": "0037_sprint3_wizard_drafts",
+      "breakpoints": true
     }
   ]
 }

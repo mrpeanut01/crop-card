@@ -18,7 +18,15 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import {
+  index,
+  integer,
+  primaryKey,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex
+} from 'drizzle-orm/sqlite-core';
 import type { TenantScoped } from './tenant';
 
 /** Marks a table as tenant-scoped at the type level. Pure type cast; emits
@@ -470,7 +478,14 @@ export const crops = tenantScoped(
        *  the dent/grain harvest window, or `["fresh-eating","dry-storage"]`
        *  to keep both. The loader filters `growthStageTable.harvestTargets`
        *  through this list before computing per-bar harvest windows. */
-      harvestUseCases: text('harvest_use_cases')
+      harvestUseCases: text('harvest_use_cases'),
+      /** Sprint 3 (#212 / CT-PP-004) — provenance tag the wizard commit
+       *  flow writes so PlanV2Shell can render the right PlantingCard
+       *  source badge ("AI plan" / "Carry-forward") instead of the
+       *  catch-all "Manual entry". NULL = manual drag-drop (the existing
+       *  /plan?tab=crops behavior); explicit `'ai'` or `'fallback'` for
+       *  wizard runs. */
+      sourceProvenance: text('source_provenance', { enum: ['ai', 'fallback'] })
     },
     (table) => ({
       ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),
@@ -1429,6 +1444,34 @@ export const wizardChatMessages = tenantScoped(
         table.step,
         table.createdAt
       )
+    })
+  )
+);
+
+// ─── Sprint 3 (#173 / CT-W-004) — wizard_drafts (Save & resume later) ───
+//
+// One row per (owner, plan_id). Save & resume later snapshots the
+// in-progress wizard step + form state + chat thread; re-opening the
+// wizard hydrates from the most-recent draft. Commit + Exit-with-discard
+// delete the row. Tenant-scoped per CLAUDE.md invariant 6.
+
+export const wizardDrafts = tenantScoped(
+  sqliteTable(
+    'wizard_drafts',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      planId: text('plan_id').notNull(),
+      step: text('step').notNull(),
+      payloadJson: text('payload_json').notNull(),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      createdByUserId: text('created_by_user_id').references(() => users.id)
+    },
+    (table) => ({
+      ownerPlanUq: uniqueIndex('wizard_drafts_owner_plan_uq').on(table.ownerId, table.planId),
+      ownerUpdatedIdx: index('wizard_drafts_owner_updated_idx').on(table.ownerId, table.updatedAt)
     })
   )
 );

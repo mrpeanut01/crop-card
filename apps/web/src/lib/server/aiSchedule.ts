@@ -447,6 +447,12 @@ export async function schedulePlantings(
   );
 
   const apiKey = getApiKey();
+  // #210 — parity-log so allocate vs schedule divergence is visible. Both
+  // endpoints route through `getApiKey()` (env-var first, settings second);
+  // matching log lines make a mismatch trivial to spot.
+  console.log(
+    `[ai-schedule] apiKey present=${!!apiKey} envKey=${!!process.env.ANTHROPIC_API_KEY} settingsKey=${!!(apiKey && !process.env.ANTHROPIC_API_KEY)}`
+  );
   if (!apiKey) {
     const det = buildDeterministicSchedule(input, windows, successionFits);
     return {

@@ -23,12 +23,20 @@
     InputsPlan,
     InputsPlanApplication,
     InputsPlanProvisionalPlanting,
-    InputsPlanScoutTask
+    InputsPlanScoutTask,
+    PlannerWarning
   } from '$lib/plan/inputsPlan';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   interface Props {
     plantings: ReadonlyArray<InputsPlanProvisionalPlanting>;
     year: number;
+    /** #214 — passed in by `AllocationWizard` so the legend mirrors the
+     *  Schedule step's "Where this data came from" surface. Reflects the
+     *  presence of an Anthropic key at wizard mount; the per-row provenance
+     *  chip flips to `fallback` whenever `planMeta.fallback` is set. */
+    aiEnabled?: boolean;
     onCommit: (accepted: {
       applications: InputsPlanApplication[];
       scoutTasks: InputsPlanScoutTask[];
@@ -41,7 +49,42 @@
     onBack: () => void;
   }
 
-  let { plantings, year, onCommit, onBack }: Props = $props();
+  let { plantings, year, aiEnabled = false, onCommit, onBack }: Props = $props();
+
+  /** #211 — translate raw `PlannerWarning.kind` enum keys into human copy
+   *  with planting name + recommended action, so users don't see bare
+   *  identifiers like `no-growth-stage-table`. */
+  function warningCopy(w: PlannerWarning): { title: string; body: string } {
+    const plantingName =
+      plantings.find((p) => p.id === w.plantingId)?.varietyDisplayName ?? 'this planting';
+    switch (w.kind) {
+      case 'no-compliant-product':
+        return {
+          title: `No compliant product for ${plantingName}`,
+          body: `${w.reason} — review on /settings/season and /stock, or relax the philosophy filter.`
+        };
+      case 'missing-yield-goal':
+        return {
+          title: `Yield goal missing for ${plantingName}`,
+          body: `Family "${w.cropFamily}" has no yield-goal default. N/P/K rates use a conservative fallback; edit the planting to set a target yield for sharper rates.`
+        };
+      case 'missing-spray-window-purpose':
+        return {
+          title: `Spray-window purpose missing on ${plantingName}`,
+          body: `Crop plugin "${w.cropPluginId}" has a "${w.windowTitle}" window without a tagged purpose — that window was skipped. File a plugin issue or add the purpose field.`
+        };
+      case 'missing-anchor-date':
+        return {
+          title: `No planting date set on ${plantingName}`,
+          body: `Schedule a planting date in the Schedule step so applications can anchor to it.`
+        };
+      case 'no-growth-stage-table':
+        return {
+          title: `No IPM scout cadence library for ${plantingName}`,
+          body: `Crop plugin "${w.cropPluginId}" isn't in the growth-stage table — a general 7-day scouting reminder was added in place of the targeted cadence.`
+        };
+    }
+  }
 
   let plan = $state<InputsPlan | null>(null);
   let planMeta = $state<{
@@ -230,6 +273,14 @@
 
     <div class="layout">
       <main class="cards">
+        <ProvenanceLegend
+          shown={aiEnabled && !planMeta?.fallback
+            ? ['plugin', 'data', 'ai', 'manual']
+            : ['plugin', 'data', 'fallback', 'manual']}
+          note={aiEnabled && !planMeta?.fallback
+            ? 'Rates from plugin defaults · AI substitutes products · all editable'
+            : 'AI off · deterministic plan · plugin + your records'}
+        />
         {#each plantings as planting (planting.id)}
           {@const apps = appsByPlanting.get(planting.id) ?? []}
           {@const scouts = scoutsByPlanting.get(planting.id) ?? []}
@@ -275,6 +326,10 @@
                           {app.productDisplayName ?? '⚠ pick product'}
                         </span>
                         <span class="row-date">{fmtDate(app.applicationDateMs)}</span>
+                        <Provenance
+                          source={planMeta?.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+                          compact
+                        />
                       </div>
                       <p class="rationale">{app.rationale}</p>
                       {#if app.rateAmount != null && app.rateUnit}
@@ -301,6 +356,7 @@
                         <span class="slot-pill" data-category="scout">scout</span>
                         <span class="product-name">{scout.title}</span>
                         <span class="row-date">every {scout.recurrenceDays}d</span>
+                        <Provenance source="plugin" compact />
                       </div>
                       <p class="rationale">{scout.body}</p>
                     </div>
@@ -312,15 +368,14 @@
         {/each}
 
         {#if plan.warnings.length > 0}
-          <section class="card warn">
-            <h3>Warnings ({plan.warnings.length})</h3>
-            <ul>
+          <section class="card warn" aria-labelledby="ips-warn-heading">
+            <h3 id="ips-warn-heading">Warnings ({plan.warnings.length})</h3>
+            <ul class="warn-list">
               {#each plan.warnings as w, i (i)}
+                {@const c = warningCopy(w)}
                 <li>
-                  <code>{w.kind}</code>
-                  {#if 'reason' in w}— {w.reason}{/if}
-                  {#if 'cropFamily' in w}— family {w.cropFamily}{/if}
-                  {#if 'windowTitle' in w}— window "{w.windowTitle}"{/if}
+                  <strong>{c.title}</strong>
+                  <p class="warn-body">{c.body}</p>
                 </li>
               {/each}
             </ul>
@@ -406,6 +461,28 @@
   .card.warn {
     background: #fff8e1;
     border-color: #f1c40f;
+  }
+  .warn-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .warn-list li {
+    padding-left: 0;
+  }
+  .warn-list strong {
+    display: block;
+    color: #5b3a00;
+    font-size: 13.5px;
+    margin-bottom: 2px;
+  }
+  .warn-body {
+    margin: 0;
+    color: #5b3a00;
+    font-size: 12.5px;
+    line-height: 1.45;
   }
   .card.info {
     background: #e3f2fd;

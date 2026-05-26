@@ -250,6 +250,11 @@
               planting={p}
               daysToMaturity={meta?.daysToMaturity}
               companions={companionsFor(p.id)}
+              sourceTag={p.sourceProvenance === 'ai'
+                ? 'AI plan'
+                : p.sourceProvenance === 'fallback'
+                  ? 'Carry-forward'
+                  : undefined}
               onCompanionClick={(id) => selectPlanting(plantings.findIndex((x) => x.id === id))}
             />
           {/each}
@@ -261,6 +266,11 @@
             planting={activePlanting}
             daysToMaturity={meta?.daysToMaturity}
             companions={companionsFor(activePlanting.id)}
+            sourceTag={activePlanting.sourceProvenance === 'ai'
+              ? 'AI plan'
+              : activePlanting.sourceProvenance === 'fallback'
+                ? 'Carry-forward'
+                : undefined}
             onCompanionClick={(id) => selectPlanting(plantings.findIndex((x) => x.id === id))}
           />
         </div>

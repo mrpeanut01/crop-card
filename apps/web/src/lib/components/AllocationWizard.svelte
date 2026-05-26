@@ -1326,6 +1326,12 @@
       failed: []
     };
     const quantities = buildCommitQuantities(response.assignments);
+    // #212 — every wizard-committed planting carries a provenance flag so
+    // PlantingCard's footer reads "AI plan" / "Fallback" instead of the
+    // catch-all "Manual entry". Driven by the allocate response's
+    // meta.fallback (set by aiTry on no-key / over-cap / quota-exceeded /
+    // engine-only AI validation failures).
+    const planProvenance: 'ai' | 'fallback' = response.meta.fallback ? 'fallback' : 'ai';
     for (const a of response.assignments) {
       const seedEntry = seedStock.find((s) => s.stockItemId === a.stockItemId);
       const unit = seedEntry?.defaultUnit ?? 'seeds';
@@ -1339,7 +1345,8 @@
             varietyDisplayName: a.varietyDisplayName,
             quantityPlanted: quantityForCommit,
             quantityUnit: unit,
-            stockItemId: a.stockItemId
+            stockItemId: a.stockItemId,
+            sourceProvenance: planProvenance
           })
         });
         if (!res.ok) {
@@ -1352,6 +1359,7 @@
     }
     if (commitProgress.failed.length === 0) {
       await commitAcceptedInputs();
+      await discardDraft();
       onCommitted();
     }
   }
@@ -1387,6 +1395,12 @@
       const quantityForCommit = isInteger
         ? Math.max(0, Math.round(seedQty))
         : Number(seedQty.toFixed(3));
+      // #212 — provenance flag derived from BOTH the allocator AND the
+      // scheduler: if either fell back to deterministic, the planting
+      // carries 'fallback'; otherwise 'ai'. Mirrors the per-row chip on
+      // the review + schedule steps.
+      const planProvenance: 'ai' | 'fallback' =
+        response?.meta.fallback || scheduleResponse?.meta.fallback ? 'fallback' : 'ai';
       try {
         const res = await fetch(`/api/blocks/${p.blockId}/plantings`, {
           method: 'POST',
@@ -1397,7 +1411,8 @@
             quantityPlanted: quantityForCommit,
             quantityUnit: unit,
             stockItemId: p.stockItemId,
-            plantingDate: p.plantingDateMs
+            plantingDate: p.plantingDateMs,
+            sourceProvenance: planProvenance
           })
         });
         if (!res.ok) {
@@ -1414,6 +1429,7 @@
     }
     if (commitProgress.failed.length === 0) {
       await commitAcceptedInputs();
+      await discardDraft();
       onCommitted();
     }
   }
@@ -1543,8 +1559,150 @@
       }, 0)
   );
 
+  // #173 — Save & resume later. Plumbing for the wizard's third exit
+  // gesture. `saveAndResumeLater` snapshots the in-progress step + form
+  // state and exits. On re-open, `hydrateDraft` looks up the saved row and
+  // restores selectedSeeds + selectedBlockIds + chatDraft so the user
+  // lands exactly where they left off.
+  let draftSaving = $state(false);
+  let draftSaveError = $state<string | null>(null);
+  let draftHydrated = $state(false);
+
+  async function saveAndResumeLater(): Promise<void> {
+    draftSaving = true;
+    draftSaveError = null;
+    try {
+      const res = await fetch('/api/plan/wizard/draft', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          step,
+          payload: {
+            step,
+            selectedSeeds: [...selectedSeeds.entries()],
+            selectedBlockIds: [...selectedBlockIds],
+            chatDraft
+          }
+        })
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        draftSaveError = body.error ?? `HTTP ${res.status}`;
+        return;
+      }
+      onClose();
+    } catch (e) {
+      draftSaveError = e instanceof Error ? e.message : String(e);
+    } finally {
+      draftSaving = false;
+    }
+  }
+
+  async function discardDraft(): Promise<void> {
+    try {
+      await fetch('/api/plan/wizard/draft', { method: 'DELETE' });
+    } catch {
+      // non-fatal — the row will get overwritten on the next save or
+      // cleared when the wizard commits.
+    }
+  }
+
+  $effect(() => {
+    if (draftHydrated) return;
+    draftHydrated = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/plan/wizard/draft');
+        if (!res.ok) return;
+        const body = (await res.json()) as {
+          draft: {
+            step: string;
+            payload: {
+              selectedSeeds: Array<[string, number]>;
+              selectedBlockIds: string[];
+              chatDraft: string;
+            };
+          } | null;
+        };
+        if (!body.draft) return;
+        if (body.draft.payload.selectedSeeds.length > 0) {
+          selectedSeeds = new Map(body.draft.payload.selectedSeeds);
+        }
+        if (body.draft.payload.selectedBlockIds.length > 0) {
+          selectedBlockIds = new Set(body.draft.payload.selectedBlockIds);
+        }
+        if (body.draft.payload.chatDraft) {
+          chatDraft = body.draft.payload.chatDraft;
+        }
+        const validSteps: Step[] = [
+          'season-setup',
+          'plan-state',
+          'seeds',
+          'blocks',
+          'review',
+          'schedule',
+          'inputs',
+          'commit'
+        ];
+        if ((validSteps as string[]).includes(body.draft.step)) {
+          step = body.draft.step as Step;
+        }
+      } catch {
+        // Resume is best-effort — keep the wizard usable even if the
+        // draft fetch fails.
+      }
+    })();
+  });
+
+  // #187 — focus trap for the modal dialog. On mount we focus the modal so
+  // screen readers announce "dialog" + the header; tabbing past the last
+  // focusable element wraps to the first (and vice versa for Shift-Tab).
+  let modalEl: HTMLDivElement | null = $state(null);
+
+  function getFocusable(): HTMLElement[] {
+    if (!modalEl) return [];
+    const sel =
+      'button:not([disabled]):not([aria-hidden="true"]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return Array.from(modalEl.querySelectorAll<HTMLElement>(sel)).filter(
+      (el) => el.offsetParent !== null || el === document.activeElement
+    );
+  }
+
+  $effect(() => {
+    if (!modalEl) return;
+    queueMicrotask(() => {
+      const focusables = getFocusable();
+      if (focusables.length === 0) return;
+      const active = document.activeElement;
+      if (!active || !modalEl?.contains(active)) {
+        focusables[0]?.focus();
+      }
+    });
+  });
+
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && step !== 'commit') onClose();
+    if (e.key === 'Escape' && step !== 'commit') {
+      onClose();
+      return;
+    }
+    if (e.key === 'Tab' && modalEl) {
+      const focusables = getFocusable();
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey) {
+        if (active === first || !modalEl.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
   }
 </script>
 
@@ -1560,15 +1718,35 @@
 {/snippet}
 
 {#snippet chatPanel()}
+  <!-- #171 — header now surfaces the model identity ("haiku-4-5 ·
+       grounded on your plugins") when AI is enabled, and swaps to a
+       distinct "AI assistant is off" variant otherwise. The full
+       right-rail layout pull-out from the design mockup remains a
+       follow-on refactor (touches every step's aw-body shape); the
+       in-step chat panel keeps working in the meantime and now reads
+       correctly across all modes. -->
   <section class="aw-chat" aria-label="Refine plan with AI">
-    <header class="aw-chat-header">
-      <h3>💬 Refine with AI</h3>
-      <span class="muted">
-        {#if step === 'schedule'}Ask for date changes; the schedule above updates each turn.
-        {:else}Ask for changes; the plan above updates each turn.
-        {/if}
-      </span>
-    </header>
+    {#if aiEnabled}
+      <header class="aw-chat-header">
+        <h3>💬 Refine with AI</h3>
+        <span class="muted aw-chat-model"> claude-haiku-4-5 · grounded on your plugins </span>
+        <span class="muted">
+          {#if step === 'schedule'}Ask for date changes; the schedule above updates each turn.
+          {:else}Ask for changes; the plan above updates each turn.
+          {/if}
+        </span>
+      </header>
+    {:else}
+      <header class="aw-chat-header aw-chat-header-off">
+        <h3>AI assistant is off</h3>
+        <span class="muted">
+          Add an Anthropic API key on
+          <a href="/settings/ai" class="aw-chat-key-link">Settings → AI</a>
+          to refine this plan with Claude. Without a key, every value above is the deterministic engine's
+          output — edit by hand or regenerate.
+        </span>
+      </header>
+    {/if}
     <div class="aw-chat-log" bind:this={chatLogEl} role="log" aria-live="polite">
       {#each chatMessages as msg, i (i)}
         <div class={`chat-msg chat-${msg.role}`}>
@@ -1607,27 +1785,33 @@
         </span>
       </div>
     {/if}
-    <form
-      class="aw-chat-input"
-      onsubmit={(e) => {
-        e.preventDefault();
-        void sendChat();
-      }}
-    >
-      <textarea
-        rows="2"
-        placeholder={step === 'schedule'
-          ? 'e.g. "Plant the corn the first week of May" or "Push brassicas two weeks later"'
-          : 'e.g. "Move the corn off the narrow block" or "Give the brassicas more room"'}
-        bind:value={chatDraft}
-        onkeydown={onChatKeydown}
-        disabled={chatBusy}
-        aria-label="Refinement request"
-      ></textarea>
-      <button type="submit" class="btn-primary chat-send" disabled={chatBusy || !chatDraft.trim()}>
-        {chatBusy ? '…' : 'Send'}
-      </button>
-    </form>
+    {#if aiEnabled}
+      <form
+        class="aw-chat-input"
+        onsubmit={(e) => {
+          e.preventDefault();
+          void sendChat();
+        }}
+      >
+        <textarea
+          rows="2"
+          placeholder={step === 'schedule'
+            ? 'e.g. "Plant the corn the first week of May" or "Push brassicas two weeks later"'
+            : 'e.g. "Move the corn off the narrow block" or "Give the brassicas more room"'}
+          bind:value={chatDraft}
+          onkeydown={onChatKeydown}
+          disabled={chatBusy}
+          aria-label="Refinement request"
+        ></textarea>
+        <button
+          type="submit"
+          class="btn-primary chat-send"
+          disabled={chatBusy || !chatDraft.trim()}
+        >
+          {chatBusy ? '…' : 'Send'}
+        </button>
+      </form>
+    {/if}
   </section>
 {/snippet}
 
@@ -1640,13 +1824,21 @@
     if (e.target === e.currentTarget && step !== 'commit') onClose();
   }}
 >
-  <div class="aw-modal" role="dialog" aria-modal="true" aria-labelledby="aw-title">
+  <div
+    class="aw-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="aw-title"
+    bind:this={modalEl}
+    tabindex="-1"
+  >
     <WizardHeader
       seasonYear={currentYear}
       activeStepId={step}
       steps={wizardSteps}
       onExit={onClose}
       onStepClick={canJumpToStep}
+      onSaveAndResume={saveAndResumeLater}
     />
 
     {#if activeSetup && step !== 'season-setup'}
@@ -1884,6 +2076,18 @@
               >
                 {seedStockRefreshing ? 'Refreshing…' : 'I’ve added stock — refresh'}
               </button>
+              <!-- #175 — explicit skip path so the seeds step is never a
+                   dead-end. Closes the wizard with a clear "come back later"
+                   gesture; pairs with #173 Save & resume later once that
+                   lands. -->
+              <button
+                type="button"
+                class="btn-link"
+                onclick={onClose}
+                data-action="skip-seeds-for-now"
+              >
+                Skip — I’ll add seed stock later
+              </button>
             </div>
           </div>
         {:else if eligibleStock.length === 0 && noPluginStock.length > 0}
@@ -2044,14 +2248,14 @@
           <p class="aw-error">Error: {error}</p>
         {:else if response}
           {#if response.meta.fallback}
-            <div class="aw-banner warn" role="status" aria-live="polite">
+            <div class="aw-banner warn" role="alert" aria-live="assertive">
               {response.meta.fallback === 'no-api-key'
                 ? 'No Anthropic API key configured — plan generated by the deterministic engine. Add a key on /settings/ai to enable the AI rationale layer.'
                 : response.meta.fallback === 'over-cap'
                   ? 'Monthly AI cap reached — plan generated by the deterministic engine. Raise the cap on /settings/ai to restore AI refinement.'
                   : response.meta.fallback === 'quota-exceeded'
                     ? 'Today’s AI quota reached — plan generated by the deterministic engine. Retry tomorrow or raise the quota on /settings/ai.'
-                    : 'AI output failed validation; falling back to the deterministic engine.'}
+                    : 'Plan generated by the deterministic engine after AI output failed validation twice.'}
             </div>
           {/if}
           {#if (response.geometryMissingBlockIds ?? []).length > 0}
@@ -2064,19 +2268,35 @@
               field geometry on /fields to enable.
             </div>
           {/if}
+          <!-- #172 — provenance legend mirroring the Schedule step so every
+               pre-populated value carries an explicit source signal per
+               Invariant 7 + the AI provenance addendum. -->
+          <ProvenanceLegend
+            shown={aiEnabled && !response.meta.fallback
+              ? ['plugin', 'data', 'ai', 'manual']
+              : ['plugin', 'data', 'fallback', 'manual']}
+            note={aiEnabled && !response.meta.fallback
+              ? 'Blocks AI-proposed within plugin-derived constraints · editable per row'
+              : 'AI off · deterministic allocator · plugin rules + your blocks'}
+          />
           <!-- #209 / CT-PP-007 — on fallback the AI's stale narrative is
                discarded and replaced with a deterministic engine handoff
                so chat narrative cannot contradict the per-row table below.
                Server already swaps response.rationale; this is the
                defence-in-depth render-side check. -->
-          {#if response.meta.fallback}
-            <p class="aw-rationale">
+          <p class="aw-rationale">
+            {#if response.meta.fallback}
               {response.rationale ||
                 'Deterministic engine plan — see the "Why" column for per-row reasoning.'}
-            </p>
-          {:else}
-            <p class="aw-rationale">{response.rationale}</p>
-          {/if}
+            {:else}
+              {response.rationale}
+            {/if}
+            <Provenance
+              source={response.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+              detail={response.meta.fallback ? 'deterministic allocator' : undefined}
+              compact
+            />
+          </p>
           <table class="aw-table">
             <thead>
               <tr>
@@ -2085,6 +2305,7 @@
                 <th>Plants</th>
                 <th>Block fit</th>
                 <th>Why</th>
+                <th>Source</th>
               </tr>
             </thead>
             <tbody>
@@ -2110,6 +2331,12 @@
                     {/if}
                   </td>
                   <td class="why">{response.perRowRationale[key] ?? ''}</td>
+                  <td class="cell-provenance">
+                    <Provenance
+                      source={response.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+                      compact
+                    />
+                  </td>
                 </tr>
               {/each}
             </tbody>
@@ -2156,7 +2383,7 @@
             <button class="btn-secondary" onclick={advanceToSchedule}>Retry</button>
           {:else if scheduleResponse}
             {#if scheduleResponse.meta.fallback}
-              <div class="aw-banner info">
+              <div class="aw-banner info" role="alert" aria-live="assertive">
                 {scheduleResponse.meta.fallback === 'no-api-key'
                   ? '🛟 Dates picked by the deterministic scheduler (no Anthropic API key). Staggers + companion offsets honored.'
                   : '🛟 AI needed help — deterministic scheduler took over. See chat below for what tripped it up and refine from there.'}
@@ -2214,6 +2441,7 @@
         <InputsPlanStep
           plantings={provisionalPlantings()}
           year={currentYear}
+          {aiEnabled}
           onCommit={handleInputsAccepted}
           onBack={() => (step = 'schedule')}
         />
@@ -2704,6 +2932,24 @@
     font-size: 0.95rem;
     color: var(--color-forest);
   }
+  .aw-chat-header-off {
+    background: var(--color-wheat-soft, #fbf3df);
+    border-color: #e0d5b0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .aw-chat-header-off h3 {
+    color: var(--color-wheat-deep, #8a6722);
+  }
+  .aw-chat-model {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.78rem;
+    color: var(--color-ink-muted);
+  }
+  .aw-chat-key-link {
+    color: var(--color-forest-deep, #1f3522);
+    text-decoration: underline;
+  }
   .aw-chat-log {
     display: flex;
     flex-direction: column;
@@ -3030,6 +3276,19 @@
     text-decoration: none;
     display: inline-flex;
     align-items: center;
+  }
+  .aw-seed-empty-actions .btn-link {
+    background: transparent;
+    border: none;
+    color: var(--color-ink-muted);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0.5rem 0.6rem;
+    margin-left: auto;
+  }
+  .aw-seed-empty-actions .btn-link:hover {
+    color: var(--color-forest-deep, #1f3522);
   }
 
   /* #252 / CT-W-007 — needs-plugin section. Same visual register as

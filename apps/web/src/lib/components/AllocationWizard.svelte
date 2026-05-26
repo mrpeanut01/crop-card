@@ -263,6 +263,25 @@
 
   let seedSearch = $state('');
 
+  // #175 / CT-W-006 (Sprint 1 link-out, Sprint 3 embed) — Seeds step
+  // dead-end recovery. When `eligibleStock` is empty, the empty-state
+  // card below lets the user open /stock/add in a new tab and then
+  // refresh the wizard data in place. `seedStockRefreshing` debounces
+  // the refresh button so a slow loader doesn't double-fire.
+  // Spec: docs/design/almanac/direction-almanac-wizard.jsx §seeds-fallback.
+  let seedStockRefreshing = $state(false);
+  async function refreshSeedStock() {
+    if (!onRefreshParent || seedStockRefreshing) return;
+    seedStockRefreshing = true;
+    try {
+      await onRefreshParent();
+    } catch {
+      /* non-fatal; the wizard keeps its prior seedStock prop */
+    } finally {
+      seedStockRefreshing = false;
+    }
+  }
+
   const eligibleStock = $derived(seedStock.filter((s) => !!s.cropPluginId && s.onHand > 0));
 
   const filteredEligibleStock = $derived.by(() => {
@@ -1627,7 +1646,50 @@
           Pick the seed lots you want to plant. Adjust quantity per row — defaults to on-hand.
         </p>
         {#if eligibleStock.length === 0}
-          <p class="empty">No seed stock with a known crop plugin and on-hand &gt; 0.</p>
+          <!-- #175 (CT-W-006) — empty-state card replaces the previous
+               dead-end `<p>`. The Sprint-1 link-out path opens
+               /stock/add in a new tab so the wizard modal + step state
+               stay mounted while the user adds inventory; the Sprint-3
+               follow-up extends this same `.aw-seed-empty` block with
+               an inline embedded form (toggle pattern) without changing
+               the CTAs below. Touch this block, not its callers. -->
+          <div class="aw-seed-empty" data-empty-state="seed-stock">
+            <h3 class="aw-seed-empty-title">No seed stock yet</h3>
+            <p class="aw-seed-empty-lede">
+              Seed lots are tracked in Inventory — packets, bulk orders, and saved seed all belong
+              there. Add at least one lot with a known crop plugin and on-hand greater than zero,
+              then come back here to plan the season.
+            </p>
+            <div class="aw-seed-empty-actions">
+              <a
+                class="btn-primary"
+                href="/stock/add"
+                target="_blank"
+                rel="noopener"
+                data-action="add-seed-stock"
+              >
+                Add seed stock ↗
+              </a>
+              <a
+                class="btn-secondary"
+                href="/stock"
+                target="_blank"
+                rel="noopener"
+                data-action="open-stock"
+              >
+                Open Stock ↗
+              </a>
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick={refreshSeedStock}
+                disabled={seedStockRefreshing || !onRefreshParent}
+                data-action="refresh-seed-stock"
+              >
+                {seedStockRefreshing ? 'Refreshing…' : 'I’ve added stock — refresh'}
+              </button>
+            </div>
+          </div>
         {:else}
           <div class="aw-search-row">
             <input
@@ -2736,5 +2798,39 @@
   .empty {
     color: #6a7d6a;
     font-style: italic;
+  }
+
+  /* #175 (CT-W-006) — Seeds step empty-state card. Sized to feel like
+     a "next step" card rather than an error. Sprint 3 extends this
+     block with an inline embedded stock-add form; keep the class
+     names stable so that work doesn't need to re-style. */
+  .aw-seed-empty {
+    border: 1px solid var(--color-divider, #d8dcd1);
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+    background: var(--color-cream, #fbfaf3);
+    margin-block: 1rem 0.5rem;
+  }
+  .aw-seed-empty-title {
+    margin: 0 0 0.4rem 0;
+    font-size: 1.05rem;
+    color: var(--color-forest-deep, #1f3522);
+  }
+  .aw-seed-empty-lede {
+    margin: 0 0 1rem 0;
+    color: #4a5a4a;
+    line-height: 1.45;
+  }
+  .aw-seed-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+  }
+  .aw-seed-empty-actions .btn-primary,
+  .aw-seed-empty-actions .btn-secondary {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
   }
 </style>

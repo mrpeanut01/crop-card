@@ -68,6 +68,7 @@ import type {
 } from '$lib/season/setup';
 
 import { effectiveAcresFor } from '$lib/db/blocks';
+import { coverCropCreditRationale, coverCropNCreditLbPerAcre } from './coverCropNCredit';
 
 /* ─── Tier comparators ──────────────────────────────────────────────── */
 
@@ -694,8 +695,15 @@ function planForPlanting(
       p: pCreditFromSoilTestLbPerAcre(test),
       k: kCreditFromSoilTestLbPerAcre(test)
     };
+    // #228: subtract cover-legume N credit when the operator picked
+    // 'cover-crop-credits'. Without this, vetch → corn still recommends
+    // the full removal target and defeats the whole approach.
+    const coverNCredit =
+      seasonSetup.fertilityApproach === 'cover-crop-credits'
+        ? coverCropNCreditLbPerAcre(seasonSetup.coverCropIntent)
+        : 0;
     const deficit = {
-      n: removal.nRemovalLbPerAcre - soilCredits.n - explicitCredits.n,
+      n: removal.nRemovalLbPerAcre - soilCredits.n - explicitCredits.n - coverNCredit,
       p: removal.pRemovalLbPerAcre - soilCredits.p - explicitCredits.p,
       k: removal.kRemovalLbPerAcre - soilCredits.k - explicitCredits.k
     };
@@ -744,7 +752,11 @@ function planForPlanting(
           `N ${Math.max(0, deficit.n).toFixed(0)} lb/ac, ` +
           `P₂O₅ ${Math.max(0, deficit.p).toFixed(0)} lb/ac, ` +
           `K₂O ${Math.max(0, deficit.k).toFixed(0)} lb/ac ` +
-          `(${crop.cropFamily} removal at family default − soil credits − fertility credits).`
+          `(${crop.cropFamily} removal at family default − soil credits − fertility credits` +
+          (coverNCredit > 0
+            ? ` − ${coverCropCreditRationale(seasonSetup.coverCropIntent)?.replace(/^Cover-crop N credit: /, '')}`
+            : '') +
+          `).`
       });
     }
   }

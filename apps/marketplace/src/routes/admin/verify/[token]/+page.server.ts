@@ -10,7 +10,15 @@ import { writeAdminSession } from '$lib/server/adminSession';
  */
 export const load: PageServerLoad = async ({ params, cookies }) => {
   const token = params.token;
-  const redeemed = redeemLoginToken(token);
+  // #232 (CT-MP-001): any failure path (invalid token, expired, already
+  // used, OR DB unavailable) must collapse to the same 400. Letting the
+  // DB error propagate exposes server state via the status-code split.
+  let redeemed: ReturnType<typeof redeemLoginToken> | null = null;
+  try {
+    redeemed = redeemLoginToken(token);
+  } catch {
+    redeemed = null;
+  }
   if (!redeemed) {
     throw error(
       400,

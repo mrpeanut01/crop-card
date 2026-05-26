@@ -92,7 +92,7 @@ export function requireSuperadmin(event: RequestEvent): AuthenticatedUser {
  */
 export interface LoginResult {
   user: AuthenticatedUser;
-  next: 'onboarding' | 'picker' | 'today';
+  next: 'onboarding' | 'picker' | 'today' | 'admin';
 }
 
 export function loginByEmail(
@@ -122,6 +122,29 @@ export function loginByEmail(
 
   const assignments = activeAssignmentsForUser(userId);
   if (assignments.length === 0) {
+    // #222: a superadmin without any helper_assignments should NOT bounce
+    // through /onboarding — their job is to manage other Owners, not become
+    // one. Mint the same partial session shape but route to /admin/owners.
+    if (isSuperadmin) {
+      writeSession(event.cookies, {
+        id: userId,
+        email: userEmail,
+        isSuperadmin,
+        activeOwnerId: null,
+        activeRole: 'owner'
+      });
+      return {
+        user: {
+          id: userId,
+          email: userEmail,
+          role: 'owner',
+          activeOwnerId: null,
+          isSuperadmin,
+          impersonating: false
+        },
+        next: 'admin'
+      };
+    }
     // First-time signup: mint a partial session with no active Owner and
     // redirect to /onboarding. The onboarding form completes the assignment.
     writeSession(event.cookies, {
@@ -191,6 +214,12 @@ export function loginByEmail(
  *  the routing so /signin actions don't have to duplicate the mapping. */
 export function redirectFromLogin(next: LoginResult['next']): never {
   const path =
-    next === 'onboarding' ? '/onboarding' : next === 'picker' ? '/owner-picker' : '/today';
+    next === 'onboarding'
+      ? '/onboarding'
+      : next === 'picker'
+        ? '/owner-picker'
+        : next === 'admin'
+          ? '/admin/owners'
+          : '/today';
   throw redirect(303, path);
 }

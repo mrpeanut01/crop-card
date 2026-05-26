@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { CROP_FAMILIES, type CropFamily } from '$lib/safety/cropFamilyLethality';
 import type { ScheduleWindow } from './scheduleCandidacy';
-import { evaluateSuccessionFit, splitQuantityForSuccession } from './succession';
+import {
+  FAMILY_SUCCESSION_DAYS,
+  evaluateSuccessionFit,
+  splitQuantityForSuccession
+} from './succession';
 
 function fakeWindow(opts: { startMs: number; endMs: number }): ScheduleWindow {
   return {
@@ -75,6 +80,31 @@ describe('evaluateSuccessionFit', () => {
     const fit = evaluateSuccessionFit(longWindow, fakePlug('mystery-family', 60), 'b', 's');
     expect(fit.eligible).toBe(false);
     expect(fit.reason).toMatch(/don't succession/);
+  });
+
+  // Regression #227: succession.ts had 5 family-key typos
+  // ('alliums', 'root-crop', 'culinary-herb', 'cover-crop-grass',
+  //  'cover-crop-legume') that silently denied 36+ plugins. The
+  // Record<CropFamily, number> annotation now blocks compile if any
+  // canonical family is missing — this test is the runtime mirror.
+  it('declares a spacing value for every canonical CropFamily', () => {
+    for (const family of CROP_FAMILIES) {
+      expect(
+        Object.prototype.hasOwnProperty.call(FAMILY_SUCCESSION_DAYS, family),
+        `FAMILY_SUCCESSION_DAYS is missing canonical family "${family}"`
+      ).toBe(true);
+    }
+  });
+
+  it('allium succession lookup hits canonical key (#227)', () => {
+    const fit = evaluateSuccessionFit(longWindow, fakePlug('allium', 60), 'b', 's');
+    expect(fit.suggestedIntervalDays).toBe(21);
+  });
+
+  it('root succession lookup hits canonical key (#227)', () => {
+    const fit = evaluateSuccessionFit(longWindow, fakePlug('root', 50), 'b', 's');
+    expect(fit.suggestedIntervalDays).toBe(14);
+    expect(fit.eligible).toBe(true);
   });
 });
 

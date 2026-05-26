@@ -598,6 +598,80 @@ describe('planInputs — fertility budget arithmetic', () => {
     expect(fertWith?.totalAmount ?? 0).toBeLessThan(fertWithout?.totalAmount ?? 0);
   });
 
+  // Regression #228: 'cover-crop-credits' must subtract cover-legume N
+  // fixation from the deficit. Vetch → corn went from 150 lb-N/ac
+  // (full removal default) to ~85 lb-N/ac (150 − 65 credit) after fix.
+  it('cover-crop-credits + vetch-clover subtracts N credit from deficit (#228)', () => {
+    const crop = buildCrop('corn', 'corn-1');
+    const planting = buildPlanting('p1', 'b1', 'corn-1');
+    const buildIt = (intent: 'vetch-clover' | 'fall-cereal' | 'none') =>
+      planInputs(
+        buildBaseInput({
+          plantings: [planting],
+          blocks: [buildBlock('b1')],
+          cropPlugins: { 'corn-1': crop },
+          seasonSetup: buildSetup('conventional', 'synthetic', {
+            fertilityApproach: 'cover-crop-credits',
+            coverCropIntent: intent
+          })
+        })
+      );
+
+    const vetch = buildIt('vetch-clover');
+    const cereal = buildIt('fall-cereal');
+    const none = buildIt('none');
+
+    const fertVetch = vetch.applications.find((a) => a.slot === 'pre-plant-fertility');
+    const fertCereal = cereal.applications.find((a) => a.slot === 'pre-plant-fertility');
+    const fertNone = none.applications.find((a) => a.slot === 'pre-plant-fertility');
+
+    // Cereal + none give no credit; vetch must reduce the rate.
+    expect(fertVetch?.totalAmount ?? 0).toBeLessThan(fertCereal?.totalAmount ?? 0);
+    expect(fertVetch?.rationale).toMatch(/vetch-clover/);
+
+    // Cereal + none should produce identical deficits since both credit 0.
+    expect(fertCereal?.totalAmount).toBe(fertNone?.totalAmount);
+  });
+
+  it('cover-crop-credits without legume cover (fall-cereal) does NOT credit N (#228)', () => {
+    const crop = buildCrop('corn', 'corn-1');
+    const planting = buildPlanting('p1', 'b1', 'corn-1');
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [planting],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': crop },
+        seasonSetup: buildSetup('conventional', 'synthetic', {
+          fertilityApproach: 'cover-crop-credits',
+          coverCropIntent: 'fall-cereal'
+        })
+      })
+    );
+    const fert = result.applications.find((a) => a.slot === 'pre-plant-fertility');
+    // Rationale should not reference a credit when intent is cereal.
+    expect(fert?.rationale).not.toMatch(/vetch-clover/);
+  });
+
+  it('cover-crop-credits not selected → no N credit even with vetch-clover intent', () => {
+    const crop = buildCrop('corn', 'corn-1');
+    const planting = buildPlanting('p1', 'b1', 'corn-1');
+    const vetchOnly = planInputs(
+      buildBaseInput({
+        plantings: [planting],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': crop },
+        seasonSetup: buildSetup('conventional', 'synthetic', {
+          fertilityApproach: 'synthetic',
+          coverCropIntent: 'vetch-clover'
+        })
+      })
+    );
+    const fert = vetchOnly.applications.find((a) => a.slot === 'pre-plant-fertility');
+    // Rationale must not include the cover-crop credit annotation since
+    // the operator did not choose the credits-based approach.
+    expect(fert?.rationale).not.toMatch(/vetch-clover/);
+  });
+
   it('omits pre-plant fertility application when removal default is unknown (warning emitted)', () => {
     // 'small-fruit' has no FAMILY_REMOVAL_DEFAULTS entry.
     const crop = buildCrop('small-fruit', 'blueberry');

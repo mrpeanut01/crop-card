@@ -17,19 +17,23 @@
  */
 
 import type { CropPlugin } from '$lib/plugins/schemas';
+import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import type { ScheduleWindow } from './scheduleCandidacy';
 
 const ONE_DAY_MS = 86_400_000;
 const BED_TURNOVER_DAYS = 10;
 
-/** Family-keyed succession spacing. Anything not listed → no succession. */
-export const FAMILY_SUCCESSION_DAYS: Record<string, number> = {
+// Record<CropFamily,…> is the compile-time gate against the silent key-mismatch
+// regression #227 — every CropFamily value MUST appear here or the build fails.
+export const FAMILY_SUCCESSION_DAYS: Record<CropFamily, number> = {
   'leafy-green': 14,
-  'root-crop': 14,
+  root: 14,
   legume: 14,
   brassica: 21,
-  alliums: 21,
-  'culinary-herb': 14,
+  allium: 21,
+  'herb-culinary': 14,
+  apiaceae: 14,
+  'broadleaf-companion': 14,
   corn: 14,
   // Long-DTM fruiting crops typically can't succession in Loudoun's season.
   // Set to 0 = not eligible.
@@ -37,12 +41,13 @@ export const FAMILY_SUCCESSION_DAYS: Record<string, number> = {
   solanaceae: 0,
   'stone-fruit': 0,
   'vine-fruit': 0,
-  brambles: 0,
+  bramble: 0,
   'small-fruit': 0,
   orchard: 0,
   forage: 0,
-  'cover-crop-grass': 0,
-  'cover-crop-legume': 0
+  'cereal-grain': 0,
+  'cover-grass': 0,
+  'cover-legume': 0
 };
 
 export interface SuccessionFit {

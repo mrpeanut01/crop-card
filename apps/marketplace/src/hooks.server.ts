@@ -21,14 +21,30 @@ export const handle: Handle = async ({ event, resolve }) => {
   ensureBootstrapped();
 
   // 2. Auth resolution
+  // /api/v1/health bypasses auth entirely — it's a public liveness probe
+  // and must answer even when the DB is down.
+  const isHealthProbe = event.url.pathname === '/api/v1/health';
   const authHeader = event.request.headers.get('authorization');
-  if (authHeader?.toLowerCase().startsWith('bearer ')) {
+  if (!isHealthProbe && authHeader?.toLowerCase().startsWith('bearer ')) {
     const token = authHeader.slice(7).trim();
-    const cred = lookupByPlaintext(token);
+    // #233 (CT-MP-002): a DB error during lookup must NOT leak as a 500.
+    // Probe traffic with a well-formed ccm_ token previously learned the
+    // server state ("DB up vs down") from the status-code split; collapse
+    // every failure mode to 401 so the auth gate is opaque.
+    let cred: ReturnType<typeof lookupByPlaintext> | null = null;
+    try {
+      cred = lookupByPlaintext(token);
+    } catch {
+      cred = null;
+    }
     if (cred) {
       event.locals.app = cred;
       event.locals.authVia = 'bearer';
-      touchCredential(cred.id);
+      try {
+        touchCredential(cred.id);
+      } catch {
+        // Touching last-used is best-effort; never block the request.
+      }
     } else {
       return new Response(
         JSON.stringify({ error: 'invalid or revoked Bearer token' }),

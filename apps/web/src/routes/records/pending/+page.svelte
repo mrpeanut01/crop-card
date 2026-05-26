@@ -3,14 +3,18 @@
   import type { PendingSprayRecord } from '$lib/client/dexie';
 
   let pending = $state<PendingSprayRecord[]>([]);
+  let otherOwnerCount = $state(0);
   let busy = $state(false);
   let lastDrainResult = $state<string | null>(null);
   let dexieAvailable = $state(true);
 
   async function refresh() {
     try {
-      const { listPending } = await import('$lib/client/syncQueue');
-      pending = await listPending();
+      const { listPendingForActiveOwner, pendingCountForOtherOwners } = await import(
+        '$lib/client/syncQueue'
+      );
+      pending = await listPendingForActiveOwner();
+      otherOwnerCount = await pendingCountForOtherOwners();
     } catch {
       dexieAvailable = false;
     }
@@ -33,8 +37,8 @@
 
   async function discard(id: string) {
     if (!confirm('Discard this queued record? This cannot be undone.')) return;
-    const { db } = await import('$lib/client/dexie');
-    await db().pendingSprayRecords.delete(id);
+    const { discardPendingForActiveOwner } = await import('$lib/client/syncQueue');
+    await discardPendingForActiveOwner(id);
     await refresh();
   }
 
@@ -60,6 +64,12 @@
     <a href="/records">All records →</a>
   </div>
   {#if lastDrainResult}<p class="result">{lastDrainResult}</p>{/if}
+  {#if otherOwnerCount > 0}
+    <p class="other-owner-badge" role="status">
+      {otherOwnerCount} queued record{otherOwnerCount === 1 ? '' : 's'} from another farm —
+      switch Owner to sync or discard them.
+    </p>
+  {/if}
   {#if pending.length === 0}
     <p class="empty">Queue is empty.</p>
   {:else}
@@ -134,6 +144,15 @@
   }
   .warn {
     color: #b00020;
+  }
+  .other-owner-badge {
+    background: #fff4e5;
+    border-left: 4px solid #b35900;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    color: #6a3500;
+    font-size: 0.9rem;
+    margin: 0 0 1rem;
   }
   .pending {
     list-style: none;

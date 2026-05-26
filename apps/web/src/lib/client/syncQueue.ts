@@ -82,6 +82,27 @@ export async function listPending(): Promise<PendingSprayRecord[]> {
   return db().pendingSprayRecords.orderBy('createdAt').toArray();
 }
 
+// #240: the UI must never list or operate on a foreign Owner's queued rows.
+// Phase 18h's drain helper already skips cross-owner records; this is the
+// missing read-side filter for the list view + discard.
+export async function listPendingForActiveOwner(): Promise<PendingSprayRecord[]> {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return [];
+  return db()
+    .pendingSprayRecords.where('ownerId')
+    .equals(ownerId)
+    .sortBy('createdAt');
+}
+
+export async function discardPendingForActiveOwner(id: string): Promise<boolean> {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return false;
+  const row = await db().pendingSprayRecords.get(id);
+  if (!row || row.ownerId !== ownerId) return false;
+  await db().pendingSprayRecords.delete(id);
+  return true;
+}
+
 async function submitOne(rec: PendingSprayRecord): Promise<unknown> {
   const res = await fetch('/api/spray/record', {
     method: 'POST',

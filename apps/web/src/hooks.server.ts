@@ -275,7 +275,11 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (!user.activeOwnerId) {
     if (allowsPartialSession(path)) return resolve(event);
     if (isAnonymous(path)) return resolve(event);
-    const next = pickRedirectForPartialSession(user.id);
+    // #222: a superadmin without active assignments lives at /admin/owners.
+    // Both the routing target AND the path allowlist need to honor that —
+    // otherwise direct nav to /admin/owners ricochets back to /onboarding.
+    if (user.isSuperadmin && path.startsWith('/admin')) return resolve(event);
+    const next = user.isSuperadmin ? '/admin/owners' : pickRedirectForPartialSession(user.id);
     throw redirect(303, next);
   }
 

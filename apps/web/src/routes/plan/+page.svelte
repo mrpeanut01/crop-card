@@ -17,15 +17,24 @@
   import PlanV2Shell from '$lib/components/plan/PlanV2Shell.svelte';
   import NewBlockModal from '$lib/components/plan/NewBlockModal.svelte';
   import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
+  import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   // Phase 25b (#81) — controls the legacy <details> open state. The
   // mutation callbacks emitted from PlanV2Shell flip this true so the
   // user lands on the right legacy tab.
   let detailOpen = $state(false);
   // Sprint 3 (#186) — inline modal state for "+ New block" / "+ Add
-  // planting". Routes that used to redirect into the legacy editor now
-  // open these modals in-place so the user stays in the Almanac shell.
+  // planting". Sprint 5 (#260) — same pattern for "Edit block". Routes
+  // that used to redirect into the legacy editor now open these modals
+  // in-place so the user stays in the Almanac shell.
   let showNewBlockModal = $state(false);
   let showNewPlantingModal = $state(false);
+  let showEditBlockModal = $state(false);
+  let editBlockTarget = $state<{
+    id: string;
+    name: string;
+    blockLabel: string | null;
+    acres: number | null;
+  } | null>(null);
   let addPlantingTargetBlockId = $state<string | null>(null);
   let addPlantingTargetBlockName = $state<string>('');
   import PlantingGroupWizard from '$lib/components/PlantingGroupWizard.svelte';
@@ -2419,10 +2428,16 @@
   onAddBlock={() => {
     showNewBlockModal = true;
   }}
-  onEditBlock={() => {
-    detailOpen = true;
-    setTimeout(() => (location.hash = '#legacy-plan'), 50);
-    return goto(tabHref('layout'));
+  onEditBlock={(blockId) => {
+    const block = data.blocks.find((b) => b.id === blockId);
+    if (!block) return;
+    editBlockTarget = {
+      id: block.id,
+      name: block.name,
+      blockLabel: block.blockLabel ?? null,
+      acres: block.acres ?? null
+    };
+    showEditBlockModal = true;
   }}
   onAddPlanting={(blockId) => {
     const block = data.blocks.find((b) => b.id === blockId);
@@ -2439,6 +2454,22 @@
     showNewBlockModal = false;
     await invalidateAll();
     await goto(`?block=${newBlockId}`, { keepFocus: true, noScroll: true });
+  }}
+/>
+
+<EditBlockModal
+  open={showEditBlockModal}
+  block={editBlockTarget}
+  onClose={() => (showEditBlockModal = false)}
+  onSaved={async () => {
+    showEditBlockModal = false;
+    await invalidateAll();
+  }}
+  onEditGeometry={() => {
+    showEditBlockModal = false;
+    detailOpen = true;
+    setTimeout(() => (location.hash = '#legacy-plan'), 50);
+    void goto(tabHref('layout'));
   }}
 />
 

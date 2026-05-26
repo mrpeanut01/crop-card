@@ -71,7 +71,7 @@
   );
 </script>
 
-<span class="prov src-{source}" class:compact title={titleText}>
+<span class="prov src-{source}" class:compact title={titleText} data-provenance={source}>
   <Icon size={compact ? 9 : 10} strokeWidth={1.75} />
   {#if !compact}<span class="label">{meta.label}</span>{/if}
   {#if showConf}<span class="conf mono">{confPct}</span>{/if}

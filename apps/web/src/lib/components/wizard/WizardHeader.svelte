@@ -33,12 +33,23 @@
     activeStepId: string;
     /** Optional title override; if omitted we derive from the active step. */
     title?: string;
+    /** id used by parent `aria-labelledby`. Defaults to `aw-title` to match the
+     *  AllocationWizard dialog wrapper. */
+    titleId?: string;
     onStepClick?: (stepId: string) => void;
     onExit?: () => void;
     onSaveAndResume?: () => void;
   }
-  const { seasonYear, steps, activeStepId, title, onStepClick, onExit, onSaveAndResume }: Props =
-    $props();
+  const {
+    seasonYear,
+    steps,
+    activeStepId,
+    title,
+    titleId = 'aw-title',
+    onStepClick,
+    onExit,
+    onSaveAndResume
+  }: Props = $props();
 
   const activeTitle = $derived(
     title ?? steps.find((s) => s.id === activeStepId)?.label ?? 'Season plan'
@@ -52,7 +63,7 @@
         <Sprout size={12} strokeWidth={1.75} class="wh-kicker-icon" />
         Season {seasonYear} plan · wizard
       </div>
-      <h1 class="serif wh-title">{activeTitle}</h1>
+      <h1 class="serif wh-title" id={titleId}>{activeTitle}</h1>
     </div>
     <div class="wh-actions">
       {#if onExit}
@@ -81,8 +92,10 @@
           onclick={() => onStepClick?.(s.id)}
           disabled={!onStepClick}
           title={s.hint ?? s.label}
+          aria-label={s.label}
+          aria-current={isActive ? 'step' : undefined}
         >
-          <span class="circle" data-state={effectiveState}>
+          <span class="circle" data-state={effectiveState} aria-hidden="true">
             {#if effectiveState === 'done'}
               <Check size={12} strokeWidth={2.5} />
             {:else if effectiveState === 'stale'}

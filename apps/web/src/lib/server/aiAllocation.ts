@@ -174,6 +174,13 @@ export async function allocate(
   }
 
   const apiKey = getApiKey();
+  // #210 — keep both wizard endpoints' key-resolution paths observable so a
+  // divergence between allocate-uses-AI / schedule-falls-back can be
+  // diagnosed from production logs without a debugger. Cheap; runs only when
+  // a wizard request lands.
+  console.log(
+    `[ai-allocate] apiKey present=${!!apiKey} envKey=${!!process.env.ANTHROPIC_API_KEY} settingsKey=${!!(apiKey && !process.env.ANTHROPIC_API_KEY)}`
+  );
   if (!apiKey) {
     return engineFallback(input, matrix, 'no-api-key');
   }

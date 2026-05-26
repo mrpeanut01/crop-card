@@ -37,9 +37,22 @@
   interface Props {
     onSubmit: (draft: StockEntryDraft) => void | Promise<void>;
     busy?: boolean;
+    /** #250 / CT-ST-009 — Invariant 7. When the active user has no
+     *  Anthropic key configured, this tab renders a pre-flight
+     *  empty-state instead of letting the operator hit a dead-end
+     *  after capturing a photo. Resolved via getUserAiEnabled() in
+     *  the /stock/add loader. Defaults to false so legacy callers
+     *  see the safer empty-state path. */
+    aiEnabled?: boolean;
+    /** #251 / CT-ST-010 — recovery from the no-key error path. The
+     *  parent (/stock/add) handles tab switching; when the operator
+     *  picks "Use Manual entry instead" the captured photo is
+     *  preserved into the parent's manual draft (future enhancement)
+     *  while this callback advances the tab. */
+    onSwitchToManual?: () => void;
   }
 
-  const { onSubmit, busy = false }: Props = $props();
+  const { onSubmit, busy = false, aiEnabled = false, onSwitchToManual }: Props = $props();
 
   let fileInput = $state<HTMLInputElement | null>(null);
   let preview = $state<string | null>(null); // data: URL for the preview card
@@ -101,6 +114,14 @@
     }
   }
 
+  // #250 / #251 — detect the canonical no-key error string so the
+  // error CTA can recover (link to settings + offer Manual) rather
+  // than offer the useless "Try another photo" loop. The server
+  // string lives at apps/web/src/lib/server/scanResult.ts:738.
+  const isNoKeyError = $derived(
+    !!extractError && /No Anthropic API key configured/i.test(extractError)
+  );
+
   async function runExtract(dataUrl: string): Promise<void> {
     extracting = true;
     extractError = null;
@@ -141,7 +162,45 @@
     fields — every output gets a provenance tag so you can spot-check before save.
   </p>
 
-  {#if !preview}
+  {#if !aiEnabled}
+    <!-- #250 / CT-ST-009 — pre-flight empty-state when no Anthropic
+         key is configured. Invariant 7 ("AI assists, never gates")
+         requires no-key be a first-class product mode rather than a
+         post-action error. We render an empty-state card with two
+         recovery CTAs: configure the key (opens Settings in a new
+         tab so the /stock/add state survives) or switch to Manual
+         entry (no AI dependency).
+         Spec: docs/design/almanac/AI_PROVENANCE_ADDENDUM.md §no-key. -->
+    <div class="no-key-empty" data-empty-state="no-ai-key">
+      <h3 class="no-key-empty-title">Claude key required for label extraction</h3>
+      <p class="no-key-empty-lede">
+        Scan Label uses Claude Vision to read product labels and pre-populate the inventory fields.
+        Add an Anthropic API key on the Settings page to enable this method, or switch to Manual
+        entry to type the fields in yourself.
+      </p>
+      <div class="no-key-empty-actions">
+        <a
+          class="capture-tile capture-tile-primary capture-tile-inline"
+          href="/settings/ai"
+          target="_blank"
+          rel="noopener"
+          data-action="configure-ai"
+        >
+          Configure AI key ↗
+        </a>
+        {#if onSwitchToManual}
+          <button
+            type="button"
+            class="upload-tile upload-tile-secondary upload-tile-inline"
+            onclick={onSwitchToManual}
+            data-action="switch-to-manual"
+          >
+            Switch to Manual entry →
+          </button>
+        {/if}
+      </div>
+    </div>
+  {:else if !preview}
     <!-- #248 / CT-ST-007 — camera-first. Primary CTA opens the
          LabelCapture modal (live <video> getUserMedia feed) so the
          operator never lands on the OS photo-roll first. When the
@@ -217,9 +276,42 @@
 
   {#if extractError}
     <p class="error" aria-live="polite">{extractError}</p>
-    <button type="button" class="ghost" onclick={clear} disabled={busy || extracting}>
-      Try another photo
-    </button>
+    <!-- #251 / CT-ST-010 — recovery CTAs. The dead-end "Try another
+         photo" loop is fine for transient extraction failures (bad
+         lighting, blurry text) but useless for the no-key case
+         where re-trying without a key fails identically. Branch on
+         isNoKeyError so the user always has a real next step. -->
+    {#if isNoKeyError}
+      <div class="error-actions">
+        <a
+          class="capture-tile capture-tile-primary capture-tile-inline"
+          href="/settings/ai"
+          target="_blank"
+          rel="noopener"
+          data-action="configure-ai-from-error"
+        >
+          Add Claude key ↗
+        </a>
+        {#if onSwitchToManual}
+          <button
+            type="button"
+            class="upload-tile upload-tile-secondary upload-tile-inline"
+            onclick={() => {
+              clear();
+              onSwitchToManual?.();
+            }}
+            disabled={busy}
+            data-action="switch-to-manual-from-error"
+          >
+            Use Manual entry instead →
+          </button>
+        {/if}
+      </div>
+    {:else}
+      <button type="button" class="ghost" onclick={clear} disabled={busy || extracting}>
+        Try another photo
+      </button>
+    {/if}
   {/if}
 </div>
 
@@ -400,5 +492,45 @@
     font-size: 13px;
     cursor: pointer;
     min-height: 38px;
+  }
+
+  /* #250 / CT-ST-009 — pre-flight no-key empty-state. Same visual
+     register as the wizard-Seeds empty-state from #175 so the
+     "what's missing + how to recover" pattern is consistent
+     across AI-dependent surfaces. */
+  .no-key-empty {
+    border: 1px solid var(--color-divider, #d8dcd1);
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+    background: var(--color-cream, #fbfaf3);
+  }
+  .no-key-empty-title {
+    margin: 0 0 0.4rem 0;
+    font-size: 1.05rem;
+    color: var(--color-forest-deep, #1f3522);
+  }
+  .no-key-empty-lede {
+    margin: 0 0 1rem 0;
+    color: #4a5a4a;
+    line-height: 1.45;
+  }
+  .no-key-empty-actions,
+  .error-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: stretch;
+  }
+  /* #250 / #251 — inline variant of the capture/upload tiles so the
+     recovery CTAs sit side-by-side rather than stacking full-width.
+     Re-uses .capture-tile and .upload-tile primitives so a future
+     redesign only touches the base classes. */
+  .capture-tile-inline,
+  .upload-tile-inline {
+    padding: 12px 18px !important;
+    min-height: 44px;
+    flex-direction: row !important;
+    gap: 8px !important;
+    text-decoration: none;
   }
 </style>

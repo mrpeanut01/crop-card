@@ -32,5 +32,6 @@
     "daysFromPlantingMin": 70,
     "daysFromPlantingMax": 100,
     "beeAttractive": true
-  }
+  },
+  "archetype": "cover-crop.termination"
 }

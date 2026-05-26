@@ -47,5 +47,6 @@
     "daysFromPlantingMin": 55,
     "daysFromPlantingMax": 75,
     "beeAttractive": false
-  }
+  },
+  "archetype": "row-grain.pollination"
 }

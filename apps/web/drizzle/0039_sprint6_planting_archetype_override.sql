@@ -1,0 +1,12 @@
+-- Sprint 6 / Phase 27A (#257) — per-planting archetype override.
+--
+-- Defaults to NULL: HarvestRouter resolves the archetype from the crop
+-- plugin via `resolveArchetype(plugin)` when the override is absent. Set
+-- this column to one of the 10 canonical archetype values (per
+-- packages/plugin-validation/src/schemas.ts ARCHETYPES) to override at
+-- the planting level — e.g., corn-for-silage routes through
+-- `forage-cutting-cycle` instead of `row-grain.pollination`.
+--
+-- Text column, no DB-level enum constraint — the kernel + Zod schema
+-- guard the value space.
+ALTER TABLE `crops` ADD `archetype_override` text;

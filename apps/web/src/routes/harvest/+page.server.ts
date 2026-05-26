@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
-import type { CropPlugin, HarvestStyle } from '$lib/plugins/schemas';
+import type { Archetype, CropPlugin, HarvestStyle } from '$lib/plugins/schemas';
 import { getRegistry } from '$lib/server/registry';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -15,8 +15,15 @@ export interface PlantingHarvestStatus {
   cropPluginId: string;
   varietyDisplayName: string;
   cropFamily?: string;
-  /** Phase 25c.0 #87 — drives the Phase 25c HarvestRouter dispatch. */
+  /** Phase 25c.0 #87 — legacy discriminator. Phase 27A prefers
+   *  `archetype` (plugin-declared) + `archetypeOverride` (planting-level);
+   *  HarvestRouter resolves through `resolveArchetype()` when archetype
+   *  is absent. */
   harvestStyle?: HarvestStyle;
+  /** Phase 27A — explicit plugin archetype. */
+  archetype?: Archetype;
+  /** Phase 27A — per-planting operator override (migration 0039). */
+  archetypeOverride?: Archetype | null;
   plantingDate: number | null;
   windowStartMs?: number;
   windowEndMs?: number;
@@ -76,6 +83,8 @@ export const load: PageServerLoad = async ({ url }) => {
         varietyDisplayName: p.varietyDisplayName,
         cropFamily: crop?.cropFamily,
         harvestStyle: crop?.harvestStyle,
+        archetype: crop?.archetype,
+        archetypeOverride: (p as { archetypeOverride?: Archetype | null }).archetypeOverride ?? null,
         plantingDate: p.plantingDate,
         windowStartMs,
         windowEndMs,

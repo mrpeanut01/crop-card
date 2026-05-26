@@ -485,7 +485,15 @@ export const crops = tenantScoped(
        *  catch-all "Manual entry". NULL = manual drag-drop (the existing
        *  /plan?tab=crops behavior); explicit `'ai'` or `'fallback'` for
        *  wizard runs. */
-      sourceProvenance: text('source_provenance', { enum: ['ai', 'fallback'] })
+      sourceProvenance: text('source_provenance', { enum: ['ai', 'fallback'] }),
+      /** Sprint 6 / Phase 27A (#257) — per-planting archetype override.
+       *  NULL means "use the resolved archetype from the crop plugin"
+       *  (the default — `resolveArchetype(plugin)` in plugin-validation).
+       *  Set to one of the 10 canonical archetype values to override at
+       *  the planting level (e.g., corn-for-silage routes through
+       *  `forage-cutting-cycle` instead of `row-grain.pollination`). The
+       *  enum constraint is enforced in code; SQLite stores any text. */
+      archetypeOverride: text('archetype_override')
     },
     (table) => ({
       ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),

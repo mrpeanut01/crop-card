@@ -18,5 +18,6 @@
     "daysFromPlantingMin": 60,
     "daysFromPlantingMax": 110,
     "beeAttractive": true
-  }
+  },
+  "archetype": "cut-and-come-again-leafy"
 }

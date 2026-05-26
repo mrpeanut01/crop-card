@@ -1,5 +1,9 @@
 <script lang="ts">
-  import type { HarvestStyle } from '$lib/plugins/schemas';
+  import {
+    resolveArchetype,
+    type Archetype,
+    type HarvestStyle
+  } from '$lib/plugins/schemas';
   import FallbackHarvestRenderer from './renderers/FallbackHarvestRenderer.svelte';
   import SmallGrainZadoks from './renderers/SmallGrainZadoks.svelte';
   import ContinuousHarvestFruit from './renderers/ContinuousHarvestFruit.svelte';
@@ -14,21 +18,22 @@
 
   /**
    * Phase 25c (#88) — HarvestRouter.
+   * Phase 27A (#257) — dispatch on explicit `archetype` instead of the
+   * inferred `harvestStyle`. The planting-level `archetypeOverride`
+   * takes priority over the plugin's declared archetype so operators can
+   * route a corn planting through `forage-cutting-cycle` (silage) rather
+   * than `row-grain.pollination` (grain) without editing the plugin.
    *
-   * Dispatches a planting's harvest UI based on the crop plugin's
-   * `harvestStyle` discriminator (Phase 25c.0 #87 promoted this to
-   * required at 100% coverage, so the fallback is defensive only).
+   * Resolution order, via `resolveArchetype()` in plugin-validation:
+   *   1. `archetypeOverride` prop (planting-level operator override)
+   *   2. `archetype` prop (plugin-declared explicit value)
+   *   3. legacy `harvestStyle` 1:1 map (10:1 except `single-event`)
+   *   4. `cropFamily` fallback (family-keyed table)
    *
-   * Phase 25c ships 3 representative renderers + the dispatch
-   * primitive; the remaining 7 archetypes (DrySeedLegume, WinterSquashCure,
-   * CutAndComeAgainLeafy, CoverCropTermination, PerennialVineQuality,
-   * TreeFruitMultiPick, RowGrainPollinated) ship as one-per-PR
-   * follow-ups against this dispatch.
-   *
-   * Each renderer receives the same `RendererProps` so swapping
-   * implementations doesn't require touching the parent. The renderer
-   * owns the form + submit; the parent owns the recordingFor state +
-   * reload.
+   * `FallbackHarvestRenderer` is now defensive-only — `resolveArchetype()`
+   * always returns one of the 10 canonical values. The fallback survives
+   * for the missing-data case (no plugin + no override) so a planting
+   * with corrupted metadata still renders.
    */
 
   export interface RendererProps {
@@ -42,200 +47,73 @@
     windowStartMs?: number;
     windowEndMs?: number;
     harvestIndicators: string[];
-    /** Caller-provided commit hook. Receives the form data + returns
-     *  the new event id (or null on failure). Parent handles the
-     *  invalidate + UI reset. */
     onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
-    /** Surfaced under the form when the operator's last commit attempt
-     *  failed. Parent owns the string; the renderer just displays it. */
     error?: string | null;
     onCancel: () => void;
   }
 
   interface Props extends RendererProps {
-    /** Source of truth for which renderer to dispatch. When undefined
-     *  (pre-Phase 25c.0 plugins or unrecognized future styles) we fall
-     *  through to FallbackHarvestRenderer. */
+    /** Plugin-declared archetype (Phase 27A, preferred). */
+    archetype?: Archetype;
+    /** Per-planting operator override (Sprint 6 / Phase 27A migration
+     *  0039). Takes priority over the plugin's declared archetype. */
+    archetypeOverride?: Archetype | null;
+    /** Legacy discriminator. Kept for plugins authored before Phase 27A
+     *  ships the explicit field; `resolveArchetype()` derives from this. */
     harvestStyle?: HarvestStyle;
   }
 
   const props: Props = $props();
+
+  // Override wins over plugin field wins over derivation. $derived so a
+  // reactive parent (e.g. operator flips archetypeOverride mid-session)
+  // re-dispatches without remounting the whole HarvestRouter tree.
+  const resolved: Archetype = $derived(
+    resolveArchetype({
+      archetype: props.archetypeOverride ?? props.archetype ?? undefined,
+      harvestStyle: props.harvestStyle,
+      cropFamily: props.cropFamily
+    })
+  );
+
+  // Strip the dispatch-only fields when handing off to the renderer.
+  const rendererProps: RendererProps = $derived({
+    plantingId: props.plantingId,
+    blockId: props.blockId,
+    blockName: props.blockName,
+    cropPluginId: props.cropPluginId,
+    varietyDisplayName: props.varietyDisplayName,
+    cropFamily: props.cropFamily,
+    plantingDate: props.plantingDate,
+    windowStartMs: props.windowStartMs,
+    windowEndMs: props.windowEndMs,
+    harvestIndicators: props.harvestIndicators,
+    onCommit: props.onCommit,
+    error: props.error,
+    onCancel: props.onCancel
+  });
 </script>
 
-{#if props.harvestStyle === 'single-cut-grain'}
-  <SmallGrainZadoks
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'continuous-fruit'}
-  <ContinuousHarvestFruit
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'forage-cutting-cycle'}
-  <ForageCuttingCycle
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'row-grain-pollinated'}
-  <RowGrainPollinated
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'cut-and-come-again'}
-  <CutAndComeAgainLeafy
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'dry-seed-legume'}
-  <DrySeedLegume
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'cure-then-store'}
-  <WinterSquashCure
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'cover-crop-termination'}
-  <CoverCropTermination
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'perennial-vine'}
-  <PerennialVineQuality
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
-{:else if props.harvestStyle === 'tree-fruit-multi-pick'}
-  <TreeFruitMultiPick
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
+{#if resolved === 'small-grain.zadoks'}
+  <SmallGrainZadoks {...rendererProps} />
+{:else if resolved === 'row-grain.pollination'}
+  <RowGrainPollinated {...rendererProps} />
+{:else if resolved === 'dry-seed-legume'}
+  <DrySeedLegume {...rendererProps} />
+{:else if resolved === 'winter-squash-cure'}
+  <WinterSquashCure {...rendererProps} />
+{:else if resolved === 'continuous-harvest-fruit'}
+  <ContinuousHarvestFruit {...rendererProps} />
+{:else if resolved === 'cut-and-come-again-leafy'}
+  <CutAndComeAgainLeafy {...rendererProps} />
+{:else if resolved === 'cover-crop.termination'}
+  <CoverCropTermination {...rendererProps} />
+{:else if resolved === 'forage-cutting-cycle'}
+  <ForageCuttingCycle {...rendererProps} />
+{:else if resolved === 'perennial-vine-quality'}
+  <PerennialVineQuality {...rendererProps} />
+{:else if resolved === 'tree-fruit-multi-pick'}
+  <TreeFruitMultiPick {...rendererProps} />
 {:else}
-  <FallbackHarvestRenderer
-    plantingId={props.plantingId}
-    blockId={props.blockId}
-    blockName={props.blockName}
-    cropPluginId={props.cropPluginId}
-    varietyDisplayName={props.varietyDisplayName}
-    cropFamily={props.cropFamily}
-    plantingDate={props.plantingDate}
-    windowStartMs={props.windowStartMs}
-    windowEndMs={props.windowEndMs}
-    harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
-    error={props.error}
-    onCancel={props.onCancel}
-  />
+  <FallbackHarvestRenderer {...rendererProps} />
 {/if}

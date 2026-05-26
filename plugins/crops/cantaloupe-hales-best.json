@@ -35,5 +35,6 @@
     "continuous": true,
     "beeAttractive": true
   },
-  "harvestStyle": "continuous-fruit"
+  "harvestStyle": "continuous-fruit",
+  "archetype": "continuous-harvest-fruit"
 }

@@ -35,5 +35,6 @@
   "bloomWindow": {
     "continuous": true,
     "beeAttractive": false
-  }
+  },
+  "archetype": "continuous-harvest-fruit"
 }

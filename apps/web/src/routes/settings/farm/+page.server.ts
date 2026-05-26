@@ -1,21 +1,22 @@
 /**
  * Phase 25c (#88) — /settings/farm loader.
  *
- * Farm-level configuration:
- *   - block list with field grouping (read-only here; CRUD on /plan)
- *   - active season setup (year + philosophy + fertility approach)
- *   - lat/lon + frost dates (read-only summary; edit at /settings/system
- *     Location & Climate tab until that gets its own form here)
- *
- * Folds /settings/season's data into the same page so the operator
- * doesn't have to hop between subroutes for adjacent farm config.
+ * Farm-level configuration. Sprint 2 (#203) adds a save action so the
+ * Save button is no longer permanently disabled — for now it persists
+ * the farm display name (the only field with a real backing column);
+ * lat/lon + frost-date edits stay in /settings/system until that page
+ * gets its own form.
  */
 
-import { error, redirect, type ServerLoad } from '@sveltejs/kit';
+import { error, redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
+import { db } from '$lib/db/client';
+import { owners } from '$lib/db/schema';
 import { listBlocks } from '$lib/db/blocks';
 import { listFields } from '$lib/db/fields';
 import { getFarmLatLon, frostDatesForYear } from '$lib/schedule/settings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
+import { unscopedQueryNote } from '$lib/db/tenant';
 
 export const load: ServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
@@ -36,7 +37,18 @@ export const load: ServerLoad = ({ locals }) => {
     plantingCount: b.plantings?.length ?? 0
   }));
 
+  let farmName = '';
+  if (locals.user.activeOwnerId) {
+    const row = db
+      .select({ name: owners.name })
+      .from(owners)
+      .where(eq(owners.id, locals.user.activeOwnerId))
+      .get();
+    farmName = row?.name ?? '';
+  }
+
   return {
+    farmName,
     blocks: blocksWithField,
     fields: fields.map((f) => ({ id: f.id, name: f.name })),
     farmLatLon: getFarmLatLon(),
@@ -44,4 +56,22 @@ export const load: ServerLoad = ({ locals }) => {
     currentYear,
     activeSeasonSetup: loadSeasonSetup(currentYear)
   };
+};
+
+export const actions: Actions = {
+  save: async ({ request, locals }) => {
+    if (!locals.user) throw error(401, 'sign-in required');
+    if (locals.user.role !== 'owner') throw error(403, 'owner-only');
+    if (!locals.user.activeOwnerId) throw error(400, 'no active owner');
+    const form = await request.formData();
+    const farmName = String(form.get('farmName') ?? '').trim();
+    if (farmName.length > 0 && farmName.length <= 120) {
+      unscopedQueryNote('settings/farm save updates the active owners row');
+      db.update(owners)
+        .set({ name: farmName })
+        .where(eq(owners.id, locals.user.activeOwnerId))
+        .run();
+    }
+    return { ok: true };
+  }
 };

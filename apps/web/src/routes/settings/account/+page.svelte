@@ -22,7 +22,7 @@
 
 <svelte:head><title>Account & sign-in · CropCard</title></svelte:head>
 
-<SettingsShell title="Account & sign-in" kicker="Owner profile">
+<SettingsShell title="Account & sign-in" kicker="Owner profile" saveAction="?/save">
   <SettingsSection title="Profile" sub="Visible to helpers in your farm.">
     <div class="profile-grid">
       <div class="avatar">{data.account.name.charAt(0).toUpperCase()}</div>
@@ -89,12 +89,15 @@
     </div>
   </SettingsSection>
 
-  <SettingsSection title="Data export" sub="GDPR-style download · CSV + JSON + plugin snapshot.">
+  <SettingsSection
+    title="Data export"
+    sub="GDPR-style download · JSON manifest + linked PDF/CSV downloads."
+  >
     <div class="export-row">
-      <a class="ghost" href="/api/spray/records/export.csv">
-        <FileText size={13} /> Download account data
+      <a class="ghost" href="/api/account/export.json" download>
+        <FileText size={13} /> Download account data (JSON)
       </a>
-      <a class="ghost" href="/api/spray/records/export.usda.csv">
+      <a class="ghost" href="/api/records/export.vdacs.pdf" download>
         <FileText size={13} /> Download VDACS audit pack
       </a>
     </div>

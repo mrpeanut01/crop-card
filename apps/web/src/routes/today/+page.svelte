@@ -379,6 +379,85 @@
   />
 </div>
 
+<!-- #189 / F-01 — UC-20 first-run bootstrap card. Lives OUTSIDE the
+     legacy <details> so a fresh user sees the 3-step "Get started" guide
+     on first visit without having to click through the disclosure.
+     Spec: docs/design/almanac/direction-almanac-today.jsx §bootstrap-card. -->
+{#if !data.bootstrapDone}
+  <Card loose>
+    <Kicker>UC-20 · One-time setup</Kicker>
+    <h2 class="serif bootstrap-title">Get started</h2>
+    <p class="bootstrap-lede">
+      A few one-time setup steps. CropCard plans, calibrates, and records around blocks + sprayers —
+      once these three are in place, the calendar drives the rest.
+    </p>
+    <ol class="bootstrap-steps">
+      <li class:done={data.bootstrap.hasBlock && data.bootstrap.hasPlanting}>
+        <span class="step-num" aria-hidden="true">
+          {data.bootstrap.hasBlock && data.bootstrap.hasPlanting ? '✓' : '1'}
+        </span>
+        <div class="step-body">
+          <strong>Add your first block & planting</strong>
+          <small>
+            {#if data.bootstrap.hasBlock && data.bootstrap.hasPlanting}
+              Done.
+            {:else if data.bootstrap.hasBlock}
+              Block added. Now record a planting in it.
+            {:else}
+              A block is your field; a planting is what's growing in it.
+            {/if}
+          </small>
+          {#if !(data.bootstrap.hasBlock && data.bootstrap.hasPlanting)}
+            <a href="/plan" class="bootstrap-cta"
+              ><Button variant="primary" size="sm">Open Plan →</Button></a
+            >
+          {/if}
+        </div>
+      </li>
+      <li class:done={data.bootstrap.hasSprayer}>
+        <span class="step-num" aria-hidden="true">
+          {data.bootstrap.hasSprayer ? '✓' : '2'}
+        </span>
+        <div class="step-body">
+          <strong>Register a sprayer</strong>
+          <small>
+            {#if data.bootstrap.hasSprayer}
+              Done.
+            {:else}
+              The kernel won't let you spray without one — it tracks chemistry & decon state.
+            {/if}
+          </small>
+          {#if !data.bootstrap.hasSprayer}
+            <a href="/equipment" class="bootstrap-cta"
+              ><Button variant="primary" size="sm">Open Equipment →</Button></a
+            >
+          {/if}
+        </div>
+      </li>
+      <li class:done={data.bootstrap.hasCalibration}>
+        <span class="step-num" aria-hidden="true">
+          {data.bootstrap.hasCalibration ? '✓' : '3'}
+        </span>
+        <div class="step-body">
+          <strong>Calibrate the sprayer</strong>
+          <small>
+            {#if data.bootstrap.hasCalibration}
+              Done.
+            {:else}
+              UC-10 1/128-acre method. The dilution calculator scales every product rate by GPA.
+            {/if}
+          </small>
+          {#if data.bootstrap.hasSprayer && !data.bootstrap.hasCalibration}
+            <a href="/calibrate" class="bootstrap-cta"
+              ><Button variant="primary" size="sm">Open Calibrate →</Button></a
+            >
+          {/if}
+        </div>
+      </li>
+    </ol>
+  </Card>
+{/if}
+
 <details class="legacy-detail" bind:open={detailOpen}>
   <summary>Full schedule view — tasks · calendar · sprayers · kernel info</summary>
   <div class="tab-row">
@@ -649,81 +728,6 @@
       </ul>
     {/if}
   </section>
-
-  {#if !data.bootstrapDone}
-    <Card loose>
-      <Kicker>UC-20 · One-time setup</Kicker>
-      <h2 class="serif bootstrap-title">Get started</h2>
-      <p class="bootstrap-lede">
-        A few one-time setup steps. CropCard plans, calibrates, and records around blocks + sprayers
-        — once these three are in place, the calendar drives the rest.
-      </p>
-      <ol class="bootstrap-steps">
-        <li class:done={data.bootstrap.hasBlock && data.bootstrap.hasPlanting}>
-          <span class="step-num" aria-hidden="true">
-            {data.bootstrap.hasBlock && data.bootstrap.hasPlanting ? '✓' : '1'}
-          </span>
-          <div class="step-body">
-            <strong>Add your first block & planting</strong>
-            <small>
-              {#if data.bootstrap.hasBlock && data.bootstrap.hasPlanting}
-                Done.
-              {:else if data.bootstrap.hasBlock}
-                Block added. Now record a planting in it.
-              {:else}
-                A block is your field; a planting is what's growing in it.
-              {/if}
-            </small>
-            {#if !(data.bootstrap.hasBlock && data.bootstrap.hasPlanting)}
-              <a href="/plan" class="bootstrap-cta"
-                ><Button variant="primary" size="sm">Open Plan →</Button></a
-              >
-            {/if}
-          </div>
-        </li>
-        <li class:done={data.bootstrap.hasSprayer}>
-          <span class="step-num" aria-hidden="true">
-            {data.bootstrap.hasSprayer ? '✓' : '2'}
-          </span>
-          <div class="step-body">
-            <strong>Register a sprayer</strong>
-            <small>
-              {#if data.bootstrap.hasSprayer}
-                Done.
-              {:else}
-                The kernel won't let you spray without one — it tracks chemistry & decon state.
-              {/if}
-            </small>
-            {#if !data.bootstrap.hasSprayer}
-              <a href="/equipment" class="bootstrap-cta"
-                ><Button variant="primary" size="sm">Open Equipment →</Button></a
-              >
-            {/if}
-          </div>
-        </li>
-        <li class:done={data.bootstrap.hasCalibration}>
-          <span class="step-num" aria-hidden="true">
-            {data.bootstrap.hasCalibration ? '✓' : '3'}
-          </span>
-          <div class="step-body">
-            <strong>Calibrate the sprayer</strong>
-            <small>
-              {#if data.bootstrap.hasCalibration}
-                Done.
-              {:else}
-                UC-10 1/128-acre method. The dilution calculator scales every product rate by GPA.
-              {/if}
-            </small>
-            {#if data.bootstrap.hasSprayer && !data.bootstrap.hasCalibration}
-              <a href="/calibrate" class="bootstrap-cta"
-                ><Button variant="primary" size="sm">Open Calibrate →</Button></a
-              >
-            {/if}
-          </div>
-        </li>
-      </ol>
-    </Card>
-  {/if}
 
   {#if data.lowStock.length > 0}
     <Banner tone="wheat">

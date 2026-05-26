@@ -5,7 +5,7 @@ import { listBlocks } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { getRegistry } from '$lib/server/registry';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
-import { allocate } from '$lib/server/aiAllocation';
+import { allocate, allocateDeterministic } from '$lib/server/aiAllocation';
 import { checkGuard, recordCall } from '$lib/server/aiGuard';
 import type { PlanInput } from '$lib/layout/engine';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
@@ -32,21 +32,19 @@ const bodySchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
+  // #184 / FP-004 — Invariant 7 ("AI assists, never gates"): the guard
+  // result must NOT short-circuit the endpoint with a 4xx. We resolve
+  // ok-vs-degrade here and finish parsing first, then either run the
+  // AI path or call the deterministic engine and tag the response with
+  // `meta.fallback` so the wizard can render the "AI off — engine plan"
+  // chip and CTA. Spec: docs/design/almanac/AI_PROVENANCE_ADDENDUM.md
+  // §degradation-matrix.
   const guard = checkGuard(user.id, 'allocate');
-  if (!guard.ok) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'allocate',
-      model: 'n/a',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: guard.reason
-    });
-    return json({ error: guard.message }, { status: guard.status });
-  }
+  const guardFallbackReason: 'over-cap' | 'quota-exceeded' | null = !guard.ok
+    ? guard.reason === 'cap-exceeded'
+      ? 'over-cap'
+      : 'quota-exceeded'
+    : null;
 
   let raw: unknown;
   try {
@@ -130,6 +128,46 @@ export const POST: RequestHandler = async (event) => {
   };
 
   const year = parsed.data.year ?? new Date().getFullYear();
+
+  // #184 / FP-004 — guard short-circuit. Skip Anthropic context build entirely
+  // and return the deterministic engine plan with `meta.fallback` tagged. The
+  // wizard treats this identically to the AI-output path (renders provenance
+  // badges + a banner explaining the cap/quota state).
+  if (guardFallbackReason) {
+    const result = allocateDeterministic(planInput, guardFallbackReason);
+    recordCall({
+      userId: user.id,
+      endpoint: 'allocate',
+      model: 'engine-fallback',
+      inputTokens: 0,
+      cachedInputTokens: 0,
+      outputTokens: 0,
+      usdEstimate: 0,
+      success: true,
+      errorClass: guardFallbackReason,
+      provenance: 'fallback',
+      fallbackReason: guardFallbackReason === 'over-cap' ? 'over-cap' : 'rate-limit'
+    });
+    return json({
+      assignments: result.assignments,
+      unplaced: result.unplaced,
+      sufficiency: result.sufficiency,
+      rationale: result.rationale,
+      perRowRationale: result.perRowRationale,
+      advisories: result.advisories,
+      pollinationConstraints: result.pollinationConstraints,
+      geometryMissingBlockIds: result.geometryMissingBlockIds,
+      companionGroups: result.companionGroups,
+      meta: {
+        model: result.meta.model,
+        usdEstimate: result.meta.usdEstimate,
+        fallback: result.meta.fallback,
+        violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt
+      },
+      guardMessage: guard.ok ? null : guard.message
+    });
+  }
+
   const built = await buildFarmContextWithCache(year);
 
   try {
@@ -166,7 +204,7 @@ export const POST: RequestHandler = async (event) => {
         fallback: result.meta.fallback,
         violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt
       },
-      spend: guard.spend
+      spend: guard.ok ? guard.spend : null
     });
   } catch (err) {
     recordCall({

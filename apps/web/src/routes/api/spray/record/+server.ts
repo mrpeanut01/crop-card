@@ -239,7 +239,10 @@ export const POST: RequestHandler = async (event) => {
   const stockResults: DecrementResult[] = [];
   const stockWarnings: string[] = [];
   if (parsed.data.tankSizeGallons) {
-    const effectiveGpa = stored ? stored.calibratedGpa : undefined;
+    // #190 / F-02 — stored.calibratedGpa may be null on an uncalibrated
+    // sprayer; coalesce so computeTankMixDilutions falls back to the
+    // herbicide-plugin GPA default rather than treating null as 0.
+    const effectiveGpa = stored?.calibratedGpa ?? undefined;
     const lines = computeTankMixDilutions(fullProducts, parsed.data.tankSizeGallons, effectiveGpa);
     for (const line of lines) {
       const stockItem = stockByPluginId.get(line.pluginId);

@@ -495,6 +495,46 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
   - **Scan label** — pure Claude Vision endpoint; no deterministic fallback exists. The tab MUST render a pre-flight empty-state card when `aiEnabled === false`, with two recovery CTAs: **Configure AI key →** (opens `/settings/ai` in a new tab to preserve `/stock/add` state) and **Switch to Manual entry →** (jumps tabs; Phase-26 enhancement will preserve any in-flight capture as a Manual attachment per [#251](https://github.com/mrpeanut01/crop-card/issues/251)).
   - **AI Photo (Phase 26)** — same contract as Scan Label.
   - When a post-action error matches the canonical no-key string, the dead-end "Try another photo" CTA MUST be replaced with the same recovery pair so a race-condition no-key user (e.g., key revoked mid-session) has a real next step. The /stock/add loader resolves `aiEnabled` via [getUserAiEnabled](../apps/web/src/lib/server/aiTry.ts) — the canonical helper shared with the planning wizard + `/today` AI variants — keeping all AI-dependency probes on a single chokepoint.
+- **Phase 27 (Inventory unification, ratified 2026-05-26)** — supersedes the per-mode add flow with **one canonical inventory surface** parameterized by type. Design source-of-truth: [`docs/design/almanac/INVENTORY_UNIFICATION.md`](../docs/design/almanac/INVENTORY_UNIFICATION.md) + [`direction-almanac-inventory.jsx`](../docs/design/almanac/direction-almanac-inventory.jsx). Implementation tracker: [#256](https://github.com/mrpeanut01/crop-card/issues/256).
+  - **Five inventory types**: `pesticide` (lot + catalog + safety kernel), `fertility` (lot + catalog), `seed` (lot + catalog; routes through safety kernel when `treated=true`), `crop` (catalog only; archetype-keyed renderer), `sprayer` (asset; calibration-linked, no lots).
+  - **Pattern**: `List → Detail → Edit/Add → List`. Identical chrome across all five types; ONLY the field set, columns, KPIs, sub-filters, and detail sections vary. List screen uses a 5-chip type swap (`?type=` URL param) + a Stock/Catalog segmented control for lot-bearing types.
+  - **Per-type field-coverage matrix** (`■ required / · optional / blank n/a`):
+
+| Field                        | pesticide | fertility | seed | crop | sprayer |
+|------------------------------|-----------|-----------|------|------|---------|
+| `name` / display label       | ■ | ■ | ■ | ■ | ■ |
+| `manufacturer`               | ■ | · | · | · | · |
+| `pluginId` (catalog link)    | ■ | ■ | · | ■ | · |
+| `epaRegNo` + `signalWord`    | ■ |   |   |   |   |
+| `moaGroup` (FRAC/IRAC/HRAC)  | ■ |   |   |   |   |
+| `activeIngredients[]`        | ■ |   | · (when treated) |   |   |
+| `restrictedUse` / RUP flag   | ■ |   |   |   |   |
+| `reiHours` / `phiByCrop`     | ■ |   | · (when treated) |   |   |
+| `rateRangeByCrop`            | ■ |   |   |   |   |
+| `tankMixIncompatible[]`      | ■ |   |   |   |   |
+| `npk` + `secondaries`        |   | ■ |   |   |   |
+| `form` (Granular/Liquid/etc) |   | ■ |   |   |   |
+| `density`                    |   | · |   |   |   |
+| `omri`                       |   | · | · |   |   |
+| `recommendedRate`            |   | · |   |   |   |
+| `variety` / `latinName`      |   |   | ■ |   |   |
+| `daysToMaturity` tuple       |   |   | · |   |   |
+| `germPct` + `germTestDate` + `germTestBy` | | | ■ |   |   |
+| `treated` block              |   |   | ■ |   |   |
+| `archetype` (explicit enum)  |   |   |   | ■ |   |
+| `renderer` + `rulesVersion`  |   |   |   | ■ |   |
+| `varieties[]` + `stages[]` + `pests[]` | | | | ■ |   |
+| `source` (core/marketplace/draft) |   |   |   | ■ |   |
+| `tankGal` + `nozzleType` + `nozzleCount` + `boomWidthFt` |   |   |   |   | ■ |
+| `lastCalibratedAt` + `measuredGpa` |   |   |   |   | ■ |
+| `lastProductCycled` + `rupCleared` |   |   |   |   | · |
+| **Lot-bearing extension** (`InventoryLot`) | ■ | ■ | ■ |   |   |
+
+  - **Archetype is now first-class** on the crop plugin (10-value enum). The Phase-25 inferred-combo dispatch (`harvestStyle` + `cropFamily` + `agronomy.lifecycle` + `postHarvestCuring` + `growthStageTable.system`) becomes a backward-compat fallback only — the explicit enum is authoritative for renderer dispatch. Resolves [#254](https://github.com/mrpeanut01/crop-card/issues/254).
+  - **5-method add flow preserved** but routes through the unified type-aware canonical form. Every entry method (camera-first label scan, file upload fallback, search, barcode, manual) produces the same audit/hash-chain row. The type-chip selector at the top of the form is the entry point; switching types swaps the field stack without losing identity-section input (so accidental clicks don't lose work).
+  - **Per-field chip taxonomy** rendered by the unified `InvField` primitive: `REQUIRED` (Zod-required), `FROM PLUGIN` (auto-filled from registry, edit-via-proposal), `KERNEL-LOCKED` (read-only on this surface; curator-reviewed elsewhere), hint chip (units/format).
+  - **Save semantics**: the sticky footer commits the lot row + signs the hash chain in one transaction. Kernel-locked fields (EPA reg, MoA, REI/PHI) require a curator/proposal flow — out of scope for the inventory surface, tracked separately.
+  - **State persistence**: list views persist `?type=`, `?mode=stock|catalog`, `?q=` in the URL; sub-filter selection in component state.
 
 ## UC-32 — Insecticide scout-and-spray
 

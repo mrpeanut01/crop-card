@@ -2,7 +2,7 @@
   import { ChevronLeft, Lock, Pencil } from 'lucide-svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import LockPill from '$lib/components/ui/LockPill.svelte';
-  import { KIND_LABEL, KIND_TONE } from '$lib/db/recordsUnified';
+  import { KIND_LABEL, KIND_TONE } from '$lib/db/recordKinds';
 
   let { data } = $props();
 

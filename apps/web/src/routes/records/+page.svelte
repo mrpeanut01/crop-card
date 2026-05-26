@@ -5,7 +5,7 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import LockPill from '$lib/components/ui/LockPill.svelte';
-  import { KIND_LABEL, KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordsUnified';
+  import { KIND_LABEL, KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
 
   let { data } = $props();
 
@@ -241,54 +241,56 @@
       </p>
     </div>
   {:else}
-    <table class="ledger" aria-label="Records ledger">
-      <thead>
-        <tr>
-          <th scope="col">Timestamp</th>
-          <th scope="col">Kind</th>
-          <th scope="col">Block · planting</th>
-          <th scope="col">Detail</th>
-          <th scope="col">By</th>
-          <th scope="col">Hash</th>
-          <th scope="col" aria-label="Open"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each data.records as r (r.id)}
+    <div class="ledger-scroll">
+      <table class="ledger" aria-label="Records ledger">
+        <thead>
           <tr>
-            <td class="mono ts">{fmtTimestamp(r.occurredAt)}</td>
-            <td>
-              <Pill tone={KIND_TONE[r.kind]}>{KIND_LABEL[r.kind]}</Pill>
-            </td>
-            <td>
-              <div class="block-name">{r.blockLabel ?? '—'}</div>
-              {#if r.cropPluginId}
-                <div class="block-sub">{r.cropPluginId}</div>
-              {/if}
-            </td>
-            <td class="detail-cell">
-              {r.detail}
-              {#if r.customRateOverride}
-                <span class="override-pill">custom rate</span>
-              {/if}
-            </td>
-            <td class="performer">{r.performerLabel ?? '—'}</td>
-            <td>
-              <LockPill locked={r.locked} hash={r.hash} />
-            </td>
-            <td class="open-cell">
-              <a
-                class="drill"
-                href={`/records/${r.kind}/${r.rowId}`}
-                aria-label={`Open ${KIND_LABEL[r.kind]} record from ${fmtTimestamp(r.occurredAt)}`}
-              >
-                <ChevronRight size={14} />
-              </a>
-            </td>
+            <th scope="col">Timestamp</th>
+            <th scope="col">Kind</th>
+            <th scope="col">Block · planting</th>
+            <th scope="col">Detail</th>
+            <th scope="col">By</th>
+            <th scope="col">Hash</th>
+            <th scope="col" aria-label="Open"></th>
           </tr>
-        {/each}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {#each data.records as r (r.id)}
+            <tr>
+              <td class="mono ts">{fmtTimestamp(r.occurredAt)}</td>
+              <td>
+                <Pill tone={KIND_TONE[r.kind]}>{KIND_LABEL[r.kind]}</Pill>
+              </td>
+              <td>
+                <div class="block-name">{r.blockLabel ?? '—'}</div>
+                {#if r.cropPluginId}
+                  <div class="block-sub">{r.cropPluginId}</div>
+                {/if}
+              </td>
+              <td class="detail-cell">
+                {r.detail}
+                {#if r.customRateOverride}
+                  <span class="override-pill">custom rate</span>
+                {/if}
+              </td>
+              <td class="performer">{r.performerLabel ?? '—'}</td>
+              <td>
+                <LockPill locked={r.locked} hash={r.hash} />
+              </td>
+              <td class="open-cell">
+                <a
+                  class="drill"
+                  href={`/records/${r.kind}/${r.rowId}`}
+                  aria-label={`Open ${KIND_LABEL[r.kind]} record from ${fmtTimestamp(r.occurredAt)}`}
+                >
+                  <ChevronRight size={14} />
+                </a>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
   {/if}
 </section>
 
@@ -510,6 +512,13 @@
     color: var(--color-forest-deep, #1f3a28);
   }
 
+  /* Wrap the table so narrow viewports get horizontal scroll instead
+     of a clipped 7-column layout. `.filter-card` has `overflow: hidden`
+     for rounded corners, so the scroll lives one level in. */
+  .ledger-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .ledger {
     width: 100%;
     border-collapse: collapse;

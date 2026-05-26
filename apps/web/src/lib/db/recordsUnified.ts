@@ -32,43 +32,17 @@ import { listBlocks } from './blocks';
 import { fertilityApplications } from './schema';
 import type { FertilityApplication } from './fertility';
 
-export const RECORD_KINDS = [
-  'spray',
-  'insecticide',
-  'fungicide',
-  'scout',
-  'harvest',
-  'fertility',
-  'planting',
-  'decon'
-] as const;
-
-export type RecordKind = (typeof RECORD_KINDS)[number];
-
-export const KIND_TONE: Record<RecordKind, 'rust' | 'wheat' | 'sky' | 'forest' | 'neutral'> = {
-  spray: 'rust',
-  insecticide: 'wheat',
-  fungicide: 'sky',
-  scout: 'neutral',
-  harvest: 'wheat',
-  fertility: 'sky',
-  planting: 'forest',
-  decon: 'rust'
-};
-
-/** Display labels for the chip + table cells. */
-export const KIND_LABEL: Record<RecordKind, string> = {
-  spray: 'Spray',
-  insecticide: 'Insecticide',
-  fungicide: 'Fungicide',
-  scout: 'Scout',
-  harvest: 'Harvest',
-  fertility: 'Fertility',
-  planting: 'Planting',
-  decon: 'Decon'
-};
-
-export const LOCK_WINDOW_MS = 48 * 60 * 60 * 1000;
+// Pure constants live in recordKinds.ts so Svelte components can import
+// them without dragging this file's server-only transitive imports
+// (sprayEvents → server/superadmin) into the client bundle.
+export {
+  KIND_LABEL,
+  KIND_TONE,
+  LOCK_WINDOW_MS,
+  RECORD_KINDS,
+  type RecordKind
+} from './recordKinds';
+import { LOCK_WINDOW_MS, RECORD_KINDS, type RecordKind } from './recordKinds';
 
 export interface UnifiedRecord {
   /** Composite id: `${kind}:${rowId}` so it stays unique when one table has the same uuid as another (cannot happen in practice but keeps drill-down URLs unambiguous). */
@@ -119,8 +93,11 @@ function resolvePerformers(ids: string[]): Map<string, string> {
     .from(users)
     .where(inArray(users.id, unique))
     .all();
-  // No tenant filter — users table is global identity. Display the local-part of the email so we don't leak full addresses on the ledger row.
-  return new Map(rows.map((r) => [r.id, r.email.split('@')[0] ?? r.email]));
+  // No tenant filter — users table is global identity. Show the full
+  // email; the audit ledger is for inspectors + owner-role users who
+  // already know the operators on the farm, and the local-part alone is
+  // ambiguous when helpers share first names.
+  return new Map(rows.map((r) => [r.id, r.email]));
 }
 
 interface DeconEvent {

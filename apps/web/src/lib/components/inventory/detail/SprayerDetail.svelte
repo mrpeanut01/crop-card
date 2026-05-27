@@ -26,13 +26,16 @@
 </script>
 
 <header class="detail-header">
-  <span class="kicker">Sprayer · equipment</span>
-  <h1 class="serif">{equipment.label}</h1>
-  {#if equipment.state.calibratedGpa != null}
-    <p class="sub mono">{equipment.state.calibratedGpa.toFixed(1)} GPA · calibrated</p>
-  {:else}
-    <p class="sub muted">Not yet calibrated</p>
-  {/if}
+  <div>
+    <span class="kicker">Sprayer · equipment</span>
+    <h1 class="serif">{equipment.label}</h1>
+    {#if equipment.state.calibratedGpa != null}
+      <p class="sub mono">{equipment.state.calibratedGpa.toFixed(1)} GPA · calibrated</p>
+    {:else}
+      <p class="sub muted">Not yet calibrated</p>
+    {/if}
+  </div>
+  <a class="edit-cta" href="/inventory/sprayer/{equipment.id}/edit">Edit</a>
 </header>
 
 <div class="detail-grid">
@@ -114,6 +117,22 @@
 <style>
   .detail-header {
     margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 12px;
+  }
+  .edit-cta {
+    background: var(--color-forest, #1f5e3a);
+    color: var(--color-cream, #fff8e1);
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  .edit-cta:hover {
+    background: var(--color-forest-deep, #1f3522);
   }
   .kicker {
     font-size: 0.7rem;

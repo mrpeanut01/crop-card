@@ -20,13 +20,16 @@
 </script>
 
 <header class="detail-header">
-  <span class="kicker">Seed · {plugin?.cropFamily ?? 'unknown family'}</span>
-  <h1 class="serif">{item.displayName}</h1>
-  {#if plugin?.daysToMaturity}
-    <p class="sub">
-      <span class="mono">{plugin.daysToMaturity.min}–{plugin.daysToMaturity.max} d</span> to maturity
-    </p>
-  {/if}
+  <div>
+    <span class="kicker">Seed · {plugin?.cropFamily ?? 'unknown family'}</span>
+    <h1 class="serif">{item.displayName}</h1>
+    {#if plugin?.daysToMaturity}
+      <p class="sub">
+        <span class="mono">{plugin.daysToMaturity.min}–{plugin.daysToMaturity.max} d</span> to maturity
+      </p>
+    {/if}
+  </div>
+  <a class="edit-cta" href="/inventory/seed/{item.id}/edit">Edit</a>
 </header>
 
 <div class="detail-grid">
@@ -99,6 +102,22 @@
 <style>
   .detail-header {
     margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 12px;
+  }
+  .edit-cta {
+    background: var(--color-forest, #1f5e3a);
+    color: var(--color-cream, #fff8e1);
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  .edit-cta:hover {
+    background: var(--color-forest-deep, #1f3522);
   }
   .kicker {
     font-size: 0.7rem;

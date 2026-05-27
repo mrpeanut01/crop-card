@@ -121,6 +121,9 @@
       Pesticides, fertility, seeds, crop plugins, and sprayers — one surface, per-type fields.
     </p>
   </div>
+  {#if type !== 'crop'}
+    <a class="add-cta" href="/inventory/{type}/add">+ Add {type}</a>
+  {/if}
 </header>
 
 <InvTypeChip activeType={type} onTypeChange={switchType} countByType={counts} />
@@ -250,7 +253,21 @@
     display: flex;
     justify-content: space-between;
     align-items: end;
+    gap: 12px;
     margin-bottom: 12px;
+  }
+  .add-cta {
+    background: var(--color-forest, #1f5e3a);
+    color: var(--color-cream, #fff8e1);
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .add-cta:hover {
+    background: var(--color-forest-deep, #1f3522);
   }
   .inv-header-title {
     display: flex;

@@ -115,10 +115,11 @@ const PARTIAL_SESSION_PATHS = new Set([
   '/api/session/switch-owner'
 ]);
 
-function allowsPartialSession(pathname: string): boolean {
+function allowsPartialSession(pathname: string, isSuperadmin: boolean): boolean {
   if (PARTIAL_SESSION_PATHS.has(pathname)) return true;
   if (pathname.startsWith('/onboarding/')) return true;
   if (pathname.startsWith('/owner-picker/')) return true;
+  if (isSuperadmin && pathname.startsWith('/admin')) return true;
   return false;
 }
 
@@ -271,17 +272,18 @@ export const handle: Handle = async ({ event, resolve }) => {
     throw redirect(303, '/');
   }
 
-  // Partial session: complete it via picker or onboarding.
   if (!user.activeOwnerId) {
-    if (allowsPartialSession(path)) return resolve(event);
+    if (allowsPartialSession(path, user.isSuperadmin)) return resolve(event);
     if (isAnonymous(path)) return resolve(event);
-    const next = pickRedirectForPartialSession(user.id);
+    const next = pickRedirectForPartialSession(user.id, user.isSuperadmin);
     throw redirect(303, next);
   }
 
-  // Billing gate: suspended tenants stop everywhere except superadmin
-  // surfaces (so support can remediate) and the landing itself.
-  if (!isAnonymous(path) && !allowsPartialSession(path) && !path.startsWith('/admin')) {
+  if (
+    !isAnonymous(path) &&
+    !allowsPartialSession(path, user.isSuperadmin) &&
+    !path.startsWith('/admin')
+  ) {
     const billing = ownerBillingStatus(user.activeOwnerId);
     if (billing === 'suspended') {
       return new Response('Tenant suspended — contact support@cropcard.local.', {
@@ -339,14 +341,14 @@ function buildBearerUser(resolved: {
   }
 }
 
-function pickRedirectForPartialSession(userId: string): string {
+function pickRedirectForPartialSession(userId: string, isSuperadmin: boolean): string {
   try {
     const assignments = activeAssignmentsForUser(userId);
-    if (assignments.length === 0) return '/onboarding';
+    if (assignments.length === 0) return isSuperadmin ? '/admin/owners' : '/onboarding';
     return '/owner-picker';
   } catch (err) {
     console.error('[tenant] failed to look up helper assignments', err);
-    return '/onboarding';
+    return isSuperadmin ? '/admin/owners' : '/onboarding';
   }
 }
 

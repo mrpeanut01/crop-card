@@ -24,11 +24,23 @@ export const handle: Handle = async ({ event, resolve }) => {
   const authHeader = event.request.headers.get('authorization');
   if (authHeader?.toLowerCase().startsWith('bearer ')) {
     const token = authHeader.slice(7).trim();
-    const cred = lookupByPlaintext(token);
+    let cred: ReturnType<typeof lookupByPlaintext>;
+    try {
+      cred = lookupByPlaintext(token);
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'invalid or revoked Bearer token' }),
+        { status: 401, headers: { 'content-type': 'application/json' } }
+      );
+    }
     if (cred) {
       event.locals.app = cred;
       event.locals.authVia = 'bearer';
-      touchCredential(cred.id);
+      try {
+        touchCredential(cred.id);
+      } catch {
+        // touch is best-effort; do not propagate DB errors back to the agent.
+      }
     } else {
       return new Response(
         JSON.stringify({ error: 'invalid or revoked Bearer token' }),

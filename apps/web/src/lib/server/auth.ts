@@ -92,7 +92,7 @@ export function requireSuperadmin(event: RequestEvent): AuthenticatedUser {
  */
 export interface LoginResult {
   user: AuthenticatedUser;
-  next: 'onboarding' | 'picker' | 'today';
+  next: 'onboarding' | 'picker' | 'today' | 'admin';
 }
 
 export function loginByEmail(
@@ -122,8 +122,6 @@ export function loginByEmail(
 
   const assignments = activeAssignmentsForUser(userId);
   if (assignments.length === 0) {
-    // First-time signup: mint a partial session with no active Owner and
-    // redirect to /onboarding. The onboarding form completes the assignment.
     writeSession(event.cookies, {
       id: userId,
       email: userEmail,
@@ -140,7 +138,7 @@ export function loginByEmail(
         isSuperadmin,
         impersonating: false
       },
-      next: 'onboarding'
+      next: isSuperadmin ? 'admin' : 'onboarding'
     };
   }
 
@@ -191,6 +189,12 @@ export function loginByEmail(
  *  the routing so /signin actions don't have to duplicate the mapping. */
 export function redirectFromLogin(next: LoginResult['next']): never {
   const path =
-    next === 'onboarding' ? '/onboarding' : next === 'picker' ? '/owner-picker' : '/today';
+    next === 'onboarding'
+      ? '/onboarding'
+      : next === 'picker'
+        ? '/owner-picker'
+        : next === 'admin'
+          ? '/admin/owners'
+          : '/today';
   throw redirect(303, path);
 }

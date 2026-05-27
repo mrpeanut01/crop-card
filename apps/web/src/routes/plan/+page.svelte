@@ -16,6 +16,7 @@
   // tasks) on top of the legacy tabbed editor (now in a <details>).
   import PlanV2Shell from '$lib/components/plan/PlanV2Shell.svelte';
   import NewBlockModal from '$lib/components/plan/NewBlockModal.svelte';
+  import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
   // Phase 25b (#81) — controls the legacy <details> open state. The
   // mutation callbacks emitted from PlanV2Shell flip this true so the
@@ -25,6 +26,7 @@
   // planting". Routes that used to redirect into the legacy editor now
   // open these modals in-place so the user stays in the Almanac shell.
   let showNewBlockModal = $state(false);
+  let editBlockTargetId = $state<string | null>(null);
   let showNewPlantingModal = $state(false);
   let addPlantingTargetBlockId = $state<string | null>(null);
   let addPlantingTargetBlockName = $state<string>('');
@@ -2419,10 +2421,8 @@
   onAddBlock={() => {
     showNewBlockModal = true;
   }}
-  onEditBlock={() => {
-    detailOpen = true;
-    setTimeout(() => (location.hash = '#legacy-plan'), 50);
-    return goto(tabHref('layout'));
+  onEditBlock={(blockId: string) => {
+    editBlockTargetId = blockId;
   }}
   onAddPlanting={(blockId) => {
     const block = data.blocks.find((b) => b.id === blockId);
@@ -2439,6 +2439,17 @@
     showNewBlockModal = false;
     await invalidateAll();
     await goto(`?block=${newBlockId}`, { keepFocus: true, noScroll: true });
+  }}
+/>
+
+<EditBlockModal
+  open={editBlockTargetId !== null}
+  block={editBlockTargetId ? (data.blocks.find((b) => b.id === editBlockTargetId) ?? null) : null}
+  legacyEditorHref={`${tabHref('layout')}#legacy-plan`}
+  onClose={() => (editBlockTargetId = null)}
+  onSaved={async () => {
+    editBlockTargetId = null;
+    await invalidateAll();
   }}
 />
 

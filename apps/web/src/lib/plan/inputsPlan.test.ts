@@ -598,6 +598,91 @@ describe('planInputs — fertility budget arithmetic', () => {
     expect(fertWith?.totalAmount ?? 0).toBeLessThan(fertWithout?.totalAmount ?? 0);
   });
 
+  it('#228 cover-crop-credits + vetch-clover subtracts N credit from corn pre-plant deficit', () => {
+    const crop = buildCrop('corn', 'corn-1');
+    const planting = buildPlanting('p1', 'b1', 'corn-1');
+
+    const withoutIntent = planInputs(
+      buildBaseInput({
+        plantings: [planting],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': crop },
+        seasonSetup: buildSetup('conventional', 'cover-crop-credits', { coverCropIntent: 'none' })
+      })
+    );
+
+    const withCredit = planInputs(
+      buildBaseInput({
+        plantings: [planting],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': crop },
+        seasonSetup: buildSetup('conventional', 'cover-crop-credits', {
+          coverCropIntent: 'vetch-clover'
+        })
+      })
+    );
+
+    const fertBaseline = withoutIntent.applications.find((a) => a.slot === 'pre-plant-fertility');
+    const fertWith = withCredit.applications.find((a) => a.slot === 'pre-plant-fertility');
+
+    expect(fertWith?.totalAmount ?? 0).toBeLessThan(fertBaseline?.totalAmount ?? 0);
+    expect(fertWith?.rationale).toMatch(/cover-crop credit/i);
+    expect(fertWith?.rationale).toMatch(/65 lb-N\/ac/);
+  });
+
+  it('#228 cover-crop-credits + none → no credit applied (intent gate)', () => {
+    const crop = buildCrop('corn', 'corn-1');
+    const planting = buildPlanting('p1', 'b1', 'corn-1');
+
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [planting],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': crop },
+        seasonSetup: buildSetup('conventional', 'cover-crop-credits', { coverCropIntent: 'none' })
+      })
+    );
+
+    const fert = result.applications.find((a) => a.slot === 'pre-plant-fertility');
+    expect(fert?.rationale ?? '').not.toMatch(/cover-crop credit/i);
+  });
+
+  it('#228 cover-crop-credits + fall-cereal → no credit (grasses do not fix N)', () => {
+    const crop = buildCrop('corn', 'corn-1');
+    const planting = buildPlanting('p1', 'b1', 'corn-1');
+
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [planting],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': crop },
+        seasonSetup: buildSetup('conventional', 'cover-crop-credits', {
+          coverCropIntent: 'fall-cereal'
+        })
+      })
+    );
+
+    const fert = result.applications.find((a) => a.slot === 'pre-plant-fertility');
+    expect(fert?.rationale ?? '').not.toMatch(/cover-crop credit/i);
+  });
+
+  it('#228 vetch-clover intent without cover-crop-credits approach → no credit (approach gate)', () => {
+    const crop = buildCrop('corn', 'corn-1');
+    const planting = buildPlanting('p1', 'b1', 'corn-1');
+
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [planting],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { 'corn-1': crop },
+        seasonSetup: buildSetup('conventional', 'mixed', { coverCropIntent: 'vetch-clover' })
+      })
+    );
+
+    const fert = result.applications.find((a) => a.slot === 'pre-plant-fertility');
+    expect(fert?.rationale ?? '').not.toMatch(/cover-crop credit/i);
+  });
+
   it('omits pre-plant fertility application when removal default is unknown (warning emitted)', () => {
     // 'small-fruit' has no FAMILY_REMOVAL_DEFAULTS entry.
     const crop = buildCrop('small-fruit', 'blueberry');

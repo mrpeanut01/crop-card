@@ -59,6 +59,7 @@ import type {
 } from '$lib/plugins/schemas';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import { isProductAllowed } from '$lib/season/philosophyFilter';
+import { nCreditForIntent } from '$lib/fertility/coverCropCredits';
 import type {
   FertilityApproach,
   PestStrategy,
@@ -699,6 +700,15 @@ function planForPlanting(
       p: removal.pRemovalLbPerAcre - soilCredits.p - explicitCredits.p,
       k: removal.kRemovalLbPerAcre - soilCredits.k - explicitCredits.k
     };
+
+    const coverNCredit =
+      seasonSetup.fertilityApproach === 'cover-crop-credits'
+        ? nCreditForIntent(seasonSetup.coverCropIntent)
+        : 0;
+    if (coverNCredit > 0) {
+      deficit.n = deficit.n - coverNCredit;
+    }
+
     const totalDeficit = Math.max(0, deficit.n) + Math.max(0, deficit.p) + Math.max(0, deficit.k);
 
     if (totalDeficit > 0) {
@@ -744,7 +754,11 @@ function planForPlanting(
           `N ${Math.max(0, deficit.n).toFixed(0)} lb/ac, ` +
           `P₂O₅ ${Math.max(0, deficit.p).toFixed(0)} lb/ac, ` +
           `K₂O ${Math.max(0, deficit.k).toFixed(0)} lb/ac ` +
-          `(${crop.cropFamily} removal at family default − soil credits − fertility credits).`
+          `(${crop.cropFamily} removal at family default − soil credits − fertility credits` +
+          (coverNCredit > 0
+            ? ` − ${coverNCredit} lb-N/ac cover-crop credit (${seasonSetup.coverCropIntent})`
+            : '') +
+          `).`
       });
     }
   }

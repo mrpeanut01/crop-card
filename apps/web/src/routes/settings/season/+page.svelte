@@ -1,7 +1,9 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { goto } from '$app/navigation';
+  import { ChevronRight } from 'lucide-svelte';
   import type { PageData } from './$types';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
   import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
   import type { SeasonSetup } from '$lib/season/setup';
@@ -26,13 +28,18 @@
 </script>
 
 <svelte:head>
-  <title>Season setup — CropCard</title>
+  <title>Season setup · CropCard</title>
 </svelte:head>
 
 <main class="season-page">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/settings">Settings</a>
+    <ChevronRight size={13} aria-hidden="true" />
+    <span>Season setup</span>
+  </nav>
   <header class="page-header">
-    <a class="back-link" href="/settings">← Settings</a>
-    <h1>Season setup</h1>
+    <Kicker>Settings · Season {data.currentYear}</Kicker>
+    <h1 class="serif">Season setup.</h1>
     <p class="hint">
       Your input philosophy for the {data.currentYear} planting year. Drives what products and tasks the
       Plan wizard suggests.
@@ -83,19 +90,27 @@
     flex-direction: column;
     gap: 0.4rem;
   }
-  .back-link {
-    color: #1f5e3a;
-    text-decoration: none;
-    font-size: 0.9rem;
-    align-self: flex-start;
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-ink-muted);
+    margin-bottom: 4px;
   }
-  .back-link:hover {
+  .breadcrumb a {
+    color: var(--color-forest);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover {
     text-decoration: underline;
   }
   .page-header h1 {
-    margin: 0;
-    color: #1f5e3a;
-    font-size: 1.5rem;
+    margin: 6px 0 0;
+    font-family: var(--font-serif, serif);
+    font-size: 30px;
+    color: var(--color-forest-deep);
+    letter-spacing: -0.02em;
   }
   .hint {
     margin: 0;

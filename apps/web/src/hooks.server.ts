@@ -282,13 +282,14 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (
     !isAnonymous(path) &&
     !allowsPartialSession(path, user.isSuperadmin) &&
-    !path.startsWith('/admin')
+    !path.startsWith('/admin') &&
+    !path.startsWith('/settings/billing') &&
+    path !== '/suspended' &&
+    path !== '/signout'
   ) {
     const billing = ownerBillingStatus(user.activeOwnerId);
     if (billing === 'suspended') {
-      return new Response('Tenant suspended — contact support@cropcard.local.', {
-        status: 402
-      });
+      throw redirect(303, '/suspended');
     }
   }
 

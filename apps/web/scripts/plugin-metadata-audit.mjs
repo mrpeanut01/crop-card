@@ -77,8 +77,9 @@ function main() {
 
   writeFileSync(
     AUDIT_CSV,
-    auditRows.map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n') +
-      '\n',
+    auditRows
+      .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n') + '\n',
     'utf8'
   );
 

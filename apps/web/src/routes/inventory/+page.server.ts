@@ -20,10 +20,7 @@ import type { PageServerLoad } from './$types';
 import { listStockItems, type StockCategory, type StockItemWithBalance } from '$lib/db/stock';
 import { listEquipment } from '$lib/db/equipment';
 import { getRegistry } from '$lib/server/registry';
-import {
-  INVENTORY_TYPES,
-  type InventoryType
-} from '$lib/inventory/types';
+import { INVENTORY_TYPES, type InventoryType } from '$lib/inventory/types';
 
 /** Row shape consumed by `A_InventoryList`. Per-type columns are
  *  selected at render time via the `kind` discriminator. */
@@ -83,13 +80,14 @@ const TYPE_TO_STOCK_CATEGORIES: Record<InventoryType, StockCategory[] | null> = 
   sprayer: null
 };
 
-const TYPE_TO_PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<CatalogRow['pluginType']> | null> = {
-  pesticide: ['herbicide', 'insecticide', 'fungicide'],
-  fertility: ['fertilizer'],
-  seed: ['crop'],
-  crop: ['crop'],
-  sprayer: null
-};
+const TYPE_TO_PLUGIN_TYPES: Record<InventoryType, ReadonlyArray<CatalogRow['pluginType']> | null> =
+  {
+    pesticide: ['herbicide', 'insecticide', 'fungicide'],
+    fertility: ['fertilizer'],
+    seed: ['crop'],
+    crop: ['crop'],
+    sprayer: null
+  };
 
 function parseType(raw: string | null): InventoryType {
   if (raw && (INVENTORY_TYPES as readonly string[]).includes(raw)) {

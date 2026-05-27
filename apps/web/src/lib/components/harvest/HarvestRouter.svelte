@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    resolveArchetype,
-    type Archetype,
-    type HarvestStyle
-  } from '$lib/plugins/schemas';
+  import { resolveArchetype, type Archetype, type HarvestStyle } from '$lib/plugins/schemas';
   import FallbackHarvestRenderer from './renderers/FallbackHarvestRenderer.svelte';
   import SmallGrainZadoks from './renderers/SmallGrainZadoks.svelte';
   import ContinuousHarvestFruit from './renderers/ContinuousHarvestFruit.svelte';

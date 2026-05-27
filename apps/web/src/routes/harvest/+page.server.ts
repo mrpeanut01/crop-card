@@ -84,7 +84,8 @@ export const load: PageServerLoad = async ({ url }) => {
         cropFamily: crop?.cropFamily,
         harvestStyle: crop?.harvestStyle,
         archetype: crop?.archetype,
-        archetypeOverride: (p as { archetypeOverride?: Archetype | null }).archetypeOverride ?? null,
+        archetypeOverride:
+          (p as { archetypeOverride?: Archetype | null }).archetypeOverride ?? null,
         plantingDate: p.plantingDate,
         windowStartMs,
         windowEndMs,

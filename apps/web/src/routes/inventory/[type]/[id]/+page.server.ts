@@ -153,7 +153,11 @@ export const load: PageServerLoad = async ({ params }): Promise<DetailPayload> =
   // under /inventory/pesticide/[id].
   if (
     type === 'pesticide' &&
-    !(item.category === 'herbicide' || item.category === 'insecticide' || item.category === 'fungicide')
+    !(
+      item.category === 'herbicide' ||
+      item.category === 'insecticide' ||
+      item.category === 'fungicide'
+    )
   ) {
     throw error(404, `item ${id} is not a pesticide`);
   }

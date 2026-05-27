@@ -39,17 +39,23 @@
       <div class="npk-bars">
         <div class="npk-row">
           <span class="npk-label">N</span>
-          <div class="npk-bar"><div class="fill n" style="width: {(npk.n / npkMax) * 100}%"></div></div>
+          <div class="npk-bar">
+            <div class="fill n" style="width: {(npk.n / npkMax) * 100}%"></div>
+          </div>
           <span class="npk-val mono">{npk.n}%</span>
         </div>
         <div class="npk-row">
           <span class="npk-label">P₂O₅</span>
-          <div class="npk-bar"><div class="fill p" style="width: {(npk.p / npkMax) * 100}%"></div></div>
+          <div class="npk-bar">
+            <div class="fill p" style="width: {(npk.p / npkMax) * 100}%"></div>
+          </div>
           <span class="npk-val mono">{npk.p}%</span>
         </div>
         <div class="npk-row">
           <span class="npk-label">K₂O</span>
-          <div class="npk-bar"><div class="fill k" style="width: {(npk.k / npkMax) * 100}%"></div></div>
+          <div class="npk-bar">
+            <div class="fill k" style="width: {(npk.k / npkMax) * 100}%"></div>
+          </div>
           <span class="npk-val mono">{npk.k}%</span>
         </div>
       </div>
@@ -65,10 +71,7 @@
       {:else}
         <p class="empty">No application range declared.</p>
       {/if}
-      <InvKVP
-        label="Approach class"
-        value={plugin?.organic ? 'OMRI / organic' : 'Conventional'}
-      />
+      <InvKVP label="Approach class" value={plugin?.organic ? 'OMRI / organic' : 'Conventional'} />
     </InvSection>
 
     <InvSection title="Nutrient-plan impact" kicker="Phase 21b">

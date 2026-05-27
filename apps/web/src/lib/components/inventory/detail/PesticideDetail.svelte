@@ -54,7 +54,9 @@
       {#if plugin?.activeIngredients?.length}
         <div class="ai-list">
           {#each plugin.activeIngredients as ai}
-            <span class="ai-chip">{ai.name}{ai.chemistryClass ? ` (${ai.chemistryClass})` : ''}</span>
+            <span class="ai-chip"
+              >{ai.name}{ai.chemistryClass ? ` (${ai.chemistryClass})` : ''}</span
+            >
           {/each}
         </div>
       {/if}
@@ -62,7 +64,11 @@
 
     <InvSection title="Application rate" kicker="Label-derived">
       {#if plugin?.ratePerAcre}
-        <InvKVP label="Default rate" value={`${plugin.ratePerAcre.amount} ${plugin.ratePerAcre.unit}`} tone="mono" />
+        <InvKVP
+          label="Default rate"
+          value={`${plugin.ratePerAcre.amount} ${plugin.ratePerAcre.unit}`}
+          tone="mono"
+        />
       {:else}
         <p class="empty">No default rate declared on plugin.</p>
       {/if}

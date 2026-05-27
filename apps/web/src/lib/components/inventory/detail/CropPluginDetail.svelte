@@ -56,7 +56,9 @@
   const varieties = $derived(Array.isArray(plugin.varieties) ? plugin.varieties : []);
   const growthStages = $derived(Array.isArray(plugin.growthStages) ? plugin.growthStages : []);
   const seasonalTasks = $derived(Array.isArray(plugin.seasonalTasks) ? plugin.seasonalTasks : []);
-  const postHarvestCuring = $derived(plugin.postHarvestCuring as Record<string, unknown> | undefined);
+  const postHarvestCuring = $derived(
+    plugin.postHarvestCuring as Record<string, unknown> | undefined
+  );
 </script>
 
 <header class="detail-header">
@@ -127,8 +129,7 @@
   <div class="col">
     <InvSection title="Where it's used" kicker="Cross-refs">
       <p class="empty small">
-        Block + planting back-references land in Phase 28 with the Unified Inventory
-        edit flow.
+        Block + planting back-references land in Phase 28 with the Unified Inventory edit flow.
       </p>
     </InvSection>
 

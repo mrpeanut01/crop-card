@@ -38,9 +38,7 @@
     return rows.filter((r) => {
       if (r.kind === 'stock') return r.displayName.toLowerCase().includes(q);
       if (r.kind === 'catalog')
-        return (
-          r.displayName.toLowerCase().includes(q) || r.pluginId.toLowerCase().includes(q)
-        );
+        return r.displayName.toLowerCase().includes(q) || r.pluginId.toLowerCase().includes(q);
       return r.label.toLowerCase().includes(q);
     });
   });
@@ -61,8 +59,7 @@
   }
 
   function navigateTo(row: InventoryRow): void {
-    const id =
-      row.kind === 'stock' ? row.id : row.kind === 'catalog' ? row.pluginId : row.id;
+    const id = row.kind === 'stock' ? row.id : row.kind === 'catalog' ? row.pluginId : row.id;
     goto(`/inventory/${type}/${encodeURIComponent(id)}`);
   }
 
@@ -233,7 +230,8 @@
               <td>{row.displayName}</td>
               <td class="muted">{row.category}</td>
               <td class="num" class:low={row.isLow}>
-                {row.onHand.toFixed(1)} {row.defaultUnit}
+                {row.onHand.toFixed(1)}
+                {row.defaultUnit}
               </td>
               <td class="num muted">{row.lotCount}</td>
               <td class="muted">

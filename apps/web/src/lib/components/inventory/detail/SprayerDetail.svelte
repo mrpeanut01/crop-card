@@ -17,7 +17,9 @@
   type Props = Omit<SprayerDetailPayload, 'type'>;
   const { equipment }: Props = $props();
 
-  const spec = $derived((equipment.spec ?? {}) as { tankGal?: number; nozzle?: string; boom?: number });
+  const spec = $derived(
+    (equipment.spec ?? {}) as { tankGal?: number; nozzle?: string; boom?: number }
+  );
   const lastUsed = $derived(equipment.state.lastUsedAt);
   const lastDecon = $derived(equipment.state.lastDeconAt);
   const deconRequired = $derived(!!(lastUsed && (!lastDecon || lastDecon < lastUsed)));
@@ -44,7 +46,9 @@
     <InvSection title="Calibration" kicker="UC-10 1/128-acre">
       <InvKVP
         label="Measured GPA"
-        value={equipment.state.calibratedGpa != null ? equipment.state.calibratedGpa.toFixed(1) : '—'}
+        value={equipment.state.calibratedGpa != null
+          ? equipment.state.calibratedGpa.toFixed(1)
+          : '—'}
         tone="mono"
       />
       <InvKVP
@@ -97,8 +101,8 @@
 
     <InvSection title="Linked spray events" kicker="Deferred">
       <p class="empty small">
-        Per-sprayer spray-event back-reference lands in Phase 28; today /records carries
-        the canonical history.
+        Per-sprayer spray-event back-reference lands in Phase 28; today /records carries the
+        canonical history.
       </p>
       <p class="cta-row">
         <a href="/records?sprayer={equipment.id}">Open records for this sprayer →</a>

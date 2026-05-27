@@ -11,7 +11,9 @@
 <svelte:head>
   <title>
     {data.type === 'crop' || data.type === 'sprayer'
-      ? (data.type === 'crop' ? data.plugin.displayName : data.equipment.label)
+      ? data.type === 'crop'
+        ? data.plugin.displayName
+        : data.equipment.label
       : data.item.displayName} — CropCard
   </title>
 </svelte:head>
@@ -21,13 +23,27 @@
 </nav>
 
 {#if data.type === 'pesticide'}
-  <PesticideDetail item={data.item} lots={data.lots} movements={data.movements} plugin={data.plugin} />
+  <PesticideDetail
+    item={data.item}
+    lots={data.lots}
+    movements={data.movements}
+    plugin={data.plugin}
+  />
 {:else if data.type === 'fertility'}
-  <FertilityDetail item={data.item} lots={data.lots} movements={data.movements} plugin={data.plugin} />
+  <FertilityDetail
+    item={data.item}
+    lots={data.lots}
+    movements={data.movements}
+    plugin={data.plugin}
+  />
 {:else if data.type === 'seed'}
   <SeedDetail item={data.item} lots={data.lots} movements={data.movements} plugin={data.plugin} />
 {:else if data.type === 'crop'}
-  <CropPluginDetail plugin={data.plugin} resolvedArchetype={data.resolvedArchetype} hash={data.hash} />
+  <CropPluginDetail
+    plugin={data.plugin}
+    resolvedArchetype={data.resolvedArchetype}
+    hash={data.hash}
+  />
 {:else if data.type === 'sprayer'}
   <SprayerDetail equipment={data.equipment} />
 {/if}

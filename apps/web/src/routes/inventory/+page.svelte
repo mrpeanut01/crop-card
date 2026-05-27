@@ -8,9 +8,4 @@
   <title>Inventory — CropCard</title>
 </svelte:head>
 
-<A_InventoryList
-  type={data.type}
-  mode={data.mode}
-  counts={data.counts}
-  rows={data.rows}
-/>
+<A_InventoryList type={data.type} mode={data.mode} counts={data.counts} rows={data.rows} />

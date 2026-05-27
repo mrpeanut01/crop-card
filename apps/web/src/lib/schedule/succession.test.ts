@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { ScheduleWindow } from './scheduleCandidacy';
-import { evaluateSuccessionFit, splitQuantityForSuccession } from './succession';
+import {
+  evaluateSuccessionFit,
+  FAMILY_SUCCESSION_DAYS,
+  splitQuantityForSuccession
+} from './succession';
+import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 
 function fakeWindow(opts: { startMs: number; endMs: number }): ScheduleWindow {
   return {
@@ -75,6 +80,24 @@ describe('evaluateSuccessionFit', () => {
     const fit = evaluateSuccessionFit(longWindow, fakePlug('mystery-family', 60), 'b', 's');
     expect(fit.eligible).toBe(false);
     expect(fit.reason).toMatch(/don't succession/);
+  });
+
+  it('allium (#227) — uses canonical singular key with 21d spacing', () => {
+    const fit = evaluateSuccessionFit(longWindow, fakePlug('allium', 60), 'b', 's');
+    expect(fit.eligible).toBe(true);
+    expect(fit.suggestedIntervalDays).toBe(21);
+  });
+
+  it('root (#227) — uses canonical singular key with 14d spacing', () => {
+    const fit = evaluateSuccessionFit(longWindow, fakePlug('root', 50), 'b', 's');
+    expect(fit.eligible).toBe(true);
+    expect(fit.suggestedIntervalDays).toBe(14);
+  });
+
+  it('FAMILY_SUCCESSION_DAYS covers every canonical CropFamily (#227 drift guard)', () => {
+    for (const family of CROP_FAMILIES) {
+      expect(FAMILY_SUCCESSION_DAYS[family]).toBeTypeOf('number');
+    }
   });
 });
 

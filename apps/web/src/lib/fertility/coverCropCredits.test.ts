@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultCoverCredit } from './coverCropCredits';
+import { defaultCoverCredit, nCreditForIntent } from './coverCropCredits';
 
 describe('defaultCoverCredit', () => {
   it('returns N-fixing legumes with non-zero N', () => {
@@ -22,5 +22,20 @@ describe('defaultCoverCredit', () => {
     const cc = defaultCoverCredit('austrian-winter-pea-cover');
     expect(cc).toBeDefined();
     expect(cc!.rationale.length).toBeGreaterThan(0);
+  });
+});
+
+describe('nCreditForIntent (#228)', () => {
+  it('vetch-clover returns 65 lb-N/ac', () => {
+    expect(nCreditForIntent('vetch-clover')).toBe(65);
+  });
+  it('fall-cereal returns 0 (non-legume, no fixation)', () => {
+    expect(nCreditForIntent('fall-cereal')).toBe(0);
+  });
+  it('other returns 0 (conservative when unknown)', () => {
+    expect(nCreditForIntent('other')).toBe(0);
+  });
+  it('none returns 0', () => {
+    expect(nCreditForIntent('none')).toBe(0);
   });
 });

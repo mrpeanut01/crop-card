@@ -81,7 +81,7 @@
       <ol class="stage-list">
         {#each zadoks as s (s.stage)}
           {@const isCurrent = currentStage?.stage === s.stage}
-          {@const isHarvest = /Z8[0-9]|Z9[0-9]/.test(s.stage)}
+          {@const isHarvest = (parseInt(s.stage.match(/^Z(\d{2})/)?.[1] ?? '', 10) || 0) >= 80}
           <li class:current={isCurrent} class:harvest={isHarvest}>
             <span class="stage-code mono">{s.stage}</span>
             <span class="stage-name">{s.name}</span>

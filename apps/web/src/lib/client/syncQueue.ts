@@ -82,6 +82,22 @@ export async function listPending(): Promise<PendingSprayRecord[]> {
   return db().pendingSprayRecords.orderBy('createdAt').toArray();
 }
 
+export async function listPendingForActiveOwner(): Promise<PendingSprayRecord[]> {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return [];
+  const all = await db().pendingSprayRecords.where('ownerId').equals(ownerId).toArray();
+  return all.sort((a, b) => a.createdAt - b.createdAt);
+}
+
+export async function discardPendingForActiveOwner(id: string): Promise<boolean> {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return false;
+  const target = await db().pendingSprayRecords.get(id);
+  if (!target || target.ownerId !== ownerId) return false;
+  await db().pendingSprayRecords.delete(id);
+  return true;
+}
+
 async function submitOne(rec: PendingSprayRecord): Promise<unknown> {
   const res = await fetch('/api/spray/record', {
     method: 'POST',

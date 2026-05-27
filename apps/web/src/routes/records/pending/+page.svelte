@@ -3,14 +3,17 @@
   import type { PendingSprayRecord } from '$lib/client/dexie';
 
   let pending = $state<PendingSprayRecord[]>([]);
+  let otherOwnerCount = $state(0);
   let busy = $state(false);
   let lastDrainResult = $state<string | null>(null);
   let dexieAvailable = $state(true);
 
   async function refresh() {
     try {
-      const { listPending } = await import('$lib/client/syncQueue');
-      pending = await listPending();
+      const { listPendingForActiveOwner, pendingCountForOtherOwners } =
+        await import('$lib/client/syncQueue');
+      pending = await listPendingForActiveOwner();
+      otherOwnerCount = await pendingCountForOtherOwners();
     } catch {
       dexieAvailable = false;
     }
@@ -33,8 +36,8 @@
 
   async function discard(id: string) {
     if (!confirm('Discard this queued record? This cannot be undone.')) return;
-    const { db } = await import('$lib/client/dexie');
-    await db().pendingSprayRecords.delete(id);
+    const { discardPendingForActiveOwner } = await import('$lib/client/syncQueue');
+    await discardPendingForActiveOwner(id);
     await refresh();
   }
 
@@ -63,6 +66,12 @@
        outcome even when the message body changes between drains. Must stay
        mounted (no {#if}) for assistive tech to pick up updates. -->
   <p class="result" role="status" aria-live="polite">{lastDrainResult ?? ''}</p>
+  {#if otherOwnerCount > 0}
+    <p class="other-owner-badge">
+      {otherOwnerCount} record{otherOwnerCount === 1 ? '' : 's'} queued from another farm — switch Owner
+      to see {otherOwnerCount === 1 ? 'it' : 'them'}.
+    </p>
+  {/if}
   {#if pending.length === 0}
     <p class="empty">Queue is empty.</p>
   {:else}
@@ -134,6 +143,15 @@
   .empty {
     color: #555;
     font-style: italic;
+  }
+  .other-owner-badge {
+    background: #fff4d6;
+    border: 1px solid #e6c97a;
+    color: #6b4d00;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin: 0.5rem 0 1rem;
   }
   .warn {
     color: #b00020;

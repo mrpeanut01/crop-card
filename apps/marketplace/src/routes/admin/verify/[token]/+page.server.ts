@@ -10,7 +10,15 @@ import { writeAdminSession } from '$lib/server/adminSession';
  */
 export const load: PageServerLoad = async ({ params, cookies }) => {
   const token = params.token;
-  const redeemed = redeemLoginToken(token);
+  let redeemed: ReturnType<typeof redeemLoginToken>;
+  try {
+    redeemed = redeemLoginToken(token);
+  } catch {
+    throw error(
+      400,
+      'sign-in link is invalid, expired, or already used — request a new one from /admin/login'
+    );
+  }
   if (!redeemed) {
     throw error(
       400,

@@ -87,3 +87,16 @@ const CREDITS: Record<string, CoverCropCredit> = {
 export function defaultCoverCredit(cropPluginId: string): CoverCropCredit | undefined {
   return CREDITS[cropPluginId];
 }
+
+import type { CoverCropIntent } from '$lib/season/setup';
+
+const INTENT_N_CREDIT: Record<CoverCropIntent, number> = {
+  'vetch-clover': 65,
+  'fall-cereal': 0,
+  other: 0,
+  none: 0
+};
+
+export function nCreditForIntent(intent: CoverCropIntent): number {
+  return INTENT_N_CREDIT[intent];
+}

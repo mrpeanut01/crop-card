@@ -17,7 +17,7 @@ import { getSprayer, recordCalibration } from '$lib/server/sprayers';
 import { submitPendingCalibration } from '$lib/server/pendingCalibrations';
 
 const requestSchema = z.object({
-  calibratedGpa: z.number().positive(),
+  calibratedGpa: z.number().min(0.5).max(200),
   spreadInches: z.number().positive().optional(),
   ouncesCollected: z.number().nonnegative().optional(),
   notes: z.string().max(500).optional()

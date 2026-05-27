@@ -106,7 +106,7 @@
   <select id="sprayer-select" bind:value={selectedSprayerId}>
     {#each data.sprayers as s (s.id)}
       <option value={s.id}>
-        {s.label} (current: {s.calibratedGpa} GPA)
+        {s.label} ({s.calibratedGpa == null ? 'Uncalibrated' : `current: ${s.calibratedGpa} GPA`})
       </option>
     {/each}
   </select>
@@ -175,9 +175,16 @@
       <strong>{gpaResult.gpa}</strong> <span>GPA</span>
     </p>
     {#if data.canSave}
-      <button class="primary" onclick={save} disabled={saving || !sprayer}>
+      <button
+        class="primary"
+        onclick={save}
+        disabled={saving || !sprayer || gpaResult.outsideSanityBand}
+      >
         {saving ? 'Saving…' : `Save to ${sprayer?.label ?? '…'}`}
       </button>
+      {#if gpaResult.outsideSanityBand}
+        <p class="error">Cannot save — re-measure before recording (5–60 GPA expected range).</p>
+      {/if}
       {#if saveError}<p class="error">{saveError}</p>{/if}
       {#if saveOk}<p class="ok-msg">✓ Saved. Future spray dilutions will use this GPA.</p>{/if}
     {:else}
@@ -185,7 +192,11 @@
         Owner role required to apply this calibration to {sprayer?.label ?? 'the sprayer'}. You can
         send the result to the owner for review.
       </p>
-      <button class="primary" onclick={save} disabled={saving || !sprayer || pendingSent}>
+      <button
+        class="primary"
+        onclick={save}
+        disabled={saving || !sprayer || pendingSent || gpaResult.outsideSanityBand}
+      >
         {#if saving}
           Sending…
         {:else if pendingSent}

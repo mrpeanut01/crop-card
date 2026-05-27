@@ -3,6 +3,12 @@
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
+  import SprayStepper, { type StepState } from '$lib/components/spray/SprayStepper.svelte';
+  import SprayContextStrip, {
+    type CompatibilityState,
+    type SprayContextBlock
+  } from '$lib/components/spray/SprayContextStrip.svelte';
+  import { checkFungicideTankMixCompat } from '$lib/safety/fungicideTankMix';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
@@ -64,6 +70,17 @@
     data.fungicides.filter((f) => selectedPluginIds.includes(f.pluginId))
   );
 
+  const tankMixIssues = $derived(
+    checkFungicideTankMixCompat(
+      selectedFungicides.map((f) => ({
+        pluginId: f.pluginId,
+        displayName: f.displayName,
+        fracCodes: f.fracCodes
+      }))
+    )
+  );
+  const tankMixBlocked = $derived(tankMixIssues.some((i) => i.severity === 'incompatible'));
+
   /** True when the tank mix contains two plugins sharing a FRAC code —
    *  surfaces a resistance warning before persistence. */
   const tankFracOverlap = $derived.by(() => {
@@ -76,6 +93,62 @@
     }
     return null;
   });
+
+  const canSubmit = $derived(!!selectedBlockId && selectedPluginIds.length > 0 && !tankMixBlocked);
+
+  const stepperData = $derived.by<Array<{ label: string; state: StepState }>>(() => {
+    const hasBlock = !!selectedBlockId;
+    const hasProducts = selectedPluginIds.length > 0;
+    const tankMixOk = !tankMixBlocked;
+    const hasObservation = !!diseaseName && diseaseValue !== null;
+    return [
+      { label: 'Block', state: hasBlock ? 'done' : 'active' },
+      { label: 'Disease + FRAC', state: !hasProducts ? (hasBlock ? 'active' : 'pending') : 'done' },
+      {
+        label: 'Tank-mix check',
+        state: !hasProducts ? 'pending' : tankMixOk ? 'done' : 'active'
+      },
+      {
+        label: 'Observation',
+        state: hasObservation ? 'done' : hasProducts && tankMixOk ? 'active' : 'pending'
+      },
+      {
+        label: 'Conditions',
+        state: canSubmit ? 'done' : tankMixOk ? 'active' : 'pending'
+      },
+      { label: 'Record', state: canSubmit ? 'active' : 'pending' }
+    ];
+  });
+
+  const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId) ?? null);
+  const ctxBlocks = $derived<SprayContextBlock[]>(
+    selectedBlock ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: 0 }] : []
+  );
+  const ctxCropLabel = $derived(
+    selectedBlock?.cropPluginIds.length
+      ? selectedBlock.cropPluginIds.length === 1
+        ? selectedBlock.cropPluginIds[0]
+        : `${selectedBlock.cropPluginIds.length} crops`
+      : '—'
+  );
+  const ctxCompatibility = $derived<CompatibilityState | undefined>(
+    selectedPluginIds.length === 0
+      ? undefined
+      : tankMixBlocked
+        ? {
+            label: 'Tank-mix incompatibility',
+            reason: tankMixIssues[0]?.message,
+            tone: 'rust'
+          }
+        : {
+            label:
+              selectedFungicides.length === 1
+                ? `${selectedFungicides[0].displayName} compatible`
+                : `${selectedFungicides.length}-way tank-mix compatible`,
+            reason: 'Kernel verified FRAC pair-incompatibility table.',
+            tone: 'forest'
+          }
+  );
 
   function toggleProduct(pluginId: string): void {
     if (selectedPluginIds.includes(pluginId)) {
@@ -141,6 +214,18 @@
   }
 </script>
 
+<div class="spray-almanac-chrome">
+  <SprayStepper steps={stepperData} />
+  <SprayContextStrip blocks={ctxBlocks} cropLabel={ctxCropLabel} compatibility={ctxCompatibility} />
+</div>
+
+{#each tankMixIssues as issue (issue.code)}
+  <div class="tank-mix-banner" class:incompat={issue.severity === 'incompatible'} role="alert">
+    <strong>{issue.severity === 'incompatible' ? 'Phytotoxicity risk' : 'Caution'}.</strong>
+    {issue.message}
+  </div>
+{/each}
+
 <SprayDecisionPage
   chemistry="fungicide"
   blocks={data.blocks}
@@ -156,7 +241,7 @@
   {violations}
   {warnings}
   {aiEnabled}
-  canSubmit={!!selectedBlockId && selectedPluginIds.length > 0}
+  {canSubmit}
   submitLabel="Record fungicide application"
   onSubmit={recordSpray}
 >
@@ -266,6 +351,23 @@
 </SprayDecisionPage>
 
 <style>
+  .spray-almanac-chrome {
+    margin-bottom: 22px;
+  }
+  .tank-mix-banner {
+    background: var(--color-wheat-soft, #e8d9b5);
+    border: 1px solid #d9c18f;
+    color: #6b4d00;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+  }
+  .tank-mix-banner.incompat {
+    background: #f8e2da;
+    border-color: #e2b69e;
+    color: #8a341b;
+  }
   /* Snippet-scoped styles for productSection / observation form controls
      and the recent-events list. The shell can't reach into snippet
      content (scoped to this component), so re-declare what's needed. */

@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    INVENTORY_TYPES,
-    INVENTORY_TYPE_LABELS,
-    type InventoryType
-  } from '$lib/inventory/types';
+  import { INVENTORY_TYPES, INVENTORY_TYPE_LABELS, type InventoryType } from '$lib/inventory/types';
 
   /**
    * Phase 27A primitive (#257). The 5-chip type-swap row that sits at
@@ -66,7 +62,9 @@
     align-items: center;
     gap: 6px;
     white-space: nowrap;
-    transition: background 0.1s ease, border-color 0.1s ease;
+    transition:
+      background 0.1s ease,
+      border-color 0.1s ease;
   }
   .chip:hover {
     background: var(--color-forest-tint, #e8f1ea);

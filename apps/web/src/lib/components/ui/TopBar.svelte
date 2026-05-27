@@ -56,19 +56,37 @@
   // 7-item nav per design (collapsed from 13). Map / Calendar fold into Plan,
   // Insecticides into Spray, Fertility under Records, Equipment under
   // /settings/sprayers, Hay into archetype renderers.
+  // Sprint 7 / Phase 27B: "Inventory" replaces the "Stock" entry and
+  // points at the unified surface. /stock keeps resolving until the
+  // Sprint 9 cutover deletes the old shell.
   const items: Array<{ href: string; label: string; icon: LucideIcon }> = [
     { href: '/today', label: 'Today', icon: Sun },
     { href: '/plan', label: 'Plan', icon: Sprout },
     { href: '/spray', label: 'Spray', icon: SprayCan },
     { href: '/scout', label: 'Scout', icon: Eye },
     { href: '/harvest', label: 'Harvest', icon: Wheat },
-    { href: '/stock', label: 'Stock', icon: Box },
+    { href: '/inventory', label: 'Inventory', icon: Box },
     { href: '/records', label: 'Records', icon: FileText }
   ];
 
   function isActive(href: string): boolean {
     const path = page.url.pathname;
     if (href === '/today') return path === '/today' || path === '/';
+    // Sprint 7 transitional active-state: /inventory entry also lights
+    // up for the legacy /stock + /settings/plugins + /settings/sprayers
+    // shells until Sprint 9 redirects them.
+    if (href === '/inventory') {
+      return (
+        path === '/inventory' ||
+        path.startsWith('/inventory/') ||
+        path === '/stock' ||
+        path.startsWith('/stock/') ||
+        path === '/settings/plugins' ||
+        path.startsWith('/settings/plugins/') ||
+        path === '/settings/sprayers' ||
+        path.startsWith('/settings/sprayers/')
+      );
+    }
     return path === href || path.startsWith(`${href}/`);
   }
 

@@ -109,9 +109,7 @@
   let reorderThreshold = $state<number | null>(
     untrack(() => existingItem?.reorderThreshold ?? null)
   );
-  let notes = $state(
-    untrack(() => existingItem?.notes ?? existingEquipment?.notes ?? '')
-  );
+  let notes = $state(untrack(() => existingItem?.notes ?? existingEquipment?.notes ?? ''));
   let barcode = $state(untrack(() => existingItem?.barcode ?? ''));
 
   // Sprayer-specific spec fields (free-form on equipment.spec JSON column).
@@ -136,7 +134,18 @@
     // Init touch is suppressed by referencing all signals once then
     // immediately resetting — Svelte 5's $effect runs after first state
     // read so we set dirty=false on next microtask.
-    [displayName, shortName, category, defaultUnit, pluginId, reorderThreshold, notes, barcode, tankGal, nozzle];
+    [
+      displayName,
+      shortName,
+      category,
+      defaultUnit,
+      pluginId,
+      reorderThreshold,
+      notes,
+      barcode,
+      tankGal,
+      nozzle
+    ];
     dirty = true;
   });
 
@@ -388,7 +397,13 @@
         <input id="tankGal" type="number" step="0.5" min="0" bind:value={tankGal} />
       </InvField>
       <InvField id="nozzle" label="Nozzle">
-        <input id="nozzle" type="text" bind:value={nozzle} placeholder="e.g. TeeJet XR110015" maxlength="60" />
+        <input
+          id="nozzle"
+          type="text"
+          bind:value={nozzle}
+          placeholder="e.g. TeeJet XR110015"
+          maxlength="60"
+        />
       </InvField>
     </InvSection>
   {/if}
@@ -424,8 +439,8 @@
   {#if type === 'crop'}
     <div class="banner">
       <strong>Crop plugin editing is versioned.</strong>
-      Use <a href="/settings/plugins">/settings/plugins</a> to upload a new version of this plugin —
-      the unified edit flow lands in Sprint 9 alongside the cutover.
+      Use <a href="/settings/plugins">/settings/plugins</a> to upload a new version of this plugin — the
+      unified edit flow lands in Sprint 9 alongside the cutover.
     </div>
   {/if}
 

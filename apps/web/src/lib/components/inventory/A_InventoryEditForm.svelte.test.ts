@@ -87,7 +87,8 @@ describe('A_InventoryEditForm — Sprint 8 add flow', () => {
     // Wait a microtask for the async submit handler.
     await new Promise((r) => setTimeout(r, 0));
     expect(globalThis.fetch).toHaveBeenCalled();
-    const callArgs = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls[0];
+    const callArgs = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock
+      .calls[0];
     expect(callArgs[0]).toBe('/api/stock');
     const body = JSON.parse((callArgs[1] as { body: string }).body);
     expect(body.defaultUnit).toBeTruthy(); // #199 — never undefined
@@ -111,7 +112,8 @@ describe('A_InventoryEditForm — Sprint 8 add flow', () => {
     const form = container.querySelector('form');
     await fireEvent.submit(form!);
     await new Promise((r) => setTimeout(r, 0));
-    const callArgs = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls[0];
+    const callArgs = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock
+      .calls[0];
     expect(callArgs[0]).toBe('/api/stock/sk_abc');
     expect((callArgs[1] as { method: string }).method).toBe('PATCH');
   });
@@ -123,7 +125,8 @@ describe('A_InventoryEditForm — Sprint 8 add flow', () => {
     const form = container.querySelector('form');
     await fireEvent.submit(form!);
     await new Promise((r) => setTimeout(r, 0));
-    const callArgs = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls[0];
+    const callArgs = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock
+      .calls[0];
     expect(callArgs[0]).toBe('/api/equipment');
     const body = JSON.parse((callArgs[1] as { body: string }).body);
     expect(body.type).toBe('sprayer');

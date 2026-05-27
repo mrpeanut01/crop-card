@@ -3,7 +3,7 @@ import { listSprayers } from '$lib/server/sprayers';
 import { activeAssignmentsForUser } from '$lib/db/users';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { unscopedQueryNote } from '$lib/db/tenant';
 
 export const load: LayoutServerLoad = ({ locals }) => {
@@ -62,6 +62,17 @@ export const load: LayoutServerLoad = ({ locals }) => {
           const ownerInfo = byId.get(locals.user.activeOwnerId);
           if (ownerInfo) activeOwner = ownerInfo;
         }
+      }
+      if (locals.user.impersonating && !activeOwner && locals.user.activeOwnerId) {
+        unscopedQueryNote(
+          'superadmin impersonating an Owner they have no helper_assignment for; fetch the target name for the banner (#223)'
+        );
+        const impersonated = db
+          .select({ id: owners.id, name: owners.name, slug: owners.slug })
+          .from(owners)
+          .where(eq(owners.id, locals.user.activeOwnerId))
+          .get();
+        if (impersonated) activeOwner = impersonated;
       }
     } catch (err) {
       console.error('[tenant] layout failed to hydrate owners list', err);

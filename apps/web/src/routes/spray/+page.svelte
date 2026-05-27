@@ -762,31 +762,44 @@
 
   <section class="step">
     <h2>3. Sprayer</h2>
-    <div class="cards">
-      {#each data.sprayers as s (s.id)}
-        <button
-          type="button"
-          class="card"
-          class:selected={selectedSprayerId === s.id}
-          onclick={() => (selectedSprayerId = s.id)}
-        >
-          <strong>{s.label}</strong>
-          <small
-            >id: {s.id} • {s.calibratedGpa != null
-              ? `${s.calibratedGpa} GPA`
-              : 'Uncalibrated'}</small
+    {#if data.sprayers.length === 0}
+      <div class="sprayer-empty">
+        <p>
+          <strong>No sprayers configured yet.</strong> Add one before recording a spray — the kernel uses
+          the sprayer's GPA calibration to compute every product rate.
+        </p>
+        <div class="sprayer-empty-cta">
+          <a class="primary" href="/inventory/sprayer/add">+ Add sprayer</a>
+          <a href="/calibrate">Calibrate existing sprayer →</a>
+        </div>
+      </div>
+    {:else}
+      <div class="cards">
+        {#each data.sprayers as s (s.id)}
+          <button
+            type="button"
+            class="card"
+            class:selected={selectedSprayerId === s.id}
+            onclick={() => (selectedSprayerId = s.id)}
           >
-          {#if s.lastChemistryClass}
-            <small class="warn">last load: {s.lastChemistryClass}</small>
-          {:else}
-            <small class="ok">clean</small>
-          {/if}
-          {#if s.lastDeconAt}
-            <small>last decon: {new Date(s.lastDeconAt).toLocaleString()}</small>
-          {/if}
-        </button>
-      {/each}
-    </div>
+            <strong>{s.label}</strong>
+            <small
+              >id: {s.id} • {s.calibratedGpa != null
+                ? `${s.calibratedGpa} GPA`
+                : 'Uncalibrated'}</small
+            >
+            {#if s.lastChemistryClass}
+              <small class="warn">last load: {s.lastChemistryClass}</small>
+            {:else}
+              <small class="ok">clean</small>
+            {/if}
+            {#if s.lastDeconAt}
+              <small>last decon: {new Date(s.lastDeconAt).toLocaleString()}</small>
+            {/if}
+          </button>
+        {/each}
+      </div>
+    {/if}
   </section>
 
   <section class="step">
@@ -1115,6 +1128,35 @@
   .empty-state a {
     color: var(--color-forest);
     font-weight: 600;
+  }
+  .sprayer-empty {
+    background: #fff8ec;
+    border: 1px solid #d9c18f;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+  }
+  .sprayer-empty p {
+    margin: 0 0 1rem;
+    color: #6b4d00;
+  }
+  .sprayer-empty-cta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .sprayer-empty-cta a.primary {
+    background: var(--color-forest);
+    color: var(--color-cream, #fff8e1);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .sprayer-empty-cta a {
+    color: var(--color-forest);
+    font-weight: 600;
+    text-decoration: none;
   }
   .filter-hint {
     background: #fff8ec;

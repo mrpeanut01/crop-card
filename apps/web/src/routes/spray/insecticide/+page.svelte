@@ -3,6 +3,11 @@
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
+  import SprayStepper, { type StepState } from '$lib/components/spray/SprayStepper.svelte';
+  import SprayContextStrip, {
+    type CompatibilityState,
+    type SprayContextBlock
+  } from '$lib/components/spray/SprayContextStrip.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
@@ -78,6 +83,66 @@
     Array<{ code: string; message: string; detail?: Record<string, unknown> }>
   >([]);
   let busy = $state(false);
+
+  // IPM gate: when the product declares a scout threshold, the operator
+  // can only record once the recent observations cross it. The kernel
+  // also enforces this server-side (HTTP 422 IPM_THRESHOLD_NOT_MET) — the
+  // gate here is a glove-operability layer so the operator gets an
+  // immediate blocker instead of a network round-trip on submit.
+  const ipmBlocked = $derived(!!primaryThreshold && !ipmTriggered);
+  const canSubmit = $derived(!!selectedBlockId && !!selectedPluginId && !ipmBlocked);
+
+  const stepperData = $derived.by<Array<{ label: string; state: StepState }>>(() => {
+    const hasBlock = !!selectedBlockId;
+    const hasProduct = !!selectedPluginId;
+    const ipmReady = !primaryThreshold || ipmTriggered;
+    const hasObservation = !!scoutPest && scoutValue !== null;
+    return [
+      { label: 'Block', state: hasBlock ? 'done' : 'active' },
+      { label: 'Product', state: !hasProduct ? (hasBlock ? 'active' : 'pending') : 'done' },
+      {
+        label: 'IPM gate',
+        state: !ipmReady ? (hasProduct ? 'active' : 'pending') : 'done'
+      },
+      {
+        label: 'Observation',
+        state: hasObservation ? 'done' : ipmReady && hasProduct ? 'active' : 'pending'
+      },
+      {
+        label: 'Conditions',
+        state: canSubmit ? 'done' : ipmReady ? 'active' : 'pending'
+      },
+      { label: 'Record', state: canSubmit ? 'active' : 'pending' }
+    ];
+  });
+
+  const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId) ?? null);
+  const ctxBlocks = $derived<SprayContextBlock[]>(
+    selectedBlock ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: 0 }] : []
+  );
+  const ctxCropLabel = $derived(
+    selectedBlock?.cropPluginIds.length
+      ? selectedBlock.cropPluginIds.length === 1
+        ? selectedBlock.cropPluginIds[0]
+        : `${selectedBlock.cropPluginIds.length} crops`
+      : '—'
+  );
+  const ctxCompatibility = $derived<CompatibilityState | undefined>(
+    !selectedPluginId
+      ? undefined
+      : ipmBlocked
+        ? {
+            label: `IPM threshold not met for ${primaryThreshold?.pest ?? 'target pest'}`,
+            reason:
+              'Action threshold has not been crossed in the 5-week scout window — kernel will block submit.',
+            tone: 'wheat'
+          }
+        : {
+            label: 'IPM threshold cleared',
+            reason: 'Recent scout observations cross the product’s action threshold.',
+            tone: 'forest'
+          }
+  );
 
   async function recordSpray(ev: Event) {
     ev.preventDefault();
@@ -177,6 +242,21 @@
   {/if}
 </section>
 
+<div class="spray-almanac-chrome">
+  <SprayStepper steps={stepperData} />
+  <SprayContextStrip blocks={ctxBlocks} cropLabel={ctxCropLabel} compatibility={ctxCompatibility} />
+</div>
+
+{#if ipmBlocked}
+  <div class="ipm-block-banner" role="status">
+    <strong>Below action threshold.</strong>
+    Recent scout observations don't cross {primaryThreshold?.pest}
+    ≥{primaryThreshold?.threshold}
+    {primaryThreshold?.metric.replace(/-/g, ' ')}. Record an observation above to clear the gate, or
+    pick a non-IPM product.
+  </div>
+{/if}
+
 <SprayDecisionPage
   chemistry="insecticide"
   blocks={data.blocks}
@@ -191,7 +271,7 @@
   {error}
   {violations}
   {aiEnabled}
-  canSubmit={!!selectedBlockId && !!selectedPluginId}
+  {canSubmit}
   submitLabel="Record application"
   onSubmit={recordSpray}
 >
@@ -349,6 +429,18 @@
 </SprayDecisionPage>
 
 <style>
+  .spray-almanac-chrome {
+    margin-bottom: 22px;
+  }
+  .ipm-block-banner {
+    background: var(--color-wheat-soft, #e8d9b5);
+    border: 1px solid #d9c18f;
+    color: #6b4d00;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+  }
   .card {
     background: var(--color-paper, #fff);
     border: 1px solid var(--color-divider);

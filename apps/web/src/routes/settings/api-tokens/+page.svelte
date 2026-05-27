@@ -1,5 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { ChevronRight } from 'lucide-svelte';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -14,11 +16,19 @@
 </script>
 
 <svelte:head>
-  <title>API tokens — CropCard</title>
+  <title>API tokens · CropCard</title>
 </svelte:head>
 
 <main class="api-tokens">
-  <h1>API tokens</h1>
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/settings">Settings</a>
+    <ChevronRight size={13} aria-hidden="true" />
+    <a href="/settings/integrations">Integrations</a>
+    <ChevronRight size={13} aria-hidden="true" />
+    <span>External agents (API tokens)</span>
+  </nav>
+  <Kicker>Settings · Integrations</Kicker>
+  <h1 class="serif">API tokens.</h1>
   <p class="hint">
     Bearer credentials for external Claude agents that act on this farm's behalf (UC-43). Each token
     is scoped to this Owner and inherits your role's permissions. Tokens cannot mint other tokens or
@@ -116,6 +126,28 @@
     max-width: 880px;
     margin: 0 auto;
     padding: 1rem;
+  }
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-ink-muted);
+    margin-bottom: 4px;
+  }
+  .breadcrumb a {
+    color: var(--color-forest);
+    text-decoration: none;
+  }
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+  h1 {
+    margin: 6px 0 0.5rem;
+    font-family: var(--font-serif, serif);
+    font-size: 30px;
+    color: var(--color-forest-deep);
+    letter-spacing: -0.02em;
   }
   .hint {
     color: #555;

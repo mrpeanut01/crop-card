@@ -53,7 +53,7 @@
       href: '/settings/season',
       icon: Sprout,
       label: 'Season setup',
-      sub: 'Philosophy · tillage · fertility · irrigation',
+      sub: 'Philosophy · tillage · fertility · irrigation · re-walk the 6-step wizard',
       badge: { tone: 'neutral', text: 'Synced from wizard' },
       ownerOnly: true
     },
@@ -132,10 +132,13 @@
     <Kicker>Settings</Kicker>
     <h1>Configure CropCard.</h1>
   </div>
-  <a class="ghost-btn" href="/settings/advanced">
-    <FileDown size={14} />
-    Export account data
-  </a>
+  <div class="header-actions">
+    <a class="ghost-btn" href="/onboarding"> Re-walk setup tour → </a>
+    <a class="ghost-btn" href="/settings/advanced">
+      <FileDown size={14} />
+      Export account data
+    </a>
+  </div>
 </header>
 
 <!-- ─── Identity hero card ─────────────────────────────────────── -->
@@ -323,6 +326,11 @@
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 22px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
   }
   .page-head h1 {
     margin: 6px 0 0;

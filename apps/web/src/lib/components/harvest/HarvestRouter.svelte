@@ -1,12 +1,6 @@
 <script lang="ts">
-  import {
-    resolveArchetype,
-    type Archetype,
-    type HarvestStyle,
-    type HayOperations,
-    type HarvestMoistureGate,
-    type ZadoksStage
-  } from '$lib/plugins/schemas';
+  import { resolveArchetype, type Archetype, type HarvestStyle } from '$lib/plugins/schemas';
+  import type { RendererData, RendererProps } from './renderers/types';
   import FallbackHarvestRenderer from './renderers/FallbackHarvestRenderer.svelte';
   import SmallGrainZadoks from './renderers/SmallGrainZadoks.svelte';
   import ContinuousHarvestFruit from './renderers/ContinuousHarvestFruit.svelte';
@@ -19,57 +13,7 @@
   import PerennialVineQuality from './renderers/PerennialVineQuality.svelte';
   import TreeFruitMultiPick from './renderers/TreeFruitMultiPick.svelte';
 
-  /**
-   * Phase 25c (#88) — HarvestRouter.
-   * Phase 27A (#257) — dispatch on explicit `archetype` instead of the
-   * inferred `harvestStyle`. The planting-level `archetypeOverride`
-   * takes priority over the plugin's declared archetype so operators can
-   * route a corn planting through `forage-cutting-cycle` (silage) rather
-   * than `row-grain.pollination` (grain) without editing the plugin.
-   *
-   * Resolution order, via `resolveArchetype()` in plugin-validation:
-   *   1. `archetypeOverride` prop (planting-level operator override)
-   *   2. `archetype` prop (plugin-declared explicit value)
-   *   3. legacy `harvestStyle` 1:1 map (10:1 except `single-event`)
-   *   4. `cropFamily` fallback (family-keyed table)
-   *
-   * `FallbackHarvestRenderer` is now defensive-only — `resolveArchetype()`
-   * always returns one of the 10 canonical values. The fallback survives
-   * for the missing-data case (no plugin + no override) so a planting
-   * with corrupted metadata still renders.
-   */
-
-  /** Sprint 9 / Phase 27E — plugin-derived slice the renderer reads.
-   *  Pre-extracted server-side by /harvest +page.server.ts so the
-   *  renderer doesn't need to re-fetch the registry to show stage
-   *  tables / moisture gates / cut-cycle counts. */
-  export interface RendererData {
-    hayOperations?: HayOperations;
-    zadoksStages?: ZadoksStage[];
-    moistureGates?: HarvestMoistureGate[];
-    /** Number of harvest events already logged against this planting
-     *  (used by tree-fruit + continuous-fruit renderers for "Pick N"). */
-    priorPickCount: number;
-  }
-
-  export interface RendererProps {
-    plantingId: string;
-    blockId: string;
-    blockName: string;
-    cropPluginId: string;
-    varietyDisplayName: string;
-    cropFamily?: string;
-    plantingDate: number | null;
-    windowStartMs?: number;
-    windowEndMs?: number;
-    harvestIndicators: string[];
-    onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
-    error?: string | null;
-    onCancel: () => void;
-    /** Sprint 9 — optional plugin-derived enrichment. Renderers MUST
-     *  tolerate undefined (older plugins / fallback path). */
-    rendererData?: RendererData;
-  }
+  // resolveArchetype() order: archetypeOverride > archetype > harvestStyle (legacy) > cropFamily fallback.
 
   interface Props extends RendererProps {
     /** Plugin-declared archetype (Phase 27A, preferred). */

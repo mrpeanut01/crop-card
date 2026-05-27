@@ -1,33 +1,16 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
-import type {
-  Archetype,
-  CropPlugin,
-  HarvestStyle,
-  HayOperations,
-  HarvestMoistureGate,
-  ZadoksStage
-} from '$lib/plugins/schemas';
+import type { Archetype, CropPlugin, HarvestStyle } from '$lib/plugins/schemas';
+import type { RendererData } from '$lib/components/harvest/renderers/types';
+import { forageCutWindow, plantingHarvestKey } from '$lib/harvest/forageWindow';
 import { getRegistry } from '$lib/server/registry';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type HarvestStatus = 'too-early' | 'in-window' | 'past' | 'unknown';
 
-/** Sprint 9 / Phase 27E (#230, #177, #180, #181) — per-renderer payload.
- *  HarvestRouter forwards this to the archetype-specific renderer so
- *  ForageCuttingCycle / SmallGrainZadoks / etc. can show plugin-derived
- *  stage tables + moisture gates + prior-pick counts without re-fetching
- *  the registry client-side. */
-export interface RendererData {
-  hayOperations?: HayOperations;
-  zadoksStages?: ZadoksStage[];
-  moistureGates?: HarvestMoistureGate[];
-  /** Tree-fruit / continuous-fruit — number of harvest events already
-   *  logged against this planting. Renderer displays "Pick N". */
-  priorPickCount: number;
-}
+export type { RendererData };
 
 export interface PlantingHarvestStatus {
   blockId: string;
@@ -65,20 +48,27 @@ export const load: PageServerLoad = async ({ url }) => {
   const blocks = listBlocks();
   const registry = await getRegistry();
   const all = listHarvestEvents();
-  const harvestedKey = (blockId: string, cropPluginId: string) => `${blockId}|${cropPluginId}`;
-  const harvestedSet = new Set(all.map((e) => harvestedKey(e.blockId, e.cropPluginId)));
+  const harvestedSet = new Set(
+    all.map((e) =>
+      plantingHarvestKey({
+        cropId: e.cropId,
+        blockId: e.blockId,
+        cropPluginId: e.cropPluginId
+      })
+    )
+  );
 
   const now = Date.now();
   const plantings: PlantingHarvestStatus[] = [];
 
-  // Sprint 9 / #230 — last-pick lookup for the forage cut-cycle path.
-  // Forage plantings re-cut every `cutIntervalDays` from the previous
-  // cut, not from the planting date. Build a (blockId, cropPluginId) →
-  // most-recent-harvest-occurredAt map once so the inner loop is O(1).
   const lastPickByPlanting = new Map<string, number>();
   const pickCountByPlanting = new Map<string, number>();
   for (const e of all) {
-    const k = harvestedKey(e.blockId, e.cropPluginId);
+    const k = plantingHarvestKey({
+      cropId: e.cropId,
+      blockId: e.blockId,
+      cropPluginId: e.cropPluginId
+    });
     const prev = lastPickByPlanting.get(k);
     if (prev === undefined || e.occurredAt > prev) lastPickByPlanting.set(k, e.occurredAt);
     pickCountByPlanting.set(k, (pickCountByPlanting.get(k) ?? 0) + 1);
@@ -89,7 +79,7 @@ export const load: PageServerLoad = async ({ url }) => {
       const rec = registry.get(p.cropPluginId);
       const crop = rec?.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : undefined;
       const dtm = crop?.daysToMaturity;
-      const key = harvestedKey(b.id, p.cropPluginId);
+      const key = plantingHarvestKey({ cropId: p.id, blockId: b.id, cropPluginId: p.cropPluginId });
       const priorPickCount = pickCountByPlanting.get(key) ?? 0;
       const lastPickMs = lastPickByPlanting.get(key);
       const hayOps = crop?.hayOperations;
@@ -101,16 +91,16 @@ export const load: PageServerLoad = async ({ url }) => {
       let daysIntoWindow: number | undefined;
       let daysPastWindow: number | undefined;
 
-      // #230 — forage cut-cycle override. Once a forage planting has
-      // been mowed at least once and the plugin declares a cut interval,
-      // the *next* window is keyed to the last cut, not the planting
-      // date. Pre-first-cut still uses the standard dtm path so growers
-      // see "first cut at week 7" for newly-seeded alfalfa.
       const isForage =
         crop?.archetype === 'forage-cutting-cycle' || crop?.harvestStyle === 'forage-cutting-cycle';
-      if (isForage && lastPickMs !== undefined && hayOps?.cutIntervalDays) {
-        windowStartMs = lastPickMs + hayOps.cutIntervalDays.min * DAY_MS;
-        windowEndMs = lastPickMs + hayOps.cutIntervalDays.max * DAY_MS;
+      const forageWindow = forageCutWindow({
+        isForage,
+        lastPickMs,
+        cutIntervalDays: hayOps?.cutIntervalDays
+      });
+      if (forageWindow) {
+        windowStartMs = forageWindow.windowStartMs;
+        windowEndMs = forageWindow.windowEndMs;
       } else if (dtm && p.plantingDate !== null) {
         windowStartMs = p.plantingDate + dtm.min * DAY_MS;
         windowEndMs = p.plantingDate + dtm.max * DAY_MS;

@@ -12,23 +12,9 @@
    * the router doesn't know yet.
    */
 
-  interface Props {
-    plantingId: string;
-    blockId: string;
-    blockName: string;
-    cropPluginId: string;
-    varietyDisplayName: string;
-    cropFamily?: string;
-    plantingDate: number | null;
-    windowStartMs?: number;
-    windowEndMs?: number;
-    harvestIndicators: string[];
-    onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
-    error?: string | null;
-    onCancel: () => void;
-  }
+  import type { RendererProps } from './types';
 
-  const props: Props = $props();
+  const props: RendererProps = $props();
   // Don't destructure `props` — Svelte 5 needs a $derived to keep
   // reactive references current across loader re-runs.
   const harvestIndicators = $derived(props.harvestIndicators);

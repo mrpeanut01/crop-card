@@ -1,20 +1,30 @@
 <script lang="ts">
   import { Sprout } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
-
-  /**
-   * Phase 25c (#88) — dry-seed legume renderer.
-   *
-   * Cowpea, soup beans (cherokee, black turtle, kidney, navy, pinto),
-   * lentil, soybean grain, field pea. Single threshing pass at full
-   * senescence (~13-15% moisture for storage). The kicker reminds
-   * the operator to test moisture before storing — wet beans heat in
-   * the bin and rot.
-   */
-
   import type { RendererProps } from './types';
 
   const props: RendererProps = $props();
+
+  let dryPodLb = $state('');
+  let cleanSeedLb = $state('');
+  let storageMoisturePct = $state('');
+
+  const moistureWarn = $derived.by(() => {
+    const v = parseFloat(storageMoisturePct);
+    return Number.isFinite(v) && v > 15;
+  });
+
+  async function handleCommit(input: {
+    quantity?: string;
+    lotNumber?: string;
+  }): Promise<string | null> {
+    const tagBits: string[] = [];
+    if (dryPodLb.trim()) tagBits.push(`pods=${dryPodLb} lb`);
+    if (storageMoisturePct.trim()) tagBits.push(`moisture=${storageMoisturePct}%`);
+    const quantity = cleanSeedLb.trim() ? `${cleanSeedLb} lb seed` : input.quantity;
+    const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
+    return props.onCommit({ quantity, lotNumber: lot || undefined });
+  }
 </script>
 
 <div class="dry-legume-renderer">
@@ -29,6 +39,35 @@
     </div>
   </header>
 
+  <div class="bean-block">
+    <span class="block-title">Threshing + storage</span>
+    <div class="bean-grid">
+      <label class="qfield">
+        <span>Dry pod weight (lb)</span>
+        <input type="text" inputmode="decimal" placeholder="180" bind:value={dryPodLb} />
+      </label>
+      <label class="qfield">
+        <span>Clean seed weight (lb)</span>
+        <input type="text" inputmode="decimal" placeholder="120" bind:value={cleanSeedLb} />
+      </label>
+      <label class="qfield wide">
+        <span>Storage moisture (%)</span>
+        <input
+          type="text"
+          inputmode="decimal"
+          placeholder="14"
+          bind:value={storageMoisturePct}
+          class:warn={moistureWarn}
+        />
+      </label>
+    </div>
+    {#if moistureWarn}
+      <p class="moisture-warn">
+        ⚠ Above 15% moisture — beans will heat and rot in the bin. Dry to 13–15% before storage.
+      </p>
+    {/if}
+  </div>
+
   <FallbackHarvestRenderer
     plantingId={props.plantingId}
     blockId={props.blockId}
@@ -40,7 +79,7 @@
     windowStartMs={props.windowStartMs}
     windowEndMs={props.windowEndMs}
     harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
+    onCommit={handleCommit}
     error={props.error}
     onCancel={props.onCancel}
   />
@@ -81,5 +120,58 @@
     font-size: 12px;
     color: var(--color-ink-soft);
     line-height: 1.35;
+  }
+  .bean-block {
+    background: var(--color-cream, #fff8e1);
+    border-radius: 4px;
+    padding: 12px 14px;
+  }
+  .block-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .bean-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .qfield {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink-muted);
+  }
+  .qfield.wide {
+    grid-column: 1 / -1;
+  }
+  .qfield input {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 14px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-divider);
+    border-radius: 4px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    min-height: 36px;
+  }
+  .qfield input.warn {
+    border-color: var(--color-rust, #ba4b38);
+    background: #fdecea;
+  }
+  .moisture-warn {
+    margin: 8px 0 0;
+    color: var(--color-rust, #ba4b38);
+    background: #fdecea;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
   }
 </style>

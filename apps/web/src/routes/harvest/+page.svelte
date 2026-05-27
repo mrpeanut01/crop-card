@@ -94,6 +94,39 @@
     if (p.alreadyHarvested && !allowsReHarvest(p)) return false;
     return p.status === 'in-window' || p.status === 'too-early' || p.status === 'past';
   }
+
+  const readyPlantings = $derived(
+    data.plantings.filter((p) => p.status === 'in-window' && !p.alreadyHarvested)
+  );
+  const upcomingPlantings = $derived(data.plantings.filter((p) => p.status === 'too-early'));
+  const pastPlantings = $derived(
+    data.plantings.filter((p) => p.status === 'past' || p.alreadyHarvested)
+  );
+  const yearStart = $derived(new Date(new Date().getFullYear(), 0, 1).getTime());
+  const eventsYtd = $derived(data.recordedHarvests.filter((e) => e.occurredAt >= yearStart));
+
+  function exportYtdCsv() {
+    const rows = [
+      ['Date', 'Block', 'Crop plugin', 'Quantity', 'Lot #'],
+      ...eventsYtd.map((e) => [
+        new Date(e.occurredAt).toISOString().slice(0, 10),
+        e.blockName ?? e.blockId,
+        e.cropPluginId,
+        e.quantity ?? '',
+        e.lotNumber ?? ''
+      ])
+    ];
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `harvest-ytd-${new Date().getFullYear()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 </script>
 
 <svelte:head>
@@ -101,13 +134,18 @@
 </svelte:head>
 
 <header class="page-header">
-  <Kicker>Harvest · DTM-driven readiness</Kicker>
-  <h1 class="serif">Harvest</h1>
-  <p class="lede">
-    Each planting's harvest window is computed from the crop plugin's days-to-maturity. Walk the
-    block, check readiness against the indicators, and record the harvest with optional lot number
-    for traceability.
+  <Kicker>Harvest · {new Date().getFullYear()} season</Kicker>
+  <h1 class="serif">Harvest.</h1>
+  <p class="stat-line">
+    <strong>{readyPlantings.length}</strong> ready today ·
+    <strong>{upcomingPlantings.length}</strong> upcoming windows ·
+    <strong>{eventsYtd.length}</strong> events logged YTD
   </p>
+  <div class="page-actions">
+    <button class="ghost" type="button" onclick={exportYtdCsv} disabled={eventsYtd.length === 0}>
+      Export YTD ↓
+    </button>
+  </div>
 </header>
 
 {#if data.plantings.length === 0}
@@ -116,8 +154,8 @@
     <p>Add a planting on <a href="/plan">/plan</a> first.</p>
   </section>
 {:else}
-  <section class="card">
-    <h2>Plantings</h2>
+  <section class="card panel ready">
+    <h2>Plantings <span class="panel-count">{readyPlantings.length} ready</span></h2>
     <ul class="plantings">
       {#each data.plantings as p (p.plantingId)}
         <li
@@ -248,6 +286,28 @@
   </section>
 {/if}
 
+{#if upcomingPlantings.length > 0}
+  <section class="card panel upcoming">
+    <h2>Upcoming windows <span class="panel-count">{upcomingPlantings.length}</span></h2>
+    <ul class="upcoming-list">
+      {#each upcomingPlantings.slice(0, 8) as p (p.plantingId)}
+        <li>
+          <strong>{p.varietyDisplayName}</strong>
+          <span class="up-block">· {p.blockName}</span>
+          {#if p.windowStartMs}
+            <span class="up-when">
+              opens {new Date(p.windowStartMs).toLocaleDateString()} ({p.daysUntilWindow}d)
+            </span>
+          {/if}
+        </li>
+      {/each}
+      {#if upcomingPlantings.length > 8}
+        <li class="more">+ {upcomingPlantings.length - 8} more upcoming.</li>
+      {/if}
+    </ul>
+  </section>
+{/if}
+
 {#if data.recordedHarvests.length > 0}
   {@const inCuring = data.recordedHarvests.filter((h) => h.curing && h.curing.phase !== 'overdue')}
   {#if inCuring.length > 0}
@@ -345,6 +405,71 @@
   .lede {
     color: #555;
     margin: 0 0 1.5rem;
+  }
+  .stat-line {
+    margin: 0.25rem 0 0.75rem;
+    color: var(--color-ink-soft);
+    font-size: 14px;
+  }
+  .stat-line strong {
+    color: var(--color-ink);
+    font-weight: 700;
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+  .page-actions {
+    margin-bottom: 1rem;
+  }
+  .page-actions .ghost {
+    background: transparent;
+    color: var(--color-ink);
+    border: 1px solid var(--color-divider);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .page-actions .ghost:hover {
+    border-color: var(--color-ink);
+  }
+  .page-actions .ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .panel-count {
+    font-size: 12px;
+    color: var(--color-ink-muted);
+    font-weight: 500;
+    margin-left: 0.5rem;
+  }
+  .upcoming {
+    background: rgba(141, 174, 138, 0.06);
+  }
+  .upcoming-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+  }
+  .upcoming-list li {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-divider-soft, var(--color-divider));
+  }
+  .upcoming-list li:last-child {
+    border-bottom: none;
+  }
+  .upcoming-list .up-block {
+    color: var(--color-ink-muted);
+    margin-left: 4px;
+  }
+  .upcoming-list .up-when {
+    color: var(--color-ink-soft);
+    margin-left: 0.5rem;
+    font-family: var(--font-mono, ui-monospace, monospace);
+  }
+  .upcoming-list .more {
+    color: var(--color-ink-muted);
+    font-style: italic;
   }
   .curing-card {
     border-left: 4px solid #d4a017;

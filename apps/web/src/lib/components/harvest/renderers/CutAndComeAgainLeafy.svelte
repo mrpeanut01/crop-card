@@ -1,21 +1,28 @@
 <script lang="ts">
   import { Leaf } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
-
-  /**
-   * Phase 25c (#88) — cut-and-come-again leafy renderer.
-   *
-   * Lettuce, spinach, kale, collards, mustard greens, mizuna, arugula,
-   * culinary herbs (basil, parsley, cilantro, dill umbels). Cut above
-   * the growing point and the plant regrows for 2-4 more cuts before
-   * bolt or exhaustion. The kicker reminds the operator about cut
-   * height (above the apical meristem) — too-low cuts kill the
-   * regrowth potential.
-   */
-
   import type { RendererProps } from './types';
 
   const props: RendererProps = $props();
+
+  const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
+  const cutNumber = $derived(priorPicks + 1);
+
+  let cutLb = $state('');
+  let cutHeightInches = $state('');
+  let boltObserved = $state(false);
+
+  async function handleCommit(input: {
+    quantity?: string;
+    lotNumber?: string;
+  }): Promise<string | null> {
+    const tagBits: string[] = [`cut=${cutNumber}`];
+    if (cutHeightInches.trim()) tagBits.push(`cutHeight=${cutHeightInches}"`);
+    if (boltObserved) tagBits.push('bolt-observed');
+    const quantity = cutLb.trim() ? `${cutLb} lb` : input.quantity;
+    const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
+    return props.onCommit({ quantity, lotNumber: lot || undefined });
+  }
 </script>
 
 <div class="leafy-renderer">
@@ -24,11 +31,29 @@
     <div>
       <span class="archetype-name">Cut-and-come-again harvest</span>
       <span class="archetype-sub">
-        Cut 1-2" above the growing point so the plant can regrow. Re-harvest in 2-3 weeks until
-        bolt.
+        Cut {cutNumber}. Cut 1-2" above the growing point so the plant can regrow. Re-harvest in 2-3
+        weeks until bolt.
       </span>
     </div>
   </header>
+
+  <div class="cut-block">
+    <span class="block-title">This cut</span>
+    <div class="cut-grid">
+      <label class="qfield">
+        <span>Cut weight (lb)</span>
+        <input type="text" inputmode="decimal" placeholder="3.5" bind:value={cutLb} />
+      </label>
+      <label class="qfield">
+        <span>Cut height above crown (in)</span>
+        <input type="text" inputmode="decimal" placeholder="1.5" bind:value={cutHeightInches} />
+      </label>
+    </div>
+    <label class="bolt-check">
+      <input type="checkbox" bind:checked={boltObserved} />
+      Bolt observed — plant likely past its regrowth window
+    </label>
+  </div>
 
   <FallbackHarvestRenderer
     plantingId={props.plantingId}
@@ -41,7 +66,7 @@
     windowStartMs={props.windowStartMs}
     windowEndMs={props.windowEndMs}
     harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
+    onCommit={handleCommit}
     error={props.error}
     onCancel={props.onCancel}
   />
@@ -82,5 +107,51 @@
     font-size: 12px;
     color: var(--color-ink-soft);
     line-height: 1.35;
+  }
+  .cut-block {
+    background: var(--color-cream, #fff8e1);
+    border-radius: 4px;
+    padding: 12px 14px;
+  }
+  .block-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .cut-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .qfield {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink-muted);
+  }
+  .qfield input {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 14px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-divider);
+    border-radius: 4px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    min-height: 36px;
+  }
+  .bolt-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--color-ink);
+    font-weight: 500;
   }
 </style>

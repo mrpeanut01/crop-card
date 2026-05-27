@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { resolveArchetype, type Archetype, type HarvestStyle } from '$lib/plugins/schemas';
+  import {
+    resolveArchetype,
+    type Archetype,
+    type HarvestStyle,
+    type HayOperations,
+    type HarvestMoistureGate,
+    type ZadoksStage
+  } from '$lib/plugins/schemas';
   import FallbackHarvestRenderer from './renderers/FallbackHarvestRenderer.svelte';
   import SmallGrainZadoks from './renderers/SmallGrainZadoks.svelte';
   import ContinuousHarvestFruit from './renderers/ContinuousHarvestFruit.svelte';
@@ -32,6 +39,19 @@
    * with corrupted metadata still renders.
    */
 
+  /** Sprint 9 / Phase 27E — plugin-derived slice the renderer reads.
+   *  Pre-extracted server-side by /harvest +page.server.ts so the
+   *  renderer doesn't need to re-fetch the registry to show stage
+   *  tables / moisture gates / cut-cycle counts. */
+  export interface RendererData {
+    hayOperations?: HayOperations;
+    zadoksStages?: ZadoksStage[];
+    moistureGates?: HarvestMoistureGate[];
+    /** Number of harvest events already logged against this planting
+     *  (used by tree-fruit + continuous-fruit renderers for "Pick N"). */
+    priorPickCount: number;
+  }
+
   export interface RendererProps {
     plantingId: string;
     blockId: string;
@@ -46,6 +66,9 @@
     onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
     error?: string | null;
     onCancel: () => void;
+    /** Sprint 9 — optional plugin-derived enrichment. Renderers MUST
+     *  tolerate undefined (older plugins / fallback path). */
+    rendererData?: RendererData;
   }
 
   interface Props extends RendererProps {
@@ -86,7 +109,8 @@
     harvestIndicators: props.harvestIndicators,
     onCommit: props.onCommit,
     error: props.error,
-    onCancel: props.onCancel
+    onCancel: props.onCancel,
+    rendererData: props.rendererData
   });
 </script>
 

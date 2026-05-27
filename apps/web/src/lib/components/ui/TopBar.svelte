@@ -55,10 +55,10 @@
 
   // 7-item nav per design (collapsed from 13). Map / Calendar fold into Plan,
   // Insecticides into Spray, Fertility under Records, Equipment under
-  // /settings/sprayers, Hay into archetype renderers.
-  // Sprint 7 / Phase 27B: "Inventory" replaces the "Stock" entry and
-  // points at the unified surface. /stock keeps resolving until the
-  // Sprint 9 cutover deletes the old shell.
+  // /inventory?type=sprayer, Hay into archetype renderers.
+  // Sprint 9 / Phase 27E: legacy /stock, /settings/plugins, /settings/sprayers
+  // now 308-redirect to /inventory; the transitional active-state branch
+  // below is kept short-term so a 308 still lights up the Inventory chip.
   const items: Array<{ href: string; label: string; icon: LucideIcon }> = [
     { href: '/today', label: 'Today', icon: Sun },
     { href: '/plan', label: 'Plan', icon: Sprout },
@@ -123,7 +123,11 @@
     <IconButton ariaLabel="Alerts">
       {#snippet icon()}<Bell size={16} strokeWidth={1.75} />{/snippet}
     </IconButton>
-    <IconButton href="/settings" ariaLabel="Settings">
+    <IconButton
+      href="/settings"
+      ariaLabel="Settings"
+      aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}
+    >
       {#snippet icon()}<Settings size={16} strokeWidth={1.75} />{/snippet}
     </IconButton>
     {#if availableOwners.length > 1 && activeOwner}

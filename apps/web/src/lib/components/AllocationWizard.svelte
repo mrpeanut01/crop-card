@@ -2051,7 +2051,7 @@
             <div class="aw-seed-empty-actions">
               <a
                 class="btn-primary"
-                href="/stock/add"
+                href="/inventory/seed/add"
                 target="_blank"
                 rel="noopener"
                 data-action="add-seed-stock"
@@ -2060,12 +2060,12 @@
               </a>
               <a
                 class="btn-secondary"
-                href="/stock"
+                href="/inventory?type=seed"
                 target="_blank"
                 rel="noopener"
                 data-action="open-stock"
               >
-                Open Stock ↗
+                Open Inventory ↗
               </a>
               <button
                 type="button"

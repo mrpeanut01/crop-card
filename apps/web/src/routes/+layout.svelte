@@ -86,6 +86,9 @@
 {:else if (pendingCount ?? 0) > 0}
   <Banner tone="wheat">
     {pendingCount} pending record{pendingCount === 1 ? '' : 's'} queued.
+    {#snippet action()}
+      <a href="/records/pending" class="banner-link">Review queue</a>
+    {/snippet}
   </Banner>
 {/if}
 

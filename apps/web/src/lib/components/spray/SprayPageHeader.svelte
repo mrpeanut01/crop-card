@@ -77,15 +77,15 @@
   {#if gates}
     {@render gates()}
   {:else if chemistry === 'herbicide'}
-    <Pill tone="sky">IPM threshold gate — Phase 25d</Pill>
-    <Pill tone="sky">Pollinator-bloom gate — Phase 25d</Pill>
+    <Pill tone="forest">IPM threshold gate · enforced</Pill>
+    <Pill tone="forest">Pollinator-bloom gate · enforced</Pill>
   {:else if chemistry === 'insecticide'}
-    <Pill tone="sky">IPM threshold gate — Phase 25d</Pill>
-    <Pill tone="sky">Pollinator-bloom gate — Phase 25d</Pill>
+    <Pill tone="forest">IPM threshold gate · enforced</Pill>
+    <Pill tone="forest">Pollinator-bloom gate · enforced</Pill>
   {:else if chemistry === 'fungicide'}
-    <Pill tone="sky">FRAC rotation evaluator — Phase 25d</Pill>
+    <Pill tone="forest">FRAC rotation · enforced</Pill>
     <Pill tone="sky">Disease forecast (NEWA / FHB) — Phase 26</Pill>
-    <Pill tone="sky">Rain/dew dry-hours gate — Phase 25d</Pill>
+    <Pill tone="forest">Rain/dew dry-hours · enforced</Pill>
   {/if}
 </div>
 

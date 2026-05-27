@@ -36,6 +36,7 @@ import {
 } from '$lib/safety/userAddedRestrictionsFromStock';
 import { RULES_VERSION } from '$lib/safety/version';
 import { checkFracRotation } from '$lib/safety/fracRotation';
+import { checkFungicideTankMixCompat } from '$lib/safety/fungicideTankMix';
 import { checkPollinatorBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
 import { runEvaluator } from '$lib/safety/dryRunRunner';
 import type { StockUnit } from '$lib/stock/units';
@@ -132,6 +133,32 @@ export const POST: RequestHandler = async (event) => {
   // Both evaluators short-circuit through runEvaluator() which respects
   // KERNEL_DRY_RUN; during the 14-day window after 25d ships, violations
   // log to kernel_dry_run_log instead of blocking the spray.
+
+  // Sprint 12 (#194) — copper + sulfur tank-mix is phytotoxic. Hard-gate
+  // before any other kernel evaluator so the operator sees the precise
+  // chemistry-pair reason rather than a generic "FRAC overlap".
+  const tankMixIssues = checkFungicideTankMixCompat(
+    products.map((p) => ({
+      pluginId: p.pluginId,
+      displayName: p.displayName,
+      fracCodes: Array.from(new Set(p.activeIngredients.map((ai) => ai.fracCode)))
+    }))
+  );
+  const incompatIssues = tankMixIssues.filter((i) => i.severity === 'incompatible');
+  if (incompatIssues.length > 0) {
+    return json(
+      {
+        error: 'tank-mix incompatibility',
+        violations: incompatIssues.map((i) => ({
+          code: i.code,
+          message: i.message,
+          detail: { productPluginIds: i.productPluginIds }
+        })),
+        ruleVersion: RULES_VERSION
+      },
+      { status: 422 }
+    );
+  }
 
   const fracProposed = products.map((p) => ({
     pluginId: p.pluginId,

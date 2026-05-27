@@ -32,5 +32,6 @@
     "continuous": true,
     "beeAttractive": true
   },
-  "harvestStyle": "cure-then-store"
+  "harvestStyle": "cure-then-store",
+  "archetype": "winter-squash-cure"
 }

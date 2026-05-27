@@ -36,5 +36,6 @@
     "daysFromPlantingMin": 40,
     "daysFromPlantingMax": 70,
     "beeAttractive": false
-  }
+  },
+  "archetype": "dry-seed-legume"
 }

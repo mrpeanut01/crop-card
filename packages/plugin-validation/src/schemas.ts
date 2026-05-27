@@ -239,6 +239,127 @@ export const HARVEST_STYLES = [
 export const harvestStyleSchema = z.enum(HARVEST_STYLES);
 export type HarvestStyle = (typeof HARVEST_STYLES)[number];
 
+// ─── Phase 27A — explicit crop archetype (Invariant 8, design 2026-05-26) ──
+//
+// Replaces the inferred `harvestStyle` discriminator with an explicit
+// first-class enum on every crop plugin. The 10 values are canonical per
+// the design source-of-truth at `docs/design/almanac/INVENTORY_UNIFICATION.md`
+// — adding an 11th value here is a kernel-level design decision, not a
+// plugin-author choice.
+//
+// Naming convention: `family.subtype` where the dot-segment names the
+// renderer/workflow shape (NOT the crop biology). e.g., `winter-squash-cure`
+// is the archetype for "harvest once at maturity, prep for storage" — used
+// by cabbage + onion + carrot even though they aren't squash.
+//
+// Authoring: NEW crop plugins MUST declare `archetype`. EXISTING plugins
+// are backfilled from `harvestStyle` + `cropFamily` via
+// `scripts/backfill-archetype.mjs`. The Sprint 6 schema keeps `archetype`
+// optional during the rollout window; Sprint 7 flips to required after
+// backfill verifies clean on all 376 plugins.
+export const ARCHETYPES = [
+  /** Wheat / oats / barley — Zadoks staging + moisture gates. */
+  'small-grain.zadoks',
+  /** Corn — V/R staging + pollination-window pollination. */
+  'row-grain.pollination',
+  /** Dry beans / cowpea / soup beans — harvest at full senescence. */
+  'dry-seed-legume',
+  /** Single-harvest crops with storage prep — winter squash, cabbage,
+   *  onion, garlic, beets, carrots. The "cure" label is workflow shape,
+   *  not crop biology. */
+  'winter-squash-cure',
+  /** Tomato / pepper / eggplant / summer squash — multi-week harvest. */
+  'continuous-harvest-fruit',
+  /** Lettuce / spinach / kale / arugula / mizuna — repeat-cut leafy. */
+  'cut-and-come-again-leafy',
+  /** Cover-crop termination — rye, vetch, buckwheat, sorghum-sudan. */
+  'cover-crop.termination',
+  /** Hay — alfalfa, mixed grasses, orchard-grass; multi-cut cycle. */
+  'forage-cutting-cycle',
+  /** Grape / hops / kiwi — perennial vine, Brix/pH at harvest. */
+  'perennial-vine-quality',
+  /** Apple / pear / stone fruit — multi-pass ripening windows. */
+  'tree-fruit-multi-pick'
+] as const;
+export const archetypeSchema = z.enum(ARCHETYPES);
+export type Archetype = (typeof ARCHETYPES)[number];
+
+/** 1:1 mapping from the legacy `harvestStyle` discriminator to canonical
+ *  archetype. The `single-event` value has no 1:1 archetype — it falls to
+ *  `archetypeForFamilyFallback()` keyed on `cropFamily`. */
+export const HARVEST_STYLE_TO_ARCHETYPE: Record<HarvestStyle, Archetype | null> = {
+  'single-cut-grain': 'small-grain.zadoks',
+  'row-grain-pollinated': 'row-grain.pollination',
+  'dry-seed-legume': 'dry-seed-legume',
+  'cure-then-store': 'winter-squash-cure',
+  'continuous-fruit': 'continuous-harvest-fruit',
+  'cut-and-come-again': 'cut-and-come-again-leafy',
+  'cover-crop-termination': 'cover-crop.termination',
+  'forage-cutting-cycle': 'forage-cutting-cycle',
+  'perennial-vine': 'perennial-vine-quality',
+  'tree-fruit-multi-pick': 'tree-fruit-multi-pick',
+  'single-event': null
+};
+
+/** Family-keyed fallback for plugins whose `harvestStyle` is `single-event`
+ *  (or absent entirely). Picks the archetype whose *workflow shape* matches,
+ *  not the crop's biology. Conservative defaults; can be overridden per
+ *  plugin once authored. */
+export function archetypeForFamilyFallback(family: string): Archetype {
+  switch (family) {
+    case 'leafy-green':
+    case 'herb-culinary':
+      return 'cut-and-come-again-leafy';
+    case 'legume':
+      return 'dry-seed-legume';
+    case 'solanaceae':
+      return 'continuous-harvest-fruit';
+    case 'cereal-grain':
+      return 'small-grain.zadoks';
+    case 'corn':
+      return 'row-grain.pollination';
+    case 'cucurbit':
+    case 'brassica':
+    case 'allium':
+    case 'root':
+    case 'apiaceae':
+    case 'broadleaf-companion':
+      return 'winter-squash-cure';
+    case 'forage':
+      return 'forage-cutting-cycle';
+    case 'cover-grass':
+    case 'cover-legume':
+      return 'cover-crop.termination';
+    case 'stone-fruit':
+    case 'small-fruit':
+    case 'bramble':
+    case 'orchard':
+      return 'tree-fruit-multi-pick';
+    case 'vine-fruit':
+      return 'perennial-vine-quality';
+    default:
+      return 'winter-squash-cure';
+  }
+}
+
+/** Single resolution helper used by HarvestRouter + the backfill script.
+ *  Returns the explicit `archetype` if the plugin declares one; otherwise
+ *  derives from `harvestStyle` (10:1 map) or `cropFamily` (single-event
+ *  fallback). Never returns null — the kernel guarantees a renderer
+ *  always has an archetype. */
+export function resolveArchetype(plugin: {
+  archetype?: Archetype | undefined;
+  harvestStyle?: HarvestStyle | undefined;
+  cropFamily?: string | undefined;
+}): Archetype {
+  if (plugin.archetype) return plugin.archetype;
+  if (plugin.harvestStyle) {
+    const mapped = HARVEST_STYLE_TO_ARCHETYPE[plugin.harvestStyle];
+    if (mapped) return mapped;
+  }
+  return archetypeForFamilyFallback(plugin.cropFamily ?? '');
+}
+
 // ─── Phase 25c.0 — bloom window (pollinator-bloom gate input, 25d) ──────
 //
 // Consumed by `lib/safety/pollinatorBloom.ts` (Phase 25d) to decide whether
@@ -632,6 +753,14 @@ export const cropPluginSchema = pluginBase.extend({
    *  (Phase 25c #88) becomes defensive-only — primary path always
    *  finds a renderer. */
   harvestStyle: harvestStyleSchema,
+  /** Phase 27A (Invariant 8) — explicit crop archetype, 10 canonical
+   *  values. Drives the unified `HarvestRouter` dispatch + the Phase 27
+   *  Unified Inventory crop-detail renderer. Authoritative over the legacy
+   *  `harvestStyle` discriminator; `resolveArchetype()` is the runtime
+   *  fallback for plugins backfilled in flight. Optional during the
+   *  Sprint 6 rollout window — Sprint 7 promotes to required once the
+   *  `scripts/backfill-archetype.mjs` audit confirms clean coverage. */
+  archetype: archetypeSchema.optional(),
   /** When does this crop bloom + is it bee-attractive? Phase 25d
    *  pollinator-bloom gate blocks bee-toxic spray applications during
    *  the declared window. See `bloomWindowSchema` JSDoc.

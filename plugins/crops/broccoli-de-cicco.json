@@ -28,5 +28,6 @@
     "daysFromPlantingMin": 60,
     "daysFromPlantingMax": 90,
     "beeAttractive": false
-  }
+  },
+  "archetype": "winter-squash-cure"
 }

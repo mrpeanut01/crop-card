@@ -61,5 +61,6 @@
   "bloomWindow": {
     "continuous": true,
     "beeAttractive": true
-  }
+  },
+  "archetype": "forage-cutting-cycle"
 }

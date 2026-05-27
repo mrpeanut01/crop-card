@@ -32,5 +32,6 @@
     "daysFromPlantingMin": 50,
     "daysFromPlantingMax": 110,
     "beeAttractive": true
-  }
+  },
+  "archetype": "continuous-harvest-fruit"
 }

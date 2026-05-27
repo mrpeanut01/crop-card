@@ -60,5 +60,6 @@
   "bloomWindow": {
     "continuous": true,
     "beeAttractive": true
-  }
+  },
+  "archetype": "winter-squash-cure"
 }

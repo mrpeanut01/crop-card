@@ -218,6 +218,8 @@
               <div class="renderer-mount">
                 <HarvestRouter
                   harvestStyle={p.harvestStyle}
+                  archetype={p.archetype}
+                  archetypeOverride={p.archetypeOverride}
                   plantingId={p.plantingId}
                   blockId={p.blockId}
                   blockName={p.blockName}

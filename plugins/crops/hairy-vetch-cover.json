@@ -10,5 +10,6 @@
   "bloomWindow": {
     "continuous": true,
     "beeAttractive": true
-  }
+  },
+  "archetype": "cover-crop.termination"
 }

@@ -1,48 +1,11 @@
 <script lang="ts">
   import { TreeDeciduous } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
-  import type { RendererData } from '../HarvestRouter.svelte';
+  import type { RendererProps } from './types';
 
-  /**
-   * Sprint 9 / Phase 27E (#181) — tree-fruit multi-pick renderer.
-   *
-   * Apple, pear, stone-fruit (peach, plum, cherry). Multiple ripening
-   * passes per orchard — pickers walk the block 2-4 times across a
-   * 2-3 week window picking only what's at color/firmness target.
-   *
-   * Enrichment:
-   *   • prior-pick count comes from `rendererData.priorPickCount`
-   *     (built server-side in /harvest +page.server.ts by counting
-   *     harvest events for this (blockId, cropPluginId) pair). Shown
-   *     as a "Pick N" badge so the operator knows which pass this is.
-   *   • A typical-pass guidance hint (3-pass apple, 2-pass peach)
-   *     keyed by cropFamily. The plugin schema does not yet carry
-   *     per-cultivar pick-pass counts (Phase 28 lift); the renderer
-   *     surfaces a structured timeline anchored on the prior-pick log.
-   */
+  const props: RendererProps = $props();
 
-  interface Props {
-    plantingId: string;
-    blockId: string;
-    blockName: string;
-    cropPluginId: string;
-    varietyDisplayName: string;
-    cropFamily?: string;
-    plantingDate: number | null;
-    windowStartMs?: number;
-    windowEndMs?: number;
-    harvestIndicators: string[];
-    onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
-    error?: string | null;
-    onCancel: () => void;
-    rendererData?: RendererData;
-  }
-
-  const props: Props = $props();
-
-  /** Family-keyed pass-count guidance until Phase 28 lifts this onto
-   *  the plugin schema. Apples = 3 passes (early/peak/late), pears = 2,
-   *  stone fruit = 2 (with cherry effectively 1). */
+  // Family-keyed pick-pass guidance pending #181 schema lift onto cropPlugin.
   const FAMILY_PASS_GUIDANCE: Record<
     string,
     { typical: number; spreadDays: number; note: string }

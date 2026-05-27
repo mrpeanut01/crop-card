@@ -160,3 +160,11 @@ export const INVENTORY_TYPE_LABELS: Record<InventoryType, string> = {
   crop: 'Crops',
   sprayer: 'Sprayers'
 };
+
+export const STOCK_CATEGORY_TO_INVENTORY_TYPE: Record<string, InventoryType> = {
+  herbicide: 'pesticide',
+  insecticide: 'pesticide',
+  fungicide: 'pesticide',
+  fertilizer: 'fertility',
+  seed: 'seed'
+};

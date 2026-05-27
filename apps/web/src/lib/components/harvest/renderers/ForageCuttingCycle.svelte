@@ -1,44 +1,10 @@
 <script lang="ts">
   import { Scissors } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
-  import type { RendererData } from '../HarvestRouter.svelte';
+  import type { RendererProps } from './types';
+  import { fmtRange } from './format';
 
-  /**
-   * Sprint 9 / Phase 27E (#230) — forage cutting-cycle renderer.
-   *
-   * Perennial forage (alfalfa, clover, orchard-grass, timothy). Multi-
-   * cut model: typically 2-4 cuttings per season at 28-35 day intervals.
-   *
-   * The enriched header reads `hayOperations` from the crop plugin and
-   * surfaces:
-   *   • cutting count (this cut N of declared M)
-   *   • days since last cut + days remaining in the regrowth window
-   *   • per-bale-type moisture danger thresholds (small-square baled
-   *     >22% = mold/fire risk; large-round tolerates higher)
-   *
-   * The /harvest +page.server.ts also keys the *next* harvest window
-   * off the last cut + `hayOperations.cutIntervalDays` once the
-   * planting has been mowed at least once.
-   */
-
-  interface Props {
-    plantingId: string;
-    blockId: string;
-    blockName: string;
-    cropPluginId: string;
-    varietyDisplayName: string;
-    cropFamily?: string;
-    plantingDate: number | null;
-    windowStartMs?: number;
-    windowEndMs?: number;
-    harvestIndicators: string[];
-    onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
-    error?: string | null;
-    onCancel: () => void;
-    rendererData?: RendererData;
-  }
-
-  const props: Props = $props();
+  const props: RendererProps = $props();
 
   const hayOps = $derived(props.rendererData?.hayOperations);
   const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
@@ -77,9 +43,7 @@
         <div class="detail-row">
           <span class="detail-label">Cutting</span>
           <span class="detail-value mono">
-            {priorPicks + 1} of {cuttingsPerSeason.min === cuttingsPerSeason.max
-              ? cuttingsPerSeason.min
-              : `${cuttingsPerSeason.min}-${cuttingsPerSeason.max}`} per season
+            {priorPicks + 1} of {fmtRange(cuttingsPerSeason)} per season
           </span>
         </div>
       {/if}
@@ -87,9 +51,7 @@
         <div class="detail-row">
           <span class="detail-label">Cut interval</span>
           <span class="detail-value mono">
-            {cutInterval.min === cutInterval.max
-              ? `${cutInterval.min} d`
-              : `${cutInterval.min}–${cutInterval.max} d`} regrowth window
+            {fmtRange(cutInterval, 'd')} regrowth window
           </span>
         </div>
       {/if}

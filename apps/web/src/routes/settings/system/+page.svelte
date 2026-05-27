@@ -1488,7 +1488,7 @@
           <p class="hint">
             No pending suggestions. Run <strong>Look up missing metadata</strong> above, or click
             <strong>🔍 Refresh from web</strong>
-            on any item in <a href="/stock">/stock</a>.
+            on any item in <a href="/inventory">/inventory</a>.
           </p>
         {:else}
           <div class="actions-row">

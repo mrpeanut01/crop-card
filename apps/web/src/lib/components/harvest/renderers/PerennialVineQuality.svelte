@@ -1,44 +1,10 @@
 <script lang="ts">
   import { Grape } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
-  import type { RendererData } from '../HarvestRouter.svelte';
+  import type { RendererProps } from './types';
 
-  /**
-   * Sprint 9 / Phase 27E (#180) — perennial vine quality renderer.
-   *
-   * Grape (wine, table, juice), hops, kiwi. Quality-anchored single
-   * harvest window — for wine grapes that means Brix + pH + TA at the
-   * cultivar target. Hops harvest at aroma-cone shatter test.
-   *
-   * The plugin schema does not yet carry vine-quality targets as a
-   * first-class field (`qualityTargets: { brixMin, phRange, taRange }`
-   * lands in Phase 28). For Sprint 9 we expose three structured input
-   * slots (Brix, pH, TA) that the operator fills against their own
-   * tasting / lab notes; the values are persisted into the harvest
-   * event's `lotNumber` slot as a packed quality tag so vintage tracking
-   * has the agronomic context now. When the schema field lands, the
-   * inputs will be pre-populated and the field-label badges will go
-   * `from-plugin` instead of `manual`.
-   */
-
-  interface Props {
-    plantingId: string;
-    blockId: string;
-    blockName: string;
-    cropPluginId: string;
-    varietyDisplayName: string;
-    cropFamily?: string;
-    plantingDate: number | null;
-    windowStartMs?: number;
-    windowEndMs?: number;
-    harvestIndicators: string[];
-    onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
-    error?: string | null;
-    onCancel: () => void;
-    rendererData?: RendererData;
-  }
-
-  const props: Props = $props();
+  // Quality (Brix/pH/TA) is packed into the lotNumber tag pending #180 schema lift.
+  const props: RendererProps = $props();
 
   let brix = $state('');
   let phReading = $state('');

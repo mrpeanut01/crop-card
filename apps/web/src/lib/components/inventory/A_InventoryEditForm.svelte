@@ -439,8 +439,7 @@
   {#if type === 'crop'}
     <div class="banner">
       <strong>Crop plugin editing is versioned.</strong>
-      Use <a href="/settings/plugins">/settings/plugins</a> to upload a new version of this plugin — the
-      unified edit flow lands in Sprint 9 alongside the cutover.
+      Use <a href="/plugins">/plugins</a> to upload a new version of this plugin.
     </div>
   {/if}
 

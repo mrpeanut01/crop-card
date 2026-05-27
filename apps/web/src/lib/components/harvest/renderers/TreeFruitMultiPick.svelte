@@ -43,16 +43,17 @@
   /** Family-keyed pass-count guidance until Phase 28 lifts this onto
    *  the plugin schema. Apples = 3 passes (early/peak/late), pears = 2,
    *  stone fruit = 2 (with cherry effectively 1). */
-  const FAMILY_PASS_GUIDANCE: Record<string, { typical: number; spreadDays: number; note: string }> = {
+  const FAMILY_PASS_GUIDANCE: Record<
+    string,
+    { typical: number; spreadDays: number; note: string }
+  > = {
     pome: { typical: 3, spreadDays: 21, note: 'Pick over 3 passes ~7 days apart.' },
     'stone-fruit': { typical: 2, spreadDays: 10, note: 'Two passes, ~5 days apart by color.' },
     bramble: { typical: 4, spreadDays: 21, note: 'Pick every 3–5 days through the window.' }
   };
 
   const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
-  const guidance = $derived(
-    props.cropFamily ? FAMILY_PASS_GUIDANCE[props.cropFamily] : undefined
-  );
+  const guidance = $derived(props.cropFamily ? FAMILY_PASS_GUIDANCE[props.cropFamily] : undefined);
   const currentPick = $derived(priorPicks + 1);
 </script>
 
@@ -70,7 +71,9 @@
 
   <div class="pick-timeline">
     <div class="pick-head">
-      <span class="pick-badge mono">Pick {currentPick}{guidance ? ` of ~${guidance.typical}` : ''}</span>
+      <span class="pick-badge mono"
+        >Pick {currentPick}{guidance ? ` of ~${guidance.typical}` : ''}</span
+      >
       {#if guidance}
         <span class="pick-note">{guidance.note}</span>
       {/if}

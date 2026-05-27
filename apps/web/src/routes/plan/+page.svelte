@@ -3658,7 +3658,9 @@
           {/if}
           {#if (data.seedStock ?? []).length === 0}
             <p class="seed-rail-empty">
-              No seed stock with on-hand &gt; 0. Add seeds via <a href="/inventory?type=seed">Inventory</a>.
+              No seed stock with on-hand &gt; 0. Add seeds via <a href="/inventory?type=seed"
+                >Inventory</a
+              >.
             </p>
           {:else}
             {@const groupsByFamily = (() => {

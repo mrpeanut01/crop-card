@@ -104,8 +104,8 @@
       </label>
     </div>
     <p class="hint">
-      Wine grapes target: Brix 22–25, pH 3.2–3.6, TA 6–9 g/L. Tune to varietal + style. Hops:
-      log dry-matter %.
+      Wine grapes target: Brix 22–25, pH 3.2–3.6, TA 6–9 g/L. Tune to varietal + style. Hops: log
+      dry-matter %.
     </p>
   </div>
 

@@ -53,8 +53,7 @@
     return (
       zadoks.find(
         (s) =>
-          daysFromPlanting >= s.daysFromPlanting.min &&
-          daysFromPlanting <= s.daysFromPlanting.max
+          daysFromPlanting >= s.daysFromPlanting.min && daysFromPlanting <= s.daysFromPlanting.max
       ) ?? null
     );
   });

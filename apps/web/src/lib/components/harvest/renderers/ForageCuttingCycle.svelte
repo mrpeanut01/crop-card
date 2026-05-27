@@ -46,9 +46,7 @@
   const cutInterval = $derived(hayOps?.cutIntervalDays);
   const baleGate = $derived(hayOps?.baleMoistureGate);
 
-  const baleEntries = $derived(
-    baleGate ? Object.entries(baleGate).filter(([, v]) => !!v) : []
-  );
+  const baleEntries = $derived(baleGate ? Object.entries(baleGate).filter(([, v]) => !!v) : []);
 </script>
 
 <div class="forage-renderer">

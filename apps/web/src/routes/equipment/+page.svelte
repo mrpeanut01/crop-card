@@ -149,17 +149,10 @@
   });
 </script>
 
-<!--
-  Phase 25c (#88) — soft-redirect banner. /equipment kept at its URL
-  (the form here is still the canonical CRUD surface), but the new
-  Settings IA surfaces sprayer-specific summary + decon status at
-  /settings/sprayers. Banner lets the operator discover the new
-  Settings landing without breaking bookmarks.
--->
 <p class="redirect-banner">
   Looking for sprayer calibration + decon status?
-  <a href="/settings/sprayers">→ /settings/sprayers</a>
-  is the new Settings landing. This page stays for CRUD across all equipment types.
+  <a href="/inventory?type=sprayer">→ /inventory?type=sprayer</a>. This page stays for CRUD across
+  all equipment types.
 </p>
 
 <h1>Equipment</h1>

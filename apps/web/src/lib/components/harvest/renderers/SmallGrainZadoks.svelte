@@ -1,43 +1,10 @@
 <script lang="ts">
   import { Wheat } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
-  import type { RendererData } from '../HarvestRouter.svelte';
+  import type { RendererProps } from './types';
+  import { fmtRange } from './format';
 
-  /**
-   * Sprint 9 / Phase 27E — small-grain Zadoks renderer.
-   *
-   * Cereal grains (wheat, barley, oats, rye, broomcorn). Single-event
-   * harvest at Zadoks Z89 (full ripeness, ~12-14% grain moisture for
-   * malt barley, 13.5% for wheat).
-   *
-   * Enrichment reads `zadoksStages` + `moistureGates` from the plugin so
-   * the operator sees:
-   *   • where this planting is in the Zadoks staging table relative to
-   *     days-from-planting (current/imminent stage highlighted)
-   *   • declared moisture danger thresholds before binning (>14% wheat,
-   *     >13% barley = storage spoilage risk)
-   *
-   * Z80-Z99 (ripening) are flagged as harvest-window stages.
-   */
-
-  interface Props {
-    plantingId: string;
-    blockId: string;
-    blockName: string;
-    cropPluginId: string;
-    varietyDisplayName: string;
-    cropFamily?: string;
-    plantingDate: number | null;
-    windowStartMs?: number;
-    windowEndMs?: number;
-    harvestIndicators: string[];
-    onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
-    error?: string | null;
-    onCancel: () => void;
-    rendererData?: RendererData;
-  }
-
-  const props: Props = $props();
+  const props: RendererProps = $props();
   const DAY_MS = 24 * 60 * 60 * 1000;
 
   const zadoks = $derived(props.rendererData?.zadoksStages);
@@ -85,11 +52,7 @@
           <li class:current={isCurrent} class:harvest={isHarvest}>
             <span class="stage-code mono">{s.stage}</span>
             <span class="stage-name">{s.name}</span>
-            <span class="stage-days mono muted">
-              {s.daysFromPlanting.min === s.daysFromPlanting.max
-                ? `d${s.daysFromPlanting.min}`
-                : `d${s.daysFromPlanting.min}–${s.daysFromPlanting.max}`}
-            </span>
+            <span class="stage-days mono muted">d{fmtRange(s.daysFromPlanting)}</span>
           </li>
         {/each}
       </ol>

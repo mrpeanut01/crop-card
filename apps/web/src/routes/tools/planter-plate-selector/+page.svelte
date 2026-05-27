@@ -251,7 +251,7 @@
 
 <header class="head">
   {#if ctx}
-    <a href="/stock" class="back">← Back to inventory</a>
+    <a href="/inventory?type=seed" class="back">← Back to inventory</a>
   {:else}
     <a href="/tools" class="back">← Tools</a>
   {/if}
@@ -576,7 +576,10 @@
                 >
               </form>
             {:else if data.canEdit && data.seedItems.length === 0}
-              <p class="empty save-empty">No seed inventory yet — add a seed to /stock to save.</p>
+              <p class="empty save-empty">
+                No seed inventory yet — add a seed to <a href="/inventory/seed/add">/inventory</a> to
+                save.
+              </p>
             {/if}
           </li>
         {/each}

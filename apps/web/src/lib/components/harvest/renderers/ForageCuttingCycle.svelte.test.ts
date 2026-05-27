@@ -41,8 +41,8 @@ describe('ForageCuttingCycle — Sprint 9 enrichment', () => {
         priorPickCount: 1
       } as never
     });
-    // After 1 prior pick, we're on cut 2 of 3-4 per season
-    expect(container.textContent).toMatch(/2 of 3-4/);
+    // After 1 prior pick, we're on cut 2 of 3–4 per season (en-dash via fmtRange)
+    expect(container.textContent).toMatch(/2 of 3–4/);
     expect(container.textContent).toMatch(/28–35 d/);
   });
 

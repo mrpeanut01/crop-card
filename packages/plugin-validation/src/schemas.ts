@@ -135,6 +135,7 @@ export const hayOperationsSchema = z.object({
   /** Storage temperature watch — fires reminder events (FR-23 supports). */
   storageTempWatchF: z.object({ warn: z.number(), danger: z.number() }).optional()
 });
+export type HayOperations = z.infer<typeof hayOperationsSchema>;
 
 /** Zadoks small-grain growth-stage table (FR-20).
  *  @deprecated Loader normalizes into `growthStageTable` with `system: 'zadoks'`. */
@@ -145,6 +146,7 @@ export const zadoksStageSchema = z.object({
     .object({ min: z.number().int().nonnegative(), max: z.number().int().positive() })
     .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
 });
+export type ZadoksStage = z.infer<typeof zadoksStageSchema>;
 
 // ─── Plugin schema v1.3 (growth-stage phenology) ─────────────────────────
 //
@@ -433,6 +435,7 @@ export const harvestMoistureGateSchema = z.object({
   operation: z.literal('harvest'),
   thresholds: moistureThresholdsSchema
 });
+export type HarvestMoistureGate = z.infer<typeof harvestMoistureGateSchema>;
 
 /**
  * Orchard-specific seasonal task templates (FR-10). Each entry fires once

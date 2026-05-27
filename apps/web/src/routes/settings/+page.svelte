@@ -76,7 +76,7 @@
       ownerOnly: true
     },
     {
-      href: '/settings/sprayers',
+      href: '/inventory?type=sprayer',
       icon: SprayCan,
       label: 'Sprayers & calibration',
       sub: `${data.counts.equipment} registered${data.counts.dirtySprayers > 0 ? ` · ${data.counts.dirtySprayers} needs decon` : ''}`,
@@ -84,7 +84,7 @@
       ownerOnly: true
     },
     {
-      href: '/settings/plugins',
+      href: '/inventory?type=crop&mode=catalog',
       icon: Box,
       label: 'Plugins & crop library',
       sub: `${data.counts.plugins} loaded · ${data.advanced.pluginFailures} failed`

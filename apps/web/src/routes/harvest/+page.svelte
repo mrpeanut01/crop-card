@@ -230,6 +230,7 @@
                   windowStartMs={p.windowStartMs}
                   windowEndMs={p.windowEndMs}
                   harvestIndicators={p.harvestIndicators}
+                  rendererData={p.rendererData}
                   onCommit={(input) => commitFromRenderer(p, input)}
                   error={lastError}
                   onCancel={cancelRecord}

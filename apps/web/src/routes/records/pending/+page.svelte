@@ -59,7 +59,10 @@
     </button>
     <a href="/records">All records →</a>
   </div>
-  {#if lastDrainResult}<p class="result">{lastDrainResult}</p>{/if}
+  <!-- #242 — persistent aria-live region so screen readers announce the drain
+       outcome even when the message body changes between drains. Must stay
+       mounted (no {#if}) for assistive tech to pick up updates. -->
+  <p class="result" role="status" aria-live="polite">{lastDrainResult ?? ''}</p>
   {#if pending.length === 0}
     <p class="empty">Queue is empty.</p>
   {:else}

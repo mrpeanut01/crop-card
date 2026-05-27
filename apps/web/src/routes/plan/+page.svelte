@@ -3658,7 +3658,9 @@
           {/if}
           {#if (data.seedStock ?? []).length === 0}
             <p class="seed-rail-empty">
-              No seed stock with on-hand &gt; 0. Add seeds via <a href="/stock">Stock</a>.
+              No seed stock with on-hand &gt; 0. Add seeds via <a href="/inventory?type=seed"
+                >Inventory</a
+              >.
             </p>
           {:else}
             {@const groupsByFamily = (() => {
@@ -3698,9 +3700,9 @@
                       ondragstart={(e) => onSeedRailDragStart(e, s)}
                       ondragend={onSeedRailDragEnd}
                       title={empty
-                        ? `Out of stock — restock in /stock to plant\n${s.displayName}`
+                        ? `Out of stock — restock in /inventory to plant\n${s.displayName}`
                         : !s.cropPluginId
-                          ? `No crop plugin linked — set one in /stock\n${s.displayName}`
+                          ? `No crop plugin linked — set one in /inventory\n${s.displayName}`
                           : `Drag onto a block to plant\n${s.displayName}`}
                     >
                       <span class="seed-name">{s.shortName ?? s.displayName}</span>

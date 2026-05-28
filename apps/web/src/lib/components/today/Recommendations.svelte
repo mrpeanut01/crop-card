@@ -29,8 +29,10 @@
     /** Pass through from the loader's existing AI confidence; defaults to 0.86
      *  when not available, to match the design mockup's example value. */
     aiConfidence?: number;
+    /** Called when user clicks "+ Schedule task" on a recommendation (#105). */
+    onSchedule?: (id: string) => void;
   }
-  const { aiEnabled, items, aiConfidence = 0.86 }: Props = $props();
+  const { aiEnabled, items, aiConfidence = 0.86, onSchedule }: Props = $props();
 
   const visible = $derived(items.slice(0, 2));
   const remaining = $derived(Math.max(0, items.length - visible.length));
@@ -71,7 +73,11 @@
           {#if s.crop}{s.crop} ·
           {/if}<span class="mono">{s.window}</span>
         </div>
-        <button type="button" class="schedule">+ Schedule task</button>
+        {#if onSchedule}
+          <button type="button" class="schedule" onclick={() => onSchedule(s.id)}>
+            + Schedule task
+          </button>
+        {/if}
       </div>
     {/each}
   {/if}

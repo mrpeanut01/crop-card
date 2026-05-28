@@ -6,20 +6,68 @@ import { fields, helperAssignments, ownerSubscriptions, owners } from '$lib/db/s
 import { currentUser } from '$lib/server/auth';
 import { writeSession } from '$lib/server/session';
 import { runWithTenant, unscopedQueryNote } from '$lib/db/tenant';
+import { listBlocks } from '$lib/db/blocks';
+import { listSprayers } from '$lib/db/sprayers';
+import { listCrops } from '$lib/db/crops';
+import { loadSeasonSetup } from '$lib/season/setup.server';
 import type { PageServerLoad } from './$types';
 
+// #112 — derive a friendly first name from the email when no display
+// name exists yet. "sherry.miller@hilltop.farm" → "Sherry". Conservative:
+// title-case the first label, fall back to the literal email prefix
+// when the parse looks odd (no letters, all-numeric, etc.).
+function inferFirstName(email: string | null | undefined): string {
+  if (!email) return 'there';
+  const local = email.split('@')[0] ?? '';
+  const head = local.split(/[._-]/)[0] ?? '';
+  if (!/[a-zA-Z]/.test(head)) return local || 'there';
+  return head.charAt(0).toUpperCase() + head.slice(1).toLowerCase();
+}
+
 export const load: PageServerLoad = ({ locals }) => {
-  // #108 / CT-OB-001 — guard against silent second-farm creation. The
-  // hooks layer allows partial sessions through to /onboarding so users
-  // mid-bootstrap can finish setup; the symmetric block for *full*
-  // sessions wasn't there, so a logged-in onboarded user typing the URL
-  // could submit and silently get a second `owners` row. Bouncing here
-  // is the belt half of belt-and-braces; the POST action below is the
-  // braces.
-  if (locals.user?.activeOwnerId) {
-    throw redirect(303, '/today');
+  const user = locals.user ?? null;
+  const firstName = inferFirstName(user?.email);
+
+  // Pre-farm state: no activeOwnerId yet. Render the farm-creation form
+  // (step 0 of the wizard).
+  if (!user?.activeOwnerId) {
+    return {
+      user,
+      firstName,
+      farmName: null as string | null,
+      progress: null
+    };
   }
-  return { user: locals.user ?? null };
+
+  // Post-farm state: re-entrant wizard view. Sprint 14 #109 wired a
+  // "Re-walk setup tour →" link from /settings; this loader derives the
+  // 6-step progress from live DB state so the steps tick as the user
+  // completes them across other pages.
+  const ownerRow = (() => {
+    unscopedQueryNote('onboarding wizard reads the active owner row by id');
+    return db.select().from(owners).where(eq(owners.id, user.activeOwnerId!)).get();
+  })();
+  const blocks = listBlocks();
+  const sprayers = listSprayers();
+  const plantings = listCrops({ status: 'active', limit: 1 });
+  const season = loadSeasonSetup(new Date().getFullYear());
+
+  const progress = {
+    farm: !!ownerRow,
+    season: !!season,
+    block: blocks.length > 0,
+    sprayer: sprayers.length > 0,
+    // #190 — same kernel-correct predicate as /today bootstrap.
+    calibration: sprayers.some((s) => s.calibratedGpa != null && s.calibratedGpa > 0),
+    planting: plantings.length > 0
+  };
+
+  return {
+    user,
+    firstName,
+    farmName: ownerRow?.name ?? null,
+    progress
+  };
 };
 
 function slugify(name: string): string {
@@ -41,7 +89,6 @@ function uniqueSlug(base: string): string {
     const exists = db.select({ id: owners.id }).from(owners).where(eq(owners.slug, trial)).get();
     if (!exists) return trial;
   }
-  // Fallback: random tail.
   return `${candidate}-${randomUUID().slice(0, 6)}`;
 }
 
@@ -108,8 +155,6 @@ export const actions: Actions = {
         .run();
     });
 
-    // Seed the Home Field for the new tenant so block creation has a default
-    // parent. Wrapped in `runWithTenant` because the fields repo is scoped.
     runWithTenant(ownerId, () => {
       db.insert(fields)
         .values({
@@ -129,6 +174,9 @@ export const actions: Actions = {
       activeOwnerId: ownerId,
       activeRole: 'owner'
     });
-    throw redirect(303, '/today');
+    // After farm creation, stay on /onboarding so the user lands on the
+    // 6-step wizard with step 1 ticked. /today is reachable via the top
+    // nav once they're ready.
+    throw redirect(303, '/onboarding');
   }
 };

@@ -129,12 +129,10 @@
       ? 's'
       : ''} decontamination —
     {#each data.dirtySprayers as s, i (s.id)}
-      {#if i > 0},
-      {/if}
-      <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}">
-        <strong>{s.label}</strong> ({s.lastChemistryClass})
-      </a>
-    {/each}
+      {#if i > 0}{', '}{/if}<strong>{s.label}</strong> ({s.lastChemistryClass}){/each}
+    <a class="decon-cta" href="/spray/decon?sprayer={encodeURIComponent(data.dirtySprayers[0].id)}">
+      Run decon wizard →
+    </a>
   </Banner>
 {/if}
 

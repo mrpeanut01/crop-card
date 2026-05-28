@@ -37,6 +37,8 @@ export interface PriorityAction {
   blockId?: string;
   /** Overdue by N days, if applicable. */
   overdueDays?: number;
+  /** Task row id when kind==='task' — drives the Skip-with-reason flow (#104). */
+  taskId?: string;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -147,7 +149,8 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
       ctaHref: cta.href,
       ctaLabel: cta.label,
       blockId: top.blockId,
-      overdueDays
+      overdueDays,
+      taskId: top.id
     };
   }
 

@@ -21,8 +21,20 @@
   interface Props {
     action: PriorityAction | null;
     aiEnabled: boolean;
+    /** Called when user records a skip-with-reason on a task action (#104). */
+    onSkip?: (taskId: string, reason: string) => void;
   }
-  const { action, aiEnabled }: Props = $props();
+  const { action, aiEnabled, onSkip }: Props = $props();
+
+  let skipOpen = $state(false);
+  let skipReason = $state('');
+
+  function submitSkip() {
+    if (!action?.taskId || !onSkip) return;
+    onSkip(action.taskId, skipReason.trim());
+    skipOpen = false;
+    skipReason = '';
+  }
 
   /** Tone pill on the hero: chemistry-flavored chip. */
   function toneLabel(tag: PriorityAction['toneTag']): string {
@@ -75,7 +87,11 @@
           {action.ctaLabel}
           <ArrowRight size={15} strokeWidth={1.75} />
         </a>
-        <button type="button" class="ghost">Skip — note why</button>
+        {#if action.taskId && onSkip}
+          <button type="button" class="ghost" onclick={() => (skipOpen = !skipOpen)}>
+            Skip — note why
+          </button>
+        {/if}
         {#if aiEnabled}
           <span class="ai-hint">
             <Sparkle size={12} strokeWidth={1.75} />
@@ -84,6 +100,21 @@
         {/if}
       </div>
     </div>
+    {#if skipOpen}
+      <div class="skip-form" role="region" aria-label="Skip reason">
+        <label for="skip-reason">Why are you skipping this?</label>
+        <textarea
+          id="skip-reason"
+          bind:value={skipReason}
+          rows="2"
+          placeholder="e.g. weather window closed · stock out · re-evaluated"
+        ></textarea>
+        <div class="skip-actions">
+          <button type="button" class="ghost" onclick={() => (skipOpen = false)}>Cancel</button>
+          <button type="button" class="primary" onclick={submitSkip}>Save skip</button>
+        </div>
+      </div>
+    {/if}
     {#if action.scope.length > 0}
       <div class="scope-band">
         {#each action.scope as [k, v] (k)}
@@ -211,6 +242,39 @@
   }
   .ai-hint :global(svg) {
     color: var(--color-wheat, #d4a75c);
+  }
+  .skip-form {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    background: var(--color-cream);
+    border: 1px solid var(--color-divider);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 620px;
+  }
+  .skip-form label {
+    font-size: 12px;
+    color: var(--color-ink-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .skip-form textarea {
+    font-family: inherit;
+    font-size: 13.5px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-divider);
+    border-radius: 4px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    resize: vertical;
+  }
+  .skip-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
   }
   .scope-band {
     display: grid;

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
+  import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
   import Card from '$lib/components/ui/Card.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -751,7 +752,10 @@
       <ul class="alert-list">
         {#each data.lowStock as i (i.id)}
           <li>
-            <a href="/stock/{i.id}">{i.displayName}</a>
+            <a
+              href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[i.category] ?? 'pesticide'}/{i.id}"
+              >{i.displayName}</a
+            >
             — {i.onHand}
             {i.defaultUnit} on hand (reorder at {i.reorderThreshold}
             {i.defaultUnit})
@@ -769,7 +773,10 @@
       <ul class="alert-list">
         {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
           <li>
-            <a href="/stock/{e.itemId}">{e.itemName}</a>
+            <a
+              href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[e.category] ??
+                'pesticide'}/{e.itemId}">{e.itemName}</a
+            >
             {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}
             — {e.balance}
             {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left

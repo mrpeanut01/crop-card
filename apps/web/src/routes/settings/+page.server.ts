@@ -25,6 +25,8 @@ import { spendSnapshot } from '$lib/server/aiGuard';
 import { RULES_VERSION } from '$lib/safety/version';
 import { getRegistry } from '$lib/server/registry';
 import { getApiKey } from '$lib/server/scanResult';
+import { withTenant } from '$lib/db/tenant';
+import { and } from 'drizzle-orm';
 
 const DAY_MS = 86_400_000;
 const MONTH_MS = 30 * DAY_MS;
@@ -62,11 +64,19 @@ export const load: ServerLoad = async ({ locals }) => {
   // ─── AI snapshot (owner-only fields gated below) ────────────────────
   const ai = isOwner ? spendSnapshot() : null;
   const aiKey = isOwner ? getApiKey() : null;
+  // #167 / CT-SET-004 — the aiCallLog table is tenant-scoped (Phase 18a
+  // brand). The previous query omitted withTenant() and counted every
+  // owner's calls into the active tenant's display — a cross-tenant
+  // leak that inflated the count and disagreed with /settings/ai (which
+  // filters correctly). Use the same scoped predicate as /settings/ai
+  // so both surfaces report the same number.
   const aiCallsThisMonth = isOwner
     ? (db
         .select({ n: count() })
         .from(aiCallLog)
-        .where(gte(aiCallLog.createdAt, new Date(Date.now() - MONTH_MS)))
+        .where(
+          and(withTenant(aiCallLog), gte(aiCallLog.createdAt, new Date(Date.now() - MONTH_MS)))
+        )
         .get()?.n ?? 0)
     : 0;
 

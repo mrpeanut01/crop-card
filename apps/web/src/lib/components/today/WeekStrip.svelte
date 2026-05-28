@@ -18,13 +18,23 @@
     kind: WeekKind;
   }
 
+  export type Period = 'week' | 'month' | 'season';
+  const PERIODS: { id: Period; label: string; days: number }[] = [
+    { id: 'week', label: 'Week', days: 7 },
+    { id: 'month', label: 'Month', days: 28 },
+    { id: 'season', label: 'Season', days: 84 }
+  ];
+
   interface Props {
     /** ms timestamp for today (local 00:00). */
     todayStartMs: number;
-    /** Map keyed by YYYY-MM-DD → items for that day. */
+    /** Map keyed by YYYY-MM-DD → items for that day. Should cover 84 days for Season view. */
     items: Record<string, WeekItem[]>;
   }
   const { todayStartMs, items }: Props = $props();
+
+  let period = $state<Period>('week');
+  const periodMeta = $derived(PERIODS.find((p) => p.id === period)!);
 
   const DAY_MS = 24 * 60 * 60 * 1000;
   const days = $derived.by(() => {
@@ -35,7 +45,7 @@
       isToday: boolean;
       items: WeekItem[];
     }> = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < periodMeta.days; i++) {
       const ms = todayStartMs + i * DAY_MS;
       const d = new Date(ms);
       const iso = d.toISOString().slice(0, 10);
@@ -53,9 +63,24 @@
 
 <Card>
   <div class="head">
-    <h3 class="serif">This week</h3>
+    <h3 class="serif">
+      {period === 'week' ? 'This week' : period === 'month' ? 'Next 4 weeks' : 'This season'}
+    </h3>
+    <div class="seg" role="tablist" aria-label="View period">
+      {#each PERIODS as p (p.id)}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={period === p.id}
+          class:active={period === p.id}
+          onclick={() => (period = p.id)}
+        >
+          {p.label}
+        </button>
+      {/each}
+    </div>
   </div>
-  <div class="grid">
+  <div class="grid" data-period={period}>
     {#each days as d (d.iso)}
       <div class="day" class:today={d.isToday}>
         <div class="day-head">
@@ -84,10 +109,37 @@
     letter-spacing: -0.01em;
     font-family: var(--font-serif, serif);
   }
+  .seg {
+    display: inline-flex;
+    background: var(--color-cream);
+    border: 1px solid var(--color-divider);
+    border-radius: 999px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .seg button {
+    padding: 4px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink-muted);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .seg button.active {
+    background: var(--color-forest);
+    color: var(--color-cream);
+  }
   .grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 8px;
+  }
+  .grid[data-period='month'] .day,
+  .grid[data-period='season'] .day {
+    min-height: 90px;
   }
   .day {
     background: var(--color-cream);

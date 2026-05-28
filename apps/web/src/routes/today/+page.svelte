@@ -86,16 +86,18 @@
   function isoDay(ms: number): string {
     return new Date(ms).toISOString().slice(0, 10);
   }
+  // #103 — populate 84 days so WeekStrip's Week/Month/Season segmented
+  // control renders real items in every mode (not just the first 7 days).
   const weekItemsByDay = $derived.by(() => {
     const out: Record<string, WeekItem[]> = {};
-    const weekEndMs = todayStartMs + 7 * DAY_MS_LOCAL;
+    const horizonEndMs = todayStartMs + 84 * DAY_MS_LOCAL;
     for (const t of data.primariesInWindow) {
-      if (t.scheduledFor < todayStartMs || t.scheduledFor >= weekEndMs) continue;
+      if (t.scheduledFor < todayStartMs || t.scheduledFor >= horizonEndMs) continue;
       const key = isoDay(t.scheduledFor);
       (out[key] ??= []).push({ title: t.title, kind: weekKindForTask(t) });
     }
     for (const e of data.derivedEvents) {
-      if (e.startMs < todayStartMs || e.startMs >= weekEndMs) continue;
+      if (e.startMs < todayStartMs || e.startMs >= horizonEndMs) continue;
       // Skip passive events that pollute the strip (stage transitions, emergence).
       if (e.kind === 'emergence' || e.kind === 'stage-window' || e.kind === 'shade-window')
         continue;
@@ -356,14 +358,26 @@
 <WeatherStrip dateLabel={todayDateLabel} {greeting} {subtitle} weather={data.weatherSummary} />
 
 <div class="t-grid">
-  <TodayHero action={data.priorityAction} {aiEnabled} />
+  <TodayHero
+    action={data.priorityAction}
+    {aiEnabled}
+    onSkip={(taskId, reason) => patchTask(taskId, { action: 'abort', reason })}
+  />
   <QuickActions />
 </div>
 
 <div class="t-grid t-grid-second">
   <WeekStrip {todayStartMs} items={weekItemsByDay} />
   <div class="t-side-stack">
-    <Recommendations {aiEnabled} items={recommendationItems} />
+    <Recommendations
+      {aiEnabled}
+      items={recommendationItems}
+      onSchedule={(id) => {
+        const idx = recommendationItems.findIndex((r) => r.id === id);
+        const ev = data.upcoming[idx];
+        if (ev) scheduleFromEvent(ev);
+      }}
+    />
     <SeasonGlance glance={data.seasonGlance} />
   </div>
 </div>

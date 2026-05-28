@@ -49,11 +49,13 @@
 {/if}
 
 <style>
+  /* #146 / CT-H-004 — CLAUDE.md invariant: field UI must be one-handed-
+     glove operable (>=48dp tap targets). The visible icon stays 16-20px
+     via the consumer's <svg size> prop; the tap area expands via the
+     button's own min-height/min-width. */
   .icon-btn {
-    width: 36px;
-    height: 36px;
-    min-width: 0;
-    min-height: 0;
+    min-width: 48px;
+    min-height: 48px;
     border-radius: var(--radius-input);
     border: 1px solid var(--color-divider);
     background: var(--color-paper);

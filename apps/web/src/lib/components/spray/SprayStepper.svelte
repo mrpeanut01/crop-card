@@ -95,15 +95,23 @@
     background: var(--color-divider);
     min-width: 12px;
   }
+  /* #126 / CT-S-002 — labels stay visible on mobile per the
+     direction-almanac-rest.jsx ASprayScreen spec. Tighter typography +
+     overflow-x scroll keep all 5 labels readable on a 390px viewport
+     instead of collapsing 4 of them to digits-only. */
   @media (max-width: 700px) {
     .stepper {
-      gap: 8px;
+      gap: 6px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 2px;
     }
     .label {
-      display: none;
+      font-size: 11px;
+      white-space: nowrap;
     }
-    .step.active .label {
-      display: inline;
+    .connector {
+      min-width: 6px;
     }
   }
 </style>

@@ -3,6 +3,26 @@
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
+
+  // #225 / CT-ADM-005 — client-side search + status filter. URL-state
+  // intentionally deferred; the dataset on /admin/owners is small enough
+  // that loader pagination isn't yet needed.
+  let query = $state('');
+  let statusFilter = $state<'all' | 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'>(
+    'all'
+  );
+  const filteredOwners = $derived(
+    data.owners.filter((o) => {
+      if (statusFilter !== 'all' && o.billingStatus !== statusFilter) return false;
+      if (!query.trim()) return true;
+      const q = query.trim().toLowerCase();
+      return (
+        o.name.toLowerCase().includes(q) ||
+        o.slug.toLowerCase().includes(q) ||
+        o.id.toLowerCase().includes(q)
+      );
+    })
+  );
 </script>
 
 <svelte:head>
@@ -20,6 +40,26 @@
   {/if}
 
   <section class="section">
+    <div class="filter-row">
+      <input
+        type="search"
+        placeholder="Search name, slug, or id…"
+        bind:value={query}
+        class="search"
+        aria-label="Search owners"
+      />
+      <select bind:value={statusFilter} class="status-filter" aria-label="Filter by billing status">
+        <option value="all">All statuses</option>
+        <option value="trial">Trial</option>
+        <option value="active">Active</option>
+        <option value="past_due">Past due</option>
+        <option value="canceled">Canceled</option>
+        <option value="suspended">Suspended</option>
+      </select>
+      <span class="count">
+        {filteredOwners.length} of {data.owners.length}
+      </span>
+    </div>
     <table class="owners">
       <thead>
         <tr>
@@ -28,7 +68,7 @@
         </tr>
       </thead>
       <tbody>
-        {#each data.owners as o}
+        {#each filteredOwners as o}
           <tr class:suspended={o.billingStatus === 'suspended'}>
             <td><strong>{o.name}</strong></td>
             <td><code>{o.slug}</code></td>
@@ -98,6 +138,31 @@
   }
   .section {
     margin: 1.5rem 0;
+  }
+  /* #225 — owners filter row */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .search,
+  .status-filter {
+    padding: 8px 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.9rem;
+    min-height: 36px;
+  }
+  .search {
+    flex: 1;
+    max-width: 320px;
+  }
+  .count {
+    color: var(--color-ink-muted);
+    font-size: 0.85rem;
+    margin-left: auto;
   }
   table {
     width: 100%;

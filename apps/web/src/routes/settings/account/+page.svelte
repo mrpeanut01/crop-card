@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { browser } from '$app/environment';
   import { User, Lock, FileText } from 'lucide-svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
@@ -82,7 +83,11 @@
       </ul>
       <form method="POST" action="/signout">
         <button type="submit" class="ghost-sm with-icon">
-          <Lock size={11} strokeWidth={1.75} />
+          <!-- #258 / CT-004 — lucide@^1.0.1 <Lock> has an SSR/hydration
+               edge case in this slot (element.getAttribute() runtime
+               error). Render client-side only to skip SSR until a
+               lucide-svelte bump. -->
+          {#if browser}<Lock size={11} strokeWidth={1.75} />{/if}
           Sign out everywhere
         </button>
       </form>

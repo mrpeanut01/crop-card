@@ -44,6 +44,18 @@
   let showInviteForm = $state(false);
   let inviteEmail = $state('');
   let inviteRole = $state<'helper' | 'inspector' | 'custom-operator'>('helper');
+  let inviteEmailEl = $state<HTMLInputElement | null>(null);
+
+  // #206 / CT-RS-005 — when the form opens, scroll it into view + focus
+  // the first field. Without this, the form appears below the 844px
+  // viewport edge and keyboard users get no signal that the click did
+  // anything.
+  $effect(() => {
+    if (showInviteForm && inviteEmailEl) {
+      inviteEmailEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      inviteEmailEl.focus();
+    }
+  });
 </script>
 
 <svelte:head><title>Helpers & invites · CropCard</title></svelte:head>
@@ -83,7 +95,14 @@
       <form method="POST" action="?/invite" class="invite-form">
         <label class="iv-field">
           <span>Email</span>
-          <input type="email" name="email" bind:value={inviteEmail} required class="s-input" />
+          <input
+            type="email"
+            name="email"
+            bind:value={inviteEmail}
+            bind:this={inviteEmailEl}
+            required
+            class="s-input"
+          />
         </label>
         <label class="iv-field">
           <span>Role</span>

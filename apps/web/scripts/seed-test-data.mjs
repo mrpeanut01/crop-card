@@ -105,6 +105,14 @@ const helperUser = {
   id: randomUUID(),
   email: 'helper@cropcard.local'
 };
+// #191 — superadmin fixture so /admin/owners + impersonation flow can
+// be verified in dev. No helper_assignments row by design — the Phase
+// 18g superadmin routing path lets a `is_superadmin = 1` user land at
+// /admin/owners with a partial session.
+const superadminUser = {
+  id: 'user_superadmin',
+  email: 'superadmin@cropcard.local'
+};
 
 const homeField = { id: randomUUID(), name: 'Home Field' };
 
@@ -147,8 +155,12 @@ const dirtySprayer = { id: randomUUID(), type: 'sprayer', label: 'Sprayer-Contam
 
 // ─── users ──────────────────────────────────────────────────────────────
 const insertUser = sqlite.prepare(`INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)`);
+const insertSuperadmin = sqlite.prepare(
+  `INSERT INTO users (id, email, is_superadmin, created_at) VALUES (?, ?, 1, ?)`
+);
 insertUser.run(ownerUser.id, ownerUser.email, now);
 insertUser.run(helperUser.id, helperUser.email, now);
+insertSuperadmin.run(superadminUser.id, superadminUser.email, now);
 
 // ─── owner tenant + role assignment ─────────────────────────────────────
 sqlite
@@ -237,7 +249,9 @@ sqlite.close();
 
 console.log(`[seed] done`);
 console.log(`  owner:     ${ownerTenant.name} (slug=${ownerTenant.slug})`);
-console.log(`  users:     ${ownerUser.email} (owner role), ${helperUser.email} (helper role)`);
+console.log(
+  `  users:     ${ownerUser.email} (owner role), ${helperUser.email} (helper role), ${superadminUser.email} (superadmin)`
+);
 console.log(`  field:     ${homeField.name}`);
 console.log(
   `  blocks:    ${blockA.name} (corn, ${blockA.acres}ac), ${blockB.name} (soybean, ${blockB.acres}ac)`

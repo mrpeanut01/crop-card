@@ -2,9 +2,16 @@
  * Phase 25d (#89) — env-driven enabled-methods resolver for the Stock
  * 5-method add waterfall.
  *
- * `STOCK_ADD_METHODS=manual,search,barcode,label` enables those tabs.
- * Default = all four when the env var is absent. `photo` is reserved
- * for the Phase 26 AI-photo-extract method (deferred per #89).
+ * `STOCK_ADD_METHODS=manual,search,barcode,label,photo` enables those
+ * tabs. Default = all five when the env var is absent.
+ *
+ * Sprint 20 (#149 / Phase 26B) — `photo` promoted to a default method.
+ * Internally the photo + label tabs share the /api/scan-label vision
+ * endpoint; the difference is the operator's intent (full-product
+ * vision vs label-block OCR). Both surfaces are wired through the
+ * existing LabelCapture component, which accepts any image. A future
+ * Phase 28 sprint may split them into distinct API endpoints with
+ * tuned Claude prompts.
  *
  * Caller (the /stock/add loader) reads STOCK_ADD_METHODS from
  * `$env/dynamic/private` and passes the raw string here; this module
@@ -15,7 +22,7 @@
 export const ALL_STOCK_ADD_METHODS = ['manual', 'search', 'barcode', 'label', 'photo'] as const;
 export type StockAddMethod = (typeof ALL_STOCK_ADD_METHODS)[number];
 
-const DEFAULT_METHODS: StockAddMethod[] = ['manual', 'search', 'barcode', 'label'];
+const DEFAULT_METHODS: StockAddMethod[] = ['manual', 'search', 'barcode', 'label', 'photo'];
 
 export interface MethodMeta {
   id: StockAddMethod;
@@ -48,7 +55,8 @@ export const METHOD_META: Record<StockAddMethod, MethodMeta> = {
   photo: {
     id: 'photo',
     label: 'Photo extract',
-    description: 'Phase 26 — full bottle/bag photo → vision-extracted draft.'
+    description:
+      'Take any photo of the product — Claude vision pulls the draft even when the label is damaged or partially obscured.'
   }
 };
 

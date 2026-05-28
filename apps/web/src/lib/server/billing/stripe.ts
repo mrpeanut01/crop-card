@@ -82,10 +82,7 @@ export function verifyWebhookSignature(
   const expected = createHmac('sha256', secret).update(`${t}.${rawBody}`).digest('hex');
   const actual = Buffer.from(v1, 'hex');
   const expectedBuf = Buffer.from(expected, 'hex');
-  if (
-    actual.length !== expectedBuf.length ||
-    !timingSafeEqual(actual, expectedBuf)
-  ) {
+  if (actual.length !== expectedBuf.length || !timingSafeEqual(actual, expectedBuf)) {
     throw new StripeWebhookError('Stripe-Signature mismatch', 400);
   }
 }
@@ -114,7 +111,10 @@ export interface StripeEvent {
   };
 }
 
-const STRIPE_TO_OWNER_STATUS: Record<string, 'active' | 'past_due' | 'canceled' | 'suspended' | 'trial'> = {
+const STRIPE_TO_OWNER_STATUS: Record<
+  string,
+  'active' | 'past_due' | 'canceled' | 'suspended' | 'trial'
+> = {
   trialing: 'trial',
   active: 'active',
   past_due: 'past_due',

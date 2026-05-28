@@ -45,9 +45,7 @@ describe('stripe webhook signature verification', () => {
   });
 
   it('rejects a missing or malformed signature header', () => {
-    expect(() => verifyWebhookSignature('{}', null, SECRET)).toThrow(
-      /missing Stripe-Signature/
-    );
+    expect(() => verifyWebhookSignature('{}', null, SECRET)).toThrow(/missing Stripe-Signature/);
     expect(() => verifyWebhookSignature('{}', 'totally-bogus', SECRET)).toThrow(
       /malformed Stripe-Signature/
     );

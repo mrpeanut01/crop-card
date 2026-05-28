@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
 import { insertHarvestEvent } from '$lib/db/harvestEvents';
 import { getRegistry } from '$lib/server/registry';
+import { evaluateHarvestMoisture, HARVEST_MOISTURE_BLOCK } from '$lib/safety/harvestMoisture';
 
 const requestSchema = z.object({
   blockId: z.string().min(1),
@@ -19,7 +20,10 @@ const requestSchema = z.object({
   cropPluginId: z.string().min(1),
   occurredAt: z.number().int().optional(),
   quantity: z.string().max(60).optional(),
-  lotNumber: z.string().max(40).optional()
+  lotNumber: z.string().max(40).optional(),
+  // UC-16 — stored moisture %. When provided, the safety kernel gates
+  // the commit against the family threshold (block above, warn near).
+  moisturePct: z.number().min(0).max(100).optional()
 });
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -40,6 +44,29 @@ export const POST: RequestHandler = async ({ request }) => {
   const plugin = registry.get(parsed.data.cropPluginId);
   if (!plugin || plugin.plugin.type !== 'crop') {
     return json({ error: 'unknown crop plugin' }, { status: 404 });
+  }
+  // UC-16 — harvest-moisture kernel gate (Phase 26A, RULES_VERSION 0.5.2).
+  // Only fires when moisturePct is supplied and the resolved archetype
+  // has a stored threshold. Block above threshold; the UI surfaces warn.
+  if (parsed.data.moisturePct != null) {
+    const cropPlugin = plugin.plugin as {
+      archetype?: string;
+      cropFamily?: string;
+    };
+    const verdict = evaluateHarvestMoisture({
+      moisturePct: parsed.data.moisturePct,
+      cropPlugin: cropPlugin as Parameters<typeof evaluateHarvestMoisture>[0]['cropPlugin']
+    });
+    if (verdict?.decision === 'block') {
+      return json(
+        {
+          error: HARVEST_MOISTURE_BLOCK,
+          message: verdict.reason,
+          thresholdPct: verdict.thresholdPct
+        },
+        { status: 422 }
+      );
+    }
   }
   const occurredAt = parsed.data.occurredAt ?? Date.now();
   const event = insertHarvestEvent({

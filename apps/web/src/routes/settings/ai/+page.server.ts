@@ -13,7 +13,7 @@
  */
 
 import { error, fail } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { and, count, eq, gte } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
 import { users, aiCallLog } from '$lib/db/schema';
@@ -77,6 +77,18 @@ export const load: PageServerLoad = ({ locals }) => {
     .all()
     .reverse(); // newest first
 
+  // #167 / CT-SET-004 — canonical month-window call count. Same
+  // tenant-scoped query as /settings (after Sprint 17 fix) so both
+  // surfaces report identical numbers. recentCalls (limit 50) is for
+  // the audit-row display only — not the total.
+  const MONTH_MS = 30 * 86_400_000;
+  const callsThisMonth =
+    db
+      .select({ n: count() })
+      .from(aiCallLog)
+      .where(and(withTenant(aiCallLog), gte(aiCallLog.createdAt, new Date(Date.now() - MONTH_MS))))
+      .get()?.n ?? 0;
+
   return {
     key,
     spend,
@@ -84,6 +96,7 @@ export const load: PageServerLoad = ({ locals }) => {
     dailyQuotas,
     userAiEnabled: !!userRow?.aiEnabled,
     recentCalls,
+    callsThisMonth,
     isOwner: locals.user.role === 'owner'
   };
 };

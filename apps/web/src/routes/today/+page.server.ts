@@ -227,12 +227,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     orphanedPrePost,
     tasksCompletedToday,
     activeCrops,
+    // #280 — lift `category` into the projection so the /today template
+    // can resolve a /inventory/[type]/[id] link via the canonical
+    // STOCK_CATEGORY_TO_INVENTORY_TYPE map (no 308-redirect RTT).
     lowStock: lowStockItems().map((i) => ({
       id: i.id,
       displayName: i.displayName,
       onHand: i.onHand,
       defaultUnit: i.defaultUnit,
-      reorderThreshold: i.reorderThreshold ?? 0
+      reorderThreshold: i.reorderThreshold ?? 0,
+      category: i.category
     })),
     expiringStock: expiringSoon(30).map((e) => ({
       itemId: e.item.id,
@@ -240,7 +244,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       lotNumber: e.lot.lotNumber,
       balance: e.lot.balance,
       unit: e.item.defaultUnit,
-      daysUntilExpiry: e.lot.daysUntilExpiry ?? 0
+      daysUntilExpiry: e.lot.daysUntilExpiry ?? 0,
+      category: e.item.category
     })),
     // Phase 25e (#97) — Almanac hero / weather strip / season glance.
     priorityAction,

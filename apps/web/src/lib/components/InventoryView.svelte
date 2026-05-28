@@ -6,6 +6,7 @@
   import LabelCapture from '$lib/components/LabelCapture.svelte';
   import type { StockItemWithBalance } from '$lib/db/stock';
   import type { TaxonomyTerm } from '$lib/db/taxonomy';
+  import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
 
   export type InventoryViewItem = StockItemWithBalance & {
     typeId?: string | null;
@@ -1943,7 +1944,36 @@
             </button>
           </form>
         {/if}
-        {#if scanError}<p class="scan-error" role="alert">{scanError}</p>{/if}
+        {#if scanError}
+          <p class="scan-error" role="alert">{scanError}</p>
+          <!-- #251 / CT-ST-010 — recovery CTAs for the no-key error path.
+               The dead-end retry loop is useless when Claude isn't
+               configured; surface "Add Claude key" + "Use Manual entry"
+               so the operator always has a real next step. -->
+          {#if /No Anthropic API key configured/i.test(scanError)}
+            <div class="scan-error-actions">
+              <a
+                href="/settings/ai"
+                target="_blank"
+                rel="noopener"
+                class="scan-error-cta primary"
+                data-action="configure-ai-from-error"
+              >
+                Add Claude key ↗
+              </a>
+              <button
+                type="button"
+                class="scan-error-cta ghost"
+                onclick={() => {
+                  scanError = null;
+                }}
+                data-action="use-manual-from-error"
+              >
+                Use Manual entry instead →
+              </button>
+            </div>
+          {/if}
+        {/if}
         {#if scanSource && scanSource !== 'none'}
           <p class="scan-notice" role="status">
             {#if scanSource === 'openfoodfacts'}✓ Open Food Facts
@@ -2033,8 +2063,12 @@
                 <button type="button" onclick={() => (modalAddStockOpen = false)}>✕</button>
               </form>
             {/if}
-            <a href="/stock/{editTarget?.id}" class="lots-link" onclick={() => (modalMode = null)}
-              >Manage lots →</a
+            <a
+              href="/inventory/{editTarget
+                ? (STOCK_CATEGORY_TO_INVENTORY_TYPE[editTarget.category] ?? 'pesticide')
+                : 'pesticide'}/{editTarget?.id}"
+              class="lots-link"
+              onclick={() => (modalMode = null)}>Manage lots →</a
             >
           </div>
           {#if modalLotError}<p class="error">{modalLotError}</p>{/if}
@@ -3818,6 +3852,39 @@
     padding: 0.4rem 0.7rem;
     border-radius: 3px;
     margin: 0.4rem 1.25rem 0;
+  }
+  /* #251 — recovery CTAs on the no-key error path */
+  .scan-error-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 8px 1.25rem 0;
+  }
+  .scan-error-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 36px;
+  }
+  .scan-error-cta.primary {
+    background: var(--color-forest, #1f5e3a);
+    color: var(--color-cream, white);
+    border: 1px solid var(--color-forest, #1f5e3a);
+  }
+  .scan-error-cta.ghost {
+    background: transparent;
+    color: var(--color-forest, #1f5e3a);
+    border: 1px solid var(--color-divider, #d4d4d4);
+  }
+  .scan-error-cta.ghost:hover {
+    border-color: var(--color-forest, #1f5e3a);
   }
 
   /* ── Shared buttons ─────────────────────────────────────────────────────── */

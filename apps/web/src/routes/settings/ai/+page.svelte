@@ -52,6 +52,13 @@
   {#snippet badge()}
     {#if enabled}
       <Pill tone="forest"><Check size={10} /> Active</Pill>
+      <!-- #167 / CT-SET-004 — surface a "Cap exceeded" pill next to
+           the Active state when this month's spend is over the cap.
+           Mirrors the .over class on the cap-fill bar so the badge
+           area and the bar are never out-of-sync. -->
+      {#if data.spend.pctUsed >= 1}
+        <Pill tone="rust">Cap exceeded</Pill>
+      {/if}
     {:else}
       <Pill tone="rust">No key</Pill>
     {/if}
@@ -98,7 +105,10 @@
         <div class="cap-ticks mono">
           <span>$0</span>
           <span
-            >${data.spend.monthlyUsdSoFar.toFixed(2)} spent · {data.recentCalls?.length ?? 0} calls</span
+            >${data.spend.monthlyUsdSoFar.toFixed(2)} spent · {data.callsThisMonth ?? 0} call{(data.callsThisMonth ??
+              0) === 1
+              ? ''
+              : 's'}</span
           >
           <span>${data.spend.cap.toFixed(0)} cap</span>
         </div>

@@ -179,16 +179,24 @@ describe('A_InventoryEditForm — #296 type-aware placeholders + prefill', () =>
     expect(getByRole('status').textContent).toMatch(/review/i);
   });
 
-  it('ignores a prefilled category that is invalid for the type', () => {
+  it('ignores a prefilled category that is invalid for the type', async () => {
     const { container } = render(A_InventoryEditForm, {
       type: 'fertility',
       prefill: { source: 'ai', category: 'herbicide', displayName: 'Mislabeled' }
     });
-    // fertility only allows 'fertilizer'; the bad category must not stick.
-    // No category dropdown renders for single-option types, so submit and
-    // assert the posted category is fertilizer.
+    // fertility only allows 'fertilizer'; the bad 'herbicide' category must be
+    // dropped on prefill. Submit and assert the posted category is corrected.
     const input = container.querySelector('#displayName') as HTMLInputElement;
     expect(input.value).toBe('Mislabeled');
+    const form = container.querySelector('form');
+    await fireEvent.submit(form!);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(globalThis.fetch).toHaveBeenCalled();
+    const callArgs = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock
+      .calls[0];
+    const body = JSON.parse((callArgs[1] as { body: string }).body);
+    expect(body.category).toBe('fertilizer');
+    expect(body.category).not.toBe('herbicide');
   });
 
   it('shows no provenance banner for a manual (empty) draft', () => {

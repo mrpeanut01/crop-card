@@ -738,44 +738,37 @@
           Math.abs(box.cx - q.cx) < (box.w + q.w) / 2 + PAD &&
           Math.abs(box.cy - q.cy) < (box.h + q.h) / 2 + PAD
       );
-    for (const e of sorted) {
-      const p = map.latLngToContainerPoint([e.lat, e.lon]);
-      let w = e.el.offsetWidth;
-      let h = e.el.offsetHeight;
+    // Greedily nudge a box (vertically first, then horizontally) until it
+    // clears every already-placed box or the budget is exhausted. Captures the
+    // colliding box once per step rather than re-scanning twice.
+    const nudgeClear = (px: number, py: number, w: number, h: number) => {
       let dx = 0;
       let dy = 0;
-      let guard = 0;
-      while (overlaps({ cx: p.x + dx, cy: p.y + dy, w, h }) && guard < 200) {
-        guard++;
-        const hit = overlaps({ cx: p.x + dx, cy: p.y + dy, w, h })!;
-        dy += p.y + dy >= hit.cy ? STEP : -STEP;
+      let hit: { cx: number; cy: number } | undefined;
+      for (let guard = 0; guard < 200; guard++) {
+        hit = overlaps({ cx: px + dx, cy: py + dy, w, h });
+        if (!hit) break;
+        dy += py + dy >= hit.cy ? STEP : -STEP;
         if (Math.abs(dy) > CAP) {
           dy = 0;
           dx += STEP;
         }
         if (Math.abs(dx) > CAP) break;
       }
+      return { dx, dy, clear: !hit };
+    };
+    for (const e of sorted) {
+      const p = map.latLngToContainerPoint([e.lat, e.lon]);
+      let { dx, dy, clear } = nudgeClear(p.x, p.y, e.el.offsetWidth, e.el.offsetHeight);
       // Couldn't separate the full label — fall back to the compact code and
       // try once more from the centroid.
-      if (overlaps({ cx: p.x + dx, cy: p.y + dy, w, h })) {
+      if (!clear) {
         e.el.classList.add('block-label--compact');
         e.el.innerHTML = escapeHtml(e.compact);
-        w = e.el.offsetWidth;
-        h = e.el.offsetHeight;
-        dx = 0;
-        dy = 0;
-        guard = 0;
-        while (overlaps({ cx: p.x + dx, cy: p.y + dy, w, h }) && guard < 200) {
-          guard++;
-          const hit = overlaps({ cx: p.x + dx, cy: p.y + dy, w, h })!;
-          dy += p.y + dy >= hit.cy ? STEP : -STEP;
-          if (Math.abs(dy) > CAP) {
-            dy = 0;
-            dx += STEP;
-          }
-          if (Math.abs(dx) > CAP) break;
-        }
+        ({ dx, dy } = nudgeClear(p.x, p.y, e.el.offsetWidth, e.el.offsetHeight));
       }
+      const w = e.el.offsetWidth;
+      const h = e.el.offsetHeight;
       e.el.style.transform = `translate(-50%, -50%) translate(${dx}px, ${dy}px)`;
       placed.push({ cx: p.x + dx, cy: p.y + dy, w, h });
     }

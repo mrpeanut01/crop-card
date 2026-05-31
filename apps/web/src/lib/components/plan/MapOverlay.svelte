@@ -195,15 +195,15 @@
         <Info size={13} />
         <p>
           Click any block to jump there in Plan. The dedicated
-          <a href="/plan?tab=layout">layout editor</a> has soil zones, irrigation, and pesticide-buffer
-          overlays.
+          <a href="/settings/farm/map">fields & blocks editor</a> in Settings has soil zones, irrigation,
+          and pesticide-buffer overlays.
         </p>
       </div>
     {/if}
   </div>
   {#snippet footer()}
-    <a class="ghost" href="/plan?tab=layout" onclick={onClose}>
-      Open full layout editor <ArrowRight size={13} />
+    <a class="ghost" href="/settings/farm/map" onclick={onClose}>
+      Open fields & blocks editor <ArrowRight size={13} />
     </a>
   {/snippet}
 </Modal>

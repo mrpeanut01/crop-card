@@ -60,6 +60,7 @@ export async function POST({ request }) {
   if (existing) {
     return json({
       existingStockItemId: existing.id,
+      category: existing.category,
       found: true,
       barcode,
       source: 'none'

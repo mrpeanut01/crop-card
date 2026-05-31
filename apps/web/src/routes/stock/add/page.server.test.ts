@@ -7,9 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { load } from './+page.server';
 
 function redirectFrom(category?: string): { status: number; location: string } {
-  const url = new URL(
-    `http://localhost/stock/add${category ? `?category=${category}` : ''}`
-  );
+  const url = new URL(`http://localhost/stock/add${category ? `?category=${category}` : ''}`);
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (load as any)({ url });

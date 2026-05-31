@@ -1737,8 +1737,6 @@
     }))
   );
 
-
-
   function fmt(ts?: number) {
     return ts ? new Date(ts).toLocaleDateString() : '—';
   }
@@ -2010,7 +2008,11 @@
     <section class="card layout-cta">
       <div class="layout-cta-text">
         <strong>Field & block map</strong>
-        <span>This is a read-only view. {data.canEdit ? 'Draw and edit boundaries in Settings.' : 'Boundaries are managed by the farm owner.'}</span>
+        <span
+          >This is a read-only view. {data.canEdit
+            ? 'Draw and edit boundaries in Settings.'
+            : 'Boundaries are managed by the farm owner.'}</span
+        >
       </div>
       {#if data.canEdit}
         <a class="layout-cta-btn" href="/settings/farm/map">Manage fields & blocks →</a>

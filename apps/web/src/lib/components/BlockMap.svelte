@@ -49,6 +49,7 @@
   export type ShadeSourceLite = {
     id: string;
     name: string;
+    fieldId?: string;
     kind:
       | 'tree-row'
       | 'tree-grove'
@@ -89,6 +90,8 @@
     onSaveFieldGeometry,
     onCreateFieldWithGeometry,
     blockBadges,
+    showBlockLabels = false,
+    declutterLabels = false,
     shadeSources = [],
     onCreateShadeSource,
     onDeleteShadeSource,
@@ -99,6 +102,14 @@
     canEdit: boolean;
     thumbnail?: boolean;
     onThumbnailClick?: () => void;
+    /** Render a permanent, high-contrast name pill at each block centroid
+     *  (read-only surfaces like /plan layout). Off by default so the crops
+     *  tab + thumbnail previews keep their hover-only block tooltips. */
+    showBlockLabels?: boolean;
+    /** Run a greedy collision-avoidance pass on the permanent labels so block
+     *  names never overlap; falls back to a compact badge when a label can't
+     *  be separated at the current zoom. Re-runs on zoom/pan. */
+    declutterLabels?: boolean;
     onSaveGeometry: SaveCallback;
     onCreateWithGeometry: CreateBlockCb;
     onSaveFieldGeometry: SaveCallback;
@@ -148,6 +159,18 @@
   let blockLayer: LayerGroup | null = null;
   /** v1.3 — shade-source layer renders above blocks. */
   let shadeLayer: LayerGroup | null = null;
+  /** Permanent block-name labels render above everything else. */
+  let labelLayer: LayerGroup | null = null;
+  /** Live label elements + their map anchor, rebuilt on every block render and
+   *  re-flowed by the declutter pass. */
+  let labelEntries: Array<{
+    el: HTMLElement;
+    lat: number;
+    lon: number;
+    full: string;
+    compact: string;
+  }> = [];
+  let labelRelayoutQueued = false;
 
   const polygonToBlockId = new Map<number, string>();
   const polygonToFieldId = new Map<number, string>();
@@ -288,12 +311,19 @@
     fieldLayer = L.layerGroup().addTo(map);
     blockLayer = L.layerGroup().addTo(map);
     shadeLayer = L.layerGroup().addTo(map);
+    // Permanent name labels render on top of every polygon layer.
+    labelLayer = L.layerGroup().addTo(map);
 
     buildFieldColorMap();
     renderFields(L);
     renderBlocks(L);
     renderShadeSources(L);
     fitToAll(L);
+
+    if (showBlockLabels && declutterLabels) {
+      map.on('zoomend moveend', scheduleLabelRelayout);
+      scheduleLabelRelayout();
+    }
 
     if (thumbnail) return; // no controls or editing in thumbnail mode
 
@@ -481,6 +511,8 @@
     if (!map || !blockLayer) return;
     blockLayer.clearLayers();
     polygonToBlockId.clear();
+    if (labelLayer) labelLayer.clearLayers();
+    labelEntries = [];
     for (const b of blocks) {
       if (!b.geometryGeojson) continue;
       let parsed: unknown;
@@ -496,6 +528,30 @@
       layer.bindTooltip(b.name, { direction: 'center' });
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
       polygonToBlockId.set(id, b.id);
+
+      // Permanent, high-contrast name pill at the centroid for read-only
+      // surfaces. The declutter pass (when enabled) keeps these from
+      // overlapping; without it they render at the raw centroid.
+      if (showBlockLabels && !thumbnail && labelLayer) {
+        const centroid = geojsonCentroid(b.geometryGeojson);
+        if (centroid) {
+          const [lon, lat] = centroid;
+          const full = b.name;
+          const compact = b.blockLabel?.trim() || b.name.charAt(0).toUpperCase();
+          const icon = L.divIcon({
+            html: `<span class="block-label">${escapeHtml(full)}</span>`,
+            className: 'block-label-wrap',
+            iconSize: [0, 0]
+          });
+          const marker = L.marker([lat, lon], {
+            icon,
+            interactive: false,
+            keyboard: false
+          }).addTo(labelLayer);
+          const el = marker.getElement()?.querySelector('.block-label') as HTMLElement | null;
+          if (el) labelEntries.push({ el, lat, lon, full, compact });
+        }
+      }
 
       // Phase 14e: optional badge at the polygon centroid (e.g. crop family
       // emoji on /plan?tab=crops). Non-interactive so polygon clicks still
@@ -632,8 +688,98 @@
       renderFields(mod.default);
       renderBlocks(mod.default);
       renderShadeSources(mod.default);
+      if (showBlockLabels && declutterLabels) scheduleLabelRelayout();
     });
   });
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /** Coalesce relayout requests into one rAF tick so zoom/pan/data churn
+   *  doesn't thrash layout. */
+  function scheduleLabelRelayout() {
+    if (labelRelayoutQueued) return;
+    labelRelayoutQueued = true;
+    requestAnimationFrame(() => {
+      labelRelayoutQueued = false;
+      relayoutLabels();
+    });
+  }
+
+  /**
+   * Greedy collision-avoidance for the permanent block labels. Resets every
+   * label to its true centroid, then places labels north-to-south, nudging any
+   * that would overlap an already-placed label. A label that still can't be
+   * separated within the nudge budget collapses to its compact code so the
+   * guarantee ("no overlap") always holds. Idempotent — safe to re-run on
+   * every zoom/pan/render.
+   */
+  function relayoutLabels() {
+    if (!map || !labelEntries.length) return;
+    // Reset to full text + base transform before measuring.
+    for (const e of labelEntries) {
+      e.el.classList.remove('block-label--compact');
+      e.el.innerHTML = escapeHtml(e.full);
+      e.el.style.transform = 'translate(-50%, -50%)';
+    }
+    const sorted = [...labelEntries].sort((a, b) => b.lat - a.lat);
+    const placed: Array<{ cx: number; cy: number; w: number; h: number }> = [];
+    const PAD = 2;
+    const STEP = 4;
+    const CAP = 28;
+    const overlaps = (box: { cx: number; cy: number; w: number; h: number }) =>
+      placed.find(
+        (q) =>
+          Math.abs(box.cx - q.cx) < (box.w + q.w) / 2 + PAD &&
+          Math.abs(box.cy - q.cy) < (box.h + q.h) / 2 + PAD
+      );
+    for (const e of sorted) {
+      const p = map.latLngToContainerPoint([e.lat, e.lon]);
+      let w = e.el.offsetWidth;
+      let h = e.el.offsetHeight;
+      let dx = 0;
+      let dy = 0;
+      let guard = 0;
+      while (overlaps({ cx: p.x + dx, cy: p.y + dy, w, h }) && guard < 200) {
+        guard++;
+        const hit = overlaps({ cx: p.x + dx, cy: p.y + dy, w, h })!;
+        dy += p.y + dy >= hit.cy ? STEP : -STEP;
+        if (Math.abs(dy) > CAP) {
+          dy = 0;
+          dx += STEP;
+        }
+        if (Math.abs(dx) > CAP) break;
+      }
+      // Couldn't separate the full label — fall back to the compact code and
+      // try once more from the centroid.
+      if (overlaps({ cx: p.x + dx, cy: p.y + dy, w, h })) {
+        e.el.classList.add('block-label--compact');
+        e.el.innerHTML = escapeHtml(e.compact);
+        w = e.el.offsetWidth;
+        h = e.el.offsetHeight;
+        dx = 0;
+        dy = 0;
+        guard = 0;
+        while (overlaps({ cx: p.x + dx, cy: p.y + dy, w, h }) && guard < 200) {
+          guard++;
+          const hit = overlaps({ cx: p.x + dx, cy: p.y + dy, w, h })!;
+          dy += p.y + dy >= hit.cy ? STEP : -STEP;
+          if (Math.abs(dy) > CAP) {
+            dy = 0;
+            dx += STEP;
+          }
+          if (Math.abs(dx) > CAP) break;
+        }
+      }
+      e.el.style.transform = `translate(-50%, -50%) translate(${dx}px, ${dy}px)`;
+      placed.push({ cx: p.x + dx, cy: p.y + dy, w, h });
+    }
+  }
 
   function fitToAll(L: typeof import('leaflet')) {
     if (!map) return;
@@ -1340,6 +1486,33 @@
     white-space: nowrap;
     pointer-events: none;
     user-select: none;
+  }
+  :global(.block-label-wrap) {
+    background: transparent !important;
+    border: 0 !important;
+  }
+  /* Permanent, high-contrast block name pill for read-only maps. The
+     declutter pass adds an extra translate() on top of the centering one. */
+  :global(.block-label) {
+    display: inline-block;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    color: #14331f;
+    font-weight: 700;
+    font-size: 0.8rem;
+    line-height: 1.1;
+    padding: 2px 7px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    user-select: none;
+  }
+  :global(.block-label--compact) {
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
   }
   :global(.shade-marker-wrap) {
     background: transparent !important;

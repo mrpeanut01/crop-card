@@ -3,6 +3,7 @@
   import BarcodeScanner from '$lib/components/BarcodeScanner.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { draftFromScanResult, type StockEntryDraft } from '$lib/stock/normalizeStockEntry';
+  import { STOCK_CATEGORY_TO_INVENTORY_TYPE, type InventoryType } from '$lib/inventory/types';
 
   /**
    * Phase 25d (#89) — Method 3 of the 5-method add waterfall.
@@ -22,15 +23,19 @@
   interface Props {
     onSubmit: (draft: StockEntryDraft) => void | Promise<void>;
     busy?: boolean;
+    /** Fallback inventory type for the existing-item link when the
+     *  scanned product carries no resolvable category. */
+    type?: InventoryType;
   }
 
-  const { onSubmit, busy = false }: Props = $props();
+  const { onSubmit, busy = false, type }: Props = $props();
 
   let scannerOpen = $state(false);
   let lookingUp = $state(false);
   let lookupError = $state<string | null>(null);
   let lastBarcode = $state<string | null>(null);
   let existingItemId = $state<string | null>(null);
+  let existingType = $state<InventoryType | null>(null);
 
   async function handleDetected(rawValue: string, _format: string): Promise<void> {
     scannerOpen = false;
@@ -51,6 +56,8 @@
       }
       if (body.existingStockItemId) {
         existingItemId = body.existingStockItemId;
+        existingType =
+          (body.category && STOCK_CATEGORY_TO_INVENTORY_TYPE[body.category]) ?? type ?? null;
         return;
       }
       if (!body.found) {
@@ -111,7 +118,11 @@
         <Provenance source="data" compact />
       </p>
       <div class="existing-actions">
-        <a class="primary" href="/stock/{existingItemId}?added-lot=1"> Add a lot to that item → </a>
+        {#if existingType}
+          <a class="primary" href="/inventory/{existingType}/{existingItemId}">
+            Open that item →
+          </a>
+        {/if}
         <button type="button" class="ghost" onclick={startOver}>Scan another</button>
       </div>
     </div>

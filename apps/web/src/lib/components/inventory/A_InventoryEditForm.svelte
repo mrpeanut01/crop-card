@@ -26,7 +26,9 @@
   import { untrack } from 'svelte';
   import InvSection from './InvSection.svelte';
   import InvField from './InvField.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { InventoryType } from '$lib/inventory/types';
+  import type { StockEntryDraft } from '$lib/stock/normalizeStockEntry';
 
   type StockCategory =
     | 'herbicide'
@@ -76,11 +78,22 @@
     /** When defined, the form is in `edit` mode prefilled from this row.
      *  When undefined, the form is in `add` mode (empty defaults). */
     existing?: ExistingItem | ExistingEquipment;
+    /** Add-mode pre-population produced by a scan / search / lookup
+     *  method (barcode, label OCR, AI photo, web). The operator reviews
+     *  + edits these values before save — "AI assists, never gates".
+     *  A non-`manual` source renders a provenance banner so the operator
+     *  knows where the draft came from. Ignored in edit mode. */
+    prefill?: StockEntryDraft;
   }
 
-  const { type, existing }: Props = $props();
+  const { type, existing, prefill }: Props = $props();
 
   const isEdit = $derived(!!existing);
+
+  // Show a provenance banner only when add-mode values were pre-populated
+  // by a non-manual method (scan / search / web). Pure manual entry needs
+  // no banner — the operator typed everything themselves.
+  const showPrefillBanner = $derived(!isEdit && !!prefill && prefill.source !== 'manual');
 
   // For sprayer the existing shape is different — narrow + reshape.
   const existingItem = $derived(
@@ -98,19 +111,25 @@
   // The parent route component already remounts the form via {#key} on
   // route navigation so a new edit target gets a fresh form.
   let displayName = $state(
-    untrack(() => existingItem?.displayName ?? existingEquipment?.label ?? '')
+    untrack(
+      () => existingItem?.displayName ?? existingEquipment?.label ?? prefill?.displayName ?? ''
+    )
   );
-  let shortName = $state(untrack(() => existingItem?.shortName ?? ''));
-  let category = $state<StockCategory>(untrack(() => defaultCategoryFor(type)));
+  let shortName = $state(untrack(() => existingItem?.shortName ?? prefill?.shortName ?? ''));
+  let category = $state<StockCategory>(
+    untrack(() => prefillCategory() ?? defaultCategoryFor(type))
+  );
   let defaultUnit = $state<StockUnit>(
-    untrack(() => existingItem?.defaultUnit ?? defaultUnitFor(type))
+    untrack(() => existingItem?.defaultUnit ?? prefill?.defaultUnit ?? defaultUnitFor(type))
   );
-  let pluginId = $state(untrack(() => existingItem?.pluginId ?? ''));
+  let pluginId = $state(untrack(() => existingItem?.pluginId ?? prefill?.pluginId ?? ''));
   let reorderThreshold = $state<number | null>(
-    untrack(() => existingItem?.reorderThreshold ?? null)
+    untrack(() => existingItem?.reorderThreshold ?? prefill?.reorderThreshold ?? null)
   );
-  let notes = $state(untrack(() => existingItem?.notes ?? existingEquipment?.notes ?? ''));
-  let barcode = $state(untrack(() => existingItem?.barcode ?? ''));
+  let notes = $state(
+    untrack(() => existingItem?.notes ?? existingEquipment?.notes ?? prefill?.notes ?? '')
+  );
+  let barcode = $state(untrack(() => existingItem?.barcode ?? prefill?.barcode ?? ''));
 
   // Sprayer-specific spec fields (free-form on equipment.spec JSON column).
   const initialSprayerSpec = untrack(() =>
@@ -156,18 +175,35 @@
     if (t === 'seed') return 'seed';
     return 'herbicide';
   }
+  function categoryOptionsFor(t: InventoryType): StockCategory[] {
+    if (t === 'pesticide') return ['herbicide', 'insecticide', 'fungicide'];
+    if (t === 'fertility') return ['fertilizer'];
+    if (t === 'seed') return ['seed'];
+    return [];
+  }
+  // Only honor a prefilled category when it's valid for this type — a
+  // mismatched scan never silently flips the form to the wrong taxonomy.
+  function prefillCategory(): StockCategory | undefined {
+    const c = prefill?.category;
+    return c && categoryOptionsFor(type).includes(c) ? c : undefined;
+  }
   function defaultUnitFor(t: InventoryType): StockUnit {
     if (t === 'pesticide') return 'fl-oz';
     if (t === 'fertility') return 'lb';
     if (t === 'seed') return 'count';
     return 'count';
   }
-  const categoryOptions = $derived.by<StockCategory[]>(() => {
-    if (type === 'pesticide') return ['herbicide', 'insecticide', 'fungicide'];
-    if (type === 'fertility') return ['fertilizer'];
-    if (type === 'seed') return ['seed'];
-    return [];
-  });
+  // Type-aware examples — a seed form must never read as a pesticide form.
+  function placeholdersFor(t: InventoryType): { displayName: string; shortName: string } {
+    if (t === 'seed')
+      return { displayName: 'e.g. Cherokee Purple Tomato', shortName: 'e.g. Cherokee Purple' };
+    if (t === 'fertility')
+      return { displayName: 'e.g. Calcium Nitrate 15.5-0-0', shortName: 'e.g. CalNit' };
+    if (t === 'sprayer') return { displayName: 'e.g. Boom sprayer 25 gal', shortName: '' };
+    return { displayName: 'e.g. Roundup PowerMAX', shortName: 'e.g. Roundup PM' };
+  }
+  const placeholders = $derived(placeholdersFor(type));
+  const categoryOptions = $derived(categoryOptionsFor(type));
 
   const unitOptions: StockUnit[] = [
     'fl-oz',
@@ -320,6 +356,15 @@
   </h1>
 </header>
 
+{#if showPrefillBanner && prefill}
+  <div class="prefill-banner" role="status">
+    <Provenance source={prefill.source} />
+    <span
+      >Pre-filled for your review — check each field, then save. Nothing is recorded until you do.</span
+    >
+  </div>
+{/if}
+
 <form onsubmit={handleSubmit} class="form-body">
   <InvSection title="Identity" kicker="Required">
     <InvField id="displayName" label="Display name" chip="required" error={fieldErrors.displayName}>
@@ -327,7 +372,7 @@
         id="displayName"
         type="text"
         bind:value={displayName}
-        placeholder="e.g. Roundup PowerMAX"
+        placeholder={placeholders.displayName}
         maxlength="120"
         required
       />
@@ -339,7 +384,7 @@
           id="shortName"
           type="text"
           bind:value={shortName}
-          placeholder="e.g. Roundup PM"
+          placeholder={placeholders.shortName}
           maxlength="40"
         />
       </InvField>
@@ -478,6 +523,18 @@
     flex-direction: column;
     gap: 14px;
     padding-bottom: 80px;
+  }
+  .prefill-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: var(--color-cream, #fff8e1);
+    border: 1px solid var(--color-divider, #e5e7e0);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--color-ink, #2b2f27);
   }
   input[type='text'],
   input[type='number'],

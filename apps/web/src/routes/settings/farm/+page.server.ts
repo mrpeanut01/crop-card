@@ -50,6 +50,9 @@ export const load: ServerLoad = ({ locals }) => {
   return {
     farmName,
     blocks: blocksWithField,
+    // Full geometry-bearing payloads for the read-only BlockMap preview.
+    mapBlocks: blocks,
+    mapFields: fields,
     fields: fields.map((f) => ({ id: f.id, name: f.name })),
     farmLatLon: getFarmLatLon(),
     frostDates: frostDatesForYear(currentYear),

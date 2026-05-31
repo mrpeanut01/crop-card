@@ -903,7 +903,7 @@
         {#if blocksMissingAcres.length > 0}
           <p class="dilution-warn-line">
             ⚠ Acres unknown for {blocksMissingAcres.join(', ')} — totals exclude these blocks. Set acres
-            on the <a href="/plan?tab=layout">Layout tab</a> for accurate dilution.
+            in <a href="/settings/farm/map">Settings → Farm map</a> for accurate dilution.
           </p>
         {/if}
         {#if tanksNeeded > 1}

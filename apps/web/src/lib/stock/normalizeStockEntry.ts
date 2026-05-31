@@ -10,7 +10,7 @@
  * Centralizing the normalization here keeps the per-method UIs thin
  * and prevents the 5 methods from drifting on validation / defaults
  * (which is exactly how the pre-#89 single modal grew its 3,869-line
- * blob in `InventoryView.svelte`).
+ * blob before the multi-modal add flow split it apart).
  *
  * **Lot # is never AI** — per the v2 provenance addendum (CLAUDE.md
  * invariant 7), lot is always `manual` source even when surrounding

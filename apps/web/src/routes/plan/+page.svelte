@@ -1,6 +1,5 @@
 <script lang="ts">
   import { goto, invalidateAll } from '$app/navigation';
-  import { untrack } from 'svelte';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
   import BlockMap from '$lib/components/BlockMap.svelte';
@@ -52,7 +51,7 @@
   import { eventsForPlanting } from '$lib/calendar/engine';
   import { prepTasksForPlanting } from '$lib/schedule/prepTasks';
   import { detectPhiConflict, harvestWindow, sprayWindows } from '$lib/schedule/timeline';
-  import { DAY_MS, type TillageMethod } from '$lib/schedule/constants';
+  import { DAY_MS } from '$lib/schedule/constants';
   import type { PlanTab, ScheduleCatalogItem } from './+page.server';
 
   let { data } = $props();
@@ -95,358 +94,13 @@
     return `/plan?${sp.toString()}`;
   }
 
-  // ─── Layout — field / block management state ────────────────────────────
-  let newFieldName = $state('');
-  let newFieldAcres = $state<number | undefined>(undefined);
-  let newFieldNotes = $state('');
-  let creatingField = $state(false);
-  let fieldError = $state<string | null>(null);
-
-  async function createField() {
-    if (!newFieldName.trim()) return;
-    creatingField = true;
-    fieldError = null;
-    try {
-      const res = await fetch('/api/fields', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newFieldName.trim(),
-          acres: newFieldAcres,
-          notes: newFieldNotes.trim() || undefined
-        })
-      });
-      const out = await res.json();
-      if (!res.ok) {
-        fieldError = out.error ?? `HTTP ${res.status}`;
-        return;
-      }
-      newFieldName = '';
-      newFieldAcres = undefined;
-      newFieldNotes = '';
-      await invalidateAll();
-    } catch (e) {
-      fieldError = e instanceof Error ? e.message : String(e);
-    } finally {
-      creatingField = false;
-    }
-  }
-
-  let editingFieldId = $state<string | null>(null);
-  let editFieldName = $state('');
-  let editFieldAcres = $state<number | undefined>(undefined);
-  let editFieldNotes = $state('');
-
-  function startEditField(f: { id: string; name: string; acres?: number; notes?: string }) {
-    editingFieldId = f.id;
-    editFieldName = f.name;
-    editFieldAcres = f.acres;
-    editFieldNotes = f.notes ?? '';
-  }
-
-  async function saveEditField() {
-    if (!editingFieldId) return;
-    const res = await fetch(`/api/fields/${encodeURIComponent(editingFieldId)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: editFieldName.trim(),
-        acres: editFieldAcres ?? null,
-        notes: editFieldNotes.trim() || null
-      })
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      alert(`Save failed: ${out.error ?? res.status}`);
-      return;
-    }
-    editingFieldId = null;
-    await invalidateAll();
-  }
-
-  async function deleteField(id: string, name: string, blockCount: number) {
-    const ok = confirm(
-      blockCount > 0
-        ? `Delete field "${name}"? This removes all ${blockCount} block(s) and every crop + event recorded against them. Cannot be undone.`
-        : `Delete field "${name}"?`
-    );
-    if (!ok) return;
-    const res = await fetch(`/api/fields/${encodeURIComponent(id)}`, { method: 'DELETE' });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      alert(`Delete failed: ${out.error ?? res.status}`);
-      return;
-    }
-    await invalidateAll();
-  }
-
-  let newBlockName = $state('');
-  let newBlockAcres = $state<number | undefined>(undefined);
-  let newBlockFieldId = $state<string>('');
-  let creatingBlock = $state(false);
-  let blockError = $state<string | null>(null);
-  let addingBlockForFieldId = $state<string | null>(null);
-
-  async function createBlock(targetFieldId?: string) {
-    if (!newBlockName.trim()) return;
-    creatingBlock = true;
-    blockError = null;
-    try {
-      const fieldId = targetFieldId ?? (newBlockFieldId || undefined);
-      const res = await fetch('/api/blocks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newBlockName.trim(), acres: newBlockAcres, fieldId })
-      });
-      const out = await res.json();
-      if (!res.ok) {
-        blockError = out.error ?? `HTTP ${res.status}`;
-        return;
-      }
-      newBlockName = '';
-      newBlockAcres = undefined;
-      newBlockFieldId = '';
-      addingBlockForFieldId = null;
-      await invalidateAll();
-    } catch (e) {
-      blockError = e instanceof Error ? e.message : String(e);
-    } finally {
-      creatingBlock = false;
-    }
-  }
-
-  let editingBlockId = $state<string | null>(null);
-  let editBlockName = $state('');
-  let editBlockAcres = $state<number | undefined>(undefined);
-  let editBlockLabel = $state('');
-  let editBlockFieldId = $state<string>('');
-  let editBlockTillage = $state<TillageMethod>('conventional');
-  /** v1.3 shade model: terrain slope inputs. */
-  let editBlockSlopePercent = $state<number | null>(null);
-  let editBlockSlopeAspectDeg = $state<number | null>(null);
-
-  // ─── Shade-source inline edit state (parallels block edit) ────────────────
-  let editingShadeId = $state<string | null>(null);
-  let editShadeName = $state('');
-  let editShadeKind = $state<
-    | 'tree-row'
-    | 'tree-grove'
-    | 'tree-single'
-    | 'hedge'
-    | 'building'
-    | 'fence'
-    | 'structure'
-    | 'other'
-  >('tree-row');
-  let editShadeFieldId = $state<string>('');
-  let editShadeHeightFt = $state<number | undefined>(undefined);
-  let editShadeOpacity = $state<number | undefined>(undefined);
-  let editShadeIsDeciduous = $state<boolean>(true);
-  let editShadeLeafOnDoy = $state<number | undefined>(undefined);
-  let editShadeLeafOffDoy = $state<number | undefined>(undefined);
-
-  function startEditShade(s: {
-    id: string;
-    name: string;
-    kind:
-      | 'tree-row'
-      | 'tree-grove'
-      | 'tree-single'
-      | 'hedge'
-      | 'building'
-      | 'fence'
-      | 'structure'
-      | 'other';
-    fieldId?: string;
-    heightFt: number;
-    opacity: number;
-    isDeciduous: boolean;
-    leafOnDayOfYear: number;
-    leafOffDayOfYear: number;
-  }) {
-    editingShadeId = s.id;
-    editShadeName = s.name;
-    editShadeKind = s.kind;
-    editShadeFieldId = s.fieldId ?? '';
-    editShadeHeightFt = s.heightFt;
-    editShadeOpacity = s.opacity;
-    editShadeIsDeciduous = s.isDeciduous;
-    editShadeLeafOnDoy = s.leafOnDayOfYear;
-    editShadeLeafOffDoy = s.leafOffDayOfYear;
-  }
-
-  async function saveEditShade() {
-    if (!editingShadeId) return;
-    const body: Record<string, unknown> = {
-      name: editShadeName.trim(),
-      kind: editShadeKind,
-      heightFt: Number(editShadeHeightFt),
-      opacity: Number(editShadeOpacity),
-      isDeciduous: editShadeIsDeciduous,
-      leafOnDayOfYear: Number(editShadeLeafOnDoy) || 105,
-      leafOffDayOfYear: Number(editShadeLeafOffDoy) || 305
-    };
-    body.fieldId = editShadeFieldId || null;
-    const res = await fetch(`/api/shade-sources/${encodeURIComponent(editingShadeId)}`, {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      alert(`Save failed: ${out.error ?? res.status}`);
-      return;
-    }
-    editingShadeId = null;
-    await invalidateAll();
-  }
-
-  function shadeKindEmoji(kind: string): string {
-    switch (kind) {
-      case 'tree-row':
-        return '🌳';
-      case 'tree-grove':
-        return '🌲';
-      case 'tree-single':
-        return '🌳';
-      case 'hedge':
-        return '🌿';
-      case 'building':
-        return '🏠';
-      case 'fence':
-        return '🧱';
-      case 'structure':
-        return '🏗️';
-      default:
-        return '🌑';
-    }
-  }
-
-  // ─── Unified "Add without drawing" panel ──────────────────────────────────
-  type AddKind =
-    | 'field'
-    | 'block'
-    | 'tree-row'
-    | 'tree-grove'
-    | 'tree-single'
-    | 'hedge'
-    | 'building'
-    | 'fence'
-    | 'structure'
-    | 'other';
-  let addKind = $state<AddKind>('field');
-  // Shade-source-specific add state (separate from the inline edit state).
-  let addShadeName = $state('');
-  let addShadeHeightFt = $state<number>(30);
-  let addShadeOpacity = $state<number>(0.7);
-  let addShadeIsDeciduous = $state<boolean>(true);
-  let addShadeLeafOnDoy = $state<number>(105);
-  let addShadeLeafOffDoy = $state<number>(305);
-  let addShadeFieldId = $state<string>('');
-  let addingShade = $state<boolean>(false);
-  let addShadeError = $state<string | null>(null);
-
-  function isShadeKind(k: AddKind): boolean {
-    return k !== 'field' && k !== 'block';
-  }
-
-  async function addShadeWithoutGeometry() {
-    if (!isShadeKind(addKind)) return;
-    if (!addShadeName.trim()) {
-      addShadeError = 'Name is required.';
-      return;
-    }
-    addingShade = true;
-    addShadeError = null;
-    try {
-      const body = {
-        name: addShadeName.trim(),
-        kind: addKind,
-        heightFt: addShadeHeightFt,
-        opacity: addShadeOpacity,
-        isDeciduous: addShadeIsDeciduous,
-        leafOnDayOfYear: addShadeLeafOnDoy,
-        leafOffDayOfYear: addShadeLeafOffDoy,
-        fieldId: addShadeFieldId || undefined
-      };
-      const res = await fetch('/api/shade-sources', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) {
-        const out = await res.json().catch(() => ({}));
-        addShadeError = out.error ?? `HTTP ${res.status}`;
-        return;
-      }
-      addShadeName = '';
-      await invalidateAll();
-    } catch (e) {
-      addShadeError = e instanceof Error ? e.message : String(e);
-    } finally {
-      addingShade = false;
-    }
-  }
-
-  function startEditBlock(b: {
-    id: string;
-    name: string;
-    acres?: number;
-    blockLabel?: string;
-    fieldId?: string;
-    tillageMethod?: TillageMethod;
-    slopePercent?: number;
-    slopeAspectDeg?: number;
-  }) {
-    editingBlockId = b.id;
-    editBlockName = b.name;
-    editBlockAcres = b.acres;
-    editBlockLabel = b.blockLabel ?? '';
-    editBlockFieldId = b.fieldId ?? '';
-    editBlockTillage = b.tillageMethod ?? 'conventional';
-    editBlockSlopePercent = b.slopePercent ?? null;
-    editBlockSlopeAspectDeg = b.slopeAspectDeg ?? null;
-  }
-
-  async function saveEditBlock() {
-    if (!editingBlockId) return;
-    const res = await fetch(`/api/blocks/${encodeURIComponent(editingBlockId)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: editBlockName.trim(),
-        acres: editBlockAcres ?? null,
-        blockLabel: editBlockLabel.trim() || null,
-        fieldId: editBlockFieldId || undefined,
-        tillageMethod: editBlockTillage,
-        slopePercent: editBlockSlopePercent,
-        slopeAspectDeg: editBlockSlopeAspectDeg
-      })
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      alert(`Save failed: ${out.error ?? res.status}`);
-      return;
-    }
-    editingBlockId = null;
-    await invalidateAll();
-  }
-
-  async function deleteBlock(id: string, name: string, plantingsCount: number) {
-    const ok = confirm(
-      plantingsCount > 0
-        ? `Delete block "${name}"? This removes all ${plantingsCount} crop(s) plus every event recorded against them. Cannot be undone.`
-        : `Delete block "${name}"?`
-    );
-    if (!ok) return;
-    const res = await fetch(`/api/blocks/${encodeURIComponent(id)}`, { method: 'DELETE' });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      alert(`Delete failed: ${out.error ?? res.status}`);
-      return;
-    }
-    await invalidateAll();
-  }
+  // ─── Read-only map callbacks ──────────────────────────────────────────────
+  // /plan renders BlockMap with canEdit=false, so these are never invoked;
+  // BlockMap requires them as props. Geometry editing lives in the standalone
+  // Settings editor (/settings/farm/map).
+  const noopGeometry = () => {};
+  const noopCreate = () => {};
+  const noopCreateField = () => {};
 
   // ─── Crops tab state ────────────────────────────────────────────────────
   let plantingError = $state<string | null>(null);
@@ -2083,255 +1737,6 @@
     }))
   );
 
-  // ─── Layout tab — interactive map (Phase 13b) ──────────────────────────
-  type Geom = { type: 'Polygon' | 'MultiPolygon'; coordinates: unknown };
-
-  /** Save (or clear) geometry on an existing block. */
-  async function saveGeometry(blockId: string, geom: Geom | null) {
-    if (geom === null) {
-      const res = await fetch(`/api/blocks/${encodeURIComponent(blockId)}/geometry`, {
-        method: 'DELETE'
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      await invalidateAll();
-      return;
-    }
-    const res = await fetch(`/api/blocks/${encodeURIComponent(blockId)}/geometry`, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(geom)
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      throw new Error(out.error ?? `HTTP ${res.status}`);
-    }
-    await invalidateAll();
-  }
-
-  /** Create a brand-new block with a polygon drawn on the map. */
-  let blockMap = $state<{
-    currentDraftName: () => string;
-    currentDraftFieldId: () => string;
-  } | null>(null);
-  async function createBlockWithGeometry(geom: Geom, suggestedAcres: number | null) {
-    const name = blockMap?.currentDraftName().trim() ?? '';
-    if (!name) throw new Error('block name required');
-    const fieldId = blockMap?.currentDraftFieldId() || undefined;
-    const res = await fetch('/api/blocks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        acres: suggestedAcres !== null ? Number(suggestedAcres.toFixed(2)) : undefined,
-        fieldId,
-        geometryGeojson: geom
-      })
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      throw new Error(out.error ?? `HTTP ${res.status}`);
-    }
-    await invalidateAll();
-  }
-
-  /** Save (or clear) a field's boundary polygon. */
-  async function saveFieldGeometry(fieldId: string, geom: Geom | null) {
-    if (geom === null) {
-      const res = await fetch(`/api/fields/${encodeURIComponent(fieldId)}/geometry`, {
-        method: 'DELETE'
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      await invalidateAll();
-      return;
-    }
-    const res = await fetch(`/api/fields/${encodeURIComponent(fieldId)}/geometry`, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(geom)
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      throw new Error(out.error ?? `HTTP ${res.status}`);
-    }
-    await invalidateAll();
-  }
-
-  /** Create a new field with a boundary drawn on the map. */
-  async function createFieldWithGeometry(name: string, geom: Geom, suggestedAcres: number | null) {
-    if (!name.trim()) throw new Error('field name required');
-    const res = await fetch('/api/fields', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: name.trim(),
-        acres: suggestedAcres !== null ? Number(suggestedAcres.toFixed(2)) : undefined,
-        geometryGeojson: geom
-      })
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      throw new Error(out.error ?? `HTTP ${res.status}`);
-    }
-    await invalidateAll();
-  }
-
-  /** Create a shade source from the BlockMap draft. */
-  async function createShadeSource(input: {
-    name: string;
-    kind:
-      | 'tree-row'
-      | 'tree-grove'
-      | 'tree-single'
-      | 'hedge'
-      | 'building'
-      | 'fence'
-      | 'structure'
-      | 'other';
-    geometryGeojson: string;
-    heightFt: number;
-    opacity: number;
-    isDeciduous: boolean;
-    leafOnDayOfYear: number;
-    leafOffDayOfYear: number;
-  }) {
-    const res = await fetch('/api/shade-sources', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(input)
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      throw new Error(out.error ?? `HTTP ${res.status}`);
-    }
-    await invalidateAll();
-  }
-
-  async function deleteShadeSource(id: string, name: string) {
-    if (!confirm(`Delete shade source "${name}"?`)) return;
-    const res = await fetch(`/api/shade-sources/${encodeURIComponent(id)}`, {
-      method: 'DELETE'
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      alert(out.error ?? `HTTP ${res.status}`);
-      return;
-    }
-    await invalidateAll();
-  }
-
-  /** Persist a moved/reshaped shade-source polygon or polyline. */
-  async function updateShadeGeometry(id: string, geometryGeojson: string) {
-    const res = await fetch(`/api/shade-sources/${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ geometryGeojson })
-    });
-    if (!res.ok) {
-      const out = await res.json().catch(() => ({}));
-      throw new Error(out.error ?? `HTTP ${res.status}`);
-    }
-    await invalidateAll();
-  }
-
-  // Advanced GeoJSON paste form (kept for power users / QGIS imports).
-  let pasteBlockId = $state(untrack(() => data.blocks[0]?.id ?? ''));
-  let pasteText = $state('');
-  let pasteMode = $state<'block' | 'collection'>('block');
-  let geomBusy = $state(false);
-  let geomError = $state<string | null>(null);
-  let geomMessage = $state<string | null>(null);
-  let pasteResults = $state<Array<{ name: string; kind: string; status: string }>>([]);
-
-  async function savePaste(e: Event) {
-    e.preventDefault();
-    geomBusy = true;
-    geomError = null;
-    geomMessage = null;
-    pasteResults = [];
-    try {
-      const parsed = JSON.parse(pasteText);
-
-      if (pasteMode === 'block') {
-        const res = await fetch(`/api/blocks/${encodeURIComponent(pasteBlockId)}/geometry`, {
-          method: 'PUT',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(parsed)
-        });
-        const out = await res.json();
-        if (!res.ok) {
-          geomError = out.error ?? 'failed';
-          return;
-        }
-        geomMessage = 'Geometry saved.';
-        pasteText = '';
-        await invalidateAll();
-        return;
-      }
-
-      // ── FeatureCollection mode ──────────────────────────────────────────
-      if (parsed.type !== 'FeatureCollection' || !Array.isArray(parsed.features)) {
-        geomError = 'Expected a FeatureCollection with a features array.';
-        return;
-      }
-      const results: typeof pasteResults = [];
-      for (const feat of parsed.features as Array<{
-        type: string;
-        geometry: unknown;
-        properties: Record<string, string> | null;
-      }>) {
-        const props = feat.properties ?? {};
-        const kind = props['type'];
-        const name = props['name'];
-        if (!name) {
-          results.push({ name: '(unnamed)', kind: kind ?? '?', status: 'skipped — no name' });
-          continue;
-        }
-        const geom = feat.geometry ?? feat;
-
-        if (kind === 'field') {
-          const field = data.fields.find((f) => f.name === name);
-          if (!field) {
-            results.push({ name, kind: 'field', status: 'not found' });
-            continue;
-          }
-          const res = await fetch(`/api/fields/${encodeURIComponent(field.id)}/geometry`, {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(geom)
-          });
-          results.push({ name, kind: 'field', status: res.ok ? 'saved ✓' : `error ${res.status}` });
-        } else if (kind === 'block') {
-          const fieldName = props['field'];
-          const block =
-            data.blocks.find(
-              (b) =>
-                b.name === name &&
-                (!fieldName || data.fields.find((f) => f.id === b.fieldId)?.name === fieldName)
-            ) ?? data.blocks.find((b) => b.name === name);
-          if (!block) {
-            results.push({ name, kind: 'block', status: 'not found' });
-            continue;
-          }
-          const res = await fetch(`/api/blocks/${encodeURIComponent(block.id)}/geometry`, {
-            method: 'PUT',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(geom)
-          });
-          results.push({ name, kind: 'block', status: res.ok ? 'saved ✓' : `error ${res.status}` });
-        } else {
-          results.push({ name, kind: kind ?? '?', status: 'skipped — unknown type' });
-        }
-      }
-      pasteResults = results;
-      pasteText = '';
-      await invalidateAll();
-    } catch (e2) {
-      geomError = e2 instanceof Error ? e2.message : String(e2);
-    } finally {
-      geomBusy = false;
-    }
-  }
-
   function fmt(ts?: number) {
     return ts ? new Date(ts).toLocaleDateString() : '—';
   }
@@ -2598,823 +2003,46 @@
 
   <!-- ────────────────────────── LAYOUT ────────────────────────── -->
   {#if data.tab === 'layout'}
-    {#if data.isFirstRun && data.canEdit}
-      <section class="card wizard">
-        <h2>👋 Welcome to CropCard</h2>
-        <p>
-          Draw your first field on the map below, or use <strong
-            >Add field or block without drawing</strong
-          > at the bottom of this page to get started by name.
-        </p>
-      </section>
-    {/if}
-
-    {#if browser}
-      <BlockMap
-        bind:this={blockMap}
-        blocks={data.blocks}
-        fields={data.fields}
-        canEdit={data.canEdit}
-        onSaveGeometry={saveGeometry}
-        onCreateWithGeometry={createBlockWithGeometry}
-        onSaveFieldGeometry={saveFieldGeometry}
-        onCreateFieldWithGeometry={createFieldWithGeometry}
-        shadeSources={data.shadeSources ?? []}
-        onCreateShadeSource={createShadeSource}
-        onDeleteShadeSource={deleteShadeSource}
-        onUpdateShadeGeometry={updateShadeGeometry}
-      />
-    {:else}
-      <section class="card empty"><p>Loading map…</p></section>
-    {/if}
-
-    <section class="card">
-      {#if data.fields.length === 0}
-        <p class="empty-row">No fields yet. Use ➕ Draw field on the map above.</p>
-      {:else}
-        {#each data.fields as f (f.id)}
-          {@const fieldBlocksRaw = data.blocks.filter((b) => b.fieldId === f.id)}
-          {@const fieldBlocks = applyBlockOrder(fieldBlocksRaw, cropsTabOrder)}
-          {@const fieldAcresDisplay = f.acres ?? (f.blockAcresTotal > 0 ? f.blockAcresTotal : null)}
-          <div class="field-group">
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
-              class="field-row"
-              class:field-drop-target={fieldDropOverId === f.id && cropsReorderDragId !== null}
-              ondragover={(e) => onFieldRowDragOver(e, f.id)}
-              ondragleave={() => onFieldRowDragLeave(f.id)}
-              ondrop={(e) => onFieldRowDrop(e, f.id)}
-            >
-              <span class="field-icon">🌾</span>
-              <strong class="field-name">{f.name}</strong>
-              <span class="field-stats">
-                {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
-                {#if fieldAcresDisplay !== null}· {fieldAcresDisplay.toFixed(1)} ac{/if}
-              </span>
-              {#if data.canEdit}
-                <button
-                  class="row-action"
-                  draggable="false"
-                  ondragstart={(e) => e.preventDefault()}
-                  onclick={() => {
-                    addingBlockForFieldId = addingBlockForFieldId === f.id ? null : f.id;
-                    newBlockName = '';
-                    newBlockAcres = undefined;
-                    blockError = null;
-                  }}
-                  title="Add block"
-                  aria-label="Add block to {f.name}">＋</button
-                >
-                <button
-                  class="row-action"
-                  draggable="false"
-                  ondragstart={(e) => e.preventDefault()}
-                  onclick={() => startEditField(f)}
-                  title="Edit field">✏</button
-                >
-                <button
-                  class="row-action danger"
-                  draggable="false"
-                  ondragstart={(e) => e.preventDefault()}
-                  onclick={() => deleteField(f.id, f.name, fieldBlocks.length)}
-                  aria-label="Delete {f.name}"
-                  title="Delete field">🗑</button
-                >
-              {/if}
-            </div>
-
-            {#if editingFieldId === f.id}
-              <div class="inline-edit">
-                <div class="grid2">
-                  <label>Name<input type="text" bind:value={editFieldName} /></label>
-                  <label
-                    >Acres<input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      bind:value={editFieldAcres}
-                    /></label
-                  >
-                  <label class="full">Notes<input type="text" bind:value={editFieldNotes} /></label>
-                </div>
-                <div class="row">
-                  <button class="primary" onclick={saveEditField}>Save</button>
-                  <button onclick={() => (editingFieldId = null)}>Cancel</button>
-                </div>
-              </div>
-            {/if}
-
-            {#if f.notes && editingFieldId !== f.id}<p class="field-notes">{f.notes}</p>{/if}
-
-            {#if fieldBlocks.length === 0}
-              <p class="empty-row-indent">
-                No blocks yet — draw on the map above or add one below.
-              </p>
-            {:else}
-              <ul class="block-list-flat">
-                {#each fieldBlocks as b (b.id)}
-                  {@const acresDisplay = b.acres !== undefined ? `${b.acres.toFixed(1)} ac` : null}
-                  <!-- svelte-ignore a11y_no_static_element_interactions -->
-                  <li
-                    class="block-row layout-block-row"
-                    class:dragging={cropsReorderDragId === b.id}
-                    class:drop-target={cropsReorderOverId === b.id &&
-                      cropsReorderDragId !== null &&
-                      cropsReorderDragId !== b.id}
-                    draggable={data.canEdit !== false}
-                    ondragstart={(e) => onCropsHeaderDragStart(e, b.id)}
-                    ondragover={(e) => onCropsHeaderDragOver(e, b.id)}
-                    ondragleave={() => onCropsHeaderDragLeave(b.id)}
-                    ondrop={(e) =>
-                      onCropsHeaderDrop(
-                        e,
-                        b.id,
-                        fieldBlocks.map((x) => x.id)
-                      )}
-                    ondragend={onCropsHeaderDragEnd}
-                    title="Drag to reorder, or drop on another field row to move"
-                  >
-                    <span class="grip" aria-hidden="true">⋮⋮</span>
-                    <span class="block-icon">▪</span>
-                    <span class="block-name">{b.name}</span>
-                    <span class="block-stats">
-                      {#if acresDisplay}{acresDisplay}{/if}
-                      {#if b.plantings.length > 0}
-                        {acresDisplay ? ' · ' : ''}
-                        <span
-                          class="plantings-tip"
-                          data-tip={b.plantings.map((p) => p.varietyDisplayName).join(' · ')}
-                          >{b.plantings.length} planting{b.plantings.length === 1 ? '' : 's'}</span
-                        >
-                      {/if}
-                      {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
-                    </span>
-                    {#if data.canEdit}
-                      <button
-                        class="row-action"
-                        draggable="false"
-                        ondragstart={(e) => e.preventDefault()}
-                        onclick={() => startEditBlock(b)}
-                        title="Edit block">✏</button
-                      >
-                      <button
-                        class="row-action danger"
-                        draggable="false"
-                        ondragstart={(e) => e.preventDefault()}
-                        onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
-                        aria-label="Delete {b.name}"
-                        title="Delete block">🗑</button
-                      >
-                    {/if}
-                  </li>
-                  {#if editingBlockId === b.id}
-                    <li class="inline-edit-row">
-                      <div class="inline-edit">
-                        <div class="grid2">
-                          <label>Name<input type="text" bind:value={editBlockName} /></label>
-                          <label
-                            >Acres<input
-                              type="number"
-                              min="0"
-                              step="0.1"
-                              bind:value={editBlockAcres}
-                            /></label
-                          >
-                          {#if data.fields.length > 1}
-                            <label class="full"
-                              >Move to field
-                              <select bind:value={editBlockFieldId}>
-                                {#each data.fields as ff (ff.id)}<option value={ff.id}
-                                    >{ff.name}</option
-                                  >{/each}
-                              </select>
-                            </label>
-                          {/if}
-                          <label class="full"
-                            >Tillage method
-                            <select bind:value={editBlockTillage}>
-                              <option value="conventional">Conventional (plow/disk)</option>
-                              <option value="reduced-till">Reduced-till (single pass)</option>
-                              <option value="no-till">No-till (burndown only)</option>
-                            </select>
-                          </label>
-                          <label
-                            >Slope (%)
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              step="0.5"
-                              placeholder="0"
-                              bind:value={editBlockSlopePercent}
-                            />
-                          </label>
-                          <label
-                            >Slope aspect (° downhill)
-                            <input
-                              type="number"
-                              min="0"
-                              max="360"
-                              step="1"
-                              placeholder="0=N, 90=E, 180=S, 270=W"
-                              bind:value={editBlockSlopeAspectDeg}
-                            />
-                          </label>
-                        </div>
-                        <p class="block-slope-hint">
-                          Slope inputs are optional. Leave both blank for flat terrain. The shade
-                          model uses these to lengthen / shorten projected shadows along the
-                          downhill axis.
-                        </p>
-                        <div class="row">
-                          <button class="primary" onclick={saveEditBlock}>Save</button>
-                          <button onclick={() => (editingBlockId = null)}>Cancel</button>
-                        </div>
-                      </div>
-                    </li>
-                  {/if}
-                {/each}
-              </ul>
-            {/if}
-
-            {#if data.canEdit && addingBlockForFieldId === f.id}
-              <div class="add-block-inline">
-                <input type="text" placeholder="Block name" bind:value={newBlockName} />
-                <input
-                  type="number"
-                  placeholder="ac"
-                  min="0"
-                  step="0.1"
-                  bind:value={newBlockAcres}
-                  class="acres-input"
-                />
-                <button
-                  class="primary small"
-                  onclick={() => createBlock(f.id)}
-                  disabled={creatingBlock || !newBlockName.trim()}
-                >
-                  {creatingBlock ? '…' : 'Add'}
-                </button>
-                <button
-                  class="small"
-                  onclick={() => {
-                    addingBlockForFieldId = null;
-                    newBlockName = '';
-                    newBlockAcres = undefined;
-                  }}>✕</button
-                >
-              </div>
-              {#if blockError}<p class="error" style="padding-left:1.5rem">{blockError}</p>{/if}
-            {/if}
-
-            {#if (data.shadeSources ?? []).some((s) => s.fieldId === f.id)}
-              {@const fieldShades = (data.shadeSources ?? []).filter((s) => s.fieldId === f.id)}
-              <ul class="block-list-flat">
-                {#each fieldShades as s (s.id)}
-                  <li class="block-row shade-row">
-                    <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
-                    <span class="block-name">{s.name}</span>
-                    <span class="block-stats">
-                      {s.kind} · {s.heightFt} ft
-                      {#if s.isDeciduous}
-                        · deciduous{/if}
-                      {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
-                    </span>
-                    {#if data.canEdit}
-                      <button
-                        class="row-action"
-                        onclick={() => startEditShade(s)}
-                        title="Edit shade source">✏</button
-                      >
-                      <button
-                        class="row-action danger"
-                        onclick={() => deleteShadeSource(s.id, s.name)}
-                        aria-label="Delete {s.name}"
-                        title="Delete shade source">🗑</button
-                      >
-                    {/if}
-                  </li>
-                  {#if editingShadeId === s.id}
-                    <li class="inline-edit-row">
-                      <div class="inline-edit">
-                        <div class="grid2">
-                          <label>Name<input type="text" bind:value={editShadeName} /></label>
-                          <label
-                            >Kind
-                            <select bind:value={editShadeKind}>
-                              <option value="tree-row">Tree row</option>
-                              <option value="tree-grove">Tree grove</option>
-                              <option value="tree-single">Single tree</option>
-                              <option value="hedge">Hedge</option>
-                              <option value="building">Building</option>
-                              <option value="fence">Fence</option>
-                              <option value="structure">Structure</option>
-                              <option value="other">Other</option>
-                            </select>
-                          </label>
-                          <label
-                            >Height (ft)<input
-                              type="number"
-                              min="1"
-                              max="200"
-                              step="1"
-                              bind:value={editShadeHeightFt}
-                            /></label
-                          >
-                          <label
-                            >Opacity (0–1)<input
-                              type="number"
-                              min="0"
-                              max="1"
-                              step="0.05"
-                              bind:value={editShadeOpacity}
-                            /></label
-                          >
-                          {#if data.fields.length > 0}
-                            <label class="full"
-                              >Field
-                              <select bind:value={editShadeFieldId}>
-                                <option value="">— Farm-wide (no field) —</option>
-                                {#each data.fields as ff (ff.id)}<option value={ff.id}
-                                    >{ff.name}</option
-                                  >{/each}
-                              </select>
-                            </label>
-                          {/if}
-                        </div>
-                        <label class="checkbox-line">
-                          <input type="checkbox" bind:checked={editShadeIsDeciduous} />
-                          Deciduous (leaves drop in winter)
-                        </label>
-                        {#if editShadeIsDeciduous}
-                          <div class="grid2">
-                            <label
-                              >Leaf-on (day of year)<input
-                                type="number"
-                                min="1"
-                                max="366"
-                                bind:value={editShadeLeafOnDoy}
-                              /></label
-                            >
-                            <label
-                              >Leaf-off (day of year)<input
-                                type="number"
-                                min="1"
-                                max="366"
-                                bind:value={editShadeLeafOffDoy}
-                              /></label
-                            >
-                          </div>
-                        {/if}
-                        <div class="row">
-                          <button class="primary" onclick={saveEditShade}>Save</button>
-                          <button onclick={() => (editingShadeId = null)}>Cancel</button>
-                        </div>
-                      </div>
-                    </li>
-                  {/if}
-                {/each}
-              </ul>
-            {/if}
-          </div>
-        {/each}
-
-        {#if (data.shadeSources ?? []).some((s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId))}
-          {@const unscopedShades = (data.shadeSources ?? []).filter(
-            (s) => !s.fieldId || !data.fields.some((f) => f.id === s.fieldId)
-          )}
-          <div class="field-group">
-            <div class="field-row">
-              <span class="field-icon">🌐</span>
-              <strong class="field-name">Farm-wide shade sources</strong>
-              <span class="field-stats"
-                >{unscopedShades.length} entr{unscopedShades.length === 1 ? 'y' : 'ies'}</span
-              >
-            </div>
-            <ul class="block-list-flat">
-              {#each unscopedShades as s (s.id)}
-                <li class="block-row shade-row">
-                  <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
-                  <span class="block-name">{s.name}</span>
-                  <span class="block-stats">
-                    {s.kind} · {s.heightFt} ft
-                    {#if s.isDeciduous}
-                      · deciduous{/if}
-                    {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
-                  </span>
-                  {#if data.canEdit}
-                    <button
-                      class="row-action"
-                      onclick={() => startEditShade(s)}
-                      title="Edit shade source">✏</button
-                    >
-                    <button
-                      class="row-action danger"
-                      onclick={() => deleteShadeSource(s.id, s.name)}
-                      aria-label="Delete {s.name}"
-                      title="Delete shade source">🗑</button
-                    >
-                  {/if}
-                </li>
-                {#if editingShadeId === s.id}
-                  <li class="inline-edit-row">
-                    <div class="inline-edit">
-                      <div class="grid2">
-                        <label>Name<input type="text" bind:value={editShadeName} /></label>
-                        <label
-                          >Kind
-                          <select bind:value={editShadeKind}>
-                            <option value="tree-row">Tree row</option>
-                            <option value="tree-grove">Tree grove</option>
-                            <option value="tree-single">Single tree</option>
-                            <option value="hedge">Hedge</option>
-                            <option value="building">Building</option>
-                            <option value="fence">Fence</option>
-                            <option value="structure">Structure</option>
-                            <option value="other">Other</option>
-                          </select>
-                        </label>
-                        <label
-                          >Height (ft)<input
-                            type="number"
-                            min="1"
-                            max="200"
-                            step="1"
-                            bind:value={editShadeHeightFt}
-                          /></label
-                        >
-                        <label
-                          >Opacity (0–1)<input
-                            type="number"
-                            min="0"
-                            max="1"
-                            step="0.05"
-                            bind:value={editShadeOpacity}
-                          /></label
-                        >
-                        {#if data.fields.length > 0}
-                          <label class="full"
-                            >Field
-                            <select bind:value={editShadeFieldId}>
-                              <option value="">— Farm-wide (no field) —</option>
-                              {#each data.fields as ff (ff.id)}<option value={ff.id}
-                                  >{ff.name}</option
-                                >{/each}
-                            </select>
-                          </label>
-                        {/if}
-                      </div>
-                      <label class="checkbox-line">
-                        <input type="checkbox" bind:checked={editShadeIsDeciduous} />
-                        Deciduous (leaves drop in winter)
-                      </label>
-                      {#if editShadeIsDeciduous}
-                        <div class="grid2">
-                          <label
-                            >Leaf-on (day of year)<input
-                              type="number"
-                              min="1"
-                              max="366"
-                              bind:value={editShadeLeafOnDoy}
-                            /></label
-                          >
-                          <label
-                            >Leaf-off (day of year)<input
-                              type="number"
-                              min="1"
-                              max="366"
-                              bind:value={editShadeLeafOffDoy}
-                            /></label
-                          >
-                        </div>
-                      {/if}
-                      <div class="row">
-                        <button class="primary" onclick={saveEditShade}>Save</button>
-                        <button onclick={() => (editingShadeId = null)}>Cancel</button>
-                      </div>
-                    </div>
-                  </li>
-                {/if}
-              {/each}
-            </ul>
-          </div>
-        {/if}
-        <!-- Blocks with no field assignment (shouldn't happen post-migration) -->
-        {@const orphans = data.blocks.filter(
-          (b) => !b.fieldId || !data.fields.some((f) => f.id === b.fieldId)
-        )}
-        {#if orphans.length > 0}
-          <div class="field-group">
-            <div class="field-row">
-              <span class="field-icon">⚠️</span>
-              <strong class="field-name">Unassigned</strong>
-            </div>
-            <ul class="block-list-flat">
-              {#each orphans as b (b.id)}
-                <li class="block-row">
-                  <span class="block-icon">▪</span>
-                  <span class="block-name">{b.name}</span>
-                  <span class="block-stats">
-                    {#if b.acres !== undefined}{b.acres.toFixed(1)} ac{/if}
-                    {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
-                  </span>
-                  {#if data.canEdit}
-                    <button
-                      class="row-action danger"
-                      onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
-                      aria-label="Delete {b.name}">🗑</button
-                    >
-                  {/if}
-                </li>
-              {/each}
-            </ul>
-          </div>
-        {/if}
+    <!-- Read-only farm map. Drawing + editing live in Settings → Farm map
+         (/settings/farm/map); the planning flow only consumes geometry. -->
+    <section class="card layout-cta">
+      <div class="layout-cta-text">
+        <strong>Field & block map</strong>
+        <span
+          >This is a read-only view. {data.canEdit
+            ? 'Draw and edit boundaries in Settings.'
+            : 'Boundaries are managed by the farm owner.'}</span
+        >
+      </div>
+      {#if data.canEdit}
+        <a class="layout-cta-btn" href="/settings/farm/map">Manage fields & blocks →</a>
       {/if}
     </section>
 
-    {#if data.canEdit}
-      <details class="card advanced">
-        <summary>Add without drawing</summary>
-        <p class="lede">
-          Add a field, block, tree row, grove, building, or other shade source by name only.
-          Geometry is optional — draw it later on the map above by selecting the matching tool.
+    {#if browser && (data.fields.some((f) => f.geometryGeojson) || data.blocks.some((b) => b.geometryGeojson))}
+      <BlockMap
+        blocks={data.blocks}
+        fields={data.fields}
+        canEdit={false}
+        showBlockLabels
+        declutterLabels
+        shadeSources={data.shadeSources ?? []}
+        onSaveGeometry={noopGeometry}
+        onCreateWithGeometry={noopCreate}
+        onSaveFieldGeometry={noopGeometry}
+        onCreateFieldWithGeometry={noopCreateField}
+      />
+    {:else if browser}
+      <section class="card empty">
+        <p>
+          No field boundaries drawn yet.
+          {#if data.canEdit}
+            <a href="/settings/farm/map">Draw your fields & blocks →</a>
+          {/if}
         </p>
-
-        <label class="full">
-          What are you adding?
-          <select bind:value={addKind}>
-            <option value="field">Field</option>
-            <option value="block">Block</option>
-            <option disabled>──────────────</option>
-            <option value="tree-row">🌳 Tree row</option>
-            <option value="tree-grove">🌲 Tree grove</option>
-            <option value="tree-single">🌳 Single tree</option>
-            <option value="hedge">🌿 Hedge</option>
-            <option value="building">🏠 Building</option>
-            <option value="fence">🧱 Fence</option>
-            <option value="structure">🏗️ Structure</option>
-            <option value="other">🌑 Other</option>
-          </select>
-        </label>
-
-        {#if addKind === 'field'}
-          <div class="add-form-section">
-            <div class="grid2">
-              <label
-                >Name<input
-                  type="text"
-                  placeholder="e.g. North Field"
-                  bind:value={newFieldName}
-                /></label
-              >
-              <label
-                >Acres (optional)<input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  bind:value={newFieldAcres}
-                /></label
-              >
-              <label class="full"
-                >Notes (optional)<input
-                  type="text"
-                  placeholder="Lease info, address, etc."
-                  bind:value={newFieldNotes}
-                /></label
-              >
-            </div>
-            <button
-              class="primary"
-              onclick={createField}
-              disabled={creatingField || !newFieldName.trim()}
-            >
-              {creatingField ? '…' : 'Add field'}
-            </button>
-            {#if fieldError}<p class="error">{fieldError}</p>{/if}
-          </div>
-        {:else if addKind === 'block'}
-          {#if data.fields.length === 0}
-            <p class="error">Add a field first — every block belongs to one.</p>
-          {:else}
-            <div class="add-form-section">
-              <div class="grid2">
-                <label
-                  >Name<input
-                    type="text"
-                    placeholder="e.g. Corn Block A"
-                    bind:value={newBlockName}
-                  /></label
-                >
-                <label
-                  >Acres (optional)<input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    bind:value={newBlockAcres}
-                  /></label
-                >
-                <label class="full"
-                  >Field
-                  <select bind:value={newBlockFieldId}>
-                    {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
-                  </select>
-                </label>
-              </div>
-              <button
-                class="primary"
-                onclick={() => createBlock()}
-                disabled={creatingBlock || !newBlockName.trim()}
-              >
-                {creatingBlock ? '…' : 'Add block'}
-              </button>
-              {#if blockError}<p class="error">{blockError}</p>{/if}
-            </div>
-          {/if}
-        {:else}
-          <div class="add-form-section">
-            <div class="grid2">
-              <label
-                >Name<input
-                  type="text"
-                  placeholder="e.g. North maple windbreak"
-                  bind:value={addShadeName}
-                /></label
-              >
-              <label
-                >Height (ft)<input
-                  type="number"
-                  min="1"
-                  max="200"
-                  step="1"
-                  bind:value={addShadeHeightFt}
-                /></label
-              >
-              <label
-                >Opacity (0–1)<input
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  bind:value={addShadeOpacity}
-                /></label
-              >
-              <label class="full"
-                >Field (optional — leave blank for farm-wide)
-                <select bind:value={addShadeFieldId}>
-                  <option value="">— Farm-wide (no field) —</option>
-                  {#each data.fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
-                </select>
-              </label>
-            </div>
-            <label class="checkbox-line">
-              <input type="checkbox" bind:checked={addShadeIsDeciduous} />
-              Deciduous (leaves drop in winter)
-            </label>
-            {#if addShadeIsDeciduous}
-              <div class="grid2">
-                <label
-                  >Leaf-on (day of year)<input
-                    type="number"
-                    min="1"
-                    max="366"
-                    bind:value={addShadeLeafOnDoy}
-                  /></label
-                >
-                <label
-                  >Leaf-off (day of year)<input
-                    type="number"
-                    min="1"
-                    max="366"
-                    bind:value={addShadeLeafOffDoy}
-                  /></label
-                >
-              </div>
-            {/if}
-            <button
-              class="primary"
-              onclick={addShadeWithoutGeometry}
-              disabled={addingShade || !addShadeName.trim()}
-            >
-              {addingShade ? '…' : `Add ${addKind}`}
-            </button>
-            {#if addShadeError}<p class="error">{addShadeError}</p>{/if}
-            <p class="muted" style="margin-top:0.4rem">
-              Without geometry the shade source won't project shadows — draw it on the map after to
-              wire up shading.
-            </p>
-          </div>
-        {/if}
-
-        <details class="nested-advanced">
-          <summary>Advanced — paste GeoJSON</summary>
-          <p class="lede">
-            Power-user import path: paste GeoJSON exported from QGIS, ArcGIS, or a county GIS
-            portal. Currently supports field + block features only.
-          </p>
-
-          <div class="paste-mode-tabs">
-            <button
-              class:active={pasteMode === 'block'}
-              onclick={() => {
-                pasteMode = 'block';
-                pasteResults = [];
-                geomError = null;
-                geomMessage = null;
-              }}
-              type="button">Single block</button
-            >
-            <button
-              class:active={pasteMode === 'collection'}
-              onclick={() => {
-                pasteMode = 'collection';
-                geomError = null;
-                geomMessage = null;
-              }}
-              type="button">Fields + Blocks (FeatureCollection)</button
-            >
-          </div>
-
-          <form onsubmit={savePaste}>
-            {#if pasteMode === 'block'}
-              <label>
-                Block
-                <select bind:value={pasteBlockId}>
-                  {#each data.blocks as b (b.id)}
-                    <option value={b.id}>
-                      {b.name}{b.geometryGeojson ? ' (has geometry)' : ''}
-                    </option>
-                  {/each}
-                </select>
-              </label>
-              <label>
-                GeoJSON (Polygon, MultiPolygon, Feature, or FeatureCollection)
-                <textarea
-                  bind:value={pasteText}
-                  rows="6"
-                  placeholder={'{"type":"Polygon","coordinates":[[[-77.6,39.1],[-77.6,39.11],[-77.59,39.11],[-77.59,39.1],[-77.6,39.1]]]}'}
-                ></textarea>
-              </label>
-            {:else}
-              <p class="lede">
-                Paste a GeoJSON <code>FeatureCollection</code> where each Feature has
-                <code>properties.type</code> of <code>"field"</code> or <code>"block"</code>, and
-                <code>properties.name</code>
-                matching an existing field or block name. Block features may also include
-                <code>properties.field</code> to disambiguate when the same block name exists in multiple
-                fields.
-              </p>
-              <details class="example-collapse">
-                <summary>Show example</summary>
-                <pre class="geojson-example">{`{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": { "type": "Polygon", "coordinates": [[...]] },
-      "properties": { "type": "field", "name": "Home Field" }
-    },
-    {
-      "type": "Feature",
-      "geometry": { "type": "Polygon", "coordinates": [[...]] },
-      "properties": { "type": "block", "name": "Corn Block A", "field": "Home Field" }
-    }
-  ]
-}`}</pre>
-              </details>
-              <label>
-                FeatureCollection JSON
-                <textarea
-                  bind:value={pasteText}
-                  rows="10"
-                  placeholder={'{"type":"FeatureCollection","features":[...]}'}
-                ></textarea>
-              </label>
-            {/if}
-
-            <button type="submit" class="primary" disabled={geomBusy || !pasteText.trim()}>
-              {geomBusy ? 'Saving…' : pasteMode === 'collection' ? 'Import all' : 'Save geometry'}
-            </button>
-          </form>
-
-          {#if geomMessage}<p class="success">{geomMessage}</p>{/if}
-          {#if geomError}<p class="error">{geomError}</p>{/if}
-          {#if pasteResults.length > 0}
-            <table class="paste-results">
-              <thead><tr><th>Name</th><th>Type</th><th>Result</th></tr></thead>
-              <tbody>
-                {#each pasteResults as r}
-                  <tr class={r.status.startsWith('saved') ? 'result-ok' : 'result-warn'}>
-                    <td>{r.name}</td>
-                    <td>{r.kind}</td>
-                    <td>{r.status}</td>
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-          {/if}
-        </details>
-      </details>
+      </section>
+    {:else}
+      <section class="card empty"><p>Loading map…</p></section>
     {/if}
   {/if}
 
@@ -3427,10 +2055,10 @@
         canEdit={false}
         {blockBadges}
         shadeSources={data.shadeSources ?? []}
-        onSaveGeometry={saveGeometry}
-        onCreateWithGeometry={createBlockWithGeometry}
-        onSaveFieldGeometry={saveFieldGeometry}
-        onCreateFieldWithGeometry={createFieldWithGeometry}
+        onSaveGeometry={noopGeometry}
+        onCreateWithGeometry={noopCreate}
+        onSaveFieldGeometry={noopGeometry}
+        onCreateFieldWithGeometry={noopCreateField}
       />
     {/if}
 
@@ -4843,9 +3471,6 @@
     color: #6b7280;
     margin: 0.25rem 0 0.5rem;
   }
-  .shade-row .block-icon {
-    font-size: 1rem;
-  }
   .shade-row {
     background: rgba(134, 239, 172, 0.08);
   }
@@ -4854,19 +3479,6 @@
     align-items: center;
     gap: 0.5rem;
     margin: 0.4rem 0;
-  }
-  .nested-advanced {
-    margin-top: 1rem;
-    padding: 0.6rem 0.8rem;
-    border-left: 3px solid #d1d5db;
-    background: rgba(243, 244, 246, 0.5);
-    border-radius: 0 0.25rem 0.25rem 0;
-  }
-  .nested-advanced > summary {
-    cursor: pointer;
-    font-weight: 600;
-    color: #4b5563;
-    font-size: 0.9rem;
   }
   h1 {
     margin: 0 0 0.25rem;
@@ -4961,22 +3573,38 @@
     padding: 2rem;
     color: #555;
   }
-  details.advanced {
-    padding: 0.75rem 1rem;
+  .layout-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
   }
-  details.advanced > summary {
-    cursor: pointer;
-    color: var(--color-forest);
+  .layout-cta-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .layout-cta-text strong {
+    font-size: 14px;
+    color: var(--color-ink);
+  }
+  .layout-cta-text span {
+    font-size: 12.5px;
+    color: var(--color-ink-muted);
+  }
+  .layout-cta-btn {
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
+    padding: 8px 14px;
+    border-radius: var(--radius-input, 6px);
+    text-decoration: none;
+    font-size: 13px;
     font-weight: 600;
-    font-size: 0.95rem;
-    padding: 0.5rem 0;
-    list-style: revert;
+    white-space: nowrap;
   }
-  details.advanced[open] > summary {
-    margin-bottom: 0.5rem;
-  }
-  details.advanced .lede {
-    margin: 0.25rem 0 0.75rem;
+  .layout-cta-btn:hover {
+    filter: brightness(1.08);
   }
   .empty-row {
     color: #888;
@@ -4997,23 +3625,6 @@
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 0.5rem;
     margin-bottom: 0.75rem;
-  }
-  .grid2 label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-  }
-  .grid2 label.full {
-    grid-column: 1 / -1;
-  }
-  .grid2 input,
-  .grid2 select {
-    padding: 0.6rem;
-    border: 2px solid var(--color-divider);
-    border-radius: 4px;
-    min-height: 48px;
-    font-size: 1rem;
   }
   .primary {
     background: var(--color-forest);
@@ -5096,23 +3707,6 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-  .inline-edit label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-  }
-  .inline-edit label.full {
-    width: 100%;
-  }
-  .inline-edit input,
-  .inline-edit select {
-    padding: 0.5rem;
-    border: 2px solid var(--color-divider);
-    border-radius: 4px;
-    min-height: 44px;
-  }
-
   .block-list {
     list-style: none;
     padding: 0;
@@ -5122,17 +3716,6 @@
     margin-top: 0.5rem;
   }
 
-  /* Layout (port from /map) */
-  textarea {
-    padding: 0.55rem;
-    border: 2px solid var(--color-divider);
-    border-radius: 4px;
-    font-size: 0.95rem;
-    font-family: ui-monospace, Menlo, Monaco, monospace;
-    min-height: 96px;
-    width: 100%;
-    box-sizing: border-box;
-  }
   .block-list-flat {
     list-style: none;
     padding: 0;
@@ -5211,36 +3794,12 @@
     padding: 0;
   }
 
-  .add-block-inline {
-    display: flex;
-    gap: 0.4rem;
-    align-items: center;
-    padding: 0.3rem 0.6rem 0.4rem 1.5rem;
-    border-top: 1px dashed #d0e8d4;
-  }
-  .add-block-inline input[type='text'] {
-    flex: 1;
-    min-width: 0;
-  }
-  .add-block-inline .acres-input {
-    width: 5rem;
-  }
   .small {
     padding: 0.4rem 0.7rem;
     font-size: 0.85rem;
     min-height: 36px;
   }
 
-  .add-forms {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-  @media (max-width: 600px) {
-    .add-forms {
-      grid-template-columns: 1fr;
-    }
-  }
   .add-form-section {
     margin: 0.5rem 0;
   }
@@ -5257,28 +3816,6 @@
     border-left: 3px solid #b8d9c0;
     margin-left: 0.5rem;
     font-size: 0.85rem;
-  }
-  .layout-block-row {
-    cursor: grab;
-    user-select: none;
-  }
-  .layout-block-row:active {
-    cursor: grabbing;
-  }
-  .layout-block-row.dragging {
-    opacity: 0.4;
-  }
-  .layout-block-row.drop-target {
-    background: #dbeafe;
-    box-shadow: inset 3px 0 0 #2563eb;
-  }
-  .layout-block-row .grip {
-    color: #94a3b8;
-    font-weight: 700;
-    letter-spacing: -2px;
-    margin-right: 0.05rem;
-    font-size: 0.85rem;
-    flex-shrink: 0;
   }
   .ov-block-row {
     display: flex;
@@ -5394,66 +3931,6 @@
     margin: 0.25rem 0 0.5rem 0.75rem;
     color: #777;
     font-size: 0.875rem;
-  }
-  .paste-mode-tabs {
-    display: flex;
-    gap: 0.25rem;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #e0e0e0;
-  }
-  .paste-mode-tabs button {
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    padding: 0.4rem 0.75rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-    color: #555;
-  }
-  .paste-mode-tabs button.active {
-    border-bottom-color: #2e7d32;
-    color: #2e7d32;
-    font-weight: 600;
-  }
-  .example-collapse {
-    margin: 0.5rem 0;
-  }
-  .example-collapse > summary {
-    cursor: pointer;
-    font-size: 0.85rem;
-    color: #555;
-  }
-  .geojson-example {
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 0.75rem;
-    font-size: 0.78rem;
-    overflow-x: auto;
-    white-space: pre;
-  }
-  .paste-results {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-    margin-top: 0.75rem;
-  }
-  .paste-results th,
-  .paste-results td {
-    text-align: left;
-    padding: 0.3rem 0.5rem;
-    border-bottom: 1px solid #eee;
-  }
-  .paste-results th {
-    font-weight: 600;
-    background: #f5f5f5;
-  }
-  .result-ok td {
-    color: #1a5c2e;
-  }
-  .result-warn td {
-    color: #8a4800;
   }
   .input-hint {
     display: block;

@@ -1,10 +1,21 @@
 <script lang="ts">
-  import { ChevronRight, Plus, Map } from 'lucide-svelte';
+  import { ChevronRight, Plus, Map, MapPin } from 'lucide-svelte';
+  import { browser } from '$app/environment';
+  import { goto } from '$app/navigation';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
+  import BlockMap from '$lib/components/BlockMap.svelte';
 
   let { data } = $props();
+
+  // Read-only preview only — edit/draw happens at /settings/farm/map. BlockMap
+  // requires these callbacks but never invokes them in thumbnail mode.
+  const noop = () => {};
+
+  const hasGeometry = $derived(
+    data.mapBlocks.some((b) => b.geometryGeojson) || data.mapFields.some((f) => f.geometryGeojson)
+  );
 
   function fmtDate(ms: number): string {
     return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -62,51 +73,49 @@
     sub="Click a block to edit boundary, soil zone, irrigation, or rotation history."
   >
     {#snippet right()}
-      <a class="primary-sm" href="/plan?tab=layout">
+      <a class="primary-sm" href="/settings/farm/map">
         <Plus size={11} /> New block
       </a>
     {/snippet}
 
     <div class="grid grid-2">
-      <!-- Map placeholder — gradient bg + per-block tinted tiles in
-           rough proportional layout. Real BlockMap lives at /plan. -->
-      <div class="map">
-        {#each data.blocks.slice(0, 7) as b, i (b.id)}
-          {@const positions = [
-            { x: 12, y: 14, w: 26, h: 22 },
-            { x: 40, y: 14, w: 16, h: 14 },
-            { x: 58, y: 12, w: 26, h: 26 },
-            { x: 12, y: 40, w: 14, h: 14 },
-            { x: 28, y: 40, w: 18, h: 16 },
-            { x: 50, y: 42, w: 26, h: 24 },
-            { x: 20, y: 60, w: 22, h: 18 }
-          ]}
-          {@const p = positions[i]}
-          <div
-            class="map-tile"
-            style:left="{p.x}%"
-            style:top="{p.y}%"
-            style:width="{p.w}%"
-            style:height="{p.h}%"
-            style:background={colorFor(b.id)}
-            style:border-color={colorFor(b.id)}
-          >
-            {b.blockLabel ?? b.name.charAt(0)}
+      <!-- Real read-only BlockMap preview; edit/draw lives at /settings/farm/map. -->
+      <div class="map-cell">
+        {#if browser && hasGeometry}
+          <BlockMap
+            thumbnail
+            blocks={data.mapBlocks}
+            fields={data.mapFields}
+            canEdit={false}
+            onThumbnailClick={() => goto('/settings/farm/map')}
+            onSaveGeometry={noop}
+            onCreateWithGeometry={noop}
+            onSaveFieldGeometry={noop}
+            onCreateFieldWithGeometry={noop}
+          />
+          <a class="map-edit-link" href="/settings/farm/map">
+            <Map size={12} /> Edit fields & blocks
+          </a>
+        {:else if browser}
+          <div class="map-empty">
+            <MapPin size={22} />
+            <p class="map-empty-title">No field boundaries drawn yet</p>
+            <a class="primary-sm" href="/settings/farm/map">
+              <Plus size={11} /> Draw your blocks
+            </a>
           </div>
-        {/each}
-        <div class="map-legend mono">map view · {total.toFixed(1)} ac</div>
-        <a class="map-edit" href="/plan?tab=layout">
-          <Map size={11} /> Edit boundaries
-        </a>
+        {:else}
+          <div class="map-loading mono">Loading map…</div>
+        {/if}
       </div>
 
       <!-- Block list -->
       <div class="block-list">
         {#if data.blocks.length === 0}
-          <p class="empty">No blocks yet. <a href="/plan">Add one in /plan</a>.</p>
+          <p class="empty">No blocks yet. <a href="/settings/farm/map">Draw one on the map</a>.</p>
         {/if}
         {#each data.blocks as b (b.id)}
-          <a class="block-row" href="/plan?tab=layout&block={b.id}">
+          <a class="block-row" href="/settings/farm/map">
             <div class="block-chip" style:background={colorFor(b.id)}>
               {b.blockLabel ?? b.name.charAt(0)}
             </div>
@@ -166,54 +175,53 @@
   }
 
   /* ── Map ── */
-  .map {
-    position: relative;
-    aspect-ratio: 1 / 1;
-    border-radius: 8px;
-    background: linear-gradient(180deg, #dce6cf 0%, #c5d4b6 100%);
-    border: 1px solid var(--color-divider);
-    overflow: hidden;
+  .map-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  .map-tile {
-    position: absolute;
-    opacity: 0.78;
-    border-radius: 4px;
-    border-width: 1.5px;
-    border-style: solid;
-    display: grid;
-    place-items: center;
-    color: var(--color-cream, #f8f3e8);
-    font-weight: 800;
-    font-size: 13px;
-  }
-  .map-legend {
-    position: absolute;
-    left: 10px;
-    top: 10px;
-    font-size: 10px;
+  .map-edit-link {
+    align-self: flex-end;
     color: var(--color-forest-deep);
-    background: rgba(255, 255, 255, 0.7);
-    padding: 2px 7px;
-    border-radius: 4px;
-  }
-  .map-edit {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    background: var(--color-paper);
-    color: var(--color-ink);
-    border: 1px solid var(--color-divider);
-    padding: 4px 8px;
-    border-radius: var(--radius-input, 6px);
     text-decoration: none;
-    font-family: inherit;
-    font-size: 11px;
+    font-size: 11.5px;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 4px;
   }
-  .map-edit:hover {
-    border-color: var(--color-forest-deep);
+  .map-edit-link:hover {
+    text-decoration: underline;
+  }
+  .map-empty {
+    border: 1px dashed var(--color-divider);
+    border-radius: 8px;
+    background: var(--color-cream);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--color-ink-soft);
+    text-align: center;
+    padding: 16px;
+  }
+  .map-empty-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .map-loading {
+    border: 1px solid var(--color-divider);
+    border-radius: 8px;
+    min-height: 200px;
+    display: grid;
+    place-items: center;
+    color: var(--color-ink-muted);
+    font-size: 12px;
+    background: linear-gradient(180deg, #dce6cf 0%, #c5d4b6 100%);
   }
 
   /* ── Block list ── */

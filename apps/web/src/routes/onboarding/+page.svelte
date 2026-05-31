@@ -70,8 +70,8 @@
     {
       id: 'block',
       label: 'Add your first block',
-      detail: 'A planted area inside your field. Geometry optional but unlocks pollination.',
-      href: '/plan',
+      detail: 'Draw your fields and blocks on the map. Geometry optional but unlocks pollination.',
+      href: '/settings/farm/map',
       icon: Layers
     },
     {

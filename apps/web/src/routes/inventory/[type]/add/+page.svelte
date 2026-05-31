@@ -1,5 +1,5 @@
 <script lang="ts">
-  import A_InventoryEditForm from '$lib/components/inventory/A_InventoryEditForm.svelte';
+  import A_InventoryAddFlow from '$lib/components/inventory/A_InventoryAddFlow.svelte';
 
   const { data } = $props();
 </script>
@@ -12,7 +12,7 @@
   <a href="/inventory?type={data.type}">← All {data.type}</a>
 </nav>
 
-<A_InventoryEditForm type={data.type} />
+<A_InventoryAddFlow type={data.type} aiEnabled={data.aiEnabled} />
 
 <style>
   .breadcrumb {

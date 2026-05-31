@@ -8,7 +8,7 @@
  *
  * Body: { acceptedKeys: string[] }
  *
- * Merge rules mirror what InventoryView's applyRefreshSelection +
+ * Merge rules mirror what the inventory edit form's applyRefreshSelection +
  * saveEdit do on the client:
  *   - Seed-meta fields (daysToMaturity, plantingTempMinF, spacingInches,
  *     depthInches, sunRequirement, seedsPerPacket, matureHeightFt) merge

@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { Search, Loader2, Globe, Database } from 'lucide-svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { StockEntryDraft } from '$lib/stock/normalizeStockEntry';
   import type { StockUnit } from '$lib/stock/units';
   import type { StockCategory } from '$lib/db/stock';
+  import type { InventoryType } from '$lib/inventory/types';
 
   /**
    * Phase 25d (#89) — Method 2 of the 5-method add waterfall.
@@ -38,9 +40,20 @@
   interface Props {
     onSubmit: (draft: StockEntryDraft) => void | Promise<void>;
     busy?: boolean;
+    /** Drives the `hintType` sent to the search endpoint so seed search
+     *  hits the crop-plugin library, etc. */
+    type?: InventoryType;
+    /** Gates the opt-in "Search the web" tier — hidden with no key. */
+    aiEnabled?: boolean;
   }
 
-  const { onSubmit, busy = false }: Props = $props();
+  const { onSubmit, busy = false, type, aiEnabled = false }: Props = $props();
+
+  // Map the inventory type onto the search endpoint's hintType enum.
+  // Pesticide is ambiguous (herb/insect/fungicide) so it stays unhinted.
+  const hintType = $derived(
+    type === 'seed' ? 'crop' : type === 'fertility' ? 'fertilizer' : undefined
+  );
 
   let query = $state('');
   let searching = $state(false);
@@ -50,31 +63,48 @@
   let searchError = $state<string | null>(null);
   let searchMeta = $state<{ quotaBlocked?: boolean; upstreamOverloaded?: boolean } | null>(null);
 
-  async function runSearch(includeWeb: boolean): Promise<void> {
+  // Live local typeahead — debounce keystrokes and fire a local-only
+  // (free, no-quota) query so completions appear as the operator types.
+  // The web tier stays opt-in behind the button below.
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  function onQueryInput(): void {
+    clearTimeout(debounceTimer);
+    searchError = null;
     const q = query.trim();
     if (q.length < 2) {
-      searchError = 'Type at least 2 characters to search.';
+      candidates = [];
+      searchSource = null;
+      return;
+    }
+    debounceTimer = setTimeout(() => void runSearch(false, true), 250);
+  }
+  onDestroy(() => clearTimeout(debounceTimer));
+
+  async function runSearch(includeWeb: boolean, silent = false): Promise<void> {
+    const q = query.trim();
+    if (q.length < 2) {
+      if (!silent) searchError = 'Type at least 2 characters to search.';
       return;
     }
     searching = true;
-    searchError = null;
+    if (!silent) searchError = null;
     if (includeWeb) searchedWeb = true;
     try {
       const res = await fetch('/api/plugins/search-by-name', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query: q, skipWebSearch: !includeWeb })
+        body: JSON.stringify({ query: q, hintType, skipWebSearch: !includeWeb })
       });
       const body = await res.json();
       if (!res.ok && !Array.isArray(body.candidates)) {
-        searchError = body.error ?? `HTTP ${res.status}`;
+        if (!silent) searchError = body.error ?? `HTTP ${res.status}`;
         return;
       }
       candidates = (body.candidates as SearchCandidate[]) ?? [];
       searchSource = body.source ?? null;
       searchMeta = body.meta ?? null;
     } catch (e) {
-      searchError = e instanceof Error ? e.message : String(e);
+      if (!silent) searchError = e instanceof Error ? e.message : String(e);
     } finally {
       searching = false;
     }
@@ -138,8 +168,8 @@
 
 <div class="search-panel">
   <p class="lede">
-    Search your plugin library first. If we don't find a match, we'll ask Claude (uses your daily AI
-    quota — see /settings/ai).
+    Matches from your plugin library appear as you type.{#if aiEnabled}
+      No match? Ask Claude to search the web (uses your daily AI quota — see /settings/ai).{/if}
   </p>
 
   <div class="search-row">
@@ -149,6 +179,7 @@
       id="search-input"
       type="text"
       bind:value={query}
+      oninput={onQueryInput}
       onkeydown={onQueryKeydown}
       maxlength="120"
       placeholder="e.g., Engenia, Cherokee Purple, Calcium Nitrate…"
@@ -235,7 +266,7 @@
     </ul>
   {/if}
 
-  {#if candidates.length > 0 && !hasConfidentLocal && !searchedWeb}
+  {#if candidates.length > 0 && !hasConfidentLocal && !searchedWeb && aiEnabled}
     <div class="web-prompt">
       <p>Nothing in your library matched confidently. Want to ask Claude to search the web?</p>
       <button type="button" onclick={() => runSearch(true)} disabled={busy || searching}>

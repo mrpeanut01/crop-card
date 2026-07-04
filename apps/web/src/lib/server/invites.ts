@@ -144,6 +144,30 @@ export function findRedeemableInvite(token: string, email: string): InviteMatch 
   };
 }
 
+/** Why a token+email pair failed to redeem. `not-found` covers both an
+ *  unknown token and a token whose email doesn't match the signed-in user
+ *  — we can't distinguish those without leaking token existence, so they
+ *  share the (mismatch-shaped) message. `revoked` / `expired` / `accepted`
+ *  are surfaced precisely so the UI can tell the helper what to do next. */
+export type InviteInvalidReason = 'not-found' | 'revoked' | 'expired' | 'accepted';
+
+/** Classify a redemption failure for a token+email pair. Only called on the
+ *  `findRedeemableInvite` null path, so a `null` return here means the row
+ *  is in fact redeemable (caller races excepted). */
+export function diagnoseInvite(token: string, email: string): InviteInvalidReason {
+  unscopedQueryNote('invite redemption diagnosis lookup is cross-tenant by definition');
+  const tokenH = hashToken(token);
+  const emailH = hashEmail(email);
+  const row = db.select().from(helperInvites).where(eq(helperInvites.tokenHash, tokenH)).get();
+  // No token match, or the token exists but was minted for a different
+  // email — both read as "not for you" to avoid confirming token existence.
+  if (!row || row.emailHash !== emailH) return 'not-found';
+  if (row.status === 'revoked') return 'revoked';
+  if (row.status === 'accepted') return 'accepted';
+  if (row.expiresAt.getTime() < Date.now()) return 'expired';
+  return 'not-found';
+}
+
 export function markInviteAccepted(inviteId: string): void {
   unscopedQueryNote('stamp accepted_at on the redeemed invite row');
   db.update(helperInvites)

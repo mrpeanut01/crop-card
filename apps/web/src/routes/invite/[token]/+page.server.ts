@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { currentUser } from '$lib/server/auth';
 import { writeSession } from '$lib/server/session';
 import { addAssignment } from '$lib/db/users';
-import { findRedeemableInvite, markInviteAccepted } from '$lib/server/invites';
+import { diagnoseInvite, findRedeemableInvite, markInviteAccepted } from '$lib/server/invites';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import type { PageServerLoad } from './$types';
 
@@ -27,7 +27,7 @@ export const load: PageServerLoad = async (event) => {
 
   const match = findRedeemableInvite(token, user.email);
   if (!match) {
-    return { token, status: 'invalid' as const };
+    return { token, status: 'invalid' as const, reason: diagnoseInvite(token, user.email) };
   }
 
   unscopedQueryNote('owner name for the redemption confirmation screen');

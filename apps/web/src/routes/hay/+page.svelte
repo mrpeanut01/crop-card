@@ -211,8 +211,8 @@
   <button type="submit" class="primary">Load</button>
 </form>
 
-{#if banner}<p class="success">{banner}</p>{/if}
-{#if error}<p class="error">{error}</p>{/if}
+{#if banner}<p class="success" role="status" aria-live="polite">{banner}</p>{/if}
+{#if error}<p class="error" role="alert" aria-live="polite">{error}</p>{/if}
 
 <section class="card">
   <h2>1 — Mow decision</h2>
@@ -254,7 +254,7 @@
       </table>
     {/if}
     {#if mowViolations.length > 0}
-      <div class="banner danger">
+      <div class="banner danger" role="alert" aria-live="assertive">
         <strong>STOP</strong> — {mowViolations[0].message}
       </div>
     {/if}
@@ -264,7 +264,7 @@
         onclick={() => startCutting()}
         disabled={busy || !blockId || !cropPluginId}
       >
-        Record cutting now (mow done)
+        {busy ? 'Saving…' : 'Record cutting now (mow done)'}
       </button>
       {#if mowViolations.length > 0}
         <button
@@ -272,7 +272,7 @@
           onclick={() => startCutting({ override: true })}
           disabled={busy}
         >
-          Override + record anyway
+          {busy ? 'Saving…' : 'Override + record anyway'}
         </button>
       {/if}
     </div>
@@ -331,7 +331,7 @@
         {#if nextStep(c)}
           <div class="row">
             <button class="primary" onclick={() => advance(c.id, nextStep(c)!)} disabled={busy}>
-              Advance — {nextStep(c)}
+              {busy ? 'Saving…' : `Advance — ${nextStep(c)}`}
             </button>
             {#if nextStep(c) === 'bale'}
               <button
@@ -339,7 +339,7 @@
                 onclick={() => advance(c.id, 'bale', { override: true })}
                 disabled={busy}
               >
-                Override bale gate
+                {busy ? 'Saving…' : 'Override bale gate'}
               </button>
             {/if}
             <button class="secondary" onclick={() => abortCutting(c.id)} disabled={busy}>
@@ -520,8 +520,8 @@
     border-radius: 4px;
   }
   .error {
-    background: #fce4e4;
-    color: #b00020;
+    background: #fdecea;
+    color: #a23a3a;
     padding: 0.6rem;
     border-radius: 4px;
   }

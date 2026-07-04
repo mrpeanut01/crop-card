@@ -42,7 +42,9 @@ import * as planRevisionsRepo from '$lib/plan/revisions';
 import * as scoutObservationsRepo from './scoutObservations';
 import * as wizardChatRepo from './wizardChat';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
-import { users, helperAssignments } from './schema';
+import { users, helperAssignments, recordDeletions } from './schema';
+import { eq } from 'drizzle-orm';
+import { tenantValues, withTenant } from './tenant';
 
 const OWNER_A = 'cross-tenant-test-owner-a';
 const OWNER_B = 'cross-tenant-test-owner-b';
@@ -328,6 +330,50 @@ describe('cross-tenant isolation', () => {
     expect(bMessages.length).toBeGreaterThan(0);
     expect(aMessages[0].content).toContain(OWNER_A);
     expect(bMessages[0].content).toContain(OWNER_B);
+  });
+
+  // #329 — record_deletions (force-delete tombstones) is tenant-scoped and
+  // has no dedicated repo (written inline in admin.ts). Seed one tombstone
+  // per Owner via tenantValues and assert a tenant-scoped read never crosses
+  // the boundary.
+  it('record_deletions tombstones are owner-scoped', () => {
+    const seedTombstone = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const id = `tombstone-${ownerId}-${randomUUID().slice(0, 8)}`;
+        db.insert(recordDeletions)
+          .values(
+            tenantValues({
+              id,
+              recordKind: 'spray',
+              recordId: `rec-${ownerId}`,
+              deletedBy: null,
+              reason: 'cross-tenant test',
+              snapshotJson: JSON.stringify({ owner: ownerId })
+            })
+          )
+          .run();
+        return id;
+      });
+
+    const aId = seedTombstone(OWNER_A);
+    const bId = seedTombstone(OWNER_B);
+
+    const aSeen = runWithTenant(OWNER_A, () =>
+      db.select().from(recordDeletions).where(withTenant(recordDeletions)).all()
+    );
+    const aIds = new Set(aSeen.map((r) => r.id));
+    expect(aIds.has(aId)).toBe(true);
+    expect(aIds.has(bId)).toBe(false);
+
+    // Owner A reading Owner B's tombstone by id returns nothing.
+    const aReadsB = runWithTenant(OWNER_A, () =>
+      db
+        .select()
+        .from(recordDeletions)
+        .where(withTenant(recordDeletions, eq(recordDeletions.id, bId)))
+        .all()
+    );
+    expect(aReadsB).toEqual([]);
   });
 
   // Quiet noise — these imports exist so the test refuses to compile when a

@@ -33,8 +33,9 @@ export const DELETE: RequestHandler = (event) => {
   }
   const existing = getSprayEvent(event.params.id);
   if (!existing) throw error(404, 'spray record not found');
+  const reason = event.url.searchParams.get('reason') ?? undefined;
   try {
-    return json(deleteSprayEvent(event.params.id, { force }));
+    return json(deleteSprayEvent(event.params.id, { force, deletedBy: auth?.id, reason }));
   } catch (e) {
     if (e instanceof RecordLockedError) {
       return json({ error: e.message }, { status: 422 });

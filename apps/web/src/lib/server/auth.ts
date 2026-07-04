@@ -38,6 +38,18 @@ export interface AuthenticatedUser {
 }
 
 export function currentUser(event: RequestEvent): AuthenticatedUser | null {
+  // Phase 24 / #317 — prefer a Bearer-resolved user when hooks.server.ts
+  // has already vetted one. `event.locals.user` is populated ONLY by the
+  // request boundary in hooks.server.ts, either from a validated
+  // `Authorization: Bearer cck_…` token (authVia === 'bearer') or from the
+  // cookie session below (authVia === 'cookie'). Reading it here lets
+  // mutation gates (`requireUser`/`requireOwner`/`requireMutator`) succeed
+  // for Bearer agents instead of falling through to a cookie-only 401.
+  // We do NOT synthesize a user from anything else — this stays exactly as
+  // authenticated as "a cookie session OR a hooks-vetted Bearer user".
+  if (event.locals?.authVia === 'bearer' && event.locals?.user) {
+    return event.locals.user;
+  }
   const session = readSession(event.cookies);
   if (!session) return null;
   return {

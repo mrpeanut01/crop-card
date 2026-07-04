@@ -69,19 +69,28 @@ export const PATCH: RequestHandler = async (event) => {
   }
 
   const id = event.params.id;
-  if (parsed.data.action === 'complete') {
-    return json({ task: completeTask(id, { occurredAt: parsed.data.occurredAt }) });
+  try {
+    if (parsed.data.action === 'complete') {
+      return json({ task: completeTask(id, { occurredAt: parsed.data.occurredAt }) });
+    }
+    if (parsed.data.action === 'abort') {
+      return json({ task: abortTask(id, parsed.data.reason) });
+    }
+    if (parsed.data.action === 'reschedule') {
+      return json({ task: updateTask(id, { scheduledFor: parsed.data.scheduledFor }) });
+    }
+    // edit
+    return json({
+      task: updateTask(id, { title: parsed.data.title, body: parsed.data.body })
+    });
+  } catch (e) {
+    // The repo throws `unknown task id: …` when the row doesn't exist (or is
+    // out of tenant scope). Surface that as a clean 404 instead of a raw 500.
+    if (e instanceof Error && /unknown task id/i.test(e.message)) {
+      return json({ error: 'task not found' }, { status: 404 });
+    }
+    throw e;
   }
-  if (parsed.data.action === 'abort') {
-    return json({ task: abortTask(id, parsed.data.reason) });
-  }
-  if (parsed.data.action === 'reschedule') {
-    return json({ task: updateTask(id, { scheduledFor: parsed.data.scheduledFor }) });
-  }
-  // edit
-  return json({
-    task: updateTask(id, { title: parsed.data.title, body: parsed.data.body })
-  });
 };
 
 /**

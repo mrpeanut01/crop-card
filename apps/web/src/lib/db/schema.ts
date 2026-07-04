@@ -342,6 +342,41 @@ export const superadminAudit = sqliteTable('superadmin_audit', {
     .default(sql`(unixepoch() * 1000)`)
 });
 
+/**
+ * Force-delete tombstones (#329). When an owner hard-deletes a *locked*
+ * record via `?force=true`, the row itself is removed — leaving a gap in
+ * the audit sequence with no trace of what was destroyed or by whom. This
+ * table records a tombstone written *before* the delete: record kind, id,
+ * the acting user, an optional reason, and a JSON snapshot of the row so
+ * the deletion is reconstructable. Tenant-scoped so tombstones never leak
+ * across Owners.
+ */
+export const recordDeletions = tenantScoped(
+  sqliteTable(
+    'record_deletions',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      recordKind: text('record_kind', {
+        enum: ['spray', 'insecticide', 'harvest']
+      }).notNull(),
+      recordId: text('record_id').notNull(),
+      deletedBy: text('deleted_by'),
+      reason: text('reason'),
+      deletedAt: integer('deleted_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      snapshotJson: text('snapshot_json').notNull()
+    },
+    (table) => ({
+      ownerDeletedIdx: index('record_deletions_owner_deleted_idx').on(
+        table.ownerId,
+        table.deletedAt
+      )
+    })
+  )
+);
+
 // ─── Fields → Blocks hierarchy (Phase 13, tenant-scoped in Phase 18a) ──
 
 export const fields = tenantScoped(
@@ -621,6 +656,10 @@ export const harvestEvents = tenantScoped(
       occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
       quantity: text('quantity'),
       lotNumber: text('lot_number'),
+      /** FR-09 (#308) — 48-hour immutability lock, stamped on the first
+       *  read past the window (mirrors spray_events.locked_at). Nullable:
+       *  null means still-mutable. */
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
       /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
       provenanceJson: text('provenance_json')
     },

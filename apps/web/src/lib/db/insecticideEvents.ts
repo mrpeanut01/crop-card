@@ -126,6 +126,48 @@ export function listInsecticideEvents(filters: ListFilters = {}): InsecticideEve
   return q.all().map(rowToEvent);
 }
 
+export function getInsecticideEvent(id: string): InsecticideEvent | undefined {
+  const row = db
+    .select()
+    .from(insecticideEvents)
+    .where(withTenant(insecticideEvents, eq(insecticideEvents.id, id)))
+    .get();
+  return row ? rowToEvent(row) : undefined;
+}
+
+export class RecordLockedError extends Error {
+  constructor(public readonly lockedAt: number) {
+    super('insecticide record is locked (FR-09 48-hour immutability window)');
+    this.name = 'RecordLockedError';
+  }
+}
+
+/**
+ * FR-09 (#308) — the 48-hour lock kicks in on first read after the window
+ * passes, stamping `lockedAt` once and refusing future edits/deletes.
+ * Returns the lock timestamp if locked, undefined if still mutable.
+ * Mirrors sprayEvents.evaluateLock exactly.
+ */
+export function evaluateLock(
+  event: InsecticideEvent,
+  now: number = Date.now()
+): number | undefined {
+  if (event.lockedAt) return event.lockedAt;
+  const elapsed = now - event.occurredAt;
+  if (elapsed < INSECTICIDE_LOCK_WINDOW_MS) return undefined;
+  const lockedAt = event.occurredAt + INSECTICIDE_LOCK_WINDOW_MS;
+  db.update(insecticideEvents)
+    .set({ lockedAt: new Date(lockedAt) })
+    .where(withTenant(insecticideEvents, eq(insecticideEvents.id, event.id)))
+    .run();
+  return lockedAt;
+}
+
+export function assertEditable(event: InsecticideEvent): void {
+  const lockedAt = evaluateLock(event);
+  if (lockedAt !== undefined) throw new RecordLockedError(lockedAt);
+}
+
 /** Blocks currently inside a re-entry interval — drives the /today banner. */
 export function activeReEntryRestrictions(now: number = Date.now()): InsecticideEvent[] {
   const all = db

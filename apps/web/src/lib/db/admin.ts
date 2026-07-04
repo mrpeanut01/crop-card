@@ -12,6 +12,7 @@
  * cross-tenant wipes are an explicit, audited operation defined elsewhere.
  */
 
+import { randomUUID } from 'node:crypto';
 import { type SQL, and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
@@ -30,6 +31,7 @@ import {
   fungicideEvents,
   insecticideEvents,
   pendingCalibrations,
+  recordDeletions,
   soilTests,
   sprayEvents,
   sprayers,
@@ -38,7 +40,19 @@ import {
   stockMovements,
   tasks
 } from './schema';
-import { type TenantScopedTable, withTenant } from './tenant';
+import { type TenantScopedTable, tenantValues, withTenant } from './tenant';
+import {
+  evaluateLock as evaluateSprayLock,
+  getSprayEvent
+} from './sprayEvents';
+import {
+  evaluateLock as evaluateInsecticideLock,
+  getInsecticideEvent
+} from './insecticideEvents';
+import {
+  evaluateLock as evaluateHarvestLock,
+  getHarvestEvent
+} from './harvestEvents';
 
 export interface DeleteSummary {
   /** Per-table row counts that were removed. Surfaces in the response so
@@ -61,23 +75,54 @@ function del<T extends TenantScopedTable>(table: T, where: SQL): number {
 
 export interface DeleteSprayEventOptions {
   force?: boolean;
+  /** #329 — acting user + reason recorded on the force-delete tombstone. */
+  deletedBy?: string;
+  reason?: string;
 }
 
 export class RecordLockedError extends Error {
-  constructor() {
-    super('spray record is locked (FR-09); pass force=true (owner-only) to override');
+  constructor(kind: 'spray' | 'insecticide' | 'harvest' = 'spray') {
+    super(`${kind} record is locked (FR-09); pass force=true (owner-only) to override`);
     this.name = 'RecordLockedError';
   }
 }
 
+/**
+ * #329 — write a tombstone before a force-delete removes a locked record.
+ * The row is gone after the delete, so the snapshot + acting user + reason
+ * are the only surviving trace. Tenant-scoped via `tenantValues`.
+ */
+function writeDeletionTombstone(
+  kind: 'spray' | 'insecticide' | 'harvest',
+  recordId: string,
+  snapshot: unknown,
+  opts: { deletedBy?: string; reason?: string }
+): void {
+  db.insert(recordDeletions)
+    .values(
+      tenantValues({
+        id: randomUUID(),
+        recordKind: kind,
+        recordId,
+        deletedBy: opts.deletedBy ?? null,
+        reason: opts.reason ?? null,
+        snapshotJson: JSON.stringify(snapshot ?? null)
+      })
+    )
+    .run();
+}
+
 export function deleteSprayEvent(id: string, opts: DeleteSprayEventOptions = {}): DeleteSummary {
-  const row = db
-    .select()
-    .from(sprayEvents)
-    .where(withTenant(sprayEvents, eq(sprayEvents.id, id)))
-    .get();
-  if (!row) return { removed: {} };
-  if (row.lockedAt && !opts.force) throw new RecordLockedError();
+  const event = getSprayEvent(id);
+  if (!event) return { removed: {} };
+  // evaluateLock stamps + returns the lock time for any row past the 48h
+  // window, including aged rows that were never read (the #308 class of
+  // bug where a never-stamped lockedAt let old records delete freely).
+  const lockedAt = evaluateSprayLock(event);
+  if (lockedAt !== undefined) {
+    if (!opts.force) throw new RecordLockedError('spray');
+    writeDeletionTombstone('spray', id, event, opts);
+  }
   const removed: Record<string, number> = {};
   removed.stock_movements = del(stockMovements, eq(stockMovements.sprayEventId, id));
   removed.spray_events = del(sprayEvents, eq(sprayEvents.id, id));
@@ -86,11 +131,31 @@ export function deleteSprayEvent(id: string, opts: DeleteSprayEventOptions = {})
 
 // ─── Per-other-event ────────────────────────────────────────────────────
 
-export function deleteHarvestEvent(id: string): DeleteSummary {
+export function deleteHarvestEvent(
+  id: string,
+  opts: DeleteSprayEventOptions = {}
+): DeleteSummary {
+  const event = getHarvestEvent(id);
+  if (!event) return { removed: {} };
+  const lockedAt = evaluateHarvestLock(event);
+  if (lockedAt !== undefined) {
+    if (!opts.force) throw new RecordLockedError('harvest');
+    writeDeletionTombstone('harvest', id, event, opts);
+  }
   return { removed: { harvest_events: del(harvestEvents, eq(harvestEvents.id, id)) } };
 }
 
-export function deleteInsecticideEvent(id: string): DeleteSummary {
+export function deleteInsecticideEvent(
+  id: string,
+  opts: DeleteSprayEventOptions = {}
+): DeleteSummary {
+  const event = getInsecticideEvent(id);
+  if (!event) return { removed: {} };
+  const lockedAt = evaluateInsecticideLock(event);
+  if (lockedAt !== undefined) {
+    if (!opts.force) throw new RecordLockedError('insecticide');
+    writeDeletionTombstone('insecticide', id, event, opts);
+  }
   const removed: Record<string, number> = {};
   removed.stock_movements = del(stockMovements, eq(stockMovements.insecticideEventId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.id, id));

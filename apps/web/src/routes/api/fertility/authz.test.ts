@@ -115,12 +115,14 @@ describe('fertility + decon mutation authz gate', () => {
       expect(await statusOf(() => soilTestDelete(makeEvent({ params: { id: 'st-1' } })))).toBe(403);
     });
     it('POST /api/fertility/applications', async () => {
-      expect(await statusOf(() => applicationPost(makeEvent({ body: VALID.application })))).toBe(403);
+      expect(await statusOf(() => applicationPost(makeEvent({ body: VALID.application })))).toBe(
+        403
+      );
     });
     it('DELETE /api/fertility/applications/:id', async () => {
-      expect(
-        await statusOf(() => applicationDelete(makeEvent({ params: { id: 'fa-1' } })))
-      ).toBe(403);
+      expect(await statusOf(() => applicationDelete(makeEvent({ params: { id: 'fa-1' } })))).toBe(
+        403
+      );
     });
     it('POST /api/fertility/credits', async () => {
       expect(await statusOf(() => creditPost(makeEvent({ body: VALID.credit })))).toBe(403);

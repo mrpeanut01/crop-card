@@ -251,7 +251,7 @@ describe('FR-09 delete lock — spray tombstone (#329)', () => {
 });
 
 describe('tombstone tenant isolation', () => {
-  it("a force-delete tombstone is scoped to the acting Owner and never leaks", () => {
+  it('a force-delete tombstone is scoped to the acting Owner and never leaks', () => {
     ensureOwner(OWNER);
     ensureOwner(OWNER_OTHER);
     ensureUser('u1');

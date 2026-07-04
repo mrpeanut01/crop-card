@@ -41,18 +41,9 @@ import {
   tasks
 } from './schema';
 import { type TenantScopedTable, tenantValues, withTenant } from './tenant';
-import {
-  evaluateLock as evaluateSprayLock,
-  getSprayEvent
-} from './sprayEvents';
-import {
-  evaluateLock as evaluateInsecticideLock,
-  getInsecticideEvent
-} from './insecticideEvents';
-import {
-  evaluateLock as evaluateHarvestLock,
-  getHarvestEvent
-} from './harvestEvents';
+import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents';
+import { evaluateLock as evaluateInsecticideLock, getInsecticideEvent } from './insecticideEvents';
+import { evaluateLock as evaluateHarvestLock, getHarvestEvent } from './harvestEvents';
 
 export interface DeleteSummary {
   /** Per-table row counts that were removed. Surfaces in the response so
@@ -131,10 +122,7 @@ export function deleteSprayEvent(id: string, opts: DeleteSprayEventOptions = {})
 
 // ─── Per-other-event ────────────────────────────────────────────────────
 
-export function deleteHarvestEvent(
-  id: string,
-  opts: DeleteSprayEventOptions = {}
-): DeleteSummary {
+export function deleteHarvestEvent(id: string, opts: DeleteSprayEventOptions = {}): DeleteSummary {
   const event = getHarvestEvent(id);
   if (!event) return { removed: {} };
   const lockedAt = evaluateHarvestLock(event);

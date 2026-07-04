@@ -11,11 +11,19 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-const currentUser = vi.fn();
-const deleteInsecticideEvent = vi.fn(() => ({ removed: { insecticide_events: 1 } }));
-const deleteHarvestEvent = vi.fn(() => ({ removed: { harvest_events: 1 } }));
-const getInsecticideEvent = vi.fn(() => ({ id: 'rec-1' }));
-const getHarvestEvent = vi.fn(() => ({ id: 'rec-1' }));
+const {
+  currentUser,
+  deleteInsecticideEvent,
+  deleteHarvestEvent,
+  getInsecticideEvent,
+  getHarvestEvent
+} = vi.hoisted(() => ({
+  currentUser: vi.fn(),
+  deleteInsecticideEvent: vi.fn(() => ({ removed: { insecticide_events: 1 } })),
+  deleteHarvestEvent: vi.fn(() => ({ removed: { harvest_events: 1 } })),
+  getInsecticideEvent: vi.fn(() => ({ id: 'rec-1' })),
+  getHarvestEvent: vi.fn(() => ({ id: 'rec-1' }))
+}));
 
 vi.mock('$lib/server/auth', () => ({ currentUser }));
 vi.mock('$lib/db/admin', async () => {

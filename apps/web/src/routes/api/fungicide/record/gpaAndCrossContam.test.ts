@@ -15,23 +15,33 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-const currentUser = vi.fn(() => ({ id: 'u1', role: 'owner' }));
-const getRegistry = vi.fn();
-const getSprayer = vi.fn();
-const recordSpray = vi.fn();
-const computeRatedDilution = vi.fn(() => ({
-  pluginId: 'fung-1',
-  displayName: 'Spot Stop',
-  productAmount: 6,
-  unit: 'fl-oz',
-  display: '6 fl-oz',
-  acresCovered: 1,
-  gpaUsed: 20,
-  ratePerAcre: { amount: 6, unit: 'fl-oz' },
-  customRateApplied: false
+const {
+  currentUser,
+  getRegistry,
+  getSprayer,
+  recordSpray,
+  computeRatedDilution,
+  insertFungicideEvent,
+  decrementForUse
+} = vi.hoisted(() => ({
+  currentUser: vi.fn(() => ({ id: 'u1', role: 'owner' })),
+  getRegistry: vi.fn(),
+  getSprayer: vi.fn(),
+  recordSpray: vi.fn(),
+  computeRatedDilution: vi.fn(() => ({
+    pluginId: 'fung-1',
+    displayName: 'Spot Stop',
+    productAmount: 6,
+    unit: 'fl-oz',
+    display: '6 fl-oz',
+    acresCovered: 1,
+    gpaUsed: 20,
+    ratePerAcre: { amount: 6, unit: 'fl-oz' },
+    customRateApplied: false
+  })),
+  insertFungicideEvent: vi.fn(() => ({ id: 'evt-1' })),
+  decrementForUse: vi.fn(() => ({ notes: [] }))
 }));
-const insertFungicideEvent = vi.fn(() => ({ id: 'evt-1' }));
-const decrementForUse = vi.fn(() => ({ notes: [] }));
 
 vi.mock('$lib/server/auth', () => ({ currentUser }));
 vi.mock('$lib/server/session', () => ({ canMutate: (r: string) => r !== 'inspector' }));

@@ -86,8 +86,8 @@
     font-size: 20px;
     line-height: 1;
     color: inherit;
-    width: 28px;
-    height: 28px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: var(--radius-pill);
     display: grid;
     place-items: center;

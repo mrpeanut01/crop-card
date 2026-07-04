@@ -23,6 +23,7 @@
   let acres = $state<number | null>(null);
   let submitting = $state(false);
   let saveError = $state<string | null>(null);
+  let modalEl = $state<HTMLDivElement | null>(null);
 
   $effect(() => {
     if (open && block) {
@@ -32,6 +33,25 @@
       saveError = null;
     }
   });
+
+  // #355 — on open, move focus into the dialog (first input) so the trigger
+  // doesn't keep focus off-screen; Tab wraps within the modal (focus trap).
+  $effect(() => {
+    if (open && block) {
+      queueMicrotask(() => {
+        document.getElementById('edit-block-name')?.focus();
+      });
+    }
+  });
+
+  function getFocusable(): HTMLElement[] {
+    if (!modalEl) return [];
+    const sel =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return Array.from(modalEl.querySelectorAll<HTMLElement>(sel)).filter(
+      (el) => el.offsetParent !== null || el === document.activeElement
+    );
+  }
 
   async function handleSubmit(e: SubmitEvent): Promise<void> {
     e.preventDefault();
@@ -66,7 +86,26 @@
   }
 
   function onKey(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && !submitting) onClose();
+    if (e.key === 'Escape' && !submitting) {
+      onClose();
+      return;
+    }
+    if (e.key === 'Tab' && modalEl) {
+      const focusables = getFocusable();
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey) {
+        if (active === first || !modalEl.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
   }
 </script>
 
@@ -80,7 +119,14 @@
       if (e.target === e.currentTarget && !submitting) onClose();
     }}
   >
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-block-title">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-block-title"
+      bind:this={modalEl}
+      tabindex="-1"
+    >
       <header class="modal-header">
         <h2 id="edit-block-title" class="serif">Edit block</h2>
         <button type="button" class="close" onclick={onClose} aria-label="Close">
@@ -91,6 +137,7 @@
         <label class="field">
           <span class="label">Name <span class="req" aria-hidden="true">*</span></span>
           <input
+            id="edit-block-name"
             type="text"
             bind:value={name}
             placeholder="e.g. East Field"

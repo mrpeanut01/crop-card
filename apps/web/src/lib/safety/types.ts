@@ -26,6 +26,24 @@ export const CHEMISTRY_CLASSES = [
 
 export type ChemistryClass = (typeof CHEMISTRY_CLASSES)[number];
 
+/**
+ * Coarse pesticide-category load tokens for the sprayer state machine ONLY
+ * (#321). Insecticides carry IRAC groups and fungicides carry FRAC codes —
+ * neither is an HRAC `ChemistryClass`, and neither belongs in the herbicide
+ * kill-matrix (`CHEMISTRY_KILL_MATRIX`). But the cross-contamination gate
+ * (UC-04 / UC-32) still needs to know that a *non-herbicide* load passed
+ * through the tank so the next different-chemistry pass routes to decon.
+ *
+ * `SprayerLoadClass` widens the state-machine chemistry token without
+ * touching `ChemistryClass`, so the kill-matrix and every herbicide-only
+ * consumer stay HRAC-pure. `checkCrossContamination` fires on any distinct
+ * token: herbicide→insecticide, insecticide→herbicide, and
+ * fungicide→herbicide sequences all trigger the decon requirement.
+ */
+export const SPRAYER_LOAD_CLASSES = ['insecticide-load', 'fungicide-load'] as const;
+
+export type SprayerLoadClass = ChemistryClass | (typeof SPRAYER_LOAD_CLASSES)[number];
+
 export interface ActiveIngredient {
   name: string;
   chemistryClass: ChemistryClass;
@@ -77,7 +95,10 @@ export interface BlockCrops {
 
 export interface SprayerState {
   id: string;
-  lastChemistryClass?: ChemistryClass;
+  /** Widened to `SprayerLoadClass` (#321) so insecticide (`insecticide-load`)
+   *  and fungicide (`fungicide-load`) passes participate in the
+   *  cross-contamination state machine alongside HRAC herbicide classes. */
+  lastChemistryClass?: SprayerLoadClass;
   lastSprayedAt?: number;
   lastDeconAt?: number;
 }

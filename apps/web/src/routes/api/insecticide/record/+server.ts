@@ -36,11 +36,18 @@ import {
 import { RULES_VERSION } from '$lib/safety/version';
 import { checkIpmThreshold, type ScoutObservation } from '$lib/safety/ipmThreshold';
 import { checkPollinatorBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
+import { checkCrossContaminationForClasses } from '$lib/safety/crossContamination';
 import { runEvaluator } from '$lib/safety/dryRunRunner';
 import type { StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
+import { getSprayer, recordSpray } from '$lib/server/sprayers';
+
+/** Coarse sprayer-load token for the cross-contamination state machine
+ *  (#321). Insecticides carry IRAC groups, not an HRAC ChemistryClass, so
+ *  the tank records this category token instead of a per-ingredient class. */
+const INSECTICIDE_LOAD_CLASS = 'insecticide-load' as const;
 
 const requestSchema = z.object({
   blockId: z.string().min(1),
@@ -241,6 +248,40 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
+  // #321 — load the sprayer so the cross-contamination gate and the
+  // calibrated-GPA decrement both read real tank state (mirrors the
+  // herbicide path). A missing sprayer id is not fatal here (the
+  // insecticide flow allows unattributed passes); the gate + calibrated
+  // GPA simply no-op when no sprayer is selected.
+  const sprayer = parsed.data.sprayerId ? getSprayer(parsed.data.sprayerId) : undefined;
+  if (parsed.data.sprayerId && !sprayer) {
+    return json({ error: `unknown sprayer: ${parsed.data.sprayerId}` }, { status: 404 });
+  }
+
+  // Cross-contamination gate (UC-04 / UC-32). If the tank last carried a
+  // different chemistry category and no decon has been recorded since,
+  // block and route to the decon wizard — same rule the herbicide path
+  // runs, now wired into the insecticide flow.
+  if (sprayer) {
+    const contamination = checkCrossContaminationForClasses([INSECTICIDE_LOAD_CLASS], {
+      id: sprayer.id,
+      lastChemistryClass: sprayer.lastChemistryClass,
+      lastSprayedAt: sprayer.lastSprayedAt,
+      lastDeconAt: sprayer.lastDeconAt
+    });
+    if (contamination.violations.length > 0) {
+      return json(
+        {
+          error: 'cross-contamination gate failed; decon required before this spray',
+          violations: contamination.violations,
+          requiresDecon: contamination.requiresDecon,
+          ruleVersion: RULES_VERSION
+        },
+        { status: 422 }
+      );
+    }
+  }
+
   // Phase 17 (Track 2.4) — resolve stock items once for the augmenter + decrement.
   const stockByPluginId = new Map<string, StockItem>();
   const stockPairs: StockPluginPair[] = [];
@@ -334,10 +375,21 @@ export const POST: RequestHandler = async (event) => {
     pluginHashes
   });
 
+  // #321 — update sprayer chemistry history so the next different-chemistry
+  // pass (e.g. a herbicide after this insecticide) trips the cross-
+  // contamination gate. Mirrors the herbicide path's post-persist
+  // recordSpray call.
+  if (sprayer) recordSpray(sprayer.id, INSECTICIDE_LOAD_CLASS, occurredAt);
+
   // Auto-decrement stock (best-effort; warns on shortfall, never blocks).
   const stockResults: DecrementResult[] = [];
   const stockWarnings: string[] = [];
   if (parsed.data.tankSizeGallons) {
+    // #319 — scale the decrement by the sprayer's stored calibrated GPA, not
+    // the plugin default. `computeRatedDilution` coalesces null/undefined
+    // calibratedGpa to the plugin's `gpaCalibration` fallback, matching the
+    // herbicide path (an 18-GPA rig now decrements ~20% more product).
+    const effectiveGpa = sprayer?.calibratedGpa ?? undefined;
     for (const p of products) {
       if (!p.ratePerAcre) continue;
       const line = computeRatedDilution(
@@ -347,7 +399,8 @@ export const POST: RequestHandler = async (event) => {
           ratePerAcre: p.ratePerAcre,
           gpaCalibration: p.gpaCalibration ?? 15
         },
-        parsed.data.tankSizeGallons
+        parsed.data.tankSizeGallons,
+        effectiveGpa
       );
       const stockItem = stockByPluginId.get(p.pluginId);
       if (!stockItem) {

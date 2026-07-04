@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkCrossContamination } from './crossContamination';
+import { checkCrossContamination, checkCrossContaminationForClasses } from './crossContamination';
 import type { HerbicideProduct, SprayerState } from './types';
 
 const auxin: HerbicideProduct = {
@@ -65,5 +65,73 @@ describe('checkCrossContamination', () => {
       lastDeconAt: 3000
     };
     expect(checkCrossContamination([glypho], sprayer).requiresDecon).toBe(true);
+  });
+});
+
+describe('checkCrossContaminationForClasses (#321 — insecticide / fungicide loads)', () => {
+  it('passes a fresh sprayer with no history for an insecticide load', () => {
+    expect(checkCrossContaminationForClasses(['insecticide-load'], { id: 's1' })).toEqual({
+      violations: [],
+      requiresDecon: false
+    });
+  });
+
+  it('demands decon for a herbicide after an insecticide load (the #321 bug)', () => {
+    // Prior insecticide pass recorded `insecticide-load`; a herbicide now
+    // planned differs → the gate must fire (previously it never ran).
+    const sprayer: SprayerState = {
+      id: 's1',
+      lastChemistryClass: 'insecticide-load',
+      lastSprayedAt: 1000
+    };
+    const out = checkCrossContaminationForClasses(['glyphosate'], sprayer);
+    expect(out.requiresDecon).toBe(true);
+    expect(out.violations[0].code).toBe('CROSS_CONTAMINATION');
+  });
+
+  it('demands decon for an insecticide after a herbicide load', () => {
+    const sprayer: SprayerState = {
+      id: 's1',
+      lastChemistryClass: 'synthetic-auxin',
+      lastSprayedAt: 1000
+    };
+    const out = checkCrossContaminationForClasses(['insecticide-load'], sprayer);
+    expect(out.requiresDecon).toBe(true);
+    expect(out.violations[0].code).toBe('CROSS_CONTAMINATION');
+  });
+
+  it('demands decon for a herbicide after a fungicide load', () => {
+    const sprayer: SprayerState = {
+      id: 's1',
+      lastChemistryClass: 'fungicide-load',
+      lastSprayedAt: 1000
+    };
+    expect(checkCrossContaminationForClasses(['synthetic-auxin'], sprayer).requiresDecon).toBe(
+      true
+    );
+  });
+
+  it('passes an insecticide load repeated back-to-back', () => {
+    const sprayer: SprayerState = {
+      id: 's1',
+      lastChemistryClass: 'insecticide-load',
+      lastSprayedAt: 1000
+    };
+    expect(checkCrossContaminationForClasses(['insecticide-load'], sprayer)).toEqual({
+      violations: [],
+      requiresDecon: false
+    });
+  });
+
+  it('clears an insecticide-after-herbicide once decon is recorded', () => {
+    const sprayer: SprayerState = {
+      id: 's1',
+      lastChemistryClass: 'synthetic-auxin',
+      lastSprayedAt: 1000,
+      lastDeconAt: 2000
+    };
+    expect(checkCrossContaminationForClasses(['insecticide-load'], sprayer).requiresDecon).toBe(
+      false
+    );
   });
 });

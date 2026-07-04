@@ -15,7 +15,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
-import type { ChemistryClass } from '$lib/safety/types';
+import type { SprayerLoadClass } from '$lib/safety/types';
 import { db } from './client';
 import { equipment, equipmentLog, equipmentState } from './schema';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
@@ -52,7 +52,7 @@ export interface Equipment {
 export interface EquipmentStateRow {
   equipmentId: string;
   hourMeter?: number;
-  lastChemistryClass?: ChemistryClass;
+  lastChemistryClass?: SprayerLoadClass;
   lastUsedAt?: number;
   lastDeconAt?: number;
   calibratedGpa?: number;
@@ -89,7 +89,7 @@ function rowToState(row: typeof equipmentState.$inferSelect): EquipmentStateRow 
   return {
     equipmentId: row.equipmentId,
     hourMeter: row.hourMeter ?? undefined,
-    lastChemistryClass: (row.lastChemistryClass as ChemistryClass | null) ?? undefined,
+    lastChemistryClass: (row.lastChemistryClass as SprayerLoadClass | null) ?? undefined,
     lastUsedAt: row.lastUsedAt?.getTime(),
     lastDeconAt: row.lastDeconAt?.getTime(),
     calibratedGpa: row.calibratedGpa ?? undefined,
@@ -199,7 +199,7 @@ export function updateEquipmentState(
   // decon flow can actually mark a sprayer clean. Other fields use the
   // same undefined-means-skip convention.
   patch: Partial<Omit<EquipmentStateRow, 'equipmentId' | 'lastChemistryClass'>> & {
-    lastChemistryClass?: ChemistryClass | null;
+    lastChemistryClass?: SprayerLoadClass | null;
   }
 ): EquipmentStateRow {
   const set: Partial<typeof equipmentState.$inferInsert> = {};

@@ -1,4 +1,4 @@
-import type { ChemistryClass, HerbicideProduct, SafetyViolation, SprayerState } from './types';
+import type { HerbicideProduct, SafetyViolation, SprayerLoadClass, SprayerState } from './types';
 
 /**
  * Cross-contamination gate. If the planned chemistry classes differ from the
@@ -14,16 +14,21 @@ export interface ContaminationCheck {
   requiresDecon: boolean;
 }
 
-export function checkCrossContamination(
-  products: HerbicideProduct[],
+/**
+ * Core evaluator over an explicit set of planned load classes. The
+ * herbicide path derives these from `activeIngredients[].chemistryClass`;
+ * the insecticide / fungicide paths (#321) pass the coarse
+ * `insecticide-load` / `fungicide-load` token so a different chemistry
+ * category still trips the decon requirement.
+ */
+export function checkCrossContaminationForClasses(
+  plannedClasses: readonly SprayerLoadClass[],
   sprayer: SprayerState
 ): ContaminationCheck {
   const last = sprayer.lastChemistryClass;
   if (!last) return { violations: [], requiresDecon: false };
 
-  const planned = new Set<ChemistryClass>(
-    products.flatMap((p) => p.activeIngredients.map((ai) => ai.chemistryClass))
-  );
+  const planned = new Set<SprayerLoadClass>(plannedClasses);
 
   if (planned.has(last)) return { violations: [], requiresDecon: false };
 
@@ -47,4 +52,14 @@ export function checkCrossContamination(
     ],
     requiresDecon: true
   };
+}
+
+export function checkCrossContamination(
+  products: HerbicideProduct[],
+  sprayer: SprayerState
+): ContaminationCheck {
+  const plannedClasses = products.flatMap((p) =>
+    p.activeIngredients.map((ai) => ai.chemistryClass)
+  );
+  return checkCrossContaminationForClasses(plannedClasses, sprayer);
 }

@@ -38,11 +38,18 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { checkFracRotation } from '$lib/safety/fracRotation';
 import { checkFungicideTankMixCompat } from '$lib/safety/fungicideTankMix';
 import { checkPollinatorBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
+import { checkCrossContaminationForClasses } from '$lib/safety/crossContamination';
 import { runEvaluator } from '$lib/safety/dryRunRunner';
 import type { StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
+import { getSprayer, recordSpray } from '$lib/server/sprayers';
+
+/** Coarse sprayer-load token for the cross-contamination state machine
+ *  (#321). Fungicides carry FRAC codes, not an HRAC ChemistryClass, so the
+ *  tank records this category token instead of a per-ingredient class. */
+const FUNGICIDE_LOAD_CLASS = 'fungicide-load' as const;
 
 const requestSchema = z.object({
   blockId: z.string().min(1),
@@ -223,6 +230,39 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
+  // #321 — load the sprayer so the cross-contamination gate and the
+  // calibrated-GPA decrement both read real tank state (mirrors the
+  // herbicide path). A missing sprayer id is not fatal (the fungicide flow
+  // allows unattributed passes); the gate + calibrated GPA no-op then.
+  const sprayer = parsed.data.sprayerId ? getSprayer(parsed.data.sprayerId) : undefined;
+  if (parsed.data.sprayerId && !sprayer) {
+    return json({ error: `unknown sprayer: ${parsed.data.sprayerId}` }, { status: 404 });
+  }
+
+  // Cross-contamination gate (UC-04 / UC-32). Copper fungicides in
+  // particular carry over and damage the next pass's crop; a different
+  // prior chemistry category with no decon since blocks and routes to the
+  // decon wizard.
+  if (sprayer) {
+    const contamination = checkCrossContaminationForClasses([FUNGICIDE_LOAD_CLASS], {
+      id: sprayer.id,
+      lastChemistryClass: sprayer.lastChemistryClass,
+      lastSprayedAt: sprayer.lastSprayedAt,
+      lastDeconAt: sprayer.lastDeconAt
+    });
+    if (contamination.violations.length > 0) {
+      return json(
+        {
+          error: 'cross-contamination gate failed; decon required before this spray',
+          violations: contamination.violations,
+          requiresDecon: contamination.requiresDecon,
+          ruleVersion: RULES_VERSION
+        },
+        { status: 422 }
+      );
+    }
+  }
+
   const stockByPluginId = new Map<string, StockItem>();
   const stockPairs: StockPluginPair[] = [];
   for (let i = 0; i < products.length; i++) {
@@ -308,9 +348,19 @@ export const POST: RequestHandler = async (event) => {
     pluginHashes
   });
 
+  // #321 — update sprayer chemistry history so the next different-chemistry
+  // pass trips the cross-contamination gate. Mirrors the herbicide path's
+  // post-persist recordSpray call.
+  if (sprayer) recordSpray(sprayer.id, FUNGICIDE_LOAD_CLASS, occurredAt);
+
   const stockResults: DecrementResult[] = [];
   const stockWarnings: string[] = [];
   if (parsed.data.tankSizeGallons) {
+    // #319 — scale the decrement by the sprayer's stored calibrated GPA, not
+    // the plugin default. `computeRatedDilution` coalesces null/undefined
+    // calibratedGpa to the plugin's `gpaCalibration` fallback, matching the
+    // herbicide path.
+    const effectiveGpa = sprayer?.calibratedGpa ?? undefined;
     for (const p of products) {
       const line = computeRatedDilution(
         {
@@ -319,7 +369,8 @@ export const POST: RequestHandler = async (event) => {
           ratePerAcre: p.ratePerAcre,
           gpaCalibration: p.gpaCalibration ?? 15
         },
-        parsed.data.tankSizeGallons
+        parsed.data.tankSizeGallons,
+        effectiveGpa
       );
       const stockItem = stockByPluginId.get(p.pluginId);
       if (!stockItem) {

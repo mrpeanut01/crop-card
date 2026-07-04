@@ -11,7 +11,11 @@ export { isIncompatiblePair, checkChemistryCompatibility } from './chemistry';
 export { checkCropCompatibility } from './cropCompatibility';
 export { checkCropStage } from './cropStage';
 export { checkTankMix, type PriorApplication } from './tankMix';
-export { checkCrossContamination, type ContaminationCheck } from './crossContamination';
+export {
+  checkCrossContamination,
+  checkCrossContaminationForClasses,
+  type ContaminationCheck
+} from './crossContamination';
 export { checkEnvironment, ENV_BOUNDS } from './environment';
 export { evaluateSpray, type EvaluateOptions } from './evaluate';
 export { buildTankMixSteps, type TankMixStep } from './tankMixOrder';

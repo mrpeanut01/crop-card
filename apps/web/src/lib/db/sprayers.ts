@@ -9,7 +9,7 @@
  */
 
 import { appendEquipmentLog, getEquipment, listEquipment, updateEquipmentState } from './equipment';
-import type { ChemistryClass } from '$lib/safety/types';
+import type { SprayerLoadClass } from '$lib/safety/types';
 
 export interface Sprayer {
   id: string;
@@ -21,7 +21,7 @@ export interface Sprayer {
    *  prompt the user; consult docs/use-cases.md UC-10 for the wizard. */
   calibratedGpa: number | null;
   calibrationDate?: number;
-  lastChemistryClass?: ChemistryClass;
+  lastChemistryClass?: SprayerLoadClass;
   lastSprayedAt?: number;
   lastDeconAt?: number;
 }
@@ -51,7 +51,7 @@ export function getSprayer(id: string): Sprayer | undefined {
   return toSprayer(eq);
 }
 
-export function recordSpray(id: string, chemistry: ChemistryClass, occurredAt: number): Sprayer {
+export function recordSpray(id: string, chemistry: SprayerLoadClass, occurredAt: number): Sprayer {
   updateEquipmentState(id, {
     lastChemistryClass: chemistry,
     lastUsedAt: occurredAt

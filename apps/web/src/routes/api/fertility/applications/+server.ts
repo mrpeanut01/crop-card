@@ -2,7 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { insertFertilityApplication, listFertilityApplicationsForBlock } from '$lib/db/fertility';
 import { ensureSystemUser } from '$lib/db/users';
-import { currentUser } from '$lib/server/auth';
+import { currentUser, requireOwner } from '$lib/server/auth';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
@@ -20,6 +20,7 @@ const inputSchema = z.object({
 });
 
 export const POST: RequestHandler = async (event) => {
+  requireOwner(event);
   const auth = currentUser(event);
   let body: unknown;
   try {

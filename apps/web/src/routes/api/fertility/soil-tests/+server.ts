@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { insertSoilTest, listSoilTestsForBlock } from '$lib/db/fertility';
+import { requireOwner } from '$lib/server/auth';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
@@ -17,6 +18,7 @@ const inputSchema = z.object({
 });
 
 export const POST: RequestHandler = async (event) => {
+  requireOwner(event);
   let body: unknown;
   try {
     body = await event.request.json();

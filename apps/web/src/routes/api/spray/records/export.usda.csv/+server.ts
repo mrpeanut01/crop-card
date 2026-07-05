@@ -15,19 +15,39 @@
  *   - EPA reg # is also pulled for fungicides (previously only herbicide
  *     + insecticide branches set it).
  *
+ * #326 (inspector-grade completeness — UC-22 receiver acceptance):
+ *   The original 13 columns keep their exact names + positions; the 5 new
+ *   columns are appended so existing importers stay compatible.
+ *   - `crop_commodity` names the crop/commodity treated (resolved from the
+ *     block's plantings), which NRCS reviewers require per application.
+ *   - `applicator_cert_no` is present but empty — CropCard does not yet
+ *     capture the applicator's pesticide-applicator certification number
+ *     (documented data-gap, see PR). The column is emitted so downstream
+ *     tooling has a stable slot and the operator can hand-annotate.
+ *   - `total_amount_applied` = rate_per_acre × area_acres (blank when
+ *     either input is missing) — the absolute product volume/mass, not
+ *     just the per-acre rate.
+ *   - `moisture_pct` carries stored moisture on harvest rows (UC-16); the
+ *     `record_kind` column discriminates `application` from `harvest` so
+ *     the one CSV carries both application + harvest-moisture records.
+ *
  * Columns:
  *   date_iso, block_label, applicator, product_name, epa_reg_no,
  *   active_ingredients, rate_per_acre, rate_unit, area_acres,
- *   target_pest, weather_wind_mph, weather_temp_f, warning
+ *   target_pest, weather_wind_mph, weather_temp_f, warning,
+ *   crop_commodity, applicator_cert_no, total_amount_applied, moisture_pct,
+ *   record_kind
  */
 
 import { type RequestHandler } from '@sveltejs/kit';
 import { inArray } from 'drizzle-orm';
 import papa from 'papaparse';
 import { listBlocks } from '$lib/db/blocks';
+import type { BlockWithPlantings } from '$lib/db/blocks';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
+import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { getRegistry } from '$lib/server/registry';
 import { requireUser } from '$lib/server/auth';
 import { parseExportDateRange } from '$lib/exports/dateRange';
@@ -73,8 +93,30 @@ export const GET: RequestHandler = async (event) => {
   const sprays = listSprayEvents({ blockId, sprayerId, fromMs, toMs, limit: 10_000 });
   const insecticides = listInsecticideEvents({ blockId, fromMs, toMs, limit: 10_000 });
   const fungicides = listFungicideEvents({ blockId, fromMs, toMs, limit: 10_000 });
+  const harvests = listHarvestEvents({ blockId, fromMs, toMs });
   const blocks = new Map(listBlocks().map((b) => [b.id, b]));
   const registry = await getRegistry();
+
+  // Crop/commodity treated — the block's plantings name the crop under the
+  // application. Multiple plantings on one block join with "; ". Resolved
+  // to the registry displayName when available, else the plugin id.
+  function cropCommodityFor(block: BlockWithPlantings | undefined): string {
+    if (!block || block.plantings.length === 0) return '';
+    const names = new Set<string>();
+    for (const p of block.plantings) {
+      const plugin = registry.get(p.cropPluginId)?.plugin as { displayName?: string } | undefined;
+      names.add(plugin?.displayName ?? p.varietyDisplayName ?? p.cropPluginId);
+    }
+    return Array.from(names).slice(0, 3).join('; ');
+  }
+
+  // total_amount_applied = rate/acre × acres. Blank when either is missing
+  // so the inspector can tell "not computable" from a real zero.
+  function totalAmountApplied(rate: number | undefined, acres: number | undefined): string {
+    if (rate === undefined || acres === undefined || !Number.isFinite(rate)) return '';
+    const total = rate * acres;
+    return Number.isFinite(total) ? String(Math.round(total * 1000) / 1000) : '';
+  }
 
   const applicatorIds = [
     ...sprays.map((e) => e.performedById),
@@ -97,8 +139,20 @@ export const GET: RequestHandler = async (event) => {
     weather_wind_mph: string;
     weather_temp_f: string;
     warning: string;
+    // #326 appended columns (kept after the stable 13 above).
+    crop_commodity: string;
+    applicator_cert_no: string;
+    total_amount_applied: string;
+    moisture_pct: string;
+    record_kind: string;
   };
   const rows: Row[] = [];
+
+  // Data-gap (#326): no applicator pesticide-certification number is
+  // captured anywhere in the schema yet. Emit the column empty rather than
+  // fabricate a value; the PR documents this so it can be backfilled once
+  // the field exists on the user/owner profile.
+  const APPLICATOR_CERT_NO = '';
 
   function applicatorLabel(userId: string): string {
     return applicators.get(userId) ?? userId;
@@ -106,7 +160,8 @@ export const GET: RequestHandler = async (event) => {
 
   function rowsForSprayEvent(e: (typeof sprays)[number]) {
     const block = blocks.get(e.blockId);
-    const acres = block?.acres ?? '';
+    const acres = block?.acres;
+    const commodity = cropCommodityFor(block);
     const wind = e.conditions.windMph;
     const temp = e.conditions.tempF;
     for (const p of e.products) {
@@ -126,18 +181,24 @@ export const GET: RequestHandler = async (event) => {
         active_ingredients: p.chemistryClasses.join(' / '),
         rate_per_acre: p.rate?.amount?.toString() ?? '',
         rate_unit: p.rate?.unit ?? '',
-        area_acres: acres ? String(acres) : '',
+        area_acres: acres !== undefined ? String(acres) : '',
         target_pest: targetPestFor(plugin),
         weather_wind_mph: String(wind),
         weather_temp_f: String(temp),
-        warning: epa ? '' : 'MISSING_EPA_REG'
+        warning: epa ? '' : 'MISSING_EPA_REG',
+        crop_commodity: commodity,
+        applicator_cert_no: APPLICATOR_CERT_NO,
+        total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
+        moisture_pct: '',
+        record_kind: 'application'
       });
     }
   }
 
   function rowsForInsecticideEvent(e: (typeof insecticides)[number]) {
     const block = blocks.get(e.blockId);
-    const acres = block?.acres ?? '';
+    const acres = block?.acres;
+    const commodity = cropCommodityFor(block);
     const wind = e.conditions.windMph;
     const temp = e.conditions.tempF;
     for (const p of e.products) {
@@ -158,18 +219,24 @@ export const GET: RequestHandler = async (event) => {
         active_ingredients: p.iracGroups.map((g) => `IRAC ${g}`).join(' / '),
         rate_per_acre: p.rate?.amount?.toString() ?? '',
         rate_unit: p.rate?.unit ?? '',
-        area_acres: acres ? String(acres) : '',
+        area_acres: acres !== undefined ? String(acres) : '',
         target_pest: e.scoutObservation?.pest ?? targetPestFor(plugin),
         weather_wind_mph: String(wind),
         weather_temp_f: String(temp),
-        warning: epa ? '' : 'MISSING_EPA_REG'
+        warning: epa ? '' : 'MISSING_EPA_REG',
+        crop_commodity: commodity,
+        applicator_cert_no: APPLICATOR_CERT_NO,
+        total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
+        moisture_pct: '',
+        record_kind: 'application'
       });
     }
   }
 
   function rowsForFungicideEvent(e: (typeof fungicides)[number]) {
     const block = blocks.get(e.blockId);
-    const acres = block?.acres ?? '';
+    const acres = block?.acres;
+    const commodity = cropCommodityFor(block);
     const wind = e.conditions.windMph;
     const temp = e.conditions.tempF;
     for (const p of e.products) {
@@ -186,18 +253,53 @@ export const GET: RequestHandler = async (event) => {
         active_ingredients: p.fracCodes.map((g) => `FRAC ${g}`).join(' / '),
         rate_per_acre: p.rate?.amount?.toString() ?? '',
         rate_unit: p.rate?.unit ?? '',
-        area_acres: acres ? String(acres) : '',
+        area_acres: acres !== undefined ? String(acres) : '',
         target_pest: e.diseaseObservation?.disease ?? targetPestFor(plugin),
         weather_wind_mph: String(wind),
         weather_temp_f: String(temp),
-        warning: epa ? '' : 'MISSING_EPA_REG'
+        warning: epa ? '' : 'MISSING_EPA_REG',
+        crop_commodity: commodity,
+        applicator_cert_no: APPLICATOR_CERT_NO,
+        total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
+        moisture_pct: '',
+        record_kind: 'application'
       });
     }
+  }
+
+  // Harvest rows carry the crop/commodity + stored moisture (UC-16) that an
+  // inspector cross-references against the pesticide pre-harvest intervals.
+  // These rows leave the application columns blank and set record_kind to
+  // 'harvest' so a reviewer can filter them apart.
+  function rowsForHarvestEvent(e: (typeof harvests)[number]) {
+    const block = blocks.get(e.blockId);
+    const plugin = registry.get(e.cropPluginId)?.plugin as { displayName?: string } | undefined;
+    rows.push({
+      date_iso: new Date(e.occurredAt).toISOString().slice(0, 10),
+      block_label: block?.blockLabel ?? block?.name ?? e.blockId,
+      applicator: '',
+      product_name: '',
+      epa_reg_no: '',
+      active_ingredients: '',
+      rate_per_acre: '',
+      rate_unit: '',
+      area_acres: block?.acres !== undefined ? String(block.acres) : '',
+      target_pest: '',
+      weather_wind_mph: '',
+      weather_temp_f: '',
+      warning: '',
+      crop_commodity: plugin?.displayName ?? e.cropPluginId,
+      applicator_cert_no: '',
+      total_amount_applied: e.quantity ?? '',
+      moisture_pct: e.moisturePct !== undefined ? String(e.moisturePct) : '',
+      record_kind: 'harvest'
+    });
   }
 
   for (const e of sprays) rowsForSprayEvent(e);
   for (const e of insecticides) rowsForInsecticideEvent(e);
   for (const e of fungicides) rowsForFungicideEvent(e);
+  for (const e of harvests) rowsForHarvestEvent(e);
 
   rows.sort((a, b) => a.date_iso.localeCompare(b.date_iso));
 

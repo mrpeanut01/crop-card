@@ -73,4 +73,40 @@ describe('harvestMoisture — UC-16 storage-moisture safety gate', () => {
       expect(r?.thresholdPct).toBe(18.0);
     });
   });
+
+  describe('#340 — cure-archetype copy branch', () => {
+    const squash = { archetype: 'winter-squash-cure' as const };
+
+    it('winter-squash-cure block copy is cure-appropriate, NOT "drying required"', () => {
+      const r = evaluateHarvestMoisture({ moisturePct: 80, cropPlugin: squash });
+      expect(r?.decision).toBe('block');
+      expect(r?.reason).not.toMatch(/drying required/i);
+      expect(r?.reason).toMatch(/extend cure|cull/i);
+    });
+
+    it('winter-squash-cure warn copy watches for rot, not heating', () => {
+      const r = evaluateHarvestMoisture({ moisturePct: 69.5, cropPlugin: squash });
+      expect(r?.decision).toBe('warn');
+      expect(r?.reason).not.toMatch(/heating/i);
+      expect(r?.reason).toMatch(/soft spots|rot/i);
+    });
+
+    it('small-grain block copy keeps the "drying required" remedy', () => {
+      const r = evaluateHarvestMoisture({
+        moisturePct: 15,
+        cropPlugin: { archetype: 'small-grain.zadoks' as const }
+      });
+      expect(r?.decision).toBe('block');
+      expect(r?.reason).toMatch(/drying required/i);
+    });
+
+    it('small-grain warn copy keeps the "heating" watch', () => {
+      const r = evaluateHarvestMoisture({
+        moisturePct: 13.0,
+        cropPlugin: { archetype: 'small-grain.zadoks' as const }
+      });
+      expect(r?.decision).toBe('warn');
+      expect(r?.reason).toMatch(/heating/i);
+    });
+  });
 });

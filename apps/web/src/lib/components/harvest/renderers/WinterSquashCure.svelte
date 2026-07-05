@@ -8,6 +8,7 @@
   let fruitCount = $state('');
   let totalLb = $state('');
   let cureStart = $state('');
+  let moisturePct = $state('');
 
   async function handleCommit(input: {
     quantity?: string;
@@ -16,9 +17,16 @@
     const tagBits: string[] = [];
     if (fruitCount.trim()) tagBits.push(`fruits=${fruitCount}`);
     if (cureStart.trim()) tagBits.push(`cureStart=${cureStart}`);
+    if (moisturePct.trim()) tagBits.push(`moisture=${moisturePct}%`);
     const quantity = totalLb.trim() ? `${totalLb} lb` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
-    return props.onCommit({ quantity, lotNumber: lot || undefined });
+    // #322 — moisture also travels as a structured number so the kernel gate is reachable.
+    const moisture = parseFloat(moisturePct);
+    return props.onCommit({
+      quantity,
+      lotNumber: lot || undefined,
+      moisturePct: Number.isFinite(moisture) ? moisture : undefined
+    });
   }
 </script>
 
@@ -45,9 +53,13 @@
         <span>Total weight (lb)</span>
         <input type="text" inputmode="decimal" placeholder="850" bind:value={totalLb} />
       </label>
-      <label class="qfield wide">
+      <label class="qfield">
         <span>Cure start (date)</span>
         <input type="date" bind:value={cureStart} />
+      </label>
+      <label class="qfield">
+        <span>Flesh moisture (%)</span>
+        <input type="text" inputmode="decimal" placeholder="optional" bind:value={moisturePct} />
       </label>
     </div>
     <p class="hint">

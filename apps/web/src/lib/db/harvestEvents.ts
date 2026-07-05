@@ -23,6 +23,8 @@ export interface HarvestEventInput {
   occurredAt: number;
   quantity?: string;
   lotNumber?: string;
+  /** UC-16 (#339) — stored moisture %, when the operator measured it. */
+  moisturePct?: number;
 }
 
 export interface HarvestEvent extends HarvestEventInput {
@@ -49,7 +51,8 @@ export function insertHarvestEvent(input: HarvestEventInput): HarvestEvent {
         cropPluginId: input.cropPluginId,
         occurredAt: new Date(input.occurredAt),
         quantity: input.quantity ?? null,
-        lotNumber: input.lotNumber ?? null
+        lotNumber: input.lotNumber ?? null,
+        moisturePct: input.moisturePct ?? null
       })
     )
     .returning()
@@ -91,6 +94,7 @@ function rowToEvent(row: typeof harvestEvents.$inferSelect): HarvestEvent {
     occurredAt: row.occurredAt.getTime(),
     quantity: row.quantity ?? undefined,
     lotNumber: row.lotNumber ?? undefined,
+    moisturePct: row.moisturePct ?? undefined,
     lockedAt: row.lockedAt?.getTime()
   };
 }

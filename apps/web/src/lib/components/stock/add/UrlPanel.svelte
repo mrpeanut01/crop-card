@@ -10,7 +10,10 @@
    * Operator pastes a product-page URL; client POSTs `/api/scan-url`,
    * which fetches the page + asks Claude to read it into a `ScanResult`.
    * Mirrors BarcodePanel's loading / not-found / existing-SKU shape.
-   * AI-gated — the parent only mounts this when `aiEnabled`.
+   * #312 / CT-S3-002 — the chip always renders; when the active user
+   * has no Anthropic key this panel shows the same pre-flight recovery
+   * empty-state as LabelOcrPanel instead of a dead-end input that only
+   * fails on submit (Invariant 7 — "AI assists, never gates").
    */
 
   interface Props {
@@ -19,9 +22,17 @@
     /** Fallback inventory type for the existing-item link when the
      *  resolved product carries no category. */
     type?: InventoryType;
+    /** #312 — no-key mode. When false the panel renders the recovery
+     *  empty-state (configure key / switch to manual) rather than the
+     *  URL input, since /api/scan-url needs Claude. Defaults true so
+     *  legacy callers keep the input path. */
+    aiEnabled?: boolean;
+    /** #312 — parent advances to the manual method when the operator
+     *  picks "Switch to Manual entry". */
+    onSwitchToManual?: () => void;
   }
 
-  const { onSubmit, busy = false, type }: Props = $props();
+  const { onSubmit, busy = false, type, aiEnabled = true, onSwitchToManual }: Props = $props();
 
   let url = $state('');
   let lookingUp = $state(false);
@@ -82,36 +93,68 @@
     the page into a draft you can review.
   </p>
 
-  <div class="url-row">
-    <span class="url-icon" aria-hidden="true"><Globe size={18} strokeWidth={1.75} /></span>
-    <label class="visually-hidden" for="url-input">Product page URL</label>
-    <input
-      id="url-input"
-      type="url"
-      bind:value={url}
-      onkeydown={onKeydown}
-      placeholder="https://…"
-      disabled={busy || lookingUp}
-    />
-    <button type="button" onclick={runLookup} disabled={busy || lookingUp}>
-      {lookingUp ? 'Reading…' : 'Read page'}
-    </button>
-  </div>
-
-  {#if existingItemId}
-    <div class="existing">
-      <p>
-        That product is already in your inventory.
-        <Provenance source="data" compact />
+  {#if !aiEnabled}
+    <div class="no-key-empty" data-empty-state="no-ai-key">
+      <h3 class="no-key-empty-title">Claude key required for web lookup</h3>
+      <p class="no-key-empty-lede">
+        From URL uses Claude to read a product page and pre-populate the inventory fields. Add an
+        Anthropic API key on the Settings page to enable this method, or switch to Manual entry to
+        type the fields in yourself.
       </p>
-      {#if existingType}
-        <a class="primary" href="/inventory/{existingType}/{existingItemId}">Open that item →</a>
-      {/if}
+      <div class="no-key-empty-actions">
+        <a
+          class="recovery-tile recovery-tile-primary"
+          href="/settings/ai"
+          target="_blank"
+          rel="noopener"
+          data-action="configure-ai"
+        >
+          Configure AI key ↗
+        </a>
+        {#if onSwitchToManual}
+          <button
+            type="button"
+            class="recovery-tile recovery-tile-secondary"
+            onclick={onSwitchToManual}
+            data-action="switch-to-manual"
+          >
+            Switch to Manual entry →
+          </button>
+        {/if}
+      </div>
     </div>
-  {/if}
+  {:else}
+    <div class="url-row">
+      <span class="url-icon" aria-hidden="true"><Globe size={18} strokeWidth={1.75} /></span>
+      <label class="visually-hidden" for="url-input">Product page URL</label>
+      <input
+        id="url-input"
+        type="url"
+        bind:value={url}
+        onkeydown={onKeydown}
+        placeholder="https://…"
+        disabled={busy || lookingUp}
+      />
+      <button type="button" onclick={runLookup} disabled={busy || lookingUp}>
+        {lookingUp ? 'Reading…' : 'Read page'}
+      </button>
+    </div>
 
-  {#if lookupError}
-    <p class="error" aria-live="polite">{lookupError}</p>
+    {#if existingItemId}
+      <div class="existing">
+        <p>
+          That product is already in your inventory.
+          <Provenance source="data" compact />
+        </p>
+        {#if existingType}
+          <a class="primary" href="/inventory/{existingType}/{existingItemId}">Open that item →</a>
+        {/if}
+      </div>
+    {/if}
+
+    {#if lookupError}
+      <p class="error" aria-live="polite">{lookupError}</p>
+    {/if}
   {/if}
 </div>
 
@@ -218,5 +261,51 @@
     background: rgba(186, 75, 56, 0.08);
     border-left: 3px solid var(--color-rust, #ba4b38);
     border-radius: 4px;
+  }
+  /* #312 — no-key recovery empty-state, mirrors LabelOcrPanel's. */
+  .no-key-empty {
+    border: 1px solid var(--color-divider, #d8dcd1);
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+    background: var(--color-cream, #fbfaf3);
+  }
+  .no-key-empty-title {
+    margin: 0 0 0.4rem 0;
+    font-size: 1.05rem;
+    color: var(--color-forest-deep, #1f3522);
+  }
+  .no-key-empty-lede {
+    margin: 0 0 1rem 0;
+    color: #4a5a4a;
+    line-height: 1.45;
+  }
+  .no-key-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: stretch;
+  }
+  .recovery-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    min-height: 44px;
+    border-radius: var(--radius-input, 6px);
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .recovery-tile-primary {
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
+    border: 0;
+  }
+  .recovery-tile-secondary {
+    background: transparent;
+    color: var(--color-forest-deep, #1f3522);
+    border: 1px solid var(--color-divider, #d8dcd1);
   }
 </style>

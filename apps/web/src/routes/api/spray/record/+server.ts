@@ -70,7 +70,11 @@ const requestSchema = z.object({
   conditions: z.object({
     windMph: z.number().nonnegative(),
     tempF: z.number(),
-    rainForecastMmNext24h: z.number().nonnegative()
+    rainForecastMmNext24h: z.number().nonnegative(),
+    /** #320 / CT-S5-003 — honest audit trail. When the client omits this
+     *  (or the operator never entered readings) we persist `'default'`
+     *  so a synthetic 5 mph / 70 °F is never presented as measured. */
+    conditionsProvenance: z.enum(['measured', 'default']).optional()
   }),
   /** Tank size for auto-decrement; if omitted, no stock decrement happens. */
   tankSizeGallons: z.number().positive().optional(),
@@ -167,7 +171,11 @@ export const POST: RequestHandler = async (event) => {
       lastSprayedAt: stored.lastSprayedAt,
       lastDeconAt: stored.lastDeconAt
     },
-    conditions: parsed.data.conditions
+    conditions: {
+      windMph: parsed.data.conditions.windMph,
+      tempF: parsed.data.conditions.tempF,
+      rainForecastMmNext24h: parsed.data.conditions.rainForecastMmNext24h
+    }
   };
 
   const kernelResult = evaluateSpray(ctx);
@@ -227,7 +235,13 @@ export const POST: RequestHandler = async (event) => {
       chemistryClasses: Array.from(new Set(p.activeIngredients.map((ai) => ai.chemistryClass))),
       rate: p.ratePerAcre
     })),
-    conditions: parsed.data.conditions,
+    conditions: {
+      ...parsed.data.conditions,
+      // #320 — never let a synthetic reading masquerade as measured. A
+      // client that omits the flag gets `'default'`; the UI sets
+      // `'measured'` only once the operator enters real conditions.
+      conditionsProvenance: parsed.data.conditions.conditionsProvenance ?? 'default'
+    },
     rulesVersion: RULES_VERSION,
     pluginHashes,
     customRateOverride: parsed.data.customRateOverride ?? false,

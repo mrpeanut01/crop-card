@@ -20,10 +20,15 @@
    *                  reviews every field, then saves. Nothing persists
    *                  until then ("AI assists, never gates", Invariant 7).
    *
-   * Claude-required methods (Scan label, From URL, and the web tier of
-   * Search) only appear when an Anthropic key is configured (`aiEnabled`).
-   * No-key methods (local Search, Barcode via OpenFoodFacts, Manual)
-   * always work — no dead-ends.
+   * Claude-required methods (Scan label, From URL) always render their
+   * chips regardless of `aiEnabled` (#312 / CT-S3-002, Invariant 7 —
+   * "AI assists, never gates"). With no key the chip is reachable and
+   * its PANEL renders the built-in pre-flight recovery empty-state
+   * ("Configure AI key" + "Switch to Manual"). Hiding the chips
+   * outright was the bug: it made the recovery empty-state
+   * (LabelOcrPanel:165-190) unreachable and left the operator with an
+   * unexplained 3-of-5 chip row. No-key methods (local Search, Barcode
+   * via OpenFoodFacts, Manual) work end-to-end — no dead-ends.
    *
    * Sprayer + crop are not lot-bearing scan targets, so they skip the
    * picker and render the plain manual form directly.
@@ -43,7 +48,8 @@
     label: string;
     blurb: string;
     icon: typeof Search;
-    /** Hidden when no Anthropic key is configured. */
+    /** Needs an Anthropic key to *resolve* a draft. The chip always
+     *  renders (#312); the panel shows a no-key recovery empty-state. */
     aiRequired: boolean;
   }
 
@@ -88,7 +94,12 @@
   // Sprayer + crop aren't scan/search targets — render the bare form.
   const lotBearing = $derived(type === 'pesticide' || type === 'fertility' || type === 'seed');
 
-  const visibleMethods = $derived(METHODS.filter((m) => aiEnabled || !m.aiRequired));
+  // #312 / CT-S3-002 — all five chips always render. AI-required chips
+  // are reachable with no key so their panels can surface the built-in
+  // no-key recovery empty-state (Invariant 7 — "AI assists, never
+  // gates"). Filtering them out hid the recovery UI and left an
+  // unexplained 3-of-5 chip row.
+  const visibleMethods = METHODS;
 
   type Phase = 'pick' | 'approve';
   let phase = $state<Phase>('pick');
@@ -153,8 +164,9 @@
 
   {#if !aiEnabled}
     <p class="ai-note">
-      Scan-label and web lookup need a Claude API key —
-      <a href="/settings/ai" target="_blank" rel="noopener">add one in Settings</a> to unlock them.
+      Scan label and From URL need a Claude API key to read the draft —
+      <a href="/settings/ai" target="_blank" rel="noopener">add one in Settings</a>, or use Search,
+      Scan barcode, or Type it in without a key.
     </p>
   {/if}
 
@@ -171,7 +183,13 @@
         onSwitchToManual={() => selectMethod('manual')}
       />
     {:else if method === 'url'}
-      <UrlPanel {type} {busy} onSubmit={onPanelDraft} />
+      <UrlPanel
+        {type}
+        {busy}
+        {aiEnabled}
+        onSubmit={onPanelDraft}
+        onSwitchToManual={() => selectMethod('manual')}
+      />
     {/if}
   </div>
 {/if}

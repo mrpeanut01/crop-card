@@ -15,7 +15,11 @@
 
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
-import type { ChemistryClass, EnvironmentalConditions } from '$lib/safety/types';
+import type {
+  ChemistryClass,
+  ConditionsProvenance,
+  EnvironmentalConditions
+} from '$lib/safety/types';
 import { db } from './client';
 import { sprayEvents } from './schema';
 import { currentOwnerId, tenantValues, tenantWhere, withTenant } from './tenant';
@@ -36,7 +40,14 @@ export interface SprayEventInput {
     chemistryClasses: ChemistryClass[];
     rate?: { amount: number; unit: string };
   }>;
-  conditions: EnvironmentalConditions & { cornHeightIn?: number };
+  /** #320 — `conditionsProvenance` distinguishes operator-measured
+   *  readings from synthetic defaults. Stored inside the conditionsJson
+   *  blob (no schema column / migration). Absent on legacy rows; treat
+   *  a missing value as `'default'` when reading. */
+  conditions: EnvironmentalConditions & {
+    cornHeightIn?: number;
+    conditionsProvenance?: ConditionsProvenance;
+  };
   rulesVersion: string;
   pluginHashes: Record<string, string>;
   customRateOverride?: boolean;
@@ -56,6 +67,7 @@ export class RecordLockedError extends Error {
 }
 
 function rowToEvent(row: typeof sprayEvents.$inferSelect): SprayEvent {
+  const conditions = JSON.parse(row.conditionsJson) as SprayEventInput['conditions'];
   return {
     id: row.id,
     blockId: row.blockId,
@@ -64,7 +76,12 @@ function rowToEvent(row: typeof sprayEvents.$inferSelect): SprayEvent {
     performedById: row.performedById,
     occurredAt: row.occurredAt.getTime(),
     products: JSON.parse(row.productsJson),
-    conditions: JSON.parse(row.conditionsJson),
+    // #320 — legacy rows predate the provenance flag; those synthetic
+    // readings were exactly the defaults, so coalesce to `'default'`.
+    conditions: {
+      ...conditions,
+      conditionsProvenance: conditions.conditionsProvenance ?? 'default'
+    },
     rulesVersion: row.rulesVersion,
     pluginHashes: JSON.parse(row.pluginHashesJson),
     customRateOverride: row.customRateOverride,

@@ -23,7 +23,7 @@ import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
 import { getRegistry } from '$lib/server/registry';
 import { loadSeasonSetup } from '$lib/season/setup.server';
-import { DEFAULT_SEASON_SETUP, type Philosophy } from '$lib/season/setup';
+import { SEASON_SETUP_DEFAULTS, type Philosophy } from '$lib/season/setup';
 import { isProductAllowed, type FilterableInputPlugin } from '$lib/season/philosophyFilter';
 import { resolveArchetype, type Archetype, type CropPlugin } from '$lib/plugins/schemas';
 
@@ -109,7 +109,7 @@ export async function buildYearSummary(year: number, ownerId: string | null): Pr
   const registry = await getRegistry();
 
   const philosophy: Philosophy =
-    loadSeasonSetup(year)?.philosophy ?? DEFAULT_SEASON_SETUP.philosophy;
+    loadSeasonSetup(year)?.philosophy ?? SEASON_SETUP_DEFAULTS.philosophy;
 
   // ── Applications (herbicide + insecticide + fungicide), normalized. ──
   const applications: SprayApplicationRow[] = [];

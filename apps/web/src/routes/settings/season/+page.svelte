@@ -76,6 +76,17 @@
   {/if}
 
   <section class="closeout-link">
+    <h2>Prep next season</h2>
+    <p class="hint">
+      Carry the whole operation into {data.currentYear + 1}: rotation checks, surviving stock, a
+      pre-seeded planting draft, and a sprayer calibration hand-off. Deterministic — no AI.
+    </p>
+    <a class="prep-cta" href="/settings/season/carry-forward"
+      >Prep the {data.currentYear + 1} season →</a
+    >
+  </section>
+
+  <section class="closeout-link">
     <h2>End of season</h2>
     <p class="hint">
       Done for the {data.currentYear} year? Close the season to lock every {data.currentYear} record against
@@ -112,6 +123,21 @@
     border-radius: 8px;
     font-weight: 600;
     text-decoration: none;
+  }
+  .prep-cta {
+    align-self: flex-start;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.25rem;
+    background: #1f5e3a;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .prep-cta:hover {
+    background: #174a2c;
   }
   .closeout-cta:hover {
     background: #f6ecea;

@@ -826,3 +826,60 @@ describe('planInputs — meta', () => {
     expect(result.meta.generatedAtMs).toBeLessThanOrEqual(after);
   });
 });
+
+/* ─── UC-47 — per-block cover-crop N-credit override ─────────────────── */
+
+describe('planInputs — UC-47 cover N-credit re-key (coverNCreditByBlock)', () => {
+  function nFromRationale(rationale: string): number {
+    const m = rationale.match(/N (\d+) lb\/ac/);
+    return m ? Number(m[1]) : NaN;
+  }
+
+  function runCornWith(over: Partial<InputsPlanInput>) {
+    const crop = buildCrop('corn', 'crop-corn');
+    const blockId = 'block-corn';
+    return planInputs(
+      buildBaseInput({
+        plantings: [buildPlanting('p-corn', blockId, 'crop-corn')],
+        blocks: [buildBlock(blockId)],
+        cropPlugins: { 'crop-corn': crop },
+        seasonSetup: buildSetup('conventional', 'cover-crop-credits', {
+          coverCropIntent: 'vetch-clover'
+        }),
+        ...over
+      })
+    );
+  }
+
+  it('applies the flat intent credit when no per-block override is supplied', () => {
+    const result = runCornWith({});
+    const fert = result.applications.find((a) => a.slot === 'pre-plant-fertility');
+    expect(fert).toBeDefined();
+    // vetch-clover intent credit is 65 lb-N; corn removal default is higher, so
+    // an N deficit remains after crediting.
+    const nFlat = nFromRationale(fert!.rationale);
+    expect(Number.isNaN(nFlat)).toBe(false);
+  });
+
+  it('a larger per-block actual credit reduces the N deficit further than the flat intent', () => {
+    const flat = runCornWith({});
+    const overridden = runCornWith({ coverNCreditByBlock: { 'block-corn': 200 } });
+
+    const flatFert = flat.applications.find((a) => a.slot === 'pre-plant-fertility');
+    const overFert = overridden.applications.find((a) => a.slot === 'pre-plant-fertility');
+    // With a 200 lb-N/ac actual credit the N deficit is fully covered, so
+    // either no pre-plant fertility is emitted at all, or the N budget is 0.
+    if (overFert) {
+      expect(nFromRationale(overFert.rationale)).toBeLessThan(nFromRationale(flatFert!.rationale));
+    } else {
+      expect(flatFert).toBeDefined();
+    }
+  });
+
+  it('ignores the override for blocks absent from the map', () => {
+    const result = runCornWith({ coverNCreditByBlock: { 'some-other-block': 200 } });
+    const withMap = result.applications.find((a) => a.slot === 'pre-plant-fertility');
+    const baseline = runCornWith({}).applications.find((a) => a.slot === 'pre-plant-fertility');
+    expect(withMap?.rationale).toBe(baseline?.rationale);
+  });
+});

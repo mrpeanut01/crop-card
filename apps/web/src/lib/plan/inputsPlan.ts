@@ -386,6 +386,14 @@ export interface InputsPlanInput {
   };
   existingStock: ReadonlyArray<InputsPlanStockRef>;
   year: number;
+  /** UC-47 — per-block cover-crop N-credit derived from the ACTUAL prior-year
+   *  terminated `cover-crop.termination` plantings (subsumes #228's real fix).
+   *  When a block appears here, its value overrides the flat, season-setup-
+   *  *declared* `nCreditForIntent(coverCropIntent)` for that block only.
+   *  Blocks absent from this map fall back to the declared-intent credit, so
+   *  the legacy behavior is preserved for anyone who didn't run the
+   *  carry-forward prep. */
+  coverNCreditByBlock?: Record<string, number>;
   /** Optional clock injection for tests. Defaults to `Date.now()`. */
   nowMs?: number;
 }
@@ -701,9 +709,13 @@ function planForPlanting(
       k: removal.kRemovalLbPerAcre - soilCredits.k - explicitCredits.k
     };
 
+    // UC-47 — prefer the per-block credit from ACTUAL terminated cover crops
+    // when the carry-forward prep supplied it; otherwise fall back to the
+    // flat season-setup-declared intent credit (#228 legacy path).
+    const actualBlockCredit = input.coverNCreditByBlock?.[planting.blockId];
     const coverNCredit =
       seasonSetup.fertilityApproach === 'cover-crop-credits'
-        ? nCreditForIntent(seasonSetup.coverCropIntent)
+        ? (actualBlockCredit ?? nCreditForIntent(seasonSetup.coverCropIntent))
         : 0;
     if (coverNCredit > 0) {
       deficit.n = deficit.n - coverNCredit;

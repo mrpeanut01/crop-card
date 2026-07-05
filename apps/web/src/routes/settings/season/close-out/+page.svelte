@@ -138,9 +138,11 @@
           <span class="cta-title">Year-end report →</span>
           <span class="cta-sub">Review + export the {data.year} record book.</span>
         </a>
-        <a class="cta-card" href="/settings/season">
-          <span class="cta-title">Set up next season →</span>
-          <span class="cta-sub">Carry philosophy forward into {data.year + 1}.</span>
+        <a class="cta-card" href="/settings/season/carry-forward">
+          <span class="cta-title">Prep next season →</span>
+          <span class="cta-sub"
+            >Rotation checks, stock roll-forward + plan draft for {data.year + 1}.</span
+          >
         </a>
       </div>
 

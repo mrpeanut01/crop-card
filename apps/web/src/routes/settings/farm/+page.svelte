@@ -9,6 +9,29 @@
 
   let { data } = $props();
 
+  // #309 — editable farm coordinates + frost dates. Seed from the loader;
+  // the form posts these back to ?/save which persists them to the same
+  // app_settings keys the /api/settings endpoint validates.
+  let lat = $state(data.farmLatLon.lat.toFixed(4));
+  let lon = $state(data.farmLatLon.lon.toFixed(4));
+
+  // Frost inputs are <input type="date"> (YYYY-MM-DD). Seed from the stored
+  // MM-DD when present, else from the resolved default for the current
+  // season year. The save action re-derives MM-DD from the posted value.
+  function mmDdToIso(mmDd: string | null, fallbackMs: number): string {
+    const yr = data.currentYear;
+    if (mmDd) {
+      const [mm, dd] = mmDd.split('-');
+      return `${yr}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    }
+    const d = new Date(fallbackMs);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yr}-${mm}-${dd}`;
+  }
+  let lastFrost = $state(mmDdToIso(data.lastFrostMmDd, data.frostDates.lastSpringFrostMs));
+  let firstFrost = $state(mmDdToIso(data.firstFrostMmDd, data.frostDates.firstFallFrostMs));
+
   // Read-only preview only — edit/draw happens at /settings/farm/map. BlockMap
   // requires these callbacks but never invokes them in thumbnail mode.
   const noop = () => {};
@@ -16,10 +39,6 @@
   const hasGeometry = $derived(
     data.mapBlocks.some((b) => b.geometryGeojson) || data.mapFields.some((f) => f.geometryGeojson)
   );
-
-  function fmtDate(ms: number): string {
-    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
 
   // Per-block tile color — cycle through a forest/wheat/rust/sky palette
   // so the map preview chips look distinct. Stable across renders by
@@ -52,18 +71,36 @@
         <select class="s-input"><option>7a</option><option>7b</option></select>
       </SettingsField>
     </div>
-    <div class="grid grid-3 second-row">
-      <SettingsField label="Lat / Long" hint="for frost + GDD">
+    <div class="grid grid-4 second-row">
+      <SettingsField label="Latitude" hint="for frost + GDD">
         <input
           class="s-input mono"
-          value={`${data.farmLatLon.lat.toFixed(4)}, ${data.farmLatLon.lon.toFixed(4)}`}
+          name="lat"
+          type="number"
+          step="0.0001"
+          min="-90"
+          max="90"
+          inputmode="decimal"
+          bind:value={lat}
+        />
+      </SettingsField>
+      <SettingsField label="Longitude" hint="for frost + GDD">
+        <input
+          class="s-input mono"
+          name="lon"
+          type="number"
+          step="0.0001"
+          min="-180"
+          max="180"
+          inputmode="decimal"
+          bind:value={lon}
         />
       </SettingsField>
       <SettingsField label="Last frost · spring">
-        <input class="s-input" value={fmtDate(data.frostDates.lastSpringFrostMs)} />
+        <input class="s-input" name="lastFrost" type="date" bind:value={lastFrost} />
       </SettingsField>
       <SettingsField label="First frost · fall">
-        <input class="s-input" value={fmtDate(data.frostDates.firstFallFrostMs)} />
+        <input class="s-input" name="firstFrost" type="date" bind:value={firstFrost} />
       </SettingsField>
     </div>
   </SettingsSection>
@@ -151,8 +188,10 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
+  .grid-4 {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
   .second-row {
-    grid-template-columns: 1fr 1fr 1fr;
     margin-top: 12px;
   }
   .s-input {
@@ -314,6 +353,7 @@
   @media (max-width: 760px) {
     .grid-3,
     .grid-2,
+    .grid-4,
     .second-row {
       grid-template-columns: 1fr;
     }

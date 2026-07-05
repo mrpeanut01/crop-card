@@ -23,6 +23,7 @@ import {
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
+import { checkSeasonClosed } from '$lib/server/seasonClose';
 
 const patchSchema = z.discriminatedUnion('action', [
   z.object({
@@ -85,6 +86,17 @@ export const PATCH: RequestHandler = async (event) => {
     return json({ cutting: abortCutting(cutting.id, parsed.data.reason) });
   }
 
+  // UC-44 — SEASON_CLOSED gate. An advance stamps a dated field operation;
+  // refuse it when that date lands inside a closed season.
+  const advanceAt = parsed.data.occurredAt ?? Date.now();
+  const seasonClosed = checkSeasonClosed(advanceAt);
+  if (seasonClosed) {
+    return json(
+      { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },
+      { status: 422 }
+    );
+  }
+
   // advance — figure out the target step.
   const registry = await getRegistry();
   const cropRecord = registry.get(cutting.cropPluginId);
@@ -117,15 +129,35 @@ export const PATCH: RequestHandler = async (event) => {
       baleType: parsed.data.baleType ?? cutting.baleType ?? null!,
       moisturePct: parsed.data.baleMoisturePct ?? cutting.baleMoisturePct
     });
-    if (!decision.ok && !parsed.data.overrideBaleGate) {
-      return json(
-        {
-          error: 'bale gate rejected; pass overrideBaleGate:true to record anyway',
-          violations: decision.violations,
-          warnings: decision.warnings
-        },
-        { status: 422 }
-      );
+    if (!decision.ok) {
+      // #323 — FR-21 / UC-14: a `danger`-severity violation (>dangerAbovePct
+      // fire risk, MOISTURE_MISSING, BALE_TYPE_MISSING) is a hard STOP that
+      // `overrideBaleGate` CANNOT bypass. The override only clears `warn`
+      // severity. This closes the hole where a single boolean skipped the
+      // >22% "cannot be bypassed" fire-risk STOP.
+      const hardStop = decision.violations.some((v) => v.severity === 'danger');
+      if (hardStop) {
+        return json(
+          {
+            error: 'bale gate STOP — danger-severity violation cannot be overridden',
+            violations: decision.violations,
+            warnings: decision.warnings,
+            overridable: false
+          },
+          { status: 422 }
+        );
+      }
+      if (!parsed.data.overrideBaleGate) {
+        return json(
+          {
+            error: 'bale gate rejected; pass overrideBaleGate:true to record anyway',
+            violations: decision.violations,
+            warnings: decision.warnings,
+            overridable: true
+          },
+          { status: 422 }
+        );
+      }
     }
   }
 

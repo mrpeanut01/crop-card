@@ -2,6 +2,21 @@ import type { CalendarEvent } from '$lib/calendar/engine';
 import { DAY_MS } from './constants';
 
 /**
+ * Core PHI predicate (#324): is a harvest at `harvestMs` inside the
+ * pre-harvest interval opened by a spray applied at `sprayAppliedMs`?
+ *
+ * True when the harvest lands strictly before the spray's PHI clears
+ * (`sprayAppliedMs + phiDays`). Shared by the plan-timeline conflict
+ * detector below and the at-harvest PHI check (`lib/schedule/harvestPhi.ts`)
+ * so both reason with the same interval math.
+ */
+export function isWithinPhi(sprayAppliedMs: number, phiDays: number, harvestMs: number): boolean {
+  if (phiDays <= 0) return false;
+  const clearsAtMs = sprayAppliedMs + phiDays * DAY_MS;
+  return harvestMs >= sprayAppliedMs && harvestMs < clearsAtMs;
+}
+
+/**
  * Returns true when any derived spray-window event's end falls within the
  * PHI zone before the harvest-window start.
  *

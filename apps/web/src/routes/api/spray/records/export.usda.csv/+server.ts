@@ -50,6 +50,7 @@ import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { getRegistry } from '$lib/server/registry';
 import { requireUser } from '$lib/server/auth';
+import { parseExportDateRange } from '$lib/exports/dateRange';
 import { APP_VERSION } from '$lib/version';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
@@ -86,10 +87,10 @@ export const GET: RequestHandler = async (event) => {
   const user = requireUser(event);
   const { url } = event;
   const blockId = url.searchParams.get('blockId') ?? undefined;
-  const fromMs = Number(url.searchParams.get('from')) || undefined;
-  const toMs = Number(url.searchParams.get('to')) || undefined;
+  const sprayerId = url.searchParams.get('sprayerId') ?? undefined;
+  const { fromMs, toMs } = parseExportDateRange(url.searchParams);
 
-  const sprays = listSprayEvents({ blockId, fromMs, toMs, limit: 10_000 });
+  const sprays = listSprayEvents({ blockId, sprayerId, fromMs, toMs, limit: 10_000 });
   const insecticides = listInsecticideEvents({ blockId, fromMs, toMs, limit: 10_000 });
   const fungicides = listFungicideEvents({ blockId, fromMs, toMs, limit: 10_000 });
   const harvests = listHarvestEvents({ blockId, fromMs, toMs });

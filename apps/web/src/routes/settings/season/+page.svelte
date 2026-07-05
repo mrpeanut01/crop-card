@@ -74,9 +74,48 @@
       </p>
     </section>
   {/if}
+
+  <section class="closeout-link">
+    <h2>End of season</h2>
+    <p class="hint">
+      Done for the {data.currentYear} year? Close the season to lock every {data.currentYear} record against
+      late edits.
+    </p>
+    <a class="closeout-cta" href="/settings/season/close-out"
+      >Close the {data.currentYear} season →</a
+    >
+  </section>
 </main>
 
 <style>
+  .closeout-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #cbbf9a;
+  }
+  .closeout-link h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1f5e3a;
+  }
+  .closeout-cta {
+    align-self: flex-start;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.25rem;
+    background: transparent;
+    color: #8a3b34;
+    border: 1px solid #8a3b34;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .closeout-cta:hover {
+    background: #f6ecea;
+  }
   .season-page {
     max-width: 760px;
     margin: 0 auto;

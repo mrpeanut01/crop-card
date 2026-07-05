@@ -23,8 +23,7 @@ export interface HarvestEventInput {
   occurredAt: number;
   quantity?: string;
   lotNumber?: string;
-  /** CT-S6-004 / #326 — stored moisture %. Persisted so inspector exports
-   *  can surface the value the UC-16 kernel already validates. */
+  /** UC-16 (#339) — stored moisture %, when the operator measured it. */
   moisturePct?: number;
 }
 
@@ -53,8 +52,7 @@ export function insertHarvestEvent(input: HarvestEventInput): HarvestEvent {
         occurredAt: new Date(input.occurredAt),
         quantity: input.quantity ?? null,
         lotNumber: input.lotNumber ?? null,
-        moisturePctHundredths:
-          input.moisturePct !== undefined ? Math.round(input.moisturePct * 100) : null
+        moisturePct: input.moisturePct ?? null
       })
     )
     .returning()
@@ -96,7 +94,7 @@ function rowToEvent(row: typeof harvestEvents.$inferSelect): HarvestEvent {
     occurredAt: row.occurredAt.getTime(),
     quantity: row.quantity ?? undefined,
     lotNumber: row.lotNumber ?? undefined,
-    moisturePct: row.moisturePctHundredths !== null ? row.moisturePctHundredths / 100 : undefined,
+    moisturePct: row.moisturePct ?? undefined,
     lockedAt: row.lockedAt?.getTime()
   };
 }

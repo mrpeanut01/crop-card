@@ -8,7 +8,6 @@
     Sun,
     ArrowRight,
     Check,
-    ChevronRight,
     Layers,
     Tractor,
     Gauge,
@@ -259,15 +258,6 @@
             </div>
           {/each}
         </div>
-
-        <!-- #118 — CSV import skip strip -->
-        <a class="skip-strip" href="/today">
-          <ChevronRight size={13} aria-hidden="true" />
-          <span>
-            Already set up your blocks in a spreadsheet?
-            <strong>Skip ahead and import a CSV &rarr;</strong>
-          </span>
-        </a>
       </section>
 
       <!-- Right rail: AI offer + Shortcuts + Why these six -->
@@ -284,9 +274,9 @@
             <Provenance source="ai" compact />
           </div>
           <p class="offer-body">
-            Want Claude to seed a sample farm with mock blocks, scout history, and a starter plan
-            you can edit? Or paste an API key to enable AI proposals later &mdash; every screen
-            works without one.
+            Add a Claude API key to unlock AI proposals in the planner &mdash; allocation,
+            scheduling, and inputs suggestions you can accept or reject. Every screen already works
+            without one; the key only turns on the optional assist.
           </p>
           <div class="offer-info">
             <Info size={13} strokeWidth={1.75} aria-hidden="true" />
@@ -296,9 +286,10 @@
               <em>AI only assists; never gates.</em>
             </span>
           </div>
-          <!-- #117 — CTA copy: "Seed a sample plan with Claude" -->
+          <!-- #310 — honest CTA: /settings/ai only stores a key; no seeding
+               backend exists. Copy reflects what the link actually does. -->
           <a class="primary full" href="/settings/ai">
-            <Sprout size={13} aria-hidden="true" /> Seed a sample plan with Claude
+            <Sprout size={13} aria-hidden="true" /> Add a Claude key to enable AI planning &rarr;
           </a>
           <a class="ghost full" href="/today"> Skip &middot; I'll add a key later (or never) </a>
         </Card>
@@ -336,8 +327,8 @@
   <footer class="reassurance">
     <Lock size={11} strokeWidth={1.75} aria-hidden="true" />
     <span>
-      Your data lives on your device first; sync to the cloud is opt-in. You can delete the sample
-      plan any time from Settings.
+      Your data lives on your device first; sync to the cloud is opt-in. You can edit or remove
+      anything you add from Settings.
     </span>
   </footer>
 </main>
@@ -598,24 +589,6 @@
   }
   .done-edit {
     font-size: 12.5px;
-    color: var(--color-forest);
-    font-weight: 600;
-  }
-  /* Skip strip */
-  .skip-strip {
-    margin-top: 16px;
-    padding: 12px 14px;
-    background: var(--color-paper);
-    border: 1px dashed var(--color-divider);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12.5px;
-    color: var(--color-ink-soft);
-    text-decoration: none;
-  }
-  .skip-strip strong {
     color: var(--color-forest);
     font-weight: 600;
   }

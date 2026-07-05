@@ -656,12 +656,12 @@ export const harvestEvents = tenantScoped(
       occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
       quantity: text('quantity'),
       lotNumber: text('lot_number'),
-      /** CT-S6-004 / #326 — stored moisture %, in hundredths of a percent
-       *  (13.5% → 1350). Validated at record time by the UC-16 harvest-
-       *  moisture kernel (Sprint 19); persisted here so inspector exports
-       *  (USDA CSV, VDACS PDF) can surface it. Nullable: null means the
-       *  operator did not capture moisture (informational, not a gate). */
-      moisturePctHundredths: integer('moisture_pct_hundredths'),
+      /** UC-16 (#339) — stored moisture % captured at harvest. Nullable:
+       *  null means the operator didn't measure. When present, the
+       *  harvest-moisture kernel (RULES_VERSION >=0.5.2) gates the commit
+       *  against the family threshold. Persisted so the gate decision is
+       *  auditable, not just enforced then dropped. */
+      moisturePct: real('moisture_pct'),
       /** FR-09 (#308) — 48-hour immutability lock, stamped on the first
        *  read past the window (mirrors spray_events.locked_at). Nullable:
        *  null means still-mutable. */
@@ -1525,6 +1525,43 @@ export const wizardDrafts = tenantScoped(
     (table) => ({
       ownerPlanUq: uniqueIndex('wizard_drafts_owner_plan_uq').on(table.ownerId, table.planId),
       ownerUpdatedIdx: index('wizard_drafts_owner_updated_idx').on(table.ownerId, table.updatedAt)
+    })
+  )
+);
+
+// ─── UC-44 — Season close-out state machine (#349) ─────────────────────
+//
+// One row per (owner_id, year). Writing the row "closes" that season: the
+// shared `SEASON_CLOSED` gate (lib/server/seasonClose.ts) then refuses any
+// record-write dated inside the closed year — the FR-09 lock pattern lifted
+// to a whole season. `snapshotJson` captures the preflight state at close
+// time (planting resolutions + harvest roll-up + pending count + the
+// RULES_VERSION stamp, for provenance only — this is an app-layer gate, not
+// a safety-kernel rule, so RULES_VERSION is NOT bumped). Reopen within 7
+// days clears the close by stamping `reopenedAt`; past the window the close
+// is permanent. Tenant-scoped per CLAUDE.md invariant 6.
+
+export const seasonCloseouts = tenantScoped(
+  sqliteTable(
+    'season_closeouts',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      year: integer('year').notNull(),
+      closedAt: integer('closed_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      closedById: text('closed_by_id').references(() => users.id),
+      /** JSON snapshot of the preflight state at close time: planting
+       *  resolutions, harvest roll-up, pending count, RULES_VERSION. */
+      snapshotJson: text('snapshot_json').notNull(),
+      /** Non-null once the close has been reopened (within the 7-day
+       *  window). A reopened row is treated as "not closed" by the gate. */
+      reopenedAt: integer('reopened_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerYearUq: uniqueIndex('season_closeouts_owner_year_uq').on(table.ownerId, table.year),
+      ownerClosedIdx: index('season_closeouts_owner_closed_idx').on(table.ownerId, table.closedAt)
     })
   )
 );

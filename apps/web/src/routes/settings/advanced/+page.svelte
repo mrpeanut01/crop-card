@@ -15,7 +15,7 @@
   ]);
 
   const EXPORTS = [
-    { name: 'Spray events', fmt: 'CSV + signed JSON', href: '/api/spray/records/export.csv' },
+    { name: 'Spray events', fmt: 'CSV', href: '/api/spray/records/export.csv' },
     { name: 'USDA / NRCS export', fmt: 'CSV', href: '/api/spray/records/export.usda.csv' },
     { name: 'Spray events PDF', fmt: 'PDF · printable', href: '/api/spray/records/export.pdf' },
     { name: 'Records (audit)', fmt: 'browser', href: '/records' },

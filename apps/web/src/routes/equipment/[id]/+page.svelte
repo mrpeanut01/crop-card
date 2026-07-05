@@ -136,9 +136,13 @@
     {#if eq.type === 'sprayer'}
       <dt>Calibrated GPA</dt>
       <dd>
-        {eq.state.calibratedGpa ?? '—'}
-        {#if eq.state.calibrationDate}
-          <small>({fmt(eq.state.calibrationDate)})</small>
+        {#if eq.state.calibratedGpa == null}
+          <span class="warn">Uncalibrated</span>
+        {:else}
+          {eq.state.calibratedGpa}
+          {#if eq.state.calibrationDate}
+            <small>({fmt(eq.state.calibrationDate)})</small>
+          {/if}
         {/if}
       </dd>
       <dt>Last chemistry</dt>
@@ -152,6 +156,13 @@
       </dd>
       <dt>Last decon</dt>
       <dd>{fmt(eq.state.lastDeconAt)}</dd>
+      {#if eq.state.winterizedAt}
+        <dt>Winterized</dt>
+        <dd>
+          <span class="ok">{fmt(eq.state.winterizedAt)}</span>
+          <small>· Recalibrate in spring</small>
+        </dd>
+      {/if}
     {:else}
       <dt>Hour meter</dt>
       <dd>{eq.state.hourMeter ?? '—'}</dd>
@@ -165,6 +176,7 @@
     {#if eq.type === 'sprayer'}
       <a class="btn" href="/calibrate">Calibrate</a>
       <a class="btn" href="/spray/decon?sprayer={encodeURIComponent(eq.id)}">Decon wizard</a>
+      <a class="btn" href="/equipment/{encodeURIComponent(eq.id)}/winterize">Winterize</a>
     {/if}
   </div>
 </section>

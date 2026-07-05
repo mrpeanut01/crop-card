@@ -57,6 +57,7 @@ export interface EquipmentStateRow {
   lastDeconAt?: number;
   calibratedGpa?: number;
   calibrationDate?: number;
+  winterizedAt?: number;
 }
 
 export interface EquipmentWithState extends Equipment {
@@ -93,7 +94,8 @@ function rowToState(row: typeof equipmentState.$inferSelect): EquipmentStateRow 
     lastUsedAt: row.lastUsedAt?.getTime(),
     lastDeconAt: row.lastDeconAt?.getTime(),
     calibratedGpa: row.calibratedGpa ?? undefined,
-    calibrationDate: row.calibrationDate?.getTime()
+    calibrationDate: row.calibrationDate?.getTime(),
+    winterizedAt: row.winterizedAt?.getTime()
   };
 }
 
@@ -196,10 +198,20 @@ export function updateEquipment(id: string, patch: { label?: string; notes?: str
 export function updateEquipmentState(
   id: string,
   // `lastChemistryClass: null` clears the chemistry flag — needed so the
-  // decon flow can actually mark a sprayer clean. Other fields use the
+  // decon flow can actually mark a sprayer clean. `calibratedGpa: null` /
+  // `calibrationDate: null` clear calibration so UC-45 winterization can
+  // flag the sprayer "Uncalibrated" for next spring. Other fields use the
   // same undefined-means-skip convention.
-  patch: Partial<Omit<EquipmentStateRow, 'equipmentId' | 'lastChemistryClass'>> & {
+  patch: Partial<
+    Omit<
+      EquipmentStateRow,
+      'equipmentId' | 'lastChemistryClass' | 'calibratedGpa' | 'calibrationDate' | 'winterizedAt'
+    >
+  > & {
     lastChemistryClass?: SprayerLoadClass | null;
+    calibratedGpa?: number | null;
+    calibrationDate?: number | null;
+    winterizedAt?: number | null;
   }
 ): EquipmentStateRow {
   const set: Partial<typeof equipmentState.$inferInsert> = {};
@@ -212,6 +224,8 @@ export function updateEquipmentState(
   if (patch.calibratedGpa !== undefined) set.calibratedGpa = patch.calibratedGpa;
   if (patch.calibrationDate !== undefined)
     set.calibrationDate = patch.calibrationDate ? new Date(patch.calibrationDate) : null;
+  if (patch.winterizedAt !== undefined)
+    set.winterizedAt = patch.winterizedAt ? new Date(patch.winterizedAt) : null;
   const updated = db
     .update(equipmentState)
     .set(set)

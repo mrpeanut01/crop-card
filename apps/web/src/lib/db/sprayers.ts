@@ -24,6 +24,8 @@ export interface Sprayer {
   lastChemistryClass?: SprayerLoadClass;
   lastSprayedAt?: number;
   lastDeconAt?: number;
+  /** UC-45 — set when the sprayer was winterized for the off-season. */
+  winterizedAt?: number;
 }
 
 function toSprayer(eq: ReturnType<typeof listEquipment>[number]): Sprayer {
@@ -34,7 +36,8 @@ function toSprayer(eq: ReturnType<typeof listEquipment>[number]): Sprayer {
     calibrationDate: eq.state.calibrationDate,
     lastChemistryClass: eq.state.lastChemistryClass,
     lastSprayedAt: eq.state.lastUsedAt,
-    lastDeconAt: eq.state.lastDeconAt
+    lastDeconAt: eq.state.lastDeconAt,
+    winterizedAt: eq.state.winterizedAt
   };
 }
 
@@ -96,6 +99,52 @@ export function recordCalibration(
     kind: 'calibration',
     occurredAt: calibratedAt,
     payload: { calibratedGpa: Math.round(calibratedGpa) }
+  });
+  const out = getSprayer(id);
+  if (!out) throw new Error(`unknown sprayer: ${id}`);
+  return out;
+}
+
+/**
+ * UC-45 — winterize a sprayer for the off-season. Writes one `equipment_log`
+ * row per confirmed wizard step (reusing existing `decon` / `maintenance` /
+ * `inspection` kinds — no enum migration), then in a single state write:
+ *   - stamps `winterizedAt`,
+ *   - clears `lastChemistryClass` + stamps `lastDeconAt` (decon semantics,
+ *     so the cross-contamination gate treats the tank as clean next spring),
+ *   - nulls calibration so `/calibrate` shows "Uncalibrated" and UC-10 must
+ *     re-run before the first spring spray (Sprint-10 #216 path).
+ */
+export interface WinterizeStep {
+  key: string;
+  kind: 'decon' | 'maintenance' | 'inspection';
+  label: string;
+  notes?: string;
+  payload?: Record<string, unknown>;
+}
+
+export function recordWinterization(
+  id: string,
+  steps: WinterizeStep[],
+  opts: { completedAt?: number; performedById?: string } = {}
+): Sprayer {
+  const completedAt = opts.completedAt ?? Date.now();
+  for (const step of steps) {
+    appendEquipmentLog({
+      equipmentId: id,
+      kind: step.kind,
+      occurredAt: completedAt,
+      performedById: opts.performedById,
+      notes: step.notes ?? step.label,
+      payload: { winterizeStep: step.key, ...(step.payload ?? {}) }
+    });
+  }
+  updateEquipmentState(id, {
+    winterizedAt: completedAt,
+    lastDeconAt: completedAt,
+    lastChemistryClass: null,
+    calibratedGpa: null,
+    calibrationDate: null
   });
   const out = getSprayer(id);
   if (!out) throw new Error(`unknown sprayer: ${id}`);

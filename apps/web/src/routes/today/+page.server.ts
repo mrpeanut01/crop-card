@@ -24,6 +24,7 @@ import { getForecast, WeatherFetchError } from '$lib/server/weather';
 import { derivePriorityAction } from '$lib/today/priorityAction';
 import { summarizeForecastSafely } from '$lib/today/weatherSummary';
 import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
+import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 type Tab = 'today' | '7d' | '30d' | 'season';
@@ -197,6 +198,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     now
   });
 
+  // UC-45 — next-spring reminder for sprayers used this season but not
+  // winterized after the prior one. Informational (assists, never gates).
+  const winterizeAlerts = deriveWinterizeAlerts(sprayers, now);
+
   return {
     today: new Date().toISOString().slice(0, 10),
     tab,
@@ -250,6 +255,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // Phase 25e (#97) — Almanac hero / weather strip / season glance.
     priorityAction,
     weatherSummary,
-    seasonGlance
+    seasonGlance,
+    winterizeAlerts
   };
 };

@@ -724,7 +724,11 @@ export const equipmentState = tenantScoped(
       lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
       lastDeconAt: integer('last_decon_at', { mode: 'timestamp_ms' }),
       calibratedGpa: integer('calibrated_gpa'),
-      calibrationDate: integer('calibration_date', { mode: 'timestamp_ms' })
+      calibrationDate: integer('calibration_date', { mode: 'timestamp_ms' }),
+      // UC-45 — set when the sprayer is winterized for the off-season.
+      // The same write nulls calibration (recalibrate in spring) and clears
+      // chemistry via the decon semantics. Null = not winterized.
+      winterizedAt: integer('winterized_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
       ownerIdx: index('equipment_state_owner_idx').on(table.ownerId)

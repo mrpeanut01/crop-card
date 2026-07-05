@@ -17,5 +17,10 @@
  * only clears `warn` severity. Harvest-moisture (#340) block/warn copy
  * branches on the cure archetype so winter-squash no longer reads the
  * small-grain "drying required" remedy.
+ * #350 (UC-45) — 0.5.5: class-specific decon SOPs (`deconProtocol.ts`).
+ * The winterization flow (and any decon) selects a bespoke rinse sequence
+ * for the three strict chemistries — paraquat (bleach + TSP + 3 rinses),
+ * glufosinate (detergent + water rinse), copper (vinegar rinse) — instead
+ * of the generic ammonia soak. Every other class keeps the generic path.
  */
-export const RULES_VERSION = '0.5.4-issue323' as const;
+export const RULES_VERSION = '0.5.5-issue350' as const;

@@ -1,0 +1,1 @@
+ALTER TABLE `equipment_state` ADD `winterized_at` integer;

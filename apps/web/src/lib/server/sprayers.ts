@@ -10,5 +10,7 @@ export {
   recordSpray,
   recordDecon,
   recordCalibration,
-  type Sprayer
+  recordWinterization,
+  type Sprayer,
+  type WinterizeStep
 } from '$lib/db/sprayers';

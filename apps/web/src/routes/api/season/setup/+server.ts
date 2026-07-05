@@ -16,6 +16,8 @@ import { z } from 'zod';
 
 import { requireOwner } from '$lib/server/auth';
 import { saveSeasonSetup } from '$lib/season/setup.server';
+import { listSprayers } from '$lib/server/sprayers';
+import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
 
 const bodySchema = z.object({
   year: z.number().int().min(2000).max(3000),
@@ -37,5 +39,9 @@ export async function POST(event) {
   }
   const { year, ...fields } = parsed.data;
   const setup = saveSeasonSetup(year, fields);
-  return json({ setup });
+  // UC-45 — informational (assists, never gates): flag active sprayers that
+  // were used this season but not winterized after the prior one so the
+  // operator sees the spring reminder right after saving setup.
+  const winterizeAlerts = deriveWinterizeAlerts(listSprayers());
+  return json({ setup, winterizeAlerts });
 }

@@ -367,6 +367,26 @@
   <QuickActions />
 </div>
 
+{#if data.winterizeAlerts.length > 0}
+  <section class="card winterize-alert" aria-label="Winterization reminder">
+    <h2>❄ Winterization check</h2>
+    <p>
+      {data.winterizeAlerts.length === 1 ? 'A sprayer was' : 'Sprayers were'} used this season but
+      {data.winterizeAlerts.length === 1 ? 'was' : 'were'} not winterized after the prior one. Recalibrate
+      (UC-10) and winterize before storage.
+    </p>
+    <ul>
+      {#each data.winterizeAlerts as a (a.sprayerId)}
+        <li>
+          <a href="/equipment/{encodeURIComponent(a.sprayerId)}/winterize">{a.label}</a>
+          {#if a.uncalibrated}<span class="pill">Uncalibrated</span>{/if}
+          {#if a.neverWinterized}<span class="pill">Never winterized</span>{/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
+{/if}
+
 <div class="t-grid t-grid-second">
   <WeekStrip {todayStartMs} items={weekItemsByDay} />
   <div class="t-side-stack">
@@ -1570,5 +1590,31 @@
     min-height: 60px;
     line-height: 1.4;
     align-self: flex-start;
+  }
+  .winterize-alert {
+    border-left: 4px solid #2a6ca8;
+    background: #eef5fb;
+  }
+  .winterize-alert h2 {
+    color: #1b4c78;
+  }
+  .winterize-alert ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+  }
+  .winterize-alert li {
+    padding: 0.2rem 0;
+  }
+  .winterize-alert a {
+    color: #1b4c78;
+    font-weight: 600;
+  }
+  .winterize-alert .pill {
+    background: #d6e6f4;
+    color: #1b4c78;
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    margin-left: 0.4rem;
   }
 </style>

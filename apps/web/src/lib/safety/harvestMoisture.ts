@@ -75,6 +75,15 @@ export function thresholdForPlugin(plugin: PluginShape): number | null {
   return ARCHETYPE_MOISTURE_MAX[archetype] ?? null;
 }
 
+/**
+ * Cure-then-store archetypes (winter squash) finish at a much higher
+ * moisture during cure; the 70% ceiling is a *cure-moisture cap*, not a
+ * drying floor. Its over-threshold copy must not say "drying required"
+ * (#340) — a curing crop is remedied by extending the cure / rejecting a
+ * rotting fruit, not by drying grain.
+ */
+const CURE_ARCHETYPES = new Set<Archetype>(['winter-squash-cure']);
+
 export function evaluateHarvestMoisture(input: HarvestMoistureInput): HarvestMoistureResult | null {
   const threshold = thresholdForPlugin(input.cropPlugin);
   if (threshold == null) return null;
@@ -86,20 +95,26 @@ export function evaluateHarvestMoisture(input: HarvestMoistureInput): HarvestMoi
     return null;
   }
 
+  const isCure = CURE_ARCHETYPES.has(resolveArchetype(input.cropPlugin));
+
   if (m > threshold) {
+    const remedy = isCure
+      ? 'Extend cure or cull soft fruit before storing.'
+      : 'Drying required before commit.';
     return {
       decision: 'block',
       thresholdPct: threshold,
       warnBufferPct: WARN_BUFFER_PCT,
-      reason: `Stored moisture ${m.toFixed(1)}% > ${threshold.toFixed(1)}% safe-storage threshold for this crop family. Drying required before commit.`
+      reason: `Stored moisture ${m.toFixed(1)}% > ${threshold.toFixed(1)}% safe-storage threshold for this crop family. ${remedy}`
     };
   }
   if (m >= threshold - WARN_BUFFER_PCT) {
+    const watch = isCure ? 'Monitor for soft spots / rot.' : 'Monitor for heating.';
     return {
       decision: 'warn',
       thresholdPct: threshold,
       warnBufferPct: WARN_BUFFER_PCT,
-      reason: `Stored moisture ${m.toFixed(1)}% within ${WARN_BUFFER_PCT.toFixed(1)}% of the ${threshold.toFixed(1)}% threshold. Monitor for heating.`
+      reason: `Stored moisture ${m.toFixed(1)}% within ${WARN_BUFFER_PCT.toFixed(1)}% of the ${threshold.toFixed(1)}% threshold. ${watch}`
     };
   }
   return {

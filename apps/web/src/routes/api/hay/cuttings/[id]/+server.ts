@@ -117,15 +117,35 @@ export const PATCH: RequestHandler = async (event) => {
       baleType: parsed.data.baleType ?? cutting.baleType ?? null!,
       moisturePct: parsed.data.baleMoisturePct ?? cutting.baleMoisturePct
     });
-    if (!decision.ok && !parsed.data.overrideBaleGate) {
-      return json(
-        {
-          error: 'bale gate rejected; pass overrideBaleGate:true to record anyway',
-          violations: decision.violations,
-          warnings: decision.warnings
-        },
-        { status: 422 }
-      );
+    if (!decision.ok) {
+      // #323 — FR-21 / UC-14: a `danger`-severity violation (>dangerAbovePct
+      // fire risk, MOISTURE_MISSING, BALE_TYPE_MISSING) is a hard STOP that
+      // `overrideBaleGate` CANNOT bypass. The override only clears `warn`
+      // severity. This closes the hole where a single boolean skipped the
+      // >22% "cannot be bypassed" fire-risk STOP.
+      const hardStop = decision.violations.some((v) => v.severity === 'danger');
+      if (hardStop) {
+        return json(
+          {
+            error: 'bale gate STOP — danger-severity violation cannot be overridden',
+            violations: decision.violations,
+            warnings: decision.warnings,
+            overridable: false
+          },
+          { status: 422 }
+        );
+      }
+      if (!parsed.data.overrideBaleGate) {
+        return json(
+          {
+            error: 'bale gate rejected; pass overrideBaleGate:true to record anyway',
+            violations: decision.violations,
+            warnings: decision.warnings,
+            overridable: true
+          },
+          { status: 422 }
+        );
+      }
     }
   }
 

@@ -7,6 +7,15 @@ export interface RendererData {
   priorPickCount: number;
 }
 
+export interface HarvestCommitInput {
+  quantity?: string;
+  lotNumber?: string;
+  /** UC-16 (#322) — structured stored moisture %. When present, the POST
+   *  body carries it as a number so the harvest-moisture kernel gate is
+   *  reachable from the form (a free-text lot-tag string is not). */
+  moisturePct?: number;
+}
+
 export interface RendererProps {
   plantingId: string;
   blockId: string;
@@ -18,7 +27,7 @@ export interface RendererProps {
   windowStartMs?: number;
   windowEndMs?: number;
   harvestIndicators: string[];
-  onCommit: (input: { quantity?: string; lotNumber?: string }) => Promise<string | null>;
+  onCommit: (input: HarvestCommitInput) => Promise<string | null>;
   error?: string | null;
   onCancel: () => void;
   rendererData?: RendererData;

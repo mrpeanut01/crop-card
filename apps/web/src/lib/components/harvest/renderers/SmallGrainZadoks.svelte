@@ -14,6 +14,23 @@
     props.plantingDate ? Math.floor((Date.now() - props.plantingDate) / DAY_MS) : null
   );
 
+  let moisturePct = $state('');
+
+  async function handleCommit(input: {
+    quantity?: string;
+    lotNumber?: string;
+  }): Promise<string | null> {
+    // #322 — moisture travels as a structured number so the kernel gate is reachable.
+    const tag = moisturePct.trim() ? `moisture=${moisturePct}%` : '';
+    const lot = [input.lotNumber, tag].filter(Boolean).join(' · ').trim();
+    const moisture = parseFloat(moisturePct);
+    return props.onCommit({
+      quantity: input.quantity,
+      lotNumber: lot || undefined,
+      moisturePct: Number.isFinite(moisture) ? moisture : undefined
+    });
+  }
+
   /** Stage the planting is *currently* in (its daysFromPlanting band contains today). */
   const currentStage = $derived.by(() => {
     if (!zadoks || daysFromPlanting === null) return null;
@@ -83,6 +100,14 @@
     </div>
   {/if}
 
+  <div class="moisture-capture">
+    <label class="qfield">
+      <span>Stored moisture (%)</span>
+      <input type="text" inputmode="decimal" placeholder="13.0" bind:value={moisturePct} />
+    </label>
+    <p class="hint">Binning above the family threshold is blocked — dry down first.</p>
+  </div>
+
   <FallbackHarvestRenderer
     plantingId={props.plantingId}
     blockId={props.blockId}
@@ -94,7 +119,7 @@
     windowStartMs={props.windowStartMs}
     windowEndMs={props.windowEndMs}
     harvestIndicators={props.harvestIndicators}
-    onCommit={props.onCommit}
+    onCommit={handleCommit}
     error={props.error}
     onCancel={props.onCancel}
   />
@@ -216,5 +241,34 @@
   }
   .mono {
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  }
+  .moisture-capture {
+    background: var(--color-cream, #fff8e1);
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+  .qfield {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-ink-muted);
+  }
+  .qfield input {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 14px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-divider);
+    border-radius: 4px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    min-height: 40px;
+  }
+  .hint {
+    margin: 6px 0 0;
+    font-size: 11.5px;
+    color: var(--color-ink-soft);
+    line-height: 1.4;
   }
 </style>

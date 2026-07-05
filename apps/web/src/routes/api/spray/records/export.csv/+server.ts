@@ -22,13 +22,15 @@ import { evaluateLock, listSprayEvents } from '$lib/db/sprayEvents';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { requireUser } from '$lib/server/auth';
+import { parseExportDateRange } from '$lib/exports/dateRange';
 import { APP_VERSION } from '$lib/version';
 
 export const GET: RequestHandler = (event) => {
   const user = requireUser(event);
   const sprayerId = event.url.searchParams.get('sprayerId') ?? undefined;
   const blockId = event.url.searchParams.get('blockId') ?? undefined;
-  const events = listSprayEvents({ limit: 10_000, sprayerId, blockId });
+  const { fromMs, toMs } = parseExportDateRange(event.url.searchParams);
+  const events = listSprayEvents({ limit: 10_000, sprayerId, blockId, fromMs, toMs });
 
   // T1 / T2 — id → name lookups.
   const blockNameById = new Map(listBlocks().map((b) => [b.id, b.blockLabel ?? b.name]));

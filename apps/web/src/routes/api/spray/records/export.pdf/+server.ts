@@ -28,6 +28,7 @@ import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { RULES_VERSION } from '$lib/safety/version';
 import { requireUser } from '$lib/server/auth';
+import { parseExportDateRange } from '$lib/exports/dateRange';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
@@ -55,7 +56,8 @@ export const GET: RequestHandler = async (event) => {
   const user = requireUser(event);
   const sprayerId = event.url.searchParams.get('sprayerId') ?? undefined;
   const blockId = event.url.searchParams.get('blockId') ?? undefined;
-  const events = listSprayEvents({ limit: 10_000, sprayerId, blockId });
+  const { fromMs, toMs } = parseExportDateRange(event.url.searchParams);
+  const events = listSprayEvents({ limit: 10_000, sprayerId, blockId, fromMs, toMs });
   const generatedAt = new Date();
 
   const blockNameById = new Map(listBlocks().map((b) => [b.id, b.blockLabel ?? b.name]));

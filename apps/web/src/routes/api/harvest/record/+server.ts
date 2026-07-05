@@ -75,7 +75,8 @@ export const POST: RequestHandler = async ({ request }) => {
     cropPluginId: parsed.data.cropPluginId,
     occurredAt,
     quantity: parsed.data.quantity,
-    lotNumber: parsed.data.lotNumber
+    lotNumber: parsed.data.lotNumber,
+    moisturePct: parsed.data.moisturePct
   });
   if (parsed.data.taskId) {
     try {

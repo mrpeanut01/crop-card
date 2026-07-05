@@ -656,6 +656,12 @@ export const harvestEvents = tenantScoped(
       occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
       quantity: text('quantity'),
       lotNumber: text('lot_number'),
+      /** CT-S6-004 / #326 — stored moisture %, in hundredths of a percent
+       *  (13.5% → 1350). Validated at record time by the UC-16 harvest-
+       *  moisture kernel (Sprint 19); persisted here so inspector exports
+       *  (USDA CSV, VDACS PDF) can surface it. Nullable: null means the
+       *  operator did not capture moisture (informational, not a gate). */
+      moisturePctHundredths: integer('moisture_pct_hundredths'),
       /** FR-09 (#308) — 48-hour immutability lock, stamped on the first
        *  read past the window (mirrors spray_events.locked_at). Nullable:
        *  null means still-mutable. */

@@ -28,6 +28,7 @@ import { listInsecticideEvents } from './insecticideEvents';
 import { listFungicideEvents } from './fungicideEvents';
 import { listScoutObservations } from './scoutObservations';
 import { listHarvestEvents } from './harvestEvents';
+import { listCuttings } from './hayCuttings';
 import { listBlocks } from './blocks';
 import { fertilityApplications } from './schema';
 import type { FertilityApplication } from './fertility';
@@ -346,6 +347,7 @@ export function listUnifiedRecords(filters: UnifiedFilters = {}): UnifiedRecord[
       toMs: filters.toMs
     });
     for (const e of events.slice(0, perKindLimit)) {
+      const moisture = e.moisturePct !== undefined ? ` · ${e.moisturePct}% moisture` : '';
       out.push({
         id: `harvest:${e.id}`,
         kind: 'harvest',
@@ -355,10 +357,53 @@ export function listUnifiedRecords(filters: UnifiedFilters = {}): UnifiedRecord[
         blockLabel: blockLabelById.get(e.blockId),
         cropPluginId: e.cropPluginId,
         detail: e.quantity
-          ? `${e.cropPluginId} · ${e.quantity}${e.lotNumber ? ` · lot ${e.lotNumber}` : ''}`
-          : e.cropPluginId,
-        hash: shortHash({ k: 'harvest', id: e.id, o: e.occurredAt, q: e.quantity }),
-        locked: isLocked(e.occurredAt, undefined, now)
+          ? `${e.cropPluginId} · ${e.quantity}${e.lotNumber ? ` · lot ${e.lotNumber}` : ''}${moisture}`
+          : `${e.cropPluginId}${moisture}`,
+        hash: shortHash({
+          k: 'harvest',
+          id: e.id,
+          o: e.occurredAt,
+          q: e.quantity,
+          m: e.moisturePct
+        }),
+        locked: isLocked(e.occurredAt, e.lockedAt, now),
+        lockedAt: e.lockedAt
+      });
+    }
+  }
+
+  if (kinds.has('hay')) {
+    // Forage cuttings are a multi-step workflow (mow → ted → rake → bale →
+    // store). We surface each cutting as one ledger row, timestamped at the
+    // mow (workflow start) so an inspector sees the operation date; the
+    // detail line carries the cutting #, status, bale type/count, and bale
+    // moisture % — the forage equivalents of a harvest row. Tenant-scoped
+    // via listCuttings → withTenant.
+    const cuttings = listCuttings({ blockId: filters.blockId, limit: perKindLimit });
+    for (const c of cuttings) {
+      const occurredAt = c.mowAt ?? c.baleAt ?? c.storedAt ?? c.createdAt;
+      if (filters.fromMs !== undefined && occurredAt < filters.fromMs) continue;
+      if (filters.toMs !== undefined && occurredAt > filters.toMs) continue;
+      if (c.performedById) performerIds.push(c.performedById);
+      const bale =
+        c.balesQuantity !== undefined && c.baleType
+          ? ` · ${c.balesQuantity} ${c.baleType}`
+          : c.baleType
+            ? ` · ${c.baleType}`
+            : '';
+      const moisture = c.baleMoisturePct !== undefined ? ` · ${c.baleMoisturePct}% moisture` : '';
+      out.push({
+        id: `hay:${c.id}`,
+        kind: 'hay',
+        rowId: c.id,
+        occurredAt,
+        blockId: c.blockId,
+        blockLabel: blockLabelById.get(c.blockId),
+        cropPluginId: c.cropPluginId,
+        performedById: c.performedById,
+        detail: `${c.cropPluginId} · cutting ${c.cuttingNumber} · ${c.status}${bale}${moisture}`,
+        hash: shortHash({ k: 'hay', id: c.id, o: occurredAt, n: c.cuttingNumber, s: c.status }),
+        locked: isLocked(occurredAt, undefined, now)
       });
     }
   }

@@ -20,6 +20,7 @@ import { insertInsecticideEvent } from './insecticideEvents';
 import { insertFungicideEvent } from './fungicideEvents';
 import { insertScoutObservation } from './scoutObservations';
 import { insertHarvestEvent } from './harvestEvents';
+import { createCutting, advanceCutting } from './hayCuttings';
 import { insertFertilityApplication } from './fertility';
 import {
   KIND_LABEL,
@@ -107,12 +108,29 @@ function seedAllKinds(ownerId: string, userId: string) {
       occurredAt: now - 15_000
     });
 
-    // harvest
+    // harvest (with stored moisture — #326)
     const harvest = insertHarvestEvent({
       blockId: block.id,
       cropPluginId: 'lettuce-fixture',
       occurredAt: now - 10_000,
-      quantity: '8 lb'
+      quantity: '8 lb',
+      moisturePct: 13.2
+    });
+
+    // hay cutting (#326) — mow → bale workflow, carries bale moisture.
+    const cutting = createCutting({
+      blockId: block.id,
+      cropPluginId: 'orchardgrass-fixture',
+      year: new Date(now).getFullYear(),
+      mowAt: now - 9_000,
+      rulesVersion: 'test-rules'
+    });
+    advanceCutting(cutting.id, {
+      status: 'baling',
+      occurredAt: now - 8_500,
+      baleType: 'small-square',
+      balesQuantity: 40,
+      baleMoisturePct: 16.5
     });
 
     // fertility
@@ -156,6 +174,7 @@ function seedAllKinds(ownerId: string, userId: string) {
         fungicide: fungicide.id,
         scout: scout.id,
         harvest: harvest.id,
+        hay: cutting.id,
         fertility: fertility.id,
         planting: planting.id,
         decon: deconId
@@ -189,6 +208,42 @@ describe('recordsUnified — listUnifiedRecords', () => {
       for (let i = 1; i < records.length; i += 1) {
         expect(records[i - 1].occurredAt).toBeGreaterThanOrEqual(records[i].occurredAt);
       }
+    });
+  });
+
+  it('surfaces the hay cutting branch with cutting #, status, bale + moisture (#326)', () => {
+    const ownerId = `rec-hay-${randomUUID().slice(0, 6)}`;
+    const userId = `rec-hay-user-${randomUUID().slice(0, 6)}`;
+    ensureOwner(ownerId);
+    ensureUser(userId);
+    const seeded = seedAllKinds(ownerId, userId);
+
+    runWithTenant(ownerId, () => {
+      const records = listUnifiedRecords();
+      const hay = records.find((r) => r.kind === 'hay' && r.rowId === seeded.ids.hay);
+      expect(hay, 'hay cutting must appear in the unified ledger').toBeDefined();
+      expect(hay?.detail).toContain('cutting 1');
+      expect(hay?.detail).toContain('baling');
+      expect(hay?.detail).toContain('40 small-square');
+      expect(hay?.detail).toContain('16.5% moisture');
+      // Filtering to only `hay` returns the cutting and no pesticide rows.
+      const only = listUnifiedRecords({ kinds: ['hay'] });
+      expect(only.every((r) => r.kind === 'hay')).toBe(true);
+      expect(only.some((r) => r.rowId === seeded.ids.hay)).toBe(true);
+    });
+  });
+
+  it('surfaces stored harvest moisture in the harvest detail (#326)', () => {
+    const ownerId = `rec-hm-${randomUUID().slice(0, 6)}`;
+    const userId = `rec-hm-user-${randomUUID().slice(0, 6)}`;
+    ensureOwner(ownerId);
+    ensureUser(userId);
+    const seeded = seedAllKinds(ownerId, userId);
+
+    runWithTenant(ownerId, () => {
+      const records = listUnifiedRecords();
+      const harvest = records.find((r) => r.kind === 'harvest' && r.rowId === seeded.ids.harvest);
+      expect(harvest?.detail).toContain('13.2% moisture');
     });
   });
 

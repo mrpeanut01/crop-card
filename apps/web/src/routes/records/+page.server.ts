@@ -2,6 +2,9 @@ import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { recordsApproachingRetention } from '$lib/db/sprayEvents';
 import { listSprayers } from '$lib/server/sprayers';
+import { listYearsWithCrops } from '$lib/db/crops';
+import { requireUser } from '$lib/server/auth';
+import { buildYearSummary } from '$lib/records/yearSummary.server';
 import {
   RECORD_KINDS,
   listUnifiedRecords,
@@ -19,7 +22,9 @@ import {
  * existing CSV/PDF exports), but the table itself is no longer
  * spray-only.
  */
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async (event) => {
+  const { url } = event;
+  const user = requireUser(event);
   const sprayerId = url.searchParams.get('sprayerId') ?? undefined;
   const blockId = url.searchParams.get('blockId') ?? undefined;
   const fromMsRaw = url.searchParams.get('from');
@@ -47,6 +52,18 @@ export const load: PageServerLoad = async ({ url }) => {
   const summary = summarizeUnifiedRecords(allRecords);
   const approaching = recordsApproachingRetention();
 
+  // UC-46 — Year in review. Deterministic aggregate for the selected year.
+  // The year selector defaults to the current calendar year; the option
+  // list unions the current year with every year that has planting data.
+  const currentYear = new Date().getFullYear();
+  const yearParamRaw = url.searchParams.get('year');
+  const selectedYear =
+    yearParamRaw && /^\d{4}$/.test(yearParamRaw) ? Number(yearParamRaw) : currentYear;
+  const availableYears = Array.from(
+    new Set<number>([currentYear, ...listYearsWithCrops(), selectedYear])
+  ).sort((a, b) => b - a);
+  const yearSummary = await buildYearSummary(selectedYear, user.activeOwnerId);
+
   return {
     records: filteredRecords,
     summary,
@@ -57,6 +74,9 @@ export const load: PageServerLoad = async ({ url }) => {
     activeBlockId: blockId ?? null,
     activeKinds,
     activeFromIso: fromMsRaw ?? null,
-    activeToIso: toMsRaw ?? null
+    activeToIso: toMsRaw ?? null,
+    yearSummary,
+    selectedYear,
+    availableYears
   };
 };

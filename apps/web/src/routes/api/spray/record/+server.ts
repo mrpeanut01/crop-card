@@ -41,6 +41,7 @@ import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
+import { checkSeasonClosed } from '$lib/server/seasonClose';
 
 const cropStageInput = z.object({
   cropPluginId: z.string().min(1),
@@ -99,6 +100,15 @@ export const POST: RequestHandler = async (event) => {
 
   const registry = await getRegistry();
   const occurredAt = parsed.data.occurredAt ?? Date.now();
+
+  // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
+  const seasonClosed = checkSeasonClosed(occurredAt);
+  if (seasonClosed) {
+    return json(
+      { error: seasonClosed.code, message: seasonClosed.message, year: seasonClosed.year },
+      { status: 422 }
+    );
+  }
 
   const products: HerbicideProduct[] = [];
   const fullProducts: HerbicidePlugin[] = [];

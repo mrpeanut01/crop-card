@@ -12,6 +12,7 @@ import { getBlock } from '$lib/db/blocks';
 import { insertHarvestEvent } from '$lib/db/harvestEvents';
 import { getRegistry } from '$lib/server/registry';
 import { evaluateHarvestMoisture, HARVEST_MOISTURE_BLOCK } from '$lib/safety/harvestMoisture';
+import { checkSeasonClosed } from '$lib/server/seasonClose';
 
 const requestSchema = z.object({
   blockId: z.string().min(1),
@@ -69,6 +70,14 @@ export const POST: RequestHandler = async ({ request }) => {
     }
   }
   const occurredAt = parsed.data.occurredAt ?? Date.now();
+  // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
+  const closed = checkSeasonClosed(occurredAt);
+  if (closed) {
+    return json(
+      { error: closed.code, message: closed.message, year: closed.year },
+      { status: 422 }
+    );
+  }
   const event = insertHarvestEvent({
     blockId: parsed.data.blockId,
     cropId: parsed.data.cropId,

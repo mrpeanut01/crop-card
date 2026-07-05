@@ -80,9 +80,22 @@
     )
   );
   let selectedSprayerId = $state(untrack(() => data.sprayers[0]?.id ?? ''));
-  let windMph = $state(5);
-  let tempF = $state(70);
-  let rainMm = $state(0);
+  // #320 / CT-S5-003 — conservative synthetic defaults. These still feed
+  // the environmental kernel gate, but they are NOT presented as measured
+  // readings: the record carries `conditionsProvenance` so a persisted 5
+  // mph is attributable to "operator left conditions untouched" rather
+  // than "measured 5 mph". `conditionsMeasured` flips true the moment the
+  // operator edits any conditions input (or hydrates measured prefs).
+  const DEFAULT_WIND_MPH = 5;
+  const DEFAULT_TEMP_F = 70;
+  const DEFAULT_RAIN_MM = 0;
+  let windMph = $state(DEFAULT_WIND_MPH);
+  let tempF = $state(DEFAULT_TEMP_F);
+  let rainMm = $state(DEFAULT_RAIN_MM);
+  let conditionsMeasured = $state(false);
+  function markConditionsMeasured() {
+    conditionsMeasured = true;
+  }
   let cornHeightIn = $state<number | undefined>(6);
   let tankSizeGallons = $state(50);
   let showAllHerbicides = $state(untrack(() => data.preselect.windowStage === null));
@@ -93,6 +106,9 @@
     tempF: number;
     rainMm: number;
     cornHeightIn?: number;
+    /** #320 — remember whether the last saved conditions were measured
+     *  so re-selecting a sprayer restores the honest provenance too. */
+    conditionsMeasured?: boolean;
   };
 
   function prefsKey(sprayerId: string) {
@@ -132,6 +148,9 @@
     windMph = prefs.windMph;
     tempF = prefs.tempF;
     rainMm = prefs.rainMm;
+    // #320 — a hydrated pref that the operator once measured stays
+    // measured; otherwise the restored numbers remain synthetic defaults.
+    conditionsMeasured = prefs.conditionsMeasured ?? false;
     if (prefs.cornHeightIn !== undefined) cornHeightIn = prefs.cornHeightIn;
   });
 
@@ -419,7 +438,14 @@
       productPluginIds: selectedHerbicideIds,
       sprayer: { id: sprayer.id },
       tankSizeGallons,
-      conditions: { windMph, tempF, rainForecastMmNext24h: rainMm },
+      // #320 — tag conditions with their provenance so the persisted
+      // record never claims synthetic defaults are measured readings.
+      conditions: {
+        windMph,
+        tempF,
+        rainForecastMmNext24h: rainMm,
+        conditionsProvenance: conditionsMeasured ? 'measured' : 'default'
+      },
       // Phase 21b follow-up — when deep-linked from a pip popover the
       // server closes the originating task on a successful record.
       // Only attach cropId/taskId on the block the popover came from,
@@ -460,6 +486,7 @@
       windMph,
       tempF,
       rainMm,
+      conditionsMeasured,
       cornHeightIn: isCornBlock ? cornHeightIn : undefined
     });
 
@@ -823,13 +850,92 @@
     </div>
   </section>
 
-  <!-- Phase 21b follow-up — Conditions section removed and "Check safety"
-       button removed. The kernel now runs dynamically via a debounced
-       `$effect` (script section) whenever blocks / herbicides / sprayer
-       / tank size change. Conservative defaults are used for wind /
-       temp / rain; environmental gates still fire if those defaults
-       cross a kernel threshold. Operators with a real concern can
-       check the local forecast — the form no longer demands the data. -->
+  <!-- #320 / CT-S5-003 — explicit conditions inputs restored so the
+       operator records REAL wind / temp / rain. Until touched, the
+       conservative defaults (5 mph / 70 °F / 0 mm) drive the kernel gate
+       but the record is tagged `conditionsProvenance: 'default'` — a real
+       20 mph day is no longer silently persisted as 5. Editing any field
+       flips the record to `'measured'`. The kernel still re-runs via the
+       debounced `$effect` on any change. -->
+  <section class="step">
+    <h2>5. Conditions</h2>
+    <p class="hint">
+      {#if conditionsMeasured}
+        Recorded as <strong>measured</strong> — these values save to the spray record.
+      {:else}
+        Using conservative defaults. Enter real readings before you spray so the record and drift
+        documentation are accurate.
+      {/if}
+    </p>
+    <div class="conditions conditions-grid">
+      <div class="stepper">
+        <span class="stepper-label">Wind</span>
+        <button
+          type="button"
+          aria-label="Decrease wind speed"
+          onclick={() => {
+            windMph = Math.max(0, windMph - 1);
+            markConditionsMeasured();
+          }}>−</button
+        >
+        <output>{windMph}<small> mph</small></output>
+        <button
+          type="button"
+          aria-label="Increase wind speed"
+          onclick={() => {
+            windMph = windMph + 1;
+            markConditionsMeasured();
+          }}>+</button
+        >
+      </div>
+      <div class="stepper">
+        <span class="stepper-label">Temp</span>
+        <button
+          type="button"
+          aria-label="Decrease temperature"
+          onclick={() => {
+            tempF = tempF - 1;
+            markConditionsMeasured();
+          }}>−</button
+        >
+        <output>{tempF}<small> °F</small></output>
+        <button
+          type="button"
+          aria-label="Increase temperature"
+          onclick={() => {
+            tempF = tempF + 1;
+            markConditionsMeasured();
+          }}>+</button
+        >
+      </div>
+      <div class="stepper">
+        <span class="stepper-label">Rain 24h</span>
+        <button
+          type="button"
+          aria-label="Decrease rain forecast"
+          onclick={() => {
+            rainMm = Math.max(0, rainMm - 1);
+            markConditionsMeasured();
+          }}>−</button
+        >
+        <output>{rainMm}<small> mm</small></output>
+        <button
+          type="button"
+          aria-label="Increase rain forecast"
+          onclick={() => {
+            rainMm = rainMm + 1;
+            markConditionsMeasured();
+          }}>+</button
+        >
+      </div>
+    </div>
+    {#if !conditionsMeasured}
+      <p class="conditions-provenance-note">
+        Not yet measured — this pass will be recorded with default conditions.
+      </p>
+    {/if}
+  </section>
+
   {#if isCornBlock}
     <section class="step">
       <h2>Corn height</h2>
@@ -1350,6 +1456,20 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 0.5rem;
+  }
+  /* #320 — three conditions steppers side-by-side on wider screens,
+     stacked on mobile. */
+  .conditions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  .conditions-provenance-note {
+    margin: 0.5rem 0 0;
+    padding: 0.45rem 0.6rem;
+    background: #fef3c7;
+    border-left: 3px solid #b45309;
+    border-radius: 0.25rem;
+    color: #78350f;
+    font-size: 0.85rem;
   }
   .stepper {
     display: grid;

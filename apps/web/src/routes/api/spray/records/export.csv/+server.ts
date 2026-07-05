@@ -49,6 +49,9 @@ export const GET: RequestHandler = (event) => {
     windMph: e.conditions.windMph,
     tempF: e.conditions.tempF,
     rainForecastMmNext24h: e.conditions.rainForecastMmNext24h,
+    // #320 / CT-S5-003 — attributability. Distinguishes operator-measured
+    // readings from synthetic defaults so drift documentation is honest.
+    conditionsProvenance: e.conditions.conditionsProvenance ?? 'default',
     rulesVersion: e.rulesVersion,
     pluginHashes: Object.entries(e.pluginHashes)
       .map(([id, h]) => `${id}:${h.slice(0, 16)}`)

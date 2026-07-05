@@ -109,6 +109,17 @@ export interface EnvironmentalConditions {
   rainForecastMmNext24h: number;
 }
 
+/**
+ * #320 / CT-S5-003 — provenance of the environmental conditions persisted
+ * on a spray_event. `measured` = the operator entered real readings for
+ * this pass; `default` = synthetic conservative placeholders were used
+ * (the operator left the conditions untouched). Kept out of
+ * `EnvironmentalConditions` so the kernel evaluation input is unchanged;
+ * it rides alongside the conditions in the stored `conditionsJson` blob
+ * so exports + audit can distinguish a real 5 mph from a placeholder 5.
+ */
+export type ConditionsProvenance = 'measured' | 'default';
+
 export interface SprayContext {
   occurredAt: number;
   products: HerbicideProduct[];

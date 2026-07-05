@@ -243,9 +243,13 @@ export function updateSprayEvent(
 }
 
 export function recordsApproachingRetention(now: number = Date.now()): SprayEvent[] {
-  const cutoff = now - (RETENTION_WINDOW_MS - RETENTION_ALERT_WINDOW_MS);
+  // The alert should fire only in the 30-day pre-expiry window: records aged
+  // between (retention - alert) and the full retention window. Without the
+  // lower bound this also returned long-expired rows well past 2 years.
+  const alertStart = now - RETENTION_WINDOW_MS;
+  const alertEnd = now - (RETENTION_WINDOW_MS - RETENTION_ALERT_WINDOW_MS);
   // Use the listing function so tenant filter is applied uniformly. The
   // `tenantWhere` inside `listSprayEvents` is the canonical scope.
   void tenantWhere;
-  return listSprayEvents({ toMs: cutoff });
+  return listSprayEvents({ fromMs: alertStart, toMs: alertEnd });
 }

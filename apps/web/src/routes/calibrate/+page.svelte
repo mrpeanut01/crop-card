@@ -251,13 +251,15 @@
               onclick={() => actOnPending(p.id, 'reject')}
               disabled={pendingActionId === p.id}
             >
-              Reject
+              {pendingActionId === p.id ? 'Working…' : 'Reject'}
             </button>
           </div>
         </li>
       {/each}
     </ul>
-    {#if pendingActionError}<p class="error">{pendingActionError}</p>{/if}
+    {#if pendingActionError}<p class="error" role="alert" aria-live="polite">
+        {pendingActionError}
+      </p>{/if}
   </section>
 {/if}
 

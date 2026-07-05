@@ -1,10 +1,13 @@
 /**
  * GET /api/records/export.vdacs.pdf
  *
- * VDACS-formatted audit-pack PDF (#161). Strictly broader than the
- * existing /api/spray/records/export.pdf — covers spray + insecticide +
- * fungicide events in one document, with the active Owner's identity,
- * the rules version, and an integrity hash of the canonical row set.
+ * VDACS-formatted audit-pack PDF (#161, extended #326). Strictly broader
+ * than the existing /api/spray/records/export.pdf — covers spray +
+ * insecticide + fungicide + harvest + decon + fertility events in one
+ * document, with the active Owner's identity, the rules version, and an
+ * integrity hash of the canonical row set. Harvest rows carry stored
+ * moisture (UC-16) so a VDACS/NRCS reviewer can accept the pack without a
+ * follow-up (UC-22 receiver acceptance).
  *
  * Targets the VDACS Office of Pesticide Services pesticide-records
  * format used at small-farm inspections in Virginia. Same cookie-based
@@ -14,7 +17,7 @@
  * Layout:
  *   - Cover page: farm identity + integrity hash + filter context
  *   - Pesticide application table (chronological, all three flows)
- *   - Hash-chain verification footer with on-device command
+ *   - Integrity note: SHA-256 of the canonical row set + per-record plugin hashes
  *   - Per-page header (farm + date + page #) and signature footer
  */
 
@@ -23,17 +26,20 @@ import { type RequestHandler } from '@sveltejs/kit';
 import PdfPrinter from 'pdfmake';
 import { eq } from 'drizzle-orm';
 
+import { and, desc, gte, lte } from 'drizzle-orm';
+
 import { evaluateLock, listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
+import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { getRegistry } from '$lib/server/registry';
 import { RULES_VERSION } from '$lib/safety/version';
 import { requireUser } from '$lib/server/auth';
 import { db } from '$lib/db/client';
-import { owners, users } from '$lib/db/schema';
-import { unscopedQueryNote } from '$lib/db/tenant';
+import { equipment, equipmentLog, fertilityApplications, owners, users } from '$lib/db/schema';
+import { unscopedQueryNote, withTenant } from '$lib/db/tenant';
 import { APP_VERSION } from '$lib/version';
 
 const fonts = {
@@ -60,8 +66,91 @@ function performerNameOf(userId: string): string {
   return row?.email ?? userId;
 }
 
+interface DeconRow {
+  id: string;
+  occurredAt: number;
+  equipmentLabel: string;
+  performedById?: string;
+  notes?: string;
+}
+
+// #326 — decon events (equipment_log kind='decon'), tenant-scoped so the
+// audit pack shows tank clean-outs between pesticide classes.
+function listDeconForExport(filters: { fromMs?: number; toMs?: number }): DeconRow[] {
+  const conds = [eq(equipmentLog.kind, 'decon')];
+  if (filters.fromMs !== undefined)
+    conds.push(gte(equipmentLog.occurredAt, new Date(filters.fromMs)));
+  if (filters.toMs !== undefined) conds.push(lte(equipmentLog.occurredAt, new Date(filters.toMs)));
+  return db
+    .select({
+      id: equipmentLog.id,
+      occurredAt: equipmentLog.occurredAt,
+      performedById: equipmentLog.performedById,
+      notes: equipmentLog.notes,
+      equipmentLabel: equipment.label,
+      equipmentId: equipmentLog.equipmentId
+    })
+    .from(equipmentLog)
+    .leftJoin(equipment, eq(equipment.id, equipmentLog.equipmentId))
+    .where(withTenant(equipmentLog, and(...conds)))
+    .orderBy(desc(equipmentLog.occurredAt))
+    .all()
+    .map((r) => ({
+      id: r.id,
+      occurredAt: r.occurredAt.getTime(),
+      equipmentLabel: r.equipmentLabel ?? r.equipmentId,
+      performedById: r.performedById ?? undefined,
+      notes: r.notes ?? undefined
+    }));
+}
+
+interface FertilityRow {
+  id: string;
+  occurredAt: number;
+  blockId: string;
+  source: string;
+  ratePerAcre: number;
+  rateUnit: string;
+  nLbPerAcre: number;
+  pLbPerAcre: number;
+  kLbPerAcre: number;
+  performedById?: string;
+}
+
+// #326 — fertility applications across every block for the active tenant.
+function listFertilityForExport(filters: {
+  blockId?: string;
+  fromMs?: number;
+  toMs?: number;
+}): FertilityRow[] {
+  const conds = [];
+  if (filters.blockId) conds.push(eq(fertilityApplications.blockId, filters.blockId));
+  if (filters.fromMs !== undefined)
+    conds.push(gte(fertilityApplications.occurredAt, new Date(filters.fromMs)));
+  if (filters.toMs !== undefined)
+    conds.push(lte(fertilityApplications.occurredAt, new Date(filters.toMs)));
+  return db
+    .select()
+    .from(fertilityApplications)
+    .where(withTenant(fertilityApplications, conds.length ? and(...conds) : undefined))
+    .orderBy(desc(fertilityApplications.occurredAt))
+    .all()
+    .map((r) => ({
+      id: r.id,
+      occurredAt: r.occurredAt.getTime(),
+      blockId: r.blockId,
+      source: r.source,
+      ratePerAcre: r.ratePerAcreHundredths / 100,
+      rateUnit: r.rateUnit,
+      nLbPerAcre: r.nDeliveredHundredths / 100,
+      pLbPerAcre: r.pDeliveredHundredths / 100,
+      kLbPerAcre: r.kDeliveredHundredths / 100,
+      performedById: r.performedById ?? undefined
+    }));
+}
+
 interface UnifiedRow {
-  kind: 'spray' | 'insecticide' | 'fungicide';
+  kind: 'spray' | 'insecticide' | 'fungicide' | 'harvest' | 'decon' | 'fertility';
   id: string;
   occurredAt: number;
   blockLabel: string;
@@ -110,6 +199,20 @@ export const GET: RequestHandler = async (event) => {
     fromMs: Number.isFinite(fromMs) ? fromMs : undefined,
     toMs: Number.isFinite(toMs) ? toMs : undefined,
     limit: 10_000
+  });
+  const harvests = listHarvestEvents({
+    blockId,
+    fromMs: Number.isFinite(fromMs) ? fromMs : undefined,
+    toMs: Number.isFinite(toMs) ? toMs : undefined
+  });
+  const decons = listDeconForExport({
+    fromMs: Number.isFinite(fromMs) ? fromMs : undefined,
+    toMs: Number.isFinite(toMs) ? toMs : undefined
+  });
+  const fertilities = listFertilityForExport({
+    blockId,
+    fromMs: Number.isFinite(fromMs) ? fromMs : undefined,
+    toMs: Number.isFinite(toMs) ? toMs : undefined
   });
 
   const unified: UnifiedRow[] = [];
@@ -188,6 +291,74 @@ export const GET: RequestHandler = async (event) => {
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
       locked: Boolean(ev.lockedAt),
+      customRateOverride: false
+    });
+  }
+  // #326 — harvest rows carry crop/commodity, quantity, and stored moisture
+  // (UC-16) so the inspector can cross-check pre-harvest intervals against
+  // the pesticide applications above.
+  for (const ev of harvests) {
+    const plugin = registry.get(ev.cropPluginId)?.plugin;
+    const cropName = plugin && 'displayName' in plugin ? plugin.displayName : ev.cropPluginId;
+    const parts = [
+      cropName,
+      ev.quantity ? `qty ${ev.quantity}` : '',
+      ev.lotNumber ? `lot ${ev.lotNumber}` : '',
+      ev.moisturePct !== undefined ? `${ev.moisturePct}% moisture` : ''
+    ].filter(Boolean);
+    unified.push({
+      kind: 'harvest',
+      id: ev.id,
+      occurredAt: ev.occurredAt,
+      blockLabel: blockLabelById.get(ev.blockId) ?? ev.blockId,
+      sprayerLabel: '—',
+      performer: '—',
+      productLines: parts.join(' · '),
+      conditionLine: '—',
+      rulesVersion: RULES_VERSION,
+      pluginHashes: {},
+      locked: Boolean(ev.lockedAt),
+      customRateOverride: false
+    });
+  }
+  // #326 — decon (tank clean-out) events between pesticide classes.
+  for (const ev of decons) {
+    unified.push({
+      kind: 'decon',
+      id: ev.id,
+      occurredAt: ev.occurredAt,
+      blockLabel: '—',
+      sprayerLabel: ev.equipmentLabel,
+      performer: ev.performedById ? performerNameOf(ev.performedById) : '—',
+      productLines: ev.notes ? `decon · ${ev.notes}` : 'decon',
+      conditionLine: '—',
+      rulesVersion: RULES_VERSION,
+      pluginHashes: {},
+      locked: false,
+      customRateOverride: false
+    });
+  }
+  // #326 — fertility applications (N/P/K delivered per acre).
+  for (const ev of fertilities) {
+    const npk = [
+      ev.nLbPerAcre ? `N ${ev.nLbPerAcre.toFixed(0)}` : '',
+      ev.pLbPerAcre ? `P ${ev.pLbPerAcre.toFixed(0)}` : '',
+      ev.kLbPerAcre ? `K ${ev.kLbPerAcre.toFixed(0)}` : ''
+    ]
+      .filter(Boolean)
+      .join(' / ');
+    unified.push({
+      kind: 'fertility',
+      id: ev.id,
+      occurredAt: ev.occurredAt,
+      blockLabel: blockLabelById.get(ev.blockId) ?? ev.blockId,
+      sprayerLabel: '—',
+      performer: ev.performedById ? performerNameOf(ev.performedById) : '—',
+      productLines: `${ev.source} · ${ev.ratePerAcre} ${ev.rateUnit}${npk ? ` · ${npk}` : ''}`,
+      conditionLine: '—',
+      rulesVersion: RULES_VERSION,
+      pluginHashes: {},
+      locked: false,
       customRateOverride: false
     });
   }
@@ -285,7 +456,7 @@ export const GET: RequestHandler = async (event) => {
     content: [
       { text: 'VDACS audit pack', style: 'h1' },
       {
-        text: `${unified.length} pesticide application(s) · rules ${RULES_VERSION} · app v${APP_VERSION}`,
+        text: `${unified.length} record(s) — spray/insecticide/fungicide + harvest/decon/fertility · rules ${RULES_VERSION} · app v${APP_VERSION}`,
         style: 'sub'
       },
       {
@@ -294,7 +465,7 @@ export const GET: RequestHandler = async (event) => {
         margin: [0, 0, 0, 12]
       },
       {
-        text: `Hash-chain verification: run \`cropcard verify --hash=${integrityHash.slice(0, 12)}…\` to confirm the record set has not been tampered with since export.`,
+        text: `Integrity verification: the hash above is a SHA-256 of the canonical row set (kind, id, occurrence time, block, rules version, and each record's plugin hashes). Re-exporting the same records reproduces the same hash; any change to a record after the FR-09 lock alters it. Each record also carries per-plugin content hashes so an individual application can be checked against the plugin version that produced it.`,
         style: 'sub',
         margin: [0, 0, 0, 12]
       },

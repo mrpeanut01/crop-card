@@ -82,7 +82,7 @@
       Make corrections before the 48-hour FR-09 window closes — after that this row will be locked for
       audit integrity.
     </span>
-    {#if editHref(data.kind)}
+    {#if data.canEdit && editHref(data.kind)}
       <a class="edit-cta" href={editHref(data.kind)!}>
         <Pencil size={13} /> Edit in {data.kind}
       </a>

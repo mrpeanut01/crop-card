@@ -76,17 +76,27 @@
     busy = true;
     error = null;
     banner = null;
+    const body = {
+      blockId,
+      cropPluginId,
+      year,
+      forecast: forecast ?? undefined,
+      overrideMowGate: opts.override
+    };
     try {
+      // #316 (NFR-02) — offline path. Queue the cutting-start locally; the
+      // sync queue replays it against /api/hay/cuttings (server re-runs the
+      // mow gate) on reconnect. No reload — the server has nothing new yet.
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        const { enqueueRecord } = await import('$lib/client/syncQueue');
+        await enqueueRecord('hay-cutting', body);
+        banner = '☁ Offline — cutting queued. Will sync when the connection returns.';
+        return;
+      }
       const res = await fetch('/api/hay/cuttings', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          blockId,
-          cropPluginId,
-          year,
-          forecast: forecast ?? undefined,
-          overrideMowGate: opts.override
-        })
+        body: JSON.stringify(body)
       });
       const out = await res.json();
       if (!res.ok) {
@@ -99,7 +109,23 @@
       banner = `Cutting #${out.cutting.cuttingNumber} recorded.`;
       reload();
     } catch (e) {
-      error = e instanceof Error ? e.message : String(e);
+      // #316 — transient network failure while "online": queue instead of
+      // losing the cutting.
+      const msg = e instanceof Error ? e.message : String(e);
+      const isNetworkErr = e instanceof TypeError && /(fetch|network|failed)/i.test(msg);
+      if (isNetworkErr) {
+        try {
+          const { enqueueRecord } = await import('$lib/client/syncQueue');
+          await enqueueRecord('hay-cutting', body);
+          banner = '☁ Offline — cutting queued. Will sync when the connection returns.';
+        } catch (queueErr) {
+          error = `offline queue failed: ${
+            queueErr instanceof Error ? queueErr.message : queueErr
+          }`;
+        }
+      } else {
+        error = msg;
+      }
     } finally {
       busy = false;
     }
@@ -211,8 +237,8 @@
   <button type="submit" class="primary">Load</button>
 </form>
 
-{#if banner}<p class="success">{banner}</p>{/if}
-{#if error}<p class="error">{error}</p>{/if}
+{#if banner}<p class="success" role="status" aria-live="polite">{banner}</p>{/if}
+{#if error}<p class="error" role="alert" aria-live="polite">{error}</p>{/if}
 
 <section class="card">
   <h2>1 — Mow decision</h2>
@@ -254,7 +280,7 @@
       </table>
     {/if}
     {#if mowViolations.length > 0}
-      <div class="banner danger">
+      <div class="banner danger" role="alert" aria-live="assertive">
         <strong>STOP</strong> — {mowViolations[0].message}
       </div>
     {/if}
@@ -264,7 +290,7 @@
         onclick={() => startCutting()}
         disabled={busy || !blockId || !cropPluginId}
       >
-        Record cutting now (mow done)
+        {busy ? 'Saving…' : 'Record cutting now (mow done)'}
       </button>
       {#if mowViolations.length > 0}
         <button
@@ -272,7 +298,7 @@
           onclick={() => startCutting({ override: true })}
           disabled={busy}
         >
-          Override + record anyway
+          {busy ? 'Saving…' : 'Override + record anyway'}
         </button>
       {/if}
     </div>
@@ -331,7 +357,7 @@
         {#if nextStep(c)}
           <div class="row">
             <button class="primary" onclick={() => advance(c.id, nextStep(c)!)} disabled={busy}>
-              Advance — {nextStep(c)}
+              {busy ? 'Saving…' : `Advance — ${nextStep(c)}`}
             </button>
             {#if nextStep(c) === 'bale'}
               <button
@@ -339,7 +365,7 @@
                 onclick={() => advance(c.id, 'bale', { override: true })}
                 disabled={busy}
               >
-                Override bale gate
+                {busy ? 'Saving…' : 'Override bale gate'}
               </button>
             {/if}
             <button class="secondary" onclick={() => abortCutting(c.id)} disabled={busy}>
@@ -520,8 +546,8 @@
     border-radius: 4px;
   }
   .error {
-    background: #fce4e4;
-    color: #b00020;
+    background: #fdecea;
+    color: #a23a3a;
     padding: 0.6rem;
     border-radius: 4px;
   }

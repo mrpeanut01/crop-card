@@ -509,23 +509,24 @@
 
 <section class="footer-cards">
   <article class="reassurance">
-    <div class="reassurance-kicker">Hash chain</div>
+    <div class="reassurance-kicker">Integrity hash</div>
     <p>
-      Every record signs the previous record's hash. A tampered row breaks the chain at the next
-      link. The VDACS export bundle includes the full chain + a verification command.
+      Each record carries per-plugin content hashes, and every export prints a SHA-256 of its
+      canonical row set. Re-exporting the same records reproduces the same hash; a change after the
+      FR-09 lock alters it.
     </p>
     <a class="reassurance-link" href="/api/records/export.vdacs.pdf{exportQuery}" download>
-      Verify chain on-device <ArrowRight size={12} />
+      Download VDACS audit pack <ArrowRight size={12} />
     </a>
   </article>
   <article class="reassurance">
     <div class="reassurance-kicker">Inspector access</div>
     <p>
-      Generate a time-boxed link to share with VDACS or a CSA member. The link opens this view in
-      read-only mode with the right filters preset. No login required.
+      Invite a VDACS inspector or CSA member as a read-only inspector. They sign in with their own
+      account and see this view without edit access.
     </p>
-    <a class="reassurance-link ghost" href="/settings/api-tokens">
-      <Plus size={12} /> Create inspector link
+    <a class="reassurance-link ghost" href="/settings/helpers">
+      <Plus size={12} /> Invite an inspector
     </a>
   </article>
 </section>

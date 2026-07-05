@@ -77,6 +77,7 @@ export const POST: RequestHandler = async (event) => {
     return json(
       {
         error: 'no season setup for year — complete the season setup step first',
+        needsSeasonSetup: true,
         year
       },
       { status: 409 }

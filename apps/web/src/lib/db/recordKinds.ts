@@ -17,6 +17,7 @@ export const RECORD_KINDS = [
   'fungicide',
   'scout',
   'harvest',
+  'hay',
   'fertility',
   'planting',
   'decon'
@@ -31,6 +32,7 @@ export const KIND_TONE: Record<RecordKind, 'rust' | 'wheat' | 'sky' | 'forest' |
   fungicide: 'sky',
   scout: 'neutral',
   harvest: 'wheat',
+  hay: 'forest',
   fertility: 'sky',
   planting: 'forest',
   decon: 'rust'
@@ -43,6 +45,7 @@ export const KIND_LABEL: Record<RecordKind, string> = {
   fungicide: 'Fungicide',
   scout: 'Scout',
   harvest: 'Harvest',
+  hay: 'Hay',
   fertility: 'Fertility',
   planting: 'Planting',
   decon: 'Decon'

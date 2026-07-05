@@ -13,6 +13,10 @@
   // keep recordingFor + lastError at this level so the parent decides
   // which planting's renderer is active and surfaces error state.
   let lastError = $state<string | null>(null);
+  // #316 — non-error success/offline notice (e.g. "queued offline").
+  let lastNotice = $state<string | null>(null);
+  // #324 — PHI warning surfaced after a successful commit (non-blocking).
+  let phiWarning = $state<string | null>(null);
 
   onMount(async () => {
     if (data.focusPlantingId) {
@@ -25,6 +29,7 @@
   function startRecord(plantingId: string) {
     recordingFor = plantingId;
     lastError = null;
+    phiWarning = null;
   }
 
   function cancelRecord() {
@@ -37,30 +42,70 @@
    *  renderer can render it. */
   async function commitFromRenderer(
     planting: PlantingHarvestStatus,
-    input: { quantity?: string; lotNumber?: string }
+    input: { quantity?: string; lotNumber?: string; moisturePct?: number }
   ): Promise<string | null> {
     lastError = null;
+    lastNotice = null;
+    const body = {
+      blockId: planting.blockId,
+      cropPluginId: planting.cropPluginId,
+      quantity: input.quantity,
+      lotNumber: input.lotNumber,
+      // #322 — structured moisture reaches the kernel gate.
+      moisturePct: input.moisturePct
+    };
     try {
+      // #316 (NFR-02) — offline path. Queue the harvest locally; the sync
+      // queue replays it against /api/harvest/record (server re-runs the
+      // moisture kernel) on reconnect. No invalidateAll — the server has
+      // nothing new yet.
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        const { enqueueRecord } = await import('$lib/client/syncQueue');
+        const queueId = await enqueueRecord('harvest', body);
+        recordingFor = null;
+        lastNotice = '☁ Offline — harvest queued. Will sync when the connection returns.';
+        return queueId;
+      }
       const res = await fetch('/api/harvest/record', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          blockId: planting.blockId,
-          cropPluginId: planting.cropPluginId,
-          quantity: input.quantity,
-          lotNumber: input.lotNumber
-        })
+        body: JSON.stringify(body)
       });
       const out = await res.json();
       if (!res.ok) {
-        lastError = out.error ?? `HTTP ${res.status}`;
+        // #341 — surface the API's human `message` (with threshold) instead
+        // of the raw error code, so the operator reads a plain sentence.
+        const thresh =
+          typeof out.thresholdPct === 'number' ? ` (threshold ${out.thresholdPct}%)` : '';
+        lastError = out.message ? `${out.message}${thresh}` : (out.error ?? `HTTP ${res.status}`);
         return null;
       }
+      // #324 — non-blocking PHI warning: the record committed, but surface
+      // the label-interval caution so the operator can act on it.
+      phiWarning = out?.phiWarning?.message ?? null;
       recordingFor = null;
       await invalidateAll();
       return (out?.event?.id as string | undefined) ?? null;
     } catch (e) {
-      lastError = e instanceof Error ? e.message : String(e);
+      // #316 — transient network failure while "online": queue instead of
+      // losing the harvest.
+      const msg = e instanceof Error ? e.message : String(e);
+      const isNetworkErr = e instanceof TypeError && /(fetch|network|failed)/i.test(msg);
+      if (isNetworkErr) {
+        try {
+          const { enqueueRecord } = await import('$lib/client/syncQueue');
+          const queueId = await enqueueRecord('harvest', body);
+          recordingFor = null;
+          lastNotice = '☁ Offline — harvest queued. Will sync when the connection returns.';
+          return queueId;
+        } catch (queueErr) {
+          lastError = `offline queue failed: ${
+            queueErr instanceof Error ? queueErr.message : queueErr
+          }`;
+          return null;
+        }
+      }
+      lastError = msg;
       return null;
     }
   }
@@ -147,6 +192,21 @@
     </button>
   </div>
 </header>
+
+{#if lastNotice}
+  <Banner tone="wheat">{lastNotice}</Banner>
+{/if}
+{#if phiWarning}
+  <div class="phi-banner">
+    <Banner tone="wheat">
+      <strong>⚠ Pre-harvest interval:</strong>
+      {phiWarning}
+      <button class="phi-dismiss" type="button" onclick={() => (phiWarning = null)}
+        >Acknowledge</button
+      >
+    </Banner>
+  </div>
+{/if}
 
 {#if data.plantings.length === 0}
   <section class="card empty">
@@ -665,6 +725,21 @@
   .window-banner,
   .forage-banner {
     margin-top: 0.6rem;
+  }
+  .phi-banner {
+    margin-bottom: 1rem;
+  }
+  .phi-dismiss {
+    margin-left: 0.5rem;
+    background: transparent;
+    border: 1px solid currentColor;
+    color: inherit;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 12px;
+    min-height: unset;
+    cursor: pointer;
   }
   .primary {
     background: var(--color-forest);

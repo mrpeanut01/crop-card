@@ -26,6 +26,8 @@ import { db } from '$lib/db/client';
 import { equipment, equipmentLog, fertilityApplications, users } from '$lib/db/schema';
 import { withTenant } from '$lib/db/tenant';
 import { RECORD_KINDS, LOCK_WINDOW_MS, type RecordKind } from '$lib/db/recordsUnified';
+import { requireUser } from '$lib/server/auth';
+import { canMutate } from '$lib/server/session';
 
 function isLocked(occurredAt: number, lockedAt: number | undefined, now: number): boolean {
   if (lockedAt) return true;
@@ -41,7 +43,9 @@ function performerEmail(userId: string | null | undefined): string | null {
   return row?.email ?? null;
 }
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async (event) => {
+  const { params } = event;
+  const user = requireUser(event);
   const kind = params.kind as RecordKind;
   if (!(RECORD_KINDS as readonly string[]).includes(kind)) {
     throw error(404, `unknown record kind: ${params.kind}`);
@@ -197,6 +201,7 @@ export const load: PageServerLoad = async ({ params }) => {
     locked,
     lockedAt,
     performerLabel,
-    detail
+    detail,
+    canEdit: canMutate(user.role)
   };
 };

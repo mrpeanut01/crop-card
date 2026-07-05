@@ -1,26 +1,13 @@
 <script lang="ts">
-  import { Lock, FileText, Plus } from 'lucide-svelte';
+  import { FileText, Plus } from 'lucide-svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
-  import SettingsField from '$lib/components/settings/SettingsField.svelte';
 
   let { data } = $props();
 
-  const RETENTION_TILES = [
-    { k: 'Spray events', v: '7 yr', note: 'FR-09 lock + hash chain' },
-    { k: 'Harvest events', v: '7 yr', note: 'Full provenance' },
-    { k: 'Scout events', v: '3 yr', note: 'Trend analysis' },
-    { k: 'Application photos', v: '1 yr', note: 'Optional · disable per-event' }
-  ];
-
-  // Hash-chain integrity stats — we don't have a real hash chain yet
-  // (Phase 26 work), so surface the record count as the "chain length"
-  // placeholder + use the oldest spray event for "oldest record".
-  const chainStats = $derived({
-    length: data.counts.sprays,
-    lastVerified: 'today',
-    oldest: '—'
-  });
+  const totalRecords = $derived(
+    data.counts.sprays + data.counts.insecticides + data.counts.fungicides + data.counts.harvests
+  );
 </script>
 
 <svelte:head><title>Records & retention · CropCard</title></svelte:head>
@@ -28,58 +15,61 @@
 <SettingsShell title="Records & retention" kicker="Compliance & audit">
   <SettingsSection
     title="Retention policy"
-    sub="VDACS expects 2 years. CropCard retains the spray + harvest hash chain for 7 years."
+    sub="VDACS requires a 2-year minimum for pesticide records. CropCard never auto-deletes — near-expiry rows surface an alert and only the owner can remove them (NFR-05)."
   >
     <div class="tile-grid">
-      {#each RETENTION_TILES as r (r.k)}
-        <div class="tile">
-          <div class="tile-v serif">{r.v}</div>
-          <div class="tile-k">{r.k}</div>
-          <div class="tile-note">{r.note}</div>
+      <div class="tile">
+        <div class="tile-v serif">{data.retention.sprayYears} yr</div>
+        <div class="tile-k">Minimum retention</div>
+        <div class="tile-note">Spray, insecticide, fungicide (FR-09 / NFR-05)</div>
+      </div>
+      <div class="tile">
+        <div class="tile-v serif">{data.retention.sprayInRetention}</div>
+        <div class="tile-k">Spray records in retention</div>
+        <div class="tile-note">Within the last {data.retention.sprayYears} years</div>
+      </div>
+      <div class="tile">
+        <div class="tile-v serif">{data.retention.approachingRetention}</div>
+        <div class="tile-k">Approaching expiry</div>
+        <div class="tile-note">Aged into the 30-day pre-expiry window</div>
+      </div>
+      <div class="tile">
+        <div class="tile-v serif">{totalRecords}</div>
+        <div class="tile-k">Records retained</div>
+        <div class="tile-note">
+          {data.counts.sprays} spray · {data.counts.insecticides} insecticide · {data.counts
+            .fungicides} fungicide · {data.counts.harvests} harvest
         </div>
-      {/each}
+      </div>
     </div>
   </SettingsSection>
 
   <SettingsSection
     title="Lock window"
-    sub="FR-09 · spray records become immutable after this many hours. Server-enforced regardless of UI."
+    sub="FR-09 · spray records become immutable after this window closes. Server-enforced regardless of UI; not user-configurable."
   >
     <div class="lock-grid">
-      <SettingsField label="Lock after" hint="hours">
-        <input class="s-input mono" type="number" value={data.retention.sprayYears * 0 + 48} />
-      </SettingsField>
+      <div class="tile">
+        <div class="tile-v serif">{data.lockWindowHours} h</div>
+        <div class="tile-k">Immutable after</div>
+        <div class="tile-note">Measured from the time of application</div>
+      </div>
       <div class="warn-card">
-        <strong>Important:</strong> setting below 24h surfaces a curator warning. Setting above 96h triggers
-        a VDACS escalation review (events should be locked promptly).
+        <strong>How it works:</strong> a record is editable for {data.lockWindowHours} hours after it's
+        entered. After that the server refuses any edit or delete, so the audit trail stays tamper-evident.
       </div>
     </div>
   </SettingsSection>
 
   <SettingsSection
-    title="Hash chain integrity"
-    sub="Every record signs the previous record's hash. A tampered row breaks the chain."
+    title="Integrity & export"
+    sub="Each record carries per-plugin content hashes; every export prints a SHA-256 of its canonical row set so an inspector can confirm the records haven't changed since export."
   >
-    <div class="chain-grid">
-      <div>
-        <div class="kicker-row">Chain length</div>
-        <div class="chain-val mono">{chainStats.length} records</div>
-      </div>
-      <div>
-        <div class="kicker-row">Last verified</div>
-        <div class="chain-val mono">{chainStats.lastVerified}</div>
-      </div>
-      <div>
-        <div class="kicker-row">Oldest record</div>
-        <div class="chain-val mono">{chainStats.oldest}</div>
-      </div>
-    </div>
     <div class="action-row">
-      <button type="button" class="ghost" disabled><Lock size={12} /> Re-verify chain</button>
-      <a class="ghost" href="/api/spray/records/export.usda.csv"
-        ><FileText size={12} /> Download VDACS audit pack</a
-      >
-      <a class="ghost" href="/settings/helpers"><Plus size={12} /> Create inspector link</a>
+      <a class="ghost" href="/api/records/export.vdacs.pdf">
+        <FileText size={12} /> Download VDACS audit pack
+      </a>
+      <a class="ghost" href="/settings/helpers"><Plus size={12} /> Invite an inspector</a>
     </div>
   </SettingsSection>
 </SettingsShell>
@@ -119,7 +109,7 @@
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 14px;
-    align-items: center;
+    align-items: stretch;
   }
   .warn-card {
     padding: 10px 12px;
@@ -131,47 +121,10 @@
     line-height: 1.5;
   }
 
-  .chain-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .kicker-row {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--color-ink-muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .chain-val {
-    font-size: 13px;
-    color: var(--color-ink);
-    margin-top: 3px;
-  }
-
   .action-row {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-  }
-  .s-input {
-    border: 1px solid var(--color-divider);
-    background: var(--color-paper);
-    color: var(--color-ink);
-    padding: 8px 10px;
-    border-radius: var(--radius-input, 6px);
-    font-size: 13.5px;
-    font-family: inherit;
-    outline: none;
-    width: 100%;
-  }
-  .s-input.mono {
-    font-family: var(--font-mono, ui-monospace, monospace);
-  }
-  .s-input:focus {
-    border-color: var(--color-forest-deep);
-    box-shadow: 0 0 0 2px rgba(44, 82, 55, 0.15);
   }
   .ghost {
     background: var(--color-paper);
@@ -187,22 +140,14 @@
     align-items: center;
     gap: 5px;
   }
-  .ghost:hover:not(:disabled) {
+  .ghost:hover {
     border-color: var(--color-forest-deep);
-  }
-  .ghost:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .mono {
-    font-family: var(--font-mono, ui-monospace, monospace);
   }
   @media (max-width: 760px) {
     .tile-grid {
       grid-template-columns: 1fr 1fr;
     }
-    .lock-grid,
-    .chain-grid {
+    .lock-grid {
       grid-template-columns: 1fr;
     }
   }

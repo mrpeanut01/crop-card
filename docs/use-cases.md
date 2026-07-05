@@ -102,7 +102,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   5. Inline form: quantity (free text), lot number (free text)
   6. Submit
 - **Success:** `/api/harvest/record` persists; planting marked `harvested`.
-- **Audit notes:** Both inputs use placeholder text ([harvest:133, harvest:137](../apps/web/src/routes/harvest/+page.svelte#L133)) — see F-F. No moisture-at-harvest field on the harvest record — adequate for vegetables. Small-grain harvest (UC-16, FR-21) still requires the moisture extension; the readiness panel surfaces moisture *guidance* from the plugin but does not persist it on the event row.
+- **Audit notes:** Both inputs use placeholder text ([harvest:133, harvest:137](../apps/web/src/routes/harvest/+page.svelte#L133)) — see F-F. No moisture-at-harvest field on the harvest record — adequate for vegetables. Small-grain harvest (UC-16, FR-21) still requires the moisture extension; the readiness panel surfaces moisture _guidance_ from the plugin but does not persist it on the event row.
 
 ## UC-07 — Companion-system advisor
 
@@ -213,7 +213,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
 - **Success:** Each step writes its timestamp on the `hay_cuttings` row; the bale moisture gate cannot be bypassed regardless of UI; `status='complete'` once stored.
 - **Audit notes:** `rules_version` is stamped on the row for replay parity. Moisture stored as hundredths (17.5% → 1750) to match stock-management precision. Storage reminder leans on the same Tasks plumbing (UC-11) — no separate scheduler.
 
-## UC-15 — Small grain planting + Zadoks tracking *(stage projection implemented; observation capture deferred)*
+## UC-15 — Small grain planting + Zadoks tracking _(stage projection implemented; observation capture deferred)_
 
 - **Persona:** P1, P3
 - **Status:** **Partially implemented.** Stage projection landed in v1.3 — `growthStageTable` schema generalizes `zadoksStages` and the calendar engine emits `stage-window` events for every planted variety. Observed-stage capture (operator records "saw Z65 anthesis on May 14") is still gap, deferred to the inspection-card slice with a future `crop_observations` table.
@@ -226,7 +226,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
 - **Implementation locus:** [apps/web/src/lib/plugins/growthStageTemplates.ts](../apps/web/src/lib/plugins/growthStageTemplates.ts) carries the cereal-grain Zadoks template; [apps/web/src/lib/calendar/stageProjection.ts](../apps/web/src/lib/calendar/stageProjection.ts) does the math; [apps/web/src/lib/calendar/engine.ts](../apps/web/src/lib/calendar/engine.ts) emits `stage-window` events.
 - **Success criteria:** Plan→Schedule shows current stage and next decision point for every active small-grain planting (✓). Stage-gated task auto-firing remains gap.
 
-## UC-16 — Small grain harvest readiness *(spec-defined, NOT implemented)*
+## UC-16 — Small grain harvest readiness _(spec-defined, NOT implemented)_
 
 - **Persona:** P1, P3
 - **Status:** **Gap.** Extends existing UC-06; needs moisture gate.
@@ -296,7 +296,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
 - **Success criteria:** Owner adds a helper without dev intervention; helper signs in via the magic link and lands on `/today` with helper role.
 - **Cross-reference:** UC-17 (sign-in / role assumption).
 
-## UC-22 — Inspector record review *(proposed; documents the export-receiver journey)*
+## UC-22 — Inspector record review _(proposed; documents the export-receiver journey)_
 
 - **Persona:** P4 (Dale)
 - **Status:** **Gap in audit coverage** — the export feature exists; nobody has audited it from the receiver's POV.
@@ -310,7 +310,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
 - **Implementation locus (proposed):** Audit pass scoped under [B-04 in feature-backlog.md](./feature-backlog.md) (Sprint D' polish — quick wins T1/T2/T5/T9). PDF generator location: search [records/](../apps/web/src/routes/records/) for the export endpoint.
 - **Success criteria:** Dale reads the export once, accepts the answer, no callback.
 
-## UC-23 — Restore from device loss *(proposed)*
+## UC-23 — Restore from device loss _(proposed)_
 
 - **Persona:** P1
 - **Status:** **Gap.** Litestream replicates the server DB, but Dexie's offline queue is on the client device. If Marco's phone breaks before sync, those records are lost.
@@ -322,7 +322,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   3. Long-term: server-side draft-spray endpoint so offline records are durable from creation
 - **Success criteria:** User understands which records are durable and which aren't, before they trust the queue.
 
-## UC-24 — Search records *(proposed)*
+## UC-24 — Search records _(proposed)_
 
 - **Persona:** P1
 - **Status:** **Gap.** `/records` filters by sprayer or block only.
@@ -347,7 +347,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   - `axesLocked` blocks: `inferBlockAxes` will not overwrite a manually-positioned block's east-west / north-south indices when the block is re-assigned.
 - **Audit notes:** Comprehensive deletes (planting, sprayer, plugin, etc.) are covered in UC-35 (Phase 12e). Field rename does not regenerate any swim-lane indices — those are centroid-derived from `geometryGeojson` and only move when geometry changes.
 
-## UC-26 — Sidebar navigation + header identity strip + app footer *(proposed)*
+## UC-26 — Sidebar navigation + header identity strip + app footer _(proposed)_
 
 - **Persona:** P1, P2, P5
 - **Status:** **Design change request.** Current nav is a fixed bottom-tab bar on mobile (7 primary items + "More" overflow) and a horizontal in-header row on desktop. All items are flat; there is no hierarchy.
@@ -361,13 +361,13 @@ Replace the horizontal nav with a persistent left sidebar on desktop and a hambu
 
 Proposed section grouping (hierarchical):
 
-| Section | Items |
-|---|---|
-| **Plan** | Overview, Calendar, Map |
-| **Today** | *(leaf — no sub-items)* |
-| **Operations** | Spray, Decon, Scout, Harvest |
-| **Field & Crop** | Crops, Equipment, Hay, Stock |
-| **Admin** | Records, Calibrate, Insecticides, Fertility, Plugins, Settings |
+| Section          | Items                                                          |
+| ---------------- | -------------------------------------------------------------- |
+| **Plan**         | Overview, Calendar, Map                                        |
+| **Today**        | _(leaf — no sub-items)_                                        |
+| **Operations**   | Spray, Decon, Scout, Harvest                                   |
+| **Field & Crop** | Crops, Equipment, Hay, Stock                                   |
+| **Admin**        | Records, Calibrate, Insecticides, Fertility, Plugins, Settings |
 
 - Each section header is a disclosure button (≥48 dp) that toggles its children.
 - The active route's ancestor section auto-expands on page load.
@@ -419,7 +419,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - Footer shows app name and version on every page.
 - Existing a11y invariants (skip-link, `aria-live` banners, focus-visible) pass unchanged.
 
-## UC-27 — Bulk / multi-field entry in Plan Overview *(proposed)*
+## UC-27 — Bulk / multi-field entry in Plan Overview _(proposed)_
 
 - **Persona:** P1
 - **Status:** **Gap.** The "Add a field" form ([plan/+page.svelte:496](../apps/web/src/routes/plan/+page.svelte#L496)) accepts one field at a time; after each save the form resets and the user must fill it again. Farms with multiple named fields (e.g. Home Field, River Bottom, Leased Parcel) must repeat the cycle.
@@ -434,14 +434,14 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - **Implementation locus (proposed):** Extend the "Add a field" section in [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) with a reactive array of draft rows; no new API endpoint needed — `POST /api/fields` is called once per row.
 - **Success criteria:** A farmer can name and optionally acreage-stamp five fields in a single form session with one final confirm action.
 
-## UC-28 — Acreage hint text on block & field entry forms *(micro-improvement, proposed)*
+## UC-28 — Acreage hint text on block & field entry forms _(micro-improvement, proposed)_
 
 - **Persona:** P1
 - **Status:** **Gap.** The acres inputs in the "Add block" inline form ([plan/+page.svelte:643](../apps/web/src/routes/plan/+page.svelte#L643)) and the "Add a field" form ([plan/+page.svelte:505](../apps/web/src/routes/plan/+page.svelte#L505)) show only a bare number input with `placeholder="acres"`. There is no affordance pointing users to the Layout tab where acreage can be computed from a drawn polygon.
 - **Trigger:** User sees the acres box and doesn't know whether to type a number or whether the app can derive it from the map.
 - **Proposed change:**
-  - Block acres input: add a `<small>` hint below the input reading: *"Enter acreage, or draw the block on the Layout tab to compute it from the polygon."*
-  - Field acres input (the `grid2` label): same pattern — *"Optional. Block polygons on the Layout tab compute acreage automatically."*
+  - Block acres input: add a `<small>` hint below the input reading: _"Enter acreage, or draw the block on the Layout tab to compute it from the polygon."_
+  - Field acres input (the `grid2` label): same pattern — _"Optional. Block polygons on the Layout tab compute acreage automatically."_
   - Hint text: `font-size: 0.75rem; color: #666;` to keep it visually subordinate.
 - **Implementation locus (proposed):** Two-line change inside the Overview section of [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) — one `<small>` element after each acres `<input>`.
 - **Success criteria:** A user who has never opened the Layout tab can read the hint and understand that acreage can come from either manual entry or map-derived computation.
@@ -471,7 +471,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
   3. Sprayer-typed equipment carries chemistry-history + decon + GPA-calibration state in `equipment_state`; the safety kernel reads these on every spray.
   4. `/equipment/[id]` shows usage history (`equipment_log`) with kinds: `use`, `maintenance`, `calibration`, `decon`, `inspection`, `note`.
 - **Success:** Equipment row exists with current state surfaced wherever the kernel needs it (`/spray`, `/calibrate`, `/spray/decon`).
-- **Audit notes:** `pendingCalibrations` (UC-10 / FR-12) targets the unified `equipment` table; helpers stage calibration here and owners approve from `/equipment/[id]`. Equipment-anchored pre/post-task templates (`equipment.preTasks`) materialize on Crops via UC-11.
+- **Audit notes:** `pendingCalibrations` (UC-10 / FR-12) targets the unified `equipment` table; helpers stage calibration here and owners approve from the pending-calibration queue on `/calibrate`. Equipment-anchored pre/post-task templates (`equipment.preTasks`) materialize on Crops via UC-11.
 
 ## UC-31 — Stock inventory, lots, and low-stock alerts
 
@@ -487,8 +487,8 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - **Success:** On-hand totals reflect every event; expired lots and below-reorder-threshold SKUs surface via the top-bar banner.
 - **Audit notes:** Quantities stored as integer hundredths to preserve 2-decimal precision (e.g., 1.50 fl-oz → 150). Per-crop attribution on `stock_movements.crop_id` powers per-crop "what did this crop consume?" rollups (UC-29).
 - **Phase 17 (Track 2):** AI label scan now captures **active ingredients + concentration** (chem products) and **N-P-K + formulation type + product class** (fertilizers) into two new columns: `stockItems.activeIngredientsJson` and `stockItems.formulationJson`. Migration `0019_phase17_track2_stock_formulation.sql`. The Claude Sonnet 4.6 vision prompt in [scan-label/+server.ts](../apps/web/src/routes/api/scan-label/+server.ts) returns `activeIngredients[]` (name, concentrationPct, chemistryClass, iracGroup, fracCode) and a `formulation` block; the inventory-add UI surfaces an editable read-only summary with discard before save. Active-ingredient chemistry classes feed the new data-augmented safety hook (UC-03 augment).
-- **Phase 26 (Track A) — camera-first label scan + batch unboxing flow** *(spec — in flight; trackers [#248](https://github.com/mrpeanut01/crop-card/issues/248) + [#249](https://github.com/mrpeanut01/crop-card/issues/249))*. The Scan-Label method on `/stock/add` MUST open a live `<video>` camera feed by default (mirroring the Barcode tab's [BarcodeScanner.svelte](../apps/web/src/lib/components/BarcodeScanner.svelte) pattern via `navigator.mediaDevices.getUserMedia({ facingMode: 'environment' })`). File upload is a **fallback** path that triggers when the operator chooses "Upload from gallery" OR when getUserMedia permission is denied / unavailable (e.g., desktop without camera). The fallback path MUST accept multiple files (`<input multiple>`) so unboxing a seasonal chemical/seed order (typical 10-30 SKUs) is one batched action: selected files render as a queue with thumbnails + per-row status (pending / extracting / done / failed), each file is sequentially POSTed to `/api/scan-label` (concurrency=1 to keep audit rows clean + Anthropic spend predictable), and each successful extraction lands as a draft in the Confirm step where the operator reviews + edits + commits per-row or "Commit all". The aiGuard meters each call individually; over-cap rows degrade to the existing "Claude could not identify" fallback path (Invariant 7). The camera-first capture flow stays single-shot; batch capture from the camera is a future enhancement (the file-picker batch path adequately covers the unboxing case).
-- **No-key behaviour (Invariant 7 contract)** *(trackers [#250](https://github.com/mrpeanut01/crop-card/issues/250) + [#251](https://github.com/mrpeanut01/crop-card/issues/251))*. Per [AI_PROVENANCE_ADDENDUM.md](../docs/design/almanac/AI_PROVENANCE_ADDENDUM.md) §no-key, no-key is a first-class product mode, not an error state. AI-dependent tabs on `/stock/add` MUST NOT silently disappear when no Anthropic key is configured, AND MUST NOT let the operator hit a dead-end after capturing a photo. Per-tab contract:
+- **Phase 26 (Track A) — camera-first label scan + batch unboxing flow** _(spec — in flight; trackers [#248](https://github.com/mrpeanut01/crop-card/issues/248) + [#249](https://github.com/mrpeanut01/crop-card/issues/249))_. The Scan-Label method on `/stock/add` MUST open a live `<video>` camera feed by default (mirroring the Barcode tab's [BarcodeScanner.svelte](../apps/web/src/lib/components/BarcodeScanner.svelte) pattern via `navigator.mediaDevices.getUserMedia({ facingMode: 'environment' })`). File upload is a **fallback** path that triggers when the operator chooses "Upload from gallery" OR when getUserMedia permission is denied / unavailable (e.g., desktop without camera). The fallback path MUST accept multiple files (`<input multiple>`) so unboxing a seasonal chemical/seed order (typical 10-30 SKUs) is one batched action: selected files render as a queue with thumbnails + per-row status (pending / extracting / done / failed), each file is sequentially POSTed to `/api/scan-label` (concurrency=1 to keep audit rows clean + Anthropic spend predictable), and each successful extraction lands as a draft in the Confirm step where the operator reviews + edits + commits per-row or "Commit all". The aiGuard meters each call individually; over-cap rows degrade to the existing "Claude could not identify" fallback path (Invariant 7). The camera-first capture flow stays single-shot; batch capture from the camera is a future enhancement (the file-picker batch path adequately covers the unboxing case).
+- **No-key behaviour (Invariant 7 contract)** _(trackers [#250](https://github.com/mrpeanut01/crop-card/issues/250) + [#251](https://github.com/mrpeanut01/crop-card/issues/251))_. Per [AI_PROVENANCE_ADDENDUM.md](../docs/design/almanac/AI_PROVENANCE_ADDENDUM.md) §no-key, no-key is a first-class product mode, not an error state. AI-dependent tabs on `/stock/add` MUST NOT silently disappear when no Anthropic key is configured, AND MUST NOT let the operator hit a dead-end after capturing a photo. Per-tab contract:
   - **Manual** — no AI dependency, unchanged.
   - **Search** — 2-tier deterministic waterfall (local plugin library → optional web search). The 3rd "ask Claude" tier self-degrades when no key.
   - **Scan barcode** — OpenFoodFacts + stored barcode→SKU match are deterministic; the Claude-vision fallback for unknown barcodes self-degrades and surfaces a "configure AI key" hint inline.
@@ -500,41 +500,41 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
   - **Pattern**: `List → Detail → Edit/Add → List`. Identical chrome across all five types; ONLY the field set, columns, KPIs, sub-filters, and detail sections vary. List screen uses a 5-chip type swap (`?type=` URL param) + a Stock/Catalog segmented control for lot-bearing types.
   - **Per-type field-coverage matrix** (`■ required / · optional / blank n/a`):
 
-| Field                        | pesticide | fertility | seed | crop | sprayer |
-|------------------------------|-----------|-----------|------|------|---------|
-| `name` / display label       | ■ | ■ | ■ | ■ | ■ |
-| `manufacturer`               | ■ | · | · | · | · |
-| `pluginId` (catalog link)    | ■ | ■ | · | ■ | · |
-| `epaRegNo` + `signalWord`    | ■ |   |   |   |   |
-| `moaGroup` (FRAC/IRAC/HRAC)  | ■ |   |   |   |   |
-| `activeIngredients[]`        | ■ |   | · (when treated) |   |   |
-| `restrictedUse` / RUP flag   | ■ |   |   |   |   |
-| `reiHours` / `phiByCrop`     | ■ |   | · (when treated) |   |   |
-| `rateRangeByCrop`            | ■ |   |   |   |   |
-| `tankMixIncompatible[]`      | ■ |   |   |   |   |
-| `npk` + `secondaries`        |   | ■ |   |   |   |
-| `form` (Granular/Liquid/etc) |   | ■ |   |   |   |
-| `density`                    |   | · |   |   |   |
-| `omri`                       |   | · | · |   |   |
-| `recommendedRate`            |   | · |   |   |   |
-| `variety` / `latinName`      |   |   | ■ |   |   |
-| `daysToMaturity` tuple       |   |   | · |   |   |
-| `germPct` + `germTestDate` + `germTestBy` | | | ■ |   |   |
-| `treated` block              |   |   | ■ |   |   |
-| `archetype` (explicit enum)  |   |   |   | ■ |   |
-| `renderer` + `rulesVersion`  |   |   |   | ■ |   |
-| `varieties[]` + `stages[]` + `pests[]` | | | | ■ |   |
-| `source` (core/marketplace/draft) |   |   |   | ■ |   |
-| `tankGal` + `nozzleType` + `nozzleCount` + `boomWidthFt` |   |   |   |   | ■ |
-| `lastCalibratedAt` + `measuredGpa` |   |   |   |   | ■ |
-| `lastProductCycled` + `rupCleared` |   |   |   |   | · |
-| **Lot-bearing extension** (`InventoryLot`) | ■ | ■ | ■ |   |   |
+| Field                                                    | pesticide | fertility | seed             | crop | sprayer |
+| -------------------------------------------------------- | --------- | --------- | ---------------- | ---- | ------- |
+| `name` / display label                                   | ■         | ■         | ■                | ■    | ■       |
+| `manufacturer`                                           | ■         | ·         | ·                | ·    | ·       |
+| `pluginId` (catalog link)                                | ■         | ■         | ·                | ■    | ·       |
+| `epaRegNo` + `signalWord`                                | ■         |           |                  |      |         |
+| `moaGroup` (FRAC/IRAC/HRAC)                              | ■         |           |                  |      |         |
+| `activeIngredients[]`                                    | ■         |           | · (when treated) |      |         |
+| `restrictedUse` / RUP flag                               | ■         |           |                  |      |         |
+| `reiHours` / `phiByCrop`                                 | ■         |           | · (when treated) |      |         |
+| `rateRangeByCrop`                                        | ■         |           |                  |      |         |
+| `tankMixIncompatible[]`                                  | ■         |           |                  |      |         |
+| `npk` + `secondaries`                                    |           | ■         |                  |      |         |
+| `form` (Granular/Liquid/etc)                             |           | ■         |                  |      |         |
+| `density`                                                |           | ·         |                  |      |         |
+| `omri`                                                   |           | ·         | ·                |      |         |
+| `recommendedRate`                                        |           | ·         |                  |      |         |
+| `variety` / `latinName`                                  |           |           | ■                |      |         |
+| `daysToMaturity` tuple                                   |           |           | ·                |      |         |
+| `germPct` + `germTestDate` + `germTestBy`                |           |           | ■                |      |         |
+| `treated` block                                          |           |           | ■                |      |         |
+| `archetype` (explicit enum)                              |           |           |                  | ■    |         |
+| `renderer` + `rulesVersion`                              |           |           |                  | ■    |         |
+| `varieties[]` + `stages[]` + `pests[]`                   |           |           |                  | ■    |         |
+| `source` (core/marketplace/draft)                        |           |           |                  | ■    |         |
+| `tankGal` + `nozzleType` + `nozzleCount` + `boomWidthFt` |           |           |                  |      | ■       |
+| `lastCalibratedAt` + `measuredGpa`                       |           |           |                  |      | ■       |
+| `lastProductCycled` + `rupCleared`                       |           |           |                  |      | ·       |
+| **Lot-bearing extension** (`InventoryLot`)               | ■         | ■         | ■                |      |         |
 
-  - **Archetype is now first-class** on the crop plugin (10-value enum). The Phase-25 inferred-combo dispatch (`harvestStyle` + `cropFamily` + `agronomy.lifecycle` + `postHarvestCuring` + `growthStageTable.system`) becomes a backward-compat fallback only — the explicit enum is authoritative for renderer dispatch. Resolves [#254](https://github.com/mrpeanut01/crop-card/issues/254).
-  - **5-method add flow preserved** but routes through the unified type-aware canonical form. Every entry method (camera-first label scan, file upload fallback, search, barcode, manual) produces the same audit/hash-chain row. The type-chip selector at the top of the form is the entry point; switching types swaps the field stack without losing identity-section input (so accidental clicks don't lose work).
-  - **Per-field chip taxonomy** rendered by the unified `InvField` primitive: `REQUIRED` (Zod-required), `FROM PLUGIN` (auto-filled from registry, edit-via-proposal), `KERNEL-LOCKED` (read-only on this surface; curator-reviewed elsewhere), hint chip (units/format).
-  - **Save semantics**: the sticky footer commits the lot row + signs the hash chain in one transaction. Kernel-locked fields (EPA reg, MoA, REI/PHI) require a curator/proposal flow — out of scope for the inventory surface, tracked separately.
-  - **State persistence**: list views persist `?type=`, `?mode=stock|catalog`, `?q=` in the URL; sub-filter selection in component state.
+- **Archetype is now first-class** on the crop plugin (10-value enum). The Phase-25 inferred-combo dispatch (`harvestStyle` + `cropFamily` + `agronomy.lifecycle` + `postHarvestCuring` + `growthStageTable.system`) becomes a backward-compat fallback only — the explicit enum is authoritative for renderer dispatch. Resolves [#254](https://github.com/mrpeanut01/crop-card/issues/254).
+- **5-method add flow preserved** but routes through the unified type-aware canonical form. Every entry method (camera-first label scan, file upload fallback, search, barcode, manual) produces the same audit/hash-chain row. The type-chip selector at the top of the form is the entry point; switching types swaps the field stack without losing identity-section input (so accidental clicks don't lose work).
+- **Per-field chip taxonomy** rendered by the unified `InvField` primitive: `REQUIRED` (Zod-required), `FROM PLUGIN` (auto-filled from registry, edit-via-proposal), `KERNEL-LOCKED` (read-only on this surface; curator-reviewed elsewhere), hint chip (units/format).
+- **Save semantics**: the sticky footer commits the lot row + signs the hash chain in one transaction. Kernel-locked fields (EPA reg, MoA, REI/PHI) require a curator/proposal flow — out of scope for the inventory surface, tracked separately.
+- **State persistence**: list views persist `?type=`, `?mode=stock|catalog`, `?q=` in the URL; sub-filter selection in component state.
 
 ## UC-32 — Insecticide scout-and-spray
 
@@ -799,8 +799,8 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
      - **Transitioning started** (conditional) — YYYY, shown only when `philosophy='organic-transitioning'`. Lets the UI surface "year 2 of 3" badges.
   4. Submit → `saveSeasonSetup(year, formValues)` writes one `settings` row per key under `season_setup.<year>.*`. Wizard advances to allocation. Setup is now a SeasonSetup prop on every subsequent wizard step.
   5. Subsequent wizard entries this year show a 1-line **summary chip** (e.g., `Organic · IPM · Compost-first · Backpack ≤4 gal · Cover: vetch · 2026`) + an **Edit** link. Click → re-opens the form.
-- **Year rollover:** the first time the operator opens `/plan` after the calendar year flips, the wizard prompts: *"Carry forward 2026 settings to 2027?"* — neither silent copy nor silent empty. If declined, the operator gets the empty form for the new year.
-- **Mid-season edits:** allowed any time via the chip's Edit link or `/settings/season`. Banner warning: *"Changing this won't re-write tasks already committed via UC-37d. Re-run the Inputs step to align."*
+- **Year rollover:** the first time the operator opens `/plan` after the calendar year flips, the wizard prompts: _"Carry forward 2026 settings to 2027?"_ — neither silent copy nor silent empty. If declined, the operator gets the empty form for the new year.
+- **Mid-season edits:** allowed any time via the chip's Edit link or `/settings/season`. Banner warning: _"Changing this won't re-write tasks already committed via UC-37d. Re-run the Inputs step to align."_
 - **Helper visibility:** chip is rendered read-only on `/today` so helpers see the active philosophy (relevant for which products they'll pick up at the shed). Server `requireOwner()` rejects helper mutations.
 - **Cross-tenant isolation:** each owner's setup is invisible to others by virtue of `settings.ts` tenant scoping (Phase 18b). Verified by `settings.crossTenant.test.ts` (extends the existing pattern).
 - **Onboarding interaction:** `/onboarding` does **not** ask these questions inline — onboarding stays lightweight per the P5 first-run design constraint. After onboarding completes, a one-line link points new owners to `/plan` to set up their first season.
@@ -832,70 +832,72 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 
 ---
 
-## UC-46 — Year-end summary report
+## UC-44 — Season close-out wizard
 
-- **Persona:** P1 (Owner/operator) + P4 (compliance/records reviewer).
-- **Status:** Shipped (Phase 28, `feat/uc46-year-summary`). Deterministic, read-only aggregate over a single (owner, year) — no migration, no `RULES_VERSION` bump. AI narrative deliberately **not** shipped this pass: per Invariant 7 the tables are the product; the AI narrative is optional enrichment deferred to a follow-up (it would go through `aiTry()` + `<Provenance>` and stay a no-op in no-key mode).
-- **Trigger:** Owner opens `/records` and reads the "Year in review" card, or picks a different season from the year selector; downloads `GET /api/records/year-summary.pdf?year=YYYY`.
-- **Preconditions:** Authenticated user with an active Owner (helpers can view; the surface is read-only).
-- **Aggregate fields** (`apps/web/src/lib/records/yearSummary.ts`, pure fold + `yearSummary.server.ts` orchestrator):
-  1. **Totals** — herbicide/insecticide/fungicide application counts, harvest events, distinct blocks treated.
-  2. **Acres treated by product + chemistry class** — each product on a tank-mix gets its own treated-acre pass; classes de-duped per application.
-  3. **Applications vs philosophy** — every application classified compliant / non-compliant / unclassified against the Season-Setup philosophy via `isProductAllowed()` (organic-compliance roll-up).
-  4. **Harvest totals by archetype** (via `resolveArchetype()`) incl. moisture min/max/mean. Moisture is parsed from the `moisture=<n>%` lot tag the archetype renderers write (no `moisture_pct` column exists yet — parse stays migration-free; swap for a direct read on the future schema lift).
-  5. **Input costs** — consumption movements (`stock_movements`, negative deltas) × lot cost-per-unit, rolled up by category.
-  6. **Scout → spray funnel** — scout observations, threshold-triggered applications, and sprays avoided (an at-threshold observation whose block saw no follow-up application within 14 days).
-  7. **Decon + calibration compliance** — calibrated sprayers, calibrations this year, decon events this year.
-- **Surface:** "Year in review" card on `apps/web/src/routes/records/+page.svelte` — a season/year selector + KPI strip + six read-only cards + "Year summary PDF" download.
-- **Cross-tenant isolation:** every read funnels through the tenant-scoped repos + a `withTenant`-joined `stock_movements` query (Invariant 6). Covered by a `buildYearSummary` case in `apps/web/src/lib/db/exports.crossTenant.test.ts`.
-- **Tests:** `apps/web/src/lib/records/yearSummary.test.ts` fixtures the pure fold (totals, acreage double-count, philosophy classification, moisture stats, input costs, scout funnel, compliance).
+- **Persona:** P1 (Owner/operator). Helpers may view the checklist read-only; only the owner can close or reopen.
+- **Status:** Shipped (#349). At the end of a growing year the operator wants to "put the books to bed": confirm the season's records are complete, then lock them so a stray late entry can't corrupt the year's history. This is the FR-09 immutability lock lifted from a single record to a whole season — server-enforced, not UI-only.
+- **Trigger:** Owner navigates to `/settings/season/close-out` (linked from `/settings/season`).
+- **Preconditions:** Owner role + active tenant. The three preflight checks must be green before the **Close season** button enables.
+- **Primary path:**
+  1. The route renders a three-item preflight checklist for the current year:
+     - **Offline queue drained** — client-side count via the existing `listPendingForActiveOwner()` (Dexie). Non-zero blocks the close; the operator is pointed at `/records/pending`.
+     - **Active plantings resolved** — server-computed. Every `crops` row planted in the year must be in a terminal status (`harvested | failed | archived`); `planned`/`active` block. No migration — the enum already carries the terminal states.
+     - **Harvest roll-up reviewed** — the year's `harvest_events` count is surfaced; the operator ticks an attestation checkbox.
+  2. Owner clicks **Close season**. `POST /api/season/close` (`action: 'close'`) re-verifies the two server-side checks + the client-attested pending count, then writes one `season_closeouts` row keyed `(owner_id, year)` UNIQUE, with `closedAt`, `closedById`, `snapshotJson` (planting resolutions + harvest roll-up + pending count + `RULES_VERSION` stamp), and `reopenedAt = null`.
+  3. A **hand-off screen** replaces the checklist: a "season closed" badge + CTAs to winterize equipment (`/equipment`), the year-end report (`/records`), and next-season setup (`/settings/season`). Those follow-on flows (UC-45/46/47) may be stubs today.
+  4. From this point the shared **`SEASON_CLOSED` gate** (`apps/web/src/lib/server/seasonClose.ts:checkSeasonClosed()`) — consulted by every record-write endpoint — returns `422 SEASON_CLOSED` for any record dated inside the closed year.
+- **Alt path — reopen (reversible for 7 days):** Owner clicks **Reopen season** on the hand-off screen. `POST /api/season/close` (`action: 'reopen'`) stamps `reopenedAt` when the close is within `REOPEN_WINDOW_MS` (7 days). The gate then treats the season as open again. Past the window the reopen is refused (`409 REOPEN_WINDOW_EXPIRED`) — the close is permanent.
+- **Alt path — helper view:** a helper hitting `/settings/season/close-out` sees the checklist read-only (attestation checkbox + Close button disabled). Any helper `POST /api/season/close` is refused by `requireOwner`.
+- **The gate (one check-site):** `checkSeasonClosed(occurredAtMs)` maps the record's timestamp to its calendar year, looks up the active (non-reopened) close for the tenant, and returns a `SeasonClosedBlock | null`. It is called from exactly five endpoints — `/api/spray/record`, `/api/insecticide/record`, `/api/fungicide/record`, `/api/harvest/record`, `/api/hay/cuttings/[id]` — right after each computes its effective `occurredAt`. The logic lives in one helper; endpoints only translate a non-null result into a 422. A wiring test pins all five call-sites.
+- **Success:** the year's records are immutable; late/duplicate entries dated in the closed year are refused server-side regardless of UI or Bearer path; the operator has a clear off-season hand-off.
+- **Audit notes:** New tenant-scoped table `season_closeouts` (migration 0041; CLAUDE.md invariant 6 four-step checklist: `tenantScoped(...)` brand + `owner_id` + composite `(owner_id, year)` UNIQUE index + wired into `tenant.crossTenant.test.ts` + repo funnels through `withTenant`/`tenantValues`). Repo `apps/web/src/lib/db/seasonCloseouts.ts`; gate + close/reopen orchestration `apps/web/src/lib/server/seasonClose.ts`; server preflight `apps/web/src/lib/season/closeout.server.ts`; route `/settings/season/close-out`; endpoint `/api/season/close`. `RULES_VERSION` is **not** bumped — the gate is an app-layer lock (like FR-09), not a safety-kernel rule; the version is stamped into the snapshot for provenance only. Kernel-grade vitest at `apps/web/src/lib/server/seasonClose.test.ts` (fast-check over arbitrary dates vs a closed year + close/reopen/permanent-window state machine + tenant isolation).
 
 ---
 
 ## Summary table
 
-| ID | Status | Persona | Implementation locus |
-|---|---|---|---|
-| UC-01 | Implemented | P1 | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) |
-| UC-02 | Implemented | P1, P2 | [spray/+page.svelte](../apps/web/src/routes/spray/+page.svelte) |
-| UC-03 | Implemented | P1, P2 | [spray/+page.svelte:473](../apps/web/src/routes/spray/+page.svelte#L473) |
-| UC-04 | Implemented | P1, P2 | [spray/decon/+page.svelte](../apps/web/src/routes/spray/decon/+page.svelte) |
-| UC-05 | Implemented | P1, P2 | [scout/+page.svelte](../apps/web/src/routes/scout/+page.svelte) |
-| UC-06 | Implemented | P1, P2 | [harvest/+page.svelte](../apps/web/src/routes/harvest/+page.svelte) |
-| UC-07 | Implemented | P1 | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) |
-| UC-08 | Implemented | P1 | [plugins/new/+page.svelte](../apps/web/src/routes/plugins/new/+page.svelte) |
-| UC-09 | Implemented | P1 | [records/+page.svelte](../apps/web/src/routes/records/+page.svelte) |
-| UC-10 | Implemented | P1, P2 | [calibrate/+page.svelte](../apps/web/src/routes/calibrate/+page.svelte) |
-| UC-11 | Implemented | P1, P2 | [today/+page.svelte](../apps/web/src/routes/today/+page.svelte) |
-| UC-12 | Implemented | P1, P2 | [records/pending/+page.svelte](../apps/web/src/routes/records/pending/+page.svelte) |
-| UC-13 | Implemented | P3 | [hay/+page.svelte](../apps/web/src/routes/hay/+page.svelte) (Sprint E) |
-| UC-14 | Implemented | P3 | [hay/+page.svelte](../apps/web/src/routes/hay/+page.svelte) (Sprint E) |
-| UC-15 | **Partially implemented** (stage projection ✓; observation capture deferred) | P1, P3 | [growthStageTemplates.ts](../apps/web/src/lib/plugins/growthStageTemplates.ts) + [stageProjection.ts](../apps/web/src/lib/calendar/stageProjection.ts) |
-| UC-16 | **Spec-defined, NOT implemented** | P1, P3 | Extend `harvest/+page.svelte` + FR-21 |
-| UC-17 | Implemented | All | [signin/+page.svelte](../apps/web/src/routes/signin/+page.svelte) |
-| UC-18 | Implemented | P1 | [plan/+page.svelte?tab=calendar](../apps/web/src/routes/plan/+page.svelte) |
-| UC-19 | Implemented | P1 | [records/+page.svelte](../apps/web/src/routes/records/+page.svelte) |
-| UC-20 | Implemented | P5 | [/onboarding/+page.svelte](../apps/web/src/routes/onboarding/+page.svelte) (Phase 18f) |
-| UC-21 | Implemented | P1 | [/settings/helpers/+page.svelte](../apps/web/src/routes/settings/helpers/+page.svelte) + [lib/server/invites.ts](../apps/web/src/lib/server/invites.ts) (Phase 18e) |
-| UC-22 | **Proposed (audit only)** | P4 | Audit pass on existing PDF/CSV exports |
-| UC-23 | **Proposed (mitigation)** | P1 | Document loss boundary; force-sync button |
-| UC-24 | **Proposed** | P1 | Extend records filter |
-| UC-25 | Implemented | P1 | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 13) |
-| UC-26 | **Proposed** | P1, P2, P5 | Sidebar nav + header identity strip + footer in [+layout.svelte](../apps/web/src/routes/+layout.svelte) |
-| UC-27 | **Proposed** | P1 | Bulk multi-field entry in [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) |
-| UC-28 | **Proposed (micro)** | P1 | Acreage hint `<small>` text in [plan/+page.svelte:505,643](../apps/web/src/routes/plan/+page.svelte#L505) |
-| UC-29 | Implemented | P1 | [crops/+page.svelte](../apps/web/src/routes/crops/+page.svelte) (Phase 12d) |
-| UC-30 | Implemented | P1, P2 | [equipment/+page.svelte](../apps/web/src/routes/equipment/+page.svelte) (Phase 8a) |
-| UC-31 | Implemented | P1 | [stock/+page.svelte](../apps/web/src/routes/stock/+page.svelte) (Phase 8b) |
-| UC-32 | Implemented | P1, P2 | [spray/insecticide/+page.svelte](../apps/web/src/routes/spray/insecticide/+page.svelte) (Phase 10; relocated Phase 25b) |
-| UC-33 | Implemented | P1 | [fertility/+page.svelte](../apps/web/src/routes/fertility/+page.svelte) (Phase 10) |
-| UC-34 | Implemented | P1 | [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) |
-| UC-35 | Implemented | P1 | Per-entity deletes through each repo + `POST /api/admin/wipe` + Danger Zone UI in [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) (Phase 12e) |
-| UC-36 | Implemented | P1 | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 14a) — Schedule tab + `lib/layout/engine.ts` |
-| UC-37 | Implemented | P1 | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 14e) — Crops tab `🤖 Suggest allocation` → [`AllocationWizard.svelte`](../apps/web/src/lib/components/AllocationWizard.svelte) → [`/api/plan/allocate`](../apps/web/src/routes/api/plan/allocate/+server.ts) backed by [`aiAllocation.ts`](../apps/web/src/lib/server/aiAllocation.ts) + [`sufficiency.ts`](../apps/web/src/lib/layout/sufficiency.ts) |
-| UC-40 | Implemented | P1, P2, P3 | [BlockSwimlane.svelte](../apps/web/src/lib/components/BlockSwimlane.svelte) (v1.3) — stage badges + harvest-target footer; backed by [`growthStageTemplates.ts`](../apps/web/src/lib/plugins/growthStageTemplates.ts) + [`stageProjection.ts`](../apps/web/src/lib/calendar/stageProjection.ts) |
-| UC-41 | Implemented | P1, P2 | Engine + catalog in [lib/planterPlate/](../apps/web/src/lib/planterPlate/); tool at [tools/planter-plate-selector/+page.svelte](../apps/web/src/routes/tools/planter-plate-selector/+page.svelte); AI auto-pick wired into [aiRefreshStock.ts](../apps/web/src/lib/server/aiRefreshStock.ts). Persists `planterPlateConfig`, `seedDimensionsMm`, `seedShape` into `stock_items.metadata_json`. Phase 21 gates the UI behind the existing `display_planter_setup` setting (off by default for new owners). |
-| UC-37d | **Shipped** (Phase 21b) | P1 | `lib/plan/inputsPlan.ts` + `lib/server/aiInputsPlan.ts` + `/api/plan/inputs/*` + step in [AllocationWizard.svelte](../apps/web/src/lib/components/AllocationWizard.svelte). |
-| UC-42 | **Shipped** (Phase 21a) | P1 | `lib/season/setup.ts` + `SeasonSetupStep.svelte` + `SeasonSetupChip.svelte` + `/settings/season/` route. Backed by `settings` table (no migration). |
-| UC-43 | **Shipped** (Phase 24) | P6 | `api_tokens` table (migration 0029) + [apiTokens.ts](../apps/web/src/lib/server/apiTokens.ts) + Bearer middleware in [hooks.server.ts](../apps/web/src/hooks.server.ts) + `/settings/api-tokens/` route + `/api/auth/token/*` endpoints + CSRF Origin bridge + `/api/openapi.json` + per-token quota in [aiGuard.ts](../apps/web/src/lib/server/aiGuard.ts). |
-| UC-46 | **Shipped** (Phase 28) | P1, P4 | Pure aggregate [yearSummary.ts](../apps/web/src/lib/records/yearSummary.ts) + [yearSummary.server.ts](../apps/web/src/lib/records/yearSummary.server.ts) orchestrator; "Year in review" surface on [records/+page.svelte](../apps/web/src/routes/records/+page.svelte); PDF at [api/records/year-summary.pdf](../apps/web/src/routes/api/records/year-summary.pdf/+server.ts). Deterministic tables + PDF; AI narrative deferred. |
+| ID     | Status                                                                       | Persona    | Implementation locus                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------ | ---------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UC-01  | Implemented                                                                  | P1         | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| UC-02  | Implemented                                                                  | P1, P2     | [spray/+page.svelte](../apps/web/src/routes/spray/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| UC-03  | Implemented                                                                  | P1, P2     | [spray/+page.svelte:473](../apps/web/src/routes/spray/+page.svelte#L473)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| UC-04  | Implemented                                                                  | P1, P2     | [spray/decon/+page.svelte](../apps/web/src/routes/spray/decon/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| UC-05  | Implemented                                                                  | P1, P2     | [scout/+page.svelte](../apps/web/src/routes/scout/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| UC-06  | Implemented                                                                  | P1, P2     | [harvest/+page.svelte](../apps/web/src/routes/harvest/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| UC-07  | Implemented                                                                  | P1         | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| UC-08  | Implemented                                                                  | P1         | [plugins/new/+page.svelte](../apps/web/src/routes/plugins/new/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| UC-09  | Implemented                                                                  | P1         | [records/+page.svelte](../apps/web/src/routes/records/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| UC-10  | Implemented                                                                  | P1, P2     | [calibrate/+page.svelte](../apps/web/src/routes/calibrate/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| UC-11  | Implemented                                                                  | P1, P2     | [today/+page.svelte](../apps/web/src/routes/today/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| UC-12  | Implemented                                                                  | P1, P2     | [records/pending/+page.svelte](../apps/web/src/routes/records/pending/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| UC-13  | Implemented                                                                  | P3         | [hay/+page.svelte](../apps/web/src/routes/hay/+page.svelte) (Sprint E)                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| UC-14  | Implemented                                                                  | P3         | [hay/+page.svelte](../apps/web/src/routes/hay/+page.svelte) (Sprint E)                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| UC-15  | **Partially implemented** (stage projection ✓; observation capture deferred) | P1, P3     | [growthStageTemplates.ts](../apps/web/src/lib/plugins/growthStageTemplates.ts) + [stageProjection.ts](../apps/web/src/lib/calendar/stageProjection.ts)                                                                                                                                                                                                                                                                                                                                                    |
+| UC-16  | **Spec-defined, NOT implemented**                                            | P1, P3     | Extend `harvest/+page.svelte` + FR-21                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| UC-17  | Implemented                                                                  | All        | [signin/+page.svelte](../apps/web/src/routes/signin/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| UC-18  | Implemented                                                                  | P1         | [plan/+page.svelte?tab=calendar](../apps/web/src/routes/plan/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| UC-19  | Implemented                                                                  | P1         | [records/+page.svelte](../apps/web/src/routes/records/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| UC-20  | Implemented                                                                  | P5         | [/onboarding/+page.svelte](../apps/web/src/routes/onboarding/+page.svelte) (Phase 18f)                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| UC-21  | Implemented                                                                  | P1         | [/settings/helpers/+page.svelte](../apps/web/src/routes/settings/helpers/+page.svelte) + [lib/server/invites.ts](../apps/web/src/lib/server/invites.ts) (Phase 18e)                                                                                                                                                                                                                                                                                                                                       |
+| UC-22  | **Proposed (audit only)**                                                    | P4         | Audit pass on existing PDF/CSV exports                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| UC-23  | **Proposed (mitigation)**                                                    | P1         | Document loss boundary; force-sync button                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| UC-24  | **Proposed**                                                                 | P1         | Extend records filter                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| UC-25  | Implemented                                                                  | P1         | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 13)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| UC-26  | **Proposed**                                                                 | P1, P2, P5 | Sidebar nav + header identity strip + footer in [+layout.svelte](../apps/web/src/routes/+layout.svelte)                                                                                                                                                                                                                                                                                                                                                                                                   |
+| UC-27  | **Proposed**                                                                 | P1         | Bulk multi-field entry in [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| UC-28  | **Proposed (micro)**                                                         | P1         | Acreage hint `<small>` text in [plan/+page.svelte:505,643](../apps/web/src/routes/plan/+page.svelte#L505)                                                                                                                                                                                                                                                                                                                                                                                                 |
+| UC-29  | Implemented                                                                  | P1         | [crops/+page.svelte](../apps/web/src/routes/crops/+page.svelte) (Phase 12d)                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| UC-30  | Implemented                                                                  | P1, P2     | [equipment/+page.svelte](../apps/web/src/routes/equipment/+page.svelte) (Phase 8a)                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| UC-31  | Implemented                                                                  | P1         | [stock/+page.svelte](../apps/web/src/routes/stock/+page.svelte) (Phase 8b)                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| UC-32  | Implemented                                                                  | P1, P2     | [spray/insecticide/+page.svelte](../apps/web/src/routes/spray/insecticide/+page.svelte) (Phase 10; relocated Phase 25b)                                                                                                                                                                                                                                                                                                                                                                                   |
+| UC-33  | Implemented                                                                  | P1         | [fertility/+page.svelte](../apps/web/src/routes/fertility/+page.svelte) (Phase 10)                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| UC-34  | Implemented                                                                  | P1         | [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte)                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| UC-35  | Implemented                                                                  | P1         | Per-entity deletes through each repo + `POST /api/admin/wipe` + Danger Zone UI in [settings/+page.svelte](../apps/web/src/routes/settings/+page.svelte) (Phase 12e)                                                                                                                                                                                                                                                                                                                                       |
+| UC-36  | Implemented                                                                  | P1         | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 14a) — Schedule tab + `lib/layout/engine.ts`                                                                                                                                                                                                                                                                                                                                                                                         |
+| UC-37  | Implemented                                                                  | P1         | [plan/+page.svelte](../apps/web/src/routes/plan/+page.svelte) (Phase 14e) — Crops tab `🤖 Suggest allocation` → [`AllocationWizard.svelte`](../apps/web/src/lib/components/AllocationWizard.svelte) → [`/api/plan/allocate`](../apps/web/src/routes/api/plan/allocate/+server.ts) backed by [`aiAllocation.ts`](../apps/web/src/lib/server/aiAllocation.ts) + [`sufficiency.ts`](../apps/web/src/lib/layout/sufficiency.ts)                                                                               |
+| UC-40  | Implemented                                                                  | P1, P2, P3 | [BlockSwimlane.svelte](../apps/web/src/lib/components/BlockSwimlane.svelte) (v1.3) — stage badges + harvest-target footer; backed by [`growthStageTemplates.ts`](../apps/web/src/lib/plugins/growthStageTemplates.ts) + [`stageProjection.ts`](../apps/web/src/lib/calendar/stageProjection.ts)                                                                                                                                                                                                           |
+| UC-41  | Implemented                                                                  | P1, P2     | Engine + catalog in [lib/planterPlate/](../apps/web/src/lib/planterPlate/); tool at [tools/planter-plate-selector/+page.svelte](../apps/web/src/routes/tools/planter-plate-selector/+page.svelte); AI auto-pick wired into [aiRefreshStock.ts](../apps/web/src/lib/server/aiRefreshStock.ts). Persists `planterPlateConfig`, `seedDimensionsMm`, `seedShape` into `stock_items.metadata_json`. Phase 21 gates the UI behind the existing `display_planter_setup` setting (off by default for new owners). |
+| UC-37d | **Shipped** (Phase 21b)                                                      | P1         | `lib/plan/inputsPlan.ts` + `lib/server/aiInputsPlan.ts` + `/api/plan/inputs/*` + step in [AllocationWizard.svelte](../apps/web/src/lib/components/AllocationWizard.svelte).                                                                                                                                                                                                                                                                                                                               |
+| UC-42  | **Shipped** (Phase 21a)                                                      | P1         | `lib/season/setup.ts` + `SeasonSetupStep.svelte` + `SeasonSetupChip.svelte` + `/settings/season/` route. Backed by `settings` table (no migration).                                                                                                                                                                                                                                                                                                                                                       |
+| UC-43  | **Shipped** (Phase 24)                                                       | P6         | `api_tokens` table (migration 0029) + [apiTokens.ts](../apps/web/src/lib/server/apiTokens.ts) + Bearer middleware in [hooks.server.ts](../apps/web/src/hooks.server.ts) + `/settings/api-tokens/` route + `/api/auth/token/*` endpoints + CSRF Origin bridge + `/api/openapi.json` + per-token quota in [aiGuard.ts](../apps/web/src/lib/server/aiGuard.ts).                                                                                                                                              |
+| UC-44  | **Shipped** (#349)                                                           | P1         | `season_closeouts` table (migration 0041) + [seasonCloseouts.ts](../apps/web/src/lib/db/seasonCloseouts.ts) repo + shared `SEASON_CLOSED` gate in [seasonClose.ts](../apps/web/src/lib/server/seasonClose.ts) (called from spray/insecticide/fungicide/harvest/hay-cuttings record endpoints) + server preflight [closeout.server.ts](../apps/web/src/lib/season/closeout.server.ts) + `/settings/season/close-out` route + `/api/season/close` endpoint (close + 7-day reversible reopen).               |

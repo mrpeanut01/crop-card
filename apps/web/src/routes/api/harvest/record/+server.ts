@@ -16,6 +16,7 @@ import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { getRegistry } from '$lib/server/registry';
 import type { PluginRegistry } from '$lib/plugins';
 import { evaluateHarvestMoisture, HARVEST_MOISTURE_BLOCK } from '$lib/safety/harvestMoisture';
+import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { evaluateHarvestPhi, type AppliedSpray } from '$lib/schedule/harvestPhi';
 
 const PHI_LOOKBACK_MS = 120 * 24 * 60 * 60 * 1000;
@@ -135,6 +136,14 @@ export const POST: RequestHandler = async ({ request }) => {
     }
   }
   const occurredAt = parsed.data.occurredAt ?? Date.now();
+  // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
+  const closed = checkSeasonClosed(occurredAt);
+  if (closed) {
+    return json(
+      { error: closed.code, message: closed.message, year: closed.year },
+      { status: 422 }
+    );
+  }
 
   // #324 — PHI (pre-harvest interval) check. Consults recent spray /
   // insecticide / fungicide events on the block against each applied

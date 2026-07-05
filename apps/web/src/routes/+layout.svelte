@@ -26,7 +26,17 @@
 
     (async () => {
       try {
-        const { watchOnline, pendingCount: count } = await import('$lib/client/syncQueue');
+        const {
+          watchOnline,
+          pendingCount: count,
+          primeActiveOwnerId
+        } = await import('$lib/client/syncQueue');
+        // #314 — seed the active-owner key from the server-provided value
+        // BEFORE watchOnline() can auto-drain. A fresh tab / first-login
+        // never fires an Owner-switch (the pre-#314 sole writer), so
+        // without this the key is null and drainQueue would fail-safe to a
+        // no-op (records stranded) while enqueue mis-tags rows.
+        primeActiveOwnerId(data.activeOwner?.id ?? data.user?.activeOwnerId ?? null);
         cleanupSync = watchOnline();
         const refresh = async () => {
           try {

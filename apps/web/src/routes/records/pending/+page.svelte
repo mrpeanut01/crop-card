@@ -25,7 +25,14 @@
     try {
       const { drainQueue } = await import('$lib/client/syncQueue');
       const result = await drainQueue();
-      lastDrainResult = `Synced ${result.succeeded.length}; ${result.failed.length} still pending.`;
+      // #315 — surface skippedOtherOwner so the operator understands why a
+      // drain that "succeeded 0" still left records behind: they belong to
+      // another farm and only drain when that Owner is active.
+      lastDrainResult =
+        `Synced ${result.succeeded.length}; ${result.failed.length} still pending` +
+        (result.skippedOtherOwner > 0
+          ? `; ${result.skippedOtherOwner} skipped from another farm.`
+          : '.');
       await refresh();
     } catch (e) {
       lastDrainResult = `error: ${e instanceof Error ? e.message : e}`;
@@ -48,9 +55,10 @@
 
 <h1>Pending sync queue</h1>
 <p class="lede">
-  Spray records confirmed offline (or that hit a transient network error) are stored in IndexedDB.
-  They submit to <code>/api/spray/record</code> when the app reconnects — the server still re-runs the
-  kernel on each one. Records the kernel rejects stay flagged for owner review.
+  Field records — sprays (herbicide, insecticide, fungicide), harvests, and hay cuttings — confirmed
+  offline (or that hit a transient network error) are stored in IndexedDB. Each submits to its
+  endpoint when the app reconnects — the server still re-runs the kernel on each one. Records the
+  kernel rejects stay flagged for owner review.
 </p>
 
 {#if !dexieAvailable}

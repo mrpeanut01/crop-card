@@ -13,6 +13,8 @@
   // keep recordingFor + lastError at this level so the parent decides
   // which planting's renderer is active and surfaces error state.
   let lastError = $state<string | null>(null);
+  // #316 — non-error success/offline notice (e.g. "queued offline").
+  let lastNotice = $state<string | null>(null);
   // #324 — PHI warning surfaced after a successful commit (non-blocking).
   let phiWarning = $state<string | null>(null);
 
@@ -43,18 +45,31 @@
     input: { quantity?: string; lotNumber?: string; moisturePct?: number }
   ): Promise<string | null> {
     lastError = null;
+    lastNotice = null;
+    const body = {
+      blockId: planting.blockId,
+      cropPluginId: planting.cropPluginId,
+      quantity: input.quantity,
+      lotNumber: input.lotNumber,
+      // #322 — structured moisture reaches the kernel gate.
+      moisturePct: input.moisturePct
+    };
     try {
+      // #316 (NFR-02) — offline path. Queue the harvest locally; the sync
+      // queue replays it against /api/harvest/record (server re-runs the
+      // moisture kernel) on reconnect. No invalidateAll — the server has
+      // nothing new yet.
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        const { enqueueRecord } = await import('$lib/client/syncQueue');
+        const queueId = await enqueueRecord('harvest', body);
+        recordingFor = null;
+        lastNotice = '☁ Offline — harvest queued. Will sync when the connection returns.';
+        return queueId;
+      }
       const res = await fetch('/api/harvest/record', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          blockId: planting.blockId,
-          cropPluginId: planting.cropPluginId,
-          quantity: input.quantity,
-          lotNumber: input.lotNumber,
-          // #322 — structured moisture reaches the kernel gate.
-          moisturePct: input.moisturePct
-        })
+        body: JSON.stringify(body)
       });
       const out = await res.json();
       if (!res.ok) {
@@ -72,7 +87,25 @@
       await invalidateAll();
       return (out?.event?.id as string | undefined) ?? null;
     } catch (e) {
-      lastError = e instanceof Error ? e.message : String(e);
+      // #316 — transient network failure while "online": queue instead of
+      // losing the harvest.
+      const msg = e instanceof Error ? e.message : String(e);
+      const isNetworkErr = e instanceof TypeError && /(fetch|network|failed)/i.test(msg);
+      if (isNetworkErr) {
+        try {
+          const { enqueueRecord } = await import('$lib/client/syncQueue');
+          const queueId = await enqueueRecord('harvest', body);
+          recordingFor = null;
+          lastNotice = '☁ Offline — harvest queued. Will sync when the connection returns.';
+          return queueId;
+        } catch (queueErr) {
+          lastError = `offline queue failed: ${
+            queueErr instanceof Error ? queueErr.message : queueErr
+          }`;
+          return null;
+        }
+      }
+      lastError = msg;
       return null;
     }
   }
@@ -160,6 +193,9 @@
   </div>
 </header>
 
+{#if lastNotice}
+  <Banner tone="wheat">{lastNotice}</Banner>
+{/if}
 {#if phiWarning}
   <div class="phi-banner">
     <Banner tone="wheat">

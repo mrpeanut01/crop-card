@@ -61,7 +61,7 @@
       case 'no-compliant-product':
         return {
           title: `No compliant product for ${plantingName}`,
-          body: `${w.reason} — review on /settings/season and /stock, or relax the philosophy filter.`
+          body: `${w.reason} — review on /settings/season and /inventory, or relax the philosophy filter.`
         };
       case 'missing-yield-goal':
         return {

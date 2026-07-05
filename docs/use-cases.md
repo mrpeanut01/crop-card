@@ -471,7 +471,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
   3. Sprayer-typed equipment carries chemistry-history + decon + GPA-calibration state in `equipment_state`; the safety kernel reads these on every spray.
   4. `/equipment/[id]` shows usage history (`equipment_log`) with kinds: `use`, `maintenance`, `calibration`, `decon`, `inspection`, `note`.
 - **Success:** Equipment row exists with current state surfaced wherever the kernel needs it (`/spray`, `/calibrate`, `/spray/decon`).
-- **Audit notes:** `pendingCalibrations` (UC-10 / FR-12) targets the unified `equipment` table; helpers stage calibration here and owners approve from `/equipment/[id]`. Equipment-anchored pre/post-task templates (`equipment.preTasks`) materialize on Crops via UC-11.
+- **Audit notes:** `pendingCalibrations` (UC-10 / FR-12) targets the unified `equipment` table; helpers stage calibration here and owners approve from the pending-calibration queue on `/calibrate`. Equipment-anchored pre/post-task templates (`equipment.preTasks`) materialize on Crops via UC-11.
 
 ## UC-31 — Stock inventory, lots, and low-stock alerts
 

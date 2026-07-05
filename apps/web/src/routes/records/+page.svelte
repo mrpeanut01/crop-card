@@ -108,6 +108,33 @@
   }
 
   const summary = $derived(data.summary);
+
+  // UC-46 — Year in review.
+  const yearSummary = $derived(data.yearSummary);
+  const PHILOSOPHY_LABELS: Record<string, string> = {
+    conventional: 'Conventional',
+    'non-gmo': 'Non-GMO',
+    'organic-transitioning': 'Organic (transitioning)',
+    'certified-organic': 'Certified organic'
+  };
+
+  function changeYear(value: string) {
+    const params = new URLSearchParams(exportQuery.replace(/^\?/, ''));
+    params.set('year', value);
+    goto(`/records?${params.toString()}`, { invalidateAll: true, keepFocus: true });
+  }
+
+  function fmtCents(cents: number): string {
+    return `$${(cents / 100).toFixed(2)}`;
+  }
+
+  function fmtAcres(acres: number): string {
+    return acres.toFixed(2);
+  }
+
+  function fmtMoisture(m: { min: number | null; mean: number | null; max: number | null }): string {
+    return m.mean === null ? '—' : `${m.min}% / ${m.mean}% / ${m.max}%`;
+  }
 </script>
 
 <svelte:head><title>Records · CropCard</title></svelte:head>
@@ -149,6 +176,185 @@
     </a>
   </div>
 </header>
+
+<section class="year-review" aria-labelledby="year-review-heading">
+  <div class="year-review-head">
+    <div>
+      <Kicker>Year in review</Kicker>
+      <h2 id="year-review-heading" class="serif">{yearSummary.year} season summary.</h2>
+      <p class="year-lede">
+        Deterministic roll-up of every recorded application, harvest, and input for the season.
+        Read-only.
+      </p>
+    </div>
+    <div class="year-actions">
+      <label class="year-select">
+        <span class="visually-hidden">Season year</span>
+        <Calendar size={13} />
+        <select
+          value={String(data.selectedYear)}
+          onchange={(e) => changeYear((e.target as HTMLSelectElement).value)}
+        >
+          {#each data.availableYears as y (y)}
+            <option value={String(y)}>{y}</option>
+          {/each}
+        </select>
+      </label>
+      <a class="btn-primary" href="/api/records/year-summary.pdf?year={yearSummary.year}" download>
+        <FileText size={13} /> Year summary PDF
+      </a>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <span class="kpi-num mono">{yearSummary.totals.totalApplications}</span>
+      <span class="kpi-label">Applications</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-num mono">{yearSummary.totals.harvestEvents}</span>
+      <span class="kpi-label">Harvest events</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-num mono">{yearSummary.totals.blocksTreated}</span>
+      <span class="kpi-label">Blocks treated</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-num mono">{fmtCents(yearSummary.inputCosts.totalCents)}</span>
+      <span class="kpi-label">Input costs</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-num mono">{yearSummary.scoutFunnel.spraysAvoided}</span>
+      <span class="kpi-label">Sprays avoided</span>
+    </div>
+  </div>
+
+  <div class="review-cards">
+    <article class="review-card">
+      <h3>Applications by product</h3>
+      {#if yearSummary.productAcreage.length}
+        <table class="mini-table">
+          <thead>
+            <tr
+              ><th>Product</th><th>Class</th><th class="num">Apps</th><th class="num">Acres</th></tr
+            >
+          </thead>
+          <tbody>
+            {#each yearSummary.productAcreage.slice(0, 12) as p (p.productId)}
+              <tr>
+                <td>{p.displayName}</td>
+                <td class="muted">{p.classes.join(', ') || '—'}</td>
+                <td class="num mono">{p.applicationCount}</td>
+                <td class="num mono">{fmtAcres(p.acresTreated)}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {:else}
+        <p class="empty">No applications recorded this year.</p>
+      {/if}
+    </article>
+
+    <article class="review-card">
+      <h3>By chemistry class</h3>
+      {#if yearSummary.chemistryClassAcreage.length}
+        <table class="mini-table">
+          <thead>
+            <tr><th>Class</th><th class="num">Apps</th><th class="num">Acres</th></tr>
+          </thead>
+          <tbody>
+            {#each yearSummary.chemistryClassAcreage as c (c.className)}
+              <tr>
+                <td>{c.className}</td>
+                <td class="num mono">{c.applicationCount}</td>
+                <td class="num mono">{fmtAcres(c.acresTreated)}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {:else}
+        <p class="empty">No chemistry classes recorded.</p>
+      {/if}
+    </article>
+
+    <article class="review-card">
+      <h3>Philosophy compliance</h3>
+      <p class="philosophy-line">
+        Evaluated against <strong
+          >{PHILOSOPHY_LABELS[yearSummary.philosophy.philosophy] ??
+            yearSummary.philosophy.philosophy}</strong
+        >.
+      </p>
+      <ul class="stat-list">
+        <li>
+          <Pill tone="forest">{yearSummary.philosophy.compliantApplications}</Pill> compliant
+        </li>
+        <li>
+          <Pill tone="rust">{yearSummary.philosophy.nonCompliantApplications}</Pill> non-compliant
+        </li>
+        <li>
+          <Pill tone="neutral">{yearSummary.philosophy.unknownApplications}</Pill> unclassified
+        </li>
+      </ul>
+    </article>
+
+    <article class="review-card">
+      <h3>Harvest by archetype</h3>
+      {#if yearSummary.harvestByArchetype.length}
+        <table class="mini-table">
+          <thead>
+            <tr><th>Archetype</th><th class="num">Events</th><th>Moisture min/mean/max</th></tr>
+          </thead>
+          <tbody>
+            {#each yearSummary.harvestByArchetype as h (h.archetype)}
+              <tr>
+                <td>{h.archetype}</td>
+                <td class="num mono">{h.eventCount}</td>
+                <td class="mono muted">{fmtMoisture(h.moisture)}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      {:else}
+        <p class="empty">No harvest events recorded this year.</p>
+      {/if}
+    </article>
+
+    <article class="review-card">
+      <h3>Scout → spray funnel</h3>
+      <ul class="stat-list">
+        <li>
+          <strong class="mono">{yearSummary.scoutFunnel.scoutObservations}</strong> observations
+        </li>
+        <li>
+          <strong class="mono">{yearSummary.scoutFunnel.thresholdTriggeredApplications}</strong>
+          threshold-triggered
+        </li>
+        <li>
+          <strong class="mono">{yearSummary.scoutFunnel.spraysAvoided}</strong> sprays avoided
+        </li>
+      </ul>
+    </article>
+
+    <article class="review-card">
+      <h3>Decon + calibration</h3>
+      <ul class="stat-list">
+        <li>
+          <strong class="mono"
+            >{yearSummary.compliance.calibratedSprayerCount}/{yearSummary.compliance
+              .sprayerCount}</strong
+          > sprayers calibrated
+        </li>
+        <li>
+          <strong class="mono">{yearSummary.compliance.calibratedThisYear}</strong> calibrated this year
+        </li>
+        <li>
+          <strong class="mono">{yearSummary.compliance.deconEventsThisYear}</strong> decon events
+        </li>
+      </ul>
+    </article>
+  </div>
+</section>
 
 <section class="filter-card">
   <div class="filter-row chip-row" role="group" aria-label="Record kind filters">
@@ -327,6 +533,141 @@
 <style>
   .page-header {
     margin-bottom: 14px;
+  }
+
+  /* ── UC-46 Year in review ─────────────────────────────────────────── */
+  .year-review {
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card, 12px);
+    background: var(--color-paper);
+    padding: 18px 18px 20px;
+    margin-bottom: 18px;
+  }
+  .year-review-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .year-review-head h2 {
+    margin: 4px 0 0;
+    font-size: 22px;
+  }
+  .year-lede {
+    color: var(--color-ink-soft, #4a4f46);
+    margin: 4px 0 0;
+    font-size: 13px;
+    max-width: 46ch;
+  }
+  .year-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .year-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    background: var(--color-paper);
+    min-height: 36px;
+  }
+  .year-select select {
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 8px);
+    background: var(--color-cream, #f6efdf);
+  }
+  .kpi-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-forest-deep, #1f3a28);
+  }
+  .kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-soft, #4a4f46);
+  }
+  .review-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .review-card {
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 8px);
+    padding: 12px 14px;
+    background: var(--color-paper);
+  }
+  .review-card h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-forest-deep, #1f3a28);
+  }
+  .mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .mini-table th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-ink-soft, #4a4f46);
+    padding: 3px 6px;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .mini-table td {
+    padding: 3px 6px;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .mini-table .num {
+    text-align: right;
+  }
+  .mini-table .muted,
+  .philosophy-line {
+    color: var(--color-ink-soft, #4a4f46);
+  }
+  .philosophy-line {
+    font-size: 13px;
+    margin: 0 0 8px;
+  }
+  .stat-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .review-card .empty {
+    color: var(--color-ink-soft, #4a4f46);
+    font-style: italic;
+    font-size: 12px;
+    margin: 0;
   }
   .lede {
     color: var(--color-ink-soft, #4a4f46);

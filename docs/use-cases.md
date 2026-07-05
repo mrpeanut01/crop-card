@@ -832,6 +832,26 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 
 ---
 
+## UC-46 — Year-end summary report
+
+- **Persona:** P1 (Owner/operator) + P4 (compliance/records reviewer).
+- **Status:** Shipped (Phase 28, `feat/uc46-year-summary`). Deterministic, read-only aggregate over a single (owner, year) — no migration, no `RULES_VERSION` bump. AI narrative deliberately **not** shipped this pass: per Invariant 7 the tables are the product; the AI narrative is optional enrichment deferred to a follow-up (it would go through `aiTry()` + `<Provenance>` and stay a no-op in no-key mode).
+- **Trigger:** Owner opens `/records` and reads the "Year in review" card, or picks a different season from the year selector; downloads `GET /api/records/year-summary.pdf?year=YYYY`.
+- **Preconditions:** Authenticated user with an active Owner (helpers can view; the surface is read-only).
+- **Aggregate fields** (`apps/web/src/lib/records/yearSummary.ts`, pure fold + `yearSummary.server.ts` orchestrator):
+  1. **Totals** — herbicide/insecticide/fungicide application counts, harvest events, distinct blocks treated.
+  2. **Acres treated by product + chemistry class** — each product on a tank-mix gets its own treated-acre pass; classes de-duped per application.
+  3. **Applications vs philosophy** — every application classified compliant / non-compliant / unclassified against the Season-Setup philosophy via `isProductAllowed()` (organic-compliance roll-up).
+  4. **Harvest totals by archetype** (via `resolveArchetype()`) incl. moisture min/max/mean. Moisture is parsed from the `moisture=<n>%` lot tag the archetype renderers write (no `moisture_pct` column exists yet — parse stays migration-free; swap for a direct read on the future schema lift).
+  5. **Input costs** — consumption movements (`stock_movements`, negative deltas) × lot cost-per-unit, rolled up by category.
+  6. **Scout → spray funnel** — scout observations, threshold-triggered applications, and sprays avoided (an at-threshold observation whose block saw no follow-up application within 14 days).
+  7. **Decon + calibration compliance** — calibrated sprayers, calibrations this year, decon events this year.
+- **Surface:** "Year in review" card on `apps/web/src/routes/records/+page.svelte` — a season/year selector + KPI strip + six read-only cards + "Year summary PDF" download.
+- **Cross-tenant isolation:** every read funnels through the tenant-scoped repos + a `withTenant`-joined `stock_movements` query (Invariant 6). Covered by a `buildYearSummary` case in `apps/web/src/lib/db/exports.crossTenant.test.ts`.
+- **Tests:** `apps/web/src/lib/records/yearSummary.test.ts` fixtures the pure fold (totals, acreage double-count, philosophy classification, moisture stats, input costs, scout funnel, compliance).
+
+---
+
 ## Summary table
 
 | ID | Status | Persona | Implementation locus |
@@ -878,3 +898,4 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 | UC-37d | **Shipped** (Phase 21b) | P1 | `lib/plan/inputsPlan.ts` + `lib/server/aiInputsPlan.ts` + `/api/plan/inputs/*` + step in [AllocationWizard.svelte](../apps/web/src/lib/components/AllocationWizard.svelte). |
 | UC-42 | **Shipped** (Phase 21a) | P1 | `lib/season/setup.ts` + `SeasonSetupStep.svelte` + `SeasonSetupChip.svelte` + `/settings/season/` route. Backed by `settings` table (no migration). |
 | UC-43 | **Shipped** (Phase 24) | P6 | `api_tokens` table (migration 0029) + [apiTokens.ts](../apps/web/src/lib/server/apiTokens.ts) + Bearer middleware in [hooks.server.ts](../apps/web/src/hooks.server.ts) + `/settings/api-tokens/` route + `/api/auth/token/*` endpoints + CSRF Origin bridge + `/api/openapi.json` + per-token quota in [aiGuard.ts](../apps/web/src/lib/server/aiGuard.ts). |
+| UC-46 | **Shipped** (Phase 28) | P1, P4 | Pure aggregate [yearSummary.ts](../apps/web/src/lib/records/yearSummary.ts) + [yearSummary.server.ts](../apps/web/src/lib/records/yearSummary.server.ts) orchestrator; "Year in review" surface on [records/+page.svelte](../apps/web/src/routes/records/+page.svelte); PDF at [api/records/year-summary.pdf](../apps/web/src/routes/api/records/year-summary.pdf/+server.ts). Deterministic tables + PDF; AI narrative deferred. |

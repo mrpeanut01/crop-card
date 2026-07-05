@@ -18,13 +18,14 @@ import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 
-import { runWithTenant } from './tenant';
+import { runWithTenant, runWithTenantAsync } from './tenant';
 import { db } from './client';
 import { equipment, owners, users } from './schema';
 import { createField } from './fields';
 import { createBlock } from './blocks';
 import { insertSprayEvent, listSprayEvents } from './sprayEvents';
 import { insertInsecticideEvent, listInsecticideEvents } from './insecticideEvents';
+import { buildYearSummary } from '$lib/records/yearSummary.server';
 
 const OWNER_X = 'export-test-owner-x';
 const OWNER_Y = 'export-test-owner-y';
@@ -179,5 +180,26 @@ describe('export endpoints cross-tenant isolation', () => {
       const xCountAfter = listSprayEvents().length;
       expect(xCountAfter).toBe(xCountBefore);
     });
+  });
+
+  it('buildYearSummary() (UC-46) never rolls up another Owner into the aggregate', async () => {
+    const userX = `user_${randomUUID().slice(0, 8)}`;
+    const userY = `user_${randomUUID().slice(0, 8)}`;
+    ensureUser(userX);
+    ensureUser(userY);
+    // Both seeds insert one recent spray + one recent insecticide event —
+    // i.e. two applications each, in the current calendar year.
+    seedOwnerWithSpray(OWNER_X, userX);
+    seedOwnerWithSpray(OWNER_Y, userY);
+    const year = new Date().getFullYear();
+
+    const xSummary = await runWithTenantAsync(OWNER_X, () => buildYearSummary(year, OWNER_X));
+    const ySummary = await runWithTenantAsync(OWNER_Y, () => buildYearSummary(year, OWNER_Y));
+
+    // Each Owner sees exactly their own two applications — never the sum.
+    expect(xSummary.totals.totalApplications).toBe(2);
+    expect(ySummary.totals.totalApplications).toBe(2);
+    expect(xSummary.ownerId).toBe(OWNER_X);
+    expect(ySummary.ownerId).toBe(OWNER_Y);
   });
 });

@@ -14,7 +14,7 @@
  * Layout:
  *   - Cover page: farm identity + integrity hash + filter context
  *   - Pesticide application table (chronological, all three flows)
- *   - Hash-chain verification footer with on-device command
+ *   - Integrity note: SHA-256 of the canonical row set + per-record plugin hashes
  *   - Per-page header (farm + date + page #) and signature footer
  */
 
@@ -294,7 +294,7 @@ export const GET: RequestHandler = async (event) => {
         margin: [0, 0, 0, 12]
       },
       {
-        text: `Hash-chain verification: run \`cropcard verify --hash=${integrityHash.slice(0, 12)}…\` to confirm the record set has not been tampered with since export.`,
+        text: `Integrity verification: the hash above is a SHA-256 of the canonical row set (kind, id, occurrence time, block, rules version, and each record's plugin hashes). Re-exporting the same records reproduces the same hash; any change to a record after the FR-09 lock alters it. Each record also carries per-plugin content hashes so an individual application can be checked against the plugin version that produced it.`,
         style: 'sub',
         margin: [0, 0, 0, 12]
       },

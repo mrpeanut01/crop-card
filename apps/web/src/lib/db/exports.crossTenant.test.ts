@@ -183,23 +183,31 @@ describe('export endpoints cross-tenant isolation', () => {
   });
 
   it('buildYearSummary() (UC-46) never rolls up another Owner into the aggregate', async () => {
-    const userX = `user_${randomUUID().slice(0, 8)}`;
-    const userY = `user_${randomUUID().slice(0, 8)}`;
-    ensureUser(userX);
-    ensureUser(userY);
-    // Both seeds insert one recent spray + one recent insecticide event —
-    // i.e. two applications each, in the current calendar year.
-    seedOwnerWithSpray(OWNER_X, userX);
-    seedOwnerWithSpray(OWNER_Y, userY);
+    // Fresh Owner ids so each tenant holds EXACTLY the two events seeded here
+    // (the shared OWNER_X/OWNER_Y constants accumulate events across the
+    // other tests in this file, which would mask the isolation assertion).
+    const ownerA = `yearsum-owner-${randomUUID().slice(0, 8)}`;
+    const ownerB = `yearsum-owner-${randomUUID().slice(0, 8)}`;
+    const userA = `user_${randomUUID().slice(0, 8)}`;
+    const userB = `user_${randomUUID().slice(0, 8)}`;
+    ensureUser(userA);
+    ensureUser(userB);
+    // Each seed inserts one recent spray + one recent insecticide event —
+    // i.e. exactly two applications, in the current calendar year.
+    seedOwnerWithSpray(ownerA, userA);
+    seedOwnerWithSpray(ownerB, userB);
     const year = new Date().getFullYear();
 
-    const xSummary = await runWithTenantAsync(OWNER_X, () => buildYearSummary(year, OWNER_X));
-    const ySummary = await runWithTenantAsync(OWNER_Y, () => buildYearSummary(year, OWNER_Y));
+    const aSummary = await runWithTenantAsync(ownerA, () => buildYearSummary(year, ownerA));
+    const bSummary = await runWithTenantAsync(ownerB, () => buildYearSummary(year, ownerB));
 
-    // Each Owner sees exactly their own two applications — never the sum.
-    expect(xSummary.totals.totalApplications).toBe(2);
-    expect(ySummary.totals.totalApplications).toBe(2);
-    expect(xSummary.ownerId).toBe(OWNER_X);
-    expect(ySummary.ownerId).toBe(OWNER_Y);
+    // Each Owner sees exactly their own two applications — never the other's,
+    // and never the accumulated sum across tenants (Invariant 6).
+    expect(aSummary.totals.totalApplications).toBe(2);
+    expect(bSummary.totals.totalApplications).toBe(2);
+    expect(aSummary.totals.blocksTreated).toBe(1);
+    expect(bSummary.totals.blocksTreated).toBe(1);
+    expect(aSummary.ownerId).toBe(ownerA);
+    expect(bSummary.ownerId).toBe(ownerB);
   });
 });

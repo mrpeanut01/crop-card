@@ -15,6 +15,8 @@
   let lastError = $state<string | null>(null);
   // #316 — non-error success/offline notice (e.g. "queued offline").
   let lastNotice = $state<string | null>(null);
+  // #324 — PHI warning surfaced after a successful commit (non-blocking).
+  let phiWarning = $state<string | null>(null);
 
   onMount(async () => {
     if (data.focusPlantingId) {
@@ -27,6 +29,7 @@
   function startRecord(plantingId: string) {
     recordingFor = plantingId;
     lastError = null;
+    phiWarning = null;
   }
 
   function cancelRecord() {
@@ -39,7 +42,7 @@
    *  renderer can render it. */
   async function commitFromRenderer(
     planting: PlantingHarvestStatus,
-    input: { quantity?: string; lotNumber?: string }
+    input: { quantity?: string; lotNumber?: string; moisturePct?: number }
   ): Promise<string | null> {
     lastError = null;
     lastNotice = null;
@@ -47,7 +50,9 @@
       blockId: planting.blockId,
       cropPluginId: planting.cropPluginId,
       quantity: input.quantity,
-      lotNumber: input.lotNumber
+      lotNumber: input.lotNumber,
+      // #322 — structured moisture reaches the kernel gate.
+      moisturePct: input.moisturePct
     };
     try {
       // #316 (NFR-02) — offline path. Queue the harvest locally; the sync
@@ -68,9 +73,16 @@
       });
       const out = await res.json();
       if (!res.ok) {
-        lastError = out.error ?? `HTTP ${res.status}`;
+        // #341 — surface the API's human `message` (with threshold) instead
+        // of the raw error code, so the operator reads a plain sentence.
+        const thresh =
+          typeof out.thresholdPct === 'number' ? ` (threshold ${out.thresholdPct}%)` : '';
+        lastError = out.message ? `${out.message}${thresh}` : (out.error ?? `HTTP ${res.status}`);
         return null;
       }
+      // #324 — non-blocking PHI warning: the record committed, but surface
+      // the label-interval caution so the operator can act on it.
+      phiWarning = out?.phiWarning?.message ?? null;
       recordingFor = null;
       await invalidateAll();
       return (out?.event?.id as string | undefined) ?? null;
@@ -183,6 +195,17 @@
 
 {#if lastNotice}
   <Banner tone="wheat">{lastNotice}</Banner>
+{/if}
+{#if phiWarning}
+  <div class="phi-banner">
+    <Banner tone="wheat">
+      <strong>⚠ Pre-harvest interval:</strong>
+      {phiWarning}
+      <button class="phi-dismiss" type="button" onclick={() => (phiWarning = null)}
+        >Acknowledge</button
+      >
+    </Banner>
+  </div>
 {/if}
 
 {#if data.plantings.length === 0}
@@ -702,6 +725,21 @@
   .window-banner,
   .forage-banner {
     margin-top: 0.6rem;
+  }
+  .phi-banner {
+    margin-bottom: 1rem;
+  }
+  .phi-dismiss {
+    margin-left: 0.5rem;
+    background: transparent;
+    border: 1px solid currentColor;
+    color: inherit;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 12px;
+    min-height: unset;
+    cursor: pointer;
   }
   .primary {
     background: var(--color-forest);

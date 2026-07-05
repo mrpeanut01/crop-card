@@ -12,5 +12,10 @@
  * insecticide + fungicide record endpoints run the gate before persist and
  * update `lastChemistryClass` after, so herbicide-after-insecticide (and
  * other cross-category) sequences correctly require decon.
+ * #323 #340 — 0.5.4: FR-21 bale-gate `danger`-severity moisture violations
+ * (>22% fire risk / UC-14) are now NON-overridable — `overrideBaleGate`
+ * only clears `warn` severity. Harvest-moisture (#340) block/warn copy
+ * branches on the cure archetype so winter-squash no longer reads the
+ * small-grain "drying required" remedy.
  */
-export const RULES_VERSION = '0.5.3-issue321' as const;
+export const RULES_VERSION = '0.5.4-issue323' as const;

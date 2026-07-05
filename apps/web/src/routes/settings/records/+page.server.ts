@@ -8,7 +8,7 @@
  */
 
 import { error, redirect, type ServerLoad } from '@sveltejs/kit';
-import { listSprayEvents } from '$lib/db/sprayEvents';
+import { listSprayEvents, recordsApproachingRetention, LOCK_WINDOW_MS } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
@@ -29,6 +29,7 @@ export const load: ServerLoad = ({ locals }) => {
   const retentionCutoffMs = now - SPRAY_RETENTION_YEARS * 365 * DAY_MS;
   const sprayInRetention = sprays.filter((s) => s.occurredAt >= retentionCutoffMs).length;
   const sprayOlder = sprays.length - sprayInRetention;
+  const approachingRetention = recordsApproachingRetention(now).length;
 
   return {
     counts: {
@@ -40,7 +41,9 @@ export const load: ServerLoad = ({ locals }) => {
     retention: {
       sprayYears: SPRAY_RETENTION_YEARS,
       sprayInRetention,
-      sprayOlder
-    }
+      sprayOlder,
+      approachingRetention
+    },
+    lockWindowHours: LOCK_WINDOW_MS / (60 * 60 * 1000)
   };
 };

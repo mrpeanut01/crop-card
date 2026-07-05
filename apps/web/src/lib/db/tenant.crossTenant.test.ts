@@ -41,6 +41,7 @@ import * as settingsRepo from './settings';
 import * as planRevisionsRepo from '$lib/plan/revisions';
 import * as scoutObservationsRepo from './scoutObservations';
 import * as wizardChatRepo from './wizardChat';
+import * as seasonCloseoutsRepo from './seasonCloseouts';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
 import { users, helperAssignments, recordDeletions } from './schema';
 import { eq } from 'drizzle-orm';
@@ -376,6 +377,37 @@ describe('cross-tenant isolation', () => {
     expect(aReadsB).toEqual([]);
   });
 
+  it('season_closeouts rows are owner-scoped (UC-44)', () => {
+    const seedCloseout = (ownerId: string) =>
+      runWithTenant(
+        ownerId,
+        () =>
+          seasonCloseoutsRepo.createCloseout({
+            year: 2099,
+            snapshotJson: JSON.stringify({ owner: ownerId }),
+            closedById: null
+          }).id
+      );
+
+    const aId = seedCloseout(OWNER_A);
+    const bId = seedCloseout(OWNER_B);
+    expect(aId).not.toEqual(bId);
+
+    // Each owner sees only its own close row for the shared year.
+    const aList = runWithTenant(OWNER_A, () => seasonCloseoutsRepo.listCloseouts());
+    const aIds = new Set(aList.map((c) => c.id));
+    expect(aIds.has(aId)).toBe(true);
+    expect(aIds.has(bId)).toBe(false);
+
+    // The gate lookup is owner-scoped: A closing 2099 does not close it for B
+    // if B never closed — but here both closed, so both see their own close.
+    expect(runWithTenant(OWNER_A, () => seasonCloseoutsRepo.isSeasonClosed(2099))).toBe(true);
+    // A reopen by A must not touch B's row.
+    runWithTenant(OWNER_A, () => seasonCloseoutsRepo.reopenCloseout(2099));
+    expect(runWithTenant(OWNER_A, () => seasonCloseoutsRepo.isSeasonClosed(2099))).toBe(false);
+    expect(runWithTenant(OWNER_B, () => seasonCloseoutsRepo.isSeasonClosed(2099))).toBe(true);
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -398,7 +430,8 @@ describe('cross-tenant isolation', () => {
       settingsRepo,
       planRevisionsRepo,
       scoutObservationsRepo,
-      wizardChatRepo
+      wizardChatRepo,
+      seasonCloseoutsRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

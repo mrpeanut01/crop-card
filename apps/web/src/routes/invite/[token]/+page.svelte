@@ -3,6 +3,31 @@
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
+
+  // #333 — surface the specific redemption failure so the helper knows
+  // whether to ask for a fresh link, sign in under a different email, or
+  // just log in. `reason` is only present on the invalid branch.
+  const INVALID_COPY = {
+    expired: {
+      title: 'This invite has expired',
+      hint: 'Invite links are valid for 7 days. Ask the farm owner to send a fresh one.'
+    },
+    revoked: {
+      title: 'This invite was revoked',
+      hint: 'The farm owner cancelled this invite. Ask them to send a new one if you still need access.'
+    },
+    accepted: {
+      title: 'This invite was already used',
+      hint: 'You (or someone on this email) already accepted it. Just sign in to reach the farm.'
+    },
+    'not-found': {
+      title: 'Invite no longer valid',
+      hint: "This link doesn't match your signed-in email, or it never existed. Check you're signed in under the address the invite was sent to, or ask for a fresh invite."
+    }
+  } as const;
+  const invalid = $derived(
+    data.status === 'invalid' ? INVALID_COPY[data.reason ?? 'not-found'] : null
+  );
 </script>
 
 <svelte:head>
@@ -11,11 +36,8 @@
 
 <main class="invite">
   {#if data.status === 'invalid'}
-    <h1>Invite no longer valid</h1>
-    <p class="hint">
-      This invite link has expired, been revoked, or doesn't match your email. Ask the farm owner to
-      send a fresh invite.
-    </p>
+    <h1>{invalid?.title}</h1>
+    <p class="hint">{invalid?.hint}</p>
     <a href="/today" class="back">← Back</a>
   {:else}
     <h1>Join {data.ownerName}</h1>

@@ -8,8 +8,13 @@
  *
  * Returns a JSON manifest of every tenant-scoped event + the operator's
  * profile in one file. Stays tenant-scoped via the existing `list*`
- * pipelines; cross-tenant data never leaks because every repo funnels
- * through `tenantWhere`.
+ * pipelines and `withTenant` queries; cross-tenant data never leaks
+ * because every read funnels through the tenant filter.
+ *
+ * The `events` object mirrors every kind in `summary.countsByKind`
+ * (spray, insecticide, fungicide, scout, harvest, fertility, planting,
+ * decon) so the two reconcile (#328). Hay cuttings and API-token
+ * METADATA (never the plaintext token or its hash) round out the dump.
  *
  * Bigger objects (PDF audit pack, plugin snapshot zip) are linked, not
  * inlined, so the JSON stays under a few MB even for active farms.
@@ -18,16 +23,18 @@
 import { type RequestHandler } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
-import { owners, users } from '$lib/db/schema';
-import { unscopedQueryNote } from '$lib/db/tenant';
+import { equipment, equipmentLog, fertilityApplications, owners, users } from '$lib/db/schema';
+import { unscopedQueryNote, withTenant } from '$lib/db/tenant';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
+import { listCuttings } from '$lib/db/hayCuttings';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { listUnifiedRecords, summarizeUnifiedRecords } from '$lib/db/recordsUnified';
+import { listTokensForOwner } from '$lib/server/apiTokens';
 import { requireUser } from '$lib/server/auth';
 import { APP_VERSION } from '$lib/version';
 import { RULES_VERSION } from '$lib/safety/version';
@@ -42,6 +49,86 @@ export const GET: RequestHandler = async (event) => {
 
   const records = listUnifiedRecords();
   const summary = summarizeUnifiedRecords(records);
+
+  // Fertility applications (tenant-scoped) — mirrors the `fertility` kind in
+  // countsByKind so `events` reconciles with the summary.
+  const fertilityRows = db
+    .select()
+    .from(fertilityApplications)
+    .where(withTenant(fertilityApplications))
+    .all();
+  const fertility = fertilityRows.map((r) => ({
+    id: r.id,
+    blockId: r.blockId,
+    occurredAt: r.occurredAt.toISOString(),
+    source: r.source,
+    ratePerAcre: r.ratePerAcreHundredths / 100,
+    rateUnit: r.rateUnit,
+    nLbPerAcre: r.nDeliveredHundredths / 100,
+    pLbPerAcre: r.pDeliveredHundredths / 100,
+    kLbPerAcre: r.kDeliveredHundredths / 100,
+    performedById: r.performedById ?? null,
+    notes: r.notes ?? null
+  }));
+
+  // Decon events live in equipment_log under kind='decon'.
+  const deconRows = db
+    .select({
+      id: equipmentLog.id,
+      occurredAt: equipmentLog.occurredAt,
+      equipmentId: equipmentLog.equipmentId,
+      equipmentLabel: equipment.label,
+      performedById: equipmentLog.performedById,
+      notes: equipmentLog.notes,
+      payloadJson: equipmentLog.payloadJson
+    })
+    .from(equipmentLog)
+    .leftJoin(equipment, eq(equipment.id, equipmentLog.equipmentId))
+    .where(withTenant(equipmentLog, eq(equipmentLog.kind, 'decon')))
+    .all();
+  const decon = deconRows.map((r) => ({
+    id: r.id,
+    occurredAt: r.occurredAt.toISOString(),
+    equipmentId: r.equipmentId,
+    equipmentLabel: r.equipmentLabel ?? null,
+    performedById: r.performedById ?? null,
+    notes: r.notes ?? null,
+    payload: r.payloadJson ? JSON.parse(r.payloadJson) : null
+  }));
+
+  // Plantings are also nested under `blocks`, but the flat list makes the
+  // `planting` kind in countsByKind self-contained inside `events`.
+  const planting = listBlocks().flatMap((b) =>
+    b.plantings
+      .filter((p) => p.plantingDate != null)
+      .map((p) => ({
+        id: p.id,
+        blockId: b.id,
+        cropPluginId: p.cropPluginId,
+        varietyDisplayName: p.varietyDisplayName ?? null,
+        plantingDate: p.plantingDate ? new Date(p.plantingDate).toISOString() : null,
+        quantityPlanted: p.quantityPlanted ?? null,
+        quantityUnit: p.quantityUnit ?? null
+      }))
+  );
+
+  // Hay cuttings (tenant-scoped). Not part of the unified-records taxonomy but
+  // still the operator's data, so the GDPR dump must include them.
+  const hayCuttings = listCuttings({});
+
+  // API-token METADATA only — never the plaintext token or its hash.
+  const apiTokens = user.activeOwnerId
+    ? listTokensForOwner(user.activeOwnerId).map((t) => ({
+        id: t.id,
+        label: t.label,
+        userId: t.userId,
+        isServiceAccount: t.isServiceAccount,
+        createdAt: new Date(t.createdAt).toISOString(),
+        lastUsedAt: t.lastUsedAt ? new Date(t.lastUsedAt).toISOString() : null,
+        requestCount: t.requestCount,
+        revokedAt: t.revokedAt ? new Date(t.revokedAt).toISOString() : null
+      }))
+    : [];
 
   const payload = {
     schemaVersion: '1.0.0',
@@ -92,8 +179,13 @@ export const GET: RequestHandler = async (event) => {
       insecticide: listInsecticideEvents({ limit: 10_000 }),
       fungicide: listFungicideEvents({ limit: 10_000 }),
       scout: listScoutObservations({ limit: 10_000 }),
-      harvest: listHarvestEvents()
+      harvest: listHarvestEvents(),
+      fertility,
+      planting,
+      decon
     },
+    hayCuttings,
+    apiTokens,
     relatedDownloads: {
       vdacsAuditPdf: '/api/records/export.vdacs.pdf',
       sprayCsv: '/api/spray/records/export.csv',

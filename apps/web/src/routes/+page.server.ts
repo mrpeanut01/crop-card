@@ -1,5 +1,5 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
-import { loginByEmail } from '$lib/server/auth';
+import { loginByEmail, redirectFromLogin } from '$lib/server/auth';
 import { ALL_SESSION_ROLES, type SessionRole } from '$lib/server/session';
 import type { PageServerLoad } from './$types';
 
@@ -37,19 +37,16 @@ const DEMO_EMAIL: Record<SessionRole, string> = {
   'custom-operator': 'custom-operator@cropcard.local'
 };
 
-/** Compute the post-auth redirect target. Honors `?invite=<token>` so the
- *  invite flow round-trips through sign-in cleanly. */
-function nextForLogin(result: ReturnType<typeof loginByEmail>, inviteToken: string | null): string {
-  if (inviteToken) return `/invite/${encodeURIComponent(inviteToken)}`;
-  switch (result.next) {
-    case 'onboarding':
-      return '/onboarding';
-    case 'picker':
-      return '/owner-picker';
-    case 'today':
-    default:
-      return '/today';
-  }
+/** Follow the post-auth redirect. `?invite=<token>` short-circuits so the
+ *  invite flow round-trips through sign-in cleanly; otherwise delegate to
+ *  the canonical `redirectFromLogin` helper, which covers every LoginResult
+ *  arm (including `'admin'` — #332, avoiding the /today→/admin double hop). */
+function redirectNextForLogin(
+  result: ReturnType<typeof loginByEmail>,
+  inviteToken: string | null
+): never {
+  if (inviteToken) throw redirect(303, `/invite/${encodeURIComponent(inviteToken)}`);
+  redirectFromLogin(result.next);
 }
 
 export const actions: Actions = {
@@ -67,13 +64,13 @@ export const actions: Actions = {
         inviteToken
       });
     }
-    throw redirect(303, nextForLogin(result, inviteToken));
+    redirectNextForLogin(result, inviteToken);
   },
   demo: async (event) => {
     const fd = await event.request.formData();
     const role = coerceRole(fd.get('role'));
     const inviteToken = String(fd.get('invite') ?? '') || null;
     const result = loginByEmail(event, DEMO_EMAIL[role], role);
-    throw redirect(303, nextForLogin(result, inviteToken));
+    redirectNextForLogin(result, inviteToken);
   }
 };

@@ -10,8 +10,75 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
 import { insertHarvestEvent } from '$lib/db/harvestEvents';
+import { listSprayEvents } from '$lib/db/sprayEvents';
+import { listInsecticideEvents } from '$lib/db/insecticideEvents';
+import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { getRegistry } from '$lib/server/registry';
+import type { PluginRegistry } from '$lib/plugins';
 import { evaluateHarvestMoisture, HARVEST_MOISTURE_BLOCK } from '$lib/safety/harvestMoisture';
+import { checkSeasonClosed } from '$lib/server/seasonClose';
+import { evaluateHarvestPhi, type AppliedSpray } from '$lib/schedule/harvestPhi';
+
+const PHI_LOOKBACK_MS = 120 * 24 * 60 * 60 * 1000;
+
+/**
+ * #324 — assemble the applied-spray facts on this block for the PHI check.
+ * Insecticide + fungicide events persist `preHarvestClearAt`, so we derive
+ * their PHI days from that; herbicide spray events don't, so we look up each
+ * product's `preHarvestIntervalDays` from the registry.
+ */
+function gatherAppliedSprays(
+  blockId: string,
+  harvestMs: number,
+  registry: PluginRegistry
+): AppliedSpray[] {
+  const fromMs = harvestMs - PHI_LOOKBACK_MS;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const out: AppliedSpray[] = [];
+
+  for (const ev of listInsecticideEvents({ blockId, fromMs })) {
+    const phiDays = ev.preHarvestClearAt
+      ? Math.round((ev.preHarvestClearAt - ev.occurredAt) / DAY_MS)
+      : 0;
+    if (phiDays <= 0) continue;
+    for (const p of ev.products) {
+      out.push({
+        productName: p.displayName,
+        kind: 'insecticide',
+        appliedMs: ev.occurredAt,
+        phiDays
+      });
+    }
+  }
+
+  for (const ev of listFungicideEvents({ blockId, fromMs })) {
+    const phiDays = ev.preHarvestClearAt
+      ? Math.round((ev.preHarvestClearAt - ev.occurredAt) / DAY_MS)
+      : 0;
+    if (phiDays <= 0) continue;
+    for (const p of ev.products) {
+      out.push({
+        productName: p.displayName,
+        kind: 'fungicide',
+        appliedMs: ev.occurredAt,
+        phiDays
+      });
+    }
+  }
+
+  for (const ev of listSprayEvents({ blockId, fromMs })) {
+    for (const p of ev.products) {
+      const rec = registry.get(p.pluginId);
+      const phiDays = (rec?.plugin as { preHarvestIntervalDays?: number } | undefined)
+        ?.preHarvestIntervalDays;
+      if (!phiDays || phiDays <= 0) continue;
+      const name = (rec?.plugin as { displayName?: string } | undefined)?.displayName ?? p.pluginId;
+      out.push({ productName: name, kind: 'herbicide', appliedMs: ev.occurredAt, phiDays });
+    }
+  }
+
+  return out;
+}
 
 const requestSchema = z.object({
   blockId: z.string().min(1),
@@ -69,13 +136,34 @@ export const POST: RequestHandler = async ({ request }) => {
     }
   }
   const occurredAt = parsed.data.occurredAt ?? Date.now();
+  // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
+  const closed = checkSeasonClosed(occurredAt);
+  if (closed) {
+    return json(
+      { error: closed.code, message: closed.message, year: closed.year },
+      { status: 422 }
+    );
+  }
+
+  // #324 — PHI (pre-harvest interval) check. Consults recent spray /
+  // insecticide / fungicide events on the block against each applied
+  // product's PHI. v1 decision: WARN (non-blocking, acknowledgeable) —
+  // residue timing is label-legal + grower-owned, so we surface a clear
+  // warning rather than refuse the record. The harvest still commits; the
+  // warning rides on the response so the operator sees it.
+  const phi = evaluateHarvestPhi(
+    gatherAppliedSprays(parsed.data.blockId, occurredAt, registry),
+    occurredAt
+  );
+
   const event = insertHarvestEvent({
     blockId: parsed.data.blockId,
     cropId: parsed.data.cropId,
     cropPluginId: parsed.data.cropPluginId,
     occurredAt,
     quantity: parsed.data.quantity,
-    lotNumber: parsed.data.lotNumber
+    lotNumber: parsed.data.lotNumber,
+    moisturePct: parsed.data.moisturePct
   });
   if (parsed.data.taskId) {
     try {
@@ -89,5 +177,8 @@ export const POST: RequestHandler = async ({ request }) => {
       // Non-fatal; the harvest is recorded.
     }
   }
-  return json({ event });
+  return json({
+    event,
+    phiWarning: phi.decision === 'warn' ? { message: phi.message, conflicts: phi.conflicts } : null
+  });
 };

@@ -656,6 +656,12 @@ export const harvestEvents = tenantScoped(
       occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
       quantity: text('quantity'),
       lotNumber: text('lot_number'),
+      /** UC-16 (#339) — stored moisture % captured at harvest. Nullable:
+       *  null means the operator didn't measure. When present, the
+       *  harvest-moisture kernel (RULES_VERSION >=0.5.2) gates the commit
+       *  against the family threshold. Persisted so the gate decision is
+       *  auditable, not just enforced then dropped. */
+      moisturePct: real('moisture_pct'),
       /** FR-09 (#308) — 48-hour immutability lock, stamped on the first
        *  read past the window (mirrors spray_events.locked_at). Nullable:
        *  null means still-mutable. */

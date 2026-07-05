@@ -105,7 +105,7 @@ export const actions: Actions = {
     if (user.activeOwnerId) {
       return fail(400, {
         error:
-          'Your farm is already set up. Visit Settings to rename it, or open the Setup guide from /setup.'
+          'Your farm is already set up. Visit Settings to rename it, or re-walk the setup guide at /onboarding.'
       });
     }
 

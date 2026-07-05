@@ -258,7 +258,7 @@ export const POST: RequestHandler = async (event) => {
       const stockItem = stockByPluginId.get(line.pluginId);
       if (!stockItem) {
         stockWarnings.push(
-          `${line.pluginId}: not tracked in stock — add a SKU on /stock to enable auto-decrement`
+          `${line.pluginId}: not tracked in stock — add a SKU on /inventory to enable auto-decrement`
         );
         continue;
       }

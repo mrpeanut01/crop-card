@@ -20,7 +20,13 @@
     if (earCount.trim()) tagBits.push(`ears=${earCount}`);
     const quantity = bushels.trim() ? `${bushels} bu` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
-    return props.onCommit({ quantity, lotNumber: lot || undefined });
+    // #322 — moisture also travels as a structured number so the kernel gate is reachable.
+    const moisture = parseFloat(moisturePct);
+    return props.onCommit({
+      quantity,
+      lotNumber: lot || undefined,
+      moisturePct: Number.isFinite(moisture) ? moisture : undefined
+    });
   }
 </script>
 

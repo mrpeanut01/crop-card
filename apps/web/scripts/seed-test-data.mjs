@@ -105,6 +105,14 @@ const helperUser = {
   id: randomUUID(),
   email: 'helper@cropcard.local'
 };
+// #348 — inspector fixture so the read-only inspector persona is reachable
+// in one login. Scoped to the same test owner via helper_assignments with
+// role_within_owner='inspector'; the session gate treats it as read-only
+// across every mutation surface.
+const inspectorUser = {
+  id: randomUUID(),
+  email: 'inspector@cropcard.local'
+};
 // #191 — superadmin fixture so /admin/owners + impersonation flow can
 // be verified in dev. No helper_assignments row by design — the Phase
 // 18g superadmin routing path lets a `is_superadmin = 1` user land at
@@ -160,6 +168,7 @@ const insertSuperadmin = sqlite.prepare(
 );
 insertUser.run(ownerUser.id, ownerUser.email, now);
 insertUser.run(helperUser.id, helperUser.email, now);
+insertUser.run(inspectorUser.id, inspectorUser.email, now);
 insertSuperadmin.run(superadminUser.id, superadminUser.email, now);
 
 // ─── owner tenant + role assignment ─────────────────────────────────────
@@ -177,6 +186,7 @@ const insertAssignment = sqlite.prepare(
 );
 insertAssignment.run(ownerTenant.id, ownerUser.id, 'owner', now, now);
 insertAssignment.run(ownerTenant.id, helperUser.id, 'helper', now, now);
+insertAssignment.run(ownerTenant.id, inspectorUser.id, 'inspector', now, now);
 
 // ─── tenant-scoped fixtures ─────────────────────────────────────────────
 const O = ownerTenant.id;
@@ -250,7 +260,7 @@ sqlite.close();
 console.log(`[seed] done`);
 console.log(`  owner:     ${ownerTenant.name} (slug=${ownerTenant.slug})`);
 console.log(
-  `  users:     ${ownerUser.email} (owner role), ${helperUser.email} (helper role), ${superadminUser.email} (superadmin)`
+  `  users:     ${ownerUser.email} (owner role), ${helperUser.email} (helper role), ${inspectorUser.email} (inspector role), ${superadminUser.email} (superadmin)`
 );
 console.log(`  field:     ${homeField.name}`);
 console.log(

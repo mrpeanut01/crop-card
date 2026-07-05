@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "0490ad3c-d8f7-4e77-bf55-fba870a022ea",
+  "id": "8ac71cde-fbd2-4996-9a72-734bdad90ac2",
   "prevId": "779bdba6-ec35-4f60-97e2-e029ed69093a",
   "tables": {
     "ai_call_log": {
@@ -1645,6 +1645,13 @@
         "lot_number": {
           "name": "lot_number",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "moisture_pct": {
+          "name": "moisture_pct",
+          "type": "real",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -3306,97 +3313,6 @@
           "tableTo": "users",
           "columnsFrom": [
             "performed_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "season_closeouts": {
-      "name": "season_closeouts",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "owner_id": {
-          "name": "owner_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "year": {
-          "name": "year",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "closed_at": {
-          "name": "closed_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch() * 1000)"
-        },
-        "closed_by_id": {
-          "name": "closed_by_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "snapshot_json": {
-          "name": "snapshot_json",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "reopened_at": {
-          "name": "reopened_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "season_closeouts_owner_year_uq": {
-          "name": "season_closeouts_owner_year_uq",
-          "columns": [
-            "owner_id",
-            "year"
-          ],
-          "isUnique": true
-        },
-        "season_closeouts_owner_closed_idx": {
-          "name": "season_closeouts_owner_closed_idx",
-          "columns": [
-            "owner_id",
-            "closed_at"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "season_closeouts_closed_by_id_users_id_fk": {
-          "name": "season_closeouts_closed_by_id_users_id_fk",
-          "tableFrom": "season_closeouts",
-          "tableTo": "users",
-          "columnsFrom": [
-            "closed_by_id"
           ],
           "columnsTo": [
             "id"

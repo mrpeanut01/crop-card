@@ -23,7 +23,13 @@
     if (storageMoisturePct.trim()) tagBits.push(`moisture=${storageMoisturePct}%`);
     const quantity = cleanSeedLb.trim() ? `${cleanSeedLb} lb seed` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
-    return props.onCommit({ quantity, lotNumber: lot || undefined });
+    // #322 — moisture also travels as a structured number so the kernel gate is reachable.
+    const moisture = parseFloat(storageMoisturePct);
+    return props.onCommit({
+      quantity,
+      lotNumber: lot || undefined,
+      moisturePct: Number.isFinite(moisture) ? moisture : undefined
+    });
   }
 </script>
 

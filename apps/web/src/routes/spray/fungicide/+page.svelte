@@ -165,22 +165,30 @@
     result = null;
     warnings = [];
     violations = [];
-    try {
-      const body: Record<string, unknown> = {
-        blockId: selectedBlockId,
-        productPluginIds: selectedPluginIds,
-        conditions: {
-          windMph,
-          tempF,
-          rainForecastMmNext24h: (rainPct / 100) * 25.4
-        }
-      };
-      if (diseaseName && diseaseValue !== null) {
-        body.disease = { disease: diseaseName, metric: diseaseMetric, value: diseaseValue };
+    const body: Record<string, unknown> = {
+      blockId: selectedBlockId,
+      productPluginIds: selectedPluginIds,
+      conditions: {
+        windMph,
+        tempF,
+        rainForecastMmNext24h: (rainPct / 100) * 25.4
       }
-      if (tankSize) body.tankSizeGallons = tankSize;
-      if (data.preselect.taskId) body.taskId = data.preselect.taskId;
-
+    };
+    if (diseaseName && diseaseValue !== null) {
+      body.disease = { disease: diseaseName, metric: diseaseMetric, value: diseaseValue };
+    }
+    if (tankSize) body.tankSizeGallons = tankSize;
+    if (data.preselect.taskId) body.taskId = data.preselect.taskId;
+    try {
+      // #316 (NFR-02) — offline path. Queue locally; the sync queue replays
+      // against /api/fungicide/record (server re-runs FRAC/tank-mix gates)
+      // on reconnect.
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        const { enqueueRecord } = await import('$lib/client/syncQueue');
+        await enqueueRecord('fungicide', body);
+        result = '☁ Offline — queued. Will sync to the server when the connection returns.';
+        return;
+      }
       const res = await fetch('/api/fungicide/record', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -207,7 +215,23 @@
         return;
       }
     } catch (e) {
-      error = e instanceof Error ? e.message : String(e);
+      // #316 — transient network failure while "online": fall back to the
+      // offline queue instead of losing the record.
+      const msg = e instanceof Error ? e.message : String(e);
+      const isNetworkErr = e instanceof TypeError && /(fetch|network|failed)/i.test(msg);
+      if (isNetworkErr) {
+        try {
+          const { enqueueRecord } = await import('$lib/client/syncQueue');
+          await enqueueRecord('fungicide', body);
+          result = '☁ Offline — queued. Will sync to the server when the connection returns.';
+        } catch (queueErr) {
+          error = `offline queue failed: ${
+            queueErr instanceof Error ? queueErr.message : queueErr
+          }`;
+        }
+      } else {
+        error = msg;
+      }
     } finally {
       busy = false;
     }

@@ -76,17 +76,27 @@
     busy = true;
     error = null;
     banner = null;
+    const body = {
+      blockId,
+      cropPluginId,
+      year,
+      forecast: forecast ?? undefined,
+      overrideMowGate: opts.override
+    };
     try {
+      // #316 (NFR-02) — offline path. Queue the cutting-start locally; the
+      // sync queue replays it against /api/hay/cuttings (server re-runs the
+      // mow gate) on reconnect. No reload — the server has nothing new yet.
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        const { enqueueRecord } = await import('$lib/client/syncQueue');
+        await enqueueRecord('hay-cutting', body);
+        banner = '☁ Offline — cutting queued. Will sync when the connection returns.';
+        return;
+      }
       const res = await fetch('/api/hay/cuttings', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          blockId,
-          cropPluginId,
-          year,
-          forecast: forecast ?? undefined,
-          overrideMowGate: opts.override
-        })
+        body: JSON.stringify(body)
       });
       const out = await res.json();
       if (!res.ok) {
@@ -99,7 +109,23 @@
       banner = `Cutting #${out.cutting.cuttingNumber} recorded.`;
       reload();
     } catch (e) {
-      error = e instanceof Error ? e.message : String(e);
+      // #316 — transient network failure while "online": queue instead of
+      // losing the cutting.
+      const msg = e instanceof Error ? e.message : String(e);
+      const isNetworkErr = e instanceof TypeError && /(fetch|network|failed)/i.test(msg);
+      if (isNetworkErr) {
+        try {
+          const { enqueueRecord } = await import('$lib/client/syncQueue');
+          await enqueueRecord('hay-cutting', body);
+          banner = '☁ Offline — cutting queued. Will sync when the connection returns.';
+        } catch (queueErr) {
+          error = `offline queue failed: ${
+            queueErr instanceof Error ? queueErr.message : queueErr
+          }`;
+        }
+      } else {
+        error = msg;
+      }
     } finally {
       busy = false;
     }

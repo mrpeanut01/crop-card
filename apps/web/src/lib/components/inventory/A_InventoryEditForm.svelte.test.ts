@@ -26,6 +26,9 @@ beforeEach(() => {
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  // Vitest 3+ restoreAllMocks no longer clears vi.fn() call history, so
+  // the module-level `goto` mock would carry calls across tests.
+  vi.clearAllMocks();
   vi.restoreAllMocks();
 });
 

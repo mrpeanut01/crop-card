@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Quadris Flowable (Syngenta azoxystrobin)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "100-1098",
   "defaultUnit": "fl-oz",
   "formulation": "F",
   "applicationTiming": "COVER",

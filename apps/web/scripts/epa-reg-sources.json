@@ -354,6 +354,183 @@
       "epaRegistrationNumber": "7969-374",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00374-20240423.pdf",
       "matchedTitle": "US EPA, Pesticide Product Label, Zidua SC Herbicide,04/23/2024"
+    },
+    "admire-pro": {
+      "epaRegistrationNumber": "264-827",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20110822.pdf",
+      "docDate": "2011-08-22",
+      "page": 2,
+      "quote": "ADMIRE® PRO Systemic Protectant EPA Reg. No. 264-827",
+      "note": "Resolves allowlist question: PPLS 264-827 (Bayer CropScience LLC, Active) primary name is 'GAUCHO 550 SC INSECTICIDE' with alternate brand name 'ADMIRE PRO SYSTEMIC PROTECTANT'. The quote is from the EPA-accepted Admire Pro supplemental foliar label (2011) under the same number; latest full label 000264-00827-20190917.pdf is written under the Gaucho 550 SC brand."
+    },
+    "anthem-maxx": {
+      "epaRegistrationNumber": "279-3468",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
+      "docDate": "2025-11-25",
+      "page": 3,
+      "quote": "F9310-7 (ABN: Anthem Maxx Herbicide) For preplant burndown/ preemergence, preplant incorporated and postemergence weed c",
+      "note": "FMC, Active. PPLS alternate brand names: ANTHEM MAXX HERBICIDE, ANTHEM NXT HERBICIDE. The newer 2026 label files print only F9310-7; 279-3450 is plain Anthem (different product)."
+    },
+    "aza-direct": {
+      "epaRegistrationNumber": "71908-1-10163",
+      "sourceUrl": "https://www.gowanco.com/sites/default/files/gowanco_com/_attachments/product/resource/label/aza-direct_71908-1-10163_01-r1218.pdf",
+      "docDate": "2018-12",
+      "page": 1,
+      "quote": "Produced For: EPA Reg. No. 71908-1-10163 Gowan Company",
+      "note": "Supplemental distributor number (parent 71908-1 NeemAzal T/S 1.2 EC, Coromandel International; distributor 10163 = Gowan). Plugin names Gowan, so the distributor number applies. PPLS search 'Aza-Direct' returns 71908-1-10163 AZA-DIRECT, Active since 2018-12-04; PPLS holds no label PDF for the distributor number, so the Gowan-hosted label (rev 01-R1218) is the source."
+    },
+    "belay": {
+      "epaRegistrationNumber": "59639-150",
+      "sourceUrl": "https://www.agrian.com/pdfs/Belayr_Insecticide1b_2016-BEL-0001_Label.pdf",
+      "docDate": "2018",
+      "page": 1,
+      "quote": "Contains 2.13 lbs active ingredient per gallon EPA Reg. No. 59639-150",
+      "note": "Resolves allowlist question: PPLS 59639-150 (Valent U.S.A. LLC, Active) is titled 'V-10170 2.13SC INSECTICIDE' with alternate brand names 'BELAY INSECTICIDE' and 'CLUTCH SC INSECTICIDE'. Quote is from the Belay Insecticide label (code 2018-BEL-0001-1681-L) linked from valent.com/products/belay-insecticide. Other Belay brands exist (Belay 50 WDG 59639-152, Belay 16 WSG 59639-153) but are dry; the plugin's fl-oz rate matches the liquid Belay Insecticide."
+    },
+    "bravo-weather-stik": {
+      "epaRegistrationNumber": "66222-276",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/050534-00188-20050927.pdf",
+      "docDate": "2005-09-27",
+      "page": 1,
+      "quote": "Bravo®720 (Alternate Brand Name: Bravo Weather Stik",
+      "note": "Bravo Weather Stik is an alternate brand of Bravo 720, originally 50534-188 (GB Biosciences/Syngenta). PPLS: 50534-188 transferred to 66222-276 (Makhteshim Agan of North America / ADAMA) on 2017-09-18; 66222-276 is Active and PPLS lists altbrandname 'BRAVO WEATHERSTIK'. No Syngenta-held active registration remains (Syngenta supplemental 50534-188-100 is Inactive). Plugin displayName still says Syngenta."
+    },
+    "captan-80wdg": {
+      "epaRegistrationNumber": "70506-445",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00029-20180226.pdf",
+      "docDate": "2018-02-26",
+      "page": 3,
+      "quote": "GROUP M4 FUNGICIDE CAPTAN 80 WDG [Alternate Brand Name: Captan 80 WDG Fungicide] A Fungicide for Plant Disease Control",
+      "note": "Plugin names Arysta: Arysta's Captan 80 WDG was 66330-29 (label above, Arysta letterhead p1); PPLS reg record shows 66330-29 transferred to UPL NA as 70506-445 on 2021-05-26 (Active). 66222-58-51036, 103591-32 (Prism) etc. are other registrants' products. PPLS lists no label file under 70506-445 yet, so the quoted label is the last 66330-29 file. Plugin names Arysta; Arysta was acquired by UPL and its 66330-29 registration transferred to UPL as 70506-445 on 2021-05-26."
+    },
+    "engenia": {
+      "epaRegistrationNumber": "7969-507",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00507-20260206.pdf",
+      "docDate": "2026-02-06",
+      "page": 15,
+      "quote": "Engenia is a soluble liquid (SL). EPA Reg. No. 7969-507",
+      "note": "Resolves the allowlist ambiguity: of the three PPLS 'Engenia Herbicide' records, only 7969-507 is Active (BASF, label accepted 2026-02-06, RUP, labeling expires 2028-02-06); 7969-345 and 7969-472 are Inactive. Jugs from the earlier registrations will carry the old numbers."
+    },
+    "flint-extra": {
+      "epaRegistrationNumber": "264-826",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00826-20250116.pdf",
+      "docDate": "2025-01-16",
+      "page": 3,
+      "quote": "Gem® 500 SC Fungicide [ABN:FLINT® Extra]",
+      "note": "PPLS product name is GEM 500 SC FUNGICIDE (Bayer CropScience LLC, Active); FLINT EXTRA is a registered alternate brand name (PPLS altbrandname 'FLINT EXTRA'). Resolves allowlist note: 264-777 is plain Flint (50WG), not Flint Extra."
+    },
+    "gramoxone-sl-3": {
+      "epaRegistrationNumber": "100-1652",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01652-20220824.pdf",
+      "docDate": "2022-08-24",
+      "page": 3,
+      "quote": "Gramoxone® 3LB [Alternate Brand Name: Gramoxone® SL 3.0] HERBICIDE A Weed, Grass, and Harvest Aid Desiccant/Defoliant Herbicide",
+      "note": "Resolves the allowlist ambiguity: Gramoxone SL 3.0 is a label-printed alternate brand of Gramoxone 3LB (Syngenta, Active). Gramoxone SL 2.0 is a separate product."
+    },
+    "indar-2f": {
+      "epaRegistrationNumber": "62719-416",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00416-20130711.pdf",
+      "docDate": "2013-07-11",
+      "page": 3,
+      "quote": "Group FUNGICIDE Enable® 2F [Alternate Brand Name: Indar® 2F] Fungicide Active Ingredient fenbuconazole ... 23.5%",
+      "note": "Resolves the allowlist question: the federal Enable 2F label (Corteva, Active) carries Indar 2F as an alternate brand name (also on container page p6); PPLS search also lists 'INDAR 2F' as alt brand of 62719-416. The MI090002 etc. entries are 24(c) SLNs."
+    },
+    "kocide-3000-o": {
+      "epaRegistrationNumber": "91411-11-70051",
+      "sourceUrl": "https://www.certisbio.com/hubfs/20250114%2091411-11-70051%20K3000-O%20Specimen%20Lbl.pdf",
+      "docDate": "2025-01-14",
+      "page": 1,
+      "quote": "MANUFACTURED FOR: Certis USA LLC ... EPA Reg. No. 91411-11-70051 ... FOR ORGANIC PRODUCTION Dry Flowable",
+      "note": "Certis supplemental distributor number (PPLS search: '91411-11-70051 Kocide 3000-O' Active). Base registration 91411-11 is COSACO LLC product KX-002 with alternate brand name KOCIDE 3000-O (PPLS, Active; label 091411-00011-20180312 p.3 'KX-002 ABN: Kocide 3000-O'). Plugin names Certis, so the supplemental number is used. Resolves allowlist note: plugin's candidates 91411-2 / 352-662 are plain Kocide 3000."
+    },
+    "lannate-lv": {
+      "epaRegistrationNumber": "61842-55",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "docDate": "2024-10-10",
+      "page": 3,
+      "quote": "GROUP 1A INSECTICIDE Lannate® LV INSECTICIDE {[Alternate Brand Name:}[ Lannate® LV] Water Soluble Liquid ... EPA Reg. 61842-55",
+      "note": "Resolves allowlist ambiguity: 352-384 (Corteva) is not a separate live product. PPLS transfer_history shows it moved to 61842-55 (Tessenderlo Kerley, Inc.) on 2023-01-12, and 61842-55 is the only Active record. The plugin name says 'Corteva', but Corteva no longer holds the registration, so the display name/notes should drop Corteva. Newest file 20250729 has unreadable fonts, so the quote comes from the 2024-10-10 label."
+    },
+    "liberty-ultra": {
+      "epaRegistrationNumber": "7969-500",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00500-20251030.pdf",
+      "docDate": "2025-10-30",
+      "page": 3,
+      "quote": "BASF Agricultural Solutions US LLC ... Alternate Brand Names: Liberty ® ULTRA Herbicide, Liberty ® ULTRA, Noventa® ULTRA, Noventa® ULTRA Herbicide",
+      "note": "Base label name 'BASF L-Glufosinate-Ammonium 211'; Liberty ULTRA is a label-printed alternate brand name. PPLS status Active (BASF). Resolves the prior 'no PPLS match' reason."
+    },
+    "me-too-lachlor-ii": {
+      "epaRegistrationNumber": "19713-549",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/019713-00549-20230104.pdf",
+      "docDate": "2023-01-04",
+      "page": 3,
+      "quote": "METOLACHLOR GROUP 15 HERBICIDE Me-Too-LachlorTM II Herbicide Jan 04, 2023 19713-549",
+      "note": "Resolves the allowlist ambiguity: PPLS now titles 19713-549 'DREXEL ME-TOO-LACHLOR II HERBICIDE' (Active, Drexel); 19713-548 is plain 'Drexel Me-Too-Lachlor' (86.4%), and 19713-554/555/556 are the V/IV/III products. EPA letter p1: 'Product Name: Drexel Me-Too-Lachlor II Herbicide EPA Registration Number: 19713-549'."
+    },
+    "mustang-maxx": {
+      "epaRegistrationNumber": "279-3426",
+      "matchedTitle": "F9114 EC INSECTICIDE (ABN: MUSTANG MAXX INSECTICIDE)",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+      "docDate": "2022-08-16",
+      "page": 3,
+      "quote": "F9114 EC Insecticide [ABN: Mustang Maxx Insecticide] EPA Reg. No. 279-3426",
+      "note": "Resolves the open allowlist question: the development-code title 'F9114 EC' carries Mustang Maxx as its alternate brand name (ABN) on the label itself; PPLS name search also lists 'MUSTANG MAXX INSECTICIDE' under 279-3426. Registrant FMC Corporation, status Active. Zeta-cypermethrin 9.15% matches the plugin AI."
+    },
+    "permit": {
+      "epaRegistrationNumber": "81880-2",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00002-20250911.pdf",
+      "docDate": "2025-09-11",
+      "page": 3,
+      "quote": "HALOSULFURON-METHYL GROUP 2 HERBICIDE Permit® Herbicide PERMIT is a selective herbicide for control of listed broadleaf weeds and nutsedge",
+      "note": "PPLS 81880-2 'PERMIT' Active; 2025 amendment letter: 'change of primary brand name to PERMIT'. Registrant is Canyon Group LLC, label p3 'Produced For: Canyon Group LLC. C/O Gowan Company, LLC' - matches the plugin's Gowan attribution. Label covers 'CORN, FIELD AND FIELD CORN GROWN FOR SEED 2/3 - 1 1/3' oz/acre (p10). Not Permit Plus (81880-26)."
+    },
+    "quadris-flowable": {
+      "epaRegistrationNumber": "100-1098",
+      "sourceUrl": "https://www.cdms.net/ldat/ld5QN003.pdf",
+      "docDate": "2018-12-19",
+      "page": 5,
+      "quote": "EPA Reg. No. 100-1098 ... Quadris Flowable Fungicide is a member of Syngenta’s Plant Performance™ product line",
+      "note": "PPLS master brand for 100-1098 is Abound Flowable Fungicide; PPLS lists 'QUADRIS FLOWABLE FUNGICIDE' as an alternate brand (Active, Syngenta). The Syngenta Quadris container label (SCP 1098B-L2W 1218) prints EPA Reg. No. 100-1098 (p1). Quadris Top/Opti/Xtra are different registrations."
+    },
+    "roundup-powermax-3": {
+      "epaRegistrationNumber": "524-659",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00659-20241213.pdf",
+      "docDate": "2024-12-13",
+      "page": 3,
+      "quote": "MASTER LABEL FOR EPA REG. NO. 524-659 Primary Brand Name: MON 301108 Herbicide Alternate Brand Names: Roundup PowerMAX 3 Herbicide",
+      "note": "Resolves the allowlist question: the label names Roundup PowerMAX 3 as the alternate brand of MON 301108 (524-659, Bayer). PPLS transfer history: 524-659 moved from Bayer CropScience to Ruveon, LLC on 2026-01-14 and is now carried as 105211-118 (Active, product name 'MON 301108 Herbicide', PPLS search alt name 'ROUNDUP POWERMAX 3 HERBICIDE'). Plugin names Bayer, so the Bayer number is used; jugs sold under Ruveon will show 105211-118. Registration transferred Bayer -> Ruveon, LLC on 2026-01-14 (now 105211-118 in PPLS); kept 524-659 because the plugin names Bayer, and jugs in circulation carry it."
+    },
+    "sivanto-prime": {
+      "epaRegistrationNumber": "264-1141",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01141-20210603.pdf",
+      "docDate": "2021-06-03",
+      "page": 2,
+      "quote": "SIVANTO™ 200 SL [ABN: SIVANTO™ prime] EPA Reg. No. 264-1141",
+      "note": "Resolves allowlist ambiguity: 'Sivanto prime' is an alternate brand name (ABN) of Sivanto 200 SL, 264-1141 (Bayer CropScience LLC, Active). PPLS altbrandnames for 264-1141 are 'SIVANTO PRIME' and 'SIVANTO PRIME 200 SL'. Sivanto 400 SL/HL (264-1198) is a different, 3.34 lb/gal product."
+    },
+    "topsin-m-wsb": {
+      "epaRegistrationNumber": "8033-125",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00125-20260625.pdf",
+      "docDate": "2026-06-25",
+      "page": 3,
+      "quote": "THIOPHANATE-METHYL GROUP 1 FUNGICIDE TOPSIN® M WSB THIOPHANATE-METHYL FUNGICIDE IN WATER SOLUBLE BAGS 70% Wettable Powder",
+      "note": "Resolves allowlist: PPLS shows 73545-16 (Nisso TM) transferred into 8033-125 (Nippon Soda, Active) on 2013-04-30, so 8033-125 is the current registration. Plugin names UPL: PPLS search lists UPL's supplemental 8033-125-70506 'TOPSIN M WSB' (Active) but PPLS has no label file for it, so the primary number is proposed."
+    },
+    "valor-sx": {
+      "epaRegistrationNumber": "59639-99",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00099-20260917.pdf",
+      "docDate": "2026-09-17",
+      "page": 3,
+      "quote": "Valor® Herbicide is a water dispersible granule containing 51% active ingredient.",
+      "note": "PPLS record 59639-99 (Valent, Active) lists alternate brand names 'VALOR SX HERBICIDE' and 'VALOR(R) SX HERBICIDE' (also Chateau, Payload WDG); label body uses 'Valor Herbicide'. Valor SX = the WDG 51% flumioxazin; Valor EZ is a separate SC registration (59639-127/-221). Resolves the prior 'Valor vs Valor SX' reason."
+    },
+    "warrant": {
+      "epaRegistrationNumber": "524-591",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00591-20200618.pdf",
+      "docDate": "2020-06-18",
+      "page": 3,
+      "quote": "FOR EPA REG. NO. 524-591 Registered Brand Names: Primary Brand Name: MON 63410 Herbicide Alternate Brand Name: WARRANT® Herbicide",
+      "note": "Resolves the allowlist question: the master label names WARRANT as the alternate brand of MON 63410 (Bayer CropScience, Active, no transfers). PPLS search also lists 524-591 as 'WARRANT HERBICIDE'. Not Warrant Ultra (524-620, acetochlor + fomesafen)."
     }
   },
   "rainfast": {

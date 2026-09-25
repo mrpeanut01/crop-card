@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Kocide 3000-O (Certis copper hydroxide — OMRI)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "91411-11-70051",
   "defaultUnit": "lb",
   "applicationTiming": "COVER",
   "activeIngredients": [

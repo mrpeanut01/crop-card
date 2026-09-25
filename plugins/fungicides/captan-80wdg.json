@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Captan 80 WDG (Arysta phthalimide)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "70506-445",
   "defaultUnit": "lb",
   "formulation": "WDG",
   "applicationTiming": "COVER",

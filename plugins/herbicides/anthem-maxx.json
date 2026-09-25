@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Anthem MAXX (FMC)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "279-3468",
   "defaultUnit": "fl-oz",
   "applicationTiming": "PRE",
   "activeIngredients": [

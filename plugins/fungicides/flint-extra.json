@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Flint Extra (Bayer trifloxystrobin)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "264-826",
   "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "trifloxystrobin", "fracCode": "11" }],

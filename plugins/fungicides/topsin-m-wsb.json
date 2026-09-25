@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Topsin M WSB (UPL thiophanate-methyl)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "8033-125",
   "defaultUnit": "lb",
   "applicationTiming": "PRE-BLOOM",
   "activeIngredients": [{ "name": "thiophanate-methyl", "fracCode": "1" }],

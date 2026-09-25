@@ -33,6 +33,7 @@
     ProgressStage,
     SeedStockEntry
   } from '$lib/components/wizard/allocation/types';
+  import CommitStep from '$lib/components/wizard/allocation/steps/CommitStep.svelte';
 
   const {
     seedStock,
@@ -1023,21 +1024,7 @@
           onBack={() => (w.step = 'schedule')}
         />
       {:else if w.step === 'commit'}
-        <p class="aw-loading">
-          Committing… {w.commitProgress.done} / {w.commitProgress.total}
-        </p>
-        <progress value={w.commitProgress.done} max={w.commitProgress.total}></progress>
-        {#if w.inputsCommitError}
-          <p class="aw-error">Inputs plan tasks failed to commit: {w.inputsCommitError}</p>
-        {/if}
-        {#if w.commitProgress.failed.length > 0}
-          <p class="aw-error">Failed: {w.commitProgress.failed.length}</p>
-          <ul>
-            {#each w.commitProgress.failed as f}
-              <li>{f}</li>
-            {/each}
-          </ul>
-        {/if}
+        <CommitStep />
       {/if}
     </div>
 
@@ -1680,10 +1667,6 @@
     max-width: 28rem;
     min-width: 12rem;
   }
-  .aw-schedule-coming-soon {
-    font-style: italic;
-    margin: 0.75rem 0 0;
-  }
   .chip-succession {
     background: #e6efff;
     color: #1f4a85;
@@ -1754,10 +1737,6 @@
   .aw-error-banner strong {
     color: #6a1414;
   }
-  .aw-loading {
-    color: var(--color-forest);
-    font-size: 1rem;
-  }
   .chip {
     display: inline-block;
     padding: 0.15rem 0.55rem;
@@ -1818,16 +1797,10 @@
     background: white;
     color: #4a5d4a;
   }
-  progress {
-    width: 100%;
-    height: 14px;
-    margin-top: 0.5rem;
-  }
   .empty {
     color: #6a7d6a;
     font-style: italic;
   }
-
   /* #175 (CT-W-006) — Seeds step empty-state card. Sized to feel like
      a "next step" card rather than an error. Sprint 3 extends this
      block with an inline embedded stock-add form; keep the class
@@ -1874,7 +1847,6 @@
   .aw-seed-empty-actions .btn-link:hover {
     color: var(--color-forest-deep, #1f3522);
   }
-
   /* #252 / CT-W-007 — needs-plugin section. Same visual register as
      the wizard-Seeds empty-state (#175) so the operator reads the
      two empty-states as a consistent "data is incomplete; here's how

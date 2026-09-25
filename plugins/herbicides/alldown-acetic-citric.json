@@ -2,6 +2,7 @@
   "pluginId": "alldown-acetic-citric",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "AllDown (acetic + citric acid, OMRI)",
   "activeIngredients": [

@@ -21,8 +21,8 @@ import { db } from '$lib/db/client';
 import { weatherForecastCache } from '$lib/db/schema';
 import type { ForecastDay } from '$lib/hay/types';
 
-const NWS_BASE = 'https://api.weather.gov';
-const USER_AGENT = 'cropcard.farm (cropcard-app, contact: github.com/mrpeanut01/crop-card)';
+export const NWS_BASE = 'https://api.weather.gov';
+export const USER_AGENT = 'cropcard.farm (cropcard-app, contact: github.com/mrpeanut01/crop-card)';
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
 export class WeatherFetchError extends Error {
@@ -39,9 +39,10 @@ function cacheKey(lat: number, lon: number): string {
   return `${lat.toFixed(4)},${lon.toFixed(4)}`;
 }
 
-interface NwsPointsResponse {
+export interface NwsPointsResponse {
   properties: {
     forecast: string;
+    forecastGridData?: string;
   };
 }
 
@@ -64,17 +65,26 @@ interface NwsForecastResponse {
   };
 }
 
-async function nwsFetch<T>(url: string): Promise<T> {
+export async function nwsFetch<T>(url: string, init: { signal?: AbortSignal } = {}): Promise<T> {
   const res = await fetch(url, {
     headers: {
       'User-Agent': USER_AGENT,
       Accept: 'application/geo+json'
-    }
+    },
+    signal: init.signal
   });
   if (!res.ok) {
     throw new WeatherFetchError(`NWS fetch failed: ${res.status} ${res.statusText} (${url})`);
   }
   return (await res.json()) as T;
+}
+
+export function fetchNwsPoints(
+  lat: number,
+  lon: number,
+  init: { signal?: AbortSignal } = {}
+): Promise<NwsPointsResponse> {
+  return nwsFetch<NwsPointsResponse>(`${NWS_BASE}/points/${lat},${lon}`, init);
 }
 
 /**
@@ -136,7 +146,7 @@ export async function getForecast(lat: number, lon: number): Promise<ForecastDay
     return JSON.parse(cached.payloadJson) as ForecastDay[];
   }
 
-  const points = await nwsFetch<NwsPointsResponse>(`${NWS_BASE}/points/${lat},${lon}`);
+  const points = await fetchNwsPoints(lat, lon);
   const forecast = await nwsFetch<NwsForecastResponse>(points.properties.forecast);
   const days = periodsToDays(forecast.properties.periods);
 

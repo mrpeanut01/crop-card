@@ -1,0 +1,13 @@
+{
+  "id": "https://api.weather.gov/points/39.1157,-77.5636",
+  "type": "Feature",
+  "properties": {
+    "gridId": "LWX",
+    "gridX": 82,
+    "gridY": 79,
+    "forecast": "https://api.weather.gov/gridpoints/LWX/82,79/forecast",
+    "forecastHourly": "https://api.weather.gov/gridpoints/LWX/82,79/forecast/hourly",
+    "forecastGridData": "https://api.weather.gov/gridpoints/LWX/82,79",
+    "timeZone": "America/New_York"
+  }
+}

@@ -2,6 +2,7 @@
   "pluginId": "chilean-nitrate-16-0-0",
   "type": "fertilizer",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
     "n": 16,

@@ -12,7 +12,7 @@
   <a href="/inventory?type={data.type}">← All {data.type}</a>
 </nav>
 
-<A_InventoryAddFlow type={data.type} aiEnabled={data.aiEnabled} />
+<A_InventoryAddFlow type={data.type} aiEnabled={data.aiEnabled} canSave={data.canSave} />
 
 <style>
   .breadcrumb {

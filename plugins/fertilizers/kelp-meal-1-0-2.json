@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Kelp Meal (1-0-2, OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 1,
     "p": 0,

@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Bravo Weather Stik (Syngenta chlorothalonil)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "chlorothalonil", "fracCode": "M05" }],
   "ratePerAcre": { "amount": 1.5, "unit": "pt" },

@@ -66,6 +66,20 @@
         "meal"
       ]
     },
+    "defaultUnit": {
+      "type": "string",
+      "enum": [
+        "fl-oz",
+        "pt",
+        "qt",
+        "gal",
+        "oz",
+        "lb",
+        "kg",
+        "g",
+        "count"
+      ]
+    },
     "organic": {
       "type": "boolean",
       "default": false

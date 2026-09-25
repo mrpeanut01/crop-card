@@ -2,6 +2,7 @@
   "pluginId": "spear-lep",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Spear-Lep (GS-omega/kappa-Hxtx-Hv1a peptide, OMRI)",
   "activeIngredients": [

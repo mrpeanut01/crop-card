@@ -3,22 +3,26 @@ import { fetchPageContent, renderPageContentForPrompt } from './scanResult';
 
 /**
  * fetchPageContent is normally called against a live URL. To exercise the
- * HTML decomposition in isolation we stub `globalThis.fetch` with a Response
- * that streams a fixed HTML body. This keeps the test fast and offline while
- * still going through the same code path as a real request.
+ * HTML decomposition in isolation we inject safeFetch's resolver + connector
+ * with a canned public address and a fixed response body, so the test runs
+ * offline through the same code path as a real request.
  */
+function stub(body: string, status = 200, contentType = 'text/html; charset=utf-8') {
+  return {
+    resolver: async () => [{ address: '93.184.216.34', family: 4 }],
+    connector: async () => ({
+      status,
+      headers: { 'content-type': contentType },
+      body: (async function* () {
+        yield new TextEncoder().encode(body);
+      })(),
+      destroy: () => {}
+    })
+  };
+}
+
 async function extract(html: string, url = 'https://example.test/product/foo') {
-  const original = globalThis.fetch;
-  globalThis.fetch = (async () =>
-    new Response(html, {
-      status: 200,
-      headers: { 'content-type': 'text/html; charset=utf-8' }
-    })) as typeof fetch;
-  try {
-    return await fetchPageContent(url);
-  } finally {
-    globalThis.fetch = original;
-  }
+  return await fetchPageContent(url, stub(html));
 }
 
 const SAMPLE_HTML = `
@@ -117,33 +121,15 @@ describe('fetchPageContent', () => {
   });
 
   it('rejects non-HTML responses', async () => {
-    const original = globalThis.fetch;
-    globalThis.fetch = (async () =>
-      new Response('{}', {
-        status: 200,
-        headers: { 'content-type': 'application/json' }
-      })) as typeof fetch;
-    try {
-      await expect(fetchPageContent('https://example.test/x.json')).rejects.toThrow(
-        /content-type/i
-      );
-    } finally {
-      globalThis.fetch = original;
-    }
+    await expect(
+      fetchPageContent('https://example.test/x.json', stub('{}', 200, 'application/json'))
+    ).rejects.toThrow(/content-type/i);
   });
 
   it('throws on upstream HTTP errors', async () => {
-    const original = globalThis.fetch;
-    globalThis.fetch = (async () =>
-      new Response('not found', {
-        status: 404,
-        headers: { 'content-type': 'text/html' }
-      })) as typeof fetch;
-    try {
-      await expect(fetchPageContent('https://example.test/missing')).rejects.toThrow(/HTTP 404/);
-    } finally {
-      globalThis.fetch = original;
-    }
+    await expect(
+      fetchPageContent('https://example.test/missing', stub('not found', 404, 'text/html'))
+    ).rejects.toThrow(/HTTP 404/);
   });
 });
 

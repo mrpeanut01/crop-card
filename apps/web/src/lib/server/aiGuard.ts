@@ -20,7 +20,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, eq, gte, sum } from 'drizzle-orm';
+import { and, eq, gte, sql, sum } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { aiCallLog, apiTokens } from '$lib/db/schema';
 import { type AiEndpointName } from '$lib/schedule/constants';
@@ -64,6 +64,11 @@ function utcMonthStart(now = Date.now()): number {
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0);
 }
 
+// Rows with zero tokens never reached Claude (no-key / deterministic
+// fallback / guard rejection). Counting them would let the deterministic
+// path exhaust the AI quota and then 429 a no-key user (Invariant 7).
+const consumedTokens = sql`(${aiCallLog.inputTokens} + ${aiCallLog.cachedInputTokens} + ${aiCallLog.outputTokens}) > 0`;
+
 function callsToday(userId: string, endpoint: AiEndpointName): number {
   const dayStart = utcDayStart();
   const rows = db
@@ -73,7 +78,8 @@ function callsToday(userId: string, endpoint: AiEndpointName): number {
       and(
         eq(aiCallLog.userId, userId),
         eq(aiCallLog.endpoint, endpoint),
-        gte(aiCallLog.createdAt, new Date(dayStart))
+        gte(aiCallLog.createdAt, new Date(dayStart)),
+        consumedTokens
       )
     )
     .all();
@@ -92,7 +98,8 @@ function callsTodayByToken(tokenId: string, endpoint: AiEndpointName): number {
       and(
         eq(aiCallLog.tokenId, tokenId),
         eq(aiCallLog.endpoint, endpoint),
-        gte(aiCallLog.createdAt, new Date(dayStart))
+        gte(aiCallLog.createdAt, new Date(dayStart)),
+        consumedTokens
       )
     )
     .all();

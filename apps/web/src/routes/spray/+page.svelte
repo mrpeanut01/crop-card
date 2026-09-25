@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
+  import { herbicideRatePreview } from '$lib/dilution/ratePreview';
   import Banner from '$lib/components/ui/Banner.svelte';
   import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
   // Phase 25b (#85) — Almanac chrome (stepper + context strip) on top
@@ -757,6 +758,12 @@
         </button>
       </p>
     {/if}
+    {#if sprayer && sprayer.calibratedGpa == null}
+      <p class="filter-hint" data-testid="uncalibrated-hint">
+        <strong>{sprayer.label}</strong> is uncalibrated — rates below are per acre only.
+        <a href="/calibrate">Calibrate sprayer →</a>
+      </p>
+    {/if}
     <div class="cards">
       {#each showAllHerbicides ? data.allHerbicides : data.herbicides as h (h.pluginId)}
         <button
@@ -776,9 +783,8 @@
           <small
             >{h.applicationTiming ?? 'unspecified timing'} • {h.chemistryClasses.join(', ')}</small
           >
-          <small>
-            {h.ratePerAcre.amount}
-            {h.ratePerAcre.unit}/A @ {h.gpaCalibration} GPA
+          <small data-testid="herbicide-rate-preview">
+            {herbicideRatePreview(h.ratePerAcre, sprayer).label}
             {#if h.requiresAMS}• AMS{/if}
             {#if h.deconRequired}• decon{/if}
           </small>

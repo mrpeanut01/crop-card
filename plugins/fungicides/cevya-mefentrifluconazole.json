@@ -2,6 +2,7 @@
   "pluginId": "cevya-mefentrifluconazole",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Cevya (mefentrifluconazole)",
   "applicationTiming": "PRE-BLOOM",

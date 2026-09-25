@@ -2,6 +2,7 @@
   "pluginId": "miravis-pydiflumetofen",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Miravis (pydiflumetofen)",
   "applicationTiming": "PRE-BLOOM",

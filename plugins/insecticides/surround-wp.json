@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Surround WP Crop Protectant (kaolin clay — OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "WP",
   "activeIngredients": [
     {
       "name": "kaolin clay",

@@ -3,6 +3,8 @@
   "type": "herbicide",
   "displayName": "Treflan / Trust HFP (trifluralin EC)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "EC",
   "applicationTiming": "PRE",
   "activeIngredients": [
     {

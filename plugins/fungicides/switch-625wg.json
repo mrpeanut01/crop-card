@@ -3,6 +3,8 @@
   "type": "fungicide",
   "displayName": "Switch 62.5WG (Syngenta cyprodinil + fludioxonil)",
   "version": "1.0.0",
+  "defaultUnit": "oz",
+  "formulation": "WG",
   "applicationTiming": "PRE-HARVEST",
   "activeIngredients": [
     { "name": "cyprodinil", "fracCode": "9" },

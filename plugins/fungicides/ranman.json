@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Ranman (FMC cyazofamid)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "cyazofamid", "fracCode": "21" }],
   "ratePerAcre": { "amount": 2.75, "unit": "fl-oz" },

@@ -2,6 +2,7 @@
   "pluginId": "zerotol-2-0-sanitizer",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "ZeroTol 2.0 (hydrogen peroxide + peroxyacetic acid, OMRI)",
   "applicationTiming": "COVER",

@@ -52,6 +52,20 @@ describe('validateCandidate', () => {
     expect(r.validation.schemaIssues.some((i) => i.path === 'pluginId')).toBe(true);
   });
 
+  it('#255: drops an unrecognised AI-supplied formulation / defaultUnit instead of failing', async () => {
+    const r = await validateCandidate({
+      type: 'herbicide',
+      displayName: 'Test Novel Herbicide 4L',
+      activeIngredients: [{ name: 'glyphosate', chemistryClass: 'glyphosate' }],
+      ratePerAcre: { amount: 1, unit: 'qt' },
+      formulation: '4 lb/gal liquid',
+      defaultUnit: 'jug'
+    });
+    expect(r.candidate).not.toBeNull();
+    expect(r.candidate && 'formulation' in r.candidate).toBe(false);
+    expect(r.candidate && 'defaultUnit' in r.candidate).toBe(false);
+  });
+
   it('returns bypass issues for an unsafe herbicide claim', async () => {
     const r = await validateCandidate({
       type: 'herbicide',
@@ -90,6 +104,21 @@ describe('localFuzzyMatchPlugins', () => {
   it('returns empty when the hint kind has no match', async () => {
     const matches = await localFuzzyMatchPlugins('apple', 'fungicide');
     expect(matches.length).toBe(0);
+  });
+
+  it('#199/#255: glyphosate-4-plus carries a defaultUnit for the Search pick', async () => {
+    const matches = await localFuzzyMatchPlugins('glyphosate 4 plus', 'herbicide');
+    const hit = matches.find((m) => m.candidate?.pluginId === 'glyphosate-4-plus');
+    expect(hit?.candidate && 'defaultUnit' in hit.candidate && hit.candidate.defaultUnit).toBe(
+      'fl-oz'
+    );
+  });
+
+  it('#255: an ambiguous oz-rate plugin gets no derived unit (form default applies)', async () => {
+    const matches = await localFuzzyMatchPlugins('accent q nicosulfuron', 'herbicide');
+    const hit = matches.find((m) => m.candidate?.pluginId === 'accent-q-nicosulfuron');
+    expect(hit).toBeDefined();
+    expect(hit?.candidate && 'defaultUnit' in hit.candidate).toBe(false);
   });
 
   it('marks every local result as validation.ok = true', async () => {

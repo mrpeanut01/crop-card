@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Muriate of Potash / MOP (0-0-60)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 0,
     "p": 0,

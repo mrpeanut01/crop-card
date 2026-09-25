@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "DiPel DF (Valent Bt aizawai-kurstaki — OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "DF",
   "activeIngredients": [
     {
       "name": "Bacillus thuringiensis kurstaki",

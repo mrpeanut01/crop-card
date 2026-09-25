@@ -2,6 +2,7 @@
   "pluginId": "liquid-kelp-0-0-1",
   "type": "fertilizer",
   "version": "1.0.0",
+  "defaultUnit": "gal",
   "pluginSchemaVersion": "1.1",
   "analysis": {
     "n": 0,

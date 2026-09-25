@@ -2,6 +2,7 @@
   "pluginId": "cease-omri",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Cease (Bacillus subtilis QST 713, OMRI)",
   "applicationTiming": "COVER",

@@ -13,6 +13,7 @@ export const load: PageServerLoad = ({ params, locals }) => {
   }
   return {
     type: params.type as InventoryType,
-    aiEnabled: getUserAiEnabled(locals.user?.id)
+    aiEnabled: getUserAiEnabled(locals.user?.id),
+    canSave: locals.user?.role === 'owner'
   };
 };

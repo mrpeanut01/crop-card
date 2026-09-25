@@ -2,6 +2,7 @@
   "pluginId": "finalsan-pelargonic",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Finalsan (pelargonic acid)",
   "activeIngredients": [

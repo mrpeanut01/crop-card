@@ -45,17 +45,24 @@ export const POST: RequestHandler = async (event) => {
     .where(eq(owners.id, u.activeOwnerId))
     .get();
   const acceptUrl = `${event.url.origin}/invite/${issued.token}`;
-  await dispatchEmail({
+  const emailSent = await dispatchEmail({
     kind: 'helper-invite',
     to: inviteeEmail,
     ownerName: ownerRow?.name ?? 'a CropCard farm',
     acceptUrl,
     message,
     expiresAt: issued.expiresAt
-  });
+  }).then(
+    () => true,
+    (err) => {
+      console.error('[invites] email dispatch failed; invite link still valid', err);
+      return false;
+    }
+  );
 
   return json({
     ok: true,
+    emailSent,
     inviteId: issued.id,
     // The plaintext token is included in the response so the owner can
     // copy the link manually if email delivery fails. Treat as one-time.

@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Dimilin 2L (UPL diflubenzuron)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "L",
   "activeIngredients": [
     {
       "name": "diflubenzuron",

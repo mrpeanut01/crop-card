@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Dolomitic Lime (Ca + Mg carbonate)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 0,
     "p": 0,

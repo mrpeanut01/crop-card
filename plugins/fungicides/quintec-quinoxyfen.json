@@ -2,6 +2,7 @@
   "pluginId": "quintec-quinoxyfen",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Quintec (quinoxyfen)",
   "applicationTiming": "PRE-BLOOM",

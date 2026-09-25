@@ -1272,7 +1272,10 @@ export const aiCallLog = tenantScoped(
           'inputs',
           'plugin-scan',
           'plugin-search',
-          'plugin-batch-scan'
+          'plugin-batch-scan',
+          'scan-label',
+          'scan-url',
+          'scan-barcode'
         ]
       }).notNull(),
       model: text('model').notNull(),

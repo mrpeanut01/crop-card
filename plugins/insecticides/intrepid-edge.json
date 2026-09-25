@@ -2,6 +2,7 @@
   "pluginId": "intrepid-edge",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Intrepid Edge (methoxyfenozide + spinetoram)",
   "activeIngredients": [

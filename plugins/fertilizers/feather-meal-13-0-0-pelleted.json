@@ -2,6 +2,7 @@
   "pluginId": "feather-meal-13-0-0-pelleted",
   "type": "fertilizer",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
     "n": 13,

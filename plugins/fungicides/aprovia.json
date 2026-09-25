@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Aprovia (Syngenta benzovindiflupyr)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "benzovindiflupyr", "fracCode": "7" }],
   "ratePerAcre": { "amount": 5.5, "unit": "fl-oz" },

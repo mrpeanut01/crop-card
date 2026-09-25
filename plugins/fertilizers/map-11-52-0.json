@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "MAP — Monoammonium Phosphate (11-52-0)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 11,
     "p": 52,

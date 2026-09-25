@@ -65,14 +65,20 @@ export const actions: Actions = {
       .where(eq(owners.id, u.activeOwnerId))
       .get();
     const acceptUrl = `${event.url.origin}/invite/${issued.token}`;
-    await dispatchEmail({
+    const emailSent = await dispatchEmail({
       kind: 'helper-invite',
       to: inviteeEmail,
       ownerName: ownerRow?.name ?? 'a CropCard farm',
       acceptUrl,
       expiresAt: issued.expiresAt
-    });
-    return { ok: true, acceptUrl };
+    }).then(
+      () => true,
+      (err) => {
+        console.error('[invites] email dispatch failed; invite link still valid', err);
+        return false;
+      }
+    );
+    return { ok: true, acceptUrl, emailSent };
   },
   revoke: async (event) => {
     const u = requireOwner(event);

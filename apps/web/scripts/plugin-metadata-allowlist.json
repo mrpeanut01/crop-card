@@ -1,0 +1,825 @@
+{
+  "$comment": "#255 — known input-plugin metadata gaps. Every entry needs a reason. The coverage test fails on any gap not listed here AND on any entry that is no longer a gap, so remove entries as plugins are label-verified.",
+  "entries": [
+    {
+      "pluginId": "2-4-d-amine",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "24d",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "accent-q-nicosulfuron",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "accent-q-nicosulfuron",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "acuron",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "alldown-acetic-citric",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "anthem-maxx",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "authority-mtz-sulfentrazone",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "axxe-ammonium-nonanoate",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "banvel",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "beyond",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "cadet-fluthiacet",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "callisto",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "capreno-thiencarbazone-tembotrione",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "chaparral-aminopyralid-metsulfuron",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "chaparral-aminopyralid-metsulfuron",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "classic-chlorimuron",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "classic-chlorimuron",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "cobra",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "corn-gluten-meal-pre",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "crossbow",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "ct-test-herbicide-clickthrough",
+      "field": "formulation",
+      "reason": "E2E click-through test fixture, not a real product."
+    },
+    {
+      "pluginId": "dual-ii-magnum",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "duracor-aminopyralid-florpyrauxifen",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "engenia",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "et-herbicide-pyraflufen",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "express-tribenuron",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "express-tribenuron",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "fierce-flumioxazin-pyroxasulfone",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "fierce-flumioxazin-pyroxasulfone",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "finalsan-pelargonic",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "glyphosate-4-plus",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "glyphosate-generic",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "grazonnext-hl",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "halex-gt",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "laudis",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "liberty-ultra",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "lumax-ez",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "me-too-lachlor-ii",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "outlook",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "permit",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "permit",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "phydura-clove-citric",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "poast-plus",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "prowl-h2o",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "pursuit",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "raptor-imazamox",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "reflex",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "resicore-rev",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "roundup-powermax-3",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "sandea",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "sandea",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "sharpen-saflufenacil",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "spartan-charge",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "stadia-dry",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "stadia",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "stadia",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "stinger",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "touchdown-hitech",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "valor-sx",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "valor-sx",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "verdict-saflufenacil-dimethenamid",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "warrant",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "weed-zap-citronella",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "xtendimax",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "zidua-pro",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "actara",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "actara",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "admiral-igr",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "admire-pro",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "altacor-chlorantraniliprole",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "altacor-chlorantraniliprole",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "asana-xl",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "avaunt-evo",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "avaunt-evo",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "aza-direct",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "azaguard",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "baythroid-xl",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "belay",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "bt-kurstaki",
+      "field": "defaultUnit",
+      "reason": "Generic active-ingredient entry with no label rate; the unit depends on which Bt product (DF vs liquid) is purchased."
+    },
+    {
+      "pluginId": "bt-kurstaki",
+      "field": "formulation",
+      "reason": "Generic active-ingredient entry; formulation depends on which Bt product is purchased."
+    },
+    {
+      "pluginId": "coragen",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "cyd-x-codling-moth-virus",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "deadline-mps-metaldehyde",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "exirel",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "intrepid-edge",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "isomate-c-plus-pheromone",
+      "field": "defaultUnit",
+      "reason": "Count-based product (hand-applied pheromone dispensers); the plugin's 'oz' rate unit contradicts the product and needs a data fix to a 'count' unit."
+    },
+    {
+      "pluginId": "isomate-c-plus-pheromone",
+      "field": "formulation",
+      "reason": "Pheromone dispenser — no spray formulation code applies."
+    },
+    {
+      "pluginId": "jms-stylet-oil-omri",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "jms-stylet-oil",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "lannate-lv",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "m-pede-organic",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "m-pede",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "madex-hp-virus",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "majestene-nematicide",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "movento",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "mustang-maxx",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "mycotrol-eso",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "nematode-steinernema-feltiae",
+      "field": "defaultUnit",
+      "reason": "Live beneficial nematodes are sold by count; the plugin's 'lb' rate unit is suspect — needs label review before a unit is authored."
+    },
+    {
+      "pluginId": "nematode-steinernema-feltiae",
+      "field": "formulation",
+      "reason": "Live beneficial nematodes — no formulation code printed in the plugin; needs label review."
+    },
+    {
+      "pluginId": "portal-xlo",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "sevin-xlr-plus",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "sivanto-prime",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "sluggo-iron-phosphate",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "spear-lep",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "spinosad",
+      "field": "defaultUnit",
+      "reason": "Generic active-ingredient entry with no label rate; the unit depends on which spinosad product is purchased."
+    },
+    {
+      "pluginId": "spinosad",
+      "field": "formulation",
+      "reason": "Generic active-ingredient entry; formulation depends on which spinosad product is purchased."
+    },
+    {
+      "pluginId": "trichogramma-egg-parasitoid",
+      "field": "defaultUnit",
+      "reason": "Live parasitoid release sold by count; the plugin's 'oz' rate unit contradicts the product and needs a data fix to a 'count' unit."
+    },
+    {
+      "pluginId": "trichogramma-egg-parasitoid",
+      "field": "formulation",
+      "reason": "Live beneficial insect release — no spray formulation code applies."
+    },
+    {
+      "pluginId": "velum-prime-fluopyram-nematicide",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "venerate-xc",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "voliam-xpress",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "warrior-ii-with-zeon",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "actinovate-streptomyces",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "actinovate-streptomyces",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "aprovia",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "bravo-weather-stik",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "cease-omri",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "cevya-mefentrifluconazole",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "champ-dp",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "cuprofix-ultra-disperss",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "dithane-rainshield",
+      "field": "defaultUnit",
+      "reason": "Display name says 'F45' (flowable liquid) but the label rate is in lb — contradictory plugin data needs label review."
+    },
+    {
+      "pluginId": "dithane-rainshield",
+      "field": "formulation",
+      "reason": "Display name says 'F45' (flowable liquid) but the label rate is in lb — contradictory plugin data needs label review."
+    },
+    {
+      "pluginId": "double-nickel-55",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "endura-boscalid",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "endura-boscalid",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "flint-extra",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "forum",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "howler-evo-pseudomonas",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "inspire-super",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "k-phite-phosphonate",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "kocide-3000-o",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "luna-tranquility",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "manzate-pro-stick",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "merivon",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "microthiol-disperss",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "milstop-potassium-bicarbonate",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "miravis-pydiflumetofen",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "mycoshield-oxytetracycline",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "mycostop-streptomyces",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "mycostop-streptomyces",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "orondis-opti",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "oxidate-2-0",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "phostrol-phosphonate",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "presidio-fluopicolide",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "previcur-flex-propamocarb",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "pristine",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "pristine",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "prophyt-phosphonate",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "quintec-quinoxyfen",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "ranman",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "regalia-maxx-omri",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "regalia",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "revus",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "serenade-aso",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "stargus-bacillus-amyloliquefaciens",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "topguard-ez",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "topsin-m-wsb",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "trilogy-neem",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "velista-penthiopyrad",
+      "field": "defaultUnit",
+      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+    },
+    {
+      "pluginId": "velista-penthiopyrad",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "zampro-ametoctradin",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "zerotol-2-0-sanitizer",
+      "field": "formulation",
+      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+    },
+    {
+      "pluginId": "can-17-calcium-ammonium-nitrate",
+      "field": "defaultUnit",
+      "reason": "form 'liquid' contradicts the lb-per-acre application rate — needs label review."
+    }
+  ]
+}

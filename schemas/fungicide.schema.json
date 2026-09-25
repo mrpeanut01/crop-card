@@ -51,6 +51,46 @@
       },
       "minItems": 1
     },
+    "defaultUnit": {
+      "type": "string",
+      "enum": [
+        "fl-oz",
+        "pt",
+        "qt",
+        "gal",
+        "oz",
+        "lb",
+        "kg",
+        "g",
+        "count"
+      ]
+    },
+    "formulation": {
+      "type": "string",
+      "enum": [
+        "EC",
+        "SL",
+        "SC",
+        "F",
+        "L",
+        "ME",
+        "ES",
+        "EW",
+        "CS",
+        "OD",
+        "SE",
+        "WDG",
+        "WG",
+        "DF",
+        "SG",
+        "SP",
+        "WP",
+        "WSP",
+        "WS",
+        "G",
+        "D"
+      ]
+    },
     "applicationTiming": {
       "type": "string",
       "enum": [
@@ -133,6 +173,12 @@
     "preHarvestIntervalDays": {
       "type": "integer",
       "minimum": 0
+    },
+    "rainfastHours": {
+      "type": "number",
+      "exclusiveMinimum": true,
+      "minimum": 0,
+      "maximum": 72
     },
     "pollinatorRisk": {
       "type": "string",

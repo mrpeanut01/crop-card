@@ -5,6 +5,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { StockCategory } from '$lib/db/stock';
 import { getRegistry } from '$lib/server/registry';
 import { getSetting } from '$lib/db/settings';
+import {
+  POLICY_ERROR_CODES,
+  SafeFetchError,
+  safeFetch,
+  type SafeFetchOptions,
+  type SafeFetchResponse
+} from './safeFetch';
 
 export interface SeedMeta {
   daysToMaturity?: number;
@@ -117,6 +124,10 @@ export async function matchCropPlugins(displayName: string): Promise<CropPluginM
     return [];
   }
 }
+
+/** Matched client-side (/No Anthropic API key configured/i) to render the
+ *  add-a-key recovery CTAs — keep the leading phrase stable. */
+export const NO_KEY_MESSAGE = 'No Anthropic API key configured. Add it on the Settings page.';
 
 export function getApiKey(): string {
   return process.env.ANTHROPIC_API_KEY || getSetting('anthropic_api_key') || '';
@@ -362,10 +373,48 @@ async function withRetry<T>(
   throw lastErr;
 }
 
+export interface ScanCallUsage {
+  model: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+  usdEstimate: number;
+}
+
+export type ScanUsageSink = (usage: ScanCallUsage) => void;
+
+const SCAN_MODEL_PRICING: Record<string, { input: number; cached: number; output: number }> = {
+  'claude-haiku-4-5-20251001': { input: 1.0, cached: 0.1, output: 5.0 },
+  'claude-sonnet-4-6': { input: 3.0, cached: 0.3, output: 15.0 }
+};
+
+function reportUsage(
+  model: string,
+  usage: {
+    input_tokens?: number | null;
+    output_tokens?: number | null;
+    cache_read_input_tokens?: number | null;
+    cache_creation_input_tokens?: number | null;
+  },
+  sink?: ScanUsageSink
+): void {
+  if (!sink) return;
+  const inputTokens = (usage.input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0);
+  const cachedInputTokens = usage.cache_read_input_tokens ?? 0;
+  const outputTokens = usage.output_tokens ?? 0;
+  const p = SCAN_MODEL_PRICING[model] ?? SCAN_MODEL_PRICING['claude-sonnet-4-6'];
+  const usdEstimate =
+    (inputTokens / 1_000_000) * p.input +
+    (cachedInputTokens / 1_000_000) * p.cached +
+    (outputTokens / 1_000_000) * p.output;
+  sink({ model, inputTokens, cachedInputTokens, outputTokens, usdEstimate });
+}
+
 // Claude text-only call (for barcode lookup where we have no image).
 export async function claudeTextLookup(
   barcode: string,
-  partialName?: string
+  partialName?: string,
+  onUsage?: ScanUsageSink
 ): Promise<Partial<ScanResult>> {
   const apiKey = getApiKey();
   if (!apiKey) return { found: false };
@@ -385,6 +434,7 @@ export async function claudeTextLookup(
         ]
       })
     );
+    reportUsage('claude-haiku-4-5-20251001', msg.usage, onUsage);
     const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
     return parseClaudeJson(text);
   } catch (err) {
@@ -422,45 +472,43 @@ export interface FetchedPageContent {
  *  spec tables, so we surface those separately rather than collapsing
  *  everything into one text run.
  *
- *  Caller is responsible for URL validation. Caps the read at ~2MB, times
- *  out after 12s, and rejects non-HTML content-types. */
-export async function fetchPageContent(url: string): Promise<FetchedPageContent> {
-  let res: Response;
+ *  Transport is `safeFetch` (SSRF-hardened: per-hop validation, resolved-IP
+ *  pinning). Caps the read at ~2MB, times out after 12s, and rejects non-HTML
+ *  content-types. Policy rejections surface as `SafeFetchError`. */
+export async function fetchPageContent(
+  url: string,
+  opts: SafeFetchOptions = {}
+): Promise<FetchedPageContent> {
+  let res: SafeFetchResponse;
   try {
-    res = await fetch(url, {
+    res = await safeFetch(url, {
+      ...opts,
       headers: {
         'User-Agent': 'CropCard/1.0 (+farm inventory)',
-        Accept: 'text/html,application/xhtml+xml'
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(12_000)
+        Accept: 'text/html,application/xhtml+xml',
+        ...opts.headers
+      }
     });
   } catch (e) {
+    if (e instanceof SafeFetchError && POLICY_ERROR_CODES.has(e.code)) throw e;
     throw new Error(`Could not load page: ${e instanceof Error ? e.message : String(e)}`);
   }
-  if (!res.ok) throw new Error(`Page returned HTTP ${res.status}`);
-  const ctype = res.headers.get('content-type') ?? '';
+  if (res.status < 200 || res.status >= 300) {
+    res.cancel();
+    throw new Error(`Page returned HTTP ${res.status}`);
+  }
+  const ctype = res.contentType;
   if (!/text\/html|application\/xhtml/.test(ctype)) {
+    res.cancel();
     throw new Error(`Unsupported content-type "${ctype || 'unknown'}" — expected HTML`);
   }
 
-  const reader = res.body?.getReader();
-  if (!reader) throw new Error('Empty response body');
-  const decoder = new TextDecoder('utf-8');
-  let html = '';
-  const MAX_BYTES = 2_000_000;
-  let bytes = 0;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    bytes += value.byteLength;
-    html += decoder.decode(value, { stream: true });
-    if (bytes >= MAX_BYTES) {
-      await reader.cancel();
-      break;
-    }
+  let html: string;
+  try {
+    ({ text: html } = await res.readText());
+  } catch (e) {
+    throw new Error(`Could not load page: ${e instanceof Error ? e.message : String(e)}`);
   }
-  html += decoder.decode();
 
   // <title>
   const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
@@ -701,9 +749,12 @@ function truncate(s: string, n: number): string {
  *  tables, and headings as separate labeled sections so the model can read
  *  pack sizes from the SELECT and DTM from the spec table instead of
  *  hunting through prose. */
-export async function claudeUrlLookup(content: FetchedPageContent): Promise<Partial<ScanResult>> {
+export async function claudeUrlLookup(
+  content: FetchedPageContent,
+  onUsage?: ScanUsageSink
+): Promise<Partial<ScanResult>> {
   const apiKey = getApiKey();
-  if (!apiKey) throw new Error('No Anthropic API key configured. Add it on the Settings page.');
+  if (!apiKey) throw new Error(NO_KEY_MESSAGE);
   const client = new Anthropic({ apiKey });
   const rendered = renderPageContentForPrompt(content);
   const userMessage =
@@ -725,6 +776,7 @@ export async function claudeUrlLookup(content: FetchedPageContent): Promise<Part
       messages: [{ role: 'user', content: userMessage }]
     })
   );
+  reportUsage('claude-sonnet-4-6', msg.usage, onUsage);
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
   return parseClaudeJson(text);
 }
@@ -732,10 +784,11 @@ export async function claudeUrlLookup(content: FetchedPageContent): Promise<Part
 // Claude vision call (for label photo).
 export async function claudeVisionLookup(
   base64jpeg: string,
-  barcode?: string
+  barcode?: string,
+  onUsage?: ScanUsageSink
 ): Promise<Partial<ScanResult>> {
   const apiKey = getApiKey();
-  if (!apiKey) throw new Error('No Anthropic API key configured. Add it on the Settings page.');
+  if (!apiKey) throw new Error(NO_KEY_MESSAGE);
   const client = new Anthropic({ apiKey });
   const barcodeHint = barcode ? ` The product barcode is ${barcode}.` : '';
   const msg = await withRetry(() =>
@@ -760,6 +813,7 @@ export async function claudeVisionLookup(
       ]
     })
   );
+  reportUsage('claude-sonnet-4-6', msg.usage, onUsage);
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
   return parseClaudeJson(text);
 }

@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Bone Meal (3-15-0 + Ca, OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 3,
     "p": 15,

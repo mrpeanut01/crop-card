@@ -2,6 +2,7 @@
   import { ChevronRight, Plus, Map, MapPin } from 'lucide-svelte';
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
+  import { untrack } from 'svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
@@ -12,8 +13,8 @@
   // #309 — editable farm coordinates + frost dates. Seed from the loader;
   // the form posts these back to ?/save which persists them to the same
   // app_settings keys the /api/settings endpoint validates.
-  let lat = $state(data.farmLatLon.lat.toFixed(4));
-  let lon = $state(data.farmLatLon.lon.toFixed(4));
+  let lat = $state(untrack(() => data.farmLatLon.lat.toFixed(4)));
+  let lon = $state(untrack(() => data.farmLatLon.lon.toFixed(4)));
 
   // Frost inputs are <input type="date"> (YYYY-MM-DD). Seed from the stored
   // MM-DD when present, else from the resolved default for the current
@@ -29,8 +30,12 @@
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yr}-${mm}-${dd}`;
   }
-  let lastFrost = $state(mmDdToIso(data.lastFrostMmDd, data.frostDates.lastSpringFrostMs));
-  let firstFrost = $state(mmDdToIso(data.firstFrostMmDd, data.frostDates.firstFallFrostMs));
+  let lastFrost = $state(
+    untrack(() => mmDdToIso(data.lastFrostMmDd, data.frostDates.lastSpringFrostMs))
+  );
+  let firstFrost = $state(
+    untrack(() => mmDdToIso(data.firstFrostMmDd, data.frostDates.firstFallFrostMs))
+  );
 
   // Read-only preview only — edit/draw happens at /settings/farm/map. BlockMap
   // requires these callbacks but never invokes them in thumbnail mode.

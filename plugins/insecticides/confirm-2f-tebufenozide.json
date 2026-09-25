@@ -2,6 +2,8 @@
   "pluginId": "confirm-2f-tebufenozide",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "F",
   "pluginSchemaVersion": "1.1",
   "displayName": "Confirm 2F (tebufenozide)",
   "activeIngredients": [

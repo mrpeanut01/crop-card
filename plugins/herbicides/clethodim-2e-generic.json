@@ -3,6 +3,8 @@
   "type": "herbicide",
   "displayName": "Clethodim 2EC (generic — Volunteer / Select Max equivalents)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "EC",
   "applicationTiming": "POST",
   "activeIngredients": [
     {

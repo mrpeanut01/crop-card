@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Soft Rock Phosphate (0-3-0, OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 0,
     "p": 3,

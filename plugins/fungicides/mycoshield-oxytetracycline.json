@@ -2,6 +2,7 @@
   "pluginId": "mycoshield-oxytetracycline",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "displayName": "Mycoshield (oxytetracycline, bactericide)",
   "applicationTiming": "BLOOM",

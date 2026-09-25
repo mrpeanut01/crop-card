@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Touchdown HiTech (Syngenta)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "applicationTiming": "BURNDOWN",
   "activeIngredients": [
     {

@@ -2,6 +2,7 @@
   "pluginId": "ct-test-herbicide-clickthrough",
   "displayName": "CT Test Herbicide Clickthrough",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "type": "herbicide",
   "activeIngredients": [

@@ -148,9 +148,6 @@
     font-weight: 600;
     color: var(--color-ink-muted);
   }
-  .qfield.wide {
-    grid-column: 1 / -1;
-  }
   .qfield input {
     font-family: var(--font-mono, ui-monospace, monospace);
     font-size: 14px;

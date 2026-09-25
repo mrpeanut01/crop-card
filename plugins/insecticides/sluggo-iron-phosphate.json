@@ -2,6 +2,7 @@
   "pluginId": "sluggo-iron-phosphate",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "displayName": "Sluggo (iron phosphate, OMRI slug/snail bait)",
   "activeIngredients": [

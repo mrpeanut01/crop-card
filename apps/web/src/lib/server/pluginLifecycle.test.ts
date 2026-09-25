@@ -74,7 +74,7 @@ const created: string[] = [];
 
 beforeAll(() => {
   // Ensure the FK targets used by spray-event inserts + tombstone rows exist
-  // in the fresh /tmp/cropcard-test.db. onConflictDoNothing is fine for the
+  // in the fresh per-run test DB. onConflictDoNothing is fine for the
   // owner-home-farm row that migrations already create.
   db.insert(users)
     .values({ id: SYSTEM_USER_ID, email: 'system@cropcard.local' })

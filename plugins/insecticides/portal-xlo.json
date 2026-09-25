@@ -2,6 +2,7 @@
   "pluginId": "portal-xlo",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Portal XLO (fenpyroximate)",
   "activeIngredients": [

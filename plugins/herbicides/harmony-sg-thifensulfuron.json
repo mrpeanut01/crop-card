@@ -2,6 +2,8 @@
   "pluginId": "harmony-sg-thifensulfuron",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "oz",
+  "formulation": "SG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Harmony SG (thifensulfuron)",
   "activeIngredients": [

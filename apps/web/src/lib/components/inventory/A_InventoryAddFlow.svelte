@@ -4,6 +4,8 @@
   import SearchPanel from '$lib/components/stock/add/SearchPanel.svelte';
   import BarcodePanel from '$lib/components/stock/add/BarcodePanel.svelte';
   import LabelOcrPanel from '$lib/components/stock/add/LabelOcrPanel.svelte';
+  import LabelBatchQueue from '$lib/components/stock/add/LabelBatchQueue.svelte';
+  import { LabelBatch, type BatchRow } from '$lib/stock/labelBatch.svelte';
   import UrlPanel from '$lib/components/stock/add/UrlPanel.svelte';
   import type { InventoryType } from '$lib/inventory/types';
   import type { StockEntryDraft } from '$lib/stock/normalizeStockEntry';
@@ -32,14 +34,26 @@
    *
    * Sprayer + crop are not lot-bearing scan targets, so they skip the
    * picker and render the plain manual form directly.
+   *
+   * #152 — the picker is the mockup's card grid (icon chip + label +
+   * mono hint), still an ARIA tablist with roving tabindex + arrow keys.
+   * #201 — each panel owns its own error state and is remounted on a
+   * method switch, so an error from one method never leaks into another.
+   * #249 — picking several label photos starts a sequential batch
+   * queue; each draft is reviewed and saved through the same canonical
+   * form (one POST /api/stock, one audit row per item).
    */
 
   interface Props {
     type: InventoryType;
     aiEnabled: boolean;
+    /** Only the owner can POST /api/stock. Helpers can still look products
+     *  up, but don't get the multi-photo batch (30 Claude calls they could
+     *  never save). The server enforces the gate either way. */
+    canSave?: boolean;
   }
 
-  const { type, aiEnabled }: Props = $props();
+  const { type, aiEnabled, canSave = true }: Props = $props();
 
   type AddMethod = 'search' | 'barcode' | 'label' | 'url' | 'manual';
 
@@ -47,6 +61,7 @@
     id: AddMethod;
     label: string;
     blurb: string;
+    hint: string;
     icon: typeof Search;
     /** Needs an Anthropic key to *resolve* a draft. The chip always
      *  renders (#312); the panel shows a no-key recovery empty-state. */
@@ -56,6 +71,7 @@
   const METHODS: MethodMeta[] = [
     {
       id: 'search',
+      hint: 'Plugin library → web',
       label: 'Search',
       blurb: 'Type the name — instant matches from your plugin library.',
       icon: Search,
@@ -63,6 +79,7 @@
     },
     {
       id: 'barcode',
+      hint: 'UPC · EAN · DataMatrix',
       label: 'Scan barcode',
       blurb: 'Point the camera at the UPC/EAN. OpenFoodFacts first, then Claude.',
       icon: ScanBarcode,
@@ -70,6 +87,7 @@
     },
     {
       id: 'label',
+      hint: 'Claude Vision · batch OK',
       label: 'Scan label',
       blurb: 'Photograph the label or any product shot — Claude Vision extracts the fields.',
       icon: ImageIcon,
@@ -77,6 +95,7 @@
     },
     {
       id: 'url',
+      hint: 'Product page → draft',
       label: 'From URL',
       blurb: 'Paste a product page link — Claude reads it into a draft.',
       icon: Globe,
@@ -84,6 +103,7 @@
     },
     {
       id: 'manual',
+      hint: 'Full form · no key needed',
       label: 'Type it in',
       blurb: 'Fill the fields by hand. Works offline, no key needed.',
       icon: Pencil,
@@ -107,7 +127,27 @@
   let draft = $state<StockEntryDraft | null>(null);
   let busy = $state(false);
 
+  const batch = new LabelBatch();
+  let reviewingRowId = $state<string | null>(null);
+  let batchNotice = $state<string | null>(null);
+  const batchActive = $derived(batch.rows.length > 0);
+
+  const tabRefs: Record<string, HTMLButtonElement | undefined> = {};
+
+  function onTabKeydown(e: KeyboardEvent, index: number): void {
+    const last = visibleMethods.length - 1;
+    let next: number | null = null;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = index === last ? 0 : index + 1;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = index === 0 ? last : index - 1;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = last;
+    if (next === null) return;
+    e.preventDefault();
+    tabRefs[visibleMethods[next].id]?.focus();
+  }
+
   function selectMethod(m: AddMethod): void {
+    batchNotice = null;
     if (m === 'manual') {
       // Manual skips straight to an empty form.
       draft = { source: 'manual' };
@@ -124,17 +164,53 @@
 
   function backToMethods(): void {
     draft = null;
+    reviewingRowId = null;
     phase = 'pick';
+  }
+
+  function startBatch(files: File[]): void {
+    batchNotice = null;
+    batch.add(files);
+    void batch.run();
+  }
+
+  function reviewBatchRow(row: BatchRow): void {
+    if (!row.draft) return;
+    batchNotice = null;
+    reviewingRowId = row.id;
+    draft = row.draft;
+    phase = 'approve';
+  }
+
+  function onBatchRowSaved(): void {
+    const id = reviewingRowId;
+    if (id) batch.markSaved(id);
+    const name = draft?.displayName;
+    const left = batch.counts.done;
+    batchNotice = `Saved${name ? ` ${name}` : ''}.${left ? ` ${left} draft${left === 1 ? '' : 's'} left to review.` : ''}`;
+    method = 'label';
+    backToMethods();
   }
 </script>
 
 {#if !lotBearing}
   <A_InventoryEditForm {type} />
 {:else if phase === 'approve'}
-  <button type="button" class="back-link" onclick={backToMethods}
-    >← Choose a different method</button
-  >
-  <A_InventoryEditForm {type} prefill={draft ?? undefined} />
+  <button type="button" class="back-link" onclick={backToMethods}>
+    {reviewingRowId ? '← Back to batch queue' : '← Choose a different method'}
+  </button>
+  {#if reviewingRowId}
+    {#key reviewingRowId}
+      <A_InventoryEditForm
+        {type}
+        prefill={draft ?? undefined}
+        onSaved={onBatchRowSaved}
+        onCancel={backToMethods}
+      />
+    {/key}
+  {:else}
+    <A_InventoryEditForm {type} prefill={draft ?? undefined} />
+  {/if}
 {:else}
   <header class="flow-header">
     <span class="kicker">Add · {type}</span>
@@ -145,22 +221,38 @@
     </p>
   </header>
 
-  <div class="method-row" role="tablist" aria-label="Add method">
-    {#each visibleMethods as m (m.id)}
+  <div class="method-grid" role="tablist" aria-label="Add method">
+    {#each visibleMethods as m, i (m.id)}
       {@const Icon = m.icon}
+      {@const on = method === m.id}
       <button
+        bind:this={tabRefs[m.id]}
         type="button"
         role="tab"
-        aria-selected={method === m.id}
-        class="method-chip"
-        class:active={method === m.id}
+        id="add-method-{m.id}"
+        aria-selected={on}
+        aria-controls="add-method-panel"
+        tabindex={on ? 0 : -1}
+        class="method-card"
+        class:active={on}
         onclick={() => selectMethod(m.id)}
+        onkeydown={(e) => onTabKeydown(e, i)}
       >
-        <span class="chip-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.75} /></span>
-        <span class="chip-label">{m.label}</span>
+        <span class="card-top">
+          <span class="card-icon" aria-hidden="true"><Icon size={16} strokeWidth={1.9} /></span>
+          <span class="card-label">{m.label}</span>
+        </span>
+        <span class="card-hint">{m.hint}</span>
       </button>
     {/each}
   </div>
+
+  {#if !canSave}
+    <p class="ai-note" role="note" data-testid="helper-note">
+      You're signed in as a helper — you can look products up here, but only the farm owner can save
+      new inventory.
+    </p>
+  {/if}
 
   {#if !aiEnabled}
     <p class="ai-note">
@@ -170,27 +262,45 @@
     </p>
   {/if}
 
-  <div class="panel">
-    {#if method === 'search'}
-      <SearchPanel {type} {aiEnabled} {busy} onSubmit={onPanelDraft} />
-    {:else if method === 'barcode'}
-      <BarcodePanel {type} {busy} onSubmit={onPanelDraft} />
-    {:else if method === 'label'}
-      <LabelOcrPanel
-        {busy}
-        {aiEnabled}
-        onSubmit={onPanelDraft}
-        onSwitchToManual={() => selectMethod('manual')}
-      />
-    {:else if method === 'url'}
-      <UrlPanel
-        {type}
-        {busy}
-        {aiEnabled}
-        onSubmit={onPanelDraft}
-        onSwitchToManual={() => selectMethod('manual')}
-      />
-    {/if}
+  <div
+    class="panel"
+    role="tabpanel"
+    id="add-method-panel"
+    aria-labelledby="add-method-{method}"
+    tabindex="-1"
+  >
+    {#key method}
+      {#if method === 'search'}
+        <SearchPanel {type} {aiEnabled} {busy} onSubmit={onPanelDraft} />
+      {:else if method === 'barcode'}
+        <BarcodePanel {type} {busy} onSubmit={onPanelDraft} />
+      {:else if method === 'label'}
+        {#if batchActive}
+          <LabelBatchQueue
+            {batch}
+            notice={batchNotice}
+            onReview={reviewBatchRow}
+            onSwitchToManual={() => selectMethod('manual')}
+          />
+        {:else}
+          <LabelOcrPanel
+            {busy}
+            {aiEnabled}
+            onSubmit={onPanelDraft}
+            onBatch={canSave ? startBatch : undefined}
+            onSwitchToManual={() => selectMethod('manual')}
+          />
+        {/if}
+      {:else if method === 'url'}
+        <UrlPanel
+          {type}
+          {busy}
+          {aiEnabled}
+          onSubmit={onPanelDraft}
+          onSwitchToManual={() => selectMethod('manual')}
+        />
+      {/if}
+    {/key}
   </div>
 {/if}
 
@@ -216,43 +326,89 @@
     color: var(--color-ink-soft, #4a4f43);
     max-width: 60ch;
   }
-  .method-row {
-    display: flex;
-    flex-wrap: wrap;
+  .method-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
-  .method-chip {
-    flex: 1 1 auto;
-    min-width: 104px;
-    min-height: 64px;
+  .method-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 10px 12px;
+    align-items: flex-start;
+    gap: 6px;
+    min-height: 72px;
+    min-width: 0;
+    padding: 14px 16px;
     border: 1px solid var(--color-divider, #e5e7e0);
-    background: var(--color-paper, #fff);
-    border-radius: 8px;
+    background: transparent;
+    border-radius: 10px;
     color: var(--color-ink-soft, #4a4f43);
     font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
+    text-align: left;
     cursor: pointer;
   }
-  .method-chip:hover {
+  .method-card:hover {
     border-color: var(--color-forest, #1f5e3a);
-    color: var(--color-forest-deep, #1f3522);
   }
-  .method-chip.active {
-    border-color: var(--color-forest, #1f5e3a);
-    color: var(--color-forest-deep, #1f3522);
-    box-shadow: inset 0 0 0 1px var(--color-forest, #1f5e3a);
+  .method-card:focus-visible {
+    outline: 2px solid var(--color-forest, #1f5e3a);
+    outline-offset: 2px;
   }
-  .chip-icon {
+  .method-card.active {
+    background: var(--color-paper, #fff);
+    border: 1.5px solid var(--color-forest, #1f5e3a);
+    box-shadow: 0 1px 0 rgba(44, 82, 55, 0.08);
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+  .card-icon {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
     display: grid;
     place-items: center;
+    background: var(--color-divider-soft, #eef0ea);
+    color: var(--color-ink-soft, #4a4f43);
+  }
+  .method-card.active .card-icon {
+    background: var(--color-forest, #1f5e3a);
+    color: var(--color-cream, #fff8e1);
+  }
+  .card-label {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .method-card.active .card-label {
+    color: var(--color-forest-deep, #1f3522);
+  }
+  .card-hint {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--color-ink-muted, #6a6f63);
+  }
+  @media (max-width: 900px) {
+    .method-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 560px) {
+    .method-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .method-card {
+      padding: 12px;
+    }
+    .method-card:last-child {
+      grid-column: 1 / -1;
+    }
   }
   .ai-note {
     margin: 0 0 12px;
@@ -279,7 +435,8 @@
     font-size: 0.85rem;
     cursor: pointer;
     padding: 0;
-    margin-bottom: 12px;
+    min-height: 48px;
+    margin-bottom: 4px;
   }
   .back-link:hover {
     text-decoration: underline;

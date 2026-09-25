@@ -1,9 +1,69 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
-import { defineConfig } from 'vite';
+import type { VitePWAOptions } from 'vite-plugin-pwa';
+import { defineConfig, transformWithEsbuild, type Plugin } from 'vite';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import type { TenantCachePlugin } from './src/lib/client/swTenantKey';
+
+const SW_TENANT_SOURCE = fileURLToPath(new URL('./src/lib/client/swTenantKey.ts', import.meta.url));
+
+function cropcardSwTenant(): Plugin {
+  let ssr = false;
+  return {
+    name: 'cropcard:sw-tenant',
+    apply: 'build',
+    configResolved(config) {
+      ssr = !!config.build.ssr;
+    },
+    async generateBundle() {
+      if (ssr) return;
+      const source = await readFile(SW_TENANT_SOURCE, 'utf-8');
+      const { code } = await transformWithEsbuild(source, SW_TENANT_SOURCE, {
+        loader: 'ts',
+        format: 'iife',
+        globalName: '__cropcardSwTenantLib',
+        target: 'es2020',
+        minify: true
+      });
+      this.emitFile({
+        type: 'asset',
+        fileName: 'sw-tenant.js',
+        source: `${code}\nself.__cropcardTenantPlugin = __cropcardSwTenantLib.installSwTenant(self, (b) => new Response(b));\n`
+      });
+    }
+  };
+}
+
+// Stringified into the generated SW by workbox-build, so each callback must
+// be self-contained. Missing runtime ⇒ fail safe (no cache read or write).
+type SwTenantGlobal = { __cropcardTenantPlugin?: TenantCachePlugin };
+type RuntimeCachingEntry = NonNullable<
+  NonNullable<VitePWAOptions['workbox']>['runtimeCaching']
+>[number];
+type WorkboxPlugin = NonNullable<NonNullable<RuntimeCachingEntry['options']>['plugins']>[number];
+const tenantCachePlugin: WorkboxPlugin = {
+  cacheKeyWillBeUsed: async (p) => {
+    const t = (globalThis as SwTenantGlobal).__cropcardTenantPlugin;
+    return t ? t.cacheKeyWillBeUsed(p) : p.request;
+  },
+  cachedResponseWillBeUsed: async (p) => {
+    const t = (globalThis as SwTenantGlobal).__cropcardTenantPlugin;
+    return t ? ((await t.cachedResponseWillBeUsed(p)) as Response | null) : null;
+  },
+  cacheWillUpdate: async (p) => {
+    const t = (globalThis as SwTenantGlobal).__cropcardTenantPlugin;
+    return t ? ((await t.cacheWillUpdate(p)) as Response | null) : null;
+  },
+  fetchDidSucceed: async (p) => {
+    const t = (globalThis as SwTenantGlobal).__cropcardTenantPlugin;
+    return t ? ((await t.fetchDidSucceed(p)) as Response) : p.response;
+  }
+};
 
 export default defineConfig({
   plugins: [
+    cropcardSwTenant(),
     sveltekit(),
     SvelteKitPWA({
       strategies: 'generateSW',
@@ -23,27 +83,56 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff2,json}'],
-        navigateFallback: '/',
         cleanupOutdatedCaches: true,
-        // GET /api/plugins is the catalog the kernel + UI need offline.
-        // Stale-while-revalidate so the field UI keeps rendering with the
-        // last-seen data while a fresh copy fetches in the background.
+        navigateFallback: null,
+        importScripts: ['sw-tenant.js'],
+        // Tenant-scoped runtime caches are keyed per active Owner by
+        // `tenantCachePlugin` (logic in src/lib/client/swTenantKey.ts), so an
+        // Owner switch keeps every farm's entries and never cross-serves.
+        // NetworkFirst: online reads always hit the server (which is also how
+        // the SW notices a session/Owner change); the cache is the offline
+        // fallback. No navigateFallback: SSR pages are not precached, so
+        // offline navigations use the per-Owner page cache instead.
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname === '/api/plugins',
-            handler: 'StaleWhileRevalidate',
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'cropcard-plugins',
-              expiration: { maxAgeSeconds: 7 * 24 * 60 * 60 }
+              cacheName: 'cropcard-tenant-plugins',
+              networkTimeoutSeconds: 3,
+              expiration: { maxAgeSeconds: 7 * 24 * 60 * 60 },
+              plugins: [tenantCachePlugin]
             }
           },
           {
             urlPattern: ({ url }) => url.pathname === '/api/sprayers',
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'cropcard-sprayers',
+              cacheName: 'cropcard-tenant-sprayers',
               networkTimeoutSeconds: 3,
-              expiration: { maxAgeSeconds: 24 * 60 * 60 }
+              expiration: { maxAgeSeconds: 24 * 60 * 60 },
+              plugins: [tenantCachePlugin]
+            }
+          },
+          {
+            urlPattern: ({ request, sameOrigin }) => sameOrigin && request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'cropcard-tenant-pages',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              plugins: [tenantCachePlugin]
+            }
+          },
+          {
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && url.pathname.endsWith('/__data.json'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'cropcard-tenant-data',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              plugins: [tenantCachePlugin]
             }
           },
           {

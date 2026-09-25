@@ -2,6 +2,7 @@
   "pluginId": "calcium-nitrate-15-5-0-19ca",
   "type": "fertilizer",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
     "n": 15,

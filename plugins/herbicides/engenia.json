@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Engenia (BASF dicamba BAPMA salt)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [
     {

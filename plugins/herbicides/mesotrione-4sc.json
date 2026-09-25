@@ -3,6 +3,8 @@
   "type": "herbicide",
   "displayName": "Mesotrione 4SC",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "SC",
   "applicationTiming": "POST",
   "activeIngredients": [
     {

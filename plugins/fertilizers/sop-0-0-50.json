@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Sulfate of Potash / SOP (0-0-50, +18S)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 0,
     "p": 0,

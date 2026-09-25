@@ -2,6 +2,7 @@
   "pluginId": "et-herbicide-pyraflufen",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "ET Herbicide (pyraflufen-ethyl)",
   "activeIngredients": [

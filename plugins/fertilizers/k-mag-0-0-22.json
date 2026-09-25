@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "K-Mag / Sulfate of Potash-Magnesia (0-0-22, +11Mg, +22S)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 0,
     "p": 0,

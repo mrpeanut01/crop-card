@@ -2,6 +2,8 @@
   "pluginId": "curzate-60df-cymoxanil",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "oz",
+  "formulation": "DF",
   "pluginSchemaVersion": "1.1",
   "displayName": "Curzate 60DF (cymoxanil)",
   "applicationTiming": "COVER",

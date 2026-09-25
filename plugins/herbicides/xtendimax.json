@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "XtendiMax with VaporGrip (Bayer)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [
     {

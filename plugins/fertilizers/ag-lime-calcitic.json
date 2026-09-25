@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Calcitic Ag Lime (CaCO3, ENM 100)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 0,
     "p": 0,

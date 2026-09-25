@@ -44,7 +44,7 @@
   const KICKER: Record<Chemistry, string> = {
     herbicide: 'Spray · Herbicide · Kernel-gated',
     insecticide: 'IPM · IRAC-grouped library',
-    fungicide: 'Spray · FRAC-rotated · Phase 25d gate stub'
+    fungicide: 'Spray · FRAC-rotated · weather-aware'
   };
 
   const DEFAULT_TITLE: Record<Chemistry, string> = {
@@ -84,8 +84,8 @@
     <Pill tone="forest">Pollinator-bloom gate · enforced</Pill>
   {:else if chemistry === 'fungicide'}
     <Pill tone="forest">FRAC rotation · enforced</Pill>
-    <Pill tone="sky">Disease forecast (NEWA / FHB) — Phase 26</Pill>
-    <Pill tone="forest">Rain/dew dry-hours · enforced</Pill>
+    <Pill tone="sky">Rain/dew dry window · advisory</Pill>
+    <Pill tone="neutral">Disease forecast (NEWA / FHB) · coming in Phase 26</Pill>
   {/if}
 </div>
 

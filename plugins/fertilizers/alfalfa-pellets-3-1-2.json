@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Alfalfa Pellets (3-1-2, OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 3,
     "p": 1,

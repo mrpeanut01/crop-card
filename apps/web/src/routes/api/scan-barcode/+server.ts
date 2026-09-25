@@ -1,12 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getStockItemByBarcode, getStockItemByPluginId } from '$lib/db/stock';
-import {
-  AnthropicOverloadedError,
-  claudeTextLookup,
-  matchCropPlugins,
-  type ScanResult
-} from '$lib/server/scanResult';
+import { claudeTextLookup, matchCropPlugins, type ScanResult } from '$lib/server/scanResult';
+import { runScanAi } from '$lib/server/scanAi';
 import { findTaxonomyTermByName, inventoryDomain } from '$lib/db/taxonomy';
 
 const requestSchema = z.object({ barcode: z.string().min(1).max(100) });
@@ -50,8 +46,8 @@ async function tryOpenFoodFacts(barcode: string) {
   }
 }
 
-export async function POST({ request }) {
-  const body = await request.json().catch(() => null);
+export async function POST(event) {
+  const body = await event.request.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) error(400, 'invalid request');
   const { barcode } = parsed.data;
@@ -79,23 +75,17 @@ export async function POST({ request }) {
       guessed: []
     };
   } else {
-    try {
-      result = await claudeTextLookup(barcode, off.name);
-    } catch (e) {
-      if (e instanceof AnthropicOverloadedError) {
-        return json(
-          {
-            found: false,
-            source: 'none',
-            message: e.message,
-            retryable: true,
-            barcode
-          } satisfies ScanResult & { message: string; retryable: boolean },
-          { status: 503 }
-        );
-      }
-      throw e;
+    const ai = await runScanAi({
+      event,
+      endpoint: 'scan-barcode',
+      subject: 'barcode',
+      call: (onUsage) => claudeTextLookup(barcode, off.name, onUsage)
+    });
+    if (!ai.ok) {
+      const retryable = 'retryable' in ai.body && ai.body.retryable;
+      return json({ ...ai.body, barcode }, { status: retryable ? ai.status : 200 });
     }
+    result = ai.result;
     result.source = result.found ? 'claude' : 'none';
   }
 

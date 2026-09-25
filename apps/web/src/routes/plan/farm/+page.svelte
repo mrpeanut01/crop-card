@@ -44,6 +44,7 @@
       shadeSources={data.shadeSources}
       canEdit
       isFirstRun={data.isFirstRun}
+      initialCenter={data.center}
     />
   {:else}
     <section class="loading"><p>Loading map…</p></section>

@@ -1378,6 +1378,19 @@
 
   onMount(() => {
     cropsTabOrder = loadBlockOrder();
+    const w = $page.url.searchParams.get('wizard');
+    if (w === 'allocation' || w === 'season-setup') {
+      openWizard(w);
+      const sp = new URLSearchParams($page.url.searchParams);
+      sp.delete('wizard');
+      const qs = sp.toString();
+      void goto(`/plan${qs ? `?${qs}` : ''}`, {
+        replaceState: true,
+        keepFocus: true,
+        noScroll: true
+      });
+      return;
+    }
     const sp = $page.url.searchParams;
     const deepLinked = ['map', 'block', 'planting', 'tab'].some((k) => sp.has(k));
     if (data.emptySeason && data.canEdit && !deepLinked) openWizard();

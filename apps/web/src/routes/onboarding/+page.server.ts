@@ -1,4 +1,4 @@
-import { fail, redirect, type Actions } from '@sveltejs/kit';
+import { error, fail, redirect, type Actions, type RequestEvent } from '@sveltejs/kit';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
@@ -7,10 +7,25 @@ import { currentUser } from '$lib/server/auth';
 import { writeSession } from '$lib/server/session';
 import { runWithTenant, tenantValues, unscopedQueryNote } from '$lib/db/tenant';
 import { listBlocks } from '$lib/db/blocks';
-import { listSprayers } from '$lib/db/sprayers';
-import { listCrops } from '$lib/db/crops';
+import { listFields } from '$lib/db/fields';
+import { listShadeSources } from '$lib/db/shadeSources';
+import { createEquipment, listEquipment } from '$lib/db/equipment';
+import { setSetting, getSetting } from '$lib/db/settings';
+import { SEED_EQUIPMENT_TEMPLATES } from '$lib/server/equipmentTemplates';
+import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
+import {
+  LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
+  LOUDOUN_DEFAULT_LAST_FROST_MMDD,
+  LOUDOUN_DEFAULT_LAT_LON,
+  SETTINGS_KEYS
+} from '$lib/schedule/constants';
+import { normalizeFrost, parseLatLon } from '$lib/schedule/farmLocation';
 import { loadSeasonSetup } from '$lib/season/setup.server';
-import { loadPlanningYearView, setActivePlanningYear } from '$lib/season/planningYear.server';
+import {
+  getActivePlanningYear,
+  loadPlanningYearView,
+  setActivePlanningYear
+} from '$lib/season/planningYear.server';
 import {
   isSelectablePlanningYear,
   selectablePlanningYears,
@@ -18,6 +33,14 @@ import {
   suggestionReason,
   type PlanningYearView
 } from '$lib/season/planningYear';
+import {
+  confirmImplements,
+  getOnboardingStatus,
+  loadOnboardingProgress,
+  setOnboardingStatus
+} from '$lib/onboarding/state.server';
+import { nextAfter, resolveStep, type OnboardingProgress } from '$lib/onboarding/steps';
+import { planImplementCreates, sameImplement } from '$lib/onboarding/implements';
 import type { PageServerLoad } from './$types';
 
 // #112 — derive a friendly first name from the email when no display
@@ -32,12 +55,19 @@ function inferFirstName(email: string | null | undefined): string {
   return head.charAt(0).toUpperCase() + head.slice(1).toLowerCase();
 }
 
-export const load: PageServerLoad = ({ locals }) => {
+const NO_FARM: OnboardingProgress = {
+  farm: false,
+  location: false,
+  fields: false,
+  implements: false,
+  season: false,
+  plan: false
+};
+
+export const load: PageServerLoad = ({ locals, url }) => {
   const user = locals.user ?? null;
   const firstName = inferFirstName(user?.email);
 
-  // Pre-farm state: no activeOwnerId yet. Render the farm-creation form
-  // (step 0 of the wizard).
   if (!user?.activeOwnerId) {
     const now = new Date();
     const planningYear: PlanningYearView = {
@@ -49,44 +79,112 @@ export const load: PageServerLoad = ({ locals }) => {
       chosen: false
     };
     return {
-      user,
+      planningYear,
       firstName,
       farmName: null as string | null,
-      progress: null,
-      planningYear
+      progress: NO_FARM,
+      step: 'farm' as const,
+      canEdit: false,
+      status: null,
+      location: null,
+      map: null,
+      implements: null,
+      season: null,
+      summary: null
     };
   }
 
-  // Post-farm state: re-entrant wizard view. Sprint 14 #109 wired a
-  // "Re-walk setup tour →" link from /settings; this loader derives the
-  // 6-step progress from live DB state so the steps tick as the user
-  // completes them across other pages.
   const ownerRow = (() => {
     unscopedQueryNote('onboarding wizard reads the active owner row by id');
     return db.select().from(owners).where(eq(owners.id, user.activeOwnerId!)).get();
   })();
-  const blocks = listBlocks();
-  const sprayers = listSprayers();
-  const plantings = listCrops({ status: 'active', limit: 1 });
-  const planningYear = loadPlanningYearView();
-  const season = loadSeasonSetup(planningYear.activeYear);
+  const year = getActivePlanningYear();
+  const progress = loadOnboardingProgress(year);
+  const step = resolveStep(url.searchParams.get('step'), progress);
+  const center = hasFarmLatLon() ? getFarmLatLon() : null;
 
-  const progress = {
-    farm: !!ownerRow,
-    season: !!season,
-    block: blocks.length > 0,
-    sprayer: sprayers.length > 0,
-    // #190 — same kernel-correct predicate as /today bootstrap.
-    calibration: sprayers.some((s) => s.calibratedGpa != null && s.calibratedGpa > 0),
-    planting: plantings.length > 0
-  };
+  const location =
+    step === 'location'
+      ? {
+          current: center,
+          fallback: LOUDOUN_DEFAULT_LAT_LON,
+          lastFrost: getSetting(SETTINGS_KEYS.lastFrost) ?? null,
+          firstFrost: getSetting(SETTINGS_KEYS.firstFrost) ?? null,
+          defaultLastFrost: LOUDOUN_DEFAULT_LAST_FROST_MMDD,
+          defaultFirstFrost: LOUDOUN_DEFAULT_FIRST_FROST_MMDD
+        }
+      : null;
+
+  const map =
+    step === 'fields'
+      ? {
+          blocks: listBlocks(),
+          fields: listFields(),
+          shadeSources: listShadeSources(),
+          center
+        }
+      : null;
+
+  const equipment = step === 'implements' || step === 'plan' ? listEquipment() : [];
+  const implementsData =
+    step === 'implements'
+      ? {
+          templates: SEED_EQUIPMENT_TEMPLATES.map((t) => ({
+            templateId: t.templateId,
+            type: t.type,
+            category: t.category,
+            label: t.label,
+            description: t.description
+          })),
+          owned: equipment
+            .filter((e) => !e.retiredAt)
+            .map((e) => ({ id: e.id, type: e.type, label: e.label })),
+          ownedTemplateIds: SEED_EQUIPMENT_TEMPLATES.filter((t) =>
+            equipment.some((e) => sameImplement(e, t))
+          ).map((t) => t.templateId)
+        }
+      : null;
+
+  const season =
+    step === 'season'
+      ? {
+          planningYear: loadPlanningYearView(),
+          existing: loadSeasonSetup(year),
+          lastYearSetup: loadSeasonSetup(year - 1),
+          currentYear: year
+        }
+      : null;
+
+  const summary =
+    step === 'plan'
+      ? (() => {
+          const blocks = listBlocks();
+          const sprayers = equipment.filter((e) => e.type === 'sprayer' && !e.retiredAt);
+          return {
+            blockCount: blocks.length,
+            acres: Number(blocks.reduce((sum, b) => sum + (b.acres ?? 0), 0).toFixed(2)),
+            implementCount: equipment.filter((e) => !e.retiredAt).length,
+            uncalibratedSprayers: sprayers.filter(
+              (s) => !(s.state.calibratedGpa != null && s.state.calibratedGpa > 0)
+            ).length,
+            location: center
+          };
+        })()
+      : null;
 
   return {
-    user,
     firstName,
     farmName: ownerRow?.name ?? null,
     progress,
-    planningYear
+    step,
+    planningYear: null,
+    canEdit: user.role === 'owner',
+    status: getOnboardingStatus(),
+    location,
+    map,
+    implements: implementsData,
+    season,
+    summary
   };
 };
 
@@ -112,8 +210,21 @@ function uniqueSlug(base: string): string {
   return `${candidate}-${randomUUID().slice(0, 6)}`;
 }
 
+function requireFarmOwner(event: RequestEvent) {
+  const user = currentUser(event);
+  if (!user) throw redirect(303, '/signin');
+  if (!user.activeOwnerId) throw redirect(303, '/onboarding');
+  if (user.role !== 'owner') throw error(403, 'owner-only');
+  return user;
+}
+
+function continueTo(from: Parameters<typeof nextAfter>[0]): never {
+  const next = nextAfter(from, loadOnboardingProgress(getActivePlanningYear()));
+  throw redirect(303, `/onboarding?step=${next}`);
+}
+
 export const actions: Actions = {
-  default: async (event) => {
+  farm: async (event) => {
     const user = currentUser(event);
     if (!user) throw redirect(303, '/signin');
 
@@ -180,6 +291,8 @@ export const actions: Actions = {
     });
 
     runWithTenant(ownerId, () => {
+      setOnboardingStatus('in-progress');
+      setActivePlanningYear(planningYear, now);
       db.insert(fields)
         .values(
           tenantValues({
@@ -190,7 +303,6 @@ export const actions: Actions = {
           })
         )
         .run();
-      setActivePlanningYear(planningYear, now);
     });
 
     writeSession(event.cookies, {
@@ -201,9 +313,56 @@ export const actions: Actions = {
       activeOwnerId: ownerId,
       activeRole: 'owner'
     });
-    // After farm creation, stay on /onboarding so the user lands on the
-    // 6-step wizard with step 1 ticked. /today is reachable via the top
-    // nav once they're ready.
-    throw redirect(303, '/onboarding');
+    throw redirect(303, '/onboarding?step=location');
+  },
+  location: async (event) => {
+    requireFarmOwner(event);
+    const fd = await event.request.formData();
+    const latLon = parseLatLon(fd.get('lat'), fd.get('lon'));
+    if (!latLon) {
+      return fail(400, {
+        error: 'Drop a pin on the map, use your current location, or type a latitude and longitude.'
+      });
+    }
+    setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify(latLon));
+    const lastFrost = normalizeFrost(fd.get('lastFrost'));
+    if (lastFrost) setSetting(SETTINGS_KEYS.lastFrost, lastFrost);
+    const firstFrost = normalizeFrost(fd.get('firstFrost'));
+    if (firstFrost) setSetting(SETTINGS_KEYS.firstFrost, firstFrost);
+    continueTo('location');
+  },
+
+  implements: async (event) => {
+    requireFarmOwner(event);
+    const fd = await event.request.formData();
+    const selected = fd.getAll('templateId').map(String);
+    const types = fd.getAll('customType').map(String);
+    const labels = fd.getAll('customLabel').map(String);
+    const custom = labels.map((label, i) => ({ label, type: types[i] ?? '' }));
+    const { creates, errors } = planImplementCreates(
+      selected,
+      custom,
+      SEED_EQUIPMENT_TEMPLATES,
+      listEquipment()
+    );
+    if (errors.length > 0) return fail(400, { error: errors.join(' ') });
+    db.transaction(() => {
+      for (const c of creates) createEquipment(c);
+      confirmImplements();
+    });
+    continueTo('implements');
+  },
+
+  finish: async (event) => {
+    requireFarmOwner(event);
+    const fd = await event.request.formData();
+    setOnboardingStatus('complete');
+    throw redirect(303, fd.get('dest') === 'today' ? '/today' : '/plan?wizard=allocation');
+  },
+
+  later: async (event) => {
+    requireFarmOwner(event);
+    if (getOnboardingStatus() !== 'complete') setOnboardingStatus('later');
+    throw redirect(303, '/today');
   }
 };

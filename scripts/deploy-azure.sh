@@ -29,6 +29,12 @@
 # The same SHA is baked into the image (BUILD_SHA) and served by /api/health as
 # `version`; the deploy only counts as done once the live app reports it.
 #
+# Custom domain: the template hosts the DNS zone and a CNAME per hostname. Until
+# the registrar delegates to the zone's name servers the app stays on its
+# default hostname. Once public DNS resolves, the next deploy adds the
+# hostnames and requests managed certificates; when those are issued this
+# script deploys again to bind TLS and move ORIGIN to the first hostname. Every step is re-derived on each run.
+#
 # --ci (used by the workflow) expects the group, CROPCARD_ACR and CROPCARD_KV to
 # exist, never creates or grants anything, and reads only secret names.
 # --image <ref> deploys an already-pushed image instead of building one.
@@ -151,16 +157,55 @@ echo "pingram      : ${HAS_PINGRAM}"
 echo "postmark     : ${HAS_POSTMARK}"
 echo "anthropic    : ${HAS_ANTHROPIC}"
 
+# ─── Custom domain readiness ────────────────────────────────────────────
+# Zone and host labels come from the .bicepparam so the template and this
+# check can't disagree.
+PARAM_FILE="infra/azure/parameters.dev.bicepparam"
+ZONE="$(sed -n "s/^param dnsZoneName = '\(.*\)'$/\1/p" "$PARAM_FILE")"
+read -ra HOSTS <<<"$(sed -n "s/^param customHosts = \[\(.*\)\]$/\1/p" "$PARAM_FILE" | tr -d "',")"
+FQDNS=(); for h in "${HOSTS[@]}"; do [ "$h" = "@" ] && FQDNS+=("$ZONE") || FQDNS+=("${h}.${ZONE}"); done
+ENV_NAME="cropcard-dev-cae"
+DNS_READY=false
+if [ -n "$ZONE" ] && [ "${#FQDNS[@]}" -gt 0 ] && command -v dig >/dev/null; then
+  STATIC_IP="$(az containerapp env show -g "$GROUP" -n "$ENV_NAME" --query properties.staticIp -o tsv 2>/dev/null || true)"
+  APP_FQDN="$(az containerapp show -g "$GROUP" -n "$APP_NAME" --query properties.configuration.ingress.fqdn -o tsv 2>/dev/null || true)"
+  VERIFY_ID="$(az containerapp show -g "$GROUP" -n "$APP_NAME" --query properties.customDomainVerificationId -o tsv 2>/dev/null || true)"
+  if [ -n "$APP_FQDN" ] && [ -n "$VERIFY_ID" ]; then
+    DNS_READY=true
+    for f in "${FQDNS[@]}"; do
+      if [ "$f" = "$ZONE" ]; then
+        dig +short @1.1.1.1 A "$f" | grep -qx "$STATIC_IP"
+      else
+        dig +short @1.1.1.1 CNAME "$f" | grep -qx "${APP_FQDN}."
+      fi &&
+        dig +short @1.1.1.1 TXT "asuid.${f}" | tr -d '"' | grep -qx "$VERIFY_ID" ||
+        DNS_READY=false
+    done
+  fi
+fi
+cert_issued() {
+  [ "$DNS_READY" = true ] || return 1
+  local issued
+  issued="$(az containerapp env certificate list -g "$GROUP" -n "$ENV_NAME" --managed-certificates-only \
+    --query "[?properties.provisioningState=='Succeeded'].name" -o tsv 2>/dev/null)" || return 1
+  for f in "${FQDNS[@]}"; do
+    printf '%s\n' "$issued" | grep -qx "cropcard-dev-${f//./-}" || return 1
+  done
+}
+CERT_ISSUED=false; cert_issued && CERT_ISSUED=true
+echo "domain       : ${FQDNS[*]:-none} (dns ready: ${DNS_READY}, certs issued: ${CERT_ISSUED})"
+
 PARAMS=(
-  --parameters infra/azure/parameters.dev.bicepparam
+  --parameters "$PARAM_FILE"
   --parameters location="$LOCATION" image="$IMAGE" containerRegistryServer="$REGISTRY"
   --parameters keyVaultName="$KV" hasPingramKey="$HAS_PINGRAM" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
+domain_params() { echo "customDomainDnsReady=$DNS_READY" "customDomainCertIssued=$CERT_ISSUED"; }
 
 if [ "$APPLY" = false ]; then
   az deployment group what-if -g "$GROUP" --name "$DEPLOYMENT_NAME" \
-    --template-file infra/azure/main.bicep "${PARAMS[@]}"
+    --template-file infra/azure/main.bicep "${PARAMS[@]}" --parameters $(domain_params)
   exit 0
 fi
 
@@ -176,12 +221,62 @@ else
     --build-arg BUILD_SHA="$SHA" --tag "$IMAGE" --push .
 fi
 
-az deployment group create -g "$GROUP" --name "$DEPLOYMENT_NAME" \
-  --template-file infra/azure/main.bicep "${PARAMS[@]}" --output none
+deploy() {
+  az deployment group create -g "$GROUP" --name "$DEPLOYMENT_NAME" \
+    --template-file infra/azure/main.bicep "${PARAMS[@]}" --parameters $(domain_params) --output none
+}
+deploy
+
+# First deploy with DNS ready requested the certificate; bind it once issued.
+if [ "$DNS_READY" = true ] && [ "$CERT_ISSUED" = false ]; then
+  for i in $(seq 1 40); do
+    cert_issued && { CERT_ISSUED=true; break; }
+    echo "waiting for the ${FQDNS[*]} certificates [$i/40]"
+    sleep 15
+  done
+  if [ "$CERT_ISSUED" = true ]; then
+    echo "binding TLS for ${FQDNS[*]}"
+    deploy
+  else
+    echo "certificates for ${FQDNS[*]} not issued yet; the next deploy binds them" >&2
+  fi
+fi
+
+NS="$(az deployment group show -g "$GROUP" --name "$DEPLOYMENT_NAME" --query "properties.outputs.customDomainNameServers.value" -o tsv 2>/dev/null | tr '\n' ' ')"
+if [ -n "$ZONE" ] && [ "$DNS_READY" = false ]; then
+  echo "domain       : ${ZONE} is not delegated yet; set its name servers at the registrar to: ${NS}"
+fi
 
 ORIGIN="$(az deployment group show -g "$GROUP" --name "$DEPLOYMENT_NAME" --query properties.outputs.appOrigin.value -o tsv)"
 echo "deployed     : ${ORIGIN}"
 [ -n "${GITHUB_OUTPUT:-}" ] && echo "origin=${ORIGIN}" >> "$GITHUB_OUTPUT"
+
+# Load the app once the way a browser would, so the first real visitor doesn't
+# pay for SSR module loading and cold asset fetches. Best effort: a failure
+# here never fails the deploy.
+warm_up() {
+  local page assets fonts path n=0
+  page="$(curl -fsS -i --max-time 60 "${ORIGIN}/" 2>/dev/null || true)"
+  if [ -z "$page" ]; then
+    echo "warm-up      : landing page did not answer (skipped)"
+    return 0
+  fi
+  # The HTML and its Link preload header reference assets as ./_app/... or /...
+  assets="$(printf '%s' "$page" |
+    grep -oE '(href="|src="|import\("|<)\.?/[^/"#>][^"#>]*' |
+    sed -E 's/^(href="|src="|import\("|<)\.?//' | sort -u || true)"
+  for path in /manifest.webmanifest /registerSW.js /sw.js $assets; do
+    curl -fsS --max-time 30 -o /dev/null "${ORIGIN}${path}" 2>/dev/null && n=$((n + 1))
+  done
+  # Fonts are only named inside the stylesheets.
+  fonts="$(for path in $(printf '%s\n' $assets | grep '\.css$'); do
+      curl -fsS --max-time 30 "${ORIGIN}${path}" 2>/dev/null || true
+    done | grep -oE 'url\([^)]*fonts/[^)]+\)' | grep -oE '/fonts/[^)"'"'"']+' | sort -u || true)"
+  for path in $fonts; do
+    curl -fsS --max-time 30 -o /dev/null "${ORIGIN}${path}" 2>/dev/null && n=$((n + 1))
+  done
+  echo "warm-up      : loaded / and ${n} assets"
+}
 
 # The ARM deployment returns before the new revision takes traffic. Done means
 # the live app reports this build's SHA, not merely that something answers.
@@ -191,6 +286,7 @@ for i in $(seq 1 40); do
     sed -n 's/.*"version":"\([^"]*\)".*/\1/p' || true)"
   if [ "$LIVE" = "$SHA" ]; then
     echo "live         : ${SHA} at ${ORIGIN}"
+    warm_up
     exit 0
   fi
   echo "waiting for ${SHA::7} (serving: ${LIVE:-no answer}) [$i/40]"

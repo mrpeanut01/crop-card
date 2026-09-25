@@ -27,7 +27,8 @@
     shadeSources = [],
     canEdit,
     isFirstRun = false,
-    initialMode
+    initialMode,
+    initialCenter = null
   }: {
     blocks: BlockWithPlantings[];
     fields: FieldWithBlocks[];
@@ -37,6 +38,7 @@
     /** Start on the map or on the dimension sketch. Defaults to the sketch
      *  when the farm has sizes entered but nothing drawn on the map. */
     initialMode?: 'map' | 'sketch';
+    initialCenter?: { lat: number; lon: number } | null;
   } = $props();
 
   const hasGeometry = $derived(
@@ -729,7 +731,8 @@
       {fields}
       {canEdit}
       {shadeSources}
-      autoLocate={canEdit && !hasGeometry}
+      {initialCenter}
+      autoLocate={canEdit && !hasGeometry && !initialCenter}
       onSaveGeometry={saveGeometry}
       onCreateWithGeometry={createBlockWithGeometry}
       onSaveFieldGeometry={saveFieldGeometry}

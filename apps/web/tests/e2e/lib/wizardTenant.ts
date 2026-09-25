@@ -68,7 +68,7 @@ export async function provisionWizardTenant(
   expect(signinBody.location, 'fresh user should land on onboarding').toBe('/onboarding');
 
   const year = new Date().getFullYear();
-  const onboard = await page.request.post('/onboarding', {
+  const onboard = await page.request.post('/onboarding?/farm', {
     form: { farmName: `Wizard Farm ${Date.now()}`, planningYear: String(year) },
     headers: { 'x-sveltekit-action': 'true', origin },
     maxRedirects: 0

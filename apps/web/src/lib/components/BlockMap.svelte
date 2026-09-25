@@ -96,6 +96,7 @@
     onCreateShadeSource,
     onDeleteShadeSource,
     onUpdateShadeGeometry,
+    initialCenter = null,
     autoLocate = false
   }: {
     blocks: BlockWithPlantings[];
@@ -127,6 +128,9 @@
     onCreateShadeSource?: CreateShadeSourceCb;
     onDeleteShadeSource?: DeleteShadeSourceCb;
     onUpdateShadeGeometry?: UpdateShadeGeometryCb;
+    /** Where the map opens before any geometry exists (the farm location).
+     *  Once blocks or fields are drawn, the map fits to them instead. */
+    initialCenter?: { lat: number; lon: number } | null;
     /** When nothing is drawn yet, center on the browser's location (the
      *  browser asks the user first). */
     autoLocate?: boolean;
@@ -294,7 +298,10 @@
       touchZoom: !thumbnail,
       keyboard: !thumbnail,
       attributionControl: !thumbnail
-    }).setView([39.1, -77.55], 13);
+    }).setView(
+      initialCenter ? [initialCenter.lat, initialCenter.lon] : [39.1, -77.55],
+      initialCenter ? 16 : 13
+    );
     markMapReady();
 
     const satellite = L.tileLayer(

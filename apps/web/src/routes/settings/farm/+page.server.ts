@@ -17,10 +17,9 @@ import { listFields } from '$lib/db/fields';
 import { getFarmLatLon, frostDatesForYear } from '$lib/schedule/settings';
 import { getSetting, setSetting } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
+import { normalizeFrost, parseLatLon } from '$lib/schedule/farmLocation';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { unscopedQueryNote } from '$lib/db/tenant';
-
-const MM_DD_RE = /^(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$/;
 
 export const load: ServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
@@ -69,17 +68,6 @@ export const load: ServerLoad = ({ locals }) => {
   };
 };
 
-/** Normalize a frost-date form value to a canonical `MM-DD` string, or
- *  null when the field was left blank. Accepts both the browser
- *  `<input type="date">` shape (`YYYY-MM-DD`) and a bare `MM-DD`. */
-function normalizeFrost(raw: string): string | null {
-  const s = raw.trim();
-  if (!s) return null;
-  const iso = /^\d{4}-(\d{2})-(\d{2})$/.exec(s);
-  const mmdd = iso ? `${iso[1]}-${iso[2]}` : s;
-  return MM_DD_RE.test(mmdd) ? mmdd : null;
-}
-
 export const actions: Actions = {
   save: async ({ request, locals }) => {
     if (!locals.user) throw error(401, 'sign-in required');
@@ -98,27 +86,13 @@ export const actions: Actions = {
 
     // Lat/lon — persisted as JSON under farm_lat_lon (same key /api/settings
     // validates). Only write when both parse to in-range numbers.
-    const latRaw = String(form.get('lat') ?? '').trim();
-    const lonRaw = String(form.get('lon') ?? '').trim();
-    if (latRaw && lonRaw) {
-      const lat = Number(latRaw);
-      const lon = Number(lonRaw);
-      if (
-        Number.isFinite(lat) &&
-        Number.isFinite(lon) &&
-        lat >= -90 &&
-        lat <= 90 &&
-        lon >= -180 &&
-        lon <= 180
-      ) {
-        setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify({ lat, lon }));
-      }
-    }
+    const latLon = parseLatLon(form.get('lat'), form.get('lon'));
+    if (latLon) setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify(latLon));
 
     // Frost dates — MM-DD strings under last_frost_date / first_frost_date.
-    const lastFrost = normalizeFrost(String(form.get('lastFrost') ?? ''));
+    const lastFrost = normalizeFrost(form.get('lastFrost'));
     if (lastFrost) setSetting(SETTINGS_KEYS.lastFrost, lastFrost);
-    const firstFrost = normalizeFrost(String(form.get('firstFrost') ?? ''));
+    const firstFrost = normalizeFrost(form.get('firstFrost'));
     if (firstFrost) setSetting(SETTINGS_KEYS.firstFrost, firstFrost);
 
     return { ok: true };

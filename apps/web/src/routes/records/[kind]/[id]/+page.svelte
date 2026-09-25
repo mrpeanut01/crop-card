@@ -3,6 +3,11 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import LockPill from '$lib/components/ui/LockPill.svelte';
   import { KIND_LABEL, KIND_TONE } from '$lib/db/recordKinds';
+  import {
+    BLOOM_SOURCE_LABEL,
+    BLOOM_STATUS_LABEL,
+    VERDICT_LABEL
+  } from '$lib/records/pollinatorAttestation';
 
   let { data } = $props();
 
@@ -106,6 +111,38 @@
     <div class="card-value mono">{data.rowId}</div>
   </div>
 </section>
+
+{#if data.pollinator}
+  {@const p = data.pollinator}
+  <section class="card" aria-labelledby="pollinator-heading" data-testid="pollinator-attestation">
+    <h2 class="card-title" id="pollinator-heading">Pollinator protection</h2>
+    <div class="card-row">
+      <div class="card-label">Bloom status</div>
+      <div class="card-value">{p.bloomStatus ? BLOOM_STATUS_LABEL[p.bloomStatus] : '—'}</div>
+    </div>
+    <div class="card-row">
+      <div class="card-label">Bloom source</div>
+      <div class="card-value">
+        {p.bloomStatusSource ? BLOOM_SOURCE_LABEL[p.bloomStatusSource] : '—'}
+      </div>
+    </div>
+    <div class="card-row">
+      <div class="card-label">No foragers attested</div>
+      <div class="card-value">
+        {p.attestedNoForagers === undefined ? '—' : p.attestedNoForagers ? 'Yes' : 'No'}
+      </div>
+    </div>
+    <div class="card-row">
+      <div class="card-label">Gate verdict</div>
+      <div class="card-value">
+        {p.pollinatorVerdict ? VERDICT_LABEL[p.pollinatorVerdict] : '—'}
+      </div>
+    </div>
+    {#if !p.bloomStatus && !p.pollinatorVerdict}
+      <p class="card-note">Recorded before bloom attestation was stored (#130).</p>
+    {/if}
+  </section>
+{/if}
 
 <section class="card">
   <h2 class="card-title">Detail</h2>
@@ -239,6 +276,11 @@
   }
   .card-value {
     color: var(--color-ink, #1a1f1a);
+  }
+  .card-note {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--color-ink-muted, #7a7f75);
   }
   .kv {
     display: grid;

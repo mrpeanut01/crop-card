@@ -43,6 +43,7 @@ import {
   type BloomStatus
 } from '$lib/safety/pollinatorProtection';
 import { sunTimesFor } from '$lib/safety/sunTimes';
+import type { AttestedBloomSource } from '$lib/records/pollinatorAttestation';
 import { getFarmLatLon } from '$lib/schedule/settings';
 import { checkCrossContaminationForClasses } from '$lib/safety/crossContamination';
 import { runEvaluator } from '$lib/safety/dryRunRunner';
@@ -283,6 +284,11 @@ export const POST: RequestHandler = async (event) => {
   const pluginSaysInBloom = cropsInBlock.some((c) => isInBloom(c, occurredAt));
   const bloomStatus: BloomStatus =
     parsed.data.bloomStatus ?? (pluginSaysInBloom ? 'in-bloom' : 'unknown');
+  const bloomStatusSource: AttestedBloomSource = parsed.data.bloomStatus
+    ? 'operator'
+    : pluginSaysInBloom
+      ? 'plugin'
+      : 'default';
   const centroid = block?.geometryGeojson ? geometryCentroid(block.geometryGeojson) : null;
   const { lat, lon } = centroid ?? getFarmLatLon();
   const pollinator = checkPollinatorProtection({
@@ -449,7 +455,11 @@ export const POST: RequestHandler = async (event) => {
     reEntryClearAt,
     preHarvestClearAt,
     rulesVersion: RULES_VERSION,
-    pluginHashes
+    pluginHashes,
+    bloomStatus,
+    bloomStatusSource,
+    attestedNoForagers: parsed.data.attestedNoForagers,
+    pollinatorVerdict: pollinator.overall
   });
 
   // #321 — update sprayer chemistry history so the next different-chemistry

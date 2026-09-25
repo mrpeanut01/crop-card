@@ -12,6 +12,11 @@
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, gte, lte } from 'drizzle-orm';
 import type { EnvironmentalConditions } from '$lib/safety/types';
+import type {
+  AttestedBloomSource,
+  AttestedBloomStatus,
+  AttestedPollinatorVerdict
+} from '$lib/records/pollinatorAttestation';
 import { db } from './client';
 import { insecticideEvents } from './schema';
 import { tenantValues, withTenant } from './tenant';
@@ -46,6 +51,11 @@ export interface InsecticideEventInput {
   preHarvestClearAt?: number;
   rulesVersion: string;
   pluginHashes: Record<string, string>;
+  /** #130 — pollinator-gate inputs + verdict at record time. Absent on legacy rows. */
+  bloomStatus?: AttestedBloomStatus;
+  bloomStatusSource?: AttestedBloomSource;
+  attestedNoForagers?: boolean;
+  pollinatorVerdict?: AttestedPollinatorVerdict;
 }
 
 export interface InsecticideEvent extends InsecticideEventInput {
@@ -68,7 +78,11 @@ function rowToEvent(row: typeof insecticideEvents.$inferSelect): InsecticideEven
     preHarvestClearAt: row.preHarvestClearAt?.getTime(),
     rulesVersion: row.rulesVersion,
     pluginHashes: JSON.parse(row.pluginHashesJson),
-    lockedAt: row.lockedAt?.getTime()
+    lockedAt: row.lockedAt?.getTime(),
+    bloomStatus: row.bloomStatus ?? undefined,
+    bloomStatusSource: row.bloomStatusSource ?? undefined,
+    attestedNoForagers: row.attestedNoForagers ?? undefined,
+    pollinatorVerdict: row.pollinatorVerdict ?? undefined
   };
 }
 
@@ -92,7 +106,11 @@ export function insertInsecticideEvent(input: InsecticideEventInput): Insecticid
         reEntryClearAt: input.reEntryClearAt ? new Date(input.reEntryClearAt) : null,
         preHarvestClearAt: input.preHarvestClearAt ? new Date(input.preHarvestClearAt) : null,
         rulesVersion: input.rulesVersion,
-        pluginHashesJson: JSON.stringify(input.pluginHashes)
+        pluginHashesJson: JSON.stringify(input.pluginHashes),
+        bloomStatus: input.bloomStatus ?? null,
+        bloomStatusSource: input.bloomStatusSource ?? null,
+        attestedNoForagers: input.attestedNoForagers ?? null,
+        pollinatorVerdict: input.pollinatorVerdict ?? null
       })
     )
     .returning()

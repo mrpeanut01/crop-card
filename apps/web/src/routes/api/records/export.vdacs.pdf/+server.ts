@@ -16,7 +16,9 @@
  *
  * Layout:
  *   - Cover page: farm identity + integrity hash + filter context
- *   - Pesticide application table (chronological, all three flows)
+ *   - Pesticide application table (chronological, all three flows); the
+ *     Pollinator column carries the #130 bloom attestation + gate verdict
+ *     on insecticide rows (blank on other kinds and pre-#130 rows)
  *   - Integrity note: SHA-256 of the canonical row set + per-record plugin hashes
  *   - Per-page header (farm + date + page #) and signature footer
  */
@@ -41,6 +43,7 @@ import { db } from '$lib/db/client';
 import { equipment, equipmentLog, fertilityApplications, owners, users } from '$lib/db/schema';
 import { unscopedQueryNote, withTenant } from '$lib/db/tenant';
 import { APP_VERSION } from '$lib/version';
+import { pollinatorAttestationSummary } from '$lib/records/pollinatorAttestation';
 
 const fonts = {
   Roboto: {
@@ -162,6 +165,8 @@ interface UnifiedRow {
   pluginHashes: Record<string, string>;
   locked: boolean;
   customRateOverride: boolean;
+  /** #130 — pollinator-gate attestation; '' for other kinds and legacy rows. */
+  pollinatorLine: string;
 }
 
 export const GET: RequestHandler = async (event) => {
@@ -242,7 +247,8 @@ export const GET: RequestHandler = async (event) => {
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
       locked: evaluateLock(ev) !== undefined,
-      customRateOverride: ev.customRateOverride === true
+      customRateOverride: ev.customRateOverride === true,
+      pollinatorLine: ''
     });
   }
   for (const ev of insecticides) {
@@ -268,7 +274,8 @@ export const GET: RequestHandler = async (event) => {
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
       locked: Boolean(ev.lockedAt),
-      customRateOverride: false
+      customRateOverride: false,
+      pollinatorLine: pollinatorAttestationSummary(ev)
     });
   }
   for (const ev of fungicides) {
@@ -291,7 +298,8 @@ export const GET: RequestHandler = async (event) => {
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
       locked: Boolean(ev.lockedAt),
-      customRateOverride: false
+      customRateOverride: false,
+      pollinatorLine: ''
     });
   }
   // #326 — harvest rows carry crop/commodity, quantity, and stored moisture
@@ -318,7 +326,8 @@ export const GET: RequestHandler = async (event) => {
       rulesVersion: RULES_VERSION,
       pluginHashes: {},
       locked: Boolean(ev.lockedAt),
-      customRateOverride: false
+      customRateOverride: false,
+      pollinatorLine: ''
     });
   }
   // #326 — decon (tank clean-out) events between pesticide classes.
@@ -335,7 +344,8 @@ export const GET: RequestHandler = async (event) => {
       rulesVersion: RULES_VERSION,
       pluginHashes: {},
       locked: false,
-      customRateOverride: false
+      customRateOverride: false,
+      pollinatorLine: ''
     });
   }
   // #326 — fertility applications (N/P/K delivered per acre).
@@ -359,7 +369,8 @@ export const GET: RequestHandler = async (event) => {
       rulesVersion: RULES_VERSION,
       pluginHashes: {},
       locked: false,
-      customRateOverride: false
+      customRateOverride: false,
+      pollinatorLine: ''
     });
   }
 
@@ -394,6 +405,7 @@ export const GET: RequestHandler = async (event) => {
       { text: 'Product / EPA / Rate', style: 'th' },
       { text: 'Cond.', style: 'th' },
       { text: 'Applicator', style: 'th' },
+      { text: 'Pollinator', style: 'th' },
       { text: 'Lock', style: 'th' }
     ]
   ];
@@ -406,6 +418,7 @@ export const GET: RequestHandler = async (event) => {
       r.productLines,
       r.conditionLine,
       r.performer,
+      r.pollinatorLine,
       r.locked ? 'LOCKED' : 'editable'
     ]);
   }
@@ -472,7 +485,7 @@ export const GET: RequestHandler = async (event) => {
       {
         table: {
           headerRows: 1,
-          widths: ['auto', 'auto', 60, 60, '*', 'auto', 'auto', 'auto'],
+          widths: ['auto', 'auto', 60, 60, '*', 'auto', 'auto', 90, 'auto'],
           body: tableBody
         },
         layout: {

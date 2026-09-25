@@ -1001,7 +1001,12 @@ export const insecticideEvents = tenantScoped(
       pluginHashesJson: text('plugin_hashes_json').notNull(),
       lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
       /** Phase 25d v2-addendum — see sprayEvents.provenanceJson. */
-      provenanceJson: text('provenance_json')
+      provenanceJson: text('provenance_json'),
+      /** #130 — bloom status the pollinator gate evaluated. NULL on pre-#130 rows. */
+      bloomStatus: text('bloom_status', { enum: ['in-bloom', 'not-in-bloom', 'unknown'] }),
+      bloomStatusSource: text('bloom_status_source', { enum: ['operator', 'plugin', 'default'] }),
+      attestedNoForagers: integer('attested_no_foragers', { mode: 'boolean' }),
+      pollinatorVerdict: text('pollinator_verdict', { enum: ['pass', 'warn', 'block'] })
     },
     (table) => ({
       ownerOccurredIdx: index('insecticide_events_owner_occurred_idx').on(

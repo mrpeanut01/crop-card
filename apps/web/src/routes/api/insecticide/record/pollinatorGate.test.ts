@@ -251,3 +251,65 @@ describe('POST /api/insecticide/record — client occurredAt (offline replay)', 
     expect(insertInsecticideEvent).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /api/insecticide/record — #130 attestation persistence', () => {
+  it('persists an operator attestation, the no-foragers flag, and the verdict', async () => {
+    const res = await post({
+      productPluginIds: ['pyrethroid'],
+      occurredAt: MIDNIGHT_EDT,
+      bloomStatus: 'in-bloom',
+      attestedNoForagers: true
+    });
+    expect(res.status).toBe(200);
+    expect(insertInsecticideEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bloomStatus: 'in-bloom',
+        bloomStatusSource: 'operator',
+        attestedNoForagers: true,
+        pollinatorVerdict: 'warn'
+      })
+    );
+  });
+
+  it('records source=plugin when bloom is derived from a crop bloom window', async () => {
+    getBlock.mockReturnValue({
+      plantings: [{ cropPluginId: 'squash', plantingDate: MIDNIGHT_EDT - 60 * 86_400_000 }]
+    });
+    const res = await post({ productPluginIds: ['bt'], occurredAt: MIDNIGHT_EDT });
+    expect(res.status).toBe(200);
+    expect(insertInsecticideEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bloomStatus: 'in-bloom',
+        bloomStatusSource: 'plugin',
+        attestedNoForagers: undefined,
+        pollinatorVerdict: 'pass'
+      })
+    );
+  });
+
+  it('records source=default + unknown when nothing attests bloom', async () => {
+    const res = await post({ productPluginIds: ['bt'], occurredAt: MIDNIGHT_EDT });
+    expect(res.status).toBe(200);
+    expect(insertInsecticideEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ bloomStatus: 'unknown', bloomStatusSource: 'default' })
+    );
+  });
+
+  it('records not-in-bloom with verdict pass for an attested bloom-free block', async () => {
+    const res = await post({
+      productPluginIds: ['neonic'],
+      occurredAt: NOON_EDT,
+      bloomStatus: 'not-in-bloom',
+      attestedNoForagers: false
+    });
+    expect(res.status).toBe(200);
+    expect(insertInsecticideEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        bloomStatus: 'not-in-bloom',
+        bloomStatusSource: 'operator',
+        attestedNoForagers: false,
+        pollinatorVerdict: 'pass'
+      })
+    );
+  });
+});

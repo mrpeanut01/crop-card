@@ -17,6 +17,7 @@ import { and, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 import { listSprayEvents, evaluateLock as evaluateSprayLock } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
+import type { PollinatorAttestation } from '$lib/records/pollinatorAttestation';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
@@ -61,6 +62,7 @@ export const load: PageServerLoad = async (event) => {
   let lockedAt: number | undefined;
   let occurredAt = 0;
   let performerLabel: string | null = null;
+  let pollinator: PollinatorAttestation | null = null;
 
   if (kind === 'spray') {
     const ev = listSprayEvents({ limit: 10_000 }).find((e) => e.id === rowId);
@@ -85,6 +87,12 @@ export const load: PageServerLoad = async (event) => {
     lockedAt = ev.lockedAt;
     locked = isLocked(occurredAt, lockedAt, now);
     performerLabel = performerEmail(ev.performedById);
+    pollinator = {
+      bloomStatus: ev.bloomStatus,
+      bloomStatusSource: ev.bloomStatusSource,
+      attestedNoForagers: ev.attestedNoForagers,
+      pollinatorVerdict: ev.pollinatorVerdict
+    };
     detail = {
       blockLabel: blockLabelById.get(ev.blockId) ?? ev.blockId,
       products: ev.products,
@@ -202,6 +210,7 @@ export const load: PageServerLoad = async (event) => {
     lockedAt,
     performerLabel,
     detail,
+    pollinator,
     canEdit: canMutate(user.role)
   };
 };

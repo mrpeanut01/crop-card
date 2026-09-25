@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Microthiol Disperss (UPL sulfur — OMRI)",
   "version": "1.0.0",
+  "formulation": "WP",
   "epaRegistrationNumber": "70506-187",
   "defaultUnit": "lb",
   "applicationTiming": "COVER",

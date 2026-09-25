@@ -2,6 +2,7 @@
   "pluginId": "classic-chlorimuron",
   "type": "herbicide",
   "version": "1.0.0",
+  "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Classic (chlorimuron-ethyl)",
   "activeIngredients": [
@@ -19,5 +20,6 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "352-449",
+  "defaultUnit": "oz",
   "notes": "Corteva POST soybean broadleaf herbicide. Group 2 ALS inhibitor. Strong rotation restrictions for sensitive crops."
 }

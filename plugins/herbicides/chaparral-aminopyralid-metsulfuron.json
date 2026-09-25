@@ -23,5 +23,6 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "62719-595",
+  "defaultUnit": "oz",
   "notes": "Corteva premix for pasture, rangeland, CRP, non-cropland. Group 4 auxin paired with Group 2 sulfonylurea."
 }

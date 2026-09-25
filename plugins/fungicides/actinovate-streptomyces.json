@@ -2,6 +2,7 @@
   "pluginId": "actinovate-streptomyces",
   "type": "fungicide",
   "version": "1.0.0",
+  "formulation": "SP",
   "pluginSchemaVersion": "1.1",
   "displayName": "Actinovate AG (Streptomyces lydicus WYEC 108, OMRI)",
   "applicationTiming": "COVER",
@@ -20,6 +21,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "none",
   "epaRegistrationNumber": "73314-1",
+  "defaultUnit": "oz",
   "targetDiseases": [
     "Pythium",
     "Rhizoctonia",

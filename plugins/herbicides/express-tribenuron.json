@@ -19,5 +19,6 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "432-1542",
+  "defaultUnit": "oz",
   "notes": "FMC POST broadleaf sulfonylurea for wheat, barley, oats, triticale (Group 2)."
 }

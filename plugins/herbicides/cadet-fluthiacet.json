@@ -2,6 +2,7 @@
   "pluginId": "cadet-fluthiacet",
   "type": "herbicide",
   "version": "1.0.0",
+  "formulation": "EC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Cadet (fluthiacet-methyl)",

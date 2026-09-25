@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Prowl H2O (BASF)",
   "version": "1.0.0",
+  "formulation": "CS",
   "epaRegistrationNumber": "241-418",
   "defaultUnit": "fl-oz",
   "applicationTiming": "PRE",

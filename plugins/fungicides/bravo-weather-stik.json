@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Bravo Weather Stik (Syngenta chlorothalonil)",
   "version": "1.0.0",
+  "formulation": "SC",
   "epaRegistrationNumber": "66222-276",
   "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",

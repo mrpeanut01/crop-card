@@ -2,6 +2,7 @@
   "pluginId": "altacor-chlorantraniliprole",
   "type": "insecticide",
   "version": "1.0.0",
+  "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Altacor (chlorantraniliprole, fruit/vegetable)",
   "activeIngredients": [
@@ -20,6 +21,7 @@
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "epaRegistrationNumber": "352-730",
+  "defaultUnit": "oz",
   "targetPests": [
     "codling moth",
     "oriental fruit moth",

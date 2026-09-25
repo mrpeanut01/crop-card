@@ -2,6 +2,7 @@
   "pluginId": "oxidate-2-0",
   "type": "fungicide",
   "version": "1.0.0",
+  "formulation": "L",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "OxiDate 2.0 (hydrogen peroxide + peroxyacetic acid, OMRI)",

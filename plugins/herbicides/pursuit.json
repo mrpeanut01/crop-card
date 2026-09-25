@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Pursuit (BASF imazethapyr)",
   "version": "1.0.0",
+  "formulation": "SL",
   "epaRegistrationNumber": "241-310",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",

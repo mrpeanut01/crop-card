@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Manzate Pro-Stick (UPL mancozeb)",
   "version": "1.0.0",
+  "formulation": "WDG",
   "epaRegistrationNumber": "70506-234",
   "defaultUnit": "lb",
   "applicationTiming": "COVER",

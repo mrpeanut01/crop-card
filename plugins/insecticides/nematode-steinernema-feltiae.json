@@ -2,6 +2,7 @@
   "pluginId": "nematode-steinernema-feltiae",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "count",
   "pluginSchemaVersion": "1.1",
   "displayName": "Steinernema feltiae (beneficial nematodes, OMRI)",
   "activeIngredients": [

@@ -2,7 +2,8 @@
   "pluginId": "authority-mtz-sulfentrazone",
   "type": "herbicide",
   "version": "1.0.0",
-  "defaultUnit": "fl-oz",
+  "formulation": "DF",
+  "defaultUnit": "oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Authority MTZ (sulfentrazone + metribuzin)",
   "activeIngredients": [
@@ -17,7 +18,7 @@
   ],
   "ratePerAcre": {
     "amount": 8,
-    "unit": "fl-oz"
+    "unit": "oz"
   },
   "gpaCalibration": 15,
   "applicationTiming": "PRE",

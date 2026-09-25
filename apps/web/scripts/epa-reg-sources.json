@@ -801,5 +801,782 @@
       "quote": "To minimize potential exposure to bees and other pollinating insects, do not apply while bees are foraging.",
       "note": "Also 'Do not allow product to drift to blooming crops or weeds if bees are foraging.' No bee toxicity class stated and no bloom prohibition, only a foraging restriction."
     }
+  },
+  "formulation": {
+    "accent-q-nicosulfuron": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00773-20241107.pdf",
+      "docDate": "2024-11-07",
+      "page": 3,
+      "quote": "Accent® Q [Alternate Brand Name: DuPont Accent Q] HERBICIDE ... This product is a water-dispersible granule containing 54.5% active ingredient by weight.",
+      "note": "Label is EPA Reg. No. 352-773 (Corteva, Active). PPLS formulations field: 'Water Dispersible Granule'. The plugin's EPA number 352-768 is NOT Accent Q (PPLS 352-768 = MATRIX SG) - see contradictions."
+    },
+    "actara": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00938-20131203.pdf",
+      "docDate": "2013-12-03",
+      "page": 2,
+      "quote": "Actara is a water-dispersible granule.",
+      "note": "No code printed in the brand name; label words 'water-dispersible granule' -> WDG. PPLS formulations field: 'Water Dispersible Granule'."
+    },
+    "actinovate-streptomyces": {
+      "formulation": "SP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073314-00020-20221215.pdf",
+      "docDate": "2022-12-15",
+      "page": 61,
+      "quote": "ACTINOVATE ® SOLUBLE [BIOLOGICAL FUNGICIDE] [Alternate Brand Names: Actinovate® SP, ActinoGro® TURF, ActinoGrow T & O]",
+      "note": "Actinovate AG is an alternate brand of the same registration (73314-20, Sublabel A p4). The label prints the code 'SP' in the sibling alternate brand name, describes the product as 'dry powder' (p12) that is 'completely soluble' (p13) and sold by Net Weight. PPLS formulation field reads 'Soluble Concentrate', which conflicts with a dry powder; reviewer may prefer keep-gap."
+    },
+    "admire-pro": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "docDate": "2019-09-17",
+      "page": 8,
+      "quote": "GAUCHO 550 SC INSECTICIDE is a suspension concentrate (flowable) formulation, shake well prior to measuring/mixing.",
+      "note": "Same registration (264-827) as Admire Pro (alternate brand). PPLS record formulation: 'Flowable Concentrate'. Label says suspension concentrate -> SC."
+    },
+    "altacor-chlorantraniliprole": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "docDate": "2018-07-02",
+      "page": 2,
+      "quote": "ALTACOR® is a water dispersible granule.",
+      "note": "No code in the brand name; label words 'water dispersible granule' -> WDG (the mixing-order list groups it with 'water dispersible granules (WG, XP, DF)', not a product code). PPLS formulations: 'Water Dispersible Granule'."
+    },
+    "anthem-maxx": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
+      "docDate": "2025-11-25",
+      "page": 3,
+      "quote": "F9310-7 is a SC (suspension concentrate) containing 4.30 total lbs. active ingredients per gallon",
+      "note": "PPLS formulation field says 'Emulsifiable Concentrate'; label text wins."
+    },
+    "aprovia": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "docDate": "2024-10-30",
+      "page": 3,
+      "quote": "Aprovia Fungicide is formulated as an Emulsifiable Concentrate (EC) and contains 0.83 lb of benzovindiflupyr active ingredient per gallon.",
+      "note": "PPLS record lists formulation 'Soluble Concentrate'; the label itself says EC, label text preferred."
+    },
+    "asana-xl": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "docDate": "2026-04-14",
+      "page": 3,
+      "quote": "This product contains 0.66 lbs. Active Ingredient per gallon. 0.66 Emulsible Concentrate.",
+      "note": "'Emulsible Concentrate' -> EC. PPLS formulations: 'Emulsifiable Concentrate'."
+    },
+    "authority-mtz-sulfentrazone": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03340-20230713.pdf",
+      "docDate": "2023-07-13",
+      "page": 5,
+      "quote": "PRODUCT INFORMATION F6482 45DF Herbicide is a dry flowable formulation to be mixed with water and sprayed for selective preemergence or preplant incorporated weed control",
+      "note": "EPA Reg. 279-3340 (FMC, Active); PPLS alternate brand 'AUTHORITY MTZ DF HERBICIDE', and label p16 reads 'Authority MTZ DF Herbicide will provide control of'. Plugin EPA 279-3437 is a different product (see contradictions)."
+    },
+    "avaunt-evo": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "docDate": "2024-08-22",
+      "page": 5,
+      "quote": "AVAUNT® eVo insect control is a water dispersible granule that can be applied as a foliar spray",
+      "note": "Front panel also reads '...Dispersible Granules' (p3). PPLS formulations: 'Water Dispersible Granule'."
+    },
+    "axxe-ammonium-nonanoate": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00023-20210205.pdf",
+      "docDate": "2020-06-17",
+      "page": 7,
+      "quote": "AXXE Broad Spectrum Herbicide is completely soluble in water and requires only nominal mixing.",
+      "note": "No formulation code printed; liquid concentrate (3.3 lbs ammonium nonanoate per US gallon, p3) that is completely water-soluble. PPLS formulation field corroborates: 'Soluble Concentrate'. Lower confidence than a printed code. Label version V10 dated 2020-06-17, accepted 2021-02-05."
+    },
+    "aza-direct": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071908-00001-20200127.pdf",
+      "docDate": "2020-01-27",
+      "page": 36,
+      "quote": "Product Name; Neemazal T/S 1.2 EC / EPA Registration Number; 71908-1 ... This product is an emulsifiable concentrate to be diluted with water.",
+      "note": "The Gowan Aza-Direct label itself prints no formulation code or words (grep concentrat|emulsi|EC: no match). Value taken from the parent registration 71908-1 that the supplemental distributor product is sold under (PPLS formulation: 'Emulsifiable Concentrate'; brand 'Neemazal T/S 1.2 EC', quote pp.1 and 36). OMRI also lists the Mexican equivalent as 'AZA-Direct 1.2 CE'. Reviewer may prefer keep-gap if a parent-label source is not acceptable."
+    },
+    "azaguard": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00017-20200727.pdf",
+      "docDate": "2020-07-27",
+      "page": 6,
+      "quote": "AzaGuard is an emulsifiable concentrate containing 3.0% azadirachtin by weight.",
+      "note": "Read from the AzaGuard label (BioSafe Systems, EPA Reg. No. 70299-17), NOT the plugin's EPA number 70051-9 (see contradictions). PPLS 70299-17 formulations: 'Emulsifiable Concentrate'."
+    },
+    "baythroid-xl": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+      "docDate": "2019-10-07",
+      "page": 9,
+      "quote": "BAYTHROID XL is an Emulsifiable Concentrate formulation and is active by contact and ingestion.",
+      "note": "PPLS formulations: 'Emulsifiable Concentrate'."
+    },
+    "belay": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00150-20170711.pdf",
+      "docDate": "2017-07-11",
+      "page": 2,
+      "quote": "V-10170 2.13 SC INSECTICIDE FOR CONTROL OF LISTED SUCKING AND CHEWING INSECTS ... Contains 2.13 lb active ingredient per gallon",
+      "note": "Code 'SC' printed in the EPA master-label brand name of 59639-150 (alternate brand 'Belay Insecticide'). The marketed Belay label prints no code. Caveat: the PPLS record's formulations field reads 'Emulsifiable Concentrate', which conflicts with the label's SC; label code taken per brief."
+    },
+    "beyond": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00441-20221011.pdf",
+      "docDate": "2022-10-11",
+      "page": 6,
+      "quote": "Beyond® herbicide, a soluble liquid, is a postemergence herbicide to control and suppress many broadleaf and grass weeds",
+      "note": "The newest file (2024-04-22) is image-only. p3 also says 'formulated as a soluble liquid'. PPLS formulation field says 'Emulsifiable Concentrate', which contradicts the label."
+    },
+    "bravo-weather-stik": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/050534-00188-20140822.pdf",
+      "docDate": "2014-08-22",
+      "page": 2,
+      "quote": "Bravo 720 is formulated as a suspension concentrate (SC). Contains 6.0 pounds Chlorothalonil per gallon",
+      "note": "PPLS formulation field: 'Flowable Concentrate' (consistent, liquid)."
+    },
+    "cadet-fluthiacet": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03338-20260213.pdf",
+      "docDate": "2026-02-13",
+      "page": 3,
+      "quote": "Cadet is an emulsifiable concentrate containing 0.91 lb active ingredient per gallon.",
+      "note": "Label is FMC Cadet Herbicide, EPA Reg. No. 279-3338 (PPLS formulation: 'Emulsifiable Concentrate'), not the plugin's 59639-198."
+    },
+    "callisto": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20260409.pdf",
+      "docDate": "2026-04-09",
+      "page": 3,
+      "quote": "Callisto® Herbicide is formulated as a suspension concentrate (SC) and contains 4 lb of active ingredient mesotrione per gallon.",
+      "note": "EPA 100-1131 Syngenta, Active. PPLS formulations field reads 'Ready-to-Use Solution' (EPA record error); label text governs."
+    },
+    "capreno-thiencarbazone-tembotrione": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+      "docDate": "2026-02-10",
+      "page": 12,
+      "quote": "SC 547 Herbicide is a suspension concentrate that requires the use of an external adjuvant",
+      "note": "Label p3: 'SC 547 Herbicide [ABN : CAPRENO® Herbicide]', EPA Reg. No 264-1063. Same sentence on the 2019 and 2015 labels. The PPLS record's formulation field says 'Emulsifiable Concentrate', which disagrees with the label text; label wording used."
+    },
+    "cevya-mefentrifluconazole": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00407-20230112.pdf",
+      "docDate": "2023-01-12",
+      "page": 9,
+      "quote": "Water-dispersible products (including dry flowables, wettable powders, suspension concentrates including Cevya® fungicide",
+      "note": "PPLS formulation field empty."
+    },
+    "classic-chlorimuron": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00681-20200924.pdf",
+      "docDate": "2020-09-24",
+      "page": 6,
+      "quote": "CLASSIC® herbicide is a dispersible granule formulation to be mixed with water and sprayed",
+      "note": "Corroborated by PPLS formulation 'Water Dispersible Granule'. Label for 5481-681 (AMVAC); p3 prints '[Alternate Brand Name: Classic®]'."
+    },
+    "cobra": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00034-20260113.pdf",
+      "docDate": "2026-01-13",
+      "page": 10,
+      "quote": "Cobra Herbicide is formulated as an emulsifiable concentrate containing 2 lb of active ingredient per gallon.",
+      "note": "PPLS record 59639-34 formulation: 'Emulsifiable Concentrate'. REI 12 h on label p5."
+    },
+    "coragen": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+      "docDate": "2020-10-27",
+      "page": 3,
+      "quote": "CORAGEN® is a suspension concentrate. Contains 1.67 lb. active ingredient per gallon.",
+      "note": "Label words 'suspension concentrate' -> SC; mixing-order list also groups it with 'water based suspension concentrates (SC)' (p7). PPLS formulations field ('Emulsifiable Concentrate', 'Flowable Concentrate') is inconsistent with the label; label wins."
+    },
+    "cuprofix-ultra-disperss": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20251204.pdf",
+      "docDate": "2025-12-04",
+      "page": 3,
+      "quote": "Cuprofix® Ultra 40 Disperss® Dry Flowable Fungicide/Bactericide",
+      "note": "PPLS alternate brand name is 'CUPROFIX 40 DISPERSS DF'. PPLS formulation field says 'Flowable Concentrate'; label text preferred."
+    },
+    "cyd-x-codling-moth-virus": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00044-20250707.pdf",
+      "docDate": "2025-07-07",
+      "page": 4,
+      "quote": "SUBLABEL A: Agricultural Use An Aqueous Suspension Biological Insecticide for Control of the Codling Moth",
+      "note": "Label words 'Aqueous Suspension' mapped to SC (suspension concentrate); rates are 'fluid ounces per acre' (p7), consistent with a liquid. REVIEW: PPLS record formulations field says 'Water Dispersible Granule', which disagrees with the label; label taken as primary. Keep-gap if the reviewer treats the PPLS field as a disagreeing source."
+    },
+    "deadline-mps-metaldehyde": {
+      "formulation": "G",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00507-20150303.pdf",
+      "docDate": "2015-03-03",
+      "page": 4,
+      "quote": "Granules on soil surface may be hazardous to terrestrial wildlife. ... by hand or with commercial application equipment designed for banded application of granular products.",
+      "note": "Product is a 4% metaldehyde bait pellet ('Deadline M-Ps Mini-Pellets (ABN)', EPA 5481-507). PPLS formulation field is 'Pelleted/Tableted', which has no code in the allowed list; the label itself describes the product as granules/granular (pp.4, 6). Mapped to G (dry, lb). Reviewer may prefer keep-gap since 'pellet' is not a listed code."
+    },
+    "dithane-rainshield": {
+      "formulation": "F",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00396-20240229.pdf",
+      "docDate": "2024-02-29",
+      "page": 3,
+      "quote": "Dithane F-45® FUNGICIDE [Alternate Brand Name: Dithane F-45® Rainshield®] Active Ingredients mancozeb...37.0%",
+      "note": "'F' in F-45 = flowable; PPLS record formulation 'Flowable Concentrate'; label rates are in quarts ('Rate per Application (qt/acre)', p17) and '4 lb active ingredient per gallon'."
+    },
+    "double-nickel-55": {
+      "formulation": "WG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00108-20250108.pdf",
+      "docDate": "2025-01-08",
+      "page": 24,
+      "quote": "{List of Alternate Brand Names:} Double Nickel 55® Amylo-X® Bacstar® Amylo-X® WG Double Nickel® 55 WG",
+      "note": "Label 70051-108 (not the plugin's 70051-107): first page reads 'Water Dispersible Granular Biofungicide FOR ORGANIC PRODUCTION' (p.3); ABN prints WG. Plugin's lb rate is consistent with the dry 55 WG product, not the LC."
+    },
+    "dual-ii-magnum": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00818-20240521.pdf",
+      "docDate": "2024-05-21",
+      "page": 3,
+      "quote": "Dual II Magnum® Herbicide is formulated as an Emulsifiable Concentrate (EC) and contains the equivalent of 82.4% or 7.64 lb of active ingredient per gallon.",
+      "note": "EPA 100-818 Syngenta, Active; PPLS formulations 'Emulsifiable Concentrate' agrees."
+    },
+    "endura-boscalid": {
+      "formulation": "WG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00197-20221108.pdf",
+      "docDate": "2022-11-08",
+      "page": 6,
+      "quote": "This package contains Endura® fungicide, a water dis- persible granule (WG).",
+      "note": "Label is under 7969-197 (see contradictions); PPLS formulation Water Dispersible Granule."
+    },
+    "engenia": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00507-20260206.pdf",
+      "docDate": "2026-02-06",
+      "page": 15,
+      "quote": "Contains 48.38% dicamba (5 pounds acid equivalent per gallon or 600 grams per liter). Engenia is a soluble liquid (SL).",
+      "note": "Also p16: 'Formulation type: Soluble Liquid'. Label max 12.8 fl ozs/A per application (p25) matches plugin rate."
+    },
+    "exirel": {
+      "formulation": "SE",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "docDate": "2024-08-29",
+      "page": 3,
+      "quote": "EXIREL® insect control is a suspoemulsion (oil in water emulsion). SHAKE WELL BEFORE USING.",
+      "note": "'Suspoemulsion' -> SE. PPLS formulations field says 'Emulsifiable Concentrate'; label wins."
+    },
+    "fierce-flumioxazin-pyroxasulfone": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00193-20210915.pdf",
+      "docDate": "2021-09-15",
+      "page": 3,
+      "quote": "V-10233 Herbicide is a water dispersible granule containing 76% active ingredient.",
+      "note": "EPA 59639-193 (Valent, Active); base label name 'V-10233 Herbicide', PPLS alternate brand names 'FIERCE HERBICIDE' and 'PIPER HERBICIDE'. PPLS formulations field says 'Soluble Concentrate' (EPA record error); label text governs. Plugin EPA 59639-189 is a different product (see contradictions)."
+    },
+    "flint-extra": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00826-20250116.pdf",
+      "docDate": "2025-01-16",
+      "page": 3,
+      "quote": "Gem® 500 SC Fungicide [ABN:FLINT® Extra]",
+      "note": "SC code printed in the base brand name; label notes the formulation is water-based."
+    },
+    "forum": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00427-20190930.pdf",
+      "docDate": "2019-09-30",
+      "page": 7,
+      "quote": "Water-dispersible products (wettable powders, dry flowables, suspension concentrates, including Forum® fungicide, or suspo-emulsions)",
+      "note": "Label places Forum among suspension concentrates; 4.17 lb dimethomorph/gal (p3). PPLS record: Flowable Concentrate (consistent liquid)."
+    },
+    "glyphosate-4-plus": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+      "docDate": "2020-02-24",
+      "page": 5,
+      "quote": "It is formulated as a water-soluble liquid.",
+      "note": "Alligare Glyphosate 4 Plus, EPA Reg. 81927-9 (Active). Water-soluble liquid mapped to SL; PPLS record formulation 'Soluble Concentrate' corroborates."
+    },
+    "howler-evo-pseudomonas": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00141-20260505.pdf",
+      "docDate": "2026-05-05",
+      "page": 4,
+      "quote": "Sublabel A: Agricultural Crop Use {dry flow able} {fungicide} {For Organic Production}",
+      "note": "Descriptor is in optional braces. PPLS search lists 'HOWLER EVO FUNGICIDE' as an alternate brand of 70051-141 (the label text itself only says Howler®). PPLS formulation field is empty."
+    },
+    "inspire-super": {
+      "formulation": "EW",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01317-20210505.pdf",
+      "docDate": "2021-05-05",
+      "page": 3,
+      "quote": "Inspire Super is an oil in water emulsion (EW) containing 0.73 lb of difenoconazole active ingredient and 2.09 lb of cyprodinil active ingredient per gallon.",
+      "note": "PPLS formulation field says 'Emulsifiable Concentrate'; label prints EW, label preferred."
+    },
+    "k-phite-phosphonate": {
+      "formulation": "L",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073806-00001-20250130.pdf",
+      "docDate": "2025-01-30",
+      "page": 8,
+      "quote": "PFS 56 SYSTEMIC FUNGICIDE BACTERICIDE is a water-based liquid formulation",
+      "note": "K-PHITE 7LP is an alternate brand of PFS 56 (p3). PPLS formulation field says 'Emulsifiable Concentrate', which contradicts the label's water-based liquid; reviewer may prefer keep-gap."
+    },
+    "kocide-3000-o": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/091411-00011-20180312.pdf",
+      "docDate": "2018-03-12",
+      "page": 3,
+      "quote": "KX-002 ABN: Kocide 3000-O Fungicide/Bactericide Dry Flowable",
+      "note": "Certis supplemental label also reads 'Dry Flowable'. PPLS formulation field says 'Soluble Concentrate'; label text preferred."
+    },
+    "lannate-lv": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "docDate": "2024-10-10",
+      "page": 3,
+      "quote": "Lannate® LV INSECTICIDE ... Water Soluble Liquid Contains 2.4 lbs active ingredient per gallon.",
+      "note": "'Water Soluble Liquid' maps to SL. PPLS formulations field: 'Soluble Concentrate'."
+    },
+    "laudis": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00860-20180921.pdf",
+      "docDate": "2018-09-21",
+      "page": 12,
+      "quote": "LAUDIS Herbicide is a suspension concentrate that requires the use of an external federally approved surfactant",
+      "note": "Bayer Laudis, EPA Reg. 264-860 (Active). The PPLS record's formulation field says 'Soluble Concentrate', which disagrees with the label wording; label used."
+    },
+    "luna-tranquility": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01085-20250618.pdf",
+      "docDate": "2025-06-18",
+      "page": 5,
+      "quote": "LUNA® TRANQUILITY: ... is formulated as a suspension concentrate (SC).",
+      "note": "Label is EPA Reg. No. 264-1085 (not the plugin's 264-1115, see contradictions). PPLS formulation field says 'Soluble Concentrate'; label text preferred."
+    },
+    "manzate-pro-stick": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00234-20260416.pdf",
+      "docDate": "2026-04-16",
+      "page": 3,
+      "quote": "Manzate® Pro-StickTM fungicide DISPERSIBLE GRANULES (ALTERNATE BRAND NAMES: MANZATE 75DF, MANZATE PRO-STICK T&O FUNGICIDE)",
+      "note": "PPLS formulation field: 'Water Dispersible Granule'. Alternate brand 'Manzate 75DF' carries DF; both dry, same defaultUnit."
+    },
+    "merivon": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00310-20240118.pdf",
+      "docDate": "2024-01-18",
+      "page": 6,
+      "quote": "This package contains Merivon® Xemium® brand fungicide, a suspension concentrate (SC) containing fluxapyroxad and pyraclostrobin."
+    },
+    "microthiol-disperss": {
+      "formulation": "WP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00187-20241013.pdf",
+      "docDate": "2024-10-13",
+      "page": 3,
+      "quote": "MICROTHIOL DISPERSS MICRONIZED WETTABLE SULFUR ACTIVE INGREDIENT: Sulfur",
+      "note": "No code printed; label calls it 'micronized wettable sulfur' (no granule/dry flowable wording) and the PPLS record formulation is 'Wettable Powder'. Newest PPLS file (2026-09-03) is a scanned notification with no text; 2024-10-13 label used."
+    },
+    "milstop-potassium-bicarbonate": {
+      "formulation": "SP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/068539-00013-20211020.pdf",
+      "docDate": "2021-10-20",
+      "page": 3,
+      "quote": "PB133 Alternate Brand Names: MilStop® SP Broad Spectrum Foliar Fungicide; MilStop® SP Foliar Fungicide; MilStop® Broad Spectrum Foliar Fungicide",
+      "note": "Code SP printed in the MilStop alternate brand names on the same registration; rates are in lbs. PPLS formulation field reads 'Soluble Concentrate' (conflicts with a dry product; reviewer may prefer keep-gap)."
+    },
+    "miravis-pydiflumetofen": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "docDate": "2025-07-24",
+      "page": 3,
+      "quote": "A19649 Crop is formulated as a suspension concentrate (SC) and contains 1.67 lb of pydiflumetofen per gallon.",
+      "note": "Label base name A19649 Crop '[Alternate brand names: Miravis®, Miravis® Ace A]' (p3); EPA letter p1 'Product Name: Miravis®'."
+    },
+    "movento": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01050-20170628.pdf",
+      "docDate": "2017-06-28",
+      "page": 7,
+      "quote": "PRODUCT INFORMATION MOVENTO®: Is a suspension concentrate formulation and is active primarily by ingestion against immature target pest life stages.",
+      "note": "The label calls it a suspension concentrate, so SC. The PPLS record's formulations field reads 'Emulsifiable Concentrate', which conflicts; label wording taken per brief."
+    },
+    "mustang-maxx": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+      "docDate": "2022-08-16",
+      "page": 3,
+      "quote": "F9114 EC Insecticide [ABN: Mustang Maxx Insecticide] ... Contains 0.8 lb ai/gal ... **Contains Petroleum Distillates",
+      "note": "Code 'EC' printed in the label's base product name on page 1 (Mustang Maxx is the ABN of this label). PPLS formulations field reads 'Flowable Concentrate', which disagrees; the label-printed code was taken per the brief. Reviewer may wish to confirm."
+    },
+    "mycostop-streptomyces": {
+      "formulation": "WP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00005-20260804.pdf",
+      "docDate": "2026-08-04",
+      "page": 3,
+      "quote": "MYCOSTOP® BIOFUNGICIDE Alternate Brand Name: LALSTOP® K61 WP",
+      "note": "PPLS formulation field: 'Wettable Powder/Dust' (corroborates)."
+    },
+    "orondis-opti": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01591-20240515.pdf",
+      "docDate": "2024-05-15",
+      "page": 3,
+      "quote": "Orondis® Opti is formulated as a suspension concentrate and contains 3.32 lb of chlorothalonil and 0.05 lb of oxathiapiprolin per gallon",
+      "note": "Mixing order p.18 also lists 'Water-based suspension concentrates (SC) (Orondis Opti)'. PPLS formulation field says 'Flowable Concentrate'; label preferred."
+    },
+    "outlook": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00156-20191129.pdf",
+      "docDate": "2019-11-29",
+      "page": 13,
+      "quote": "6. Emulsifiable concentrates (such as Outlook or oil concentrate when applicable)",
+      "note": "Mixing-order list names Outlook as an EC; p16 also warns about 'Tank mixing Outlook with other emulsifiable concentrate (EC) formulated products'. PPLS 7969-156 formulation 'Emulsifiable Concentrate' corroborates."
+    },
+    "oxidate-2-0": {
+      "formulation": "L",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "docDate": "2021-09-03",
+      "page": 6,
+      "quote": "ZeroTol 2.0 is a liquid bactericide/fungicide used to treat and control plant pathogens",
+      "note": "OxiDate® 2.0 is an alternate brand of ZeroTol 2.0 (p3). PPLS formulation field: 'Soluble Concentrate' (SL); both liquid."
+    },
+    "permit": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00002-20250911.pdf",
+      "docDate": "2025-09-11",
+      "page": 4,
+      "quote": "PRODUCT INFORMATION PERMIT® is a Water Dispersible Granule (WDG) formulation that selectively controls certain broadleaf weeds and nutsedges",
+      "note": "PPLS formulations field says 'Emulsifiable Concentrate' (EPA record error); label text governs."
+    },
+    "poast-plus": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00088-20140211.pdf",
+      "docDate": "2014-02-11",
+      "page": 3,
+      "quote": "Equivalent to 1 pound of sethoxydim per gallon formulated as an emulsifiable concentrate Contains petroleum distillate EPA Reg. No. 7969-88",
+      "note": "PPLS formulation 'Emulsifiable Concentrate' corroborates. NOTE: PPLS shows 7969-88 (Poast Plus) status Inactive since 2021-08-27 (company request); 2014 label is the last one on file."
+    },
+    "portal-xlo": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00040-20240111.pdf",
+      "docDate": "2024-01-11",
+      "page": 3,
+      "quote": "NAI-2399-2 5EC ... EPA Reg. No. 71711-40 ... [Alternate Brand Names: Portal ® XLO Miticide/Insecticide, FujiMite® XLO Miticide/Insecticide]",
+      "note": "Portal XLO is an alternate brand name of the 71711-40 label whose base name carries '5EC'; label also 'Contains petroleum distillates'. PPLS formulations: 'Emulsifiable Concentrate'. Read from 71711-40, not the plugin's 71711-23 (see contradictions)."
+    },
+    "presidio-fluopicolide": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00140-20220523.pdf",
+      "docDate": "2022-05-23",
+      "page": 8,
+      "quote": "V-10161 4 SC Fungicide is formulated as 4 lb ai/gallon suspension concentrate (SC).",
+      "note": "59639-140 base name is V-10161 4 SC Fungicide; PPLS lists 'PRESIDIO FUNGICIDE' as its alternate brand name (the label PDF text itself does not print 'Presidio'). PPLS formulation field says 'Flowable Concentrate'; label preferred."
+    },
+    "pristine": {
+      "formulation": "WG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00199-20221130.pdf",
+      "docDate": "2022-11-30",
+      "page": 6,
+      "quote": "This package contains Pristine® fungicide, a water dis- persible granule (WG)."
+    },
+    "prowl-h2o": {
+      "formulation": "CS",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00418-20240925.pdf",
+      "docDate": "2024-09-25",
+      "page": 3,
+      "quote": "*1 gallon contains 3.8 pounds of pendimethalin formulated as an aqueous capsule suspension. EPA Reg. No. 241-418",
+      "note": "Main Prowl® H2O label (EPA 241-418, BASF, Active); the newer 2026-08-19 PPLS file is a Navajo Nation onion supplemental with the same statement. PPLS formulations field 'Emulsifiable Concentrate' is an EPA record error."
+    },
+    "pursuit": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00310-20150929.pdf",
+      "docDate": "2015-09-29",
+      "page": 6,
+      "quote": "Pursuit® herbicide is a soluble liquid herbicide to control and suppress many broadleaf and grass weeds and sedges",
+      "note": "PPLS formulation 'Soluble Concentrate' corroborates."
+    },
+    "quintec-quinoxyfen": {
+      "formulation": "F",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/033906-00026-20230413.pdf",
+      "docDate": "2023-04-13",
+      "page": 9,
+      "quote": "Add (in order) dry flowable, wettable powder, and Quintec or other flowable (aqueous suspension) products to the spray tank.",
+      "note": "Label names Quintec a flowable (aqueous suspension). PPLS record (81880-30) says 'Emulsifiable Concentrate', which conflicts with the label; liquid either way. Reviewer may prefer keep-gap given the PPLS conflict."
+    },
+    "ranman": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00003-20260625.pdf",
+      "docDate": "2026-06-25",
+      "page": 2,
+      "quote": "RANMAN 400SC AGRICULTURAL FUNGICIDE ACTIVE INGREDIENT: Cyazofamid* ... 34.5%",
+      "note": "Code in brand name. PPLS field says 'Soluble Concentrate' but the brand code is SC; label rates are fluid ounces."
+    },
+    "raptor-imazamox": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00379-20210430.pdf",
+      "docDate": "2021-04-30",
+      "page": 6,
+      "quote": "Raptor® herbicide, a soluble liquid, is a postemergence herbicide to control and suppress many broadleaf and grass weeds",
+      "note": "'Soluble liquid' mapped to SL. The PPLS record's formulation field says 'Emulsifiable Concentrate', which disagrees with the label wording; label used."
+    },
+    "reflex": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00993-20240325.pdf",
+      "docDate": "2024-03-25",
+      "page": 3,
+      "quote": "Reflex Herbicide is formulated as a soluble liquid.",
+      "note": "EPA 100-993 Syngenta, Active. 'Soluble liquid' maps to SL. PPLS formulations field 'Emulsifiable Concentrate' is an EPA record error."
+    },
+    "regalia": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00003-20260820.pdf",
+      "docDate": "2026-08-20",
+      "page": 7,
+      "quote": "...liquid flowable formulations, and emulsifiable formulations such as REGALIA® Bioprotectant Concentrate.",
+      "note": "No code printed; label describes the product as an emulsifiable formulation and names it a 'Concentrate'. PPLS record formulation 'Emulsifiable Concentrate' corroborates. Alternate brand names on p.3 include 'REGALIA® Biofungicide'."
+    },
+    "regalia-maxx-omri": {
+      "formulation": "ME",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00003-20260820.pdf",
+      "docDate": "2026-08-20",
+      "page": 8,
+      "quote": "Application Instructions: REGALIA® Bioprotectant Concentrate is a micro-emulsion concentrate consisting of certain ingredients extracted from Reynoutria sachalinensis.",
+      "note": "For 84059-3 (the plugin's EPA no. and 0.5-4 qt/A rate). Same label also groups it with 'emulsifiable formulations' in tank-mix order, and PPLS says Emulsifiable Concentrate; Regalia Maxx (84059-6) label likewise says 'micro-emulsion concentrate'. Liquid either way."
+    },
+    "revus": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "docDate": "2025-10-16",
+      "page": 3,
+      "quote": "Revus is formulated as a suspension concentrate and contains 2.08 lb of active ingredient per gallon"
+    },
+    "roundup-powermax-3": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00659-20241213.pdf",
+      "docDate": "2024-12-13",
+      "page": 15,
+      "quote": "It is formulated as a water-soluble liquid containing surfactant and may be applied using standard and specialized pesticide application",
+      "note": "Water-soluble liquid mapped to SL (same mapping as other glyphosate SLs). PPLS formulation field is empty for this record."
+    },
+    "sandea": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00018-20250911.pdf",
+      "docDate": "2025-09-11",
+      "page": 4,
+      "quote": "PRODUCT INFORMATION SANDEA is a dry flowable formulation that selectively controls certain broadleaf weeds and nutsedges in selected crops.",
+      "note": "EPA 81880-18, Active. PPLS formulations field 'Emulsifiable Concentrate' is an EPA record error."
+    },
+    "sevin-xlr-plus": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "docDate": "2025-07-17",
+      "page": 7,
+      "quote": "SEVIN® brand XLR PLUS Carbaryl Insecticide is a suspension of microfine SEVIN® brand carbaryl insecticide in an aqueous medium.",
+      "note": "Aqueous suspension -> SC. REVIEW: PPLS formulations field says 'Emulsifiable Concentrate', which disagrees with the label; label taken as primary."
+    },
+    "sharpen-saflufenacil": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00278-20240910.pdf",
+      "docDate": "2024-09-10",
+      "page": 3,
+      "quote": "Contains 2.85 pounds active ingredient saflufenacil per gallon formulated as a water-based suspension concentrate EPA Reg. No. 7969-278",
+      "note": "PPLS record lists both 'Emulsifiable Concentrate' and 'Flowable Concentrate'; the label text is unambiguous (SC)."
+    },
+    "sivanto-prime": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01141-20210603.pdf",
+      "docDate": "2021-06-03",
+      "page": 2,
+      "quote": "FLUPYRADIFURONE GROUP 4D INSECTICIDE SIVANTO™ 200 SL [ABN: SIVANTO™ prime]",
+      "note": "The code SL is printed in the brand name. PPLS formulation: 'Soluble Concentrate'."
+    },
+    "sluggo-iron-phosphate": {
+      "formulation": "G",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/067702-00003-20140908.pdf",
+      "docDate": "2014-09-08",
+      "page": 7,
+      "quote": "Easy-to-use (ready-to-use) (RTU) granular (pellet) formulation. -Easy to apply granules.",
+      "note": "Master label for 67702-3 (Neudorff 'NEU1165M SLUG AND SNAIL BAIT'); ag sublabel B p13 'Scatter pellets at a rate of 20-44 lbs. per acre'. PPLS formulations: 'Granular'. The Sluggo brand itself is sold under supplemental distributor number 67702-3-54705 ('SLUGGO' / 'SLUGGO - AG'); the plugin's 67702-3 (Neudorff basic registration) is consistent with the plugin notes naming Neudorff."
+    },
+    "spartan-charge": {
+      "formulation": "SE",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03337-20250804.pdf",
+      "docDate": "2025-08-04",
+      "page": 3,
+      "quote": "F7127 SE HERBICIDE EPA Reg. No. 279-3337 ... Carfentrazone-ethyl 3.53% Sulfentrazone 31.77%",
+      "note": "Code 'SE' printed in the base brand name; label p9 also groups it with 'liquid suspensions'. PPLS alternate brand names for 279-3337 include 'SPARTAN CHARGE HERBICIDE' (FMC, Active). PPLS formulations field 'Emulsifiable Concentrate' is an EPA record error."
+    },
+    "stargus-bacillus-amyloliquefaciens": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00028-20260410.pdf",
+      "docDate": "2026-04-10",
+      "page": 7,
+      "quote": "MBI-110 EP is an aqueous suspension. Use 50-mesh nozzle screens or larger.",
+      "note": "Stargus is an alternate brand of MBI-110 EP (p3). Label says 'Aqueous Suspension', mapped to SC; PPLS formulation field empty. Liquid either way."
+    },
+    "topsin-m-wsb": {
+      "formulation": "WP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00125-20260625.pdf",
+      "docDate": "2026-06-25",
+      "page": 3,
+      "quote": "TOPSIN® M WSB THIOPHANATE-METHYL FUNGICIDE IN WATER SOLUBLE BAGS 70% Wettable Powder",
+      "note": "Wettable powder in water-soluble bags; label calls it Wettable Powder; PPLS formulation Wettable Powder."
+    },
+    "touchdown-hitech": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01182-20150318.pdf",
+      "docDate": "2015-03-18",
+      "page": 3,
+      "quote": "Touchdown HiTech is formulated as a soluble liquid. *Touchdown HiTech contains 5 pounds per U.S. gallon of glyphosate acid equivalent",
+      "note": "PPLS 'Soluble Concentrate' corroborates."
+    },
+    "trilogy-neem": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00002-20230602.pdf",
+      "docDate": "2023-06-02",
+      "page": 1,
+      "quote": "Alternate Brand Names to only include - Neemgard, Nimbuz, Triact 70 EC, Trilogy, Trilogy PHC, Triact 64 L, Trilogy 70 EC, and Trilogy 64 EC",
+      "note": "'Trilogy' is an alternate brand name of Neem Oil 70% (70051-2); the same registration's Trilogy ABNs print 'EC' ('Trilogy 70 EC', 'Trilogy 64 EC') and the mixing directions refer to emulsification (p.6). PPLS formulation field says 'Oils (no added pesticide)'. Reviewer may prefer keep-gap if the plain 'Trilogy' container must itself print the code."
+    },
+    "valor-sx": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00099-20260917.pdf",
+      "docDate": "2026-09-17",
+      "page": 3,
+      "quote": "Valor® Herbicide is a water dispersible granule containing 51% active ingredient."
+    },
+    "velista-penthiopyrad": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01534-20141120.pdf",
+      "docDate": "2014-11-20",
+      "page": 3,
+      "quote": "Contains 0.5 pound Penthiopyrad per pound of product. Velista™ is a water-dispersible granule.",
+      "note": "Latest PPLS file (2024-04-18) is font-encoded; 2014 label used. PPLS field: 'Water Dispersible Granule'."
+    },
+    "velum-prime-fluopyram-nematicide": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01078-20260903.pdf",
+      "docDate": "2026-09-03",
+      "page": 3,
+      "quote": "Contains 4.16 lbs FLUOPYRAM per gallon ... EPA Reg. No. 264-1078 EPA Est. No. SUSPENSION CONCENTRATE",
+      "note": "Label base name LUNA PRIVILEGE, 'ABN: Velum® Prime, Velum® 500, Velum® One, FLUOPYRAM 500 ST; Velum®' (p3). Read from 264-1078, not the plugin's 264-1136 (see contradictions). PPLS formulations field says 'Soluble Concentrate'; label prints SUSPENSION CONCENTRATE, label wins."
+    },
+    "verdict-saflufenacil-dimethenamid": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00279-20180504.pdf",
+      "docDate": "2018-05-04",
+      "page": 3,
+      "quote": "Contains 0.57 pound of saflufenacil and 5.0 pounds of dimethenamid-P per gallon, formulated as an emulsifiable concentrate",
+      "note": "PPLS 'Emulsifiable Concentrate' corroborates."
+    },
+    "warrant": {
+      "formulation": "CS",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00591-20200618.pdf",
+      "docDate": "2020-06-18",
+      "page": 4,
+      "quote": "[Insert brand name] is an encapsulated herbicide for weed control in Alfalfa, Field Corn, Popcorn, Production Seed Corn",
+      "note": "Label prints no code; 'encapsulated herbicide' mapped to CS (capsule suspension/microencapsulated). PPLS record formulation 'Microencapsulated' corroborates."
+    },
+    "warrior-ii-with-zeon": {
+      "formulation": "CS",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "docDate": "2025-07-03",
+      "page": 3,
+      "quote": "Warrior II with Zeon Technology contains 2.08 lb of active ingredient per gal and is a capsule suspension.",
+      "note": "Capsule suspension -> CS. REVIEW: PPLS formulations field says 'Emulsifiable Concentrate', which disagrees with the label; label taken as primary."
+    },
+    "zampro-ametoctradin": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00302-20190930.pdf",
+      "docDate": "2019-09-30",
+      "page": 5,
+      "quote": "This package contains Zampro® fungicide, a suspension concentrate (SC) with two active ingredients, ametoctradin and dimethomorph."
+    },
+    "zerotol-2-0-sanitizer": {
+      "formulation": "L",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "docDate": "2021-09-03",
+      "page": 6,
+      "quote": "ZeroTol 2.0 is a liquid bactericide/fungicide used to treat and control plant pathogens on indoor, gree[nhouse]...",
+      "note": "No code printed; label word 'liquid' maps to L. PPLS record formulation is 'Soluble Concentrate' (SL), so a reviewer may prefer SL; the two disagree."
+    },
+    "zidua-pro": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00365-20171228.pdf",
+      "docDate": "2017-12-28",
+      "page": 3,
+      "quote": "1.33 lbs imazethaypr, and 0.48 lbs saflufenacil per gallon formulated as a water-based suspension concentrate EPA Reg. No. 7969-365",
+      "note": "Label is Zidua PRO (EPA Reg. 7969-365), not the plugin's 7969-374 (Zidua SC). PPLS 7969-365 lists 'Soluble Concentrate' and 'Flowable Concentrate'; label text used."
+    }
+  },
+  "dataCorrections": {
+    "authority-mtz-sulfentrazone": [
+      {
+        "path": "ratePerAcre.unit",
+        "from": "fl-oz",
+        "to": "oz",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03340-20230713.pdf",
+        "quote": "F6482 45DF Herbicide is a dry flowable formulation ... Apply F6482 45DF at 5 - 22.2 oz/A",
+        "page": 11
+      },
+      {
+        "path": "defaultUnit",
+        "from": "fl-oz",
+        "to": "oz",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03340-20230713.pdf",
+        "quote": "F6482 45DF Herbicide is a dry flowable formulation",
+        "page": 11
+      }
+    ]
+  },
+  "defaultUnit": {
+    "can-17-calcium-ammonium-nitrate": {
+      "defaultUnit": "gal",
+      "sourceUrl": "https://www.yara.us/contentassets/280676bbae1c466799e9d22b57225584/yaraliva-can-17-bulk-label.pdf",
+      "docDate": "2025-01",
+      "page": 1,
+      "quote": "17-0-0 plus 8.8% Ca CAN-17 ... Derived from: Calcium Nitrate and Ammonium Nitrate. Density: 12.6 pounds per gallon at 68° F.",
+      "note": "CAN-17 is a liquid solution: Yara label (YaraLiva_CAN-17_17-0-0_bulk_0125_v002) gives density 12.6 lb/gal; Nutrien label (https://products.nutrien.com/docs/1281, F3320 11/8/22) reads 'CAN 17 Calcium Ammonium Nitrate Solution ... Density 12.7 lb/gal at 68°F, (Specific Gravity 1.5)'. So the plugin's form 'liquid' is CORRECT; keep it. 'gal' matches the other 9 liquid fertilizer plugins. Granular CAN is a different grade (27% N)."
+    },
+    "chaparral-aminopyralid-metsulfuron": {
+      "defaultUnit": "oz",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+      "docDate": "2024-09-27",
+      "page": 19,
+      "quote": "Product Measurement Chaparral is measured using the Chaparral volumetric measuring cylinder. Scales calibrated in ounces may also be used.",
+      "note": "Explicit because formulation stays gapped. Rates are oz of dry product per acre ('cannot exceed 3.3 oz of product per acre per year', p16); plugin 3.3 oz rate matches the label max."
+    },
+    "express-tribenuron": {
+      "defaultUnit": "oz",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09578-20190506.pdf",
+      "docDate": "2019-05-06",
+      "page": 8,
+      "quote": "Use EXPRESS XP herbicide at 0.33 oz/A (0.0155 Lb. ai/A) (except oats) for heavy infestation",
+      "note": "Both candidate labels are dry granules rated in dry oz/A: Express XP 'Dry Flowable' (p3) and Express with TotalSol 'Soluble Granule' (279-9594, 2022-12-20, p3; 'Use 0.375 oz/A ... to 0.5 oz/A' p12). Dry oz is correct whichever product the plugin means; formulation stays gapped."
+    },
+    "isomate-c-plus-pheromone": {
+      "defaultUnit": "count",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/053575-00006-20140203.pdf",
+      "docDate": "2014-02-03",
+      "page": 2,
+      "quote": "400 dispensers per acre (2.88 fl oz or 72.91 g a.i. per application).",
+      "note": "Label rate is a dispenser count (min 200, typically 400 per acre). Schema ratePerAcre.unit cannot be 'count', so the 400 'oz' rate needs a schema-level decision (see contradictions)."
+    },
+    "nematode-steinernema-feltiae": {
+      "defaultUnit": "count",
+      "sourceUrl": "https://www.koppertus.com/entonem/",
+      "docDate": "2026-09-25",
+      "quote": "50 million - 1 sachet of 50 million in a box ... 500 million - 2 sachets of 250 million in a box ... Soil application: 250,000 to 500,000 nematodes per m²",
+      "note": "Producer product page (Koppert Entonem, S. feltiae), not an EPA label; macro-organisms have none. Product is sold and dosed by count of nematodes, not weight. See contradictions: the plugin rate '1 lb' is wrong, and the insecticide ratePerAcre.unit enum (oz|fl-oz|lb|pt|qt) cannot express count."
+    },
+    "trichogramma-egg-parasitoid": {
+      "defaultUnit": "count",
+      "sourceUrl": "https://insectary.com/trichoforceb/",
+      "docDate": "2026-09-25",
+      "quote": "TRICHOforce™ B – 100,000 ... 50,000 to 100,000 per acre/weekly during moth flight",
+      "note": "Producer product page (Beneficial Insectary; T. brassicae), not an EPA label; macro-organisms have none. Sold and released by count. The plugin amount 100000 matches the page's 50,000-100,000/acre, but its unit 'oz' is wrong (see contradictions)."
+    }
   }
 }

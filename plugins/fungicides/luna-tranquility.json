@@ -2,6 +2,7 @@
   "pluginId": "luna-tranquility",
   "type": "fungicide",
   "version": "1.0.0",
+  "formulation": "SC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Luna Tranquility (fluopyram + pyrimethanil)",

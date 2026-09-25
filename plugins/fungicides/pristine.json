@@ -3,7 +3,9 @@
   "type": "fungicide",
   "displayName": "Pristine (BASF boscalid + pyraclostrobin)",
   "version": "1.0.0",
+  "formulation": "WG",
   "epaRegistrationNumber": "7969-199",
+  "defaultUnit": "oz",
   "applicationTiming": "COVER",
   "activeIngredients": [
     { "name": "boscalid", "fracCode": "7" },

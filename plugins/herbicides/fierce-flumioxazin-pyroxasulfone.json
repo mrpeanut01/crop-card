@@ -2,6 +2,7 @@
   "pluginId": "fierce-flumioxazin-pyroxasulfone",
   "type": "herbicide",
   "version": "1.0.0",
+  "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Fierce (flumioxazin + pyroxasulfone)",
   "activeIngredients": [
@@ -23,5 +24,6 @@
   "requiresAMS": false,
   "deconRequired": false,
   "epaRegistrationNumber": "59639-189",
+  "defaultUnit": "oz",
   "notes": "Valent PRE premix for soybean and field corn. PPO plus VLCFA for broad residual on waterhemp, Palmer amaranth, grasses."
 }

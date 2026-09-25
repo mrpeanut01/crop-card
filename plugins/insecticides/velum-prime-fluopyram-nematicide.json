@@ -2,6 +2,7 @@
   "pluginId": "velum-prime-fluopyram-nematicide",
   "type": "insecticide",
   "version": "1.0.0",
+  "formulation": "SC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Velum Prime (fluopyram, nematicide use)",

@@ -2,6 +2,7 @@
   "pluginId": "mycostop-streptomyces",
   "type": "fungicide",
   "version": "1.0.0",
+  "formulation": "WP",
   "pluginSchemaVersion": "1.1",
   "displayName": "MycoStop (Streptomyces griseoviridis K61, OMRI)",
   "applicationTiming": "COVER",
@@ -20,6 +21,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "none",
   "epaRegistrationNumber": "64137-5",
+  "defaultUnit": "oz",
   "targetDiseases": [
     "Fusarium",
     "Pythium",

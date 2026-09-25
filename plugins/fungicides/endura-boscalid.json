@@ -2,6 +2,7 @@
   "pluginId": "endura-boscalid",
   "type": "fungicide",
   "version": "1.0.0",
+  "formulation": "WG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Endura (boscalid)",
   "applicationTiming": "COVER",
@@ -20,6 +21,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
   "epaRegistrationNumber": "7969-218",
+  "defaultUnit": "oz",
   "targetDiseases": [
     "Botrytis",
     "Sclerotinia",

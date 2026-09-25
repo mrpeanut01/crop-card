@@ -2,6 +2,7 @@
   "pluginId": "deadline-mps-metaldehyde",
   "type": "insecticide",
   "version": "1.0.0",
+  "formulation": "G",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "displayName": "Deadline M-Ps (metaldehyde slug/snail bait)",

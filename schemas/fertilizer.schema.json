@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cropcard.dev/schemas/fertilizer.schema.json",
   "title": "CropCard Fertilizer Plugin",
   "description": "Data-only fertilizer definition. Mirrors apps/web/src/lib/plugins/schemas.ts (fertilizerPluginSchema). The existing `organic` boolean is the source of truth for organic-source amendments; complianceFlags (Phase 21) adds the NOP / OMRI distinction.",
@@ -81,8 +81,8 @@
       ]
     },
     "organic": {
-      "type": "boolean",
-      "default": false
+      "default": false,
+      "type": "boolean"
     },
     "secondaryNutrients": {
       "type": "object",
@@ -135,13 +135,11 @@
       "properties": {
         "min": {
           "type": "number",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "max": {
           "type": "number",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "unit": {
           "type": "string",

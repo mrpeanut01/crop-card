@@ -31,7 +31,7 @@ import { dirname, resolve } from 'node:path';
 
 // `tsx` is required to load the .ts source. Invoke via the npm script so
 // it's available in the path: `pnpm gen:schemas`.
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { z } from 'zod';
 
 import {
   cropPluginSchema,
@@ -94,11 +94,20 @@ const TARGETS = [
 ];
 
 for (const { file, schema, title, description } of TARGETS) {
-  const json = zodToJsonSchema(schema, {
-    name: undefined,
-    $refStrategy: 'none',
-    target: 'jsonSchema2019-09',
-    definitionPath: 'definitions'
+  // io: 'input' documents what a plugin author writes (defaulted fields are
+  // optional). The override closes non-catchall objects the way Zod's default
+  // strip behaviour treats unknown keys, matching the prior generator output.
+  const { $schema: _generatedDialect, ...json } = z.toJSONSchema(schema, {
+    target: 'draft-2020-12',
+    io: 'input',
+    reused: 'inline',
+    unrepresentable: 'any',
+    override: (ctx) => {
+      const def = ctx.zodSchema._zod.def;
+      if (def.type === 'object' && def.catchall === undefined) {
+        ctx.jsonSchema.additionalProperties = false;
+      }
+    }
   });
   // Override the auto-generated header with our stable metadata so the
   // file is reproducible across runs (no name/version drift).

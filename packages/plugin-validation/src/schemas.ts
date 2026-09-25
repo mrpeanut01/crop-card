@@ -130,7 +130,7 @@ export const hayOperationsSchema = z.object({
   weatherWindowDays: z.number().int().min(1).max(14).default(3),
   /** Per-bale-type baling thresholds. Keys are bale-type strings. */
   baleMoistureGate: z
-    .record(z.enum(['small-square', 'large-round', 'large-square']), moistureThresholdsSchema)
+    .partialRecord(z.enum(['small-square', 'large-round', 'large-square']), moistureThresholdsSchema)
     .optional(),
   /** Storage temperature watch — fires reminder events (FR-23 supports). */
   storageTempWatchF: z.object({ warn: z.number(), danger: z.number() }).optional()
@@ -1035,7 +1035,7 @@ export const insecticidePluginSchema = pluginBase.extend({
       unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
     })
     .optional(),
-  gpaCalibration: z.number().int().nonnegative().default(15).optional(),
+  gpaCalibration: z.number().int().nonnegative().optional().meta({ default: 15 }),
   dilutionTable: dilutionTableSchema.optional(),
   targetPests: z.array(z.string().min(1)).optional(),
   pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),

@@ -44,17 +44,13 @@ export const actions: Actions = {
     if (!u.activeOwnerId) throw error(400, 'no active owner');
     const fd = await event.request.formData();
     const inviteeEmail = String(fd.get('email') ?? '').trim();
-    const role = String(fd.get('role') ?? 'helper');
     if (!inviteeEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteeEmail)) {
       return fail(400, { error: 'invalid email' });
-    }
-    if (!['helper', 'inspector', 'custom-operator'].includes(role)) {
-      return fail(400, { error: 'invalid role' });
     }
     const issued = issueInvite({
       ownerId: u.activeOwnerId,
       inviteeEmail,
-      roleWithinOwner: role as 'helper' | 'inspector' | 'custom-operator',
+      roleWithinOwner: 'helper',
       invitedByUserId: u.id
     });
 

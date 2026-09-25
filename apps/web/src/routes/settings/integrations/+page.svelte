@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Cloud, Check } from 'lucide-svelte';
+  import { Cloud, Check, Leaf } from 'lucide-svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
 
-  let { data } = $props();
+  let { data, form } = $props();
 
   // Static integration list — these describe app-wide capability not
   // per-tenant state. Real connection status (e.g., NEWA API key set)
@@ -76,6 +76,60 @@
 <svelte:head><title>Integrations · CropCard</title></svelte:head>
 
 <SettingsShell title="Integrations" kicker="Connected services">
+  <SettingsSection
+    title="Claude AI assistant"
+    sub="Optional. Without a key every feature runs on its deterministic fallback."
+  >
+    {#snippet right()}
+      {#if data.ai.enabled}
+        <Pill tone="forest"><Check size={10} /> Active</Pill>
+      {:else}
+        <Pill tone="rust">Off · no key</Pill>
+      {/if}
+    {/snippet}
+
+    <div class="ai-row">
+      <div class="icon" class:on={data.ai.enabled}><Leaf size={16} strokeWidth={1.75} /></div>
+      <div class="row-text">
+        {#if data.ai.fromEnv}
+          <div class="row-title">Key set by the server environment</div>
+          <div class="row-sub mono">{data.ai.keyMasked}</div>
+        {:else}
+          <form method="POST" action="?/saveKey" class="key-row">
+            <label class="sr-only" for="ai-key">Claude API key</label>
+            <input
+              id="ai-key"
+              type="password"
+              name="apiKey"
+              placeholder={data.ai.keyMasked || 'sk-ant-…'}
+              autocomplete="off"
+              class="key-input mono"
+            />
+            <button type="submit" class="primary-sm">
+              {data.ai.enabled ? 'Update key' : 'Save & enable'}
+            </button>
+          </form>
+          <div class="row-sub">
+            Get a key at
+            <a href="https://console.anthropic.com" target="_blank" rel="noreferrer noopener"
+              >console.anthropic.com</a
+            >.
+          </div>
+        {/if}
+        {#if form && 'error' in form && form.error}
+          <p class="err" role="alert">{form.error}</p>
+        {:else if form && 'message' in form && form.message}
+          <p class="ok" role="status">{form.message}</p>
+        {/if}
+        <div class="row-meta mono">
+          ${data.ai.spendThisMonth.toFixed(2)} of ${data.ai.monthlyCapUSD.toFixed(0)} monthly cap ·
+          {data.ai.callsThisMonth} call{data.ai.callsThisMonth === 1 ? '' : 's'} this month
+        </div>
+      </div>
+      <a class="ghost-sm" href="/settings/ai">Usage & quotas</a>
+    </div>
+  </SettingsSection>
+
   <SettingsSection title="Active integrations">
     {#each active as it, i (it.id)}
       <div class="row">
@@ -140,6 +194,71 @@
     display: grid;
     place-items: center;
     flex-shrink: 0;
+  }
+  .icon.on {
+    background: var(--color-forest-deep);
+    color: var(--color-cream, #f8f3e8);
+  }
+  .ai-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+  }
+  .key-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .key-input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 13px;
+    background: var(--color-cream);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    color: var(--color-ink);
+    min-height: 48px;
+  }
+  .key-input:focus {
+    border-color: var(--color-forest-deep);
+    outline: 2px solid var(--color-forest-deep);
+    outline-offset: 1px;
+  }
+  .primary-sm {
+    background: var(--color-forest-deep);
+    color: var(--color-paper);
+    border: 0;
+    padding: 8px 14px;
+    border-radius: var(--radius-input, 6px);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 48px;
+  }
+  .row-sub a {
+    color: var(--color-forest-deep);
+    font-weight: 600;
+  }
+  .err {
+    margin: 6px 0 0;
+    color: var(--color-rust, #ba4b38);
+    font-size: 12.5px;
+  }
+  .ok {
+    margin: 6px 0 0;
+    color: var(--color-forest-deep);
+    font-size: 12.5px;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
   .icon.dim {
     width: 28px;
@@ -217,6 +336,8 @@
     font-family: inherit;
     font-size: 11.5px;
     cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
   }
   .ghost-sm:hover {
     border-color: var(--color-forest-deep);
@@ -234,6 +355,16 @@
     }
     .planned-grid {
       grid-template-columns: 1fr;
+    }
+    .ai-row {
+      grid-template-columns: auto 1fr;
+    }
+    .ai-row > .ghost-sm {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+    .key-row {
+      flex-direction: column;
     }
   }
 </style>

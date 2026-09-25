@@ -8,6 +8,8 @@ import type {
   InputsPlanScoutTask
 } from '$lib/plan/inputsPlan';
 import { fmtDateMs } from './format';
+import { AllocateFlow } from './flows/allocateFlow';
+import { humanizeAllocationViolation as humanizeViolation } from './flows/violations';
 import { PlanResetState } from './steps/planResetState.svelte';
 import { SeedLinkState } from './steps/seedLinkState.svelte';
 import type {
@@ -107,6 +109,7 @@ export class AllocationWizardState {
 
   readonly planReset: PlanResetState;
   readonly seedLink: SeedLinkState;
+  readonly #allocate = new AllocateFlow(this);
 
   seedSearch = $state('');
 
@@ -248,82 +251,7 @@ export class AllocationWizardState {
    *  the operator still gets readable names even when the rule wording
    *  stays technical. */
   humanizeAllocationViolation(v: string): string {
-    const blockNames = new Map<string, string>();
-    for (const b of this.props.blocks) blockNames.set(b.id, b.name);
-    const seedNames = new Map<string, string>();
-    for (const s of this.props.seedStock) {
-      seedNames.set(s.stockItemId, s.shortName ?? s.displayName);
-    }
-    const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
-    const replaceIds = (str: string) =>
-      str.replace(UUID_RE, (id) => {
-        const b = blockNames.get(id);
-        if (b) return `“${b}”`;
-        const s = seedNames.get(id);
-        if (s) return `“${s}”`;
-        return id;
-      });
-
-    // Family-density pattern: "block <id> packs multiple <family>
-    // varieties: total N plants exceeds 1.25× the largest plantsFit (M)"
-    const familyMatch = v.match(
-      /^block ([0-9a-f-]{36}) packs multiple (\S+) varieties: total (\d+) plants exceeds 1\.25× the largest plantsFit \((\d+)\)/i
-    );
-    if (familyMatch) {
-      const [, blockId, family, totalStr, capStr] = familyMatch;
-      const blockName = blockNames.get(blockId) ?? blockId;
-      const total = Number(totalStr);
-      const cap = Number(capStr);
-      const overBy = total - cap;
-      const detail = replaceIds(v).replace(/^.*\(/, '(');
-      return (
-        `Too many ${family} varieties packed onto “${blockName}”: ${total} plants total, ` +
-        `but the block's largest single-variety capacity is ${cap}. That's ${overBy} plants ` +
-        `over the recommended density. Spread some varieties to another block, or reduce ` +
-        `plant counts. ${detail}`
-      );
-    }
-
-    // Per-assignment density pattern: "assignment X→Y packs N/M plants
-    // (R× capacity). Reduce or split..."
-    const perAssign = v.match(
-      /^assignment ([0-9a-f-]{36})→([0-9a-f-]{36}) packs (\d+)\/(\d+) plants \(([0-9.]+)× capacity\)/
-    );
-    if (perAssign) {
-      const [, sid, bid, plantsStr, capStr] = perAssign;
-      const seedName = seedNames.get(sid) ?? sid;
-      const blockName = blockNames.get(bid) ?? bid;
-      return (
-        `“${seedName}” is over-packed on “${blockName}” (${plantsStr} plants vs. ` +
-        `${capStr} recommended). This variety has other viable blocks — splitting or ` +
-        `reducing would clear the density check.`
-      );
-    }
-
-    // plantsFit cap pattern: "assignment[N] plants=X exceeds plantsFit=Y for (sid, bid)"
-    const plantsFit = v.match(
-      /plants=(\d+) exceeds plantsFit=(\d+) for \(([0-9a-f-]{36}), ([0-9a-f-]{36})\)/
-    );
-    if (plantsFit) {
-      const [, plantsStr, capStr, sid, bid] = plantsFit;
-      const seedName = seedNames.get(sid) ?? sid;
-      const blockName = blockNames.get(bid) ?? bid;
-      return `“${seedName}” on “${blockName}” has ${plantsStr} plants but the block only fits ${capStr}.`;
-    }
-
-    // Matrix-not-candidate pattern.
-    const notCand = v.match(
-      /assignment\[\d+\] \(([0-9a-f-]{36}) → ([0-9a-f-]{36})\) is not in the candidacy matrix/
-    );
-    if (notCand) {
-      const [, sid, bid] = notCand;
-      const seedName = seedNames.get(sid) ?? sid;
-      const blockName = blockNames.get(bid) ?? bid;
-      return `The AI proposed planting “${seedName}” on “${blockName}”, but this combination wasn't on the candidacy list (likely a sun, rotation, or capacity mismatch from the original blocks step).`;
-    }
-
-    // Default: UUID-replacement only.
-    return replaceIds(v);
+    return humanizeViolation(v, this.props.blocks, this.props.seedStock);
   }
 
   /** Phase 25d (#89) — fire-and-forget append to /api/wizard/chat. The
@@ -349,57 +277,7 @@ export class AllocationWizardState {
   }
 
   seedChatFromAdvisories(r: AllocationResponse) {
-    const lines: string[] = [];
-    const pollination = r.pollinationConstraints ?? [];
-    const mustStagger = pollination.filter((p) => p.kind === 'must-stagger');
-    const isolated = pollination.filter((p) => p.kind === 'isolated-spatially');
-    const geomMissing = (r.geometryMissingBlockIds ?? []).length;
-
-    if (mustStagger.length > 0 || isolated.length > 0 || geomMissing > 0) {
-      lines.push('Cross-pollination notes:');
-      for (const p of isolated) lines.push(`• ${p.note}`);
-      for (const p of mustStagger) lines.push(`• ⚠ ${p.note}`);
-      if (geomMissing > 0) {
-        lines.push(
-          `• Couldn't check ${geomMissing} block${geomMissing === 1 ? '' : 's'} without geometry — add field boundaries to enable the spatial check.`
-        );
-      }
-      lines.push('');
-    }
-
-    if (r.advisories.length > 0) {
-      lines.push('Other things worth thinking about:');
-      for (const a of r.advisories) lines.push(`• ${a}`);
-      lines.push('');
-    }
-
-    if (mustStagger.length > 0) {
-      lines.push(
-        'These crossing pairs will be carried into the schedule step as required planting offsets. Tell me anything you\'d like to change before then — for example: "swap the Bantam onto Block C to gain more isolation" or "split the brassicas onto two beds."'
-      );
-    } else if (lines.length === 0) {
-      lines.push(
-        'Plan looks clean — nothing jumped out to flag. If you\'d like to tweak it, just tell me what to change (e.g., "move the corn off the narrow block" or "give the brassicas more room").'
-      );
-    } else {
-      lines.push(
-        'Tell me anything you\'d like to change — for example: "move the corn off the narrow block" or "split the tomatoes onto two beds."'
-      );
-    }
-
-    // Seed message is NOT persisted — it's deterministic from the
-    // current advisories. On resume from a server-hydrated transcript,
-    // we skip re-seeding entirely so the prior conversation renders
-    // intact. Persisting the seed would double-seed on the second
-    // wizard open; replacing the transcript with the seed would erase
-    // the resumed chat. Keeping in-memory only is the right balance.
-    if (this.allocationChatMessages.length === 0) {
-      this.allocationChatMessages = [
-        { role: 'assistant', content: lines.join('\n'), kind: 'seed' }
-      ];
-    }
-    this.chatDraft = '';
-    this.chatError = null;
+    this.#allocate.seedChatFromAdvisories(r);
   }
 
   pluginShapeFor(stockItemId: string): SeedPluginShape | undefined {
@@ -467,56 +345,8 @@ export class AllocationWizardState {
     this.selectedBlockIds = new Set(this.props.blocks.map((b) => b.id));
   }
 
-  async generatePlan() {
-    this.loading = true;
-    this.error = null;
-    this.response = null;
-    this.allocateStartMs = Date.now();
-    this.nowMs = Date.now();
-    // Advance to the Review step immediately so the operator sees the
-    // staged AI-progress indicator (label + spinner + elapsed time) from
-    // second 0, instead of staring at "Generating…" on the Blocks-step
-    // button for a minute.
-    this.step = 'review';
-    try {
-      const seedSelections = [...this.selectedSeeds.entries()]
-        .filter(([, qty]) => qty > 0)
-        .map(([stockItemId, quantity]) => {
-          const entry = this.props.seedStock.find((s) => s.stockItemId === stockItemId)!;
-          const plants = this.plantsFor(stockItemId, quantity);
-          return {
-            stockItemId,
-            cropPluginId: entry.cropPluginId!,
-            // Prefer the curated shortName so Claude's rationale + chips
-            // surface "Bloody Butcher" instead of "Bloody Butcher
-            // Ornamental Corn — Raw Untreated Non-GMO (1/2 lb)". Falls back
-            // to displayName when no shortName is set.
-            varietyDisplayName: entry.shortName ?? entry.displayName,
-            quantityPlants: Math.max(1, plants ?? Math.round(quantity))
-          };
-        });
-
-      const res = await fetch('/api/plan/allocate', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          seedSelections,
-          blockIds: [...this.selectedBlockIds]
-        })
-      });
-      const body = (await res.json()) as AllocationResponse | { error: string };
-      if (!res.ok) {
-        this.error = 'error' in body ? body.error : `HTTP ${res.status}`;
-        return;
-      }
-      this.response = body as AllocationResponse;
-      this.seedChatFromAdvisories(this.response);
-    } catch (err) {
-      this.error = err instanceof Error ? err.message : 'request failed';
-    } finally {
-      this.loading = false;
-      this.allocateStartMs = null;
-    }
+  generatePlan() {
+    return this.#allocate.generatePlan();
   }
 
   async sendChat() {
@@ -566,18 +396,7 @@ export class AllocationWizardState {
   async sendAllocationChat(text: string) {
     const response = this.response;
     if (!response) return;
-    const seedSelections = [...this.selectedSeeds.entries()]
-      .filter(([, qty]) => qty > 0)
-      .map(([stockItemId, quantity]) => {
-        const entry = this.props.seedStock.find((s) => s.stockItemId === stockItemId)!;
-        const plants = this.plantsFor(stockItemId, quantity);
-        return {
-          stockItemId,
-          cropPluginId: entry.cropPluginId!,
-          varietyDisplayName: entry.shortName ?? entry.displayName,
-          quantityPlants: Math.max(1, plants ?? Math.round(quantity))
-        };
-      });
+    const seedSelections = this.#allocate.buildSeedSelections();
     const previousPlan = {
       assignments: response.assignments.map((a) => ({
         stockItemId: a.stockItemId,

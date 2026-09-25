@@ -182,6 +182,10 @@
     font-weight: 600;
   }
   .trail {
+    /* Containing block for the absolutely-positioned .sr-only spans, so
+       they are clipped by the trail's own scroll box instead of widening
+       the page at 375px. */
+    position: relative;
     flex: 1;
     display: flex;
     align-items: center;

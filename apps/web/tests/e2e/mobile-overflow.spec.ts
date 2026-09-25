@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './lib/test';
 import { signInAsDemoOwner } from './lib/auth';
 
 const ROUTES = ['/today', '/plan', '/spray/fungicide', '/inventory'];

@@ -1986,6 +1986,9 @@
         <div class="season-headline">
           <span class="season-year">{data.currentYear ?? new Date().getFullYear()}</span>
           <span class="season-title">Planting season</span>
+          {#if data.canEdit}
+            <a class="season-year-change" href="/settings/season">Change year</a>
+          {/if}
         </div>
         <span class="stage-pill">Stage 1 of 5 · Season setup</span>
       </header>
@@ -4728,6 +4731,14 @@
     display: flex;
     align-items: baseline;
     gap: 0.5rem;
+  }
+  .season-year-change {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-forest);
   }
   .season-year {
     font-size: 1.6rem;

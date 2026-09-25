@@ -49,11 +49,10 @@ export default tseslint.config(
       'no-inner-declarations': 'warn',
       'svelte/no-inner-declarations': 'warn',
       'prefer-const': 'warn',
-      // Phase 18b (Invariant 6): flags raw Drizzle reads/writes against
-      // tenant-scoped tables that bypass tenantWhere/withTenant/tenantValues.
-      // Warn until the remaining intentional unscoped sites are annotated
-      // with `unscopedQueryNote('reason')`; then promote to 'error'.
-      'cropcard/no-raw-tenant-table': 'warn',
+      // Invariant 6: raw Drizzle reads/writes against tenant-scoped tables
+      // must go through tenantWhere/withTenant/tenantValues, or the function
+      // must call `unscopedQueryNote('reason')` when intentionally global.
+      'cropcard/no-raw-tenant-table': 'error',
       // Added to typescript-eslint's recommended set in v8; not enforced under
       // the v7 config this replaced. Adopt in a dedicated cleanup pass.
       '@typescript-eslint/no-unused-expressions': 'off'

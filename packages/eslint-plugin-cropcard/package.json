@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "test:unit": "node --test"
+    "test:unit": "node --test",
+    "gen:tables": "node scripts/gen-tenant-tables.js"
   },
   "peerDependencies": {
     "eslint": "^9.0.0"

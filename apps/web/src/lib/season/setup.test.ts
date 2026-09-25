@@ -7,12 +7,11 @@
  * test at `apps/web/src/lib/db/tenant.crossTenant.test.ts`).
  */
 
-import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { db } from '$lib/db/client';
 import { appSettings, owners } from '$lib/db/schema';
-import { runWithTenant } from '$lib/db/tenant';
+import { runWithTenant, tenantWhere } from '$lib/db/tenant';
 
 import {
   allowsSynthetics,
@@ -39,7 +38,7 @@ function seedOwner(ownerId: string): void {
 }
 
 function clearSettingsFor(ownerId: string): void {
-  db.delete(appSettings).where(eq(appSettings.ownerId, ownerId)).run();
+  runWithTenant(ownerId, () => db.delete(appSettings).where(tenantWhere(appSettings)).run());
 }
 
 describe('season setup repo', () => {

@@ -24,7 +24,7 @@ import { issueToken } from './apiTokens';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users, helperAssignments, aiCallLog, apiTokens } from '$lib/db/schema';
-import { runWithTenant } from '$lib/db/tenant';
+import { runWithTenant, tenantValues } from '$lib/db/tenant';
 
 function uniq(prefix: string): string {
   return `${prefix}-${randomUUID().slice(0, 8)}`;
@@ -95,21 +95,25 @@ function seedCalls(opts: {
   count: number;
 }): void {
   for (let i = 0; i < opts.count; i++) {
-    db.insert(aiCallLog)
-      .values({
-        id: randomUUID(),
-        ownerId: opts.ownerId,
-        userId: opts.userId,
-        tokenId: opts.tokenId,
-        endpoint: opts.endpoint,
-        model: 'claude-opus-4-7',
-        inputTokens: 10,
-        cachedInputTokens: 0,
-        outputTokens: 5,
-        usdEstimate: 0.0001,
-        success: true
-      })
-      .run();
+    runWithTenant(opts.ownerId, () =>
+      db
+        .insert(aiCallLog)
+        .values(
+          tenantValues({
+            id: randomUUID(),
+            userId: opts.userId,
+            tokenId: opts.tokenId,
+            endpoint: opts.endpoint,
+            model: 'claude-opus-4-7',
+            inputTokens: 10,
+            cachedInputTokens: 0,
+            outputTokens: 5,
+            usdEstimate: 0.0001,
+            success: true
+          })
+        )
+        .run()
+    );
   }
 }
 
@@ -219,20 +223,24 @@ describe('Phase 24 — monthly USD cap stays global', () => {
     // The cap is global by design (safety brake against a runaway agent);
     // one oversized row anywhere proves a service-account token gets
     // blocked just like a cookie session would.
-    db.insert(aiCallLog)
-      .values({
-        id: randomUUID(),
-        ownerId,
-        userId,
-        endpoint: 'allocate',
-        model: 'claude-opus-4-7',
-        inputTokens: 0,
-        cachedInputTokens: 0,
-        outputTokens: 0,
-        usdEstimate: 999_999,
-        success: true
-      })
-      .run();
+    runWithTenant(ownerId, () =>
+      db
+        .insert(aiCallLog)
+        .values(
+          tenantValues({
+            id: randomUUID(),
+            userId,
+            endpoint: 'allocate',
+            model: 'claude-opus-4-7',
+            inputTokens: 0,
+            cachedInputTokens: 0,
+            outputTokens: 0,
+            usdEstimate: 999_999,
+            success: true
+          })
+        )
+        .run()
+    );
 
     runWithTenant(ownerId, () => {
       const tokenCall = checkGuard(userId, 'allocate', {

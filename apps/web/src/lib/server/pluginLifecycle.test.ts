@@ -24,6 +24,7 @@ import {
   unretirePlugin
 } from './pluginLifecycle';
 import { appendVersion, currentVersionOf, historyOf } from '$lib/db/pluginVersions';
+import { runWithTenant, tenantValues, withTenant } from '$lib/db/tenant';
 
 const TEST_OWNER_ID = 'owner_home_farm';
 const SYSTEM_USER_ID = 'system';
@@ -80,32 +81,44 @@ beforeAll(() => {
     .values({ id: SYSTEM_USER_ID, email: 'system@cropcard.local' })
     .onConflictDoNothing()
     .run();
-  db.insert(fields)
-    .values({
-      id: TEST_FIELD_ID,
-      ownerId: TEST_OWNER_ID,
-      name: 'Lifecycle Test Field'
-    })
-    .onConflictDoNothing()
-    .run();
-  db.insert(blocks)
-    .values({
-      id: TEST_BLOCK_ID,
-      ownerId: TEST_OWNER_ID,
-      fieldId: TEST_FIELD_ID,
-      name: 'Lifecycle Test Block'
-    })
-    .onConflictDoNothing()
-    .run();
-  db.insert(equipment)
-    .values({
-      id: TEST_SPRAYER_ID,
-      ownerId: TEST_OWNER_ID,
-      type: 'sprayer',
-      label: 'Lifecycle Test Sprayer'
-    })
-    .onConflictDoNothing()
-    .run();
+  runWithTenant(TEST_OWNER_ID, () =>
+    db
+      .insert(fields)
+      .values(
+        tenantValues({
+          id: TEST_FIELD_ID,
+          name: 'Lifecycle Test Field'
+        })
+      )
+      .onConflictDoNothing()
+      .run()
+  );
+  runWithTenant(TEST_OWNER_ID, () =>
+    db
+      .insert(blocks)
+      .values(
+        tenantValues({
+          id: TEST_BLOCK_ID,
+          fieldId: TEST_FIELD_ID,
+          name: 'Lifecycle Test Block'
+        })
+      )
+      .onConflictDoNothing()
+      .run()
+  );
+  runWithTenant(TEST_OWNER_ID, () =>
+    db
+      .insert(equipment)
+      .values(
+        tenantValues({
+          id: TEST_SPRAYER_ID,
+          type: 'sprayer' as const,
+          label: 'Lifecycle Test Sprayer'
+        })
+      )
+      .onConflictDoNothing()
+      .run()
+  );
 });
 
 afterAll(async () => {
@@ -185,26 +198,35 @@ describe('countReferences', () => {
     const id = `lifecycle-ref-${randomUUID().slice(0, 8)}`;
     const eventId = randomUUID();
     // Insert a spray event whose pluginHashesJson mentions our pluginId.
-    db.insert(sprayEvents)
-      .values({
-        id: eventId,
-        ownerId: TEST_OWNER_ID,
-        blockId: TEST_BLOCK_ID,
-        sprayerId: TEST_SPRAYER_ID,
-        performedById: SYSTEM_USER_ID,
-        occurredAt: new Date(Date.now()),
-        productsJson: '[]',
-        conditionsJson: '{}',
-        rulesVersion: '0.3.0-safety-kernel',
-        pluginHashesJson: JSON.stringify({ [id]: 'deadbeef' })
-      })
-      .run();
+    runWithTenant(TEST_OWNER_ID, () =>
+      db
+        .insert(sprayEvents)
+        .values(
+          tenantValues({
+            id: eventId,
+            blockId: TEST_BLOCK_ID,
+            sprayerId: TEST_SPRAYER_ID,
+            performedById: SYSTEM_USER_ID,
+            occurredAt: new Date(Date.now()),
+            productsJson: '[]',
+            conditionsJson: '{}',
+            rulesVersion: '0.3.0-safety-kernel',
+            pluginHashesJson: JSON.stringify({ [id]: 'deadbeef' })
+          })
+        )
+        .run()
+    );
     try {
       const refs = countReferences(id, 'herbicide');
       expect(refs.sprayEvents).toBe(1);
       expect(refs.total).toBe(1);
     } finally {
-      db.delete(sprayEvents).where(eq(sprayEvents.id, eventId)).run();
+      runWithTenant(TEST_OWNER_ID, () =>
+        db
+          .delete(sprayEvents)
+          .where(withTenant(sprayEvents, eq(sprayEvents.id, eventId)))
+          .run()
+      );
     }
   });
 });
@@ -235,20 +257,24 @@ describe('uninstallPlugin', () => {
     await seedFakeCropPlugin(id);
 
     const eventId = randomUUID();
-    db.insert(sprayEvents)
-      .values({
-        id: eventId,
-        ownerId: TEST_OWNER_ID,
-        blockId: TEST_BLOCK_ID,
-        sprayerId: TEST_SPRAYER_ID,
-        performedById: SYSTEM_USER_ID,
-        occurredAt: new Date(Date.now()),
-        productsJson: '[]',
-        conditionsJson: '{}',
-        rulesVersion: '0.3.0-safety-kernel',
-        pluginHashesJson: JSON.stringify({ [id]: 'cafebabe' })
-      })
-      .run();
+    runWithTenant(TEST_OWNER_ID, () =>
+      db
+        .insert(sprayEvents)
+        .values(
+          tenantValues({
+            id: eventId,
+            blockId: TEST_BLOCK_ID,
+            sprayerId: TEST_SPRAYER_ID,
+            performedById: SYSTEM_USER_ID,
+            occurredAt: new Date(Date.now()),
+            productsJson: '[]',
+            conditionsJson: '{}',
+            rulesVersion: '0.3.0-safety-kernel',
+            pluginHashesJson: JSON.stringify({ [id]: 'cafebabe' })
+          })
+        )
+        .run()
+    );
 
     try {
       await expect(uninstallPlugin(id, { changedByUserId: 'system' })).rejects.toMatchObject({
@@ -256,7 +282,12 @@ describe('uninstallPlugin', () => {
         references: expect.objectContaining({ sprayEvents: 1, total: 1 })
       });
     } finally {
-      db.delete(sprayEvents).where(eq(sprayEvents.id, eventId)).run();
+      runWithTenant(TEST_OWNER_ID, () =>
+        db
+          .delete(sprayEvents)
+          .where(withTenant(sprayEvents, eq(sprayEvents.id, eventId)))
+          .run()
+      );
     }
   });
 });

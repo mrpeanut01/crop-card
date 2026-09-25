@@ -18,9 +18,9 @@
 
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
-import { runWithTenant } from './tenant';
+import { runWithTenant, tenantValues, unscopedQueryNote, withTenant } from './tenant';
 import { db } from './client';
 import { equipment, owners, recordDeletions, users } from './schema';
 import { createField } from './fields';
@@ -71,7 +71,7 @@ function seedBlock(ownerId: string): { blockId: string; sprayerId: string } {
   });
   const sprayerId = `${ownerId}-sprayer-${randomUUID().slice(0, 6)}`;
   db.insert(equipment)
-    .values({ id: sprayerId, ownerId, type: 'sprayer', label: `${ownerId} sprayer` })
+    .values(tenantValues({ id: sprayerId, type: 'sprayer' as const, label: `${ownerId} sprayer` }))
     .run();
   return { blockId: block.id, sprayerId };
 }
@@ -125,7 +125,7 @@ function tombstones(ownerId: string, recordId: string) {
     db
       .select()
       .from(recordDeletions)
-      .where(and(eq(recordDeletions.ownerId, ownerId), eq(recordDeletions.recordId, recordId)))
+      .where(withTenant(recordDeletions, eq(recordDeletions.recordId, recordId)))
       .all()
   );
 }
@@ -260,6 +260,7 @@ describe('tombstone tenant isolation', () => {
       deleteInsecticideEvent(id, { force: true, deletedBy: 'u1', reason: 'scoped' })
     );
     // The other Owner sees no tombstone for OWNER's deleted record.
+    unscopedQueryNote('test reads the raw tombstone row to assert its stored owner_id');
     const otherSees = runWithTenant(OWNER_OTHER, () =>
       db.select().from(recordDeletions).where(eq(recordDeletions.recordId, id)).all()
     );

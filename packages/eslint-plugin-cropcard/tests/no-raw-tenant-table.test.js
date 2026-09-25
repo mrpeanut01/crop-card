@@ -27,6 +27,12 @@ ruleTester.run('no-raw-tenant-table', rule, {
      }`,
     `db.update(stockLots).set({ qty: 1 }).where(withTenant(stockLots, eq(stockLots.id, id)));`,
     `db.select().from(blocks as unknown as Table);`,
+    `db.select().from(seasonCloseouts).where(withTenant(seasonCloseouts, eq(seasonCloseouts.year, 2026)));`,
+    `db.insert(wizardDrafts).values(tenantValues({ id: 'd1' }));`,
+    `db.select().from(apiTokens).where(eq(apiTokens.tokenHash, h));`,
+    `import { tasks as taskRows } from './fixtures'; db.select().from(taskRows);`,
+    `import * as repo from './blocks'; db.select().from(repo.blocks);`,
+    `import { users as u } from '$lib/db/schema'; db.select().from(u);`,
     `list.from(someArray);`,
     `const x: Array<string> = Array.from(names);`
   ],
@@ -50,6 +56,36 @@ ruleTester.run('no-raw-tenant-table', rule, {
     {
       code: `db.delete(tasks).where(eq(tasks.id, id));`,
       errors: [{ messageId: 'rawDelete', data: { name: 'tasks' } }]
+    },
+    ...[
+      'recordDeletions',
+      'fungicideEvents',
+      'planRevisions',
+      'scoutObservations',
+      'kernelDryRunLog',
+      'wizardSessions',
+      'wizardChatMessages',
+      'wizardDrafts',
+      'seasonCloseouts',
+      'plantingRecords'
+    ].map((name) => ({
+      code: `db.select().from(${name}); db.insert(${name}).values({}); db.update(${name}).set({}); db.delete(${name});`,
+      errors: [
+        { messageId: 'rawFrom', data: { name } },
+        { messageId: 'rawInsert', data: { name } },
+        { messageId: 'rawUpdate', data: { name } },
+        { messageId: 'rawDelete', data: { name } }
+      ]
+    })),
+    {
+      code: `import { crops as cropsTable } from '$lib/db/schema';
+             db.insert(cropsTable).values({ id: 'c1' });`,
+      errors: [{ messageId: 'rawInsert', data: { name: 'cropsTable' } }]
+    },
+    {
+      code: `import * as schema from './schema';
+             db.select().from(schema.wizardDrafts);`,
+      errors: [{ messageId: 'rawFrom', data: { name: 'schema.wizardDrafts' } }]
     },
     {
       code: `// tenantWhere is only mentioned in a comment, never called

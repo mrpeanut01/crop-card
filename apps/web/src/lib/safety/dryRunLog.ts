@@ -23,7 +23,7 @@ import { randomUUID } from 'node:crypto';
 import { env } from '$env/dynamic/private';
 import { db } from '$lib/db/client';
 import { kernelDryRunLog } from '$lib/db/schema';
-import { currentOwnerId } from '$lib/db/tenant';
+import { currentOwnerId, tenantValues } from '$lib/db/tenant';
 import { RULES_VERSION } from './version';
 import type { SafetyViolation } from './types';
 
@@ -42,24 +42,24 @@ export function isDryRunActive(): boolean {
 }
 
 export function recordDryRun(input: DryRunRecord): void {
-  const ownerId = currentOwnerId();
-  if (!ownerId) {
+  if (!currentOwnerId()) {
     console.warn('[kernel-dry-run] no active owner context; skipping log entry');
     return;
   }
   const verdict: 'ok' | 'block' = input.violations.length === 0 ? 'ok' : 'block';
   try {
     db.insert(kernelDryRunLog)
-      .values({
-        id: randomUUID(),
-        ownerId,
-        rulesVersion: RULES_VERSION,
-        evaluator: input.evaluator,
-        verdict,
-        reasonsJson: JSON.stringify(input.violations),
-        plannedSprayJson: JSON.stringify(input.plannedSpray),
-        blockId: input.blockId ?? null
-      })
+      .values(
+        tenantValues({
+          id: randomUUID(),
+          rulesVersion: RULES_VERSION,
+          evaluator: input.evaluator,
+          verdict,
+          reasonsJson: JSON.stringify(input.violations),
+          plannedSprayJson: JSON.stringify(input.plannedSpray),
+          blockId: input.blockId ?? null
+        })
+      )
       .run();
   } catch (err) {
     console.error('[kernel-dry-run] failed to write log entry', err);

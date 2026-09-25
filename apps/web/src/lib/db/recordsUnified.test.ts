@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import { db } from './client';
 import { equipment, equipmentLog, owners, users } from './schema';
-import { runWithTenant } from './tenant';
+import { runWithTenant, tenantValues } from './tenant';
 import { createField } from './fields';
 import { createBlock, addPlanting } from './blocks';
 import { insertSprayEvent } from './sprayEvents';
@@ -59,7 +59,9 @@ function seedAllKinds(ownerId: string, userId: string) {
     });
     const sprayerId = `${ownerId}-sprayer-${randomUUID().slice(0, 6)}`;
     db.insert(equipment)
-      .values({ id: sprayerId, ownerId, type: 'sprayer', label: `${ownerId} sprayer` })
+      .values(
+        tenantValues({ id: sprayerId, type: 'sprayer' as const, label: `${ownerId} sprayer` })
+      )
       .run();
 
     const now = Date.now();
@@ -155,15 +157,16 @@ function seedAllKinds(ownerId: string, userId: string) {
     // decon (equipment_log row, kind='decon')
     const deconId = randomUUID();
     db.insert(equipmentLog)
-      .values({
-        id: deconId,
-        ownerId,
-        equipmentId: sprayerId,
-        occurredAt: new Date(now - 2_000),
-        kind: 'decon',
-        performedById: userId,
-        notes: 'triple rinse + ammonia'
-      })
+      .values(
+        tenantValues({
+          id: deconId,
+          equipmentId: sprayerId,
+          occurredAt: new Date(now - 2_000),
+          kind: 'decon' as const,
+          performedById: userId,
+          notes: 'triple rinse + ammonia'
+        })
+      )
       .run();
 
     return {

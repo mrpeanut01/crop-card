@@ -18,7 +18,7 @@ import { updateStatus } from '$lib/db/crops';
 import { createEquipment } from '$lib/db/equipment';
 import { appSettings, owners } from '$lib/db/schema';
 import { createStockItem, listMovementsForItem, receiveLot } from '$lib/db/stock';
-import { runWithTenant } from '$lib/db/tenant';
+import { runWithTenant, tenantWhere } from '$lib/db/tenant';
 import type { CropPlugin } from '$lib/plugins/schemas';
 
 import { runCarryForward } from './carryForward.server';
@@ -62,7 +62,7 @@ const NOW = Date.UTC(2025, 10, 15); // Nov 15 2025
 
 describe('runCarryForward (UC-47 orchestration)', () => {
   beforeEach(() => {
-    db.delete(appSettings).run();
+    runWithTenant(OWNER, () => db.delete(appSettings).where(tenantWhere(appSettings)).run());
   });
 
   it('produces rotation warnings, N-credit re-key, and clones — and applies expiry movements', () => {

@@ -71,6 +71,9 @@ const consumedTokens = sql`(${aiCallLog.inputTokens} + ${aiCallLog.cachedInputTo
 
 function callsToday(userId: string, endpoint: AiEndpointName): number {
   const dayStart = utcDayStart();
+  unscopedQueryNote(
+    'per-user daily quota counts the user across every Owner they belong to, keyed on user id'
+  );
   const rows = db
     .select({ id: aiCallLog.id })
     .from(aiCallLog)
@@ -120,6 +123,9 @@ function perTokenQuota(tokenId: string, endpoint: AiEndpointName): number | null
 
 function monthlyUsdSpent(): number {
   const monthStart = utcMonthStart();
+  unscopedQueryNote(
+    'monthly USD cap is a deployment-wide safety brake on the shared Anthropic key, summed across all Owners'
+  );
   const row = db
     .select({ total: sum(aiCallLog.usdEstimate) })
     .from(aiCallLog)

@@ -29,43 +29,27 @@
  * touch a tenant-scoped table without importing any of the helpers —
  * the "forgot to wire tenant scoping at all" case.
  *
- * Maintain the `TENANT_SCOPED_TABLE_NAMES` list when the schema gains a
- * new branded table. The compile-time `TenantScoped` brand in
- * `schema.ts` is the canonical gate; this rule is a secondary safety net.
+ * The table list is generated from every `tenantScoped(...)` export in
+ * `schema.ts` into `tenant-scoped-tables.json` (`pnpm --filter
+ * eslint-plugin-cropcard gen:tables`); a drift test fails when the two
+ * disagree. The compile-time `TenantScoped` brand in `schema.ts` is the
+ * canonical gate; this rule is a secondary safety net.
  */
 
-const TENANT_SCOPED_TABLE_NAMES = new Set([
-  'fields',
-  'blocks',
-  'shadeSources',
-  'crops',
-  'plantingRecords',
-  'cropEquipment',
-  'sprayers',
-  'sprayEvents',
-  'harvestEvents',
-  'equipment',
-  'equipmentState',
-  'equipmentLog',
-  'pendingCalibrations',
-  'stockItems',
-  'stockLots',
-  'stockMovements',
-  'soilTests',
-  'fertilityApplications',
-  'fertilityCredits',
-  'insecticideEvents',
-  'hayCuttings',
-  'tasks',
-  'appSettings',
-  'aiCallLog',
-  'pluginOverrides',
-  'pushSubscriptions',
-  'pushDeliveries'
-]);
+import { readFileSync } from 'node:fs';
 
-function isTenantTableIdentifier(node) {
-  return node && node.type === 'Identifier' && TENANT_SCOPED_TABLE_NAMES.has(node.name);
+const TENANT_SCOPED_TABLE_NAMES = new Set(
+  JSON.parse(readFileSync(new URL('../tenant-scoped-tables.json', import.meta.url), 'utf8'))
+);
+
+const SCHEMA_SOURCE = /(^|\/)schema(\.[jt]s)?$/;
+
+function fromSchema(spec) {
+  return SCHEMA_SOURCE.test(String(spec.parent.source.value));
+}
+
+function importedName(spec) {
+  return spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value;
 }
 
 /** @type {import('eslint').Rule.RuleModule} */
@@ -92,6 +76,37 @@ export default {
 
   create(context) {
     let fileIsTenantAware = false;
+    const sourceCode = context.sourceCode ?? context.getSourceCode();
+    // `import { crops as cropsTable }` and `import * as schema` must not
+    // slip past the name check.
+    const aliases = new Set();
+    const namespaces = new Set();
+
+    function tenantTableName(node) {
+      if (!node) return null;
+      if (node.type === 'Identifier') {
+        return TENANT_SCOPED_TABLE_NAMES.has(node.name) || aliases.has(node.name)
+          ? node.name
+          : null;
+      }
+      if (
+        node.type === 'MemberExpression' &&
+        !node.computed &&
+        node.object.type === 'Identifier' &&
+        namespaces.has(node.object.name) &&
+        node.property.type === 'Identifier' &&
+        TENANT_SCOPED_TABLE_NAMES.has(node.property.name)
+      ) {
+        return sourceCode.getText(node);
+      }
+      return null;
+    }
+
+    function check(node, messageId) {
+      if (fileIsTenantAware) return;
+      const name = tenantTableName(node.arguments[0]);
+      if (name) context.report({ node, messageId, data: { name } });
+    }
 
     return {
       Program() {
@@ -99,62 +114,44 @@ export default {
         // accessors or an explicit cross-tenant note), treat it as
         // tenant-aware and suppress this rule file-wide. See the file
         // header for the why.
-        const src = (context.sourceCode ?? context.getSourceCode()).getText();
+        const src = sourceCode.getText();
         fileIsTenantAware = /\b(tenantWhere|withTenant|tenantValues|unscopedQueryNote)\s*\(/.test(
           src
         );
       },
 
+      ImportSpecifier(node) {
+        if (
+          fromSchema(node) &&
+          node.local.name !== importedName(node) &&
+          TENANT_SCOPED_TABLE_NAMES.has(importedName(node))
+        ) {
+          aliases.add(node.local.name);
+        }
+      },
+
+      ImportNamespaceSpecifier(node) {
+        if (fromSchema(node)) namespaces.add(node.local.name);
+      },
+
       // db.select(...).from(blocks)
       'CallExpression[callee.property.name="from"]'(node) {
-        if (fileIsTenantAware) return;
-        const arg = node.arguments[0];
-        if (isTenantTableIdentifier(arg)) {
-          context.report({
-            node,
-            messageId: 'rawFrom',
-            data: { name: arg.name }
-          });
-        }
+        check(node, 'rawFrom');
       },
 
       // db.insert(blocks).values({...})
       'CallExpression[callee.property.name="insert"]'(node) {
-        if (fileIsTenantAware) return;
-        const arg = node.arguments[0];
-        if (isTenantTableIdentifier(arg)) {
-          context.report({
-            node,
-            messageId: 'rawInsert',
-            data: { name: arg.name }
-          });
-        }
+        check(node, 'rawInsert');
       },
 
       // db.update(blocks).set({...}).where(...)
       'CallExpression[callee.property.name="update"]'(node) {
-        if (fileIsTenantAware) return;
-        const arg = node.arguments[0];
-        if (isTenantTableIdentifier(arg)) {
-          context.report({
-            node,
-            messageId: 'rawUpdate',
-            data: { name: arg.name }
-          });
-        }
+        check(node, 'rawUpdate');
       },
 
       // db.delete(blocks).where(...)
       'CallExpression[callee.property.name="delete"]'(node) {
-        if (fileIsTenantAware) return;
-        const arg = node.arguments[0];
-        if (isTenantTableIdentifier(arg)) {
-          context.report({
-            node,
-            messageId: 'rawDelete',
-            data: { name: arg.name }
-          });
-        }
+        check(node, 'rawDelete');
       }
     };
   }

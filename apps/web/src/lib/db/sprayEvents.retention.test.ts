@@ -10,7 +10,7 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
-import { runWithTenant } from './tenant';
+import { runWithTenant, tenantValues } from './tenant';
 import { db } from './client';
 import { equipment, owners, users } from './schema';
 import { createField } from './fields';
@@ -54,7 +54,9 @@ function seedSpray(ownerId: string, occurredAt: number): string {
     });
     const sprayerId = `${ownerId}-sprayer-${randomUUID().slice(0, 6)}`;
     db.insert(equipment)
-      .values({ id: sprayerId, ownerId, type: 'sprayer', label: `${ownerId} sprayer` })
+      .values(
+        tenantValues({ id: sprayerId, type: 'sprayer' as const, label: `${ownerId} sprayer` })
+      )
       .run();
     return insertSprayEvent({
       blockId: block.id,

@@ -63,6 +63,9 @@ const requestSchema = z.object({
   blockId: z.string().min(1),
   cropId: z.string().optional(),
   taskId: z.string().optional(),
+  /** Epoch ms the operator recorded the application (stamped client-side,
+   *  preserved through the offline queue). The pollinator time-of-day gate
+   *  and the stored event time key off this, not server receive time. */
   occurredAt: z.number().int().optional(),
   productPluginIds: z.array(z.string().min(1)).min(1),
   /** Phase 17 (Track 2.4) — parallel to productPluginIds. Feeds the safety
@@ -96,6 +99,21 @@ const requestSchema = z.object({
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
+const OCCURRED_AT_MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
+const OCCURRED_AT_MAX_AGE_MS = 7 * DAY_MS;
+
+/** Bounds a client-supplied application time: no more than a small clock
+ *  skew into the future, and no older than the offline-queue horizon. */
+function occurredAtError(occurredAt: number, now: number): string | null {
+  if (occurredAt > now + OCCURRED_AT_MAX_FUTURE_SKEW_MS) {
+    return 'occurredAt is in the future';
+  }
+  if (occurredAt < now - OCCURRED_AT_MAX_AGE_MS) {
+    return 'occurredAt is more than 7 days old';
+  }
+  return null;
+}
+
 export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
@@ -127,7 +145,17 @@ export const POST: RequestHandler = async (event) => {
   if (foreign) return foreign;
 
   const registry = await getRegistry();
-  const occurredAt = parsed.data.occurredAt ?? Date.now();
+  const now = Date.now();
+  if (parsed.data.occurredAt !== undefined) {
+    const err = occurredAtError(parsed.data.occurredAt, now);
+    if (err) {
+      return json(
+        { error: 'invalid request', issues: [{ path: 'occurredAt', message: err }] },
+        { status: 400 }
+      );
+    }
+  }
+  const occurredAt = parsed.data.occurredAt ?? now;
 
   // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
   const seasonClosed = checkSeasonClosed(occurredAt);

@@ -10,6 +10,7 @@ import {
   drainDecisionFor,
   endpointForRecord,
   kindOf,
+  withOccurredAt,
   ENDPOINT_BY_KIND,
   type DrainDecision
 } from './syncQueue';
@@ -88,5 +89,32 @@ describe('#316 — kind → endpoint routing', () => {
     // routes to the safest existing endpoint rather than crashing the drain.
     const rogue = { kind: 'not-a-real-kind' as unknown as PendingRecordKind };
     expect(endpointForRecord(rogue)).toBe('/api/spray/record');
+  });
+});
+
+describe('withOccurredAt — application time survives the offline queue', () => {
+  const T = Date.parse('2026-06-22T01:00:00Z');
+
+  it('stamps an insecticide payload lacking occurredAt with the enqueue time', () => {
+    expect(withOccurredAt('insecticide', { blockId: 'b' }, T)).toEqual({
+      blockId: 'b',
+      occurredAt: T
+    });
+  });
+
+  it('preserves an occurredAt the page already stamped', () => {
+    const payload = { blockId: 'b', occurredAt: T - 1000 };
+    expect(withOccurredAt('insecticide', payload, T)).toBe(payload);
+  });
+
+  it('leaves other record kinds untouched', () => {
+    const payload = { blockId: 'b' };
+    for (const kind of ['herbicide', 'fungicide', 'harvest', 'hay-cutting'] as const) {
+      expect(withOccurredAt(kind, payload, T)).toBe(payload);
+    }
+  });
+
+  it('passes non-object payloads through', () => {
+    expect(withOccurredAt('insecticide', null, T)).toBeNull();
   });
 });

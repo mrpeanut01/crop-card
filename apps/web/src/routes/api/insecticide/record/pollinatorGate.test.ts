@@ -4,7 +4,7 @@
  * replays from the offline queue that carry no bloom attestation.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { getRegistry, getBlock, geometryCentroid, insertInsecticideEvent } = vi.hoisted(() => ({
   getRegistry: vi.fn(),
@@ -32,12 +32,19 @@ vi.mock('$lib/db/stock', () => ({
   getStockItem: vi.fn(),
   getStockItemByPluginId: vi.fn()
 }));
+vi.mock('$lib/safety/sunTimes', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('$lib/safety/sunTimes')>();
+  return { ...actual, sunTimesFor: vi.fn(actual.sunTimesFor) };
+});
 vi.mock('$lib/db/users', () => ({ ensureSystemUser: vi.fn(async () => ({ id: 'sys' })) }));
 
 import { POST } from './+server';
+import { sunTimesFor } from '$lib/safety/sunTimes';
 
 const NOON_EDT = Date.parse('2026-06-21T16:00:00Z');
 const MIDNIGHT_EDT = Date.parse('2026-06-22T04:00:00Z');
+const NINE_PM_EDT = Date.parse('2026-06-22T01:00:00Z');
+const EIGHT_AM_EDT_DRAIN = Date.parse('2026-06-22T12:00:00Z');
 
 const base = {
   type: 'insecticide',
@@ -87,10 +94,16 @@ function post(body: Record<string, unknown>) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(EIGHT_AM_EDT_DRAIN);
   getRegistry.mockResolvedValue({
     get: (id: string) => (PLUGINS[id] ? { plugin: PLUGINS[id], hash: 'h' } : undefined)
   });
   getBlock.mockReturnValue({ plantings: [] });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('POST /api/insecticide/record — #130 pollinator gate', () => {
@@ -172,5 +185,69 @@ describe('POST /api/insecticide/record — #130 pollinator gate', () => {
   it('rejects an invalid bloomStatus value', async () => {
     const res = await post({ productPluginIds: ['bt'], bloomStatus: 'maybe' });
     expect(res.status).toBe(400);
+  });
+});
+
+describe('POST /api/insecticide/record — client occurredAt (offline replay)', () => {
+  it('accepts a dusk-to-dawn product sprayed at 21:00 and drained at 08:00', async () => {
+    const res = await post({
+      productPluginIds: ['pyrethroid'],
+      occurredAt: NINE_PM_EDT,
+      bloomStatus: 'in-bloom'
+    });
+    expect(res.status).toBe(200);
+    expect(insertInsecticideEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ occurredAt: NINE_PM_EDT })
+    );
+    const body = await res.json();
+    expect(body.pollinatorWarnings.map((c: { id: string }) => c.id)).toContain('bee-toxicity');
+  });
+
+  it('evaluates sun times for the application date, not the drain date', async () => {
+    await post({
+      productPluginIds: ['pyrethroid'],
+      occurredAt: NINE_PM_EDT,
+      bloomStatus: 'in-bloom'
+    });
+    expect(sunTimesFor).toHaveBeenCalledTimes(1);
+    const [, , when] = vi.mocked(sunTimesFor).mock.calls[0];
+    expect(when.getTime()).toBe(NINE_PM_EDT);
+  });
+
+  it('without occurredAt keeps server-time behaviour (08:00 daylight → blocked)', async () => {
+    const res = await post({ productPluginIds: ['pyrethroid'], bloomStatus: 'in-bloom' });
+    expect(res.status).toBe(422);
+    expect((await res.json()).code).toBe('POLLINATOR_BLOCK');
+  });
+
+  it('400 for an occurredAt beyond the 5-minute future skew', async () => {
+    const res = await post({
+      productPluginIds: ['bt'],
+      occurredAt: EIGHT_AM_EDT_DRAIN + 10 * 60_000,
+      bloomStatus: 'not-in-bloom'
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.issues[0].path).toBe('occurredAt');
+    expect(insertInsecticideEvent).not.toHaveBeenCalled();
+  });
+
+  it('tolerates small client clock skew into the future', async () => {
+    const res = await post({
+      productPluginIds: ['bt'],
+      occurredAt: EIGHT_AM_EDT_DRAIN + 2 * 60_000,
+      bloomStatus: 'not-in-bloom'
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('400 for an occurredAt older than 7 days', async () => {
+    const res = await post({
+      productPluginIds: ['bt'],
+      occurredAt: EIGHT_AM_EDT_DRAIN - 8 * 86_400_000,
+      bloomStatus: 'not-in-bloom'
+    });
+    expect(res.status).toBe(400);
+    expect(insertInsecticideEvent).not.toHaveBeenCalled();
   });
 });

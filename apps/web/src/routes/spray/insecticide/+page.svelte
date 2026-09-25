@@ -210,6 +210,7 @@
     violations = [];
     const body: Record<string, unknown> = {
       blockId: selectedBlockId,
+      occurredAt: Date.now(),
       productPluginIds: [selectedPluginId],
       conditions: {
         windMph,

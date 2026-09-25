@@ -117,14 +117,30 @@ export function primeActiveOwnerId(ownerId: string | null | undefined): void {
   }
 }
 
+/** Kinds whose server gates depend on the application time of day
+ *  (insecticide pollinator dusk-to-dawn / residual). Their payloads must
+ *  carry the moment the operator recorded, not the drain time. */
+const TIME_GATED_KINDS: ReadonlySet<PendingRecordKind> = new Set(['insecticide']);
+
+/** Stamps `occurredAt` on a time-gated payload that lacks one. Pure; other
+ *  kinds and payloads that already carry a timestamp pass through as-is. */
+export function withOccurredAt(kind: PendingRecordKind, payload: unknown, now: number): unknown {
+  if (!TIME_GATED_KINDS.has(kind)) return payload;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  const existing = (payload as { occurredAt?: unknown }).occurredAt;
+  if (typeof existing === 'number' && Number.isFinite(existing)) return payload;
+  return { ...(payload as Record<string, unknown>), occurredAt: now };
+}
+
 /**
  * #316 — generalized enqueue. Stashes a payload under a record kind so the
  * drain can POST it to the right endpoint. `occurredAt` is lifted from the
  * payload when present (herbicide/insecticide/etc. carry it) so the queue
  * UI can show a sensible timestamp.
  */
-export async function enqueueRecord(kind: PendingRecordKind, payload: unknown): Promise<string> {
+export async function enqueueRecord(kind: PendingRecordKind, raw: unknown): Promise<string> {
   const id = uuid();
+  const payload = withOccurredAt(kind, raw, Date.now());
   const ownerId = currentOwnerId() ?? UNASSIGNED_OWNER_ID;
   await db().pendingSprayRecords.put({
     id,

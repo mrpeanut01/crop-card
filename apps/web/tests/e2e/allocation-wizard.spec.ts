@@ -1,6 +1,10 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './lib/test';
-import { openWizardFromPlan, provisionWizardTenant } from './lib/wizardTenant';
+import {
+  gotoPlanWithoutWizard,
+  openWizardFromPlan,
+  provisionWizardTenant
+} from './lib/wizardTenant';
 
 // Every spec provisions its own Owner (see lib/wizardTenant.ts) and runs the
 // no-key deterministic path end to end: allocate, schedule and inputs all
@@ -110,8 +114,7 @@ test.describe('allocation wizard', () => {
     page
   }) => {
     await provisionWizardTenant(page, { seasonSetup: true });
-    await page.goto('/plan');
-    await page.waitForLoadState('networkidle');
+    await gotoPlanWithoutWizard(page);
     await page.getByRole('button', { name: /Open the wizard at Season setup/ }).click();
     await expectActiveStep(page, '0. Season');
     await expect(body(page).getByRole('button', { name: 'Save changes & continue' })).toBeVisible();
@@ -442,5 +445,65 @@ test.describe('allocation wizard', () => {
     ).toBeVisible();
 
     expect(errors.filter((m) => !/404/.test(m))).toEqual([]);
+  });
+});
+
+test.describe('empty season starts in the wizard', () => {
+  test.describe.configure({ timeout: 90_000 });
+
+  test('a farm with no blocks opens the wizard, and blocks can be added inline', async ({
+    page
+  }) => {
+    await provisionWizardTenant(page, { seasonSetup: true, blocks: [] });
+    await page.goto('/plan');
+    await page.waitForLoadState('networkidle');
+
+    await expect(wizard(page)).toBeVisible();
+    await expectActiveStep(page, '1. Seeds');
+    await goToBlocks(page);
+
+    const empty = body(page).locator('[data-empty-state="blocks"]');
+    await expect(empty.getByRole('heading', { name: 'Add your first block' })).toBeVisible();
+    const form = body(page).getByTestId('wizard-add-block');
+    await form.getByLabel('Block name').fill('Kitchen Garden');
+    await form.getByRole('button', { name: '+ Add block' }).click();
+
+    await expect(body(page).getByLabel('Kitchen Garden')).toBeChecked();
+    await expect(
+      footer(page).getByRole('button', { name: /^Generate plan \(1 blocks\)/ })
+    ).toBeEnabled();
+
+    await page.keyboard.press('Escape');
+    await expect(wizard(page)).toHaveCount(0);
+  });
+
+  test('closing the auto-opened wizard leaves a start card that reopens it', async ({ page }) => {
+    await provisionWizardTenant(page, { seasonSetup: true, blocks: [] });
+    await gotoPlanWithoutWizard(page);
+
+    const card = page.locator('[data-empty-state="season-start"]');
+    await expect(card.getByRole('heading', { name: /Plan your \d{4} season/ })).toBeVisible();
+    await card.getByRole('button', { name: 'Start the planning wizard' }).click();
+    await expect(wizard(page)).toBeVisible();
+  });
+
+  test('carry-forward shows last season and skips the plan-in-place gate', async ({ page }) => {
+    const { year } = await provisionWizardTenant(page, {
+      seasonSetup: false,
+      priorPlanting: true
+    });
+    await page.goto('/plan');
+    await page.waitForLoadState('networkidle');
+
+    await expect(wizard(page)).toBeVisible();
+    await expectActiveStep(page, '0. Season');
+    const prior = body(page).getByTestId('prior-season-panel');
+    await expect(prior.getByRole('heading', { name: `Last season (${year - 1})` })).toBeVisible();
+    await expect(prior.getByText('Last Year Beans')).toBeVisible();
+
+    await body(page).getByRole('button', { name: 'Save & continue' }).click();
+    await expectActiveStep(page, '1. Seeds');
+    await goToBlocks(page);
+    await expect(body(page).getByText(`${year - 1}: Last Year Beans`)).toBeVisible();
   });
 });

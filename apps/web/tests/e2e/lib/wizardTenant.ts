@@ -22,6 +22,8 @@ export type WizardTenantOptions = {
   blocks?: Array<{ name: string; acres: number }>;
   /** Plant one crop on the first block so the wizard gates on plan-state. */
   existingPlanting?: boolean;
+  /** Plant one crop on the first block dated last year (carry-forward history). */
+  priorPlanting?: boolean;
 };
 
 const DEFAULT_SEEDS = [
@@ -114,13 +116,35 @@ export async function provisionWizardTenant(
     });
   }
 
+  if (opts.priorPlanting) {
+    await postJson(page, `/api/blocks/${blocks[0].id}/plantings`, {
+      cropPluginId: 'bush-bean-provider',
+      varietyDisplayName: 'Last Year Beans',
+      plantingDate: new Date(year - 1, 4, 15).getTime()
+    });
+  }
+
   return { blocks, seeds, year };
+}
+
+function wizardDialog(page: Page) {
+  return page.locator('.aw-modal');
+}
+
+/** Loads /plan and waits for the page to settle. An empty season opens the
+ *  wizard on its own, so callers that want the bare page close it here. */
+export async function gotoPlanWithoutWizard(page: Page): Promise<void> {
+  await page.goto('/plan');
+  await page.waitForLoadState('networkidle');
+  if (await wizardDialog(page).isVisible()) {
+    await page.keyboard.press('Escape');
+    await expect(wizardDialog(page)).toHaveCount(0);
+  }
 }
 
 /** Opens the wizard from the /plan workflow strip CTA and waits for the modal. */
 export async function openWizardFromPlan(page: Page): Promise<void> {
-  await page.goto('/plan');
-  await page.waitForLoadState('networkidle');
+  await gotoPlanWithoutWizard(page);
   await page
     .getByRole('button', { name: /^Open wizard/ })
     .first()

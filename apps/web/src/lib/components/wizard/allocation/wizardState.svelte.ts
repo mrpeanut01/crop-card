@@ -15,6 +15,7 @@ import type {
   AllocationResponse,
   BlockEntry,
   ChatMsg,
+  PriorSeason,
   InitialChatMessage,
   ScheduleResponse,
   ScheduledPlanting,
@@ -28,6 +29,8 @@ import type {
 export interface WizardInputs {
   readonly seedStock: SeedStockEntry[];
   readonly blocks: BlockEntry[];
+  /** Last season's crops per block, shown as carry-forward context. */
+  readonly priorSeason: PriorSeason | null;
   readonly plantingGuides: Record<string, NonNullable<CropPlugin['plantingGuide']>>;
   readonly aiEnabled: boolean;
   readonly wizardPlanId: string | undefined;
@@ -41,6 +44,9 @@ export interface WizardInitial {
   seasonSetup: SeasonSetup | null;
   initialChatMessages: InitialChatMessage[];
   initialStep: 'season-setup' | 'allocation' | undefined;
+  /** Nothing is planned for this season yet; prior-year plantings on the
+   *  blocks are history, so the "plan in place" step is skipped. */
+  emptySeason: boolean;
 }
 
 // Phase 25b (#96) — derived wizard step descriptors for the Almanac
@@ -175,8 +181,8 @@ export class AllocationWizardState {
     this.planReset = new PlanResetState(this);
     this.seedLink = new SeedLinkState(this);
     this.activeSetup = initial.seasonSetup;
-    this.hasExistingPlan = untrack(() =>
-      props.blocks.some((b) => b.plantings && b.plantings.length > 0)
+    this.hasExistingPlan = untrack(
+      () => !initial.emptySeason && props.blocks.some((b) => b.plantings && b.plantings.length > 0)
     );
     this.step = (() => {
       if (!this.activeSetup || initial.initialStep === 'season-setup') return 'season-setup';

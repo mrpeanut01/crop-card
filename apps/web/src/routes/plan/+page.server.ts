@@ -83,6 +83,7 @@ import {
 import { getRegistry } from '$lib/server/registry';
 import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/companions';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
+import { isEmptySeason, priorSeasonSummary } from '$lib/plan/seasonStart';
 
 export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
 const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calendar'];
@@ -222,6 +223,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     currentYear,
     seasonSetup,
     lastYearSetup,
+    emptySeason: isEmptySeason(blocks, currentYear),
+    priorSeason: priorSeasonSummary(blocks, currentYear),
     // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the
     // schedule step of the AllocationWizard.
     aiEnabled: getUserAiEnabled(locals.user?.id),

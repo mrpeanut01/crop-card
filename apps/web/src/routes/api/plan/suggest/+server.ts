@@ -40,11 +40,12 @@ export const POST: RequestHandler = async (event) => {
   const tried = await tryAiWithGuard({
     endpoint: 'suggest',
     userId: user.id,
-    prompt: async () => {
+    prompt: async (signal) => {
       const built = await buildFarmContextWithCache(year);
       return planWithAI('suggest', built.context, userPrompt, {
         planningSessionId: parsed.data.planningSessionId,
-        contextCacheHit: built.cacheHit
+        contextCacheHit: built.cacheHit,
+        signal
       });
     }
   });

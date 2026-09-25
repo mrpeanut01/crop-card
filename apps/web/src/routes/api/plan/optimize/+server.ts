@@ -41,9 +41,9 @@ export const POST: RequestHandler = async (event) => {
   const tried = await tryAiWithGuard({
     endpoint: 'optimize',
     userId: user.id,
-    prompt: async () => {
+    prompt: async (signal) => {
       const ctx = await buildFarmContext(year);
-      return planWithAI('optimize', ctx, userPrompt);
+      return planWithAI('optimize', ctx, userPrompt, { signal });
     }
   });
 

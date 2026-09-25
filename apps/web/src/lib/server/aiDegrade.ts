@@ -1,4 +1,5 @@
 import type { AiEndpointName } from '$lib/schedule/constants';
+import { currentOwnerId, runWithTenant } from '$lib/db/tenant';
 import { checkGuard, recordCall, type GuardOutcome } from './aiGuard';
 import { aiTry, type FallbackReason } from './aiTry';
 import { getApiKey } from './scanResult';
@@ -37,11 +38,95 @@ export type DegradeOutcome<T> =
       guard: GuardOutcome;
     };
 
+export interface CallUsage {
+  model: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+  usdEstimate: number;
+}
+
 export interface TryAiWithGuardArgs<T> {
   endpoint: AiEndpointName;
   userId: string;
-  prompt: () => Promise<T>;
+  /** The signal aborts when aiTry gives up on the call (timeout); prompt
+   *  functions that thread it into the SDK get the request cancelled. */
+  prompt: (signal: AbortSignal) => Promise<T>;
   timeoutMs?: number;
+  /** Token usage carried by a resolved value, for metering a call that
+   *  settles after the timeout. Defaults to reading `value.meta`. */
+  usageOf?: (value: T) => CallUsage | null;
+}
+
+function isFiniteNumber(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v);
+}
+
+/** Every AI module returns `{ ..., meta: AiResultMeta }`; read it defensively. */
+export function usageFromMeta(value: unknown): CallUsage | null {
+  if (!value || typeof value !== 'object') return null;
+  const meta = (value as { meta?: unknown }).meta;
+  if (!meta || typeof meta !== 'object') return null;
+  const m = meta as Record<string, unknown>;
+  if (
+    !isFiniteNumber(m.inputTokens) ||
+    !isFiniteNumber(m.outputTokens) ||
+    !isFiniteNumber(m.usdEstimate)
+  ) {
+    return null;
+  }
+  return {
+    model: typeof m.model === 'string' ? m.model : 'unknown',
+    inputTokens: m.inputTokens,
+    cachedInputTokens: isFiniteNumber(m.cachedInputTokens) ? m.cachedInputTokens : 0,
+    outputTokens: m.outputTokens,
+    usdEstimate: m.usdEstimate
+  };
+}
+
+/** A timed-out Claude call keeps running (and billing) unless its prompt
+ *  honours the abort signal. When it eventually resolves, write its real
+ *  usage so the spend counts toward the monthly cap + daily quota — the
+ *  caller's zero-token `recordFallback` row covers only the audit. The
+ *  tenant id is captured before the request returns and re-entered here so
+ *  the row lands on the right Owner however the SDK schedules the settle. */
+function meterLateSettle<T>(
+  pending: Promise<T>,
+  args: TryAiWithGuardArgs<T>,
+  ownerId: string | null
+): void {
+  const usageOf = args.usageOf ?? usageFromMeta;
+  pending.then(
+    (value) => {
+      const usage = usageOf(value);
+      if (!usage) return;
+      if (usage.inputTokens + usage.outputTokens + usage.usdEstimate <= 0) return;
+      const write = () =>
+        recordCall({
+          userId: args.userId,
+          endpoint: args.endpoint,
+          model: usage.model,
+          inputTokens: usage.inputTokens,
+          cachedInputTokens: usage.cachedInputTokens,
+          outputTokens: usage.outputTokens,
+          usdEstimate: usage.usdEstimate,
+          success: false,
+          errorClass: 'timeout',
+          provenance: 'fallback',
+          fallbackReason: 'timeout',
+          attemptedAiAt: Date.now()
+        });
+      try {
+        if (ownerId) runWithTenant(ownerId, write);
+        else write();
+      } catch (err) {
+        console.error(`[ai] ${args.endpoint} late recordCall failed`, err);
+      }
+    },
+    () => {
+      /* aborted or failed after the timeout: no usage reported to meter */
+    }
+  );
 }
 
 export function fallbackMessageFor(
@@ -62,7 +147,9 @@ export function fallbackMessageFor(
  *  inputs (key present, guard verdict) and the human copy for the banner. */
 export async function tryAiWithGuard<T>(args: TryAiWithGuardArgs<T>): Promise<DegradeOutcome<T>> {
   const guard = checkGuard(args.userId, args.endpoint);
-  const state: { error: unknown } = { error: null };
+  const ownerId = currentOwnerId();
+  const controller = new AbortController();
+  const state: { error: unknown; pending: Promise<T> | null } = { error: null, pending: null };
   const tried = await aiTry<T | null>({
     endpoint: args.endpoint,
     aiEnabled: !!getApiKey(),
@@ -71,7 +158,8 @@ export async function tryAiWithGuard<T>(args: TryAiWithGuardArgs<T>): Promise<De
     timeoutMs: args.timeoutMs ?? LONG_AI_TIMEOUT_MS,
     prompt: async () => {
       try {
-        return { value: await args.prompt() };
+        state.pending = args.prompt(controller.signal);
+        return { value: await state.pending };
       } catch (err) {
         state.error = err;
         throw err;
@@ -81,6 +169,10 @@ export async function tryAiWithGuard<T>(args: TryAiWithGuardArgs<T>): Promise<De
   });
   if (tried.provenance === 'ai') return { provenance: 'ai', value: tried.value as T, guard };
   const reason = tried.fallbackReason ?? 'rate-limit';
+  if (reason === 'timeout' && state.pending) {
+    controller.abort();
+    meterLateSettle(state.pending, args, ownerId);
+  }
   return {
     provenance: 'fallback',
     value: null,

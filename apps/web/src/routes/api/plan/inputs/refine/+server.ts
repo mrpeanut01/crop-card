@@ -147,12 +147,13 @@ export const POST: RequestHandler = async (event) => {
   const tried = await tryAiWithGuard({
     endpoint: 'inputs',
     userId: auth.id,
-    prompt: () =>
+    prompt: (signal) =>
       refineInputs({
         base: baseInput,
         previousPlan,
         message: parsed.data.message,
-        history: parsed.data.history
+        history: parsed.data.history,
+        signal
       })
   });
 

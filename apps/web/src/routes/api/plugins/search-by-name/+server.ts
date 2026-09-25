@@ -76,7 +76,8 @@ export const POST: RequestHandler = async (event) => {
     endpoint: 'plugin-search',
     userId: session.id,
     timeoutMs: 90_000,
-    prompt: () => claudePluginSearchByName(query, hintType as PluginKindHint | undefined)
+    prompt: (signal) =>
+      claudePluginSearchByName(query, hintType as PluginKindHint | undefined, signal)
   });
 
   if (tried.provenance === 'fallback') {

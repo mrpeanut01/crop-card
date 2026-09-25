@@ -52,9 +52,9 @@ export const POST: RequestHandler = async (event) => {
   const tried = await tryAiWithGuard({
     endpoint: 'succession',
     userId: user.id,
-    prompt: async () => {
+    prompt: async (signal) => {
       const ctx = await buildFarmContext(year);
-      return planWithAI('succession', ctx, userPrompt);
+      return planWithAI('succession', ctx, userPrompt, { signal });
     }
   });
 

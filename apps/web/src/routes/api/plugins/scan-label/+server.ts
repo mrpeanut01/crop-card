@@ -52,10 +52,11 @@ export const POST: RequestHandler = async (event) => {
     endpoint: 'plugin-scan',
     userId: session.id,
     timeoutMs: 60_000,
-    prompt: () =>
+    prompt: (signal) =>
       claudeVisionPluginLookup(
         parsed.data.image,
-        parsed.data.hintType as PluginKindHint | undefined
+        parsed.data.hintType as PluginKindHint | undefined,
+        signal
       )
   });
 

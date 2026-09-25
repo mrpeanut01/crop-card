@@ -150,7 +150,7 @@ export const POST: RequestHandler = async (event) => {
   const tried = await tryAiWithGuard({
     endpoint: 'inputs',
     userId: auth.id,
-    prompt: () => planInputsWithAI(baseInput)
+    prompt: (signal) => planInputsWithAI({ ...baseInput, signal })
   });
 
   if (tried.provenance === 'fallback') {

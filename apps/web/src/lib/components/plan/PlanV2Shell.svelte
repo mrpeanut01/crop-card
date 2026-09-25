@@ -62,6 +62,10 @@
     onEditBlock?: (blockId: string) => void;
     /** Optional: wire to /plan's existing add-block flow. */
     onAddBlock?: () => void;
+    /** Opens the planning wizard from the empty-farm state (owner only). */
+    onStartPlan?: () => void;
+    /** Season the empty-farm state invites the operator to plan. */
+    seasonYear?: number;
     /** Optional: wire to /plan's existing add-planting flow. */
     onAddPlanting?: (blockId: string) => void;
     /** Opens the add-task form for the selected block (+ active planting). */
@@ -78,6 +82,8 @@
     onOpenWizard,
     onEditBlock,
     onAddBlock,
+    onStartPlan,
+    seasonYear = new Date().getFullYear(),
     onAddPlanting,
     onAddTask,
     geometryEditHref
@@ -236,12 +242,27 @@
 
   <div class="pv2-main">
     {#if !selectedBlock}
-      <div class="pv2-empty">
-        <p>
-          No blocks yet. <button type="button" class="link" onclick={() => onAddBlock?.()}
-            >Add your first block</button
-          >.
-        </p>
+      <div class="pv2-empty" data-empty-state="season-start">
+        {#if onStartPlan}
+          <h2 class="pv2-empty-title">Plan your {seasonYear} season</h2>
+          <p class="pv2-empty-lede">
+            The planning wizard walks you through it one step at a time: your season goals, the seed
+            you have on hand, and the blocks you'll plant.
+          </p>
+          <button type="button" class="primary start" onclick={onStartPlan}>
+            <Sparkle size={15} strokeWidth={1.75} />
+            Start the planning wizard
+          </button>
+          {#if onAddBlock}
+            <p class="pv2-empty-alt">
+              Prefer to lay it out yourself? <button type="button" class="link" onclick={onAddBlock}
+                >Add a block by hand</button
+              >
+            </p>
+          {/if}
+        {:else}
+          <p>No blocks yet. The farm owner sets up blocks and the season plan.</p>
+        {/if}
       </div>
     {:else}
       <PlanBlockHeader
@@ -364,8 +385,32 @@
   }
   .pv2-empty {
     text-align: center;
-    padding: 40px 24px;
+    padding: 48px 24px;
     color: var(--color-ink-muted);
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .pv2-empty-title {
+    margin: 0 0 10px;
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+  .pv2-empty-lede {
+    margin: 0;
+    color: var(--color-ink-soft);
+    line-height: 1.5;
+  }
+  .pv2-empty-alt {
+    margin: 18px 0 0;
+    font-size: 14px;
+  }
+  .primary.start {
+    min-height: 48px;
+    padding: 12px 20px;
+    font-size: 15px;
+    margin-top: 20px;
   }
   .link {
     background: transparent;

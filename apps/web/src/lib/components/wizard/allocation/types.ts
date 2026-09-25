@@ -20,6 +20,11 @@ export type BlockEntry = {
   plantings: Array<{ varietyDisplayName: string }>;
 };
 
+export type PriorSeason = {
+  year: number;
+  blocks: Array<{ blockId: string; blockName: string; crops: string[] }>;
+};
+
 export type CropCatalogItem = {
   pluginId: string;
   displayName: string;

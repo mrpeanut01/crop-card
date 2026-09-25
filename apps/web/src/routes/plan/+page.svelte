@@ -1379,6 +1379,7 @@
 
   onMount(() => {
     cropsTabOrder = loadBlockOrder();
+    if (data.emptySeason && data.canEdit) openWizard();
   });
 
   function onCropsHeaderDragStart(ev: DragEvent, blockId: string) {
@@ -1871,6 +1872,8 @@
     ])
   )}
   onOpenWizard={() => openWizard()}
+  seasonYear={data.currentYear ?? new Date().getFullYear()}
+  onStartPlan={data.canEdit ? () => openWizard() : undefined}
   onAddTask={(blockId, plantingId) => {
     addTaskTarget = { blockId, plantingId };
   }}
@@ -3495,6 +3498,8 @@
     cropCatalog={data.cropCatalog}
     seasonSetup={data.seasonSetup ?? null}
     lastYearSetup={data.lastYearSetup ?? null}
+    priorSeason={data.priorSeason ?? null}
+    emptySeason={data.emptySeason ?? false}
     currentYear={data.currentYear ?? new Date().getFullYear()}
     aiEnabled={data.aiEnabled ?? false}
     wizardPlanId={data.wizardPlanId}

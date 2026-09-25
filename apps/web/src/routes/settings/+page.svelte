@@ -4,18 +4,14 @@
   import {
     User,
     Sprout,
-    Wrench,
     Users,
-    SprayCan,
+    Tractor,
     Box,
     FileText,
-    Leaf,
     Plug,
     CreditCard,
     AlertTriangle,
     ChevronRight,
-    Check,
-    Lock,
     LayoutGrid,
     FileDown,
     Bell
@@ -28,8 +24,8 @@
    *
    * Canonical mockup at
    * `docs/design/almanac/direction-almanac-pages.jsx` ASettingsScreen.
-   * Hero identity card + featured AI assistant card + 2-column section
-   * grid + cream advanced-diagnostics footer.
+   * Hero identity card + 2-column section grid + cream
+   * advanced-diagnostics footer. The Claude key lives under Integrations.
    */
 
   let { data } = $props();
@@ -77,7 +73,11 @@
       href: '/settings/helpers',
       icon: Users,
       label: 'Helpers & invites',
-      sub: `${data.counts.helpers} active helper${data.counts.helpers === 1 ? '' : 's'} · ${data.counts.pendingInvites} pending invite${data.counts.pendingInvites === 1 ? '' : 's'}`,
+      sub: [
+        `${data.counts.owners} owner${data.counts.owners === 1 ? '' : 's'}`,
+        `${data.counts.helpers} helper${data.counts.helpers === 1 ? '' : 's'}`,
+        `${data.counts.pendingInvites} pending invite${data.counts.pendingInvites === 1 ? '' : 's'}`
+      ].join(' · '),
       badge:
         data.counts.pendingInvites > 0
           ? { tone: 'wheat', text: `${data.counts.pendingInvites} pending` }
@@ -85,10 +85,14 @@
       ownerOnly: true
     },
     {
-      href: '/inventory?type=sprayer',
-      icon: SprayCan,
-      label: 'Sprayers & calibration',
-      sub: `${data.counts.equipment} registered${data.counts.dirtySprayers > 0 ? ` · ${data.counts.dirtySprayers} needs decon` : ''}`,
+      href: '/settings/equipment',
+      icon: Tractor,
+      label: 'Equipment',
+      sub: [
+        `${data.counts.equipment} piece${data.counts.equipment === 1 ? '' : 's'}`,
+        `${data.counts.sprayers} sprayer${data.counts.sprayers === 1 ? '' : 's'} & calibration`,
+        ...(data.counts.dirtySprayers > 0 ? [`${data.counts.dirtySprayers} needs decon`] : [])
+      ].join(' · '),
       badge: data.counts.dirtySprayers > 0 ? { tone: 'rust', text: 'Decon needed' } : undefined,
       ownerOnly: true
     },
@@ -109,7 +113,10 @@
       href: '/settings/integrations',
       icon: Plug,
       label: 'Integrations',
-      sub: `${data.counts.apiTokens} API token${data.counts.apiTokens === 1 ? '' : 's'} · weather · USDA (planned)`,
+      sub: `Claude API key · ${data.counts.apiTokens} API token${data.counts.apiTokens === 1 ? '' : 's'} · weather · USDA`,
+      badge: data.aiEnabled
+        ? { tone: 'forest', text: 'AI on' }
+        : { tone: 'neutral', text: 'AI off' },
       ownerOnly: true
     },
     {
@@ -169,107 +176,6 @@
     </div>
   </div>
 </section>
-
-<!-- ─── AI assistant featured card ─────────────────────────────── -->
-{#if data.ai && data.isOwner}
-  <section class="card ai-feature">
-    <header class="ai-head">
-      <div class="ai-icon" class:on={data.ai.enabled}>
-        <Leaf size={20} strokeWidth={1.75} />
-      </div>
-      <div class="ai-title">
-        <div class="ai-title-row">
-          <h2>AI planning assistant</h2>
-          {#if data.ai.enabled}
-            <Pill tone="forest"><Check size={10} /> Active</Pill>
-          {:else}
-            <Pill tone="rust">Off · no key</Pill>
-          {/if}
-        </div>
-        <div class="ai-meta">
-          Claude {data.ai.model} · monthly cap ${data.ai.monthlyCapUSD.toFixed(0)} · ${data.ai.spendThisMonth.toFixed(
-            2
-          )}
-          spent this month · {data.ai.callsThisMonth} call{data.ai.callsThisMonth === 1 ? '' : 's'}
-        </div>
-      </div>
-    </header>
-
-    <div class="ai-body">
-      <div class="ai-key-col">
-        <div class="key-label">Claude API key</div>
-        <form method="POST" action="/settings/ai?/saveKey" class="key-row">
-          <input
-            type="password"
-            name="apiKey"
-            placeholder="sk-ant-…"
-            value={data.ai.keyMasked ?? ''}
-            class="key-input mono"
-          />
-          <button type="submit" class="primary-btn">
-            {data.ai.enabled ? 'Update' : 'Save & enable'}
-          </button>
-        </form>
-        <div class="key-hint">
-          <Lock size={11} strokeWidth={1.75} />
-          Stored locally · never sent to the CropCard server. Get a key at
-          <a href="https://console.anthropic.com" target="_blank" rel="noreferrer noopener">
-            console.anthropic.com
-          </a>.
-        </div>
-
-        <div class="cap-section">
-          <div class="cap-head">
-            <span class="cap-label">Monthly cap</span>
-            <span class="cap-value mono">${data.ai.monthlyCapUSD.toFixed(2)}</span>
-          </div>
-          <div
-            class="cap-bar"
-            role="meter"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-valuenow={Math.round(data.ai.pctUsed * 100)}
-          >
-            <div
-              class="cap-fill"
-              class:warn={data.ai.warnAt80}
-              class:over={data.ai.pctUsed >= 1}
-              style:width="{Math.min(100, Math.round(data.ai.pctUsed * 100))}%"
-            ></div>
-          </div>
-          <div class="cap-ticks mono">
-            <span>$0</span>
-            <span>${data.ai.spendThisMonth.toFixed(2)} spent</span>
-            <span>${data.ai.monthlyCapUSD.toFixed(0)} cap</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="ai-gated-col">
-        <div class="kicker-row">
-          Gated by AI ({data.ai.enabled ? 'available' : 'currently hidden'})
-        </div>
-        <ul class="gated-list" class:dim={!data.ai.enabled}>
-          {#each data.ai.gatedFeatures as f, i (i)}
-            <li>{f}</li>
-          {/each}
-        </ul>
-
-        <div class="kicker-row alt">
-          Always works ({data.ai.keepWorking.length})
-        </div>
-        <ul class="works-list">
-          {#each data.ai.keepWorking as k, i (i)}
-            <li>
-              <Check size={11} strokeWidth={2} />
-              {k}
-            </li>
-          {/each}
-        </ul>
-      </div>
-    </div>
-  </section>
-{/if}
 
 <!-- ─── 2-column section grid ──────────────────────────────────── -->
 <ul class="section-grid" aria-label="Settings sections">
@@ -420,219 +326,6 @@
     font-family: var(--font-mono, ui-monospace, monospace);
   }
 
-  /* ── AI feature ── */
-  .ai-feature {
-    padding: 0;
-  }
-  .ai-head {
-    padding: 16px 20px 12px;
-    border-bottom: 1px solid var(--color-divider-soft, var(--color-divider));
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .ai-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    background: var(--color-divider-soft, var(--color-divider));
-    color: var(--color-ink-muted);
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-  }
-  .ai-icon.on {
-    background: var(--color-forest-deep);
-    color: var(--color-cream, #f8f3e8);
-  }
-  .ai-title {
-    flex: 1;
-  }
-  .ai-title-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .ai-title-row h2 {
-    margin: 0;
-    font-family: var(--font-serif, serif);
-    font-size: 17px;
-    color: var(--color-forest-deep);
-    letter-spacing: -0.01em;
-  }
-  .ai-meta {
-    font-size: 12.5px;
-    color: var(--color-ink-muted);
-    margin-top: 3px;
-  }
-  .ai-body {
-    padding: 16px 20px;
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 24px;
-  }
-
-  .key-label {
-    font-size: 11px;
-    color: var(--color-ink-muted);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-  }
-  .key-row {
-    display: flex;
-    gap: 8px;
-  }
-  .key-input {
-    flex: 1;
-    padding: 10px 12px;
-    font-size: 13px;
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider);
-    border-radius: var(--radius-input, 6px);
-    color: var(--color-ink);
-    outline: none;
-  }
-  .key-input:focus {
-    border-color: var(--color-forest-deep);
-    outline: 2px solid var(--color-forest-deep);
-    outline-offset: 1px;
-  }
-  .primary-btn {
-    background: var(--color-forest-deep);
-    color: var(--color-paper);
-    border: 0;
-    padding: 8px 14px;
-    border-radius: var(--radius-input, 6px);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    min-height: 38px;
-  }
-  .key-hint {
-    margin-top: 6px;
-    font-size: 11px;
-    color: var(--color-ink-muted);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .key-hint a {
-    color: var(--color-forest-deep);
-    font-weight: 600;
-    text-decoration: none;
-  }
-  .key-hint a:hover {
-    text-decoration: underline;
-  }
-
-  .cap-section {
-    margin-top: 16px;
-  }
-  .cap-head {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-  }
-  .cap-label {
-    font-size: 11px;
-    color: var(--color-ink-muted);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .cap-value {
-    font-size: 12px;
-    color: var(--color-ink);
-    font-weight: 600;
-  }
-  .cap-bar {
-    height: 8px;
-    background: var(--color-cream);
-    border-radius: 999px;
-    overflow: hidden;
-    border: 1px solid var(--color-divider);
-  }
-  .cap-fill {
-    height: 100%;
-    background: var(--color-forest-deep);
-    transition: width 0.3s ease;
-  }
-  .cap-fill.warn {
-    background: var(--color-wheat, #d4a75c);
-  }
-  .cap-fill.over {
-    background: var(--color-rust, #ba4b38);
-  }
-  .cap-ticks {
-    margin-top: 4px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 10.5px;
-    color: var(--color-ink-muted);
-  }
-
-  .ai-gated-col {
-    padding-left: 18px;
-    border-left: 1px solid var(--color-divider-soft, var(--color-divider));
-  }
-  .kicker-row {
-    font-size: 11px;
-    color: var(--color-ink-muted);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .kicker-row.alt {
-    margin-top: 12px;
-  }
-  .gated-list,
-  .works-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .gated-list li {
-    font-size: 12px;
-    color: var(--color-ink);
-    line-height: 1.5;
-    padding-left: 14px;
-    position: relative;
-  }
-  .gated-list li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 7px;
-    width: 5px;
-    height: 5px;
-    border-radius: 999px;
-    background: var(--color-forest-deep);
-  }
-  .gated-list.dim li {
-    color: var(--color-ink-muted);
-  }
-  .gated-list.dim li::before {
-    background: var(--color-divider);
-  }
-  .works-list li {
-    font-size: 12px;
-    color: var(--color-ink);
-    line-height: 1.5;
-    padding-left: 18px;
-    position: relative;
-    margin-top: 4px;
-  }
-  .works-list li :global(svg) {
-    position: absolute;
-    left: 0;
-    top: 4px;
-    color: var(--color-forest-deep);
-  }
-
   /* ── Section grid ── */
   .section-grid {
     list-style: none;
@@ -740,15 +433,6 @@
     .identity-meta {
       grid-column: 1 / -1;
       text-align: left;
-    }
-    .ai-body {
-      grid-template-columns: 1fr;
-    }
-    .ai-gated-col {
-      padding-left: 0;
-      border-left: 0;
-      border-top: 1px solid var(--color-divider-soft, var(--color-divider));
-      padding-top: 14px;
     }
     .section-grid {
       grid-template-columns: 1fr;

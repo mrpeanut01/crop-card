@@ -1,4 +1,6 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { getOnboardingStatus } from '$lib/onboarding/state.server';
 import { listBlocks, geometryCentroid } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
@@ -46,6 +48,16 @@ function clampView(raw: string | null): View {
 }
 
 export const load: PageServerLoad = async ({ url, locals }) => {
+  // A new Owner stays in the setup wizard until they finish it or pick
+  // "finish later". Impersonating superadmins are never bounced.
+  const onboardingStatus = locals.user?.activeOwnerId ? getOnboardingStatus() : null;
+  if (
+    onboardingStatus === 'in-progress' &&
+    locals.user?.role === 'owner' &&
+    !locals.user.impersonating
+  ) {
+    throw redirect(303, '/onboarding');
+  }
   const tab = clampTab(url.searchParams.get('tab'));
   const view = clampView(url.searchParams.get('view'));
   // Phase 25d v2-addendum (#89 / #80 partial) — drives AI-on vs AI-off
@@ -220,6 +232,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     sprayers,
     bootstrap,
     bootstrapDone,
+    setupUnfinished: onboardingStatus === 'later' && locals.user?.role === 'owner',
     pluginFailures: stats.failures,
     // Legacy: keep these so the existing template still has data while we
     // migrate to the tabbed layout.

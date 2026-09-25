@@ -8,35 +8,9 @@
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  const ROLE_META = [
-    {
-      role: 'owner',
-      label: 'Owner',
-      blurb: 'Full edit. Manages safety bypasses + billing.',
-      tone: 'forest' as const
-    },
-    {
-      role: 'helper',
-      label: 'Helper',
-      blurb: 'Spray + scout + harvest. No bypasses. No billing.',
-      tone: 'sky' as const
-    },
-    {
-      role: 'inspector',
-      label: 'Inspector',
-      blurb: 'Read-only · time-boxed link · no login.',
-      tone: 'wheat' as const
-    }
-  ];
-
-  const roleCounts = $derived(
-    ROLE_META.map((r) => ({
-      ...r,
-      count: data.members.filter((m) => m.roleWithinOwner === r.role && m.status === 'active')
-        .length
-    }))
+  const activeOwners = $derived(
+    data.members.filter((m) => m.status === 'active' && m.roleWithinOwner === 'owner')
   );
-
   const activeMembers = $derived(
     data.members.filter((m) => m.status === 'active' && m.roleWithinOwner !== 'owner')
   );
@@ -44,7 +18,6 @@
 
   let showInviteForm = $state(false);
   let inviteEmail = $state('');
-  let inviteRole = $state<'helper' | 'inspector' | 'custom-operator'>('helper');
   let inviteEmailEl = $state<HTMLInputElement | null>(null);
 
   // #206 / CT-RS-005 — when the form opens, scroll it into view + focus
@@ -73,15 +46,20 @@
     sub="Server-enforced. Helpers can't edit locked records or override custom rates."
   >
     <div class="role-grid">
-      {#each roleCounts as r (r.role)}
-        <div class="role-card">
-          <div class="role-head">
-            <span class="role-label">{r.label}</span>
-            <span class="role-count mono" data-tone={r.tone}>{r.count}</span>
-          </div>
-          <p class="role-blurb">{r.blurb}</p>
+      <div class="role-card">
+        <div class="role-head">
+          <span class="role-label">Owner</span>
+          <span class="role-count mono" data-tone="forest">{activeOwners.length}</span>
         </div>
-      {/each}
+        <p class="role-blurb">Full edit. Manages safety bypasses, helpers and billing.</p>
+      </div>
+      <div class="role-card">
+        <div class="role-head">
+          <span class="role-label">Helper</span>
+          <span class="role-count mono" data-tone="sky">{activeMembers.length}</span>
+        </div>
+        <p class="role-blurb">Spray, scout and harvest. No bypasses. No billing.</p>
+      </div>
     </div>
   </SettingsSection>
 
@@ -104,14 +82,6 @@
             required
             class="s-input"
           />
-        </label>
-        <label class="iv-field">
-          <span>Role</span>
-          <select name="role" bind:value={inviteRole} class="s-input">
-            <option value="helper">Helper</option>
-            <option value="inspector">Inspector</option>
-            <option value="custom-operator">Custom operator</option>
-          </select>
         </label>
         <button type="submit" class="primary-sm">Send invite</button>
       </form>
@@ -140,7 +110,7 @@
           <div class="row-title">{m.name}</div>
           {#if m.name !== m.email}<div class="row-sub">{m.email}</div>{/if}
         </div>
-        <Pill tone="sky">{m.roleWithinOwner}</Pill>
+        <Pill tone="sky">Helper</Pill>
         <form method="POST" action="?/remove">
           <input type="hidden" name="userId" value={m.userId} />
           <button type="submit" class="ghost-sm">Remove</button>
@@ -167,7 +137,7 @@
             })}
           </div>
         </div>
-        <Pill tone="wheat">{inv.roleWithinOwner}</Pill>
+        <Pill tone="wheat">Helper</Pill>
         <span class="expires mono">
           expires {new Date(inv.expiresAt).toLocaleDateString('en-US', {
             month: 'short',
@@ -186,7 +156,7 @@
 <style>
   .role-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
   .role-card {
@@ -214,9 +184,6 @@
   .role-count[data-tone='sky'] {
     color: #6f8fa8;
   }
-  .role-count[data-tone='wheat'] {
-    color: var(--color-wheat, #d4a75c);
-  }
   .role-blurb {
     margin: 4px 0 0;
     font-size: 11.5px;
@@ -226,7 +193,7 @@
 
   .invite-form {
     display: grid;
-    grid-template-columns: 2fr 1fr auto;
+    grid-template-columns: 1fr auto;
     gap: 10px;
     align-items: end;
     margin-bottom: 14px;

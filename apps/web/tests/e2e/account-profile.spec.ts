@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './lib/test';
 import { signInAsDemoOwner } from './lib/auth';
 
 const PNG_4X4 = Buffer.from(

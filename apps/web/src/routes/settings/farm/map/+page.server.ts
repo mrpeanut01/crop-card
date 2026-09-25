@@ -9,6 +9,7 @@ import { error, redirect, type ServerLoad } from '@sveltejs/kit';
 import { listBlocks } from '$lib/db/blocks';
 import { listFields } from '$lib/db/fields';
 import { listShadeSources } from '$lib/db/shadeSources';
+import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 
 export const load: ServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
@@ -20,6 +21,7 @@ export const load: ServerLoad = ({ locals }) => {
     fields: listFields(),
     shadeSources: listShadeSources(),
     canEdit: true,
-    isFirstRun: blocks.length === 0
+    isFirstRun: blocks.length === 0,
+    initialCenter: hasFarmLatLon() ? getFarmLatLon() : null
   };
 };

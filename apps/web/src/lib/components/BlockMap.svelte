@@ -95,7 +95,8 @@
     shadeSources = [],
     onCreateShadeSource,
     onDeleteShadeSource,
-    onUpdateShadeGeometry
+    onUpdateShadeGeometry,
+    initialCenter = null
   }: {
     blocks: BlockWithPlantings[];
     fields: FieldWithBlocks[];
@@ -126,6 +127,9 @@
     onCreateShadeSource?: CreateShadeSourceCb;
     onDeleteShadeSource?: DeleteShadeSourceCb;
     onUpdateShadeGeometry?: UpdateShadeGeometryCb;
+    /** Where the map opens before any geometry exists (the farm location).
+     *  Once blocks or fields are drawn, the map fits to them instead. */
+    initialCenter?: { lat: number; lon: number } | null;
   } = $props();
 
   // ── Per-field color palette (index cycles for farms with >8 fields) ──────
@@ -286,7 +290,10 @@
       touchZoom: !thumbnail,
       keyboard: !thumbnail,
       attributionControl: !thumbnail
-    }).setView([39.1, -77.55], 13);
+    }).setView(
+      initialCenter ? [initialCenter.lat, initialCenter.lon] : [39.1, -77.55],
+      initialCenter ? 16 : 13
+    );
 
     const satellite = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',

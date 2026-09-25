@@ -3,7 +3,7 @@
  *
  * Rebuilt to match the canonical mockup at
  * `docs/design/almanac/direction-almanac-pages.jsx` ASettingsScreen
- * (hero identity card + featured AI assistant + 2-column section
+ * (hero identity card + 2-column section
  * grid + cream advanced-diagnostics footer).
  *
  * Surfaces real data wherever available + sensible fallbacks for
@@ -13,25 +13,19 @@
 
 import { error, type ServerLoad } from '@sveltejs/kit';
 import { db } from '$lib/db/client';
-import { owners, users, aiCallLog } from '$lib/db/schema';
+import { owners, users } from '$lib/db/schema';
 import { identityName } from '$lib/identity';
 import { profileFor } from '$lib/db/userProfile';
-import { eq, gte, count, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { listBlocks } from '$lib/db/blocks';
 import { listEquipment } from '$lib/db/equipment';
 import { listStockItems } from '$lib/db/stock';
 import { usersForOwner } from '$lib/db/users';
 import { listInvitesForOwner } from '$lib/server/invites';
 import { listTokensForOwner } from '$lib/server/apiTokens';
-import { spendSnapshot } from '$lib/server/aiGuard';
 import { RULES_VERSION } from '$lib/safety/version';
 import { getRegistry } from '$lib/server/registry';
 import { getApiKey } from '$lib/server/scanResult';
-import { withTenant } from '$lib/db/tenant';
-import { and } from 'drizzle-orm';
-
-const DAY_MS = 86_400_000;
-const MONTH_MS = 30 * DAY_MS;
 
 export const load: ServerLoad = async ({ locals }) => {
   if (!locals.user) throw error(401, 'sign-in required');
@@ -43,15 +37,17 @@ export const load: ServerLoad = async ({ locals }) => {
 
   // ─── Counts for the section subtitles ───────────────────────────────
   const blocks = listBlocks();
-  const equipment = listEquipment({ type: 'sprayer' });
+  const equipment = listEquipment().filter((e) => e.retiredAt == null);
+  const sprayers = equipment.filter((e) => e.type === 'sprayer');
   const stock = listStockItems();
-  const helpers = ownerId ? usersForOwner(ownerId) : [];
+  const members = ownerId ? usersForOwner(ownerId).filter((a) => a.status === 'active') : [];
+  const ownerCount = members.filter((a) => a.roleWithinOwner === 'owner').length;
   const invites = ownerId ? listInvitesForOwner(ownerId) : [];
   const tokens = ownerId ? listTokensForOwner(ownerId) : [];
 
   const pendingInvites = invites.filter((i) => i.status === 'pending').length;
 
-  const dirtySprayers = equipment.filter(
+  const dirtySprayers = sprayers.filter(
     (e) =>
       e.state.lastChemistryClass != null &&
       ['synthetic-auxin', 'sulfonylurea', 'imidazolinone'].includes(e.state.lastChemistryClass)
@@ -63,24 +59,7 @@ export const load: ServerLoad = async ({ locals }) => {
   // Future: surface registry.failures() if we add a load-failure log;
   // today the loader filters before populating.
 
-  // ─── AI snapshot (owner-only fields gated below) ────────────────────
-  const ai = isOwner ? spendSnapshot() : null;
-  const aiKey = isOwner ? getApiKey() : null;
-  // #167 / CT-SET-004 — the aiCallLog table is tenant-scoped (Phase 18a
-  // brand). The previous query omitted withTenant() and counted every
-  // owner's calls into the active tenant's display — a cross-tenant
-  // leak that inflated the count and disagreed with /settings/ai (which
-  // filters correctly). Use the same scoped predicate as /settings/ai
-  // so both surfaces report the same number.
-  const aiCallsThisMonth = isOwner
-    ? (db
-        .select({ n: count() })
-        .from(aiCallLog)
-        .where(
-          and(withTenant(aiCallLog), gte(aiCallLog.createdAt, new Date(Date.now() - MONTH_MS)))
-        )
-        .get()?.n ?? 0)
-    : 0;
+  const aiEnabled = isOwner && getApiKey() !== '';
 
   // ─── User identity metadata ─────────────────────────────────────────
   const memberSince = userRow?.createdAt
@@ -119,36 +98,16 @@ export const load: ServerLoad = async ({ locals }) => {
     counts: {
       blocks: blocks.length,
       equipment: equipment.length,
+      sprayers: sprayers.length,
       stock: stock.length,
-      helpers: helpers.length,
+      owners: ownerCount,
+      helpers: members.length - ownerCount,
       pendingInvites,
       dirtySprayers,
       apiTokens: tokens.length,
       plugins: allPlugins.length
     },
-    ai: ai && {
-      enabled: aiKey != null,
-      keyMasked: aiKey
-        ? `${aiKey.slice(0, 8)}${'•'.repeat(Math.max(0, aiKey.length - 12))}${aiKey.slice(-4)}`
-        : null,
-      model: 'claude-haiku-4-5',
-      spendThisMonth: ai.monthlyUsdSoFar,
-      monthlyCapUSD: ai.cap,
-      pctUsed: ai.pctUsed,
-      warnAt80: ai.warnAt80,
-      callsThisMonth: aiCallsThisMonth,
-      gatedFeatures: [
-        'Allocation refinement chat',
-        'Schedule re-derivation (e.g. 3-sisters offsets)',
-        'Input plan substitutions',
-        "Free-text 'ask the assistant' on Plan v2 + Today"
-      ],
-      keepWorking: [
-        'All five wizard steps run fully manually — drag Gantt bars, click edit, fill forms',
-        'Safety kernel + decon + retention logic are local and never call AI',
-        `CSV import / export · ${allPlugins.length} plugins · all calendar derivations`
-      ]
-    },
+    aiEnabled,
     advanced: {
       buildVersion: 'phase-25c',
       rulesVersion: RULES_VERSION,

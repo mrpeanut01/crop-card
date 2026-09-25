@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Beleaf 50SG (FMC flonicamid)",
   "version": "1.0.0",
+  "defaultUnit": "oz",
+  "formulation": "SG",
   "activeIngredients": [
     {
       "name": "flonicamid",

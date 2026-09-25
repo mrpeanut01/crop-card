@@ -2,6 +2,7 @@
   "pluginId": "stargus-bacillus-amyloliquefaciens",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Stargus (Bacillus amyloliquefaciens F727, OMRI)",
   "applicationTiming": "COVER",

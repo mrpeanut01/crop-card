@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "AgriMek SC (Syngenta abamectin)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "SC",
   "activeIngredients": [
     {
       "name": "abamectin",

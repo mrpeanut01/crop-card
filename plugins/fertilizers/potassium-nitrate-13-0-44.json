@@ -2,6 +2,7 @@
   "pluginId": "potassium-nitrate-13-0-44",
   "type": "fertilizer",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
     "n": 13,

@@ -3,6 +3,8 @@
   "type": "herbicide",
   "displayName": "Princep 4L (Syngenta simazine)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "L",
   "applicationTiming": "PRE",
   "activeIngredients": [
     {

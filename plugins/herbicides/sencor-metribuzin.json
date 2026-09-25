@@ -2,6 +2,8 @@
   "pluginId": "sencor-metribuzin",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "DF",
   "pluginSchemaVersion": "1.1",
   "displayName": "Sencor 75 DF (metribuzin)",
   "activeIngredients": [

@@ -2,6 +2,7 @@
   "pluginId": "weed-zap-citronella",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Weed Zap (clove + cinnamon oils, OMRI)",
   "activeIngredients": [

@@ -2,6 +2,8 @@
   "pluginId": "suppress-ec",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "EC",
   "pluginSchemaVersion": "1.1",
   "displayName": "Suppress EC (caprylic + capric acid, OMRI)",
   "activeIngredients": [

@@ -2,6 +2,7 @@
   "pluginId": "topguard-ez",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "TopGuard EZ (flutriafol)",
   "applicationTiming": "PRE-BLOOM",

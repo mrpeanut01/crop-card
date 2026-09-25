@@ -3,6 +3,8 @@
   "type": "herbicide",
   "displayName": "Command 3ME (FMC clomazone)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "ME",
   "applicationTiming": "PRE",
   "activeIngredients": [
     {

@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "2,4-D Amine",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "activeIngredients": [
     {
       "name": "2,4-D",

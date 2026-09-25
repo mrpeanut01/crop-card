@@ -2,6 +2,7 @@
   "pluginId": "zampro-ametoctradin",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Zampro (ametoctradin + dimethomorph)",
   "applicationTiming": "COVER",

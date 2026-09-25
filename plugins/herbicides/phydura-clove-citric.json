@@ -2,6 +2,7 @@
   "pluginId": "phydura-clove-citric",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Phydura (clove oil + citric acid, OMRI)",
   "activeIngredients": [

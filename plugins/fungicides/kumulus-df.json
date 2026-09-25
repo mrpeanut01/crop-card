@@ -3,6 +3,8 @@
   "type": "fungicide",
   "displayName": "Kumulus DF (BASF sulfur)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "DF",
   "applicationTiming": "COVER",
   "activeIngredients": [
     {

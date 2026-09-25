@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Fish Emulsion (5-1-1, OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "gal",
   "analysis": {
     "n": 5,
     "p": 1,

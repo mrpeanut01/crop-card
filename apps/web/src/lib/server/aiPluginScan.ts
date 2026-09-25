@@ -22,6 +22,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { PluginRegistrationError, PluginRegistry, pluginSchema, type Plugin } from '$lib/plugins';
+import { pesticideFormulationSchema, pluginDefaultUnitSchema } from '$lib/plugins/schemas';
+import { withResolvedDefaultUnit } from '$lib/plugins/inputMetadata';
 import { getRegistry } from './registry';
 import { AnthropicOverloadedError, getApiKey } from './scanResult';
 import { selectModel, estimateUsd, type AiResultMeta } from './aiPlanning';
@@ -299,6 +301,12 @@ function normalizeCandidate(raw: unknown): unknown {
     }
   } else if (typeof obj.pluginId === 'string') {
     obj.pluginId = slugify(obj.pluginId);
+  }
+  if ('defaultUnit' in obj && !pluginDefaultUnitSchema.safeParse(obj.defaultUnit).success) {
+    delete obj.defaultUnit;
+  }
+  if ('formulation' in obj && !pesticideFormulationSchema.safeParse(obj.formulation).success) {
+    delete obj.formulation;
   }
   return obj;
 }
@@ -652,7 +660,7 @@ export async function localFuzzyMatchPlugins(
 
   return scored.map((s) => ({
     source: 'local' as const,
-    candidate: s.record.plugin,
+    candidate: withResolvedDefaultUnit(s.record.plugin),
     validation: { ok: true, schemaIssues: [], bypassIssues: [] },
     score: s.score
   }));

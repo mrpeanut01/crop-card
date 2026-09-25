@@ -2,6 +2,7 @@
   "pluginId": "grazonnext-hl",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "GrazonNext HL (aminopyralid + 2,4-D)",
   "activeIngredients": [

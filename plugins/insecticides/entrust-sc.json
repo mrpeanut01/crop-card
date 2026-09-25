@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Entrust SC (Corteva spinosad — OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "SC",
   "activeIngredients": [
     {
       "name": "spinosad",

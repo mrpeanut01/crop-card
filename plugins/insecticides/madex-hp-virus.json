@@ -2,6 +2,7 @@
   "pluginId": "madex-hp-virus",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Madex HP (codling moth + Oriental fruit moth granulovirus, OMRI)",
   "activeIngredients": [

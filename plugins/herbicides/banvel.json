@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Banvel (BASF dicamba DMA salt, generic)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [
     {

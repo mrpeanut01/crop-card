@@ -2,6 +2,8 @@
   "pluginId": "tilt-36ec-propiconazole",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "EC",
   "pluginSchemaVersion": "1.1",
   "displayName": "Tilt 3.6 EC (propiconazole)",
   "applicationTiming": "PRE-BLOOM",

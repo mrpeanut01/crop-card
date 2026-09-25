@@ -2,6 +2,8 @@
   "pluginId": "lifegard-bacillus-mycoides",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "oz",
+  "formulation": "WG",
   "pluginSchemaVersion": "1.1",
   "displayName": "LifeGard WG (Bacillus mycoides J, OMRI)",
   "applicationTiming": "COVER",

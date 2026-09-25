@@ -2,6 +2,8 @@
   "pluginId": "applaud-buprofezin",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "oz",
+  "formulation": "DF",
   "pluginSchemaVersion": "1.1",
   "displayName": "Applaud 70DF (buprofezin)",
   "activeIngredients": [

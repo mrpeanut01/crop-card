@@ -1056,6 +1056,21 @@
         "single-event"
       ]
     },
+    "archetype": {
+      "type": "string",
+      "enum": [
+        "small-grain.zadoks",
+        "row-grain.pollination",
+        "dry-seed-legume",
+        "winter-squash-cure",
+        "continuous-harvest-fruit",
+        "cut-and-come-again-leafy",
+        "cover-crop.termination",
+        "forage-cutting-cycle",
+        "perennial-vine-quality",
+        "tree-fruit-multi-pick"
+      ]
+    },
     "bloomWindow": {
       "type": "object",
       "properties": {

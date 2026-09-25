@@ -2,6 +2,8 @@
   "pluginId": "balan-benefin",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "DF",
   "pluginSchemaVersion": "1.1",
   "displayName": "Balan DF (benefin)",
   "activeIngredients": [

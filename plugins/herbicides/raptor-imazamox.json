@@ -2,6 +2,7 @@
   "pluginId": "raptor-imazamox",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Raptor (imazamox)",
   "activeIngredients": [

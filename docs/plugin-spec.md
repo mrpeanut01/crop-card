@@ -329,6 +329,17 @@ Minimum viable:
 
 `applicationRange.unit` enum: `lb-per-acre | gal-per-acre | qt-per-acre | fl-oz-per-acre | ton-per-acre`. Use `fl-oz-per-acre` or `qt-per-acre` for foliar liquids, `gal-per-acre` for fertigation, `lb-per-acre` for granular/meal, `ton-per-acre` for compost.
 
+### 5.5a Input metadata: `defaultUnit` + `formulation` (#255)
+
+Optional on herbicide / insecticide / fungicide (`defaultUnit` + `formulation`) and fertilizer (`defaultUnit`; `form` plays the formulation role and `analysis` the active-ingredient role).
+
+- **`defaultUnit`** — the unit the operator tracks stock in on `/inventory`: `fl-oz | pt | qt | gal | oz | lb | kg | g | count`.
+- **`formulation`** — label formulation code: liquid `EC | SL | SC | F | L | ME | ES | EW | CS | OD | SE`; dry `WDG | WG | DF | SG | SP | WP | WSP | WS | G | D`. Author it only when it is printed on the label.
+
+When `defaultUnit` is absent, the catalog search (`/inventory/[type]/add` → Search) derives one from the plugin's own data ([`inputMetadata.ts`](../apps/web/src/lib/plugins/inputMetadata.ts)): liquid formulation or `fl-oz`/`pt`/`qt` rate → `fl-oz`; dry formulation or `lb` rate → `lb` (`oz` when the label rate is in oz); fertilizer liquid `form` → `gal`, else `lb`. A bare `oz` rate is ambiguous (dry vs fluid ounces) and derives nothing, so the add form's per-type default applies and the operator picks.
+
+Coverage is gated in CI: `src/lib/plugins/inputMetadata.coverage.test.ts` fails on any missing field that is not listed, with a reason, in [`apps/web/scripts/plugin-metadata-allowlist.json`](../apps/web/scripts/plugin-metadata-allowlist.json) — and on allowlist entries that are no longer gaps. `pnpm audit:plugin-metadata` prints the coverage table (`--check` exits non-zero on the same conditions).
+
 ### 5.6 Companion
 
 [/schemas/companion.schema.json](../schemas/companion.schema.json)

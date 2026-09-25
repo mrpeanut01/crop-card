@@ -2,6 +2,7 @@
   "pluginId": "jms-stylet-oil-omri",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "JMS Stylet-Oil OMRI (paraffinic oil)",
   "activeIngredients": [

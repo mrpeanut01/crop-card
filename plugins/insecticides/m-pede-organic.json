@@ -2,6 +2,7 @@
   "pluginId": "m-pede-organic",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "M-Pede Organic (potassium salts of fatty acids, OMRI)",
   "activeIngredients": [

@@ -2,6 +2,8 @@
   "pluginId": "scala-sc",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "SC",
   "pluginSchemaVersion": "1.1",
   "displayName": "Scala SC (pyrimethanil)",
   "applicationTiming": "PRE-BLOOM",

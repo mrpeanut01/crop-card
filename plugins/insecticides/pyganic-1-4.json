@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "PyGanic Crop Protection EC 1.4 II (MGK pyrethrins — OMRI)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "EC",
   "activeIngredients": [
     {
       "name": "pyrethrins",

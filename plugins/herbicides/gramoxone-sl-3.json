@@ -3,6 +3,8 @@
   "type": "herbicide",
   "displayName": "Gramoxone SL 3.0 (Syngenta)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "SL",
   "applicationTiming": "BURNDOWN",
   "activeIngredients": [
     {

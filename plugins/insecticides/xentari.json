@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "XenTari DF (Valent Bt aizawai)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "DF",
   "activeIngredients": [
     {
       "name": "Bacillus thuringiensis aizawai",

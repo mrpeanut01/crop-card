@@ -2,6 +2,8 @@
   "pluginId": "met52-ec-metarhizium",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "EC",
   "pluginSchemaVersion": "1.1",
   "displayName": "Met52 EC (Metarhizium anisopliae F52, OMRI)",
   "activeIngredients": [

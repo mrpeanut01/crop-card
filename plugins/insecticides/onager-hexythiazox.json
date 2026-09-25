@@ -2,6 +2,8 @@
   "pluginId": "onager-hexythiazox",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "EC",
   "pluginSchemaVersion": "1.1",
   "displayName": "Onager 1EC (hexythiazox)",
   "activeIngredients": [

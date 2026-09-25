@@ -843,9 +843,66 @@ export const complianceFlagsSchema = z
   })
   .optional();
 
+/**
+ * #255 — the stock unit an operator tracks this product in on /inventory.
+ * Subset of `StockUnit` (apps/web/src/lib/stock/units.ts) that makes sense
+ * for a purchased input. Optional: the web loader derives one from
+ * `formulation` / `form` / the rate unit when absent.
+ */
+export const PLUGIN_DEFAULT_UNITS = [
+  'fl-oz',
+  'pt',
+  'qt',
+  'gal',
+  'oz',
+  'lb',
+  'kg',
+  'g',
+  'count'
+] as const;
+export type PluginDefaultUnit = (typeof PLUGIN_DEFAULT_UNITS)[number];
+export const pluginDefaultUnitSchema = z.enum(PLUGIN_DEFAULT_UNITS);
+
+/**
+ * #255 — label formulation code (CropLife / EPA convention). Only the
+ * codes CropCard needs to resolve physical state are listed; add new ones
+ * together with their `FORMULATION_PHYSICAL_STATE` entry.
+ */
+export const FORMULATION_PHYSICAL_STATE = {
+  EC: 'liquid',
+  SL: 'liquid',
+  SC: 'liquid',
+  F: 'liquid',
+  L: 'liquid',
+  ME: 'liquid',
+  ES: 'liquid',
+  EW: 'liquid',
+  CS: 'liquid',
+  OD: 'liquid',
+  SE: 'liquid',
+  WDG: 'dry',
+  WG: 'dry',
+  DF: 'dry',
+  SG: 'dry',
+  SP: 'dry',
+  WP: 'dry',
+  WSP: 'dry',
+  WS: 'dry',
+  G: 'dry',
+  D: 'dry'
+} as const satisfies Record<string, 'liquid' | 'dry'>;
+export type PesticideFormulation = keyof typeof FORMULATION_PHYSICAL_STATE;
+export const PESTICIDE_FORMULATIONS = Object.keys(FORMULATION_PHYSICAL_STATE) as [
+  PesticideFormulation,
+  ...PesticideFormulation[]
+];
+export const pesticideFormulationSchema = z.enum(PESTICIDE_FORMULATIONS);
+
 export const herbicidePluginSchema = pluginBase.extend({
   type: z.literal('herbicide'),
   activeIngredients: z.array(activeIngredientSchema).min(1),
+  defaultUnit: pluginDefaultUnitSchema.optional(),
+  formulation: pesticideFormulationSchema.optional(),
   applicationTiming: z.enum(['BURNDOWN', 'PRE', 'POST', 'POST-DIRECTED']).optional(),
   ratePerAcre: z.object({
     amount: z.number().positive(),
@@ -946,6 +1003,8 @@ const applicationProtocolStepSchema = z.object({
 export const insecticidePluginSchema = pluginBase.extend({
   type: z.literal('insecticide'),
   activeIngredients: z.array(insecticideIngredientSchema).min(1),
+  defaultUnit: pluginDefaultUnitSchema.optional(),
+  formulation: pesticideFormulationSchema.optional(),
   reEntryIntervalHours: z.number().int().nonnegative(),
   /** Phase 9 additions — all optional for back-compat with v1 plugins. */
   preHarvestIntervalDays: z.number().int().nonnegative().optional(),
@@ -1003,6 +1062,8 @@ const fungicideIngredientSchema = z.object({
 export const fungicidePluginSchema = pluginBase.extend({
   type: z.literal('fungicide'),
   activeIngredients: z.array(fungicideIngredientSchema).min(1),
+  defaultUnit: pluginDefaultUnitSchema.optional(),
+  formulation: pesticideFormulationSchema.optional(),
   applicationTiming: z
     .enum(['DORMANT', 'PRE-BLOOM', 'BLOOM', 'POST-BLOOM', 'COVER', 'PRE-HARVEST'])
     .optional(),
@@ -1038,6 +1099,7 @@ export const fertilizerPluginSchema = pluginBase.extend({
     k: z.number().min(0).max(100)
   }),
   form: z.enum(['granular', 'liquid', 'soluble', 'compost', 'slow-release', 'meal']),
+  defaultUnit: pluginDefaultUnitSchema.optional(),
   organic: z.boolean().default(false),
   secondaryNutrients: z
     .object({

@@ -2,6 +2,8 @@
   "pluginId": "kanemite-acequinocyl",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "SC",
   "pluginSchemaVersion": "1.1",
   "displayName": "Kanemite 15SC (acequinocyl)",
   "activeIngredients": [

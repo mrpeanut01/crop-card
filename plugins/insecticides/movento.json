@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Movento (Bayer spirotetramat)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "activeIngredients": [
     {
       "name": "spirotetramat",

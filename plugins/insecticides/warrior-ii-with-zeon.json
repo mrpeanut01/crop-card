@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Warrior II with Zeon (Syngenta lambda-cyhalothrin)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "activeIngredients": [
     {
       "name": "lambda-cyhalothrin",

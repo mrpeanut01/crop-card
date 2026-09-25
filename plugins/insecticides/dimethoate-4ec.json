@@ -2,6 +2,8 @@
   "pluginId": "dimethoate-4ec",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "EC",
   "pluginSchemaVersion": "1.1",
   "displayName": "Dimethoate 4EC (organophosphate)",
   "activeIngredients": [

@@ -2,6 +2,7 @@
   "pluginId": "prophyt-phosphonate",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "ProPhyt (potassium phosphite)",
   "applicationTiming": "COVER",

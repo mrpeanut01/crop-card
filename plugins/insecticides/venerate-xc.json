@@ -2,6 +2,7 @@
   "pluginId": "venerate-xc",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Venerate XC (Burkholderia spp. A396, OMRI)",
   "activeIngredients": [

@@ -2,6 +2,8 @@
   "pluginId": "fulfill-pymetrozine",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "oz",
+  "formulation": "WG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Fulfill 50WG (pymetrozine)",
   "activeIngredients": [

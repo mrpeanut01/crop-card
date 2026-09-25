@@ -2,6 +2,8 @@
   "pluginId": "vydate-l-oxamyl",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "L",
   "pluginSchemaVersion": "1.1",
   "displayName": "Vydate L (oxamyl)",
   "activeIngredients": [

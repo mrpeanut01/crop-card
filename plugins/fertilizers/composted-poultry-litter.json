@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Composted Poultry Litter (3-3-2)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 3,
     "p": 3,

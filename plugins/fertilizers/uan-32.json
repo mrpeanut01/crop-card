@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "UAN 32% (urea-ammonium nitrate liquid)",
   "version": "1.0.0",
+  "defaultUnit": "gal",
   "analysis": {
     "n": 32,
     "p": 0,

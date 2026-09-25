@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Stadia (dry)",
   "version": "1.0.0",
+  "defaultUnit": "oz",
   "applicationTiming": "POST",
   "activeIngredients": [
     {

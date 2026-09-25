@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Mustang Maxx (FMC zeta-cypermethrin)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "activeIngredients": [
     {
       "name": "zeta-cypermethrin",

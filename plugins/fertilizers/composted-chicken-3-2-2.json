@@ -2,6 +2,7 @@
   "pluginId": "composted-chicken-3-2-2",
   "type": "fertilizer",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "analysis": {
     "n": 3,

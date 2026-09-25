@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "DAP — Diammonium Phosphate (18-46-0)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 18,
     "p": 46,

@@ -3,6 +3,8 @@
   "type": "fungicide",
   "displayName": "Headline SC (BASF pyraclostrobin)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
+  "formulation": "SC",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "pyraclostrobin", "fracCode": "11" }],
   "ratePerAcre": { "amount": 12, "unit": "fl-oz" },

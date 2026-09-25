@@ -3,6 +3,7 @@
   "type": "fertilizer",
   "displayName": "Urea (46-0-0)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "analysis": {
     "n": 46,
     "p": 0,

@@ -1,27 +1,39 @@
 #!/usr/bin/env node
 /**
- * Sprint 6 / #255 — chemical-plugin metadata coverage audit.
+ * #255 — input-plugin metadata coverage audit.
  *
- * Walks every plugin under /plugins/{herbicides,insecticides,fungicides,fertilizers}
- * and reports per-category coverage of the three fields Phase 27D's Edit
- * form will require: `defaultUnit`, `activeIngredients`, `formulation`.
+ * Validates every plugin under /plugins/{herbicides,insecticides,fungicides,
+ * fertilizers} against the Zod schema, then reports per-category coverage of
+ * `defaultUnit`, `activeIngredients`, `formulation` (fertilizers satisfy the
+ * latter two via the required `analysis` + `form`). Gaps must be listed in
+ * scripts/plugin-metadata-allowlist.json with a reason; the same check runs
+ * in `pnpm test:unit` (src/lib/plugins/inputMetadata.coverage.test.ts).
  *
- * Read-only by design — emits a CSV at /tmp/cropcard-plugin-metadata-audit.csv
- * + a per-category summary on stdout. The remediation is plugin-author
- * work (re-issue the AI ingest with stronger prompts) and lands in a
- * follow-up sprint; this script is the audit gate that closes #255.
+ * Also reports (informational, not gated) the #255 follow-up fields:
+ * `complianceFlags` and insecticide `scoutingThresholds`.
  *
  * Usage:
- *   pnpm audit:plugin-metadata
+ *   pnpm audit:plugin-metadata            # table + CSV
+ *   pnpm audit:plugin-metadata --check    # exit 1 on unallowlisted/stale
  */
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { pluginSchema } from '../src/lib/plugins/schemas.ts';
+import {
+  checkCoverage,
+  metadataGaps,
+  resolvePluginDefaultUnit,
+  METADATA_FIELDS
+} from '../src/lib/plugins/inputMetadata.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = resolve(__dirname, '../../..');
-const AUDIT_CSV = '/tmp/cropcard-plugin-metadata-audit.csv';
+const PLUGINS_DIR = resolve(__dirname, '../../../plugins');
+const ALLOWLIST_PATH = resolve(__dirname, 'plugin-metadata-allowlist.json');
+const AUDIT_CSV = resolve(tmpdir(), 'cropcard-plugin-metadata-audit.csv');
+const CHECK = process.argv.includes('--check');
 
 const CATEGORIES = [
   { dir: 'herbicides', kind: 'herbicide' },
@@ -30,73 +42,105 @@ const CATEGORIES = [
   { dir: 'fertilizers', kind: 'fertilizer' }
 ];
 
-const FIELDS = ['defaultUnit', 'activeIngredients', 'formulation'];
-
-function loadPlugins(dir) {
-  const fullDir = resolve(REPO_ROOT, 'plugins', dir);
-  try {
-    return readdirSync(fullDir)
-      .filter((f) => f.endsWith('.json'))
-      .map((file) => ({
-        file,
-        plugin: JSON.parse(readFileSync(resolve(fullDir, file), 'utf8'))
-      }));
-  } catch {
-    return [];
-  }
-}
-
-function fieldPresent(plugin, field) {
-  const v = plugin[field];
-  if (v === undefined || v === null) return false;
-  if (Array.isArray(v) && v.length === 0) return false;
-  if (typeof v === 'string' && v.trim() === '') return false;
-  return true;
-}
-
-function main() {
-  const auditRows = [['kind', 'pluginId', 'file', ...FIELDS]];
-  const summary = new Map();
-
-  for (const { dir, kind } of CATEGORIES) {
-    const plugins = loadPlugins(dir);
-    const counts = { total: plugins.length, present: {} };
-    for (const field of FIELDS) counts.present[field] = 0;
-
-    for (const { file, plugin } of plugins) {
-      const row = [kind, plugin.pluginId ?? file.replace(/\.json$/, ''), file];
-      for (const field of FIELDS) {
-        const present = fieldPresent(plugin, field);
-        if (present) counts.present[field]++;
-        row.push(present ? 'present' : 'MISSING');
-      }
-      auditRows.push(row);
-    }
-    summary.set(kind, counts);
-  }
-
-  writeFileSync(
-    AUDIT_CSV,
-    auditRows
-      .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
-      .join('\n') + '\n',
-    'utf8'
-  );
-
-  console.log('\n─── #255 plugin metadata coverage audit ───\n');
-  console.log('kind         | total | defaultUnit | activeIngredients | formulation');
-  console.log('-------------|-------|-------------|-------------------|------------');
-  let totalRowsCount = 0;
-  for (const [kind, c] of summary) {
-    const pct = (n) => (c.total === 0 ? '  -' : ((n / c.total) * 100).toFixed(0).padStart(3) + '%');
-    const cell = (n) => `${pct(n)} (${n}/${c.total})`.padEnd(11);
-    console.log(
-      `${kind.padEnd(12)} | ${String(c.total).padStart(5)} | ${cell(c.present.defaultUnit)} | ${cell(c.present.activeIngredients).padEnd(17)} | ${cell(c.present.formulation)}`
+const invalid = [];
+const plugins = [];
+for (const { dir } of CATEGORIES) {
+  for (const file of readdirSync(resolve(PLUGINS_DIR, dir)).filter((f) => f.endsWith('.json'))) {
+    const parsed = pluginSchema.safeParse(
+      JSON.parse(readFileSync(resolve(PLUGINS_DIR, dir, file), 'utf8'))
     );
-    totalRowsCount += c.total;
+    if (parsed.success) plugins.push({ file, plugin: parsed.data });
+    else invalid.push(`${dir}/${file}: ${parsed.error.issues[0]?.message}`);
   }
-  console.log(`\nTotal chemical plugins audited: ${totalRowsCount}`);
-  console.log(`Audit CSV: ${AUDIT_CSV}`);
 }
 
-main();
+const allowlist = JSON.parse(readFileSync(ALLOWLIST_PATH, 'utf8')).entries;
+const allowedReason = new Map(allowlist.map((e) => [`${e.pluginId}::${e.field}`, e.reason]));
+const report = checkCoverage(
+  plugins.map((p) => p.plugin),
+  allowlist
+);
+
+const rows = [
+  [
+    'kind',
+    'pluginId',
+    'file',
+    ...METADATA_FIELDS,
+    'resolvedDefaultUnit',
+    'unitBasis',
+    'complianceFlags',
+    'allowlistReasons'
+  ]
+];
+const summary = new Map(
+  CATEGORIES.map(({ kind }) => [
+    kind,
+    {
+      total: 0,
+      defaultUnit: 0,
+      activeIngredients: 0,
+      formulation: 0,
+      complianceFlags: 0,
+      scouting: 0
+    }
+  ])
+);
+for (const { file, plugin } of plugins) {
+  const s = summary.get(plugin.type);
+  const gaps = metadataGaps(plugin);
+  s.total++;
+  for (const f of METADATA_FIELDS) if (!gaps.includes(f)) s[f]++;
+  if (plugin.complianceFlags) s.complianceFlags++;
+  if (plugin.type === 'insecticide' && plugin.scoutingThresholds?.length) s.scouting++;
+  const resolved = resolvePluginDefaultUnit(plugin);
+  rows.push([
+    plugin.type,
+    plugin.pluginId,
+    file,
+    ...METADATA_FIELDS.map((f) => (gaps.includes(f) ? 'MISSING' : 'present')),
+    resolved.unit,
+    resolved.basis,
+    plugin.complianceFlags ? 'present' : 'MISSING',
+    gaps
+      .map((f) => allowedReason.get(`${plugin.pluginId}::${f}`))
+      .filter(Boolean)
+      .join(' | ')
+  ]);
+}
+
+writeFileSync(
+  AUDIT_CSV,
+  rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n') + '\n',
+  'utf8'
+);
+
+const pct = (n, t) => (t === 0 ? '  -' : `${((n / t) * 100).toFixed(0).padStart(3)}%`);
+const cell = (n, t, w) => `${pct(n, t)} (${n}/${t})`.padEnd(w);
+console.log('\n─── #255 input-plugin metadata coverage ───\n');
+console.log(
+  'kind         | total | defaultUnit     | activeIngredients | formulation     | complianceFlags'
+);
+console.log(
+  '-------------|-------|-----------------|-------------------|-----------------|----------------'
+);
+for (const [kind, s] of summary) {
+  console.log(
+    `${kind.padEnd(12)} | ${String(s.total).padStart(5)} | ${cell(s.defaultUnit, s.total, 15)} | ${cell(s.activeIngredients, s.total, 17)} | ${cell(s.formulation, s.total, 15)} | ${cell(s.complianceFlags, s.total, 15)}`
+  );
+}
+const ins = summary.get('insecticide');
+console.log(`\ninsecticide scoutingThresholds (informational): ${ins.scouting}/${ins.total}`);
+console.log('fertilizer activeIngredients/formulation are satisfied by `analysis` / `form`.');
+console.log(
+  `\nGaps: ${report.gaps.length} total · ${report.gaps.length - report.unallowlisted.length} allowlisted · ${report.unallowlisted.length} NOT allowlisted · ${report.stale.length} stale allowlist entries`
+);
+console.log(`Audit CSV: ${AUDIT_CSV}`);
+
+for (const i of invalid) console.error(`INVALID  ${i}`);
+for (const g of report.unallowlisted) console.error(`GAP      ${g.pluginId} · ${g.field}`);
+for (const e of report.stale)
+  console.error(`STALE    ${e.pluginId} · ${e.field} (no longer a gap)`);
+
+if (CHECK && (invalid.length || report.unallowlisted.length || report.stale.length))
+  process.exit(1);

@@ -2,6 +2,8 @@
   "pluginId": "sulfur-90w",
   "type": "insecticide",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "WP",
   "pluginSchemaVersion": "1.1",
   "displayName": "Wettable Sulfur 90W (OMRI)",
   "activeIngredients": [

@@ -3,6 +3,8 @@
   "type": "fungicide",
   "displayName": "Captan 80 WDG (Arysta phthalimide)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "WDG",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "captan", "fracCode": "M04" }],
   "ratePerAcre": { "amount": 5, "unit": "lb" },

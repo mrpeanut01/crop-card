@@ -2,6 +2,7 @@
   "pluginId": "milstop-potassium-bicarbonate",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "displayName": "MilStop (potassium bicarbonate, OMRI)",
   "applicationTiming": "COVER",

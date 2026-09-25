@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Javelin WG (Certis Bt kurstaki)",
   "version": "1.0.0",
+  "defaultUnit": "lb",
+  "formulation": "WG",
   "activeIngredients": [
     {
       "name": "Bacillus thuringiensis kurstaki",

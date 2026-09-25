@@ -2,6 +2,7 @@
   "pluginId": "verdict-saflufenacil-dimethenamid",
   "type": "herbicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Verdict (saflufenacil + dimethenamid-P)",
   "activeIngredients": [

@@ -2,6 +2,7 @@
   "pluginId": "orondis-opti",
   "type": "fungicide",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Orondis Opti (oxathiapiprolin + chlorothalonil)",
   "applicationTiming": "COVER",

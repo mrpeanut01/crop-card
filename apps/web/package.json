@@ -25,7 +25,7 @@
     "audit:plugins": "node scripts/auditPluginDiscriminators.mjs",
     "enhance:plugins": "node scripts/enhancePluginDiscriminators.mjs",
     "backfill:archetype": "node scripts/backfill-archetype.mjs",
-    "audit:plugin-metadata": "node scripts/plugin-metadata-audit.mjs"
+    "audit:plugin-metadata": "tsx scripts/plugin-metadata-audit.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",

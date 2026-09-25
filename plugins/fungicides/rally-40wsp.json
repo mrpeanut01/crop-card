@@ -3,6 +3,8 @@
   "type": "fungicide",
   "displayName": "Rally 40WSP (Corteva myclobutanil)",
   "version": "1.0.0",
+  "defaultUnit": "oz",
+  "formulation": "WSP",
   "applicationTiming": "PRE-BLOOM",
   "activeIngredients": [{ "name": "myclobutanil", "fracCode": "3" }],
   "ratePerAcre": { "amount": 5, "unit": "oz" },

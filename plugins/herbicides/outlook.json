@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Outlook (BASF dimethenamid-P)",
   "version": "1.0.0",
+  "defaultUnit": "fl-oz",
   "applicationTiming": "PRE",
   "activeIngredients": [
     {

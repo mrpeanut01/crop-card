@@ -183,6 +183,33 @@ ORIGIN="$(az deployment group show -g "$GROUP" --name "$DEPLOYMENT_NAME" --query
 echo "deployed     : ${ORIGIN}"
 [ -n "${GITHUB_OUTPUT:-}" ] && echo "origin=${ORIGIN}" >> "$GITHUB_OUTPUT"
 
+# Load the app once the way a browser would, so the first real visitor doesn't
+# pay for SSR module loading and cold asset fetches. Best effort: a failure
+# here never fails the deploy.
+warm_up() {
+  local page assets fonts path n=0
+  page="$(curl -fsS -i --max-time 60 "${ORIGIN}/" 2>/dev/null || true)"
+  if [ -z "$page" ]; then
+    echo "warm-up      : landing page did not answer (skipped)"
+    return 0
+  fi
+  # The HTML and its Link preload header reference assets as ./_app/... or /...
+  assets="$(printf '%s' "$page" |
+    grep -oE '(href="|src="|import\("|<)\.?/[^/"#>][^"#>]*' |
+    sed -E 's/^(href="|src="|import\("|<)\.?//' | sort -u || true)"
+  for path in /manifest.webmanifest /registerSW.js /sw.js $assets; do
+    curl -fsS --max-time 30 -o /dev/null "${ORIGIN}${path}" 2>/dev/null && n=$((n + 1))
+  done
+  # Fonts are only named inside the stylesheets.
+  fonts="$(for path in $(printf '%s\n' $assets | grep '\.css$'); do
+      curl -fsS --max-time 30 "${ORIGIN}${path}" 2>/dev/null || true
+    done | grep -oE 'url\([^)]*fonts/[^)]+\)' | grep -oE '/fonts/[^)"'"'"']+' | sort -u || true)"
+  for path in $fonts; do
+    curl -fsS --max-time 30 -o /dev/null "${ORIGIN}${path}" 2>/dev/null && n=$((n + 1))
+  done
+  echo "warm-up      : loaded / and ${n} assets"
+}
+
 # The ARM deployment returns before the new revision takes traffic. Done means
 # the live app reports this build's SHA, not merely that something answers.
 LIVE=""
@@ -191,6 +218,7 @@ for i in $(seq 1 40); do
     sed -n 's/.*"version":"\([^"]*\)".*/\1/p' || true)"
   if [ "$LIVE" = "$SHA" ]; then
     echo "live         : ${SHA} at ${ORIGIN}"
+    warm_up
     exit 0
   fi
   echo "waiting for ${SHA::7} (serving: ${LIVE:-no answer}) [$i/40]"

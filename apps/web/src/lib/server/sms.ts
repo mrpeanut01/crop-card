@@ -91,7 +91,11 @@ async function dispatchPingramSms(sms: OutboundSms): Promise<void> {
       signal: AbortSignal.timeout(PINGRAM_SMS_TIMEOUT_MS)
     });
   } catch (e) {
-    throw new SmsTransportError('Pingram SMS dispatch failed: request error or timeout', undefined, e);
+    throw new SmsTransportError(
+      'Pingram SMS dispatch failed: request error or timeout',
+      undefined,
+      e
+    );
   }
   const detail = await res.text().catch(() => '');
   if (!res.ok) {

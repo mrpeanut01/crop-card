@@ -165,8 +165,12 @@ describe('SMS sign-in', () => {
   it('caps texts per IP across different numbers', async () => {
     const ip = { hash: `ip-${randomUUID()}`, max: 2 };
     const now = Date.now();
-    expect((await requestSmsLogin({ phone: uniqPhone(), ip, origin: ORIGIN, now })).outcome).toBe('sent');
-    expect((await requestSmsLogin({ phone: uniqPhone(), ip, origin: ORIGIN, now })).outcome).toBe('sent');
+    expect((await requestSmsLogin({ phone: uniqPhone(), ip, origin: ORIGIN, now })).outcome).toBe(
+      'sent'
+    );
+    expect((await requestSmsLogin({ phone: uniqPhone(), ip, origin: ORIGIN, now })).outcome).toBe(
+      'sent'
+    );
     expect((await requestSmsLogin({ phone: uniqPhone(), ip, origin: ORIGIN, now })).outcome).toBe(
       'rate-limited'
     );
@@ -311,9 +315,9 @@ describe('linking a second sign-in identity', () => {
     const phone = uniqPhone();
     await requestSmsLogin({ phone, ip: IP, origin: ORIGIN });
     const code = lastSmsCode(phone);
-    expect(
-      redeemLinkCode({ userId, identifier: { kind: 'phone', value: phone }, code }).ok
-    ).toBe(false);
+    expect(redeemLinkCode({ userId, identifier: { kind: 'phone', value: phone }, code }).ok).toBe(
+      false
+    );
   });
 
   it('never removes the last identity', () => {

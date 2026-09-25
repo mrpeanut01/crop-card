@@ -411,8 +411,7 @@ const CODE_ERROR_COPY: Record<CodeInvalidReason, string> = {
 };
 
 export type CodeLoginResult =
-  | { ok: true; identity: { email: string } | { phone: string } }
-  | { ok: false; error: string };
+  { ok: true; identity: { email: string } | { phone: string } } | { ok: false; error: string };
 
 /** Redeem a login code typed into the sign-in form. */
 export function redeemLoginCode(rawIdentifier: unknown, rawCode: unknown): CodeLoginResult {

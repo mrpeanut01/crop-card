@@ -99,10 +99,7 @@ export function issueCode(input: IssueInput): { id: string; code: string; expire
   return { id, code, expiresAt };
 }
 
-function countSince(
-  where: ReturnType<typeof and>,
-  now: number
-): number {
+function countSince(where: ReturnType<typeof and>, now: number): number {
   const row = db
     .select({ n: sql<number>`count(*)` })
     .from(loginCodes)
@@ -125,7 +122,9 @@ function purge(now: number): void {
 
 /** The web-OTP suffix lets iOS/Android offer the code as a one-tap autofill. */
 function smsLoginBody(code: string, origin: string | null): string {
-  const lines = [`${code} is your CropCard sign-in code. It expires in 10 minutes. Don't share it.`];
+  const lines = [
+    `${code} is your CropCard sign-in code. It expires in 10 minutes. Don't share it.`
+  ];
   if (origin) {
     try {
       lines.push('', `@${new URL(origin).host} #${code}`);
@@ -305,9 +304,7 @@ export async function requestLinkCode(opts: {
   return { ok: true, expiresAt };
 }
 
-export type LinkRedeemResult =
-  | { ok: true }
-  | { ok: false; error: CodeInvalidReason | 'in-use' };
+export type LinkRedeemResult = { ok: true } | { ok: false; error: CodeInvalidReason | 'in-use' };
 
 /** Verify a link code and attach the email/phone to the user. */
 export function redeemLinkCode(opts: {

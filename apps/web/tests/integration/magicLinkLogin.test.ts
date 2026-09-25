@@ -294,16 +294,17 @@ describe('one-field sign-in: email or phone, then a 6-digit code', () => {
       identifier: u.email,
       code: code === '000000' ? '111111' : '000000'
     });
-    expect(result).toMatchObject({ status: 400, data: { sent: true, codeError: expect.any(String) } });
+    expect(result).toMatchObject({
+      status: 400,
+      data: { sent: true, codeError: expect.any(String) }
+    });
     expect(readSession(event.cookies)).toBeNull();
   });
 
   it('a code threads the invite token through to /invite/<token>', async () => {
     const u = seedUser();
     const invite = 'x'.repeat(24);
-    await landingActions.magic!(
-      formEvent('/?/magic', { identifier: u.email, invite }) as never
-    );
+    await landingActions.magic!(formEvent('/?/magic', { identifier: u.email, invite }) as never);
     const { code } = readOutbox(u.email).at(-1)!.email as { code: string };
     const { location } = await runCode({ identifier: u.email, code, invite });
     expect(location).toBe(`/invite/${invite}`);

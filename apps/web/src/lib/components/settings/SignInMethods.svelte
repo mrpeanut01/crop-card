@@ -16,7 +16,12 @@
 
   const methods = $derived([
     { kind: 'email' as const, value: email, label: 'Email', shown: email },
-    { kind: 'phone' as const, value: phone, label: 'Mobile', shown: phone ? formatPhone(phone) : null }
+    {
+      kind: 'phone' as const,
+      value: phone,
+      label: 'Mobile',
+      shown: phone ? formatPhone(phone) : null
+    }
   ]);
   const linkedCount = $derived(methods.filter((m) => m.value).length);
 
@@ -141,7 +146,9 @@
         {:else}
           <label class="add-field">
             <span>
-              6-digit code sent to {m.kind === 'phone' ? formatPhone(pendingIdentifier) : pendingIdentifier}
+              6-digit code sent to {m.kind === 'phone'
+                ? formatPhone(pendingIdentifier)
+                : pendingIdentifier}
             </span>
             <input
               class="s-input mono code"
@@ -157,7 +164,8 @@
             <button type="button" class="primary-sm" disabled={busy} onclick={verify}>
               {busy ? 'Checking…' : 'Verify'}
             </button>
-            <button type="button" class="ghost-sm" disabled={busy} onclick={sendCode}>Resend</button>
+            <button type="button" class="ghost-sm" disabled={busy} onclick={sendCode}>Resend</button
+            >
             <button type="button" class="ghost-sm" onclick={cancel}>Cancel</button>
           </div>
         {/if}

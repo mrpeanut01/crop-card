@@ -156,8 +156,7 @@ export function loginByIdentity(
     insert = { id: newUserId(), phone };
   }
   const row =
-    existing ??
-    (db.insert(users).values(insert).returning().get() as typeof users.$inferSelect);
+    existing ?? (db.insert(users).values(insert).returning().get() as typeof users.$inferSelect);
   return startSession(event, row);
 }
 
@@ -184,7 +183,12 @@ export function startSession(
   const assignments = activeAssignmentsForUser(row.id);
 
   if (assignments.length === 0) {
-    writeSession(event.cookies, { ...identity, isSuperadmin, activeOwnerId: null, activeRole: 'owner' });
+    writeSession(event.cookies, {
+      ...identity,
+      isSuperadmin,
+      activeOwnerId: null,
+      activeRole: 'owner'
+    });
     return {
       user: { ...identity, role: 'owner', activeOwnerId: null, isSuperadmin, impersonating: false },
       next: isSuperadmin ? 'admin' : 'onboarding'

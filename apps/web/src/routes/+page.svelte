@@ -198,8 +198,8 @@
             {:else}
               <p><strong>Check your email.</strong></p>
               <p>
-                We sent a sign-in link to {sent.sentTo}. Tap it on this device, or enter the
-                6-digit code from the email below.
+                We sent a sign-in link to {sent.sentTo}. Tap it on this device, or enter the 6-digit
+                code from the email below.
               </p>
             {/if}
           </div>

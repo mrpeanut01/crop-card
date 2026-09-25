@@ -31,9 +31,7 @@ describe('Pingram transport', () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('https://api.pingram.io/email');
     expect(init?.signal).toBeInstanceOf(AbortSignal);
-    expect((init?.headers as Record<string, string>).Authorization).toBe(
-      'Bearer pingram_sk_test'
-    );
+    expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer pingram_sk_test');
     const body = JSON.parse(String(init?.body));
     expect(body).toMatchObject({
       type: 'magic-link',

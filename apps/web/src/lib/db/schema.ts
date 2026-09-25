@@ -242,10 +242,7 @@ export const loginCodes = sqliteTable(
     consumedAt: integer('consumed_at', { mode: 'timestamp_ms' })
   },
   (table) => ({
-    destinationIdx: index('login_codes_destination_idx').on(
-      table.destination,
-      table.createdAt
-    ),
+    destinationIdx: index('login_codes_destination_idx').on(table.destination, table.createdAt),
     ipIdx: index('login_codes_ip_idx').on(table.ipHash, table.createdAt),
     loginTokenIdx: index('login_codes_login_token_idx').on(table.loginTokenId)
   })

@@ -119,12 +119,7 @@ function verify(cookie: string): SessionPayload | null {
   } catch {
     return null;
   }
-  if (
-    !parsed ||
-    typeof parsed !== 'object' ||
-    !('userId' in parsed) ||
-    !('exp' in parsed)
-  ) {
+  if (!parsed || typeof parsed !== 'object' || !('userId' in parsed) || !('exp' in parsed)) {
     return null;
   }
   const p = parsed as Partial<SessionPayload>;

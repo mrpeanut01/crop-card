@@ -18,12 +18,17 @@ describe('parseIdentifier', () => {
     expect(parseIdentifier(input)).toEqual(expected);
   });
 
-  it.each(['', 'owner@', '555-0123', '071-555-0123', '+0123456789', 'call me', '12345678901234567'])(
-    'rejects %s',
-    (input) => {
-      expect(parseIdentifier(input)).toBeNull();
-    }
-  );
+  it.each([
+    '',
+    'owner@',
+    '555-0123',
+    '071-555-0123',
+    '+0123456789',
+    'call me',
+    '12345678901234567'
+  ])('rejects %s', (input) => {
+    expect(parseIdentifier(input)).toBeNull();
+  });
 
   it('rejects non-strings', () => {
     expect(parseIdentifier(42)).toBeNull();

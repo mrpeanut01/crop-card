@@ -2,6 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { parseIdentifier } from '$lib/identity';
 import { refreshSessionIdentity, requireInteractiveUser } from '$lib/server/auth';
 import { requestLinkCode, unlinkIdentity } from '$lib/server/loginCodes';
+import { magicLinkOrigin } from '$lib/server/magicLink';
 
 const LINK_ERROR_COPY = {
   'in-use': 'That is already the sign-in for a different CropCard account.',
@@ -18,7 +19,13 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: 'Enter an email address or a phone number.' }, { status: 400 });
   }
   try {
-    const r = await requestLinkCode({ userId: user.id, identifier: id });
+    let origin: string | null = null;
+    try {
+      origin = magicLinkOrigin(event.url.origin);
+    } catch {
+      // No ORIGIN in production: send the code without the autofill line.
+    }
+    const r = await requestLinkCode({ userId: user.id, identifier: id, origin });
     if (!r.ok) {
       return json(
         { error: LINK_ERROR_COPY[r.error] },

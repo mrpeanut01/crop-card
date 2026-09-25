@@ -122,7 +122,7 @@ describe('requestMagicLink — issue', () => {
     expect(rows[0].ipHash).toMatch(/^[0-9a-f]{64}$/);
 
     const mail = readOutbox(email)[0];
-    expect(mail.subject).toMatch(/sign-in link/i);
+    expect(mail.subject).toMatch(/sign-in code is \d{6}$/);
     expect(mail.body).toContain(`${ORIGIN}/auth/verify?token=`);
   });
 

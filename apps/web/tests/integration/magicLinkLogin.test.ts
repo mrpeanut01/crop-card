@@ -260,7 +260,7 @@ describe('one-field sign-in: email or phone, then a 6-digit code', () => {
   }
 
   function smsCode(phone: string): string {
-    return /^(\d{6}) /.exec(readSmsOutbox(phone).at(-1)!.body)![1];
+    return /code is (\d{6})\./.exec(readSmsOutbox(phone).at(-1)!.body)![1];
   }
 
   it('a new phone number signs up phone-only and lands on onboarding', async () => {

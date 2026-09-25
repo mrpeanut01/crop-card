@@ -43,7 +43,7 @@ function uniqIp(): string {
 
 function lastSmsCode(phone: string): string {
   const msgs = readSmsOutbox(phone);
-  const m = /^(\d{6}) /.exec(msgs[msgs.length - 1]?.body ?? '');
+  const m = /code is (\d{6})\./.exec(msgs[msgs.length - 1]?.body ?? '');
   if (!m) throw new Error(`no code texted to ${phone}`);
   return m[1];
 }
@@ -265,8 +265,10 @@ describe('linking a second sign-in identity', () => {
     const userId = makeUser({ email: uniqEmail() });
     const phone = uniqPhone();
     const identifier = { kind: 'phone' as const, value: phone };
-    expect(await requestLinkCode({ userId, identifier })).toMatchObject({ ok: true });
-    const code = /^(\d{6}) /.exec(readSmsOutbox(phone).at(-1)!.body)![1];
+    expect(await requestLinkCode({ userId, identifier, origin: ORIGIN })).toMatchObject({
+      ok: true
+    });
+    const code = /code is (\d{6})\./.exec(readSmsOutbox(phone).at(-1)!.body)![1];
     expect(redeemLinkCode({ userId, identifier, code })).toEqual({ ok: true });
     expect(db.select().from(users).where(eq(users.id, userId)).get()?.phone).toBe(phone);
   });
@@ -275,7 +277,7 @@ describe('linking a second sign-in identity', () => {
     const userId = makeUser({ phone: uniqPhone() });
     const email = uniqEmail();
     const identifier = { kind: 'email' as const, value: email };
-    await requestLinkCode({ userId, identifier });
+    await requestLinkCode({ userId, identifier, origin: ORIGIN });
     const mail = lastEmail(email);
     expect(mail?.kind).toBe('contact-code');
     const code = (mail as { code: string }).code;
@@ -288,8 +290,8 @@ describe('linking a second sign-in identity', () => {
     const mallory = makeUser({ email: uniqEmail() });
     const phone = uniqPhone();
     const identifier = { kind: 'phone' as const, value: phone };
-    await requestLinkCode({ userId: alice, identifier });
-    const code = /^(\d{6}) /.exec(readSmsOutbox(phone).at(-1)!.body)![1];
+    await requestLinkCode({ userId: alice, identifier, origin: ORIGIN });
+    const code = /code is (\d{6})\./.exec(readSmsOutbox(phone).at(-1)!.body)![1];
     expect(redeemLinkCode({ userId: mallory, identifier, code })).toEqual({
       ok: false,
       error: 'invalid'
@@ -301,11 +303,19 @@ describe('linking a second sign-in identity', () => {
     makeUser({ email: taken });
     const me = makeUser({ email: uniqEmail(), phone: uniqPhone() });
     expect(
-      await requestLinkCode({ userId: me, identifier: { kind: 'email', value: taken } })
+      await requestLinkCode({
+        userId: me,
+        identifier: { kind: 'email', value: taken },
+        origin: ORIGIN
+      })
     ).toEqual({ ok: false, error: 'in-use' });
     const mine = db.select().from(users).where(eq(users.id, me)).get()!;
     expect(
-      await requestLinkCode({ userId: me, identifier: { kind: 'phone', value: mine.phone! } })
+      await requestLinkCode({
+        userId: me,
+        identifier: { kind: 'phone', value: mine.phone! },
+        origin: ORIGIN
+      })
     ).toEqual({ ok: false, error: 'already-yours' });
     expect(readOutbox(taken)).toHaveLength(0);
   });

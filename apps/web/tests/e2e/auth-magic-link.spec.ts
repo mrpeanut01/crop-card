@@ -70,7 +70,11 @@ test.describe('AUTH_MODE=magic-link', () => {
     await page.getByRole('button', { name: /email me a sign-in link/i }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Check your email' })).toBeVisible();
 
-    const body = await latestMessage(page.request, 'owner@cropcard.local', /code instead: (\d{6})/);
+    const body = await latestMessage(
+      page.request,
+      'owner@cropcard.local',
+      /sign-in code is (\d{6})\./
+    );
     await page.getByLabel('6-digit code').fill(body[1]);
     await page.getByRole('button', { name: /sign in/i }).click();
     await expect(page).toHaveURL(/\/today$/);
@@ -84,7 +88,7 @@ test.describe('AUTH_MODE=magic-link', () => {
     await page.getByRole('button', { name: /text me a code/i }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Check your texts' })).toBeVisible();
 
-    const body = await latestMessage(page.request, e164, /^(\d{6}) is your CropCard sign-in code/);
+    const body = await latestMessage(page.request, e164, /sign-in code is (\d{6})\./);
     await page.getByLabel('6-digit code').fill(body[1]);
     await page.getByRole('button', { name: /sign in/i }).click();
     await expect(page).toHaveURL(/\/onboarding$/);
@@ -95,7 +99,7 @@ test.describe('AUTH_MODE=magic-link', () => {
     await page.goto('/');
     await page.getByLabel('Email or mobile number').fill(local);
     await page.getByRole('button', { name: /text me a code/i }).click();
-    const body = await latestMessage(page.request, `+1${local}`, /^(\d{6}) /);
+    const body = await latestMessage(page.request, `+1${local}`, /code is (\d{6})\./);
     await page.getByLabel('6-digit code').fill(body[1] === '000000' ? '111111' : '000000');
     await page.getByRole('button', { name: /sign in/i }).click();
     await expect(page.getByRole('alert')).toContainText("didn't match");

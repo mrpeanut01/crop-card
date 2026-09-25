@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * UC-17 magic-link sign-in: redemption through /auth/verify routes every
  * LoginResult arm exactly like the direct sign-in, mints the existing HMAC

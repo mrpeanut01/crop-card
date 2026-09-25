@@ -12,6 +12,7 @@
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   import PollinatorGatePanel from '$lib/components/spray/PollinatorGatePanel.svelte';
   import { checkPollinatorProtection, type BloomStatus } from '$lib/safety/pollinatorProtection';
+  import { checkNearbyPollinatorBlocks } from '$lib/pollinator/nearbyBlocks';
   import { sunTimesFor } from '$lib/safety/sunTimes';
 
   let { data } = $props();
@@ -135,6 +136,12 @@
     })
   );
   const pollinatorBlocked = $derived(pollinatorResult.overall === 'block');
+  const nearbyPollinator = $derived(
+    checkNearbyPollinatorBlocks({
+      beeToxicity: pollinatorResult.effective.beeToxicity,
+      neighbors: data.blocks.find((b) => b.id === selectedBlockId)?.pollinatorNeighbors ?? []
+    })
+  );
   const fmtClock = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
   const canSubmit = $derived(
@@ -507,6 +514,7 @@
   {#snippet pollinatorGate()}
     <PollinatorGatePanel
       result={pollinatorResult}
+      nearby={nearbyPollinator}
       bind:bloomStatus
       bind:attestedNoForagers
       bloomingCrops={selectedBlock?.bloomingCropPluginIds ?? []}

@@ -91,4 +91,27 @@ describe('/spray/insecticide pollinator gate (#130)', () => {
     expect(screen.getByTestId('pollinator-check-bloom').dataset.status).toBe('block');
     expect(recordButton()).toBeDisabled();
   });
+
+  it('shows nearby pollinator-attractive blocks as an advisory tile that never disables Record', async () => {
+    const d = data(
+      { beeToxicity: 'highly-toxic', bloomRestriction: 'prohibited-during-bloom' },
+      []
+    );
+    (d.blocks[0] as Record<string, unknown>).pollinatorNeighbors = [
+      {
+        blockId: 'b2',
+        name: 'Squash patch',
+        distanceFt: 1500,
+        crops: [
+          { cropPluginId: 'squash', displayName: 'Squash', inBloomNow: true, beeAttractive: true }
+        ]
+      }
+    ];
+    render(Page, { props: { data: d } as never });
+    await fireEvent.click(screen.getByLabelText(/no bloom/i));
+    const tile = screen.getByTestId('pollinator-check-nearby-blocks');
+    expect(tile.dataset.status).toBe('warn');
+    expect(screen.getByTestId('nearby-block-b2').textContent).toMatch(/Squash patch/);
+    expect(recordButton()).not.toBeDisabled();
+  });
 });

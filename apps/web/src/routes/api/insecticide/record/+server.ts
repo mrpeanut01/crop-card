@@ -16,7 +16,7 @@ import {
   type ScoutObservation as InsectScoutObs
 } from '$lib/db/insecticideEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
-import { geometryCentroid, getBlock } from '$lib/db/blocks';
+import { geometryCentroid, getBlock, listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import {
   decrementForUse,
@@ -43,6 +43,9 @@ import {
   type BloomStatus
 } from '$lib/safety/pollinatorProtection';
 import { sunTimesFor } from '$lib/safety/sunTimes';
+import type { AttestedBloomSource } from '$lib/records/pollinatorAttestation';
+import { checkNearbyPollinatorBlocks } from '$lib/pollinator/nearbyBlocks';
+import { pollinatorNeighbors } from '$lib/server/pollinatorNeighbors';
 import { getFarmLatLon } from '$lib/schedule/settings';
 import { checkCrossContaminationForClasses } from '$lib/safety/crossContamination';
 import { runEvaluator } from '$lib/safety/dryRunRunner';
@@ -283,6 +286,11 @@ export const POST: RequestHandler = async (event) => {
   const pluginSaysInBloom = cropsInBlock.some((c) => isInBloom(c, occurredAt));
   const bloomStatus: BloomStatus =
     parsed.data.bloomStatus ?? (pluginSaysInBloom ? 'in-bloom' : 'unknown');
+  const bloomStatusSource: AttestedBloomSource = parsed.data.bloomStatus
+    ? 'operator'
+    : pluginSaysInBloom
+      ? 'plugin'
+      : 'default';
   const centroid = block?.geometryGeojson ? geometryCentroid(block.geometryGeojson) : null;
   const { lat, lon } = centroid ?? getFarmLatLon();
   const pollinator = checkPollinatorProtection({
@@ -312,6 +320,21 @@ export const POST: RequestHandler = async (event) => {
       { status: 422 }
     );
   }
+
+  // Advisory only (never blocks): bee-toxic product with bloom or
+  // bee-attractive plantings on other blocks within foraging range.
+  const nearbyPollinator = checkNearbyPollinatorBlocks({
+    beeToxicity: pollinator.effective.beeToxicity,
+    neighbors: pollinatorNeighbors(
+      parsed.data.blockId,
+      listBlocks(),
+      (id) => {
+        const rec = registry.get(id);
+        return rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
+      },
+      occurredAt
+    )
+  });
 
   const gateViolations = [...ipmViolations];
   if (gateViolations.length > 0) {
@@ -449,7 +472,11 @@ export const POST: RequestHandler = async (event) => {
     reEntryClearAt,
     preHarvestClearAt,
     rulesVersion: RULES_VERSION,
-    pluginHashes
+    pluginHashes,
+    bloomStatus,
+    bloomStatusSource,
+    attestedNoForagers: parsed.data.attestedNoForagers,
+    pollinatorVerdict: pollinator.overall
   });
 
   // #321 — update sprayer chemistry history so the next different-chemistry
@@ -526,6 +553,9 @@ export const POST: RequestHandler = async (event) => {
     ruleVersion: RULES_VERSION,
     stockDecrements: stockResults,
     stockWarnings,
-    pollinatorWarnings: pollinator.checks.filter((c) => c.status === 'warn')
+    pollinatorWarnings: [
+      ...pollinator.checks.filter((c) => c.status === 'warn'),
+      ...(nearbyPollinator.status === 'warn' ? [nearbyPollinator] : [])
+    ]
   });
 };

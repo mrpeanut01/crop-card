@@ -31,12 +31,19 @@
  *     `record_kind` column discriminates `application` from `harvest` so
  *     the one CSV carries both application + harvest-moisture records.
  *
+ * #130 — four pollinator-gate columns appended after `record_kind`:
+ *   `bloom_status` (in-bloom | not-in-bloom | unknown), `bloom_status_source`
+ *   (operator | plugin | default), `attested_no_foragers` (yes | no), and
+ *   `pollinator_verdict` (pass | warn | block). Populated on insecticide
+ *   rows only; blank on other kinds and on pre-#130 insecticide rows.
+ *
  * Columns:
  *   date_iso, block_label, applicator, product_name, epa_reg_no,
  *   active_ingredients, rate_per_acre, rate_unit, area_acres,
  *   target_pest, weather_wind_mph, weather_temp_f, warning,
  *   crop_commodity, applicator_cert_no, total_amount_applied, moisture_pct,
- *   record_kind
+ *   record_kind, bloom_status, bloom_status_source, attested_no_foragers,
+ *   pollinator_verdict
  */
 
 import { type RequestHandler } from '@sveltejs/kit';
@@ -51,6 +58,11 @@ import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { getRegistry } from '$lib/server/registry';
 import { requireUser } from '$lib/server/auth';
 import { parseExportDateRange } from '$lib/exports/dateRange';
+import {
+  EMPTY_POLLINATOR_CELLS,
+  pollinatorAttestationCells,
+  type PollinatorAttestationCells
+} from '$lib/records/pollinatorAttestation';
 import { APP_VERSION } from '$lib/version';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
@@ -145,7 +157,7 @@ export const GET: RequestHandler = async (event) => {
     total_amount_applied: string;
     moisture_pct: string;
     record_kind: string;
-  };
+  } & PollinatorAttestationCells;
   const rows: Row[] = [];
 
   // Data-gap (#326): no applicator pesticide-certification number is
@@ -190,7 +202,8 @@ export const GET: RequestHandler = async (event) => {
         applicator_cert_no: APPLICATOR_CERT_NO,
         total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
         moisture_pct: '',
-        record_kind: 'application'
+        record_kind: 'application',
+        ...EMPTY_POLLINATOR_CELLS
       });
     }
   }
@@ -228,7 +241,8 @@ export const GET: RequestHandler = async (event) => {
         applicator_cert_no: APPLICATOR_CERT_NO,
         total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
         moisture_pct: '',
-        record_kind: 'application'
+        record_kind: 'application',
+        ...pollinatorAttestationCells(e)
       });
     }
   }
@@ -262,7 +276,8 @@ export const GET: RequestHandler = async (event) => {
         applicator_cert_no: APPLICATOR_CERT_NO,
         total_amount_applied: totalAmountApplied(p.rate?.amount, acres),
         moisture_pct: '',
-        record_kind: 'application'
+        record_kind: 'application',
+        ...EMPTY_POLLINATOR_CELLS
       });
     }
   }
@@ -292,7 +307,8 @@ export const GET: RequestHandler = async (event) => {
       applicator_cert_no: '',
       total_amount_applied: e.quantity ?? '',
       moisture_pct: e.moisturePct !== undefined ? String(e.moisturePct) : '',
-      record_kind: 'harvest'
+      record_kind: 'harvest',
+      ...EMPTY_POLLINATOR_CELLS
     });
   }
 

@@ -25,6 +25,7 @@ import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { withTenant } from './tenant';
 import { listSprayEvents, evaluateLock as evaluateSprayLock } from './sprayEvents';
 import { listInsecticideEvents } from './insecticideEvents';
+import { pollinatorAttestationSummary } from '$lib/records/pollinatorAttestation';
 import { listFungicideEvents } from './fungicideEvents';
 import { listScoutObservations } from './scoutObservations';
 import { listHarvestEvents } from './harvestEvents';
@@ -278,9 +279,14 @@ export function listUnifiedRecords(filters: UnifiedFilters = {}): UnifiedRecord[
         blockId: e.blockId,
         blockLabel: blockLabelById.get(e.blockId),
         performedById: e.performedById,
-        detail: e.scoutObservation
-          ? `${products} · ${e.scoutObservation.pest} ${e.scoutObservation.metric}=${e.scoutObservation.value}`
-          : products || 'insecticide event',
+        detail: [
+          e.scoutObservation
+            ? `${products} · ${e.scoutObservation.pest} ${e.scoutObservation.metric}=${e.scoutObservation.value}`
+            : products || 'insecticide event',
+          pollinatorAttestationSummary(e)
+        ]
+          .filter(Boolean)
+          .join(' · '),
         hash: shortHash({ k: 'insecticide', id: e.id, o: e.occurredAt, p: e.products }),
         locked: isLocked(e.occurredAt, e.lockedAt, now),
         lockedAt: e.lockedAt

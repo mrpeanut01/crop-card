@@ -1,6 +1,7 @@
 <script lang="ts">
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { BloomStatus, PollinatorProtectionResult } from '$lib/safety/pollinatorProtection';
+  import { formatDistance, type NearbyPollinatorAdvisory } from '$lib/pollinator/nearbyBlocks';
 
   interface Props {
     result: PollinatorProtectionResult;
@@ -12,6 +13,8 @@
     hasPluginData: boolean;
     sunsetLabel: string | null;
     sunriseLabel: string | null;
+    /** Advisory only — other blocks in foraging range; never blocks. */
+    nearby?: NearbyPollinatorAdvisory;
   }
 
   let {
@@ -21,7 +24,8 @@
     bloomingCrops,
     hasPluginData,
     sunsetLabel,
-    sunriseLabel
+    sunriseLabel,
+    nearby
   }: Props = $props();
 
   const needsForagerAttestation = $derived(
@@ -101,6 +105,37 @@
       </div>
     </li>
   {/each}
+  {#if nearby}
+    <li
+      class="tile tile-{nearby.status} tile-wide"
+      data-testid="pollinator-check-nearby-blocks"
+      data-status={nearby.status}
+    >
+      <span class="icon" aria-hidden="true">{nearby.status === 'pass' ? '✓' : '!'}</span>
+      <div class="nearby-body">
+        <div class="tile-label">
+          {nearby.label} · within {formatDistance(nearby.radiusFt)}
+          <span class="sr-only">— {nearby.status}</span>
+          <Provenance source="plugin" detail="crop bloom window" compact />
+          <Provenance source="data" detail="block geometry" compact />
+        </div>
+        <div class="tile-reason">{nearby.reason}</div>
+        {#if nearby.blocks.length > 0 || nearby.unknownDistance.length > 0}
+          <ul class="nearby-list">
+            {#each [...nearby.blocks, ...nearby.unknownDistance] as b (b.blockId)}
+              <li class="nearby-row" data-testid="nearby-block-{b.blockId}">
+                <span class="nearby-name">{b.name}</span>
+                <span class="mono nearby-dist">{formatDistance(b.distanceFt)}</span>
+                <span class="nearby-why">
+                  {b.reason === 'in-bloom' ? 'in bloom' : 'bee-attractive'} · {b.crops.join(', ')}
+                </span>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
+    </li>
+  {/if}
 </ul>
 
 <style>
@@ -238,6 +273,37 @@
     color: var(--color-ink-soft);
     margin-top: 2px;
     line-height: 1.4;
+  }
+  .tile-wide {
+    grid-column: 1 / -1;
+  }
+  .nearby-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .nearby-list {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+  }
+  .nearby-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    min-height: 48px;
+    border-top: 1px solid var(--color-divider);
+    font-size: 0.85rem;
+    color: var(--color-ink);
+  }
+  .nearby-name {
+    font-weight: 600;
+  }
+  .nearby-dist {
+    color: var(--color-ink);
+  }
+  .nearby-why {
+    color: var(--color-ink-soft);
   }
   .sr-only {
     position: absolute;

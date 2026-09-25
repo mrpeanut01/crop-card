@@ -212,4 +212,48 @@ describe('export endpoints cross-tenant isolation', () => {
     expect(aSummary.ownerId).toBe(ownerA);
     expect(bSummary.ownerId).toBe(ownerB);
   });
+
+  it('#130 bloom attestation round-trips and stays inside its Owner', () => {
+    const ownerA = `bloom-owner-${randomUUID().slice(0, 8)}`;
+    const ownerB = `bloom-owner-${randomUUID().slice(0, 8)}`;
+    const user = `user_${randomUUID().slice(0, 8)}`;
+    ensureUser(user);
+    const a = seedOwnerWithSpray(ownerA, user);
+    seedOwnerWithSpray(ownerB, user);
+
+    const attested = runWithTenant(ownerA, () =>
+      insertInsecticideEvent({
+        blockId: a.blockId,
+        performedById: user,
+        occurredAt: Date.now() - 10_000,
+        products: [{ pluginId: 'pest:test', displayName: 'TestPest', iracGroups: ['3A'] }],
+        conditions: { tempF: 70, windMph: 5, rainForecastMmNext24h: 0 },
+        rulesVersion: 'test',
+        pluginHashes: {},
+        bloomStatus: 'in-bloom',
+        bloomStatusSource: 'plugin',
+        attestedNoForagers: true,
+        pollinatorVerdict: 'warn'
+      })
+    );
+
+    runWithTenant(ownerA, () => {
+      const rows = listInsecticideEvents();
+      const row = rows.find((e) => e.id === attested.id);
+      expect(row).toMatchObject({
+        bloomStatus: 'in-bloom',
+        bloomStatusSource: 'plugin',
+        attestedNoForagers: true,
+        pollinatorVerdict: 'warn'
+      });
+      const legacy = rows.find((e) => e.id === a.insecticideId);
+      expect(legacy?.bloomStatus).toBeUndefined();
+      expect(legacy?.bloomStatusSource).toBeUndefined();
+      expect(legacy?.attestedNoForagers).toBeUndefined();
+      expect(legacy?.pollinatorVerdict).toBeUndefined();
+    });
+    runWithTenant(ownerB, () => {
+      expect(listInsecticideEvents().some((e) => e.id === attested.id)).toBe(false);
+    });
+  });
 });

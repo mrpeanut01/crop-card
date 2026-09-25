@@ -176,7 +176,13 @@ export const GET: RequestHandler = async (event) => {
     })),
     events: {
       spray: listSprayEvents({ limit: 10_000 }),
-      insecticide: listInsecticideEvents({ limit: 10_000 }),
+      insecticide: listInsecticideEvents({ limit: 10_000 }).map((e) => ({
+        ...e,
+        bloomStatus: e.bloomStatus ?? null,
+        bloomStatusSource: e.bloomStatusSource ?? null,
+        attestedNoForagers: e.attestedNoForagers ?? null,
+        pollinatorVerdict: e.pollinatorVerdict ?? null
+      })),
       fungicide: listFungicideEvents({ limit: 10_000 }),
       scout: listScoutObservations({ limit: 10_000 }),
       harvest: listHarvestEvents(),

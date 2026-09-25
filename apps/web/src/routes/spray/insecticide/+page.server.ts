@@ -8,6 +8,7 @@ import { getUserAiEnabled } from '$lib/server/aiTry';
 import { getFarmLatLon } from '$lib/schedule/settings';
 import { isInBloom } from '$lib/safety/pollinatorBloom';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { pollinatorNeighbors } from '$lib/server/pollinatorNeighbors';
 
 /**
  * Phase 25d (#95) — IPM-gate scout data. Primary path reads from the
@@ -69,9 +70,15 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const farm = getFarmLatLon();
   const now = Date.now();
 
+  const allBlocks = listBlocks();
+  const cropPlugin = (id: string): CropPlugin | null => {
+    const rec = registry.get(id);
+    return rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin) : null;
+  };
+
   return {
     insecticides: insecticidePlugins,
-    blocks: listBlocks().map((b) => {
+    blocks: allBlocks.map((b) => {
       const location = (b.geometryGeojson && geometryCentroid(b.geometryGeojson)) || farm;
       const blooming = b.plantings.filter((p) => {
         if (p.plantingDate == null) return false;
@@ -89,7 +96,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         cropPluginIds: b.plantings.map((p) => p.cropPluginId),
         lat: location.lat,
         lon: location.lon,
-        bloomingCropPluginIds: Array.from(new Set(blooming.map((p) => p.cropPluginId)))
+        bloomingCropPluginIds: Array.from(new Set(blooming.map((p) => p.cropPluginId))),
+        pollinatorNeighbors: pollinatorNeighbors(b.id, allBlocks, cropPlugin, now)
       };
     }),
     recentEvents: listInsecticideEvents({ limit: 20 }),

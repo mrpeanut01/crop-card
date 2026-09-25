@@ -22,6 +22,8 @@ for (const vp of VIEWPORTS) {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto('/plan');
     await page.waitForLoadState('networkidle');
+    // An empty planning season opens the wizard; the baseline is the shell.
+    if (await page.locator('.aw-modal').isVisible()) await page.keyboard.press('Escape');
     await expect(page.getByPlaceholder('Filter blocks…')).toBeVisible();
 
     await settleForScreenshot(page);

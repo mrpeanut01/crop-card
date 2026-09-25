@@ -17,6 +17,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import PlanningYearPicker from '$lib/components/PlanningYearPicker.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -56,7 +57,7 @@
     },
     {
       id: 'season',
-      label: 'Pick this season’s philosophy',
+      label: 'Pick the season’s philosophy',
       detail: 'Six quick questions — drives what the planner suggests.',
       href: '/settings/season',
       icon: Leaf
@@ -158,6 +159,7 @@
             placeholder="e.g., Loudoun County, VA &mdash; paste lat/lng if you have it"
           />
         </label>
+        <PlanningYearPicker view={data.planningYear} name="planningYear" />
         <button class="submit" type="submit">Create farm <ArrowRight size={14} /></button>
       </form>
     </Card>
@@ -225,7 +227,12 @@
     <div class="grid">
       <!-- Step cards -->
       <section>
-        <h2 class="serif sub">Your setup</h2>
+        <div class="year-card">
+          <Card>
+            <PlanningYearPicker view={data.planningYear} />
+          </Card>
+        </div>
+        <h2 class="serif sub">Your {data.planningYear.activeYear} setup</h2>
         <div class="steps">
           {#each STEPS as s, i (s.id)}
             {@const done = data.progress![s.id]}
@@ -238,7 +245,11 @@
                 <s.icon size={17} strokeWidth={1.75} />
               </div>
               <div class="step-body">
-                <div class="serif step-label">{s.label}</div>
+                <div class="serif step-label">
+                  {s.id === 'season'
+                    ? `Pick the ${data.planningYear.activeYear} season’s philosophy`
+                    : s.label}
+                </div>
                 <div class="step-detail">{s.detail}</div>
               </div>
               {#if isCurrent}
@@ -370,6 +381,9 @@
     line-height: 1.55;
     margin: 0;
     max-width: 540px;
+  }
+  .year-card {
+    margin-bottom: 20px;
   }
   .sub {
     margin: 0 0 14px;

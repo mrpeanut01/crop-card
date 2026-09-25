@@ -11,6 +11,7 @@ import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { FallbackReason } from '$lib/server/aiTry';
 import type { PlanInput } from '$lib/layout/engine';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 const bodySchema = z.object({
   seedSelections: z
@@ -140,7 +141,7 @@ export const POST: RequestHandler = async (event) => {
     companions
   };
 
-  const year = parsed.data.year ?? new Date().getFullYear();
+  const year = parsed.data.year ?? getActivePlanningYear();
   const built = await buildFarmContextWithCache(year);
   const refineInput = {
     previousAssignments: parsed.data.previousPlan.assignments,

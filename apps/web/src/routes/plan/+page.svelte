@@ -42,8 +42,7 @@
     WEED_LABELS,
     PEST_LABELS,
     FERTILITY_LABELS,
-    COVER_LABELS,
-    SPRAY_LABELS
+    COVER_LABELS
   } from '$lib/season/setup';
   import {
     applyBlockOrder,
@@ -1379,6 +1378,9 @@
 
   onMount(() => {
     cropsTabOrder = loadBlockOrder();
+    const sp = $page.url.searchParams;
+    const deepLinked = ['map', 'block', 'planting', 'tab'].some((k) => sp.has(k));
+    if (data.emptySeason && data.canEdit && !deepLinked) openWizard();
   });
 
   function onCropsHeaderDragStart(ev: DragEvent, blockId: string) {
@@ -1871,6 +1873,8 @@
     ])
   )}
   onOpenWizard={() => openWizard()}
+  seasonYear={data.currentYear ?? new Date().getFullYear()}
+  onStartPlan={data.canEdit ? () => openWizard() : undefined}
   onAddTask={(blockId, plantingId) => {
     addTaskTarget = { blockId, plantingId };
   }}
@@ -1986,6 +1990,9 @@
         <div class="season-headline">
           <span class="season-year">{data.currentYear ?? new Date().getFullYear()}</span>
           <span class="season-title">Planting season</span>
+          {#if data.canEdit}
+            <a class="season-year-change" href="/settings/season">Change year</a>
+          {/if}
         </div>
         <span class="stage-pill">Stage 1 of 5 · Season setup</span>
       </header>
@@ -2013,16 +2020,12 @@
             <dd>{PEST_LABELS[data.seasonSetup.pestStrategy]}</dd>
           </div>
           <div class="season-row">
-            <dt>Fertility approach</dt>
-            <dd>{FERTILITY_LABELS[data.seasonSetup.fertilityApproach]}</dd>
-          </div>
-          <div class="season-row">
-            <dt>Cover crop intent</dt>
+            <dt>Last year's cover crop</dt>
             <dd>{COVER_LABELS[data.seasonSetup.coverCropIntent]}</dd>
           </div>
           <div class="season-row">
-            <dt>Spray application capacity</dt>
-            <dd>{SPRAY_LABELS[data.seasonSetup.sprayCapacity]}</dd>
+            <dt>Fertility approach</dt>
+            <dd>{FERTILITY_LABELS[data.seasonSetup.fertilityApproach]}</dd>
           </div>
         </dl>
         {#if data.canEdit}
@@ -3495,6 +3498,8 @@
     cropCatalog={data.cropCatalog}
     seasonSetup={data.seasonSetup ?? null}
     lastYearSetup={data.lastYearSetup ?? null}
+    priorSeason={data.priorSeason ?? null}
+    emptySeason={data.emptySeason ?? false}
     currentYear={data.currentYear ?? new Date().getFullYear()}
     aiEnabled={data.aiEnabled ?? false}
     wizardPlanId={data.wizardPlanId}
@@ -4728,6 +4733,14 @@
     display: flex;
     align-items: baseline;
     gap: 0.5rem;
+  }
+  .season-year-change {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-forest);
   }
   .season-year {
     font-size: 1.6rem;

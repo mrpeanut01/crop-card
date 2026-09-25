@@ -6,6 +6,8 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
   import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
+  import PlanningYearPicker from '$lib/components/PlanningYearPicker.svelte';
+  import Card from '$lib/components/ui/Card.svelte';
   import type { SeasonSetup } from '$lib/season/setup';
 
   let { data }: { data: PageData } = $props();
@@ -13,8 +15,13 @@
   // Initial state from server-loaded data; subsequent updates flow via
   // handleSave from the SeasonSetupStep child component.
   let existing = $state<SeasonSetup | null>(untrack(() => data.existing));
-  let editing = $state(untrack(() => !data.existing));
+  let editing = $state(untrack(() => !data.existing && !data.readOnly));
   let savedNotice = $state<string | null>(null);
+
+  $effect(() => {
+    existing = data.existing;
+    editing = !data.existing && !data.readOnly;
+  });
 
   function handleSave(setup: SeasonSetup) {
     existing = setup;
@@ -46,17 +53,35 @@
     </p>
   </header>
 
+  {#if data.readOnly}
+    <div class="past-banner" role="status">
+      <p>
+        You're looking at the {data.currentYear} season. Past seasons are view only.
+      </p>
+      <p class="past-links">
+        <a href="/records?year={data.currentYear}">See {data.currentYear} records &rarr;</a>
+        <a href="/settings/season">Back to {data.planningYear.activeYear}</a>
+      </p>
+    </div>
+  {:else}
+    <Card>
+      <PlanningYearPicker view={data.planningYear} />
+    </Card>
+  {/if}
+
   {#if savedNotice}
     <p class="success" role="status">{savedNotice}</p>
   {/if}
 
   {#if editing}
-    <SeasonSetupStep
-      {existing}
-      lastYearSetup={data.lastYearSetup}
-      currentYear={data.currentYear}
-      onSave={handleSave}
-    />
+    {#key data.currentYear}
+      <SeasonSetupStep
+        {existing}
+        lastYearSetup={data.lastYearSetup}
+        currentYear={data.currentYear}
+        onSave={handleSave}
+      />
+    {/key}
     {#if existing}
       <p class="actions-row">
         <button type="button" class="link-btn" onclick={() => (editing = false)}>Cancel</button>
@@ -64,41 +89,72 @@
     {/if}
   {:else if existing}
     <section class="current">
-      <h2>Current setup</h2>
-      <SeasonSetupChip setup={existing} canEdit onEdit={() => (editing = true)} />
+      <h2>{data.readOnly ? `${data.currentYear} setup` : 'Current setup'}</h2>
+      <SeasonSetupChip setup={existing} canEdit={!data.readOnly} onEdit={() => (editing = true)} />
       <p class="hint">
         Last updated {new Date(existing.setAt).toLocaleString()}.
       </p>
-      <p class="actions-row">
-        <button type="button" onclick={() => goto('/plan')}>Go to Plan wizard →</button>
-      </p>
+      {#if !data.readOnly}
+        <p class="actions-row">
+          <button type="button" onclick={() => goto('/plan')}>Go to Plan wizard →</button>
+        </p>
+      {/if}
     </section>
+  {:else if data.readOnly}
+    <p class="hint">No season setup was saved for {data.currentYear}.</p>
   {/if}
 
-  <section class="closeout-link">
-    <h2>Prep next season</h2>
-    <p class="hint">
-      Carry the whole operation into {data.currentYear + 1}: rotation checks, surviving stock, a
-      pre-seeded planting draft, and a sprayer calibration hand-off. Deterministic — no AI.
-    </p>
-    <a class="prep-cta" href="/settings/season/carry-forward"
-      >Prep the {data.currentYear + 1} season →</a
-    >
-  </section>
+  {#if !data.readOnly}
+    <section class="closeout-link">
+      <h2>Prep next season</h2>
+      <p class="hint">
+        Carry the whole operation into {data.calendarYear + 1}: rotation checks, surviving stock, a
+        pre-seeded planting draft, and a sprayer calibration hand-off. Deterministic, no AI.
+      </p>
+      <a class="prep-cta" href="/settings/season/carry-forward"
+        >Prep the {data.calendarYear + 1} season →</a
+      >
+    </section>
 
-  <section class="closeout-link">
-    <h2>End of season</h2>
-    <p class="hint">
-      Done for the {data.currentYear} year? Close the season to lock every {data.currentYear} record against
-      late edits.
-    </p>
-    <a class="closeout-cta" href="/settings/season/close-out"
-      >Close the {data.currentYear} season →</a
-    >
-  </section>
+    <section class="closeout-link">
+      <h2>End of season</h2>
+      <p class="hint">
+        Done for the {data.calendarYear} year? Close the season to lock every {data.calendarYear} record
+        against late edits.
+      </p>
+      <a class="closeout-cta" href="/settings/season/close-out"
+        >Close the {data.calendarYear} season →</a
+      >
+    </section>
+  {/if}
 </main>
 
 <style>
+  .past-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    background: var(--pill-wheat-bg);
+    border: 1px solid var(--pill-wheat-bd);
+    border-radius: 8px;
+    color: var(--pill-wheat-fg);
+  }
+  .past-banner p {
+    margin: 0;
+  }
+  .past-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.25rem;
+  }
+  .past-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest);
+    font-weight: 600;
+  }
   .closeout-link {
     display: flex;
     flex-direction: column;

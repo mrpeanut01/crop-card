@@ -17,6 +17,7 @@ import { frostDatesForYear } from '$lib/schedule/settings';
 import { LOUDOUN_VA, soilTempEarliestDayMs } from '$lib/weather/normals';
 import { footprintSqFt, plantsFitUsable } from '$lib/layout/sufficiency';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 const bodySchema = z.object({
   year: z.number().int().min(2000).max(2100).optional(),
@@ -51,7 +52,7 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
 
-  const year = parsed.data.year ?? new Date().getFullYear();
+  const year = parsed.data.year ?? getActivePlanningYear();
   const allBlocks = listBlocks();
   const idFilter =
     parsed.data.blockIds && parsed.data.blockIds.length > 0

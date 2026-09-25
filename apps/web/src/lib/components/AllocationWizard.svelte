@@ -21,8 +21,10 @@
     BlockEntry,
     CropCatalogItem,
     InitialChatMessage,
+    PriorSeason,
     SeedStockEntry
   } from '$lib/components/wizard/allocation/types';
+  import PriorSeasonPanel from '$lib/components/wizard/allocation/PriorSeasonPanel.svelte';
   import CommitStep from '$lib/components/wizard/allocation/steps/CommitStep.svelte';
   import ScheduleStep from '$lib/components/wizard/allocation/steps/ScheduleStep.svelte';
   import ReviewStep from '$lib/components/wizard/allocation/steps/ReviewStep.svelte';
@@ -37,6 +39,8 @@
     cropCatalog: _cropCatalog,
     seasonSetup = null,
     lastYearSetup = null,
+    priorSeason = null,
+    emptySeason = false,
     currentYear = new Date().getFullYear(),
     aiEnabled = false,
     wizardPlanId,
@@ -52,6 +56,10 @@
     cropCatalog: CropCatalogItem[];
     seasonSetup?: SeasonSetup | null;
     lastYearSetup?: SeasonSetup | null;
+    /** Last season's crops per block (carry-forward context). */
+    priorSeason?: PriorSeason | null;
+    /** True when nothing is planned for `currentYear` yet. */
+    emptySeason?: boolean;
     currentYear?: number;
     /** Phase 25d v2-addendum (#82 partial / #89) — drives the schedule
      *  step's AI-on/off variant. Step 2 (Schedule) shows the deterministic
@@ -90,6 +98,9 @@
         get blocks() {
           return blocks;
         },
+        get priorSeason() {
+          return priorSeason;
+        },
         get plantingGuides() {
           return plantingGuides;
         },
@@ -109,7 +120,7 @@
           return onRefreshParent;
         }
       },
-      untrack(() => ({ seasonSetup, initialChatMessages, initialStep }))
+      untrack(() => ({ seasonSetup, initialChatMessages, initialStep, emptySeason }))
     )
   );
 
@@ -236,6 +247,9 @@
 
     <div class="aw-body">
       {#if w.step === 'season-setup'}
+        {#if priorSeason}
+          <PriorSeasonPanel {priorSeason} />
+        {/if}
         <SeasonSetupStep
           existing={w.activeSetup}
           {lastYearSetup}

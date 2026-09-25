@@ -55,7 +55,7 @@ assign() { # role scope [condition]
   local extra=()
   [ -n "${3:-}" ] && extra=(--condition "$3" --condition-version 2.0)
   az role assignment create --assignee-object-id "$SP" --assignee-principal-type ServicePrincipal \
-    --role "$1" --scope "$2" "${extra[@]}" --output none
+    --role "$1" --scope "$2" ${extra[@]+"${extra[@]}"} --output none
   echo "granted: $1"
 }
 

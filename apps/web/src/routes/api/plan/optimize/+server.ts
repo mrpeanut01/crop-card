@@ -5,6 +5,7 @@ import { buildFarmContext } from '$lib/server/aiContext';
 import { planWithAI } from '$lib/server/aiPlanning';
 import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 const bodySchema = z.object({
   cropWishlist: z.array(z.string().min(1)).min(1).max(50),
@@ -24,7 +25,7 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
 
-  const year = parsed.data.year ?? new Date().getFullYear();
+  const year = parsed.data.year ?? getActivePlanningYear();
   const userPrompt = [
     `Plan a full ${year} season placing each of these crops on appropriate blocks:`,
     parsed.data.cropWishlist.map((id) => `- ${id}`).join('\n'),

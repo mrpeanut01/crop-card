@@ -10,6 +10,7 @@ import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { FallbackReason } from '$lib/server/aiTry';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 const bodySchema = z.object({
   assignments: z
@@ -122,7 +123,7 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
-  const year = parsed.data.year ?? new Date().getFullYear();
+  const year = parsed.data.year ?? getActivePlanningYear();
   const frostDates = frostDatesForYear(year);
   const built = await buildFarmContextWithCache(year);
   const refineInput = {

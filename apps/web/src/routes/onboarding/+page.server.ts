@@ -10,6 +10,14 @@ import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { listCrops } from '$lib/db/crops';
 import { loadSeasonSetup } from '$lib/season/setup.server';
+import { loadPlanningYearView, setActivePlanningYear } from '$lib/season/planningYear.server';
+import {
+  isSelectablePlanningYear,
+  selectablePlanningYears,
+  suggestPlanningYear,
+  suggestionReason,
+  type PlanningYearView
+} from '$lib/season/planningYear';
 import type { PageServerLoad } from './$types';
 
 // #112 — derive a friendly first name from the email when no display
@@ -31,11 +39,21 @@ export const load: PageServerLoad = ({ locals }) => {
   // Pre-farm state: no activeOwnerId yet. Render the farm-creation form
   // (step 0 of the wizard).
   if (!user?.activeOwnerId) {
+    const now = new Date();
+    const planningYear: PlanningYearView = {
+      activeYear: suggestPlanningYear(now),
+      suggestedYear: suggestPlanningYear(now),
+      suggestionReason: suggestionReason(now),
+      options: selectablePlanningYears(now),
+      pastYears: [],
+      chosen: false
+    };
     return {
       user,
       firstName,
       farmName: null as string | null,
-      progress: null
+      progress: null,
+      planningYear
     };
   }
 
@@ -50,7 +68,8 @@ export const load: PageServerLoad = ({ locals }) => {
   const blocks = listBlocks();
   const sprayers = listSprayers();
   const plantings = listCrops({ status: 'active', limit: 1 });
-  const season = loadSeasonSetup(new Date().getFullYear());
+  const planningYear = loadPlanningYearView();
+  const season = loadSeasonSetup(planningYear.activeYear);
 
   const progress = {
     farm: !!ownerRow,
@@ -66,7 +85,8 @@ export const load: PageServerLoad = ({ locals }) => {
     user,
     firstName,
     farmName: ownerRow?.name ?? null,
-    progress
+    progress,
+    planningYear
   };
 };
 
@@ -113,10 +133,14 @@ export const actions: Actions = {
     const farmName = String(fd.get('farmName') ?? '').trim();
     const location = String(fd.get('location') ?? '').trim();
     if (!farmName) return fail(400, { error: 'farmName required' });
+    const now = new Date(Date.now());
+    const planningYearRaw = Number(fd.get('planningYear'));
+    const planningYear = isSelectablePlanningYear(planningYearRaw, now)
+      ? planningYearRaw
+      : suggestPlanningYear(now);
 
     const ownerId = `owner_${randomUUID().slice(0, 12)}`;
     const slug = uniqueSlug(slugify(farmName));
-    const now = new Date(Date.now());
 
     db.transaction(() => {
       unscopedQueryNote('onboarding writes the new owner + assignment + subscription rows');
@@ -166,6 +190,7 @@ export const actions: Actions = {
           })
         )
         .run();
+      setActivePlanningYear(planningYear, now);
     });
 
     writeSession(event.cookies, {

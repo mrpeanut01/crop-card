@@ -65,15 +65,15 @@ export async function provisionWizardTenant(
   const signinBody = (await signin.json()) as { type?: string; location?: string };
   expect(signinBody.location, 'fresh user should land on onboarding').toBe('/onboarding');
 
+  const year = new Date().getFullYear();
   const onboard = await page.request.post('/onboarding', {
-    form: { farmName: `Wizard Farm ${Date.now()}` },
+    form: { farmName: `Wizard Farm ${Date.now()}`, planningYear: String(year) },
     headers: { 'x-sveltekit-action': 'true', origin },
     maxRedirects: 0
   });
   const onboardBody = (await onboard.json()) as { type?: string; location?: string };
   expect(onboardBody.type, JSON.stringify(onboardBody)).toBe('redirect');
 
-  const year = new Date().getFullYear();
   if (opts.seasonSetup) {
     await postJson(page, '/api/season/setup', {
       year,

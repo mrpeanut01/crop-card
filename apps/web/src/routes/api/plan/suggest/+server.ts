@@ -5,6 +5,7 @@ import { buildFarmContextWithCache } from '$lib/server/aiContext';
 import { planWithAI } from '$lib/server/aiPlanning';
 import { recordCall } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 const bodySchema = z.object({
   blockId: z.string().min(1),
@@ -28,7 +29,7 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
 
-  const year = parsed.data.year ?? new Date().getFullYear();
+  const year = parsed.data.year ?? getActivePlanningYear();
   const userPrompt = [
     `Suggest 3–5 crop plantings for blockId="${parsed.data.blockId}" in ${year}.`,
     'Respect the rotation rule: examine the block ID; you may not see history, so suggest cultivars across diverse families.',

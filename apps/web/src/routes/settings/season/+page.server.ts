@@ -3,15 +3,24 @@ import type { PageServerLoad } from './$types';
 
 import { requireOwner } from '$lib/server/auth';
 import { loadSeasonSetup } from '$lib/season/setup.server';
+import { loadPlanningYearView } from '$lib/season/planningYear.server';
 
 export const load: PageServerLoad = (event) => {
   const u = requireOwner(event);
   if (!u.activeOwnerId) throw redirect(303, '/owner-picker');
 
-  const currentYear = new Date().getFullYear();
+  const planningYear = loadPlanningYearView();
+  const yearParam = event.url.searchParams.get('year');
+  const requested = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : null;
+  const pastView = requested !== null && planningYear.pastYears.includes(requested);
+  const year = pastView ? requested : planningYear.activeYear;
+
   return {
-    currentYear,
-    existing: loadSeasonSetup(currentYear),
-    lastYearSetup: loadSeasonSetup(currentYear - 1)
+    currentYear: year,
+    calendarYear: new Date().getFullYear(),
+    readOnly: pastView,
+    planningYear,
+    existing: loadSeasonSetup(year),
+    lastYearSetup: loadSeasonSetup(year - 1)
   };
 };

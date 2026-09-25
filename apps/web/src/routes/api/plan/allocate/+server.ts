@@ -9,6 +9,7 @@ import { allocate, allocateDeterministic } from '$lib/server/aiAllocation';
 import { checkGuard, recordCall } from '$lib/server/aiGuard';
 import type { PlanInput } from '$lib/layout/engine';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 const bodySchema = z.object({
   seedSelections: z
@@ -127,7 +128,7 @@ export const POST: RequestHandler = async (event) => {
     companions
   };
 
-  const year = parsed.data.year ?? new Date().getFullYear();
+  const year = parsed.data.year ?? getActivePlanningYear();
 
   // #184 / FP-004 — guard short-circuit. Skip Anthropic context build entirely
   // and return the deterministic engine plan with `meta.fallback` tagged. The

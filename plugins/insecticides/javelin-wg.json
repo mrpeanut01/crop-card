@@ -25,7 +25,7 @@
     "armyworm"
   ],
   "pollinatorRisk": "none",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "notes": "Bt IRAC 11A — alternate to DiPel. OMRI.",
   "complianceFlags": {
     "omriListed": false,

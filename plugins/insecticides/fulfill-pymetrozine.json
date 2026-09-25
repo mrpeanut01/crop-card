@@ -21,7 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"dusk-to-dawn-only"},
   "epaRegistrationNumber": "100-912",
   "targetPests": [
     "aphid",

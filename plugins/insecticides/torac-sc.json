@@ -21,7 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 14,
   "pollinatorRisk": "high",
-  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only","residualToxicityHours":8},
   "epaRegistrationNumber": "71711-32",
   "targetPests": [
     "whitefly",

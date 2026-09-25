@@ -21,7 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 21,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "66222-181",
   "targetPests": [
     "European red mite eggs",

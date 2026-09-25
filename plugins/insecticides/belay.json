@@ -27,7 +27,7 @@
     "Colorado potato beetle"
   ],
   "pollinatorRisk": "high",
-  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom","residualToxicityHours":120},
   "notes": "Neonicotinoid IRAC 4A. Brassica / cucurbit / fruiting / leafy label. NO bloom application.",
   "complianceFlags": {
     "omriListed": false,

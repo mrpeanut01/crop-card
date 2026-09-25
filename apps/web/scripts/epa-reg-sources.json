@@ -800,6 +800,548 @@
       "page": 7,
       "quote": "To minimize potential exposure to bees and other pollinating insects, do not apply while bees are foraging.",
       "note": "Also 'Do not allow product to drift to blooming crops or weeds if bees are foraging.' No bee toxicity class stated and no bloom prohibition, only a foraging restriction."
+    },
+    "actara": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00938-20131203.pdf",
+      "docDate": "2013-12-03",
+      "page": 4,
+      "quote": "This pesticide is highly toxic to bees exposed to direct treatment on blooming crops/plants or weeds. ... Do not apply this product until flowering is complete and all petals have fallen unless",
+      "note": "Verified 2026-09-25 (confirmed). Toxicity p.4 (Environmental Hazards); bloom language p.9 (generic pollinator directions). Exceptions for non-contracted crops include after sunset, <55F, public health, apiary registry notification; contracted crops only via 48h beekeeper notice. Sunset is not the only path, so the stricter class stands. No hours stated."
+    },
+    "admire-pro": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "docDate": "2019-09-17",
+      "page": 3,
+      "quote": "This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds.",
+      "note": "Verified 2026-09-25 (confirmed). Label is GAUCHO 550 SC; PPLS lists ADMIRE PRO SYSTEMIC PROTECTANT as alternate brand of 264-827. p6 pollinator box: 'Do not apply this product until flowering is complete and all petals have fallen unless...' (exceptions: after sunset, <55F, public-health response, or 48h beekeeper notice for contracted pollination). Crop directions (strawberry, pome, stone fruit, bushberry, caneberry) say 'Do not apply pre-bloom or during bloom or when bees are foraging.' Sunset is not the only permitted path, so prohibited-during-bloom stands (more protective). No residual hours stated."
+    },
+    "agrimek-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "docDate": "2021-02-09",
+      "page": 23,
+      "quote": "4) DO NOT apply from onset of flowering until petal fall is complete.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective. Env. Hazards p.8: 'This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds.' Crop sections (p.23, 33, 34, 42, 44, 45) prohibit application from onset of flowering until petal fall; citrus p.25 'prohibited from the onset of flowering until the end of the flowering period'. No sunset exception, no hours stated."
+    },
+    "altacor-chlorantraniliprole": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "docDate": "2018-07-02",
+      "page": 3,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to aquatic invertebrates, oysters, and shrimp.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Label (only Altacor label on 279-9607) has no bee/pollinator statement anywhere; Environmental Hazards covers aquatic invertebrates only. 'relatively-nontoxic' requires an explicit label statement, so the AI-table value cannot stand; corrected to unknown. MORE protective (removes an unsupported low-toxicity claim); bloomRestriction none unchanged."
+    },
+    "apollo-clofentezine": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066222-00047-20201026.pdf",
+      "docDate": "2020-10-26",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses, do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported 'relatively-nontoxic' claim). Label for the correct product (Apollo SC, 66222-47) has no bee/pollinator/bloom language anywhere (grep bee|pollinat|bloom|flower|forag, 11 pages). Only related text is p.5 'not disruptive to beneficial insects and mites', which is not a bee statement. Silence cannot support relatively-nontoxic, so beeToxicity -> unknown."
+    },
+    "asana-xl": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "docDate": "2026-04-14",
+      "page": 16,
+      "quote": "NOTE: ASANA XL can act as a bee repellent, do not apply within 7 days of pollination. Apply as a pre- bloom or post-bloom spray only.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective. p5 Environmental Hazards: 'This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply ... to blooming crops if bees are visiting the treatment area.' (foraging-only), but the blueberry and caneberry directions (p16) restrict to pre-bloom/post-bloom only, which is a bloom prohibition on a claimed crop class. Sunset language on p16 is advisory ('For maximum safety to bees'), not a permitted in-bloom path. No residual hours stated."
+    },
+    "assail-30sg": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00036-20210611.pdf",
+      "docDate": "2021-06-11",
+      "page": 4,
+      "quote": "This product is toxic to bees exposed to direct treatment. Do not apply this product while bees are foraging in the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Only bee restriction is foraging-based; no bloom prohibition (apple p.18 even directs Mullein plant bug sprays 'at pink bud through bloom' with 'Do not apply this product when bees are foraging'). No pollinator box, no hours stated."
+    },
+    "avaunt-evo": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "docDate": "2024-08-22",
+      "page": 5,
+      "quote": "Foliar application of this product is prohibited to a crop from onset of flowering until flowering is complete when bees are under contract for pollination services to that crop unless:",
+      "note": "Verified 2026-09-25 (confirmed). MORE protective. p4: 'This product is highly toxic to bees and other pollinating insects exposed to direct treatment on blooming crops or weeds. Do not apply ... while bees are foraging'. p5 Use Restrictions prohibit bloom foliar application on contracted-pollination crops unless applied between 2 h before sunset and sunrise OR at <=50F. Because sunset is not the only permitted in-bloom path (temperature exception too), the brief's rule gives prohibited-during-bloom. Owner may prefer dusk-to-dawn-only for non-contracted crops (only foraging language applies there). No residual hours. Review: bloomRestriction kept at 'dusk-to-dawn-only' because the label permits in-bloom application after sunset."
+    },
+    "baythroid-xl": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+      "docDate": "2019-10-07",
+      "page": 4,
+      "quote": "This pesticide is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds on which bees are actively foraging.",
+      "note": "Verified 2026-09-25 (confirmed). Foraging-only bloom language. Label also bans use on several crops grown for seed 'Due to potential injury to bees' (alfalfa p.10, p.19, p.23, southern peas p.25, p.26); that is a crop exclusion, not a bloom-window rule, so dusk-to-dawn-only stands. No hours stated."
+    },
+    "belay": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom",
+        "residualToxicityHours": 120
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00150-20170711.pdf",
+      "docDate": "2017-07-11",
+      "page": 44,
+      "quote": "This product is very toxic to bees exposed to treatment and for more than 5 days following treatment.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"prohibited-during-bloom\"}. Label title is V-10170 2.13 SC; PPLS lists BELAY INSECTICIDE (and CLUTCH SC) as alternate brands of 59639-150. Ag Environmental Hazards (p6) say 'toxic to bees exposed to treatment and for more than 5 days following treatment'; non-ag section (p44) says 'very toxic' -> stricter class highly-toxic kept. p8 bee box: 'Do not apply this product until flowering is complete and all petals have fallen' (only exception: 48 h beekeeper notice + bees removed/covered 5 days); p16 'must not be applied during bloom or when bees are foraging'. Residual stated as '>5 days' (not hours), so residualToxicityHours left unset; owner may want 120 (the gate only adds a residual warning when this is set, so 120 would be more protective). Review: residualToxicityHours 120 from the label's 'more than 5 days' residual statement (5 d = 120 h, a lower bound)."
+    },
+    "beleaf-50sg": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00010-20221121.pdf",
+      "docDate": "2022-11-21",
+      "page": 4,
+      "quote": "This product is moderately toxic to bees and other pollinating insects exposed to direct treatment, or to residues in/on blooming crops or weeds.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective. 'Moderately toxic' is not in the mapping; mapped to the stricter 'toxic' (same as wave-1 handling of Acramite). Label gives no bloom or foraging restriction (only 'Protect pollinating insects by following label directions intended to minimize drift'), so bloomRestriction stays none. No hours."
+    },
+    "botanigard-es-beauveria": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/082074-00001-20240403.pdf",
+      "docDate": "2024-04-03",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This product is potentially pathogenic to honeybees. Avoid applying to areas where honeybees are actively foraging or around beehives.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective. Label is Mycotrol ES (82074-1), whose master label lists 'Alternate Brand Names: BotaniGard ES' (p22). 'Potentially pathogenic to honeybees' is a hazard statement, not a low-risk statement, so relatively-nontoxic is unsupported; 'toxic' chosen as the stricter reading of ambiguous wording (alternative: unknown). Foraging-only avoidance language -> dusk-to-dawn-only. Same Environmental Hazards text appears on 82074-2 (BotaniGard 22WP, 2025-03-10 label p4). No residual hours."
+    },
+    "brigade-2ec": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03313-20211119.pdf",
+      "docDate": "2021-11-19",
+      "page": 4,
+      "quote": "This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or if bees are visiting the treatment area.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective, ambiguity call. The Brigade 2EC label sentence reads literally as two bans: no application/drift to blooming crops, OR when bees are visiting. The same-AI Capture 2EC label (279-3069, 2025-09-05, p.4) says 'to blooming crops or weeds if bees are visiting', i.e. foraging-only, so the Brigade wording may be a drafting slip. Per the stricter-when-ambiguous rule, prohibited-during-bloom; owner may downgrade to dusk-to-dawn-only if FMC confirms the conditional reading. Plugin notes already say 'no bloom application'. No hours stated."
+    },
+    "bt-kurstaki": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00039-20260901.pdf",
+      "docDate": "2026-09-01",
+      "page": 14,
+      "quote": "DiPel DF can be used during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Generic plugin (no EPA number). Checked two Btk labels: DiPel DF 73049-39 (2026-09-01) and Javelin WG 70051-66 (2021-12-16, https://www3.epa.gov/pesticides/chem_search/ppls/070051-00066-20211216.pdf). Neither has any bee/pollinator statement; DiPel expressly allows bloom use. relatively-nontoxic requires explicit label language -> unknown (more protective); bloomRestriction none is label-consistent."
+    },
+    "closer-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00623-20210108.pdf",
+      "docDate": "2021-01-08",
+      "page": 4,
+      "quote": "This product is highly toxic to bees and other pollinating insects ... Do not apply this product at any time between 3 days prior to bloom and until after petal fall. ... The RT25 for this product is less than or equal to 3 hours.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"prohibited-during-bloom\"}. MORE protective (adds residual hours; toxicity/bloom confirmed). Toxicity p.4; bloom bans on many crop groups (p.20, 21, 23, 28: 'between 3 days prior to bloom and until after petal fall'); some crops (citrus p.24, ornamentals p.30) allow a single reduced-rate bloom application, but the stricter class stands. RT25 <= 3 h stated p.24/p.26 in the Advisory Pollinator Statement; used as residualToxicityHours = 3 (the stated upper bound)."
+    },
+    "coragen": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+      "docDate": "2020-10-27",
+      "page": 4,
+      "quote": "This pesticide is toxic to aquatic invertebrates, oysters, and shrimp.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Full 34-page label has no bee/pollinator statement; Environmental Hazards covers aquatic invertebrates only. relatively-nontoxic requires an explicit label statement, so corrected to unknown (removes an unsupported low-risk claim; more protective). No bloom restriction on label."
+    },
+    "cyd-x-codling-moth-virus": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00044-20250707.pdf",
+      "docDate": "2025-07-07",
+      "page": 6,
+      "quote": "ENVIRONMENTAL HAZARDS: For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). Cyd-X master label (70051-44, 13 pages) has no bee/pollinator/bloom statement at all; it only says baculoviruses are found only in invertebrates (p.7), which is not a bee-safety statement. Silence -> unknown. The owner may keep relatively-nontoxic only with a label or registrant statement on bees."
+    },
+    "deadline-mps-metaldehyde": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00507-20150303.pdf",
+      "docDate": "2015-03-03",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to mollusks (e.g., clams, oysters, scallops, mussels). This pesticide is toxic to birds and mammals.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Plugin number 70506-130 is not in PPLS, so the Deadline Bullets master label 5481-507 (AMVAC; 'Deadline M-Ps Mini-Pellets (ABN)' p2) was used; the 2024-04-19 file is a scanned image, so the 2015-03-03 text label was read. No bee/pollinator/bloom statement. relatively-nontoxic requires explicit label language -> unknown (more protective). 5481-511 (Deadline Ornamental, ABN 'DEADLINE M-PS') is also silent on bees."
+    },
+    "dimethoate-4ec": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/034704-00207-20140605.pdf",
+      "docDate": "2014-06-05",
+      "page": 5,
+      "quote": "This product is highly toxic to bees and other pollinators exposed to direct treat- ment or residues on blooming crops or weeds. ... Do not apply when trees or substantial numbers of weeds in the orchard are in bloom.",
+      "note": "Verified 2026-09-25 (confirmed). Plugin's own number is not a dimethoate product, so verified on Loveland's Dimethoate 400 (34704-207, Active; plugin notes name Loveland). Toxicity p.5; orchard bloom bans p.10-11; field crops (beans/peas/alfalfa p.12-15) are foraging-only. The CA-style orchard window allows night applications only under specific conditions, so the stricter class stands. Drexel Dimethoate 4EC (19713-231, 2026-02-24 label, p.4 and p.10-12) carries identical wording, so the result does not depend on which 43.5% EC is chosen. No hours stated."
+    },
+    "dipel-df": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00039-20260901.pdf",
+      "docDate": "2026-09-01",
+      "page": 14,
+      "quote": "DiPel DF can be used during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective only in the sense of removing an unsupported claim. The label has no bee or pollinator statement (Environmental Hazards p6 covers water only); it expressly permits bloom use (pome fruit, p14), so bloomRestriction none is label-supported. relatively-nontoxic needs an explicit label statement, so beeToxicity -> unknown."
+    },
+    "entrust-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "docDate": "2026-06-11",
+      "page": 4,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment, or to residues in/on blooming crops or weeds. Protect pollinating insects by following label directions intended to minimize drift",
+      "note": "Verified 2026-09-25 (confirmed). beeToxicity confirmed. The current label (and the 2020-2024 versions checked) has NO foraging, bloom or residual-hours statement, so 'dusk-to-dawn-only' and 'residualToxicityHours: 3' are not label-sourced (the 3 h figure appears nowhere on 62719-621). Label-literal would be bloomRestriction 'none' with no residual, but that is LESS protective and rests only on silence, so the current values are kept, not corrected. Owner decision."
+    },
+    "exirel": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "docDate": "2024-08-29",
+      "page": 5,
+      "quote": "Do not apply this product until flowering is complete and all petals have fallen unless one of the following conditions is met: • The application is made to the target site after sunset",
+      "note": "Verified 2026-09-25 (confirmed). MORE protective. p4: 'This product is highly toxic to bees exposed to direct treatment on blooming crops or weeds.' p5 EPA pollinator box: contracted-pollination crops may not be treated until petal fall (only exception: 48 h beekeeper notice); non-contracted attractive crops: no application until petal fall unless after sunset, <55F, public-health response, or state/tribal program. Sunset is not the only permitted path -> prohibited-during-bloom. No residual hours. Review: bloomRestriction kept at 'dusk-to-dawn-only' because the label permits in-bloom application after sunset (dusk-to-dawn models it)."
+    },
+    "fulfill-pymetrozine": {
+      "pollinator": {
+        "beeToxicity": "relatively-nontoxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066222-00274-20250812.pdf",
+      "docDate": "2025-08-12",
+      "page": 5,
+      "quote": "it has a low toxicity to beneficial insects (including honeybees and bumblebees) and mites. It can be used ... during periods of pollination. However, do not apply Fulfill Insecticide directly to bees that are actively foraging",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (bloomRestriction none -> dusk-to-dawn-only, from the foraging statement). beeToxicity relatively-nontoxic is supported by the explicit 'low toxicity to ... honeybees and bumblebees'. No bloom ban (label explicitly allows use during pollination), no hours. Verified on the current holder's label (66222-274)."
+    },
+    "intrepid-edge": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "docDate": "2017-06-29",
+      "page": 3,
+      "quote": "This product is toxic to bees exposed to treatment for 3 hours following treatment.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\", \"residualToxicityHours\": 3}. LESS protective (highly-toxic -> toxic), based on an explicit label statement: the label says 'toxic', never 'highly toxic' (grep of full 48-page label). Plugin number 62719-707 is a SmartStax PRO corn PIP, so the Intrepid Edge label (62719-666, title GF-3028, PPLS alternate brand INTREPID EDGE) was used. Bloom language is foraging-only ('Do not apply ... if bees may forage on the plants during this time period', p3) and pome directions allow bloom-to-petal-fall sprays -> dusk-to-dawn-only confirmed; 3 h residual confirmed."
+    },
+    "isomate-c-plus-pheromone": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/053575-00006-20090304.pdf",
+      "docDate": "2009-03-04",
+      "page": 1,
+      "quote": "ENVIRONMENT AL HAZARDS For terrestrial uses: Do not apply directly to water, to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). Isomate-C Plus (53575-6) labels 2009 and 2014 (the 2014 scan is partly illegible) and 1996/2002 versions have no bee/pollinator statement; the product is a hand-placed pheromone dispenser (p.2 of 2014 label: 'Place dispensers on lateral branches'), so exposure is low in practice, but the label makes no bee claim. Silence -> unknown. Owner may accept relatively-nontoxic as an engineering judgment, not a label fact."
+    },
+    "javelin-wg": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00066-20211216.pdf",
+      "docDate": "2021-12-16",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Label has no bee/pollinator/bloom statement anywhere (Environmental Hazards covers water only). relatively-nontoxic needs an explicit label statement -> unknown (removes unsupported low-risk claim; more protective). No bloom restriction on label."
+    },
+    "jms-stylet-oil": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/065564-00001-20110719.pdf",
+      "docDate": "2011-07-19",
+      "page": 8,
+      "quote": "For powdery mildew begin at 5% bloom and continue at 10-14 day intervals until terminal growth phase stops.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). JMS Stylet-Oil label (65564-1, 11 pages) has no bee/pollinator statement anywhere (grep bee|pollinat|forag). It directs sprays at bloom for disease (quoted), so there is no bloom restriction, but it never says the oil is low-risk to bees. Silence -> unknown."
+    },
+    "jms-stylet-oil-omri": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/065564-00001-20110719.pdf",
+      "docDate": "2011-07-19",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Latest PPLS label for 65564-1 has no bee/pollinator statement; directions permit bloom sprays (e.g. 'Repeat at bloom', 'Initiate sprays at bloom' for grape Botrytis, p7/p9). relatively-nontoxic needs explicit label language -> unknown (more protective); bloomRestriction none is label-consistent."
+    },
+    "lannate-lv": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "docDate": "2024-10-10",
+      "page": 18,
+      "quote": "Blueberry Leafroller Blueberry Maggot 3/4 - 1 1/2 Do not apply during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective. Env. Hazards p.5: 'This product is highly toxic to bees exposed to direct treatment on blooming crops or weeds. Do not apply ... while bees are actively foraging the treatment area.' Blueberry directions add an outright bloom ban (p.18), which per the rule sets prohibited-during-bloom. Newest file 20250729 has unreadable fonts, so the 2024-10-10 label was used. No hours."
+    },
+    "m-pede": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20210121.pdf",
+      "docDate": "2021-01-21",
+      "page": 7,
+      "quote": "Pear psylla ... PRECAUTIONS: Do not tank mix with oil. Do not apply during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. Label has no bee/pollinator statement (Environmental Hazards p4: 'may be hazardous to aquatic invertebrates' only), so relatively-nontoxic is unsupported -> unknown. Pear psylla and rosy apple aphid directions both say 'Do not apply during bloom' (p7); likely a phytotoxicity precaution, but the brief's rule maps any crop-level bloom prohibition to prohibited-during-bloom. silentLabel=true refers to bees; the bloom sentence is not bee language. Review: bloomRestriction kept at 'none' because the pome bloom ban is not bee language."
+    },
+    "m-pede-organic": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20210121.pdf",
+      "docDate": "2021-01-21",
+      "page": 7,
+      "quote": "PRECAUTIONS: Do not tank mix with oil. Do not apply during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. Label (10163-324, Gowan) has no bee/pollinator statement at all (grep bee|pollinat|forag), so beeToxicity -> unknown. The pome-fruit sections (pear psylla, rosy apple aphid, p.7) say 'Do not apply during bloom'; the label gives no reason (likely phytotoxicity/fruit finish), but per the rule any bloom ban -> prohibited-during-bloom. Owner may choose to scope this to pome fruit only. Review: bloomRestriction kept at 'none' because the pome bloom ban is not bee language."
+    },
+    "madex-hp-virus": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/069553-00001-20260922.pdf",
+      "docDate": "2026-09-22",
+      "page": 8,
+      "quote": "Environmental Hazards For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Plugin number 73049-39 is DiPel DF, so the Madex HP label (69553-1, Andermatt USA) was used. It has no bee/pollinator/bloom statement. relatively-nontoxic needs an explicit label statement -> unknown (more protective)."
+    },
+    "mustang-maxx": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+      "docDate": "2022-08-16",
+      "page": 4,
+      "quote": "This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds if bees are visiting the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Only bee restriction is conditional on bees visiting (foraging-based); p.8 pollinator BMP suggests evening/night application. No crop-specific bloom ban found (grep bloom|petal: only sorghum-midge timing p.34). No hours. Label is F9114 EC with ABN Mustang Maxx (279-3426)."
+    },
+    "mycotrol-eso": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/082074-00001-20240403.pdf",
+      "docDate": "2024-04-03",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This product is potentially pathogenic to honeybees. Avoid applying to areas where honeybees are actively foraging or around beehives.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective. Plugin number 70051-19 is PFR-97 20% WDG (a different fungus), so the correct label was used: Mycotrol ES 82074-1, whose alternate brand list includes 'Mycotrol® ESO' (p23). 'Potentially pathogenic to honeybees' is not a low-risk statement; 'toxic' chosen as stricter reading of ambiguous wording (alternative: unknown). Foraging-only avoidance -> dusk-to-dawn-only. No residual hours."
+    },
+    "nematode-steinernema-feltiae": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). No EPA label exists: live entomopathogenic nematodes are macro-organisms exempt from FIFRA registration, and the plugin has no EPA number, so there is no label bee statement to verify against. 'relatively-nontoxic' came from the AI table, not a label. Under the no-silence rule -> unknown. If the owner accepts a producer's bee-safety statement for the product on hand, that can restore relatively-nontoxic with provenance."
+    },
+    "onager-hexythiazox": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00277-20171102.pdf",
+      "docDate": "2017-11-02",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Latest Onager label (10163-277) has no bee/pollinator/bloom statement. relatively-nontoxic needs explicit label language -> unknown (more protective)."
+    },
+    "pyganic-1-4": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01771-20260427.pdf",
+      "docDate": "2026-04-27",
+      "page": 5,
+      "quote": "This product is highly toxic to bees exposed to direct treatment on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds while bees are foraging in the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Foraging-only restriction; p.7 adds 'To avoid possible harm to honey bees, apply in the early morning or late evening hours.' No bloom ban, no hours."
+    },
+    "pyganic-5-0": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01772-20260917.pdf",
+      "docDate": "2026-09-17",
+      "page": 4,
+      "quote": "This product is highly toxic to bees exposed to direct treatment on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds while bees are foraging",
+      "note": "Verified 2026-09-25 (confirmed). Bloom language is foraging-only; advisory 'apply in the early morning or late evening hours' (p13) and 'apply when the non-target insects are least active' (p6). No crop-level bloom prohibition, no residual hours."
+    },
+    "radiant-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "docDate": "2026-06-11",
+      "page": 4,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment, or to residues in/on blooming crops or weeds. Protect pollinating insects by following label directions intended to minimize drift",
+      "note": "Verified 2026-09-25 (confirmed). beeToxicity confirmed. Label (56 pages) has no foraging, bloom-window or residual-hours statement (grep forag|sunset|petal fall|in bloom|RT25|3 hours). The 'dusk-to-dawn-only' and 3 h residual are not label-sourced; downgrading to 'none' would be LESS protective on silence alone, so current values are kept. Owner decision."
+    },
+    "sevin-xlr-plus": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "docDate": "2025-07-17",
+      "page": 5,
+      "quote": "BEE CAUTION: This product is highly toxic to honeybees and other bees exposed to direct treatment or residues on crops or weeds in bloom.",
+      "note": "Verified 2026-09-25 (confirmed). p5: 'For crops in bloom (except soybean and corn): Do not apply this product to target crops or weeds in bloom.' Only soybean/corn get a sunrise/sunset-advisory path. Label says it 'may show residual toxicity to honeybees' but gives no hours, so residualToxicityHours stays unset."
+    },
+    "sluggo-iron-phosphate": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/067702-00003-20140908.pdf",
+      "docDate": "2014-09-08",
+      "page": 7,
+      "quote": "-Can be used around domestic animals (pets) and wildlife.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). Basic registration 67702-3 (Neudorff 'NEU1165M Slug and Snail Bait'; Sluggo is sold under supplemental numbers such as 67702-3-54705 Monterey and 67702-3-70051 Certis, whose labels are not on PPLS). The 17-page label has no bee/pollinator statement; the only safety claim is pets/wildlife (quoted), which is not a bee statement. Pelleted ground bait makes bee exposure unlikely, but that is judgment, not label. Silence -> unknown."
+    },
+    "spinosad": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "docDate": "2026-06-11",
+      "page": 4,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment, or to residues in/on blooming crops or weeds.",
+      "note": "Verified 2026-09-25 (confirmed). Generic plugin (no EPA number); verified against two spinosad labels, taking the stricter value per field. Entrust SC 62719-621 (2026-06-11, p4) says 'highly toxic' but has no foraging/bloom or residual-hours language. Success 62719-292 (2015-04-15 label, p3; https://www3.epa.gov/pesticides/chem_search/ppls/062719-00292-20150415.pdf): 'toxic to bees exposed to treatment for 3 hours following treatment. Do not apply ... if bees may forage'. highly-toxic (Entrust), dusk-to-dawn-only (Success; not loosened on Entrust's silence), 3 h residual kept because the gate only adds a warning when it is set."
+    },
+    "sulfur-90w": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/019713-00238-20170907.pdf",
+      "docDate": "2017-09-07",
+      "page": 5,
+      "quote": "Brown rot blossom blight, Coryneum blight. Powdery mildew. Rust, Scab TIMING/SPECIFIC DIRECTIONS: Apply pre­bloom, bloom, petal fall and in cover spray at 7 to 14 day intervals.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). Generic plugin with no EPA number, so no single label governs; checked the representative Drexel Sulfur 90W (19713-238, Active, 90% sulfur, 9 pages): no bee/pollinator statement anywhere, and it directs bloom-time sprays (quoted), so no bloom restriction. Silence -> unknown. Re-check against the label of the bag on hand once a number is chosen."
+    },
+    "surround-wp": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00018-20191223.pdf",
+      "docDate": "2019-12-23",
+      "page": 18,
+      "quote": "Table grapes: Do not spray table grapes from first bloom to harvest as white residue can remain on the rachis and fruit until harvest.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. No bee/pollinator statement anywhere on the label (Environmental Hazards p6/p30 cover water only) -> beeToxicity unknown (relatively-nontoxic unsupported). The only bloom prohibition is the table-grape residue restriction (a cosmetic, not bee, reason); citrus directions allow sprays 'throughout bloom' (p15). Applied the brief's any-crop rule -> prohibited-during-bloom; owner may prefer 'none' since the restriction is not pollinator-driven. Review: bloomRestriction kept at 'none' because the table-grape bloom ban concerns fruit residue, not bees."
+    },
+    "torac-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 8
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00036-20260728.pdf",
+      "docDate": "2026-07-28",
+      "page": 5,
+      "quote": "Application must be made at least 8 hours prior to bees foraging. ... Do not apply this product until flowering is complete and all petals have fallen unless one of the following conditions is met:",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective. Toxicity + 8 h statement p.5 (Env. Hazards: 'highly toxic to bees and other pollinating insects'). Pollinator box p.6: contracted crops - no application until petal fall unless beekeeper notified 48 h ahead; non-contracted attractive crops - until petal fall unless after sunset, <55F, public health, or apiary registry. Sunset is not the only path, so prohibited-during-bloom. residualToxicityHours = 8 from the explicit '8 hours prior to bees foraging'. Torac SC is an alternate brand of 71711-36. Review: bloomRestriction kept at 'dusk-to-dawn-only' because the label permits in-bloom application after sunset."
+    },
+    "voliam-xpress": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01320-20250509.pdf",
+      "docDate": "2025-05-09",
+      "page": 6,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment or residues in/on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds if bees are visiting the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Foraging-only language (p.6; p.8 'while bees are foraging in/or adjacent to the treated area'; alfalfa p.22 'Bee Precaution - Make applications when bees are not actively foraging by applying during the early morning or during the evening hours'). No bloom ban (only post-bloom rate caps, p.42). No hours. Verified on the correct Voliam Xpress number 100-1320."
+    },
+    "vydate-l-oxamyl": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00372-20230628.pdf",
+      "docDate": "2023-06-28",
+      "page": 14,
+      "quote": "Do not apply at bloom or within 30 days after bloom, as fruit thinning may occur.",
+      "note": "Verified 2026-09-25 (confirmed). MORE protective. p5 Environmental Hazards: 'highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply ... if bees are foraging' (foraging-only). Apple (p14) and pear (p20) directions prohibit bloom application (thinning reason); citrus (p17) allows bloom only between 1 h before sunset and 1 h after sunrise OR below 55F. Crop-level bloom prohibition + non-sunset exception -> prohibited-during-bloom under the brief's rule. No residual hours. Review: bloomRestriction kept at 'dusk-to-dawn-only' because the apple/pear 'Do not apply at bloom' is a fruit-thinning directive, not bee language."
+    },
+    "warrior-ii-with-zeon": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "docDate": "2025-07-03",
+      "page": 6,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment or residues in/on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds if bees are visiting the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Foraging-only language (p.6; alfalfa p.20 'Avoid application when bees are actively foraging by applying during the early morning or during the evening hours'). No bloom ban (only post-bloom rate caps p.49-52). No hours."
+    },
+    "xentari": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00040-20220503.pdf",
+      "docDate": "2022-05-03",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS This product is toxic to aquatic invertebrates. This product is toxic to the green lacewing and the predatory mite (Galendromus (= Metaseiulus) occidentalis)",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Label names non-target beneficial-insect toxicity (lacewing, predatory mite) but says nothing about bees/pollinators or bloom. relatively-nontoxic needs an explicit label statement -> unknown (more protective)."
     }
   },
   "formulation": {

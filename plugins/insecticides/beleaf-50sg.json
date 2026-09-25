@@ -24,7 +24,7 @@
     "whitefly (suppression)"
   ],
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"toxic","bloomRestriction":"none"},
   "notes": "IRAC 29 selective feeding inhibitor. Aphid + plant bug specialist; very low non-target impact.",
   "complianceFlags": {
     "omriListed": false,

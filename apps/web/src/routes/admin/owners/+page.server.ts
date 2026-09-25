@@ -67,11 +67,14 @@ export const actions: Actions = {
       activeRole: next?.roleWithinOwner ?? 'owner',
       impersonating: false
     });
-    writeAuditRow({
-      superadminUserId: u.id,
-      action: 'exit_impersonation',
-      ownerId: null
-    });
+    if (u.impersonating) {
+      writeAuditRow({
+        superadminUserId: u.id,
+        action: 'exit_impersonation',
+        ownerId: null,
+        payload: { from: u.activeOwnerId }
+      });
+    }
     throw redirect(303, '/admin/owners');
   }
 };

@@ -92,6 +92,9 @@ export function isInspectorSession(event: RequestEvent): boolean {
 export function requireSuperadmin(event: RequestEvent): AuthenticatedUser {
   const u = requireUser(event);
   if (!u.isSuperadmin) throw error(403, 'superadmin required');
+  if (event.locals?.authVia === 'bearer') {
+    throw error(403, 'superadmin actions require an interactive session');
+  }
   return u;
 }
 

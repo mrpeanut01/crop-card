@@ -42,6 +42,15 @@ param emailFrom string = ''
 @description('Key Vault holds an anthropic-api-key secret. False = no-key mode (Invariant 7: deterministic fallbacks).')
 param hasAnthropicKey bool = false
 
+@description('Apex custom domain served by the web app, e.g. cropcard.ag. Empty = default ACA hostname only.')
+param customDomain string = ''
+
+@description('Public DNS for customDomain already resolves to this environment (checked by deploy-azure.sh). Gates the hostname binding and the managed certificate request.')
+param customDomainDnsReady bool = false
+
+@description('The managed certificate for customDomain has been issued (checked by deploy-azure.sh). Gates the TLS binding and switching ORIGIN to the custom domain.')
+param customDomainCertIssued bool = false
+
 @description('Deploy the plugin marketplace app (with its ClamAV sidecar). The web app does not depend on it.')
 param deployMarketplace bool = false
 
@@ -67,6 +76,10 @@ var marketplaceBlobContainerName = 'cropcard-marketplace'
 var useRegistry = !empty(containerRegistryServer)
 var acrName = useRegistry ? split(containerRegistryServer, '.')[0] : 'none'
 var kvSecretsUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+var useDomain = !empty(customDomain)
+var bindDomain = useDomain && customDomainDnsReady
+var domainTls = bindDomain && customDomainCertIssued
+var domainCertName = '${prefix}-${replace(customDomain, '.', '-')}'
 var acrPullRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 // ─── Storage account + blob container for Litestream replicas ──────────
@@ -199,8 +212,24 @@ resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
 }
 
 // ACA's default hostname is <app>.<env default domain>, so ORIGIN is known
-// before the app exists. Magic links are built from ORIGIN, never from Host.
-var appOrigin = 'https://${appName}.${cae.properties.defaultDomain}'
+// before the app exists. Magic links are built from ORIGIN, never from Host,
+// so it only moves to the custom domain once that serves valid TLS.
+var appOrigin = domainTls ? 'https://${customDomain}' : 'https://${appName}.${cae.properties.defaultDomain}'
+
+// A managed certificate needs the hostname already on the app, and the app
+// can only bind TLS to an issued certificate, so the domain comes up over
+// two deploys: hostname + certificate request, then the SNI binding.
+var appCustomDomains = !bindDomain
+  ? []
+  : domainTls
+      ? [
+          {
+            name: customDomain
+            bindingType: 'SniEnabled'
+            certificateId: '${cae.id}/managedCertificates/${domainCertName}'
+          }
+        ]
+      : [{ name: customDomain, bindingType: 'Disabled' }]
 
 // Container Apps rejects empty secret values, so optional secrets are only
 // declared (and referenced) when supplied.
@@ -251,6 +280,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 8080
         transport: 'auto'
         allowInsecure: false
+        customDomains: appCustomDomains
       }
       secrets: concat(coreSecrets, optionalSecrets)
     }
@@ -302,6 +332,43 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
         maxReplicas: 1
       }
     }
+  }
+}
+
+// ─── Custom domain ─────────────────────────────────────────────────────
+// The zone is hosted here so the records track the environment's IP and the
+// app's verification ID; the registrar only delegates to its name servers.
+resource dnsZone 'Microsoft.Network/dnsZones@2018-05-01' = if (useDomain) {
+  name: useDomain ? customDomain : 'unused.invalid'
+  location: 'global'
+}
+
+resource apexA 'Microsoft.Network/dnsZones/A@2018-05-01' = if (useDomain) {
+  parent: dnsZone
+  name: '@'
+  properties: {
+    TTL: 3600
+    ARecords: [{ ipv4Address: cae.properties.staticIp }]
+  }
+}
+
+resource asuidTxt 'Microsoft.Network/dnsZones/TXT@2018-05-01' = if (useDomain) {
+  parent: dnsZone
+  name: 'asuid'
+  properties: {
+    TTL: 3600
+    TXTRecords: [{ value: [app.properties.customDomainVerificationId] }]
+  }
+}
+
+resource domainCert 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (bindDomain) {
+  parent: cae
+  name: domainCertName
+  location: location
+  dependsOn: [app]
+  properties: {
+    subjectName: customDomain
+    domainControlValidation: 'HTTP'
   }
 }
 
@@ -395,5 +462,6 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = if (deployMar
 output appFqdn string = app.properties.configuration.ingress.fqdn
 output appOrigin string = appOrigin
 output marketplaceFqdn string = deployMarketplace ? marketplaceApp!.properties.configuration.ingress.fqdn : ''
+output customDomainNameServers array = useDomain ? dnsZone!.properties.nameServers : []
 output storageAccount string = storage.name
 output blobContainer string = blobContainerName

@@ -21,7 +21,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "high",
   "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
-  "epaRegistrationNumber": "1021-1772",
+  "epaRegistrationNumber": "73049-552",
   "targetPests": [
     "aphid",
     "leafhopper",

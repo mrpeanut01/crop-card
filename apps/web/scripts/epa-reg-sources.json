@@ -277,9 +277,11 @@
       "matchedTitle": "US EPA, Pesticide Product Label, PURSUIT HERBICIDE"
     },
     "pyganic-1-4": {
-      "epaRegistrationNumber": "1021-1771",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01771-20220804.pdf",
-      "matchedTitle": "PyGanic® Crop Protection EC 1.4 II"
+      "epaRegistrationNumber": "73049-551",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01771-20260427.pdf",
+      "docDate": "2026-04-27",
+      "quote": "Pyganic® Crop Protection EC 1.4II Master Label",
+      "note": "Corrected 2026-09-25 from 1021-1771. PPLS transfer history: 1021-1771 (MGK) -> 73049-551 (Sumitomo Biorational) on 2026-09-03."
     },
     "radiant-sc": {
       "epaRegistrationNumber": "62719-545",
@@ -517,12 +519,11 @@
       "note": "PPLS master brand for 100-1098 is Abound Flowable Fungicide; PPLS lists 'QUADRIS FLOWABLE FUNGICIDE' as an alternate brand (Active, Syngenta). The Syngenta Quadris container label (SCP 1098B-L2W 1218) prints EPA Reg. No. 100-1098 (p1). Quadris Top/Opti/Xtra are different registrations."
     },
     "roundup-powermax-3": {
-      "epaRegistrationNumber": "524-659",
+      "epaRegistrationNumber": "105211-118",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00659-20241213.pdf",
       "docDate": "2024-12-13",
-      "page": 3,
-      "quote": "MASTER LABEL FOR EPA REG. NO. 524-659 Primary Brand Name: MON 301108 Herbicide Alternate Brand Names: Roundup PowerMAX 3 Herbicide",
-      "note": "Resolves the allowlist question: the label names Roundup PowerMAX 3 as the alternate brand of MON 301108 (524-659, Bayer). PPLS transfer history: 524-659 moved from Bayer CropScience to Ruveon, LLC on 2026-01-14 and is now carried as 105211-118 (Active, product name 'MON 301108 Herbicide', PPLS search alt name 'ROUNDUP POWERMAX 3 HERBICIDE'). Plugin names Bayer, so the Bayer number is used; jugs sold under Ruveon will show 105211-118. Registration transferred Bayer -> Ruveon, LLC on 2026-01-14 (now 105211-118 in PPLS); kept 524-659 because the plugin names Bayer, and jugs in circulation carry it."
+      "quote": "Primary Brand Name: MON 301108 Herbicide Alternate Brand Names: Roundup PowerMAX 3 Herbicide",
+      "note": "Corrected 2026-09-25 from 524-659. PPLS transfer history: 524-659 (Bayer CropScience) -> 105211-118 (Ruveon, LLC) on 2026-01-14. Owner decision: records match the EPA system, so the current holder's number."
     },
     "sivanto-prime": {
       "epaRegistrationNumber": "264-1141",
@@ -1151,6 +1152,13 @@
       "epaRegistrationNumber": "91234-31",
       "quote": "A304.01 [Alternate Brand Names: Promote™, Stadia™, Empero™]",
       "page": 3
+    },
+    "pyganic-5-0": {
+      "epaRegistrationNumber": "73049-552",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01772-20260917.pdf",
+      "docDate": "2026-09-17",
+      "quote": "Product Name: PYGANIC CROP PROTECTION EC 5.0 II Admin Number: 1021-1772",
+      "note": "Corrected 2026-09-25 from 1021-1772. PPLS transfer history: 1021-1772 (MGK) -> 73049-552 (Sumitomo Biorational) on 2026-09-03."
     }
   },
   "rainfast": {
@@ -2687,6 +2695,13 @@
       "page": 3,
       "quote": "Lumax® EZ Herbicide is a ZC formulation",
       "note": "ZC = mixed capsule suspension + suspension concentrate (liquid); code added to the schema enum. PPLS formulation field disagrees (EC / Pressurized Liquid); label wins."
+    },
+    "met52-ec-metarhizium": {
+      "formulation": "OD",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00033-20260528.pdf",
+      "docDate": "2026-05-28",
+      "quote": "LALGUARD® M52 OD",
+      "page": 3
     }
   },
   "dataCorrections": {
@@ -3510,6 +3525,19 @@
         }
       },
       "note": "Owner decision 2026-09-25: correct records to match the EPA system. The only PPLS product named Stadia is 91234-31 (halosulfuron-methyl 75% WDG); the plugin had declared rimsulfuron."
+    },
+    "met52-ec-metarhizium": {
+      "from": {
+        "displayName": "Met52 EC (Metarhizium anisopliae F52, OMRI)",
+        "formulation": "EC",
+        "activeIngredients[0].name": "Metarhizium anisopliae strain F52",
+        "omriListed": true,
+        "certifiedOrganicAllowed": true
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00033-20260528.pdf",
+      "docDate": "2026-05-28",
+      "quote": "LALGUARD M52 OD is composed of spores of the insect pathogenic fungus Metarhizium brunneum strain F52.",
+      "note": "64137-33 is now branded LALGUARD M52 OD (Met52 EC brand dropped 2022); OD is the code in the brand name. OMRI lists only LALGUARD M52 GR (agb-19015), not the OD, and the label carries no organic statement."
     }
   }
 }

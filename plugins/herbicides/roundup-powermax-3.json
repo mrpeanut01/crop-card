@@ -1,10 +1,10 @@
 {
   "pluginId": "roundup-powermax-3",
   "type": "herbicide",
-  "displayName": "Roundup PowerMAX 3 (Bayer)",
+  "displayName": "Roundup PowerMAX 3 (Ruveon; formerly Bayer)",
   "version": "1.0.0",
   "formulation": "SL",
-  "epaRegistrationNumber": "524-659",
+  "epaRegistrationNumber": "105211-118",
   "defaultUnit": "fl-oz",
   "applicationTiming": "BURNDOWN",
   "activeIngredients": [

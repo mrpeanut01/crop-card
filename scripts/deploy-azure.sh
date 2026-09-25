@@ -244,7 +244,7 @@ fi
 
 NS="$(az deployment group show -g "$GROUP" --name "$DEPLOYMENT_NAME" --query "properties.outputs.customDomainNameServers.value" -o tsv 2>/dev/null | tr '\n' ' ')"
 if [ -n "$ZONE" ] && [ "$DNS_READY" = false ]; then
-  echo "domain       : ${ZONE} is not delegated yet; set its name servers at the registrar to: ${NS}"
+  echo "domain       : ${FQDNS[*]} don't resolve to the app yet; if ${ZONE} isn't delegated, set its name servers at the registrar to: ${NS}"
 fi
 
 ORIGIN="$(az deployment group show -g "$GROUP" --name "$DEPLOYMENT_NAME" --query properties.outputs.appOrigin.value -o tsv)"

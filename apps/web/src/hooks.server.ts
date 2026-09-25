@@ -172,6 +172,21 @@ export function csrfDecision(input: {
 }
 
 /**
+ * Billing gate for an Owner whose status is already known. API callers get
+ * a JSON 402 instead of a 303 to the HTML /suspended page; /api/billing/**
+ * stays reachable so a suspended Owner can pay their way back.
+ */
+export type SuspendedTenantGate = 'allow' | 'redirect' | 'json-402';
+export function suspendedTenantGate(
+  pathname: string,
+  billingStatus: string | null
+): SuspendedTenantGate {
+  if (billingStatus !== 'suspended') return 'allow';
+  if (pathname.startsWith('/api/billing/')) return 'allow';
+  return pathname.startsWith('/api/') ? 'json-402' : 'redirect';
+}
+
+/**
  * Request boundary (Phase 18 final + Phase 24 Bearer auth):
  *   0. (Phase 24) Resolve `Authorization: Bearer cck_…` BEFORE cookie
  *      lookup. Hit → mint an AuthenticatedUser-shaped record from the
@@ -185,7 +200,7 @@ export function csrfDecision(input: {
  *      blindly).
  *   4. Partial sessions (no `activeOwnerId`) bounce to /owner-picker or
  *      /onboarding depending on assignment count.
- *   5. Suspended Owners get 402.
+ *   5. Suspended Owners: HTML → 303 /suspended; /api/** → JSON 402.
  *   6. Wrap `resolve(event)` in `runWithTenant(activeOwnerId, …)` so
  *      tenant-scoped repos see the right Owner.
  */
@@ -290,10 +305,14 @@ export const handle: Handle = async ({ event, resolve }) => {
     path !== '/suspended' &&
     path !== '/signout'
   ) {
-    const billing = ownerBillingStatus(user.activeOwnerId);
-    if (billing === 'suspended') {
-      throw redirect(303, '/suspended');
+    const gate = suspendedTenantGate(path, ownerBillingStatus(user.activeOwnerId));
+    if (gate === 'json-402') {
+      return json(
+        { error: 'tenant-suspended' },
+        { status: 402, headers: { 'cache-control': 'no-store' } }
+      );
     }
+    if (gate === 'redirect') throw redirect(303, '/suspended');
   }
 
   const activeOwnerId = user.activeOwnerId;

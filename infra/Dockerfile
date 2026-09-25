@@ -83,6 +83,10 @@ CMD ["pnpm", "dev"]
 FROM node:${NODE_VERSION} AS runtime
 ARG APP_NAME
 ARG DB_FILENAME
+# Commit this image was built from; /api/health reports it as `version` so a
+# deploy can prove the new build is the one serving. Declared in this stage
+# only, so changing it never busts the dependency or build caches.
+ARG BUILD_SHA=dev
 RUN apk add --no-cache sqlite ca-certificates tini
 WORKDIR /app
 
@@ -113,6 +117,7 @@ RUN addgroup -S app && adduser -S app -G app && \
 USER app
 
 ENV NODE_ENV=production
+ENV BUILD_SHA=${BUILD_SHA}
 ENV DATABASE_URL=file:/data/${DB_FILENAME}
 ENV DB_PATH=/data/${DB_FILENAME}
 ENV PLUGINS_DIR=/app/plugins

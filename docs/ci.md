@@ -38,7 +38,7 @@ The release workflow then runs:
 
 ## Deploy
 
-`deploy.yml` runs when `ci` succeeds on a push to `main`: it builds the image on the runner, pushes it to the resource group's ACR, deploys `infra/azure/main.bicep`, and smoke-tests `/api/health`. It authenticates with GitHub OIDC through the `production` environment (main only), so GitHub holds no Azure credentials, and app secrets never leave Key Vault. One-time setup is `scripts/setup-github-deploy.sh`; `scripts/deploy-azure.sh --apply` remains the local path and the bootstrap for a fresh resource group.
+`deploy.yml` runs when `ci` succeeds on a push to `main`: it builds the image on the runner, pushes it to the resource group's ACR, deploys `infra/azure/main.bicep`, and waits until `/api/health` reports the deployed commit as `version` (baked into the image as `BUILD_SHA`); the deploy step itself is `scripts/deploy-azure.sh --apply --ci`, the same script used by hand. `scripts/watch-deploy.sh <pr>` follows a merge to that point and prints a LIVE banner. It authenticates with GitHub OIDC through the `production` environment (main only), so GitHub holds no Azure credentials, and app secrets never leave Key Vault. One-time setup is `scripts/setup-github-deploy.sh`; `scripts/deploy-azure.sh --apply` remains the local path and the bootstrap for a fresh resource group.
 
 ## On demand
 

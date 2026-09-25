@@ -1,6 +1,8 @@
 name: deploy
 
-# Deploys main to Azure Container Apps after `ci` passes on it.
+# Deploys main to Azure Container Apps after `ci` passes on it, and succeeds
+# only when the live app's /api/health reports the deployed SHA.
+# scripts/watch-deploy.sh follows a merge through to that point.
 #
 # Auth is GitHub OIDC → the `cropcard-github-deploy` Entra app, federated to
 # this repo's `production` environment (no Azure credentials in GitHub). App
@@ -72,43 +74,28 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.image }}
+          build-args: BUILD_SHA=${{ env.SHA }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Optional secrets present in Key Vault
-        id: secrets
-        run: |
-          NAMES="$(az keyvault secret list --vault-name "$KV" --query "[].name" -o tsv)"
-          has() { printf '%s\n' "$NAMES" | grep -qx "$1" && echo true || echo false; }
-          printf '%s\n' "$NAMES" | grep -qx auth-secret || { echo "::error::auth-secret missing from $KV"; exit 1; }
-          echo "postmark=$(has postmark-token)" >> "$GITHUB_OUTPUT"
-          echo "anthropic=$(has anthropic-api-key)" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy Bicep
+      # One deploy path: the same script a human runs, in --ci mode (no
+      # creates or grants, secret names only). It deploys infra/azure/main.bicep
+      # with the image above and returns only once /api/health reports this SHA.
+      - name: Deploy and wait until live
         id: deploy
         env:
+          CROPCARD_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          CROPCARD_ACR: ${{ vars.ACR_NAME }}
+          CROPCARD_KV: ${{ vars.KEY_VAULT_NAME }}
+          CROPCARD_SHA: ${{ env.SHA }}
           EMAIL_FROM: ${{ vars.EMAIL_FROM }}
-        run: |
-          EXTRA=()
-          [ -n "$EMAIL_FROM" ] && EXTRA+=(--parameters emailFrom="$EMAIL_FROM")
-          az deployment group create -g "$RG" --name main \
-            --template-file infra/azure/main.bicep \
-            --parameters infra/azure/parameters.dev.bicepparam \
-            --parameters image="${{ steps.meta.outputs.image }}" \
-                         containerRegistryServer="${ACR}.azurecr.io" \
-                         keyVaultName="$KV" \
-                         hasPostmarkToken="${{ steps.secrets.outputs.postmark }}" \
-                         hasAnthropicKey="${{ steps.secrets.outputs.anthropic }}" \
-            "${EXTRA[@]}" --output none
-          ORIGIN="$(az deployment group show -g "$RG" --name main --query properties.outputs.appOrigin.value -o tsv)"
-          echo "origin=${ORIGIN}" >> "$GITHUB_OUTPUT"
+        run: ./scripts/deploy-azure.sh --apply --ci --image "${{ steps.meta.outputs.image }}"
 
-      - name: Smoke test
+      - name: Summary
+        if: success()
         run: |
-          ORIGIN="${{ steps.deploy.outputs.origin }}"
-          for i in $(seq 1 10); do
-            if curl -fsS --max-time 60 "${ORIGIN}/api/health"; then echo; echo "Health OK"; exit 0; fi
-            echo "attempt $i failed; retrying"; sleep 10
-          done
-          echo "::error::health check failed for ${ORIGIN}"
-          exit 1
+          {
+            echo "### Live: \`${SHA::7}\`"
+            echo
+            echo "${{ steps.deploy.outputs.origin }} is serving ${SHA} (checked via /api/health)."
+          } >> "$GITHUB_STEP_SUMMARY"

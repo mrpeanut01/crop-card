@@ -5,7 +5,8 @@ param env = 'dev'
 param location = 'eastus2'
 param authMode = 'magic-link'
 param deployMarketplace = false
-param customDomain = 'cropcard.ag'
+param dnsZoneName = 'cropcard.io'
+param customHosts = ['app', 'www']
 
 // Supplied at deploy time by scripts/deploy-azure.sh:
 //   image, containerRegistryServer, keyVaultName, hasPostmarkToken, hasAnthropicKey, emailFrom,

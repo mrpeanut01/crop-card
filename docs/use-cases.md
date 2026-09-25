@@ -107,6 +107,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   5. Inline form: quantity (free text), lot number (free text)
   6. Submit
 - **Success:** `/api/harvest/record` persists; planting marked `harvested`.
+- **Repeat picks:** plantings whose resolved archetype (planting `archetype_override` > plugin `archetype` > legacy `harvestStyle`) is `cut-and-come-again-leafy`, `continuous-harvest-fruit` or `tree-fruit-multi-pick` keep a **Record another pick** button after the first harvest; every other archetype closes the form once harvested.
 - **Audit notes:** Both inputs use placeholder text ([harvest:133, harvest:137](../apps/web/src/routes/harvest/+page.svelte#L133)) — see F-F. No moisture-at-harvest field on the harvest record — adequate for vegetables. Small-grain harvest (UC-16, FR-21) still requires the moisture extension; the readiness panel surfaces moisture _guidance_ from the plugin but does not persist it on the event row.
 
 ## UC-07 — Companion-system advisor

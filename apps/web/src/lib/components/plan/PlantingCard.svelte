@@ -143,7 +143,7 @@
   <div class="pc-body">
     <div class="pc-head">
       <div class="pc-title-wrap">
-        <div class="serif pc-title">{planting.varietyDisplayName}</div>
+        <a class="serif pc-title" href="/crops/{planting.id}">{planting.varietyDisplayName}</a>
         {#if subLine}
           <div class="pc-sub">{subLine}</div>
         {/if}
@@ -277,11 +277,21 @@
     min-width: 0;
   }
   .pc-title {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    margin: -12px 0 -8px;
+    text-decoration: none;
     font-size: 17px;
     color: var(--color-ink);
     letter-spacing: -0.01em;
     line-height: 1.2;
     font-family: var(--font-serif, serif);
+  }
+  .pc-title:hover,
+  .pc-title:focus-visible {
+    text-decoration: underline;
+    color: var(--color-forest-deep);
   }
   .pc-sub {
     font-size: 12px;

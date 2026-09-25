@@ -57,3 +57,11 @@ describe('PlantingCard (#121)', () => {
     expect(values[1]).toBe('—');
   });
 });
+
+describe('PlantingCard title link (#179)', () => {
+  it('links the title to the planting detail page', () => {
+    render(PlantingCard, { planting: PLANTING });
+    const link = screen.getByRole('link', { name: 'Bloody Butcher' });
+    expect(link.getAttribute('href')).toBe('/crops/p1');
+  });
+});

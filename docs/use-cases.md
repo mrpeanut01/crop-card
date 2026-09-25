@@ -468,12 +468,12 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 ## UC-29 — Crops dashboard & per-crop history
 
 - **Persona:** P1
-- **Status:** Implemented at [crops/+page.svelte](../apps/web/src/routes/crops/+page.svelte) and [crops/[id]/+page.svelte](../apps/web/src/routes/crops/[id]/+page.svelte) (Phase 12d).
+- **Status:** Implemented at [crops/[id]/+page.svelte](../apps/web/src/routes/crops/[id]/+page.svelte) (Phase 12d). The standalone `/crops` list was retired (#178): it now 308-redirects to `/plan` (mapping `?blockId=` to `?block=`), because the Plan v2 planting grid covers "what's growing where".
 - **Trigger:** Owner wants to see "what's growing where" or open the timeline for one crop.
 - **Preconditions:** ≥1 crop row.
 - **Primary path:**
-  1. Open `/crops`. Status tabs (Active / Harvested / Planned / Failed / Archived) filter the list; optional `blockId` and `year` query params narrow further.
-  2. Each card shows variety, block, planting date, status. Tap it to open `/crops/[id]`.
+  1. Open `/plan` and pick a block. The Plan v2 planting grid shows variety, role, stage, planting date and harvest window per planting.
+  2. Tap a planting card's title to open `/crops/[id]`, the planting detail page (Almanac shell: breadcrumb Plan › Block › Planting, Kicker, serif H1, `<title>` set to the variety).
   3. Per-crop detail page consolidates the full timeline tied by `crop_id`: spray events, harvest events, insecticide events, fertility applications, hay cuttings, tasks, stock movements.
 - **Success:** Owner sees the per-crop "Brewfather batch" view with every event scoped to that planting.
 - **Audit notes:** A Crop is one planting on one block. Per CLAUDE.md Phase 12d, every event table now FK's `crop_id`, and the Phase 13 backfill populated `stock_movements.crop_id` from source events. Pre/post-task templates (UC-11) are anchored on the Crop, so the dashboard surfaces them in chronological order.

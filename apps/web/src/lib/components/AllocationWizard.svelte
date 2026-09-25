@@ -91,6 +91,7 @@
     aiEnabled = false,
     wizardPlanId,
     initialChatMessages = [],
+    initialStep,
     onClose,
     onCommitted,
     onRefreshParent
@@ -120,6 +121,10 @@
       role: 'user' | 'assistant' | 'system';
       content: string;
     }>;
+    /** #120 — entry point chosen from the /plan workflow strip. The
+     *  downstream steps (schedule / inputs / commit) consume an in-memory
+     *  allocation, so only these two can be mounted cold. */
+    initialStep?: 'season-setup' | 'allocation';
     onClose: () => void;
     onCommitted: () => void;
     /** Optional — refresh parent data WITHOUT closing the wizard. Used by
@@ -156,7 +161,7 @@
   const hasExistingPlan = untrack(() => blocks.some((b) => b.plantings && b.plantings.length > 0));
   let step: Step = $state(
     untrack(() => {
-      if (!activeSetup) return 'season-setup';
+      if (!activeSetup || initialStep === 'season-setup') return 'season-setup';
       if (hasExistingPlan) return 'plan-state';
       return 'seeds';
     })

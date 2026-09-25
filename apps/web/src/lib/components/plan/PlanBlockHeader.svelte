@@ -13,10 +13,11 @@
    * so the consumer can route them however it likes (navigate, open
    * a Modal, etc.).
    */
-  import { Map, Sprout, Wrench, Plus, Layers } from 'lucide-svelte';
+  import { Map, MapPin, Sprout, Wrench, Plus, Layers } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
+  import { fmtAcres } from '$lib/plan/planV2Derive';
 
   interface Props {
     block: BlockWithPlantings;
@@ -25,6 +26,9 @@
     /** Status pill content + tone. */
     statusLabel?: string;
     statusTone?: 'forest' | 'wheat' | 'rust' | 'sky' | 'neutral';
+    /** Where the "No map geometry" pill links (the farm-map editor).
+     *  Omitted for roles that can't edit geometry — the pill still shows. */
+    geometryEditHref?: string;
     /** Optional action handlers. Buttons hide when handler is null. */
     onOpenMap?: () => void;
     onRefineWithAi?: () => void;
@@ -36,6 +40,7 @@
     harvestWindowLabel,
     statusLabel,
     statusTone = 'forest',
+    geometryEditHref,
     onOpenMap,
     onRefineWithAi,
     onEditBlock,
@@ -43,6 +48,9 @@
   }: Props = $props();
 
   const isPoly = $derived(block.plantings.length > 1);
+  const geometryMissing = $derived(!block.geometryGeojson);
+  const geometryNote =
+    'This block has no map outline, so pollination distances, the map overlay, and area-from-map are unavailable.';
   const cropSummary = $derived.by(() => {
     if (block.plantings.length === 0) return 'No plantings yet';
     if (block.plantings.length === 1) return block.plantings[0].varietyDisplayName;
@@ -52,7 +60,7 @@
       .join(', ')}…`;
   });
   const kickerText = $derived.by(() => {
-    const ac = block.acres !== undefined ? `${block.acres} ac` : 'no acres recorded';
+    const ac = block.acres !== undefined ? fmtAcres(block.acres) : 'no acres recorded';
     const polyLabel = isPoly
       ? `${block.plantings.length} plantings`
       : block.plantings.length === 1
@@ -77,7 +85,33 @@
         </Pill>
       {/if}
       {#if block.acres !== undefined}
-        <Pill tone="neutral">{block.acres} ac</Pill>
+        <Pill tone="neutral">{fmtAcres(block.acres)}</Pill>
+      {/if}
+      {#if geometryMissing}
+        {#if geometryEditHref}
+          <a
+            class="geo-link"
+            href={geometryEditHref}
+            title="{geometryNote} Draw it in the farm map editor."
+            data-testid="geometry-missing"
+          >
+            <Pill tone="wheat">
+              <MapPin size={10} strokeWidth={1.75} aria-hidden="true" />
+              No map geometry
+            </Pill>
+          </a>
+        {:else}
+          <span
+            class="geo-static"
+            title="{geometryNote} The farm owner can draw it."
+            data-testid="geometry-missing"
+          >
+            <Pill tone="wheat">
+              <MapPin size={10} strokeWidth={1.75} aria-hidden="true" />
+              No map geometry
+            </Pill>
+          </span>
+        {/if}
       {/if}
       {#if harvestWindowLabel}
         <Pill tone="wheat">Harvest {harvestWindowLabel}</Pill>
@@ -146,6 +180,7 @@
   }
   .pills {
     display: flex;
+    align-items: center;
     gap: 8px;
     margin-top: 10px;
     flex-wrap: wrap;
@@ -153,14 +188,33 @@
   .bh-actions {
     display: flex;
     gap: 8px;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0;
     flex-wrap: wrap;
+  }
+  .geo-link,
+  .geo-static {
+    display: inline-flex;
+    align-items: center;
+  }
+  .geo-link {
+    min-height: 48px;
+    text-decoration: none;
+    border-radius: var(--radius-pill);
+  }
+  .geo-link:hover :global(.pill) {
+    border-color: var(--color-forest-deep);
+  }
+  .geo-link:focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 2px;
   }
   .ghost,
   .primary {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    min-height: 48px;
     padding: 8px 14px;
     border-radius: var(--radius-input, 6px);
     font-size: 13px;

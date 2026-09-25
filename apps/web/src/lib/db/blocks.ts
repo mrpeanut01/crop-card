@@ -61,6 +61,7 @@ export interface PlantingRecord {
    *  PlantingCard `sourceTag` prop so the footer renders the right
    *  badge instead of the catch-all "Manual entry". */
   sourceProvenance?: 'ai' | 'fallback' | null;
+  groupRole?: 'anchor' | 'companion';
 }
 
 export interface BlockWithPlantings extends Block {
@@ -110,7 +111,8 @@ export function listBlocks(): BlockWithPlantings[] {
       quantityPlanted:
         p.quantityPlantedHundredths != null ? p.quantityPlantedHundredths / 100 : undefined,
       quantityUnit: p.quantityUnit ?? undefined,
-      sourceProvenance: p.sourceProvenance ?? null
+      sourceProvenance: p.sourceProvenance ?? null,
+      groupRole: p.groupRole ?? undefined
     });
     grouped.set(p.blockId, list);
   }
@@ -141,7 +143,8 @@ export function getBlock(id: string): BlockWithPlantings | undefined {
       quantityPlanted:
         p.quantityPlantedHundredths != null ? p.quantityPlantedHundredths / 100 : undefined,
       quantityUnit: p.quantityUnit ?? undefined,
-      sourceProvenance: p.sourceProvenance ?? null
+      sourceProvenance: p.sourceProvenance ?? null,
+      groupRole: p.groupRole ?? undefined
     }));
   return { ...rowToBlock(row), plantings };
 }

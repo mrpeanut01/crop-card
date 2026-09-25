@@ -15,6 +15,7 @@
   import { Plus, Search, Layers } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
+  import { fmtAcres } from '$lib/plan/planV2Derive';
 
   interface Props {
     blocks: BlockWithPlantings[];
@@ -94,7 +95,7 @@
           <div class="head-line">
             <span class="serif name">{b.name}</span>
             {#if b.acres !== undefined}
-              <span class="mono acres">{b.acres} ac</span>
+              <span class="mono acres">{fmtAcres(b.acres)}</span>
             {/if}
           </div>
           {#if b.plantings.length > 0}

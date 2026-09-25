@@ -49,8 +49,8 @@
   <div class="head">
     <h3 class="serif">Scheduled tasks <span class="suffix">{titleSuffix}</span></h3>
     {#if onAddTask}
-      <button class="ghost" onclick={onAddTask} type="button">
-        <Plus size={13} strokeWidth={1.75} /> Task
+      <button class="ghost" onclick={onAddTask} type="button" aria-label="Add task">
+        <Plus size={13} strokeWidth={1.75} aria-hidden="true" /> Task
       </button>
     {/if}
   </div>
@@ -58,46 +58,48 @@
   {#if rows.length === 0}
     <div class="empty">Nothing scheduled in this window.</div>
   {:else}
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Task</th>
-          <th>Planting</th>
-          <th>Source</th>
-          <th>Status</th>
-          <th aria-label="open"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each rows as row (row.id)}
+    <div class="table-scroll">
+      <table>
+        <thead>
           <tr>
-            <td class="mono date">{row.dateLabel}</td>
-            <td class="task">{row.title}</td>
-            <td>
-              {#if row.plantingLabel}
-                <span class="planting-chip">
-                  <span
-                    class="swatch"
-                    style:background={row.plantingColor ?? 'var(--color-divider)'}
-                  ></span>
-                  {row.plantingLabel}
-                </span>
-              {/if}
-            </td>
-            <td class="source">{row.source}</td>
-            <td><Pill tone={statusTone(row.status)}>{row.status}</Pill></td>
-            <td class="chev">
-              {#if row.href}
-                <a href={row.href} aria-label="Open task">
-                  <ChevronRight size={14} strokeWidth={1.75} />
-                </a>
-              {/if}
-            </td>
+            <th>Date</th>
+            <th>Task</th>
+            <th>Planting</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th aria-label="open"></th>
           </tr>
-        {/each}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {#each rows as row (row.id)}
+            <tr>
+              <td class="mono date">{row.dateLabel}</td>
+              <td class="task">{row.title}</td>
+              <td>
+                {#if row.plantingLabel}
+                  <span class="planting-chip">
+                    <span
+                      class="swatch"
+                      style:background={row.plantingColor ?? 'var(--color-divider)'}
+                    ></span>
+                    {row.plantingLabel}
+                  </span>
+                {/if}
+              </td>
+              <td class="source">{row.source}</td>
+              <td><Pill tone={statusTone(row.status)}>{row.status}</Pill></td>
+              <td class="chev">
+                {#if row.href}
+                  <a href={row.href} aria-label="Open task">
+                    <ChevronRight size={14} strokeWidth={1.75} />
+                  </a>
+                {/if}
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
   {/if}
 </Card>
 
@@ -106,6 +108,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
     margin-bottom: 14px;
   }
   .head h3 {
@@ -123,7 +126,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 10px;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 6px 12px;
     border: 1px solid var(--color-divider);
     background: transparent;
     color: var(--color-forest-deep);
@@ -141,6 +146,9 @@
     font-size: 13px;
     padding: 14px 0 0;
     font-style: italic;
+  }
+  .table-scroll {
+    overflow-x: auto;
   }
   table {
     width: 100%;

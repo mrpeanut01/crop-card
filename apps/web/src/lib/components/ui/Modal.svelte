@@ -14,6 +14,8 @@
   }
 
   let { open, onClose, title, children, footer, closeOnBackdrop = true }: Props = $props();
+  const uid = $props.id();
+  const titleId = `modal-title-${uid}`;
 
   let dialog: HTMLDialogElement | undefined = $state();
   let previouslyFocused: HTMLElement | null = null;
@@ -49,15 +51,10 @@
   });
 </script>
 
-<dialog
-  bind:this={dialog}
-  oncancel={onCancel}
-  onclick={onBackdropClick}
-  aria-labelledby="modal-title"
->
+<dialog bind:this={dialog} oncancel={onCancel} onclick={onBackdropClick} aria-labelledby={titleId}>
   <div class="shell" role="document">
     <header>
-      <h2 id="modal-title" class="serif">{title}</h2>
+      <h2 id={titleId} class="serif">{title}</h2>
       <button type="button" class="close" aria-label="Close" onclick={onClose}>×</button>
     </header>
     <div class="body">{@render children()}</div>

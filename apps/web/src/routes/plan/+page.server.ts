@@ -28,6 +28,7 @@ import { getFarmLatLon } from '$lib/schedule/settings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { deriveSeasonWorkflow } from '$lib/plan/seasonWorkflow';
+import { planV2EventsFor } from '$lib/plan/planV2Derive';
 import { listPlanRevisions } from '$lib/plan/revisions';
 import { getActiveSession, listMessages } from '$lib/db/wizardChat';
 import {
@@ -263,6 +264,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       staleAnchor: t.staleAnchor,
       createdAt: t.createdAt
     })),
+    planV2Events: planV2EventsFor(blocks, (id) => {
+      const plug = registry.get(id)?.plugin;
+      return plug && plug.type === 'crop' ? (plug as CropPlugin) : undefined;
+    }),
     // Phase 25d (#89) — wizard chat server-persistence. Pass the
     // wizard the planId + any prior chat turns so resume restores the
     // conversation instead of dropping it on the floor.

@@ -26,6 +26,11 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   4. (If applicable) Companion-system advisor proposes a layout — accept to batch-add (this is UC-07)
 - **Success:** Block appears on `/today` upcoming-events list and is selectable on `/spray`, `/scout`, `/harvest`.
 - **Click count from `/`:** 5 clicks for a block + planting + companion accept.
+- **Plan v2 shell (#119–#123):**
+  - **Workflow strip steps are clickable.** _Season setup_ opens the AllocationWizard on its Season step. _Allocation_ opens the wizard at its allocation entry (the plan-state chooser when plantings exist). The wizard's Schedule, Inputs, and Commit steps depend on an in-memory allocation, so they can't be opened directly. Once a plan exists, _Schedule_ opens the Calendar swimlane in the full plan editor. A done _Inputs plan_ scrolls to Scheduled tasks; a pending one opens the wizard at Allocation. A done _Commit_ scrolls to the revision history. Steps with nowhere to go (Schedule, Inputs, or Commit before Allocation; Commit before a wizard commit) stay disabled and give the reason in their tooltip. Routing lives in `workflowStepRoute()` ([seasonWorkflow.ts](../apps/web/src/lib/plan/seasonWorkflow.ts)).
+  - **Planting cards.** Each card has an italic sub-line: the crop name (when it differs from the variety) · role. Every card shows five metadata cells: Role, Stage, Planted, Harvest, Area. Role comes from the planting's group role (Anchor, Companion, or Primary). Stage and harvest start come from the calendar engine's `stage-window` and `harvest-window` events, which the `/plan` loader derives (`planV2EventsFor`).
+  - **Block header.** Pills show block status (active, planned, or mature) and the block's open harvest window. A block without `geometryGeojson` shows a wheat "No map geometry" pill. For owners it links to Settings → Farm map. For helpers it is plain text, because the editor is owner-only.
+  - **+ Task.** The Scheduled tasks card has a "+ Task" button. It opens a form with title, date, optional planting (preselected from the active planting tab), and notes. Submitting posts a `primary` task to `POST /api/tasks` (owner and helper), and the table refreshes. Cancel writes nothing. The button also shows on blocks with no plantings.
 
 ## UC-02 — Plan & record a spray
 

@@ -12,6 +12,7 @@
   import { Info, Layers, User, Sprout, ArrowRight, ChevronRight } from 'lucide-svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import type { PlantingRecord } from '$lib/db/blocks';
+  import { plantingStatus } from '$lib/plan/planV2Derive';
 
   export type PlantingSourceTag =
     | 'AI plan'
@@ -24,8 +25,13 @@
     planting: PlantingRecord;
     /** Days-to-maturity from the crop plugin, used to compute harvest hint. */
     daysToMaturity?: number;
+    /** Crop plugin display name; shown in the sub-line when it differs
+     *  from the variety title. */
+    cropName?: string;
     /** Stage label from the calendar engine (e.g., "V8 · pre-tassel"). */
     stage?: string;
+    /** Engine-derived harvest-window start; wins over the DTM estimate. */
+    harvestStart?: string;
     /** Role within the block (e.g., "primary", "companion", "border"). */
     role?: string;
     /** Optional companion plantings in the same block — render their
@@ -43,7 +49,9 @@
   const {
     planting,
     daysToMaturity,
+    cropName,
     stage,
+    harvestStart,
     role,
     companions = [],
     sourceTag,
@@ -79,6 +87,7 @@
     });
   });
   const harvestLabel = $derived.by(() => {
+    if (harvestStart) return harvestStart;
     if (!planting.plantingDate || !daysToMaturity) return '—';
     const ms = planting.plantingDate + daysToMaturity * 24 * 60 * 60 * 1000;
     return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -89,14 +98,12 @@
     }
     return '—';
   });
-  const statusLabel = $derived.by(() => {
-    if (!planting.plantingDate) return 'planned';
-    const now = Date.now();
-    const dap = (now - planting.plantingDate) / (24 * 60 * 60 * 1000);
-    if (daysToMaturity && dap > daysToMaturity) return 'mature';
-    if (dap < 0) return 'planned';
-    return 'active';
-  });
+  const statusLabel = $derived(plantingStatus(planting.plantingDate, daysToMaturity));
+  const subLine = $derived(
+    [cropName && cropName !== planting.varietyDisplayName ? cropName : undefined, role]
+      .filter(Boolean)
+      .join(' · ')
+  );
   const statusTone = $derived<'forest' | 'sky' | 'wheat' | 'rust' | 'neutral'>(
     statusLabel === 'active' ? 'forest' : statusLabel === 'planned' ? 'sky' : 'wheat'
   );
@@ -134,26 +141,22 @@
     <div class="pc-head">
       <div class="pc-title-wrap">
         <div class="serif pc-title">{planting.varietyDisplayName}</div>
-        {#if role}
-          <div class="pc-sub">{role}</div>
+        {#if subLine}
+          <div class="pc-sub">{subLine}</div>
         {/if}
       </div>
       <Pill tone={statusTone}>{statusLabel}</Pill>
     </div>
 
     <div class="pc-meta">
-      {#if role}
-        <div class="pc-cell">
-          <div class="k">Role</div>
-          <div class="v mono">{role}</div>
-        </div>
-      {/if}
-      {#if stage}
-        <div class="pc-cell">
-          <div class="k">Stage</div>
-          <div class="v mono">{stage}</div>
-        </div>
-      {/if}
+      <div class="pc-cell">
+        <div class="k">Role</div>
+        <div class="v mono">{role ?? '—'}</div>
+      </div>
+      <div class="pc-cell">
+        <div class="k">Stage</div>
+        <div class="v mono" title={stage}>{stage ?? '—'}</div>
+      </div>
       <div class="pc-cell">
         <div class="k">Planted</div>
         <div class="v mono">{plantedLabel}</div>

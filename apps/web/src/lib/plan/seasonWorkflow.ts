@@ -155,3 +155,67 @@ export function deriveSeasonWorkflow(input: SeasonWorkflowInput): WorkflowStep[]
 
   return steps;
 }
+
+/**
+ * #120 — where a click on a WorkflowStrip step lands. The wizard's
+ * Schedule / Inputs / Commit steps consume an in-memory allocation, so
+ * they cannot be mounted cold; once a plan is committed, those steps
+ * route to the surfaces that hold the committed data instead.
+ */
+export type WorkflowStepTarget =
+  | { kind: 'wizard'; wizardStep: 'season-setup' | 'allocation' }
+  | { kind: 'calendar' }
+  | { kind: 'tasks' }
+  | { kind: 'provenance' };
+
+export interface WorkflowStepRoute {
+  target: WorkflowStepTarget | null;
+  hint: string;
+}
+
+export function workflowStepRoute(stepId: string, steps: WorkflowStep[]): WorkflowStepRoute {
+  const stateOf = (id: string) => steps.find((s) => s.id === id)?.state ?? 'pending';
+  const allocated = stateOf('allocation') !== 'pending';
+  switch (stepId) {
+    case 'season-setup':
+      return {
+        target: { kind: 'wizard', wizardStep: 'season-setup' },
+        hint: 'Open the wizard at Season setup'
+      };
+    case 'allocation':
+      return {
+        target: { kind: 'wizard', wizardStep: 'allocation' },
+        hint: 'Open the wizard at Allocation'
+      };
+    case 'schedule':
+      return allocated
+        ? {
+            target: { kind: 'calendar' },
+            hint: 'Open the season calendar to review planting dates'
+          }
+        : { target: null, hint: 'Run Allocation first — schedule follows it in the wizard' };
+    case 'inputs':
+      if (!allocated) {
+        return { target: null, hint: 'Run Allocation first — the inputs plan follows it' };
+      }
+      return stateOf('inputs') === 'done'
+        ? { target: { kind: 'tasks' }, hint: 'Show the scheduled input tasks' }
+        : {
+            target: { kind: 'wizard', wizardStep: 'allocation' },
+            hint: 'Open the wizard — the inputs plan follows Allocation + Schedule'
+          };
+    case 'commit':
+      return stateOf('commit') === 'done'
+        ? { target: { kind: 'provenance' }, hint: 'Show the plan revision history' }
+        : { target: null, hint: 'Commit runs at the end of a wizard pass' };
+    default:
+      return { target: null, hint: '' };
+  }
+}
+
+export function withStepRoutes(steps: WorkflowStep[]): WorkflowStep[] {
+  return steps.map((s) => {
+    const r = workflowStepRoute(s.id, steps);
+    return { ...s, disabled: r.target === null, actionHint: r.hint };
+  });
+}

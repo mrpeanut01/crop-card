@@ -29,9 +29,9 @@ describe('Modal', () => {
   it('renders title via aria-labelledby on the dialog', () => {
     render(Modal, { open: true, title: 'Confirm spray', onClose: vi.fn(), children: bodySnippet });
     const heading = screen.getByText('Confirm spray');
-    expect(heading.id).toBe('modal-title');
+    expect(heading.id).toMatch(/^modal-title-/);
     const dialog = document.querySelector('dialog');
-    expect(dialog?.getAttribute('aria-labelledby')).toBe('modal-title');
+    expect(dialog?.getAttribute('aria-labelledby')).toBe(heading.id);
   });
 
   it('renders a close button with aria-label and fires onClose when clicked', async () => {

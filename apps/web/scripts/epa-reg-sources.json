@@ -1146,6 +1146,11 @@
       "page": 3,
       "quote": "Contains 2.28 lbs of pyroxasulfone, 1.33 lbs imazethaypr, and 0.48 lbs saflufenacil per gallon formulated as a water-based suspension concentrate EPA Reg. No. 7969-365",
       "note": "Corrected 2026-09-25 from 7969-374. 7969-374 is Zidua SC (pyroxasulfone solo; ABN Vermeso). 7969-365 ZIDUA PRO POWERED BY KIXOR HERBICIDE (BASF, Active); label p6 'Zidua® PRO herbicide'. SC matches plugin. Plugin 6 fl oz/A = label burndown/soybean rate (p16-17)."
+    },
+    "stadia": {
+      "epaRegistrationNumber": "91234-31",
+      "quote": "A304.01 [Alternate Brand Names: Promote™, Stadia™, Empero™]",
+      "page": 3
     }
   },
   "rainfast": {
@@ -3443,6 +3448,68 @@
     "m-pede-organic": {
       "retiredOn": "2026-09-25",
       "reason": "Duplicate of m-pede: there is one registered M-Pede (10163-324) and it is itself OMRI-listed."
+    }
+  },
+  "identityCorrections": {
+    "stadia": {
+      "from": {
+        "epaRegistrationNumber": null,
+        "formulation": null,
+        "defaultUnit": null,
+        "activeIngredients": [
+          {
+            "name": "rimsulfuron",
+            "chemistryClass": "sulfonylurea"
+          }
+        ],
+        "ratePerAcre": {
+          "amount": 1,
+          "unit": "oz"
+        },
+        "labelClaims": null,
+        "traitGatedSafeFor": null,
+        "displayName": "Stadia",
+        "notes": null
+      },
+      "fields": {
+        "epaRegistrationNumber": {
+          "quote": "A304.01 [Alternate Brand Names: Promote™, Stadia™, Empero™]",
+          "page": 3
+        },
+        "formulation": {
+          "quote": "A304.01 is a water dispersible granule designed to be diluted with water",
+          "page": 7
+        },
+        "defaultUnit": {
+          "quote": "The use rate for A304.01 is expressed in terms of the oz. of this product by weight per acre as Rate Oz./Acre.",
+          "page": 16
+        },
+        "activeIngredients": {
+          "quote": "ACTIVE INGREDIENT: % BY WT. Halosulfuron-methyl ... 75%",
+          "page": 3
+        },
+        "ratePerAcre": {
+          "quote": "Direct-seeded: Use Rate: ½ - ¾ oz.",
+          "page": 39
+        },
+        "labelClaims": {
+          "quote": "FIELD CORN AND FIELD CORN GROWN FOR SEED ⅔ – 1⅓ 30 ... PUMPKINS AND WINTER SQUASH ½ - 1 30",
+          "page": 27
+        },
+        "traitGatedSafeFor": {
+          "quote": "TOMATOES ½ - 1 30 Do not make more than 2 applications per crop cycle.",
+          "page": 54
+        },
+        "displayName": {
+          "quote": "[Alternate Brand Names: Promote™, Stadia™, Empero™] ... Halosulfuron-methyl ... 75%",
+          "page": 3
+        },
+        "notes": {
+          "quote": "Contains halosulfuron, the active ingredient used in [Permit®] [and] [Sandea®] [and] [SedgeHammer®].",
+          "page": 3
+        }
+      },
+      "note": "Owner decision 2026-09-25: correct records to match the EPA system. The only PPLS product named Stadia is 91234-31 (halosulfuron-methyl 75% WDG); the plugin had declared rimsulfuron."
     }
   }
 }

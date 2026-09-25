@@ -1,23 +1,48 @@
 {
   "pluginId": "stadia",
   "type": "herbicide",
-  "displayName": "Stadia",
+  "displayName": "Stadia (Atticus halosulfuron-methyl 75% WDG)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "91234-31",
+  "defaultUnit": "oz",
+  "formulation": "WDG",
   "activeIngredients": [
     {
-      "name": "rimsulfuron",
+      "name": "halosulfuron-methyl",
       "chemistryClass": "sulfonylurea"
     }
   ],
   "ratePerAcre": {
-    "amount": 1,
+    "amount": 0.75,
     "unit": "oz"
   },
+  "labelClaims": {
+    "safeForCropPluginIds": [
+      "corn-feed-dent-pioneer",
+      "pumpkin-ez-gro-monster",
+      "butternut-squash-waltham"
+    ]
+  },
+  "traitGatedSafeFor": [
+    {
+      "cropPluginId": "tomato-roma-vf",
+      "requiresTraits": [
+        "native-halosulfuron-tolerant"
+      ]
+    },
+    {
+      "cropPluginId": "tomato-cherokee-purple",
+      "requiresTraits": [
+        "native-halosulfuron-tolerant"
+      ]
+    }
+  ],
   "complianceFlags": {
     "omriListed": false,
     "certifiedOrganicAllowed": false,
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },
+  "notes": "Atticus halosulfuron-methyl 75% WDG (EPA 91234-31; Stadia is an alternate brand name of A304.01, same active as Permit/Sandea). Group 2 ALS. Nutsedge + broadleaf PRE/POST in field corn, pumpkins/winter squash and tomatoes; 30-day PHI, 12 h REI. Fresh-market pumpkin/squash 1/2-3/4 oz/A; tomato trait override mirrors Sandea. Sweet corn only on hybrids the seed company or Extension has cleared, max 2/3 oz. Clean sprayer before non-corn crops.",
   "pluginSchemaVersion": "1.1"
 }

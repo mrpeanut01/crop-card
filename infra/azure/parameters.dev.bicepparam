@@ -3,10 +3,11 @@ using './main.bicep'
 param project = 'cropcard'
 param env = 'dev'
 param location = 'eastus2'
-param image = 'ghcr.io/CHANGE_ME/cropcard:latest'
-param emailFrom = 'cropcard@example.com'
+param authMode = 'magic-link'
+param deployMarketplace = false
 
-// Secrets are passed at deploy time via:
-//   az deployment group create ... --parameters authSecret=$AUTH_SECRET emailApiKey=$RESEND_API_KEY
+// Supplied at deploy time by scripts/deploy-azure.sh:
+//   image, containerRegistryServer, authSecret
+//   postmarkToken / emailFrom / anthropicApiKey (optional; from the environment)
+param image = ''
 param authSecret = ''
-param emailApiKey = ''

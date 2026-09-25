@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@playwright/test';
 
 const PORT = Number(process.env.E2E_PORT ?? 5173);
@@ -17,6 +18,11 @@ const BUILD_MARKER = `./.playwright-data/.build-done-${PORT}-${Date.now()}`;
 // Only set when the pinned Playwright's bundled chromium isn't installed
 // (e.g. a sandbox with a preinstalled browser). CI never sets it.
 const CHROMIUM_PATH = process.env.PW_CHROMIUM_PATH;
+
+// The built server resolves its default plugin dir relative to the bundled
+// chunk (which lands outside the repo), so pin it like the Dockerfile does.
+// Without it the crop registry is empty and the allocation wizard can't run.
+const PLUGINS_DIR = fileURLToPath(new URL('../../plugins', import.meta.url));
 
 // The blocking CI e2e job skips visual specs; the separate non-blocking
 // `visual` CI job sets E2E_VISUAL=1. Linux baselines are captured with a
@@ -39,7 +45,7 @@ export default defineConfig({
         `touch ${BUILD_MARKER} && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
-        `DATABASE_URL=file:${TEST_DB_PATH} ENABLE_DEV_ROUTES=1 pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
+        `DATABASE_URL=file:${TEST_DB_PATH} ENABLE_DEV_ROUTES=1 PLUGINS_DIR=${PLUGINS_DIR} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
       port: PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000
@@ -53,7 +59,7 @@ export default defineConfig({
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} AUTH_MODE=magic-link EMAIL_TRANSPORT=memory E2E_OUTBOX=1 ` +
-        `ORIGIN=http://localhost:${MAGIC_PORT} ` +
+        `ORIGIN=http://localhost:${MAGIC_PORT} PLUGINS_DIR=${PLUGINS_DIR} ` +
         `pnpm exec vite preview --host 0.0.0.0 --port ${MAGIC_PORT} --strictPort`,
       port: MAGIC_PORT,
       reuseExistingServer: !process.env.CI,

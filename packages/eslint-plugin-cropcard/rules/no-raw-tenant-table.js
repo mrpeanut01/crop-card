@@ -17,17 +17,16 @@
  *
  * If you genuinely need an unscoped query (e.g. cross-tenant superadmin
  * lookup or a global table like users), call `unscopedQueryNote('reason')`
- * in the same function — the rule's heuristic allows the file when that
- * call is present.
+ * in the same function.
  *
- * Heuristic: the rule operates at FILE granularity, not call-chain
+ * Heuristic: the rule operates at FUNCTION granularity, not call-chain
  * granularity — chasing `.from(X).where(tenantWhere(X))` through the
- * Drizzle fluent API across nodes is fragile. If the file references
- * ANY of `tenantWhere`, `withTenant`, `tenantValues`, or
- * `unscopedQueryNote`, it is treated as tenant-aware and the rule
- * suppresses. The real value of the rule is catching new files that
- * touch a tenant-scoped table without importing any of the helpers —
- * the "forgot to wire tenant scoping at all" case.
+ * Drizzle fluent API is fragile. A raw query is allowed when a call to
+ * `tenantWhere`, `withTenant`, `tenantValues`, or `unscopedQueryNote`
+ * appears anywhere inside the query's innermost enclosing function, or
+ * directly in the body of a function (or module scope) enclosing it. A
+ * helper in a sibling function — even one nested in the same outer
+ * function, e.g. two `it()` callbacks in one `describe()` — does not count.
  *
  * The table list is generated from every `tenantScoped(...)` export in
  * `schema.ts` into `tenant-scoped-tables.json` (`pnpm --filter
@@ -47,6 +46,14 @@ const SCHEMA_SOURCE = /(^|\/)schema(\.[jt]s)?$/;
 function fromSchema(spec) {
   return SCHEMA_SOURCE.test(String(spec.parent.source.value));
 }
+
+const HELPERS = new Set(['tenantWhere', 'withTenant', 'tenantValues', 'unscopedQueryNote']);
+
+const FUNCTION_TYPES = new Set([
+  'FunctionDeclaration',
+  'FunctionExpression',
+  'ArrowFunctionExpression'
+]);
 
 function importedName(spec) {
   return spec.imported.type === 'Identifier' ? spec.imported.name : spec.imported.value;
@@ -75,7 +82,11 @@ export default {
   },
 
   create(context) {
-    let fileIsTenantAware = false;
+    // Functions whose body contains a helper call at any depth.
+    const containsHelper = new Set();
+    // Innermost function (or `null` for module scope) of each helper call.
+    const directHelperScopes = new Set();
+    const rawQueries = [];
     const sourceCode = context.sourceCode ?? context.getSourceCode();
     // `import { crops as cropsTable }` and `import * as schema` must not
     // slip past the name check.
@@ -102,22 +113,47 @@ export default {
       return null;
     }
 
+    function enclosingFunctions(node) {
+      const fns = [];
+      for (let p = node.parent; p; p = p.parent) {
+        if (FUNCTION_TYPES.has(p.type)) fns.push(p);
+      }
+      return fns;
+    }
+
     function check(node, messageId) {
-      if (fileIsTenantAware) return;
       const name = tenantTableName(node.arguments[0]);
-      if (name) context.report({ node, messageId, data: { name } });
+      if (name) rawQueries.push({ node, messageId, name });
+    }
+
+    function isHelperCall(node) {
+      const c = node.callee;
+      if (c.type === 'Identifier') return HELPERS.has(c.name);
+      return (
+        c.type === 'MemberExpression' &&
+        !c.computed &&
+        c.property.type === 'Identifier' &&
+        HELPERS.has(c.property.name)
+      );
     }
 
     return {
-      Program() {
-        // Scan once: if the file references any tenant helper (tenant
-        // accessors or an explicit cross-tenant note), treat it as
-        // tenant-aware and suppress this rule file-wide. See the file
-        // header for the why.
-        const src = sourceCode.getText();
-        fileIsTenantAware = /\b(tenantWhere|withTenant|tenantValues|unscopedQueryNote)\s*\(/.test(
-          src
-        );
+      CallExpression(node) {
+        if (!isHelperCall(node)) return;
+        const fns = enclosingFunctions(node);
+        directHelperScopes.add(fns[0] ?? null);
+        for (const fn of fns) containsHelper.add(fn);
+      },
+
+      'Program:exit'() {
+        for (const { node, messageId, name } of rawQueries) {
+          const [inner, ...outer] = enclosingFunctions(node);
+          const covered =
+            directHelperScopes.has(null) ||
+            (inner !== undefined && containsHelper.has(inner)) ||
+            outer.some((fn) => directHelperScopes.has(fn));
+          if (!covered) context.report({ node, messageId, data: { name } });
+        }
       },
 
       ImportSpecifier(node) {

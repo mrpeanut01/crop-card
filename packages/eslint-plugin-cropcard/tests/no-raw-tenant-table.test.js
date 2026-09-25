@@ -30,6 +30,16 @@ ruleTester.run('no-raw-tenant-table', rule, {
     `db.select().from(seasonCloseouts).where(withTenant(seasonCloseouts, eq(seasonCloseouts.year, 2026)));`,
     `db.insert(wizardDrafts).values(tenantValues({ id: 'd1' }));`,
     `db.select().from(apiTokens).where(eq(apiTokens.tokenHash, h));`,
+    `function outer() {
+       unscopedQueryNote('sweep across all tenants');
+       return ids.map((id) => db.delete(tasks).where(eq(tasks.id, id)));
+     }`,
+    `function f() {
+       const where = () => withTenant(blocks, eq(blocks.id, id));
+       return db.select().from(blocks).where(where());
+     }`,
+    `runWithTenant(o, () => db.select().from(blocks).where(tenantWhere(blocks)));`,
+    `const w = tenantWhere(blocks); const rows = db.select().from(blocks).where(w);`,
     `import { tasks as taskRows } from './fixtures'; db.select().from(taskRows);`,
     `import * as repo from './blocks'; db.select().from(repo.blocks);`,
     `import { users as u } from '$lib/db/schema'; db.select().from(u);`,
@@ -77,6 +87,36 @@ ruleTester.run('no-raw-tenant-table', rule, {
         { messageId: 'rawDelete', data: { name } }
       ]
     })),
+    {
+      code: `function a() { return db.select().from(blocks).where(tenantWhere(blocks)); }
+             function b() { return db.select().from(blocks); }`,
+      errors: [{ messageId: 'rawFrom', data: { name: 'blocks' } }]
+    },
+    {
+      code: `function crossTenant() { unscopedQueryNote('superadmin lookup'); }
+             const leak = () => db.delete(tasks);`,
+      errors: [{ messageId: 'rawDelete', data: { name: 'tasks' } }]
+    },
+    {
+      code: `describe('x', () => {
+               it('a', () => db.insert(tasks).values(tenantValues({})));
+               it('b', () => db.insert(tasks).values({ ownerId: 'o' }));
+             });`,
+      errors: [{ messageId: 'rawInsert', data: { name: 'tasks' } }]
+    },
+    {
+      code: `const rows = db.select().from(blocks);
+             function f() { return tenantWhere(blocks); }`,
+      errors: [{ messageId: 'rawFrom', data: { name: 'blocks' } }]
+    },
+    {
+      code: `function outer() {
+               const inner = () => tenantWhere(blocks);
+               return inner;
+             }
+             function other() { return db.update(blocks).set({}); }`,
+      errors: [{ messageId: 'rawUpdate', data: { name: 'blocks' } }]
+    },
     {
       code: `import { crops as cropsTable } from '$lib/db/schema';
              db.insert(cropsTable).values({ id: 'c1' });`,

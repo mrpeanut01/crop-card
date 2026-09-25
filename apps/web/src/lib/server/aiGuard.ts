@@ -25,7 +25,7 @@ import { db } from '$lib/db/client';
 import { aiCallLog, apiTokens } from '$lib/db/schema';
 import { type AiEndpointName } from '$lib/schedule/constants';
 import { getAiDailyCallQuota, getAiMonthlyUsdCap } from '$lib/schedule/settings';
-import { currentOwnerId, unscopedQueryNote } from '$lib/db/tenant';
+import { currentOwnerId, tenantValues, unscopedQueryNote } from '$lib/db/tenant';
 import { incrementUsageCounter } from './superadmin';
 
 /** Phase 24 — per-token quota context passed by hooks.server.ts via
@@ -236,27 +236,28 @@ export function recordCall(input: RecordCallInput): void {
     return;
   }
   db.insert(aiCallLog)
-    .values({
-      id: randomUUID(),
-      ownerId,
-      userId: input.userId,
-      tokenId: input.tokenId ?? null,
-      endpoint: input.endpoint,
-      model: input.model,
-      inputTokens: input.inputTokens,
-      cachedInputTokens: input.cachedInputTokens,
-      outputTokens: input.outputTokens,
-      usdEstimate: input.usdEstimate,
-      success: input.success,
-      errorClass: input.errorClass ?? null,
-      // Phase 25d (#89 / #93) — provenance fields. All nullable so
-      // legacy call sites don't need updating; they write null for now
-      // and migrate to populate when they're moved onto aiTry().
-      provenance: input.provenance ?? null,
-      confidence: input.confidence ?? null,
-      fallbackReason: input.fallbackReason ?? null,
-      attemptedAiAt: input.attemptedAiAt != null ? new Date(input.attemptedAiAt) : null
-    })
+    .values(
+      tenantValues({
+        id: randomUUID(),
+        userId: input.userId,
+        tokenId: input.tokenId ?? null,
+        endpoint: input.endpoint,
+        model: input.model,
+        inputTokens: input.inputTokens,
+        cachedInputTokens: input.cachedInputTokens,
+        outputTokens: input.outputTokens,
+        usdEstimate: input.usdEstimate,
+        success: input.success,
+        errorClass: input.errorClass ?? null,
+        // Phase 25d (#89 / #93) — provenance fields. All nullable so
+        // legacy call sites don't need updating; they write null for now
+        // and migrate to populate when they're moved onto aiTry().
+        provenance: input.provenance ?? null,
+        confidence: input.confidence ?? null,
+        fallbackReason: input.fallbackReason ?? null,
+        attemptedAiAt: input.attemptedAiAt != null ? new Date(input.attemptedAiAt) : null
+      })
+    )
     .run();
   try {
     incrementUsageCounter(ownerId, { aiCalls: 1 });

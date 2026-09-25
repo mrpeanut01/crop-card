@@ -27,7 +27,7 @@ jobs:
       - name: Skip (no ANTHROPIC_API_KEY secret)
         if: env.HAS_KEY != 'true'
         run: echo "ANTHROPIC_API_KEY is not set; skipping." >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: env.HAS_KEY == 'true'
         with:
           fetch-depth: 0

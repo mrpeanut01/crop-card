@@ -40,12 +40,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.TAG }}
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build runtime image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: infra/Dockerfile
@@ -55,7 +55,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Vulnerability scan (fail on fixable critical)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: cropcard:${{ env.TAG }}
           severity: CRITICAL
@@ -63,7 +63,7 @@ jobs:
           exit-code: '1'
       - name: Vulnerability report (high+, informational)
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: cropcard:${{ env.TAG }}
           severity: HIGH,CRITICAL
@@ -77,7 +77,7 @@ jobs:
           format: spdx-json
           output-file: sbom.spdx.json
           upload-artifact: false
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: release-image-reports
@@ -100,7 +100,7 @@ jobs:
         run: |
           echo "ANTHROPIC_API_KEY is not set; skipping the AI review." >> "$GITHUB_STEP_SUMMARY"
           echo "Add it under Settings → Secrets and variables → Actions to enable release reviews." > release-review.md
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: env.HAS_KEY == 'true'
         with:
           ref: ${{ env.TAG }}
@@ -143,7 +143,7 @@ jobs:
         run: |
           [ -f release-review.md ] || echo "Review produced no report." > release-review.md
           cat release-review.md >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: release-review
@@ -157,10 +157,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.TAG }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
       - name: Create or update the release

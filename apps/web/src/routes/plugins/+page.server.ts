@@ -1,5 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { getRegistry, getRegistryStats } from '$lib/server/registry';
+import { getBaseRegistry, getRegistry, getRegistryStats } from '$lib/server/registry';
+import { HIDDEN_PAYLOAD, listEffectiveOverrides } from '$lib/db/pluginOverrides';
+import { currentOwnerId } from '$lib/db/tenant';
 import { currentVersionOf, historyOf } from '$lib/db/pluginVersions';
 import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
 import type { Plugin } from '$lib/plugins/schemas';
@@ -104,11 +106,20 @@ function summaryFor(plugin: Plugin): string {
 
 export const load: PageServerLoad = async ({ locals }) => {
   const registry = await getRegistry();
+  const base = await getBaseRegistry();
   const stats = getRegistryStats();
-  const records = registry.all().map((r) => {
+  const overrides = currentOwnerId() ? listEffectiveOverrides() : new Map();
+  const farmRetired = [...overrides.values()]
+    .filter((o) => o.payloadJson === HIDDEN_PAYLOAD)
+    .map((o) => base.get(o.pluginId))
+    .filter((r) => r !== undefined);
+  const records = [...registry.all(), ...farmRetired].map((r) => {
     const current = currentVersionOf(r.plugin.pluginId);
     const history = historyOf(r.plugin.pluginId);
+    const own = overrides.get(r.plugin.pluginId);
     return {
+      farmOverride: !!own && own.payloadJson !== HIDDEN_PAYLOAD,
+      farmRetired: own?.payloadJson === HIDDEN_PAYLOAD,
       pluginId: r.plugin.pluginId,
       type: r.plugin.type,
       displayName: r.plugin.displayName,
@@ -125,6 +136,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     records,
     failures: stats.failures,
     loadedAt: stats.loadedAt ?? null,
-    canEdit: locals.user?.role === 'owner'
+    canEdit: locals.user?.role === 'owner',
+    isSuperadmin: !!locals.user?.isSuperadmin && locals.authVia !== 'bearer'
   };
 };

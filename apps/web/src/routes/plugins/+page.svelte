@@ -483,6 +483,16 @@
               <GroupCodeBadge kind={gc.kind} group={gc.group} />
             {/each}
             <span class="version">v{r.version}</span>
+            {#if r.farmOverride}
+              <span
+                class="history-chip"
+                title="Edited on this farm; other farms see the shared version"
+                >this farm's copy</span
+              >
+            {/if}
+            {#if r.farmRetired}
+              <span class="history-chip">retired on this farm</span>
+            {/if}
             {#if r.historyCount > 1}
               <span class="history-chip" title="Number of versions on record"
                 >{r.historyCount} versions</span

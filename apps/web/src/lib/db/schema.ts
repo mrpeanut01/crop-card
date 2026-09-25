@@ -214,8 +214,12 @@ export const loginTokens = sqliteTable(
 );
 
 /** Per-Owner plugin overlays. The base plugin catalog lives on the
- *  filesystem under /plugins/; this table layers per-Owner customizations
- *  (full replacement per pluginId). Safety kernel never reads overrides. */
+ *  filesystem under /plugins/; this table layers per-Owner customizations:
+ *  newest row per pluginId wins, a full payload replaces the shared plugin
+ *  for that Owner, an empty payload hides (retires) it for that Owner.
+ *  Repo: `lib/db/pluginOverrides.ts`; applied by `getRegistry()`. Payloads
+ *  pass the same schema + bypass validation as shared-library uploads
+ *  before the kernel ever sees them. */
 export const pluginOverrides = tenantScoped(
   sqliteTable(
     'plugin_overrides',

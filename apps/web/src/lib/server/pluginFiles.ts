@@ -23,7 +23,8 @@ import {
   isVersionAhead,
   type PluginVersionRow
 } from '$lib/db/pluginVersions';
-import { getRegistry, resetRegistry } from './registry';
+import { effectiveOverride, HIDDEN_PAYLOAD, insertOverridePayload } from '$lib/db/pluginOverrides';
+import { getBaseRegistry, getRegistry, resetRegistry } from './registry';
 
 export class PluginAuthorError extends Error {
   constructor(
@@ -98,19 +99,7 @@ export async function writePluginFile(
   }
   const data = parsed.data;
 
-  const live = await getRegistry();
-  const probe = new PluginRegistry();
-  for (const r of live.all()) {
-    if (r.plugin.pluginId !== data.pluginId) probe.register(r.plugin);
-  }
-  try {
-    probe.register(data);
-  } catch (err) {
-    if (err instanceof PluginRegistrationError) {
-      throw new PluginAuthorError(err.message, 'bypass', err.issues);
-    }
-    throw err;
-  }
+  await dryRunRegister(await getBaseRegistry(), data);
 
   const prior = currentVersionOf(data.pluginId);
   const priorPayload: Plugin | null = prior
@@ -171,6 +160,87 @@ export async function writePluginFile(
     diff,
     priorVersion: prior?.version
   };
+}
+
+async function dryRunRegister(live: PluginRegistry, data: Plugin): Promise<void> {
+  const probe = new PluginRegistry();
+  for (const r of live.all()) {
+    if (r.plugin.pluginId !== data.pluginId) probe.register(r.plugin);
+  }
+  try {
+    probe.register(data);
+  } catch (err) {
+    if (err instanceof PluginRegistrationError) {
+      throw new PluginAuthorError(err.message, 'bypass', err.issues);
+    }
+    throw err;
+  }
+}
+
+/**
+ * Owner-level save (upload, edit, save-to-catalog): same schema + bypass
+ * validation as `writePluginFile`, but the payload lands in the active
+ * Owner's `plugin_overrides` and replaces the shared plugin for that Owner
+ * only. The shared library on disk is untouched (Invariant 6).
+ */
+export async function writeOwnerPlugin(plugin: unknown): Promise<WritePluginResult> {
+  const parsed = pluginSchema.safeParse(plugin);
+  if (!parsed.success) {
+    throw new PluginAuthorError(
+      'plugin failed schema validation',
+      'schema',
+      parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
+    );
+  }
+  const data = parsed.data;
+  const live = await getRegistry();
+  await dryRunRegister(live, data);
+
+  const override = effectiveOverride(data.pluginId);
+  const priorPayload: Plugin | null =
+    override && override.payloadJson !== HIDDEN_PAYLOAD
+      ? (safeParse(override.payloadJson) as Plugin | null)
+      : ((live.get(data.pluginId)?.plugin ??
+          (await getBaseRegistry()).get(data.pluginId)?.plugin ??
+          null) as Plugin | null);
+  const priorVersion = priorPayload?.version;
+
+  if (priorPayload && isSameIgnoringVersion(priorPayload, data)) {
+    return {
+      path: overridePath(data.pluginId),
+      pluginId: data.pluginId,
+      version: priorPayload.version,
+      hash: override?.hash ?? '',
+      noChange: true,
+      bumped: false,
+      diff: { addedKeys: [], removedKeys: [], changedKeys: [] },
+      priorVersion
+    };
+  }
+
+  const candidateVersion = data.version || '1.0.0';
+  let effectiveVersion = candidateVersion;
+  let bumped = false;
+  if (priorVersion && !isVersionAhead(candidateVersion, priorVersion)) {
+    effectiveVersion = bumpPatch(priorVersion);
+    bumped = true;
+  }
+  const payloadForWrite: Plugin = { ...data, version: effectiveVersion };
+  const row = insertOverridePayload(data.pluginId, data.type, JSON.stringify(payloadForWrite));
+  return {
+    path: overridePath(data.pluginId),
+    pluginId: data.pluginId,
+    version: effectiveVersion,
+    hash: row.hash,
+    noChange: false,
+    bumped,
+    diff: diffPlugins(priorPayload, payloadForWrite),
+    priorVersion
+  };
+}
+
+function overridePath(pluginId: string): string {
+  return `farm override: ${pluginId}`;
 }
 
 function filePathFor(meta: Plugin): string {

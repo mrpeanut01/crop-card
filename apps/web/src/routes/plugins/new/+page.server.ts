@@ -6,6 +6,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   const all = registry.all();
   return {
     canEdit: locals.user?.role === 'owner',
+    isSuperadmin: !!locals.user?.isSuperadmin && locals.authVia !== 'bearer',
     /** Just the IDs — used for the uniqueSlug helper that auto-generates
      *  new pluginIds without colliding with the live catalog. */
     existingPluginIds: all.map((r) => r.plugin.pluginId),

@@ -706,6 +706,7 @@
   // ─── Submit ───────────────────────────────────────────────────────────
 
   let submitting = $state(false);
+  let publishGlobal = $state(false);
   let submitError = $state<string | null>(null);
   type RejectIssue = { path: string; message: string };
   let submitReject = $state<{ title: string; issues: RejectIssue[] } | null>(null);
@@ -715,7 +716,7 @@
     submitReject = null;
     submitting = true;
     try {
-      const res = await fetch('/api/plugins/upload', {
+      const res = await fetch(`/api/plugins/upload${publishGlobal ? '?scope=global' : ''}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(preview)
@@ -751,8 +752,8 @@
   <section class="card role-locked">
     <h2>Owner role required</h2>
     <p>
-      Authoring plugins changes the safety knowledge base for the whole farm. Sign in as Owner to
-      use this wizard. Helpers can browse the existing catalog at <a href="/plugins">/plugins</a>.
+      Authoring plugins changes this farm's safety knowledge base. Sign in as Owner to use this
+      wizard. Helpers can browse the existing catalog at <a href="/plugins">/plugins</a>.
     </p>
     <a class="primary" href="/signin">Sign in</a>
   </section>
@@ -1358,6 +1359,15 @@
       <pre>{JSON.stringify(preview, null, 2)}</pre>
     </details>
 
+    {#if data.isSuperadmin}
+      <label class="publish-global">
+        <input type="checkbox" bind:checked={publishGlobal} />
+        Publish to the shared library (every farm)
+      </label>
+    {:else}
+      <p class="muted">Saved to this farm only; other farms keep the shared library version.</p>
+    {/if}
+
     <div class="footer-actions">
       <button class="primary" onclick={submit} disabled={submitting}>
         {submitting ? 'Saving…' : 'Save plugin'}
@@ -1538,6 +1548,12 @@
   button.primary:disabled {
     background: #888;
     cursor: not-allowed;
+  }
+  .publish-global {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 48px;
   }
   .link {
     color: #1f5e3a;

@@ -14,12 +14,12 @@
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { requireOwner } from '$lib/server/auth';
+import { requireSuperadmin } from '$lib/server/auth';
 import { PluginAuthorError, rollbackTo } from '$lib/server/pluginFiles';
 import { historyOf } from '$lib/db/pluginVersions';
 
 export const POST: RequestHandler = async (event) => {
-  const session = requireOwner(event);
+  const session = requireSuperadmin(event);
   const pluginId = event.params.pluginId;
   if (!pluginId) return json({ error: 'pluginId is required' }, { status: 400 });
 

@@ -44,6 +44,7 @@ import * as wizardChatRepo from './wizardChat';
 import * as seasonCloseoutsRepo from './seasonCloseouts';
 import * as pushSubscriptionsRepo from './pushSubscriptions';
 import * as taxonomyRepo from './taxonomy';
+import * as pluginOverridesRepo from './pluginOverrides';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
 import { users, helperAssignments, recordDeletions, cropEquipment } from './schema';
 import { eq } from 'drizzle-orm';
@@ -536,6 +537,38 @@ describe('cross-tenant isolation', () => {
     expect(renamed.name).toMatch(/^a-renamed-/);
   });
 
+  it('plugin_overrides (farm copies + farm retires) are owner-scoped', () => {
+    const pluginId = `xt-plugin-${randomUUID()}`;
+    const payload = JSON.stringify({ pluginId, type: 'crop', displayName: 'A copy' });
+    const aRow = runWithTenant(OWNER_A, () =>
+      pluginOverridesRepo.insertOverridePayload(pluginId, 'crop', payload)
+    );
+    runWithTenant(OWNER_A, () => pluginOverridesRepo.hideForOwner(`${pluginId}-2`, 'crop'));
+
+    const aMap = runWithTenant(OWNER_A, () => pluginOverridesRepo.listEffectiveOverrides());
+    expect(aMap.get(pluginId)?.payloadJson).toBe(payload);
+    expect(
+      runWithTenant(OWNER_A, () => pluginOverridesRepo.isHiddenForOwner(`${pluginId}-2`))
+    ).toBe(true);
+
+    const bMap = runWithTenant(OWNER_B, () => pluginOverridesRepo.listEffectiveOverrides());
+    expect(bMap.has(pluginId)).toBe(false);
+    expect(bMap.has(`${pluginId}-2`)).toBe(false);
+    expect(
+      runWithTenant(OWNER_B, () => pluginOverridesRepo.getOverrideByHash(pluginId, aRow.hash))
+    ).toBeUndefined();
+    expect(
+      runWithTenant(OWNER_B, () => pluginOverridesRepo.isHiddenForOwner(`${pluginId}-2`))
+    ).toBe(false);
+
+    // B's unretire cannot remove A's marker.
+    runWithTenant(OWNER_B, () => pluginOverridesRepo.unhideForOwner(`${pluginId}-2`));
+    expect(
+      runWithTenant(OWNER_A, () => pluginOverridesRepo.isHiddenForOwner(`${pluginId}-2`))
+    ).toBe(true);
+    expect(pluginOverridesRepo.overridesRevision(OWNER_A)).toBeGreaterThan(0);
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -560,7 +593,8 @@ describe('cross-tenant isolation', () => {
       scoutObservationsRepo,
       wizardChatRepo,
       seasonCloseoutsRepo,
-      pushSubscriptionsRepo
+      pushSubscriptionsRepo,
+      pluginOverridesRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

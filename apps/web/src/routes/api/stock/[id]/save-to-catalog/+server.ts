@@ -13,7 +13,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getStockItem, updateStockItem } from '$lib/db/stock';
 import { getTaxonomyTerm } from '$lib/db/taxonomy';
-import { PluginAuthorError, writePluginFile } from '$lib/server/pluginFiles';
+import { PluginAuthorError, writeOwnerPlugin } from '$lib/server/pluginFiles';
 import { requireOwner } from '$lib/server/auth';
 
 const TYPE_NAME_TO_CROP_FAMILY: Record<string, string> = {
@@ -96,7 +96,7 @@ export const POST: RequestHandler = async (event) => {
   if (Object.keys(plantingGuide).length > 0) plugin.plantingGuide = plantingGuide;
 
   try {
-    const written = await writePluginFile(plugin);
+    const written = await writeOwnerPlugin(plugin);
     const updated = updateStockItem(item.id, { pluginId: written.pluginId });
     return json({ ok: true, pluginId: written.pluginId, path: written.path, item: updated });
   } catch (e) {

@@ -14,6 +14,7 @@
  * hash) row exists, its payload never changes.
  */
 
+import { getOverrideByHash } from '$lib/db/pluginOverrides';
 import { getByHash, type PluginVersionRow } from '$lib/db/pluginVersions';
 import type { Plugin } from '$lib/plugins';
 
@@ -44,12 +45,18 @@ export function getPluginByHash(pluginId: string, hash: string): PluginVersionRo
 }
 
 /** Decode the stored payload back into a typed Plugin. Returns null on
- *  missing row, empty (uninstall tombstone) payload, or parse failure. */
+ *  missing row, empty (uninstall tombstone) payload, or parse failure.
+ *  Falls back to the active Owner's own `plugin_overrides` payload when
+ *  the event was recorded against a farm-level plugin. */
 export function getPluginPayloadByHash(pluginId: string, hash: string): Plugin | null {
   const row = getPluginByHash(pluginId, hash);
-  if (!row || row.payloadJson === '') return null;
+  const payloadJson =
+    row && row.payloadJson !== ''
+      ? row.payloadJson
+      : getOverrideByHash(pluginId, hash)?.payloadJson;
+  if (!payloadJson) return null;
   try {
-    return JSON.parse(row.payloadJson) as Plugin;
+    return JSON.parse(payloadJson) as Plugin;
   } catch {
     return null;
   }

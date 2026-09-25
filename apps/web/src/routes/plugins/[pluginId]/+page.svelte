@@ -32,20 +32,27 @@
     return !!current?.retiredAt;
   });
 
-  async function lifecycleAction(action: 'retire' | 'unretire') {
+  async function lifecycleAction(action: 'retire' | 'unretire', global = false) {
     retireBusy = true;
     lifecycleError = null;
     lifecycleSuccess = null;
     try {
-      const res = await fetch(`/api/plugins/${encodeURIComponent(data.pluginId)}/${action}`, {
-        method: 'POST'
-      });
+      const scope = global ? '?scope=global' : '';
+      const res = await fetch(
+        `/api/plugins/${encodeURIComponent(data.pluginId)}/${action}${scope}`,
+        { method: 'POST' }
+      );
       const out = await res.json();
       if (!res.ok) {
         lifecycleError = out.error ?? `HTTP ${res.status}`;
         return;
       }
-      lifecycleSuccess = action === 'retire' ? 'Retired.' : 'Restored.';
+      lifecycleSuccess =
+        action === 'retire'
+          ? global
+            ? 'Retired for every farm.'
+            : 'Retired on this farm.'
+          : 'Restored.';
       await invalidateAll();
     } catch (e) {
       lifecycleError = e instanceof Error ? e.message : String(e);
@@ -216,13 +223,13 @@
       </a>
       {#if data.canEdit}
         <span class="action-divider" aria-hidden="true"></span>
-        {#if isRetired}
+        {#if data.hiddenForOwner}
           <button
             class="action warn"
             onclick={() => lifecycleAction('unretire')}
             disabled={retireBusy}
           >
-            ⤴ Unretire
+            ⤴ Unretire on this farm
           </button>
         {:else}
           <button
@@ -230,7 +237,27 @@
             onclick={() => lifecycleAction('retire')}
             disabled={retireBusy}
           >
-            ⤵ Retire
+            ⤵ Retire on this farm
+          </button>
+        {/if}
+      {/if}
+      {#if data.isSuperadmin}
+        <span class="action-divider" aria-hidden="true"></span>
+        {#if isRetired}
+          <button
+            class="action warn"
+            onclick={() => lifecycleAction('unretire', true)}
+            disabled={retireBusy}
+          >
+            ⤴ Unretire for all farms
+          </button>
+        {:else}
+          <button
+            class="action warn"
+            onclick={() => lifecycleAction('retire', true)}
+            disabled={retireBusy}
+          >
+            ⤵ Retire for all farms
           </button>
         {/if}
         <button class="action danger" onclick={openUninstallConfirm} disabled={retireBusy}>
@@ -238,10 +265,21 @@
         </button>
       {/if}
     </div>
-    {#if isRetired}
+    {#if data.hiddenForOwner}
       <p class="retired-banner">
-        ⚠ This plugin is <strong>retired</strong>. It's hidden from spray pickers but still resolves
-        for historical event records. Unretire to make it available again.
+        ⚠ This plugin is <strong>retired on this farm</strong>. It's hidden from this farm's pickers
+        but still resolves for historical event records. Other farms are unaffected.
+      </p>
+    {:else if isRetired}
+      <p class="retired-banner">
+        ⚠ This plugin is <strong>retired</strong> in the shared library. It's hidden from spray pickers
+        but still resolves for historical event records.
+      </p>
+    {/if}
+    {#if data.farmOverride}
+      <p class="retired-banner">
+        This is <strong>this farm's copy</strong> of the plugin. Edits apply to this farm only; other
+        farms see the shared version.
       </p>
     {/if}
   </section>
@@ -252,6 +290,15 @@
       No live registry entry. This plugin is either retired or has been removed from disk; version
       history below.
     </p>
+    {#if data.isSuperadmin && isRetired}
+      <button
+        class="action warn"
+        onclick={() => lifecycleAction('unretire', true)}
+        disabled={retireBusy}
+      >
+        ⤴ Unretire for all farms
+      </button>
+    {/if}
   </section>
 {/if}
 
@@ -910,7 +957,7 @@
   {:else}
     <PluginVersionTimeline
       rows={data.history}
-      canRollback={data.canEdit}
+      canRollback={data.isSuperadmin}
       onRollback={rollingBack ? undefined : rollback}
     />
   {/if}

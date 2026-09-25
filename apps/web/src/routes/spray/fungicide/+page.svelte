@@ -9,6 +9,18 @@
     type SprayContextBlock
   } from '$lib/components/spray/SprayContextStrip.svelte';
   import { checkFungicideTankMixCompat } from '$lib/safety/fungicideTankMix';
+  import { checkFracRotation } from '$lib/safety/fracRotation';
+  import LeafWetDial from '$lib/components/spray/LeafWetDial.svelte';
+  import RainSparkline from '$lib/components/spray/RainSparkline.svelte';
+  import DryWindowGate from '$lib/components/spray/DryWindowGate.svelte';
+  import FracRotationTile from '$lib/components/spray/FracRotationTile.svelte';
+  import {
+    DEFAULT_LEAF_WET_THRESHOLD_HOURS,
+    deriveHourly,
+    tankMixRainfastHours,
+    type HourlyPoint,
+    type WeatherProvenance
+  } from '$lib/weather/leafWet';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
@@ -94,7 +106,86 @@
     return null;
   });
 
-  const canSubmit = $derived(!!selectedBlockId && selectedPluginIds.length > 0 && !tankMixBlocked);
+  const priorFungicide = $derived(data.priorFungicideByBlock[selectedBlockId] ?? null);
+  const proposedFracCodes = $derived(
+    Array.from(new Set(selectedFungicides.flatMap((f) => f.fracCodes)))
+  );
+  const fracViolations = $derived(
+    checkFracRotation(
+      selectedFungicides.map((f) => ({ pluginId: f.pluginId, fracCodes: f.fracCodes })),
+      priorFungicide ? [priorFungicide] : []
+    )
+  );
+  const fracBlocked = $derived(fracViolations.length > 0);
+
+  interface WeatherPayload {
+    hours: HourlyPoint[];
+    provenance: WeatherProvenance;
+    fetchedAt: number;
+    location: { source: 'block' | 'farm-block' | 'farm-default' } | null;
+  }
+  const UNAVAILABLE: WeatherPayload = {
+    hours: [],
+    provenance: 'fallback',
+    fetchedAt: 0,
+    location: null
+  };
+  let weather = $state<WeatherPayload | null>(null);
+  let weatherAck = $state(false);
+  let weatherSeq = 0;
+
+  async function loadWeather(blockId: string): Promise<void> {
+    const seq = ++weatherSeq;
+    weather = null;
+    let next: WeatherPayload = UNAVAILABLE;
+    if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+      try {
+        const qs = blockId ? `?blockId=${encodeURIComponent(blockId)}` : '';
+        const res = await fetch(`/api/weather/hourly${qs}`);
+        if (res.ok) {
+          const body = (await res.json()) as Partial<WeatherPayload>;
+          next = {
+            hours: Array.isArray(body.hours) ? body.hours : [],
+            provenance: body.provenance === 'data' ? 'data' : 'fallback',
+            fetchedAt: typeof body.fetchedAt === 'number' ? body.fetchedAt : Date.now(),
+            location: body.location ?? null
+          };
+        }
+      } catch {
+        next = UNAVAILABLE;
+      }
+    }
+    if (seq === weatherSeq) weather = next;
+  }
+
+  $effect(() => {
+    void loadWeather(selectedBlockId);
+  });
+
+  const rainfast = $derived(tankMixRainfastHours(selectedFungicides));
+  const weatherDerived = $derived(
+    deriveHourly(weather?.hours ?? [], weather?.provenance ?? 'fallback', {
+      nowMs: Date.now(),
+      rainfastHours: rainfast.hours
+    })
+  );
+  const rainRisk = $derived(
+    weatherDerived.provenance === 'data' && weatherDerived.rainfast.status === 'rain-risk'
+  );
+
+  $effect(() => {
+    void selectedBlockId;
+    void rainfast.hours;
+    weatherAck = false;
+  });
+
+  const canSubmit = $derived(
+    !!selectedBlockId &&
+      selectedPluginIds.length > 0 &&
+      !tankMixBlocked &&
+      !fracBlocked &&
+      (!rainRisk || weatherAck)
+  );
 
   const stepperData = $derived.by<Array<{ label: string; state: StepState }>>(() => {
     const hasBlock = !!selectedBlockId;
@@ -103,7 +194,10 @@
     const hasObservation = !!diseaseName && diseaseValue !== null;
     return [
       { label: 'Block', state: hasBlock ? 'done' : 'active' },
-      { label: 'Disease + FRAC', state: !hasProducts ? (hasBlock ? 'active' : 'pending') : 'done' },
+      {
+        label: 'Disease + FRAC',
+        state: !hasProducts ? (hasBlock ? 'active' : 'pending') : fracBlocked ? 'active' : 'done'
+      },
       {
         label: 'Tank-mix check',
         state: !hasProducts ? 'pending' : tankMixOk ? 'done' : 'active'
@@ -300,14 +394,60 @@
           </div>
         {/each}
       </fieldset>
-
-      {#if tankFracOverlap}
-        <p class="warn-inline">
-          ⚠ FRAC {tankFracOverlap} is on two products in this tank. Consider rotating to a different mode
-          of action for resistance management.
-        </p>
-      {/if}
     {/if}
+  {/snippet}
+
+  {#snippet diseaseGate()}
+    <div class="gate-head">
+      <h2>Disease + FRAC</h2>
+      {#if weather && weather.provenance === 'data'}
+        <span class="gate-meta">
+          NWS forecast · fetched {new Date(weather.fetchedAt).toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit'
+          })}
+          {#if weather.location?.source === 'farm-default'}· farm default location (no block map){/if}
+          {#if weather.location?.source === 'farm-block'}· nearest mapped block{/if}
+        </span>
+      {/if}
+    </div>
+    {#if weather === null}
+      <p class="gate-loading" role="status">Loading hourly forecast…</p>
+    {:else}
+      <div class="weather-grid">
+        <LeafWetDial
+          past={weatherDerived.leafWet.past24h}
+          next={weatherDerived.leafWet.next24h}
+          threshold={DEFAULT_LEAF_WET_THRESHOLD_HOURS}
+          provenance={weatherDerived.provenance}
+        />
+        <RainSparkline
+          rain={weatherDerived.dailyRain}
+          leafWet={weatherDerived.dailyLeafWet}
+          provenance={weatherDerived.provenance}
+        />
+      </div>
+    {/if}
+    <div class="gate-tiles">
+      <DryWindowGate
+        rainfast={weatherDerived.rainfast}
+        dryWindow={weatherDerived.dryWindow}
+        provenance={weather === null ? 'fallback' : weatherDerived.provenance}
+        rainfastFromLabel={rainfast.fromLabel}
+        bind:acknowledged={weatherAck}
+      />
+      <FracRotationTile
+        violations={fracViolations}
+        prior={priorFungicide}
+        {proposedFracCodes}
+        tankOverlapCode={tankFracOverlap}
+      />
+    </div>
+    <p class="gate-note">
+      Leaf wetness is estimated from forecast humidity (RH ≥ 90%) and rain — not a disease model.
+      Disease forecast models (NEWA / FHB) are coming in Phase 26. Weather checks are advisory; FRAC
+      rotation is enforced by the server.
+    </p>
   {/snippet}
 
   {#snippet observation()}
@@ -453,12 +593,43 @@
     font-size: 0.85rem;
     margin-left: auto;
   }
-  .warn-inline {
+  .gate-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .gate-head h2 {
+    margin: 0;
+  }
+  .gate-meta,
+  .gate-loading,
+  .gate-note {
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
+  }
+  .gate-note {
     margin: 0.75rem 0 0;
-    padding: 0.6rem;
-    background: var(--pill-wheat-bg);
-    border-left: 4px solid var(--color-wheat);
-    border-radius: 4px;
+  }
+  .weather-grid,
+  .gate-tiles {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .gate-tiles {
+    margin-bottom: 0;
+  }
+  @media (min-width: 720px) {
+    .weather-grid {
+      grid-template-columns: 1fr 1.4fr;
+      align-items: center;
+    }
+    .gate-tiles {
+      grid-template-columns: 1fr 1fr;
+    }
   }
   .empty {
     color: var(--color-ink-muted);

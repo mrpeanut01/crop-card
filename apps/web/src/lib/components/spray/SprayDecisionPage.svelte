@@ -96,6 +96,9 @@
     /** Pollinator-protection gate panel. Pages render bloom-stage +
      *  bee-forecast + `<Provenance>` (`plugin` + `data`). */
     pollinatorGate?: Snippet;
+    /** Fungicide weather + FRAC rotation panel (leaf-wet dial, rain
+     *  sparkline, dry-window gate, FRAC tile). */
+    diseaseGate?: Snippet;
   }
 
   let {
@@ -125,7 +128,8 @@
     legendStrip,
     tankMixProvenance,
     ipmGate,
-    pollinatorGate
+    pollinatorGate,
+    diseaseGate
   }: Props = $props();
 
   // `aiEnabled` is destructured for the page-level snippets that read it
@@ -164,6 +168,10 @@
       <div class="tank-mix-provenance">{@render tankMixProvenance()}</div>
     {/if}
   </section>
+
+  {#if diseaseGate}
+    <section class="card gate-card">{@render diseaseGate()}</section>
+  {/if}
 
   {#if ipmGate}
     <section class="card gate-card">{@render ipmGate()}</section>

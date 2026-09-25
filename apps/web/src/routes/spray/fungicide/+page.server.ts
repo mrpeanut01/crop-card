@@ -40,6 +40,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         fracCodes: Array.from(new Set(p.activeIngredients.map((ai) => ai.fracCode))),
         reEntryIntervalHours: p.reEntryIntervalHours,
         preHarvestIntervalDays: p.preHarvestIntervalDays,
+        rainfastHours: p.rainfastHours ?? null,
         pollinatorRisk: p.pollinatorRisk ?? 'unknown',
         ratePerAcre: p.ratePerAcre,
         gpaCalibration: p.gpaCalibration,
@@ -50,9 +51,28 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     .filter((p): p is NonNullable<typeof p> => p !== null)
     .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
+  const blocks = listBlocks();
+  // Mirrors the /api/fungicide/record FRAC-rotation input so the tile
+  // shows the same verdict the server will enforce.
+  const priorFungicideByBlock: Record<
+    string,
+    { pluginId: string; displayName: string; fracCodes: string[]; occurredAt: number }
+  > = {};
+  for (const b of blocks) {
+    const last = listFungicideEvents({ blockId: b.id, limit: 1 })[0];
+    if (!last) continue;
+    priorFungicideByBlock[b.id] = {
+      pluginId: last.products[0]?.pluginId ?? 'unknown',
+      displayName: last.products.map((p) => p.displayName).join(' + ') || 'unknown',
+      fracCodes: last.products.flatMap((p) => p.fracCodes ?? []),
+      occurredAt: last.occurredAt
+    };
+  }
+
   return {
     fungicides: fungicidePlugins,
-    blocks: listBlocks().map((b) => ({
+    priorFungicideByBlock,
+    blocks: blocks.map((b) => ({
       id: b.id,
       name: b.name,
       acres: b.acres ?? null,

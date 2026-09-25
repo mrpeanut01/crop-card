@@ -1075,6 +1075,8 @@ export const fungicidePluginSchema = pluginBase.extend({
   dilutionTable: dilutionTableSchema.optional(),
   reEntryIntervalHours: z.number().int().nonnegative(),
   preHarvestIntervalDays: z.number().int().nonnegative(),
+  /** Phase 29 (#132) — label rainfast interval: hours of dry weather needed after application before rain no longer washes the product off. Optional; the /spray/fungicide dry-window advisory defaults to 4h when absent. */
+  rainfastHours: z.number().positive().max(72).optional(),
   pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),
   /** Fungicides rarely require sprayer decon (no herbicide cross-contam class) but a few do (e.g., copper after a Bordeaux mix). */
   deconRequired: z.boolean().optional(),

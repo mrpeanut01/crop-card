@@ -1,5 +1,5 @@
 /**
- * PATCH  /api/types/:id — rename or re-describe a term (owner-only).
+ * PATCH  /api/types/:id — rename or re-describe a user-added term (owner-only; defaults are shared and read-only).
  * DELETE /api/types/:id — delete a user-added term (default terms cannot be deleted).
  */
 

@@ -13,6 +13,8 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeTankMixDilutions } from '$lib/dilution/calculator';
+import { getBlock } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import { insertSprayEvent } from '$lib/db/sprayEvents';
 import {
   decrementForUse,
@@ -42,6 +44,7 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const cropStageInput = z.object({
   cropPluginId: z.string().min(1),
@@ -101,6 +104,12 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+
+  const foreign = rejectForeignRefs(
+    ['blockId', parsed.data.blockId, getBlock],
+    ['cropId', parsed.data.cropId, getCrop]
+  );
+  if (foreign) return foreign;
 
   const registry = await getRegistry();
   const occurredAt = parsed.data.occurredAt ?? Date.now();

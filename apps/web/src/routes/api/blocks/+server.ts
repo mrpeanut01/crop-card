@@ -1,7 +1,9 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { createBlock, listBlocks } from '$lib/db/blocks';
+import { getField } from '$lib/db/fields';
 import { requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 export const GET: RequestHandler = () => {
   return json({ blocks: listBlocks() });
@@ -43,6 +45,8 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
+  const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
+  if (foreign) return foreign;
   const { geometryGeojson, ...rest } = parsed.data;
   const block = createBlock({
     ...rest,

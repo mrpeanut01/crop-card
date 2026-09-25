@@ -9,6 +9,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import { insertHarvestEvent } from '$lib/db/harvestEvents';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
@@ -17,6 +18,7 @@ import { getRegistry } from '$lib/server/registry';
 import type { PluginRegistry } from '$lib/plugins';
 import { evaluateHarvestMoisture, HARVEST_MOISTURE_BLOCK } from '$lib/safety/harvestMoisture';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { evaluateHarvestPhi, type AppliedSpray } from '$lib/schedule/harvestPhi';
 
 const PHI_LOOKBACK_MS = 120 * 24 * 60 * 60 * 1000;
@@ -107,6 +109,8 @@ export const POST: RequestHandler = async ({ request }) => {
   if (!getBlock(parsed.data.blockId)) {
     return json({ error: 'unknown block' }, { status: 404 });
   }
+  const foreign = rejectForeignRefs(['cropId', parsed.data.cropId, getCrop]);
+  if (foreign) return foreign;
   const registry = await getRegistry();
   const plugin = registry.get(parsed.data.cropPluginId);
   if (!plugin || plugin.plugin.type !== 'crop') {

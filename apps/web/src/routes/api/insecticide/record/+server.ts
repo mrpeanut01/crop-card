@@ -17,6 +17,7 @@ import {
 } from '$lib/db/insecticideEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
 import { geometryCentroid, getBlock } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import {
   decrementForUse,
   getStockItem,
@@ -51,6 +52,7 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 /** Coarse sprayer-load token for the cross-contamination state machine
  *  (#321). Insecticides carry IRAC groups, not an HRAC ChemistryClass, so
@@ -117,6 +119,12 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+
+  const foreign = rejectForeignRefs(
+    ['blockId', parsed.data.blockId, getBlock],
+    ['cropId', parsed.data.cropId, getCrop]
+  );
+  if (foreign) return foreign;
 
   const registry = await getRegistry();
   const occurredAt = parsed.data.occurredAt ?? Date.now();

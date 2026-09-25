@@ -18,6 +18,7 @@ import { computeRatedDilution } from '$lib/dilution/calculator';
 import { insertFungicideEvent, type DiseaseObservation } from '$lib/db/fungicideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { getBlock } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import {
   decrementForUse,
   getStockItem,
@@ -46,6 +47,7 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 /** Coarse sprayer-load token for the cross-contamination state machine
  *  (#321). Fungicides carry FRAC codes, not an HRAC ChemistryClass, so the
@@ -103,6 +105,12 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+
+  const foreign = rejectForeignRefs(
+    ['blockId', parsed.data.blockId, getBlock],
+    ['cropId', parsed.data.cropId, getCrop]
+  );
+  if (foreign) return foreign;
 
   const registry = await getRegistry();
   const occurredAt = parsed.data.occurredAt ?? Date.now();

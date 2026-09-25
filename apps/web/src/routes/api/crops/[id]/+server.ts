@@ -9,6 +9,7 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { deleteCropCascade } from '$lib/db/admin';
+import { getBlock } from '$lib/db/blocks';
 import {
   getCrop,
   isGroupAnchorWithMembers,
@@ -20,6 +21,7 @@ import {
 } from '$lib/db/crops';
 import { reanchorCropTasks } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 
 const patchSchema = z.discriminatedUnion('action', [
@@ -152,6 +154,8 @@ export const PATCH: RequestHandler = async (event) => {
   if (parsed.data.action === 'set-schedule') {
     const before = getCrop(event.params.id);
     if (!before) throw error(404, 'crop not found');
+    const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
+    if (foreign) return foreign;
     const result = setSchedule(event.params.id, {
       plantingDate: parsed.data.plantingDate,
       blockId: parsed.data.blockId

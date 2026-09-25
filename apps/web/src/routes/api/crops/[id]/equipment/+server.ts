@@ -12,7 +12,9 @@ import {
   listCropEquipment
 } from '$lib/db/cropEquipment';
 import { getCrop } from '$lib/db/crops';
+import { getEquipment } from '$lib/db/equipment';
 import { currentUser } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 
 export const GET: RequestHandler = ({ params }) => {
@@ -45,6 +47,8 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
+  const foreign = rejectForeignRefs(['equipmentId', parsed.data.equipmentId, getEquipment]);
+  if (foreign) return foreign;
   try {
     const binding = bindEquipment({
       cropId: event.params.id,

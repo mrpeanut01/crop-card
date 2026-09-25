@@ -1,7 +1,9 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getBlock } from '$lib/db/blocks';
 import { insertSoilTest, listSoilTestsForBlock } from '$lib/db/fertility';
 import { requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
@@ -35,6 +37,8 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+  const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
+  if (foreign) return foreign;
   const persisted = insertSoilTest({
     ...parsed.data,
     sampledAt: parsed.data.sampledAt ?? Date.now()

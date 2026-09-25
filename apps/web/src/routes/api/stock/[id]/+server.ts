@@ -8,10 +8,12 @@ import {
   updateStockItem,
   type StockCategory
 } from '$lib/db/stock';
+import { getTaxonomyTerm } from '$lib/db/taxonomy';
 import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const CATEGORIES: StockCategory[] = [
   'herbicide',
@@ -69,6 +71,8 @@ export const PATCH: RequestHandler = async (event) => {
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success)
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+  const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
+  if (foreign) return foreign;
   return json({ item: updateStockItem(event.params.id, parsed.data) });
 };
 

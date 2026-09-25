@@ -1,8 +1,10 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getBlock } from '$lib/db/blocks';
 import { insertFertilityCredit, listFertilityCreditsForBlock } from '$lib/db/fertility';
 import { defaultCoverCredit } from '$lib/fertility/coverCropCredits';
 import { requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
@@ -35,6 +37,9 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+
+  const foreign = rejectForeignRefs(['blockId', parsed.data.blockId, getBlock]);
+  if (foreign) return foreign;
 
   let { nLbPerAcre, pLbPerAcre, kLbPerAcre, notes } = parsed.data;
   if (parsed.data.useDefaults && parsed.data.cropPluginId) {

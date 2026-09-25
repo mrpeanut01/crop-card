@@ -10,6 +10,8 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getBlock } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import { createCutting, listCuttings } from '$lib/db/hayCuttings';
 import { ensureSystemUser } from '$lib/db/users';
 import { evaluateMowDecision, type ForecastDay } from '$lib/hay';
@@ -17,6 +19,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
@@ -76,6 +79,12 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+
+  const foreign = rejectForeignRefs(
+    ['blockId', parsed.data.blockId, getBlock],
+    ['cropId', parsed.data.cropId, getCrop]
+  );
+  if (foreign) return foreign;
 
   const registry = await getRegistry();
   const cropRecord = registry.get(parsed.data.cropPluginId);

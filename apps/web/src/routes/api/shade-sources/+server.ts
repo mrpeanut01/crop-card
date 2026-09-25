@@ -5,8 +5,10 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getField } from '$lib/db/fields';
 import { createShadeSource, listShadeSources } from '$lib/db/shadeSources';
 import { requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const KINDS = [
   'tree-row',
@@ -48,5 +50,7 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
+  const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
+  if (foreign) return foreign;
   return json({ shadeSource: createShadeSource(parsed.data) }, { status: 201 });
 };

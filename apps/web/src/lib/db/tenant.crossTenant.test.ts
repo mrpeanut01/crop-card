@@ -43,8 +43,9 @@ import * as scoutObservationsRepo from './scoutObservations';
 import * as wizardChatRepo from './wizardChat';
 import * as seasonCloseoutsRepo from './seasonCloseouts';
 import * as pushSubscriptionsRepo from './pushSubscriptions';
+import * as taxonomyRepo from './taxonomy';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
-import { users, helperAssignments, recordDeletions } from './schema';
+import { users, helperAssignments, recordDeletions, cropEquipment } from './schema';
 import { eq } from 'drizzle-orm';
 import { tenantValues, withTenant } from './tenant';
 
@@ -471,6 +472,68 @@ describe('cross-tenant isolation', () => {
 
     const tenants = pushSubscriptionsRepo.listOwnerIdsWithPushSubscriptions();
     expect(tenants).toEqual(expect.arrayContaining([OWNER_A, OWNER_B]));
+  });
+
+  it("listCropEquipment never joins another Owner's equipment row", () => {
+    const bEquipment = runWithTenant(OWNER_B, () =>
+      equipmentRepo.createEquipment({ type: 'planter', label: 'B-secret-planter' })
+    );
+    const aCropId = runWithTenant(OWNER_A, () => cropsRepo.listCrops()[0].id);
+    expect(() =>
+      runWithTenant(OWNER_A, () =>
+        cropEquipmentRepo.bindEquipment({
+          cropId: aCropId,
+          equipmentId: bEquipment.id,
+          role: 'planter'
+        })
+      )
+    ).toThrow(/unknown equipment id/);
+    // A pre-existing binding row pointing at B's equipment (legacy data)
+    // must still not surface B's label through the join.
+    runWithTenant(OWNER_A, () =>
+      db
+        .insert(cropEquipment)
+        .values(
+          tenantValues({
+            id: randomUUID(),
+            cropId: aCropId,
+            equipmentId: bEquipment.id,
+            role: 'planter'
+          })
+        )
+        .run()
+    );
+    const listed = runWithTenant(OWNER_A, () => cropEquipmentRepo.listCropEquipment(aCropId));
+    expect(listed.map((b) => b.equipmentLabel)).not.toContain('B-secret-planter');
+  });
+
+  it('taxonomy defaults are shared read-only; own terms stay per-Owner', () => {
+    const def = runWithTenant(OWNER_A, () =>
+      taxonomyRepo.listTaxonomyTerms({ domain: 'equipment' }).find((t) => t.isDefault)
+    );
+    expect(def).toBeTruthy();
+    expect(() =>
+      runWithTenant(OWNER_A, () => taxonomyRepo.updateTaxonomyTerm(def!.id, { name: 'hijacked' }))
+    ).toThrow(taxonomyRepo.DefaultTermEditError);
+    expect(runWithTenant(OWNER_B, () => taxonomyRepo.getTaxonomyTerm(def!.id)?.name)).toBe(
+      def!.name
+    );
+
+    const bTerm = runWithTenant(OWNER_B, () =>
+      taxonomyRepo.createTaxonomyTerm({ domain: 'equipment', name: `b-term-${randomUUID()}` })
+    );
+    expect(runWithTenant(OWNER_A, () => taxonomyRepo.getTaxonomyTerm(bTerm.id))).toBeUndefined();
+    expect(() =>
+      runWithTenant(OWNER_A, () => taxonomyRepo.updateTaxonomyTerm(bTerm.id, { name: 'x' }))
+    ).toThrow();
+
+    const aTerm = runWithTenant(OWNER_A, () =>
+      taxonomyRepo.createTaxonomyTerm({ domain: 'equipment', name: `a-term-${randomUUID()}` })
+    );
+    const renamed = runWithTenant(OWNER_A, () =>
+      taxonomyRepo.updateTaxonomyTerm(aTerm.id, { name: `a-renamed-${randomUUID()}` })
+    );
+    expect(renamed.name).toMatch(/^a-renamed-/);
   });
 
   // Quiet noise — these imports exist so the test refuses to compile when a

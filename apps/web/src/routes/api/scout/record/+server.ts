@@ -13,9 +13,12 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getBlock } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import { insertScoutObservation } from '$lib/db/scoutObservations';
 import { ensureSystemUser } from '$lib/db/users';
 import { currentUser } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 
 const requestSchema = z.object({
@@ -51,6 +54,12 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+
+  const foreign = rejectForeignRefs(
+    ['blockId', parsed.data.blockId, getBlock],
+    ['cropId', parsed.data.cropId, getCrop]
+  );
+  if (foreign) return foreign;
 
   const performer = auth ?? (await ensureSystemUser());
   const persisted = insertScoutObservation({

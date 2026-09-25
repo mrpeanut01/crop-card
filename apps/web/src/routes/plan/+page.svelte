@@ -110,7 +110,8 @@
   let openGuides = $state(new Set<string>());
   function toggleGuide(id: string) {
     const next = new Set(openGuides);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     openGuides = next;
   }
 

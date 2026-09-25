@@ -157,7 +157,7 @@
     // Init touch is suppressed by referencing all signals once then
     // immediately resetting — Svelte 5's $effect runs after first state
     // read so we set dirty=false on next microtask.
-    [
+    void [
       displayName,
       shortName,
       category,

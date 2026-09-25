@@ -52,10 +52,7 @@ export default tseslint.config(
       // Invariant 6: raw Drizzle reads/writes against tenant-scoped tables
       // must go through tenantWhere/withTenant/tenantValues, or the function
       // must call `unscopedQueryNote('reason')` when intentionally global.
-      'cropcard/no-raw-tenant-table': 'error',
-      // Added to typescript-eslint's recommended set in v8; not enforced under
-      // the v7 config this replaced. Adopt in a dedicated cleanup pass.
-      '@typescript-eslint/no-unused-expressions': 'off'
+      'cropcard/no-raw-tenant-table': 'error'
     }
   },
   {

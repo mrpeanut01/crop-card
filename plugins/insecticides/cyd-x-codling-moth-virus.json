@@ -21,7 +21,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
-  "epaRegistrationNumber": "70051-32",
+  "epaRegistrationNumber": "70051-44",
   "targetPests": [
     "codling moth"
   ],

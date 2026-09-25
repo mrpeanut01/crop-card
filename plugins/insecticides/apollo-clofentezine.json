@@ -22,7 +22,7 @@
   "preHarvestIntervalDays": 21,
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
-  "epaRegistrationNumber": "66222-181",
+  "epaRegistrationNumber": "66222-47",
   "targetPests": [
     "European red mite eggs",
     "twospotted spider mite eggs"

@@ -25,7 +25,7 @@
   "preHarvestIntervalDays": 1,
   "pollinatorRisk": "moderate",
   "pollinator": {"beeToxicity":"toxic","bloomRestriction":"dusk-to-dawn-only","residualToxicityHours":3},
-  "epaRegistrationNumber": "62719-707",
+  "epaRegistrationNumber": "62719-666",
   "targetPests": [
     "corn earworm",
     "European corn borer",

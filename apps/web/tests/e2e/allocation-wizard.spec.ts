@@ -507,3 +507,11 @@ test.describe('empty season starts in the wizard', () => {
     await expect(body(page).getByText(`${year - 1}: Last Year Beans`)).toBeVisible();
   });
 });
+
+test('an empty season deep link (?map=open) does not stack the wizard on top', async ({ page }) => {
+  await provisionWizardTenant(page, { seasonSetup: true });
+  await page.goto('/plan?map=open');
+  await page.waitForLoadState('networkidle');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(wizard(page)).toHaveCount(0);
+});

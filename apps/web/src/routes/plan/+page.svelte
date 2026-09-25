@@ -1378,7 +1378,9 @@
 
   onMount(() => {
     cropsTabOrder = loadBlockOrder();
-    if (data.emptySeason && data.canEdit) openWizard();
+    const sp = $page.url.searchParams;
+    const deepLinked = ['map', 'block', 'planting', 'tab'].some((k) => sp.has(k));
+    if (data.emptySeason && data.canEdit && !deepLinked) openWizard();
   });
 
   function onCropsHeaderDragStart(ev: DragEvent, blockId: string) {

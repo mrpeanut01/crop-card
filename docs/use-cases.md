@@ -365,7 +365,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
 - **Constraints:**
   - Block re-assignment cascades correctly: spray/scout/harvest records keep their `blockId`; the Block's `fieldId` is the only FK that moves.
   - `axesLocked` blocks: `inferBlockAxes` will not overwrite a manually-positioned block's east-west / north-south indices when the block is re-assigned.
-- **Audit notes:** Comprehensive deletes (planting, sprayer, plugin, etc.) are covered in UC-35 (Phase 12e). Field rename does not regenerate any swim-lane indices — those are centroid-derived from `geometryGeojson` and only move when geometry changes.
+- **Audit notes:** `PUT`/`DELETE /api/blocks/[id]/geometry` apply the same inspector read-only gate (403) as the other block mutations. Comprehensive deletes (planting, sprayer, plugin, etc.) are covered in UC-35 (Phase 12e). Field rename does not regenerate any swim-lane indices — those are centroid-derived from `geometryGeojson` and only move when geometry changes.
 
 ## UC-26 — Sidebar navigation + header identity strip + app footer _(proposed)_
 

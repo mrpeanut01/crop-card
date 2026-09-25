@@ -26,6 +26,7 @@
     "cabbage looper"
   ],
   "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only","residualToxicityHours":3},
   "notes": "OMRI-listed organic spinosad. Same a.i. as Tracer/Success — different formulation. Apply at sunset to avoid bee toxicity.",
   "complianceFlags": {
     "omriListed": false,

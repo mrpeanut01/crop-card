@@ -25,6 +25,7 @@
     "leafhopper"
   ],
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
   "notes": "Neonicotinoid IRAC 4A. Soil-applied + foliar. Highly bee-toxic — never apply during bloom; soil application before bloom only.",
   "complianceFlags": {
     "omriListed": false,

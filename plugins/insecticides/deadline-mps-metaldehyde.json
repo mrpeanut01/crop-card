@@ -18,6 +18,7 @@
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 21,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "epaRegistrationNumber": "70506-130",
   "targetPests": [
     "gray field slug",

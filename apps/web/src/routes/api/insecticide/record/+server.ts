@@ -16,7 +16,7 @@ import {
   type ScoutObservation as InsectScoutObs
 } from '$lib/db/insecticideEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
-import { getBlock } from '$lib/db/blocks';
+import { geometryCentroid, getBlock } from '$lib/db/blocks';
 import {
   decrementForUse,
   getStockItem,
@@ -35,7 +35,14 @@ import {
 } from '$lib/safety/userAddedRestrictionsFromStock';
 import { RULES_VERSION } from '$lib/safety/version';
 import { checkIpmThreshold, type ScoutObservation } from '$lib/safety/ipmThreshold';
-import { checkPollinatorBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
+import { isInBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
+import {
+  checkPollinatorProtection,
+  pollinatorViolations,
+  type BloomStatus
+} from '$lib/safety/pollinatorProtection';
+import { sunTimesFor } from '$lib/safety/sunTimes';
+import { getFarmLatLon } from '$lib/schedule/settings';
 import { checkCrossContaminationForClasses } from '$lib/safety/crossContamination';
 import { runEvaluator } from '$lib/safety/dryRunRunner';
 import type { StockUnit } from '$lib/stock/units';
@@ -75,7 +82,13 @@ const requestSchema = z.object({
       notes: z.string().max(500).optional()
     })
     .optional(),
-  tankSizeGallons: z.number().positive().optional()
+  tankSizeGallons: z.number().positive().optional(),
+  /** #130 — operator bloom attestation (crop or flowering weeds). Missing
+   *  → derived from crop-plugin bloom windows, else `unknown`. */
+  bloomStatus: z.enum(['in-bloom', 'not-in-bloom', 'unknown']).optional(),
+  /** #130 — "no bees foraging" attestation; only consulted when sunrise /
+   *  sunset cannot be computed for a dusk-to-dawn-only label. */
+  attestedNoForagers: z.boolean().optional()
 });
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -229,24 +242,42 @@ export const POST: RequestHandler = async (event) => {
         bloomWindow: cropPlugin?.bloomWindow
       };
     });
-  const pollinatorViolations = runEvaluator(
-    'pollinatorBloom',
-    () =>
-      checkPollinatorBloom(
-        products.map((p) => ({
-          pluginId: p.pluginId,
-          pollinatorRisk: p.pollinatorRisk ?? 'unknown'
-        })),
-        cropsInBlock,
-        occurredAt
-      ),
-    {
-      plannedSpray: { productPluginIds: parsed.data.productPluginIds },
-      blockId: parsed.data.blockId
-    }
-  );
+  // #130 — label pollinator gate (RULES_VERSION 0.5.6). Label language is
+  // law, so this is not routed through the KERNEL_DRY_RUN wrapper.
+  const pluginSaysInBloom = cropsInBlock.some((c) => isInBloom(c, occurredAt));
+  const bloomStatus: BloomStatus =
+    parsed.data.bloomStatus ?? (pluginSaysInBloom ? 'in-bloom' : 'unknown');
+  const centroid = block?.geometryGeojson ? geometryCentroid(block.geometryGeojson) : null;
+  const { lat, lon } = centroid ?? getFarmLatLon();
+  const pollinator = checkPollinatorProtection({
+    products: products.map((p) => ({
+      pluginId: p.pluginId,
+      displayName: p.displayName,
+      pollinator: p.pollinator,
+      pollinatorRisk: p.pollinatorRisk
+    })),
+    bloomStatus,
+    applicationTime: new Date(occurredAt),
+    sunTimes: sunTimesFor(lat, lon, new Date(occurredAt)),
+    attestedNoForagers: parsed.data.attestedNoForagers
+  });
+  const pollinatorBlock = pollinatorViolations(pollinator);
+  if (pollinatorBlock.length > 0) {
+    return json(
+      {
+        error: 'POLLINATOR_BLOCK',
+        code: 'POLLINATOR_BLOCK',
+        message: pollinatorBlock[0].message,
+        checks: pollinator.checks,
+        bloomStatus,
+        violations: pollinatorBlock,
+        ruleVersion: RULES_VERSION
+      },
+      { status: 422 }
+    );
+  }
 
-  const gateViolations = [...ipmViolations, ...pollinatorViolations];
+  const gateViolations = [...ipmViolations];
   if (gateViolations.length > 0) {
     return json(
       {
@@ -458,6 +489,7 @@ export const POST: RequestHandler = async (event) => {
     event: persisted,
     ruleVersion: RULES_VERSION,
     stockDecrements: stockResults,
-    stockWarnings
+    stockWarnings,
+    pollinatorWarnings: pollinator.checks.filter((c) => c.status === 'warn')
   });
 };

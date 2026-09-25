@@ -1,10 +1,13 @@
 import type { PageServerLoad } from './$types';
-import { listBlocks } from '$lib/db/blocks';
+import { geometryCentroid, listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { listInsecticideEvents, activeReEntryRestrictions } from '$lib/db/insecticideEvents';
 import { scoutLogByBlock as scoutLogFromTable } from '$lib/db/scoutObservations';
 import { getRegistry } from '$lib/server/registry';
 import { getUserAiEnabled } from '$lib/server/aiTry';
+import { getFarmLatLon } from '$lib/schedule/settings';
+import { isInBloom } from '$lib/safety/pollinatorBloom';
+import type { CropPlugin } from '$lib/plugins/schemas';
 
 /**
  * Phase 25d (#95) — IPM-gate scout data. Primary path reads from the
@@ -51,7 +54,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         applicationProtocol: p.applicationProtocol ?? [],
         reEntryIntervalHours: p.reEntryIntervalHours,
         preHarvestIntervalDays: p.preHarvestIntervalDays,
-        pollinatorRisk: p.pollinatorRisk ?? 'unknown',
+        pollinatorRisk: p.pollinatorRisk ?? ('unknown' as const),
+        pollinator: p.pollinator ?? null,
         epaRegistrationNumber: p.epaRegistrationNumber ?? null,
         iracGroups: Array.from(
           new Set(
@@ -62,13 +66,32 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     })
     .filter((p): p is NonNullable<typeof p> => p !== null);
 
+  const farm = getFarmLatLon();
+  const now = Date.now();
+
   return {
     insecticides: insecticidePlugins,
-    blocks: listBlocks().map((b) => ({
-      id: b.id,
-      name: b.name,
-      cropPluginIds: b.plantings.map((p) => p.cropPluginId)
-    })),
+    blocks: listBlocks().map((b) => {
+      const location = (b.geometryGeojson && geometryCentroid(b.geometryGeojson)) || farm;
+      const blooming = b.plantings.filter((p) => {
+        if (p.plantingDate == null) return false;
+        const rec = registry.get(p.cropPluginId);
+        const bloomWindow =
+          rec && rec.plugin.type === 'crop' ? (rec.plugin as CropPlugin).bloomWindow : undefined;
+        return isInBloom(
+          { cropPluginId: p.cropPluginId, plantedAt: p.plantingDate, bloomWindow },
+          now
+        );
+      });
+      return {
+        id: b.id,
+        name: b.name,
+        cropPluginIds: b.plantings.map((p) => p.cropPluginId),
+        lat: location.lat,
+        lon: location.lon,
+        bloomingCropPluginIds: Array.from(new Set(blooming.map((p) => p.cropPluginId)))
+      };
+    }),
     recentEvents: listInsecticideEvents({ limit: 20 }),
     activeREI: activeReEntryRestrictions(),
     preselectedBlockId: crop?.blockId ?? url.searchParams.get('block') ?? null,

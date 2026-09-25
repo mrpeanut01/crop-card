@@ -20,6 +20,7 @@
   "reEntryIntervalHours": 48,
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "epaRegistrationNumber": "352-372",
   "targetPests": [
     "root-knot nematode",

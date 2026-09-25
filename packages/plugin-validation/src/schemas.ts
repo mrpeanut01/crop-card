@@ -1000,6 +1000,27 @@ const applicationProtocolStepSchema = z.object({
   dayOffset: z.number().int().nonnegative().optional()
 });
 
+/**
+ * #130 — label pollinator-protection data consumed by the safety kernel's
+ * `checkPollinatorProtection` gate (`apps/web/src/lib/safety/pollinatorProtection.ts`).
+ *
+ * - `beeToxicity` — EPA acute honey-bee toxicity class of the formulated
+ *   product (worst active ingredient wins). `unknown` is treated as hazardous.
+ * - `bloomRestriction` — the label's bloom language:
+ *   `prohibited-during-bloom` (e.g. the neonicotinoid bee-advisory box — no
+ *   application while crop or flowering weeds are in bloom),
+ *   `dusk-to-dawn-only` ("do not apply while bees are actively foraging" —
+ *   the gate allows sunset → sunrise only), or `none`.
+ * - `residualToxicityHours` — label/EPA RT25 residual toxicity window; used to
+ *   warn when foragers would return before residues dry.
+ */
+export const pollinatorProtectionSchema = z.object({
+  beeToxicity: z.enum(['highly-toxic', 'toxic', 'relatively-nontoxic', 'unknown']),
+  bloomRestriction: z.enum(['prohibited-during-bloom', 'dusk-to-dawn-only', 'none']),
+  residualToxicityHours: z.number().nonnegative().max(720).optional()
+});
+export type PollinatorProtection = z.infer<typeof pollinatorProtectionSchema>;
+
 export const insecticidePluginSchema = pluginBase.extend({
   type: z.literal('insecticide'),
   activeIngredients: z.array(insecticideIngredientSchema).min(1),
@@ -1018,6 +1039,8 @@ export const insecticidePluginSchema = pluginBase.extend({
   dilutionTable: dilutionTableSchema.optional(),
   targetPests: z.array(z.string().min(1)).optional(),
   pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),
+  /** #130 — label bee-toxicity + bloom restriction. See `pollinatorProtectionSchema`. */
+  pollinator: pollinatorProtectionSchema.optional(),
   /** Phase 10: scouting nudge thresholds — drives /scout → /spray handoff. */
   scoutingThresholds: z.array(scoutingThresholdSchema).optional(),
   /** Phase 10: multi-step protocol — e.g. Bt rotation, biocontrol release. */

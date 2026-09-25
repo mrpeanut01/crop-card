@@ -10,6 +10,9 @@
   } from '$lib/components/spray/SprayContextStrip.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
+  import PollinatorGatePanel from '$lib/components/spray/PollinatorGatePanel.svelte';
+  import { checkPollinatorProtection, type BloomStatus } from '$lib/safety/pollinatorProtection';
+  import { sunTimesFor } from '$lib/safety/sunTimes';
 
   let { data } = $props();
 
@@ -90,7 +93,53 @@
   // gate here is a glove-operability layer so the operator gets an
   // immediate blocker instead of a network round-trip on submit.
   const ipmBlocked = $derived(!!primaryThreshold && !ipmTriggered);
-  const canSubmit = $derived(!!selectedBlockId && !!selectedPluginId && !ipmBlocked);
+
+  // #130 — pollinator-protection gate. Same pure kernel evaluator the
+  // server runs; the server re-checks on submit (422 POLLINATOR_BLOCK).
+  let bloomStatus = $state<BloomStatus>('unknown');
+  let attestedNoForagers = $state(false);
+  let nowMs = $state(Date.now());
+  $effect(() => {
+    const id = setInterval(() => (nowMs = Date.now()), 60_000);
+    return () => clearInterval(id);
+  });
+  $effect(() => {
+    void selectedBlockId;
+    const prefill = untrack(() =>
+      (data.blocks.find((b) => b.id === selectedBlockId)?.bloomingCropPluginIds.length ?? 0) > 0
+        ? 'in-bloom'
+        : 'unknown'
+    );
+    bloomStatus = prefill;
+    attestedNoForagers = false;
+  });
+  const sunTimes = $derived.by(() => {
+    const b = data.blocks.find((x) => x.id === selectedBlockId);
+    return b ? sunTimesFor(b.lat, b.lon, new Date(nowMs)) : null;
+  });
+  const pollinatorResult = $derived(
+    checkPollinatorProtection({
+      products: selectedInsecticide
+        ? [
+            {
+              pluginId: selectedInsecticide.pluginId,
+              pollinator: selectedInsecticide.pollinator ?? undefined,
+              pollinatorRisk: selectedInsecticide.pollinatorRisk
+            }
+          ]
+        : [],
+      bloomStatus,
+      applicationTime: new Date(nowMs),
+      sunTimes,
+      attestedNoForagers
+    })
+  );
+  const pollinatorBlocked = $derived(pollinatorResult.overall === 'block');
+  const fmtClock = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  const canSubmit = $derived(
+    !!selectedBlockId && !!selectedPluginId && !ipmBlocked && !pollinatorBlocked
+  );
 
   const stepperData = $derived.by<Array<{ label: string; state: StepState }>>(() => {
     const hasBlock = !!selectedBlockId;
@@ -130,18 +179,27 @@
   const ctxCompatibility = $derived<CompatibilityState | undefined>(
     !selectedPluginId
       ? undefined
-      : ipmBlocked
+      : pollinatorBlocked
         ? {
-            label: `IPM threshold not met for ${primaryThreshold?.pest ?? 'target pest'}`,
-            reason:
-              'Action threshold has not been crossed in the 5-week scout window — kernel will block submit.',
-            tone: 'wheat'
+            label: 'Pollinator-protection gate blocks this application',
+            reason: pollinatorResult.checks
+              .filter((c) => c.status === 'block')
+              .map((c) => c.reason)
+              .join(' '),
+            tone: 'rust'
           }
-        : {
-            label: 'IPM threshold cleared',
-            reason: 'Recent scout observations cross the product’s action threshold.',
-            tone: 'forest'
-          }
+        : ipmBlocked
+          ? {
+              label: `IPM threshold not met for ${primaryThreshold?.pest ?? 'target pest'}`,
+              reason:
+                'Action threshold has not been crossed in the 5-week scout window — kernel will block submit.',
+              tone: 'wheat'
+            }
+          : {
+              label: 'IPM threshold cleared',
+              reason: 'Recent scout observations cross the product’s action threshold.',
+              tone: 'forest'
+            }
   );
 
   async function recordSpray(ev: Event) {
@@ -163,6 +221,8 @@
       body.scout = { pest: scoutPest, metric: scoutMetric, value: scoutValue };
     }
     if (tankSize) body.tankSizeGallons = tankSize;
+    body.bloomStatus = bloomStatus;
+    if (attestedNoForagers) body.attestedNoForagers = true;
     // Phase 21b follow-up — close the swim-lane pip when deep-linked.
     if (data.preselectedCropId) body.cropId = data.preselectedCropId;
     if (data.taskId) body.taskId = data.taskId;
@@ -239,7 +299,9 @@
             {#if p.preHarvestIntervalDays !== undefined}
               · PHI {p.preHarvestIntervalDays}d
             {/if}
-            · Pollinator risk {p.pollinatorRisk}
+            · {p.pollinator
+              ? `Bees: ${p.pollinator.beeToxicity}${p.pollinator.bloomRestriction === 'none' ? '' : ` · ${p.pollinator.bloomRestriction}`}`
+              : `Pollinator risk ${p.pollinatorRisk}`}
             {#if p.epaRegistrationNumber}· EPA {p.epaRegistrationNumber}{/if}
           </div>
           {#if p.scoutingThresholds.length}
@@ -442,15 +504,15 @@
   {/snippet}
 
   {#snippet pollinatorGate()}
-    <header class="gate-header">
-      <h2>Pollinator-protection gate</h2>
-      <Provenance source="plugin" detail="bloom-window" compact />
-      <Provenance source="data" detail="local weather feed" compact />
-    </header>
-    <p class="gate-body">
-      Blocks bee-toxic applications when any selected block is in its declared bloom window AND the
-      product carries a bee-toxicity flag. Full evaluator lands in Phase 25d.
-    </p>
+    <PollinatorGatePanel
+      result={pollinatorResult}
+      bind:bloomStatus
+      bind:attestedNoForagers
+      bloomingCrops={selectedBlock?.bloomingCropPluginIds ?? []}
+      hasPluginData={!!selectedInsecticide?.pollinator}
+      sunsetLabel={sunTimes ? fmtClock(sunTimes.sunset) : null}
+      sunriseLabel={sunTimes ? fmtClock(sunTimes.sunrise) : null}
+    />
   {/snippet}
 </SprayDecisionPage>
 

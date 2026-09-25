@@ -26,6 +26,7 @@
     "cabbage looper"
   ],
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "Pyrethroid IRAC 3A. Restricted-use. NOT during bloom — pollinator-toxic. Contact + residual.",
   "complianceFlags": {
     "omriListed": false,

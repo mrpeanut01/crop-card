@@ -23,6 +23,7 @@
     "powdery mildew (suppression)"
   ],
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "notes": "Highly refined hort oil — used as virus-vector blocker for aphid-transmitted virus management. Phytotox risk during heat stress; avoid >85 °F.",
   "complianceFlags": {
     "omriListed": false,

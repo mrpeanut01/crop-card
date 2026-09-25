@@ -24,6 +24,7 @@
     "soft-bodied insects"
   ],
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "notes": "Organic insecticidal soap. Contact-only — must wet the pest. Phytotoxicity risk on stressed plants.",
   "complianceFlags": {
     "omriListed": false,

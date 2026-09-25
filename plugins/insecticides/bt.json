@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Bt kurstaki",
   "version": "1.0.0",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "activeIngredients": [
     {
       "name": "Bacillus thuringiensis kurstaki"

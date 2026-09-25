@@ -25,6 +25,7 @@
     "tomato hornworm"
   ],
   "pollinatorRisk": "none",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "notes": "Bt IRAC 11A. OMRI organic. Caterpillar-only — no broadleaf insect activity. Eat-to-kill, slow but selective.",
   "complianceFlags": {
     "omriListed": false,

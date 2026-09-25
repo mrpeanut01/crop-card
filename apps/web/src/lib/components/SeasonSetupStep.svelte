@@ -2,7 +2,7 @@
   /**
    * Season Setup wizard step (Phase 21 / UC-42).
    *
-   * Six-question form (plus one conditional) that gates downstream Phase 21
+   * Five-question form (plus one conditional) that gates downstream Phase 21
    * input planning. Renders inside `AllocationWizard.svelte` as the new
    * first step before 'seeds'. Also reused on /settings/season.
    *
@@ -18,8 +18,7 @@
     WEED_LABELS,
     PEST_LABELS,
     FERTILITY_LABELS,
-    COVER_LABELS,
-    SPRAY_LABELS
+    COVER_LABELS
   } from '$lib/season/setup';
 
   let {
@@ -45,7 +44,6 @@
   let pestStrategy = $state(seed.pestStrategy);
   let fertilityApproach = $state(seed.fertilityApproach);
   let coverCropIntent = $state(seed.coverCropIntent);
-  let sprayCapacity = $state(seed.sprayCapacity);
   let transitioningStartedYear = $state<number | null>(
     untrack(() =>
       seed.philosophy === 'organic-transitioning'
@@ -83,7 +81,6 @@
           pestStrategy,
           fertilityApproach,
           coverCropIntent,
-          sprayCapacity,
           transitioningStartedYear
         })
       });
@@ -135,7 +132,7 @@
   <header class="ss-header">
     <h3>Set up your {currentYear} planting season</h3>
     <p class="ss-intro">
-      Six quick questions tell the planner what kinds of products + practices fit your operation.
+      Five quick questions tell the planner what kinds of products + practices fit your operation.
       Your answers carry forward year over year — you can change them any time from <a
         href="/settings/season">Settings → Season</a
       >.
@@ -207,6 +204,19 @@
     </label>
 
     <label class="ss-field">
+      <span class="ss-label">Last year's cover crop</span>
+      <select bind:value={coverCropIntent} disabled={saving} required>
+        {#each Object.entries(COVER_LABELS) as [val, label] (val)}
+          <option value={val}>{label}</option>
+        {/each}
+      </select>
+      <span class="ss-hint">
+        What overwintered on your fields. Schedules spring termination and feeds the legume N credit
+        below.
+      </span>
+    </label>
+
+    <label class="ss-field">
       <span class="ss-label">Fertility approach</span>
       <select bind:value={fertilityApproach} disabled={saving} required>
         {#each Object.entries(FERTILITY_LABELS) as [val, label] (val)}
@@ -216,28 +226,6 @@
       <span class="ss-hint">
         Picks the fertility product pool. Cover-crop credits subtract legume N from required N
         before sizing.
-      </span>
-    </label>
-
-    <label class="ss-field">
-      <span class="ss-label">Cover crop intent</span>
-      <select bind:value={coverCropIntent} disabled={saving} required>
-        {#each Object.entries(COVER_LABELS) as [val, label] (val)}
-          <option value={val}>{label}</option>
-        {/each}
-      </select>
-      <span class="ss-hint"> Gates post-harvest cover-seed tasks + spring termination tasks. </span>
-    </label>
-
-    <label class="ss-field">
-      <span class="ss-label">Spray application capacity</span>
-      <select bind:value={sprayCapacity} disabled={saving} required>
-        {#each Object.entries(SPRAY_LABELS) as [val, label] (val)}
-          <option value={val}>{label}</option>
-        {/each}
-      </select>
-      <span class="ss-hint">
-        Filters tank-mix sizing + dilution defaults. Pairs with the sprayer registry (UC-10).
       </span>
     </label>
 

@@ -113,6 +113,7 @@
   const yearSummary = $derived(data.yearSummary);
   const PHILOSOPHY_LABELS: Record<string, string> = {
     conventional: 'Conventional',
+    'no-till': 'No-till',
     'non-gmo': 'Non-GMO',
     'organic-transitioning': 'Organic (transitioning)',
     'certified-organic': 'Certified organic'

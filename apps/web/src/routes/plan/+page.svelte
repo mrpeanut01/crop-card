@@ -42,8 +42,7 @@
     WEED_LABELS,
     PEST_LABELS,
     FERTILITY_LABELS,
-    COVER_LABELS,
-    SPRAY_LABELS
+    COVER_LABELS
   } from '$lib/season/setup';
   import {
     applyBlockOrder,
@@ -2013,16 +2012,12 @@
             <dd>{PEST_LABELS[data.seasonSetup.pestStrategy]}</dd>
           </div>
           <div class="season-row">
-            <dt>Fertility approach</dt>
-            <dd>{FERTILITY_LABELS[data.seasonSetup.fertilityApproach]}</dd>
-          </div>
-          <div class="season-row">
-            <dt>Cover crop intent</dt>
+            <dt>Last year's cover crop</dt>
             <dd>{COVER_LABELS[data.seasonSetup.coverCropIntent]}</dd>
           </div>
           <div class="season-row">
-            <dt>Spray application capacity</dt>
-            <dd>{SPRAY_LABELS[data.seasonSetup.sprayCapacity]}</dd>
+            <dt>Fertility approach</dt>
+            <dd>{FERTILITY_LABELS[data.seasonSetup.fertilityApproach]}</dd>
           </div>
         </dl>
         {#if data.canEdit}

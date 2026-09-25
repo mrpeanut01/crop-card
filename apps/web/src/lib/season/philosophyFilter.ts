@@ -16,6 +16,8 @@
  * Allow-deny matrix:
  *
  *   conventional               — all products allowed
+ *   no-till                    — all products allowed (burndown herbicides
+ *                                  stand in for tillage, so nothing is gated)
  *   non-gmo                    — requires `complianceFlags.nonGmoCompliant === true`
  *   organic-transitioning      — requires `transitioningAllowed === true`
  *                                  OR `omriListed === true`
@@ -51,7 +53,7 @@ export type FilterableInputPlugin =
  * docstring for the matrix.
  */
 export function isProductAllowed(plugin: FilterableInputPlugin, philosophy: Philosophy): boolean {
-  if (philosophy === 'conventional') return true;
+  if (philosophy === 'conventional' || philosophy === 'no-till') return true;
 
   const flags = plugin.complianceFlags;
 
@@ -98,7 +100,7 @@ export function philosophyRejectionReason(
   plugin: FilterableInputPlugin,
   philosophy: Philosophy
 ): string {
-  if (philosophy === 'conventional') return ''; // never reached
+  if (philosophy === 'conventional' || philosophy === 'no-till') return ''; // never reached
   const flags = plugin.complianceFlags;
 
   if (philosophy === 'non-gmo') {

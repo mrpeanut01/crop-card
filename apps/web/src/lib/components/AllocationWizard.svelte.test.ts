@@ -22,7 +22,6 @@ const setup: SeasonSetup = {
   pestStrategy: 'ipm',
   fertilityApproach: 'synthetic',
   coverCropIntent: 'none',
-  sprayCapacity: 'backpack-4gal',
   transitioningStartedYear: null,
   year: 2026,
   setAt: 0

@@ -851,6 +851,9 @@ function planForPlanting(
         });
       }
     }
+    // No-till leaves the residue on the surface, so it can't be incorporated.
+    const mechanicalTerminate =
+      seasonSetup.philosophy === 'no-till' ? 'Roller-crimp' : 'Mow + incorporate';
     const terminateDateMs = plantingDateMs - 21 * DAY_MS;
     applications.push({
       id: applicationId(planting.id, 'cover-terminate', 0),
@@ -860,7 +863,7 @@ function planForPlanting(
       slot: 'cover-terminate',
       productPluginId: picked?.pluginId ?? null,
       productDisplayName:
-        (picked?.displayName ?? useHerbicide) ? null : 'Mow + incorporate (no herbicide)',
+        (picked?.displayName ?? useHerbicide) ? null : `${mechanicalTerminate} (no herbicide)`,
       productCategory: 'herbicide',
       windowStartMs: terminateDateMs - 7 * DAY_MS,
       windowEndMs: terminateDateMs + 7 * DAY_MS,
@@ -874,7 +877,7 @@ function planForPlanting(
           : null,
       rationale: useHerbicide
         ? `Terminate prior-year ${seasonSetup.coverCropIntent} cover crop ~3 weeks before planting.`
-        : `Mow + incorporate ${seasonSetup.coverCropIntent} cover crop ~3 weeks before planting (cultivation-first weed strategy).`
+        : `${mechanicalTerminate} ${seasonSetup.coverCropIntent} cover crop ~3 weeks before planting (cultivation-first weed strategy).`
     });
   }
 

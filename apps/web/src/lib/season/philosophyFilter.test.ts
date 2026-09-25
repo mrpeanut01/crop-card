@@ -87,6 +87,21 @@ describe('isProductAllowed — conventional', () => {
   });
 });
 
+describe('isProductAllowed — no-till', () => {
+  it('allows every product regardless of flags, burndown herbicides included', () => {
+    expect(isProductAllowed(herbicide('roundup'), 'no-till')).toBe(true);
+    expect(isProductAllowed(herbicide('gramoxone', { nonGmoCompliant: false }), 'no-till')).toBe(
+      true
+    );
+    expect(isProductAllowed(fungicide('copper', { omriListed: false }), 'no-till')).toBe(true);
+    expect(isProductAllowed(fertilizer('urea', { organic: false }), 'no-till')).toBe(true);
+  });
+
+  it('never produces a rejection reason', () => {
+    expect(philosophyRejectionReason(herbicide('roundup'), 'no-till')).toBe('');
+  });
+});
+
 describe('isProductAllowed — non-gmo', () => {
   it('requires nonGmoCompliant === true', () => {
     expect(isProductAllowed(herbicide('h1', { nonGmoCompliant: true }), 'non-gmo')).toBe(true);

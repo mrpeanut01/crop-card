@@ -5,7 +5,7 @@
  * read/write functions live in the sibling `setup.server.ts` so they don't
  * leak `better-sqlite3` into the client bundle.
  *
- * Six-question form captured at the start of `/plan` and persisted forever.
+ * Five-question form captured at the start of `/plan` and persisted forever.
  * Downstream consumers (Phase 21 inputs planner; AI refinement layer) read
  * this to filter products by `philosophy`, gate weed / pest spray emissions
  * by `weedStrategy` / `pestStrategy`, and pick fertility products by
@@ -23,14 +23,14 @@ export const SEASON_SETUP_FIELDS = [
   'pestStrategy',
   'fertilityApproach',
   'coverCropIntent',
-  'sprayCapacity',
   'transitioningStartedYear',
   'setAt'
 ] as const;
 
 export type SeasonSetupField = (typeof SEASON_SETUP_FIELDS)[number];
 
-export type Philosophy = 'conventional' | 'non-gmo' | 'organic-transitioning' | 'certified-organic';
+export type Philosophy =
+  'conventional' | 'no-till' | 'non-gmo' | 'organic-transitioning' | 'certified-organic';
 
 export type WeedStrategy = 'cultivate-first' | 'pre-emergence-ok' | 'post-emergence-ok';
 
@@ -40,15 +40,16 @@ export type FertilityApproach = 'synthetic' | 'compost-amendments' | 'cover-crop
 
 export type CoverCropIntent = 'fall-cereal' | 'vetch-clover' | 'other' | 'none';
 
-export type SprayCapacity = 'backpack-4gal' | 'handheld-25gal' | 'boom-25-plus' | 'none';
-
 export interface SeasonSetup {
   philosophy: Philosophy;
   weedStrategy: WeedStrategy;
   pestStrategy: PestStrategy;
   fertilityApproach: FertilityApproach;
+  /** The cover crop grown over the prior winter, terminated ahead of this
+   *  season's planting. Drives the spring termination task and the flat
+   *  N credit under the cover-crop-credits fertility approach. The key keeps
+   *  its original name so saved setups load unchanged. */
   coverCropIntent: CoverCropIntent;
-  sprayCapacity: SprayCapacity;
   /** Only populated when `philosophy === 'organic-transitioning'`. */
   transitioningStartedYear: number | null;
   /** The planting year this setup describes (e.g. 2026). */
@@ -66,12 +67,12 @@ export const SEASON_SETUP_DEFAULTS: Omit<SeasonSetup, 'year' | 'setAt'> = {
   pestStrategy: 'ipm',
   fertilityApproach: 'mixed',
   coverCropIntent: 'none',
-  sprayCapacity: 'backpack-4gal',
   transitioningStartedYear: null
 };
 
 export const PHILOSOPHY_VALUES: readonly Philosophy[] = [
   'conventional',
+  'no-till',
   'non-gmo',
   'organic-transitioning',
   'certified-organic'
@@ -97,12 +98,6 @@ export const COVER_VALUES: readonly CoverCropIntent[] = [
   'other',
   'none'
 ];
-export const SPRAY_VALUES: readonly SprayCapacity[] = [
-  'backpack-4gal',
-  'handheld-25gal',
-  'boom-25-plus',
-  'none'
-];
 
 /** True when the setup demands NOP-compliant products only. Drives the
  *  philosophy filter in `lib/season/philosophyFilter.ts` (B-25). */
@@ -115,7 +110,9 @@ export function isOrganicCompliant(s: SeasonSetup): boolean {
  *  philosophies; the transitioning case is conservative (treated as
  *  organic). */
 export function allowsSynthetics(s: SeasonSetup): boolean {
-  return s.philosophy === 'conventional' || s.philosophy === 'non-gmo';
+  return (
+    s.philosophy === 'conventional' || s.philosophy === 'no-till' || s.philosophy === 'non-gmo'
+  );
 }
 
 /** Strip the explanatory tail from a label so the compact chip fits on a
@@ -128,20 +125,20 @@ function chipForm(label: string): string {
 
 /** Compact human-readable summary used by `SeasonSetupChip.svelte`.
  *  Example: "Certified organic · Scout-then-spray · Compost & amendments
- *  · Backpack ≤4 gal · Cover: Vetch / clover · 2026" */
+ *  · Cover: Vetch / clover · 2026" */
 export function summarizeSeasonSetup(s: SeasonSetup): string {
   const phil = chipForm(PHILOSOPHY_LABELS[s.philosophy]);
   const pest = chipForm(PEST_LABELS[s.pestStrategy]);
   const fert = chipForm(FERTILITY_LABELS[s.fertilityApproach]);
-  const cap = chipForm(SPRAY_LABELS[s.sprayCapacity]);
   const cover = s.coverCropIntent === 'none' ? null : `Cover: ${COVER_LABELS[s.coverCropIntent]}`;
-  return [phil, pest, fert, cap, cover, s.year].filter(Boolean).join(' · ');
+  return [phil, pest, fert, cover, s.year].filter(Boolean).join(' · ');
 }
 
 // ─── Human-readable labels (for chip + select options) ──────────────────
 
 export const PHILOSOPHY_LABELS: Record<Philosophy, string> = {
   conventional: 'Conventional',
+  'no-till': 'No-till — burndown and residue management instead of tillage',
   'non-gmo': 'Non-GMO',
   'organic-transitioning': 'Organic (transitioning)',
   'certified-organic': 'Certified organic'
@@ -196,12 +193,5 @@ export const COVER_LABELS: Record<CoverCropIntent, string> = {
   'fall-cereal': 'Fall cereal rye',
   'vetch-clover': 'Vetch / clover',
   other: 'Other',
-  none: 'None'
-};
-
-export const SPRAY_LABELS: Record<SprayCapacity, string> = {
-  'backpack-4gal': 'Backpack ≤4 gal',
-  'handheld-25gal': 'Handheld ≤25 gal',
-  'boom-25-plus': 'Boom 25+ gal',
   none: 'None'
 };

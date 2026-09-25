@@ -33,6 +33,8 @@ interface InviteEmail {
 
 export type OutboundEmail = InviteEmail;
 
+export const POSTMARK_TIMEOUT_MS = 10_000;
+
 export class EmailTransportError extends Error {
   constructor(
     message: string,
@@ -73,21 +75,31 @@ async function dispatchPostmark(
   if (!token) {
     throw new EmailTransportError('POSTMARK_TOKEN not configured');
   }
-  const res = await fetch('https://api.postmarkapp.com/email', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'X-Postmark-Server-Token': token
-    },
-    body: JSON.stringify({
-      From: from,
-      To: email.to,
-      Subject: subject,
-      TextBody: textBody,
-      MessageStream: process.env.POSTMARK_STREAM ?? 'outbound'
-    })
-  });
+  let res: Response;
+  try {
+    res = await fetch('https://api.postmarkapp.com/email', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-Postmark-Server-Token': token
+      },
+      body: JSON.stringify({
+        From: from,
+        To: email.to,
+        Subject: subject,
+        TextBody: textBody,
+        MessageStream: process.env.POSTMARK_STREAM ?? 'outbound'
+      }),
+      signal: AbortSignal.timeout(POSTMARK_TIMEOUT_MS)
+    });
+  } catch (e) {
+    throw new EmailTransportError(
+      'Postmark dispatch failed: request error or timeout',
+      undefined,
+      e
+    );
+  }
   if (!res.ok) {
     const detail = await res.text().catch(() => '(no body)');
     throw new EmailTransportError(

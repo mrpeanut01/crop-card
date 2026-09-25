@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { seedsToPlants, type SeedPluginShape } from '$lib/seed/quantity';
+  import type { PollinationConstraint } from '$lib/plan/types';
   import type { CropPlugin } from '$lib/plugins/schemas';
-  import type { CompanionGroupMarker, PollinationConstraint } from '$lib/plan/types';
   import { untrack } from 'svelte';
   import type { SeasonSetup } from '$lib/season/setup';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
@@ -9,82 +8,37 @@
   import InputsPlanStep from '$lib/components/InputsPlanStep.svelte';
   // Phase 25b (#96) — Almanac wizard chrome. Shared header + stepper +
   // footer matching `direction-almanac-wizard.jsx` so every step renders
-  // with consistent chrome. Per-step component-file extraction is a
-  // separate tracked follow-up.
+  // with consistent chrome.
   import WizardHeader, {
     type WizardStepDescriptor
   } from '$lib/components/wizard/WizardHeader.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
+  import {
+    AllocationWizardState,
+    STEP_LABELS,
+    STEP_ORDER,
+    setWizardContext
+  } from '$lib/components/wizard/allocation/wizardState.svelte';
+  import {
+    aiProgressLabel,
+    fmtDateMs,
+    fmtElapsed,
+    sufficiencyChip
+  } from '$lib/components/wizard/allocation/format';
   import type {
-    InputsPlanApplication,
-    InputsPlanProvisionalPlanting,
-    InputsPlanScoutTask
-  } from '$lib/plan/inputsPlan';
+    BlockEntry,
+    CropCatalogItem,
+    InitialChatMessage,
+    ProgressStage,
+    SeedStockEntry
+  } from '$lib/components/wizard/allocation/types';
 
-  type SeedStockEntry = {
-    stockItemId: string;
-    displayName: string;
-    /** Phase 15d — short label; falls back to displayName when absent. */
-    shortName?: string;
-    onHand: number;
-    defaultUnit: string;
-    cropPluginId: string | null;
-    cropFamily: string | null;
-  };
-
-  type BlockEntry = {
-    id: string;
-    name: string;
-    blockLabel?: string;
-    acres?: number;
-    sunExposure?: 'full' | 'partial' | 'shade';
-    plantings: Array<{ varietyDisplayName: string }>;
-  };
-
-  type CropCatalogItem = {
-    pluginId: string;
-    displayName: string;
-    cropFamily: string;
-  };
-
-  type SufficiencyResult = {
-    status: 'deficit' | 'match' | 'surplus';
-    plantsAvailable: number;
-    plantsFit: number;
-    utilizationPct: number;
-    leftoverPlants: number;
-  };
-
-  type AllocationResponse = {
-    assignments: Array<{
-      stockItemId: string;
-      cropPluginId: string;
-      varietyDisplayName: string;
-      blockId: string;
-      plants: number;
-    }>;
-    unplaced: Array<{ stockItemId: string; cropPluginId: string; quantityPlants: number }>;
-    sufficiency: Record<string, SufficiencyResult>;
-    rationale: string;
-    perRowRationale: Record<string, string>;
-    advisories: string[];
-    pollinationConstraints?: PollinationConstraint[];
-    geometryMissingBlockIds?: string[];
-    companionGroups?: CompanionGroupMarker[];
-    meta: {
-      model: string;
-      usdEstimate: number;
-      fallback?: 'engine-only' | 'no-api-key' | 'over-cap' | 'quota-exceeded';
-      violationsOnFirstAttempt?: string[];
-    };
-  };
-
-  let {
+  const {
     seedStock,
     blocks,
     plantingGuides,
-    cropCatalog,
+    cropCatalog: _cropCatalog,
     seasonSetup = null,
     lastYearSetup = null,
     currentYear = new Date().getFullYear(),
@@ -116,11 +70,7 @@
      *  per-step transcripts on mount. The loader runs the GET before
      *  showing the wizard so the operator sees the resumed conversation
      *  without a flash of empty state. */
-    initialChatMessages?: Array<{
-      step: 'allocation' | 'schedule' | 'inputs';
-      role: 'user' | 'assistant' | 'system';
-      content: string;
-    }>;
+    initialChatMessages?: InitialChatMessage[];
     /** #120 — entry point chosen from the /plan workflow strip. The
      *  downstream steps (schedule / inputs / commit) consume an in-memory
      *  allocation, so only these two can be mounted cold. */
@@ -135,70 +85,40 @@
     onRefreshParent?: () => void | Promise<void>;
   } = $props();
 
-  type Step =
-    | 'season-setup'
-    | 'plan-state'
-    | 'seeds'
-    | 'blocks'
-    | 'review'
-    | 'schedule'
-    | 'inputs'
-    | 'commit';
-  // Phase 21: when the operator has never set up the active year, gate the
-  // whole flow on the Season Setup form. Otherwise fall into the existing
-  // 'seeds' step and surface the saved setup as a chip in the header. The
-  // initial wizard state is read from props once at mount; subsequent
-  // changes are owned locally (handleSeasonSetupSaved updates `activeSetup`
-  // after a successful save).
-  //
-  // Phase 21 follow-up: when an existing plan is detected (any block
-  // already has plantings), gate on the new 'plan-state' chooser so the
-  // operator can pick between "Continue planning (add more)" and "Start
-  // over (clear current plan)". Without this gate, clicking "Plan
-  // Plantings" with a plan in place silently dropped them into the
-  // additive flow with no way to reset.
-  let activeSetup = $state<SeasonSetup | null>(untrack(() => seasonSetup));
-  const hasExistingPlan = untrack(() => blocks.some((b) => b.plantings && b.plantings.length > 0));
-  let step: Step = $state(
-    untrack(() => {
-      if (!activeSetup || initialStep === 'season-setup') return 'season-setup';
-      if (hasExistingPlan) return 'plan-state';
-      return 'seeds';
-    })
+  const w = setWizardContext(
+    new AllocationWizardState(
+      {
+        get seedStock() {
+          return seedStock;
+        },
+        get blocks() {
+          return blocks;
+        },
+        get plantingGuides() {
+          return plantingGuides;
+        },
+        get aiEnabled() {
+          return aiEnabled;
+        },
+        get wizardPlanId() {
+          return wizardPlanId;
+        },
+        get onClose() {
+          return onClose;
+        },
+        get onCommitted() {
+          return onCommitted;
+        },
+        get onRefreshParent() {
+          return onRefreshParent;
+        }
+      },
+      untrack(() => ({ seasonSetup, initialChatMessages, initialStep }))
+    )
   );
 
-  function handleSeasonSetupSaved(saved: SeasonSetup) {
-    activeSetup = saved;
-    step = hasExistingPlan ? 'plan-state' : 'seeds';
-  }
-
-  // Phase 25b (#96) — derived wizard step descriptors for the Almanac
-  // header. Ordered: season → seeds → blocks → review → schedule →
-  // inputs → commit. `plan-state` is a transient gate that doesn't get
-  // its own header slot (the chip-row above carries it visually). State
-  // per step: done = past, active = current (header applies this),
-  // pending = future, stale = data drifted (Phase 26 follow-up).
-  const STEP_ORDER: Step[] = [
-    'season-setup',
-    'seeds',
-    'blocks',
-    'review',
-    'schedule',
-    'inputs',
-    'commit'
-  ];
-  const STEP_LABELS: Record<Step, string> = {
-    'season-setup': '0. Season',
-    'plan-state': 'Plan state',
-    seeds: '1. Seeds',
-    blocks: '2. Blocks',
-    review: '3. Review',
-    schedule: '4. Schedule',
-    inputs: '5. Inputs',
-    commit: '6. Commit'
-  };
   const wizardSteps = $derived.by<WizardStepDescriptor[]>(() => {
-    const currentIdx = STEP_ORDER.indexOf(step === 'plan-state' ? 'seeds' : (step as Step));
+    const currentIdx = STEP_ORDER.indexOf(w.step === 'plan-state' ? 'seeds' : w.step);
     return STEP_ORDER.map((sid, i) => ({
       id: sid,
       label: STEP_LABELS[sid],
@@ -206,200 +126,15 @@
     }));
   });
 
-  /** Allow the user to click a prior (done) step to jump back. Future steps
-   *  stay locked — the wizard's forward gates haven't been satisfied yet. */
-  function canJumpToStep(stepId: string) {
-    const currentIdx = STEP_ORDER.indexOf(step === 'plan-state' ? 'seeds' : (step as Step));
-    const targetIdx = STEP_ORDER.indexOf(stepId as Step);
-    if (targetIdx < 0 || targetIdx >= currentIdx) return;
-    step = stepId as Step;
-  }
-
-  // ─── Plan-state step handlers (Phase 21 follow-up) ───────────────────
-  let resetConfirmOpen = $state(false);
-  let resetting = $state(false);
-  let resetError = $state<string | null>(null);
-  let resetSummary = $state<Record<string, number> | null>(null);
-
-  function continueExistingPlan() {
-    step = 'seeds';
-  }
-
-  function openResetConfirm() {
-    resetError = null;
-    resetSummary = null;
-    resetConfirmOpen = true;
-  }
-
-  function cancelReset() {
-    resetConfirmOpen = false;
-  }
-
-  async function confirmReset() {
-    resetting = true;
-    resetError = null;
-    try {
-      const res = await fetch('/api/plan/reset', { method: 'DELETE' });
-      const body = await res.json();
-      if (!res.ok) {
-        resetError = body.error ?? `HTTP ${res.status}`;
-        return;
-      }
-      resetSummary = body.removed ?? {};
-      resetConfirmOpen = false;
-      // Advance to 'seeds'. We deliberately do NOT call onCommitted here
-      // (that's the parent's signal to CLOSE the wizard). Instead, refresh
-      // the parent's data in-place via onRefreshParent so the wizard stays
-      // open and the operator can immediately start a fresh plan.
-      step = 'seeds';
-      if (onRefreshParent) {
-        try {
-          await onRefreshParent();
-        } catch {
-          /* refresh failures are non-fatal — wizard keeps its initial props */
-        }
-      }
-    } catch (e) {
-      resetError = e instanceof Error ? e.message : String(e);
-    } finally {
-      resetting = false;
-    }
-  }
-
-  let seedSearch = $state('');
-
-  // #175 / CT-W-006 (Sprint 1 link-out, Sprint 3 embed) — Seeds step
-  // dead-end recovery. When `eligibleStock` is empty, the empty-state
-  // card below lets the user open /stock/add in a new tab and then
-  // refresh the wizard data in place. `seedStockRefreshing` debounces
-  // the refresh button so a slow loader doesn't double-fire.
-  // Spec: docs/design/almanac/direction-almanac-wizard.jsx §seeds-fallback.
-  let seedStockRefreshing = $state(false);
-  async function refreshSeedStock() {
-    if (!onRefreshParent || seedStockRefreshing) return;
-    seedStockRefreshing = true;
-    try {
-      await onRefreshParent();
-    } catch {
-      /* non-fatal; the wizard keeps its prior seedStock prop */
-    } finally {
-      seedStockRefreshing = false;
-    }
-  }
-
-  const eligibleStock = $derived(seedStock.filter((s) => !!s.cropPluginId && s.onHand > 0));
-
-  // #252 / CT-W-007 — surface seeds the operator added without a crop
-  // plugin (Manual entry path; or Search/Barcode/Label where the
-  // confidence threshold rejected the auto-link). They have on-hand
-  // quantity but no plugin link, so the eligibleStock filter rejects
-  // them. We don't drop them — we render them in a "Needs crop plugin"
-  // section with an inline picker that hits /api/plugins/search-by-name
-  // and PATCHes /api/stock/[id] with the chosen pluginId. The seed
-  // then migrates to eligibleStock on the next render.
-  const noPluginStock = $derived(seedStock.filter((s) => !s.cropPluginId && s.onHand > 0));
-
-  type PluginCandidate = {
-    pluginId: string;
-    displayName: string;
-    score: number;
-    source: 'local' | 'web-search' | 'mixed';
-  };
-  let linkPickerOpenFor = $state<string | null>(null);
-  let linkQuery = $state('');
-  let linkResults = $state<PluginCandidate[]>([]);
-  let linkSearching = $state(false);
-  let linkError = $state<string | null>(null);
-  let linkAssigningId = $state<string | null>(null);
-  let linkDebounceHandle: ReturnType<typeof setTimeout> | null = null;
-
-  function openLinkPicker(stockItemId: string): void {
-    linkPickerOpenFor = stockItemId;
-    linkQuery = '';
-    linkResults = [];
-    linkError = null;
-  }
-  function closeLinkPicker(): void {
-    linkPickerOpenFor = null;
-    linkQuery = '';
-    linkResults = [];
-    linkError = null;
-    if (linkDebounceHandle) {
-      clearTimeout(linkDebounceHandle);
-      linkDebounceHandle = null;
-    }
-  }
-  function onLinkQueryChange(): void {
-    if (linkDebounceHandle) clearTimeout(linkDebounceHandle);
-    const q = linkQuery.trim();
-    if (q.length < 2) {
-      linkResults = [];
-      return;
-    }
-    linkDebounceHandle = setTimeout(() => {
-      void runLinkSearch(q);
-    }, 200);
-  }
-  async function runLinkSearch(q: string): Promise<void> {
-    linkSearching = true;
-    linkError = null;
-    try {
-      // skipWebSearch=true → local fuzzy match only, no AI quota
-      // consumption while the operator types. Honors Invariant 7
-      // (AI assists, never gates) — picker works without an Anthropic
-      // key for any plugin already in the operator's library.
-      const res = await fetch('/api/plugins/search-by-name', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query: q, hintType: 'crop', skipWebSearch: true })
-      });
-      const body = await res.json();
-      if (!res.ok) {
-        linkError = body.error ?? `HTTP ${res.status}`;
-        return;
-      }
-      linkResults = (body.candidates ?? []) as PluginCandidate[];
-    } catch (err) {
-      linkError = err instanceof Error ? err.message : String(err);
-    } finally {
-      linkSearching = false;
-    }
-  }
-  async function assignPluginToStock(stockItemId: string, pluginId: string): Promise<void> {
-    if (linkAssigningId) return;
-    linkAssigningId = stockItemId;
-    linkError = null;
-    try {
-      const res = await fetch(`/api/stock/${stockItemId}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ pluginId })
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        linkError = body.error ?? `HTTP ${res.status}`;
-        return;
-      }
-      closeLinkPicker();
-      // Refresh so the seed migrates from noPluginStock → eligibleStock.
-      // refreshSeedStock guards against double-fire via seedStockRefreshing.
-      await refreshSeedStock();
-    } catch (err) {
-      linkError = err instanceof Error ? err.message : String(err);
-    } finally {
-      linkAssigningId = null;
-    }
-  }
-
   const filteredEligibleStock = $derived.by(() => {
-    const q = seedSearch.trim().toLowerCase();
+    const q = w.seedSearch.trim().toLowerCase();
     const matches = q
-      ? eligibleStock.filter(
+      ? w.eligibleStock.filter(
           (s) =>
             s.displayName.toLowerCase().includes(q) ||
             (s.cropFamily ?? '').toLowerCase().includes(q)
         )
-      : eligibleStock;
+      : w.eligibleStock;
     return [...matches].sort((a, b) => {
       const fa = a.cropFamily ?? 'zz';
       const fb = b.cropFamily ?? 'zz';
@@ -422,222 +157,10 @@
     }));
   });
 
-  let selectedSeeds = $state<Map<string, number>>(new Map());
-  let selectedBlockIds = $state<Set<string>>(new Set());
-
-  let response = $state<AllocationResponse | null>(null);
-  let loading = $state(false);
-  let error = $state<string | null>(null);
-
-  /** Phase 21b follow-up — the AI's last rejected proposal, captured from
-   *  refine fallback responses so we can offer "Apply anyway." Cleared on
-   *  successful refine or step transitions. */
-  let lastRejectedAssignments = $state<AllocationResponse['assignments'] | null>(null);
-  let lastRejectedRationale = $state<string>('');
-  let lastRejectedViolations = $state<string[]>([]);
-
-  /** Translate a raw validator violation string into operator-friendly
-   *  text. Replaces UUIDs with block/variety names from props and
-   *  rewrites the known "family density" pattern into plain English.
-   *  Anything we don't recognize falls through to UUID-replacement only —
-   *  the operator still gets readable names even when the rule wording
-   *  stays technical. */
-  function humanizeAllocationViolation(v: string): string {
-    const blockNames = new Map<string, string>();
-    for (const b of blocks) blockNames.set(b.id, b.name);
-    const seedNames = new Map<string, string>();
-    for (const s of seedStock) {
-      seedNames.set(s.stockItemId, s.shortName ?? s.displayName);
-    }
-    const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
-    const replaceIds = (str: string) =>
-      str.replace(UUID_RE, (id) => {
-        const b = blockNames.get(id);
-        if (b) return `“${b}”`;
-        const s = seedNames.get(id);
-        if (s) return `“${s}”`;
-        return id;
-      });
-
-    // Family-density pattern: "block <id> packs multiple <family>
-    // varieties: total N plants exceeds 1.25× the largest plantsFit (M)"
-    const familyMatch = v.match(
-      /^block ([0-9a-f-]{36}) packs multiple (\S+) varieties: total (\d+) plants exceeds 1\.25× the largest plantsFit \((\d+)\)/i
-    );
-    if (familyMatch) {
-      const [, blockId, family, totalStr, capStr] = familyMatch;
-      const blockName = blockNames.get(blockId) ?? blockId;
-      const total = Number(totalStr);
-      const cap = Number(capStr);
-      const overBy = total - cap;
-      const detail = replaceIds(v).replace(/^.*\(/, '(');
-      return (
-        `Too many ${family} varieties packed onto “${blockName}”: ${total} plants total, ` +
-        `but the block's largest single-variety capacity is ${cap}. That's ${overBy} plants ` +
-        `over the recommended density. Spread some varieties to another block, or reduce ` +
-        `plant counts. ${detail}`
-      );
-    }
-
-    // Per-assignment density pattern: "assignment X→Y packs N/M plants
-    // (R× capacity). Reduce or split..."
-    const perAssign = v.match(
-      /^assignment ([0-9a-f-]{36})→([0-9a-f-]{36}) packs (\d+)\/(\d+) plants \(([0-9.]+)× capacity\)/
-    );
-    if (perAssign) {
-      const [, sid, bid, plantsStr, capStr] = perAssign;
-      const seedName = seedNames.get(sid) ?? sid;
-      const blockName = blockNames.get(bid) ?? bid;
-      return (
-        `“${seedName}” is over-packed on “${blockName}” (${plantsStr} plants vs. ` +
-        `${capStr} recommended). This variety has other viable blocks — splitting or ` +
-        `reducing would clear the density check.`
-      );
-    }
-
-    // plantsFit cap pattern: "assignment[N] plants=X exceeds plantsFit=Y for (sid, bid)"
-    const plantsFit = v.match(
-      /plants=(\d+) exceeds plantsFit=(\d+) for \(([0-9a-f-]{36}), ([0-9a-f-]{36})\)/
-    );
-    if (plantsFit) {
-      const [, plantsStr, capStr, sid, bid] = plantsFit;
-      const seedName = seedNames.get(sid) ?? sid;
-      const blockName = blockNames.get(bid) ?? bid;
-      return `“${seedName}” on “${blockName}” has ${plantsStr} plants but the block only fits ${capStr}.`;
-    }
-
-    // Matrix-not-candidate pattern.
-    const notCand = v.match(
-      /assignment\[\d+\] \(([0-9a-f-]{36}) → ([0-9a-f-]{36})\) is not in the candidacy matrix/
-    );
-    if (notCand) {
-      const [, sid, bid] = notCand;
-      const seedName = seedNames.get(sid) ?? sid;
-      const blockName = blockNames.get(bid) ?? bid;
-      return `The AI proposed planting “${seedName}” on “${blockName}”, but this combination wasn't on the candidacy list (likely a sun, rotation, or capacity mismatch from the original blocks step).`;
-    }
-
-    // Default: UUID-replacement only.
-    return replaceIds(v);
-  }
-
-  /** Phase 17 — chat refinement state. The transcript is the source of truth
-   *  for what's rendered in the bubble list and what gets sent to the refine
-   *  endpoint on each turn. Seeded with an assistant message synthesized
-   *  from the initial plan's advisories so the chat opens with the same
-   *  observations the old "Worth considering" block used to show. */
-  // Phase 25d (#89) — `kind: 'seed'` marks the deterministic intro
-  // synthesized from advisories. Stripped before sending to refine
-  // (the seed isn't a conversational turn) and never persisted to the
-  // server (regenerated locally on each wizard open from the fresh
-  // allocation). Real conversation turns omit the kind field.
-  type ChatMsg = { role: 'user' | 'assistant'; content: string; kind?: 'seed' };
-  // Two separate transcripts — allocation chat lives with step 3 (Review),
-  // schedule chat lives with step 4. Switching steps preserves each
-  // transcript so the user can refine either independently, but the
-  // schedule chat doesn't carry over allocation-level pollination notes
-  // (those are already shown on the Review step).
-  // Phase 25d (#89) — hydrate from server-loaded history when present.
-  // `system` rows are dropped from the rendered transcripts since the
-  // UI only renders user/assistant bubbles; they may be reintroduced
-  // later if we add tool-call traces.
-  const seededAllocation: ChatMsg[] = untrack(() =>
-    initialChatMessages
-      .filter((m) => m.step === 'allocation' && (m.role === 'user' || m.role === 'assistant'))
-      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
-  );
-  const seededSchedule: ChatMsg[] = untrack(() =>
-    initialChatMessages
-      .filter((m) => m.step === 'schedule' && (m.role === 'user' || m.role === 'assistant'))
-      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
-  );
-  let allocationChatMessages = $state<ChatMsg[]>(seededAllocation);
-  let scheduleChatMessages = $state<ChatMsg[]>(seededSchedule);
-
-  /** Phase 25d (#89) — fire-and-forget append to /api/wizard/chat. The
-   *  in-memory transcript stays authoritative for rendering; this just
-   *  mirrors writes so reload restores them. Failures are logged but
-   *  never break the chat UX. `wizardPlanId` not set → disabled. */
-  async function persistChatMessage(
-    chatStep: 'allocation' | 'schedule' | 'inputs',
-    role: 'user' | 'assistant',
-    content: string
-  ): Promise<void> {
-    if (!wizardPlanId) return;
-    try {
-      await fetch('/api/wizard/chat', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ planId: wizardPlanId, step: chatStep, role, content })
-      });
-    } catch (err) {
-      console.warn('[wizard-chat] persist failed', err);
-    }
-  }
-  const chatMessages = $derived(
-    (step as Step) === 'schedule' ? scheduleChatMessages : allocationChatMessages
-  );
-  let chatDraft = $state('');
-  let chatBusy = $state(false);
-  let chatError = $state<string | null>(null);
-  let chatLogEl = $state<HTMLDivElement | null>(null);
-
-  function seedChatFromAdvisories(r: AllocationResponse) {
-    const lines: string[] = [];
-    const pollination = r.pollinationConstraints ?? [];
-    const mustStagger = pollination.filter((p) => p.kind === 'must-stagger');
-    const isolated = pollination.filter((p) => p.kind === 'isolated-spatially');
-    const geomMissing = (r.geometryMissingBlockIds ?? []).length;
-
-    if (mustStagger.length > 0 || isolated.length > 0 || geomMissing > 0) {
-      lines.push('Cross-pollination notes:');
-      for (const p of isolated) lines.push(`• ${p.note}`);
-      for (const p of mustStagger) lines.push(`• ⚠ ${p.note}`);
-      if (geomMissing > 0) {
-        lines.push(
-          `• Couldn't check ${geomMissing} block${geomMissing === 1 ? '' : 's'} without geometry — add field boundaries to enable the spatial check.`
-        );
-      }
-      lines.push('');
-    }
-
-    if (r.advisories.length > 0) {
-      lines.push('Other things worth thinking about:');
-      for (const a of r.advisories) lines.push(`• ${a}`);
-      lines.push('');
-    }
-
-    if (mustStagger.length > 0) {
-      lines.push(
-        'These crossing pairs will be carried into the schedule step as required planting offsets. Tell me anything you\'d like to change before then — for example: "swap the Bantam onto Block C to gain more isolation" or "split the brassicas onto two beds."'
-      );
-    } else if (lines.length === 0) {
-      lines.push(
-        'Plan looks clean — nothing jumped out to flag. If you\'d like to tweak it, just tell me what to change (e.g., "move the corn off the narrow block" or "give the brassicas more room").'
-      );
-    } else {
-      lines.push(
-        'Tell me anything you\'d like to change — for example: "move the corn off the narrow block" or "split the tomatoes onto two beds."'
-      );
-    }
-
-    // Seed message is NOT persisted — it's deterministic from the
-    // current advisories. On resume from a server-hydrated transcript,
-    // we skip re-seeding entirely so the prior conversation renders
-    // intact. Persisting the seed would double-seed on the second
-    // wizard open; replacing the transcript with the seed would erase
-    // the resumed chat. Keeping in-memory only is the right balance.
-    if (allocationChatMessages.length === 0) {
-      allocationChatMessages = [{ role: 'assistant', content: lines.join('\n'), kind: 'seed' }];
-    }
-    chatDraft = '';
-    chatError = null;
-  }
-
   /** Pollination chips for a single assignment row. Surfaces only the
    *  unresolved (must-stagger) constraints so the table doesn't bloat. */
   function pollinationChipsFor(stockItemId: string, blockId: string): PollinationConstraint[] {
-    const list = response?.pollinationConstraints ?? [];
+    const list = w.response?.pollinationConstraints ?? [];
     return list.filter(
       (p) =>
         p.kind === 'must-stagger' &&
@@ -661,7 +184,7 @@
     if (chips.length === 0) return null;
     const days = Math.max(...chips.map((c) => c.staggerDays));
     const partners = Array.from(
-      new Set(chips.map((c) => varietyDisplayFor(partnerStockId(c, stockItemId))))
+      new Set(chips.map((c) => w.varietyDisplayFor(partnerStockId(c, stockItemId))))
     );
     const visible = partners.slice(0, 3);
     const overflow = partners.length - visible.length;
@@ -671,77 +194,13 @@
     return { label, tooltip, days };
   }
 
-  let commitProgress = $state<{ done: number; total: number; failed: string[] }>({
-    done: 0,
-    total: 0,
-    failed: []
-  });
-
-  type ScheduledPlanting = {
-    stockItemId: string;
-    blockId: string;
-    cropPluginId: string;
-    varietyDisplayName: string;
-    plantingDateMs: number;
-    plants: number;
-    successionIndex?: { i: number; n: number };
-    rationale: string;
-  };
-  type ScheduleDiagnosis = { summary: string; suggestions: string[] };
-  type ScheduleResponse = {
-    scheduled: ScheduledPlanting[];
-    rationale: string;
-    advisories: string[];
-    meta: {
-      model: string;
-      usdEstimate: number;
-      fallback?: 'deterministic' | 'no-api-key' | 'ai-unavailable';
-      violations?: string[];
-      diagnosis?: ScheduleDiagnosis;
-    };
-  };
-
-  let scheduleResponse = $state<ScheduleResponse | null>(null);
-
-  // Phase 21b / B-28 — inputs plan state held across the inputs →
-  // commit transition. `acceptedInputs` is populated by
-  // InputsPlanStep.onCommit and consumed by `commit()` so the
-  // planting persistence + task materialization happen as one
-  // operator-visible action.
-  let acceptedInputs = $state<{
-    applications: InputsPlanApplication[];
-    scoutTasks: InputsPlanScoutTask[];
-    aiRefined: boolean;
-  } | null>(null);
-  let inputsCommitError = $state<string | null>(null);
-  let scheduleLoading = $state(false);
-  let scheduleError = $state<string | null>(null);
-
-  function fmtDateMs(ms: number): string {
-    return new Date(ms).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  }
-
-  // ─── AI progress heartbeat ──────────────────────────────────────────────
-  // Long Sonnet calls (allocator, scheduler, chat refinement) can run 30-120s.
-  // Without feedback "Generating…" reads as a hang. We track start time per
-  // operation and tick a shared `nowMs` state every 500ms so elapsed time
-  // + a rotating stage label can re-render. Stage labels are time-windowed
-  // narration — not real progress from the server, but plenty to communicate
-  // "the system is alive and working."
-  let nowMs = $state(Date.now());
-  let allocateStartMs = $state<number | null>(null);
-  let scheduleStartMs = $state<number | null>(null);
-  let chatStartMs = $state<number | null>(null);
-
+  // Heartbeat for the AI progress labels: tick `nowMs` every 500ms while
+  // any long-running call is in flight.
   $effect(() => {
-    const active = allocateStartMs != null || scheduleStartMs != null || chatStartMs != null;
+    const active = w.allocateStartMs != null || w.scheduleStartMs != null || w.chatStartMs != null;
     if (!active) return;
     const id = setInterval(() => {
-      nowMs = Date.now();
+      w.nowMs = Date.now();
     }, 500);
     return () => clearInterval(id);
   });
@@ -749,918 +208,18 @@
   // Diagnostic: log every step transition so we can trace the wizard's
   // path in the browser console. Cheap; only fires when `step` changes.
   $effect(() => {
-    console.info('[AllocationWizard] step →', step);
+    console.info('[AllocationWizard] step →', w.step);
   });
-
-  type ProgressStage = 'allocate' | 'schedule' | 'chat-allocate' | 'chat-schedule';
-  function aiProgressLabel(stage: ProgressStage, elapsedMs: number): string {
-    const s = Math.floor(elapsedMs / 1000);
-    if (stage === 'allocate') {
-      if (s < 3) return 'Building candidacy matrix…';
-      if (s < 12) return 'Asking Claude to allocate seeds across your blocks…';
-      if (s < 30) return 'Weighing sun, rotation, companions, and cross-pollination…';
-      if (s < 60) return 'Refining placements to maximize spacing…';
-      if (s < 120) return 'Still working — complex farms take a minute or two…';
-      return 'Almost there — the API is slower than usual right now…';
-    }
-    if (stage === 'schedule') {
-      if (s < 3) return 'Computing planting windows from frost dates and DTM…';
-      if (s < 12) return 'Asking Claude to pick planting dates…';
-      if (s < 30) return 'Honoring cross-pollination staggers and companion offsets…';
-      if (s < 60) return 'Checking succession spacing for fast-growing crops…';
-      if (s < 120) return 'Still scheduling — staggers across many varieties take time…';
-      return 'Almost there — the API is slower than usual right now…';
-    }
-    // Chat refinements are shorter prompts → quicker stages.
-    if (s < 2) return 'Reading your message…';
-    if (s < 8)
-      return stage === 'chat-schedule' ? 'Reconsidering the dates…' : 'Reconsidering the plan…';
-    if (s < 20) return 'Validating against constraints…';
-    if (s < 45) return 'Still thinking — refinement turn taking longer than usual…';
-    return 'Almost there…';
-  }
-
-  function fmtElapsed(ms: number): string {
-    const s = Math.floor(ms / 1000);
-    if (s < 60) return `${s}s`;
-    const m = Math.floor(s / 60);
-    const rem = s % 60;
-    return `${m}m ${String(rem).padStart(2, '0')}s`;
-  }
-
-  function pluginShapeFor(stockItemId: string): SeedPluginShape | undefined {
-    const entry = seedStock.find((s) => s.stockItemId === stockItemId);
-    if (!entry?.cropPluginId) return undefined;
-    return {
-      cropFamily: entry.cropFamily ?? undefined,
-      plantingGuide: plantingGuides[entry.cropPluginId]
-    };
-  }
-
-  function plantsFor(stockItemId: string, quantity: number): number | null {
-    const entry = seedStock.find((s) => s.stockItemId === stockItemId);
-    if (!entry) return null;
-    const result = seedsToPlants({
-      unit: entry.defaultUnit,
-      quantity,
-      plugin: pluginShapeFor(stockItemId)
-    });
-    return result?.plants ?? null;
-  }
-
-  function selectAllInFamily(items: ReadonlyArray<SeedStockEntry>) {
-    for (const s of items) {
-      if (!selectedSeeds.has(s.stockItemId)) selectedSeeds.set(s.stockItemId, s.onHand);
-    }
-    selectedSeeds = new Map(selectedSeeds);
-  }
-
-  function clearFamily(items: ReadonlyArray<SeedStockEntry>) {
-    for (const s of items) selectedSeeds.delete(s.stockItemId);
-    selectedSeeds = new Map(selectedSeeds);
-  }
-
-  function familySelectedCount(items: ReadonlyArray<SeedStockEntry>): number {
-    let n = 0;
-    for (const s of items) if (selectedSeeds.has(s.stockItemId)) n++;
-    return n;
-  }
-
-  function toggleSeed(s: SeedStockEntry) {
-    if (selectedSeeds.has(s.stockItemId)) {
-      selectedSeeds.delete(s.stockItemId);
-    } else {
-      selectedSeeds.set(s.stockItemId, s.onHand);
-    }
-    selectedSeeds = new Map(selectedSeeds);
-  }
-
-  function setSeedQuantity(stockItemId: string, quantity: number) {
-    const entry = seedStock.find((s) => s.stockItemId === stockItemId);
-    if (!entry) return;
-    const clamped = Math.max(0, Math.min(entry.onHand, quantity));
-    selectedSeeds.set(stockItemId, clamped);
-    selectedSeeds = new Map(selectedSeeds);
-  }
-
-  function toggleBlock(id: string) {
-    if (selectedBlockIds.has(id)) selectedBlockIds.delete(id);
-    else selectedBlockIds.add(id);
-    selectedBlockIds = new Set(selectedBlockIds);
-  }
-
-  function selectAllBlocks() {
-    selectedBlockIds = new Set(blocks.map((b) => b.id));
-  }
-
-  async function generatePlan() {
-    loading = true;
-    error = null;
-    response = null;
-    allocateStartMs = Date.now();
-    nowMs = Date.now();
-    // Advance to the Review step immediately so the operator sees the
-    // staged AI-progress indicator (label + spinner + elapsed time) from
-    // second 0, instead of staring at "Generating…" on the Blocks-step
-    // button for a minute.
-    step = 'review';
-    try {
-      const seedSelections = [...selectedSeeds.entries()]
-        .filter(([, qty]) => qty > 0)
-        .map(([stockItemId, quantity]) => {
-          const entry = seedStock.find((s) => s.stockItemId === stockItemId)!;
-          const plants = plantsFor(stockItemId, quantity);
-          return {
-            stockItemId,
-            cropPluginId: entry.cropPluginId!,
-            // Prefer the curated shortName so Claude's rationale + chips
-            // surface "Bloody Butcher" instead of "Bloody Butcher
-            // Ornamental Corn — Raw Untreated Non-GMO (1/2 lb)". Falls back
-            // to displayName when no shortName is set.
-            varietyDisplayName: entry.shortName ?? entry.displayName,
-            quantityPlants: Math.max(1, plants ?? Math.round(quantity))
-          };
-        });
-
-      const res = await fetch('/api/plan/allocate', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          seedSelections,
-          blockIds: [...selectedBlockIds]
-        })
-      });
-      const body = (await res.json()) as AllocationResponse | { error: string };
-      if (!res.ok) {
-        error = 'error' in body ? body.error : `HTTP ${res.status}`;
-        return;
-      }
-      response = body as AllocationResponse;
-      seedChatFromAdvisories(response);
-    } catch (err) {
-      error = err instanceof Error ? err.message : 'request failed';
-    } finally {
-      loading = false;
-      allocateStartMs = null;
-    }
-  }
-
-  async function sendChat() {
-    const text = chatDraft.trim();
-    if (!text || chatBusy || !response) return;
-    chatError = null;
-    const userTurn: ChatMsg = { role: 'user', content: text };
-    // Append to the active step's transcript optimistically.
-    const chatStepKey: 'allocation' | 'schedule' = step === 'schedule' ? 'schedule' : 'allocation';
-    if (chatStepKey === 'schedule') {
-      scheduleChatMessages = [...scheduleChatMessages, userTurn];
-    } else {
-      allocationChatMessages = [...allocationChatMessages, userTurn];
-    }
-    // Phase 25d (#89) — fire-and-forget server persist; doesn't block UI.
-    void persistChatMessage(chatStepKey, 'user', text);
-    chatDraft = '';
-    chatBusy = true;
-    chatStartMs = Date.now();
-    nowMs = Date.now();
-    queueScrollChat();
-    try {
-      // Chat routes through schedule-refinement when in step 4, otherwise
-      // allocator-refinement. Each path mutates its own transcript.
-      if (step === 'schedule' && scheduleResponse) {
-        await sendScheduleChat(text);
-      } else {
-        await sendAllocationChat(text);
-      }
-      queueScrollChat();
-    } catch (err) {
-      chatError = err instanceof Error ? err.message : 'chat request failed';
-      // Roll back the optimistic user message on hard error.
-      if (step === 'schedule') {
-        scheduleChatMessages = scheduleChatMessages.slice(0, -1);
-      } else {
-        allocationChatMessages = allocationChatMessages.slice(0, -1);
-      }
-      chatDraft = text;
-    } finally {
-      chatBusy = false;
-      chatStartMs = null;
-    }
-  }
-
-  async function sendAllocationChat(text: string) {
-    if (!response) return;
-    const seedSelections = [...selectedSeeds.entries()]
-      .filter(([, qty]) => qty > 0)
-      .map(([stockItemId, quantity]) => {
-        const entry = seedStock.find((s) => s.stockItemId === stockItemId)!;
-        const plants = plantsFor(stockItemId, quantity);
-        return {
-          stockItemId,
-          cropPluginId: entry.cropPluginId!,
-          varietyDisplayName: entry.shortName ?? entry.displayName,
-          quantityPlants: Math.max(1, plants ?? Math.round(quantity))
-        };
-      });
-    const previousPlan = {
-      assignments: response.assignments.map((a) => ({
-        stockItemId: a.stockItemId,
-        blockId: a.blockId,
-        plants: a.plants,
-        rationale: response!.perRowRationale[`${a.stockItemId}:${a.blockId}`] ?? ''
-      })),
-      rationale: response.rationale,
-      advisories: response.advisories
-    };
-    const sendable = allocationChatMessages
-      .filter((m) => m.kind !== 'seed')
-      .map((m) => ({ role: m.role, content: m.content }));
-    const res = await fetch('/api/plan/allocate/refine', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        seedSelections,
-        blockIds: [...selectedBlockIds],
-        previousPlan,
-        transcript: sendable
-      })
-    });
-    const body = await res.json();
-    if (!res.ok) {
-      chatError = body?.error ?? `HTTP ${res.status}`;
-      allocationChatMessages = allocationChatMessages.slice(0, -1);
-      chatDraft = text;
-      return;
-    }
-    // When the server fell back (validation failed both passes, parse
-    // failed, etc.), body.assignments is the PREVIOUS unchanged plan
-    // but the AI's reply may still confidently claim it made changes.
-    // Prefix a warning + humanized violations so the operator sees the
-    // table didn't update, then capture the AI's rejected proposal so
-    // the "Apply anyway" affordance can offer it.
-    const fallback: string | undefined = body?.meta?.fallback;
-    const rawViolations: string[] = Array.isArray(body?.meta?.violationsOnFirstAttempt)
-      ? body.meta.violationsOnFirstAttempt
-      : [];
-    const violations = rawViolations.map(humanizeAllocationViolation);
-    const aiReply: string =
-      typeof body.reply === 'string' && body.reply.trim().length > 0
-        ? body.reply
-        : fallback
-          ? 'The plan above is unchanged.'
-          : 'Done — updated the plan above.';
-    let reply = aiReply;
-    if (fallback) {
-      const header =
-        fallback === 'engine-only'
-          ? '⚠ Could not apply the change cleanly — the planning rules flagged it. The plan above is unchanged.'
-          : `⚠ The plan above is unchanged (${fallback}).`;
-      const violationLine = violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
-      const overrideHint =
-        Array.isArray(body?.meta?.rejectedAssignments) && body.meta.rejectedAssignments.length > 0
-          ? "\n\nIf you've reviewed and want to accept the AI's plan anyway, use “Apply anyway” below."
-          : '';
-      reply = `${header}${violationLine}${overrideHint}\n\n${aiReply}`;
-
-      // Capture the rejected proposal + a sticky violation list so the
-      // template can render the override button.
-      if (Array.isArray(body?.meta?.rejectedAssignments)) {
-        lastRejectedAssignments = body.meta.rejectedAssignments;
-        lastRejectedRationale =
-          typeof body.meta.rejectedRationale === 'string' ? body.meta.rejectedRationale : '';
-        lastRejectedViolations = violations;
-      } else {
-        lastRejectedAssignments = null;
-        lastRejectedRationale = '';
-        lastRejectedViolations = [];
-      }
-    } else {
-      // Successful refine — clear any stale rejected proposal.
-      lastRejectedAssignments = null;
-      lastRejectedRationale = '';
-      lastRejectedViolations = [];
-    }
-    allocationChatMessages = [...allocationChatMessages, { role: 'assistant', content: reply }];
-    void persistChatMessage('allocation', 'assistant', reply);
-    response = {
-      assignments: body.assignments,
-      unplaced: body.unplaced ?? [],
-      sufficiency: body.sufficiency ?? {},
-      rationale: body.rationale ?? response.rationale,
-      perRowRationale: body.perRowRationale ?? {},
-      advisories: Array.isArray(body.advisories) ? body.advisories : [],
-      pollinationConstraints: Array.isArray(body.pollinationConstraints)
-        ? body.pollinationConstraints
-        : response.pollinationConstraints,
-      geometryMissingBlockIds: Array.isArray(body.geometryMissingBlockIds)
-        ? body.geometryMissingBlockIds
-        : response.geometryMissingBlockIds,
-      companionGroups: Array.isArray(body.companionGroups)
-        ? body.companionGroups
-        : response.companionGroups,
-      meta: body.meta ?? response.meta
-    };
-  }
-
-  /** Phase 21b follow-up — operator override. Swaps the response in
-   *  place with the AI's last rejected proposal so the planning grid
-   *  reflects the operator's accepted-anyway plan. Adds an assistant
-   *  message noting the override so the audit trail lives in the chat. */
-  function applyRejectedAnyway() {
-    if (!response || !lastRejectedAssignments) return;
-    const overridden = [...lastRejectedAssignments];
-    response = {
-      ...response,
-      assignments: overridden,
-      rationale: lastRejectedRationale || response.rationale,
-      // Per-row rationale is cleared — the detailed per-pair text lived
-      // only in the rejected proposal before validation stripped it.
-      perRowRationale: {},
-      // Unplaced + sufficiency are recomputed by the next refine; until
-      // then, clear them so the operator doesn't read stale numbers.
-      unplaced: [],
-      sufficiency: {}
-    };
-    allocationChatMessages = [
-      ...allocationChatMessages,
-      {
-        role: 'assistant',
-        content:
-          '✅ Applied the AI plan over the validator. The grid above shows the new layout. ' +
-          'Density / capacity checks were overridden — review the plant counts before committing.'
-      }
-    ];
-    lastRejectedAssignments = null;
-    lastRejectedRationale = '';
-    lastRejectedViolations = [];
-  }
-
-  async function sendScheduleChat(text: string) {
-    if (!response || !scheduleResponse) return;
-    const sendable = scheduleChatMessages
-      .filter((m) => m.kind !== 'seed')
-      .map((m) => ({ role: m.role, content: m.content }));
-    const res = await fetch('/api/plan/schedule/refine', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        assignments: response.assignments.map((a) => ({
-          stockItemId: a.stockItemId,
-          blockId: a.blockId,
-          cropPluginId: a.cropPluginId,
-          varietyDisplayName: a.varietyDisplayName,
-          plants: a.plants
-        })),
-        pollinationConstraints: response.pollinationConstraints ?? [],
-        companionGroups: response.companionGroups ?? [],
-        previousScheduled: scheduleResponse.scheduled,
-        previousRationale: scheduleResponse.rationale,
-        previousAdvisories: scheduleResponse.advisories,
-        transcript: sendable
-      })
-    });
-    const body = await res.json();
-    if (!res.ok) {
-      chatError = body?.error ?? `HTTP ${res.status}`;
-      scheduleChatMessages = scheduleChatMessages.slice(0, -1);
-      chatDraft = text;
-      return;
-    }
-    // When the server fell back (validation failed, parse failed, no API
-    // key), the `scheduled` array is the PREVIOUS unchanged plan — the
-    // AI's reply may still confidently claim "I moved planting X to date
-    // Y", which is misleading. Prefix the chat message with a warning
-    // banner so the operator knows the table above did NOT update, and
-    // surface the violation list when available.
-    const fallback: string | undefined = body?.meta?.fallback;
-    const violations: string[] = Array.isArray(body?.meta?.violations) ? body.meta.violations : [];
-    const aiReply: string =
-      typeof body.reply === 'string' && body.reply.trim().length > 0
-        ? body.reply
-        : fallback
-          ? 'The schedule above is unchanged.'
-          : 'Done — updated the dates above.';
-    let reply = aiReply;
-    if (fallback) {
-      const header =
-        fallback === 'no-api-key'
-          ? '⚠ No Anthropic API key configured — the schedule above is unchanged.'
-          : fallback === 'ai-unavailable'
-            ? '⚠ Claude is unavailable — the schedule above is unchanged.'
-            : '⚠ Could not apply the change — it would break a planting window, stagger, or companion offset. The schedule above is unchanged.';
-      const violationLine =
-        violations.length > 0 ? `\n\nValidator violations:\n• ${violations.join('\n• ')}` : '';
-      reply = `${header}${violationLine}\n\n${aiReply}`;
-    }
-    scheduleChatMessages = [...scheduleChatMessages, { role: 'assistant', content: reply }];
-    void persistChatMessage('schedule', 'assistant', reply);
-    scheduleResponse = {
-      scheduled: Array.isArray(body.scheduled) ? body.scheduled : scheduleResponse.scheduled,
-      rationale: typeof body.rationale === 'string' ? body.rationale : scheduleResponse.rationale,
-      advisories: Array.isArray(body.advisories) ? body.advisories : scheduleResponse.advisories,
-      meta: body.meta ?? scheduleResponse.meta
-    };
-  }
-
-  function queueScrollChat() {
-    requestAnimationFrame(() => {
-      if (chatLogEl) chatLogEl.scrollTop = chatLogEl.scrollHeight;
-    });
-  }
 
   function onChatKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      void sendChat();
-    }
-  }
-
-  /** Phase B1 — "Accept all" no longer commits. It locks the spatial
-   *  allocation in place and advances to the Schedule step, where the
-   *  scheduler proposes planting dates (Phase B3+) before the operator
-   *  commits crops to the DB. The same chat panel continues in step 4. */
-  async function advanceToSchedule() {
-    if (!response) return;
-    step = 'schedule';
-    scheduleResponse = null;
-    scheduleError = null;
-    scheduleLoading = true;
-    scheduleStartMs = Date.now();
-    nowMs = Date.now();
-    try {
-      const res = await fetch('/api/plan/schedule', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          assignments: response.assignments,
-          pollinationConstraints: response.pollinationConstraints ?? [],
-          companionGroups: response.companionGroups ?? []
-        })
-      });
-      const body = (await res.json()) as ScheduleResponse | { error: string };
-      if (!res.ok) {
-        scheduleError = 'error' in body ? body.error : `HTTP ${res.status}`;
-        return;
-      }
-      scheduleResponse = body as ScheduleResponse;
-      const lines: string[] = [];
-      const fb = scheduleResponse.meta.fallback;
-      if (fb === 'no-api-key' || fb === 'ai-unavailable') {
-        lines.push(
-          fb === 'no-api-key'
-            ? '🛟 I picked dates with the deterministic scheduler (no Anthropic API key configured). Staggers and companion offsets are honored.'
-            : '🛟 I picked dates with the deterministic scheduler (Claude is unavailable right now). Staggers and companion offsets are honored.'
-        );
-        if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
-        lines.push('');
-        lines.push(
-          'Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."'
-        );
-      } else if (fb === 'deterministic') {
-        // Help-seeking chat dialogue: the server's diagnosis names specific
-        // varieties + actionable suggestions in plain English. We don't show
-        // raw validator strings.
-        const dx = scheduleResponse.meta.diagnosis;
-        if (dx && (dx.summary || dx.suggestions.length > 0)) {
-          if (dx.summary) {
-            lines.push(`🛟 ${dx.summary}`);
-            lines.push('');
-            lines.push(
-              "I went with a safe-default plan above so you're not stuck — but you can probably do better. Here's what might help:"
-            );
-          } else {
-            lines.push(
-              "🛟 I couldn't fit your schedule cleanly. The deterministic plan above is a safe default, but here's what might help:"
-            );
-          }
-          if (dx.suggestions.length > 0) {
-            lines.push('');
-            for (const s of dx.suggestions) lines.push(`  • ${s}`);
-          }
-          lines.push('');
-          lines.push('What would you like me to try?');
-        } else {
-          // Diagnosis missing (older server, edge case) — keep a clean
-          // fallback message without the technical violation list.
-          lines.push(
-            "🛟 I couldn't fit your schedule cleanly, even after a retry. The deterministic plan above honors every hard constraint but isn't necessarily the most elegant arrangement."
-          );
-          lines.push('');
-          lines.push(
-            'Tell me what to adjust — for example: "drop one corn variety", "skip successions for sweet corn", or "just keep these dates and commit".'
-          );
-        }
-      } else {
-        lines.push('📅 Planting dates proposed above.');
-        if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
-        if (scheduleResponse.advisories.length > 0) {
-          lines.push('');
-          for (const a of scheduleResponse.advisories) lines.push(`• ${a}`);
-        }
-        lines.push('');
-        lines.push(
-          'Tell me anything to change — e.g., "plant the corn the first week of May" or "push the brassicas two weeks later."'
-        );
-      }
-      // Start the schedule chat clean — don't carry allocation-step
-      // pollination notes or rationale into this conversation. Anything the
-      // user wants to revisit about the layout is on the Review step.
-      // Phase 25d (#89) — preserve resumed turns; only insert the seed
-      // when starting fresh.
-      if (scheduleChatMessages.length === 0) {
-        scheduleChatMessages = [{ role: 'assistant', content: lines.join('\n'), kind: 'seed' }];
-      }
-      queueScrollChat();
-    } catch (e) {
-      scheduleError = e instanceof Error ? e.message : 'schedule request failed';
-    } finally {
-      scheduleLoading = false;
-      scheduleStartMs = null;
-    }
-  }
-
-  /** Phase 21b / B-28 — between Schedule and Commit. Advances to the
-   *  Inputs Plan step where the deterministic planner proposes per-
-   *  planting product applications + IPM scout cadences against the
-   *  current season setup. The accept handler stashes the operator's
-   *  chosen subset and then calls `commit()` so plantings + tasks
-   *  persist as one action. */
-  function advanceToInputs() {
-    if (!response || !scheduleResponse) return;
-    step = 'inputs';
-    acceptedInputs = null;
-    inputsCommitError = null;
-  }
-
-  /** Provisional plantings (in-memory shape) handed to the Inputs Plan
-   *  step. The planner uses these as the basis for per-block work; the
-   *  underlying `crops` rows don't exist yet — they get persisted when
-   *  the operator clicks "Accept and commit" inside the step. */
-  function provisionalPlantings(): InputsPlanProvisionalPlanting[] {
-    if (!scheduleResponse) return [];
-    return scheduleResponse.scheduled.map((s, i) => ({
-      id: `${s.stockItemId}:${s.blockId}:${i}`,
-      blockId: s.blockId,
-      cropPluginId: s.cropPluginId,
-      varietyDisplayName: s.varietyDisplayName,
-      plantingDate: s.plantingDateMs
-    }));
-  }
-
-  async function handleInputsAccepted(accepted: {
-    applications: InputsPlanApplication[];
-    scoutTasks: InputsPlanScoutTask[];
-    aiRefined: boolean;
-  }) {
-    acceptedInputs = accepted;
-    await commit();
-  }
-
-  async function commit() {
-    if (!response) return;
-    step = 'commit';
-    error = null;
-
-    // Phase B5 — if the scheduler ran, commit one dated row per scheduled
-    // planting (successions are already split). Otherwise (no scheduler) fall
-    // back to the pre-B5 path that commits one undated row per assignment.
-    if (scheduleResponse && scheduleResponse.scheduled.length > 0) {
-      await commitScheduled(scheduleResponse.scheduled);
-      return;
-    }
-
-    commitProgress = {
-      done: 0,
-      total: response.assignments.length,
-      failed: []
-    };
-    const quantities = buildCommitQuantities(response.assignments);
-    // #212 — every wizard-committed planting carries a provenance flag so
-    // PlantingCard's footer reads "AI plan" / "Fallback" instead of the
-    // catch-all "Manual entry". Driven by the allocate response's
-    // meta.fallback (set by aiTry on no-key / over-cap / quota-exceeded /
-    // engine-only AI validation failures).
-    const planProvenance: 'ai' | 'fallback' = response.meta.fallback ? 'fallback' : 'ai';
-    for (const a of response.assignments) {
-      const seedEntry = seedStock.find((s) => s.stockItemId === a.stockItemId);
-      const unit = seedEntry?.defaultUnit ?? 'seeds';
-      const quantityForCommit = quantities.get(`${a.stockItemId}:${a.blockId}`) ?? 0;
-      try {
-        const res = await fetch(`/api/blocks/${a.blockId}/plantings`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            cropPluginId: a.cropPluginId,
-            varietyDisplayName: a.varietyDisplayName,
-            quantityPlanted: quantityForCommit,
-            quantityUnit: unit,
-            stockItemId: a.stockItemId,
-            sourceProvenance: planProvenance
-          })
-        });
-        if (!res.ok) {
-          commitProgress.failed.push(`${a.varietyDisplayName} → ${blockNameFor(a.blockId)}`);
-        }
-      } catch {
-        commitProgress.failed.push(`${a.varietyDisplayName} → ${blockNameFor(a.blockId)}`);
-      }
-      commitProgress = { ...commitProgress, done: commitProgress.done + 1 };
-    }
-    if (commitProgress.failed.length === 0) {
-      await commitAcceptedInputs();
-      await discardDraft();
-      onCommitted();
-    }
-  }
-
-  /** Phase B5 — dated commit. Walks the scheduler's `scheduled[]` and posts
-   *  one planting per dated row, including succession entries. Seed quantity
-   *  per row = (plants_i / total_plants_per_stock) × operator's original
-   *  selectedSeeds quantity so stock decrement matches what was actually
-   *  consumed. */
-  async function commitScheduled(plantings: ScheduledPlanting[]) {
-    commitProgress = {
-      done: 0,
-      total: plantings.length,
-      failed: []
-    };
-    // Pre-compute total plants per (stockItemId) and the operator's seed
-    // quantity so we can apportion per-row seed accurately.
-    const totalPlantsByStock = new Map<string, number>();
-    for (const p of plantings) {
-      totalPlantsByStock.set(
-        p.stockItemId,
-        (totalPlantsByStock.get(p.stockItemId) ?? 0) + p.plants
-      );
-    }
-
-    for (const p of plantings) {
-      const seedEntry = seedStock.find((s) => s.stockItemId === p.stockItemId);
-      const unit = seedEntry?.defaultUnit ?? 'seeds';
-      const selectedQty = selectedSeeds.get(p.stockItemId) ?? 0;
-      const totalPlants = totalPlantsByStock.get(p.stockItemId) ?? 0;
-      const seedQty = totalPlants > 0 ? (p.plants / totalPlants) * selectedQty : 0;
-      const isInteger = unit === 'seeds' || unit === 'count' || unit === 'packets';
-      const quantityForCommit = isInteger
-        ? Math.max(0, Math.round(seedQty))
-        : Number(seedQty.toFixed(3));
-      // #212 — provenance flag derived from BOTH the allocator AND the
-      // scheduler: if either fell back to deterministic, the planting
-      // carries 'fallback'; otherwise 'ai'. Mirrors the per-row chip on
-      // the review + schedule steps.
-      const planProvenance: 'ai' | 'fallback' =
-        response?.meta.fallback || scheduleResponse?.meta.fallback ? 'fallback' : 'ai';
-      try {
-        const res = await fetch(`/api/blocks/${p.blockId}/plantings`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            cropPluginId: p.cropPluginId,
-            varietyDisplayName: p.varietyDisplayName,
-            quantityPlanted: quantityForCommit,
-            quantityUnit: unit,
-            stockItemId: p.stockItemId,
-            plantingDate: p.plantingDateMs,
-            sourceProvenance: planProvenance
-          })
-        });
-        if (!res.ok) {
-          commitProgress.failed.push(
-            `${p.varietyDisplayName} → ${blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`
-          );
-        }
-      } catch {
-        commitProgress.failed.push(
-          `${p.varietyDisplayName} → ${blockNameFor(p.blockId)} (${fmtDateMs(p.plantingDateMs)})`
-        );
-      }
-      commitProgress = { ...commitProgress, done: commitProgress.done + 1 };
-    }
-    if (commitProgress.failed.length === 0) {
-      await commitAcceptedInputs();
-      await discardDraft();
-      onCommitted();
-    }
-  }
-
-  /** POST the operator-accepted Inputs Plan rows as tasks (Phase 21 /
-   *  B-28). Runs after plantings persist so the commit endpoint can
-   *  resolve cropId via the (blockId, cropPluginId) lookup. A failure
-   *  here doesn't block the planting commit — the operator can rerun
-   *  the wizard or build tasks manually. */
-  async function commitAcceptedInputs(): Promise<void> {
-    if (!acceptedInputs) return;
-    if (acceptedInputs.applications.length === 0 && acceptedInputs.scoutTasks.length === 0) {
-      return;
-    }
-    try {
-      const res = await fetch('/api/plan/inputs/commit', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          applications: acceptedInputs.applications,
-          scoutTasks: acceptedInputs.scoutTasks,
-          aiRefined: acceptedInputs.aiRefined
-        })
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        inputsCommitError = body.error ?? `HTTP ${res.status}`;
-      }
-    } catch (e) {
-      inputsCommitError = e instanceof Error ? e.message : String(e);
-    }
-  }
-
-  /** Apportion the user's original seed quantity (selectedSeeds) across the
-   *  AI's per-block plant assignments. Stock decrement runs against this
-   *  number, so the seed quantity actually planted is what gets debited —
-   *  not the post-germination plant count. Integer-required units (`seeds`,
-   *  `count`, `packets`) use largest-remainder rounding so the per-assignment
-   *  values sum back to the user's original quantity. */
-  function buildCommitQuantities(
-    assignments: AllocationResponse['assignments']
-  ): Map<string, number> {
-    const out = new Map<string, number>();
-    const byStock = new Map<string, AllocationResponse['assignments']>();
-    for (const a of assignments) {
-      const list = byStock.get(a.stockItemId) ?? [];
-      list.push(a);
-      byStock.set(a.stockItemId, list);
-    }
-    for (const [stockItemId, items] of byStock) {
-      const entry = seedStock.find((s) => s.stockItemId === stockItemId);
-      if (!entry) continue;
-      const selectedQty = selectedSeeds.get(stockItemId) ?? 0;
-      if (selectedQty <= 0) continue;
-      const totalPlants = items.reduce((s, x) => s + x.plants, 0);
-      if (totalPlants <= 0) continue;
-      const unit = entry.defaultUnit;
-      const isInteger = unit === 'seeds' || unit === 'count' || unit === 'packets';
-      const raw = items.map((a) => ({
-        a,
-        raw: (a.plants / totalPlants) * selectedQty
-      }));
-      if (!isInteger) {
-        for (const { a, raw: r } of raw) {
-          out.set(`${stockItemId}:${a.blockId}`, Number(r.toFixed(3)));
-        }
-        continue;
-      }
-      const target = Math.round(selectedQty);
-      const rounded = raw.map((x) => ({
-        a: x.a,
-        floor: Math.floor(x.raw),
-        frac: x.raw - Math.floor(x.raw)
-      }));
-      let used = rounded.reduce((s, x) => s + x.floor, 0);
-      let remainder = target - used;
-      const order = [...rounded].sort((x, y) => y.frac - x.frac);
-      for (const x of order) {
-        if (remainder <= 0) break;
-        x.floor += 1;
-        remainder -= 1;
-      }
-      for (const x of rounded) {
-        out.set(`${stockItemId}:${x.a.blockId}`, x.floor);
-      }
-    }
-    return out;
-  }
-
-  function blockNameFor(blockId: string): string {
-    return blocks.find((b) => b.id === blockId)?.name ?? blockId;
-  }
-
-  function varietyDisplayFor(stockItemId: string): string {
-    const entry = seedStock.find((s) => s.stockItemId === stockItemId);
-    return entry?.shortName ?? entry?.displayName ?? stockItemId;
-  }
-
-  function sufficiencyChip(s: SufficiencyResult): { label: string; cls: string; tooltip: string } {
-    const pct = Math.round(s.utilizationPct * 100);
-    if (s.status === 'match') {
-      return {
-        label: `Fills block · ${pct}%`,
-        cls: 'chip-match',
-        tooltip: `Your seed quantity (${s.plantsAvailable.toLocaleString()} plants) is the right size for this block (fits ${s.plantsFit.toLocaleString()}).`
-      };
-    }
-    if (s.status === 'surplus') {
-      return {
-        label: `${s.leftoverPlants.toLocaleString()} extra plants`,
-        cls: 'chip-surplus',
-        tooltip: `You have seed for ${s.plantsAvailable.toLocaleString()} plants but the block only fits ${s.plantsFit.toLocaleString()} — about ${s.leftoverPlants.toLocaleString()} plants worth of seed will be left over.`
-      };
-    }
-    return {
-      label: `Only fills ${pct}% of block`,
-      cls: 'chip-deficit',
-      tooltip: `Your seed quantity (${s.plantsAvailable.toLocaleString()} plants) only covers ${pct}% of the block's capacity (${s.plantsFit.toLocaleString()} plants).`
-    };
-  }
-
-  const totalPlantsSelected = $derived(
-    [...selectedSeeds.entries()]
-      .filter(([, qty]) => qty > 0)
-      .reduce((sum, [stockItemId, quantity]) => {
-        return sum + (plantsFor(stockItemId, quantity) ?? 0);
-      }, 0)
-  );
-
-  // #173 — Save & resume later. Plumbing for the wizard's third exit
-  // gesture. `saveAndResumeLater` snapshots the in-progress step + form
-  // state and exits. On re-open, `hydrateDraft` looks up the saved row and
-  // restores selectedSeeds + selectedBlockIds + chatDraft so the user
-  // lands exactly where they left off.
-  let draftSaving = $state(false);
-  let draftSaveError = $state<string | null>(null);
-  let draftHydrated = $state(false);
-
-  async function saveAndResumeLater(): Promise<void> {
-    draftSaving = true;
-    draftSaveError = null;
-    try {
-      const res = await fetch('/api/plan/wizard/draft', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          step,
-          payload: {
-            step,
-            selectedSeeds: [...selectedSeeds.entries()],
-            selectedBlockIds: [...selectedBlockIds],
-            chatDraft
-          }
-        })
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        draftSaveError = body.error ?? `HTTP ${res.status}`;
-        return;
-      }
-      onClose();
-    } catch (e) {
-      draftSaveError = e instanceof Error ? e.message : String(e);
-    } finally {
-      draftSaving = false;
-    }
-  }
-
-  async function discardDraft(): Promise<void> {
-    try {
-      await fetch('/api/plan/wizard/draft', { method: 'DELETE' });
-    } catch {
-      // non-fatal — the row will get overwritten on the next save or
-      // cleared when the wizard commits.
+      void w.sendChat();
     }
   }
 
   $effect(() => {
-    if (draftHydrated) return;
-    draftHydrated = true;
-    (async () => {
-      try {
-        const res = await fetch('/api/plan/wizard/draft');
-        if (!res.ok) return;
-        const body = (await res.json()) as {
-          draft: {
-            step: string;
-            payload: {
-              selectedSeeds: Array<[string, number]>;
-              selectedBlockIds: string[];
-              chatDraft: string;
-            };
-          } | null;
-        };
-        if (!body.draft) return;
-        if (body.draft.payload.selectedSeeds.length > 0) {
-          selectedSeeds = new Map(body.draft.payload.selectedSeeds);
-        }
-        if (body.draft.payload.selectedBlockIds.length > 0) {
-          selectedBlockIds = new Set(body.draft.payload.selectedBlockIds);
-        }
-        if (body.draft.payload.chatDraft) {
-          chatDraft = body.draft.payload.chatDraft;
-        }
-        const validSteps: Step[] = [
-          'season-setup',
-          'plan-state',
-          'seeds',
-          'blocks',
-          'review',
-          'schedule',
-          'inputs',
-          'commit'
-        ];
-        if ((validSteps as string[]).includes(body.draft.step)) {
-          step = body.draft.step as Step;
-        }
-      } catch {
-        // Resume is best-effort — keep the wizard usable even if the
-        // draft fetch fails.
-      }
-    })();
+    w.hydrateDraft();
   });
 
   // #187 — focus trap for the modal dialog. On mount we focus the modal so
@@ -1690,7 +249,7 @@
   });
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && step !== 'commit') {
+    if (e.key === 'Escape' && w.step !== 'commit') {
       onClose();
       return;
     }
@@ -1716,7 +275,7 @@
 </script>
 
 {#snippet aiProgress(stage: ProgressStage, startMs: number | null)}
-  {@const elapsed = startMs == null ? 0 : Math.max(0, nowMs - startMs)}
+  {@const elapsed = startMs == null ? 0 : Math.max(0, w.nowMs - startMs)}
   <div class="ai-progress" role="status" aria-live="polite">
     <span class="ai-spinner" aria-hidden="true"></span>
     <div class="ai-progress-text">
@@ -1740,7 +299,7 @@
         <h3>💬 Refine with AI</h3>
         <span class="muted aw-chat-model"> claude-haiku-4-5 · grounded on your plugins </span>
         <span class="muted">
-          {#if step === 'schedule'}Ask for date changes; the schedule above updates each turn.
+          {#if w.step === 'schedule'}Ask for date changes; the schedule above updates each turn.
           {:else}Ask for changes; the plan above updates each turn.
           {/if}
         </span>
@@ -1756,38 +315,38 @@
         </span>
       </header>
     {/if}
-    <div class="aw-chat-log" bind:this={chatLogEl} role="log" aria-live="polite">
-      {#each chatMessages as msg, i (i)}
+    <div class="aw-chat-log" bind:this={w.chatLogEl} role="log" aria-live="polite">
+      {#each w.chatMessages as msg, i (i)}
         <div class={`chat-msg chat-${msg.role}`}>
           <span class="chat-role" aria-hidden="true">{msg.role === 'assistant' ? '🌱' : '👤'}</span>
           <pre class="chat-bubble">{msg.content}</pre>
         </div>
       {/each}
-      {#if chatBusy}
+      {#if w.chatBusy}
         <div class="chat-msg chat-assistant">
           <span class="chat-role" aria-hidden="true">🌱</span>
           <span class="chat-bubble chat-thinking">
             {aiProgressLabel(
-              step === 'schedule' ? 'chat-schedule' : 'chat-allocate',
-              chatStartMs == null ? 0 : Math.max(0, nowMs - chatStartMs)
+              w.step === 'schedule' ? 'chat-schedule' : 'chat-allocate',
+              w.chatStartMs == null ? 0 : Math.max(0, w.nowMs - w.chatStartMs)
             )}
             <span class="chat-elapsed"
-              >{fmtElapsed(chatStartMs == null ? 0 : Math.max(0, nowMs - chatStartMs))}</span
+              >{fmtElapsed(w.chatStartMs == null ? 0 : Math.max(0, w.nowMs - w.chatStartMs))}</span
             >
           </span>
         </div>
       {/if}
     </div>
-    {#if chatError}<p class="aw-error chat-error" role="alert">{chatError}</p>{/if}
-    {#if step === 'review' && lastRejectedAssignments && lastRejectedAssignments.length > 0}
+    {#if w.chatError}<p class="aw-error chat-error" role="alert">{w.chatError}</p>{/if}
+    {#if w.step === 'review' && w.lastRejectedAssignments && w.lastRejectedAssignments.length > 0}
       <div class="aw-override-row" role="region" aria-label="Override validators">
         <button
           type="button"
           class="btn-secondary btn-override"
-          onclick={applyRejectedAnyway}
+          onclick={() => w.applyRejectedAnyway()}
           title="Apply the AI's proposed plan even though it failed agronomic validation."
         >
-          🛠 Apply anyway ({lastRejectedAssignments.length} rows)
+          🛠 Apply anyway ({w.lastRejectedAssignments.length} rows)
         </button>
         <span class="muted override-hint">
           Bypasses density / capacity checks. Spray-time safety rules are NOT affected.
@@ -1799,25 +358,25 @@
         class="aw-chat-input"
         onsubmit={(e) => {
           e.preventDefault();
-          void sendChat();
+          void w.sendChat();
         }}
       >
         <textarea
           rows="2"
-          placeholder={step === 'schedule'
+          placeholder={w.step === 'schedule'
             ? 'e.g. "Plant the corn the first week of May" or "Push brassicas two weeks later"'
             : 'e.g. "Move the corn off the narrow block" or "Give the brassicas more room"'}
-          bind:value={chatDraft}
+          bind:value={w.chatDraft}
           onkeydown={onChatKeydown}
-          disabled={chatBusy}
+          disabled={w.chatBusy}
           aria-label="Refinement request"
         ></textarea>
         <button
           type="submit"
           class="btn-primary chat-send"
-          disabled={chatBusy || !chatDraft.trim()}
+          disabled={w.chatBusy || !w.chatDraft.trim()}
         >
-          {chatBusy ? '…' : 'Send'}
+          {w.chatBusy ? '…' : 'Send'}
         </button>
       </form>
     {/if}
@@ -1830,7 +389,7 @@
   class="aw-backdrop"
   role="presentation"
   onclick={(e) => {
-    if (e.target === e.currentTarget && step !== 'commit') onClose();
+    if (e.target === e.currentTarget && w.step !== 'commit') onClose();
   }}
 >
   <div
@@ -1843,35 +402,35 @@
   >
     <WizardHeader
       seasonYear={currentYear}
-      activeStepId={step}
+      activeStepId={w.step}
       steps={wizardSteps}
       onExit={onClose}
-      onStepClick={canJumpToStep}
-      onSaveAndResume={saveAndResumeLater}
+      onStepClick={(id) => w.canJumpToStep(id)}
+      onSaveAndResume={() => w.saveAndResumeLater()}
     />
 
-    {#if activeSetup && step !== 'season-setup'}
+    {#if w.activeSetup && w.step !== 'season-setup'}
       <div class="aw-chip-row">
-        <SeasonSetupChip setup={activeSetup} onEdit={() => (step = 'season-setup')} />
+        <SeasonSetupChip setup={w.activeSetup} onEdit={() => (w.step = 'season-setup')} />
       </div>
     {/if}
 
-    {#if error && step !== 'commit' && step !== 'review' && step !== 'season-setup'}
+    {#if w.error && w.step !== 'commit' && w.step !== 'review' && w.step !== 'season-setup'}
       <div class="aw-error-banner" role="alert">
         <strong>Couldn't generate plan:</strong>
-        {error}
+        {w.error}
       </div>
     {/if}
 
     <div class="aw-body">
-      {#if step === 'season-setup'}
+      {#if w.step === 'season-setup'}
         <SeasonSetupStep
-          existing={activeSetup}
+          existing={w.activeSetup}
           {lastYearSetup}
           {currentYear}
-          onSave={handleSeasonSetupSaved}
+          onSave={(saved) => w.handleSeasonSetupSaved(saved)}
         />
-      {:else if step === 'plan-state'}
+      {:else if w.step === 'plan-state'}
         <section class="aw-plan-state">
           <h3>You have a plan in place</h3>
           <p class="aw-plan-state-lede">
@@ -1888,7 +447,7 @@
             <button
               type="button"
               class="aw-plan-state-btn aw-plan-state-continue"
-              onclick={continueExistingPlan}
+              onclick={() => w.planReset.continueExistingPlan()}
             >
               <span class="aw-plan-state-icon" aria-hidden="true">✚</span>
               <span class="aw-plan-state-title">Continue planning</span>
@@ -1897,7 +456,7 @@
             <button
               type="button"
               class="aw-plan-state-btn aw-plan-state-reset"
-              onclick={openResetConfirm}
+              onclick={() => w.planReset.openResetConfirm()}
             >
               <span class="aw-plan-state-icon" aria-hidden="true">↻</span>
               <span class="aw-plan-state-title">Start over</span>
@@ -1907,11 +466,11 @@
               </span>
             </button>
           </div>
-          {#if resetError}
-            <p class="aw-error" role="alert">Reset failed: {resetError}</p>
+          {#if w.planReset.resetError}
+            <p class="aw-error" role="alert">Reset failed: {w.planReset.resetError}</p>
           {/if}
 
-          {#if resetConfirmOpen}
+          {#if w.planReset.resetConfirmOpen}
             <div
               class="aw-confirm-overlay"
               role="dialog"
@@ -1928,23 +487,23 @@
                   <button
                     type="button"
                     class="btn-secondary"
-                    onclick={cancelReset}
-                    disabled={resetting}>Cancel</button
+                    onclick={() => w.planReset.cancelReset()}
+                    disabled={w.planReset.resetting}>Cancel</button
                   >
                   <button
                     type="button"
                     class="btn-danger"
-                    onclick={confirmReset}
-                    disabled={resetting}
+                    onclick={() => w.planReset.confirmReset()}
+                    disabled={w.planReset.resetting}
                   >
-                    {resetting ? 'Clearing…' : 'Yes — clear the plan'}
+                    {w.planReset.resetting ? 'Clearing…' : 'Yes — clear the plan'}
                   </button>
                 </div>
               </div>
             </div>
           {/if}
         </section>
-      {:else if step === 'seeds'}
+      {:else if w.step === 'seeds'}
         <p class="aw-intro">
           Pick the seed lots you want to plant. Adjust quantity per row — defaults to on-hand.
         </p>
@@ -1955,10 +514,10 @@
              quota), then PATCHes /api/stock/[id] with the chosen
              pluginId. On 200 the seed migrates from noPluginStock →
              eligibleStock via the existing onRefreshParent path. -->
-        {#if noPluginStock.length > 0}
+        {#if w.noPluginStock.length > 0}
           <div class="needs-plugin-section" data-empty-state="needs-plugin">
             <h3 class="needs-plugin-title">
-              {noPluginStock.length} seed{noPluginStock.length === 1 ? '' : 's'} need a crop plugin
+              {w.noPluginStock.length} seed{w.noPluginStock.length === 1 ? '' : 's'} need a crop plugin
             </h3>
             <p class="needs-plugin-lede">
               These seed lots are in your inventory but aren’t linked to a crop plugin yet. Link
@@ -1966,7 +525,7 @@
               and companion rules. Picking a plugin is local-only — no Anthropic key needed.
             </p>
             <ul class="needs-plugin-list">
-              {#each noPluginStock as s (s.stockItemId)}
+              {#each w.noPluginStock as s (s.stockItemId)}
                 <li class="needs-plugin-row">
                   <div class="needs-plugin-name">
                     <strong>{s.shortName ?? s.displayName}</strong>
@@ -1975,31 +534,33 @@
                   <button
                     type="button"
                     class="btn-secondary needs-plugin-btn"
-                    onclick={() => openLinkPicker(s.stockItemId)}
-                    disabled={!!linkAssigningId}
+                    onclick={() => w.seedLink.openLinkPicker(s.stockItemId)}
+                    disabled={!!w.seedLink.linkAssigningId}
                     data-action="open-link-picker"
                   >
-                    {linkPickerOpenFor === s.stockItemId ? 'Picking…' : 'Link to crop plugin →'}
+                    {w.seedLink.linkPickerOpenFor === s.stockItemId
+                      ? 'Picking…'
+                      : 'Link to crop plugin →'}
                   </button>
-                  {#if linkPickerOpenFor === s.stockItemId}
+                  {#if w.seedLink.linkPickerOpenFor === s.stockItemId}
                     <div class="link-picker" role="dialog" aria-label="Pick a crop plugin">
                       <input
                         type="search"
                         class="aw-search"
                         placeholder="Search by crop name (e.g. corn, lettuce, basil)…"
-                        bind:value={linkQuery}
-                        oninput={onLinkQueryChange}
+                        bind:value={w.seedLink.linkQuery}
+                        oninput={() => w.seedLink.onLinkQueryChange()}
                         aria-label="Search crop plugin library"
                       />
-                      {#if linkSearching}
+                      {#if w.seedLink.linkSearching}
                         <p class="muted">Searching plugin library…</p>
-                      {:else if linkError}
-                        <p class="error" role="alert">{linkError}</p>
-                      {:else if linkQuery.trim().length < 2}
+                      {:else if w.seedLink.linkError}
+                        <p class="error" role="alert">{w.seedLink.linkError}</p>
+                      {:else if w.seedLink.linkQuery.trim().length < 2}
                         <p class="muted">
                           Type at least 2 characters to search your local plugin library.
                         </p>
-                      {:else if linkResults.length === 0}
+                      {:else if w.seedLink.linkResults.length === 0}
                         <p class="muted">
                           No matches in your plugin library. Try a different search, or open
                           <a href="/plugins" target="_blank" rel="noopener">/plugins</a> to add a new
@@ -2007,13 +568,14 @@
                         </p>
                       {:else}
                         <ul class="link-results">
-                          {#each linkResults as r (r.pluginId)}
+                          {#each w.seedLink.linkResults as r (r.pluginId)}
                             <li>
                               <button
                                 type="button"
                                 class="link-result"
-                                onclick={() => assignPluginToStock(s.stockItemId, r.pluginId)}
-                                disabled={!!linkAssigningId}
+                                onclick={() =>
+                                  w.seedLink.assignPluginToStock(s.stockItemId, r.pluginId)}
+                                disabled={!!w.seedLink.linkAssigningId}
                               >
                                 <span class="link-result-name">{r.displayName}</span>
                                 <span class="muted link-result-score"
@@ -2028,8 +590,8 @@
                         <button
                           type="button"
                           class="btn-secondary"
-                          onclick={closeLinkPicker}
-                          disabled={linkAssigningId === s.stockItemId}
+                          onclick={() => w.seedLink.closeLinkPicker()}
+                          disabled={w.seedLink.linkAssigningId === s.stockItemId}
                         >
                           Cancel
                         </button>
@@ -2042,7 +604,7 @@
           </div>
         {/if}
 
-        {#if eligibleStock.length === 0 && noPluginStock.length === 0}
+        {#if w.eligibleStock.length === 0 && w.noPluginStock.length === 0}
           <!-- #175 (CT-W-006) — empty-state card replaces the previous
                dead-end `<p>`. The Sprint-1 link-out path opens
                /stock/add in a new tab so the wizard modal + step state
@@ -2079,11 +641,11 @@
               <button
                 type="button"
                 class="btn-secondary"
-                onclick={refreshSeedStock}
-                disabled={seedStockRefreshing || !onRefreshParent}
+                onclick={() => w.seedLink.refreshSeedStock()}
+                disabled={w.seedLink.seedStockRefreshing || !onRefreshParent}
                 data-action="refresh-seed-stock"
               >
-                {seedStockRefreshing ? 'Refreshing…' : 'I’ve added stock — refresh'}
+                {w.seedLink.seedStockRefreshing ? 'Refreshing…' : 'I’ve added stock — refresh'}
               </button>
               <!-- #175 — explicit skip path so the seeds step is never a
                    dead-end. Closes the wizard with a clear "come back later"
@@ -2099,7 +661,7 @@
               </button>
             </div>
           </div>
-        {:else if eligibleStock.length === 0 && noPluginStock.length > 0}
+        {:else if w.eligibleStock.length === 0 && w.noPluginStock.length > 0}
           <p class="empty">Link a crop plugin to a seed above to make it available for planning.</p>
         {:else}
           <div class="aw-search-row">
@@ -2108,16 +670,16 @@
               class="aw-search"
               placeholder="Search by variety or family…"
               aria-label="Search seed lots"
-              bind:value={seedSearch}
+              bind:value={w.seedSearch}
             />
-            {#if seedSearch.trim().length > 0}
+            {#if w.seedSearch.trim().length > 0}
               <span class="muted">
-                {filteredEligibleStock.length} of {eligibleStock.length}
+                {filteredEligibleStock.length} of {w.eligibleStock.length}
               </span>
             {/if}
           </div>
           {#if filteredEligibleStock.length === 0}
-            <p class="empty">No seeds match “{seedSearch}”.</p>
+            <p class="empty">No seeds match “{w.seedSearch}”.</p>
           {:else}
             <table class="aw-table">
               <thead>
@@ -2140,7 +702,7 @@
               </thead>
               <tbody>
                 {#each seedFamilyGroups as g (g.family ?? '__unc__')}
-                  {@const famCount = familySelectedCount(g.items)}
+                  {@const famCount = w.familySelectedCount(g.items)}
                   <tr class="family-row">
                     <td colspan="5">
                       <span class="family-name">{g.family ?? 'Unclassified'}</span>
@@ -2149,7 +711,7 @@
                         <button
                           type="button"
                           class="family-action-btn"
-                          onclick={() => selectAllInFamily(g.items)}
+                          onclick={() => w.selectAllInFamily(g.items)}
                           disabled={famCount === g.items.length}
                           aria-label={`Select all ${g.family ?? 'unclassified'} seeds`}
                           >Select all</button
@@ -2158,7 +720,7 @@
                           <button
                             type="button"
                             class="family-action-btn family-action-clear"
-                            onclick={() => clearFamily(g.items)}
+                            onclick={() => w.clearFamily(g.items)}
                             aria-label={`Clear ${g.family ?? 'unclassified'} selection`}
                             >Clear</button
                           >
@@ -2167,16 +729,16 @@
                     </td>
                   </tr>
                   {#each g.items as s (s.stockItemId)}
-                    {@const checked = selectedSeeds.has(s.stockItemId)}
-                    {@const qty = selectedSeeds.get(s.stockItemId) ?? s.onHand}
-                    {@const plants = plantsFor(s.stockItemId, qty)}
+                    {@const checked = w.selectedSeeds.has(s.stockItemId)}
+                    {@const qty = w.selectedSeeds.get(s.stockItemId) ?? s.onHand}
+                    {@const plants = w.plantsFor(s.stockItemId, qty)}
                     <tr class:row-checked={checked}>
                       <td>
                         <input
                           type="checkbox"
                           aria-label={`Select ${s.shortName ?? s.displayName}`}
                           {checked}
-                          onchange={() => toggleSeed(s)}
+                          onchange={() => w.toggleSeed(s)}
                         />
                       </td>
                       <td title={s.displayName}>
@@ -2197,7 +759,7 @@
                           value={qty}
                           disabled={!checked}
                           oninput={(e) =>
-                            setSeedQuantity(
+                            w.setSeedQuantity(
                               s.stockItemId,
                               Number((e.target as HTMLInputElement).value)
                             )}
@@ -2212,14 +774,20 @@
             </table>
           {/if}
         {/if}
-      {:else if step === 'blocks'}
+      {:else if w.step === 'blocks'}
         <div class="aw-blocks-header">
           <p class="aw-intro">Pick the blocks the wizard may use.</p>
           <div class="aw-blocks-actions">
-            <span class="muted">{selectedBlockIds.size} of {blocks.length} selected</span>
-            <button type="button" class="aw-link" onclick={selectAllBlocks}>Select all</button>
-            {#if selectedBlockIds.size > 0}
-              <button type="button" class="aw-link" onclick={() => (selectedBlockIds = new Set())}>
+            <span class="muted">{w.selectedBlockIds.size} of {blocks.length} selected</span>
+            <button type="button" class="aw-link" onclick={() => w.selectAllBlocks()}
+              >Select all</button
+            >
+            {#if w.selectedBlockIds.size > 0}
+              <button
+                type="button"
+                class="aw-link"
+                onclick={() => (w.selectedBlockIds = new Set())}
+              >
                 Clear
               </button>
             {/if}
@@ -2227,7 +795,7 @@
         </div>
         <ul class="aw-blocklist">
           {#each blocks as b (b.id)}
-            {@const checked = selectedBlockIds.has(b.id)}
+            {@const checked = w.selectedBlockIds.has(b.id)}
             {@const acresText = b.acres !== undefined ? `${b.acres.toFixed(2)} ac` : null}
             {@const sunText = b.sunExposure ? `${b.sunExposure} sun` : null}
             {@const plantingsText =
@@ -2236,7 +804,7 @@
                 : null}
             <li class:checked>
               <label>
-                <input type="checkbox" {checked} onchange={() => toggleBlock(b.id)} />
+                <input type="checkbox" {checked} onchange={() => w.toggleBlock(b.id)} />
                 <span class="aw-block-info">
                   <span class="aw-block-name">{b.blockLabel ?? b.name}</span>
                   <span class="aw-chips">
@@ -2250,41 +818,41 @@
             </li>
           {/each}
         </ul>
-      {:else if step === 'review'}
-        {#if loading}
-          {@render aiProgress('allocate', allocateStartMs)}
-        {:else if error}
-          <p class="aw-error">Error: {error}</p>
-        {:else if response}
-          {#if response.meta.fallback}
+      {:else if w.step === 'review'}
+        {#if w.loading}
+          {@render aiProgress('allocate', w.allocateStartMs)}
+        {:else if w.error}
+          <p class="aw-error">Error: {w.error}</p>
+        {:else if w.response}
+          {#if w.response.meta.fallback}
             <div class="aw-banner warn" role="alert" aria-live="assertive">
-              {response.meta.fallback === 'no-api-key'
+              {w.response.meta.fallback === 'no-api-key'
                 ? 'No Anthropic API key configured — plan generated by the deterministic engine. Add a key on /settings/ai to enable the AI rationale layer.'
-                : response.meta.fallback === 'over-cap'
+                : w.response.meta.fallback === 'over-cap'
                   ? 'Monthly AI cap reached — plan generated by the deterministic engine. Raise the cap on /settings/ai to restore AI refinement.'
-                  : response.meta.fallback === 'quota-exceeded'
+                  : w.response.meta.fallback === 'quota-exceeded'
                     ? 'Today’s AI quota reached — plan generated by the deterministic engine. Retry tomorrow or raise the quota on /settings/ai.'
                     : 'Plan generated by the deterministic engine after AI output failed validation twice.'}
             </div>
           {/if}
-          {#if (response.geometryMissingBlockIds ?? []).length > 0}
+          {#if (w.response.geometryMissingBlockIds ?? []).length > 0}
             <div class="aw-banner info">
-              📐 Pollination check skipped for {response.geometryMissingBlockIds!.length} block{response
-                .geometryMissingBlockIds!.length === 1
+              📐 Pollination check skipped for {w.response.geometryMissingBlockIds!.length} block{w
+                .response.geometryMissingBlockIds!.length === 1
                 ? ''
                 : 's'}
-              ({response.geometryMissingBlockIds!.map((id) => blockNameFor(id)).join(', ')}) — add
-              field geometry on /fields to enable.
+              ({w.response.geometryMissingBlockIds!.map((id) => w.blockNameFor(id)).join(', ')}) —
+              add field geometry on /fields to enable.
             </div>
           {/if}
           <!-- #172 — provenance legend mirroring the Schedule step so every
                pre-populated value carries an explicit source signal per
                Invariant 7 + the AI provenance addendum. -->
           <ProvenanceLegend
-            shown={aiEnabled && !response.meta.fallback
+            shown={aiEnabled && !w.response.meta.fallback
               ? ['plugin', 'data', 'ai', 'manual']
               : ['plugin', 'data', 'fallback', 'manual']}
-            note={aiEnabled && !response.meta.fallback
+            note={aiEnabled && !w.response.meta.fallback
               ? 'Blocks AI-proposed within plugin-derived constraints · editable per row'
               : 'AI off · deterministic allocator · plugin rules + your blocks'}
           />
@@ -2294,15 +862,15 @@
                Server already swaps response.rationale; this is the
                defence-in-depth render-side check. -->
           <p class="aw-rationale">
-            {#if response.meta.fallback}
-              {response.rationale ||
+            {#if w.response.meta.fallback}
+              {w.response.rationale ||
                 'Deterministic engine plan — see the "Why" column for per-row reasoning.'}
             {:else}
-              {response.rationale}
+              {w.response.rationale}
             {/if}
             <Provenance
-              source={response.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
-              detail={response.meta.fallback ? 'deterministic allocator' : undefined}
+              source={w.response.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+              detail={w.response.meta.fallback ? 'deterministic allocator' : undefined}
               compact
             />
           </p>
@@ -2318,14 +886,14 @@
               </tr>
             </thead>
             <tbody>
-              {#each response.assignments as a}
+              {#each w.response.assignments as a}
                 {@const key = `${a.stockItemId}:${a.blockId}`}
-                {@const suff = response.sufficiency[key]}
+                {@const suff = w.response.sufficiency[key]}
                 {@const chip = suff ? sufficiencyChip(suff) : null}
                 {@const poll = pollinationSummary(a.stockItemId, a.blockId)}
                 <tr>
-                  <td>{varietyDisplayFor(a.stockItemId)}</td>
-                  <td>{blockNameFor(a.blockId)}</td>
+                  <td>{w.varietyDisplayFor(a.stockItemId)}</td>
+                  <td>{w.blockNameFor(a.blockId)}</td>
                   <td>{a.plants.toLocaleString()}</td>
                   <td class="cell-fit">
                     {#if chip}
@@ -2339,10 +907,10 @@
                       >
                     {/if}
                   </td>
-                  <td class="why">{response.perRowRationale[key] ?? ''}</td>
+                  <td class="why">{w.response.perRowRationale[key] ?? ''}</td>
                   <td class="cell-provenance">
                     <Provenance
-                      source={response.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+                      source={w.response.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
                       compact
                     />
                   </td>
@@ -2353,25 +921,25 @@
 
           {@render chatPanel()}
 
-          {#if response.unplaced.length > 0}
+          {#if w.response.unplaced.length > 0}
             <h3>Unplaced</h3>
             <ul>
-              {#each response.unplaced as u}
+              {#each w.response.unplaced as u}
                 <li>
-                  {varietyDisplayFor(u.stockItemId)}: {u.quantityPlants} plants couldn't be placed.
+                  {w.varietyDisplayFor(u.stockItemId)}: {u.quantityPlants} plants couldn't be placed.
                 </li>
               {/each}
             </ul>
           {/if}
 
-          {#if response.meta.usdEstimate > 0}
+          {#if w.response.meta.usdEstimate > 0}
             <p class="aw-cost">
-              Cost: ${response.meta.usdEstimate.toFixed(4)} ({response.meta.model})
+              Cost: ${w.response.meta.usdEstimate.toFixed(4)} ({w.response.meta.model})
             </p>
           {/if}
         {/if}
-      {:else if step === 'schedule'}
-        {#if response}
+      {:else if w.step === 'schedule'}
+        {#if w.response}
           <!-- Phase 25 v2-addendum (#82 partial) — AI-on/off legend strip
                at the top of the schedule step. Per the addendum spec,
                AI on/off is a real product mode, not an error state —
@@ -2385,24 +953,24 @@
               ? 'Dates AI-proposed within plugin-derived windows · all editable'
               : 'AI off · deterministic scheduler · plugin windows + your records'}
           />
-          {#if scheduleLoading}
-            {@render aiProgress('schedule', scheduleStartMs)}
-          {:else if scheduleError}
-            <p class="aw-error">Error: {scheduleError}</p>
-            <button class="btn-secondary" onclick={advanceToSchedule}>Retry</button>
-          {:else if scheduleResponse}
-            {#if scheduleResponse.meta.fallback}
+          {#if w.scheduleLoading}
+            {@render aiProgress('schedule', w.scheduleStartMs)}
+          {:else if w.scheduleError}
+            <p class="aw-error">Error: {w.scheduleError}</p>
+            <button class="btn-secondary" onclick={() => w.advanceToSchedule()}>Retry</button>
+          {:else if w.scheduleResponse}
+            {#if w.scheduleResponse.meta.fallback}
               <div class="aw-banner info" role="alert" aria-live="assertive">
-                {scheduleResponse.meta.fallback === 'no-api-key'
+                {w.scheduleResponse.meta.fallback === 'no-api-key'
                   ? '🛟 Dates picked by the deterministic scheduler (no Anthropic API key). Staggers + companion offsets honored.'
                   : '🛟 AI needed help — deterministic scheduler took over. See chat below for what tripped it up and refine from there.'}
               </div>
             {/if}
             <p class="aw-rationale">
-              {scheduleResponse.rationale}
+              {w.scheduleResponse.rationale}
               <Provenance
-                source={scheduleResponse.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
-                detail={scheduleResponse.meta.fallback ? 'deterministic scheduler' : undefined}
+                source={w.scheduleResponse.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
+                detail={w.scheduleResponse.meta.fallback ? 'deterministic scheduler' : undefined}
                 compact
               />
             </p>
@@ -2417,7 +985,7 @@
                 </tr>
               </thead>
               <tbody>
-                {#each scheduleResponse.scheduled as p, i (i)}
+                {#each w.scheduleResponse.scheduled as p, i (i)}
                   <tr>
                     <td>
                       {p.varietyDisplayName}
@@ -2427,7 +995,7 @@
                         </span>
                       {/if}
                     </td>
-                    <td>{blockNameFor(p.blockId)}</td>
+                    <td>{w.blockNameFor(p.blockId)}</td>
                     <td>{fmtDateMs(p.plantingDateMs)}</td>
                     <td>{p.plants.toLocaleString()}</td>
                     <td class="why">{p.rationale}</td>
@@ -2435,37 +1003,37 @@
                 {/each}
               </tbody>
             </table>
-            {#if scheduleResponse.advisories.length > 0}
+            {#if w.scheduleResponse.advisories.length > 0}
               <section class="aw-banner info">
                 <strong>Schedule notes:</strong>
                 <ul>
-                  {#each scheduleResponse.advisories as a}<li>{a}</li>{/each}
+                  {#each w.scheduleResponse.advisories as a}<li>{a}</li>{/each}
                 </ul>
               </section>
             {/if}
             {@render chatPanel()}
           {/if}
         {/if}
-      {:else if step === 'inputs'}
+      {:else if w.step === 'inputs'}
         <InputsPlanStep
-          plantings={provisionalPlantings()}
+          plantings={w.provisionalPlantings()}
           year={currentYear}
           {aiEnabled}
-          onCommit={handleInputsAccepted}
-          onBack={() => (step = 'schedule')}
+          onCommit={(accepted) => w.handleInputsAccepted(accepted)}
+          onBack={() => (w.step = 'schedule')}
         />
-      {:else if step === 'commit'}
+      {:else if w.step === 'commit'}
         <p class="aw-loading">
-          Committing… {commitProgress.done} / {commitProgress.total}
+          Committing… {w.commitProgress.done} / {w.commitProgress.total}
         </p>
-        <progress value={commitProgress.done} max={commitProgress.total}></progress>
-        {#if inputsCommitError}
-          <p class="aw-error">Inputs plan tasks failed to commit: {inputsCommitError}</p>
+        <progress value={w.commitProgress.done} max={w.commitProgress.total}></progress>
+        {#if w.inputsCommitError}
+          <p class="aw-error">Inputs plan tasks failed to commit: {w.inputsCommitError}</p>
         {/if}
-        {#if commitProgress.failed.length > 0}
-          <p class="aw-error">Failed: {commitProgress.failed.length}</p>
+        {#if w.commitProgress.failed.length > 0}
+          <p class="aw-error">Failed: {w.commitProgress.failed.length}</p>
           <ul>
-            {#each commitProgress.failed as f}
+            {#each w.commitProgress.failed as f}
               <li>{f}</li>
             {/each}
           </ul>
@@ -2474,68 +1042,75 @@
     </div>
 
     <footer class="aw-footer">
-      {#if step === 'season-setup'}
+      {#if w.step === 'season-setup'}
         <button class="btn-secondary" onclick={onClose}>Cancel</button>
-        {#if activeSetup}
+        {#if w.activeSetup}
           <button
             class="btn-secondary"
-            onclick={() => (step = hasExistingPlan ? 'plan-state' : 'seeds')}
+            onclick={() => (w.step = w.hasExistingPlan ? 'plan-state' : 'seeds')}
           >
             Keep current & continue
           </button>
         {/if}
-      {:else if step === 'plan-state'}
+      {:else if w.step === 'plan-state'}
         <button class="btn-secondary" onclick={onClose}>Cancel</button>
-      {:else if step === 'seeds'}
+      {:else if w.step === 'seeds'}
         <button class="btn-secondary" onclick={onClose}>Cancel</button>
         <button
           class="btn-primary"
-          disabled={[...selectedSeeds.values()].every((v) => v <= 0)}
-          onclick={() => (step = 'blocks')}
+          disabled={[...w.selectedSeeds.values()].every((v) => v <= 0)}
+          onclick={() => (w.step = 'blocks')}
         >
-          Next: blocks ({totalPlantsSelected.toLocaleString()} plants)
+          Next: blocks ({w.totalPlantsSelected.toLocaleString()} plants)
         </button>
-      {:else if step === 'blocks'}
-        <button class="btn-secondary" onclick={() => (step = 'seeds')}>Back</button>
+      {:else if w.step === 'blocks'}
+        <button class="btn-secondary" onclick={() => (w.step = 'seeds')}>Back</button>
         <button
           class="btn-primary"
-          disabled={selectedBlockIds.size === 0 || loading}
-          onclick={generatePlan}
+          disabled={w.selectedBlockIds.size === 0 || w.loading}
+          onclick={() => w.generatePlan()}
         >
-          {loading ? 'Generating…' : `Generate plan (${selectedBlockIds.size} blocks)`}
+          {w.loading ? 'Generating…' : `Generate plan (${w.selectedBlockIds.size} blocks)`}
         </button>
-      {:else if step === 'review'}
-        <button class="btn-secondary" onclick={() => (step = 'blocks')}>Back</button>
-        <button class="btn-secondary" onclick={generatePlan} disabled={loading}>Regenerate</button>
+      {:else if w.step === 'review'}
+        <button class="btn-secondary" onclick={() => (w.step = 'blocks')}>Back</button>
+        <button class="btn-secondary" onclick={() => w.generatePlan()} disabled={w.loading}
+          >Regenerate</button
+        >
         <button
           class="btn-primary"
-          onclick={advanceToSchedule}
-          disabled={!response || response.assignments.length === 0}
+          onclick={() => w.advanceToSchedule()}
+          disabled={!w.response || w.response.assignments.length === 0}
           title="Locks the layout above and moves on to picking planting dates."
         >
           Accept all → schedule
         </button>
-      {:else if step === 'schedule'}
-        <button class="btn-secondary" onclick={() => (step = 'review')}>Back to allocation</button>
-        <button class="btn-secondary" onclick={advanceToSchedule} disabled={scheduleLoading}
-          >Re-schedule</button
+      {:else if w.step === 'schedule'}
+        <button class="btn-secondary" onclick={() => (w.step = 'review')}>Back to allocation</button
+        >
+        <button
+          class="btn-secondary"
+          onclick={() => w.advanceToSchedule()}
+          disabled={w.scheduleLoading}>Re-schedule</button
         >
         <button
           class="btn-primary"
-          onclick={advanceToInputs}
-          disabled={scheduleLoading || !scheduleResponse || scheduleResponse.scheduled.length === 0}
+          onclick={() => w.advanceToInputs()}
+          disabled={w.scheduleLoading ||
+            !w.scheduleResponse ||
+            w.scheduleResponse.scheduled.length === 0}
         >
-          Accept dates → inputs plan ({scheduleResponse?.scheduled.length ?? 0})
+          Accept dates → inputs plan ({w.scheduleResponse?.scheduled.length ?? 0})
         </button>
-      {:else if step === 'inputs'}
+      {:else if w.step === 'inputs'}
         <!-- Footer actions live inside InputsPlanStep; no parent buttons here. -->
-      {:else if step === 'commit'}
+      {:else if w.step === 'commit'}
         <button
           class="btn-primary"
           onclick={onClose}
-          disabled={commitProgress.done < commitProgress.total}
+          disabled={w.commitProgress.done < w.commitProgress.total}
         >
-          {commitProgress.done < commitProgress.total ? 'Committing…' : 'Done'}
+          {w.commitProgress.done < w.commitProgress.total ? 'Committing…' : 'Done'}
         </button>
       {/if}
     </footer>

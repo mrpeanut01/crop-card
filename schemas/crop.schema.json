@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cropcard.dev/schemas/crop.schema.json",
   "title": "CropCard Crop Plugin",
   "description": "Data-only crop variety definition. Cannot override Safety Kernel rules. Mirrors apps/web/src/lib/plugins/schemas.ts (cropPluginSchema) — the Zod schema is the runtime source of truth; this file is documentation for plugin authors.",
@@ -56,26 +56,26 @@
     },
     "defaultRowSpacingInches": {
       "type": "number",
-      "exclusiveMinimum": true,
-      "minimum": 0,
+      "exclusiveMinimum": 0,
       "maximum": 360
     },
     "preHarvestIntervalDays": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 9007199254740991
     },
     "daysToMaturity": {
       "type": "object",
       "properties": {
         "min": {
           "type": "integer",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "max": {
           "type": "integer",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         }
       },
       "required": [
@@ -92,8 +92,7 @@
         },
         "rowSpacingIn": {
           "type": "number",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "inRowSpacingIn": {
           "type": "object",
@@ -133,13 +132,12 @@
         },
         "seedsPerAcre": {
           "type": "integer",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "recommendedLbsPerAcre": {
           "type": "number",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "vineSpreadFt": {
           "type": "object",
@@ -161,19 +159,17 @@
         },
         "matureCanopyFtSq": {
           "type": "number",
-          "exclusiveMinimum": true,
-          "minimum": 0,
+          "exclusiveMinimum": 0,
           "maximum": 2000
         },
         "seedsPerLb": {
           "type": "number",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "referenceDensitySeedsPerAcre": {
           "type": "integer",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "emergenceDays": {
           "type": "object",
@@ -208,13 +204,13 @@
           "properties": {
             "min": {
               "type": "integer",
-              "exclusiveMinimum": true,
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "max": {
               "type": "integer",
-              "exclusiveMinimum": true,
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -274,10 +270,10 @@
             "maximum": 366
           },
           "windowDays": {
+            "default": 7,
             "type": "integer",
             "minimum": 1,
-            "maximum": 60,
-            "default": 7
+            "maximum": 60
           },
           "title": {
             "type": "string",
@@ -321,6 +317,7 @@
             "maxLength": 80
           },
           "kind": {
+            "default": "cultural",
             "type": "string",
             "enum": [
               "spray",
@@ -331,8 +328,7 @@
               "irrigate",
               "scout",
               "harvest"
-            ],
-            "default": "cultural"
+            ]
           },
           "dayOfYear": {
             "type": "integer",
@@ -345,10 +341,10 @@
             "maximum": 3650
           },
           "windowDays": {
+            "default": 7,
             "type": "integer",
             "minimum": 1,
-            "maximum": 120,
-            "default": 7
+            "maximum": 120
           },
           "title": {
             "type": "string",
@@ -392,6 +388,13 @@
       "type": "object",
       "properties": {
         "steps": {
+          "default": [
+            "mow",
+            "rake",
+            "bale",
+            "store"
+          ],
+          "minItems": 2,
           "type": "array",
           "items": {
             "type": "string",
@@ -402,27 +405,20 @@
               "bale",
               "store"
             ]
-          },
-          "minItems": 2,
-          "default": [
-            "mow",
-            "rake",
-            "bale",
-            "store"
-          ]
+          }
         },
         "cuttingsPerSeason": {
           "type": "object",
           "properties": {
             "min": {
               "type": "integer",
-              "exclusiveMinimum": true,
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "max": {
               "type": "integer",
-              "exclusiveMinimum": true,
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -436,13 +432,13 @@
           "properties": {
             "min": {
               "type": "integer",
-              "exclusiveMinimum": true,
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             },
             "max": {
               "type": "integer",
-              "exclusiveMinimum": true,
-              "minimum": 0
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -455,13 +451,21 @@
           "type": "string"
         },
         "weatherWindowDays": {
+          "default": 3,
           "type": "integer",
           "minimum": 1,
-          "maximum": 14,
-          "default": 3
+          "maximum": 14
         },
         "baleMoistureGate": {
           "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "small-square",
+              "large-round",
+              "large-square"
+            ]
+          },
           "additionalProperties": {
             "type": "object",
             "properties": {
@@ -505,13 +509,6 @@
               }
             },
             "additionalProperties": false
-          },
-          "propertyNames": {
-            "enum": [
-              "small-square",
-              "large-round",
-              "large-square"
-            ]
           }
         },
         "storageTempWatchF": {
@@ -551,12 +548,13 @@
             "properties": {
               "min": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 9007199254740991
               },
               "max": {
                 "type": "integer",
-                "exclusiveMinimum": true,
-                "minimum": 0
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
               }
             },
             "required": [
@@ -663,11 +661,13 @@
           },
           "daysBeforePlant": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "daysBeforeFirstHarvest": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "phaseKey": {
             "type": "string",
@@ -676,7 +676,8 @@
           },
           "daysBeforePhase": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "category": {
             "type": "string",
@@ -722,11 +723,13 @@
           },
           "daysAfterPlant": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "daysAfterHarvest": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "phaseKey": {
             "type": "string",
@@ -735,7 +738,8 @@
           },
           "daysAfterPhase": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "category": {
             "type": "string",
@@ -762,8 +766,7 @@
     },
     "matureHeightFt": {
       "type": "number",
-      "exclusiveMinimum": true,
-      "minimum": 0,
+      "exclusiveMinimum": 0,
       "maximum": 60
     },
     "shadeCasting": {
@@ -785,10 +788,11 @@
         },
         "referenceDtmDays": {
           "type": "integer",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "stages": {
+          "minItems": 1,
           "type": "array",
           "items": {
             "type": "object",
@@ -808,12 +812,13 @@
                 "properties": {
                   "min": {
                     "type": "integer",
-                    "minimum": 0
+                    "minimum": 0,
+                    "maximum": 9007199254740991
                   },
                   "max": {
                     "type": "integer",
-                    "exclusiveMinimum": true,
-                    "minimum": 0
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
@@ -843,10 +848,10 @@
               "daysFromPlanting"
             ],
             "additionalProperties": false
-          },
-          "minItems": 1
+          }
         },
         "harvestTargets": {
+          "minItems": 1,
           "type": "array",
           "items": {
             "type": "object",
@@ -880,8 +885,7 @@
               "label"
             ],
             "additionalProperties": false
-          },
-          "minItems": 1
+          }
         }
       },
       "required": [
@@ -903,23 +907,21 @@
       ]
     },
     "crossesWith": {
+      "maxItems": 40,
       "type": "array",
       "items": {
         "type": "string",
         "pattern": "^(family:)?[a-z0-9][a-z0-9-]{0,63}$"
-      },
-      "maxItems": 40
+      }
     },
     "isolationFeet": {
       "type": "number",
-      "exclusiveMinimum": true,
-      "minimum": 0,
+      "exclusiveMinimum": 0,
       "maximum": 5280
     },
     "isolationStaggerDays": {
       "type": "integer",
-      "exclusiveMinimum": true,
-      "minimum": 0,
+      "exclusiveMinimum": 0,
       "maximum": 120
     },
     "agronomy": {
@@ -977,11 +979,13 @@
           },
           "offsetDaysMin": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "offsetDaysMax": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 9007199254740991
           },
           "anchor": {
             "type": "string",
@@ -1076,21 +1080,22 @@
       "properties": {
         "daysFromPlantingMin": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 9007199254740991
         },
         "daysFromPlantingMax": {
           "type": "integer",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
         },
         "monthsOfYear": {
+          "maxItems": 12,
           "type": "array",
           "items": {
             "type": "integer",
             "minimum": 1,
             "maximum": 12
-          },
-          "maxItems": 12
+          }
         },
         "continuous": {
           "type": "boolean"
@@ -1107,12 +1112,18 @@
     },
     "planting": {
       "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
       "additionalProperties": {}
     },
     "growthStages": {
       "type": "array",
       "items": {
         "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
         "additionalProperties": {}
       }
     },

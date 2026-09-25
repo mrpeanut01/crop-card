@@ -23,6 +23,7 @@ import {
 } from './weatherHourly';
 
 const FIXTURE_START = Date.UTC(2026, 8, 25, 8);
+const FIXTURE_HOURS = 130;
 let latSeq = 0;
 function freshLat(): number {
   latSeq += 1;
@@ -80,10 +81,14 @@ describe('expandValidTime', () => {
 describe('gridpointToHourly', () => {
   it('expands the recorded fixture into one point per hour with converted units', () => {
     const hours = gridpointToHourly(grid as NwsGridpointResponse);
-    expect(hours).toHaveLength(128);
+    expect(hours).toHaveLength(FIXTURE_HOURS);
     expect(hours[0].t).toBe(FIXTURE_START);
     for (let i = 1; i < hours.length; i++) expect(hours[i].t - hours[i - 1].t).toBe(HOUR_MS);
-    for (const h of hours) {
+    // NWS series end at different times, so the tail past the last temperature
+    // interval legitimately carries nulls.
+    const lastTemp = hours.findLastIndex((h) => h.tempF !== null);
+    expect(lastTemp).toBeGreaterThan(110);
+    for (const h of hours.slice(0, lastTemp + 1)) {
       expect(h.tempF).not.toBeNull();
       expect(h.tempF!).toBeGreaterThan(40);
       expect(h.tempF!).toBeLessThan(100);
@@ -120,7 +125,7 @@ describe('gridpointToHourly', () => {
     expect(hours[0].rhPct).toBeNull();
   });
 
-  it('fixture derives a rain-risk window for the Sep 26 evening event', () => {
+  it('fixture derives a rain-risk window for the recorded Sep 26 rain', () => {
     const hours = gridpointToHourly(grid as NwsGridpointResponse);
     const d = deriveHourly(hours, 'data', { nowMs: Date.UTC(2026, 8, 26, 16), rainfastHours: 4 });
     expect(d.rainfast.status).toBe('rain-risk');
@@ -138,12 +143,12 @@ describe('getHourlyForecast', () => {
     const now = Date.UTC(2026, 8, 25, 14);
     const first = await getHourlyForecast(lat, -77.5, now);
     expect(first.provenance).toBe('data');
-    expect(first.hours).toHaveLength(128);
+    expect(first.hours).toHaveLength(FIXTURE_HOURS);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const [pointsUrl, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(pointsUrl).toContain(`/points/${lat},-77.5`);
     expect((init.headers as Record<string, string>)['User-Agent']).toMatch(/cropcard/);
-    expect(fetchMock.mock.calls[1][0]).toBe('https://api.weather.gov/gridpoints/LWX/82,79');
+    expect(fetchMock.mock.calls[1][0]).toBe('https://api.weather.gov/gridpoints/LWX/77,79');
 
     const row = db
       .select()

@@ -880,6 +880,7 @@ export const FORMULATION_PHYSICAL_STATE = {
   CS: 'liquid',
   OD: 'liquid',
   SE: 'liquid',
+  ZC: 'liquid',
   WDG: 'dry',
   WG: 'dry',
   DF: 'dry',

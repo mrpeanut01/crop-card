@@ -130,7 +130,8 @@ jobs:
   # Single stable check name for branch protection. Require `test` and the
   # individual jobs can be split, renamed or parallelised freely.
   test:
-    if: always()
+    # Skip (rather than fail) when the run was cancelled by a newer push.
+    if: ${{ !cancelled() }}
     needs: [static, unit, e2e, validate-bicep]
     runs-on: ubuntu-latest
     timeout-minutes: 2

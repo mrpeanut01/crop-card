@@ -56,7 +56,7 @@
       />
       {#if plugin?.activeIngredients?.length}
         <div class="ai-list">
-          {#each plugin.activeIngredients as ai}
+          {#each plugin.activeIngredients as ai, idx (idx)}
             <span class="ai-chip"
               >{ai.name}{ai.chemistryClass ? ` (${ai.chemistryClass})` : ''}</span
             >

@@ -115,7 +115,7 @@
       </tr>
     </thead>
     <tbody>
-      {#each w.response.assignments as a}
+      {#each w.response.assignments as a, idx (idx)}
         {@const key = `${a.stockItemId}:${a.blockId}`}
         {@const suff = w.response.sufficiency[key]}
         {@const chip = suff ? sufficiencyChip(suff) : null}
@@ -149,7 +149,7 @@
   {#if w.response.unplaced.length > 0}
     <h3>Unplaced</h3>
     <ul>
-      {#each w.response.unplaced as u}
+      {#each w.response.unplaced as u, idx (idx)}
         <li>
           {w.varietyDisplayFor(u.stockItemId)}: {u.quantityPlants} plants couldn't be placed.
         </li>

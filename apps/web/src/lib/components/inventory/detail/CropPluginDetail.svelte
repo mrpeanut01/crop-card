@@ -85,7 +85,7 @@
     {#if varieties.length > 0}
       <InvSection title="Varieties" kicker="From plugin">
         <ul class="bullet-list">
-          {#each varieties.slice(0, 12) as v}
+          {#each varieties.slice(0, 12) as v, idx (idx)}
             <li>
               {#if typeof v === 'string'}
                 {v}
@@ -106,7 +106,7 @@
     {#if growthStages.length > 0}
       <InvSection title="Growth stages" kicker="V/R / Zadoks">
         <ul class="bullet-list">
-          {#each growthStages.slice(0, 10) as s}
+          {#each growthStages.slice(0, 10) as s, idx (idx)}
             <li>{formatField(s)}</li>
           {/each}
         </ul>
@@ -136,7 +136,7 @@
     {#if seasonalTasks.length > 0}
       <InvSection title="Seasonal tasks" kicker="From plugin">
         <ul class="bullet-list">
-          {#each seasonalTasks.slice(0, 8) as t}
+          {#each seasonalTasks.slice(0, 8) as t, idx (idx)}
             <li>{formatField(t)}</li>
           {/each}
         </ul>

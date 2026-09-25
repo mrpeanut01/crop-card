@@ -135,7 +135,7 @@
       </div>
       <select class="family-filter" bind:value={familyFilter} aria-label="Filter by crop type">
         <option value="">All crop types</option>
-        {#each families as fam}
+        {#each families as fam (fam)}
           <option value={fam}>{FAMILY_LABEL[fam] ?? fam}</option>
         {/each}
       </select>
@@ -145,7 +145,7 @@
       {#if grouped.length === 0}
         <p class="no-results">No varieties match your search.</p>
       {/if}
-      {#each grouped as [fam, items]}
+      {#each grouped as [fam, items] (fam)}
         <div class="family-group">
           <div class="family-heading">
             <span aria-hidden="true">{FAMILY_ICON[fam] ?? '🌱'}</span>

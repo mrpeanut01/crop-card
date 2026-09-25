@@ -52,10 +52,7 @@ export default tseslint.config(
       // Invariant 6: raw Drizzle reads/writes against tenant-scoped tables
       // must go through tenantWhere/withTenant/tenantValues, or the function
       // must call `unscopedQueryNote('reason')` when intentionally global.
-      'cropcard/no-raw-tenant-table': 'error',
-      // Added to typescript-eslint's recommended set in v8; not enforced under
-      // the v7 config this replaced. Adopt in a dedicated cleanup pass.
-      '@typescript-eslint/no-unused-expressions': 'off'
+      'cropcard/no-raw-tenant-table': 'error'
     }
   },
   {
@@ -73,14 +70,10 @@ export default tseslint.config(
       'svelte/valid-compile': ['warn', { ignoreWarnings: true }],
       'svelte/no-unused-svelte-ignore': 'warn',
       'svelte/no-inner-declarations': 'warn',
-      // New in eslint-plugin-svelte v3's recommended set and already violated
-      // by existing components; the v2 config this replaced did not enforce
-      // them. Adopt in a dedicated cleanup pass rather than the ESLint 9 bump.
+      // resolve() only matters under kit.paths.base, which this app never sets; ~215 plain-string hrefs/gotos would churn for no behavioural change.
       'svelte/no-navigation-without-resolve': 'off',
-      'svelte/prefer-svelte-reactivity': 'off',
-      'svelte/require-each-key': 'off',
-      'svelte/prefer-writable-derived': 'off',
-      'svelte/no-useless-mustaches': 'off'
+      // No scope analysis: every hit is a function- or $derived-local temporary, a copy-then-reassign $state update, or imperative Leaflet bookkeeping, where SvelteMap/Set/Date/URLSearchParams adds signals without changing behaviour.
+      'svelte/prefer-svelte-reactivity': 'off'
     }
   }
 );

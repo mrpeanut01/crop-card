@@ -14,7 +14,7 @@
 {#if w.commitProgress.failed.length > 0}
   <p class="aw-error">Failed: {w.commitProgress.failed.length}</p>
   <ul>
-    {#each w.commitProgress.failed as f}
+    {#each w.commitProgress.failed as f, idx (idx)}
       <li>{f}</li>
     {/each}
   </ul>

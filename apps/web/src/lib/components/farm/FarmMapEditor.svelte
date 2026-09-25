@@ -1135,7 +1135,7 @@
         <table class="paste-results">
           <thead><tr><th>Name</th><th>Type</th><th>Result</th></tr></thead>
           <tbody>
-            {#each pasteResults as r}
+            {#each pasteResults as r, idx (idx)}
               <tr class={r.status.startsWith('saved') ? 'result-ok' : 'result-warn'}>
                 <td>{r.name}</td>
                 <td>{r.kind}</td>

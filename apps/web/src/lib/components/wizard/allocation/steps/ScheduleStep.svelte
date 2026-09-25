@@ -78,7 +78,7 @@
       <section class="aw-banner info">
         <strong>Schedule notes:</strong>
         <ul>
-          {#each w.scheduleResponse.advisories as a}<li>{a}</li>{/each}
+          {#each w.scheduleResponse.advisories as a, idx (idx)}<li>{a}</li>{/each}
         </ul>
       </section>
     {/if}

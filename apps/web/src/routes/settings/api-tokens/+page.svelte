@@ -80,7 +80,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each data.tokens.filter((t) => !t.revokedAt) as t}
+          {#each data.tokens.filter((t) => !t.revokedAt) as t (t.id)}
             <tr>
               <td>{t.label}</td>
               <td>{t.isServiceAccount ? 'Service account' : 'Personal use'}</td>
@@ -108,7 +108,7 @@
           <tr><th>Label</th><th>Revoked</th><th>Total requests</th></tr>
         </thead>
         <tbody>
-          {#each data.tokens.filter((t) => t.revokedAt) as t}
+          {#each data.tokens.filter((t) => t.revokedAt) as t (t.id)}
             <tr>
               <td>{t.label}</td>
               <td>{new Date(t.revokedAt!).toLocaleDateString()}</td>

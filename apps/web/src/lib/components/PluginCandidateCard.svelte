@@ -64,7 +64,7 @@
     {#if candidate.guessed && candidate.guessed.length > 0}
       <p class="guessed">
         <strong>Guessed:</strong>
-        {#each candidate.guessed as f, i}
+        {#each candidate.guessed as f, i (i)}
           <code>{f}</code>{i < candidate.guessed.length - 1 ? ',' : ''}
         {/each}
         — verify before commit.
@@ -79,7 +79,7 @@
             : 's'}</summary
         >
         <ul class="citations">
-          {#each candidate.citations as c}
+          {#each candidate.citations as c, idx (idx)}
             <li><a href={c.url} target="_blank" rel="noopener">{c.title ?? c.url}</a></li>
           {/each}
         </ul>
@@ -90,7 +90,7 @@
       <div class="issues">
         <strong>⛔ Cannot commit as-is:</strong>
         <ul>
-          {#each issues as i}
+          {#each issues as i, idx (idx)}
             <li>
               <span class="kind-pill {i.kind}">{i.kind}</span>
               {#if i.path}<code>{i.path}</code>{/if}
@@ -109,7 +109,7 @@
     <p class="empty">No payload returned for this candidate.</p>
     {#if hasIssues}
       <ul class="issues">
-        {#each issues as i}
+        {#each issues as i, idx (idx)}
           <li>
             <span class="kind-pill {i.kind}">{i.kind}</span>
             {i.message}

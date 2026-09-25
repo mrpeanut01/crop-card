@@ -65,7 +65,7 @@ export async function provisionWizardTenant(
   const signinBody = (await signin.json()) as { type?: string; location?: string };
   expect(signinBody.location, 'fresh user should land on onboarding').toBe('/onboarding');
 
-  const onboard = await page.request.post('/onboarding', {
+  const onboard = await page.request.post('/onboarding?/farm', {
     form: { farmName: `Wizard Farm ${Date.now()}` },
     headers: { 'x-sveltekit-action': 'true', origin },
     maxRedirects: 0

@@ -426,6 +426,11 @@
       A few one-time setup steps. CropCard plans, calibrates, and records around blocks + sprayers —
       once these three are in place, the calendar drives the rest.
     </p>
+    {#if data.setupUnfinished}
+      <a href="/onboarding" class="resume-setup"
+        ><Button variant="primary" size="sm">Resume the setup guide →</Button></a
+      >
+    {/if}
     <ol class="bootstrap-steps">
       <li class:done={data.bootstrap.hasBlock && data.bootstrap.hasPlanting}>
         <span class="step-num" aria-hidden="true">
@@ -1531,6 +1536,10 @@
   }
   .bootstrap-lede {
     color: #555;
+    margin: 0 0 1rem;
+  }
+  .resume-setup {
+    display: inline-block;
     margin: 0 0 1rem;
   }
   .bootstrap-steps {

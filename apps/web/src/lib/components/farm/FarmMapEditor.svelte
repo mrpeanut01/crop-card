@@ -24,13 +24,15 @@
     fields,
     shadeSources = [],
     canEdit,
-    isFirstRun = false
+    isFirstRun = false,
+    initialCenter = null
   }: {
     blocks: BlockWithPlantings[];
     fields: FieldWithBlocks[];
     shadeSources?: ShadeSource[];
     canEdit: boolean;
     isFirstRun?: boolean;
+    initialCenter?: { lat: number; lon: number } | null;
   } = $props();
 
   // ─── BlockMap draw callbacks ──────────────────────────────────────────────
@@ -605,6 +607,7 @@
     {fields}
     {canEdit}
     {shadeSources}
+    {initialCenter}
     onSaveGeometry={saveGeometry}
     onCreateWithGeometry={createBlockWithGeometry}
     onSaveFieldGeometry={saveFieldGeometry}

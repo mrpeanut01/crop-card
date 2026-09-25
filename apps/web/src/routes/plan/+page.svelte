@@ -1379,6 +1379,18 @@
 
   onMount(() => {
     cropsTabOrder = loadBlockOrder();
+    const w = $page.url.searchParams.get('wizard');
+    if (w === 'allocation' || w === 'season-setup') {
+      openWizard(w);
+      const sp = new URLSearchParams($page.url.searchParams);
+      sp.delete('wizard');
+      const qs = sp.toString();
+      void goto(`/plan${qs ? `?${qs}` : ''}`, {
+        replaceState: true,
+        keepFocus: true,
+        noScroll: true
+      });
+    }
   });
 
   function onCropsHeaderDragStart(ev: DragEvent, blockId: string) {

@@ -72,3 +72,10 @@ export function getAiDailyCallQuota(): typeof DEFAULT_AI_DAILY_QUOTA {
     return DEFAULT_AI_DAILY_QUOTA;
   }
 }
+
+/** True once the owner has saved real coordinates (not the Loudoun default). */
+export function hasFarmLatLon(): boolean {
+  const raw = getSetting(SETTINGS_KEYS.farmLatLon);
+  if (!raw) return false;
+  return getFarmLatLon() !== LOUDOUN_DEFAULT_LAT_LON;
+}

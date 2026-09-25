@@ -21,6 +21,7 @@
       shadeSources={data.shadeSources}
       canEdit={data.canEdit}
       isFirstRun={data.isFirstRun}
+      initialCenter={data.initialCenter}
     />
   {:else}
     <section class="loading"><p>Loading map…</p></section>

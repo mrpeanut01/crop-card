@@ -5,9 +5,17 @@
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
   import SignInMethods from '$lib/components/settings/SignInMethods.svelte';
+  import AvatarUpload from '$lib/components/settings/AvatarUpload.svelte';
+  import { DISPLAY_NAME_MAX, DISPLAY_UNITS, TIME_ZONES } from '$lib/profile';
   import Pill from '$lib/components/ui/Pill.svelte';
 
-  let { data } = $props();
+  let { data, form } = $props();
+
+  const timeZoneOptions = $derived(
+    TIME_ZONES.some((tz) => tz.id === data.account.timeZone)
+      ? TIME_ZONES
+      : [{ id: data.account.timeZone, label: data.account.timeZone }, ...TIME_ZONES]
+  );
 
   // Active sessions — we don't track concurrent sessions yet; the
   // current cookie is "this device". Sticking to one row keeps the
@@ -27,22 +35,51 @@
 <SettingsShell title="Account & sign-in" kicker="Owner profile" saveAction="?/save">
   <SettingsSection title="Profile" sub="Visible to helpers in your farm.">
     <div class="profile-grid">
-      <div class="avatar">{data.account.name.charAt(0).toUpperCase()}</div>
+      <AvatarUpload name={data.account.name} avatarUrl={data.account.avatarUrl} />
       <div class="fields">
-        <SettingsField label="Display name">
-          <input class="s-input" type="text" value={data.account.name} name="name" />
+        <SettingsField label="Display name" hint="Leave blank to use your sign-in name.">
+          <input
+            class="s-input"
+            type="text"
+            name="name"
+            value={form?.submitted?.name ?? data.account.displayName}
+            placeholder={data.account.name}
+            maxlength={DISPLAY_NAME_MAX}
+            autocomplete="name"
+            disabled={data.account.impersonating}
+          />
         </SettingsField>
         <SettingsField label="Time zone">
-          <select class="s-input"><option>America/New_York (EST)</option></select>
+          <select
+            class="s-input"
+            name="timeZone"
+            value={form?.submitted?.timeZone ?? data.account.timeZone}
+            disabled={data.account.impersonating}
+          >
+            {#each timeZoneOptions as tz (tz.id)}
+              <option value={tz.id}>{tz.label}</option>
+            {/each}
+          </select>
         </SettingsField>
         <SettingsField label="Display units">
-          <select class="s-input">
-            <option value="us">US (acre · lb · °F)</option>
-            <option value="metric">Metric (ha · kg · °C)</option>
+          <select
+            class="s-input"
+            name="displayUnits"
+            value={form?.submitted?.displayUnits ?? data.account.displayUnits}
+            disabled={data.account.impersonating}
+          >
+            {#each DISPLAY_UNITS as u (u.id)}
+              <option value={u.id}>{u.label}</option>
+            {/each}
           </select>
         </SettingsField>
       </div>
     </div>
+    {#if form?.error}
+      <p class="form-msg error" role="alert">{form.error}</p>
+    {:else if form?.ok}
+      <p class="form-msg" role="status">Profile saved.</p>
+    {/if}
   </SettingsSection>
 
   <SettingsSection
@@ -112,17 +149,13 @@
     gap: 18px;
     align-items: start;
   }
-  .avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 999px;
-    background: var(--color-wheat, #d4a75c);
-    color: var(--color-cream, #f8f3e8);
-    display: grid;
-    place-items: center;
-    font-size: 26px;
-    font-weight: 700;
-    font-family: var(--font-serif, serif);
+  .form-msg {
+    margin: 12px 0 0;
+    font-size: 12.5px;
+    color: var(--color-forest-deep);
+  }
+  .form-msg.error {
+    color: var(--color-rust, #a3472a);
   }
   .fields {
     display: grid;

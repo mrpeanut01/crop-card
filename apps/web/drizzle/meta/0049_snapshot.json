@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b53e07e0-9ee8-418f-8f76-298ab764b677",
-  "prevId": "23e5b6c8-03da-4c19-8b9a-c5898cb4f288",
+  "id": "60c64ffe-5ae4-4937-b17d-c2f4d553566c",
+  "prevId": "b53e07e0-9ee8-418f-8f76-298ab764b677",
   "tables": {
     "ai_call_log": {
       "name": "ai_call_log",
@@ -461,6 +461,20 @@
         },
         "slope_aspect_deg": {
           "name": "slope_aspect_deg",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "width_ft": {
+          "name": "width_ft",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "length_ft": {
+          "name": "length_ft",
           "type": "real",
           "primaryKey": false,
           "notNull": false,
@@ -1377,6 +1391,20 @@
         "geometry_geojson": {
           "name": "geometry_geojson",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "width_ft": {
+          "name": "width_ft",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "length_ft": {
+          "name": "length_ft",
+          "type": "real",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

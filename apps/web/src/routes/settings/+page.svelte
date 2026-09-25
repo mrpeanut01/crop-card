@@ -1,5 +1,6 @@
 <script lang="ts">
   import { identityLabel } from '$lib/identity';
+  import Avatar from '$lib/components/ui/Avatar.svelte';
   import {
     User,
     Sprout,
@@ -158,9 +159,7 @@
 
 <!-- ─── Identity hero card ─────────────────────────────────────── -->
 <section class="card identity">
-  <div class="avatar" aria-hidden="true">
-    {data.user.name.charAt(0).toUpperCase()}
-  </div>
+  <Avatar name={data.user.name} src={data.user.avatarUrl} size={52} />
   <div class="identity-body">
     <div class="name">{data.user.name}</div>
     <div class="email">{identityLabel(data.user)}</div>
@@ -286,18 +285,6 @@
     grid-template-columns: auto 1fr auto;
     gap: 16px;
     align-items: center;
-  }
-  .avatar {
-    width: 52px;
-    height: 52px;
-    border-radius: 999px;
-    background: var(--color-wheat, #d4a75c);
-    color: var(--color-cream, #f8f3e8);
-    display: grid;
-    place-items: center;
-    font-size: 22px;
-    font-weight: 700;
-    font-family: var(--font-serif, serif);
   }
   .identity-body .name {
     font-family: var(--font-serif, serif);

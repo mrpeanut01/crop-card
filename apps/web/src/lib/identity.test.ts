@@ -47,5 +47,9 @@ describe('labels', () => {
     expect(identityLabel({ email: null, phone: '+15715550123' })).toBe('(571) 555-0123');
     expect(identityName({ email: 'dale@farm.co', phone: null })).toBe('dale');
     expect(identityName({ email: null, phone: '+15715550123' })).toBe('(571) 555-0123');
+    expect(identityName({ email: 'dale@farm.co', phone: null, displayName: 'Dale R.' })).toBe(
+      'Dale R.'
+    );
+    expect(identityName({ email: 'dale@farm.co', phone: null, displayName: null })).toBe('dale');
   });
 });

@@ -1,0 +1,52 @@
+name: claude-pr-review
+
+# Opt-in AI review for a PR: add the `claude-review` label. Advisory only
+# (posts comments, never blocks), runs once per label, and is skipped when
+# the ANTHROPIC_API_KEY secret is absent. Releases always get a review
+# (release.yml); this is for PRs that touch risky areas before release.
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    if: github.event.label.name == 'claude-review' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    env:
+      HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    steps:
+      - name: Skip (no ANTHROPIC_API_KEY secret)
+        if: env.HAS_KEY != 'true'
+        run: echo "ANTHROPIC_API_KEY is not set; skipping." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/checkout@v4
+        if: env.HAS_KEY == 'true'
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        if: env.HAS_KEY == 'true'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: --max-turns 40
+          prompt: |
+            Review PR #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+            Read CLAUDE.md first; its Invariants section lists what must never
+            break (safety kernel + RULES_VERSION, tenant isolation, "AI assists,
+            never gates", FR-09 locks, server-side role gates).
+            Look for security issues and real bugs with a concrete failing
+            scenario. Skip style nits. Post findings as inline review comments
+            on the changed lines, then one short summary comment. If there is
+            nothing worth flagging, post a single comment saying so.
+      - name: Remove label so it can be re-applied
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr edit ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --remove-label claude-review || true

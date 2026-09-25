@@ -1,0 +1,175 @@
+name: release
+
+# Cut a release by pushing a semver tag: `git tag v1.2.3 && git push origin v1.2.3`.
+# Everything a release needs that is too slow or too noisy for each PR lives
+# here: the full CI gate, CodeQL, a container image scan + SBOM, and a
+# Claude code + security review of everything since the previous release.
+# Deployment stays manual (deploy.yml).
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to (re)run the release checks for, e.g. v1.2.3
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  gate:
+    uses: ./.github/workflows/ci.yml
+
+  security:
+    uses: ./.github/workflows/security.yml
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+  image:
+    name: container image scan + SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build runtime image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/Dockerfile
+          target: runtime
+          load: true
+          tags: cropcard:${{ env.TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Vulnerability scan (fail on fixable critical)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: cropcard:${{ env.TAG }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+      - name: Vulnerability report (high+, informational)
+        if: always()
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: cropcard:${{ env.TAG }}
+          severity: HIGH,CRITICAL
+          format: table
+          output: trivy-report.txt
+          exit-code: '0'
+      - name: SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          image: cropcard:${{ env.TAG }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: false
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-image-reports
+          path: |
+            trivy-report.txt
+            sbom.spdx.json
+
+  ai-review:
+    name: Claude code + security review
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    steps:
+      - name: Skip (no ANTHROPIC_API_KEY secret)
+        if: env.HAS_KEY != 'true'
+        run: |
+          echo "ANTHROPIC_API_KEY is not set; skipping the AI review." >> "$GITHUB_STEP_SUMMARY"
+          echo "Add it under Settings → Secrets and variables → Actions to enable release reviews." > release-review.md
+      - uses: actions/checkout@v4
+        if: env.HAS_KEY == 'true'
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+      - name: Range since previous release
+        if: env.HAS_KEY == 'true'
+        id: range
+        run: |
+          prev=$(git describe --tags --abbrev=0 --match 'v*.*.*' "${TAG}^" 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -1)
+          echo "base=$prev" >> "$GITHUB_OUTPUT"
+          echo "Reviewing ${prev}..${TAG} ($(git rev-list --count "${prev}..${TAG}") commits)" >> "$GITHUB_STEP_SUMMARY"
+      - uses: anthropics/claude-code-action@v1
+        if: env.HAS_KEY == 'true'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: >-
+            --max-turns 60
+            --allowedTools "Bash(git diff:*),Bash(git log:*),Bash(git show:*),Read,Glob,Grep,Write"
+          prompt: |
+            You are reviewing CropCard release ${{ env.TAG }}: the changes in
+            `git diff ${{ steps.range.outputs.base }}..${{ env.TAG }}`.
+            Read CLAUDE.md first; its "Invariants" section defines what must
+            never break (safety kernel in apps/web/src/lib/safety with
+            RULES_VERSION + property tests, tenant isolation via
+            tenantWhere/withTenant/tenantValues, "AI assists, never gates",
+            FR-09 record locks, owner/helper server-side gates).
+            Do two passes over the diff:
+            1. Security: injection, SSRF, authz/authn gaps, cross-tenant data
+               access, secrets, unsafe deserialization, missing server-side
+               enforcement of a UI rule.
+            2. Correctness: real bugs with a concrete failing scenario, and
+               any invariant violation.
+            Report only high-confidence findings. For each: severity
+            (critical/high/medium), file:line, the concrete failure scenario,
+            and a suggested fix. No style nits. If nothing qualifies, say so.
+            Write the report as Markdown to release-review.md in the repo
+            root and nothing else.
+      - name: Publish review summary
+        if: always()
+        run: |
+          [ -f release-review.md ] || echo "Review produced no report." > release-review.md
+          cat release-review.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-review
+          path: release-review.md
+
+  publish:
+    name: GitHub release
+    needs: [gate, security, image, ai-review]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          files=$(find dist -type f \( -name 'sbom.spdx.json' -o -name 'trivy-report.txt' -o -name 'release-review.md' \))
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" $files --clobber
+          else
+            gh release create "$TAG" $files --verify-tag --generate-notes --title "$TAG"
+          fi

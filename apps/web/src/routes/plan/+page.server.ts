@@ -62,7 +62,12 @@ import { listFields, type FieldWithBlocks } from '$lib/db/fields';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listStockItems, type StockItemWithBalance } from '$lib/db/stock';
 import { listTasks, type Task } from '$lib/db/tasks';
-import type { CropPlugin, StageSystem, CornType } from '$lib/plugins/schemas';
+import {
+  resolveArchetype,
+  type CropPlugin,
+  type StageSystem,
+  type CornType
+} from '$lib/plugins/schemas';
 import {
   resolveGrowthStageTable,
   resolvePerennialTemplate
@@ -152,7 +157,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         pluginId: c.pluginId,
         displayName: c.displayName,
         cropFamily: c.cropFamily,
-        daysToMaturity: c.daysToMaturity
+        daysToMaturity: c.daysToMaturity,
+        archetype: resolveArchetype(c)
       };
     })
     .sort((a, b) => a.displayName.localeCompare(b.displayName));

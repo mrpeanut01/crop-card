@@ -52,7 +52,10 @@
     /** Active farm name; appears in the MapOverlay title. */
     farmLabel?: string;
     /** Plugin index used to derive crop name + DTM for plantings. */
-    cropMeta: Record<string, { displayName: string; daysToMaturity?: number; cropFamily?: string }>;
+    cropMeta: Record<
+      string,
+      { displayName: string; daysToMaturity?: number; cropFamily?: string; archetype?: string }
+    >;
     /** When the user clicks "Add planting" / "Refine with AI" / etc. */
     onOpenWizard?: () => void;
     /** Optional: wire to /plan's existing block-edit modal. */
@@ -192,6 +195,12 @@
     return plantings.filter((p) => p.id !== plantingId);
   }
 
+  function smallGrainHref(plantingId: string, archetype?: string): string | undefined {
+    return archetype === 'small-grain.zadoks'
+      ? `/plan/wheat?planting=${encodeURIComponent(plantingId)}`
+      : undefined;
+  }
+
   // ── Nav actions ───────────────────────────────────────────────────
   function selectBlock(id: string) {
     const sp = new URLSearchParams($page.url.searchParams);
@@ -272,6 +281,7 @@
               role={plantingRoleLabel(p)}
               stage={currentStageLabel(blockEvents, p)}
               harvestStart={plantingHarvestLabel(blockEvents, p.id)}
+              detailHref={smallGrainHref(p.id, meta?.archetype)}
               companions={companionsFor(p.id)}
               sourceTag={p.sourceProvenance === 'ai'
                 ? 'AI plan'
@@ -292,6 +302,7 @@
             role={plantingRoleLabel(activePlanting)}
             stage={currentStageLabel(blockEvents, activePlanting)}
             harvestStart={plantingHarvestLabel(blockEvents, activePlanting.id)}
+            detailHref={smallGrainHref(activePlanting.id, meta?.archetype)}
             companions={companionsFor(activePlanting.id)}
             sourceTag={activePlanting.sourceProvenance === 'ai'
               ? 'AI plan'

@@ -1863,7 +1863,8 @@
         daysToMaturity: c.daysToMaturity
           ? Math.round((c.daysToMaturity.min + c.daysToMaturity.max) / 2)
           : undefined,
-        cropFamily: c.cropFamily
+        cropFamily: c.cropFamily,
+        archetype: c.archetype
       }
     ])
   )}

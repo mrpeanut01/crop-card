@@ -45,6 +45,8 @@
     seededAtLabel?: string;
     onCompanionClick?: (plantingId: string) => void;
     onRefine?: () => void;
+    /** Archetype-specific plan view (e.g. /plan/wheat for small grains). */
+    detailHref?: string;
   }
   const {
     planting,
@@ -58,7 +60,8 @@
     refineCount = 0,
     seededAtLabel,
     onCompanionClick,
-    onRefine
+    onRefine,
+    detailHref
   }: Props = $props();
 
   function plantingColor(plantingId: string): string {
@@ -171,6 +174,13 @@
       </div>
     </div>
 
+    {#if detailHref}
+      <a class="detail-link" href={detailHref}>
+        Stages, scab risk &amp; vernalization
+        <ChevronRight size={14} strokeWidth={1.75} />
+      </a>
+    {/if}
+
     {#if companions.length > 0}
       <div class="companions">
         <div class="comp-head">
@@ -226,6 +236,22 @@
 </article>
 
 <style>
+  .detail-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 48px;
+    margin-top: 10px;
+    padding: 0 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: 8px;
+    background: var(--color-cream);
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: none;
+  }
   .pc {
     background: var(--color-paper);
     border: 1px solid var(--color-divider);

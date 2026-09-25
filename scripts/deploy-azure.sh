@@ -97,9 +97,11 @@ fi
 if az acr repository show-tags --name "$ACR" --repository cropcard-web -o tsv 2>/dev/null | grep -qx "$TAG"; then
   echo "image ${TAG} already in registry, skipping build"
 else
-  # Built in ACR so the image is native linux/amd64 regardless of this machine.
-  az acr build --registry "$ACR" --image "cropcard-web:${TAG}" \
-    --file infra/Dockerfile --target runtime --platform linux/amd64 .
+  # Built locally: the Dockerfile uses BuildKit cache mounts, which `az acr build` doesn't support.
+  command -v docker >/dev/null || { echo "docker is not installed" >&2; exit 1; }
+  az acr login --name "$ACR" --output none
+  docker buildx build --platform linux/amd64 --file infra/Dockerfile --target runtime \
+    --tag "$IMAGE" --push .
 fi
 
 az deployment group create -g "$GROUP" --name "$DEPLOYMENT_NAME" \

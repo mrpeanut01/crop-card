@@ -23,7 +23,7 @@
     "diamondback moth (Bt-kurstaki resistant strains)"
   ],
   "pollinatorRisk": "none",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "notes": "Bt aizawai — manages Bt-kurstaki-resistant DBM populations. Rotate with kurstaki for resistance.",
   "complianceFlags": {
     "omriListed": false,

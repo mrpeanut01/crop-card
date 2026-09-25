@@ -28,7 +28,7 @@
     "cabbage looper"
   ],
   "pollinatorRisk": "high",
-  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
   "notes": "Pyrethroid IRAC 3A. Orchard + vegetable workhorse. Bee-toxic — apply at sunset, never on open bloom.",
   "complianceFlags": {
     "omriListed": false,

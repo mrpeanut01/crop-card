@@ -12,6 +12,7 @@
   render continuously with the off-year half rendered at lower opacity.
 -->
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { ShadeImpactEvent } from '$lib/calendar/engine';
   import type { RotationConflict, SameTimeOverlap } from '$lib/calendar/rotation';
   import {
@@ -176,7 +177,7 @@
   let reorderDragId = $state<string | null>(null);
   let reorderOverId = $state<string | null>(null);
 
-  $effect(() => {
+  onMount(() => {
     customOrder = loadBlockOrder();
   });
 

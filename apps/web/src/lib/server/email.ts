@@ -108,7 +108,9 @@ export async function dispatchEmail(email: OutboundEmail): Promise<void> {
 
   if (transport === 'memory') {
     if (!outboxEnabled()) {
-      throw new EmailTransportError('EMAIL_TRANSPORT=memory requires NODE_ENV=test or E2E_OUTBOX=1');
+      throw new EmailTransportError(
+        'EMAIL_TRANSPORT=memory requires NODE_ENV=test or E2E_OUTBOX=1'
+      );
     }
     memoryOutbox.push({ to: email.to, subject, body, email, sentAt: Date.now() });
     if (memoryOutbox.length > OUTBOX_LIMIT) memoryOutbox.shift();

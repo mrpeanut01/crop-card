@@ -15,7 +15,10 @@ import { issueToken } from '$lib/server/apiTokens';
 import { clearOutbox, readOutbox } from '$lib/server/email';
 import { requestMagicLink } from '$lib/server/magicLink';
 import { readSession, type SessionRole } from '$lib/server/session';
-import { actions as verifyActions, load as verifyLoad } from '../../src/routes/auth/verify/+page.server';
+import {
+  actions as verifyActions,
+  load as verifyLoad
+} from '../../src/routes/auth/verify/+page.server';
 import { actions as landingActions } from '../../src/routes/+page.server';
 import { handle, isAnonymous } from '../../src/hooks.server';
 import { GET as outboxGet } from '../../src/routes/_dev/outbox/+server';
@@ -134,7 +137,10 @@ describe('/auth/verify → LoginResult routing', () => {
     assign(ownerId, u.id, 'helper');
     const { location, event } = await redeem(await mintLink(u.email));
     expect(location).toBe('/today');
-    expect(readSession(event.cookies)).toMatchObject({ activeOwnerId: ownerId, activeRole: 'helper' });
+    expect(readSession(event.cookies)).toMatchObject({
+      activeOwnerId: ownerId,
+      activeRole: 'helper'
+    });
   });
 
   it('multi-owner user → /owner-picker with a partial session', async () => {

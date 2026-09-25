@@ -48,7 +48,7 @@ VS Code: open the repo root and choose **Reopen in Container** when prompted.
 
 - **Runtime**: Azure Container Apps (consumption tier, scale-to-zero)
 - **Database**: SQLite + Litestream → Azure Blob Storage (single-writer, ~$1/mo)
-- **Auth**: Auth.js magic-link with `owner` / `helper` roles
+- **Auth**: HMAC cookie sessions; email magic-link sign-in in production (`AUTH_MODE=magic-link`), direct/demo sign-in in dev; per-Owner roles (`owner` / `helper` / `inspector` / `custom-operator`); Bearer tokens for external agents
 - **PWA**: vite-plugin-pwa (Workbox) precaching plugin JSON, dilution tables, shell
 - **Client storage**: Dexie.js → IndexedDB (offline-first per NFR-02)
 

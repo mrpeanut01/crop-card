@@ -91,7 +91,16 @@ describe('normalizeLoginEmail', () => {
   });
 
   it('rejects malformed input', () => {
-    for (const bad of ['', 'nope', 'a@b', 'a b@c.d', null, 42, undefined, `${'x'.repeat(250)}@e.co`])
+    for (const bad of [
+      '',
+      'nope',
+      'a@b',
+      'a b@c.d',
+      null,
+      42,
+      undefined,
+      `${'x'.repeat(250)}@e.co`
+    ])
       expect(normalizeLoginEmail(bad)).toBeNull();
   });
 });
@@ -163,15 +172,7 @@ describe('peek / consume', () => {
   });
 
   it('rejects unknown, malformed and non-string tokens', () => {
-    for (const bad of [
-      undefined,
-      null,
-      '',
-      'short',
-      'x'.repeat(500),
-      123,
-      'A'.repeat(43)
-    ]) {
+    for (const bad of [undefined, null, '', 'short', 'x'.repeat(500), 123, 'A'.repeat(43)]) {
       expect(consumeMagicLink(bad).ok).toBe(false);
       expect(peekMagicLink(bad).ok).toBe(false);
     }
@@ -253,7 +254,9 @@ function fakeEvent(ip: string): RequestEvent {
 describe('handleMagicLinkRequest — no enumeration', () => {
   it('returns the identical generic result for known, unknown and throttled emails', async () => {
     const known = uniqEmail('known');
-    db.insert(users).values({ id: `user_${randomUUID()}`, email: known }).run();
+    db.insert(users)
+      .values({ id: `user_${randomUUID()}`, email: known })
+      .run();
     const unknown = uniqEmail('unknown');
     const throttled = uniqEmail('throttled');
     const now = Date.now();

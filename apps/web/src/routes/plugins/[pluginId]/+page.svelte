@@ -4,6 +4,7 @@
   import PluginRef from '$lib/components/PluginRef.svelte';
   import PluginVersionTimeline from '$lib/components/PluginVersionTimeline.svelte';
   import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
+  import { rangeText } from '$lib/plugins/rangeText';
 
   let { data } = $props();
 
@@ -407,13 +408,14 @@
         </div>
       {/if}
       {#if curing}
+        {@const curingWeeks = rangeText(curing.durationWeeks)}
+        {@const curingMoisture = rangeText(curing.targetMoisturePercent)}
         <div class="bullet-list">
           <strong class="row-label">Post-harvest curing</strong>
           <p class="muted">
             {(curing.method as string) ?? ''}
-            {#if curing.durationWeeks != null}· {curing.durationWeeks} weeks{/if}
-            {#if curing.targetMoisturePercent != null}· target {curing.targetMoisturePercent}%
-              moisture{/if}
+            {#if curingWeeks}· {curingWeeks} weeks{/if}
+            {#if curingMoisture}· target {curingMoisture}% moisture{/if}
             {#if curing.storageLocation}· store at {curing.storageLocation}{/if}
           </p>
         </div>

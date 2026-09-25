@@ -21,23 +21,10 @@ import { equipment, equipmentLog, equipmentState } from './schema';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export type EquipmentType =
-  | 'sprayer'
-  | 'planter'
-  | 'drill'
-  | 'rake'
-  | 'baler'
-  | 'tractor'
-  | 'mower'
-  | 'irrigation'
-  | 'other';
+  'sprayer' | 'planter' | 'drill' | 'rake' | 'baler' | 'tractor' | 'mower' | 'irrigation' | 'other';
 
 export type EquipmentLogKind =
-  | 'use'
-  | 'maintenance'
-  | 'calibration'
-  | 'decon'
-  | 'inspection'
-  | 'note';
+  'use' | 'maintenance' | 'calibration' | 'decon' | 'inspection' | 'note';
 
 export interface Equipment {
   id: string;

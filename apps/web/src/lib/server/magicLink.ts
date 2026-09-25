@@ -213,8 +213,7 @@ export async function requestMagicLink(
 export type MagicLinkInvalidReason = 'invalid' | 'expired' | 'used';
 
 export type MagicLinkCheck =
-  | { ok: true; email: string }
-  | { ok: false; reason: MagicLinkInvalidReason };
+  { ok: true; email: string } | { ok: false; reason: MagicLinkInvalidReason };
 
 function looksLikeToken(token: unknown): token is string {
   return typeof token === 'string' && token.length >= 32 && token.length <= 128;
@@ -278,8 +277,7 @@ function clientAddress(event: RequestEvent): string | null {
 }
 
 export type MagicLinkHttpResult =
-  | { ok: true; message: string }
-  | { ok: false; status: 400 | 503; error: string };
+  { ok: true; message: string } | { ok: false; status: 400 | 503; error: string };
 
 /** Shared by POST /api/auth/magic-link and the landing-page form action. */
 export async function handleMagicLinkRequest(

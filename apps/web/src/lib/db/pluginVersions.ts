@@ -23,12 +23,7 @@ import { unscopedQueryNote } from './tenant';
 import type { PluginDiff } from '$lib/plugins/diff';
 
 export type PluginKind =
-  | 'crop'
-  | 'herbicide'
-  | 'insecticide'
-  | 'fungicide'
-  | 'fertilizer'
-  | 'companion';
+  'crop' | 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'companion';
 
 export interface PluginVersionRow {
   id: string;

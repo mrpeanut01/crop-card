@@ -70,8 +70,7 @@ async function stripePost<T>(path: string, params: FormParams, idempotencyKey: s
     body: formEncode(params)
   });
   const payload = (await res.json().catch(() => null)) as
-    | (T & { error?: { message?: string } })
-    | null;
+    (T & { error?: { message?: string } }) | null;
   if (!res.ok || !payload) {
     const msg = payload?.error?.message ?? `Stripe ${path} failed with ${res.status}`;
     throw new StripeApiError(msg, res.status);

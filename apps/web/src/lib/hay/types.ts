@@ -15,13 +15,7 @@
 export type HayStep = 'mow' | 'ted' | 'rake' | 'bale' | 'store';
 
 export type HayStatus =
-  | 'mowing'
-  | 'tedding'
-  | 'raking'
-  | 'baling'
-  | 'storing'
-  | 'complete'
-  | 'aborted';
+  'mowing' | 'tedding' | 'raking' | 'baling' | 'storing' | 'complete' | 'aborted';
 
 export type BaleType = 'small-square' | 'large-round' | 'large-square';
 

@@ -16,15 +16,7 @@
  */
 
 export type EquipmentType =
-  | 'sprayer'
-  | 'planter'
-  | 'drill'
-  | 'rake'
-  | 'baler'
-  | 'tractor'
-  | 'mower'
-  | 'irrigation'
-  | 'other';
+  'sprayer' | 'planter' | 'drill' | 'rake' | 'baler' | 'tractor' | 'mower' | 'irrigation' | 'other';
 
 /**
  * Pre/post-task templates (Phase 12). When an operator schedules a primary

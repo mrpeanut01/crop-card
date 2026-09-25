@@ -18,14 +18,7 @@ import { stockItems, stockLots, stockMovements } from './schema';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export type StockCategory =
-  | 'herbicide'
-  | 'insecticide'
-  | 'fungicide'
-  | 'fertilizer'
-  | 'seed'
-  | 'adjuvant'
-  | 'fuel'
-  | 'part';
+  'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'seed' | 'adjuvant' | 'fuel' | 'part';
 
 export type MovementReason =
   | 'receipt'

@@ -13,8 +13,7 @@ export interface BatchRow {
 }
 
 export type ScanOutcome =
-  | { ok: true; draft: StockEntryDraft }
-  | { ok: false; stop: boolean; message: string };
+  { ok: true; draft: StockEntryDraft } | { ok: false; stop: boolean; message: string };
 
 export const MAX_BATCH_FILES = 30;
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;

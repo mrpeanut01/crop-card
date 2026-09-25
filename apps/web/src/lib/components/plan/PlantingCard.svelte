@@ -15,11 +15,7 @@
   import { plantingStatus } from '$lib/plan/planV2Derive';
 
   export type PlantingSourceTag =
-    | 'AI plan'
-    | 'Companion AI'
-    | 'Carry-forward'
-    | 'Manual'
-    | 'Perennial';
+    'AI plan' | 'Companion AI' | 'Carry-forward' | 'Manual' | 'Perennial';
 
   interface Props {
     planting: PlantingRecord;

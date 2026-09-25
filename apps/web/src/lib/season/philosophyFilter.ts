@@ -44,10 +44,7 @@ import type {
 
 /** Any plugin type that carries `complianceFlags`. */
 export type FilterableInputPlugin =
-  | HerbicidePlugin
-  | InsecticidePlugin
-  | FungicidePlugin
-  | FertilizerPlugin;
+  HerbicidePlugin | InsecticidePlugin | FungicidePlugin | FertilizerPlugin;
 
 /**
  * Returns true iff `plugin` is allowed under `philosophy`. See file

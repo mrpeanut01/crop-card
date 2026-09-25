@@ -205,7 +205,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const seasonGlance = deriveSeasonGlance({
     activePlantings: totalPlantings,
     spraysYTD,
-    pluginsLoaded: registry.all().length,
     derivedEvents: allEvents,
     now
   });

@@ -4,7 +4,7 @@
    *
    * 1:1 port of the `ATodayScreen` season-glance card in
    * [`direction-almanac-today.jsx`](../../../../docs/design/almanac/direction-almanac-today.jsx)
-   * (lines 376–389). Four big serif numbers.
+   * (lines 376–389). Three big serif numbers.
    */
   import Card from '$lib/components/ui/Card.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
@@ -21,8 +21,7 @@
     [
       glance.daysToNextHarvest === null ? '—' : String(glance.daysToNextHarvest),
       'days to next harvest'
-    ],
-    [String(glance.pluginsLoaded), 'plugins loaded']
+    ]
   ] as const);
 </script>
 
@@ -41,7 +40,7 @@
 <style>
   .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 14px;
     margin-top: 12px;
   }

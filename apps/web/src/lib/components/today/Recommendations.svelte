@@ -1,20 +1,12 @@
 <script lang="ts">
   /**
-   * Phase 25e (#97) — /today recommendations card with AI-on / AI-off
-   * variant per the v2 AI-provenance addendum.
-   *
-   * 1:1 port of the recommendations card in
-   * [`direction-almanac-today.jsx`](../../../../docs/design/almanac/direction-almanac-today.jsx)
-   * (lines 353–375). AI-on label: "Recommended · ranked by Claude" with a
-   * Provenance(ai, confidence) badge. AI-off label: "Recommended · plugin
-   * defaults" with a Provenance(fallback) badge, same items in plugin order.
+   * Phase 25e (#97) — /today recommendations card.
    *
    * Items come from the loader's upcoming-events list (calendar-engine
    * derived). We surface the first 2 + a "see all N" link.
    */
   import Card from '$lib/components/ui/Card.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
-  import Provenance from '$lib/components/ui/Provenance.svelte';
 
   export interface RecommendationItem {
     id: string;
@@ -24,15 +16,11 @@
   }
 
   interface Props {
-    aiEnabled: boolean;
     items: RecommendationItem[];
-    /** Pass through from the loader's existing AI confidence; defaults to 0.86
-     *  when not available, to match the design mockup's example value. */
-    aiConfidence?: number;
     /** Called when user clicks "+ Schedule task" on a recommendation (#105). */
     onSchedule?: (id: string) => void;
   }
-  const { aiEnabled, items, aiConfidence = 0.86, onSchedule }: Props = $props();
+  const { items, onSchedule }: Props = $props();
 
   const visible = $derived(items.slice(0, 2));
   const remaining = $derived(Math.max(0, items.length - visible.length));
@@ -40,26 +28,10 @@
 
 <Card>
   <div class="head">
-    <span
-      title={aiEnabled
-        ? 'When AI is on, the top section ranks these by your fertility + scout history. Without a key, you see the same items in plugin-default order.'
-        : 'AI key not set — listed in plugin-default order. Add a key in Settings → AI to get personalised ranking.'}
-    >
-      <Kicker>
-        {aiEnabled ? 'Recommended · ranked by Claude' : 'Recommended · plugin defaults'}
-      </Kicker>
-    </span>
+    <Kicker>Recommended</Kicker>
     {#if remaining > 0}
       <a class="see-all" href="/plan">See all {items.length} →</a>
     {/if}
-  </div>
-  <div class="prov-row">
-    {#if aiEnabled}
-      <Provenance source="ai" confidence={aiConfidence} />
-    {:else}
-      <Provenance source="fallback" detail="AI off — using plugin order" />
-    {/if}
-    <Provenance source="plugin" detail="crop guides + companion library" compact />
   </div>
   {#if visible.length === 0}
     <div class="empty">
@@ -96,12 +68,6 @@
     color: var(--color-forest);
     font-weight: 600;
     text-decoration: none;
-  }
-  .prov-row {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
   }
   .item {
     padding: 10px 0;

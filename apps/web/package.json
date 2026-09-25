@@ -67,7 +67,7 @@
     "@cropcard/plugin-validation": "workspace:*",
     "@geoman-io/leaflet-geoman-free": "^2.18.0",
     "@zxing/library": "^0.23.0",
-    "better-sqlite3": "^11.5.0",
+    "better-sqlite3": "^13.0.3",
     "dexie": "^4.0.10",
     "drizzle-orm": "^0.36.4",
     "leaflet": "^1.9.4",

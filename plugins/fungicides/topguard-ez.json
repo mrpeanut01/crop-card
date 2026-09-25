@@ -2,6 +2,7 @@
   "pluginId": "topguard-ez",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'TopGuard'). Conventional synthetic product; label has no organic-production statement. Only compost products named 'Desert Topguard' appear. Product identity itself is unverified (no PPLS record for TopGuard EZ / 279-3505)."},
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "TopGuard EZ (flutriafol)",

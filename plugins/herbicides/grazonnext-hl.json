@@ -2,6 +2,7 @@
   "pluginId": "grazonnext-hl",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'GrazonNext', 'aminopyralid'; hits were unrelated products). Label (62719-628 master label accepted 2017-03-13) makes no organic-production claim; conventional synthetic herbicide."},
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "GrazonNext HL (aminopyralid + 2,4-D)",

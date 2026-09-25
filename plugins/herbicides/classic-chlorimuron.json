@@ -2,6 +2,7 @@
   "pluginId": "classic-chlorimuron",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Classic'; 'chlorimuron'). Conventional synthetic herbicide; label carries no organic-production statement."},
   "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Classic (chlorimuron-ethyl)",

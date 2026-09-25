@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Forum (BASF dimethomorph)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Forum'). Label has no organic statement."},
   "formulation": "SC",
   "epaRegistrationNumber": "241-427",
   "defaultUnit": "fl-oz",

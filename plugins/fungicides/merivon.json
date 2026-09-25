@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Merivon (BASF fluxapyroxad + pyraclostrobin)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Merivon'). Label has no organic statement."},
   "formulation": "SC",
   "epaRegistrationNumber": "7969-310",
   "defaultUnit": "fl-oz",

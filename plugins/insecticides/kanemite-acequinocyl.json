@@ -2,6 +2,7 @@
   "pluginId": "kanemite-acequinocyl",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic product (Kanemite 15 SC, UPL NA, EPA 70506-447). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Kanemite', 'acequinocyl'); fuzzy hits were unrelated products. No organic/NOP statement found on the label."},
   "defaultUnit": "fl-oz",
   "formulation": "SC",
   "pluginSchemaVersion": "1.1",

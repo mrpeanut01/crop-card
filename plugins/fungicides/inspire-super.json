@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Inspire Super (Syngenta cyprodinil + difenoconazole)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Inspire'). Conventional DMI + anilinopyrimidine premix; label makes no organic statement."},
   "formulation": "EW",
   "epaRegistrationNumber": "100-1317",
   "defaultUnit": "fl-oz",

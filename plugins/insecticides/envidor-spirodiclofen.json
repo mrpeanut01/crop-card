@@ -2,6 +2,7 @@
   "pluginId": "envidor-spirodiclofen",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Envidor' - 3 NOP results, none Envidor; 'spirodiclofen' - no spirodiclofen product). Conventional synthetic miticide; label (EPA 10163-383, 2026-06-02) makes no organic statement."},
   "defaultUnit": "fl-oz",
   "formulation": "SC",
   "pluginSchemaVersion": "1.1",

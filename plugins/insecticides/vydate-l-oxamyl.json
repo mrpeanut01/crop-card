@@ -2,6 +2,7 @@
   "pluginId": "vydate-l-oxamyl",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic carbamate (oxamyl 24%), Restricted Use Pesticide. No NOP listing on the OMRI Products List (searched 2026-09-25: 'Vydate' -> 0 results, 'oxamyl' -> 1 unrelated copper product). Label (EPA Reg. No. 352-372, accepted 2023-06-28) makes no organic-production statement."},
   "defaultUnit": "fl-oz",
   "formulation": "L",
   "pluginSchemaVersion": "1.1",

@@ -2,6 +2,7 @@
   "pluginId": "acramite-bifenazate",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Acramite', 'bifenazate'). Conventional synthetic miticide; label makes no organic statement."},
   "defaultUnit": "lb",
   "formulation": "WS",
   "pluginSchemaVersion": "1.1",

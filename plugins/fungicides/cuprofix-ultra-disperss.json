@@ -38,7 +38,7 @@
   },
   "notes": "M01 multi-site copper. Phytotoxic on apple after pink stage. Decon sprayer thoroughly — copper residue can damage non-target crops next pass.",
   "complianceFlags": {
-    "omriListed": true,
+    "omriListed": false,
     "nonGmoCompliant": true,
     "transitioningAllowed": true
   },

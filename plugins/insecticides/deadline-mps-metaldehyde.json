@@ -2,6 +2,7 @@
   "pluginId": "deadline-mps-metaldehyde",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Deadline' - no Deadline product among 13 NOP results; 'metaldehyde' - 0 results). Conventional metaldehyde bait; the label (EPA 5481-507, 2015-03-03) makes no organic statement."},
   "formulation": "G",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",

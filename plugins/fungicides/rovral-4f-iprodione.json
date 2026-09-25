@@ -2,6 +2,7 @@
   "pluginId": "rovral-4f-iprodione",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Rovral'). Conventional synthetic product; label has no organic-production statement."},
   "defaultUnit": "fl-oz",
   "formulation": "F",
   "pluginSchemaVersion": "1.1",

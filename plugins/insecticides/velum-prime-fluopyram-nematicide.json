@@ -2,6 +2,7 @@
   "pluginId": "velum-prime-fluopyram-nematicide",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic SDHI (fluopyram 41.5%). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Velum', 'Luna Privilege' -> only unrelated products; 'fluopyram' -> 0). Label (EPA Reg. No. 264-1078, accepted 2026-09-03) makes no organic-production statement."},
   "formulation": "SC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",

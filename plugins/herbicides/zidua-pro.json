@@ -2,6 +2,7 @@
   "pluginId": "zidua-pro",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Zidua', 'pyroxasulfone'; hits were unrelated products). Label (7969-365, accepted 2017-12-28) makes no organic-production claim; conventional synthetic herbicide."},
   "formulation": "SC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",

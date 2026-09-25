@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Captan 80 WDG (Arysta phthalimide)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Captan 80 WDG'; 'Captan'). Label has no organic statement."},
   "epaRegistrationNumber": "70506-445",
   "defaultUnit": "lb",
   "formulation": "WDG",

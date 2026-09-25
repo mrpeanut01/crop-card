@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Headline SC (BASF pyraclostrobin)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Headline'; 0 results). Conventional QoI (pyraclostrobin); label makes no organic statement."},
   "epaRegistrationNumber": "7969-289",
   "defaultUnit": "fl-oz",
   "formulation": "SC",

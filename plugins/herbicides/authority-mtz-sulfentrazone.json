@@ -2,6 +2,7 @@
   "pluginId": "authority-mtz-sulfentrazone",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Authority MTZ', 'Authority'). Conventional synthetic PPO + triazine premix (sulfentrazone + metribuzin, FMC EPA 279-3340); label makes no organic-production claim."},
   "formulation": "DF",
   "defaultUnit": "oz",
   "pluginSchemaVersion": "1.1",

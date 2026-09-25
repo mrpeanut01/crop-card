@@ -2,6 +2,7 @@
   "pluginId": "fulfill-pymetrozine",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic product (Fulfill, ADAMA/Makhteshim Agan, EPA 66222-274). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Fulfill', 'pymetrozine'); fuzzy hits were unrelated products. No organic/NOP statement found on the label."},
   "defaultUnit": "oz",
   "formulation": "WG",
   "pluginSchemaVersion": "1.1",

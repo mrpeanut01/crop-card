@@ -2,6 +2,7 @@
   "pluginId": "aim-ec-carfentrazone",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Aim EC', 'Aim', 'carfentrazone'; hits were unrelated products). Label (279-3241, accepted 2024-02-28) makes no organic-production claim; conventional synthetic herbicide."},
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "pluginSchemaVersion": "1.1",

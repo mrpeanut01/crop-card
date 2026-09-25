@@ -1529,6 +1529,94 @@
         "quote": "F6482 45DF Herbicide is a dry flowable formulation",
         "page": 11
       }
+    ],
+    "m-pede": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": false,
+          "certifiedOrganicAllowed": false
+        },
+        "to": {
+          "omriListed": true,
+          "certifiedOrganicAllowed": true
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=M-Pede",
+        "docDate": "2026-09-25",
+        "quote": "OMRI NOP listing 'M-Pede Insecticide/Miticide/Fungicide', Gowan Company, goc-2510, expires 2026-12-01"
+      }
+    ],
+    "aza-direct": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": false,
+          "certifiedOrganicAllowed": false
+        },
+        "to": {
+          "omriListed": true,
+          "certifiedOrganicAllowed": true
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=Aza-Direct",
+        "docDate": "2026-09-25",
+        "quote": "OMRI NOP listing 'Aza-Direct Botanical Insecticide', Gowan Company, goc-9305, expires 2026-12-01"
+      }
+    ],
+    "kumulus-df": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": true
+        },
+        "to": {
+          "omriListed": false
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=Kumulus",
+        "docDate": "2026-09-25",
+        "quote": "Only OMRI listings are BASF Mexico (asf-15133) and BASF Costa Rica (bbv-16410) products, not the US Kumulus DF (51036-352)"
+      }
+    ],
+    "champ-dp": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": true
+        },
+        "to": {
+          "omriListed": false
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=Champ",
+        "docDate": "2026-09-25",
+        "quote": "OMRI lists Nufarm Champ WG (agt-1382) and ChampION++ (agt-5824), not Champ Dry Prill"
+      }
+    ],
+    "cuprofix-ultra-disperss": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": true
+        },
+        "to": {
+          "omriListed": false
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=Cuprofix",
+        "docDate": "2026-09-25",
+        "quote": "OMRI lists only Cuprofix Flex Dry Flowable (UPL, upi-16918), a different product"
+      }
+    ],
+    "alldown-acetic-citric": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": true
+        },
+        "to": {
+          "omriListed": false
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=AllDown",
+        "docDate": "2026-09-25",
+        "quote": "No OMRI listing for 'AllDown' or 'Summerset'; label does say 'FOR USE IN ORGANIC PRODUCTION' (certifiedOrganicAllowed kept). Both SummerSet registrations (84069-1/-2) inactive since 2025-01-13"
+      }
     ]
   },
   "defaultUnit": {
@@ -1577,6 +1665,542 @@
       "docDate": "2026-09-25",
       "quote": "TRICHOforce™ B – 100,000 ... 50,000 to 100,000 per acre/weekly during moth flight",
       "note": "Producer product page (Beneficial Insectary; T. brassicae), not an EPA label; macro-organisms have none. Sold and released by count. The plugin amount 100000 matches the page's 50,000-100,000/acre, but its unit 'oz' is wrong (see contradictions)."
+    }
+  },
+  "complianceFlags": {
+    "accent-q-nicosulfuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Accent%20Q",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Accent Q' / 'Accent': no Corteva/DuPont Accent product among NOP results"
+    },
+    "acramite-bifenazate": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Acramite",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Acramite' and 'bifenazate': no Acramite/bifenazate product among NOP results"
+    },
+    "actigard-50wg": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Actigard",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Actigard': 14 NOP results, none is Actigard/acibenzolar-S-methyl"
+    },
+    "admiral-igr": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Admiral",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Admiral': 0 total (NOP)"
+    },
+    "aim-ec-carfentrazone": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Aim%20EC",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Aim EC': no product titled Aim EC (NOP)"
+    },
+    "aliette-wdg-fosetyl-al": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Aliette",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Aliette': no product titled Aliette (NOP ruling body)"
+    },
+    "altacor-chlorantraniliprole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Altacor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Altacor': 0 total"
+    },
+    "apollo-clofentezine": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Apollo",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Apollo': no NOP listing for Apollo SC, ADAMA/Makhteshim Agan"
+    },
+    "applaud-buprofezin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=buprofezin",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'buprofezin': 0 total; 'Applaud': 8 NOP results, none an Applaud product"
+    },
+    "aprovia": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Aprovia",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Aprovia': 2 NOP results, neither is Aprovia"
+    },
+    "authority-mtz-sulfentrazone": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Authority%20MTZ",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Authority MTZ' / 'Authority': no FMC Authority product among NOP results"
+    },
+    "balan-benefin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Balan",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Balan': no product titled Balan (NOP)"
+    },
+    "bravo-weather-stik": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Bravo",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Bravo': no NOP product listing for this brand"
+    },
+    "cadet-fluthiacet": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Cadet",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Cadet': 0 total (NOP ruling body)"
+    },
+    "caparol-prometryn": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Caparol",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "capreno-thiencarbazone-tembotrione": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Capreno",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Capreno': 3 total -- Kyprion, CUPROAN PRO+, Copernico HB (copper products, not Capreno)"
+    },
+    "captan-80wdg": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Captan%2080%20WDG",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Captan 80 WDG': no product titled Captan 80 WDG (NOP ruling body)"
+    },
+    "cevya-mefentrifluconazole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Cevya",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Cevya': no NOP product listing for this brand"
+    },
+    "chaparral-aminopyralid-metsulfuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Chaparral",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Chaparral': 2 NOP results, neither a Corteva Chaparral herbicide"
+    },
+    "classic-chlorimuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Classic",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "closer-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Closer",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Closer': no NOP listing for Closer SC, Corteva"
+    },
+    "confirm-2f-tebufenozide": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=tebufenozide",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'tebufenozide': 0 total; 'Confirm 2F': no Confirm/tebufenozide product among NOP results"
+    },
+    "curzate-60df-cymoxanil": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Curzate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Curzate': no NOP product listing for this brand"
+    },
+    "deadline-mps-metaldehyde": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=metaldehyde",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'metaldehyde': 0 total; 'Deadline': 13 NOP results, none a Deadline product"
+    },
+    "dimethoate-4ec": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Dimethoate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Dimethoate': 0 total"
+    },
+    "dithane-rainshield": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Dithane",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Dithane': no product titled Dithane (NOP ruling body)"
+    },
+    "duracor-aminopyralid-florpyrauxifen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=DuraCor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "elevate-50wdg": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Elevate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Elevate': no NOP product listing for this brand"
+    },
+    "endura-boscalid": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Endura",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Endura': no product titled Endura (NOP ruling body)"
+    },
+    "envidor-spirodiclofen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Envidor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Envidor': 3 NOP results, none an Envidor product"
+    },
+    "eptam-eptc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Eptam",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Eptam': 1 NOP result, 'TIS Silicone Adjuvant' (Jiangxi Tiansheng) - not Eptam"
+    },
+    "et-herbicide-pyraflufen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=ET%20Herbicide",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "express-tribenuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Express",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Express': no product titled Express (NOP)"
+    },
+    "fierce-flumioxazin-pyroxasulfone": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Fierce",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Fierce': no Valent Fierce product among NOP results"
+    },
+    "flint-extra": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Flint",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Flint': 21 NOP results, none is Flint Extra/Gem 500 SC"
+    },
+    "folicur-36f-tebuconazole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Folicur",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Folicur': no NOP product listing for this brand"
+    },
+    "forum": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Forum",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Forum': no product titled Forum (NOP ruling body)"
+    },
+    "fulfill-pymetrozine": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Fulfill",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Fulfill': no NOP listing for Fulfill, ADAMA/Makhteshim Agan"
+    },
+    "grazonnext-hl": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=GrazonNext",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'GrazonNext': no product titled GrazonNext (NOP)"
+    },
+    "harmony-sg-thifensulfuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Harmony",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "headline-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Headline",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Headline': 0 NOP results"
+    },
+    "indar-2f": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Indar",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Indar': no product titled Indar (NOP ruling body)"
+    },
+    "inspire-super": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Inspire",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Inspire': 15 NOP results, none is Inspire Super"
+    },
+    "intrepid-edge": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Intrepid%20Edge",
+      "docDate": "2026-09-25",
+      "quote": "No Intrepid Edge / GF-3028 product among OMRI NOP results"
+    },
+    "k-phite-phosphonate": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=K-Phite",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'K-Phite': no NOP product listing for this brand"
+    },
+    "kanemite-acequinocyl": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Kanemite",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Kanemite': no NOP listing for Kanemite 15 SC, UPL NA"
+    },
+    "kasumin-2l-kasugamycin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Kasumin",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Kasumin': no product titled Kasumin (NOP ruling body)"
+    },
+    "luna-tranquility": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Luna",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Luna': 99 NOP results, only Luna match is 'Penn Perlite Horticultural: Screened Luna Rock'"
+    },
+    "manzate-pro-stick": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Manzate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Manzate': no NOP product listing for this brand"
+    },
+    "merivon": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Merivon",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Merivon': no product titled Merivon (NOP ruling body)"
+    },
+    "method-aminocyclopyrachlor": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Method%20240SL",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "miravis-pydiflumetofen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Miravis",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Miravis': no product titled Miravis (NOP ruling body)"
+    },
+    "mycoshield-oxytetracycline": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Mycoshield",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Mycoshield': 1 NOP result, 'Farmonic MycoShield Mycorrhizal Inoculant' (different product)"
+    },
+    "oberon-spiromesifen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Oberon",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Oberon': 0 total"
+    },
+    "omega-500f-fluazinam": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Omega%20500F",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Omega 500F': no product titled Omega 500F (NOP ruling body)"
+    },
+    "onager-hexythiazox": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Onager",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Onager': no NOP listing for Onager Miticide, Gowan"
+    },
+    "orondis-opti": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Orondis",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Orondis': 2 NOP results, neither is Orondis"
+    },
+    "phostrol-phosphonate": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Phostrol",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Phostrol': no product titled Phostrol (NOP ruling body)"
+    },
+    "portal-xlo": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Portal",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'fenpyroximate': 0 total"
+    },
+    "presidio-fluopicolide": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Presidio",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Presidio': 80 NOP results, none is Presidio Fungicide"
+    },
+    "previcur-flex-propamocarb": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Previcur",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Previcur': no NOP product listing for this brand"
+    },
+    "pristine": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Pristine",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Pristine': no product titled Pristine (NOP ruling body)"
+    },
+    "prophyt-phosphonate": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=ProPhyt",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'ProPhyt': 36 NOP results, none is ProPhyt/Helena ProPhyt"
+    },
+    "quadris-flowable": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Quadris",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Quadris': no NOP product listing for this brand"
+    },
+    "quintec-quinoxyfen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Quintec",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Quintec': no product titled Quintec (NOP ruling body)"
+    },
+    "rally-40wsp": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Rally",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Rally': 113 NOP results, none is Rally 40WSP/myclobutanil"
+    },
+    "ranman": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Ranman",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Ranman': no NOP product listing for this brand"
+    },
+    "raptor-imazamox": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Raptor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Raptor': no product titled Raptor (NOP)"
+    },
+    "regalia": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Regalia",
+      "docDate": "2026-09-25",
+      "quote": "REGALIA Biofungicide | ProFarm Group | pfb-18571 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
+    "resicore-rev": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Resicore",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "revus": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Revus",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Revus': no NOP product listing for this brand"
+    },
+    "ridomil-gold-sl": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Ridomil%20Gold",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Ridomil Gold': no product titled Ridomil Gold (NOP ruling body)"
+    },
+    "rovral-4f-iprodione": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Rovral",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Rovral': no NOP product listing for this brand"
+    },
+    "scala-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Scala",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Scala': no product titled Scala (NOP ruling body)"
+    },
+    "sencor-metribuzin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Sencor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "serenade-aso": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Serenade",
+      "docDate": "2026-09-25",
+      "quote": "Bayer Serenade ASO | Bayer CropScience LP | gus-4423 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
+    "sharpen-saflufenacil": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Sharpen",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Sharpen': no product titled Sharpen (NOP)"
+    },
+    "switch-625wg": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Switch%2062.5WG",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Switch 62.5WG': no product titled Switch 62.5WG (NOP ruling body)"
+    },
+    "tilt-36ec-propiconazole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Tilt",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Tilt': 4 NOP results, none is Tilt"
+    },
+    "topguard-ez": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=TopGuard",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'TopGuard': no NOP product listing for this brand"
+    },
+    "topsin-m-wsb": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Topsin",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Topsin': no product titled Topsin (NOP ruling body)"
+    },
+    "torac-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Torac",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Torac': no NOP listing for Torac SC, Nichino America"
+    },
+    "velista-penthiopyrad": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Velista",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Velista': no NOP product listing for this brand"
+    },
+    "velum-prime-fluopyram-nematicide": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Velum",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'fluopyram': 0 total"
+    },
+    "verdict-saflufenacil-dimethenamid": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Verdict",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "voliam-xpress": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Voliam",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Voliam': 4 NOP results, none a Voliam product"
+    },
+    "vydate-l-oxamyl": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Vydate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Vydate': 0 total"
+    },
+    "zampro-ametoctradin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Zampro",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Zampro': no product titled Zampro (NOP ruling body)"
+    },
+    "zidua-pro": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Zidua",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Zidua': no product titled Zidua (NOP)"
     }
   }
 }

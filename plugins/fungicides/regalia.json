@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Regalia (Marrone Bio Reynoutria sachalinensis — OMRI)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": true, "certifiedOrganicAllowed": true, "notes": "OMRI Products List (searched 2026-09-25: 'Regalia'): 'REGALIA Biofungicide', ProFarm Group, code pfb-18571, NOP, Allowed with Restrictions, expires 2027-06-01. 'REGALIA Biofungicide' is a listed alternate brand name of 84059-3 (ProFarm Group). Label carries optional '(For Organic Production)' statement (p.4)."},
   "formulation": "EC",
   "epaRegistrationNumber": "84059-3",
   "defaultUnit": "fl-oz",

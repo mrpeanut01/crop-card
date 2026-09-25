@@ -25,7 +25,7 @@
   "deconRequired": false,
   "epaRegistrationNumber": "67702-25",
   "complianceFlags": {
-    "omriListed": true,
+    "omriListed": false,
     "nonGmoCompliant": true,
     "certifiedOrganicAllowed": true,
     "transitioningAllowed": true

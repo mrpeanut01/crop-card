@@ -2,6 +2,7 @@
   "pluginId": "ridomil-gold-sl",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Ridomil Gold'). Label has no organic statement."},
   "defaultUnit": "fl-oz",
   "formulation": "SL",
   "pluginSchemaVersion": "1.1",

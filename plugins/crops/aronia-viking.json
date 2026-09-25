@@ -1,0 +1,39 @@
+{
+  "pluginId": "aronia-viking",
+  "type": "crop",
+  "displayName": "Aronia Viking (chokeberry)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 730,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "soilTempMinF": 40,
+    "rowSpacingIn": 96,
+    "inRowSpacingIn": {
+      "min": 48,
+      "max": 60
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "North American native black chokeberry. Very high anthocyanin and antioxidant content. Cold-hardy to zone 3.",
+  "harvestIndicators": [
+    "Deep black-purple clusters, full color, slight give"
+  ],
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  },
+  "archetype": "perennial-vine-quality"
+}

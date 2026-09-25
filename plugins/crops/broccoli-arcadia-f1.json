@@ -1,0 +1,37 @@
+{
+  "pluginId": "broccoli-arcadia-f1",
+  "type": "crop",
+  "displayName": "Broccoli Arcadia F1 (cold-hardy)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 63,
+    "max": 70
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Cold-hardy main-season broccoli hybrid. Suited to fall harvest in the north. Strong side-shoot production after main head cut.",
+  "harvestIndicators": [
+    "6 to 7 inch domed head with tight blue-green beads"
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  },
+  "archetype": "winter-squash-cure"
+}

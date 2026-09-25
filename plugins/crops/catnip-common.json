@@ -1,0 +1,37 @@
+{
+  "pluginId": "catnip-common",
+  "type": "crop",
+  "displayName": "Catnip Common (Nepeta cataria)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "culinary-herb",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 80,
+    "max": 100
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Hardy mint-family perennial. Pet product market staple. Nepetalactone repels mosquitoes and cockroaches.",
+  "harvestIndicators": [
+    "Stems cut at first bloom for highest nepetalactone content"
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 110,
+    "beeAttractive": true
+  },
+  "archetype": "cut-and-come-again-leafy"
+}

@@ -1,0 +1,37 @@
+{
+  "pluginId": "bok-choy-white-stem",
+  "type": "crop",
+  "displayName": "Bok Choy White Stem (Joi Choi F1)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 45,
+    "max": 50
+  },
+  "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 18,
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "White-stemmed pak choy hybrid. Heat-tolerant for spring through fall succession. Strong CSA and Asian-market seller.",
+  "harvestIndicators": [
+    "10 to 12 inch upright plant, firm white petioles"
+  ],
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  },
+  "archetype": "winter-squash-cure",
+  "harvestStyle": "single-event"
+}

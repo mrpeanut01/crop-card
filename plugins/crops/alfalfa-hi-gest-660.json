@@ -1,0 +1,36 @@
+{
+  "pluginId": "alfalfa-hi-gest-660",
+  "type": "crop",
+  "displayName": "Alfalfa Hi-Gest 660 (low-lignin forage)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "forage",
+  "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 90
+  },
+  "defaultRowSpacingInches": 7,
+  "plantingGuide": {
+    "soilTempMinF": 55,
+    "rowSpacingIn": 7,
+    "inRowSpacingIn": {
+      "min": 7,
+      "max": 7
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 4
+  },
+  "notes": "Alforex Hi-Gest series. Conventionally-bred low-lignin alfalfa with extended cutting window. Higher fiber digestibility.",
+  "harvestIndicators": [
+    "Late bud stage, 10% bloom maximum for high-quality forage"
+  ],
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  },
+  "archetype": "forage-cutting-cycle",
+  "harvestStyle": "forage-cutting-cycle"
+}

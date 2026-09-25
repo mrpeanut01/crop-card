@@ -1,0 +1,39 @@
+{
+  "pluginId": "beet-golden-touchstone",
+  "type": "crop",
+  "displayName": "Beet Touchstone Gold",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "root",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 55,
+    "max": 60
+  },
+  "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 12,
+    "inRowSpacingIn": {
+      "min": 3,
+      "max": 4
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Improved golden beet with stronger germination than older Burpees Golden. Color does not bleed in cooking.",
+  "harvestIndicators": [
+    "2 to 3 inch yellow-gold round root, smooth shoulders"
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "monthsOfYear": [
+      6,
+      7
+    ],
+    "beeAttractive": false
+  },
+  "archetype": "winter-squash-cure"
+}

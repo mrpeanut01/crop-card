@@ -1,0 +1,37 @@
+{
+  "pluginId": "baby-kale-blend",
+  "type": "crop",
+  "displayName": "Baby Kale Blend (multi-color baby leaf)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 25,
+    "max": 40
+  },
+  "defaultRowSpacingInches": 6,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 6,
+    "inRowSpacingIn": {
+      "min": 1,
+      "max": 2
+    }
+  },
+  "agronomy": {
+    "lifecycle": "biennial",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Multi-cultivar blend (typically Red Russian, Lacinato, Curly, Redbor) for baby-leaf salad mix. Direct-sow densely; cut at 3 to 4 inches.",
+  "harvestIndicators": [
+    "Tender 3 to 4 inch leaves before stem texture toughens"
+  ],
+  "harvestStyle": "cut-and-come-again",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  },
+  "archetype": "cut-and-come-again-leafy"
+}

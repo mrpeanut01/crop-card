@@ -48,6 +48,9 @@ param dnsZoneName string = ''
 @description('Labels of dnsZoneName bound to the web app, \'@\' for the apex, e.g. [\'app\', \'www\', \'@\']. The first becomes ORIGIN; the rest redirect to it.')
 param customHosts array = []
 
+@description('Extra TXT records in dnsZoneName, relative name → value (mail DKIM and the like). Each value must fit one 255-char string.')
+param dnsTxtRecords object = {}
+
 @description('Public DNS for every custom hostname already resolves to this app (checked by deploy-azure.sh). Gates the hostname bindings and the managed certificate requests.')
 param customDomainDnsReady bool = false
 
@@ -372,6 +375,15 @@ resource hostAsuid 'Microsoft.Network/dnsZones/TXT@2018-05-01' = [for h in (useD
   properties: {
     TTL: 3600
     TXTRecords: [{ value: [app.properties.customDomainVerificationId] }]
+  }
+}]
+
+resource extraTxt 'Microsoft.Network/dnsZones/TXT@2018-05-01' = [for r in items(useDomain ? dnsTxtRecords : {}): {
+  parent: dnsZone
+  name: r.key
+  properties: {
+    TTL: 3600
+    TXTRecords: [{ value: [r.value] }]
   }
 }]
 

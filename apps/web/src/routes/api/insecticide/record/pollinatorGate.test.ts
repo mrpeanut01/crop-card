@@ -6,12 +6,17 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getRegistry, getBlock, geometryCentroid, insertInsecticideEvent } = vi.hoisted(() => ({
-  getRegistry: vi.fn(),
-  getBlock: vi.fn(),
-  geometryCentroid: vi.fn(() => null),
-  insertInsecticideEvent: vi.fn(() => ({ id: 'evt-1' }))
-}));
+const { getRegistry, getBlock, listBlocks, geometryCentroid, insertInsecticideEvent } = vi.hoisted(
+  () => ({
+    getRegistry: vi.fn(),
+    getBlock: vi.fn(),
+    listBlocks: vi.fn((): unknown[] => []),
+    geometryCentroid: vi.fn((g: string): { lat: number; lon: number } | null =>
+      g ? (JSON.parse(g) as { lat: number; lon: number }) : null
+    ),
+    insertInsecticideEvent: vi.fn(() => ({ id: 'evt-1' }))
+  })
+);
 
 vi.mock('$lib/server/auth', () => ({ currentUser: () => ({ id: 'u1', role: 'owner' }) }));
 vi.mock('$lib/server/session', () => ({ canMutate: (r: string) => r !== 'inspector' }));
@@ -23,7 +28,7 @@ vi.mock('$lib/db/insecticideEvents', () => ({
   listInsecticideEvents: vi.fn(() => [])
 }));
 vi.mock('$lib/db/scoutObservations', () => ({ listScoutObservations: vi.fn(() => []) }));
-vi.mock('$lib/db/blocks', () => ({ getBlock, geometryCentroid }));
+vi.mock('$lib/db/blocks', () => ({ getBlock, listBlocks, geometryCentroid }));
 vi.mock('$lib/schedule/settings', () => ({
   getFarmLatLon: () => ({ lat: 39.1157, lon: -77.5636 })
 }));
@@ -74,7 +79,14 @@ const PLUGINS: Record<string, unknown> = {
   squash: {
     pluginId: 'squash',
     type: 'crop',
+    displayName: 'Squash',
     bloomWindow: { continuous: true, daysFromPlantingMin: 30, beeAttractive: true }
+  },
+  wheat: {
+    pluginId: 'wheat',
+    type: 'crop',
+    displayName: 'Wheat',
+    bloomWindow: { monthsOfYear: [5, 6], beeAttractive: false }
   }
 };
 
@@ -100,6 +112,7 @@ beforeEach(() => {
     get: (id: string) => (PLUGINS[id] ? { plugin: PLUGINS[id], hash: 'h' } : undefined)
   });
   getBlock.mockReturnValue({ plantings: [] });
+  listBlocks.mockReturnValue([]);
 });
 
 afterEach(() => {
@@ -310,6 +323,80 @@ describe('POST /api/insecticide/record — #130 attestation persistence', () => 
         attestedNoForagers: false,
         pollinatorVerdict: 'pass'
       })
+    );
+  });
+});
+
+describe('POST /api/insecticide/record — nearby pollinator-attractive blocks advisory', () => {
+  const geo = (lat: number, lon: number) => JSON.stringify({ lat, lon });
+  const planted = MIDNIGHT_EDT - 60 * 86_400_000;
+  const planting = (cropPluginId: string) => ({
+    cropPluginId,
+    varietyDisplayName: cropPluginId,
+    plantingDate: planted
+  });
+  function farm() {
+    listBlocks.mockReturnValue([
+      { id: 'blk-1', name: 'Treated', geometryGeojson: geo(39.1, -77.5), plantings: [] },
+      {
+        id: 'near',
+        name: 'Squash patch',
+        geometryGeojson: geo(39.104, -77.5),
+        plantings: [planting('squash')]
+      },
+      {
+        id: 'grain',
+        name: 'Wheat',
+        geometryGeojson: geo(39.101, -77.5),
+        plantings: [planting('wheat')]
+      },
+      {
+        id: 'far',
+        name: 'Far squash',
+        geometryGeojson: geo(39.15, -77.5),
+        plantings: [planting('squash')]
+      },
+      { id: 'nogeo', name: 'Unmapped', geometryGeojson: undefined, plantings: [planting('squash')] }
+    ]);
+  }
+
+  it('returns a nearby-blocks warning listing in-range attractive blocks for a bee-toxic product', async () => {
+    farm();
+    const res = await post({
+      productPluginIds: ['pyrethroid'],
+      occurredAt: MIDNIGHT_EDT,
+      bloomStatus: 'in-bloom'
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    const nearby = body.pollinatorWarnings.find((c: { id: string }) => c.id === 'nearby-blocks');
+    expect(nearby.status).toBe('warn');
+    expect(nearby.blocks.map((b: { blockId: string }) => b.blockId)).toEqual(['near']);
+    expect(nearby.blocks[0].reason).toBe('in-bloom');
+    expect(nearby.blocks[0].distanceFt).toBeGreaterThan(1000);
+    expect(nearby.blocks[0].distanceFt).toBeLessThan(2000);
+    expect(nearby.unknownDistance.map((b: { blockId: string }) => b.blockId)).toEqual(['nogeo']);
+  });
+
+  it('never blocks: a nearby attractive block does not stop a pass-verdict record', async () => {
+    farm();
+    const res = await post({
+      productPluginIds: ['neonic'],
+      occurredAt: NOON_EDT,
+      bloomStatus: 'not-in-bloom'
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.pollinatorWarnings.map((c: { id: string }) => c.id)).toEqual(['nearby-blocks']);
+  });
+
+  it('stays silent for a relatively-nontoxic product', async () => {
+    farm();
+    const res = await post({ productPluginIds: ['bt'], occurredAt: MIDNIGHT_EDT });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.pollinatorWarnings.some((c: { id: string }) => c.id === 'nearby-blocks')).toBe(
+      false
     );
   });
 });

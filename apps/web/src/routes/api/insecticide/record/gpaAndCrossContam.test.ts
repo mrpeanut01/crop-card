@@ -60,6 +60,7 @@ vi.mock('$lib/db/insecticideEvents', () => ({
 vi.mock('$lib/db/scoutObservations', () => ({ listScoutObservations: vi.fn(() => []) }));
 vi.mock('$lib/db/blocks', () => ({
   getBlock: vi.fn(() => ({ plantings: [] })),
+  listBlocks: vi.fn(() => []),
   geometryCentroid: vi.fn(() => null)
 }));
 vi.mock('$lib/schedule/settings', () => ({

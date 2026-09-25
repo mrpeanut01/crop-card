@@ -1,3 +1,5 @@
+import { minutesInWords, withOriginBoundLine } from './otpMessage';
+
 /**
  * Email transport (Phase 18e foundation + Sprint 21 production adapter).
  *
@@ -55,6 +57,8 @@ interface ContactCodeEmail {
   code: string;
   /** ms-epoch expiry. */
   expiresAt: number;
+  /** Site origin for the autofill line; null skips it. */
+  origin: string | null;
 }
 
 export type OutboundEmail = InviteEmail | MagicLinkEmail | ContactCodeEmail;
@@ -270,9 +274,9 @@ function subjectFor(email: OutboundEmail): string {
     case 'helper-invite':
       return `You've been invited to ${email.ownerName} on CropCard`;
     case 'magic-link':
-      return `Your CropCard sign-in link (code ${email.code})`;
+      return `Your CropCard sign-in code is ${email.code}`;
     case 'contact-code':
-      return `Your CropCard verification code: ${email.code}`;
+      return `Your CropCard verification code is ${email.code}`;
   }
 }
 
@@ -297,33 +301,37 @@ function bodyFor(email: OutboundEmail): string {
         .join('\n');
     }
     case 'magic-link': {
-      const minutes = Math.max(1, Math.round((email.expiresAt - Date.now()) / 60_000));
-      return [
-        `Hi,`,
-        ``,
-        `Use this link to sign in to CropCard (expires in ${minutes} minutes, works once):`,
-        email.loginUrl,
-        ``,
-        `Signing in on another device? Enter this code instead: ${email.code}`,
-        ``,
-        `If you didn't ask to sign in, you can ignore this email.`,
-        ``,
-        `— CropCard`
-      ].join('\n');
+      const expires = minutesInWords(email.expiresAt - Date.now());
+      return withOriginBoundLine(
+        [
+          `Your CropCard sign-in code is ${email.code}.`,
+          ``,
+          `Enter it on the sign-in screen, or use this link on this device (it expires in ${expires} and works once):`,
+          email.loginUrl,
+          ``,
+          `If you didn't ask to sign in, you can ignore this email.`,
+          ``,
+          `— CropCard`
+        ],
+        new URL(email.loginUrl).origin,
+        email.code
+      );
     }
     case 'contact-code': {
-      const minutes = Math.max(1, Math.round((email.expiresAt - Date.now()) / 60_000));
-      return [
-        `Hi,`,
-        ``,
-        `Enter this code in CropCard to add this email to your account (expires in ${minutes} minutes):`,
-        ``,
-        email.code,
-        ``,
-        `If you didn't ask for this, you can ignore this email.`,
-        ``,
-        `— CropCard`
-      ].join('\n');
+      const expires = minutesInWords(email.expiresAt - Date.now());
+      return withOriginBoundLine(
+        [
+          `Your CropCard verification code is ${email.code}.`,
+          ``,
+          `Enter it in CropCard to add this email to your account. It expires in ${expires}.`,
+          ``,
+          `If you didn't ask for this, you can ignore this email.`,
+          ``,
+          `— CropCard`
+        ],
+        email.origin,
+        email.code
+      );
     }
   }
 }

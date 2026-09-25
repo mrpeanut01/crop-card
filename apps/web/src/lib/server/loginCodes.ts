@@ -23,8 +23,9 @@ import { and, desc, eq, gt, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { loginCodes, loginTokens, users } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
-import { formatPhone, type Identifier } from '$lib/identity';
+import { type Identifier } from '$lib/identity';
 import { dispatchEmail } from './email';
+import { smsLinkBody, smsLoginBody } from './otpMessage';
 import { dispatchSms } from './sms';
 
 export const CODE_LENGTH = 6;
@@ -120,21 +121,6 @@ function purge(now: number): void {
     .run();
 }
 
-/** The web-OTP suffix lets iOS/Android offer the code as a one-tap autofill. */
-function smsLoginBody(code: string, origin: string | null): string {
-  const lines = [
-    `${code} is your CropCard sign-in code. It expires in 10 minutes. Don't share it.`
-  ];
-  if (origin) {
-    try {
-      lines.push('', `@${new URL(origin).host} #${code}`);
-    } catch {
-      // Malformed origin: skip the autofill hint.
-    }
-  }
-  return lines.join('\n');
-}
-
 export interface SmsLoginRequest {
   phone: string;
   ip: { hash: string; max: number };
@@ -165,7 +151,11 @@ export async function requestSmsLogin(
     ttlMs: SMS_CODE_TTL_MS,
     now
   });
-  await dispatchSms({ to: req.phone, kind: 'login-code', body: smsLoginBody(code, req.origin) });
+  await dispatchSms({
+    to: req.phone,
+    kind: 'login-code',
+    body: smsLoginBody(code, SMS_CODE_TTL_MS, req.origin)
+  });
   return { outcome: 'sent' };
 }
 
@@ -262,6 +252,8 @@ export type LinkRequestResult =
 export async function requestLinkCode(opts: {
   userId: string;
   identifier: Identifier;
+  /** Site origin for the autofill line; null skips it. */
+  origin: string | null;
   now?: number;
 }): Promise<LinkRequestResult> {
   unscopedQueryNote('linking a sign-in identity touches the global users table');
@@ -293,12 +285,12 @@ export async function requestLinkCode(opts: {
     now
   });
   if (channel === 'email') {
-    await dispatchEmail({ kind: 'contact-code', to: value, code, expiresAt });
+    await dispatchEmail({ kind: 'contact-code', to: value, code, expiresAt, origin: opts.origin });
   } else {
     await dispatchSms({
       to: value,
       kind: 'verify-phone',
-      body: `${code} is your CropCard code to add ${formatPhone(value)} to your account. It expires in 15 minutes.`
+      body: smsLinkBody(code, LINK_CODE_TTL_MS, opts.origin)
     });
   }
   return { ok: true, expiresAt };

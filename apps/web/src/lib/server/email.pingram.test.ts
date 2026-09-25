@@ -36,7 +36,7 @@ describe('Pingram transport', () => {
     expect(body).toMatchObject({
       type: 'magic-link',
       to: 'owner@example.com',
-      subject: 'Your CropCard sign-in link (code 042917)',
+      subject: 'Your CropCard sign-in code is 042917',
       fromName: 'CropCard'
     });
     expect(body.fromAddress).toBeUndefined();

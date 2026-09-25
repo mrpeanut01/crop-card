@@ -1,4 +1,6 @@
 <script lang="ts">
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
@@ -103,7 +105,7 @@
   let cropFamily = $state<CropFamily>('corn');
   let cropDtmMin = $state<number | undefined>(undefined);
   let cropDtmMax = $state<number | undefined>(undefined);
-  let cropRowSpacing = $state<number | undefined>(undefined);
+  let cropRowSpacing = $state<number | null>(null);
   let cropPHI = $state<number | undefined>(undefined);
   let cropIndicators = $state('');
   let cropNotes = $state('');
@@ -579,7 +581,7 @@
       pluginSchemaVersion: '1.1' as const,
       cropFamily,
       ...(cropDtmMin && cropDtmMax ? { daysToMaturity: { min: cropDtmMin, max: cropDtmMax } } : {}),
-      ...(cropRowSpacing ? { defaultRowSpacingInches: cropRowSpacing } : {}),
+      ...(cropRowSpacing ? { defaultRowSpacingInches: Number(cropRowSpacing.toFixed(2)) } : {}),
       ...(cropPHI != null ? { preHarvestIntervalDays: cropPHI } : {}),
       ...(indicators.length > 0 ? { harvestIndicators: indicators } : {}),
       ...(cropNotes.trim() ? { notes: cropNotes.trim() } : {}),
@@ -834,8 +836,8 @@
           <input type="number" min="1" bind:value={cropDtmMax} />
         </label>
         <label>
-          Default row spacing (in)
-          <input type="number" min="1" bind:value={cropRowSpacing} />
+          Default row spacing ({fmt.unit('length')})
+          <UnitInput quantity="length" min={1} suffix={false} bind:value={cropRowSpacing} />
         </label>
         <label>
           <span class="label-row">
@@ -1521,6 +1523,7 @@
   }
   input[type='text'],
   input[type='number'],
+  label :global(.unit-input input),
   select,
   textarea {
     padding: 0.5rem 0.6rem;

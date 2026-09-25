@@ -6,6 +6,8 @@
  * round-trips through the API as a decimal.
  */
 
+import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
+
 export type LiquidUnit = 'fl-oz' | 'pt' | 'qt' | 'gal';
 export type SolidUnit = 'oz' | 'lb' | 'kg' | 'g';
 /** Discrete-count units. `seeds` is a 1:1 plant equivalent for the
@@ -86,4 +88,77 @@ export function toStorage(
   const converted = convert(amount, fromUnit, defaultUnit);
   if (converted === null) return null;
   return toHundredths(converted);
+}
+
+const ML_PER_FL_OZ = 29.5735295625;
+const GRAMS_PER_OZ = 28.349523125;
+
+const num = (v: number, digits: number) =>
+  v.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+
+function metricEquivalent(amount: number, unit: StockUnit): string | null {
+  if (isLiquid(unit)) {
+    const ml = amount * LIQUID_FL_OZ_PER_UNIT[unit] * ML_PER_FL_OZ;
+    return Math.abs(ml) < 1000 ? `${num(ml, 0)} mL` : `${num(ml / 1000, 1)} L`;
+  }
+  if (unit === 'lb' || unit === 'oz') {
+    const g = amount * (unit === 'lb' ? 16 : 1) * GRAMS_PER_OZ;
+    return Math.abs(g) < 1000 ? `${num(g, 0)} g` : `${num(g / 1000, 1)} kg`;
+  }
+  return null;
+}
+
+export interface StockDisplayOpts {
+  digits?: number;
+  /** Pesticide stock is shown in its label unit, metric alongside. */
+  labelUnit?: boolean;
+}
+
+/** A stored stock quantity for display. US users see it as stored
+ *  ("12.0 gal"). Metric users see plain weights/volumes converted
+ *  ("45.4 L"), or, for label-unit stock, "12.0 gal (45.4 L)". Counts,
+ *  bags and already-metric units are never converted. */
+export function formatStockQuantity(
+  amount: number | null | undefined,
+  unit: StockUnit | string,
+  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS,
+  opts: StockDisplayOpts = {}
+): string {
+  if (amount === null || amount === undefined || !Number.isFinite(amount)) return '—';
+  const us = `${opts.digits === undefined ? amount.toFixed(1) : num(amount, opts.digits)} ${unit}`;
+  if (prefs.units !== 'metric') return us;
+  const metric = (ALL_STOCK_UNITS as ReadonlyArray<string>).includes(unit)
+    ? metricEquivalent(amount, unit as StockUnit)
+    : null;
+  if (!metric) return us;
+  return opts.labelUnit ? `${us} (${metric})` : metric;
+}
+
+const PESTICIDE_CATEGORIES = new Set(['herbicide', 'insecticide', 'fungicide', 'pesticide']);
+
+export function isLabelUnitCategory(category: string | null | undefined): boolean {
+  return !!category && PESTICIDE_CATEGORIES.has(category);
+}
+
+const ACRES_PER_HA = 2.471053814671653;
+const PER_AREA = /^\s*(fl[\s-]?oz|pt|qt|gal|oz|lb)s?\s*(?:\/|-per-|\s+per\s+)\s*(?:ac|acre|a)\s*$/i;
+
+/** A per-acre rate whose unit is free text ("22 fl oz/ac", "150 lb/acre").
+ *  Label rates keep the label unit first; other rates convert outright.
+ *  Units that aren't a plain weight or volume per acre stay as written. */
+export function formatRateText(
+  amount: number | null | undefined,
+  unit: string,
+  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS,
+  opts: { labelUnit?: boolean } = {}
+): string {
+  if (amount === null || amount === undefined || !Number.isFinite(amount)) return '—';
+  const us = `${amount} ${unit}`;
+  if (prefs.units !== 'metric') return us;
+  const m = PER_AREA.exec(unit);
+  if (!m) return us;
+  const base = m[1].toLowerCase().replace(/^fl[\s-]?oz$/, 'fl-oz') as StockUnit;
+  const perHa = metricEquivalent(amount * ACRES_PER_HA, base);
+  if (!perHa) return us;
+  return opts.labelUnit ? `${us} (${perHa}/ha)` : `${perHa}/ha`;
 }

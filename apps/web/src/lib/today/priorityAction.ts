@@ -16,6 +16,7 @@
 
 import type { CalendarEvent } from '$lib/calendar/engine';
 import type { Task } from '$lib/db/tasks';
+import { formatCalendarDate } from '$lib/prefs';
 
 export type PriorityActionKind = 'task' | 'derived';
 
@@ -134,11 +135,7 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
     if (top.equipmentId) scope.push(['Equipment', top.equipmentId]);
     scope.push([
       'Scheduled',
-      new Date(top.scheduledFor).toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric'
-      })
+      formatCalendarDate(top.scheduledFor, 'month-day', { weekday: 'short' })
     ]);
     return {
       kind: 'task',
@@ -166,14 +163,7 @@ export function derivePriorityAction(inputs: DerivePriorityInputs): PriorityActi
     const blockName = ev.blockId ? inputs.blockNameById.get(ev.blockId) : undefined;
     const scope: Array<[string, string]> = [];
     if (blockName) scope.push(['Block', blockName]);
-    scope.push([
-      'Window closes',
-      new Date(ev.endMs).toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric'
-      })
-    ]);
+    scope.push(['Window closes', formatCalendarDate(ev.endMs, 'month-day', { weekday: 'short' })]);
     return {
       kind: 'derived',
       title: ev.title,

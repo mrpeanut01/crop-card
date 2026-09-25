@@ -1,6 +1,7 @@
 import { eventsForPlanting, type CalendarEvent } from '$lib/calendar/engine';
 import type { BlockWithPlantings, PlantingRecord } from '$lib/db/blocks';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import { DEFAULT_PREFS, formatCalendarDate, formatQuantity, type Prefs } from '$lib/prefs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -57,7 +58,7 @@ export function currentStageLabel(
 }
 
 function fmtMonthDay(ms: number): string {
-  return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return formatCalendarDate(ms, 'month-day');
 }
 
 /**
@@ -102,8 +103,8 @@ export function blockStatusTone(s: BlockStatus): 'forest' | 'sky' | 'wheat' | 'n
   return s === 'active' ? 'forest' : s === 'planned' ? 'sky' : s === 'mature' ? 'wheat' : 'neutral';
 }
 
-export function fmtAcres(acres: number): string {
-  return `${Number(acres.toFixed(2))} ac`;
+export function fmtAcres(acres: number, prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS): string {
+  return formatQuantity(acres, 'area', prefs);
 }
 
 const PLAN_V2_EVENT_KINDS = new Set<CalendarEvent['kind']>([

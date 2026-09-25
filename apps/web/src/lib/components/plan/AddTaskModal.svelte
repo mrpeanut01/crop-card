@@ -1,5 +1,6 @@
 <script lang="ts">
   import Modal from '$lib/components/ui/Modal.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   export interface AddTaskPlantingOption {
     id: string;
@@ -28,10 +29,7 @@
   }: Props = $props();
 
   function todayIso(): string {
-    const d = new Date();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${d.getFullYear()}-${mm}-${dd}`;
+    return fmt.today();
   }
 
   let title = $state('');
@@ -66,7 +64,7 @@
       error = 'Give the task a title';
       return;
     }
-    const scheduledFor = Date.parse(`${date}T00:00:00`);
+    const scheduledFor = Date.parse(date);
     if (!Number.isFinite(scheduledFor)) {
       error = 'Pick a date';
       return;

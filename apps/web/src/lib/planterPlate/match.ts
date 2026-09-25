@@ -1,5 +1,6 @@
 import type { CellRecommendation, MatchInput, MatchResult, Plate, PlateSeedType } from './types';
 import { MM_TO_64THS } from './types';
+import { DEFAULT_PREFS, formatQuantity, toDisplay, unitLabel, type Prefs } from '$lib/prefs';
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -60,19 +61,21 @@ export function matchPlates(plates: Plate[], input: MatchInput): MatchResult[] {
  */
 export function cellCountRecommendation(
   inRowInches: number | undefined,
-  rowInches: number | undefined
+  rowInches: number | undefined,
+  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS
 ): CellRecommendation | null {
   if (!inRowInches || inRowInches <= 0) return null;
   const row = rowInches ?? 30;
   if (!row || row <= 0) return null;
   const ppa = Math.round((43560 * 144) / (inRowInches * row));
-  const ppaStr = ppa.toLocaleString();
+  const ppaStr = `${formatQuantity(ppa, 'perArea', prefs, { bare: true })} plants${unitLabel('perArea', prefs)}`;
+  const k = (v: number) => `${Math.round(toDisplay(v, 'perArea', prefs) / 1000)}k`;
   if (ppa <= 22_000) {
     return {
       cells: 16,
       band: 'low',
       plantsPerAcre: ppa,
-      note: `${ppaStr} plants/acre is a sparse stand — a 16-cell plate matches at standard sprockets.`
+      note: `${ppaStr} is a sparse stand — a 16-cell plate matches at standard sprockets.`
     };
   }
   if (ppa >= 26_000) {
@@ -80,14 +83,14 @@ export function cellCountRecommendation(
       cells: 24,
       band: 'high',
       plantsPerAcre: ppa,
-      note: `${ppaStr} plants/acre is a typical/high stand — a 24-cell plate matches at standard sprockets.`
+      note: `${ppaStr} is a typical/high stand — a 24-cell plate matches at standard sprockets.`
     };
   }
   return {
     cells: 24,
     band: 'mid',
     plantsPerAcre: ppa,
-    note: `${ppaStr} plants/acre is between 22k–26k — either works, but 24-cell gives more downward sprocket headroom.`
+    note: `${ppaStr} is between ${k(22_000)}–${k(26_000)} — either works, but 24-cell gives more downward sprocket headroom.`
   };
 }
 

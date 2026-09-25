@@ -22,7 +22,8 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
-  import Input from '$lib/components/ui/Input.svelte';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
 
   let { data } = $props();
@@ -35,13 +36,13 @@
     { weedsPer10SqFt: 0 },
     { weedsPer10SqFt: 0 }
   ]);
-  let maxHeight = $state<number | undefined>(undefined);
+  let maxHeight = $state<number | null>(null);
 
   let saving = $state(false);
   let saveError = $state<string | null>(null);
   let saveSuccess = $state(false);
 
-  const result = $derived(evaluateScout({ spots, maxWeedHeightInches: maxHeight }));
+  const result = $derived(evaluateScout({ spots, maxWeedHeightInches: maxHeight ?? undefined }));
   const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId));
 
   /** Prior observations for the selected block, newest first. Comes from
@@ -82,7 +83,9 @@
       // historical context lives in the audit trail.
       const notes = [
         `spots=[${spots.map((s) => s.weedsPer10SqFt).join(',')}]`,
-        maxHeight != null && Number.isFinite(maxHeight) ? `tallest_in=${maxHeight}` : null,
+        maxHeight != null && Number.isFinite(maxHeight)
+          ? `tallest_in=${Number(maxHeight.toFixed(2))}`
+          : null,
         `decision=${result.decision}`
       ]
         .filter(Boolean)
@@ -114,7 +117,7 @@
   }
 
   function fmtDate(ms: number): string {
-    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return fmt.instant(ms, 'month-day');
   }
 </script>
 
@@ -131,7 +134,7 @@
 </header>
 <p class="lede">
   Walk the block, count broadleaves in 4–5 random 10 sq ft spots, and note the tallest weed. The
-  threshold: ≥ 3 weeds / 10 sq ft on average, or any weed taller than 2 inches → spray.
+  threshold: ≥ 3 weeds / 10 sq ft on average, or any weed taller than {fmt.qty(2, 'length')} → spray.
 </p>
 
 {#if data.blocks.length > 0}
@@ -169,14 +172,20 @@
 
 <div class="card-wrap">
   <Card>
-    <Input
-      label="Tallest weed observed (in)"
-      hint="Leave blank if you didn't measure. Example: 1.5"
-      type="number"
-      step="0.5"
-      min="0"
-      bind:value={maxHeight}
-    />
+    <div class="height-field">
+      <label for="scout-max-height">Tallest weed observed ({fmt.unit('length')})</label>
+      <UnitInput
+        id="scout-max-height"
+        quantity="length"
+        min={0}
+        suffix={false}
+        aria-describedby="scout-max-height-hint"
+        bind:value={maxHeight}
+      />
+      <div id="scout-max-height-hint" class="hint">
+        Leave blank if you didn't measure. Example: {fmt.qty(1.5, 'length', { bare: true })}
+      </div>
+    </div>
   </Card>
 </div>
 
@@ -436,6 +445,29 @@
     min-height: 48px;
     width: 100%;
     box-sizing: border-box;
+  }
+  .height-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .height-field label {
+    font-size: var(--font-size-caption);
+    color: var(--color-ink-soft);
+    font-weight: 500;
+  }
+  .height-field :global(input[type='number']) {
+    min-height: 48px;
+    padding: 0 10px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-size: 1.1rem;
+  }
+  .hint {
+    font-size: var(--font-size-caption);
+    color: var(--color-ink-muted);
   }
   label[for='scout-block'] {
     display: block;

@@ -14,6 +14,7 @@
   import { checkPollinatorProtection, type BloomStatus } from '$lib/safety/pollinatorProtection';
   import { checkNearbyPollinatorBlocks } from '$lib/pollinator/nearbyBlocks';
   import { sunTimesFor } from '$lib/safety/sunTimes';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -139,10 +140,11 @@
   const nearbyPollinator = $derived(
     checkNearbyPollinatorBlocks({
       beeToxicity: pollinatorResult.effective.beeToxicity,
-      neighbors: data.blocks.find((b) => b.id === selectedBlockId)?.pollinatorNeighbors ?? []
+      neighbors: data.blocks.find((b) => b.id === selectedBlockId)?.pollinatorNeighbors ?? [],
+      prefs: currentPrefs()
     })
   );
-  const fmtClock = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const fmtClock = (d: Date) => fmt.instant(d, 'time');
 
   const canSubmit = $derived(
     !!selectedBlockId && !!selectedPluginId && !ipmBlocked && !pollinatorBlocked
@@ -255,7 +257,7 @@
         if (Array.isArray(respData.violations)) violations = respData.violations;
         return;
       }
-      result = `Recorded — re-entry clear ${new Date(respData.event.reEntryClearAt).toLocaleString()}.`;
+      result = `Recorded — re-entry clear ${fmt.instant(respData.event.reEntryClearAt)}.`;
       if (data.taskId) {
         goto('/plan?tab=schedule&view=swimlane');
         return;
@@ -402,7 +404,7 @@
         <ul>
           {#each data.recentEvents as e (e.id)}
             <li>
-              {new Date(e.occurredAt).toLocaleDateString()} —
+              {fmt.instant(e.occurredAt, 'date')} —
               {e.products.map((p) => p.displayName).join(', ')}
               on block {e.blockId}
               {#if e.scoutObservation}

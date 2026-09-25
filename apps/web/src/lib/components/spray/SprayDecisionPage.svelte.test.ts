@@ -1,10 +1,17 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import SprayDecisionPage from './SprayDecisionPage.svelte';
+
+const page = vi.hoisted(() => ({ data: {} as Record<string, unknown> }));
+vi.mock('$app/state', () => ({ page }));
+
+afterEach(() => {
+  page.data = {};
+});
 
 const baseProps = {
   chemistry: 'insecticide' as const,
@@ -44,8 +51,25 @@ describe('SprayDecisionPage', () => {
 
   it('renders block options with acres when present', () => {
     render(SprayDecisionPage, { ...baseProps });
-    expect(screen.getByRole('option', { name: 'North field · 1.50 acres' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'North field · 1.5 ac' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'South field' })).toBeInTheDocument();
+  });
+
+  it('metric users see label-first area and converted condition hints; inputs stay US', () => {
+    page.data = { prefs: { timeZone: 'America/New_York', units: 'metric' } };
+    render(SprayDecisionPage, { ...baseProps });
+    expect(
+      screen.getByRole('option', { name: 'North field · 1.5 ac (0.61 ha)' })
+    ).toBeInTheDocument();
+    expect((screen.getByLabelText('Wind (mph)') as HTMLInputElement).value).toBe('5');
+    expect(screen.getByText('≈ 8 km/h')).toBeInTheDocument();
+    expect(screen.getByText('≈ 22°C')).toBeInTheDocument();
+    expect(screen.getByText('≈ 94.6 L')).toBeInTheDocument();
+  });
+
+  it('US users see no conversion hints', () => {
+    render(SprayDecisionPage, { ...baseProps });
+    expect(screen.queryByText(/≈/)).toBeNull();
   });
 
   it('renders conditions fields with required attribute', () => {

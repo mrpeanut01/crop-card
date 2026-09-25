@@ -11,6 +11,8 @@
   import { browser } from '$app/environment';
   import { untrack } from 'svelte';
   import BlockMap from '$lib/components/BlockMap.svelte';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { FieldWithBlocks } from '$lib/db/fields';
   import type { ShadeSource, ShadeSourceKind } from '$lib/db/shadeSources';
@@ -633,7 +635,9 @@
           <strong class="field-name">{f.name}</strong>
           <span class="field-stats">
             {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
-            {#if fieldAcresDisplay !== null}· {fieldAcresDisplay.toFixed(1)} ac{/if}
+            {#if fieldAcresDisplay !== null}· {fmt.qty(fieldAcresDisplay, 'area', {
+                digits: 1
+              })}{/if}
           </span>
           {#if canEdit}
             <button
@@ -664,7 +668,13 @@
             <div class="grid2">
               <label>Name<input type="text" bind:value={editFieldName} /></label>
               <label
-                >Acres<input type="number" min="0" step="0.1" bind:value={editFieldAcres} /></label
+                >Area<UnitInput
+                  quantity="area"
+                  min={0}
+                  bind:value={
+                    () => editFieldAcres ?? null, (v) => (editFieldAcres = v ?? undefined)
+                  }
+                /></label
               >
               <label class="full">Notes<input type="text" bind:value={editFieldNotes} /></label>
             </div>
@@ -682,7 +692,8 @@
         {:else}
           <ul class="block-list-flat">
             {#each fieldBlocks as b (b.id)}
-              {@const acresDisplay = b.acres !== undefined ? `${b.acres.toFixed(1)} ac` : null}
+              {@const acresDisplay =
+                b.acres !== undefined ? fmt.qty(b.acres, 'area', { digits: 1 }) : null}
               <li class="block-row">
                 <span class="block-icon">▪</span>
                 <span class="block-name">{b.name}</span>
@@ -714,11 +725,12 @@
                     <div class="grid2">
                       <label>Name<input type="text" bind:value={editBlockName} /></label>
                       <label
-                        >Acres<input
-                          type="number"
-                          min="0"
-                          step="0.1"
-                          bind:value={editBlockAcres}
+                        >Area<UnitInput
+                          quantity="area"
+                          min={0}
+                          bind:value={
+                            () => editBlockAcres ?? null, (v) => (editBlockAcres = v ?? undefined)
+                          }
                         /></label
                       >
                       <label
@@ -786,14 +798,15 @@
         {#if canEdit && addingBlockForFieldId === f.id}
           <div class="add-block-inline">
             <input type="text" placeholder="Block name" bind:value={newBlockName} />
-            <input
-              type="number"
-              placeholder="ac"
-              min="0"
-              step="0.1"
-              bind:value={newBlockAcres}
-              class="acres-input"
-            />
+            <span class="acres-input"
+              ><UnitInput
+                quantity="area"
+                min={0}
+                placeholder={fmt.unit('area')}
+                suffix={false}
+                bind:value={() => newBlockAcres ?? null, (v) => (newBlockAcres = v ?? undefined)}
+              /></span
+            >
             <button
               class="primary small"
               onclick={() => createBlock(f.id)}
@@ -820,7 +833,7 @@
                 <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
                 <span class="block-name">{s.name}</span>
                 <span class="block-stats">
-                  {s.kind} · {s.heightFt} ft{#if s.isDeciduous}
+                  {s.kind} · {fmt.qty(s.heightFt, 'distance')}{#if s.isDeciduous}
                     · deciduous{/if}
                   {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
                 </span>
@@ -861,7 +874,7 @@
               <span class="block-icon">{shadeKindEmoji(s.kind)}</span>
               <span class="block-name">{s.name}</span>
               <span class="block-stats">
-                {s.kind} · {s.heightFt} ft{#if s.isDeciduous}
+                {s.kind} · {fmt.qty(s.heightFt, 'distance')}{#if s.isDeciduous}
                   · deciduous{/if}
                 {#if !s.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
               </span>
@@ -927,11 +940,10 @@
             /></label
           >
           <label
-            >Acres (optional)<input
-              type="number"
-              min="0"
-              step="0.1"
-              bind:value={newFieldAcres}
+            >Area (optional)<UnitInput
+              quantity="area"
+              min={0}
+              bind:value={() => newFieldAcres ?? null, (v) => (newFieldAcres = v ?? undefined)}
             /></label
           >
           <label class="full"
@@ -965,11 +977,10 @@
               /></label
             >
             <label
-              >Acres (optional)<input
-                type="number"
-                min="0"
-                step="0.1"
-                bind:value={newBlockAcres}
+              >Area (optional)<UnitInput
+                quantity="area"
+                min={0}
+                bind:value={() => newBlockAcres ?? null, (v) => (newBlockAcres = v ?? undefined)}
               /></label
             >
             <label class="full"
@@ -1000,12 +1011,11 @@
             /></label
           >
           <label
-            >Height (ft)<input
-              type="number"
-              min="1"
-              max="200"
-              step="1"
-              bind:value={addShadeHeightFt}
+            >Height<UnitInput
+              quantity="distance"
+              min={1}
+              max={200}
+              bind:value={() => addShadeHeightFt, (v) => (addShadeHeightFt = v ?? 0)}
             /></label
           >
           <label
@@ -1170,12 +1180,11 @@
         </select>
       </label>
       <label
-        >Height (ft)<input
-          type="number"
-          min="1"
-          max="200"
-          step="1"
-          bind:value={editShadeHeightFt}
+        >Height<UnitInput
+          quantity="distance"
+          min={1}
+          max={200}
+          bind:value={() => editShadeHeightFt ?? null, (v) => (editShadeHeightFt = v ?? undefined)}
         /></label
       >
       <label
@@ -1374,6 +1383,8 @@
   }
   input[type='text'],
   input[type='number'],
+  label :global(.unit-input > input),
+  .acres-input :global(input),
   select,
   textarea {
     border: 1px solid var(--color-divider);
@@ -1410,7 +1421,7 @@
     flex: 1;
   }
   .acres-input {
-    max-width: 80px;
+    max-width: 96px;
   }
 
   button.primary {

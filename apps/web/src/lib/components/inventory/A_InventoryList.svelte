@@ -13,6 +13,8 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import InvTypeChip from './InvTypeChip.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
   import type { InventoryType } from '$lib/inventory/types';
   import type {
     CatalogRow,
@@ -79,7 +81,7 @@
         { label: 'Decon needed', value: deconNeeded },
         {
           label: 'Most recent cal',
-          value: lastCal ? new Date(lastCal).toLocaleDateString() : '—'
+          value: lastCal ? fmt.instant(lastCal, 'date') : '—'
         }
       ];
     }
@@ -109,6 +111,11 @@
       { label: 'Expiring 60d', value: expiring60 }
     ];
   });
+
+  function gpaText(gpa: number): string {
+    const metric = currentPrefs().units === 'metric' ? ` (${fmt.qty(gpa, 'volumePerArea')})` : '';
+    return `${gpa.toFixed(1)}${metric}`;
+  }
 
   const showCatalogToggle = $derived(type !== 'crop' && type !== 'sprayer');
 </script>
@@ -204,11 +211,13 @@
             {#if row.kind === 'sprayer'}
               <td>{row.label}</td>
               <td class="muted">{row.nozzleType ?? '—'}</td>
-              <td class="num muted">{row.tankGal != null ? `${row.tankGal} gal` : '—'}</td>
+              <td class="num muted"
+                >{row.tankGal != null ? fmt.label(row.tankGal, 'volume') : '—'}</td
+              >
               <td class="muted">
-                {row.lastCalibratedAt ? new Date(row.lastCalibratedAt).toLocaleDateString() : '—'}
+                {row.lastCalibratedAt ? fmt.instant(row.lastCalibratedAt, 'date') : '—'}
               </td>
-              <td class="num">{row.measuredGpa != null ? row.measuredGpa.toFixed(1) : '—'}</td>
+              <td class="num">{row.measuredGpa != null ? gpaText(row.measuredGpa) : '—'}</td>
               <td>
                 {#if row.deconRequired}
                   <span class="pill pill-warn">Decon</span>
@@ -233,12 +242,13 @@
               <td>{row.displayName}</td>
               <td class="muted">{row.category}</td>
               <td class="num" class:low={row.isLow}>
-                {row.onHand.toFixed(1)}
-                {row.defaultUnit}
+                {formatStockQuantity(row.onHand, row.defaultUnit, currentPrefs(), {
+                  labelUnit: isLabelUnitCategory(row.category)
+                })}
               </td>
               <td class="num muted">{row.lotCount}</td>
               <td class="muted">
-                {row.earliestExpiry ? new Date(row.earliestExpiry).toLocaleDateString() : '—'}
+                {row.earliestExpiry ? fmt.day(row.earliestExpiry) : '—'}
               </td>
             {/if}
           </tr>

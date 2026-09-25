@@ -13,10 +13,15 @@
    */
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { formatStockQuantity } from '$lib/stock/units';
   import type { SeedDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<SeedDetailPayload, 'type'>;
   const { item, lots, movements, plugin }: Props = $props();
+
+  const stockQty = (v: number, digits?: number) =>
+    formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits });
 </script>
 
 <header class="detail-header">
@@ -65,10 +70,7 @@
       {#if lots.length === 0}
         <p class="empty">No lots received yet — receive a lot via /stock/add to plant.</p>
       {:else}
-        <InvKVP
-          label="Total"
-          value={`${lots.reduce((s, l) => s + l.balance, 0).toFixed(1)} ${item.defaultUnit}`}
-        />
+        <InvKVP label="Total" value={stockQty(lots.reduce((s, l) => s + l.balance, 0))} />
         <InvKVP label="Lots" value={lots.length} />
       {/if}
     </InvSection>
@@ -80,10 +82,10 @@
         <ul class="movement-list">
           {#each movements.slice(0, 8) as m (m.id)}
             <li>
-              <span class="muted small">{new Date(m.occurredAt).toLocaleDateString()}</span>
+              <span class="muted small">{fmt.instant(m.occurredAt, 'date')}</span>
               <span class="mono">{m.reason}</span>
               <span class={m.delta < 0 ? 'rust' : 'forest'}>
-                {m.delta > 0 ? '+' : ''}{m.delta.toFixed(1)}
+                {m.delta > 0 ? '+' : ''}{stockQty(m.delta)}
               </span>
             </li>
           {/each}

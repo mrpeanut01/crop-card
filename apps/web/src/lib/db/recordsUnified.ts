@@ -46,6 +46,7 @@ export {
 } from './recordKinds';
 import { LOCK_WINDOW_MS, RECORD_KINDS, type RecordKind } from './recordKinds';
 import { identityLabel } from '$lib/identity';
+import { DEFAULT_PREFS, formatQuantity, unitLabel, ymdInZone, type Prefs } from '$lib/prefs';
 
 export interface UnifiedRecord {
   /** Composite id: `${kind}:${rowId}` so it stays unique when one table has the same uuid as another (cannot happen in practice but keeps drill-down URLs unambiguous). */
@@ -217,7 +218,10 @@ function listFertilityApplicationsAll(filters: {
   }));
 }
 
-export function listUnifiedRecords(filters: UnifiedFilters = {}): UnifiedRecord[] {
+export function listUnifiedRecords(
+  filters: UnifiedFilters = {},
+  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS
+): UnifiedRecord[] {
   const now = Date.now();
   const kinds = new Set<RecordKind>(filters.kinds ?? RECORD_KINDS);
   const perKindLimit = filters.perKindLimit ?? 500;
@@ -245,7 +249,7 @@ export function listUnifiedRecords(filters: UnifiedFilters = {}): UnifiedRecord[
         blockLabel: blockLabelById.get(e.blockId),
         performedById: e.performedById,
         detail: products
-          ? `${products} · ${e.conditions.windMph}mph / ${e.conditions.tempF}°F`
+          ? `${products} · ${formatQuantity(e.conditions.windMph, 'speed', prefs)} / ${formatQuantity(e.conditions.tempF, 'temperature', prefs)}`
           : 'spray event',
         hash: shortHash({
           k: 'spray',
@@ -431,6 +435,20 @@ export function listUnifiedRecords(filters: UnifiedFilters = {}): UnifiedRecord[
       ]
         .filter(Boolean)
         .join(' / ');
+      const nutrients = [
+        e.nLbPerAcre
+          ? `N ${formatQuantity(e.nLbPerAcre, 'weightPerArea', prefs, { bare: true })}`
+          : null,
+        e.pLbPerAcre
+          ? `P ${formatQuantity(e.pLbPerAcre, 'weightPerArea', prefs, { bare: true })}`
+          : null,
+        e.kLbPerAcre
+          ? `K ${formatQuantity(e.kLbPerAcre, 'weightPerArea', prefs, { bare: true })}`
+          : null
+      ]
+        .filter(Boolean)
+        .join(' / ');
+      const nutrientLine = nutrients ? ` · ${nutrients} ${unitLabel('weightPerArea', prefs)}` : '';
       out.push({
         id: `fertility:${e.id}`,
         kind: 'fertility',
@@ -439,7 +457,7 @@ export function listUnifiedRecords(filters: UnifiedFilters = {}): UnifiedRecord[
         blockId: e.blockId,
         blockLabel: blockLabelById.get(e.blockId),
         performedById: e.performedById,
-        detail: `${e.source} · ${e.ratePerAcre} ${e.rateUnit}${npk ? ` · ${npk}` : ''}`,
+        detail: `${e.source} · ${e.ratePerAcre} ${e.rateUnit}${nutrientLine}`,
         hash: shortHash({ k: 'fertility', id: e.id, o: e.occurredAt, npk }),
         locked: isLocked(e.occurredAt, undefined, now)
       });
@@ -510,8 +528,18 @@ export interface UnifiedRecordSummary {
   countsByKind: Record<RecordKind, number>;
 }
 
-export function summarizeUnifiedRecords(rows: UnifiedRecord[]): UnifiedRecordSummary {
-  const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();
+const ZONE_SLACK_MS = 15 * 60 * 60 * 1000;
+
+export function summarizeUnifiedRecords(
+  rows: UnifiedRecord[],
+  prefs: Pick<Prefs, 'timeZone'> = DEFAULT_PREFS,
+  now: number = Date.now()
+): UnifiedRecordSummary {
+  const year = ymdInZone(now, prefs.timeZone).slice(0, 4);
+  const yearStartUtc = Date.UTC(Number(year), 0, 1);
+  const inYear = (ms: number) =>
+    ms >= yearStartUtc + ZONE_SLACK_MS ||
+    (ms >= yearStartUtc - ZONE_SLACK_MS && ymdInZone(ms, prefs.timeZone).slice(0, 4) >= year);
   const countsByKind = Object.fromEntries(RECORD_KINDS.map((k) => [k, 0])) as Record<
     RecordKind,
     number
@@ -523,7 +551,7 @@ export function summarizeUnifiedRecords(rows: UnifiedRecord[]): UnifiedRecordSum
   for (const r of rows) {
     countsByKind[r.kind] += 1;
     if (r.locked) locked += 1;
-    if (r.occurredAt >= yearStart) ytd += 1;
+    if (inYear(r.occurredAt)) ytd += 1;
     if (oldest === null || r.occurredAt < oldest) oldest = r.occurredAt;
     if (newest === null || r.occurredAt > newest) newest = r.occurredAt;
   }

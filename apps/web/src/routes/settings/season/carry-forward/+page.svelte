@@ -3,6 +3,7 @@
   import { ChevronRight } from 'lucide-svelte';
   import type { PageData } from './$types';
   import Kicker from '$lib/components/ui/Kicker.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   let { data }: { data: PageData } = $props();
 
@@ -14,7 +15,7 @@
 
   function fmtDate(ms: number | null): string {
     if (ms === null) return 'no date';
-    return new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return fmt.day(ms, 'month-day');
   }
 
   async function applyPrep() {
@@ -165,7 +166,9 @@
           <li class="row">
             <span class="row-title">Block {n.blockId.slice(0, 8)}</span>
             <span class="row-body"
-              >{n.nCreditLbPerAcre} lb-N/ac from {n.sourcePluginIds.join(', ')}</span
+              >{fmt.qty(n.nCreditLbPerAcre, 'weightPerArea').replace('/', '-N/')} from {n.sourcePluginIds.join(
+                ', '
+              )}</span
             >
           </li>
         {/each}

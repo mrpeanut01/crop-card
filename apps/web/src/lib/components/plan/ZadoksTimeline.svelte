@@ -1,7 +1,7 @@
 <script lang="ts">
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { DecisionKind, SmallGrainStage } from '$lib/plan/smallGrain';
-  import { DEFAULT_TIME_ZONE } from '$lib/weather/leafWet';
+  import { formatCalendarDate } from '$lib/prefs';
 
   interface Props {
     stages: SmallGrainStage[];
@@ -33,11 +33,7 @@
   };
 
   function fmt(ms: number): string {
-    return new Date(ms).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      timeZone: DEFAULT_TIME_ZONE
-    });
+    return formatCalendarDate(ms, 'month-day');
   }
 
   function relative(ms: number): string {

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Sparkles, Pencil, Sprout } from 'lucide-svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   /**
    * Phase 25d (#89, #81) — provenance panel for the Plan v2 view.
@@ -67,7 +68,7 @@
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
     if (days < 7) return `${days}d ago`;
-    return new Date(ms).toLocaleDateString();
+    return fmt.instant(ms, 'date');
   }
 </script>
 

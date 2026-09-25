@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -14,6 +15,7 @@
     title: string;
     body: string;
     requiresTimer?: boolean;
+    metricNote?: () => string;
   };
 
   const STEPS: Step[] = [
@@ -41,7 +43,8 @@
       key: 'ammonia',
       title: 'Ammonia soak — 30 minutes',
       body: 'Add 1 cup household ammonia per 5 gal of water. Fill tank to operating volume, run pump for 30 sec, then SHUT OFF and let the solution sit for 30 minutes. Timer below.',
-      requiresTimer: true
+      requiresTimer: true,
+      metricNote: () => `about 237 mL ammonia per ${fmt.qty(5, 'volume')} of water`
     },
     {
       key: 'boom-flush',
@@ -88,7 +91,7 @@
   let timerSkipped = $state(false);
   const stepCanAdvance = $derived(currentStep.requiresTimer ? timerDone || timerSkipped : true);
 
-  function fmt(ms: number) {
+  function clock(ms: number) {
     const total = Math.ceil(ms / 1000);
     const m = Math.floor(total / 60);
     const s = total % 60;
@@ -159,7 +162,7 @@
   {#if sprayer?.lastChemistryClass}
     <p class="warn">
       Last carried: <strong>{sprayer.lastChemistryClass}</strong> at
-      {sprayer.lastSprayedAt ? new Date(sprayer.lastSprayedAt).toLocaleString() : 'unknown'}
+      {sprayer.lastSprayedAt ? fmt.instant(sprayer.lastSprayedAt) : 'unknown'}
     </p>
   {/if}
 
@@ -187,6 +190,9 @@
   <section class="step">
     <h2>Step {stepIndex + 1} of {STEPS.length}: {currentStep.title}</h2>
     <p>{currentStep.body}</p>
+    {#if currentStep.metricNote && currentPrefs().units === 'metric'}
+      <p class="hint">({currentStep.metricNote()})</p>
+    {/if}
 
     {#if currentStep.requiresTimer}
       {#if !timerStartedAt && !timerSkipped}
@@ -210,7 +216,7 @@
           continue.
         </p>
       {:else if !timerDone}
-        <p class="timer">Soaking… <strong>{fmt(remaining)}</strong> remaining</p>
+        <p class="timer">Soaking… <strong>{clock(remaining)}</strong> remaining</p>
         <p class="hint">
           You may close this tab — the timer is cosmetic; what matters is the actual 30-minute dwell
           on the chemicals. The next step unlocks at zero. Or

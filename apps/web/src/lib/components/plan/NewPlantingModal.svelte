@@ -57,7 +57,7 @@
       varietyDisplayName: varietyDisplayName.trim() || undefined
     };
     if (plantingDate) {
-      const ms = Date.parse(`${plantingDate}T00:00:00`);
+      const ms = Date.parse(plantingDate);
       if (Number.isFinite(ms)) payload.plantingDate = ms;
     }
     if (quantityPlanted != null && quantityPlanted > 0) {

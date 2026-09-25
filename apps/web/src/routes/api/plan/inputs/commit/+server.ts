@@ -49,6 +49,8 @@ import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { insertPlanRevision } from '$lib/plan/revisions';
 import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
+import { DEFAULT_PREFS, formatCalendarDate, type Prefs } from '$lib/prefs';
+import { formatApplicationRateLine, localizeRationale } from '$lib/plan/inputsPlanFormat';
 
 const INPUTS_PLAN_TEMPLATE_KEY = 'inputs-plan';
 
@@ -111,15 +113,10 @@ function applicationTitle(app: z.infer<typeof applicationSchema>): string {
 
 /** Format the task body — surfaces the rate + total so the operator
  *  has the dilution math anchor without re-running the planner. */
-function applicationBody(app: z.infer<typeof applicationSchema>): string {
-  const parts = [app.rationale];
-  if (app.rateAmount != null && app.rateUnit) {
-    parts.push(
-      `Rate: ${app.rateAmount} ${app.rateUnit}/ac × ${app.acres.toFixed(2)} ac = ${
-        app.totalAmount ?? 0
-      } ${app.rateUnit} total.`
-    );
-  }
+function applicationBody(app: z.infer<typeof applicationSchema>, prefs: Prefs): string {
+  const parts = [localizeRationale(app.rationale, prefs)];
+  const rateLine = formatApplicationRateLine(app, prefs);
+  if (rateLine) parts.push(`Rate: ${rateLine} total.`);
   if (!app.productPluginId) {
     parts.push(`No philosophy-compliant product selected — pick one before executing.`);
   }
@@ -132,6 +129,9 @@ export const POST: RequestHandler = async (event) => {
   if (!canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
   }
+  // Task text is stored and read by everyone on the farm, so it stays in
+  // US/label units regardless of who commits the plan.
+  const prefs = DEFAULT_PREFS;
 
   let body: unknown;
   try {
@@ -198,7 +198,7 @@ export const POST: RequestHandler = async (event) => {
     const cropId = cropByBlockAndPluginId.get(`${app.blockId}:${app.cropPluginId}`);
     const task = createTask({
       title: applicationTitle(app),
-      body: applicationBody(app),
+      body: applicationBody(app, prefs),
       kind: 'primary',
       blockId: app.blockId,
       cropId,
@@ -214,9 +214,7 @@ export const POST: RequestHandler = async (event) => {
     const cropId = cropByBlockAndPluginId.get(`${scout.blockId}:${scout.cropPluginId}`);
     const task = createTask({
       title: scout.title,
-      body: `${scout.body}\n\nRepeats every ${scout.recurrenceDays} days through ${new Date(
-        scout.windowEndMs
-      ).toLocaleDateString()}.`,
+      body: `${scout.body}\n\nRepeats every ${scout.recurrenceDays} days through ${formatCalendarDate(scout.windowEndMs)}.`,
       kind: 'primary',
       blockId: scout.blockId,
       cropId,

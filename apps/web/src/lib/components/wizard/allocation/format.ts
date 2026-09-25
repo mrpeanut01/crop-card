@@ -1,11 +1,8 @@
+import { formatCalendarDate } from '$lib/prefs';
 import type { ProgressStage, SufficiencyResult } from './types';
 
 export function fmtDateMs(ms: number): string {
-  return new Date(ms).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  return formatCalendarDate(ms, 'date');
 }
 
 // ─── AI progress heartbeat ──────────────────────────────────────────────

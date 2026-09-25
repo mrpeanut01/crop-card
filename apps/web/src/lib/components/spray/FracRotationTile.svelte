@@ -8,6 +8,7 @@
 </script>
 
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
@@ -72,15 +73,16 @@
   <p class="msg" role={status === 'block' ? 'alert' : undefined}>
     {#if status === 'block'}
       FRAC {sharedCodes.join(', ')} was used in the most recent fungicide on this block ({prior?.displayName ??
-        'prior application'}, {prior ? new Date(prior.occurredAt).toLocaleDateString() : ''}).
-      Rotate to a different mode of action — the server will refuse this record.
+        'prior application'}, {prior ? fmt.instant(prior.occurredAt, 'date') : ''}). Rotate to a
+      different mode of action — the server will refuse this record.
     {:else if status === 'warn'}
       FRAC {tankOverlapCode} is on two products in this tank. Consider a different mode of action for
       resistance management.
     {:else if status === 'pass' && prior}
-      No FRAC group overlaps the last fungicide on this block ({prior.displayName}, {new Date(
-        prior.occurredAt
-      ).toLocaleDateString()}).
+      No FRAC group overlaps the last fungicide on this block ({prior.displayName}, {fmt.instant(
+        prior.occurredAt,
+        'date'
+      )}).
     {:else if status === 'pass'}
       No prior fungicide recorded on this block — nothing to rotate against.
     {:else}

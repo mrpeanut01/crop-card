@@ -49,6 +49,8 @@ vi.mock('$lib/db/insecticideEvents', () => ({
 vi.mock('$lib/db/fungicideEvents', () => ({ listFungicideEvents: () => [] }));
 vi.mock('$lib/db/harvestEvents', () => ({ listHarvestEvents: () => [] }));
 vi.mock('$lib/db/tenant', () => ({ unscopedQueryNote: () => undefined }));
+const prefs = vi.hoisted(() => ({ timeZone: 'America/New_York', units: 'us' as const }));
+vi.mock('$lib/db/userProfile', () => ({ prefsFor: () => prefs }));
 vi.mock('$lib/db/client', () => ({
   db: { select: () => ({ from: () => ({ where: () => ({ all: () => [] }) }) }) }
 }));
@@ -94,6 +96,18 @@ describe('USDA CSV — #130 pollinator columns', () => {
       expect(r.bloom_status_source).toBe('');
       expect(r.attested_no_foragers).toBe('');
       expect(r.pollinator_verdict).toBe('');
+    }
+  });
+
+  it('writes date_iso as the application date in the user zone', async () => {
+    const east = await rows();
+    expect(east.data.every((r) => r.date_iso === '2026-06-21')).toBe(true);
+    prefs.timeZone = 'America/Los_Angeles';
+    try {
+      const west = await rows();
+      expect(west.data.every((r) => r.date_iso === '2026-06-20')).toBe(true);
+    } finally {
+      prefs.timeZone = 'America/New_York';
     }
   });
 });

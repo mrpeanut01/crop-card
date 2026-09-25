@@ -2,11 +2,14 @@
   import { Sprout } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { fmtQtyRange, usText } from './format';
 
   const props: RendererProps = $props();
 
-  let dryPodLb = $state('');
-  let cleanSeedLb = $state('');
+  let dryPodLb = $state<number | null>(null);
+  let cleanSeedLb = $state<number | null>(null);
   let storageMoisturePct = $state('');
 
   const moistureWarn = $derived.by(() => {
@@ -19,9 +22,9 @@
     lotNumber?: string;
   }): Promise<string | null> {
     const tagBits: string[] = [];
-    if (dryPodLb.trim()) tagBits.push(`pods=${dryPodLb} lb`);
+    if (usText(dryPodLb)) tagBits.push(`pods=${usText(dryPodLb)} lb`);
     if (storageMoisturePct.trim()) tagBits.push(`moisture=${storageMoisturePct}%`);
-    const quantity = cleanSeedLb.trim() ? `${cleanSeedLb} lb seed` : input.quantity;
+    const quantity = usText(cleanSeedLb) ? `${usText(cleanSeedLb)} lb seed` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
     // #322 — moisture also travels as a structured number so the kernel gate is reachable.
     const moisture = parseFloat(storageMoisturePct);
@@ -49,12 +52,22 @@
     <span class="block-title">Threshing + storage</span>
     <div class="bean-grid">
       <label class="qfield">
-        <span>Dry pod weight (lb)</span>
-        <input type="text" inputmode="decimal" placeholder="180" bind:value={dryPodLb} />
+        <span>Dry pod weight ({fmt.unit('weight')})</span>
+        <UnitInput
+          quantity="weight"
+          suffix={false}
+          placeholder={fmt.qty(180, 'weight', { bare: true })}
+          bind:value={dryPodLb}
+        />
       </label>
       <label class="qfield">
-        <span>Clean seed weight (lb)</span>
-        <input type="text" inputmode="decimal" placeholder="120" bind:value={cleanSeedLb} />
+        <span>Clean seed weight ({fmt.unit('weight')})</span>
+        <UnitInput
+          quantity="weight"
+          suffix={false}
+          placeholder={fmt.qty(120, 'weight', { bare: true })}
+          bind:value={cleanSeedLb}
+        />
       </label>
       <label class="qfield wide">
         <span>Storage moisture (%)</span>
@@ -157,7 +170,7 @@
   .qfield.wide {
     grid-column: 1 / -1;
   }
-  .qfield input {
+  .qfield :global(input) {
     font-family: var(--font-mono, ui-monospace, monospace);
     font-size: 14px;
     padding: 8px 10px;

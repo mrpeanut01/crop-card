@@ -36,6 +36,7 @@ import {
   type ShadeTarget
 } from './shadeModel';
 import { dayOfYear } from './solar';
+import { formatCalendarDate } from '$lib/prefs';
 import { geojsonCentroid } from '$lib/geo/area';
 
 export type CalendarEventKind =
@@ -373,7 +374,7 @@ export function eventsForPlanting(
         startMs: nextCashCrop.plantingDate! - (leadMin + 7) * DAY_MS,
         endMs: nextCashCrop.plantingDate! - leadMin * DAY_MS,
         title: `Terminate cover: ${planting.varietyDisplayName}`,
-        body: `Burndown ≥${leadMin} days before ${nextCashCrop.varietyDisplayName} planting on ${new Date(nextCashCrop.plantingDate!).toLocaleDateString()}.`,
+        body: `Burndown ≥${leadMin} days before ${nextCashCrop.varietyDisplayName} planting on ${formatCalendarDate(nextCashCrop.plantingDate!)}.`,
         detail: { nextCashCropPlantingId: nextCashCrop.id, anchorDate: nextCashCrop.plantingDate! }
       });
     } else {

@@ -5,6 +5,8 @@
   import PluginVersionTimeline from '$lib/components/PluginVersionTimeline.svelte';
   import { hracGroupOf } from '$lib/safety/cropFamilyLethality';
   import { rangeText } from '$lib/plugins/rangeText';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { formatRateText } from '$lib/stock/units';
 
   let { data } = $props();
 
@@ -186,6 +188,29 @@
     return v && typeof v === 'object' && !Array.isArray(v)
       ? (v as Record<string, unknown>)
       : undefined;
+  }
+
+  function labelRate(rate: Record<string, unknown>): string {
+    const amount = asNum(rate.amount);
+    if (amount === undefined) return `${rate.amount} ${rate.unit}`;
+    return formatRateText(amount, String(rate.unit), currentPrefs(), { labelUnit: true });
+  }
+
+  function rangeRate(range: Record<string, unknown>): string {
+    const us = `${range.min}-${range.max} ${range.unit}`;
+    const min = asNum(range.min);
+    const max = asNum(range.max);
+    if (min === undefined || max === undefined) return us;
+    const unit = String(range.unit);
+    const lo = formatRateText(min, unit, currentPrefs());
+    if (lo === `${min} ${unit}`) return us;
+    return `${lo} – ${formatRateText(max, unit, currentPrefs())}`;
+  }
+
+  function metricGpa(gpa: number | undefined): string {
+    return gpa !== undefined && currentPrefs().units === 'metric'
+      ? ` (${fmt.qty(gpa, 'volumePerArea')})`
+      : '';
   }
 </script>
 
@@ -406,7 +431,7 @@
         {#if asNum(plugin.defaultRowSpacingInches) !== undefined}
           <div class="stat">
             <dt>Row spacing</dt>
-            <dd>{plugin.defaultRowSpacingInches}″</dd>
+            <dd>{fmt.qty(asNum(plugin.defaultRowSpacingInches), 'length')}</dd>
           </div>
         {/if}
         {#if asNum(plugin.preHarvestIntervalDays) !== undefined}
@@ -436,7 +461,7 @@
         {#if asNum(planting?.soilTempMinF) !== undefined}
           <div class="stat">
             <dt>Soil temp min</dt>
-            <dd>{planting?.soilTempMinF}°F</dd>
+            <dd>{fmt.qty(asNum(planting?.soilTempMinF), 'temperature')}</dd>
           </div>
         {/if}
       </dl>
@@ -492,13 +517,13 @@
         {#if rate}
           <div class="stat">
             <dt>Rate / acre</dt>
-            <dd>{rate.amount} {rate.unit}</dd>
+            <dd>{labelRate(rate)}</dd>
           </div>
         {/if}
         {#if asNum(plugin.gpaCalibration) !== undefined}
           <div class="stat">
             <dt>GPA calibration</dt>
-            <dd>{plugin.gpaCalibration}</dd>
+            <dd>{plugin.gpaCalibration}{metricGpa(asNum(plugin.gpaCalibration))}</dd>
           </div>
         {/if}
         {#if asStr(plugin.applicationTiming)}
@@ -583,7 +608,7 @@
         {#if rate}
           <div class="stat">
             <dt>Rate / acre</dt>
-            <dd>{rate.amount} {rate.unit}</dd>
+            <dd>{labelRate(rate)}</dd>
           </div>
         {/if}
         {#if asNum(plugin.reEntryIntervalHours) !== undefined}
@@ -675,13 +700,13 @@
         {#if rate}
           <div class="stat">
             <dt>Rate / acre</dt>
-            <dd>{rate.amount} {rate.unit}</dd>
+            <dd>{labelRate(rate)}</dd>
           </div>
         {/if}
         {#if asNum(plugin.gpaCalibration) !== undefined}
           <div class="stat">
             <dt>GPA calibration</dt>
-            <dd>{plugin.gpaCalibration}</dd>
+            <dd>{plugin.gpaCalibration}{metricGpa(asNum(plugin.gpaCalibration))}</dd>
           </div>
         {/if}
         {#if asNum(plugin.reEntryIntervalHours) !== undefined}
@@ -766,7 +791,7 @@
         {#if range}
           <div class="stat">
             <dt>Application range</dt>
-            <dd>{range.min}-{range.max} {range.unit}</dd>
+            <dd>{rangeRate(range)}</dd>
           </div>
         {/if}
       </dl>

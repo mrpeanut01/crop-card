@@ -1,10 +1,12 @@
 import type { PageServerLoad } from './$types';
+import { prefsFor } from '$lib/db/userProfile';
+import { todayYmd } from '$lib/prefs';
 import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { listCuttings } from '$lib/db/hayCuttings';
 import { getRegistry } from '$lib/server/registry';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const registry = await getRegistry();
   const blocks = listBlocks();
   const cropId = url.searchParams.get('crop');
@@ -43,7 +45,8 @@ export const load: PageServerLoad = async ({ url }) => {
     blockOptions.find((b) => b.hayPlanting)?.id ??
     blockOptions[0]?.id ??
     '';
-  const year = Number(url.searchParams.get('year')) || new Date().getFullYear();
+  const year =
+    Number(url.searchParams.get('year')) || Number(todayYmd(prefsFor(locals.user?.id)).slice(0, 4));
 
   return {
     blocks: blockOptions,

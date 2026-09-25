@@ -15,7 +15,8 @@ import { error, type ServerLoad } from '@sveltejs/kit';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { identityName } from '$lib/identity';
-import { profileFor } from '$lib/db/userProfile';
+import { prefsFor, profileFor } from '$lib/db/userProfile';
+import { formatInstant } from '$lib/prefs';
 import { eq } from 'drizzle-orm';
 import { listBlocks } from '$lib/db/blocks';
 import { listEquipment } from '$lib/db/equipment';
@@ -62,13 +63,14 @@ export const load: ServerLoad = async ({ locals }) => {
   const aiEnabled = isOwner && getApiKey() !== '';
 
   // ─── User identity metadata ─────────────────────────────────────────
+  const prefs = prefsFor(locals.user.id);
   const memberSince = userRow?.createdAt
-    ? userRow.createdAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    ? formatInstant(userRow.createdAt, prefs, 'date', { day: undefined })
     : '—';
   // Last sign-in is the HMAC cookie's issuance time; we don't persist
   // sign-in events as DB rows yet, so use "today" as a placeholder
   // when the user is currently authenticated.
-  const lastLogin = `today · ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  const lastLogin = `today · ${formatInstant(new Date(), prefs, 'time', { timeZoneName: 'short' })}`;
 
   const profile = profileFor(locals.user.id);
 

@@ -125,6 +125,16 @@ describe('derivePriorityAction', () => {
     expect(result?.scope).toContainEqual(['Block', 'Block A']);
   });
 
+  it('labels a day-granular task by its calendar day, not a zone-shifted one', () => {
+    const result = derivePriorityAction({
+      openPrimaries: [task({ scheduledFor: Date.UTC(2026, 4, 24) })],
+      derivedEvents: [],
+      blockNameById: blocks,
+      now: NOW
+    });
+    expect(result?.scope).toContainEqual(['Scheduled', 'Sun, May 24']);
+  });
+
   it('routes insecticide tasks to /spray/insecticide', () => {
     const result = derivePriorityAction({
       openPrimaries: [task({ relatedEventTable: 'insecticide_event' })],

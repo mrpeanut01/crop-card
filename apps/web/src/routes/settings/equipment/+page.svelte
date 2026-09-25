@@ -4,14 +4,16 @@
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import type { PageData } from './$types';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
 
   let { data }: { data: PageData } = $props();
 
   const dirtyCount = $derived(data.sprayers.filter((s) => s.needsDecon).length);
   const otherCount = $derived(data.otherTypes.reduce((n, t) => n + t.count, 0));
 
-  const fmtDate = (ms: number) =>
-    new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const fmtDate = (ms: number) => fmt.instant(ms, 'date');
+  const metricGpa = (gpa: number) =>
+    currentPrefs().units === 'metric' ? ` (${fmt.qty(gpa, 'volumePerArea')})` : '';
 </script>
 
 <svelte:head><title>Equipment · CropCard</title></svelte:head>
@@ -41,7 +43,7 @@
           <a class="row-title" href="/inventory/sprayer/{s.id}">{s.label}</a>
           <div class="row-sub mono">
             {#if s.calibratedGpa != null}
-              {s.calibratedGpa.toFixed(1)} GPA{s.calibrationDate
+              {s.calibratedGpa.toFixed(1)} GPA{metricGpa(s.calibratedGpa)}{s.calibrationDate
                 ? ` · calibrated ${fmtDate(s.calibrationDate)}`
                 : ''}
             {:else}

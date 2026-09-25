@@ -8,6 +8,7 @@
   import SeasonSetupChip from '$lib/components/SeasonSetupChip.svelte';
   import PlanningYearPicker from '$lib/components/PlanningYearPicker.svelte';
   import Card from '$lib/components/ui/Card.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import type { SeasonSetup } from '$lib/season/setup';
 
   let { data }: { data: PageData } = $props();
@@ -92,7 +93,7 @@
       <h2>{data.readOnly ? `${data.currentYear} setup` : 'Current setup'}</h2>
       <SeasonSetupChip setup={existing} canEdit={!data.readOnly} onEdit={() => (editing = true)} />
       <p class="hint">
-        Last updated {new Date(existing.setAt).toLocaleString()}.
+        Last updated {fmt.instant(existing.setAt)}.
       </p>
       {#if !data.readOnly}
         <p class="actions-row">

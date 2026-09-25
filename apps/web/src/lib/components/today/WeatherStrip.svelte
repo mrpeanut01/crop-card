@@ -11,6 +11,7 @@
   import { Sun, Wind, CloudRain } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import type { WeatherSummary } from '$lib/today/weatherSummary';
+  import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
     /** Local date string ("May 24") — kicker above the greeting. */
@@ -33,11 +34,15 @@
   {#if weather}
     <div class="weather" aria-label="Local weather">
       <div class="w-cell">
-        <Sun size={16} strokeWidth={1.75} /><span class="mono">{weather.tempF}°F</span>
+        <Sun size={16} strokeWidth={1.75} /><span class="mono"
+          >{fmt.qty(weather.tempF, 'temperature')}</span
+        >
       </div>
       {#if weather.windMph !== undefined}
         <div class="w-cell">
-          <Wind size={16} strokeWidth={1.75} /><span class="mono">{weather.windMph} mph</span>
+          <Wind size={16} strokeWidth={1.75} /><span class="mono"
+            >{fmt.qty(weather.windMph, 'speed')}</span
+          >
         </div>
       {/if}
       {#if weather.rainHint}

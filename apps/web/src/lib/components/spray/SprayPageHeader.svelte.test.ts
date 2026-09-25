@@ -56,6 +56,14 @@ describe('SprayPageHeader', () => {
     expect(screen.getByText(/Block block-abc/)).toBeInTheDocument();
   });
 
+  it('renders the re-entry clear time in the user zone', () => {
+    render(SprayPageHeader, {
+      chemistry: 'insecticide',
+      activeREI: [{ id: 'rei-1', blockId: 'b1', reEntryClearAt: Date.UTC(2026, 8, 26, 2, 30) }]
+    });
+    expect(screen.getByText(/re-entry clear Sep 25, 2026, 10:30 PM/)).toBeInTheDocument();
+  });
+
   it('omits activeREI banner when none active', () => {
     render(SprayPageHeader, { chemistry: 'herbicide' });
     expect(screen.queryByText(/Active.*re-entry intervals/)).not.toBeInTheDocument();

@@ -2,11 +2,14 @@
   import { Package } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { fmtQtyRange, usText } from './format';
 
   const props: RendererProps = $props();
 
   let fruitCount = $state('');
-  let totalLb = $state('');
+  let totalLb = $state<number | null>(null);
   let cureStart = $state('');
   let moisturePct = $state('');
 
@@ -18,7 +21,7 @@
     if (fruitCount.trim()) tagBits.push(`fruits=${fruitCount}`);
     if (cureStart.trim()) tagBits.push(`cureStart=${cureStart}`);
     if (moisturePct.trim()) tagBits.push(`moisture=${moisturePct}%`);
-    const quantity = totalLb.trim() ? `${totalLb} lb` : input.quantity;
+    const quantity = usText(totalLb) ? `${usText(totalLb)} lb` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
     // #322 — moisture also travels as a structured number so the kernel gate is reachable.
     const moisture = parseFloat(moisturePct);
@@ -36,8 +39,9 @@
     <div>
       <span class="archetype-name">Cure-then-store harvest</span>
       <span class="archetype-sub">
-        Field-cure 10-14 days at 80-85°F before storing at 50-55°F. Record field-pick weight here;
-        log cull + cured weight separately.
+        Field-cure 10-14 days at {fmtQtyRange(80, 85, 'temperature', currentPrefs())} before storing at
+        {fmtQtyRange(50, 55, 'temperature', currentPrefs())}. Record field-pick weight here; log
+        cull + cured weight separately.
       </span>
     </div>
   </header>
@@ -50,8 +54,13 @@
         <input type="text" inputmode="numeric" placeholder="120" bind:value={fruitCount} />
       </label>
       <label class="qfield">
-        <span>Total weight (lb)</span>
-        <input type="text" inputmode="decimal" placeholder="850" bind:value={totalLb} />
+        <span>Total weight ({fmt.unit('weight')})</span>
+        <UnitInput
+          quantity="weight"
+          suffix={false}
+          placeholder={fmt.qty(850, 'weight', { bare: true })}
+          bind:value={totalLb}
+        />
       </label>
       <label class="qfield">
         <span>Cure start (date)</span>
@@ -63,8 +72,8 @@
       </label>
     </div>
     <p class="hint">
-      Cure 10–14 days at 80–85°F before binning. Stop curing once stems pull dry with a clean
-      abscission.
+      Cure 10–14 days at {fmtQtyRange(80, 85, 'temperature', currentPrefs())} before binning. Stop curing
+      once stems pull dry with a clean abscission.
     </p>
   </div>
 
@@ -148,7 +157,7 @@
     font-weight: 600;
     color: var(--color-ink-muted);
   }
-  .qfield input {
+  .qfield :global(input) {
     font-family: var(--font-mono, ui-monospace, monospace);
     font-size: 14px;
     padding: 8px 10px;

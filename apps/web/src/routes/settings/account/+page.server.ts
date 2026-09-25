@@ -20,6 +20,7 @@ import {
   normalizeTimeZone
 } from '$lib/profile';
 import { identityName } from '$lib/identity';
+import { formatInstant } from '$lib/prefs';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -34,19 +35,12 @@ export const load: PageServerLoad = ({ locals }) => {
   const assignments = activeAssignmentsForUser(user.id);
 
   const timeZone = userRow?.timeZone ?? DEFAULT_TIME_ZONE;
+  const displayUnits = userRow?.displayUnits ?? 'us';
+  const prefs = { timeZone, units: displayUnits };
   const memberSince = userRow?.createdAt
-    ? userRow.createdAt.toLocaleDateString('en-US', {
-        month: 'short',
-        year: 'numeric',
-        timeZone
-      })
+    ? formatInstant(userRow.createdAt, prefs, 'date', { day: undefined })
     : '—';
-  const lastLogin = `today · ${new Date().toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    timeZone,
-    timeZoneName: 'short'
-  })}`;
+  const lastLogin = `today · ${formatInstant(new Date(), prefs, 'time', { timeZoneName: 'short' })}`;
 
   return {
     account: {
@@ -56,7 +50,7 @@ export const load: PageServerLoad = ({ locals }) => {
       name: identityName(userRow ?? user),
       displayName: userRow?.displayName ?? '',
       timeZone,
-      displayUnits: userRow?.displayUnits ?? 'us',
+      displayUnits,
       avatarUrl: avatarUrl(user.id, avatarVersion(user.id)),
       role: user.role,
       isSuperadmin: user.isSuperadmin === true,

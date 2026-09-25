@@ -4,6 +4,7 @@
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import Avatar from '$lib/components/ui/Avatar.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -131,18 +132,12 @@
         <div class="row-text">
           <div class="row-title mono">{inv.id}</div>
           <div class="row-sub mono">
-            email hashed (SHA-256) · sent {new Date(inv.createdAt).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric'
-            })}
+            email hashed (SHA-256) · sent {fmt.instant(inv.createdAt, 'month-day')}
           </div>
         </div>
         <Pill tone="wheat">Helper</Pill>
         <span class="expires mono">
-          expires {new Date(inv.expiresAt).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric'
-          })}
+          expires {fmt.instant(inv.expiresAt, 'month-day')}
         </span>
         <form method="POST" action="?/revoke">
           <input type="hidden" name="inviteId" value={inv.id} />

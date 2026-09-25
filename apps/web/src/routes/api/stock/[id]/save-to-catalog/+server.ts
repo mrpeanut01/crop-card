@@ -15,6 +15,8 @@ import { getStockItem, updateStockItem } from '$lib/db/stock';
 import { getTaxonomyTerm } from '$lib/db/taxonomy';
 import { PluginAuthorError, writeOwnerPlugin } from '$lib/server/pluginFiles';
 import { requireOwner } from '$lib/server/auth';
+import { prefsFor } from '$lib/db/userProfile';
+import { todayYmd } from '$lib/prefs';
 
 const TYPE_NAME_TO_CROP_FAMILY: Record<string, string> = {
   Corn: 'corn',
@@ -48,7 +50,7 @@ function slugify(name: string): string {
 }
 
 export const POST: RequestHandler = async (event) => {
-  requireOwner(event);
+  const owner = requireOwner(event);
   if (!event.params.id) return json({ error: 'id required' }, { status: 400 });
   const item = getStockItem(event.params.id);
   if (!item) return json({ error: 'unknown stock item' }, { status: 404 });
@@ -90,7 +92,7 @@ export const POST: RequestHandler = async (event) => {
     displayName: item.displayName,
     version: '1.0.0',
     cropFamily,
-    notes: item.notes ?? `User-authored from inventory on ${new Date().toISOString().slice(0, 10)}.`
+    notes: item.notes ?? `User-authored from inventory on ${todayYmd(prefsFor(owner.id))}.`
   };
   if (dtm !== undefined) plugin.daysToMaturity = { min: dtm, max: dtm };
   if (Object.keys(plantingGuide).length > 0) plugin.plantingGuide = plantingGuide;

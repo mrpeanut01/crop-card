@@ -22,6 +22,7 @@
     type WeatherProvenance
   } from '$lib/weather/leafWet';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
   let { data } = $props();
@@ -166,7 +167,8 @@
   const weatherDerived = $derived(
     deriveHourly(weather?.hours ?? [], weather?.provenance ?? 'fallback', {
       nowMs: Date.now(),
-      rainfastHours: rainfast.hours
+      rainfastHours: rainfast.hours,
+      timeZone: currentPrefs().timeZone
     })
   );
   const rainRisk = $derived(
@@ -295,10 +297,10 @@
         return;
       }
       const reiClear = payload.event.reEntryClearAt
-        ? new Date(payload.event.reEntryClearAt).toLocaleString()
+        ? fmt.instant(payload.event.reEntryClearAt)
         : 'n/a';
       const phiClear = payload.event.preHarvestClearAt
-        ? new Date(payload.event.preHarvestClearAt).toLocaleString()
+        ? fmt.instant(payload.event.preHarvestClearAt)
         : 'n/a';
       result = `Recorded — REI clear ${reiClear} · PHI clear ${phiClear}.`;
       if (Array.isArray(payload.stockWarnings)) warnings = payload.stockWarnings;
@@ -402,10 +404,7 @@
       <h2>Disease + FRAC</h2>
       {#if weather && weather.provenance === 'data'}
         <span class="gate-meta">
-          NWS forecast · fetched {new Date(weather.fetchedAt).toLocaleTimeString([], {
-            hour: 'numeric',
-            minute: '2-digit'
-          })}
+          NWS forecast · fetched {fmt.instant(weather.fetchedAt, 'time')}
           {#if weather.location?.source === 'farm-default'}· farm default location (no block map){/if}
           {#if weather.location?.source === 'farm-block'}· nearest mapped block{/if}
         </span>
@@ -500,11 +499,10 @@
         <ul class="recent-list">
           {#each data.recentEvents as e (e.id)}
             <li>
-              <strong>{new Date(e.occurredAt).toLocaleString()}</strong> — block {e.blockId}
+              <strong>{fmt.instant(e.occurredAt)}</strong> — block {e.blockId}
               · {e.products.map((p) => p.displayName).join(', ')}
               {#if e.preHarvestClearAt}
-                <span class="phi">· PHI clear {new Date(e.preHarvestClearAt).toLocaleString()}</span
-                >
+                <span class="phi">· PHI clear {fmt.instant(e.preHarvestClearAt)}</span>
               {/if}
             </li>
           {/each}

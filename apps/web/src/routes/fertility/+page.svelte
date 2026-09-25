@@ -1,5 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { formatRateText } from '$lib/stock/units';
 
   let { data } = $props();
 
@@ -13,9 +16,9 @@
   let appSource = $state('10-10-10');
   let appRate = $state(200);
   let appUnit = $state('lb-per-acre');
-  let appN = $state(20);
-  let appP = $state(20);
-  let appK = $state(20);
+  let appN = $state<number | null>(20);
+  let appP = $state<number | null>(20);
+  let appK = $state<number | null>(20);
 
   // Credit form
   let creditSource = $state('cover-crop:crimson-clover-cover');
@@ -29,6 +32,11 @@
   let stNO3 = $state<number | null>(null);
   let stP = $state<number | null>(null);
   let stK = $state<number | null>(null);
+
+  const rateUnit = $derived(fmt.unit('weightPerArea'));
+  const npk = (v: number | null | undefined) =>
+    fmt.qty(v ?? 0, 'weightPerArea', { digits: 0, bare: true });
+  const perAc = (v: number) => fmt.qty(v, 'weightPerArea', { digits: 1, bare: true });
 
   async function reload() {
     const url = new URL(window.location.href);
@@ -51,9 +59,9 @@
           source: appSource,
           ratePerAcre: appRate,
           rateUnit: appUnit,
-          nLbPerAcre: appN,
-          pLbPerAcre: appP,
-          kLbPerAcre: appK
+          nLbPerAcre: appN ?? undefined,
+          pLbPerAcre: appP ?? undefined,
+          kLbPerAcre: appK ?? undefined
         })
       });
       const out = await res.json();
@@ -150,7 +158,9 @@
     Block
     <select bind:value={blockId}>
       {#each data.blocks as b (b.id)}
-        <option value={b.id}>{b.name}{b.acres ? ` — ${b.acres.toFixed(2)} ac` : ''}</option>
+        <option value={b.id}
+          >{b.name}{b.acres ? ` — ${fmt.qty(b.acres, 'area', { digits: 2 })}` : ''}</option
+        >
       {/each}
     </select>
   </label>
@@ -168,29 +178,29 @@
       <thead>
         <tr>
           <th></th>
-          <th>N (lb/ac)</th>
-          <th>P₂O₅ (lb/ac)</th>
-          <th>K₂O (lb/ac)</th>
+          <th>N ({rateUnit})</th>
+          <th>P₂O₅ ({rateUnit})</th>
+          <th>K₂O ({rateUnit})</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <th scope="row">Applications</th>
-          <td>{data.budget.nDeliveredLbPerAcre.toFixed(1)}</td>
-          <td>{data.budget.pDeliveredLbPerAcre.toFixed(1)}</td>
-          <td>{data.budget.kDeliveredLbPerAcre.toFixed(1)}</td>
+          <td>{perAc(data.budget.nDeliveredLbPerAcre)}</td>
+          <td>{perAc(data.budget.pDeliveredLbPerAcre)}</td>
+          <td>{perAc(data.budget.kDeliveredLbPerAcre)}</td>
         </tr>
         <tr>
           <th scope="row">Cover-crop / residual credits</th>
-          <td>{data.budget.nCreditedLbPerAcre.toFixed(1)}</td>
-          <td>{data.budget.pCreditedLbPerAcre.toFixed(1)}</td>
-          <td>{data.budget.kCreditedLbPerAcre.toFixed(1)}</td>
+          <td>{perAc(data.budget.nCreditedLbPerAcre)}</td>
+          <td>{perAc(data.budget.pCreditedLbPerAcre)}</td>
+          <td>{perAc(data.budget.kCreditedLbPerAcre)}</td>
         </tr>
         <tr class="total">
           <th scope="row">Total available</th>
-          <td>{data.budget.totalNLbPerAcre.toFixed(1)}</td>
-          <td>{data.budget.totalPLbPerAcre.toFixed(1)}</td>
-          <td>{data.budget.totalKLbPerAcre.toFixed(1)}</td>
+          <td>{perAc(data.budget.totalNLbPerAcre)}</td>
+          <td>{perAc(data.budget.totalPLbPerAcre)}</td>
+          <td>{perAc(data.budget.totalKLbPerAcre)}</td>
         </tr>
       </tbody>
     </table>
@@ -206,11 +216,17 @@
     <label>Source <input type="text" bind:value={appSource} /></label>
     <label>Rate <input type="number" min="0" step="any" bind:value={appRate} /></label>
     <label>Unit <input type="text" bind:value={appUnit} /></label>
-    <label>N delivered (lb/ac) <input type="number" min="0" step="any" bind:value={appN} /></label>
     <label
-      >P₂O₅ delivered (lb/ac) <input type="number" min="0" step="any" bind:value={appP} /></label
+      >N delivered ({rateUnit})
+      <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appN} /></label
     >
-    <label>K₂O delivered (lb/ac) <input type="number" min="0" step="any" bind:value={appK} /></label
+    <label
+      >P₂O₅ delivered ({rateUnit})
+      <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appP} /></label
+    >
+    <label
+      >K₂O delivered ({rateUnit})
+      <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={appK} /></label
     >
     <button type="submit" class="primary" disabled={busy}>Record</button>
   </form>
@@ -226,12 +242,8 @@
       Use default credit table for this plugin
     </label>
     <label
-      >Override N credit (lb/ac, optional) <input
-        type="number"
-        min="0"
-        step="any"
-        bind:value={creditN}
-      /></label
+      >Override N credit ({rateUnit}, optional)
+      <UnitInput quantity="weightPerArea" min={0} suffix={false} bind:value={creditN} /></label
     >
     <button type="submit" class="primary" disabled={busy}>Record credit</button>
   </form>
@@ -265,11 +277,10 @@
     <ul>
       {#each data.applications as a (a.id)}
         <li>
-          {new Date(a.occurredAt).toLocaleDateString()} —
-          {a.source} · {a.ratePerAcre}
-          {a.rateUnit}
-          ({a.nLbPerAcre?.toFixed(0) ?? 0} N · {a.pLbPerAcre?.toFixed(0) ?? 0} P ·
-          {a.kLbPerAcre?.toFixed(0) ?? 0} K lb/ac)
+          {fmt.instant(a.occurredAt, 'date')} —
+          {a.source} · {formatRateText(a.ratePerAcre, a.rateUnit, currentPrefs())}
+          ({npk(a.nLbPerAcre)} N · {npk(a.pLbPerAcre)} P ·
+          {npk(a.kLbPerAcre)} K {rateUnit})
         </li>
       {/each}
     </ul>
@@ -285,8 +296,8 @@
       {#each data.credits as c (c.id)}
         <li>
           {c.appliesToYear} — {c.source}
-          ({c.nLbPerAcre?.toFixed(0) ?? 0} N · {c.pLbPerAcre?.toFixed(0) ?? 0} P ·
-          {c.kLbPerAcre?.toFixed(0) ?? 0} K lb/ac)
+          ({npk(c.nLbPerAcre)} N · {npk(c.pLbPerAcre)} P ·
+          {npk(c.kLbPerAcre)} K {rateUnit})
           {#if c.notes}<br /><em class="hint">{c.notes}</em>{/if}
         </li>
       {/each}
@@ -302,7 +313,7 @@
     <ul>
       {#each data.soilTests as t (t.id)}
         <li>
-          {new Date(t.sampledAt).toLocaleDateString()} — pH {t.ph?.toFixed(1) ?? '?'}, OM {t.organicMatterPct?.toFixed(
+          {fmt.instant(t.sampledAt, 'date')} — pH {t.ph?.toFixed(1) ?? '?'}, OM {t.organicMatterPct?.toFixed(
             1
           ) ?? '?'}%, NO₃ {t.nitratePpm ?? '?'} ppm
         </li>
@@ -353,6 +364,7 @@
     gap: 0.5rem;
   }
   input,
+  label :global(.unit-input input),
   select {
     padding: 0.55rem;
     border: 2px solid #d0d7d0;

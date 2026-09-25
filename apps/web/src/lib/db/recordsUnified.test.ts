@@ -308,4 +308,56 @@ describe('recordsUnified — listUnifiedRecords', () => {
       expect(KIND_TONE[k]).toBeTruthy();
     }
   });
+
+  it('renders spray conditions in the requested units', () => {
+    const ownerId = `rec-units-${randomUUID().slice(0, 6)}`;
+    const userId = `rec-units-user-${randomUUID().slice(0, 6)}`;
+    ensureOwner(ownerId);
+    ensureUser(userId);
+    const seeded = seedAllKinds(ownerId, userId);
+
+    runWithTenant(ownerId, () => {
+      const us = listUnifiedRecords({ kinds: ['spray'] });
+      const metric = listUnifiedRecords({ kinds: ['spray'] }, { units: 'metric' });
+      const usRow = us.find((r) => r.rowId === seeded.ids.spray);
+      const metricRow = metric.find((r) => r.rowId === seeded.ids.spray);
+      expect(usRow?.detail).toMatch(/mph \/ -?\d+°F$/);
+      expect(metricRow?.detail).toMatch(/km\/h \/ -?\d+°C$/);
+      expect(metricRow?.hash).toBe(usRow?.hash);
+    });
+  });
+});
+
+describe('summarizeUnifiedRecords — year-to-date in the user zone', () => {
+  const row = (occurredAt: number) =>
+    ({ kind: 'spray', occurredAt, locked: false }) as Parameters<
+      typeof summarizeUnifiedRecords
+    >[0][number];
+  const now = Date.parse('2026-06-15T12:00:00Z');
+  const newYearsEveEast = Date.parse('2026-01-01T03:00:00Z');
+
+  it('counts a Dec 31 evening in New York as last year', () => {
+    const s = summarizeUnifiedRecords(
+      [row(newYearsEveEast)],
+      { timeZone: 'America/New_York' },
+      now
+    );
+    expect(s.ytd).toBe(0);
+  });
+
+  it('counts the same instant as this year in UTC and Berlin', () => {
+    expect(summarizeUnifiedRecords([row(newYearsEveEast)], { timeZone: 'UTC' }, now).ytd).toBe(1);
+    expect(
+      summarizeUnifiedRecords([row(newYearsEveEast)], { timeZone: 'Europe/Berlin' }, now).ytd
+    ).toBe(1);
+  });
+
+  it('counts rows well inside the year without zone lookups', () => {
+    const s = summarizeUnifiedRecords(
+      [row(Date.parse('2026-03-01T00:00:00Z')), row(Date.parse('2025-06-01T00:00:00Z'))],
+      { timeZone: 'Pacific/Honolulu' },
+      now
+    );
+    expect(s.ytd).toBe(1);
+  });
 });

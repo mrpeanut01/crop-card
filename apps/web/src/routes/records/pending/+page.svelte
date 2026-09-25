@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { PendingSprayRecord } from '$lib/client/dexie';
+  import { fmt } from '$lib/prefsState.svelte';
 
   let pending = $state<PendingSprayRecord[]>([]);
   let otherOwnerCount = $state(0);
@@ -87,8 +88,8 @@
       {#each pending as p (p.id)}
         <li>
           <header>
-            <strong>{new Date(p.occurredAt).toLocaleString()}</strong>
-            <span class="meta">queued {new Date(p.createdAt).toLocaleTimeString()}</span>
+            <strong>{fmt.instant(p.occurredAt)}</strong>
+            <span class="meta">queued {fmt.instant(p.createdAt, 'time')}</span>
             <span class="attempts">{p.attempts} attempt{p.attempts === 1 ? '' : 's'}</span>
             <button class="discard" onclick={() => discard(p.id)}>Discard</button>
           </header>

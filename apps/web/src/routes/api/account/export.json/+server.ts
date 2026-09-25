@@ -24,7 +24,7 @@ import { type RequestHandler } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { equipment, equipmentLog, fertilityApplications, owners, users } from '$lib/db/schema';
-import { avatarUrl, avatarVersion } from '$lib/db/userProfile';
+import { avatarUrl, avatarVersion, prefsFor } from '$lib/db/userProfile';
 import { unscopedQueryNote, withTenant } from '$lib/db/tenant';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
@@ -50,7 +50,8 @@ export const GET: RequestHandler = async (event) => {
     : null;
 
   const records = listUnifiedRecords();
-  const summary = summarizeUnifiedRecords(records);
+  const prefs = prefsFor(user.id);
+  const summary = summarizeUnifiedRecords(records, prefs);
 
   // Fertility applications (tenant-scoped) — mirrors the `fertility` kind in
   // countsByKind so `events` reconciles with the summary.
@@ -145,6 +146,8 @@ export const GET: RequestHandler = async (event) => {
       createdAt: userRow?.createdAt?.toISOString() ?? null,
       aiEnabled: userRow?.aiEnabled === true,
       displayName: userRow?.displayName ?? null,
+      timeZone: prefs.timeZone,
+      displayUnits: prefs.units,
       avatarUrl: avatarUrl(user.id, avatarVersion(user.id))
     },
     activeOwner: ownerRow

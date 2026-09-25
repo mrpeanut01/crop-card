@@ -13,10 +13,15 @@
    */
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { formatRateText, formatStockQuantity } from '$lib/stock/units';
   import type { FertilityDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<FertilityDetailPayload, 'type'>;
   const { item, lots, movements, plugin }: Props = $props();
+
+  const stockQty = (v: number, digits?: number) =>
+    formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits });
 
   const npk = $derived(plugin?.analysis ?? { n: 0, p: 0, k: 0 });
   const npkMax = $derived(Math.max(npk.n, npk.p, npk.k, 1));
@@ -68,7 +73,11 @@
       {#if plugin?.applicationRange}
         <InvKVP
           label="Default rate"
-          value={`${plugin.applicationRange.amount} ${plugin.applicationRange.unit}`}
+          value={formatRateText(
+            plugin.applicationRange.amount,
+            plugin.applicationRange.unit,
+            currentPrefs()
+          )}
           tone="mono"
         />
       {:else}
@@ -87,17 +96,14 @@
 
   <div class="col">
     <InvSection title="On hand">
-      <InvKVP
-        label="Total"
-        value={`${lots.reduce((s, l) => s + l.balance, 0).toFixed(1)} ${item.defaultUnit}`}
-      />
+      <InvKVP label="Total" value={stockQty(lots.reduce((s, l) => s + l.balance, 0))} />
       <InvKVP label="Lots" value={lots.length} />
     </InvSection>
 
     <InvSection title="Storage & reorder">
       <InvKVP
         label="Reorder at"
-        value={item.reorderThreshold != null ? `${item.reorderThreshold} ${item.defaultUnit}` : '—'}
+        value={item.reorderThreshold != null ? stockQty(item.reorderThreshold, 2) : '—'}
       />
       <InvKVP label="Notes" value={item.notes ?? '—'} />
     </InvSection>
@@ -109,10 +115,10 @@
         <ul class="movement-list">
           {#each movements.slice(0, 8) as m (m.id)}
             <li>
-              <span class="muted small">{new Date(m.occurredAt).toLocaleDateString()}</span>
+              <span class="muted small">{fmt.instant(m.occurredAt, 'date')}</span>
               <span class="mono">{m.reason}</span>
               <span class={m.delta < 0 ? 'rust' : 'forest'}>
-                {m.delta > 0 ? '+' : ''}{m.delta.toFixed(1)}
+                {m.delta > 0 ? '+' : ''}{stockQty(m.delta)}
               </span>
             </li>
           {/each}

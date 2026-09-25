@@ -94,6 +94,15 @@ describe('checkNearbyPollinatorBlocks', () => {
     expect(formatDistance(420.4)).toBe('420 ft');
     expect(formatDistance(2640)).toBe('0.5 mi');
     expect(formatDistance(null)).toBe('distance unknown');
+    expect(formatDistance(420.4, { units: 'metric' })).toBe('128 m');
+    expect(formatDistance(5280, { units: 'metric' })).toBe('1.6 km');
+    expect(formatDistance(null, { units: 'metric' })).toBe('distance unknown');
+    const metric = checkNearbyPollinatorBlocks({
+      beeToxicity: 'toxic',
+      neighbors: [],
+      prefs: { units: 'metric' }
+    });
+    expect(metric.reason).toContain('within 1.6 km');
   });
 });
 

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { X } from 'lucide-svelte';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
 
   interface BlockSeed {
     id: string;
@@ -155,8 +156,8 @@
           />
         </label>
         <label class="field">
-          <span class="label">Acres</span>
-          <input type="number" step="0.01" min="0" bind:value={acres} placeholder="Optional" />
+          <span class="label">Area</span>
+          <UnitInput quantity="area" min={0} bind:value={acres} placeholder="Optional" />
           <span class="hint">
             <a href={legacyEditorHref}>Edit geometry on map →</a>
           </span>
@@ -236,14 +237,16 @@
   .req {
     color: var(--color-rust, #a23a3a);
   }
-  input {
+  input,
+  .field :global(.unit-input > input) {
     padding: 10px 12px;
     border: 1px solid var(--color-divider);
     border-radius: 6px;
     font: inherit;
     background: var(--color-paper);
   }
-  input:focus {
+  input:focus,
+  .field :global(.unit-input > input:focus) {
     outline: 2px solid var(--color-forest);
     outline-offset: 1px;
   }

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { checkFracRotation } from '$lib/safety/fracRotation';
 import type { RainfastCheck } from '$lib/weather/leafWet';
@@ -9,6 +9,13 @@ import DryWindowGate from './DryWindowGate.svelte';
 import FracRotationTile from './FracRotationTile.svelte';
 import LeafWetDial from './LeafWetDial.svelte';
 import RainSparkline from './RainSparkline.svelte';
+
+const page = vi.hoisted(() => ({ data: {} as Record<string, unknown> }));
+vi.mock('$app/state', () => ({ page }));
+
+afterEach(() => {
+  page.data = {};
+});
 
 const T = Date.UTC(2026, 8, 25, 16);
 
@@ -65,9 +72,22 @@ describe('RainSparkline', () => {
       provenance: 'data'
     });
     expect(container.querySelectorAll('rect')).toHaveLength(3);
+    expect(screen.getByRole('img', { name: /Sat 0.28 in/ })).toBeInTheDocument();
+    expect(screen.getByText('0.43 in total')).toBeInTheDocument();
+    expect(screen.getByText(/11h wet/)).toBeInTheDocument();
+  });
+
+  it('shows millimetres for metric users', () => {
+    page.data = { prefs: { timeZone: 'Europe/Berlin', units: 'metric' } };
+    render(RainSparkline, {
+      rain: [
+        { date: '2026-09-26', value: 7.2, coveredHours: 24 },
+        { date: '2026-09-27', value: 3.6, coveredHours: 24 }
+      ],
+      provenance: 'data'
+    });
     expect(screen.getByRole('img', { name: /Sat 7.2 mm/ })).toBeInTheDocument();
     expect(screen.getByText('10.8 mm total')).toBeInTheDocument();
-    expect(screen.getByText(/11h wet/)).toBeInTheDocument();
   });
 
   it('shows the unavailable message with no data', () => {
@@ -111,6 +131,20 @@ describe('DryWindowGate', () => {
     await fireEvent.click(box);
     expect(box.checked).toBe(true);
     expect(screen.getByText(/No 4-hour dry window/)).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(/from Fri 1:00 PM .*0\.09 in\)/);
+  });
+
+  it('rain-risk times follow the user zone and units', () => {
+    page.data = { prefs: { timeZone: 'Europe/Berlin', units: 'metric' } };
+    render(DryWindowGate, {
+      rainfast: rainfast({ status: 'rain-risk', firstRiskMs: T + 3600_000, totalPrecipMm: 2.4 }),
+      dryWindow: { startMs: T + 6 * 3600_000, endMs: T + 10 * 3600_000, hours: 4 },
+      provenance: 'data',
+      rainfastFromLabel: true,
+      acknowledged: false
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent(/from Fri 7:00 PM .*2\.4 mm\)/);
+    expect(screen.getByText(/Sat 12:00 AM – Sat 4:00 AM/)).toBeInTheDocument();
   });
 
   it('fallback provenance is honest and never asks for acknowledgement', () => {

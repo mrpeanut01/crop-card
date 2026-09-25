@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
+  import { fmt as prefsFmt } from '$lib/prefsState.svelte';
 
   const { data } = $props();
 
@@ -9,19 +10,25 @@
     [
       'Planting',
       data.cropPlugin?.displayName ?? data.crop.cropPluginId,
-      data.crop.plantingDate ? String(new Date(data.crop.plantingDate).getFullYear()) : 'planned'
+      data.crop.plantingDate
+        ? new Date(data.crop.plantingDate).toISOString().slice(0, 4)
+        : 'planned'
     ].join(' · ')
   );
 
   let busy = $state(false);
   let actionError = $state<string | null>(null);
 
+  function fmtDay(ms: number): string {
+    return prefsFmt.day(ms);
+  }
+
   function fmt(ms: number): string {
-    return new Date(ms).toLocaleDateString();
+    return prefsFmt.instant(ms, 'date');
   }
 
   function fmtDateTime(ms: number): string {
-    return new Date(ms).toLocaleString();
+    return prefsFmt.instant(ms);
   }
 
   async function changeStatus(action: 'mark-harvested' | 'archive' | 'mark-failed' | 'reactivate') {
@@ -96,9 +103,9 @@
     <h1 class="serif">{data.crop.varietyDisplayName}</h1>
     <p class="meta">
       Block <strong>{data.block.name}</strong>
-      {#if data.block.acres}— {data.block.acres} ac{/if}
-      {#if data.crop.plantingDate}· Planted {fmt(data.crop.plantingDate)}{:else}· Planned — no date
-        set{/if}
+      {#if data.block.acres}— {prefsFmt.qty(data.block.acres, 'area')}{/if}
+      {#if data.crop.plantingDate}· Planted {fmtDay(data.crop.plantingDate)}{:else}· Planned — no
+        date set{/if}
     </p>
   </div>
   <div class="status-row">
@@ -191,7 +198,7 @@
     <ul>
       {#each data.tasks as t (t.id)}
         <li>
-          <span class="when">{fmtDateTime(t.scheduledFor)}</span>
+          <span class="when">{fmtDay(t.scheduledFor)}</span>
           <strong>{t.title}</strong>
           <span class="kind-chip">{t.kind}</span>
           {#if t.completedAt}<span class="status status-harvested">done</span>{/if}
@@ -338,7 +345,7 @@
     <ul>
       {#each data.projected as p (p.kind + p.startMs + p.title)}
         <li>
-          <span class="when">{fmt(p.startMs)}</span>
+          <span class="when">{fmtDay(p.startMs)}</span>
           <strong>{p.title}</strong>
           <span class="kind-chip">{p.kind}</span>
         </li>

@@ -3,6 +3,7 @@
   import SprayPageHeader from './SprayPageHeader.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import Button from '$lib/components/ui/Button.svelte';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   /** Shell shared by `/spray/insecticide` + `/spray/fungicide`. Owns the
    *  header, block selector, conditions, submit, banner stack, and the
@@ -141,6 +142,7 @@
   const tempFieldId = $derived(`${chemistry}-temp`);
   const rainFieldId = $derived(`${chemistry}-rain`);
   const tankFieldId = $derived(`${chemistry}-tank`);
+  const metric = $derived(currentPrefs().units === 'metric');
   const conditionsHeading = $derived(observation ? '3 · Conditions' : '2 · Conditions');
 </script>
 
@@ -158,7 +160,9 @@
     <select id={blockFieldId} bind:value={blockId} required>
       <option value="">— pick a block —</option>
       {#each blocks as b (b.id)}
-        <option value={b.id}>{b.name}{b.acres ? ` · ${b.acres.toFixed(2)} acres` : ''}</option>
+        <option value={b.id}
+          >{b.name}{b.acres ? ` · ${fmt.label(b.acres, 'area', { digits: 2 })}` : ''}</option
+        >
       {/each}
     </select>
 
@@ -193,9 +197,13 @@
 
     <label for={windFieldId}>Wind (mph)</label>
     <input id={windFieldId} type="number" min="0" step="0.5" bind:value={windMph} required />
+    {#if metric && Number.isFinite(windMph)}<span class="hint">≈ {fmt.qty(windMph, 'speed')}</span
+      >{/if}
 
     <label for={tempFieldId}>Temperature (°F)</label>
     <input id={tempFieldId} type="number" step="0.5" bind:value={tempF} required />
+    {#if metric && Number.isFinite(tempF)}<span class="hint">≈ {fmt.qty(tempF, 'temperature')}</span
+      >{/if}
 
     <label for={rainFieldId}>Rain forecast next 24h (%)</label>
     <input
@@ -210,6 +218,7 @@
 
     <label for={tankFieldId}>Tank size (gal, optional — enables stock decrement)</label>
     <input id={tankFieldId} type="number" min="0" step="0.5" bind:value={tankSize} />
+    {#if metric && tankSize}<span class="hint">≈ {fmt.qty(tankSize, 'volume')}</span>{/if}
   </section>
 
   <section class="card actions">
@@ -278,6 +287,12 @@
     border: 1px solid var(--color-divider);
     border-radius: var(--radius-input, 6px);
     background: var(--color-paper, #fff);
+  }
+  .hint {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--color-ink-soft);
   }
   .actions {
     text-align: right;

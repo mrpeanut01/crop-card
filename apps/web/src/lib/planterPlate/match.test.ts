@@ -112,6 +112,17 @@ describe('cellCountRecommendation', () => {
     expect(rec?.band).toBe('mid');
   });
 
+  it("notes the density in the user's units", () => {
+    expect(cellCountRecommendation(9, 30)?.note).toBe(
+      '23,232 plants/ac is between 22k–26k — either works, but 24-cell gives more downward sprocket headroom.'
+    );
+    const metric = cellCountRecommendation(9, 30, { units: 'metric' });
+    expect(metric?.plantsPerAcre).toBe(23_232);
+    expect(metric?.note).toBe(
+      '57,408 plants/ha is between 54k–64k — either works, but 24-cell gives more downward sprocket headroom.'
+    );
+  });
+
   it('returns null when in-row spacing is missing or invalid', () => {
     expect(cellCountRecommendation(undefined, 30)).toBeNull();
     expect(cellCountRecommendation(0, 30)).toBeNull();

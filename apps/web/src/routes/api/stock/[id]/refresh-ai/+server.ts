@@ -20,27 +20,12 @@ import { getTaxonomyTerm } from '$lib/db/taxonomy';
 import { requireOwner } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
 import { refreshStockItem } from '$lib/server/aiRefreshStock';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { CropPlugin } from '$lib/plugins/schemas';
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const guard = checkGuard(user.id, 'rationale');
-  if (!guard.ok) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'rationale',
-      model: 'n/a',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: guard.reason
-    });
-    return json({ error: guard.message }, { status: guard.status });
-  }
-
   const id = event.params.id;
   if (!id) return json({ error: 'missing id' }, { status: 400 });
   const item = getStockItem(id);
@@ -60,21 +45,46 @@ export const POST: RequestHandler = async (event) => {
   // Not sent to Claude.
   const seedTypeName = item.typeId ? getTaxonomyTerm(item.typeId)?.name : undefined;
 
-  const response = await refreshStockItem({
-    itemId: item.id,
-    displayName: item.displayName,
-    shortName: item.shortName,
-    category: item.category,
-    pluginId: item.pluginId,
-    cropFamily,
-    existingSeedMeta: isObject(existingSeedMeta) ? existingSeedMeta : undefined,
-    existingActiveIngredients: Array.isArray(existingActiveIngredients)
-      ? existingActiveIngredients
-      : undefined,
-    existingFormulation: isObject(existingFormulation) ? existingFormulation : undefined,
-    seedTypeName
+  const tried = await tryAiWithGuard({
+    endpoint: 'rationale',
+    userId: user.id,
+    timeoutMs: 120_000,
+    prompt: () =>
+      refreshStockItem({
+        itemId: item.id,
+        displayName: item.displayName,
+        shortName: item.shortName,
+        category: item.category,
+        pluginId: item.pluginId,
+        cropFamily,
+        existingSeedMeta: isObject(existingSeedMeta) ? existingSeedMeta : undefined,
+        existingActiveIngredients: Array.isArray(existingActiveIngredients)
+          ? existingActiveIngredients
+          : undefined,
+        existingFormulation: isObject(existingFormulation) ? existingFormulation : undefined,
+        seedTypeName
+      })
   });
 
+  if (tried.provenance === 'fallback') {
+    recordFallback(user.id, 'rationale', tried.fallbackReason);
+    return json({
+      result: null,
+      provenance: 'fallback',
+      fallbackReason: tried.fallbackReason,
+      message: `${tried.fallbackMessage} The item is unchanged; edit its fields by hand.`,
+      meta: {
+        model: 'n/a',
+        usdEstimate: 0,
+        fallback: tried.fallbackReason === 'no-key' ? 'no-api-key' : 'ai-unavailable',
+        errorMessage: tried.fallbackMessage
+      },
+      spend: tried.guard.ok ? tried.guard.spend : null
+    });
+  }
+
+  const response = tried.value;
+  const provenance = response.meta.fallback ? 'fallback' : 'ai';
   recordCall({
     userId: user.id,
     endpoint: 'rationale',
@@ -84,7 +94,8 @@ export const POST: RequestHandler = async (event) => {
     outputTokens: response.meta.outputTokens,
     usdEstimate: response.meta.usdEstimate,
     success: !!response.result?.hasCitations,
-    errorClass: response.meta.fallback
+    errorClass: response.meta.fallback,
+    provenance
   });
 
   // Phase 17 follow-up — persist the suggestion so it survives modal
@@ -103,13 +114,14 @@ export const POST: RequestHandler = async (event) => {
   return json({
     result: response.result,
     pendingRefreshAt,
+    provenance,
     meta: {
       model: response.meta.model,
       usdEstimate: response.meta.usdEstimate,
       fallback: response.meta.fallback,
       errorMessage: response.meta.errorMessage
     },
-    spend: guard.spend
+    spend: tried.guard.ok ? tried.guard.spend : null
   });
 };
 

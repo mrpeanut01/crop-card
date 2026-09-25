@@ -19,8 +19,8 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
-  "epaRegistrationNumber": "73049-39",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
+  "epaRegistrationNumber": "69553-1",
   "targetPests": [
     "codling moth",
     "Oriental fruit moth"

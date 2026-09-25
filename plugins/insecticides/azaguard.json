@@ -21,7 +21,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
-  "epaRegistrationNumber": "70051-9",
+  "epaRegistrationNumber": "70299-17",
   "targetPests": [
     "aphid",
     "whitefly",

@@ -25,7 +25,7 @@
     "russet mite"
   ],
   "pollinatorRisk": "high",
-  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
   "notes": "Avermectin IRAC 6 — translaminar. Mite + leafminer specialist. Restricted-use. Apple / orchard / vegetable.",
   "complianceFlags": {
     "omriListed": false,

@@ -22,7 +22,7 @@
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
-  "epaRegistrationNumber": "59639-94",
+  "epaRegistrationNumber": "71711-21",
   "targetPests": [
     "whitefly nymphs",
     "scale",

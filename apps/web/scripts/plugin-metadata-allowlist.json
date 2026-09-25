@@ -12,16 +12,6 @@
       "reason": "Generic plugin with no single label: dozens of 2,4-D amine registrations differ in strength and label wording, so the formulation code must come from the jug on hand rather than one chosen label."
     },
     {
-      "pluginId": "acuron",
-      "field": "formulation",
-      "reason": "Label (100-1466, 2021-11-10, p3) says 'Acuron Herbicide is a ZC formulation'; ZC (mixed capsule suspension + SC) is not in the formulation enum, and PPLS lists it as Emulsifiable Concentrate. Needs enum decision."
-    },
-    {
-      "pluginId": "alldown-acetic-citric",
-      "field": "formulation",
-      "reason": "AllDown Concentrate label (EPA 84069-1, 2010) names no formulation type (only 'Concentrate', diluted 1:2-1:3 with water); PPLS lists 'Ready-to-Use Solution', not a code. Registration inactive since 2025-01-13."
-    },
-    {
       "pluginId": "banvel",
       "field": "formulation",
       "reason": "No single Banvel product: the Banvel name is on three UPL registrations (70506-461 Banvel, 70506-505 Banvel 4 SL, 70506-503 Banvel 480) and the plugin names BASF, whose dicamba label never says Banvel. Pick the product first; formulation follows (label-research 2026-09-25)."
@@ -57,16 +47,6 @@
       "reason": "The ET Herbicide/Defoliant label (71711-7, 2026-09-03, p3) prints no formulation code or name ('Contains 0.208 lb. pyraflufen ethyl per gallon'). PPLS lists 'Emulsifiable Concentrate'; its inactive brand name is 'ET-751 2.5% EC'. Corroboration only."
     },
     {
-      "pluginId": "express-tribenuron",
-      "field": "formulation",
-      "reason": "Ambiguous brand: FMC sells Express with TotalSol (279-9594, labeled Soluble Granule, SG) and Express XP (279-9578, labeled Dry Flowable, DF; old name Express Herbicide). Pick the jug on hand."
-    },
-    {
-      "pluginId": "finalsan-pelargonic",
-      "field": "formulation",
-      "reason": "Identity unclear: the plugin says pelargonic acid (EU Finalsan), but US Finalsan (67702-8, 67702-34) is ammoniated soap of fatty acids 22%. Neither label prints a formulation; PPLS says EC for one, Soluble Concentrate for the other."
-    },
-    {
       "pluginId": "glyphosate-generic",
       "field": "formulation",
       "reason": "Generic 'Glyphosate 41%' names no single product; formulation must come from the specific jug's label (41% IPA-salt products are typically soluble liquids, but not verified per product)."
@@ -87,11 +67,6 @@
       "reason": "Liberty ULTRA label (EPA 7969-500, 2025-10-30 and 2024-10-22) prints no formulation code or type; says only it 'is a water-soluble nonselective herbicide' and 'is formulated to mix readily in water'. PPLS formulations field is empty."
     },
     {
-      "pluginId": "lumax-ez",
-      "field": "formulation",
-      "reason": "Label (100-1442, 2022-12-14, p3) says 'Lumax® EZ Herbicide is a ZC formulation'. ZC is not in the formulation enum, and PPLS lists 'Pressurized Liquid'. Needs enum decision."
-    },
-    {
       "pluginId": "me-too-lachlor-ii",
       "field": "formulation",
       "reason": "Me-Too-Lachlor II label (19713-549, 2023-01-04) prints no formulation code or wording ('7.8 pounds of active ingredient per gallon' only); PPLS record says Emulsifiable Concentrate, usable only as corroboration."
@@ -107,21 +82,6 @@
       "reason": "Label (GF-4556, 62719-756, 2025-04-04, p3) calls it only 'An encapsulated herbicide'. It is a premix with encapsulated acetochlor, so CS vs ZC can't be settled, and it prints no code. PPLS formulation field is empty."
     },
     {
-      "pluginId": "stadia-dry",
-      "field": "formulation",
-      "reason": "Placeholder plugin with no real active ingredient; the only PPLS 'Stadia' (91234-31, Atticus) is a Water Dispersible Granule, but the plugin's identity with that product is unconfirmed."
-    },
-    {
-      "pluginId": "stadia",
-      "field": "defaultUnit",
-      "reason": "Plugin identity unresolved: the only PPLS product named Stadia (91234-31, Atticus) is halosulfuron-methyl 75% WDG, but this plugin declares rimsulfuron. Held until the owner decides which product the plugin describes (label-research 2026-09-25)."
-    },
-    {
-      "pluginId": "stadia",
-      "field": "formulation",
-      "reason": "Plugin identity unresolved: the only PPLS product named Stadia (91234-31, Atticus) is halosulfuron-methyl 75% WDG, but this plugin declares rimsulfuron. Held until the owner decides which product the plugin describes (label-research 2026-09-25)."
-    },
-    {
       "pluginId": "stinger",
       "field": "formulation",
       "reason": "Stinger label (EPA 62719-73, 2019-03-11 and 2014-09-23 versions) prints no formulation code or type; states only clopyralid MEA salt 40.9% (3 lb ae/gal). PPLS record says 'Emulsifiable Concentrate' (not corroborated by label)."
@@ -130,16 +90,6 @@
       "pluginId": "weed-zap-citronella",
       "field": "formulation",
       "reason": "Weed Zap is a FIFRA 25(b) exempt product (no EPA label). JH Biotech label (2014) calls it only 'WEED ZAP concentrate' (45% clove oil, 45% cinnamon oil); no EC/SL/L code or formulation term. JH product profile says 'Form: Liquid' (not label)."
-    },
-    {
-      "pluginId": "xtendimax",
-      "field": "formulation",
-      "reason": "XtendiMax label (264-1210, 2023-02-16) prints only '2.9 pounds acid equivalent per U.S. gallon', no formulation type. The successor Stryax label (264-1241, p15) says 'a soluble concentrate' but is a different brand; fill SL if repointed."
-    },
-    {
-      "pluginId": "admiral-igr",
-      "field": "formulation",
-      "reason": "No US 'Admiral' pyriproxyfen product in EPA PPLS (name search 2026-09-25); plugin's 71711-2 is Moncut CL Flowable. Admiral is a non-US brand; no label to verify."
     },
     {
       "pluginId": "bt-kurstaki",
@@ -170,11 +120,6 @@
       "pluginId": "jms-stylet-oil",
       "field": "formulation",
       "reason": "Label 65564-1 (2011-07-19) prints no formulation code or name (only 'dilute spray emulsion'); PPLS type is 'Oils (no added pesticide)'. Undiluted 97.1% paraffinic oil, a liquid with no matching code."
-    },
-    {
-      "pluginId": "m-pede-organic",
-      "field": "formulation",
-      "reason": "M-Pede label (EPA 10163-324, 2021-01-21) prints no formulation code or type; only 'concentrate' and '4.16 lb ai per gallon'. PPLS record lists Soluble Concentrate (SL), unconfirmed on label."
     },
     {
       "pluginId": "m-pede",
@@ -267,11 +212,6 @@
       "reason": "Serenade ASO label 264-1152 (2025-02-12) says 'AN AQUEOUS SUSPENSION BIOFUNGICIDE' with no code; PPLS lists Emulsifiable Concentrate, which conflicts. Live-microbe suspension; SC is closest but unconfirmed."
     },
     {
-      "pluginId": "topguard-ez",
-      "field": "formulation",
-      "reason": "No PPLS product named 'TopGuard EZ' and 279-3505 has no PPLS record (checked 2026-09-25). TopGuard (279-3557, SC, 1.04 lb/gal) and TopGuard Terra/EQ/Maxx exist, but the plugin's product cannot be tied to one label."
-    },
-    {
       "pluginId": "2-4-d-amine",
       "field": "epaRegistrationNumber",
       "reason": "Generic plugin: '2,4-D Amine' names an active ingredient, not one registrant's product; dozens of EPA registrations exist and the number depends on the jug on hand (checked 2026-09-25)."
@@ -327,24 +267,9 @@
       "reason": "Generic: PPLS search 'Mesotrione 4SC' (2026-09-25) returns 10+ active registrations from different registrants (e.g. 89168-54, 93809-1, 84229-48, 42750-315, 93182-30, 87290-61, 60063-66); number depends on the jug on hand."
     },
     {
-      "pluginId": "stadia-dry",
-      "field": "epaRegistrationNumber",
-      "reason": "Placeholder plugin: active ingredient 'stadia-active-ingredient', no real AI. PPLS has 'Stadia' only as an Atticus alternate brand of 91234-31 (halosulfuron-methyl 75% WDG); can't match without confirming the plugin means halosulfuron."
-    },
-    {
-      "pluginId": "stadia",
-      "field": "epaRegistrationNumber",
-      "reason": "Plugin identity unresolved: the only PPLS product named Stadia (91234-31, Atticus) is halosulfuron-methyl 75% WDG, but this plugin declares rimsulfuron. Held until the owner decides which product the plugin describes (label-research 2026-09-25)."
-    },
-    {
       "pluginId": "treflan-trust-ec",
       "field": "epaRegistrationNumber",
       "reason": "Plugin spans two brands: Treflan HFP is one registration (62719-250 transferred to Gowan as 10163-363 in 2016), but Trust is WinField 1381-146 or 1381-261 and no PPLS product is named Trust HFP. Use the number on the jug."
-    },
-    {
-      "pluginId": "xtendimax",
-      "field": "epaRegistrationNumber",
-      "reason": "XtendiMax With VaporGrip 264-1210 is Inactive (court vacated it 2024-02-06). The 2026 Bayer re-registration 264-1241 is branded Stryax Herbicide and doesn't name XtendiMax. Repoint the plugin to Stryax or retire it."
     },
     {
       "pluginId": "bt-kurstaki",
@@ -370,6 +295,21 @@
       "pluginId": "trichogramma-egg-parasitoid",
       "field": "epaRegistrationNumber",
       "reason": "Trichogramma egg parasitoids are macro-organisms (beneficial insects), exempt from FIFRA registration under 40 CFR 152.20(a). The producer page (Beneficial Insectary TRICHOforce B) shows no EPA number."
+    },
+    {
+      "pluginId": "phydura-clove-citric",
+      "field": "epaRegistrationNumber",
+      "reason": "FIFRA 25(b) minimum-risk product (Soil Technologies Corp. label, OMRI 10/2022): 'This product has not been registered by the U.S. E.P.A.' No EPA Reg. No. exists; 82557-3 is Sinon Methomyl 90 WSP."
+    },
+    {
+      "pluginId": "weed-zap-citronella",
+      "field": "epaRegistrationNumber",
+      "reason": "FIFRA 25(b) minimum-risk product (JH Biotech Weed Zap label: 'exempt from registration ... under section 25 (b) of FIFRA'). No EPA Reg. No.; 84718-1 does not exist in PPLS."
+    },
+    {
+      "pluginId": "dimethoate-4ec",
+      "field": "epaRegistrationNumber",
+      "reason": "Generic plugin: several active dimethoate 4EC registrations (Loveland 34704-207, Drexel 19713-231, UPL 70506-453, FMC 279-3541); the number depends on the jug on hand. The previous 5905-368 was Omni Supreme Spray (a mineral oil)."
     }
   ]
 }

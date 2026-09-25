@@ -114,9 +114,9 @@ describe('localFuzzyMatchPlugins', () => {
     );
   });
 
-  it('#255: an ambiguous oz-rate plugin gets no derived unit (form default applies)', async () => {
-    const matches = await localFuzzyMatchPlugins('stadia', 'herbicide');
-    const hit = matches.find((m) => m.candidate?.pluginId === 'stadia');
+  it('#255: a plugin with no unit evidence gets no derived unit (form default applies)', async () => {
+    const matches = await localFuzzyMatchPlugins('bt kurstaki', 'insecticide');
+    const hit = matches.find((m) => m.candidate?.pluginId === 'bt-kurstaki');
     expect(hit).toBeDefined();
     expect(hit?.candidate && 'defaultUnit' in hit.candidate).toBe(false);
   });

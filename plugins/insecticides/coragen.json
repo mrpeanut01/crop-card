@@ -28,7 +28,7 @@
     "leafminer larvae"
   ],
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "labelClaims": {
     "safeForCropFamilies": [
       "solanaceae",

@@ -22,7 +22,6 @@
   "preHarvestIntervalDays": 14,
   "pollinatorRisk": "high",
   "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
-  "epaRegistrationNumber": "5905-368",
   "targetPests": [
     "aphid",
     "leafminer",

@@ -48,6 +48,9 @@ async function collectJsonFiles(dir: string): Promise<string[]> {
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
+      // `_retired/` (pluginLifecycle's soft-retire target) and any other
+      // `_`-prefixed directory are parked plugins, not part of the library.
+      if (entry.name.startsWith('_')) continue;
       out.push(...(await collectJsonFiles(full)));
     } else if (entry.isFile() && entry.name.endsWith('.json')) {
       out.push(full);

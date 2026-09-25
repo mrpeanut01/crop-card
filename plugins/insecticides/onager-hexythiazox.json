@@ -21,7 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 28,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "10163-277",
   "targetPests": [
     "twospotted spider mite eggs and immatures",

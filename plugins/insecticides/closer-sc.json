@@ -21,8 +21,8 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 1,
   "pollinatorRisk": "high",
-  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
-  "epaRegistrationNumber": "62719-625",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom","residualToxicityHours":3},
+  "epaRegistrationNumber": "62719-623",
   "targetPests": [
     "aphid",
     "whitefly",

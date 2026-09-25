@@ -25,7 +25,7 @@
   "preHarvestIntervalDays": 1,
   "pollinatorRisk": "high",
   "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
-  "epaRegistrationNumber": "100-1402",
+  "epaRegistrationNumber": "100-1320",
   "targetPests": [
     "corn earworm",
     "fall armyworm",

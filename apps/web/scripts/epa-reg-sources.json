@@ -24,8 +24,11 @@
     },
     "agrimek-sc": {
       "epaRegistrationNumber": "100-1351",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20140930.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, AGRI-MEK SC MITICIDE"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "docDate": "2021-02-09",
+      "page": 3,
+      "quote": "Agri-Mek® SC Miticide/Insecticide Active Ingredient: Abamectin ... 8.0% ... formulated as a suspension concentrate and contains 0.7 lb abamectin per gallon",
+      "note": "Verified 2026-09-25 (confirmed). Brand spelled 'Agri-Mek' on label; PPLS Active, Syngenta, Restricted Use (matches plugin)."
     },
     "aprovia": {
       "epaRegistrationNumber": "100-1471",
@@ -67,8 +70,11 @@
     },
     "brigade-2ec": {
       "epaRegistrationNumber": "279-3313",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03313-20211119.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, BRIGADE 2EC"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/OR070014-20241008.pdf",
+      "docDate": "2024-10-08",
+      "page": 1,
+      "quote": "SLN Registration Number: OR070014 ... Parent EPA Reg. No.: 279-3313 Product Name: Brigade 2EC Insecticide/Miticide",
+      "note": "Verified 2026-09-25 (confirmed). The PPLS product lookup returns no record for 279-3313, so the federal label could not be read. Two EPA SLN acceptance letters name Brigade 2EC with parent 279-3313 (OR070014 2024-10-08, and CO170003 2021-11-10 p1-2, 'EPA Reg. No. 279-3313'). Both SLNs are Active, FMC, bifenthrin 25.1% EC, RUP. Separately, PPLS name search lists 'BRIGADE 2EC INSECTICIDE/MITICIDE' as an alternate brand on 279-3069, but the 279-3069 labels (2025, 2009) print only 'Capture 2EC', no Brigade. Owner may want to re-check once PPLS lists 279-3313."
     },
     "callisto": {
       "epaRegistrationNumber": "100-1131",
@@ -109,9 +115,12 @@
       "note": "the only Cuprofix Ultra Disperss product; not Cuprofix Flex 70506-393"
     },
     "dimilin-2l": {
-      "epaRegistrationNumber": "400-461",
+      "epaRegistrationNumber": "70506-525",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00461-20201102.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, DIMILIN 2L,11/02/2020"
+      "docDate": "2020-11-02",
+      "page": 3,
+      "quote": "DIFLUBENZURON GROUP 15 INSECTICIDE DIMILIN® 2L [Alternate Brand Names: MICROMITE® 2L; DIMILIN® 2L INSECTICIDE; MICROMITE® 2L INSECTICIDE] Insect Growth Regulator Aqueous Flowable",
+      "note": "Corrected 2026-09-25 from 400-461. PPLS transfer_history: 400-461 (MacDermid Agricultural Solutions) transferred to 70506-525 (UPL NA, Inc.) on 2021-06-09, which matches the plugin's 'UPL'. 70506-525 is Active, diflubenzuron 22%, Restricted Use. No label has been filed under the new number yet (newest file still prints 400-461)."
     },
     "dipel-df": {
       "epaRegistrationNumber": "73049-39",
@@ -119,10 +128,12 @@
       "matchedTitle": "US EPA, Pesticide Product Label, DIPEL DF BIOLOGICAL ..."
     },
     "dithane-rainshield": {
-      "epaRegistrationNumber": "62719-396",
+      "epaRegistrationNumber": "70506-654",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00396-20240229.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, Dithane F-45®,02/29/2024",
-      "note": "F-45 flowable; not Dithane DF Rainshield 62719-402"
+      "docDate": "2024-02-29",
+      "page": 3,
+      "quote": "Group M3 FUNGICIDE Dithane F-45® FUNGICIDE [Alternate Brand Name: Dithane F-45® Rainshield®] Active Ingredients mancozeb",
+      "note": "Corrected 2026-09-25 from 62719-396. Brand confirmed on the 2024 Corteva label for 62719-396. PPLS shows that registration transferred to UPL NA, Inc. as 70506-654 on 2025-02-18 (Active; alt brand 'Dithane F-45® Rainshield®'); no UPL-issued label is posted yet, so the quote is from the last Corteva label of the same registration. Plugin displayName 'Corteva' is stale (now UPL)."
     },
     "dual-ii-magnum": {
       "epaRegistrationNumber": "100-818",
@@ -130,9 +141,12 @@
       "matchedTitle": "US EPA, Pesticide Product Label, DUAL II MAGNUM"
     },
     "elevate-50wdg": {
-      "epaRegistrationNumber": "66330-35",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00035-20210525.pdf",
-      "matchedTitle": "Elevate 50 WDG Fungicide"
+      "epaRegistrationNumber": "70506-446",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00446-20260303.pdf",
+      "docDate": "2026-03-03",
+      "page": 3,
+      "quote": "FenhexamidGROUP 17 FUNGICIDE ELEVATE®50 WDG Fungicide [Alternate Brand Name: JUDGE®50 WDG] [50% Water Dispersible Granule",
+      "note": "Corrected 2026-09-25 from 66330-35. Same registration transferred from Arysta LifeScience (66330-35) to UPL NA, Inc. as 70506-446 on 2021-05-26 (PPLS, Active). Plugin displayName 'Arysta' is stale (now UPL)."
     },
     "entrust-sc": {
       "epaRegistrationNumber": "62719-621",
@@ -237,7 +251,10 @@
     "poast-plus": {
       "epaRegistrationNumber": "7969-88",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00088-20140211.pdf",
-      "matchedTitle": "Poast Plus Herbicide"
+      "docDate": "2014-02-11",
+      "page": 3,
+      "quote": "Poast Plus herbicide For broad-spectrum, postemergence selective control of annual and perennial grass weeds ... Equivalent to 1 pound of sethoxydim per gallon formulated as an emulsifiable concentrate ... EPA Reg. No. 7969-88",
+      "note": "Verified 2026-09-25 (confirmed). Right product, but PPLS status is Inactive since 2021-08-27 (cancel flag Yes, 'Company Request'); the 2014-02-11 label is the last on file (existing stocks only). Plugin 1.5 pt/A is within label rates (e.g. carrot max single 3.75 pt/A, p18)."
     },
     "princep-4l": {
       "epaRegistrationNumber": "100-526",
@@ -260,9 +277,11 @@
       "matchedTitle": "US EPA, Pesticide Product Label, PURSUIT HERBICIDE"
     },
     "pyganic-1-4": {
-      "epaRegistrationNumber": "1021-1771",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01771-20220804.pdf",
-      "matchedTitle": "PyGanic® Crop Protection EC 1.4 II"
+      "epaRegistrationNumber": "73049-551",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01771-20260427.pdf",
+      "docDate": "2026-04-27",
+      "quote": "Pyganic® Crop Protection EC 1.4II Master Label",
+      "note": "Corrected 2026-09-25 from 1021-1771. PPLS transfer history: 1021-1771 (MGK) -> 73049-551 (Sumitomo Biorational) on 2026-09-03."
     },
     "radiant-sc": {
       "epaRegistrationNumber": "62719-545",
@@ -276,9 +295,10 @@
     },
     "ranman": {
       "epaRegistrationNumber": "71512-3",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00003-20200326.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, Ranman 400SC",
-      "note": "agricultural label; not Ranman Ornamental and Greenhouse 71512-38"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00003-20260625.pdf",
+      "docDate": "2026-06-25",
+      "quote": "Ranman 400SC (PPLS product name), ISK Biosciences Corporation",
+      "note": "Verified 2026-09-25 (confirmed). Base registration kept; FMC markets it under supplemental 71512-3-279 (undated label), so the dated primary registration is cited."
     },
     "reflex": {
       "epaRegistrationNumber": "100-993",
@@ -316,8 +336,11 @@
     },
     "spartan-charge": {
       "epaRegistrationNumber": "279-3337",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03337-20100126.pdf",
-      "matchedTitle": "Spartan Charge Herbicide"
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03337-20250804.pdf",
+      "docDate": "2025-08-04",
+      "page": 3,
+      "quote": "F7127 SE HERBICIDE EPA Reg. No. 279-3337 ... Carfentrazone-ethyl 3.53% Sulfentrazone 31.77%",
+      "note": "Verified 2026-09-25 (confirmed). Development-code title F7127 SE (FMC, Active); PPLS alternate brand names 'SPARTAN CHARGE HERBICIDE', 'ZEUS PRIME XC', 'ZEUS XLR8'. The label body (2025, 2021 files) prints only F7127 SE, so the brand link rests on the PPLS alternate-brand list. Same AIs/percent as the plugin; SE matches. Separate product 279-3458 'SPARTAN CHARGE CAL' (same AIs) exists; not chosen because the plugin names plain Spartan Charge. Label lists soybeans, sunflowers and dry beans/peas."
     },
     "stinger": {
       "epaRegistrationNumber": "62719-73",
@@ -337,7 +360,10 @@
     "touchdown-hitech": {
       "epaRegistrationNumber": "100-1182",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01182-20150318.pdf",
-      "matchedTitle": "US EPA, Pesticide Product Label, TOUCHDOWN HITECH"
+      "docDate": "2015-03-18",
+      "page": 7,
+      "quote": "Touchdown HiTech® Herbicide Nonselective Foliar Systemic Herbicide for Weed Control Active Ingredient: *Glyphosate ... in the form of the monopotassium salt",
+      "note": "Verified 2026-09-25 (confirmed). Right product (Syngenta, glyphosate K salt 52.3%, soluble liquid) but PPLS status Inactive since 2020-11-02 (cancel flag Yes, 'Company Request'); the 2015-03-18 label is the last on file."
     },
     "warrior-ii-with-zeon": {
       "epaRegistrationNumber": "100-1295",
@@ -389,11 +415,11 @@
     },
     "bravo-weather-stik": {
       "epaRegistrationNumber": "66222-276",
-      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/050534-00188-20050927.pdf",
-      "docDate": "2005-09-27",
-      "page": 1,
-      "quote": "Bravo®720 (Alternate Brand Name: Bravo Weather Stik",
-      "note": "Bravo Weather Stik is an alternate brand of Bravo 720, originally 50534-188 (GB Biosciences/Syngenta). PPLS: 50534-188 transferred to 66222-276 (Makhteshim Agan of North America / ADAMA) on 2017-09-18; 66222-276 is Active and PPLS lists altbrandname 'BRAVO WEATHERSTIK'. No Syngenta-held active registration remains (Syngenta supplemental 50534-188-100 is Inactive). Plugin displayName still says Syngenta."
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/050534-00188-20140822.pdf",
+      "docDate": "2014-08-22",
+      "page": 2,
+      "quote": "Bravo® 720 Agricultural Fungicide Active Ingredient: Chlorothalonil (tetrachloroisophthalonitrile) [SuperWeatherStik® logo here] FUNGICIDE | 54.0%",
+      "note": "Verified 2026-09-25 (confirmed). PPLS record 66222-276 (BRAVO 720, Active) lists alternate brand name 'BRAVO WEATHERSTIK'; the label carries the WeatherStik logo on the Bravo 720 brand line. Registration is held by Makhteshim Agan of North America (ADAMA), transferred from Syngenta's GB Biosciences 50534-188 on 2017-09-18; Syngenta supplemental 50534-188-100 'BRAVO WEATHER STIK AGRICULTURAL FUNGICIDE' is Inactive. Plugin displayName 'Syngenta' is stale. Newest PPLS label file is the 2014 GB Biosciences label (no newer ADAMA label posted)."
     },
     "captan-80wdg": {
       "epaRegistrationNumber": "70506-445",
@@ -493,12 +519,11 @@
       "note": "PPLS master brand for 100-1098 is Abound Flowable Fungicide; PPLS lists 'QUADRIS FLOWABLE FUNGICIDE' as an alternate brand (Active, Syngenta). The Syngenta Quadris container label (SCP 1098B-L2W 1218) prints EPA Reg. No. 100-1098 (p1). Quadris Top/Opti/Xtra are different registrations."
     },
     "roundup-powermax-3": {
-      "epaRegistrationNumber": "524-659",
+      "epaRegistrationNumber": "105211-118",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00659-20241213.pdf",
       "docDate": "2024-12-13",
-      "page": 3,
-      "quote": "MASTER LABEL FOR EPA REG. NO. 524-659 Primary Brand Name: MON 301108 Herbicide Alternate Brand Names: Roundup PowerMAX 3 Herbicide",
-      "note": "Resolves the allowlist question: the label names Roundup PowerMAX 3 as the alternate brand of MON 301108 (524-659, Bayer). PPLS transfer history: 524-659 moved from Bayer CropScience to Ruveon, LLC on 2026-01-14 and is now carried as 105211-118 (Active, product name 'MON 301108 Herbicide', PPLS search alt name 'ROUNDUP POWERMAX 3 HERBICIDE'). Plugin names Bayer, so the Bayer number is used; jugs sold under Ruveon will show 105211-118. Registration transferred Bayer -> Ruveon, LLC on 2026-01-14 (now 105211-118 in PPLS); kept 524-659 because the plugin names Bayer, and jugs in circulation carry it."
+      "quote": "Primary Brand Name: MON 301108 Herbicide Alternate Brand Names: Roundup PowerMAX 3 Herbicide",
+      "note": "Corrected 2026-09-25 from 524-659. PPLS transfer history: 524-659 (Bayer CropScience) -> 105211-118 (Ruveon, LLC) on 2026-01-14. Owner decision: records match the EPA system, so the current holder's number."
     },
     "sivanto-prime": {
       "epaRegistrationNumber": "264-1141",
@@ -531,6 +556,609 @@
       "page": 3,
       "quote": "FOR EPA REG. NO. 524-591 Registered Brand Names: Primary Brand Name: MON 63410 Herbicide Alternate Brand Name: WARRANT® Herbicide",
       "note": "Resolves the allowlist question: the master label names WARRANT as the alternate brand of MON 63410 (Bayer CropScience, Active, no transfers). PPLS search also lists 524-591 as 'WARRANT HERBICIDE'. Not Warrant Ultra (524-620, acetochlor + fomesafen)."
+    },
+    "accent-q-nicosulfuron": {
+      "epaRegistrationNumber": "352-773",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00773-20241107.pdf",
+      "docDate": "2024-11-07",
+      "page": 3,
+      "quote": "Accent® Q [Alternate Brand Name: DuPont Accent Q] HERBICIDE For use on Field Corn grown for grain, seed or silage, Popcorn, and Sweet Corn.",
+      "note": "Corrected 2026-09-25 from 352-768. 352-768 is MATRIX SG (rimsulfuron). 352-773 ACCENT Q is Active (Corteva); PPLS formulation Water Dispersible Granule, nicosulfuron 54.5%, matching plugin WDG + nicosulfuron."
+    },
+    "acramite-bifenazate": {
+      "epaRegistrationNumber": "70506-536",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00503-20201216.pdf",
+      "docDate": "2020-12-16",
+      "page": 3,
+      "quote": "BIFENAZATE GROUP 20D ACARICIDE Acramite®-50WS Miticide in Water-Soluble Bags ... EPA Reg. No. 400-503",
+      "note": "Corrected 2026-09-25 from 400-503. Label is Acramite-50WS (bifenazate 50%, WP in water-soluble bags). PPLS transfer_history: 400-503 (MacDermid Agricultural Solutions) transferred to 70506-536 (UPL NA, Inc.) on 2021-06-09; 70506-536 is Active and no label has been filed under the new number yet (newest PPLS file still prints 400-503). Registrant is UPL, not ADAMA as plugin notes say."
+    },
+    "actinovate-streptomyces": {
+      "epaRegistrationNumber": "73314-20",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073314-00020-20221215.pdf",
+      "docDate": "2022-12-15",
+      "page": 4,
+      "quote": "ACTINOVATE ® SOLUBLE [BIOLOGICAL FUNGICIDE] [Alternate Brand Names: Actinovate® AG, ActinoGro®, ActinoGrow, Quell, Knot Shot, ActinoStar, ActinoX, Nvelop]",
+      "note": "Corrected 2026-09-25 from 73314-1. PPLS: 73314-1 was transferred to 73314-20 (Novozymes BioAg, Active; 'ACTINOVATE AG' in PPLS alt brand names). PPLS formulation is 'Soluble Concentrate' while plugin says SP (not changed here)."
+    },
+    "altacor-chlorantraniliprole": {
+      "epaRegistrationNumber": "279-9607",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "docDate": "2018-07-02",
+      "page": 1,
+      "quote": "Revising label to reflect transfer from DuPont Product Name: Altacor Insect Control EPA Registration Number: 279-9607",
+      "note": "Corrected 2026-09-25 from 352-730. 352-730 (DuPont/Corteva) transferred to FMC as 279-9607 on 2018-05-25 (PPLS transfer_history); Active. Label p2: 'ALTACOR® is a water dispersible granule' containing chlorantraniliprole 35% (matches plugin AI + WDG)."
+    },
+    "apollo-clofentezine": {
+      "epaRegistrationNumber": "66222-47",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066222-00047-20201026.pdf",
+      "docDate": "2020-10-26",
+      "page": 3,
+      "quote": "CLOFENTEZINE GROUP 10A INSECTICIDE Apollo®SC OVICIDE/MITICIDE A Suspension Concentrate (SC) Formulation for Mite Control",
+      "note": "Corrected 2026-09-25 from 66222-181. 66222-181 is COTORAN 4L (fluometuron herbicide). 66222-47 Apollo SC Ovicide/Miticide, Makhteshim Agan of North America (ADAMA), clofentezine 42%, Active."
+    },
+    "applaud-buprofezin": {
+      "epaRegistrationNumber": "71711-21",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00021-20231030.pdf",
+      "docDate": "2023-10-30",
+      "page": 3,
+      "quote": "BUPROFEZIN GROUP 16 INSECTICIDE APPLAUD 70DF Insect Growth Regulator ... Contains 0.70 lb. buprofezin per lb. of product EPA Reg. No. 71711-21",
+      "note": "Corrected 2026-09-25 from 59639-94. 59639-94 is Lactofen Technical (Valent herbicide manufacturing-use). 71711-21 Applaud 70DF, Nichino America, buprofezin 70%, Active. (PPLS formulation field reads 'Emulsifiable Concentrate', which conflicts with the label's '70DF'; label governs.)"
+    },
+    "authority-mtz-sulfentrazone": {
+      "epaRegistrationNumber": "279-3340",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03340-20230713.pdf",
+      "docDate": "2023-07-13",
+      "page": 16,
+      "quote": "When applied according to directions, Authority MTZ DF Herbicide will provide control of: Galinsoga Lambsquarters, common Nightshade...",
+      "note": "Corrected 2026-09-25 from 279-3437. 279-3437 is now 101563-343 'F7220-3 Herbicide Concentrate' (sulfentrazone 1.4% RTU, transferred FMC -> Environmental Science U.S. 2025-03-24). 279-3340 (FMC, Active) base name 'F6482 45DF Herbicide', PPLS alternate brand 'AUTHORITY MTZ DF HERBICIDE'; label p3 AIs sulfentrazone 18% + metribuzin 27%, 45DF. PPLS lists formulation as 'Emulsifiable Concentrate' but the label brand says 45DF."
+    },
+    "axxe-ammonium-nonanoate": {
+      "epaRegistrationNumber": "70299-23",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00023-20210205.pdf",
+      "docDate": "2021-02-05",
+      "page": 3,
+      "quote": "AXXE Broad Spectrum Herbicide; EPA Reg. No. 70299-23 ... MASTER LABEL AXXE Broad Spectrum Herbicide Non-selective Herbicide",
+      "note": "Corrected 2026-09-25 from 70299-21. 70299-21 is SaniDate Sanitizing Wipes (BioSafe). 70299-23 AXXE (BioSafe Systems, Active): ammonium nonanoate 40%, PPLS formulation Soluble Concentrate; matches plugin SL. Plugin 9 qt/A falls within the label's 6-8% v/v at >=30 gal/A (p7-8)."
+    },
+    "azaguard": {
+      "epaRegistrationNumber": "70299-17",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00017-20200727.pdf",
+      "docDate": "2020-07-27",
+      "page": 6,
+      "quote": "AzaGuard is an emulsifiable concentrate containing 3.0% azadirachtin by weight.",
+      "note": "Corrected 2026-09-25 from 70051-9. Letter p1: 'Product Name: AzaGuard EPA Registration Number: 70299-17' (BioSafe Systems, Active). 70051-9 is SuperNeem 4.5-B (Certis, azadirachtin 4.5%), a different product. REI 4 h and 0-day PHI match the plugin."
+    },
+    "balan-benefin": {
+      "epaRegistrationNumber": "34704-746",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/034704-00746-20251105.pdf",
+      "docDate": "2025-11-05",
+      "page": 4,
+      "quote": "BALAN* DF EPA REG. NO. 34704-746",
+      "note": "Corrected 2026-09-25 from 62719-2. 62719-2 is Corteva DMA 6 Weed Killer (2,4-D). BALAN DRY FLOWABLE 34704-746 is Loveland Products (Active); PPLS history: Elanco 1471-140 -> Corteva 62719-129 -> Loveland. Benfluralin 60%, PPLS formulation Water Dispersible Granule; label brand 'BALAN DF'. Plugin notes call it a Corteva product; registrant is Loveland."
+    },
+    "cadet-fluthiacet": {
+      "epaRegistrationNumber": "279-3338",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03338-20260213.pdf",
+      "docDate": "2026-02-13",
+      "page": 3,
+      "quote": "EPA Reg. No. 279-3338 ... Fluthiacet-methyl 10.3% ... Cadet is an emulsifiable concentrate containing 0.91 lb active ingredient per gallon.",
+      "note": "Corrected 2026-09-25 from 59639-198. 59639-198 is Valent S-2200 4 SC fungicide (mandestrobin). CADET HERBICIDE 279-3338 is FMC (Active); EC matches plugin. Plugin notes attribute Cadet to Valent; registrant is FMC. Label p3 also reads 'For Use Only by Individuals/Firms Certified As Licensed Pesticide Applicators'. Plugin 0.9 fl oz/A is within the per-application max (p14) and the 1.25 fl oz/A/yr cap (p13)."
+    },
+    "capreno-thiencarbazone-tembotrione": {
+      "epaRegistrationNumber": "264-1063",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+      "docDate": "2026-02-10",
+      "page": 3,
+      "quote": "SC 547 Herbicide [ABN : CAPRENO® Herbicide] A herbicide for control of annual broadleaf and grass weeds in corn. ... EPA Reg. No 264-1063",
+      "note": "Corrected 2026-09-25 from 264-1083. 264-1083 is not a PPLS registration. 264-1063 (Bayer CropScience, Active), thiencarbazone-methyl 5.6% + tembotrione 28.3%, matching plugin AIs. The label front panel prints no formulation code; PPLS lists 'Emulsifiable Concentrate' vs plugin SC (not verified from label text). Plugin 3 fl oz/A = label POST rate (p11)."
+    },
+    "cease-omri": {
+      "epaRegistrationNumber": "264-1155-68539",
+      "sourceUrl": "https://bioworksinc.com/wp-content/uploads/products/cease/cease-label.pdf",
+      "docDate": "2016-10-03",
+      "page": 1,
+      "quote": "EPA Reg. No. 264-1155-68539 EPA Est. No. 264-MEX-001 ... CEASE can be used for organic production.",
+      "note": "Corrected 2026-09-25 from 264-1155. Base registration 264-1155 is Bayer's RHAPSODY ASO (same QST 713 1.34% product). The plugin (Cease, BioWorks) matches BioWorks' supplemental distributor registration 264-1155-68539 (PPLS 'CEASE', Active since 2013-01-14), read on the BioWorks container label. docDate taken from the label footer code '10032016' (read as 2016-10-03)."
+    },
+    "cevya-mefentrifluconazole": {
+      "epaRegistrationNumber": "7969-407",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00407-20230112.pdf",
+      "docDate": "2023-01-12",
+      "page": 3,
+      "quote": "* Cevya® fungicide contains 3.34 lbs mefentrifluconazole per gallon. EPA Reg. No. 7969-407",
+      "note": "Corrected 2026-09-25 from 7969-380. 7969-380 is Nexicor Xemium (pyraclostrobin + propiconazole + fluxapyroxad). Cevya Fungicide is 7969-407 (BASF, Active), single AI mefentrifluconazole, matching the plugin."
+    },
+    "chaparral-aminopyralid-metsulfuron": {
+      "epaRegistrationNumber": "62719-597",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+      "docDate": "2024-09-27",
+      "page": 3,
+      "quote": "[Sub-Label A for Range and Pasture] (Base label): AMINOPYRALID GROUP 4 HERBICIDE METSULFURON-METHYL GROUP 2 HERBICIDE Chaparral™ SPECIALTY HERBICIDE",
+      "note": "Corrected 2026-09-25 from 62719-595. 62719-595 was transferred to Clarke (now 8329-85, NATULAR T30 spinosad larvicide). 62719-597 CHAPARRAL (Corteva, Active; alt brands GF-2050, Opensight), aminopyralid K salt 62.13% + metsulfuron-methyl 9.45%, WDG. Plugin 3.3 oz/A equals the label annual broadcast max (p16)."
+    },
+    "classic-chlorimuron": {
+      "epaRegistrationNumber": "5481-681",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00681-20200924.pdf",
+      "docDate": "2020-09-24",
+      "page": 3,
+      "quote": "DuPont Classic® HERBICIDE CHLORIMURON ETHYL GROUP 2 HERBICIDE Classic® Herbicide [optional text] Dispersible Granules",
+      "note": "Corrected 2026-09-25 from 352-449. 352-449 is a mancozeb fungicide registration (now Manzate Pro-Stick). Classic was Corteva 352-436, transferred to AMVAC 2020-03-12 as 5481-681 (Active); label p3 also 'EMERGENCY INFORMATION [Alternate Brand Name: Classic®] 5481-681'. Chlorimuron 25%, WDG. Plugin 0.5 oz/A is within POST rates (p12 'up to 0.75')."
+    },
+    "closer-sc": {
+      "epaRegistrationNumber": "62719-623",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00623-20210108.pdf",
+      "docDate": "2021-01-08",
+      "page": 3,
+      "quote": "SULFOXAFLOR GROUP 4C INSECTICIDE Closer® SC INSECTICIDE [Alternate Brand Name: Sequoia™] with Isoclast Active",
+      "note": "Corrected 2026-09-25 from 62719-625. 62719-625 is Transform WG (sulfoxaflor 50% WG, same registrant, different product). 62719-623 Closer SC, Corteva, sulfoxaflor 21.8%, Active; label p5 'EPA Reg. No. 62719-623'."
+    },
+    "confirm-2f-tebufenozide": {
+      "epaRegistrationNumber": "8033-111",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00111-20220513.pdf",
+      "docDate": "2022-05-13",
+      "page": 3,
+      "quote": "TEBUFENOZIDE GROUP 18 INSECTICIDE Confirm® 2F Insecticide ... Contains 2 lb. active ingredient per gallon",
+      "note": "Corrected 2026-09-25 from 62719-481. 62719-481 is Glyphosate 1.92% RTU (Corteva, Inactive). 8033-111 Confirm 2F Insecticide, Nippon Soda Co., Ltd., tebufenozide 23%, Active. Registration moved from Corteva (62719-420) to Nippon Soda in 2010 per PPLS transfer_history, so the plugin notes' 'Corteva' is out of date. REI 4 h matches."
+    },
+    "curzate-60df-cymoxanil": {
+      "epaRegistrationNumber": "352-592",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00592-20210505.pdf",
+      "docDate": "2021-05-05",
+      "page": 11,
+      "quote": "Curzate 60DF is a locally systemic fungicide labeled for use in potatoes, potato seed pieces, tomatoes,",
+      "note": "Corrected 2026-09-25 from 352-580. 352-580 is DuPont Reliance STS SP herbicide (thifensulfuron + chlorimuron, Inactive). CURZATE 60DF is 352-592 (Corteva, Active, 'Water Dispersible Granule', cymoxanil 60%). Label body uses a shifted-font encoding in places; quoted text is from the plain-text lines. Label also states 'rainfast within 2 hours', matching plugin rainfastHours 2."
+    },
+    "cyd-x-codling-moth-virus": {
+      "epaRegistrationNumber": "70051-44",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00044-20250707.pdf",
+      "docDate": "2025-07-07",
+      "page": 4,
+      "quote": "SUBLABEL A: Agricultural Use An Aqueous Suspension Biological Insecticide for Control of the Codling Moth",
+      "note": "Corrected 2026-09-25 from 70051-32. Letter p1 'Product Name: CYD-X Admin Number: 70051-44'; Certis USA, Active. 70051-32 is Technical Pheromone Z-11 (Certis, Inactive). The 2025 label renames the AI 'Betabaculovirus cypomonellae strain M-CB1 (formerly Cydia pomonella granulosis virus)', 0.06%: same organism, new taxonomy, not a mismatch. REI 4 h and day-of-harvest application (p6-7) match."
+    },
+    "deadline-mps-metaldehyde": {
+      "epaRegistrationNumber": "5481-507",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00507-20150303.pdf",
+      "docDate": "2015-03-03",
+      "page": 2,
+      "quote": "(Deadline M-Ps Mini-Pellets (ABN) Language Only) Mini-Pellets! ONE LAST MEAL FOR SLUGS & SNAILS EFFECTIVE DEADLINE M-Ps excel at attracting and destroying slugs and snails.",
+      "note": "Corrected 2026-09-25 from 70506-130. 70506-130 has no PPLS record. 5481-507 (primary brand Deadline Bullets, AMVAC, metaldehyde 4%, Active) carries the ABN 'Deadline® M-Ps™ Mini-Pellets'. It has agricultural per-acre rates (p6 '10 – 20 lbs. / acre'), which fit the plugin's 20 lb/acre. PPLS also lists 'DEADLINE M-PS' as an alternate brand of 5481-511 (Deadline Ornamental / T&O), but that label only gives pellets-per-square-foot garden and ornamental rates and no per-acre crop use. The newest 5481-507 file (2024-04-19) is image-only, so the 2015-03-03 label was read."
+    },
+    "double-nickel-55": {
+      "epaRegistrationNumber": "70051-108",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00108-20250108.pdf",
+      "docDate": "2025-01-08",
+      "page": 24,
+      "quote": "CX-9030 EPA Reg. No. 70051-108 ... {List of Alternate Brand Names:} Double Nickel 55® Amylo-X® Bacstar® Amylo-X® WG Double Nickel® 55 WG",
+      "note": "Corrected 2026-09-25 from 70051-107. 70051-107 is CX-9032, whose alternate brands include 'DOUBLE NICKEL LC' (the liquid). Double Nickel 55 is CX-9030, 70051-108 (Certis USA, Active), 'Water Dispersible Granular Biofungicide' (p.3), which matches the plugin's WG formulation and lb rate. REI 4 h and day-of-harvest PHI match the plugin."
+    },
+    "duracor-aminopyralid-florpyrauxifen": {
+      "epaRegistrationNumber": "62719-739",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00739-20191126.pdf",
+      "docDate": "2019-11-26",
+      "page": 3,
+      "quote": "GF-3850 HERBICIDE with Rinskor™ active [Alternate Brand Name: DuraCor™] For control of broadleaf weeds, including invasive and noxious weeds, and certain woody plants on rangeland, permanent grass pastures",
+      "note": "Corrected 2026-09-25 from 62719-728. 62719-728 is Sequoia CA (sulfoxaflor insecticide). 62719-739 GF-3850 (Corteva, Active; PPLS alt brand DURACOR), aminopyralid K salt 8.95% + florpyrauxifen-benzyl 0.76%, EC. Plugin 16 fl oz/A is under the 20 fl oz/A broadcast max (p14)."
+    },
+    "endura-boscalid": {
+      "epaRegistrationNumber": "7969-197",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00197-20221108.pdf",
+      "docDate": "2022-11-08",
+      "page": 6,
+      "quote": "This package contains Endura® fungicide, a water dis- persible granule (WG) . Boscalid, the active ingredient in Endura",
+      "note": "Corrected 2026-09-25 from 7969-218. 7969-218 has no PPLS record. ENDURA FUNGICIDE is 7969-197 (BASF, Active, boscalid 70%, WG), label p.3 'EPA Reg. No. 7969-197'."
+    },
+    "envidor-spirodiclofen": {
+      "epaRegistrationNumber": "10163-383",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00383-20260602.pdf",
+      "docDate": "2026-06-02",
+      "page": 3,
+      "quote": "SPIRODICLOFEN GROUP 23 ACARICIDE/INSECTICIDE ENVIDOR 2 SC MITICIDE [ABN: ENVIDOR CA] ... contains 2 pounds of Spirodiclofen per US gallon",
+      "note": "Corrected 2026-09-25 from 264-831. PPLS transfer_history: 264-831 (Bayer CropScience) transferred to 10163-383 (Gowan Company) on 2021-03-18. Active, spirodiclofen 22.3%. REI 12 h matches the plugin. Plugin notes still say Bayer."
+    },
+    "eptam-eptc": {
+      "epaRegistrationNumber": "10163-283",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00283-20260219.pdf",
+      "docDate": "2026-02-19",
+      "page": 3,
+      "quote": "EPTAM® 7E Selective Herbicide – Emulsifiable Liquid Multiple Crop Herbicide for Broadleaf and Grass Weed Control ACTIVE INGREDIENT: EPTC",
+      "note": "Corrected 2026-09-25 from 10163-280. 10163-280 is Gowan Ultiflora Miticide/Insecticide (Inactive). 10163-283 EPTAM 7-E SELECTIVE HERBICIDE (Gowan, Active; PPLS alt brand 'EPTAM 7E'), EPTC 87.8%, PPLS formulation Emulsifiable Concentrate. Plugin 3.5 pt/A matches the label's base weed-control rate (p5)."
+    },
+    "et-herbicide-pyraflufen": {
+      "epaRegistrationNumber": "71711-7",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00007-20260903.pdf",
+      "docDate": "2026-09-03",
+      "page": 3,
+      "quote": "ET® Herbicide/Defoliant A Contact Herbicide for Broadleaf Weed Control, Defoliation, and Desiccation ... Pyraflufen-ethyl ... 2.5% ... EPA Reg. No. 71711- 7",
+      "note": "Corrected 2026-09-25 from 71711-9. 71711-9 is Flutolanil Technical (Inactive). 71711-7 ET HERBICIDE/DEFOLIANT (Nichino America, Active; alt brand Edict IVM), EC. Plugin 1.5 fl oz/A is within the 2.0 fl oz/A single-application max (p12)."
+    },
+    "fierce-flumioxazin-pyroxasulfone": {
+      "epaRegistrationNumber": "59639-193",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00193-20210915.pdf",
+      "docDate": "2021-09-15",
+      "page": 3,
+      "quote": "V-10233 Herbicide is a water dispersible granule containing 76% active ingredient.",
+      "note": "Corrected 2026-09-25 from 59639-189. 59639-189 is League MVP Herbicide. 59639-193 (Valent, Active) is the development-code title V-10233 Herbicide; PPLS lists alternate brand names 'FIERCE HERBICIDE' and 'PIPER HERBICIDE', and the 2013-03-01 supplemental label (059639-00193-20130301.pdf p9) footer reads 'Fierce, Cobra, Gangster, Phoenix, Valor ... are trademarks ... of Valent'. The current label body itself only prints V-10233. AIs flumioxazin 33.5% + pyroxasulfone 42.5%, WDG, matching the plugin. Fierce EZ (59639-237), XLT (59639-194) and MTZ (59639-236) are separate products."
+    },
+    "folicur-36f-tebuconazole": {
+      "epaRegistrationNumber": "264-752",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00752-20131119.pdf",
+      "docDate": "2013-11-19",
+      "page": 1,
+      "quote": "Subject: Folicur 3.6 F Foliar Fungicide EPA Reg. No. 264-752",
+      "note": "Corrected 2026-09-25 from 264-985. 264-985 is GB34 Concentrate Biological Fungicide (Bacillus pumilus, Inactive). FOLICUR 3.6 F FOLIAR FUNGICIDE is 264-752 (Bayer CropScience, Active, tebuconazole 38.7%); label body repeatedly names 'FOLICUR 3.6 F Foliar Fungicide' (p.4). PPLS lists the formulation as 'Emulsifiable Concentrate'; plugin F not changed here."
+    },
+    "fulfill-pymetrozine": {
+      "epaRegistrationNumber": "66222-274",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066222-00274-20250812.pdf",
+      "docDate": "2025-08-12",
+      "page": 3,
+      "quote": "PYMETROZINE GROUP 9B INSECTICIDE Fulfill® Insecticide ... (Fulfill Insecticide is a water-dispersible granule containing 50% active ingredient",
+      "note": "Corrected 2026-09-25 from 100-912. PPLS transfer_history: 100-912 (Syngenta) transferred to 66222-274 (Makhteshim Agan of North America / ADAMA) on 2017-09-11. Active, pymetrozine 50% WDG. REI 12 h matches the plugin. Plugin notes still say Syngenta."
+    },
+    "grandevo-wdg": {
+      "epaRegistrationNumber": "84059-17",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00017-20180927.pdf",
+      "docDate": "2018-09-27",
+      "page": 3,
+      "quote": "MASTER LABEL GRANDEVO® Alternate Brand Names: MBI-203 DF1, MBI-203 DF2, MBI-203 DF3, GRANDEVO® PTO, GRANDEVO ST, GRANDEVO BSST",
+      "note": "Verified 2026-09-25 (confirmed). Brand is 'GRANDEVO'; 'WDG' in the plugin name is a formulation suffix and is not printed as a brand word. Active, Pro Farm Group, Inc. (formerly Marrone Bio Innovations), Chromobacterium subtsugae strain PRAA4-1T 30%. REI 4 h (p6) matches."
+    },
+    "grazonnext-hl": {
+      "epaRegistrationNumber": "62719-628",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00628-20170313.pdf",
+      "docDate": "2017-03-13",
+      "page": 3,
+      "quote": "(Base label): GrazonNext® HL SPECIALTY HERBICIDE For control of broadleaf weeds, including invasive and noxious weeds, and certain woody plants on rangeland, permanent grass pastures",
+      "note": "Corrected 2026-09-25 from 62719-635. 62719-635 is Corteva GF-2506 (clopyralid + thifensulfuron + fluroxypyr). 62719-628 GrazonNext HL (Corteva, Active). The newest PPLS files (2020-03-24, 2017-05-01) are state supplemental labels; the full master label used here is 2017-03-13. Plugin 2 pt/A is under the 2.1 pt/A/yr max (p16)."
+    },
+    "harmony-sg-thifensulfuron": {
+      "epaRegistrationNumber": "279-9595",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09595-20200417.pdf",
+      "docDate": "2020-04-17",
+      "page": 3,
+      "quote": "GROUP 2 HERBICIDE SG HARMONY HERBICIDE WITH TOTAL SOL ® SOLUBLE GRANULES FMC Corporation",
+      "note": "Corrected 2026-09-25 from 432-1559. 432-1559 is DuPont Tranxit (rimsulfuron, Inactive). 279-9595 HARMONY SG (FMC, Active; transferred from Corteva 352-633 in 2018), thifensulfuron 50%, SG."
+    },
+    "howler-evo-pseudomonas": {
+      "epaRegistrationNumber": "70051-141",
+      "sourceUrl": "https://www.certisbio.com/hubfs/Howler%20and%20Theia%20Label%20Updates/20240514%2070051-141%20Howler%20EVO%20Fung%20SpLbl%202.pdf",
+      "docDate": "2024-05-14",
+      "page": 3,
+      "quote": "Howler® EVO fungicide is a biological fungicide containing the active ingredient Pseudomonas chlororaphis strain AFS009",
+      "note": "Corrected 2026-09-25 from 91473-1. 91473-1 is Fungisei (Bacillus subtilis IAB/BS03, Seipasa). Howler was AFS009 Plant Protection (AgBiome) 91197-3, transferred to Certis USA as 70051-141 on 2024-05-06 (PPLS, Active; alt brand 'HOWLER EVO FUNGICIDE'). The Certis Howler EVO specimen label p.1 reads 'EPA Reg. No. 70051-141'. PPLS also lists a supplemental 70051-141-92488 'Howler EVO' (Active; AgBiome's old 91197-3-92488 is Inactive), but no label for that number was read, so the Certis base number is used. EPA's own label for 70051-141 (2026-05-05) names 'Howler' (dry flowable). Plugin notes 'AgBiome' are stale (now Certis)."
+    },
+    "intrepid-edge": {
+      "epaRegistrationNumber": "62719-666",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "docDate": "2017-06-29",
+      "page": 2,
+      "quote": "GF-3028 INSECTICIDE [Alternate Brand Name: Intrepid Edge®] Group 5 18 INSECTICIDE Active Ingredients: methoxyfenozide",
+      "note": "Corrected 2026-09-25 from 62719-707. 62719-707 is SmartStax PRO Enlist Refuge Advanced (a PIP corn seed product). 62719-666 GF-3028 (ABN Intrepid Edge), Corteva, methoxyfenozide 28.3% + spinetoram 5.66%, Active. REI 4 h (p9) matches."
+    },
+    "isomate-c-plus-pheromone": {
+      "epaRegistrationNumber": "53575-6",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/053575-00006-20140203.pdf",
+      "docDate": "2014-02-03",
+      "page": 1,
+      "quote": "Product Name: Isomate C Plus EPA Reg. No: 53575-6",
+      "note": "Corrected 2026-09-25 from 53575-31. 53575-31 is Isomate CM/LR TT (codling moth + leafroller blend, same registrant). 53575-6 Isomate-C Plus, Pacific Biocontrol, Active, impregnated dispensers; label p2 'It is CRITICAL that ISOMATE C PLUS is applied as directed', pome fruit and walnut use. Label scan is partly garbled OCR."
+    },
+    "k-phite-phosphonate": {
+      "epaRegistrationNumber": "73806-1",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073806-00001-20250130.pdf",
+      "docDate": "2025-01-30",
+      "page": 3,
+      "quote": "Primary Brand Name: PFS 56 Systemic Fungicide Bactericide [Alternate Brand Name: K-PHITE® 7LP SYSTEMIC FUNGICIDE BACTERICIDE",
+      "note": "Corrected 2026-09-25 from 73806-3. 73806-3 is PFS 516 (dipotassium phosphite 21% + dipotassium phosphate 24.5%; alt brands Renew/Bullet/Xylem PK, no K-Phite name). K-Phite 7LP is an alternate brand of PFS 56, 73806-1 (Plant Food Systems, Active), 'mono -and dipotassium salts of Phosphorous Acid' 6.98 lb/gal, matching the plugin AI. REI 4 h and 0-day PHI match."
+    },
+    "kanemite-acequinocyl": {
+      "epaRegistrationNumber": "70506-447",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00447-20211001.pdf",
+      "docDate": "2021-10-01",
+      "page": 3,
+      "quote": "KANEMITE® 15 SC MITICIDE [Alternate Brand Names: SHUTTLE® 15 SC MITICIDE; SHUTTLE® O MITICIDE] ... ACEQUINOCYL GROUP 20B ACARICIDE 10/01/2021 70506-447",
+      "note": "Corrected 2026-09-25 from 66330-37. 66330-37 is Chloropicrin technical (Arysta, Inactive). Kanemite 15 SC was 66330-38 (Arysta); it transferred to 70506-447 (UPL NA, Inc.) on 2021-05-26. Active, acequinocyl 15.8%. REI 12 h matches."
+    },
+    "kasumin-2l-kasugamycin": {
+      "epaRegistrationNumber": "70506-430",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00404-20191021.pdf",
+      "docDate": "2019-10-21",
+      "page": 3,
+      "quote": "KASUMIN® 2L For Agricultural Use Only FOR CONTROL OF BACTERIAL DISEASES IN BEARING AND NON-BEARING CHERRY (CROP SUBGROUP 12-12A); BEARING AND NON-BEARING POME FRUIT",
+      "note": "Corrected 2026-09-25 from 66330-404. Same registration transferred from Arysta (66330-404) to UPL NA, Inc. as 70506-430 on 2021-05-26 (PPLS, Active). The newest PPLS file (070506-00430-20250227.pdf) is only an EPA letter granting a time-limited extension to 'a renewed expiration date of March 1, 2026'; that date has passed and PPLS still shows Active on 2026-09-25. The owner should confirm current legal status before relying on this plugin. The label body quoted is the last full label (Arysta, 2019)."
+    },
+    "lifegard-bacillus-mycoides": {
+      "epaRegistrationNumber": "70051-119",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00119-20250624.pdf",
+      "docDate": "2025-06-24",
+      "page": 26,
+      "quote": "List of Alternate Brand Names: x LifeGard WG x LifeGard 40 WG",
+      "note": "Corrected 2026-09-25 from 84059-20. 84059-20 is MBI-011 EP (sarmentine herbicide, Pro Farm, Inactive). LifeGard WG is an alternate brand of BmJ WG, 70051-119 (Certis USA, Active, Bacillus mycoides isolate J 40%, Water Dispersible Granule). REI 4 h and 0-day PHI match the plugin."
+    },
+    "luna-tranquility": {
+      "epaRegistrationNumber": "264-1085",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01085-20250618.pdf",
+      "docDate": "2025-06-18",
+      "page": 5,
+      "quote": "For resistance management, please note that LUNA TRANQUILITY contains both a Group 7 and Group 9 fungicide.",
+      "note": "Corrected 2026-09-25 from 264-1115. 264-1115 was Bayer's Bacillus firmus I-1582 product, transferred to 432-1512 (BAFI TW / Nortica). LUNA TRANQUILITY is 264-1085 (Bayer CropScience, Active; fluopyram 11.3% + pyrimethanil 33.8%), matching the plugin AIs. PPLS lists formulation 'Soluble Concentrate'; plugin says SC (not changed here)."
+    },
+    "madex-hp-virus": {
+      "epaRegistrationNumber": "69553-1",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/069553-00001-20260922.pdf",
+      "docDate": "2026-09-22",
+      "page": 5,
+      "quote": "SUBLABEL A: Agricultural Use MADEX HP Biological Insecticide for Control of the Codling Moth and Oriental Fruit Moth",
+      "note": "Corrected 2026-09-25 from 73049-39. 73049-39 is DiPel DF (Bacillus thuringiensis kurstaki, Sumitomo/Valent BioSciences). 69553-1 Madex HP, Andermatt USA Corporation, Active; letter p1 'Product Name: Madex HP EPA Registration Number: 69553-1'. REI 4 h (p9) matches."
+    },
+    "majestene-nematicide": {
+      "epaRegistrationNumber": "84059-14",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00014-20260202.pdf",
+      "docDate": "2026-02-02",
+      "page": 3,
+      "quote": "MBI-206 EP (Alternate Brand Names: VENERATE, ... VENERATE XC, ... NEMORAX, MAJESTENE, MAJESTENE BIONEMATICIDE, MAJESTENE PNW, ...)",
+      "note": "Corrected 2026-09-25 from 84059-23. 84059-23 has no PPLS record. Majestene is an alternate brand of MBI-206 EP, 84059-14, Pro Farm Group, Active, heat-killed Burkholderia sp. strain A396 cells and spent fermentation media 94.46%. Venerate XC shares this number. REI 4 h (p6) matches."
+    },
+    "met52-ec-metarhizium": {
+      "epaRegistrationNumber": "64137-33",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070127-00010-20171109.pdf",
+      "docDate": "2017-11-09",
+      "page": 4,
+      "quote": "TICK-EX EC BIOINSECTICIDE [ABN: MET52® EC ] ... ACTIVE INGREDIENT – Metarhizium anisopliae Strain 52 ... 11.0%",
+      "note": "Corrected 2026-09-25 from 64137-12. 64137-12 is RotStop C (Phlebiopsis gigantea biofungicide). The Met52 EC registration was 70127-10 (Novozymes), which transferred to 64137-33 (Danstar Ferment / Lallemand Plant Care) on 2022-03-15. EPA letter of 2022-09-14 (064137-00033-20220914.pdf p1): 'the alternate brand-names, MET52 EC and Tick-EX EC Bioinsecticide have been removed from the registration'. The product is now LALGUARD M52 OD. Registration Active, REI 4 h (2026 label p7) matches. The plugin brand is discontinued; the owner may want to rename the plugin to Lalguard M52 OD."
+    },
+    "method-aminocyclopyrachlor": {
+      "epaRegistrationNumber": "101563-177",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/101563-00177-20231116.pdf",
+      "docDate": "2023-11-16",
+      "page": 3,
+      "quote": "AMINOCYCLOPYRACHLOR GROUP 4 HERBICIDE METHOD® 240SL HERBICIDE ... Soluble Liquid For Non-Crop Use",
+      "note": "Corrected 2026-09-25 from 81880-25. 81880-25 is Canyon Group GWN-9889. METHOD 240SL 101563-177 (Environmental Science U.S./Envu, Active); PPLS history Corteva 352-786 -> Bayer Environmental Science 432-1565 -> Envu 2022-12-16. Aminocyclopyrachlor K salt 25%. Plugin 5 fl oz/A is under the 18 fl oz/A/yr max (p5). Plugin notes say 'Bayer'; current registrant is Envu."
+    },
+    "milstop-potassium-bicarbonate": {
+      "epaRegistrationNumber": "68539-13",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/068539-00013-20211020.pdf",
+      "docDate": "2021-10-20",
+      "page": 3,
+      "quote": "PB133 Alternate Brand Names: MilStop® SP Broad Spectrum Foliar Fungicide; MilStop® SP Foliar Fungicide; MilStop® Broad Spectrum Foliar Fungicide; MilStop® Foliar Fungicide",
+      "note": "Corrected 2026-09-25 from 70870-1. 70870-1 was H&I Agritech's potassium bicarbonate, transferred to BioWorks as 68539-16 'AGRICURE' (alt GreenCure), now Inactive, with no MilStop name. MilStop brands are on PB133, 68539-13 (BioWorks, Active, potassium bicarbonate 85%). REI 1 h, day-of-harvest PHI and 'Do not exceed a use rate of 5 pounds ... per acre' (p.7) match the plugin."
+    },
+    "miravis-pydiflumetofen": {
+      "epaRegistrationNumber": "100-1601",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "docDate": "2025-07-24",
+      "page": 3,
+      "quote": "PYDIFLUMETOFEN GROUP 7 FUNGICIDE A19649 Crop [Alternate brand names: Miravis®, Miravis® Ace A] Fungicide ADEPIDYN® Technology",
+      "note": "Corrected 2026-09-25 from 100-1577. 100-1577 has no PPLS record. Miravis (pydiflumetofen solo, 18.3%) is an alternate brand of A19649 Crop, 100-1601 (Syngenta, Active). The EPA letter p.1 names 'Product Name: Miravis®' for this registration."
+    },
+    "mycoshield-oxytetracycline": {
+      "epaRegistrationNumber": "55146-97",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00097-20191107.pdf",
+      "docDate": "2019-11-07",
+      "page": 3,
+      "quote": "Mycoshield® Agricultural Antibiotic/Bactericide FOR THE CONTROL OF LISTED DISEASES ON APPLE, CITRUS FRUIT CROP GROUP 10-10, NECTARINE, PEACH, AND PEAR ACTIVE INGREDIENT: Calcium Oxytetracycline",
+      "note": "Corrected 2026-09-25 from 66222-218. 66222-218 was a Makhteshim Agan isoxaben herbicide, now 53883-434 (Quali-Pro Isoxaben 75 WG). MYCOSHIELD is 55146-97 (Nufarm Americas, Active, calcium oxytetracycline 17.7%, Wettable Powder). Newer PPLS files (2020) are supplemental labels only; the 2019 file is the full master label. A separate 'Mycoshield 34 WP' (55146-164) exists; the plugin's 1.5 lb/A max matches 55146-97 ('Do not apply more than 1.5 lb of product', p.8)."
+    },
+    "mycotrol-eso": {
+      "epaRegistrationNumber": "82074-1",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/082074-00001-20240403.pdf",
+      "docDate": "2024-04-03",
+      "page": 23,
+      "quote": "• Mycotrol® ESO • BoteGHA® ES • BotaniGard® OD • BotaniGard® • BotaniGard® 10.7 SC • Mycotrol® SE • Mycotrol® ESO 11.3 SC",
+      "note": "Corrected 2026-09-25 from 70051-19. 70051-19 is PFR-97 20% WDG (Isaria fumosorosea). Mycotrol ESO is an alternate brand (listed on p23) of Mycotrol ES, 82074-1, Certis USA, Active, Beauveria bassiana strain GHA 11.3%. REI 4 h (p5) and 0-day PHI (p6) match the plugin. A supplemental distributor number 82074-1-68539 'Mycotrol ESO' also exists, but the plugin names no distributor. 'Mycotrol 2% ESO' / 'Mycotrol Optima ESO' is a different registration (82074-17), which is why the brand needs care."
+    },
+    "omega-500f-fluazinam": {
+      "epaRegistrationNumber": "71512-1",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00001-20240226.pdf",
+      "docDate": "2024-02-26",
+      "page": 3,
+      "quote": "OMEGA500F AGRICULTURAL FUNGICIDE ACTIVE INGREDIENT: Fluazinam* ................................... 40.0%",
+      "note": "Corrected 2026-09-25 from 71512-3. 71512-3 is Ranman 400SC (cyazofamid). OMEGA 500F is 71512-1 (ISK Biosciences, Active, fluazinam 40%). Plugin notes say Syngenta; wave-1 notes mention a Syngenta supplemental 71512-1-100, but that label was not read, so the ISK base number is used."
+    },
+    "oxidate-2-0": {
+      "epaRegistrationNumber": "70299-12",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "docDate": "2021-09-03",
+      "page": 3,
+      "quote": "MASTER LABEL ZeroTol 2.0™ Sublabel A: Horticultural and Turf Sublabel B: Agricultural Sublabel C: Aquatic Uses (Alternate Brand Names: “OxiDate® 2.0”; “GreenClean® Liquid 2.0”, “ZT 2.0”)",
+      "note": "Corrected 2026-09-25 from 70299-2. 70299-2 is the original OxiDate (hydrogen peroxide 27% only; Inactive since 2020-02-04). OxiDate 2.0 (hydrogen peroxide 27.1% + peroxyacetic acid 2%) is an alternate brand of ZeroTol 2.0, 70299-12 (BioSafe Systems, Active), matching the plugin's two AIs. REI 1 h for spray/fog applications and 0-day PHI match (p.6, p.8)."
+    },
+    "pfr-97-isaria": {
+      "epaRegistrationNumber": "70051-19",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00019-20201028.pdf",
+      "docDate": "2020-10-28",
+      "page": 1,
+      "quote": "Product Name: PFR-97 20% WDG EPA Registration Number: 70051-19",
+      "note": "Corrected 2026-09-25 from 70127-9. 70127-9 was a Novozymes Metarhizium granule, now Tick-Ex G 64137-32 (Lallemand). 70051-19 PFR-97 20% WDG, Certis USA, Active. Full label (070051-00019-20200204.pdf p3): 'Isaria fumosorosea Apopka Strain 97 ... 20.0%' and 'EPA Reg. No. 70051-19'. REI 4 h (p5) matches. The newest file (2020-10-28) is the hemp supplemental plus its letter."
+    },
+    "portal-xlo": {
+      "epaRegistrationNumber": "71711-40",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00040-20240111.pdf",
+      "docDate": "2024-01-11",
+      "page": 3,
+      "quote": "EPA Reg. No. 71711-40 EPA Est. No. ___________ [Alternate Brand Names: Portal ® XLO Miticide/Insecticide, FujiMite® XLO Miticide/Insecticide]",
+      "note": "Corrected 2026-09-25 from 71711-23. 71711-23 is AC 801,757 3EC (tebufenpyrad, Inactive). Portal XLO is an alternate brand of NAI-2399-2 5EC Miticide/Insecticide, 71711-40, Nichino America, fenpyroximate 5% EC, Active. REI 12 h (p6) matches."
+    },
+    "presidio-fluopicolide": {
+      "epaRegistrationNumber": "59639-140",
+      "sourceUrl": "https://www.agrian.com/pdfs/Presidior_Fungicide_Label1fe.pdf",
+      "docDate": "2022-05-23",
+      "page": 1,
+      "quote": "Presidio® Fungicide is a suspension concentrate containing 4 lb active ingredient per gallon. EPA Reg. No. 59639-140",
+      "note": "Verified 2026-09-25 (confirmed). PPLS record 59639-140 is titled 'V-10161 4 SC FUNGICIDE' (Valent, Active) with alternate brand 'PRESIDIO FUNGICIDE'; the EPA-stamped labels use the V-10161 code name only. The Presidio-branded label (Valent Form 1688-R, linked from valent.com; footer code '059639-00140.20220317 ... SAL20220523', i.e. the 2022-05-23 EPA-accepted text) names Presidio with 59639-140. Label also says 'Foliar sprays are rainfast 2 hours after application' (p.13), matching plugin rainfastHours 2."
+    },
+    "previcur-flex-propamocarb": {
+      "epaRegistrationNumber": "264-678",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00678-20240816.pdf",
+      "docDate": "2024-08-16",
+      "page": 3,
+      "quote": "PREVICUR® FLEX Fungicide For Control of Diseases of Cucurbits Vegetables, Guava, Leafy Greens Subgroup 4-16A, Lima Beans",
+      "note": "Corrected 2026-09-25 from 264-1083. 264-1083 has no PPLS record. PREVICUR FLEX is 264-678 (Bayer CropScience, Active, propamocarb hydrochloride 66.5%; PPLS alt brand 'PREVICUR FLEX FUNGICIDE')."
+    },
+    "prophyt-phosphonate": {
+      "epaRegistrationNumber": "42519-22-5905",
+      "sourceUrl": "https://s3-us-west-1.amazonaws.com/agrian-cg-fs1-production/pdfs/Helena_ProPhyt1u_Label.pdf",
+      "page": 1,
+      "quote": "*Phosphorous acid equivalent: 34.30% (4.2 lbs/gal) EPA Reg. No.: 42519-22-5905 ... Manufactured for: HELENA CHEMICAL COMPANY",
+      "note": "Corrected 2026-09-25 from 70299-12. 70299-12 is ZeroTol 2.0 (hydrogen peroxide/peroxyacetic acid, BioSafe), not ProPhyt. ProPhyt's base registration is 42519-22 (Luxembourg-Pamol, Active; EPA label https://www3.epa.gov/pesticides/chem_search/ppls/042519-00022-20251024.pdf p.3 'Master Label ProPhyt®', potassium phosphite 54.50%). The plugin notes name Helena, and Helena's container label (Agrian-hosted, form code '5004-10/160502_1/14', no dated acceptance) reads 42519-22-5905 (PPLS 'HELENA PROPHYT', Active). If the owner prefers the registrant's number, use 42519-22. Label REI is 4 h, matching the plugin. The plugin AI name 'mono- and di-potassium salts of phosphorous acid' is looser than the label's 'Potassium phosphite' but the same chemistry."
+    },
+    "quintec-quinoxyfen": {
+      "epaRegistrationNumber": "81880-30",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/033906-00026-20230413.pdf",
+      "docDate": "2023-04-13",
+      "page": 3,
+      "quote": "QUINOXYFEN GROUP 13 FUNGICIDE Quintec® FUNGICIDE A protectant fungicide for the control of powdery mildew in artichoke, gourds, lettuce, melons, pepper, pumpkin",
+      "note": "Corrected 2026-09-25 from 62719-545. 62719-545 is RADIANT SC (spinetoram insecticide). Quintec moved Corteva 62719-375 -> Nissan 33906-26 (2020-02-20) -> Canyon Group LLC 81880-30 (2025-09-15); PPLS 81880-30 'QUINTEC' is Active. No Canyon-issued label is posted yet, so the quote is from the last label on the same registration (Nissan, 2023). A supplemental 81880-30-10163 'Quintec Fungicide' (Active) also exists; not read. Plugin notes 'Corteva' are stale. PPLS formulation 'Emulsifiable Concentrate' vs plugin F (not changed here)."
+    },
+    "regalia-maxx-omri": {
+      "epaRegistrationNumber": "84059-6",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00006-20130226.pdf",
+      "docDate": "2013-02-26",
+      "page": 1,
+      "quote": "Product Name: Regalia Maxx. Alternate Brand Name: Regalia Rx Biofungicide. EPA Reg. No: 84059-6.",
+      "note": "Corrected 2026-09-25 from 84059-3. 84059-3 is plain Regalia (5%), which has its own plugin; this plugin is Regalia Maxx (20%). Rate is fixed in the label-conformance pass."
+    },
+    "resicore-rev": {
+      "epaRegistrationNumber": "62719-756",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00756-20250404.pdf",
+      "docDate": "2025-04-04",
+      "page": 3,
+      "quote": "GF-4556 [Alternate Brand Name: Resicore® XL] [Alternate Brand Name: T3J-3-82] [Alternate Brand Name: Resicore® REV] HERBICIDE An encapsulated herbicide",
+      "note": "Corrected 2026-09-25 from 62719-743. 62719-743 is Loyant CA. 62719-756 GF-4556 (Corteva, Active) carries both Resicore XL and Resicore REV; acetochlor 30% + mesotrione 2.9% + clopyralid 2.6%. Plugin 2.5 qt/A is under the 3.25 qt/A single-application max (p20)."
+    },
+    "rovral-4f-iprodione": {
+      "epaRegistrationNumber": "279-9564",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09564-20150828.pdf",
+      "docDate": "2015-08-28",
+      "page": 3,
+      "quote": "4 Flowable Fungicide (Alternate Brand Names: Rovral Brand 4 Flowable Fungicide, Rovral 4F Fungicide, Rovral 4F, and Rovral Fungicide) EPA Reg. No. 279-9564",
+      "note": "Corrected 2026-09-25 from 264-481. 264-481 is CHIPCO 26019 (iprodione 50% WP, turf; now 101563-420). Rovral 4F moved from Bayer (264-482) to FMC as 279-9564 on 2012-02-02 (PPLS 'ROVRAL 4 FLOWABLE FUNGICIDE', Active, iprodione 41.6%). Plugin notes 'Bayer' are stale (now FMC)."
+    },
+    "sencor-metribuzin": {
+      "epaRegistrationNumber": "264-738",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00738-20140218.pdf",
+      "docDate": "2014-02-18",
+      "page": 2,
+      "quote": "Sencor® DF 75% Dry Flowable Herbicide For control of certain grasses and broadleaf weeds. ACTIVE INGREDIENT: Metribuzin",
+      "note": "Corrected 2026-09-25 from 264-816. 264-816 is Betamix B (Inactive). 264-738 SENCOR DF 75% DRY FLOWABLE HERBICIDE (Bayer CropScience, Active), metribuzin 75%. Plugin 0.66 lb/A matches the transplant-tomato broadcast range '1/3 to 2/3 Lb Sencor DF/Acre' (p57-58) and is within the cereal 10.66 oz/A/yr cap (p59). Label's corn max is 5-1/3 oz/A/season, but the plugin does not claim corn."
+    },
+    "sluggo-iron-phosphate": {
+      "epaRegistrationNumber": "67702-3",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/067702-00003-20140908.pdf",
+      "docDate": "2014-09-08",
+      "page": 2,
+      "quote": "MASTER LABEL NEU1165M SLUG AND SNAIL BAIT Active Ingredient: By weight Iron phosphate 1.0%",
+      "note": "Verified 2026-09-25 (confirmed). 67702-3 is Neudorff's basic registration (NEU1165M Slug and Snail Bait, iron phosphate 1%, Active). The master label uses '[brand name]' placeholders and never prints 'Sluggo'. The Sluggo brand appears only on PPLS supplemental distributor records of this number: 67702-3-54705 'SLUGGO' / 'SLUGGO - AG', 67702-3-70051 'SLUGGO SLUG AND SNAIL BAIT' (Certis), and 67702-3-34704 'LEAF LIFE SLUGGO' (Loveland). Their labels are not available in PPLS. Plugin names Neudorff and no distributor, so the basic number stands. Do not confuse with Sluggo Maxx / Sluggo HP / Sluggo 3.0 (67702-55, iron phosphate 3%). Label rate 20-44 lb/acre (p12-13) and 'May be used up to and including day of harvest' (p8) are consistent with the plugin."
+    },
+    "spear-lep": {
+      "epaRegistrationNumber": "56336-97",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/088847-00006-20220928.pdf",
+      "docDate": "2022-09-28",
+      "page": 24,
+      "quote": "Spear®-T Liquid Concentrate Spear®-Lep Spear®-RC VST-006340 SL Alternate Brand Names:",
+      "note": "Corrected 2026-09-25 from 92604-1. 92604-1 transferred to 93108-1 AquaVert (hypochlorous acid), which is unrelated. Spear-Lep is an alternate brand of VST-006340 LC (GS-omega/kappa-Hxtx-Hv1a 2%). Vestaron registered it as 88847-6; PPLS transfer_history shows it moved to Suterra, LLC as 56336-97 on 2026-05-07 (Active). No label has been filed under the new number yet (newest file prints 88847-6). REI 4 h and 0-day PHI (p5) match the plugin."
+    },
+    "stargus-bacillus-amyloliquefaciens": {
+      "epaRegistrationNumber": "84059-28",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00028-20260410.pdf",
+      "docDate": "2026-04-10",
+      "page": 3,
+      "quote": "MBI-110 EP Alternate Brand Names: Stargus, Stargus CG, Amplitude, MBI-110 ST, Amplitude ST, Stargus ST, Stargus Biofungicide",
+      "note": "Verified 2026-09-25 (confirmed). PPLS title is the development code 'MBI-110 EP' (Pro Farm Group, Active, Bacillus amyloliquefaciens F727 96.4%); the label names Stargus as an alternate brand. Aqueous suspension; REI 4 h and day-of-harvest PHI match the plugin."
+    },
+    "suppress-ec": {
+      "epaRegistrationNumber": "51517-9",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/051517-00009-20260724.pdf",
+      "docDate": "2026-07-24",
+      "page": 3,
+      "quote": "MASTER LABEL SUPPRESS® Herbicide EC [ABN = SUPPRESS® T&O Herbicide EC] ... Caprylic Acid 47% Capric Acid 32% ... EPA Reg. No. 51517-9",
+      "note": "Corrected 2026-09-25 from 68660-1. 68660-1 is Solvay Proxitane WW-12 (peracetic acid). 51517-9 SUPPRESS HERBICIDE EC is Active; PPLS formulation Emulsifiable Concentrate; label manufacturer 'SAN Group Biotech, USA' (Vista, CA). Plugin notes say 'Westbridge'; the label names SAN Group Biotech."
+    },
+    "torac-sc": {
+      "epaRegistrationNumber": "71711-36",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00036-20260728.pdf",
+      "docDate": "2026-07-28",
+      "page": 3,
+      "quote": "[Alternate Brand Names: APTA ® Insecticide, BEXAR ® Insecticide, HACHI-HACHI ® SC Insecticide, TORAC ® SC Insecticide]",
+      "note": "Corrected 2026-09-25 from 71711-32. 71711-32 is NNI-0871 SC (flubendiamide + buprofezin, Inactive). Torac SC is an alternate brand of Tolfenpyrad 15SC Insecticide, 71711-36, Nichino America, tolfenpyrad 15%, Active. REI 12 h (p7) matches. The plugin's 14 d PHI is not shorter than any crop PHI seen (label range 0-14 d)."
+    },
+    "trilogy-neem": {
+      "epaRegistrationNumber": "70051-2",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00002-20230602.pdf",
+      "docDate": "2023-06-02",
+      "page": 1,
+      "quote": "Revision of Alternate Brand Names to only include - Neemgard, Nimbuz, Triact 70 EC, Trilogy, Trilogy PHC, Triact 64 L, Trilogy 70 EC, and Trilogy 64 EC Product Name: Neem Oil 70%",
+      "note": "Verified 2026-09-25 (confirmed). PPLS title 'Neem Oil 70%' (Certis USA, Active; clarified hydrophobic neem oil 70%) with alternate brands incl. TRILOGY. The brand is named in the EPA acceptance letter for this label. REI 4 h (p.5) and 'Can be Used Up to Day of Harvest' (p.3) match the plugin."
+    },
+    "velum-prime-fluopyram-nematicide": {
+      "epaRegistrationNumber": "264-1078",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01078-20260903.pdf",
+      "docDate": "2026-09-03",
+      "page": 3,
+      "quote": "LUNA® PRIVILEGE ABN: Velum® Prime, Velum® 500, Velum® One, FLUOPYRAM 500 ST; Velum® Broad-spectrum fungicide and nematicide",
+      "note": "Corrected 2026-09-25 from 264-1136. 264-1136 has no PPLS record. Velum Prime is an alternate brand of Luna Privilege, 264-1078, Bayer CropScience, fluopyram 41.5% SC, Active. REI 12 h (p6) matches; 6.84 fl oz/acre is the label maximum single rate."
+    },
+    "venerate-xc": {
+      "epaRegistrationNumber": "84059-14",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00014-20260202.pdf",
+      "docDate": "2026-02-02",
+      "page": 3,
+      "quote": "MBI-206 EP (Alternate Brand Names: VENERATE, VENERATE BIOINSECTICIDE, VENERATE XC, VENERATE XC BIOINSECTICIDE, ...)",
+      "note": "Corrected 2026-09-25 from 84059-15. 84059-15 is MBI-401 SDP (Zequanox molluscicide, Pseudomonas fluorescens CL145A), which moved to 104032-2 (Invasive Species Corp.) on 2026-02-18. Venerate XC is an alternate brand of MBI-206 EP, 84059-14, Pro Farm Group, Active, heat-killed Burkholderia sp. strain A396. REI 4 h (p6) matches."
+    },
+    "verdict-saflufenacil-dimethenamid": {
+      "epaRegistrationNumber": "7969-279",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00279-20180504.pdf",
+      "docDate": "2018-05-04",
+      "page": 5,
+      "quote": "Observe all restrictions and precautions in this label and the labels of products used in combination with Verdict ® herbicide.",
+      "note": "Corrected 2026-09-25 from 7969-330. 7969-330 does not exist in PPLS. 7969-279 VERDICT POWERED BY KIXOR HERBICIDE (BASF, Active); label p3 saflufenacil 6.24% + dimethenamid-P 55.04% 'formulated as an emulsifiable concentrate', EPA Reg. No. 7969-279. Plugin 13 fl oz/A is within the 10-25 fl oz/A range (p19)."
+    },
+    "voliam-xpress": {
+      "epaRegistrationNumber": "100-1320",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01320-20250509.pdf",
+      "docDate": "2025-05-09",
+      "page": 3,
+      "quote": "Voliam Xpress® LAMBDA-CYHALOTHRIN GROUP 3A INSECTICIDE CHLORANTRANILIPROLE GROUP 28 INSECTICIDE ... contains 0.835 lb. of chlorantraniliprole and 0.417 lb. of lambda cyhalothrin per gallon",
+      "note": "Corrected 2026-09-25 from 100-1402. 100-1402 is Besiege Insecticide: same AIs and percentages (chlorantraniliprole 9.26% + lambda-cyhalothrin 4.63%), but a separate registration. 100-1320 Voliam Xpress Insecticide, Syngenta, Active, Restricted Use (p3). REI 24 h (p9) matches."
+    },
+    "zampro-ametoctradin": {
+      "epaRegistrationNumber": "7969-302",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00302-20190930.pdf",
+      "docDate": "2019-09-30",
+      "page": 5,
+      "quote": "This package contains Zampro® fungicide, a suspension concentrate (SC) with two active ingredients, ametoctradin and dimethomorph.",
+      "note": "Corrected 2026-09-25 from 7969-310. 7969-310 is MERIVON (duplicates merivon.json). Zampro Fungicide is 7969-302 (BASF, Active; ametoctradin 26.9% + dimethomorph 20.2%). Rainfast: the EPA label has no rainfast interval (the only 'rain' text is a runoff advisory), so the 1 h vs 2 h question is not settled by the label."
+    },
+    "zerotol-2-0-sanitizer": {
+      "epaRegistrationNumber": "70299-12",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "docDate": "2021-09-03",
+      "page": 3,
+      "quote": "ZeroTol 2.0™ EPA Reg. No. 70299-12 Redline Label (V16.2) August 5, 2021 Amendment Page 1 of 63 MASTER LABEL ZeroTol 2.0™",
+      "note": "Verified 2026-09-25 (confirmed). PPLS ZEROTOL 2.0, BioSafe Systems, Active; hydrogen peroxide 27.1% + peroxyacetic acid 2%. REI 1 h (spray/fog) and 0-day PHI match the plugin."
+    },
+    "zidua-pro": {
+      "epaRegistrationNumber": "7969-365",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00365-20171228.pdf",
+      "docDate": "2017-12-28",
+      "page": 3,
+      "quote": "Contains 2.28 lbs of pyroxasulfone, 1.33 lbs imazethaypr, and 0.48 lbs saflufenacil per gallon formulated as a water-based suspension concentrate EPA Reg. No. 7969-365",
+      "note": "Corrected 2026-09-25 from 7969-374. 7969-374 is Zidua SC (pyroxasulfone solo; ABN Vermeso). 7969-365 ZIDUA PRO POWERED BY KIXOR HERBICIDE (BASF, Active); label p6 'Zidua® PRO herbicide'. SC matches plugin. Plugin 6 fl oz/A = label burndown/soybean rate (p16-17)."
+    },
+    "stadia": {
+      "epaRegistrationNumber": "91234-31",
+      "quote": "A304.01 [Alternate Brand Names: Promote™, Stadia™, Empero™]",
+      "page": 3
+    },
+    "pyganic-5-0": {
+      "epaRegistrationNumber": "73049-552",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01772-20260917.pdf",
+      "docDate": "2026-09-17",
+      "quote": "Product Name: PYGANIC CROP PROTECTION EC 5.0 II Admin Number: 1021-1772",
+      "note": "Corrected 2026-09-25 from 1021-1772. PPLS transfer history: 1021-1772 (MGK) -> 73049-552 (Sumitomo Biorational) on 2026-09-03."
     }
   },
   "rainfast": {
@@ -800,6 +1428,548 @@
       "page": 7,
       "quote": "To minimize potential exposure to bees and other pollinating insects, do not apply while bees are foraging.",
       "note": "Also 'Do not allow product to drift to blooming crops or weeds if bees are foraging.' No bee toxicity class stated and no bloom prohibition, only a foraging restriction."
+    },
+    "actara": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00938-20131203.pdf",
+      "docDate": "2013-12-03",
+      "page": 4,
+      "quote": "This pesticide is highly toxic to bees exposed to direct treatment on blooming crops/plants or weeds. ... Do not apply this product until flowering is complete and all petals have fallen unless",
+      "note": "Verified 2026-09-25 (confirmed). Toxicity p.4 (Environmental Hazards); bloom language p.9 (generic pollinator directions). Exceptions for non-contracted crops include after sunset, <55F, public health, apiary registry notification; contracted crops only via 48h beekeeper notice. Sunset is not the only path, so the stricter class stands. No hours stated."
+    },
+    "admire-pro": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "docDate": "2019-09-17",
+      "page": 3,
+      "quote": "This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds.",
+      "note": "Verified 2026-09-25 (confirmed). Label is GAUCHO 550 SC; PPLS lists ADMIRE PRO SYSTEMIC PROTECTANT as alternate brand of 264-827. p6 pollinator box: 'Do not apply this product until flowering is complete and all petals have fallen unless...' (exceptions: after sunset, <55F, public-health response, or 48h beekeeper notice for contracted pollination). Crop directions (strawberry, pome, stone fruit, bushberry, caneberry) say 'Do not apply pre-bloom or during bloom or when bees are foraging.' Sunset is not the only permitted path, so prohibited-during-bloom stands (more protective). No residual hours stated."
+    },
+    "agrimek-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20210209.pdf",
+      "docDate": "2021-02-09",
+      "page": 23,
+      "quote": "4) DO NOT apply from onset of flowering until petal fall is complete.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective. Env. Hazards p.8: 'This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds.' Crop sections (p.23, 33, 34, 42, 44, 45) prohibit application from onset of flowering until petal fall; citrus p.25 'prohibited from the onset of flowering until the end of the flowering period'. No sunset exception, no hours stated."
+    },
+    "altacor-chlorantraniliprole": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "docDate": "2018-07-02",
+      "page": 3,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to aquatic invertebrates, oysters, and shrimp.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Label (only Altacor label on 279-9607) has no bee/pollinator statement anywhere; Environmental Hazards covers aquatic invertebrates only. 'relatively-nontoxic' requires an explicit label statement, so the AI-table value cannot stand; corrected to unknown. MORE protective (removes an unsupported low-toxicity claim); bloomRestriction none unchanged."
+    },
+    "apollo-clofentezine": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066222-00047-20201026.pdf",
+      "docDate": "2020-10-26",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses, do not apply directly to water, or to areas where surface water is present, or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported 'relatively-nontoxic' claim). Label for the correct product (Apollo SC, 66222-47) has no bee/pollinator/bloom language anywhere (grep bee|pollinat|bloom|flower|forag, 11 pages). Only related text is p.5 'not disruptive to beneficial insects and mites', which is not a bee statement. Silence cannot support relatively-nontoxic, so beeToxicity -> unknown."
+    },
+    "asana-xl": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "docDate": "2026-04-14",
+      "page": 16,
+      "quote": "NOTE: ASANA XL can act as a bee repellent, do not apply within 7 days of pollination. Apply as a pre- bloom or post-bloom spray only.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective. p5 Environmental Hazards: 'This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply ... to blooming crops if bees are visiting the treatment area.' (foraging-only), but the blueberry and caneberry directions (p16) restrict to pre-bloom/post-bloom only, which is a bloom prohibition on a claimed crop class. Sunset language on p16 is advisory ('For maximum safety to bees'), not a permitted in-bloom path. No residual hours stated."
+    },
+    "assail-30sg": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00036-20210611.pdf",
+      "docDate": "2021-06-11",
+      "page": 4,
+      "quote": "This product is toxic to bees exposed to direct treatment. Do not apply this product while bees are foraging in the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Only bee restriction is foraging-based; no bloom prohibition (apple p.18 even directs Mullein plant bug sprays 'at pink bud through bloom' with 'Do not apply this product when bees are foraging'). No pollinator box, no hours stated."
+    },
+    "avaunt-evo": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "docDate": "2024-08-22",
+      "page": 5,
+      "quote": "Foliar application of this product is prohibited to a crop from onset of flowering until flowering is complete when bees are under contract for pollination services to that crop unless:",
+      "note": "Verified 2026-09-25 (confirmed). MORE protective. p4: 'This product is highly toxic to bees and other pollinating insects exposed to direct treatment on blooming crops or weeds. Do not apply ... while bees are foraging'. p5 Use Restrictions prohibit bloom foliar application on contracted-pollination crops unless applied between 2 h before sunset and sunrise OR at <=50F. Because sunset is not the only permitted in-bloom path (temperature exception too), the brief's rule gives prohibited-during-bloom. Owner may prefer dusk-to-dawn-only for non-contracted crops (only foraging language applies there). No residual hours. Review: bloomRestriction kept at 'dusk-to-dawn-only' because the label permits in-bloom application after sunset."
+    },
+    "baythroid-xl": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+      "docDate": "2019-10-07",
+      "page": 4,
+      "quote": "This pesticide is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds on which bees are actively foraging.",
+      "note": "Verified 2026-09-25 (confirmed). Foraging-only bloom language. Label also bans use on several crops grown for seed 'Due to potential injury to bees' (alfalfa p.10, p.19, p.23, southern peas p.25, p.26); that is a crop exclusion, not a bloom-window rule, so dusk-to-dawn-only stands. No hours stated."
+    },
+    "belay": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom",
+        "residualToxicityHours": 120
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00150-20170711.pdf",
+      "docDate": "2017-07-11",
+      "page": 44,
+      "quote": "This product is very toxic to bees exposed to treatment and for more than 5 days following treatment.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"prohibited-during-bloom\"}. Label title is V-10170 2.13 SC; PPLS lists BELAY INSECTICIDE (and CLUTCH SC) as alternate brands of 59639-150. Ag Environmental Hazards (p6) say 'toxic to bees exposed to treatment and for more than 5 days following treatment'; non-ag section (p44) says 'very toxic' -> stricter class highly-toxic kept. p8 bee box: 'Do not apply this product until flowering is complete and all petals have fallen' (only exception: 48 h beekeeper notice + bees removed/covered 5 days); p16 'must not be applied during bloom or when bees are foraging'. Residual stated as '>5 days' (not hours), so residualToxicityHours left unset; owner may want 120 (the gate only adds a residual warning when this is set, so 120 would be more protective). Review: residualToxicityHours 120 from the label's 'more than 5 days' residual statement (5 d = 120 h, a lower bound)."
+    },
+    "beleaf-50sg": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00010-20221121.pdf",
+      "docDate": "2022-11-21",
+      "page": 4,
+      "quote": "This product is moderately toxic to bees and other pollinating insects exposed to direct treatment, or to residues in/on blooming crops or weeds.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective. 'Moderately toxic' is not in the mapping; mapped to the stricter 'toxic' (same as wave-1 handling of Acramite). Label gives no bloom or foraging restriction (only 'Protect pollinating insects by following label directions intended to minimize drift'), so bloomRestriction stays none. No hours."
+    },
+    "botanigard-es-beauveria": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/082074-00001-20240403.pdf",
+      "docDate": "2024-04-03",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This product is potentially pathogenic to honeybees. Avoid applying to areas where honeybees are actively foraging or around beehives.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective. Label is Mycotrol ES (82074-1), whose master label lists 'Alternate Brand Names: BotaniGard ES' (p22). 'Potentially pathogenic to honeybees' is a hazard statement, not a low-risk statement, so relatively-nontoxic is unsupported; 'toxic' chosen as the stricter reading of ambiguous wording (alternative: unknown). Foraging-only avoidance language -> dusk-to-dawn-only. Same Environmental Hazards text appears on 82074-2 (BotaniGard 22WP, 2025-03-10 label p4). No residual hours."
+    },
+    "brigade-2ec": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03313-20211119.pdf",
+      "docDate": "2021-11-19",
+      "page": 4,
+      "quote": "This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or if bees are visiting the treatment area.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective, ambiguity call. The Brigade 2EC label sentence reads literally as two bans: no application/drift to blooming crops, OR when bees are visiting. The same-AI Capture 2EC label (279-3069, 2025-09-05, p.4) says 'to blooming crops or weeds if bees are visiting', i.e. foraging-only, so the Brigade wording may be a drafting slip. Per the stricter-when-ambiguous rule, prohibited-during-bloom; owner may downgrade to dusk-to-dawn-only if FMC confirms the conditional reading. Plugin notes already say 'no bloom application'. No hours stated."
+    },
+    "bt-kurstaki": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00039-20260901.pdf",
+      "docDate": "2026-09-01",
+      "page": 14,
+      "quote": "DiPel DF can be used during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Generic plugin (no EPA number). Checked two Btk labels: DiPel DF 73049-39 (2026-09-01) and Javelin WG 70051-66 (2021-12-16, https://www3.epa.gov/pesticides/chem_search/ppls/070051-00066-20211216.pdf). Neither has any bee/pollinator statement; DiPel expressly allows bloom use. relatively-nontoxic requires explicit label language -> unknown (more protective); bloomRestriction none is label-consistent."
+    },
+    "closer-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00623-20210108.pdf",
+      "docDate": "2021-01-08",
+      "page": 4,
+      "quote": "This product is highly toxic to bees and other pollinating insects ... Do not apply this product at any time between 3 days prior to bloom and until after petal fall. ... The RT25 for this product is less than or equal to 3 hours.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"prohibited-during-bloom\"}. MORE protective (adds residual hours; toxicity/bloom confirmed). Toxicity p.4; bloom bans on many crop groups (p.20, 21, 23, 28: 'between 3 days prior to bloom and until after petal fall'); some crops (citrus p.24, ornamentals p.30) allow a single reduced-rate bloom application, but the stricter class stands. RT25 <= 3 h stated p.24/p.26 in the Advisory Pollinator Statement; used as residualToxicityHours = 3 (the stated upper bound)."
+    },
+    "coragen": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+      "docDate": "2020-10-27",
+      "page": 4,
+      "quote": "This pesticide is toxic to aquatic invertebrates, oysters, and shrimp.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Full 34-page label has no bee/pollinator statement; Environmental Hazards covers aquatic invertebrates only. relatively-nontoxic requires an explicit label statement, so corrected to unknown (removes an unsupported low-risk claim; more protective). No bloom restriction on label."
+    },
+    "cyd-x-codling-moth-virus": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00044-20250707.pdf",
+      "docDate": "2025-07-07",
+      "page": 6,
+      "quote": "ENVIRONMENTAL HAZARDS: For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). Cyd-X master label (70051-44, 13 pages) has no bee/pollinator/bloom statement at all; it only says baculoviruses are found only in invertebrates (p.7), which is not a bee-safety statement. Silence -> unknown. The owner may keep relatively-nontoxic only with a label or registrant statement on bees."
+    },
+    "deadline-mps-metaldehyde": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00507-20150303.pdf",
+      "docDate": "2015-03-03",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to mollusks (e.g., clams, oysters, scallops, mussels). This pesticide is toxic to birds and mammals.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Plugin number 70506-130 is not in PPLS, so the Deadline Bullets master label 5481-507 (AMVAC; 'Deadline M-Ps Mini-Pellets (ABN)' p2) was used; the 2024-04-19 file is a scanned image, so the 2015-03-03 text label was read. No bee/pollinator/bloom statement. relatively-nontoxic requires explicit label language -> unknown (more protective). 5481-511 (Deadline Ornamental, ABN 'DEADLINE M-PS') is also silent on bees."
+    },
+    "dimethoate-4ec": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/034704-00207-20140605.pdf",
+      "docDate": "2014-06-05",
+      "page": 5,
+      "quote": "This product is highly toxic to bees and other pollinators exposed to direct treat- ment or residues on blooming crops or weeds. ... Do not apply when trees or substantial numbers of weeds in the orchard are in bloom.",
+      "note": "Verified 2026-09-25 (confirmed). Plugin's own number is not a dimethoate product, so verified on Loveland's Dimethoate 400 (34704-207, Active; plugin notes name Loveland). Toxicity p.5; orchard bloom bans p.10-11; field crops (beans/peas/alfalfa p.12-15) are foraging-only. The CA-style orchard window allows night applications only under specific conditions, so the stricter class stands. Drexel Dimethoate 4EC (19713-231, 2026-02-24 label, p.4 and p.10-12) carries identical wording, so the result does not depend on which 43.5% EC is chosen. No hours stated."
+    },
+    "dipel-df": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00039-20260901.pdf",
+      "docDate": "2026-09-01",
+      "page": 14,
+      "quote": "DiPel DF can be used during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective only in the sense of removing an unsupported claim. The label has no bee or pollinator statement (Environmental Hazards p6 covers water only); it expressly permits bloom use (pome fruit, p14), so bloomRestriction none is label-supported. relatively-nontoxic needs an explicit label statement, so beeToxicity -> unknown."
+    },
+    "entrust-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "docDate": "2026-06-11",
+      "page": 4,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment, or to residues in/on blooming crops or weeds. Protect pollinating insects by following label directions intended to minimize drift",
+      "note": "Verified 2026-09-25 (confirmed). beeToxicity confirmed. The current label (and the 2020-2024 versions checked) has NO foraging, bloom or residual-hours statement, so 'dusk-to-dawn-only' and 'residualToxicityHours: 3' are not label-sourced (the 3 h figure appears nowhere on 62719-621). Label-literal would be bloomRestriction 'none' with no residual, but that is LESS protective and rests only on silence, so the current values are kept, not corrected. Owner decision."
+    },
+    "exirel": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "docDate": "2024-08-29",
+      "page": 5,
+      "quote": "Do not apply this product until flowering is complete and all petals have fallen unless one of the following conditions is met: • The application is made to the target site after sunset",
+      "note": "Verified 2026-09-25 (confirmed). MORE protective. p4: 'This product is highly toxic to bees exposed to direct treatment on blooming crops or weeds.' p5 EPA pollinator box: contracted-pollination crops may not be treated until petal fall (only exception: 48 h beekeeper notice); non-contracted attractive crops: no application until petal fall unless after sunset, <55F, public-health response, or state/tribal program. Sunset is not the only permitted path -> prohibited-during-bloom. No residual hours. Review: bloomRestriction kept at 'dusk-to-dawn-only' because the label permits in-bloom application after sunset (dusk-to-dawn models it)."
+    },
+    "fulfill-pymetrozine": {
+      "pollinator": {
+        "beeToxicity": "relatively-nontoxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066222-00274-20250812.pdf",
+      "docDate": "2025-08-12",
+      "page": 5,
+      "quote": "it has a low toxicity to beneficial insects (including honeybees and bumblebees) and mites. It can be used ... during periods of pollination. However, do not apply Fulfill Insecticide directly to bees that are actively foraging",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (bloomRestriction none -> dusk-to-dawn-only, from the foraging statement). beeToxicity relatively-nontoxic is supported by the explicit 'low toxicity to ... honeybees and bumblebees'. No bloom ban (label explicitly allows use during pollination), no hours. Verified on the current holder's label (66222-274)."
+    },
+    "intrepid-edge": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00666-20170629.pdf",
+      "docDate": "2017-06-29",
+      "page": 3,
+      "quote": "This product is toxic to bees exposed to treatment for 3 hours following treatment.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\", \"residualToxicityHours\": 3}. LESS protective (highly-toxic -> toxic), based on an explicit label statement: the label says 'toxic', never 'highly toxic' (grep of full 48-page label). Plugin number 62719-707 is a SmartStax PRO corn PIP, so the Intrepid Edge label (62719-666, title GF-3028, PPLS alternate brand INTREPID EDGE) was used. Bloom language is foraging-only ('Do not apply ... if bees may forage on the plants during this time period', p3) and pome directions allow bloom-to-petal-fall sprays -> dusk-to-dawn-only confirmed; 3 h residual confirmed."
+    },
+    "isomate-c-plus-pheromone": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/053575-00006-20090304.pdf",
+      "docDate": "2009-03-04",
+      "page": 1,
+      "quote": "ENVIRONMENT AL HAZARDS For terrestrial uses: Do not apply directly to water, to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). Isomate-C Plus (53575-6) labels 2009 and 2014 (the 2014 scan is partly illegible) and 1996/2002 versions have no bee/pollinator statement; the product is a hand-placed pheromone dispenser (p.2 of 2014 label: 'Place dispensers on lateral branches'), so exposure is low in practice, but the label makes no bee claim. Silence -> unknown. Owner may accept relatively-nontoxic as an engineering judgment, not a label fact."
+    },
+    "javelin-wg": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00066-20211216.pdf",
+      "docDate": "2021-12-16",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Label has no bee/pollinator/bloom statement anywhere (Environmental Hazards covers water only). relatively-nontoxic needs an explicit label statement -> unknown (removes unsupported low-risk claim; more protective). No bloom restriction on label."
+    },
+    "jms-stylet-oil": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/065564-00001-20110719.pdf",
+      "docDate": "2011-07-19",
+      "page": 8,
+      "quote": "For powdery mildew begin at 5% bloom and continue at 10-14 day intervals until terminal growth phase stops.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). JMS Stylet-Oil label (65564-1, 11 pages) has no bee/pollinator statement anywhere (grep bee|pollinat|forag). It directs sprays at bloom for disease (quoted), so there is no bloom restriction, but it never says the oil is low-risk to bees. Silence -> unknown."
+    },
+    "jms-stylet-oil-omri": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/065564-00001-20110719.pdf",
+      "docDate": "2011-07-19",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Latest PPLS label for 65564-1 has no bee/pollinator statement; directions permit bloom sprays (e.g. 'Repeat at bloom', 'Initiate sprays at bloom' for grape Botrytis, p7/p9). relatively-nontoxic needs explicit label language -> unknown (more protective); bloomRestriction none is label-consistent."
+    },
+    "lannate-lv": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "docDate": "2024-10-10",
+      "page": 18,
+      "quote": "Blueberry Leafroller Blueberry Maggot 3/4 - 1 1/2 Do not apply during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective. Env. Hazards p.5: 'This product is highly toxic to bees exposed to direct treatment on blooming crops or weeds. Do not apply ... while bees are actively foraging the treatment area.' Blueberry directions add an outright bloom ban (p.18), which per the rule sets prohibited-during-bloom. Newest file 20250729 has unreadable fonts, so the 2024-10-10 label was used. No hours."
+    },
+    "m-pede": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20210121.pdf",
+      "docDate": "2021-01-21",
+      "page": 7,
+      "quote": "Pear psylla ... PRECAUTIONS: Do not tank mix with oil. Do not apply during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. Label has no bee/pollinator statement (Environmental Hazards p4: 'may be hazardous to aquatic invertebrates' only), so relatively-nontoxic is unsupported -> unknown. Pear psylla and rosy apple aphid directions both say 'Do not apply during bloom' (p7); likely a phytotoxicity precaution, but the brief's rule maps any crop-level bloom prohibition to prohibited-during-bloom. silentLabel=true refers to bees; the bloom sentence is not bee language. Review: bloomRestriction kept at 'none' because the pome bloom ban is not bee language."
+    },
+    "m-pede-organic": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20210121.pdf",
+      "docDate": "2021-01-21",
+      "page": 7,
+      "quote": "PRECAUTIONS: Do not tank mix with oil. Do not apply during bloom.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. Label (10163-324, Gowan) has no bee/pollinator statement at all (grep bee|pollinat|forag), so beeToxicity -> unknown. The pome-fruit sections (pear psylla, rosy apple aphid, p.7) say 'Do not apply during bloom'; the label gives no reason (likely phytotoxicity/fruit finish), but per the rule any bloom ban -> prohibited-during-bloom. Owner may choose to scope this to pome fruit only. Review: bloomRestriction kept at 'none' because the pome bloom ban is not bee language."
+    },
+    "madex-hp-virus": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/069553-00001-20260922.pdf",
+      "docDate": "2026-09-22",
+      "page": 8,
+      "quote": "Environmental Hazards For terrestrial uses: Do not apply directly to water, or to areas where surface water is present or to intertidal areas below the mean high water mark.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Plugin number 73049-39 is DiPel DF, so the Madex HP label (69553-1, Andermatt USA) was used. It has no bee/pollinator/bloom statement. relatively-nontoxic needs an explicit label statement -> unknown (more protective)."
+    },
+    "mustang-maxx": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+      "docDate": "2022-08-16",
+      "page": 4,
+      "quote": "This product is highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds if bees are visiting the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Only bee restriction is conditional on bees visiting (foraging-based); p.8 pollinator BMP suggests evening/night application. No crop-specific bloom ban found (grep bloom|petal: only sorghum-midge timing p.34). No hours. Label is F9114 EC with ABN Mustang Maxx (279-3426)."
+    },
+    "mycotrol-eso": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/082074-00001-20240403.pdf",
+      "docDate": "2024-04-03",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This product is potentially pathogenic to honeybees. Avoid applying to areas where honeybees are actively foraging or around beehives.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective. Plugin number 70051-19 is PFR-97 20% WDG (a different fungus), so the correct label was used: Mycotrol ES 82074-1, whose alternate brand list includes 'Mycotrol® ESO' (p23). 'Potentially pathogenic to honeybees' is not a low-risk statement; 'toxic' chosen as stricter reading of ambiguous wording (alternative: unknown). Foraging-only avoidance -> dusk-to-dawn-only. No residual hours."
+    },
+    "nematode-steinernema-feltiae": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). No EPA label exists: live entomopathogenic nematodes are macro-organisms exempt from FIFRA registration, and the plugin has no EPA number, so there is no label bee statement to verify against. 'relatively-nontoxic' came from the AI table, not a label. Under the no-silence rule -> unknown. If the owner accepts a producer's bee-safety statement for the product on hand, that can restore relatively-nontoxic with provenance."
+    },
+    "onager-hexythiazox": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00277-20171102.pdf",
+      "docDate": "2017-11-02",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Latest Onager label (10163-277) has no bee/pollinator/bloom statement. relatively-nontoxic needs explicit label language -> unknown (more protective)."
+    },
+    "pyganic-1-4": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01771-20260427.pdf",
+      "docDate": "2026-04-27",
+      "page": 5,
+      "quote": "This product is highly toxic to bees exposed to direct treatment on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds while bees are foraging in the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Foraging-only restriction; p.7 adds 'To avoid possible harm to honey bees, apply in the early morning or late evening hours.' No bloom ban, no hours."
+    },
+    "pyganic-5-0": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01772-20260917.pdf",
+      "docDate": "2026-09-17",
+      "page": 4,
+      "quote": "This product is highly toxic to bees exposed to direct treatment on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds while bees are foraging",
+      "note": "Verified 2026-09-25 (confirmed). Bloom language is foraging-only; advisory 'apply in the early morning or late evening hours' (p13) and 'apply when the non-target insects are least active' (p6). No crop-level bloom prohibition, no residual hours."
+    },
+    "radiant-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20260611.pdf",
+      "docDate": "2026-06-11",
+      "page": 4,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment, or to residues in/on blooming crops or weeds. Protect pollinating insects by following label directions intended to minimize drift",
+      "note": "Verified 2026-09-25 (confirmed). beeToxicity confirmed. Label (56 pages) has no foraging, bloom-window or residual-hours statement (grep forag|sunset|petal fall|in bloom|RT25|3 hours). The 'dusk-to-dawn-only' and 3 h residual are not label-sourced; downgrading to 'none' would be LESS protective on silence alone, so current values are kept. Owner decision."
+    },
+    "sevin-xlr-plus": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "docDate": "2025-07-17",
+      "page": 5,
+      "quote": "BEE CAUTION: This product is highly toxic to honeybees and other bees exposed to direct treatment or residues on crops or weeds in bloom.",
+      "note": "Verified 2026-09-25 (confirmed). p5: 'For crops in bloom (except soybean and corn): Do not apply this product to target crops or weeds in bloom.' Only soybean/corn get a sunrise/sunset-advisory path. Label says it 'may show residual toxicity to honeybees' but gives no hours, so residualToxicityHours stays unset."
+    },
+    "sluggo-iron-phosphate": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/067702-00003-20140908.pdf",
+      "docDate": "2014-09-08",
+      "page": 7,
+      "quote": "-Can be used around domestic animals (pets) and wildlife.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). Basic registration 67702-3 (Neudorff 'NEU1165M Slug and Snail Bait'; Sluggo is sold under supplemental numbers such as 67702-3-54705 Monterey and 67702-3-70051 Certis, whose labels are not on PPLS). The 17-page label has no bee/pollinator statement; the only safety claim is pets/wildlife (quoted), which is not a bee statement. Pelleted ground bait makes bee exposure unlikely, but that is judgment, not label. Silence -> unknown."
+    },
+    "spinosad": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 3
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20260611.pdf",
+      "docDate": "2026-06-11",
+      "page": 4,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment, or to residues in/on blooming crops or weeds.",
+      "note": "Verified 2026-09-25 (confirmed). Generic plugin (no EPA number); verified against two spinosad labels, taking the stricter value per field. Entrust SC 62719-621 (2026-06-11, p4) says 'highly toxic' but has no foraging/bloom or residual-hours language. Success 62719-292 (2015-04-15 label, p3; https://www3.epa.gov/pesticides/chem_search/ppls/062719-00292-20150415.pdf): 'toxic to bees exposed to treatment for 3 hours following treatment. Do not apply ... if bees may forage'. highly-toxic (Entrust), dusk-to-dawn-only (Success; not loosened on Entrust's silence), 3 h residual kept because the gate only adds a warning when it is set."
+    },
+    "sulfur-90w": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/019713-00238-20170907.pdf",
+      "docDate": "2017-09-07",
+      "page": 5,
+      "quote": "Brown rot blossom blight, Coryneum blight. Powdery mildew. Rust, Scab TIMING/SPECIFIC DIRECTIONS: Apply pre­bloom, bloom, petal fall and in cover spray at 7 to 14 day intervals.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective (drops an unsupported claim). Generic plugin with no EPA number, so no single label governs; checked the representative Drexel Sulfur 90W (19713-238, Active, 90% sulfur, 9 pages): no bee/pollinator statement anywhere, and it directs bloom-time sprays (quoted), so no bloom restriction. Silence -> unknown. Re-check against the label of the bag on hand once a number is chosen."
+    },
+    "surround-wp": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00018-20191223.pdf",
+      "docDate": "2019-12-23",
+      "page": 18,
+      "quote": "Table grapes: Do not spray table grapes from first bloom to harvest as white residue can remain on the rachis and fruit until harvest.",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. MORE protective on both fields. No bee/pollinator statement anywhere on the label (Environmental Hazards p6/p30 cover water only) -> beeToxicity unknown (relatively-nontoxic unsupported). The only bloom prohibition is the table-grape residue restriction (a cosmetic, not bee, reason); citrus directions allow sprays 'throughout bloom' (p15). Applied the brief's any-crop rule -> prohibited-during-bloom; owner may prefer 'none' since the restriction is not pollinator-driven. Review: bloomRestriction kept at 'none' because the table-grape bloom ban concerns fruit residue, not bees."
+    },
+    "torac-sc": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only",
+        "residualToxicityHours": 8
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00036-20260728.pdf",
+      "docDate": "2026-07-28",
+      "page": 5,
+      "quote": "Application must be made at least 8 hours prior to bees foraging. ... Do not apply this product until flowering is complete and all petals have fallen unless one of the following conditions is met:",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"highly-toxic\", \"bloomRestriction\": \"dusk-to-dawn-only\"}. MORE protective. Toxicity + 8 h statement p.5 (Env. Hazards: 'highly toxic to bees and other pollinating insects'). Pollinator box p.6: contracted crops - no application until petal fall unless beekeeper notified 48 h ahead; non-contracted attractive crops - until petal fall unless after sunset, <55F, public health, or apiary registry. Sunset is not the only path, so prohibited-during-bloom. residualToxicityHours = 8 from the explicit '8 hours prior to bees foraging'. Torac SC is an alternate brand of 71711-36. Review: bloomRestriction kept at 'dusk-to-dawn-only' because the label permits in-bloom application after sunset."
+    },
+    "voliam-xpress": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01320-20250509.pdf",
+      "docDate": "2025-05-09",
+      "page": 6,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment or residues in/on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds if bees are visiting the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Foraging-only language (p.6; p.8 'while bees are foraging in/or adjacent to the treated area'; alfalfa p.22 'Bee Precaution - Make applications when bees are not actively foraging by applying during the early morning or during the evening hours'). No bloom ban (only post-bloom rate caps, p.42). No hours. Verified on the correct Voliam Xpress number 100-1320."
+    },
+    "vydate-l-oxamyl": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00372-20230628.pdf",
+      "docDate": "2023-06-28",
+      "page": 14,
+      "quote": "Do not apply at bloom or within 30 days after bloom, as fruit thinning may occur.",
+      "note": "Verified 2026-09-25 (confirmed). MORE protective. p5 Environmental Hazards: 'highly toxic to bees exposed to direct treatment or residues on blooming crops or weeds. Do not apply ... if bees are foraging' (foraging-only). Apple (p14) and pear (p20) directions prohibit bloom application (thinning reason); citrus (p17) allows bloom only between 1 h before sunset and 1 h after sunrise OR below 55F. Crop-level bloom prohibition + non-sunset exception -> prohibited-during-bloom under the brief's rule. No residual hours. Review: bloomRestriction kept at 'dusk-to-dawn-only' because the apple/pear 'Do not apply at bloom' is a fruit-thinning directive, not bee language."
+    },
+    "warrior-ii-with-zeon": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "docDate": "2025-07-03",
+      "page": 6,
+      "quote": "This product is highly toxic to bees and other pollinating insects exposed to direct treatment or residues in/on blooming crops or weeds. Do not apply this product or allow it to drift to blooming crops or weeds if bees are visiting the treatment area.",
+      "note": "Verified 2026-09-25 (confirmed). Foraging-only language (p.6; alfalfa p.20 'Avoid application when bees are actively foraging by applying during the early morning or during the evening hours'). No bloom ban (only post-bloom rate caps p.49-52). No hours."
+    },
+    "xentari": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00040-20220503.pdf",
+      "docDate": "2022-05-03",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS This product is toxic to aquatic invertebrates. This product is toxic to the green lacewing and the predatory mite (Galendromus (= Metaseiulus) occidentalis)",
+      "note": "Verified 2026-09-25; was {\"beeToxicity\": \"relatively-nontoxic\", \"bloomRestriction\": \"none\"}. Label names non-target beneficial-insect toxicity (lacewing, predatory mite) but says nothing about bees/pollinators or bloom. relatively-nontoxic needs an explicit label statement -> unknown (more protective)."
     }
   },
   "formulation": {
@@ -1509,6 +2679,29 @@
       "page": 3,
       "quote": "1.33 lbs imazethaypr, and 0.48 lbs saflufenacil per gallon formulated as a water-based suspension concentrate EPA Reg. No. 7969-365",
       "note": "Label is Zidua PRO (EPA Reg. 7969-365), not the plugin's 7969-374 (Zidua SC). PPLS 7969-365 lists 'Soluble Concentrate' and 'Flowable Concentrate'; label text used."
+    },
+    "acuron": {
+      "formulation": "ZC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20211110.pdf",
+      "docDate": "2021-11-10",
+      "page": 3,
+      "quote": "Acuron Herbicide is a ZC formulation",
+      "note": "ZC = mixed capsule suspension + suspension concentrate (liquid); code added to the schema enum. PPLS formulation field disagrees (EC / Pressurized Liquid); label wins."
+    },
+    "lumax-ez": {
+      "formulation": "ZC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20221214.pdf",
+      "docDate": "2022-12-14",
+      "page": 3,
+      "quote": "Lumax® EZ Herbicide is a ZC formulation",
+      "note": "ZC = mixed capsule suspension + suspension concentrate (liquid); code added to the schema enum. PPLS formulation field disagrees (EC / Pressurized Liquid); label wins."
+    },
+    "met52-ec-metarhizium": {
+      "formulation": "OD",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00033-20260528.pdf",
+      "docDate": "2026-05-28",
+      "quote": "LALGUARD® M52 OD",
+      "page": 3
     }
   },
   "dataCorrections": {
@@ -1616,6 +2809,37 @@
         "sourceUrl": "https://www.omri.org/omri-search?query=AllDown",
         "docDate": "2026-09-25",
         "quote": "No OMRI listing for 'AllDown' or 'Summerset'; label does say 'FOR USE IN ORGANIC PRODUCTION' (certifiedOrganicAllowed kept). Both SummerSet registrations (84069-1/-2) inactive since 2025-01-13"
+      }
+    ],
+    "phydura-clove-citric": [
+      {
+        "path": "epaRegistrationNumber",
+        "from": "82557-3",
+        "to": null,
+        "sourceUrl": "https://www.soiltechcorp.com/wp-content/uploads/Phydura_Label_OMRI_10_2022-2.pdf",
+        "docDate": "2022-10",
+        "page": 1,
+        "quote": "This product has not been registered by the U.S. E.P.A. Soil Technologies Corp. manufactures this product in compliance with the U.S.A. E.P.A. Minimum Risk Pesticide Regulation, CFR Title 40, Chapter 1, Subchapter E, 152.25 (f).",
+        "note": "SAFETY/COMPLIANCE: the current number belongs to Methomyl 90 WSP (a restricted-use carbamate insecticide); exports would print it on a clove-oil herbicide record. No PPLS results for 'Phydura'."
+      }
+    ],
+    "weed-zap-citronella": [
+      {
+        "path": "epaRegistrationNumber",
+        "from": "84718-1",
+        "to": null,
+        "sourceUrl": "http://cdn.arbico-organics.com/downloads/1811106_Weed-Zap-Label.pdf",
+        "page": 1,
+        "quote": "This product ingredients are exempt from registration with the Federal EPA under section 25 (b) of FIFRA. WEED ZAP has not been registered with the Environmental Protection Agency.",
+        "note": "The label PDF is JH Biotech's own label as hosted by the retailer Arbico Organics (undated). Label AIs: clove oil 45% + cinnamon oil 45%."
+      }
+    ],
+    "dimethoate-4ec": [
+      {
+        "path": "epaRegistrationNumber",
+        "from": "5905-368",
+        "to": null,
+        "quote": "Generic plugin: several active dimethoate 4EC registrations (Loveland 34704-207, Drexel 19713-231, UPL 70506-453, FMC 279-3541); the number depends on the jug on hand. The previous 5905-368 was Omni Supreme Spray (a mineral oil)."
       }
     ]
   },
@@ -2201,6 +3425,119 @@
       "sourceUrl": "https://www.omri.org/omri-search?query=Zidua",
       "docDate": "2026-09-25",
       "quote": "OMRI search 'Zidua': no product titled Zidua (NOP)"
+    }
+  },
+  "retired": {
+    "admiral-igr": {
+      "retiredOn": "2026-09-25",
+      "reason": "No US product named Admiral; its 71711-2 is Moncut CL, a fungicide."
+    },
+    "xtendimax": {
+      "retiredOn": "2026-09-25",
+      "reason": "XtendiMax 264-1210 was vacated 2024-02-06; the 2026 re-registration 264-1241 is branded Stryax."
+    },
+    "finalsan-pelargonic": {
+      "retiredOn": "2026-09-25",
+      "reason": "Both US Finalsan registrations (67702-8, 67702-34) are ammoniated soap of fatty acids, not the plugin's pelargonic acid."
+    },
+    "stadia-dry": {
+      "retiredOn": "2026-09-25",
+      "reason": "Placeholder plugin with no product behind it."
+    },
+    "velista-penthiopyrad": {
+      "retiredOn": "2026-09-25",
+      "reason": "Velista (100-1534) is labeled for turf only; no food-crop uses."
+    },
+    "alldown-acetic-citric": {
+      "retiredOn": "2026-09-25",
+      "reason": "Both SummerSet AllDown registrations (84069-1/-2) inactive since 2025-01-13; plugin rate matches neither label."
+    },
+    "express-tribenuron": {
+      "retiredOn": "2026-09-25",
+      "reason": "Two active FMC products fit (279-9594 Express TotalSol SG, 279-9578 Express XP DF); the plugin does not say which."
+    },
+    "topguard-ez": {
+      "retiredOn": "2026-09-25",
+      "reason": "No product named TopGuard EZ in PPLS and 279-3505 has no record; two flutriafol TopGuard products (279-3557, 279-3594 Terra) fit."
+    },
+    "m-pede-organic": {
+      "retiredOn": "2026-09-25",
+      "reason": "Duplicate of m-pede: there is one registered M-Pede (10163-324) and it is itself OMRI-listed."
+    }
+  },
+  "identityCorrections": {
+    "stadia": {
+      "from": {
+        "epaRegistrationNumber": null,
+        "formulation": null,
+        "defaultUnit": null,
+        "activeIngredients": [
+          {
+            "name": "rimsulfuron",
+            "chemistryClass": "sulfonylurea"
+          }
+        ],
+        "ratePerAcre": {
+          "amount": 1,
+          "unit": "oz"
+        },
+        "labelClaims": null,
+        "traitGatedSafeFor": null,
+        "displayName": "Stadia",
+        "notes": null
+      },
+      "fields": {
+        "epaRegistrationNumber": {
+          "quote": "A304.01 [Alternate Brand Names: Promote™, Stadia™, Empero™]",
+          "page": 3
+        },
+        "formulation": {
+          "quote": "A304.01 is a water dispersible granule designed to be diluted with water",
+          "page": 7
+        },
+        "defaultUnit": {
+          "quote": "The use rate for A304.01 is expressed in terms of the oz. of this product by weight per acre as Rate Oz./Acre.",
+          "page": 16
+        },
+        "activeIngredients": {
+          "quote": "ACTIVE INGREDIENT: % BY WT. Halosulfuron-methyl ... 75%",
+          "page": 3
+        },
+        "ratePerAcre": {
+          "quote": "Direct-seeded: Use Rate: ½ - ¾ oz.",
+          "page": 39
+        },
+        "labelClaims": {
+          "quote": "FIELD CORN AND FIELD CORN GROWN FOR SEED ⅔ – 1⅓ 30 ... PUMPKINS AND WINTER SQUASH ½ - 1 30",
+          "page": 27
+        },
+        "traitGatedSafeFor": {
+          "quote": "TOMATOES ½ - 1 30 Do not make more than 2 applications per crop cycle.",
+          "page": 54
+        },
+        "displayName": {
+          "quote": "[Alternate Brand Names: Promote™, Stadia™, Empero™] ... Halosulfuron-methyl ... 75%",
+          "page": 3
+        },
+        "notes": {
+          "quote": "Contains halosulfuron, the active ingredient used in [Permit®] [and] [Sandea®] [and] [SedgeHammer®].",
+          "page": 3
+        }
+      },
+      "note": "Owner decision 2026-09-25: correct records to match the EPA system. The only PPLS product named Stadia is 91234-31 (halosulfuron-methyl 75% WDG); the plugin had declared rimsulfuron."
+    },
+    "met52-ec-metarhizium": {
+      "from": {
+        "displayName": "Met52 EC (Metarhizium anisopliae F52, OMRI)",
+        "formulation": "EC",
+        "activeIngredients[0].name": "Metarhizium anisopliae strain F52",
+        "omriListed": true,
+        "certifiedOrganicAllowed": true
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00033-20260528.pdf",
+      "docDate": "2026-05-28",
+      "quote": "LALGUARD M52 OD is composed of spores of the insect pathogenic fungus Metarhizium brunneum strain F52.",
+      "note": "64137-33 is now branded LALGUARD M52 OD (Met52 EC brand dropped 2022); OD is the code in the brand name. OMRI lists only LALGUARD M52 GR (agb-19015), not the OD, and the label carries no organic statement."
     }
   }
 }

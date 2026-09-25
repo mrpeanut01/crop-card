@@ -17,8 +17,8 @@
   "reEntryIntervalHours": 0,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
-  "epaRegistrationNumber": "53575-31",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
+  "epaRegistrationNumber": "53575-6",
   "defaultUnit": "count",
   "targetPests": [
     "codling moth"

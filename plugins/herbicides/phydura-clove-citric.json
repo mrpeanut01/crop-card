@@ -23,7 +23,6 @@
   "applicationTiming": "POST",
   "requiresAMS": false,
   "deconRequired": false,
-  "epaRegistrationNumber": "82557-3",
   "complianceFlags": {
     "omriListed": true,
     "nonGmoCompliant": true,

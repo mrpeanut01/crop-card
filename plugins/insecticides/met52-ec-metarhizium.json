@@ -3,12 +3,12 @@
   "type": "insecticide",
   "version": "1.0.0",
   "defaultUnit": "fl-oz",
-  "formulation": "EC",
+  "formulation": "OD",
   "pluginSchemaVersion": "1.1",
-  "displayName": "Met52 EC (Metarhizium anisopliae F52, OMRI)",
+  "displayName": "Lalguard M52 OD (Metarhizium brunneum F52; formerly Met52 EC)",
   "activeIngredients": [
     {
-      "name": "Metarhizium anisopliae strain F52",
+      "name": "Metarhizium brunneum strain F52",
       "iracGroup": "UNF"
     }
   ],
@@ -21,7 +21,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
-  "epaRegistrationNumber": "64137-12",
+  "epaRegistrationNumber": "64137-33",
   "targetPests": [
     "thrips",
     "whitefly",
@@ -30,9 +30,9 @@
     "soilborne weevils"
   ],
   "complianceFlags": {
-    "omriListed": true,
+    "omriListed": false,
     "nonGmoCompliant": true,
-    "certifiedOrganicAllowed": true,
+    "certifiedOrganicAllowed": false,
     "transitioningAllowed": true
   },
   "notes": "Novozymes (now Pro-Farm) entomopathogenic fungus. Strong on thrips and soil-dwelling pests.",

@@ -20,8 +20,8 @@
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 21,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
-  "epaRegistrationNumber": "70506-130",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
+  "epaRegistrationNumber": "5481-507",
   "targetPests": [
     "gray field slug",
     "European brown garden snail"

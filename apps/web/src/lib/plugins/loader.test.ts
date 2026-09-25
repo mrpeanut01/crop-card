@@ -51,6 +51,29 @@ describe('loadPluginsFromDirectory', () => {
     expect(registry.has('gly')).toBe(true);
   });
 
+  it('skips retired plugins parked under _retired/', async () => {
+    const crop = (pluginId: string) =>
+      JSON.stringify({
+        pluginId,
+        type: 'crop',
+        displayName: pluginId,
+        version: '1.0.0',
+        cropFamily: 'corn',
+        harvestStyle: 'row-grain-pollinated',
+        bloomWindow: { daysFromPlantingMin: 55, daysFromPlantingMax: 75, beeAttractive: false }
+      });
+    await mkdir(path.join(tmp, 'crops'));
+    await writeFile(path.join(tmp, 'crops', 'live.json'), crop('live'));
+    await mkdir(path.join(tmp, '_retired', 'crops'), { recursive: true });
+    await writeFile(path.join(tmp, '_retired', 'crops', 'gone.json'), crop('gone'));
+
+    const registry = new PluginRegistry();
+    const result = await loadPluginsFromDirectory(registry, tmp);
+    expect(registry.has('live')).toBe(true);
+    expect(registry.has('gone')).toBe(false);
+    expect(result.registered).toHaveLength(1);
+  });
+
   it('continues past invalid files and reports them', async () => {
     await writeFile(path.join(tmp, 'broken.json'), '{ not valid json');
     await writeFile(

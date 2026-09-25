@@ -1,33 +1,21 @@
 /**
- * Stripe billing scaffold (Sprint 21 / Phase 21 launch readiness).
+ * Stripe billing — webhook half (Sprint 21 / Phase 21 launch readiness).
  *
- * Minimal viable Stripe surface for v1 launch:
  *   - verifyWebhookSignature() — verifies Stripe-Signature headers using
  *     the v1 scheme (HMAC-SHA256 over timestamped payload).
  *   - applyWebhookEvent() — small dispatcher that maps the Stripe event
- *     types we care about onto the existing owner_subscriptions row.
+ *     types we care about onto the owner_subscriptions row (and mirrors
+ *     status onto owners.billing_status, which hooks.server.ts gates on).
  *
- * Not in scope (deferred to a launch-followup sprint):
- *   - Stripe.customers.create() on Owner provision.
- *   - Stripe.subscriptions.create() / update() server-side calls.
- *   - The full Stripe Elements payment-method UI on /settings/billing.
- *
- * Rationale: the webhook receiver is the safety-critical piece (Stripe
- * pushes state changes; we must converge on them). Customer + Subscription
- * creation can happen via Stripe Checkout (hosted) in v1 — no client
- * library required. When Phase 28 adds Stripe Elements for in-app
- * payment-method editing, extend this module with the create-call
- * helpers and an integration test.
- *
- * Stripe SDK intentionally NOT installed yet — we read JSON bodies
- * directly so the dependency surface stays minimal until the broader
- * billing UI lands.
+ * Customer creation + hosted Checkout / Billing Portal sessions live in
+ * `stripeApi.ts` (direct REST, no SDK). This module stays the source of
+ * truth for owner_subscriptions state: every status change arrives here.
  */
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
-import { ownerSubscriptions } from '$lib/db/schema';
+import { ownerSubscriptions, owners } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 
 const SIGNATURE_TOLERANCE_SECONDS = 300; // Stripe default
@@ -104,9 +92,11 @@ export interface StripeEvent {
       status?: 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete';
       current_period_start?: number; // unix seconds
       current_period_end?: number;
-      metadata?: { ownerId?: string };
-      // Invoice objects
-      subscription?: string;
+      metadata?: { ownerId?: string; owner_id?: string } | null;
+      // Invoice + Checkout Session objects
+      subscription?: string | null;
+      // Checkout Session objects
+      client_reference_id?: string | null;
     };
   };
 }
@@ -135,15 +125,27 @@ export function applyWebhookEvent(event: StripeEvent): {
   reason: string;
 } {
   const obj = event.data.object;
-  const ownerId = obj.metadata?.ownerId;
+  const ownerId = resolveOwnerId(event);
   if (!ownerId) {
-    // Events without metadata.ownerId aren't ours — Stripe lets the
-    // creator set it at subscription create. We log + skip; this is
-    // not a failure mode because Stripe may send platform-level events
-    // (test pings, account.updated, etc.).
-    return { applied: false, ownerId: null, reason: 'event has no metadata.ownerId' };
+    // Not ours (platform-level pings, customers created outside CropCard).
+    // Log + skip rather than fail so Stripe does not retry forever.
+    return { applied: false, ownerId: null, reason: 'event has no resolvable owner' };
   }
   switch (event.type) {
+    case 'checkout.session.completed': {
+      if (!obj.customer) {
+        return { applied: false, ownerId, reason: 'checkout session has no customer' };
+      }
+      if (
+        !convergeSubscription(ownerId, {
+          stripeCustomerId: obj.customer,
+          ...(obj.subscription ? { stripeSubscriptionId: obj.subscription } : {})
+        })
+      ) {
+        return { applied: false, ownerId, reason: 'unknown owner' };
+      }
+      return { applied: true, ownerId, reason: 'checkout completed → customer linked' };
+    }
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       const localStatus = obj.status ? STRIPE_TO_OWNER_STATUS[obj.status] : null;
@@ -154,39 +156,95 @@ export function applyWebhookEvent(event: StripeEvent): {
           reason: `unhandled Stripe subscription status: ${obj.status}`
         };
       }
-      unscopedQueryNote(
-        'Stripe webhook writes owner_subscriptions across tenants; ownerId comes from the Stripe event metadata'
-      );
-      db.update(ownerSubscriptions)
-        .set({
+      if (
+        !convergeSubscription(ownerId, {
           status: localStatus,
           stripeCustomerId: obj.customer ?? null,
           stripeSubscriptionId: obj.id ?? null,
           periodStart: obj.current_period_start ? new Date(obj.current_period_start * 1000) : null,
-          periodEnd: obj.current_period_end ? new Date(obj.current_period_end * 1000) : null,
-          updatedAt: new Date()
+          periodEnd: obj.current_period_end ? new Date(obj.current_period_end * 1000) : null
         })
-        .where(eq(ownerSubscriptions.ownerId, ownerId))
-        .run();
+      ) {
+        return { applied: false, ownerId, reason: 'unknown owner' };
+      }
       return { applied: true, ownerId, reason: `subscription → ${localStatus}` };
     }
     case 'customer.subscription.deleted': {
-      unscopedQueryNote('Stripe webhook cancels owner_subscriptions across tenants');
-      db.update(ownerSubscriptions)
-        .set({ status: 'canceled', updatedAt: new Date() })
-        .where(eq(ownerSubscriptions.ownerId, ownerId))
-        .run();
+      if (!convergeSubscription(ownerId, { status: 'canceled' })) {
+        return { applied: false, ownerId, reason: 'unknown owner' };
+      }
       return { applied: true, ownerId, reason: 'subscription canceled' };
     }
     case 'invoice.payment_failed': {
-      unscopedQueryNote('Stripe webhook marks owner past_due across tenants');
-      db.update(ownerSubscriptions)
-        .set({ status: 'past_due', updatedAt: new Date() })
-        .where(eq(ownerSubscriptions.ownerId, ownerId))
-        .run();
+      if (!convergeSubscription(ownerId, { status: 'past_due' })) {
+        return { applied: false, ownerId, reason: 'unknown owner' };
+      }
       return { applied: true, ownerId, reason: 'invoice failed → past_due' };
     }
     default:
       return { applied: false, ownerId, reason: `unhandled event type ${event.type}` };
   }
+}
+
+type OwnerStatus = (typeof STRIPE_TO_OWNER_STATUS)[string];
+
+interface SubscriptionPatch {
+  status?: OwnerStatus;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  periodStart?: Date | null;
+  periodEnd?: Date | null;
+}
+
+/**
+ * Owner resolution order: explicit metadata (set at Checkout via
+ * subscription_data.metadata), then the Checkout Session's
+ * client_reference_id, then a reverse lookup of the Stripe customer id
+ * (invoices carry no subscription metadata).
+ */
+function resolveOwnerId(event: StripeEvent): string | null {
+  const obj = event.data.object;
+  const fromMetadata = obj.metadata?.ownerId ?? obj.metadata?.owner_id;
+  if (fromMetadata) return fromMetadata;
+  if (event.type === 'checkout.session.completed' && obj.client_reference_id) {
+    return obj.client_reference_id;
+  }
+  if (obj.customer) {
+    unscopedQueryNote('Stripe webhook resolves the owner by stripe_customer_id across tenants');
+    const row = db
+      .select({ ownerId: ownerSubscriptions.ownerId })
+      .from(ownerSubscriptions)
+      .where(eq(ownerSubscriptions.stripeCustomerId, obj.customer))
+      .get();
+    if (row) return row.ownerId;
+  }
+  return null;
+}
+
+/**
+ * Absolute-value upsert of owner_subscriptions, mirrored onto
+ * owners.billing_status (the column hooks.server.ts gates on) so a
+ * Stripe `unpaid → suspended` actually suspends — same pairing as
+ * superadmin.setBillingStatus. Returns false when the owner is unknown.
+ */
+function convergeSubscription(ownerId: string, patch: SubscriptionPatch): boolean {
+  unscopedQueryNote(
+    'Stripe webhook writes owner_subscriptions across tenants; ownerId comes from the Stripe event'
+  );
+  const owner = db.select({ id: owners.id }).from(owners).where(eq(owners.id, ownerId)).get();
+  if (!owner) return false;
+  const now = new Date();
+  db.transaction((tx) => {
+    tx.insert(ownerSubscriptions)
+      .values({ ownerId, ...patch, createdAt: now, updatedAt: now })
+      .onConflictDoUpdate({
+        target: ownerSubscriptions.ownerId,
+        set: { ...patch, updatedAt: now }
+      })
+      .run();
+    if (patch.status) {
+      tx.update(owners).set({ billingStatus: patch.status }).where(eq(owners.id, ownerId)).run();
+    }
+  });
+  return true;
 }

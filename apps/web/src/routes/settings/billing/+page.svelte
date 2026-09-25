@@ -5,6 +5,59 @@
 
   let { data } = $props();
 
+  const STATUS_TONE = {
+    active: 'forest',
+    trial: 'sky',
+    past_due: 'wheat',
+    canceled: 'neutral',
+    suspended: 'rust'
+  } as const;
+  const STATUS_LABEL: Record<string, string> = {
+    active: 'Active',
+    trial: 'Trial',
+    past_due: 'Past due',
+    canceled: 'Canceled',
+    suspended: 'Suspended',
+    unknown: 'Unknown'
+  };
+
+  const hasSubscription = $derived(!!data.subscription?.hasSubscription);
+  const statusTone = $derived(
+    STATUS_TONE[data.billingStatus as keyof typeof STATUS_TONE] ?? 'neutral'
+  );
+  const periodEndLabel = $derived(
+    data.subscription?.periodEnd
+      ? new Date(data.subscription.periodEnd).toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })
+      : null
+  );
+
+  let pending = $state<'checkout' | 'portal' | null>(null);
+  let actionError = $state<string | null>(null);
+
+  async function startBilling(kind: 'checkout' | 'portal') {
+    pending = kind;
+    actionError = null;
+    try {
+      const res = await fetch(`/api/billing/${kind}`, { method: 'POST' });
+      const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (res.ok && body.url) {
+        window.location.assign(body.url);
+        return;
+      }
+      actionError =
+        body.error === 'billing-not-configured'
+          ? "Billing isn't configured on this server."
+          : 'Stripe could not open the billing page. Try again in a minute.';
+    } catch {
+      actionError = 'Network error — billing needs a connection.';
+    }
+    pending = null;
+  }
+
   // Usage counters · this month. Spray + harvest counts pulled from
   // the snapshot via the loader's spendSnapshot proxy; AI counts come
   // from the same source. Caps are illustrative (no enforcement yet).
@@ -65,7 +118,9 @@
         <div class="kicker-row mt">Bandwidth</div>
         <div class="meta-val mono">~$0.80/mo · scale-to-zero</div>
         <div class="kicker-row mt">Status</div>
-        <div class="meta-val mono">{data.billingStatus}</div>
+        <div class="meta-val">
+          <Pill tone={statusTone}>{STATUS_LABEL[data.billingStatus] ?? data.billingStatus}</Pill>
+        </div>
       </div>
     </div>
   </SettingsSection>
@@ -99,15 +154,93 @@
     </div>
   </SettingsSection>
 
-  <SettingsSection title="Payment method">
-    <div class="payment-row">
-      <div class="card-chip mono">VISA</div>
-      <div class="payment-text">
-        <div class="payment-num mono">•••• ••••</div>
-        <div class="payment-sub">Stripe webhook wire-up · Phase 26</div>
+  <SettingsSection
+    title="Subscription & payment"
+    sub="Checkout and card management are hosted by Stripe; CropCard never sees your card number."
+  >
+    {#if data.checkoutResult === 'success'}
+      <p class="notice" data-tone="forest" role="status">
+        Checkout complete. Your plan status updates here as soon as Stripe confirms it.
+      </p>
+    {:else if data.checkoutResult === 'cancel'}
+      <p class="notice" data-tone="neutral" role="status">
+        Checkout canceled — nothing was charged.
+      </p>
+    {/if}
+
+    {#if !data.billingConfigured}
+      <div class="payment-row" data-testid="billing-not-configured">
+        <div class="payment-text">
+          <div class="payment-num">Billing isn't configured on this server</div>
+          <div class="payment-sub">
+            The operator hasn't set Stripe keys, so there's nothing to pay here. Your farm keeps
+            working as-is.
+          </div>
+        </div>
       </div>
-      <button type="button" class="ghost-sm" disabled>Update</button>
-    </div>
+    {:else}
+      <div class="payment-row">
+        <div class="payment-text">
+          <div class="payment-num">
+            {#if hasSubscription}
+              Stripe subscription on file
+            {:else}
+              No subscription yet
+            {/if}
+          </div>
+          <div class="payment-sub">
+            {#if hasSubscription && periodEndLabel}
+              Current period ends {periodEndLabel}. Update card, download invoices or cancel in the
+              Stripe portal.
+            {:else if hasSubscription}
+              Update card, download invoices or cancel in the Stripe portal.
+            {:else}
+              Start the Solo plan through Stripe's secure hosted checkout.
+            {/if}
+          </div>
+        </div>
+        <div class="payment-actions">
+          {#if hasSubscription}
+            <button
+              type="button"
+              class="billing-btn primary"
+              disabled={pending !== null || data.impersonating}
+              aria-busy={pending === 'portal' || undefined}
+              onclick={() => startBilling('portal')}
+            >
+              {pending === 'portal' ? 'Opening…' : 'Manage billing'}
+            </button>
+          {:else}
+            <button
+              type="button"
+              class="billing-btn primary"
+              disabled={pending !== null || data.impersonating}
+              aria-busy={pending === 'checkout' || undefined}
+              onclick={() => startBilling('checkout')}
+            >
+              {pending === 'checkout' ? 'Opening…' : 'Start subscription'}
+            </button>
+            {#if data.subscription?.hasCustomer}
+              <button
+                type="button"
+                class="billing-btn ghost"
+                disabled={pending !== null || data.impersonating}
+                aria-busy={pending === 'portal' || undefined}
+                onclick={() => startBilling('portal')}
+              >
+                {pending === 'portal' ? 'Opening…' : 'Manage billing'}
+              </button>
+            {/if}
+          {/if}
+        </div>
+      </div>
+      {#if data.impersonating}
+        <p class="payment-sub">Billing actions are disabled while impersonating.</p>
+      {/if}
+    {/if}
+    {#if actionError}
+      <p class="notice" data-tone="rust" role="alert">{actionError}</p>
+    {/if}
   </SettingsSection>
 
   <SettingsSection
@@ -237,52 +370,81 @@
 
   .payment-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 14px;
     padding: 10px 14px;
     border: 1px solid var(--color-divider-soft, var(--color-divider));
     border-radius: 8px;
   }
-  .card-chip {
-    width: 40px;
-    height: 28px;
-    border-radius: 4px;
-    background: var(--color-forest-deep);
-    color: var(--color-cream, #f8f3e8);
-    display: grid;
-    place-items: center;
-    font-size: 10px;
-    font-weight: 700;
-  }
   .payment-text {
-    flex: 1;
+    flex: 1 1 220px;
+    min-width: 0;
   }
   .payment-num {
-    font-size: 12.5px;
+    font-size: 13.5px;
     color: var(--color-ink);
     font-weight: 600;
   }
   .payment-sub {
-    font-size: 11.5px;
-    color: var(--color-ink-muted);
+    font-size: 12.5px;
+    color: var(--color-ink-soft);
     margin-top: 2px;
+    line-height: 1.5;
   }
-  .ghost-sm {
-    background: var(--color-paper);
-    color: var(--color-ink);
-    border: 1px solid var(--color-divider);
-    padding: 5px 10px;
+  .payment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .billing-btn {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 18px;
     border-radius: var(--radius-input, 6px);
     font-family: inherit;
-    font-size: 11.5px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
   }
-  .ghost-sm:disabled {
-    opacity: 0.5;
+  .billing-btn.primary {
+    background: var(--color-forest-deep);
+    color: var(--color-cream, #f8f3e8);
+    border: 1.5px solid var(--color-forest-deep);
+  }
+  .billing-btn.ghost {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 1.5px solid var(--color-divider);
+  }
+  .billing-btn:disabled {
+    opacity: 0.55;
     cursor: not-allowed;
   }
-  .ghost-sm:hover:not(:disabled) {
+  .billing-btn.ghost:hover:not(:disabled) {
     border-color: var(--color-forest-deep);
+  }
+  .notice {
+    margin: 0 0 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid var(--color-divider);
+  }
+  .notice[data-tone='forest'] {
+    background: #e5eedf;
+    color: #1f3a28;
+    border-color: #c9dbc0;
+  }
+  .notice[data-tone='rust'] {
+    margin: 10px 0 0;
+    background: #f1d9ce;
+    color: #8a341b;
+    border-color: #e2b69e;
+  }
+  .notice[data-tone='neutral'] {
+    background: #e9dfcc;
+    color: #4a4f46;
   }
 
   .upgrade-grid {

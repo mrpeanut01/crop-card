@@ -70,7 +70,8 @@ const ANONYMOUS_PATHS = new Set([
   '/signin',
   '/signout',
   '/api/health',
-  '/api/openapi.json' // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
+  '/api/openapi.json', // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
+  '/api/billing/stripe-webhook' // Stripe POSTs without a session; the signature is the auth.
 ]);
 const ANONYMOUS_PATH_PREFIXES = ['/invite/', '/api/health/'];
 const ANONYMOUS_STATIC_PATHS = new Set([
@@ -86,7 +87,7 @@ const ANONYMOUS_STATIC_PREFIXES = [
   '/static/'
 ];
 
-function isAnonymous(pathname: string): boolean {
+export function isAnonymous(pathname: string): boolean {
   if (ANONYMOUS_PATHS.has(pathname)) return true;
   if (ANONYMOUS_STATIC_PATHS.has(pathname)) return true;
   for (const p of ANONYMOUS_PATH_PREFIXES) if (pathname.startsWith(p)) return true;

@@ -13,7 +13,7 @@
  */
 
 import { error } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 import { listSprayEvents, evaluateLock as evaluateSprayLock } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
@@ -180,7 +180,7 @@ export const load: PageServerLoad = async (event) => {
         equipmentLabel: equipment.label
       })
       .from(equipmentLog)
-      .leftJoin(equipment, eq(equipment.id, equipmentLog.equipmentId))
+      .leftJoin(equipment, and(eq(equipment.id, equipmentLog.equipmentId), withTenant(equipment)))
       .where(withTenant(equipmentLog, eq(equipmentLog.id, rowId)))
       .get();
     if (!row) throw error(404, 'decon record not found');

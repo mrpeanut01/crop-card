@@ -91,7 +91,7 @@ function listDeconForExport(filters: { fromMs?: number; toMs?: number }): DeconR
       equipmentId: equipmentLog.equipmentId
     })
     .from(equipmentLog)
-    .leftJoin(equipment, eq(equipment.id, equipmentLog.equipmentId))
+    .leftJoin(equipment, and(eq(equipment.id, equipmentLog.equipmentId), withTenant(equipment)))
     .where(withTenant(equipmentLog, and(...conds)))
     .orderBy(desc(equipmentLog.occurredAt))
     .all()

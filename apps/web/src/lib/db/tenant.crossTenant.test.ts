@@ -46,7 +46,8 @@ import * as pushSubscriptionsRepo from './pushSubscriptions';
 import * as taxonomyRepo from './taxonomy';
 import * as pluginOverridesRepo from './pluginOverrides';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
-import { users, helperAssignments, recordDeletions, cropEquipment } from './schema';
+import { users, helperAssignments, recordDeletions, cropEquipment, equipmentLog } from './schema';
+import { listUnifiedRecords } from './recordsUnified';
 import { eq } from 'drizzle-orm';
 import { tenantValues, withTenant } from './tenant';
 
@@ -506,6 +507,31 @@ describe('cross-tenant isolation', () => {
     );
     const listed = runWithTenant(OWNER_A, () => cropEquipmentRepo.listCropEquipment(aCropId));
     expect(listed.map((b) => b.equipmentLabel)).not.toContain('B-secret-planter');
+  });
+
+  it("decon records never join another Owner's equipment label", () => {
+    const bRig = runWithTenant(OWNER_B, () =>
+      equipmentRepo.createEquipment({ type: 'sprayer', label: 'B-secret-sprayer' })
+    );
+    const logId = randomUUID();
+    // Legacy/bad row: A's decon log pointing at B's sprayer id.
+    runWithTenant(OWNER_A, () =>
+      db
+        .insert(equipmentLog)
+        .values(
+          tenantValues({
+            id: logId,
+            equipmentId: bRig.id,
+            occurredAt: new Date(),
+            kind: 'decon' as const
+          })
+        )
+        .run()
+    );
+    const rows = runWithTenant(OWNER_A, () => listUnifiedRecords({ kinds: ['decon'] }));
+    const row = rows.find((r) => r.rowId === logId);
+    expect(row).toBeTruthy();
+    expect(row?.detail).not.toContain('B-secret-sprayer');
   });
 
   it('taxonomy defaults are shared read-only; own terms stay per-Owner', () => {

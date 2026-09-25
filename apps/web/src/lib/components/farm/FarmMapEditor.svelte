@@ -11,6 +11,8 @@
   import { browser } from '$app/environment';
   import { untrack } from 'svelte';
   import BlockMap from '$lib/components/BlockMap.svelte';
+  import FarmSketch from '$lib/components/farm/FarmSketch.svelte';
+  import { formatFt, sketchAcres } from '$lib/farm/sketch';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { FieldWithBlocks } from '$lib/db/fields';
   import type { ShadeSource, ShadeSourceKind } from '$lib/db/shadeSources';
@@ -24,19 +26,50 @@
     fields,
     shadeSources = [],
     canEdit,
-    isFirstRun = false
+    isFirstRun = false,
+    initialMode
   }: {
     blocks: BlockWithPlantings[];
     fields: FieldWithBlocks[];
     shadeSources?: ShadeSource[];
     canEdit: boolean;
     isFirstRun?: boolean;
+    /** Start on the map or on the dimension sketch. Defaults to the sketch
+     *  when the farm has sizes entered but nothing drawn on the map. */
+    initialMode?: 'map' | 'sketch';
   } = $props();
+
+  const hasGeometry = $derived(
+    fields.some((f) => f.geometryGeojson) || blocks.some((b) => b.geometryGeojson)
+  );
+  const hasSketchDims = $derived(
+    fields.some((f) => f.widthFt && f.lengthFt) || blocks.some((b) => b.widthFt && b.lengthFt)
+  );
+  let mode = $state<'map' | 'sketch'>(
+    untrack(() => initialMode ?? (!hasGeometry && hasSketchDims ? 'sketch' : 'map'))
+  );
+
+  let locating = $state(false);
+  let locateMessage = $state<string | null>(null);
+  async function centerOnMe() {
+    if (!blockMap) return;
+    locating = true;
+    locateMessage = null;
+    locateMessage = await blockMap.centerOnMe();
+    locating = false;
+  }
+
+  function dimsText(item: { widthFt?: number; lengthFt?: number }): string | null {
+    return item.widthFt && item.lengthFt
+      ? `${formatFt(item.widthFt).replace(' ft', '')} × ${formatFt(item.lengthFt)}`
+      : null;
+  }
 
   // ─── BlockMap draw callbacks ──────────────────────────────────────────────
   let blockMap = $state<{
     currentDraftName: () => string;
     currentDraftFieldId: () => string;
+    centerOnMe: () => Promise<string | null>;
   } | null>(null);
 
   async function saveGeometry(blockId: string, geom: Geom | null) {
@@ -170,6 +203,8 @@
   let newFieldName = $state('');
   let newFieldAcres = $state<number | undefined>(undefined);
   let newFieldNotes = $state('');
+  let newFieldWidth = $state<number | undefined>(undefined);
+  let newFieldLength = $state<number | undefined>(undefined);
   let creatingField = $state(false);
   let fieldError = $state<string | null>(null);
 
@@ -184,7 +219,9 @@
         body: JSON.stringify({
           name: newFieldName.trim(),
           acres: newFieldAcres,
-          notes: newFieldNotes.trim() || undefined
+          notes: newFieldNotes.trim() || undefined,
+          widthFt: newFieldWidth || undefined,
+          lengthFt: newFieldLength || undefined
         })
       });
       const out = await res.json();
@@ -195,6 +232,9 @@
       newFieldName = '';
       newFieldAcres = undefined;
       newFieldNotes = '';
+      newFieldWidth = undefined;
+      newFieldLength = undefined;
+      newBlockFieldId = out.field?.id ?? newBlockFieldId;
       await invalidateAll();
     } catch (e) {
       fieldError = e instanceof Error ? e.message : String(e);
@@ -207,12 +247,23 @@
   let editFieldName = $state('');
   let editFieldAcres = $state<number | undefined>(undefined);
   let editFieldNotes = $state('');
+  let editFieldWidth = $state<number | undefined>(undefined);
+  let editFieldLength = $state<number | undefined>(undefined);
 
-  function startEditField(f: { id: string; name: string; acres?: number; notes?: string }) {
+  function startEditField(f: {
+    id: string;
+    name: string;
+    acres?: number;
+    notes?: string;
+    widthFt?: number;
+    lengthFt?: number;
+  }) {
     editingFieldId = f.id;
     editFieldName = f.name;
     editFieldAcres = f.acres;
     editFieldNotes = f.notes ?? '';
+    editFieldWidth = f.widthFt;
+    editFieldLength = f.lengthFt;
   }
 
   async function saveEditField() {
@@ -222,7 +273,12 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: editFieldName.trim(),
-        acres: editFieldAcres ?? null,
+        ...dimsPatch(
+          editFieldWidth,
+          editFieldLength,
+          editFieldAcres,
+          fields.find((f) => f.id === editingFieldId)
+        ),
         notes: editFieldNotes.trim() || null
       })
     });
@@ -255,7 +311,30 @@
   let newBlockName = $state('');
   let newBlockAcres = $state<number | undefined>(undefined);
   let newBlockFieldId = $state<string>('');
+  let newBlockWidth = $state<number | undefined>(undefined);
+  let newBlockLength = $state<number | undefined>(undefined);
   let creatingBlock = $state(false);
+
+  $effect(() => {
+    if (fields.length > 0 && !fields.some((f) => f.id === newBlockFieldId)) {
+      newBlockFieldId = fields[0].id;
+    }
+  });
+
+  /** When the size changes, acres are left out so the server recomputes them
+   *  from width × length; otherwise the edited acres are saved as-is. */
+  function dimsPatch(
+    widthFt: number | undefined,
+    lengthFt: number | undefined,
+    acres: number | undefined,
+    before: { widthFt?: number; lengthFt?: number } | undefined
+  ) {
+    const w = widthFt || null;
+    const l = lengthFt || null;
+    const resized = w !== (before?.widthFt ?? null) || l !== (before?.lengthFt ?? null);
+    const recompute = resized && sketchAcres(w, l) !== undefined;
+    return { widthFt: w, lengthFt: l, acres: recompute ? undefined : (acres ?? null) };
+  }
   let blockError = $state<string | null>(null);
   let addingBlockForFieldId = $state<string | null>(null);
 
@@ -268,7 +347,13 @@
       const res = await fetch('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newBlockName.trim(), acres: newBlockAcres, fieldId })
+        body: JSON.stringify({
+          name: newBlockName.trim(),
+          acres: newBlockAcres,
+          fieldId,
+          widthFt: newBlockWidth || undefined,
+          lengthFt: newBlockLength || undefined
+        })
       });
       const out = await res.json();
       if (!res.ok) {
@@ -277,7 +362,8 @@
       }
       newBlockName = '';
       newBlockAcres = undefined;
-      newBlockFieldId = '';
+      newBlockWidth = undefined;
+      newBlockLength = undefined;
       addingBlockForFieldId = null;
       await invalidateAll();
     } catch (e) {
@@ -295,6 +381,8 @@
   let editBlockTillage = $state<TillageMethod>('conventional');
   let editBlockSlopePercent = $state<number | null>(null);
   let editBlockSlopeAspectDeg = $state<number | null>(null);
+  let editBlockWidth = $state<number | undefined>(undefined);
+  let editBlockLength = $state<number | undefined>(undefined);
 
   function startEditBlock(b: {
     id: string;
@@ -305,8 +393,12 @@
     tillageMethod?: TillageMethod;
     slopePercent?: number;
     slopeAspectDeg?: number;
+    widthFt?: number;
+    lengthFt?: number;
   }) {
     editingBlockId = b.id;
+    editBlockWidth = b.widthFt;
+    editBlockLength = b.lengthFt;
     editBlockName = b.name;
     editBlockAcres = b.acres;
     editBlockLabel = b.blockLabel ?? '';
@@ -323,7 +415,12 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: editBlockName.trim(),
-        acres: editBlockAcres ?? null,
+        ...dimsPatch(
+          editBlockWidth,
+          editBlockLength,
+          editBlockAcres,
+          blocks.find((b) => b.id === editingBlockId)
+        ),
         blockLabel: editBlockLabel.trim() || null,
         fieldId: editBlockFieldId || undefined,
         tillageMethod: editBlockTillage,
@@ -591,35 +688,187 @@
   <section class="card welcome">
     <h2>👋 Draw your farm</h2>
     <p>
-      Use the toolbar on the map to <strong>draw a field</strong>, then draw the
-      <strong>blocks</strong> inside it. No GPS? Use <strong>Add without drawing</strong> below to create
-      them by name and sketch boundaries later.
+      Start with your <strong>fields</strong>, then the <strong>blocks</strong> inside them. On the
+      <strong>Map</strong>, use the toolbar to draw a field, then draw its blocks. If the aerial
+      view doesn't help, switch to <strong>Dimensions</strong> and type each field's width and length;
+      CropCard draws them as boxes.
     </p>
   </section>
 {/if}
 
-{#if browser}
-  <BlockMap
-    bind:this={blockMap}
-    {blocks}
-    {fields}
-    {canEdit}
-    {shadeSources}
-    onSaveGeometry={saveGeometry}
-    onCreateWithGeometry={createBlockWithGeometry}
-    onSaveFieldGeometry={saveFieldGeometry}
-    onCreateFieldWithGeometry={createFieldWithGeometry}
-    onCreateShadeSource={createShadeSource}
-    onDeleteShadeSource={deleteShadeSource}
-    onUpdateShadeGeometry={updateShadeGeometry}
-  />
+<div class="mode-bar">
+  <div class="seg" role="group" aria-label="How to lay out your farm">
+    <button
+      type="button"
+      class:active={mode === 'map'}
+      aria-pressed={mode === 'map'}
+      onclick={() => (mode = 'map')}>🗺️ Map</button
+    >
+    <button
+      type="button"
+      class:active={mode === 'sketch'}
+      aria-pressed={mode === 'sketch'}
+      onclick={() => (mode = 'sketch')}>📐 Dimensions</button
+    >
+  </div>
+  {#if mode === 'map'}
+    <button type="button" class="locate" onclick={centerOnMe} disabled={locating || !blockMap}>
+      📍 {locating ? 'Locating…' : 'Center on my location'}
+    </button>
+  {/if}
+</div>
+{#if mode === 'map' && locateMessage}
+  <p class="locate-msg" role="status">{locateMessage}</p>
+{/if}
+
+{#if mode === 'map'}
+  {#if browser}
+    <BlockMap
+      bind:this={blockMap}
+      {blocks}
+      {fields}
+      {canEdit}
+      {shadeSources}
+      autoLocate={canEdit && !hasGeometry}
+      onSaveGeometry={saveGeometry}
+      onCreateWithGeometry={createBlockWithGeometry}
+      onSaveFieldGeometry={saveFieldGeometry}
+      onCreateFieldWithGeometry={createFieldWithGeometry}
+      onCreateShadeSource={createShadeSource}
+      onDeleteShadeSource={deleteShadeSource}
+      onUpdateShadeGeometry={updateShadeGeometry}
+    />
+  {:else}
+    <section class="card empty"><p>Loading map…</p></section>
+  {/if}
 {:else}
-  <section class="card empty"><p>Loading map…</p></section>
+  <FarmSketch {fields} {blocks} />
+  {#if canEdit}
+    {@const fieldAcresPreview = sketchAcres(newFieldWidth, newFieldLength)}
+    {@const blockAcresPreview = sketchAcres(newBlockWidth, newBlockLength)}
+    <section class="card sketch-forms">
+      <form
+        class="dim-form"
+        data-testid="sketch-add-field"
+        onsubmit={(e) => {
+          e.preventDefault();
+          createField();
+        }}
+      >
+        <h3>{fields.length === 0 ? '1. Add your first field' : 'Add another field'}</h3>
+        <div class="grid3">
+          <label
+            >Field name<input
+              type="text"
+              placeholder="e.g. North Field"
+              bind:value={newFieldName}
+            /></label
+          >
+          <label
+            >Width (ft)<input
+              type="number"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              bind:value={newFieldWidth}
+            /></label
+          >
+          <label
+            >Length (ft)<input
+              type="number"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              bind:value={newFieldLength}
+            /></label
+          >
+        </div>
+        <div class="row">
+          <button
+            type="submit"
+            class="primary"
+            disabled={creatingField || !newFieldName.trim() || !fieldAcresPreview}
+          >
+            {creatingField ? '…' : 'Add field'}
+          </button>
+          {#if fieldAcresPreview}<span class="hint">≈ {fieldAcresPreview.toFixed(2)} acres</span
+            >{/if}
+        </div>
+        {#if fieldError}<p class="error">{fieldError}</p>{/if}
+      </form>
+
+      {#if fields.length > 0}
+        <form
+          class="dim-form"
+          data-testid="sketch-add-block"
+          onsubmit={(e) => {
+            e.preventDefault();
+            createBlock();
+          }}
+        >
+          <h3>{blocks.length === 0 ? '2. Add the blocks inside it' : 'Add a block'}</h3>
+          <p class="hint">
+            A block is a patch you plant as one unit: a bed, a row set, a corner of a field. Blocks
+            are packed inside their field's box.
+          </p>
+          <div class="grid3">
+            {#if fields.length > 1}
+              <label class="full"
+                >Field
+                <select bind:value={newBlockFieldId}>
+                  {#each fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
+                </select>
+              </label>
+            {/if}
+            <label
+              >Block name<input
+                type="text"
+                placeholder="e.g. Sweet corn A"
+                bind:value={newBlockName}
+              /></label
+            >
+            <label
+              >Width (ft)<input
+                type="number"
+                min="1"
+                step="1"
+                inputmode="numeric"
+                bind:value={newBlockWidth}
+              /></label
+            >
+            <label
+              >Length (ft)<input
+                type="number"
+                min="1"
+                step="1"
+                inputmode="numeric"
+                bind:value={newBlockLength}
+              /></label
+            >
+          </div>
+          <div class="row">
+            <button
+              type="submit"
+              class="primary"
+              disabled={creatingBlock || !newBlockName.trim() || !blockAcresPreview}
+            >
+              {creatingBlock ? '…' : 'Add block'}
+            </button>
+            {#if blockAcresPreview}<span class="hint">≈ {blockAcresPreview.toFixed(2)} acres</span
+              >{/if}
+          </div>
+          {#if blockError}<p class="error">{blockError}</p>{/if}
+        </form>
+      {/if}
+    </section>
+  {/if}
 {/if}
 
 <section class="card">
   {#if fields.length === 0}
-    <p class="empty-row">No fields yet. Use ➕ Draw field on the map above, or add one below.</p>
+    <p class="empty-row">
+      No fields yet. Draw one on the map, or switch to Dimensions and type its size.
+    </p>
   {:else}
     {#each fields as f (f.id)}
       {@const fieldBlocks = blocks.filter((b) => b.fieldId === f.id)}
@@ -631,6 +880,7 @@
           <span class="field-stats">
             {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
             {#if fieldAcresDisplay !== null}· {fieldAcresDisplay.toFixed(1)} ac{/if}
+            {#if dimsText(f)}· {dimsText(f)}{/if}
           </span>
           {#if canEdit}
             <button
@@ -663,6 +913,22 @@
               <label
                 >Acres<input type="number" min="0" step="0.1" bind:value={editFieldAcres} /></label
               >
+              <label
+                >Width (ft)<input
+                  type="number"
+                  min="1"
+                  step="1"
+                  bind:value={editFieldWidth}
+                /></label
+              >
+              <label
+                >Length (ft)<input
+                  type="number"
+                  min="1"
+                  step="1"
+                  bind:value={editFieldLength}
+                /></label
+              >
               <label class="full">Notes<input type="text" bind:value={editFieldNotes} /></label>
             </div>
             <div class="row">
@@ -675,7 +941,9 @@
         {#if f.notes && editingFieldId !== f.id}<p class="field-notes">{f.notes}</p>{/if}
 
         {#if fieldBlocks.length === 0}
-          <p class="empty-row-indent">No blocks yet — draw on the map above or add one below.</p>
+          <p class="empty-row-indent">
+            No blocks yet. Draw one on the map, or add it by size under Dimensions.
+          </p>
         {:else}
           <ul class="block-list-flat">
             {#each fieldBlocks as b (b.id)}
@@ -691,7 +959,10 @@
                       ? ''
                       : 's'}
                   {/if}
-                  {#if !b.geometryGeojson}<span class="not-drawn">not drawn</span>{/if}
+                  {#if dimsText(b)}{acresDisplay || b.plantings.length > 0 ? ' · ' : ''}{dimsText(
+                      b
+                    )}{/if}
+                  {#if !b.geometryGeojson}<span class="not-drawn">not on map</span>{/if}
                 </span>
                 {#if canEdit}
                   <button class="row-action" onclick={() => startEditBlock(b)} title="Edit block"
@@ -723,6 +994,22 @@
                           type="text"
                           placeholder="A"
                           bind:value={editBlockLabel}
+                        /></label
+                      >
+                      <label
+                        >Width (ft)<input
+                          type="number"
+                          min="1"
+                          step="1"
+                          bind:value={editBlockWidth}
+                        /></label
+                      >
+                      <label
+                        >Length (ft)<input
+                          type="number"
+                          min="1"
+                          step="1"
+                          bind:value={editBlockLength}
                         /></label
                       >
                       {#if fields.length > 1}
@@ -888,7 +1175,7 @@
   {/if}
 </section>
 
-{#if canEdit}
+{#if canEdit && mode === 'map'}
   <details class="card advanced">
     <summary>Add without drawing</summary>
     <p class="lede">
@@ -1232,6 +1519,95 @@
     border-radius: 10px;
     padding: 16px;
     margin-bottom: 14px;
+  }
+  .mode-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--color-divider);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .seg button {
+    min-height: 48px;
+    padding: 0 16px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    font-size: 14px !important;
+    font-weight: 600;
+    background: var(--color-paper);
+    color: var(--color-ink-soft);
+  }
+  .seg button.active {
+    background: var(--color-forest-deep) !important;
+    color: var(--color-paper);
+  }
+  button.locate {
+    min-height: 48px;
+    font-weight: 600;
+  }
+  .locate-msg {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: var(--color-ink-soft);
+  }
+  .sketch-forms {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .dim-form h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+  }
+  .dim-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-ink-soft);
+  }
+  .dim-form input,
+  .dim-form select {
+    min-height: 44px;
+    font-size: 15px;
+  }
+  .dim-form button.primary {
+    min-height: 48px;
+  }
+  .dim-form .row {
+    align-items: center;
+  }
+  .grid3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 10px;
+  }
+  .grid3 .full {
+    grid-column: 1 / -1;
+  }
+  @media (max-width: 480px) {
+    .grid3 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .grid3 > label:first-child:not(.full),
+    .grid3 > .full + label {
+      grid-column: 1 / -1;
+    }
+  }
+  .hint {
+    font-size: 12.5px;
+    color: var(--color-ink-muted);
+    margin: 0 0 8px;
+  }
+  .row .hint {
+    margin: 0;
   }
   .welcome h2 {
     margin: 0 0 6px;

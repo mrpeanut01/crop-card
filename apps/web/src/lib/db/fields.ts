@@ -16,6 +16,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from './client';
 import { blocks, fields } from './schema';
 import { effectiveAcresFor } from './blocks';
+import { sketchAcres } from '$lib/farm/sketch';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export interface Field {
@@ -25,6 +26,8 @@ export interface Field {
   location?: string;
   notes?: string;
   geometryGeojson?: string;
+  widthFt?: number;
+  lengthFt?: number;
   createdAt: number;
 }
 
@@ -42,6 +45,8 @@ function rowToField(row: typeof fields.$inferSelect): Field {
     location: row.location ?? undefined,
     notes: row.notes ?? undefined,
     geometryGeojson: row.geometryGeojson ?? undefined,
+    widthFt: row.widthFt ?? undefined,
+    lengthFt: row.lengthFt ?? undefined,
     createdAt: row.createdAt.getTime()
   };
 }
@@ -89,10 +94,15 @@ export function createField(input: {
   location?: string;
   notes?: string;
   geometryGeojson?: string;
+  widthFt?: number;
+  lengthFt?: number;
 }): Field {
   const id = randomUUID();
   const acresToPersist =
-    effectiveAcresFor({ acres: input.acres, geometryGeojson: input.geometryGeojson }) ?? null;
+    effectiveAcresFor({
+      acres: input.acres ?? sketchAcres(input.widthFt, input.lengthFt),
+      geometryGeojson: input.geometryGeojson
+    }) ?? null;
   const row = db
     .insert(fields)
     .values(
@@ -102,7 +112,9 @@ export function createField(input: {
         acres: acresToPersist,
         location: input.location ?? null,
         notes: input.notes ?? null,
-        geometryGeojson: input.geometryGeojson ?? null
+        geometryGeojson: input.geometryGeojson ?? null,
+        widthFt: input.widthFt ?? null,
+        lengthFt: input.lengthFt ?? null
       })
     )
     .returning()
@@ -118,6 +130,8 @@ export function updateField(
     location?: string | null;
     notes?: string | null;
     geometryGeojson?: string | null;
+    widthFt?: number | null;
+    lengthFt?: number | null;
   }
 ): Field | undefined {
   const set: Partial<typeof fields.$inferInsert> = {};
@@ -125,6 +139,8 @@ export function updateField(
   if (patch.acres !== undefined) set.acres = patch.acres;
   if (patch.location !== undefined) set.location = patch.location;
   if (patch.notes !== undefined) set.notes = patch.notes;
+  if (patch.widthFt !== undefined) set.widthFt = patch.widthFt;
+  if (patch.lengthFt !== undefined) set.lengthFt = patch.lengthFt;
   if (patch.geometryGeojson !== undefined) {
     set.geometryGeojson = patch.geometryGeojson;
     const fromGeo = effectiveAcresFor({ acres: undefined, geometryGeojson: patch.geometryGeojson });

@@ -95,7 +95,8 @@
     shadeSources = [],
     onCreateShadeSource,
     onDeleteShadeSource,
-    onUpdateShadeGeometry
+    onUpdateShadeGeometry,
+    autoLocate = false
   }: {
     blocks: BlockWithPlantings[];
     fields: FieldWithBlocks[];
@@ -126,6 +127,9 @@
     onCreateShadeSource?: CreateShadeSourceCb;
     onDeleteShadeSource?: DeleteShadeSourceCb;
     onUpdateShadeGeometry?: UpdateShadeGeometryCb;
+    /** When nothing is drawn yet, center on the browser's location (the
+     *  browser asks the user first). */
+    autoLocate?: boolean;
   } = $props();
 
   // ── Per-field color palette (index cycles for farms with >8 fields) ──────
@@ -273,6 +277,10 @@
       : !!pendingDraft.newFieldName.trim();
   });
 
+  const LOCATE_GIVE_UP_MS = 15000;
+  let markMapReady: () => void = () => {};
+  const mapReady = new Promise<void>((resolve) => (markMapReady = resolve));
+
   onMount(async () => {
     if (!browser) return;
     const L = (await import('leaflet')).default;
@@ -287,6 +295,7 @@
       keyboard: !thumbnail,
       attributionControl: !thumbnail
     }).setView([39.1, -77.55], 13);
+    markMapReady();
 
     const satellite = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -318,7 +327,8 @@
     renderFields(L);
     renderBlocks(L);
     renderShadeSources(L);
-    fitToAll(L);
+    const fitted = fitToAll(L);
+    if (!fitted && autoLocate && !thumbnail) void centerOnMe();
 
     if (showBlockLabels && declutterLabels) {
       map.on('zoomend moveend', scheduleLabelRelayout);
@@ -337,9 +347,13 @@
         btn.setAttribute('aria-label', 'Center on my GPS location');
         btn.innerHTML = '📍';
         btn.style.cssText =
-          'display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:white;border:none;cursor:pointer;font-size:1.1rem;';
+          'display:flex;align-items:center;justify-content:center;width:44px;height:44px;background:white;border:none;cursor:pointer;font-size:1.3rem;';
         L.DomEvent.disableClickPropagation(wrap);
-        L.DomEvent.on(btn, 'click', () => locateMe());
+        L.DomEvent.on(btn, 'click', () => {
+          void centerOnMe().then((msg) => {
+            if (msg) drawError = msg;
+          });
+        });
         return wrap;
       }
     });
@@ -774,15 +788,17 @@
     }
   }
 
-  function fitToAll(L: typeof import('leaflet')) {
-    if (!map) return;
+  function fitToAll(L: typeof import('leaflet')): boolean {
+    if (!map) return false;
     const group = L.featureGroup([
       ...(fieldLayer?.getLayers() ?? []),
       ...(blockLayer?.getLayers() ?? []),
       ...(shadeLayer?.getLayers() ?? [])
     ] as Parameters<typeof L.featureGroup>[0]);
     const bounds = group.getBounds();
-    if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
+    if (!bounds.isValid()) return false;
+    map.fitBounds(bounds, { padding: [40, 40] });
+    return true;
   }
 
   // ── Debounced saves ───────────────────────────────────────────────────────
@@ -882,21 +898,44 @@
     pendingShadeKind = null;
   }
 
-  function locateMe() {
-    if (!map) return;
-    if (!('geolocation' in navigator)) {
-      drawError = 'Geolocation not available';
-      return;
+  /** Centers the map on the browser's location. Resolves with an error
+   *  message when location is unavailable or the user declines. */
+  export async function centerOnMe(): Promise<string | null> {
+    await mapReady;
+    if (!browser || !('geolocation' in navigator)) {
+      return 'This browser does not share its location.';
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        map?.flyTo([pos.coords.latitude, pos.coords.longitude], 17);
-      },
-      (err) => {
-        drawError = `Location: ${err.message}`;
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
+    const denied = 'Location permission is off. Allow it in your browser to center the map on you.';
+    try {
+      const status = await navigator.permissions?.query({ name: 'geolocation' });
+      if (status?.state === 'denied') return denied;
+    } catch {
+      /* Permissions API missing; the request below still asks. */
+    }
+    return new Promise((resolve) => {
+      // The geolocation timeout only starts once permission is granted, so an
+      // unanswered prompt needs its own limit.
+      const giveUp = setTimeout(
+        () => resolve('No location yet. Allow location access in your browser, then try again.'),
+        LOCATE_GIVE_UP_MS
+      );
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          clearTimeout(giveUp);
+          map?.flyTo([pos.coords.latitude, pos.coords.longitude], 17);
+          resolve(null);
+        },
+        (err) => {
+          clearTimeout(giveUp);
+          resolve(
+            err.code === err.PERMISSION_DENIED
+              ? denied
+              : `Could not get your location: ${err.message}`
+          );
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    });
   }
 
   // ── Area helper ───────────────────────────────────────────────────────────

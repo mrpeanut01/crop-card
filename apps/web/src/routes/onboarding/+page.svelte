@@ -65,8 +65,9 @@
     {
       id: 'block',
       label: 'Add your first block',
-      detail: 'Draw your fields and blocks on the map. Geometry optional but unlocks pollination.',
-      href: '/settings/farm/map',
+      detail:
+        'Draw your fields and blocks on the map, or enter their sizes and sketch them as boxes.',
+      href: '/plan/farm',
       icon: Layers
     },
     {

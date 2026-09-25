@@ -296,7 +296,7 @@
       {#each data.insecticides as p (p.pluginId)}
         <li>
           <strong>{p.displayName}</strong>
-          {#each p.iracGroups as g}
+          {#each p.iracGroups as g, idx (idx)}
             <GroupCodeBadge kind="IRAC" group={g} />
           {/each}
           {#if p.targetPests.length}

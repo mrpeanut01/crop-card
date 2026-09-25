@@ -249,14 +249,14 @@
               <div class="indicators-inline">
                 <strong>Readiness indicators</strong>
                 <ul class="indicators">
-                  {#each p.harvestIndicators as ind}<li>{ind}</li>{/each}
+                  {#each p.harvestIndicators as ind, idx (idx)}<li>{ind}</li>{/each}
                 </ul>
               </div>
             {:else}
               <details>
                 <summary>Readiness indicators</summary>
                 <ul class="indicators">
-                  {#each p.harvestIndicators as ind}<li>{ind}</li>{/each}
+                  {#each p.harvestIndicators as ind, idx (idx)}<li>{ind}</li>{/each}
                 </ul>
               </details>
             {/if}

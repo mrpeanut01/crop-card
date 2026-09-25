@@ -74,8 +74,7 @@ export default tseslint.config(
       // by existing components; the v2 config this replaced did not enforce
       // them. Adopt in a dedicated cleanup pass rather than the ESLint 9 bump.
       'svelte/no-navigation-without-resolve': 'off',
-      'svelte/prefer-svelte-reactivity': 'off',
-      'svelte/require-each-key': 'off'
+      'svelte/prefer-svelte-reactivity': 'off'
     }
   }
 );

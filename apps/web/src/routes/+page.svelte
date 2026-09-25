@@ -254,7 +254,7 @@
             One-tap sign-in to a sandbox tenant — pick a role to feel the surface area.
           </p>
           <div class="demo-grid">
-            {#each demoRoles as r}
+            {#each demoRoles as r (r.role)}
               <form method="POST" action="?/demo" use:enhance>
                 <input type="hidden" name="role" value={r.role} />
                 {#if data.inviteToken}

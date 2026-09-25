@@ -726,7 +726,7 @@
             {/if}
           {:else}
             <ul>
-              {#each b.crops as c}
+              {#each b.crops as c, idx (idx)}
                 <li>{c.displayName} <em>({c.cropFamily})</em></li>
               {/each}
             </ul>
@@ -775,7 +775,7 @@
           <strong>{h.displayName}</strong>
           {#if h.hracGroups && h.hracGroups.length > 0}
             <div class="badges">
-              {#each h.hracGroups as g}
+              {#each h.hracGroups as g, idx (idx)}
                 <GroupCodeBadge kind="HRAC" group={g} />
               {/each}
             </div>

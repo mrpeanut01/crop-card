@@ -18,7 +18,7 @@
 
   <form method="POST" action="?/pick" use:enhance>
     <ul class="choices">
-      {#each data.choices as choice}
+      {#each data.choices as choice (choice.ownerId)}
         <li>
           <button class="choice" type="submit" name="ownerId" value={choice.ownerId}>
             <span class="name">{choice.name}</span>

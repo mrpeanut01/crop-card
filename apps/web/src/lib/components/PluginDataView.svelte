@@ -73,7 +73,7 @@
         {:else if Array.isArray(value)}
           {#if value.every(isPrimitive)}
             <span class="chips">
-              {#each value as v}
+              {#each value as v, idx (idx)}
                 <span class="chip">{formatPrimitive(v)}</span>
               {/each}
             </span>

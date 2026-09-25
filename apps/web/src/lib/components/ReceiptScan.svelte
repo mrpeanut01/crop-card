@@ -320,10 +320,10 @@
                   </div>
                   {#if hasIssues}
                     <div class="issues">
-                      {#each c.validation.bypassIssues as issue}
+                      {#each c.validation.bypassIssues as issue, idx (idx)}
                         <span class="issue bypass">{issue.message}</span>
                       {/each}
-                      {#each c.validation.schemaIssues as issue}
+                      {#each c.validation.schemaIssues as issue, idx (idx)}
                         <span class="issue schema">{issue.path}: {issue.message}</span>
                       {/each}
                     </div>
@@ -341,7 +341,7 @@
           <details class="error-details">
             <summary>{commitErrors.length} failed</summary>
             <ul>
-              {#each commitErrors as e}
+              {#each commitErrors as e, idx (idx)}
                 <li>Line {e.lineIndex + 1}: {e.message}</li>
               {/each}
             </ul>

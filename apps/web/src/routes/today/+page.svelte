@@ -892,7 +892,7 @@
         <dt>Plugin load failures</dt>
         <dd class="warn">
           <ul>
-            {#each data.pluginFailures as f}<li>{f}</li>{/each}
+            {#each data.pluginFailures as f, idx (idx)}<li>{f}</li>{/each}
           </ul>
         </dd>
       {/if}

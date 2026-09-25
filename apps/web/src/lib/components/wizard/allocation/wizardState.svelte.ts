@@ -7,6 +7,7 @@ import { AllocateFlow } from './flows/allocateFlow';
 import { AllocationChatFlow } from './flows/allocationChat';
 import { ScheduleFlow } from './flows/scheduleFlow';
 import { CommitFlow, type AcceptedInputs } from './flows/commitFlow';
+import { DraftFlow } from './flows/draftFlow';
 import { humanizeAllocationViolation as humanizeViolation } from './flows/violations';
 import { PlanResetState } from './steps/planResetState.svelte';
 import { SeedLinkState } from './steps/seedLinkState.svelte';
@@ -68,22 +69,16 @@ export const STEP_LABELS: Record<Step, string> = {
   commit: '6. Commit'
 };
 
-const VALID_STEPS: Step[] = [
-  'season-setup',
-  'plan-state',
-  'seeds',
-  'blocks',
-  'review',
-  'schedule',
-  'inputs',
-  'commit'
-];
-
 /**
  * Cross-step state + flows for the allocation wizard (#96 per-step split).
  * Every step component reads and mutates this one instance via context so
  * Back/Next and header jumps keep selections, the allocation, the schedule
  * and both chat transcripts exactly as the pre-split monolith did.
+ *
+ * This class is the façade: it owns every piece of shared $state and the
+ * public method surface the steps call. The async flows live in
+ * `./flows/*` and read/write that state through this instance, so there
+ * is one source of reactivity and no destructured copies.
  */
 export class AllocationWizardState {
   readonly props: WizardInputs;
@@ -111,6 +106,7 @@ export class AllocationWizardState {
   readonly #chat = new AllocationChatFlow(this, this.#allocate);
   readonly #schedule = new ScheduleFlow(this);
   readonly #commit = new CommitFlow(this);
+  readonly #draft = new DraftFlow(this);
 
   seedSearch = $state('');
 
@@ -241,12 +237,6 @@ export class AllocationWizardState {
     this.step = this.hasExistingPlan ? 'plan-state' : 'seeds';
   }
 
-  /** Translate a raw validator violation string into operator-friendly
-   *  text. Replaces UUIDs with block/variety names from props and
-   *  rewrites the known "family density" pattern into plain English.
-   *  Anything we don't recognize falls through to UUID-replacement only —
-   *  the operator still gets readable names even when the rule wording
-   *  stays technical. */
   humanizeAllocationViolation(v: string): string {
     return humanizeViolation(v, this.props.blocks, this.props.seedStock);
   }
@@ -409,80 +399,16 @@ export class AllocationWizardState {
     return entry?.shortName ?? entry?.displayName ?? stockItemId;
   }
 
-  async saveAndResumeLater(): Promise<void> {
-    this.draftSaving = true;
-    this.draftSaveError = null;
-    try {
-      const res = await fetch('/api/plan/wizard/draft', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          step: this.step,
-          payload: {
-            step: this.step,
-            selectedSeeds: [...this.selectedSeeds.entries()],
-            selectedBlockIds: [...this.selectedBlockIds],
-            chatDraft: this.chatDraft
-          }
-        })
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        this.draftSaveError = body.error ?? `HTTP ${res.status}`;
-        return;
-      }
-      this.props.onClose();
-    } catch (e) {
-      this.draftSaveError = e instanceof Error ? e.message : String(e);
-    } finally {
-      this.draftSaving = false;
-    }
+  saveAndResumeLater(): Promise<void> {
+    return this.#draft.saveAndResumeLater();
   }
 
-  async discardDraft(): Promise<void> {
-    try {
-      await fetch('/api/plan/wizard/draft', { method: 'DELETE' });
-    } catch {
-      // non-fatal — the row will get overwritten on the next save or
-      // cleared when the wizard commits.
-    }
+  discardDraft(): Promise<void> {
+    return this.#draft.discardDraft();
   }
 
   hydrateDraft(): void {
-    if (this.draftHydrated) return;
-    this.draftHydrated = true;
-    (async () => {
-      try {
-        const res = await fetch('/api/plan/wizard/draft');
-        if (!res.ok) return;
-        const body = (await res.json()) as {
-          draft: {
-            step: string;
-            payload: {
-              selectedSeeds: Array<[string, number]>;
-              selectedBlockIds: string[];
-              chatDraft: string;
-            };
-          } | null;
-        };
-        if (!body.draft) return;
-        if (body.draft.payload.selectedSeeds.length > 0) {
-          this.selectedSeeds = new Map(body.draft.payload.selectedSeeds);
-        }
-        if (body.draft.payload.selectedBlockIds.length > 0) {
-          this.selectedBlockIds = new Set(body.draft.payload.selectedBlockIds);
-        }
-        if (body.draft.payload.chatDraft) {
-          this.chatDraft = body.draft.payload.chatDraft;
-        }
-        if ((VALID_STEPS as string[]).includes(body.draft.step)) {
-          this.step = body.draft.step as Step;
-        }
-      } catch {
-        // Resume is best-effort — keep the wizard usable even if the
-        // draft fetch fails.
-      }
-    })();
+    this.#draft.hydrateDraft();
   }
 }
 

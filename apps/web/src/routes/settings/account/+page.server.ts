@@ -2,19 +2,19 @@
  * Phase 25c (#88) — /settings/account loader + actions.
  *
  * The user's identity card: email, role within active Owner, active
- * Owner chip, impersonation banner if relevant. Sprint 2 (#203) adds a
- * functional save action so the form's Save button is no longer
- * permanently disabled. The user-table only persists email today
- * (display name derives from the local-part); time-zone + units-of-
- * measure are accepted but not yet persisted to a real column, kept
- * here as a no-op so the form contract stays stable.
+ * Owner chip, impersonation banner if relevant. The save action persists
+ * the display name; time-zone + units-of-measure are accepted but not yet
+ * persisted to a real column. The profile picture uploads on its own
+ * through /api/account/avatar.
  */
 
-import { error } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { activeAssignmentsForUser } from '$lib/db/users';
+import { avatarUrl, avatarVersion, setDisplayName } from '$lib/db/userProfile';
+import { normalizeDisplayName } from '$lib/profile';
 import { identityName } from '$lib/identity';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -40,6 +40,8 @@ export const load: PageServerLoad = ({ locals }) => {
       email: userRow ? userRow.email : user.email,
       phone: userRow ? userRow.phone : user.phone,
       name: identityName(userRow ?? user),
+      displayName: userRow?.displayName ?? '',
+      avatarUrl: avatarUrl(user.id, avatarVersion(user.id)),
       role: user.role,
       isSuperadmin: user.isSuperadmin === true,
       impersonating: user.impersonating === true,
@@ -56,10 +58,18 @@ export const load: PageServerLoad = ({ locals }) => {
 export const actions: Actions = {
   save: async ({ request, locals }) => {
     if (!locals.user) throw error(401, 'sign-in required');
+    if (locals.user.impersonating) {
+      return fail(403, {
+        error: "You can't change someone's profile while impersonating them.",
+        name: undefined
+      });
+    }
     // Sign-in email/phone change only through the verified-code flow in
-    // the "Sign-in methods" section (/api/account/identity); the remaining
-    // profile fields are not persisted yet.
-    await request.formData();
+    // the "Sign-in methods" section (/api/account/identity).
+    const fd = await request.formData();
+    const name = normalizeDisplayName(fd.get('name'));
+    if (!name.ok) return fail(400, { error: name.error, name: String(fd.get('name') ?? '') });
+    setDisplayName(locals.user.id, name.value);
     return { ok: true };
   }
 };

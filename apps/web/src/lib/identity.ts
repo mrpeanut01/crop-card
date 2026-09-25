@@ -58,8 +58,14 @@ export function identityLabel(u: { email: string | null; phone: string | null })
   return 'unknown user';
 }
 
-/** Short display name: email local-part, else the formatted phone. */
-export function identityName(u: { email: string | null; phone: string | null }): string {
+/** Short display name: the user's chosen name, else the email local-part,
+ *  else the formatted phone. */
+export function identityName(u: {
+  email: string | null;
+  phone: string | null;
+  displayName?: string | null;
+}): string {
+  if (u.displayName) return u.displayName;
   if (u.email) return u.email.split('@')[0];
   return identityLabel(u);
 }

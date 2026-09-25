@@ -7,6 +7,8 @@ import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { unscopedQueryNote } from '$lib/db/tenant';
+import { avatarUrl, avatarVersions } from '$lib/db/userProfile';
+import { identityLabel, identityName } from '$lib/identity';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = (event) => {
@@ -16,7 +18,12 @@ export const load: PageServerLoad = (event) => {
   const assignments = usersForOwner(u.activeOwnerId);
   unscopedQueryNote("hydrate user emails for the active Owner's assignment list");
   const userRows = db
-    .select({ id: users.id, email: users.email })
+    .select({
+      id: users.id,
+      email: users.email,
+      phone: users.phone,
+      displayName: users.displayName
+    })
     .from(users)
     .where(
       inArray(
@@ -25,15 +32,21 @@ export const load: PageServerLoad = (event) => {
       )
     )
     .all();
-  const byId = new Map(userRows.map((r) => [r.id, r.email]));
+  const byId = new Map(userRows.map((r) => [r.id, r]));
+  const avatars = avatarVersions(userRows.map((r) => r.id));
 
   return {
-    members: assignments.map((a) => ({
-      userId: a.userId,
-      email: byId.get(a.userId) ?? '(unknown)',
-      roleWithinOwner: a.roleWithinOwner,
-      status: a.status
-    })),
+    members: assignments.map((a) => {
+      const r = byId.get(a.userId);
+      return {
+        userId: a.userId,
+        email: r ? identityLabel(r) : '(unknown)',
+        name: r ? identityName(r) : '(unknown)',
+        avatarUrl: avatarUrl(a.userId, avatars.get(a.userId)),
+        roleWithinOwner: a.roleWithinOwner,
+        status: a.status
+      };
+    }),
     invites: listInvitesForOwner(u.activeOwnerId)
   };
 };

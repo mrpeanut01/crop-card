@@ -337,6 +337,13 @@
       "when": 1790364294144,
       "tag": "0047_phone_login_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "6",
+      "when": 1790369925924,
+      "tag": "0048_user_profile",
+      "breakpoints": true
     }
   ]
 }

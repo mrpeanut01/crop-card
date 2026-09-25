@@ -15,6 +15,7 @@ import { error, type ServerLoad } from '@sveltejs/kit';
 import { db } from '$lib/db/client';
 import { owners, users, aiCallLog } from '$lib/db/schema';
 import { identityName } from '$lib/identity';
+import { profileFor } from '$lib/db/userProfile';
 import { eq, gte, count, sql } from 'drizzle-orm';
 import { listBlocks } from '$lib/db/blocks';
 import { listEquipment } from '$lib/db/equipment';
@@ -90,6 +91,8 @@ export const load: ServerLoad = async ({ locals }) => {
   // when the user is currently authenticated.
   const lastLogin = `today · ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
 
+  const profile = profileFor(locals.user.id);
+
   return {
     isOwner,
     user: {
@@ -97,7 +100,8 @@ export const load: ServerLoad = async ({ locals }) => {
       email: locals.user.email,
       role: locals.user.role,
       phone: locals.user.phone,
-      name: identityName(locals.user),
+      name: identityName({ ...locals.user, displayName: profile.displayName }),
+      avatarUrl: profile.avatarUrl,
       since: memberSince,
       lastLogin,
       // Active sessions — we don't track concurrent sessions yet; the

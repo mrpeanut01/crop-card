@@ -5,6 +5,8 @@ import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { unscopedQueryNote } from '$lib/db/tenant';
+import { profileFor } from '$lib/db/userProfile';
+import { identityName } from '$lib/identity';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
 import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
 import { buildNavAlerts, type NavAlert } from '$lib/today/navAlerts';
@@ -102,12 +104,16 @@ export const load: LayoutServerLoad = ({ locals }) => {
     }
   }
 
+  const profile = locals.user ? profileFor(locals.user.id) : null;
+
   return {
     user: locals.user
       ? {
           id: locals.user.id,
           email: locals.user.email,
           phone: locals.user.phone,
+          name: identityName({ ...locals.user, displayName: profile?.displayName }),
+          avatarUrl: profile?.avatarUrl ?? null,
           role: locals.user.role,
           activeOwnerId: locals.user.activeOwnerId,
           isSuperadmin: locals.user.isSuperadmin,

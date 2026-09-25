@@ -1,10 +1,12 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import type { VitePWAOptions } from 'vite-plugin-pwa';
-import { defineConfig, transformWithEsbuild, type Plugin } from 'vite';
+import type { Plugin } from 'vite';
+import { defineConfig } from 'vitest/config';
+import { transform } from 'esbuild';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import type { TenantCachePlugin } from './src/lib/client/swTenantKey';
+import type { TenantCachePlugin } from './src/lib/client/swTenantKey.ts';
 
 // Import-free TS modules compiled into classic scripts the generated SW
 // loads via `importScripts` (see workbox.importScripts below).
@@ -36,7 +38,8 @@ function cropcardSwModules(): Plugin {
       if (ssr) return;
       for (const mod of SW_MODULES) {
         const source = await readFile(mod.source, 'utf-8');
-        const { code } = await transformWithEsbuild(source, mod.source, {
+        const { code } = await transform(source, {
+          sourcefile: mod.source,
           loader: 'ts',
           format: 'iife',
           globalName: mod.globalName,
@@ -199,7 +202,7 @@ export default defineConfig({
     // mount()) and component tests fail with `lifecycle_function_unavailable`.
     // The runtime SvelteKit server build still resolves SSR via its own
     // build pipeline, so this only affects the vitest run.
-    conditions: process.env.VITEST ? ['browser'] : []
+    ...(process.env.VITEST ? { conditions: ['browser'] } : {})
   },
   test: {
     include: [

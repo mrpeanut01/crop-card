@@ -42,6 +42,7 @@ interface FakeEventOpts {
   cookieSession?: {
     id: string;
     email: string;
+    phone: string | null;
     activeOwnerId: string | null;
     activeRole: SessionRole;
     isSuperadmin?: boolean;
@@ -66,6 +67,7 @@ function bearerUser(role: SessionRole): AuthenticatedUser {
   return {
     id: 'user_bearer',
     email: 'agent@example.test',
+    phone: null,
     role,
     activeOwnerId: 'owner_bearer',
     isSuperadmin: false,
@@ -110,6 +112,7 @@ describe('auth gate — Bearer locals resolution (#317)', () => {
       cookieSession: {
         id: 'user_cookie',
         email: 'human@example.test',
+        phone: null,
         activeOwnerId: 'owner_cookie',
         activeRole: 'helper'
       }
@@ -125,6 +128,7 @@ describe('auth gate — Bearer locals resolution (#317)', () => {
       cookieSession: {
         id: 'user_cookie',
         email: 'human@example.test',
+        phone: null,
         activeOwnerId: 'owner_cookie',
         activeRole: 'owner'
       }

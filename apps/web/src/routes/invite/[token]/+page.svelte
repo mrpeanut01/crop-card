@@ -20,6 +20,10 @@
       title: 'This invite was already used',
       hint: 'You (or someone on this email) already accepted it. Just sign in to reach the farm.'
     },
+    'needs-email': {
+      title: 'Add your email to accept',
+      hint: 'Invites are sent to an email address and you signed in with a phone number. Add and verify that email under Settings → Account, then open this link again.'
+    },
     'not-found': {
       title: 'Invite no longer valid',
       hint: "This link doesn't match your signed-in email, or it never existed. Check you're signed in under the address the invite was sent to, or ask for a fresh invite."
@@ -38,6 +42,9 @@
   {#if data.status === 'invalid'}
     <h1>{invalid?.title}</h1>
     <p class="hint">{invalid?.hint}</p>
+    {#if data.reason === 'needs-email'}
+      <a href="/settings/account" class="back">Add an email →</a>
+    {/if}
     <a href="/today" class="back">← Back</a>
   {:else}
     <h1>Join {data.ownerName}</h1>

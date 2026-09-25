@@ -30,7 +30,8 @@
     role: string;
   }
   interface User {
-    email: string;
+    email: string | null;
+    phone?: string | null;
     role: string;
     isSuperadmin?: boolean;
   }
@@ -111,7 +112,7 @@
     return path === href || path.startsWith(`${href}/`);
   }
 
-  const initial = $derived(user?.email?.[0]?.toUpperCase() ?? '?');
+  const initial = $derived(user?.email?.[0]?.toUpperCase() ?? (user?.phone ? '#' : '?'));
 </script>
 
 <header class="topbar">

@@ -20,15 +20,31 @@ async function latestLink(request: APIRequestContext, email: string): Promise<st
   return link!;
 }
 
+async function latestMessage(
+  request: APIRequestContext,
+  to: string,
+  pattern: RegExp
+): Promise<RegExpMatchArray> {
+  let match: RegExpMatchArray | null = null;
+  await expect
+    .poll(async () => {
+      const res = await request.get(`${MAGIC_BASE}/_dev/outbox?to=${encodeURIComponent(to)}`);
+      const body = (await res.json()) as { messages: Array<{ body: string }> };
+      match = body.messages.at(-1)?.body.match(pattern) ?? null;
+      return match;
+    })
+    .toBeTruthy();
+  return match!;
+}
+
 test.describe('AUTH_MODE=magic-link', () => {
   test.use({ baseURL: MAGIC_BASE });
 
   test('request link → email → confirm → /today with the owner session', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('button', { name: /email me a sign-in link/i })).toBeVisible();
     await expect(page.getByText('Try the demo')).toHaveCount(0);
 
-    await page.getByLabel('Email').fill('owner@cropcard.local');
+    await page.getByLabel('Email or mobile number').fill('owner@cropcard.local');
     await page.getByRole('button', { name: /email me a sign-in link/i }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Check your email' })).toBeVisible();
 
@@ -46,6 +62,44 @@ test.describe('AUTH_MODE=magic-link', () => {
     await expect(page.getByRole('heading', { name: "Link can't be used" })).toBeVisible();
     await expect(page.getByText(/already been used/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /send a new link/i })).toBeVisible();
+  });
+
+  test('the 6-digit code from the email signs in on another device', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel('Email or mobile number').fill('owner@cropcard.local');
+    await page.getByRole('button', { name: /email me a sign-in link/i }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Check your email' })).toBeVisible();
+
+    const body = await latestMessage(page.request, 'owner@cropcard.local', /code instead: (\d{6})/);
+    await page.getByLabel('6-digit code').fill(body[1]);
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await expect(page).toHaveURL(/\/today$/);
+  });
+
+  test('a new mobile number signs up by SMS code and lands on /onboarding', async ({ page }) => {
+    const local = `571555${String(Date.now()).slice(-4)}`;
+    const e164 = `+1${local}`;
+    await page.goto('/');
+    await page.getByLabel('Email or mobile number').fill(local);
+    await page.getByRole('button', { name: /text me a code/i }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Check your texts' })).toBeVisible();
+
+    const body = await latestMessage(page.request, e164, /^(\d{6}) is your CropCard sign-in code/);
+    await page.getByLabel('6-digit code').fill(body[1]);
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await expect(page).toHaveURL(/\/onboarding$/);
+  });
+
+  test('a wrong code is rejected and the code form stays up', async ({ page }) => {
+    const local = `571556${String(Date.now()).slice(-4)}`;
+    await page.goto('/');
+    await page.getByLabel('Email or mobile number').fill(local);
+    await page.getByRole('button', { name: /text me a code/i }).click();
+    const body = await latestMessage(page.request, `+1${local}`, /^(\d{6}) /);
+    await page.getByLabel('6-digit code').fill(body[1] === '000000' ? '111111' : '000000');
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await expect(page.getByRole('alert')).toContainText("didn't match");
+    await expect(page.getByLabel('6-digit code')).toBeVisible();
   });
 
   test('a brand-new email lands on /onboarding', async ({ page }) => {

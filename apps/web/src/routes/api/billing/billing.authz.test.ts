@@ -18,6 +18,7 @@ function asRole(role: SessionRole, ownerId: string, impersonating = false) {
   session = {
     userId: 'user-billing',
     email: 'owner@example.com',
+    phone: null,
     isSuperadmin: false,
     activeOwnerId: ownerId,
     activeRole: role,

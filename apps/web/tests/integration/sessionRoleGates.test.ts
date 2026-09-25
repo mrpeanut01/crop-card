@@ -31,6 +31,7 @@ describe('session HMAC cookie', () => {
     writeSession(cookies, {
       id: 'u1',
       email: 'owner@example.com',
+      phone: null,
       activeOwnerId: 'owner_home_farm',
       activeRole: 'owner'
     });
@@ -45,6 +46,7 @@ describe('session HMAC cookie', () => {
     writeSession(cookies, {
       id: 'u1',
       email: 'helper@example.com',
+      phone: null,
       activeOwnerId: 'owner_home_farm',
       activeRole: 'helper'
     });
@@ -70,6 +72,7 @@ describe('session HMAC cookie', () => {
       writeSession(cookies, {
         id: 'u1',
         email: 'helper@example.com',
+        phone: null,
         activeOwnerId: 'owner_home_farm',
         activeRole: 'helper'
       });
@@ -85,6 +88,7 @@ describe('session HMAC cookie', () => {
     writeSession(cookies, {
       id: 'u1',
       email: 'helper@example.com',
+      phone: null,
       activeOwnerId: 'owner_home_farm',
       activeRole: 'helper'
     });
@@ -102,6 +106,7 @@ describe('session HMAC cookie', () => {
     writeSession(cookies, {
       id: 'u1',
       email: 'x@example.com',
+      phone: null,
       activeOwnerId: 'owner_home_farm',
       activeRole: 'helper'
     });
@@ -111,6 +116,7 @@ describe('session HMAC cookie', () => {
       JSON.stringify({
         userId: 'u1',
         email: 'x@example.com',
+        phone: null,
         role: 'admin',
         exp: Date.now() + 1000
       })

@@ -39,7 +39,12 @@ function tenantScoped<T>(table: T): T & TenantScoped {
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
-  email: text('email').notNull().unique(),
+  /** Sign-in identities. Either may be null (a phone-only signup has no
+   *  email) but never both: every row is created from a verified email or
+   *  phone, and removing the last one is refused. Email is lowercased,
+   *  phone is E.164. */
+  email: text('email').unique(),
+  phone: text('phone').unique(),
   /** Cross-tenant support / abuse role. Boolean (not part of any role enum)
    *  because roles describe in-tenant permissions; superadmin is *across*
    *  tenants. Default false. */
@@ -210,6 +215,36 @@ export const loginTokens = sqliteTable(
     tokenHashIdx: uniqueIndex('login_tokens_token_hash_idx').on(table.tokenHash),
     emailIdx: index('login_tokens_email_idx').on(table.email, table.createdAt),
     ipIdx: index('login_tokens_ip_idx').on(table.ipHash, table.createdAt)
+  })
+);
+
+/** Short numeric sign-in / contact-verification codes (email or SMS).
+ *  Identity-level like `login_tokens`, so unscoped. `destination` is the
+ *  normalized address the code was sent to; `purpose='link'` rows carry the
+ *  signed-in `user_id` they will attach the destination to. An email login
+ *  code shares a lifetime with its magic link via `login_token_id`:
+ *  redeeming either burns both. Only an HMAC of the code is stored and
+ *  `attempts` caps guessing per code. */
+export const loginCodes = sqliteTable(
+  'login_codes',
+  {
+    id: text('id').primaryKey(),
+    channel: text('channel', { enum: ['email', 'sms'] }).notNull(),
+    purpose: text('purpose', { enum: ['login', 'link'] }).notNull(),
+    destination: text('destination').notNull(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    loginTokenId: text('login_token_id'),
+    codeHash: text('code_hash').notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    ipHash: text('ip_hash'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    consumedAt: integer('consumed_at', { mode: 'timestamp_ms' })
+  },
+  (table) => ({
+    destinationIdx: index('login_codes_destination_idx').on(table.destination, table.createdAt),
+    ipIdx: index('login_codes_ip_idx').on(table.ipHash, table.createdAt),
+    loginTokenIdx: index('login_codes_login_token_idx').on(table.loginTokenId)
   })
 );
 

@@ -58,7 +58,7 @@ export default defineConfig({
         `mkdir -p ./.playwright-data && rm -f ${MAGIC_DB_PATH} && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${MAGIC_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
-        `DATABASE_URL=file:${MAGIC_DB_PATH} AUTH_MODE=magic-link EMAIL_TRANSPORT=memory E2E_OUTBOX=1 ` +
+        `DATABASE_URL=file:${MAGIC_DB_PATH} AUTH_MODE=magic-link EMAIL_TRANSPORT=memory SMS_TRANSPORT=memory E2E_OUTBOX=1 ` +
         `ORIGIN=http://localhost:${MAGIC_PORT} PLUGINS_DIR=${PLUGINS_DIR} ` +
         `pnpm exec vite preview --host 0.0.0.0 --port ${MAGIC_PORT} --strictPort`,
       port: MAGIC_PORT,

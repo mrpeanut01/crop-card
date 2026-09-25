@@ -367,7 +367,7 @@ function buildBearerUser(resolved: {
 }): import('$lib/server/auth').AuthenticatedUser | null {
   try {
     const userRow = db
-      .select({ email: users.email, isSuperadmin: users.isSuperadmin })
+      .select({ email: users.email, phone: users.phone, isSuperadmin: users.isSuperadmin })
       .from(users)
       .where(eq(users.id, resolved.userId))
       .get();
@@ -387,6 +387,7 @@ function buildBearerUser(resolved: {
     return {
       id: resolved.userId,
       email: userRow.email,
+      phone: userRow.phone,
       role: assignment.roleWithinOwner as SessionRole,
       activeOwnerId: resolved.ownerId,
       isSuperadmin: userRow.isSuperadmin,

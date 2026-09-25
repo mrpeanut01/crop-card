@@ -10,11 +10,12 @@
 #   CROPCARD_LOCATION   region                (default eastus2)
 #   CROPCARD_ACR        registry name         (default: discovered in the group, else created)
 #   CROPCARD_KV         Key Vault name        (default: discovered in the group, else created)
-#   EMAIL_FROM                                sender address for Postmark
+#   EMAIL_FROM                                sender address (Postmark / Pingram)
 #
 # Secrets live only in the Key Vault; this script never passes one to the template.
 # The session secret is generated there on first deploy. Optional secrets are
 # switched on by their presence in the vault:
+#   pingram-api-key     email + SMS sign-in codes via Pingram (email wins over postmark-token)
 #   postmark-token      emailed magic links (else they go to the container log)
 #   anthropic-api-key   AI assists (else no-key mode)
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
@@ -119,15 +120,17 @@ if ! kv_has auth-secret; then
   echo "seeded auth-secret in ${KV}"
 fi
 
+HAS_PINGRAM=false; kv_has pingram-api-key && HAS_PINGRAM=true
 HAS_POSTMARK=false; kv_has postmark-token && HAS_POSTMARK=true
 HAS_ANTHROPIC=false; kv_has anthropic-api-key && HAS_ANTHROPIC=true
+echo "pingram      : ${HAS_PINGRAM}"
 echo "postmark     : ${HAS_POSTMARK}"
 echo "anthropic    : ${HAS_ANTHROPIC}"
 
 PARAMS=(
   --parameters infra/azure/parameters.dev.bicepparam
   --parameters location="$LOCATION" image="$IMAGE" containerRegistryServer="$REGISTRY"
-  --parameters keyVaultName="$KV" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
+  --parameters keyVaultName="$KV" hasPingramKey="$HAS_PINGRAM" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
 

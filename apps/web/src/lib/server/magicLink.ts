@@ -21,7 +21,17 @@ import { db } from '$lib/db/client';
 import { loginTokens } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import type { RequestEvent } from '@sveltejs/kit';
+import { formatPhone, normalizeEmail, parseIdentifier } from '$lib/identity';
 import { dispatchEmail } from './email';
+import {
+  burnCodesForLoginToken,
+  issueCode,
+  MAX_SMS_PER_IP,
+  MAX_SMS_UNATTRIBUTED,
+  redeemCode,
+  requestSmsLogin,
+  type CodeInvalidReason
+} from './loginCodes';
 import { isPublicAddress } from './safeFetch';
 
 export const MAGIC_LINK_TTL_MS = 15 * 60 * 1000;
@@ -55,14 +65,7 @@ export function isDirectLoginAllowed(): boolean {
   return authMode() === 'direct';
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export function normalizeLoginEmail(input: unknown): string | null {
-  if (typeof input !== 'string') return null;
-  const e = input.trim().toLowerCase();
-  if (!e || e.length > 254 || !EMAIL_RE.test(e)) return null;
-  return e;
-}
+export const normalizeLoginEmail = normalizeEmail;
 
 function sha256(input: string): string {
   return createHash('sha256').update(input).digest('hex');
@@ -190,9 +193,10 @@ export async function requestMagicLink(
 
   const token = randomBytes(32).toString('base64url');
   const expiresAt = now + MAGIC_LINK_TTL_MS;
+  const tokenId = `lgn_${now}_${randomBytes(4).toString('hex')}`;
   db.insert(loginTokens)
     .values({
-      id: `lgn_${now}_${randomBytes(4).toString('hex')}`,
+      id: tokenId,
       tokenHash: hashLoginToken(token),
       email: req.email,
       ipHash,
@@ -200,11 +204,21 @@ export async function requestMagicLink(
       expiresAt: new Date(expiresAt)
     })
     .run();
+  const { code } = issueCode({
+    channel: 'email',
+    purpose: 'login',
+    destination: req.email,
+    loginTokenId: tokenId,
+    ipHash,
+    ttlMs: MAGIC_LINK_TTL_MS,
+    now
+  });
 
   await dispatchEmail({
     kind: 'magic-link',
     to: req.email,
     loginUrl: buildVerifyUrl(req.origin, token, req.inviteToken),
+    code,
     expiresAt
   });
   return { outcome: 'sent', expiresAt };
@@ -251,9 +265,12 @@ export function consumeMagicLink(token: unknown, now = Date.now()): MagicLinkChe
         gt(loginTokens.expiresAt, new Date(now))
       )
     )
-    .returning({ email: loginTokens.email })
+    .returning({ id: loginTokens.id, email: loginTokens.email })
     .get();
-  if (claimed) return { ok: true, email: claimed.email };
+  if (claimed) {
+    burnCodesForLoginToken(claimed.id, now);
+    return { ok: true, email: claimed.email };
+  }
   const check = peekMagicLink(token, now);
   return check.ok ? { ok: false, reason: 'invalid' } : check;
 }
@@ -279,7 +296,7 @@ function clientAddress(event: RequestEvent): string | null {
 export type MagicLinkHttpResult =
   { ok: true; message: string } | { ok: false; status: 400 | 503; error: string };
 
-/** Shared by POST /api/auth/magic-link and the landing-page form action. */
+/** Shared by POST /api/auth/magic-link and the /auth/verify resend. */
 export async function handleMagicLinkRequest(
   event: RequestEvent,
   rawEmail: unknown,
@@ -287,27 +304,123 @@ export async function handleMagicLinkRequest(
 ): Promise<MagicLinkHttpResult> {
   const email = normalizeLoginEmail(rawEmail);
   if (!email) return { ok: false, status: 400, error: 'Enter a valid email address.' };
+  const result = await handleLoginRequest(event, email, rawInvite);
+  return result.ok ? { ok: true, message: result.message } : result;
+}
+
+export type LoginRequestResult =
+  | {
+      ok: true;
+      channel: 'email' | 'sms';
+      /** Normalized identifier; echoed back with the code. */
+      identifier: string;
+      /** What the "we sent it to" copy shows. */
+      sentTo: string;
+      message: string;
+    }
+  | { ok: false; status: 400 | 503; error: string };
+
+/**
+ * Start sign-in (or sign-up — they are the same) from one free-text field.
+ * An email gets a magic link carrying a backup code; a phone gets an SMS
+ * code. Every accepted request reads the same whether or not an account
+ * exists or the request was throttled.
+ */
+export async function handleLoginRequest(
+  event: RequestEvent,
+  rawIdentifier: unknown,
+  rawInvite: unknown
+): Promise<LoginRequestResult> {
+  const id = parseIdentifier(rawIdentifier);
+  if (!id) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'Enter an email address or a phone number (US numbers can skip the +1).'
+    };
+  }
   let origin: string;
   try {
     origin = magicLinkOrigin(event.url.origin);
   } catch (e) {
-    console.error('[magic-link]', e instanceof Error ? e.message : e);
-    return { ok: false, status: 503, error: 'Email sign-in is not configured on this server.' };
+    console.error('[login]', e instanceof Error ? e.message : e);
+    return { ok: false, status: 503, error: 'Sign-in is not configured on this server.' };
   }
+  const ip = clientAddress(event);
+
+  if (id.kind === 'email') {
+    try {
+      await requestMagicLink({
+        email: id.value,
+        ip,
+        origin,
+        inviteToken: sanitizeInviteToken(rawInvite)
+      });
+    } catch (e) {
+      console.error('[magic-link] dispatch failed', e instanceof Error ? e.message : e);
+      return {
+        ok: false,
+        status: 503,
+        error: "We couldn't send the email just now. Try again in a minute."
+      };
+    }
+    return {
+      ok: true,
+      channel: 'email',
+      identifier: id.value,
+      sentTo: id.value,
+      message: MAGIC_LINK_GENERIC_MESSAGE
+    };
+  }
+
+  const bucket = ipRateBucket(ip);
+  if (!bucket.attributed) warnUnattributedOnce(ip);
   try {
-    await requestMagicLink({
-      email,
-      ip: clientAddress(event),
-      origin,
-      inviteToken: sanitizeInviteToken(rawInvite)
+    await requestSmsLogin({
+      phone: id.value,
+      ip: {
+        hash: sha256(bucket.key),
+        max: bucket.attributed ? MAX_SMS_PER_IP : MAX_SMS_UNATTRIBUTED
+      },
+      origin
     });
   } catch (e) {
-    console.error('[magic-link] dispatch failed', e instanceof Error ? e.message : e);
+    console.error('[sms-login] dispatch failed', e instanceof Error ? e.message : e);
     return {
       ok: false,
       status: 503,
-      error: "We couldn't send the email just now. Try again in a minute."
+      error: "We couldn't send the text just now. Try again in a minute, or use your email."
     };
   }
-  return { ok: true, message: MAGIC_LINK_GENERIC_MESSAGE };
+  return {
+    ok: true,
+    channel: 'sms',
+    identifier: id.value,
+    sentTo: formatPhone(id.value),
+    message: SMS_CODE_GENERIC_MESSAGE
+  };
+}
+
+export const SMS_CODE_GENERIC_MESSAGE =
+  'If that number can receive texts, a 6-digit code is on its way. It expires in 10 minutes.';
+
+const CODE_ERROR_COPY: Record<CodeInvalidReason, string> = {
+  invalid: "That code didn't match. Check it and try again.",
+  expired: 'That code has expired. Send a new one.',
+  'too-many-attempts': 'Too many wrong tries for that code. Send a new one.'
+};
+
+export type CodeLoginResult =
+  { ok: true; identity: { email: string } | { phone: string } } | { ok: false; error: string };
+
+/** Redeem a login code typed into the sign-in form. */
+export function redeemLoginCode(rawIdentifier: unknown, rawCode: unknown): CodeLoginResult {
+  const id = parseIdentifier(rawIdentifier);
+  if (!id) return { ok: false, error: 'Start again with your email or phone number.' };
+  const r = redeemCode({ destination: id.value, purpose: 'login', code: rawCode });
+  if (!r.ok) return { ok: false, error: CODE_ERROR_COPY[r.reason] };
+  return {
+    ok: true,
+    identity: id.kind === 'email' ? { email: id.value } : { phone: id.value }
+  };
 }

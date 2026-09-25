@@ -22,7 +22,8 @@ declare global {
     interface PageData {
       user?: {
         id: string;
-        email: string;
+        email: string | null;
+        phone?: string | null;
         role: 'owner' | 'helper' | 'inspector' | 'custom-operator';
         activeOwnerId: string | null;
         isSuperadmin?: boolean;

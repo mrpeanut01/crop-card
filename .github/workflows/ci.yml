@@ -54,7 +54,6 @@ jobs:
   # them over the baselines once they look right.
   visual:
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: write
     steps:

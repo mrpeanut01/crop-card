@@ -74,6 +74,13 @@ export function drainDecisionFor(
   return recordOwnerId === activeOwnerId ? 'submit' : 'skip-other-owner';
 }
 
+/** #278 — tag for a row enqueued while the active Owner is unknown. It can
+ *  never equal a real owner id, so the row is never listed, drained, or
+ *  discarded under any tenant; it surfaces only in the other-farm count.
+ *  Previously such rows were tagged `owner_home_farm`, which would have
+ *  replayed another farm's record against the Home Farm session. */
+export const UNASSIGNED_OWNER_ID = '__unassigned__';
+
 function uuid(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()
@@ -118,7 +125,7 @@ export function primeActiveOwnerId(ownerId: string | null | undefined): void {
  */
 export async function enqueueRecord(kind: PendingRecordKind, payload: unknown): Promise<string> {
   const id = uuid();
-  const ownerId = currentOwnerId() ?? 'owner_home_farm';
+  const ownerId = currentOwnerId() ?? UNASSIGNED_OWNER_ID;
   await db().pendingSprayRecords.put({
     id,
     ownerId,
@@ -155,11 +162,15 @@ export async function pendingCountForActiveOwner(): Promise<number> {
 }
 
 /** Pending count for any Owner OTHER than the current — drives the
- *  "queued at <other farm>" hint on the layout banner. */
+ *  "queued at <other farm>" hint on the layout banner. Scans rather than
+ *  using the `ownerId` index so rows lacking an ownerId (absent from the
+ *  index) are still surfaced instead of silently hidden. */
 export async function pendingCountForOtherOwners(): Promise<number> {
   const ownerId = currentOwnerId();
   if (!ownerId) return 0;
-  return db().pendingSprayRecords.where('ownerId').notEqual(ownerId).count();
+  return db()
+    .pendingSprayRecords.filter((r) => r.ownerId !== ownerId)
+    .count();
 }
 
 export async function listPending(): Promise<PendingSprayRecord[]> {

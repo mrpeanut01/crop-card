@@ -176,6 +176,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
   2. Manual sync or discard each row
 - **Success:** Queue empties; banner disappears.
 - **Audit notes:** Queue is reachable only via banner or direct URL — not in main nav. Easy to overlook. See F-N.
+- **Tenant scoping (Invariant 6, [#278](https://github.com/mrpeanut01/crop-card/issues/278)):** the list, discard, and drain act only on rows tagged with the active Owner; other-farm rows show as a read-only "queued from another farm" count. With no known active Owner nothing is listed or drained. A record queued while the active Owner is unknown is tagged `__unassigned__` (never the Home Farm): it never drains under any Owner and appears only in the other-farm count. Proven by the fake-indexeddb property test `lib/client/syncQueue.crossTenant.test.ts`.
 
 ## UC-13 — Hay cutting decision (weather-windowed)
 

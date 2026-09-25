@@ -6,7 +6,9 @@ import { listCrops } from '$lib/db/crops';
 import { getRegistry } from '$lib/server/registry';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
 import { refineAllocation } from '$lib/server/aiAllocation';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import type { FallbackReason } from '$lib/server/aiTry';
 import type { PlanInput } from '$lib/layout/engine';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 
@@ -53,22 +55,6 @@ const bodySchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const guard = checkGuard(user.id, 'allocate');
-  if (!guard.ok) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'allocate',
-      model: 'n/a',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: guard.reason
-    });
-    return json({ error: guard.message }, { status: guard.status });
-  }
-
   let raw: unknown;
   try {
     raw = await event.request.json();
@@ -156,24 +142,41 @@ export const POST: RequestHandler = async (event) => {
 
   const year = parsed.data.year ?? new Date().getFullYear();
   const built = await buildFarmContextWithCache(year);
+  const refineInput = {
+    previousAssignments: parsed.data.previousPlan.assignments,
+    previousRationale: parsed.data.previousPlan.rationale,
+    previousAdvisories: parsed.data.previousPlan.advisories,
+    transcript: parsed.data.transcript
+  };
+  const options = {
+    planningSessionId: parsed.data.planningSessionId,
+    contextCacheHit: built.cacheHit,
+    contextVersion: built.contextVersion,
+    companionSystems
+  };
 
-  try {
-    const result = await refineAllocation(
-      planInput,
-      built.context,
-      {
-        previousAssignments: parsed.data.previousPlan.assignments,
-        previousRationale: parsed.data.previousPlan.rationale,
-        previousAdvisories: parsed.data.previousPlan.advisories,
-        transcript: parsed.data.transcript
-      },
-      {
-        planningSessionId: parsed.data.planningSessionId,
-        contextCacheHit: built.cacheHit,
-        contextVersion: built.contextVersion,
-        companionSystems
-      }
-    );
+  const tried = await tryAiWithGuard({
+    endpoint: 'allocate',
+    userId: user.id,
+    prompt: () => refineAllocation(planInput, built.context, refineInput, options)
+  });
+
+  let result;
+  let provenance: 'ai' | 'fallback';
+  let fallbackReason: FallbackReason | null = null;
+  let fallbackMessage: string | null = null;
+  if (tried.provenance === 'fallback') {
+    fallbackReason = tried.fallbackReason;
+    fallbackMessage = tried.fallbackMessage;
+    result = await refineAllocation(planInput, built.context, refineInput, {
+      ...options,
+      degradeMessage: fallbackReason === 'no-key' ? undefined : fallbackMessage
+    });
+    provenance = 'fallback';
+    recordFallback(user.id, 'allocate', fallbackReason);
+  } else {
+    result = tried.value;
+    provenance = result.meta.fallback ? 'fallback' : 'ai';
     recordCall({
       userId: user.id,
       endpoint: 'allocate',
@@ -183,44 +186,33 @@ export const POST: RequestHandler = async (event) => {
       outputTokens: result.meta.outputTokens,
       usdEstimate: result.meta.usdEstimate,
       success: result.assignments.length > 0,
-      errorClass: result.meta.fallback
+      errorClass: result.meta.fallback,
+      provenance
     });
-    return json({
-      reply: result.reply,
-      assignments: result.assignments,
-      unplaced: result.unplaced,
-      sufficiency: result.sufficiency,
-      rationale: result.rationale,
-      perRowRationale: result.perRowRationale,
-      advisories: result.advisories,
-      pollinationConstraints: result.pollinationConstraints,
-      geometryMissingBlockIds: result.geometryMissingBlockIds,
-      companionGroups: result.companionGroups,
-      meta: {
-        model: result.meta.model,
-        usdEstimate: result.meta.usdEstimate,
-        fallback: result.meta.fallback,
-        violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt,
-        rejectedAssignments: result.meta.rejectedAssignments,
-        rejectedRationale: result.meta.rejectedRationale
-      },
-      spend: guard.spend
-    });
-  } catch (err) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'allocate',
-      model: 'unknown',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: 'upstream-error'
-    });
-    return json(
-      { error: err instanceof Error ? err.message : 'refinement failed' },
-      { status: 502 }
-    );
   }
+
+  return json({
+    reply: result.reply,
+    assignments: result.assignments,
+    unplaced: result.unplaced,
+    sufficiency: result.sufficiency,
+    rationale: result.rationale,
+    perRowRationale: result.perRowRationale,
+    advisories: result.advisories,
+    pollinationConstraints: result.pollinationConstraints,
+    geometryMissingBlockIds: result.geometryMissingBlockIds,
+    companionGroups: result.companionGroups,
+    meta: {
+      model: result.meta.model,
+      usdEstimate: result.meta.usdEstimate,
+      fallback: result.meta.fallback,
+      violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt,
+      rejectedAssignments: result.meta.rejectedAssignments,
+      rejectedRationale: result.meta.rejectedRationale,
+      provenance,
+      fallbackReason,
+      fallbackMessage
+    },
+    spend: tried.guard.ok ? tried.guard.spend : null
+  });
 };

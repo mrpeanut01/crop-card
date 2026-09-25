@@ -140,6 +140,9 @@ export interface AllocateOptions {
    *  in the finalized assignments and emits `companionGroups[]` in the
    *  result so the scheduler can anchor + offset planting dates. */
   companionSystems?: ReadonlyArray<CompanionPlugin>;
+  /** Refine only: set when aiTry() degraded (quota, cap, timeout, upstream
+   *  error) so the previous plan is echoed with this message as the reply. */
+  degradeMessage?: string;
 }
 
 // ─── Public API ──────────────────────────────────────────────────────────
@@ -382,11 +385,12 @@ export async function refineAllocation(
   }
 
   const apiKey = getApiKey();
-  if (!apiKey) {
+  if (!apiKey || options.degradeMessage) {
     return {
       ...echoPreviousPlan(input, matrix, refine),
-      reply:
-        "I can't refine the plan without an Anthropic API key — add one on the Settings page and the chat will come back. The current plan is unchanged."
+      reply: options.degradeMessage
+        ? `${options.degradeMessage} The current plan is unchanged.`
+        : "I can't refine the plan without an Anthropic API key — add one on the Settings page and the chat will come back. The current plan is unchanged."
     };
   }
 

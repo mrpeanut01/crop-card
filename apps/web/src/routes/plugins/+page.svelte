@@ -60,7 +60,9 @@
       }
       if (out.found === false || !out.candidate) {
         scanError =
-          'Claude could not identify a product on this label. Try a clearer photo or the authoring form directly.';
+          typeof out.message === 'string' && out.message
+            ? out.message
+            : 'Claude could not identify a product on this label. Try a clearer photo or the authoring form directly.';
         return;
       }
       scanCandidate = out.candidate;

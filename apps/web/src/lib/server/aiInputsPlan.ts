@@ -61,7 +61,7 @@ export interface AiInputsSubstitution {
 export interface AiInputsPlanResult {
   plan: InputsPlan;
   meta: AiResultMeta & {
-    fallback?: 'no-api-key' | 'deterministic' | 'quota-exceeded';
+    fallback?: 'no-api-key' | 'deterministic' | 'quota-exceeded' | 'ai-unavailable';
     /** When fallback=deterministic, the per-validator violations that
      *  triggered the fallback. UI surfaces these in the warnings band. */
     violations?: string[];

@@ -690,7 +690,7 @@
     meta: {
       model: string;
       usdEstimate: number;
-      fallback?: 'deterministic' | 'no-api-key';
+      fallback?: 'deterministic' | 'no-api-key' | 'ai-unavailable';
       violations?: string[];
       diagnosis?: ScheduleDiagnosis;
     };
@@ -1140,7 +1140,9 @@
       const header =
         fallback === 'no-api-key'
           ? '⚠ No Anthropic API key configured — the schedule above is unchanged.'
-          : '⚠ Could not apply the change — it would break a planting window, stagger, or companion offset. The schedule above is unchanged.';
+          : fallback === 'ai-unavailable'
+            ? '⚠ Claude is unavailable — the schedule above is unchanged.'
+            : '⚠ Could not apply the change — it would break a planting window, stagger, or companion offset. The schedule above is unchanged.';
       const violationLine =
         violations.length > 0 ? `\n\nValidator violations:\n• ${violations.join('\n• ')}` : '';
       reply = `${header}${violationLine}\n\n${aiReply}`;
@@ -1198,9 +1200,11 @@
       scheduleResponse = body as ScheduleResponse;
       const lines: string[] = [];
       const fb = scheduleResponse.meta.fallback;
-      if (fb === 'no-api-key') {
+      if (fb === 'no-api-key' || fb === 'ai-unavailable') {
         lines.push(
-          '🛟 I picked dates with the deterministic scheduler (no Anthropic API key configured). Staggers and companion offsets are honored.'
+          fb === 'no-api-key'
+            ? '🛟 I picked dates with the deterministic scheduler (no Anthropic API key configured). Staggers and companion offsets are honored.'
+            : '🛟 I picked dates with the deterministic scheduler (Claude is unavailable right now). Staggers and companion offsets are honored.'
         );
         if (scheduleResponse.rationale) lines.push(scheduleResponse.rationale);
         lines.push('');

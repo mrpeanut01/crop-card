@@ -76,6 +76,10 @@ export interface ScheduleInput {
 
 export interface ScheduleOptions {
   planningSessionId?: string;
+  /** Set by the endpoint when aiTry() degraded (quota, cap, timeout,
+   *  upstream error): skip Claude and return the deterministic path with
+   *  this message in place of the no-key copy. */
+  degradeMessage?: string;
 }
 
 export interface ScheduleResult {
@@ -87,7 +91,7 @@ export interface ScheduleResult {
   windows: ScheduleWindow[];
   successionFits: SuccessionFit[];
   meta: AiResultMeta & {
-    fallback?: 'deterministic' | 'no-api-key';
+    fallback?: 'deterministic' | 'no-api-key' | 'ai-unavailable';
     violations?: string[];
     /** Plain-English explanation + per-family actionable suggestions, set
      *  when the AI failed validation and we want the chat to help the
@@ -168,22 +172,23 @@ export async function refineSchedule(
   );
 
   const apiKey = getApiKey();
-  if (!apiKey) {
+  if (!apiKey || options.degradeMessage) {
     return {
       scheduled: input.previousScheduled,
       rationale: input.previousRationale,
       advisories: input.previousAdvisories,
-      reply:
-        "I can't refine the schedule without an Anthropic API key. The current dates are unchanged.",
+      reply: options.degradeMessage
+        ? `${options.degradeMessage} The current dates are unchanged.`
+        : "I can't refine the schedule without an Anthropic API key. The current dates are unchanged.",
       windows,
       successionFits,
       meta: {
-        model: 'no-api-key',
+        model: options.degradeMessage ? 'engine-fallback' : 'no-api-key',
         inputTokens: 0,
         cachedInputTokens: 0,
         outputTokens: 0,
         usdEstimate: 0,
-        fallback: 'no-api-key'
+        fallback: options.degradeMessage ? 'ai-unavailable' : 'no-api-key'
       }
     };
   }
@@ -453,22 +458,23 @@ export async function schedulePlantings(
   console.log(
     `[ai-schedule] apiKey present=${!!apiKey} envKey=${!!process.env.ANTHROPIC_API_KEY} settingsKey=${!!(apiKey && !process.env.ANTHROPIC_API_KEY)}`
   );
-  if (!apiKey) {
+  if (!apiKey || options.degradeMessage) {
     const det = buildDeterministicSchedule(input, windows, successionFits);
     return {
       scheduled: det,
-      rationale:
-        'No Anthropic API key configured — defaulted every planting to its earliest feasible date.',
+      rationale: options.degradeMessage
+        ? `${options.degradeMessage} Defaulted every planting to its earliest feasible date.`
+        : 'No Anthropic API key configured — defaulted every planting to its earliest feasible date.',
       advisories: [],
       windows,
       successionFits,
       meta: {
-        model: 'no-api-key',
+        model: options.degradeMessage ? 'engine-fallback' : 'no-api-key',
         inputTokens: 0,
         cachedInputTokens: 0,
         outputTokens: 0,
         usdEstimate: 0,
-        fallback: 'no-api-key'
+        fallback: options.degradeMessage ? 'ai-unavailable' : 'no-api-key'
       }
     };
   }

@@ -118,7 +118,14 @@
         <p class="err">{form.error}</p>
       {/if}
       {#if form && 'acceptUrl' in form && form.acceptUrl}
-        <p class="ok">Invite sent. Accept URL: <span class="mono">{form.acceptUrl}</span></p>
+        {#if 'emailSent' in form && form.emailSent === false}
+          <p class="err" role="alert">
+            Invite created, but the email could not be delivered. Send this link to your helper
+            yourself: <span class="mono">{form.acceptUrl}</span>
+          </p>
+        {:else}
+          <p class="ok">Invite sent. Accept URL: <span class="mono">{form.acceptUrl}</span></p>
+        {/if}
       {/if}
     {/if}
 

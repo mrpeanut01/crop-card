@@ -317,3 +317,62 @@ describe('AllocationWizard refine chat (AI on)', () => {
     expect(log.textContent).not.toMatch(/Plan looks clean/);
   });
 });
+
+describe('AllocationWizard seeds step recovery', () => {
+  it('links a plugin-less seed lot inline and refreshes the parent', async () => {
+    const onRefreshParent = vi.fn();
+    routes['POST /api/plugins/search-by-name'] = () => ({
+      json: {
+        candidates: [
+          { pluginId: 'bush-bean-provider', displayName: 'Bush Bean — Provider', score: 0.92 }
+        ]
+      }
+    });
+    routes['PATCH /api/stock/stock-unlinked'] = () => ({ json: { ok: true } });
+    renderWizard({
+      onRefreshParent,
+      seedStock: [
+        ...seedStock,
+        {
+          stockItemId: 'stock-unlinked',
+          displayName: 'Mystery Bean',
+          onHand: 50,
+          defaultUnit: 'seeds',
+          cropPluginId: null,
+          cropFamily: null
+        }
+      ]
+    });
+
+    expect(screen.getByText('1 seed need a crop plugin')).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', { name: 'Link to crop plugin →' }));
+    const search = screen.getByRole('searchbox', { name: 'Search crop plugin library' });
+    await fireEvent.input(search, { target: { value: 'bean' } });
+    const result = await screen.findByRole('button', { name: /Bush Bean — Provider\s*92% match/ });
+    expect(calls.find((c) => c.key === 'POST /api/plugins/search-by-name')?.body).toEqual({
+      query: 'bean',
+      hintType: 'crop',
+      skipWebSearch: true
+    });
+
+    await fireEvent.click(result);
+    await waitFor(() => expect(onRefreshParent).toHaveBeenCalledTimes(1));
+    expect(calls.find((c) => c.key === 'PATCH /api/stock/stock-unlinked')?.body).toEqual({
+      pluginId: 'bush-bean-provider'
+    });
+    expect(screen.queryByRole('dialog', { name: 'Pick a crop plugin' })).not.toBeInTheDocument();
+  });
+
+  it('keeps search text and seed choices across a Back/Next round trip', async () => {
+    renderWizard();
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Select Beet — Detroit Dark Red' }));
+    await fireEvent.input(screen.getByRole('searchbox', { name: 'Search seed lots' }), {
+      target: { value: 'beet' }
+    });
+    expect(screen.getByText('1 of 2')).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('button', { name: /^Next: blocks/ }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('searchbox', { name: 'Search seed lots' })).toHaveValue('beet');
+    expect(screen.getByRole('checkbox', { name: 'Select Beet — Detroit Dark Red' })).toBeChecked();
+  });
+});

@@ -12,7 +12,7 @@ These jobs run in parallel and usually finish in a few minutes. Branch protectio
 | unit tests | The safety kernel (with its fast-check properties), tenant isolation, and server logic |
 | e2e | Sign-in, the plan wizard, the spray and plan shells, and no horizontal overflow at 375px |
 | validate-bicep | The Azure template still builds |
-| dependency review | A PR can't add a dependency with a known high-severity advisory |
+| dependency review | A PR can't add a dependency with a known high-severity advisory. Runs once the Dependency graph is enabled and the repo variable `DEPENDENCY_REVIEW=true` is set |
 
 A new push to the same PR cancels the run already in progress.
 

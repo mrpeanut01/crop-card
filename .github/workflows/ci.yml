@@ -99,9 +99,12 @@ jobs:
           path: apps/web/test-results/
           retention-days: 7
 
+  # Needs the repository's Dependency graph (Settings → Code security).
+  # Enable it, then set the repo variable DEPENDENCY_REVIEW=true. Until then
+  # the prod audit in `static` covers known-vulnerable dependencies.
   dependency-review:
     name: dependency review
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && vars.DEPENDENCY_REVIEW == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

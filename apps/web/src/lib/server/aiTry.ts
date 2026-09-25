@@ -85,8 +85,9 @@ export async function aiTry<T>(args: AiTryArgs<T>): Promise<AiTryResult<T>> {
 
   const timeoutMs = args.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const timeoutSentinel = Symbol('aiTry-timeout');
+  let timerHandle: ReturnType<typeof setTimeout> | undefined;
   const timer: Promise<typeof timeoutSentinel> = new Promise((resolve) => {
-    setTimeout(() => resolve(timeoutSentinel), timeoutMs);
+    timerHandle = setTimeout(() => resolve(timeoutSentinel), timeoutMs);
   });
 
   try {
@@ -106,6 +107,8 @@ export async function aiTry<T>(args: AiTryArgs<T>): Promise<AiTryResult<T>> {
     // the audit row. A future enhancement can split this into
     // 'rate-limit' vs 'timeout' based on the error class.
     return runFallback(args.fallback, 'rate-limit');
+  } finally {
+    clearTimeout(timerHandle);
   }
 }
 

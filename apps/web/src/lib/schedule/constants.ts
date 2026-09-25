@@ -89,7 +89,13 @@ export const DEFAULT_AI_DAILY_QUOTA = {
    *  per-line enrichment that follows uses the existing 'plugin-search'
    *  quota since each line item triggers a web_search to fill the plugin
    *  shape. Cap intentionally low — a receipt is a high-leverage import. */
-  'plugin-batch-scan': 5
+  'plugin-batch-scan': 5,
+  /** #298 — inventory add-flow scans (label/photo vision, product-page URL,
+   *  barcode enrichment when OpenFoodFacts misses). One call per scan; the
+   *  manual form is the fallback when the quota is spent. */
+  'scan-label': 40,
+  'scan-url': 20,
+  'scan-barcode': 40
 } as const;
 
 export type AiEndpointName = keyof typeof DEFAULT_AI_DAILY_QUOTA;

@@ -1,11 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import { z } from 'zod';
-import {
-  AnthropicOverloadedError,
-  claudeVisionLookup,
-  matchCropPlugins,
-  type ScanResult
-} from '$lib/server/scanResult';
+import { claudeVisionLookup, matchCropPlugins, type ScanResult } from '$lib/server/scanResult';
+import { runScanAi } from '$lib/server/scanAi';
 import { findTaxonomyTermByName, inventoryDomain } from '$lib/db/taxonomy';
 import { getStockItemByPluginId } from '$lib/db/stock';
 
@@ -14,31 +10,21 @@ const requestSchema = z.object({
   barcode: z.string().optional()
 });
 
-export async function POST({ request }) {
-  const body = await request.json().catch(() => null);
+export async function POST(event) {
+  const body = await event.request.json().catch(() => null);
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) error(400, 'invalid request');
 
   const { image, barcode } = parsed.data;
 
-  let result: Partial<ScanResult>;
-  try {
-    result = await claudeVisionLookup(image, barcode);
-  } catch (e) {
-    if (e instanceof AnthropicOverloadedError) {
-      return json(
-        {
-          found: false,
-          source: 'none',
-          message: e.message,
-          retryable: true
-        } satisfies ScanResult & { message: string; retryable: boolean },
-        { status: 503 }
-      );
-    }
-    const msg = e instanceof Error ? e.message : 'Label read failed';
-    error(503, msg);
-  }
+  const ai = await runScanAi({
+    event,
+    endpoint: 'scan-label',
+    subject: 'label',
+    call: (onUsage) => claudeVisionLookup(image, barcode, onUsage)
+  });
+  if (!ai.ok) return json({ ...ai.body, barcode }, { status: ai.status });
+  const result = ai.result;
 
   result.source = 'claude-vision';
 
@@ -67,5 +53,11 @@ export async function POST({ request }) {
       : { name: result.suggestedType.name, isNew: true };
   }
 
-  return json({ found: false, source: 'none', ...result, barcode } satisfies ScanResult);
+  return json({
+    found: false,
+    source: 'none',
+    ...result,
+    barcode,
+    provenance: 'ai'
+  } satisfies ScanResult & { provenance: 'ai' });
 }

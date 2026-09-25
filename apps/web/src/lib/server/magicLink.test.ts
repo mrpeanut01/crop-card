@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { createHash, randomUUID } from 'node:crypto';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
@@ -10,16 +10,19 @@ import {
   MAGIC_LINK_TTL_MS,
   MAX_PER_EMAIL,
   MAX_PER_IP,
+  MAX_PER_UNATTRIBUTED,
   authMode,
   buildVerifyUrl,
   consumeMagicLink,
   handleMagicLinkRequest,
   hashLoginToken,
+  ipRateBucket,
   isDirectLoginAllowed,
   magicLinkOrigin,
   normalizeLoginEmail,
   peekMagicLink,
   requestMagicLink,
+  resetUnattributedWarningForTests,
   sanitizeInviteToken
 } from './magicLink';
 
@@ -29,10 +32,10 @@ function uniqEmail(tag = 'm'): string {
   return `${tag}-${randomUUID().slice(0, 8)}@example.test`;
 }
 
+/** Random public unicast address (44.0.0.0/8 is globally routable). */
 function uniqIp(): string {
-  return `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(
-    Math.random() * 250
-  )}-${randomUUID().slice(0, 4)}`;
+  const octet = () => 1 + Math.floor(Math.random() * 254);
+  return `44.${octet()}.${octet()}.${octet()}`;
 }
 
 function tokenFromOutbox(email: string): string {
@@ -294,6 +297,119 @@ describe('handleMagicLinkRequest — no enumeration', () => {
     const email = uniqEmail();
     expect((await handleMagicLinkRequest(event, email, null)).ok).toBe(true);
     const row = db.select().from(loginTokens).where(eq(loginTokens.email, email)).get();
-    expect(row?.ipHash).toBeNull();
+    expect(row?.ipHash).toBe(createHash('sha256').update('ip:unattributed').digest('hex'));
+  });
+});
+
+// The shared bucket is global to the test DB (other files write to it), so
+// these tests run in their own past window — counts only span [now - window, now].
+describe('client address resolution + proxy-safe per-IP limit', () => {
+  it('gives a public client address its own bucket', () => {
+    expect(ipRateBucket('44.1.2.3')).toEqual({
+      key: 'ip:44.1.2.3',
+      max: MAX_PER_IP,
+      attributed: true
+    });
+    expect(ipRateBucket('2600:1f18::1')).toMatchObject({ attributed: true, max: MAX_PER_IP });
+  });
+
+  it('routes proxy / private / loopback / missing / garbage addresses to the shared bucket', () => {
+    for (const ip of [
+      '10.0.0.4',
+      '172.16.8.1',
+      '192.168.1.10',
+      '100.64.0.9',
+      '127.0.0.1',
+      '::1',
+      'fd00::1',
+      '::ffff:10.0.0.4',
+      'not-an-ip',
+      '',
+      null
+    ]) {
+      expect(ipRateBucket(ip)).toMatchObject({
+        key: 'ip:unattributed',
+        max: MAX_PER_UNATTRIBUTED,
+        attributed: false
+      });
+    }
+  });
+
+  it('a request behind an unconfigured proxy does not lock out other users after MAX_PER_IP', async () => {
+    const proxyIp = '10.244.0.1';
+    const now = Date.now() - 3 * 60 * 60 * 1000;
+    for (let i = 0; i < MAX_PER_IP + 5; i++) {
+      const r = await requestMagicLink({
+        email: uniqEmail('proxy'),
+        ip: proxyIp,
+        origin: ORIGIN,
+        now
+      });
+      expect(r.outcome).toBe('sent');
+    }
+  });
+
+  it('the shared bucket still caps mass mailing at MAX_PER_UNATTRIBUTED', async () => {
+    const now = Date.now() - 6 * 60 * 60 * 1000;
+    for (let i = 0; i < MAX_PER_UNATTRIBUTED; i++) {
+      const r = await requestMagicLink({
+        email: uniqEmail('bulk'),
+        ip: '10.244.0.1',
+        origin: ORIGIN,
+        now
+      });
+      expect(r.outcome).toBe('sent');
+    }
+    const blocked = await requestMagicLink({
+      email: uniqEmail('bulk'),
+      ip: null,
+      origin: ORIGIN,
+      now
+    });
+    expect(blocked.outcome).toBe('rate-limited');
+    const publicIp = await requestMagicLink({
+      email: uniqEmail('pub'),
+      ip: uniqIp(),
+      origin: ORIGIN,
+      now
+    });
+    expect(publicIp.outcome).toBe('sent');
+  });
+
+  it('keys the per-IP limit on the address adapter-node resolves via getClientAddress', async () => {
+    const clientIp = uniqIp();
+    const now = Date.now();
+    for (let i = 0; i < MAX_PER_IP; i++) {
+      await requestMagicLink({ email: uniqEmail('xff'), ip: clientIp, origin: ORIGIN, now });
+    }
+    const email = uniqEmail('xff-blocked');
+    const r = await handleMagicLinkRequest(fakeEvent(clientIp), email, null);
+    expect(r.ok).toBe(true);
+    expect(readOutbox(email)).toHaveLength(0);
+    const other = uniqEmail('xff-other');
+    await handleMagicLinkRequest(fakeEvent(uniqIp()), other, null);
+    expect(readOutbox(other)).toHaveLength(1);
+  });
+
+  it('warns once in production when the address is not public', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.E2E_OUTBOX = '1';
+    resetUnattributedWarningForTests();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await requestMagicLink({
+      email: uniqEmail('w'),
+      ip: '10.0.0.1',
+      origin: ORIGIN,
+      now: Date.now() - 9 * 60 * 60 * 1000
+    });
+    await requestMagicLink({
+      email: uniqEmail('w'),
+      ip: '10.0.0.1',
+      origin: ORIGIN,
+      now: Date.now() - 9 * 60 * 60 * 1000
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toMatch(/ADDRESS_HEADER=X-Forwarded-For/);
+    warn.mockRestore();
   });
 });

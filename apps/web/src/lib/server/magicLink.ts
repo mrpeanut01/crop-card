@@ -16,17 +16,24 @@
  */
 
 import { createHash, randomBytes } from 'node:crypto';
-import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, lt, lte, sql } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { loginTokens } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import type { RequestEvent } from '@sveltejs/kit';
 import { dispatchEmail } from './email';
+import { isPublicAddress } from './safeFetch';
 
 export const MAGIC_LINK_TTL_MS = 15 * 60 * 1000;
 export const RATE_WINDOW_MS = 15 * 60 * 1000;
 export const MAX_PER_EMAIL = 5;
 export const MAX_PER_IP = 20;
+/** Shared ceiling for requests whose client address is missing or not a
+ *  public unicast IP — i.e. the proxy's own address when ADDRESS_HEADER /
+ *  XFF_DEPTH are not configured. High enough that a misconfigured proxy
+ *  never locks every user out; low enough to still cap mass mailing. The
+ *  per-email limit applies to every request regardless. */
+export const MAX_PER_UNATTRIBUTED = 200;
 const PURGE_AFTER_MS = 24 * 60 * 60 * 1000;
 
 /** Same copy for every accepted request so the response never reveals
@@ -87,6 +94,45 @@ export function buildVerifyUrl(origin: string, token: string, inviteToken?: stri
 
 export type MagicLinkRequestOutcome = 'sent' | 'rate-limited';
 
+export interface IpRateBucket {
+  key: string;
+  max: number;
+  attributed: boolean;
+}
+
+const UNATTRIBUTED_BUCKET: IpRateBucket = {
+  key: 'ip:unattributed',
+  max: MAX_PER_UNATTRIBUTED,
+  attributed: false
+};
+
+/** Only a public client address gets its own per-IP bucket. A private,
+ *  loopback or unparseable address is almost certainly the ingress proxy
+ *  (adapter-node falls back to the socket peer when ADDRESS_HEADER is
+ *  unset), and keying on it would put every user in one 20-request bucket. */
+export function ipRateBucket(ip: string | null): IpRateBucket {
+  if (ip && isPublicAddress(ip.trim())) {
+    return { key: `ip:${ip.trim()}`, max: MAX_PER_IP, attributed: true };
+  }
+  return UNATTRIBUTED_BUCKET;
+}
+
+let warnedUnattributed = false;
+
+export function resetUnattributedWarningForTests(): void {
+  warnedUnattributed = false;
+}
+
+function warnUnattributedOnce(ip: string | null): void {
+  if (warnedUnattributed || process.env.NODE_ENV !== 'production') return;
+  warnedUnattributed = true;
+  console.warn(
+    `[magic-link] client address ${ip ?? '(none)'} is not a public IP; per-IP sign-in ` +
+      'limits are using the shared unattributed bucket. Behind a reverse proxy set ' +
+      'ADDRESS_HEADER=X-Forwarded-For and XFF_DEPTH to the number of trusted proxies.'
+  );
+}
+
 export interface MagicLinkRequest {
   email: string;
   /** Raw client address; only its hash is stored. */
@@ -107,27 +153,40 @@ export async function requestMagicLink(
 ): Promise<{ outcome: MagicLinkRequestOutcome; expiresAt?: number }> {
   unscopedQueryNote('login_tokens is identity-level; sign-in precedes any Owner context');
   const now = req.now ?? Date.now();
-  const ipHash = req.ip ? sha256(`ip:${req.ip}`) : null;
+  const bucket = ipRateBucket(req.ip);
+  if (!bucket.attributed) warnUnattributedOnce(req.ip);
+  const ipHash = sha256(bucket.key);
 
   db.delete(loginTokens)
     .where(lt(loginTokens.expiresAt, new Date(now - PURGE_AFTER_MS)))
     .run();
 
   const since = new Date(now - RATE_WINDOW_MS);
+  const at = new Date(now);
   const perEmail = db
     .select({ n: sql<number>`count(*)` })
     .from(loginTokens)
-    .where(and(eq(loginTokens.email, req.email), gt(loginTokens.createdAt, since)))
+    .where(
+      and(
+        eq(loginTokens.email, req.email),
+        gt(loginTokens.createdAt, since),
+        lte(loginTokens.createdAt, at)
+      )
+    )
     .get();
   if ((perEmail?.n ?? 0) >= MAX_PER_EMAIL) return { outcome: 'rate-limited' };
-  if (ipHash) {
-    const perIp = db
-      .select({ n: sql<number>`count(*)` })
-      .from(loginTokens)
-      .where(and(eq(loginTokens.ipHash, ipHash), gt(loginTokens.createdAt, since)))
-      .get();
-    if ((perIp?.n ?? 0) >= MAX_PER_IP) return { outcome: 'rate-limited' };
-  }
+  const perIp = db
+    .select({ n: sql<number>`count(*)` })
+    .from(loginTokens)
+    .where(
+      and(
+        eq(loginTokens.ipHash, ipHash),
+        gt(loginTokens.createdAt, since),
+        lte(loginTokens.createdAt, at)
+      )
+    )
+    .get();
+  if ((perIp?.n ?? 0) >= bucket.max) return { outcome: 'rate-limited' };
 
   const token = randomBytes(32).toString('base64url');
   const expiresAt = now + MAGIC_LINK_TTL_MS;
@@ -208,6 +267,8 @@ export function sanitizeInviteToken(input: unknown): string | null {
   return typeof input === 'string' && INVITE_TOKEN_RE.test(input) ? input : null;
 }
 
+/** adapter-node resolves this from ADDRESS_HEADER / XFF_DEPTH when set
+ *  (and throws if the configured header is missing), else the socket peer. */
 function clientAddress(event: RequestEvent): string | null {
   try {
     return event.getClientAddress();

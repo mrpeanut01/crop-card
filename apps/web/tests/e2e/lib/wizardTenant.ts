@@ -81,8 +81,7 @@ export async function provisionWizardTenant(
       weedStrategy: 'cultivate-first',
       pestStrategy: 'ipm',
       fertilityApproach: 'synthetic',
-      coverCropIntent: 'none',
-      sprayCapacity: 'backpack-4gal'
+      coverCropIntent: 'none'
     });
   }
 

@@ -3,7 +3,7 @@
  *
  * Coverage strategy:
  *
- *   1. **96-scenario parametric matrix** — 4 philosophies × 4 fertility
+ *   1. **120-scenario parametric matrix** — 5 philosophies × 4 fertility
  *      approaches × 6 representative crop families. Each combination runs
  *      a fixed-fixture plan and asserts a small invariant set
  *      (fertilizer chosen ↔ philosophy compatible; warnings have the
@@ -53,7 +53,6 @@ function buildSetup(
     pestStrategy: 'preventive',
     fertilityApproach,
     coverCropIntent: 'none',
-    sprayCapacity: 'backpack-4gal',
     transitioningStartedYear: null,
     year: YEAR,
     setAt: 0,
@@ -266,10 +265,11 @@ function buildBaseInput(overrides: Partial<InputsPlanInput> = {}): InputsPlanInp
   };
 }
 
-/* ─── 1. Parametric 96-scenario matrix ──────────────────────────────── */
+/* ─── 1. Parametric 120-scenario matrix ──────────────────────────────── */
 
 const PHILOSOPHIES: Philosophy[] = [
   'conventional',
+  'no-till',
   'non-gmo',
   'organic-transitioning',
   'certified-organic'
@@ -295,7 +295,7 @@ const FAMILIES: CropFamily[] = [
  *  end-to-end. */
 const FIXTURE_POOL_COVERS_EVERY_PHILOSOPHY = true;
 
-describe('planInputs — 4×4×6 philosophy × approach × family matrix', () => {
+describe('planInputs — 5×4×6 philosophy × approach × family matrix', () => {
   for (const philosophy of PHILOSOPHIES) {
     for (const approach of FERTILITY_APPROACHES) {
       for (const family of FAMILIES) {
@@ -529,6 +529,28 @@ describe('planInputs — synthesized slots', () => {
     expect(terminate).toBeDefined();
     expect(terminate?.productPluginId).toBeNull();
     expect(terminate?.rationale).toContain('Mow + incorporate');
+  });
+
+  it('cover-terminate under no-till + cultivate-first roller-crimps instead of incorporating', () => {
+    const crop = buildCrop('solanaceae', 'tomato');
+    const planting = buildPlanting('p1', 'b1', 'tomato');
+
+    const result = planInputs(
+      buildBaseInput({
+        plantings: [planting],
+        blocks: [buildBlock('b1')],
+        cropPlugins: { tomato: crop },
+        seasonSetup: buildSetup('no-till', 'cover-crop-credits', {
+          coverCropIntent: 'vetch-clover',
+          weedStrategy: 'cultivate-first'
+        })
+      })
+    );
+
+    const terminate = result.applications.find((a) => a.slot === 'cover-terminate');
+    expect(terminate?.productPluginId).toBeNull();
+    expect(terminate?.rationale).toContain('Roller-crimp');
+    expect(terminate?.rationale).not.toContain('incorporate');
   });
 });
 

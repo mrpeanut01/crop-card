@@ -7,6 +7,7 @@ import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { currentOwnerId, unscopedQueryNote } from '$lib/db/tenant';
+import { identityLabel } from '$lib/identity';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const pluginId = params.pluginId;
@@ -43,7 +44,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   if (userIds.length > 0) {
     for (const id of userIds) {
       const u = db.select().from(users).where(eq(users.id, id)).get();
-      if (u) emailMap.set(u.id, u.email);
+      if (u) emailMap.set(u.id, identityLabel(u));
     }
   }
 

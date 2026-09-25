@@ -95,6 +95,7 @@ describe('admin/owners exitImpersonation action (#221)', () => {
     const event = makeEvent({
       id: sa.id,
       email: sa.email,
+      phone: null,
       isSuperadmin: true,
       activeOwnerId: target,
       activeRole: 'owner',
@@ -121,6 +122,7 @@ describe('admin/owners exitImpersonation action (#221)', () => {
     const event = makeEvent({
       id: sa.id,
       email: sa.email,
+      phone: null,
       isSuperadmin: true,
       activeOwnerId: target,
       activeRole: 'owner',
@@ -139,6 +141,7 @@ describe('admin/owners exitImpersonation action (#221)', () => {
     const event = makeEvent({
       id: sa.id,
       email: sa.email,
+      phone: null,
       isSuperadmin: true,
       activeOwnerId: null,
       activeRole: 'owner',
@@ -155,6 +158,7 @@ describe('admin/owners exitImpersonation action (#221)', () => {
     const event = makeEvent({
       id: u.id,
       email: u.email,
+      phone: null,
       isSuperadmin: false,
       activeOwnerId: owner,
       activeRole: 'owner',
@@ -179,6 +183,7 @@ describe('admin/owners exitImpersonation action (#221)', () => {
       user: {
         id: sa.id,
         email: sa.email,
+        phone: null,
         role: 'owner',
         activeOwnerId: owner,
         isSuperadmin: true,

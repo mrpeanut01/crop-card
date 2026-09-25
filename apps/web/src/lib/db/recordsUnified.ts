@@ -45,6 +45,7 @@ export {
   type RecordKind
 } from './recordKinds';
 import { LOCK_WINDOW_MS, RECORD_KINDS, type RecordKind } from './recordKinds';
+import { identityLabel } from '$lib/identity';
 
 export interface UnifiedRecord {
   /** Composite id: `${kind}:${rowId}` so it stays unique when one table has the same uuid as another (cannot happen in practice but keeps drill-down URLs unambiguous). */
@@ -91,7 +92,7 @@ function resolvePerformers(ids: string[]): Map<string, string> {
   const unique = Array.from(new Set(ids.filter((s): s is string => Boolean(s))));
   if (unique.length === 0) return new Map();
   const rows = db
-    .select({ id: users.id, email: users.email })
+    .select({ id: users.id, email: users.email, phone: users.phone })
     .from(users)
     .where(inArray(users.id, unique))
     .all();
@@ -99,7 +100,7 @@ function resolvePerformers(ids: string[]): Map<string, string> {
   // email; the audit ledger is for inspectors + owner-role users who
   // already know the operators on the farm, and the local-part alone is
   // ambiguous when helpers share first names.
-  return new Map(rows.map((r) => [r.id, r.email]));
+  return new Map(rows.map((r) => [r.id, identityLabel(r)]));
 }
 
 interface DeconEvent {

@@ -14,6 +14,7 @@
 import { error, type ServerLoad } from '@sveltejs/kit';
 import { db } from '$lib/db/client';
 import { owners, users, aiCallLog } from '$lib/db/schema';
+import { identityName } from '$lib/identity';
 import { eq, gte, count, sql } from 'drizzle-orm';
 import { listBlocks } from '$lib/db/blocks';
 import { listEquipment } from '$lib/db/equipment';
@@ -95,7 +96,8 @@ export const load: ServerLoad = async ({ locals }) => {
       id: locals.user.id,
       email: locals.user.email,
       role: locals.user.role,
-      name: locals.user.email.split('@')[0],
+      phone: locals.user.phone,
+      name: identityName(locals.user),
       since: memberSince,
       lastLogin,
       // Active sessions — we don't track concurrent sessions yet; the

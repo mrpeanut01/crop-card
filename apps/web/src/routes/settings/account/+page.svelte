@@ -4,6 +4,7 @@
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
+  import SignInMethods from '$lib/components/settings/SignInMethods.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
 
   let { data } = $props();
@@ -31,9 +32,6 @@
         <SettingsField label="Display name">
           <input class="s-input" type="text" value={data.account.name} name="name" />
         </SettingsField>
-        <SettingsField label="Email" hint="magic-link sign-in">
-          <input class="s-input" type="email" value={data.account.email} name="email" />
-        </SettingsField>
         <SettingsField label="Time zone">
           <select class="s-input"><option>America/New_York (EST)</option></select>
         </SettingsField>
@@ -48,16 +46,14 @@
   </SettingsSection>
 
   <SettingsSection
-    title="Sign-in security"
-    sub="Magic-link (no password) · optional 2FA when shipped."
+    title="Sign-in methods"
+    sub="No passwords. Sign in with a link or 6-digit code sent to any verified email or mobile number."
   >
+    <SignInMethods email={data.account.email} phone={data.account.phone} />
+  </SettingsSection>
+
+  <SettingsSection title="Sessions" sub="Signed-in devices.">
     <div class="security-grid">
-      <SettingsField label="Sign-in method">
-        <select class="s-input">
-          <option value="magic">Magic-link email</option>
-          <option disabled>Magic-link + passkey (coming)</option>
-        </select>
-      </SettingsField>
       <SettingsField label="Last sign-in" hint="HMAC cookie session">
         <input class="s-input mono" value={data.account.lastLogin} disabled />
       </SettingsField>

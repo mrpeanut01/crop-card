@@ -10,12 +10,12 @@
  * here as a no-op so the form contract stays stable.
  */
 
-import { error, fail } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { activeAssignmentsForUser } from '$lib/db/users';
-import { unscopedQueryNote } from '$lib/db/tenant';
+import { identityName } from '$lib/identity';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -37,8 +37,9 @@ export const load: PageServerLoad = ({ locals }) => {
   return {
     account: {
       id: user.id,
-      email: user.email,
-      name: user.email.split('@')[0],
+      email: userRow ? userRow.email : user.email,
+      phone: userRow ? userRow.phone : user.phone,
+      name: identityName(userRow ?? user),
       role: user.role,
       isSuperadmin: user.isSuperadmin === true,
       impersonating: user.impersonating === true,
@@ -55,22 +56,10 @@ export const load: PageServerLoad = ({ locals }) => {
 export const actions: Actions = {
   save: async ({ request, locals }) => {
     if (!locals.user) throw error(401, 'sign-in required');
-    const form = await request.formData();
-    const email = String(form.get('email') ?? '').trim();
-    // Email is the magic-link identity; if the operator typed a new
-    // address we'd need an OOB confirmation flow before mutating. For
-    // Sprint 2 we accept the field but only persist when it matches the
-    // current sign-in identity (no-op) — the alternative is rejecting
-    // valid edits silently, which the disabled-button bug already does.
-    if (email && email !== locals.user.email) {
-      return fail(400, {
-        ok: false,
-        message:
-          'Changing the sign-in email requires confirming the new address via a magic link. Sign out and sign in with the new email to switch identities.'
-      });
-    }
-    unscopedQueryNote('settings/account save touches the global users table (identity)');
-    db.update(users).set({ email: locals.user.email }).where(eq(users.id, locals.user.id)).run();
+    // Sign-in email/phone change only through the verified-code flow in
+    // the "Sign-in methods" section (/api/account/identity); the remaining
+    // profile fields are not persisted yet.
+    await request.formData();
     return { ok: true };
   }
 };

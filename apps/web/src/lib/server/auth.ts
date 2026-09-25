@@ -16,6 +16,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
 import { activeAssignmentsForUser } from '$lib/db/users';
+import { normalizeEmail, normalizePhone } from '$lib/identity';
 import {
   ALL_SESSION_ROLES,
   canMutate,
@@ -27,7 +28,8 @@ import {
 
 export interface AuthenticatedUser {
   id: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   /** Role within the active Owner context. */
   role: SessionRole;
   /** Active Owner id, or null when the session is partial (post-signin,
@@ -55,6 +57,7 @@ export function currentUser(event: RequestEvent): AuthenticatedUser | null {
   return {
     id: session.userId,
     email: session.email,
+    phone: session.phone,
     role: session.activeRole,
     activeOwnerId: session.activeOwnerId,
     isSuperadmin: session.isSuperadmin,
@@ -82,6 +85,18 @@ export function requireMutator(event: RequestEvent): AuthenticatedUser {
 }
 
 /** True when the current session has read-only permissions (inspector). */
+/** Adding or removing a sign-in identity changes who can sign in as this
+ *  user, so it needs the interactive cookie session: an API token must not
+ *  be able to attach its own phone and then sign in with it. */
+export function requireInteractiveUser(event: RequestEvent): AuthenticatedUser {
+  const u = requireUser(event);
+  if (event.locals?.authVia === 'bearer') {
+    throw error(403, 'sign-in identities can only be changed from a signed-in browser');
+  }
+  if (u.impersonating) throw error(403, 'not available while impersonating');
+  return u;
+}
+
 export function isInspectorSession(event: RequestEvent): boolean {
   const u = currentUser(event);
   return !!u && isReadOnly(u.role);
@@ -110,49 +125,68 @@ export interface LoginResult {
   next: 'onboarding' | 'picker' | 'today' | 'admin';
 }
 
+export type LoginIdentity = { email: string } | { phone: string };
+
+/**
+ * Sign in (creating the user on first contact) by a *proven* identity:
+ * a redeemed magic link / email code, a redeemed SMS code, or the
+ * direct/demo email path when AUTH_MODE allows it. Phone-only users are
+ * created with a null email; either identity can be linked later from
+ * /settings/account.
+ */
+export function loginByIdentity(
+  event: RequestEvent,
+  identity: LoginIdentity,
+  desiredRole: SessionRole = 'helper'
+): LoginResult {
+  if (!ALL_SESSION_ROLES.includes(desiredRole)) {
+    throw error(400, `invalid role: ${desiredRole}`);
+  }
+  let existing: typeof users.$inferSelect | undefined;
+  let insert: typeof users.$inferInsert;
+  if ('email' in identity) {
+    const email = normalizeEmail(identity.email);
+    if (!email) throw error(400, 'invalid email');
+    existing = db.select().from(users).where(eq(users.email, email)).get();
+    insert = { id: newUserId(), email };
+  } else {
+    const phone = normalizePhone(identity.phone);
+    if (!phone) throw error(400, 'invalid phone number');
+    existing = db.select().from(users).where(eq(users.phone, phone)).get();
+    insert = { id: newUserId(), phone };
+  }
+  const row =
+    existing ??
+    (db.insert(users).values(insert).returning().get() as typeof users.$inferSelect);
+  return startSession(event, row);
+}
+
 export function loginByEmail(
   event: RequestEvent,
   email: string,
   desiredRole: SessionRole = 'helper'
 ): LoginResult {
-  const normalized = email.trim().toLowerCase();
-  if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
-    throw error(400, 'invalid email');
-  }
-  if (!ALL_SESSION_ROLES.includes(desiredRole)) {
-    throw error(400, `invalid role: ${desiredRole}`);
-  }
+  return loginByIdentity(event, { email }, desiredRole);
+}
 
-  const existing = db.select().from(users).where(eq(users.email, normalized)).get();
-  const userId = existing
-    ? existing.id
-    : (() => {
-        const id = `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        db.insert(users).values({ id, email: normalized }).run();
-        return id;
-      })();
+function newUserId(): string {
+  return `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
-  const userEmail = existing?.email ?? normalized;
-  const isSuperadmin = !!existing?.isSuperadmin;
+/** Mint the session for a user row and pick the post-login destination.
+ *  Also used after linking a new email/phone so the cookie reflects it. */
+export function startSession(
+  event: RequestEvent,
+  row: { id: string; email: string | null; phone: string | null; isSuperadmin: boolean }
+): LoginResult {
+  const identity = { id: row.id, email: row.email, phone: row.phone };
+  const isSuperadmin = !!row.isSuperadmin;
+  const assignments = activeAssignmentsForUser(row.id);
 
-  const assignments = activeAssignmentsForUser(userId);
   if (assignments.length === 0) {
-    writeSession(event.cookies, {
-      id: userId,
-      email: userEmail,
-      isSuperadmin,
-      activeOwnerId: null,
-      activeRole: 'owner'
-    });
+    writeSession(event.cookies, { ...identity, isSuperadmin, activeOwnerId: null, activeRole: 'owner' });
     return {
-      user: {
-        id: userId,
-        email: userEmail,
-        role: 'owner',
-        activeOwnerId: null,
-        isSuperadmin,
-        impersonating: false
-      },
+      user: { ...identity, role: 'owner', activeOwnerId: null, isSuperadmin, impersonating: false },
       next: isSuperadmin ? 'admin' : 'onboarding'
     };
   }
@@ -160,16 +194,14 @@ export function loginByEmail(
   if (assignments.length === 1) {
     const a = assignments[0];
     writeSession(event.cookies, {
-      id: userId,
-      email: userEmail,
+      ...identity,
       isSuperadmin,
       activeOwnerId: a.ownerId,
       activeRole: a.roleWithinOwner
     });
     return {
       user: {
-        id: userId,
-        email: userEmail,
+        ...identity,
         role: a.roleWithinOwner,
         activeOwnerId: a.ownerId,
         isSuperadmin,
@@ -181,16 +213,14 @@ export function loginByEmail(
 
   // Multiple assignments → partial session, Owner picker.
   writeSession(event.cookies, {
-    id: userId,
-    email: userEmail,
+    ...identity,
     isSuperadmin,
     activeOwnerId: null,
     activeRole: assignments[0].roleWithinOwner
   });
   return {
     user: {
-      id: userId,
-      email: userEmail,
+      ...identity,
       role: assignments[0].roleWithinOwner,
       activeOwnerId: null,
       isSuperadmin,
@@ -198,6 +228,26 @@ export function loginByEmail(
     },
     next: 'picker'
   };
+}
+
+/** Re-mint the cookie after an email/phone was linked or removed, keeping
+ *  the active Owner, role and impersonation state. */
+export function refreshSessionIdentity(event: RequestEvent, user: AuthenticatedUser): void {
+  const row = db
+    .select({ email: users.email, phone: users.phone })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .get();
+  if (!row) throw error(401, 'authentication required');
+  writeSession(event.cookies, {
+    id: user.id,
+    email: row.email,
+    phone: row.phone,
+    isSuperadmin: user.isSuperadmin,
+    activeOwnerId: user.activeOwnerId,
+    activeRole: user.role,
+    impersonating: user.impersonating
+  });
 }
 
 /** Throws a SvelteKit redirect to the canonical next-step path. Centralizes

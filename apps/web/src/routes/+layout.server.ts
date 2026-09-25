@@ -107,6 +107,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
       ? {
           id: locals.user.id,
           email: locals.user.email,
+          phone: locals.user.phone,
           role: locals.user.role,
           activeOwnerId: locals.user.activeOwnerId,
           isSuperadmin: locals.user.isSuperadmin,

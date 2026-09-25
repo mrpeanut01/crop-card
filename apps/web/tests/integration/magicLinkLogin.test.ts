@@ -15,7 +15,8 @@ import { helperAssignments, owners, users } from '$lib/db/schema';
 import { issueToken } from '$lib/server/apiTokens';
 import { clearOutbox, readOutbox } from '$lib/server/email';
 import { requestMagicLink } from '$lib/server/magicLink';
-import { readSession, type SessionRole } from '$lib/server/session';
+import { readSession, writeSession, type SessionRole } from '$lib/server/session';
+import { clearSmsOutbox, readSmsOutbox } from '$lib/server/sms';
 import {
   actions as verifyActions,
   load as verifyLoad
@@ -23,6 +24,7 @@ import {
 import { actions as landingActions } from '../../src/routes/+page.server';
 import { handle, isAnonymous } from '../../src/hooks.server';
 import { GET as outboxGet } from '../../src/routes/_dev/outbox/+server';
+import { POST as identityPost } from '../../src/routes/api/account/identity/+server';
 
 const ORIGIN = 'http://cropcard.test';
 
@@ -63,12 +65,14 @@ function fakeCookies() {
 }
 
 function formEvent(path: string, fields: Record<string, string>): RequestEvent {
-  const fd = new FormData();
-  for (const [k, v] of Object.entries(fields)) fd.set(k, v);
   const url = new URL(path, ORIGIN);
   return {
     url,
-    request: new Request(url, { method: 'POST', body: fd }),
+    request: new Request(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(fields).toString()
+    }),
     cookies: fakeCookies(),
     locals: {},
     params: {},
@@ -107,8 +111,10 @@ const savedEnv = { ...process.env };
 
 beforeEach(() => {
   process.env.EMAIL_TRANSPORT = 'memory';
+  process.env.SMS_TRANSPORT = 'memory';
   process.env.AUTH_MODE = 'magic-link';
   clearOutbox();
+  clearSmsOutbox();
 });
 
 afterEach(() => {
@@ -239,6 +245,118 @@ describe('AUTH_MODE gates the direct login server-side', () => {
     expect(res).toMatchObject({ sent: true });
     expect(readOutbox(email)).toHaveLength(1);
     expect(readSession(event.cookies)).toBeNull();
+  });
+});
+
+describe('one-field sign-in: email or phone, then a 6-digit code', () => {
+  async function runCode(fields: Record<string, string>) {
+    const event = formEvent('/?/code', fields);
+    try {
+      return { result: await landingActions.code!(event as never), event };
+    } catch (e) {
+      if (isRedirect(e)) return { location: e.location, event };
+      throw e;
+    }
+  }
+
+  function smsCode(phone: string): string {
+    return /^(\d{6}) /.exec(readSmsOutbox(phone).at(-1)!.body)![1];
+  }
+
+  it('a new phone number signs up phone-only and lands on onboarding', async () => {
+    const phone = `+1571555${String(Math.floor(Math.random() * 1e4)).padStart(4, '0')}`;
+    const start = formEvent('/?/magic', { identifier: phone.slice(2) });
+    const res = await landingActions.magic!(start as never);
+    expect(res).toMatchObject({ sent: true, channel: 'sms', identifier: phone });
+
+    const { location, event } = await runCode({ identifier: phone, code: smsCode(phone) });
+    expect(location).toBe('/onboarding');
+    expect(readSession(event.cookies)).toMatchObject({ email: null, phone });
+    expect(db.select().from(users).where(eq(users.phone, phone)).get()?.email).toBeNull();
+  });
+
+  it('an existing email user can sign in with the code from the magic-link email', async () => {
+    const ownerId = seedOwner();
+    const u = seedUser();
+    assign(ownerId, u.id, 'owner');
+    await landingActions.magic!(formEvent('/?/magic', { identifier: u.email }) as never);
+    const mail = readOutbox(u.email).at(-1)!.email as { code: string };
+    const { location, event } = await runCode({ identifier: u.email, code: mail.code });
+    expect(location).toBe('/today');
+    expect(readSession(event.cookies)).toMatchObject({ userId: u.id, activeOwnerId: ownerId });
+  });
+
+  it('a wrong code keeps the code form up with an error and mints no session', async () => {
+    const u = seedUser();
+    await landingActions.magic!(formEvent('/?/magic', { identifier: u.email }) as never);
+    const { code } = readOutbox(u.email).at(-1)!.email as { code: string };
+    const { result, event } = await runCode({
+      identifier: u.email,
+      code: code === '000000' ? '111111' : '000000'
+    });
+    expect(result).toMatchObject({ status: 400, data: { sent: true, codeError: expect.any(String) } });
+    expect(readSession(event.cookies)).toBeNull();
+  });
+
+  it('a code threads the invite token through to /invite/<token>', async () => {
+    const u = seedUser();
+    const invite = 'x'.repeat(24);
+    await landingActions.magic!(
+      formEvent('/?/magic', { identifier: u.email, invite }) as never
+    );
+    const { code } = readOutbox(u.email).at(-1)!.email as { code: string };
+    const { location } = await runCode({ identifier: u.email, code, invite });
+    expect(location).toBe(`/invite/${invite}`);
+  });
+});
+
+describe('linking identities requires the interactive session', () => {
+  it('refuses a Bearer-authenticated request', async () => {
+    const u = seedUser();
+    const event = {
+      request: new Request(`${ORIGIN}/api/account/identity`, {
+        method: 'POST',
+        body: JSON.stringify({ identifier: '5715550199' })
+      }),
+      cookies: fakeCookies(),
+      locals: {
+        authVia: 'bearer',
+        user: {
+          id: u.id,
+          email: u.email,
+          phone: null,
+          role: 'owner',
+          activeOwnerId: null,
+          isSuperadmin: false,
+          impersonating: false
+        }
+      }
+    } as unknown as RequestEvent;
+    await expect(identityPost(event as never)).rejects.toMatchObject({ status: 403 });
+    expect(readSmsOutbox('+15715550199')).toHaveLength(0);
+  });
+
+  it('sends a code for a cookie session', async () => {
+    const u = seedUser();
+    const cookies = fakeCookies();
+    writeSession(cookies, {
+      id: u.id,
+      email: u.email,
+      phone: null,
+      activeOwnerId: null,
+      activeRole: 'owner'
+    });
+    const event = {
+      request: new Request(`${ORIGIN}/api/account/identity`, {
+        method: 'POST',
+        body: JSON.stringify({ identifier: '(571) 555-0198' })
+      }),
+      cookies,
+      locals: {}
+    } as unknown as RequestEvent;
+    const res = await identityPost(event as never);
+    expect(res.status).toBe(200);
+    expect(readSmsOutbox('+15715550198')).toHaveLength(1);
   });
 });
 

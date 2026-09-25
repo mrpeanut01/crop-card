@@ -21,6 +21,7 @@ vi.mock('$lib/server/session', async (importOriginal) => {
         ? {
             userId: session.userId,
             email: `${session.userId}@push.test`,
+            phone: null,
             isSuperadmin: false,
             activeOwnerId: 'owner-push',
             activeRole: session.role,

@@ -18,7 +18,7 @@ import { unscopedQueryNote } from './tenant';
 
 const SYSTEM_USER_ID = 'system';
 
-export async function ensureSystemUser(): Promise<{ id: string; email: string }> {
+export async function ensureSystemUser(): Promise<{ id: string; email: string | null }> {
   unscopedQueryNote('users table is global identity, not tenant-scoped');
   const existing = db.select().from(users).where(eq(users.id, SYSTEM_USER_ID)).get();
   if (existing) return { id: existing.id, email: existing.email };

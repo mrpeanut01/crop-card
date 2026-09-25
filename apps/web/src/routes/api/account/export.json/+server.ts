@@ -38,6 +38,7 @@ import { listTokensForOwner } from '$lib/server/apiTokens';
 import { requireUser } from '$lib/server/auth';
 import { APP_VERSION } from '$lib/version';
 import { RULES_VERSION } from '$lib/safety/version';
+import { identityLabel } from '$lib/identity';
 
 export const GET: RequestHandler = async (event) => {
   const user = requireUser(event);
@@ -138,6 +139,7 @@ export const GET: RequestHandler = async (event) => {
     operator: {
       id: user.id,
       email: user.email,
+      phone: user.phone,
       isSuperadmin: user.isSuperadmin === true,
       createdAt: userRow?.createdAt?.toISOString() ?? null,
       aiEnabled: userRow?.aiEnabled === true
@@ -208,7 +210,7 @@ export const GET: RequestHandler = async (event) => {
       'Content-Type': 'application/json; charset=utf-8',
       'Content-Disposition': `attachment; filename="cropcard-account-export-${stamp}.json"`,
       'X-CropCard-Generator': `CropCard/${APP_VERSION}`,
-      'X-CropCard-Exported-By': user.email
+      'X-CropCard-Exported-By': identityLabel(user)
     }
   });
 };

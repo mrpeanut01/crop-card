@@ -33,7 +33,10 @@ param authMode string = 'magic-link'
 @description('Key Vault holds a postmark-token secret. False = magic links and invites are written to the container log instead of emailed.')
 param hasPostmarkToken bool = false
 
-@description('From-address for outbound email (Postmark sender signature).')
+@description('Key Vault holds a pingram-api-key secret. Sends email (over Postmark when both are present) and the SMS sign-in codes; without it codes are written to the container log.')
+param hasPingramKey bool = false
+
+@description('From-address for outbound email (Postmark sender signature, or a Pingram verified domain; empty uses Pingram\'s built-in sender).')
 param emailFrom string = ''
 
 @description('Key Vault holds an anthropic-api-key secret. False = no-key mode (Invariant 7: deterministic fallbacks).')
@@ -207,16 +210,23 @@ var coreSecrets = [
   kvSecret('storage-key', vaultUri, identity.id)
 ]
 var optionalSecrets = concat(
-  hasPostmarkToken ? [kvSecret('postmark-token', vaultUri, identity.id)] : [],
+  hasPingramKey ? [kvSecret('pingram-api-key', vaultUri, identity.id)] : [],
+  !hasPingramKey && hasPostmarkToken ? [kvSecret('postmark-token', vaultUri, identity.id)] : [],
   hasAnthropicKey ? [kvSecret('anthropic-api-key', vaultUri, identity.id)] : []
 )
 var optionalEnv = concat(
-  !hasPostmarkToken
-    ? [{ name: 'EMAIL_TRANSPORT', value: 'stdout' }]
-    : [
-        { name: 'EMAIL_TRANSPORT', value: 'postmark' }
-        { name: 'POSTMARK_TOKEN', secretRef: 'postmark-token' }
-      ],
+  hasPingramKey
+    ? [
+        { name: 'EMAIL_TRANSPORT', value: 'pingram' }
+        { name: 'SMS_TRANSPORT', value: 'pingram' }
+        { name: 'PINGRAM_API_KEY', secretRef: 'pingram-api-key' }
+      ]
+    : hasPostmarkToken
+        ? [
+            { name: 'EMAIL_TRANSPORT', value: 'postmark' }
+            { name: 'POSTMARK_TOKEN', secretRef: 'postmark-token' }
+          ]
+        : [{ name: 'EMAIL_TRANSPORT', value: 'stdout' }],
   empty(emailFrom) ? [] : [{ name: 'EMAIL_FROM', value: emailFrom }],
   hasAnthropicKey ? [{ name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }] : []
 )

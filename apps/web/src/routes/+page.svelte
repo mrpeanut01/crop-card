@@ -1,11 +1,25 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { parseIdentifier } from '$lib/identity';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let showDemo = $state(false);
   let submitting = $state(false);
+  let entered = $state('');
+
+  const detected = $derived(parseIdentifier(entered));
+  const sent = $derived(form && 'sent' in form && form.sent ? form : null);
+  const inviteToken = $derived(form?.inviteToken ?? data.inviteToken);
+
+  function pending() {
+    submitting = true;
+    return async ({ update }: { update: () => Promise<void> }) => {
+      await update();
+      submitting = false;
+    };
+  }
 
   const demoRoles = [
     { role: 'owner', label: 'Owner', sub: 'Full access' },
@@ -161,7 +175,9 @@
   <section class="auth" aria-labelledby="signin-title">
     <div class="auth-card">
       <h2 id="signin-title">Sign in</h2>
-      <p class="auth-hint">Enter your email. New here? We'll set up your farm in the next step.</p>
+      <p class="auth-hint">
+        Enter your email or mobile number. New here? We'll set up your farm in the next step.
+      </p>
 
       {#if form?.error}
         <p class="error" role="alert">{form.error}</p>
@@ -174,33 +190,72 @@
       {/if}
 
       {#if data.authMode === 'magic-link'}
-        {#if form && 'sent' in form && form.sent}
+        {#if sent}
           <div class="sent" role="status" aria-live="polite">
-            <p><strong>Check your email.</strong></p>
-            <p>{form.message}</p>
-            <p class="sent-hint">Open the link on this device to finish signing in.</p>
+            {#if sent.channel === 'sms'}
+              <p><strong>Check your texts.</strong></p>
+              <p>We sent a 6-digit code to {sent.sentTo}. It expires in 10 minutes.</p>
+            {:else}
+              <p><strong>Check your email.</strong></p>
+              <p>
+                We sent a sign-in link to {sent.sentTo}. Tap it on this device, or enter the
+                6-digit code from the email below.
+              </p>
+            {/if}
+          </div>
+
+          {#if 'codeError' in sent && sent.codeError}
+            <p class="error" role="alert">{sent.codeError}</p>
+          {/if}
+
+          <form method="POST" action="?/code" use:enhance={pending}>
+            <label class="row">
+              <span class="lbl">6-digit code</span>
+              <input
+                class="code-input"
+                type="text"
+                name="code"
+                required
+                autocomplete="one-time-code"
+                inputmode="numeric"
+                maxlength="7"
+                placeholder="123456"
+              />
+            </label>
+            <input type="hidden" name="identifier" value={sent.identifier} />
+            {#if inviteToken}
+              <input type="hidden" name="invite" value={inviteToken} />
+            {/if}
+            <button class="primary" type="submit" disabled={submitting}>
+              {submitting ? 'Checking…' : 'Sign in →'}
+            </button>
+          </form>
+
+          <div class="code-actions">
+            <form method="POST" action="?/magic" use:enhance={pending}>
+              <input type="hidden" name="identifier" value={sent.identifier} />
+              {#if inviteToken}
+                <input type="hidden" name="invite" value={inviteToken} />
+              {/if}
+              <button class="link-btn" type="submit" disabled={submitting}>Send a new code</button>
+            </form>
+            <a
+              class="link-btn"
+              href={inviteToken ? `/?invite=${encodeURIComponent(inviteToken)}` : '/'}
+              data-sveltekit-reload>Use a different email or phone</a
+            >
           </div>
         {:else}
-          <form
-            method="POST"
-            action="?/magic"
-            use:enhance={() => {
-              submitting = true;
-              return async ({ update }) => {
-                await update();
-                submitting = false;
-              };
-            }}
-          >
+          <form method="POST" action="?/magic" use:enhance={pending}>
             <label class="row">
-              <span class="lbl">Email</span>
+              <span class="lbl">Email or mobile number</span>
               <input
-                type="email"
-                name="email"
+                type="text"
+                name="identifier"
                 required
-                autocomplete="email"
-                placeholder="you@example.com"
-                inputmode="email"
+                bind:value={entered}
+                autocomplete="username"
+                placeholder="you@example.com or (571) 555-0123"
                 autocapitalize="off"
                 autocorrect="off"
                 spellcheck="false"
@@ -210,31 +265,28 @@
               <input type="hidden" name="invite" value={data.inviteToken} />
             {/if}
             <button class="primary" type="submit" disabled={submitting}>
-              {submitting ? 'Sending…' : 'Email me a sign-in link →'}
+              {#if submitting}
+                Sending…
+              {:else if detected?.kind === 'phone'}
+                Text me a code →
+              {:else if detected?.kind === 'email'}
+                Email me a sign-in link →
+              {:else}
+                Continue →
+              {/if}
             </button>
           </form>
         {/if}
       {:else}
-        <form
-          method="POST"
-          action="?/signin"
-          use:enhance={() => {
-            submitting = true;
-            return async ({ update }) => {
-              await update();
-              submitting = false;
-            };
-          }}
-        >
+        <form method="POST" action="?/signin" use:enhance={pending}>
           <label class="row">
-            <span class="lbl">Email</span>
+            <span class="lbl">Email or mobile number</span>
             <input
-              type="email"
-              name="email"
+              type="text"
+              name="identifier"
               required
-              autocomplete="email"
-              placeholder="you@example.com"
-              inputmode="email"
+              autocomplete="username"
+              placeholder="you@example.com or (571) 555-0123"
               autocapitalize="off"
               autocorrect="off"
               spellcheck="false"
@@ -420,6 +472,34 @@
     margin: 0 0 1rem;
     font-size: 0.9rem;
   }
+  .code-input {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 22px;
+    letter-spacing: 0.3em;
+  }
+  .code-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .code-actions form {
+    margin: 0;
+  }
+  .link-btn {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    background: none;
+    border: 0;
+    padding: 0 4px;
+    color: #1f5e3a;
+    font: inherit;
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+  }
   .sent {
     background: #e7f4ee;
     border: 1px solid #b9d8c5;
@@ -429,9 +509,6 @@
   }
   .sent p {
     margin: 0 0 0.5rem;
-  }
-  .sent-hint {
-    font-size: 0.9rem;
   }
   .error {
     background: #fdecec;
@@ -454,7 +531,7 @@
     font-size: 0.875rem;
     color: #3d4742;
   }
-  input[type='email'] {
+  input[type='text'] {
     font: inherit;
     padding: 0.75rem 0.875rem;
     border: 1px solid #c9d2c9;
@@ -462,7 +539,7 @@
     min-height: 48px;
     background: #fbfbf9;
   }
-  input[type='email']:focus {
+  input[type='text']:focus {
     outline: 2px solid #1f5e3a;
     outline-offset: 1px;
     background: white;

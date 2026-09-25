@@ -60,7 +60,10 @@ export function isOwner(role: SessionRole): boolean {
 
 export interface SessionPayload {
   userId: string;
-  email: string;
+  /** Sign-in identities; at least one is set. Cookies minted before
+   *  phone sign-in carry only `email`. */
+  email: string | null;
+  phone: string | null;
   /** Cross-tenant support / abuse role. Read-only by default; impersonation
    *  requires a separate banner + audit trail. */
   isSuperadmin: boolean;
@@ -120,13 +123,15 @@ function verify(cookie: string): SessionPayload | null {
     !parsed ||
     typeof parsed !== 'object' ||
     !('userId' in parsed) ||
-    !('email' in parsed) ||
     !('exp' in parsed)
   ) {
     return null;
   }
   const p = parsed as Partial<SessionPayload>;
   if (typeof p.exp !== 'number' || p.exp < Date.now()) return null;
+  const email = typeof p.email === 'string' ? p.email : null;
+  const phone = typeof p.phone === 'string' ? p.phone : null;
+  if (!email && !phone) return null;
   // Legacy cookies (pre Phase 18c) only carry `role`. Promote to the new
   // shape with `activeRole = role`, `activeOwnerId = null` (the hooks
   // layer falls back to Home Farm), `isSuperadmin = false`. This lets
@@ -136,7 +141,8 @@ function verify(cookie: string): SessionPayload | null {
   if (!activeRole || !ALL_SESSION_ROLES.includes(activeRole)) return null;
   return {
     userId: p.userId as string,
-    email: p.email as string,
+    email,
+    phone,
     isSuperadmin: p.isSuperadmin ?? false,
     activeOwnerId: p.activeOwnerId ?? null,
     activeRole,
@@ -152,7 +158,8 @@ export function readSession(cookies: Cookies): SessionPayload | null {
 
 export interface WriteSessionInput {
   id: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   isSuperadmin?: boolean;
   activeOwnerId: string | null;
   activeRole: SessionRole;
@@ -163,6 +170,7 @@ export function writeSession(cookies: Cookies, user: WriteSessionInput): void {
   const payload: SessionPayload = {
     userId: user.id,
     email: user.email,
+    phone: user.phone,
     isSuperadmin: user.isSuperadmin ?? false,
     activeOwnerId: user.activeOwnerId,
     activeRole: user.activeRole,

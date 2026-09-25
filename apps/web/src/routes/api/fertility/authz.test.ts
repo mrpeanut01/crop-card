@@ -20,6 +20,7 @@ vi.mock('$lib/server/session', async (importOriginal) => {
     readSession: (): SessionPayload => ({
       userId: 'user-test',
       email: 'test@example.com',
+      phone: null,
       isSuperadmin: false,
       activeOwnerId: 'owner-test',
       activeRole: currentRole,

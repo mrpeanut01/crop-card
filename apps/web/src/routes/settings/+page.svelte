@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { identityLabel } from '$lib/identity';
   import {
     User,
     Sprout,
@@ -155,7 +156,7 @@
   </div>
   <div class="identity-body">
     <div class="name">{data.user.name}</div>
-    <div class="email">{data.user.email}</div>
+    <div class="email">{identityLabel(data.user)}</div>
     <div class="pills">
       <Pill tone="forest">{data.user.role}</Pill>
       <Pill tone="neutral">Member since {data.user.since}</Pill>

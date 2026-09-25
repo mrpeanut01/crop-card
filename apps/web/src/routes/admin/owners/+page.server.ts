@@ -46,6 +46,7 @@ export const actions: Actions = {
     writeSession(event.cookies, {
       id: u.id,
       email: u.email,
+      phone: u.phone,
       isSuperadmin: true,
       activeOwnerId: ownerId,
       activeRole: 'owner',
@@ -62,6 +63,7 @@ export const actions: Actions = {
     writeSession(event.cookies, {
       id: u.id,
       email: u.email,
+      phone: u.phone,
       isSuperadmin: true,
       activeOwnerId: next?.ownerId ?? null,
       activeRole: next?.roleWithinOwner ?? 'owner',

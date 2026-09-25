@@ -1,6 +1,13 @@
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
-import { loginByEmail, redirectFromLogin } from '$lib/server/auth';
-import { authMode, handleMagicLinkRequest, isDirectLoginAllowed } from '$lib/server/magicLink';
+import { formatPhone, parseIdentifier } from '$lib/identity';
+import { loginByEmail, loginByIdentity, redirectFromLogin } from '$lib/server/auth';
+import {
+  authMode,
+  handleLoginRequest,
+  isDirectLoginAllowed,
+  redeemLoginCode,
+  sanitizeInviteToken
+} from '$lib/server/magicLink';
 import { ALL_SESSION_ROLES, type SessionRole } from '$lib/server/session';
 import type { PageServerLoad } from './$types';
 
@@ -51,7 +58,7 @@ const DEMO_EMAIL: Record<SessionRole, string> = {
  *  the canonical `redirectFromLogin` helper, which covers every LoginResult
  *  arm (including `'admin'` — #332, avoiding the /today→/admin double hop). */
 function redirectNextForLogin(
-  result: ReturnType<typeof loginByEmail>,
+  result: ReturnType<typeof loginByIdentity>,
   inviteToken: string | null
 ): never {
   if (inviteToken) throw redirect(303, `/invite/${encodeURIComponent(inviteToken)}`);
@@ -62,12 +69,16 @@ export const actions: Actions = {
   signin: async (event) => {
     assertDirectLogin();
     const fd = await event.request.formData();
-    const email = String(fd.get('email') ?? '').trim();
     const inviteToken = String(fd.get('invite') ?? '') || null;
-    if (!email) return fail(400, { error: 'email required', inviteToken });
+    const id = parseIdentifier(fd.get('identifier') ?? fd.get('email'));
+    if (!id) return fail(400, { error: 'Enter an email address or a phone number.', inviteToken });
     let result;
     try {
-      result = loginByEmail(event, email, 'helper');
+      result = loginByIdentity(
+        event,
+        id.kind === 'email' ? { email: id.value } : { phone: id.value },
+        'helper'
+      );
     } catch (e) {
       return fail(400, {
         error: e instanceof Error ? e.message : String(e),
@@ -84,12 +95,44 @@ export const actions: Actions = {
     const result = loginByEmail(event, DEMO_EMAIL[role], role);
     redirectNextForLogin(result, inviteToken);
   },
+  /** Step 1: email → magic link + backup code; phone → SMS code. */
   magic: async (event) => {
     const fd = await event.request.formData();
-    const email = String(fd.get('email') ?? '').trim();
-    const inviteToken = String(fd.get('invite') ?? '') || null;
-    const result = await handleMagicLinkRequest(event, email, inviteToken);
-    if (!result.ok) return fail(result.status, { error: result.error, inviteToken });
-    return { sent: true, message: result.message, inviteToken };
+    const raw = fd.get('identifier') ?? fd.get('email');
+    const inviteToken = sanitizeInviteToken(fd.get('invite'));
+    const result = await handleLoginRequest(event, raw, inviteToken);
+    if (!result.ok) {
+      return fail(result.status, { error: result.error, inviteToken, entered: String(raw ?? '') });
+    }
+    return {
+      sent: true,
+      channel: result.channel,
+      identifier: result.identifier,
+      sentTo: result.sentTo,
+      message: result.message,
+      inviteToken
+    };
+  },
+  /** Step 2: the 6-digit code from the email or text. Works in both
+   *  AUTH_MODEs because it proves control of the address. */
+  code: async (event) => {
+    const fd = await event.request.formData();
+    const identifier = String(fd.get('identifier') ?? '');
+    const inviteToken = sanitizeInviteToken(fd.get('invite'));
+    const redeemed = redeemLoginCode(identifier, fd.get('code'));
+    const id = parseIdentifier(identifier);
+    if (!redeemed.ok) {
+      return fail(400, {
+        sent: true,
+        codeError: redeemed.error,
+        channel: id?.kind === 'phone' ? ('sms' as const) : ('email' as const),
+        identifier,
+        sentTo: id?.kind === 'phone' ? formatPhone(id.value) : identifier,
+        message: '',
+        inviteToken
+      });
+    }
+    const result = loginByIdentity(event, redeemed.identity);
+    redirectNextForLogin(result, inviteToken);
   }
 };

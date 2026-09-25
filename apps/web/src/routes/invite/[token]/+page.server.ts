@@ -25,6 +25,7 @@ export const load: PageServerLoad = async (event) => {
     throw redirect(303, `/?invite=${encodeURIComponent(token)}`);
   }
 
+  if (!user.email) return { token, status: 'invalid' as const, reason: 'needs-email' as const };
   const match = findRedeemableInvite(token, user.email);
   if (!match) {
     return { token, status: 'invalid' as const, reason: diagnoseInvite(token, user.email) };
@@ -53,7 +54,7 @@ export const actions: Actions = {
     const user = currentUser(event);
     if (!user) throw redirect(303, `/?invite=${encodeURIComponent(token)}`);
 
-    const match = findRedeemableInvite(token, user.email);
+    const match = user.email ? findRedeemableInvite(token, user.email) : null;
     if (!match) throw error(400, 'invite is no longer valid');
 
     addAssignment({
@@ -69,6 +70,7 @@ export const actions: Actions = {
     writeSession(event.cookies, {
       id: user.id,
       email: user.email,
+      phone: user.phone,
       isSuperadmin: user.isSuperadmin,
       activeOwnerId: match.ownerId,
       activeRole: match.roleWithinOwner

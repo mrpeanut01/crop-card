@@ -12,7 +12,7 @@
   import Banner from '$lib/components/ui/Banner.svelte';
   import UpdateToast from '$lib/components/ui/UpdateToast.svelte';
 
-  let { data, children } = $props();
+  const { data, children } = $props();
 
   let pendingCount = $state<number | null>(null);
   let online = $state(true);
@@ -120,6 +120,7 @@
     availableOwners={data.availableOwners}
     {online}
     {pendingCount}
+    alerts={data.navAlerts}
     {onSwitchOwner}
   />
 {/if}

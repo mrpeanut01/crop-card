@@ -9,12 +9,12 @@
     Wheat,
     Box,
     FileText,
-    Search,
     Bell,
     Settings
   } from 'lucide-svelte';
   import IconButton from './IconButton.svelte';
   import OfflineIndicator from './OfflineIndicator.svelte';
+  import type { NavAlert } from '$lib/today/navAlerts';
 
   // lucide-svelte ships class components that don't match Svelte 5's Component
   // signature; type them loosely so {@const Icon = item.icon} works.
@@ -41,6 +41,7 @@
     availableOwners?: AvailableOwner[];
     online: boolean;
     pendingCount: number | null;
+    alerts?: NavAlert[];
     onSwitchOwner?: (ownerId: string) => void | Promise<void>;
   }
 
@@ -50,8 +51,28 @@
     availableOwners = [],
     online,
     pendingCount,
+    alerts = [],
     onSwitchOwner
   }: Props = $props();
+
+  let alertsOpen = $state(false);
+
+  const allAlerts = $derived<NavAlert[]>(
+    (pendingCount ?? 0) > 0
+      ? [
+          {
+            id: 'pending',
+            tone: 'wheat',
+            label: `${pendingCount} offline record${pendingCount === 1 ? '' : 's'} waiting to sync`,
+            href: '/records/pending'
+          },
+          ...alerts
+        ]
+      : alerts
+  );
+  const alertsLabel = $derived(
+    allAlerts.length === 0 ? 'Alerts, none active' : `Alerts, ${allAlerts.length} active`
+  );
 
   // 7-item nav per design (collapsed from 13). Map / Calendar fold into Plan,
   // Insecticides into Spray, Fertility under Records, Equipment under
@@ -117,14 +138,31 @@
   </nav>
 
   <div class="right">
-    <span class="aux">
-      <IconButton ariaLabel="Search">
-        {#snippet icon()}<Search size={16} strokeWidth={1.75} />{/snippet}
-      </IconButton>
-      <IconButton ariaLabel="Alerts">
-        {#snippet icon()}<Bell size={16} strokeWidth={1.75} />{/snippet}
-      </IconButton>
-    </span>
+    <details class="alerts-menu" bind:open={alertsOpen}>
+      <summary class="alerts-trigger" aria-label={alertsLabel} title={alertsLabel}>
+        <Bell size={16} strokeWidth={1.75} />
+        {#if allAlerts.length > 0}
+          <span class="alerts-badge mono" aria-hidden="true">{allAlerts.length}</span>
+        {/if}
+      </summary>
+      <div class="alerts-popover">
+        <div class="popover-label">Alerts</div>
+        {#if allAlerts.length === 0}
+          <p class="alerts-empty">No active alerts.</p>
+        {:else}
+          <ul class="alerts-list">
+            {#each allAlerts as a (a.id)}
+              <li>
+                <a href={a.href} class="alert-link {a.tone}" onclick={() => (alertsOpen = false)}
+                  >{a.label}</a
+                >
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        <a href="/today" class="alerts-today" onclick={() => (alertsOpen = false)}>Open Today →</a>
+      </div>
+    </details>
     <IconButton
       href="/settings"
       ariaLabel="Settings"
@@ -234,8 +272,106 @@
     align-items: center;
     gap: 10px;
   }
-  .aux {
-    display: contents;
+  .alerts-menu {
+    position: relative;
+  }
+  .alerts-trigger {
+    list-style: none;
+    cursor: pointer;
+    position: relative;
+    min-width: 48px;
+    min-height: 48px;
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-divider);
+    background: var(--color-paper);
+    color: var(--color-ink-soft);
+  }
+  .alerts-trigger::-webkit-details-marker {
+    display: none;
+  }
+  .alerts-trigger:hover {
+    background: var(--color-divider-soft);
+    color: var(--color-ink);
+  }
+  .alerts-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: var(--radius-pill);
+    background: var(--color-rust);
+    color: var(--color-cream);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+  }
+  .alerts-popover {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    width: 300px;
+    max-width: calc(100vw - 24px);
+    background: var(--color-paper);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 6px;
+    z-index: 50;
+  }
+  .popover-label {
+    font-size: var(--font-size-kicker);
+    color: var(--color-ink-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 8px 10px 4px;
+  }
+  .alerts-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .alert-link,
+  .alerts-today {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 6px 10px;
+    border-radius: var(--radius-input);
+    color: var(--color-ink);
+    font-size: 13.5px;
+    line-height: 1.3;
+  }
+  .alert-link {
+    border-left: 3px solid var(--color-wheat);
+  }
+  .alert-link.rust {
+    border-left-color: var(--color-rust);
+    font-weight: 600;
+  }
+  .alert-link:hover,
+  .alerts-today:hover {
+    background: var(--color-divider-soft);
+  }
+  .alerts-empty {
+    margin: 0;
+    padding: 8px 10px;
+    color: var(--color-ink-muted);
+    font-size: 13.5px;
+  }
+  .alerts-today {
+    color: var(--color-forest);
+    font-weight: 600;
+    border-top: 1px solid var(--color-divider);
+    border-radius: 0;
+    margin-top: 4px;
   }
   .owner-chip {
     position: relative;
@@ -313,15 +449,10 @@
     text-transform: uppercase;
   }
 
-  /* The header row degrades in steps so it never widens the page: the inert
-     Search/Alerts placeholders go first, then the sync label collapses to
-     its dot (text stays in the a11y tree), then the farm name. Between
-     769px and ~1030px the primary nav scrolls within itself as a fallback. */
-  @media (max-width: 1380px) {
-    .aux {
-      display: none;
-    }
-  }
+  /* The header row degrades in steps so it never widens the page: the sync
+     label collapses to its dot first (text stays in the a11y tree), then the
+     farm name. Between 769px and ~1030px the primary nav scrolls within
+     itself as a fallback. */
   @media (max-width: 1280px) {
     .right :global(.indicator .label) {
       position: absolute;
@@ -391,6 +522,14 @@
     .right {
       gap: 4px;
       flex-shrink: 0;
+    }
+    .alerts-popover {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: 64px;
+      width: auto;
+      max-width: none;
     }
   }
 </style>

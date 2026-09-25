@@ -5,6 +5,9 @@ import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { unscopedQueryNote } from '$lib/db/tenant';
+import { expiringSoon, lowStockItems } from '$lib/db/stock';
+import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
+import { buildNavAlerts, type NavAlert } from '$lib/today/navAlerts';
 
 export const load: LayoutServerLoad = ({ locals }) => {
   // A sprayer is "dirty" when it has carried chemistry that has not yet been
@@ -15,8 +18,9 @@ export const load: LayoutServerLoad = ({ locals }) => {
   // Phase 18a: only load sprayers when authenticated. Unauthenticated
   // requests (e.g., /signin, /manifest.webmanifest) skip the query so they
   // don't trip `TenantContextMissingError` in tenant-scoped repos.
+  const sprayers = locals.user?.activeOwnerId ? listSprayers() : [];
   const dirtySprayers = locals.user?.activeOwnerId
-    ? listSprayers()
+    ? sprayers
         .filter((s) => {
           if (!s.lastChemistryClass) return false;
           if (!s.lastSprayedAt) return false;
@@ -29,6 +33,25 @@ export const load: LayoutServerLoad = ({ locals }) => {
           lastChemistryClass: s.lastChemistryClass
         }))
     : [];
+
+  let navAlerts: NavAlert[] = [];
+  if (locals.user?.activeOwnerId) {
+    try {
+      navAlerts = buildNavAlerts({
+        dirtySprayers,
+        winterize: deriveWinterizeAlerts(sprayers),
+        lowStock: lowStockItems(),
+        expiring: expiringSoon(30).map((e) => ({
+          itemId: e.item.id,
+          itemName: e.item.displayName,
+          category: e.item.category,
+          daysUntilExpiry: e.lot.daysUntilExpiry ?? 0
+        }))
+      });
+    } catch (err) {
+      console.error('[layout] failed to build nav alerts', err);
+    }
+  }
 
   // Phase 18d: surface the active Owner + all assignments to the layout
   // so the top-nav chip + Owner-switch menu can render without an extra
@@ -91,6 +114,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
         }
       : null,
     dirtySprayers,
+    navAlerts,
     activeOwner,
     availableOwners
   };

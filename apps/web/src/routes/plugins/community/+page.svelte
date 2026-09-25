@@ -1,73 +1,114 @@
 <script lang="ts">
-  // Static stub — no data prop. Phase 10 placeholder for §11 Out-of-Scope
-  // "community plugin marketplace". Future iterations would fetch from a
-  // signed registry, surface ratings, allow one-click install with
-  // re-validation through the bypass-detection path. For now the stub
-  // explains the architecture so operators know how to share plugins
-  // by hand.
+  import Kicker from '$lib/components/ui/Kicker.svelte';
 </script>
 
-<h1>Community plugins</h1>
+<svelte:head><title>Community plugins · CropCard</title></svelte:head>
 
-<section class="card">
-  <h2>Not yet open</h2>
-  <p>
-    A signed community marketplace is on the roadmap. CropCard already supports plugin sharing today
-    — drop any well-formed plugin JSON file into <code>plugins/crops/</code>,
-    <code>plugins/herbicides/</code>, <code>plugins/insecticides/</code>, or
-    <code>plugins/companions/</code> and it loads on next start.
+<header class="head">
+  <Kicker>Plugins · Community</Kicker>
+  <h1>Community plugins</h1>
+  <p class="lede">
+    Shared browsing and one-click install aren't available in CropCard yet. You can still add any
+    crop or input plugin today — here's how.
   </p>
-  <p>
-    Each plugin gets re-validated against its Zod schema at boot, runs the bypass-detection check (a
-    plugin can never widen safety), and is hashed so audit records can prove which plugin version
-    drove which spray decision. The future marketplace will preserve that contract — no plugin can
-    ship code, only data.
-  </p>
-</section>
+</header>
 
-<section class="card">
-  <h2>Until the marketplace exists</h2>
-  <ul>
+<section class="card" aria-labelledby="add-now">
+  <h2 id="add-now">Add a plugin now</h2>
+  <ul class="actions">
     <li>
-      Authoring lives at <a href="/plugins">/plugins</a> — paste or upload a JSON file. The validator
-      runs the same bypass check the marketplace will.
+      <a class="action primary" href="/plugins" data-testid="community-upload">
+        Upload plugin JSON →
+      </a>
+      <span class="hint">
+        Owners can paste or upload a plugin file a neighbor or extension agent shared with you.
+      </span>
     </li>
     <li>
-      Schemas are published in <code>schemas/</code> and tracked alongside the app version, so external
-      authors can validate against the same rules CropCard does.
+      <a class="action" href="/plugins/new">Author a plugin →</a>
+      <span class="hint">Step-by-step wizard for a crop or product that isn't in the library.</span>
     </li>
     <li>
-      Sharing today: zip your <code>plugins/</code> folder and email it to a neighbor; they drop it
-      into their own <code>plugins/</code> directory.
+      <a class="action" href="/inventory?type=crop&mode=catalog" data-testid="community-catalog">
+        Browse installed catalog →
+      </a>
+      <span class="hint">Every crop and input plugin already on this farm.</span>
     </li>
   </ul>
 </section>
 
-<section class="card">
-  <h2>Want to help build it?</h2>
+<section class="card" aria-labelledby="status">
+  <h2 id="status">What the marketplace will be</h2>
   <p>
-    The marketplace needs (1) a signed plugin registry, (2) a discoverability surface (ratings, crop
-    / region tags), and (3) a one-click install path that runs the bypass-detection check
-    server-side. If you'd contribute, the code lives in
-    <code>apps/web/src/lib/plugins/registry.ts</code> — start there.
+    A curated catalog of reviewed plugin definitions — crops, herbicides, insecticides, fungicides,
+    fertilizers and companions — that CropCard can pull in with one click. The catalog service
+    exists and is admin-reviewed today, but this app does not connect to it yet, so there is nothing
+    to browse from here.
+  </p>
+  <p>
+    The contract won't change when it opens: plugins are data only, every file is re-validated
+    against its schema, and the bypass check guarantees a plugin can never loosen a safety rule.
+    Uploads you make today go through that same check.
   </p>
 </section>
 
 <style>
+  .head {
+    margin-bottom: 1rem;
+  }
+  h1 {
+    margin: 0.25rem 0 0.5rem;
+  }
+  .lede {
+    margin: 0;
+    color: var(--color-ink-soft, #444);
+    max-width: 60ch;
+  }
   .card {
-    background: white;
+    background: var(--color-paper, white);
+    border: 1px solid var(--color-divider, #e5e0d5);
     padding: 1.25rem;
     border-radius: 8px;
     margin-bottom: 1rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
-  ul {
-    line-height: 1.6;
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
   }
-  code {
-    background: #f5f7f4;
-    padding: 0.1rem 0.3rem;
-    border-radius: 3px;
+  .actions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .actions li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 48px;
+    padding: 0 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--color-forest, #2f5a3a);
+    color: var(--color-forest, #2f5a3a);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .action.primary {
+    background: var(--color-forest, #2f5a3a);
+    color: var(--color-cream, #fff);
+  }
+  .action:focus-visible {
+    outline: 3px solid var(--color-sky, #6f8fa8);
+    outline-offset: 2px;
+  }
+  .hint {
     font-size: 0.9rem;
+    color: var(--color-ink-muted, #555);
   }
 </style>

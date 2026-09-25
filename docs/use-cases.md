@@ -36,7 +36,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
 - **Primary path:**
   1. Land on `/spray` (often pre-filled with `?block=<id>` from `/today` or `/scout`)
   2. Select block (1)
-  3. Select herbicide(s) (window-stage filtered when deep-linked) (2)
+  3. Select herbicide(s) (window-stage filtered when deep-linked) (2). Each card previews the per-acre rate at the selected sprayer's calibrated GPA; an uncalibrated sprayer shows "sprayer uncalibrated" plus a Calibrate link instead of a placeholder GPA (#218).
   4. Select sprayer (3)
   5. Pick tank size from quick-picks (4)
   6. Kernel re-evaluates automatically as selections change (Phase 21b removed the explicit wind/temp/rain steppers + "Check safety" CTA; defaults of 5 mph / 70°F / 0 mm rain are used. A future revision will wire condition inputs into the autosave loop.)

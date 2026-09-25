@@ -3,6 +3,8 @@
   "type": "fungicide",
   "displayName": "Indar 2F (Corteva fenbuconazole)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Indar'; 'Enable 2F'). Label has no organic statement."},
+  "epaRegistrationNumber": "62719-416",
   "defaultUnit": "fl-oz",
   "formulation": "F",
   "applicationTiming": "BLOOM",

@@ -2,6 +2,7 @@
   "pluginId": "acramite-bifenazate",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Acramite', 'bifenazate'). Conventional synthetic miticide; label makes no organic statement."},
   "defaultUnit": "lb",
   "formulation": "WS",
   "pluginSchemaVersion": "1.1",
@@ -20,6 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"toxic","bloomRestriction":"dusk-to-dawn-only"},
   "epaRegistrationNumber": "400-503",
   "targetPests": [
     "twospotted spider mite",

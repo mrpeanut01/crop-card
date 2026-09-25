@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Admire Pro (Bayer imidacloprid)",
   "version": "1.0.0",
+  "formulation": "SC",
+  "epaRegistrationNumber": "264-827",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
     {

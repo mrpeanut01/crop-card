@@ -2,6 +2,7 @@
   "pluginId": "confirm-2f-tebufenozide",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Confirm 2F', 'tebufenozide' - 0 results for tebufenozide). Conventional synthetic IGR; the Confirm 2F label (EPA 8033-111, 2022-05-13) has no organic statement."},
   "defaultUnit": "fl-oz",
   "formulation": "F",
   "pluginSchemaVersion": "1.1",
@@ -20,7 +21,7 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 14,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "62719-481",
   "targetPests": [
     "lepidopteran larvae",

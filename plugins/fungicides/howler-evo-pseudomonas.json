@@ -2,6 +2,7 @@
   "pluginId": "howler-evo-pseudomonas",
   "type": "fungicide",
   "version": "1.0.0",
+  "formulation": "DF",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "displayName": "Howler EVO (Pseudomonas chlororaphis AFS009, OMRI)",

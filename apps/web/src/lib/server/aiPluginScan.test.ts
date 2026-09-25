@@ -115,8 +115,8 @@ describe('localFuzzyMatchPlugins', () => {
   });
 
   it('#255: an ambiguous oz-rate plugin gets no derived unit (form default applies)', async () => {
-    const matches = await localFuzzyMatchPlugins('accent q nicosulfuron', 'herbicide');
-    const hit = matches.find((m) => m.candidate?.pluginId === 'accent-q-nicosulfuron');
+    const matches = await localFuzzyMatchPlugins('stadia', 'herbicide');
+    const hit = matches.find((m) => m.candidate?.pluginId === 'stadia');
     expect(hit).toBeDefined();
     expect(hit?.candidate && 'defaultUnit' in hit.candidate).toBe(false);
   });

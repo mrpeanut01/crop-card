@@ -28,7 +28,7 @@
   ],
   "notes": "Granular sulfur — phytotox >85 °F. Resistance management partner for DMI / SDHI.",
   "complianceFlags": {
-    "omriListed": true,
+    "omriListed": false,
     "nonGmoCompliant": true,
     "transitioningAllowed": true
   },

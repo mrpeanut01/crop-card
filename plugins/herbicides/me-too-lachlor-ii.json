@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Me-Too-Lachlor II",
   "version": "1.0.0",
+  "epaRegistrationNumber": "19713-549",
   "defaultUnit": "fl-oz",
   "applicationTiming": "PRE",
   "activeIngredients": [

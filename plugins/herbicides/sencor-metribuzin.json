@@ -2,6 +2,7 @@
   "pluginId": "sencor-metribuzin",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Sencor'; 'metribuzin'). Conventional synthetic herbicide; label carries no organic-production statement."},
   "defaultUnit": "lb",
   "formulation": "DF",
   "pluginSchemaVersion": "1.1",

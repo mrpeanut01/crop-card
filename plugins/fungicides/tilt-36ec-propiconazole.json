@@ -2,6 +2,7 @@
   "pluginId": "tilt-36ec-propiconazole",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Tilt'; 4 NOP results, none is Tilt/propiconazole). Conventional DMI (propiconazole, contains petroleum distillates); label makes no organic statement."},
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "pluginSchemaVersion": "1.1",

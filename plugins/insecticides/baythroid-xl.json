@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Baythroid XL (Bayer beta-cyfluthrin)",
   "version": "1.0.0",
+  "formulation": "EC",
   "epaRegistrationNumber": "264-840",
   "defaultUnit": "fl-oz",
   "activeIngredients": [

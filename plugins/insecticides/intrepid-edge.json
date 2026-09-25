@@ -2,6 +2,7 @@
   "pluginId": "intrepid-edge",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic premix (methoxyfenozide 28.3% + spinetoram 5.66%). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Intrepid Edge', 'Intrepid', 'GF-3028', 'spinetoram' - only unrelated products). Label (EPA Reg. No. 62719-666) makes no organic-production statement."},
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Intrepid Edge (methoxyfenozide + spinetoram)",

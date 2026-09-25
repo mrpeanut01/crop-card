@@ -2,6 +2,8 @@
   "pluginId": "velista-penthiopyrad",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Velista'). Conventional synthetic product; label has no organic-production statement."},
+  "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Velista (penthiopyrad)",
   "applicationTiming": "COVER",
@@ -20,6 +22,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
   "epaRegistrationNumber": "100-1402",
+  "defaultUnit": "oz",
   "targetDiseases": [
     "dollar spot",
     "brown patch",

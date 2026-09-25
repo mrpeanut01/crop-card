@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Lannate LV (Corteva methomyl)",
   "version": "1.0.0",
+  "formulation": "SL",
+  "epaRegistrationNumber": "61842-55",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
     {

@@ -354,6 +354,183 @@
       "epaRegistrationNumber": "7969-374",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00374-20240423.pdf",
       "matchedTitle": "US EPA, Pesticide Product Label, Zidua SC Herbicide,04/23/2024"
+    },
+    "admire-pro": {
+      "epaRegistrationNumber": "264-827",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20110822.pdf",
+      "docDate": "2011-08-22",
+      "page": 2,
+      "quote": "ADMIRE® PRO Systemic Protectant EPA Reg. No. 264-827",
+      "note": "Resolves allowlist question: PPLS 264-827 (Bayer CropScience LLC, Active) primary name is 'GAUCHO 550 SC INSECTICIDE' with alternate brand name 'ADMIRE PRO SYSTEMIC PROTECTANT'. The quote is from the EPA-accepted Admire Pro supplemental foliar label (2011) under the same number; latest full label 000264-00827-20190917.pdf is written under the Gaucho 550 SC brand."
+    },
+    "anthem-maxx": {
+      "epaRegistrationNumber": "279-3468",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
+      "docDate": "2025-11-25",
+      "page": 3,
+      "quote": "F9310-7 (ABN: Anthem Maxx Herbicide) For preplant burndown/ preemergence, preplant incorporated and postemergence weed c",
+      "note": "FMC, Active. PPLS alternate brand names: ANTHEM MAXX HERBICIDE, ANTHEM NXT HERBICIDE. The newer 2026 label files print only F9310-7; 279-3450 is plain Anthem (different product)."
+    },
+    "aza-direct": {
+      "epaRegistrationNumber": "71908-1-10163",
+      "sourceUrl": "https://www.gowanco.com/sites/default/files/gowanco_com/_attachments/product/resource/label/aza-direct_71908-1-10163_01-r1218.pdf",
+      "docDate": "2018-12",
+      "page": 1,
+      "quote": "Produced For: EPA Reg. No. 71908-1-10163 Gowan Company",
+      "note": "Supplemental distributor number (parent 71908-1 NeemAzal T/S 1.2 EC, Coromandel International; distributor 10163 = Gowan). Plugin names Gowan, so the distributor number applies. PPLS search 'Aza-Direct' returns 71908-1-10163 AZA-DIRECT, Active since 2018-12-04; PPLS holds no label PDF for the distributor number, so the Gowan-hosted label (rev 01-R1218) is the source."
+    },
+    "belay": {
+      "epaRegistrationNumber": "59639-150",
+      "sourceUrl": "https://www.agrian.com/pdfs/Belayr_Insecticide1b_2016-BEL-0001_Label.pdf",
+      "docDate": "2018",
+      "page": 1,
+      "quote": "Contains 2.13 lbs active ingredient per gallon EPA Reg. No. 59639-150",
+      "note": "Resolves allowlist question: PPLS 59639-150 (Valent U.S.A. LLC, Active) is titled 'V-10170 2.13SC INSECTICIDE' with alternate brand names 'BELAY INSECTICIDE' and 'CLUTCH SC INSECTICIDE'. Quote is from the Belay Insecticide label (code 2018-BEL-0001-1681-L) linked from valent.com/products/belay-insecticide. Other Belay brands exist (Belay 50 WDG 59639-152, Belay 16 WSG 59639-153) but are dry; the plugin's fl-oz rate matches the liquid Belay Insecticide."
+    },
+    "bravo-weather-stik": {
+      "epaRegistrationNumber": "66222-276",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/050534-00188-20050927.pdf",
+      "docDate": "2005-09-27",
+      "page": 1,
+      "quote": "Bravo®720 (Alternate Brand Name: Bravo Weather Stik",
+      "note": "Bravo Weather Stik is an alternate brand of Bravo 720, originally 50534-188 (GB Biosciences/Syngenta). PPLS: 50534-188 transferred to 66222-276 (Makhteshim Agan of North America / ADAMA) on 2017-09-18; 66222-276 is Active and PPLS lists altbrandname 'BRAVO WEATHERSTIK'. No Syngenta-held active registration remains (Syngenta supplemental 50534-188-100 is Inactive). Plugin displayName still says Syngenta."
+    },
+    "captan-80wdg": {
+      "epaRegistrationNumber": "70506-445",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00029-20180226.pdf",
+      "docDate": "2018-02-26",
+      "page": 3,
+      "quote": "GROUP M4 FUNGICIDE CAPTAN 80 WDG [Alternate Brand Name: Captan 80 WDG Fungicide] A Fungicide for Plant Disease Control",
+      "note": "Plugin names Arysta: Arysta's Captan 80 WDG was 66330-29 (label above, Arysta letterhead p1); PPLS reg record shows 66330-29 transferred to UPL NA as 70506-445 on 2021-05-26 (Active). 66222-58-51036, 103591-32 (Prism) etc. are other registrants' products. PPLS lists no label file under 70506-445 yet, so the quoted label is the last 66330-29 file. Plugin names Arysta; Arysta was acquired by UPL and its 66330-29 registration transferred to UPL as 70506-445 on 2021-05-26."
+    },
+    "engenia": {
+      "epaRegistrationNumber": "7969-507",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00507-20260206.pdf",
+      "docDate": "2026-02-06",
+      "page": 15,
+      "quote": "Engenia is a soluble liquid (SL). EPA Reg. No. 7969-507",
+      "note": "Resolves the allowlist ambiguity: of the three PPLS 'Engenia Herbicide' records, only 7969-507 is Active (BASF, label accepted 2026-02-06, RUP, labeling expires 2028-02-06); 7969-345 and 7969-472 are Inactive. Jugs from the earlier registrations will carry the old numbers."
+    },
+    "flint-extra": {
+      "epaRegistrationNumber": "264-826",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00826-20250116.pdf",
+      "docDate": "2025-01-16",
+      "page": 3,
+      "quote": "Gem® 500 SC Fungicide [ABN:FLINT® Extra]",
+      "note": "PPLS product name is GEM 500 SC FUNGICIDE (Bayer CropScience LLC, Active); FLINT EXTRA is a registered alternate brand name (PPLS altbrandname 'FLINT EXTRA'). Resolves allowlist note: 264-777 is plain Flint (50WG), not Flint Extra."
+    },
+    "gramoxone-sl-3": {
+      "epaRegistrationNumber": "100-1652",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01652-20220824.pdf",
+      "docDate": "2022-08-24",
+      "page": 3,
+      "quote": "Gramoxone® 3LB [Alternate Brand Name: Gramoxone® SL 3.0] HERBICIDE A Weed, Grass, and Harvest Aid Desiccant/Defoliant Herbicide",
+      "note": "Resolves the allowlist ambiguity: Gramoxone SL 3.0 is a label-printed alternate brand of Gramoxone 3LB (Syngenta, Active). Gramoxone SL 2.0 is a separate product."
+    },
+    "indar-2f": {
+      "epaRegistrationNumber": "62719-416",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00416-20130711.pdf",
+      "docDate": "2013-07-11",
+      "page": 3,
+      "quote": "Group FUNGICIDE Enable® 2F [Alternate Brand Name: Indar® 2F] Fungicide Active Ingredient fenbuconazole ... 23.5%",
+      "note": "Resolves the allowlist question: the federal Enable 2F label (Corteva, Active) carries Indar 2F as an alternate brand name (also on container page p6); PPLS search also lists 'INDAR 2F' as alt brand of 62719-416. The MI090002 etc. entries are 24(c) SLNs."
+    },
+    "kocide-3000-o": {
+      "epaRegistrationNumber": "91411-11-70051",
+      "sourceUrl": "https://www.certisbio.com/hubfs/20250114%2091411-11-70051%20K3000-O%20Specimen%20Lbl.pdf",
+      "docDate": "2025-01-14",
+      "page": 1,
+      "quote": "MANUFACTURED FOR: Certis USA LLC ... EPA Reg. No. 91411-11-70051 ... FOR ORGANIC PRODUCTION Dry Flowable",
+      "note": "Certis supplemental distributor number (PPLS search: '91411-11-70051 Kocide 3000-O' Active). Base registration 91411-11 is COSACO LLC product KX-002 with alternate brand name KOCIDE 3000-O (PPLS, Active; label 091411-00011-20180312 p.3 'KX-002 ABN: Kocide 3000-O'). Plugin names Certis, so the supplemental number is used. Resolves allowlist note: plugin's candidates 91411-2 / 352-662 are plain Kocide 3000."
+    },
+    "lannate-lv": {
+      "epaRegistrationNumber": "61842-55",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "docDate": "2024-10-10",
+      "page": 3,
+      "quote": "GROUP 1A INSECTICIDE Lannate® LV INSECTICIDE {[Alternate Brand Name:}[ Lannate® LV] Water Soluble Liquid ... EPA Reg. 61842-55",
+      "note": "Resolves allowlist ambiguity: 352-384 (Corteva) is not a separate live product. PPLS transfer_history shows it moved to 61842-55 (Tessenderlo Kerley, Inc.) on 2023-01-12, and 61842-55 is the only Active record. The plugin name says 'Corteva', but Corteva no longer holds the registration, so the display name/notes should drop Corteva. Newest file 20250729 has unreadable fonts, so the quote comes from the 2024-10-10 label."
+    },
+    "liberty-ultra": {
+      "epaRegistrationNumber": "7969-500",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00500-20251030.pdf",
+      "docDate": "2025-10-30",
+      "page": 3,
+      "quote": "BASF Agricultural Solutions US LLC ... Alternate Brand Names: Liberty ® ULTRA Herbicide, Liberty ® ULTRA, Noventa® ULTRA, Noventa® ULTRA Herbicide",
+      "note": "Base label name 'BASF L-Glufosinate-Ammonium 211'; Liberty ULTRA is a label-printed alternate brand name. PPLS status Active (BASF). Resolves the prior 'no PPLS match' reason."
+    },
+    "me-too-lachlor-ii": {
+      "epaRegistrationNumber": "19713-549",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/019713-00549-20230104.pdf",
+      "docDate": "2023-01-04",
+      "page": 3,
+      "quote": "METOLACHLOR GROUP 15 HERBICIDE Me-Too-LachlorTM II Herbicide Jan 04, 2023 19713-549",
+      "note": "Resolves the allowlist ambiguity: PPLS now titles 19713-549 'DREXEL ME-TOO-LACHLOR II HERBICIDE' (Active, Drexel); 19713-548 is plain 'Drexel Me-Too-Lachlor' (86.4%), and 19713-554/555/556 are the V/IV/III products. EPA letter p1: 'Product Name: Drexel Me-Too-Lachlor II Herbicide EPA Registration Number: 19713-549'."
+    },
+    "mustang-maxx": {
+      "epaRegistrationNumber": "279-3426",
+      "matchedTitle": "F9114 EC INSECTICIDE (ABN: MUSTANG MAXX INSECTICIDE)",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+      "docDate": "2022-08-16",
+      "page": 3,
+      "quote": "F9114 EC Insecticide [ABN: Mustang Maxx Insecticide] EPA Reg. No. 279-3426",
+      "note": "Resolves the open allowlist question: the development-code title 'F9114 EC' carries Mustang Maxx as its alternate brand name (ABN) on the label itself; PPLS name search also lists 'MUSTANG MAXX INSECTICIDE' under 279-3426. Registrant FMC Corporation, status Active. Zeta-cypermethrin 9.15% matches the plugin AI."
+    },
+    "permit": {
+      "epaRegistrationNumber": "81880-2",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00002-20250911.pdf",
+      "docDate": "2025-09-11",
+      "page": 3,
+      "quote": "HALOSULFURON-METHYL GROUP 2 HERBICIDE Permit® Herbicide PERMIT is a selective herbicide for control of listed broadleaf weeds and nutsedge",
+      "note": "PPLS 81880-2 'PERMIT' Active; 2025 amendment letter: 'change of primary brand name to PERMIT'. Registrant is Canyon Group LLC, label p3 'Produced For: Canyon Group LLC. C/O Gowan Company, LLC' - matches the plugin's Gowan attribution. Label covers 'CORN, FIELD AND FIELD CORN GROWN FOR SEED 2/3 - 1 1/3' oz/acre (p10). Not Permit Plus (81880-26)."
+    },
+    "quadris-flowable": {
+      "epaRegistrationNumber": "100-1098",
+      "sourceUrl": "https://www.cdms.net/ldat/ld5QN003.pdf",
+      "docDate": "2018-12-19",
+      "page": 5,
+      "quote": "EPA Reg. No. 100-1098 ... Quadris Flowable Fungicide is a member of Syngenta’s Plant Performance™ product line",
+      "note": "PPLS master brand for 100-1098 is Abound Flowable Fungicide; PPLS lists 'QUADRIS FLOWABLE FUNGICIDE' as an alternate brand (Active, Syngenta). The Syngenta Quadris container label (SCP 1098B-L2W 1218) prints EPA Reg. No. 100-1098 (p1). Quadris Top/Opti/Xtra are different registrations."
+    },
+    "roundup-powermax-3": {
+      "epaRegistrationNumber": "524-659",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00659-20241213.pdf",
+      "docDate": "2024-12-13",
+      "page": 3,
+      "quote": "MASTER LABEL FOR EPA REG. NO. 524-659 Primary Brand Name: MON 301108 Herbicide Alternate Brand Names: Roundup PowerMAX 3 Herbicide",
+      "note": "Resolves the allowlist question: the label names Roundup PowerMAX 3 as the alternate brand of MON 301108 (524-659, Bayer). PPLS transfer history: 524-659 moved from Bayer CropScience to Ruveon, LLC on 2026-01-14 and is now carried as 105211-118 (Active, product name 'MON 301108 Herbicide', PPLS search alt name 'ROUNDUP POWERMAX 3 HERBICIDE'). Plugin names Bayer, so the Bayer number is used; jugs sold under Ruveon will show 105211-118. Registration transferred Bayer -> Ruveon, LLC on 2026-01-14 (now 105211-118 in PPLS); kept 524-659 because the plugin names Bayer, and jugs in circulation carry it."
+    },
+    "sivanto-prime": {
+      "epaRegistrationNumber": "264-1141",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01141-20210603.pdf",
+      "docDate": "2021-06-03",
+      "page": 2,
+      "quote": "SIVANTO™ 200 SL [ABN: SIVANTO™ prime] EPA Reg. No. 264-1141",
+      "note": "Resolves allowlist ambiguity: 'Sivanto prime' is an alternate brand name (ABN) of Sivanto 200 SL, 264-1141 (Bayer CropScience LLC, Active). PPLS altbrandnames for 264-1141 are 'SIVANTO PRIME' and 'SIVANTO PRIME 200 SL'. Sivanto 400 SL/HL (264-1198) is a different, 3.34 lb/gal product."
+    },
+    "topsin-m-wsb": {
+      "epaRegistrationNumber": "8033-125",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00125-20260625.pdf",
+      "docDate": "2026-06-25",
+      "page": 3,
+      "quote": "THIOPHANATE-METHYL GROUP 1 FUNGICIDE TOPSIN® M WSB THIOPHANATE-METHYL FUNGICIDE IN WATER SOLUBLE BAGS 70% Wettable Powder",
+      "note": "Resolves allowlist: PPLS shows 73545-16 (Nisso TM) transferred into 8033-125 (Nippon Soda, Active) on 2013-04-30, so 8033-125 is the current registration. Plugin names UPL: PPLS search lists UPL's supplemental 8033-125-70506 'TOPSIN M WSB' (Active) but PPLS has no label file for it, so the primary number is proposed."
+    },
+    "valor-sx": {
+      "epaRegistrationNumber": "59639-99",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00099-20260917.pdf",
+      "docDate": "2026-09-17",
+      "page": 3,
+      "quote": "Valor® Herbicide is a water dispersible granule containing 51% active ingredient.",
+      "note": "PPLS record 59639-99 (Valent, Active) lists alternate brand names 'VALOR SX HERBICIDE' and 'VALOR(R) SX HERBICIDE' (also Chateau, Payload WDG); label body uses 'Valor Herbicide'. Valor SX = the WDG 51% flumioxazin; Valor EZ is a separate SC registration (59639-127/-221). Resolves the prior 'Valor vs Valor SX' reason."
+    },
+    "warrant": {
+      "epaRegistrationNumber": "524-591",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00591-20200618.pdf",
+      "docDate": "2020-06-18",
+      "page": 3,
+      "quote": "FOR EPA REG. NO. 524-591 Registered Brand Names: Primary Brand Name: MON 63410 Herbicide Alternate Brand Name: WARRANT® Herbicide",
+      "note": "Resolves the allowlist question: the master label names WARRANT as the alternate brand of MON 63410 (Bayer CropScience, Active, no transfers). PPLS search also lists 524-591 as 'WARRANT HERBICIDE'. Not Warrant Ultra (524-620, acetochlor + fomesafen)."
     }
   },
   "rainfast": {
@@ -391,6 +568,1639 @@
       "rainfastHours": 0.5,
       "rainfastSourceUrl": "https://cs-assets.bayer.com/is/content/bayer/2023-Previcur-Flex-Product-Bulletinpdf",
       "statement": "Bayer Previcur Flex product bulletin: rainfast 30 minutes after application"
+    },
+    "curzate-60df-cymoxanil": {
+      "rainfastHours": 2,
+      "rainfastSourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00592-20181019.pdf",
+      "statement": "Rainfastness: CURZATE® 60DF rapidly penetrates into plant tissues and is rainfast within 2 hours after application.",
+      "docDate": "2018-10-19",
+      "page": 4,
+      "note": "Latest PPLS file (2021-05-05) has font-encoded body text that cannot be searched; value taken from the 2018-10-19 accepted label."
+    },
+    "elevate-50wdg": {
+      "rainfastHours": 2,
+      "rainfastSourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00446-20260303.pdf",
+      "statement": "Rainfall or overhead irrigation within 2 hours of application may necessitate re-treatment.",
+      "docDate": "2026-03-03",
+      "page": 7
+    },
+    "folicur-36f-tebuconazole": {
+      "rainfastHours": 4,
+      "rainfastSourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00752-20131119.pdf",
+      "statement": "must have two to four hours of drying time on plant foliage for the active ingredient to move systemically into plant tissue before rain or irrigation occurs",
+      "docDate": "2013-11-19",
+      "page": 6,
+      "note": "Label gives a 2-4 h range; proposed the upper (more protective) bound. Reviewer may prefer keep-gap given the range."
+    }
+  },
+  "pollinator": {
+    "acramite-bifenazate": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00503-20201216.pdf",
+      "docDate": "2020-12-16",
+      "page": 4,
+      "quote": "This product is moderately toxic to bees and other pollinating insects exposed to direct treatment or to residues in/on blooming crops or weeds. ... Do not apply this product while bees are foraging the treatment area.",
+      "note": "Label says 'moderately toxic' (not in the mapping) -> mapped to the more protective 'toxic'. Only bee restriction is the foraging statement; no bloom prohibition found (grep bees|bloom|flower). Latest PPLS label for the product now registered as 70506-536 (UPL NA, transferred from 400-503 on 2021-06-09)."
+    },
+    "applaud-buprofezin": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00021-20231030.pdf",
+      "docDate": "2023-10-30",
+      "quote": "(no bee or pollinator statement anywhere on the label)",
+      "note": "Correction (was relatively-nontoxic/none from the active-ingredient table). The 71711-21 label is silent on bees, so the label supports only 'unknown'; the kernel treats unknown as hazardous (warn)."
+    },
+    "aza-direct": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www.gowanco.com/sites/default/files/gowanco_com/_attachments/product/resource/label/aza-direct_71908-1-10163_01-r1218.pdf",
+      "docDate": "2018-12",
+      "page": 1,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates.",
+      "note": "No bee/pollinator/bloom/foraging language anywhere on the Aza-Direct label (grep \\bbees?\\b|pollinat|forag: none; 'bloom' only in 'Waxy bloom'). Parent 71908-1 label (2020-01-27, 79 pp) also has no bee language."
+    },
+    "azaguard": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00017-20200727.pdf",
+      "docDate": "2020-07-27",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates. For terrestrial uses: Do not apply directly to water",
+      "note": "AzaGuard label (70299-17) Environmental Hazards and directions contain no bee/pollinator/bloom language (grep 'bee|pollinat|bloom' across all 32 pages: no hits). Label silent -> unknown/none."
+    },
+    "confirm-2f-tebufenozide": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00111-20220513.pdf",
+      "docDate": "2022-05-13",
+      "quote": "(no bee or pollinator statement anywhere on the label)",
+      "note": "Correction (was relatively-nontoxic/none from the active-ingredient table). The 8033-111 label is silent on bees, so the label supports only 'unknown'; the kernel treats unknown as hazardous (warn)."
+    },
+    "dimilin-2l": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00461-20201102.pdf",
+      "docDate": "2020-11-02",
+      "page": 5,
+      "quote": "Drift of this product onto beehives or off-site to pollinator attractive habitat can result in reducing immature bee viability.",
+      "note": "Env. Hazards (p4): 'This pesticide is toxic to terrestrial juvenile insects'. Brood/immature-bee effect -> at least 'toxic' per brief. No do-not-apply-during-bloom or foraging restriction; label directs bloom-period uses (cotton first bloom through mid-bloom; nut crops 'bloom to petal fall'), so bloomRestriction 'none'."
+    },
+    "envidor-spirodiclofen": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00383-20260602.pdf",
+      "docDate": "2026-06-02",
+      "page": 4,
+      "quote": "PROTECTION OF POLLINATORS Do not apply this product or allow it to drift to blooming crops or weeds if bees are visiting the treatment area. (p.4) ... For citrus (except lemon) in California, do not apply until petal fall is complete. (p.7)",
+      "note": "Label has no bee-toxicity statement (grep 'toxic' only hits disposal) -> beeToxicity unknown. General restriction is foraging-only, but the crop-specific California citrus direction prohibits application until petal fall -> prohibited-during-bloom per brief rule ('on any crop'). Current label is under 10163-383 (Gowan; transferred from Bayer 264-831 on 2021-03-18)."
+    },
+    "grandevo-wdg": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00017-20180927.pdf",
+      "docDate": "2018-09-27",
+      "page": 7,
+      "quote": "This product is toxic to certain nontarget terrestrial arthropods. (p.5) ... This product temporarily repels honeybees, for up to 4 to 6 days after spraying. (p.7) ... Flowers, Bedding Plants and Ornamentals - ground application only to non-blooming plants (p.18)",
+      "note": "No explicit bee-toxicity statement: label says toxic to 'certain nontarget terrestrial arthropods' and that it repels honeybees 4-6 days; neither maps cleanly -> unknown (reviewer may choose 'toxic' as the more protective reading of the arthropod statement). Bloom: ornamentals section limits application to non-blooming plants -> prohibited-during-bloom per 'any crop' rule. No hour figure for residual toxicity (repellency 4-6 days is not toxicity)."
+    },
+    "kanemite-acequinocyl": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00447-20211001.pdf",
+      "docDate": "2021-10-01",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This product is toxic to aquatic invertebrates such as Eastern oysters and mysid shrimp.",
+      "note": "Label has no bee/pollinator/bloom language (grep bee|pollinat|bloom|hive|forag: no match). Only 'relatively harmless to most predacious mites and beneficial insects' (p7), which is not a bee statement."
+    },
+    "majestene-nematicide": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00014-20260202.pdf",
+      "docDate": "2026-02-02",
+      "page": 7,
+      "quote": "To minimize potential exposure to bees and other pollinating insects, do not apply while bees are foraging. - Do not allow product to drift to blooming crops or weeds if bees are foraging.",
+      "note": "Label (84059-14 master, alternate brand MAJESTENE) makes no bee-toxicity statement (Env. Hazards p5 only refers to Directions for Use), so beeToxicity=unknown. Only foraging-time language, no bloom prohibition -> dusk-to-dawn-only."
+    },
+    "met52-ec-metarhizium": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070127-00010-20171109.pdf",
+      "docDate": "2017-11-09",
+      "page": 3,
+      "quote": "TICK-EX EC BIOINSECTICIDE [ABN: MET52® EC ]",
+      "note": "Last PPLS label bearing the Met52 EC brand (reg then 70127-10, now 64137-33). No bee/pollinator/bloom language on it, nor on the current Lalguard M52 OD label (064137-00033-20260528.pdf)."
+    },
+    "movento": {
+      "pollinator": {
+        "beeToxicity": "toxic",
+        "bloomRestriction": "prohibited-during-bloom"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01050-20170628.pdf",
+      "docDate": "2017-06-28",
+      "page": 5,
+      "quote": "This product is potentially toxic to honey bee larvae through residues in pollen and nectar, but not to adult honeybees. (p.5) ... Do not apply this product within 10 days prior to bloom, during bloom, or until petal fall is complete. (p.15)",
+      "note": "Brood/larvae toxicity statement -> at least 'toxic' per brief (label says not toxic to adults). Many crop sections prohibit bloom application: seed onions/leeks/chives 'do not apply 4 months prior to bloom, during bloom or until after petal fall' (p.13); p.15 crop '10 days prior to bloom, during bloom, or until petal fall'; pome/stone/tree nut 'do not apply prior to petal-fall' (p.8). -> prohibited-during-bloom."
+    },
+    "oberon-spiromesifen": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00719-20230830.pdf",
+      "docDate": "2023-08-30",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS This pesticide is toxic to fish and aquatic invertebrates. Do not contaminate surface water through spray drift.",
+      "note": "Oberon 2SC label makes no bee/brood toxicity statement and no bloom or foraging restriction. Page 6 has only the generic pollinator best-management advisory ('applying pesticides at twilight and at night when pollinators are less likely foraging' offered as an example BMP, not a directive). -> unknown/none. Not marked silent because generic pollinator-BMP text is present."
+    },
+    "pfr-97-isaria": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00019-20200204.pdf",
+      "docDate": "2020-02-04",
+      "page": 4,
+      "quote": "ENVIRONMENTAL HAZARDS For outdoor, non-greenhouse use, do not apply when bees are actively foraging.",
+      "note": "Label for PFR-97 20% WDG (EPA 70051-19, Certis USA). No bee-toxicity statement, so unknown. The only restriction is on foraging, so dusk-to-dawn-only. The newest file (2020-10-28) is a hemp supplemental with no bee text, so the 2020-02-04 full label was used."
+    },
+    "portal-xlo": {
+      "pollinator": {
+        "beeToxicity": "relatively-nontoxic",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00040-20240111.pdf",
+      "docDate": "2024-01-11",
+      "page": 6,
+      "quote": "Minimum Honey Bee Toxicity Fenpyroximate is practically nontoxic to bees through acute contact and acute oral exposure when applied to listed crops according to the label directions.",
+      "note": "Label explicitly states practically nontoxic to bees; no bloom or foraging restriction found (grep bloom|forag|flowering|pollinat: none)."
+    },
+    "sivanto-prime": {
+      "pollinator": {
+        "beeToxicity": "highly-toxic",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01141-20210603.pdf",
+      "docDate": "2021-06-03",
+      "page": 2,
+      "quote": "Highly toxic to adult Megachile rotundata (alfalfa leafcutting bee) via direct contact exposure. Do not apply to foliage when managed alfalfa leafcutting bees are foraging in the treatment area.",
+      "note": "Correction (was relatively-nontoxic/none from the AI table). Label also: 'Toxic to adult bees in laboratory studies via oral exposure. Not toxic to honey bees or bumble bees through contact exposure.' Stricter class taken."
+    },
+    "spear-lep": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/088847-00006-20220928.pdf",
+      "docDate": "2022-09-28",
+      "page": 5,
+      "quote": "Environmental Hazards: For terrestrial uses: Do not apply directly to water, or to areas where surface water is present",
+      "note": "Master label (then EPA 88847-6, Vestaron) listing Spear-Lep as alternate brand (p24). No bee/pollinator/bloom language anywhere (grep bee|pollinat|bloom|hive|forag)."
+    },
+    "velum-prime-fluopyram-nematicide": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "none"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01078-20260903.pdf",
+      "docDate": "2026-09-03",
+      "page": 5,
+      "quote": "ENVIRONMENTAL HAZARDS For terrestrial uses: DO NOT apply directly to water, or to areas where surface water is present",
+      "note": "No bee/pollinator/bloom-restriction language anywhere on the 64-page label (grep 'bee|pollinat' no hits; 'bloom' only in 'coverage of foliage, bloom, and fruit'). Label silent -> unknown/none."
+    },
+    "venerate-xc": {
+      "pollinator": {
+        "beeToxicity": "unknown",
+        "bloomRestriction": "dusk-to-dawn-only"
+      },
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00014-20260202.pdf",
+      "docDate": "2026-02-02",
+      "page": 7,
+      "quote": "To minimize potential exposure to bees and other pollinating insects, do not apply while bees are foraging.",
+      "note": "Also 'Do not allow product to drift to blooming crops or weeds if bees are foraging.' No bee toxicity class stated and no bloom prohibition, only a foraging restriction."
+    }
+  },
+  "formulation": {
+    "accent-q-nicosulfuron": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00773-20241107.pdf",
+      "docDate": "2024-11-07",
+      "page": 3,
+      "quote": "Accent® Q [Alternate Brand Name: DuPont Accent Q] HERBICIDE ... This product is a water-dispersible granule containing 54.5% active ingredient by weight.",
+      "note": "Label is EPA Reg. No. 352-773 (Corteva, Active). PPLS formulations field: 'Water Dispersible Granule'. The plugin's EPA number 352-768 is NOT Accent Q (PPLS 352-768 = MATRIX SG) - see contradictions."
+    },
+    "actara": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00938-20131203.pdf",
+      "docDate": "2013-12-03",
+      "page": 2,
+      "quote": "Actara is a water-dispersible granule.",
+      "note": "No code printed in the brand name; label words 'water-dispersible granule' -> WDG. PPLS formulations field: 'Water Dispersible Granule'."
+    },
+    "actinovate-streptomyces": {
+      "formulation": "SP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073314-00020-20221215.pdf",
+      "docDate": "2022-12-15",
+      "page": 61,
+      "quote": "ACTINOVATE ® SOLUBLE [BIOLOGICAL FUNGICIDE] [Alternate Brand Names: Actinovate® SP, ActinoGro® TURF, ActinoGrow T & O]",
+      "note": "Actinovate AG is an alternate brand of the same registration (73314-20, Sublabel A p4). The label prints the code 'SP' in the sibling alternate brand name, describes the product as 'dry powder' (p12) that is 'completely soluble' (p13) and sold by Net Weight. PPLS formulation field reads 'Soluble Concentrate', which conflicts with a dry powder; reviewer may prefer keep-gap."
+    },
+    "admire-pro": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00827-20190917.pdf",
+      "docDate": "2019-09-17",
+      "page": 8,
+      "quote": "GAUCHO 550 SC INSECTICIDE is a suspension concentrate (flowable) formulation, shake well prior to measuring/mixing.",
+      "note": "Same registration (264-827) as Admire Pro (alternate brand). PPLS record formulation: 'Flowable Concentrate'. Label says suspension concentrate -> SC."
+    },
+    "altacor-chlorantraniliprole": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09607-20180702.pdf",
+      "docDate": "2018-07-02",
+      "page": 2,
+      "quote": "ALTACOR® is a water dispersible granule.",
+      "note": "No code in the brand name; label words 'water dispersible granule' -> WDG (the mixing-order list groups it with 'water dispersible granules (WG, XP, DF)', not a product code). PPLS formulations: 'Water Dispersible Granule'."
+    },
+    "anthem-maxx": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03468-20251125.pdf",
+      "docDate": "2025-11-25",
+      "page": 3,
+      "quote": "F9310-7 is a SC (suspension concentrate) containing 4.30 total lbs. active ingredients per gallon",
+      "note": "PPLS formulation field says 'Emulsifiable Concentrate'; label text wins."
+    },
+    "aprovia": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20241030.pdf",
+      "docDate": "2024-10-30",
+      "page": 3,
+      "quote": "Aprovia Fungicide is formulated as an Emulsifiable Concentrate (EC) and contains 0.83 lb of benzovindiflupyr active ingredient per gallon.",
+      "note": "PPLS record lists formulation 'Soluble Concentrate'; the label itself says EC, label text preferred."
+    },
+    "asana-xl": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20260414.pdf",
+      "docDate": "2026-04-14",
+      "page": 3,
+      "quote": "This product contains 0.66 lbs. Active Ingredient per gallon. 0.66 Emulsible Concentrate.",
+      "note": "'Emulsible Concentrate' -> EC. PPLS formulations: 'Emulsifiable Concentrate'."
+    },
+    "authority-mtz-sulfentrazone": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03340-20230713.pdf",
+      "docDate": "2023-07-13",
+      "page": 5,
+      "quote": "PRODUCT INFORMATION F6482 45DF Herbicide is a dry flowable formulation to be mixed with water and sprayed for selective preemergence or preplant incorporated weed control",
+      "note": "EPA Reg. 279-3340 (FMC, Active); PPLS alternate brand 'AUTHORITY MTZ DF HERBICIDE', and label p16 reads 'Authority MTZ DF Herbicide will provide control of'. Plugin EPA 279-3437 is a different product (see contradictions)."
+    },
+    "avaunt-evo": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20240822.pdf",
+      "docDate": "2024-08-22",
+      "page": 5,
+      "quote": "AVAUNT® eVo insect control is a water dispersible granule that can be applied as a foliar spray",
+      "note": "Front panel also reads '...Dispersible Granules' (p3). PPLS formulations: 'Water Dispersible Granule'."
+    },
+    "axxe-ammonium-nonanoate": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00023-20210205.pdf",
+      "docDate": "2020-06-17",
+      "page": 7,
+      "quote": "AXXE Broad Spectrum Herbicide is completely soluble in water and requires only nominal mixing.",
+      "note": "No formulation code printed; liquid concentrate (3.3 lbs ammonium nonanoate per US gallon, p3) that is completely water-soluble. PPLS formulation field corroborates: 'Soluble Concentrate'. Lower confidence than a printed code. Label version V10 dated 2020-06-17, accepted 2021-02-05."
+    },
+    "aza-direct": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071908-00001-20200127.pdf",
+      "docDate": "2020-01-27",
+      "page": 36,
+      "quote": "Product Name; Neemazal T/S 1.2 EC / EPA Registration Number; 71908-1 ... This product is an emulsifiable concentrate to be diluted with water.",
+      "note": "The Gowan Aza-Direct label itself prints no formulation code or words (grep concentrat|emulsi|EC: no match). Value taken from the parent registration 71908-1 that the supplemental distributor product is sold under (PPLS formulation: 'Emulsifiable Concentrate'; brand 'Neemazal T/S 1.2 EC', quote pp.1 and 36). OMRI also lists the Mexican equivalent as 'AZA-Direct 1.2 CE'. Reviewer may prefer keep-gap if a parent-label source is not acceptable."
+    },
+    "azaguard": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00017-20200727.pdf",
+      "docDate": "2020-07-27",
+      "page": 6,
+      "quote": "AzaGuard is an emulsifiable concentrate containing 3.0% azadirachtin by weight.",
+      "note": "Read from the AzaGuard label (BioSafe Systems, EPA Reg. No. 70299-17), NOT the plugin's EPA number 70051-9 (see contradictions). PPLS 70299-17 formulations: 'Emulsifiable Concentrate'."
+    },
+    "baythroid-xl": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+      "docDate": "2019-10-07",
+      "page": 9,
+      "quote": "BAYTHROID XL is an Emulsifiable Concentrate formulation and is active by contact and ingestion.",
+      "note": "PPLS formulations: 'Emulsifiable Concentrate'."
+    },
+    "belay": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00150-20170711.pdf",
+      "docDate": "2017-07-11",
+      "page": 2,
+      "quote": "V-10170 2.13 SC INSECTICIDE FOR CONTROL OF LISTED SUCKING AND CHEWING INSECTS ... Contains 2.13 lb active ingredient per gallon",
+      "note": "Code 'SC' printed in the EPA master-label brand name of 59639-150 (alternate brand 'Belay Insecticide'). The marketed Belay label prints no code. Caveat: the PPLS record's formulations field reads 'Emulsifiable Concentrate', which conflicts with the label's SC; label code taken per brief."
+    },
+    "beyond": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00441-20221011.pdf",
+      "docDate": "2022-10-11",
+      "page": 6,
+      "quote": "Beyond® herbicide, a soluble liquid, is a postemergence herbicide to control and suppress many broadleaf and grass weeds",
+      "note": "The newest file (2024-04-22) is image-only. p3 also says 'formulated as a soluble liquid'. PPLS formulation field says 'Emulsifiable Concentrate', which contradicts the label."
+    },
+    "bravo-weather-stik": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/050534-00188-20140822.pdf",
+      "docDate": "2014-08-22",
+      "page": 2,
+      "quote": "Bravo 720 is formulated as a suspension concentrate (SC). Contains 6.0 pounds Chlorothalonil per gallon",
+      "note": "PPLS formulation field: 'Flowable Concentrate' (consistent, liquid)."
+    },
+    "cadet-fluthiacet": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03338-20260213.pdf",
+      "docDate": "2026-02-13",
+      "page": 3,
+      "quote": "Cadet is an emulsifiable concentrate containing 0.91 lb active ingredient per gallon.",
+      "note": "Label is FMC Cadet Herbicide, EPA Reg. No. 279-3338 (PPLS formulation: 'Emulsifiable Concentrate'), not the plugin's 59639-198."
+    },
+    "callisto": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20260409.pdf",
+      "docDate": "2026-04-09",
+      "page": 3,
+      "quote": "Callisto® Herbicide is formulated as a suspension concentrate (SC) and contains 4 lb of active ingredient mesotrione per gallon.",
+      "note": "EPA 100-1131 Syngenta, Active. PPLS formulations field reads 'Ready-to-Use Solution' (EPA record error); label text governs."
+    },
+    "capreno-thiencarbazone-tembotrione": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01063-20260210.pdf",
+      "docDate": "2026-02-10",
+      "page": 12,
+      "quote": "SC 547 Herbicide is a suspension concentrate that requires the use of an external adjuvant",
+      "note": "Label p3: 'SC 547 Herbicide [ABN : CAPRENO® Herbicide]', EPA Reg. No 264-1063. Same sentence on the 2019 and 2015 labels. The PPLS record's formulation field says 'Emulsifiable Concentrate', which disagrees with the label text; label wording used."
+    },
+    "cevya-mefentrifluconazole": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00407-20230112.pdf",
+      "docDate": "2023-01-12",
+      "page": 9,
+      "quote": "Water-dispersible products (including dry flowables, wettable powders, suspension concentrates including Cevya® fungicide",
+      "note": "PPLS formulation field empty."
+    },
+    "classic-chlorimuron": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00681-20200924.pdf",
+      "docDate": "2020-09-24",
+      "page": 6,
+      "quote": "CLASSIC® herbicide is a dispersible granule formulation to be mixed with water and sprayed",
+      "note": "Corroborated by PPLS formulation 'Water Dispersible Granule'. Label for 5481-681 (AMVAC); p3 prints '[Alternate Brand Name: Classic®]'."
+    },
+    "cobra": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00034-20260113.pdf",
+      "docDate": "2026-01-13",
+      "page": 10,
+      "quote": "Cobra Herbicide is formulated as an emulsifiable concentrate containing 2 lb of active ingredient per gallon.",
+      "note": "PPLS record 59639-34 formulation: 'Emulsifiable Concentrate'. REI 12 h on label p5."
+    },
+    "coragen": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20201027.pdf",
+      "docDate": "2020-10-27",
+      "page": 3,
+      "quote": "CORAGEN® is a suspension concentrate. Contains 1.67 lb. active ingredient per gallon.",
+      "note": "Label words 'suspension concentrate' -> SC; mixing-order list also groups it with 'water based suspension concentrates (SC)' (p7). PPLS formulations field ('Emulsifiable Concentrate', 'Flowable Concentrate') is inconsistent with the label; label wins."
+    },
+    "cuprofix-ultra-disperss": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20251204.pdf",
+      "docDate": "2025-12-04",
+      "page": 3,
+      "quote": "Cuprofix® Ultra 40 Disperss® Dry Flowable Fungicide/Bactericide",
+      "note": "PPLS alternate brand name is 'CUPROFIX 40 DISPERSS DF'. PPLS formulation field says 'Flowable Concentrate'; label text preferred."
+    },
+    "cyd-x-codling-moth-virus": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00044-20250707.pdf",
+      "docDate": "2025-07-07",
+      "page": 4,
+      "quote": "SUBLABEL A: Agricultural Use An Aqueous Suspension Biological Insecticide for Control of the Codling Moth",
+      "note": "Label words 'Aqueous Suspension' mapped to SC (suspension concentrate); rates are 'fluid ounces per acre' (p7), consistent with a liquid. REVIEW: PPLS record formulations field says 'Water Dispersible Granule', which disagrees with the label; label taken as primary. Keep-gap if the reviewer treats the PPLS field as a disagreeing source."
+    },
+    "deadline-mps-metaldehyde": {
+      "formulation": "G",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/005481-00507-20150303.pdf",
+      "docDate": "2015-03-03",
+      "page": 4,
+      "quote": "Granules on soil surface may be hazardous to terrestrial wildlife. ... by hand or with commercial application equipment designed for banded application of granular products.",
+      "note": "Product is a 4% metaldehyde bait pellet ('Deadline M-Ps Mini-Pellets (ABN)', EPA 5481-507). PPLS formulation field is 'Pelleted/Tableted', which has no code in the allowed list; the label itself describes the product as granules/granular (pp.4, 6). Mapped to G (dry, lb). Reviewer may prefer keep-gap since 'pellet' is not a listed code."
+    },
+    "dithane-rainshield": {
+      "formulation": "F",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00396-20240229.pdf",
+      "docDate": "2024-02-29",
+      "page": 3,
+      "quote": "Dithane F-45® FUNGICIDE [Alternate Brand Name: Dithane F-45® Rainshield®] Active Ingredients mancozeb...37.0%",
+      "note": "'F' in F-45 = flowable; PPLS record formulation 'Flowable Concentrate'; label rates are in quarts ('Rate per Application (qt/acre)', p17) and '4 lb active ingredient per gallon'."
+    },
+    "double-nickel-55": {
+      "formulation": "WG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00108-20250108.pdf",
+      "docDate": "2025-01-08",
+      "page": 24,
+      "quote": "{List of Alternate Brand Names:} Double Nickel 55® Amylo-X® Bacstar® Amylo-X® WG Double Nickel® 55 WG",
+      "note": "Label 70051-108 (not the plugin's 70051-107): first page reads 'Water Dispersible Granular Biofungicide FOR ORGANIC PRODUCTION' (p.3); ABN prints WG. Plugin's lb rate is consistent with the dry 55 WG product, not the LC."
+    },
+    "dual-ii-magnum": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00818-20240521.pdf",
+      "docDate": "2024-05-21",
+      "page": 3,
+      "quote": "Dual II Magnum® Herbicide is formulated as an Emulsifiable Concentrate (EC) and contains the equivalent of 82.4% or 7.64 lb of active ingredient per gallon.",
+      "note": "EPA 100-818 Syngenta, Active; PPLS formulations 'Emulsifiable Concentrate' agrees."
+    },
+    "endura-boscalid": {
+      "formulation": "WG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00197-20221108.pdf",
+      "docDate": "2022-11-08",
+      "page": 6,
+      "quote": "This package contains Endura® fungicide, a water dis- persible granule (WG).",
+      "note": "Label is under 7969-197 (see contradictions); PPLS formulation Water Dispersible Granule."
+    },
+    "engenia": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00507-20260206.pdf",
+      "docDate": "2026-02-06",
+      "page": 15,
+      "quote": "Contains 48.38% dicamba (5 pounds acid equivalent per gallon or 600 grams per liter). Engenia is a soluble liquid (SL).",
+      "note": "Also p16: 'Formulation type: Soluble Liquid'. Label max 12.8 fl ozs/A per application (p25) matches plugin rate."
+    },
+    "exirel": {
+      "formulation": "SE",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "docDate": "2024-08-29",
+      "page": 3,
+      "quote": "EXIREL® insect control is a suspoemulsion (oil in water emulsion). SHAKE WELL BEFORE USING.",
+      "note": "'Suspoemulsion' -> SE. PPLS formulations field says 'Emulsifiable Concentrate'; label wins."
+    },
+    "fierce-flumioxazin-pyroxasulfone": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00193-20210915.pdf",
+      "docDate": "2021-09-15",
+      "page": 3,
+      "quote": "V-10233 Herbicide is a water dispersible granule containing 76% active ingredient.",
+      "note": "EPA 59639-193 (Valent, Active); base label name 'V-10233 Herbicide', PPLS alternate brand names 'FIERCE HERBICIDE' and 'PIPER HERBICIDE'. PPLS formulations field says 'Soluble Concentrate' (EPA record error); label text governs. Plugin EPA 59639-189 is a different product (see contradictions)."
+    },
+    "flint-extra": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00826-20250116.pdf",
+      "docDate": "2025-01-16",
+      "page": 3,
+      "quote": "Gem® 500 SC Fungicide [ABN:FLINT® Extra]",
+      "note": "SC code printed in the base brand name; label notes the formulation is water-based."
+    },
+    "forum": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00427-20190930.pdf",
+      "docDate": "2019-09-30",
+      "page": 7,
+      "quote": "Water-dispersible products (wettable powders, dry flowables, suspension concentrates, including Forum® fungicide, or suspo-emulsions)",
+      "note": "Label places Forum among suspension concentrates; 4.17 lb dimethomorph/gal (p3). PPLS record: Flowable Concentrate (consistent liquid)."
+    },
+    "glyphosate-4-plus": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+      "docDate": "2020-02-24",
+      "page": 5,
+      "quote": "It is formulated as a water-soluble liquid.",
+      "note": "Alligare Glyphosate 4 Plus, EPA Reg. 81927-9 (Active). Water-soluble liquid mapped to SL; PPLS record formulation 'Soluble Concentrate' corroborates."
+    },
+    "howler-evo-pseudomonas": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00141-20260505.pdf",
+      "docDate": "2026-05-05",
+      "page": 4,
+      "quote": "Sublabel A: Agricultural Crop Use {dry flow able} {fungicide} {For Organic Production}",
+      "note": "Descriptor is in optional braces. PPLS search lists 'HOWLER EVO FUNGICIDE' as an alternate brand of 70051-141 (the label text itself only says Howler®). PPLS formulation field is empty."
+    },
+    "inspire-super": {
+      "formulation": "EW",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01317-20210505.pdf",
+      "docDate": "2021-05-05",
+      "page": 3,
+      "quote": "Inspire Super is an oil in water emulsion (EW) containing 0.73 lb of difenoconazole active ingredient and 2.09 lb of cyprodinil active ingredient per gallon.",
+      "note": "PPLS formulation field says 'Emulsifiable Concentrate'; label prints EW, label preferred."
+    },
+    "k-phite-phosphonate": {
+      "formulation": "L",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073806-00001-20250130.pdf",
+      "docDate": "2025-01-30",
+      "page": 8,
+      "quote": "PFS 56 SYSTEMIC FUNGICIDE BACTERICIDE is a water-based liquid formulation",
+      "note": "K-PHITE 7LP is an alternate brand of PFS 56 (p3). PPLS formulation field says 'Emulsifiable Concentrate', which contradicts the label's water-based liquid; reviewer may prefer keep-gap."
+    },
+    "kocide-3000-o": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/091411-00011-20180312.pdf",
+      "docDate": "2018-03-12",
+      "page": 3,
+      "quote": "KX-002 ABN: Kocide 3000-O Fungicide/Bactericide Dry Flowable",
+      "note": "Certis supplemental label also reads 'Dry Flowable'. PPLS formulation field says 'Soluble Concentrate'; label text preferred."
+    },
+    "lannate-lv": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00055-20241010.pdf",
+      "docDate": "2024-10-10",
+      "page": 3,
+      "quote": "Lannate® LV INSECTICIDE ... Water Soluble Liquid Contains 2.4 lbs active ingredient per gallon.",
+      "note": "'Water Soluble Liquid' maps to SL. PPLS formulations field: 'Soluble Concentrate'."
+    },
+    "laudis": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00860-20180921.pdf",
+      "docDate": "2018-09-21",
+      "page": 12,
+      "quote": "LAUDIS Herbicide is a suspension concentrate that requires the use of an external federally approved surfactant",
+      "note": "Bayer Laudis, EPA Reg. 264-860 (Active). The PPLS record's formulation field says 'Soluble Concentrate', which disagrees with the label wording; label used."
+    },
+    "luna-tranquility": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01085-20250618.pdf",
+      "docDate": "2025-06-18",
+      "page": 5,
+      "quote": "LUNA® TRANQUILITY: ... is formulated as a suspension concentrate (SC).",
+      "note": "Label is EPA Reg. No. 264-1085 (not the plugin's 264-1115, see contradictions). PPLS formulation field says 'Soluble Concentrate'; label text preferred."
+    },
+    "manzate-pro-stick": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00234-20260416.pdf",
+      "docDate": "2026-04-16",
+      "page": 3,
+      "quote": "Manzate® Pro-StickTM fungicide DISPERSIBLE GRANULES (ALTERNATE BRAND NAMES: MANZATE 75DF, MANZATE PRO-STICK T&O FUNGICIDE)",
+      "note": "PPLS formulation field: 'Water Dispersible Granule'. Alternate brand 'Manzate 75DF' carries DF; both dry, same defaultUnit."
+    },
+    "merivon": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00310-20240118.pdf",
+      "docDate": "2024-01-18",
+      "page": 6,
+      "quote": "This package contains Merivon® Xemium® brand fungicide, a suspension concentrate (SC) containing fluxapyroxad and pyraclostrobin."
+    },
+    "microthiol-disperss": {
+      "formulation": "WP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00187-20241013.pdf",
+      "docDate": "2024-10-13",
+      "page": 3,
+      "quote": "MICROTHIOL DISPERSS MICRONIZED WETTABLE SULFUR ACTIVE INGREDIENT: Sulfur",
+      "note": "No code printed; label calls it 'micronized wettable sulfur' (no granule/dry flowable wording) and the PPLS record formulation is 'Wettable Powder'. Newest PPLS file (2026-09-03) is a scanned notification with no text; 2024-10-13 label used."
+    },
+    "milstop-potassium-bicarbonate": {
+      "formulation": "SP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/068539-00013-20211020.pdf",
+      "docDate": "2021-10-20",
+      "page": 3,
+      "quote": "PB133 Alternate Brand Names: MilStop® SP Broad Spectrum Foliar Fungicide; MilStop® SP Foliar Fungicide; MilStop® Broad Spectrum Foliar Fungicide",
+      "note": "Code SP printed in the MilStop alternate brand names on the same registration; rates are in lbs. PPLS formulation field reads 'Soluble Concentrate' (conflicts with a dry product; reviewer may prefer keep-gap)."
+    },
+    "miravis-pydiflumetofen": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01601-20250724.pdf",
+      "docDate": "2025-07-24",
+      "page": 3,
+      "quote": "A19649 Crop is formulated as a suspension concentrate (SC) and contains 1.67 lb of pydiflumetofen per gallon.",
+      "note": "Label base name A19649 Crop '[Alternate brand names: Miravis®, Miravis® Ace A]' (p3); EPA letter p1 'Product Name: Miravis®'."
+    },
+    "movento": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01050-20170628.pdf",
+      "docDate": "2017-06-28",
+      "page": 7,
+      "quote": "PRODUCT INFORMATION MOVENTO®: Is a suspension concentrate formulation and is active primarily by ingestion against immature target pest life stages.",
+      "note": "The label calls it a suspension concentrate, so SC. The PPLS record's formulations field reads 'Emulsifiable Concentrate', which conflicts; label wording taken per brief."
+    },
+    "mustang-maxx": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03426-20220816.pdf",
+      "docDate": "2022-08-16",
+      "page": 3,
+      "quote": "F9114 EC Insecticide [ABN: Mustang Maxx Insecticide] ... Contains 0.8 lb ai/gal ... **Contains Petroleum Distillates",
+      "note": "Code 'EC' printed in the label's base product name on page 1 (Mustang Maxx is the ABN of this label). PPLS formulations field reads 'Flowable Concentrate', which disagrees; the label-printed code was taken per the brief. Reviewer may wish to confirm."
+    },
+    "mycostop-streptomyces": {
+      "formulation": "WP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/064137-00005-20260804.pdf",
+      "docDate": "2026-08-04",
+      "page": 3,
+      "quote": "MYCOSTOP® BIOFUNGICIDE Alternate Brand Name: LALSTOP® K61 WP",
+      "note": "PPLS formulation field: 'Wettable Powder/Dust' (corroborates)."
+    },
+    "orondis-opti": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01591-20240515.pdf",
+      "docDate": "2024-05-15",
+      "page": 3,
+      "quote": "Orondis® Opti is formulated as a suspension concentrate and contains 3.32 lb of chlorothalonil and 0.05 lb of oxathiapiprolin per gallon",
+      "note": "Mixing order p.18 also lists 'Water-based suspension concentrates (SC) (Orondis Opti)'. PPLS formulation field says 'Flowable Concentrate'; label preferred."
+    },
+    "outlook": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00156-20191129.pdf",
+      "docDate": "2019-11-29",
+      "page": 13,
+      "quote": "6. Emulsifiable concentrates (such as Outlook or oil concentrate when applicable)",
+      "note": "Mixing-order list names Outlook as an EC; p16 also warns about 'Tank mixing Outlook with other emulsifiable concentrate (EC) formulated products'. PPLS 7969-156 formulation 'Emulsifiable Concentrate' corroborates."
+    },
+    "oxidate-2-0": {
+      "formulation": "L",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "docDate": "2021-09-03",
+      "page": 6,
+      "quote": "ZeroTol 2.0 is a liquid bactericide/fungicide used to treat and control plant pathogens",
+      "note": "OxiDate® 2.0 is an alternate brand of ZeroTol 2.0 (p3). PPLS formulation field: 'Soluble Concentrate' (SL); both liquid."
+    },
+    "permit": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00002-20250911.pdf",
+      "docDate": "2025-09-11",
+      "page": 4,
+      "quote": "PRODUCT INFORMATION PERMIT® is a Water Dispersible Granule (WDG) formulation that selectively controls certain broadleaf weeds and nutsedges",
+      "note": "PPLS formulations field says 'Emulsifiable Concentrate' (EPA record error); label text governs."
+    },
+    "poast-plus": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00088-20140211.pdf",
+      "docDate": "2014-02-11",
+      "page": 3,
+      "quote": "Equivalent to 1 pound of sethoxydim per gallon formulated as an emulsifiable concentrate Contains petroleum distillate EPA Reg. No. 7969-88",
+      "note": "PPLS formulation 'Emulsifiable Concentrate' corroborates. NOTE: PPLS shows 7969-88 (Poast Plus) status Inactive since 2021-08-27 (company request); 2014 label is the last one on file."
+    },
+    "portal-xlo": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071711-00040-20240111.pdf",
+      "docDate": "2024-01-11",
+      "page": 3,
+      "quote": "NAI-2399-2 5EC ... EPA Reg. No. 71711-40 ... [Alternate Brand Names: Portal ® XLO Miticide/Insecticide, FujiMite® XLO Miticide/Insecticide]",
+      "note": "Portal XLO is an alternate brand name of the 71711-40 label whose base name carries '5EC'; label also 'Contains petroleum distillates'. PPLS formulations: 'Emulsifiable Concentrate'. Read from 71711-40, not the plugin's 71711-23 (see contradictions)."
+    },
+    "presidio-fluopicolide": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00140-20220523.pdf",
+      "docDate": "2022-05-23",
+      "page": 8,
+      "quote": "V-10161 4 SC Fungicide is formulated as 4 lb ai/gallon suspension concentrate (SC).",
+      "note": "59639-140 base name is V-10161 4 SC Fungicide; PPLS lists 'PRESIDIO FUNGICIDE' as its alternate brand name (the label PDF text itself does not print 'Presidio'). PPLS formulation field says 'Flowable Concentrate'; label preferred."
+    },
+    "pristine": {
+      "formulation": "WG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00199-20221130.pdf",
+      "docDate": "2022-11-30",
+      "page": 6,
+      "quote": "This package contains Pristine® fungicide, a water dis- persible granule (WG)."
+    },
+    "prowl-h2o": {
+      "formulation": "CS",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00418-20240925.pdf",
+      "docDate": "2024-09-25",
+      "page": 3,
+      "quote": "*1 gallon contains 3.8 pounds of pendimethalin formulated as an aqueous capsule suspension. EPA Reg. No. 241-418",
+      "note": "Main Prowl® H2O label (EPA 241-418, BASF, Active); the newer 2026-08-19 PPLS file is a Navajo Nation onion supplemental with the same statement. PPLS formulations field 'Emulsifiable Concentrate' is an EPA record error."
+    },
+    "pursuit": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00310-20150929.pdf",
+      "docDate": "2015-09-29",
+      "page": 6,
+      "quote": "Pursuit® herbicide is a soluble liquid herbicide to control and suppress many broadleaf and grass weeds and sedges",
+      "note": "PPLS formulation 'Soluble Concentrate' corroborates."
+    },
+    "quintec-quinoxyfen": {
+      "formulation": "F",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/033906-00026-20230413.pdf",
+      "docDate": "2023-04-13",
+      "page": 9,
+      "quote": "Add (in order) dry flowable, wettable powder, and Quintec or other flowable (aqueous suspension) products to the spray tank.",
+      "note": "Label names Quintec a flowable (aqueous suspension). PPLS record (81880-30) says 'Emulsifiable Concentrate', which conflicts with the label; liquid either way. Reviewer may prefer keep-gap given the PPLS conflict."
+    },
+    "ranman": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00003-20260625.pdf",
+      "docDate": "2026-06-25",
+      "page": 2,
+      "quote": "RANMAN 400SC AGRICULTURAL FUNGICIDE ACTIVE INGREDIENT: Cyazofamid* ... 34.5%",
+      "note": "Code in brand name. PPLS field says 'Soluble Concentrate' but the brand code is SC; label rates are fluid ounces."
+    },
+    "raptor-imazamox": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00379-20210430.pdf",
+      "docDate": "2021-04-30",
+      "page": 6,
+      "quote": "Raptor® herbicide, a soluble liquid, is a postemergence herbicide to control and suppress many broadleaf and grass weeds",
+      "note": "'Soluble liquid' mapped to SL. The PPLS record's formulation field says 'Emulsifiable Concentrate', which disagrees with the label wording; label used."
+    },
+    "reflex": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00993-20240325.pdf",
+      "docDate": "2024-03-25",
+      "page": 3,
+      "quote": "Reflex Herbicide is formulated as a soluble liquid.",
+      "note": "EPA 100-993 Syngenta, Active. 'Soluble liquid' maps to SL. PPLS formulations field 'Emulsifiable Concentrate' is an EPA record error."
+    },
+    "regalia": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00003-20260820.pdf",
+      "docDate": "2026-08-20",
+      "page": 7,
+      "quote": "...liquid flowable formulations, and emulsifiable formulations such as REGALIA® Bioprotectant Concentrate.",
+      "note": "No code printed; label describes the product as an emulsifiable formulation and names it a 'Concentrate'. PPLS record formulation 'Emulsifiable Concentrate' corroborates. Alternate brand names on p.3 include 'REGALIA® Biofungicide'."
+    },
+    "regalia-maxx-omri": {
+      "formulation": "ME",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00003-20260820.pdf",
+      "docDate": "2026-08-20",
+      "page": 8,
+      "quote": "Application Instructions: REGALIA® Bioprotectant Concentrate is a micro-emulsion concentrate consisting of certain ingredients extracted from Reynoutria sachalinensis.",
+      "note": "For 84059-3 (the plugin's EPA no. and 0.5-4 qt/A rate). Same label also groups it with 'emulsifiable formulations' in tank-mix order, and PPLS says Emulsifiable Concentrate; Regalia Maxx (84059-6) label likewise says 'micro-emulsion concentrate'. Liquid either way."
+    },
+    "revus": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20251016.pdf",
+      "docDate": "2025-10-16",
+      "page": 3,
+      "quote": "Revus is formulated as a suspension concentrate and contains 2.08 lb of active ingredient per gallon"
+    },
+    "roundup-powermax-3": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00659-20241213.pdf",
+      "docDate": "2024-12-13",
+      "page": 15,
+      "quote": "It is formulated as a water-soluble liquid containing surfactant and may be applied using standard and specialized pesticide application",
+      "note": "Water-soluble liquid mapped to SL (same mapping as other glyphosate SLs). PPLS formulation field is empty for this record."
+    },
+    "sandea": {
+      "formulation": "DF",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00018-20250911.pdf",
+      "docDate": "2025-09-11",
+      "page": 4,
+      "quote": "PRODUCT INFORMATION SANDEA is a dry flowable formulation that selectively controls certain broadleaf weeds and nutsedges in selected crops.",
+      "note": "EPA 81880-18, Active. PPLS formulations field 'Emulsifiable Concentrate' is an EPA record error."
+    },
+    "sevin-xlr-plus": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250717.pdf",
+      "docDate": "2025-07-17",
+      "page": 7,
+      "quote": "SEVIN® brand XLR PLUS Carbaryl Insecticide is a suspension of microfine SEVIN® brand carbaryl insecticide in an aqueous medium.",
+      "note": "Aqueous suspension -> SC. REVIEW: PPLS formulations field says 'Emulsifiable Concentrate', which disagrees with the label; label taken as primary."
+    },
+    "sharpen-saflufenacil": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00278-20240910.pdf",
+      "docDate": "2024-09-10",
+      "page": 3,
+      "quote": "Contains 2.85 pounds active ingredient saflufenacil per gallon formulated as a water-based suspension concentrate EPA Reg. No. 7969-278",
+      "note": "PPLS record lists both 'Emulsifiable Concentrate' and 'Flowable Concentrate'; the label text is unambiguous (SC)."
+    },
+    "sivanto-prime": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01141-20210603.pdf",
+      "docDate": "2021-06-03",
+      "page": 2,
+      "quote": "FLUPYRADIFURONE GROUP 4D INSECTICIDE SIVANTO™ 200 SL [ABN: SIVANTO™ prime]",
+      "note": "The code SL is printed in the brand name. PPLS formulation: 'Soluble Concentrate'."
+    },
+    "sluggo-iron-phosphate": {
+      "formulation": "G",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/067702-00003-20140908.pdf",
+      "docDate": "2014-09-08",
+      "page": 7,
+      "quote": "Easy-to-use (ready-to-use) (RTU) granular (pellet) formulation. -Easy to apply granules.",
+      "note": "Master label for 67702-3 (Neudorff 'NEU1165M SLUG AND SNAIL BAIT'); ag sublabel B p13 'Scatter pellets at a rate of 20-44 lbs. per acre'. PPLS formulations: 'Granular'. The Sluggo brand itself is sold under supplemental distributor number 67702-3-54705 ('SLUGGO' / 'SLUGGO - AG'); the plugin's 67702-3 (Neudorff basic registration) is consistent with the plugin notes naming Neudorff."
+    },
+    "spartan-charge": {
+      "formulation": "SE",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03337-20250804.pdf",
+      "docDate": "2025-08-04",
+      "page": 3,
+      "quote": "F7127 SE HERBICIDE EPA Reg. No. 279-3337 ... Carfentrazone-ethyl 3.53% Sulfentrazone 31.77%",
+      "note": "Code 'SE' printed in the base brand name; label p9 also groups it with 'liquid suspensions'. PPLS alternate brand names for 279-3337 include 'SPARTAN CHARGE HERBICIDE' (FMC, Active). PPLS formulations field 'Emulsifiable Concentrate' is an EPA record error."
+    },
+    "stargus-bacillus-amyloliquefaciens": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00028-20260410.pdf",
+      "docDate": "2026-04-10",
+      "page": 7,
+      "quote": "MBI-110 EP is an aqueous suspension. Use 50-mesh nozzle screens or larger.",
+      "note": "Stargus is an alternate brand of MBI-110 EP (p3). Label says 'Aqueous Suspension', mapped to SC; PPLS formulation field empty. Liquid either way."
+    },
+    "topsin-m-wsb": {
+      "formulation": "WP",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00125-20260625.pdf",
+      "docDate": "2026-06-25",
+      "page": 3,
+      "quote": "TOPSIN® M WSB THIOPHANATE-METHYL FUNGICIDE IN WATER SOLUBLE BAGS 70% Wettable Powder",
+      "note": "Wettable powder in water-soluble bags; label calls it Wettable Powder; PPLS formulation Wettable Powder."
+    },
+    "touchdown-hitech": {
+      "formulation": "SL",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01182-20150318.pdf",
+      "docDate": "2015-03-18",
+      "page": 3,
+      "quote": "Touchdown HiTech is formulated as a soluble liquid. *Touchdown HiTech contains 5 pounds per U.S. gallon of glyphosate acid equivalent",
+      "note": "PPLS 'Soluble Concentrate' corroborates."
+    },
+    "trilogy-neem": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00002-20230602.pdf",
+      "docDate": "2023-06-02",
+      "page": 1,
+      "quote": "Alternate Brand Names to only include - Neemgard, Nimbuz, Triact 70 EC, Trilogy, Trilogy PHC, Triact 64 L, Trilogy 70 EC, and Trilogy 64 EC",
+      "note": "'Trilogy' is an alternate brand name of Neem Oil 70% (70051-2); the same registration's Trilogy ABNs print 'EC' ('Trilogy 70 EC', 'Trilogy 64 EC') and the mixing directions refer to emulsification (p.6). PPLS formulation field says 'Oils (no added pesticide)'. Reviewer may prefer keep-gap if the plain 'Trilogy' container must itself print the code."
+    },
+    "valor-sx": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00099-20260917.pdf",
+      "docDate": "2026-09-17",
+      "page": 3,
+      "quote": "Valor® Herbicide is a water dispersible granule containing 51% active ingredient."
+    },
+    "velista-penthiopyrad": {
+      "formulation": "WDG",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01534-20141120.pdf",
+      "docDate": "2014-11-20",
+      "page": 3,
+      "quote": "Contains 0.5 pound Penthiopyrad per pound of product. Velista™ is a water-dispersible granule.",
+      "note": "Latest PPLS file (2024-04-18) is font-encoded; 2014 label used. PPLS field: 'Water Dispersible Granule'."
+    },
+    "velum-prime-fluopyram-nematicide": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01078-20260903.pdf",
+      "docDate": "2026-09-03",
+      "page": 3,
+      "quote": "Contains 4.16 lbs FLUOPYRAM per gallon ... EPA Reg. No. 264-1078 EPA Est. No. SUSPENSION CONCENTRATE",
+      "note": "Label base name LUNA PRIVILEGE, 'ABN: Velum® Prime, Velum® 500, Velum® One, FLUOPYRAM 500 ST; Velum®' (p3). Read from 264-1078, not the plugin's 264-1136 (see contradictions). PPLS formulations field says 'Soluble Concentrate'; label prints SUSPENSION CONCENTRATE, label wins."
+    },
+    "verdict-saflufenacil-dimethenamid": {
+      "formulation": "EC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00279-20180504.pdf",
+      "docDate": "2018-05-04",
+      "page": 3,
+      "quote": "Contains 0.57 pound of saflufenacil and 5.0 pounds of dimethenamid-P per gallon, formulated as an emulsifiable concentrate",
+      "note": "PPLS 'Emulsifiable Concentrate' corroborates."
+    },
+    "warrant": {
+      "formulation": "CS",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000524-00591-20200618.pdf",
+      "docDate": "2020-06-18",
+      "page": 4,
+      "quote": "[Insert brand name] is an encapsulated herbicide for weed control in Alfalfa, Field Corn, Popcorn, Production Seed Corn",
+      "note": "Label prints no code; 'encapsulated herbicide' mapped to CS (capsule suspension/microencapsulated). PPLS record formulation 'Microencapsulated' corroborates."
+    },
+    "warrior-ii-with-zeon": {
+      "formulation": "CS",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20250703.pdf",
+      "docDate": "2025-07-03",
+      "page": 3,
+      "quote": "Warrior II with Zeon Technology contains 2.08 lb of active ingredient per gal and is a capsule suspension.",
+      "note": "Capsule suspension -> CS. REVIEW: PPLS formulations field says 'Emulsifiable Concentrate', which disagrees with the label; label taken as primary."
+    },
+    "zampro-ametoctradin": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00302-20190930.pdf",
+      "docDate": "2019-09-30",
+      "page": 5,
+      "quote": "This package contains Zampro® fungicide, a suspension concentrate (SC) with two active ingredients, ametoctradin and dimethomorph."
+    },
+    "zerotol-2-0-sanitizer": {
+      "formulation": "L",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070299-00012-20210903.pdf",
+      "docDate": "2021-09-03",
+      "page": 6,
+      "quote": "ZeroTol 2.0 is a liquid bactericide/fungicide used to treat and control plant pathogens on indoor, gree[nhouse]...",
+      "note": "No code printed; label word 'liquid' maps to L. PPLS record formulation is 'Soluble Concentrate' (SL), so a reviewer may prefer SL; the two disagree."
+    },
+    "zidua-pro": {
+      "formulation": "SC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00365-20171228.pdf",
+      "docDate": "2017-12-28",
+      "page": 3,
+      "quote": "1.33 lbs imazethaypr, and 0.48 lbs saflufenacil per gallon formulated as a water-based suspension concentrate EPA Reg. No. 7969-365",
+      "note": "Label is Zidua PRO (EPA Reg. 7969-365), not the plugin's 7969-374 (Zidua SC). PPLS 7969-365 lists 'Soluble Concentrate' and 'Flowable Concentrate'; label text used."
+    }
+  },
+  "dataCorrections": {
+    "authority-mtz-sulfentrazone": [
+      {
+        "path": "ratePerAcre.unit",
+        "from": "fl-oz",
+        "to": "oz",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03340-20230713.pdf",
+        "quote": "F6482 45DF Herbicide is a dry flowable formulation ... Apply F6482 45DF at 5 - 22.2 oz/A",
+        "page": 11
+      },
+      {
+        "path": "defaultUnit",
+        "from": "fl-oz",
+        "to": "oz",
+        "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03340-20230713.pdf",
+        "quote": "F6482 45DF Herbicide is a dry flowable formulation",
+        "page": 11
+      }
+    ],
+    "m-pede": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": false,
+          "certifiedOrganicAllowed": false
+        },
+        "to": {
+          "omriListed": true,
+          "certifiedOrganicAllowed": true
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=M-Pede",
+        "docDate": "2026-09-25",
+        "quote": "OMRI NOP listing 'M-Pede Insecticide/Miticide/Fungicide', Gowan Company, goc-2510, expires 2026-12-01"
+      }
+    ],
+    "aza-direct": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": false,
+          "certifiedOrganicAllowed": false
+        },
+        "to": {
+          "omriListed": true,
+          "certifiedOrganicAllowed": true
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=Aza-Direct",
+        "docDate": "2026-09-25",
+        "quote": "OMRI NOP listing 'Aza-Direct Botanical Insecticide', Gowan Company, goc-9305, expires 2026-12-01"
+      }
+    ],
+    "kumulus-df": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": true
+        },
+        "to": {
+          "omriListed": false
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=Kumulus",
+        "docDate": "2026-09-25",
+        "quote": "Only OMRI listings are BASF Mexico (asf-15133) and BASF Costa Rica (bbv-16410) products, not the US Kumulus DF (51036-352)"
+      }
+    ],
+    "champ-dp": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": true
+        },
+        "to": {
+          "omriListed": false
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=Champ",
+        "docDate": "2026-09-25",
+        "quote": "OMRI lists Nufarm Champ WG (agt-1382) and ChampION++ (agt-5824), not Champ Dry Prill"
+      }
+    ],
+    "cuprofix-ultra-disperss": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": true
+        },
+        "to": {
+          "omriListed": false
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=Cuprofix",
+        "docDate": "2026-09-25",
+        "quote": "OMRI lists only Cuprofix Flex Dry Flowable (UPL, upi-16918), a different product"
+      }
+    ],
+    "alldown-acetic-citric": [
+      {
+        "path": "complianceFlags",
+        "from": {
+          "omriListed": true
+        },
+        "to": {
+          "omriListed": false
+        },
+        "sourceUrl": "https://www.omri.org/omri-search?query=AllDown",
+        "docDate": "2026-09-25",
+        "quote": "No OMRI listing for 'AllDown' or 'Summerset'; label does say 'FOR USE IN ORGANIC PRODUCTION' (certifiedOrganicAllowed kept). Both SummerSet registrations (84069-1/-2) inactive since 2025-01-13"
+      }
+    ]
+  },
+  "defaultUnit": {
+    "can-17-calcium-ammonium-nitrate": {
+      "defaultUnit": "gal",
+      "sourceUrl": "https://www.yara.us/contentassets/280676bbae1c466799e9d22b57225584/yaraliva-can-17-bulk-label.pdf",
+      "docDate": "2025-01",
+      "page": 1,
+      "quote": "17-0-0 plus 8.8% Ca CAN-17 ... Derived from: Calcium Nitrate and Ammonium Nitrate. Density: 12.6 pounds per gallon at 68° F.",
+      "note": "CAN-17 is a liquid solution: Yara label (YaraLiva_CAN-17_17-0-0_bulk_0125_v002) gives density 12.6 lb/gal; Nutrien label (https://products.nutrien.com/docs/1281, F3320 11/8/22) reads 'CAN 17 Calcium Ammonium Nitrate Solution ... Density 12.7 lb/gal at 68°F, (Specific Gravity 1.5)'. So the plugin's form 'liquid' is CORRECT; keep it. 'gal' matches the other 9 liquid fertilizer plugins. Granular CAN is a different grade (27% N)."
+    },
+    "chaparral-aminopyralid-metsulfuron": {
+      "defaultUnit": "oz",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00597-20240927.pdf",
+      "docDate": "2024-09-27",
+      "page": 19,
+      "quote": "Product Measurement Chaparral is measured using the Chaparral volumetric measuring cylinder. Scales calibrated in ounces may also be used.",
+      "note": "Explicit because formulation stays gapped. Rates are oz of dry product per acre ('cannot exceed 3.3 oz of product per acre per year', p16); plugin 3.3 oz rate matches the label max."
+    },
+    "express-tribenuron": {
+      "defaultUnit": "oz",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09578-20190506.pdf",
+      "docDate": "2019-05-06",
+      "page": 8,
+      "quote": "Use EXPRESS XP herbicide at 0.33 oz/A (0.0155 Lb. ai/A) (except oats) for heavy infestation",
+      "note": "Both candidate labels are dry granules rated in dry oz/A: Express XP 'Dry Flowable' (p3) and Express with TotalSol 'Soluble Granule' (279-9594, 2022-12-20, p3; 'Use 0.375 oz/A ... to 0.5 oz/A' p12). Dry oz is correct whichever product the plugin means; formulation stays gapped."
+    },
+    "isomate-c-plus-pheromone": {
+      "defaultUnit": "count",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/053575-00006-20140203.pdf",
+      "docDate": "2014-02-03",
+      "page": 2,
+      "quote": "400 dispensers per acre (2.88 fl oz or 72.91 g a.i. per application).",
+      "note": "Label rate is a dispenser count (min 200, typically 400 per acre). Schema ratePerAcre.unit cannot be 'count', so the 400 'oz' rate needs a schema-level decision (see contradictions)."
+    },
+    "nematode-steinernema-feltiae": {
+      "defaultUnit": "count",
+      "sourceUrl": "https://www.koppertus.com/entonem/",
+      "docDate": "2026-09-25",
+      "quote": "50 million - 1 sachet of 50 million in a box ... 500 million - 2 sachets of 250 million in a box ... Soil application: 250,000 to 500,000 nematodes per m²",
+      "note": "Producer product page (Koppert Entonem, S. feltiae), not an EPA label; macro-organisms have none. Product is sold and dosed by count of nematodes, not weight. See contradictions: the plugin rate '1 lb' is wrong, and the insecticide ratePerAcre.unit enum (oz|fl-oz|lb|pt|qt) cannot express count."
+    },
+    "trichogramma-egg-parasitoid": {
+      "defaultUnit": "count",
+      "sourceUrl": "https://insectary.com/trichoforceb/",
+      "docDate": "2026-09-25",
+      "quote": "TRICHOforce™ B – 100,000 ... 50,000 to 100,000 per acre/weekly during moth flight",
+      "note": "Producer product page (Beneficial Insectary; T. brassicae), not an EPA label; macro-organisms have none. Sold and released by count. The plugin amount 100000 matches the page's 50,000-100,000/acre, but its unit 'oz' is wrong (see contradictions)."
+    }
+  },
+  "complianceFlags": {
+    "accent-q-nicosulfuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Accent%20Q",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Accent Q' / 'Accent': no Corteva/DuPont Accent product among NOP results"
+    },
+    "acramite-bifenazate": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Acramite",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Acramite' and 'bifenazate': no Acramite/bifenazate product among NOP results"
+    },
+    "actigard-50wg": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Actigard",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Actigard': 14 NOP results, none is Actigard/acibenzolar-S-methyl"
+    },
+    "admiral-igr": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Admiral",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Admiral': 0 total (NOP)"
+    },
+    "aim-ec-carfentrazone": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Aim%20EC",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Aim EC': no product titled Aim EC (NOP)"
+    },
+    "aliette-wdg-fosetyl-al": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Aliette",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Aliette': no product titled Aliette (NOP ruling body)"
+    },
+    "altacor-chlorantraniliprole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Altacor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Altacor': 0 total"
+    },
+    "apollo-clofentezine": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Apollo",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Apollo': no NOP listing for Apollo SC, ADAMA/Makhteshim Agan"
+    },
+    "applaud-buprofezin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=buprofezin",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'buprofezin': 0 total; 'Applaud': 8 NOP results, none an Applaud product"
+    },
+    "aprovia": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Aprovia",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Aprovia': 2 NOP results, neither is Aprovia"
+    },
+    "authority-mtz-sulfentrazone": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Authority%20MTZ",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Authority MTZ' / 'Authority': no FMC Authority product among NOP results"
+    },
+    "balan-benefin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Balan",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Balan': no product titled Balan (NOP)"
+    },
+    "bravo-weather-stik": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Bravo",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Bravo': no NOP product listing for this brand"
+    },
+    "cadet-fluthiacet": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Cadet",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Cadet': 0 total (NOP ruling body)"
+    },
+    "caparol-prometryn": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Caparol",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "capreno-thiencarbazone-tembotrione": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Capreno",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Capreno': 3 total -- Kyprion, CUPROAN PRO+, Copernico HB (copper products, not Capreno)"
+    },
+    "captan-80wdg": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Captan%2080%20WDG",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Captan 80 WDG': no product titled Captan 80 WDG (NOP ruling body)"
+    },
+    "cevya-mefentrifluconazole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Cevya",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Cevya': no NOP product listing for this brand"
+    },
+    "chaparral-aminopyralid-metsulfuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Chaparral",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Chaparral': 2 NOP results, neither a Corteva Chaparral herbicide"
+    },
+    "classic-chlorimuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Classic",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "closer-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Closer",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Closer': no NOP listing for Closer SC, Corteva"
+    },
+    "confirm-2f-tebufenozide": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=tebufenozide",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'tebufenozide': 0 total; 'Confirm 2F': no Confirm/tebufenozide product among NOP results"
+    },
+    "curzate-60df-cymoxanil": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Curzate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Curzate': no NOP product listing for this brand"
+    },
+    "deadline-mps-metaldehyde": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=metaldehyde",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'metaldehyde': 0 total; 'Deadline': 13 NOP results, none a Deadline product"
+    },
+    "dimethoate-4ec": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Dimethoate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Dimethoate': 0 total"
+    },
+    "dithane-rainshield": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Dithane",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Dithane': no product titled Dithane (NOP ruling body)"
+    },
+    "duracor-aminopyralid-florpyrauxifen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=DuraCor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "elevate-50wdg": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Elevate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Elevate': no NOP product listing for this brand"
+    },
+    "endura-boscalid": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Endura",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Endura': no product titled Endura (NOP ruling body)"
+    },
+    "envidor-spirodiclofen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Envidor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Envidor': 3 NOP results, none an Envidor product"
+    },
+    "eptam-eptc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Eptam",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Eptam': 1 NOP result, 'TIS Silicone Adjuvant' (Jiangxi Tiansheng) - not Eptam"
+    },
+    "et-herbicide-pyraflufen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=ET%20Herbicide",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "express-tribenuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Express",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Express': no product titled Express (NOP)"
+    },
+    "fierce-flumioxazin-pyroxasulfone": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Fierce",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Fierce': no Valent Fierce product among NOP results"
+    },
+    "flint-extra": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Flint",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Flint': 21 NOP results, none is Flint Extra/Gem 500 SC"
+    },
+    "folicur-36f-tebuconazole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Folicur",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Folicur': no NOP product listing for this brand"
+    },
+    "forum": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Forum",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Forum': no product titled Forum (NOP ruling body)"
+    },
+    "fulfill-pymetrozine": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Fulfill",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Fulfill': no NOP listing for Fulfill, ADAMA/Makhteshim Agan"
+    },
+    "grazonnext-hl": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=GrazonNext",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'GrazonNext': no product titled GrazonNext (NOP)"
+    },
+    "harmony-sg-thifensulfuron": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Harmony",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "headline-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Headline",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Headline': 0 NOP results"
+    },
+    "indar-2f": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Indar",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Indar': no product titled Indar (NOP ruling body)"
+    },
+    "inspire-super": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Inspire",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Inspire': 15 NOP results, none is Inspire Super"
+    },
+    "intrepid-edge": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Intrepid%20Edge",
+      "docDate": "2026-09-25",
+      "quote": "No Intrepid Edge / GF-3028 product among OMRI NOP results"
+    },
+    "k-phite-phosphonate": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=K-Phite",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'K-Phite': no NOP product listing for this brand"
+    },
+    "kanemite-acequinocyl": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Kanemite",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Kanemite': no NOP listing for Kanemite 15 SC, UPL NA"
+    },
+    "kasumin-2l-kasugamycin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Kasumin",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Kasumin': no product titled Kasumin (NOP ruling body)"
+    },
+    "luna-tranquility": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Luna",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Luna': 99 NOP results, only Luna match is 'Penn Perlite Horticultural: Screened Luna Rock'"
+    },
+    "manzate-pro-stick": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Manzate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Manzate': no NOP product listing for this brand"
+    },
+    "merivon": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Merivon",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Merivon': no product titled Merivon (NOP ruling body)"
+    },
+    "method-aminocyclopyrachlor": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Method%20240SL",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "miravis-pydiflumetofen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Miravis",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Miravis': no product titled Miravis (NOP ruling body)"
+    },
+    "mycoshield-oxytetracycline": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Mycoshield",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Mycoshield': 1 NOP result, 'Farmonic MycoShield Mycorrhizal Inoculant' (different product)"
+    },
+    "oberon-spiromesifen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Oberon",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Oberon': 0 total"
+    },
+    "omega-500f-fluazinam": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Omega%20500F",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Omega 500F': no product titled Omega 500F (NOP ruling body)"
+    },
+    "onager-hexythiazox": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Onager",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Onager': no NOP listing for Onager Miticide, Gowan"
+    },
+    "orondis-opti": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Orondis",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Orondis': 2 NOP results, neither is Orondis"
+    },
+    "phostrol-phosphonate": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Phostrol",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Phostrol': no product titled Phostrol (NOP ruling body)"
+    },
+    "portal-xlo": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Portal",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'fenpyroximate': 0 total"
+    },
+    "presidio-fluopicolide": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Presidio",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Presidio': 80 NOP results, none is Presidio Fungicide"
+    },
+    "previcur-flex-propamocarb": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Previcur",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Previcur': no NOP product listing for this brand"
+    },
+    "pristine": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Pristine",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Pristine': no product titled Pristine (NOP ruling body)"
+    },
+    "prophyt-phosphonate": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=ProPhyt",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'ProPhyt': 36 NOP results, none is ProPhyt/Helena ProPhyt"
+    },
+    "quadris-flowable": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Quadris",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Quadris': no NOP product listing for this brand"
+    },
+    "quintec-quinoxyfen": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Quintec",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Quintec': no product titled Quintec (NOP ruling body)"
+    },
+    "rally-40wsp": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Rally",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Rally': 113 NOP results, none is Rally 40WSP/myclobutanil"
+    },
+    "ranman": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Ranman",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Ranman': no NOP product listing for this brand"
+    },
+    "raptor-imazamox": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Raptor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Raptor': no product titled Raptor (NOP)"
+    },
+    "regalia": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Regalia",
+      "docDate": "2026-09-25",
+      "quote": "REGALIA Biofungicide | ProFarm Group | pfb-18571 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
+    "resicore-rev": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Resicore",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "revus": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Revus",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Revus': no NOP product listing for this brand"
+    },
+    "ridomil-gold-sl": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Ridomil%20Gold",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Ridomil Gold': no product titled Ridomil Gold (NOP ruling body)"
+    },
+    "rovral-4f-iprodione": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Rovral",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Rovral': no NOP product listing for this brand"
+    },
+    "scala-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Scala",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Scala': no product titled Scala (NOP ruling body)"
+    },
+    "sencor-metribuzin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Sencor",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "serenade-aso": {
+      "omriListed": true,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Serenade",
+      "docDate": "2026-09-25",
+      "quote": "Bayer Serenade ASO | Bayer CropScience LP | gus-4423 | NOP | Allowed with Restrictions | expires 2027-06-01"
+    },
+    "sharpen-saflufenacil": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Sharpen",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Sharpen': no product titled Sharpen (NOP)"
+    },
+    "switch-625wg": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Switch%2062.5WG",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Switch 62.5WG': no product titled Switch 62.5WG (NOP ruling body)"
+    },
+    "tilt-36ec-propiconazole": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Tilt",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Tilt': 4 NOP results, none is Tilt"
+    },
+    "topguard-ez": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=TopGuard",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'TopGuard': no NOP product listing for this brand"
+    },
+    "topsin-m-wsb": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Topsin",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Topsin': no product titled Topsin (NOP ruling body)"
+    },
+    "torac-sc": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Torac",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Torac': no NOP listing for Torac SC, Nichino America"
+    },
+    "velista-penthiopyrad": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Velista",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Velista': no NOP product listing for this brand"
+    },
+    "velum-prime-fluopyram-nematicide": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Velum",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'fluopyram': 0 total"
+    },
+    "verdict-saflufenacil-dimethenamid": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Verdict",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search returned no NOP listing for this product or active ingredient"
+    },
+    "voliam-xpress": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Voliam",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Voliam': 4 NOP results, none a Voliam product"
+    },
+    "vydate-l-oxamyl": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Vydate",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Vydate': 0 total"
+    },
+    "zampro-ametoctradin": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Zampro",
+      "docDate": "2026-09-25",
+      "quote": "OMRI results for 'Zampro': no product titled Zampro (NOP ruling body)"
+    },
+    "zidua-pro": {
+      "omriListed": false,
+      "sourceUrl": "https://www.omri.org/omri-search?query=Zidua",
+      "docDate": "2026-09-25",
+      "quote": "OMRI search 'Zidua': no product titled Zidua (NOP)"
     }
   }
 }

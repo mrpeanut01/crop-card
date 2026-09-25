@@ -4,1032 +4,372 @@
     {
       "pluginId": "2-4-d-amine",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Generic plugin with no single product label; 2,4-D amine jugs differ by registrant, so no one label's formulation statement applies (checked 2026-09-25)."
     },
     {
       "pluginId": "24d",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "accent-q-nicosulfuron",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "accent-q-nicosulfuron",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Generic plugin with no single label: dozens of 2,4-D amine registrations differ in strength and label wording, so the formulation code must come from the jug on hand rather than one chosen label."
     },
     {
       "pluginId": "acuron",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Label (100-1466, 2021-11-10, p3) says 'Acuron Herbicide is a ZC formulation'; ZC (mixed capsule suspension + SC) is not in the formulation enum, and PPLS lists it as Emulsifiable Concentrate. Needs enum decision."
     },
     {
       "pluginId": "alldown-acetic-citric",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "anthem-maxx",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "authority-mtz-sulfentrazone",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "axxe-ammonium-nonanoate",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "AllDown Concentrate label (EPA 84069-1, 2010) names no formulation type (only 'Concentrate', diluted 1:2-1:3 with water); PPLS lists 'Ready-to-Use Solution', not a code. Registration inactive since 2025-01-13."
     },
     {
       "pluginId": "banvel",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "beyond",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "cadet-fluthiacet",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "callisto",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "capreno-thiencarbazone-tembotrione",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "chaparral-aminopyralid-metsulfuron",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+      "reason": "No single Banvel product: the Banvel name is on three UPL registrations (70506-461 Banvel, 70506-505 Banvel 4 SL, 70506-503 Banvel 480) and the plugin names BASF, whose dicamba label never says Banvel. Pick the product first; formulation follows (label-research 2026-09-25)."
     },
     {
       "pluginId": "chaparral-aminopyralid-metsulfuron",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "classic-chlorimuron",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "classic-chlorimuron",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "cobra",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Chaparral label (EPA 62719-597, 2024 and 2011 versions, plus Greenbook specimen) names no formulation type; only PPLS record says 'Water Dispersible Granule'. Product is dry, measured by volumetric cylinder or scale in ounces."
     },
     {
       "pluginId": "corn-gluten-meal-pre",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Generic 25(b) material with no single product label: corn gluten meal is sold as meal, powder, granules or pellets by many marketers (OMRI lists many). Plugin names no brand, so no label formulation to cite."
     },
     {
       "pluginId": "crossbow",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Crossbow label (62719-260, 2025-02-04) prints no formulation code or name (grep for emulsifiable/concentrate/formulation found none). PPLS lists 'Emulsifiable Concentrate', which counts only as corroboration."
     },
     {
       "pluginId": "ct-test-herbicide-clickthrough",
       "field": "formulation",
-      "reason": "E2E click-through test fixture, not a real product."
-    },
-    {
-      "pluginId": "dual-ii-magnum",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "E2E clickthrough test fixture, not a real product; no label, so no formulation code applies."
     },
     {
       "pluginId": "duracor-aminopyralid-florpyrauxifen",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "engenia",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "The DuraCor label (GF-3850, 62719-739, 2019-11-26) prints no formulation code or formulation name. PPLS lists 'Emulsifiable Concentrate', which counts only as corroboration. Needs a printed label or tech sheet."
     },
     {
       "pluginId": "et-herbicide-pyraflufen",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "express-tribenuron",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+      "reason": "The ET Herbicide/Defoliant label (71711-7, 2026-09-03, p3) prints no formulation code or name ('Contains 0.208 lb. pyraflufen ethyl per gallon'). PPLS lists 'Emulsifiable Concentrate'; its inactive brand name is 'ET-751 2.5% EC'. Corroboration only."
     },
     {
       "pluginId": "express-tribenuron",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "fierce-flumioxazin-pyroxasulfone",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "fierce-flumioxazin-pyroxasulfone",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Ambiguous brand: FMC sells Express with TotalSol (279-9594, labeled Soluble Granule, SG) and Express XP (279-9578, labeled Dry Flowable, DF; old name Express Herbicide). Pick the jug on hand."
     },
     {
       "pluginId": "finalsan-pelargonic",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "glyphosate-4-plus",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Identity unclear: the plugin says pelargonic acid (EU Finalsan), but US Finalsan (67702-8, 67702-34) is ammoniated soap of fatty acids 22%. Neither label prints a formulation; PPLS says EC for one, Soluble Concentrate for the other."
     },
     {
       "pluginId": "glyphosate-generic",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Generic 'Glyphosate 41%' names no single product; formulation must come from the specific jug's label (41% IPA-salt products are typically soluble liquids, but not verified per product)."
     },
     {
       "pluginId": "grazonnext-hl",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "GrazonNext HL master label (62719-628, 2017-03-13) prints no formulation code or wording; only the PPLS record says Emulsifiable Concentrate, which the brief allows as corroboration only. Newer PPLS files are supplemental labels."
     },
     {
       "pluginId": "halex-gt",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "laudis",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Halex GT label (EPA 100-1282, 2025-01-15 and 2008-08-18 versions) prints no formulation type or code, only 'DoseLock Formulation Technology' and a.i. per gallon. PPLS record says 'Emulsifiable Concentrate' (corroboration only, not label)."
     },
     {
       "pluginId": "liberty-ultra",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Liberty ULTRA label (EPA 7969-500, 2025-10-30 and 2024-10-22) prints no formulation code or type; says only it 'is a water-soluble nonselective herbicide' and 'is formulated to mix readily in water'. PPLS formulations field is empty."
     },
     {
       "pluginId": "lumax-ez",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Label (100-1442, 2022-12-14, p3) says 'Lumax® EZ Herbicide is a ZC formulation'. ZC is not in the formulation enum, and PPLS lists 'Pressurized Liquid'. Needs enum decision."
     },
     {
       "pluginId": "me-too-lachlor-ii",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "outlook",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "permit",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "permit",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Me-Too-Lachlor II label (19713-549, 2023-01-04) prints no formulation code or wording ('7.8 pounds of active ingredient per gallon' only); PPLS record says Emulsifiable Concentrate, usable only as corroboration."
     },
     {
       "pluginId": "phydura-clove-citric",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "poast-plus",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "prowl-h2o",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "pursuit",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "raptor-imazamox",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "reflex",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "The manufacturer label (Soil Technologies Corp., OMRI 10/2022) calls it only a liquid 'herbicide CONCENTRATE' (clove oil 1.0%, 'SHAKE WELL'); it prints no formulation code or type that maps to the enum. The product is FIFRA 25(b) minimum-risk, so there is no EPA label."
     },
     {
       "pluginId": "resicore-rev",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "roundup-powermax-3",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "sandea",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "sandea",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "sharpen-saflufenacil",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "spartan-charge",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Label (GF-4556, 62719-756, 2025-04-04, p3) calls it only 'An encapsulated herbicide'. It is a premix with encapsulated acetochlor, so CS vs ZC can't be settled, and it prints no code. PPLS formulation field is empty."
     },
     {
       "pluginId": "stadia-dry",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Placeholder plugin with no real active ingredient; the only PPLS 'Stadia' (91234-31, Atticus) is a Water Dispersible Granule, but the plugin's identity with that product is unconfirmed."
     },
     {
       "pluginId": "stadia",
       "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
+      "reason": "Plugin identity unresolved: the only PPLS product named Stadia (91234-31, Atticus) is halosulfuron-methyl 75% WDG, but this plugin declares rimsulfuron. Held until the owner decides which product the plugin describes (label-research 2026-09-25)."
     },
     {
       "pluginId": "stadia",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Plugin identity unresolved: the only PPLS product named Stadia (91234-31, Atticus) is halosulfuron-methyl 75% WDG, but this plugin declares rimsulfuron. Held until the owner decides which product the plugin describes (label-research 2026-09-25)."
     },
     {
       "pluginId": "stinger",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "touchdown-hitech",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "valor-sx",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "valor-sx",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "verdict-saflufenacil-dimethenamid",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "warrant",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Stinger label (EPA 62719-73, 2019-03-11 and 2014-09-23 versions) prints no formulation code or type; states only clopyralid MEA salt 40.9% (3 lb ae/gal). PPLS record says 'Emulsifiable Concentrate' (not corroborated by label)."
     },
     {
       "pluginId": "weed-zap-citronella",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Weed Zap is a FIFRA 25(b) exempt product (no EPA label). JH Biotech label (2014) calls it only 'WEED ZAP concentrate' (45% clove oil, 45% cinnamon oil); no EC/SL/L code or formulation term. JH product profile says 'Form: Liquid' (not label)."
     },
     {
       "pluginId": "xtendimax",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "zidua-pro",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "actara",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "actara",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "XtendiMax label (264-1210, 2023-02-16) prints only '2.9 pounds acid equivalent per U.S. gallon', no formulation type. The successor Stryax label (264-1241, p15) says 'a soluble concentrate' but is a different brand; fill SL if repointed."
     },
     {
       "pluginId": "admiral-igr",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "admire-pro",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "altacor-chlorantraniliprole",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "altacor-chlorantraniliprole",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "asana-xl",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "avaunt-evo",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "avaunt-evo",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "aza-direct",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "azaguard",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "baythroid-xl",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "belay",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "No US 'Admiral' pyriproxyfen product in EPA PPLS (name search 2026-09-25); plugin's 71711-2 is Moncut CL Flowable. Admiral is a non-US brand; no label to verify."
     },
     {
       "pluginId": "bt-kurstaki",
       "field": "defaultUnit",
-      "reason": "Generic active-ingredient entry with no label rate; the unit depends on which Bt product (DF vs liquid) is purchased."
+      "reason": "Generic Btk entry with no label rate; the unit depends on which Bt product (dry DF/WG in lb vs liquid in fl oz) is purchased. Checked 2026-09-25, no single label applies."
     },
     {
       "pluginId": "bt-kurstaki",
       "field": "formulation",
-      "reason": "Generic active-ingredient entry; formulation depends on which Bt product is purchased."
-    },
-    {
-      "pluginId": "coragen",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "cyd-x-codling-moth-virus",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "deadline-mps-metaldehyde",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "exirel",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Generic Btk entry: registered Btk products span DF, WG, WP, liquid and dust formulations (e.g. Javelin 6.4 WG, DiPel dust/DF), so no single label code applies. Use the brand plugins (dipel-df, javelin-wg)."
     },
     {
       "pluginId": "intrepid-edge",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "isomate-c-plus-pheromone",
-      "field": "defaultUnit",
-      "reason": "Count-based product (hand-applied pheromone dispensers); the plugin's 'oz' rate unit contradicts the product and needs a data fix to a 'count' unit."
+      "reason": "Sources disagree: US label (62719-666, 2017 PPLS and 12-07-22 specimen) prints no code and only groups it with 'aqueous suspensions', separately from ECs; PPLS formulation field says Emulsifiable Concentrate. Likely SC; needs review."
     },
     {
       "pluginId": "isomate-c-plus-pheromone",
       "field": "formulation",
-      "reason": "Pheromone dispenser — no spray formulation code applies."
+      "reason": "Hand-applied pheromone dispenser (PPLS formulation 'Impregnated Materials', Isomate-C Plus EPA 53575-6); no spray formulation code applies."
     },
     {
       "pluginId": "jms-stylet-oil-omri",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Label (65564-1, PPLS 2011-07-19; Organic JMS Stylet-Oil specimen) prints no formulation code or type, only 'Mineral Oil 97.1%' diluted as a 'spray emulsion'. PPLS type 'Oils (no added pesticide)' maps to no code. Checked 2026-09-25."
     },
     {
       "pluginId": "jms-stylet-oil",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "lannate-lv",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Label 65564-1 (2011-07-19) prints no formulation code or name (only 'dilute spray emulsion'); PPLS type is 'Oils (no added pesticide)'. Undiluted 97.1% paraffinic oil, a liquid with no matching code."
     },
     {
       "pluginId": "m-pede-organic",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "M-Pede label (EPA 10163-324, 2021-01-21) prints no formulation code or type; only 'concentrate' and '4.16 lb ai per gallon'. PPLS record lists Soluble Concentrate (SL), unconfirmed on label."
     },
     {
       "pluginId": "m-pede",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "M-Pede label (10163-324, accepted 2021-01-21) prints no formulation code or type; it only says 'The formulation is based on potassium salts of naturally derived fatty acids'. PPLS lists 'Soluble Concentrate' (SL) but that is an EPA-record field only."
     },
     {
       "pluginId": "madex-hp-virus",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Madex HP label (EPA 69553-1, 2026-09-22) prints no formulation code or name; it only says to mix with water, 0.5-3.0 fl oz/acre. PPLS type is 'Ready-to-Use Solution', which conflicts with dilution use. Liquid virus product, no confirmable code."
     },
     {
       "pluginId": "majestene-nematicide",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "movento",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "mustang-maxx",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Master label for Majestene (base 'MBI-206 EP', EPA 84059-14, accepted 2026-02-02) prints no formulation code or type; it is a liquid of heat-killed Burkholderia cells. PPLS field says Emulsifiable Concentrate, not on the label. Checked 2026-09-25."
     },
     {
       "pluginId": "mycotrol-eso",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "nematode-steinernema-feltiae",
-      "field": "defaultUnit",
-      "reason": "Live beneficial nematodes are sold by count; the plugin's 'lb' rate unit is suspect — needs label review before a unit is authored."
+      "reason": "Mycotrol ESO is an alternate brand on the Mycotrol ES master label (EPA 82074-1), which sells the same formula as ES, OD, SC, SE and EW brands; PPLS says EC. No single code for 'Mycotrol ESO'."
     },
     {
       "pluginId": "nematode-steinernema-feltiae",
       "field": "formulation",
-      "reason": "Live beneficial nematodes — no formulation code printed in the plugin; needs label review."
-    },
-    {
-      "pluginId": "portal-xlo",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "sevin-xlr-plus",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "sivanto-prime",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "sluggo-iron-phosphate",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Live beneficial nematodes are sold as infective juveniles in sachets/carrier (Koppert Entonem: sachets of 50 or 250 million). No spray formulation code applies."
     },
     {
       "pluginId": "spear-lep",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Spear-Lep is an alternate brand of VST-006340 LC (now EPA 56336-97); siblings are 'Spear-T Liquid Concentrate' and 'VST-006340 SL', PPLS says Soluble Concentrate. Spear-Lep itself names no code."
     },
     {
       "pluginId": "spinosad",
       "field": "defaultUnit",
-      "reason": "Generic active-ingredient entry with no label rate; the unit depends on which spinosad product is purchased."
+      "reason": "Generic active-ingredient entry with no ratePerAcre. The unit (fl-oz for SC, oz for WP) depends on which spinosad product is bought, so none can be derived."
     },
     {
       "pluginId": "spinosad",
       "field": "formulation",
-      "reason": "Generic active-ingredient entry; formulation depends on which spinosad product is purchased."
-    },
-    {
-      "pluginId": "trichogramma-egg-parasitoid",
-      "field": "defaultUnit",
-      "reason": "Live parasitoid release sold by count; the plugin's 'oz' rate unit contradicts the product and needs a data fix to a 'count' unit."
+      "reason": "Generic active-ingredient entry. Spinosad is sold as SC (Entrust SC, Success), WP (Entrust 80W) and other formulations, so no single code applies without a specific product."
     },
     {
       "pluginId": "trichogramma-egg-parasitoid",
       "field": "formulation",
-      "reason": "Live beneficial insect release — no spray formulation code applies."
-    },
-    {
-      "pluginId": "velum-prime-fluopyram-nematicide",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Live parasitoid release, sold as parasitized-egg cards or cups (Beneficial Insectary TRICHOforce B: 100,000 card or 8 oz cup). No spray formulation code applies."
     },
     {
       "pluginId": "venerate-xc",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Venerate XC is an alternate brand of MBI-206 EP (EPA 84059-14); the label names no standard formulation code or type ('EP' is not one). PPLS lists Emulsifiable Concentrate, unconfirmed on label."
     },
     {
       "pluginId": "voliam-xpress",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "warrior-ii-with-zeon",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "actinovate-streptomyces",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "actinovate-streptomyces",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "aprovia",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "bravo-weather-stik",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Voliam Xpress label (100-1320, 2025-05-09) prints no code, only 'an aqueous based formulation'. PPLS says 'Emulsifiable Concentrate'. Sister Besiege calls it a Zeon Concentrate (CS + SC), which has no listed code. Liquid."
     },
     {
       "pluginId": "cease-omri",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "cevya-mefentrifluconazole",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Cease label (264-1155-68539) calls it 'An Aqueous Suspension Biofungicide' with no code; PPLS lists base reg 264-1155 as Soluble Concentrate. Live-microbe suspension, no mapped code; SC is closest but unconfirmed."
     },
     {
       "pluginId": "champ-dp",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "cuprofix-ultra-disperss",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "dithane-rainshield",
-      "field": "defaultUnit",
-      "reason": "Display name says 'F45' (flowable liquid) but the label rate is in lb — contradictory plugin data needs label review."
-    },
-    {
-      "pluginId": "dithane-rainshield",
-      "field": "formulation",
-      "reason": "Display name says 'F45' (flowable liquid) but the label rate is in lb — contradictory plugin data needs label review."
-    },
-    {
-      "pluginId": "double-nickel-55",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "endura-boscalid",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "endura-boscalid",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "flint-extra",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "forum",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "howler-evo-pseudomonas",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "inspire-super",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "k-phite-phosphonate",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "kocide-3000-o",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "luna-tranquility",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "manzate-pro-stick",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "merivon",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "microthiol-disperss",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "milstop-potassium-bicarbonate",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "miravis-pydiflumetofen",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Label (055146-00057-20220727) prints no formulation code or standard formulation words; Nufarm's product bulletin says 'FORMULATION dry prill' (not a mapped code). PPLS record says Water Dispersible Granule; dry product either way."
     },
     {
       "pluginId": "mycoshield-oxytetracycline",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "mycostop-streptomyces",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "mycostop-streptomyces",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "orondis-opti",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "oxidate-2-0",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Mycoshield label 55146-97 (2019-11-07 master) prints no formulation code or formulation words (only 'Agricultural Antibiotic/Bactericide'). PPLS record says Wettable Powder (WP), corroboration only; needs label/tech sheet wording."
     },
     {
       "pluginId": "phostrol-phosphonate",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "presidio-fluopicolide",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Phostrol label (055146-00083-20211208) prints no formulation code or formulation words (rates in pints product/A). PPLS record says Soluble Concentrate (SL) but label corroboration is missing; liquid either way."
     },
     {
       "pluginId": "previcur-flex-propamocarb",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "pristine",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "pristine",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Previcur Flex label (264-678, 2024-08-16) names no formulation code or type (only '6.0 lbs ... per gallon'); PPLS field says 'Flowable Concentrate'. Liquid, but no label formulation to cite."
     },
     {
       "pluginId": "prophyt-phosphonate",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "quintec-quinoxyfen",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "ranman",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "regalia-maxx-omri",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "regalia",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "revus",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "ProPhyt master label 42519-22 (2025-10-24) prints no formulation code or formulation words (only 'systemic biofungicide containing potassium phosphite'); PPLS record says Soluble Concentrate (SL), corroboration only."
     },
     {
       "pluginId": "serenade-aso",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "stargus-bacillus-amyloliquefaciens",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
+      "reason": "Serenade ASO label 264-1152 (2025-02-12) says 'AN AQUEOUS SUSPENSION BIOFUNGICIDE' with no code; PPLS lists Emulsifiable Concentrate, which conflicts. Live-microbe suspension; SC is closest but unconfirmed."
     },
     {
       "pluginId": "topguard-ez",
       "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "topsin-m-wsb",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "trilogy-neem",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "velista-penthiopyrad",
-      "field": "defaultUnit",
-      "reason": "Label rate unit is 'oz' with no formulation code in the plugin — dry oz vs fl-oz is ambiguous; loader uses the category default until label-verified."
-    },
-    {
-      "pluginId": "velista-penthiopyrad",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "zampro-ametoctradin",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "zerotol-2-0-sanitizer",
-      "field": "formulation",
-      "reason": "No formulation code (EC/SL/SC/WDG/…) printed in the product name or plugin data; needs label verification before authoring."
-    },
-    {
-      "pluginId": "can-17-calcium-ammonium-nitrate",
-      "field": "defaultUnit",
-      "reason": "form 'liquid' contradicts the lb-per-acre application rate — needs label review."
+      "reason": "No PPLS product named 'TopGuard EZ' and 279-3505 has no PPLS record (checked 2026-09-25). TopGuard (279-3557, SC, 1.04 lb/gal) and TopGuard Terra/EQ/Maxx exist, but the plugin's product cannot be tied to one label."
     },
     {
       "pluginId": "2-4-d-amine",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"2,4-D Amine\" is sold under dozens of EPA registrations; the number depends on the jug on hand"
+      "reason": "Generic plugin: '2,4-D Amine' names an active ingredient, not one registrant's product; dozens of EPA registrations exist and the number depends on the jug on hand (checked 2026-09-25)."
     },
     {
       "pluginId": "24d",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"2,4-D Amine\" is sold under dozens of EPA registrations; the number depends on the jug on hand"
-    },
-    {
-      "pluginId": "anthem-maxx",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: no PPLS result titled Anthem MAXX (only an untitled 279-3450 registration letter), needs label check"
+      "reason": "Generic plugin: PPLS lists many active \"2,4-D Amine\" registrations (e.g. 87290-45, 33270-21, 93930-42, 1381-103, 62719-2), so the number depends on the jug on hand."
     },
     {
       "pluginId": "atrazine-4l-generic",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"Atrazine 4L\" is sold under many EPA registrations; the number depends on the jug on hand"
+      "reason": "Generic plugin: PPLS lists many active \"Atrazine 4L\" registrations (e.g. 33270-10, 2749-657, 94730-23, 35915-4, 5905-470), so the number depends on the jug on hand."
     },
     {
       "pluginId": "banvel",
       "field": "epaRegistrationNumber",
-      "reason": "ambiguous: several Banvel registrations in PPLS (Banvel 4-S, Banvel potassium formulation, Banvel SGF) and the plugin's 'BASF dicamba DMA salt, generic' doesn't name one"
+      "reason": "Still ambiguous. BASF's DMA dicamba 7969-131 label names only 'BAS 183 06 H' (no Banvel). The Banvel name sits on UPL registrations (ex-BASF 51036-289): 70506-461 'Banvel Herbicide', 70506-505 'Banvel 4 SL', 70506-503 'Banvel 480'. None is BASF; pick by jug."
     },
     {
       "pluginId": "clethodim-2e-generic",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"Clethodim 2EC\" is sold under many EPA registrations; the number depends on the jug on hand"
+      "reason": "Generic plugin: PPLS lists many active clethodim 2EC registrations (e.g. 228-735, 38167-39, 87290-11, 92647-31, 34704-864), so the number depends on the jug on hand."
     },
     {
       "pluginId": "clethodim-2e",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"Clethodim 2EC\" is sold under many EPA registrations; the number depends on the jug on hand"
+      "reason": "Generic: PPLS search 'Clethodim 2EC'/'Clethodim 2E' (2026-09-25) returns 12+ active registrations from different registrants (e.g. 38167-39, 87290-11, 93809-5, 34704-864, 70506-481, 228-735); number depends on the jug on hand."
     },
     {
       "pluginId": "clethodim",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"Clethodim 2EC\" is sold under many EPA registrations; the number depends on the jug on hand"
+      "reason": "Generic plugin: 'Clethodim 2EC' names an active ingredient and concentration sold by many registrants; the EPA number depends on the jug on hand (checked 2026-09-25)."
     },
     {
       "pluginId": "corn-gluten-meal-pre",
       "field": "epaRegistrationNumber",
-      "reason": "exempt product: corn gluten meal is a FIFRA 25(b) minimum-risk pesticide with no EPA registration number"
+      "reason": "Exempt/generic: corn gluten meal is a FIFRA 25(b) minimum-risk active; PPLS search 'Corn Gluten' (2026-09-25) returns no registrations. Plugin names no single marketed product, so there is no number to record."
     },
     {
       "pluginId": "ct-test-herbicide-clickthrough",
       "field": "epaRegistrationNumber",
-      "reason": "test fixture: clickthrough-test plugin, not a real product"
-    },
-    {
-      "pluginId": "engenia",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS lists Engenia Herbicide under 7969-345, 7969-472 and 7969-507 (post-2024 re-registration), so the current number needs a label check"
+      "reason": "E2E clickthrough test fixture, not a real product; no EPA registration exists or should be assigned."
     },
     {
       "pluginId": "glyphosate-generic",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"Glyphosate 41%\" is sold under many EPA registrations; the number depends on the jug on hand"
-    },
-    {
-      "pluginId": "gramoxone-sl-3",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS titles are 'Gramoxone 3LB' (100-1652) and 'Gramoxone SL 2.0'; no PPLS title for 'Gramoxone SL 3.0'"
-    },
-    {
-      "pluginId": "liberty-ultra",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: the only candidate PPLS result (7969-500) is titled 'BASF L-Glufosinate-...', not Liberty ULTRA; needs label check"
-    },
-    {
-      "pluginId": "me-too-lachlor-ii",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS has Drexel Me-Too-Lachlor (19713-548) and a truncated 'DREXEL ME-TOO-...' title (19713-549); no PPLS title confirms which one is 'II'"
+      "reason": "Generic: PPLS search 'Glyphosate 41' (2026-09-25) returns many active registrations from different registrants (e.g. 5905-635, 87659-3, 84229-36, 85945-1, 88343-4, 71995-7, 103822-3); number depends on the jug on hand."
     },
     {
       "pluginId": "mesotrione-4sc",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"Mesotrione 4SC\" is sold under several EPA registrations; the number depends on the jug on hand"
-    },
-    {
-      "pluginId": "permit",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: PPLS results titled Permit Plus / Halosulfuron / Sedgehammer, none titled plain 'Permit'"
-    },
-    {
-      "pluginId": "roundup-powermax-3",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: the candidate PPLS label (524-659) is titled by its development code 'MON 301108 Herbicide', not Roundup PowerMAX 3; needs label check"
+      "reason": "Generic: PPLS search 'Mesotrione 4SC' (2026-09-25) returns 10+ active registrations from different registrants (e.g. 89168-54, 93809-1, 84229-48, 42750-315, 93182-30, 87290-61, 60063-66); number depends on the jug on hand."
     },
     {
       "pluginId": "stadia-dry",
       "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: placeholder plugin ('stadia-active-ingredient'), no product to match"
+      "reason": "Placeholder plugin: active ingredient 'stadia-active-ingredient', no real AI. PPLS has 'Stadia' only as an Atticus alternate brand of 91234-31 (halosulfuron-methyl 75% WDG); can't match without confirming the plugin means halosulfuron."
     },
     {
       "pluginId": "stadia",
       "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: no PPLS result titled Stadia (rimsulfuron results are other brands)"
+      "reason": "Plugin identity unresolved: the only PPLS product named Stadia (91234-31, Atticus) is halosulfuron-methyl 75% WDG, but this plugin declares rimsulfuron. Held until the owner decides which product the plugin describes (label-research 2026-09-25)."
     },
     {
       "pluginId": "treflan-trust-ec",
       "field": "epaRegistrationNumber",
-      "reason": "ambiguous: plugin covers both Treflan and Trust HFP, and PPLS lists Treflan HFP under two registrants (62719-250 and 10163-363)"
-    },
-    {
-      "pluginId": "valor-sx",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS titles read 'Valor Herbicide' (59639-99); none names the SX formulation, so Valor vs Valor SX needs a label check"
-    },
-    {
-      "pluginId": "warrant",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: the candidate PPLS label (524-591) is titled by its development code 'MON 63410 HERBICIDE', not Warrant; needs label check"
+      "reason": "Plugin spans two brands: Treflan HFP is one registration (62719-250 transferred to Gowan as 10163-363 in 2016), but Trust is WinField 1381-146 or 1381-261 and no PPLS product is named Trust HFP. Use the number on the jug."
     },
     {
       "pluginId": "xtendimax",
       "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS titles 'XtendiMax With VaporGrip' under 264-1210, but dicamba OTT registrations were vacated in 2024 and re-issued in 2026 (264-1241 is untitled in PPLS), so the current number needs a label check"
-    },
-    {
-      "pluginId": "admire-pro",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: the likely PPLS file (264-827) has a truncated title with no product name; needs label check"
-    },
-    {
-      "pluginId": "aza-direct",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: no PPLS result titled Aza-Direct (only other azadirachtin brands)"
-    },
-    {
-      "pluginId": "belay",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: clothianidin PPLS results are titled by Valent development codes (V-10170 ...), none titled Belay"
+      "reason": "XtendiMax With VaporGrip 264-1210 is Inactive (court vacated it 2024-02-06). The 2026 Bayer re-registration 264-1241 is branded Stryax Herbicide and doesn't name XtendiMax. Repoint the plugin to Stryax or retire it."
     },
     {
       "pluginId": "bt-kurstaki",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"Bt kurstaki\" is sold under many EPA registrations (DiPel, Javelin, etc. have their own plugins)"
-    },
-    {
-      "pluginId": "lannate-lv",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS titles Lannate LV under both 352-384 (DuPont) and 61842-55 (2024-2025 labels); needs a label check for the current registrant"
-    },
-    {
-      "pluginId": "mustang-maxx",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: the candidate PPLS label (279-3426) is titled by its development code 'F9114 EC INSECTICIDE', not Mustang Maxx; needs label check"
+      "reason": "Generic active-ingredient entry, not one registrant's product: PPLS lists many active Btk registrations (e.g. 34 active DiPel records, Javelin 70051-60/70051-66), and DiPel DF and Javelin WG have their own plugins. Checked 2026-09-25."
     },
     {
       "pluginId": "nematode-steinernema-feltiae",
       "field": "epaRegistrationNumber",
-      "reason": "exempt product: beneficial nematodes are macro-organisms, not EPA-registered pesticides"
-    },
-    {
-      "pluginId": "sivanto-prime",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS titles read 'Sivanto 200 SL' (264-1141) and 'Sivanto 400 SL' (264-1198); none is titled Sivanto Prime"
+      "reason": "Live entomopathogenic nematodes are macro-organisms, exempt from FIFRA registration under 40 CFR 152.20(a). No EPA number exists (producer page for Koppert Entonem shows no EPA reg. no.)."
     },
     {
       "pluginId": "spinosad",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: plain \"Spinosad\" names an active ingredient, not a registered product; the number depends on the product on hand"
+      "reason": "Generic entry: 'Spinosad' names an active ingredient, not one registrant's product. PPLS lists many spinosad products (Entrust, Success, Monterey etc.), each with its own number. The number depends on the product on hand."
     },
     {
       "pluginId": "sulfur-90w",
       "field": "epaRegistrationNumber",
-      "reason": "generic product: \"Wettable Sulfur 90W\" is sold under many EPA registrations; the number depends on the bag on hand"
+      "reason": "Generic product: plugin names no registrant. PPLS lists many active wettable sulfurs (e.g. Drexel Sulfur 90W 19713-238, Yellow Jacket 6325-13, Clean Crop 6325-13-34704); the number depends on the bag on hand. Checked 2026-09-25."
     },
     {
       "pluginId": "trichogramma-egg-parasitoid",
       "field": "epaRegistrationNumber",
-      "reason": "exempt product: Trichogramma egg parasitoids are macro-organisms, not EPA-registered pesticides"
-    },
-    {
-      "pluginId": "bravo-weather-stik",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: the matching PPLS titles read 'Bravo 720' (50534-188) and none names Weather Stik; needs label check"
-    },
-    {
-      "pluginId": "captan-80wdg",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS lists 'Captan 80 WDG' under at least five registrants (34704-1075, 66222-58, 66330-29, 85678-14, 103591-32); needs the label on hand"
-    },
-    {
-      "pluginId": "flint-extra",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: PPLS results are titled 'Flint Fungicide' (264-777); none titled Flint Extra"
-    },
-    {
-      "pluginId": "indar-2f",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: the only PPLS result titled Indar 2F is a Michigan 24(c) SLN (MI090002), not a federal registration; the federal fenbuconazole 2F label is titled Enable 2F (62719-416)"
-    },
-    {
-      "pluginId": "kocide-3000-o",
-      "field": "epaRegistrationNumber",
-      "reason": "no PPLS match found: PPLS results are titled Kocide 3000 (91411-2, 352-662), none titled Kocide 3000-O"
-    },
-    {
-      "pluginId": "quadris-flowable",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: no PPLS title reads Quadris Flowable; azoxystrobin 2SC PPLS titles are Abound (100-1098), Quadris Top/Opti/S (different products)"
-    },
-    {
-      "pluginId": "topsin-m-wsb",
-      "field": "epaRegistrationNumber",
-      "reason": "ambiguous: PPLS titles Topsin M WSB under both 8033-125 (2020) and 73545-16 (2009); needs a label check for the current registrant"
+      "reason": "Trichogramma egg parasitoids are macro-organisms (beneficial insects), exempt from FIFRA registration under 40 CFR 152.20(a). The producer page (Beneficial Insectary TRICHOforce B) shows no EPA number."
     }
   ]
 }

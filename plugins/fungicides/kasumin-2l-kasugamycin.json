@@ -2,6 +2,7 @@
   "pluginId": "kasumin-2l-kasugamycin",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Kasumin'). Label has no organic statement."},
   "defaultUnit": "fl-oz",
   "formulation": "L",
   "pluginSchemaVersion": "1.1",

@@ -2,6 +2,7 @@
   "pluginId": "torac-sc",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic product (Torac SC, Nichino America, EPA 71711-36). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Torac', 'tolfenpyrad'); fuzzy hits were unrelated products. No organic/NOP statement found on the label."},
   "defaultUnit": "fl-oz",
   "formulation": "SC",
   "pluginSchemaVersion": "1.1",

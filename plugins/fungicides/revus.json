@@ -3,6 +3,8 @@
   "type": "fungicide",
   "displayName": "Revus (Syngenta mandipropamid)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Revus'). Conventional synthetic product; label has no organic-production statement."},
+  "formulation": "SC",
   "epaRegistrationNumber": "100-1254",
   "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",

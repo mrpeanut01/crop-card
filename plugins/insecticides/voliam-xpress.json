@@ -2,6 +2,7 @@
   "pluginId": "voliam-xpress",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Voliam' - 4 NOP results, none Voliam; 'chlorantraniliprole' - no chlorantraniliprole product). Restricted-use synthetic diamide + pyrethroid premix; label (EPA 100-1320, 2025-05-09) makes no organic statement."},
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Voliam Xpress (chlorantraniliprole + lambda-cyhalothrin)",

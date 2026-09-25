@@ -2,6 +2,8 @@
   "pluginId": "classic-chlorimuron",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Classic'; 'chlorimuron'). Conventional synthetic herbicide; label carries no organic-production statement."},
+  "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Classic (chlorimuron-ethyl)",
   "activeIngredients": [
@@ -19,5 +21,6 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "352-449",
+  "defaultUnit": "oz",
   "notes": "Corteva POST soybean broadleaf herbicide. Group 2 ALS inhibitor. Strong rotation restrictions for sensitive crops."
 }

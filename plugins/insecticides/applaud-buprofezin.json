@@ -2,6 +2,7 @@
   "pluginId": "applaud-buprofezin",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Applaud' - 8 NOP results, none Applaud; 'buprofezin' - 0 results). Conventional synthetic IGR; Applaud 70DF label (EPA 71711-21, 2023-10-30) makes no organic statement."},
   "defaultUnit": "oz",
   "formulation": "DF",
   "pluginSchemaVersion": "1.1",
@@ -20,7 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "59639-94",
   "targetPests": [
     "whitefly nymphs",

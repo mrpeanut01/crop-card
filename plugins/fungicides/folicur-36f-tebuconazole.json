@@ -2,6 +2,7 @@
   "pluginId": "folicur-36f-tebuconazole",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Folicur'). Conventional synthetic product; label has no organic-production statement."},
   "defaultUnit": "fl-oz",
   "formulation": "F",
   "pluginSchemaVersion": "1.1",
@@ -20,6 +21,7 @@
   "gpaCalibration": 15,
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 30,
+  "rainfastHours": 4,
   "pollinatorRisk": "low",
   "epaRegistrationNumber": "264-985",
   "targetDiseases": [

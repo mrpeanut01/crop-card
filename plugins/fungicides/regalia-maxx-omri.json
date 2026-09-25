@@ -2,6 +2,7 @@
   "pluginId": "regalia-maxx-omri",
   "type": "fungicide",
   "version": "1.0.0",
+  "formulation": "ME",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Regalia Maxx (Reynoutria sachalinensis extract, OMRI)",

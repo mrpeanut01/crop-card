@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Beyond (BASF imazamox)",
   "version": "1.0.0",
+  "formulation": "SL",
   "epaRegistrationNumber": "241-441",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",

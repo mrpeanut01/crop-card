@@ -2,6 +2,7 @@
   "pluginId": "oberon-spiromesifen",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic tetronic acid (spiromesifen 23.1%). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Oberon' -> 0 results, 'spiromesifen' -> only unrelated products). Label (EPA Reg. No. 264-719, accepted 2023-08-30) makes no organic-production statement."},
   "defaultUnit": "fl-oz",
   "formulation": "SC",
   "pluginSchemaVersion": "1.1",
@@ -20,6 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "264-719",
   "targetPests": [
     "twospotted spider mite",

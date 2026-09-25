@@ -2,6 +2,7 @@
   "pluginId": "curzate-60df-cymoxanil",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Curzate'). Conventional synthetic product; label has no organic-production statement."},
   "defaultUnit": "oz",
   "formulation": "DF",
   "pluginSchemaVersion": "1.1",
@@ -20,6 +21,7 @@
   "gpaCalibration": 30,
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 3,
+  "rainfastHours": 2,
   "pollinatorRisk": "low",
   "epaRegistrationNumber": "352-580",
   "targetDiseases": [

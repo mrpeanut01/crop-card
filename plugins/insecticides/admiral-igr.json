@@ -2,6 +2,7 @@
   "pluginId": "admiral-igr",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Synthetic pyriproxyfen IGR (not a US-registered brand; plugin EPA no. 71711-2 is Moncut CL). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Admiral', 'pyriproxyfen'); pyriproxyfen hits were unrelated products."},
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Admiral IGR (pyriproxyfen)",

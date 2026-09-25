@@ -2,6 +2,7 @@
   "pluginId": "scala-sc",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Scala'). Label has no organic statement."},
   "defaultUnit": "fl-oz",
   "formulation": "SC",
   "pluginSchemaVersion": "1.1",

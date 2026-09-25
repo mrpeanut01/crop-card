@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Serenade ASO (Bayer Bacillus subtilis — OMRI)",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": true, "certifiedOrganicAllowed": true, "notes": "OMRI Products List (searched 2026-09-25: 'Serenade'): 'Bayer Serenade ASO', Bayer CropScience LP, code gus-4423, NOP, Allowed with Restrictions, expires 2027-06-01. Label (264-1152) carries optional 'For Organic Production' / 'Can be Used for Organic Production' statements (p.5)."},
   "epaRegistrationNumber": "264-1152",
   "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",

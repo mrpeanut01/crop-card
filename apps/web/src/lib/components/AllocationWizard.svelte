@@ -20,7 +20,7 @@
     STEP_ORDER,
     setWizardContext
   } from '$lib/components/wizard/allocation/wizardState.svelte';
-  import { fmtDateMs, sufficiencyChip } from '$lib/components/wizard/allocation/format';
+  import { sufficiencyChip } from '$lib/components/wizard/allocation/format';
   import type {
     BlockEntry,
     CropCatalogItem,
@@ -30,6 +30,7 @@
   import CommitStep from '$lib/components/wizard/allocation/steps/CommitStep.svelte';
   import AiProgress from '$lib/components/wizard/allocation/AiProgress.svelte';
   import ChatPanel from '$lib/components/wizard/allocation/ChatPanel.svelte';
+  import ScheduleStep from '$lib/components/wizard/allocation/steps/ScheduleStep.svelte';
 
   const {
     seedStock,
@@ -820,81 +821,7 @@
           {/if}
         {/if}
       {:else if w.step === 'schedule'}
-        {#if w.response}
-          <!-- Phase 25 v2-addendum (#82 partial) — AI-on/off legend strip
-               at the top of the schedule step. Per the addendum spec,
-               AI on/off is a real product mode, not an error state —
-               the operator sees the provenance map for the dates they're
-               about to commit. -->
-          <ProvenanceLegend
-            shown={aiEnabled
-              ? ['plugin', 'data', 'ai', 'manual']
-              : ['plugin', 'data', 'fallback', 'manual']}
-            note={aiEnabled
-              ? 'Dates AI-proposed within plugin-derived windows · all editable'
-              : 'AI off · deterministic scheduler · plugin windows + your records'}
-          />
-          {#if w.scheduleLoading}
-            <AiProgress stage="schedule" startMs={w.scheduleStartMs} />
-          {:else if w.scheduleError}
-            <p class="aw-error">Error: {w.scheduleError}</p>
-            <button class="btn-secondary" onclick={() => w.advanceToSchedule()}>Retry</button>
-          {:else if w.scheduleResponse}
-            {#if w.scheduleResponse.meta.fallback}
-              <div class="aw-banner info" role="alert" aria-live="assertive">
-                {w.scheduleResponse.meta.fallback === 'no-api-key'
-                  ? '🛟 Dates picked by the deterministic scheduler (no Anthropic API key). Staggers + companion offsets honored.'
-                  : '🛟 AI needed help — deterministic scheduler took over. See chat below for what tripped it up and refine from there.'}
-              </div>
-            {/if}
-            <p class="aw-rationale">
-              {w.scheduleResponse.rationale}
-              <Provenance
-                source={w.scheduleResponse.meta.fallback ? 'fallback' : aiEnabled ? 'ai' : 'plugin'}
-                detail={w.scheduleResponse.meta.fallback ? 'deterministic scheduler' : undefined}
-                compact
-              />
-            </p>
-            <table class="aw-table">
-              <thead>
-                <tr>
-                  <th>Seed</th>
-                  <th>Block</th>
-                  <th>Planting date</th>
-                  <th>Plants</th>
-                  <th>Why</th>
-                </tr>
-              </thead>
-              <tbody>
-                {#each w.scheduleResponse.scheduled as p, i (i)}
-                  <tr>
-                    <td>
-                      {p.varietyDisplayName}
-                      {#if p.successionIndex}
-                        <span class="chip chip-succession" title="Succession sowing">
-                          {p.successionIndex.i}/{p.successionIndex.n}
-                        </span>
-                      {/if}
-                    </td>
-                    <td>{w.blockNameFor(p.blockId)}</td>
-                    <td>{fmtDateMs(p.plantingDateMs)}</td>
-                    <td>{p.plants.toLocaleString()}</td>
-                    <td class="why">{p.rationale}</td>
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-            {#if w.scheduleResponse.advisories.length > 0}
-              <section class="aw-banner info">
-                <strong>Schedule notes:</strong>
-                <ul>
-                  {#each w.scheduleResponse.advisories as a}<li>{a}</li>{/each}
-                </ul>
-              </section>
-            {/if}
-            <ChatPanel />
-          {/if}
-        {/if}
+        <ScheduleStep />
       {:else if w.step === 'inputs'}
         <InputsPlanStep
           plantings={w.provisionalPlantings()}
@@ -1397,12 +1324,6 @@
   td.cell-fit {
     max-width: 28rem;
     min-width: 12rem;
-  }
-  .chip-succession {
-    background: #e6efff;
-    color: #1f4a85;
-    margin-left: 0.3rem;
-    font-weight: 600;
   }
   .aw-error {
     color: #b22222;

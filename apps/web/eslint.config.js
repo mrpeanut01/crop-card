@@ -76,8 +76,7 @@ export default tseslint.config(
       'svelte/no-navigation-without-resolve': 'off',
       'svelte/prefer-svelte-reactivity': 'off',
       'svelte/require-each-key': 'off',
-      'svelte/prefer-writable-derived': 'off',
-      'svelte/no-useless-mustaches': 'off'
+      'svelte/prefer-writable-derived': 'off'
     }
   }
 );

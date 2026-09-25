@@ -853,7 +853,7 @@
         <textarea
           rows="4"
           bind:value={cropIndicators}
-          placeholder={'e.g.\nHusks fully dry and papery\nBlack layer at kernel tip'}
+          placeholder="e.g.&#10;Husks fully dry and papery&#10;Black layer at kernel tip"
         ></textarea>
       </label>
       <label class="full">

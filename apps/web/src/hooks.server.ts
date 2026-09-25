@@ -1,4 +1,10 @@
-import { json, redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
+import {
+  json,
+  redirect,
+  type Handle,
+  type HandleServerError,
+  type ServerInit
+} from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
 import { canMutate, type SessionRole } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';
@@ -8,6 +14,13 @@ import { owners, users, helperAssignments } from '$lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
 import { OWNER_HEADER } from '$lib/client/swTenantKey';
+import { maybeStartPushScheduler } from '$lib/server/push/scheduler';
+
+/** NFR-06 — start the in-process push alert scheduler (no-op without VAPID
+ *  keys or under tests; single replica per invariant 3). */
+export const init: ServerInit = () => {
+  maybeStartPushScheduler();
+};
 
 /**
  * Phase 21a follow-up — error visibility (2026-05-17).

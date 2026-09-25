@@ -42,6 +42,7 @@ import * as planRevisionsRepo from '$lib/plan/revisions';
 import * as scoutObservationsRepo from './scoutObservations';
 import * as wizardChatRepo from './wizardChat';
 import * as seasonCloseoutsRepo from './seasonCloseouts';
+import * as pushSubscriptionsRepo from './pushSubscriptions';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
 import { users, helperAssignments, recordDeletions } from './schema';
 import { eq } from 'drizzle-orm';
@@ -408,6 +409,70 @@ describe('cross-tenant isolation', () => {
     expect(runWithTenant(OWNER_B, () => seasonCloseoutsRepo.isSeasonClosed(2099))).toBe(true);
   });
 
+  it('push_subscriptions + push_deliveries are owner-scoped (NFR-06)', () => {
+    const endpoint = 'https://push.example.net/send/shared-device';
+    const seedPush = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const userId = ensureCrossTenantTestUser(ownerId);
+        const sub = pushSubscriptionsRepo.upsertSubscription({
+          userId,
+          endpoint,
+          p256dh: `p256dh-${ownerId}`,
+          auth: `auth-${ownerId}`
+        });
+        expect(pushSubscriptionsRepo.claimDelivery('decon-due', 'sprayer-x:1')).toBe(true);
+        return { userId, id: sub.id };
+      });
+
+    const a = seedPush(OWNER_A);
+    const b = seedPush(OWNER_B);
+    expect(a.id).not.toEqual(b.id);
+
+    const aSubs = runWithTenant(OWNER_A, () => pushSubscriptionsRepo.listSubscriptions());
+    expect(aSubs.map((s) => s.id)).toContain(a.id);
+    expect(aSubs.map((s) => s.id)).not.toContain(b.id);
+    expect(aSubs.every((s) => s.ownerId === OWNER_A)).toBe(true);
+
+    // A cannot read, re-key, update, or delete B's row even with B's user id.
+    expect(
+      runWithTenant(OWNER_A, () => pushSubscriptionsRepo.getSubscriptionForUser(b.userId, endpoint))
+    ).toBeNull();
+    expect(
+      runWithTenant(OWNER_A, () =>
+        pushSubscriptionsRepo.updatePrefsForUser(b.userId, endpoint, {
+          'decon-due': false,
+          'lock-window-closing': false,
+          'spring-calibration': false
+        })
+      )
+    ).toBeNull();
+    expect(
+      runWithTenant(OWNER_A, () =>
+        pushSubscriptionsRepo.deleteSubscriptionForUser(b.userId, endpoint)
+      )
+    ).toBe(false);
+    expect(runWithTenant(OWNER_A, () => pushSubscriptionsRepo.deleteSubscriptionById(b.id))).toBe(
+      false
+    );
+    runWithTenant(OWNER_A, () => pushSubscriptionsRepo.markSubscriptionFailure(b.id));
+    const bSub = runWithTenant(OWNER_B, () =>
+      pushSubscriptionsRepo.getSubscriptionForUser(b.userId, endpoint)
+    );
+    expect(bSub?.failureCount).toBe(0);
+    expect(bSub?.p256dh).toBe(`p256dh-${OWNER_B}`);
+
+    // The sent-log is per Owner: B's claim of the same subject succeeded
+    // above, and each Owner sees only its own delivery row.
+    const aDeliveries = runWithTenant(OWNER_A, () => pushSubscriptionsRepo.listDeliveries());
+    expect(aDeliveries.every((d) => d.ownerId === OWNER_A)).toBe(true);
+    expect(
+      runWithTenant(OWNER_A, () => pushSubscriptionsRepo.claimDelivery('decon-due', 'sprayer-x:1'))
+    ).toBe(false);
+
+    const tenants = pushSubscriptionsRepo.listOwnerIdsWithPushSubscriptions();
+    expect(tenants).toEqual(expect.arrayContaining([OWNER_A, OWNER_B]));
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -431,7 +496,8 @@ describe('cross-tenant isolation', () => {
       planRevisionsRepo,
       scoutObservationsRepo,
       wizardChatRepo,
-      seasonCloseoutsRepo
+      seasonCloseoutsRepo,
+      pushSubscriptionsRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

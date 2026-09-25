@@ -59,7 +59,9 @@ const TENANT_SCOPED_TABLE_NAMES = new Set([
   'tasks',
   'appSettings',
   'aiCallLog',
-  'pluginOverrides'
+  'pluginOverrides',
+  'pushSubscriptions',
+  'pushDeliveries'
 ]);
 
 function isTenantTableIdentifier(node) {

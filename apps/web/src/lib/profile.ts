@@ -44,3 +44,51 @@ export function sniffAvatarMime(bytes: Uint8Array): AvatarMime | null {
   }
   return null;
 }
+
+export const DEFAULT_TIME_ZONE = 'America/New_York';
+
+export const TIME_ZONES: ReadonlyArray<{ id: string; label: string }> = [
+  { id: 'America/New_York', label: 'Eastern (New York)' },
+  { id: 'America/Chicago', label: 'Central (Chicago)' },
+  { id: 'America/Denver', label: 'Mountain (Denver)' },
+  { id: 'America/Phoenix', label: 'Arizona (Phoenix, no DST)' },
+  { id: 'America/Los_Angeles', label: 'Pacific (Los Angeles)' },
+  { id: 'America/Anchorage', label: 'Alaska (Anchorage)' },
+  { id: 'Pacific/Honolulu', label: 'Hawaii (Honolulu)' },
+  { id: 'America/Puerto_Rico', label: 'Atlantic (Puerto Rico)' },
+  { id: 'America/Halifax', label: 'Atlantic (Halifax)' },
+  { id: 'America/Toronto', label: 'Eastern (Toronto)' },
+  { id: 'America/Winnipeg', label: 'Central (Winnipeg)' },
+  { id: 'America/Edmonton', label: 'Mountain (Edmonton)' },
+  { id: 'America/Vancouver', label: 'Pacific (Vancouver)' },
+  { id: 'UTC', label: 'UTC' }
+];
+
+export type DisplayUnits = 'us' | 'metric';
+export const DISPLAY_UNITS: ReadonlyArray<{ id: DisplayUnits; label: string }> = [
+  { id: 'us', label: 'US (acre · lb · °F)' },
+  { id: 'metric', label: 'Metric (ha · kg · °C)' }
+];
+
+/** Any IANA zone the runtime knows is accepted, not just the listed ones,
+ *  so a value set elsewhere never fails a later save. */
+export function normalizeTimeZone(
+  raw: unknown
+): { ok: true; value: string } | { ok: false; error: string } {
+  if (typeof raw !== 'string' || !raw.trim()) return { ok: true, value: DEFAULT_TIME_ZONE };
+  const tz = raw.trim();
+  try {
+    const canonical = new Intl.DateTimeFormat('en-US', { timeZone: tz }).resolvedOptions().timeZone;
+    return { ok: true, value: canonical };
+  } catch {
+    return { ok: false, error: 'Pick a time zone from the list.' };
+  }
+}
+
+export function normalizeDisplayUnits(
+  raw: unknown
+): { ok: true; value: DisplayUnits } | { ok: false; error: string } {
+  if (raw === null || raw === undefined || raw === '') return { ok: true, value: 'us' };
+  if (raw === 'us' || raw === 'metric') return { ok: true, value: raw };
+  return { ok: false, error: 'Pick US or Metric units.' };
+}

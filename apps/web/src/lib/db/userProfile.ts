@@ -2,10 +2,13 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from './client';
 import { helperAssignments, userAvatars, users } from './schema';
 import { unscopedQueryNote } from './tenant';
-import type { AvatarMime } from '$lib/profile';
+import type { AvatarMime, DisplayUnits } from '$lib/profile';
 
-export function setDisplayName(userId: string, displayName: string | null): void {
-  db.update(users).set({ displayName }).where(eq(users.id, userId)).run();
+export function updateProfile(
+  userId: string,
+  fields: { displayName: string | null; timeZone: string; displayUnits: DisplayUnits }
+): void {
+  db.update(users).set(fields).where(eq(users.id, userId)).run();
 }
 
 export function avatarVersion(userId: string): number | null {

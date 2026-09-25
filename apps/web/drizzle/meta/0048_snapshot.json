@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "261b5cc2-cf41-4676-852e-7f7713c86cab",
+  "id": "b53e07e0-9ee8-418f-8f76-298ab764b677",
   "prevId": "23e5b6c8-03da-4c19-8b9a-c5898cb4f288",
   "tables": {
     "ai_call_log": {
@@ -5327,6 +5327,22 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "time_zone": {
+          "name": "time_zone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'America/New_York'"
+        },
+        "display_units": {
+          "name": "display_units",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'us'"
         },
         "created_at": {
           "name": "created_at",

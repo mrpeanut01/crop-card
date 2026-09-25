@@ -10,7 +10,7 @@ import {
   getAvatar,
   profileFor,
   saveAvatar,
-  setDisplayName
+  updateProfile
 } from './userProfile';
 
 function seedUser(): string {
@@ -36,13 +36,25 @@ function assign(ownerId: string, userId: string, status: 'active' | 'revoked' = 
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
 
 describe('userProfile repo', () => {
-  it('stores and clears the display name', () => {
+  it('stores the profile fields and clears the display name', () => {
     const u = seedUser();
-    setDisplayName(u, 'Dale Ridge');
+    const fresh = db.select().from(users).where(eq(users.id, u)).get();
+    expect(fresh?.timeZone).toBe('America/New_York');
+    expect(fresh?.displayUnits).toBe('us');
+
+    updateProfile(u, {
+      displayName: 'Dale Ridge',
+      timeZone: 'America/Chicago',
+      displayUnits: 'metric'
+    });
     expect(profileFor(u).displayName).toBe('Dale Ridge');
-    setDisplayName(u, null);
+    const row = db.select().from(users).where(eq(users.id, u)).get();
+    expect(row?.timeZone).toBe('America/Chicago');
+    expect(row?.displayUnits).toBe('metric');
+    expect(row?.email).toBe(`${u}@profile.test`);
+
+    updateProfile(u, { displayName: null, timeZone: 'UTC', displayUnits: 'us' });
     expect(profileFor(u).displayName).toBeNull();
-    expect(db.select().from(users).where(eq(users.id, u)).get()?.email).toBe(`${u}@profile.test`);
   });
 
   it('replaces the avatar in place and versions the URL', () => {

@@ -32,6 +32,29 @@ test.describe('/settings/account profile', () => {
     );
   });
 
+  test('saves time zone and display units', async ({ page }) => {
+    await page.goto('/settings/account');
+    const tz = page.getByRole('combobox', { name: /time zone/i });
+    const units = page.getByRole('combobox', { name: /display units/i });
+    await expect(tz).toHaveValue('America/New_York');
+    await expect(units).toHaveValue('us');
+
+    await tz.selectOption('America/Chicago');
+    await units.selectOption('metric');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText('Profile saved.')).toBeVisible();
+
+    await page.reload();
+    await expect(tz).toHaveValue('America/Chicago');
+    await expect(units).toHaveValue('metric');
+    await expect(page.getByLabel(/last sign-in/i)).toHaveValue(/C[SD]T$/);
+
+    await tz.selectOption('America/New_York');
+    await units.selectOption('us');
+    await page.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText('Profile saved.')).toBeVisible();
+  });
+
   test('uploads, displays and removes a profile picture', async ({ page }) => {
     await page.goto('/settings/account');
     await page.locator('#avatar-file').setInputFiles({

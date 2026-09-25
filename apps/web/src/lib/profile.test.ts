@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { DISPLAY_NAME_MAX, normalizeDisplayName, sniffAvatarMime } from './profile';
+import {
+  DEFAULT_TIME_ZONE,
+  DISPLAY_NAME_MAX,
+  TIME_ZONES,
+  normalizeDisplayName,
+  normalizeDisplayUnits,
+  normalizeTimeZone,
+  sniffAvatarMime
+} from './profile';
 
 describe('normalizeDisplayName', () => {
   it('trims and collapses whitespace', () => {
@@ -55,5 +63,36 @@ describe('sniffAvatarMime', () => {
     expect(sniffAvatarMime(bytes(0xff, 0xd8))).toBeNull();
     expect(sniffAvatarMime(ascii('RIFF\0\0\0\0WAVE'))).toBeNull();
     expect(sniffAvatarMime(bytes())).toBeNull();
+  });
+});
+
+describe('normalizeTimeZone', () => {
+  it('accepts every listed zone unchanged', () => {
+    for (const tz of TIME_ZONES)
+      expect(normalizeTimeZone(tz.id)).toEqual({ ok: true, value: tz.id });
+  });
+
+  it('canonicalizes aliases and defaults blanks', () => {
+    expect(normalizeTimeZone('US/Eastern')).toEqual({ ok: true, value: 'America/New_York' });
+    expect(normalizeTimeZone('')).toEqual({ ok: true, value: DEFAULT_TIME_ZONE });
+    expect(normalizeTimeZone(null)).toEqual({ ok: true, value: DEFAULT_TIME_ZONE });
+  });
+
+  it('refuses unknown zones', () => {
+    expect(normalizeTimeZone('Mars/Olympus_Mons').ok).toBe(false);
+    expect(normalizeTimeZone('<script>').ok).toBe(false);
+  });
+});
+
+describe('normalizeDisplayUnits', () => {
+  it('accepts us and metric, defaults blanks to us', () => {
+    expect(normalizeDisplayUnits('metric')).toEqual({ ok: true, value: 'metric' });
+    expect(normalizeDisplayUnits('us')).toEqual({ ok: true, value: 'us' });
+    expect(normalizeDisplayUnits('')).toEqual({ ok: true, value: 'us' });
+  });
+
+  it('refuses anything else', () => {
+    expect(normalizeDisplayUnits('imperial').ok).toBe(false);
+    expect(normalizeDisplayUnits('METRIC').ok).toBe(false);
   });
 });

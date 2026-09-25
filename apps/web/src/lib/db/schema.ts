@@ -59,6 +59,11 @@ export const users = sqliteTable('users', {
   /** Self-chosen name shown in the app chrome and to farm members. Null
    *  falls back to the email local-part or the formatted phone. */
   displayName: text('display_name'),
+  /** IANA zone for dates and times this user reads. */
+  timeZone: text('time_zone').notNull().default('America/New_York'),
+  displayUnits: text('display_units', { enum: ['us', 'metric'] })
+    .notNull()
+    .default('us'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)

@@ -6,4 +6,6 @@ CREATE TABLE `user_avatars` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-ALTER TABLE `users` ADD `display_name` text;
+ALTER TABLE `users` ADD `display_name` text;--> statement-breakpoint
+ALTER TABLE `users` ADD `time_zone` text DEFAULT 'America/New_York' NOT NULL;--> statement-breakpoint
+ALTER TABLE `users` ADD `display_units` text DEFAULT 'us' NOT NULL;

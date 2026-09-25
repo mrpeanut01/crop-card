@@ -443,14 +443,14 @@
       {#if traits.length > 0}
         <div class="chip-row">
           <span class="row-label">Traits</span>
-          {#each traits as t}<span class="chip neutral">{t}</span>{/each}
+          {#each traits as t, idx (idx)}<span class="chip neutral">{t}</span>{/each}
         </div>
       {/if}
       {#if indicators.length > 0}
         <div class="bullet-list">
           <strong class="row-label">Harvest indicators</strong>
           <ul>
-            {#each indicators as ind}<li>{ind}</li>{/each}
+            {#each indicators as ind, idx (idx)}<li>{ind}</li>{/each}
           </ul>
         </div>
       {/if}
@@ -525,18 +525,21 @@
       {#if safeFor.length > 0}
         <div class="chip-row">
           <span class="row-label">Label-safe crops</span>
-          {#each safeFor as id}<PluginRef pluginId={id} lookup={data.pluginLookup} />{/each}
+          {#each safeFor as id, idx (idx)}<PluginRef
+              pluginId={id}
+              lookup={data.pluginLookup}
+            />{/each}
         </div>
       {/if}
       {#if traitGated.length > 0}
         <div class="bullet-list">
           <strong class="row-label">Trait-gated safety</strong>
           <ul>
-            {#each traitGated as tg}
+            {#each traitGated as tg, idx (idx)}
               <li>
                 <PluginRef pluginId={tg.cropPluginId as string} lookup={data.pluginLookup} />
                 requires
-                {#each asArray<string>(tg.requiresTraits) as t, i}
+                {#each asArray<string>(tg.requiresTraits) as t, i (i)}
                   <span class="chip neutral">{t}</span>
                 {/each}
               </li>
@@ -611,20 +614,23 @@
       {#if pests.length > 0}
         <div class="chip-row">
           <span class="row-label">Target pests</span>
-          {#each pests as p}<span class="chip neutral">{p}</span>{/each}
+          {#each pests as p, idx (idx)}<span class="chip neutral">{p}</span>{/each}
         </div>
       {/if}
       {#if safeFor.length > 0}
         <div class="chip-row">
           <span class="row-label">Label-safe crops</span>
-          {#each safeFor as id}<PluginRef pluginId={id} lookup={data.pluginLookup} />{/each}
+          {#each safeFor as id, idx (idx)}<PluginRef
+              pluginId={id}
+              lookup={data.pluginLookup}
+            />{/each}
         </div>
       {/if}
       {#if thresholds.length > 0}
         <div class="bullet-list">
           <strong class="row-label">Scouting thresholds</strong>
           <ul>
-            {#each thresholds as t}
+            {#each thresholds as t, idx (idx)}
               <li>
                 <strong>{t.pest}</strong>: spray at {t.threshold}
                 {t.metric}
@@ -710,13 +716,16 @@
       {#if diseases.length > 0}
         <div class="chip-row">
           <span class="row-label">Target diseases</span>
-          {#each diseases as d}<span class="chip neutral">{d}</span>{/each}
+          {#each diseases as d, idx (idx)}<span class="chip neutral">{d}</span>{/each}
         </div>
       {/if}
       {#if safeFor.length > 0}
         <div class="chip-row">
           <span class="row-label">Label-safe crops</span>
-          {#each safeFor as id}<PluginRef pluginId={id} lookup={data.pluginLookup} />{/each}
+          {#each safeFor as id, idx (idx)}<PluginRef
+              pluginId={id}
+              lookup={data.pluginLookup}
+            />{/each}
         </div>
       {/if}
       {#if flags}
@@ -764,7 +773,7 @@
       {#if secondary}
         <div class="chip-row">
           <span class="row-label">Secondary nutrients</span>
-          {#each Object.entries(secondary) as [k, v]}
+          {#each Object.entries(secondary) as [k, v] (k)}
             <span class="chip neutral">{k.toUpperCase()} {v}%</span>
           {/each}
         </div>
@@ -809,7 +818,7 @@
         <div class="bullet-list">
           <strong class="row-label">Companion members</strong>
           <ul>
-            {#each members as m}
+            {#each members as m, idx (idx)}
               <li>
                 <strong>{m.role}</strong>
                 <span class="muted">({m.family})</span>
@@ -831,13 +840,19 @@
       {#if goodWith.length > 0}
         <div class="chip-row">
           <span class="row-label">Good with</span>
-          {#each goodWith as id}<PluginRef pluginId={id} lookup={data.pluginLookup} />{/each}
+          {#each goodWith as id, idx (idx)}<PluginRef
+              pluginId={id}
+              lookup={data.pluginLookup}
+            />{/each}
         </div>
       {/if}
       {#if badWith.length > 0}
         <div class="chip-row">
           <span class="row-label">Bad with</span>
-          {#each badWith as id}<PluginRef pluginId={id} lookup={data.pluginLookup} />{/each}
+          {#each badWith as id, idx (idx)}<PluginRef
+              pluginId={id}
+              lookup={data.pluginLookup}
+            />{/each}
         </div>
       {/if}
     </section>
@@ -855,7 +870,7 @@
           <div class="task-group">
             <h3>Pre-tasks ({preTasks.length})</h3>
             <ul class="task-list">
-              {#each preTasks as t}
+              {#each preTasks as t, idx (idx)}
                 <li>
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
@@ -875,7 +890,7 @@
           <div class="task-group">
             <h3>Post-tasks ({postTasks.length})</h3>
             <ul class="task-list">
-              {#each postTasks as t}
+              {#each postTasks as t, idx (idx)}
                 <li>
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
@@ -895,7 +910,7 @@
           <div class="task-group">
             <h3>Seasonal tasks ({seasonalTasks.length})</h3>
             <ul class="task-list">
-              {#each seasonalTasks as t}
+              {#each seasonalTasks as t, idx (idx)}
                 <li>
                   {#if t.category}<span class="task-cat">{t.category}</span>{/if}
                   <strong>{t.title}</strong>
@@ -924,7 +939,7 @@
       <details class="card">
         <summary>Spray windows ({sprayWindows.length})</summary>
         <ul class="task-list">
-          {#each sprayWindows as sw}
+          {#each sprayWindows as sw, idx (idx)}
             <li>
               <strong>{sw.title}</strong>
               <span class="muted">· {sw.chemistryClass}</span>

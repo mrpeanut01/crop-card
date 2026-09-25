@@ -2,6 +2,7 @@
   "pluginId": "express-tribenuron",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Express', 'tribenuron'; hits were unrelated products). Label (279-9594 accepted 2022-12-20 and 279-9578 accepted 2019-05-06) makes no organic-production claim; conventional synthetic herbicide."},
   "pluginSchemaVersion": "1.1",
   "displayName": "Express (tribenuron-methyl)",
   "activeIngredients": [
@@ -19,5 +20,6 @@
   "requiresAMS": false,
   "deconRequired": true,
   "epaRegistrationNumber": "432-1542",
+  "defaultUnit": "oz",
   "notes": "FMC POST broadleaf sulfonylurea for wheat, barley, oats, triticale (Group 2)."
 }

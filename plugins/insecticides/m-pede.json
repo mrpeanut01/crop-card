@@ -28,8 +28,8 @@
   "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "notes": "Organic insecticidal soap. Contact-only — must wet the pest. Phytotoxicity risk on stressed plants.",
   "complianceFlags": {
-    "omriListed": false,
-    "certifiedOrganicAllowed": false,
+    "omriListed": true,
+    "certifiedOrganicAllowed": true,
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },

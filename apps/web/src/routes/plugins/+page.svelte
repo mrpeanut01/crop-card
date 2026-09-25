@@ -413,7 +413,7 @@
   <section class="alert">
     <strong>⚠ {data.failures.length} plugin file(s) failed to load:</strong>
     <ul>
-      {#each data.failures as f}<li>{f}</li>{/each}
+      {#each data.failures as f, idx (idx)}<li>{f}</li>{/each}
     </ul>
   </section>
 {/if}
@@ -479,7 +479,7 @@
           <div class="row-line1">
             <strong class="name">{r.displayName}</strong>
             <span class="type-badge type-{r.type}">{r.type}</span>
-            {#each r.groupCodes as gc}
+            {#each r.groupCodes as gc, idx (idx)}
               <GroupCodeBadge kind={gc.kind} group={gc.group} />
             {/each}
             <span class="version">v{r.version}</span>
@@ -583,7 +583,7 @@
         </p>
       {/if}
       <ul class="issues">
-        {#each reject.issues as i}
+        {#each reject.issues as i, idx (idx)}
           <li>
             {#if i.path}<code>{i.path}</code>{/if}
             <span>{i.message}</span>

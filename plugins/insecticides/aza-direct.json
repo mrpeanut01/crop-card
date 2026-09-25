@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Aza-Direct (Gowan azadirachtin — OMRI)",
   "version": "1.0.0",
+  "formulation": "EC",
+  "epaRegistrationNumber": "71908-1-10163",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
     {
@@ -25,10 +27,11 @@
     "Mexican bean beetle"
   ],
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "notes": "OMRI organic neem extract IGR + antifeedant. Slow, broad-spectrum. Stop bee toxicity by spraying at sunset.",
   "complianceFlags": {
-    "omriListed": false,
-    "certifiedOrganicAllowed": false,
+    "omriListed": true,
+    "certifiedOrganicAllowed": true,
     "nonGmoCompliant": true,
     "transitioningAllowed": false
   },

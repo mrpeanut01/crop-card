@@ -20,6 +20,7 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"dusk-to-dawn-only"},
   "epaRegistrationNumber": "70127-9",
   "targetPests": [
     "whitefly",

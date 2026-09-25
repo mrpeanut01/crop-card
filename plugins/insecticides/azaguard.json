@@ -2,6 +2,7 @@
   "pluginId": "azaguard",
   "type": "insecticide",
   "version": "1.0.0",
+  "formulation": "EC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "AzaGuard (Azadirachtin 3%, OMRI)",
@@ -19,6 +20,7 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "70051-9",
   "targetPests": [
     "aphid",

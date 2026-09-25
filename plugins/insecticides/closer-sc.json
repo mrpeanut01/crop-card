@@ -2,6 +2,7 @@
   "pluginId": "closer-sc",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic product (Closer SC, Corteva, EPA 62719-623). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Closer', 'sulfoxaflor'); fuzzy hits were unrelated products. No organic/NOP statement found on the label."},
   "defaultUnit": "fl-oz",
   "formulation": "SC",
   "pluginSchemaVersion": "1.1",

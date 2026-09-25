@@ -3,6 +3,8 @@
   "type": "herbicide",
   "displayName": "Roundup PowerMAX 3 (Bayer)",
   "version": "1.0.0",
+  "formulation": "SL",
+  "epaRegistrationNumber": "524-659",
   "defaultUnit": "fl-oz",
   "applicationTiming": "BURNDOWN",
   "activeIngredients": [

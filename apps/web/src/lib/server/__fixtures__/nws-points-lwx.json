@@ -1,13 +1,106 @@
 {
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "s": "https://schema.org/",
+      "geo": "http://www.opengis.net/ont/geosparql#",
+      "unit": "http://codes.wmo.int/common/unit/",
+      "@vocab": "https://api.weather.gov/ontology#",
+      "geometry": {
+        "@id": "s:GeoCoordinates",
+        "@type": "geo:wktLiteral"
+      },
+      "city": "s:addressLocality",
+      "state": "s:addressRegion",
+      "distance": {
+        "@id": "s:Distance",
+        "@type": "s:QuantitativeValue"
+      },
+      "bearing": {
+        "@type": "s:QuantitativeValue"
+      },
+      "value": {
+        "@id": "s:value"
+      },
+      "unitCode": {
+        "@id": "s:unitCode",
+        "@type": "@id"
+      },
+      "forecastOffice": {
+        "@type": "@id"
+      },
+      "forecastGridData": {
+        "@type": "@id"
+      },
+      "publicZone": {
+        "@type": "@id"
+      },
+      "county": {
+        "@type": "@id"
+      }
+    }
+  ],
   "id": "https://api.weather.gov/points/39.1157,-77.5636",
   "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [-77.5636, 39.1157]
+  },
   "properties": {
+    "@id": "https://api.weather.gov/points/39.1157,-77.5636",
+    "@type": "wx:Point",
+    "cwa": "LWX",
+    "type": "land",
+    "forecastOffice": "https://api.weather.gov/offices/LWX",
     "gridId": "LWX",
-    "gridX": 82,
+    "gridX": 77,
     "gridY": 79,
-    "forecast": "https://api.weather.gov/gridpoints/LWX/82,79/forecast",
-    "forecastHourly": "https://api.weather.gov/gridpoints/LWX/82,79/forecast/hourly",
-    "forecastGridData": "https://api.weather.gov/gridpoints/LWX/82,79",
-    "timeZone": "America/New_York"
+    "forecast": "https://api.weather.gov/gridpoints/LWX/77,79/forecast",
+    "forecastHourly": "https://api.weather.gov/gridpoints/LWX/77,79/forecast/hourly",
+    "forecastGridData": "https://api.weather.gov/gridpoints/LWX/77,79",
+    "observationStations": "https://api.weather.gov/gridpoints/LWX/77,79/stations",
+    "relativeLocation": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-77.5591947, 39.106396]
+      },
+      "properties": {
+        "city": "Leesburg",
+        "state": "VA",
+        "distance": {
+          "unitCode": "wmoUnit:m",
+          "value": 0
+        },
+        "bearing": {
+          "unitCode": "wmoUnit:degree_(angle)",
+          "value": 0
+        }
+      }
+    },
+    "forecastZone": "https://api.weather.gov/zones/forecast/VAZ506",
+    "county": "https://api.weather.gov/zones/county/VAC107",
+    "fireWeatherZone": "https://api.weather.gov/zones/fire/VAZ506",
+    "timeZone": "America/New_York",
+    "radarStation": "KLWX",
+    "astronomicalData": {
+      "sunrise": "2026-09-24T06:59:58-04:00",
+      "sunset": "2026-09-24T19:04:23-04:00",
+      "transit": "2026-09-24T13:02:11-04:00",
+      "civilTwilightBegin": "2026-09-24T06:33:24-04:00",
+      "civilTwilightEnd": "2026-09-24T19:30:58-04:00",
+      "nauticalTwilightBegin": "2026-09-24T06:02:15-04:00",
+      "nauticalTwilightEnd": "2026-09-24T20:02:07-04:00",
+      "astronomicalTwilightBegin": "2026-09-24T05:30:39-04:00",
+      "astronomicalTwilightEnd": "2026-09-24T20:33:43-04:00"
+    },
+    "nwr": {
+      "transmitter": "WNG736",
+      "sameCode": "051107",
+      "areaBroadcast": "https://api.weather.gov/radio/WNG736/broadcast",
+      "pointBroadcast": "https://api.weather.gov/points/39.1157,-77.5636/radio"
+    }
   }
 }

@@ -2,6 +2,8 @@
   "pluginId": "altacor-chlorantraniliprole",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic diamide (chlorantraniliprole 35%). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Altacor', 'chlorantraniliprole'). Label (EPA Reg. No. 279-9607, accepted 2018-07-02) makes no organic-production statement."},
+  "formulation": "WDG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Altacor (chlorantraniliprole, fruit/vegetable)",
   "activeIngredients": [
@@ -20,6 +22,7 @@
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "epaRegistrationNumber": "352-730",
+  "defaultUnit": "oz",
   "targetPests": [
     "codling moth",
     "oriental fruit moth",

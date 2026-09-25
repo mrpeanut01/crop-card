@@ -68,7 +68,7 @@
         </tr>
       </thead>
       <tbody>
-        {#each filteredOwners as o}
+        {#each filteredOwners as o (o.id)}
           <tr class:suspended={o.billingStatus === 'suspended'}>
             <td><strong>{o.name}</strong></td>
             <td><code>{o.slug}</code></td>
@@ -113,7 +113,7 @@
     <table class="audit">
       <thead><tr><th>When</th><th>By</th><th>Action</th><th>Owner</th><th>Target</th></tr></thead>
       <tbody>
-        {#each data.audit as a}
+        {#each data.audit as a (a.id)}
           <tr>
             <td>{new Date(a.at).toLocaleString()}</td>
             <td><code>{a.superadminUserId}</code></td>

@@ -3,7 +3,9 @@
   "type": "insecticide",
   "displayName": "Actara (Syngenta thiamethoxam)",
   "version": "1.0.0",
+  "formulation": "WDG",
   "epaRegistrationNumber": "100-938",
+  "defaultUnit": "oz",
   "activeIngredients": [
     {
       "name": "thiamethoxam",

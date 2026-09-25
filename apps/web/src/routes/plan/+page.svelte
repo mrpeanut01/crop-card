@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
@@ -110,7 +111,8 @@
   let openGuides = $state(new Set<string>());
   function toggleGuide(id: string) {
     const next = new Set(openGuides);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     openGuides = next;
   }
 
@@ -1375,7 +1377,7 @@
     cropsSeedDropBlockId = null;
   }
 
-  $effect(() => {
+  onMount(() => {
     cropsTabOrder = loadBlockOrder();
   });
 

@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Coragen (FMC chlorantraniliprole)",
   "version": "1.0.0",
+  "formulation": "SC",
   "epaRegistrationNumber": "279-9606",
   "defaultUnit": "fl-oz",
   "activeIngredients": [

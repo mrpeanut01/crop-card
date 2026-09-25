@@ -2,6 +2,7 @@
   "pluginId": "dimethoate-4ec",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic organophosphate (dimethoate). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Dimethoate' -> 0 results; 'Dimethoate 4EC' -> only unrelated fuzzy matches). Synthetic OP insecticides are not on the NOP National List; no organic statement on any dimethoate label reviewed."},
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "pluginSchemaVersion": "1.1",

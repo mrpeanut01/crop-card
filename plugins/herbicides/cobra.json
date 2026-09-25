@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Cobra (Valent lactofen)",
   "version": "1.0.0",
+  "formulation": "EC",
   "epaRegistrationNumber": "59639-34",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",

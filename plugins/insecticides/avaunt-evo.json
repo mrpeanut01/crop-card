@@ -3,7 +3,9 @@
   "type": "insecticide",
   "displayName": "Avaunt eVo (FMC indoxacarb)",
   "version": "1.0.0",
+  "formulation": "WDG",
   "epaRegistrationNumber": "279-9629",
+  "defaultUnit": "oz",
   "activeIngredients": [
     {
       "name": "indoxacarb",

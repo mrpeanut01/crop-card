@@ -816,7 +816,7 @@
             />
           </span>
           <select bind:value={cropFamily}>
-            {#each CROP_FAMILIES as f}<option value={f}>{f}</option>{/each}
+            {#each CROP_FAMILIES as f (f)}<option value={f}>{f}</option>{/each}
           </select>
         </label>
         <label>
@@ -853,7 +853,7 @@
         <textarea
           rows="4"
           bind:value={cropIndicators}
-          placeholder={'e.g.\nHusks fully dry and papery\nBlack layer at kernel tip'}
+          placeholder="e.g.&#10;Husks fully dry and papery&#10;Black layer at kernel tip"
         ></textarea>
       </label>
       <label class="full">
@@ -897,7 +897,7 @@
             />
           </span>
           <select bind:value={hChemistryClass}>
-            {#each CHEMISTRY_CLASSES as c}<option value={c}>{c}</option>{/each}
+            {#each CHEMISTRY_CLASSES as c (c)}<option value={c}>{c}</option>{/each}
           </select>
         </label>
         <label>
@@ -1304,7 +1304,7 @@
             />
           </span>
           <select bind:value={cmpPrimaryFamily}>
-            {#each CROP_FAMILIES as f}<option value={f}>{f}</option>{/each}
+            {#each CROP_FAMILIES as f (f)}<option value={f}>{f}</option>{/each}
           </select>
         </label>
       </div>
@@ -1381,7 +1381,7 @@
     <div class="reject">
       <strong>⛔ {submitReject.title}</strong>
       <ul>
-        {#each submitReject.issues as i}
+        {#each submitReject.issues as i, idx (idx)}
           <li>
             {#if i.path}<code>{i.path}</code>{/if}
             {i.message}

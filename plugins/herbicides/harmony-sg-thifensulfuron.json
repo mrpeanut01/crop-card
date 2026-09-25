@@ -2,6 +2,7 @@
   "pluginId": "harmony-sg-thifensulfuron",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Harmony'; 'thifensulfuron'). Conventional synthetic herbicide; label carries no organic-production statement."},
   "defaultUnit": "oz",
   "formulation": "SG",
   "pluginSchemaVersion": "1.1",

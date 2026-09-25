@@ -2,6 +2,7 @@
   "pluginId": "onager-hexythiazox",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic product (Onager Miticide, Gowan, EPA 10163-277). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Onager', 'hexythiazox'); fuzzy hits were unrelated products. No organic/NOP statement found on the label."},
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "pluginSchemaVersion": "1.1",

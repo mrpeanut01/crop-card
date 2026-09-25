@@ -27,7 +27,7 @@
   ],
   "notes": "Brand-name copper hydroxide. Generic alternative to Kocide.",
   "complianceFlags": {
-    "omriListed": true,
+    "omriListed": false,
     "nonGmoCompliant": true,
     "transitioningAllowed": true
   },

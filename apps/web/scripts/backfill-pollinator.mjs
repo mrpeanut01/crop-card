@@ -20,6 +20,9 @@
  * top-level "version" line) so existing formatting is preserved. Re-runnable:
  * an existing single-line `"pollinator"` entry is replaced in place.
  *
+ * Plugins with a label-sourced `pollinator` (listed under `pollinator` in
+ * scripts/epa-reg-sources.json) are skipped.
+ *
  * Usage: node scripts/backfill-pollinator.mjs [--dry-run]
  */
 
@@ -144,14 +147,23 @@ function upsert(text, value) {
   return text.replace(afterVersion, `$1\n${line}`);
 }
 
+/** Plugins whose `pollinator` was read from the label (provenance in
+ *  epa-reg-sources.json → `pollinator`). The table never overwrites them. */
+function labelSourced() {
+  const sources = JSON.parse(readFileSync(resolve(__dirname, 'epa-reg-sources.json'), 'utf8'));
+  return new Set(Object.keys(sources.pollinator ?? {}));
+}
+
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   const counts = {};
   const skipped = [];
+  const fromLabel = labelSourced();
   for (const file of readdirSync(DIR).filter((f) => f.endsWith('.json'))) {
     const path = resolve(DIR, file);
     const text = readFileSync(path, 'utf8');
     const plugin = JSON.parse(text);
+    if (fromLabel.has(plugin.pluginId)) continue;
     const { pollinator, unmapped } = pollinatorFor(plugin.activeIngredients ?? []);
     if (!pollinator) {
       skipped.push(`${plugin.pluginId}: ${unmapped.join(', ')}`);

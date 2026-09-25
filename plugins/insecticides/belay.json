@@ -3,6 +3,8 @@
   "type": "insecticide",
   "displayName": "Belay (Valent clothianidin)",
   "version": "1.0.0",
+  "formulation": "SC",
+  "epaRegistrationNumber": "59639-150",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
     {

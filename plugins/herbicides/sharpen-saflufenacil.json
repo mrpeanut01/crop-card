@@ -2,6 +2,8 @@
   "pluginId": "sharpen-saflufenacil",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Sharpen', 'saflufenacil'; hits were unrelated products). Label (7969-278, accepted 2024-09-10) makes no organic-production claim; conventional synthetic herbicide."},
+  "formulation": "SC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Sharpen (saflufenacil)",

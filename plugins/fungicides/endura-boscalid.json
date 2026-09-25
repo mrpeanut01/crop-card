@@ -2,6 +2,8 @@
   "pluginId": "endura-boscalid",
   "type": "fungicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Endura'). Label has no organic statement."},
+  "formulation": "WG",
   "pluginSchemaVersion": "1.1",
   "displayName": "Endura (boscalid)",
   "applicationTiming": "COVER",
@@ -20,6 +22,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
   "epaRegistrationNumber": "7969-218",
+  "defaultUnit": "oz",
   "targetDiseases": [
     "Botrytis",
     "Sclerotinia",

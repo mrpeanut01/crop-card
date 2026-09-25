@@ -2,6 +2,8 @@
   "pluginId": "portal-xlo",
   "type": "insecticide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "Conventional synthetic METI acaricide (fenpyroximate 5%). No NOP listing on the OMRI Products List (searched 2026-09-25: 'Portal' -> only unrelated products, 'fenpyroximate' -> 0). Label (EPA Reg. No. 71711-40, accepted 2024-01-11) makes no organic-production statement."},
+  "formulation": "EC",
   "defaultUnit": "fl-oz",
   "pluginSchemaVersion": "1.1",
   "displayName": "Portal XLO (fenpyroximate)",
@@ -19,6 +21,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "epaRegistrationNumber": "71711-23",
   "targetPests": [
     "European red mite",

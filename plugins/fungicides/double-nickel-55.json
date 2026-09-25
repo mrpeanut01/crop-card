@@ -2,6 +2,7 @@
   "pluginId": "double-nickel-55",
   "type": "fungicide",
   "version": "1.0.0",
+  "formulation": "WG",
   "defaultUnit": "lb",
   "pluginSchemaVersion": "1.1",
   "displayName": "Double Nickel 55 (Bacillus amyloliquefaciens D747, OMRI)",

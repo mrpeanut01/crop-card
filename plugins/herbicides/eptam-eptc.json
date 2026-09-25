@@ -2,6 +2,7 @@
   "pluginId": "eptam-eptc",
   "type": "herbicide",
   "version": "1.0.0",
+  "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Eptam'; only an unrelated silicone adjuvant returned). Conventional synthetic thiocarbamate (EPTC) herbicide, Gowan Eptam 7-E EPA 10163-283; label makes no organic-production claim."},
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "pluginSchemaVersion": "1.1",

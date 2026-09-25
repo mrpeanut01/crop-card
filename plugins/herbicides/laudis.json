@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Laudis (Bayer tembotrione)",
   "version": "1.0.0",
+  "formulation": "SC",
   "epaRegistrationNumber": "264-860",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",

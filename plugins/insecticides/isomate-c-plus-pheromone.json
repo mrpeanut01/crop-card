@@ -19,6 +19,7 @@
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "epaRegistrationNumber": "53575-31",
+  "defaultUnit": "count",
   "targetPests": [
     "codling moth"
   ],

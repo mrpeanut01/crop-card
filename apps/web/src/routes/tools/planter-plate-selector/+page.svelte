@@ -463,7 +463,7 @@
     <p class="count" aria-live="polite">
       {results.length}
       {results.length === 1 ? 'plate' : 'plates'} found
-      {#if results.length === 20}{' '}(showing first 20){/if}
+      {results.length === 20 ? ' (showing first 20)' : ''}
     </p>
     {#if results.length === 0}
       <p class="empty">No plates found — try widening your tolerance or clearing filters.</p>

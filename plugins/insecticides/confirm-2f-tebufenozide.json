@@ -20,7 +20,7 @@
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 14,
   "pollinatorRisk": "low",
-  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "epaRegistrationNumber": "62719-481",
   "targetPests": [
     "lepidopteran larvae",

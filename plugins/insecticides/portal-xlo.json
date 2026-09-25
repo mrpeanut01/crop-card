@@ -19,6 +19,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "epaRegistrationNumber": "71711-23",
   "targetPests": [
     "European red mite",

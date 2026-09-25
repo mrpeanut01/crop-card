@@ -26,6 +26,7 @@
     "Mexican bean beetle"
   ],
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
   "notes": "OMRI organic neem extract IGR + antifeedant. Slow, broad-spectrum. Stop bee toxicity by spraying at sunset.",
   "complianceFlags": {
     "omriListed": false,

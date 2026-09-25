@@ -12,6 +12,7 @@
   "gpaCalibration": 50,
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 0,
+  "rainfastHours": 2,
   "pollinatorRisk": "low",
   "targetDiseases": ["Botrytis", "Sclerotinia"],
   "labelClaims": { "safeForCropFamilies": ["small-fruit", "vine-fruit", "stone-fruit"] },

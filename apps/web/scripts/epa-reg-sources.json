@@ -568,6 +568,29 @@
       "rainfastHours": 0.5,
       "rainfastSourceUrl": "https://cs-assets.bayer.com/is/content/bayer/2023-Previcur-Flex-Product-Bulletinpdf",
       "statement": "Bayer Previcur Flex product bulletin: rainfast 30 minutes after application"
+    },
+    "curzate-60df-cymoxanil": {
+      "rainfastHours": 2,
+      "rainfastSourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000352-00592-20181019.pdf",
+      "statement": "Rainfastness: CURZATE® 60DF rapidly penetrates into plant tissues and is rainfast within 2 hours after application.",
+      "docDate": "2018-10-19",
+      "page": 4,
+      "note": "Latest PPLS file (2021-05-05) has font-encoded body text that cannot be searched; value taken from the 2018-10-19 accepted label."
+    },
+    "elevate-50wdg": {
+      "rainfastHours": 2,
+      "rainfastSourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00446-20260303.pdf",
+      "statement": "Rainfall or overhead irrigation within 2 hours of application may necessitate re-treatment.",
+      "docDate": "2026-03-03",
+      "page": 7
+    },
+    "folicur-36f-tebuconazole": {
+      "rainfastHours": 4,
+      "rainfastSourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00752-20131119.pdf",
+      "statement": "must have two to four hours of drying time on plant foliage for the active ingredient to move systemically into plant tissue before rain or irrigation occurs",
+      "docDate": "2013-11-19",
+      "page": 6,
+      "note": "Label gives a 2-4 h range; proposed the upper (more protective) bound. Reviewer may prefer keep-gap given the range."
     }
   },
   "pollinator": {

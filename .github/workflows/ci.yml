@@ -46,6 +46,45 @@ jobs:
       - name: E2E smoke
         run: pnpm test:e2e
 
+  # #101 — visual regression against the committed *-linux.png baselines.
+  # Non-blocking until it has run green on the GitHub runner for a while:
+  # the baselines were captured with a different chromium build than the
+  # one `playwright install` pulls here. If it drifts, download the
+  # `visual-diffs` artifact, inspect the *-actual.png files, and commit
+  # them over the baselines once they look right.
+  visual:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile=false
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @cropcard/web exec playwright install --with-deps chromium
+
+      - name: Visual regression
+        env:
+          E2E_VISUAL: "1"
+        run: pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=none
+
+      - name: Upload visual diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: apps/web/test-results/
+          retention-days: 14
+
   validate-bicep:
     runs-on: ubuntu-latest
     steps:

@@ -6,7 +6,7 @@
  * date kicker, weather strip, season-glance counters) is masked so
  * baselines stay deterministic across days.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, settleForScreenshot } from '../lib/test';
 import { signInAsDemoOwner } from '../lib/auth';
 
 const VIEWPORTS = [
@@ -24,6 +24,7 @@ for (const vp of VIEWPORTS) {
     // Wait for at least one shell element so we don't snapshot a partial render.
     await expect(page.getByRole('heading', { name: 'This week' })).toBeVisible();
 
+    await settleForScreenshot(page);
     await expect(page).toHaveScreenshot(`today-${vp.name}.png`, {
       fullPage: true,
       mask: [
@@ -44,8 +45,7 @@ for (const vp of VIEWPORTS) {
         page.locator('.item'),
         // Season-glance counters depend on registered plugins / season data.
         page.locator('.cell')
-      ],
-      maxDiffPixelRatio: 0.01
+      ]
     });
   });
 }

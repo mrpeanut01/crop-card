@@ -84,6 +84,7 @@ const ANONYMOUS_STATIC_PREFIXES = [
   '/_app/', // SvelteKit-built JS/CSS bundles
   '/icon-', // PWA icons (/icon-192.png, /icon-512.png)
   '/img/',
+  '/fonts/',
   '/static/'
 ];
 

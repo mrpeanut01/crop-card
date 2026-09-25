@@ -1,40 +1,17 @@
 import type { Page } from '@playwright/test';
 
 /**
- * Phase 25b (#86) — Playwright auth helper.
+ * Signs in as the seeded demo owner via the `POST /?/demo` form action.
+ * `scripts/seed-test-data.mjs` gives owner@cropcard.local exactly one
+ * helper_assignments(role='owner') row, so login must resolve straight to
+ * /today. Anything else (/owner-picker, /onboarding) means the fixture
+ * drifted (#246) and every signed-in spec would silently test the wrong
+ * page — fail loudly here instead.
  *
- * Signs in as the demo owner via the existing `POST /?/demo` form
- * action (defined in `src/routes/+page.server.ts`). The seed script
- * (`scripts/seed-test-data.mjs`, wired into playwright.config.ts'
- * webServer command chain) creates the demo owner + their tenant +
- * blocks + plantings, so this helper just establishes the session
- * cookie.
- *
- * Usage in a spec:
- *   test('something', async ({ page }) => {
- *     await signInAsDemoOwner(page);
- *     await page.goto('/spray');
- *     // …
- *   });
- *
- * Idempotent — subsequent calls return the same cookie because
- * loginByEmail() upserts by email.
+ * APIRequestContext doesn't set `Origin`, and SvelteKit's CSRF check
+ * rejects Origin-less form posts, so we send the baseURL as Origin.
  */
 export async function signInAsDemoOwner(page: Page): Promise<void> {
-  // The demo action is a `formData` POST that returns a 303 redirect
-  // to /today (or /onboarding for fresh users; seeded data short-
-  // circuits to /today). Playwright follows the redirect by default
-  // and the Set-Cookie header is captured in the page's context.
-  //
-  // CI fix (2026-05-25): `page.request.post()` uses Playwright's
-  // APIRequestContext, which does NOT auto-set the `Origin` header
-  // the way a browser-context fetch would. Form-encoded posts that
-  // arrive Origin-less get rejected by SvelteKit's built-in CSRF
-  // check ("Cross-site POST form submissions are forbidden") — that
-  // check was re-armed for form actions in Phase 25 (#94) after the
-  // deprecated `kit.csrf.checkOrigin: false` flag was removed.
-  // Spoofing Origin to the resolved baseURL keeps the fixture passing
-  // both locally and in CI.
   const baseURL =
     (page.context() as unknown as { _options?: { baseURL?: string } })._options?.baseURL ??
     'http://localhost:5173';
@@ -44,9 +21,15 @@ export async function signInAsDemoOwner(page: Page): Promise<void> {
       'x-sveltekit-action': 'true',
       origin: baseURL
     },
-    maxRedirects: 5
+    maxRedirects: 0
   });
   if (!res.ok()) {
     throw new Error(`demo signin failed: ${res.status()} ${await res.text()}`);
+  }
+  const body = (await res.json().catch(() => null)) as { type?: string; location?: string } | null;
+  if (body?.type !== 'redirect' || body.location !== '/today') {
+    throw new Error(
+      `demo signin should land on /today, got ${JSON.stringify(body)} — check seed-test-data.mjs helper_assignments for owner@cropcard.local`
+    );
   }
 }

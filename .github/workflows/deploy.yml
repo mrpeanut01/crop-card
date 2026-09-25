@@ -1,8 +1,9 @@
 name: deploy
 
 # Manual-only until Azure secrets (AZURE_CLIENT_ID, AZURE_TENANT_ID,
-# AZURE_SUBSCRIPTION_ID, AUTH_SECRET, POSTMARK_TOKEN) and the EMAIL_FROM
-# repo variable are configured. Local deploys use scripts/deploy-azure.sh,
+# AZURE_SUBSCRIPTION_ID) plus the KEY_VAULT_NAME and EMAIL_FROM repo
+# variables are configured. App secrets are read from Key Vault, never
+# passed from GitHub. Local deploys use scripts/deploy-azure.sh,
 # which builds into the resource group's ACR instead of GHCR. Trigger via the Actions tab → "deploy" →
 # "Run workflow".
 on:
@@ -75,8 +76,7 @@ jobs:
             --template-file infra/azure/main.bicep \
             --parameters infra/azure/parameters.dev.bicepparam \
             --parameters image="${{ needs.build-and-push.outputs.image }}" \
-            --parameters authSecret="${{ secrets.AUTH_SECRET }}" \
-            --parameters postmarkToken="${{ secrets.POSTMARK_TOKEN }}" \
+            --parameters keyVaultName="${{ vars.KEY_VAULT_NAME }}" \
             --parameters emailFrom="${{ vars.EMAIL_FROM }}"
 
       - name: Smoke-test deployed app

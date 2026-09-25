@@ -7,7 +7,7 @@ param authMode = 'magic-link'
 param deployMarketplace = false
 
 // Supplied at deploy time by scripts/deploy-azure.sh:
-//   image, containerRegistryServer, authSecret
-//   postmarkToken / emailFrom / anthropicApiKey (optional; from the environment)
+//   image, containerRegistryServer, keyVaultName, hasPostmarkToken, hasAnthropicKey, emailFrom
+// Secret values live only in the Key Vault; see scripts/set-azure-secret.sh.
 param image = ''
-param authSecret = ''
+param keyVaultName = ''

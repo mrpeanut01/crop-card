@@ -9,9 +9,15 @@
 #   CROPCARD_GROUP      resource group        (default cropcard-dev-rg)
 #   CROPCARD_LOCATION   region                (default eastus2)
 #   CROPCARD_ACR        registry name         (default: discovered in the group, else created)
-#   POSTMARK_TOKEN      + EMAIL_FROM          enables emailed magic links (else they go to the log)
-#   ANTHROPIC_API_KEY                         enables AI assists (else no-key mode)
-#   AUTH_SECRET                               only on first deploy; later deploys reuse the live one
+#   CROPCARD_KV         Key Vault name        (default: discovered in the group, else created)
+#   EMAIL_FROM                                sender address for Postmark
+#
+# Secrets live only in the Key Vault; this script never passes one to the template.
+# The session secret is generated there on first deploy. Optional secrets are
+# switched on by their presence in the vault:
+#   postmark-token      emailed magic links (else they go to the container log)
+#   anthropic-api-key   AI assists (else no-key mode)
+# Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
 #
 # The image tag is the commit SHA, so a dirty tree is refused unless --allow-dirty.
 
@@ -28,7 +34,7 @@ for arg in "$@"; do
   case "$arg" in
     --apply) APPLY=true ;;
     --allow-dirty) ALLOW_DIRTY=true ;;
-    -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown argument: $arg" >&2; exit 2 ;;
   esac
 done
@@ -72,21 +78,58 @@ REGISTRY="${ACR}.azurecr.io"
 IMAGE="${REGISTRY}/cropcard-web:${TAG}"
 echo "image        : ${IMAGE}"
 
-# The signing secret is read back from the running app so re-deploys don't sign everyone out.
-SECRET="${AUTH_SECRET:-$(az containerapp secret show -g "$GROUP" -n "$APP_NAME" --secret-name auth-secret --query value -o tsv 2>/dev/null || true)}"
-if [ -z "$SECRET" ]; then
-  SECRET="$(openssl rand -base64 32)"
-  echo "generated a new AUTH_SECRET (stored only as a Container App secret)"
+# ─── Key Vault ──────────────────────────────────────────────────────────
+# Created here rather than in the template so auth-secret can be seeded before
+# the Container App that references it exists. RBAC mode, purge-protected.
+KV="${CROPCARD_KV:-$(az keyvault list --resource-group "$GROUP" --query "[0].name" -o tsv 2>/dev/null || true)}"
+if [ -z "$KV" ]; then
+  [ "$APPLY" = true ] || { echo "No Key Vault yet; --apply will create one."; exit 0; }
+  KV="cropcard-kv-$(openssl rand -hex 4)"
+  echo "creating key vault ${KV}"
+  az keyvault create --resource-group "$GROUP" --name "$KV" --location "$LOCATION" \
+    --enable-rbac-authorization true --enable-purge-protection true \
+    --retention-days 90 --tags project=cropcard --output none
 fi
+KV_ID="$(az keyvault show --name "$KV" --query id -o tsv)"
+echo "key vault    : ${KV}"
+
+ME="$(az ad signed-in-user show --query id -o tsv)"
+if ! az role assignment list --assignee "$ME" --scope "$KV_ID" --role "Key Vault Secrets Officer" --query "[0].id" -o tsv | grep -q .; then
+  az role assignment create --assignee-object-id "$ME" --assignee-principal-type User \
+    --role "Key Vault Secrets Officer" --scope "$KV_ID" --output none
+fi
+
+kv_has() { az keyvault secret show --vault-name "$KV" --name "$1" --query id -o tsv >/dev/null 2>&1; }
+
+# RBAC grants take a minute or two to reach the data plane.
+for attempt in $(seq 1 12); do
+  az keyvault secret list --vault-name "$KV" --query "[0].id" -o tsv >/dev/null 2>&1 && break
+  [ "$attempt" = 12 ] && { echo "no data-plane access to ${KV} after 2 minutes" >&2; exit 1; }
+  sleep 10
+done
+
+if ! kv_has auth-secret; then
+  [ "$APPLY" = true ] || { echo "auth-secret not in vault yet; --apply will seed it."; exit 0; }
+  # Carry over a secret already held by the running app so nobody is signed out.
+  LEGACY="$(az containerapp secret show -g "$GROUP" -n "$APP_NAME" --secret-name auth-secret --query value -o tsv 2>/dev/null || true)"
+  { [ -n "$LEGACY" ] && printf '%s' "$LEGACY" || openssl rand -base64 32 | tr -d '\n'; } |
+    az keyvault secret set --vault-name "$KV" --name auth-secret --file /dev/stdin \
+      --content-type "HMAC session signing secret" --output none
+  unset LEGACY
+  echo "seeded auth-secret in ${KV}"
+fi
+
+HAS_POSTMARK=false; kv_has postmark-token && HAS_POSTMARK=true
+HAS_ANTHROPIC=false; kv_has anthropic-api-key && HAS_ANTHROPIC=true
+echo "postmark     : ${HAS_POSTMARK}"
+echo "anthropic    : ${HAS_ANTHROPIC}"
 
 PARAMS=(
   --parameters infra/azure/parameters.dev.bicepparam
   --parameters location="$LOCATION" image="$IMAGE" containerRegistryServer="$REGISTRY"
-  --parameters authSecret="$SECRET"
+  --parameters keyVaultName="$KV" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
 )
-[ -n "${POSTMARK_TOKEN:-}" ] && PARAMS+=(--parameters postmarkToken="$POSTMARK_TOKEN")
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
-[ -n "${ANTHROPIC_API_KEY:-}" ] && PARAMS+=(--parameters anthropicApiKey="$ANTHROPIC_API_KEY")
 
 if [ "$APPLY" = false ]; then
   az deployment group what-if -g "$GROUP" --name "$DEPLOYMENT_NAME" \

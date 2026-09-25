@@ -23,24 +23,21 @@ param image string
 @description('Login server of an ACR in this resource group, e.g. cropcardacr.azurecr.io. Empty = public image, no registry auth.')
 param containerRegistryServer string = ''
 
-@description('HMAC session signing secret (32-byte random). Rotating it signs everyone out.')
-@secure()
-param authSecret string
+@description('Name of the Key Vault (created by scripts/deploy-azure.sh) holding the app secrets.')
+param keyVaultName string
 
 @description('UC-17 sign-in mode. magic-link disables the direct/demo sign-in.')
 @allowed(['magic-link', 'direct'])
 param authMode string = 'magic-link'
 
-@description('Postmark server token. Empty = magic links and invites are written to the container log instead of emailed.')
-@secure()
-param postmarkToken string = ''
+@description('Key Vault holds a postmark-token secret. False = magic links and invites are written to the container log instead of emailed.')
+param hasPostmarkToken bool = false
 
 @description('From-address for outbound email (Postmark sender signature).')
 param emailFrom string = ''
 
-@description('Anthropic API key. Empty = no-key mode (Invariant 7: deterministic fallbacks).')
-@secure()
-param anthropicApiKey string = ''
+@description('Key Vault holds an anthropic-api-key secret. False = no-key mode (Invariant 7: deterministic fallbacks).')
+param hasAnthropicKey bool = false
 
 @description('Deploy the plugin marketplace app (with its ClamAV sidecar). The web app does not depend on it.')
 param deployMarketplace bool = false
@@ -51,9 +48,8 @@ param marketplaceImage string = image
 @description('Comma-separated list of operator emails allowed to sign in to the marketplace admin UI.')
 param marketplaceAdminEmails string = ''
 
-@description('Optional seed credential for the marketplace on first boot (format ccm_<base64url>).')
-@secure()
-param marketplaceSeedCredential string = ''
+@description('Key Vault holds a marketplace-seed-credential secret (format ccm_<base64url>).')
+param hasMarketplaceSeed bool = false
 
 // Names
 var prefix = '${project}-${env}'
@@ -67,6 +63,7 @@ var blobContainerName = 'cropcard'
 var marketplaceBlobContainerName = 'cropcard-marketplace'
 var useRegistry = !empty(containerRegistryServer)
 var acrName = useRegistry ? split(containerRegistryServer, '.')[0] : 'none'
+var kvSecretsUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
 var acrPullRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 // ─── Storage account + blob container for Litestream replicas ──────────
@@ -132,6 +129,49 @@ resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (useR
   }
 }
 
+// ─── Key Vault secrets ─────────────────────────────────────────────────
+// The vault is created (and auth-secret seeded) by the deploy script so the
+// session secret never passes through a template parameter. The storage key
+// is written here so it never leaves ARM.
+resource kv 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
+}
+
+resource storageKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: kv
+  name: 'storage-key'
+  properties: {
+    value: storage.listKeys().keys[0].value
+    contentType: 'Litestream replica account key (managed by main.bicep)'
+  }
+}
+
+resource kvSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(kv.id, identity.id, kvSecretsUserRoleId)
+  scope: kv
+  properties: {
+    principalId: identity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: kvSecretsUserRoleId
+  }
+}
+
+resource kvAudit 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'audit-to-log-analytics'
+  scope: kv
+  properties: {
+    workspaceId: logs.id
+    logs: [{ categoryGroup: 'audit', enabled: true }]
+  }
+}
+
+// Container App secrets that resolve from Key Vault via the app identity.
+func kvSecret(name string, vaultUri string, identityId string) object => {
+  name: name
+  keyVaultUrl: '${vaultUri}secrets/${name}'
+  identity: identityId
+}
+
 var registries = useRegistry ? [{ server: containerRegistryServer, identity: identity.id }] : []
 
 // ─── Container Apps environment ────────────────────────────────────────
@@ -161,19 +201,24 @@ var appOrigin = 'https://${appName}.${cae.properties.defaultDomain}'
 
 // Container Apps rejects empty secret values, so optional secrets are only
 // declared (and referenced) when supplied.
+var vaultUri = kv.properties.vaultUri
+var coreSecrets = [
+  kvSecret('auth-secret', vaultUri, identity.id)
+  kvSecret('storage-key', vaultUri, identity.id)
+]
 var optionalSecrets = concat(
-  empty(postmarkToken) ? [] : [{ name: 'postmark-token', value: postmarkToken }],
-  empty(anthropicApiKey) ? [] : [{ name: 'anthropic-api-key', value: anthropicApiKey }]
+  hasPostmarkToken ? [kvSecret('postmark-token', vaultUri, identity.id)] : [],
+  hasAnthropicKey ? [kvSecret('anthropic-api-key', vaultUri, identity.id)] : []
 )
 var optionalEnv = concat(
-  empty(postmarkToken)
+  !hasPostmarkToken
     ? [{ name: 'EMAIL_TRANSPORT', value: 'stdout' }]
     : [
         { name: 'EMAIL_TRANSPORT', value: 'postmark' }
         { name: 'POSTMARK_TOKEN', secretRef: 'postmark-token' }
       ],
   empty(emailFrom) ? [] : [{ name: 'EMAIL_FROM', value: emailFrom }],
-  empty(anthropicApiKey) ? [] : [{ name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }]
+  hasAnthropicKey ? [{ name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }] : []
 )
 
 // ─── Container App ─────────────────────────────────────────────────────
@@ -184,7 +229,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
     type: 'UserAssigned'
     userAssignedIdentities: { '${identity.id}': {} }
   }
-  dependsOn: [acrPull]
+  dependsOn: [acrPull, kvSecretsUser, storageKeySecret]
   properties: {
     managedEnvironmentId: cae.id
     workloadProfileName: 'Consumption'
@@ -197,13 +242,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'auto'
         allowInsecure: false
       }
-      secrets: concat(
-        [
-          { name: 'auth-secret', value: authSecret }
-          { name: 'storage-key', value: storage.listKeys().keys[0].value }
-        ],
-        optionalSecrets
-      )
+      secrets: concat(coreSecrets, optionalSecrets)
     }
     template: {
       containers: [
@@ -265,7 +304,7 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = if (deployMar
     type: 'UserAssigned'
     userAssignedIdentities: { '${identity.id}': {} }
   }
-  dependsOn: [acrPull]
+  dependsOn: [acrPull, kvSecretsUser, storageKeySecret]
   properties: {
     managedEnvironmentId: cae.id
     workloadProfileName: 'Consumption'
@@ -278,11 +317,10 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = if (deployMar
         transport: 'auto'
         allowInsecure: false
       }
-      secrets: [
-        { name: 'auth-secret', value: authSecret }
-        { name: 'storage-key', value: storage.listKeys().keys[0].value }
-        { name: 'marketplace-seed-credential', value: empty(marketplaceSeedCredential) ? 'unset' : marketplaceSeedCredential }
-      ]
+      secrets: concat(
+        coreSecrets,
+        hasMarketplaceSeed ? [kvSecret('marketplace-seed-credential', vaultUri, identity.id)] : []
+      )
     }
     template: {
       containers: [
@@ -293,7 +331,7 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = if (deployMar
             cpu: json('0.5')
             memory: '1Gi'
           }
-          env: [
+          env: concat([
             { name: 'NODE_ENV', value: 'production' }
             { name: 'HOST', value: '0.0.0.0' }
             { name: 'PORT', value: '8080' }
@@ -305,10 +343,9 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = if (deployMar
             { name: 'AZURE_BLOB_CONTAINER', value: marketplaceBlobContainerName }
             { name: 'MARKETPLACE_MODE', value: 'internet' }
             { name: 'MARKETPLACE_ADMIN_EMAILS', value: marketplaceAdminEmails }
-            { name: 'MARKETPLACE_SEED_CREDENTIAL', secretRef: 'marketplace-seed-credential' }
             { name: 'CLAMAV_HOST', value: 'localhost' }
             { name: 'CLAMAV_PORT', value: '3310' }
-          ]
+          ], hasMarketplaceSeed ? [{ name: 'MARKETPLACE_SEED_CREDENTIAL', secretRef: 'marketplace-seed-credential' }] : [])
           probes: [
             {
               type: 'Liveness'

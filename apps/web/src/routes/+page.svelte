@@ -173,59 +173,102 @@
         </p>
       {/if}
 
-      <form
-        method="POST"
-        action="?/signin"
-        use:enhance={() => {
-          submitting = true;
-          return async ({ update }) => {
-            await update();
-            submitting = false;
-          };
-        }}
-      >
-        <label class="row">
-          <span class="lbl">Email</span>
-          <input
-            type="email"
-            name="email"
-            required
-            autocomplete="email"
-            placeholder="you@example.com"
-            inputmode="email"
-            autocapitalize="off"
-            autocorrect="off"
-            spellcheck="false"
-          />
-        </label>
-        {#if data.inviteToken}
-          <input type="hidden" name="invite" value={data.inviteToken} />
+      {#if data.authMode === 'magic-link'}
+        {#if form && 'sent' in form && form.sent}
+          <div class="sent" role="status" aria-live="polite">
+            <p><strong>Check your email.</strong></p>
+            <p>{form.message}</p>
+            <p class="sent-hint">Open the link on this device to finish signing in.</p>
+          </div>
+        {:else}
+          <form
+            method="POST"
+            action="?/magic"
+            use:enhance={() => {
+              submitting = true;
+              return async ({ update }) => {
+                await update();
+                submitting = false;
+              };
+            }}
+          >
+            <label class="row">
+              <span class="lbl">Email</span>
+              <input
+                type="email"
+                name="email"
+                required
+                autocomplete="email"
+                placeholder="you@example.com"
+                inputmode="email"
+                autocapitalize="off"
+                autocorrect="off"
+                spellcheck="false"
+              />
+            </label>
+            {#if data.inviteToken}
+              <input type="hidden" name="invite" value={data.inviteToken} />
+            {/if}
+            <button class="primary" type="submit" disabled={submitting}>
+              {submitting ? 'Sending…' : 'Email me a sign-in link →'}
+            </button>
+          </form>
         {/if}
-        <button class="primary" type="submit" disabled={submitting}>
-          {submitting ? 'Signing in…' : 'Continue →'}
-        </button>
-      </form>
+      {:else}
+        <form
+          method="POST"
+          action="?/signin"
+          use:enhance={() => {
+            submitting = true;
+            return async ({ update }) => {
+              await update();
+              submitting = false;
+            };
+          }}
+        >
+          <label class="row">
+            <span class="lbl">Email</span>
+            <input
+              type="email"
+              name="email"
+              required
+              autocomplete="email"
+              placeholder="you@example.com"
+              inputmode="email"
+              autocapitalize="off"
+              autocorrect="off"
+              spellcheck="false"
+            />
+          </label>
+          {#if data.inviteToken}
+            <input type="hidden" name="invite" value={data.inviteToken} />
+          {/if}
+          <button class="primary" type="submit" disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Continue →'}
+          </button>
+        </form>
 
-      <details class="demo" bind:open={showDemo}>
-        <summary>Try the demo</summary>
-        <p class="demo-hint">
-          One-tap sign-in to a sandbox tenant — pick a role to feel the surface area.
-        </p>
-        <div class="demo-grid">
-          {#each demoRoles as r}
-            <form method="POST" action="?/demo" use:enhance>
-              <input type="hidden" name="role" value={r.role} />
-              {#if data.inviteToken}
-                <input type="hidden" name="invite" value={data.inviteToken} />
-              {/if}
-              <button class="demo-btn" type="submit">
-                <strong>{r.label}</strong>
-                <small>{r.sub}</small>
-              </button>
-            </form>
-          {/each}
-        </div>
-      </details>
+        <details class="demo" bind:open={showDemo}>
+          <summary>Try the demo</summary>
+          <p class="demo-hint">
+            One-tap sign-in to a sandbox tenant — pick a role to feel the surface area.
+          </p>
+          <div class="demo-grid">
+            {#each demoRoles as r}
+              <form method="POST" action="?/demo" use:enhance>
+                <input type="hidden" name="role" value={r.role} />
+                {#if data.inviteToken}
+                  <input type="hidden" name="invite" value={data.inviteToken} />
+                {/if}
+                <button class="demo-btn" type="submit">
+                  <strong>{r.label}</strong>
+                  <small>{r.sub}</small>
+                </button>
+              </form>
+            {/each}
+          </div>
+        </details>
+      {/if}
     </div>
 
     <footer class="auth-footer">
@@ -375,6 +418,19 @@
     padding: 0.625rem 0.875rem;
     border-radius: 0.375rem;
     margin: 0 0 1rem;
+    font-size: 0.9rem;
+  }
+  .sent {
+    background: #e7f4ee;
+    border: 1px solid #b9d8c5;
+    color: #14422a;
+    padding: 0.875rem 1rem;
+    border-radius: 0.5rem;
+  }
+  .sent p {
+    margin: 0 0 0.5rem;
+  }
+  .sent-hint {
     font-size: 0.9rem;
   }
   .error {

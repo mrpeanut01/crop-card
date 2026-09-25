@@ -8,6 +8,10 @@
  *                                     keep noise out of CI logs).
  *   - `postmark`                   → POST to api.postmarkapp.com via the
  *                                     server token at $POSTMARK_TOKEN.
+ *   - `memory`                     → appends to an in-process outbox the
+ *                                     e2e suite reads via /_dev/outbox.
+ *                                     Refused unless NODE_ENV=test or
+ *                                     E2E_OUTBOX=1 (see outboxEnabled).
  *
  * The Postmark path is a direct REST POST so we don't take on the
  * `postmark` SDK dependency for one endpoint. Other providers (SES,
@@ -31,7 +35,50 @@ interface InviteEmail {
   expiresAt: number;
 }
 
-export type OutboundEmail = InviteEmail;
+interface MagicLinkEmail {
+  kind: 'magic-link';
+  to: string;
+  /** Full sign-in URL including the unguessable token. */
+  loginUrl: string;
+  /** ms-epoch expiry. */
+  expiresAt: number;
+}
+
+export type OutboundEmail = InviteEmail | MagicLinkEmail;
+
+export interface OutboxEntry {
+  to: string;
+  subject: string;
+  body: string;
+  email: OutboundEmail;
+  sentAt: number;
+}
+
+const OUTBOX_LIMIT = 200;
+const memoryOutbox: OutboxEntry[] = [];
+
+/** The in-memory outbox exists only for vitest (NODE_ENV=test) and the
+ *  Playwright preview server (E2E_OUTBOX=1, set by playwright.config.ts).
+ *  Anything else — including production — can neither write to it nor
+ *  read it, because it holds live sign-in links. */
+export function outboxEnabled(): boolean {
+  return (
+    process.env.EMAIL_TRANSPORT === 'memory' &&
+    (process.env.NODE_ENV === 'test' || process.env.E2E_OUTBOX === '1')
+  );
+}
+
+/** Test-only view of the `memory` transport. Always empty for any other
+ *  transport, so callers can't read mail that went to a real provider. */
+export function readOutbox(to?: string): OutboxEntry[] {
+  if (!outboxEnabled()) return [];
+  const norm = to?.trim().toLowerCase();
+  return memoryOutbox.filter((e) => !norm || e.to.toLowerCase() === norm);
+}
+
+export function clearOutbox(): void {
+  memoryOutbox.length = 0;
+}
 
 export const POSTMARK_TIMEOUT_MS = 10_000;
 
@@ -56,6 +103,15 @@ export async function dispatchEmail(email: OutboundEmail): Promise<void> {
 
   if (transport === 'postmark') {
     await dispatchPostmark(email, subject, body);
+    return;
+  }
+
+  if (transport === 'memory') {
+    if (!outboxEnabled()) {
+      throw new EmailTransportError('EMAIL_TRANSPORT=memory requires NODE_ENV=test or E2E_OUTBOX=1');
+    }
+    memoryOutbox.push({ to: email.to, subject, body, email, sentAt: Date.now() });
+    if (memoryOutbox.length > OUTBOX_LIMIT) memoryOutbox.shift();
     return;
   }
 
@@ -113,6 +169,8 @@ function subjectFor(email: OutboundEmail): string {
   switch (email.kind) {
     case 'helper-invite':
       return `You've been invited to ${email.ownerName} on CropCard`;
+    case 'magic-link':
+      return 'Your CropCard sign-in link';
   }
 }
 
@@ -135,6 +193,19 @@ function bodyFor(email: OutboundEmail): string {
       ]
         .filter(Boolean)
         .join('\n');
+    }
+    case 'magic-link': {
+      const minutes = Math.max(1, Math.round((email.expiresAt - Date.now()) / 60_000));
+      return [
+        `Hi,`,
+        ``,
+        `Use this link to sign in to CropCard (expires in ${minutes} minutes, works once):`,
+        email.loginUrl,
+        ``,
+        `If you didn't ask to sign in, you can ignore this email.`,
+        ``,
+        `— CropCard`
+      ].join('\n');
     }
   }
 }

@@ -1,5 +1,6 @@
-import { fail, redirect, type Actions } from '@sveltejs/kit';
+import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { loginByEmail, redirectFromLogin } from '$lib/server/auth';
+import { authMode, handleMagicLinkRequest, isDirectLoginAllowed } from '$lib/server/magicLink';
 import { ALL_SESSION_ROLES, type SessionRole } from '$lib/server/session';
 import type { PageServerLoad } from './$types';
 
@@ -21,9 +22,17 @@ export const load: PageServerLoad = ({ locals, url }) => {
     throw redirect(307, '/owner-picker');
   }
   return {
-    inviteToken: url.searchParams.get('invite') ?? null
+    inviteToken: url.searchParams.get('invite') ?? null,
+    authMode: authMode()
   };
 };
+
+/** AUTH_MODE=magic-link turns off every path that mints a session from a
+ *  bare email (the email form and the demo buttons). Enforced here, not
+ *  just hidden in the UI. */
+function assertDirectLogin(): void {
+  if (!isDirectLoginAllowed()) throw error(403, 'direct sign-in is disabled; use the email link');
+}
 
 function coerceRole(input: unknown): SessionRole {
   const s = String(input ?? 'helper');
@@ -51,6 +60,7 @@ function redirectNextForLogin(
 
 export const actions: Actions = {
   signin: async (event) => {
+    assertDirectLogin();
     const fd = await event.request.formData();
     const email = String(fd.get('email') ?? '').trim();
     const inviteToken = String(fd.get('invite') ?? '') || null;
@@ -67,10 +77,19 @@ export const actions: Actions = {
     redirectNextForLogin(result, inviteToken);
   },
   demo: async (event) => {
+    assertDirectLogin();
     const fd = await event.request.formData();
     const role = coerceRole(fd.get('role'));
     const inviteToken = String(fd.get('invite') ?? '') || null;
     const result = loginByEmail(event, DEMO_EMAIL[role], role);
     redirectNextForLogin(result, inviteToken);
+  },
+  magic: async (event) => {
+    const fd = await event.request.formData();
+    const email = String(fd.get('email') ?? '').trim();
+    const inviteToken = String(fd.get('invite') ?? '') || null;
+    const result = await handleMagicLinkRequest(event, email, inviteToken);
+    if (!result.ok) return fail(result.status, { error: result.error, inviteToken });
+    return { sent: true, message: result.message, inviteToken };
   }
 };

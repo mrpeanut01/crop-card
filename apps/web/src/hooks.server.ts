@@ -83,6 +83,8 @@ const ANONYMOUS_PATHS = new Set([
   '/signin',
   '/signout',
   '/api/health',
+  '/api/auth/magic-link', // UC-17 — request an email sign-in link pre-auth.
+  '/auth/verify', // UC-17 — redeem the link; mints the HMAC session.
   '/api/openapi.json', // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
   '/api/billing/stripe-webhook' // Stripe POSTs without a session; the signature is the auth.
 ]);

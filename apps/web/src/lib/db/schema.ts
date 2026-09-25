@@ -191,6 +191,28 @@ export const apiTokens = sqliteTable(
   })
 );
 
+/** Magic-link sign-in tokens. Identity-level (like `users`), so NOT
+ *  tenant-scoped: the row exists before the email is proven and before any
+ *  Owner is chosen. Only sha256(token) is stored; `ip_hash` is sha256 of
+ *  the requesting client address, used solely for the per-IP rate limit. */
+export const loginTokens = sqliteTable(
+  'login_tokens',
+  {
+    id: text('id').primaryKey(),
+    tokenHash: text('token_hash').notNull(),
+    email: text('email').notNull(),
+    ipHash: text('ip_hash'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    consumedAt: integer('consumed_at', { mode: 'timestamp_ms' })
+  },
+  (table) => ({
+    tokenHashIdx: uniqueIndex('login_tokens_token_hash_idx').on(table.tokenHash),
+    emailIdx: index('login_tokens_email_idx').on(table.email, table.createdAt),
+    ipIdx: index('login_tokens_ip_idx').on(table.ipHash, table.createdAt)
+  })
+);
+
 /** Per-Owner plugin overlays. The base plugin catalog lives on the
  *  filesystem under /plugins/; this table layers per-Owner customizations
  *  (full replacement per pluginId). Safety kernel never reads overrides. */

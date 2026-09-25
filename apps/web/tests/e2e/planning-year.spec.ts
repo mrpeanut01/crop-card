@@ -26,6 +26,7 @@ test.describe('planning year', () => {
   }) => {
     await signInFresh(page);
     await page.goto('/onboarding');
+    await page.waitForLoadState('networkidle');
 
     const picker = page.getByRole('group', { name: /which planting year/i });
     await expect(picker.getByRole('radio')).toHaveCount(2);
@@ -35,7 +36,7 @@ test.describe('planning year', () => {
     await picker.getByLabel(String(thisYear + 1)).check();
     await page.getByRole('button', { name: /create farm/i }).click();
 
-    await expect(page.getByRole('heading', { name: `Your ${thisYear + 1} setup` })).toBeVisible();
+    await expect(page).toHaveURL(/\/onboarding\?step=location$/);
 
     await page.goto('/settings/season');
     await expect(page.getByText(`Settings · Season ${thisYear + 1}`)).toBeVisible();
@@ -48,7 +49,7 @@ test.describe('planning year', () => {
 
   test('earlier seasons with data are listed and open read-only', async ({ page }) => {
     await signInFresh(page);
-    const onboard = await page.request.post('/onboarding', {
+    const onboard = await page.request.post('/onboarding?/farm', {
       form: { farmName: `Past Farm ${Date.now()}`, planningYear: String(thisYear) },
       headers: { 'x-sveltekit-action': 'true', origin: origin(page) },
       maxRedirects: 0

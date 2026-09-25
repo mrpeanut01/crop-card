@@ -36,7 +36,9 @@ The release workflow then runs:
 4. A Claude code and security review of every change since the previous tag, measured against the invariants in `CLAUDE.md`. It needs the `ANTHROPIC_API_KEY` repository secret and is skipped (not failed) without it.
 5. A GitHub Release with generated notes and the SBOM, scan report and review attached.
 
-Deployment stays manual through `deploy.yml`.
+## Deploy
+
+`deploy.yml` runs when `ci` succeeds on a push to `main`: it builds the image on the runner, pushes it to the resource group's ACR, deploys `infra/azure/main.bicep`, and smoke-tests `/api/health`. It authenticates with GitHub OIDC through the `production` environment (main only), so GitHub holds no Azure credentials, and app secrets never leave Key Vault. One-time setup is `scripts/setup-github-deploy.sh`; `scripts/deploy-azure.sh --apply` remains the local path and the bootstrap for a fresh resource group.
 
 ## On demand
 

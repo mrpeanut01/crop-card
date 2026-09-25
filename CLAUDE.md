@@ -102,9 +102,8 @@ pnpm test:unit                                         # vitest
 pnpm test:e2e                                          # playwright
 pnpm db:generate                                       # author migration
 pnpm db:migrate                                        # apply migrations
-az deployment group create -g cropcard-dev-rg \
-  --template-file infra/azure/main.bicep \
-  --parameters infra/azure/parameters.dev.bicepparam   # manual deploy
+./scripts/deploy-azure.sh [--apply]                    # manual deploy (what-if without --apply)
+./scripts/set-azure-secret.sh anthropic-api-key        # store a secret in Key Vault
 ```
 
 ## Code style

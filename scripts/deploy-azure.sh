@@ -163,16 +163,21 @@ echo "anthropic    : ${HAS_ANTHROPIC}"
 PARAM_FILE="infra/azure/parameters.dev.bicepparam"
 ZONE="$(sed -n "s/^param dnsZoneName = '\(.*\)'$/\1/p" "$PARAM_FILE")"
 read -ra HOSTS <<<"$(sed -n "s/^param customHosts = \[\(.*\)\]$/\1/p" "$PARAM_FILE" | tr -d "',")"
-FQDNS=(); for h in "${HOSTS[@]}"; do FQDNS+=("${h}.${ZONE}"); done
+FQDNS=(); for h in "${HOSTS[@]}"; do [ "$h" = "@" ] && FQDNS+=("$ZONE") || FQDNS+=("${h}.${ZONE}"); done
 ENV_NAME="cropcard-dev-cae"
 DNS_READY=false
 if [ -n "$ZONE" ] && [ "${#FQDNS[@]}" -gt 0 ] && command -v dig >/dev/null; then
+  STATIC_IP="$(az containerapp env show -g "$GROUP" -n "$ENV_NAME" --query properties.staticIp -o tsv 2>/dev/null || true)"
   APP_FQDN="$(az containerapp show -g "$GROUP" -n "$APP_NAME" --query properties.configuration.ingress.fqdn -o tsv 2>/dev/null || true)"
   VERIFY_ID="$(az containerapp show -g "$GROUP" -n "$APP_NAME" --query properties.customDomainVerificationId -o tsv 2>/dev/null || true)"
   if [ -n "$APP_FQDN" ] && [ -n "$VERIFY_ID" ]; then
     DNS_READY=true
     for f in "${FQDNS[@]}"; do
-      dig +short @1.1.1.1 CNAME "$f" | grep -qx "${APP_FQDN}." &&
+      if [ "$f" = "$ZONE" ]; then
+        dig +short @1.1.1.1 A "$f" | grep -qx "$STATIC_IP"
+      else
+        dig +short @1.1.1.1 CNAME "$f" | grep -qx "${APP_FQDN}."
+      fi &&
         dig +short @1.1.1.1 TXT "asuid.${f}" | tr -d '"' | grep -qx "$VERIFY_ID" ||
         DNS_READY=false
     done

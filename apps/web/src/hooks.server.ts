@@ -15,6 +15,7 @@ import { and, eq } from 'drizzle-orm';
 import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
 import { OWNER_HEADER } from '$lib/client/swTenantKey';
 import { maybeStartPushScheduler } from '$lib/server/push/scheduler';
+import { hostRedirectTarget, parseRedirectHosts } from '$lib/server/hostRedirect';
 
 /** NFR-06 — start the in-process push alert scheduler (no-op without VAPID
  *  keys or under tests; single replica per invariant 3). */
@@ -219,7 +220,23 @@ export function suspendedTenantGate(
  *   6. Wrap `resolve(event)` in `runWithTenant(activeOwnerId, …)` so
  *      tenant-scoped repos see the right Owner.
  */
+const redirectHosts = parseRedirectHosts(process.env.REDIRECT_HOSTS);
+
 export const handle: Handle = async ({ event, resolve }) => {
+  const canonical = hostRedirectTarget({
+    host: event.request.headers.get('host'),
+    url: event.url,
+    redirectHosts,
+    origin: process.env.ORIGIN
+  });
+  if (canonical) {
+    const method = event.request.method;
+    return new Response(null, {
+      status: method === 'GET' || method === 'HEAD' ? 301 : 308,
+      headers: { location: canonical }
+    });
+  }
+
   // Phase 24 — Bearer-first auth resolution.
   const authHeader = event.request.headers.get('authorization');
   let user: ReturnType<typeof currentUser> = null;

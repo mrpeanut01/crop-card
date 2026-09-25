@@ -45,7 +45,7 @@ param hasAnthropicKey bool = false
 @description('DNS zone hosted for the custom hostnames, e.g. cropcard.io. Empty = default ACA hostname only.')
 param dnsZoneName string = ''
 
-@description('Subdomain labels of dnsZoneName the web app serves, e.g. [\'app\', \'www\']. The first one becomes ORIGIN.')
+@description('Labels of dnsZoneName bound to the web app, \'@\' for the apex, e.g. [\'app\', \'www\', \'@\']. The first becomes ORIGIN; the rest redirect to it.')
 param customHosts array = []
 
 @description('Public DNS for every custom hostname already resolves to this app (checked by deploy-azure.sh). Gates the hostname bindings and the managed certificate requests.')
@@ -82,7 +82,9 @@ var kvSecretsUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDe
 var useDomain = !empty(dnsZoneName) && !empty(customHosts)
 var bindDomain = useDomain && customDomainDnsReady
 var domainTls = bindDomain && customDomainCertIssued
-var customFqdns = [for h in customHosts: '${h}.${dnsZoneName}']
+var customFqdns = [for h in customHosts: h == '@' ? dnsZoneName : '${h}.${dnsZoneName}']
+var subdomainHosts = filter(customHosts, h => h != '@')
+var hasApex = contains(customHosts, '@')
 var acrPullRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 // ─── Storage account + blob container for Litestream replicas ──────────
@@ -303,6 +305,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
               { name: 'AUTH_SECRET', secretRef: 'auth-secret' }
               { name: 'AUTH_MODE', value: authMode }
               { name: 'ORIGIN', value: appOrigin }
+              { name: 'REDIRECT_HOSTS', value: domainTls ? join(skip(customFqdns, 1), ',') : '' }
               { name: 'ADDRESS_HEADER', value: 'X-Forwarded-For' }
               { name: 'XFF_DEPTH', value: '1' }
               { name: 'AZURE_STORAGE_ACCOUNT', value: storage.name }
@@ -344,7 +347,7 @@ resource dnsZone 'Microsoft.Network/dnsZones@2018-05-01' = if (useDomain) {
   location: 'global'
 }
 
-resource hostCname 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = [for h in (useDomain ? customHosts : []): {
+resource hostCname 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = [for h in (useDomain ? subdomainHosts : []): {
   parent: dnsZone
   name: h
   properties: {
@@ -353,9 +356,19 @@ resource hostCname 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = [for h in (us
   }
 }]
 
+// The apex can't be a CNAME, so it points at the environment's static IP.
+resource apexA 'Microsoft.Network/dnsZones/A@2018-05-01' = if (useDomain && hasApex) {
+  parent: dnsZone
+  name: '@'
+  properties: {
+    TTL: 3600
+    ARecords: [{ ipv4Address: cae.properties.staticIp }]
+  }
+}
+
 resource hostAsuid 'Microsoft.Network/dnsZones/TXT@2018-05-01' = [for h in (useDomain ? customHosts : []): {
   parent: dnsZone
-  name: 'asuid.${h}'
+  name: h == '@' ? 'asuid' : 'asuid.${h}'
   properties: {
     TTL: 3600
     TXTRecords: [{ value: [app.properties.customDomainVerificationId] }]
@@ -369,7 +382,7 @@ resource hostCert 'Microsoft.App/managedEnvironments/managedCertificates@2024-03
   dependsOn: [app]
   properties: {
     subjectName: fqdn
-    domainControlValidation: 'CNAME'
+    domainControlValidation: fqdn == dnsZoneName ? 'HTTP' : 'CNAME'
   }
 }]
 

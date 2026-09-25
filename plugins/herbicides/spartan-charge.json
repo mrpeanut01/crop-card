@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Spartan Charge (FMC sulfentrazone + carfentrazone)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "279-3337",
   "defaultUnit": "fl-oz",
   "applicationTiming": "PRE",
   "activeIngredients": [

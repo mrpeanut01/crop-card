@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "M-Pede (Gowan insecticidal soap — OMRI)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "10163-324",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
     {

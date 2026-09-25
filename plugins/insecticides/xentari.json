@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "XenTari DF (Valent Bt aizawai)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "73049-40",
   "defaultUnit": "lb",
   "formulation": "DF",
   "activeIngredients": [

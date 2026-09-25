@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Liberty 280 SL (BASF)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "7969-448",
   "defaultUnit": "fl-oz",
   "formulation": "SL",
   "applicationTiming": "POST",

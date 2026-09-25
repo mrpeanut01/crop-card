@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Beleaf 50SG (FMC flonicamid)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "71512-10",
   "defaultUnit": "oz",
   "formulation": "SG",
   "activeIngredients": [

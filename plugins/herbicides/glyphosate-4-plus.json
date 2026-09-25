@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Glyphosate 4 Plus",
   "version": "1.0.0",
+  "epaRegistrationNumber": "81927-9",
   "defaultUnit": "fl-oz",
   "applicationTiming": "BURNDOWN",
   "activeIngredients": [

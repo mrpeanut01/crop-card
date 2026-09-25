@@ -1,0 +1,359 @@
+{
+  "$comment": "#381 — provenance for every epaRegistrationNumber backfilled from the EPA Pesticide Product Label System (PPLS). Each number is the company/product pair in the PPLS label URL whose title names the plugin's product. Numbers authored before #381 are not listed here.",
+  "entries": {
+    "aatrex-4l": {
+      "epaRegistrationNumber": "100-497",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00497-20211110.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, AATREX 4L HERBICIDE"
+    },
+    "actara": {
+      "epaRegistrationNumber": "100-938",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00938-20131203.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, ACTARA INSECTICIDE",
+      "note": "not Actara 240 SC, 100-1250"
+    },
+    "actigard-50wg": {
+      "epaRegistrationNumber": "100-922",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00922-20160928.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, ACTIGARD 50WG"
+    },
+    "acuron": {
+      "epaRegistrationNumber": "100-1466",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20150424.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, ACURON HERBICIDE"
+    },
+    "agrimek-sc": {
+      "epaRegistrationNumber": "100-1351",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01351-20140930.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, AGRI-MEK SC MITICIDE"
+    },
+    "aprovia": {
+      "epaRegistrationNumber": "100-1471",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01471-20180817.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, APROVIA FUNGICIDE",
+      "note": "not Aprovia Top, 100-1476"
+    },
+    "asana-xl": {
+      "epaRegistrationNumber": "59639-209",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00209-20150206.pdf",
+      "matchedTitle": "Dupont Asana XL Insecticide",
+      "note": "Valent company no. 59639; the older DuPont registration was 352-515"
+    },
+    "assail-30sg": {
+      "epaRegistrationNumber": "8033-36",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/008033-00036-20110629.pdf",
+      "matchedTitle": "Assail 30SG Insecticide"
+    },
+    "avaunt-evo": {
+      "epaRegistrationNumber": "279-9629",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09629-20201123.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, AVAUNT EVO INSECT CONTROL",
+      "note": "FMC company no. 279; the older DuPont registration was 352-906"
+    },
+    "baythroid-xl": {
+      "epaRegistrationNumber": "264-840",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00840-20191007.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, BAYTHROID XL,10/07/2019"
+    },
+    "beleaf-50sg": {
+      "epaRegistrationNumber": "71512-10",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00010-20220616.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, BELEAF 50SG"
+    },
+    "beyond": {
+      "epaRegistrationNumber": "241-441",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00441-20221011.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, BEYOND,10/11/2022"
+    },
+    "brigade-2ec": {
+      "epaRegistrationNumber": "279-3313",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03313-20211119.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, BRIGADE 2EC"
+    },
+    "callisto": {
+      "epaRegistrationNumber": "100-1131",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01131-20131122.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, CALLISTO HERBICIDE"
+    },
+    "champ-dp": {
+      "epaRegistrationNumber": "55146-57",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/055146-00057-20220727.pdf",
+      "matchedTitle": "Champ Dry Prill",
+      "note": "DP = Dry Prill; not Champ WG 55146-1 or Champ Formula 2 Flowable 55146-64"
+    },
+    "cobra": {
+      "epaRegistrationNumber": "59639-34",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/059639-00034-20250121.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, COBRA HERBICIDE"
+    },
+    "command-3me": {
+      "epaRegistrationNumber": "279-3158",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03158-20190131.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, COMMAND 3ME"
+    },
+    "coragen": {
+      "epaRegistrationNumber": "279-9606",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09606-20180914.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, CORAGEN INSECT CONTROL",
+      "note": "FMC company no. 279; the older DuPont registration was 352-729"
+    },
+    "crossbow": {
+      "epaRegistrationNumber": "62719-260",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00260-20250204.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, CROSSBOW,02/04/2025"
+    },
+    "cuprofix-ultra-disperss": {
+      "epaRegistrationNumber": "70506-201",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00201-20110926.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, CUPROFIX ULTRA 40 ...",
+      "note": "the only Cuprofix Ultra Disperss product; not Cuprofix Flex 70506-393"
+    },
+    "dimilin-2l": {
+      "epaRegistrationNumber": "400-461",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000400-00461-20201102.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, DIMILIN 2L,11/02/2020"
+    },
+    "dipel-df": {
+      "epaRegistrationNumber": "73049-39",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00039-20220602.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, DIPEL DF BIOLOGICAL ..."
+    },
+    "dithane-rainshield": {
+      "epaRegistrationNumber": "62719-396",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00396-20240229.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Dithane F-45®,02/29/2024",
+      "note": "F-45 flowable; not Dithane DF Rainshield 62719-402"
+    },
+    "dual-ii-magnum": {
+      "epaRegistrationNumber": "100-818",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00818-20201026.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, DUAL II MAGNUM"
+    },
+    "elevate-50wdg": {
+      "epaRegistrationNumber": "66330-35",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/066330-00035-20210525.pdf",
+      "matchedTitle": "Elevate 50 WDG Fungicide"
+    },
+    "entrust-sc": {
+      "epaRegistrationNumber": "62719-621",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00621-20240325.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Entrust® SC,03/25/2024"
+    },
+    "exirel": {
+      "epaRegistrationNumber": "279-9615",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-09615-20240829.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, EXIREL INSECT ...",
+      "note": "FMC company no. 279; the older DuPont registration was 352-859"
+    },
+    "forum": {
+      "epaRegistrationNumber": "241-427",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00427-20190930.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, FORUM FUNGICIDE,09/30/2019"
+    },
+    "glyphosate-4-plus": {
+      "epaRegistrationNumber": "81927-9",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081927-00009-20200224.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, GLYPHOSATE 4 PLUS"
+    },
+    "halex-gt": {
+      "epaRegistrationNumber": "100-1282",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01282-20250115.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Halex® GT Herbicide"
+    },
+    "headline-sc": {
+      "epaRegistrationNumber": "7969-289",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00289-20211014.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Headline SC,10/14/2021",
+      "note": "not Headline EC 7969-186"
+    },
+    "inspire-super": {
+      "epaRegistrationNumber": "100-1317",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01317-20191219.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, INSPIRE SUPER,12/19/2019"
+    },
+    "javelin-wg": {
+      "epaRegistrationNumber": "70051-66",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070051-00066-20211216.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, JAVELIN WG ,12/16/2021"
+    },
+    "jms-stylet-oil": {
+      "epaRegistrationNumber": "65564-1",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/065564-00001-20110719.pdf",
+      "matchedTitle": "jms stylet-oil"
+    },
+    "kumulus-df": {
+      "epaRegistrationNumber": "51036-352",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/051036-00352-20140624.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, KUMULUS DF, 06/24/2014"
+    },
+    "laudis": {
+      "epaRegistrationNumber": "264-860",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-00860-20180921.pdf",
+      "matchedTitle": "Laudis Herbicide"
+    },
+    "liberty-280-sl": {
+      "epaRegistrationNumber": "7969-448",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00448-20221209.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, LIBERTY 280 SL",
+      "note": "BASF company no. 7969; the older Bayer registration 264-829 is the pre-divestiture label"
+    },
+    "lumax-ez": {
+      "epaRegistrationNumber": "100-1442",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20180321.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Lumax EZ Herbicide,03/21/2018"
+    },
+    "m-pede": {
+      "epaRegistrationNumber": "10163-324",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/010163-00324-20200122.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, M-PEDE INSECTICIDE/ ...",
+      "note": "Gowan company no. 10163; the older Dow registration was 62719-515"
+    },
+    "manzate-pro-stick": {
+      "epaRegistrationNumber": "70506-234",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00234-20231204.pdf",
+      "matchedTitle": "Manzate® Pro-Stick Fungicide"
+    },
+    "merivon": {
+      "epaRegistrationNumber": "7969-310",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00310-20240118.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, MERIVON XEMIUM ..."
+    },
+    "microthiol-disperss": {
+      "epaRegistrationNumber": "70506-187",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/070506-00187-20100312.pdf",
+      "matchedTitle": "U.S. EPA, Pesticides, Label, MICROTHIOL DISPERSS, 3/12/2010"
+    },
+    "movento": {
+      "epaRegistrationNumber": "264-1050",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01050-20170628.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, MOVENTO ,06/28/2017",
+      "note": "not Movento HL 264-1188 or Movento 150 OD 264-1051"
+    },
+    "outlook": {
+      "epaRegistrationNumber": "7969-156",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00156-20191129.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, OUTLOOK HERBICIDE"
+    },
+    "poast-plus": {
+      "epaRegistrationNumber": "7969-88",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00088-20140211.pdf",
+      "matchedTitle": "Poast Plus Herbicide"
+    },
+    "princep-4l": {
+      "epaRegistrationNumber": "100-526",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00526-20110726.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, PRINCEP 4L"
+    },
+    "pristine": {
+      "epaRegistrationNumber": "7969-199",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00199-20221130.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, PRISTINE FUNGICIDE"
+    },
+    "prowl-h2o": {
+      "epaRegistrationNumber": "241-418",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00418-20150129.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, PROWL H2O"
+    },
+    "pursuit": {
+      "epaRegistrationNumber": "241-310",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000241-00310-20150929.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, PURSUIT HERBICIDE"
+    },
+    "pyganic-1-4": {
+      "epaRegistrationNumber": "1021-1771",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/001021-01771-20220804.pdf",
+      "matchedTitle": "PyGanic® Crop Protection EC 1.4 II"
+    },
+    "radiant-sc": {
+      "epaRegistrationNumber": "62719-545",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00545-20240325.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, RADIANT SC,03/25/2024"
+    },
+    "rally-40wsp": {
+      "epaRegistrationNumber": "62719-410",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00410-20180227.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, RALLY 40WSP,02/27/2018"
+    },
+    "ranman": {
+      "epaRegistrationNumber": "71512-3",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/071512-00003-20200326.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Ranman 400SC",
+      "note": "agricultural label; not Ranman Ornamental and Greenhouse 71512-38"
+    },
+    "reflex": {
+      "epaRegistrationNumber": "100-993",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00993-20240325.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, REFLEX HERBICIDE"
+    },
+    "regalia": {
+      "epaRegistrationNumber": "84059-3",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/084059-00003-20100623.pdf",
+      "matchedTitle": "U.S. EPA, Pesticides, Label, REGALIA, 6/23/2010",
+      "note": "not Regalia Maxx 84059-6"
+    },
+    "revus": {
+      "epaRegistrationNumber": "100-1254",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01254-20211109.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, REVUS,11/09/2021",
+      "note": "not Revus Top 100-1278"
+    },
+    "sandea": {
+      "epaRegistrationNumber": "81880-18",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/081880-00018-20220310.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, SANDEA HERBICIDE"
+    },
+    "serenade-aso": {
+      "epaRegistrationNumber": "264-1152",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000264-01152-20150803.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, SERENADE ASO",
+      "note": "Bayer company no. 264; the older AgraQuest registration was 69592-12"
+    },
+    "sevin-xlr-plus": {
+      "epaRegistrationNumber": "61842-37",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00037-20250409.pdf",
+      "matchedTitle": "Sevin XLR Plus Carbaryl Insecticide",
+      "note": "Tessenderlo Kerley company no. 61842; the older registration was 264-333"
+    },
+    "spartan-charge": {
+      "epaRegistrationNumber": "279-3337",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000279-03337-20100126.pdf",
+      "matchedTitle": "Spartan Charge Herbicide"
+    },
+    "stinger": {
+      "epaRegistrationNumber": "62719-73",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/062719-00073-20140923.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, STINGER, 09/23/2014"
+    },
+    "surround-wp": {
+      "epaRegistrationNumber": "61842-18",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/061842-00018-20080529.pdf",
+      "matchedTitle": "Surround WP Crop Protectant"
+    },
+    "switch-625wg": {
+      "epaRegistrationNumber": "100-953",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-00953-20250421.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, SWITCH 62.5WG,04/21/2025"
+    },
+    "touchdown-hitech": {
+      "epaRegistrationNumber": "100-1182",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01182-20150318.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, TOUCHDOWN HITECH"
+    },
+    "warrior-ii-with-zeon": {
+      "epaRegistrationNumber": "100-1295",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01295-20141113.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, WARRIOR II WITH ZEON ..."
+    },
+    "xentari": {
+      "epaRegistrationNumber": "73049-40",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/073049-00040-20030806.pdf",
+      "matchedTitle": "XENTARI® BIOLOGICAL INSECTICIDE DRY FLOWABLE",
+      "note": "not XenTari AS 73049-31 or WDG 73049-23"
+    },
+    "zidua-sc": {
+      "epaRegistrationNumber": "7969-374",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00374-20240423.pdf",
+      "matchedTitle": "US EPA, Pesticide Product Label, Zidua SC Herbicide,04/23/2024"
+    }
+  }
+}

@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Avaunt eVo (FMC indoxacarb)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "279-9629",
   "activeIngredients": [
     {
       "name": "indoxacarb",

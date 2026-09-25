@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Crossbow (Corteva 2,4-D + triclopyr)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "62719-260",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [

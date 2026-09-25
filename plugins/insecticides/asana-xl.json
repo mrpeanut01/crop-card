@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Asana XL (Valent esfenvalerate)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "59639-209",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
     {

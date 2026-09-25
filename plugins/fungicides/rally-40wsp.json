@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Rally 40WSP (Corteva myclobutanil)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "62719-410",
   "defaultUnit": "oz",
   "formulation": "WSP",
   "applicationTiming": "PRE-BLOOM",

@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Javelin WG (Certis Bt kurstaki)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "70051-66",
   "defaultUnit": "lb",
   "formulation": "WG",
   "activeIngredients": [

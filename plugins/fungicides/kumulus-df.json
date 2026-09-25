@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Kumulus DF (BASF sulfur)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "51036-352",
   "defaultUnit": "lb",
   "formulation": "DF",
   "applicationTiming": "COVER",

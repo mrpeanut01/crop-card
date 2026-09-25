@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "JMS Stylet Oil (paraffinic horticultural oil)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "65564-1",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
     {

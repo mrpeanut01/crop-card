@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Dual II Magnum (Syngenta)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "100-818",
   "defaultUnit": "fl-oz",
   "applicationTiming": "PRE",
   "activeIngredients": [

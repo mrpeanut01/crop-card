@@ -1104,6 +1104,11 @@ export const fungicidePluginSchema = pluginBase.extend({
   /** Fungicides rarely require sprayer decon (no herbicide cross-contam class) but a few do (e.g., copper after a Bordeaux mix). */
   deconRequired: z.boolean().optional(),
   targetDiseases: z.array(z.string().min(1)).optional(),
+  /** #381 — EPA reg number for the USDA / VDACS spray-record export (was stripped from fungicides before this field existed). */
+  epaRegistrationNumber: z
+    .string()
+    .regex(/^\d{1,6}-\d{1,6}(-\d{1,6})?$/, 'EPA reg numbers look like 524-617 or 524-617-100')
+    .optional(),
   labelClaims: z
     .object({
       safeForCropPluginIds: z.array(z.string()).optional(),

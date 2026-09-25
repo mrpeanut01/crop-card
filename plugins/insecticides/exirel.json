@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Exirel (FMC cyantraniliprole)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "279-9615",
   "defaultUnit": "fl-oz",
   "activeIngredients": [
     {

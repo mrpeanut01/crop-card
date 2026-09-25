@@ -199,6 +199,10 @@
         "minLength": 1
       }
     },
+    "epaRegistrationNumber": {
+      "type": "string",
+      "pattern": "^\\d{1,6}-\\d{1,6}(-\\d{1,6})?$"
+    },
     "labelClaims": {
       "type": "object",
       "properties": {

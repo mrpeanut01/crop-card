@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Dimilin 2L (UPL diflubenzuron)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "400-461",
   "defaultUnit": "fl-oz",
   "formulation": "L",
   "activeIngredients": [

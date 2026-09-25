@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Aatrex 4L (Syngenta atrazine)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "100-497",
   "defaultUnit": "fl-oz",
   "formulation": "L",
   "applicationTiming": "PRE",

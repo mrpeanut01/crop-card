@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Serenade ASO (Bayer Bacillus subtilis — OMRI)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "264-1152",
   "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "Bacillus subtilis QST 713", "fracCode": "BM02" }],

@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Stinger (Corteva clopyralid)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "62719-73",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [

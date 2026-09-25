@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Sandea (Gowan halosulfuron-methyl)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "81880-18",
   "applicationTiming": "POST",
   "activeIngredients": [
     {

@@ -1,5 +1,5 @@
 {
-  "$comment": "#255 — known input-plugin metadata gaps. Every entry needs a reason. The coverage test fails on any gap not listed here AND on any entry that is no longer a gap, so remove entries as plugins are label-verified.",
+  "$comment": "#255 / #381 — known input-plugin metadata gaps (#381 added epaRegistrationNumber for herbicides, insecticides and fungicides). Every entry needs a reason. The coverage test fails on any gap not listed here AND on any entry that is no longer a gap, so remove entries as plugins are label-verified.",
   "entries": [
     {
       "pluginId": "2-4-d-amine",
@@ -820,6 +820,216 @@
       "pluginId": "can-17-calcium-ammonium-nitrate",
       "field": "defaultUnit",
       "reason": "form 'liquid' contradicts the lb-per-acre application rate — needs label review."
+    },
+    {
+      "pluginId": "2-4-d-amine",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"2,4-D Amine\" is sold under dozens of EPA registrations; the number depends on the jug on hand"
+    },
+    {
+      "pluginId": "24d",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"2,4-D Amine\" is sold under dozens of EPA registrations; the number depends on the jug on hand"
+    },
+    {
+      "pluginId": "anthem-maxx",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: no PPLS result titled Anthem MAXX (only an untitled 279-3450 registration letter), needs label check"
+    },
+    {
+      "pluginId": "atrazine-4l-generic",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"Atrazine 4L\" is sold under many EPA registrations; the number depends on the jug on hand"
+    },
+    {
+      "pluginId": "banvel",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: several Banvel registrations in PPLS (Banvel 4-S, Banvel potassium formulation, Banvel SGF) and the plugin's 'BASF dicamba DMA salt, generic' doesn't name one"
+    },
+    {
+      "pluginId": "clethodim-2e-generic",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"Clethodim 2EC\" is sold under many EPA registrations; the number depends on the jug on hand"
+    },
+    {
+      "pluginId": "clethodim-2e",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"Clethodim 2EC\" is sold under many EPA registrations; the number depends on the jug on hand"
+    },
+    {
+      "pluginId": "clethodim",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"Clethodim 2EC\" is sold under many EPA registrations; the number depends on the jug on hand"
+    },
+    {
+      "pluginId": "corn-gluten-meal-pre",
+      "field": "epaRegistrationNumber",
+      "reason": "exempt product: corn gluten meal is a FIFRA 25(b) minimum-risk pesticide with no EPA registration number"
+    },
+    {
+      "pluginId": "ct-test-herbicide-clickthrough",
+      "field": "epaRegistrationNumber",
+      "reason": "test fixture: clickthrough-test plugin, not a real product"
+    },
+    {
+      "pluginId": "engenia",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS lists Engenia Herbicide under 7969-345, 7969-472 and 7969-507 (post-2024 re-registration), so the current number needs a label check"
+    },
+    {
+      "pluginId": "glyphosate-generic",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"Glyphosate 41%\" is sold under many EPA registrations; the number depends on the jug on hand"
+    },
+    {
+      "pluginId": "gramoxone-sl-3",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS titles are 'Gramoxone 3LB' (100-1652) and 'Gramoxone SL 2.0'; no PPLS title for 'Gramoxone SL 3.0'"
+    },
+    {
+      "pluginId": "liberty-ultra",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: the only candidate PPLS result (7969-500) is titled 'BASF L-Glufosinate-...', not Liberty ULTRA; needs label check"
+    },
+    {
+      "pluginId": "me-too-lachlor-ii",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS has Drexel Me-Too-Lachlor (19713-548) and a truncated 'DREXEL ME-TOO-...' title (19713-549); no PPLS title confirms which one is 'II'"
+    },
+    {
+      "pluginId": "mesotrione-4sc",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"Mesotrione 4SC\" is sold under several EPA registrations; the number depends on the jug on hand"
+    },
+    {
+      "pluginId": "permit",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: PPLS results titled Permit Plus / Halosulfuron / Sedgehammer, none titled plain 'Permit'"
+    },
+    {
+      "pluginId": "roundup-powermax-3",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: the candidate PPLS label (524-659) is titled by its development code 'MON 301108 Herbicide', not Roundup PowerMAX 3; needs label check"
+    },
+    {
+      "pluginId": "stadia-dry",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: placeholder plugin ('stadia-active-ingredient'), no product to match"
+    },
+    {
+      "pluginId": "stadia",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: no PPLS result titled Stadia (rimsulfuron results are other brands)"
+    },
+    {
+      "pluginId": "treflan-trust-ec",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: plugin covers both Treflan and Trust HFP, and PPLS lists Treflan HFP under two registrants (62719-250 and 10163-363)"
+    },
+    {
+      "pluginId": "valor-sx",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS titles read 'Valor Herbicide' (59639-99); none names the SX formulation, so Valor vs Valor SX needs a label check"
+    },
+    {
+      "pluginId": "warrant",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: the candidate PPLS label (524-591) is titled by its development code 'MON 63410 HERBICIDE', not Warrant; needs label check"
+    },
+    {
+      "pluginId": "xtendimax",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS titles 'XtendiMax With VaporGrip' under 264-1210, but dicamba OTT registrations were vacated in 2024 and re-issued in 2026 (264-1241 is untitled in PPLS), so the current number needs a label check"
+    },
+    {
+      "pluginId": "admire-pro",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: the likely PPLS file (264-827) has a truncated title with no product name; needs label check"
+    },
+    {
+      "pluginId": "aza-direct",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: no PPLS result titled Aza-Direct (only other azadirachtin brands)"
+    },
+    {
+      "pluginId": "belay",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: clothianidin PPLS results are titled by Valent development codes (V-10170 ...), none titled Belay"
+    },
+    {
+      "pluginId": "bt-kurstaki",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"Bt kurstaki\" is sold under many EPA registrations (DiPel, Javelin, etc. have their own plugins)"
+    },
+    {
+      "pluginId": "lannate-lv",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS titles Lannate LV under both 352-384 (DuPont) and 61842-55 (2024-2025 labels); needs a label check for the current registrant"
+    },
+    {
+      "pluginId": "mustang-maxx",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: the candidate PPLS label (279-3426) is titled by its development code 'F9114 EC INSECTICIDE', not Mustang Maxx; needs label check"
+    },
+    {
+      "pluginId": "nematode-steinernema-feltiae",
+      "field": "epaRegistrationNumber",
+      "reason": "exempt product: beneficial nematodes are macro-organisms, not EPA-registered pesticides"
+    },
+    {
+      "pluginId": "sivanto-prime",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS titles read 'Sivanto 200 SL' (264-1141) and 'Sivanto 400 SL' (264-1198); none is titled Sivanto Prime"
+    },
+    {
+      "pluginId": "spinosad",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: plain \"Spinosad\" names an active ingredient, not a registered product; the number depends on the product on hand"
+    },
+    {
+      "pluginId": "sulfur-90w",
+      "field": "epaRegistrationNumber",
+      "reason": "generic product: \"Wettable Sulfur 90W\" is sold under many EPA registrations; the number depends on the bag on hand"
+    },
+    {
+      "pluginId": "trichogramma-egg-parasitoid",
+      "field": "epaRegistrationNumber",
+      "reason": "exempt product: Trichogramma egg parasitoids are macro-organisms, not EPA-registered pesticides"
+    },
+    {
+      "pluginId": "bravo-weather-stik",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: the matching PPLS titles read 'Bravo 720' (50534-188) and none names Weather Stik; needs label check"
+    },
+    {
+      "pluginId": "captan-80wdg",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS lists 'Captan 80 WDG' under at least five registrants (34704-1075, 66222-58, 66330-29, 85678-14, 103591-32); needs the label on hand"
+    },
+    {
+      "pluginId": "flint-extra",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: PPLS results are titled 'Flint Fungicide' (264-777); none titled Flint Extra"
+    },
+    {
+      "pluginId": "indar-2f",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: the only PPLS result titled Indar 2F is a Michigan 24(c) SLN (MI090002), not a federal registration; the federal fenbuconazole 2F label is titled Enable 2F (62719-416)"
+    },
+    {
+      "pluginId": "kocide-3000-o",
+      "field": "epaRegistrationNumber",
+      "reason": "no PPLS match found: PPLS results are titled Kocide 3000 (91411-2, 352-662), none titled Kocide 3000-O"
+    },
+    {
+      "pluginId": "quadris-flowable",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: no PPLS title reads Quadris Flowable; azoxystrobin 2SC PPLS titles are Abound (100-1098), Quadris Top/Opti/S (different products)"
+    },
+    {
+      "pluginId": "topsin-m-wsb",
+      "field": "epaRegistrationNumber",
+      "reason": "ambiguous: PPLS titles Topsin M WSB under both 8033-125 (2020) and 73545-16 (2009); needs a label check for the current registrant"
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 
 export const load: ServerLoad = () => {
-  throw redirect(308, '/inventory?type=sprayer');
+  throw redirect(308, '/settings/equipment');
 };

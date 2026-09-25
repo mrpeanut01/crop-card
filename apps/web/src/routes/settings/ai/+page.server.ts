@@ -17,34 +17,17 @@ import { and, count, eq, gte, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
 import { users, aiCallLog } from '$lib/db/schema';
-import { getSetting, setSetting } from '$lib/db/settings';
+import { setSetting } from '$lib/db/settings';
+import { AI_KEY_SETTING, aiKeyStatus, saveAiKey } from '$lib/server/aiKey';
 import { getAiDailyCallQuota, getAiMonthlyUsdCap } from '$lib/schedule/settings';
 import { spendSnapshot } from '$lib/server/aiGuard';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { withTenant } from '$lib/db/tenant';
 
-const KEY_SETTING = 'anthropic_api_key';
-
-function maskKey(raw: string): string {
-  if (!raw) return '';
-  // sk-ant-…XXXX — show prefix + last 4 chars.
-  const prefix = raw.slice(0, 6);
-  const suffix = raw.slice(-4);
-  return `${prefix}…${suffix}`;
-}
-
-function keyStatus(): { source: 'env' | 'setting' | 'none'; masked: string } {
-  const envKey = process.env.ANTHROPIC_API_KEY;
-  if (envKey) return { source: 'env', masked: maskKey(envKey) };
-  const setKey = getSetting(KEY_SETTING);
-  if (setKey) return { source: 'setting', masked: maskKey(setKey) };
-  return { source: 'none', masked: '' };
-}
-
 export const load: PageServerLoad = ({ locals }) => {
   if (!locals.user) throw error(401, 'sign-in required');
 
-  const key = keyStatus();
+  const key = aiKeyStatus();
   const spend = spendSnapshot();
   const cap = getAiMonthlyUsdCap();
   const dailyQuotas = getAiDailyCallQuota();
@@ -124,33 +107,14 @@ export const load: PageServerLoad = ({ locals }) => {
 };
 
 export const actions: Actions = {
-  saveKey: async ({ locals, request }) => {
-    if (!locals.user) return fail(401, { error: 'sign-in required' });
-    if (locals.user.role !== 'owner') {
-      return fail(403, { error: 'only the Owner role can set the AI key' });
-    }
-    const form = await request.formData();
-    const raw = (form.get('apiKey') ?? '').toString().trim();
-    if (!raw) return fail(400, { error: 'API key cannot be empty' });
-    if (!raw.startsWith('sk-ant-')) {
-      return fail(400, {
-        error:
-          'expected an Anthropic key (starts with "sk-ant-"). Paste from console.anthropic.com.'
-      });
-    }
-    setSetting(KEY_SETTING, raw);
-    // Flip the current user's opt-in on so the AI-on variant takes
-    // effect across screens on the next loader run.
-    db.update(users).set({ aiEnabled: true }).where(eq(users.id, locals.user.id)).run();
-    return { success: true, message: 'API key saved. AI proposals enabled.' };
-  },
+  saveKey: ({ locals, request }) => saveAiKey(locals.user, request),
 
   clearKey: async ({ locals }) => {
     if (!locals.user) return fail(401, { error: 'sign-in required' });
     if (locals.user.role !== 'owner') {
       return fail(403, { error: 'only the Owner role can clear the AI key' });
     }
-    setSetting(KEY_SETTING, '');
+    setSetting(AI_KEY_SETTING, '');
     return { success: true, message: 'API key cleared. AI proposals disabled.' };
   },
 

@@ -12,11 +12,6 @@
       "reason": "Generic plugin with no single label: dozens of 2,4-D amine registrations differ in strength and label wording, so the formulation code must come from the jug on hand rather than one chosen label."
     },
     {
-      "pluginId": "acuron",
-      "field": "formulation",
-      "reason": "Label (100-1466, 2021-11-10, p3) says 'Acuron Herbicide is a ZC formulation'; ZC (mixed capsule suspension + SC) is not in the formulation enum, and PPLS lists it as Emulsifiable Concentrate. Needs enum decision."
-    },
-    {
       "pluginId": "alldown-acetic-citric",
       "field": "formulation",
       "reason": "AllDown Concentrate label (EPA 84069-1, 2010) names no formulation type (only 'Concentrate', diluted 1:2-1:3 with water); PPLS lists 'Ready-to-Use Solution', not a code. Registration inactive since 2025-01-13."
@@ -85,11 +80,6 @@
       "pluginId": "liberty-ultra",
       "field": "formulation",
       "reason": "Liberty ULTRA label (EPA 7969-500, 2025-10-30 and 2024-10-22) prints no formulation code or type; says only it 'is a water-soluble nonselective herbicide' and 'is formulated to mix readily in water'. PPLS formulations field is empty."
-    },
-    {
-      "pluginId": "lumax-ez",
-      "field": "formulation",
-      "reason": "Label (100-1442, 2022-12-14, p3) says 'Lumax® EZ Herbicide is a ZC formulation'. ZC is not in the formulation enum, and PPLS lists 'Pressurized Liquid'. Needs enum decision."
     },
     {
       "pluginId": "me-too-lachlor-ii",

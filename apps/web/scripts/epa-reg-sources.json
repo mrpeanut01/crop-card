@@ -1509,6 +1509,22 @@
       "page": 3,
       "quote": "1.33 lbs imazethaypr, and 0.48 lbs saflufenacil per gallon formulated as a water-based suspension concentrate EPA Reg. No. 7969-365",
       "note": "Label is Zidua PRO (EPA Reg. 7969-365), not the plugin's 7969-374 (Zidua SC). PPLS 7969-365 lists 'Soluble Concentrate' and 'Flowable Concentrate'; label text used."
+    },
+    "acuron": {
+      "formulation": "ZC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01466-20211110.pdf",
+      "docDate": "2021-11-10",
+      "page": 3,
+      "quote": "Acuron Herbicide is a ZC formulation",
+      "note": "ZC = mixed capsule suspension + suspension concentrate (liquid); code added to the schema enum. PPLS formulation field disagrees (EC / Pressurized Liquid); label wins."
+    },
+    "lumax-ez": {
+      "formulation": "ZC",
+      "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/000100-01442-20221214.pdf",
+      "docDate": "2022-12-14",
+      "page": 3,
+      "quote": "Lumax® EZ Herbicide is a ZC formulation",
+      "note": "ZC = mixed capsule suspension + suspension concentrate (liquid); code added to the schema enum. PPLS formulation field disagrees (EC / Pressurized Liquid); label wins."
     }
   },
   "dataCorrections": {

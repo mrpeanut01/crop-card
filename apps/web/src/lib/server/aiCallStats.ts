@@ -15,13 +15,7 @@
 const MAX_ENTRIES = 200;
 
 export type AiEndpoint =
-  | 'suggest'
-  | 'optimize'
-  | 'allocate'
-  | 'groups'
-  | 'rationale'
-  | 'shortNames'
-  | 'planWithAI';
+  'suggest' | 'optimize' | 'allocate' | 'groups' | 'rationale' | 'shortNames' | 'planWithAI';
 
 export interface AiCallEntry {
   endpoint: AiEndpoint;

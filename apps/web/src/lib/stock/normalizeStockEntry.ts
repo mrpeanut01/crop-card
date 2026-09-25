@@ -84,8 +84,7 @@ export interface NormalizeIssue {
 }
 
 export type NormalizeResult =
-  | { ok: true; request: StockEntryRequest }
-  | { ok: false; issues: NormalizeIssue[] };
+  { ok: true; request: StockEntryRequest } | { ok: false; issues: NormalizeIssue[] };
 
 /** Project a draft onto the create-stock POST shape. Caller checks
  *  `result.ok` before invoking fetch. */

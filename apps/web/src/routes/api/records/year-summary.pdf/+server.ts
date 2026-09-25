@@ -15,7 +15,7 @@
  */
 
 import { type RequestHandler } from '@sveltejs/kit';
-import PdfPrinter from 'pdfmake';
+import { renderPdf, type PdfDocDefinition } from '$lib/server/pdf';
 import { eq } from 'drizzle-orm';
 
 import { requireUser } from '$lib/server/auth';
@@ -26,17 +26,6 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { APP_VERSION } from '$lib/version';
 import { buildYearSummary } from '$lib/records/yearSummary.server';
 import { PHILOSOPHY_LABELS } from '$lib/season/setup';
-
-const fonts = {
-  Roboto: {
-    normal: 'Helvetica',
-    bold: 'Helvetica-Bold',
-    italics: 'Helvetica-Oblique',
-    bolditalics: 'Helvetica-BoldOblique'
-  }
-};
-
-const printer = new PdfPrinter(fonts);
 
 function ownerNameOf(ownerId: string | null): string {
   if (!ownerId) return '(unknown farm)';
@@ -127,12 +116,7 @@ export const GET: RequestHandler = async (event) => {
 
   const philosophyLabel = PHILOSOPHY_LABELS[summary.philosophy.philosophy];
 
-  type DocDefWithChrome = Parameters<typeof printer.createPdfKitDocument>[0] & {
-    header?: (currentPage: number, pageCount: number) => unknown;
-    footer?: (currentPage: number, pageCount: number) => unknown;
-  };
-
-  const docDef: DocDefWithChrome = {
+  const docDef: PdfDocDefinition = {
     info: {
       title: `CropCard year-end summary ${year} — ${farmName}`,
       author: 'CropCard',
@@ -250,15 +234,7 @@ export const GET: RequestHandler = async (event) => {
     defaultStyle: { fontSize: 10, font: 'Roboto' }
   };
 
-  const pdfDoc = printer.createPdfKitDocument(docDef);
-  const chunks: Buffer[] = [];
-  pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
-  pdfDoc.end();
-
-  const buffer: Buffer = await new Promise((resolve, reject) => {
-    pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
-    pdfDoc.on('error', reject);
-  });
+  const buffer = await renderPdf(docDef);
 
   return new Response(new Uint8Array(buffer), {
     headers: {

@@ -87,8 +87,7 @@ export interface CloseSeasonInput extends CloseSnapshotInput {
 }
 
 export type CloseSeasonResult =
-  | { ok: true; closeout: SeasonCloseout }
-  | { ok: false; code: 'ALREADY_CLOSED'; year: number };
+  { ok: true; closeout: SeasonCloseout } | { ok: false; code: 'ALREADY_CLOSED'; year: number };
 
 /**
  * Close `year` for the active tenant. Writes one `season_closeouts` row with

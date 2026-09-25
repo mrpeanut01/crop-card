@@ -1,7 +1,7 @@
 declare module 'pdfmake' {
   type Style = Record<string, unknown>;
 
-  interface DocumentDefinition {
+  export interface DocumentDefinition {
     info?: Record<string, string>;
     pageSize?: string;
     pageOrientation?: 'portrait' | 'landscape';
@@ -11,22 +11,23 @@ declare module 'pdfmake' {
     defaultStyle?: Style;
   }
 
-  interface PdfDoc {
-    on(event: 'data', cb: (chunk: Buffer) => void): this;
-    on(event: 'end', cb: () => void): this;
-    on(event: 'error', cb: (err: Error) => void): this;
-    end(): void;
-  }
-
   type Fonts = Record<
     string,
     { normal: string; bold: string; italics: string; bolditalics: string }
   >;
 
-  class PdfPrinter {
-    constructor(fonts: Fonts);
-    createPdfKitDocument(def: DocumentDefinition): PdfDoc;
+  interface OutputDocument {
+    getBuffer(): Promise<Buffer>;
+    getBase64(): Promise<string>;
   }
 
-  export = PdfPrinter;
+  interface PdfMake {
+    setFonts(fonts: Fonts): void;
+    setUrlAccessPolicy(callback: ((url: string) => boolean) | undefined): void;
+    setLocalAccessPolicy(callback: ((path: string) => boolean) | undefined): void;
+    createPdf(def: DocumentDefinition, options?: Record<string, unknown>): OutputDocument;
+  }
+
+  const pdfmake: PdfMake;
+  export default pdfmake;
 }

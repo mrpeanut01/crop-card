@@ -59,14 +59,7 @@ export type AllocationResponse = {
 };
 
 export type Step =
-  | 'season-setup'
-  | 'plan-state'
-  | 'seeds'
-  | 'blocks'
-  | 'review'
-  | 'schedule'
-  | 'inputs'
-  | 'commit';
+  'season-setup' | 'plan-state' | 'seeds' | 'blocks' | 'review' | 'schedule' | 'inputs' | 'commit';
 
 /** Phase 17 — chat refinement state. The transcript is the source of truth
  *  for what's rendered in the bubble list and what gets sent to the refine

@@ -305,12 +305,7 @@ export const FHB_SPRAY_WINDOW_AFTER_DAYS = 6;
 
 export type FhbRiskLevel = 'low' | 'moderate' | 'high';
 export type FhbStatus =
-  | 'no-anthesis'
-  | 'too-early'
-  | 'past'
-  | 'no-data'
-  | 'insufficient-data'
-  | 'assessed';
+  'no-anthesis' | 'too-early' | 'past' | 'no-data' | 'insufficient-data' | 'assessed';
 
 export interface FhbAssessment {
   status: FhbStatus;
@@ -478,11 +473,7 @@ export function climatologyMeanF(ms: number): number {
 }
 
 export type VernalizationStatus =
-  | 'not-required'
-  | 'not-planted'
-  | 'in-progress'
-  | 'complete'
-  | 'at-risk';
+  'not-required' | 'not-planted' | 'in-progress' | 'complete' | 'at-risk';
 
 export interface VernalizationAssessment {
   required: boolean;

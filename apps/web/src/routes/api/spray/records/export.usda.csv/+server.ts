@@ -178,8 +178,7 @@ export const GET: RequestHandler = async (event) => {
     const temp = e.conditions.tempF;
     for (const p of e.products) {
       const plugin = registry.get(p.pluginId)?.plugin as
-        | { type?: string; displayName?: string; epaRegistrationNumber?: string }
-        | undefined;
+        { type?: string; displayName?: string; epaRegistrationNumber?: string } | undefined;
       const epa =
         plugin && (plugin.type === 'herbicide' || plugin.type === 'insecticide')
           ? (plugin.epaRegistrationNumber ?? '')
@@ -216,8 +215,7 @@ export const GET: RequestHandler = async (event) => {
     const temp = e.conditions.tempF;
     for (const p of e.products) {
       const plugin = registry.get(p.pluginId)?.plugin as
-        | { type?: string; epaRegistrationNumber?: string; targetPests?: string[] }
-        | undefined;
+        { type?: string; epaRegistrationNumber?: string; targetPests?: string[] } | undefined;
       const epa =
         plugin && plugin.type === 'insecticide' ? (plugin.epaRegistrationNumber ?? '') : '';
       rows.push({
@@ -255,8 +253,7 @@ export const GET: RequestHandler = async (event) => {
     const temp = e.conditions.tempF;
     for (const p of e.products) {
       const plugin = registry.get(p.pluginId)?.plugin as
-        | { type?: string; epaRegistrationNumber?: string; targetPests?: string[] }
-        | undefined;
+        { type?: string; epaRegistrationNumber?: string; targetPests?: string[] } | undefined;
       const epa = plugin && plugin.type === 'fungicide' ? (plugin.epaRegistrationNumber ?? '') : '';
       rows.push({
         date_iso: new Date(e.occurredAt).toISOString().slice(0, 10),

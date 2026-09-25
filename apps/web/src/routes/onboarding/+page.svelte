@@ -38,12 +38,7 @@
   // statically; each `done` derives from live DB state in the loader
   // (#115 — progress persistence is implicit, not a separate store).
   type StepIcon =
-    | typeof Sun
-    | typeof Layers
-    | typeof Tractor
-    | typeof Gauge
-    | typeof Leaf
-    | typeof Wheat;
+    typeof Sun | typeof Layers | typeof Tractor | typeof Gauge | typeof Leaf | typeof Wheat;
   interface Step {
     id: keyof NonNullable<PageData['progress']>;
     label: string;

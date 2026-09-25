@@ -26,10 +26,7 @@ const MAX_ENTRIES_PER_VERSION = 16;
  * caller; no schema change.
  */
 export type DerivedSignalKind =
-  | 'density-per-draft'
-  | 'candidacy-matrix'
-  | 'viable-windows'
-  | 'rotation-history';
+  'density-per-draft' | 'candidacy-matrix' | 'viable-windows' | 'rotation-history';
 
 interface SignalEntry<T = unknown> {
   contextVersion: string;

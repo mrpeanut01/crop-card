@@ -207,3 +207,71 @@ describe('A_InventoryEditForm — #296 type-aware placeholders + prefill', () =>
     expect(queryByRole('status')).toBeNull();
   });
 });
+
+describe('A_InventoryEditForm — canonical save path for batch review (#249)', () => {
+  function lastBody(): Record<string, unknown> {
+    const calls = (globalThis.fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+    return JSON.parse((calls[calls.length - 1][1] as { body: string }).body);
+  }
+
+  it('create omits empty optional fields instead of sending null (POST /api/stock rejects null)', async () => {
+    const { container } = render(A_InventoryEditForm, {
+      type: 'pesticide',
+      prefill: { source: 'ai', displayName: 'Scanned Herbicide', category: 'herbicide' }
+    });
+    await fireEvent.submit(container.querySelector('form')!);
+    await new Promise((r) => setTimeout(r, 0));
+    const body = lastBody();
+    expect(body.displayName).toBe('Scanned Herbicide');
+    expect('pluginId' in body).toBe(false);
+    expect('reorderThreshold' in body).toBe(false);
+  });
+
+  it('edit still sends null so PATCH can clear the plugin link', async () => {
+    const { container } = render(A_InventoryEditForm, {
+      type: 'pesticide',
+      existing: {
+        id: 'stk1',
+        displayName: 'Old',
+        category: 'herbicide',
+        defaultUnit: 'fl-oz',
+        pluginId: 'x'
+      }
+    });
+    const plugin = container.querySelector('#pluginId') as HTMLInputElement;
+    await fireEvent.input(plugin, { target: { value: '' } });
+    await fireEvent.submit(container.querySelector('form')!);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(lastBody().pluginId).toBeNull();
+  });
+
+  it('calls onSaved instead of navigating when provided', async () => {
+    const { goto } = await import('$app/navigation');
+    const onSaved = vi.fn();
+    const { container } = render(A_InventoryEditForm, {
+      type: 'pesticide',
+      prefill: { source: 'ai', displayName: 'Batch item' },
+      onSaved
+    });
+    await fireEvent.submit(container.querySelector('form')!);
+    await vi.waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    expect(goto).not.toHaveBeenCalled();
+  });
+
+  it('surfaces an honest message when a helper hits the owner-only gate', async () => {
+    globalThis.fetch = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ message: 'owner role required' }), {
+          status: 403,
+          headers: { 'content-type': 'application/json' }
+        })
+    ) as never;
+    const { container, findByRole } = render(A_InventoryEditForm, {
+      type: 'pesticide',
+      prefill: { source: 'ai', displayName: 'Helper try' }
+    });
+    await fireEvent.submit(container.querySelector('form')!);
+    const alert = await findByRole('alert');
+    expect(alert.textContent).toMatch(/Only the farm owner can save/);
+  });
+});

@@ -22,10 +22,9 @@
    * file picker is the only path. The /api/scan-label pipeline is
    * unchanged: both paths produce a data:image/jpeg base64 URL.
    *
-   * #249 (Sprint 4) extends the file-picker path with multi-file
-   * batch — add a queue state + per-row status. The CTA scaffold +
-   * runExtract pipeline below are deliberately shaped to accept that
-   * extension without restructuring.
+   * #249 — the gallery picker accepts several files. One file keeps
+   * the single-shot path below; two or more are handed to `onBatch`
+   * so the parent can run the sequential batch queue.
    *
    * Per the v2 provenance addendum the resulting draft carries
    * `source: 'ai'` (everything came from Claude Vision). The Provenance
@@ -50,9 +49,10 @@
      *  preserved into the parent's manual draft (future enhancement)
      *  while this callback advances the tab. */
     onSwitchToManual?: () => void;
+    onBatch?: (files: File[]) => void;
   }
 
-  const { onSubmit, busy = false, aiEnabled = false, onSwitchToManual }: Props = $props();
+  const { onSubmit, busy = false, aiEnabled = false, onSwitchToManual, onBatch }: Props = $props();
 
   let fileInput = $state<HTMLInputElement | null>(null);
   let preview = $state<string | null>(null); // data: URL for the preview card
@@ -84,7 +84,13 @@
 
   async function handleFileChange(e: Event): Promise<void> {
     const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const files = input.files ? Array.from(input.files) : [];
+    if (files.length > 1 && onBatch) {
+      input.value = '';
+      onBatch(files);
+      return;
+    }
+    const file = files[0];
     if (!file) return;
     extractError = null;
     try {
@@ -221,8 +227,9 @@
         <span class="capture-tile-hint">Live camera · rear-facing</span>
       </button>
     {/if}
-    <!-- File picker = fallback. Sprint 4 (#249) adds `multiple` here
-         + a per-row queue UI for batch unboxing. -->
+    <!-- #249 — gallery fallback takes several photos at once for
+         batch unboxing. No `capture` attribute: on mobile it forces the
+         camera and disables multi-select. -->
     <label
       class="upload-tile"
       class:upload-tile-secondary={cameraSupported}
@@ -230,14 +237,17 @@
     >
       <ImageIcon size={cameraSupported ? 24 : 32} strokeWidth={1.5} aria-hidden="true" />
       <span class="upload-label"
-        >{cameraSupported ? 'Or upload from gallery' : 'Upload a photo'}</span
+        >{cameraSupported ? 'Or upload from gallery' : 'Upload photos'}</span
       >
-      <span class="upload-hint">JPG / PNG / HEIC, ≤ 10 MB</span>
+      <span class="upload-hint"
+        >JPG / PNG / HEIC, ≤ 10 MB each{onBatch ? ' · pick several to batch an unboxing' : ''}</span
+      >
       <input
         bind:this={fileInput}
         type="file"
         accept="image/*"
-        capture="environment"
+        multiple={!!onBatch}
+        data-testid="label-file-input"
         onchange={handleFileChange}
         disabled={busy || extracting}
       />
@@ -491,7 +501,7 @@
     font-family: inherit;
     font-size: 13px;
     cursor: pointer;
-    min-height: 38px;
+    min-height: 48px;
   }
 
   /* #250 / CT-ST-009 — pre-flight no-key empty-state. Same visual

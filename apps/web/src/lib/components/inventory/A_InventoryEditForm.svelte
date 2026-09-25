@@ -84,9 +84,13 @@
      *  A non-`manual` source renders a provenance banner so the operator
      *  knows where the draft came from. Ignored in edit mode. */
     prefill?: StockEntryDraft;
+    /** Replaces the post-save navigation — the batch label queue (#249)
+     *  saves one reviewed draft, then returns to the queue. */
+    onSaved?: () => void;
+    onCancel?: () => void;
   }
 
-  const { type, existing, prefill }: Props = $props();
+  const { type, existing, prefill, onSaved, onCancel }: Props = $props();
 
   const isEdit = $derived(!!existing);
 
@@ -263,7 +267,8 @@
         await submitLotBearing();
       }
       dirty = false;
-      goto(`/inventory?type=${type}`);
+      if (onSaved) onSaved();
+      else goto(`/inventory?type=${type}`);
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
     } finally {
@@ -271,14 +276,16 @@
     }
   }
 
+  // POST /api/stock rejects null (fields are optional); PATCH uses null to clear.
   async function submitLotBearing(): Promise<void> {
+    const unset = existingItem ? null : undefined;
     const payload = {
       displayName: displayName.trim(),
       shortName: shortName.trim() || undefined,
       category,
       defaultUnit, // #199: always present
-      pluginId: pluginId.trim() || null,
-      reorderThreshold: reorderThreshold ?? null,
+      pluginId: pluginId.trim() || unset,
+      reorderThreshold: reorderThreshold ?? unset,
       notes: notes.trim() || undefined,
       barcode: barcode.trim() || undefined
     };
@@ -289,10 +296,19 @@
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-      throw new Error(body.error ?? `HTTP ${res.status}`);
+    if (!res.ok) throw new Error(await apiError(res));
+  }
+
+  async function apiError(res: Response): Promise<string> {
+    const body = await res.json().catch(() => null);
+    if (res.status === 403) {
+      return `Only the farm owner can save inventory changes${body?.message ? ` (${body.message})` : ''}.`;
     }
+    const issue = body?.issues?.[0];
+    const detail = issue?.message
+      ? ` — ${issue.path?.length ? `${issue.path.join('.')}: ` : ''}${issue.message}`
+      : '';
+    return `${body?.error ?? body?.message ?? `HTTP ${res.status}`}${detail}`;
   }
 
   async function submitSprayer(): Promise<void> {
@@ -305,10 +321,7 @@
           notes: notes.trim() || undefined
         })
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(body.error ?? `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(await apiError(res));
     } else {
       const spec: Record<string, unknown> = {};
       if (tankGal != null && tankGal > 0) spec.tankGal = tankGal;
@@ -323,15 +336,16 @@
           spec: Object.keys(spec).length > 0 ? spec : undefined
         })
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-        throw new Error(body.error ?? `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(await apiError(res));
     }
   }
 
   function handleCancel(): void {
     if (dirty && !confirm('Discard unsaved changes?')) return;
+    if (onCancel) {
+      onCancel();
+      return;
+    }
     if (existing && type !== 'crop') {
       const id = (existing as { id: string }).id;
       goto(`/inventory/${type}/${id}`);
@@ -593,7 +607,7 @@
     font-weight: 600;
     cursor: pointer;
     border: 1px solid transparent;
-    min-height: 44px;
+    min-height: 48px;
   }
   .btn-primary {
     background: var(--color-forest, #1f5e3a);

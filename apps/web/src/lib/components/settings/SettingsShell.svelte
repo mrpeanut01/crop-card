@@ -11,7 +11,8 @@
    *   - Breadcrumb header bar: back chevron + "Settings · <kicker>" +
    *     serif title + optional badge slot + optional dirty indicator
    *   - Body area (cream background) with max-width container
-   *   - Sticky footer with Cancel + Save changes (unless hideFooter)
+   *   - Sticky footer with Cancel + Save changes when saveAction is set
+   *     (unless hideFooter); read-only pages get no footer
    *
    * Each subpage just provides `title`, `kicker`, body slot, and
    * optionally `badge` + `dirty` + form action targets.
@@ -66,9 +67,8 @@
     <!--
       #203 — when a saveAction is provided we wrap the body in the form so
       every input the page renders is submitted on Save, and the button is
-      live (not perma-disabled). The legacy disabled-button path is kept
-      for hideFooter pages (danger-zone only) and for pages that don't
-      know their saveAction yet.
+      live (not perma-disabled). Read-only pages (no saveAction) render no
+      footer at all rather than a dead, permanently disabled Save button.
     -->
     <form method="POST" action={saveAction} class="settings-form">
       <div class="body">
@@ -87,12 +87,6 @@
         {@render children()}
       </div>
     </div>
-    {#if !hideFooter}
-      <footer class="footer">
-        <a class="ghost" href={backHref}>Cancel</a>
-        <button type="button" class="primary" disabled>Save changes</button>
-      </footer>
-    {/if}
   {/if}
 </div>
 

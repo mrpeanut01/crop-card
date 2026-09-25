@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "complianceFlags": {"omriListed": false, "certifiedOrganicAllowed": false, "notes": "No NOP listing on the OMRI Products List (searched 2026-09-25: 'Dithane'). Label has no organic statement."},
   "formulation": "F",
-  "epaRegistrationNumber": "62719-396",
+  "epaRegistrationNumber": "70506-654",
   "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "mancozeb", "fracCode": "M03" }],

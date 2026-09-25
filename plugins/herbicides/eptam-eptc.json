@@ -21,6 +21,6 @@
   "applicationTiming": "PRE",
   "requiresAMS": false,
   "deconRequired": false,
-  "epaRegistrationNumber": "10163-280",
+  "epaRegistrationNumber": "10163-283",
   "notes": "Gowan Group 15 thiocarbamate VLCFA inhibitor. Incorporate within 30 min to avoid volatility loss. Strong on yellow nutsedge. chemistryClass tag is the nearest enum match; EPTC is technically Group 15 thiocarbamate, not pyroxasulfone family."
 }

@@ -15,7 +15,6 @@ const PLUGINS_DIR = path.resolve(__dirname, '../../../../plugins');
 
 const TRAIT_GATED_BRANDS = [
   { herbicide: 'engenia', crop: 'soybean-asgrow-roundup-ready-2-xtend' },
-  { herbicide: 'xtendimax', crop: 'soybean-asgrow-roundup-ready-2-xtend' },
   { herbicide: 'halex-gt', crop: 'corn-feed-dent-pioneer' },
   { herbicide: 'sandea', crop: 'tomato-roma-vf' },
   { herbicide: 'sandea', crop: 'tomato-cherokee-purple' },

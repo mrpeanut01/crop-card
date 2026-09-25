@@ -22,7 +22,7 @@
   "preHarvestIntervalDays": 7,
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"toxic","bloomRestriction":"dusk-to-dawn-only"},
-  "epaRegistrationNumber": "400-503",
+  "epaRegistrationNumber": "70506-536",
   "targetPests": [
     "twospotted spider mite",
     "European red mite",

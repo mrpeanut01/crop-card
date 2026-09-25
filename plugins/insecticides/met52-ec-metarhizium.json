@@ -21,7 +21,7 @@
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
   "pollinator": {"beeToxicity":"unknown","bloomRestriction":"none"},
-  "epaRegistrationNumber": "64137-12",
+  "epaRegistrationNumber": "64137-33",
   "targetPests": [
     "thrips",
     "whitefly",

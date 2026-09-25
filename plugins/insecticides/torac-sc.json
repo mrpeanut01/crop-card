@@ -22,7 +22,7 @@
   "preHarvestIntervalDays": 14,
   "pollinatorRisk": "high",
   "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only","residualToxicityHours":8},
-  "epaRegistrationNumber": "71711-32",
+  "epaRegistrationNumber": "71711-36",
   "targetPests": [
     "whitefly",
     "psyllid",

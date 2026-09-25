@@ -451,11 +451,13 @@ test.describe('allocation wizard', () => {
 test.describe('empty season starts in the wizard', () => {
   test.describe.configure({ timeout: 90_000 });
 
-  test('a farm with no blocks opens the wizard, and blocks can be added inline', async ({
+  test('skipping the farm map opens the wizard, and blocks can be added inline', async ({
     page
   }) => {
     await provisionWizardTenant(page, { seasonSetup: true, blocks: [] });
-    await page.goto('/plan');
+    await page.goto('/plan/farm');
+    await page.getByRole('link', { name: 'Skip the map and plan by block name' }).click();
+    await page.waitForURL(/\/plan\?setup=skip$/);
     await page.waitForLoadState('networkidle');
 
     await expect(wizard(page)).toBeVisible();

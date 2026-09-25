@@ -253,9 +253,8 @@
           </button>
           {#if onAddBlock}
             <p class="pv2-empty-alt">
-              Prefer to lay it out yourself? <button type="button" class="link" onclick={onAddBlock}
-                >Add a block by hand</button
-              >
+              Prefer to lay it out yourself? <a href="/plan/farm">Draw your farm</a> or
+              <button type="button" class="link" onclick={onAddBlock}>add a block by hand</button>
             </p>
           {/if}
         {:else}

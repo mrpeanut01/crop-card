@@ -16,7 +16,6 @@
 #   CROPCARD_ACR        registry name         (default: discovered in the group, else created)
 #   CROPCARD_KV         Key Vault name        (default: discovered in the group, else created)
 #   EMAIL_FROM                                sender address (Postmark / Pingram)
-#   CROPCARD_DOMAIN     custom domain         (default: customDomain in the .bicepparam)
 #
 # Secrets live only in the Key Vault; this script never passes one to the template.
 # The session secret is generated there on first deploy. Optional secrets are
@@ -30,11 +29,11 @@
 # The same SHA is baked into the image (BUILD_SHA) and served by /api/health as
 # `version`; the deploy only counts as done once the live app reports it.
 #
-# Custom domain: the template hosts its DNS zone. Until the registrar delegates
-# to the zone's name servers the app stays on its default hostname. Once public
-# DNS resolves, the next deploy adds the hostname and requests a managed
-# certificate; when that is issued this script deploys again to bind TLS and
-# move ORIGIN to the domain. Every step is re-derived on each run.
+# Custom domain: the template hosts the DNS zone and a CNAME per hostname. Until
+# the registrar delegates to the zone's name servers the app stays on its
+# default hostname. Once public DNS resolves, the next deploy adds the
+# hostnames and requests managed certificates; when those are issued this
+# script deploys again to bind TLS and move ORIGIN to the first hostname. Every step is re-derived on each run.
 #
 # --ci (used by the workflow) expects the group, CROPCARD_ACR and CROPCARD_KV to
 # exist, never creates or grants anything, and reads only secret names.
@@ -159,27 +158,42 @@ echo "postmark     : ${HAS_POSTMARK}"
 echo "anthropic    : ${HAS_ANTHROPIC}"
 
 # ─── Custom domain readiness ────────────────────────────────────────────
+# Zone and host labels come from the .bicepparam so the template and this
+# check can't disagree.
 PARAM_FILE="infra/azure/parameters.dev.bicepparam"
-DOMAIN="${CROPCARD_DOMAIN-$(sed -n "s/^param customDomain = '\(.*\)'$/\1/p" "$PARAM_FILE")}"
+ZONE="$(sed -n "s/^param dnsZoneName = '\(.*\)'$/\1/p" "$PARAM_FILE")"
+read -ra HOSTS <<<"$(sed -n "s/^param customHosts = \[\(.*\)\]$/\1/p" "$PARAM_FILE" | tr -d "',")"
+FQDNS=(); for h in "${HOSTS[@]}"; do [ "$h" = "@" ] && FQDNS+=("$ZONE") || FQDNS+=("${h}.${ZONE}"); done
 ENV_NAME="cropcard-dev-cae"
-CERT_NAME="cropcard-dev-${DOMAIN//./-}"
 DNS_READY=false
-if [ -n "$DOMAIN" ]; then
+if [ -n "$ZONE" ] && [ "${#FQDNS[@]}" -gt 0 ] && command -v dig >/dev/null; then
   STATIC_IP="$(az containerapp env show -g "$GROUP" -n "$ENV_NAME" --query properties.staticIp -o tsv 2>/dev/null || true)"
+  APP_FQDN="$(az containerapp show -g "$GROUP" -n "$APP_NAME" --query properties.configuration.ingress.fqdn -o tsv 2>/dev/null || true)"
   VERIFY_ID="$(az containerapp show -g "$GROUP" -n "$APP_NAME" --query properties.customDomainVerificationId -o tsv 2>/dev/null || true)"
-  if [ -n "$STATIC_IP" ] && [ -n "$VERIFY_ID" ] && command -v dig >/dev/null &&
-    dig +short @1.1.1.1 A "$DOMAIN" | grep -qx "$STATIC_IP" &&
-    dig +short @1.1.1.1 TXT "asuid.${DOMAIN}" | tr -d '"' | grep -qx "$VERIFY_ID"; then
+  if [ -n "$APP_FQDN" ] && [ -n "$VERIFY_ID" ]; then
     DNS_READY=true
+    for f in "${FQDNS[@]}"; do
+      if [ "$f" = "$ZONE" ]; then
+        dig +short @1.1.1.1 A "$f" | grep -qx "$STATIC_IP"
+      else
+        dig +short @1.1.1.1 CNAME "$f" | grep -qx "${APP_FQDN}."
+      fi &&
+        dig +short @1.1.1.1 TXT "asuid.${f}" | tr -d '"' | grep -qx "$VERIFY_ID" ||
+        DNS_READY=false
+    done
   fi
 fi
 cert_issued() {
-  [ "$DNS_READY" = true ] &&
-    az containerapp env certificate list -g "$GROUP" -n "$ENV_NAME" --managed-certificates-only \
-      --query "[?name=='${CERT_NAME}' && properties.provisioningState=='Succeeded'].name" -o tsv 2>/dev/null | grep -q .
+  [ "$DNS_READY" = true ] || return 1
+  local issued
+  issued="$(az containerapp env certificate list -g "$GROUP" -n "$ENV_NAME" --managed-certificates-only \
+    --query "[?properties.provisioningState=='Succeeded'].name" -o tsv 2>/dev/null)" || return 1
+  for f in "${FQDNS[@]}"; do
+    printf '%s\n' "$issued" | grep -qx "cropcard-dev-${f//./-}" || return 1
+  done
 }
 CERT_ISSUED=false; cert_issued && CERT_ISSUED=true
-echo "domain       : ${DOMAIN:-none} (dns ready: ${DNS_READY}, cert issued: ${CERT_ISSUED})"
+echo "domain       : ${FQDNS[*]:-none} (dns ready: ${DNS_READY}, certs issued: ${CERT_ISSUED})"
 
 PARAMS=(
   --parameters "$PARAM_FILE"
@@ -187,7 +201,6 @@ PARAMS=(
   --parameters keyVaultName="$KV" hasPingramKey="$HAS_PINGRAM" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
-[ -n "${CROPCARD_DOMAIN+x}" ] && PARAMS+=(--parameters customDomain="$DOMAIN")
 domain_params() { echo "customDomainDnsReady=$DNS_READY" "customDomainCertIssued=$CERT_ISSUED"; }
 
 if [ "$APPLY" = false ]; then
@@ -218,20 +231,20 @@ deploy
 if [ "$DNS_READY" = true ] && [ "$CERT_ISSUED" = false ]; then
   for i in $(seq 1 40); do
     cert_issued && { CERT_ISSUED=true; break; }
-    echo "waiting for the ${DOMAIN} certificate [$i/40]"
+    echo "waiting for the ${FQDNS[*]} certificates [$i/40]"
     sleep 15
   done
   if [ "$CERT_ISSUED" = true ]; then
-    echo "binding TLS for ${DOMAIN}"
+    echo "binding TLS for ${FQDNS[*]}"
     deploy
   else
-    echo "certificate for ${DOMAIN} not issued yet; the next deploy binds it" >&2
+    echo "certificates for ${FQDNS[*]} not issued yet; the next deploy binds them" >&2
   fi
 fi
 
 NS="$(az deployment group show -g "$GROUP" --name "$DEPLOYMENT_NAME" --query "properties.outputs.customDomainNameServers.value" -o tsv 2>/dev/null | tr '\n' ' ')"
-if [ -n "$DOMAIN" ] && [ "$DNS_READY" = false ]; then
-  echo "domain       : ${DOMAIN} is not delegated yet; set its name servers at the registrar to: ${NS}"
+if [ -n "$ZONE" ] && [ "$DNS_READY" = false ]; then
+  echo "domain       : ${FQDNS[*]} don't resolve to the app yet; if ${ZONE} isn't delegated, set its name servers at the registrar to: ${NS}"
 fi
 
 ORIGIN="$(az deployment group show -g "$GROUP" --name "$DEPLOYMENT_NAME" --query properties.outputs.appOrigin.value -o tsv)"

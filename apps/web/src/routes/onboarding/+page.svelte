@@ -398,8 +398,8 @@
           <div><strong>1.</strong> Use the map toolbar to draw the outline of a field.</div>
           <div><strong>2.</strong> Draw the blocks inside it. Area fills in from the shape.</div>
           <div>
-            <strong>No GPS or imagery?</strong> Use <em>Add without drawing</em> under the map and sketch
-            the boundary later.
+            <strong>No GPS or imagery?</strong> Switch to <em>Dimensions</em> above the map and type each
+            field's and block's width and length; they're drawn as boxes.
           </div>
         </div>
         {#if browser}

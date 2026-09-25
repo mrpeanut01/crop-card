@@ -42,13 +42,19 @@ param emailFrom string = ''
 @description('Key Vault holds an anthropic-api-key secret. False = no-key mode (Invariant 7: deterministic fallbacks).')
 param hasAnthropicKey bool = false
 
-@description('Apex custom domain served by the web app, e.g. cropcard.ag. Empty = default ACA hostname only.')
-param customDomain string = ''
+@description('DNS zone hosted for the custom hostnames, e.g. cropcard.io. Empty = default ACA hostname only.')
+param dnsZoneName string = ''
 
-@description('Public DNS for customDomain already resolves to this environment (checked by deploy-azure.sh). Gates the hostname binding and the managed certificate request.')
+@description('Labels of dnsZoneName bound to the web app, \'@\' for the apex, e.g. [\'app\', \'www\', \'@\']. The first becomes ORIGIN; the rest redirect to it.')
+param customHosts array = []
+
+@description('Extra TXT records in dnsZoneName, relative name → value (mail DKIM and the like). Each value must fit one 255-char string.')
+param dnsTxtRecords object = {}
+
+@description('Public DNS for every custom hostname already resolves to this app (checked by deploy-azure.sh). Gates the hostname bindings and the managed certificate requests.')
 param customDomainDnsReady bool = false
 
-@description('The managed certificate for customDomain has been issued (checked by deploy-azure.sh). Gates the TLS binding and switching ORIGIN to the custom domain.')
+@description('Every custom hostname\'s managed certificate has been issued (checked by deploy-azure.sh). Gates the TLS bindings and switching ORIGIN to the custom domain.')
 param customDomainCertIssued bool = false
 
 @description('Deploy the plugin marketplace app (with its ClamAV sidecar). The web app does not depend on it.')
@@ -76,10 +82,12 @@ var marketplaceBlobContainerName = 'cropcard-marketplace'
 var useRegistry = !empty(containerRegistryServer)
 var acrName = useRegistry ? split(containerRegistryServer, '.')[0] : 'none'
 var kvSecretsUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
-var useDomain = !empty(customDomain)
+var useDomain = !empty(dnsZoneName) && !empty(customHosts)
 var bindDomain = useDomain && customDomainDnsReady
 var domainTls = bindDomain && customDomainCertIssued
-var domainCertName = '${prefix}-${replace(customDomain, '.', '-')}'
+var customFqdns = [for h in customHosts: h == '@' ? dnsZoneName : '${h}.${dnsZoneName}']
+var subdomainHosts = filter(customHosts, h => h != '@')
+var hasApex = contains(customHosts, '@')
 var acrPullRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 // ─── Storage account + blob container for Litestream replicas ──────────
@@ -214,22 +222,20 @@ resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
 // ACA's default hostname is <app>.<env default domain>, so ORIGIN is known
 // before the app exists. Magic links are built from ORIGIN, never from Host,
 // so it only moves to the custom domain once that serves valid TLS.
-var appOrigin = domainTls ? 'https://${customDomain}' : 'https://${appName}.${cae.properties.defaultDomain}'
+var appOrigin = domainTls ? 'https://${customFqdns[0]}' : 'https://${appName}.${cae.properties.defaultDomain}'
 
 // A managed certificate needs the hostname already on the app, and the app
 // can only bind TLS to an issued certificate, so the domain comes up over
-// two deploys: hostname + certificate request, then the SNI binding.
+// two deploys: hostnames + certificate requests, then the SNI bindings.
 var appCustomDomains = !bindDomain
   ? []
-  : domainTls
-      ? [
-          {
-            name: customDomain
-            bindingType: 'SniEnabled'
-            certificateId: '${cae.id}/managedCertificates/${domainCertName}'
-          }
-        ]
-      : [{ name: customDomain, bindingType: 'Disabled' }]
+  : map(customFqdns, fqdn => domainTls
+      ? {
+          name: fqdn
+          bindingType: 'SniEnabled'
+          certificateId: '${cae.id}/managedCertificates/${prefix}-${replace(fqdn, '.', '-')}'
+        }
+      : { name: fqdn, bindingType: 'Disabled' })
 
 // Container Apps rejects empty secret values, so optional secrets are only
 // declared (and referenced) when supplied.
@@ -302,6 +308,7 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
               { name: 'AUTH_SECRET', secretRef: 'auth-secret' }
               { name: 'AUTH_MODE', value: authMode }
               { name: 'ORIGIN', value: appOrigin }
+              { name: 'REDIRECT_HOSTS', value: domainTls ? join(skip(customFqdns, 1), ',') : '' }
               { name: 'ADDRESS_HEADER', value: 'X-Forwarded-For' }
               { name: 'XFF_DEPTH', value: '1' }
               { name: 'AZURE_STORAGE_ACCOUNT', value: storage.name }
@@ -336,14 +343,24 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
 }
 
 // ─── Custom domain ─────────────────────────────────────────────────────
-// The zone is hosted here so the records track the environment's IP and the
-// app's verification ID; the registrar only delegates to its name servers.
+// The zone is hosted here so the records track the app's hostname and
+// verification ID; the registrar only delegates to its name servers.
 resource dnsZone 'Microsoft.Network/dnsZones@2018-05-01' = if (useDomain) {
-  name: useDomain ? customDomain : 'unused.invalid'
+  name: useDomain ? dnsZoneName : 'unused.invalid'
   location: 'global'
 }
 
-resource apexA 'Microsoft.Network/dnsZones/A@2018-05-01' = if (useDomain) {
+resource hostCname 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = [for h in (useDomain ? subdomainHosts : []): {
+  parent: dnsZone
+  name: h
+  properties: {
+    TTL: 3600
+    CNAMERecord: { cname: app.properties.configuration.ingress.fqdn }
+  }
+}]
+
+// The apex can't be a CNAME, so it points at the environment's static IP.
+resource apexA 'Microsoft.Network/dnsZones/A@2018-05-01' = if (useDomain && hasApex) {
   parent: dnsZone
   name: '@'
   properties: {
@@ -352,25 +369,34 @@ resource apexA 'Microsoft.Network/dnsZones/A@2018-05-01' = if (useDomain) {
   }
 }
 
-resource asuidTxt 'Microsoft.Network/dnsZones/TXT@2018-05-01' = if (useDomain) {
+resource hostAsuid 'Microsoft.Network/dnsZones/TXT@2018-05-01' = [for h in (useDomain ? customHosts : []): {
   parent: dnsZone
-  name: 'asuid'
+  name: h == '@' ? 'asuid' : 'asuid.${h}'
   properties: {
     TTL: 3600
     TXTRecords: [{ value: [app.properties.customDomainVerificationId] }]
   }
-}
+}]
 
-resource domainCert 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (bindDomain) {
+resource extraTxt 'Microsoft.Network/dnsZones/TXT@2018-05-01' = [for r in items(useDomain ? dnsTxtRecords : {}): {
+  parent: dnsZone
+  name: r.key
+  properties: {
+    TTL: 3600
+    TXTRecords: [{ value: [r.value] }]
+  }
+}]
+
+resource hostCert 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = [for fqdn in (bindDomain ? customFqdns : []): {
   parent: cae
-  name: domainCertName
+  name: '${prefix}-${replace(fqdn, '.', '-')}'
   location: location
   dependsOn: [app]
   properties: {
-    subjectName: customDomain
-    domainControlValidation: 'HTTP'
+    subjectName: fqdn
+    domainControlValidation: fqdn == dnsZoneName ? 'HTTP' : 'CNAME'
   }
-}
+}]
 
 // ─── Marketplace Container App (Phase 23, optional) ────────────────────
 // ClamAV sidecar in the same pod; the marketplace reaches clamd on localhost.

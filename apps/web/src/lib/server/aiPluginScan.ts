@@ -444,7 +444,8 @@ function buildSearchUserPrompt(query: string, hintType?: PluginKindHint): string
 /** Path A — single label photo → 1 plugin candidate. */
 export async function claudeVisionPluginLookup(
   base64jpeg: string,
-  hintType?: PluginKindHint
+  hintType?: PluginKindHint,
+  signal?: AbortSignal
 ): Promise<{ candidate: PluginCandidate | null; meta: AiResultMeta }> {
   const apiKey = getApiKey();
   if (!apiKey) {
@@ -463,23 +464,26 @@ export async function claudeVisionPluginLookup(
   const choice = selectModel('rationale');
   const userPrompt = buildVisionUserPrompt(hintType);
 
-  const msg = await client.messages.create({
-    model: choice.model,
-    max_tokens: MAX_VISION_TOKENS,
-    system: PLUGIN_SYSTEM_PROMPT,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: 'image/jpeg', data: base64jpeg }
-          },
-          { type: 'text', text: userPrompt }
-        ]
-      }
-    ]
-  });
+  const msg = await client.messages.create(
+    {
+      model: choice.model,
+      max_tokens: MAX_VISION_TOKENS,
+      system: PLUGIN_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: 'image/jpeg', data: base64jpeg }
+            },
+            { type: 'text', text: userPrompt }
+          ]
+        }
+      ]
+    },
+    { signal }
+  );
 
   const usage = msg.usage as {
     input_tokens?: number;
@@ -521,7 +525,8 @@ export async function claudeVisionPluginLookup(
 /** Path B (AI branch) — typed query → ≤3 ranked candidates via web_search. */
 export async function claudePluginSearchByName(
   query: string,
-  hintType?: PluginKindHint
+  hintType?: PluginKindHint,
+  signal?: AbortSignal
 ): Promise<{
   candidates: PluginCandidate[];
   citations: Array<{ url: string; title?: string }>;
@@ -545,20 +550,23 @@ export async function claudePluginSearchByName(
   const choice = selectModel('rationale');
   const userPrompt = buildSearchUserPrompt(query, hintType);
 
-  const msg = await client.messages.create({
-    model: choice.model,
-    max_tokens: MAX_SEARCH_TOKENS,
-    system: PLUGIN_SYSTEM_PROMPT,
-    tools: [
-      {
-        type: 'web_search_20250305',
-        name: 'web_search',
-        max_uses: MAX_WEB_SEARCHES
-      }
-    ],
-    tool_choice: { type: 'any' },
-    messages: [{ role: 'user', content: [{ type: 'text', text: userPrompt }] }]
-  });
+  const msg = await client.messages.create(
+    {
+      model: choice.model,
+      max_tokens: MAX_SEARCH_TOKENS,
+      system: PLUGIN_SYSTEM_PROMPT,
+      tools: [
+        {
+          type: 'web_search_20250305',
+          name: 'web_search',
+          max_uses: MAX_WEB_SEARCHES
+        }
+      ],
+      tool_choice: { type: 'any' },
+      messages: [{ role: 'user', content: [{ type: 'text', text: userPrompt }] }]
+    },
+    { signal }
+  );
 
   const usage = msg.usage as {
     input_tokens?: number;

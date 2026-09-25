@@ -1,6 +1,6 @@
 # Feature backlog — CropCard
 
-> **Status (2026-05-25):** GitHub issue queue is empty. Phases 1–25 shipped to `main`. The prior Sprint E / D' / Phase 21 / Phase 23 / Phase 24 / UI-overhaul backlog items all closed via their referenced issues (#13, #18, #37, #38, #41–#47, #55–#59, #79–#89, #96, #97). For per-phase summaries see [CLAUDE.md](../CLAUDE.md) "Phase status"; for pre-launch operational notes see CLAUDE.md "Known follow-ups (not blocking)".
+> **Status (2026-09-25):** Phases 1–29 shipped. Phase 29 closed the open GitHub issue queue from the 2026-07 handoff (PRs #379 and #380). The remaining open items need a human: launch env configuration in Azure, re-capturing visual baselines on CI Chromium ([#101](https://github.com/mrpeanut01/crop-card/issues/101)), and EPA registration-number research ([#381](https://github.com/mrpeanut01/crop-card/issues/381)). For per-phase summaries see [CLAUDE.md](../CLAUDE.md) "Phase status"; for pre-launch operational notes see CLAUDE.md "Known follow-ups (not blocking)".
 >
 > This file is the working backlog. Add a row only when scoping a new sub-task; delete the row in the same PR that lands it.
 

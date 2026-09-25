@@ -26,6 +26,7 @@
     "cucumber beetle"
   ],
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "Pyrethroid IRAC 3A. Mite-suppression activity. Restricted-use; no bloom application.",
   "complianceFlags": {
     "omriListed": false,

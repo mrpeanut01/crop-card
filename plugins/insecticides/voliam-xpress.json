@@ -23,6 +23,7 @@
   "reEntryIntervalHours": 24,
   "preHarvestIntervalDays": 1,
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "epaRegistrationNumber": "100-1402",
   "targetPests": [
     "corn earworm",

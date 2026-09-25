@@ -42,7 +42,12 @@
   type SuggestResponse = {
     proposed: ProposedPlan[];
     unscheduled: Array<{ cropId: string; reason: string }>;
-    meta: { model: string; usdEstimate: number; fallback?: string };
+    meta: {
+      model: string;
+      usdEstimate: number;
+      fallback?: string;
+      fallbackMessage?: string | null;
+    };
     spend?: { monthlyUsdSoFar: number; cap: number; warnAt80: boolean };
   };
 
@@ -251,6 +256,9 @@
       <div class="fallback-banner">
         {#if response.meta.fallback === 'no-api-key'}
           ℹ Engine-only plan (no AI key configured). Proposals are deterministic.
+        {:else if response.meta.fallback === 'ai-unavailable'}
+          ℹ Engine-only plan — {response.meta.fallbackMessage ?? 'Claude is unavailable right now.'} Proposals
+          are deterministic.
         {:else if response.meta.fallback === 'engine-only'}
           ⚠ AI validation failed twice — using engine fallback. Plans are still safe.
         {:else if response.meta.fallback === 'no-drafts'}

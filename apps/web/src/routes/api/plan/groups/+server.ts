@@ -6,8 +6,13 @@ import { listStockItems } from '$lib/db/stock';
 import { requireOwner } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
-import { proposeGroupPlans, type GroupPlanningInput } from '$lib/server/aiGroupPlanning';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import {
+  proposeGroupPlans,
+  proposePlansEngineOnly,
+  type GroupPlanningInput
+} from '$lib/server/aiGroupPlanning';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import { LOUDOUN_VA, soilTempEarliestDayMs } from '$lib/weather/normals';
 import { footprintSqFt, plantsFitUsable } from '$lib/layout/sufficiency';
@@ -35,22 +40,6 @@ const bodySchema = z.object({
  */
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const guard = checkGuard(user.id, 'groups');
-  if (!guard.ok) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'groups',
-      model: 'n/a',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: guard.reason
-    });
-    return json({ error: guard.message }, { status: guard.status });
-  }
-
   let raw: unknown;
   try {
     raw = await event.request.json();
@@ -100,7 +89,7 @@ export const POST: RequestHandler = async (event) => {
       proposed: [],
       unscheduled: [],
       meta: { model: 'n/a', usdEstimate: 0, fallback: 'no-drafts' },
-      spend: guard.spend
+      spend: null
     });
   }
 
@@ -170,48 +159,63 @@ export const POST: RequestHandler = async (event) => {
 
   const built = await buildFarmContextWithCache(year);
 
-  try {
-    const result = await proposeGroupPlans(planningInput, built.context, {
-      planningSessionId: parsed.data.planningSessionId,
-      contextCacheHit: built.cacheHit,
-      contextVersion: built.contextVersion
-    });
-    recordCall({
-      userId: user.id,
-      endpoint: 'groups',
-      model: result.meta.model,
-      inputTokens: result.meta.inputTokens,
-      cachedInputTokens: result.meta.cachedInputTokens,
-      outputTokens: result.meta.outputTokens,
-      usdEstimate: result.meta.usdEstimate,
-      success: result.proposed.length > 0,
-      errorClass: result.meta.fallback
-    });
+  const tried = await tryAiWithGuard({
+    endpoint: 'groups',
+    userId: user.id,
+    prompt: () =>
+      proposeGroupPlans(planningInput, built.context, {
+        planningSessionId: parsed.data.planningSessionId,
+        contextCacheHit: built.cacheHit,
+        contextVersion: built.contextVersion
+      })
+  });
+
+  if (tried.provenance === 'fallback') {
+    const result = proposePlansEngineOnly(
+      planningInput,
+      tried.fallbackReason === 'no-key' ? 'no-api-key' : 'ai-unavailable'
+    );
+    recordFallback(user.id, 'groups', tried.fallbackReason);
     return json({
       proposed: result.proposed,
       unscheduled: result.unscheduled,
       meta: {
         model: result.meta.model,
-        usdEstimate: result.meta.usdEstimate,
-        fallback: result.meta.fallback
+        usdEstimate: 0,
+        fallback: result.meta.fallback,
+        provenance: 'fallback',
+        fallbackReason: tried.fallbackReason,
+        fallbackMessage: tried.fallbackMessage
       },
-      spend: guard.spend
+      spend: tried.guard.ok ? tried.guard.spend : null
     });
-  } catch (err) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'groups',
-      model: 'unknown',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: 'upstream-error'
-    });
-    return json(
-      { error: err instanceof Error ? err.message : 'group planning failed' },
-      { status: 502 }
-    );
   }
+
+  const result = tried.value;
+  const provenance = result.meta.fallback ? 'fallback' : 'ai';
+  recordCall({
+    userId: user.id,
+    endpoint: 'groups',
+    model: result.meta.model,
+    inputTokens: result.meta.inputTokens,
+    cachedInputTokens: result.meta.cachedInputTokens,
+    outputTokens: result.meta.outputTokens,
+    usdEstimate: result.meta.usdEstimate,
+    success: result.proposed.length > 0,
+    errorClass: result.meta.fallback,
+    provenance
+  });
+  return json({
+    proposed: result.proposed,
+    unscheduled: result.unscheduled,
+    meta: {
+      model: result.meta.model,
+      usdEstimate: result.meta.usdEstimate,
+      fallback: result.meta.fallback,
+      provenance,
+      fallbackReason: null,
+      fallbackMessage: null
+    },
+    spend: tried.guard.ok ? tried.guard.spend : null
+  });
 };

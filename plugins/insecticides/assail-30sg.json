@@ -26,6 +26,7 @@
     "apple maggot"
   ],
   "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "Neonicotinoid IRAC 4A — lower bee toxicity than imidacloprid. Apple / pear / grape / vegetable label.",
   "complianceFlags": {
     "omriListed": false,

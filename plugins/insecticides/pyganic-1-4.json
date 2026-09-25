@@ -25,6 +25,7 @@
     "stink bug (knockdown only)"
   ],
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "OMRI organic pyrethrin. Knockdown-only — no residual. Apply at sunset to avoid bee toxicity.",
   "complianceFlags": {
     "omriListed": false,

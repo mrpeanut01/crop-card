@@ -10,11 +10,24 @@
   import { enhance } from '$app/forms';
   import TopBar from '$lib/components/ui/TopBar.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
+  import UpdateToast from '$lib/components/ui/UpdateToast.svelte';
 
-  let { data, children } = $props();
+  const { data, children } = $props();
 
   let pendingCount = $state<number | null>(null);
   let online = $state(true);
+  let waitingWorker = $state<ServiceWorker | null>(null);
+  let updateDismissed = $state(false);
+
+  function reloadIntoNewVersion() {
+    const worker = waitingWorker;
+    if (!worker) return;
+    import('$lib/client/swUpdate')
+      .then(({ activateWaitingWorker }) =>
+        activateWaitingWorker(worker, navigator.serviceWorker, () => window.location.reload())
+      )
+      .catch(() => window.location.reload());
+  }
 
   onMount(() => {
     online = navigator.onLine;
@@ -31,6 +44,19 @@
         syncServiceWorkerTenant({ register: !dev, signedIn: !!data.user, ownerId: activeOwnerId })
       )
       .catch(() => undefined);
+
+    let stopSwUpdates: (() => void) | undefined;
+    if (!dev) {
+      import('$lib/client/swUpdate')
+        .then(({ watchServiceWorkerUpdates }) =>
+          watchServiceWorkerUpdates((worker) => {
+            waitingWorker = worker;
+            updateDismissed = false;
+          })
+        )
+        .then((stop) => (stopSwUpdates = stop))
+        .catch(() => undefined);
+    }
 
     (async () => {
       try {
@@ -64,6 +90,7 @@
       window.removeEventListener('online', updateOnline);
       window.removeEventListener('offline', updateOnline);
       cleanupSync?.();
+      stopSwUpdates?.();
       if (pollInterval) clearInterval(pollInterval);
     };
   });
@@ -93,6 +120,7 @@
     availableOwners={data.availableOwners}
     {online}
     {pendingCount}
+    alerts={data.navAlerts}
     {onSwitchOwner}
   />
 {/if}
@@ -159,6 +187,12 @@
 <main id="main-content" tabindex="-1">
   {@render children()}
 </main>
+
+<UpdateToast
+  visible={!!waitingWorker && !updateDismissed}
+  onReload={reloadIntoNewVersion}
+  onDismiss={() => (updateDismissed = true)}
+/>
 
 <style>
   .skip-link {

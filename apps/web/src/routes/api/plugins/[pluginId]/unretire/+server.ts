@@ -1,22 +1,28 @@
 /**
  * POST /api/plugins/[pluginId]/unretire
  *
- * Reverses a Tier-1 retire: clears the `retired_at` timestamp on the
- * current version row + moves the on-disk file back from
- * `plugins/_retired/<kind>s/` to the live `plugins/<kind>s/` directory.
+ * Default (owner): removes the active Owner's retire marker.
+ * `?scope=global` (superadmin, interactive session): restores a globally
+ * retired plugin in the shared library.
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { requireOwner } from '$lib/server/auth';
-import { PluginLifecycleError, unretirePlugin } from '$lib/server/pluginLifecycle';
+import { requireOwner, requireSuperadmin } from '$lib/server/auth';
+import {
+  PluginLifecycleError,
+  unretirePlugin,
+  unretirePluginForOwner
+} from '$lib/server/pluginLifecycle';
 
 export const POST: RequestHandler = async (event) => {
-  requireOwner(event);
+  const global = event.url.searchParams.get('scope') === 'global';
+  if (global) requireSuperadmin(event);
+  else requireOwner(event);
   const pluginId = event.params.pluginId;
   if (!pluginId) return json({ error: 'pluginId is required' }, { status: 400 });
   try {
-    await unretirePlugin(pluginId);
-    return json({ pluginId, retired: false });
+    await (global ? unretirePlugin(pluginId) : unretirePluginForOwner(pluginId));
+    return json({ pluginId, retired: false, scope: global ? 'global' : 'owner' });
   } catch (e) {
     if (e instanceof PluginLifecycleError) {
       const status = e.code === 'not-found' ? 404 : 500;

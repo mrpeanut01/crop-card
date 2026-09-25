@@ -2,6 +2,7 @@
   "pluginId": "spinosad",
   "displayName": "Spinosad",
   "version": "1.0.0",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only","residualToxicityHours":3},
   "type": "insecticide",
   "activeIngredients": [
     {

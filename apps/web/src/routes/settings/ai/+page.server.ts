@@ -13,7 +13,7 @@
  */
 
 import { error, fail } from '@sveltejs/kit';
-import { and, count, eq, gte } from 'drizzle-orm';
+import { and, count, eq, gte, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
 import { users, aiCallLog } from '$lib/db/schema';
@@ -89,6 +89,27 @@ export const load: PageServerLoad = ({ locals }) => {
       .where(and(withTenant(aiCallLog), gte(aiCallLog.createdAt, new Date(Date.now() - MONTH_MS))))
       .get()?.n ?? 0;
 
+  // Per-endpoint usage against the daily quota — same predicate as
+  // aiGuard.callsToday (this user, UTC day, token-consuming rows only).
+  const utcDayStart = new Date();
+  utcDayStart.setUTCHours(0, 0, 0, 0);
+  const usedToday: Record<string, number> = {};
+  for (const row of db
+    .select({ endpoint: aiCallLog.endpoint, n: count() })
+    .from(aiCallLog)
+    .where(
+      and(
+        withTenant(aiCallLog),
+        eq(aiCallLog.userId, locals.user.id),
+        gte(aiCallLog.createdAt, utcDayStart),
+        sql`(${aiCallLog.inputTokens} + ${aiCallLog.cachedInputTokens} + ${aiCallLog.outputTokens}) > 0`
+      )
+    )
+    .groupBy(aiCallLog.endpoint)
+    .all()) {
+    usedToday[row.endpoint] = row.n;
+  }
+
   return {
     key,
     spend,
@@ -96,6 +117,7 @@ export const load: PageServerLoad = ({ locals }) => {
     dailyQuotas,
     userAiEnabled: !!userRow?.aiEnabled,
     recentCalls,
+    usedToday,
     callsThisMonth,
     isOwner: locals.user.role === 'owner'
   };

@@ -24,14 +24,7 @@
     'CSV import / export · plugins · all calendar derivations'
   ];
 
-  // Group recent calls by endpoint for the per-endpoint usage tiles.
-  type Endpoint = string;
-  const callsByEndpoint = $derived(
-    (data.recentCalls ?? []).reduce<Record<Endpoint, number>>((acc, c) => {
-      acc[c.endpoint] = (acc[c.endpoint] ?? 0) + 1;
-      return acc;
-    }, {})
-  );
+  const usedToday = $derived((data.usedToday ?? {}) as Record<string, number>);
   // Real quota keys live in DEFAULT_AI_DAILY_QUOTA. Display the
   // ones the design's mockup highlights; fall back to '—' for any
   // that aren't in the snapshot.
@@ -42,7 +35,10 @@
     { key: 'suggest', quota: q.suggest ?? 20 },
     { key: 'succession', quota: q.succession ?? 20 },
     { key: 'plugin-search', label: 'Search → web lookup', quota: q['plugin-search'] ?? 15 },
-    { key: 'plugin-scan', label: 'Plugin scan (label OCR)', quota: q['plugin-scan'] ?? 10 }
+    { key: 'plugin-scan', label: 'Plugin scan (label OCR)', quota: q['plugin-scan'] ?? 10 },
+    { key: 'scan-label', label: 'Inventory label / photo scan', quota: q['scan-label'] ?? 40 },
+    { key: 'scan-url', label: 'Inventory product-page URL', quota: q['scan-url'] ?? 20 },
+    { key: 'scan-barcode', label: 'Inventory barcode lookup', quota: q['scan-barcode'] ?? 40 }
   ]);
 </script>
 
@@ -122,7 +118,7 @@
   >
     <div class="quota-grid">
       {#each ENDPOINTS as e (e.key)}
-        {@const used = callsByEndpoint[e.key] ?? 0}
+        {@const used = usedToday[e.key] ?? 0}
         {@const pct = e.quota ? used / e.quota : 0}
         <div class="quota-row">
           <div class="quota-text">

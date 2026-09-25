@@ -7,7 +7,7 @@
  * planting metadata, harvest dates) is masked so baselines stay
  * deterministic across days.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, settleForScreenshot } from '../lib/test';
 import { signInAsDemoOwner } from '../lib/auth';
 
 const VIEWPORTS = [
@@ -24,6 +24,7 @@ for (const vp of VIEWPORTS) {
     await page.waitForLoadState('networkidle');
     await expect(page.getByPlaceholder('Filter blocks…')).toBeVisible();
 
+    await settleForScreenshot(page);
     await expect(page).toHaveScreenshot(`plan-${vp.name}.png`, {
       fullPage: true,
       mask: [
@@ -38,8 +39,7 @@ for (const vp of VIEWPORTS) {
         // Scheduled-tasks rows.
         page.locator('table tbody')
         // Legacy details summary (stable so don't mask).
-      ],
-      maxDiffPixelRatio: 0.01
+      ]
     });
   });
 }

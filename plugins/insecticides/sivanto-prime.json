@@ -23,6 +23,7 @@
     "psyllid"
   ],
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "notes": "Butenolide IRAC 4D — bee-friendlier neonic alternative. Sucking-pest specialist.",
   "complianceFlags": {
     "omriListed": false,

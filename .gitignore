@@ -48,3 +48,4 @@ test-results/
 # Vite HMR scratch files
 vite.config.ts.timestamp-*.mjs
 *.vite.config.ts.timestamp-*.mjs
+apps/web/.agent-data/

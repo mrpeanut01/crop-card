@@ -88,8 +88,9 @@
 
   let plan = $state<InputsPlan | null>(null);
   let planMeta = $state<{
-    fallback?: 'no-api-key' | 'deterministic' | 'quota-exceeded';
+    fallback?: 'no-api-key' | 'deterministic' | 'quota-exceeded' | 'ai-unavailable';
     violations?: string[];
+    fallbackMessage?: string | null;
   } | null>(null);
   let loading = $state(true);
   let error = $state<string | null>(null);
@@ -261,8 +262,18 @@
       </div>
     {:else if planMeta?.fallback === 'quota-exceeded'}
       <div class="card warn" role="status">
-        <strong>Daily AI quota reached.</strong> Showing the deterministic plan. Raise the quota on Settings
-        or try again tomorrow.
+        {#if planMeta.fallbackMessage}
+          <strong>AI limit reached.</strong>
+          {planMeta.fallbackMessage} Showing the deterministic plan.
+        {:else}
+          <strong>Daily AI quota reached.</strong> Showing the deterministic plan. Raise the quota on
+          Settings or try again tomorrow.
+        {/if}
+      </div>
+    {:else if planMeta?.fallback === 'ai-unavailable'}
+      <div class="card info" role="status">
+        Showing the deterministic plan — {planMeta.fallbackMessage ??
+          'Claude is unavailable right now.'}
       </div>
     {:else if planMeta?.fallback === 'no-api-key'}
       <div class="card info" role="status">

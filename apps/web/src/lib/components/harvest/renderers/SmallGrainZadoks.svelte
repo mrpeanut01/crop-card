@@ -3,6 +3,7 @@
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
   import { fmtRange } from './format';
+  import { stageForDaysFromPlanting, zadoksNumber } from '$lib/plan/smallGrain';
 
   const props: RendererProps = $props();
   const DAY_MS = 24 * 60 * 60 * 1000;
@@ -32,15 +33,9 @@
   }
 
   /** Stage the planting is *currently* in (its daysFromPlanting band contains today). */
-  const currentStage = $derived.by(() => {
-    if (!zadoks || daysFromPlanting === null) return null;
-    return (
-      zadoks.find(
-        (s) =>
-          daysFromPlanting >= s.daysFromPlanting.min && daysFromPlanting <= s.daysFromPlanting.max
-      ) ?? null
-    );
-  });
+  const currentStage = $derived(
+    zadoks && daysFromPlanting !== null ? stageForDaysFromPlanting(zadoks, daysFromPlanting) : null
+  );
 </script>
 
 <div class="grain-renderer">
@@ -65,7 +60,7 @@
       <ol class="stage-list">
         {#each zadoks as s (s.stage)}
           {@const isCurrent = currentStage?.stage === s.stage}
-          {@const isHarvest = (parseInt(s.stage.match(/^Z(\d{2})/)?.[1] ?? '', 10) || 0) >= 80}
+          {@const isHarvest = (zadoksNumber(s.stage) ?? 0) >= 80}
           <li class:current={isCurrent} class:harvest={isHarvest}>
             <span class="stage-code mono">{s.stage}</span>
             <span class="stage-name">{s.name}</span>

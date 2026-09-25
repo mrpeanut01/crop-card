@@ -258,6 +258,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    width: 100%;
     max-width: 640px;
     margin: 0 auto;
   }
@@ -318,6 +319,7 @@
   }
   .ss-field select,
   .ss-field input[type='number'] {
+    max-width: 100%;
     min-height: 48px;
     padding: 0.5rem 0.75rem;
     font-size: 1rem;

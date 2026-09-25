@@ -37,6 +37,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { and, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { getBlock } from '$lib/db/blocks';
 import { db } from '$lib/db/client';
 import { listCrops } from '$lib/db/crops';
 import { tasks } from '$lib/db/schema';
@@ -44,6 +45,7 @@ import { createTask, type RelatedEventTable } from '$lib/db/tasks';
 import { withTenant } from '$lib/db/tenant';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { insertPlanRevision } from '$lib/plan/revisions';
 import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
 
@@ -161,6 +163,10 @@ export const POST: RequestHandler = async (event) => {
   const blockIds = new Set<string>();
   for (const a of parsed.data.applications) blockIds.add(a.blockId);
   for (const s of parsed.data.scoutTasks) blockIds.add(s.blockId);
+  const foreign = rejectForeignRefs(
+    ...Array.from(blockIds, (id) => ['blockId', id, getBlock] as const)
+  );
+  if (foreign) return foreign;
 
   // Idempotency — delete OPEN inputs-plan tasks for the affected
   // blocks. Completed / aborted tasks survive: their executed history

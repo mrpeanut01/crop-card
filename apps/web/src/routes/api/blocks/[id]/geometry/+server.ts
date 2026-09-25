@@ -10,6 +10,8 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { setBlockGeometry } from '$lib/db/blocks';
+import { currentUser } from '$lib/server/auth';
+import { canMutate } from '$lib/server/session';
 
 const geomSchema = z.union([
   z.object({
@@ -30,8 +32,13 @@ const geomSchema = z.union([
   })
 ]);
 
-export const PUT: RequestHandler = async ({ params, request }) => {
+export const PUT: RequestHandler = async (event) => {
+  const { params, request } = event;
   if (!params.id) throw error(400, 'block id required');
+  const auth = currentUser(event);
+  if (auth && !canMutate(auth.role)) {
+    return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
   let body: unknown;
   try {
     body = await request.json();
@@ -53,8 +60,13 @@ export const PUT: RequestHandler = async ({ params, request }) => {
   return json({ block });
 };
 
-export const DELETE: RequestHandler = ({ params }) => {
+export const DELETE: RequestHandler = (event) => {
+  const { params } = event;
   if (!params.id) throw error(400, 'block id required');
+  const auth = currentUser(event);
+  if (auth && !canMutate(auth.role)) {
+    return json({ error: 'inspector role is read-only' }, { status: 403 });
+  }
   const block = setBlockGeometry(params.id, null);
   if (!block) throw error(404, 'block not found');
   return json({ block });

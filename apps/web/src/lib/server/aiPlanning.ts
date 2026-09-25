@@ -198,6 +198,8 @@ export interface PlanWithAIOptions {
   /** Phase 17 (Track 3.5) — caller passes through whether at least one
    *  derived signal was reused. */
   derivedSignalHit?: boolean;
+  /** Cancels the in-flight SDK request (aiTry timeout). */
+  signal?: AbortSignal;
 }
 
 export async function planWithAI(
@@ -221,12 +223,15 @@ export async function planWithAI(
   }));
 
   const startMs = Date.now();
-  const msg = await client.messages.create({
-    model: choice.model,
-    max_tokens: MAX_TOKENS_BY_TASK[task],
-    system: systemBlocks,
-    messages
-  });
+  const msg = await client.messages.create(
+    {
+      model: choice.model,
+      max_tokens: MAX_TOKENS_BY_TASK[task],
+      system: systemBlocks,
+      messages
+    },
+    { signal: options.signal }
+  );
   const durationMs = Date.now() - startMs;
 
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';

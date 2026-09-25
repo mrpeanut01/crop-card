@@ -24,6 +24,7 @@
     "diamondback moth"
   ],
   "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "Oxadiazine IRAC 22. Apple / pear orchard + vegetable. Pro-insecticide — slow gut activity.",
   "complianceFlags": {
     "omriListed": false,

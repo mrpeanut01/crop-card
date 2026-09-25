@@ -58,7 +58,13 @@ vi.mock('$lib/db/insecticideEvents', () => ({
   listInsecticideEvents: vi.fn(() => [])
 }));
 vi.mock('$lib/db/scoutObservations', () => ({ listScoutObservations: vi.fn(() => []) }));
-vi.mock('$lib/db/blocks', () => ({ getBlock: vi.fn(() => ({ plantings: [] })) }));
+vi.mock('$lib/db/blocks', () => ({
+  getBlock: vi.fn(() => ({ plantings: [] })),
+  geometryCentroid: vi.fn(() => null)
+}));
+vi.mock('$lib/schedule/settings', () => ({
+  getFarmLatLon: vi.fn(() => ({ lat: 39.1157, lon: -77.5636 }))
+}));
 vi.mock('$lib/db/stock', () => ({
   decrementForUse,
   getStockItem,
@@ -102,7 +108,8 @@ const baseBody = {
   sprayerId: 'spr-1',
   productPluginIds: ['insect-1'],
   conditions: { windMph: 3, tempF: 60, rainForecastMmNext24h: 0 },
-  tankSizeGallons: 18
+  tankSizeGallons: 18,
+  bloomStatus: 'not-in-bloom'
 };
 
 describe('#319 — insecticide decrement uses the sprayer calibrated GPA', () => {

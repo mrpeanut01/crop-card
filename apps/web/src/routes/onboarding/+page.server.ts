@@ -5,7 +5,7 @@ import { db } from '$lib/db/client';
 import { fields, helperAssignments, ownerSubscriptions, owners } from '$lib/db/schema';
 import { currentUser } from '$lib/server/auth';
 import { writeSession } from '$lib/server/session';
-import { runWithTenant, unscopedQueryNote } from '$lib/db/tenant';
+import { runWithTenant, tenantValues, unscopedQueryNote } from '$lib/db/tenant';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { listCrops } from '$lib/db/crops';
@@ -157,13 +157,14 @@ export const actions: Actions = {
 
     runWithTenant(ownerId, () => {
       db.insert(fields)
-        .values({
-          id: randomUUID(),
-          ownerId,
-          name: 'Home Field',
-          location: location || null,
-          createdAt: now
-        })
+        .values(
+          tenantValues({
+            id: randomUUID(),
+            name: 'Home Field',
+            location: location || null,
+            createdAt: now
+          })
+        )
         .run();
     });
 

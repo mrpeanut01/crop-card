@@ -26,6 +26,7 @@
     "cabbage looper"
   ],
   "pollinatorRisk": "moderate",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "Second-generation diamide — sucking + chewing pest spectrum. Rotate with non-Group-28 to slow resistance.",
   "complianceFlags": {
     "omriListed": false,

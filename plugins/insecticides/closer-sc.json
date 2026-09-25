@@ -20,6 +20,7 @@
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 1,
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
   "epaRegistrationNumber": "62719-625",
   "targetPests": [
     "aphid",

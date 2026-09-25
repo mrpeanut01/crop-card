@@ -24,6 +24,7 @@
     "thrips (suppression)"
   ],
   "pollinatorRisk": "none",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "notes": "Kaolin clay film barrier — physical pest deterrent. OMRI organic. Re-apply after rain. Apple / pear orchard standard.",
   "complianceFlags": {
     "omriListed": false,

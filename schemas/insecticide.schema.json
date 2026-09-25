@@ -178,6 +178,38 @@
         "high"
       ]
     },
+    "pollinator": {
+      "type": "object",
+      "properties": {
+        "beeToxicity": {
+          "type": "string",
+          "enum": [
+            "highly-toxic",
+            "toxic",
+            "relatively-nontoxic",
+            "unknown"
+          ]
+        },
+        "bloomRestriction": {
+          "type": "string",
+          "enum": [
+            "prohibited-during-bloom",
+            "dusk-to-dawn-only",
+            "none"
+          ]
+        },
+        "residualToxicityHours": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 720
+        }
+      },
+      "required": [
+        "beeToxicity",
+        "bloomRestriction"
+      ],
+      "additionalProperties": false
+    },
     "scoutingThresholds": {
       "type": "array",
       "items": {

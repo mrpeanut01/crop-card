@@ -16,7 +16,7 @@
   });
 </script>
 
-<div class="indicator" class:offline={!online} class:queued={(pendingCount ?? 0) > 0}>
+<div class="indicator" class:offline={!online} class:queued={(pendingCount ?? 0) > 0} title={label}>
   <span class="dot" aria-hidden="true"></span>
   <span class="label mono">{label}</span>
 </div>
@@ -29,6 +29,7 @@
     font-size: var(--font-size-meta);
     color: var(--color-ink-muted);
     font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    white-space: nowrap;
   }
   .dot {
     width: 7px;

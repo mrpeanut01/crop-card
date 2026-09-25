@@ -1,0 +1,23 @@
+{
+  "name": "eslint-plugin-cropcard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CropCard's local ESLint plugin (flat config). Custom rules backing repo invariants, e.g. Invariant 6 tenant isolation.",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:unit": "node --test",
+    "gen:tables": "node scripts/gen-tenant-tables.js"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^8.70.1",
+    "eslint": "^9.39.5"
+  }
+}

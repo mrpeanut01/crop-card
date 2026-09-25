@@ -12,6 +12,7 @@ vi.mock('$lib/db/client', () => ({
 }));
 vi.mock('$lib/db/tenant', () => ({
   currentOwnerId: () => 'owner-test',
+  tenantValues: <T extends object>(v: T) => ({ ...v, ownerId: 'owner-test' }),
   unscopedQueryNote: () => undefined
 }));
 

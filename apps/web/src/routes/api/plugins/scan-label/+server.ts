@@ -10,17 +10,16 @@
  * when the operator confirms.
  *
  * Quota: `'plugin-scan'` in `DEFAULT_AI_DAILY_QUOTA` (10 calls/day default).
+ * No key / spent quota / cap / upstream failure → 200 `{ found: false,
+ * provenance: 'fallback', fallbackReason, message }` (Invariant 7).
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
-import {
-  AnthropicOverloadedError,
-  claudeVisionPluginLookup,
-  type PluginKindHint
-} from '$lib/server/aiPluginScan';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import { claudeVisionPluginLookup, type PluginKindHint } from '$lib/server/aiPluginScan';
 
 const PLUGIN_KIND_HINTS = [
   'crop',
@@ -38,11 +37,6 @@ const requestSchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const session = requireOwner(event);
-  const guard = checkGuard(session.id, 'plugin-scan');
-  if (!guard.ok) {
-    return json({ error: guard.message }, { status: guard.status });
-  }
-
   let body: unknown;
   try {
     body = await event.request.json();
@@ -54,40 +48,51 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
 
-  try {
-    const result = await claudeVisionPluginLookup(
-      parsed.data.image,
-      parsed.data.hintType as PluginKindHint | undefined
+  const tried = await tryAiWithGuard({
+    endpoint: 'plugin-scan',
+    userId: session.id,
+    timeoutMs: 60_000,
+    prompt: (signal) =>
+      claudeVisionPluginLookup(
+        parsed.data.image,
+        parsed.data.hintType as PluginKindHint | undefined,
+        signal
+      )
+  });
+
+  if (tried.provenance === 'fallback') {
+    recordFallback(
+      session.id,
+      'plugin-scan',
+      tried.fallbackReason,
+      tried.error instanceof Error ? tried.error.name : undefined
     );
-    recordCall({
-      userId: session.id,
-      endpoint: 'plugin-scan',
-      model: result.meta.model,
-      inputTokens: result.meta.inputTokens,
-      cachedInputTokens: result.meta.cachedInputTokens,
-      outputTokens: result.meta.outputTokens,
-      usdEstimate: result.meta.usdEstimate,
-      success: result.candidate !== null
+    const retryable = tried.guard.ok && tried.fallbackReason !== 'no-key';
+    return json({
+      found: false,
+      provenance: 'fallback',
+      fallbackReason: tried.fallbackReason,
+      message: `${tried.fallbackMessage} ${
+        retryable ? 'Try again, or use' : 'Use'
+      } the authoring form to add the plugin by hand.`,
+      ...(retryable ? { retryable: true } : {})
     });
-    if (!result.candidate) {
-      return json({ found: false, meta: result.meta }, { status: 200 });
-    }
-    return json({ found: true, candidate: result.candidate, meta: result.meta });
-  } catch (err) {
-    if (err instanceof AnthropicOverloadedError) {
-      return json({ error: err.message, retryable: true }, { status: 503 });
-    }
-    recordCall({
-      userId: session.id,
-      endpoint: 'plugin-scan',
-      model: 'unknown',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: err instanceof Error ? err.name : 'unknown'
-    });
-    return json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
+
+  const result = tried.value;
+  recordCall({
+    userId: session.id,
+    endpoint: 'plugin-scan',
+    model: result.meta.model,
+    inputTokens: result.meta.inputTokens,
+    cachedInputTokens: result.meta.cachedInputTokens,
+    outputTokens: result.meta.outputTokens,
+    usdEstimate: result.meta.usdEstimate,
+    success: result.candidate !== null,
+    provenance: 'ai'
+  });
+  if (!result.candidate) {
+    return json({ found: false, provenance: 'ai', meta: result.meta }, { status: 200 });
+  }
+  return json({ found: true, provenance: 'ai', candidate: result.candidate, meta: result.meta });
 };

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './lib/test';
 import { signInAsDemoOwner } from './lib/auth';
 
 test('today renders Almanac shell after sign-in', async ({ page }) => {

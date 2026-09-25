@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
 import { planWithAI } from '$lib/server/aiPlanning';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 
 const bodySchema = z.object({
   blockId: z.string().min(1),
@@ -16,22 +17,6 @@ const bodySchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const guard = checkGuard(user.id, 'suggest');
-  if (!guard.ok) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'suggest',
-      model: 'n/a',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: guard.reason
-    });
-    return json({ error: guard.message }, { status: guard.status });
-  }
-
   let raw: unknown;
   try {
     raw = await event.request.json();
@@ -44,7 +29,6 @@ export const POST: RequestHandler = async (event) => {
   }
 
   const year = parsed.data.year ?? new Date().getFullYear();
-  const built = await buildFarmContextWithCache(year);
   const userPrompt = [
     `Suggest 3–5 crop plantings for blockId="${parsed.data.blockId}" in ${year}.`,
     'Respect the rotation rule: examine the block ID; you may not see history, so suggest cultivars across diverse families.',
@@ -53,41 +37,47 @@ export const POST: RequestHandler = async (event) => {
     'Output JSON: { "suggestions": [{ "blockId": "...", "cropPluginId": "...", "plantingDate": "YYYY-MM-DD", "rationaleShort": "..." }] }.'
   ].join('\n');
 
-  try {
-    const { suggestions, meta } = await planWithAI('suggest', built.context, userPrompt, {
-      planningSessionId: parsed.data.planningSessionId,
-      contextCacheHit: built.cacheHit
-    });
-    recordCall({
-      userId: user.id,
-      endpoint: 'suggest',
-      model: meta.model,
-      inputTokens: meta.inputTokens,
-      cachedInputTokens: meta.cachedInputTokens,
-      outputTokens: meta.outputTokens,
-      usdEstimate: meta.usdEstimate,
-      success: suggestions.length > 0
-    });
+  const tried = await tryAiWithGuard({
+    endpoint: 'suggest',
+    userId: user.id,
+    prompt: async (signal) => {
+      const built = await buildFarmContextWithCache(year);
+      return planWithAI('suggest', built.context, userPrompt, {
+        planningSessionId: parsed.data.planningSessionId,
+        contextCacheHit: built.cacheHit,
+        signal
+      });
+    }
+  });
+
+  if (tried.provenance === 'fallback') {
+    recordFallback(user.id, 'suggest', tried.fallbackReason);
     return json({
-      suggestions,
-      spend: guard.spend,
-      meta: {
-        model: meta.model,
-        usdEstimate: meta.usdEstimate
-      }
+      suggestions: [],
+      fallback: tried.fallbackReason,
+      provenance: 'fallback',
+      fallbackReason: tried.fallbackReason,
+      message: tried.fallbackMessage,
+      spend: tried.guard.ok ? tried.guard.spend : null
     });
-  } catch (err) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'suggest',
-      model: 'unknown',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: 'upstream-error'
-    });
-    return json({ error: err instanceof Error ? err.message : 'AI call failed' }, { status: 502 });
   }
+
+  const { suggestions, meta } = tried.value;
+  recordCall({
+    userId: user.id,
+    endpoint: 'suggest',
+    model: meta.model,
+    inputTokens: meta.inputTokens,
+    cachedInputTokens: meta.cachedInputTokens,
+    outputTokens: meta.outputTokens,
+    usdEstimate: meta.usdEstimate,
+    success: suggestions.length > 0,
+    provenance: 'ai'
+  });
+  return json({
+    suggestions,
+    provenance: 'ai',
+    spend: tried.guard.ok ? tried.guard.spend : null,
+    meta: { model: meta.model, usdEstimate: meta.usdEstimate }
+  });
 };

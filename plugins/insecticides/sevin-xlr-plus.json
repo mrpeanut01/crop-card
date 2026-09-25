@@ -23,6 +23,7 @@
     "tarnished plant bug"
   ],
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
   "notes": "Carbamate IRAC 1A. Highly bee-toxic. Consumer-favorite legacy product but use restraint — many alternatives are more selective.",
   "complianceFlags": {
     "omriListed": false,

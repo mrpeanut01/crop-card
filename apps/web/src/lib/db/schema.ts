@@ -191,9 +191,35 @@ export const apiTokens = sqliteTable(
   })
 );
 
+/** Magic-link sign-in tokens. Identity-level (like `users`), so NOT
+ *  tenant-scoped: the row exists before the email is proven and before any
+ *  Owner is chosen. Only sha256(token) is stored; `ip_hash` is sha256 of
+ *  the requesting client address, used solely for the per-IP rate limit. */
+export const loginTokens = sqliteTable(
+  'login_tokens',
+  {
+    id: text('id').primaryKey(),
+    tokenHash: text('token_hash').notNull(),
+    email: text('email').notNull(),
+    ipHash: text('ip_hash'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    consumedAt: integer('consumed_at', { mode: 'timestamp_ms' })
+  },
+  (table) => ({
+    tokenHashIdx: uniqueIndex('login_tokens_token_hash_idx').on(table.tokenHash),
+    emailIdx: index('login_tokens_email_idx').on(table.email, table.createdAt),
+    ipIdx: index('login_tokens_ip_idx').on(table.ipHash, table.createdAt)
+  })
+);
+
 /** Per-Owner plugin overlays. The base plugin catalog lives on the
- *  filesystem under /plugins/; this table layers per-Owner customizations
- *  (full replacement per pluginId). Safety kernel never reads overrides. */
+ *  filesystem under /plugins/; this table layers per-Owner customizations:
+ *  newest row per pluginId wins, a full payload replaces the shared plugin
+ *  for that Owner, an empty payload hides (retires) it for that Owner.
+ *  Repo: `lib/db/pluginOverrides.ts`; applied by `getRegistry()`. Payloads
+ *  pass the same schema + bypass validation as shared-library uploads
+ *  before the kernel ever sees them. */
 export const pluginOverrides = tenantScoped(
   sqliteTable(
     'plugin_overrides',
@@ -1569,6 +1595,69 @@ export const seasonCloseouts = tenantScoped(
     (table) => ({
       ownerYearUq: uniqueIndex('season_closeouts_owner_year_uq').on(table.ownerId, table.year),
       ownerClosedIdx: index('season_closeouts_owner_closed_idx').on(table.ownerId, table.closedAt)
+    })
+  )
+);
+
+// ─── Web Push (NFR-06) ───────────────────────────────────────────────────
+//
+// One row per (owner, browser push endpoint). Subscriptions belong to a user
+// but are scoped to the Owner that was active when the user opted in, so a
+// helper serving two farms gets one row per farm and alerts never cross
+// tenants. `prefsJson` holds the enabled alert kinds (lib/push/prefs.ts).
+
+export const pushSubscriptions = tenantScoped(
+  sqliteTable(
+    'push_subscriptions',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      userId: text('user_id')
+        .notNull()
+        .references(() => users.id),
+      endpoint: text('endpoint').notNull(),
+      p256dh: text('p256dh').notNull(),
+      auth: text('auth').notNull(),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      lastSuccessAt: integer('last_success_at', { mode: 'timestamp_ms' }),
+      failureCount: integer('failure_count').notNull().default(0),
+      prefsJson: text('prefs_json').notNull().default('{}')
+    },
+    (table) => ({
+      ownerUserIdx: index('push_subscriptions_owner_user_idx').on(table.ownerId, table.userId),
+      ownerEndpointUq: uniqueIndex('push_subscriptions_owner_endpoint_uq').on(
+        table.ownerId,
+        table.endpoint
+      )
+    })
+  )
+);
+
+/** Sent-log for scheduled push alerts: the (owner, kind, subject) UNIQUE key
+ *  makes every alert fire at most once, across scheduler restarts too. */
+export const pushDeliveries = tenantScoped(
+  sqliteTable(
+    'push_deliveries',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      kind: text('kind', {
+        enum: ['decon-due', 'lock-window-closing', 'spring-calibration']
+      }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      sentAt: integer('sent_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      recipientCount: integer('recipient_count').notNull().default(0)
+    },
+    (table) => ({
+      ownerKindSubjectUq: uniqueIndex('push_deliveries_owner_kind_subject_uq').on(
+        table.ownerId,
+        table.kind,
+        table.subjectId
+      )
     })
   )
 );

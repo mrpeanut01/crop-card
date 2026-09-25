@@ -56,6 +56,7 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY apps/marketplace/package.json ./apps/marketplace/
 COPY packages/plugin-validation/package.json ./packages/plugin-validation/
+COPY packages/eslint-plugin-cropcard/package.json ./packages/eslint-plugin-cropcard/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile=false
 

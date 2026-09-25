@@ -18,7 +18,7 @@ import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 
-import { runWithTenant, runWithTenantAsync } from './tenant';
+import { runWithTenant, runWithTenantAsync, tenantValues } from './tenant';
 import { db } from './client';
 import { equipment, owners, users } from './schema';
 import { createField } from './fields';
@@ -56,7 +56,9 @@ function seedOwnerWithSpray(
     // the spray-event FK resolves within the same Owner.
     const sprayerId = `${ownerId}-sprayer`;
     db.insert(equipment)
-      .values({ id: sprayerId, ownerId, type: 'sprayer', label: `${ownerId} sprayer` })
+      .values(
+        tenantValues({ id: sprayerId, type: 'sprayer' as const, label: `${ownerId} sprayer` })
+      )
       .onConflictDoNothing()
       .run();
     const spray = insertSprayEvent({
@@ -161,7 +163,7 @@ describe('export endpoints cross-tenant isolation', () => {
       });
       const isoSprayerId = `iso-sprayer-${randomUUID().slice(0, 6)}`;
       db.insert(equipment)
-        .values({ id: isoSprayerId, ownerId: OWNER_Y, type: 'sprayer', label: 'iso sprayer' })
+        .values(tenantValues({ id: isoSprayerId, type: 'sprayer' as const, label: 'iso sprayer' }))
         .run();
       insertSprayEvent({
         blockId: block.id,

@@ -6,31 +6,49 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { TenantCachePlugin } from './src/lib/client/swTenantKey';
 
-const SW_TENANT_SOURCE = fileURLToPath(new URL('./src/lib/client/swTenantKey.ts', import.meta.url));
+// Import-free TS modules compiled into classic scripts the generated SW
+// loads via `importScripts` (see workbox.importScripts below).
+const SW_MODULES = [
+  {
+    source: fileURLToPath(new URL('./src/lib/client/swTenantKey.ts', import.meta.url)),
+    fileName: 'sw-tenant.js',
+    globalName: '__cropcardSwTenantLib',
+    install:
+      'self.__cropcardTenantPlugin = __cropcardSwTenantLib.installSwTenant(self, (b) => new Response(b));'
+  },
+  {
+    source: fileURLToPath(new URL('./src/lib/client/swPush.ts', import.meta.url)),
+    fileName: 'sw-push.js',
+    globalName: '__cropcardSwPushLib',
+    install: '__cropcardSwPushLib.installSwPush(self);'
+  }
+];
 
-function cropcardSwTenant(): Plugin {
+function cropcardSwModules(): Plugin {
   let ssr = false;
   return {
-    name: 'cropcard:sw-tenant',
+    name: 'cropcard:sw-modules',
     apply: 'build',
     configResolved(config) {
       ssr = !!config.build.ssr;
     },
     async generateBundle() {
       if (ssr) return;
-      const source = await readFile(SW_TENANT_SOURCE, 'utf-8');
-      const { code } = await transformWithEsbuild(source, SW_TENANT_SOURCE, {
-        loader: 'ts',
-        format: 'iife',
-        globalName: '__cropcardSwTenantLib',
-        target: 'es2020',
-        minify: true
-      });
-      this.emitFile({
-        type: 'asset',
-        fileName: 'sw-tenant.js',
-        source: `${code}\nself.__cropcardTenantPlugin = __cropcardSwTenantLib.installSwTenant(self, (b) => new Response(b));\n`
-      });
+      for (const mod of SW_MODULES) {
+        const source = await readFile(mod.source, 'utf-8');
+        const { code } = await transformWithEsbuild(source, mod.source, {
+          loader: 'ts',
+          format: 'iife',
+          globalName: mod.globalName,
+          target: 'es2020',
+          minify: true
+        });
+        this.emitFile({
+          type: 'asset',
+          fileName: mod.fileName,
+          source: `${code}\n${mod.install}\n`
+        });
+      }
     }
   };
 }
@@ -63,7 +81,7 @@ const tenantCachePlugin: WorkboxPlugin = {
 
 export default defineConfig({
   plugins: [
-    cropcardSwTenant(),
+    cropcardSwModules(),
     sveltekit(),
     SvelteKitPWA({
       strategies: 'generateSW',
@@ -85,7 +103,7 @@ export default defineConfig({
         globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff2,json}'],
         cleanupOutdatedCaches: true,
         navigateFallback: null,
-        importScripts: ['sw-tenant.js'],
+        importScripts: ['sw-tenant.js', 'sw-push.js'],
         // Tenant-scoped runtime caches are keyed per active Owner by
         // `tenantCachePlugin` (logic in src/lib/client/swTenantKey.ts), so an
         // Owner switch keeps every farm's entries and never cross-serves.

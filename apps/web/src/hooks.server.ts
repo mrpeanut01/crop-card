@@ -1,4 +1,10 @@
-import { json, redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
+import {
+  json,
+  redirect,
+  type Handle,
+  type HandleServerError,
+  type ServerInit
+} from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
 import { canMutate, type SessionRole } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';
@@ -8,6 +14,13 @@ import { owners, users, helperAssignments } from '$lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
 import { OWNER_HEADER } from '$lib/client/swTenantKey';
+import { maybeStartPushScheduler } from '$lib/server/push/scheduler';
+
+/** NFR-06 — start the in-process push alert scheduler (no-op without VAPID
+ *  keys or under tests; single replica per invariant 3). */
+export const init: ServerInit = () => {
+  maybeStartPushScheduler();
+};
 
 /**
  * Phase 21a follow-up — error visibility (2026-05-17).
@@ -70,6 +83,8 @@ const ANONYMOUS_PATHS = new Set([
   '/signin',
   '/signout',
   '/api/health',
+  '/api/auth/magic-link', // UC-17 — request an email sign-in link pre-auth.
+  '/auth/verify', // UC-17 — redeem the link; mints the HMAC session.
   '/api/openapi.json', // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
   '/api/billing/stripe-webhook' // Stripe POSTs without a session; the signature is the auth.
 ]);
@@ -84,6 +99,7 @@ const ANONYMOUS_STATIC_PREFIXES = [
   '/_app/', // SvelteKit-built JS/CSS bundles
   '/icon-', // PWA icons (/icon-192.png, /icon-512.png)
   '/img/',
+  '/fonts/',
   '/static/'
 ];
 
@@ -171,6 +187,21 @@ export function csrfDecision(input: {
 }
 
 /**
+ * Billing gate for an Owner whose status is already known. API callers get
+ * a JSON 402 instead of a 303 to the HTML /suspended page; /api/billing/**
+ * stays reachable so a suspended Owner can pay their way back.
+ */
+export type SuspendedTenantGate = 'allow' | 'redirect' | 'json-402';
+export function suspendedTenantGate(
+  pathname: string,
+  billingStatus: string | null
+): SuspendedTenantGate {
+  if (billingStatus !== 'suspended') return 'allow';
+  if (pathname.startsWith('/api/billing/')) return 'allow';
+  return pathname.startsWith('/api/') ? 'json-402' : 'redirect';
+}
+
+/**
  * Request boundary (Phase 18 final + Phase 24 Bearer auth):
  *   0. (Phase 24) Resolve `Authorization: Bearer cck_…` BEFORE cookie
  *      lookup. Hit → mint an AuthenticatedUser-shaped record from the
@@ -184,7 +215,7 @@ export function csrfDecision(input: {
  *      blindly).
  *   4. Partial sessions (no `activeOwnerId`) bounce to /owner-picker or
  *      /onboarding depending on assignment count.
- *   5. Suspended Owners get 402.
+ *   5. Suspended Owners: HTML → 303 /suspended; /api/** → JSON 402.
  *   6. Wrap `resolve(event)` in `runWithTenant(activeOwnerId, …)` so
  *      tenant-scoped repos see the right Owner.
  */
@@ -289,10 +320,14 @@ export const handle: Handle = async ({ event, resolve }) => {
     path !== '/suspended' &&
     path !== '/signout'
   ) {
-    const billing = ownerBillingStatus(user.activeOwnerId);
-    if (billing === 'suspended') {
-      throw redirect(303, '/suspended');
+    const gate = suspendedTenantGate(path, ownerBillingStatus(user.activeOwnerId));
+    if (gate === 'json-402') {
+      return json(
+        { error: 'tenant-suspended' },
+        { status: 402, headers: { 'cache-control': 'no-store' } }
+      );
     }
+    if (gate === 'redirect') throw redirect(303, '/suspended');
   }
 
   const activeOwnerId = user.activeOwnerId;

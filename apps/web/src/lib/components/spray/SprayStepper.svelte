@@ -102,6 +102,8 @@
   @media (max-width: 700px) {
     .stepper {
       gap: 6px;
+      max-width: 100%;
+      min-width: 0;
       overflow-x: auto;
       flex-wrap: nowrap;
       padding-bottom: 2px;
@@ -109,6 +111,9 @@
     .label {
       font-size: 11px;
       white-space: nowrap;
+    }
+    .step {
+      flex-shrink: 0;
     }
     .connector {
       min-width: 6px;

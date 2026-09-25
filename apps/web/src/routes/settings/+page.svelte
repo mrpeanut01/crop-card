@@ -15,7 +15,8 @@
     Check,
     Lock,
     LayoutGrid,
-    FileDown
+    FileDown,
+    Bell
   } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -48,6 +49,12 @@
       icon: User,
       label: 'Account & sign-in',
       sub: 'Email · password · 2FA · active sessions'
+    },
+    {
+      href: '/settings/notifications',
+      icon: Bell,
+      label: 'Notifications',
+      sub: 'Push alerts · decon due · record lock closing · spring calibration'
     },
     {
       href: '/settings/season',

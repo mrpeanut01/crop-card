@@ -57,6 +57,37 @@ export class PluginRegistry {
     return record;
   }
 
+  /** A copy of this registry with `hidden` ids removed and `payloads`
+   *  replacing same-id plugins. Payloads go through the full `register()`
+   *  validation (schema + cross-field + bypass); a rejected payload is left
+   *  out and reported rather than falling back to the shared plugin. */
+  withOverlay(
+    hidden: Iterable<string>,
+    payloads: unknown[]
+  ): { registry: PluginRegistry; failures: { pluginId: string; error: string }[] } {
+    const next = new PluginRegistry();
+    const drop = new Set(hidden);
+    const ids = payloads.map((p) =>
+      p && typeof p === 'object' ? String((p as { pluginId?: unknown }).pluginId ?? '') : ''
+    );
+    for (const id of ids) drop.add(id);
+    for (const [id, rec] of this.byId) {
+      if (!drop.has(id)) next.byId.set(id, rec);
+    }
+    const ordered = payloads
+      .map((p, i) => ({ p, id: ids[i] }))
+      .sort((a, b) => Number(isCrop(b.p)) - Number(isCrop(a.p)));
+    const failures: { pluginId: string; error: string }[] = [];
+    for (const { p, id } of ordered) {
+      try {
+        next.register(p);
+      } catch (e) {
+        failures.push({ pluginId: id, error: e instanceof Error ? e.message : String(e) });
+      }
+    }
+    return { registry: next, failures };
+  }
+
   get(pluginId: string): PluginRecord | undefined {
     return this.byId.get(pluginId);
   }
@@ -99,6 +130,10 @@ export class PluginRegistry {
       .map((r) => r.plugin)
       .filter((p): p is HerbicidePlugin => p.type === 'herbicide');
   }
+}
+
+function isCrop(p: unknown): boolean {
+  return !!p && typeof p === 'object' && (p as { type?: unknown }).type === 'crop';
 }
 
 function issuesFromZod(error: ZodError): { path: string; message: string }[] {

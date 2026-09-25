@@ -24,6 +24,7 @@
     "aphid"
   ],
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "Pyrethroid IRAC 3A. Restricted-use. Tank-mix with diamides for resistance management.",
   "complianceFlags": {
     "omriListed": false,

@@ -18,7 +18,8 @@ import { listStockItems, updateStockItem } from '$lib/db/stock';
 import { requireOwner } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
 import { generateShortNames, type ShortNameInput } from '$lib/server/aiShortNames';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { CropPlugin } from '$lib/plugins/schemas';
 
 const bodySchema = z.object({
@@ -28,22 +29,6 @@ const bodySchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const guard = checkGuard(user.id, 'shortNames');
-  if (!guard.ok) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'shortNames',
-      model: 'n/a',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: guard.reason
-    });
-    return json({ error: guard.message }, { status: guard.status });
-  }
-
   let raw: unknown;
   try {
     raw = await event.request.json();
@@ -65,7 +50,7 @@ export const POST: RequestHandler = async (event) => {
       updated: 0,
       results: [],
       meta: { model: 'n/a', usdEstimate: 0 },
-      spend: guard.spend
+      spend: null
     });
   }
 
@@ -84,7 +69,31 @@ export const POST: RequestHandler = async (event) => {
     category: i.category
   }));
 
-  const response = await generateShortNames(inputs);
+  const tried = await tryAiWithGuard({
+    endpoint: 'shortNames',
+    userId: user.id,
+    timeoutMs: 60_000,
+    prompt: () => generateShortNames(inputs)
+  });
+
+  if (tried.provenance === 'fallback') {
+    recordFallback(user.id, 'shortNames', tried.fallbackReason);
+    return json({
+      updated: 0,
+      results: inputs.map((i) => ({ itemId: i.itemId, shortName: null })),
+      provenance: 'fallback',
+      fallbackReason: tried.fallbackReason,
+      message: `${tried.fallbackMessage} Items keep their full display names.`,
+      meta: {
+        model: 'n/a',
+        usdEstimate: 0,
+        fallback: tried.fallbackReason === 'no-key' ? 'no-api-key' : 'ai-unavailable'
+      },
+      spend: tried.guard.ok ? tried.guard.spend : null
+    });
+  }
+
+  const response = tried.value;
 
   let updated = 0;
   for (const r of response.results) {
@@ -97,6 +106,7 @@ export const POST: RequestHandler = async (event) => {
     }
   }
 
+  const provenance = response.meta.fallback ? 'fallback' : 'ai';
   recordCall({
     userId: user.id,
     endpoint: 'shortNames',
@@ -106,17 +116,19 @@ export const POST: RequestHandler = async (event) => {
     outputTokens: response.meta.outputTokens,
     usdEstimate: response.meta.usdEstimate,
     success: updated > 0,
-    errorClass: response.meta.fallback
+    errorClass: response.meta.fallback,
+    provenance
   });
 
   return json({
     updated,
     results: response.results,
+    provenance,
     meta: {
       model: response.meta.model,
       usdEstimate: response.meta.usdEstimate,
       fallback: response.meta.fallback
     },
-    spend: guard.spend
+    spend: tried.guard.ok ? tried.guard.spend : null
   });
 };

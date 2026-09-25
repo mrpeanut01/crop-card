@@ -72,7 +72,9 @@
     const out: Window[] = [];
     const color = plantingColor(p.id);
     // Calendar engine windows for this planting/crop combo.
-    const ours = events.filter((e) => e.cropPluginId === p.cropPluginId);
+    const ours = events.filter((e) =>
+      e.cropId ? e.cropId === p.id : e.cropPluginId === p.cropPluginId
+    );
 
     const plantingEv = ours.find((e) => e.kind === 'planting');
     const harvestEv = ours.find((e) => e.kind === 'harvest-window');

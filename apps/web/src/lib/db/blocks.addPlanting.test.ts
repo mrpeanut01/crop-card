@@ -10,12 +10,12 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, eq, isNull } from 'drizzle-orm';
+import { eq, isNull } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { addPlanting, createBlock } from './blocks';
 import { db } from './client';
 import { plantingRecords } from './schema';
-import { runWithTenant } from './tenant';
+import { runWithTenant, withTenant } from './tenant';
 
 const TEST_OWNER_ID = 'owner_home_farm';
 
@@ -28,7 +28,8 @@ function countPlantedRowsFor(blockId: string, cropPluginId: string): number {
     .select()
     .from(plantingRecords)
     .where(
-      and(
+      withTenant(
+        plantingRecords,
         eq(plantingRecords.blockId, blockId),
         eq(plantingRecords.cropPluginId, cropPluginId),
         eq(plantingRecords.status, 'planned'),
@@ -39,7 +40,11 @@ function countPlantedRowsFor(blockId: string, cropPluginId: string): number {
 }
 
 function quantityFor(plantingId: string): number | null {
-  const row = db.select().from(plantingRecords).where(eq(plantingRecords.id, plantingId)).get();
+  const row = db
+    .select()
+    .from(plantingRecords)
+    .where(withTenant(plantingRecords, eq(plantingRecords.id, plantingId)))
+    .get();
   return row?.quantityPlantedHundredths ?? null;
 }
 

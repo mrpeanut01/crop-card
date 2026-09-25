@@ -61,7 +61,12 @@
   let candidates = $state<SearchCandidate[]>([]);
   let searchSource = $state<'local' | 'web-search' | 'mixed' | null>(null);
   let searchError = $state<string | null>(null);
-  let searchMeta = $state<{ quotaBlocked?: boolean; upstreamOverloaded?: boolean } | null>(null);
+  let searchMeta = $state<{
+    quotaBlocked?: boolean;
+    upstreamOverloaded?: boolean;
+    aiUnavailable?: boolean;
+    message?: string;
+  } | null>(null);
 
   // Live local typeahead — debounce keystrokes and fire a local-only
   // (free, no-quota) query so completions appear as the operator types.
@@ -194,15 +199,14 @@
     <p class="error" aria-live="polite">{searchError}</p>
   {/if}
 
-  {#if searchMeta?.quotaBlocked}
-    <p class="hint" aria-live="polite">
-      Daily AI quota exhausted — only library matches shown. Try again tomorrow or upgrade from
-      /settings/ai.
-    </p>
-  {/if}
   {#if searchMeta?.upstreamOverloaded}
     <p class="hint" aria-live="polite">
       Claude is overloaded right now — only library matches shown. Try again in a minute.
+    </p>
+  {:else if searchMeta?.quotaBlocked || searchMeta?.aiUnavailable}
+    <p class="hint" aria-live="polite">
+      {searchMeta.message ??
+        'Daily AI quota exhausted — only library matches shown. Try again tomorrow or upgrade from /settings/ai.'}
     </p>
   {/if}
 

@@ -61,7 +61,7 @@ export interface AiInputsSubstitution {
 export interface AiInputsPlanResult {
   plan: InputsPlan;
   meta: AiResultMeta & {
-    fallback?: 'no-api-key' | 'deterministic' | 'quota-exceeded';
+    fallback?: 'no-api-key' | 'deterministic' | 'quota-exceeded' | 'ai-unavailable';
     /** When fallback=deterministic, the per-validator violations that
      *  triggered the fallback. UI surfaces these in the warnings band. */
     violations?: string[];
@@ -72,6 +72,8 @@ export interface AiInputsPlanInput extends InputsPlanInput {
   /** Optional override — defaults to `process.env.ANTHROPIC_API_KEY`.
    *  Tests inject `''` to force the no-api-key fallback. */
   apiKeyOverride?: string;
+  /** Cancels the in-flight SDK request (aiTry timeout). */
+  signal?: AbortSignal;
 }
 
 /**
@@ -93,7 +95,7 @@ export async function planInputsWithAI(input: AiInputsPlanInput): Promise<AiInpu
 
   let aiCall: AiCallResult;
   try {
-    aiCall = await callInputsClaude(apiKey, deterministic, input);
+    aiCall = await callInputsClaude(apiKey, deterministic, input, { signal: input.signal });
   } catch (err) {
     console.warn(
       `[aiInputsPlan] Anthropic call threw: ${err instanceof Error ? err.message : String(err)}`
@@ -159,6 +161,7 @@ export async function refineInputs(input: {
   message: string;
   history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>;
   apiKeyOverride?: string;
+  signal?: AbortSignal;
 }): Promise<AiInputsPlanResult> {
   const apiKey = input.apiKeyOverride !== undefined ? input.apiKeyOverride : getApiKey();
   if (!apiKey) {
@@ -167,13 +170,11 @@ export async function refineInputs(input: {
 
   let aiCall: AiCallResult;
   try {
-    aiCall = await callInputsClaude(
-      apiKey,
-      input.previousPlan,
-      input.base,
-      input.message,
-      input.history
-    );
+    aiCall = await callInputsClaude(apiKey, input.previousPlan, input.base, {
+      refinementMessage: input.message,
+      history: input.history,
+      signal: input.signal
+    });
   } catch (err) {
     console.warn(
       `[aiInputsPlan] refine call threw: ${err instanceof Error ? err.message : String(err)}`
@@ -216,9 +217,13 @@ async function callInputsClaude(
   apiKey: string,
   basePlan: InputsPlan,
   input: InputsPlanInput,
-  refinementMessage?: string,
-  history: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }> = []
+  opts: {
+    refinementMessage?: string;
+    history?: ReadonlyArray<{ role: 'user' | 'assistant'; content: string }>;
+    signal?: AbortSignal;
+  } = {}
 ): Promise<AiCallResult> {
+  const { refinementMessage, history = [], signal } = opts;
   const client = new Anthropic({ apiKey });
   const choice = selectModel('inputs');
 
@@ -236,12 +241,15 @@ async function callInputsClaude(
   }
   messages.push({ role: 'user', content: [{ type: 'text', text: userMessage }] });
 
-  const msg = await client.messages.create({
-    model: choice.model,
-    max_tokens: MAX_OUTPUT_TOKENS,
-    system: systemPrompt,
-    messages
-  });
+  const msg = await client.messages.create(
+    {
+      model: choice.model,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      system: systemPrompt,
+      messages
+    },
+    { signal }
+  );
   const usage = (msg.usage as unknown as Record<string, number | undefined>) ?? {};
   const text = msg.content[0]?.type === 'text' ? msg.content[0].text : '';
   const parsed = extractJsonObject(text);

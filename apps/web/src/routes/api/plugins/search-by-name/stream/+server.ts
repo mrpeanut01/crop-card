@@ -14,9 +14,10 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import type { FallbackReason } from '$lib/server/aiTry';
 import {
-  AnthropicOverloadedError,
   claudePluginSearchByNameStreaming,
   type PluginKindHint,
   type SearchStreamEvent
@@ -36,7 +37,14 @@ const requestSchema = z.object({
   hintType: z.enum(PLUGIN_KIND_HINTS).optional()
 });
 
-function encodeFrame(event: SearchStreamEvent | { phase: 'error'; message: string }): Uint8Array {
+type ErrorFrame = {
+  phase: 'error';
+  message: string;
+  provenance?: 'fallback';
+  fallbackReason?: FallbackReason;
+};
+
+function encodeFrame(event: SearchStreamEvent | ErrorFrame): Uint8Array {
   return new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`);
 }
 
@@ -53,18 +61,6 @@ export const POST: RequestHandler = async (event) => {
     return new Response('invalid request', { status: 400 });
   }
 
-  const guard = checkGuard(session.id, 'plugin-search');
-  if (!guard.ok) {
-    const headers = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' };
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(encodeFrame({ phase: 'error', message: guard.message }));
-        controller.close();
-      }
-    });
-    return new Response(stream, { headers, status: 200 });
-  }
-
   const stream = new ReadableStream({
     async start(controller) {
       const send = (e: SearchStreamEvent) => {
@@ -76,11 +72,35 @@ export const POST: RequestHandler = async (event) => {
       };
 
       try {
-        const { meta, candidates } = await claudePluginSearchByNameStreaming(
-          parsed.data.query,
-          parsed.data.hintType as PluginKindHint | undefined,
-          send
-        );
+        const tried = await tryAiWithGuard({
+          endpoint: 'plugin-search',
+          userId: session.id,
+          timeoutMs: 120_000,
+          prompt: () =>
+            claudePluginSearchByNameStreaming(
+              parsed.data.query,
+              parsed.data.hintType as PluginKindHint | undefined,
+              send
+            )
+        });
+        if (tried.provenance === 'fallback') {
+          recordFallback(
+            session.id,
+            'plugin-search',
+            tried.fallbackReason,
+            tried.error instanceof Error ? tried.error.name : undefined
+          );
+          controller.enqueue(
+            encodeFrame({
+              phase: 'error',
+              message: tried.fallbackMessage,
+              provenance: 'fallback',
+              fallbackReason: tried.fallbackReason
+            })
+          );
+          return;
+        }
+        const { meta, candidates } = tried.value;
         recordCall({
           userId: session.id,
           endpoint: 'plugin-search',
@@ -89,27 +109,11 @@ export const POST: RequestHandler = async (event) => {
           cachedInputTokens: meta.cachedInputTokens,
           outputTokens: meta.outputTokens,
           usdEstimate: meta.usdEstimate,
-          success: candidates.length > 0
+          success: candidates.length > 0,
+          provenance: 'ai'
         });
-      } catch (err) {
-        const message =
-          err instanceof AnthropicOverloadedError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : String(err);
-        send({ phase: 'error', message });
-        recordCall({
-          userId: session.id,
-          endpoint: 'plugin-search',
-          model: 'unknown',
-          inputTokens: 0,
-          cachedInputTokens: 0,
-          outputTokens: 0,
-          usdEstimate: 0,
-          success: false,
-          errorClass: err instanceof Error ? err.name : 'unknown'
-        });
+      } catch {
+        /* client disconnected */
       } finally {
         controller.close();
       }

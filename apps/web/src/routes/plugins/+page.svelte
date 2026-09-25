@@ -4,6 +4,7 @@
   import LabelCapture from '$lib/components/LabelCapture.svelte';
   import PluginCandidateCard from '$lib/components/PluginCandidateCard.svelte';
   import ReceiptScan from '$lib/components/ReceiptScan.svelte';
+  import { filterRegisteredPlugins } from '$lib/plugins/filterRegistered';
 
   let { data } = $props();
 
@@ -60,7 +61,9 @@
       }
       if (out.found === false || !out.candidate) {
         scanError =
-          'Claude could not identify a product on this label. Try a clearer photo or the authoring form directly.';
+          typeof out.message === 'string' && out.message
+            ? out.message
+            : 'Claude could not identify a product on this label. Try a clearer photo or the authoring form directly.';
         return;
       }
       scanCandidate = out.candidate;
@@ -190,8 +193,13 @@
     'all' | 'crop' | 'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'companion'
   >('all');
 
+  let listQuery = $state('');
+
   const filtered = $derived(
-    typeFilter === 'all' ? data.records : data.records.filter((r) => r.type === typeFilter)
+    filterRegisteredPlugins(
+      typeFilter === 'all' ? data.records : data.records.filter((r) => r.type === typeFilter),
+      listQuery
+    )
   );
 
   // ─── Bulk selection ─────────────────────────────────────────────────
@@ -438,6 +446,14 @@
   {/if}
 
   <div class="list-toolbar">
+    <input
+      class="list-search"
+      type="search"
+      bind:value={listQuery}
+      placeholder="Filter by name or plugin id"
+      aria-label="Filter registered plugins"
+      data-testid="plugin-list-filter"
+    />
     <label class="select-all">
       <input
         type="checkbox"
@@ -467,6 +483,16 @@
               <GroupCodeBadge kind={gc.kind} group={gc.group} />
             {/each}
             <span class="version">v{r.version}</span>
+            {#if r.farmOverride}
+              <span
+                class="history-chip"
+                title="Edited on this farm; other farms see the shared version"
+                >this farm's copy</span
+              >
+            {/if}
+            {#if r.farmRetired}
+              <span class="history-chip">retired on this farm</span>
+            {/if}
             {#if r.historyCount > 1}
               <span class="history-chip" title="Number of versions on record"
                 >{r.historyCount} versions</span
@@ -698,9 +724,21 @@
     margin-left: auto;
   }
   .list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
     padding: 0.5rem 1.25rem;
     border-bottom: 1px solid #eef0ee;
     background: #fafdfb;
+  }
+  .list-search {
+    flex: 1 1 14rem;
+    min-height: 48px;
+    padding: 0 0.75rem;
+    border: 1px solid #cfd6cf;
+    border-radius: 6px;
+    font: inherit;
   }
   .select-all {
     display: inline-flex;

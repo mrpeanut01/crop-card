@@ -57,6 +57,25 @@ describe('WorkflowStrip', () => {
     expect(scheduleBtn).toBeDisabled();
   });
 
+  it('disables only the steps marked unreachable and never fires them (#120)', async () => {
+    const onSelectStep = vi.fn();
+    const routed: WorkflowStep[] = STEPS.map((s) => ({
+      ...s,
+      disabled: s.id === 'commit',
+      actionHint: s.id === 'commit' ? 'Commit runs at the end of a wizard pass' : 'Open'
+    }));
+    render(WorkflowStrip, { seasonYear: 2026, steps: routed, onSelectStep });
+    const commitBtn = screen.getByText('Commit').closest('button')!;
+    const setupBtn = screen.getByText('Season setup').closest('button')!;
+    expect(commitBtn).toBeDisabled();
+    expect(setupBtn).toBeEnabled();
+    expect(commitBtn.getAttribute('title')).toContain('Commit runs at the end of a wizard pass');
+    await fireEvent.click(commitBtn);
+    expect(onSelectStep).not.toHaveBeenCalled();
+    await fireEvent.click(setupBtn);
+    expect(onSelectStep).toHaveBeenCalledWith('season-setup');
+  });
+
   it('renders stale state with rust-toned when label', () => {
     const stalesteps: WorkflowStep[] = [{ id: 'a', label: 'A', state: 'stale' }];
     render(WorkflowStrip, { seasonYear: 2026, steps: stalesteps });

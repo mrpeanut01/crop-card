@@ -147,7 +147,9 @@ export type ViolationCode =
   // closes.
   | 'FRAC_ROTATION_BLOCK'
   | 'IPM_THRESHOLD_NOT_MET'
-  | 'POLLINATOR_BLOOM_BLOCK';
+  | 'POLLINATOR_BLOOM_BLOCK'
+  // #130 — label bee-toxicity / bloom / dusk-to-dawn gate (pollinatorProtection.ts).
+  | 'POLLINATOR_BLOCK';
 
 export interface SafetyViolation {
   code: ViolationCode;

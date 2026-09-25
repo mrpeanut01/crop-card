@@ -32,16 +32,30 @@
   import SeasonTimelineCard from './SeasonTimelineCard.svelte';
   import ScheduledTasksCard, { type ScheduledRow } from './ScheduledTasksCard.svelte';
   import MapOverlay from './MapOverlay.svelte';
+  import {
+    blockHarvestWindowLabel,
+    blockStatus,
+    blockStatusTone,
+    currentStageLabel,
+    plantingRoleLabel,
+    plantingHarvestLabel,
+    plantingStatus
+  } from '$lib/plan/planV2Derive';
 
   interface Props {
     blocks: BlockWithPlantings[];
     /** Open primary tasks across the active tenant. Filtered by selected
      *  block + planting for the ScheduledTasksCard. */
     tasks: Task[];
+    /** Calendar-engine events for every planting (loader-derived). */
+    events?: CalendarEvent[];
     /** Active farm name; appears in the MapOverlay title. */
     farmLabel?: string;
     /** Plugin index used to derive crop name + DTM for plantings. */
-    cropMeta: Record<string, { displayName: string; daysToMaturity?: number; cropFamily?: string }>;
+    cropMeta: Record<
+      string,
+      { displayName: string; daysToMaturity?: number; cropFamily?: string; archetype?: string }
+    >;
     /** When the user clicks "Add planting" / "Refine with AI" / etc. */
     onOpenWizard?: () => void;
     /** Optional: wire to /plan's existing block-edit modal. */
@@ -50,16 +64,23 @@
     onAddBlock?: () => void;
     /** Optional: wire to /plan's existing add-planting flow. */
     onAddPlanting?: (blockId: string) => void;
+    /** Opens the add-task form for the selected block (+ active planting). */
+    onAddTask?: (blockId: string, plantingId: string | null) => void;
+    /** Farm-map editor link for the "No map geometry" pill (owner only). */
+    geometryEditHref?: string;
   }
   const {
     blocks,
     tasks,
+    events = [],
     farmLabel,
     cropMeta,
     onOpenWizard,
     onEditBlock,
     onAddBlock,
-    onAddPlanting
+    onAddPlanting,
+    onAddTask,
+    geometryEditHref
   }: Props = $props();
 
   // ── URL-driven state ──────────────────────────────────────────────
@@ -99,19 +120,16 @@
   /** All calendar-engine events for the selected block, oldest-first. */
   const blockEvents = $derived.by<CalendarEvent[]>(() => {
     if (!selectedBlock) return [];
-    const out: CalendarEvent[] = [];
-    for (const p of selectedBlock.plantings) {
-      const meta = cropMeta[p.cropPluginId];
-      if (!meta) continue;
-      // We need the actual CropPlugin to derive events, but cropMeta is a
-      // thin projection. The parent passes through eventsForPlanting()
-      // results via the `events` field on each planting when available;
-      // here we lazy-derive from a synthetic minimal plugin only if no
-      // events were pre-computed. Most callers should pre-derive at the
-      // loader layer.
-    }
-    return out;
+    const id = selectedBlock.id;
+    return events.filter((e) => e.blockId === id).sort((a, b) => a.startMs - b.startMs);
   });
+
+  const headerStatus = $derived(
+    blockStatus(
+      plantings.map((p) => plantingStatus(p.plantingDate, cropMeta[p.cropPluginId]?.daysToMaturity))
+    )
+  );
+  const harvestWindowLabel = $derived(blockHarvestWindowLabel(blockEvents));
 
   const daysToMaturityById = $derived.by<Record<string, number>>(() => {
     const out: Record<string, number> = {};
@@ -177,6 +195,12 @@
     return plantings.filter((p) => p.id !== plantingId);
   }
 
+  function smallGrainHref(plantingId: string, archetype?: string): string | undefined {
+    return archetype === 'small-grain.zadoks'
+      ? `/plan/wheat?planting=${encodeURIComponent(plantingId)}`
+      : undefined;
+  }
+
   // ── Nav actions ───────────────────────────────────────────────────
   function selectBlock(id: string) {
     const sp = new URLSearchParams($page.url.searchParams);
@@ -222,6 +246,10 @@
     {:else}
       <PlanBlockHeader
         block={selectedBlock}
+        statusLabel={headerStatus}
+        statusTone={blockStatusTone(headerStatus)}
+        {harvestWindowLabel}
+        {geometryEditHref}
         onOpenMap={openMap}
         onRefineWithAi={onOpenWizard}
         onEditBlock={onEditBlock ? () => onEditBlock(selectedBlock.id) : undefined}
@@ -249,6 +277,11 @@
             <PlantingCard
               planting={p}
               daysToMaturity={meta?.daysToMaturity}
+              cropName={meta?.displayName}
+              role={plantingRoleLabel(p)}
+              stage={currentStageLabel(blockEvents, p)}
+              harvestStart={plantingHarvestLabel(blockEvents, p.id)}
+              detailHref={smallGrainHref(p.id, meta?.archetype)}
               companions={companionsFor(p.id)}
               sourceTag={p.sourceProvenance === 'ai'
                 ? 'AI plan'
@@ -265,6 +298,11 @@
           <PlantingCard
             planting={activePlanting}
             daysToMaturity={meta?.daysToMaturity}
+            cropName={meta?.displayName}
+            role={plantingRoleLabel(activePlanting)}
+            stage={currentStageLabel(blockEvents, activePlanting)}
+            harvestStart={plantingHarvestLabel(blockEvents, activePlanting.id)}
+            detailHref={smallGrainHref(activePlanting.id, meta?.archetype)}
             companions={companionsFor(activePlanting.id)}
             sourceTag={activePlanting.sourceProvenance === 'ai'
               ? 'AI plan'
@@ -278,14 +316,19 @@
 
       {#if plantings.length > 0}
         <SeasonTimelineCard {plantings} events={blockEvents} {daysToMaturityById} />
+      {/if}
 
+      <div id="plan-scheduled-tasks">
         <ScheduledTasksCard
           rows={scheduledRows}
           titleSuffix={activePlanting
             ? `· ${activePlanting.varietyDisplayName.split(' ').slice(0, 2).join(' ')}`
             : '· next 30 days'}
+          onAddTask={onAddTask
+            ? () => onAddTask(selectedBlock.id, activePlanting?.id ?? null)
+            : undefined}
         />
-      {/if}
+      </div>
     {/if}
   </div>
 

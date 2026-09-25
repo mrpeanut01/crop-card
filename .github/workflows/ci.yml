@@ -46,6 +46,69 @@ jobs:
       - name: E2E smoke
         run: pnpm test:e2e
 
+  # #101 — visual regression against the committed *-linux.png baselines.
+  # Non-blocking until it has run green on the GitHub runner for a while:
+  # the baselines were captured with a different chromium build than the
+  # one `playwright install` pulls here. If it drifts, download the
+  # `visual-diffs` artifact, inspect the *-actual.png files, and commit
+  # them over the baselines once they look right.
+  visual:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # On same-repo PRs check out the branch itself so a baseline
+          # re-capture (below) can be pushed back to it.
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref || github.ref }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile=false
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @cropcard/web exec playwright install --with-deps chromium
+
+      # Baselines must come from this runner's Chromium build. A head commit
+      # whose message contains [update-visual] re-captures the Linux
+      # baselines here and commits them back to the PR branch.
+      - name: Re-capture Linux baselines ([update-visual])
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          E2E_VISUAL: "1"
+        run: |
+          if git log -1 --format=%B | grep -qF '[update-visual]'; then
+            pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=all
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add 'apps/web/tests/e2e/visual/**/*-linux.png'
+            if ! git diff --cached --quiet; then
+              git commit -m "test(visual): re-capture Linux baselines on CI Chromium"
+              git push origin HEAD:${{ github.head_ref }}
+            fi
+          fi
+
+      - name: Visual regression
+        env:
+          E2E_VISUAL: "1"
+        run: pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=none
+
+      - name: Upload visual diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: apps/web/test-results/
+          retention-days: 14
+
   validate-bicep:
     runs-on: ubuntu-latest
     steps:

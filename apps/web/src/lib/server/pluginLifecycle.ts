@@ -41,7 +41,13 @@ import {
   unretire as clearRetired,
   type PluginKind
 } from '$lib/db/pluginVersions';
-import { resetRegistry } from './registry';
+import {
+  effectiveOverride,
+  hideForOwner,
+  isHiddenForOwner,
+  unhideForOwner
+} from '$lib/db/pluginOverrides';
+import { getBaseRegistry, resetRegistry } from './registry';
 
 export class PluginLifecycleError extends Error {
   constructor(
@@ -145,6 +151,30 @@ export function countReferences(pluginId: string, kind: PluginKind): ReferenceSu
     cropRows: cropN,
     total: sprayN + insecN + fungN + cropN
   };
+}
+
+/** Owner-level retire: hides the plugin for the active Owner only (a
+ *  `plugin_overrides` marker). The shared library and other farms are
+ *  untouched; historical replay still resolves by hash. */
+export async function retirePluginForOwner(pluginId: string): Promise<void> {
+  const kind =
+    ((await getBaseRegistry()).get(pluginId)?.plugin.type as PluginKind | undefined) ??
+    effectiveOverride(pluginId)?.kind ??
+    (currentVersionOf(pluginId)?.kind as PluginKind | undefined);
+  if (!kind) throw new PluginLifecycleError(`no plugin '${pluginId}' on record`, 'not-found');
+  hideForOwner(pluginId, kind);
+}
+
+export async function unretirePluginForOwner(pluginId: string): Promise<void> {
+  if (!isHiddenForOwner(pluginId)) {
+    const known =
+      (await getBaseRegistry()).has(pluginId) ||
+      !!effectiveOverride(pluginId) ||
+      !!currentVersionOf(pluginId);
+    if (!known) throw new PluginLifecycleError(`no plugin '${pluginId}' on record`, 'not-found');
+    return;
+  }
+  unhideForOwner(pluginId);
 }
 
 export async function retirePlugin(pluginId: string): Promise<void> {

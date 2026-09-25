@@ -24,6 +24,7 @@
     "tarnished plant bug"
   ],
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"prohibited-during-bloom"},
   "notes": "Neonicotinoid IRAC 4A. Foliar + soil. NO bloom application — bee toxicity.",
   "complianceFlags": {
     "omriListed": false,

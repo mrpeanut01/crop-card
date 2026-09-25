@@ -18,7 +18,7 @@ import { z } from 'zod';
 import { listBlocks } from '$lib/db/blocks';
 import { listSoilTestsForBlock, listFertilityCreditsForBlock } from '$lib/db/fertility';
 import { listStockItems } from '$lib/db/stock';
-import { type InputsPlanInput } from '$lib/plan/inputsPlan';
+import { planInputs, type InputsPlanInput } from '$lib/plan/inputsPlan';
 import type {
   FertilizerPlugin,
   FungicidePlugin,
@@ -28,7 +28,8 @@ import type {
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getRegistry } from '$lib/server/registry';
 import { currentUser } from '$lib/server/auth';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { degradeTag, recordFallback, tryAiWithGuard, ZERO_USAGE } from '$lib/server/aiDegrade';
 import { planInputsWithAI } from '$lib/server/aiInputsPlan';
 
 const provisionalPlantingSchema = z.object({
@@ -146,33 +147,30 @@ export const POST: RequestHandler = async (event) => {
     year
   };
 
-  // AI substitution pass — only attempts when API key + quota allow.
-  // Always returns a valid plan (deterministic fallback baked in).
-  const guard = checkGuard(auth.id, 'inputs');
-  if (!guard.ok) {
-    // Quota / cap exceeded — run the deterministic planner and stamp
-    // meta.fallback so the UI surfaces a banner.
-    const { planInputs } = await import('$lib/plan/inputsPlan');
-    const plan = planInputs(baseInput);
+  const tried = await tryAiWithGuard({
+    endpoint: 'inputs',
+    userId: auth.id,
+    prompt: (signal) => planInputsWithAI({ ...baseInput, signal })
+  });
+
+  if (tried.provenance === 'fallback') {
+    recordFallback(auth.id, 'inputs', tried.fallbackReason);
     return json({
-      plan,
+      plan: planInputs(baseInput),
       meta: {
+        ...ZERO_USAGE,
         model: 'no-call',
-        inputTokens: 0,
-        cachedInputTokens: 0,
-        outputTokens: 0,
-        usdEstimate: 0,
-        fallback: 'quota-exceeded',
-        violations: [guard.reason]
+        fallback: degradeTag(tried.fallbackReason, tried.guard),
+        violations: tried.guard.ok ? [] : [tried.guard.reason],
+        provenance: 'fallback',
+        fallbackReason: tried.fallbackReason,
+        fallbackMessage: tried.fallbackMessage
       }
     });
   }
 
-  const result = await planInputsWithAI(baseInput);
-
-  // Record the call telemetry — even when the AI didn't actually run
-  // (no api key / fallback), we record a row tagged success=false so
-  // the call count is honest. This is consistent with aiSchedule.ts.
+  const result = tried.value;
+  const provenance = result.meta.fallback ? 'fallback' : 'ai';
   recordCall({
     userId: auth.id,
     endpoint: 'inputs',
@@ -182,8 +180,9 @@ export const POST: RequestHandler = async (event) => {
     outputTokens: result.meta.outputTokens,
     usdEstimate: result.meta.usdEstimate,
     success: !result.meta.fallback,
-    errorClass: result.meta.fallback
+    errorClass: result.meta.fallback,
+    provenance
   });
 
-  return json({ plan: result.plan, meta: result.meta });
+  return json({ plan: result.plan, meta: { ...result.meta, provenance } });
 };

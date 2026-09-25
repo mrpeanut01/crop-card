@@ -23,6 +23,7 @@
     "leafminer"
   ],
   "pollinatorRisk": "high",
+  "pollinator": {"beeToxicity":"highly-toxic","bloomRestriction":"dusk-to-dawn-only"},
   "notes": "RESTRICTED-USE carbamate IRAC 1A. Acutely toxic to humans and bees — closed-system handling, full PPE. 48-hr REI.",
   "complianceFlags": {
     "omriListed": false,

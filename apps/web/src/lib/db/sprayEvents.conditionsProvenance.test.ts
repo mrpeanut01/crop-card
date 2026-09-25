@@ -13,7 +13,7 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
-import { runWithTenant } from './tenant';
+import { runWithTenant, tenantValues } from './tenant';
 import { db } from './client';
 import { equipment, owners, sprayEvents, users } from './schema';
 import { createField } from './fields';
@@ -50,7 +50,7 @@ function seedBlockAndSprayer(ownerId: string): { blockId: string; sprayerId: str
   });
   const sprayerId = `${ownerId}-sprayer-${randomUUID().slice(0, 6)}`;
   db.insert(equipment)
-    .values({ id: sprayerId, ownerId, type: 'sprayer', label: `${ownerId} sprayer` })
+    .values(tenantValues({ id: sprayerId, type: 'sprayer' as const, label: `${ownerId} sprayer` }))
     .run();
   return { blockId: block.id, sprayerId };
 }
@@ -114,21 +114,27 @@ describe('spray_event conditions provenance (#320)', () => {
     const id = randomUUID();
     const { blockId, sprayerId } = runWithTenant(OWNER, () => seedBlockAndSprayer(OWNER));
     // Simulate a pre-#320 row: conditionsJson has no conditionsProvenance key.
-    db.insert(sprayEvents)
-      .values({
-        id,
-        ownerId: OWNER,
-        blockId,
-        sprayerId,
-        performedById: 'u-prov',
-        occurredAt: new Date(),
-        productsJson: JSON.stringify([{ pluginId: 'herb:test', chemistryClasses: ['glyphosate'] }]),
-        conditionsJson: JSON.stringify({ windMph: 5, tempF: 70, rainForecastMmNext24h: 0 }),
-        rulesVersion: 'test',
-        pluginHashesJson: JSON.stringify({ 'herb:test': 'abc' }),
-        customRateOverride: false
-      })
-      .run();
+    runWithTenant(OWNER, () =>
+      db
+        .insert(sprayEvents)
+        .values(
+          tenantValues({
+            id,
+            blockId,
+            sprayerId,
+            performedById: 'u-prov',
+            occurredAt: new Date(),
+            productsJson: JSON.stringify([
+              { pluginId: 'herb:test', chemistryClasses: ['glyphosate'] }
+            ]),
+            conditionsJson: JSON.stringify({ windMph: 5, tempF: 70, rainForecastMmNext24h: 0 }),
+            rulesVersion: 'test',
+            pluginHashesJson: JSON.stringify({ 'herb:test': 'abc' }),
+            customRateOverride: false
+          })
+        )
+        .run()
+    );
 
     const read = runWithTenant(OWNER, () => listSprayEvents({ blockId }));
     const row = read.find((e) => e.id === id);

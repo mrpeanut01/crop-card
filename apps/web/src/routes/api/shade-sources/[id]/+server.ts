@@ -5,8 +5,10 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getField } from '$lib/db/fields';
 import { deleteShadeSource, getShadeSource, updateShadeSource } from '$lib/db/shadeSources';
 import { requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const KINDS = [
   'tree-row',
@@ -47,6 +49,8 @@ export const PATCH: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
+  const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
+  if (foreign) return foreign;
   const updated = updateShadeSource(id, parsed.data);
   return json({ shadeSource: updated });
 };

@@ -44,6 +44,10 @@ vi.mock('$lib/db/admin', () => ({
   deleteSoilTest: () => ({ ok: true })
 }));
 
+vi.mock('$lib/db/blocks', () => ({ getBlock: (id: string) => ({ id }) }));
+vi.mock('$lib/db/crops', () => ({ getCrop: (id: string) => ({ id }) }));
+vi.mock('$lib/db/stock', () => ({ getStockItem: (id: string) => ({ id }) }));
+
 vi.mock('$lib/db/users', () => ({
   ensureSystemUser: async () => ({ id: 'sys-user' })
 }));

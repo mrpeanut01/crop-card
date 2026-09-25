@@ -26,6 +26,7 @@ import { createField, ensureHomeField, listFields, updateField } from '$lib/db/f
 import { crops as cropsTable, equipment, stockMovements } from '$lib/db/schema';
 import { decrementForUse, createStockItem, receiveLot } from '$lib/db/stock';
 import { eq } from 'drizzle-orm';
+import { tenantValues, withTenant } from '$lib/db/tenant';
 
 function uniq(prefix: string) {
   return `${prefix}-${randomUUID().slice(0, 8)}`;
@@ -98,24 +99,26 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
     // Insert a crop directly so we don't need the full plantings flow.
     const cropId = uniq('crop');
     db.insert(cropsTable)
-      .values({
-        id: cropId,
-        blockId: block.id,
-        ownerId: 'owner_home_farm',
-        cropPluginId: 'corn-feed-dent-pioneer',
-        varietyDisplayName: 'Pioneer Corn (test)',
-        plantingDate: new Date()
-      })
+      .values(
+        tenantValues({
+          id: cropId,
+          blockId: block.id,
+          cropPluginId: 'corn-feed-dent-pioneer',
+          varietyDisplayName: 'Pioneer Corn (test)',
+          plantingDate: new Date()
+        })
+      )
       .run();
 
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({
-        id: equipmentId,
-        ownerId: 'owner_home_farm',
-        type: 'sprayer',
-        label: 'Test sprayer 50gal'
-      })
+      .values(
+        tenantValues({
+          id: equipmentId,
+          type: 'sprayer' as const,
+          label: 'Test sprayer 50gal'
+        })
+      )
       .run();
 
     const binding = bindEquipment({ cropId, equipmentId, role: 'sprayer' });
@@ -136,7 +139,9 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
 
     // cleanup
     deleteBlockCascade(block.id);
-    db.delete(equipment).where(eq(equipment.id, equipmentId)).run();
+    db.delete(equipment)
+      .where(withTenant(equipment, eq(equipment.id, equipmentId)))
+      .run();
   });
 
   it('binding the same (crop, equipment, role) twice throws', () => {
@@ -144,23 +149,25 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
     const block = createBlock({ name: uniq('dup-block'), fieldId: homeId });
     const cropId = uniq('crop');
     db.insert(cropsTable)
-      .values({
-        id: cropId,
-        blockId: block.id,
-        ownerId: 'owner_home_farm',
-        cropPluginId: 'corn-feed-dent-pioneer',
-        varietyDisplayName: 'Dup Corn',
-        plantingDate: new Date()
-      })
+      .values(
+        tenantValues({
+          id: cropId,
+          blockId: block.id,
+          cropPluginId: 'corn-feed-dent-pioneer',
+          varietyDisplayName: 'Dup Corn',
+          plantingDate: new Date()
+        })
+      )
       .run();
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({
-        id: equipmentId,
-        ownerId: 'owner_home_farm',
-        type: 'sprayer',
-        label: 'Dup sprayer'
-      })
+      .values(
+        tenantValues({
+          id: equipmentId,
+          type: 'sprayer' as const,
+          label: 'Dup sprayer'
+        })
+      )
       .run();
 
     bindEquipment({ cropId, equipmentId, role: 'sprayer' });
@@ -180,23 +187,25 @@ describe('Phase 13 — crop ↔ equipment binding', () => {
     const block = createBlock({ name: uniq('cascade-block'), fieldId: homeId });
     const cropId = uniq('crop');
     db.insert(cropsTable)
-      .values({
-        id: cropId,
-        blockId: block.id,
-        ownerId: 'owner_home_farm',
-        cropPluginId: 'corn-feed-dent-pioneer',
-        varietyDisplayName: 'Cascade Corn',
-        plantingDate: new Date()
-      })
+      .values(
+        tenantValues({
+          id: cropId,
+          blockId: block.id,
+          cropPluginId: 'corn-feed-dent-pioneer',
+          varietyDisplayName: 'Cascade Corn',
+          plantingDate: new Date()
+        })
+      )
       .run();
     const equipmentId = uniq('eq');
     db.insert(equipment)
-      .values({
-        id: equipmentId,
-        ownerId: 'owner_home_farm',
-        type: 'sprayer',
-        label: 'Cascade sprayer'
-      })
+      .values(
+        tenantValues({
+          id: equipmentId,
+          type: 'sprayer' as const,
+          label: 'Cascade sprayer'
+        })
+      )
       .run();
     bindEquipment({ cropId, equipmentId, role: 'sprayer' });
 
@@ -215,14 +224,15 @@ describe('Phase 13 — stock_movements cropId', () => {
     const block = createBlock({ name: uniq('stock-block'), fieldId: homeId });
     const cropId = uniq('crop');
     db.insert(cropsTable)
-      .values({
-        id: cropId,
-        blockId: block.id,
-        ownerId: 'owner_home_farm',
-        cropPluginId: 'corn-feed-dent-pioneer',
-        varietyDisplayName: 'Stock Corn',
-        plantingDate: new Date()
-      })
+      .values(
+        tenantValues({
+          id: cropId,
+          blockId: block.id,
+          cropPluginId: 'corn-feed-dent-pioneer',
+          varietyDisplayName: 'Stock Corn',
+          plantingDate: new Date()
+        })
+      )
       .run();
 
     const item = createStockItem({
@@ -251,7 +261,7 @@ describe('Phase 13 — stock_movements cropId', () => {
     const row = db
       .select()
       .from(stockMovements)
-      .where(eq(stockMovements.id, result.movements[0].id))
+      .where(withTenant(stockMovements, eq(stockMovements.id, result.movements[0].id)))
       .get();
     expect(row?.cropId).toBe(cropId);
 

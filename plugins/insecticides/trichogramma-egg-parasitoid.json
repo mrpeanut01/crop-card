@@ -17,6 +17,7 @@
   "reEntryIntervalHours": 0,
   "preHarvestIntervalDays": 0,
   "pollinatorRisk": "low",
+  "pollinator": {"beeToxicity":"relatively-nontoxic","bloomRestriction":"none"},
   "targetPests": [
     "European corn borer eggs",
     "tomato hornworm eggs",

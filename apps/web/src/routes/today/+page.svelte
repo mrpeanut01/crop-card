@@ -904,7 +904,7 @@
   /* Phase 25e (#97) — Almanac /today shell layout. */
   .t-grid {
     display: grid;
-    grid-template-columns: 1.7fr 1fr;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
     gap: 18px;
     margin-bottom: 18px;
   }
@@ -939,7 +939,7 @@
   @media (max-width: 900px) {
     .t-grid,
     .t-grid-second {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
   .tab-row {

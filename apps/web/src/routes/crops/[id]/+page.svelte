@@ -1,5 +1,17 @@
 <script lang="ts">
-  let { data } = $props();
+  import { ChevronRight } from 'lucide-svelte';
+  import Kicker from '$lib/components/ui/Kicker.svelte';
+
+  const { data } = $props();
+
+  const blockHref = $derived(`/plan?block=${encodeURIComponent(data.block.id)}`);
+  const kicker = $derived(
+    [
+      'Planting',
+      data.cropPlugin?.displayName ?? data.crop.cropPluginId,
+      data.crop.plantingDate ? String(new Date(data.crop.plantingDate).getFullYear()) : 'planned'
+    ].join(' · ')
+  );
 
   let busy = $state(false);
   let actionError = $state<string | null>(null);
@@ -57,7 +69,7 @@
         actionError = out.error ?? 'delete failed';
         return;
       }
-      window.location.href = '/crops';
+      window.location.href = blockHref;
     } catch (e) {
       actionError = e instanceof Error ? e.message : String(e);
     } finally {
@@ -66,9 +78,22 @@
   }
 </script>
 
+<svelte:head>
+  <title>{data.crop.varietyDisplayName} · CropCard</title>
+</svelte:head>
+
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="/plan">Plan</a>
+  <ChevronRight size={13} aria-hidden="true" />
+  <a href={blockHref}>{data.block.name}</a>
+  <ChevronRight size={13} aria-hidden="true" />
+  <span aria-current="page">{data.crop.varietyDisplayName}</span>
+</nav>
+
 <header class="crop-header">
   <div>
-    <h1>{data.crop.varietyDisplayName}</h1>
+    <Kicker>{kicker}</Kicker>
+    <h1 class="serif">{data.crop.varietyDisplayName}</h1>
     <p class="meta">
       Block <strong>{data.block.name}</strong>
       {#if data.block.acres}— {data.block.acres} ac{/if}
@@ -332,7 +357,30 @@
     margin: 0 0 1rem;
   }
   .crop-header h1 {
-    margin: 0 0 0.25rem;
+    margin: 6px 0 0.25rem;
+    font-family: var(--font-serif, serif);
+    font-size: 30px;
+    color: var(--color-forest-deep);
+    letter-spacing: -0.02em;
+  }
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-ink-muted);
+    margin-bottom: 8px;
+  }
+  .breadcrumb a {
+    color: var(--color-forest);
+    text-decoration: none;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .breadcrumb a:hover {
+    text-decoration: underline;
   }
   .meta {
     color: #555;
@@ -362,7 +410,7 @@
     padding: 0.4rem 0.75rem;
     border: 1px solid #1f5e3a;
     border-radius: 4px;
-    min-height: 36px;
+    min-height: 48px;
     display: inline-flex;
     align-items: center;
   }
@@ -381,7 +429,7 @@
     border-radius: 4px;
     font-weight: 600;
     padding: 0.55rem 1rem;
-    min-height: 44px;
+    min-height: 48px;
   }
   .primary {
     background: #1f5e3a;

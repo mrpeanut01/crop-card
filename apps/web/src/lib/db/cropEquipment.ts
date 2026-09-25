@@ -64,7 +64,7 @@ export function listCropEquipment(cropId: string): CropEquipmentBinding[] {
       equipmentRetiredAt: equipment.retiredAt
     })
     .from(cropEquipment)
-    .innerJoin(equipment, eq(cropEquipment.equipmentId, equipment.id))
+    .innerJoin(equipment, and(eq(cropEquipment.equipmentId, equipment.id), withTenant(equipment)))
     .where(withTenant(cropEquipment, eq(cropEquipment.cropId, cropId)))
     .all();
   return rows.map((r) => ({
@@ -104,6 +104,12 @@ export function bindEquipment(input: {
   role: CropEquipmentRole;
   notes?: string;
 }): CropEquipmentBinding {
+  const owned = db
+    .select({ id: equipment.id })
+    .from(equipment)
+    .where(withTenant(equipment, eq(equipment.id, input.equipmentId)))
+    .get();
+  if (!owned) throw new Error(`unknown equipment id: ${input.equipmentId}`);
   const existing = db
     .select({ id: cropEquipment.id })
     .from(cropEquipment)

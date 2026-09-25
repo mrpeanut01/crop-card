@@ -274,7 +274,29 @@ Minimum viable:
 
 **`iracGroup`** is an IRAC mode-of-action code: a 1-4 character alphanumeric string (e.g. `1A`, `4A`, `11A`, `29`). Drives resistance-rotation hints in the spray flow.
 
-**Common optional fields:** `ratePerAcre`, `preHarvestIntervalDays`, `pollinatorRisk` (`none | low | moderate | high`), `targetPests[]`, `scoutingThresholds[]`, `applicationProtocol[]`, `epaRegistrationNumber`, `labelClaims.safeForCropPluginIds[]`, `complianceFlags`, `notes`.
+**Common optional fields:** `ratePerAcre`, `preHarvestIntervalDays`, `pollinatorRisk` (`none | low | moderate | high`, legacy coarse hint), `pollinator` (see below), `targetPests[]`, `scoutingThresholds[]`, `applicationProtocol[]`, `epaRegistrationNumber`, `labelClaims.safeForCropPluginIds[]`, `complianceFlags`, `notes`.
+
+#### `pollinator` — label bee-protection data (#130)
+
+Consumed by the safety kernel's pollinator-protection gate (`apps/web/src/lib/safety/pollinatorProtection.ts`, RULES_VERSION 0.5.6) on `/spray/insecticide` and `POST /api/insecticide/record`. The plugin only _declares_ label facts; the kernel owns what they mean and a plugin cannot loosen it.
+
+```jsonc
+"pollinator": {
+  "beeToxicity": "highly-toxic",          // highly-toxic | toxic | relatively-nontoxic | unknown
+  "bloomRestriction": "dusk-to-dawn-only", // prohibited-during-bloom | dusk-to-dawn-only | none
+  "residualToxicityHours": 3               // optional — label / EPA RT25 residual window
+}
+```
+
+| Field                   | How to fill it                                                                                                                                                                                                                                                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `beeToxicity`           | EPA acute honey-bee contact class of the worst active ingredient: **highly-toxic** (LD50 < 2 µg/bee), **toxic** (2–10.99), **relatively-nontoxic** (≥ 11). Use `unknown` when you cannot confirm it. The kernel treats `unknown` as hazardous. If you're unsure whether it's toxic or highly toxic, use `highly-toxic`. |
+| `bloomRestriction`      | Copy it from the label's Environmental Hazards / bee-advisory box. **prohibited-during-bloom**: "Do not apply … from onset of flowering until petal fall" (e.g. the neonicotinoid bee-advisory box). **dusk-to-dawn-only**: "Do not apply while bees are actively visiting/foraging". **none**: no bloom language.      |
+| `residualToxicityHours` | Optional. Hours the dried residue stays toxic to foragers (e.g. spinosyns ≈ 3 h). Leave it out if the label doesn't give a number.                                                                                                                                                                                      |
+
+**Kernel behaviour:** with `prohibited-during-bloom`, the gate blocks when the operator attests the block is in bloom, and also when bloom status is unattested. With `dusk-to-dawn-only`, it blocks between local sunrise and sunset whenever flowers may be present. A bee-toxic product with no restriction gets a warning only, and so does a residual that outlasts the time left before sunrise. Neither block can be overridden. For a tank mix, the gate takes the worst toxicity, the strictest restriction and the longest residual across all products. If `pollinator` is absent, the label's bloom language is unknown, so the product is treated as `{ beeToxicity: "unknown", bloomRestriction: "prohibited-during-bloom" }`. The one exception is a legacy `pollinatorRisk` of `none` or `low`, which relaxes it to `{ "unknown", "none" }` (warn only).
+
+The bundled library was backfilled from active ingredients by `apps/web/scripts/backfill-pollinator.mjs`, which holds the reference table and can be re-run. Products with an ingredient that isn't in the table are left without the field so a reviewer can fill it from the label.
 
 ### 5.4 Fungicide
 

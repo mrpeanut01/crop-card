@@ -129,7 +129,7 @@ function listDeconEvents(filters: {
       equipmentLabel: equipment.label
     })
     .from(equipmentLog)
-    .leftJoin(equipment, eq(equipment.id, equipmentLog.equipmentId))
+    .leftJoin(equipment, and(eq(equipment.id, equipmentLog.equipmentId), withTenant(equipment)))
     .where(withTenant(equipmentLog, and(...conds)))
     .$dynamic();
   q = q.orderBy(desc(equipmentLog.occurredAt));

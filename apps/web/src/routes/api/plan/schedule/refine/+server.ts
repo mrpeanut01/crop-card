@@ -5,7 +5,9 @@ import { listCrops } from '$lib/db/crops';
 import { getRegistry } from '$lib/server/registry';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
 import { refineSchedule } from '$lib/server/aiSchedule';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import type { FallbackReason } from '$lib/server/aiTry';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import type { CropPlugin } from '$lib/plugins/schemas';
 
@@ -92,22 +94,6 @@ const bodySchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  const guard = checkGuard(user.id, 'allocate');
-  if (!guard.ok) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'allocate',
-      model: 'n/a',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: guard.reason
-    });
-    return json({ error: guard.message }, { status: guard.status });
-  }
-
   let raw: unknown;
   try {
     raw = await event.request.json();
@@ -139,29 +125,46 @@ export const POST: RequestHandler = async (event) => {
   const year = parsed.data.year ?? new Date().getFullYear();
   const frostDates = frostDatesForYear(year);
   const built = await buildFarmContextWithCache(year);
+  const refineInput = {
+    assignments: parsed.data.assignments,
+    pluginIndex,
+    existingCrops: listCrops(),
+    pollinationConstraints: parsed.data.pollinationConstraints,
+    companionGroups: parsed.data.companionGroups,
+    frostDates,
+    year,
+    previousScheduled: parsed.data.previousScheduled.map((p) => ({
+      ...p,
+      successionIndex: p.successionIndex ?? undefined
+    })),
+    previousRationale: parsed.data.previousRationale,
+    previousAdvisories: parsed.data.previousAdvisories,
+    transcript: parsed.data.transcript
+  };
+  const options = { planningSessionId: parsed.data.planningSessionId };
 
-  try {
-    const result = await refineSchedule(
-      {
-        assignments: parsed.data.assignments,
-        pluginIndex,
-        existingCrops: listCrops(),
-        pollinationConstraints: parsed.data.pollinationConstraints,
-        companionGroups: parsed.data.companionGroups,
-        frostDates,
-        year,
-        previousScheduled: parsed.data.previousScheduled.map((p) => ({
-          ...p,
-          successionIndex: p.successionIndex ?? undefined
-        })),
-        previousRationale: parsed.data.previousRationale,
-        previousAdvisories: parsed.data.previousAdvisories,
-        transcript: parsed.data.transcript
-      },
-      built.context,
-      { planningSessionId: parsed.data.planningSessionId }
-    );
+  const tried = await tryAiWithGuard({
+    endpoint: 'allocate',
+    userId: user.id,
+    prompt: () => refineSchedule(refineInput, built.context, options)
+  });
 
+  let result;
+  let provenance: 'ai' | 'fallback';
+  let fallbackReason: FallbackReason | null = null;
+  let fallbackMessage: string | null = null;
+  if (tried.provenance === 'fallback') {
+    fallbackReason = tried.fallbackReason;
+    fallbackMessage = tried.fallbackMessage;
+    result = await refineSchedule(refineInput, built.context, {
+      ...options,
+      degradeMessage: fallbackReason === 'no-key' ? undefined : fallbackMessage
+    });
+    provenance = 'fallback';
+    recordFallback(user.id, 'allocate', fallbackReason);
+  } else {
+    result = tried.value;
+    provenance = result.meta.fallback ? 'fallback' : 'ai';
     recordCall({
       userId: user.id,
       endpoint: 'allocate',
@@ -171,37 +174,25 @@ export const POST: RequestHandler = async (event) => {
       outputTokens: result.meta.outputTokens,
       usdEstimate: result.meta.usdEstimate,
       success: result.scheduled.length > 0,
-      errorClass: result.meta.fallback
+      errorClass: result.meta.fallback,
+      provenance
     });
-
-    return json({
-      reply: result.reply,
-      scheduled: result.scheduled,
-      rationale: result.rationale,
-      advisories: result.advisories,
-      meta: {
-        model: result.meta.model,
-        usdEstimate: result.meta.usdEstimate,
-        fallback: result.meta.fallback,
-        violations: result.meta.violations
-      },
-      spend: guard.spend
-    });
-  } catch (err) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'allocate',
-      model: 'unknown',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: 'upstream-error'
-    });
-    return json(
-      { error: err instanceof Error ? err.message : 'schedule refinement failed' },
-      { status: 502 }
-    );
   }
+
+  return json({
+    reply: result.reply,
+    scheduled: result.scheduled,
+    rationale: result.rationale,
+    advisories: result.advisories,
+    meta: {
+      model: result.meta.model,
+      usdEstimate: result.meta.usdEstimate,
+      fallback: result.meta.fallback,
+      violations: result.meta.violations,
+      provenance,
+      fallbackReason,
+      fallbackMessage
+    },
+    spend: tried.guard.ok ? tried.guard.spend : null
+  });
 };

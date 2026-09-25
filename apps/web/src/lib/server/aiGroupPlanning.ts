@@ -166,7 +166,7 @@ export interface GroupPlanningResult {
     reason: string;
     kind: 'window-conflict' | 'density-displaced';
   }>;
-  meta: AiResultMeta & { fallback?: 'engine-only' | 'no-api-key' };
+  meta: AiResultMeta & { fallback?: 'engine-only' | 'no-api-key' | 'ai-unavailable' };
 }
 
 export interface GroupPlanningOptions {
@@ -288,9 +288,12 @@ export async function proposeGroupPlans(
 /** Phase 15d — deterministic engine-only path. Skips Claude entirely; the
  *  caller (e.g., the "Auto-schedule drafts" button) gets the same proposal
  *  shape but with `meta.fallback = 'engine-only'`. */
-export function proposePlansEngineOnly(input: GroupPlanningInput): GroupPlanningResult {
+export function proposePlansEngineOnly(
+  input: GroupPlanningInput,
+  reason: 'engine-only' | 'no-api-key' | 'ai-unavailable' = 'engine-only'
+): GroupPlanningResult {
   const matrix = buildGroupCandidacyMatrix(input);
-  return engineFallback(input, matrix, 'engine-only');
+  return engineFallback(input, matrix, reason);
 }
 
 // ─── Candidacy matrix ────────────────────────────────────────────────────
@@ -411,7 +414,7 @@ const SUCCESSION_INTERVAL_DAYS = 7;
 function engineFallback(
   input: GroupPlanningInput,
   matrix: MatrixCandidate[],
-  reason: 'engine-only' | 'no-api-key'
+  reason: 'engine-only' | 'no-api-key' | 'ai-unavailable'
 ): GroupPlanningResult {
   const usedCropIds = new Set<string>();
   const proposed: ProposedPlan[] = [];

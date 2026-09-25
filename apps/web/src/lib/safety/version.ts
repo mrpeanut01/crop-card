@@ -22,5 +22,10 @@
  * for the three strict chemistries — paraquat (bleach + TSP + 3 rinses),
  * glufosinate (detergent + water rinse), copper (vinegar rinse) — instead
  * of the generic ammonia soak. Every other class keeps the generic path.
+ * #130 — 0.5.6: pollinator-protection gate (`pollinatorProtection.ts`).
+ * Insecticide records are blocked when the label prohibits application
+ * during bloom and the block is in bloom (or bloom is unattested), and
+ * dusk-to-dawn-only products are blocked between sunrise and sunset while
+ * flowers may be present (NOAA sunrise/sunset in `sunTimes.ts`).
  */
-export const RULES_VERSION = '0.5.5-issue350' as const;
+export const RULES_VERSION = '0.5.6-issue130' as const;

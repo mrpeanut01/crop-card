@@ -42,8 +42,12 @@ import * as planRevisionsRepo from '$lib/plan/revisions';
 import * as scoutObservationsRepo from './scoutObservations';
 import * as wizardChatRepo from './wizardChat';
 import * as seasonCloseoutsRepo from './seasonCloseouts';
+import * as pushSubscriptionsRepo from './pushSubscriptions';
+import * as taxonomyRepo from './taxonomy';
+import * as pluginOverridesRepo from './pluginOverrides';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
-import { users, helperAssignments, recordDeletions } from './schema';
+import { users, helperAssignments, recordDeletions, cropEquipment, equipmentLog } from './schema';
+import { listUnifiedRecords } from './recordsUnified';
 import { eq } from 'drizzle-orm';
 import { tenantValues, withTenant } from './tenant';
 
@@ -408,6 +412,189 @@ describe('cross-tenant isolation', () => {
     expect(runWithTenant(OWNER_B, () => seasonCloseoutsRepo.isSeasonClosed(2099))).toBe(true);
   });
 
+  it('push_subscriptions + push_deliveries are owner-scoped (NFR-06)', () => {
+    const endpoint = 'https://push.example.net/send/shared-device';
+    const seedPush = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const userId = ensureCrossTenantTestUser(ownerId);
+        const sub = pushSubscriptionsRepo.upsertSubscription({
+          userId,
+          endpoint,
+          p256dh: `p256dh-${ownerId}`,
+          auth: `auth-${ownerId}`
+        });
+        expect(pushSubscriptionsRepo.claimDelivery('decon-due', 'sprayer-x:1')).toBe(true);
+        return { userId, id: sub.id };
+      });
+
+    const a = seedPush(OWNER_A);
+    const b = seedPush(OWNER_B);
+    expect(a.id).not.toEqual(b.id);
+
+    const aSubs = runWithTenant(OWNER_A, () => pushSubscriptionsRepo.listSubscriptions());
+    expect(aSubs.map((s) => s.id)).toContain(a.id);
+    expect(aSubs.map((s) => s.id)).not.toContain(b.id);
+    expect(aSubs.every((s) => s.ownerId === OWNER_A)).toBe(true);
+
+    // A cannot read, re-key, update, or delete B's row even with B's user id.
+    expect(
+      runWithTenant(OWNER_A, () => pushSubscriptionsRepo.getSubscriptionForUser(b.userId, endpoint))
+    ).toBeNull();
+    expect(
+      runWithTenant(OWNER_A, () =>
+        pushSubscriptionsRepo.updatePrefsForUser(b.userId, endpoint, {
+          'decon-due': false,
+          'lock-window-closing': false,
+          'spring-calibration': false
+        })
+      )
+    ).toBeNull();
+    expect(
+      runWithTenant(OWNER_A, () =>
+        pushSubscriptionsRepo.deleteSubscriptionForUser(b.userId, endpoint)
+      )
+    ).toBe(false);
+    expect(runWithTenant(OWNER_A, () => pushSubscriptionsRepo.deleteSubscriptionById(b.id))).toBe(
+      false
+    );
+    runWithTenant(OWNER_A, () => pushSubscriptionsRepo.markSubscriptionFailure(b.id));
+    const bSub = runWithTenant(OWNER_B, () =>
+      pushSubscriptionsRepo.getSubscriptionForUser(b.userId, endpoint)
+    );
+    expect(bSub?.failureCount).toBe(0);
+    expect(bSub?.p256dh).toBe(`p256dh-${OWNER_B}`);
+
+    // The sent-log is per Owner: B's claim of the same subject succeeded
+    // above, and each Owner sees only its own delivery row.
+    const aDeliveries = runWithTenant(OWNER_A, () => pushSubscriptionsRepo.listDeliveries());
+    expect(aDeliveries.every((d) => d.ownerId === OWNER_A)).toBe(true);
+    expect(
+      runWithTenant(OWNER_A, () => pushSubscriptionsRepo.claimDelivery('decon-due', 'sprayer-x:1'))
+    ).toBe(false);
+
+    const tenants = pushSubscriptionsRepo.listOwnerIdsWithPushSubscriptions();
+    expect(tenants).toEqual(expect.arrayContaining([OWNER_A, OWNER_B]));
+  });
+
+  it("listCropEquipment never joins another Owner's equipment row", () => {
+    const bEquipment = runWithTenant(OWNER_B, () =>
+      equipmentRepo.createEquipment({ type: 'planter', label: 'B-secret-planter' })
+    );
+    const aCropId = runWithTenant(OWNER_A, () => cropsRepo.listCrops()[0].id);
+    expect(() =>
+      runWithTenant(OWNER_A, () =>
+        cropEquipmentRepo.bindEquipment({
+          cropId: aCropId,
+          equipmentId: bEquipment.id,
+          role: 'planter'
+        })
+      )
+    ).toThrow(/unknown equipment id/);
+    // A pre-existing binding row pointing at B's equipment (legacy data)
+    // must still not surface B's label through the join.
+    runWithTenant(OWNER_A, () =>
+      db
+        .insert(cropEquipment)
+        .values(
+          tenantValues({
+            id: randomUUID(),
+            cropId: aCropId,
+            equipmentId: bEquipment.id,
+            role: 'planter'
+          })
+        )
+        .run()
+    );
+    const listed = runWithTenant(OWNER_A, () => cropEquipmentRepo.listCropEquipment(aCropId));
+    expect(listed.map((b) => b.equipmentLabel)).not.toContain('B-secret-planter');
+  });
+
+  it("decon records never join another Owner's equipment label", () => {
+    const bRig = runWithTenant(OWNER_B, () =>
+      equipmentRepo.createEquipment({ type: 'sprayer', label: 'B-secret-sprayer' })
+    );
+    const logId = randomUUID();
+    // Legacy/bad row: A's decon log pointing at B's sprayer id.
+    runWithTenant(OWNER_A, () =>
+      db
+        .insert(equipmentLog)
+        .values(
+          tenantValues({
+            id: logId,
+            equipmentId: bRig.id,
+            occurredAt: new Date(),
+            kind: 'decon' as const
+          })
+        )
+        .run()
+    );
+    const rows = runWithTenant(OWNER_A, () => listUnifiedRecords({ kinds: ['decon'] }));
+    const row = rows.find((r) => r.rowId === logId);
+    expect(row).toBeTruthy();
+    expect(row?.detail).not.toContain('B-secret-sprayer');
+  });
+
+  it('taxonomy defaults are shared read-only; own terms stay per-Owner', () => {
+    const def = runWithTenant(OWNER_A, () =>
+      taxonomyRepo.listTaxonomyTerms({ domain: 'equipment' }).find((t) => t.isDefault)
+    );
+    expect(def).toBeTruthy();
+    expect(() =>
+      runWithTenant(OWNER_A, () => taxonomyRepo.updateTaxonomyTerm(def!.id, { name: 'hijacked' }))
+    ).toThrow(taxonomyRepo.DefaultTermEditError);
+    expect(runWithTenant(OWNER_B, () => taxonomyRepo.getTaxonomyTerm(def!.id)?.name)).toBe(
+      def!.name
+    );
+
+    const bTerm = runWithTenant(OWNER_B, () =>
+      taxonomyRepo.createTaxonomyTerm({ domain: 'equipment', name: `b-term-${randomUUID()}` })
+    );
+    expect(runWithTenant(OWNER_A, () => taxonomyRepo.getTaxonomyTerm(bTerm.id))).toBeUndefined();
+    expect(() =>
+      runWithTenant(OWNER_A, () => taxonomyRepo.updateTaxonomyTerm(bTerm.id, { name: 'x' }))
+    ).toThrow();
+
+    const aTerm = runWithTenant(OWNER_A, () =>
+      taxonomyRepo.createTaxonomyTerm({ domain: 'equipment', name: `a-term-${randomUUID()}` })
+    );
+    const renamed = runWithTenant(OWNER_A, () =>
+      taxonomyRepo.updateTaxonomyTerm(aTerm.id, { name: `a-renamed-${randomUUID()}` })
+    );
+    expect(renamed.name).toMatch(/^a-renamed-/);
+  });
+
+  it('plugin_overrides (farm copies + farm retires) are owner-scoped', () => {
+    const pluginId = `xt-plugin-${randomUUID()}`;
+    const payload = JSON.stringify({ pluginId, type: 'crop', displayName: 'A copy' });
+    const aRow = runWithTenant(OWNER_A, () =>
+      pluginOverridesRepo.insertOverridePayload(pluginId, 'crop', payload)
+    );
+    runWithTenant(OWNER_A, () => pluginOverridesRepo.hideForOwner(`${pluginId}-2`, 'crop'));
+
+    const aMap = runWithTenant(OWNER_A, () => pluginOverridesRepo.listEffectiveOverrides());
+    expect(aMap.get(pluginId)?.payloadJson).toBe(payload);
+    expect(
+      runWithTenant(OWNER_A, () => pluginOverridesRepo.isHiddenForOwner(`${pluginId}-2`))
+    ).toBe(true);
+
+    const bMap = runWithTenant(OWNER_B, () => pluginOverridesRepo.listEffectiveOverrides());
+    expect(bMap.has(pluginId)).toBe(false);
+    expect(bMap.has(`${pluginId}-2`)).toBe(false);
+    expect(
+      runWithTenant(OWNER_B, () => pluginOverridesRepo.getOverrideByHash(pluginId, aRow.hash))
+    ).toBeUndefined();
+    expect(
+      runWithTenant(OWNER_B, () => pluginOverridesRepo.isHiddenForOwner(`${pluginId}-2`))
+    ).toBe(false);
+
+    // B's unretire cannot remove A's marker.
+    runWithTenant(OWNER_B, () => pluginOverridesRepo.unhideForOwner(`${pluginId}-2`));
+    expect(
+      runWithTenant(OWNER_A, () => pluginOverridesRepo.isHiddenForOwner(`${pluginId}-2`))
+    ).toBe(true);
+    expect(pluginOverridesRepo.overridesRevision(OWNER_A)).toBeGreaterThan(0);
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -431,7 +618,9 @@ describe('cross-tenant isolation', () => {
       planRevisionsRepo,
       scoutObservationsRepo,
       wizardChatRepo,
-      seasonCloseoutsRepo
+      seasonCloseoutsRepo,
+      pushSubscriptionsRepo,
+      pluginOverridesRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

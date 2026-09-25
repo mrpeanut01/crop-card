@@ -16,6 +16,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { requireOwner } from '$lib/server/auth';
 import { diffPlugins } from '$lib/plugins/diff';
 import { bumpPatch, currentVersionOf } from '$lib/db/pluginVersions';
+import { effectiveOverride, HIDDEN_PAYLOAD } from '$lib/db/pluginOverrides';
 
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
@@ -37,7 +38,18 @@ export const POST: RequestHandler = async (event) => {
     return json({ error: 'candidate.pluginId is required' }, { status: 400 });
   }
 
-  const prior = currentVersionOf(pluginId);
+  const own =
+    event.url.searchParams.get('scope') === 'global' ? undefined : effectiveOverride(pluginId);
+  const shared = currentVersionOf(pluginId);
+  const prior =
+    own && own.payloadJson !== HIDDEN_PAYLOAD
+      ? {
+          version: String((JSON.parse(own.payloadJson) as { version?: unknown }).version ?? ''),
+          hash: own.hash,
+          retiredAt: null,
+          payloadJson: own.payloadJson
+        }
+      : shared;
   let priorPayload: unknown = null;
   if (prior) {
     try {

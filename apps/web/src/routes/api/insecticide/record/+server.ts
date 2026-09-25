@@ -16,7 +16,8 @@ import {
   type ScoutObservation as InsectScoutObs
 } from '$lib/db/insecticideEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
-import { getBlock } from '$lib/db/blocks';
+import { geometryCentroid, getBlock } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import {
   decrementForUse,
   getStockItem,
@@ -35,7 +36,14 @@ import {
 } from '$lib/safety/userAddedRestrictionsFromStock';
 import { RULES_VERSION } from '$lib/safety/version';
 import { checkIpmThreshold, type ScoutObservation } from '$lib/safety/ipmThreshold';
-import { checkPollinatorBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
+import { isInBloom, type CropInBlock } from '$lib/safety/pollinatorBloom';
+import {
+  checkPollinatorProtection,
+  pollinatorViolations,
+  type BloomStatus
+} from '$lib/safety/pollinatorProtection';
+import { sunTimesFor } from '$lib/safety/sunTimes';
+import { getFarmLatLon } from '$lib/schedule/settings';
 import { checkCrossContaminationForClasses } from '$lib/safety/crossContamination';
 import { runEvaluator } from '$lib/safety/dryRunRunner';
 import type { StockUnit } from '$lib/stock/units';
@@ -44,6 +52,7 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 /** Coarse sprayer-load token for the cross-contamination state machine
  *  (#321). Insecticides carry IRAC groups, not an HRAC ChemistryClass, so
@@ -54,6 +63,9 @@ const requestSchema = z.object({
   blockId: z.string().min(1),
   cropId: z.string().optional(),
   taskId: z.string().optional(),
+  /** Epoch ms the operator recorded the application (stamped client-side,
+   *  preserved through the offline queue). The pollinator time-of-day gate
+   *  and the stored event time key off this, not server receive time. */
   occurredAt: z.number().int().optional(),
   productPluginIds: z.array(z.string().min(1)).min(1),
   /** Phase 17 (Track 2.4) — parallel to productPluginIds. Feeds the safety
@@ -75,11 +87,32 @@ const requestSchema = z.object({
       notes: z.string().max(500).optional()
     })
     .optional(),
-  tankSizeGallons: z.number().positive().optional()
+  tankSizeGallons: z.number().positive().optional(),
+  /** #130 — operator bloom attestation (crop or flowering weeds). Missing
+   *  → derived from crop-plugin bloom windows, else `unknown`. */
+  bloomStatus: z.enum(['in-bloom', 'not-in-bloom', 'unknown']).optional(),
+  /** #130 — "no bees foraging" attestation; only consulted when sunrise /
+   *  sunset cannot be computed for a dusk-to-dawn-only label. */
+  attestedNoForagers: z.boolean().optional()
 });
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
+
+const OCCURRED_AT_MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
+const OCCURRED_AT_MAX_AGE_MS = 7 * DAY_MS;
+
+/** Bounds a client-supplied application time: no more than a small clock
+ *  skew into the future, and no older than the offline-queue horizon. */
+function occurredAtError(occurredAt: number, now: number): string | null {
+  if (occurredAt > now + OCCURRED_AT_MAX_FUTURE_SKEW_MS) {
+    return 'occurredAt is in the future';
+  }
+  if (occurredAt < now - OCCURRED_AT_MAX_AGE_MS) {
+    return 'occurredAt is more than 7 days old';
+  }
+  return null;
+}
 
 export const POST: RequestHandler = async (event) => {
   const auth = currentUser(event);
@@ -105,8 +138,24 @@ export const POST: RequestHandler = async (event) => {
     );
   }
 
+  const foreign = rejectForeignRefs(
+    ['blockId', parsed.data.blockId, getBlock],
+    ['cropId', parsed.data.cropId, getCrop]
+  );
+  if (foreign) return foreign;
+
   const registry = await getRegistry();
-  const occurredAt = parsed.data.occurredAt ?? Date.now();
+  const now = Date.now();
+  if (parsed.data.occurredAt !== undefined) {
+    const err = occurredAtError(parsed.data.occurredAt, now);
+    if (err) {
+      return json(
+        { error: 'invalid request', issues: [{ path: 'occurredAt', message: err }] },
+        { status: 400 }
+      );
+    }
+  }
+  const occurredAt = parsed.data.occurredAt ?? now;
 
   // UC-44 — SEASON_CLOSED gate. Refuse writes dated inside a closed season.
   const seasonClosed = checkSeasonClosed(occurredAt);
@@ -229,24 +278,42 @@ export const POST: RequestHandler = async (event) => {
         bloomWindow: cropPlugin?.bloomWindow
       };
     });
-  const pollinatorViolations = runEvaluator(
-    'pollinatorBloom',
-    () =>
-      checkPollinatorBloom(
-        products.map((p) => ({
-          pluginId: p.pluginId,
-          pollinatorRisk: p.pollinatorRisk ?? 'unknown'
-        })),
-        cropsInBlock,
-        occurredAt
-      ),
-    {
-      plannedSpray: { productPluginIds: parsed.data.productPluginIds },
-      blockId: parsed.data.blockId
-    }
-  );
+  // #130 — label pollinator gate (RULES_VERSION 0.5.6). Label language is
+  // law, so this is not routed through the KERNEL_DRY_RUN wrapper.
+  const pluginSaysInBloom = cropsInBlock.some((c) => isInBloom(c, occurredAt));
+  const bloomStatus: BloomStatus =
+    parsed.data.bloomStatus ?? (pluginSaysInBloom ? 'in-bloom' : 'unknown');
+  const centroid = block?.geometryGeojson ? geometryCentroid(block.geometryGeojson) : null;
+  const { lat, lon } = centroid ?? getFarmLatLon();
+  const pollinator = checkPollinatorProtection({
+    products: products.map((p) => ({
+      pluginId: p.pluginId,
+      displayName: p.displayName,
+      pollinator: p.pollinator,
+      pollinatorRisk: p.pollinatorRisk
+    })),
+    bloomStatus,
+    applicationTime: new Date(occurredAt),
+    sunTimes: sunTimesFor(lat, lon, new Date(occurredAt)),
+    attestedNoForagers: parsed.data.attestedNoForagers
+  });
+  const pollinatorBlock = pollinatorViolations(pollinator);
+  if (pollinatorBlock.length > 0) {
+    return json(
+      {
+        error: 'POLLINATOR_BLOCK',
+        code: 'POLLINATOR_BLOCK',
+        message: pollinatorBlock[0].message,
+        checks: pollinator.checks,
+        bloomStatus,
+        violations: pollinatorBlock,
+        ruleVersion: RULES_VERSION
+      },
+      { status: 422 }
+    );
+  }
 
-  const gateViolations = [...ipmViolations, ...pollinatorViolations];
+  const gateViolations = [...ipmViolations];
   if (gateViolations.length > 0) {
     return json(
       {
@@ -458,6 +525,7 @@ export const POST: RequestHandler = async (event) => {
     event: persisted,
     ruleVersion: RULES_VERSION,
     stockDecrements: stockResults,
-    stockWarnings
+    stockWarnings,
+    pollinatorWarnings: pollinator.checks.filter((c) => c.status === 'warn')
   });
 };

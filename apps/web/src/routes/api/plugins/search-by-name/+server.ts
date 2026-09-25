@@ -10,13 +10,16 @@
  * Response: { candidates: PluginCandidate[], source: 'local'|'web-search'|'mixed', meta }
  *
  * Quota: `'plugin-search'` in `DEFAULT_AI_DAILY_QUOTA` (15 calls/day default).
- * Local-only responses do NOT consume quota.
+ * Local-only responses do NOT consume quota. No key / spent quota / cap /
+ * upstream failure → 200 with the local matches, `provenance: 'fallback'`,
+ * `fallbackReason` and `meta.message` (Invariant 7).
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import {
   AnthropicOverloadedError,
   claudePluginSearchByName,
@@ -69,73 +72,60 @@ export const POST: RequestHandler = async (event) => {
     });
   }
 
-  const guard = checkGuard(session.id, 'plugin-search');
-  if (!guard.ok) {
-    return json(
-      {
-        candidates: localMatches,
-        source: 'local',
-        meta: { quotaBlocked: true, message: guard.message }
-      },
-      { status: localMatches.length > 0 ? 200 : guard.status }
+  const tried = await tryAiWithGuard({
+    endpoint: 'plugin-search',
+    userId: session.id,
+    timeoutMs: 90_000,
+    prompt: (signal) =>
+      claudePluginSearchByName(query, hintType as PluginKindHint | undefined, signal)
+  });
+
+  if (tried.provenance === 'fallback') {
+    recordFallback(
+      session.id,
+      'plugin-search',
+      tried.fallbackReason,
+      tried.error instanceof Error ? tried.error.name : undefined
     );
-  }
-
-  try {
-    const ai = await claudePluginSearchByName(query, hintType as PluginKindHint | undefined);
-    recordCall({
-      userId: session.id,
-      endpoint: 'plugin-search',
-      model: ai.meta.model,
-      inputTokens: ai.meta.inputTokens,
-      cachedInputTokens: ai.meta.cachedInputTokens,
-      outputTokens: ai.meta.outputTokens,
-      usdEstimate: ai.meta.usdEstimate,
-      success: ai.candidates.length > 0
-    });
-
-    const merged: PluginCandidate[] = [...localMatches, ...ai.candidates].slice(0, 6);
-    const source: 'local' | 'web-search' | 'mixed' =
-      localMatches.length > 0 && ai.candidates.length > 0
-        ? 'mixed'
-        : ai.candidates.length > 0
-          ? 'web-search'
-          : 'local';
     return json({
-      candidates: merged,
-      source,
-      citations: ai.citations,
-      meta: ai.meta
+      candidates: localMatches,
+      source: 'local',
+      provenance: 'fallback',
+      fallbackReason: tried.fallbackReason,
+      meta: {
+        quotaBlocked: !tried.guard.ok,
+        upstreamOverloaded: tried.error instanceof AnthropicOverloadedError,
+        aiUnavailable: true,
+        message: `${tried.fallbackMessage} Showing local registry matches only.`
+      }
     });
-  } catch (err) {
-    if (err instanceof AnthropicOverloadedError) {
-      return json(
-        {
-          candidates: localMatches,
-          source: 'local',
-          meta: { upstreamOverloaded: true, message: err.message }
-        },
-        { status: 200 }
-      );
-    }
-    recordCall({
-      userId: session.id,
-      endpoint: 'plugin-search',
-      model: 'unknown',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: err instanceof Error ? err.name : 'unknown'
-    });
-    return json(
-      {
-        candidates: localMatches,
-        source: 'local',
-        meta: { error: err instanceof Error ? err.message : String(err) }
-      },
-      { status: localMatches.length > 0 ? 200 : 500 }
-    );
   }
+
+  const ai = tried.value;
+  recordCall({
+    userId: session.id,
+    endpoint: 'plugin-search',
+    model: ai.meta.model,
+    inputTokens: ai.meta.inputTokens,
+    cachedInputTokens: ai.meta.cachedInputTokens,
+    outputTokens: ai.meta.outputTokens,
+    usdEstimate: ai.meta.usdEstimate,
+    success: ai.candidates.length > 0,
+    provenance: 'ai'
+  });
+
+  const merged: PluginCandidate[] = [...localMatches, ...ai.candidates].slice(0, 6);
+  const source: 'local' | 'web-search' | 'mixed' =
+    localMatches.length > 0 && ai.candidates.length > 0
+      ? 'mixed'
+      : ai.candidates.length > 0
+        ? 'web-search'
+        : 'local';
+  return json({
+    candidates: merged,
+    source,
+    provenance: 'ai',
+    citations: ai.citations,
+    meta: ai.meta
+  });
 };

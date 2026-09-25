@@ -21,7 +21,7 @@
  */
 
 import { type RequestHandler } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { equipment, equipmentLog, fertilityApplications, owners, users } from '$lib/db/schema';
 import { unscopedQueryNote, withTenant } from '$lib/db/tenant';
@@ -83,7 +83,7 @@ export const GET: RequestHandler = async (event) => {
       payloadJson: equipmentLog.payloadJson
     })
     .from(equipmentLog)
-    .leftJoin(equipment, eq(equipment.id, equipmentLog.equipmentId))
+    .leftJoin(equipment, and(eq(equipment.id, equipmentLog.equipmentId), withTenant(equipment)))
     .where(withTenant(equipmentLog, eq(equipmentLog.kind, 'decon')))
     .all();
   const decon = deconRows.map((r) => ({

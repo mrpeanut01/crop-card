@@ -6,8 +6,10 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { createStockItem, listStockItems, type StockCategory } from '$lib/db/stock';
+import { getTaxonomyTerm } from '$lib/db/taxonomy';
 import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
 import { requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const CATEGORIES: StockCategory[] = [
   'herbicide',
@@ -60,5 +62,7 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
+  const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
+  if (foreign) return foreign;
   return json({ item: createStockItem(parsed.data) }, { status: 201 });
 };

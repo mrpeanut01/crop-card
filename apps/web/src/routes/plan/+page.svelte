@@ -17,6 +17,8 @@
   import NewBlockModal from '$lib/components/plan/NewBlockModal.svelte';
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
+  import AddTaskModal from '$lib/components/plan/AddTaskModal.svelte';
+  import { withStepRoutes, workflowStepRoute } from '$lib/plan/seasonWorkflow';
   // Phase 25b (#81) — controls the legacy <details> open state. The
   // mutation callbacks emitted from PlanV2Shell flip this true so the
   // user lands on the right legacy tab.
@@ -393,6 +395,46 @@
   let planning = $state(false);
   let committing = $state(false);
   let showAllocationWizard = $state(false);
+  let wizardInitialStep = $state<'season-setup' | 'allocation' | undefined>(undefined);
+  let addTaskTarget = $state<{ blockId: string; plantingId: string | null } | null>(null);
+  const addTaskBlock = $derived(
+    addTaskTarget ? data.blocks.find((b) => b.id === addTaskTarget?.blockId) : undefined
+  );
+
+  function openWizard(initial?: 'season-setup' | 'allocation') {
+    wizardInitialStep = initial;
+    showAllocationWizard = true;
+  }
+
+  function revealById(id: string) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function handleWorkflowStep(stepId: string) {
+    const { target } = workflowStepRoute(stepId, data.seasonWorkflow ?? []);
+    if (!target) return;
+    if (target.kind === 'wizard') {
+      openWizard(target.wizardStep);
+    } else if (target.kind === 'calendar') {
+      const sp = new URLSearchParams($page.url.searchParams);
+      sp.set('tab', 'calendar');
+      sp.set('view', 'swimlane');
+      detailOpen = true;
+      await goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
+      revealById('legacy-plan');
+    } else if (target.kind === 'tasks') {
+      revealById('plan-scheduled-tasks');
+    } else if (target.kind === 'provenance') {
+      if (data.tab !== 'overview') {
+        const sp = new URLSearchParams($page.url.searchParams);
+        sp.set('tab', 'overview');
+        await goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
+      }
+      revealById('plan-provenance');
+    }
+  }
   // Phase 21a polish — when the Overview tab shows an existing Season
   // Setup chip, this toggles back to the inline form so the operator can
   // edit in place (no navigation to /settings/season).
@@ -1785,8 +1827,9 @@
 {#if data.seasonWorkflow && data.seasonWorkflow.length > 0}
   <WorkflowStrip
     seasonYear={data.currentYear ?? new Date().getFullYear()}
-    steps={data.seasonWorkflow}
-    onOpenWizard={() => (showAllocationWizard = true)}
+    steps={withStepRoutes(data.seasonWorkflow)}
+    onOpenWizard={() => openWizard()}
+    onSelectStep={handleWorkflowStep}
   />
 {/if}
 
@@ -1794,7 +1837,7 @@
      is the resting state for plans built pre-#89; new wizard commits +
      manual edits push revisions into `plan_revisions` and surface here. -->
 {#if data.tab === 'overview' && data.planRevisions}
-  <div class="provenance-mount">
+  <div class="provenance-mount" id="plan-provenance">
     <ProvenancePanel revisions={data.planRevisions} planLabel={data.planLabel} />
   </div>
 {/if}
@@ -1809,6 +1852,8 @@
 <PlanV2Shell
   blocks={data.blocks}
   tasks={data.planV2Tasks ?? []}
+  events={data.planV2Events ?? []}
+  geometryEditHref={data.canEdit ? '/settings/farm/map' : undefined}
   farmLabel={data.fields[0]?.name}
   cropMeta={Object.fromEntries(
     data.cropCatalog.map((c) => [
@@ -1818,11 +1863,15 @@
         daysToMaturity: c.daysToMaturity
           ? Math.round((c.daysToMaturity.min + c.daysToMaturity.max) / 2)
           : undefined,
-        cropFamily: c.cropFamily
+        cropFamily: c.cropFamily,
+        archetype: c.archetype
       }
     ])
   )}
-  onOpenWizard={() => (showAllocationWizard = true)}
+  onOpenWizard={() => openWizard()}
+  onAddTask={(blockId, plantingId) => {
+    addTaskTarget = { blockId, plantingId };
+  }}
   onAddBlock={() => {
     showNewBlockModal = true;
   }}
@@ -1870,6 +1919,22 @@
   onClose={() => (showNewPlantingModal = false)}
   onCreated={async () => {
     showNewPlantingModal = false;
+    await invalidateAll();
+  }}
+/>
+
+<AddTaskModal
+  open={addTaskTarget !== null}
+  blockId={addTaskTarget?.blockId ?? null}
+  blockName={addTaskBlock?.name ?? 'this block'}
+  plantings={(addTaskBlock?.plantings ?? []).map((p) => ({
+    id: p.id,
+    label: p.varietyDisplayName
+  }))}
+  defaultPlantingId={addTaskTarget?.plantingId ?? null}
+  onClose={() => (addTaskTarget = null)}
+  onCreated={async () => {
+    addTaskTarget = null;
     await invalidateAll();
   }}
 />
@@ -2289,7 +2354,7 @@
             <button
               type="button"
               class="ai-allocate-btn"
-              onclick={() => (showAllocationWizard = true)}
+              onclick={() => openWizard()}
               title="Plan plantings from your seed stock — AI picks blocks and dates"
             >
               ✨ Plan Plantings
@@ -3406,6 +3471,7 @@
      See docs/design/almanac/direction-almanac-wizard.jsx. -->
 {#if showAllocationWizard}
   <AllocationWizard
+    initialStep={wizardInitialStep}
     seedStock={(data.seedStock ?? []).map((s) => ({
       stockItemId: s.stockItemId,
       displayName: s.displayName,

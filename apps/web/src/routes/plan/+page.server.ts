@@ -28,6 +28,7 @@ import { getFarmLatLon } from '$lib/schedule/settings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { deriveSeasonWorkflow } from '$lib/plan/seasonWorkflow';
+import { planV2EventsFor } from '$lib/plan/planV2Derive';
 import { listPlanRevisions } from '$lib/plan/revisions';
 import { getActiveSession, listMessages } from '$lib/db/wizardChat';
 import {
@@ -61,7 +62,12 @@ import { listFields, type FieldWithBlocks } from '$lib/db/fields';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listStockItems, type StockItemWithBalance } from '$lib/db/stock';
 import { listTasks, type Task } from '$lib/db/tasks';
-import type { CropPlugin, StageSystem, CornType } from '$lib/plugins/schemas';
+import {
+  resolveArchetype,
+  type CropPlugin,
+  type StageSystem,
+  type CornType
+} from '$lib/plugins/schemas';
 import {
   resolveGrowthStageTable,
   resolvePerennialTemplate
@@ -151,7 +157,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         pluginId: c.pluginId,
         displayName: c.displayName,
         cropFamily: c.cropFamily,
-        daysToMaturity: c.daysToMaturity
+        daysToMaturity: c.daysToMaturity,
+        archetype: resolveArchetype(c)
       };
     })
     .sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -263,6 +270,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       staleAnchor: t.staleAnchor,
       createdAt: t.createdAt
     })),
+    planV2Events: planV2EventsFor(blocks, (id) => {
+      const plug = registry.get(id)?.plugin;
+      return plug && plug.type === 'crop' ? (plug as CropPlugin) : undefined;
+    }),
     // Phase 25d (#89) — wizard chat server-persistence. Pass the
     // wizard the planId + any prior chat turns so resume restores the
     // conversation instead of dropping it on the floor.

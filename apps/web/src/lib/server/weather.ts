@@ -65,14 +65,30 @@ interface NwsForecastResponse {
   };
 }
 
+export const NWS_FETCH_TIMEOUT_MS = 8000;
+
+/** URLs followed out of a /points response are only trusted when they stay
+ *  on api.weather.gov over https (SSRF guard). */
+export function isNwsUrl(url: unknown): url is string {
+  return typeof url === 'string' && url.startsWith(`${NWS_BASE}/`);
+}
+
 export async function nwsFetch<T>(url: string, init: { signal?: AbortSignal } = {}): Promise<T> {
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': USER_AGENT,
-      Accept: 'application/geo+json'
-    },
-    signal: init.signal
-  });
+  if (!isNwsUrl(url)) {
+    throw new WeatherFetchError(`Refusing non-NWS URL: ${String(url).slice(0, 200)}`);
+  }
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: {
+        'User-Agent': USER_AGENT,
+        Accept: 'application/geo+json'
+      },
+      signal: init.signal ?? AbortSignal.timeout(NWS_FETCH_TIMEOUT_MS)
+    });
+  } catch (e) {
+    throw new WeatherFetchError(`NWS fetch failed (${url})`, e);
+  }
   if (!res.ok) {
     throw new WeatherFetchError(`NWS fetch failed: ${res.status} ${res.statusText} (${url})`);
   }

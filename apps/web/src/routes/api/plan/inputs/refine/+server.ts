@@ -9,9 +9,10 @@
  *
  * Hard guardrails identical to `/api/plan/inputs`:
  *   - Same quota guard (10 calls/day default, tracked under endpoint
- *     'inputs').
- *   - Same fallback semantics: rejection or missing key → return the
- *     PREVIOUS plan unchanged with meta.fallback set.
+ *     'inputs'); a spent quota/cap degrades instead of 4xx-ing.
+ *   - Same fallback semantics: rejection, missing key, spent quota/cap →
+ *     return the PREVIOUS plan unchanged with meta.fallback +
+ *     meta.provenance='fallback' + meta.fallbackReason set.
  *   - Same telemetry recording so the cost dashboard shows refinement
  *     usage alongside initial planning.
  */
@@ -33,7 +34,8 @@ import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getRegistry } from '$lib/server/registry';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { degradeTag, recordFallback, tryAiWithGuard, ZERO_USAGE } from '$lib/server/aiDegrade';
 import { refineInputs } from '$lib/server/aiInputsPlan';
 
 const provisionalPlantingSchema = z.object({
@@ -85,11 +87,6 @@ export const POST: RequestHandler = async (event) => {
   const seasonSetup = loadSeasonSetup(parsed.data.year);
   if (!seasonSetup) {
     return json({ error: 'no season setup for year', year: parsed.data.year }, { status: 409 });
-  }
-
-  const guard = checkGuard(auth.id, 'inputs');
-  if (!guard.ok) {
-    return json({ error: guard.message, reason: guard.reason }, { status: guard.status });
   }
 
   const registry = await getRegistry();
@@ -146,13 +143,38 @@ export const POST: RequestHandler = async (event) => {
     year: parsed.data.year
   };
 
-  const result = await refineInputs({
-    base: baseInput,
-    previousPlan: parsed.data.previousPlan as InputsPlan,
-    message: parsed.data.message,
-    history: parsed.data.history
+  const previousPlan = parsed.data.previousPlan as InputsPlan;
+  const tried = await tryAiWithGuard({
+    endpoint: 'inputs',
+    userId: auth.id,
+    prompt: (signal) =>
+      refineInputs({
+        base: baseInput,
+        previousPlan,
+        message: parsed.data.message,
+        history: parsed.data.history,
+        signal
+      })
   });
 
+  if (tried.provenance === 'fallback') {
+    recordFallback(auth.id, 'inputs', tried.fallbackReason);
+    return json({
+      plan: previousPlan,
+      meta: {
+        ...ZERO_USAGE,
+        model: 'no-call',
+        fallback: degradeTag(tried.fallbackReason, tried.guard),
+        violations: tried.guard.ok ? [] : [tried.guard.reason],
+        provenance: 'fallback',
+        fallbackReason: tried.fallbackReason,
+        fallbackMessage: tried.fallbackMessage
+      }
+    });
+  }
+
+  const result = tried.value;
+  const provenance = result.meta.fallback ? 'fallback' : 'ai';
   recordCall({
     userId: auth.id,
     endpoint: 'inputs',
@@ -162,8 +184,9 @@ export const POST: RequestHandler = async (event) => {
     outputTokens: result.meta.outputTokens,
     usdEstimate: result.meta.usdEstimate,
     success: !result.meta.fallback,
-    errorClass: result.meta.fallback
+    errorClass: result.meta.fallback,
+    provenance
   });
 
-  return json({ plan: result.plan, meta: result.meta });
+  return json({ plan: result.plan, meta: { ...result.meta, provenance } });
 };

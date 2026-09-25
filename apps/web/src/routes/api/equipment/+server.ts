@@ -6,7 +6,9 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { createEquipment, listEquipment, type EquipmentType } from '$lib/db/equipment';
+import { getTaxonomyTerm } from '$lib/db/taxonomy';
 import { requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const TYPES: EquipmentType[] = [
   'sprayer',
@@ -46,5 +48,7 @@ export const POST: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
+  const foreign = rejectForeignRefs(['typeId', parsed.data.typeId, getTaxonomyTerm]);
+  if (foreign) return foreign;
   return json({ equipment: createEquipment(parsed.data) }, { status: 201 });
 };

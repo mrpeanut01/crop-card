@@ -24,6 +24,10 @@
     when?: string;
     /** Optional tooltip body when the user hovers a step. */
     note?: string;
+    /** When true the step renders but cannot be activated. */
+    disabled?: boolean;
+    /** Where a click lands (or why it can't), appended to the tooltip. */
+    actionHint?: string;
   }
 
   interface Props {
@@ -98,9 +102,11 @@
         <button
           type="button"
           class="step-btn"
-          title={[s.note, s.when].filter(Boolean).join(' · ')}
-          onclick={() => onSelectStep?.(s.id)}
-          disabled={!onSelectStep}
+          title={[s.note, s.when, s.actionHint].filter(Boolean).join(' · ')}
+          onclick={() => {
+            if (!s.disabled) onSelectStep?.(s.id);
+          }}
+          disabled={!onSelectStep || s.disabled}
         >
           <span
             class="dot"
@@ -118,6 +124,9 @@
           <span class="step-text">
             <span class="step-label">{s.label}</span>
             <span class="step-when" class:stale={s.state === 'stale'}>{whenLabel(s)}</span>
+            {#if onSelectStep && s.actionHint}
+              <span class="sr-only">{s.actionHint}</span>
+            {/if}
           </span>
         </button>
         {#if i < steps.length - 1}
@@ -173,6 +182,10 @@
     font-weight: 600;
   }
   .trail {
+    /* Containing block for the absolutely-positioned .sr-only spans, so
+       they are clipped by the trail's own scroll box instead of widening
+       the page at 375px. */
+    position: relative;
     flex: 1;
     display: flex;
     align-items: center;
@@ -192,6 +205,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    min-height: 48px;
     padding: 5px 10px 5px 5px;
     border-radius: 999px;
     background: transparent;
@@ -202,6 +216,7 @@
   }
   .step-btn:disabled {
     cursor: default;
+    opacity: 0.65;
   }
   .step-btn:not(:disabled):hover {
     background: var(--color-divider-soft);
@@ -258,6 +273,7 @@
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
+    min-height: 48px;
     padding: 8px 14px;
     background: var(--color-forest);
     color: var(--color-cream);
@@ -274,5 +290,28 @@
   .cta:focus-visible {
     outline: 2px solid var(--color-forest);
     outline-offset: 2px;
+  }
+  @media (max-width: 900px) {
+    .strip {
+      flex-wrap: wrap;
+    }
+    .label {
+      border-right: none;
+    }
+    .trail {
+      order: 3;
+      flex-basis: 100%;
+      min-width: 0;
+      overflow-x: auto;
+    }
+    .step {
+      flex: 0 0 auto;
+    }
+    .trail-bar {
+      flex: 0 0 16px;
+    }
+    .cta {
+      margin-left: auto;
+    }
   }
 </style>

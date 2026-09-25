@@ -10,8 +10,11 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadPluginsFromDirectory, PluginRegistry } from '$lib/plugins';
+import { currentOwnerId } from '$lib/db/tenant';
+import { HIDDEN_PAYLOAD, listEffectiveOverrides, overridesRevision } from '$lib/db/pluginOverrides';
 
 let cached: { registry: PluginRegistry; loadedAt: number; failures: string[] } | null = null;
+const ownerViews = new Map<string, { key: string; registry: PluginRegistry }>();
 
 function pluginsDir(): string {
   // In dev: /app/plugins (compose mount). In prod: alongside the build dir.
@@ -22,7 +25,35 @@ function pluginsDir(): string {
   return path.resolve(here, '../../../../../plugins');
 }
 
+/** The active Owner's view: the shared library with that Owner's
+ *  `plugin_overrides` applied (retired ids hidden, own uploads replacing
+ *  same-id plugins). Outside a tenant context, the shared library. */
 export async function getRegistry(): Promise<PluginRegistry> {
+  const base = await getBaseRegistry();
+  const ownerId = currentOwnerId();
+  if (!ownerId || !cached) return base;
+  const revision = overridesRevision(ownerId);
+  if (revision === 0) return base;
+  const key = `${cached.loadedAt}:${revision}`;
+  const hit = ownerViews.get(ownerId);
+  if (hit && hit.key === key) return hit.registry;
+  const hidden: string[] = [];
+  const payloads: unknown[] = [];
+  for (const o of listEffectiveOverrides().values()) {
+    if (o.payloadJson === HIDDEN_PAYLOAD) hidden.push(o.pluginId);
+    else payloads.push(JSON.parse(o.payloadJson));
+  }
+  const { registry, failures } = base.withOverlay(hidden, payloads);
+  if (failures.length > 0) {
+    console.warn(`[registry] owner ${ownerId}: plugin overrides rejected`, failures);
+  }
+  ownerViews.set(ownerId, { key, registry });
+  return registry;
+}
+
+/** The shared plugin library, ignoring every Owner's overrides. Global
+ *  (superadmin) library operations validate against this. */
+export async function getBaseRegistry(): Promise<PluginRegistry> {
   if (cached) return cached.registry;
   const registry = new PluginRegistry();
   const result = await loadPluginsFromDirectory(registry, pluginsDir());
@@ -46,4 +77,5 @@ export function getRegistryStats(): { loadedAt?: number; failures: string[] } {
  *  the plugin authoring + upload flows after writing a new file to disk. */
 export function resetRegistry(): void {
   cached = null;
+  ownerViews.clear();
 }

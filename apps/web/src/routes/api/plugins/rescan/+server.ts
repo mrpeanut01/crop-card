@@ -14,7 +14,7 @@
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { requireOwner } from '$lib/server/auth';
+import { requireSuperadmin } from '$lib/server/auth';
 import { rescanPluginsFromDisk } from '$lib/server/pluginRescan';
 import {
   diagnoseBindMount,
@@ -23,7 +23,7 @@ import {
 } from '$lib/server/bindMountHealth';
 
 export const POST: RequestHandler = async (event) => {
-  const session = requireOwner(event);
+  const session = requireSuperadmin(event);
 
   const diag = diagnoseBindMount();
   if (diag.schemasLooksTruncated) {

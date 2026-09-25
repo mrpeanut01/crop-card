@@ -2,6 +2,7 @@ import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { lookupByPlaintext, touchCredential } from '$lib/server/appCreds';
 import { readAdminSession } from '$lib/server/adminSession';
 import { ensureBootstrapped } from '$lib/server/bootstrap';
+import { resolveBearer } from '$lib/server/bearerAuth';
 
 /**
  * Request pipeline:
@@ -21,32 +22,14 @@ export const handle: Handle = async ({ event, resolve }) => {
   ensureBootstrapped();
 
   // 2. Auth resolution
-  const authHeader = event.request.headers.get('authorization');
-  if (authHeader?.toLowerCase().startsWith('bearer ')) {
-    const token = authHeader.slice(7).trim();
-    let cred: ReturnType<typeof lookupByPlaintext>;
-    try {
-      cred = lookupByPlaintext(token);
-    } catch {
-      return new Response(
-        JSON.stringify({ error: 'invalid or revoked Bearer token' }),
-        { status: 401, headers: { 'content-type': 'application/json' } }
-      );
-    }
-    if (cred) {
-      event.locals.app = cred;
-      event.locals.authVia = 'bearer';
-      try {
-        touchCredential(cred.id);
-      } catch {
-        // touch is best-effort; do not propagate DB errors back to the agent.
-      }
-    } else {
-      return new Response(
-        JSON.stringify({ error: 'invalid or revoked Bearer token' }),
-        { status: 401, headers: { 'content-type': 'application/json' } }
-      );
-    }
+  const bearer = resolveBearer(event.request.headers.get('authorization'), {
+    lookup: lookupByPlaintext,
+    touch: touchCredential
+  });
+  if (bearer.kind === 'reject') return bearer.response;
+  if (bearer.kind === 'ok') {
+    event.locals.app = bearer.cred;
+    event.locals.authVia = 'bearer';
   } else {
     const session = readAdminSession(event.cookies);
     if (session) {

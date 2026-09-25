@@ -130,6 +130,7 @@ export interface UpdateTaxonomyTermInput {
 export function updateTaxonomyTerm(id: string, input: UpdateTaxonomyTermInput): TaxonomyTerm {
   const existing = getTaxonomyTerm(id);
   if (!existing) throw new Error(`unknown taxonomy term: ${id}`);
+  if (existing.isDefault) throw new DefaultTermEditError(existing.name);
 
   const set: Partial<typeof taxonomyTerms.$inferInsert> = {};
   if (input.name !== undefined) {
@@ -145,17 +146,24 @@ export function updateTaxonomyTerm(id: string, input: UpdateTaxonomyTermInput): 
     set.description = input.description?.trim() || null;
   }
   if (Object.keys(set).length === 0) return existing;
-  // Allow updates to either system defaults (ownerId IS NULL) or owner's
-  // own terms — but never to another tenant's. The visibleTermsCondition
-  // makes that distinction.
+  // System defaults (owner_id IS NULL) are shared by every Owner, so only
+  // the active Owner's own terms are writable (Invariant 6).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row = db
     .update(taxonomyTerms)
     .set(set as any)
-    .where(and(eq(taxonomyTerms.id, id), visibleTermsCondition()))
+    .where(and(eq(taxonomyTerms.id, id), eq(taxonomyTerms.ownerId, requireOwnerId())))
     .returning()
     .get();
+  if (!row) throw new DefaultTermEditError(existing.name);
   return rowToTerm(row);
+}
+
+export class DefaultTermEditError extends Error {
+  constructor(name: string) {
+    super(`default taxonomy term '${name}' is shared by every farm and cannot be edited`);
+    this.name = 'DefaultTermEditError';
+  }
 }
 
 export class DefaultTermDeleteError extends Error {

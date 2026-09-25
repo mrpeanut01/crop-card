@@ -25,7 +25,9 @@ import {
 import { requireOwner } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
 import { refreshStockItem, type StockRefreshResult } from '$lib/server/aiRefreshStock';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import type { FallbackReason } from '$lib/server/aiTry';
 import type { CropPlugin } from '$lib/plugins/schemas';
 
 const MAX_ITEMS_PER_BULK = 25;
@@ -115,31 +117,42 @@ export const POST: RequestHandler = async (event) => {
   let lastModel = 'n/a';
   let withCitations = 0;
   let firstFallback: string | undefined;
+  let degraded: { reason: FallbackReason; message: string } | null = null;
 
   for (const stockId of pool.map((p) => p.id)) {
-    // Per-item guard check so a single overrun doesn't burn the whole batch.
-    const guard = checkGuard(user.id, 'rationale');
-    if (!guard.ok) {
-      firstFallback = firstFallback ?? guard.reason;
-      break;
-    }
     const item = getStockItem(stockId);
     if (!item) continue;
     const existingSeedMeta = safeParseJson(item.metadataJson);
     const existingActive = safeParseJson(item.activeIngredientsJson);
     const existingFormulation = safeParseJson(item.formulationJson);
 
-    const r = await refreshStockItem({
-      itemId: item.id,
-      displayName: item.displayName,
-      shortName: item.shortName,
-      category: item.category,
-      pluginId: item.pluginId,
-      cropFamily: cropFamilyOf(item.pluginId),
-      existingSeedMeta: isObject(existingSeedMeta) ? existingSeedMeta : undefined,
-      existingActiveIngredients: Array.isArray(existingActive) ? existingActive : undefined,
-      existingFormulation: isObject(existingFormulation) ? existingFormulation : undefined
+    // Per-item guard (inside tryAiWithGuard) so a single overrun stops the
+    // batch without discarding the items already refreshed.
+    const tried = await tryAiWithGuard({
+      endpoint: 'rationale',
+      userId: user.id,
+      timeoutMs: 120_000,
+      prompt: () =>
+        refreshStockItem({
+          itemId: item.id,
+          displayName: item.displayName,
+          shortName: item.shortName,
+          category: item.category,
+          pluginId: item.pluginId,
+          cropFamily: cropFamilyOf(item.pluginId),
+          existingSeedMeta: isObject(existingSeedMeta) ? existingSeedMeta : undefined,
+          existingActiveIngredients: Array.isArray(existingActive) ? existingActive : undefined,
+          existingFormulation: isObject(existingFormulation) ? existingFormulation : undefined
+        })
     });
+    if (tried.provenance === 'fallback') {
+      recordFallback(user.id, 'rationale', tried.fallbackReason);
+      degraded = { reason: tried.fallbackReason, message: tried.fallbackMessage };
+      firstFallback =
+        firstFallback ?? (tried.fallbackReason === 'no-key' ? 'no-api-key' : 'ai-unavailable');
+      break;
+    }
+    const r = tried.value;
 
     if (r.result) {
       results.push(r.result);
@@ -172,7 +185,8 @@ export const POST: RequestHandler = async (event) => {
       outputTokens: r.meta.outputTokens,
       usdEstimate: r.meta.usdEstimate,
       success: !!r.result?.hasCitations,
-      errorClass: r.meta.fallback
+      errorClass: r.meta.fallback,
+      provenance: r.meta.fallback ? 'fallback' : 'ai'
     });
   }
 
@@ -181,6 +195,13 @@ export const POST: RequestHandler = async (event) => {
     withCitations,
     overflowed,
     results,
+    ...(degraded
+      ? {
+          provenance: 'fallback',
+          fallbackReason: degraded.reason,
+          message: `${degraded.message} ${results.length} of ${pool.length} item(s) refreshed; the rest are unchanged.`
+        }
+      : { provenance: 'ai' }),
     meta: {
       model: lastModel,
       totalUsd,

@@ -1,8 +1,12 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getBlock } from '$lib/db/blocks';
+import { getCrop } from '$lib/db/crops';
 import { insertFertilityApplication, listFertilityApplicationsForBlock } from '$lib/db/fertility';
+import { getStockItem } from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
 import { currentUser, requireOwner } from '$lib/server/auth';
+import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
 const inputSchema = z.object({
   blockId: z.string().min(1),
@@ -38,6 +42,12 @@ export const POST: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+  const foreign = rejectForeignRefs(
+    ['blockId', parsed.data.blockId, getBlock],
+    ['cropId', parsed.data.cropId, getCrop],
+    ['stockItemId', parsed.data.stockItemId, getStockItem]
+  );
+  if (foreign) return foreign;
   const performer = auth ?? (await ensureSystemUser());
   const occurredAt = parsed.data.occurredAt ?? Date.now();
   const persisted = insertFertilityApplication({

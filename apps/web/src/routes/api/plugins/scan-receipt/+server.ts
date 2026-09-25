@@ -20,12 +20,10 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
-import {
-  AnthropicOverloadedError,
-  claudeReceiptScanStreaming,
-  type ReceiptStreamEvent
-} from '$lib/server/aiPluginScan';
+import { recordCall } from '$lib/server/aiGuard';
+import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
+import type { FallbackReason } from '$lib/server/aiTry';
+import { claudeReceiptScanStreaming, type ReceiptStreamEvent } from '$lib/server/aiPluginScan';
 
 const requestSchema = z.object({
   /** Base64-encoded payload (no data: prefix). */
@@ -35,7 +33,14 @@ const requestSchema = z.object({
   mediaType: z.enum(['image/jpeg', 'image/png', 'application/pdf'])
 });
 
-function encodeFrame(event: ReceiptStreamEvent | { phase: 'error'; message: string }): Uint8Array {
+type ErrorFrame = {
+  phase: 'error';
+  message: string;
+  provenance?: 'fallback';
+  fallbackReason?: FallbackReason;
+};
+
+function encodeFrame(event: ReceiptStreamEvent | ErrorFrame): Uint8Array {
   return new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`);
 }
 
@@ -52,19 +57,6 @@ export const POST: RequestHandler = async (event) => {
     return new Response('invalid request', { status: 400 });
   }
 
-  const guard = checkGuard(session.id, 'plugin-batch-scan');
-  if (!guard.ok) {
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(encodeFrame({ phase: 'error', message: guard.message }));
-        controller.close();
-      }
-    });
-    return new Response(stream, {
-      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' }
-    });
-  }
-
   const stream = new ReadableStream({
     async start(controller) {
       const send = (e: ReceiptStreamEvent) => {
@@ -76,11 +68,31 @@ export const POST: RequestHandler = async (event) => {
       };
 
       try {
-        const { meta, proposed } = await claudeReceiptScanStreaming(
-          parsed.data.document,
-          parsed.data.mediaType,
-          send
-        );
+        const tried = await tryAiWithGuard({
+          endpoint: 'plugin-batch-scan',
+          userId: session.id,
+          timeoutMs: 120_000,
+          prompt: () =>
+            claudeReceiptScanStreaming(parsed.data.document, parsed.data.mediaType, send)
+        });
+        if (tried.provenance === 'fallback') {
+          recordFallback(
+            session.id,
+            'plugin-batch-scan',
+            tried.fallbackReason,
+            tried.error instanceof Error ? tried.error.name : undefined
+          );
+          controller.enqueue(
+            encodeFrame({
+              phase: 'error',
+              message: tried.fallbackMessage,
+              provenance: 'fallback',
+              fallbackReason: tried.fallbackReason
+            })
+          );
+          return;
+        }
+        const { meta, proposed } = tried.value;
         recordCall({
           userId: session.id,
           endpoint: 'plugin-batch-scan',
@@ -89,27 +101,11 @@ export const POST: RequestHandler = async (event) => {
           cachedInputTokens: meta.cachedInputTokens,
           outputTokens: meta.outputTokens,
           usdEstimate: meta.usdEstimate,
-          success: proposed.length > 0
+          success: proposed.length > 0,
+          provenance: 'ai'
         });
-      } catch (err) {
-        const message =
-          err instanceof AnthropicOverloadedError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : String(err);
-        send({ phase: 'error', message });
-        recordCall({
-          userId: session.id,
-          endpoint: 'plugin-batch-scan',
-          model: 'unknown',
-          inputTokens: 0,
-          cachedInputTokens: 0,
-          outputTokens: 0,
-          usdEstimate: 0,
-          success: false,
-          errorClass: err instanceof Error ? err.name : 'unknown'
-        });
+      } catch {
+        /* client disconnected */
       } finally {
         controller.close();
       }

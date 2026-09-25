@@ -5,6 +5,7 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import HarvestRouter from '$lib/components/harvest/HarvestRouter.svelte';
+  import { reHarvestArchetype, reHarvestLabel } from '$lib/components/harvest/reHarvest';
 
   let { data } = $props();
 
@@ -122,13 +123,8 @@
    *  visible after the first pick so the operator can log 2nd, 3rd,
    *  Nth cut/pick. The other archetypes (single-cut-grain, dry-seed,
    *  cure-then-store, etc.) keep the original gate. */
-  const RE_HARVEST_ARCHETYPES = new Set([
-    'cut-and-come-again',
-    'continuous-fruit',
-    'tree-fruit-multi-pick'
-  ]);
   function allowsReHarvest(p: PlantingHarvestStatus): boolean {
-    return p.harvestStyle ? RE_HARVEST_ARCHETYPES.has(p.harvestStyle) : false;
+    return reHarvestArchetype(p) !== null;
   }
 
   /** Sprint 4 (#198 / CT-HS-002) — the form is rendered for too-early
@@ -300,14 +296,11 @@
                  even after the first pick so cut-and-come-again leafies,
                  continuous-fruit (tomato, pepper) and tree-fruit-multi-
                  pick (apple, peach) can log 2nd, 3rd, Nth picks. -->
-            {#if p.alreadyHarvested && allowsReHarvest(p)}
+            {@const reArch = p.alreadyHarvested ? reHarvestArchetype(p) : null}
+            {#if reArch}
               <div class="window-banner">
                 <Banner tone="sky">
-                  This {p.harvestStyle === 'cut-and-come-again'
-                    ? 'cut-and-come-again'
-                    : p.harvestStyle === 'continuous-fruit'
-                      ? 'continuous-fruit'
-                      : 'tree-fruit-multi-pick'} planting supports repeat harvest — log additional picks
+                  This {reHarvestLabel(reArch)} planting supports repeat harvest — log additional picks
                   here.
                 </Banner>
               </div>

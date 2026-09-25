@@ -197,7 +197,9 @@
         const header =
           fallback === 'no-api-key'
             ? '⚠ No Anthropic API key configured — proposal unchanged.'
-            : '⚠ Could not apply that change cleanly. Validators rejected the proposal; the schedule above stays as it is.';
+            : fallback === 'ai-unavailable'
+              ? '⚠ Claude is unavailable — proposal unchanged.'
+              : '⚠ Could not apply that change cleanly. Validators rejected the proposal; the schedule above stays as it is.';
         const violationLine = violations.length > 0 ? `\n\nWhy:\n• ${violations.join('\n• ')}` : '';
         display = `${header}${violationLine}\n\n${reply}`;
         // Don't buffer a proposed schedule when the AI's output failed

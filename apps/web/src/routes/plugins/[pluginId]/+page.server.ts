@@ -1,21 +1,26 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getRegistry } from '$lib/server/registry';
+import { getBaseRegistry, getRegistry } from '$lib/server/registry';
+import { effectiveOverride, HIDDEN_PAYLOAD } from '$lib/db/pluginOverrides';
 import { historyOf } from '$lib/db/pluginVersions';
 import { db } from '$lib/db/client';
 import { users } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { unscopedQueryNote } from '$lib/db/tenant';
+import { currentOwnerId, unscopedQueryNote } from '$lib/db/tenant';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const pluginId = params.pluginId;
   if (!pluginId) throw error(404, 'plugin id required');
 
   const registry = await getRegistry();
-  const liveRecord = registry.get(pluginId);
+  const own = currentOwnerId() ? effectiveOverride(pluginId) : undefined;
+  const hiddenForOwner = own?.payloadJson === HIDDEN_PAYLOAD;
+  const liveRecord =
+    registry.get(pluginId) ??
+    (hiddenForOwner ? (await getBaseRegistry()).get(pluginId) : undefined);
   const history = historyOf(pluginId);
 
-  if (!liveRecord && history.length === 0) {
+  if (!liveRecord && history.length === 0 && !own) {
     throw error(404, `no plugin '${pluginId}' on record`);
   }
 
@@ -67,6 +72,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       : null,
     history: rows,
     pluginLookup,
-    canEdit: locals.user?.role === 'owner'
+    canEdit: locals.user?.role === 'owner',
+    isSuperadmin: !!locals.user?.isSuperadmin && locals.authVia !== 'bearer',
+    hiddenForOwner,
+    farmOverride: !!own && !hiddenForOwner
   };
 };

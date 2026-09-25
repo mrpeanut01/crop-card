@@ -67,7 +67,7 @@ var blobContainerName = 'cropcard'
 var marketplaceBlobContainerName = 'cropcard-marketplace'
 var useRegistry = !empty(containerRegistryServer)
 var acrName = useRegistry ? split(containerRegistryServer, '.')[0] : 'none'
-var acrPullRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dff-4ed7-4f47-8e2e-b6e7d4b1e2f5')
+var acrPullRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 // ─── Storage account + blob container for Litestream replicas ──────────
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {

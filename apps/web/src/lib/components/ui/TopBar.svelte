@@ -13,6 +13,7 @@
     Settings
   } from 'lucide-svelte';
   import IconButton from './IconButton.svelte';
+  import Avatar from './Avatar.svelte';
   import OfflineIndicator from './OfflineIndicator.svelte';
   import type { NavAlert } from '$lib/today/navAlerts';
 
@@ -32,6 +33,8 @@
   interface User {
     email: string | null;
     phone?: string | null;
+    name?: string;
+    avatarUrl?: string | null;
     role: string;
     isSuperadmin?: boolean;
   }
@@ -112,7 +115,7 @@
     return path === href || path.startsWith(`${href}/`);
   }
 
-  const initial = $derived(user?.email?.[0]?.toUpperCase() ?? (user?.phone ? '#' : '?'));
+  const avatarName = $derived(user?.name ?? user?.email ?? (user?.phone ? '#' : '?'));
 </script>
 
 <header class="topbar">
@@ -174,7 +177,7 @@
     {#if availableOwners.length > 1 && activeOwner}
       <details class="owner-chip">
         <summary aria-label="Switch farm" title={activeOwner.name}>
-          <span class="avatar">{initial}</span>
+          <Avatar name={avatarName} src={user?.avatarUrl} />
         </summary>
         <div class="owner-popover" role="menu">
           <div class="owner-popover-label">Switch farm</div>
@@ -194,7 +197,9 @@
         </div>
       </details>
     {:else}
-      <span class="avatar standalone" aria-hidden="true">{initial}</span>
+      <span class="standalone" title={user?.name}>
+        <Avatar name={avatarName} src={user?.avatarUrl} />
+      </span>
     {/if}
     <OfflineIndicator {online} {pendingCount} />
   </div>
@@ -391,19 +396,9 @@
   .owner-chip > summary::-webkit-details-marker {
     display: none;
   }
-  .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-pill);
-    background: var(--color-wheat);
-    color: var(--color-cream);
-    display: grid;
-    place-items: center;
-    font-weight: 600;
-    font-size: 13px;
-    flex-shrink: 0;
+  .standalone {
+    display: inline-flex;
   }
-  /* .standalone is just a marker class; no additional styles needed. */
   .owner-popover {
     position: absolute;
     right: 0;

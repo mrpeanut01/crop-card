@@ -3,6 +3,7 @@
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import Avatar from '$lib/components/ui/Avatar.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -104,9 +105,10 @@
     {/if}
     {#each activeMembers as m (m.userId)}
       <div class="row member">
-        <div class="avatar">{m.email.charAt(0).toUpperCase()}</div>
+        <Avatar name={m.name} src={m.avatarUrl} size={36} />
         <div class="row-text">
-          <div class="row-title">{m.email}</div>
+          <div class="row-title">{m.name}</div>
+          {#if m.name !== m.email}<div class="row-sub">{m.email}</div>{/if}
         </div>
         <Pill tone="sky">Helper</Pill>
         <form method="POST" action="?/remove">
@@ -263,18 +265,6 @@
   }
   .invite-row:first-of-type {
     margin-top: 0;
-  }
-  .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    background: #6f8fa8;
-    color: var(--color-cream, #f8f3e8);
-    display: grid;
-    place-items: center;
-    font-weight: 700;
-    font-size: 14px;
-    font-family: var(--font-serif, serif);
   }
   .row-text {
     min-width: 0;

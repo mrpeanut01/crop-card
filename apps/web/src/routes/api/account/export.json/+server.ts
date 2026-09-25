@@ -24,6 +24,7 @@ import { type RequestHandler } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { equipment, equipmentLog, fertilityApplications, owners, users } from '$lib/db/schema';
+import { avatarUrl, avatarVersion } from '$lib/db/userProfile';
 import { unscopedQueryNote, withTenant } from '$lib/db/tenant';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
@@ -142,7 +143,9 @@ export const GET: RequestHandler = async (event) => {
       phone: user.phone,
       isSuperadmin: user.isSuperadmin === true,
       createdAt: userRow?.createdAt?.toISOString() ?? null,
-      aiEnabled: userRow?.aiEnabled === true
+      aiEnabled: userRow?.aiEnabled === true,
+      displayName: userRow?.displayName ?? null,
+      avatarUrl: avatarUrl(user.id, avatarVersion(user.id))
     },
     activeOwner: ownerRow
       ? {

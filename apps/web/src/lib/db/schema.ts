@@ -19,6 +19,7 @@
 
 import { sql } from 'drizzle-orm';
 import {
+  blob,
   index,
   integer,
   primaryKey,
@@ -55,9 +56,29 @@ export const users = sqliteTable('users', {
    *  product mode is the first-paint baseline for new users + inspectors
    *  (Dale persona) who will never paste a key. */
   aiEnabled: integer('ai_enabled', { mode: 'boolean' }).notNull().default(false),
+  /** Self-chosen name shown in the app chrome and to farm members. Null
+   *  falls back to the email local-part or the formatted phone. */
+  displayName: text('display_name'),
+  /** IANA zone for dates and times this user reads. */
+  timeZone: text('time_zone').notNull().default('America/New_York'),
+  displayUnits: text('display_units', { enum: ['us', 'metric'] })
+    .notNull()
+    .default('us'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)
+});
+
+/** Profile picture, one per user. Kept off `users` so the hot per-request
+ *  user lookups never pull the image bytes. The client downsizes before
+ *  upload; the server re-checks type and size (`lib/db/userProfile.ts`). */
+export const userAvatars = sqliteTable('user_avatars', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  mime: text('mime', { enum: ['image/jpeg', 'image/png', 'image/webp'] }).notNull(),
+  data: blob('data', { mode: 'buffer' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 
 // ─── Multi-tenant core (Phase 18a) ──────────────────────────────────────

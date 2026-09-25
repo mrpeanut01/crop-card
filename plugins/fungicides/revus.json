@@ -11,6 +11,7 @@
   "gpaCalibration": 30,
   "reEntryIntervalHours": 4,
   "preHarvestIntervalDays": 1,
+  "rainfastHours": 1,
   "pollinatorRisk": "low",
   "targetDiseases": ["downy mildew", "late blight"],
   "labelClaims": { "safeForCropFamilies": ["solanaceae", "cucurbit", "leafy-green", "vine-fruit"] },

@@ -19,6 +19,7 @@
   "gpaCalibration": 30,
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 21,
+  "rainfastHours": 1,
   "pollinatorRisk": "low",
   "epaRegistrationNumber": "62719-545",
   "targetDiseases": [

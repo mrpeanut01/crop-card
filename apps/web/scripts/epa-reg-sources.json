@@ -1,5 +1,5 @@
 {
-  "$comment": "#381 — provenance for every epaRegistrationNumber backfilled from the EPA Pesticide Product Label System (PPLS). Each number is the company/product pair in the PPLS label URL whose title names the plugin's product. Numbers authored before #381 are not listed here.",
+  "$comment": "#381 — provenance for every epaRegistrationNumber backfilled from the EPA Pesticide Product Label System (PPLS). Each number is the company/product pair in the PPLS label URL whose title names the plugin's product. Numbers authored before #381 are not listed here. `rainfast` lists fungicide rainfastHours taken only from a source that states the interval for that specific product.",
   "entries": {
     "aatrex-4l": {
       "epaRegistrationNumber": "100-497",
@@ -354,6 +354,43 @@
       "epaRegistrationNumber": "7969-374",
       "sourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00374-20240423.pdf",
       "matchedTitle": "US EPA, Pesticide Product Label, Zidua SC Herbicide,04/23/2024"
+    }
+  },
+  "rainfast": {
+    "revus": {
+      "rainfastHours": 1,
+      "rainfastSourceUrl": "https://assets.syngentaebiz.com/pdf/media/Revus_techbull2013.pdf",
+      "statement": "Syngenta Revus technical bulletin: rainfast within 1 hour once spray has dried"
+    },
+    "merivon": {
+      "rainfastHours": 1,
+      "rainfastSourceUrl": "https://agriculture.basf.ca/content/dam/cxm/agriculture/canada/english/agriculture/horticulture/documents/BASF_Merivon_Tech_Sheet.pdf",
+      "statement": "BASF Merivon technology sheet: rainfast 1 hour"
+    },
+    "pristine": {
+      "rainfastHours": 1,
+      "rainfastSourceUrl": "https://agriculture.basf.ca/content/dam/cxm/agriculture/canada/english/agriculture/horticulture/documents/BASF_Pristine_Tech_Sheet.pdf",
+      "statement": "BASF Pristine technology sheet: rainfast 1 hour"
+    },
+    "presidio-fluopicolide": {
+      "rainfastHours": 2,
+      "rainfastSourceUrl": "https://assets.greenbook.net/22-03-06-01-03-2024-Presidio_-_label.pdf",
+      "statement": "Presidio label: foliar sprays are rainfast 2 hours after application"
+    },
+    "cevya-mefentrifluconazole": {
+      "rainfastHours": 1,
+      "rainfastSourceUrl": "https://www3.epa.gov/pesticides/chem_search/ppls/007969-00407-20230112.pdf",
+      "statement": "Cevya label: rainfast 1 hour after the application has dried"
+    },
+    "quintec-quinoxyfen": {
+      "rainfastHours": 1,
+      "rainfastSourceUrl": "https://www.gowanco.com/sites/default/files/gowanco_com/_attachments/product/resource/label/quintec_33906-26-10163_02-r1115.pdf",
+      "statement": "Quintec label: when applied alone, rainfast 1 hour after application"
+    },
+    "previcur-flex-propamocarb": {
+      "rainfastHours": 0.5,
+      "rainfastSourceUrl": "https://cs-assets.bayer.com/is/content/bayer/2023-Previcur-Flex-Product-Bulletinpdf",
+      "statement": "Bayer Previcur Flex product bulletin: rainfast 30 minutes after application"
     }
   }
 }

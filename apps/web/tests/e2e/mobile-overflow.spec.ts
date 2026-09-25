@@ -1,7 +1,7 @@
 import { test, expect } from './lib/test';
 import { signInAsDemoOwner } from './lib/auth';
 
-const ROUTES = ['/today', '/plan', '/spray/fungicide', '/inventory'];
+const ROUTES = ['/today', '/plan', '/plan/farm', '/spray/fungicide', '/inventory'];
 
 test.use({ viewport: { width: 375, height: 800 } });
 

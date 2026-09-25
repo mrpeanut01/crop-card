@@ -23,6 +23,7 @@ import { ensureHomeField } from './fields';
 import { blocks, plantingRecords } from './schema';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
 import { geojsonAreaAcres } from '$lib/geo/area';
+import { sketchAcres } from '$lib/farm/sketch';
 
 export type TillageMethod = 'conventional' | 'reduced-till' | 'no-till';
 export type SunExposure = 'full' | 'partial' | 'shade';
@@ -45,6 +46,8 @@ export interface Block {
   sunExposure?: SunExposure;
   slopePercent?: number;
   slopeAspectDeg?: number;
+  widthFt?: number;
+  lengthFt?: number;
 }
 
 export interface PlantingRecord {
@@ -91,7 +94,9 @@ function rowToBlock(row: typeof blocks.$inferSelect): Block {
     axesLocked: row.axesLocked ?? false,
     sunExposure: (row.sunExposure as SunExposure | null) ?? undefined,
     slopePercent: row.slopePercent ?? undefined,
-    slopeAspectDeg: row.slopeAspectDeg ?? undefined
+    slopeAspectDeg: row.slopeAspectDeg ?? undefined,
+    widthFt: row.widthFt ?? undefined,
+    lengthFt: row.lengthFt ?? undefined
   };
 }
 
@@ -160,11 +165,16 @@ export function createBlock(input: {
   /** Manual override; if provided, axes are written and locked. */
   eastWestIndex?: number;
   northSouthIndex?: number;
+  widthFt?: number;
+  lengthFt?: number;
 }): Block {
   const id = randomUUID();
   const fieldId = input.fieldId ?? ensureHomeField();
   const acresToPersist =
-    effectiveAcresFor({ acres: input.acres, geometryGeojson: input.geometryGeojson }) ?? null;
+    effectiveAcresFor({
+      acres: input.acres ?? sketchAcres(input.widthFt, input.lengthFt),
+      geometryGeojson: input.geometryGeojson
+    }) ?? null;
   const row = db
     .insert(blocks)
     .values(
@@ -179,7 +189,9 @@ export function createBlock(input: {
         sunExposure: input.sunExposure ?? null,
         eastWestIndex: input.eastWestIndex ?? null,
         northSouthIndex: input.northSouthIndex ?? null,
-        axesLocked: input.eastWestIndex !== undefined || input.northSouthIndex !== undefined
+        axesLocked: input.eastWestIndex !== undefined || input.northSouthIndex !== undefined,
+        widthFt: input.widthFt ?? null,
+        lengthFt: input.lengthFt ?? null
       })
     )
     .returning()
@@ -232,6 +244,8 @@ export function updateBlock(
     axesLocked?: boolean;
     slopePercent?: number | null;
     slopeAspectDeg?: number | null;
+    widthFt?: number | null;
+    lengthFt?: number | null;
   }
 ): Block | undefined {
   const set: Partial<typeof blocks.$inferInsert> = {};
@@ -243,6 +257,8 @@ export function updateBlock(
   if (patch.sunExposure !== undefined) set.sunExposure = patch.sunExposure;
   if (patch.slopePercent !== undefined) set.slopePercent = patch.slopePercent;
   if (patch.slopeAspectDeg !== undefined) set.slopeAspectDeg = patch.slopeAspectDeg;
+  if (patch.widthFt !== undefined) set.widthFt = patch.widthFt;
+  if (patch.lengthFt !== undefined) set.lengthFt = patch.lengthFt;
   const axisManualEdit = patch.eastWestIndex !== undefined || patch.northSouthIndex !== undefined;
   if (patch.eastWestIndex !== undefined) set.eastWestIndex = patch.eastWestIndex;
   if (patch.northSouthIndex !== undefined) set.northSouthIndex = patch.northSouthIndex;

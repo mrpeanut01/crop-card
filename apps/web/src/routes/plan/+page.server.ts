@@ -14,6 +14,7 @@
  *   Stock has been promoted to its own /stock route.
  */
 
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import {
   eventsForHarvest,
@@ -147,6 +148,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const fields = listFields();
   const isFirstRun = blocks.length === 0 && fields.length === 0;
   const canEdit = locals.user?.role === 'owner';
+
+  // A farm with no blocks starts at "Draw your farm". Any query string
+  // (a deep link, or ?setup=skip from that page) stays on /plan.
+  if (canEdit && blocks.length === 0 && url.search === '') throw redirect(303, '/plan/farm');
 
   // Common (Overview / Crops / Equipment / Stock all need crop catalog).
   const registry = await getRegistry();

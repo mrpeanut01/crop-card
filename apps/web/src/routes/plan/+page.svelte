@@ -2120,7 +2120,7 @@
         <p>
           No field boundaries drawn yet.
           {#if data.canEdit}
-            <a href="/settings/farm/map">Draw your fields & blocks →</a>
+            <a href="/plan/farm">Draw your fields & blocks →</a>
           {/if}
         </p>
       </section>

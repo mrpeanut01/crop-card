@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { deleteBlockCascade } from '$lib/db/admin';
 import { getBlock, updateBlock } from '$lib/db/blocks';
 import { getField } from '$lib/db/fields';
+import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
@@ -27,7 +28,9 @@ const patchSchema = z.object({
   tillageMethod: z.enum(['conventional', 'reduced-till', 'no-till']).optional(),
   /** v1.3 shade model — terrain slope (optional). Null clears the value. */
   slopePercent: z.number().min(0).max(100).nullable().optional(),
-  slopeAspectDeg: z.number().min(0).max(360).nullable().optional()
+  slopeAspectDeg: z.number().min(0).max(360).nullable().optional(),
+  widthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional(),
+  lengthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional()
 });
 
 export const PATCH: RequestHandler = async (event) => {
@@ -52,7 +55,7 @@ export const PATCH: RequestHandler = async (event) => {
   if (parsed.data.fieldId && !getField(parsed.data.fieldId)) {
     return json({ error: 'unknown fieldId' }, { status: 400 });
   }
-  const updated = updateBlock(event.params.id, parsed.data);
+  const updated = updateBlock(event.params.id, withSketchAcres(parsed.data));
   return json({ block: updated });
 };
 

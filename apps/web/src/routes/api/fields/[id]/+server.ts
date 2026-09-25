@@ -8,6 +8,7 @@ import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { deleteFieldCascade } from '$lib/db/admin';
 import { getField, updateField } from '$lib/db/fields';
+import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
@@ -23,7 +24,9 @@ const patchSchema = z.object({
   acres: z.number().positive().nullable().optional(),
   location: z.string().max(500).nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
-  geometryGeojson: z.string().nullable().optional()
+  geometryGeojson: z.string().nullable().optional(),
+  widthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional(),
+  lengthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional()
 });
 
 export const PATCH: RequestHandler = async (event) => {
@@ -44,7 +47,7 @@ export const PATCH: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
-  const field = updateField(event.params.id, parsed.data);
+  const field = updateField(event.params.id, withSketchAcres(parsed.data));
   return json({ field });
 };
 

@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { createBlock, listBlocks } from '$lib/db/blocks';
+import { MAX_SKETCH_FT } from '$lib/farm/sketch';
 import { getField } from '$lib/db/fields';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
@@ -30,6 +31,8 @@ const createSchema = z.object({
   acres: z.number().positive().optional(),
   blockLabel: z.string().max(60).optional(),
   fieldId: z.string().min(1).optional(),
+  widthFt: z.number().positive().max(MAX_SKETCH_FT).optional(),
+  lengthFt: z.number().positive().max(MAX_SKETCH_FT).optional(),
   geometryGeojson: geomSchema.optional()
 });
 

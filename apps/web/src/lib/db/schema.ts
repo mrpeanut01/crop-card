@@ -476,6 +476,9 @@ export const fields = tenantScoped(
       /** Optional field-level outline (GeoJSON Polygon). Block polygons remain
        *  authoritative for the SVG renderer. */
       geometryGeojson: text('geometry_geojson'),
+      /** Sketch dimensions in feet for farms mapped without GPS (drawn as boxes). */
+      widthFt: real('width_ft'),
+      lengthFt: real('length_ft'),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
         .default(sql`(unixepoch() * 1000)`)
@@ -510,7 +513,9 @@ export const blocks = tenantScoped(
       axesLocked: integer('axes_locked', { mode: 'boolean' }).notNull().default(false),
       sunExposure: text('sun_exposure', { enum: ['full', 'partial', 'shade'] }),
       slopePercent: real('slope_percent'),
-      slopeAspectDeg: real('slope_aspect_deg')
+      slopeAspectDeg: real('slope_aspect_deg'),
+      widthFt: real('width_ft'),
+      lengthFt: real('length_ft')
     },
     (table) => ({
       ownerNameIdx: index('blocks_owner_name_idx').on(table.ownerId, table.name),

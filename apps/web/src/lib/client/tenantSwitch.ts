@@ -1,39 +1,138 @@
 /**
- * Tenant-switch client-side cache reset (Phase 18d/18h).
+ * Tenant-aware service-worker cache coordination (Phase 18d/18h).
  *
- * Called from the top-nav Owner chip after a successful POST to
- * /api/session/switch-owner. Clears the Workbox runtime cache buckets
- * that are namespaced per-tenant so the new Owner's responses don't
- * collide with the old Owner's. The Dexie queue is intentionally
- * preserved — a helper who recorded offline at Farm A then switches
- * to Farm B mid-drive should not lose A's records; they drain when A
- * is active again.
+ * Runtime cache entries are namespaced per Owner inside the SW (see
+ * `swTenantKey.ts`), so an Owner switch no longer wipes them: the page
+ * tells the SW which Owner is active and the SW keys reads/writes by it.
+ * Logout still wipes every tenant cache.
  *
- * Best-effort: failures are swallowed so a stale cache doesn't block
- * the switch. The server is the source of truth.
+ * The Dexie queue is intentionally preserved across switches — a helper who
+ * recorded offline at Farm A then switches to Farm B should not lose A's
+ * records; they drain when A is active again.
+ *
+ * Best-effort: failures are swallowed so a missing SW never blocks a switch.
+ * The SW itself fails safe (unknown owner ⇒ network-only).
  */
 
-const TENANT_NAMESPACED_CACHES = ['cropcard-plugins', 'cropcard-sprayers'];
+import {
+  LEGACY_TENANT_CACHE_NAMES,
+  SET_ACTIVE_OWNER_MESSAGE,
+  SW_META_CACHE,
+  TENANT_CACHE_NAMES,
+  isValidOwnerId
+} from './swTenantKey';
 
+const ACK_TIMEOUT_MS = 1000;
+
+async function activeServiceWorker(): Promise<ServiceWorker | null> {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return null;
+  try {
+    if (navigator.serviceWorker.controller) return navigator.serviceWorker.controller;
+    const reg = await navigator.serviceWorker.getRegistration();
+    return reg?.active ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function announceActiveOwner(
+  ownerId: string | null | undefined,
+  opts: { wipe?: boolean } = {}
+): Promise<boolean> {
+  const sw = await activeServiceWorker();
+  if (!sw) return false;
+  const message = {
+    type: SET_ACTIVE_OWNER_MESSAGE,
+    ownerId: isValidOwnerId(ownerId) ? ownerId : null,
+    wipe: opts.wipe === true
+  };
+  if (typeof MessageChannel === 'undefined') {
+    sw.postMessage(message);
+    return true;
+  }
+  return new Promise<boolean>((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => {
+      channel.port1.close();
+      resolve(false);
+    }, ACK_TIMEOUT_MS);
+    channel.port1.onmessage = () => {
+      clearTimeout(timer);
+      channel.port1.close();
+      resolve(true);
+    };
+    try {
+      sw.postMessage(message, [channel.port2]);
+    } catch {
+      clearTimeout(timer);
+      resolve(false);
+    }
+  });
+}
+
+function rememberActiveOwner(ownerId: string | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (ownerId) sessionStorage.setItem('cropcard.activeOwnerId', ownerId);
+    else sessionStorage.removeItem('cropcard.activeOwnerId');
+  } catch {
+    /* private mode → skip */
+  }
+}
+
+/** Call BEFORE POSTing /api/session/switch-owner: demotes the SW to
+ *  "unknown owner" so no response can be cached or served mid-switch. */
+export async function beginOwnerSwitch(): Promise<void> {
+  await announceActiveOwner(null);
+}
+
+/** Call after a successful switch. Keeps every Owner's namespaced cache
+ *  entries; only the SW's active-owner pointer moves. */
 export async function resetTenantCaches(newOwnerId: string): Promise<void> {
+  rememberActiveOwner(newOwnerId);
+  await announceActiveOwner(newOwnerId);
+}
+
+/** Logout: wipe every tenant cache (current + legacy) and the SW's
+ *  persisted owner pointer. */
+export async function wipeTenantCaches(): Promise<void> {
+  rememberActiveOwner(null);
+  await announceActiveOwner(null, { wipe: true });
   if (typeof caches === 'undefined') return;
   try {
+    const doomed = new Set<string>([
+      ...TENANT_CACHE_NAMES,
+      ...LEGACY_TENANT_CACHE_NAMES,
+      SW_META_CACHE
+    ]);
     const names = await caches.keys();
-    await Promise.all(
-      names
-        .filter((n) => TENANT_NAMESPACED_CACHES.some((root) => n.startsWith(root)))
-        .map((n) => caches.delete(n))
-    );
+    await Promise.all(names.filter((n) => doomed.has(n)).map((n) => caches.delete(n)));
   } catch {
-    // service worker not registered yet → nothing to clean.
+    /* no Cache Storage → nothing to clean */
   }
-  // Force a refresh of any module that cached the previous owner id at
-  // module scope.
-  if (typeof window !== 'undefined') {
+}
+
+/** Layout-mount entry point: optionally registers the SW, then tells it
+ *  which Owner is active (signed in) or wipes tenant caches (signed out). */
+export async function syncServiceWorkerTenant(opts: {
+  register: boolean;
+  signedIn: boolean;
+  ownerId: string | null | undefined;
+}): Promise<void> {
+  if (!opts.signedIn) await wipeTenantCaches();
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+  if (opts.register) {
     try {
-      sessionStorage.setItem('cropcard.activeOwnerId', newOwnerId);
+      await navigator.serviceWorker.register('/sw.js', { scope: '/' });
     } catch {
-      /* private mode → skip */
+      return;
     }
+  }
+  if (!opts.signedIn) return;
+  await announceActiveOwner(opts.ownerId);
+  if (!navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready
+      .then(() => announceActiveOwner(opts.ownerId))
+      .catch(() => undefined);
   }
 }

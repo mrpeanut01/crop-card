@@ -33,7 +33,10 @@ export default defineConfig({
     // browsers/machines. Without this, screenshots end up at the test
     // host's device-pixel-ratio (e.g., 2x on Retina) and break baselines
     // captured at 1x. Mobile/tablet viewports stay logical-pixel sized.
-    deviceScaleFactor: 1
+    deviceScaleFactor: 1,
+    // The preview build registers the Workbox SW; keep e2e hitting the
+    // server directly so specs never depend on runtime-cache state.
+    serviceWorkers: 'block'
   },
   // Visual specs use 0.5% pixelmatch tolerance to absorb font-rendering
   // jitter between local + CI (system fonts render fractionally

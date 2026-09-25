@@ -7,6 +7,7 @@ import { db } from '$lib/db/client';
 import { owners, users, helperAssignments } from '$lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
+import { OWNER_HEADER } from '$lib/client/swTenantKey';
 
 /**
  * Phase 21a follow-up — error visibility (2026-05-17).
@@ -293,8 +294,27 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
   }
 
-  return runWithTenantAsync(user.activeOwnerId, () => Promise.resolve(resolve(event)));
+  const activeOwnerId = user.activeOwnerId;
+  const response = await runWithTenantAsync(activeOwnerId, () => Promise.resolve(resolve(event)));
+  return withOwnerHeader(response, activeOwnerId);
 };
+
+/**
+ * Tag every tenant-resolved response with the Owner it was rendered for.
+ * The service worker refuses to cache (or serve) a tenant-scoped response
+ * whose tag disagrees with the Owner baked into its cache key
+ * (`lib/client/swTenantKey.ts`).
+ */
+export function withOwnerHeader(response: Response, ownerId: string): Response {
+  try {
+    response.headers.set(OWNER_HEADER, ownerId);
+    return response;
+  } catch {
+    const copy = new Response(response.body, response);
+    copy.headers.set(OWNER_HEADER, ownerId);
+    return copy;
+  }
+}
 
 /**
  * Build an AuthenticatedUser from a Bearer-resolved token. Looks up the

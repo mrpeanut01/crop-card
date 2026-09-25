@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { dev } from '$app/environment';
   // Fonts: `@font-face` declarations in $lib/styles/type.css use a local()
   // → CDN fallback chain so a missing font asset never crashes a route.
   // No npm dep on fontsource intentionally — the static `import` from
@@ -24,6 +25,13 @@
     let cleanupSync: (() => void) | undefined;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
+    const activeOwnerId = data.activeOwner?.id ?? data.user?.activeOwnerId ?? null;
+    import('$lib/client/tenantSwitch')
+      .then(({ syncServiceWorkerTenant }) =>
+        syncServiceWorkerTenant({ register: !dev, signedIn: !!data.user, ownerId: activeOwnerId })
+      )
+      .catch(() => undefined);
+
     (async () => {
       try {
         const {
@@ -36,7 +44,7 @@
         // never fires an Owner-switch (the pre-#314 sole writer), so
         // without this the key is null and drainQueue would fail-safe to a
         // no-op (records stranded) while enqueue mis-tags rows.
-        primeActiveOwnerId(data.activeOwner?.id ?? data.user?.activeOwnerId ?? null);
+        primeActiveOwnerId(activeOwnerId);
         cleanupSync = watchOnline();
         const refresh = async () => {
           try {
@@ -61,19 +69,19 @@
   });
 
   async function onSwitchOwner(ownerId: string) {
+    const tenantSwitch = await import('$lib/client/tenantSwitch').catch(() => null);
+    await tenantSwitch?.beginOwnerSwitch().catch(() => undefined);
     const res = await fetch('/api/session/switch-owner', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ownerId })
     });
     if (res.ok) {
-      try {
-        const { resetTenantCaches } = await import('$lib/client/tenantSwitch');
-        await resetTenantCaches(ownerId);
-      } catch {
-        // best-effort cache reset
-      }
+      await tenantSwitch?.resetTenantCaches(ownerId).catch(() => undefined);
       window.location.href = '/today';
+    } else {
+      const previous = data.activeOwner?.id ?? data.user?.activeOwnerId ?? null;
+      await tenantSwitch?.announceActiveOwner(previous).catch(() => undefined);
     }
   }
 </script>

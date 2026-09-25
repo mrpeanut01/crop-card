@@ -6,6 +6,7 @@ import { owners } from '$lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { profileFor } from '$lib/db/userProfile';
+import { DEFAULT_PREFS } from '$lib/prefs';
 import { identityName } from '$lib/identity';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
 import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
@@ -120,6 +121,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
           impersonating: locals.user.impersonating
         }
       : null,
+    prefs: profile?.prefs ?? DEFAULT_PREFS,
     dirtySprayers,
     navAlerts,
     activeOwner,

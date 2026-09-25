@@ -3,6 +3,7 @@ import { db } from './client';
 import { helperAssignments, userAvatars, users } from './schema';
 import { unscopedQueryNote } from './tenant';
 import type { AvatarMime, DisplayUnits } from '$lib/profile';
+import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
 
 export function updateProfile(
   userId: string,
@@ -89,15 +90,33 @@ export function canViewAvatar(viewerId: string, subjectId: string): boolean {
 export function profileFor(userId: string): {
   displayName: string | null;
   avatarUrl: string | null;
+  prefs: Prefs;
 } {
   const row = db
-    .select({ displayName: users.displayName, avatarAt: userAvatars.updatedAt })
+    .select({
+      displayName: users.displayName,
+      timeZone: users.timeZone,
+      units: users.displayUnits,
+      avatarAt: userAvatars.updatedAt
+    })
     .from(users)
     .leftJoin(userAvatars, eq(userAvatars.userId, users.id))
     .where(eq(users.id, userId))
     .get();
   return {
     displayName: row?.displayName ?? null,
-    avatarUrl: avatarUrl(userId, row?.avatarAt?.getTime())
+    avatarUrl: avatarUrl(userId, row?.avatarAt?.getTime()),
+    prefs: row ? { timeZone: row.timeZone, units: row.units } : DEFAULT_PREFS
   };
+}
+
+/** Display preferences for server-rendered output (exports, PDFs). */
+export function prefsFor(userId: string | null | undefined): Prefs {
+  if (!userId) return DEFAULT_PREFS;
+  const row = db
+    .select({ timeZone: users.timeZone, units: users.displayUnits })
+    .from(users)
+    .where(eq(users.id, userId))
+    .get();
+  return row ?? DEFAULT_PREFS;
 }

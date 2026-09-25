@@ -13,9 +13,12 @@
 
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
+import { getEquipment } from '$lib/db/equipment';
 import {
   createTask,
+  getTask,
   listTasks,
   loadEquipmentContext,
   materializePluginPrePost
@@ -88,6 +91,18 @@ export const POST: RequestHandler = async (event) => {
       },
       { status: 400 }
     );
+  }
+
+  // Referenced rows must belong to the active Owner (Invariant 6): the
+  // tenant-scoped getters return undefined for another Owner's ids.
+  const d = parsed.data;
+  const foreign =
+    (d.blockId && !getBlock(d.blockId) && 'blockId') ||
+    (d.cropId && !getCrop(d.cropId) && 'cropId') ||
+    (d.equipmentId && !getEquipment(d.equipmentId) && 'equipmentId') ||
+    (d.linkedToTaskId && !getTask(d.linkedToTaskId) && 'linkedToTaskId');
+  if (foreign) {
+    return json({ error: `unknown ${foreign}` }, { status: 400 });
   }
 
   const performer = auth ?? (await ensureSystemUser());

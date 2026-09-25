@@ -23,7 +23,6 @@ import {
   PEST_VALUES,
   FERTILITY_VALUES,
   COVER_VALUES,
-  SPRAY_VALUES,
   type SeasonSetup,
   type SeasonSetupField
 } from './setup';
@@ -83,11 +82,6 @@ export function loadSeasonSetup(year: number): SeasonSetup | null {
       COVER_VALUES,
       SEASON_SETUP_DEFAULTS.coverCropIntent
     ),
-    sprayCapacity: parseEnum(
-      getSetting(settingKey(year, 'sprayCapacity')),
-      SPRAY_VALUES,
-      SEASON_SETUP_DEFAULTS.sprayCapacity
-    ),
     transitioningStartedYear: parseTransitioningYear(
       getSetting(settingKey(year, 'transitioningStartedYear'))
     ),
@@ -98,7 +92,7 @@ export function loadSeasonSetup(year: number): SeasonSetup | null {
 
 /** Save a partial update for `year`. Missing fields fall back to the
  *  current saved value (if any), then to `SEASON_SETUP_DEFAULTS`. Always
- *  writes all six core fields + `setAt` so a subsequent `loadSeasonSetup`
+ *  writes all five core fields + `setAt` so a subsequent `loadSeasonSetup`
  *  returns a complete, non-null record. */
 export function saveSeasonSetup(
   year: number,
@@ -112,7 +106,6 @@ export function saveSeasonSetup(
         pestStrategy: current.pestStrategy,
         fertilityApproach: current.fertilityApproach,
         coverCropIntent: current.coverCropIntent,
-        sprayCapacity: current.sprayCapacity,
         transitioningStartedYear: current.transitioningStartedYear
       }
     : { ...SEASON_SETUP_DEFAULTS };
@@ -124,7 +117,6 @@ export function saveSeasonSetup(
   setSetting(settingKey(year, 'pestStrategy'), merged.pestStrategy);
   setSetting(settingKey(year, 'fertilityApproach'), merged.fertilityApproach);
   setSetting(settingKey(year, 'coverCropIntent'), merged.coverCropIntent);
-  setSetting(settingKey(year, 'sprayCapacity'), merged.sprayCapacity);
 
   if (merged.philosophy === 'organic-transitioning' && merged.transitioningStartedYear !== null) {
     setSetting(
@@ -164,7 +156,6 @@ export function carryForward(fromYear: number, toYear: number): SeasonSetup | nu
     pestStrategy: source.pestStrategy,
     fertilityApproach: source.fertilityApproach,
     coverCropIntent: source.coverCropIntent,
-    sprayCapacity: source.sprayCapacity,
     transitioningStartedYear: source.transitioningStartedYear
   });
 }

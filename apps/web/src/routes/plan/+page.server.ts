@@ -44,6 +44,7 @@ import { listBlocks, type BlockWithPlantings, type PlantingRecord } from '$lib/d
 import { listCrops, type Crop } from '$lib/db/crops';
 import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
 import { frostDatesForYear } from '$lib/schedule/settings';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { getSetting } from '$lib/db/settings';
 import {
   SETTINGS_KEYS,
@@ -82,6 +83,7 @@ import {
 import { getRegistry } from '$lib/server/registry';
 import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/companions';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
+import { isEmptySeason, priorSeasonSummary } from '$lib/plan/seasonStart';
 
 export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
 const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calendar'];
@@ -173,7 +175,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   const fieldsByBlockId = blockToFieldMap(blocks, fields);
 
-  const currentYear = new Date().getFullYear();
+  const currentYear = getActivePlanningYear();
   const frostDates = frostDatesForYear(currentYear);
   const seasonSetup = loadSeasonSetup(currentYear);
   const lastYearSetup = loadSeasonSetup(currentYear - 1);
@@ -221,6 +223,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     currentYear,
     seasonSetup,
     lastYearSetup,
+    emptySeason: isEmptySeason(blocks, currentYear),
+    priorSeason: priorSeasonSummary(blocks, currentYear),
     // Phase 25d v2-addendum (#89) — drives AI-on/off variant on the
     // schedule step of the AllocationWizard.
     aiEnabled: getUserAiEnabled(locals.user?.id),
@@ -331,8 +335,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // conflict pairs, the "to schedule" tray, and snap boundaries.
 
     const yearParam = url.searchParams.get('year');
-    const year =
-      yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : new Date().getFullYear();
+    const year = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : currentYear;
 
     const scheduleCatalog: ScheduleCatalogItem[] = registry
       .all()

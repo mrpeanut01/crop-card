@@ -62,8 +62,7 @@ describe('season setup repo', () => {
         weedStrategy: 'cultivate-first',
         pestStrategy: 'ipm',
         fertilityApproach: 'compost-amendments',
-        coverCropIntent: 'vetch-clover',
-        sprayCapacity: 'backpack-4gal'
+        coverCropIntent: 'vetch-clover'
       });
 
       const loaded = loadSeasonSetup(2026);
@@ -73,10 +72,19 @@ describe('season setup repo', () => {
       expect(loaded?.pestStrategy).toBe('ipm');
       expect(loaded?.fertilityApproach).toBe('compost-amendments');
       expect(loaded?.coverCropIntent).toBe('vetch-clover');
-      expect(loaded?.sprayCapacity).toBe('backpack-4gal');
       expect(loaded?.transitioningStartedYear).toBeNull();
       expect(loaded?.year).toBe(2026);
       expect(loaded?.setAt).toBe(saved.setAt);
+    });
+  });
+
+  it('round-trips the no-till philosophy', () => {
+    runWithTenant(OWNER_A, () => {
+      saveSeasonSetup(2026, { philosophy: 'no-till', coverCropIntent: 'fall-cereal' });
+      const loaded = loadSeasonSetup(2026);
+      expect(loaded?.philosophy).toBe('no-till');
+      expect(loaded?.coverCropIntent).toBe('fall-cereal');
+      expect(summarizeSeasonSetup(loaded!)).toMatch(/^No-till · /);
     });
   });
 
@@ -89,7 +97,6 @@ describe('season setup repo', () => {
       expect(loaded?.pestStrategy).toBe(SEASON_SETUP_DEFAULTS.pestStrategy);
       expect(loaded?.fertilityApproach).toBe(SEASON_SETUP_DEFAULTS.fertilityApproach);
       expect(loaded?.coverCropIntent).toBe(SEASON_SETUP_DEFAULTS.coverCropIntent);
-      expect(loaded?.sprayCapacity).toBe(SEASON_SETUP_DEFAULTS.sprayCapacity);
     });
   });
 
@@ -149,8 +156,7 @@ describe('season setup repo', () => {
           weedStrategy: 'cultivate-first',
           pestStrategy: 'ipm',
           fertilityApproach: 'compost-amendments',
-          coverCropIntent: 'vetch-clover',
-          sprayCapacity: 'backpack-4gal'
+          coverCropIntent: 'vetch-clover'
         });
 
         const carried = carryForward(2026, 2027);
@@ -190,11 +196,13 @@ describe('season setup repo', () => {
       expect(isOrganicCompliant(fixture('certified-organic'))).toBe(true);
       expect(isOrganicCompliant(fixture('organic-transitioning'))).toBe(true);
       expect(isOrganicCompliant(fixture('non-gmo'))).toBe(false);
+      expect(isOrganicCompliant(fixture('no-till'))).toBe(false);
       expect(isOrganicCompliant(fixture('conventional'))).toBe(false);
     });
 
-    it('allowsSynthetics is true only for conventional + non-gmo', () => {
+    it('allowsSynthetics is true only for conventional, no-till + non-gmo', () => {
       expect(allowsSynthetics(fixture('conventional'))).toBe(true);
+      expect(allowsSynthetics(fixture('no-till'))).toBe(true);
       expect(allowsSynthetics(fixture('non-gmo'))).toBe(true);
       expect(allowsSynthetics(fixture('certified-organic'))).toBe(false);
       expect(allowsSynthetics(fixture('organic-transitioning'))).toBe(false);
@@ -208,7 +216,6 @@ describe('season setup repo', () => {
         philosophy: 'certified-organic',
         pestStrategy: 'ipm',
         fertilityApproach: 'compost-amendments',
-        sprayCapacity: 'backpack-4gal',
         coverCropIntent: 'vetch-clover',
         year: 2026,
         setAt: 0
@@ -217,7 +224,7 @@ describe('season setup repo', () => {
       expect(summary).toContain('Certified organic');
       expect(summary).toContain('Scout-then-spray');
       expect(summary).toContain('Compost');
-      expect(summary).toContain('Backpack');
+      expect(summary).not.toContain('Backpack');
       expect(summary).toContain('Vetch');
       expect(summary).toContain('2026');
     });

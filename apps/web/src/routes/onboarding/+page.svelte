@@ -24,6 +24,7 @@
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import FarmMapEditor from '$lib/components/farm/FarmMapEditor.svelte';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
+  import PlanningYearPicker from '$lib/components/PlanningYearPicker.svelte';
   import LocationPicker from '$lib/components/onboarding/LocationPicker.svelte';
   import ImplementPicker from '$lib/components/onboarding/ImplementPicker.svelte';
   import {
@@ -48,7 +49,8 @@
   };
 
   function headings(
-    firstName: string
+    firstName: string,
+    seasonYear: number
   ): Record<OnboardingStepId, { kicker: string; title: string; lede: string }> {
     return {
       farm: {
@@ -72,8 +74,8 @@
         lede: 'Pick the implements on the farm. Sprayers carry chemistry and decon history, and the rest attach their pre-use checks to scheduled tasks.'
       },
       season: {
-        kicker: `Your season · ${new Date().getFullYear()}`,
-        title: 'How do you want to farm this year?',
+        kicker: `Your season · ${seasonYear}`,
+        title: `How do you want to farm in ${seasonYear}?`,
         lede: 'Six quick questions. The answers decide which products the planner will suggest and which it filters out.'
       },
       plan: {
@@ -84,7 +86,9 @@
     };
   }
 
-  const heading = $derived(headings(data.firstName)[data.step]);
+  const heading = $derived(
+    headings(data.firstName, data.season?.currentYear ?? new Date().getFullYear())[data.step]
+  );
   const unlocked = $derived(basicsComplete(data.progress));
   const done = $derived(doneCount(data.progress));
   const next = $derived(nextAfter(data.step, data.progress));
@@ -266,6 +270,9 @@
                 placeholder="e.g., Purcellville, VA"
               />
             </label>
+            {#if data.planningYear}
+              <PlanningYearPicker view={data.planningYear} name="planningYear" />
+            {/if}
             <div class="actions">
               <button class="primary" type="submit" disabled={submitting}>
                 Create farm <ArrowRight size={15} />
@@ -472,12 +479,17 @@
           <span>Farm basics are done. Now for this season.</span>
         </div>
         <Card>
-          <SeasonSetupStep
-            existing={data.season.existing}
-            lastYearSetup={data.season.lastYearSetup}
-            currentYear={data.season.currentYear}
-            onSave={onSeasonSaved}
-          />
+          <PlanningYearPicker view={data.season.planningYear} canEdit={data.canEdit} />
+        </Card>
+        <Card>
+          {#key data.season.currentYear}
+            <SeasonSetupStep
+              existing={data.season.existing}
+              lastYearSetup={data.season.lastYearSetup}
+              currentYear={data.season.currentYear}
+              onSave={onSeasonSaved}
+            />
+          {/key}
         </Card>
 
         <!-- ─── 6. Plan hand-off ──────────────────────────────────────── -->

@@ -44,7 +44,12 @@
 
 <svelte:head><title>AI assistant · CropCard</title></svelte:head>
 
-<SettingsShell title="AI planning assistant" kicker="Claude" saveAction="?/saveKey">
+<SettingsShell
+  title="AI planning assistant"
+  kicker="Integrations · Claude"
+  backHref="/settings/integrations"
+  saveAction="?/saveKey"
+>
   {#snippet badge()}
     {#if enabled}
       <Pill tone="forest"><Check size={10} /> Active</Pill>

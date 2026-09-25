@@ -48,6 +48,7 @@ import { canMutate } from '$lib/server/session';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { insertPlanRevision } from '$lib/plan/revisions';
 import { getActiveSession, markSessionCompleted } from '$lib/db/wizardChat';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 const INPUTS_PLAN_TEMPLATE_KEY = 'inputs-plan';
 
@@ -232,7 +233,7 @@ export const POST: RequestHandler = async (event) => {
   // the commit summary (kept small — full applications array would
   // bloat the audit log without adding diff value beyond the task
   // table itself).
-  const year = new Date().getUTCFullYear();
+  const year = getActivePlanningYear();
   try {
     insertPlanRevision({
       planId: `season-${year}`,

@@ -22,6 +22,18 @@ import {
 import { normalizeFrost, parseLatLon } from '$lib/schedule/farmLocation';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import {
+  getActivePlanningYear,
+  loadPlanningYearView,
+  setActivePlanningYear
+} from '$lib/season/planningYear.server';
+import {
+  isSelectablePlanningYear,
+  selectablePlanningYears,
+  suggestPlanningYear,
+  suggestionReason,
+  type PlanningYearView
+} from '$lib/season/planningYear';
+import {
   confirmImplements,
   getOnboardingStatus,
   loadOnboardingProgress,
@@ -57,7 +69,17 @@ export const load: PageServerLoad = ({ locals, url }) => {
   const firstName = inferFirstName(user?.email);
 
   if (!user?.activeOwnerId) {
+    const now = new Date();
+    const planningYear: PlanningYearView = {
+      activeYear: suggestPlanningYear(now),
+      suggestedYear: suggestPlanningYear(now),
+      suggestionReason: suggestionReason(now),
+      options: selectablePlanningYears(now),
+      pastYears: [],
+      chosen: false
+    };
     return {
+      planningYear,
       firstName,
       farmName: null as string | null,
       progress: NO_FARM,
@@ -76,7 +98,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
     unscopedQueryNote('onboarding wizard reads the active owner row by id');
     return db.select().from(owners).where(eq(owners.id, user.activeOwnerId!)).get();
   })();
-  const year = new Date().getFullYear();
+  const year = getActivePlanningYear();
   const progress = loadOnboardingProgress(year);
   const step = resolveStep(url.searchParams.get('step'), progress);
   const center = hasFarmLatLon() ? getFarmLatLon() : null;
@@ -126,6 +148,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
   const season =
     step === 'season'
       ? {
+          planningYear: loadPlanningYearView(),
           existing: loadSeasonSetup(year),
           lastYearSetup: loadSeasonSetup(year - 1),
           currentYear: year
@@ -154,6 +177,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
     farmName: ownerRow?.name ?? null,
     progress,
     step,
+    planningYear: null,
     canEdit: user.role === 'owner',
     status: getOnboardingStatus(),
     location,
@@ -195,7 +219,7 @@ function requireFarmOwner(event: RequestEvent) {
 }
 
 function continueTo(from: Parameters<typeof nextAfter>[0]): never {
-  const next = nextAfter(from, loadOnboardingProgress(new Date().getFullYear()));
+  const next = nextAfter(from, loadOnboardingProgress(getActivePlanningYear()));
   throw redirect(303, `/onboarding?step=${next}`);
 }
 
@@ -220,10 +244,14 @@ export const actions: Actions = {
     const farmName = String(fd.get('farmName') ?? '').trim();
     const location = String(fd.get('location') ?? '').trim();
     if (!farmName) return fail(400, { error: 'farmName required' });
+    const now = new Date(Date.now());
+    const planningYearRaw = Number(fd.get('planningYear'));
+    const planningYear = isSelectablePlanningYear(planningYearRaw, now)
+      ? planningYearRaw
+      : suggestPlanningYear(now);
 
     const ownerId = `owner_${randomUUID().slice(0, 12)}`;
     const slug = uniqueSlug(slugify(farmName));
-    const now = new Date(Date.now());
 
     db.transaction(() => {
       unscopedQueryNote('onboarding writes the new owner + assignment + subscription rows');
@@ -264,6 +292,7 @@ export const actions: Actions = {
 
     runWithTenant(ownerId, () => {
       setOnboardingStatus('in-progress');
+      setActivePlanningYear(planningYear, now);
       db.insert(fields)
         .values(
           tenantValues({

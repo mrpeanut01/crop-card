@@ -1,0 +1,36 @@
+{
+  "pluginId": "asian-cucumber-suhyo-cross",
+  "type": "crop",
+  "displayName": "Cucumber Suhyo Cross F1 (Asian slicer)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "cucurbit",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 60,
+    "max": 65
+  },
+  "defaultRowSpacingInches": 48,
+  "plantingGuide": {
+    "soilTempMinF": 65,
+    "rowSpacingIn": 48,
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 18
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 2
+  },
+  "notes": "Japanese-style burpless slicing hybrid. Best trellised to keep fruit straight. Thin skin, never bitter.",
+  "harvestIndicators": [
+    "12 inch slender dark green ridged fruit"
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": true
+  },
+  "archetype": "continuous-harvest-fruit"
+}

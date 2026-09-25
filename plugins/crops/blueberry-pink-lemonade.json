@@ -1,0 +1,39 @@
+{
+  "pluginId": "blueberry-pink-lemonade",
+  "type": "crop",
+  "displayName": "Blueberry Pink Lemonade (rabbiteye/pink)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "small-fruit",
+  "preHarvestIntervalDays": 3,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1095
+  },
+  "defaultRowSpacingInches": 120,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 120,
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 72
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Pink-fruited rabbiteye-northern highbush hybrid. USDA 2007 release. Mild sweet flavor, novelty CSA seller.",
+  "harvestIndicators": [
+    "Fully pink, slight softness, dull surface bloom"
+  ],
+  "harvestStyle": "perennial-vine",
+  "bloomWindow": {
+    "monthsOfYear": [
+      4,
+      5
+    ],
+    "beeAttractive": true
+  },
+  "archetype": "perennial-vine-quality"
+}

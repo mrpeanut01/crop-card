@@ -1,0 +1,36 @@
+{
+  "pluginId": "asian-eggplant-ping-tung-long",
+  "type": "crop",
+  "displayName": "Eggplant Ping Tung Long (Asian)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "solanaceae",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 65,
+    "max": 75
+  },
+  "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "soilTempMinF": 70,
+    "rowSpacingIn": 30,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Taiwanese heirloom long-fruited eggplant. Thin-skinned, no bitterness, holds quality on the plant. Heavy producer.",
+  "harvestIndicators": [
+    "12 inch slender lavender fruit, glossy and firm"
+  ],
+  "harvestStyle": "continuous-fruit",
+  "bloomWindow": {
+    "continuous": true,
+    "beeAttractive": false
+  },
+  "archetype": "continuous-harvest-fruit"
+}

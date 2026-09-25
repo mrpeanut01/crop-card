@@ -1,0 +1,39 @@
+{
+  "pluginId": "cherry-rainier-sweet",
+  "type": "crop",
+  "displayName": "Cherry Rainier (yellow sweet)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "stone-fruit",
+  "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1460
+  },
+  "defaultRowSpacingInches": 192,
+  "plantingGuide": {
+    "soilTempMinF": 45,
+    "rowSpacingIn": 192,
+    "inRowSpacingIn": {
+      "min": 144,
+      "max": 192
+    }
+  },
+  "agronomy": {
+    "lifecycle": "perennial",
+    "rotationLookbackYears": 0
+  },
+  "notes": "Washington State University 1952 release (Bing x Van). Premium fresh-market yellow sweet cherry. Requires cross-pollinator.",
+  "harvestIndicators": [
+    "Yellow background with red blush, firm and fully colored"
+  ],
+  "harvestStyle": "tree-fruit-multi-pick",
+  "bloomWindow": {
+    "monthsOfYear": [
+      3,
+      4
+    ],
+    "beeAttractive": true
+  },
+  "archetype": "tree-fruit-multi-pick"
+}

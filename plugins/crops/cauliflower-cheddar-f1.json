@@ -1,0 +1,37 @@
+{
+  "pluginId": "cauliflower-cheddar-f1",
+  "type": "crop",
+  "displayName": "Cauliflower Cheddar F1 (orange)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 58,
+    "max": 68
+  },
+  "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 30,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Self-blanching orange cauliflower with 25x the beta-carotene of white types. Color holds through cooking.",
+  "harvestIndicators": [
+    "6 to 7 inch deep orange head, firm and uniform"
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  },
+  "archetype": "winter-squash-cure"
+}

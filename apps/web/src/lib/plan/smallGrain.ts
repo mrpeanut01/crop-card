@@ -1,5 +1,5 @@
 /**
- * Small-grain plan model (#177, UC-48) — pure, client-safe.
+ * Small-grain plan model (#177, UC-50) — pure, client-safe.
  *
  * Three advisory panels for plantings whose archetype is `small-grain.zadoks`:
  *

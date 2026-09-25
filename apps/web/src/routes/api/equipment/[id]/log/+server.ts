@@ -13,7 +13,7 @@ const schema = z.object({
   kind: z.enum(['maintenance', 'inspection', 'note']),
   occurredAt: z.number().int().optional(),
   notes: z.string().max(500).optional(),
-  payload: z.record(z.unknown()).optional()
+  payload: z.record(z.string(), z.unknown()).optional()
 });
 
 export const POST: RequestHandler = async (event) => {

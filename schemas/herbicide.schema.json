@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cropcard.dev/schemas/herbicide.schema.json",
   "title": "CropCard Herbicide Plugin",
   "description": "Data-only herbicide definition. Mirrors apps/web/src/lib/plugins/schemas.ts (herbicidePluginSchema). complianceFlags (Phase 21) drives the philosophy filter on the Inputs Plan step.",
@@ -30,6 +30,7 @@
       "const": "herbicide"
     },
     "activeIngredients": {
+      "minItems": 1,
       "type": "array",
       "items": {
         "type": "object",
@@ -63,8 +64,7 @@
           "chemistryClass"
         ],
         "additionalProperties": false
-      },
-      "minItems": 1
+      }
     },
     "defaultUnit": {
       "type": "string",
@@ -120,8 +120,7 @@
       "properties": {
         "amount": {
           "type": "number",
-          "exclusiveMinimum": true,
-          "minimum": 0
+          "exclusiveMinimum": 0
         },
         "unit": {
           "type": "string",
@@ -141,19 +140,23 @@
       "additionalProperties": false
     },
     "gpaCalibration": {
+      "default": 15,
       "type": "integer",
       "minimum": 0,
-      "default": 15
+      "maximum": 9007199254740991
     },
     "dilutionTable": {
       "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^\\d+gal$"
+      },
       "additionalProperties": {
         "type": "object",
         "properties": {
           "amount": {
             "type": "number",
-            "exclusiveMinimum": true,
-            "minimum": 0
+            "exclusiveMinimum": 0
           },
           "unit": {
             "type": "string",
@@ -174,20 +177,17 @@
           "unit"
         ],
         "additionalProperties": false
-      },
-      "propertyNames": {
-        "pattern": "^\\d+gal$"
       }
     },
     "acresPerTank": {
       "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^\\d+gal$"
+      },
       "additionalProperties": {
         "type": "number",
-        "exclusiveMinimum": true,
-        "minimum": 0
-      },
-      "propertyNames": {
-        "pattern": "^\\d+gal$"
+        "exclusiveMinimum": 0
       }
     },
     "requiresAMS": {
@@ -216,8 +216,7 @@
           },
           "amount": {
             "type": "number",
-            "exclusiveMinimum": true,
-            "minimum": 0
+            "exclusiveMinimum": 0
           },
           "unit": {
             "type": "string",
@@ -250,12 +249,12 @@
             "type": "string"
           },
           "requiresTraits": {
+            "minItems": 1,
             "type": "array",
             "items": {
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
-            },
-            "minItems": 1
+            }
           }
         },
         "required": [

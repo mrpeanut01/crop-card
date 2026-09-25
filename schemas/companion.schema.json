@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cropcard.dev/schemas/companion.schema.json",
   "title": "CropCard Companion Plugin",
   "description": "Data-only companion-planting definition (goodWith / badWith / member-system). Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema).",
@@ -30,18 +30,18 @@
       "const": "companion"
     },
     "goodWith": {
+      "default": [],
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "default": []
+      }
     },
     "badWith": {
+      "default": [],
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "default": []
+      }
     },
     "primaryFamily": {
       "type": "string",

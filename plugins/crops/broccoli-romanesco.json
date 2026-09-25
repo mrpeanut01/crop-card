@@ -1,0 +1,37 @@
+{
+  "pluginId": "broccoli-romanesco",
+  "type": "crop",
+  "displayName": "Romanesco (Cauliflower-Broccoli)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "cropFamily": "brassica",
+  "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 75,
+    "max": 100
+  },
+  "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "soilTempMinF": 50,
+    "rowSpacingIn": 30,
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
+  "agronomy": {
+    "lifecycle": "annual",
+    "rotationLookbackYears": 3
+  },
+  "notes": "Italian heirloom with striking fractal head. Treat like cauliflower for management. Strong farmstand and restaurant seller.",
+  "harvestIndicators": [
+    "Chartreuse-green fractal spiral head, tight buds"
+  ],
+  "harvestStyle": "single-event",
+  "bloomWindow": {
+    "daysFromPlantingMin": 60,
+    "daysFromPlantingMax": 90,
+    "beeAttractive": false
+  },
+  "archetype": "winter-squash-cure"
+}

@@ -242,5 +242,9 @@
     .title {
       font-size: 24px;
     }
+    .bh-actions {
+      flex-shrink: 1;
+      min-width: 0;
+    }
   }
 </style>

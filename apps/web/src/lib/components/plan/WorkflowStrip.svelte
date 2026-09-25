@@ -297,6 +297,7 @@
     .trail {
       order: 3;
       flex-basis: 100%;
+      min-width: 0;
       overflow-x: auto;
     }
     .step {

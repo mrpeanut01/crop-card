@@ -96,7 +96,8 @@
     flex-direction: column;
     min-height: calc(100vh - 56px);
     background: var(--color-cream);
-    margin: -16px;
+    margin-block: -16px;
+    margin-inline: calc(-1 * clamp(var(--space-2), 2vw, var(--page-padding)));
   }
   .head {
     background: var(--color-paper);

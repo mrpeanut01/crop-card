@@ -101,7 +101,7 @@
     <a href="/" class="brand serif" aria-label="CropCard home">CropCard</a>
     {#if activeOwner}
       <span class="divider" aria-hidden="true"></span>
-      <span class="farm mono">{activeOwner.name}</span>
+      <span class="farm mono" title={activeOwner.name}>{activeOwner.name}</span>
     {/if}
   </div>
 
@@ -117,12 +117,14 @@
   </nav>
 
   <div class="right">
-    <IconButton ariaLabel="Search">
-      {#snippet icon()}<Search size={16} strokeWidth={1.75} />{/snippet}
-    </IconButton>
-    <IconButton ariaLabel="Alerts">
-      {#snippet icon()}<Bell size={16} strokeWidth={1.75} />{/snippet}
-    </IconButton>
+    <span class="aux">
+      <IconButton ariaLabel="Search">
+        {#snippet icon()}<Search size={16} strokeWidth={1.75} />{/snippet}
+      </IconButton>
+      <IconButton ariaLabel="Alerts">
+        {#snippet icon()}<Bell size={16} strokeWidth={1.75} />{/snippet}
+      </IconButton>
+    </span>
     <IconButton
       href="/settings"
       ariaLabel="Settings"
@@ -196,11 +198,17 @@
   .farm {
     font-size: var(--font-size-caption);
     color: var(--color-ink-muted);
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .primary-nav {
     display: flex;
     gap: 2px;
     margin-left: 12px;
+    min-width: 0;
+    overflow-x: auto;
   }
   .nav-link {
     display: flex;
@@ -213,6 +221,7 @@
     font-size: 13.5px;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
+    white-space: nowrap;
   }
   .nav-link.active {
     color: var(--color-forest-deep);
@@ -225,6 +234,9 @@
     align-items: center;
     gap: 10px;
   }
+  .aux {
+    display: contents;
+  }
   .owner-chip {
     position: relative;
   }
@@ -234,6 +246,10 @@
     padding: 0;
     border: none;
     background: transparent;
+    min-width: 48px;
+    min-height: 48px;
+    display: grid;
+    place-items: center;
   }
   .owner-chip > summary::-webkit-details-marker {
     display: none;
@@ -248,6 +264,7 @@
     place-items: center;
     font-weight: 600;
     font-size: 13px;
+    flex-shrink: 0;
   }
   /* .standalone is just a marker class; no additional styles needed. */
   .owner-popover {
@@ -296,6 +313,38 @@
     text-transform: uppercase;
   }
 
+  /* The header row degrades in steps so it never widens the page: the inert
+     Search/Alerts placeholders go first, then the sync label collapses to
+     its dot (text stays in the a11y tree), then the farm name. Between
+     769px and ~1030px the primary nav scrolls within itself as a fallback. */
+  @media (max-width: 1380px) {
+    .aux {
+      display: none;
+    }
+  }
+  @media (max-width: 1280px) {
+    .right :global(.indicator .label) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  }
+  @media (max-width: 1180px) {
+    .farm,
+    .divider {
+      display: none;
+    }
+    .nav-link {
+      padding: 8px 9px;
+    }
+  }
+
   /* Mobile: collapse nav into a bottom strip below 768px so primary-nav row
      stays uncluttered. Bottom nav is one-glove non-negotiable per CLAUDE.md. */
   @media (max-width: 768px) {
@@ -327,8 +376,21 @@
       background: var(--pill-forest-bg);
       color: var(--pill-forest-fg);
     }
-    .farm {
-      display: none;
+  }
+
+  /* 375px phones: tighter chrome; Settings + the owner switcher keep their
+     48px targets. */
+  @media (max-width: 600px) {
+    .topbar {
+      gap: 8px;
+      padding: 8px 12px;
+    }
+    .brand-cluster {
+      min-width: 0;
+    }
+    .right {
+      gap: 4px;
+      flex-shrink: 0;
     }
   }
 </style>

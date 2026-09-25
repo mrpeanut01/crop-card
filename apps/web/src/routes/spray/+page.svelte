@@ -1466,7 +1466,7 @@
   /* #320 — three conditions steppers side-by-side on wider screens,
      stacked on mobile. */
   .conditions-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   }
   .conditions-provenance-note {
     margin: 0.5rem 0 0;

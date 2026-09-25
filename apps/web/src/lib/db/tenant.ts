@@ -18,7 +18,8 @@
  *      makes calling these helpers on a global table (e.g. `taxonomyTerms`)
  *      a compile error.
  *
- *   3. **ESLint rule** (`apps/web/eslint/no-raw-tenant-table.js`) that flags
+ *   3. **ESLint rule** (`cropcard/no-raw-tenant-table`, in
+ *      `packages/eslint-plugin-cropcard/`) that flags
  *      `db.select().from(<branded table>)` and steers authors to the helpers
  *      above. Whitelisted only for this module + scoped/admin helpers.
  *

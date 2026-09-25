@@ -11,7 +11,7 @@
     "dev": "pnpm --filter @cropcard/web dev",
     "build": "pnpm --filter @cropcard/web build",
     "test": "pnpm -r test",
-    "test:unit": "pnpm --filter @cropcard/web test:unit",
+    "test:unit": "pnpm --filter eslint-plugin-cropcard test:unit && pnpm --filter @cropcard/web test:unit",
     "test:e2e": "pnpm --filter @cropcard/web test:e2e",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",

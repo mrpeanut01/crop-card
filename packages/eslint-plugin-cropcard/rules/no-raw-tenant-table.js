@@ -34,8 +34,6 @@
  * `schema.ts` is the canonical gate; this rule is a secondary safety net.
  */
 
-'use strict';
-
 const TENANT_SCOPED_TABLE_NAMES = new Set([
   'fields',
   'blocks',
@@ -68,13 +66,13 @@ function isTenantTableIdentifier(node) {
   return node && node.type === 'Identifier' && TENANT_SCOPED_TABLE_NAMES.has(node.name);
 }
 
-module.exports = {
+/** @type {import('eslint').Rule.RuleModule} */
+export default {
   meta: {
     type: 'problem',
     docs: {
       description:
         'Disallow raw Drizzle reads/writes against tenant-scoped tables — funnel through tenantWhere/withTenant/tenantValues.',
-      category: 'Possible Errors',
       recommended: true
     },
     messages: {
@@ -99,7 +97,7 @@ module.exports = {
         // accessors or an explicit cross-tenant note), treat it as
         // tenant-aware and suppress this rule file-wide. See the file
         // header for the why.
-        const src = context.getSourceCode().getText();
+        const src = (context.sourceCode ?? context.getSourceCode()).getText();
         fileIsTenantAware = /\b(tenantWhere|withTenant|tenantValues|unscopedQueryNote)\s*\(/.test(
           src
         );

@@ -19,7 +19,7 @@
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.5.7",
     "@sveltejs/kit": "^2.70.3",
-    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.9.0",
     "drizzle-kit": "^0.31.11",
@@ -27,13 +27,13 @@
     "svelte-check": "^4.7.6",
     "tsx": "^4.23.15",
     "typescript": "^5.6.3",
-    "vite": "^5.4.10",
-    "vitest": "^2.1.4"
+    "vite": "^8.0.0",
+    "vitest": "^4.1.11"
   },
   "dependencies": {
     "@cropcard/plugin-validation": "workspace:*",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.3",
-    "zod": "^3.23.8"
+    "zod": "^4.6.5"
   }
 }

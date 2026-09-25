@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Actigard 50WG (Syngenta acibenzolar-S-methyl)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "100-922",
   "defaultUnit": "oz",
   "formulation": "WG",
   "applicationTiming": "PRE-BLOOM",

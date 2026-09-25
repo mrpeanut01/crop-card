@@ -22,7 +22,12 @@ export const INPUT_PLUGIN_TYPES: ReadonlyArray<InputPluginType> = [
   'fertilizer'
 ];
 
-export const METADATA_FIELDS = ['defaultUnit', 'activeIngredients', 'formulation'] as const;
+export const METADATA_FIELDS = [
+  'defaultUnit',
+  'activeIngredients',
+  'formulation',
+  'epaRegistrationNumber'
+] as const;
 export type MetadataField = (typeof METADATA_FIELDS)[number];
 
 export type PhysicalState = 'liquid' | 'dry';
@@ -90,7 +95,8 @@ export function resolvePluginDefaultUnit(plugin: InputPlugin): ResolvedDefaultUn
 
 /** Authored-coverage gaps. Fertilizers satisfy `activeIngredients` via the
  *  guaranteed `analysis` and `formulation` via `form` — both required by
- *  the fertilizer schema — so only `defaultUnit` can be a fertilizer gap. */
+ *  the fertilizer schema — and are not EPA-registered pesticides, so only
+ *  `defaultUnit` can be a fertilizer gap. */
 export function metadataGaps(plugin: InputPlugin): MetadataField[] {
   const gaps: MetadataField[] = [];
   if (!plugin.defaultUnit) gaps.push('defaultUnit');
@@ -98,6 +104,7 @@ export function metadataGaps(plugin: InputPlugin): MetadataField[] {
     if (!plugin.activeIngredients || plugin.activeIngredients.length === 0)
       gaps.push('activeIngredients');
     if (!plugin.formulation) gaps.push('formulation');
+    if (!plugin.epaRegistrationNumber) gaps.push('epaRegistrationNumber');
   }
   return gaps;
 }

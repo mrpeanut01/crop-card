@@ -3,6 +3,7 @@
   "type": "herbicide",
   "displayName": "Poast Plus (BASF sethoxydim)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "7969-88",
   "defaultUnit": "fl-oz",
   "applicationTiming": "POST",
   "activeIngredients": [

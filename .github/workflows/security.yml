@@ -1,0 +1,52 @@
+name: security
+
+# Static security analysis. Runs after merge (push to main), weekly, and as
+# part of every release — not on each PR push, where it would add minutes
+# for little marginal signal. Findings land in the repo's Security tab.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    name: CodeQL (javascript-typescript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
+
+  audit:
+    name: dependency audit (all deps, moderate+)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # PRs already block on high+ in production deps (ci.yml). This wider
+      # sweep reports moderate+ across dev deps too, without blocking.
+      - run: pnpm audit --audit-level=moderate || echo "::warning::pnpm audit reported moderate+ advisories (see log)"

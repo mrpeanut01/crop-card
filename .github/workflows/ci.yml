@@ -1,120 +1,141 @@
 name: ci
 
+# Per-PR gate. Kept deliberately small: every job here guards something a
+# real regression would break (types, lint + tenant rule, the safety kernel
+# and tenant isolation in the unit suite, the key user flows in e2e).
+# Heavier or lower-signal checks (CodeQL, image scan, AI review, visual
+# screenshots) run on main / weekly / release instead. See docs/ci.md.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test:
+  static:
+    name: typecheck + lint + audit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         with:
           version: 9.12.3
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
-      - run: pnpm install --frozen-lockfile=false
-
+      - run: pnpm install --frozen-lockfile
       - name: Typecheck
         run: pnpm typecheck
-
       - name: Lint
         run: pnpm lint
-
-      # Phase 24 — fail PRs where the OpenAPI artifact has drifted from
-      # the registry in apps/web/scripts/gen-openapi.mjs. Regenerate
-      # locally with `pnpm --filter @cropcard/web gen:openapi` and commit.
       - name: OpenAPI artifact in sync with source
         run: |
           pnpm --filter @cropcard/web gen:openapi
           git diff --exit-code apps/web/static/openapi.json
+      - name: Production dependency audit (high+)
+        run: pnpm audit --prod --audit-level=high
 
-      - name: Unit tests
-        run: pnpm test:unit
-
-      - name: Install Playwright browsers
-        run: pnpm --filter @cropcard/web exec playwright install --with-deps chromium
-
-      - name: E2E smoke
-        run: pnpm test:e2e
-
-  # #101 — visual regression against the committed *-linux.png baselines.
-  # Non-blocking until it has run green on the GitHub runner for a while:
-  # the baselines were captured with a different chromium build than the
-  # one `playwright install` pulls here. If it drifts, download the
-  # `visual-diffs` artifact, inspect the *-actual.png files, and commit
-  # them over the baselines once they look right.
-  visual:
+  unit:
+    name: unit tests
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-        with:
-          # On same-repo PRs check out the branch itself so a baseline
-          # re-capture (below) can be pushed back to it.
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref || github.ref }}
-
       - uses: pnpm/action-setup@v4
         with:
           version: 9.12.3
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:unit
 
-      - run: pnpm install --frozen-lockfile=false
-
-      - name: Install Playwright browsers
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(pnpm --filter @cropcard/web exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Playwright chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @cropcard/web exec playwright install --with-deps chromium
-
-      # Baselines must come from this runner's Chromium build. A head commit
-      # whose message contains [update-visual] re-captures the Linux
-      # baselines here and commits them back to the PR branch.
-      - name: Re-capture Linux baselines ([update-visual])
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          E2E_VISUAL: "1"
-        run: |
-          if git log -1 --format=%B | grep -qF '[update-visual]'; then
-            pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=all
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add 'apps/web/tests/e2e/visual/**/*-linux.png'
-            if ! git diff --cached --quiet; then
-              git commit -m "test(visual): re-capture Linux baselines on CI Chromium"
-              git push origin HEAD:${{ github.head_ref }}
-            fi
-          fi
-
-      - name: Visual regression
-        env:
-          E2E_VISUAL: "1"
-        run: pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=none
-
-      - name: Upload visual diffs
+      - name: Install Playwright system deps
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter @cropcard/web exec playwright install-deps chromium
+      - run: pnpm test:e2e
+      - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: visual-diffs
+          name: playwright-report
           path: apps/web/test-results/
-          retention-days: 14
+          retention-days: 7
+
+  # Needs the repository's Dependency graph (Settings → Code security).
+  # Enable it, then set the repo variable DEPENDENCY_REVIEW=true. Until then
+  # the prod audit in `static` covers known-vulnerable dependencies.
+  dependency-review:
+    name: dependency review
+    if: github.event_name == 'pull_request' && vars.DEPENDENCY_REVIEW == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
 
   validate-bicep:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      # az CLI is preinstalled on ubuntu-latest runners; install bicep into it.
       - name: Install Bicep
         run: az bicep install
       - name: Build Bicep
         run: az bicep build --file infra/azure/main.bicep
+
+  # Single stable check name for branch protection. Require `test` and the
+  # individual jobs can be split, renamed or parallelised freely.
+  test:
+    # Skip (rather than fail) when the run was cancelled by a newer push.
+    if: ${{ !cancelled() }}
+    needs: [static, unit, e2e, validate-bicep]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: All required jobs passed
+        run: |
+          echo '${{ toJSON(needs) }}' | jq -e 'to_entries | all(.value.result == "success")'

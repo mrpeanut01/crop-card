@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Dithane Rainshield F45 (Corteva mancozeb)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "62719-396",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "mancozeb", "fracCode": "M03" }],
   "ratePerAcre": { "amount": 3, "unit": "lb" },

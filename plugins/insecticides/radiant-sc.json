@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Radiant SC (Corteva spinetoram)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "62719-545",
   "defaultUnit": "fl-oz",
   "formulation": "SC",
   "activeIngredients": [

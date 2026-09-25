@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Elevate 50WDG (Arysta fenhexamid)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "66330-35",
   "defaultUnit": "lb",
   "formulation": "WDG",
   "applicationTiming": "PRE-HARVEST",

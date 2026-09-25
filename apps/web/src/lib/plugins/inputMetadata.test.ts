@@ -128,9 +128,33 @@ describe('withResolvedDefaultUnit (catalog-pick loader fallback)', () => {
 });
 
 describe('metadataGaps + checkCoverage', () => {
+  it('keeps epaRegistrationNumber on fungicides (#381)', () => {
+    const f = pluginSchema.parse({
+      pluginId: 'fg',
+      type: 'fungicide',
+      displayName: 'FG',
+      version: '1.0.0',
+      activeIngredients: [{ name: 'azoxystrobin', fracCode: '11' }],
+      ratePerAcre: { amount: 6, unit: 'fl-oz' },
+      reEntryIntervalHours: 4,
+      preHarvestIntervalDays: 0,
+      epaRegistrationNumber: '100-1098'
+    }) as InputPlugin;
+    expect(f.type !== 'fertilizer' && f.epaRegistrationNumber).toBe('100-1098');
+    expect(metadataGaps(f)).not.toContain('epaRegistrationNumber');
+  });
+
   it('reports pesticide gaps; fertilizer analysis/form satisfy the chemistry fields', () => {
-    expect(metadataGaps(herbicide())).toEqual(['defaultUnit', 'formulation']);
-    expect(metadataGaps(herbicide({ defaultUnit: 'fl-oz', formulation: 'SL' }))).toEqual([]);
+    expect(metadataGaps(herbicide())).toEqual([
+      'defaultUnit',
+      'formulation',
+      'epaRegistrationNumber'
+    ]);
+    expect(
+      metadataGaps(
+        herbicide({ defaultUnit: 'fl-oz', formulation: 'SL', epaRegistrationNumber: '524-659' })
+      )
+    ).toEqual([]);
     expect(metadataGaps(fertilizer())).toEqual(['defaultUnit']);
   });
 
@@ -139,6 +163,7 @@ describe('metadataGaps + checkCoverage', () => {
       [herbicide(), fertilizer({ defaultUnit: 'lb' })],
       [
         { pluginId: 'h', field: 'formulation', reason: 'r' },
+        { pluginId: 'h', field: 'epaRegistrationNumber', reason: 'r' },
         { pluginId: 'f', field: 'defaultUnit', reason: 'r' }
       ]
     );

@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Brigade 2EC (FMC bifenthrin)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "279-3313",
   "defaultUnit": "fl-oz",
   "formulation": "EC",
   "activeIngredients": [

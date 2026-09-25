@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Pristine (BASF boscalid + pyraclostrobin)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "7969-199",
   "applicationTiming": "COVER",
   "activeIngredients": [
     { "name": "boscalid", "fracCode": "7" },
@@ -12,6 +13,7 @@
   "gpaCalibration": 50,
   "reEntryIntervalHours": 12,
   "preHarvestIntervalDays": 0,
+  "rainfastHours": 1,
   "pollinatorRisk": "low",
   "targetDiseases": ["apple scab", "summer rots", "Botrytis", "powdery mildew", "anthracnose"],
   "labelClaims": { "safeForCropFamilies": ["orchard", "small-fruit", "vine-fruit", "stone-fruit", "solanaceae", "cucurbit"] },

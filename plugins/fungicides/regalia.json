@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Regalia (Marrone Bio Reynoutria sachalinensis — OMRI)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "84059-3",
   "defaultUnit": "fl-oz",
   "applicationTiming": "COVER",
   "activeIngredients": [{ "name": "Reynoutria sachalinensis extract", "fracCode": "P05" }],

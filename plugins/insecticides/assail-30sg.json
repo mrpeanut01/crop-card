@@ -3,6 +3,7 @@
   "type": "insecticide",
   "displayName": "Assail 30SG (UPL acetamiprid)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "8033-36",
   "defaultUnit": "oz",
   "formulation": "SG",
   "activeIngredients": [

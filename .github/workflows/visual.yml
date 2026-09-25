@@ -1,0 +1,62 @@
+name: visual
+
+# Screenshot regression is low-signal for a glove-first field app whose key
+# layout guarantee (no horizontal overflow at 375px) is already an e2e
+# assertion, so it no longer runs on PRs. Run it by hand before a visual
+# redesign lands, or set `update: true` to re-capture the -linux.png
+# baselines on this runner's Chromium and commit them to `branch`.
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to test (and to commit re-captured baselines to)
+        required: true
+        default: main
+      update:
+        description: Re-capture and commit baselines instead of comparing
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @cropcard/web exec playwright install --with-deps chromium
+      - name: Compare against baselines
+        if: ${{ !inputs.update }}
+        env:
+          E2E_VISUAL: '1'
+        run: pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=none
+      - name: Re-capture and commit baselines
+        if: ${{ inputs.update }}
+        env:
+          E2E_VISUAL: '1'
+        run: |
+          pnpm --filter @cropcard/web exec playwright test tests/e2e/visual --update-snapshots=all
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'apps/web/tests/e2e/visual/**/*-linux.png'
+          git diff --cached --quiet || { git commit -m "test(visual): re-capture Linux baselines on CI Chromium"; git push origin HEAD:${{ inputs.branch }}; }
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-diffs
+          path: apps/web/test-results/
+          retention-days: 7

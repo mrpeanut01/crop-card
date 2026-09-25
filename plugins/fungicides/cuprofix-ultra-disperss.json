@@ -3,6 +3,7 @@
   "type": "fungicide",
   "displayName": "Cuprofix Ultra Disperss (UPL copper)",
   "version": "1.0.0",
+  "epaRegistrationNumber": "70506-201",
   "defaultUnit": "lb",
   "applicationTiming": "DORMANT",
   "activeIngredients": [

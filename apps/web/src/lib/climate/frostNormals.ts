@@ -8,8 +8,9 @@ const EARTH_RADIUS_MI = 3958.7613;
 const FT_PER_M = 3.28084;
 
 /** [id, name, lat, lon, elevM, spring32P50, fall32P50, spring32P10, fall32P10,
- *  spring24P50, fall24P50, spring24P10, fall24P10, frostFree?] with day-of-year
- *  (non-leap, Jan 1 = 1) or null. */
+ *  spring24P50, fall24P50, spring24P10, fall24P10, frostFree?, extremeMinF?]
+ *  with day-of-year (non-leap, Jan 1 = 1) or null. `frostFree` is 1 or 0 and
+ *  `extremeMinF` the 1991-2020 mean annual extreme minimum in °F. */
 export type FrostStationRow = readonly (string | number | null)[];
 
 export interface FrostDataset {
@@ -87,7 +88,8 @@ const COL = {
   fall24P50: 10,
   spring24P10: 11,
   fall24P10: 12,
-  frostFree: 13
+  frostFree: 13,
+  extremeMinF: 14
 } as const;
 
 const CUM_DAYS = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
@@ -139,7 +141,9 @@ export function nearestFrostStation(
   dataset: FrostDataset,
   lat: number,
   lon: number,
-  opts: Pick<FrostLookupOptions, 'maxDistanceMi' | 'elevationFt' | 'maxElevDeltaFt'> = {}
+  opts: Pick<FrostLookupOptions, 'maxDistanceMi' | 'elevationFt' | 'maxElevDeltaFt'> & {
+    accept?: (row: FrostStationRow) => boolean;
+  } = {}
 ): NearestStation | null {
   if (!validPoint(lat, lon)) return null;
   const maxMi = opts.maxDistanceMi ?? FROST_LOOKUP_MAX_MI;
@@ -150,6 +154,7 @@ export function nearestFrostStation(
     const sLon = num(row, COL.lon);
     if (sLat === null || sLon === null) continue;
     if (Math.abs(sLat - lat) > latSlack) continue;
+    if (opts.accept && !opts.accept(row)) continue;
     if (opts.elevationFt != null && opts.maxElevDeltaFt != null) {
       const elevM = num(row, COL.elevM);
       if (elevM !== null && Math.abs(elevM * FT_PER_M - opts.elevationFt) > opts.maxElevDeltaFt) {
@@ -167,6 +172,29 @@ export function nearestFrostStation(
     }
   }
   return best;
+}
+
+/** The station's 1991-2020 mean annual extreme minimum (°F), or null. */
+export function stationExtremeMinF(row: FrostStationRow): number | null {
+  return num(row, COL.extremeMinF);
+}
+
+export function frostStationFromRow(
+  row: FrostStationRow,
+  distanceMi: number,
+  elevationFt?: number | null
+): FrostStation {
+  const elevM = num(row, COL.elevM);
+  const station: FrostStation = {
+    id: String(row[COL.id]),
+    name: String(row[COL.name] ?? row[COL.id]),
+    distanceMi: Math.round(distanceMi * 10) / 10,
+    elevM
+  };
+  if (elevationFt != null && elevM !== null) {
+    station.elevDeltaFt = Math.round(elevM * FT_PER_M - elevationFt);
+  }
+  return station;
 }
 
 export function fallbackFrost(
@@ -221,16 +249,7 @@ export function lookupFrostInDataset(
   const hit = nearestFrostStation(dataset, lat, lon as number, opts);
   if (!hit) return fallbackFrost('no-station', probability);
   const { row } = hit;
-  const elevM = num(row, COL.elevM);
-  const station: FrostStation = {
-    id: String(row[COL.id]),
-    name: String(row[COL.name] ?? row[COL.id]),
-    distanceMi: Math.round(hit.distanceMi * 10) / 10,
-    elevM
-  };
-  if (opts.elevationFt != null && elevM !== null) {
-    station.elevDeltaFt = Math.round(elevM * FT_PER_M - opts.elevationFt);
-  }
+  const station = frostStationFromRow(row, hit.distanceMi, opts.elevationFt);
   const median = dateSet(row, false);
   const cautious = dateSet(row, true);
   const chosen = probability === 'cautious' ? cautious : median;

@@ -185,6 +185,14 @@ export interface SnapshotFrostDates {
   distanceMi: number | null;
 }
 
+export interface SnapshotZone {
+  zone: string;
+  provenance: 'data' | 'manual';
+  stationName: string | null;
+  distanceMi: number | null;
+  extremeMinF: number | null;
+}
+
 export type SnapshotSprayProductType = 'herbicide' | 'insecticide' | 'fungicide';
 
 export type SnapshotRateUnit = 'oz' | 'fl-oz' | 'lb' | 'pt' | 'qt';
@@ -228,6 +236,8 @@ export interface FarmSnapshot {
   stock: SnapshotStockItem[];
   cropPlugins: Record<string, SnapshotCropPlugin>;
   frost: SnapshotFrostDates | null;
+  /** Display-only hardiness zone; absent on bundles saved before it existed. */
+  zone?: SnapshotZone | null;
   /** Stocked pesticides keyed by plugin id. Absent on bundles saved before
    *  Sprint 30F. */
   sprayProducts?: Record<string, SnapshotSprayProduct>;

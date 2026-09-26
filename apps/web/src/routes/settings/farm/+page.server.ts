@@ -24,6 +24,8 @@ import {
   resolveFrostForm
 } from '$lib/climate/frostSettings.server';
 import { storedFrostView } from '$lib/climate/frostSettings';
+import { parseZone } from '$lib/climate/zone';
+import { loadManualZone, saveZoneForm } from '$lib/climate/zoneSettings.server';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { unscopedQueryNote } from '$lib/db/tenant';
 
@@ -72,6 +74,7 @@ export const load: ServerLoad = ({ locals }) => {
         probability: stored.provenance.probability
       };
     })(),
+    manualZone: loadManualZone(),
     currentYear,
     activeSeasonSetup: loadSeasonSetup(currentYear)
   };
@@ -86,6 +89,10 @@ export const actions: Actions = {
     const latLon = parseLatLon(form.get('lat'), form.get('lon'));
     const frost = await resolveFrostForm(form, latLon);
     if (!frost.ok) return fail(400, { error: frost.error });
+    const zoneRaw = form.get('hardinessZone');
+    if (zoneRaw !== null && String(zoneRaw).trim() !== '' && !parseZone(zoneRaw)) {
+      return fail(400, { error: 'Enter a zone like 7a or 6b, or leave it blank.' });
+    }
 
     const farmName = String(form.get('farmName') ?? '').trim();
     if (farmName.length > 0 && farmName.length <= 120) {
@@ -98,6 +105,7 @@ export const actions: Actions = {
 
     if (latLon) setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify(latLon));
     if (frost.plan) applyFrostPlan(frost.plan);
+    saveZoneForm(zoneRaw);
 
     return { ok: true };
   }

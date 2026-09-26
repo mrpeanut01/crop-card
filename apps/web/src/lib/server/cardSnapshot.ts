@@ -17,6 +17,7 @@ import {
   type SnapshotSprayProduct,
   type SnapshotStockItem
 } from '$lib/cards/snapshot';
+import { farmZone } from '$lib/climate/zoneSettings.server';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { listAreas } from '$lib/db/areas';
 import { listBlocks } from '$lib/db/blocks';
@@ -303,6 +304,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     stock: stockItems.map(toStock).sort((a, b) => a.id.localeCompare(b.id)),
     cropPlugins,
     frost: snapshotFrostFromSettings(),
+    zone: await farmZone(),
     sprayProducts,
     sprayTerms: sprayTermsFor(registry)
   };

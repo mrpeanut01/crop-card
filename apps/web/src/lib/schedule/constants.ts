@@ -20,8 +20,8 @@ export const SETTINGS_KEYS = {
   firstHardFrost: 'first_hard_frost_date',
   /** Phase 30: JSON `StoredFrostProvenance` for the four frost dates. */
   frostProvenance: 'frost_provenance',
-  /** Phase 30: reserved for v1.1 (`"7a"` or null, `data | manual` or null);
-   *  nothing reads them in v1. */
+  /** The owner's own hardiness zone (`"7a"`) with provenance `manual`. The
+   *  station estimate is recomputed from the location and never stored. */
   hardinessZone: 'farm.hardiness_zone',
   hardinessZoneProvenance: 'farm.hardiness_zone_provenance',
   farmLatLon: 'farm_lat_lon',

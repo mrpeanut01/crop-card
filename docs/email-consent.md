@@ -13,10 +13,10 @@ Billing receipts come from Stripe, not from CropCard. There is no marketing mail
 
 ## Opt-in
 
-- Consent is per (farm, user, alert kind) in the tenant-scoped `email_alert_consents` table (migration 0055). No row means off. Opting in stores the time, the source (`settings` or `unsubscribe-page`) and the client IP; opting out keeps the row with `status = 'opted-out'`.
+- Consent is per (farm, user, alert kind) in the tenant-scoped `email_alert_consents` table (migration 0056). No row means off. Opting in stores the time, the source (`settings` or `unsubscribe-page`) and the client IP; opting out keeps the row with `status = 'opted-out'`.
 - It is per farm, like push subscriptions, because the alerts are about one farm's sprayers and records and a helper on two farms may want only one.
 - The only place to opt in is `/settings/notifications` (`POST /api/email/prefs`). It needs the signed-in browser session: API tokens and impersonation are refused, so nobody opts a person in on their behalf.
-- The 15-minute alert scheduler (`lib/server/push/scheduler.ts`) sends each due alert by push and, through `lib/server/push/emailAlerts.ts`, by email to users with an opt-in for that exact kind. It needs a real `EMAIL_TRANSPORT` and `ORIGIN`; `EMAIL_ALERTS=off` stops alert email only. There are no quiet hours in CropCard today, so none are applied.
+- The twice-daily alert tick (`POST /api/internal/push-tick`, woken by the `push-tick` Container Apps Jobs; `lib/server/push/wakeup.ts` and `scheduler.ts`) sends each due alert by push and, through `lib/server/push/emailAlerts.ts`, by email to users with an opt-in for that exact kind. The tick runs when push or email is configured. Email needs a real `EMAIL_TRANSPORT` and `ORIGIN`; `EMAIL_ALERTS=off` stops alert email only. There are no quiet hours in CropCard today, so none are applied.
 
 ## Unsubscribe
 

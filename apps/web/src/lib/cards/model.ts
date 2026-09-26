@@ -37,6 +37,28 @@ export interface CardProvenance {
   detail?: string;
 }
 
+/** One bed on a garden Area's bed map, in the Area's feet grid. `crops`
+ *  lists what is in the bed on the card's date. */
+export interface CardBedMapBed {
+  name: string;
+  kind: 'bed' | 'container';
+  x: number;
+  y: number;
+  w: number;
+  l: number;
+  crops: string[];
+}
+
+/** Garden and greenhouse Areas carry a to-scale sketch of their beds. */
+export interface CardBedMap {
+  widthFt: number;
+  lengthFt: number;
+  hasNorth: boolean;
+  /** Epoch ms of the day `crops` describes. */
+  onMs: number;
+  beds: CardBedMapBed[];
+}
+
 export interface CardModel {
   kind: CardKind;
   key: string;
@@ -50,6 +72,9 @@ export interface CardModel {
   rulesVersion?: string;
   provenance: CardProvenance[];
   href: string;
+  /** Extra screen links, e.g. "Open designer" on a garden Area. */
+  links?: CardAction[];
+  bedMap?: CardBedMap;
 }
 
 export type CardVariant = 'screen' | 'compact' | 'print';

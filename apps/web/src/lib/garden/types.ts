@@ -256,4 +256,19 @@ export interface GardenDesign {
   asOf: number;
   readOnly: boolean;
   readOnlyReason: 'role' | 'offline' | null;
+  /** Beds with no stored position, laid out by `freeSpot` and drawn dashed
+   *  until their first move saves one. */
+  unplacedBedIds?: string[];
+  /** Read-only context shapes (trees, fences, buildings) from `shade_sources`
+   *  attached to this Area. */
+  landmarks?: DesignLandmark[];
+}
+
+/** A shade source drawn for context. `rect` is null when it has no map
+ *  geometry to place it inside the Area. */
+export interface DesignLandmark {
+  id: string;
+  name: string;
+  kind: string;
+  rect: RectFt | null;
 }

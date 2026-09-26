@@ -297,6 +297,8 @@ The data track also takes placement on the existing planting routes: `PATCH /api
 
 `PHASE_30_AREAS_CARDS_ONBOARDING.md` names a single `lib/garden/designer.ts`; the geometry lives in `geometry.ts` and the rest is split by concern as above.
 
+**UI track (as built).** The page loader (`routes/plan/areas/[id]/design/+page.server.ts`) builds the design server side through `lib/server/gardenDesignLoad.ts`; `lib/garden/design.ts` holds the shared pure builder (`buildGardenDesign`, `layoutBeds`, `designFromSnapshot`, `landmarkRect`, `designerHref`). Additive contract changes: `GardenDesign.unplacedBedIds?` and `GardenDesign.landmarks?` (`DesignLandmark`) in `types.ts`, and `CardModel.links?` plus `CardModel.bedMap?` (`CardBedMap`) in `lib/cards/model.ts` for the Area Card's **Open designer** link and bed-map thumbnail. The client writes through the routes that exist today: beds through `/api/blocks` (which now refuses overlapping or out-of-Area beds with `OVERLAP` / `OUTSIDE_AREA`, refuses helpers on any bed with `READ_ONLY`, and honours `DELETE ?ifEmpty=1` with `BED_HAS_RECORDS`), placement through `PATCH /api/crops/[id]` `set-placement`, new plantings and accepted recipe or Fill proposals through `POST /api/blocks/[id]/plantings`. Recipes preview client side with `applyRecipe` over the recipes the loader sends. **Add N sowings** still posts to `POST /api/garden/beds/[blockId]/succession`, which is not built yet; the preview works without it.
+
 ## 23. Acceptance scenarios
 
 Dates use the Dulles frost normals (last spring frost Apr 15, first fall frost Oct 24).

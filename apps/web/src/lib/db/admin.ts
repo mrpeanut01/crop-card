@@ -253,6 +253,45 @@ export function deleteCropCascade(id: string): DeleteSummary {
 
 // ─── Per-block (the heaviest cascade) ───────────────────────────────────
 
+/** True when a block holds anything beyond `planned` plantings: an active,
+ *  harvested or failed planting, any spray, harvest, hay, fertility or soil
+ *  record, or a task that is not one of its planned plantings' own. The
+ *  garden designer only deletes beds for which this is false. */
+export function blockHasRecords(id: string): boolean {
+  const cropRows = db
+    .select({ id: crops.id, status: crops.status })
+    .from(crops)
+    .where(withTenant(crops, eq(crops.blockId, id)))
+    .all();
+  if (cropRows.some((c) => c.status !== 'planned')) return true;
+  const plannedIds = new Set(cropRows.map((c) => c.id));
+  const any = <T extends TenantScopedTable>(table: T, where: SQL): boolean =>
+    db
+      .select()
+      .from(table as SQLiteTable)
+      .where(withTenant(table, where))
+      .limit(1)
+      .all().length > 0;
+  if (
+    any(sprayEvents, eq(sprayEvents.blockId, id)) ||
+    any(insecticideEvents, eq(insecticideEvents.blockId, id)) ||
+    any(fungicideEvents, eq(fungicideEvents.blockId, id)) ||
+    any(harvestEvents, eq(harvestEvents.blockId, id)) ||
+    any(hayCuttings, eq(hayCuttings.blockId, id)) ||
+    any(fertilityApplications, eq(fertilityApplications.blockId, id)) ||
+    any(fertilityCredits, eq(fertilityCredits.blockId, id)) ||
+    any(soilTests, eq(soilTests.blockId, id))
+  ) {
+    return true;
+  }
+  const taskRows = db
+    .select({ cropId: tasks.cropId })
+    .from(tasks)
+    .where(withTenant(tasks, eq(tasks.blockId, id)))
+    .all();
+  return taskRows.some((t) => !t.cropId || !plannedIds.has(t.cropId));
+}
+
 export function deleteBlockCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};
 

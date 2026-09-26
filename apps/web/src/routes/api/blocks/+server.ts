@@ -8,6 +8,7 @@ import { parseKindFilter } from '$lib/farm/kindFilter';
 import { getField } from '$lib/db/fields';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { bedLayoutProblem } from '$lib/server/garden/bedLayout';
 
 export const GET: RequestHandler = ({ url }) => {
   const kinds = parseKindFilter(url.searchParams.get('kind'), BLOCK_KINDS);
@@ -62,6 +63,18 @@ export const POST: RequestHandler = async (event) => {
     parsed.data
   );
   if (placement) return json({ error: placement }, { status: 400 });
+  const layoutProblem = bedLayoutProblem({
+    id: '',
+    name: parsed.data.name,
+    kind: parsed.data.kind ?? DEFAULT_BLOCK_KIND,
+    fieldId: parsed.data.fieldId,
+    widthFt: parsed.data.widthFt,
+    lengthFt: parsed.data.lengthFt,
+    xFt: parsed.data.xFt,
+    yFt: parsed.data.yFt,
+    rotationDeg: parsed.data.rotationDeg
+  });
+  if (layoutProblem) return json(layoutProblem, { status: 409 });
   const { geometryGeojson, ...rest } = parsed.data;
   const block = createBlock({
     ...rest,

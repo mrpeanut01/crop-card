@@ -69,6 +69,7 @@ describe('POST /api/internal/push-tick', () => {
   it('runs one tick and reports it', async () => {
     vi.stubEnv('PUSH_TICK_SECRET', SECRET);
     vi.stubEnv('VAPID_PUBLIC_KEY', '');
+    vi.stubEnv('ORIGIN', '');
     const res = await call({ [TICK_SECRET_HEADER]: SECRET });
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe('no-store');
@@ -76,7 +77,7 @@ describe('POST /api/internal/push-tick', () => {
     expect(body).toMatchObject({
       ok: true,
       joined: false,
-      push: { skipped: 'vapid-not-configured' }
+      push: { skipped: 'alerts-not-configured' }
     });
   });
 });

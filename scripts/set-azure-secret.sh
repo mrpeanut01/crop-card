@@ -4,6 +4,7 @@
 #
 #   ./scripts/set-azure-secret.sh anthropic-api-key
 #   ./scripts/set-azure-secret.sh pingram-api-key
+#   ./scripts/set-azure-secret.sh pingram-webhook-secret       # from the Pingram webhook page
 #   ./scripts/set-azure-secret.sh postmark-token
 #   ./scripts/set-azure-secret.sh stripe-secret-key            # sk_live_… / rk_live_…
 #   ./scripts/set-azure-secret.sh stripe-webhook-secret        # whsec_…
@@ -23,9 +24,9 @@ set -euo pipefail
 
 GROUP="${CROPCARD_GROUP:-cropcard-dev-rg}"
 NAME="${1:-}"
-usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 case "$NAME" in
-  auth-secret|postmark-token|pingram-api-key|anthropic-api-key|marketplace-seed-credential|push-tick-secret) ;;
+  auth-secret|postmark-token|pingram-api-key|pingram-webhook-secret|anthropic-api-key|marketplace-seed-credential|push-tick-secret) ;;
   stripe-secret-key|stripe-webhook-secret) ;;
   stripe-price-grower-monthly|stripe-price-grower-annual|stripe-price-farm-monthly|stripe-price-farm-annual) ;;
   vapid-keys) ;;

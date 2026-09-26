@@ -5,6 +5,7 @@
   "clientRecordReceipts",
   "cropEquipment",
   "crops",
+  "emailAlertConsents",
   "equipment",
   "equipmentLog",
   "equipmentState",

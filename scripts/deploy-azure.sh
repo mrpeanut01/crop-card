@@ -30,6 +30,7 @@
 #   stripe-secret-key, stripe-webhook-secret           billing (else "not configured")
 #   stripe-price-{grower,farm}-{monthly,annual}         plan price ids (price_…)
 #   vapid-public-key + vapid-private-key               Web Push (only as a pair)
+#   pingram-webhook-secret                             Pingram events webhook (unsubscribes, bounces)
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
 # Web Push keys: ./scripts/set-azure-secret.sh vapid-keys
 #
@@ -64,7 +65,7 @@ while [ $# -gt 0 ]; do
     --allow-dirty) ALLOW_DIRTY=true ;;
     --ci) CI_MODE=true ;;
     --image) PREBUILT_IMAGE="${2:?--image needs a value}"; shift ;;
-    -h|--help) sed -n '2,48p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,49p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
@@ -180,6 +181,7 @@ PASS_THROUGH=(
   stripe-price-grower-monthly stripe-price-grower-annual
   stripe-price-farm-monthly stripe-price-farm-annual
   vapid-public-key vapid-private-key
+  pingram-webhook-secret
 )
 PRESENT=()
 for s in "${PASS_THROUGH[@]}"; do kv_has "$s" && PRESENT+=("$s"); done
@@ -194,6 +196,7 @@ if [ "$BILLING" = true ] && { ! present_has stripe-webhook-secret || [ "$STRIPE_
 fi
 PUSH=false; present_has vapid-public-key && present_has vapid-private-key && PUSH=true
 echo "web push     : ${PUSH}"
+echo "pingram hook : $(present_has pingram-webhook-secret && [ "$HAS_PINGRAM" = true ] && echo true || echo false)"
 if [ "$PUSH" = false ] && { present_has vapid-public-key || present_has vapid-private-key; }; then
   echo "warning      : only one VAPID key is in ${KV}; push stays off until both are (./scripts/set-azure-secret.sh vapid-keys)" >&2
 fi

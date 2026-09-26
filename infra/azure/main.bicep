@@ -335,12 +335,13 @@ var passThroughEnv = [
   { secret: 'stripe-price-farm-annual', env: 'STRIPE_PRICE_FARM_ANNUAL' }
   { secret: 'vapid-public-key', env: 'VAPID_PUBLIC_KEY' }
   { secret: 'vapid-private-key', env: 'VAPID_PRIVATE_KEY' }
+  { secret: 'pingram-webhook-secret', env: 'PINGRAM_WEBHOOK_SECRET' }
 ]
 // Push needs the pair; half of it would advertise a key nobody can sign for.
 var hasVapid = contains(presentSecrets, 'vapid-public-key') && contains(presentSecrets, 'vapid-private-key')
 var passThrough = filter(
   passThroughEnv,
-  e => contains(presentSecrets, e.secret) && (hasVapid || !startsWith(e.secret, 'vapid-'))
+  e => contains(presentSecrets, e.secret) && (hasVapid || !startsWith(e.secret, 'vapid-')) && (hasPingramKey || !startsWith(e.secret, 'pingram-'))
 )
 var passThroughSecretNames = union(map(passThrough, e => e.secret), [])
 var optionalSecrets = concat(

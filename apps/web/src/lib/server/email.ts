@@ -1,4 +1,6 @@
 import { minutesInWords, withOriginBoundLine } from './otpMessage';
+import type { UnsubscribeLinks } from './emailUnsubscribe';
+import { emailAlertLabel, type EmailAlertCategory } from '$lib/email/alertCategories';
 
 /**
  * Email transport (Phase 18e foundation + Sprint 21 production adapter).
@@ -61,12 +63,82 @@ interface ContactCodeEmail {
   origin: string | null;
 }
 
-export type OutboundEmail = InviteEmail | MagicLinkEmail | ContactCodeEmail;
+/** A field alert (or the test message from Settings). Opt-in only: the
+ *  alert scheduler sends one only to a user with a consent row for that
+ *  category, and every one carries its unsubscribe links. */
+export interface AlertEmail {
+  kind: 'field-alert';
+  to: string;
+  /** null for the "send a test email" message. */
+  category: EmailAlertCategory | null;
+  farmName: string;
+  title: string;
+  body: string;
+  /** Absolute link into CropCard for the alert. */
+  actionUrl: string;
+  /** Absolute link to /settings/notifications. */
+  settingsUrl: string;
+  unsubscribe: UnsubscribeLinks;
+}
+
+export type OutboundEmail = InviteEmail | MagicLinkEmail | ContactCodeEmail | AlertEmail;
+
+/**
+ * Transactional mail answers something the person just did (asked to sign
+ * in, was invited, confirms an address) and never needs consent. Everything
+ * else is opt-in and must carry a working unsubscribe. Stripe sends billing
+ * receipts itself, so CropCard sends no billing mail.
+ */
+export const EMAIL_KIND_CLASS: Record<OutboundEmail['kind'], 'transactional' | 'opt-in'> = {
+  'helper-invite': 'transactional',
+  'magic-link': 'transactional',
+  'contact-code': 'transactional',
+  'field-alert': 'opt-in'
+};
+
+/** Pingram notification type per kind. Unsubscribes on Pingram's side apply
+ *  per type, so sign-in mail never shares a type with alert mail. */
+export const PINGRAM_TYPE: Record<OutboundEmail['kind'], string> = {
+  'helper-invite': 'helper-invite',
+  'magic-link': 'magic-link',
+  'contact-code': 'contact-code',
+  'field-alert': 'field-alerts'
+};
+
+export function isOptInEmail(email: OutboundEmail): email is AlertEmail {
+  return EMAIL_KIND_CLASS[email.kind] === 'opt-in';
+}
+
+/** RFC 2369 List-Unsubscribe + RFC 8058 List-Unsubscribe-Post for opt-in
+ *  mail; null for transactional mail. */
+export function unsubscribeHeaders(email: OutboundEmail): Record<string, string> | null {
+  if (!isOptInEmail(email)) return null;
+  return {
+    'List-Unsubscribe': `<${email.unsubscribe.oneClickUrl}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+  };
+}
+
+function assertUnsubscribable(email: AlertEmail): void {
+  for (const url of [email.unsubscribe.pageUrl, email.unsubscribe.oneClickUrl]) {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new EmailTransportError('opt-in email needs absolute unsubscribe links');
+    }
+    const local = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+    if (parsed.protocol !== 'https:' && !(local && parsed.protocol === 'http:')) {
+      throw new EmailTransportError('opt-in email unsubscribe links must use https');
+    }
+  }
+}
 
 export interface OutboxEntry {
   to: string;
   subject: string;
   body: string;
+  headers: Record<string, string>;
   email: OutboundEmail;
   sentAt: number;
 }
@@ -116,11 +188,13 @@ export async function dispatchEmail(email: OutboundEmail): Promise<void> {
   const transport = process.env.EMAIL_TRANSPORT ?? 'stdout';
   if (transport === 'none') return;
 
+  if (isOptInEmail(email)) assertUnsubscribable(email);
   const subject = subjectFor(email);
   const body = bodyFor(email);
+  const headers = unsubscribeHeaders(email) ?? {};
 
   if (transport === 'postmark') {
-    await dispatchPostmark(email, subject, body);
+    await dispatchPostmark(email, subject, body, headers);
     return;
   }
 
@@ -135,7 +209,7 @@ export async function dispatchEmail(email: OutboundEmail): Promise<void> {
         'EMAIL_TRANSPORT=memory requires NODE_ENV=test or E2E_OUTBOX=1'
       );
     }
-    memoryOutbox.push({ to: email.to, subject, body, email, sentAt: Date.now() });
+    memoryOutbox.push({ to: email.to, subject, body, headers, email, sentAt: Date.now() });
     if (memoryOutbox.length > OUTBOX_LIMIT) memoryOutbox.shift();
     return;
   }
@@ -143,13 +217,17 @@ export async function dispatchEmail(email: OutboundEmail): Promise<void> {
   // Default: stdout. Keeps the prior dev behavior so invite URLs are
   // grep-able in the container logs.
   // eslint-disable-next-line no-console
-  console.log(`[email] to=${email.to} subject="${subject}"\n${body}\n[/email]`);
+  const headerLines = Object.entries(headers)
+    .map(([k, v]) => `${k}: ${v}\n`)
+    .join('');
+  console.log(`[email] to=${email.to} subject="${subject}"\n${headerLines}${body}\n[/email]`);
 }
 
 async function dispatchPostmark(
   email: OutboundEmail,
   subject: string,
-  textBody: string
+  textBody: string,
+  headers: Record<string, string>
 ): Promise<void> {
   const token = process.env.POSTMARK_TOKEN;
   const from = process.env.EMAIL_FROM ?? 'noreply@cropcard.farm';
@@ -170,7 +248,10 @@ async function dispatchPostmark(
         To: email.to,
         Subject: subject,
         TextBody: textBody,
-        MessageStream: process.env.POSTMARK_STREAM ?? 'outbound'
+        MessageStream: process.env.POSTMARK_STREAM ?? 'outbound',
+        ...(Object.keys(headers).length > 0
+          ? { Headers: Object.entries(headers).map(([Name, Value]) => ({ Name, Value })) }
+          : {})
       }),
       signal: AbortSignal.timeout(POSTMARK_TIMEOUT_MS)
     });
@@ -193,7 +274,10 @@ async function dispatchPostmark(
 /** Pingram requires an HTML body and returns HTTP 200 with an `error`
  *  object for some rejections, so both status and payload are checked.
  *  Without a verified sending domain Pingram substitutes its own
- *  noreply address, so EMAIL_FROM is only sent when explicitly set. */
+ *  noreply address, so EMAIL_FROM is only sent when explicitly set.
+ *  POST /email takes no custom headers: Pingram adds its own RFC 8058
+ *  List-Unsubscribe pointing at its hosted page, reports unsubscribes to
+ *  /api/email/pingram-webhook, and the body carries our own link. */
 async function dispatchPingram(
   email: OutboundEmail,
   subject: string,
@@ -214,7 +298,7 @@ async function dispatchPingram(
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        type: email.kind,
+        type: PINGRAM_TYPE[email.kind],
         to: email.to,
         subject,
         html: textToHtml(textBody),
@@ -277,7 +361,32 @@ function subjectFor(email: OutboundEmail): string {
       return `Your CropCard sign-in code is ${email.code}`;
     case 'contact-code':
       return `Your CropCard verification code is ${email.code}`;
+    case 'field-alert':
+      return `${email.title} · ${email.farmName}`;
   }
+}
+
+function alertBody(email: AlertEmail): string {
+  const why = email.category
+    ? `You're getting this because you turned on "${emailAlertLabel(email.category)}" emails for ${email.farmName} in CropCard.`
+    : `You asked CropCard for a test email for ${email.farmName}.`;
+  const stop = email.category
+    ? `Stop "${emailAlertLabel(email.category)}" emails:`
+    : 'Stop all alert emails from this farm:';
+  return [
+    email.body,
+    ``,
+    `Open in CropCard:`,
+    email.actionUrl,
+    ``,
+    why,
+    stop,
+    email.unsubscribe.pageUrl,
+    `Change which alerts you get:`,
+    email.settingsUrl,
+    ``,
+    `CropCard`
+  ].join('\n');
 }
 
 function bodyFor(email: OutboundEmail): string {
@@ -333,5 +442,7 @@ function bodyFor(email: OutboundEmail): string {
         email.code
       );
     }
+    case 'field-alert':
+      return alertBody(email);
   }
 }

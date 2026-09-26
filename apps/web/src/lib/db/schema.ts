@@ -1860,3 +1860,69 @@ export const pushDeliveries = tenantScoped(
     })
   )
 );
+
+// ─── Email alert consent (opt-in only) ──────────────────────────────────
+//
+// Field alerts by email are per (Owner, user, alert kind), like push: a
+// helper on two farms opts in per farm, and the alerts are about that farm's
+// sprayers and records. No row means off. The opt-in keeps when, where from
+// and the client IP as the consent record; an opt-out keeps the row.
+
+export const emailAlertConsents = tenantScoped(
+  sqliteTable(
+    'email_alert_consents',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      userId: text('user_id')
+        .notNull()
+        .references(() => users.id, { onDelete: 'cascade' }),
+      category: text('category', {
+        enum: ['decon-due', 'lock-window-closing', 'spring-calibration', 'frost-tonight']
+      }).notNull(),
+      status: text('status', { enum: ['opted-in', 'opted-out'] }).notNull(),
+      optedInAt: integer('opted_in_at', { mode: 'timestamp_ms' }),
+      optedInSource: text('opted_in_source'),
+      optedInIp: text('opted_in_ip'),
+      optedOutAt: integer('opted_out_at', { mode: 'timestamp_ms' }),
+      optedOutSource: text('opted_out_source'),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerUserCategoryUq: uniqueIndex('email_alert_consents_owner_user_category_uq').on(
+        table.ownerId,
+        table.userId,
+        table.category
+      ),
+      ownerStatusIdx: index('email_alert_consents_owner_status_idx').on(table.ownerId, table.status)
+    })
+  )
+);
+
+/** Provider-side opt-outs and failures, keyed by address. Global, not tenant
+ *  data: Pingram reports them per email address or phone number, and an
+ *  unsubscribe from an address holds for every farm that address serves. */
+export const contactSuppressions = sqliteTable(
+  'contact_suppressions',
+  {
+    id: text('id').primaryKey(),
+    address: text('address').notNull(),
+    channel: text('channel', { enum: ['email', 'sms'] }).notNull(),
+    reason: text('reason', { enum: ['unsubscribe', 'complaint', 'bounce', 'failed'] }).notNull(),
+    source: text('source').notNull(),
+    eventId: text('event_id'),
+    notificationType: text('notification_type'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+  },
+  (table) => ({
+    addressChannelReasonUq: uniqueIndex('contact_suppressions_address_channel_reason_uq').on(
+      table.address,
+      table.channel,
+      table.reason
+    )
+  })
+);

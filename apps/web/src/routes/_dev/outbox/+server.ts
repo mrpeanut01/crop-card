@@ -13,11 +13,12 @@ import { readSmsOutbox } from '$lib/server/sms';
 export const GET: RequestHandler = ({ url }) => {
   if (!outboxEnabled()) throw error(404, 'Not found');
   const to = url.searchParams.get('to') ?? undefined;
-  const mail = readOutbox(to).map(({ to, subject, body, sentAt }) => ({
+  const mail = readOutbox(to).map(({ to, subject, body, headers, sentAt }) => ({
     channel: 'email' as const,
     to,
     subject,
     body,
+    headers,
     sentAt
   }));
   const texts = readSmsOutbox(to).map(({ to, body, sentAt }) => ({
@@ -25,6 +26,7 @@ export const GET: RequestHandler = ({ url }) => {
     to,
     subject: null,
     body,
+    headers: {},
     sentAt
   }));
   const messages = [...mail, ...texts].sort((a, b) => a.sentAt - b.sentAt);

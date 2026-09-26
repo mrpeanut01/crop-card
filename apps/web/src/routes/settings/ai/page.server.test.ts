@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { db } from '$lib/db/client';
-import { owners, users } from '$lib/db/schema';
-import { runWithTenant } from '$lib/db/tenant';
+import { aiCallLog, owners, users } from '$lib/db/schema';
+import { runWithTenant, tenantValues } from '$lib/db/tenant';
 import { recordCall } from '$lib/server/aiGuard';
 import { load } from './+page.server';
 
@@ -49,5 +49,35 @@ describe('/settings/ai per-endpoint usage', () => {
     expect(data.dailyQuotas['scan-label']).toBeGreaterThan(0);
     expect(data.dailyQuotas['scan-url']).toBeGreaterThan(0);
     expect(data.dailyQuotas['scan-barcode']).toBeGreaterThan(0);
+  });
+});
+
+describe('/settings/ai recent calls', () => {
+  it('returns the 50 most recent calls, newest first, when more than 50 exist', () => {
+    const { ownerId, userId } = seed();
+    const base = Date.now() - 60 * 60_000;
+    const data = runWithTenant(ownerId, () => {
+      for (let i = 0; i < 60; i++) {
+        db.insert(aiCallLog)
+          .values(
+            tenantValues({
+              id: randomUUID(),
+              userId,
+              endpoint: 'scan-label' as const,
+              model: 'claude',
+              createdAt: new Date(base + i * 1000)
+            })
+          )
+          .run();
+      }
+      return load({
+        locals: { user: { id: userId, role: 'owner', activeOwnerId: ownerId } }
+      } as never) as { recentCalls: Array<{ createdAt: Date }> };
+    });
+    const times = data.recentCalls.map((c) => c.createdAt.getTime());
+    expect(times).toHaveLength(50);
+    expect(times[0]).toBe(base + 59 * 1000);
+    expect(times[49]).toBe(base + 10 * 1000);
+    expect(times).toEqual([...times].sort((a, b) => b - a));
   });
 });

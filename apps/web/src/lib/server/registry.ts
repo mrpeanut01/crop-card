@@ -83,6 +83,9 @@ export async function getBaseRegistry(): Promise<PluginRegistry> {
   if (cached.failures.length > 0) {
     console.warn('[registry] some plugins failed to load:', cached.failures);
   }
+  if (result.warnings.length > 0) {
+    console.warn('[registry] plugin warnings:', result.warnings);
+  }
   return registry;
 }
 

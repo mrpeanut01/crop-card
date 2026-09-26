@@ -1288,10 +1288,30 @@ export const companionSystemMemberSchema = z.object({
 });
 export type CompanionSystemMember = z.infer<typeof companionSystemMemberSchema>;
 
+/** Two-sided keep-apart pair: every crop on side `a` should not neighbour
+ *  every crop on side `b`. Crops on the same side never pair with each
+ *  other, so 28 tomato varieties × 6 potatoes needs no tomato-tomato flag.
+ *  Members are crop pluginIds. */
+export const companionKeepApartSchema = z
+  .object({
+    a: z.array(z.string().regex(pluginIdRegex)).min(1).max(200),
+    b: z.array(z.string().regex(pluginIdRegex)).min(1).max(200),
+    reason: z.string().min(1).max(300),
+    source: z.string().max(500).optional(),
+  })
+  .refine((k) => !k.a.some((id) => k.b.includes(id)), {
+    message: "a crop pluginId cannot be on both sides of a keepApart pair",
+    path: ["b"],
+  });
+export type CompanionKeepApart = z.infer<typeof companionKeepApartSchema>;
+
 export const companionPluginSchema = pluginBase.extend({
   type: z.literal("companion"),
   goodWith: z.array(z.string()).default([]),
+  /** Every listed crop is a keep-apart pair with every other listed crop.
+   *  Use `keepApart` when only pairs across two groups should fire. */
   badWith: z.array(z.string()).default([]),
+  keepApart: z.array(companionKeepApartSchema).max(50).optional(),
   /** Companion-system declaration. When present, the engine emits
    *  `companion-trigger` events for each member after the primary planting. */
   primaryFamily: z.enum(CROP_FAMILIES).optional(),

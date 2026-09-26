@@ -30,7 +30,14 @@ import type { BedHistoryEntry, GardenCrop, GardenDesign } from '$lib/garden/type
 
 export type DesignerCompanion = Pick<
   CompanionPlugin,
-  'pluginId' | 'displayName' | 'goodWith' | 'badWith' | 'primaryFamily' | 'members' | 'benefit'
+  | 'pluginId'
+  | 'displayName'
+  | 'goodWith'
+  | 'badWith'
+  | 'keepApart'
+  | 'primaryFamily'
+  | 'members'
+  | 'benefit'
 >;
 
 export interface DesignerLoad {
@@ -194,6 +201,7 @@ export async function loadGardenDesign(
       displayName: c.displayName,
       goodWith: c.goodWith,
       badWith: c.badWith,
+      keepApart: c.keepApart,
       primaryFamily: c.primaryFamily,
       members: c.members,
       benefit: c.benefit

@@ -5,6 +5,7 @@ import { appSettings } from '$lib/db/schema';
 import { tenantWhere } from '$lib/db/tenant';
 import { getSetting, setSetting } from '$lib/db/settings';
 import { listYearsWithCrops } from '$lib/db/crops';
+import { loadStoredFrost } from '$lib/climate/frostSettings.server';
 
 import {
   isSelectablePlanningYear,
@@ -13,6 +14,7 @@ import {
   selectablePlanningYears,
   suggestPlanningYear,
   suggestionReason,
+  type PlanningFrost,
   type PlanningYearView
 } from './planningYear';
 
@@ -24,8 +26,14 @@ function storedPlanningYear(): number | null {
   return Number(raw);
 }
 
+/** The frost dates saved for this farm (typed or from a station). */
+export function planningFrost(): PlanningFrost {
+  const { dates } = loadStoredFrost();
+  return { lastSpring: dates.lastFrost, firstFall: dates.firstFrost };
+}
+
 export function getActivePlanningYear(now: Date = new Date()): number {
-  return resolvePlanningYear(storedPlanningYear(), now);
+  return resolvePlanningYear(storedPlanningYear(), now, planningFrost());
 }
 
 export function setActivePlanningYear(year: number, now: Date = new Date()): void {
@@ -53,10 +61,11 @@ export function listSeasonSetupYears(): number[] {
 
 export function loadPlanningYearView(now: Date = new Date()): PlanningYearView {
   const stored = storedPlanningYear();
+  const frost = planningFrost();
   return {
-    activeYear: resolvePlanningYear(stored, now),
-    suggestedYear: suggestPlanningYear(now),
-    suggestionReason: suggestionReason(now),
+    activeYear: resolvePlanningYear(stored, now, frost),
+    suggestedYear: suggestPlanningYear(now, frost),
+    suggestionReason: suggestionReason(now, frost),
     options: selectablePlanningYears(now),
     pastYears: pastPlanningYears([...listSeasonSetupYears(), ...listYearsWithCrops()], now),
     chosen: stored !== null && isSelectablePlanningYear(stored, now)

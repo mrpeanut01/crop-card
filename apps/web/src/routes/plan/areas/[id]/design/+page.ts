@@ -1,16 +1,16 @@
 import { browser } from '$app/environment';
 import { error, redirect } from '@sveltejs/kit';
 import type { DesignerPageData, GardenDesignResponse } from '$lib/garden/api';
-import { resolvePlanningYear } from '$lib/season/planningYear';
+import { resolvePlanningYear, type PlanningFrost } from '$lib/season/planningYear';
 import type { PageLoad } from './$types';
 
 const NOT_DESIGNABLE = 'This Area has no garden designer. Only gardens and greenhouses do.';
 
-function seasonFrom(season: string | null, now: Date): number {
+function seasonFrom(season: string | null, now: Date, frost: PlanningFrost | null): number {
   const asked = Number(season);
   return Number.isInteger(asked) && asked >= 2000 && asked <= 2100
     ? asked
-    : resolvePlanningYear(null, now);
+    : resolvePlanningYear(null, now, frost);
 }
 
 async function fromSnapshot(
@@ -29,8 +29,13 @@ async function fromSnapshot(
       "You're offline, and this garden isn't saved on this device yet. Open it once with signal, or open your saved Cards."
     );
   }
+  const frost = row.bundle.frost;
+  const saved =
+    frost && frost.provenance !== 'fallback'
+      ? { lastSpring: frost.lastSpring, firstFall: frost.firstFall }
+      : null;
   const data = designerDataFromSnapshot(row.bundle, areaId, {
-    seasonYear: seasonFrom(season, new Date()),
+    seasonYear: seasonFrom(season, new Date(), saved),
     role
   });
   if (!data) error(404, "This garden isn't in the copy saved on this device.");

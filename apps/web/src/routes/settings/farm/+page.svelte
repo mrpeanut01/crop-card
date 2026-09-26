@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronRight, Plus, Map, MapPin } from 'lucide-svelte';
+  import { ChevronRight, Plus, Map, MapPin, Crosshair } from 'lucide-svelte';
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
@@ -11,12 +11,16 @@
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
   import ZoneChip from '$lib/components/farm/ZoneChip.svelte';
   import { kindStyle } from '$lib/farm/kindStyle';
+  import LocationPickerModal from '$lib/components/farm/LocationPickerModal.svelte';
+  import { LOUDOUN_DEFAULT_LAT_LON } from '$lib/schedule/constants';
 
   const { data, form } = $props();
 
   const round4 = (n: number | undefined) => (n == null ? null : Number(n.toFixed(4)));
   let lat = $state<number | null>(untrack(() => round4(data.farmLatLon?.lat)));
   let lon = $state<number | null>(untrack(() => round4(data.farmLatLon?.lon)));
+  let pickerOpen = $state(false);
+  const finite = (n: number | null) => (typeof n === 'number' && Number.isFinite(n) ? n : null);
 
   // Read-only preview only — edit/draw happens at /settings/farm/map. BlockMap
   // requires these callbacks but never invokes them in thumbnail mode.
@@ -75,6 +79,27 @@
         />
       </SettingsField>
     </div>
+    <div class="locate-row">
+      <button
+        type="button"
+        class="ghost-sm"
+        onclick={() => (pickerOpen = true)}
+        data-testid="open-location-picker"
+      >
+        <Crosshair size={13} /> Find lat/long with GPS or map
+      </button>
+    </div>
+    <LocationPickerModal
+      open={pickerOpen}
+      lat={finite(lat)}
+      lon={finite(lon)}
+      fallback={LOUDOUN_DEFAULT_LAT_LON}
+      onClose={() => (pickerOpen = false)}
+      onApply={(la, lo) => {
+        lat = round4(la);
+        lon = round4(lo);
+      }}
+    />
     <div class="frost-box">
       <FrostPanel
         lat={typeof lat === 'number' && Number.isFinite(lat) ? lat : null}
@@ -175,6 +200,27 @@
   .grid-2 {
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+  }
+  .locate-row {
+    margin-top: 10px;
+  }
+  .ghost-sm {
+    background: transparent;
+    border: 1px solid var(--color-divider);
+    color: var(--color-forest-deep);
+    min-height: 48px;
+    padding: 8px 14px;
+    border-radius: var(--radius-input, 6px);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .ghost-sm:hover {
+    background: var(--color-cream);
   }
   .frost-box {
     margin-top: 16px;

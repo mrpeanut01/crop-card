@@ -277,14 +277,20 @@
       key="garden_designer"
       anchor="[data-hint-anchor=garden_designer]"
       text="Pick a bed size, then tap the garden to put it there. Tap a bed to move, turn or size it."
-      suppressed={d.view !== 'canvas' || d.cropPanelOpen || d.mode.kind !== 'idle'}
+      suppressed={d.view !== 'canvas' ||
+        d.cropPanelOpen ||
+        !!d.selectedBed ||
+        d.mode.kind !== 'idle'}
     />
   {/if}
   <Hint
     key="designer_scrubber"
     anchor="[data-hint-anchor=designer_scrubber]"
     text="Slide through the season to see what's growing in each bed and when it opens up."
-    suppressed={!d.hasScheduledPlanting || d.cropPanelOpen || d.mode.kind !== 'idle'}
+    suppressed={!d.hasScheduledPlanting ||
+      d.cropPanelOpen ||
+      !!d.selectedBed ||
+      d.mode.kind !== 'idle'}
   />
 
   {#if customOpen && d.canEdit}

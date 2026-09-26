@@ -25,10 +25,21 @@
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
+  import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
+  import type { SetupSpotResult } from '$lib/setup/types';
 
   let { data } = $props();
 
   let selectedBlockId = $state(untrack(() => data.preselectedBlockId ?? data.blocks[0]?.id ?? ''));
+
+  let spotSheetOpen = $state(false);
+  async function onSpotAdded(r: SetupSpotResult) {
+    spotSheetOpen = false;
+    await invalidateAll();
+    selectedBlockId = r.blockId;
+  }
 
   let spots = $state<ScoutSpot[]>([
     { weedsPer10SqFt: 0 },
@@ -152,7 +163,37 @@
       {/if}
     </Card>
   </div>
+{:else}
+  <SetupCallout
+    kicker="Where?"
+    title="Where are you scouting?"
+    canEdit={data.setup.canEdit}
+    askOwner="Ask the owner to add the spot you're scouting. Once it's on the farm it shows up here."
+    testId="scout-where"
+  >
+    <p>
+      Counts are saved against a spot so you can see the trend next time. Give this one a name, no
+      map needed.
+    </p>
+    {#snippet actions()}
+      <button type="button" class="primary" onclick={() => (spotSheetOpen = true)}>
+        Name a new spot
+      </button>
+    {/snippet}
+  </SetupCallout>
 {/if}
+
+<SetupSheet
+  open={spotSheetOpen}
+  kicker="Scout"
+  title="Where?"
+  onClose={() => (spotSheetOpen = false)}
+  onDone={onSpotAdded}
+>
+  {#snippet children(done)}
+    <SetupSpot areas={data.setup.areas} canEdit={data.setup.canEdit} onDone={done} />
+  {/snippet}
+</SetupSheet>
 
 <div class="card-wrap">
   <Card>

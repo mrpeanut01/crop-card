@@ -21,6 +21,10 @@
   import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
   import AddTaskModal from '$lib/components/plan/AddTaskModal.svelte';
   import Hint from '$lib/components/ui/Hint.svelte';
+  import WhereWillThisGrow from '$lib/components/plan/WhereWillThisGrow.svelte';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
+  import type { SetupSpotResult } from '$lib/setup/types';
   import type { StockUnit } from '$lib/stock/units';
   import { withStepRoutes, workflowStepRoute } from '$lib/plan/seasonWorkflow';
   // Phase 25b (#81) — controls the legacy <details> open state. The
@@ -398,6 +402,12 @@
   const addTaskBlock = $derived(
     addTaskTarget ? data.blocks.find((b) => b.id === addTaskTarget?.blockId) : undefined
   );
+
+  let spotSheetOpen = $state(false);
+  async function onSpotAdded(r: SetupSpotResult) {
+    spotSheetOpen = false;
+    await goto(`/plan?block=${encodeURIComponent(r.blockId)}`, { invalidateAll: true });
+  }
 
   function openWizard(initial?: 'season-setup' | 'allocation') {
     wizardInitialStep = initial;
@@ -1391,7 +1401,8 @@
     }
     const sp = $page.url.searchParams;
     const deepLinked = ['map', 'block', 'planting', 'tab'].some((k) => sp.has(k));
-    if (data.emptySeason && data.canEdit && !deepLinked) openWizard();
+    const hasSomewhere = data.blocks.length > 0 || sp.get('setup') === 'skip';
+    if (data.emptySeason && data.canEdit && !deepLinked && hasSomewhere) openWizard();
   });
 
   function onCropsHeaderDragStart(ev: DragEvent, blockId: string) {
@@ -1859,6 +1870,22 @@
      tabbed editor below for now — clicking "Edit block" / "Add planting"
      / "Refine with AI" routes the operator into the existing flows.
 -->
+{#if data.canEdit && data.blocks.length === 0}
+  <WhereWillThisGrow onName={() => (spotSheetOpen = true)} />
+{/if}
+
+<SetupSheet
+  open={spotSheetOpen}
+  kicker="Plan"
+  title="Just give it a name"
+  onClose={() => (spotSheetOpen = false)}
+  onDone={onSpotAdded}
+>
+  {#snippet children(done)}
+    <SetupSpot areas={data.setupAreas} canEdit={data.canEdit} onDone={done} />
+  {/snippet}
+</SetupSheet>
+
 <PlanV2Shell
   blocks={data.blocks}
   tasks={data.planV2Tasks ?? []}

@@ -8,6 +8,10 @@
   import { reHarvestArchetype, reHarvestLabel } from '$lib/components/harvest/reHarvest';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { ymdInZone } from '$lib/prefs';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
+  import SetupPlantingBackfill from '$lib/components/setup/SetupPlantingBackfill.svelte';
+  import type { SetupPlantingResult } from '$lib/setup/types';
 
   let { data } = $props();
 
@@ -37,6 +41,17 @@
 
   function cancelRecord() {
     recordingFor = null;
+  }
+
+  let plantingSheetOpen = $state(false);
+  async function onPlantingAdded(r: SetupPlantingResult) {
+    plantingSheetOpen = false;
+    await invalidateAll();
+    startRecord(r.plantingId);
+    await tick();
+    document
+      .getElementById(`planting-${r.plantingId}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   /** Phase 25c (#88) — HarvestRouter renderer commit hook. Builds the
@@ -218,10 +233,24 @@
 {/if}
 
 {#if data.plantings.length === 0}
-  <section class="card empty">
-    <h2>No plantings yet</h2>
-    <p>Add a planting on <a href="/plan">/plan</a> first.</p>
-  </section>
+  <SetupCallout
+    kicker="Harvest"
+    title="What are you picking?"
+    canEdit={data.setup.canEdit}
+    askOwner="Ask the owner to add what's growing. Once it's on the farm you can record the harvest here."
+    testId="harvest-what"
+  >
+    <p>
+      Tell CropCard what it is, where it grew and roughly when it went in. Then record the harvest
+      right here.
+    </p>
+    {#snippet actions()}
+      <button type="button" class="primary" onclick={() => (plantingSheetOpen = true)}>
+        Add what you're picking
+      </button>
+      <a href="/plan">Plan a crop instead</a>
+    {/snippet}
+  </SetupCallout>
 {:else}
   <section class="card panel ready">
     <h2>Plantings <span class="panel-count">{readyPlantings.length} ready</span></h2>
@@ -463,6 +492,24 @@
   </section>
 {/if}
 
+<SetupSheet
+  open={plantingSheetOpen}
+  kicker="Harvest"
+  title="What are you picking?"
+  onClose={() => (plantingSheetOpen = false)}
+  onDone={onPlantingAdded}
+>
+  {#snippet children(done)}
+    <SetupPlantingBackfill
+      blocks={data.setup.blocks}
+      areas={data.setup.areas}
+      canEdit={data.setup.canEdit}
+      submitLabel="Save and record the harvest"
+      onDone={done}
+    />
+  {/snippet}
+</SetupSheet>
+
 <style>
   h1 {
     margin: 0 0 0.25rem;
@@ -621,10 +668,6 @@
     color: var(--color-forest);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-  }
-  .empty {
-    text-align: center;
-    padding: 2rem;
   }
   .plantings {
     list-style: none;

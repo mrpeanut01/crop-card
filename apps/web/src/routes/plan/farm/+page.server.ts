@@ -5,7 +5,7 @@ import { listShadeSources } from '$lib/db/shadeSources';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
-export const load: ServerLoad = ({ locals }) => {
+export const load: ServerLoad = ({ locals, url }) => {
   if (!locals.user) throw redirect(303, '/');
   if (locals.user.role !== 'owner') throw redirect(303, '/plan');
 
@@ -17,6 +17,7 @@ export const load: ServerLoad = ({ locals }) => {
     shadeSources: listShadeSources(),
     isFirstRun: blocks.length === 0 && fields.length === 0,
     seasonYear: getActivePlanningYear(),
-    center: hasFarmLatLon() ? getFarmLatLon() : null
+    center: hasFarmLatLon() ? getFarmLatLon() : null,
+    initialMode: url.searchParams.get('mode') === 'sketch' ? ('sketch' as const) : undefined
   };
 };

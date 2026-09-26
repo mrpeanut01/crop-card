@@ -133,7 +133,7 @@ function wizardDialog(page: Page) {
 
 /** Loads /plan and waits for the page to settle. An empty season opens the
  *  wizard on its own, so callers that want the bare page close it here.
- *  `?setup=skip` keeps a farm with no blocks on /plan instead of /plan/farm. */
+ *  `?setup=skip` opens the wizard even on a farm with no blocks yet. */
 export async function gotoPlanWithoutWizard(page: Page): Promise<void> {
   await page.goto('/plan?setup=skip');
   await page.waitForLoadState('networkidle');

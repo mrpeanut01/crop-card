@@ -1,0 +1,38 @@
+{
+  "pluginId": "carrots-then-fall-spinach",
+  "type": "bed-recipe",
+  "displayName": "Carrots, then fall spinach",
+  "version": "1.0.0",
+  "description": "Spring carrots fill the bed into early summer. Spinach sown in late summer is ready as the nights cool and holds through light frost.",
+  "bedSize": {
+    "widthFt": 4,
+    "lengthFt": 8
+  },
+  "frostFreeDays": {
+    "min": 120
+  },
+  "steps": [
+    {
+      "cropPluginId": "carrot-nantes-half-long",
+      "alternates": [
+        "carrot-danvers-126",
+        "carrot-scarlet-nantes-seed"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": -21
+      }
+    },
+    {
+      "cropPluginId": "spinach-bloomsdale-long-standing",
+      "alternates": [
+        "spinach-space-f1"
+      ],
+      "start": {
+        "anchor": "first-fall-frost",
+        "offsetDays": -49
+      },
+      "note": "Sow when the late-summer heat breaks."
+    }
+  ]
+}

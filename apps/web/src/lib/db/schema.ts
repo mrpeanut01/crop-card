@@ -1427,7 +1427,8 @@ export const aiCallLog = tenantScoped(
           'scan-label',
           'scan-url',
           'scan-barcode',
-          'planting-window'
+          'planting-window',
+          'garden-fill'
         ]
       }).notNull(),
       model: text('model').notNull(),

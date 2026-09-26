@@ -14,7 +14,9 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from './schema';
 
-let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+type Db = ReturnType<typeof drizzle<typeof schema>>;
+
+let _db: Db | null = null;
 
 function open() {
   const dbPath = (process.env.DATABASE_URL ?? 'file:/data/cropcard.db').replace(/^file:/, '');
@@ -26,10 +28,20 @@ function open() {
   return drizzle(sqlite, { schema });
 }
 
+/**
+ * Transactions default to BEGIN IMMEDIATE. A deferred transaction that reads
+ * before it writes gets SQLITE_BUSY_SNAPSHOT, with no busy-timeout wait, when
+ * another connection (Litestream, or a parallel test worker) commits in
+ * between. Taking the write lock up front makes it wait instead.
+ */
+const transaction: Db['transaction'] = (fn, config) =>
+  _db!.transaction(fn, { behavior: 'immediate', ...config });
+
 /** Proxy that opens the underlying drizzle handle on first method access. */
-export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+export const db = new Proxy({} as Db, {
   get(_target, prop) {
     if (!_db) _db = open();
+    if (prop === 'transaction') return transaction;
     return Reflect.get(_db, prop);
   }
 });

@@ -42,3 +42,14 @@ test('helpers page offers only Owner and Helper roles', async ({ page }) => {
   await page.getByRole('button', { name: /Invite helper/ }).click();
   await expect(page.locator('select[name="role"]')).toHaveCount(0);
 });
+
+test('about page is linked from settings and points at the GitHub repo', async ({ page }) => {
+  await page.goto('/settings');
+  await page.getByRole('link', { name: /About CropCard/ }).click();
+  await expect(page).toHaveURL('/settings/about');
+  await expect(page.getByRole('heading', { name: 'Why I built this.' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'CropCard on GitHub' })).toHaveAttribute(
+    'href',
+    'https://github.com/mrpeanut01/crop-card'
+  );
+});

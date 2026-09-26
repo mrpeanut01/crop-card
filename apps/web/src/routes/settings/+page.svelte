@@ -14,7 +14,8 @@
     ChevronRight,
     LayoutGrid,
     FileDown,
-    Bell
+    Bell,
+    Heart
   } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -125,6 +126,12 @@
       label: 'Plan & billing',
       sub: `Solo plan · single-replica · ${data.owner?.billingStatus ?? 'unknown'}`,
       ownerOnly: true
+    },
+    {
+      href: '/settings/about',
+      icon: Heart,
+      label: 'About CropCard',
+      sub: 'Why this exists · open source (MIT) · help build it'
     },
     {
       href: '/settings/advanced',

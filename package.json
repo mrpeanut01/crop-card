@@ -1,5 +1,6 @@
 {
   "name": "crop-card",
+  "license": "MIT",
   "version": "0.0.1",
   "private": true,
   "description": "CropCard — offline-first PWA replacing the paper Field Card for small-plot row crop herbicide planning, planting, and harvest tracking.",

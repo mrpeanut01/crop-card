@@ -21,9 +21,22 @@
     nowMs: number;
     loading?: boolean;
     fungicides?: FungicideNote[];
+    /** Station label when past hours come from NOAA observations. */
+    observedLabel?: string | null;
   }
 
-  const { assessment, daily, nowMs, loading = false, fungicides = [] }: Props = $props();
+  const {
+    assessment,
+    daily,
+    nowMs,
+    loading = false,
+    fungicides = [],
+    observedLabel = null
+  }: Props = $props();
+
+  const dataDetail = $derived(
+    observedLabel ? `NOAA observed · ${observedLabel} + NWS forecast` : 'NWS hourly forecast'
+  );
 
   const DAY = 24 * 60 * 60 * 1000;
   const W = 300;
@@ -117,7 +130,7 @@
     </div>
     <Provenance
       source={assessment.provenance}
-      detail={assessment.provenance === 'data' ? 'NWS hourly forecast' : 'weather unavailable'}
+      detail={assessment.provenance === 'data' ? dataDetail : 'weather unavailable'}
     />
   </header>
   <p class="sub">

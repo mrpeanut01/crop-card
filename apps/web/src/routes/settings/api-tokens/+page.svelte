@@ -2,6 +2,7 @@
   import { enhance } from '$app/forms';
   import { ChevronRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -84,8 +85,8 @@
             <tr>
               <td>{t.label}</td>
               <td>{t.isServiceAccount ? 'Service account' : 'Personal use'}</td>
-              <td>{new Date(t.createdAt).toLocaleDateString()}</td>
-              <td>{t.lastUsedAt ? new Date(t.lastUsedAt).toLocaleString() : '—'}</td>
+              <td>{fmt.instant(t.createdAt, 'date')}</td>
+              <td>{fmt.instant(t.lastUsedAt)}</td>
               <td>{t.requestCount.toLocaleString()}</td>
               <td>
                 <form method="POST" action="?/revoke" use:enhance>
@@ -111,7 +112,7 @@
           {#each data.tokens.filter((t) => t.revokedAt) as t (t.id)}
             <tr>
               <td>{t.label}</td>
-              <td>{new Date(t.revokedAt!).toLocaleDateString()}</td>
+              <td>{fmt.instant(t.revokedAt, 'date')}</td>
               <td>{t.requestCount.toLocaleString()}</td>
             </tr>
           {/each}

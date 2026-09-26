@@ -10,6 +10,8 @@
 
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import 'leaflet/dist/leaflet.css';
   import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
   import { geojsonCentroid, metersSquaredToAcres, polygonAreaSqMeters } from '$lib/geo/area';
@@ -646,7 +648,7 @@
           fillOpacity: isLine ? 0 : 0.18
         })
       });
-      const tooltipText = `${s.name} · ${s.kind} · ${s.heightFt} ft${s.isDeciduous ? ' · deciduous' : ''}`;
+      const tooltipText = `${s.name} · ${s.kind} · ${fmt.qty(s.heightFt, 'distance')}${s.isDeciduous ? ' · deciduous' : ''}`;
       layer.bindTooltip(tooltipText, { direction: 'top' });
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
       polygonToShadeId.set(id, s.id);
@@ -1350,8 +1352,19 @@
       <p class="shade-defaults-hint">Defaults adjust to match the kind — tweak any value below.</p>
       <div class="shade-grid-2">
         <label>
-          Height (ft)
-          <input type="number" min="1" max="200" step="1" bind:value={shadeDraft.heightFt} />
+          Height ({fmt.unit('distance')})
+          <UnitInput
+            quantity="distance"
+            min={1}
+            max={200}
+            suffix={false}
+            bind:value={
+              () => (shadeDraft?.heightFt ? Number(shadeDraft.heightFt) : null),
+              (v) => {
+                if (shadeDraft) shadeDraft.heightFt = v == null ? '' : String(v);
+              }
+            }
+          />
         </label>
         <label>
           Opacity (0–1)
@@ -1402,7 +1415,7 @@
   >
     <div class="draft-modal">
       {#if pendingDraft.acres !== null}
-        <p class="acres-hint">Area ≈ <strong>{pendingDraft.acres.toFixed(2)} ac</strong></p>
+        <p class="acres-hint">Area ≈ <strong>{fmt.qty(pendingDraft.acres, 'area')}</strong></p>
       {/if}
 
       {#if pendingDraft.mode === 'block'}

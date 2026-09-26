@@ -1,4 +1,6 @@
 import type { PageServerLoad } from './$types';
+import { prefsFor } from '$lib/db/userProfile';
+import { todayYmd } from '$lib/prefs';
 import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import {
@@ -8,12 +10,13 @@ import {
   listSoilTestsForBlock
 } from '$lib/db/fertility';
 
-export const load: PageServerLoad = ({ url }) => {
+export const load: PageServerLoad = ({ url, locals }) => {
   const blocks = listBlocks();
   const cropId = url.searchParams.get('crop');
   const crop = cropId ? getCrop(cropId) : undefined;
   const blockId = crop?.blockId ?? url.searchParams.get('block') ?? blocks[0]?.id ?? '';
-  const year = Number(url.searchParams.get('year')) || new Date().getFullYear();
+  const year =
+    Number(url.searchParams.get('year')) || Number(todayYmd(prefsFor(locals.user?.id)).slice(0, 4));
 
   return {
     selectedCropId: crop?.id ?? null,

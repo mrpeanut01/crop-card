@@ -35,6 +35,11 @@ import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import type { FertilityApproach, Philosophy, SeasonSetup } from '$lib/season/setup';
 
 import { planInputs, type InputsPlanInput } from './inputsPlan';
+import {
+  formatApplicationRateLine,
+  formatInputAmount,
+  localizeRationale
+} from './inputsPlanFormat';
 
 /* ─── Fixture builders ──────────────────────────────────────────────── */
 
@@ -903,5 +908,54 @@ describe('planInputs — UC-47 cover N-credit re-key (coverNCreditByBlock)', () 
     const withMap = result.applications.find((a) => a.slot === 'pre-plant-fertility');
     const baseline = runCornWith({}).applications.find((a) => a.slot === 'pre-plant-fertility');
     expect(withMap?.rationale).toBe(baseline?.rationale);
+  });
+});
+
+describe('Inputs Plan display units', () => {
+  const metric = { units: 'metric' as const };
+
+  it('keeps US amounts as-is by default', () => {
+    expect(formatInputAmount(22, 'fl-oz', 'herbicide', undefined, true)).toBe('22 fl oz/ac');
+    expect(formatInputAmount(150, 'lb', 'fertilizer')).toBe('150 lb');
+  });
+
+  it('converts fertilizer fully for metric users', () => {
+    expect(formatInputAmount(100, 'lb', 'fertilizer', metric, true)).toBe('112 kg/ha');
+    expect(formatInputAmount(100, 'lb', 'fertilizer', metric)).toBe('45.4 kg');
+    expect(formatInputAmount(10, 'gal', 'fertilizer', metric)).toBe('37.9 L');
+  });
+
+  it('shows pesticide label units first with metric alongside', () => {
+    expect(formatInputAmount(22, 'fl-oz', 'herbicide', metric, true)).toBe(
+      '22 fl oz/ac (1,608 mL/ha)'
+    );
+    expect(formatInputAmount(1, 'qt', 'fungicide', metric)).toBe('1 qt (0.95 L)');
+  });
+
+  it('leaves units with no metric mapping alone', () => {
+    expect(formatInputAmount(3, 'bags', 'fertilizer', metric)).toBe('3 bags');
+  });
+
+  it('builds the rate × area = total line', () => {
+    const app = {
+      rateAmount: 22,
+      rateUnit: 'fl-oz',
+      acres: 2.5,
+      totalAmount: 55,
+      productCategory: 'herbicide' as const
+    };
+    expect(formatApplicationRateLine(app)).toBe('22 fl oz/ac × 2.5 ac = 55 fl oz');
+    expect(formatApplicationRateLine(app, metric)).toBe(
+      '22 fl oz/ac (1,608 mL/ha) × 1.01 ha = 55 fl oz (1,627 mL)'
+    );
+    expect(formatApplicationRateLine({ ...app, rateAmount: null })).toBeNull();
+  });
+
+  it('localizes fertility rationale figures for metric users only', () => {
+    const text = 'N 120 lb/ac, P₂O₅ 0 lb/ac − 65 lb-N/ac cover-crop credit';
+    expect(localizeRationale(text)).toBe(text);
+    expect(localizeRationale(text, metric)).toBe(
+      'N 135 kg/ha, P₂O₅ 0 kg/ha − 73 kg-N/ha cover-crop credit'
+    );
   });
 });

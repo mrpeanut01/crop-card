@@ -14,6 +14,7 @@
  */
 
 import type { BeeToxicity } from '$lib/safety/pollinatorProtection';
+import { DEFAULT_PREFS, formatQuantity, toDisplay, type Prefs } from '$lib/prefs';
 
 /**
  * Honey bees routinely forage 1–2 miles from the hive (and further in a
@@ -68,13 +69,21 @@ export interface NearbyPollinatorInput {
   beeToxicity: BeeToxicity;
   neighbors: NeighborBlock[];
   radiusFt?: number;
+  prefs?: Pick<Prefs, 'units'>;
 }
 
 const WARN_TOXICITY: ReadonlySet<BeeToxicity> = new Set(['toxic', 'highly-toxic']);
 
-export function formatDistance(ft: number | null): string {
+export function formatDistance(
+  ft: number | null,
+  prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS
+): string {
   if (ft === null) return 'distance unknown';
-  if (ft < 1000) return `${Math.round(ft)} ft`;
+  if (prefs.units === 'metric') {
+    const m = toDisplay(ft, 'distance', prefs);
+    return m < 1000 ? formatQuantity(ft, 'distance', prefs) : `${(m / 1000).toFixed(1)} km`;
+  }
+  if (ft < 1000) return formatQuantity(ft, 'distance', prefs);
   return `${(ft / 5280).toFixed(1)} mi`;
 }
 
@@ -107,7 +116,7 @@ export function checkNearbyPollinatorBlocks(
   }
   blocks.sort((a, b) => (a.distanceFt ?? 0) - (b.distanceFt ?? 0));
 
-  const radiusLabel = formatDistance(radiusFt);
+  const radiusLabel = formatDistance(radiusFt, input.prefs);
   const toxic = WARN_TOXICITY.has(input.beeToxicity);
   const status: NearbyCheckStatus = toxic && blocks.length > 0 ? 'warn' : 'pass';
   let reason: string;

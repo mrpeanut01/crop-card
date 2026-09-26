@@ -14,6 +14,8 @@ import { and, eq, gte, lt } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { stockItems, stockLots, stockMovements } from '$lib/db/schema';
 import { withTenant } from '$lib/db/tenant';
+import { zonedDayStartMs } from '$lib/exports/dateRange';
+import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { listSprayEvents } from '$lib/db/sprayEvents';
@@ -36,12 +38,12 @@ import {
 
 const FILTERABLE_PLUGIN_TYPES = new Set(['herbicide', 'insecticide', 'fungicide', 'fertilizer']);
 
-/** Year bounds in *local* time — the same wall-clock a farmer thinks of a
- *  season in. Occurred timestamps are ms epoch. */
-function yearBounds(year: number): { fromMs: number; toMs: number } {
+/** Year bounds in the user's time zone — the same wall-clock a farmer
+ *  thinks of a season in. Occurred timestamps are ms epoch. */
+function yearBounds(year: number, timeZone: string): { fromMs: number; toMs: number } {
   return {
-    fromMs: new Date(year, 0, 1, 0, 0, 0, 0).getTime(),
-    toMs: new Date(year + 1, 0, 1, 0, 0, 0, 0).getTime() - 1
+    fromMs: zonedDayStartMs(year, 1, 1, timeZone),
+    toMs: zonedDayStartMs(year + 1, 1, 1, timeZone) - 1
   };
 }
 
@@ -94,8 +96,12 @@ function movementCostRows(fromMs: number, toMs: number): MovementCostRow[] {
  * Build the deterministic Year-end summary for the active tenant + year.
  * Everything here is a tenant-scoped read; there is no write path.
  */
-export async function buildYearSummary(year: number, ownerId: string | null): Promise<YearSummary> {
-  const { fromMs, toMs } = yearBounds(year);
+export async function buildYearSummary(
+  year: number,
+  ownerId: string | null,
+  prefs: Pick<Prefs, 'timeZone'> = DEFAULT_PREFS
+): Promise<YearSummary> {
+  const { fromMs, toMs } = yearBounds(year, prefs.timeZone);
 
   const sprayEvents = listSprayEvents({ fromMs, toMs, limit: 100_000 });
   const insecticideEvents = listInsecticideEvents({ fromMs, toMs, limit: 100_000 });

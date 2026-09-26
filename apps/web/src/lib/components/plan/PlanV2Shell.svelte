@@ -32,6 +32,7 @@
   import SeasonTimelineCard from './SeasonTimelineCard.svelte';
   import ScheduledTasksCard, { type ScheduledRow } from './ScheduledTasksCard.svelte';
   import MapOverlay from './MapOverlay.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import {
     blockHarvestWindowLabel,
     blockStatus,
@@ -83,7 +84,7 @@
     onEditBlock,
     onAddBlock,
     onStartPlan,
-    seasonYear = new Date().getFullYear(),
+    seasonYear = Number(fmt.today().slice(0, 4)),
     onAddPlanting,
     onAddTask,
     geometryEditHref
@@ -161,10 +162,7 @@
         const planting = selectedBlock.plantings.find((p) => p.id === t.cropId);
         return {
           id: t.id,
-          dateLabel: new Date(t.scheduledFor).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric'
-          }),
+          dateLabel: fmt.day(t.scheduledFor, 'month-day'),
           title: t.title,
           plantingLabel: planting?.varietyDisplayName?.split(' ').slice(0, 2).join(' '),
           plantingColor: planting ? plantingColor(planting.id) : undefined,

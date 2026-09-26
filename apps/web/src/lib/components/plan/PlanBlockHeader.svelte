@@ -17,7 +17,7 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
-  import { fmtAcres } from '$lib/plan/planV2Derive';
+  import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
     block: BlockWithPlantings;
@@ -60,7 +60,7 @@
       .join(', ')}…`;
   });
   const kickerText = $derived.by(() => {
-    const ac = block.acres !== undefined ? fmtAcres(block.acres) : 'no acres recorded';
+    const ac = block.acres !== undefined ? fmt.qty(block.acres, 'area') : 'no acres recorded';
     const polyLabel = isPoly
       ? `${block.plantings.length} plantings`
       : block.plantings.length === 1
@@ -85,7 +85,7 @@
         </Pill>
       {/if}
       {#if block.acres !== undefined}
-        <Pill tone="neutral">{fmtAcres(block.acres)}</Pill>
+        <Pill tone="neutral">{fmt.qty(block.acres, 'area')}</Pill>
       {/if}
       {#if geometryMissing}
         {#if geometryEditHref}

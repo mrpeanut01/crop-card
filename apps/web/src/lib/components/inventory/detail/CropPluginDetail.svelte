@@ -14,6 +14,8 @@
    */
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import { currentPrefs } from '$lib/prefsState.svelte';
+  import { formatRateText } from '$lib/stock/units';
   import type { CropDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<CropDetailPayload, 'type'>;
@@ -40,7 +42,9 @@
       }
       // {amount, unit} → "32 fl oz/ac"
       if ('amount' in obj && 'unit' in obj) {
-        return `${obj.amount} ${obj.unit}`;
+        return typeof obj.amount === 'number'
+          ? formatRateText(obj.amount, String(obj.unit), currentPrefs())
+          : `${obj.amount} ${obj.unit}`;
       }
       // {n, p, k} → "10-10-10"
       if ('n' in obj && 'p' in obj && 'k' in obj) {

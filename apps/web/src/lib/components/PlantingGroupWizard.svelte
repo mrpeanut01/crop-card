@@ -11,6 +11,8 @@
   validation twice; the wizard surfaces this via a fallback banner.
 -->
 <script lang="ts">
+  import { formatCalendarDate } from '$lib/prefs';
+
   type PlanMember = {
     cropId: string;
     cropPluginId: string;
@@ -121,7 +123,7 @@
   }
 
   function fmtDate(ms: number): string {
-    return new Date(ms).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    return formatCalendarDate(ms, 'month-day');
   }
 
   function fmtDateInput(ms: number): string {

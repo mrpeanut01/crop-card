@@ -1,5 +1,6 @@
 import type { AllocationWizardState } from '../wizardState.svelte';
 import type { AllocationResponse } from '../types';
+import { pollinationNote } from '$lib/plan/pollinationNote';
 
 /** Step 2 → 3: POST /api/plan/allocate and seed the allocation chat with
  *  the response's pollination notes + advisories. */
@@ -38,8 +39,8 @@ export class AllocateFlow {
 
     if (mustStagger.length > 0 || isolated.length > 0 || geomMissing > 0) {
       lines.push('Cross-pollination notes:');
-      for (const p of isolated) lines.push(`• ${p.note}`);
-      for (const p of mustStagger) lines.push(`• ⚠ ${p.note}`);
+      for (const p of isolated) lines.push(`• ${pollinationNote(p, this.#w.prefs)}`);
+      for (const p of mustStagger) lines.push(`• ⚠ ${pollinationNote(p, this.#w.prefs)}`);
       if (geomMissing > 0) {
         lines.push(
           `• Couldn't check ${geomMissing} block${geomMissing === 1 ? '' : 's'} without geometry — add field boundaries to enable the spatial check.`

@@ -8,11 +8,8 @@
     assessVernalization,
     dailyScabFavorableHours
   } from '$lib/plan/smallGrain';
-  import {
-    DEFAULT_TIME_ZONE,
-    type HourlyPoint,
-    type WeatherProvenance
-  } from '$lib/weather/leafWet';
+  import { type HourlyPoint, type WeatherProvenance } from '$lib/weather/leafWet';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   const { data } = $props();
 
@@ -62,7 +59,9 @@
       nowMs: data.nowMs
     })
   );
-  const daily = $derived(provenance === 'data' ? dailyScabFavorableHours(hours) : []);
+  const daily = $derived(
+    provenance === 'data' ? dailyScabFavorableHours(hours, currentPrefs().timeZone) : []
+  );
   const vern = $derived(
     assessVernalization({
       habit: plan?.habit ?? 'spring',
@@ -75,12 +74,7 @@
 
   function fmtDate(ms: number | null, year = false): string {
     if (ms === null) return '—';
-    return new Date(ms).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      ...(year ? { year: 'numeric' } : {}),
-      timeZone: DEFAULT_TIME_ZONE
-    });
+    return fmt.day(ms, year ? 'date' : 'month-day');
   }
 
   const harvestStage = $derived(plan?.stages.find((s) => s.decision === 'harvest') ?? null);
@@ -105,7 +99,7 @@
     {@const c = plan.candidate}
     <header class="page-head">
       <div class="kicker">
-        {c.blockName}{plan.acres ? ` · ${Math.round(plan.acres * 100) / 100} ac` : ''} · small grain ·
+        {c.blockName}{plan.acres ? ` · ${fmt.qty(plan.acres, 'area')}` : ''} · small grain ·
         {plan.habit} habit · stage scale: Zadoks
       </div>
       <h1 class="serif">{c.displayName}</h1>

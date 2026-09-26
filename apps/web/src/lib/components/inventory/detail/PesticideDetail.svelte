@@ -12,10 +12,15 @@
    */
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { formatRateText, formatStockQuantity } from '$lib/stock/units';
   import type { PesticideDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<PesticideDetailPayload, 'type'>;
   const { item, lots, movements, plugin }: Props = $props();
+
+  const stockQty = (v: number, digits?: number) =>
+    formatStockQuantity(v, item.defaultUnit, currentPrefs(), { digits, labelUnit: true });
 </script>
 
 <header class="detail-header">
@@ -69,7 +74,14 @@
       {#if plugin?.ratePerAcre}
         <InvKVP
           label="Default rate"
-          value={`${plugin.ratePerAcre.amount} ${plugin.ratePerAcre.unit}`}
+          value={formatRateText(
+            plugin.ratePerAcre.amount,
+            plugin.ratePerAcre.unit,
+            currentPrefs(),
+            {
+              labelUnit: true
+            }
+          )}
           tone="mono"
         />
       {:else}
@@ -80,19 +92,16 @@
 
   <div class="col">
     <InvSection title="On hand">
-      <InvKVP
-        label="Total"
-        value={`${lots.reduce((s, l) => s + l.balance, 0).toFixed(1)} ${item.defaultUnit}`}
-      />
+      <InvKVP label="Total" value={stockQty(lots.reduce((s, l) => s + l.balance, 0))} />
       <InvKVP label="Lots" value={lots.length} />
       {#if lots.length > 0}
         <ul class="lot-list">
           {#each lots as lot (lot.id)}
             <li>
               <span class="mono">{lot.lotNumber ?? '—'}</span>
-              <span class="muted">{lot.balance.toFixed(1)} {item.defaultUnit}</span>
+              <span class="muted">{stockQty(lot.balance)}</span>
               {#if lot.expiresAt}
-                <span class="muted small">exp {new Date(lot.expiresAt).toLocaleDateString()}</span>
+                <span class="muted small">exp {fmt.day(lot.expiresAt)}</span>
               {/if}
             </li>
           {/each}
@@ -103,7 +112,7 @@
     <InvSection title="Storage & reorder">
       <InvKVP
         label="Reorder at"
-        value={item.reorderThreshold != null ? `${item.reorderThreshold} ${item.defaultUnit}` : '—'}
+        value={item.reorderThreshold != null ? stockQty(item.reorderThreshold, 2) : '—'}
       />
       <InvKVP label="Notes" value={item.notes ?? '—'} />
     </InvSection>
@@ -115,7 +124,7 @@
         <ul class="movement-list">
           {#each movements.slice(0, 8) as m (m.id)}
             <li>
-              <span class="muted small">{new Date(m.occurredAt).toLocaleDateString()}</span>
+              <span class="muted small">{fmt.instant(m.occurredAt, 'date')}</span>
               <span class="mono">{m.reason}</span>
               <span class={m.delta < 0 ? 'rust' : 'forest'}>
                 {m.delta > 0 ? '+' : ''}{m.delta.toFixed(1)}

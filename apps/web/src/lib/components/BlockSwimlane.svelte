@@ -13,6 +13,7 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import type { ShadeImpactEvent } from '$lib/calendar/engine';
   import type { RotationConflict, SameTimeOverlap } from '$lib/calendar/rotation';
   import {
@@ -297,14 +298,12 @@
   }
 
   function fmtDateRange(startMs: number, endMs: number): string {
-    const fmt = (ms: number) =>
-      new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    return `${fmt(startMs)} – ${fmt(endMs)}`;
+    return `${fmt.day(startMs, 'month-day')} – ${fmt.day(endMs, 'month-day')}`;
   }
 
   /** Compose the bar's hover tooltip with stage + harvest-target detail. */
   function barTooltip(p: SwimPlanting, lanesCount: number, laneIdx: number): string {
-    const head = `${p.varietyDisplayName} • ${new Date(p.plantingDateMs).toLocaleDateString()} → ${new Date(p.endMs).toLocaleDateString()}`;
+    const head = `${p.varietyDisplayName} • ${fmt.day(p.plantingDateMs)} → ${fmt.day(p.endMs)}`;
     const grp = p.groupId ? ` • ${systemLabel(p.groupSystemKind ?? 'manual')}` : '';
     const lane = lanesCount > 1 ? ` • lane ${laneIdx + 1}/${lanesCount}` : '';
     const lines: string[] = [head + grp + lane];
@@ -407,7 +406,7 @@
           intensity: e.detail.intensity,
           sourceLabel,
           slotsLabel: '',
-          tooltip: `Shaded by ${e.detail.shadingVariety} from ${new Date(e.startMs).toLocaleDateString()} – ${new Date(e.endMs).toLocaleDateString()}`
+          tooltip: `Shaded by ${e.detail.shadingVariety} from ${fmt.day(e.startMs)} – ${fmt.day(e.endMs)}`
         });
       }
     }
@@ -443,8 +442,8 @@
   let didInitialScroll = $state(false);
   $effect(() => {
     if (!swimRoot || didInitialScroll) return;
-    const now = new Date();
-    const monthStartUtc = Date.UTC(now.getFullYear(), now.getMonth(), 1);
+    const [y, m] = fmt.today().split('-').map(Number);
+    const monthStartUtc = Date.UTC(y, m - 1, 1);
     const monthStartDayIdx = Math.max(0, Math.floor((monthStartUtc - visibleStart) / DAY_MS));
     swimRoot.scrollTop = monthStartDayIdx * ROW_H;
     didInitialScroll = true;
@@ -569,9 +568,9 @@
       if (dayIdx >= 0)
         out.push({
           dayIdx,
-          label: cur.toLocaleDateString('en', { month: 'short', year: '2-digit' })
+          label: fmt.day(cur, 'month-day', { day: undefined, year: '2-digit' })
         });
-      cur = new Date(cur.getUTCFullYear(), cur.getUTCMonth() + 1, 1);
+      cur = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth() + 1, 1));
     }
     return out;
   });
@@ -752,7 +751,7 @@
       >
         <div class="block-name">{b.blockLabel ?? b.name}</div>
         <div class="block-meta">
-          {#if b.acres != null}<span>{b.acres.toFixed(2)} ac</span>{/if}
+          {#if b.acres != null}<span>{fmt.qty(b.acres, 'area')}</span>{/if}
           <span class="sun sun-{b.sunExposure ?? 'full'}">{b.sunExposure ?? 'full'}</span>
           {#if b.eastWestIndex != null}<span class="axis">E{b.eastWestIndex}</span>{/if}
         </div>
@@ -892,10 +891,7 @@
                 {p.shortName ?? p.varietyDisplayName}
               </span>
               {#if height >= 24}
-                {@const plantDate = new Date(p.plantingDateMs).toLocaleDateString(undefined, {
-                  month: 'short',
-                  day: 'numeric'
-                })}
+                {@const plantDate = fmt.day(p.plantingDateMs, 'month-day')}
                 <span class="plant-line" aria-label="Planted {plantDate}">
                   <span class="ht-leader">Plant</span>
                   <span class="ht-date">{plantDate}</span>
@@ -907,14 +903,8 @@
               {#each p.harvestTargets as t, ti (p.cropId + ':' + t.stageCode + ':' + ti)}
                 {@const htTop = dayOffset(t.startMs) * ROW_H}
                 {@const htHeight = Math.max(28, ((t.endMs - t.startMs) / DAY_MS) * ROW_H)}
-                {@const htStart = new Date(t.startMs).toLocaleDateString(undefined, {
-                  month: 'short',
-                  day: 'numeric'
-                })}
-                {@const htEnd = new Date(t.endMs).toLocaleDateString(undefined, {
-                  month: 'short',
-                  day: 'numeric'
-                })}
+                {@const htStart = fmt.day(t.startMs, 'month-day')}
+                {@const htEnd = fmt.day(t.endMs, 'month-day')}
                 <div
                   class="harvest-target-box"
                   style="top: {htTop}px; height: {htHeight}px; left: calc({laneLeftPct}% + {LANE_GAP_PX}px); width: calc({laneWidthPct}% - {LANE_GAP_PX *

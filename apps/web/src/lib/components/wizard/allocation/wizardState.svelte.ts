@@ -1,4 +1,6 @@
 import { getContext, setContext, untrack } from 'svelte';
+import { currentPrefs } from '$lib/prefsState.svelte';
+import type { Prefs } from '$lib/prefs';
 import { seedsToPlants, type SeedPluginShape } from '$lib/seed/quantity';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { SeasonSetup } from '$lib/season/setup';
@@ -88,6 +90,10 @@ export const STEP_LABELS: Record<Step, string> = {
  */
 export class AllocationWizardState {
   readonly props: WizardInputs;
+
+  get prefs(): Prefs {
+    return currentPrefs();
+  }
 
   // Phase 21: when the operator has never set up the active year, gate the
   // whole flow on the Season Setup form. Otherwise fall into the existing

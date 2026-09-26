@@ -9,6 +9,8 @@
   } from '$lib/planterPlate/match';
   import type { Plate, PlateSeedType } from '$lib/planterPlate/types';
   import { MM_TO_64THS } from '$lib/planterPlate/types';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -120,20 +122,26 @@
   }
 
   // Density inputs for the cell-count recommendation (Corn).
-  let targetInRowSpacing = $state<number | undefined>(
+  let targetInRowSpacing = $state<number | null>(
     untrack(() => {
       const fromSaved = saved?.density?.inRowInches as number | undefined;
       if (typeof fromSaved === 'number') return fromSaved;
       const m = seedMeta?.spacingInches;
-      return typeof m === 'number' ? m : undefined;
+      return typeof m === 'number' ? m : null;
     })
   );
-  let targetRowSpacing = $state<number>(
+  let targetRowSpacing = $state<number | null>(
     untrack(() => (saved?.density?.rowInches as number | undefined) ?? 30)
   );
 
   const cellRec = $derived(
-    seedType === 'Corn' ? cellCountRecommendation(targetInRowSpacing, targetRowSpacing) : null
+    seedType === 'Corn'
+      ? cellCountRecommendation(
+          targetInRowSpacing ?? undefined,
+          targetRowSpacing ?? undefined,
+          currentPrefs()
+        )
+      : null
   );
   const plantsPerAcre = $derived(cellRec?.plantsPerAcre ?? null);
 
@@ -309,7 +317,9 @@
       Number of cells
       {#if showCellRec && cellRec && cellFilter === String(cellRec.cells) && plantsPerAcre !== null}
         <span class="rec-inline" title={cellRec.note}
-          >· suggested ({plantsPerAcre.toLocaleString()} plants/acre)</span
+          >· suggested ({fmt.qty(plantsPerAcre, 'perArea', { bare: true })} plants{fmt.unit(
+            'perArea'
+          )})</span
         >
       {/if}
     </legend>
@@ -332,34 +342,37 @@
       <details class="density-disclosure">
         <summary>Why this suggestion? (target density)</summary>
         <p class="hint">
-          For corn, a 24-cell plate plants 1.5× as many seeds/acre as a 16-cell at the same
-          sprocket. Plants/acre is computed from the spacings below; the threshold (≤22k → 16-cell,
-          ≥22k → 24-cell) is a heuristic — it picks the cell-count family, not the sprocket itself.
+          For corn, a 24-cell plate plants 1.5× as many seeds per area as a 16-cell at the same
+          sprocket. Plants{fmt.unit('perArea')} is computed from the spacings below; the threshold (≤{Math.round(
+            fmt.toDisplay(22_000, 'perArea') / 1000
+          )}k → 16-cell, ≥{Math.round(fmt.toDisplay(22_000, 'perArea') / 1000)}k → 24-cell) is a
+          heuristic — it picks the cell-count family, not the sprocket itself.
         </p>
         <div class="row2">
           <label
-            ><span>In-row spacing (in)</span><input
-              type="number"
-              min="0.5"
-              step="0.5"
+            ><span>In-row spacing ({fmt.unit('length')})</span><UnitInput
+              quantity="length"
+              min={0.5}
+              suffix={false}
               bind:value={targetInRowSpacing}
-              placeholder="e.g. 7.5"
+              placeholder={fmt.qty(7.5, 'length', { bare: true })}
             /></label
           >
           <label
-            ><span>Row spacing (in)</span><input
-              type="number"
-              min="6"
-              step="1"
+            ><span>Row spacing ({fmt.unit('length')})</span><UnitInput
+              quantity="length"
+              min={6}
+              suffix={false}
               bind:value={targetRowSpacing}
-              placeholder="30"
+              placeholder={fmt.qty(30, 'length', { bare: true })}
             /></label
           >
         </div>
         {#if cellRec && plantsPerAcre !== null}
           <p class="rec-line rec-{cellRec.band}">
             <strong
-              >{plantsPerAcre.toLocaleString()} plants/acre → suggests {cellRec.cells}-cell.</strong
+              >{fmt.qty(plantsPerAcre, 'perArea', { bare: true })} plants{fmt.unit('perArea')} → suggests
+              {cellRec.cells}-cell.</strong
             >
             <span>{cellRec.note}</span>
             {#if cellFilter !== String(cellRec.cells)}
@@ -560,12 +573,12 @@
                     value={seedT}
                   />{/if}
                 <input type="hidden" name="toleranceDisplay" value={tolerance} />
-                {#if targetInRowSpacing !== undefined}<input
+                {#if targetInRowSpacing !== null}<input
                     type="hidden"
                     name="inRowInches"
                     value={targetInRowSpacing}
                   />{/if}
-                <input type="hidden" name="rowInches" value={targetRowSpacing} />
+                <input type="hidden" name="rowInches" value={targetRowSpacing ?? ''} />
                 {#if plantsPerAcre !== null}<input
                     type="hidden"
                     name="plantsPerAcre"
@@ -661,6 +674,7 @@
   }
   select,
   input[type='number'],
+  .row2 :global(.unit-input > input),
   input[type='range'] {
     padding: 0.6rem;
     border: 2px solid var(--color-divider);

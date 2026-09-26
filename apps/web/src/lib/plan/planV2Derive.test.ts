@@ -87,6 +87,11 @@ describe('blockHarvestWindowLabel', () => {
     expect(blockHarvestWindowLabel([hw(10, 20)], PLANT + 30 * DAY)).toBeUndefined();
     expect(blockHarvestWindowLabel(STAGES, PLANT)).toBeUndefined();
   });
+  it('keeps a UTC-midnight calendar date on its own day', () => {
+    const midnight = Date.UTC(2026, 6, 30);
+    const ev: CalendarEvent = { ...hw(0, 0), startMs: midnight, endMs: midnight };
+    expect(blockHarvestWindowLabel([ev], midnight)).toBe('Jul 30');
+  });
 });
 
 describe('plantingHarvestLabel', () => {
@@ -108,6 +113,10 @@ describe('fmtAcres', () => {
     expect(fmtAcres(2.3763436061801007)).toBe('2.38 ac');
     expect(fmtAcres(0.5)).toBe('0.5 ac');
     expect(fmtAcres(2)).toBe('2 ac');
+  });
+  it('renders hectares for metric users', () => {
+    expect(fmtAcres(2.471053814671653, { units: 'metric' })).toBe('1 ha');
+    expect(fmtAcres(10, { units: 'metric' })).toBe('4.05 ha');
   });
 });
 

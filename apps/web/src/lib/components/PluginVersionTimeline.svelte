@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PluginDiff } from '$lib/plugins/diff';
+  import { fmt } from '$lib/prefsState.svelte';
 
   type TimelineRow = {
     id: string;
@@ -24,7 +25,7 @@
   } = $props();
 
   function formatDate(ms: number): string {
-    return new Date(ms).toISOString().slice(0, 10);
+    return fmt.instant(ms, 'date');
   }
 
   function isCurrent(row: TimelineRow): boolean {

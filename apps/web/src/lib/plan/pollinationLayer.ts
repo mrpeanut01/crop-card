@@ -15,6 +15,9 @@ import type { PlanInput, SeedRequest, Assignment } from '$lib/layout/engine';
 import { blockDistanceFt, compassBearingFromTo, hasGeometry } from '$lib/blocks/distance';
 import { pairRequirement, pluginsCross } from './pollination';
 import type { PollinationConstraint } from './types';
+import { pollinationNote } from './pollinationNote';
+
+export { pollinationNote };
 
 export interface CrossingPair {
   /** Sorted stockItemId pair so equality is stable. */
@@ -230,18 +233,19 @@ export function computePollinationConstraints(
         if (seen.has(key)) continue;
         seen.add(key);
         const distance = distanceBetweenBlocks(layer, bA, bB);
-        let kind: PollinationConstraint['kind'];
-        let note: string;
-        if (distance === null) {
-          kind = 'geometry-missing';
-          note = `Couldn't check isolation between ${blockNameOf(bA)} and ${blockNameOf(bB)} — add geometry to one or both to enable the check.`;
-        } else if (distance >= p.requiredIsolationFeet) {
-          kind = 'isolated-spatially';
-          note = `${seedNameOf(stockA)} on ${blockNameOf(bA)} is ${Math.round(distance)} ft from ${seedNameOf(stockB)} on ${blockNameOf(bB)} — far enough apart that cross-pollination isn't an issue.`;
-        } else {
-          kind = 'must-stagger';
-          note = `${seedNameOf(stockA)} (${blockNameOf(bA)}) and ${seedNameOf(stockB)} (${blockNameOf(bB)}) are only ${Math.round(distance)} ft apart — schedule plantings ≥${p.staggerDays} d apart so their flowering windows don't overlap.`;
-        }
+        const kind: PollinationConstraint['kind'] =
+          distance === null
+            ? 'geometry-missing'
+            : distance >= p.requiredIsolationFeet
+              ? 'isolated-spatially'
+              : 'must-stagger';
+        const note = pollinationNote({
+          kind,
+          pairDisplayNames: [seedNameOf(stockA), seedNameOf(stockB)],
+          blockNames: [blockNameOf(bA), blockNameOf(bB)],
+          distanceFt: distance,
+          staggerDays: p.staggerDays
+        });
         out.push({
           kind,
           pair: [stockA, stockB],

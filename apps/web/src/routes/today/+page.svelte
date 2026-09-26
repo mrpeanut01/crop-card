@@ -18,6 +18,7 @@
     type RecommendationItem
   } from '$lib/components/today/Recommendations.svelte';
   import SeasonGlance from '$lib/components/today/SeasonGlance.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -26,13 +27,17 @@
   const aiEnabled = $derived(data.aiEnabled);
 
   // Phase 25e (#97) — header strip data.
-  const todayDateLabel = $derived(
-    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-  );
+  const todayDateLabel = $derived(fmt.instant(Date.now(), 'date-long', { year: undefined }));
   // Use first letter of the user email as a friendly hello when no name is
   // wired up. The full session has display name once Phase 26 lands.
   const greeting = $derived.by(() => {
-    const hour = new Date().getHours();
+    const hour = Number(
+      new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        hourCycle: 'h23',
+        timeZone: currentPrefs().timeZone
+      }).format(new Date())
+    );
     const part = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
     return `Good ${part}.`;
   });
@@ -46,12 +51,7 @@
 
   // Phase 25e (#97) — week-strip items map (YYYY-MM-DD → [{title, kind}]).
   const DAY_MS_LOCAL = 24 * 60 * 60 * 1000;
-  function todayMidnight(): number {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.getTime();
-  }
-  const todayStartMs = $derived(todayMidnight());
+  const todayStartMs = $derived(Date.parse(fmt.today()));
   function weekKindForTask(t: Task): WeekKind {
     switch (t.relatedEventTable) {
       case 'spray_event':
@@ -114,7 +114,7 @@
       id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
       title: e.title,
       crop: e.varietyDisplayName,
-      window: new Date(e.startMs).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      window: fmt.day(e.startMs, 'month-day')
     }));
   });
 
@@ -203,9 +203,8 @@
   });
 
   /** Generate the days that the calendar should display in grid cells. */
-  function gridDays(tab: Tab, fromMs: number): { date: string; ms: number }[] {
-    const start = new Date(fromMs);
-    start.setHours(0, 0, 0, 0);
+  function gridDays(tab: Tab): { date: string; ms: number }[] {
+    const start = new Date(todayStartMs);
     const count = tab === '7d' ? 7 : tab === '30d' ? 28 : tab === 'season' ? 84 : 1;
     const out: { date: string; ms: number }[] = [];
     for (let i = 0; i < count; i++) {
@@ -216,19 +215,14 @@
   }
 
   function dayLabel(ms: number): string {
-    const d = new Date(ms);
-    return `${d.toLocaleDateString(undefined, { weekday: 'short' })} ${d.getMonth() + 1}/${d.getDate()}`;
+    return `${fmt.day(ms, 'weekday')} ${fmt.day(ms, 'month-day', { month: 'numeric' })}`;
   }
 
   let busy = $state(false);
   let actionError = $state<string | null>(null);
 
   function fmtDate(ms: number): string {
-    return new Date(ms).toLocaleDateString();
-  }
-
-  function fmtDateTime(ms: number): string {
-    return new Date(ms).toLocaleString();
+    return fmt.day(ms);
   }
 
   /** Promote a calendar-engine derived event into a real Task. */
@@ -289,9 +283,9 @@
   }
 
   function fmtRange(startMs: number, endMs: number) {
-    const a = new Date(startMs).toLocaleDateString();
+    const a = fmt.day(startMs);
     if (startMs === endMs) return a;
-    const b = new Date(endMs).toLocaleDateString();
+    const b = fmt.day(endMs);
     return `${a} – ${b}`;
   }
 
@@ -540,7 +534,7 @@
   {#if data.view === 'calendar'}
     <section class="card calendar-panel" aria-label="Calendar view">
       {#if data.tab === 'today'}
-        {@const today = gridDays('today', data.tabFromMs)[0]}
+        {@const today = gridDays('today')[0]}
         {@const items = calendarBuckets.get(today.date) ?? []}
         <h2>{dayLabel(today.ms)}</h2>
         {#if items.length === 0}
@@ -551,12 +545,9 @@
               <li class="day-item kind-{item.kind === 'task' ? item.taskKind : item.derivedKind}">
                 <span class="when">
                   {#if item.kind === 'task'}
-                    {new Date(item.scheduledFor).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {fmt.day(item.scheduledFor, 'month-day')}
                   {:else}
-                    {new Date(item.startMs).toLocaleDateString()}
+                    {fmt.day(item.startMs)}
                   {/if}
                 </span>
                 <strong>{item.title}</strong>
@@ -572,7 +563,7 @@
       {:else if data.tab === '7d'}
         <h2>Next 7 days</h2>
         <div class="week-grid">
-          {#each gridDays('7d', data.tabFromMs) as d (d.date)}
+          {#each gridDays('7d') as d (d.date)}
             <div class="day-cell">
               <header>{dayLabel(d.ms)}</header>
               {#each calendarBuckets.get(d.date) ?? [] as item, i (i)}
@@ -588,10 +579,10 @@
       {:else if data.tab === '30d'}
         <h2>Next 30 days</h2>
         <div class="month-grid">
-          {#each gridDays('30d', data.tabFromMs) as d (d.date)}
+          {#each gridDays('30d') as d (d.date)}
             {@const items = calendarBuckets.get(d.date) ?? []}
             <div class="month-cell" class:has-items={items.length > 0}>
-              <span class="month-day">{new Date(d.ms).getDate()}</span>
+              <span class="month-day">{new Date(d.ms).getUTCDate()}</span>
               {#if items.length > 0}
                 <span class="dot" title={items.map((it) => it.title).join('\n')}
                   >{items.length}</span
@@ -610,13 +601,8 @@
         {:else}
           <div class="gantt">
             <div class="gantt-axis">
-              {#each gridDays('season', data.tabFromMs).filter((_, i) => i % 7 === 0) as d (d.date)}
-                <span class="gantt-week"
-                  >{new Date(d.ms).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric'
-                  })}</span
-                >
+              {#each gridDays('season').filter((_, i) => i % 7 === 0) as d (d.date)}
+                <span class="gantt-week">{fmt.day(d.ms, 'month-day')}</span>
               {/each}
             </div>
             {#each data.activeCrops as crop (crop.id)}
@@ -631,7 +617,7 @@
                     <span
                       class="gantt-span kind-{e.kind}"
                       style="left:{Math.max(0, startPct)}%; width:{Math.max(1, widthPct)}%"
-                      title="{e.title} — {new Date(e.startMs).toLocaleDateString()}"
+                      title="{e.title} — {fmt.day(e.startMs)}"
                     ></span>
                   {/each}
                 </div>
@@ -665,7 +651,7 @@
       {@const post = preTasksFor(primary.id).filter((t) => t.kind === 'post-task')}
       <article class="primary-task">
         <header>
-          <span class="when">{fmtDateTime(primary.scheduledFor)}</span>
+          <span class="when">{fmtDate(primary.scheduledFor)}</span>
           <strong class="title">{primary.title}</strong>
         </header>
         {#if primary.body}<p class="body">{primary.body}</p>{/if}
@@ -675,7 +661,7 @@
             <ul class="linked">
               {#each pre as t (t.id)}
                 <li>
-                  <span class="when">{fmtDateTime(t.scheduledFor)}</span>
+                  <span class="when">{fmtDate(t.scheduledFor)}</span>
                   <strong>{t.title}</strong>
                   {#if t.body}<span class="body">— {t.body}</span>{/if}
                   <button
@@ -696,7 +682,7 @@
             <ul class="linked">
               {#each post as t (t.id)}
                 <li>
-                  <span class="when">{fmtDateTime(t.scheduledFor)}</span>
+                  <span class="when">{fmtDate(t.scheduledFor)}</span>
                   <strong>{t.title}</strong>
                   {#if t.body}<span class="body">— {t.body}</span>{/if}
                   <button
@@ -874,7 +860,7 @@
             <span class="ok">clean</span>
           {/if}
           {#if s.lastDeconAt}
-            <span class="meta">decon {new Date(s.lastDeconAt).toLocaleString()}</span>
+            <span class="meta">decon {fmt.instant(s.lastDeconAt)}</span>
           {/if}
         </li>
       {/each}

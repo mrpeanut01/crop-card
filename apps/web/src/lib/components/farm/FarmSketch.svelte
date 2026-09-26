@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import {
     formatFt,
     layoutSketch,
@@ -22,12 +23,13 @@
     `${-pad} ${-pad} ${layout.width + pad * 2} ${layout.height + pad * 2 + font * 2.2}`
   );
 
-  function niceScale(maxFt: number): number {
-    const target = maxFt / 4;
+  function niceScale(max: number): number {
+    const target = max / 4;
     const steps = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000];
     return steps.reduce((best, s) => (s <= target ? s : best), steps[0]);
   }
-  const scaleFt = $derived(niceScale(span));
+  const scaleUnits = $derived(niceScale(fmt.toDisplay(span, 'distance')));
+  const scaleFt = $derived(fmt.fromDisplay(scaleUnits, 'distance'));
 </script>
 
 <figure class="sketch" data-testid="farm-sketch">
@@ -91,9 +93,10 @@
                 vector-effect="non-scaling-stroke"
               >
                 <title
-                  >{b.name}: {formatFt(b.w)} × {formatFt(b.h)}{b.fits
-                    ? ''
-                    : ' (runs past the field edge)'}</title
+                  >{b.name}: {formatFt(b.w, currentPrefs())} × {formatFt(
+                    b.h,
+                    currentPrefs()
+                  )}{b.fits ? '' : ' (runs past the field edge)'}</title
                 >
               </rect>
               {#if b.w > font * 3 && b.h > font * 1.4}
@@ -109,7 +112,9 @@
           <text x={f.x} y={f.y - font * 0.4} font-size={font} class="sk-field-label"
             >{f.name}
             <tspan class="dims"
-              >{f.measured ? `${formatFt(f.w)} × ${formatFt(f.h)}` : '(size from acres)'}</tspan
+              >{f.measured
+                ? `${formatFt(f.w, currentPrefs())} × ${formatFt(f.h, currentPrefs())}`
+                : '(size from area)'}</tspan
             ></text
           >
         </g>
@@ -126,7 +131,7 @@
           vector-effect="non-scaling-stroke"
         />
         <text x={scaleFt + font * 0.5} y={font * 0.35} font-size={font * 0.8} class="sk-scale-label"
-          >{scaleFt} ft</text
+          >{scaleUnits} {fmt.unit('distance')}</text
         >
       </g>
     </svg>

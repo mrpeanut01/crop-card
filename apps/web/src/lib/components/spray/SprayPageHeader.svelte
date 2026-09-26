@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -95,7 +96,7 @@
     <ul class="rei-list">
       {#each activeREI as e (e.id)}
         <li>
-          Block {e.blockId} — re-entry clear {new Date(e.reEntryClearAt ?? 0).toLocaleString()}
+          Block {e.blockId} — re-entry clear {fmt.instant(e.reEntryClearAt ?? 0)}
         </li>
       {/each}
     </ul>

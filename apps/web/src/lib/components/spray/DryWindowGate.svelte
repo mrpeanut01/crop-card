@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { DryWindow, RainfastCheck, WeatherProvenance } from '$lib/weather/leafWet';
@@ -24,12 +25,8 @@
     provenance === 'fallback' ? 'unknown' : rainfast.status
   );
 
-  function fmt(ms: number): string {
-    return new Date(ms).toLocaleString('en-US', {
-      weekday: 'short',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
+  function when(ms: number): string {
+    return fmt.instant(ms, 'weekday', { hour: 'numeric', minute: '2-digit' });
   }
 </script>
 
@@ -71,13 +68,14 @@
     </p>
   {:else}
     <p class="msg" role="alert">
-      Rain forecast {rainfast.firstRiskMs ? `from ${fmt(rainfast.firstRiskMs)}` : ''} (max PoP {rainfast.maxPopPct ??
-        0}%, {rainfast.totalPrecipMm} mm) could wash product off before it is rainfast.
+      Rain forecast {rainfast.firstRiskMs ? `from ${when(rainfast.firstRiskMs)}` : ''} (max PoP {rainfast.maxPopPct ??
+        0}%, {fmt.qty(rainfast.totalPrecipMm / 25.4, 'precip')}) could wash product off before it is
+      rainfast.
       <Provenance source="data" detail="NWS gridpoint forecast" compact />
     </p>
     <p class="msg">
       {#if dryWindow}
-        Next dry window: <strong>{fmt(dryWindow.startMs)} – {fmt(dryWindow.endMs)}</strong>.
+        Next dry window: <strong>{when(dryWindow.startMs)} – {when(dryWindow.endMs)}</strong>.
       {:else}
         No {rainfast.rainfastHours}-hour dry window in the next 3 days of forecast.
       {/if}

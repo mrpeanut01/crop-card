@@ -28,3 +28,41 @@ describe('herbicideRatePreview (#218)', () => {
     expect(herbicideRatePreview(rate, null).label).toBe('32 oz/A · pick a sprayer for GPA');
   });
 });
+
+describe('herbicideRatePreview metric display', () => {
+  const metric = { units: 'metric' as const };
+
+  it('keeps the label rate first and adds metric equivalents for metric users', () => {
+    const p = herbicideRatePreview({ amount: 22, unit: 'fl-oz' }, { calibratedGpa: 15 }, metric);
+    expect(p).toEqual({
+      kind: 'calibrated',
+      label: '22 fl-oz/A (1,608 mL/ha) @ 15 GPA (140 L/ha)',
+      gpa: 15
+    });
+  });
+
+  it('converts pints, pounds and dry ounces per acre', () => {
+    expect(herbicideRatePreview({ amount: 1, unit: 'pt' }, null, metric).label).toBe(
+      '1 pt/A (1,169 mL/ha) · pick a sprayer for GPA'
+    );
+    expect(herbicideRatePreview({ amount: 2, unit: 'lb' }, null, metric).label).toBe(
+      '2 lb/A (2 kg/ha) · pick a sprayer for GPA'
+    );
+    expect(herbicideRatePreview(rate, { calibratedGpa: null }, metric).label).toBe(
+      '32 oz/A (2,242 g/ha) · sprayer uncalibrated'
+    );
+  });
+
+  it('leaves unknown units label-only', () => {
+    expect(herbicideRatePreview({ amount: 3, unit: 'bags' }, null, metric).label).toBe(
+      '3 bags/A · pick a sprayer for GPA'
+    );
+  });
+
+  it('US output is unchanged', () => {
+    expect(
+      herbicideRatePreview({ amount: 22, unit: 'fl-oz' }, { calibratedGpa: 15 }, { units: 'us' })
+        .label
+    ).toBe('22 fl-oz/A @ 15 GPA');
+  });
+});

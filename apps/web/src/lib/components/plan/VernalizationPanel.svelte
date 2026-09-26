@@ -8,6 +8,7 @@
     VERNALIZATION_MIN_F,
     type VernalizationAssessment
   } from '$lib/plan/smallGrain';
+  import { fmt } from '$lib/prefsState.svelte';
 
   interface Props {
     assessment: VernalizationAssessment;
@@ -41,10 +42,10 @@
       return 'Winter-habit variety sown in spring may not get enough cold to head. Expect a thin or headless stand.';
     if (v.status === 'complete') return 'Cold requirement met — heads will form.';
     if (v.accumulatedDays < 1)
-      return 'Cold days start counting once temperatures settle below 50 °F — typically November in Loudoun County.';
+      return `Cold days start counting once temperatures settle below ${fmt.qty(50, 'temperature')} — typically November in Loudoun County.`;
     if (v.status === 'at-risk')
       return 'Short of the typical requirement this late in spring — scout for heading.';
-    return `Winter wheat needs about ${v.requiredDays} days at ${VERNALIZATION_MIN_F}–${VERNALIZATION_MAX_F} °F to flower.`;
+    return `Winter wheat needs about ${v.requiredDays} days at ${fmt.qty(VERNALIZATION_MIN_F, 'temperature', { bare: true })}–${fmt.qty(VERNALIZATION_MAX_F, 'temperature')} to flower.`;
   });
 </script>
 
@@ -108,7 +109,7 @@
     {#if v.required && v.climatologyDays > 0}
       <p class="foot">
         Past weather isn't stored, so days before the forecast window are estimated from {LOUDOUN_AIR_TEMP_NORMALS.label}
-        with a ±9 °F daily swing. Farms far from Loudoun County will differ.
+        with a ±{fmt.qty(9, 'temperatureDelta')} daily swing. Farms far from Loudoun County will differ.
       </p>
     {/if}
   </div>

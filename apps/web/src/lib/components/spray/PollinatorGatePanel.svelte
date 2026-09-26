@@ -1,5 +1,6 @@
 <script lang="ts">
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import { currentPrefs } from '$lib/prefsState.svelte';
   import type { BloomStatus, PollinatorProtectionResult } from '$lib/safety/pollinatorProtection';
   import { formatDistance, type NearbyPollinatorAdvisory } from '$lib/pollinator/nearbyBlocks';
 
@@ -114,7 +115,7 @@
       <span class="icon" aria-hidden="true">{nearby.status === 'pass' ? '✓' : '!'}</span>
       <div class="nearby-body">
         <div class="tile-label">
-          {nearby.label} · within {formatDistance(nearby.radiusFt)}
+          {nearby.label} · within {formatDistance(nearby.radiusFt, currentPrefs())}
           <span class="sr-only">— {nearby.status}</span>
           <Provenance source="plugin" detail="crop bloom window" compact />
           <Provenance source="data" detail="block geometry" compact />
@@ -125,7 +126,7 @@
             {#each [...nearby.blocks, ...nearby.unknownDistance] as b (b.blockId)}
               <li class="nearby-row" data-testid="nearby-block-{b.blockId}">
                 <span class="nearby-name">{b.name}</span>
-                <span class="mono nearby-dist">{formatDistance(b.distanceFt)}</span>
+                <span class="mono nearby-dist">{formatDistance(b.distanceFt, currentPrefs())}</span>
                 <span class="nearby-why">
                   {b.reason === 'in-bloom' ? 'in bloom' : 'bee-attractive'} · {b.crops.join(', ')}
                 </span>

@@ -5,6 +5,7 @@
   import { herbicideRatePreview } from '$lib/dilution/ratePreview';
   import Banner from '$lib/components/ui/Banner.svelte';
   import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   // Phase 25b (#85) — Almanac chrome (stepper + context strip) on top
   // of the existing herbicide flow. 1:1 with ASprayScreen.
   import SprayStepper, { type StepState } from '$lib/components/spray/SprayStepper.svelte';
@@ -234,6 +235,7 @@
     const gpa = result?.dilutions?.[0]?.gpaUsed ?? 15;
     return tankSizeGallons / gpa;
   });
+  const metric = $derived(currentPrefs().units === 'metric');
   const tanksNeeded = $derived(
     tankAcresCapacity > 0 ? Math.max(1, Math.ceil(totalAcres / tankAcresCapacity)) : 1
   );
@@ -714,7 +716,7 @@
             <span class="card-check" aria-hidden="true">{isSelected ? '☑' : '☐'}</span>
             <strong>{b.label}</strong>
           </span>
-          <small>{b.description}</small>
+          <small>{b.acres ? fmt.label(b.acres, 'area') : ''}</small>
           {#if b.preplant}
             <!-- Phase 21b follow-up — block has nothing in the ground;
                  spray is a pre-plant burndown. Crop-tox check skipped. -->
@@ -737,10 +739,7 @@
                  instead of creating a duplicate. -->
             <p class="existing-event-tag">
               ✏ Will update event from
-              {new Date(b.existingEvent.occurredAt).toLocaleTimeString([], {
-                hour: 'numeric',
-                minute: '2-digit'
-              })}
+              {fmt.instant(b.existingEvent.occurredAt, 'time')}
             </p>
           {/if}
         </button>
@@ -784,7 +783,7 @@
             >{h.applicationTiming ?? 'unspecified timing'} • {h.chemistryClasses.join(', ')}</small
           >
           <small data-testid="herbicide-rate-preview">
-            {herbicideRatePreview(h.ratePerAcre, sprayer).label}
+            {herbicideRatePreview(h.ratePerAcre, sprayer, currentPrefs()).label}
             {#if h.requiresAMS}• AMS{/if}
             {#if h.deconRequired}• decon{/if}
           </small>
@@ -818,7 +817,7 @@
             <strong>{s.label}</strong>
             <small
               >id: {s.id} • {s.calibratedGpa != null
-                ? `${s.calibratedGpa} GPA`
+                ? fmt.label(s.calibratedGpa, 'volumePerArea')
                 : 'Uncalibrated'}</small
             >
             {#if s.lastChemistryClass}
@@ -827,7 +826,7 @@
               <small class="ok">clean</small>
             {/if}
             {#if s.lastDeconAt}
-              <small>last decon: {new Date(s.lastDeconAt).toLocaleString()}</small>
+              <small>last decon: {fmt.instant(s.lastDeconAt)}</small>
             {/if}
           </button>
         {/each}
@@ -851,6 +850,7 @@
           onclick={() => (tankSizeGallons = size)}
         >
           {size} <span>gal</span>
+          {#if metric}<span class="pick-alt">{fmt.qty(size, 'volume', { digits: 0 })}</span>{/if}
         </button>
       {/each}
     </div>
@@ -884,7 +884,11 @@
             markConditionsMeasured();
           }}>−</button
         >
-        <output>{windMph}<small> mph</small></output>
+        <output
+          >{windMph}<small> mph</small>{#if metric}<small class="alt"
+              >≈ {fmt.qty(windMph, 'speed')}</small
+            >{/if}</output
+        >
         <button
           type="button"
           aria-label="Increase wind speed"
@@ -904,7 +908,11 @@
             markConditionsMeasured();
           }}>−</button
         >
-        <output>{tempF}<small> °F</small></output>
+        <output
+          >{tempF}<small> °F</small>{#if metric}<small class="alt"
+              >≈ {fmt.qty(tempF, 'temperature')}</small
+            >{/if}</output
+        >
         <button
           type="button"
           aria-label="Increase temperature"
@@ -924,7 +932,11 @@
             markConditionsMeasured();
           }}>−</button
         >
-        <output>{rainMm}<small> mm</small></output>
+        <output
+          >{rainMm}<small> mm</small>{#if !metric}<small class="alt"
+              >≈ {fmt.qty(rainMm / 25.4, 'precip')}</small
+            >{/if}</output
+        >
         <button
           type="button"
           aria-label="Increase rain forecast"
@@ -953,7 +965,11 @@
             aria-label="Decrease corn height"
             onclick={() => (cornHeightIn = Math.max(0, (cornHeightIn ?? 0) - 1))}>−</button
           >
-          <output>{cornHeightIn ?? 0}<small> in</small></output>
+          <output
+            >{cornHeightIn ?? 0}<small> in</small>{#if metric}<small class="alt"
+                >≈ {fmt.qty(cornHeightIn ?? 0, 'length')}</small
+              >{/if}</output
+          >
           <button
             type="button"
             aria-label="Increase corn height"
@@ -999,17 +1015,26 @@
         <div class="spray-card-summary">
           <div class="sc-metric">
             <span class="sc-label">Total area</span>
-            <span class="sc-value">{totalAcres.toFixed(2)} ac</span>
+            <span class="sc-value">{fmt.label(totalAcres, 'area', { digits: 2 })}</span>
           </div>
           <div class="sc-metric">
             <span class="sc-label">Spray volume</span>
-            <span class="sc-value">{totalSprayGallons.toFixed(1)} gal</span>
-            <span class="sc-sublabel">{totalAcres.toFixed(2)} ac × {gpa} GPA</span>
+            <span class="sc-value">{fmt.label(totalSprayGallons, 'volume', { digits: 1 })}</span>
+            <span class="sc-sublabel"
+              >{fmt.label(totalAcres, 'area', { digits: 2 })} × {fmt.label(
+                gpa,
+                'volumePerArea'
+              )}</span
+            >
           </div>
           <div class="sc-metric">
             <span class="sc-label">Tank fills</span>
             <span class="sc-value">{tanksNeeded}</span>
-            <span class="sc-sublabel">{tankSizeGallons}-gal tank</span>
+            <span class="sc-sublabel"
+              >{tankSizeGallons}-gal tank{metric
+                ? ` (${fmt.qty(tankSizeGallons, 'volume', { digits: 0 })})`
+                : ''}</span
+            >
           </div>
         </div>
         {#if blocksMissingAcres.length > 0}
@@ -1071,7 +1096,7 @@
           <h3>{tanksNeeded > 1 ? `Last (partial) tank` : `Tank fill`}</h3>
           <p class="fill-note">
             The {tanksNeeded > 1 ? 'last tank covers' : 'pass covers'}
-            <strong>{remainingAcresLastTank.toFixed(2)} ac</strong>
+            <strong>{fmt.label(remainingAcresLastTank, 'area', { digits: 2 })}</strong>
             — fill to one of these levels, then mix the matching chemical amount.
           </p>
           {#each result.dilutions as d (d.pluginId)}
@@ -1091,12 +1116,16 @@
                   {@const fillSecondary = secondaryUnits(f.chemicalAmount, d.unit as DilutionUnit)}
                   <tr class:recommended={f.recommended}>
                     <td>
-                      <strong>{f.waterGallons.toFixed(f.recommended ? 2 : 0)} gal</strong>
+                      <strong
+                        >{fmt.label(f.waterGallons, 'volume', {
+                          digits: f.recommended ? 2 : 0
+                        })}</strong
+                      >
                       {#if f.recommended}
                         <small class="rec-tag">recommended</small>
                       {/if}
                     </td>
-                    <td>{f.acresCovered.toFixed(2)} ac</td>
+                    <td>{fmt.label(f.acresCovered, 'area', { digits: 2 })}</td>
                     <td>
                       <strong>{fmtUnitAmount(f.chemicalAmount, d.unit as DilutionUnit)}</strong>
                       {#if fillSecondary.length > 0}
@@ -1521,6 +1550,10 @@
     font-family: inherit;
     font-weight: 500;
     margin-left: 0.2rem;
+  }
+  .stepper output small.alt {
+    display: block;
+    margin: 0.2rem 0 0;
   }
   /* .sticky-cta was for a sticky bottom CTA bar that's no longer rendered
      after the multi-block selection refactor — the "Apply" button lives

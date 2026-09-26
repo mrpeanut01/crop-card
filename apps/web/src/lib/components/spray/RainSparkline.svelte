@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { DailyTotal, WeatherProvenance } from '$lib/weather/leafWet';
 
@@ -13,21 +14,23 @@
   const W = 260;
   const H = 72;
   const GAP = 8;
+  const MM_PER_IN = 25.4;
 
   const wetByDate = $derived(new Map(leafWet.map((d) => [d.date, d.value])));
   const max = $derived(Math.max(1, ...rain.map((d) => d.value)));
   const barW = $derived(rain.length > 0 ? (W - GAP * (rain.length - 1)) / rain.length : 0);
-  const totalMm = $derived(Math.round(rain.reduce((a, d) => a + d.value, 0) * 10) / 10);
+  const totalMm = $derived(rain.reduce((a, d) => a + d.value, 0));
+
+  const rainText = (mm: number) => fmt.qty(mm / MM_PER_IN, 'precip');
 
   function dayLabel(date: string): string {
-    const d = new Date(`${date}T12:00:00Z`);
-    return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+    return fmt.day(date, 'weekday');
   }
 
   const summary = $derived(
     rain.length === 0
       ? 'Five-day rain forecast unavailable.'
-      : `Five-day rain forecast: ${rain.map((d) => `${dayLabel(d.date)} ${d.value} mm`).join(', ')}.`
+      : `Five-day rain forecast: ${rain.map((d) => `${dayLabel(d.date)} ${rainText(d.value)}`).join(', ')}.`
   );
 </script>
 
@@ -39,7 +42,7 @@
       detail={provenance === 'data' ? 'NWS QPF' : 'weather unavailable'}
       compact
     />
-    {#if rain.length > 0}<span class="total mono">{totalMm} mm total</span>{/if}
+    {#if rain.length > 0}<span class="total mono">{rainText(totalMm)} total</span>{/if}
   </div>
   {#if rain.length === 0}
     <p class="empty">Weather unavailable — check conditions yourself.</p>
@@ -56,7 +59,7 @@
           fill={d.value > 0 ? 'var(--pill-sky-fg)' : 'var(--color-divider)'}
         />
         <text x={i * (barW + GAP) + barW / 2} y={H + 13} text-anchor="middle" class="val">
-          {d.value}mm
+          {rainText(d.value)}
         </text>
         <text x={i * (barW + GAP) + barW / 2} y={H + 26} text-anchor="middle" class="day">
           {dayLabel(d.date)}

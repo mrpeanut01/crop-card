@@ -2,6 +2,7 @@
   import { invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import { calibrationDistance, computeCalibratedGpa } from '$lib/dilution/calibration';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -17,6 +18,9 @@
   let pendingActionError = $state<string | null>(null);
 
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
+  const metric = $derived(currentPrefs().units === 'metric');
+  const gpaText = (gpa: number) =>
+    `${gpa} GPA${metric ? ` (${fmt.qty(gpa, 'volumePerArea')})` : ''}`;
 
   const distance = $derived.by(() => {
     if (!spreadInches || spreadInches <= 0) return null;
@@ -106,13 +110,15 @@
   <select id="sprayer-select" bind:value={selectedSprayerId}>
     {#each data.sprayers as s (s.id)}
       <option value={s.id}>
-        {s.label} ({s.calibratedGpa == null ? 'Uncalibrated' : `current: ${s.calibratedGpa} GPA`})
+        {s.label} ({s.calibratedGpa == null
+          ? 'Uncalibrated'
+          : `current: ${gpaText(s.calibratedGpa)}`})
       </option>
     {/each}
   </select>
   {#if sprayer?.calibrationDate}
     <p class="meta">
-      Last calibrated {new Date(sprayer.calibrationDate).toLocaleDateString()}
+      Last calibrated {fmt.instant(sprayer.calibrationDate, 'date')}
     </p>
   {/if}
 </section>
@@ -174,6 +180,9 @@
     <p class="big-gpa">
       <strong>{gpaResult.gpa}</strong> <span>GPA</span>
     </p>
+    {#if metric}
+      <p class="meta" data-testid="gpa-metric">≈ {fmt.qty(gpaResult.gpa, 'volumePerArea')}</p>
+    {/if}
     {#if data.canSave}
       <button
         class="primary"
@@ -230,10 +239,10 @@
         <li class="pending-item">
           <div class="pending-meta">
             <strong>{eq?.label ?? p.equipmentId}</strong>
-            <span class="gpa-stamp">{p.calibratedGpa} GPA</span>
+            <span class="gpa-stamp">{gpaText(p.calibratedGpa)}</span>
             <small>
               from {p.submittedByEmail} ·
-              {new Date(p.submittedAt).toLocaleString()}
+              {fmt.instant(p.submittedAt)}
               {#if p.spreadInches}· {p.spreadInches} in spread{/if}
               {#if p.ouncesCollected !== undefined}· {p.ouncesCollected} oz{/if}
             </small>

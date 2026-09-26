@@ -2,13 +2,16 @@
   import { Apple } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { fmtQtyRange, usText } from './format';
 
   const props: RendererProps = $props();
 
   const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
   const visitNumber = $derived(priorPicks + 1);
 
-  let pickLb = $state('');
+  let pickLb = $state<number | null>(null);
   let gradePct = $state('');
 
   async function handleCommit(input: {
@@ -17,7 +20,7 @@
   }): Promise<string | null> {
     const tagBits: string[] = [`pick=${visitNumber}`];
     if (gradePct.trim()) tagBits.push(`grade=${gradePct}%`);
-    const quantity = pickLb.trim() ? `${pickLb} lb` : input.quantity;
+    const quantity = usText(pickLb) ? `${usText(pickLb)} lb` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
     return props.onCommit({ quantity, lotNumber: lot || undefined });
   }
@@ -39,8 +42,13 @@
     <span class="block-title">This pick</span>
     <div class="pick-grid">
       <label class="qfield">
-        <span>Pick weight (lb)</span>
-        <input type="text" inputmode="decimal" placeholder="12" bind:value={pickLb} />
+        <span>Pick weight ({fmt.unit('weight')})</span>
+        <UnitInput
+          quantity="weight"
+          suffix={false}
+          placeholder={fmt.qty(12, 'weight', { bare: true })}
+          bind:value={pickLb}
+        />
       </label>
       <label class="qfield">
         <span>Marketable % (optional)</span>
@@ -129,7 +137,7 @@
     font-weight: 600;
     color: var(--color-ink-muted);
   }
-  .qfield input {
+  .qfield :global(input) {
     font-family: var(--font-mono, ui-monospace, monospace);
     font-size: 14px;
     padding: 8px 10px;

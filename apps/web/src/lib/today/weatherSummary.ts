@@ -9,9 +9,10 @@
  */
 
 import type { ForecastDay } from '$lib/hay/types';
+import { formatCalendarDate } from '$lib/prefs';
 
 export interface WeatherSummary {
-  /** Today's high (°F). */
+  /** Today's high (°F, stored US; the strip converts for display). */
   tempF: number;
   /** Today's mean wind speed (mph), if reported. */
   windMph?: number;
@@ -23,8 +24,7 @@ export interface WeatherSummary {
 }
 
 function dayLabel(iso: string): string {
-  const d = new Date(`${iso}T12:00:00`);
-  return d.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+  return formatCalendarDate(iso, 'weekday').toLowerCase();
 }
 
 export function summarizeForecast(days: ForecastDay[]): WeatherSummary | null {

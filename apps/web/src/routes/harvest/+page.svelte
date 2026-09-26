@@ -6,6 +6,8 @@
   import Banner from '$lib/components/ui/Banner.svelte';
   import HarvestRouter from '$lib/components/harvest/HarvestRouter.svelte';
   import { reHarvestArchetype, reHarvestLabel } from '$lib/components/harvest/reHarvest';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { ymdInZone } from '$lib/prefs';
 
   let { data } = $props();
 
@@ -111,11 +113,21 @@
     }
   }
 
-  function fmtRange(startMs?: number, endMs?: number) {
-    if (!startMs || !endMs) return 'unknown';
-    const a = new Date(startMs).toLocaleDateString();
-    const b = new Date(endMs).toLocaleDateString();
-    return `${a} – ${b}`;
+  function windowFromPick(p: PlantingHarvestStatus): boolean {
+    const forage =
+      p.archetype === 'forage-cutting-cycle' || p.harvestStyle === 'forage-cutting-cycle';
+    return (
+      forage && p.rendererData.priorPickCount > 0 && !!p.rendererData.hayOperations?.cutIntervalDays
+    );
+  }
+
+  function fmtWindowDay(ms: number, p: PlantingHarvestStatus) {
+    return windowFromPick(p) ? fmt.instant(ms, 'date') : fmt.day(ms);
+  }
+
+  function fmtRange(p: PlantingHarvestStatus) {
+    if (!p.windowStartMs || !p.windowEndMs) return 'unknown';
+    return `${fmtWindowDay(p.windowStartMs, p)} – ${fmtWindowDay(p.windowEndMs, p)}`;
   }
 
   /** Sprint 4 (#197 / CT-HS-001) — archetypes that yield multiple
@@ -143,14 +155,15 @@
   const pastPlantings = $derived(
     data.plantings.filter((p) => p.status === 'past' || p.alreadyHarvested)
   );
-  const yearStart = $derived(new Date(new Date().getFullYear(), 0, 1).getTime());
+  const seasonYear = $derived(Number(fmt.today().slice(0, 4)));
+  const yearStart = $derived(new Date(seasonYear, 0, 1).getTime());
   const eventsYtd = $derived(data.recordedHarvests.filter((e) => e.occurredAt >= yearStart));
 
   function exportYtdCsv() {
     const rows = [
       ['Date', 'Block', 'Crop plugin', 'Quantity', 'Lot #'],
       ...eventsYtd.map((e) => [
-        new Date(e.occurredAt).toISOString().slice(0, 10),
+        ymdInZone(e.occurredAt, currentPrefs().timeZone),
         e.blockName ?? e.blockId,
         e.cropPluginId,
         e.quantity ?? '',
@@ -164,7 +177,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `harvest-ytd-${new Date().getFullYear()}.csv`;
+    a.download = `harvest-ytd-${seasonYear}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -175,7 +188,7 @@
 </svelte:head>
 
 <header class="page-header">
-  <Kicker>Harvest · {new Date().getFullYear()} season</Kicker>
+  <Kicker>Harvest · {seasonYear} season</Kicker>
   <h1 class="serif">Harvest.</h1>
   <p class="stat-line">
     <strong>{readyPlantings.length}</strong> ready today ·
@@ -237,8 +250,8 @@
             {/if}
           </header>
           <div class="meta">
-            {#if p.plantingDate}Planted {new Date(p.plantingDate).toLocaleDateString()} ·
-            {/if}Window {fmtRange(p.windowStartMs, p.windowEndMs)}
+            {#if p.plantingDate}Planted {fmt.day(p.plantingDate)} ·
+            {/if}Window {fmtRange(p)}
             {#if p.status === 'too-early'}· {p.daysUntilWindow}d until window{/if}
             {#if p.status === 'in-window'}· {p.daysIntoWindow}d into window{/if}
             {#if p.status === 'past'}· {p.daysPastWindow}d past{/if}
@@ -349,7 +362,7 @@
           <span class="up-block">· {p.blockName}</span>
           {#if p.windowStartMs}
             <span class="up-when">
-              opens {new Date(p.windowStartMs).toLocaleDateString()} ({p.daysUntilWindow}d)
+              opens {fmtWindowDay(p.windowStartMs, p)} ({p.daysUntilWindow}d)
             </span>
           {/if}
         </li>
@@ -377,8 +390,7 @@
               </span>
             </header>
             <p class="meta">
-              Harvested {new Date(h.occurredAt).toLocaleDateString()} · method: {h.curing!.method ??
-                '—'} ·
+              Harvested {fmt.instant(h.occurredAt, 'date')} · method: {h.curing!.method ?? '—'} ·
               {h.curing!.minWeeks}–{h.curing!.maxWeeks} wk
             </p>
             {#if h.curing!.phase === 'in-progress'}
@@ -426,7 +438,7 @@
       <tbody>
         {#each data.recordedHarvests as h (h.id)}
           <tr>
-            <td>{new Date(h.occurredAt).toLocaleDateString()}</td>
+            <td>{fmt.instant(h.occurredAt, 'date')}</td>
             <td>{h.blockName ?? `(deleted block)`}</td>
             <td><code>{h.cropPluginId}</code></td>
             <td>{h.quantity ?? '—'}</td>

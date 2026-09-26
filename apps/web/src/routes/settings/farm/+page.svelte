@@ -7,6 +7,7 @@
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
   import BlockMap from '$lib/components/BlockMap.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -25,10 +26,7 @@
       const [mm, dd] = mmDd.split('-');
       return `${yr}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
     }
-    const d = new Date(fallbackMs);
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yr}-${mm}-${dd}`;
+    return `${yr}-${new Date(fallbackMs).toISOString().slice(5, 10)}`;
   }
   let lastFrost = $state(
     untrack(() => mmDdToIso(data.lastFrostMmDd, data.frostDates.lastSpringFrostMs))
@@ -111,7 +109,7 @@
   </SettingsSection>
 
   <SettingsSection
-    title={`Blocks · ${data.blocks.length} · ${total.toFixed(1)} ac total`}
+    title={`Blocks · ${data.blocks.length} · ${fmt.qty(total, 'area', { digits: 1 })} total`}
     sub="Click a block to edit boundary, soil zone, irrigation, or rotation history."
   >
     {#snippet right()}
@@ -165,7 +163,7 @@
               <div class="block-name">{b.name}</div>
               <div class="block-sub mono">{b.fieldName ?? '(no field)'}</div>
             </div>
-            <span class="block-acres mono">{(b.acres ?? 0).toFixed(1)} ac</span>
+            <span class="block-acres mono">{fmt.qty(b.acres ?? 0, 'area', { digits: 1 })}</span>
             <ChevronRight size={13} />
           </a>
         {/each}

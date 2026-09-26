@@ -6,6 +6,8 @@
   Bars group by equipmentId; overlap renders red.
 -->
 <script lang="ts">
+  import { fmt } from '$lib/prefsState.svelte';
+
   interface EquipmentBar {
     equipmentId: string;
     equipmentLabel: string;
@@ -68,7 +70,7 @@
                 class="bar"
                 class:conflict
                 style="left: {offsetPct(bar.startMs)}%; width: {widthPct(bar.startMs, bar.endMs)}%;"
-                title={`${g.label}: ${new Date(bar.startMs).toLocaleDateString()} → ${new Date(bar.endMs).toLocaleDateString()}`}
+                title={`${g.label}: ${fmt.day(bar.startMs)} → ${fmt.day(bar.endMs)}`}
               ></div>
             {/each}
           </div>

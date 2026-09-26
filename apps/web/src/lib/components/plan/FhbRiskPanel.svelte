@@ -7,7 +7,8 @@
     type DailyScabHours,
     type FhbAssessment
   } from '$lib/plan/smallGrain';
-  import { DEFAULT_TIME_ZONE, localDateKey } from '$lib/weather/leafWet';
+  import { localDateKey } from '$lib/weather/leafWet';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   interface FungicideNote {
     occurredAt: number;
@@ -29,13 +30,12 @@
   const H = 64;
   const GAP = 6;
 
-  function fmt(ms: number): string {
-    return new Date(ms).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      timeZone: DEFAULT_TIME_ZONE
-    });
+  function fmtDay(ms: number): string {
+    return fmt.day(ms, 'month-day');
   }
+  const scabRange = $derived(
+    `${fmt.qty(59, 'temperature', { bare: true })}–${fmt.qty(86, 'temperature')}`
+  );
   function dayLabel(date: string): string {
     return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -67,16 +67,16 @@
         return 'Set a planting date to project flowering (Z61).';
       case 'too-early': {
         const days = Math.max(0, Math.ceil(((a.windowStartMs ?? nowMs) - nowMs) / DAY));
-        return `Flowering ~${fmt(a.anthesisMs!)}. The 7-day pre-flowering window opens in ~${days} days — beyond the forecast.`;
+        return `Flowering ~${fmtDay(a.anthesisMs!)}. The 7-day pre-flowering window opens in ~${days} days — beyond the forecast.`;
       }
       case 'past':
-        return `Flowering was ~${fmt(a.anthesisMs!)}; the FHB fungicide window (Z61 + ~6 d) has passed.`;
+        return `Flowering was ~${fmtDay(a.anthesisMs!)}; the FHB fungicide window (Z61 + ~6 d) has passed.`;
       case 'no-data':
         return 'Weather unavailable — risk can’t be estimated. Check the national scab forecast before flowering.';
       case 'insufficient-data':
         return `Only ${a.coveredHours} h of the 7-day pre-flowering window is in the forecast so far.`;
       case 'assessed':
-        return `${a.favorableHours} of ${a.coveredHours} forecast hours before flowering are wet at 59–86 °F (≈${a.index} h per 7 days${a.meanTempF !== null ? `, mean ${a.meanTempF} °F` : ''}).`;
+        return `${a.favorableHours} of ${a.coveredHours} forecast hours before flowering are wet at ${scabRange} (≈${a.index} h per 7 days${a.meanTempF !== null ? `, mean ${fmt.qty(a.meanTempF, 'temperature')}` : ''}).`;
     }
     return '';
   });
@@ -97,9 +97,9 @@
       return new Set<string>();
     const s = new Set<string>();
     for (let t = assessment.windowStartMs; t < assessment.windowEndMs; t += DAY) {
-      s.add(localDateKey(t));
+      s.add(localDateKey(t, currentPrefs().timeZone));
     }
-    s.add(localDateKey(assessment.windowEndMs - 1));
+    s.add(localDateKey(assessment.windowEndMs - 1, currentPrefs().timeZone));
     return s;
   });
   function barFill(h: number): string {
@@ -122,7 +122,7 @@
   </header>
   <p class="sub">
     Spray timing is critical at early flowering (Z61–Z65)
-    {#if assessment.anthesisMs !== null}· flowering ~{fmt(assessment.anthesisMs)}{/if}
+    {#if assessment.anthesisMs !== null}· flowering ~{fmtDay(assessment.anthesisMs)}{/if}
   </p>
 
   <div class="body">
@@ -165,14 +165,15 @@
       {#each fungicides as f (f.occurredAt)}
         <li>
           <Provenance source="data" detail="your spray record" compact />
-          Fungicide {fmt(f.occurredAt)} — {f.products.join(' + ') || 'product not recorded'}
+          Fungicide {fmt.instant(f.occurredAt, 'month-day')} — {f.products.join(' + ') ||
+            'product not recorded'}
         </li>
       {/each}
     </ul>
   {/if}
 
   <p class="foot">
-    Proxy model: hours with RH ≥ 90% or rain at 59–86 °F in the 7 days before flowering (low &lt; {FHB_MODERATE_HOURS}
+    Proxy model: hours with RH ≥ 90% or rain at {scabRange} in the 7 days before flowering (low &lt; {FHB_MODERATE_HOURS}
     h, moderate &lt; {FHB_HIGH_HOURS} h, high ≥ {FHB_HIGH_HOURS} h). It is not the calibrated national
     model — before spraying, consult
     <a href="https://www.wheatscab.psu.edu/" target="_blank" rel="noopener noreferrer"

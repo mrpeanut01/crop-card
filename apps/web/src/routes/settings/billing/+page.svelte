@@ -2,6 +2,7 @@
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -26,13 +27,7 @@
     STATUS_TONE[data.billingStatus as keyof typeof STATUS_TONE] ?? 'neutral'
   );
   const periodEndLabel = $derived(
-    data.subscription?.periodEnd
-      ? new Date(data.subscription.periodEnd).toLocaleDateString(undefined, {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        })
-      : null
+    data.subscription?.periodEnd ? fmt.instant(data.subscription.periodEnd, 'date') : null
   );
 
   let pending = $state<'checkout' | 'portal' | null>(null);

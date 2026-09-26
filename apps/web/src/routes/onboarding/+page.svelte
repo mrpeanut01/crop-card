@@ -21,6 +21,7 @@
     Wheat
   } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import FarmMapEditor from '$lib/components/farm/FarmMapEditor.svelte';
   import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
@@ -86,8 +87,9 @@
     };
   }
 
+  const yearNow = Number(fmt.today().slice(0, 4));
   const heading = $derived(
-    headings(data.firstName, data.season?.currentYear ?? new Date().getFullYear())[data.step]
+    headings(data.firstName, data.season?.currentYear ?? yearNow)[data.step]
   );
   const unlocked = $derived(basicsComplete(data.progress));
   const done = $derived(doneCount(data.progress));
@@ -99,7 +101,6 @@
   }
 
   // ─── Location step ─────────────────────────────────────────────────────
-  const yearNow = new Date().getFullYear();
   let lat = $state<number | null>(untrack(() => data.location?.current?.lat ?? null));
   let lon = $state<number | null>(untrack(() => data.location?.current?.lon ?? null));
   let geoBusy = $state(false);
@@ -117,11 +118,7 @@
     return mmdd ? `${yearNow}-${mmdd}` : '';
   }
   function prettyMmDd(mmdd: string): string {
-    const [m, d] = mmdd.split('-').map(Number);
-    return new Date(yearNow, m - 1, d).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric'
-    });
+    return fmt.day(`${yearNow}-${mmdd}`, 'month-day');
   }
 
   function useMyLocation() {
@@ -399,7 +396,7 @@
       {:else if data.step === 'fields' && data.map}
         <div class="tips">
           <div><strong>1.</strong> Use the map toolbar to draw the outline of a field.</div>
-          <div><strong>2.</strong> Draw the blocks inside it. Acres fill in from the shape.</div>
+          <div><strong>2.</strong> Draw the blocks inside it. Area fills in from the shape.</div>
           <div>
             <strong>No GPS or imagery?</strong> Switch to <em>Dimensions</em> above the map and type each
             field's and block's width and length; they're drawn as boxes.
@@ -511,7 +508,7 @@
               <Layers size={16} aria-hidden="true" />
               {data.summary.blockCount}
               {data.summary.blockCount === 1 ? 'block' : 'blocks'}{data.summary.acres > 0
-                ? `, ${data.summary.acres} acres`
+                ? `, ${fmt.qty(data.summary.acres, 'area')}`
                 : ''}
             </li>
             <li>

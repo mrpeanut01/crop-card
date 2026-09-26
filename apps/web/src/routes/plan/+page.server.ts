@@ -30,6 +30,8 @@ import { loadSeasonSetup } from '$lib/season/setup.server';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { deriveSeasonWorkflow } from '$lib/plan/seasonWorkflow';
 import { planV2EventsFor } from '$lib/plan/planV2Derive';
+import { prefsFor } from '$lib/db/userProfile';
+import { formatCalendarDate, todayYmd } from '$lib/prefs';
 import { listPlanRevisions } from '$lib/plan/revisions';
 import { getActiveSession, listMessages } from '$lib/db/wizardChat';
 import {
@@ -858,10 +860,10 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     const filteredEvents = allEvents.filter((e) => inField(e) && inBlock(e));
 
     // Determine month: ?ym=YYYY-MM, default current.
-    const today = new Date();
+    const todayIso = todayYmd(prefsFor(locals.user?.id));
     const ym = url.searchParams.get('ym');
-    let year = today.getFullYear();
-    let month = today.getMonth();
+    let year = parseInt(todayIso.slice(0, 4), 10);
+    let month = parseInt(todayIso.slice(5, 7), 10) - 1;
     if (ym) {
       const m = ym.match(/^(\d{4})-(\d{2})$/);
       if (m) {
@@ -869,10 +871,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         month = parseInt(m[2], 10) - 1;
       }
     }
-    const firstOfMonth = new Date(year, month, 1);
-    const gridStart = new Date(firstOfMonth);
-    gridStart.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
-    const todayIso = today.toISOString().slice(0, 10);
+    const firstOfMonth = new Date(Date.UTC(year, month, 1));
+    const gridStart = new Date(firstOfMonth.getTime() - firstOfMonth.getUTCDay() * DAY_MS);
     const grid: DayCell[] = [];
     for (let i = 0; i < 42; i++) {
       const d = new Date(gridStart.getTime() + i * DAY_MS);
@@ -884,19 +884,24 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         .sort((a, b) => a.startMs - b.startMs);
       grid.push({
         iso,
-        inMonth: d.getMonth() === month,
+        inMonth: d.getUTCMonth() === month,
         isToday: iso === todayIso,
         events: eventsThisDay
       });
     }
-    const prev = new Date(year, month - 1, 1);
-    const next = new Date(year, month + 1, 1);
-    const fmtYM = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const prev = new Date(Date.UTC(year, month - 1, 1));
+    const next = new Date(Date.UTC(year, month + 1, 1));
+    const fmtYM = (d: Date) =>
+      `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 
     return {
       ...base,
       calendarGrid: grid,
-      monthLabel: firstOfMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+      monthLabel: formatCalendarDate(firstOfMonth, 'month-day', {
+        month: 'long',
+        day: undefined,
+        year: 'numeric'
+      }),
       prev: fmtYM(prev),
       next: fmtYM(next),
       eventCountTotal: filteredEvents.length,

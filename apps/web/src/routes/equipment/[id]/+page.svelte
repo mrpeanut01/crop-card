@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
 
   let { data } = $props();
@@ -91,8 +92,12 @@
     }
   }
 
-  function fmt(ts?: number) {
-    return ts ? new Date(ts).toLocaleString() : '—';
+  function fmtTs(ts?: number | null) {
+    return ts ? fmt.instant(ts, 'datetime') : '—';
+  }
+
+  function metricGpa(gpa: number): string {
+    return currentPrefs().units === 'metric' ? ` (${fmt.qty(gpa, 'volumePerArea')})` : '';
   }
 </script>
 
@@ -139,9 +144,9 @@
         {#if eq.state.calibratedGpa == null}
           <span class="warn">Uncalibrated</span>
         {:else}
-          {eq.state.calibratedGpa}
+          {eq.state.calibratedGpa}{metricGpa(eq.state.calibratedGpa)}
           {#if eq.state.calibrationDate}
-            <small>({fmt(eq.state.calibrationDate)})</small>
+            <small>({fmtTs(eq.state.calibrationDate)})</small>
           {/if}
         {/if}
       </dd>
@@ -149,17 +154,17 @@
       <dd>
         {#if eq.state.lastChemistryClass}
           <span class="warn">{eq.state.lastChemistryClass}</span>
-          <small>at {fmt(eq.state.lastUsedAt)}</small>
+          <small>at {fmtTs(eq.state.lastUsedAt)}</small>
         {:else}
           <span class="ok">clean</span>
         {/if}
       </dd>
       <dt>Last decon</dt>
-      <dd>{fmt(eq.state.lastDeconAt)}</dd>
+      <dd>{fmtTs(eq.state.lastDeconAt)}</dd>
       {#if eq.state.winterizedAt}
         <dt>Winterized</dt>
         <dd>
-          <span class="ok">{fmt(eq.state.winterizedAt)}</span>
+          <span class="ok">{fmtTs(eq.state.winterizedAt)}</span>
           <small>· Recalibrate in spring</small>
         </dd>
       {/if}
@@ -167,7 +172,7 @@
       <dt>Hour meter</dt>
       <dd>{eq.state.hourMeter ?? '—'}</dd>
       <dt>Last used</dt>
-      <dd>{fmt(eq.state.lastUsedAt)}</dd>
+      <dd>{fmtTs(eq.state.lastUsedAt)}</dd>
     {/if}
   </dl>
   {#if eq.notes}<p class="notes">{eq.notes}</p>{/if}
@@ -213,7 +218,7 @@
         <li class="log-entry kind-{entry.kind}">
           <header>
             <span class="kind">{entry.kind}</span>
-            <time>{fmt(entry.occurredAt)}</time>
+            <time>{fmtTs(entry.occurredAt)}</time>
           </header>
           {#if entry.notes}<p>{entry.notes}</p>{/if}
           {#if entry.payload}

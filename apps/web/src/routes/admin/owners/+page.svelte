@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { fmt } from '$lib/prefsState.svelte';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -95,7 +96,7 @@
             </td>
             <td>{o.currentPeriodAiCalls.toLocaleString()}</td>
             <td>{o.currentPeriodSprayEvents.toLocaleString()}</td>
-            <td>{new Date(o.createdAt).toLocaleDateString()}</td>
+            <td>{fmt.instant(o.createdAt, 'date')}</td>
             <td>
               <form method="POST" action="?/impersonate" use:enhance>
                 <input type="hidden" name="ownerId" value={o.id} />
@@ -115,7 +116,7 @@
       <tbody>
         {#each data.audit as a (a.id)}
           <tr>
-            <td>{new Date(a.at).toLocaleString()}</td>
+            <td>{fmt.instant(a.at)}</td>
             <td><code>{a.superadminUserId}</code></td>
             <td>{a.action}</td>
             <td>{a.ownerId ?? '—'}</td>

@@ -12,6 +12,7 @@
    */
   import InvSection from '../InvSection.svelte';
   import InvKVP from '../InvKVP.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import type { SprayerDetailPayload } from '../../../../routes/inventory/[type]/[id]/+page.server';
 
   type Props = Omit<SprayerDetailPayload, 'type'>;
@@ -23,6 +24,11 @@
   const lastUsed = $derived(equipment.state.lastUsedAt);
   const lastDecon = $derived(equipment.state.lastDeconAt);
   const deconRequired = $derived(!!(lastUsed && (!lastDecon || lastDecon < lastUsed)));
+
+  function gpaText(gpa: number): string {
+    const metric = currentPrefs().units === 'metric' ? ` (${fmt.qty(gpa, 'volumePerArea')})` : '';
+    return `${gpa.toFixed(1)} GPA${metric}`;
+  }
 </script>
 
 <header class="detail-header">
@@ -30,7 +36,7 @@
     <span class="kicker">Sprayer · equipment</span>
     <h1 class="serif">{equipment.label}</h1>
     {#if equipment.state.calibratedGpa != null}
-      <p class="sub mono">{equipment.state.calibratedGpa.toFixed(1)} GPA · calibrated</p>
+      <p class="sub mono">{gpaText(equipment.state.calibratedGpa)} · calibrated</p>
     {:else}
       <p class="sub muted">Not yet calibrated</p>
     {/if}
@@ -49,18 +55,16 @@
     <InvSection title="Calibration" kicker="UC-10 1/128-acre">
       <InvKVP
         label="Measured GPA"
-        value={equipment.state.calibratedGpa != null
-          ? equipment.state.calibratedGpa.toFixed(1)
-          : '—'}
+        value={equipment.state.calibratedGpa != null ? gpaText(equipment.state.calibratedGpa) : '—'}
         tone="mono"
       />
       <InvKVP
         label="Last calibrated"
         value={equipment.state.calibrationDate
-          ? new Date(equipment.state.calibrationDate).toLocaleDateString()
+          ? fmt.instant(equipment.state.calibrationDate, 'date')
           : '—'}
       />
-      <InvKVP label="Tank" value={spec.tankGal != null ? `${spec.tankGal} gal` : '—'} />
+      <InvKVP label="Tank" value={spec.tankGal != null ? fmt.label(spec.tankGal, 'volume') : '—'} />
       <InvKVP label="Nozzle" value={spec.nozzle ?? '—'} />
       <p class="cta-row">
         <a href="/calibrate?sprayer={equipment.id}">Open calibration wizard →</a>
@@ -83,9 +87,7 @@
       {/if}
       <InvKVP
         label="Last decon"
-        value={equipment.state.lastDeconAt
-          ? new Date(equipment.state.lastDeconAt).toLocaleDateString()
-          : '—'}
+        value={equipment.state.lastDeconAt ? fmt.instant(equipment.state.lastDeconAt, 'date') : '—'}
       />
     </InvSection>
   </div>
@@ -96,10 +98,7 @@
         label="Reading"
         value={equipment.state.hourMeter != null ? `${equipment.state.hourMeter} h` : '—'}
       />
-      <InvKVP
-        label="Last used"
-        value={lastUsed ? new Date(lastUsed).toLocaleDateString() : 'Never'}
-      />
+      <InvKVP label="Last used" value={lastUsed ? fmt.instant(lastUsed, 'date') : 'Never'} />
     </InvSection>
 
     <InvSection title="Linked spray events" kicker="Deferred">

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ForecastDay, HayViolation } from '$lib/hay';
   import { untrack } from 'svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -194,7 +195,7 @@
   }
 
   function fmtTs(ms: number | undefined): string {
-    return ms ? new Date(ms).toLocaleString() : '—';
+    return ms ? fmt.instant(ms, 'datetime') : '—';
   }
 </script>
 
@@ -258,8 +259,8 @@
         <thead>
           <tr>
             <th>Date</th>
-            <th>Hi °F</th>
-            <th>Lo °F</th>
+            <th>Hi {fmt.unit('temperature')}</th>
+            <th>Lo {fmt.unit('temperature')}</th>
             <th>Rain %</th>
             <th>Wind</th>
             <th>Note</th>
@@ -268,11 +269,11 @@
         <tbody>
           {#each forecast.slice(0, 5) as d (d.date)}
             <tr class:wet={d.popPct > 30}>
-              <td>{d.date}</td>
-              <td>{d.highF}</td>
-              <td>{d.lowF}</td>
+              <td>{fmt.day(d.date, 'date', { weekday: 'short' })}</td>
+              <td>{fmt.qty(d.highF, 'temperature', { bare: true })}</td>
+              <td>{fmt.qty(d.lowF, 'temperature', { bare: true })}</td>
               <td>{d.popPct}%</td>
-              <td>{d.windMph !== undefined ? `${d.windMph} mph` : '—'}</td>
+              <td>{d.windMph !== undefined ? fmt.qty(d.windMph, 'speed') : '—'}</td>
               <td>{d.shortForecast ?? ''}</td>
             </tr>
           {/each}

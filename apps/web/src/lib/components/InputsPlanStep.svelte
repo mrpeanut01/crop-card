@@ -26,6 +26,12 @@
     InputsPlanScoutTask,
     PlannerWarning
   } from '$lib/plan/inputsPlan';
+  import {
+    formatApplicationRateLine,
+    formatInputAmount,
+    localizeRationale
+  } from '$lib/plan/inputsPlanFormat';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
 
@@ -208,7 +214,7 @@
   }
 
   function fmtDate(ms: number): string {
-    return new Date(ms).toLocaleDateString();
+    return fmt.day(ms);
   }
 
   function fmtSlot(slot: string): string {
@@ -342,14 +348,9 @@
                           compact
                         />
                       </div>
-                      <p class="rationale">{app.rationale}</p>
+                      <p class="rationale">{localizeRationale(app.rationale, currentPrefs())}</p>
                       {#if app.rateAmount != null && app.rateUnit}
-                        <p class="rate-line">
-                          {app.rateAmount}
-                          {app.rateUnit}/ac × {app.acres.toFixed(2)} ac =
-                          {app.totalAmount}
-                          {app.rateUnit}
-                        </p>
+                        <p class="rate-line">{formatApplicationRateLine(app, currentPrefs())}</p>
                       {/if}
                     </div>
                   </label>
@@ -407,10 +408,33 @@
                   <span class="shop-name">{item.displayName}</span>
                 </div>
                 <div class="shop-totals">
-                  <span>Need: <strong>{item.totalNeeded} {item.unit}</strong></span>
-                  <span>On hand: {item.onHand} {item.unit}</span>
+                  <span
+                    >Need: <strong
+                      >{formatInputAmount(
+                        item.totalNeeded,
+                        item.unit,
+                        item.category,
+                        currentPrefs()
+                      )}</strong
+                    ></span
+                  >
+                  <span
+                    >On hand: {formatInputAmount(
+                      item.onHand,
+                      item.unit,
+                      item.category,
+                      currentPrefs()
+                    )}</span
+                  >
                   {#if item.shortfall > 0}
-                    <span class="shortfall">Buy: {item.shortfall} {item.unit}</span>
+                    <span class="shortfall"
+                      >Buy: {formatInputAmount(
+                        item.shortfall,
+                        item.unit,
+                        item.category,
+                        currentPrefs()
+                      )}</span
+                    >
                   {:else}
                     <span class="covered">✓ Covered</span>
                   {/if}

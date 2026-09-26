@@ -2,14 +2,17 @@
   import { Leaf } from 'lucide-svelte';
   import FallbackHarvestRenderer from './FallbackHarvestRenderer.svelte';
   import type { RendererProps } from './types';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { fmtQtyRange, usText } from './format';
 
   const props: RendererProps = $props();
 
   const priorPicks = $derived(props.rendererData?.priorPickCount ?? 0);
   const cutNumber = $derived(priorPicks + 1);
 
-  let cutLb = $state('');
-  let cutHeightInches = $state('');
+  let cutLb = $state<number | null>(null);
+  let cutHeightInches = $state<number | null>(null);
   let boltObserved = $state(false);
 
   async function handleCommit(input: {
@@ -17,9 +20,9 @@
     lotNumber?: string;
   }): Promise<string | null> {
     const tagBits: string[] = [`cut=${cutNumber}`];
-    if (cutHeightInches.trim()) tagBits.push(`cutHeight=${cutHeightInches}"`);
+    if (usText(cutHeightInches)) tagBits.push(`cutHeight=${usText(cutHeightInches)}"`);
     if (boltObserved) tagBits.push('bolt-observed');
-    const quantity = cutLb.trim() ? `${cutLb} lb` : input.quantity;
+    const quantity = usText(cutLb) ? `${usText(cutLb)} lb` : input.quantity;
     const lot = [input.lotNumber, tagBits.join(' / ')].filter(Boolean).join(' · ').trim();
     return props.onCommit({ quantity, lotNumber: lot || undefined });
   }
@@ -31,8 +34,8 @@
     <div>
       <span class="archetype-name">Cut-and-come-again harvest</span>
       <span class="archetype-sub">
-        Cut {cutNumber}. Cut 1-2" above the growing point so the plant can regrow. Re-harvest in 2-3
-        weeks until bolt.
+        Cut {cutNumber}. Cut {fmtQtyRange(1, 2, 'length', currentPrefs())} above the growing point so
+        the plant can regrow. Re-harvest in 2-3 weeks until bolt.
       </span>
     </div>
   </header>
@@ -41,12 +44,22 @@
     <span class="block-title">This cut</span>
     <div class="cut-grid">
       <label class="qfield">
-        <span>Cut weight (lb)</span>
-        <input type="text" inputmode="decimal" placeholder="3.5" bind:value={cutLb} />
+        <span>Cut weight ({fmt.unit('weight')})</span>
+        <UnitInput
+          quantity="weight"
+          suffix={false}
+          placeholder={fmt.qty(3.5, 'weight', { bare: true, digits: 1 })}
+          bind:value={cutLb}
+        />
       </label>
       <label class="qfield">
-        <span>Cut height above crown (in)</span>
-        <input type="text" inputmode="decimal" placeholder="1.5" bind:value={cutHeightInches} />
+        <span>Cut height above crown ({fmt.unit('length')})</span>
+        <UnitInput
+          quantity="length"
+          suffix={false}
+          placeholder={fmt.qty(1.5, 'length', { bare: true })}
+          bind:value={cutHeightInches}
+        />
       </label>
     </div>
     <label class="bolt-check">
@@ -135,7 +148,7 @@
     font-weight: 600;
     color: var(--color-ink-muted);
   }
-  .qfield input {
+  .qfield :global(input) {
     font-family: var(--font-mono, ui-monospace, monospace);
     font-size: 14px;
     padding: 8px 10px;

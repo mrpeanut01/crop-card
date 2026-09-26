@@ -13,6 +13,7 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import type { PlantingRecord } from '$lib/db/blocks';
   import { plantingStatus } from '$lib/plan/planV2Derive';
+  import { fmt } from '$lib/prefsState.svelte';
 
   export type PlantingSourceTag =
     'AI plan' | 'Companion AI' | 'Carry-forward' | 'Manual' | 'Perennial';
@@ -79,17 +80,13 @@
   const color = $derived(plantingColor(planting.id));
   const plantedLabel = $derived.by(() => {
     if (!planting.plantingDate) return 'planned';
-    return new Date(planting.plantingDate).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return fmt.day(planting.plantingDate, 'date');
   });
   const harvestLabel = $derived.by(() => {
     if (harvestStart) return harvestStart;
     if (!planting.plantingDate || !daysToMaturity) return '—';
     const ms = planting.plantingDate + daysToMaturity * 24 * 60 * 60 * 1000;
-    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return fmt.day(ms, 'month-day');
   });
   const areaLabel = $derived.by(() => {
     if (planting.quantityPlanted !== undefined && planting.quantityUnit) {

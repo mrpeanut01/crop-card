@@ -5,6 +5,7 @@ import type { CropPlugin } from '$lib/plugins/schemas';
 import {
   buildPollinationLayer,
   computePollinationConstraints,
+  pollinationNote,
   renderPollinationPromptSection
 } from './pollinationLayer';
 
@@ -327,5 +328,30 @@ describe('renderPollinationPromptSection', () => {
     const rendered = renderPollinationPromptSection(layer, input);
     expect(rendered).toMatch(/no recorded geometry/);
     expect(rendered).toMatch(/No-Geom Block/);
+  });
+});
+
+describe('pollinationNote', () => {
+  const base = {
+    pairDisplayNames: ['Bantam', 'Silver Queen'] as [string, string],
+    blockNames: ['A', 'B'] as [string, string],
+    staggerDays: 14
+  };
+  it('renders feet by default and metres for metric users', () => {
+    const c = { ...base, kind: 'must-stagger' as const, distanceFt: 109.4 };
+    expect(pollinationNote(c)).toBe(
+      "Bantam (A) and Silver Queen (B) are only 109 ft apart — schedule plantings ≥14 d apart so their flowering windows don't overlap."
+    );
+    expect(pollinationNote(c, { units: 'metric' })).toContain('are only 33 m apart');
+    expect(
+      pollinationNote({ ...base, kind: 'isolated-spatially', distanceFt: 365 }, { units: 'metric' })
+    ).toBe(
+      "Bantam on A is 111 m from Silver Queen on B — far enough apart that cross-pollination isn't an issue."
+    );
+  });
+  it('explains missing geometry without a distance', () => {
+    expect(pollinationNote({ ...base, kind: 'geometry-missing', distanceFt: null })).toMatch(
+      /^Couldn't check isolation between A and B/
+    );
   });
 });

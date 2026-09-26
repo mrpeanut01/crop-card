@@ -6,11 +6,12 @@
    * [`direction-almanac-today.jsx`](../../../../docs/design/almanac/direction-almanac-today.jsx)
    * (lines 312–350). Day cards with task items color-coded by kind.
    *
-   * Renders a 7-day window starting "today" (locale-derived). Items are
+   * Renders a 7-day window starting the user's "today" (their time zone). Items are
    * keyed by ISO date; the parent fans the tasks + derived events into
    * the map before passing in.
    */
   import Card from '$lib/components/ui/Card.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   export type WeekKind = 'scout' | 'spray' | 'harvest' | 'fertility' | 'planting' | 'task';
   export interface WeekItem {
@@ -26,7 +27,7 @@
   ];
 
   interface Props {
-    /** ms timestamp for today (local 00:00). */
+    /** ms timestamp for the user's today at 00:00 UTC (`Date.parse(fmt.today())`). */
     todayStartMs: number;
     /** Map keyed by YYYY-MM-DD → items for that day. Should cover 84 days for Season view. */
     items: Record<string, WeekItem[]>;
@@ -51,8 +52,8 @@
       const iso = d.toISOString().slice(0, 10);
       out.push({
         iso,
-        weekday: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        day: d.getDate(),
+        weekday: fmt.day(iso, 'weekday'),
+        day: d.getUTCDate(),
         isToday: i === 0,
         items: items[iso] ?? []
       });

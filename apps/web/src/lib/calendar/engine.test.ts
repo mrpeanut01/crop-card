@@ -183,6 +183,21 @@ describe('FR-18 cover-crop termination tied to next cash-crop date', () => {
     expect(term!.detail?.nextCashCropPlantingId).toBe('planting-corn');
   });
 
+  it('names the cash-crop planting day without shifting it by time zone', () => {
+    const coverPlant = planting(cover, Date.UTC(2025, 8, 1));
+    const cornNext = {
+      id: 'planting-corn',
+      blockId: coverPlant.blockId,
+      cropPluginId: corn.pluginId,
+      varietyDisplayName: corn.displayName,
+      plantingDate: Date.UTC(2026, 4, 1)
+    };
+    const term = eventsForPlanting(coverPlant, cover, {
+      blockPlantings: [coverPlant, cornNext]
+    }).find((e) => e.kind === 'cover-termination');
+    expect(term!.body).toContain('planting on May 1, 2026.');
+  });
+
   it('falls back to generic +180 day offset when no follow-up planting exists', () => {
     const coverPlant = planting(cover, Date.UTC(2025, 8, 1));
     const events = eventsForPlanting(coverPlant, cover, { blockPlantings: [coverPlant] });

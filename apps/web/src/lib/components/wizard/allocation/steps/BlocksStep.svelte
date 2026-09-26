@@ -1,5 +1,7 @@
 <script lang="ts">
   import { getWizardContext } from '../wizardState.svelte';
+  import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   const w = getWizardContext();
   const blocks = $derived(w.props.blocks);
@@ -71,7 +73,7 @@
   <ul class="aw-blocklist">
     {#each blocks as b (b.id)}
       {@const checked = w.selectedBlockIds.has(b.id)}
-      {@const acresText = b.acres !== undefined ? `${b.acres.toFixed(2)} ac` : null}
+      {@const acresText = b.acres !== undefined ? fmt.qty(b.acres, 'area', { digits: 2 }) : null}
       {@const sunText = b.sunExposure ? `${b.sunExposure} sun` : null}
       {@const plantingsText =
         b.plantings.length > 0
@@ -105,8 +107,8 @@
     <input type="text" bind:value={newName} placeholder="e.g. North beds" disabled={adding} />
   </label>
   <label class="aw-add-field aw-add-acres">
-    <span>Acres (optional)</span>
-    <input type="number" min="0" step="0.01" bind:value={newAcres} disabled={adding} />
+    <span>Area (optional)</span>
+    <UnitInput quantity="area" min={0} bind:value={newAcres} disabled={adding} />
   </label>
   <button type="submit" class="btn-secondary" disabled={adding || !w.props.onRefreshParent}>
     {adding ? 'Adding…' : '+ Add block'}
@@ -240,7 +242,8 @@
   .aw-add-acres {
     flex: 0 1 9rem;
   }
-  .aw-add-field input {
+  .aw-add-field input,
+  .aw-add-field :global(.unit-input > input) {
     min-height: 48px;
     padding: 0 0.7rem;
     border: 1px solid #cbd5cb;

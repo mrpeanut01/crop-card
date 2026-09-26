@@ -4,6 +4,7 @@
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
   import BlockMap from '$lib/components/BlockMap.svelte';
+  import { fmt as prefsFmt } from '$lib/prefsState.svelte';
   import CropPickerModal from '$lib/components/CropPickerModal.svelte';
   import BlockSwimlane from '$lib/components/BlockSwimlane.svelte';
   import CropPalette from '$lib/components/CropPalette.svelte';
@@ -140,13 +141,7 @@
   ) {
     plantingError = null;
     try {
-      // HTML `<input type="date">` returns YYYY-MM-DD which `new Date(...)`
-      // parses as UTC midnight; in a western-hemisphere zone that displays
-      // back as the *previous* day. Append a local-midnight time so the
-      // stored ms matches the operator's calendar date.
-      const plantingDateMs = plantingDateIso
-        ? new Date(`${plantingDateIso}T00:00:00`).getTime()
-        : null;
+      const plantingDateMs = plantingDateIso ? Date.parse(plantingDateIso) : null;
       const res = await fetch(`/api/blocks/${encodeURIComponent(blockId)}/plantings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1796,12 +1791,8 @@
     }))
   );
 
-  function fmt(ts?: number) {
-    return ts ? new Date(ts).toLocaleDateString() : '—';
-  }
-
-  function fmtShort(ms: number): string {
-    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  function lenRange(r: { min: number; max: number }): string {
+    return `${prefsFmt.qty(r.min, 'length', { bare: true })}–${prefsFmt.qty(r.max, 'length')}`;
   }
 
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -2044,7 +2035,7 @@
         {#if data.canEdit}
           <div class="season-meta-row">
             <span class="season-meta">
-              Last updated {new Date(data.seasonSetup.setAt).toLocaleString()}
+              Last updated {prefsFmt.instant(data.seasonSetup.setAt)}
             </span>
             <button type="button" class="edit-season-btn" onclick={() => (editingSeason = true)}>
               Edit season settings
@@ -2179,7 +2170,9 @@
               {:else}
                 {#each fieldBlocks as block (block.id)}
                   {@const blockAcresDisplay =
-                    block.acres !== undefined ? `${block.acres.toFixed(2)} ac` : null}
+                    block.acres !== undefined
+                      ? prefsFmt.qty(block.acres, 'area', { digits: 2 })
+                      : null}
                   <div
                     class="crop-block"
                     class:dragging={cropsReorderDragId === block.id}
@@ -2244,27 +2237,19 @@
                                   ' d'
                                 : '',
                               guide?.soilTempMinF !== undefined
-                                ? 'Soil min: ' + guide.soilTempMinF + '°F'
+                                ? 'Soil min: ' + prefsFmt.qty(guide.soilTempMinF, 'temperature')
                                 : '',
                               guide?.rowSpacingIn !== undefined
-                                ? 'Row spacing: ' + guide.rowSpacingIn + ' in'
+                                ? 'Row spacing: ' + prefsFmt.qty(guide.rowSpacingIn, 'length')
                                 : '',
                               guide?.inRowSpacingIn
-                                ? 'In-row: ' +
-                                  guide.inRowSpacingIn.min +
-                                  '–' +
-                                  guide.inRowSpacingIn.max +
-                                  ' in'
+                                ? 'In-row: ' + lenRange(guide.inRowSpacingIn)
                                 : '',
                               guide?.seedDepthIn
-                                ? 'Seed depth: ' +
-                                  guide.seedDepthIn.min +
-                                  '–' +
-                                  guide.seedDepthIn.max +
-                                  ' in'
+                                ? 'Seed depth: ' + lenRange(guide.seedDepthIn)
                                 : '',
                               guide?.seedsPerAcre !== undefined
-                                ? 'Seeds/acre: ' + guide.seedsPerAcre.toLocaleString()
+                                ? 'Seeds: ' + prefsFmt.qty(guide.seedsPerAcre, 'perArea')
                                 : ''
                             ]
                               .filter(Boolean)
@@ -2310,10 +2295,7 @@
                               </span>
                               {#if p.plantingDate}
                                 <span class="crop-date"
-                                  >{new Date(p.plantingDate).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}</span
+                                  >{prefsFmt.day(p.plantingDate, 'month-day')}</span
                                 >
                               {/if}
                             </div>
@@ -2327,17 +2309,15 @@
                                   </dd>
                                 {/if}
                                 {#if guide?.soilTempMinF !== undefined}<dt>Soil temp min</dt>
-                                  <dd>{guide.soilTempMinF}°F</dd>{/if}
+                                  <dd>{prefsFmt.qty(guide.soilTempMinF, 'temperature')}</dd>{/if}
                                 {#if guide?.rowSpacingIn !== undefined}<dt>Row spacing</dt>
-                                  <dd>{guide.rowSpacingIn} in</dd>{/if}
+                                  <dd>{prefsFmt.qty(guide.rowSpacingIn, 'length')}</dd>{/if}
                                 {#if guide?.inRowSpacingIn}<dt>In-row spacing</dt>
-                                  <dd>
-                                    {guide.inRowSpacingIn.min}–{guide.inRowSpacingIn.max} in
-                                  </dd>{/if}
+                                  <dd>{lenRange(guide.inRowSpacingIn)}</dd>{/if}
                                 {#if guide?.seedDepthIn}<dt>Seed depth</dt>
-                                  <dd>{guide.seedDepthIn.min}–{guide.seedDepthIn.max} in</dd>{/if}
-                                {#if guide?.seedsPerAcre !== undefined}<dt>Seeds / acre</dt>
-                                  <dd>{guide.seedsPerAcre.toLocaleString()}</dd>{/if}
+                                  <dd>{lenRange(guide.seedDepthIn)}</dd>{/if}
+                                {#if guide?.seedsPerAcre !== undefined}<dt>Seeding rate</dt>
+                                  <dd>{prefsFmt.qty(guide.seedsPerAcre, 'perArea')}</dd>{/if}
                                 {#if !catalogItem?.daysToMaturity && !guide}
                                   <dt>Info</dt>
                                   <dd>No guide available</dd>
@@ -3202,7 +3182,7 @@
               {#if m.preHarvestIntervalDays}<dt>Pre-harvest interval</dt>
                 <dd>{m.preHarvestIntervalDays} d</dd>{/if}
               {#if m.soilTempMinF !== undefined}<dt>Min soil temp</dt>
-                <dd>{m.soilTempMinF}°F</dd>{/if}
+                <dd>{prefsFmt.qty(m.soilTempMinF, 'temperature')}</dd>{/if}
             </dl>
           {/if}
           <div class="actions">
@@ -3369,18 +3349,10 @@
                   <div class="preview-card-header">
                     <strong>Succession {i + 1}</strong>
                     <span class="sched-chip chip-plant"
-                      >Plant {new Date(row.plantingDateMs).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}</span
+                      >Plant {prefsFmt.day(row.plantingDateMs, 'date')}</span
                     >
                     <span class="sched-chip chip-harvest"
-                      >Harvest by {new Date(row.targetHarvestMs).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}</span
+                      >Harvest by {prefsFmt.day(row.targetHarvestMs, 'date')}</span
                     >
                     {#if row.phiConflict}<span class="phi-badge">⚠ PHI conflict</span>{/if}
                     {#if row.soilTooEarly}<span class="warn">⚠ Soil may be cold</span>{/if}
@@ -3390,13 +3362,10 @@
                       {#each row.prepActivities as act (act.title)}
                         <li class="prep-item">
                           <span class="prep-dates"
-                            >{new Date(act.startMs).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}–{new Date(act.endMs).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}</span
+                            >{prefsFmt.day(act.startMs, 'month-day')}–{prefsFmt.day(
+                              act.endMs,
+                              'month-day'
+                            )}</span
                           >
                           <span class="prep-title">{act.title}</span>
                         </li>
@@ -3409,13 +3378,10 @@
                         <li class="sched-event">
                           <span class="sched-dot spray-window"></span>
                           <span
-                            >{s.title}: {new Date(s.startMs).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}–{new Date(s.endMs).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}</span
+                            >{s.title}: {prefsFmt.day(s.startMs, 'month-day')}–{prefsFmt.day(
+                              s.endMs,
+                              'month-day'
+                            )}</span
                           >
                         </li>
                       {/each}
@@ -3444,10 +3410,7 @@
               <li class={r.ok ? 'result-ok' : 'result-warn'}>
                 {r.ok ? '✓' : '✗'}
                 {data.blocks.find((b) => b.id === r.blockId)?.name ?? r.blockId}
-                — Plant {new Date(r.plantMs).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric'
-                })}
+                — Plant {prefsFmt.day(r.plantMs, 'month-day')}
                 {#if !r.ok && r.error}<span class="error"> ({r.error})</span>{/if}
               </li>
             {/each}
@@ -3465,10 +3428,7 @@
               <li class={r.ok ? 'result-ok' : 'result-warn'}>
                 {r.ok ? '✓' : '✗'}
                 {data.blocks.find((b) => b.id === r.blockId)?.name ?? r.blockId}
-                — Plant {new Date(r.plantMs).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric'
-                })}
+                — Plant {prefsFmt.day(r.plantMs, 'month-day')}
                 {#if !r.ok && r.error}<span class="error"> ({r.error})</span>{/if}
               </li>
             {/each}

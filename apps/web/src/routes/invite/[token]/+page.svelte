@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { fmt } from '$lib/prefsState.svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
@@ -56,7 +57,8 @@
       <button class="accept" type="submit">Accept invite →</button>
     </form>
     <p class="expires">
-      Expires {new Date(data.expiresAt).toLocaleString()}.
+      Expires {fmt.instant(data.expiresAt)}
+      {fmt.zone(data.expiresAt)}.
     </p>
   {/if}
 </main>

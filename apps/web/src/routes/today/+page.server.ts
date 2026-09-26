@@ -27,6 +27,8 @@ import { derivePriorityAction } from '$lib/today/priorityAction';
 import { summarizeForecastSafely } from '$lib/today/weatherSummary';
 import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
 import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
+import { prefsFor } from '$lib/db/userProfile';
+import { todayYmd } from '$lib/prefs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 type Tab = 'today' | '7d' | '30d' | 'season';
@@ -95,8 +97,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   // Tab-driven derived-event window.
   const now = Date.now();
-  const dayStart = new Date(now);
-  dayStart.setHours(0, 0, 0, 0);
+  const today = todayYmd(prefsFor(locals.user?.id), now);
+  const dayStart = new Date(Date.parse(today));
   const tabWindowDays = tab === '7d' ? 7 : tab === '30d' ? 30 : tab === 'season' ? 200 : 1;
   const tabFromMs = tab === 'today' ? dayStart.getTime() : now;
   const tabToMs = tabFromMs + tabWindowDays * DAY_MS;
@@ -214,7 +216,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const winterizeAlerts = deriveWinterizeAlerts(sprayers, now);
 
   return {
-    today: new Date().toISOString().slice(0, 10),
+    today,
     tab,
     view,
     tabFromMs,

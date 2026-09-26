@@ -5,6 +5,7 @@
   import PluginCandidateCard from '$lib/components/PluginCandidateCard.svelte';
   import ReceiptScan from '$lib/components/ReceiptScan.svelte';
   import { filterRegisteredPlugins } from '$lib/plugins/filterRegistered';
+  import { fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -502,8 +503,8 @@
           <div class="row-line2">
             <span class="summary">{r.summary}</span>
             {#if r.lastChangedAt}
-              <span class="updated" title={new Date(r.lastChangedAt).toISOString()}>
-                {new Date(r.lastChangedAt).toISOString().slice(0, 10)}
+              <span class="updated" title={fmt.instant(r.lastChangedAt, 'datetime')}>
+                {fmt.instant(r.lastChangedAt, 'date')}
               </span>
             {/if}
           </div>

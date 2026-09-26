@@ -23,6 +23,7 @@
     Plus
   } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
+  import { fmt } from '$lib/prefsState.svelte';
 
   export type CompatibilityTone = 'forest' | 'wheat' | 'rust';
   export interface CompatibilityState {
@@ -84,20 +85,20 @@
         <div class="cs-empty">No block selected yet</div>
       {:else if blocks.length === 1}
         <div class="cs-line">
-          {blocks[0].label} · <span class="mono">{totalAc.toFixed(1)} ac</span>
+          {blocks[0].label} · <span class="mono">{fmt.label(totalAc, 'area', { digits: 1 })}</span>
         </div>
       {:else}
         <div class="cs-line strong">
-          <span class="mono">{totalAc.toFixed(1)} ac</span> combined
+          <span class="mono">{fmt.label(totalAc, 'area', { digits: 1 })}</span> combined
         </div>
         <div class="cs-chips">
           {#each blocks as b (b.id)}
-            <span class="chip" title="{b.label} — {b.acres} ac">
+            <span class="chip" title="{b.label} — {fmt.label(b.acres, 'area')}">
               {#if b.color}
                 <span class="dot" style:background={b.color}></span>
               {/if}
               {b.label.replace(/^Block /, '')}
-              <span class="chip-acres mono">{b.acres}ac</span>
+              <span class="chip-acres mono">{fmt.qty(b.acres, 'area')}</span>
             </span>
           {/each}
           {#if onAddBlock}

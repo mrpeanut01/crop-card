@@ -8,20 +8,47 @@
     BLOOM_STATUS_LABEL,
     VERDICT_LABEL
   } from '$lib/records/pollinatorAttestation';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import type { Quantity } from '$lib/prefs';
 
   let { data } = $props();
 
   function fmtTimestamp(ms: number): string {
-    return new Date(ms).toLocaleString('sv-SE', { hour12: false }).slice(0, 16);
+    return new Date(ms)
+      .toLocaleString('sv-SE', { hour12: false, timeZone: currentPrefs().timeZone })
+      .slice(0, 16);
   }
 
-  function fmtDate(ms: number | null | undefined): string {
-    if (ms == null) return '—';
-    return new Date(ms).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  const QTY_KEYS: Record<string, Quantity> = {
+    nLbPerAcre: 'weightPerArea',
+    pLbPerAcre: 'weightPerArea',
+    kLbPerAcre: 'weightPerArea'
+  };
+  const INSTANT_KEYS = new Set(['reEntryClearAt', 'preHarvestClearAt']);
+  const KEY_LABEL: Record<string, string> = {
+    nLbPerAcre: 'N delivered',
+    pLbPerAcre: 'P delivered',
+    kLbPerAcre: 'K delivered',
+    reEntryClearAt: 'Re-entry clear',
+    preHarvestClearAt: 'Pre-harvest clear'
+  };
+
+  function fmtConditions(c: Record<string, unknown>): string {
+    const parts: string[] = [];
+    if (typeof c.windMph === 'number') parts.push(`wind ${fmt.qty(c.windMph, 'speed')}`);
+    if (typeof c.tempF === 'number') parts.push(fmt.qty(c.tempF, 'temperature'));
+    if (typeof c.rainForecastMmNext24h === 'number')
+      parts.push(`rain next 24 h ${fmt.qty(c.rainForecastMmNext24h / 25.4, 'precip')}`);
+    if (c.conditionsProvenance === 'default') parts.push('default readings');
+    return parts.join(' · ');
+  }
+
+  function fmtField(k: string, v: unknown): string {
+    if (typeof v === 'number' && QTY_KEYS[k]) return fmt.qty(v, QTY_KEYS[k]);
+    if (typeof v === 'number' && INSTANT_KEYS.has(k)) return fmt.instant(v);
+    if (k === 'conditions' && typeof v === 'object' && v !== null && 'windMph' in v)
+      return fmtConditions(v as Record<string, unknown>);
+    return fmtVal(v);
   }
 
   /**
@@ -48,7 +75,7 @@
 
   function fmtVal(v: unknown): string {
     if (v == null) return '—';
-    if (typeof v === 'number' && v > 1_000_000_000_000) return fmtDate(v);
+    if (typeof v === 'number' && v > 1_000_000_000_000) return fmt.instant(v);
     if (typeof v === 'object') return JSON.stringify(v, null, 2);
     return String(v);
   }
@@ -98,7 +125,11 @@
 <section class="card">
   <div class="card-row">
     <div class="card-label">When</div>
-    <div class="card-value mono">{fmtTimestamp(data.occurredAt)}</div>
+    <div class="card-value mono">
+      {data.kind === 'planting'
+        ? fmt.day(data.occurredAt)
+        : `${fmtTimestamp(data.occurredAt)} ${fmt.zone(data.occurredAt)}`}
+    </div>
   </div>
   {#if data.performerLabel}
     <div class="card-row">
@@ -148,12 +179,13 @@
   <h2 class="card-title">Detail</h2>
   <dl class="kv">
     {#each entries(data.detail) as [k, v] (k)}
-      <dt>{k}</dt>
+      {@const shown = fmtField(k, v)}
+      <dt>{KEY_LABEL[k] ?? k}</dt>
       <dd>
-        {#if typeof v === 'object' && v !== null}
-          <pre class="mono">{fmtVal(v)}</pre>
+        {#if shown.includes('\n')}
+          <pre class="mono">{shown}</pre>
         {:else}
-          <span class="mono">{fmtVal(v)}</span>
+          <span class="mono">{shown}</span>
         {/if}
       </dd>
     {/each}

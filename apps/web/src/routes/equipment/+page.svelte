@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { invalidateAll } from '$app/navigation';
 
   let { data } = $props();
@@ -115,8 +116,12 @@
     }
   }
 
-  function fmt(ts?: number) {
-    return ts ? new Date(ts).toLocaleDateString() : '—';
+  function fmtTs(ts?: number | null) {
+    return ts ? fmt.instant(ts, 'date') : '—';
+  }
+
+  function metricGpa(gpa: number): string {
+    return currentPrefs().units === 'metric' ? ` (${fmt.qty(gpa, 'volumePerArea')})` : '';
   }
 
   async function deleteEquipment(id: string, label: string) {
@@ -228,7 +233,7 @@
         <header>
           <a href="/equipment/{e.id}"><strong>{e.label}</strong></a>
           <span class="type-badge">{e.typeName}</span>
-          {#if e.retiredAt}<span class="retired">retired {fmt(e.retiredAt)}</span>{/if}
+          {#if e.retiredAt}<span class="retired">retired {fmtTs(e.retiredAt)}</span>{/if}
           <button
             class="delete-btn"
             onclick={() => deleteEquipment(e.id, e.label)}
@@ -241,7 +246,11 @@
         <dl>
           {#if e.type === 'sprayer'}
             <dt>GPA</dt>
-            <dd>{e.state.calibratedGpa ?? '—'}</dd>
+            <dd>
+              {e.state.calibratedGpa != null
+                ? `${e.state.calibratedGpa}${metricGpa(e.state.calibratedGpa)}`
+                : '—'}
+            </dd>
             <dt>Last load</dt>
             <dd>
               {#if e.state.lastChemistryClass}
@@ -252,12 +261,12 @@
               {/if}
             </dd>
             <dt>Last decon</dt>
-            <dd>{fmt(e.state.lastDeconAt)}</dd>
+            <dd>{fmtTs(e.state.lastDeconAt)}</dd>
           {:else}
             <dt>Hour meter</dt>
             <dd>{e.state.hourMeter ?? '—'}</dd>
             <dt>Last used</dt>
-            <dd>{fmt(e.state.lastUsedAt)}</dd>
+            <dd>{fmtTs(e.state.lastUsedAt)}</dd>
           {/if}
         </dl>
         {#if e.notes}<p class="notes">{e.notes}</p>{/if}

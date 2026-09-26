@@ -6,6 +6,7 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import LockPill from '$lib/components/ui/LockPill.svelte';
   import { KIND_LABEL, KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
+  import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   let { data } = $props();
 
@@ -93,18 +94,19 @@
   }
 
   function fmtTimestamp(ms: number): string {
-    const d = new Date(ms);
-    return d.toLocaleString('sv-SE', { hour12: false }).slice(0, 16);
+    return new Date(ms)
+      .toLocaleString('sv-SE', { hour12: false, timeZone: currentPrefs().timeZone })
+      .slice(0, 16);
+  }
+
+  function fmtRowTime(r: { kind: RecordKind; occurredAt: number }): string {
+    return r.kind === 'planting'
+      ? new Date(r.occurredAt).toISOString().slice(0, 10)
+      : fmtTimestamp(r.occurredAt);
   }
 
   function fmtDate(ms: number | null): string {
-    return ms
-      ? new Date(ms).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        })
-      : '—';
+    return ms ? fmt.instant(ms, 'date') : '—';
   }
 
   const summary = $derived(data.summary);
@@ -130,7 +132,7 @@
   }
 
   function fmtAcres(acres: number): string {
-    return acres.toFixed(2);
+    return fmt.qty(acres, 'area', { digits: 2, bare: true });
   }
 
   function fmtMoisture(m: { min: number | null; mean: number | null; max: number | null }): string {
@@ -237,7 +239,9 @@
         <table class="mini-table">
           <thead>
             <tr
-              ><th>Product</th><th>Class</th><th class="num">Apps</th><th class="num">Acres</th></tr
+              ><th>Product</th><th>Class</th><th class="num">Apps</th><th class="num"
+                >Area ({fmt.unit('area')})</th
+              ></tr
             >
           </thead>
           <tbody>
@@ -261,7 +265,10 @@
       {#if yearSummary.chemistryClassAcreage.length}
         <table class="mini-table">
           <thead>
-            <tr><th>Class</th><th class="num">Apps</th><th class="num">Acres</th></tr>
+            <tr
+              ><th>Class</th><th class="num">Apps</th><th class="num">Area ({fmt.unit('area')})</th
+              ></tr
+            >
           </thead>
           <tbody>
             {#each yearSummary.chemistryClassAcreage as c (c.className)}
@@ -452,7 +459,7 @@
       <table class="ledger" aria-label="Records ledger">
         <thead>
           <tr>
-            <th scope="col">Timestamp</th>
+            <th scope="col">Timestamp ({fmt.zone()})</th>
             <th scope="col">Kind</th>
             <th scope="col">Block · planting</th>
             <th scope="col">Detail</th>
@@ -464,7 +471,7 @@
         <tbody>
           {#each data.records as r (r.id)}
             <tr>
-              <td class="mono ts">{fmtTimestamp(r.occurredAt)}</td>
+              <td class="mono ts">{fmtRowTime(r)}</td>
               <td>
                 <Pill tone={KIND_TONE[r.kind]}>{KIND_LABEL[r.kind]}</Pill>
               </td>
@@ -488,7 +495,7 @@
                 <a
                   class="drill"
                   href={`/records/${r.kind}/${r.rowId}`}
-                  aria-label={`Open ${KIND_LABEL[r.kind]} record from ${fmtTimestamp(r.occurredAt)}`}
+                  aria-label={`Open ${KIND_LABEL[r.kind]} record from ${fmtRowTime(r)}`}
                 >
                   <ChevronRight size={14} />
                 </a>

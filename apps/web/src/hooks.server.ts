@@ -92,7 +92,11 @@ const ANONYMOUS_PATHS = new Set([
   '/api/auth/magic-link', // UC-17 — request an email sign-in link pre-auth.
   '/auth/verify', // UC-17 — redeem the link; mints the HMAC session.
   '/api/openapi.json', // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
-  '/api/billing/stripe-webhook' // Stripe POSTs without a session; the signature is the auth.
+  '/api/billing/stripe-webhook', // Stripe POSTs without a session; the signature is the auth.
+  // Phase 30F — the /cards route renders with ssr=false, so this path is a
+  // data-free HTML shell the service worker precaches at install. Its data
+  // (/cards/__data.json, /api/cards/snapshot) still needs a session.
+  '/cards'
 ]);
 const ANONYMOUS_PATH_PREFIXES = ['/invite/', '/api/health/'];
 const ANONYMOUS_STATIC_PATHS = new Set([

@@ -50,6 +50,16 @@ export interface CardModel {
   rulesVersion?: string;
   provenance: CardProvenance[];
   href: string;
+  /** Lines shown on every variant, printed included (Spray Card cautions). */
+  notices?: string[];
+  /** After this long past `asOf` the card shows a stale banner. */
+  staleAfterMs?: number;
+}
+
+export const STALE_NOTICE = 'This card is more than a day old. Refresh it before you rely on it.';
+
+export function isCardStale(card: Pick<CardModel, 'asOf' | 'staleAfterMs'>, now: number): boolean {
+  return card.staleAfterMs !== undefined && now - card.asOf > card.staleAfterMs;
 }
 
 export type CardVariant = 'screen' | 'compact' | 'print';

@@ -1,6 +1,12 @@
 <script lang="ts">
   import Provenance from '$lib/components/ui/Provenance.svelte';
-  import { CARD_KIND_LABEL, type CardModel, type CardVariant } from '$lib/cards/model';
+  import {
+    CARD_KIND_LABEL,
+    STALE_NOTICE,
+    isCardStale,
+    type CardModel,
+    type CardVariant
+  } from '$lib/cards/model';
   import type { QrPath } from '$lib/cards/qr';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
 
@@ -11,11 +17,21 @@
     /** Print only: the live-card link and its QR, built by CardPrintSheet so
      *  the encoder stays out of screen-only bundles. */
     printLink?: { url: string; qr: QrPath } | null;
+    /** Epoch ms the stale check compares `asOf` against. */
+    now?: number;
   }
 
   const COMPACT_FACTS = 2;
 
-  const { card, variant = 'screen', prefs = DEFAULT_PREFS, printLink = null }: Props = $props();
+  const {
+    card,
+    variant = 'screen',
+    prefs = DEFAULT_PREFS,
+    printLink = null,
+    now = Date.now()
+  }: Props = $props();
+
+  const stale = $derived(isCardStale(card, now));
 
   const titleId = $derived(`card-title-${variant}-${card.key}`);
   const facts = $derived(variant === 'compact' ? card.facts.slice(0, COMPACT_FACTS) : card.facts);
@@ -46,6 +62,17 @@
       <h3 class="title serif" id={titleId}>{card.title}</h3>
     {:else}
       <h3 class="title serif" id={titleId}><a href={card.href}>{card.title}</a></h3>
+    {/if}
+
+    {#if stale}
+      <p class="stale" role="status">{STALE_NOTICE}</p>
+    {/if}
+    {#if card.notices?.length}
+      <ul class="notices">
+        {#each card.notices as n, i (i)}
+          <li>{n}</li>
+        {/each}
+      </ul>
     {/if}
 
     <div class="content">
@@ -270,6 +297,25 @@
   .next-label {
     font-weight: 700;
   }
+  .stale {
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-input);
+    background: var(--pill-rust-bg);
+    border: 1px solid var(--pill-rust-bd);
+    color: var(--pill-rust-fg);
+    font-weight: 600;
+  }
+  .notices {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
   .section h4 {
     margin: 0 0 var(--space-1);
     font-size: var(--font-size-meta);
@@ -358,6 +404,14 @@
   }
   .v-print .facts {
     grid-template-columns: 1fr 1fr;
+  }
+  .v-print .notices,
+  .v-print .stale {
+    font-size: 9pt;
+    color: #000;
+    background: none;
+    border: 0;
+    padding: 0;
   }
   .v-print .foot {
     font-size: 8pt;

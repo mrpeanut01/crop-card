@@ -78,6 +78,10 @@
     display: none !important;
   }
 
+  body:has(.card-print-sheet) :has(> #main-content) > :not(#main-content) {
+    display: none !important;
+  }
+
   :has(.card-print-sheet) {
     padding: 0 !important;
     margin: 0 !important;

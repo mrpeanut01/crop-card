@@ -8,7 +8,11 @@ const config = {
     adapter: adapter({ out: 'build' }),
     alias: {
       $lib: 'src/lib'
-    }
+    },
+    // Phase 30F — root-absolute asset URLs. The service worker answers every
+    // offline /cards/** navigation with the one precached /cards shell, so
+    // its `/_app/…` links must not depend on the depth of the URL it serves.
+    paths: { relative: false }
     // Phase 24 CSRF posture (verified Phase 25, #94):
     // SvelteKit's built-in `kit.csrf.checkOrigin` check only fires for
     // FORM-encoded cross-origin mutations — JSON-encoded /api/** requests

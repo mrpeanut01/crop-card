@@ -17,7 +17,7 @@
    * see prior counts at a glance.
    */
   import { evaluateScout, type ScoutSpot } from '$lib/safety/scout';
-  import { untrack } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { invalidateAll } from '$app/navigation';
   import Card from '$lib/components/ui/Card.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -25,6 +25,16 @@
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
+
+  interface QueuedObservation {
+    id: string;
+    blockId: string;
+    pest: string;
+    metric: string;
+    value: number;
+    occurredAt: number;
+  }
 
   let { data } = $props();
 
@@ -41,6 +51,8 @@
   let saving = $state(false);
   let saveError = $state<string | null>(null);
   let saveSuccess = $state(false);
+  let saveQueued = $state(false);
+  let queued = $state<QueuedObservation[]>([]);
 
   const result = $derived(evaluateScout({ spots, maxWeedHeightInches: maxHeight ?? undefined }));
   const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId));
@@ -48,6 +60,51 @@
   /** Prior observations for the selected block, newest first. Comes from
    *  `listScoutObservations({ blockId, fromMs })` in the loader. */
   const observationsForBlock = $derived(data.observationsByBlock[selectedBlockId] ?? []);
+  const queuedForBlock = $derived(queued.filter((q) => q.blockId === selectedBlockId));
+
+  function toQueued(id: string, payload: unknown): QueuedObservation | null {
+    if (!payload || typeof payload !== 'object') return null;
+    const p = payload as Partial<QueuedObservation>;
+    if (typeof p.blockId !== 'string' || typeof p.value !== 'number') return null;
+    return {
+      id,
+      blockId: p.blockId,
+      pest: String(p.pest ?? ''),
+      metric: String(p.metric ?? ''),
+      value: p.value,
+      occurredAt: typeof p.occurredAt === 'number' ? p.occurredAt : Date.now()
+    };
+  }
+
+  async function refreshQueued(): Promise<void> {
+    try {
+      const { listPendingForActiveOwner } = await import('$lib/client/syncQueue');
+      const rows = await listPendingForActiveOwner();
+      const next = rows
+        .filter((r) => r.kind === 'scout')
+        .map((r) => toQueued(r.id, r.payload))
+        .filter((q): q is QueuedObservation => q !== null)
+        .sort((a, b) => b.occurredAt - a.occurredAt);
+      const drained = next.length < queued.length;
+      queued = next;
+      if (drained && navigator.onLine) await invalidateAll();
+    } catch {
+      queued = [];
+    }
+  }
+
+  onMount(() => {
+    void refreshQueued();
+    const timer = setInterval(refreshQueued, 4000);
+    return () => clearInterval(timer);
+  });
+
+  async function queueObservation(payload: Record<string, unknown>): Promise<void> {
+    const { enqueueRecord } = await import('$lib/client/syncQueue');
+    await enqueueRecord('scout', payload);
+    saveQueued = true;
+    await refreshQueued();
+  }
 
   const planSprayHref = $derived.by(() => {
     const params = new URLSearchParams();
@@ -76,6 +133,8 @@
     saving = true;
     saveError = null;
     saveSuccess = false;
+    saveQueued = false;
+    let payload: Record<string, unknown> | null = null;
     try {
       // One observation per scout walk; value is the average count, with
       // raw per-spot counts + the tallest-weed measurement preserved in
@@ -90,17 +149,22 @@
       ]
         .filter(Boolean)
         .join(' ');
+      payload = {
+        blockId: selectedBlockId,
+        pest: 'broadleaf-weed',
+        metric: 'avg-per-10sqft',
+        value: result.averagePer10SqFt,
+        notes,
+        occurredAt: Date.now()
+      };
+      if (navigator.onLine === false) {
+        await queueObservation(payload);
+        return;
+      }
       const res = await fetch('/api/scout/record', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          blockId: selectedBlockId,
-          pest: 'broadleaf-weed',
-          metric: 'avg-per-10sqft',
-          value: result.averagePer10SqFt,
-          notes,
-          occurredAt: Date.now()
-        })
+        body: JSON.stringify(payload)
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
@@ -110,7 +174,19 @@
       saveSuccess = true;
       await invalidateAll();
     } catch (e) {
-      saveError = e instanceof Error ? e.message : String(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      if (payload && e instanceof TypeError && /(fetch|network|failed)/i.test(msg)) {
+        try {
+          await queueObservation(payload);
+          return;
+        } catch (queueErr) {
+          saveError = `Could not keep it on this device: ${
+            queueErr instanceof Error ? queueErr.message : queueErr
+          }`;
+          return;
+        }
+      }
+      saveError = msg;
     } finally {
       saving = false;
     }
@@ -209,7 +285,13 @@
       onclick={saveObservation}
       disabled={saving || result.spotsCounted === 0 || !selectedBlockId}
     >
-      {saving ? 'Saving…' : saveSuccess ? '✓ Saved — save another?' : 'Save observation'}
+      {saving
+        ? 'Saving…'
+        : saveSuccess
+          ? '✓ Saved — save another?'
+          : saveQueued
+            ? 'Kept on this phone. Save another?'
+            : 'Save observation'}
     </button>
     {#if result.decision === 'SPRAY'}
       <a href={planSprayHref} class="primary">
@@ -217,6 +299,11 @@
       </a>
     {/if}
   </div>
+  {#if saveQueued}
+    <p class="queued-note" role="status">
+      No signal, so this observation is saved on this phone. It uploads when you are back online.
+    </p>
+  {/if}
   {#if saveError}
     <p class="error" role="alert">{saveError}</p>
   {/if}
@@ -228,7 +315,22 @@
       <h2>Recent observations{selectedBlock ? ` — ${selectedBlock.name}` : ''}</h2>
       <Provenance source="data" detail="your scout log" compact />
     </div>
-    {#if observationsForBlock.length === 0}
+    {#if queuedForBlock.length > 0}
+      <ul class="history queued-list" aria-label="Waiting to upload">
+        {#each queuedForBlock as q (q.id)}
+          <li>
+            <span class="hist-date">{fmtDate(q.occurredAt)}</span>
+            <span class="hist-pest">{q.pest}</span>
+            <span class="hist-value">
+              {q.value.toFixed(2)}
+              <span class="hist-metric">{q.metric}</span>
+            </span>
+            <QueuedBadge />
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if observationsForBlock.length === 0 && queuedForBlock.length === 0}
       <p class="muted">
         No observations recorded for this block yet — count a few spots above and save to start
         building the trend.
@@ -377,6 +479,14 @@
     font-weight: 600;
     min-height: 48px;
     line-height: 1.4;
+  }
+  .queued-note {
+    margin: 0.8rem 0 0;
+    font-size: 0.9rem;
+    color: var(--color-ink);
+  }
+  .queued-list {
+    margin-bottom: 0.5rem;
   }
   .error {
     color: var(--color-rust);

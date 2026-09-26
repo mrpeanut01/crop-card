@@ -26,6 +26,8 @@
  * Phase 30 (v4): `farmSnapshots` holds one offline Card bundle per Owner and
  * `pinnedCards` the Cards pinned per Owner. Both are read only through
  * `cardStore.ts`, which keys every read and write by the active Owner.
+ * Sprint 30F adds the `scout` record kind (no schema change: `kind` is not
+ * indexed).
  */
 
 import Dexie, { type Table } from 'dexie';
@@ -34,7 +36,7 @@ import type { FarmSnapshot } from '$lib/cards/snapshot';
 /** #316 — offline-capable record kinds. Each maps to a POST endpoint in
  *  syncQueue.ts (ENDPOINT_BY_KIND). Extend both together. */
 export type PendingRecordKind =
-  'herbicide' | 'insecticide' | 'fungicide' | 'harvest' | 'hay-cutting';
+  'herbicide' | 'insecticide' | 'fungicide' | 'harvest' | 'hay-cutting' | 'scout';
 
 export interface PendingSprayRecord {
   id: string;

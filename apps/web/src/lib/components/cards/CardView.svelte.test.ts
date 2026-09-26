@@ -8,7 +8,14 @@ import CardPrintSheet from './CardPrintSheet.svelte';
 import { buildAreaCard, buildPlantingCard, buildPlantingCards } from '$lib/cards/build';
 import { sampleSnapshot } from '$lib/cards/build/fixtures';
 import { printLinkFor } from '$lib/cards/print';
-import type { CardModel } from '$lib/cards/model';
+import { STALE_NOTICE, type CardModel } from '$lib/cards/model';
+import { sampleGearSnapshot } from '$lib/cards/build/fixturesGear';
+import {
+  SPRAY_RECHECK_NOTICE,
+  SPRAY_REFERENCE_NOTICE,
+  SPRAY_STALE_AFTER_MS,
+  buildSprayCard
+} from '$lib/cards/build/spray';
 
 const snap = sampleSnapshot();
 const tomato = buildPlantingCard(snap, 'p_tom')!;
@@ -185,5 +192,41 @@ describe('CardPrintSheet', () => {
     expect(shown.container.querySelector('.card-print-sheet')?.classList.contains('preview')).toBe(
       true
     );
+  });
+});
+
+describe('CardView spray cautions', () => {
+  const spray = buildSprayCard(sampleGearSnapshot(), 'eq_boom~24d')!;
+
+  it('shows both cautions on every variant and the rules version where there is a footer', () => {
+    for (const variant of ['screen', 'compact', 'print'] as const) {
+      const { getByText, unmount } = render(CardView, {
+        card: spray,
+        prefs,
+        variant,
+        now: spray.asOf
+      });
+      expect(getByText(SPRAY_RECHECK_NOTICE)).toBeInTheDocument();
+      expect(getByText(SPRAY_REFERENCE_NOTICE)).toBeInTheDocument();
+      expect(getByText('Rules ' + spray.rulesVersion)).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it('adds the stale banner only after 24 hours', () => {
+    const fresh = render(CardView, { card: spray, prefs, now: spray.asOf + SPRAY_STALE_AFTER_MS });
+    expect(fresh.queryByText(STALE_NOTICE)).toBeNull();
+    fresh.unmount();
+    const stale = render(CardView, {
+      card: spray,
+      prefs,
+      now: spray.asOf + SPRAY_STALE_AFTER_MS + 60_000
+    });
+    expect(stale.getByRole('status')).toHaveTextContent(STALE_NOTICE);
+  });
+
+  it('never marks a planting card stale', () => {
+    const { queryByText } = render(CardView, { card: tomato, prefs, now: tomato.asOf + 9e10 });
+    expect(queryByText(STALE_NOTICE)).toBeNull();
   });
 });

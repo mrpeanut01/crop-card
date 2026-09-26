@@ -33,7 +33,12 @@ test.describe('public pricing page', () => {
     await expect(page.getByTestId('plan-card-grower')).toContainText('billed $96 a year');
     await expect(page.getByTestId('plan-card-farm')).toContainText('$16');
 
-    await page.getByTestId('interval-month').click();
+    await expect(async () => {
+      await page.getByTestId('interval-month').click();
+      await expect(page.getByTestId('interval-month')).toHaveAttribute('aria-checked', 'true', {
+        timeout: 1000
+      });
+    }).toPass();
     await expect(page.getByTestId('plan-card-grower')).toContainText('$10');
     await expect(page.getByTestId('plan-card-farm')).toContainText('$20');
 
@@ -64,6 +69,7 @@ test.describe('plan & billing page', () => {
   test('a Free owner picks Grower monthly through a mocked Stripe checkout', async ({ page }) => {
     await signInAsDemoOwner(page);
     await page.goto('/settings/billing');
+    await page.waitForLoadState('networkidle');
     await expect(page.getByTestId('current-plan')).toContainText('Free');
     await expect(page.getByTestId('free-forever')).toBeVisible();
     await expect(page.getByTestId('plan-card-free')).toContainText('Your plan');
@@ -78,7 +84,12 @@ test.describe('plan & billing page', () => {
       });
     });
 
-    await page.getByTestId('interval-month').click();
+    await expect(async () => {
+      await page.getByTestId('interval-month').click();
+      await expect(page.getByTestId('interval-month')).toHaveAttribute('aria-checked', 'true', {
+        timeout: 1000
+      });
+    }).toPass();
     await page.getByTestId('plan-cta-grower').click();
     await expect(page.getByText('Checkout complete.')).toBeVisible();
     expect(sent).toEqual({ plan: 'grower', interval: 'month' });
@@ -87,6 +98,7 @@ test.describe('plan & billing page', () => {
   test('the plan page and the alert settings link to each other', async ({ page }) => {
     await signInAsDemoOwner(page);
     await page.goto('/settings/billing');
+    await page.waitForLoadState('networkidle');
     await page.getByRole('link', { name: 'Choose your alerts' }).click();
     await expect(page).toHaveURL(/\/settings\/notifications$/);
     await page.getByRole('link', { name: 'See your plan and billing' }).click();
@@ -97,6 +109,7 @@ test.describe('plan & billing page', () => {
   test('yearly is the default period at checkout', async ({ page }) => {
     await signInAsDemoOwner(page);
     await page.goto('/settings/billing');
+    await page.waitForLoadState('networkidle');
     let sent: unknown = null;
     await page.route('**/api/billing/checkout', async (route) => {
       sent = route.request().postDataJSON();
@@ -114,6 +127,7 @@ test.describe('plan & billing page', () => {
   test('a Grower owner switches plans through the billing portal', async ({ page }) => {
     await signInAs(page, 'grower@cropcard.local');
     await page.goto('/settings/billing');
+    await page.waitForLoadState('networkidle');
     await expect(page.getByTestId('current-plan')).toContainText('Grower');
     await expect(page.getByTestId('current-plan')).toContainText('$96 a year');
     await expect(page.getByTestId('plan-card-grower')).toContainText('Your plan');

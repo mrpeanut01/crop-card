@@ -7,7 +7,7 @@
   const hasFields = $derived(data.fields.length > 0);
   const hasBlocks = $derived(data.blocks.length > 0);
   const steps = $derived([
-    { label: 'Fields', done: hasFields, current: !hasFields },
+    { label: 'Areas', done: hasFields, current: !hasFields },
     { label: 'Blocks', done: hasBlocks, current: hasFields && !hasBlocks },
     { label: 'Plan the season', done: false, current: hasBlocks }
   ]);
@@ -20,8 +20,9 @@
     <p class="kicker">Plan · {data.seasonYear} season</p>
     <h1 class="serif">Draw your farm</h1>
     <p class="lede">
-      Lay out your fields, then the blocks inside them. Draw on the map, or type each one's width
-      and length and CropCard sketches them as boxes. Blocks are what the planner fills with crops.
+      Put your fields, garden, greenhouse and barn on the map, then the blocks inside them. Outline
+      them on the map, or type each one's width and length and CropCard sketches them as boxes.
+      Blocks are what the planner fills with crops.
     </p>
     <ol class="steps" aria-label="Setup progress">
       {#each steps as s, i (s.label)}
@@ -42,6 +43,8 @@
       blocks={data.blocks}
       fields={data.fields}
       shadeSources={data.shadeSources}
+      ownerId={data.ownerId}
+      snapshot={data.snapshot}
       canEdit
       isFirstRun={data.isFirstRun}
       initialCenter={data.center}
@@ -60,7 +63,7 @@
       <a class="continue" href="/plan">Continue to planning →</a>
     {:else}
       <p>
-        {hasFields ? 'Add at least one block to continue.' : 'Start with a field.'}
+        {hasFields ? 'Add at least one block to continue.' : 'Start by adding an area.'}
         <a class="skip" href="/plan?setup=skip">Skip the map and plan by block name</a>
       </p>
       <span class="continue disabled" aria-disabled="true">Continue to planning →</span>

@@ -6,14 +6,21 @@
     type SketchBlockInput,
     type SketchInput
   } from '$lib/farm/sketch';
+  import type { AreaKind } from '$lib/farm/areaKinds';
+  import { AREA_KIND_LABELS } from '$lib/farm/areaKinds';
+  import { kindStyle } from '$lib/farm/kindStyle';
 
   let {
     fields,
-    blocks
+    blocks,
+    onSelectArea
   }: {
-    fields: SketchInput[];
+    fields: Array<SketchInput & { kind?: AreaKind }>;
     blocks: SketchBlockInput[];
+    onSelectArea?: (id: string) => void;
   } = $props();
+
+  const kindById = $derived(new Map(fields.map((f) => [f.id, f.kind ?? 'field'] as const)));
 
   const layout = $derived(layoutSketch(fields, blocks));
   const span = $derived(Math.max(layout.width, layout.height, 1));
@@ -71,16 +78,39 @@
       />
 
       {#each layout.fields as f (f.id)}
-        <g data-field={f.name}>
-          <rect
-            x={f.x}
-            y={f.y}
-            width={f.w}
-            height={f.h}
-            class="field"
-            class:estimated={!f.measured}
-            vector-effect="non-scaling-stroke"
-          />
+        {@const kind = kindById.get(f.id) ?? 'field'}
+        <g data-field={f.name} data-area-kind={kind} style:--kind={kindStyle(kind).color}>
+          {#if onSelectArea}
+            <rect
+              x={f.x}
+              y={f.y}
+              width={f.w}
+              height={f.h}
+              class="field tappable"
+              class:estimated={!f.measured}
+              vector-effect="non-scaling-stroke"
+              role="button"
+              tabindex="0"
+              aria-label="Open the card for {f.name}, {AREA_KIND_LABELS[kind]}"
+              onclick={() => onSelectArea(f.id)}
+              onkeydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelectArea(f.id);
+                }
+              }}
+            />
+          {:else}
+            <rect
+              x={f.x}
+              y={f.y}
+              width={f.w}
+              height={f.h}
+              class="field"
+              class:estimated={!f.measured}
+              vector-effect="non-scaling-stroke"
+            />
+          {/if}
           {#each f.blocks as b (b.id)}
             <g data-block={b.name}>
               <rect
@@ -167,14 +197,23 @@
     fill: #b9c9a0;
   }
   .field {
-    fill: #f4efe0;
-    stroke: var(--color-forest, #2f4a2a);
+    fill: color-mix(in srgb, var(--kind, #2c5237) 18%, #f4efe0);
+    stroke: var(--kind, var(--color-forest));
     stroke-width: 2;
+  }
+  .field.tappable {
+    cursor: pointer;
+    outline: none;
+  }
+  .field.tappable:hover,
+  .field.tappable:focus-visible {
+    stroke-width: 4;
   }
   .field.estimated {
     stroke-dasharray: 6 4;
   }
   .block {
+    pointer-events: none;
     fill: #e8d7a8;
     stroke: #8a6d2f;
     stroke-width: 1.5;

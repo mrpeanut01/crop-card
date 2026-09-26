@@ -2,6 +2,7 @@ import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { listBlocks } from '$lib/db/blocks';
 import { listFields } from '$lib/db/fields';
 import { listShadeSources } from '$lib/db/shadeSources';
+import { buildMapSnapshot } from '$lib/server/mapSnapshot';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
@@ -14,6 +15,8 @@ export const load: ServerLoad = ({ locals, url }) => {
   return {
     blocks,
     fields,
+    ownerId: locals.user.activeOwnerId,
+    snapshot: buildMapSnapshot({ fields, blocks }),
     shadeSources: listShadeSources(),
     isFirstRun: blocks.length === 0 && fields.length === 0,
     seasonYear: getActivePlanningYear(),

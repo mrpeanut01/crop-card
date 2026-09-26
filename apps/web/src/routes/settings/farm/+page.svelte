@@ -9,6 +9,7 @@
   import BlockMap from '$lib/components/BlockMap.svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
+  import { kindStyle } from '$lib/farm/kindStyle';
 
   const { data, form } = $props();
 
@@ -24,14 +25,9 @@
     data.mapBlocks.some((b) => b.geometryGeojson) || data.mapFields.some((f) => f.geometryGeojson)
   );
 
-  // Per-block tile color — cycle through a forest/wheat/rust/sky palette
-  // so the map preview chips look distinct. Stable across renders by
-  // hashing the block id.
-  const PALETTE = ['#4F7A52', '#A64A2A', '#9C8147', '#6F8FA8', '#8A5A2C', '#5F8045', '#B8893C'];
-  function colorFor(id: string): string {
-    let h = 0;
-    for (const c of id) h = (h * 31 + c.charCodeAt(0)) % PALETTE.length;
-    return PALETTE[h] ?? PALETTE[0];
+  const kindByField = $derived(Object.fromEntries(data.mapFields.map((f) => [f.id, f.kind])));
+  function colorFor(fieldId: string | undefined): string {
+    return kindStyle(fieldId ? kindByField[fieldId] : 'field').color;
   }
 
   const total = $derived(data.blocks.reduce((s, b) => s + (b.acres ?? 0), 0));
@@ -114,12 +110,12 @@
             onCreateFieldWithGeometry={noop}
           />
           <a class="map-edit-link" href="/settings/farm/map">
-            <Map size={12} /> Edit fields & blocks
+            <Map size={12} /> Edit the farm map
           </a>
         {:else if browser}
           <div class="map-empty">
             <MapPin size={22} />
-            <p class="map-empty-title">No field boundaries drawn yet</p>
+            <p class="map-empty-title">Nothing drawn on the map yet</p>
             <a class="primary-sm" href="/settings/farm/map">
               <Plus size={11} /> Draw your blocks
             </a>
@@ -136,7 +132,7 @@
         {/if}
         {#each data.blocks as b (b.id)}
           <a class="block-row" href="/settings/farm/map">
-            <div class="block-chip" style:background={colorFor(b.id)}>
+            <div class="block-chip" style:background={colorFor(b.fieldId)}>
               {b.blockLabel ?? b.name.charAt(0)}
             </div>
             <div class="block-text">

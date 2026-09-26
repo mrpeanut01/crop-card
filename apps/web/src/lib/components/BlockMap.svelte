@@ -1426,7 +1426,11 @@
   {/if}
 
   {#if drawing}
-    <p class="hint" aria-live="polite">
+    <p
+      class="hint"
+      aria-live="polite"
+      data-hint-anchor={drawMode === 'area' ? 'map_draw_area' : undefined}
+    >
       {#if drawMode === 'shade-line'}
         Click points to draw the tree row / fence line. Double-click to finish.
       {:else if drawMode === 'shade-polygon'}

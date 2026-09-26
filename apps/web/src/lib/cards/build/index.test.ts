@@ -15,9 +15,10 @@ describe('buildCard / buildDeck', () => {
     }
   });
 
-  it('covers every kind except the farm map', () => {
+  it('covers every card kind, with exactly one farm map', () => {
     const kinds = new Set(deck.map((c) => c.kind));
-    expect(CARD_KINDS.filter((k) => !kinds.has(k))).toEqual(['farmMap']);
+    expect(CARD_KINDS.filter((k) => !kinds.has(k))).toEqual([]);
+    expect(deck.filter((c) => c.kind === 'farmMap')).toHaveLength(1);
   });
 
   it('keys are unique across the deck', () => {

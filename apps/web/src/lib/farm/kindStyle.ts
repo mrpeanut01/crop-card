@@ -91,7 +91,7 @@ export const AREA_KIND_HINT: Readonly<Record<AreaKind, string>> = {
 };
 
 export const AREA_NAME_PLACEHOLDER: Readonly<Record<AreaKind, string>> = {
-  field: 'e.g. North Field',
+  field: 'e.g. Home Field',
   garden: 'e.g. Kitchen Garden',
   greenhouse: 'e.g. High Tunnel',
   orchard: 'e.g. Apple Orchard',

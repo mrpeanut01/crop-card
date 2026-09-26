@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { validateAreaDetails } from '$lib/farm/areaKinds';
+import { CROP_AREA_KINDS, validateAreaDetails } from '$lib/farm/areaKinds';
+import { AREA_NAME_PLACEHOLDER } from '$lib/farm/kindStyle';
 import {
   GROWING_CHOICES,
   GROWING_OPTIONS,
@@ -36,6 +37,13 @@ describe('growing choices', () => {
       { name: 'High Tunnel', kind: 'greenhouse', details: { structure: 'high-tunnel' } }
     ]);
     expect(starterAreasFor([])).toEqual([]);
+  });
+
+  it('starter Areas use the same crop-area kinds and names as the setup sheets and map', () => {
+    for (const o of GROWING_OPTIONS) {
+      expect(CROP_AREA_KINDS).toContain(o.starter.kind);
+      expect(AREA_NAME_PLACEHOLDER[o.starter.kind]).toBe(`e.g. ${o.starter.name}`);
+    }
   });
 
   it('starter details validate against their kind', () => {

@@ -18,6 +18,8 @@
   import AreaCardSheet from '$lib/components/farm/AreaCardSheet.svelte';
   import AreaDetailsFields from '$lib/components/farm/AreaDetailsFields.svelte';
   import MapFilterPanel from '$lib/components/farm/MapFilterPanel.svelte';
+  import Hint from '$lib/components/ui/Hint.svelte';
+  import { markHintSeen } from '$lib/client/hints';
   import { SQFT_PER_ACRE, formatFt, sketchAcres } from '$lib/farm/sketch';
   import {
     AREA_KINDS,
@@ -100,6 +102,7 @@
   let sketchFormEl = $state<HTMLFormElement | null>(null);
   async function onPick(pick: AddPick) {
     addOpen = false;
+    void markHintSeen('map_add');
     if (mode === 'map') {
       blockMap?.startDrawPick(pick);
       return;
@@ -856,11 +859,21 @@
     <button
       type="button"
       class="verb primary"
+      data-hint-anchor="map_add"
       onclick={() => (addOpen = true)}
       disabled={mode === 'map' && !blockMap}>+ Add</button
     >
   {/if}
-  <button type="button" class="verb" class:on={filterActive} onclick={() => (filterOpen = true)}>
+  <button
+    type="button"
+    class="verb"
+    class:on={filterActive}
+    data-hint-anchor="map_filter"
+    onclick={() => {
+      filterOpen = true;
+      void markHintSeen('map_filter');
+    }}
+  >
     Filter{filterActive ? ' (on)' : ''}
   </button>
   {#if exportHref}
@@ -870,6 +883,27 @@
 {#if mode === 'map' && locateMessage}
   <p class="locate-msg" role="status">{locateMessage}</p>
 {/if}
+
+{#if canEdit}
+  <Hint
+    key="map_add"
+    anchor="[data-hint-anchor=map_add]"
+    text="Tap Add to put a field, garden, greenhouse or barn on your farm. You pick what it is, then outline it."
+    suppressed={addOpen || filterOpen || !!selectedArea}
+  />
+  <Hint
+    key="map_draw_area"
+    anchor="[data-hint-anchor=map_draw_area]"
+    text="Tap each corner, then the first corner again to close the shape. Size and perimeter fill in for you."
+    suppressed={addOpen || filterOpen || !!selectedArea}
+  />
+{/if}
+<Hint
+  key="map_filter"
+  anchor="[data-hint-anchor=map_filter]"
+  text="Filter hides kinds you don't need right now, like woods or the pond. It remembers your choice on this device."
+  suppressed={addOpen || filterOpen || !!selectedArea}
+/>
 
 <AreaAddDrawer
   open={addOpen}

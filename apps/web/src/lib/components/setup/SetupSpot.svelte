@@ -1,6 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { AREA_KIND_LABELS, CROP_AREA_KINDS, type CropAreaKind } from '$lib/farm/areaKinds';
+  import { AREA_KIND_HINT, AREA_NAME_PLACEHOLDER } from '$lib/farm/kindStyle';
   import { NEW_AREA, planSpot, saveSpot } from '$lib/setup/spot';
   import type { SetupArea, SetupSpotResult } from '$lib/setup/types';
 
@@ -20,14 +21,6 @@
     onDone
   }: Props = $props();
   const uid = $props.id();
-
-  const KIND_HINTS: Record<CropAreaKind, string> = {
-    field: 'Row crops, grain, market blocks',
-    garden: 'Beds by the house',
-    greenhouse: 'Greenhouse or high tunnel',
-    orchard: 'Fruit trees or vines',
-    pasture: 'Hay or grazing'
-  };
 
   let name = $state('');
   let areaId = $state(NEW_AREA);
@@ -73,7 +66,7 @@
       type="text"
       maxlength="120"
       autocomplete="off"
-      placeholder="Back bed, North 10, Hayfield"
+      placeholder={areaId === NEW_AREA ? AREA_NAME_PLACEHOLDER[kind] : 'e.g. Back bed'}
       bind:value={name}
       data-autofocus
       required
@@ -97,7 +90,7 @@
             <label class="kind" class:on={kind === k}>
               <input type="radio" name="{uid}-kind" value={k} bind:group={kind} />
               <span class="kind-name">{AREA_KIND_LABELS[k]}</span>
-              <span class="kind-hint">{KIND_HINTS[k]}</span>
+              <span class="kind-hint">{AREA_KIND_HINT[k]}</span>
             </label>
           {/each}
         </div>

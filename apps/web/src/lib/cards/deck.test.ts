@@ -23,12 +23,14 @@ describe('deck filters', () => {
     expect(isDeckFilter('stock')).toBe(false);
   });
 
-  it('kind filters keep only that kind; Today keeps day cards', () => {
+  it('kind filters keep only that kind (Areas also holds the farm map); Today keeps day cards', () => {
     for (const f of ['planting', 'area', 'equipment', 'spray', 'careGuide'] as const) {
       const out = filterDeck(deck, f, []);
       expect(out.length).toBeGreaterThan(0);
-      expect(out.every((c) => c.kind === f)).toBe(true);
+      const allowed = f === 'area' ? ['area', 'farmMap'] : [f];
+      expect(out.every((c) => allowed.includes(c.kind))).toBe(true);
     }
+    expect(filterDeck(deck, 'area', []).some((c) => c.kind === 'farmMap')).toBe(true);
     expect(filterDeck(deck, 'today', []).every((c) => c.kind === 'day')).toBe(true);
   });
 

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { enhance } from '$app/forms';
+  import { page } from '$app/state';
   import { Check, ChevronRight } from 'lucide-svelte';
   import {
     gettingStartedItems,
@@ -26,6 +27,9 @@
   }: Props = $props();
 
   async function defaultLoadPinned(): Promise<boolean> {
+    const ownerId = page.data?.activeOwner?.id ?? page.data?.user?.activeOwnerId ?? null;
+    const { primeActiveOwnerId } = await import('$lib/client/syncQueue');
+    primeActiveOwnerId(ownerId);
     const { listPinned } = await import('$lib/client/cardStore');
     return (await listPinned()).length > 0;
   }

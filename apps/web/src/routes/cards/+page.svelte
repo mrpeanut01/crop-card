@@ -5,6 +5,8 @@
   import CardView from '$lib/components/cards/CardView.svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
   import InstallNudge from '$lib/components/cards/InstallNudge.svelte';
+  import Hint from '$lib/components/ui/Hint.svelte';
+  import { markHintSeen } from '$lib/client/hints';
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
   import { buildDeck } from '$lib/cards/build';
   import { DECK_FILTERS, filterDeck, isDeckFilter, type DeckFilter } from '$lib/cards/deck';
@@ -79,6 +81,7 @@
 
   async function saveForOffline() {
     notice = null;
+    void markHintSeen('cards_offline');
     const outcome = await cards.saveForOffline();
     now = Date.now();
     notice =
@@ -117,6 +120,7 @@
     <button
       type="button"
       class="btn primary"
+      data-hint-anchor="cards_offline"
       onclick={saveForOffline}
       disabled={cards.syncing || !online}
     >
@@ -142,6 +146,14 @@
     <p class="notice">
       This browser may clear saved cards when space runs low. Printing a copy is the safe bet.
     </p>
+  {/if}
+  {#if online}
+    <Hint
+      key="cards_offline"
+      anchor="[data-hint-anchor=cards_offline]"
+      text="Save for offline keeps these cards on this phone, so they open in the field with no signal. Pin the ones you use most."
+      suppressed={showNudge}
+    />
   {/if}
   {#if showNudge}
     <InstallNudge onDismiss={() => (showNudge = false)} />

@@ -49,5 +49,6 @@ export function filterDeck(
     return ordered.filter((c) => set.has(c.key));
   }
   if (filter === 'today') return ordered.filter((c) => c.kind === 'day');
+  if (filter === 'area') return ordered.filter((c) => c.kind === 'area' || c.kind === 'farmMap');
   return ordered.filter((c) => c.kind === filter);
 }

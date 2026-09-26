@@ -14,12 +14,17 @@ test('today renders Almanac shell after sign-in', async ({ page }) => {
   await expect(page.locator('h1')).toContainText(/Good (morning|afternoon|evening)/);
   // Quick actions card
   await expect(page.getByText('Quick actions')).toBeVisible();
-  // Week strip header
+  // The day as a deck, with the legacy schedule tabs folded into its filters
+  const deck = page.getByTestId('today-deck');
+  await expect(deck.getByRole('heading', { name: "Today's work" })).toBeVisible();
+  await expect(page.locator('details.legacy-detail')).toHaveCount(0);
+  // Week strip lives behind the deck's Calendar view
+  await deck.getByRole('button', { name: 'Calendar' }).click();
   await expect(page.getByRole('heading', { name: 'This week' })).toBeVisible();
   // Season-at-a-glance
   await expect(page.getByText('Season at a glance')).toBeVisible();
-  // Legacy details exists (collapsed by default)
-  await expect(page.locator('details.legacy-detail')).toBeVisible();
+  // Sprayers and the rules version stay on the page
+  await expect(page.getByTestId('today-gear')).toContainText('Rules version');
 
   // Only flag console errors that aren't pre-existing 404s for fonts/manifest
   // (Phase 25a self-host work still pending).

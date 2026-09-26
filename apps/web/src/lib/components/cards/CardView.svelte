@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+  import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import BedMapThumb from './BedMapThumb.svelte';
   import {
@@ -21,6 +23,10 @@
     printLink?: { url: string; qr: QrPath } | null;
     /** Epoch ms the stale check compares `asOf` against. */
     now?: number;
+    /** Screen and compact only: controls under the card body (task actions). */
+    actions?: Snippet;
+    /** Screen and compact only: badges beside the status pill. */
+    badges?: Snippet;
   }
 
   const COMPACT_FACTS = 2;
@@ -30,7 +36,9 @@
     variant = 'screen',
     prefs = DEFAULT_PREFS,
     printLink = null,
-    now = Date.now()
+    now = Date.now(),
+    actions,
+    badges
   }: Props = $props();
 
   const stale = $derived(isCardStale(card, now));
@@ -64,7 +72,23 @@
     {#if variant === 'print' && !kickerNamesKind}
       <div class="kind-label">{CARD_KIND_LABEL[card.kind]}</div>
     {/if}
-    <div class="kicker">{card.kicker}</div>
+    {#if card.status || (badges && variant !== 'print')}
+      <div class="kicker-row">
+        <div class="kicker">{card.kicker}</div>
+        {#if card.status}
+          {#if variant === 'print'}
+            <span class="status-text" data-card-status={card.status.id}>{card.status.label}</span>
+          {:else}
+            <span class="status" data-card-status={card.status.id}>
+              <Pill tone={card.status.tone}>{card.status.label}</Pill>
+            </span>
+          {/if}
+        {/if}
+        {#if badges && variant !== 'print'}{@render badges()}{/if}
+      </div>
+    {:else}
+      <div class="kicker">{card.kicker}</div>
+    {/if}
     {#if variant === 'print'}
       <h3 class="title serif" id={titleId}>{card.title}</h3>
     {:else}
@@ -149,6 +173,9 @@
         {/each}
       {/if}
     </div>
+    {#if actions && variant !== 'print'}
+      <div class="actions">{@render actions()}</div>
+    {/if}
     {#if variant === 'print' && bodySections.length}
       <p class="more">Cut short? The label and the live card have the full directions.</p>
     {/if}
@@ -217,6 +244,25 @@
   }
   .kind-day {
     --strip: var(--color-ink-soft);
+  }
+  .kind-task {
+    --strip: var(--color-forest-deep);
+  }
+  .kicker-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+  }
+  .status-text {
+    font-size: var(--font-size-meta);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
   .strip {
     flex: 0 0 6px;

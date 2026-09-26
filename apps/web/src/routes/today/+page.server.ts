@@ -16,7 +16,7 @@ import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
-import { listTasks, type Task } from '$lib/db/tasks';
+import { listTasks } from '$lib/db/tasks';
 import {
   eventsForHarvest,
   eventsForPlanting,
@@ -34,28 +34,13 @@ import { loadTodayWeather } from '$lib/server/todayWeather';
 import { derivePriorityAction } from '$lib/today/priorityAction';
 import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
 import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
-import { equipmentIdsActiveBefore } from '$lib/db/equipment';
+import { equipmentIdsActiveBefore, listEquipment } from '$lib/db/equipment';
 import { prefsFor } from '$lib/db/userProfile';
-import { todayYmd } from '$lib/prefs';
+import { todayYmd, ymdInZone } from '$lib/prefs';
+import { SEASON_DAYS, clampView, clampWindow } from '$lib/today/deck';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-type Tab = 'today' | '7d' | '30d' | 'season';
-type View = 'list' | 'calendar';
-
-function clampTab(raw: string | null): Tab {
-  switch (raw) {
-    case '7d':
-    case '30d':
-    case 'season':
-      return raw;
-    default:
-      return 'today';
-  }
-}
-
-function clampView(raw: string | null): View {
-  return raw === 'calendar' ? 'calendar' : 'list';
-}
+const OVERDUE_LOOKBACK_DAYS = 30;
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   // An Owner who hasn't answered onboarding screen 2 goes back to it.
@@ -68,7 +53,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   ) {
     throw redirect(303, '/onboarding');
   }
-  const tab = clampTab(url.searchParams.get('tab'));
+  const deckWindow = clampWindow(url.searchParams.get('tab'));
   const view = clampView(url.searchParams.get('view'));
   // Phase 25d v2-addendum (#89 / #80 partial) — drives AI-on vs AI-off
   // variant on /today's recommendations card + provenance legend strip.
@@ -103,29 +88,18 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     allEvents.push(...eventsForHarvest(h, cropRecord.plugin as CropPlugin));
   }
 
-  // Tab-driven derived-event window.
   const now = Date.now();
-  const today = todayYmd(prefsFor(locals.user?.id), now);
-  const dayStart = new Date(Date.parse(today));
-  const tabWindowDays = tab === '7d' ? 7 : tab === '30d' ? 30 : tab === 'season' ? 200 : 1;
-  const tabFromMs = tab === 'today' ? dayStart.getTime() : now;
-  const tabToMs = tabFromMs + tabWindowDays * DAY_MS;
-  const derivedInWindow =
-    tab === 'today' ? eventsToday(allEvents, now) : eventsInRange(allEvents, tabFromMs, tabToMs);
+  const prefs = prefsFor(locals.user?.id);
+  const today = todayYmd(prefs, now);
+  const dayStart = Date.parse(today);
+  const seasonEnd = dayStart + SEASON_DAYS * DAY_MS;
 
-  // Real Tasks in the current window. Tasks are forward-looking; we also
-  // surface overdue (open tasks scheduled before now) so they don't get
-  // lost off the calendar.
-  const tasksOpen = listTasks({
-    fromMs: tabFromMs - 30 * DAY_MS, // pick up overdue from the last month
-    toMs: tabToMs,
-    status: 'open'
-  });
-
-  const tasksCompletedToday = listTasks({
-    fromMs: dayStart.getTime(),
-    toMs: dayStart.getTime() + DAY_MS - 1,
-    status: 'completed'
+  const deckTasks = listTasks({
+    fromMs: dayStart - OVERDUE_LOOKBACK_DAYS * DAY_MS,
+    toMs: seasonEnd
+  }).filter((t) => {
+    const closedAt = t.completedAt ?? t.abortedAt;
+    return closedAt === undefined || ymdInZone(closedAt, prefs.timeZone) === today;
   });
 
   const sprayers = listSprayers();
@@ -144,23 +118,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   // Active crops summary — fuels the Season tab and the equipment-readiness
   // panel.
   const activeCrops = listCrops({ status: 'active', limit: 100 });
-
-  // Group tasks by primary so the UI renders pre-tasks under their parent.
-  const tasksByPrimary = new Map<string, Task[]>();
-  for (const t of tasksOpen) {
-    if (t.kind === 'pre-task' || t.kind === 'post-task') {
-      if (!t.linkedToTaskId) continue;
-      const list = tasksByPrimary.get(t.linkedToTaskId) ?? [];
-      list.push(t);
-      tasksByPrimary.set(t.linkedToTaskId, list);
-    }
-  }
-  const primariesInWindow = tasksOpen.filter((t) => t.kind === 'primary');
-  const orphanedPrePost = tasksOpen.filter(
-    (t) =>
-      t.kind !== 'primary' &&
-      (!t.linkedToTaskId || !primariesInWindow.find((p) => p.id === t.linkedToTaskId))
-  );
 
   // Phase 25e (#97) — priorityAction + weather + seasonGlance.
   const blockNameById = new Map(blocks.map((b) => [b.id, b.name]));
@@ -203,12 +160,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     equipmentIdsActiveBefore(startOfSeason(now))
   );
 
+  const plantingNames: Record<string, { name: string; blockId: string }> = {};
+  for (const b of blocks)
+    for (const p of b.plantings)
+      plantingNames[p.id] = { name: p.varietyDisplayName, blockId: b.id };
+
   return {
     today,
-    tab,
+    nowMs: now,
+    deckWindow,
     view,
-    tabFromMs,
-    tabToMs,
     aiEnabled,
     rulesVersion: RULES_VERSION,
     counts: {
@@ -222,16 +183,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     farmProfile: getFarmProfile(),
     gettingStarted,
     pluginFailures: stats.failures,
-    // Legacy: keep these so the existing template still has data while we
-    // migrate to the tabbed layout.
-    eventsToday: eventsToday(allEvents),
-    upcoming: upcomingEvents(allEvents, 14),
-    // New tab-driven payload
-    derivedEvents: derivedInWindow,
-    primariesInWindow,
-    tasksByPrimary: Object.fromEntries(tasksByPrimary),
-    orphanedPrePost,
-    tasksCompletedToday,
+    eventsToday: eventsToday(allEvents, now),
+    upcoming: upcomingEvents(allEvents, 14, now),
+    seasonEvents: eventsInRange(allEvents, now, now + SEASON_DAYS * DAY_MS),
+    deckTasks,
+    blockNames: Object.fromEntries(blocks.map((b) => [b.id, b.name])),
+    plantingNames,
+    equipmentLabels: Object.fromEntries(listEquipment().map((e) => [e.id, e.label])),
     activeCrops,
     // #280 — lift `category` into the projection so the /today template
     // can resolve a /inventory/[type]/[id] link via the canonical

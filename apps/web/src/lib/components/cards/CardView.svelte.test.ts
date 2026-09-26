@@ -286,4 +286,30 @@ describe('garden Area card', () => {
     const { queryByTestId } = render(CardView, { card: garden, prefs, variant: 'compact' });
     expect(queryByTestId('card-bed-map')).toBeNull();
   });
+
+  it('task cards show their derived status as a pill on screen and as text in print', () => {
+    const card: CardModel = {
+      ...tomato,
+      kind: 'task',
+      key: 'tk_t1',
+      status: { id: 'late', label: 'Late', tone: 'rust' }
+    };
+    for (const variant of ['screen', 'compact'] as const) {
+      const { container, unmount } = render(CardView, { card, prefs, variant });
+      const pill = container.querySelector('[data-card-status="late"]')!;
+      expect(pill).toHaveTextContent('Late');
+      expect(pill.querySelector('.pill')).not.toBeNull();
+      unmount();
+    }
+    const { container } = render(CardView, { card, prefs, variant: 'print' });
+    const text = container.querySelector('[data-card-status="late"]')!;
+    expect(text).toHaveTextContent('Late');
+    expect(text.querySelector('.pill')).toBeNull();
+  });
+
+  it('cards without a status keep the plain kicker', () => {
+    const { container } = render(CardView, { card: tomato, prefs, variant: 'compact' });
+    expect(container.querySelector('[data-card-status]')).toBeNull();
+    expect(container.querySelector('.kicker-row')).toBeNull();
+  });
 });

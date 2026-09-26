@@ -8,7 +8,8 @@ export const CARD_KINDS = [
   'equipment',
   'careGuide',
   'day',
-  'stock'
+  'stock',
+  'task'
 ] as const;
 
 export type CardKind = (typeof CARD_KINDS)[number];
@@ -61,6 +62,13 @@ export interface CardBedMap {
   beds: CardBedMapBed[];
 }
 
+/** A derived status pill (task cards). Built with the card, never stored. */
+export interface CardStatus {
+  id: string;
+  label: string;
+  tone: 'neutral' | 'forest' | 'wheat' | 'rust' | 'sky';
+}
+
 export interface CardModel {
   kind: CardKind;
   key: string;
@@ -81,6 +89,7 @@ export interface CardModel {
   /** Extra screen links, e.g. "Open designer" on a garden Area. */
   links?: CardAction[];
   bedMap?: CardBedMap;
+  status?: CardStatus;
 }
 
 export const STALE_NOTICE = 'This card is more than a day old. Refresh it before you rely on it.';
@@ -101,7 +110,8 @@ export const CARD_KIND_LABEL: Record<CardKind, string> = {
   equipment: 'Equipment',
   careGuide: 'Care guide',
   day: 'Day',
-  stock: 'Seed & stock'
+  stock: 'Seed & stock',
+  task: 'Task'
 };
 
 export const CARD_KEY_PREFIX: Record<CardKind, string> = {
@@ -112,7 +122,8 @@ export const CARD_KEY_PREFIX: Record<CardKind, string> = {
   equipment: 'eq',
   careGuide: 'cg',
   day: 'dy',
-  stock: 'st'
+  stock: 'st',
+  task: 'tk'
 };
 
 const KIND_BY_PREFIX = new Map<string, CardKind>(

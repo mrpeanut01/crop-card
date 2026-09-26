@@ -1,55 +1,165 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { invalidateAll, replaceState } from '$app/navigation';
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
   import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
-  import Pill from '$lib/components/ui/Pill.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
-  import Provenance from '$lib/components/ui/Provenance.svelte';
+  import Pill from '$lib/components/ui/Pill.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
-  // Phase 25e (#97) — Almanac /today shell components.
   import WeatherStrip from '$lib/components/today/WeatherStrip.svelte';
   import TodayHero from '$lib/components/today/TodayHero.svelte';
   import QuickActions from '$lib/components/today/QuickActions.svelte';
   import WeekStrip, { type WeekItem, type WeekKind } from '$lib/components/today/WeekStrip.svelte';
+  import SeasonStrip from '$lib/components/today/SeasonStrip.svelte';
+  import TaskDeckCard, { type LinkedTaskItem } from '$lib/components/today/TaskDeckCard.svelte';
   import Recommendations, {
     type RecommendationItem
   } from '$lib/components/today/Recommendations.svelte';
   import SeasonGlance from '$lib/components/today/SeasonGlance.svelte';
   import GettingStartedCard from '$lib/components/today/GettingStartedCard.svelte';
+  import { buildTaskCard } from '$lib/cards/build/task';
+  import { taskPlanHref } from '$lib/cards/build/common';
+  import { cardHref, cardKey } from '$lib/cards/model';
+  import { taskStart } from '$lib/tasks/start';
+  import type { QueuedTaskAction } from '$lib/tasks/status';
+  import {
+    TODAY_WINDOWS,
+    buildTaskDeck,
+    calendarItems,
+    deckCounts,
+    eventsForWindow,
+    periodForWindow,
+    type TodayView,
+    type TodayWindow,
+    type WeekPeriod
+  } from '$lib/today/deck';
+  import type { QueuedTaskRow } from '$lib/client/taskQueue';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
 
-  let { data } = $props();
+  const { data } = $props();
 
-  // Phase 25 v2 addendum (#80 partial / #89) — drives AI-on vs AI-off
-  // variant. $derived so the variant re-paints on loader re-run.
   const aiEnabled = $derived(data.aiEnabled);
+  const prefs = $derived(currentPrefs());
+  const canAct = $derived(!!data.user && data.user.role !== 'inspector');
 
-  // Phase 25e (#97) — header strip data.
-  const todayDateLabel = $derived(fmt.instant(Date.now(), 'date-long', { year: undefined }));
-  // Use first letter of the user email as a friendly hello when no name is
-  // wired up. The full session has display name once Phase 26 lands.
+  const todayDateLabel = $derived(fmt.instant(data.nowMs, 'date-long', { year: undefined }));
   const greeting = $derived.by(() => {
     const hour = Number(
       new Intl.DateTimeFormat('en-US', {
         hour: 'numeric',
         hourCycle: 'h23',
-        timeZone: currentPrefs().timeZone
-      }).format(new Date())
+        timeZone: prefs.timeZone
+      }).format(new Date(data.nowMs))
     );
     const part = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
     return `Good ${part}.`;
   });
-  const subtitle = $derived.by(() => {
-    if (data.priorityAction) {
-      const wk = data.derivedEvents.length + data.primariesInWindow.length;
-      return `One thing to do today. · ${wk} item${wk === 1 ? '' : 's'} this week.`;
-    }
-    return "Nothing scheduled today. Check the week strip for what's coming.";
+
+  // svelte-ignore state_referenced_locally
+  let deckWindow = $state<TodayWindow>(data.deckWindow);
+  // svelte-ignore state_referenced_locally
+  let view = $state<TodayView>(data.view);
+  // svelte-ignore state_referenced_locally
+  let calPeriod = $state<WeekPeriod>(periodForWindow(data.deckWindow));
+
+  let queuedRows = $state<QueuedTaskRow[]>([]);
+  const queued = $derived.by(() => {
+    const m = new Map<string, QueuedTaskAction>();
+    for (const r of queuedRows) if (!r.rejected) m.set(r.taskId, r.action);
+    return m;
+  });
+  const rejected = $derived(new Set(queuedRows.filter((r) => r.rejected).map((r) => r.taskId)));
+
+  const tasks = $derived(data.deckTasks as Task[]);
+  const entries = $derived(
+    buildTaskDeck(tasks, {
+      window: deckWindow,
+      now: data.nowMs,
+      timeZone: prefs.timeZone,
+      queued
+    })
+  );
+  const counts = $derived(deckCounts(entries));
+  const summary = $derived.by(() => {
+    const parts: string[] = [];
+    if (counts.late) parts.push(`${counts.late} late`);
+    if (counts.dueToday) parts.push(`${counts.dueToday} due today`);
+    if (counts.planned) parts.push(`${counts.planned} planned`);
+    if (counts.done) parts.push(`${counts.done} done`);
+    if (counts.skipped) parts.push(`${counts.skipped} skipped`);
+    return parts.join(' · ');
   });
 
-  // Phase 25e (#97) — week-strip items map (YYYY-MM-DD → [{title, kind}]).
-  const DAY_MS_LOCAL = 24 * 60 * 60 * 1000;
-  const todayStartMs = $derived(Date.parse(fmt.today()));
+  const subtitle = $derived.by(() => {
+    const open = counts.late + counts.dueToday;
+    if (data.priorityAction) {
+      return open > 1
+        ? `One thing to do first, then ${open - 1} more on the list.`
+        : 'One thing to do today.';
+    }
+    return 'Nothing scheduled today. Check the list below for what is coming.';
+  });
+
+  function whereFor(t: Task): string | null {
+    const planting = t.cropId ? data.plantingNames[t.cropId] : undefined;
+    const blockId = t.blockId ?? planting?.blockId;
+    const block = blockId ? data.blockNames[blockId] : undefined;
+    const parts = [planting?.name, block].filter(Boolean);
+    return parts.length ? parts.join(' · ') : null;
+  }
+
+  function cardFor(t: Task, linked: Task[]) {
+    const planting = t.cropId ? data.plantingNames[t.cropId] : undefined;
+    return buildTaskCard(
+      t,
+      {
+        where: whereFor(t),
+        equipmentLabel: t.equipmentId ? (data.equipmentLabels[t.equipmentId] ?? null) : null,
+        before: linked.filter((l) => l.kind === 'pre-task').map((l) => l.title),
+        after: linked.filter((l) => l.kind === 'post-task').map((l) => l.title),
+        queued: queued.get(t.id) ?? null,
+        asOf: data.nowMs,
+        href: taskPlanHref(t.blockId ?? planting?.blockId ?? null)
+      },
+      { now: data.nowMs, prefs }
+    );
+  }
+
+  const deck = $derived(
+    entries.map((e) => ({
+      entry: e,
+      card: cardFor(
+        e.task,
+        e.linked.map((l) => l.task)
+      ),
+      start: taskStart(e.task),
+      linked: e.linked.map((l): LinkedTaskItem => ({
+        id: l.task.id,
+        title: l.task.title,
+        kind: l.task.kind === 'post-task' ? 'post-task' : 'pre-task',
+        status: l.status,
+        queued: l.queued !== null
+      }))
+    }))
+  );
+
+  const windowEvents = $derived(
+    eventsForWindow(
+      data.seasonEvents as CalendarEvent[],
+      data.eventsToday as CalendarEvent[],
+      deckWindow,
+      data.nowMs
+    )
+  );
+
+  const DECK_HEADINGS: Record<TodayWindow, string> = {
+    today: "Today's work",
+    '7d': 'The next 7 days',
+    '30d': 'The next 30 days',
+    season: 'The season ahead'
+  };
+
   function weekKindForTask(t: Task): WeekKind {
     switch (t.relatedEventTable) {
       case 'spray_event':
@@ -61,6 +171,19 @@
         return 'harvest';
       case 'fertility_application':
         return 'fertility';
+    }
+    switch (t.category) {
+      case 'spray':
+        return 'spray';
+      case 'scout':
+        return 'scout';
+      case 'harvest':
+      case 'hay-cutting':
+        return 'harvest';
+      case 'fertilize':
+        return 'fertility';
+      case 'plant':
+        return 'planting';
       default:
         return 'task';
     }
@@ -75,155 +198,127 @@
       case 'planting':
       case 'cover-termination':
         return 'planting';
-      case 'orchard-task':
-      case 'seasonal-task':
-        return 'task';
       default:
         return 'task';
     }
   }
-  function isoDay(ms: number): string {
-    return new Date(ms).toISOString().slice(0, 10);
-  }
-  // #103 — populate 84 days so WeekStrip's Week/Month/Season segmented
-  // control renders real items in every mode (not just the first 7 days).
+  const PASSIVE_KINDS = new Set(['emergence', 'stage-window', 'shade-window']);
+  const todayStartMs = $derived(Date.parse(data.today));
   const weekItemsByDay = $derived.by(() => {
-    const out: Record<string, WeekItem[]> = {};
-    const horizonEndMs = todayStartMs + 84 * DAY_MS_LOCAL;
-    for (const t of data.primariesInWindow) {
-      if (t.scheduledFor < todayStartMs || t.scheduledFor >= horizonEndMs) continue;
-      const key = isoDay(t.scheduledFor);
-      (out[key] ??= []).push({ title: t.title, kind: weekKindForTask(t) });
-    }
-    for (const e of data.derivedEvents) {
-      if (e.startMs < todayStartMs || e.startMs >= horizonEndMs) continue;
-      // Skip passive events that pollute the strip (stage transitions, emergence).
-      if (e.kind === 'emergence' || e.kind === 'stage-window' || e.kind === 'shade-window')
+    type Row = { at: number; value: WeekItem };
+    const rows: Row[] = [];
+    for (const t of tasks) {
+      if (t.kind !== 'primary' || t.completedAt !== undefined || t.abortedAt !== undefined)
         continue;
-      const key = isoDay(e.startMs);
-      (out[key] ??= []).push({ title: e.title, kind: weekKindForEvent(e) });
+      if (queued.has(t.id)) continue;
+      rows.push({ at: t.scheduledFor, value: { title: t.title, kind: weekKindForTask(t) } });
     }
-    return out;
+    for (const e of data.seasonEvents as CalendarEvent[]) {
+      if (PASSIVE_KINDS.has(e.kind)) continue;
+      rows.push({ at: e.startMs, value: { title: e.title, kind: weekKindForEvent(e) } });
+    }
+    return calendarItems(rows, data.today, prefs.timeZone, (v) => v);
   });
 
-  // Phase 25e (#97) — recommendations card items (next-14-day plugin events).
-  const recommendationItems = $derived.by<RecommendationItem[]>(() => {
-    return data.upcoming.slice(0, 8).map((e: CalendarEvent, i: number) => ({
+  const recommendationItems = $derived.by<RecommendationItem[]>(() =>
+    data.upcoming.slice(0, 8).map((e: CalendarEvent, i: number) => ({
       id: `${e.kind}:${e.blockId}:${e.startMs}:${i}`,
       title: e.title,
       crop: e.varietyDisplayName,
       window: fmt.day(e.startMs, 'month-day')
-    }));
-  });
+    }))
+  );
 
-  // Whether to show the legacy schedule view. URL-driven so power users can
-  // bookmark e.g. /today?detail=open to default-open.
-  let detailOpen = $state(false);
-
-  type Tab = 'today' | '7d' | '30d' | 'season';
-  type View = 'list' | 'calendar';
-  const TABS: { id: Tab; label: string }[] = [
-    { id: 'today', label: 'Today' },
-    { id: '7d', label: 'Next 7 days' },
-    { id: '30d', label: 'Next 30 days' },
-    { id: 'season', label: 'Season' }
-  ];
-
-  /** Build a URL that preserves the other querystring params. */
-  function urlFor(opts: { tab?: Tab; view?: View }): string {
-    const params = new URLSearchParams();
-    params.set('tab', opts.tab ?? data.tab);
-    params.set('view', opts.view ?? data.view);
-    return `?${params.toString()}`;
+  function setWindow(w: TodayWindow) {
+    deckWindow = w;
+    calPeriod = periodForWindow(w);
+    syncUrl();
   }
-
-  /** Calendar bucketing: fan all events + tasks into per-day slots so the
-   *  calendar layouts can render them without recomputing. */
-  type CalendarItem =
-    | {
-        kind: 'task';
-        id: string;
-        title: string;
-        scheduledFor: number;
-        taskKind: 'primary' | 'pre-task' | 'post-task';
-      }
-    | {
-        kind: 'derived';
-        title: string;
-        startMs: number;
-        endMs: number;
-        derivedKind: string;
-        blockId: string;
-      };
-
-  function dayKey(ms: number): string {
-    return new Date(ms).toISOString().slice(0, 10);
+  function setView(v: TodayView) {
+    view = v;
+    syncUrl();
   }
-
-  const calendarBuckets = $derived.by(() => {
-    const buckets = new Map<string, CalendarItem[]>();
-    const push = (k: string, item: CalendarItem) => {
-      const list = buckets.get(k) ?? [];
-      list.push(item);
-      buckets.set(k, list);
-    };
-    for (const t of data.primariesInWindow) {
-      push(dayKey(t.scheduledFor), {
-        kind: 'task',
-        id: t.id,
-        title: t.title,
-        scheduledFor: t.scheduledFor,
-        taskKind: 'primary'
-      });
+  function syncUrl() {
+    const url = new URL(window.location.href);
+    if (deckWindow === 'today') url.searchParams.delete('tab');
+    else url.searchParams.set('tab', deckWindow);
+    if (view === 'list') url.searchParams.delete('view');
+    else url.searchParams.set('view', view);
+    try {
+      replaceState(url, {});
+    } catch {
+      /* before hydration finishes; state still applies */
     }
-    for (const list of Object.values(data.tasksByPrimary as Record<string, Task[]>)) {
-      for (const t of list) {
-        push(dayKey(t.scheduledFor), {
-          kind: 'task',
-          id: t.id,
-          title: t.title,
-          scheduledFor: t.scheduledFor,
-          taskKind: t.kind as 'pre-task' | 'post-task'
-        });
-      }
-    }
-    for (const e of data.derivedEvents) {
-      push(dayKey(e.startMs), {
-        kind: 'derived',
-        title: e.title,
-        startMs: e.startMs,
-        endMs: e.endMs,
-        derivedKind: e.kind,
-        blockId: e.blockId
-      });
-    }
-    return buckets;
-  });
-
-  /** Generate the days that the calendar should display in grid cells. */
-  function gridDays(tab: Tab): { date: string; ms: number }[] {
-    const start = new Date(todayStartMs);
-    const count = tab === '7d' ? 7 : tab === '30d' ? 28 : tab === 'season' ? 84 : 1;
-    const out: { date: string; ms: number }[] = [];
-    for (let i = 0; i < count; i++) {
-      const d = new Date(start.getTime() + i * 86_400_000);
-      out.push({ date: dayKey(d.getTime()), ms: d.getTime() });
-    }
-    return out;
-  }
-
-  function dayLabel(ms: number): string {
-    return `${fmt.day(ms, 'weekday')} ${fmt.day(ms, 'month-day', { month: 'numeric' })}`;
   }
 
   let busy = $state(false);
   let actionError = $state<string | null>(null);
+  let liveMessage = $state('');
 
-  function fmtDate(ms: number): string {
-    return fmt.day(ms);
+  async function refreshQueued(): Promise<void> {
+    try {
+      const { listQueuedTaskActions } = await import('$lib/client/taskQueue');
+      const next = await listQueuedTaskActions();
+      const waiting = (rows: QueuedTaskRow[]) => rows.filter((r) => !r.rejected).length;
+      const drained = waiting(next) < waiting(queuedRows);
+      queuedRows = next;
+      if (drained && navigator.onLine) await invalidateAll();
+    } catch {
+      queuedRows = [];
+    }
   }
 
-  /** Promote a calendar-engine derived event into a real Task. */
+  onMount(() => {
+    void refreshQueued();
+    const timer = setInterval(refreshQueued, 4000);
+    return () => clearInterval(timer);
+  });
+
+  async function queueAction(taskId: string, action: QueuedTaskAction, reason?: string) {
+    const { queueTaskAction } = await import('$lib/client/taskQueue');
+    await queueTaskAction(taskId, action, reason);
+    await refreshQueued();
+    liveMessage = 'Saved on this phone. It will save when you have signal.';
+  }
+
+  async function closeTask(taskId: string, action: QueuedTaskAction, reason?: string) {
+    busy = true;
+    actionError = null;
+    liveMessage = '';
+    const body =
+      action === 'complete'
+        ? { action: 'complete', occurredAt: Date.now() }
+        : { action: 'abort', reason: reason || undefined };
+    try {
+      if (navigator.onLine === false) {
+        await queueAction(taskId, action, reason);
+        return;
+      }
+      let res: Response;
+      try {
+        res = await fetch(`/api/tasks/${encodeURIComponent(taskId)}`, {
+          method: 'PATCH',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      } catch {
+        await queueAction(taskId, action, reason);
+        return;
+      }
+      if (!res.ok) {
+        const out = await res.json().catch(() => ({}));
+        actionError = `That did not save. ${out.error ?? `The server said ${res.status}.`}`;
+        return;
+      }
+      liveMessage = action === 'complete' ? 'Marked done.' : 'Skipped.';
+      await invalidateAll();
+    } catch (err) {
+      actionError = err instanceof Error ? err.message : String(err);
+    } finally {
+      busy = false;
+    }
+  }
+
   async function scheduleFromEvent(e: CalendarEvent) {
     busy = true;
     actionError = null;
@@ -243,54 +338,44 @@
       });
       if (!res.ok) {
         const out = await res.json().catch(() => ({}));
-        actionError = out.error ?? 'failed to schedule';
+        actionError = `That did not schedule. ${out.error ?? `The server said ${res.status}.`}`;
         return;
       }
-      window.location.reload();
+      liveMessage = 'Added to your list.';
+      await invalidateAll();
     } catch (err) {
-      actionError = err instanceof Error ? err.message : String(err);
+      actionError =
+        navigator.onLine === false
+          ? 'Scheduling needs signal. Try again when you are back online.'
+          : err instanceof Error
+            ? err.message
+            : String(err);
     } finally {
       busy = false;
     }
-  }
-
-  async function patchTask(id: string, body: Record<string, unknown>) {
-    busy = true;
-    actionError = null;
-    try {
-      const res = await fetch(`/api/tasks/${id}`, {
-        method: 'PATCH',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) {
-        const out = await res.json().catch(() => ({}));
-        actionError = out.error ?? 'failed';
-        return;
-      }
-      window.location.reload();
-    } catch (err) {
-      actionError = err instanceof Error ? err.message : String(err);
-    } finally {
-      busy = false;
-    }
-  }
-
-  function preTasksFor(taskId: string): Task[] {
-    return (data.tasksByPrimary as Record<string, Task[]>)[taskId] ?? [];
   }
 
   function fmtRange(startMs: number, endMs: number) {
     const a = fmt.day(startMs);
     if (startMs === endMs) return a;
-    const b = fmt.day(endMs);
-    return `${a} – ${b}`;
+    return `${a} to ${fmt.day(endMs)}`;
   }
 
-  /**
-   * Map a calendar event to a deep-link URL + a button label so the user can
-   * one-tap from "today's action" into the right page with context filled in.
-   */
+  const EVENT_KIND_LABEL: Record<string, string> = {
+    'spray-window': 'Spray window',
+    'harvest-window': 'Harvest window',
+    planting: 'Planting',
+    'cover-termination': 'Cover crop',
+    'orchard-task': 'Orchard',
+    'seasonal-task': 'Seasonal',
+    'curing-progress': 'Curing',
+    'curing-ready': 'Curing',
+    'companion-trigger': 'Companion',
+    emergence: 'Emergence',
+    'stage-window': 'Growth stage',
+    'shade-window': 'Shade'
+  };
+
   function ctaFor(e: CalendarEvent): { href: string; label: string } | null {
     switch (e.kind) {
       case 'spray-window': {
@@ -298,56 +383,35 @@
         const params = new URLSearchParams();
         params.set('block', e.blockId);
         if (stage) params.set('windowStage', stage);
-        return {
-          href: `/scout?${params.toString()}`,
-          label: 'Scout this block →'
-        };
+        return { href: `/scout?${params.toString()}`, label: 'Scout this block' };
       }
       case 'companion-trigger':
-        return {
-          href: `/plan#block-${e.blockId}`,
-          label: 'Open block plan →'
-        };
+      case 'planting':
+      case 'seasonal-task':
+        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan' };
       case 'harvest-window':
-        // The plantingId isn't carried on the event; jump to /harvest where
-        // the readiness card with the right block + variety auto-focuses.
-        return { href: `/harvest`, label: 'Open harvest →' };
+      case 'curing-progress':
+      case 'curing-ready':
+        return { href: '/harvest', label: 'Open harvest' };
       case 'cover-termination':
         return {
           href: `/spray?block=${encodeURIComponent(e.blockId)}&windowStage=BURNDOWN`,
-          label: 'Plan burndown →'
+          label: 'Plan burndown'
         };
-      case 'planting':
-        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
       case 'orchard-task': {
         const taskKey = (e.detail?.taskKey as string | undefined) ?? '';
-        // Spray-related orchard tasks → spray flow; harvest → harvest page.
-        if (taskKey === 'harvest') return { href: '/harvest', label: 'Open harvest →' };
-        const isSpray = /spray|fungicide|oil/.test(taskKey);
-        if (isSpray) {
+        if (taskKey === 'harvest') return { href: '/harvest', label: 'Open harvest' };
+        if (/spray|fungicide|oil/.test(taskKey)) {
           const params = new URLSearchParams({ block: e.blockId });
-          return {
-            href: `/spray?${params.toString()}`,
-            label: 'Plan this orchard spray →'
-          };
+          return { href: `/spray?${params.toString()}`, label: 'Plan this orchard spray' };
         }
-        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
+        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan' };
       }
-      case 'curing-progress':
-      case 'curing-ready':
-        return { href: '/harvest', label: 'Open harvest →' };
-      case 'seasonal-task':
-        return { href: `/plan#block-${e.blockId}`, label: 'Open block plan →' };
-      case 'emergence':
-        return null;
     }
     return null;
   }
 </script>
 
-<!-- Phase 25e (#97) — Almanac /today shell. Greeting + weather strip,
-     hero card + quick actions, week strip + recommendations + glance.
-     1:1 with `direction-almanac-today.jsx` ATodayScreen. -->
 <WeatherStrip
   dateLabel={todayDateLabel}
   {greeting}
@@ -364,7 +428,7 @@
   <TodayHero
     action={data.priorityAction}
     {aiEnabled}
-    onSkip={(taskId, reason) => patchTask(taskId, { action: 'abort', reason })}
+    onSkip={canAct ? (taskId, reason) => closeTask(taskId, 'abort', reason) : undefined}
   />
   <QuickActions profile={data.farmProfile} />
 </div>
@@ -389,20 +453,245 @@
   </section>
 {/if}
 
-<div class="t-grid t-grid-second">
-  <WeekStrip {todayStartMs} items={weekItemsByDay} />
-  <div class="t-side-stack">
-    <Recommendations
-      items={recommendationItems}
-      onSchedule={(id) => {
-        const idx = recommendationItems.findIndex((r) => r.id === id);
-        const ev = data.upcoming[idx];
-        if (ev) scheduleFromEvent(ev);
-      }}
-    />
-    <SeasonGlance glance={data.seasonGlance} />
+<section class="deck" aria-labelledby="deck-heading" data-testid="today-deck">
+  <div class="deck-head">
+    <h2 id="deck-heading" class="serif">{DECK_HEADINGS[deckWindow]}</h2>
+    {#if summary}<p class="deck-sum" data-testid="deck-summary">{summary}</p>{/if}
   </div>
+  <div class="filters">
+    <div class="chips" role="group" aria-label="Show work for">
+      {#each TODAY_WINDOWS as w (w.id)}
+        <button
+          type="button"
+          class="chip"
+          aria-pressed={deckWindow === w.id}
+          onclick={() => setWindow(w.id)}>{w.label}</button
+        >
+      {/each}
+    </div>
+    <div class="chips" role="group" aria-label="Show as">
+      <button
+        type="button"
+        class="chip"
+        aria-pressed={view === 'list'}
+        onclick={() => setView('list')}>Cards</button
+      >
+      <button
+        type="button"
+        class="chip"
+        aria-pressed={view === 'calendar'}
+        onclick={() => setView('calendar')}>Calendar</button
+      >
+    </div>
+  </div>
+
+  <p class="sr-only" role="status" aria-live="polite">{liveMessage}</p>
+  {#if actionError}
+    <Banner tone="rust" urgent>{actionError}</Banner>
+  {/if}
+
+  {#if view === 'calendar'}
+    <div class="calendar">
+      <WeekStrip {todayStartMs} items={weekItemsByDay} bind:period={calPeriod} />
+      {#if deckWindow === 'season'}
+        <SeasonStrip
+          crops={data.activeCrops}
+          events={data.seasonEvents as CalendarEvent[]}
+          fromMs={data.nowMs}
+          toMs={data.nowMs + 200 * 86_400_000}
+        />
+      {/if}
+    </div>
+  {:else}
+    {#if deck.length === 0}
+      <div class="empty" data-testid="deck-empty">
+        {#if deckWindow === 'today'}
+          <p class="serif empty-title">Nothing on the list for today.</p>
+        {:else}
+          <p class="serif empty-title">Nothing scheduled in this window.</p>
+        {/if}
+        <p>
+          {#if data.counts.blocks === 0}
+            Add an Area on the <a href="/plan">Plan</a> page and plant something, and the jobs it needs
+            will show up here.
+          {:else}
+            Your crop calendar suggestions are below. Plan a one-off spray any time.
+          {/if}
+        </p>
+        <a class="btn primary" href="/spray">Plan a spray</a>
+      </div>
+    {:else}
+      <ul class="cards" aria-label="Tasks">
+        {#each deck as d (d.entry.task.id)}
+          <li>
+            <TaskDeckCard
+              card={d.card}
+              taskId={d.entry.task.id}
+              status={d.entry.status}
+              start={d.start}
+              {canAct}
+              queued={d.entry.queued !== null}
+              rejected={rejected.has(d.entry.task.id)}
+              linked={d.linked}
+              {busy}
+              {prefs}
+              now={data.nowMs}
+              onDone={(id) => closeTask(id, 'complete')}
+              onSkip={(id, reason) => closeTask(id, 'abort', reason)}
+            />
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if windowEvents.length > 0}
+      <h3 class="sub-head">From your crop calendar</h3>
+      <p class="hint">
+        Your crops suggest these. Schedule one to add it to your list, where it can get its own prep
+        and follow-up jobs.
+      </p>
+      <ul class="suggestions" aria-label="Crop calendar suggestions">
+        {#each windowEvents as e (e.kind + e.blockId + e.startMs + e.title)}
+          {@const cta = ctaFor(e)}
+          <li class="suggestion">
+            <div class="s-main">
+              <strong>{e.title}</strong>
+              <span class="s-meta"
+                >{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName} ·
+                <span class="s-kind">{EVENT_KIND_LABEL[e.kind] ?? e.kind.replace(/-/g, ' ')}</span
+                ></span
+              >
+              {#if e.body}<span class="s-body">{e.body}</span>{/if}
+            </div>
+            <div class="s-actions">
+              {#if cta}<a class="btn ghost" href={cta.href}>{cta.label}</a>{/if}
+              {#if canAct}
+                <button
+                  type="button"
+                  class="btn ghost"
+                  aria-label="Schedule: {e.title}"
+                  disabled={busy}
+                  onclick={() => scheduleFromEvent(e)}>Schedule</button
+                >
+              {/if}
+            </div>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if deckWindow === 'season' && data.activeCrops.length > 0}
+      <h3 class="sub-head">Active crops</h3>
+      <ul class="active-crops">
+        {#each data.activeCrops as c (c.id)}
+          <li>
+            <a href={cardHref('planting', cardKey('planting', c.id))}>{c.varietyDisplayName}</a>
+            <span class="s-meta"
+              >{data.blockNames[c.blockId] ?? 'Unnamed block'} · {c.plantingDate
+                ? `planted ${fmt.day(c.plantingDate)}`
+                : 'planned'}</span
+            >
+            <Pill tone={c.status === 'active' ? 'forest' : 'neutral'}>{c.status}</Pill>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  {/if}
+</section>
+
+<div class="t-grid t-grid-second">
+  <Recommendations
+    items={recommendationItems}
+    onSchedule={canAct
+      ? (id) => {
+          const idx = recommendationItems.findIndex((r) => r.id === id);
+          const ev = data.upcoming[idx];
+          if (ev) scheduleFromEvent(ev);
+        }
+      : undefined}
+  />
+  <SeasonGlance glance={data.seasonGlance} />
 </div>
+
+{#if data.lowStock.length > 0}
+  <Banner tone="wheat">
+    <strong>{data.lowStock.length} item{data.lowStock.length === 1 ? '' : 's'} low on stock:</strong
+    >
+    <ul class="alert-list">
+      {#each data.lowStock as i (i.id)}
+        <li>
+          <a href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[i.category] ?? 'pesticide'}/{i.id}"
+            >{i.displayName}</a
+          >: {i.onHand}
+          {i.defaultUnit} on hand (reorder at {i.reorderThreshold}
+          {i.defaultUnit})
+        </li>
+      {/each}
+    </ul>
+  </Banner>
+{/if}
+{#if data.expiringStock.length > 0}
+  <Banner tone="wheat">
+    <strong
+      >{data.expiringStock.length} lot{data.expiringStock.length === 1 ? '' : 's'} expiring within 30
+      days:</strong
+    >
+    <ul class="alert-list">
+      {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
+        <li>
+          <a
+            href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[e.category] ??
+              'pesticide'}/{e.itemId}">{e.itemName}</a
+          >
+          {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}: {e.balance}
+          {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left
+        </li>
+      {/each}
+    </ul>
+  </Banner>
+{/if}
+
+<section class="card gear" aria-labelledby="gear-heading" data-testid="today-gear">
+  <h2 id="gear-heading">Sprayers and safety rules</h2>
+  {#if data.sprayers.length === 0}
+    <p class="hint">No sprayers yet. Add one from <a href="/inventory">Inventory</a>.</p>
+  {:else}
+    <ul class="sprayers">
+      {#each data.sprayers as s (s.id)}
+        <li>
+          <strong>{s.label}</strong>
+          {#if s.lastChemistryClass}
+            <span class="warn">last load: {s.lastChemistryClass}</span>
+            <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}" class="link">Decon</a>
+          {:else}
+            <span class="ok">clean</span>
+          {/if}
+          {#if s.lastDeconAt}
+            <span class="meta">decon {fmt.instant(s.lastDeconAt)}</span>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+  <dl class="kernel">
+    <dt>Rules version</dt>
+    <dd><code>{data.rulesVersion}</code></dd>
+    <dt>Crops registered</dt>
+    <dd>{data.counts.crops}</dd>
+    <dt>Herbicides registered</dt>
+    <dd>{data.counts.herbicides}</dd>
+    <dt>Blocks defined</dt>
+    <dd>{data.counts.blocks}</dd>
+    {#if data.pluginFailures.length > 0}
+      <dt>Plugin load failures</dt>
+      <dd class="warn-list">
+        <ul>
+          {#each data.pluginFailures as f, idx (idx)}<li>{f}</li>{/each}
+        </ul>
+      </dd>
+    {/if}
+  </dl>
+</section>
 
 <div class="legend-tail">
   <ProvenanceLegend
@@ -415,407 +704,7 @@
   />
 </div>
 
-<details class="legacy-detail" bind:open={detailOpen}>
-  <summary>Full schedule view — tasks · calendar · sprayers · kernel info</summary>
-  <div class="tab-row">
-    <div class="tabs" role="tablist" aria-label="Calendar window">
-      {#each TABS as t (t.id)}
-        <a
-          class="tab"
-          class:active={data.tab === t.id}
-          role="tab"
-          aria-selected={data.tab === t.id}
-          href={urlFor({ tab: t.id })}
-        >
-          {t.label}
-        </a>
-      {/each}
-    </div>
-    <nav class="view-toggle" aria-label="View mode">
-      <a
-        class="view"
-        class:active={data.view === 'list'}
-        href={urlFor({ view: 'list' })}
-        aria-current={data.view === 'list' ? 'page' : undefined}
-      >
-        ☰ List
-      </a>
-      <a
-        class="view"
-        class:active={data.view === 'calendar'}
-        href={urlFor({ view: 'calendar' })}
-        aria-current={data.view === 'calendar' ? 'page' : undefined}
-      >
-        ▦ Calendar
-      </a>
-    </nav>
-  </div>
-
-  {#if actionError}
-    <Banner tone="rust" urgent>{actionError}</Banner>
-  {/if}
-
-  {#if data.view === 'calendar'}
-    <section class="card calendar-panel" aria-label="Calendar view">
-      {#if data.tab === 'today'}
-        {@const today = gridDays('today')[0]}
-        {@const items = calendarBuckets.get(today.date) ?? []}
-        <h2>{dayLabel(today.ms)}</h2>
-        {#if items.length === 0}
-          <p class="hint">Nothing scheduled today.</p>
-        {:else}
-          <ul class="day-strip">
-            {#each items.sort((a, b) => (a.kind === 'task' ? a.scheduledFor : a.startMs) - (b.kind === 'task' ? b.scheduledFor : b.startMs)) as item, i (i)}
-              <li class="day-item kind-{item.kind === 'task' ? item.taskKind : item.derivedKind}">
-                <span class="when">
-                  {#if item.kind === 'task'}
-                    {fmt.day(item.scheduledFor, 'month-day')}
-                  {:else}
-                    {fmt.day(item.startMs)}
-                  {/if}
-                </span>
-                <strong>{item.title}</strong>
-                {#if item.kind === 'derived'}
-                  <span class="kind-chip">{item.derivedKind}</span>
-                {:else}
-                  <span class="kind-chip">{item.taskKind}</span>
-                {/if}
-              </li>
-            {/each}
-          </ul>
-        {/if}
-      {:else if data.tab === '7d'}
-        <h2>Next 7 days</h2>
-        <div class="week-grid">
-          {#each gridDays('7d') as d (d.date)}
-            <div class="day-cell">
-              <header>{dayLabel(d.ms)}</header>
-              {#each calendarBuckets.get(d.date) ?? [] as item, i (i)}
-                <div
-                  class="cell-item kind-{item.kind === 'task' ? item.taskKind : item.derivedKind}"
-                >
-                  <strong>{item.title}</strong>
-                </div>
-              {/each}
-            </div>
-          {/each}
-        </div>
-      {:else if data.tab === '30d'}
-        <h2>Next 30 days</h2>
-        <div class="month-grid">
-          {#each gridDays('30d') as d (d.date)}
-            {@const items = calendarBuckets.get(d.date) ?? []}
-            <div class="month-cell" class:has-items={items.length > 0}>
-              <span class="month-day">{new Date(d.ms).getUTCDate()}</span>
-              {#if items.length > 0}
-                <span class="dot" title={items.map((it) => it.title).join('\n')}
-                  >{items.length}</span
-                >
-              {/if}
-            </div>
-          {/each}
-        </div>
-        <p class="hint">
-          Each cell shows the count of scheduled tasks + plugin events. Switch to List to drill in.
-        </p>
-      {:else if data.tab === 'season'}
-        <h2>Season — active crops</h2>
-        {#if data.activeCrops.length === 0}
-          <p class="hint">No active crops yet. Plant a crop on /plan to see a season strip here.</p>
-        {:else}
-          <div class="gantt">
-            <div class="gantt-axis">
-              {#each gridDays('season').filter((_, i) => i % 7 === 0) as d (d.date)}
-                <span class="gantt-week">{fmt.day(d.ms, 'month-day')}</span>
-              {/each}
-            </div>
-            {#each data.activeCrops as crop (crop.id)}
-              <div class="gantt-row">
-                <span class="gantt-label">{crop.varietyDisplayName}</span>
-                <div class="gantt-track">
-                  {#each data.derivedEvents.filter((e) => e.blockId === crop.blockId) as e, i (i)}
-                    {@const startPct =
-                      ((e.startMs - data.tabFromMs) / (data.tabToMs - data.tabFromMs)) * 100}
-                    {@const widthPct =
-                      ((e.endMs - e.startMs) / (data.tabToMs - data.tabFromMs)) * 100}
-                    <span
-                      class="gantt-span kind-{e.kind}"
-                      style="left:{Math.max(0, startPct)}%; width:{Math.max(1, widthPct)}%"
-                      title="{e.title} — {fmt.day(e.startMs)}"
-                    ></span>
-                  {/each}
-                </div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      {/if}
-    </section>
-  {/if}
-
-  <section
-    class="card task-panel"
-    aria-label="Scheduled tasks in window"
-    class:hidden={data.view === 'calendar' && data.tab !== 'today'}
-  >
-    <h2>
-      {#if data.tab === 'today'}Today's tasks{:else if data.tab === '7d'}Next 7 days{:else if data.tab === '30d'}Next
-        30 days{:else}Season{/if}
-    </h2>
-
-    {#if data.primariesInWindow.length === 0 && data.derivedEvents.length === 0}
-      <p class="hint">
-        Nothing scheduled in this window. Plugin suggestions below will appear once a crop is
-        planted.
-      </p>
-    {/if}
-
-    {#each data.primariesInWindow as primary (primary.id)}
-      {@const pre = preTasksFor(primary.id).filter((t) => t.kind === 'pre-task')}
-      {@const post = preTasksFor(primary.id).filter((t) => t.kind === 'post-task')}
-      <article class="primary-task">
-        <header>
-          <span class="when">{fmtDate(primary.scheduledFor)}</span>
-          <strong class="title">{primary.title}</strong>
-        </header>
-        {#if primary.body}<p class="body">{primary.body}</p>{/if}
-        {#if pre.length > 0}
-          <details open>
-            <summary>{pre.length} pre-task{pre.length === 1 ? '' : 's'}</summary>
-            <ul class="linked">
-              {#each pre as t (t.id)}
-                <li>
-                  <span class="when">{fmtDate(t.scheduledFor)}</span>
-                  <strong>{t.title}</strong>
-                  {#if t.body}<span class="body">— {t.body}</span>{/if}
-                  <button
-                    class="mini"
-                    onclick={() => patchTask(t.id, { action: 'complete' })}
-                    disabled={busy}
-                  >
-                    ✓ Done
-                  </button>
-                </li>
-              {/each}
-            </ul>
-          </details>
-        {/if}
-        {#if post.length > 0}
-          <details>
-            <summary>{post.length} post-task{post.length === 1 ? '' : 's'}</summary>
-            <ul class="linked">
-              {#each post as t (t.id)}
-                <li>
-                  <span class="when">{fmtDate(t.scheduledFor)}</span>
-                  <strong>{t.title}</strong>
-                  {#if t.body}<span class="body">— {t.body}</span>{/if}
-                  <button
-                    class="mini"
-                    onclick={() => patchTask(t.id, { action: 'complete' })}
-                    disabled={busy}
-                  >
-                    ✓ Done
-                  </button>
-                </li>
-              {/each}
-            </ul>
-          </details>
-        {/if}
-        <div class="row">
-          <button
-            class="primary"
-            onclick={() => patchTask(primary.id, { action: 'complete' })}
-            disabled={busy}
-          >
-            ✓ Mark primary complete
-          </button>
-          <button
-            class="secondary"
-            onclick={() =>
-              patchTask(primary.id, { action: 'abort', reason: 'aborted from /today' })}
-            disabled={busy}
-          >
-            Abort
-          </button>
-        </div>
-      </article>
-    {/each}
-
-    {#if data.derivedEvents.length > 0}
-      <h3 class="suggestions-heading">Plugin suggestions</h3>
-      <p class="hint">
-        Calendar engine derived these from your active crops. Click <strong>Schedule</strong> to promote
-        one to a task you can attach pre/post-tasks to.
-      </p>
-      <ul class="suggestions">
-        {#each data.derivedEvents as e (e.kind + e.blockId + e.startMs + e.title)}
-          <li>
-            <span class="when">{fmtDate(e.startMs)}</span>
-            <strong>{e.title}</strong>
-            <span class="kind">{e.kind}</span>
-            {#if e.body}<span class="body">— {e.body}</span>{/if}
-            <button class="mini" onclick={() => scheduleFromEvent(e)} disabled={busy}>
-              + Schedule
-            </button>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-
-    {#if data.tab === 'season' && data.activeCrops.length > 0}
-      <h3 class="suggestions-heading">Active crops</h3>
-      <ul class="active-crops">
-        {#each data.activeCrops as c (c.id)}
-          <li>
-            <strong>{c.varietyDisplayName}</strong>
-            — block {c.blockId.slice(0, 8)} — {c.plantingDate
-              ? `planted ${fmtDate(c.plantingDate)}`
-              : 'planned'}
-            <Pill tone={c.status === 'active' ? 'forest' : 'neutral'}>{c.status}</Pill>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </section>
-
-  {#if data.lowStock.length > 0}
-    <Banner tone="wheat">
-      <strong
-        >{data.lowStock.length} SKU{data.lowStock.length === 1 ? '' : 's'} low on stock:</strong
-      >
-      <ul class="alert-list">
-        {#each data.lowStock as i (i.id)}
-          <li>
-            <a
-              href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[i.category] ?? 'pesticide'}/{i.id}"
-              >{i.displayName}</a
-            >
-            — {i.onHand}
-            {i.defaultUnit} on hand (reorder at {i.reorderThreshold}
-            {i.defaultUnit})
-          </li>
-        {/each}
-      </ul>
-    </Banner>
-  {/if}
-  {#if data.expiringStock.length > 0}
-    <Banner tone="wheat">
-      <strong
-        >{data.expiringStock.length} lot{data.expiringStock.length === 1 ? '' : 's'} expiring within 30
-        days:</strong
-      >
-      <ul class="alert-list">
-        {#each data.expiringStock as e (e.itemId + (e.lotNumber ?? ''))}
-          <li>
-            <a
-              href="/inventory/{STOCK_CATEGORY_TO_INVENTORY_TYPE[e.category] ??
-                'pesticide'}/{e.itemId}">{e.itemName}</a
-            >
-            {#if e.lotNumber}<code>{e.lotNumber}</code>{/if}
-            — {e.balance}
-            {e.unit}, {e.daysUntilExpiry} day{e.daysUntilExpiry === 1 ? '' : 's'} left
-          </li>
-        {/each}
-      </ul>
-    </Banner>
-  {/if}
-
-  {#if data.eventsToday.length > 0}
-    <section class="card today-actions">
-      <h2>Today's actions</h2>
-      <ul>
-        {#each data.eventsToday as e (e.cropPluginId + e.title + e.startMs)}
-          {@const cta = ctaFor(e)}
-          <li class="event {e.kind}">
-            <strong>{e.title}</strong>
-            <small>{fmtRange(e.startMs, e.endMs)} · {e.varietyDisplayName}</small>
-            {#if e.body}<p>{e.body}</p>{/if}
-            {#if cta}
-              <a class="cta" href={cta.href}>{cta.label}</a>
-            {/if}
-          </li>
-        {/each}
-      </ul>
-    </section>
-  {:else}
-    <section class="card empty">
-      <h2>No scheduled action today</h2>
-      <p>
-        {#if data.counts.blocks === 0}
-          Add a block on <a href="/plan">/plan</a> with a planting record to see calendar-driven actions
-          here.
-        {:else}
-          Calendar engine has nothing for today. Plan a one-off spray on <a href="/spray">/spray</a> if
-          needed.
-        {/if}
-      </p>
-      <a href="/spray" class="primary">Plan a spray</a>
-    </section>
-  {/if}
-
-  {#if data.upcoming.length > 0}
-    <section class="card">
-      <h2>Next 14 days</h2>
-      <ul class="upcoming">
-        {#each data.upcoming.slice(0, 12) as e (e.cropPluginId + e.title + e.startMs)}
-          {@const cta = ctaFor(e)}
-          <li class="event {e.kind}">
-            <span class="when">{fmtRange(e.startMs, e.endMs)}</span>
-            <strong>{e.title}</strong>
-            <small>{e.varietyDisplayName}</small>
-            {#if cta}<a class="cta-small" href={cta.href}>{cta.label}</a>{/if}
-          </li>
-        {/each}
-      </ul>
-    </section>
-  {/if}
-
-  <section class="card">
-    <h2>Sprayers</h2>
-    <ul class="sprayers">
-      {#each data.sprayers as s (s.id)}
-        <li>
-          <strong>{s.label}</strong>
-          <span class="id">{s.id}</span>
-          {#if s.lastChemistryClass}
-            <span class="warn">last load: {s.lastChemistryClass}</span>
-            <a href="/spray/decon?sprayer={encodeURIComponent(s.id)}" class="link">Decon →</a>
-          {:else}
-            <span class="ok">clean</span>
-          {/if}
-          {#if s.lastDeconAt}
-            <span class="meta">decon {fmt.instant(s.lastDeconAt)}</span>
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  </section>
-
-  <section class="card audit">
-    <h2>Kernel</h2>
-    <dl>
-      <dt>Rules version</dt>
-      <dd><code>{data.rulesVersion}</code></dd>
-      <dt>Crops registered</dt>
-      <dd>{data.counts.crops}</dd>
-      <dt>Herbicides registered</dt>
-      <dd>{data.counts.herbicides}</dd>
-      <dt>Blocks defined</dt>
-      <dd>{data.counts.blocks}</dd>
-      {#if data.pluginFailures.length > 0}
-        <dt>Plugin load failures</dt>
-        <dd class="warn">
-          <ul>
-            {#each data.pluginFailures as f, idx (idx)}<li>{f}</li>{/each}
-          </ul>
-        </dd>
-      {/if}
-    </dl>
-  </section>
-</details>
-
 <style>
-  /* Phase 25e (#97) — Almanac /today shell layout. */
   .t-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
@@ -825,30 +714,8 @@
   .t-grid-second {
     margin-bottom: 22px;
   }
-  .t-side-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
   .legend-tail {
     margin: 0 0 22px;
-  }
-  .legacy-detail {
-    margin-top: 8px;
-    border-top: 1px solid var(--color-divider-soft, var(--color-divider));
-    padding-top: 14px;
-  }
-  .legacy-detail > summary {
-    cursor: pointer;
-    color: var(--color-forest-deep);
-    font-weight: 600;
-    font-size: 13px;
-    list-style: revert;
-    margin-bottom: 12px;
-    padding: 6px 0;
-  }
-  .legacy-detail > summary:hover {
-    color: var(--color-forest);
   }
   @media (max-width: 900px) {
     .t-grid,
@@ -856,399 +723,199 @@
       grid-template-columns: minmax(0, 1fr);
     }
   }
-  .tab-row {
+  .deck {
+    margin: 0 0 22px;
     display: flex;
-    align-items: end;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+  .deck-head {
+    display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 0 0 1rem;
-    border-bottom: 2px solid var(--color-divider);
+    align-items: baseline;
+    gap: 4px 14px;
   }
-  .tabs {
+  .deck-head h2 {
+    margin: 0;
+    font-size: 22px;
+    color: var(--color-ink);
+  }
+  .deck-sum {
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: 14px;
+  }
+  .filters {
     display: flex;
-    gap: 0;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
   }
-  .tab {
-    padding: 0.6rem 1rem;
-    color: #555;
-    text-decoration: none;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-    font-weight: 600;
-    white-space: nowrap;
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
     min-height: 48px;
-    display: flex;
-    align-items: center;
-  }
-  .tab.active {
-    color: var(--color-forest);
-    border-bottom-color: var(--color-forest);
-    background: var(--color-cream);
-  }
-  .view-toggle {
-    display: flex;
-    gap: 0.25rem;
-    margin-bottom: 4px;
-  }
-  .view {
-    padding: 0.4rem 0.75rem;
-    color: #555;
-    text-decoration: none;
+    padding: 0 14px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--color-divider);
-    border-radius: 4px;
-    font-size: 0.85rem;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font: inherit;
     font-weight: 600;
-    background: white;
-    min-height: 36px;
-    display: flex;
-    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
   }
-  .view.active {
+  .chip[aria-pressed='true'] {
     background: var(--color-forest);
-    color: white;
     border-color: var(--color-forest);
+    color: var(--color-cream);
   }
-  .calendar-panel {
-    background: white;
-    padding: 1.25rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  .chip:focus-visible,
+  .btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
   }
-  .day-strip {
+  .cards {
     list-style: none;
-    padding: 0;
     margin: 0;
-  }
-  .day-strip li {
-    display: flex;
-    gap: 0.6rem;
-    padding: 0.6rem;
-    border-left: 3px solid var(--color-divider);
-    margin-bottom: 0.3rem;
-    background: var(--color-cream);
-    border-radius: 0 4px 4px 0;
-    align-items: baseline;
-    flex-wrap: wrap;
-  }
-  .day-strip li.kind-primary {
-    border-left-color: var(--color-forest);
-  }
-  .day-strip li.kind-pre-task {
-    border-left-color: var(--color-wheat);
-  }
-  .day-strip li.kind-post-task {
-    border-left-color: #4a6ea3;
-  }
-  .day-strip li.kind-spray-window {
-    border-left-color: #4a6ea3;
-  }
-  .kind-chip {
-    background: white;
-    color: #555;
-    padding: 0.05rem 0.4rem;
-    border-radius: 3px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    border: 1px solid var(--color-divider);
-  }
-  .week-grid {
+    padding: 0;
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.4rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 12px;
   }
-  .day-cell {
-    border: 1px solid var(--color-divider);
-    border-radius: 6px;
-    min-height: 110px;
-    padding: 0.4rem;
-    background: var(--color-cream);
+  .cards > li {
+    min-width: 0;
   }
-  .day-cell header {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--color-forest);
-    margin-bottom: 0.3rem;
-    text-transform: uppercase;
-  }
-  .cell-item {
-    background: white;
-    border-radius: 3px;
-    padding: 0.2rem 0.35rem;
-    margin-bottom: 0.2rem;
-    font-size: 0.78rem;
-    border-left: 3px solid var(--color-divider);
-  }
-  .cell-item.kind-primary {
-    border-left-color: var(--color-forest);
-  }
-  .cell-item.kind-pre-task {
-    border-left-color: var(--color-wheat);
-  }
-  .cell-item.kind-post-task {
-    border-left-color: #4a6ea3;
-  }
-  .cell-item.kind-spray-window {
-    border-left-color: #4a6ea3;
-  }
-  .month-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.2rem;
-  }
-  .month-cell {
-    aspect-ratio: 1;
-    background: var(--color-cream);
-    border-radius: 4px;
+  .calendar {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 0.3rem;
-    font-size: 0.85rem;
+    gap: 12px;
+    min-width: 0;
   }
-  .month-cell.has-items {
-    background: #e7f1ea;
-    border: 1px solid var(--color-forest);
+  .empty {
+    padding: 18px;
+    border: 1px dashed var(--color-divider);
+    border-radius: var(--radius-card);
+    background: var(--color-paper);
   }
-  .month-day {
-    color: #888;
-    font-weight: 600;
+  .empty p {
+    margin: 0 0 8px;
+    color: var(--color-ink-soft);
   }
-  .month-cell .dot {
-    background: var(--color-forest);
-    color: white;
-    border-radius: 999px;
-    text-align: center;
-    width: 1.4rem;
-    height: 1.4rem;
-    line-height: 1.4rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-left: auto;
+  .empty .empty-title {
+    font-size: 18px;
+    color: var(--color-ink);
   }
-  .gantt {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-  .gantt-axis {
-    display: flex;
-    gap: 0;
-    padding-left: 8rem;
-    color: #888;
-    font-size: 0.7rem;
-  }
-  .gantt-week {
-    flex: 1 0 0;
-    text-align: left;
-    padding: 0 0.2rem;
-    border-left: 1px solid #eee;
-  }
-  .gantt-row {
-    display: grid;
-    grid-template-columns: 8rem 1fr;
+  .btn {
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-  }
-  .gantt-label {
-    font-size: 0.85rem;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: var(--radius-input);
+    font: inherit;
     font-weight: 600;
-    color: var(--color-forest);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .gantt-track {
-    position: relative;
-    height: 1.6rem;
-    background: var(--color-cream);
-    border-radius: 4px;
-  }
-  .gantt-span {
-    position: absolute;
-    top: 0.2rem;
-    bottom: 0.2rem;
-    background: rgba(31, 94, 58, 0.6);
-    border-radius: 3px;
-  }
-  .gantt-span.kind-spray-window {
-    background: rgba(74, 110, 163, 0.6);
-  }
-  .gantt-span.kind-harvest-window {
-    background: rgba(179, 89, 0, 0.6);
-  }
-  .gantt-span.kind-orchard-task {
-    background: rgba(120, 84, 184, 0.6);
-  }
-  .hidden {
-    display: none;
-  }
-  .task-panel {
-    background: white;
-    padding: 1.25rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-  .primary-task {
-    border: 1px solid var(--color-divider);
-    border-radius: 6px;
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
-  }
-  .primary-task header {
-    display: flex;
-    gap: 0.6rem;
-    align-items: baseline;
-    margin-bottom: 0.4rem;
-  }
-  .primary-task .when {
-    color: #777;
-    font-size: 0.85rem;
-  }
-  .primary-task .title {
-    font-size: 1rem;
-  }
-  .primary-task .body {
-    color: #444;
-    font-size: 0.9rem;
-    margin: 0.25rem 0;
-  }
-  ul.linked {
-    list-style: none;
-    padding: 0.5rem 0 0;
-    margin: 0;
-  }
-  ul.linked li {
-    display: flex;
-    gap: 0.4rem;
-    align-items: baseline;
-    flex-wrap: wrap;
-    padding: 0.3rem 0;
-    border-top: 1px dashed #e5e5e5;
-    font-size: 0.9rem;
-  }
-  details summary {
+    text-decoration: none;
     cursor: pointer;
-    color: var(--color-forest);
-    font-weight: 600;
-    margin: 0.4rem 0;
   }
-  .suggestions {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .suggestions li {
-    display: flex;
-    gap: 0.5rem;
-    align-items: baseline;
-    flex-wrap: wrap;
-    padding: 0.5rem 0;
-    border-top: 1px solid #eee;
-    font-size: 0.9rem;
-  }
-  .suggestions .kind {
-    background: #f0f3f0;
-    color: #555;
-    border-radius: 3px;
-    padding: 0.05rem 0.4rem;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-  }
-  .suggestions-heading {
-    margin-top: 1rem;
-    color: #555;
-    font-size: 0.95rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .active-crops {
-    list-style: none;
-    padding: 0;
-    margin: 0.5rem 0 0;
-    font-size: 0.9rem;
-  }
-  .active-crops li {
-    padding: 0.3rem 0;
-    border-top: 1px solid #eee;
-  }
-  .status {
-    padding: 0.05rem 0.4rem;
-    border-radius: 3px;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    margin-left: 0.4rem;
-  }
-  .status-active {
-    background: #e7f1ea;
-    color: var(--color-forest);
-  }
-  .status-harvested {
-    background: #fff8e1;
-    color: var(--color-wheat);
-  }
-  .row {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.6rem;
-    flex-wrap: wrap;
-  }
-  .primary,
-  .secondary,
-  .mini {
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: 600;
-  }
-  .primary {
+  .btn.primary {
     background: var(--color-forest);
-    color: white;
-    padding: 0.5rem 0.9rem;
-    /* T-06 (audit F-H): 44px violated the CLAUDE.md field-UI invariant
-     * (≥48 dp tap targets for glove-operability). Bumped to 48 px so
-     * Marco can hit the primary Today CTA reliably with gloves on. */
-    min-height: 48px;
-  }
-  .secondary {
-    background: #f0f3f0;
-    color: var(--color-forest);
-    padding: 0.5rem 0.9rem;
-    /* T-06 (audit F-H): see .primary above. */
-    min-height: 48px;
+    color: var(--color-cream);
     border: 1px solid var(--color-forest);
   }
-  .mini {
-    background: var(--color-forest);
-    color: white;
-    font-size: 0.8rem;
-    padding: 0.25rem 0.6rem;
-    min-height: 32px;
+  .btn.ghost {
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    border: 1px solid var(--color-divider);
   }
-  .primary:disabled,
-  .secondary:disabled,
-  .mini:disabled {
+  .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
+  .sub-head {
+    margin: 8px 0 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-soft);
+  }
   .hint {
-    color: #666;
-    font-size: 0.9rem;
-    margin: 0.4rem 0;
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: 14px;
   }
-  .error {
-    background: #fce4e4;
-    color: var(--color-rust);
-    padding: 0.6rem;
-    border-radius: 4px;
-    margin: 0.5rem 0;
+  .suggestions,
+  .active-crops {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  /* .alert-list is the <ul> inside the Banner low-stock / expiring lists
-     (replaced .stock-alert / .stock-alert ul / .stock-alert code that
-     backed the old bespoke <section class="stock-alerts">). */
+  .suggestion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-divider-soft);
+    border-left: 4px solid var(--color-wheat);
+    border-radius: var(--radius-input);
+    background: var(--color-paper);
+  }
+  .s-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 14rem;
+    overflow-wrap: anywhere;
+  }
+  .s-meta {
+    color: var(--color-ink-soft);
+    font-size: 13px;
+  }
+  .s-kind {
+    text-transform: lowercase;
+  }
+  .s-body {
+    font-size: 14px;
+    color: var(--color-ink);
+  }
+  .s-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .active-crops li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    min-height: 48px;
+    border-top: 1px solid var(--color-divider-soft);
+  }
+  .active-crops a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+    color: var(--color-forest-deep);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
   .alert-list {
     margin: 0.4rem 0 0 1.25rem;
     padding: 0;
@@ -1259,120 +926,24 @@
     border-radius: 3px;
     font-size: 0.85rem;
   }
-  .date {
-    margin: 0;
-    color: #555;
-    font-family: monospace;
-  }
   .card {
-    background: white;
-    border-radius: 8px;
+    background: var(--color-paper);
+    border: 1px solid var(--color-divider-soft);
+    border-radius: var(--radius-card);
     padding: 1rem 1.25rem;
     margin-bottom: 1rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
   .card h2 {
     margin: 0 0 0.75rem;
     font-size: 1rem;
-    color: var(--color-forest);
+    color: var(--color-forest-deep);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-  }
-  .empty {
-    text-align: center;
-    padding: 2rem 1rem;
-  }
-  .empty h2 {
-    color: #555;
-  }
-  .primary {
-    display: inline-block;
-    background: var(--color-forest);
-    color: white;
-    padding: 0.9rem 1.5rem;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 600;
-    margin-top: 0.75rem;
-    min-height: 48px;
-    line-height: 1.4;
-  }
-  .today-actions ul,
-  .upcoming {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .today-actions li,
-  .upcoming li {
-    padding: 0.6rem 0.75rem;
-    border-left: 4px solid var(--color-forest);
-    background: #f8fbf9;
-    margin: 0.4rem 0;
-    border-radius: 0 4px 4px 0;
-  }
-  .event small {
-    color: #555;
-    margin-left: 0.5rem;
-    font-family: monospace;
-  }
-  .event.spray-window {
-    border-left-color: var(--color-wheat);
-    background: #fff8ec;
-  }
-  .event.companion-trigger {
-    border-left-color: #4d8e36;
-  }
-  .event.harvest-window {
-    border-left-color: #6b3fa0;
-    background: #f5f0fa;
-  }
-  .event.cover-termination {
-    border-left-color: #777;
-  }
-  .event p {
-    margin: 0.25rem 0 0;
-    font-size: 0.9rem;
-  }
-  .cta {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 0.5rem;
-    background: var(--color-forest);
-    color: white;
-    text-decoration: none;
-    padding: 0.9rem 1.25rem;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 1rem;
-    min-height: 60px;
-    line-height: 1.4;
-  }
-  .cta-small {
-    margin-left: auto;
-    color: var(--color-forest);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.85rem;
-    padding: 0.3rem 0.6rem;
-    border: 1px solid var(--color-forest);
-    border-radius: 4px;
-  }
-  .upcoming li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-  .upcoming .when {
-    font-family: monospace;
-    color: #555;
-    min-width: 11rem;
   }
   .sprayers {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0 0 12px;
   }
   .sprayers li {
     display: flex;
@@ -1380,60 +951,54 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     padding: 0.5rem 0;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--color-divider-soft);
   }
   .sprayers li:first-child {
     border-top: none;
   }
-  .sprayers .id {
-    font-family: monospace;
-    color: #666;
-    font-size: 0.85rem;
-  }
   .sprayers .warn {
     background: var(--pill-wheat-bg);
-    color: var(--color-wheat);
+    color: var(--pill-wheat-fg);
     padding: 0.15rem 0.5rem;
     border-radius: 3px;
     font-size: 0.85rem;
     font-weight: 600;
   }
   .sprayers .ok {
-    background: #e7f1ea;
-    color: var(--color-forest);
+    background: var(--pill-forest-bg);
+    color: var(--pill-forest-fg);
     padding: 0.15rem 0.5rem;
     border-radius: 3px;
     font-size: 0.85rem;
     font-weight: 600;
   }
   .sprayers .meta {
-    color: #777;
+    color: var(--color-ink-soft);
     font-size: 0.8rem;
   }
   .sprayers .link {
     margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 8px;
     color: var(--color-rust);
-    text-decoration: none;
     font-weight: 600;
   }
-  dl {
+  .kernel {
     display: grid;
-    grid-template-columns: max-content 1fr;
+    grid-template-columns: max-content minmax(0, 1fr);
     gap: 0.4rem 1rem;
     margin: 0;
   }
-  dt {
-    color: #666;
+  .kernel dt {
+    color: var(--color-ink-soft);
   }
-  dd {
+  .kernel dd {
     margin: 0;
+    overflow-wrap: anywhere;
   }
-  dd code {
-    background: #f5f5f5;
-    padding: 0.1rem 0.4rem;
-    border-radius: 3px;
-  }
-  .warn ul {
+  .warn-list ul {
     margin: 0;
     padding-left: 1.25rem;
   }

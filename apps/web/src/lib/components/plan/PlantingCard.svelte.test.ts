@@ -108,6 +108,12 @@ describe('PlantingCard (#121)', () => {
     );
   });
 
+  it('opens the journal and photo help on the Planting Card page', () => {
+    render(PlantingCard, { planting: PLANTING });
+    const link = screen.getByRole('link', { name: 'Journal and photo help' });
+    expect(link).toHaveAttribute('href', '/cards/planting/pl_p1');
+  });
+
   it('tags provenance: AI plan, carry-forward, or manual entry', () => {
     const ai = render(PlantingCard, { planting: PLANTING, sourceTag: 'AI plan' });
     expect(

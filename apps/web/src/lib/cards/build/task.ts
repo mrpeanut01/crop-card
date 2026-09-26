@@ -9,8 +9,10 @@ import {
   type TaskStatus
 } from '$lib/tasks/status';
 import {
+  PLANTING_CARE_LINK_LABEL,
   cardHref,
   cardKey,
+  plantingCardHref,
   type CardFact,
   type CardModel,
   type CardProvenance,
@@ -129,7 +131,10 @@ export function buildTaskCardFrom(
     asOf: ctx.asOf,
     provenance: [provenanceFor(task)],
     href: ctx.href ?? cardHref('task', key),
-    status: { id: status, label: TASK_STATUS_LABEL[status], tone: TASK_STATUS_TONE[status] }
+    status: { id: status, label: TASK_STATUS_LABEL[status], tone: TASK_STATUS_TONE[status] },
+    ...(task.cropId
+      ? { links: [{ label: PLANTING_CARE_LINK_LABEL, href: plantingCardHref(task.cropId) }] }
+      : {})
   };
 }
 
@@ -168,7 +173,8 @@ export function buildTaskCardFromSnapshot(
       title: task.title,
       category: task.category,
       scheduledFor: task.scheduledFor,
-      blockId
+      blockId,
+      cropId: planting?.id ?? null
     },
     { where: where || null, equipmentLabel: equipment?.label ?? null, asOf: snapshot.generatedAt },
     opts

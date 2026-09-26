@@ -194,7 +194,11 @@ describe('frameLiveCard', () => {
   it('adds one link back to the record and keeps the card otherwise intact', () => {
     const live = buildPlantingCard(sampleSnapshot(), 'p_tom')!;
     const framed = frameLiveCard(frameLiveCard(live, 'harvest', 'h1'), 'harvest', 'h1');
-    expect(framed.links).toEqual([{ label: OPEN_RECORD_LABEL, href: '/records/harvest/h1' }]);
+    expect(framed.links).toEqual([
+      ...(live.links ?? []),
+      { label: OPEN_RECORD_LABEL, href: '/records/harvest/h1' }
+    ]);
+    expect(framed.links?.some((l) => l.label === 'How to care for it')).toBe(true);
     expect({ ...framed, links: live.links }).toEqual(live);
   });
 });

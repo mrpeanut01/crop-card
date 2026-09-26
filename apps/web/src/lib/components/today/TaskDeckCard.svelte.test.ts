@@ -57,6 +57,23 @@ describe('TaskDeckCard', () => {
     expect(onDone).toHaveBeenCalledWith('t1');
   });
 
+  it('a task on a planting links to its Planting Card, care guide and photo help', () => {
+    const card = buildTaskCard(
+      { ...task, cropId: 'p_kale' },
+      { asOf: now, where: 'Kale · Bed 2' },
+      { now, prefs }
+    );
+    setup({ card, canAct: false });
+    expect(
+      screen.getByRole('link', { name: 'Planting card, care and photo help' })
+    ).toHaveAttribute('href', '/cards/planting/pl_p_kale');
+  });
+
+  it('a task with no planting shows no Planting Card link', () => {
+    setup();
+    expect(screen.queryByRole('link', { name: /Planting card/ })).toBeNull();
+  });
+
   it('Skip asks why, then saves the reason', async () => {
     const { onSkip } = setup();
     const skip = screen.getByRole('button', { name: 'Skip: Spray the kale' });

@@ -84,6 +84,11 @@ describe('buildTaskCard', () => {
 });
 
 describe('task cards from the offline snapshot', () => {
+  const base = {
+    id: 't1',
+    title: 'Stake + prune suckers',
+    scheduledFor: Date.parse('2026-06-02T14:00:00Z')
+  };
   const snap = sampleSnapshot();
 
   it('builds an open task by key, naming its planting and bed', () => {
@@ -95,11 +100,26 @@ describe('task cards from the offline snapshot', () => {
     );
     expect(buildCard(snap, 'tk_t_stake', { prefs, now })).toEqual(card);
     expect(card.href).toBe('/cards/task/tk_t_stake');
+    expect(card.links).toEqual([
+      { label: 'Planting card, care and photo help', href: '/cards/planting/pl_p_tom' }
+    ]);
   });
 
   it('finds the bed through the planting when the task names none', () => {
     const card = buildTaskCardFromSnapshot(snap, 't_scout', { prefs, now })!;
     expect(card.facts.find((f) => f.label === 'Where')?.value).toContain('Bed 3');
+  });
+
+  it('a task on a planting links to its Planting Card; one without a planting links nowhere', () => {
+    const onPlanting = buildTaskCard(
+      { ...base, cropId: 'p_tom' },
+      { asOf: now },
+      { now, prefs }
+    );
+    expect(onPlanting.links).toEqual([
+      { label: 'Planting card, care and photo help', href: '/cards/planting/pl_p_tom' }
+    ]);
+    expect(buildTaskCard(base, { asOf: now }, { now, prefs }).links).toBeUndefined();
   });
 
   it('unknown ids build nothing', () => {

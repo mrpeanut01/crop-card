@@ -180,6 +180,15 @@ export function cardHref(kind: CardKind, key: string): string {
   return `/cards/${kind}/${encodeURIComponent(key)}`;
 }
 
+/** The Planting Card page, which also carries the Care Guide, photo help
+ *  and the planting journal. */
+export function plantingCardHref(plantingId: string): string {
+  return cardHref('planting', cardKey('planting', plantingId));
+}
+
+export const PLANTING_CARE_LINK_LABEL = 'Planting card, care and photo help';
+export const PLANTING_JOURNAL_LINK_LABEL = 'Journal and photo help';
+
 /** Link printed beside the QR. Null when there is no stable http(s) origin,
  *  in which case the QR is left off. */
 export function cardShortUrl(origin: string | null | undefined, key: string): string | null {

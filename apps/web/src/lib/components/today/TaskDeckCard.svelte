@@ -69,6 +69,9 @@
       {/if}
     {/snippet}
     {#snippet actions()}
+      {#each card.links ?? [] as l (l.href)}
+        <a class="card-link" href={l.href}>{l.label}</a>
+      {/each}
       {#if linked.length}
         <ul class="linked" aria-label="Get ready and follow-up for {card.title}">
           {#each linked as l (l.id)}
@@ -169,7 +172,16 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+  .card-link {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 48px;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+  }
   .btn:focus-visible,
+  .card-link:focus-visible,
   .rejected:focus-visible {
     outline: none;
     box-shadow: var(--focus-ring);

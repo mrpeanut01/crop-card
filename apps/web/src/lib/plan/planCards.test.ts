@@ -167,7 +167,10 @@ describe('planCards', () => {
     ]);
     expect(card.accent).toBe(plantingColor('p2'));
     expect(card.provenance).toEqual([{ source: 'ai', detail: 'AI plan · refined 2×' }]);
-    expect(card.links?.[0].href).toBe('/plan/wheat?planting=p2');
+    expect(card.links).toEqual([
+      { label: 'Stages, scab risk & vernalization', href: '/plan/wheat?planting=p2' },
+      { label: 'Journal and photo help', href: '/cards/planting/pl_p2' }
+    ]);
     expect(card.href).toBe('/crops/p2');
     const carry = planPlantingCard({
       planting: BLOCKS[1].plantings[1],
@@ -176,5 +179,8 @@ describe('planCards', () => {
     expect(carry.status?.label).toBe('planned');
     expect(carry.provenance[0].source).toBe('fallback');
     expect(carry.facts.find((f) => f.label === 'Planted')?.value).toBe('planned');
+    expect(carry.links).toEqual([
+      { label: 'Journal and photo help', href: `/cards/planting/pl_${BLOCKS[1].plantings[1].id}` }
+    ]);
   });
 });

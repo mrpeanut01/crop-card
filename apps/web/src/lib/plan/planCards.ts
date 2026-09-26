@@ -8,7 +8,9 @@ import { buildAreaCard } from '$lib/cards/build/area';
 import { areaDisplayName, blockDisplayName } from '$lib/cards/build/common';
 import { formatSize } from '$lib/cards/build/size';
 import {
+  PLANTING_JOURNAL_LINK_LABEL,
   cardKey,
+  plantingCardHref,
   type CardFact,
   type CardModel,
   type CardProvenance,
@@ -328,8 +330,11 @@ export function planPlantingCard(input: PlanPlantingCardInput): CardModel {
     provenance,
     href: `/crops/${encodeURIComponent(planting.id)}`,
     accent: plantingColor(planting.id),
-    ...(input.detailHref
-      ? { links: [{ label: 'Stages, scab risk & vernalization', href: input.detailHref }] }
-      : {})
+    links: [
+      ...(input.detailHref
+        ? [{ label: 'Stages, scab risk & vernalization', href: input.detailHref }]
+        : []),
+      { label: PLANTING_JOURNAL_LINK_LABEL, href: plantingCardHref(planting.id) }
+    ]
   };
 }

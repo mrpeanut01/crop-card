@@ -25,36 +25,45 @@ export function isBusyError(e: unknown): boolean {
 }
 
 type StatementMethod = 'run' | 'get' | 'all';
+type Method = (this: unknown, ...args: unknown[]) => unknown;
 const TIMED: readonly StatementMethod[] = ['run', 'get', 'all'];
+const PATCHED = Symbol.for('cropcard.dbTiming');
+
+function timed(original: Method): Method {
+  return function (this: unknown, ...args: unknown[]) {
+    const timing = timingStore.getStore();
+    if (!timing) {
+      try {
+        return original.apply(this, args);
+      } catch (e) {
+        if (isBusyError(e)) dbCounters.busy++;
+        throw e;
+      }
+    }
+    const start = performance.now();
+    try {
+      return original.apply(this, args);
+    } catch (e) {
+      if (isBusyError(e)) dbCounters.busy++;
+      throw e;
+    } finally {
+      timing.ms += performance.now() - start;
+      timing.queries++;
+    }
+  };
+}
 
 /** Times every statement run/get/all into the active request's accumulator
- *  and counts SQLITE_BUSY failures. Statements are wrapped per instance so
- *  `stmt.raw()` (which returns the same object) keeps the wrapper. */
+ *  and counts SQLITE_BUSY failures. Drizzle prepares a fresh statement per
+ *  query, so the timing wrapper is installed once on better-sqlite3's shared
+ *  Statement prototype instead of per statement; that also covers the
+ *  BEGIN/COMMIT statements behind `db.transaction`. */
 export function instrumentSqlite(sqlite: Database.Database): void {
-  const prepare = sqlite.prepare.bind(sqlite);
-  sqlite.prepare = ((source: string) => {
-    const stmt = prepare(source) as unknown as Record<
-      StatementMethod,
-      (...a: unknown[]) => unknown
-    >;
-    for (const name of TIMED) {
-      const original = stmt[name].bind(stmt);
-      stmt[name] = (...args: unknown[]) => {
-        const timing = timingStore.getStore();
-        const start = timing ? performance.now() : 0;
-        try {
-          return original(...args);
-        } catch (e) {
-          if (isBusyError(e)) dbCounters.busy++;
-          throw e;
-        } finally {
-          if (timing) {
-            timing.ms += performance.now() - start;
-            timing.queries++;
-          }
-        }
-      };
-    }
-    return stmt;
-  }) as typeof sqlite.prepare;
+  const proto = Object.getPrototypeOf(sqlite.prepare('SELECT 1')) as Record<
+    StatementMethod,
+    Method
+  > & { [PATCHED]?: true };
+  if (proto[PATCHED]) return;
+  for (const name of TIMED) proto[name] = timed(proto[name]);
+  proto[PATCHED] = true;
 }

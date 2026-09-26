@@ -43,6 +43,39 @@ describe('instrumentSqlite', () => {
     expect(timing.ms).toBeGreaterThanOrEqual(0);
   });
 
+  it('wraps once however many connections are instrumented', () => {
+    const a = new Database(':memory:');
+    const b = new Database(':memory:');
+    instrumentSqlite(a);
+    instrumentSqlite(b);
+    instrumentSqlite(b);
+    const { timing } = runWithDbTiming(() => {
+      a.prepare('SELECT 1').get();
+      b.prepare('SELECT 1').get();
+    });
+    expect(timing.queries).toBe(2);
+    a.close();
+    b.close();
+  });
+
+  it('keeps per-request totals apart across interleaved async requests', async () => {
+    const db = new Database(':memory:');
+    instrumentSqlite(db);
+    const tick = () => new Promise((r) => setTimeout(r, 1));
+    const req = (n: number) =>
+      runWithDbTiming(async () => {
+        for (let i = 0; i < n; i++) {
+          await tick();
+          db.prepare('SELECT 1').get();
+        }
+      });
+    const [x, y] = [req(2), req(5)];
+    await Promise.all([x.result, y.result]);
+    expect(x.timing.queries).toBe(2);
+    expect(y.timing.queries).toBe(5);
+    db.close();
+  });
+
   it('counts SQLITE_BUSY failures', () => {
     const file = join(tmpdir(), `cropcard-busy-${process.pid}-${Date.now()}.db`);
     const a = new Database(file);

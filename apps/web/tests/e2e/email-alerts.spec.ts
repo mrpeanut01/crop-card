@@ -1,5 +1,6 @@
 import type { APIRequestContext, Page } from '@playwright/test';
 import { expect, test } from './lib/test';
+import { createOnboardedFarm } from './lib/newOwner';
 
 // Runs on the magic-link preview (E2E_PORT + 1): it has the memory email
 // transport, /_dev/outbox and ORIGIN set, like production.
@@ -44,7 +45,11 @@ test.describe('email alerts are opt-in, with a working unsubscribe', () => {
   test.use({ baseURL: MAGIC_BASE });
 
   test('opt in, get a test email, unsubscribe signed out, turn back on', async ({ page }) => {
-    await signInByLink(page, OWNER);
+    // Its own owner: the seeded one shares the per-address sign-in and
+    // test-email limits and its consent rows with every other spec and repeat.
+    const owner = `alerts-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@e2e.cropcard.local`;
+    await signInByLink(page, owner);
+    await createOnboardedFarm(page, { growing: ['garden'] });
     await page.goto('/settings/notifications');
 
     const section = page.locator('section', { hasText: 'Email alerts' }).last();
@@ -59,13 +64,13 @@ test.describe('email alerts are opt-in, with a working unsubscribe', () => {
     await expect(page.getByRole('checkbox', { name: /Email me: Decon due/ })).toBeChecked();
     await expect(page.getByRole('checkbox', { name: /Email me: Frost tonight/ })).not.toBeChecked();
 
-    const before = (await outbox(page.request, OWNER)).length;
+    const before = (await outbox(page.request, owner)).length;
     await page.getByRole('button', { name: 'Send a test email' }).click();
-    await expect(page.getByText(`Test email sent to ${OWNER}.`)).toBeVisible();
+    await expect(page.getByText(`Test email sent to ${owner}.`)).toBeVisible();
     let mail: OutboxMessage | undefined;
     await expect
       .poll(async () => {
-        const msgs = await outbox(page.request, OWNER);
+        const msgs = await outbox(page.request, owner);
         mail = msgs.length > before ? msgs.at(-1) : undefined;
         return mail?.subject ?? '';
       })

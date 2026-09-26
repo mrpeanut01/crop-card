@@ -38,3 +38,10 @@ NOAA's `FPxx` columns give the date with an xx% chance the frost event falls aft
 ## Hardiness zone
 
 `lib/climate/zone.ts` turns `extremeMinF` into an approximate zone with the USDA map's 10 °F zones and 5 °F half-zones (0 to <5 °F is 7a). It is an estimate from one station, not the USDA Plant Hardiness Zone Map (a gridded PRISM product, not used here), and the app only displays it.
+
+Station elevations are the `elevM` column already in each row (from the normals archive), so the zone work adds nothing to this file. The farm's elevation comes from the USGS Elevation Point Query Service (`https://epqs.nationalmap.gov/v1/json`, 3DEP, a U.S. Government work in the public domain), fetched server-side through `safeFetch` with no redirects, a 4 s timeout and a 4 KB cap, and cached in `weather_forecast_cache` under `elev:<lat>,<lon>` for a year (6 h for a miss). The lookup then runs in two passes:
+
+1. The nearest station with `extremeMinF` within 50 mi, skipping any more than 1,000 ft above or below the farm when both elevations are known (a station with no recorded elevation is still accepted here).
+2. Only when the farm's elevation is known and pass 1 found nothing: the nearest station within 100 mi whose own elevation is known and within 1,000 ft of the farm's. It is shown with its distance and "similar elevation".
+
+The 1,000 ft band comes from the standard-atmosphere lapse rate of 6.5 °C/km (about 3.6 °F per 1,000 ft) against a 5 °F half-zone: inside the band, elevation alone cannot move the estimate a full half-zone. When the farm's elevation is unknown, only pass 1 runs, unguarded, exactly as before.

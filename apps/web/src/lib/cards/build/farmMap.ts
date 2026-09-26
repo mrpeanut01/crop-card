@@ -8,7 +8,7 @@ import {
   type CardSection
 } from '../model';
 import type { FarmSnapshot, SnapshotArea, SnapshotFrostDates } from '../snapshot';
-import { zoneSourceDetail, zoneValueLabel } from '$lib/climate/zone';
+import { zoneCardValue, zoneSourceDetail } from '$lib/climate/zone';
 import { AREA_KINDS, isCropBearing } from '$lib/farm/areaKinds';
 import { AREA_KIND_PLURAL, AREA_KIND_STYLE } from '$lib/farm/kindStyle';
 import { areaDisplayName, areaKindLabel, monthDay, resolveOptions, trimNumber } from './common';
@@ -111,7 +111,7 @@ export function buildFarmMapCard(
   if (snapshot.zone) {
     facts.push({
       label: 'Zone',
-      value: zoneValueLabel(snapshot.zone).replace(/^Zone /, ''),
+      value: zoneCardValue(snapshot.zone),
       provenance: snapshot.zone.provenance
     });
     provenance.push({

@@ -5,9 +5,12 @@
   import {
     farmZoneFrom,
     lookupZone,
+    zoneEstimateLong,
+    zoneReachNote,
     zoneSourceDetail,
     zoneValueLabel,
-    ZONE_ESTIMATE_LONG,
+    ZONE_NEAR_MAX_MI,
+    ZONE_WIDE_MAX_MI,
     type ZoneLookup
   } from '$lib/climate/zone';
 
@@ -23,18 +26,33 @@
   const { lat, lon, manualZone, editable = false }: Props = $props();
 
   let lookup = $state<ZoneLookup | null>(null);
+  let elevationKnown = $state(false);
   let loaded = $state(false);
   let typed = $state(untrack(() => manualZone ?? ''));
   let seq = 0;
+
+  async function elevationAt(la: number | null, lo: number | null): Promise<number | null> {
+    if (la == null || lo == null) return null;
+    try {
+      const res = await fetch(`/api/climate/elevation?lat=${la}&lon=${lo}`);
+      if (!res.ok) return null;
+      const body = (await res.json()) as { elevationFt?: unknown };
+      return typeof body.elevationFt === 'number' ? body.elevationFt : null;
+    } catch {
+      return null;
+    }
+  }
 
   $effect(() => {
     const la = lat;
     const lo = lon;
     const mine = ++seq;
     const t = setTimeout(async () => {
-      const result = await lookupZone(la, lo);
+      const elevationFt = await elevationAt(la, lo);
+      const result = await lookupZone(la, lo, { elevationFt });
       if (mine !== seq) return;
       lookup = result;
+      elevationKnown = elevationFt !== null;
       loaded = true;
     }, 250);
     return () => clearTimeout(t);
@@ -49,16 +67,23 @@
     <span class="lbl">Hardiness zone</span>
     {#if shown}
       <span class="serif value" data-testid="zone-value">{zoneValueLabel(shown)}</span>
+      {#if zoneReachNote(shown)}
+        <span class="reach" data-testid="zone-reach">· {zoneReachNote(shown)}</span>
+      {/if}
       <Provenance
         source={shown.provenance}
         detail={zoneSourceDetail(shown)}
         label={shown.provenance === 'data' ? 'Weather service' : undefined}
-        long={shown.provenance === 'data' ? ZONE_ESTIMATE_LONG : undefined}
+        long={zoneEstimateLong(shown)}
       />
     {:else if lat == null || lon == null}
       <span class="muted">Set the location to estimate it.</span>
     {:else if loaded}
-      <span class="muted" data-testid="zone-none">No station with enough winters nearby.</span>
+      <span class="muted" data-testid="zone-none"
+        >{elevationKnown
+          ? `No station with enough winters within ${ZONE_WIDE_MAX_MI} mi at a similar elevation.`
+          : `No station with enough winters within ${ZONE_NEAR_MAX_MI} mi.`}</span
+      >
     {:else}
       <span class="muted">Looking it up…</span>
     {/if}
@@ -70,7 +95,9 @@
         : ''}Average coldest night of the year, 1991-2020: {fmt.qty(
         estimate.extremeMinF,
         'temperature'
-      )}. An estimate from one station, not the USDA map. Nothing in CropCard is limited by it.
+      )}. {estimate.reach === 'wide'
+        ? 'A rougher estimate from one farther station at a similar elevation'
+        : 'An estimate from one station'}, not the USDA map. Nothing in CropCard is limited by it.
     </p>
   {/if}
   {#if editable}
@@ -108,6 +135,10 @@
   }
   .value {
     font-size: 18px;
+  }
+  .reach {
+    font-size: 13.5px;
+    color: var(--color-ink-soft);
   }
   .muted {
     margin: 0;

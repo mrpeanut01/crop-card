@@ -107,7 +107,10 @@ export const DEFAULT_AI_DAILY_QUOTA = {
   'scan-barcode': 40,
   /** Add-planting date helper: earliest / prime / latest for one crop at the
    *  farm's location. Cached per crop + year, so real use is a handful. */
-  'planting-window': 40
+  'planting-window': 40,
+  /** Garden designer "Fill this bed" (Phase 30E). The recipe fallback is
+   *  always there, so a low cap costs nothing. */
+  'garden-fill': 10
 } as const;
 
 export type AiEndpointName = keyof typeof DEFAULT_AI_DAILY_QUOTA;

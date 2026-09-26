@@ -303,3 +303,41 @@ describe('formatDateMs', () => {
     expect(formatDateMs(new Date(2026, 4, 1).getTime())).toBe('2026-05-01');
   });
 });
+
+describe('block occupancy follows the garden designer rule', () => {
+  it('holds a cut-and-come-again crop through its cut window and turnover', () => {
+    const frost = { lastSpringFrostMs: lastSpring(), firstFallFrostMs: firstFall() };
+    const corn = fakePlugin({ id: 'corn1', family: 'corn', soilTempMinF: 65, dtm: [80, 90] });
+    const lettuce = {
+      ...fakePlugin({ id: 'lettuce', family: 'leafy-green', dtm: [40, 50] }),
+      archetype: 'cut-and-come-again-leafy'
+    } as CropPlugin;
+    const plantedMs = new Date(PLAN_YEAR, 3, 20).getTime();
+    const existing = {
+      id: 'c1',
+      blockId: 'b1',
+      cropPluginId: 'lettuce',
+      plantingDate: plantedMs,
+      status: 'planned'
+    } as unknown as Crop;
+    const [w] = scheduleCandidacy({
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'corn1',
+          varietyDisplayName: 'Corn',
+          plants: 10
+        }
+      ],
+      pluginIndex: { corn1: corn, lettuce },
+      existingCrops: [existing],
+      frostDates: frost,
+      year: PLAN_YEAR,
+      nowMs: new Date(PLAN_YEAR, 0, 1).getTime()
+    });
+    const busyUntil = plantedMs + (50 + 21 + 10) * 86_400_000;
+    expect(busyUntil).toBeGreaterThan(w.latestMs);
+    for (const [start] of w.freeSubWindows ?? []) expect(start).toBeLessThan(plantedMs);
+  });
+});

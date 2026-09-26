@@ -75,7 +75,7 @@ export interface SnapshotPlanting {
   plantCount: number | null;
   /** How `plantCount` was set; `fallback` means computed without plugin spacing. */
   plantCountProvenance: 'data' | 'manual' | 'fallback' | null;
-  sourceProvenance: 'ai' | 'fallback' | null;
+  sourceProvenance: 'ai' | 'fallback' | 'plugin' | null;
 }
 
 export type SnapshotTaskCategory =

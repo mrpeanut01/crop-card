@@ -1,0 +1,48 @@
+{
+  "pluginId": "tomato-and-basil",
+  "type": "bed-recipe",
+  "displayName": "Tomato and basil",
+  "version": "1.0.0",
+  "description": "Paste tomatoes fill most of the bed with a strip of basil along the front, both set out two weeks after the last frost.",
+  "bedSize": {
+    "widthFt": 4,
+    "lengthFt": 8
+  },
+  "frostFreeDays": {
+    "min": 110
+  },
+  "steps": [
+    {
+      "cropPluginId": "tomato-roma-vf",
+      "alternates": [
+        "tomato-celebrity-f1",
+        "tomato-cherokee-purple"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": 14
+      },
+      "section": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "l": 0.75
+      }
+    },
+    {
+      "cropPluginId": "basil-genovese",
+      "alternates": [],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": 14
+      },
+      "section": {
+        "x": 0,
+        "y": 0.75,
+        "w": 1,
+        "l": 0.25
+      },
+      "note": "Pinch the tips often to keep it leafy."
+    }
+  ]
+}

@@ -50,6 +50,7 @@ import { POST as equipmentPost } from './equipment/+server';
 import { POST as stockPost } from './stock/+server';
 import { PATCH as stockPatch } from './stock/[id]/+server';
 import { PATCH as typePatch } from './types/[id]/+server';
+import { POST as gardenFillPost } from './garden/beds/[blockId]/fill/+server';
 
 const OWNER_A = 'foreign-refs-owner-a';
 const OWNER_B = 'foreign-refs-owner-b';
@@ -316,6 +317,27 @@ const cases: Case[] = [
     () => runWithTenant(OWNER_A, () => cropsRepo.getCrop(A.cropId)?.blockId)
   ],
   [
+    'crops/[id] set-placement blockId',
+    'blockId',
+    () =>
+      call(
+        cropPatch,
+        {
+          action: 'set-placement',
+          blockId: B.blockId,
+          footprint: { x_in: 0, y_in: 0, w_in: 12, l_in: 12 },
+          spacingPattern: 'square'
+        },
+        { id: A.cropId }
+      ),
+    () => runWithTenant(OWNER_A, () => cropsRepo.getCrop(A.cropId))
+  ],
+  [
+    'garden/beds/[blockId]/fill blockId',
+    'blockId',
+    () => call(gardenFillPost, { dateMs: Date.now(), seasonYear: 2027 }, { blockId: B.blockId })
+  ],
+  [
     'crops/[id]/equipment equipmentId',
     'equipmentId',
     () =>
@@ -359,7 +381,7 @@ describe('mutation endpoints reject another Owner’s ids (Invariant 6)', () => 
     const before = unchanged?.();
     const res = await run();
     expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: `unknown ${field}` });
+    expect(await res.json()).toMatchObject({ error: `unknown ${field}` });
     if (unchanged) expect(unchanged()).toEqual(before);
   });
 

@@ -250,7 +250,7 @@ describe('planting builder properties', () => {
     rowSpacingIn: fc.option(fc.double({ min: 0.5, max: 120, noNaN: true }), { nil: null }),
     plantCount: fc.option(fc.integer({ min: 0, max: 10_000 }), { nil: null }),
     plantCountProvenance: fc.constantFrom(null, 'data', 'manual', 'fallback'),
-    sourceProvenance: fc.constantFrom(null, 'ai', 'fallback')
+    sourceProvenance: fc.constantFrom(null, 'ai', 'fallback', 'plugin')
   }) as fc.Arbitrary<SnapshotPlanting>;
 
   it('never throws, round-trips its key and keeps every fact non-empty', () => {

@@ -24,13 +24,16 @@ export function loadGettingStartedFacts(input: {
   const blocks = input.blocks ?? listBlocks();
   const equipment = listEquipment().filter((e) => e.retiredAt == null);
   const sprayers = equipment.filter((e) => e.type === 'sprayer');
-  const designable = new Set(areas.filter((a) => isDesignable(a.kind)).map((a) => a.id));
+  const designableAreas = areas.filter((a) => isDesignable(a.kind));
+  const designable = new Set(designableAreas.map((a) => a.id));
+  const gardenArea = designableAreas.find((a) => a.kind === 'garden') ?? designableAreas[0] ?? null;
   return {
     profile: getFarmProfile(),
     hasLocation: hasFarmLatLon(),
     hasMappedArea: areas.some(onMap) || blocks.some(onMap),
     hasPlanting: blocks.some((b) => b.plantings.length > 0) || listCrops({ limit: 1 }).length > 0,
     hasGardenBed: blocks.some((b) => b.kind === 'bed' && !!b.fieldId && designable.has(b.fieldId)),
+    gardenAreaId: gardenArea?.id ?? null,
     hasEquipment: equipment.length > 0,
     hasSprayer: sprayers.length > 0,
     hasCalibratedSprayer: sprayers.some(

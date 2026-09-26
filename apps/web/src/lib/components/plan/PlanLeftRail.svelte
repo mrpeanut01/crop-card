@@ -16,6 +16,7 @@
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import { fmt } from '$lib/prefsState.svelte';
+  import { designerHref } from '$lib/garden/design';
 
   interface Props {
     blocks: BlockWithPlantings[];
@@ -23,8 +24,10 @@
     selectedId?: string;
     onSelect: (blockId: string) => void;
     onAddBlock?: () => void;
+    /** Gardens and greenhouses, each opening in the garden designer. */
+    gardens?: Array<{ id: string; name: string }>;
   }
-  const { blocks, selectedId, onSelect, onAddBlock }: Props = $props();
+  const { blocks, selectedId, onSelect, onAddBlock, gardens = [] }: Props = $props();
 
   let filterText = $state('');
   const filtered = $derived(
@@ -74,6 +77,15 @@
     </div>
   </div>
 
+  {#if gardens.length}
+    <div class="gardens" data-testid="rail-gardens">
+      <Kicker>Garden designer</Kicker>
+      {#each gardens as g (g.id)}
+        <a class="garden-link" href={designerHref(g.id)}>Open {g.name} designer</a>
+      {/each}
+    </div>
+  {/if}
+
   {#if filtered.length === 0}
     <div class="empty">
       {filterText.trim() ? `No blocks match “${filterText}”.` : 'No blocks yet.'}
@@ -121,6 +133,26 @@
 </aside>
 
 <style>
+  .gardens {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .garden-link {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .garden-link:hover,
+  .garden-link:focus-visible {
+    text-decoration: underline;
+  }
   .rail {
     width: 280px;
     border-right: 1px solid var(--color-divider);

@@ -31,7 +31,8 @@ export type AiTask =
    *  pass on top of the deterministic InputsPlan. Uses Haiku
    *  (substitution lookup is comparatively simple). */
   | 'inputs'
-  | 'plantingWindow';
+  | 'plantingWindow'
+  | 'gardenFill';
 
 export interface ModelChoice {
   model: string;
@@ -186,7 +187,8 @@ const MAX_TOKENS_BY_TASK: Record<AiTask, number> = {
   groups: 4000,
   shortNames: 1500,
   inputs: 3000,
-  plantingWindow: 400
+  plantingWindow: 400,
+  gardenFill: 1500
 };
 
 export interface PlanWithAIOptions {

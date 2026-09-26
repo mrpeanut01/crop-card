@@ -171,3 +171,34 @@ describe('formatSize', () => {
     expect(formatSize({ acres: 0, widthFt: 0, lengthFt: 0 }, { units: 'us' })).toBeNull();
   });
 });
+
+describe('garden bed map', () => {
+  it('gives a garden an Open designer link and a to-scale bed map for the card date', () => {
+    const card = buildAreaCard(sampleSnapshot(), 'f_garden')!;
+    expect(card.links).toEqual([{ label: 'Open designer', href: '/plan/areas/f_garden/design' }]);
+    expect(card.bedMap).toMatchObject({ widthFt: 30, lengthFt: 40, hasNorth: false });
+    const beds = card.bedMap!.beds;
+    expect(beds.map((b) => b.name).sort()).toEqual(['', 'Bed 1', 'Bed 3']);
+    expect(beds.find((b) => b.name === 'Bed 3')).toMatchObject({
+      x: 14,
+      y: 2,
+      w: 8,
+      l: 4,
+      crops: ['Cherokee Purple tomato']
+    });
+    expect(beds.find((b) => b.name === 'Bed 1')!.crops).toEqual([]);
+  });
+
+  it('lists later plantings once the card date reaches them', () => {
+    const card = buildAreaCard(sampleSnapshot(), 'f_garden', { now: Date.UTC(2026, 5, 20) })!;
+    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual(['Provider bush bean']);
+  });
+
+  it('leaves pastures and barns without a designer', () => {
+    for (const id of ['f_hay', 'f_barn']) {
+      const card = buildAreaCard(sampleSnapshot(), id)!;
+      expect(card.links).toBeUndefined();
+      expect(card.bedMap).toBeUndefined();
+    }
+  });
+});

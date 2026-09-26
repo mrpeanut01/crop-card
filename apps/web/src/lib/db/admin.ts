@@ -16,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 import { type SQL, and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
+import { plantingInGround } from '$lib/garden/inGround';
 import {
   blocks,
   cropEquipment,
@@ -252,6 +253,59 @@ export function deleteCropCascade(id: string): DeleteSummary {
 }
 
 // ─── Per-block (the heaviest cascade) ───────────────────────────────────
+
+/** True when a block holds anything beyond plans: a planting already in the
+ *  ground (see `plantingInGround`), any spray, harvest, hay, fertility or
+ *  soil record, or a task that is not one of its plans' own. The garden
+ *  designer only deletes beds for which this is false. */
+export function blockHasRecords(id: string, nowMs: number = Date.now()): boolean {
+  const cropRows = db
+    .select({
+      id: crops.id,
+      status: crops.status,
+      plantingDate: crops.plantingDate,
+      harvestedAt: crops.harvestedAt
+    })
+    .from(crops)
+    .where(withTenant(crops, eq(crops.blockId, id)))
+    .all();
+  const inGround = (c: (typeof cropRows)[number]) =>
+    plantingInGround(
+      {
+        status: c.status,
+        plantingDateMs: c.plantingDate?.getTime() ?? null,
+        harvestedAtMs: c.harvestedAt?.getTime() ?? null
+      },
+      nowMs
+    );
+  if (cropRows.some(inGround)) return true;
+  const plannedIds = new Set(cropRows.map((c) => c.id));
+  const any = <T extends TenantScopedTable>(table: T, where: SQL): boolean =>
+    db
+      .select()
+      .from(table as SQLiteTable)
+      .where(withTenant(table, where))
+      .limit(1)
+      .all().length > 0;
+  if (
+    any(sprayEvents, eq(sprayEvents.blockId, id)) ||
+    any(insecticideEvents, eq(insecticideEvents.blockId, id)) ||
+    any(fungicideEvents, eq(fungicideEvents.blockId, id)) ||
+    any(harvestEvents, eq(harvestEvents.blockId, id)) ||
+    any(hayCuttings, eq(hayCuttings.blockId, id)) ||
+    any(fertilityApplications, eq(fertilityApplications.blockId, id)) ||
+    any(fertilityCredits, eq(fertilityCredits.blockId, id)) ||
+    any(soilTests, eq(soilTests.blockId, id))
+  ) {
+    return true;
+  }
+  const taskRows = db
+    .select({ cropId: tasks.cropId })
+    .from(tasks)
+    .where(withTenant(tasks, eq(tasks.blockId, id)))
+    .all();
+  return taskRows.some((t) => !t.cropId || !plannedIds.has(t.cropId));
+}
 
 export function deleteBlockCascade(id: string): DeleteSummary {
   const removed: Record<string, number> = {};

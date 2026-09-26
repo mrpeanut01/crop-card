@@ -135,7 +135,9 @@ describe('/api/blocks kind + layout', () => {
       const field = createField({ name: 'F', kind: 'field' });
       const inGarden = await (await create({ name: 'Drawn', fieldId: garden.id })).json();
       expect(inGarden.block.kind).toBe('bed');
-      expect(loadGettingStartedFacts({ ownerId: 'o', userId: 'user-1' }).hasGardenBed).toBe(true);
+      const facts = loadGettingStartedFacts({ ownerId: 'o', userId: 'user-1' });
+      expect(facts.hasGardenBed).toBe(true);
+      expect(facts.gardenAreaId).toBe(garden.id);
       const inField = await (await create({ name: 'Drawn', fieldId: field.id })).json();
       expect(inField.block.kind).toBe('block');
     });

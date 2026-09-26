@@ -49,8 +49,7 @@ describe('AreaCardSheet', () => {
       onClose: vi.fn(),
       snapshot: snapWithHistory(),
       area: garden,
-      canEdit: true,
-      designerAvailable: false
+      canEdit: true
     });
     const sheet = screen.getByTestId('area-card-sheet');
     expect(sheet.dataset.areaKind).toBe('garden');
@@ -61,28 +60,28 @@ describe('AreaCardSheet', () => {
     expect(within(sheet).getByRole('button', { name: 'Edit details' })).toBeInTheDocument();
   });
 
-  it('shows the designer as coming soon until the route ships', () => {
+  it('shows helpers the designer link but no detail editing', () => {
     render(AreaCardSheet, {
       open: true,
       onClose: vi.fn(),
       snapshot: sampleSnapshot(),
       area: garden,
-      canEdit: false,
-      designerAvailable: false
+      canEdit: false
     });
-    expect(screen.getByRole('button', { name: 'Open designer' })).toBeDisabled();
-    expect(screen.getByText(/Coming soon/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open designer' })).toHaveAttribute(
+      'href',
+      '/plan/areas/f_garden/design'
+    );
     expect(screen.queryByRole('button', { name: 'Edit details' })).toBeNull();
   });
 
-  it('links the designer once it exists, and never for a pasture', () => {
+  it('links the designer for a garden, and never for a pasture', () => {
     const { unmount } = render(AreaCardSheet, {
       open: true,
       onClose: vi.fn(),
       snapshot: sampleSnapshot(),
       area: garden,
-      canEdit: true,
-      designerAvailable: true
+      canEdit: true
     });
     expect(screen.getByRole('link', { name: 'Open designer' })).toHaveAttribute(
       'href',
@@ -94,8 +93,7 @@ describe('AreaCardSheet', () => {
       onClose: vi.fn(),
       snapshot: sampleSnapshot(),
       area: { id: 'f_hay', name: 'Hayfield', kind: 'pasture', details: null },
-      canEdit: true,
-      designerAvailable: true
+      canEdit: true
     });
     expect(screen.queryByText('Open designer')).toBeNull();
   });
@@ -106,8 +104,7 @@ describe('AreaCardSheet', () => {
       onClose: vi.fn(),
       snapshot: snapWithHistory(),
       area: garden,
-      canEdit: true,
-      designerAvailable: false
+      canEdit: true
     });
     await fireEvent.click(screen.getByRole('tab', { name: /Plantings/ }));
     const panel = screen.getByRole('tabpanel');
@@ -134,8 +131,7 @@ describe('AreaCardSheet', () => {
       onClose: vi.fn(),
       snapshot: sampleSnapshot(),
       area: garden,
-      canEdit: true,
-      designerAvailable: false
+      canEdit: true
     });
     await fireEvent.click(screen.getByRole('button', { name: 'Edit details' }));
     await fireEvent.change(screen.getByLabelText('Organic status'), {

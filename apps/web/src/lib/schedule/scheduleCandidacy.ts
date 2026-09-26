@@ -15,9 +15,9 @@
 
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { Crop } from '$lib/db/crops';
+import { plantingOccupancy } from '$lib/garden/occupancy';
 
 const ONE_DAY_MS = 86_400_000;
-const BED_TURNOVER_DAYS = 10;
 
 export type Hardiness = 'tender' | 'half-hardy' | 'hardy';
 
@@ -97,7 +97,11 @@ export interface ScheduleWindow {
 export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] {
   const { assignments, pluginIndex, existingCrops, frostDates } = input;
   const out: ScheduleWindow[] = [];
-  const occupiedByBlock = computeBlockOccupancy(existingCrops, pluginIndex);
+  const occupiedByBlock = computeBlockOccupancy(
+    existingCrops,
+    pluginIndex,
+    frostDates.firstFallFrostMs
+  );
 
   // Earliest plantable date is floored at "tomorrow" regardless of the
   // agronomic earliest — operators don't want the AI or the deterministic
@@ -178,22 +182,33 @@ interface OccupiedWindow {
   endMs: number;
 }
 
-/** Group existing crops by blockId and compute the [plant, harvest+turnover]
- *  windows they occupy. */
+/** Group existing crops by blockId and compute the windows they occupy,
+ *  using the garden designer's `plantingOccupancy` rule (planting date to
+ *  harvest end plus bed turnover). Harvested plantings have left the bed. */
 function computeBlockOccupancy(
   crops: ReadonlyArray<Crop>,
-  pluginIndex: Record<string, CropPlugin>
+  pluginIndex: Record<string, CropPlugin>,
+  firstFallFrostMs: number
 ): Record<string, OccupiedWindow[]> {
   const byBlock: Record<string, OccupiedWindow[]> = {};
   for (const c of crops) {
-    if (!c.blockId || c.plantingDate == null) continue;
-    if (c.status === 'archived' || c.status === 'failed' || c.status === 'harvested') continue;
-    const plug = pluginIndex[c.cropPluginId];
-    const dtm = plug?.daysToMaturity?.max ?? 90;
-    const start = c.plantingDate;
-    const end = start + (dtm + BED_TURNOVER_DAYS) * ONE_DAY_MS;
+    if (!c.blockId || c.status === 'harvested') continue;
+    const interval = plantingOccupancy(
+      {
+        cropId: c.id,
+        blockId: c.blockId,
+        cropPluginId: c.cropPluginId,
+        status: c.status,
+        plantingDateMs: c.plantingDate,
+        harvestedAtMs: c.harvestedAt ?? null,
+        footprint: null
+      },
+      pluginIndex[c.cropPluginId],
+      { firstFallFrostMs }
+    );
+    if (!interval) continue;
     const list = byBlock[c.blockId] ?? [];
-    list.push({ startMs: start, endMs: end });
+    list.push({ startMs: interval.startMs, endMs: interval.endMs });
     byBlock[c.blockId] = list;
   }
   for (const id of Object.keys(byBlock)) {

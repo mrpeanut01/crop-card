@@ -1,0 +1,39 @@
+{
+  "pluginId": "radishes-then-tomatoes",
+  "type": "bed-recipe",
+  "displayName": "Radishes, then tomatoes",
+  "version": "1.0.0",
+  "description": "A quick crop of radishes uses the bed around the last frost, then tomatoes are set out once the soil has warmed.",
+  "bedSize": {
+    "widthFt": 4,
+    "lengthFt": 8
+  },
+  "frostFreeDays": {
+    "min": 120
+  },
+  "steps": [
+    {
+      "cropPluginId": "radish-cherry-belle",
+      "alternates": [
+        "radish-french-breakfast"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": -14
+      }
+    },
+    {
+      "cropPluginId": "tomato-celebrity-f1",
+      "alternates": [
+        "tomato-early-girl-f1",
+        "tomato-big-beef-f1"
+      ],
+      "start": {
+        "anchor": "after-step",
+        "afterStep": 0,
+        "offsetDays": 0
+      },
+      "note": "Stake or cage at planting."
+    }
+  ]
+}

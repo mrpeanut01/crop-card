@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { CROP_FAMILIES, CHEMISTRY_CLASSES } from './safetySnapshot';
-import { TASK_CATEGORY_VALUES } from './taskCategory';
+import { z } from "zod";
+import { CROP_FAMILIES, CHEMISTRY_CLASSES } from "./safetySnapshot";
+import { TASK_CATEGORY_VALUES } from "./taskCategory";
 
 /**
  * Phase 21b follow-up — shared Zod schema for the task category enum.
@@ -26,23 +26,25 @@ const pluginIdRegex = /^[a-z0-9][a-z0-9-]{0,63}$/;
  * of these; back-compat is preserved (a v1.0 plugin without the flag is
  * still valid because every v1.1 field is optional).
  */
-export const PLUGIN_SCHEMA_VERSION = '1.1' as const;
+export const PLUGIN_SCHEMA_VERSION = "1.1" as const;
 
 const pluginBase = z.object({
-  pluginId: z.string().regex(pluginIdRegex, 'pluginId must be kebab-case ≤64 chars'),
+  pluginId: z
+    .string()
+    .regex(pluginIdRegex, "pluginId must be kebab-case ≤64 chars"),
   displayName: z.string().min(1).max(120),
   version: z.string().min(1),
   /** Plugin author's declared schema version. Optional for back-compat —
    *  absent is treated as '1.0'. Used by tooling (e.g., the migration
    *  script that backfills v1.1 fields) to know which plugins have been
    *  upgraded. Not consumed by the safety kernel. */
-  pluginSchemaVersion: z.enum(['1.0', '1.1']).optional()
+  pluginSchemaVersion: z.enum(["1.0", "1.1"]).optional(),
 });
 
 /** Spacing guide values, surfaced inside the planting task view (FR-13). */
 const minMaxNumber = z
   .object({ min: z.number().nonnegative(), max: z.number().nonnegative() })
-  .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' });
+  .refine((v) => v.min <= v.max, { message: "min must be ≤ max" });
 
 export const plantingGuideSchema = z
   .object({
@@ -70,7 +72,7 @@ export const plantingGuideSchema = z
     referenceDensitySeedsPerAcre: z.number().int().positive().optional(),
     /** Days from planting until visible emergence. Replaces the global
      *  `DEFAULT_EMERGENCE_DAYS = {7, 14}` fallback in `calendar/engine.ts`. */
-    emergenceDays: minMaxNumber.optional()
+    emergenceDays: minMaxNumber.optional(),
   })
   .partial();
 
@@ -79,10 +81,13 @@ export const postHarvestCuringSchema = z
   .object({
     method: z.string().min(1),
     durationWeeks: z
-      .object({ min: z.number().int().positive(), max: z.number().int().positive() })
-      .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' }),
+      .object({
+        min: z.number().int().positive(),
+        max: z.number().int().positive(),
+      })
+      .refine((v) => v.min <= v.max, { message: "min must be ≤ max" }),
     targetMoisturePercent: minMaxNumber.optional(),
-    storageLocation: z.string().optional()
+    storageLocation: z.string().optional(),
   })
   .partial({ targetMoisturePercent: true, storageLocation: true });
 
@@ -94,9 +99,9 @@ export const postHarvestCuringSchema = z
 // in TypeScript; plugins declare thresholds, the kernel enforces.
 
 export const cropOperationModelSchema = z.enum([
-  'single-event',
-  'multi-step',
-  'perennial-multi-cut'
+  "single-event",
+  "multi-step",
+  "perennial-multi-cut",
 ]);
 
 const moistureThresholdsSchema = z.object({
@@ -109,42 +114,58 @@ const moistureThresholdsSchema = z.object({
   /** Above this percent → hard STOP (e.g., baled hay >22% = fire risk). */
   dangerAbovePct: z.number().nonnegative().max(100).optional(),
   /** Optimum band for the operation (display + green-state UI). */
-  optimumPercent: minMaxNumber.optional()
+  optimumPercent: minMaxNumber.optional(),
 });
 
 /** Hay-specific multi-step operation declaration (FR-19, FR-21). */
 export const hayOperationsSchema = z.object({
   steps: z
-    .array(z.enum(['mow', 'ted', 'rake', 'bale', 'store']))
+    .array(z.enum(["mow", "ted", "rake", "bale", "store"]))
     .min(2)
-    .default(['mow', 'rake', 'bale', 'store']),
+    .default(["mow", "rake", "bale", "store"]),
   cuttingsPerSeason: z
-    .object({ min: z.number().int().positive(), max: z.number().int().positive() })
-    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
+    .object({
+      min: z.number().int().positive(),
+      max: z.number().int().positive(),
+    })
+    .refine((v) => v.min <= v.max, { message: "min must be ≤ max" })
     .optional(),
   cutIntervalDays: z
-    .object({ min: z.number().int().positive(), max: z.number().int().positive() })
-    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
+    .object({
+      min: z.number().int().positive(),
+      max: z.number().int().positive(),
+    })
+    .refine((v) => v.min <= v.max, { message: "min must be ≤ max" })
     .optional(),
   mowTrigger: z.string().optional(),
   weatherWindowDays: z.number().int().min(1).max(14).default(3),
   /** Per-bale-type baling thresholds. Keys are bale-type strings. */
   baleMoistureGate: z
-    .partialRecord(z.enum(['small-square', 'large-round', 'large-square']), moistureThresholdsSchema)
+    .partialRecord(
+      z.enum(["small-square", "large-round", "large-square"]),
+      moistureThresholdsSchema,
+    )
     .optional(),
   /** Storage temperature watch — fires reminder events (FR-23 supports). */
-  storageTempWatchF: z.object({ warn: z.number(), danger: z.number() }).optional()
+  storageTempWatchF: z
+    .object({ warn: z.number(), danger: z.number() })
+    .optional(),
 });
 export type HayOperations = z.infer<typeof hayOperationsSchema>;
 
 /** Zadoks small-grain growth-stage table (FR-20).
  *  @deprecated Loader normalizes into `growthStageTable` with `system: 'zadoks'`. */
 export const zadoksStageSchema = z.object({
-  stage: z.string().regex(/^Z\d{2}(-Z\d{2})?$/, 'stage must look like Z30 or Z30-Z39'),
+  stage: z
+    .string()
+    .regex(/^Z\d{2}(-Z\d{2})?$/, "stage must look like Z30 or Z30-Z39"),
   name: z.string().min(1),
   daysFromPlanting: z
-    .object({ min: z.number().int().nonnegative(), max: z.number().int().positive() })
-    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
+    .object({
+      min: z.number().int().nonnegative(),
+      max: z.number().int().positive(),
+    })
+    .refine((v) => v.min <= v.max, { message: "min must be ≤ max" }),
 });
 export type ZadoksStage = z.infer<typeof zadoksStageSchema>;
 
@@ -157,54 +178,64 @@ export type ZadoksStage = z.infer<typeof zadoksStageSchema>;
 // from `growthStageTemplates.ts` when omitted.
 
 export const STAGE_SYSTEMS = [
-  'vr-corn',
-  'r-soybean',
-  'zadoks',
-  'bbch',
-  'simple',
-  'perennial-calendar'
+  "vr-corn",
+  "r-soybean",
+  "zadoks",
+  "bbch",
+  "simple",
+  "perennial-calendar",
 ] as const;
 export const stageSystemSchema = z.enum(STAGE_SYSTEMS);
 export type StageSystem = (typeof STAGE_SYSTEMS)[number];
 
-export const CORN_TYPES = ['sweet', 'popcorn', 'dent', 'flour', 'flint', 'dual-purpose'] as const;
+export const CORN_TYPES = [
+  "sweet",
+  "popcorn",
+  "dent",
+  "flour",
+  "flint",
+  "dual-purpose",
+] as const;
 export const cornTypeSchema = z.enum(CORN_TYPES);
 export type CornType = (typeof CORN_TYPES)[number];
 
 export const STAGE_BODY_KINDS = [
-  'vegetative',
-  'reproductive',
-  'ripening',
-  'dormant',
-  'transition'
+  "vegetative",
+  "reproductive",
+  "ripening",
+  "dormant",
+  "transition",
 ] as const;
 
 export const HARVEST_USE_CASES = [
-  'fresh-eating',
-  'milling',
-  'ornamental',
-  'seed-saving',
-  'silage',
-  'dry-storage',
-  'juicing',
-  'canning'
+  "fresh-eating",
+  "milling",
+  "ornamental",
+  "seed-saving",
+  "silage",
+  "dry-storage",
+  "juicing",
+  "canning",
 ] as const;
 
 export const growthStageSchema = z.object({
   code: z.string().min(1).max(16),
   name: z.string().min(1).max(80),
   daysFromPlanting: z
-    .object({ min: z.number().int().nonnegative(), max: z.number().int().positive() })
-    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' }),
+    .object({
+      min: z.number().int().nonnegative(),
+      max: z.number().int().positive(),
+    })
+    .refine((v) => v.min <= v.max, { message: "min must be ≤ max" }),
   inspect: z.string().max(280).optional(),
-  bodyKind: z.enum(STAGE_BODY_KINDS).optional()
+  bodyKind: z.enum(STAGE_BODY_KINDS).optional(),
 });
 export type GrowthStage = z.infer<typeof growthStageSchema>;
 
 export const harvestTargetSchema = z.object({
   stageCode: z.string().min(1).max(16),
   label: z.string().min(1).max(60),
-  useCase: z.enum(HARVEST_USE_CASES).optional()
+  useCase: z.enum(HARVEST_USE_CASES).optional(),
 });
 export type HarvestTarget = z.infer<typeof harvestTargetSchema>;
 
@@ -216,27 +247,27 @@ export type HarvestTarget = z.infer<typeof harvestTargetSchema>;
 // is defensive — it should never fire once the corpus is fully tagged.
 export const HARVEST_STYLES = [
   /** Single mechanized cut — wheat, barley, oats. Driven by Zadoks stages. */
-  'single-cut-grain',
+  "single-cut-grain",
   /** Row grain with V/R staging — corn (sweet, dent, popcorn, etc.). */
-  'row-grain-pollinated',
+  "row-grain-pollinated",
   /** Dry seed at full senescence — cherokee bean, cowpea, soup beans. */
-  'dry-seed-legume',
+  "dry-seed-legume",
   /** Cure-then-store winter cucurbits — butternut, seminole, kabocha. */
-  'cure-then-store',
+  "cure-then-store",
   /** Multiple harvests over weeks — tomato, pepper, eggplant, summer squash. */
-  'continuous-fruit',
+  "continuous-fruit",
   /** Repeat-cut leafy — head lettuce, leaf lettuce, spinach, arugula. */
-  'cut-and-come-again',
+  "cut-and-come-again",
   /** Cover-crop kill-and-roll — rye+vetch, buckwheat, sorghum-sudan. */
-  'cover-crop-termination',
+  "cover-crop-termination",
   /** Perennial multi-cut hay — alfalfa, mixed grasses. (See hayOperations.) */
-  'forage-cutting-cycle',
+  "forage-cutting-cycle",
   /** Perennial vine — grape, hops, kiwi. Quality at single harvest window. */
-  'perennial-vine',
+  "perennial-vine",
   /** Tree fruit with multiple ripening passes — apple, pear, stone fruit. */
-  'tree-fruit-multi-pick',
+  "tree-fruit-multi-pick",
   /** Catch-all for crops outside the 10 specialized archetypes. */
-  'single-event'
+  "single-event",
 ] as const;
 export const harvestStyleSchema = z.enum(HARVEST_STYLES);
 export type HarvestStyle = (typeof HARVEST_STYLES)[number];
@@ -261,27 +292,27 @@ export type HarvestStyle = (typeof HARVEST_STYLES)[number];
 // backfill verifies clean on all 376 plugins.
 export const ARCHETYPES = [
   /** Wheat / oats / barley — Zadoks staging + moisture gates. */
-  'small-grain.zadoks',
+  "small-grain.zadoks",
   /** Corn — V/R staging + pollination-window pollination. */
-  'row-grain.pollination',
+  "row-grain.pollination",
   /** Dry beans / cowpea / soup beans — harvest at full senescence. */
-  'dry-seed-legume',
+  "dry-seed-legume",
   /** Single-harvest crops with storage prep — winter squash, cabbage,
    *  onion, garlic, beets, carrots. The "cure" label is workflow shape,
    *  not crop biology. */
-  'winter-squash-cure',
+  "winter-squash-cure",
   /** Tomato / pepper / eggplant / summer squash — multi-week harvest. */
-  'continuous-harvest-fruit',
+  "continuous-harvest-fruit",
   /** Lettuce / spinach / kale / arugula / mizuna — repeat-cut leafy. */
-  'cut-and-come-again-leafy',
+  "cut-and-come-again-leafy",
   /** Cover-crop termination — rye, vetch, buckwheat, sorghum-sudan. */
-  'cover-crop.termination',
+  "cover-crop.termination",
   /** Hay — alfalfa, mixed grasses, orchard-grass; multi-cut cycle. */
-  'forage-cutting-cycle',
+  "forage-cutting-cycle",
   /** Grape / hops / kiwi — perennial vine, Brix/pH at harvest. */
-  'perennial-vine-quality',
+  "perennial-vine-quality",
   /** Apple / pear / stone fruit — multi-pass ripening windows. */
-  'tree-fruit-multi-pick'
+  "tree-fruit-multi-pick",
 ] as const;
 export const archetypeSchema = z.enum(ARCHETYPES);
 export type Archetype = (typeof ARCHETYPES)[number];
@@ -289,18 +320,21 @@ export type Archetype = (typeof ARCHETYPES)[number];
 /** 1:1 mapping from the legacy `harvestStyle` discriminator to canonical
  *  archetype. The `single-event` value has no 1:1 archetype — it falls to
  *  `archetypeForFamilyFallback()` keyed on `cropFamily`. */
-export const HARVEST_STYLE_TO_ARCHETYPE: Record<HarvestStyle, Archetype | null> = {
-  'single-cut-grain': 'small-grain.zadoks',
-  'row-grain-pollinated': 'row-grain.pollination',
-  'dry-seed-legume': 'dry-seed-legume',
-  'cure-then-store': 'winter-squash-cure',
-  'continuous-fruit': 'continuous-harvest-fruit',
-  'cut-and-come-again': 'cut-and-come-again-leafy',
-  'cover-crop-termination': 'cover-crop.termination',
-  'forage-cutting-cycle': 'forage-cutting-cycle',
-  'perennial-vine': 'perennial-vine-quality',
-  'tree-fruit-multi-pick': 'tree-fruit-multi-pick',
-  'single-event': null
+export const HARVEST_STYLE_TO_ARCHETYPE: Record<
+  HarvestStyle,
+  Archetype | null
+> = {
+  "single-cut-grain": "small-grain.zadoks",
+  "row-grain-pollinated": "row-grain.pollination",
+  "dry-seed-legume": "dry-seed-legume",
+  "cure-then-store": "winter-squash-cure",
+  "continuous-fruit": "continuous-harvest-fruit",
+  "cut-and-come-again": "cut-and-come-again-leafy",
+  "cover-crop-termination": "cover-crop.termination",
+  "forage-cutting-cycle": "forage-cutting-cycle",
+  "perennial-vine": "perennial-vine-quality",
+  "tree-fruit-multi-pick": "tree-fruit-multi-pick",
+  "single-event": null,
 };
 
 /** Family-keyed fallback for plugins whose `harvestStyle` is `single-event`
@@ -309,38 +343,38 @@ export const HARVEST_STYLE_TO_ARCHETYPE: Record<HarvestStyle, Archetype | null> 
  *  plugin once authored. */
 export function archetypeForFamilyFallback(family: string): Archetype {
   switch (family) {
-    case 'leafy-green':
-    case 'herb-culinary':
-      return 'cut-and-come-again-leafy';
-    case 'legume':
-      return 'dry-seed-legume';
-    case 'solanaceae':
-      return 'continuous-harvest-fruit';
-    case 'cereal-grain':
-      return 'small-grain.zadoks';
-    case 'corn':
-      return 'row-grain.pollination';
-    case 'cucurbit':
-    case 'brassica':
-    case 'allium':
-    case 'root':
-    case 'apiaceae':
-    case 'broadleaf-companion':
-      return 'winter-squash-cure';
-    case 'forage':
-      return 'forage-cutting-cycle';
-    case 'cover-grass':
-    case 'cover-legume':
-      return 'cover-crop.termination';
-    case 'stone-fruit':
-    case 'small-fruit':
-    case 'bramble':
-    case 'orchard':
-      return 'tree-fruit-multi-pick';
-    case 'vine-fruit':
-      return 'perennial-vine-quality';
+    case "leafy-green":
+    case "herb-culinary":
+      return "cut-and-come-again-leafy";
+    case "legume":
+      return "dry-seed-legume";
+    case "solanaceae":
+      return "continuous-harvest-fruit";
+    case "cereal-grain":
+      return "small-grain.zadoks";
+    case "corn":
+      return "row-grain.pollination";
+    case "cucurbit":
+    case "brassica":
+    case "allium":
+    case "root":
+    case "apiaceae":
+    case "broadleaf-companion":
+      return "winter-squash-cure";
+    case "forage":
+      return "forage-cutting-cycle";
+    case "cover-grass":
+    case "cover-legume":
+      return "cover-crop.termination";
+    case "stone-fruit":
+    case "small-fruit":
+    case "bramble":
+    case "orchard":
+      return "tree-fruit-multi-pick";
+    case "vine-fruit":
+      return "perennial-vine-quality";
     default:
-      return 'winter-squash-cure';
+      return "winter-squash-cure";
   }
 }
 
@@ -359,7 +393,7 @@ export function resolveArchetype(plugin: {
     const mapped = HARVEST_STYLE_TO_ARCHETYPE[plugin.harvestStyle];
     if (mapped) return mapped;
   }
-  return archetypeForFamilyFallback(plugin.cropFamily ?? '');
+  return archetypeForFamilyFallback(plugin.cropFamily ?? "");
 }
 
 // ─── Phase 25c.0 — bloom window (pollinator-bloom gate input, 25d) ──────
@@ -387,7 +421,7 @@ export const bloomWindowSchema = z
      *  treated as true when omitted (conservative — most crop flowers
      *  attract some pollinator). */
     beeAttractive: z.boolean().optional(),
-    notes: z.string().max(280).optional()
+    notes: z.string().max(280).optional(),
   })
   .refine(
     (v) =>
@@ -396,15 +430,15 @@ export const bloomWindowSchema = z
       (v.monthsOfYear?.length ?? 0) > 0,
     {
       message:
-        'bloomWindow must declare at least one of: continuous, daysFromPlantingMin, monthsOfYear'
-    }
+        "bloomWindow must declare at least one of: continuous, daysFromPlantingMin, monthsOfYear",
+    },
   )
   .refine(
     (v) =>
       v.daysFromPlantingMin === undefined ||
       v.daysFromPlantingMax === undefined ||
       v.daysFromPlantingMin <= v.daysFromPlantingMax,
-    { message: 'daysFromPlantingMin must be ≤ daysFromPlantingMax' }
+    { message: "daysFromPlantingMin must be ≤ daysFromPlantingMax" },
   );
 export type BloomWindow = z.infer<typeof bloomWindowSchema>;
 
@@ -418,22 +452,27 @@ export const growthStageTableSchema = z
       .refine(
         (arr) =>
           arr.every(
-            (s, i, a) => i === 0 || s.daysFromPlanting.min >= a[i - 1].daysFromPlanting.min
+            (s, i, a) =>
+              i === 0 ||
+              s.daysFromPlanting.min >= a[i - 1].daysFromPlanting.min,
           ),
-        'stages must be ordered by daysFromPlanting.min ascending'
+        "stages must be ordered by daysFromPlanting.min ascending",
       ),
-    harvestTargets: z.array(harvestTargetSchema).min(1)
+    harvestTargets: z.array(harvestTargetSchema).min(1),
   })
   .refine(
-    (t) => t.harvestTargets.every((h) => t.stages.some((s) => s.code === h.stageCode)),
-    'every harvestTargets[].stageCode must match a stages[].code'
+    (t) =>
+      t.harvestTargets.every((h) =>
+        t.stages.some((s) => s.code === h.stageCode),
+      ),
+    "every harvestTargets[].stageCode must match a stages[].code",
   );
 export type GrowthStageTable = z.infer<typeof growthStageTableSchema>;
 
 /** Generic harvest-moisture gate for any moisture-sensitive crop (FR-21). */
 export const harvestMoistureGateSchema = z.object({
-  operation: z.literal('harvest'),
-  thresholds: moistureThresholdsSchema
+  operation: z.literal("harvest"),
+  thresholds: moistureThresholdsSchema,
 });
 export type HarvestMoistureGate = z.infer<typeof harvestMoistureGateSchema>;
 
@@ -445,13 +484,13 @@ export type HarvestMoistureGate = z.infer<typeof harvestMoistureGateSchema>;
  */
 export const orchardSeasonalTaskSchema = z.object({
   key: z.enum([
-    'dormant-oil',
-    'pre-bloom-fungicide',
-    'bloom-fungicide',
-    'post-bloom-thinning',
-    'summer-cover-spray',
-    'pre-harvest-cover-spray',
-    'harvest'
+    "dormant-oil",
+    "pre-bloom-fungicide",
+    "bloom-fungicide",
+    "post-bloom-thinning",
+    "summer-cover-spray",
+    "pre-harvest-cover-spray",
+    "harvest",
   ]),
   /** Days from January 1 of each season-year (positive int 1-366). */
   dayOfYear: z.number().int().min(1).max(366),
@@ -459,7 +498,7 @@ export const orchardSeasonalTaskSchema = z.object({
   title: z.string().min(1),
   body: z.string().optional(),
   /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
-  category: taskCategorySchema.optional()
+  category: taskCategorySchema.optional(),
 });
 
 /**
@@ -474,27 +513,30 @@ export const seasonalTaskSchema = z
     key: z.string().min(1).max(80),
     kind: z
       .enum([
-        'spray',
-        'cultural',
-        'pruning',
-        'thinning',
-        'fertilize',
-        'irrigate',
-        'scout',
-        'harvest'
+        "spray",
+        "cultural",
+        "pruning",
+        "thinning",
+        "fertilize",
+        "irrigate",
+        "scout",
+        "harvest",
       ])
-      .default('cultural'),
+      .default("cultural"),
     dayOfYear: z.number().int().min(1).max(366).optional(),
     daysAfterPlanting: z.number().int().min(0).max(3650).optional(),
     windowDays: z.number().int().min(1).max(120).default(7),
     title: z.string().min(1),
     body: z.string().optional(),
     /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
-    category: taskCategorySchema.optional()
+    category: taskCategorySchema.optional(),
   })
-  .refine((v) => v.dayOfYear !== undefined || v.daysAfterPlanting !== undefined, {
-    message: 'seasonalTask requires either dayOfYear or daysAfterPlanting'
-  });
+  .refine(
+    (v) => v.dayOfYear !== undefined || v.daysAfterPlanting !== undefined,
+    {
+      message: "seasonalTask requires either dayOfYear or daysAfterPlanting",
+    },
+  );
 
 // ─── Phase 17 (Track 1) — agronomy block + per-crop spray windows ───────
 //
@@ -505,7 +547,7 @@ export const seasonalTaskSchema = z
 // existing plugins keep working; engines fall through to a single
 // family-default registry in `familyDefaults.ts` when omitted.
 
-export const CROP_LIFECYCLES = ['annual', 'biennial', 'perennial'] as const;
+export const CROP_LIFECYCLES = ["annual", "biennial", "perennial"] as const;
 export const cropLifecycleSchema = z.enum(CROP_LIFECYCLES);
 export type CropLifecycle = (typeof CROP_LIFECYCLES)[number];
 
@@ -517,12 +559,12 @@ export const agronomySchema = z
     rotationLookbackYears: z.number().int().min(0).max(10).optional(),
     /** Cover-crop only — minimum days between cover termination and next
      *  cash crop planting. */
-    terminationLeadDaysMin: z.number().int().min(0).max(120).optional()
+    terminationLeadDaysMin: z.number().int().min(0).max(120).optional(),
   })
   .partial();
 export type Agronomy = z.infer<typeof agronomySchema>;
 
-export const SPRAY_WINDOW_ANCHORS = ['planting', 'emergence', 'stage'] as const;
+export const SPRAY_WINDOW_ANCHORS = ["planting", "emergence", "stage"] as const;
 
 /**
  * Phase 21 (B-25) — slot taxonomy + strategy gates on per-crop spray windows.
@@ -541,15 +583,15 @@ export const SPRAY_WINDOW_ANCHORS = ['planting', 'emergence', 'stage'] as const;
  * All three fields are optional + additive — v1 plugins remain valid.
  */
 export const SPRAY_WINDOW_PURPOSES = [
-  'burndown',
-  'pre-emergent',
-  'post-emergent',
-  'insecticide-prophylactic',
-  'insecticide-scouted',
-  'fungicide',
-  'sidedress-n',
-  'sidedress-other',
-  'cover-terminate'
+  "burndown",
+  "pre-emergent",
+  "post-emergent",
+  "insecticide-prophylactic",
+  "insecticide-scouted",
+  "fungicide",
+  "sidedress-n",
+  "sidedress-other",
+  "cover-terminate",
 ] as const;
 export type SprayWindowPurpose = (typeof SPRAY_WINDOW_PURPOSES)[number];
 
@@ -578,20 +620,20 @@ export const cropSprayWindowSchema = z
      *  window with `weedStrategyGate: 'pre-emergence-ok'` is excluded
      *  for `weedStrategy: 'cultivate-first'` users. */
     weedStrategyGate: z
-      .enum(['cultivate-first', 'pre-emergence-ok', 'post-emergence-ok'])
+      .enum(["cultivate-first", "pre-emergence-ok", "post-emergence-ok"])
       .optional(),
     /** Phase 21 — minimum Season Setup `pestStrategy` that should emit
      *  this window. Absent = always emit. Example: an `insecticide-
      *  prophylactic` window with `pestStrategyGate: 'preventive'` is
      *  excluded for `pestStrategy: 'ipm'` users (who get scout tasks
      *  instead). */
-    pestStrategyGate: z.enum(['preventive', 'ipm']).optional()
+    pestStrategyGate: z.enum(["preventive", "ipm"]).optional(),
   })
   .refine((v) => v.offsetDaysMin <= v.offsetDaysMax, {
-    message: 'offsetDaysMin must be ≤ offsetDaysMax'
+    message: "offsetDaysMin must be ≤ offsetDaysMax",
   })
-  .refine((v) => v.anchor !== 'stage' || !!v.stageCode, {
-    message: 'anchor "stage" requires stageCode'
+  .refine((v) => v.anchor !== "stage" || !!v.stageCode, {
+    message: 'anchor "stage" requires stageCode',
   });
 export type CropSprayWindow = z.infer<typeof cropSprayWindowSchema>;
 
@@ -602,20 +644,26 @@ export type CropSprayWindow = z.infer<typeof cropSprayWindowSchema>;
  *  safety kernel keys on, and silently picking one would let plugins
  *  bypass the kill-matrix lookup. */
 const CROP_FAMILY_ALIASES: Record<string, string> = {
-  'culinary-herb': 'herb-culinary',
-  'cane-fruit': 'bramble'
+  "culinary-herb": "herb-culinary",
+  "cane-fruit": "bramble",
 };
 
 export const cropPluginSchema = pluginBase.extend({
-  type: z.literal('crop'),
+  type: z.literal("crop"),
   cropFamily: z.preprocess(
-    (v) => (typeof v === 'string' && CROP_FAMILY_ALIASES[v] ? CROP_FAMILY_ALIASES[v] : v),
-    z.enum(CROP_FAMILIES)
+    (v) =>
+      typeof v === "string" && CROP_FAMILY_ALIASES[v]
+        ? CROP_FAMILY_ALIASES[v]
+        : v,
+    z.enum(CROP_FAMILIES),
   ),
   defaultRowSpacingInches: z.number().positive().max(360).optional(),
   preHarvestIntervalDays: z.number().int().nonnegative().optional(),
   daysToMaturity: z
-    .object({ min: z.number().int().positive(), max: z.number().int().positive() })
+    .object({
+      min: z.number().int().positive(),
+      max: z.number().int().positive(),
+    })
     .optional(),
   /** Detailed planting guidance surfaced on /plan per-block (FR-13). */
   plantingGuide: plantingGuideSchema.optional(),
@@ -670,8 +718,8 @@ export const cropPluginSchema = pluginBase.extend({
         phaseKey: z.string().min(1).max(80).optional(),
         daysBeforePhase: z.number().int().nonnegative().optional(),
         /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
-        category: taskCategorySchema.optional()
-      })
+        category: taskCategorySchema.optional(),
+      }),
     )
     .optional(),
   /** Post-task templates — fire after a referenced phase. Same anchors. */
@@ -686,8 +734,8 @@ export const cropPluginSchema = pluginBase.extend({
         phaseKey: z.string().min(1).max(80).optional(),
         daysAfterPhase: z.number().int().nonnegative().optional(),
         /** Phase 21b follow-up — swim-lane pip glyph + popover dropdown. */
-        category: taskCategorySchema.optional()
-      })
+        category: taskCategorySchema.optional(),
+      }),
     )
     .optional(),
   // ─── v1.2 additions (Phase 14 swim-lane shade modeling) ─────────────
@@ -778,21 +826,21 @@ export const cropPluginSchema = pluginBase.extend({
   planting: z.record(z.string(), z.unknown()).optional(),
   growthStages: z.array(z.record(z.string(), z.unknown())).optional(),
   harvestIndicators: z.array(z.string()).optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 export const activeIngredientSchema = z.object({
   name: z.string().min(1),
-  chemistryClass: z.enum(CHEMISTRY_CLASSES)
+  chemistryClass: z.enum(CHEMISTRY_CLASSES),
 });
 
 export const dilutionTableSchema = z.record(
   z.string().regex(/^\d+gal$/),
   z.object({
     amount: z.number().positive(),
-    unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt']),
-    display: z.string().optional()
-  })
+    unit: z.enum(["oz", "fl-oz", "lb", "pt", "qt"]),
+    display: z.string().optional(),
+  }),
 );
 
 /** Variable-rate per-management-zone (Phase 10 stub for §11 OOS). Optional;
@@ -802,9 +850,9 @@ const ratesPerZoneSchema = z.array(
     /** Zone label or soil-test polygon id. Free-form; the operator's call. */
     zone: z.string().min(1),
     amount: z.number().positive(),
-    unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt']),
-    notes: z.string().optional()
-  })
+    unit: z.enum(["oz", "fl-oz", "lb", "pt", "qt"]),
+    notes: z.string().optional(),
+  }),
 );
 
 /**
@@ -839,7 +887,7 @@ export const complianceFlagsSchema = z
     transitioningAllowed: z.boolean().optional(),
     /** Author note explaining the compliance decision; surfaced in the
      *  product picker tooltip on the Inputs Plan step. */
-    notes: z.string().max(500).optional()
+    notes: z.string().max(500).optional(),
   })
   .optional();
 
@@ -850,15 +898,15 @@ export const complianceFlagsSchema = z
  * `formulation` / `form` / the rate unit when absent.
  */
 export const PLUGIN_DEFAULT_UNITS = [
-  'fl-oz',
-  'pt',
-  'qt',
-  'gal',
-  'oz',
-  'lb',
-  'kg',
-  'g',
-  'count'
+  "fl-oz",
+  "pt",
+  "qt",
+  "gal",
+  "oz",
+  "lb",
+  "kg",
+  "g",
+  "count",
 ] as const;
 export type PluginDefaultUnit = (typeof PLUGIN_DEFAULT_UNITS)[number];
 export const pluginDefaultUnitSchema = z.enum(PLUGIN_DEFAULT_UNITS);
@@ -869,50 +917,53 @@ export const pluginDefaultUnitSchema = z.enum(PLUGIN_DEFAULT_UNITS);
  * together with their `FORMULATION_PHYSICAL_STATE` entry.
  */
 export const FORMULATION_PHYSICAL_STATE = {
-  EC: 'liquid',
-  SL: 'liquid',
-  SC: 'liquid',
-  F: 'liquid',
-  L: 'liquid',
-  ME: 'liquid',
-  ES: 'liquid',
-  EW: 'liquid',
-  CS: 'liquid',
-  OD: 'liquid',
-  SE: 'liquid',
-  ZC: 'liquid',
-  WDG: 'dry',
-  WG: 'dry',
-  DF: 'dry',
-  SG: 'dry',
-  SP: 'dry',
-  WP: 'dry',
-  WSP: 'dry',
-  WS: 'dry',
-  G: 'dry',
-  D: 'dry'
-} as const satisfies Record<string, 'liquid' | 'dry'>;
+  EC: "liquid",
+  SL: "liquid",
+  SC: "liquid",
+  F: "liquid",
+  L: "liquid",
+  ME: "liquid",
+  ES: "liquid",
+  EW: "liquid",
+  CS: "liquid",
+  OD: "liquid",
+  SE: "liquid",
+  ZC: "liquid",
+  WDG: "dry",
+  WG: "dry",
+  DF: "dry",
+  SG: "dry",
+  SP: "dry",
+  WP: "dry",
+  WSP: "dry",
+  WS: "dry",
+  G: "dry",
+  D: "dry",
+} as const satisfies Record<string, "liquid" | "dry">;
 export type PesticideFormulation = keyof typeof FORMULATION_PHYSICAL_STATE;
-export const PESTICIDE_FORMULATIONS = Object.keys(FORMULATION_PHYSICAL_STATE) as [
-  PesticideFormulation,
-  ...PesticideFormulation[]
-];
+export const PESTICIDE_FORMULATIONS = Object.keys(
+  FORMULATION_PHYSICAL_STATE,
+) as [PesticideFormulation, ...PesticideFormulation[]];
 export const pesticideFormulationSchema = z.enum(PESTICIDE_FORMULATIONS);
 
 export const herbicidePluginSchema = pluginBase.extend({
-  type: z.literal('herbicide'),
+  type: z.literal("herbicide"),
   activeIngredients: z.array(activeIngredientSchema).min(1),
   defaultUnit: pluginDefaultUnitSchema.optional(),
   formulation: pesticideFormulationSchema.optional(),
-  applicationTiming: z.enum(['BURNDOWN', 'PRE', 'POST', 'POST-DIRECTED']).optional(),
+  applicationTiming: z
+    .enum(["BURNDOWN", "PRE", "POST", "POST-DIRECTED"])
+    .optional(),
   ratePerAcre: z.object({
     amount: z.number().positive(),
-    unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
+    unit: z.enum(["oz", "fl-oz", "lb", "pt", "qt"]),
   }),
   /** GPA the dilutionTable values are calibrated for (default 15 per FR-02). */
   gpaCalibration: z.number().int().nonnegative().default(15),
   dilutionTable: dilutionTableSchema.optional(),
-  acresPerTank: z.record(z.string().regex(/^\d+gal$/), z.number().positive()).optional(),
+  acresPerTank: z
+    .record(z.string().regex(/^\d+gal$/), z.number().positive())
+    .optional(),
   requiresAMS: z.boolean().optional(),
   deconRequired: z.boolean().optional(),
   tankMixOrder: z.number().int().min(1).max(10).optional(),
@@ -921,7 +972,10 @@ export const herbicidePluginSchema = pluginBase.extend({
    *  validate. The /records export warns when missing. */
   epaRegistrationNumber: z
     .string()
-    .regex(/^\d{1,6}-\d{1,6}(-\d{1,6})?$/, 'EPA reg numbers look like 524-617 or 524-617-100')
+    .regex(
+      /^\d{1,6}-\d{1,6}(-\d{1,6})?$/,
+      "EPA reg numbers look like 524-617 or 524-617-100",
+    )
     .optional(),
   /** Variable-rate stub — overrides ratePerAcre when the spray UI surfaces
    *  zones. Consumers without a zone-aware planter ignore this field. */
@@ -940,18 +994,20 @@ export const herbicidePluginSchema = pluginBase.extend({
     .array(
       z.object({
         cropPluginId: z.string(),
-        requiresTraits: z.array(z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/)).min(1)
-      })
+        requiresTraits: z
+          .array(z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/))
+          .min(1),
+      }),
     )
     .optional(),
   labelClaims: z
     .object({
-      safeForCropPluginIds: z.array(z.string()).optional()
+      safeForCropPluginIds: z.array(z.string()).optional(),
     })
     .optional(),
   /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
   complianceFlags: complianceFlagsSchema,
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 const insecticideIngredientSchema = z.object({
@@ -960,7 +1016,7 @@ const insecticideIngredientSchema = z.object({
   iracGroup: z
     .string()
     .regex(/^[A-Z0-9]{1,4}$/)
-    .optional()
+    .optional(),
 });
 
 /** Phase 10: declarative scouting threshold. The /scout flow renders an
@@ -977,18 +1033,18 @@ const scoutingThresholdSchema = z.object({
   pest: z.string().min(1),
   /** Metric the observer counts. */
   metric: z.enum([
-    'count-per-plant',
-    'count-per-leaf',
-    'count-per-trap-per-week',
-    'pct-defoliation',
-    'pct-infested-plants',
-    'eggs-per-plant'
+    "count-per-plant",
+    "count-per-leaf",
+    "count-per-trap-per-week",
+    "pct-defoliation",
+    "pct-infested-plants",
+    "eggs-per-plant",
   ]),
   /** Spray-action threshold; values ≥ this nudge the spray flow. */
   threshold: z.number().nonnegative(),
   /** Optional warning band (yellow). */
   warnAt: z.number().nonnegative().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 /** Phase 10: multi-step application protocol — e.g. burndown then post-emerge,
@@ -998,7 +1054,7 @@ const applicationProtocolStepSchema = z.object({
   step: z.string().min(1),
   detail: z.string().optional(),
   /** Day-offset from the first application (0 = same day). */
-  dayOffset: z.number().int().nonnegative().optional()
+  dayOffset: z.number().int().nonnegative().optional(),
 });
 
 /**
@@ -1016,14 +1072,23 @@ const applicationProtocolStepSchema = z.object({
  *   warn when foragers would return before residues dry.
  */
 export const pollinatorProtectionSchema = z.object({
-  beeToxicity: z.enum(['highly-toxic', 'toxic', 'relatively-nontoxic', 'unknown']),
-  bloomRestriction: z.enum(['prohibited-during-bloom', 'dusk-to-dawn-only', 'none']),
-  residualToxicityHours: z.number().nonnegative().max(720).optional()
+  beeToxicity: z.enum([
+    "highly-toxic",
+    "toxic",
+    "relatively-nontoxic",
+    "unknown",
+  ]),
+  bloomRestriction: z.enum([
+    "prohibited-during-bloom",
+    "dusk-to-dawn-only",
+    "none",
+  ]),
+  residualToxicityHours: z.number().nonnegative().max(720).optional(),
 });
 export type PollinatorProtection = z.infer<typeof pollinatorProtectionSchema>;
 
 export const insecticidePluginSchema = pluginBase.extend({
-  type: z.literal('insecticide'),
+  type: z.literal("insecticide"),
   activeIngredients: z.array(insecticideIngredientSchema).min(1),
   defaultUnit: pluginDefaultUnitSchema.optional(),
   formulation: pesticideFormulationSchema.optional(),
@@ -1033,13 +1098,18 @@ export const insecticidePluginSchema = pluginBase.extend({
   ratePerAcre: z
     .object({
       amount: z.number().positive(),
-      unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
+      unit: z.enum(["oz", "fl-oz", "lb", "pt", "qt"]),
     })
     .optional(),
-  gpaCalibration: z.number().int().nonnegative().optional().meta({ default: 15 }),
+  gpaCalibration: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .meta({ default: 15 }),
   dilutionTable: dilutionTableSchema.optional(),
   targetPests: z.array(z.string().min(1)).optional(),
-  pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),
+  pollinatorRisk: z.enum(["none", "low", "moderate", "high"]).optional(),
   /** #130 — label bee-toxicity + bloom restriction. See `pollinatorProtectionSchema`. */
   pollinator: pollinatorProtectionSchema.optional(),
   /** Phase 10: scouting nudge thresholds — drives /scout → /spray handoff. */
@@ -1049,17 +1119,20 @@ export const insecticidePluginSchema = pluginBase.extend({
   /** Phase 10: EPA reg number for USDA / NRCS spray-record export. */
   epaRegistrationNumber: z
     .string()
-    .regex(/^\d{1,6}-\d{1,6}(-\d{1,6})?$/, 'EPA reg numbers look like 524-617 or 524-617-100')
+    .regex(
+      /^\d{1,6}-\d{1,6}(-\d{1,6})?$/,
+      "EPA reg numbers look like 524-617 or 524-617-100",
+    )
     .optional(),
   labelClaims: z
     .object({
       safeForCropPluginIds: z.array(z.string()).optional(),
-      safeForCropFamilies: z.array(z.enum(CROP_FAMILIES)).optional()
+      safeForCropFamilies: z.array(z.enum(CROP_FAMILIES)).optional(),
     })
     .optional(),
   /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
   complianceFlags: complianceFlagsSchema,
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 /**
@@ -1079,21 +1152,28 @@ const fungicideIngredientSchema = z.object({
     .string()
     .regex(
       /^(M\d{2}|P\d{2}|U\d{2}|BM\d{2}|NC|\d{1,3})$/,
-      'fracCode must look like M03, P01, U06, BM01, NC, or a number'
-    )
+      "fracCode must look like M03, P01, U06, BM01, NC, or a number",
+    ),
 });
 
 export const fungicidePluginSchema = pluginBase.extend({
-  type: z.literal('fungicide'),
+  type: z.literal("fungicide"),
   activeIngredients: z.array(fungicideIngredientSchema).min(1),
   defaultUnit: pluginDefaultUnitSchema.optional(),
   formulation: pesticideFormulationSchema.optional(),
   applicationTiming: z
-    .enum(['DORMANT', 'PRE-BLOOM', 'BLOOM', 'POST-BLOOM', 'COVER', 'PRE-HARVEST'])
+    .enum([
+      "DORMANT",
+      "PRE-BLOOM",
+      "BLOOM",
+      "POST-BLOOM",
+      "COVER",
+      "PRE-HARVEST",
+    ])
     .optional(),
   ratePerAcre: z.object({
     amount: z.number().positive(),
-    unit: z.enum(['oz', 'fl-oz', 'lb', 'pt', 'qt'])
+    unit: z.enum(["oz", "fl-oz", "lb", "pt", "qt"]),
   }),
   gpaCalibration: z.number().int().nonnegative().default(15),
   dilutionTable: dilutionTableSchema.optional(),
@@ -1101,35 +1181,45 @@ export const fungicidePluginSchema = pluginBase.extend({
   preHarvestIntervalDays: z.number().int().nonnegative(),
   /** Phase 29 (#132) — label rainfast interval: hours of dry weather needed after application before rain no longer washes the product off. Optional; the /spray/fungicide dry-window advisory defaults to 4h when absent. */
   rainfastHours: z.number().positive().max(72).optional(),
-  pollinatorRisk: z.enum(['none', 'low', 'moderate', 'high']).optional(),
+  pollinatorRisk: z.enum(["none", "low", "moderate", "high"]).optional(),
   /** Fungicides rarely require sprayer decon (no herbicide cross-contam class) but a few do (e.g., copper after a Bordeaux mix). */
   deconRequired: z.boolean().optional(),
   targetDiseases: z.array(z.string().min(1)).optional(),
   /** #381 — EPA reg number for the USDA / VDACS spray-record export (was stripped from fungicides before this field existed). */
   epaRegistrationNumber: z
     .string()
-    .regex(/^\d{1,6}-\d{1,6}(-\d{1,6})?$/, 'EPA reg numbers look like 524-617 or 524-617-100')
+    .regex(
+      /^\d{1,6}-\d{1,6}(-\d{1,6})?$/,
+      "EPA reg numbers look like 524-617 or 524-617-100",
+    )
     .optional(),
   labelClaims: z
     .object({
       safeForCropPluginIds: z.array(z.string()).optional(),
-      safeForCropFamilies: z.array(z.enum(CROP_FAMILIES)).optional()
+      safeForCropFamilies: z.array(z.enum(CROP_FAMILIES)).optional(),
     })
     .optional(),
   /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
   complianceFlags: complianceFlagsSchema,
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 export const fertilizerPluginSchema = pluginBase.extend({
-  type: z.literal('fertilizer'),
+  type: z.literal("fertilizer"),
   /** Guaranteed analysis — N-P-K percentage by weight. P is reported as P2O5 elemental %, K as K2O elemental %, per US labeling convention. */
   analysis: z.object({
     n: z.number().min(0).max(100),
     p: z.number().min(0).max(100),
-    k: z.number().min(0).max(100)
+    k: z.number().min(0).max(100),
   }),
-  form: z.enum(['granular', 'liquid', 'soluble', 'compost', 'slow-release', 'meal']),
+  form: z.enum([
+    "granular",
+    "liquid",
+    "soluble",
+    "compost",
+    "slow-release",
+    "meal",
+  ]),
   defaultUnit: pluginDefaultUnitSchema.optional(),
   organic: z.boolean().default(false),
   secondaryNutrients: z
@@ -1141,16 +1231,22 @@ export const fertilizerPluginSchema = pluginBase.extend({
       zn: z.number().min(0).max(100).optional(),
       mn: z.number().min(0).max(100).optional(),
       cu: z.number().min(0).max(100).optional(),
-      fe: z.number().min(0).max(100).optional()
+      fe: z.number().min(0).max(100).optional(),
     })
     .optional(),
   applicationRange: z
     .object({
       min: z.number().positive(),
       max: z.number().positive(),
-      unit: z.enum(['lb-per-acre', 'gal-per-acre', 'ton-per-acre', 'qt-per-acre', 'fl-oz-per-acre'])
+      unit: z.enum([
+        "lb-per-acre",
+        "gal-per-acre",
+        "ton-per-acre",
+        "qt-per-acre",
+        "fl-oz-per-acre",
+      ]),
     })
-    .refine((v) => v.min <= v.max, { message: 'min must be ≤ max' })
+    .refine((v) => v.min <= v.max, { message: "min must be ≤ max" })
     .optional(),
   /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. The
    *  fertilizer plugin already carries `organic: boolean`; that flag is
@@ -1158,7 +1254,7 @@ export const fertilizerPluginSchema = pluginBase.extend({
    *  `complianceFlags` adds the NOP / OMRI distinction (e.g., a manure
    *  compost can be `organic: true` but `omriListed: false` if uncertified). */
   complianceFlags: complianceFlagsSchema,
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 // ─── Phase 17 (Track 1, B8) — companion-system shape ────────────────────
@@ -1188,12 +1284,12 @@ export const companionSystemMemberSchema = z.object({
   /** Optional title override for the engine's companion-trigger event. */
   title: z.string().min(1).max(120).optional(),
   /** Optional body override. */
-  body: z.string().max(500).optional()
+  body: z.string().max(500).optional(),
 });
 export type CompanionSystemMember = z.infer<typeof companionSystemMemberSchema>;
 
 export const companionPluginSchema = pluginBase.extend({
-  type: z.literal('companion'),
+  type: z.literal("companion"),
   goodWith: z.array(z.string()).default([]),
   badWith: z.array(z.string()).default([]),
   /** Companion-system declaration. When present, the engine emits
@@ -1201,16 +1297,16 @@ export const companionPluginSchema = pluginBase.extend({
   primaryFamily: z.enum(CROP_FAMILIES).optional(),
   members: z.array(companionSystemMemberSchema).optional(),
   /** Short benefit description surfaced in the companion suggestion UI. */
-  benefit: z.string().max(500).optional()
+  benefit: z.string().max(500).optional(),
 });
 
-export const pluginSchema = z.discriminatedUnion('type', [
+export const pluginSchema = z.discriminatedUnion("type", [
   cropPluginSchema,
   herbicidePluginSchema,
   insecticidePluginSchema,
   fungicidePluginSchema,
   fertilizerPluginSchema,
-  companionPluginSchema
+  companionPluginSchema,
 ]);
 
 export type CropPlugin = z.infer<typeof cropPluginSchema>;
@@ -1220,3 +1316,92 @@ export type FungicidePlugin = z.infer<typeof fungicidePluginSchema>;
 export type FertilizerPlugin = z.infer<typeof fertilizerPluginSchema>;
 export type CompanionPlugin = z.infer<typeof companionPluginSchema>;
 export type Plugin = z.infer<typeof pluginSchema>;
+
+// ─── Phase 30E: bed recipes ────────────────────────────────────────────
+// A timed sequence of crops that fills one garden bed. Data only. Loaded
+// from plugins/bed-recipes/ by its own registry pass rather than joining
+// `pluginSchema`, so no existing `plugin.type` switch changes. Spec:
+// docs/design/GARDEN_DESIGNER.md ("Bed recipes").
+
+export const BED_RECIPE_ANCHORS = [
+  "last-spring-frost",
+  "first-fall-frost",
+  "after-step",
+] as const;
+
+const fraction = z.number().min(0).max(1);
+
+export const bedRecipeStepSchema = z.strictObject({
+  cropPluginId: z.string().regex(pluginIdRegex),
+  alternates: z.array(z.string().regex(pluginIdRegex)).max(5).default([]),
+  start: z.strictObject({
+    anchor: z.enum(BED_RECIPE_ANCHORS),
+    offsetDays: z.number().int().min(-180).max(180),
+    afterStep: z.number().int().min(0).optional(),
+  }),
+  section: z
+    .strictObject({
+      x: fraction,
+      y: fraction,
+      w: fraction.positive(),
+      l: fraction.positive(),
+    })
+    .refine(
+      (s) => s.x + s.w <= 1 && s.y + s.l <= 1,
+      "section must stay inside the bed",
+    )
+    .default({ x: 0, y: 0, w: 1, l: 1 }),
+  pattern: z.enum(["square", "offset", "sfg"]).optional(),
+  successions: z
+    .strictObject({
+      count: z.number().int().min(1).max(6),
+      intervalDays: z.number().int().min(1).max(60).optional(),
+    })
+    .optional(),
+  note: z.string().max(200).optional(),
+});
+
+export const bedRecipePluginSchema = pluginBase
+  .extend({
+    type: z.literal("bed-recipe"),
+    description: z.string().min(1).max(500),
+    bedSize: z.strictObject({
+      widthFt: z.number().positive().max(20),
+      lengthFt: z.number().positive().max(200),
+    }),
+    frostFreeDays: z
+      .strictObject({
+        min: z.number().int().min(0).max(366),
+        max: z.number().int().min(0).max(366).optional(),
+      })
+      .refine((r) => r.max === undefined || r.min <= r.max, "min must be ≤ max")
+      .optional(),
+    /** Display text only ("Zone 7a"); nothing filters on it. */
+    zoneLabel: z.string().max(40).optional(),
+    steps: z.array(bedRecipeStepSchema).min(1).max(12),
+  })
+  .superRefine((recipe, ctx) => {
+    recipe.steps.forEach((step, i) => {
+      const { anchor, afterStep } = step.start;
+      if (
+        anchor === "after-step" &&
+        (afterStep === undefined || afterStep >= i)
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["steps", i, "start", "afterStep"],
+          message: "after-step needs the index of an earlier step",
+        });
+      }
+      if (anchor !== "after-step" && afterStep !== undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["steps", i, "start", "afterStep"],
+          message: "afterStep applies only to the after-step anchor",
+        });
+      }
+    });
+  });
+
+export type BedRecipeStep = z.infer<typeof bedRecipeStepSchema>;
+export type BedRecipePlugin = z.infer<typeof bedRecipePluginSchema>;

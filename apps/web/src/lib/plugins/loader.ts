@@ -13,6 +13,10 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PluginRegistrationError, PluginRegistry, type PluginRecord } from './registry';
 
+/** Folders under plugins/ that hold other data kinds with their own
+ *  registry pass (bed recipes), not library plugins. */
+export const NON_LIBRARY_PLUGIN_DIRS: ReadonlySet<string> = new Set(['bed-recipes']);
+
 export interface LoadResult {
   registered: PluginRecord[];
   failed: { file: string; error: PluginRegistrationError | Error }[];
@@ -42,7 +46,7 @@ export async function loadPluginsFromDirectory(
   return { registered, failed };
 }
 
-async function collectJsonFiles(dir: string): Promise<string[]> {
+export async function collectJsonFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
   const out: string[] = [];
   for (const entry of entries) {
@@ -51,6 +55,7 @@ async function collectJsonFiles(dir: string): Promise<string[]> {
       // `_retired/` (pluginLifecycle's soft-retire target) and any other
       // `_`-prefixed directory are parked plugins, not part of the library.
       if (entry.name.startsWith('_')) continue;
+      if (NON_LIBRARY_PLUGIN_DIRS.has(entry.name)) continue;
       out.push(...(await collectJsonFiles(full)));
     } else if (entry.isFile() && entry.name.endsWith('.json')) {
       out.push(full);

@@ -37,8 +37,7 @@
     snapshot,
     area,
     canEdit,
-    onEditShape,
-    designerAvailable
+    onEditShape
   }: {
     open: boolean;
     onClose: () => void;
@@ -46,7 +45,6 @@
     area: { id: string; name: string; kind: AreaKind; details: AreaDetails | null };
     canEdit: boolean;
     onEditShape?: () => void;
-    designerAvailable?: boolean;
   } = $props();
 
   let tab = $state<Tab>('details');
@@ -58,10 +56,14 @@
   let draftDetails = $state<DetailsDraft>({});
 
   const prefs = $derived(currentPrefs());
-  const card = $derived(buildAreaCard(snapshot, area.id, { prefs }));
+  // The sheet shows its own primary Open designer button, so the card's copy is dropped.
+  const card = $derived.by(() => {
+    const built = buildAreaCard(snapshot, area.id, { prefs });
+    return built ? { ...built, links: undefined } : null;
+  });
   const title = $derived(areaDisplayName(area));
   const style = $derived(kindStyle(area.kind));
-  const designer = $derived(designerState(area.kind, designerAvailable));
+  const designer = $derived(designerState(area.kind));
   const summary = $derived(detailsSummary(area.kind, area.details));
 
   const blocks = $derived(snapshot.blocks.filter((b) => b.areaId === area.id));
@@ -185,15 +187,8 @@
       <span class="kind">{AREA_KIND_LABELS[area.kind]}</span>
     </div>
 
-    {#if designer !== 'none'}
-      {#if designer === 'available'}
-        <a class="designer primary" href={designerHref(area.id)}>Open designer</a>
-      {:else}
-        <button type="button" class="designer primary" disabled aria-describedby="designer-soon">
-          Open designer
-        </button>
-        <p class="soon" id="designer-soon">Coming soon: lay out beds on a grid and place crops.</p>
-      {/if}
+    {#if designer === 'available'}
+      <a class="designer primary" href={designerHref(area.id)}>Open designer</a>
     {/if}
 
     <div class="tabs" role="tablist" aria-label="Area card sections">
@@ -361,11 +356,6 @@
   }
   .designer {
     align-self: flex-start;
-  }
-  .soon {
-    margin: -6px 0 0;
-    font-size: 12.5px;
-    color: var(--color-ink-muted);
   }
   .tabs {
     display: flex;

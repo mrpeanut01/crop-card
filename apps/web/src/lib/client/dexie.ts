@@ -44,6 +44,11 @@ export interface PendingSprayRecord {
   attempts: number;
   lastErrorAt?: number;
   lastError?: string;
+  /** Set when the server answered a definitive 4xx (validation, foreign
+   *  ref, kernel refusal). Rejected rows are skipped by `drainQueue` until
+   *  the operator retries or discards them. Not indexed; no schema bump. */
+  status?: 'rejected';
+  lastStatus?: number;
   createdAt: number;
 }
 

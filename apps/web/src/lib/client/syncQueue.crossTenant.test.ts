@@ -10,6 +10,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fc from 'fast-check';
 import { db, type PendingRecordKind, type PendingSprayRecord } from './dexie';
+import { ACTIVE_OWNER_ENDPOINT, EXPECTED_OWNER_HEADER } from './ownerSync';
 import {
   ENDPOINT_BY_KIND,
   UNASSIGNED_OWNER_ID,
@@ -31,16 +32,19 @@ const KINDS: PendingRecordKind[] = [
   'hay-cutting'
 ];
 
+/** 0 = accepted; 503 = transient (retried); 400/422 = definitive (parked). */
+type FailStatus = 0 | 503 | 400 | 422;
+
 interface Payload {
   marker: string;
-  fail: boolean;
+  fail: FailStatus;
 }
 
 interface SeedRow {
   ownerId: string | undefined;
   kind: PendingRecordKind | undefined;
   createdAt: number;
-  fail: boolean;
+  fail: FailStatus;
 }
 
 const ownerTagArb: fc.Arbitrary<string | undefined> = fc.oneof(
@@ -48,11 +52,15 @@ const ownerTagArb: fc.Arbitrary<string | undefined> = fc.oneof(
   { weight: 1, arbitrary: fc.constantFrom<string | undefined>(undefined, UNASSIGNED_OWNER_ID) }
 );
 
+function failArb(): fc.Arbitrary<FailStatus> {
+  return fc.constantFrom<FailStatus>(0, 0, 503, 400, 422);
+}
+
 const seedRowArb: fc.Arbitrary<SeedRow> = fc.record({
   ownerId: ownerTagArb,
   kind: fc.option(fc.constantFrom(...KINDS), { nil: undefined }),
   createdAt: fc.integer({ min: 0, max: 1_000_000 }),
-  fail: fc.boolean()
+  fail: failArb()
 });
 
 const activeOwnerArb: fc.Arbitrary<string | null> = fc.option(fc.constantFrom<string>(...OWNERS), {
@@ -101,16 +109,50 @@ interface FetchCall {
   payload: Payload;
 }
 
-function installFetch(): FetchCall[] {
+/** Fake server whose session Owner is `serverOwner()` (defaults to the
+ *  tab's own id, i.e. no stale tab). It enforces the expected-owner guard
+ *  the way hooks.server.ts does. */
+function installFetch(
+  serverOwner: () => string | null = () => sessionStorage.getItem(ACTIVE_KEY)
+): FetchCall[] {
   const calls: FetchCall[] = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string, init: RequestInit) => {
+      const owner = serverOwner();
+      if (url === ACTIVE_OWNER_ENDPOINT) {
+        return owner
+          ? {
+              ok: true,
+              status: 200,
+              headers: new Headers({ 'x-cropcard-owner': owner }),
+              json: async () => ({ activeOwnerId: owner })
+            }
+          : { ok: false, status: 401, headers: new Headers(), json: async () => ({}) };
+      }
+      const expected = (init.headers as Record<string, string>)[EXPECTED_OWNER_HEADER];
+      if (expected !== owner) {
+        return {
+          ok: false,
+          status: 409,
+          text: async (): Promise<string> => '{"code":"OWNER_MISMATCH"}'
+        };
+      }
       const payload = JSON.parse(String(init.body)) as Payload;
       calls.push({ url, payload });
       return payload.fail
-        ? { ok: false, status: 422, text: async () => 'rejected', json: async () => ({}) }
-        : { ok: true, status: 200, text: async () => '{}', json: async () => ({ ok: true }) };
+        ? {
+            ok: false,
+            status: payload.fail,
+            text: async (): Promise<string> => 'rejected',
+            json: async () => ({})
+          }
+        : {
+            ok: true,
+            status: 200,
+            text: async (): Promise<string> => '{}',
+            json: async () => ({ ok: true })
+          };
     })
   );
   return calls;
@@ -232,7 +274,8 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
 
           if (active === null) {
             expect(calls).toHaveLength(0);
-            expect(result).toEqual({ succeeded: [], failed: [], skippedOtherOwner: 0 });
+            expect(result.halted).toBe('no-active-owner');
+            expect(result.succeeded).toHaveLength(0);
             expect(after).toEqual(before);
             return;
           }
@@ -248,9 +291,13 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
             expect(src?.ownerId).toBe(active);
             expect(call.url).toBe(ENDPOINT_BY_KIND[kindOfSeed(src!)]);
           }
-          expect(new Set([...result.succeeded, ...result.failed.map((f) => f.id)])).toEqual(
-            new Set(mine.map((r) => r.id))
-          );
+          expect(
+            new Set([
+              ...result.succeeded,
+              ...result.failed.map((f) => f.id),
+              ...result.rejected.map((f) => f.id)
+            ])
+          ).toEqual(new Set(mine.map((r) => r.id)));
 
           for (const r of foreign) expect(after.get(r.id)).toEqual(before.get(r.id));
           for (const r of mine) {
@@ -258,6 +305,7 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
             if (p.fail) {
               expect(after.get(r.id)?.ownerId).toBe(active);
               expect(after.get(r.id)?.attempts).toBe(1);
+              expect(after.get(r.id)?.status).toBe(p.fail === 503 ? undefined : 'rejected');
             } else {
               expect(after.has(r.id)).toBe(false);
             }
@@ -277,7 +325,7 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
           await freshQueue();
           setActive(null);
           const ids: string[] = [];
-          for (const k of kinds) ids.push(await enqueueRecord(k, { marker: k, fail: false }));
+          for (const k of kinds) ids.push(await enqueueRecord(k, { marker: k, fail: 0 }));
 
           const stored = await db().pendingSprayRecords.bulkGet(ids);
           expect(stored.every((r) => r?.ownerId === UNASSIGNED_OWNER_ID)).toBe(true);
@@ -302,7 +350,7 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
 
   type Op =
     | { t: 'switch'; owner: string | null }
-    | { t: 'enqueue'; kind: PendingRecordKind; fail: boolean }
+    | { t: 'enqueue'; kind: PendingRecordKind; fail: FailStatus }
     | { t: 'drain' }
     | { t: 'discard'; pick: number }
     | { t: 'list' };
@@ -312,7 +360,7 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
     fc.record({
       t: fc.constant('enqueue' as const),
       kind: fc.constantFrom(...KINDS),
-      fail: fc.boolean()
+      fail: failArb()
     }),
     fc.record({ t: fc.constant('drain' as const) }),
     fc.record({ t: fc.constant('discard' as const), pick: fc.nat() }),
@@ -326,7 +374,7 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
         const calls = installFetch();
         const model = new Map<
           string,
-          { ownerId: string; kind: PendingRecordKind; marker: string }
+          { ownerId: string; kind: PendingRecordKind; marker: string; rejected: boolean }
         >();
         const everEnqueued: string[] = [];
         let active: string | null = null;
@@ -342,7 +390,8 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
             model.set(id, {
               ownerId: active ?? UNASSIGNED_OWNER_ID,
               kind: op.kind,
-              marker
+              marker,
+              rejected: false
             });
             everEnqueued.push(id);
           } else if (op.t === 'drain') {
@@ -353,15 +402,18 @@ describe('#278 — offline queue never crosses tenants (fake-indexeddb)', () => 
               expect(newCalls).toHaveLength(0);
               continue;
             }
-            const mineIds = [...model].filter(([, m]) => m.ownerId === active).map(([id]) => id);
-            expect(result.skippedOtherOwner).toBe(model.size - mineIds.length);
-            expect(newCalls).toHaveLength(mineIds.length);
+            const mine = [...model].filter(([, m]) => m.ownerId === active);
+            const live = mine.filter(([, m]) => !m.rejected);
+            expect(result.skippedOtherOwner).toBe(model.size - mine.length);
+            expect(result.skippedRejected).toBe(mine.length - live.length);
+            expect(newCalls).toHaveLength(live.length);
             for (const c of newCalls) {
               const entry = [...model].find(([, m]) => m.marker === c.payload.marker);
               expect(entry?.[1].ownerId).toBe(active);
               expect(c.url).toBe(ENDPOINT_BY_KIND[entry![1].kind]);
             }
             for (const id of result.succeeded) model.delete(id);
+            for (const { id } of result.rejected) model.get(id)!.rejected = true;
           } else if (op.t === 'discard') {
             if (everEnqueued.length === 0) continue;
             const id = everEnqueued[op.pick % everEnqueued.length];

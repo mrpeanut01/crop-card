@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { PendingSprayRecord } from '$lib/client/dexie';
+  import type { DrainHalt } from '$lib/client/syncQueue';
   import { fmt } from '$lib/prefsState.svelte';
 
   let pending = $state<PendingSprayRecord[]>([]);
@@ -8,6 +9,17 @@
   let busy = $state(false);
   let lastDrainResult = $state<string | null>(null);
   let dexieAvailable = $state(true);
+  const rejectedCount = $derived(pending.filter((p) => p.status === 'rejected').length);
+  const retryableCount = $derived(pending.length - rejectedCount);
+
+  const HALT_MESSAGES: Record<DrainHalt, string> = {
+    offline: 'Offline. Records will sync when the connection returns.',
+    'no-active-owner': 'No active farm in this tab. Reload the page and try again.',
+    'owner-unverified':
+      'Could not confirm which farm you are signed in to. Check your connection or sign in again.',
+    'owner-mismatch':
+      'Your session is on a different farm than this tab (you switched in another tab). Reload this tab; these records will sync when their farm is active.'
+  };
 
   async function refresh() {
     try {
@@ -29,11 +41,14 @@
       // #315 — surface skippedOtherOwner so the operator understands why a
       // drain that "succeeded 0" still left records behind: they belong to
       // another farm and only drain when that Owner is active.
-      lastDrainResult =
-        `Synced ${result.succeeded.length}; ${result.failed.length} still pending` +
-        (result.skippedOtherOwner > 0
-          ? `; ${result.skippedOtherOwner} skipped from another farm.`
-          : '.');
+      const parts = [`Synced ${result.succeeded.length}; ${result.failed.length} still pending`];
+      if (result.rejected.length > 0) {
+        parts.push(`${result.rejected.length} rejected by the server and need review`);
+      }
+      if (result.skippedOtherOwner > 0) {
+        parts.push(`${result.skippedOtherOwner} skipped from another farm`);
+      }
+      lastDrainResult = result.halted ? HALT_MESSAGES[result.halted] : `${parts.join('; ')}.`;
       await refresh();
     } catch (e) {
       lastDrainResult = `error: ${e instanceof Error ? e.message : e}`;
@@ -46,6 +61,12 @@
     if (!confirm('Discard this queued record? This cannot be undone.')) return;
     const { discardPendingForActiveOwner } = await import('$lib/client/syncQueue');
     await discardPendingForActiveOwner(id);
+    await refresh();
+  }
+
+  async function retry(id: string) {
+    const { retryRejectedForActiveOwner } = await import('$lib/client/syncQueue');
+    await retryRejectedForActiveOwner(id);
     await refresh();
   }
 
@@ -66,8 +87,8 @@
   <p class="warn">IndexedDB unavailable in this context. Open the app in a real browser tab.</p>
 {:else}
   <div class="actions">
-    <button class="primary" onclick={drainNow} disabled={busy || pending.length === 0}>
-      {busy ? 'Syncing…' : `Sync now (${pending.length})`}
+    <button class="primary" onclick={drainNow} disabled={busy || retryableCount === 0}>
+      {busy ? 'Syncing…' : `Sync now (${retryableCount})`}
     </button>
     <a href="/records">All records →</a>
   </div>
@@ -81,17 +102,31 @@
       to see {otherOwnerCount === 1 ? 'it' : 'them'}.
     </p>
   {/if}
+  {#if rejectedCount > 0}
+    <p class="rejected-note">
+      {rejectedCount} record{rejectedCount === 1 ? ' was' : 's were'} rejected by the server and won't
+      retry on their own. Check the error, then retry once it's fixed or discard.
+    </p>
+  {/if}
   {#if pending.length === 0}
     <p class="empty">Queue is empty.</p>
   {:else}
     <ul class="pending">
       {#each pending as p (p.id)}
-        <li>
+        <li class:rejected={p.status === 'rejected'}>
           <header>
             <strong>{fmt.instant(p.occurredAt)}</strong>
             <span class="meta">queued {fmt.instant(p.createdAt, 'time')}</span>
             <span class="attempts">{p.attempts} attempt{p.attempts === 1 ? '' : 's'}</span>
-            <button class="discard" onclick={() => discard(p.id)}>Discard</button>
+            {#if p.status === 'rejected'}
+              <span class="rejected-pill">Rejected{p.lastStatus ? ` (${p.lastStatus})` : ''}</span>
+            {/if}
+            <span class="row-actions">
+              {#if p.status === 'rejected'}
+                <button class="retry" onclick={() => retry(p.id)}>Retry</button>
+              {/if}
+              <button class="discard" onclick={() => discard(p.id)}>Discard</button>
+            </span>
           </header>
           {#if p.lastError}
             <p class="err">{p.lastError}</p>
@@ -188,8 +223,42 @@
     border-radius: 3px;
     font-size: 0.8rem;
   }
-  .discard {
+  .pending li.rejected {
+    border-left-color: #b00020;
+  }
+  .rejected-note {
+    background: #fce8e8;
+    border: 1px solid #e8a3a3;
+    color: #7a0016;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin: 0.5rem 0 1rem;
+  }
+  .rejected-pill {
+    background: #b00020;
+    color: white;
+    padding: 0.05rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .row-actions {
     margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .retry {
+    background: #e6f2ea;
+    color: #1f5e3a;
+    border: none;
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    font-weight: 600;
+    min-height: 48px;
+  }
+  .discard {
     background: #fce8e8;
     color: #b00020;
     border: none;
@@ -197,6 +266,7 @@
     padding: 0.4rem 0.75rem;
     cursor: pointer;
     font-weight: 600;
+    min-height: 48px;
   }
   .err {
     color: #b00020;

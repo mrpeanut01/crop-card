@@ -184,7 +184,7 @@ export function buildAreaCard(
   const name = areaDisplayName(area);
   const kicker = size ? `${kindLabel} · ${size}` : kindLabel;
   const key = cardKey('area', area.id);
-  const bedMap = isDesignable(area.kind) ? buildBedMap(snapshot, area.id, opts.now) : null;
+  const bedMap = isDesignable(area.kind) ? buildBedMap(snapshot, area.id, options.bedMapOnMs ?? opts.now) : null;
 
   return {
     ...(isDesignable(area.kind)

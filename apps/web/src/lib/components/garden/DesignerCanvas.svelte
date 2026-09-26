@@ -137,18 +137,49 @@
 
   onMount(() => {
     mounted = true;
-    if (!svg) return;
+    d.locate = locate;
+    const unlocate = () => {
+      if (d.locate === locate) d.locate = null;
+    };
+    if (!svg) return unlocate;
     viewportPx = Math.max(1, svg.clientWidth || 360);
     viewportH = svg.clientHeight;
-    if (typeof ResizeObserver === 'undefined') return;
+    if (typeof ResizeObserver === 'undefined') return unlocate;
     const ro = new ResizeObserver(() => {
       if (!svg) return;
       viewportPx = Math.max(1, svg.clientWidth || viewportPx);
       viewportH = svg.clientHeight;
     });
     ro.observe(svg);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      unlocate();
+    };
   });
+
+  /** A client point in feet, and the bed drawn there when the point is on
+   *  the visible canvas; how a crop dragged from the panel finds its bed. */
+  function locate(clientX: number, clientY: number): { point: PointFt; bedId: string | null } {
+    const point = toFt(clientX, clientY);
+    const box = svg?.getBoundingClientRect();
+    const onCanvas =
+      !!box &&
+      clientX >= box.left &&
+      clientX <= box.right &&
+      clientY >= box.top &&
+      clientY <= box.bottom;
+    if (!onCanvas) return { point, bedId: null };
+    const bed = [...orderedBeds]
+      .reverse()
+      .find(
+        (b) =>
+          point.x >= b.rect.x &&
+          point.x <= b.rect.x + b.rect.w &&
+          point.y >= b.rect.y &&
+          point.y <= b.rect.y + b.rect.l
+      );
+    return { point, bedId: bed?.blockId ?? null };
+  }
 
   function toFt(clientX: number, clientY: number): PointFt {
     const ctm = svg?.getScreenCTM();
@@ -645,6 +676,7 @@
         class:selected
         class:unplaced
         class:carrying
+        class:droptarget={d.cropDrag?.bedId === bed.blockId}
         class:container={bed.kind === 'container'}
         data-bed-id={bed.blockId}
         data-bed-name={bed.name}
@@ -744,6 +776,18 @@
               </g>
             {/if}
           {/each}
+        {/if}
+        {#if d.cropDrag?.bedId === bed.blockId && d.cropDrag.ghost}
+          {@const dg = footprintBounds(d.cropDrag.ghost.footprint, bed)}
+          <g
+            class="ghost drag"
+            class:nofit={!d.cropDrag.ghost.fits}
+            data-testid="drag-ghost"
+            data-fits={d.cropDrag.ghost.fits}
+            aria-hidden="true"
+          >
+            <rect x={dg.x} y={dg.y} width={dg.w} height={dg.l} vector-effect="non-scaling-stroke" />
+          </g>
         {/if}
         {#each d.ghosts.filter((g) => g.blockId === bed.blockId) as g (g.key)}
           {@const gr = footprintBounds(g.footprint, bed)}
@@ -957,6 +1001,19 @@
   }
   .ghost text {
     fill: var(--color-forest-deep);
+  }
+  .ghost.drag rect {
+    fill: var(--pill-forest-bg);
+    fill-opacity: 0.6;
+  }
+  .ghost.drag.nofit rect {
+    fill: var(--color-rust);
+    fill-opacity: 0.25;
+    stroke: var(--color-rust);
+  }
+  .bed.droptarget .bed-body {
+    stroke: var(--color-forest);
+    stroke-width: 3;
   }
   .handle {
     fill: var(--color-paper);

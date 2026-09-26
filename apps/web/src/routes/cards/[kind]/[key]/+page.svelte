@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
+  import { replaceState } from '$app/navigation';
   import { page } from '$app/state';
   import CardView from '$lib/components/cards/CardView.svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
@@ -10,6 +11,7 @@
   import { PRINT_HELP, PRINT_LAYOUTS } from '$lib/cards/print';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs } from '$lib/prefsState.svelte';
+  import { cardViewParams, withoutPrintParam } from '$lib/cards/viewParams';
 
   const cards = new OfflineCards();
 
@@ -22,10 +24,19 @@
   const key = $derived(page.params.key ?? '');
   const kind = $derived(page.params.kind ?? '');
   const snapshot = $derived(cards.row?.bundle ?? null);
+  const view = $derived(cardViewParams(page.url.searchParams, kind));
   const card = $derived.by(() => {
     if (!snapshot || !isCardKind(kind)) return null;
-    const built = buildCard(snapshot, key, { prefs, now });
+    const built = buildCard(snapshot, key, { prefs, now, bedMapOnMs: view.bedMapOnMs });
     return built && built.kind === kind ? built : null;
+  });
+
+  let autoPrinted = false;
+  $effect(() => {
+    if (!view.autoPrint || !card || autoPrinted) return;
+    autoPrinted = true;
+    replaceState(withoutPrintParam(page.url), page.state);
+    void tick().then(print);
   });
   const pinned = $derived(cards.isPinned(key));
 

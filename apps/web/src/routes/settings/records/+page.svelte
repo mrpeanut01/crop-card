@@ -12,7 +12,7 @@
 
 <svelte:head><title>Records & retention · CropCard</title></svelte:head>
 
-<SettingsShell title="Records & retention" kicker="Compliance & audit">
+{#snippet tier()}
   <SettingsSection
     title="Retention policy"
     sub="VDACS requires a 2-year minimum for pesticide records. CropCard never auto-deletes — near-expiry rows surface an alert and only the owner can remove them (NFR-05)."
@@ -72,9 +72,50 @@
       <a class="ghost" href="/settings/helpers"><Plus size={12} /> Invite an inspector</a>
     </div>
   </SettingsSection>
+{/snippet}
+
+<SettingsShell title="Records & retention" kicker="Compliance & audit">
+  {#if data.chrome === 'quiet'}
+    <details class="quiet-tier" data-testid="quiet-compliance">
+      <summary>Pesticide record-keeping (applies if you spray)</summary>
+      <p class="quiet-lede">
+        Anything you spray, whether copper, sulfur, Bt or spinosad, comes with label rules and
+        record-keeping duties. When you record a spray, CropCard keeps the record, locks it after
+        {data.lockWindowHours} hours and holds it for at least {data.retention.sprayYears} years. Here
+        is how that works.
+      </p>
+      {@render tier()}
+    </details>
+  {:else}
+    {@render tier()}
+  {/if}
 </SettingsShell>
 
 <style>
+  .quiet-tier {
+    background: var(--color-paper);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card);
+    padding: 0 16px;
+  }
+  .quiet-tier > summary {
+    cursor: pointer;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: var(--color-forest-deep);
+  }
+  .quiet-tier > summary:focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 2px;
+  }
+  .quiet-lede {
+    margin: 0 0 12px;
+    color: var(--color-ink-soft);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
   .tile-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);

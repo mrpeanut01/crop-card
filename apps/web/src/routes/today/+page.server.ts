@@ -1,6 +1,13 @@
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { getOnboardingStatus } from '$lib/onboarding/state.server';
+import { error, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import {
+  dismissGettingStarted,
+  getGettingStartedDismissedAt,
+  getOnboardingStatus,
+  restoreGettingStarted
+} from '$lib/onboarding/state.server';
+import { loadGettingStartedFacts } from '$lib/onboarding/gettingStarted.server';
+import { currentUser } from '$lib/server/auth';
 import { listBlocks } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
@@ -49,8 +56,8 @@ function clampView(raw: string | null): View {
 }
 
 export const load: PageServerLoad = async ({ url, locals }) => {
-  // A new Owner stays in the setup wizard until they finish it or pick
-  // "finish later". Impersonating superadmins are never bounced.
+  // An Owner who hasn't answered onboarding screen 2 goes back to it.
+  // Impersonating superadmins are never bounced.
   const onboardingStatus = locals.user?.activeOwnerId ? getOnboardingStatus() : null;
   if (
     onboardingStatus === 'in-progress' &&
@@ -119,20 +126,18 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     status: 'completed'
   });
 
-  // Bootstrap (UC-20) — keep existing behavior.
   const sprayers = listSprayers();
-  const bootstrap = {
-    hasBlock: blocks.length > 0,
-    hasPlanting: totalPlantings > 0,
-    hasSprayer: sprayers.length > 0,
-    // #190 / F-02 — predicate must require a real recorded calibration.
-    // Previously `s.calibratedGpa ?? 0 > 0` always passed because
-    // sprayers.ts silently substituted 15 when the value was null, so
-    // the UC-10 step auto-ticked the moment a sprayer was added.
-    hasCalibration: sprayers.some((s) => s.calibratedGpa != null && s.calibratedGpa > 0)
-  };
-  const bootstrapDone =
-    bootstrap.hasBlock && bootstrap.hasPlanting && bootstrap.hasSprayer && bootstrap.hasCalibration;
+  const isOwner = locals.user?.role === 'owner' && !!locals.user.activeOwnerId;
+  const gettingStarted = isOwner
+    ? {
+        facts: loadGettingStartedFacts({
+          ownerId: locals.user!.activeOwnerId!,
+          userId: locals.user!.id,
+          blocks
+        }),
+        dismissed: getGettingStartedDismissedAt() !== null
+      }
+    : null;
 
   // Active crops summary — fuels the Season tab and the equipment-readiness
   // panel.
@@ -208,9 +213,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       activeCrops: activeCrops.length
     },
     sprayers,
-    bootstrap,
-    bootstrapDone,
-    setupUnfinished: onboardingStatus === 'later' && locals.user?.role === 'owner',
+    gettingStarted,
     pluginFailures: stats.failures,
     // Legacy: keep these so the existing template still has data while we
     // migrate to the tabbed layout.
@@ -250,4 +253,23 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     seasonGlance,
     winterizeAlerts
   };
+};
+
+function requireTodayOwner(event: Parameters<NonNullable<Actions[string]>>[0]) {
+  const user = currentUser(event);
+  if (!user) throw redirect(303, '/');
+  if (!user.activeOwnerId || user.role !== 'owner') throw error(403, 'owner-only');
+}
+
+export const actions: Actions = {
+  dismissSetup: (event) => {
+    requireTodayOwner(event);
+    dismissGettingStarted();
+    return { ok: true };
+  },
+  showSetup: (event) => {
+    requireTodayOwner(event);
+    restoreGettingStarted();
+    throw redirect(303, '/today');
+  }
 };

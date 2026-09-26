@@ -20,6 +20,7 @@
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
   import AddTaskModal from '$lib/components/plan/AddTaskModal.svelte';
+  import Hint from '$lib/components/ui/Hint.svelte';
   import type { StockUnit } from '$lib/stock/units';
   import { withStepRoutes, workflowStepRoute } from '$lib/plan/seasonWorkflow';
   // Phase 25b (#81) — controls the legacy <details> open state. The
@@ -1897,6 +1898,19 @@
     showNewPlantingModal = true;
   }}
 />
+
+{#if data.canEdit && data.blocks.length > 0 && data.blocks.every((b) => b.plantings.length === 0)}
+  <Hint
+    key="plan_first_crop"
+    anchor="[data-hint-anchor=plan_first_crop]"
+    text="Start here. Pick a crop and when it goes in, and CropCard lays out the work on your calendar."
+    suppressed={showAllocationWizard ||
+      showNewPlantingModal ||
+      showNewBlockModal ||
+      editBlockTargetId !== null ||
+      addTaskTarget !== null}
+  />
+{/if}
 
 <NewBlockModal
   open={showNewBlockModal}

@@ -12,6 +12,8 @@ import { listSprayEvents, recordsApproachingRetention, LOCK_WINDOW_MS } from '$l
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
+import { getFarmProfile } from '$lib/onboarding/state.server';
+import { complianceChromeLevel } from '$lib/records/complianceChrome';
 
 const SPRAY_RETENTION_YEARS = 2;
 const DAY_MS = 86_400_000;
@@ -32,6 +34,11 @@ export const load: ServerLoad = ({ locals }) => {
   const approachingRetention = recordsApproachingRetention(now).length;
 
   return {
+    chrome: complianceChromeLevel(getFarmProfile(), {
+      sprays: sprays.length,
+      insecticides: insects.length,
+      fungicides: fungs.length
+    }),
     counts: {
       sprays: sprays.length,
       insecticides: insects.length,

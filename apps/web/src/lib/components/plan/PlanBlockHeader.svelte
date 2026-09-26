@@ -142,7 +142,7 @@
       </button>
     {/if}
     {#if onAddPlanting}
-      <button class="primary" onclick={onAddPlanting}>
+      <button class="primary" onclick={onAddPlanting} data-hint-anchor="plan_first_crop">
         <Plus size={14} strokeWidth={1.75} /> Add planting
       </button>
     {/if}

@@ -2,11 +2,8 @@
   import type { CalendarEvent } from '$lib/calendar/engine';
   import type { Task } from '$lib/db/tasks';
   import { STOCK_CATEGORY_TO_INVENTORY_TYPE } from '$lib/inventory/types';
-  import Card from '$lib/components/ui/Card.svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
-  import Button from '$lib/components/ui/Button.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   // Phase 25e (#97) — Almanac /today shell components.
@@ -18,6 +15,7 @@
     type RecommendationItem
   } from '$lib/components/today/Recommendations.svelte';
   import SeasonGlance from '$lib/components/today/SeasonGlance.svelte';
+  import GettingStartedCard from '$lib/components/today/GettingStartedCard.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
 
   let { data } = $props();
@@ -358,6 +356,10 @@
   canSetLocation={data.canSetFarmLocation}
 />
 
+{#if data.gettingStarted}
+  <GettingStartedCard facts={data.gettingStarted.facts} dismissed={data.gettingStarted.dismissed} />
+{/if}
+
 <div class="t-grid">
   <TodayHero
     action={data.priorityAction}
@@ -412,90 +414,6 @@
       : 'AI off · plugin + your records · all editable'}
   />
 </div>
-
-<!-- #189 / F-01 — UC-20 first-run bootstrap card. Lives OUTSIDE the
-     legacy <details> so a fresh user sees the 3-step "Get started" guide
-     on first visit without having to click through the disclosure.
-     Spec: docs/design/almanac/direction-almanac-today.jsx §bootstrap-card. -->
-{#if !data.bootstrapDone}
-  <Card loose>
-    <Kicker>UC-20 · One-time setup</Kicker>
-    <h2 class="serif bootstrap-title">Get started</h2>
-    <p class="bootstrap-lede">
-      A few one-time setup steps. CropCard plans, calibrates, and records around blocks + sprayers —
-      once these three are in place, the calendar drives the rest.
-    </p>
-    {#if data.setupUnfinished}
-      <a href="/onboarding" class="resume-setup"
-        ><Button variant="primary" size="sm">Resume the setup guide →</Button></a
-      >
-    {/if}
-    <ol class="bootstrap-steps">
-      <li class:done={data.bootstrap.hasBlock && data.bootstrap.hasPlanting}>
-        <span class="step-num" aria-hidden="true">
-          {data.bootstrap.hasBlock && data.bootstrap.hasPlanting ? '✓' : '1'}
-        </span>
-        <div class="step-body">
-          <strong>Add your first block & planting</strong>
-          <small>
-            {#if data.bootstrap.hasBlock && data.bootstrap.hasPlanting}
-              Done.
-            {:else if data.bootstrap.hasBlock}
-              Block added. Now record a planting in it.
-            {:else}
-              A block is your field; a planting is what's growing in it.
-            {/if}
-          </small>
-          {#if !(data.bootstrap.hasBlock && data.bootstrap.hasPlanting)}
-            <a href="/plan" class="bootstrap-cta"
-              ><Button variant="primary" size="sm">Open Plan →</Button></a
-            >
-          {/if}
-        </div>
-      </li>
-      <li class:done={data.bootstrap.hasSprayer}>
-        <span class="step-num" aria-hidden="true">
-          {data.bootstrap.hasSprayer ? '✓' : '2'}
-        </span>
-        <div class="step-body">
-          <strong>Register a sprayer</strong>
-          <small>
-            {#if data.bootstrap.hasSprayer}
-              Done.
-            {:else}
-              The kernel won't let you spray without one — it tracks chemistry & decon state.
-            {/if}
-          </small>
-          {#if !data.bootstrap.hasSprayer}
-            <a href="/equipment" class="bootstrap-cta"
-              ><Button variant="primary" size="sm">Open Equipment →</Button></a
-            >
-          {/if}
-        </div>
-      </li>
-      <li class:done={data.bootstrap.hasCalibration}>
-        <span class="step-num" aria-hidden="true">
-          {data.bootstrap.hasCalibration ? '✓' : '3'}
-        </span>
-        <div class="step-body">
-          <strong>Calibrate the sprayer</strong>
-          <small>
-            {#if data.bootstrap.hasCalibration}
-              Done.
-            {:else}
-              UC-10 1/128-acre method. The dilution calculator scales every product rate by GPA.
-            {/if}
-          </small>
-          {#if data.bootstrap.hasSprayer && !data.bootstrap.hasCalibration}
-            <a href="/calibrate" class="bootstrap-cta"
-              ><Button variant="primary" size="sm">Open Calibrate →</Button></a
-            >
-          {/if}
-        </div>
-      </li>
-    </ol>
-  </Card>
-{/if}
 
 <details class="legacy-detail" bind:open={detailOpen}>
   <summary>Full schedule view — tasks · calendar · sprayers · kernel info</summary>
@@ -1518,78 +1436,6 @@
   .warn ul {
     margin: 0;
     padding-left: 1.25rem;
-  }
-  /* .bootstrap section is now the Card primitive — its own wrapper
-     styles are gone. .bootstrap-title is the serif h2 inside Card. */
-  .bootstrap-title {
-    margin-top: 4px;
-    margin-bottom: 0.75rem;
-  }
-  .bootstrap-lede {
-    color: #555;
-    margin: 0 0 1rem;
-  }
-  .resume-setup {
-    display: inline-block;
-    margin: 0 0 1rem;
-  }
-  .bootstrap-steps {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .bootstrap-steps li {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border-radius: 6px;
-    background: white;
-    border-left: 4px solid var(--color-forest);
-  }
-  .bootstrap-steps li.done {
-    opacity: 0.65;
-    border-left-color: #888;
-  }
-  .step-num {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--color-forest);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.1rem;
-  }
-  .bootstrap-steps li.done .step-num {
-    background: #4d8e36;
-  }
-  .step-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  .step-body small {
-    color: #555;
-  }
-  .step-body .cta {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 0.4rem;
-    padding: 0.7rem 1rem;
-    background: var(--color-forest);
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    font-weight: 600;
-    min-height: 60px;
-    line-height: 1.4;
-    align-self: flex-start;
   }
   .winterize-alert {
     border-left: 4px solid #2a6ca8;

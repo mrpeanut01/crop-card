@@ -4,7 +4,7 @@ ISO 9241-210 *Context of Use* descriptions. Each persona names goals, tasks, env
 
 > **Naming note.** The upstream HCD Guide refers to this product as "RowWise". This repository's name is **CropCard** and that is preserved across code, schemas, routes, and DB columns. Both names refer to the same product.
 
-The two roles enforced by [auth.ts](../apps/web/src/lib/server/auth.ts) — `owner` and `helper` — implement the first two personas. P3 is documented in the HCD Guide §3.5 but has no implementation in CropCard yet (see [use-cases.md](./use-cases.md) UC-13..UC-16). P4 and P5 are proposed: they describe real-world journeys the app already implies but never names.
+The two roles enforced by [auth.ts](../apps/web/src/lib/server/auth.ts) — `owner` and `helper` — implement the first two personas. P3 is documented in the HCD Guide §3.5 but has no implementation in CropCard yet (see [use-cases.md](./use-cases.md) UC-13..UC-16). P4 is proposed: it describes a real-world journey the app already implies but never names. P5 was proposed and is now the first-run journey Phase 30 builds for.
 
 ---
 
@@ -82,23 +82,23 @@ This persona is the silent driver behind FR-09's 48-hour lock and the PDF-export
 
 ---
 
-## P5 — First-Run Sherry *(proposed)*
+## P5 — First-Run Owner (Sherry on day one, or a first-time gardener)
 
-**Source:** Implied. Same person as P1 on day one with an empty database. The current home screen `/` is an 11-tile grid with no guidance for an empty database — first-run guidance is being reworked under UC-26 sidebar nav + landing redesign (tracked in [feature-backlog.md](./feature-backlog.md)).
+**Source:** Implied, and reworked in Phase 30. The same person as P1 on day one with an empty database, or a household gardener with four raised beds who has never kept a spray record. Both arrive from the sign-in link knowing nothing about blocks, plugins or calibration, and both leave if the first screen asks for a drawing.
 
 | Context-of-Use attribute | Detail |
 |---|---|
-| Primary goals | Understand what this app does. Get the first block defined. Get the first sprayer registered. Get to a point where the dashboard shows something useful. |
-| Primary tasks | Sign in (UC-17). Land on the home screen. Try to get to "I have a first planting recorded so I can do anything else" (UC-20, currently unguided). |
-| Environment | Kitchen table, evenings, after end-of-day chores in late winter. Probably has the original Final Requirements Spec PDF open in another tab. |
-| Devices | Laptop. |
-| Connectivity | Online. |
-| Physical constraints | None. |
-| Cognitive context | Has not yet built a mental model of plugins-vs-plantings-vs-sprayers. Each tile on the home screen reads as a synonym for some other tile. |
-| Constraints | If she gives up here, the seasonal plan never gets entered, and CropCard is a write-once paper-replacement that nobody uses. |
-| Success criteria | First block + first planting + first sprayer + first plugin imported in under 20 minutes, without consulting external docs. |
+| Primary goals | Get to a useful Today screen quickly. Trust the frost dates the calendar is built on. Learn the rest when it matters, not before. |
+| Primary tasks | Sign in (UC-17). Answer two onboarding screens (UC-20): farm name and location (address search, GPS or a pin, with frost dates filled in from the nearest NOAA station), then what they grow on (garden, fields, hay or pasture, greenhouse). Work through the Getting Started card on `/today` at their own pace. |
+| Environment | Sherry: kitchen table on a winter evening. The gardener: a phone on the back step, often in spring when the urge to plant arrives. |
+| Devices | Laptop or phone. Onboarding has to work one-handed at phone width. |
+| Connectivity | Usually online. Address search is an optional online extra; GPS, the map pin and typed coordinates all work without it, and the frost table ships with the app. |
+| Physical constraints | None for setup itself; the gardener may have soil on their hands, so every target is at least 48 px. |
+| Cognitive context | Has no mental model of plugins, blocks or sprayers yet. The gardener does not know what a hard frost date is for and should not have to. |
+| Constraints | If setup feels like homework they stop, and CropCard becomes a write-once paper replacement. No AI key is needed at any point. |
+| Success criteria | From the sign-in link to `/today` in two screens and under a minute with GPS, with no drawing, no implements, no Season Setup and no Claude key. Frost dates for a Loudoun pin land within a week of the Dulles normals and name the station. Everything else (drawing an area, a first crop, equipment, calibration, helpers, the planning assistant, saving cards offline) is a Getting Started item or a just-in-time prompt inside the flow that needs it. |
 
-This persona is the strongest argument for an explicit onboarding flow (UC-20) — covered in the audit's P0/P1 list.
+The farm profile recorded on screen 2 (`garden`, `farm` or `mixed`) only tunes which Getting Started items show and how loudly the pesticide record-keeping pages speak. It never switches off a record, an export or a safety check.
 
 ---
 
@@ -129,7 +129,7 @@ Primary use case: **UC-43** (External agent orchestration via API token). See th
 | P2 Marco | `helper` | UC-02, UC-04, UC-05, UC-06, UC-10 (entry), UC-11, UC-12, UC-17 |
 | P3 Hay Operator | both | UC-13, UC-14, UC-15, UC-16 |
 | P4 Dale | n/a (export receiver) | UC-22 |
-| P5 First-Run | `owner` (new) | UC-20 |
+| P5 First-Run Owner | `owner` (new) | UC-20 |
 | P6 Integrator | Bearer (inherits role of underlying user) | UC-43 |
 
 Cross-reference: every implemented use case names its primary persona in [use-cases.md](./use-cases.md); audit-derived gaps are tracked persona-tagged in [feature-backlog.md](./feature-backlog.md), with ongoing clickthrough findings under [clickthrough-reports/](./clickthrough-reports/).

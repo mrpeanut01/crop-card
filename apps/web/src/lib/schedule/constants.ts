@@ -15,6 +15,15 @@ export const LOUDOUN_DEFAULT_FIRST_FROST_MMDD = '10-15';
 export const SETTINGS_KEYS = {
   lastFrost: 'last_frost_date',
   firstFrost: 'first_frost_date',
+  /** Phase 30: hard-frost (24 °F) dates, `MM-DD`, for winter-hardy crops. */
+  lastHardFrost: 'last_hard_frost_date',
+  firstHardFrost: 'first_hard_frost_date',
+  /** Phase 30: JSON `StoredFrostProvenance` for the four frost dates. */
+  frostProvenance: 'frost_provenance',
+  /** Phase 30: reserved for v1.1 (`"7a"` or null, `data | manual` or null);
+   *  nothing reads them in v1. */
+  hardinessZone: 'farm.hardiness_zone',
+  hardinessZoneProvenance: 'farm.hardiness_zone_provenance',
   farmLatLon: 'farm_lat_lon',
   aiMonthlyUsdCap: 'ai_monthly_usd_cap',
   aiDailyCallQuota: 'ai_daily_call_quota',

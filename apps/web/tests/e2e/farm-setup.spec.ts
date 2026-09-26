@@ -33,7 +33,9 @@ test.describe('draw your farm', () => {
     await expect(sketch(page).locator('[data-field="Back Forty"] rect')).toBeVisible();
 
     const blockForm = page.getByTestId('sketch-add-block');
-    await blockForm.getByLabel('Field').selectOption({ label: 'Back Forty' });
+    // A new farm has no starter Area until onboarding screen 2 is answered,
+    // so Back Forty is the only field and the picker only shows with two.
+    await expect(blockForm.getByLabel('Field')).toHaveCount(0);
     await blockForm.getByLabel('Block name').fill('Sweet corn A');
     await blockForm.getByLabel('Width (ft)').fill('100');
     await blockForm.getByLabel('Length (ft)').fill('150');

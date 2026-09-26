@@ -8,32 +8,13 @@
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
   import BlockMap from '$lib/components/BlockMap.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
 
-  let { data } = $props();
+  const { data, form } = $props();
 
-  // #309 — editable farm coordinates + frost dates. Seed from the loader;
-  // the form posts these back to ?/save which persists them to the same
-  // app_settings keys the /api/settings endpoint validates.
-  let lat = $state(untrack(() => data.farmLatLon.lat.toFixed(4)));
-  let lon = $state(untrack(() => data.farmLatLon.lon.toFixed(4)));
-
-  // Frost inputs are <input type="date"> (YYYY-MM-DD). Seed from the stored
-  // MM-DD when present, else from the resolved default for the current
-  // season year. The save action re-derives MM-DD from the posted value.
-  function mmDdToIso(mmDd: string | null, fallbackMs: number): string {
-    const yr = data.currentYear;
-    if (mmDd) {
-      const [mm, dd] = mmDd.split('-');
-      return `${yr}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
-    }
-    return `${yr}-${new Date(fallbackMs).toISOString().slice(5, 10)}`;
-  }
-  let lastFrost = $state(
-    untrack(() => mmDdToIso(data.lastFrostMmDd, data.frostDates.lastSpringFrostMs))
-  );
-  let firstFrost = $state(
-    untrack(() => mmDdToIso(data.firstFrostMmDd, data.frostDates.firstFallFrostMs))
-  );
+  const round4 = (n: number | undefined) => (n == null ? null : Number(n.toFixed(4)));
+  let lat = $state<number | null>(untrack(() => round4(data.farmLatLon?.lat)));
+  let lon = $state<number | null>(untrack(() => round4(data.farmLatLon?.lon)));
 
   // Read-only preview only — edit/draw happens at /settings/farm/map. BlockMap
   // requires these callbacks but never invokes them in thumbnail mode.
@@ -61,21 +42,18 @@
 <SettingsShell title="Farm & blocks" kicker="Field geometry" saveAction="?/save">
   <SettingsSection
     title="Farm details"
-    sub="Used by frost-date lookup, weather, and inspector links."
+    sub="Your farm location drives the weather, frost dates and spray windows."
   >
+    {#if form && 'error' in form && form.error}
+      <p class="error" role="alert">{form.error}</p>
+    {:else if form && 'ok' in form && form.ok}
+      <p class="saved" role="status">Saved.</p>
+    {/if}
     <div class="grid grid-3">
       <SettingsField label="Farm name">
-        <input class="s-input" name="farmName" value={data.farmName || 'Loudoun Home Farm'} />
+        <input class="s-input" name="farmName" value={data.farmName} />
       </SettingsField>
-      <SettingsField label="County">
-        <input class="s-input" value="Loudoun, VA" />
-      </SettingsField>
-      <SettingsField label="USDA hardiness">
-        <select class="s-input"><option>7a</option><option>7b</option></select>
-      </SettingsField>
-    </div>
-    <div class="grid grid-4 second-row">
-      <SettingsField label="Latitude" hint="for frost + GDD">
+      <SettingsField label="Latitude" hint="your farm location">
         <input
           class="s-input mono"
           name="lat"
@@ -87,7 +65,7 @@
           bind:value={lat}
         />
       </SettingsField>
-      <SettingsField label="Longitude" hint="for frost + GDD">
+      <SettingsField label="Longitude" hint="your farm location">
         <input
           class="s-input mono"
           name="lon"
@@ -99,12 +77,14 @@
           bind:value={lon}
         />
       </SettingsField>
-      <SettingsField label="Last frost · spring">
-        <input class="s-input" name="lastFrost" type="date" bind:value={lastFrost} />
-      </SettingsField>
-      <SettingsField label="First frost · fall">
-        <input class="s-input" name="firstFrost" type="date" bind:value={firstFrost} />
-      </SettingsField>
+    </div>
+    <div class="frost-box">
+      <FrostPanel
+        lat={typeof lat === 'number' && Number.isFinite(lat) ? lat : null}
+        lon={typeof lon === 'number' && Number.isFinite(lon) ? lon : null}
+        mode="manual"
+        stored={data.frost}
+      />
     </div>
   </SettingsSection>
 
@@ -191,11 +171,23 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
-  .grid-4 {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+  .frost-box {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-divider-soft);
   }
-  .second-row {
-    margin-top: 12px;
+  .error {
+    background: var(--pill-rust-bg);
+    border: 1px solid var(--pill-rust-bd);
+    color: var(--pill-rust-fg);
+    padding: 10px 14px;
+    border-radius: var(--radius-input);
+    margin: 0 0 12px;
+  }
+  .saved {
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    margin: 0 0 12px;
   }
   .s-input {
     border: 1px solid var(--color-divider);
@@ -355,9 +347,7 @@
   }
   @media (max-width: 760px) {
     .grid-3,
-    .grid-2,
-    .grid-4,
-    .second-row {
+    .grid-2 {
       grid-template-columns: 1fr;
     }
   }

@@ -8,16 +8,22 @@
  * reload.
  */
 
-import { error, redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
+import { error, fail, redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { listBlocks } from '$lib/db/blocks';
 import { listFields } from '$lib/db/fields';
-import { getFarmLatLon, frostDatesForYear } from '$lib/schedule/settings';
-import { getSetting, setSetting } from '$lib/db/settings';
+import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
+import { setSetting } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
-import { normalizeFrost, parseLatLon } from '$lib/schedule/farmLocation';
+import { parseLatLon } from '$lib/schedule/farmLocation';
+import {
+  applyFrostPlan,
+  loadStoredFrost,
+  resolveFrostForm
+} from '$lib/climate/frostSettings.server';
+import { storedFrostView } from '$lib/climate/frostSettings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { unscopedQueryNote } from '$lib/db/tenant';
 
@@ -57,12 +63,15 @@ export const load: ServerLoad = ({ locals }) => {
     mapBlocks: blocks,
     mapFields: fields,
     fields: fields.map((f) => ({ id: f.id, name: f.name })),
-    farmLatLon: getFarmLatLon(),
-    frostDates: frostDatesForYear(currentYear),
-    // Raw MM-DD strings backing the editable frost inputs (null → default
-    // shown to the user as an empty field with placeholder guidance).
-    lastFrostMmDd: getSetting(SETTINGS_KEYS.lastFrost) ?? null,
-    firstFrostMmDd: getSetting(SETTINGS_KEYS.firstFrost) ?? null,
+    farmLatLon: hasFarmLatLon() ? getFarmLatLon() : null,
+    frost: (() => {
+      const stored = loadStoredFrost();
+      return {
+        values: storedFrostView(stored.dates, stored.provenance),
+        source: stored.provenance.source,
+        probability: stored.provenance.probability
+      };
+    })(),
     currentYear,
     activeSeasonSetup: loadSeasonSetup(currentYear)
   };
@@ -74,6 +83,9 @@ export const actions: Actions = {
     if (locals.user.role !== 'owner') throw error(403, 'owner-only');
     if (!locals.user.activeOwnerId) throw error(400, 'no active owner');
     const form = await request.formData();
+    const latLon = parseLatLon(form.get('lat'), form.get('lon'));
+    const frost = await resolveFrostForm(form, latLon);
+    if (!frost.ok) return fail(400, { error: frost.error });
 
     const farmName = String(form.get('farmName') ?? '').trim();
     if (farmName.length > 0 && farmName.length <= 120) {
@@ -84,16 +96,8 @@ export const actions: Actions = {
         .run();
     }
 
-    // Lat/lon — persisted as JSON under farm_lat_lon (same key /api/settings
-    // validates). Only write when both parse to in-range numbers.
-    const latLon = parseLatLon(form.get('lat'), form.get('lon'));
     if (latLon) setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify(latLon));
-
-    // Frost dates — MM-DD strings under last_frost_date / first_frost_date.
-    const lastFrost = normalizeFrost(form.get('lastFrost'));
-    if (lastFrost) setSetting(SETTINGS_KEYS.lastFrost, lastFrost);
-    const firstFrost = normalizeFrost(form.get('firstFrost'));
-    if (firstFrost) setSetting(SETTINGS_KEYS.firstFrost, firstFrost);
+    if (frost.plan) applyFrostPlan(frost.plan);
 
     return { ok: true };
   }

@@ -1,26 +1,19 @@
 /**
- * First-run wizard state for the active Owner. Progress is derived from live
- * data wherever a real record proves the step is done; the two per-Owner
- * settings below cover what data can't show (a farm that runs no implements,
- * and whether a brand-new Owner still owes the wizard a visit).
+ * Onboarding and Getting Started state for the active Owner (Phase 30).
+ *
+ * `onboarding_status`:
+ *   - `in-progress`: the farm exists but screen 2 ("What are you growing
+ *     on?") is unanswered. /today sends the owner back to /onboarding.
+ *   - `later` / `complete`: done. Farms made before Phase 30 carry either of
+ *     these or nothing, and are never redirected.
  */
 
-import { getSetting, setSetting } from '$lib/db/settings';
-import { listBlocks } from '$lib/db/blocks';
-import { listCrops } from '$lib/db/crops';
-import { listEquipment } from '$lib/db/equipment';
-import { hasFarmLatLon } from '$lib/schedule/settings';
-import { loadSeasonSetup } from '$lib/season/setup.server';
-import type { OnboardingProgress } from './steps';
+import { deleteSetting, getSetting, setSetting } from '$lib/db/settings';
+import { FARM_PROFILE_KEY, parseFarmProfile, type FarmProfile } from './profile';
 
 const STATUS_KEY = 'onboarding_status';
-const IMPLEMENTS_KEY = 'onboarding_implements_confirmed';
+export const GETTING_STARTED_DISMISSED_KEY = 'getting_started_dismissed_at';
 
-/**
- * `in-progress` is written when onboarding creates the farm and sends the
- * owner back to the wizard from /today until they finish or choose "later".
- * Farms created before the wizard existed have no status and are left alone.
- */
 export type OnboardingStatus = 'in-progress' | 'later' | 'complete';
 
 export function getOnboardingStatus(): OnboardingStatus | null {
@@ -32,17 +25,23 @@ export function setOnboardingStatus(status: OnboardingStatus): void {
   setSetting(STATUS_KEY, status);
 }
 
-export function confirmImplements(): void {
-  setSetting(IMPLEMENTS_KEY, '1');
+export function getFarmProfile(): FarmProfile | null {
+  return parseFarmProfile(getSetting(FARM_PROFILE_KEY));
 }
 
-export function loadOnboardingProgress(year: number): OnboardingProgress {
-  return {
-    farm: true,
-    location: hasFarmLatLon(),
-    fields: listBlocks().length > 0,
-    implements: getSetting(IMPLEMENTS_KEY) === '1' || listEquipment().length > 0,
-    season: loadSeasonSetup(year) !== null,
-    plan: listCrops({ limit: 1 }).length > 0
-  };
+export function setFarmProfile(profile: FarmProfile): void {
+  setSetting(FARM_PROFILE_KEY, profile);
+}
+
+export function getGettingStartedDismissedAt(): number | null {
+  const n = Number(getSetting(GETTING_STARTED_DISMISSED_KEY));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+export function dismissGettingStarted(now: number = Date.now()): void {
+  setSetting(GETTING_STARTED_DISMISSED_KEY, String(now));
+}
+
+export function restoreGettingStarted(): void {
+  deleteSetting(GETTING_STARTED_DISMISSED_KEY);
 }

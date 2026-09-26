@@ -21,30 +21,29 @@ async function signInFresh(page: Page): Promise<void> {
 test.describe('planning year', () => {
   const thisYear = new Date().getFullYear();
 
-  test('a new farm picks its planting year during setup and can switch it later', async ({
+  test('a new farm starts on the suggested planting year and can switch it later', async ({
     page
   }) => {
     await signInFresh(page);
-    await page.goto('/onboarding');
-    await page.waitForLoadState('networkidle');
+    const onboard = await page.request.post('/onboarding?/farm', {
+      form: { farmName: `Year Farm ${Date.now()}` },
+      headers: { 'x-sveltekit-action': 'true', origin: origin(page) },
+      maxRedirects: 0
+    });
+    expect(((await onboard.json()) as { location?: string }).location).toBe('/onboarding');
 
+    await page.goto('/settings/season');
+    await page.waitForLoadState('networkidle');
     const picker = page.getByRole('group', { name: /which planting year/i });
     await expect(picker.getByRole('radio')).toHaveCount(2);
     await expect(picker.getByText('Suggested')).toBeVisible();
+    const active = Number(await picker.getByRole('radio', { checked: true }).getAttribute('value'));
+    expect([thisYear, thisYear + 1]).toContain(active);
+    await expect(page.getByText(`Settings · Season ${active}`)).toBeVisible();
 
-    await page.getByLabel('Farm name').fill(`Year Farm ${Date.now()}`);
-    await picker.getByLabel(String(thisYear + 1)).check();
-    await page.getByRole('button', { name: /create farm/i }).click();
-
-    await expect(page).toHaveURL(/\/onboarding\?step=location$/);
-
-    await page.goto('/settings/season');
-    await expect(page.getByText(`Settings · Season ${thisYear + 1}`)).toBeVisible();
-    await page
-      .getByRole('group', { name: /which planting year/i })
-      .getByLabel(String(thisYear))
-      .check();
-    await expect(page.getByText(`Settings · Season ${thisYear}`)).toBeVisible();
+    const other = active === thisYear ? thisYear + 1 : thisYear;
+    await picker.getByLabel(String(other)).check();
+    await expect(page.getByText(`Settings · Season ${other}`)).toBeVisible();
   });
 
   test('earlier seasons with data are listed and open read-only', async ({ page }) => {

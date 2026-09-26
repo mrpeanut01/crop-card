@@ -1,4 +1,10 @@
-import { DEFAULT_PREFS, formatCalendarDate, formatInstant, ymdInZone, type Prefs } from '$lib/prefs';
+import {
+  DEFAULT_PREFS,
+  formatCalendarDate,
+  formatInstant,
+  ymdInZone,
+  type Prefs
+} from '$lib/prefs';
 import {
   AREA_KIND_LABELS,
   BLOCK_KIND_LABELS,
@@ -87,7 +93,9 @@ export function areaDisplayName(area: Pick<SnapshotArea, 'name' | 'kind'>): stri
   return name || areaKindLabel(area.kind);
 }
 
-export function blockDisplayName(block: Pick<SnapshotBlock, 'name' | 'kind' | 'blockLabel'>): string {
+export function blockDisplayName(
+  block: Pick<SnapshotBlock, 'name' | 'kind' | 'blockLabel'>
+): string {
   const name = block.name.trim();
   if (name) return name;
   const label = BLOCK_KIND_LABEL[block.kind] ?? BLOCK_KIND_LABEL.block;
@@ -110,15 +118,24 @@ export function sortTasks(tasks: readonly SnapshotTask[]): SnapshotTask[] {
   return [...tasks].sort((a, b) => a.scheduledFor - b.scheduledFor || a.id.localeCompare(b.id));
 }
 
+/** Where a task opens: its block's scheduled-tasks list on /plan. */
+export function taskPlanHref(blockId: string | null | undefined): string {
+  return blockId
+    ? `/plan?block=${encodeURIComponent(blockId)}#plan-scheduled-tasks`
+    : '/plan#plan-scheduled-tasks';
+}
+
 export function nextAction(
   tasks: readonly SnapshotTask[],
-  opts: ResolvedOptions
+  opts: ResolvedOptions,
+  plantings: readonly { id: string; blockId: string }[] = []
 ): CardAction | undefined {
   const first = sortTasks(tasks)[0];
   if (!first) return undefined;
+  const blockId = first.blockId ?? plantings.find((p) => p.id === first.cropId)?.blockId ?? null;
   return {
     label: first.title,
-    href: `/today?task=${encodeURIComponent(first.id)}`,
+    href: taskPlanHref(blockId),
     due: dueLabel(first.scheduledFor, opts.now, opts.prefs)
   };
 }

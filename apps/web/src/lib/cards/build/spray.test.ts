@@ -9,6 +9,7 @@ import {
   CALIBRATE_FIRST_TITLE,
   SPRAY_RECHECK_NOTICE,
   SPRAY_REFERENCE_NOTICE,
+  SPRAY_RULES_MISMATCH_NOTICE,
   SPRAY_STALE_AFTER_MS,
   buildSprayCard,
   buildSprayCards,
@@ -223,7 +224,10 @@ describe('spray card properties (kernel agreement)', () => {
         (gpa, tank) => {
           expect(isCalibratedGpa(gpa)).toBe(false);
           const s = withSprayer(gpa, tank, SAMPLE_HERBICIDE);
-          for (const card of [buildSprayCard(s, sprayCardId('sp1', '24d')), ...buildSprayCards(s)]) {
+          for (const card of [
+            buildSprayCard(s, sprayCardId('sp1', '24d')),
+            ...buildSprayCards(s)
+          ]) {
             expect(card?.title).toBe(CALIBRATE_FIRST_TITLE);
             expect(card?.facts.some((f) => /^Per |Tank covers/.test(f.label))).toBe(false);
           }
@@ -251,6 +255,48 @@ describe('spray card properties (kernel agreement)', () => {
         }
       )
     );
+  });
+});
+
+describe('spray card rules version', () => {
+  it('names the rules that built the card and flags a snapshot from other rules as stale', () => {
+    const s = sampleGearSnapshot({ rulesVersion: '0.0.1-old' });
+    const cards = buildSprayCards(s);
+    expect(cards.length).toBeGreaterThan(0);
+    for (const card of cards) {
+      expect(card.rulesVersion).toBe(RULES_VERSION);
+      expect(card.notices).toContain(SPRAY_RULES_MISMATCH_NOTICE);
+      expect(isCardStale(card, s.generatedAt + 1)).toBe(true);
+    }
+  });
+});
+
+describe('spray card bee toxicity', () => {
+  const insecticide = (beeToxicity: string, bloomRestriction: string): SnapshotSprayProduct => ({
+    ...SAMPLE_HERBICIDE,
+    pluginId: 'bug-off',
+    type: 'insecticide',
+    displayName: 'Bug Off',
+    loadClasses: ['insecticide-load'],
+    pollinator: { beeToxicity, bloomRestriction }
+  });
+  const beforeYouSpray = (p: SnapshotSprayProduct) =>
+    buildSprayCard(withSprayer(20, 25, p), sprayCardId('sp1', p.pluginId))!.sections.find(
+      (x) => x.title === 'Before you spray'
+    )!.items;
+
+  it.each([
+    ['unknown', 'Bee toxicity not declared'],
+    ['toxic', 'Toxic to bees'],
+    ['highly-toxic', 'Highly toxic to bees']
+  ])('warns about bees for %s toxicity with no bloom restriction', (tox, label) => {
+    const items = beforeYouSpray(insecticide(tox, 'none'));
+    expect(items.some((i) => i.startsWith(`${label}:`) && i.includes('open flowers'))).toBe(true);
+  });
+
+  it('stays quiet about bees for a relatively nontoxic product', () => {
+    const items = beforeYouSpray(insecticide('relatively-nontoxic', 'none'));
+    expect(items.some((i) => /bees/i.test(i))).toBe(false);
   });
 });
 

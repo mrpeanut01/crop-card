@@ -95,9 +95,11 @@ const ANONYMOUS_PATHS = new Set([
   '/api/billing/stripe-webhook', // Stripe POSTs without a session; the signature is the auth.
   // Phase 30F — the /cards route renders with ssr=false, so this path is a
   // data-free HTML shell the service worker precaches at install. Its data
-  // (/cards/__data.json, /api/cards/snapshot) still needs a session.
+  // (/cards/__data.json, /api/cards/snapshot) still needs a session; see
+  // isAnonymousRequest, since SvelteKit hands handle '/cards' for both.
   '/cards'
 ]);
+const HTML_ONLY_ANONYMOUS_PATHS = new Set(['/cards']);
 const ANONYMOUS_PATH_PREFIXES = ['/invite/', '/api/health/'];
 const ANONYMOUS_STATIC_PATHS = new Set([
   '/manifest.webmanifest',
@@ -130,6 +132,14 @@ export function isAnonymous(pathname: string): boolean {
   // auth cookie just to render the primitives page.
   if (pathname.startsWith('/_dev/')) return true;
   return false;
+}
+
+/** `isAnonymous` for a live request. SvelteKit strips `/__data.json` before
+ *  handle runs, so a data request for an HTML-only public shell arrives with
+ *  the shell's pathname and must still need a session. */
+export function isAnonymousRequest(pathname: string, isDataRequest: boolean): boolean {
+  if (isDataRequest && HTML_ONLY_ANONYMOUS_PATHS.has(pathname)) return false;
+  return isAnonymous(pathname);
 }
 
 // Authenticated routes that work with a partial session (no
@@ -283,6 +293,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
   }
   const path = event.url.pathname;
+  const anonymous = isAnonymousRequest(path, event.isDataRequest);
 
   // Phase 24 — CSRF / Origin bridge. SvelteKit's built-in check is
   // disabled globally in svelte.config.js; we replace it with the
@@ -323,7 +334,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   if (!user) {
-    if (isAnonymous(path)) return resolve(event);
+    if (anonymous) return resolve(event);
     if (path.startsWith('/api/')) {
       return json({ error: 'authentication required' }, { status: 401 });
     }
@@ -335,13 +346,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   if (!user.activeOwnerId) {
     if (allowsPartialSession(path, user.isSuperadmin)) return resolve(event);
-    if (isAnonymous(path)) return resolve(event);
+    if (anonymous) return resolve(event);
     const next = pickRedirectForPartialSession(user.id, user.isSuperadmin);
     throw redirect(303, next);
   }
 
   if (
-    !isAnonymous(path) &&
+    !anonymous &&
     !allowsPartialSession(path, user.isSuperadmin) &&
     !path.startsWith('/admin') &&
     !path.startsWith('/settings/billing') &&

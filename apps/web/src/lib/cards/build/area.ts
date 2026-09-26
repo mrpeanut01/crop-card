@@ -48,7 +48,10 @@ function sizeProvenance(area: SnapshotArea): CardProvenance | null {
   if (basis === 'dimensions') return { source: 'manual', detail: 'your dimensions' };
   if (basis !== 'acres' || area.acresSource === null) return null;
   if (area.acresSource === 'geometry') return { source: 'data', detail: 'your map' };
-  return { source: 'manual', detail: area.acresSource === 'typed' ? 'typed acres' : 'your dimensions' };
+  return {
+    source: 'manual',
+    detail: area.acresSource === 'typed' ? 'typed acres' : 'your dimensions'
+  };
 }
 
 function plantingLine(
@@ -75,7 +78,9 @@ export function buildAreaCard(
 
   const blocks = snapshot.blocks
     .filter((b) => b.areaId === area.id)
-    .sort((a, b) => blockDisplayName(a).localeCompare(blockDisplayName(b), 'en', { numeric: true }));
+    .sort((a, b) =>
+      blockDisplayName(a).localeCompare(blockDisplayName(b), 'en', { numeric: true })
+    );
   const blockById = new Map(blocks.map((b) => [b.id, b]));
   const plantings = snapshot.plantings.filter((p) => blockById.has(p.blockId));
   const active = plantings.filter((p) => p.status === 'active');
@@ -112,7 +117,9 @@ export function buildAreaCard(
   if (cropBearing) {
     facts.push({
       label: 'Growing',
-      value: active.length ? `${active.length} planting${active.length === 1 ? '' : 's'}` : 'Nothing yet',
+      value: active.length
+        ? `${active.length} planting${active.length === 1 ? '' : 's'}`
+        : 'Nothing yet',
       provenance: 'data'
     });
     if (planned.length) {
@@ -168,7 +175,7 @@ export function buildAreaCard(
     kicker,
     title: name,
     facts,
-    next: nextAction(tasks, opts),
+    next: nextAction(tasks, opts, snapshot.plantings),
     sections,
     asOf: snapshot.generatedAt,
     provenance: mergeProvenance(provenance),

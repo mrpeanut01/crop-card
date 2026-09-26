@@ -92,7 +92,7 @@ export function pollinatorDataFor(p: PollinatorProduct): PollinatorData {
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
 
-const TOX_LABEL: Record<BeeToxicity, string> = {
+export const TOX_LABEL: Record<BeeToxicity, string> = {
   'highly-toxic': 'Highly toxic to bees',
   toxic: 'Toxic to bees',
   'relatively-nontoxic': 'Relatively nontoxic to bees',

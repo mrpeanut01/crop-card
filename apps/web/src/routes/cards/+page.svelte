@@ -16,13 +16,43 @@
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   const cards = new OfflineCards();
-  const EMPTY_TEXT: Partial<Record<DeckFilter, string>> = {
-    pinned: 'Nothing pinned yet. Pin a card to keep it at the top.',
-    spray:
-      'Spray cards appear for pesticides you have in stock, one for each calibrated sprayer. Add a product in Inventory to get one.',
-    planting: 'No plantings yet. Add one on the Plan page and its card shows up here.',
-    area: 'No areas yet. Draw your farm on the Plan page to get area cards.',
-    equipment: 'No equipment yet. Add a sprayer or other gear in Inventory.'
+  const EMPTY_STATE: Record<DeckFilter, { text: string; href?: string; action?: string }> = {
+    all: {
+      text: 'No cards yet. Add a planting on the Plan page to get your first one.',
+      href: '/plan',
+      action: 'Open Plan'
+    },
+    pinned: { text: 'Nothing pinned yet. Pin a card to keep it at the top.' },
+    today: {
+      text: 'Nothing due today or overdue. New tasks from your plan show up here.',
+      href: '/plan',
+      action: 'Open Plan'
+    },
+    spray: {
+      text: 'Spray cards appear for pesticides you have in stock, one for each calibrated sprayer.',
+      href: '/inventory/pesticide/add',
+      action: 'Add a pesticide'
+    },
+    planting: {
+      text: 'No plantings yet. Add one and its card shows up here.',
+      href: '/plan',
+      action: 'Add a planting'
+    },
+    area: {
+      text: 'No areas yet. Draw your farm to get area cards.',
+      href: '/plan/farm',
+      action: 'Draw your farm'
+    },
+    equipment: {
+      text: 'No equipment yet.',
+      href: '/inventory/sprayer/add',
+      action: 'Add a sprayer'
+    },
+    careGuide: {
+      text: 'Care guides come with the crops you plant. Add a planting to get its guide.',
+      href: '/plan',
+      action: 'Add a planting'
+    }
   };
   const FILTER_KEY = 'cropcard.cardsFilter';
 
@@ -174,7 +204,11 @@
   </div>
 
   {#if snapshot && visible.length === 0}
-    <p class="empty">{EMPTY_TEXT[filter] ?? 'No cards of this kind yet.'}</p>
+    {@const empty = EMPTY_STATE[filter]}
+    <p class="empty">{empty.text}</p>
+    {#if empty.href && empty.action && online}
+      <a class="empty-action" href={empty.href}>{empty.action}</a>
+    {/if}
   {/if}
 
   <ul class="deck" aria-label="Cards">
@@ -265,6 +299,13 @@
   .empty {
     margin: var(--space-3) 0 0;
     color: var(--color-ink-soft);
+  }
+  .empty-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+    color: var(--color-forest);
   }
   .notice {
     color: var(--color-ink);

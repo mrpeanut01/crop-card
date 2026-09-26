@@ -136,8 +136,8 @@ export function gettingStartedItems(f: GettingStartedFacts): GettingStartedItem[
     ),
     item(
       'cards',
-      'Save cards for offline',
-      'Keep your plantings and areas on this phone for when there is no signal.',
+      'Pin the cards you use most',
+      'Open Cards and tap Pin on a card to keep it on this phone for when there is no signal.',
       f.hasPinnedCards === true
     )
   );

@@ -1,4 +1,6 @@
+import type { SnapshotFrostDates } from '$lib/cards/snapshot';
 import { deleteSetting, getSetting, setSetting } from '$lib/db/settings';
+import { normalizeFrost } from '$lib/schedule/farmLocation';
 import { SETTINGS_KEYS, type FarmLatLon } from '$lib/schedule/constants';
 import { lookupFrostDates, type FrostProbability } from './frostNormals';
 import {
@@ -36,6 +38,50 @@ export function loadStoredFrost(): { dates: StoredFrostDates; provenance: Stored
     },
     provenance: parseFrostProvenance(getSetting(SETTINGS_KEYS.frostProvenance))
   };
+}
+
+/**
+ * Saved frost dates as the Card and map snapshots carry them, with one
+ * provenance for the spring and fall pair: the shared tag when both agree,
+ * `manual` when the owner typed either one, and `fallback` for a station date
+ * next to a Loudoun default. A station date is never shown as typed, and a
+ * pair of Loudoun defaults never as the owner's own.
+ */
+export function snapshotFrostFromSettings(): SnapshotFrostDates {
+  const stored = loadStoredFrost();
+  const dates = {} as StoredFrostDates;
+  for (const f of FROST_FIELDS) dates[f] = normalizeFrost(stored.dates[f]);
+  const view = storedFrostView(dates, stored.provenance);
+  const last = view.lastFrost.provenance;
+  const first = view.firstFrost.provenance;
+  const provenance =
+    last === first ? last : last === 'manual' || first === 'manual' ? 'manual' : 'fallback';
+  return {
+    lastSpring: view.lastFrost.value,
+    firstFall: view.firstFrost.value,
+    hardLastSpring: view.lastHardFrost.value,
+    hardFirstFall: view.firstHardFrost.value,
+    cautious: null,
+    frostFree: false,
+    provenance,
+    stationName: provenance === 'data' ? stored.provenance.source : null,
+    distanceMi: null
+  };
+}
+
+/** A frost date written outside the frost forms (the settings API): the
+ *  field becomes `manual` when set and `fallback` when cleared, and the
+ *  station label goes once no field is station data. */
+export function markFrostField(field: FrostField, provenance: 'manual' | 'fallback'): void {
+  const prov = parseFrostProvenance(getSetting(SETTINGS_KEYS.frostProvenance));
+  const values = { ...prov.values, [field]: provenance };
+  const usesData = FROST_FIELDS.some((f) => values[f] === 'data');
+  const next: StoredFrostProvenance = {
+    values,
+    source: usesData ? prov.source : null,
+    probability: usesData ? prov.probability : null
+  };
+  setSetting(SETTINGS_KEYS.frostProvenance, JSON.stringify(next));
 }
 
 export function applyFrostPlan(plan: FrostSavePlan): void {

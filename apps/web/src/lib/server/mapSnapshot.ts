@@ -5,20 +5,13 @@ import { listFields, type FieldWithBlocks } from '$lib/db/fields';
 import { listBlocks, type BlockWithPlantings } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { listTasks } from '$lib/db/tasks';
-import { getSetting } from '$lib/db/settings';
 import { requireOwnerId } from '$lib/db/tenant';
-import {
-  LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
-  LOUDOUN_DEFAULT_LAST_FROST_MMDD,
-  SETTINGS_KEYS
-} from '$lib/schedule/constants';
-import { normalizeFrost } from '$lib/schedule/farmLocation';
+import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { RULES_VERSION } from '$lib/safety/version';
 import { snapshotAreas, snapshotBlocks } from '$lib/farm/mapSnapshot';
 import {
   FARM_SNAPSHOT_VERSION,
   type FarmSnapshot,
-  type SnapshotFrostDates,
   type SnapshotPlanting
 } from '$lib/cards/snapshot';
 
@@ -28,23 +21,6 @@ const HISTORY_PER_BLOCK = 12;
 
 function ymd(ms: number | null | undefined): string | null {
   return ms == null ? null : new Date(ms).toISOString().slice(0, 10);
-}
-
-function frostFromSettings(): SnapshotFrostDates {
-  const last = normalizeFrost(getSetting(SETTINGS_KEYS.lastFrost));
-  const first = normalizeFrost(getSetting(SETTINGS_KEYS.firstFrost));
-  const typed = last !== null || first !== null;
-  return {
-    lastSpring: last ?? LOUDOUN_DEFAULT_LAST_FROST_MMDD,
-    firstFall: first ?? LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
-    hardLastSpring: null,
-    hardFirstFall: null,
-    cautious: null,
-    frostFree: false,
-    provenance: typed ? 'manual' : 'fallback',
-    stationName: null,
-    distanceMi: null
-  };
 }
 
 /**
@@ -122,6 +98,6 @@ export function buildMapSnapshot(
     equipment: [],
     stock: [],
     cropPlugins: {},
-    frost: frostFromSettings()
+    frost: snapshotFrostFromSettings()
   };
 }

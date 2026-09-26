@@ -16,6 +16,7 @@
   } from '$lib/climate/frostSuggest';
   import {
     FROST_CONFIRM_COPY,
+    FROST_STORED_FALLBACK_COPY,
     frostConfirmReason,
     suggestFromStored
   } from '$lib/climate/frostSettings';
@@ -212,6 +213,8 @@
         </p>
       {:else if basis === 'lookup' && suggestion.fallbackReason}
         <p class="src">{suggestion.fallbackReason}</p>
+      {:else if canEdit && basis === 'stored' && suggestion.values.lastFrost.provenance === 'fallback' && suggestion.values.firstFrost.provenance === 'fallback'}
+        <p class="src">{FROST_STORED_FALLBACK_COPY}</p>
       {/if}
 
       <div class="controls">

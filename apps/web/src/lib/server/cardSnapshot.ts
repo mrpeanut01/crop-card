@@ -12,10 +12,10 @@ import {
   type SnapshotBlock,
   type SnapshotCropPlugin,
   type SnapshotEquipment,
-  type SnapshotFrostDates,
   type SnapshotSprayProduct,
   type SnapshotStockItem
 } from '$lib/cards/snapshot';
+import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { listAreas } from '$lib/db/areas';
 import { listBlocks } from '$lib/db/blocks';
 import {
@@ -24,13 +24,12 @@ import {
   listPlantingsForCards
 } from '$lib/db/cardSnapshot';
 import { listEquipment } from '$lib/db/equipment';
-import { getSetting } from '$lib/db/settings';
 import { listStockItems } from '$lib/db/stock';
 import { requireOwnerId } from '$lib/db/tenant';
 import type { Plugin } from '$lib/plugins/schemas';
+import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
 import { RULES_VERSION } from '$lib/safety/version';
-import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { getRegistry } from './registry';
 
 const DAY_MS = 86_400_000;
@@ -172,9 +171,9 @@ export function toSprayProduct(p: Plugin): SnapshotSprayProduct | null {
       loadClasses: ['insecticide-load'],
       mixSteps: [],
       rainfastHours: null,
-      pollinator: p.pollinator
-        ? { beeToxicity: p.pollinator.beeToxicity, bloomRestriction: p.pollinator.bloomRestriction }
-        : null
+      pollinator: (({ beeToxicity, bloomRestriction }) => ({ beeToxicity, bloomRestriction }))(
+        pollinatorDataFor(p)
+      )
     };
   }
   if (p.type === 'fungicide') {
@@ -196,25 +195,6 @@ export function toSprayProduct(p: Plugin): SnapshotSprayProduct | null {
     };
   }
   return null;
-}
-
-const MM_DD = /^\d{2}-\d{2}$/;
-
-function frostFromSettings(): SnapshotFrostDates {
-  const last = getSetting(SETTINGS_KEYS.lastFrost);
-  const first = getSetting(SETTINGS_KEYS.firstFrost);
-  const manual = !!last && MM_DD.test(last) && !!first && MM_DD.test(first);
-  return {
-    lastSpring: last && MM_DD.test(last) ? last : '04-15',
-    firstFall: first && MM_DD.test(first) ? first : '10-15',
-    hardLastSpring: null,
-    hardFirstFall: null,
-    cautious: null,
-    frostFree: false,
-    provenance: manual ? 'manual' : 'fallback',
-    stationName: null,
-    distanceMi: null
-  };
 }
 
 export interface BuildSnapshotOptions {
@@ -266,7 +246,7 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
       .sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id)),
     stock: stockItems.map(toStock).sort((a, b) => a.id.localeCompare(b.id)),
     cropPlugins,
-    frost: frostFromSettings(),
+    frost: snapshotFrostFromSettings(),
     sprayProducts
   };
 }

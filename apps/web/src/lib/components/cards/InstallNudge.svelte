@@ -16,7 +16,7 @@
 
 <aside class="nudge no-print" aria-labelledby="install-nudge-title">
   <div class="text">
-    <h2 id="install-nudge-title">Keep your cards on this iPhone</h2>
+    <h2 id="install-nudge-title">Keep your cards on this device</h2>
     <p>
       Safari clears saved pages after about a week without a visit. Tap
       <Share size={15} strokeWidth={2} aria-label="Share" /> then

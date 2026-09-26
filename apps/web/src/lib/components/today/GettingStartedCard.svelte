@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
   import { Check, ChevronRight } from 'lucide-svelte';
@@ -37,6 +37,33 @@
   let pinned = $state<boolean | null>(null);
   let expanded = $state(false);
   let hiddenNow = $state(false);
+  let rootEl = $state<HTMLElement | null>(null);
+  let titleEl = $state<HTMLElement | null>(null);
+  let showEl = $state<HTMLButtonElement | null>(null);
+
+  async function expand() {
+    expanded = true;
+    await tick();
+    titleEl?.focus();
+  }
+
+  async function collapse() {
+    expanded = false;
+    await tick();
+    showEl?.focus();
+  }
+
+  /** The card is about to leave the DOM: move focus to the next heading on
+   *  the page so keyboard and screen-reader users aren't dropped at the top. */
+  async function focusAfterDismiss(next: Element | null) {
+    await tick();
+    const heading = next?.querySelector<HTMLElement>('h1, h2, h3');
+    const target =
+      heading ?? (document.getElementById('main-content') as HTMLElement | null) ?? null;
+    if (!target) return;
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.focus();
+  }
 
   onMount(() => {
     loadPinned()
@@ -61,7 +88,9 @@
     method="POST"
     action={dismissAction}
     use:enhance={() => {
+      const next = rootEl?.nextElementSibling ?? null;
       hiddenNow = true;
+      void focusAfterDismiss(next);
       return async ({ result, update }) => {
         if (result.type !== 'success') hiddenNow = false;
         await update({ reset: false, invalidateAll: false });
@@ -74,13 +103,15 @@
 
 {#if mode !== 'hidden'}
   {#if showFull}
-    <section class="gs" aria-labelledby="gs-title" data-testid="getting-started">
+    <section class="gs" aria-labelledby="gs-title" data-testid="getting-started" bind:this={rootEl}>
       <div class="strip" aria-hidden="true"></div>
       <div class="gs-body">
         <header class="gs-head">
           <div>
             <div class="kicker">Getting started · {summary.done} of {summary.total}</div>
-            <h2 id="gs-title" class="serif">A few things, when you're ready</h2>
+            <h2 id="gs-title" class="serif" tabindex="-1" bind:this={titleEl}>
+              A few things, when you're ready
+            </h2>
           </div>
           <svg
             class="ring"
@@ -123,18 +154,21 @@
         </ol>
         <footer class="gs-foot">
           {#if mode === 'strip'}
-            <button type="button" class="dismiss" onclick={() => (expanded = false)}>
-              Show less
-            </button>
+            <button type="button" class="dismiss" onclick={collapse}> Show less </button>
           {/if}
           {@render dismissForm()}
         </footer>
       </div>
     </section>
   {:else}
-    <section class="gs-slim" aria-label="Getting started" data-testid="getting-started-strip">
+    <section
+      class="gs-slim"
+      aria-label="Getting started"
+      data-testid="getting-started-strip"
+      bind:this={rootEl}
+    >
       <span>Setup {summary.done} of {summary.total}</span>
-      <button type="button" class="show" onclick={() => (expanded = true)}>Show</button>
+      <button type="button" class="show" onclick={expand} bind:this={showEl}>Show</button>
       {@render dismissForm()}
     </section>
   {/if}

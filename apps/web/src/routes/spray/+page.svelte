@@ -2,6 +2,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupSprayer from '$lib/components/setup/SetupSprayer.svelte';
   import SetupCalibration from '$lib/components/setup/SetupCalibration.svelte';
@@ -675,17 +676,22 @@
     setupSheet = null;
     await invalidateAll();
     selectedBlockIds = new Set([r.blockId]);
+    await focusAfterSetup(`[data-block-id="${CSS.escape(r.blockId)}"]`);
   }
 
   async function onSprayerAdded(r: SetupSprayerResult) {
     setupSheet = null;
     await invalidateAll();
     selectedSprayerId = r.sprayerId;
+    await focusAfterSetup(`[data-sprayer-id="${CSS.escape(r.sprayerId)}"]`);
   }
 
   async function onCalibrated() {
     setupSheet = null;
     await invalidateAll();
+    if (selectedSprayerId) {
+      await focusAfterSetup(`[data-sprayer-id="${CSS.escape(selectedSprayerId)}"]`);
+    }
   }
 </script>
 
@@ -746,6 +752,7 @@
           class:selected={isSelected}
           class:preplant={b.preplant}
           aria-pressed={isSelected}
+          data-block-id={b.id}
           onclick={() => toggleBlock(b.id)}
         >
           <span class="card-head">
@@ -857,6 +864,7 @@
             type="button"
             class="card"
             class:selected={selectedSprayerId === s.id}
+            data-sprayer-id={s.id}
             onclick={() => (selectedSprayerId = s.id)}
           >
             <strong>{s.label}</strong>

@@ -4,7 +4,13 @@
   import CardView from '$lib/components/cards/CardView.svelte';
   import AreaDetailsFields from './AreaDetailsFields.svelte';
   import { buildAreaCard } from '$lib/cards/build';
-  import { areaDisplayName, blockDisplayName, dueLabel, monthDay } from '$lib/cards/build/common';
+  import {
+    areaDisplayName,
+    blockDisplayName,
+    dueLabel,
+    monthDay,
+    taskPlanHref
+  } from '$lib/cards/build/common';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
   import {
     AREA_KINDS,
@@ -81,6 +87,16 @@
       )
       .sort((a, b) => a.scheduledFor - b.scheduledFor)
   );
+
+  const planHref = $derived(
+    blocks[0] ? `/plan?block=${encodeURIComponent(blocks[0].id)}` : '/plan'
+  );
+
+  function taskHref(t: { blockId: string | null; cropId: string | null }): string {
+    const blockId =
+      t.blockId ?? (t.cropId ? plantings.find((p) => p.id === t.cropId)?.blockId : undefined);
+    return taskPlanHref(blockId);
+  }
 
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: 'details', label: 'Details' },
@@ -280,13 +296,14 @@
           </ul>
         {:else}
           <p class="muted">Nothing planted here yet.</p>
+          <a class="empty-action" href={planHref}>Plan a crop here</a>
         {/if}
       {:else if tab === 'tasks'}
         {#if tasks.length}
           <ul class="rows">
             {#each tasks as t (t.id)}
               <li>
-                <a class="row-link" href="/today?task={encodeURIComponent(t.id)}">
+                <a class="row-link" href={taskHref(t)}>
                   <span class="row-title">{t.title}</span>
                   <span class="row-meta"
                     >{dueLabel(t.scheduledFor, snapshot.generatedAt, prefs)}</span
@@ -297,6 +314,7 @@
           </ul>
         {:else}
           <p class="muted">No open tasks here for the next month.</p>
+          <a class="empty-action" href={planHref}>Open this area in Plan</a>
         {/if}
       {:else if history.length}
         <ul class="rows">
@@ -439,6 +457,13 @@
   .row-meta {
     font-size: 13px;
     color: var(--color-ink-muted);
+  }
+  .empty-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-weight: 600;
+    color: var(--color-forest, var(--color-ink));
   }
   .muted {
     margin: 0;

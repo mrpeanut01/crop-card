@@ -920,6 +920,7 @@
   {counts}
   showBaseLayer={mode === 'map'}
   hasShade={shadeSources.length > 0}
+  canAdd={canEdit}
 />
 {#if selectedArea}
   <AreaCardSheet

@@ -1,18 +1,25 @@
 // @vitest-environment node
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { runWithTenant } from '$lib/db/tenant';
 
-vi.mock('$lib/server/auth', () => ({
-  currentUser: () => ({ id: 'user-1', role: 'owner' }),
-  requireOwner: () => ({ id: 'user-1', role: 'owner' })
-}));
-vi.mock('$lib/server/session', () => ({ canMutate: () => true }));
+const auth = vi.hoisted(() => ({ role: 'owner' as 'owner' | 'helper' }));
+vi.mock('$lib/server/auth', async () => {
+  const { error } = await import('@sveltejs/kit');
+  return {
+    currentUser: () => ({ id: 'user-1', role: auth.role }),
+    requireOwner: () => {
+      if (auth.role !== 'owner') throw error(403, 'owner role required');
+      return { id: 'user-1', role: auth.role };
+    }
+  };
+});
 
 import { GET as LIST, POST } from './+server';
-import { GET as GET_ONE, PATCH } from './[id]/+server';
+import { DELETE, GET as GET_ONE, PATCH } from './[id]/+server';
+import { DELETE as DELETE_GEOM, PUT as PUT_GEOM } from './[id]/geometry/+server';
 
 function seedOwner(): string {
   const id = `fields-kind-${randomUUID()}`;
@@ -110,6 +117,52 @@ describe('/api/fields kind + details', () => {
       expect(gardens.map((f: { name: string }) => f.name)).toEqual(['G']);
       expect((await list('?kind=places')).status).toBe(400);
       expect((await (await list()).json()).fields).toHaveLength(3);
+    });
+  });
+
+  describe('helper role', () => {
+    afterEach(() => {
+      auth.role = 'owner';
+    });
+
+    const status = async (fn: () => unknown) => {
+      try {
+        const res = (await fn()) as Response;
+        return res.status;
+      } catch (e) {
+        return (e as { status: number }).status;
+      }
+    };
+
+    it('403s on PATCH, DELETE and geometry writes, and changes nothing', async () => {
+      await runWithTenant(seedOwner(), async () => {
+        const { field } = await (await create({ name: 'Crops', kind: 'field' })).json();
+        auth.role = 'helper';
+        expect(await status(() => patch(field.id, { kind: 'pasture', details: {} }))).toBe(403);
+        expect(
+          await status(() =>
+            DELETE({
+              params: { id: field.id },
+              request: req('DELETE', `http://localhost/api/fields/${field.id}`)
+            } as never)
+          )
+        ).toBe(403);
+        expect(
+          await status(() =>
+            PUT_GEOM({
+              params: { id: field.id },
+              request: req('PUT', `http://localhost/api/fields/${field.id}/geometry`, {
+                type: 'Polygon',
+                coordinates: []
+              })
+            } as never)
+          )
+        ).toBe(403);
+        expect(await status(() => DELETE_GEOM({ params: { id: field.id } } as never))).toBe(403);
+        auth.role = 'owner';
+        const one = await GET_ONE({ params: { id: field.id } } as never);
+        expect((await one.json()).field).toMatchObject({ name: 'Crops', kind: 'field' });
+      });
     });
   });
 });

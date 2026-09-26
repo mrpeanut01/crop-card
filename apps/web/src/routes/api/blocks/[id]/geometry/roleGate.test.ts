@@ -5,9 +5,15 @@ const state = vi.hoisted(() => ({
   setBlockGeometry: vi.fn((id: string, geo: string | null) => ({ id, geometryGeojson: geo }))
 }));
 
-vi.mock('$lib/server/auth', () => ({
-  currentUser: () => ({ id: 'u', role: state.role })
-}));
+vi.mock('$lib/server/auth', async () => {
+  const { error } = await import('@sveltejs/kit');
+  return {
+    requireOwner: () => {
+      if (state.role !== 'owner') throw error(403, 'owner role required');
+      return { id: 'u', role: state.role };
+    }
+  };
+});
 vi.mock('$lib/db/blocks', () => ({ setBlockGeometry: state.setBlockGeometry }));
 
 import { DELETE, PUT } from './+server';
@@ -37,15 +43,27 @@ function event(method: string) {
 
 beforeEach(() => state.setBlockGeometry.mockClear());
 
+async function status(run: () => Response | Promise<Response>): Promise<number> {
+  try {
+    return (await run()).status;
+  } catch (e) {
+    return (e as { status: number }).status;
+  }
+}
+
 describe('block geometry role gate', () => {
-  it.each(['PUT', 'DELETE'] as const)('inspector %s → 403, nothing written', async (m) => {
-    state.role = 'inspector';
-    const res = await (m === 'PUT' ? PUT(event(m)) : DELETE(event(m)));
-    expect(res.status).toBe(403);
+  it.each([
+    ['inspector', 'PUT'],
+    ['inspector', 'DELETE'],
+    ['helper', 'PUT'],
+    ['helper', 'DELETE']
+  ] as const)('%s %s → 403, nothing written', async (role, m) => {
+    state.role = role;
+    expect(await status(() => (m === 'PUT' ? PUT(event(m)) : DELETE(event(m))))).toBe(403);
     expect(state.setBlockGeometry).not.toHaveBeenCalled();
   });
 
-  it.each(['owner', 'helper'])('%s can set geometry', async (role) => {
+  it.each(['owner'])('%s can set geometry', async (role) => {
     state.role = role;
     const res = await PUT(event('PUT'));
     expect(res.status).toBe(200);

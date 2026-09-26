@@ -126,7 +126,8 @@ export function suggestFromStored(
     frostFree: false,
     crossesYear: false,
     fallbackReason: null,
-    issues
+    issues,
+    basis: 'stored'
   };
 }
 
@@ -142,9 +143,16 @@ export function frostConfirmReason(s: FrostSuggestion): FrostConfirmReason | nul
   const first = s.values.firstFrost;
   if (last.value === null || first.value === null) return s.frostFree ? 'frost-free' : 'missing';
   if (s.crossesYear) return 'crosses-year';
-  if (last.provenance === 'fallback' && first.provenance === 'fallback') return 'fallback';
+  if (s.basis !== 'stored' && last.provenance === 'fallback' && first.provenance === 'fallback') {
+    return 'fallback';
+  }
   return null;
 }
+
+/** Stored dates that are still the Loudoun defaults, with no station lookup
+ *  behind them. */
+export const FROST_STORED_FALLBACK_COPY =
+  'These are the Loudoun County averages. Tap Suggest from my location to use the nearest weather station.';
 
 export const FROST_CONFIRM_COPY: Record<FrostConfirmReason, string> = {
   fallback:

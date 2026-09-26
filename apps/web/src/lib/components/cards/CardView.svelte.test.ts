@@ -50,7 +50,7 @@ describe('CardView', () => {
     expect(getByText('48 in')).toBeInTheDocument();
 
     const next = getByRole('link', { name: /Next: Side-dress \(overdue since May 30\)/ });
-    expect(next).toHaveAttribute('href', '/today?task=t_side');
+    expect(next).toHaveAttribute('href', '/plan?block=b_bed3#plan-scheduled-tasks');
     expect(next.className).toMatch(/next/);
 
     expect(getByText(/As of Jun 1, 2026, 9:00 AM/)).toBeInTheDocument();

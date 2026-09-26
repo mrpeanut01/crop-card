@@ -11,7 +11,8 @@
     onChange,
     counts,
     showBaseLayer = true,
-    hasShade = false
+    hasShade = false,
+    canAdd = false
   }: {
     open: boolean;
     onClose: () => void;
@@ -20,6 +21,7 @@
     counts: Map<AreaKind, number>;
     showBaseLayer?: boolean;
     hasShade?: boolean;
+    canAdd?: boolean;
   } = $props();
 
   const present = $derived(AREA_KINDS.filter((k) => (counts.get(k) ?? 0) > 0));
@@ -30,7 +32,10 @@
     <fieldset>
       <legend>Areas</legend>
       {#if present.length === 0}
-        <p class="muted">Nothing on the map yet.</p>
+        <p class="muted">
+          Nothing on the map yet.{#if canAdd}
+            Close this and tap <strong>+ Add</strong> to draw your first area.{/if}
+        </p>
       {/if}
       {#each present as k (k)}
         <label class="toggle">

@@ -2,6 +2,7 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
   import type { SetupSpotResult } from '$lib/setup/types';
@@ -39,6 +40,7 @@
     spotSheetOpen = false;
     await invalidateAll();
     selectedBlockId = r.blockId;
+    await focusAfterSetup('#insecticide-block');
   }
 
   // v2 addendum (#89): selected product + block drive the IPM-gate

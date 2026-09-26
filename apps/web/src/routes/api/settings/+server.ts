@@ -9,6 +9,13 @@ import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
 import { getSetting, setSetting, deleteSetting } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
+import { markFrostField } from '$lib/climate/frostSettings.server';
+import type { FrostField } from '$lib/climate/frostSuggest';
+
+const FROST_FIELD_BY_KEY: Partial<Record<string, FrostField>> = {
+  [SETTINGS_KEYS.lastFrost]: 'lastFrost',
+  [SETTINGS_KEYS.firstFrost]: 'firstFrost'
+};
 
 const SECRET_KEYS = ['anthropic_api_key'] as const;
 const PLAIN_KEYS = [
@@ -99,6 +106,8 @@ export async function POST(event) {
     error(400, e instanceof Error ? e.message : 'invalid value');
   }
   setSetting(key, serialized);
+  const frostField = FROST_FIELD_BY_KEY[key];
+  if (frostField) markFrostField(frostField, 'manual');
   return json({ ok: true });
 }
 
@@ -107,5 +116,7 @@ export async function DELETE(event) {
   const key = event.url.searchParams.get('key') as SettingKey | null;
   if (!key || !ALLOWED_KEYS.includes(key)) error(400, 'invalid key');
   deleteSetting(key);
+  const frostField = FROST_FIELD_BY_KEY[key];
+  if (frostField) markFrostField(frostField, 'fallback');
   return json({ ok: true });
 }

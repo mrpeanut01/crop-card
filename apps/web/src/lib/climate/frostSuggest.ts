@@ -40,6 +40,10 @@ export interface FrostSuggestion {
   fallbackReason: string | null;
   /** Typed values that couldn't be read as a date. */
   issues: FrostOverrideIssue[];
+  /** `stored` when the values start from what is already saved rather than
+   *  a station lookup; no station search ran, so there is no fallback to
+   *  confirm. */
+  basis?: 'lookup' | 'stored';
 }
 
 const FALLBACK_REASON: Record<string, string> = {

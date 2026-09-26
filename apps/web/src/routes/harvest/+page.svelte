@@ -9,6 +9,7 @@
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { ymdInZone } from '$lib/prefs';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupPlantingBackfill from '$lib/components/setup/SetupPlantingBackfill.svelte';
   import type { SetupPlantingResult } from '$lib/setup/types';
@@ -52,6 +53,7 @@
     document
       .getElementById(`planting-${r.plantingId}`)
       ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    await focusAfterSetup(`#planting-${CSS.escape(r.plantingId)}`);
   }
 
   /** Phase 25c (#88) — HarvestRouter renderer commit hook. Builds the

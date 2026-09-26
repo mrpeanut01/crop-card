@@ -47,7 +47,7 @@ describe('GettingStartedCard', () => {
     expect(screen.getByRole('img', { name: '1 of 6 done' })).toBeInTheDocument();
   });
 
-  it('ticks "Save cards for offline" once the device reports pinned cards', async () => {
+  it('ticks "Pin the cards you use most" once the device reports pinned cards', async () => {
     render(GettingStartedCard, {
       props: { facts: FACTS, dismissed: false, loadPinned: async () => true }
     });
@@ -64,6 +64,15 @@ describe('GettingStartedCard', () => {
     expect(strip).toHaveTextContent('Setup 5 of 6');
     await fireEvent.click(screen.getByRole('button', { name: 'Show' }));
     expect(screen.getByTestId('getting-started')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('heading', { name: /A few things, when you're ready/ })
+      )
+    );
+    await fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Show' }))
+    );
   });
 
   it('renders nothing when dismissed or fully done', async () => {

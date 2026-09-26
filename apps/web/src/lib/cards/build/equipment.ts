@@ -131,7 +131,7 @@ export function buildEquipmentCard(
     kicker: `Equipment · ${EQUIPMENT_TYPE_LABEL[e.type] ?? EQUIPMENT_TYPE_LABEL.other}`,
     title: e.label,
     facts,
-    next: priorityAction(e) ?? nextAction(tasks, opts),
+    next: priorityAction(e) ?? nextAction(tasks, opts, snapshot.plantings),
     sections,
     asOf: snapshot.generatedAt,
     provenance: mergeProvenance(provenance),

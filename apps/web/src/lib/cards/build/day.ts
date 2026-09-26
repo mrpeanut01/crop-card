@@ -68,7 +68,8 @@ export function buildDayCard(
   const facts: CardFact[] = [
     { label: 'Due', value: due.length ? `${due.length}` : 'Nothing scheduled', provenance: 'data' }
   ];
-  if (overdue.length) facts.push({ label: 'Overdue', value: `${overdue.length}`, provenance: 'data' });
+  if (overdue.length)
+    facts.push({ label: 'Overdue', value: `${overdue.length}`, provenance: 'data' });
 
   const sections: CardSection[] = [];
   if (overdue.length) {
@@ -93,7 +94,7 @@ export function buildDayCard(
     kicker: `Day · ${date}`,
     title: dayTitle(ymd, today),
     facts,
-    next: nextAction([...overdue, ...due], opts),
+    next: nextAction([...overdue, ...due], opts, snapshot.plantings),
     sections,
     asOf: snapshot.generatedAt,
     provenance,

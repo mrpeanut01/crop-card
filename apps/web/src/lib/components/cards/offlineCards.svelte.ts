@@ -26,10 +26,23 @@ export class OfflineCards {
   }
 
   /** Primes this tab's Owner key, loads what is stored, then reloads
-   *  whenever a background refresh lands. */
+   *  whenever a background refresh lands. With no active Owner it forgets
+   *  the tab's key and every stored Card instead, and shows nothing. */
   start(ownerId: string | null | undefined): () => void {
     const onSnapshot = () => void this.load();
     (async () => {
+      if (!ownerId) {
+        try {
+          const { forgetActiveOwner } = await import('$lib/client/tenantSwitch');
+          await forgetActiveOwner();
+        } catch {
+          /* no storage: nothing stored to forget */
+        }
+        this.row = null;
+        this.pinned = [];
+        this.loaded = true;
+        return;
+      }
       try {
         const { primeActiveOwnerId } = await import('$lib/client/syncQueue');
         primeActiveOwnerId(ownerId);

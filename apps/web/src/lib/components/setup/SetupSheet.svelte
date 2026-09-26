@@ -42,7 +42,7 @@
       });
     } else if (!open && dialog.open) {
       dialog.close();
-      previouslyFocused?.focus?.();
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
     }
   });
 

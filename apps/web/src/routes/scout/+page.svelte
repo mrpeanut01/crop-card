@@ -26,6 +26,7 @@
   import { fmt } from '$lib/prefsState.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
   import type { SetupSpotResult } from '$lib/setup/types';
@@ -38,6 +39,7 @@
     metric: string;
     value: number;
     occurredAt: number;
+    rejected: boolean;
   }
 
   let { data } = $props();
@@ -49,6 +51,7 @@
     spotSheetOpen = false;
     await invalidateAll();
     selectedBlockId = r.blockId;
+    await focusAfterSetup('#scout-block');
   }
 
   let spots = $state<ScoutSpot[]>([
@@ -73,7 +76,7 @@
   const observationsForBlock = $derived(data.observationsByBlock[selectedBlockId] ?? []);
   const queuedForBlock = $derived(queued.filter((q) => q.blockId === selectedBlockId));
 
-  function toQueued(id: string, payload: unknown): QueuedObservation | null {
+  function toQueued(id: string, payload: unknown, rejected: boolean): QueuedObservation | null {
     if (!payload || typeof payload !== 'object') return null;
     const p = payload as Partial<QueuedObservation>;
     if (typeof p.blockId !== 'string' || typeof p.value !== 'number') return null;
@@ -83,7 +86,8 @@
       pest: String(p.pest ?? ''),
       metric: String(p.metric ?? ''),
       value: p.value,
-      occurredAt: typeof p.occurredAt === 'number' ? p.occurredAt : Date.now()
+      occurredAt: typeof p.occurredAt === 'number' ? p.occurredAt : Date.now(),
+      rejected
     };
   }
 
@@ -93,10 +97,11 @@
       const rows = await listPendingForActiveOwner();
       const next = rows
         .filter((r) => r.kind === 'scout')
-        .map((r) => toQueued(r.id, r.payload))
+        .map((r) => toQueued(r.id, r.payload, r.status === 'rejected'))
         .filter((q): q is QueuedObservation => q !== null)
         .sort((a, b) => b.occurredAt - a.occurredAt);
-      const drained = next.length < queued.length;
+      const waiting = (list: QueuedObservation[]) => list.filter((q) => !q.rejected).length;
+      const drained = waiting(next) < waiting(queued);
       queued = next;
       if (drained && navigator.onLine) await invalidateAll();
     } catch {
@@ -357,7 +362,7 @@
       <Provenance source="data" detail="your scout log" compact />
     </div>
     {#if queuedForBlock.length > 0}
-      <ul class="history queued-list" aria-label="Waiting to upload">
+      <ul class="history queued-list" aria-label="Saved on this device">
         {#each queuedForBlock as q (q.id)}
           <li>
             <span class="hist-date">{fmtDate(q.occurredAt)}</span>
@@ -366,7 +371,11 @@
               {q.value.toFixed(2)}
               <span class="hist-metric">{q.metric}</span>
             </span>
-            <QueuedBadge />
+            {#if q.rejected}
+              <a class="not-saved" href="/records/pending">Not saved - see Pending records</a>
+            {:else}
+              <QueuedBadge />
+            {/if}
           </li>
         {/each}
       </ul>
@@ -528,6 +537,14 @@
   }
   .queued-list {
     margin-bottom: 0.5rem;
+  }
+  .not-saved {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+    color: var(--color-rust);
   }
   .error {
     color: var(--color-rust);

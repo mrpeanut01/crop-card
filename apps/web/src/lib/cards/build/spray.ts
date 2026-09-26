@@ -1,6 +1,8 @@
 import { computeRatedDilution, type DilutionLine } from '$lib/dilution/calculator';
 import { checkCrossContaminationForClasses } from '$lib/safety/crossContamination';
 import { selectDeconProtocol } from '$lib/safety/deconProtocol';
+import { TOX_LABEL } from '$lib/safety/pollinatorProtection';
+import { RULES_VERSION } from '$lib/safety/version';
 import type { SprayerLoadClass } from '$lib/safety/types';
 import { formatInstant } from '$lib/prefs';
 import {
@@ -18,6 +20,20 @@ import { resolveOptions, trimNumber, type BuildOptions, type ResolvedOptions } f
 export const SPRAY_RECHECK_NOTICE = 'Recheck weather, REI and label before spraying.';
 export const SPRAY_REFERENCE_NOTICE = 'Reference, not a clearance';
 export const SPRAY_STALE_AFTER_MS = 24 * 60 * 60 * 1000;
+export const SPRAY_RULES_MISMATCH_NOTICE =
+  'This app and your saved cards use different safety rules. Update the app and refresh your cards before relying on this card.';
+
+/** The decon and dilution sections run in this app's bundle, so a snapshot
+ *  built under other rules can't be trusted as one card. */
+function rulesMismatch(snapshot: FarmSnapshot): boolean {
+  return snapshot.rulesVersion !== RULES_VERSION;
+}
+
+function sprayNotices(snapshot: FarmSnapshot): string[] {
+  const notices = [SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE];
+  if (rulesMismatch(snapshot)) notices.push(SPRAY_RULES_MISMATCH_NOTICE);
+  return notices;
+}
 export const CALIBRATE_FIRST_TITLE = 'Calibrate first';
 
 const SEPARATOR = '~';
@@ -63,9 +79,9 @@ function baseCard(
     kind: 'spray',
     key,
     asOf: snapshot.generatedAt,
-    rulesVersion: snapshot.rulesVersion,
+    rulesVersion: RULES_VERSION,
     href: cardHref('spray', key),
-    staleAfterMs: SPRAY_STALE_AFTER_MS
+    staleAfterMs: rulesMismatch(snapshot) ? 0 : SPRAY_STALE_AFTER_MS
   };
 }
 
@@ -93,7 +109,7 @@ function calibrateFirstCard(
       }
     ],
     provenance: [{ source: 'data', detail: 'your sprayer' }],
-    notices: [SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE]
+    notices: sprayNotices(snapshot)
   };
 }
 
@@ -179,6 +195,13 @@ function deconSection(product: SnapshotSprayProduct, sprayer: SnapshotEquipment)
 
 function beforeYouSpray(product: SnapshotSprayProduct): string[] {
   const items = ['Wear the PPE the label lists.'];
+  const tox = product.pollinator?.beeToxicity;
+  if (tox && tox !== 'relatively-nontoxic') {
+    const label = TOX_LABEL[tox as keyof typeof TOX_LABEL] ?? TOX_LABEL.unknown;
+    items.push(
+      `${label}: check the crop and weeds for open flowers and spray after foragers leave.`
+    );
+  }
   if (product.pollinator?.bloomRestriction === 'prohibited-during-bloom') {
     items.push('Label bans spraying while the crop or weeds are in bloom.');
   } else if (product.pollinator?.bloomRestriction === 'dusk-to-dawn-only') {
@@ -259,7 +282,7 @@ function productCard(
     next: { label: 'Record this spray', href: RECORD_HREF[product.type] },
     sections,
     provenance: mergeProvenance(provenance),
-    notices: [SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE]
+    notices: sprayNotices(snapshot)
   };
 }
 

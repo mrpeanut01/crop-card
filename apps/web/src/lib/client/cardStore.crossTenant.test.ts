@@ -19,7 +19,8 @@ import {
   saveSnapshot,
   unpinCard
 } from './cardStore';
-import { resetTenantCaches, wipeTenantCaches } from './tenantSwitch';
+import { resetTenantCaches, syncServiceWorkerTenant, wipeTenantCaches } from './tenantSwitch';
+import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
 import { UNASSIGNED_OWNER_ID } from './syncQueue';
 import { sampleSnapshot } from '$lib/cards/build/fixtures';
 
@@ -172,5 +173,27 @@ describe('cardStore — cross-tenant isolation (Invariant 6, client)', () => {
       expect(await db().pendingSprayRecords.get('q1')).toBeDefined();
     }
     await db().pendingSprayRecords.clear();
+  });
+
+  it('a signed-in session with no active Owner (revoked helper) reads nothing from the old farm', async () => {
+    setActive('owner_a');
+    await saveSnapshot(sampleSnapshot({ ownerId: 'owner_a' }), 'e');
+    await pinCard('pl_1');
+
+    const cards = new OfflineCards();
+    const stop = cards.start(null);
+    await expect.poll(() => cards.loaded).toBe(true);
+    stop();
+    expect(cards.row).toBeNull();
+    expect(cards.pinned).toEqual([]);
+    expect(sessionStorage.getItem(ACTIVE_KEY)).toBeNull();
+    expect(await loadSnapshot()).toBeNull();
+    expect(await db().farmSnapshots.count()).toBe(0);
+
+    setActive('owner_a');
+    await saveSnapshot(sampleSnapshot({ ownerId: 'owner_a' }), 'e');
+    await syncServiceWorkerTenant({ register: false, signedIn: true, ownerId: null });
+    expect(sessionStorage.getItem(ACTIVE_KEY)).toBeNull();
+    expect(await db().farmSnapshots.count()).toBe(0);
   });
 });

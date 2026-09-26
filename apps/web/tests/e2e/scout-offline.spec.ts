@@ -14,7 +14,7 @@ test('a scout observation saved with no signal queues and uploads when back onli
   await page.getByRole('button', { name: 'Save observation' }).click();
 
   await expect(page.getByText('saved on this phone', { exact: false })).toBeVisible();
-  const queued = page.getByRole('list', { name: 'Waiting to upload' });
+  const queued = page.getByRole('list', { name: 'Saved on this device' });
   await expect(queued.getByText('Will save when online')).toBeVisible();
 
   await context.setOffline(false);

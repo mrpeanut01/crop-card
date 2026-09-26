@@ -178,6 +178,33 @@ describe('suggestFromStored', () => {
   });
 });
 
+describe('frostConfirmReason on the stored path', () => {
+  it('never asks to confirm a station-search fallback that no search produced', () => {
+    const view = storedFrostView(
+      { lastFrost: null, firstFrost: null, lastHardFrost: null, firstHardFrost: null },
+      EMPTY_FROST_PROVENANCE
+    );
+    const untouched = suggestFromStored(view, {}, null);
+    expect(frostConfirmReason(untouched)).toBeNull();
+    const hardOnly = suggestFromStored(view, { lastHardFrost: '03-30' }, null);
+    expect(frostConfirmReason(hardOnly)).toBeNull();
+    const r = planFrostSave(hardOnly, { confirmed: false, probability: null });
+    expect(r.ok && r.plan?.provenance.values).toMatchObject({
+      lastFrost: 'fallback',
+      firstFrost: 'fallback',
+      lastHardFrost: 'manual'
+    });
+  });
+
+  it('still asks when a stored spring or fall date is cleared', () => {
+    const view = storedFrostView(
+      { lastFrost: '04-20', firstFrost: '10-20', lastHardFrost: null, firstHardFrost: null },
+      EMPTY_FROST_PROVENANCE
+    );
+    expect(frostConfirmReason(suggestFromStored(view, { lastFrost: '' }, null))).toBe('missing');
+  });
+});
+
 describe('readFrostOverride', () => {
   it('only includes fields present in the form', () => {
     const fd = new FormData();

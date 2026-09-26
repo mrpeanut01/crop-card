@@ -10,6 +10,11 @@ import { createTask } from '$lib/db/tasks';
 import { setSetting } from '$lib/db/settings';
 import { buildAreaCard, buildFarmMapCard } from '$lib/cards/build';
 import { buildMapSnapshot } from './mapSnapshot';
+import { buildFarmSnapshot } from './cardSnapshot';
+import { applyFrostPlan } from '$lib/climate/frostSettings.server';
+import { planFrostSave } from '$lib/climate/frostSettings';
+import { runWithTenantAsync } from '$lib/db/tenant';
+import type { FrostSuggestion } from '$lib/climate/frostSuggest';
 
 const DAY = 86_400_000;
 
@@ -83,6 +88,62 @@ describe('buildMapSnapshot', () => {
       firstFall: '10-15',
       provenance: 'manual'
     });
+  });
+
+  function suggestion(
+    provenance: 'data' | 'fallback',
+    sourceLabel: string | null
+  ): FrostSuggestion {
+    const v = (value: string | null) => ({ value, provenance });
+    return {
+      values: {
+        lastFrost: v(provenance === 'data' ? '04-20' : '04-15'),
+        firstFrost: v(provenance === 'data' ? '10-18' : '10-15'),
+        lastHardFrost: v(provenance === 'data' ? '04-02' : null),
+        firstHardFrost: v(provenance === 'data' ? '11-01' : null)
+      },
+      sourceLabel,
+      frostFree: false,
+      crossesYear: false,
+      fallbackReason: null,
+      issues: []
+    };
+  }
+
+  function savePlan(s: FrostSuggestion) {
+    const res = planFrostSave(s, { confirmed: true, probability: 'median' });
+    if (!res.ok || !res.plan) throw new Error('plan refused');
+    applyFrostPlan(res.plan);
+  }
+
+  it('carries station dates as data, with the station and hard frosts, on both snapshots', async () => {
+    const a = newOwner('Station');
+    runWithTenant(a, () => savePlan(suggestion('data', 'Dulles Intl, 6 mi')));
+    const expected = {
+      lastSpring: '04-20',
+      firstFall: '10-18',
+      hardLastSpring: '04-02',
+      hardFirstFall: '11-01',
+      provenance: 'data',
+      stationName: 'Dulles Intl, 6 mi'
+    };
+    expect(runWithTenant(a, () => buildMapSnapshot()).frost).toMatchObject(expected);
+    const farm = await runWithTenantAsync(a, () => buildFarmSnapshot());
+    expect(farm.frost).toMatchObject(expected);
+  });
+
+  it('keeps confirmed Loudoun defaults as fallback, not the owner’s dates', async () => {
+    const a = newOwner('No station');
+    runWithTenant(a, () => savePlan(suggestion('fallback', null)));
+    const expected = {
+      lastSpring: '04-15',
+      firstFall: '10-15',
+      provenance: 'fallback',
+      stationName: null
+    };
+    expect(runWithTenant(a, () => buildMapSnapshot()).frost).toMatchObject(expected);
+    const farm = await runWithTenantAsync(a, () => buildFarmSnapshot());
+    expect(farm.frost).toMatchObject(expected);
   });
 
   it('never includes another Owner’s areas, plantings or tasks', () => {

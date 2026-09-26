@@ -119,7 +119,7 @@ describe('AreaCardSheet', () => {
     const tasks = screen.getByRole('tabpanel');
     const links = within(tasks).getAllByRole('link');
     expect(links[0]).toHaveTextContent('Side-dress');
-    expect(links[0]).toHaveAttribute('href', '/today?task=t_side');
+    expect(links[0]).toHaveAttribute('href', '/plan?block=b_bed3#plan-scheduled-tasks');
 
     await fireEvent.click(screen.getByRole('tab', { name: /History/ }));
     expect(within(screen.getByRole('tabpanel')).getByText('Sungold tomato')).toBeInTheDocument();

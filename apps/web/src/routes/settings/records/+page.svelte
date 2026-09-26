@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { FileText, Plus } from 'lucide-svelte';
+  import { ChevronRight, FileText, Plus } from 'lucide-svelte';
   import SettingsShell from '$lib/components/settings/SettingsShell.svelte';
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
 
@@ -77,7 +77,10 @@
 <SettingsShell title="Records & retention" kicker="Compliance & audit">
   {#if data.chrome === 'quiet'}
     <details class="quiet-tier" data-testid="quiet-compliance">
-      <summary>Pesticide record-keeping (applies if you spray)</summary>
+      <summary>
+        <ChevronRight size={18} class="chev" aria-hidden="true" />
+        <span>Pesticide record-keeping (applies if you spray)</span>
+      </summary>
       <p class="quiet-lede">
         Anything you spray, whether copper, sulfur, Bt or spinosad, comes with label rules and
         record-keeping duties. When you record a spray, CropCard keeps the record, locks it after
@@ -103,8 +106,20 @@
     min-height: 48px;
     display: flex;
     align-items: center;
+    gap: 6px;
+    list-style: none;
     font-weight: 600;
     color: var(--color-forest-deep);
+  }
+  .quiet-tier > summary::-webkit-details-marker {
+    display: none;
+  }
+  .quiet-tier > summary :global(.chev) {
+    flex: none;
+    transition: transform 0.15s ease;
+  }
+  .quiet-tier[open] > summary :global(.chev) {
+    transform: rotate(90deg);
   }
   .quiet-tier > summary:focus-visible {
     outline: 2px solid var(--color-forest);

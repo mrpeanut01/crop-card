@@ -200,6 +200,7 @@ test.describe('just-in-time setup', () => {
     await expect(page).toHaveURL(/\/plan\/farm$/);
 
     await page.goto('/plan');
+    await page.waitForLoadState('networkidle');
     await page
       .getByTestId('plan-where')
       .getByRole('button', { name: /Just give it a name/ })

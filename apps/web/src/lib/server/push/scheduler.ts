@@ -22,6 +22,12 @@ import { listBlocks } from '$lib/db/blocks';
 import { listSprayEvents } from '$lib/db/sprayEvents';
 import { listInsecticideEvents } from '$lib/db/insecticideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
+import { listCrops } from '$lib/db/crops';
+import type { CropPlugin } from '$lib/plugins/schemas';
+import { hardinessOf } from '$lib/schedule/scheduleCandidacy';
+import { getRegistry } from '$lib/server/registry';
+import { resolveWeatherLocation } from '$lib/server/weatherHourly';
+import { fetchFrostAlerts, type FrostAlertFetcher } from '$lib/server/nwsAlerts';
 import {
   claimDelivery,
   listOwnerIdsWithPushSubscriptions,
@@ -29,10 +35,12 @@ import {
   setDeliveryRecipientCount
 } from '$lib/db/pushSubscriptions';
 import { selectRecipients, sendToSubscriptions } from './dispatch';
+import { frostTonightAlerts, isInGroundOrImminent, type FrostPlantingSnapshot } from './frost';
 import {
   LOCK_WINDOW_MS,
   selectDueAlerts,
   type LockableRecordSnapshot,
+  type PushAlert,
   type SprayerSnapshot
 } from './triggers';
 import { readVapidConfig, type VapidConfig } from './webPush';
@@ -45,6 +53,7 @@ export interface PushTickDeps {
   config: VapidConfig;
   now?: () => number;
   fetchImpl?: typeof fetch;
+  frostAlerts?: FrostAlertFetcher;
 }
 
 export interface PushTickSummary {
@@ -109,6 +118,44 @@ function ownerSnapshot(now: number): {
   return { sprayers, records };
 }
 
+/**
+ * Opt-in frost alerts. NWS is only asked when a subscription on this Owner has
+ * the alert turned on, the farm has a real location, and something frost-tender
+ * is planted or about to be. An NWS failure skips this tick; it never throws.
+ */
+async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<PushAlert[]> {
+  if (!listSubscriptions().some((s) => s.prefs['frost-tonight'])) return [];
+  const crops = listCrops().filter((c) => c.status === 'active' || c.status === 'planned');
+  if (crops.length === 0) return [];
+  const registry = await getRegistry();
+  const blockName = new Map(listBlocks().map((b) => [b.id, b.name]));
+  const plantings: FrostPlantingSnapshot[] = [];
+  for (const c of crops) {
+    const plugin = registry.get(c.cropPluginId)?.plugin;
+    const crop = plugin?.type === 'crop' ? (plugin as CropPlugin) : undefined;
+    const snapshot: FrostPlantingSnapshot = {
+      status: c.status as 'planned' | 'active',
+      plantingDate: c.plantingDate,
+      name: c.varietyDisplayName || crop?.displayName || c.cropPluginId,
+      blockName: blockName.get(c.blockId),
+      hardiness: hardinessOf(crop)
+    };
+    if (snapshot.hardiness !== 'hardy' && isInGroundOrImminent(snapshot, now)) {
+      plantings.push(snapshot);
+    }
+  }
+  if (plantings.length === 0) return [];
+  const location = resolveWeatherLocation(null);
+  if (!location || location.source === 'farm-default') return [];
+  try {
+    const products = await (deps.frostAlerts ?? fetchFrostAlerts)(location.lat, location.lon, now);
+    return frostTonightAlerts(products, plantings, now);
+  } catch (err) {
+    console.warn('[push] NWS frost alerts unavailable this tick', err);
+    return [];
+  }
+}
+
 /** Process one Owner. Caller must already be inside that Owner's tenant context. */
 export async function processOwnerAlerts(
   ownerId: string,
@@ -117,7 +164,10 @@ export async function processOwnerAlerts(
   const now = (deps.now ?? Date.now)();
   const summary = { alerts: 0, sent: 0, removed: 0, failed: 0 };
   const { sprayers, records } = ownerSnapshot(now);
-  const alerts = selectDueAlerts({ sprayers, records, now });
+  const alerts = [
+    ...selectDueAlerts({ sprayers, records, now }),
+    ...(await frostAlertsForOwner(now, deps))
+  ];
   if (alerts.length === 0) return summary;
   const members = usersForOwner(ownerId);
   for (const alert of alerts) {

@@ -472,7 +472,8 @@ describe('cross-tenant isolation', () => {
         pushSubscriptionsRepo.updatePrefsForUser(b.userId, endpoint, {
           'decon-due': false,
           'lock-window-closing': false,
-          'spring-calibration': false
+          'spring-calibration': false,
+          'frost-tonight': false
         })
       )
     ).toBeNull();

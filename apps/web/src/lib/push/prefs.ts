@@ -1,4 +1,9 @@
-export const PUSH_ALERT_KINDS = ['decon-due', 'lock-window-closing', 'spring-calibration'] as const;
+export const PUSH_ALERT_KINDS = [
+  'decon-due',
+  'lock-window-closing',
+  'spring-calibration',
+  'frost-tonight'
+] as const;
 
 export type PushAlertKind = (typeof PUSH_ALERT_KINDS)[number];
 
@@ -16,13 +21,18 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
   'spring-calibration': {
     label: 'Spring calibration',
     sub: 'A winterized sprayer needs recalibrating before the first spring spray.'
+  },
+  'frost-tonight': {
+    label: 'Frost tonight',
+    sub: 'The National Weather Service issues a frost or freeze advisory for your farm while frost-tender crops are planted or about to be. Off until you turn it on.'
   }
 };
 
 export const DEFAULT_PUSH_PREFS: PushPrefs = {
   'decon-due': true,
   'lock-window-closing': true,
-  'spring-calibration': true
+  'spring-calibration': true,
+  'frost-tonight': false
 };
 
 export function isPushAlertKind(value: unknown): value is PushAlertKind {

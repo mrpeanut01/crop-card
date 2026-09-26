@@ -257,6 +257,27 @@ export function deriveHourly(
   };
 }
 
+/**
+ * Observed hours before the current hour, forecast hours from it on. Where both
+ * cover a past hour the observation wins; where both cover a later hour the
+ * forecast wins. Each side fills the other's gaps.
+ */
+export function mergeObservedAndForecast(
+  observed: readonly HourlyPoint[],
+  forecast: readonly HourlyPoint[],
+  nowMs: number
+): HourlyPoint[] {
+  const now = floorHour(nowMs);
+  const byT = new Map<number, HourlyPoint>();
+  const put = (h: HourlyPoint, wins: boolean) => {
+    const t = floorHour(h.t);
+    if (wins || !byT.has(t)) byT.set(t, { ...h, t });
+  };
+  for (const h of forecast) put(h, floorHour(h.t) >= now);
+  for (const h of observed) put(h, floorHour(h.t) < now);
+  return [...byT.values()].sort((a, b) => a.t - b.t);
+}
+
 /** Most conservative (longest) label rainfast interval across a tank mix. */
 export function tankMixRainfastHours(products: Array<{ rainfastHours?: number | null }>): {
   hours: number;

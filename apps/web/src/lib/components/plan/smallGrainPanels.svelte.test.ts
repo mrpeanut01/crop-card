@@ -107,6 +107,34 @@ describe('VernalizationPanel', () => {
     expect(screen.getByText(/Dulles 1991–2020/)).toBeTruthy();
   });
 
+  it('names the NOAA station when past hours are observed', () => {
+    const start = Date.UTC(2025, 10, 1);
+    const now = Date.UTC(2025, 10, 11);
+    const hours = Array.from({ length: (now - start) / (60 * 60 * 1000) }, (_, i) => ({
+      t: start + i * 60 * 60 * 1000,
+      tempF: 40,
+      dewpointF: null,
+      rhPct: 80,
+      popPct: null,
+      precipMm: null,
+      windMph: null
+    }));
+    const v = assessVernalization({
+      habit: 'winter',
+      plantMs: start,
+      nowMs: now,
+      hours,
+      provenance: 'data'
+    });
+    expect(v.provenance).toBe('data');
+    render(VernalizationPanel, {
+      assessment: v,
+      observedLabel: 'Leesburg Executive AP (KJYO)'
+    });
+    expect(screen.getAllByText(/Leesburg Executive AP \(KJYO\)/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Dulles 1991–2020/)).toBeNull();
+  });
+
   it('shows not required for spring habit', () => {
     const v = assessVernalization({
       habit: 'spring',

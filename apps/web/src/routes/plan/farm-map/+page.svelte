@@ -35,7 +35,12 @@
     </header>
 
     <div class="grid">
-      <FarmMapFigure fields={data.mapFields} blocks={data.mapBlocks} label="{card.title} map" />
+      <FarmMapFigure
+        fields={data.mapFields}
+        blocks={data.mapBlocks}
+        features={data.snapshot.mapFeatures ?? []}
+        label="{card.title} map"
+      />
       <CardView {card} {prefs} />
     </div>
 

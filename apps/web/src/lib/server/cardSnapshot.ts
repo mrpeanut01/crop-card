@@ -32,6 +32,7 @@ import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
 import { RULES_VERSION } from '$lib/safety/version';
 import { getRegistry } from './registry';
+import { listMapFeatureViews } from '$lib/db/mapFeatures';
 
 const DAY_MS = 86_400_000;
 export const SNAPSHOT_TASK_PAST_DAYS = 14;
@@ -249,7 +250,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     cropPlugins,
     frost: snapshotFrostFromSettings(),
     hardinessZone: await loadHardinessZone(),
-    sprayProducts
+    sprayProducts,
+    mapFeatures: listMapFeatureViews()
   };
 }
 

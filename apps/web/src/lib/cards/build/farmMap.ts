@@ -12,8 +12,15 @@ import { AREA_KINDS, isCropBearing } from '$lib/farm/areaKinds';
 import { AREA_KIND_PLURAL, AREA_KIND_STYLE } from '$lib/farm/kindStyle';
 import { areaDisplayName, areaKindLabel, monthDay, resolveOptions, trimNumber } from './common';
 import { formatAreaAcres, formatSize } from './size';
-import type { Prefs } from '$lib/prefs';
+import { formatQuantity, type Prefs } from '$lib/prefs';
 import { hardinessZoneText } from '$lib/climate/zone';
+import {
+  MAP_FEATURE_KINDS,
+  MAP_FEATURE_LABELS,
+  MAP_FEATURE_PLURAL,
+  MAP_FEATURE_STYLE,
+  describeFeature
+} from '$lib/farm/mapFeatures';
 
 export interface EmergencyContact {
   label: string;
@@ -134,10 +141,26 @@ export function buildFarmMapCard(
     sections.push({ title: AREA_KIND_PLURAL[kind], items });
   }
 
-  if (kindsPresent.length) {
+  const features = snapshot.mapFeatures ?? [];
+  const featureKinds = MAP_FEATURE_KINDS.filter((k) => features.some((f) => f.kind === k));
+  const lengthText = (ft: number) => formatQuantity(ft, 'distance', prefs, { digits: 0 });
+  for (const kind of featureKinds) {
+    const ofKind = features
+      .filter((f) => f.kind === kind)
+      .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }));
+    const items = ofKind.slice(0, MAX_PER_KIND).map((f) => describeFeature(f, lengthText));
+    if (ofKind.length > MAX_PER_KIND) items.push(`+${ofKind.length - MAX_PER_KIND} more`);
+    sections.push({ title: MAP_FEATURE_PLURAL[kind], items });
+  }
+  if (features.length && !areas.length) provenance.push({ source: 'data', detail: 'your map' });
+
+  if (kindsPresent.length || featureKinds.length) {
     sections.push({
       title: 'Legend',
-      items: kindsPresent.map((k) => `${areaKindLabel(k)}: ${AREA_KIND_STYLE[k].colorName}`)
+      items: [
+        ...kindsPresent.map((k) => `${areaKindLabel(k)}: ${AREA_KIND_STYLE[k].colorName}`),
+        ...featureKinds.map((k) => `${MAP_FEATURE_LABELS[k]}: ${MAP_FEATURE_STYLE[k].colorName}`)
+      ]
     });
   }
 
@@ -151,7 +174,7 @@ export function buildFarmMapCard(
     });
   }
 
-  if (!areas.length) {
+  if (!areas.length && !features.length) {
     sections.push({ title: 'Areas', items: ['Nothing on the map yet.'] });
   }
 

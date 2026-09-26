@@ -26,5 +26,12 @@ test('plan v2 map overlay opens with ?map=open', async ({ page }) => {
   await page.goto('/plan?map=open');
   await page.waitForLoadState('networkidle');
   // The Modal renders a <dialog> with the title set from MapOverlay.
-  await expect(page.getByRole('dialog')).toBeVisible();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  // Seeded blocks carry acres but no drawn geometry, so the overlay draws
+  // the dimension sketch: the field outline plus one clickable shape per block.
+  const svg = dialog.getByTestId('map-overlay-svg');
+  await expect(svg).toBeVisible();
+  await expect(svg.locator('path.field')).not.toHaveCount(0);
+  await expect(svg.locator('g.block')).not.toHaveCount(0);
 });

@@ -1841,10 +1841,9 @@
   />
 {/if}
 
-<!-- Phase 25d (#89) — provenance chain for the active plan. Empty state
-     is the resting state for plans built pre-#89; new wizard commits +
-     manual edits push revisions into `plan_revisions` and surface here. -->
-{#if data.tab === 'overview' && data.planRevisions}
+<!-- Phase 25d (#89) — provenance chain for the active plan. Hidden until
+     a wizard commit, AI refinement or manual edit records a revision. -->
+{#if data.tab === 'overview' && data.planRevisions && data.planRevisions.length > 0}
   <div class="provenance-mount" id="plan-provenance">
     <ProvenancePanel revisions={data.planRevisions} planLabel={data.planLabel} />
   </div>
@@ -1862,7 +1861,8 @@
   tasks={data.planV2Tasks ?? []}
   events={data.planV2Events ?? []}
   geometryEditHref={data.canEdit ? '/settings/farm/map' : undefined}
-  farmLabel={data.fields[0]?.name}
+  farmLabel={data.fields.length === 1 ? data.fields[0].name : undefined}
+  fields={data.fields}
   cropMeta={Object.fromEntries(
     data.cropCatalog.map((c) => [
       c.pluginId,

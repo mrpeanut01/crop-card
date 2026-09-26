@@ -19,6 +19,7 @@
     FROST_CROSSES_YEAR_COPY,
     FROST_STORED_FALLBACK_COPY,
     frostConfirmReason,
+    hardFrostText,
     suggestFromStored
   } from '$lib/climate/frostSettings';
   import { formatCalendarDate } from '$lib/prefs';
@@ -212,8 +213,11 @@
           {/each}
         </dl>
         <p class="hard">
-          Hard frost (24 °F or colder): last around {pretty(suggestion.values.lastHardFrost.value)},
-          first around {pretty(suggestion.values.firstHardFrost.value)}.
+          {hardFrostText(
+            suggestion.values.lastHardFrost.value,
+            suggestion.values.firstHardFrost.value,
+            pretty
+          )}
           <Provenance
             source={suggestion.values.lastHardFrost.provenance}
             label={suggestion.values.lastHardFrost.provenance === 'data'

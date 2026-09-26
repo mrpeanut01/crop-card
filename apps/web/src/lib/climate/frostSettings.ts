@@ -224,3 +224,22 @@ export function readFrostOverride(get: (name: string) => unknown): FrostOverride
   }
   return out;
 }
+
+/** The hard-frost line under the frost dates. When the first hard frost of
+ *  winter falls earlier in the calendar than the last one (a Gulf coast
+ *  winter where both land in January), it names the window between them
+ *  instead of reading "first" before "last". */
+export function hardFrostText(
+  lastHard: string | null,
+  firstHard: string | null,
+  pretty: (mmdd: string) => string
+): string {
+  const lead = 'Hard frost (24 °F or colder):';
+  if (!lastHard && !firstHard) return `${lead} none on record.`;
+  if (lastHard && firstHard && firstHard.replace('-', '') < lastHard.replace('-', '')) {
+    return `${lead} usually only between about ${pretty(firstHard)} and ${pretty(lastHard)}.`;
+  }
+  if (!firstHard) return `${lead} last around ${pretty(lastHard!)}. No first date on record.`;
+  if (!lastHard) return `${lead} first around ${pretty(firstHard)}. No last date on record.`;
+  return `${lead} last around ${pretty(lastHard)}, first around ${pretty(firstHard)}.`;
+}

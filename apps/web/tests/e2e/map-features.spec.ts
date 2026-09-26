@@ -63,6 +63,7 @@ test.describe('map lines and points', () => {
 
     await pick(page, /^Fence/);
     await expect(page.getByText(/Tap along the fence/)).toBeVisible();
+    await expect(page.locator('[data-hint]')).toHaveCount(0);
     const { cx, cy } = await mapCenter(page);
     await page.mouse.click(cx - 120, cy);
     await page.waitForTimeout(150);
@@ -74,6 +75,7 @@ test.describe('map lines and points', () => {
 
     const fenceModal = page.getByRole('dialog', { name: 'New fence' });
     await expect(fenceModal).toBeVisible();
+    await expect(page.locator('[data-hint]')).toHaveCount(0);
     await expect(fenceModal.getByTestId('feature-draft-length')).toContainText(/≈ \d[\d,]* ft/);
     await fenceModal.getByLabel('Name').fill('Pasture fence');
     await fenceModal.getByRole('button', { name: 'Save' }).click();

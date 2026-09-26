@@ -110,6 +110,7 @@
 
   // ─── Add drawer ────────────────────────────────────────────────────────────
   let addOpen = $state(false);
+  let mapBusy = $state(false);
   let sketchFormEl = $state<HTMLFormElement | null>(null);
   async function onPick(pick: AddPick) {
     addOpen = false;
@@ -952,20 +953,20 @@
     key="map_add"
     anchor="[data-hint-anchor=map_add]"
     text="Tap Add to put a field, garden, greenhouse or barn on your farm. You pick what it is, then outline it."
-    suppressed={addOpen || filterOpen || !!selectedArea}
+    suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
   />
   <Hint
     key="map_draw_area"
     anchor="[data-hint-anchor=map_draw_area]"
     text="Tap each corner, then the first corner again to close the shape. Size and perimeter fill in for you."
-    suppressed={addOpen || filterOpen || !!selectedArea}
+    suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
   />
 {/if}
 <Hint
   key="map_filter"
   anchor="[data-hint-anchor=map_filter]"
   text="Filter hides kinds you don't need right now, like woods or the pond. It remembers your choice on this device."
-  suppressed={addOpen || filterOpen || !!selectedArea}
+  suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
 />
 
 <AreaAddDrawer
@@ -1025,6 +1026,7 @@
       {mapFeatures}
       onCreateMapFeature={createMapFeature}
       onUpdateMapFeatureGeometry={updateMapFeatureGeometry}
+      onBusyChange={(b) => (mapBusy = b)}
     />
   {:else}
     <section class="card empty"><p>Loading map…</p></section>

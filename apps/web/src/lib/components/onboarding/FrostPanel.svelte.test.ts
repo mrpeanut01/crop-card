@@ -56,6 +56,19 @@ describe('FrostPanel', () => {
     expect(screen.queryByText('These dates are fine for now')).toBeNull();
   });
 
+  it('names the hard-frost window when both hard frosts land in January', async () => {
+    const { container } = render(FrostPanel, {
+      props: { lat: 30.69, lon: -88.04, mode: 'auto' }
+    });
+    await waitFor(() => expect(hidden(container, 'lastHardFrost')).toMatch(/^01-/), {
+      timeout: 5000
+    });
+    expect(hidden(container, 'firstHardFrost')).toMatch(/^01-/);
+    expect(container.querySelector('.hard')?.textContent).toMatch(
+      /Hard frost \(24 °F or colder\): usually only between about Jan \d+ and Jan \d+\./
+    );
+  });
+
   it('asks for confirmation when there is no station nearby', async () => {
     render(FrostPanel, { props: { lat: 30, lon: -45, mode: 'auto' } });
     const box = await screen.findByLabelText('These dates are fine for now', undefined, {

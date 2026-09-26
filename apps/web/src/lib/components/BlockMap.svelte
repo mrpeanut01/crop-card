@@ -155,6 +155,7 @@
     mapFeatures = [],
     onCreateMapFeature,
     onUpdateMapFeatureGeometry,
+    onBusyChange,
     initialCenter = null,
     autoLocate = false,
     filter,
@@ -207,6 +208,9 @@
     /** Tapping an Area opens its card instead of starting an edit. */
     onSelectArea?: (fieldId: string) => void;
     onSaveAreaDetails?: SaveAreaDetailsCb;
+    /** True while a shape is being drawn or its details form is open, so
+     *  the page can keep coachmarks off the drawing. */
+    onBusyChange?: (busy: boolean) => void;
   } = $props();
 
   // ── Colors by Area kind ──────────────────────────────────────────────────
@@ -296,6 +300,11 @@
   };
   // Set to true in a layer click so the immediately-following map click doesn't deselect.
   let _suppressNextMapClick = false;
+
+  const busy = $derived(drawing || !!featureDraft || !!shadeDraft || !!pendingDraft);
+  $effect(() => {
+    onBusyChange?.(busy);
+  });
 
   // ── Geometry helpers ─────────────────────────────────────────────────────
 

@@ -44,7 +44,7 @@ test.describe('AUTH_MODE=magic-link', () => {
     await page.goto('/');
     await expect(page.getByText('Try the demo')).toHaveCount(0);
 
-    await page.getByLabel('Email or mobile number').fill('owner@cropcard.local');
+    await page.getByLabel('Email', { exact: true }).fill('owner@cropcard.local');
     await page.getByRole('button', { name: /email me a sign-in link/i }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Check your email' })).toBeVisible();
 
@@ -66,7 +66,7 @@ test.describe('AUTH_MODE=magic-link', () => {
 
   test('the 6-digit code from the email signs in on another device', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel('Email or mobile number').fill('owner@cropcard.local');
+    await page.getByLabel('Email', { exact: true }).fill('owner@cropcard.local');
     await page.getByRole('button', { name: /email me a sign-in link/i }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Check your email' })).toBeVisible();
 
@@ -84,7 +84,8 @@ test.describe('AUTH_MODE=magic-link', () => {
     const local = `571555${String(Date.now()).slice(-4)}`;
     const e164 = `+1${local}`;
     await page.goto('/');
-    await page.getByLabel('Email or mobile number').fill(local);
+    await page.getByRole('link', { name: 'Use a phone number instead' }).click();
+    await page.getByLabel('Mobile number').fill(local);
     await page.getByRole('button', { name: /text me a code/i }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Check your texts' })).toBeVisible();
 
@@ -97,7 +98,8 @@ test.describe('AUTH_MODE=magic-link', () => {
   test('a wrong code is rejected and the code form stays up', async ({ page }) => {
     const local = `571556${String(Date.now()).slice(-4)}`;
     await page.goto('/');
-    await page.getByLabel('Email or mobile number').fill(local);
+    await page.getByRole('link', { name: 'Use a phone number instead' }).click();
+    await page.getByLabel('Mobile number').fill(local);
     await page.getByRole('button', { name: /text me a code/i }).click();
     const body = await latestMessage(page.request, `+1${local}`, /code is (\d{6})\./);
     await page.getByLabel('6-digit code').fill(body[1] === '000000' ? '111111' : '000000');
@@ -166,7 +168,7 @@ test.describe('AUTH_MODE=direct (default)', () => {
   test('email form signs straight in', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Try the demo')).toBeVisible();
-    await page.getByLabel('Email').fill('owner@cropcard.local');
+    await page.getByLabel('Email', { exact: true }).fill('owner@cropcard.local');
     await page.getByRole('button', { name: 'Continue →' }).click();
     await expect(page).toHaveURL(/\/today$/);
   });

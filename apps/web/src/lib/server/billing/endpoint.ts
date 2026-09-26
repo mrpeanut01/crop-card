@@ -14,7 +14,7 @@ export async function billingEndpoint(
     ownerId: string;
     email: string | undefined;
     config: BillingConfig;
-  }) => Promise<{ url: string }>
+  }) => Promise<{ url: string } | { error: string; status: number }>
 ): Promise<Response> {
   const user = requireOwner(event);
   if (user.impersonating) {
@@ -28,12 +28,13 @@ export async function billingEndpoint(
     return json({ error: BILLING_NOT_CONFIGURED }, { status: 503 });
   }
   try {
-    const { url } = await run({
+    const result = await run({
       ownerId: user.activeOwnerId,
       email: user.email ?? undefined,
       config
     });
-    return json({ url }, { headers: { 'cache-control': 'no-store' } });
+    if ('error' in result) return json({ error: result.error }, { status: result.status });
+    return json({ url: result.url }, { headers: { 'cache-control': 'no-store' } });
   } catch (e) {
     if (e instanceof BillingNotConfiguredError) {
       return json({ error: BILLING_NOT_CONFIGURED }, { status: 503 });

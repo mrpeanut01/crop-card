@@ -37,6 +37,7 @@ async function newArea(
 
 async function openDesigner(page: Page, areaId: string, query = ''): Promise<number> {
   await page.goto(`/plan/areas/${areaId}/design${query}`);
+  await page.waitForLoadState('networkidle');
   const root = page.getByTestId('garden-designer');
   await expect(root).toHaveAttribute('data-ready', 'true');
   return Number(await root.getAttribute('data-season-year'));

@@ -284,6 +284,7 @@ export async function refineSchedule(
     outputTokens: 0,
     usdEstimate: 0
   };
+  let cacheWriteTokens = 0;
   function addUsage(
     u:
       | {
@@ -296,6 +297,7 @@ export async function refineSchedule(
   ) {
     if (!u) return;
     meta.inputTokens += (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0);
+    cacheWriteTokens += u.cache_creation_input_tokens ?? 0;
     meta.cachedInputTokens += u.cache_read_input_tokens ?? 0;
     meta.outputTokens += u.output_tokens ?? 0;
   }
@@ -305,7 +307,9 @@ export async function refineSchedule(
   addUsage(first.usage);
 
   if (!first.parsed || typeof first.parsed !== 'object') {
-    meta.usdEstimate = estimateUsd(meta, choice);
+    meta.usdEstimate = estimateUsd(meta, choice, {
+      cache_creation_input_tokens: cacheWriteTokens
+    });
     return {
       scheduled: input.previousScheduled,
       rationale: input.previousRationale,
@@ -366,7 +370,7 @@ export async function refineSchedule(
     }
   }
 
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, { cache_creation_input_tokens: cacheWriteTokens });
   void lastParsed;
   void lastRawText;
 
@@ -778,10 +782,16 @@ function addScheduleMeta(
   },
   choice: Parameters<typeof estimateUsd>[1]
 ): void {
-  total.inputTokens += call.input_tokens + call.cache_creation_input_tokens;
-  total.cachedInputTokens += call.cache_read_input_tokens;
-  total.outputTokens += call.output_tokens;
-  total.usdEstimate = estimateUsd(total, choice);
+  const callMeta = {
+    model: total.model,
+    inputTokens: call.input_tokens + call.cache_creation_input_tokens,
+    cachedInputTokens: call.cache_read_input_tokens,
+    outputTokens: call.output_tokens
+  };
+  total.inputTokens += callMeta.inputTokens;
+  total.cachedInputTokens += callMeta.cachedInputTokens;
+  total.outputTokens += callMeta.outputTokens;
+  total.usdEstimate += estimateUsd(callMeta, choice, call);
 }
 
 // ─── Prompt building ─────────────────────────────────────────────────────

@@ -42,6 +42,15 @@ param emailFrom string = ''
 @description('Key Vault holds an anthropic-api-key secret. False = no-key mode (Invariant 7: deterministic fallbacks).')
 param hasAnthropicKey bool = false
 
+@description('Optional pass-through secrets present in the Key Vault (listed by deploy-azure.sh). Each one listed in passThroughEnv becomes a secret-backed env var; absent ones leave that feature in its honest "not configured" state.')
+param presentSecrets array = []
+
+@description('Deployment-wide AI brake: total Anthropic spend across all farms per UTC month, in USD. Empty = no brake.')
+param aiGlobalMonthlyUsdCap string = ''
+
+@description('Total AI spend across all free-plan farms per UTC month, in USD. Past it, free AI falls back to deterministic results. Empty = the app default.')
+param aiFreePoolMonthlyUsd string = ''
+
 @description('DNS zone hosted for the custom hostnames, e.g. cropcard.io. Empty = default ACA hostname only.')
 param dnsZoneName string = ''
 
@@ -50,6 +59,14 @@ param customHosts array = []
 
 @description('Extra TXT records in dnsZoneName, relative name → value (mail DKIM and the like). Each value must fit one 255-char string.')
 param dnsTxtRecords object = {}
+
+type mxRecord = {
+  preference: int
+  exchange: string
+}
+
+@description('MX records in dnsZoneName, relative name → exchanges, e.g. the Pingram/SES custom MAIL FROM subdomain.')
+param dnsMxRecords { *: mxRecord[] } = {}
 
 @description('Public DNS for every custom hostname already resolves to this app (checked by deploy-azure.sh). Gates the hostname bindings and the managed certificate requests.')
 param customDomainDnsReady bool = false
@@ -64,7 +81,7 @@ param hasPushTickSecret bool = false
 param hasVapidKeys bool = false
 
 @description('VAPID subject (mailto: or https:) sent to push services with each Web Push request. Used only when hasVapidKeys.')
-param vapidSubject string = ''
+param vapidSubject string = 'mailto:hello@cropcard.io'
 
 @description('Deploy the plugin marketplace app (with its ClamAV sidecar). The web app does not depend on it.')
 param deployMarketplace bool = false
@@ -301,11 +318,31 @@ var appCustomDomains = !bindDomain
 
 // Container Apps rejects empty secret values, so optional secrets are only
 // declared (and referenced) when supplied.
-var vaultUri = kv.properties.vaultUri
+// Same value as kv.properties.vaultUri, but known without a runtime reference,
+// so it can be used inside the map() lambdas below.
+var vaultUri = 'https://${keyVaultName}${environment().suffixes.keyvaultDns}/'
 var coreSecrets = [
   kvSecret('auth-secret', vaultUri, identity.id)
   kvSecret('storage-key', vaultUri, identity.id)
 ]
+// Key Vault secret → env var. Stripe price ids aren't secret, but keeping them
+// beside the key stops a live key being paired with test-mode prices.
+// STRIPE_PRICE_ID is the legacy name for the Grower monthly price.
+var passThroughEnv = [
+  { secret: 'stripe-secret-key', env: 'STRIPE_SECRET_KEY' }
+  { secret: 'stripe-webhook-secret', env: 'STRIPE_WEBHOOK_SECRET' }
+  { secret: 'stripe-price-grower-monthly', env: 'STRIPE_PRICE_GROWER_MONTHLY' }
+  { secret: 'stripe-price-grower-monthly', env: 'STRIPE_PRICE_ID' }
+  { secret: 'stripe-price-grower-annual', env: 'STRIPE_PRICE_GROWER_ANNUAL' }
+  { secret: 'stripe-price-farm-monthly', env: 'STRIPE_PRICE_FARM_MONTHLY' }
+  { secret: 'stripe-price-farm-annual', env: 'STRIPE_PRICE_FARM_ANNUAL' }
+  { secret: 'pingram-webhook-secret', env: 'PINGRAM_WEBHOOK_SECRET' }
+]
+var passThrough = filter(
+  passThroughEnv,
+  e => contains(presentSecrets, e.secret) && (hasPingramKey || !startsWith(e.secret, 'pingram-'))
+)
+var passThroughSecretNames = union(map(passThrough, e => e.secret), [])
 var optionalSecrets = concat(
   hasPingramKey ? [kvSecret('pingram-api-key', vaultUri, identity.id)] : [],
   !hasPingramKey && hasPostmarkToken ? [kvSecret('postmark-token', vaultUri, identity.id)] : [],
@@ -316,7 +353,8 @@ var optionalSecrets = concat(
         kvSecret('vapid-public-key', vaultUri, identity.id)
         kvSecret('vapid-private-key', vaultUri, identity.id)
       ]
-    : []
+    : [],
+  map(passThroughSecretNames, n => kvSecret(n, vaultUri, identity.id))
 )
 var optionalEnv = concat(
   hasPingramKey
@@ -340,7 +378,10 @@ var optionalEnv = concat(
         { name: 'VAPID_PRIVATE_KEY', secretRef: 'vapid-private-key' }
       ]
     : [],
-  hasVapidKeys && !empty(vapidSubject) ? [{ name: 'VAPID_SUBJECT', value: vapidSubject }] : []
+  hasVapidKeys && !empty(vapidSubject) ? [{ name: 'VAPID_SUBJECT', value: vapidSubject }] : [],
+  map(passThrough, e => { name: e.env, secretRef: e.secret }),
+  empty(aiGlobalMonthlyUsdCap) ? [] : [{ name: 'AI_GLOBAL_MONTHLY_USD_CAP', value: aiGlobalMonthlyUsdCap }],
+  empty(aiFreePoolMonthlyUsd) ? [] : [{ name: 'AI_FREE_POOL_MONTHLY_USD', value: aiFreePoolMonthlyUsd }]
 )
 
 // ─── Container App ─────────────────────────────────────────────────────
@@ -568,6 +609,15 @@ resource extraTxt 'Microsoft.Network/dnsZones/TXT@2018-05-01' = [for r in items(
   properties: {
     TTL: 3600
     TXTRecords: [{ value: [r.value] }]
+  }
+}]
+
+resource extraMx 'Microsoft.Network/dnsZones/MX@2018-05-01' = [for r in items(useDomain ? dnsMxRecords : {}): {
+  parent: dnsZone
+  name: r.key
+  properties: {
+    TTL: 3600
+    MXRecords: r.value
   }
 }]
 

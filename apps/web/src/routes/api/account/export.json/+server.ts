@@ -33,6 +33,7 @@ import { listScoutObservations } from '$lib/db/scoutObservations';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listCuttings } from '$lib/db/hayCuttings';
 import { listJournalForExport } from '$lib/db/plantingJournal';
+import { listConsentHistoryForUser } from '$lib/db/emailAlertConsents';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { listUnifiedRecords, summarizeUnifiedRecords } from '$lib/db/recordsUnified';
@@ -149,7 +150,8 @@ export const GET: RequestHandler = async (event) => {
       displayName: userRow?.displayName ?? null,
       timeZone: prefs.timeZone,
       displayUnits: prefs.units,
-      avatarUrl: avatarUrl(user.id, avatarVersion(user.id))
+      avatarUrl: avatarUrl(user.id, avatarVersion(user.id)),
+      emailAlertConsents: listConsentHistoryForUser(user.id)
     },
     activeOwner: ownerRow
       ? {

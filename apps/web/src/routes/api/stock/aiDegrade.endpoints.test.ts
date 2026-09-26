@@ -27,7 +27,11 @@ const ITEM = {
 };
 
 vi.mock('$lib/server/scanResult', () => ({ getApiKey: m.getApiKey }));
-vi.mock('$lib/server/aiGuard', () => ({ checkGuard: m.checkGuard, recordCall: m.recordCall }));
+vi.mock('$lib/server/aiGuard', () => ({
+  checkGuard: m.checkGuard,
+  reserveGuard: m.checkGuard,
+  recordCall: m.recordCall
+}));
 vi.mock('$lib/server/auth', () => ({ requireOwner: vi.fn(() => ({ id: 'u1', role: 'owner' })) }));
 vi.mock('$lib/server/registry', () => ({
   getRegistry: vi.fn(async () => ({ get: () => undefined, all: () => [] }))

@@ -24,7 +24,8 @@ import {
   growerFacingText,
   topicFor
 } from '$lib/journal/photoHelp';
-import { recordFallback, tryAiWithGuard } from './aiDegrade';
+import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
+import { aiLimitOf, recordFallback, tryAiWithGuard } from './aiDegrade';
 import { recordCall } from './aiGuard';
 import { askPhotoHelp, type PhotoHelpPromptInput } from './aiPhotoHelp';
 import type { FallbackReason } from './aiTry';
@@ -44,14 +45,16 @@ export interface PhotoHelpResponse {
   message: string | null;
   answer: JournalAnswer;
   entry: JournalEntry;
+  /** Set when the farm's AI allowance stopped the call, for the upgrade nudge. */
+  aiLimit?: AiLimit | null;
 }
 
 type Why = FallbackReason | 'quota' | 'invalid' | 'spray';
 
 const WHY_MESSAGE: Record<Why, string> = {
   'no-key': 'Claude is off, so here is what the Care Guide says.',
-  'over-cap': "Claude has reached this month's spending cap, so here is what the Care Guide says.",
-  quota: "Claude has reached today's limit for photo help, so here is what the Care Guide says.",
+  'over-cap': "This month's AI help for your farm is used up, so here is what the Care Guide says.",
+  quota: "Today's AI help for photos is used up, so here is what the Care Guide says.",
   'rate-limit': "Claude isn't answering right now, so here is what the Care Guide says.",
   offline: "Claude can't be reached right now, so here is what the Care Guide says.",
   timeout: 'Claude took too long, so here is what the Care Guide says.',
@@ -59,11 +62,14 @@ const WHY_MESSAGE: Record<Why, string> = {
   spray: `${SPRAY_REDIRECT} Here is what the Care Guide says.`
 };
 
-export function photoHelpMessage(why: Why, hasPhoto = true): string {
+export function photoHelpMessage(why: Why, hasPhoto = true, limit: AiLimit | null = null): string {
   const saved = hasPhoto
     ? 'Your photo and question are saved in the journal.'
     : 'Your question is saved in the journal.';
-  return `${WHY_MESSAGE[why]} ${saved}`;
+  const lead = limit
+    ? `${aiLimitReason(limit)}, so here is what the Care Guide says.`
+    : WHY_MESSAGE[why];
+  return `${lead} ${saved}`;
 }
 
 function isoDay(ms: number): string {
@@ -153,7 +159,8 @@ export async function answerPhotoHelp(args: {
   const fallback = (
     why: Why,
     reason: FallbackReason | null,
-    sprayRedirect = why === 'spray'
+    sprayRedirect = why === 'spray',
+    limit: AiLimit | null = null
   ): PhotoHelpResponse => {
     const answer: JournalAnswer = {
       question: req.question,
@@ -165,9 +172,10 @@ export async function answerPhotoHelp(args: {
     return {
       provenance: 'fallback',
       fallbackReason: reason,
-      message: photoHelpMessage(why, !!req.photo),
+      message: photoHelpMessage(why, !!req.photo, limit),
       answer,
-      entry: save(answer, 'fallback')
+      entry: save(answer, 'fallback'),
+      aiLimit: limit
     };
   };
 
@@ -189,7 +197,7 @@ export async function answerPhotoHelp(args: {
     recordFallback(userId, 'photo-help', tried.fallbackReason);
     const why: Why =
       !tried.guard.ok && tried.guard.reason === 'quota-exceeded' ? 'quota' : tried.fallbackReason;
-    return fallback(why, tried.fallbackReason);
+    return fallback(why, tried.fallbackReason, false, aiLimitOf(tried.guard));
   }
 
   const { meta } = tried.value;

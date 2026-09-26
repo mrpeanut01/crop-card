@@ -17,9 +17,12 @@ import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
 import { users, aiCallLog } from '$lib/db/schema';
-import { setSetting } from '$lib/db/settings';
+import { deleteSetting, setSetting } from '$lib/db/settings';
 import { AI_KEY_SETTING, aiKeyStatus, saveAiKey } from '$lib/server/aiKey';
-import { getAiDailyCallQuota, getAiMonthlyUsdCap } from '$lib/schedule/settings';
+import { getAiDailyCallQuotaOverrides, getAiMonthlyUsdCapSetting } from '$lib/schedule/settings';
+import { SETTINGS_KEYS } from '$lib/schedule/constants';
+import { effectiveDailyQuota } from '$lib/billing/plans';
+import { resolvePlan } from '$lib/server/billing/plans';
 import { spendSnapshot } from '$lib/server/aiGuard';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { withTenant } from '$lib/db/tenant';
@@ -27,10 +30,19 @@ import { withTenant } from '$lib/db/tenant';
 export const load: PageServerLoad = ({ locals }) => {
   if (!locals.user) throw error(401, 'sign-in required');
 
-  const key = aiKeyStatus();
+  const status = aiKeyStatus();
+  const isOwner = locals.user.role === 'owner';
+  const key = {
+    source: status.source,
+    masked: status.source === 'setting' && isOwner ? status.masked : ''
+  };
   const spend = spendSnapshot();
-  const cap = getAiMonthlyUsdCap();
-  const dailyQuotas = getAiDailyCallQuota();
+  const cap = spend.cap;
+  const ownerCapSetting = getAiMonthlyUsdCapSetting();
+  const plan = locals.user.activeOwnerId ? resolvePlan(locals.user.activeOwnerId) : null;
+  const dailyQuotas = plan
+    ? effectiveDailyQuota(plan.dailyQuota, getAiDailyCallQuotaOverrides())
+    : {};
 
   // Per-user opt-out flag (lands at /settings/ai/+page.svelte as a
   // toggle in a follow-up; for now we just surface its value).
@@ -71,8 +83,8 @@ export const load: PageServerLoad = ({ locals }) => {
       .where(and(withTenant(aiCallLog), gte(aiCallLog.createdAt, new Date(Date.now() - MONTH_MS))))
       .get()?.n ?? 0;
 
-  // Per-endpoint usage against the daily quota — same predicate as
-  // aiGuard.callsToday (this user, UTC day, token-consuming rows only).
+  // Per-endpoint usage against the farm's daily caps, the same predicate
+  // as aiGuard (this farm, UTC day, token-consuming rows only).
   const utcDayStart = new Date();
   utcDayStart.setUTCHours(0, 0, 0, 0);
   const usedToday: Record<string, number> = {};
@@ -82,7 +94,6 @@ export const load: PageServerLoad = ({ locals }) => {
     .where(
       and(
         withTenant(aiCallLog),
-        eq(aiCallLog.userId, locals.user.id),
         gte(aiCallLog.createdAt, utcDayStart),
         sql`(${aiCallLog.inputTokens} + ${aiCallLog.cachedInputTokens} + ${aiCallLog.outputTokens}) > 0`
       )
@@ -96,17 +107,23 @@ export const load: PageServerLoad = ({ locals }) => {
     key,
     spend,
     cap,
+    ownerCapSetting,
     dailyQuotas,
     userAiEnabled: !!userRow?.aiEnabled,
     recentCalls,
     usedToday,
     callsThisMonth,
-    isOwner: locals.user.role === 'owner'
+    isOwner
   };
 };
 
 export const actions: Actions = {
-  saveKey: ({ locals, request }) => saveAiKey(locals.user, request),
+  saveKey: ({ locals, request }) => {
+    if (aiKeyStatus().source === 'env') {
+      return fail(400, { error: 'AI help is included with your plan, so no key is needed.' });
+    }
+    return saveAiKey(locals.user, request);
+  },
 
   clearKey: async ({ locals }) => {
     if (!locals.user) return fail(401, { error: 'sign-in required' });
@@ -115,6 +132,32 @@ export const actions: Actions = {
     }
     setSetting(AI_KEY_SETTING, '');
     return { success: true, message: 'API key cleared. AI proposals disabled.' };
+  },
+
+  setCap: async ({ locals, request }) => {
+    if (!locals.user) return fail(401, { error: 'sign-in required' });
+    if (locals.user.role !== 'owner') {
+      return fail(403, { error: 'only the Owner role can change the AI limit' });
+    }
+    const form = await request.formData();
+    const mode = String(form.get('mode') ?? 'set');
+    if (mode === 'plan') {
+      deleteSetting(SETTINGS_KEYS.aiMonthlyUsdCap);
+      return { success: true, message: 'AI help is back to your full plan budget.' };
+    }
+    if (mode === 'off') {
+      setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, '0');
+      return { success: true, message: 'AI help is off. Everything still works without it.' };
+    }
+    const n = Number(form.get('cap'));
+    if (!Number.isFinite(n) || n < 0) return fail(400, { error: 'Enter a dollar amount.' });
+    const plan = locals.user.activeOwnerId ? resolvePlan(locals.user.activeOwnerId) : null;
+    if (plan && n >= plan.aiMonthlyUsd) {
+      deleteSetting(SETTINGS_KEYS.aiMonthlyUsdCap);
+      return { success: true, message: 'AI help is set to your full plan budget.' };
+    }
+    setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, String(Math.round(n * 100) / 100));
+    return { success: true, message: 'Monthly AI limit saved.' };
   },
 
   toggleOptIn: async ({ locals, request }) => {

@@ -1,20 +1,7 @@
 /**
- * aiGuard service-account quota tests (Phase 24, Sub-task D / #58).
- *
- * Verifies that when a Bearer-authed service-account token calls a
- * rate-limited AI endpoint, the daily quota keys on the TOKEN id rather
- * than the underlying user id — so a runaway scouting drone cannot drain
- * the human owner's per-user quota.
- *
- * Three scenarios from the epic:
- *   1. Service-account quota is independent of user quota.
- *   2. Runaway service account still hits the global monthly USD cap.
- *   3. Personal-use Bearer token (isServiceAccount=false) shares the
- *      user quota — there's no quota arbitrage for non-service-account
- *      tokens.
- *
- * Existing aiGuard.test.ts (none today) and cookie-session paths stay
- * unchanged; this is purely additive.
+ * Daily AI caps are per farm: the owner, helpers and every Bearer token draw
+ * on the same allowance. A service-account token's own daily_quota_* column
+ * applies on top as an extra limit, never as a way past the farm's cap.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -24,7 +11,7 @@ import { issueToken } from './apiTokens';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { owners, users, helperAssignments, aiCallLog, apiTokens } from '$lib/db/schema';
-import { runWithTenant, tenantValues } from '$lib/db/tenant';
+import { runWithTenant, tenantValues, withTenant } from '$lib/db/tenant';
 
 function uniq(prefix: string): string {
   return `${prefix}-${randomUUID().slice(0, 8)}`;
@@ -40,7 +27,13 @@ function seedServiceAccountToken(): SeedResult {
   const ownerId = uniq('owner-sa');
   const userId = uniq('user-sa');
   db.insert(owners)
-    .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
+    .values({
+      id: ownerId,
+      name: ownerId,
+      slug: ownerId,
+      billingStatus: 'active',
+      planOverride: 'grower'
+    })
     .run();
   db.insert(users)
     .values({ id: userId, email: `${userId}@test` })
@@ -61,7 +54,13 @@ function seedPersonalToken(): SeedResult {
   const ownerId = uniq('owner-pers');
   const userId = uniq('user-pers');
   db.insert(owners)
-    .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
+    .values({
+      id: ownerId,
+      name: ownerId,
+      slug: ownerId,
+      billingStatus: 'active',
+      planOverride: 'grower'
+    })
     .run();
   db.insert(users)
     .values({ id: userId, email: `${userId}@test` })
@@ -117,73 +116,79 @@ function seedCalls(opts: {
   }
 }
 
-describe('Phase 24 — service-account quota independence', () => {
-  it("a runaway service-account token does NOT drain the underlying user's daily quota", () => {
+describe('daily caps are per farm', () => {
+  it("a service-account token's calls use the farm's daily allowance", () => {
     const { ownerId, userId, tokenId } = seedServiceAccountToken();
-    // Saturate the SERVICE-ACCOUNT path with hundreds of `allocate` calls.
-    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: 200 });
-
+    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: 5 });
     runWithTenant(ownerId, () => {
-      // The same underlying user, calling via a cookie session, sees full
-      // quota still available. Default daily quota for `allocate` is 5;
-      // we've spent zero of it under the user-keyed path.
       const cookieCall = checkGuard(userId, 'allocate');
-      expect(cookieCall.ok).toBe(true);
-
-      // The service-account token, however, is over its own quota. Default
-      // service-account override is null → falls back to the per-user
-      // default of 5; with 200 calls logged against tokenId, this is blocked.
-      const tokenCall = checkGuard(userId, 'allocate', {
-        tokenId,
-        isServiceAccount: true
-      });
-      expect(tokenCall.ok).toBe(false);
-      if (!tokenCall.ok) {
-        expect(tokenCall.reason).toBe('quota-exceeded');
-        expect(tokenCall.message).toContain('Service-account');
+      expect(cookieCall.ok).toBe(false);
+      if (!cookieCall.ok) {
+        expect(cookieCall.reason).toBe('quota-exceeded');
+        expect(cookieCall.detail).toBe('daily-quota');
       }
     });
   });
 
-  it('respects a per-token daily_quota_* override when set', () => {
+  it('a per-token override lower than the farm cap limits only that token', () => {
     const { ownerId, userId, tokenId } = seedServiceAccountToken();
-    // Bump the token's allocate quota to 1000 via Drizzle.
-    db.update(apiTokens).set({ dailyQuotaAllocate: 1000 }).where(eq(apiTokens.id, tokenId)).run();
-
-    // Log 100 calls under the token — well under 1000 but well over the
-    // default of 5.
-    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: 100 });
+    db.update(apiTokens).set({ dailyQuotaAllocate: 1 }).where(eq(apiTokens.id, tokenId)).run();
+    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: 1 });
     runWithTenant(ownerId, () => {
-      const tokenCall = checkGuard(userId, 'allocate', {
-        tokenId,
-        isServiceAccount: true
-      });
-      expect(tokenCall.ok).toBe(true);
+      const tokenCall = checkGuard(userId, 'allocate', { tokenId, isServiceAccount: true });
+      expect(tokenCall.ok).toBe(false);
+      if (!tokenCall.ok) {
+        expect(tokenCall.detail).toBe('token-quota');
+        expect(tokenCall.message).toContain('Service-account');
+      }
+      expect(checkGuard(userId, 'allocate').ok).toBe(true);
     });
   });
 
-  it('personal-use Bearer token (isServiceAccount=false) shares the user quota', () => {
+  it("a per-token override cannot raise the farm's cap", () => {
+    const { ownerId, userId, tokenId } = seedServiceAccountToken();
+    db.update(apiTokens).set({ dailyQuotaAllocate: 1000 }).where(eq(apiTokens.id, tokenId)).run();
+    seedCalls({ ownerId, userId: null, tokenId, endpoint: 'allocate', count: 5 });
+    runWithTenant(ownerId, () => {
+      const tokenCall = checkGuard(userId, 'allocate', { tokenId, isServiceAccount: true });
+      expect(tokenCall.ok).toBe(false);
+      if (!tokenCall.ok) expect(tokenCall.detail).toBe('daily-quota');
+    });
+  });
+
+  it('personal-use Bearer token (isServiceAccount=false) shares the farm allowance', () => {
     const { ownerId, userId, tokenId } = seedPersonalToken();
-    // Spend the user's daily allocate quota (default 5) under the user id.
     seedCalls({ ownerId, userId, tokenId: null, endpoint: 'allocate', count: 5 });
     runWithTenant(ownerId, () => {
-      // Token call with isServiceAccount=false → uses user-keyed quota
-      // and finds it spent.
-      const tokenCall = checkGuard(userId, 'allocate', {
-        tokenId,
-        isServiceAccount: false
-      });
+      const tokenCall = checkGuard(userId, 'allocate', { tokenId, isServiceAccount: false });
       expect(tokenCall.ok).toBe(false);
       if (!tokenCall.ok) expect(tokenCall.reason).toBe('quota-exceeded');
     });
   });
 
-  it('cookie sessions are unaffected by Phase 24 changes (no regression)', () => {
-    const { ownerId, userId } = seedServiceAccountToken();
-    runWithTenant(ownerId, () => {
-      // No tokenContext arg → the original per-user behavior.
-      const guard = checkGuard(userId, 'allocate');
-      expect(guard.ok).toBe(true);
+  it("a helper's calls on another farm do not count against this farm", () => {
+    const home = seedServiceAccountToken();
+    const other = seedPersonalToken();
+    db.insert(helperAssignments)
+      .values({
+        ownerId: other.ownerId,
+        userId: home.userId,
+        roleWithinOwner: 'helper',
+        status: 'active'
+      })
+      .run();
+    seedCalls({
+      ownerId: other.ownerId,
+      userId: home.userId,
+      tokenId: null,
+      endpoint: 'allocate',
+      count: 5
+    });
+    runWithTenant(home.ownerId, () => {
+      expect(checkGuard(home.userId, 'allocate').ok).toBe(true);
+    });
+    runWithTenant(other.ownerId, () => {
+      expect(checkGuard(home.userId, 'allocate').ok).toBe(false);
     });
   });
 });
@@ -203,12 +208,17 @@ describe('Phase 24 — recordCall stamps tokenId on the audit row', () => {
         usdEstimate: 0.0001,
         success: true
       });
-      // Next checkGuard call under the same token sees one entry against it.
+      const row = db
+        .select()
+        .from(aiCallLog)
+        .where(withTenant(aiCallLog, eq(aiCallLog.tokenId, tokenId)))
+        .get();
+      expect(row?.endpoint).toBe('allocate');
       const guard = checkGuard(userId, 'allocate', {
         tokenId,
         isServiceAccount: true
       });
-      expect(guard.ok).toBe(true); // 1 of 5
+      expect(guard.ok).toBe(true);
     });
   });
 });

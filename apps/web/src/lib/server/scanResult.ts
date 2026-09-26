@@ -6,6 +6,7 @@ import { toVisionSource } from './visionImage';
 import type { StockCategory } from '$lib/db/stock';
 import { getRegistry } from '$lib/server/registry';
 import { getSetting } from '$lib/db/settings';
+import { usageSurchargeUsd } from './aiCost';
 import {
   POLICY_ERROR_CODES,
   SafeFetchError,
@@ -389,17 +390,20 @@ const SCAN_MODEL_PRICING: Record<string, { input: number; cached: number; output
   'claude-sonnet-4-6': { input: 3.0, cached: 0.3, output: 15.0 }
 };
 
-function reportUsage(
-  model: string,
-  usage: {
-    input_tokens?: number | null;
-    output_tokens?: number | null;
-    cache_read_input_tokens?: number | null;
-    cache_creation_input_tokens?: number | null;
-  },
-  sink?: ScanUsageSink
-): void {
+interface ScanApiUsage {
+  input_tokens?: number | null;
+  output_tokens?: number | null;
+  cache_read_input_tokens?: number | null;
+  cache_creation_input_tokens?: number | null;
+  server_tool_use?: { web_search_requests?: number | null } | null;
+}
+
+function reportUsage(model: string, usage: ScanApiUsage, sink?: ScanUsageSink): void {
   if (!sink) return;
+  sink(scanCallUsage(model, usage));
+}
+
+export function scanCallUsage(model: string, usage: ScanApiUsage): ScanCallUsage {
   const inputTokens = (usage.input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0);
   const cachedInputTokens = usage.cache_read_input_tokens ?? 0;
   const outputTokens = usage.output_tokens ?? 0;
@@ -407,8 +411,9 @@ function reportUsage(
   const usdEstimate =
     (inputTokens / 1_000_000) * p.input +
     (cachedInputTokens / 1_000_000) * p.cached +
-    (outputTokens / 1_000_000) * p.output;
-  sink({ model, inputTokens, cachedInputTokens, outputTokens, usdEstimate });
+    (outputTokens / 1_000_000) * p.output +
+    usageSurchargeUsd(usage, p.input);
+  return { model, inputTokens, cachedInputTokens, outputTokens, usdEstimate };
 }
 
 // Claude text-only call (for barcode lookup where we have no image).

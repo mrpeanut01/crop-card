@@ -11,6 +11,7 @@
     type PushAlertKind,
     type PushPrefs
   } from '$lib/push/prefs';
+  import { EMAIL_ALERT_CATEGORIES, type EmailAlertCategory } from '$lib/email/alertCategories';
   import {
     detectPushSupport,
     serializeSubscription,
@@ -154,6 +155,45 @@
     }
   }
 
+  let emailBusy = $state(false);
+  let emailMessage = $state('');
+  const emailPrefs = $derived(data.email.prefs);
+  const anyEmailOn = $derived(Object.values(emailPrefs).some(Boolean));
+  const emailLocked = $derived(
+    !data.email.address || !data.canSubscribe || data.email.impersonating || emailBusy
+  );
+
+  async function toggleEmail(category: EmailAlertCategory) {
+    emailBusy = true;
+    emailMessage = '';
+    try {
+      const res = await fetch('/api/email/prefs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, enabled: !emailPrefs[category] })
+      });
+      if (!res.ok) {
+        emailMessage = await readError(res);
+        return;
+      }
+      await invalidateAll();
+      emailMessage = 'Saved.';
+    } finally {
+      emailBusy = false;
+    }
+  }
+
+  async function sendTestEmail() {
+    emailBusy = true;
+    emailMessage = '';
+    try {
+      const res = await fetch('/api/email/test', { method: 'POST' });
+      emailMessage = res.ok ? `Test email sent to ${data.email.address}.` : await readError(res);
+    } finally {
+      emailBusy = false;
+    }
+  }
+
   async function sendTest() {
     if (!endpoint) return;
     busy = true;
@@ -171,7 +211,7 @@
       const summary = await res.json();
       message =
         summary.sent > 0
-          ? 'Test notification sent — it should appear in a few seconds.'
+          ? 'Test notification sent. It should appear in a few seconds.'
           : 'The push service did not accept the test. Try turning alerts off and on again.';
       await invalidateAll();
     } finally {
@@ -182,14 +222,14 @@
 
 <svelte:head><title>Notifications · CropCard</title></svelte:head>
 
-<SettingsShell title="Notifications" kicker="Push alerts" hideFooter>
+<SettingsShell title="Notifications" kicker="Push and email alerts" hideFooter>
   {#snippet badge()}
     {#if enabled}<Pill tone="forest">On for this device</Pill>{/if}
   {/snippet}
 
   <SettingsSection
-    title="This device"
-    sub="Alerts arrive even when CropCard is closed. Each device opts in separately, per farm."
+    title="Push on this device"
+    sub="Push alerts arrive even when CropCard is closed. Nothing is sent until you turn them on, and each device opts in separately, per farm."
   >
     {#if !data.configured}
       <p class="notice" role="status">Push isn't configured on this server.</p>
@@ -235,8 +275,8 @@
   </SettingsSection>
 
   <SettingsSection
-    title="Alert types"
-    sub="Reminders only — the safety kernel and the 48-hour record lock enforce regardless."
+    title="Push alert types"
+    sub="Reminders only. The safety checks and the 48-hour record lock apply either way."
   >
     <ul class="kinds">
       {#each PUSH_ALERT_KINDS as kind (kind)}
@@ -261,6 +301,74 @@
         </li>
       {/each}
     </ul>
+  </SettingsSection>
+
+  <SettingsSection
+    title="Email alerts"
+    sub="Off unless you turn them on. Pick the alerts you also want by email for this farm."
+  >
+    {#if !data.canSubscribe}
+      <p class="notice" role="status">Inspector accounts are read-only and can't receive alerts.</p>
+    {:else if !data.email.address}
+      <p class="notice" role="status">
+        Your account has no email address yet. <a href="/settings/account">Add one in Account</a>
+        to get alerts by email.
+      </p>
+    {:else}
+      <p class="muted email-to">Sends to <strong>{data.email.address}</strong>.</p>
+      {#if data.email.impersonating}
+        <p class="notice" role="status">Only the person themselves can change email consent.</p>
+      {/if}
+      {#if data.email.suppressed}
+        <p class="notice" role="status">
+          Your email provider told us this address unsubscribed or bounced, so alert emails are
+          paused. Ticking a box turns them back on after an unsubscribe.
+        </p>
+      {/if}
+      {#if data.email.transportOff}
+        <p class="notice" role="status">Email isn't configured on this server.</p>
+      {/if}
+      <ul class="kinds">
+        {#each EMAIL_ALERT_CATEGORIES as category (category)}
+          <li>
+            <label class="kind-row">
+              <input
+                type="checkbox"
+                checked={emailPrefs[category]}
+                disabled={emailLocked}
+                onchange={() => toggleEmail(category)}
+              />
+              <span class="kind-text">
+                <span class="kind-label">Email me: {PUSH_ALERT_LABELS[category].label}</span>
+                <span class="kind-sub">{PUSH_ALERT_LABELS[category].sub}</span>
+              </span>
+            </label>
+          </li>
+        {/each}
+      </ul>
+      <p class="muted">
+        Every alert email has a one-click unsubscribe link. We never send marketing mail. Sign-in
+        codes, farm invites and billing receipts still arrive because you asked for them.
+      </p>
+      {#if data.isOwner}
+        <p class="muted">
+          Receipts come from Stripe. <a href="/settings/billing">See your plan and billing</a>.
+        </p>
+      {/if}
+      {#if anyEmailOn}
+        <div class="device-row email-actions">
+          <button
+            type="button"
+            class="btn ghost"
+            disabled={emailBusy || data.email.impersonating}
+            onclick={sendTestEmail}
+          >
+            Send a test email
+          </button>
+        </div>
+      {/if}
+    {/if}
+    <p class="status" aria-live="polite">{emailMessage}</p>
   </SettingsSection>
 </SettingsShell>
 
@@ -360,5 +468,15 @@
   }
   .kind-note a {
     color: var(--color-ink);
+  }
+  .notice a {
+    color: var(--color-ink);
+  }
+  .email-to {
+    margin: 0 0 10px;
+    overflow-wrap: anywhere;
+  }
+  .email-actions {
+    margin-top: 12px;
   }
 </style>

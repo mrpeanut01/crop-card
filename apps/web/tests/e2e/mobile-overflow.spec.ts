@@ -7,7 +7,10 @@ const ROUTES = [
   '/plan/farm',
   '/spray/fungicide',
   '/inventory',
-  '/settings/about'
+  '/settings/about',
+  '/settings/billing',
+  '/settings/ai',
+  '/pricing'
 ];
 
 test.use({ viewport: { width: 375, height: 800 } });

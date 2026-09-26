@@ -1,6 +1,6 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { requireUser } from './auth';
-import { checkGuard, recordCall, type GuardOutcome, type TokenQuotaContext } from './aiGuard';
+import { recordCall, reserveGuard, type GuardOutcome, type TokenQuotaContext } from './aiGuard';
 import { aiTry, type FallbackReason } from './aiTry';
 import {
   AnthropicOverloadedError,
@@ -94,8 +94,11 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
   const recordTokenId = tokenCtx?.isServiceAccount ? tokenCtx.tokenId : null;
   const aiEnabled = !!getApiKey();
 
-  const guard: GuardOutcome | null = aiEnabled ? checkGuard(userId, args.endpoint, tokenCtx) : null;
+  const guard: GuardOutcome | null = aiEnabled
+    ? reserveGuard(userId, args.endpoint, tokenCtx)
+    : null;
   const guardBlock = guard && !guard.ok ? guard : null;
+  const hold = guard?.ok ? (guard.hold ?? null) : null;
 
   const state: { callError: unknown; settledAsTimeout: boolean } = {
     callError: null,
@@ -106,6 +109,7 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
     usage: ScanCallUsage | null,
     outcome: { provenance: 'ai' | 'fallback'; reason?: FallbackReason; errorClass?: string }
   ) => {
+    if (usage && usage.inputTokens + usage.outputTokens > 0) hold?.settle(usage.usdEstimate);
     try {
       recordCall({
         userId,
@@ -124,9 +128,12 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
       });
     } catch (err) {
       console.error(`[ai] ${args.endpoint} recordCall failed`, err);
+    } finally {
+      hold?.release();
     }
   };
 
+  const promptStarted = { value: false };
   const result = await aiTry<Partial<ScanResult>>({
     endpoint: args.endpoint,
     aiEnabled,
@@ -134,6 +141,7 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
     rateLimited: guardBlock?.reason === 'quota-exceeded',
     timeoutMs: args.timeoutMs ?? SCAN_AI_TIMEOUT_MS,
     prompt: async () => {
+      promptStarted.value = true;
       let usage: ScanCallUsage | null = null;
       try {
         const value = await args.call((u) => (usage = u));
@@ -142,7 +150,10 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
         return { value };
       } catch (err) {
         state.callError = err;
-        if (err instanceof ScanInputError) throw err;
+        if (err instanceof ScanInputError) {
+          hold?.release();
+          throw err;
+        }
         const rejected = !state.settledAsTimeout && isRejectedRequest(err);
         log(usage, {
           provenance: 'fallback',
@@ -159,6 +170,7 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
     fallback: () => ({ found: false })
   });
 
+  if (!promptStarted.value) hold?.release();
   if (result.provenance === 'ai') return { ok: true, result: result.value };
 
   if (state.callError instanceof ScanInputError) {

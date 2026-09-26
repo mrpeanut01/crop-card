@@ -20,7 +20,11 @@ const m = vi.hoisted(() => ({
 }));
 
 vi.mock('$lib/server/auth', () => ({ requireUser: m.requireUser }));
-vi.mock('$lib/server/aiGuard', () => ({ checkGuard: m.checkGuard, recordCall: m.recordCall }));
+vi.mock('$lib/server/aiGuard', () => ({
+  checkGuard: m.checkGuard,
+  reserveGuard: m.checkGuard,
+  recordCall: m.recordCall
+}));
 vi.mock('$lib/server/scanResult', async (importOriginal) => {
   const actual = await importOriginal<typeof import('$lib/server/scanResult')>();
   return {

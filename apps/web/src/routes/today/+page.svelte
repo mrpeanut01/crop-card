@@ -419,6 +419,8 @@
   }
 </script>
 
+<svelte:head><title>Today · CropCard</title></svelte:head>
+
 <WeatherStrip
   dateLabel={todayDateLabel}
   {greeting}

@@ -2,7 +2,7 @@
 /**
  * NFR-06 — generate a VAPID key pair for Web Push.
  *
- * Usage: node scripts/gen-vapid.mjs [mailto:ops@example.com]
+ * Usage: node scripts/gen-vapid.mjs [mailto:hello@cropcard.io]
  *        node scripts/gen-vapid.mjs --raw
  *
  * Prints env lines for VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY / VAPID_SUBJECT.
@@ -15,7 +15,7 @@
 import { createECDH } from 'node:crypto';
 
 const raw = process.argv[2] === '--raw';
-const subject = raw ? '' : (process.argv[2] ?? 'mailto:ops@cropcard.farm');
+const subject = raw ? '' : (process.argv[2] ?? 'mailto:hello@cropcard.io');
 if (!raw && !/^(mailto:|https:)/.test(subject)) {
   console.error('subject must start with mailto: or https:');
   process.exit(1);

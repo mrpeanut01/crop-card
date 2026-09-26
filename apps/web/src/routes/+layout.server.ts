@@ -12,6 +12,8 @@ import { expiringSoon, lowStockItems } from '$lib/db/stock';
 import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
 import { equipmentIdsActiveBefore } from '$lib/db/equipment';
 import { buildNavAlerts, type NavAlert } from '$lib/today/navAlerts';
+import { PLANS } from '$lib/billing/plans';
+import { resolvePlan } from '$lib/server/billing/plans';
 
 export const load: LayoutServerLoad = ({ locals }) => {
   // A sprayer is "dirty" when it has carried chemistry that has not yet been
@@ -110,6 +112,18 @@ export const load: LayoutServerLoad = ({ locals }) => {
     }
   }
 
+  let billingGrace: { planName: string; graceEndsAt: number } | null = null;
+  if (locals.user?.activeOwnerId && locals.user.role === 'owner') {
+    try {
+      const plan = resolvePlan(locals.user.activeOwnerId);
+      if (plan.source === 'grace' && plan.graceEndsAt) {
+        billingGrace = { planName: PLANS[plan.plan].name, graceEndsAt: plan.graceEndsAt };
+      }
+    } catch (err) {
+      console.error('[billing] layout failed to resolve the plan', err);
+    }
+  }
+
   const profile = locals.user ? profileFor(locals.user.id) : null;
 
   return {
@@ -130,6 +144,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
     dirtySprayers,
     navAlerts,
     activeOwner,
-    availableOwners
+    availableOwners,
+    billingGrace
   };
 };

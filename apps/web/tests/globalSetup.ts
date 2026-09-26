@@ -22,6 +22,10 @@ export function setup() {
   }
 
   process.env.DATABASE_URL = `file:${TEST_DB}`;
+  // The free-pool brake sums spend across every farm in the shared test DB,
+  // so one file's oversized rows would trip it for the rest; tests that
+  // exercise it set the env var themselves.
+  process.env.AI_FREE_POOL_MONTHLY_USD ??= '0';
 
   const appRoot = resolve(import.meta.dirname, '../');
   execSync('node ./scripts/migrate.mjs', {

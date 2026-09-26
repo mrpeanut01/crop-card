@@ -1,4 +1,7 @@
 <script lang="ts">
+  import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
+  import AiLimitNudge from '$lib/components/billing/AiLimitNudge.svelte';
+  import type { AiLimit } from '$lib/billing/aiLimit';
   import { onMount } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
@@ -55,6 +58,7 @@
     provenance: 'ai' | 'fallback';
     message: string | null;
     queued: boolean;
+    aiLimit?: AiLimit | null;
   }
   let shown = $state<Shown | null>(null);
 
@@ -217,6 +221,7 @@
         provenance?: 'ai' | 'fallback';
         message?: string | null;
         entry?: JournalEntry;
+        aiLimit?: AiLimit | null;
       };
       if (!res.ok || !body.answer || !body.provenance) {
         askError = body.error ?? 'That did not go through. Try again.';
@@ -226,7 +231,8 @@
         answer: body.answer,
         provenance: body.provenance,
         message: body.message ?? null,
-        queued: false
+        queued: false,
+        aiLimit: body.aiLimit ?? null
       };
       if (body.entry) entries = [body.entry, ...entries];
       photo = null;
@@ -316,6 +322,7 @@
     {/if}
 
     {#if canWrite}
+      <AiUsageChip onlyWhenOut />
       <div class="photo-row">
         <label class="btn ghost file">
           <input
@@ -366,6 +373,7 @@
       {#if shown}
         <div class="answer" data-testid="photo-answer" data-provenance={shown.provenance}>
           {#if shown.message}<p class="message">{shown.message}</p>{/if}
+          <AiLimitNudge limit={shown.aiLimit} {isOwner} />
           {#if shown.queued}<QueuedBadge />{/if}
           {#if shown.answer.text}
             <p class="ai-text">{shown.answer.text}</p>

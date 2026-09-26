@@ -2,6 +2,7 @@ import { error, fail, redirect, type Actions } from '@sveltejs/kit';
 import { requireOwner } from '$lib/server/auth';
 import { dispatchEmail } from '$lib/server/email';
 import { issueInvite, listInvitesForOwner, revokeInvite } from '$lib/server/invites';
+import { seatUsage, SEAT_LIMIT_MESSAGE } from '$lib/server/billing/plans';
 import { usersForOwner, revokeAssignment } from '$lib/db/users';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
@@ -47,7 +48,8 @@ export const load: PageServerLoad = (event) => {
         status: a.status
       };
     }),
-    invites: listInvitesForOwner(u.activeOwnerId)
+    invites: listInvitesForOwner(u.activeOwnerId),
+    seats: seatUsage(u.activeOwnerId)
   };
 };
 
@@ -59,6 +61,10 @@ export const actions: Actions = {
     const inviteeEmail = String(fd.get('email') ?? '').trim();
     if (!inviteeEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteeEmail)) {
       return fail(400, { error: 'invalid email' });
+    }
+    const seats = seatUsage(u.activeOwnerId);
+    if (!seats.canInvite) {
+      return fail(409, { error: SEAT_LIMIT_MESSAGE, seatLimit: true });
     }
     const issued = issueInvite({
       ownerId: u.activeOwnerId,

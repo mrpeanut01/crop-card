@@ -9,7 +9,9 @@
  * (triggers.ts), and claims each in the `push_deliveries` sent-log before
  * sending, so an alert goes out at most once however often ticks run.
  *
- * The clock, fetch and NWS fetcher are injectable.
+ * The same due alerts also go by email to users who opted in to that alert
+ * kind on this Owner (emailAlerts.ts). The clock, fetch and NWS fetcher are
+ * injectable.
  */
 
 import { eq } from 'drizzle-orm';
@@ -34,7 +36,9 @@ import {
   listSubscriptions,
   setDeliveryRecipientCount
 } from '$lib/db/pushSubscriptions';
+import { listOwnerIdsWithEmailOptIns, listOptedIn } from '$lib/db/emailAlertConsents';
 import { selectRecipients, sendToSubscriptions } from './dispatch';
+import { emailAlertOrigin, sendAlertEmails } from './emailAlerts';
 import { frostTonightAlerts, isInGroundOrImminent, type FrostPlantingSnapshot } from './frost';
 import {
   LOCK_WINDOW_MS,
@@ -45,10 +49,13 @@ import {
 } from './triggers';
 import type { VapidConfig } from './webPush';
 
-const SKIPPED_BILLING = new Set(['suspended', 'canceled']);
+const SKIPPED_BILLING = new Set(['suspended']);
 
 export interface PushTickDeps {
-  config: VapidConfig;
+  /** null when push is not configured; alerts can still go by email. */
+  config: VapidConfig | null;
+  /** Public origin for links in alert emails; null or unset sends no email. */
+  emailOrigin?: string | null;
   now?: () => number;
   fetchImpl?: typeof fetch;
   frostAlerts?: FrostAlertFetcher;
@@ -60,16 +67,18 @@ export interface PushTickSummary {
   sent: number;
   removed: number;
   failed: number;
+  emailed: number;
+  emailFailed: number;
 }
 
-function ownerBillingStatus(ownerId: string): string | null {
-  unscopedQueryNote('push scheduler checks the global owners row for billing suspension');
+function ownerRow(ownerId: string): { billingStatus: string; name: string } | null {
+  unscopedQueryNote('alert scheduler reads the global owners row for billing and the farm name');
   const row = db
-    .select({ billingStatus: owners.billingStatus })
+    .select({ billingStatus: owners.billingStatus, name: owners.name })
     .from(owners)
     .where(eq(owners.id, ownerId))
     .get();
-  return row?.billingStatus ?? null;
+  return row ?? null;
 }
 
 function ownerSnapshot(now: number): {
@@ -122,7 +131,11 @@ function ownerSnapshot(now: number): {
  * is planted or about to be. An NWS failure skips this tick; it never throws.
  */
 async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<PushAlert[]> {
-  if (!listSubscriptions().some((s) => s.prefs['frost-tonight'])) return [];
+  const pushWants =
+    deps.config !== null && listSubscriptions().some((s) => s.prefs['frost-tonight']);
+  const emailWants =
+    !!deps.emailOrigin && listOptedIn().some((c) => c.category === 'frost-tonight');
+  if (!pushWants && !emailWants) return [];
   const crops = listCrops({ statuses: ['active', 'planned'] });
   if (crops.length === 0) return [];
   const registry = await getRegistry();
@@ -160,7 +173,7 @@ export async function processOwnerAlerts(
   deps: PushTickDeps
 ): Promise<Omit<PushTickSummary, 'owners'>> {
   const now = (deps.now ?? Date.now)();
-  const summary = { alerts: 0, sent: 0, removed: 0, failed: 0 };
+  const summary = { alerts: 0, sent: 0, removed: 0, failed: 0, emailed: 0, emailFailed: 0 };
   const { sprayers, records } = ownerSnapshot(now);
   const alerts = [
     ...selectDueAlerts({ sprayers, records, now }),
@@ -168,35 +181,61 @@ export async function processOwnerAlerts(
   ];
   if (alerts.length === 0) return summary;
   const members = usersForOwner(ownerId);
+  const farmName = ownerRow(ownerId)?.name ?? 'your farm';
   for (const alert of alerts) {
     if (!claimDelivery(alert.kind, alert.subjectId, now)) continue;
     summary.alerts++;
-    const recipients = selectRecipients(listSubscriptions(), members, alert);
-    if (recipients.length === 0) continue;
-    const result = await sendToSubscriptions(
-      recipients,
-      {
-        title: alert.title,
-        body: alert.body,
-        url: alert.url,
-        tag: `${alert.kind}:${alert.subjectId}`,
-        kind: alert.kind
-      },
-      deps.config,
-      { fetchImpl: deps.fetchImpl, nowMs: now, urgency: 'high' }
-    );
-    setDeliveryRecipientCount(alert.kind, alert.subjectId, result.sent);
-    summary.sent += result.sent;
-    summary.removed += result.removed;
-    summary.failed += result.failed;
+    let delivered = 0;
+    const recipients = deps.config ? selectRecipients(listSubscriptions(), members, alert) : [];
+    if (deps.config && recipients.length > 0) {
+      const result = await sendToSubscriptions(
+        recipients,
+        {
+          title: alert.title,
+          body: alert.body,
+          url: alert.url,
+          tag: `${alert.kind}:${alert.subjectId}`,
+          kind: alert.kind
+        },
+        deps.config,
+        { fetchImpl: deps.fetchImpl, nowMs: now, urgency: 'high' }
+      );
+      delivered += result.sent;
+      summary.sent += result.sent;
+      summary.removed += result.removed;
+      summary.failed += result.failed;
+    }
+    if (deps.emailOrigin) {
+      const mail = await sendAlertEmails(ownerId, farmName, alert, members, deps.emailOrigin);
+      delivered += mail.sent;
+      summary.emailed += mail.sent;
+      summary.emailFailed += mail.failed;
+    }
+    setDeliveryRecipientCount(alert.kind, alert.subjectId, delivered);
   }
   return summary;
 }
 
+/** Tenants with a push subscription or an email opt-in, each once. */
+export function ownerIdsToVisit(deps: Pick<PushTickDeps, 'config' | 'emailOrigin'>): string[] {
+  const ids = new Set<string>();
+  if (deps.config) for (const id of listOwnerIdsWithPushSubscriptions()) ids.add(id);
+  if (deps.emailOrigin) for (const id of listOwnerIdsWithEmailOptIns()) ids.add(id);
+  return [...ids];
+}
+
 export async function runPushTick(deps: PushTickDeps): Promise<PushTickSummary> {
-  const total: PushTickSummary = { owners: 0, alerts: 0, sent: 0, removed: 0, failed: 0 };
-  for (const ownerId of listOwnerIdsWithPushSubscriptions()) {
-    if (SKIPPED_BILLING.has(ownerBillingStatus(ownerId) ?? '')) continue;
+  const total: PushTickSummary = {
+    owners: 0,
+    alerts: 0,
+    sent: 0,
+    removed: 0,
+    failed: 0,
+    emailed: 0,
+    emailFailed: 0
+  };
+  for (const ownerId of ownerIdsToVisit(deps)) {
+    if (SKIPPED_BILLING.has(ownerRow(ownerId)?.billingStatus ?? '')) continue;
     try {
       const s = await runWithTenantAsync(ownerId, () => processOwnerAlerts(ownerId, deps));
       total.owners++;
@@ -204,6 +243,8 @@ export async function runPushTick(deps: PushTickDeps): Promise<PushTickSummary> 
       total.sent += s.sent;
       total.removed += s.removed;
       total.failed += s.failed;
+      total.emailed += s.emailed;
+      total.emailFailed += s.emailFailed;
     } catch (err) {
       console.error(`[push] tick failed for owner ${ownerId}`, err);
     }

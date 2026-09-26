@@ -167,10 +167,11 @@
     <div class="pair">
       <section class="block note">
         <div class="note-icon" aria-hidden="true"><Server size={18} strokeWidth={1.75} /></div>
-        <h3 class="serif">Where your subscription goes</h3>
+        <h3 class="serif">Free, and what paid plans pay for</h3>
         <p>
-          The monthly charge pays for hosting: the server, the database backups, and keeping the
-          lights on. Nobody is getting rich here.
+          Records, safety checks and exports are free forever. The Grower and Farm plans add more AI
+          help and more helper seats, and they pay for hosting, backups and the AI bill. Nobody is
+          getting rich here. <a href="/pricing">See plans and pricing</a>.
         </p>
       </section>
 

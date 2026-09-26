@@ -19,7 +19,8 @@ vi.mock('@anthropic-ai/sdk', () => ({
 vi.mock('$lib/server/scanResult', () => ({ getApiKey: m.getApiKey }));
 vi.mock('$lib/server/aiGuard', async (orig) => ({
   ...(await orig<typeof import('$lib/server/aiGuard')>()),
-  checkGuard: m.checkGuard
+  checkGuard: m.checkGuard,
+  reserveGuard: m.checkGuard
 }));
 vi.mock('$lib/server/auth', () => ({
   requireOwner: () => {
@@ -204,13 +205,17 @@ describe('POST /api/garden/beds/[blockId]/fill', () => {
       ok: false,
       reason: 'cap-exceeded',
       status: 402,
-      message: 'Monthly cap reached.'
+      message: 'Monthly cap reached.',
+      detail: 'monthly-budget',
+      plan: 'free',
+      upgrade: 'grower'
     });
     await runWithTenant(seedOwner(), async () => {
       const body = (await (await call(seedBed().id)).json()) as FillResponse;
       expect(body.provenance).toBe('fallback');
       expect(body.fallbackReason).toBe('over-cap');
-      expect(body.message).toMatch(/^Claude has reached this month's spending cap, so /);
+      expect(body.message).toMatch(/^This month's AI help for your farm is used up, so /);
+      expect(body.aiLimit).toEqual({ detail: 'monthly-budget', plan: 'free', upgrade: 'grower' });
     });
     expect(m.create).not.toHaveBeenCalled();
   });
@@ -226,7 +231,7 @@ describe('POST /api/garden/beds/[blockId]/fill', () => {
     await runWithTenant(seedOwner(), async () => {
       const body = (await (await call(seedBed().id)).json()) as FillResponse;
       expect(body.fallbackReason).toBe('rate-limit');
-      expect(body.message).toMatch(/^Claude has reached today's limit for this, so /);
+      expect(body.message).toMatch(/^Today's AI help for this is used up, so /);
     });
     expect(m.create).not.toHaveBeenCalled();
   });

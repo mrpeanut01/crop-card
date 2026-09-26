@@ -113,7 +113,7 @@ export function lockWindowClosingAlerts(
       kind: 'lock-window-closing',
       subjectId: `${r.kind}:${r.id}`,
       title: `${RECORD_LABEL[r.kind]} record locks in ${when}`,
-      body: `The ${RECORD_LABEL[r.kind].toLowerCase()} record${where} becomes read-only (FR-09). Check it now if anything needs correcting.`,
+      body: `The ${RECORD_LABEL[r.kind].toLowerCase()} record${where} becomes read-only then. Check it now if anything needs correcting.`,
       url: `/records/${r.kind}/${encodeURIComponent(r.id)}`,
       audience: { kind: 'owners-and', userIds: [r.performedById] }
     });

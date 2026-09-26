@@ -14,13 +14,15 @@
  *   - phase: 'complete'   → all done; full proposed[] payload
  *
  * Quota: ONE 'plugin-batch-scan' call per receipt regardless of line
- * count. Per-line enrichment uses the existing 'plugin-search' quota.
+ * count. The receipt's hold shrinks to what it has spent so far, each line
+ * lookup reserves again under 'plugin-search', and a line is skipped once
+ * the budget is out.
  */
 
 import type { RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
-import { recordCall } from '$lib/server/aiGuard';
+import { recordCall, reserveGuard } from '$lib/server/aiGuard';
 import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { FallbackReason } from '$lib/server/aiTry';
 import { claudeReceiptScanStreaming, type ReceiptStreamEvent } from '$lib/server/aiPluginScan';
@@ -72,8 +74,18 @@ export const POST: RequestHandler = async (event) => {
           endpoint: 'plugin-batch-scan',
           userId: session.id,
           timeoutMs: 120_000,
-          prompt: () =>
-            claudeReceiptScanStreaming(parsed.data.document, parsed.data.mediaType, send)
+          prompt: (_signal, hold) =>
+            claudeReceiptScanStreaming(
+              parsed.data.document,
+              parsed.data.mediaType,
+              send,
+              (receiptUsd) => {
+                hold?.adjust(receiptUsd);
+                const line = reserveGuard(session.id, 'plugin-search');
+                if (!line.ok) return null;
+                return () => line.hold?.release();
+              }
+            )
         });
         if (tried.provenance === 'fallback') {
           recordFallback(

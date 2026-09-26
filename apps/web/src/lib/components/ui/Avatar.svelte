@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { User } from 'lucide-svelte';
+
   interface Props {
     name: string;
     src?: string | null;
@@ -10,7 +12,7 @@
 
   let failedSrc = $state<string | null>(null);
   const showImage = $derived(!!src && failedSrc !== src);
-  const initial = $derived(name.trim().charAt(0).toUpperCase() || '?');
+  const initial = $derived(name.match(/\p{L}/u)?.[0]?.toUpperCase() ?? null);
 </script>
 
 <span
@@ -22,8 +24,10 @@
 >
   {#if showImage}
     <img {src} alt="" width={size} height={size} onerror={() => (failedSrc = src)} />
-  {:else}
+  {:else if initial}
     {initial}
+  {:else}
+    <User size={Math.round(size * 0.55)} strokeWidth={2} data-testid="avatar-person" />
   {/if}
 </span>
 

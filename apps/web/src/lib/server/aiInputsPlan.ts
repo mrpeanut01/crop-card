@@ -264,12 +264,14 @@ async function callInputsClaude(
 
   const meta: AiResultMeta = {
     model: choice.model,
-    inputTokens: usage.input_tokens ?? 0,
+    inputTokens: (usage.input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0),
     cachedInputTokens: usage.cache_read_input_tokens ?? 0,
     outputTokens: usage.output_tokens ?? 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, {
+    cache_creation_input_tokens: usage.cache_creation_input_tokens
+  });
 
   return { parsed, meta };
 }

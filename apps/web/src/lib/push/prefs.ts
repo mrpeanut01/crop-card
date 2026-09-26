@@ -16,7 +16,7 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
   },
   'lock-window-closing': {
     label: 'Record lock closing',
-    sub: 'A spray, insecticide, or fungicide record locks for good in under 2 hours (FR-09).'
+    sub: 'A spray, insecticide, or fungicide record locks for good in under 2 hours.'
   },
   'spring-calibration': {
     label: 'Spring calibration',
@@ -24,7 +24,7 @@ export const PUSH_ALERT_LABELS: Record<PushAlertKind, { label: string; sub: stri
   },
   'frost-tonight': {
     label: 'Frost tonight',
-    sub: 'The National Weather Service issues a frost or freeze advisory for your farm while frost-tender crops are planted or about to be. Off until you turn it on.'
+    sub: 'The National Weather Service issues a frost or freeze advisory for your farm while frost-tender crops are planted or about to be.'
   }
 };
 

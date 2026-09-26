@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { escapeHtml } from '$lib/html';
   /**
    * Interactive map for /plan?tab=layout.
    *
@@ -653,7 +654,7 @@
         })
       });
       layer.bindTooltip(
-        f.name,
+        escapeHtml(f.name),
         labelsOn
           ? { permanent: true, direction: 'center', className: 'field-label-tip' }
           : { direction: 'center' }
@@ -707,7 +708,7 @@
       const layer = L.geoJSON(parsed as never, {
         style: () => ({ color, weight: 2, fillColor: color, fillOpacity: 0.22 })
       });
-      layer.bindTooltip(b.name, { direction: 'center' });
+      layer.bindTooltip(escapeHtml(b.name), { direction: 'center' });
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
       polygonToBlockId.set(id, b.id);
 
@@ -807,7 +808,7 @@
         })
       });
       const tooltipText = `${s.name} · ${s.kind} · ${fmt.qty(s.heightFt, 'distance')}${s.isDeciduous ? ' · deciduous' : ''}`;
-      layer.bindTooltip(tooltipText, { direction: 'top' });
+      layer.bindTooltip(escapeHtml(tooltipText), { direction: 'top' });
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
       polygonToShadeId.set(id, s.id);
       if (canEdit) {
@@ -838,7 +839,7 @@
       if (centroid) {
         const [lon, lat] = centroid;
         const emoji = shadeKindEmoji(s.kind);
-        const iconHtml = `<span class="shade-marker" title="${s.name}">${emoji}</span>`;
+        const iconHtml = `<span class="shade-marker" title="${escapeHtml(s.name)}">${emoji}</span>`;
         const icon = L.divIcon({
           html: iconHtml,
           className: 'shade-marker-wrap',
@@ -884,7 +885,7 @@
           title: f.name
         });
       }
-      layer.bindTooltip(`${MAP_FEATURE_LABELS[f.kind]}: ${tip}`, { direction: 'top' });
+      layer.bindTooltip(escapeHtml(`${MAP_FEATURE_LABELS[f.kind]}: ${tip}`), { direction: 'top' });
       if (canEdit && onUpdateMapFeatureGeometry) {
         const id = f.id;
         const kind = f.kind;
@@ -949,14 +950,6 @@
       if (showBlockLabels && declutterLabels) scheduleLabelRelayout();
     });
   });
-
-  function escapeHtml(s: string): string {
-    return s
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
 
   /** Coalesce relayout requests into one rAF tick so zoom/pan/data churn
    *  doesn't thrash layout. */
@@ -2073,6 +2066,7 @@
     border: 0 !important;
   }
   :global(.feature-pin) {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2088,6 +2082,12 @@
       sans-serif;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
     cursor: pointer;
+  }
+  :global(.feature-pin::before) {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
   }
   :global(.shade-marker-wrap) {
     background: transparent !important;

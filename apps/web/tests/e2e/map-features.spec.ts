@@ -194,4 +194,49 @@ test.describe('map lines and points', () => {
     );
     expect(overflow).toBeLessThanOrEqual(0);
   });
+
+  test('shows a point name as plain text and gives the pin a glove-sized target', async ({
+    page
+  }) => {
+    await provisionWizardTenant(page, { blocks: [] });
+    let dialogs = 0;
+    page.on('dialog', (d) => {
+      dialogs++;
+      void d.dismiss();
+    });
+    const res = await page.request.post('/api/map-features', {
+      data: {
+        kind: 'gate',
+        name: '<img src=x onerror=alert(1)><b>Back</b> gate',
+        geometry: { type: 'Point', coordinates: [-77.55, 39.1] }
+      },
+      headers: { origin: origin(page) }
+    });
+    expect(res.status(), await res.text()).toBe(201);
+
+    await page.setViewportSize({ width: 375, height: 800 });
+    await openMap(page);
+    const pin = page.locator('.feature-pin[data-feature-kind="gate"]');
+    await expect(pin).toHaveCount(1);
+    const box = (await pin.boundingBox())!;
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+    const hit = await page.evaluate(
+      ([x, y]) =>
+        [
+          [x + 22, y],
+          [x - 22, y],
+          [x, y + 22],
+          [x, y - 22]
+        ].map(([px, py]) => !!document.elementFromPoint(px, py)?.closest('.feature-pin')),
+      [cx, cy]
+    );
+    expect(hit).toEqual([true, true, true, true]);
+
+    await page.mouse.move(cx, cy);
+    const tip = page.locator('.leaflet-tooltip');
+    await expect(tip).toHaveText('Gate: <img src=x onerror=alert(1)><b>Back</b> gate');
+    await expect(tip.locator('b, img')).toHaveCount(0);
+    expect(dialogs).toBe(0);
+  });
 });

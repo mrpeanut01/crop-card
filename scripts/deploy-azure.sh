@@ -23,6 +23,9 @@
 #   pingram-api-key     email + SMS sign-in codes via Pingram (email wins over postmark-token)
 #   postmark-token      emailed magic links (else they go to the container log)
 #   anthropic-api-key   AI assists (else no-key mode)
+#   stripe-secret-key   paid plans through Stripe Checkout (else every farm stays on Free)
+#   stripe-webhook-secret                     signature secret for /api/billing/stripe-webhook
+#   stripe-price-{grower,farm}-{monthly,annual}   the four plan prices (price_…)
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
 #
 # The image tag is the commit SHA, so a dirty tree is refused unless --allow-dirty.
@@ -153,9 +156,17 @@ fi
 HAS_PINGRAM=false; kv_has pingram-api-key && HAS_PINGRAM=true
 HAS_POSTMARK=false; kv_has postmark-token && HAS_POSTMARK=true
 HAS_ANTHROPIC=false; kv_has anthropic-api-key && HAS_ANTHROPIC=true
+HAS_STRIPE=false; kv_has stripe-secret-key && HAS_STRIPE=true
+HAS_STRIPE_WEBHOOK=false; kv_has stripe-webhook-secret && HAS_STRIPE_WEBHOOK=true
+STRIPE_PRICES=()
+for p in stripe-price-grower-monthly stripe-price-grower-annual stripe-price-farm-monthly stripe-price-farm-annual; do
+  if kv_has "$p"; then STRIPE_PRICES+=("\"$p\""); fi
+done
+STRIPE_PRICE_JSON="[$(IFS=,; echo "${STRIPE_PRICES[*]}")]"
 echo "pingram      : ${HAS_PINGRAM}"
 echo "postmark     : ${HAS_POSTMARK}"
 echo "anthropic    : ${HAS_ANTHROPIC}"
+echo "stripe       : ${HAS_STRIPE} (webhook: ${HAS_STRIPE_WEBHOOK}, prices: ${#STRIPE_PRICES[@]} of 4)"
 
 # ─── Custom domain readiness ────────────────────────────────────────────
 # Zone and host labels come from the .bicepparam so the template and this
@@ -199,6 +210,7 @@ PARAMS=(
   --parameters "$PARAM_FILE"
   --parameters location="$LOCATION" image="$IMAGE" containerRegistryServer="$REGISTRY"
   --parameters keyVaultName="$KV" hasPingramKey="$HAS_PINGRAM" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
+  --parameters hasStripeKey="$HAS_STRIPE" hasStripeWebhookSecret="$HAS_STRIPE_WEBHOOK" stripePriceSecrets="$STRIPE_PRICE_JSON"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
 domain_params() { echo "customDomainDnsReady=$DNS_READY" "customDomainCertIssued=$CERT_ISSUED"; }

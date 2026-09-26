@@ -124,7 +124,7 @@
       href: '/settings/billing',
       icon: CreditCard,
       label: 'Plan & billing',
-      sub: `Solo plan · single-replica · ${data.owner?.billingStatus ?? 'unknown'}`,
+      sub: `${data.owner?.planName ?? 'Free'} plan · compare plans and manage billing`,
       ownerOnly: true
     },
     {

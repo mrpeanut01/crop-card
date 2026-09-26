@@ -499,7 +499,7 @@ export async function claudeVisionPluginLookup(
     outputTokens: usage.output_tokens ?? 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, usage);
 
   const textBlock = msg.content.find((c) => c.type === 'text');
   const text = textBlock?.type === 'text' ? textBlock.text : '';
@@ -582,7 +582,7 @@ export async function claudePluginSearchByName(
     outputTokens: usage.output_tokens ?? 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, usage);
 
   const textBlocks = msg.content.filter((c) => c.type === 'text');
   const lastText = textBlocks[textBlocks.length - 1];
@@ -839,7 +839,7 @@ export async function claudePluginSearchByNameStreaming(
     outputTokens: usage.output_tokens ?? 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, usage);
 
   send({ phase: 'validating', message: 'Validating candidates against the safety kernel…' });
 
@@ -1055,7 +1055,7 @@ export async function claudeReceiptExtract(
     outputTokens: usage.output_tokens ?? 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, usage);
 
   const textBlock = msg.content.find((c) => c.type === 'text');
   const text = textBlock?.type === 'text' ? textBlock.text : '';
@@ -1072,7 +1072,8 @@ export async function claudeReceiptExtract(
 export async function claudeReceiptScanStreaming(
   base64Image: string,
   mediaType: 'image/jpeg' | 'image/png' | 'application/pdf',
-  send: (event: ReceiptStreamEvent) => void
+  send: (event: ReceiptStreamEvent) => void,
+  lineAllowed: (receiptUsdSoFar: number) => boolean = () => true
 ): Promise<{ proposed: ReceiptProposal[]; meta: AiResultMeta }> {
   const apiKey = getApiKey();
   if (!apiKey) {
@@ -1127,6 +1128,17 @@ export async function claudeReceiptScanStreaming(
       totalLines: lines.length,
       rawText: line.rawText
     });
+
+    if (!lineAllowed(aggregateMeta.usdEstimate)) {
+      proposed.push({ lineIndex: i, line, candidate: null });
+      send({
+        phase: 'enriched',
+        message: `Line ${i + 1}: this month's AI help ran out, so fill this one in by hand.`,
+        lineIndex: i,
+        candidate: null
+      });
+      continue;
+    }
 
     try {
       const r = await claudePluginSearchByName(query, undefined);

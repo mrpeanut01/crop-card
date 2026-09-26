@@ -93,6 +93,7 @@ const ANONYMOUS_PATHS = new Set([
   '/auth/verify', // UC-17 — redeem the link; mints the HMAC session.
   '/api/openapi.json', // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
   '/api/billing/stripe-webhook', // Stripe POSTs without a session; the signature is the auth.
+  '/pricing', // Public plan comparison; static content, no tenant data.
   // Phase 30F — the /cards route renders with ssr=false, so this path is a
   // data-free HTML shell the service worker precaches at install. Its data
   // (/cards/__data.json, /api/cards/snapshot) still needs a session; see
@@ -209,17 +210,31 @@ export function csrfDecision(input: {
 }
 
 /**
- * Billing gate for an Owner whose status is already known. API callers get
- * a JSON 402 instead of a 303 to the HTML /suspended page; /api/billing/**
- * stays reachable so a suspended Owner can pay their way back.
+ * Gate for an Owner a superadmin suspended (fraud or terms abuse; Stripe
+ * never suspends). API callers get a JSON 402 instead of a 303 to the HTML
+ * /suspended page. Even then the farm keeps its records: record pages,
+ * record exports (CSV, VDACS, year summary) and the full data export stay
+ * readable, and billing and sign-out stay reachable.
  */
 export type SuspendedTenantGate = 'allow' | 'redirect' | 'json-402';
+function underPath(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(prefix + '/');
+}
 export function suspendedTenantGate(
   pathname: string,
-  billingStatus: string | null
+  billingStatus: string | null,
+  method = 'GET'
 ): SuspendedTenantGate {
   if (billingStatus !== 'suspended') return 'allow';
   if (pathname.startsWith('/api/billing/')) return 'allow';
+  if (underPath(pathname, '/settings/billing') || pathname === '/signout') return 'allow';
+  const read = method === 'GET' || method === 'HEAD';
+  if (read) {
+    if (underPath(pathname, '/records')) return 'allow';
+    if (pathname.startsWith('/api/records/')) return 'allow';
+    if (pathname.startsWith('/api/spray/records/export.')) return 'allow';
+    if (pathname === '/api/account/export.json') return 'allow';
+  }
   return pathname.startsWith('/api/') ? 'json-402' : 'redirect';
 }
 
@@ -361,7 +376,11 @@ export const handle: Handle = async ({ event, resolve }) => {
     path !== '/suspended' &&
     path !== '/signout'
   ) {
-    const gate = suspendedTenantGate(path, ownerBillingStatus(user.activeOwnerId));
+    const gate = suspendedTenantGate(
+      path,
+      ownerBillingStatus(user.activeOwnerId),
+      event.request.method
+    );
     if (gate === 'json-402') {
       return json(
         { error: 'tenant-suspended' },

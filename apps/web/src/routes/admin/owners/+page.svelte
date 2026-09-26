@@ -64,7 +64,7 @@
     <table class="owners">
       <thead>
         <tr>
-          <th>Name</th><th>Slug</th><th>Status</th><th>AI calls<br />(this month)</th>
+          <th>Name</th><th>Slug</th><th>Status</th><th>Plan</th><th>AI calls<br />(this month)</th>
           <th>Sprays<br />(this month)</th><th>Created</th><th>Actions</th>
         </tr>
       </thead>
@@ -91,6 +91,22 @@
                   <option value="suspended" selected={o.billingStatus === 'suspended'}
                     >suspended</option
                   >
+                </select>
+              </form>
+            </td>
+            <td>
+              <form method="POST" action="?/setPlanOverride" use:enhance class="status-form">
+                <input type="hidden" name="ownerId" value={o.id} />
+                <select
+                  name="plan"
+                  aria-label="Plan override for {o.name}"
+                  onchange={(e) => (e.currentTarget.form as HTMLFormElement).requestSubmit()}
+                >
+                  <option value="" selected={o.planOverride === null}>Stripe ({o.plan})</option>
+                  <option value="free" selected={o.planOverride === 'free'}>comp: free</option>
+                  <option value="grower" selected={o.planOverride === 'grower'}>comp: grower</option
+                  >
+                  <option value="farm" selected={o.planOverride === 'farm'}>comp: farm</option>
                 </select>
               </form>
             </td>

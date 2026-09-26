@@ -116,6 +116,11 @@ export const owners = sqliteTable('owners', {
   /** Bumped on every plugin_overrides write so the per-owner plugin registry
    *  LRU can key on (ownerId, revision) for cache invalidation. */
   pluginOverridesRevision: integer('plugin_overrides_revision').notNull().default(0),
+  /** Superadmin-granted plan that wins over Stripe (comped farms, support). */
+  planOverride: text('plan_override', { enum: ['free', 'grower', 'farm'] }),
+  /** When this Owner first drew the free-plan starter AI boost. The boost is
+   *  granted once per owning identity, so a second farm does not get it. */
+  starterBoostUsedAt: integer('starter_boost_used_at', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)
@@ -379,12 +384,19 @@ export const ownerSubscriptions = sqliteTable('owner_subscriptions', {
   ownerId: text('owner_id')
     .primaryKey()
     .references(() => owners.id),
-  planCode: text('plan_code').notNull().default('free'),
+  planCode: text('plan_code', { enum: ['free', 'grower', 'farm'] })
+    .notNull()
+    .default('free'),
   status: text('status', {
-    enum: ['trial', 'active', 'past_due', 'canceled', 'suspended']
+    enum: ['trial', 'active', 'past_due', 'canceled', 'suspended', 'incomplete']
   })
     .notNull()
     .default('trial'),
+  billingInterval: text('billing_interval', { enum: ['month', 'year'] }),
+  /** First failed payment of the current dunning run; the paid plan holds
+   *  for PAST_DUE_GRACE_DAYS from here. Cleared when the subscription is
+   *  active again. */
+  pastDueSince: integer('past_due_since', { mode: 'timestamp_ms' }),
   periodStart: integer('period_start', { mode: 'timestamp_ms' }),
   periodEnd: integer('period_end', { mode: 'timestamp_ms' }),
   stripeCustomerId: text('stripe_customer_id'),

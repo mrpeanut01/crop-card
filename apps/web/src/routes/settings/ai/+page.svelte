@@ -4,9 +4,11 @@
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import SettingsField from '$lib/components/settings/SettingsField.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
-  import type { PageData } from './$types';
+  import AiBudgetMeter from '$lib/components/billing/AiBudgetMeter.svelte';
+  import { PLANS, formatUsd } from '$lib/billing/plans';
+  import type { ActionData, PageData } from './$types';
 
-  let { data }: { data: PageData } = $props();
+  const { data, form }: { data: PageData; form: ActionData } = $props();
 
   const enabled = $derived(data.key.source !== 'none');
 
@@ -28,21 +30,27 @@
   // Real quota keys live in DEFAULT_AI_DAILY_QUOTA. Display the
   // ones the design's mockup highlights; fall back to '—' for any
   // that aren't in the snapshot.
-  const q = $derived(data.dailyQuotas ?? ({} as Record<string, number>));
-  const ENDPOINTS: Array<{ key: string; label?: string; quota?: number }> = $derived([
-    { key: 'allocate', quota: q.allocate ?? 10 },
-    { key: 'inputs', quota: q.inputs ?? 10 },
-    { key: 'suggest', quota: q.suggest ?? 20 },
-    { key: 'succession', quota: q.succession ?? 20 },
-    { key: 'plugin-search', label: 'Search → web lookup', quota: q['plugin-search'] ?? 15 },
-    { key: 'plugin-scan', label: 'Plugin scan (label OCR)', quota: q['plugin-scan'] ?? 10 },
-    { key: 'scan-label', label: 'Inventory label / photo scan', quota: q['scan-label'] ?? 40 },
-    { key: 'scan-url', label: 'Inventory product-page URL', quota: q['scan-url'] ?? 20 },
-    { key: 'scan-barcode', label: 'Inventory barcode lookup', quota: q['scan-barcode'] ?? 40 },
-    { key: 'planting-window', label: 'Planting date helper', quota: q['planting-window'] ?? 40 },
-    { key: 'garden-fill', label: 'Fill this bed', quota: q['garden-fill'] ?? 10 },
-    { key: 'photo-help', label: 'Ask about a photo', quota: q['photo-help'] ?? 10 }
+  const q = $derived((data.dailyQuotas ?? {}) as Record<string, number>);
+  const ENDPOINTS: Array<{ key: string; label?: string; quota: number }> = $derived([
+    { key: 'allocate', label: 'Plan, schedule and refine', quota: q.allocate ?? 0 },
+    { key: 'inputs', quota: q.inputs ?? 0 },
+    { key: 'suggest', quota: q.suggest ?? 0 },
+    { key: 'succession', quota: q.succession ?? 0 },
+    { key: 'groups', quota: q.groups ?? 0 },
+    { key: 'optimize', quota: q.optimize ?? 0 },
+    { key: 'plugin-search', label: 'Search → web lookup', quota: q['plugin-search'] ?? 0 },
+    { key: 'rationale', label: 'Stock AI refresh (web lookup)', quota: q.rationale ?? 0 },
+    { key: 'plugin-batch-scan', label: 'Receipt scan', quota: q['plugin-batch-scan'] ?? 0 },
+    { key: 'plugin-scan', label: 'Plugin scan (label OCR)', quota: q['plugin-scan'] ?? 0 },
+    { key: 'scan-label', label: 'Inventory label / photo scan', quota: q['scan-label'] ?? 0 },
+    { key: 'scan-url', label: 'Inventory product-page URL', quota: q['scan-url'] ?? 0 },
+    { key: 'scan-barcode', label: 'Inventory barcode lookup', quota: q['scan-barcode'] ?? 0 },
+    { key: 'shortNames', label: 'Short names', quota: q.shortNames ?? 0 },
+    { key: 'planting-window', label: 'Planting date helper', quota: q['planting-window'] ?? 0 },
+    { key: 'garden-fill', label: 'Fill this bed', quota: q['garden-fill'] ?? 0 },
+    { key: 'photo-help', label: 'Ask about a photo', quota: q['photo-help'] ?? 0 }
   ]);
+  const upgradeName = $derived(data.spend.upgrade ? PLANS[data.spend.upgrade].name : null);
 </script>
 
 <svelte:head><title>AI assistant · CropCard</title></svelte:head>
@@ -60,7 +68,9 @@
            the Active state when this month's spend is over the cap.
            Mirrors the .over class on the cap-fill bar so the badge
            area and the bar are never out-of-sync. -->
-      {#if data.spend.pctUsed >= 1}
+      {#if data.spend.aiOff}
+        <Pill tone="neutral">AI off</Pill>
+      {:else if data.spend.exhausted}
         <Pill tone="rust">Cap exceeded</Pill>
       {/if}
     {:else}
@@ -68,7 +78,7 @@
     {/if}
   {/snippet}
 
-  <SettingsSection title="API key & cap" sub="Stored locally · never sent to the CropCard server.">
+  <SettingsSection title="API key" sub="Stored locally · never sent to the CropCard server.">
     <form method="POST" action="?/saveKey" class="form-block">
       <div class="grid-2-1">
         <SettingsField label="Claude API key" hint="sk-ant-…">
@@ -87,44 +97,66 @@
           </select>
         </SettingsField>
       </div>
-      <div class="cap">
-        <div class="cap-head">
-          <span class="kicker-row">Monthly cap · USD</span>
-          <span class="cap-val mono">${data.spend.cap.toFixed(2)}</span>
-        </div>
-        <div
-          class="cap-bar"
-          role="meter"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          aria-valuenow={Math.round(data.spend.pctUsed * 100)}
-        >
-          <div
-            class="cap-fill"
-            class:warn={data.spend.warnAt80}
-            class:over={data.spend.pctUsed >= 1}
-            style:width="{Math.min(100, Math.round(data.spend.pctUsed * 100))}%"
-          ></div>
-        </div>
-        <div class="cap-ticks mono">
-          <span>$0</span>
-          <span
-            >${data.spend.monthlyUsdSoFar.toFixed(2)} spent · {data.callsThisMonth ?? 0} call{(data.callsThisMonth ??
-              0) === 1
-              ? ''
-              : 's'}</span
-          >
-          <span>${data.spend.cap.toFixed(0)} cap</span>
-        </div>
-      </div>
     </form>
+  </SettingsSection>
+
+  <SettingsSection
+    title="AI help this month"
+    sub="Your plan's monthly AI budget. When it runs out, every feature keeps working without AI."
+  >
+    <div class="budget" data-testid="ai-budget">
+      <AiBudgetMeter usage={data.spend} isOwner={data.isOwner} />
+      <p class="budget-plan">
+        {data.spend.planName} plan includes {formatUsd(PLANS[data.spend.plan].aiMonthlyUsd)} of AI help
+        a month.
+        {#if data.spend.starterBoost}Your first 30 days get {formatUsd(data.spend.planBudget)}.{/if}
+        {#if upgradeName && data.isOwner}
+          <a href="/settings/billing"
+            >{upgradeName} includes {formatUsd(
+              PLANS[data.spend.upgrade ?? 'grower'].aiMonthlyUsd
+            )}.</a
+          >
+        {/if}
+      </p>
+      {#if data.isOwner}
+        <form method="POST" action="?/setCap" class="cap-form">
+          <label class="cap-field">
+            <span>Your monthly limit (up to {formatUsd(data.spend.planBudget)})</span>
+            <input
+              class="s-input mono"
+              type="number"
+              name="cap"
+              min="0"
+              step="0.05"
+              max={data.spend.planBudget}
+              value={data.ownerCapSetting ?? data.spend.planBudget}
+            />
+          </label>
+          <div class="cap-actions">
+            <button type="submit" class="cap-btn primary" name="mode" value="set">Save limit</button
+            >
+            {#if data.ownerCapSetting !== null}
+              <button type="submit" class="cap-btn" name="mode" value="plan">Use full plan</button>
+            {/if}
+            {#if !data.spend.aiOff}
+              <button type="submit" class="cap-btn" name="mode" value="off">Turn AI off</button>
+            {/if}
+          </div>
+        </form>
+        {#if form && 'message' in form && form.message}
+          <p class="cap-msg" role="status">{form.message}</p>
+        {:else if form && 'error' in form && form.error}
+          <p class="cap-msg err" role="alert">{form.error}</p>
+        {/if}
+      {/if}
+    </div>
   </SettingsSection>
 
   <details class="advanced" data-testid="ai-advanced">
     <summary>Advanced: daily limits per feature</summary>
     <SettingsSection
       title="Per-endpoint daily quota"
-      sub="Each AI endpoint has its own cap. Hitting a quota falls back to deterministic mode for the rest of the day."
+      sub="Each AI feature has its own daily limit on your plan. Hitting one falls back to the deterministic result for the rest of the day. A limit of 0 means the feature is part of a bigger plan."
     >
       <div class="quota-grid">
         {#each ENDPOINTS as e (e.key)}
@@ -174,6 +206,68 @@
   .advanced {
     margin: 0 0 16px;
   }
+  .budget {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 560px;
+  }
+  .budget-plan {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-ink-soft);
+    line-height: 1.5;
+  }
+  .budget-plan a {
+    color: var(--color-forest-deep);
+    font-weight: 600;
+  }
+  .cap-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cap-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .cap-field input {
+    max-width: 180px;
+    min-height: 48px;
+  }
+  .cap-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .cap-btn {
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: var(--radius-input, 6px);
+    border: 1.5px solid var(--color-divider);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .cap-btn.primary {
+    background: var(--color-forest-deep);
+    border-color: var(--color-forest-deep);
+    color: var(--color-cream, #f8f3e8);
+  }
+  .cap-msg {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-forest-deep);
+  }
+  .cap-msg.err {
+    color: var(--color-rust);
+  }
   .advanced summary {
     min-height: 48px;
     display: flex;
@@ -190,45 +284,6 @@
   .form-block {
     margin: 0;
   }
-  .cap {
-    margin-top: 14px;
-  }
-  .cap-head {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-  }
-  .cap-val {
-    font-size: 12px;
-    color: var(--color-ink);
-    font-weight: 600;
-  }
-  .cap-bar {
-    height: 8px;
-    background: var(--color-cream);
-    border-radius: 999px;
-    overflow: hidden;
-    border: 1px solid var(--color-divider);
-  }
-  .cap-fill {
-    height: 100%;
-    background: var(--color-forest-deep);
-    transition: width 0.3s ease;
-  }
-  .cap-fill.warn {
-    background: var(--color-wheat, #d4a75c);
-  }
-  .cap-fill.over {
-    background: var(--color-rust, #ba4b38);
-  }
-  .cap-ticks {
-    margin-top: 4px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 10.5px;
-    color: var(--color-ink-muted);
-  }
-
   .quota-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

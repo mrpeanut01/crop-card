@@ -1,5 +1,6 @@
 <script lang="ts">
   import A_InventoryAddFlow from '$lib/components/inventory/A_InventoryAddFlow.svelte';
+  import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
 
   const { data } = $props();
 </script>
@@ -11,6 +12,8 @@
 <nav class="breadcrumb" aria-label="Breadcrumb">
   <a href="/inventory?type={data.type}">← All {data.type}</a>
 </nav>
+
+{#if data.aiEnabled}<AiUsageChip />{/if}
 
 <A_InventoryAddFlow type={data.type} aiEnabled={data.aiEnabled} canSave={data.canSave} />
 

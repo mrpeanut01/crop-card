@@ -100,7 +100,7 @@ export async function suggestPlantingWindow(
     outputTokens: usage.output_tokens ?? 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, usage);
   return { window: parsePlantingWindowResponse(text, input.year), meta };
 }
 

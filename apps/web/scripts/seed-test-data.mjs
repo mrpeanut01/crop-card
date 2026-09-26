@@ -71,6 +71,8 @@ const truncateOrder = [
   'helper_assignments',
   'helper_invites',
   'api_tokens',
+  'ai_call_log',
+  'app_settings',
   'owner_usage_counters',
   'owner_subscriptions',
   'plugin_overrides',
@@ -255,6 +257,71 @@ const insertEquipState = sqlite.prepare(
 insertEquipState.run(cleanSprayer.id, O, null, null, 20, days(60));
 insertEquipState.run(dirtySprayer.id, O, 'sulfonylurea', days(2), 20, days(60));
 
+// ─── plan fixtures (free / grower / free-over-budget) ────────────────────
+// The demo owner is on Free. `grower@cropcard.local` owns a farm on an
+// active yearly Grower subscription (fake Stripe ids, never called), and
+// `capped@cropcard.local` owns a Free farm, past its starter boost, that has
+// already spent this month's AI budget, so the upgrade prompt shows.
+const insertSubscription = sqlite.prepare(
+  `INSERT INTO owner_subscriptions
+     (owner_id, plan_code, status, billing_interval, period_start, period_end,
+      stripe_customer_id, stripe_subscription_id, created_at, updated_at)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+);
+insertSubscription.run(O, 'free', 'active', null, null, null, null, null, now, now);
+
+function seedPlanOwner({ slug, name, email, createdAt }) {
+  const owner = { id: randomUUID(), name, slug };
+  const user = { id: randomUUID(), email };
+  insertUser.run(user.id, user.email, createdAt);
+  sqlite
+    .prepare(
+      `INSERT INTO owners (id, name, slug, billing_status, plugin_overrides_revision, created_at)
+       VALUES (?, ?, ?, 'active', 0, ?)`
+    )
+    .run(owner.id, owner.name, owner.slug, createdAt);
+  insertAssignment.run(owner.id, user.id, 'owner', createdAt, createdAt);
+  sqlite
+    .prepare(`INSERT INTO fields (id, owner_id, name, created_at) VALUES (?, ?, ?, ?)`)
+    .run(randomUUID(), owner.id, 'Home Field', createdAt);
+  return { owner, user };
+}
+
+const grower = seedPlanOwner({
+  slug: 'grower-test-farm',
+  name: 'Grower Test Farm',
+  email: 'grower@cropcard.local',
+  createdAt: days(90)
+});
+insertSubscription.run(
+  grower.owner.id,
+  'grower',
+  'active',
+  'year',
+  days(30),
+  now + 335 * 24 * 60 * 60 * 1000,
+  'cus_e2e_grower',
+  'sub_e2e_grower',
+  days(30),
+  now
+);
+
+const capped = seedPlanOwner({
+  slug: 'capped-free-farm',
+  name: 'Capped Free Farm',
+  email: 'capped@cropcard.local',
+  createdAt: days(60)
+});
+insertSubscription.run(capped.owner.id, 'free', 'active', null, null, null, null, null, now, now);
+sqlite
+  .prepare(
+    `INSERT INTO ai_call_log
+       (id, owner_id, user_id, endpoint, model, input_tokens, cached_input_tokens,
+        output_tokens, usd_estimate, success, provenance, created_at)
+     VALUES (?, ?, ?, 'allocate', 'claude-sonnet-4-6', 40000, 0, 30000, 0.55, 1, 'ai', ?)`
+  )
+  .run(randomUUID(), capped.owner.id, capped.user.id, now);
+
 sqlite.close();
 
 console.log(`[seed] done`);
@@ -263,6 +330,9 @@ console.log(
   `  users:     ${ownerUser.email} (owner role), ${helperUser.email} (helper role), ${inspectorUser.email} (inspector role), ${superadminUser.email} (superadmin)`
 );
 console.log(`  field:     ${homeField.name}`);
+console.log(
+  `  plans:     ${ownerTenant.name} on Free, ${grower.owner.name} on Grower (${grower.user.email}), ${capped.owner.name} on Free with the AI budget spent (${capped.user.email})`
+);
 console.log(
   `  blocks:    ${blockA.name} (corn, ${blockA.acres}ac), ${blockB.name} (soybean, ${blockB.acres}ac)`
 );

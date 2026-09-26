@@ -1,57 +1,76 @@
 /**
- * AI guard middleware (Phase 14, extended Phase 24 Sub-task D):
- *   - per-day call quota, monthly USD cap, mandatory call-log writes.
+ * AI guard: per-plan monthly USD budget, per-feature daily caps, the free
+ * pool and the operator's deployment brake, checked before every Claude
+ * call. Every outcome that is not `ok` degrades through aiTry to the
+ * deterministic path; nothing here ever blocks a non-AI feature.
  *
- * Cap behavior:
- *   - 80% soft warn → result includes `spend.warn` flag for the UI banner.
- *   - 100% hard block → response 402 Payment Required, no model call made.
- *
- * Quota behavior:
- *   - Cookie sessions + personal-use Bearer tokens (isServiceAccount=false):
- *     per-(userId, endpoint, UTC-day) — the historical behavior.
- *   - Service-account Bearer tokens: per-(tokenId, endpoint, UTC-day),
- *     using the token's own daily_quota_* column when set. Lets a runaway
- *     drone share none of the human owner's daily quota.
- *
- * Monthly USD cap stays GLOBAL across both cookie + Bearer + service-account
- * paths — it's the safety brake against a runaway agent. Never per-token.
- *
- * Both checks consult `ai_call_log`, so the audit and the limit share state.
+ * Order: deployment brake, owner switched AI off, feature not in the plan,
+ * monthly budget (spent + the call's worst-case reserve), free pool, daily
+ * cap. The monthly budget is per Owner, so helpers and Bearer tokens spend
+ * the same budget. Service-account tokens key their daily count on the
+ * token instead of the user.
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, eq, gte, sql, sum } from 'drizzle-orm';
+import { and, eq, gte, inArray, notInArray, sql, sum } from 'drizzle-orm';
 import { db } from '$lib/db/client';
-import { aiCallLog, apiTokens } from '$lib/db/schema';
+import { aiCallLog, apiTokens, ownerSubscriptions, owners } from '$lib/db/schema';
 import { type AiEndpointName } from '$lib/schedule/constants';
-import { getAiDailyCallQuota, getAiMonthlyUsdCap } from '$lib/schedule/settings';
+import { getAiDailyCallQuotaOverrides, getAiMonthlyUsdCapSetting } from '$lib/schedule/settings';
 import { currentOwnerId, tenantValues, unscopedQueryNote, withTenant } from '$lib/db/tenant';
+import {
+  AI_RESERVE_USD,
+  DEFAULT_FREE_POOL_MONTHLY_USD,
+  PLANS,
+  effectiveDailyQuota,
+  effectiveMonthlyCap,
+  formatUsd,
+  nextPlanUp,
+  resolvePlanFrom,
+  type AiUsageSnapshot,
+  type PaidPlanId,
+  type PlanId,
+  type ResolvedPlan
+} from '$lib/billing/plans';
+import { resolvePlan } from './billing/plans';
 import { incrementUsageCounter } from './superadmin';
 
-/** Phase 24 — per-token quota context passed by hooks.server.ts via
- *  event.locals.tokenId + isServiceAccountToken. When isServiceAccount
- *  is true, checkGuard keys rate-limit on tokenId; otherwise the token
- *  shares the human owner's per-user quota (matches the cookie-session
- *  policy so a personal-use Bearer doesn't get any quota arbitrage). */
 export interface TokenQuotaContext {
   tokenId: string;
   isServiceAccount: boolean;
 }
 
-/** Map AI endpoint → api_tokens column that holds the per-token override.
- *  Endpoints not in this map use the per-user default for service-account
- *  tokens (Phase 24 MVP). A follow-up may widen this to a JSON column for
- *  full per-endpoint coverage. */
 const TOKEN_QUOTA_COLUMN: Partial<Record<AiEndpointName, keyof typeof apiTokens.$inferSelect>> = {
   allocate: 'dailyQuotaAllocate',
   inputs: 'dailyQuotaInputs',
-  rationale: 'dailyQuotaStockRefresh', // stock-refresh wraps the rationale endpoint
-  'plugin-search': 'dailyQuotaSchedule' // re-using the placeholder column for plugin-search
+  rationale: 'dailyQuotaStockRefresh',
+  'plugin-search': 'dailyQuotaSchedule'
 };
 
+export type GuardBlockDetail =
+  | 'global'
+  | 'owner-disabled'
+  | 'plan-excluded'
+  | 'monthly-budget'
+  | 'free-pool'
+  | 'daily-quota'
+  | 'token-quota';
+
 export type GuardOutcome =
-  | { ok: true; spend: { monthlyUsdSoFar: number; cap: number; warnAt80: boolean } }
-  | { ok: false; reason: 'quota-exceeded' | 'cap-exceeded'; status: 429 | 402; message: string };
+  | {
+      ok: true;
+      spend: { monthlyUsdSoFar: number; cap: number; warnAt80: boolean };
+      plan?: PlanId;
+    }
+  | {
+      ok: false;
+      reason: 'quota-exceeded' | 'cap-exceeded';
+      status: 429 | 402;
+      message: string;
+      detail?: GuardBlockDetail;
+      plan?: PlanId;
+      upgrade?: PaidPlanId | null;
+    };
 
 function utcDayStart(now = Date.now()): number {
   const d = new Date(now);
@@ -121,7 +140,7 @@ function perTokenQuota(tokenId: string, endpoint: AiEndpointName): number | null
   return typeof v === 'number' ? v : null;
 }
 
-/** This Owner's spend this month, compared against its own cap. */
+/** This Owner's spend this month, whoever on the farm made the call. */
 function monthlyUsdSpent(): number {
   const monthStart = utcMonthStart();
   const row = db
@@ -139,6 +158,14 @@ export function globalMonthlyUsdCap(): number {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
+/** Ceiling on all free-plan AI spend in a month. Unset = $50; 0 = off. */
+export function freePoolMonthlyUsd(): number {
+  const raw = process.env.AI_FREE_POOL_MONTHLY_USD;
+  if (raw == null || raw.trim() === '') return DEFAULT_FREE_POOL_MONTHLY_USD;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
 function deploymentUsdSpent(): number {
   const monthStart = utcMonthStart();
   unscopedQueryNote(
@@ -152,40 +179,153 @@ function deploymentUsdSpent(): number {
   return Number(row?.total ?? 0);
 }
 
+const FREE_POOL_CACHE_MS = 60_000;
+let freePoolCache: { monthStart: number; at: number; total: number } | null = null;
+
+export function resetFreePoolCache(): void {
+  freePoolCache = null;
+}
+
+function freePoolUsdSpent(now = Date.now()): number {
+  const monthStart = utcMonthStart(now);
+  if (
+    freePoolCache &&
+    freePoolCache.monthStart === monthStart &&
+    now - freePoolCache.at < FREE_POOL_CACHE_MS
+  ) {
+    return freePoolCache.total;
+  }
+  unscopedQueryNote('free pool brake sums this month of AI spend across every free-plan Owner');
+  const paidBySubscription = db
+    .select({ ownerId: ownerSubscriptions.ownerId })
+    .from(ownerSubscriptions)
+    .where(
+      and(
+        inArray(ownerSubscriptions.planCode, ['grower', 'farm']),
+        inArray(ownerSubscriptions.status, ['active', 'trial', 'past_due'])
+      )
+    );
+  const paidByOverride = db
+    .select({ id: owners.id })
+    .from(owners)
+    .where(inArray(owners.planOverride, ['grower', 'farm']));
+  const row = db
+    .select({ total: sum(aiCallLog.usdEstimate) })
+    .from(aiCallLog)
+    .where(
+      and(
+        gte(aiCallLog.createdAt, new Date(monthStart)),
+        notInArray(aiCallLog.ownerId, paidBySubscription),
+        notInArray(aiCallLog.ownerId, paidByOverride)
+      )
+    )
+    .get();
+  const total = Number(row?.total ?? 0);
+  freePoolCache = { monthStart, at: now, total };
+  return total;
+}
+
+function activePlan(): ResolvedPlan {
+  const ownerId = currentOwnerId();
+  if (ownerId) return resolvePlan(ownerId);
+  return resolvePlanFrom({
+    planOverride: null,
+    subscription: null,
+    ownerCreatedAt: 0,
+    boostEligible: false,
+    now: Date.now()
+  });
+}
+
+function upsell(plan: PlanId): string {
+  const next = nextPlanUp(plan);
+  return next ? ` More AI on ${PLANS[next].name}.` : '';
+}
+
+const WITHOUT_AI = 'CropCard worked this out without AI instead.';
+
+function blocked(
+  reason: 'quota-exceeded' | 'cap-exceeded',
+  detail: GuardBlockDetail,
+  plan: PlanId | undefined,
+  message: string,
+  upgrade: PaidPlanId | null = plan ? nextPlanUp(plan) : null
+): GuardOutcome {
+  return {
+    ok: false,
+    reason,
+    status: reason === 'cap-exceeded' ? 402 : 429,
+    message,
+    detail,
+    plan,
+    upgrade
+  };
+}
+
 /** Check before making the model call. Does NOT write to the log; that
- *  happens after the call so successful spend is captured.
- *
- *  Phase 24 — optional `tokenContext`. When the request was Bearer-authed
- *  with a service-account token, hooks.server.ts passes the token id +
- *  flag through here so the quota keys on the token instead of the user.
- *  Personal-use tokens (isServiceAccount=false) and cookie sessions share
- *  the original per-user behavior. */
+ *  happens after the call so real spend is captured. */
 export function checkGuard(
   userId: string,
   endpoint: AiEndpointName,
-  tokenContext?: TokenQuotaContext
+  tokenContext?: TokenQuotaContext,
+  pendingUsd = 0
 ): GuardOutcome {
-  // Monthly USD caps apply on every auth path — the safety brake against a
-  // runaway agent. Never bypassed for service-account tokens.
   const globalCap = globalMonthlyUsdCap();
   if (globalCap > 0 && deploymentUsdSpent() >= globalCap) {
-    return {
-      ok: false,
-      reason: 'cap-exceeded',
-      status: 402,
-      message:
-        'AI assistance is paused for this month across CropCard. Everything still works without it.'
-    };
+    return blocked(
+      'cap-exceeded',
+      'global',
+      undefined,
+      'AI help is paused for this month across CropCard. Everything still works without it.'
+    );
   }
-  const cap = getAiMonthlyUsdCap();
-  const spent = monthlyUsdSpent();
-  if (cap > 0 && spent >= cap) {
-    return {
-      ok: false,
-      reason: 'cap-exceeded',
-      status: 402,
-      message: `Monthly AI cap of $${cap.toFixed(2)} reached ($${spent.toFixed(2)} spent). Raise the cap on Settings to continue.`
-    };
+
+  const plan = activePlan();
+  const ownerSetting = getAiMonthlyUsdCapSetting();
+  if (ownerSetting === 0) {
+    return blocked(
+      'cap-exceeded',
+      'owner-disabled',
+      plan.plan,
+      `AI help is turned off for this farm. ${WITHOUT_AI} Turn it back on in Settings, AI.`,
+      null
+    );
+  }
+
+  const quotas = effectiveDailyQuota(plan.dailyQuota, getAiDailyCallQuotaOverrides());
+  if (plan.dailyQuota[endpoint] <= 0) {
+    return blocked(
+      'cap-exceeded',
+      'plan-excluded',
+      plan.plan,
+      `This AI feature is not part of the ${PLANS[plan.plan].name} plan. ${WITHOUT_AI}${upsell(plan.plan)}`
+    );
+  }
+
+  const cap = effectiveMonthlyCap(plan.aiMonthlyUsd, ownerSetting);
+  const spent = monthlyUsdSpent() + pendingUsd;
+  if (spent + AI_RESERVE_USD[endpoint] > cap) {
+    const ownerLowered = cap < plan.aiMonthlyUsd;
+    return blocked(
+      'cap-exceeded',
+      'monthly-budget',
+      plan.plan,
+      ownerLowered
+        ? `This farm's AI help for the month is used up (${formatUsd(spent)} of the ${formatUsd(cap)} you set). ${WITHOUT_AI} It resets on the 1st.`
+        : `You've used this month's AI help (${formatUsd(spent)} of ${formatUsd(cap)}). ${WITHOUT_AI} It resets on the 1st.${upsell(plan.plan)}`
+    );
+  }
+
+  if (plan.plan === 'free') {
+    const pool = freePoolMonthlyUsd();
+    if (pool > 0 && freePoolUsdSpent() >= pool) {
+      return blocked(
+        'cap-exceeded',
+        'free-pool',
+        plan.plan,
+        `Free AI help is resting until the 1st because so many farms are using it. ${WITHOUT_AI}${upsell(plan.plan)}`
+      );
+    }
   }
 
   const useTokenScope = !!tokenContext && tokenContext.isServiceAccount;
@@ -193,25 +333,26 @@ export function checkGuard(
   let today: number;
   if (useTokenScope) {
     const override = perTokenQuota(tokenContext.tokenId, endpoint);
-    quota = override ?? getAiDailyCallQuota()[endpoint];
+    quota = override ?? quotas[endpoint];
     today = callsTodayByToken(tokenContext.tokenId, endpoint);
   } else {
-    quota = getAiDailyCallQuota()[endpoint];
+    quota = quotas[endpoint];
     today = callsToday(userId, endpoint);
   }
 
   if (today >= quota) {
-    return {
-      ok: false,
-      reason: 'quota-exceeded',
-      status: 429,
-      message: useTokenScope
+    return blocked(
+      'quota-exceeded',
+      useTokenScope ? 'token-quota' : 'daily-quota',
+      plan.plan,
+      useTokenScope
         ? `Service-account token daily ${endpoint} quota of ${quota} reached. Raise it on /settings/api-tokens or wait until UTC midnight.`
-        : `Daily ${endpoint} quota of ${quota} reached. Try again tomorrow or raise the quota on Settings.`
-    };
+        : `Today's ${endpoint} AI limit of ${quota} is used up. ${WITHOUT_AI} It resets at midnight UTC.${upsell(plan.plan)}`
+    );
   }
   return {
     ok: true,
+    plan: plan.plan,
     spend: {
       monthlyUsdSoFar: spent,
       cap,
@@ -294,15 +435,30 @@ export function recordCall(input: RecordCallInput): void {
   }
 }
 
-/** Aggregate spend snapshot for the settings UI widget. */
-export function spendSnapshot(): {
-  monthlyUsdSoFar: number;
-  cap: number;
-  pctUsed: number;
-  warnAt80: boolean;
-} {
-  const cap = getAiMonthlyUsdCap();
+export type SpendSnapshot = AiUsageSnapshot;
+
+/** Spend against this farm's plan budget, for the settings pages and the
+ *  compact meter next to AI buttons. */
+export function spendSnapshot(): SpendSnapshot {
+  const plan = activePlan();
+  const ownerSetting = getAiMonthlyUsdCapSetting();
+  const cap = effectiveMonthlyCap(plan.aiMonthlyUsd, ownerSetting);
   const spent = monthlyUsdSpent();
-  const pct = cap > 0 ? Math.min(1, spent / cap) : 0;
-  return { monthlyUsdSoFar: spent, cap, pctUsed: pct, warnAt80: pct >= 0.8 };
+  const pct = cap > 0 ? Math.min(1, spent / cap) : 1;
+  return {
+    monthlyUsdSoFar: spent,
+    cap,
+    planBudget: plan.aiMonthlyUsd,
+    pctUsed: pct,
+    warnAt80: pct >= 0.8,
+    exhausted: cap <= 0 || spent >= cap,
+    aiOff: ownerSetting === 0,
+    plan: plan.plan,
+    planName: PLANS[plan.plan].name,
+    planSource: plan.source,
+    starterBoost: plan.starterBoost,
+    boostEndsAt: plan.boostEndsAt,
+    graceEndsAt: plan.graceEndsAt,
+    upgrade: nextPlanUp(plan.plan)
+  };
 }

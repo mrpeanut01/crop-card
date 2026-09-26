@@ -29,6 +29,16 @@ const PLUGINS_DIR = fileURLToPath(new URL('../../plugins', import.meta.url));
 // different chromium build than CI's, so pixel parity isn't guaranteed yet.
 const SKIP_VISUAL = !!process.env.CI && !process.env.E2E_VISUAL;
 
+// Fake Stripe config so the plan page offers checkout. Specs intercept
+// /api/billing/** in the browser, so the server never reaches Stripe.
+const STRIPE_E2E_ENV = [
+  'STRIPE_SECRET_KEY=sk_test_e2e_never_called',
+  'STRIPE_PRICE_GROWER_MONTHLY=price_e2e_grower_month',
+  'STRIPE_PRICE_GROWER_ANNUAL=price_e2e_grower_year',
+  'STRIPE_PRICE_FARM_MONTHLY=price_e2e_farm_month',
+  'STRIPE_PRICE_FARM_ANNUAL=price_e2e_farm_year'
+].join(' ');
+
 export default defineConfig({
   testDir: './tests/e2e',
   testIgnore: SKIP_VISUAL ? ['**/visual/**'] : [],
@@ -45,7 +55,7 @@ export default defineConfig({
         `touch ${BUILD_MARKER} && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/migrate.mjs && ` +
         `DATABASE_URL=file:${TEST_DB_PATH} node ./scripts/seed-test-data.mjs && ` +
-        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret ENABLE_DEV_ROUTES=1 PLUGINS_DIR=${PLUGINS_DIR} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
+        `DATABASE_URL=file:${TEST_DB_PATH} AUTH_MODE=direct AUTH_SECRET=e2e-only-not-secret ENABLE_DEV_ROUTES=1 PLUGINS_DIR=${PLUGINS_DIR} ${STRIPE_E2E_ENV} pnpm exec vite preview --host 0.0.0.0 --port ${PORT} --strictPort`,
       port: PORT,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000

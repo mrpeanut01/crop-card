@@ -42,6 +42,21 @@ param emailFrom string = ''
 @description('Key Vault holds an anthropic-api-key secret. False = no-key mode (Invariant 7: deterministic fallbacks).')
 param hasAnthropicKey bool = false
 
+@description('Key Vault holds a stripe-secret-key secret. False = /settings/billing says billing is not set up and every farm stays on Free.')
+param hasStripeKey bool = false
+
+@description('Key Vault holds a stripe-webhook-secret secret for /api/billing/stripe-webhook.')
+param hasStripeWebhookSecret bool = false
+
+@description('Stripe price ids held in Key Vault, by secret name (stripe-price-grower-monthly, stripe-price-grower-annual, stripe-price-farm-monthly, stripe-price-farm-annual).')
+param stripePriceSecrets array = []
+
+@description('Operator brake on AI spend across every farm per UTC month, USD. 0 = off.')
+param aiGlobalMonthlyUsdCap string = '150'
+
+@description('Ceiling on AI spend across all Free farms per UTC month, USD. 0 = off.')
+param aiFreePoolMonthlyUsd string = '50'
+
 @description('DNS zone hosted for the custom hostnames, e.g. cropcard.io. Empty = default ACA hostname only.')
 param dnsZoneName string = ''
 
@@ -244,10 +259,20 @@ var coreSecrets = [
   kvSecret('auth-secret', vaultUri, identity.id)
   kvSecret('storage-key', vaultUri, identity.id)
 ]
+var stripePriceEnv = {
+  'stripe-price-grower-monthly': 'STRIPE_PRICE_GROWER_MONTHLY'
+  'stripe-price-grower-annual': 'STRIPE_PRICE_GROWER_ANNUAL'
+  'stripe-price-farm-monthly': 'STRIPE_PRICE_FARM_MONTHLY'
+  'stripe-price-farm-annual': 'STRIPE_PRICE_FARM_ANNUAL'
+}
+var stripePrices = filter(stripePriceSecrets, n => contains(stripePriceEnv, n))
 var optionalSecrets = concat(
   hasPingramKey ? [kvSecret('pingram-api-key', vaultUri, identity.id)] : [],
   !hasPingramKey && hasPostmarkToken ? [kvSecret('postmark-token', vaultUri, identity.id)] : [],
-  hasAnthropicKey ? [kvSecret('anthropic-api-key', vaultUri, identity.id)] : []
+  hasAnthropicKey ? [kvSecret('anthropic-api-key', vaultUri, identity.id)] : [],
+  hasStripeKey ? [kvSecret('stripe-secret-key', vaultUri, identity.id)] : [],
+  hasStripeWebhookSecret ? [kvSecret('stripe-webhook-secret', vaultUri, identity.id)] : [],
+  map(stripePrices, n => kvSecret(n, vaultUri, identity.id))
 )
 var optionalEnv = concat(
   hasPingramKey
@@ -263,7 +288,14 @@ var optionalEnv = concat(
           ]
         : [{ name: 'EMAIL_TRANSPORT', value: 'stdout' }],
   empty(emailFrom) ? [] : [{ name: 'EMAIL_FROM', value: emailFrom }],
-  hasAnthropicKey ? [{ name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }] : []
+  hasAnthropicKey ? [{ name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }] : [],
+  hasStripeKey ? [{ name: 'STRIPE_SECRET_KEY', secretRef: 'stripe-secret-key' }] : [],
+  hasStripeWebhookSecret ? [{ name: 'STRIPE_WEBHOOK_SECRET', secretRef: 'stripe-webhook-secret' }] : [],
+  map(stripePrices, n => { name: stripePriceEnv[n], secretRef: n }),
+  [
+    { name: 'AI_GLOBAL_MONTHLY_USD_CAP', value: aiGlobalMonthlyUsdCap }
+    { name: 'AI_FREE_POOL_MONTHLY_USD', value: aiFreePoolMonthlyUsd }
+  ]
 )
 
 // ─── Container App ─────────────────────────────────────────────────────

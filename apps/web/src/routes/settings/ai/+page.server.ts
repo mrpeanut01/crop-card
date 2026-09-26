@@ -17,9 +17,12 @@ import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
 import { users, aiCallLog } from '$lib/db/schema';
-import { setSetting } from '$lib/db/settings';
+import { deleteSetting, setSetting } from '$lib/db/settings';
 import { AI_KEY_SETTING, aiKeyStatus, saveAiKey } from '$lib/server/aiKey';
-import { getAiDailyCallQuota, getAiMonthlyUsdCap } from '$lib/schedule/settings';
+import { getAiDailyCallQuotaOverrides, getAiMonthlyUsdCapSetting } from '$lib/schedule/settings';
+import { SETTINGS_KEYS } from '$lib/schedule/constants';
+import { effectiveDailyQuota } from '$lib/billing/plans';
+import { resolvePlan } from '$lib/server/billing/plans';
 import { spendSnapshot } from '$lib/server/aiGuard';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { withTenant } from '$lib/db/tenant';
@@ -29,8 +32,12 @@ export const load: PageServerLoad = ({ locals }) => {
 
   const key = aiKeyStatus();
   const spend = spendSnapshot();
-  const cap = getAiMonthlyUsdCap();
-  const dailyQuotas = getAiDailyCallQuota();
+  const cap = spend.cap;
+  const ownerCapSetting = getAiMonthlyUsdCapSetting();
+  const plan = locals.user.activeOwnerId ? resolvePlan(locals.user.activeOwnerId) : null;
+  const dailyQuotas = plan
+    ? effectiveDailyQuota(plan.dailyQuota, getAiDailyCallQuotaOverrides())
+    : {};
 
   // Per-user opt-out flag (lands at /settings/ai/+page.svelte as a
   // toggle in a follow-up; for now we just surface its value).
@@ -96,6 +103,7 @@ export const load: PageServerLoad = ({ locals }) => {
     key,
     spend,
     cap,
+    ownerCapSetting,
     dailyQuotas,
     userAiEnabled: !!userRow?.aiEnabled,
     recentCalls,
@@ -115,6 +123,29 @@ export const actions: Actions = {
     }
     setSetting(AI_KEY_SETTING, '');
     return { success: true, message: 'API key cleared. AI proposals disabled.' };
+  },
+
+  setCap: async ({ locals, request }) => {
+    if (!locals.user) return fail(401, { error: 'sign-in required' });
+    if (locals.user.role !== 'owner') {
+      return fail(403, { error: 'only the Owner role can change the AI limit' });
+    }
+    const form = await request.formData();
+    const mode = String(form.get('mode') ?? 'set');
+    if (mode === 'plan') {
+      deleteSetting(SETTINGS_KEYS.aiMonthlyUsdCap);
+      return { success: true, message: 'AI help is back to your full plan budget.' };
+    }
+    if (mode === 'off') {
+      setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, '0');
+      return { success: true, message: 'AI help is off. Everything still works without it.' };
+    }
+    const n = Number(form.get('cap'));
+    if (!Number.isFinite(n) || n < 0) return fail(400, { error: 'Enter a dollar amount.' });
+    const plan = locals.user.activeOwnerId ? resolvePlan(locals.user.activeOwnerId) : null;
+    const clamped = plan ? Math.min(n, plan.aiMonthlyUsd) : n;
+    setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, String(Math.round(clamped * 100) / 100));
+    return { success: true, message: 'Monthly AI limit saved.' };
   },
 
   toggleOptIn: async ({ locals, request }) => {

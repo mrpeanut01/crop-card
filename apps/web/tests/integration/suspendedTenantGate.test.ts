@@ -29,4 +29,32 @@ describe('suspendedTenantGate', () => {
     expect(suspendedTenantGate('/api/billingx', 'suspended')).toBe('json-402');
     expect(suspendedTenantGate('/apix/foo', 'suspended')).toBe('redirect');
   });
+
+  it('keeps records, record exports and the data export readable while suspended', () => {
+    for (const path of [
+      '/records',
+      '/records/spray',
+      '/api/records/year-summary.pdf',
+      '/api/records/export.vdacs.pdf',
+      '/api/records/spray/abc/card',
+      '/api/spray/records/export.csv',
+      '/api/spray/records/export.usda.csv',
+      '/api/account/export.json',
+      '/settings/billing',
+      '/signout'
+    ]) {
+      expect(suspendedTenantGate(path, 'suspended', 'GET'), path).toBe('allow');
+    }
+  });
+
+  it('record reads stay open but writes do not', () => {
+    expect(suspendedTenantGate('/api/records/spray/abc', 'suspended', 'DELETE')).toBe('json-402');
+    expect(suspendedTenantGate('/records', 'suspended', 'POST')).toBe('redirect');
+    expect(suspendedTenantGate('/api/spray/record', 'suspended', 'POST')).toBe('json-402');
+  });
+
+  it('does not treat look-alike record paths as records', () => {
+    expect(suspendedTenantGate('/recordsx', 'suspended', 'GET')).toBe('redirect');
+    expect(suspendedTenantGate('/api/account/export.jsonx', 'suspended', 'GET')).toBe('json-402');
+  });
 });

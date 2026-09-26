@@ -12,8 +12,8 @@
  *   - Bearer-resolved locals → currentUser/requireUser/requireOwner succeed
  *     (the mutation path is no longer reads-only).
  *   - A helper Bearer token still 403s on requireOwner (invariant 5).
- *   - The cookie path is unchanged — locals.user is only trusted when
- *     authVia === 'bearer'.
+ *   - A cookie user in locals (revalidated by hooks.server.ts) wins over
+ *     the raw cookie claims.
  *   - No auth at all → 401.
  */
 
@@ -103,24 +103,22 @@ describe('auth gate — Bearer locals resolution (#317)', () => {
     expect(() => requireUser(event)).not.toThrow();
   });
 
-  it('cookie path is unchanged — locals.user is ignored when authVia === "cookie"', () => {
-    // Even if a Bearer-shaped user is present in locals, an authVia of
-    // 'cookie' must fall through to the signed cookie, never the locals.
+  it('a hooks-revalidated cookie user in locals wins over the raw cookie claims', () => {
+    // hooks.server.ts re-reads the membership for cookie sessions; a role
+    // downgraded since the cookie was minted must not keep owner powers.
     const event = fakeEvent({
       authVia: 'cookie',
-      localsUser: bearerUser('owner'),
+      localsUser: { ...bearerUser('helper'), id: 'user_cookie', activeOwnerId: 'owner_cookie' },
       cookieSession: {
         id: 'user_cookie',
         email: 'human@example.test',
         phone: null,
         activeOwnerId: 'owner_cookie',
-        activeRole: 'helper'
+        activeRole: 'owner'
       }
     });
-    const u = currentUser(event);
-    expect(u?.id).toBe('user_cookie');
-    expect(u?.activeOwnerId).toBe('owner_cookie');
-    expect(u?.role).toBe('helper');
+    expect(currentUser(event)?.role).toBe('helper');
+    expect(() => requireOwner(event)).toThrow();
   });
 
   it('a valid cookie session (no locals) resolves normally', () => {

@@ -25,7 +25,7 @@ import { db } from '$lib/db/client';
 import { aiCallLog, apiTokens } from '$lib/db/schema';
 import { type AiEndpointName } from '$lib/schedule/constants';
 import { getAiDailyCallQuota, getAiMonthlyUsdCap } from '$lib/schedule/settings';
-import { currentOwnerId, tenantValues, unscopedQueryNote } from '$lib/db/tenant';
+import { currentOwnerId, tenantValues, unscopedQueryNote, withTenant } from '$lib/db/tenant';
 import { incrementUsageCounter } from './superadmin';
 
 /** Phase 24 — per-token quota context passed by hooks.server.ts via
@@ -121,10 +121,28 @@ function perTokenQuota(tokenId: string, endpoint: AiEndpointName): number | null
   return typeof v === 'number' ? v : null;
 }
 
+/** This Owner's spend this month, compared against its own cap. */
 function monthlyUsdSpent(): number {
   const monthStart = utcMonthStart();
+  const row = db
+    .select({ total: sum(aiCallLog.usdEstimate) })
+    .from(aiCallLog)
+    .where(withTenant(aiCallLog, gte(aiCallLog.createdAt, new Date(monthStart))))
+    .get();
+  return Number(row?.total ?? 0);
+}
+
+/** Deployment-wide brake on the shared Anthropic key, set by the operator
+ *  (`AI_GLOBAL_MONTHLY_USD_CAP`), never by a farm. Unset or 0 = off. */
+export function globalMonthlyUsdCap(): number {
+  const n = Number(process.env.AI_GLOBAL_MONTHLY_USD_CAP ?? '');
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function deploymentUsdSpent(): number {
+  const monthStart = utcMonthStart();
   unscopedQueryNote(
-    'monthly USD cap is a deployment-wide safety brake on the shared Anthropic key, summed across all Owners'
+    'operator-set deployment-wide brake on the shared Anthropic key, summed across all Owners; the total is never shown to a farm'
   );
   const row = db
     .select({ total: sum(aiCallLog.usdEstimate) })
@@ -147,10 +165,20 @@ export function checkGuard(
   endpoint: AiEndpointName,
   tokenContext?: TokenQuotaContext
 ): GuardOutcome {
+  // Monthly USD caps apply on every auth path — the safety brake against a
+  // runaway agent. Never bypassed for service-account tokens.
+  const globalCap = globalMonthlyUsdCap();
+  if (globalCap > 0 && deploymentUsdSpent() >= globalCap) {
+    return {
+      ok: false,
+      reason: 'cap-exceeded',
+      status: 402,
+      message:
+        'AI assistance is paused for this month across CropCard. Everything still works without it.'
+    };
+  }
   const cap = getAiMonthlyUsdCap();
   const spent = monthlyUsdSpent();
-  // Monthly USD cap is GLOBAL across all auth paths — the safety brake
-  // against a runaway agent. Never bypassed for service-account tokens.
   if (cap > 0 && spent >= cap) {
     return {
       ok: false,

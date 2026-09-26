@@ -53,11 +53,14 @@ export const MAGIC_LINK_GENERIC_MESSAGE =
 
 export type AuthMode = 'magic-link' | 'direct';
 
-/** Unset → 'direct' (dev/demo/e2e). Any unrecognised value fails closed to
+/** Unset → 'direct' (dev/demo/e2e), except under NODE_ENV=production where
+ *  direct sign-in must be asked for by name: it lets anyone sign in as any
+ *  address, i.e. into anyone's farm. Any unrecognised value fails closed to
  *  'magic-link' so a typo in production never re-enables direct login. */
 export function authMode(): AuthMode {
   const raw = (process.env.AUTH_MODE ?? '').trim().toLowerCase();
-  if (raw === '' || raw === 'direct') return 'direct';
+  if (raw === 'direct') return 'direct';
+  if (raw === '' && process.env.NODE_ENV !== 'production') return 'direct';
   return 'magic-link';
 }
 

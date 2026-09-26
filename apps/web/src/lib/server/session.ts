@@ -80,8 +80,19 @@ export interface SessionPayload {
   exp: number;
 }
 
+/** HMAC key for session cookies and login codes. Production refuses the
+ *  dev fallback: with a public key anyone could mint a cookie for any farm. */
+export function authSecret(): string {
+  const configured = process.env.AUTH_SECRET;
+  if (configured) return configured;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('AUTH_SECRET must be set in production');
+  }
+  return 'dev-only-not-secret-change-in-prod';
+}
+
 function secret(): string {
-  return process.env.AUTH_SECRET ?? 'dev-only-not-secret-change-in-prod';
+  return authSecret();
 }
 
 function b64url(input: string | Buffer): string {

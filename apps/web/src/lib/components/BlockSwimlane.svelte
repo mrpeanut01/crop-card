@@ -13,6 +13,7 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { page } from '$app/state';
   import { fmt } from '$lib/prefsState.svelte';
   import type { ShadeImpactEvent } from '$lib/calendar/engine';
   import type { RotationConflict, SameTimeOverlap } from '$lib/calendar/rotation';
@@ -179,7 +180,7 @@
   let reorderOverId = $state<string | null>(null);
 
   onMount(() => {
-    customOrder = loadBlockOrder();
+    customOrder = loadBlockOrder(page.data.user?.activeOwnerId);
   });
 
   const orderedBlocks = $derived(applyBlockOrder(props.blocks, customOrder));
@@ -253,7 +254,7 @@
     );
     if (!next) return;
     customOrder = next;
-    saveBlockOrder(next);
+    saveBlockOrder(page.data.user?.activeOwnerId, next);
   }
   function onHeaderDragEnd() {
     reorderDragId = null;

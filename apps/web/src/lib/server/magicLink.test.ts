@@ -69,6 +69,19 @@ describe('authMode', () => {
     expect(isDirectLoginAllowed()).toBe(true);
   });
 
+  it('defaults to magic-link when unset in production', () => {
+    delete process.env.AUTH_MODE;
+    process.env.NODE_ENV = 'production';
+    expect(authMode()).toBe('magic-link');
+    expect(isDirectLoginAllowed()).toBe(false);
+  });
+
+  it('allows direct in production only when asked for by name', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.AUTH_MODE = 'direct';
+    expect(authMode()).toBe('direct');
+  });
+
   it('honours magic-link', () => {
     process.env.AUTH_MODE = 'magic-link';
     expect(authMode()).toBe('magic-link');
@@ -393,6 +406,7 @@ describe('client address resolution + proxy-safe per-IP limit', () => {
 
   it('warns once in production when the address is not public', async () => {
     process.env.NODE_ENV = 'production';
+    process.env.AUTH_SECRET = 'test-production-secret';
     process.env.E2E_OUTBOX = '1';
     resetUnattributedWarningForTests();
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

@@ -113,7 +113,7 @@ This is the same person as P1 (Sherry) wearing a different hat, OR a future SaaS
 | Toolchain | Anthropic SDK / Claude Code / FarmOS connector / custom Python script. Reads `/api/openapi.json` to build a tool catalog without parsing TypeScript. |
 | Cognitive context | Treats CropCard as a stateful JSON API. Reasons in terms of routes + request shapes + 401/403/409 responses, not buttons + forms. |
 | Safety posture | Cannot bypass the safety kernel — every POST re-runs `evaluateSpray()`. Cannot violate tenant isolation — token is owner-scoped at issuance and rejects `POST /api/session/switch-owner`. Cannot mint another token — closes bootstrap loop on a leaked credential. |
-| Quota posture | When marked as a **service account** in the UI, gets its own per-`(tokenId, endpoint, UTC-day)` AI quota so a runaway drone can't drain the human owner's daily allowance. Monthly USD cap stays global as the safety brake. |
+| Quota posture | When marked as a **service account** in the UI, gets its own per-`(tokenId, endpoint, UTC-day)` AI quota so a runaway drone can't drain the human owner's daily allowance. The farm's monthly USD cap still applies, plus the operator's deployment-wide `AI_GLOBAL_MONTHLY_USD_CAP` brake. |
 | Constraints | Token grants the underlying user's role within the issuing Owner. No token sub-scopes (read-only / spray-only) in Phase 24 — deferred to a future phase per epic #59. |
 | Success criteria | An external Python script with `Authorization: Bearer cck_…` can read `/api/today`, post `/api/spray/record`, and walk `/api/plan/inputs/refine` without touching the browser UI. Cross-tenant property test extended with a Bearer path passes. |
 

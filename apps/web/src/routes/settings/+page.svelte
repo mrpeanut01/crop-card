@@ -53,7 +53,7 @@
       href: '/settings/notifications',
       icon: Bell,
       label: 'Notifications',
-      sub: 'Push alerts · decon due · record lock closing · spring calibration'
+      sub: 'Push and email alerts · decon due · record lock closing · spring calibration'
     },
     {
       href: '/settings/season',

@@ -36,6 +36,12 @@ param hasPostmarkToken bool = false
 @description('Key Vault holds a pingram-api-key secret. Sends email (over Postmark when both are present) and the SMS sign-in codes; without it codes are written to the container log.')
 param hasPingramKey bool = false
 
+@description('Key Vault holds a pingram-webhook-secret. Turns on /api/email/pingram-webhook, which mirrors Pingram unsubscribes and bounces; without it the endpoint answers 503.')
+param hasPingramWebhookSecret bool = false
+
+@description('Key Vault holds vapid-public-key and vapid-private-key (node apps/web/scripts/gen-vapid.mjs). Turns on Web Push; VAPID_SUBJECT defaults to mailto:hello@cropcard.io in the app.')
+param hasVapidKeys bool = false
+
 @description('From-address for outbound email (Postmark sender signature, or a Pingram verified domain; empty uses Pingram\'s built-in sender).')
 param emailFrom string = ''
 
@@ -247,7 +253,16 @@ var coreSecrets = [
 var optionalSecrets = concat(
   hasPingramKey ? [kvSecret('pingram-api-key', vaultUri, identity.id)] : [],
   !hasPingramKey && hasPostmarkToken ? [kvSecret('postmark-token', vaultUri, identity.id)] : [],
-  hasAnthropicKey ? [kvSecret('anthropic-api-key', vaultUri, identity.id)] : []
+  hasAnthropicKey ? [kvSecret('anthropic-api-key', vaultUri, identity.id)] : [],
+  hasPingramKey && hasPingramWebhookSecret
+    ? [kvSecret('pingram-webhook-secret', vaultUri, identity.id)]
+    : [],
+  hasVapidKeys
+    ? [
+        kvSecret('vapid-public-key', vaultUri, identity.id)
+        kvSecret('vapid-private-key', vaultUri, identity.id)
+      ]
+    : []
 )
 var optionalEnv = concat(
   hasPingramKey
@@ -263,7 +278,16 @@ var optionalEnv = concat(
           ]
         : [{ name: 'EMAIL_TRANSPORT', value: 'stdout' }],
   empty(emailFrom) ? [] : [{ name: 'EMAIL_FROM', value: emailFrom }],
-  hasAnthropicKey ? [{ name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }] : []
+  hasAnthropicKey ? [{ name: 'ANTHROPIC_API_KEY', secretRef: 'anthropic-api-key' }] : [],
+  hasPingramKey && hasPingramWebhookSecret
+    ? [{ name: 'PINGRAM_WEBHOOK_SECRET', secretRef: 'pingram-webhook-secret' }]
+    : [],
+  hasVapidKeys
+    ? [
+        { name: 'VAPID_PUBLIC_KEY', secretRef: 'vapid-public-key' }
+        { name: 'VAPID_PRIVATE_KEY', secretRef: 'vapid-private-key' }
+      ]
+    : []
 )
 
 // ─── Container App ─────────────────────────────────────────────────────

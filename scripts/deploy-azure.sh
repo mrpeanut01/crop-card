@@ -23,6 +23,8 @@
 #   pingram-api-key     email + SMS sign-in codes via Pingram (email wins over postmark-token)
 #   postmark-token      emailed magic links (else they go to the container log)
 #   anthropic-api-key   AI assists (else no-key mode)
+#   pingram-webhook-secret  Pingram events webhook (unsubscribes, bounces)
+#   vapid-public-key + vapid-private-key  Web Push (both, or push stays off)
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
 #
 # The image tag is the commit SHA, so a dirty tree is refused unless --allow-dirty.
@@ -153,9 +155,13 @@ fi
 HAS_PINGRAM=false; kv_has pingram-api-key && HAS_PINGRAM=true
 HAS_POSTMARK=false; kv_has postmark-token && HAS_POSTMARK=true
 HAS_ANTHROPIC=false; kv_has anthropic-api-key && HAS_ANTHROPIC=true
+HAS_PINGRAM_WEBHOOK=false; kv_has pingram-webhook-secret && HAS_PINGRAM_WEBHOOK=true
+HAS_VAPID=false; kv_has vapid-public-key && kv_has vapid-private-key && HAS_VAPID=true
 echo "pingram      : ${HAS_PINGRAM}"
 echo "postmark     : ${HAS_POSTMARK}"
 echo "anthropic    : ${HAS_ANTHROPIC}"
+echo "pingram hook : ${HAS_PINGRAM_WEBHOOK}"
+echo "web push     : ${HAS_VAPID}"
 
 # ─── Custom domain readiness ────────────────────────────────────────────
 # Zone and host labels come from the .bicepparam so the template and this
@@ -199,6 +205,7 @@ PARAMS=(
   --parameters "$PARAM_FILE"
   --parameters location="$LOCATION" image="$IMAGE" containerRegistryServer="$REGISTRY"
   --parameters keyVaultName="$KV" hasPingramKey="$HAS_PINGRAM" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
+  --parameters hasPingramWebhookSecret="$HAS_PINGRAM_WEBHOOK" hasVapidKeys="$HAS_VAPID"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
 domain_params() { echo "customDomainDnsReady=$DNS_READY" "customDomainCertIssued=$CERT_ISSUED"; }

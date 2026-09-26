@@ -9,7 +9,8 @@
  *
  * Env: VAPID_PUBLIC_KEY (base64url, 65-byte uncompressed point),
  * VAPID_PRIVATE_KEY (base64url, 32-byte scalar), VAPID_SUBJECT (mailto: or
- * https: contact). Any missing/invalid value ⇒ push is disabled (no-op).
+ * https: contact, default mailto:hello@cropcard.io). A missing or invalid
+ * key, or a subject that is set but malformed, disables push (no-op).
  * Generate a pair with `node scripts/gen-vapid.mjs`.
  */
 
@@ -22,6 +23,8 @@ import {
   randomBytes,
   sign
 } from 'node:crypto';
+
+export const DEFAULT_VAPID_SUBJECT = 'mailto:hello@cropcard.io';
 
 export interface VapidConfig {
   publicKey: string;
@@ -47,8 +50,8 @@ export function readVapidConfig(
 ): VapidConfig | null {
   const publicKey = env.VAPID_PUBLIC_KEY?.trim();
   const privateKey = env.VAPID_PRIVATE_KEY?.trim();
-  const subject = env.VAPID_SUBJECT?.trim();
-  if (!publicKey || !privateKey || !subject) return null;
+  const subject = env.VAPID_SUBJECT?.trim() || DEFAULT_VAPID_SUBJECT;
+  if (!publicKey || !privateKey) return null;
   if (!/^(mailto:|https:)/.test(subject)) return null;
   try {
     const pub = b64urlDecode(publicKey);

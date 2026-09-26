@@ -93,6 +93,10 @@
     if (e.key !== 'Escape' || !d.cropDrag) return;
     e.preventDefault();
     d.cancelCropDrag();
+    suppressClick = true;
+    window.addEventListener('pointerup', () => setTimeout(() => (suppressClick = false), 0), {
+      once: true
+    });
     end();
   }
 

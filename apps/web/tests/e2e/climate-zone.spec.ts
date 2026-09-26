@@ -94,7 +94,12 @@ test.describe('hardiness zone and year-crossing frost seasons', () => {
     await page.goto('/settings/farm');
     await page.waitForLoadState('networkidle');
     await page.getByText('Change zone', { exact: true }).click();
-    await expect(page.getByTestId('hardiness-zone')).toBeVisible();
+    const chip = page.getByTestId('hardiness-zone');
+    await expect(chip).toBeVisible();
+    const chipBox = (await chip.boundingBox())!;
+    const provBox = (await chip.locator('[data-provenance]').boundingBox())!;
+    expect(provBox.x + provBox.width).toBeLessThanOrEqual(chipBox.x + chipBox.width + 1);
+    expect(provBox.x + provBox.width).toBeLessThanOrEqual(375 - 16);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth
     );

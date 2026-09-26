@@ -86,6 +86,17 @@ test.describe('drag a crop onto a bed', () => {
     const row = panel.getByTestId('crop-row').first();
     await expect(row).toBeVisible();
 
+    const start = (await row.boundingBox())!;
+    await page.mouse.move(start.x + 20, start.y + start.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(start.x + 60, start.y + start.height / 2, { steps: 4 });
+    await expect(page.getByTestId('drag-chip')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    await expect(page.getByTestId('drag-chip')).toHaveCount(0);
+    await expect(panel).toBeVisible();
+    await expect(panel.getByLabel('Search crops')).toHaveValue('Buttercrunch');
+
     const from = (await row.boundingBox())!;
     const target = page.locator('[data-testid="bed"][data-bed-name="Bed 2"]');
     await target.scrollIntoViewIfNeeded();
@@ -103,6 +114,66 @@ test.describe('drag a crop onto a bed', () => {
     await expect(
       target.getByTestId('footprint').or(page.getByTestId('jump-to')).first()
     ).toBeVisible();
+  });
+});
+
+test.describe('drag a crop onto a bed by touch on a phone', () => {
+  test.describe.configure({ timeout: 120_000 });
+  test.use({ viewport: PHONE, hasTouch: true });
+
+  test('the page scrolls toward the canvas and the drop lands in the bed', async ({ page }) => {
+    const { areaId } = await gardenWithBeds(page, [
+      { name: 'Bed 1', xFt: 2 },
+      { name: 'Bed 2', xFt: 14 }
+    ]);
+    const year = await openDesigner(page, areaId, '?view=canvas');
+    await scrubTo(page, year, 5, 1);
+    await page.getByTestId('preset-bar').getByRole('button', { name: 'Add crop' }).click();
+    const panel = page.getByTestId('crop-panel');
+    await panel.getByLabel('Search crops').fill('Buttercrunch');
+    const grip = panel.getByTestId('crop-row').first().locator('[data-drag-grip]');
+    await grip.scrollIntoViewIfNeeded();
+    const target = page.locator('[data-testid="bed"][data-bed-name="Bed 2"] .bed-body');
+    const inView = async () => {
+      const b = await target.boundingBox();
+      return !!b && b.y > 60 && b.y + b.height < PHONE.height - 90;
+    };
+    expect(await inView()).toBe(false);
+
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', x: number, y: number) =>
+      cdp.send('Input.dispatchTouchEvent', {
+        type,
+        touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }]
+      });
+    const g = (await grip.boundingBox())!;
+    let x = g.x + g.width / 2;
+    let y = g.y + g.height / 2;
+    await touch('touchStart', x, y);
+    for (let i = 1; i <= 8; i++) {
+      await touch('touchMove', x - i * 4, y - i * 4);
+    }
+    x -= 32;
+    await expect(page.getByTestId('drag-chip')).toBeVisible();
+    for (let step = 0; step < 12 && y > 12; step++) {
+      y = Math.max(12, y - 60);
+      await touch('touchMove', x, y);
+    }
+    await expect.poll(inView, { timeout: 15_000 }).toBe(true);
+    const box = (await target.boundingBox())!;
+    const tx = box.x + box.width / 2;
+    const ty = box.y + box.height / 3;
+    for (let i = 1; i <= 6; i++) {
+      await touch('touchMove', x + ((tx - x) * i) / 6, y + ((ty - y) * i) / 6);
+    }
+    await expect(page.getByTestId('drag-ghost')).toHaveAttribute('data-fits', 'true');
+    const chip = (await page.getByTestId('drag-chip').boundingBox())!;
+    expect(chip.x).toBeGreaterThanOrEqual(15);
+    expect(chip.x + chip.width).toBeLessThanOrEqual(PHONE.width - 15);
+    await touch('touchEnd', tx, ty);
+
+    await expect(page.getByTestId('designer-status')).toContainText(/placed in Bed 2/);
+    await noHorizontalOverflow(page);
   });
 });
 

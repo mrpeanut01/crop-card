@@ -135,10 +135,21 @@ test.describe('map lines and points', () => {
     await expect(card.getByText('Barn well · Well, 12 gal/min')).toBeVisible();
     await expect(card.getByText('Fence: brown line')).toBeVisible();
     await expect(card.getByText('Water source: blue dot marked W')).toBeVisible();
-    const figure = page.getByTestId('farm-map-figure');
+    const figure = page.locator('.no-print').getByTestId('farm-map-figure');
     await expect(figure.locator('polyline[data-feature-kind="fence"]')).toHaveCount(1);
     await expect(figure.locator('g[data-feature-kind="water_source"]')).toHaveCount(1);
     await expect(figure.locator('[data-legend-feature="fence"]')).toBeVisible();
+
+    await page.emulateMedia({ media: 'print' });
+    const cell = page.locator('.card-print-sheet .sheet-page.full-page .print-cell');
+    await expect(cell).toHaveCount(1);
+    await expect(cell.getByTestId('farm-map-figure').locator('svg')).toBeVisible();
+    const cellBox = (await cell.boundingBox())!;
+    for (const text of ['Barn well · Well, 12 gal/min', 'Water source: blue dot marked W']) {
+      const box = (await cell.getByText(text).first().boundingBox())!;
+      expect(box.y + box.height, text).toBeLessThanOrEqual(cellBox.y + cellBox.height + 1);
+    }
+    await page.emulateMedia({ media: 'screen' });
   });
 
   test('edit and remove from the list, and fit a phone screen', async ({ page }) => {
@@ -220,6 +231,7 @@ test.describe('map lines and points', () => {
     await openMap(page);
     const pin = page.locator('.feature-pin[data-feature-kind="gate"]');
     await expect(pin).toHaveCount(1);
+    await pin.scrollIntoViewIfNeeded();
     const box = (await pin.boundingBox())!;
     const cx = box.x + box.width / 2;
     const cy = box.y + box.height / 2;

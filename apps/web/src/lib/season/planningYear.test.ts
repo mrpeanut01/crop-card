@@ -9,7 +9,8 @@ import {
   pastPlanningYears,
   resolvePlanningYear,
   selectablePlanningYears,
-  suggestPlanningYear
+  suggestPlanningYear,
+  suggestionReason
 } from './planningYear';
 import {
   getActivePlanningYear,
@@ -17,6 +18,8 @@ import {
   setActivePlanningYear
 } from './planningYear.server';
 import { saveSeasonSetup } from './setup.server';
+import { setSetting } from '$lib/db/settings';
+import { SETTINGS_KEYS } from '$lib/schedule/constants';
 
 const SEPT_2026 = new Date(2026, 8, 25);
 const MARCH_2026 = new Date(2026, 2, 10);
@@ -27,6 +30,55 @@ describe('planning year rules', () => {
     expect(suggestPlanningYear(new Date(2026, 6, 1))).toBe(2027);
     expect(suggestPlanningYear(new Date(2026, 5, 30))).toBe(2026);
     expect(suggestPlanningYear(MARCH_2026)).toBe(2026);
+  });
+
+  it('rolls over eight weeks before the farm first fall frost when dates are saved', () => {
+    const mobile = { lastSpring: '02-17', firstFall: '12-06' };
+    const loudoun = { lastSpring: '04-15', firstFall: '10-24' };
+    expect(suggestPlanningYear(SEPT_2026, mobile)).toBe(2026);
+    expect(suggestPlanningYear(new Date(2026, 9, 10), mobile)).toBe(2026);
+    expect(suggestPlanningYear(new Date(2026, 9, 11), mobile)).toBe(2027);
+    expect(suggestPlanningYear(new Date(2026, 7, 28), loudoun)).toBe(2026);
+    expect(suggestPlanningYear(new Date(2026, 7, 29), loudoun)).toBe(2027);
+    expect(suggestPlanningYear(SEPT_2026, loudoun)).toBe(2027);
+    expect(suggestPlanningYear(MARCH_2026, mobile)).toBe(2026);
+    expect(resolvePlanningYear(null, SEPT_2026, mobile)).toBe(2026);
+  });
+
+  it('keeps the July 1 rollover when no frost date is saved or it is unreadable', () => {
+    for (const frost of [
+      null,
+      { lastSpring: null, firstFall: null },
+      { lastSpring: null, firstFall: '02-30' }
+    ]) {
+      expect(suggestPlanningYear(SEPT_2026, frost)).toBe(2027);
+      expect(suggestPlanningYear(new Date(2026, 5, 30), frost)).toBe(2026);
+    }
+  });
+
+  it('places a fall frost that comes after New Year in the next calendar year', () => {
+    const late = { lastSpring: '01-20', firstFall: '01-05' };
+    expect(suggestPlanningYear(new Date(2026, 9, 1), late)).toBe(2026);
+    expect(suggestPlanningYear(new Date(2026, 10, 11), late)).toBe(2027);
+    expect(
+      suggestPlanningYear(new Date(2026, 9, 1), { lastSpring: null, firstFall: '01-05' })
+    ).toBe(2026);
+  });
+
+  it('explains the suggestion from the farm frost date', () => {
+    const mobile = { lastSpring: '02-17', firstFall: '12-06' };
+    expect(suggestionReason(SEPT_2026, mobile)).toBe(
+      'Your first fall frost is around Dec 6, so there is still time to plant this season.'
+    );
+    expect(suggestionReason(new Date(2026, 10, 1), mobile)).toBe(
+      'Your first fall frost is around Dec 6, so the 2026 planting window has mostly closed. Most farms are planning 2027 now.'
+    );
+    expect(suggestionReason(new Date(2026, 11, 20), mobile)).toBe(
+      'Your first fall frost, around Dec 6, has passed, so most farms are planning 2027 now.'
+    );
+    expect(suggestionReason(SEPT_2026)).toBe(
+      'The 2026 planting window has mostly closed, so most farms are planning 2027 now.'
+    );
   });
 
   it('allows this calendar year or one year ahead, never further', () => {
@@ -74,6 +126,20 @@ describe('planning year repo', () => {
     runWithTenant(OWNER_B, () => {
       expect(getActivePlanningYear(SEPT_2026)).toBe(2027);
       expect(loadPlanningYearView(SEPT_2026).chosen).toBe(false);
+    });
+  });
+
+  it("uses the Owner's saved frost dates for the suggestion", () => {
+    runWithTenant(OWNER_A, () => {
+      setSetting(SETTINGS_KEYS.lastFrost, '02-17');
+      setSetting(SETTINGS_KEYS.firstFrost, '12-06');
+      expect(getActivePlanningYear(SEPT_2026)).toBe(2026);
+      const view = loadPlanningYearView(SEPT_2026);
+      expect(view.suggestedYear).toBe(2026);
+      expect(view.suggestionReason).toMatch(/around Dec 6/);
+    });
+    runWithTenant(OWNER_B, () => {
+      expect(getActivePlanningYear(SEPT_2026)).toBe(2027);
     });
   });
 

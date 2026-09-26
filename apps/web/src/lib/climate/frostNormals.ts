@@ -41,8 +41,8 @@ export interface FrostLookupData extends FrostDateSet {
   station: FrostStation;
   frostFree: boolean;
   /** The chosen last-spring 32 °F date falls on or after the first-fall one
-   *  in day-of-year terms: the frost season spans Dec/Jan, which a single
-   *  calendar year's MM-DD pair cannot represent. */
+   *  in day-of-year terms: the frost season spans Dec/Jan and the growing
+   *  season runs across the new year (see `lib/schedule/frostSeason.ts`). */
   crossesYear: boolean;
   median: FrostDateSet;
   cautious: FrostDateSet;

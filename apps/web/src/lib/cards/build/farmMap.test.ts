@@ -53,7 +53,9 @@ describe('buildFarmMapCard', () => {
 
   it('labels fallback and frost-free climates honestly', () => {
     const fb = buildFarmMapCard(
-      sampleSnapshot({ frost: frost({ provenance: 'fallback', stationName: null, hardLastSpring: null }) }),
+      sampleSnapshot({
+        frost: frost({ provenance: 'fallback', stationName: null, hardLastSpring: null })
+      }),
       { prefs }
     );
     expect(fb.facts.find((f) => f.label === 'Last frost')?.provenance).toBe('fallback');
@@ -140,14 +142,28 @@ describe('buildFarmMapCard', () => {
     const some = buildFarmMapCard(sampleSnapshot(), {
       prefs,
       emergencyContacts: [
-        { label: 'Poison control', phone: '800-222-1222' },
-        { label: ' ', phone: '911' }
+        { name: 'Poison Control', role: 'Poisoning or chemical exposure', phone: '1-800-222-1222' },
+        { name: ' ', role: '', phone: '911' }
       ]
     });
     expect(some.sections[0]).toEqual({
       title: 'Emergency contacts',
-      items: ['Poison control: 800-222-1222']
+      items: ['Poison Control (Poisoning or chemical exposure): 1-800-222-1222'],
+      nowrapAfter: ': '
     });
+  });
+
+  it('reads saved contacts from the snapshot unless options override them', () => {
+    const snap = sampleSnapshot({
+      emergencyContacts: [{ name: 'Dr. Reyes', role: 'Vet', phone: '540-555-0101' }]
+    });
+    expect(buildFarmMapCard(snap, { prefs }).sections[0]).toEqual({
+      title: 'Emergency contacts',
+      items: ['Dr. Reyes (Vet): 540-555-0101'],
+      nowrapAfter: ': '
+    });
+    const overridden = buildFarmMapCard(snap, { prefs, emergencyContacts: [] });
+    expect(overridden.sections.some((s) => s.title === 'Emergency contacts')).toBe(false);
   });
 
   it('handles an empty farm and caps long lists', () => {
@@ -178,5 +194,99 @@ describe('buildFarmMapCard', () => {
     const snap = sampleSnapshot();
     expect(buildCard(snap, cardKey('farmMap', 'owner_a'))?.kind).toBe('farmMap');
     expect(buildCard(snap, cardKey('farmMap', 'owner_b'))).toBeNull();
+  });
+});
+
+describe('buildFarmMapCard lines and points', () => {
+  const features = [
+    {
+      id: 'mf-1',
+      kind: 'fence' as const,
+      name: 'Pasture fence',
+      fieldId: null,
+      geometry: {
+        type: 'LineString' as const,
+        coordinates: [
+          [-77.55, 39.1],
+          [-77.549, 39.1]
+        ] as Array<[number, number]>
+      },
+      details: null,
+      lengthFt: 283
+    },
+    {
+      id: 'mf-2',
+      kind: 'water_source' as const,
+      name: 'Barn well',
+      fieldId: null,
+      geometry: { type: 'Point' as const, coordinates: [-77.55, 39.1] as [number, number] },
+      details: { source: 'well' as const, flowRateGpm: 12 },
+      lengthFt: null
+    },
+    {
+      id: 'mf-3',
+      kind: 'gate' as const,
+      name: 'Lane gate',
+      fieldId: null,
+      geometry: { type: 'Point' as const, coordinates: [-77.551, 39.1] as [number, number] },
+      details: null,
+      lengthFt: null
+    }
+  ];
+
+  it('lists them by kind after the Areas and adds them to the legend', () => {
+    const card = buildFarmMapCard(sampleSnapshot({ mapFeatures: features }), { prefs });
+    expect(card.sections.map((s) => s.title)).toEqual([
+      'Gardens',
+      'Pastures',
+      'Barns',
+      'Fences',
+      'Gates',
+      'Water sources',
+      'Legend'
+    ]);
+    expect(card.sections.find((s) => s.title === 'Fences')?.items).toEqual([
+      'Pasture fence · 283 ft'
+    ]);
+    expect(card.sections.find((s) => s.title === 'Water sources')?.items).toEqual([
+      'Barn well · Well, 12 gal/min'
+    ]);
+    const legend = card.sections.find((s) => s.title === 'Legend')!.items;
+    expect(legend).toContain('Fence: brown line');
+    expect(legend).toContain('Gate: brown dot marked G');
+    expect(legend).toContain('Water source: blue dot marked W');
+    expect(card.facts.find((f) => f.label === 'Areas')?.value).toBe('3');
+  });
+
+  it('says which lines and points the printed map could not draw', () => {
+    const card = buildFarmMapCard(sampleSnapshot({ mapFeatures: features }), {
+      prefs,
+      drawnFeatureKinds: ['water_source']
+    });
+    const legend = card.sections.find((s) => s.title === 'Legend')!.items;
+    expect(legend).toContain('Water source: blue dot marked W');
+    expect(legend).toContain('Fence: listed above, not drawn on this map');
+    expect(legend).toContain('Gate: listed above, not drawn on this map');
+  });
+
+  it('uses metric lengths for metric households', () => {
+    const card = buildFarmMapCard(sampleSnapshot({ mapFeatures: features }), {
+      prefs: { ...prefs, units: 'metric' }
+    });
+    expect(card.sections.find((s) => s.title === 'Fences')?.items).toEqual([
+      'Pasture fence · 86 m'
+    ]);
+  });
+
+  it('is unchanged for bundles saved before lines and points existed', () => {
+    const before = buildFarmMapCard(sampleSnapshot(), { prefs });
+    const empty = buildFarmMapCard(sampleSnapshot({ mapFeatures: [] }), { prefs });
+    expect(empty.sections).toEqual(before.sections);
+  });
+
+  it('shows lines and points even before any Area is drawn', () => {
+    const card = buildFarmMapCard(sampleSnapshot({ areas: [], mapFeatures: features }), { prefs });
+    expect(card.sections.some((s) => s.items.includes('Nothing on the map yet.'))).toBe(false);
+    expect(card.sections.find((s) => s.title === 'Legend')?.items).toHaveLength(3);
   });
 });

@@ -31,6 +31,7 @@ import {
   harvestEvents,
   fungicideEvents,
   insecticideEvents,
+  mapFeatures,
   pendingCalibrations,
   recordDeletions,
   soilTests,
@@ -42,6 +43,7 @@ import {
   tasks
 } from './schema';
 import { type TenantScopedTable, tenantValues, withTenant } from './tenant';
+import { unlinkMapFeaturesFromField } from './mapFeatures';
 import { evaluateLock as evaluateSprayLock, getSprayEvent } from './sprayEvents';
 import { evaluateLock as evaluateInsecticideLock, getInsecticideEvent } from './insecticideEvents';
 import { evaluateLock as evaluateHarvestLock, getHarvestEvent } from './harvestEvents';
@@ -376,6 +378,7 @@ export function deleteFieldCascade(id: string): DeleteSummary {
       removed[k] = (removed[k] ?? 0) + v;
     }
   }
+  unlinkMapFeaturesFromField(id);
   removed.fields = del(fields, eq(fields.id, id));
   return { removed };
 }
@@ -478,6 +481,7 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     removed.sprayers = del(sprayers, isNotNull(sprayers.id));
   }
   removed.blocks = del(blocks, isNotNull(blocks.id));
+  removed.map_features = del(mapFeatures, isNotNull(mapFeatures.id));
   removed.fields = del(fields, isNotNull(fields.id));
   // Null out any orphan task.linkedToTaskId references (rare but possible
   // if a partial delete left dangling pointers). Tenant-scoped.

@@ -9,28 +9,25 @@ import { getSetting } from '$lib/db/settings';
 import {
   DEFAULT_AI_DAILY_QUOTA,
   DEFAULT_AI_MONTHLY_USD_CAP,
-  LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
-  LOUDOUN_DEFAULT_LAST_FROST_MMDD,
   LOUDOUN_DEFAULT_LAT_LON,
-  parseMmDd,
   SETTINGS_KEYS,
   type FarmLatLon
 } from './constants';
+import { frostDatesFromMmDd } from './frostSeason';
 
 /**
- * Frost dates for a given year. Reads `last_frost_date` / `first_frost_date`
- * from `app_settings` (MM-DD strings); falls back to Loudoun County, VA
- * defaults (Apr 15 / Oct 15).
+ * Frost dates for the growing season of `year`. Reads `last_frost_date` /
+ * `first_frost_date` from `app_settings` (MM-DD strings); falls back to
+ * Loudoun County, VA defaults (Apr 15 / Oct 15). When the season crosses the
+ * new year, the fall frost lands in `year + 1` (or the spring frost in
+ * `year - 1`), so the last spring frost always comes first.
  */
 export function frostDatesForYear(year: number) {
-  const last =
-    parseMmDd(getSetting(SETTINGS_KEYS.lastFrost)) ?? parseMmDd(LOUDOUN_DEFAULT_LAST_FROST_MMDD)!;
-  const first =
-    parseMmDd(getSetting(SETTINGS_KEYS.firstFrost)) ?? parseMmDd(LOUDOUN_DEFAULT_FIRST_FROST_MMDD)!;
-  return {
-    lastSpringFrostMs: new Date(year, last.month, last.day).getTime(),
-    firstFallFrostMs: new Date(year, first.month, first.day).getTime()
-  };
+  return frostDatesFromMmDd(
+    year,
+    getSetting(SETTINGS_KEYS.lastFrost),
+    getSetting(SETTINGS_KEYS.firstFrost)
+  );
 }
 
 /** Frost dates as local calendar days, for code shared with the browser. */

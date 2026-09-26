@@ -40,6 +40,7 @@ export interface SuccessionInput {
   /** Every interval on this bed, the anchor's included. */
   intervals: readonly OccupancyInterval[];
   firstFallFrostMs: number;
+  lastSpringFrostMs?: number;
   /** Date of the series' latest sowing when the anchor already has some;
    *  new sowings follow it instead of the anchor. */
   afterMs?: number | null;
@@ -92,7 +93,7 @@ export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
 
   for (let index = 1; index <= count; index++) {
     const plantingDateMs = baseMs + index * intervalDays * ONE_DAY_MS;
-    const frostMs = frostInYearOf(input.firstFallFrostMs, plantingDateMs);
+    const frostMs = frostInYearOf(input.firstFallFrostMs, plantingDateMs, input.lastSpringFrostMs);
     if (plantingDateMs + dtm.max * ONE_DAY_MS > frostMs) {
       sowings.push({
         index,
@@ -114,7 +115,7 @@ export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
         footprint: anchor.footprint
       },
       crop,
-      { firstFallFrostMs: input.firstFallFrostMs }
+      { firstFallFrostMs: input.firstFallFrostMs, lastSpringFrostMs: input.lastSpringFrostMs }
     );
     if (!probe) continue;
     const sharing = [...existing, ...accepted].filter((i) => intervalsOverlapInTime(i, probe));
@@ -152,7 +153,7 @@ export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
   }
 
   const fitting = sowings.filter((s) => s.conflict === null).length;
-  const firstFrost = frostInYearOf(input.firstFallFrostMs, anchorMs);
+  const firstFrost = frostInYearOf(input.firstFallFrostMs, anchorMs, input.lastSpringFrostMs);
   const fit = evaluateSuccessionFit(
     {
       stockItemId: anchor.cropId,

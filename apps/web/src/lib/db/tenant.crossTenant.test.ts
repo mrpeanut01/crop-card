@@ -30,6 +30,8 @@ import * as areasRepo from './areas';
 import { AREA_KINDS, BLOCK_KINDS } from '$lib/farm/areaKinds';
 import * as cropsRepo from './crops';
 import * as shadeRepo from './shadeSources';
+import * as mapFeaturesRepo from './mapFeatures';
+import { MAP_FEATURE_KINDS, geometryTypeFor } from '$lib/farm/mapFeatures';
 import * as sprayRepo from './sprayEvents';
 import * as harvestRepo from './harvestEvents';
 import * as insecticideRepo from './insecticideEvents';
@@ -392,17 +394,29 @@ describe('cross-tenant isolation', () => {
         const aFirst = runWithTenant(OWNER_A, () =>
           clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
         );
-        runWithTenant(OWNER_A, () => clientRecordsRepo.completeClientRecord(clientId));
+        if (aFirst.status !== 'claimed') throw new Error('expected Owner A to claim');
+        const aToken = aFirst.token;
         const bFirst = runWithTenant(OWNER_B, () =>
-          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
+          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record', aToken)
         );
-        runWithTenant(OWNER_B, () => clientRecordsRepo.releaseClientRecord(clientId));
+        if (bFirst.status !== 'claimed') throw new Error('expected Owner B to claim');
+        expect(
+          runWithTenant(OWNER_B, () => clientRecordsRepo.completeClientRecord(clientId, aToken))
+        ).toBe(true);
+        expect(
+          runWithTenant(OWNER_A, () => clientRecordsRepo.releaseClientRecord(clientId, aToken))
+        ).toBe(true);
+        expect(
+          runWithTenant(OWNER_B, () => clientRecordsRepo.releaseClientRecord(clientId, aToken))
+        ).toBe(false);
         const aAgain = runWithTenant(OWNER_A, () =>
           clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
         );
-        expect(aFirst).toBe('claimed');
-        expect(bFirst).toBe('claimed');
-        expect(aAgain).toBe('done');
+        const bAgain = runWithTenant(OWNER_B, () =>
+          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
+        );
+        expect(aAgain.status).toBe('claimed');
+        expect(bAgain).toEqual({ status: 'done' });
       }),
       { numRuns: 20 }
     );
@@ -691,6 +705,74 @@ describe('cross-tenant isolation', () => {
     expect(runWithTenant(OWNER_B, () => blocksRepo.getBlock(bBed.id))?.kind).toBe('bed');
   });
 
+  it('map_features lines and points are owner-scoped under any kind / Area filter', () => {
+    const geometryFor = (kind: (typeof MAP_FEATURE_KINDS)[number], i: number) =>
+      geometryTypeFor(kind) === 'Point'
+        ? { type: 'Point' as const, coordinates: [-77.5 + i * 1e-4, 39.1] as [number, number] }
+        : {
+            type: 'LineString' as const,
+            coordinates: [
+              [-77.5, 39.1 + i * 1e-4],
+              [-77.499, 39.1 + i * 1e-4]
+            ] as Array<[number, number]>
+          };
+    const seedFeatures = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const area = fieldsRepo.createField({ name: `${ownerId}-features-area` });
+        const ids = new Set<string>();
+        MAP_FEATURE_KINDS.forEach((kind, i) => {
+          ids.add(
+            mapFeaturesRepo.createMapFeature({
+              kind,
+              name: `${ownerId}-${kind}`,
+              geometry: geometryFor(kind, i),
+              fieldId: i % 2 === 0 ? area.id : null,
+              details: kind === 'water_source' ? { source: 'well' } : null
+            }).id
+          );
+        });
+        return { ids, areaId: area.id };
+      });
+    const a = seedFeatures(OWNER_A);
+    const b = seedFeatures(OWNER_B);
+
+    fc.assert(
+      fc.property(
+        fc.option(fc.constantFrom(...MAP_FEATURE_KINDS), { nil: undefined }),
+        fc.option(fc.constantFrom(a.areaId, b.areaId), { nil: undefined }),
+        fc.constantFrom(OWNER_A, OWNER_B),
+        (kind, fieldId, owner) => {
+          const [mine, theirs] = owner === OWNER_A ? [a, b] : [b, a];
+          runWithTenant(owner, () => {
+            const rows = mapFeaturesRepo.listMapFeatures({ kind, fieldId });
+            for (const row of rows) {
+              expect(theirs.ids.has(row.id)).toBe(false);
+              if (kind) expect(row.kind).toBe(kind);
+            }
+            if (!kind && !fieldId) {
+              expect(rows.filter((r) => mine.ids.has(r.id))).toHaveLength(MAP_FEATURE_KINDS.length);
+            }
+            if (fieldId === theirs.areaId) expect(rows).toHaveLength(0);
+          });
+        }
+      ),
+      { numRuns: 40 }
+    );
+
+    const bFence = runWithTenant(OWNER_B, () =>
+      mapFeaturesRepo.listMapFeatures({ kind: 'fence' }).find((f) => b.ids.has(f.id))
+    )!;
+    runWithTenant(OWNER_A, () => {
+      expect(mapFeaturesRepo.getMapFeature(bFence.id)).toBeUndefined();
+      expect(mapFeaturesRepo.updateMapFeature(bFence.id, { name: 'hijacked' })).toBeUndefined();
+      expect(mapFeaturesRepo.deleteMapFeature(bFence.id)).toBe(false);
+      expect(mapFeaturesRepo.unlinkMapFeaturesFromField(b.areaId)).toBe(0);
+    });
+    const after = runWithTenant(OWNER_B, () => mapFeaturesRepo.getMapFeature(bFence.id));
+    expect(after?.name).toBe(`${OWNER_B}-fence`);
+    expect(after?.fieldId).toBe(b.areaId);
+  });
+
   // Phase 30E — garden-bed footprints and date moves stay inside the tenant.
   it('garden placement writes and date moves are owner-scoped', () => {
     const placement = (x: number) => ({
@@ -807,6 +889,7 @@ describe('cross-tenant isolation', () => {
       areasRepo,
       cropsRepo,
       shadeRepo,
+      mapFeaturesRepo,
       sprayRepo,
       harvestRepo,
       insecticideRepo,

@@ -28,5 +28,5 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (!who.ok) return who.response;
   const parsed = journalEntrySchema.safeParse(await readJson(event));
   if (!parsed.success) return badRequest(parsed.error);
-  return addJournalEntry(event.params.id ?? '', who.userId, parsed.data);
+  return addJournalEntry(event, event.params.id ?? '', who.userId, parsed.data);
 });

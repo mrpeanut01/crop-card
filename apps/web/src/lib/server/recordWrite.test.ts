@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { sqliteHandle } from '$lib/db/client';
 import { runWithTenantAsync } from '$lib/db/tenant';
+import { STALE_CLAIM_MS } from '$lib/db/clientRecords';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { withClientRecordId } from './clientRecordId';
 import { bestEffort, writeRecord } from './recordWrite';
@@ -113,5 +114,90 @@ describe('writeRecord + offline replay receipts', () => {
     expect(replay.status).toBe(200);
     expect(await replay.json()).toMatchObject({ duplicate: true });
     expect(probed(id)).toBe(true);
+  });
+
+  describe('when a slow original outlives a stale-claim takeover', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    function race() {
+      let clock = Date.now();
+      vi.spyOn(Date, 'now').mockImplementation(() => clock);
+      const key = `rw-${randomUUID()}`;
+      const gates: Array<() => void> = [];
+      const attempted: string[] = [];
+      const written: string[] = [];
+      const handler = withClientRecordId(async (event) => {
+        await new Promise<void>((r) => gates.push(r));
+        const id = randomUUID();
+        attempted.push(id);
+        writeRecord(event, () => probe(id));
+        written.push(id);
+        return json({ ok: true }, { status: 201 });
+      });
+      const send = () => runWithTenantAsync(OWNER, async () => handler(eventWith(key)));
+      const started = (n: number) => vi.waitFor(() => expect(gates.length).toBe(n));
+      return {
+        key,
+        send,
+        started,
+        attempted,
+        written,
+        settle: (i: number) => gates[i](),
+        advance: (ms: number) => {
+          clock += ms;
+        }
+      };
+    }
+
+    async function takeover(r: ReturnType<typeof race>) {
+      const original = r.send();
+      await r.started(1);
+      r.advance(STALE_CLAIM_MS + 1);
+      const holder = r.send();
+      await r.started(2);
+      return { original, holder };
+    }
+
+    it('rolls the original write back and answers pending while the new holder saves', async () => {
+      const r = race();
+      const { original, holder } = await takeover(r);
+      r.settle(0);
+      const res = await original;
+      expect(res.status).toBe(503);
+      expect(await res.json()).toMatchObject({
+        error: expect.stringMatching(/already being saved/)
+      });
+      expect(r.attempted).toHaveLength(1);
+      expect(probed(r.attempted[0])).toBe(false);
+      expect(r.written).toHaveLength(0);
+      expect(receiptStatus(r.key)).toBe('pending');
+
+      r.settle(1);
+      expect((await holder).status).toBe(201);
+      expect(r.written).toHaveLength(1);
+      expect(probed(r.written[0])).toBe(true);
+      expect(receiptStatus(r.key)).toBe('done');
+      const replay = await r.send();
+      expect(replay.status).toBe(200);
+      expect(await replay.json()).toMatchObject({ duplicate: true });
+    });
+
+    it('rolls the original write back and answers duplicate once the new holder saved', async () => {
+      const r = race();
+      const { original, holder } = await takeover(r);
+      r.settle(1);
+      expect((await holder).status).toBe(201);
+      r.settle(0);
+      const res = await original;
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({ ok: true, duplicate: true });
+      expect(r.attempted).toHaveLength(2);
+      expect(probed(r.attempted[1])).toBe(false);
+      expect(r.written).toEqual([r.attempted[0]]);
+      expect(probed(r.attempted[0])).toBe(true);
+      expect(receiptStatus(r.key)).toBe('done');
+    });
   });
 });

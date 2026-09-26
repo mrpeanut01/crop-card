@@ -13,18 +13,27 @@ import { AREA_KINDS, isCropBearing } from '$lib/farm/areaKinds';
 import { AREA_KIND_PLURAL, AREA_KIND_STYLE } from '$lib/farm/kindStyle';
 import { areaDisplayName, areaKindLabel, monthDay, resolveOptions, trimNumber } from './common';
 import { formatAreaAcres, formatSize } from './size';
-import type { Prefs } from '$lib/prefs';
+import { formatQuantity, type Prefs } from '$lib/prefs';
+import {
+  MAP_FEATURE_KINDS,
+  MAP_FEATURE_LABELS,
+  MAP_FEATURE_PLURAL,
+  MAP_FEATURE_STYLE,
+  describeFeature,
+  type MapFeatureKind
+} from '$lib/farm/mapFeatures';
+import { formatEmergencyContact, type EmergencyContact } from '$lib/farm/emergencyContacts';
 
-export interface EmergencyContact {
-  label: string;
-  phone: string;
-}
+export type { EmergencyContact };
 
 export interface FarmMapBuildOptions {
   prefs?: Prefs;
   now?: number;
-  /** Only shown when the owner has saved some; the section is left off otherwise. */
+  /** Overrides the snapshot's saved contacts; the section is left off when none exist. */
   emergencyContacts?: readonly EmergencyContact[];
+  /** Line and point kinds the printed figure actually draws. Given, the
+   *  legend names the others as listed but not drawn. */
+  drawnFeatureKinds?: readonly MapFeatureKind[];
 }
 
 const MAX_PER_KIND = 6;
@@ -135,24 +144,45 @@ export function buildFarmMapCard(
     sections.push({ title: AREA_KIND_PLURAL[kind], items });
   }
 
-  if (kindsPresent.length) {
+  const features = snapshot.mapFeatures ?? [];
+  const featureKinds = MAP_FEATURE_KINDS.filter((k) => features.some((f) => f.kind === k));
+  const lengthText = (ft: number) => formatQuantity(ft, 'distance', prefs, { digits: 0 });
+  for (const kind of featureKinds) {
+    const ofKind = features
+      .filter((f) => f.kind === kind)
+      .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }));
+    const items = ofKind.slice(0, MAX_PER_KIND).map((f) => describeFeature(f, lengthText));
+    if (ofKind.length > MAX_PER_KIND) items.push(`+${ofKind.length - MAX_PER_KIND} more`);
+    sections.push({ title: MAP_FEATURE_PLURAL[kind], items });
+  }
+  if (features.length && !areas.length) provenance.push({ source: 'data', detail: 'your map' });
+
+  if (kindsPresent.length || featureKinds.length) {
     sections.push({
       title: 'Legend',
-      items: kindsPresent.map((k) => `${areaKindLabel(k)}: ${AREA_KIND_STYLE[k].colorName}`)
+      items: [
+        ...kindsPresent.map((k) => `${areaKindLabel(k)}: ${AREA_KIND_STYLE[k].colorName}`),
+        ...featureKinds.map((k) =>
+          !options.drawnFeatureKinds || options.drawnFeatureKinds.includes(k)
+            ? `${MAP_FEATURE_LABELS[k]}: ${MAP_FEATURE_STYLE[k].colorName}`
+            : `${MAP_FEATURE_LABELS[k]}: listed above, not drawn on this map`
+        )
+      ]
     });
   }
 
-  const contacts = (options.emergencyContacts ?? []).filter(
-    (c) => c.label.trim() && c.phone.trim()
+  const contacts = (options.emergencyContacts ?? snapshot.emergencyContacts ?? []).filter(
+    (c) => c.name.trim() && c.phone.trim()
   );
   if (contacts.length) {
     sections.unshift({
       title: 'Emergency contacts',
-      items: contacts.map((c) => `${c.label.trim()}: ${c.phone.trim()}`)
+      items: contacts.map(formatEmergencyContact),
+      nowrapAfter: ': '
     });
   }
 
-  if (!areas.length) {
+  if (!areas.length && !features.length) {
     sections.push({ title: 'Areas', items: ['Nothing on the map yet.'] });
   }
 

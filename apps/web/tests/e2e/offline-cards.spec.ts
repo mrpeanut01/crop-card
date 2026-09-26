@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './lib/test';
 import { signInAsDemoOwner } from './lib/auth';
+import { provisionWizardTenant } from './lib/wizardTenant';
 
 // This spec needs the real service worker: it precaches the /cards shell
 // and keeps the per-Owner copy of the /cards layout data.
@@ -103,6 +104,74 @@ test.describe('offline Cards', () => {
     if ((await spray.count()) > 0) {
       await expect(spray.first()).toContainText('Reference, not a clearance');
     }
+
+    await context.setOffline(false);
+  });
+
+  test('a garden designer opened by a link with no signal renders read-only from the saved copy', async ({
+    page,
+    context
+  }) => {
+    test.setTimeout(120_000);
+    await provisionWizardTenant(page, { blocks: [], seeds: [] });
+    const origin =
+      (page.context() as unknown as { _options?: { baseURL?: string } })._options?.baseURL ??
+      'http://localhost:5173';
+    const post = async <T>(url: string, data: unknown): Promise<T> => {
+      const res = await page.request.post(url, {
+        data: data as Record<string, unknown>,
+        headers: { origin }
+      });
+      expect(res.ok(), `${url}: ${await res.text()}`).toBe(true);
+      return (await res.json()) as T;
+    };
+    const area = await post<{ field: { id: string } }>('/api/fields', {
+      name: 'Offline Garden',
+      kind: 'garden',
+      widthFt: 20,
+      lengthFt: 30
+    });
+    await post('/api/blocks', {
+      name: 'Bed 1',
+      fieldId: area.field.id,
+      kind: 'bed',
+      bedStyle: 'raised',
+      widthFt: 4,
+      lengthFt: 8,
+      xFt: 2,
+      yFt: 3,
+      rotationDeg: 0
+    });
+
+    await page.goto('/cards');
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+    });
+    await page.reload();
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await expect.poll(() => snapshotSaved(page), { timeout: 20_000 }).toBeGreaterThan(0);
+    await expect.poll(() => cardsDataCached(page), { timeout: 20_000 }).toBeGreaterThan(0);
+
+    await context.setOffline(true);
+    await page.goto('/cards');
+    await page.getByRole('button', { name: 'Areas', exact: true }).click();
+    await page
+      .locator('[data-card-kind="area"] h3 a')
+      .filter({ hasText: 'Offline Garden' })
+      .click();
+    await expect(page).toHaveURL(/\/cards\/area\//);
+    await page.getByRole('link', { name: 'Open designer' }).first().click();
+
+    await expect(page).toHaveURL(new RegExp(`/plan/areas/${area.field.id}/design`));
+    await expect(page.getByTestId('garden-designer')).toBeVisible();
+    await expect(page.getByTestId('offline-banner')).toContainText(
+      "You're offline. This layout is from"
+    );
+    await expect(page.locator('[data-testid="bed"][data-bed-name="Bed 1"]')).toBeVisible();
+    await expect(page.getByTestId('preset-bar')).toHaveCount(0);
+    await expect(page.getByRole('slider')).toBeVisible();
+    await page.getByRole('button', { name: 'List', exact: true }).click();
+    await expect(page.locator('[data-testid="list-bed"][data-bed-name="Bed 1"]')).toBeVisible();
 
     await context.setOffline(false);
   });

@@ -184,13 +184,16 @@ test.describe('typed farm map', () => {
     await expect(card.getByText('Garden: sage')).toBeVisible();
     await expect(card.getByText('Last frost')).toBeVisible();
     await expect(
-      page.getByTestId('farm-map-figure').locator('[data-area-kind="pasture"]')
+      page.locator('.no-print').getByTestId('farm-map-figure').locator('[data-area-kind="pasture"]')
     ).toHaveCount(1);
 
     const printed = page.locator('.card-print-sheet article[data-card-kind="farmMap"]');
     await expect(printed).toBeHidden();
     await page.emulateMedia({ media: 'print' });
     await expect(printed).toBeVisible();
+    await expect(
+      page.locator('.card-print-sheet .full-page').getByTestId('farm-map-figure').locator('svg')
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Print or save as PDF' })).toBeHidden();
   });
 });
@@ -207,6 +210,7 @@ test.describe('post-draw dialog', () => {
     await page.getByRole('button', { name: '+ Add' }).click();
     await page
       .getByRole('dialog', { name: 'Add to map' })
+      .getByRole('region', { name: 'Shade & structures' })
       .getByRole('button', { name: /^Fence/ })
       .click();
 
@@ -238,6 +242,7 @@ test.describe('post-draw dialog', () => {
     await page.getByRole('button', { name: '+ Add' }).click();
     await page
       .getByRole('dialog', { name: 'Add to map' })
+      .getByRole('region', { name: 'Shade & structures' })
       .getByRole('button', { name: /^Fence/ })
       .click();
     await page.mouse.click(start[0], start[1] + 80);
@@ -247,6 +252,37 @@ test.describe('post-draw dialog', () => {
     await page.mouse.dblclick(end[0], end[1] + 80);
     await expect(modal).toBeVisible();
     await page.waitForTimeout(800);
+    await modal.getByRole('button', { name: 'Discard' }).click();
+    await expect(modal).toHaveCount(0);
+  });
+  test('extra clicks after finishing a fence line keep its save dialog open', async ({ page }) => {
+    await provisionWizardTenant(page, { blocks: [] });
+    await page.setViewportSize({ width: 1280, height: 1100 });
+    await page.goto('/settings/farm/map');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: '+ Add' }).click();
+    await page
+      .getByRole('dialog', { name: 'Add to map' })
+      .getByRole('region', { name: 'Lines & points' })
+      .getByRole('button', { name: /^Fence/ })
+      .click();
+
+    const map = page.locator('.leaflet-container');
+    await map.scrollIntoViewIfNeeded();
+    const box = (await map.boundingBox())!;
+    const cy = box.y + box.height / 2;
+    await page.mouse.click(box.x + box.width / 2 - 120, cy);
+    await page.waitForTimeout(150);
+    await page.mouse.click(box.x + box.width / 2 + 120, cy);
+    await page.waitForTimeout(150);
+    await page.mouse.dblclick(box.x + box.width / 2 + 120, cy);
+    const modal = page.getByRole('dialog', { name: 'New fence' });
+    await expect(modal).toBeVisible();
+    await page.mouse.click(box.x + 10, box.y + 10);
+    await page.waitForTimeout(800);
+    await page.mouse.click(box.x + 10, box.y + 10);
+    await expect(modal).toBeVisible();
     await modal.getByRole('button', { name: 'Discard' }).click();
     await expect(modal).toHaveCount(0);
   });

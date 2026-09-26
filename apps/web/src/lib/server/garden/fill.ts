@@ -69,7 +69,7 @@ export function loadFillInputs(
   const intervals = occupancyIntervals(
     bedCrops.map((c) => placedPlantingFromCrop(c, crops[c.cropPluginId])),
     crops,
-    { firstFallFrostMs }
+    { firstFallFrostMs, lastSpringFrostMs }
   );
   const areaBedIds = new Set(
     listBlocks()

@@ -11,6 +11,7 @@
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
   import ZoneChip from '$lib/components/farm/ZoneChip.svelte';
   import { kindStyle } from '$lib/farm/kindStyle';
+  import EmergencyContactsEditor from '$lib/components/settings/EmergencyContactsEditor.svelte';
   import LocationPickerModal from '$lib/components/farm/LocationPickerModal.svelte';
   import { LOUDOUN_DEFAULT_LAT_LON } from '$lib/schedule/constants';
 
@@ -34,6 +35,13 @@
   function colorFor(fieldId: string | undefined): string {
     return kindStyle(fieldId ? kindByField[fieldId] : 'field').color;
   }
+
+  const contactRows = $derived(
+    form && 'contactRows' in form && form.contactRows ? form.contactRows : data.emergencyContacts
+  );
+  const contactsError = $derived(
+    form && 'contactsError' in form && form.contactsError ? form.contactsError : null
+  );
 
   const total = $derived(data.blocks.reduce((s, b) => s + (b.acres ?? 0), 0));
 </script>
@@ -179,6 +187,16 @@
         {/each}
       </div>
     </div>
+  </SettingsSection>
+
+  <SettingsSection
+    title="Emergency contacts"
+    sub="Printed at the top of your Farm Map Card, so anyone on the farm can call for help."
+  >
+    {#key contactRows}
+      <EmergencyContactsEditor initial={contactRows} error={contactsError} />
+    {/key}
+    <a class="card-link" href="/plan/farm-map">See the Farm Map Card</a>
   </SettingsSection>
 
   <SettingsSection title={`Season ${data.currentYear} setup`}>
@@ -395,6 +413,14 @@
   }
   .lede a:hover {
     text-decoration: underline;
+  }
+  .card-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    font-size: 14px;
   }
   @media (max-width: 760px) {
     .grid-3,

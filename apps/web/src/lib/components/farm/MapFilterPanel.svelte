@@ -2,7 +2,14 @@
   import Modal from '$lib/components/ui/Modal.svelte';
   import { AREA_KINDS, AREA_KIND_LABELS, type AreaKind } from '$lib/farm/areaKinds';
   import { AREA_KIND_STYLE } from '$lib/farm/kindStyle';
-  import { toggleKind, type MapFilter } from '$lib/farm/mapFilter';
+  import { toggleFeatureKind, toggleKind, type MapFilter } from '$lib/farm/mapFilter';
+  import {
+    MAP_FEATURE_KINDS,
+    MAP_FEATURE_PLURAL,
+    MAP_FEATURE_STYLE,
+    geometryTypeFor,
+    type MapFeatureKind
+  } from '$lib/farm/mapFeatures';
 
   const {
     open,
@@ -10,6 +17,7 @@
     filter,
     onChange,
     counts,
+    featureCounts = new Map(),
     showBaseLayer = true,
     hasShade = false,
     canAdd = false
@@ -19,12 +27,16 @@
     filter: MapFilter;
     onChange: (next: MapFilter) => void;
     counts: Map<AreaKind, number>;
+    featureCounts?: Map<MapFeatureKind, number>;
     showBaseLayer?: boolean;
     hasShade?: boolean;
     canAdd?: boolean;
   } = $props();
 
   const present = $derived(AREA_KINDS.filter((k) => (counts.get(k) ?? 0) > 0));
+  const presentFeatures = $derived(
+    MAP_FEATURE_KINDS.filter((k) => (featureCounts.get(k) ?? 0) > 0)
+  );
 </script>
 
 <Modal {open} {onClose} title="Filter map">
@@ -50,6 +62,29 @@
         </label>
       {/each}
     </fieldset>
+    {#if presentFeatures.length}
+      <fieldset>
+        <legend>Lines & points</legend>
+        {#each presentFeatures as k (k)}
+          <label class="toggle">
+            <input
+              type="checkbox"
+              checked={!filter.hiddenFeatures.includes(k)}
+              onchange={() => onChange(toggleFeatureKind(filter, k))}
+            />
+            <span
+              class="swatch"
+              class:line={geometryTypeFor(k) === 'LineString'}
+              class:point={geometryTypeFor(k) === 'Point'}
+              style:--swatch={MAP_FEATURE_STYLE[k].color}
+              aria-hidden="true"
+            ></span>
+            <span class="name">{MAP_FEATURE_PLURAL[k]}</span>
+            <span class="n">{featureCounts.get(k)}</span>
+          </label>
+        {/each}
+      </fieldset>
+    {/if}
     <fieldset>
       <legend>Show</legend>
       {#if hasShade}
@@ -123,6 +158,19 @@
     border-radius: 4px;
     background: color-mix(in srgb, var(--swatch) 35%, transparent);
     border: 2px solid var(--swatch);
+  }
+  .swatch.line {
+    height: 5px;
+    border: 0;
+    border-radius: 3px;
+    background: var(--swatch);
+  }
+  .swatch.point {
+    width: 14px;
+    height: 14px;
+    margin: 0 2px;
+    border-radius: 50%;
+    background: var(--swatch);
   }
   .name {
     flex: 1;

@@ -90,6 +90,8 @@
     text-transform: uppercase;
     white-space: nowrap;
     border: 1px solid transparent;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .prov.compact {
     gap: 3px;
@@ -133,8 +135,11 @@
     opacity: 0.45;
   }
   .detail {
+    min-width: 0;
     font-weight: 500;
     text-transform: none;
     letter-spacing: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 </style>

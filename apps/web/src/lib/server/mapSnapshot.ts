@@ -7,6 +7,7 @@ import { listCrops } from '$lib/db/crops';
 import { listTasks } from '$lib/db/tasks';
 import { requireOwnerId } from '$lib/db/tenant';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
+import { loadEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 import { RULES_VERSION } from '$lib/safety/version';
 import { snapshotAreas, snapshotBlocks } from '$lib/farm/mapSnapshot';
 import {
@@ -14,6 +15,7 @@ import {
   type FarmSnapshot,
   type SnapshotPlanting
 } from '$lib/cards/snapshot';
+import { listMapFeatureViews } from '$lib/db/mapFeatures';
 
 const DAY_MS = 86_400_000;
 const TASK_HORIZON_DAYS = 30;
@@ -98,6 +100,8 @@ export function buildMapSnapshot(
     equipment: [],
     stock: [],
     cropPlugins: {},
-    frost: snapshotFrostFromSettings()
+    frost: snapshotFrostFromSettings(),
+    mapFeatures: listMapFeatureViews(),
+    emergencyContacts: loadEmergencyContacts()
   };
 }

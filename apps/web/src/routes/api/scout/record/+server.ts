@@ -12,6 +12,7 @@
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
+import { writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
@@ -63,16 +64,18 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   if (foreign) return foreign;
 
   const performer = auth ?? (await ensureSystemUser());
-  const persisted = insertScoutObservation({
-    blockId: parsed.data.blockId,
-    cropId: parsed.data.cropId,
-    performedById: performer.id,
-    pest: parsed.data.pest,
-    metric: parsed.data.metric,
-    value: parsed.data.value,
-    notes: parsed.data.notes,
-    occurredAt: parsed.data.occurredAt ?? Date.now()
-  });
+  const persisted = writeRecord(event, () =>
+    insertScoutObservation({
+      blockId: parsed.data.blockId,
+      cropId: parsed.data.cropId,
+      performedById: performer.id,
+      pest: parsed.data.pest,
+      metric: parsed.data.metric,
+      value: parsed.data.value,
+      notes: parsed.data.notes,
+      occurredAt: parsed.data.occurredAt ?? Date.now()
+    })
+  );
 
   return json({ observation: persisted }, { status: 201 });
 });

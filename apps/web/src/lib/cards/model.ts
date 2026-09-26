@@ -38,6 +38,9 @@ export interface CardSection {
   /** Safety content (decon, pollinator cautions). Print never clips it. */
   safety?: boolean;
   provenance?: ProvenanceSource;
+  /** Each item's text after the last copy of this is kept on one line,
+   *  e.g. `': '` keeps a phone number whole. */
+  nowrapAfter?: string;
 }
 
 export interface CardProvenance {

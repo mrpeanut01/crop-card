@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fallbackFrost, lookupFrostInDataset, type FrostDataset } from './frostNormals';
 import { suggestFrostValues } from './frostSuggest';
 import {
+  hardFrostText,
   EMPTY_FROST_PROVENANCE,
   frostConfirmReason,
   parseFrostProvenance,
@@ -135,11 +136,18 @@ describe('planFrostSave from a station lookup', () => {
     expect(r.ok && r.plan?.provenance.values.lastFrost).toBe('manual');
   });
 
-  it('asks to confirm a frost season that crosses the new year', () => {
+  it('saves a frost season that crosses the new year without asking', () => {
     const s = suggestFrostValues(odd);
     expect(s.crossesYear).toBe(true);
-    expect(frostConfirmReason(s)).toBe('crosses-year');
-    expect(planFrostSave(s, { confirmed: true, probability: 'median' }).ok).toBe(true);
+    expect(frostConfirmReason(s)).toBeNull();
+    const r = planFrostSave(s, { confirmed: false, probability: 'median' });
+    expect(r.ok && r.plan?.provenance.values.lastFrost).toBe('data');
+  });
+
+  it('still asks to confirm a fallback lookup', () => {
+    const s = suggestFrostValues(fallbackFrost('no-station'));
+    expect(frostConfirmReason(s)).toBe('fallback');
+    expect(planFrostSave(s, { confirmed: false, probability: 'median' }).ok).toBe(false);
   });
 
   it('asks when the owner clears a date', () => {
@@ -210,5 +218,31 @@ describe('readFrostOverride', () => {
     const fd = new FormData();
     fd.set('lastFrost', '04-10');
     expect(readFrostOverride((n) => fd.get(n))).toEqual({ lastFrost: '04-10' });
+  });
+});
+
+describe('hardFrostText', () => {
+  const pretty = (mmdd: string) =>
+    new Date(
+      Date.UTC(2000, Number(mmdd.slice(0, 2)) - 1, Number(mmdd.slice(3)))
+    ).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+
+  it('reads last then first for an ordinary winter', () => {
+    expect(hardFrostText('03-28', '11-05', pretty)).toBe(
+      'Hard frost (24 °F or colder): last around Mar 28, first around Nov 5.'
+    );
+  });
+
+  it('names the window when both hard frosts fall in the same stretch of January', () => {
+    expect(hardFrostText('01-22', '01-09', pretty)).toBe(
+      'Hard frost (24 °F or colder): usually only between about Jan 9 and Jan 22.'
+    );
+  });
+
+  it('says none on record plainly', () => {
+    expect(hardFrostText(null, null, pretty)).toBe('Hard frost (24 °F or colder): none on record.');
+    expect(hardFrostText('02-01', null, pretty)).toBe(
+      'Hard frost (24 °F or colder): last around Feb 1. No first date on record.'
+    );
   });
 });

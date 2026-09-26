@@ -97,11 +97,7 @@ export interface ScheduleWindow {
 export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] {
   const { assignments, pluginIndex, existingCrops, frostDates } = input;
   const out: ScheduleWindow[] = [];
-  const occupiedByBlock = computeBlockOccupancy(
-    existingCrops,
-    pluginIndex,
-    frostDates.firstFallFrostMs
-  );
+  const occupiedByBlock = computeBlockOccupancy(existingCrops, pluginIndex, frostDates);
 
   // Earliest plantable date is floored at "tomorrow" regardless of the
   // agronomic earliest — operators don't want the AI or the deterministic
@@ -188,7 +184,7 @@ interface OccupiedWindow {
 function computeBlockOccupancy(
   crops: ReadonlyArray<Crop>,
   pluginIndex: Record<string, CropPlugin>,
-  firstFallFrostMs: number
+  frost: { firstFallFrostMs: number; lastSpringFrostMs: number }
 ): Record<string, OccupiedWindow[]> {
   const byBlock: Record<string, OccupiedWindow[]> = {};
   for (const c of crops) {
@@ -204,7 +200,7 @@ function computeBlockOccupancy(
         footprint: null
       },
       pluginIndex[c.cropPluginId],
-      { firstFallFrostMs }
+      { firstFallFrostMs: frost.firstFallFrostMs, lastSpringFrostMs: frost.lastSpringFrostMs }
     );
     if (!interval) continue;
     const list = byBlock[c.blockId] ?? [];

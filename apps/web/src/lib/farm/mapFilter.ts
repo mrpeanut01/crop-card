@@ -1,8 +1,10 @@
 import { AREA_KINDS, isAreaKind, type AreaKind } from './areaKinds';
+import { MAP_FEATURE_KINDS, type MapFeatureKind } from './mapFeatures';
 
 /** Per-Owner map layer choices, kept in the browser only. */
 export interface MapFilter {
   hidden: AreaKind[];
+  hiddenFeatures: MapFeatureKind[];
   shade: boolean;
   labels: boolean;
   satellite: boolean;
@@ -10,6 +12,7 @@ export interface MapFilter {
 
 export const DEFAULT_MAP_FILTER: Readonly<MapFilter> = {
   hidden: [],
+  hiddenFeatures: [],
   shade: true,
   labels: true,
   satellite: true
@@ -22,14 +25,20 @@ export function mapFilterKey(ownerId: string | null | undefined): string | null 
 }
 
 export function parseMapFilter(raw: unknown): MapFilter {
-  if (!raw || typeof raw !== 'object') return { ...DEFAULT_MAP_FILTER, hidden: [] };
+  if (!raw || typeof raw !== 'object') {
+    return { ...DEFAULT_MAP_FILTER, hidden: [], hiddenFeatures: [] };
+  }
   const r = raw as Record<string, unknown>;
   const bool = (v: unknown, d: boolean) => (typeof v === 'boolean' ? v : d);
   const hidden = Array.isArray(r.hidden)
     ? AREA_KINDS.filter((k) => (r.hidden as unknown[]).includes(k))
     : [];
+  const hiddenFeatures = Array.isArray(r.hiddenFeatures)
+    ? MAP_FEATURE_KINDS.filter((k) => (r.hiddenFeatures as unknown[]).includes(k))
+    : [];
   return {
     hidden,
+    hiddenFeatures,
     shade: bool(r.shade, DEFAULT_MAP_FILTER.shade),
     labels: bool(r.labels, DEFAULT_MAP_FILTER.labels),
     satellite: bool(r.satellite, DEFAULT_MAP_FILTER.satellite)
@@ -81,4 +90,25 @@ export function toggleKind(filter: MapFilter, kind: AreaKind): MapFilter {
     ? filter.hidden.filter((k) => k !== kind)
     : [...filter.hidden, kind];
   return { ...filter, hidden: AREA_KINDS.filter((k) => hidden.includes(k)) };
+}
+
+export function isFeatureVisible(filter: MapFilter, kind: MapFeatureKind): boolean {
+  return !filter.hiddenFeatures.includes(kind);
+}
+
+export function toggleFeatureKind(filter: MapFilter, kind: MapFeatureKind): MapFilter {
+  const hidden = filter.hiddenFeatures.includes(kind)
+    ? filter.hiddenFeatures.filter((k) => k !== kind)
+    : [...filter.hiddenFeatures, kind];
+  return { ...filter, hiddenFeatures: MAP_FEATURE_KINDS.filter((k) => hidden.includes(k)) };
+}
+
+export function isFilterActive(filter: MapFilter): boolean {
+  return (
+    filter.hidden.length > 0 ||
+    filter.hiddenFeatures.length > 0 ||
+    !filter.shade ||
+    !filter.labels ||
+    !filter.satellite
+  );
 }

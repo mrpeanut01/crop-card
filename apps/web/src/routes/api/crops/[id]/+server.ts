@@ -25,7 +25,7 @@ import { reanchorCropTasks } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
-import { footprintWriteSchema } from '$lib/garden/api';
+import { setPlacementPatchSchema } from '$lib/garden/api';
 import { cropLookupFrom, failureResponse, writeFootprint } from '$lib/server/garden/placement';
 import { getRegistry } from '$lib/server/registry';
 
@@ -77,7 +77,7 @@ const patchSchema = z.discriminatedUnion('action', [
     action: z.literal('split'),
     parts: z.number().int().min(2).max(12)
   }),
-  footprintWriteSchema.extend({ action: z.literal('set-placement') })
+  setPlacementPatchSchema
 ]);
 
 const ACTION_TO_STATUS = {

@@ -19,6 +19,7 @@ import {
 } from '$lib/cards/snapshot';
 import { farmZone } from '$lib/climate/zoneSettings.server';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
+import { loadEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 import { listAreas } from '$lib/db/areas';
 import { listBlocks } from '$lib/db/blocks';
 import {
@@ -37,6 +38,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { eventsForPlanting } from '$lib/calendar/engine';
 import { getRegistry } from './registry';
 import { sprayTermsFor } from './sprayTerms';
+import { listMapFeatureViews } from '$lib/db/mapFeatures';
 
 const DAY_MS = 86_400_000;
 const HOUR_MS = 3_600_000;
@@ -316,7 +318,9 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     frost: snapshotFrostFromSettings(),
     zone: await farmZone(),
     sprayProducts,
-    sprayTerms: sprayTermsFor(registry)
+    sprayTerms: sprayTermsFor(registry),
+    mapFeatures: listMapFeatureViews(),
+    emergencyContacts: loadEmergencyContacts()
   };
 }
 

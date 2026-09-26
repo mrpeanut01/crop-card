@@ -7,6 +7,13 @@
 import { randomUUID } from 'node:crypto';
 import { afterEach, describe, expect, it } from 'vitest';
 import { sqliteHandle } from '$lib/db/client';
+import {
+  claimClientRecord,
+  clientRecordStatus,
+  completeClientRecord,
+  releaseClientRecord
+} from '$lib/db/clientRecords';
+import { runWithTenant } from '$lib/db/tenant';
 import { _fenceForTests, _resetHandoffForTests } from '$lib/server/ops/handoff';
 import {
   LAST_RUN_KEY,
@@ -149,6 +156,28 @@ describe('runDbMaintenance', () => {
     expect(exists('weather_forecast_cache', 'id', longExpired)).toBe(false);
     expect(exists('weather_forecast_cache', 'id', justExpired)).toBe(true);
     expect(exists('weather_forecast_cache', 'id', closedMonth)).toBe(true);
+  });
+
+  it('a pruned abandoned claim fences out its old holder and can be claimed afresh', async () => {
+    seedOwner();
+    const key = `maint-${randomUUID()}`;
+    const old = runWithTenant(OWNER, () => claimClientRecord(key, '/api/x', NOW - 2 * DAY));
+    expect(old.status).toBe('claimed');
+    const token = old.status === 'claimed' ? old.token : 0;
+    expect(runWithTenant(OWNER, () => clientRecordStatus(key))).toBe('pending');
+
+    await runDbMaintenance({ now: NOW, force: true });
+
+    runWithTenant(OWNER, () => {
+      expect(clientRecordStatus(key)).toBeNull();
+      expect(completeClientRecord(key, token, NOW)).toBe(false);
+      expect(releaseClientRecord(key, token)).toBe(false);
+      const fresh = claimClientRecord(key, '/api/x', NOW);
+      expect(fresh).toEqual({ status: 'claimed', token: NOW });
+      expect(completeClientRecord(key, token, NOW)).toBe(false);
+      expect(completeClientRecord(key, NOW, NOW)).toBe(true);
+      expect(clientRecordStatus(key)).toBe('done');
+    });
   });
 
   it('never touches compliance ledgers, however old', async () => {

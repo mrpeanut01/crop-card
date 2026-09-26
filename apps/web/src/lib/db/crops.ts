@@ -15,6 +15,7 @@ import { db } from './client';
 import { crops, tasks as tasksTable } from './schema';
 import { splitQuantityForSuccession } from '$lib/schedule/succession';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
+import { plantingInGround } from '$lib/garden/inGround';
 import {
   cascadeDeleteForCrop,
   createTask,
@@ -263,11 +264,45 @@ export interface PlantingDateMove {
   reanchored: { shifted: number; flaggedStale: number };
 }
 
+export interface GroupDateFollower {
+  crop: Crop;
+  toMs: number;
+}
+
+/** The group members that follow an anchor moved to `newMs`: every dated
+ *  member not yet in the ground, shifted by the same whole number of days.
+ *  Members already in the ground keep their dates. Empty unless `cur`
+ *  anchors a group. */
+export function groupDateFollowers(cur: Crop, newMs: number, nowMs: number): GroupDateFollower[] {
+  if (cur.plantingDate == null || !cur.groupId || cur.groupRole !== 'anchor') return [];
+  const deltaDays = Math.round((newMs - cur.plantingDate) / DAY_MS);
+  if (deltaDays === 0) return [];
+  return listGroupMembers(cur.groupId)
+    .filter(
+      (m) =>
+        m.id !== cur.id &&
+        m.plantingDate != null &&
+        !plantingInGround(
+          {
+            status: m.status,
+            plantingDateMs: m.plantingDate,
+            harvestedAtMs: m.harvestedAt ?? null
+          },
+          nowMs
+        )
+    )
+    .map((m) => ({ crop: m, toMs: m.plantingDate! + deltaDays * DAY_MS }));
+}
+
 /** Moves a planting to a new date without changing its status, re-anchoring
- *  its open tasks by the same delta. When it anchors a planting group, every
- *  dated member shifts by the same number of days and re-anchors too.
- *  Undefined when the id is not the active Owner's. */
-export function movePlantingDate(id: string, newMs: number): PlantingDateMove | undefined {
+ *  its open tasks by the same delta. When it anchors a planting group, the
+ *  members from `groupDateFollowers` shift and re-anchor too. Undefined when
+ *  the id is not the active Owner's. */
+export function movePlantingDate(
+  id: string,
+  newMs: number,
+  nowMs: number = Date.now()
+): PlantingDateMove | undefined {
   return db.transaction(() => {
     const cur = getCrop(id);
     if (!cur) return undefined;
@@ -283,19 +318,12 @@ export function movePlantingDate(id: string, newMs: number): PlantingDateMove | 
         reanchored.flaggedStale += r.flaggedStale;
       }
     };
+    const followers = groupDateFollowers(cur, newMs, nowMs);
     move(cur, newMs);
-    const followerIds: string[] = [];
-    if (cur.plantingDate != null && cur.groupId && cur.groupRole === 'anchor') {
-      const deltaDays = Math.round((newMs - cur.plantingDate) / DAY_MS);
-      for (const m of listGroupMembers(cur.groupId)) {
-        if (m.id === id || m.plantingDate == null || deltaDays === 0) continue;
-        move(m, m.plantingDate + deltaDays * DAY_MS);
-        followerIds.push(m.id);
-      }
-    }
+    for (const f of followers) move(f.crop, f.toMs);
     return {
       crop: getCrop(id)!,
-      followers: followerIds.map((f) => getCrop(f)!),
+      followers: followers.map((f) => getCrop(f.crop.id)!),
       reanchored
     };
   });

@@ -19,6 +19,7 @@
   import AreaCardSheet from '$lib/components/farm/AreaCardSheet.svelte';
   import AreaDetailsFields from '$lib/components/farm/AreaDetailsFields.svelte';
   import MapFilterPanel from '$lib/components/farm/MapFilterPanel.svelte';
+  import MapFeatureList from '$lib/components/farm/MapFeatureList.svelte';
   import Hint from '$lib/components/ui/Hint.svelte';
   import { markHintSeen } from '$lib/client/hints';
   import { SQFT_PER_ACRE, formatFt, sketchAcres } from '$lib/farm/sketch';
@@ -38,10 +39,18 @@
   } from '$lib/farm/kindStyle';
   import {
     DEFAULT_MAP_FILTER,
+    isFilterActive,
     loadMapFilter,
     saveMapFilter,
     type MapFilter
   } from '$lib/farm/mapFilter';
+  import {
+    featureCounts as countFeatures,
+    type FeatureGeometry,
+    type MapFeatureDetails,
+    type MapFeatureKind,
+    type MapFeatureView
+  } from '$lib/farm/mapFeatures';
   import { detailsFromDraft, draftFromDetails, type DetailsDraft } from '$lib/farm/areaDetailsForm';
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
@@ -58,6 +67,7 @@
     blocks,
     fields,
     shadeSources = [],
+    mapFeatures = [],
     canEdit,
     isFirstRun = false,
     initialMode,
@@ -69,6 +79,7 @@
     blocks: BlockWithPlantings[];
     fields: FieldWithBlocks[];
     shadeSources?: ShadeSource[];
+    mapFeatures?: MapFeatureView[];
     canEdit: boolean;
     isFirstRun?: boolean;
     /** Start on the map or on the dimension sketch. Defaults to the sketch
@@ -84,7 +95,7 @@
   } = $props();
 
   // ─── Filter (per Owner, this browser only) ─────────────────────────────────
-  let filter = $state<MapFilter>({ ...DEFAULT_MAP_FILTER, hidden: [] });
+  let filter = $state<MapFilter>({ ...DEFAULT_MAP_FILTER, hidden: [], hiddenFeatures: [] });
   let filterOpen = $state(false);
   onMount(() => {
     filter = loadMapFilter(ownerId);
@@ -94,12 +105,12 @@
     saveMapFilter(ownerId, next);
   }
   const counts = $derived(kindCounts(fields.map((f) => ({ kind: f.kind ?? 'field' }))));
-  const filterActive = $derived(
-    filter.hidden.length > 0 || !filter.shade || !filter.labels || !filter.satellite
-  );
+  const featureCounts = $derived(countFeatures(mapFeatures));
+  const filterActive = $derived(isFilterActive(filter));
 
   // ─── Add drawer ────────────────────────────────────────────────────────────
   let addOpen = $state(false);
+  let mapBusy = $state(false);
   let sketchFormEl = $state<HTMLFormElement | null>(null);
   async function onPick(pick: AddPick) {
     addOpen = false;
@@ -319,6 +330,44 @@
       throw new Error(out.error ?? `HTTP ${res.status}`);
     }
     await invalidateAll();
+  }
+
+  async function featureRequest(url: string, method: string, body?: unknown) {
+    const res = await fetch(url, {
+      method,
+      headers: body === undefined ? undefined : { 'content-type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const out = await res.json().catch(() => ({}));
+      throw new Error(out.error ?? `HTTP ${res.status}`);
+    }
+    await invalidateAll();
+  }
+
+  function createMapFeature(input: {
+    kind: MapFeatureKind;
+    name: string;
+    geometry: FeatureGeometry;
+    fieldId: string | null;
+    details: MapFeatureDetails | null;
+  }) {
+    return featureRequest('/api/map-features', 'POST', input);
+  }
+
+  function updateMapFeatureGeometry(id: string, geometry: FeatureGeometry) {
+    return featureRequest(`/api/map-features/${encodeURIComponent(id)}`, 'PATCH', { geometry });
+  }
+
+  function saveMapFeature(
+    id: string,
+    body: { name: string; fieldId: string | null; details: MapFeatureDetails | null }
+  ) {
+    return featureRequest(`/api/map-features/${encodeURIComponent(id)}`, 'PATCH', body);
+  }
+
+  function deleteMapFeature(id: string) {
+    return featureRequest(`/api/map-features/${encodeURIComponent(id)}`, 'DELETE');
   }
 
   // ─── Field create / edit / delete ─────────────────────────────────────────
@@ -904,20 +953,20 @@
     key="map_add"
     anchor="[data-hint-anchor=map_add]"
     text="Tap Add to put a field, garden, greenhouse or barn on your farm. You pick what it is, then outline it."
-    suppressed={addOpen || filterOpen || !!selectedArea}
+    suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
   />
   <Hint
     key="map_draw_area"
     anchor="[data-hint-anchor=map_draw_area]"
     text="Tap each corner, then the first corner again to close the shape. Size and perimeter fill in for you."
-    suppressed={addOpen || filterOpen || !!selectedArea}
+    suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
   />
 {/if}
 <Hint
   key="map_filter"
   anchor="[data-hint-anchor=map_filter]"
   text="Filter hides kinds you don't need right now, like woods or the pond. It remembers your choice on this device."
-  suppressed={addOpen || filterOpen || !!selectedArea}
+  suppressed={addOpen || filterOpen || !!selectedArea || mapBusy}
 />
 
 <AreaAddDrawer
@@ -933,6 +982,7 @@
   {filter}
   onChange={setFilter}
   {counts}
+  {featureCounts}
   showBaseLayer={mode === 'map'}
   hasShade={shadeSources.length > 0}
   canAdd={canEdit}
@@ -973,6 +1023,10 @@
       onCreateShadeSource={createShadeSource}
       onDeleteShadeSource={deleteShadeSource}
       onUpdateShadeGeometry={updateShadeGeometry}
+      {mapFeatures}
+      onCreateMapFeature={createMapFeature}
+      onUpdateMapFeatureGeometry={updateMapFeatureGeometry}
+      onBusyChange={(b) => (mapBusy = b)}
     />
   {:else}
     <section class="card empty"><p>Loading map…</p></section>
@@ -1496,6 +1550,16 @@
     {/if}
   {/if}
 </section>
+
+{#if mapFeatures.length > 0 || (canEdit && mode === 'map')}
+  <MapFeatureList
+    features={mapFeatures}
+    areas={fields.map((f) => ({ id: f.id, name: f.name }))}
+    {canEdit}
+    onSave={saveMapFeature}
+    onDelete={deleteMapFeature}
+  />
+{/if}
 
 {#if canEdit && mode === 'map'}
   <details class="card advanced">

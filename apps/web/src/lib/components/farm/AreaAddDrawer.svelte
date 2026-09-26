@@ -16,15 +16,20 @@
     canAddBlock?: boolean;
   } = $props();
 
-  const groups = $derived(mode === 'map' ? ADD_GROUPS : ADD_GROUPS.filter((g) => g.id !== 'shade'));
+  const groups = $derived(
+    mode === 'map' ? ADD_GROUPS : ADD_GROUPS.filter((g) => g.id !== 'shade' && g.id !== 'features')
+  );
 </script>
 
 <Modal {open} {onClose} title="Add to map">
   <p class="lede">
     {mode === 'map'
-      ? 'Pick what you are adding, then outline it on the map.'
+      ? 'Pick what you are adding, then outline or mark it on the map.'
       : 'Pick what you are adding, then type its width and length.'}
   </p>
+  {#if mode === 'sketch'}
+    <p class="lede note">Fences, gates, water and other lines and points go on the Map view.</p>
+  {/if}
   {#each groups as g (g.id)}
     <section class="group" aria-labelledby="add-group-{g.id}">
       <h3 id="add-group-{g.id}">{g.title}</h3>
@@ -39,13 +44,17 @@
             >
               <span
                 class="swatch"
-                class:line={item.type === 'shade'}
+                class:line={item.type === 'shade' ||
+                  (item.type === 'feature' && item.shape === 'line')}
+                class:point={item.type === 'feature' && item.shape === 'point'}
                 style:--swatch={item.color}
                 aria-hidden="true"
               ></span>
               <span class="text">
                 <span class="label">{item.label}</span>
-                {#if item.type === 'area'}<span class="hint">{item.hint}</span>{/if}
+                {#if item.type === 'area' || item.type === 'feature'}<span class="hint"
+                    >{item.hint}</span
+                  >{/if}
               </span>
             </button>
           </li>
@@ -76,6 +85,10 @@
     margin: 0 0 12px;
     color: var(--color-ink-soft);
     font-size: 14px;
+  }
+  .note {
+    margin-top: -6px;
+    font-size: 13px;
   }
   .group + .group {
     margin-top: 14px;
@@ -129,6 +142,15 @@
     height: 6px;
     border-radius: 3px;
     background: var(--swatch);
+  }
+  .swatch.point {
+    flex-basis: 16px;
+    height: 16px;
+    margin: 0 3px;
+    border-radius: 50%;
+    background: var(--swatch);
+    border-color: var(--color-paper);
+    box-shadow: 0 0 0 2px var(--swatch);
   }
   .swatch.block {
     background: var(--color-wheat-soft);

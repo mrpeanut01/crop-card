@@ -140,6 +140,7 @@ export class WriteError extends Error {
 const OFFLINE_WRITE = "That change didn't save because you're offline.";
 const DEFAULT_CROP_LENGTH_IN = 24;
 const WINDOW_GRACE_MS = 7 * 86_400_000;
+const ALERT_MS = 6000;
 
 function errorText(body: GardenErrorResponse | null, status: number, url: string): string {
   const bedWrite = url.startsWith('/api/blocks');
@@ -195,6 +196,9 @@ export class DesignerState {
   conflict = $state<RoomConflict | null>(null);
   status = $state('');
   alert = $state('');
+  private alertTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Client time of the last write the server accepted; 0 before any. */
+  lastSavedAt = 0;
   busy = $state(false);
   offline = $state(false);
   preview = $state<{ blockId: string; rect: RectFt } | null>(null);
@@ -298,13 +302,21 @@ export class DesignerState {
   }
 
   say(text: string): void {
+    this.clearAlert();
     this.status = '';
     queueMicrotask(() => (this.status = text));
   }
 
   warn(text: string): void {
-    this.alert = '';
+    this.clearAlert();
     queueMicrotask(() => (this.alert = text));
+    this.alertTimer = setTimeout(() => this.clearAlert(), ALERT_MS);
+  }
+
+  clearAlert(): void {
+    if (this.alertTimer) clearTimeout(this.alertTimer);
+    this.alertTimer = null;
+    this.alert = '';
   }
 
   bed(blockId: string): BedLayout | undefined {
@@ -482,6 +494,7 @@ export class DesignerState {
     }
     const body = (await res.json().catch(() => null)) as (T & GardenErrorResponse) | null;
     if (!res.ok) throw new WriteError(errorText(body, res.status, url), body?.code ?? null, false);
+    if ((rest.method ?? 'GET').toUpperCase() !== 'GET') this.lastSavedAt = Date.now();
     return body as T;
   }
 
@@ -593,7 +606,7 @@ export class DesignerState {
       this.canvas
     );
     if (!rect) {
-      this.warn("That bed is bigger than the garden. Set the garden's Size in Draw your farm.");
+      this.warn("That bed is bigger than the garden. Set the garden's size on the farm map.");
       return Promise.resolve();
     }
     if (overlappingBeds(rect, this.beds).length) {

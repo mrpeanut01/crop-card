@@ -11,9 +11,11 @@
   import { PRINT_HELP, PRINT_LAYOUTS } from '$lib/cards/print';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs } from '$lib/prefsState.svelte';
-  import { cardViewParams, withoutPrintParam } from '$lib/cards/viewParams';
+  import { cardViewParams, snapshotOlderThan, withoutPrintParam } from '$lib/cards/viewParams';
+  import { formatInstant } from '$lib/prefs';
 
   const cards = new OfflineCards();
+  const FRESH_PRINT_WAIT_MS = 5000;
 
   let now = $state(Date.now());
   let layout = $state<CardPrintLayout>('index-4x6');
@@ -31,10 +33,17 @@
     return built && built.kind === kind ? built : null;
   });
 
-  let autoPrinted = false;
+  let autoPrinted = $state(false);
+  let freshWaitOver = $state(false);
+  let printNotice = $state('');
   $effect(() => {
-    if (!view.autoPrint || !card || autoPrinted) return;
+    if (!view.autoPrint || !card || !snapshot || autoPrinted) return;
+    const older = snapshotOlderThan(snapshot.generatedAt, view.afterMs);
+    if (older && !freshWaitOver) return;
     autoPrinted = true;
+    printNotice = older
+      ? `Printing the copy saved at ${formatInstant(snapshot.generatedAt, prefs, 'time')}. Your latest change may not be on it yet.`
+      : '';
     replaceState(withoutPrintParam(page.url), page.state);
     void tick().then(print);
   });
@@ -42,9 +51,11 @@
 
   onMount(() => {
     const tick = setInterval(() => (now = Date.now()), 60_000);
+    const freshWait = setTimeout(() => (freshWaitOver = true), FRESH_PRINT_WAIT_MS);
     const stop = cards.start(ownerId);
     return () => {
       clearInterval(tick);
+      clearTimeout(freshWait);
       stop();
     };
   });
@@ -78,6 +89,11 @@
     <div class="one">
       <CardView {card} {prefs} {now} />
     </div>
+    {#if printNotice}
+      <p class="status" role="status" data-testid="print-notice">{printNotice}</p>
+    {:else if view.autoPrint && !autoPrinted && snapshot && snapshotOlderThan(snapshot.generatedAt, view.afterMs)}
+      <p class="status" role="status">Getting the latest copy before printing…</p>
+    {/if}
     <div class="actions">
       <button type="button" class="btn ghost" aria-pressed={pinned} onclick={togglePin}>
         {pinned ? 'Pinned' : 'Pin'}

@@ -88,7 +88,7 @@ export function resolveDesignableBed(blockId: string): DesignableBed | GardenFai
   if (!block.widthFt || !block.lengthFt) {
     return gardenFailure(
       409,
-      `Set ${block.name}'s Size before placing crops in it.`,
+      `Set ${block.name}'s size before placing crops in it.`,
       'NOT_DESIGNABLE'
     );
   }

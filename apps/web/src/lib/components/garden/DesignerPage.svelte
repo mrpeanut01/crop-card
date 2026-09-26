@@ -138,7 +138,7 @@
   }
 
   function onGlobalKey(e: KeyboardEvent): void {
-    if (e.key !== 'Escape' || e.defaultPrevented) return;
+    if (e.key !== 'Escape' || e.defaultPrevented || d.cropDrag) return;
     if (d.mode.kind !== 'idle') d.cancelMode();
     else if (d.cropPanelOpen) d.cropPanelOpen = false;
   }
@@ -158,7 +158,8 @@
           new Promise((r) => setTimeout(r, PRINT_SYNC_WAIT_MS))
         ]);
       }
-      await goto(`${areaCardHref}?on=${ymd(d.dateMs)}&print=1`);
+      const after = d.lastSavedAt ? `&after=${d.lastSavedAt}` : '';
+      await goto(`${areaCardHref}?on=${ymd(d.dateMs)}&print=1${after}`);
     } finally {
       printing = false;
     }
@@ -250,10 +251,10 @@
   {/if}
   {#if d.canvas.source === 'default'}
     <div class="banner">
-      This garden has no Size yet, so beds are drawn on a {ft(d.canvas.widthFt)} by {ft(
+      This garden doesn't have a size yet, so beds are drawn on a {ft(d.canvas.widthFt)} by {ft(
         d.canvas.lengthFt
       )} foot grid.
-      <a class="hbtn" href="/plan/farm">Set its Size in Draw your farm</a>
+      <a class="hbtn" href="/plan/farm">Set its size on the farm map</a>
     </div>
   {/if}
 
@@ -583,7 +584,7 @@
   .toast {
     position: fixed;
     left: 50%;
-    bottom: var(--space-4);
+    bottom: calc(var(--space-4) + var(--designer-nav-inset, 0px));
     transform: translateX(-50%);
     max-width: calc(100vw - 32px);
     margin: 0;
@@ -593,6 +594,11 @@
     color: #fff;
     z-index: 50;
     pointer-events: none;
+  }
+  @media (max-width: 768px) {
+    .toast {
+      --designer-nav-inset: calc(68px + env(safe-area-inset-bottom));
+    }
   }
   @media print {
     .head-actions,

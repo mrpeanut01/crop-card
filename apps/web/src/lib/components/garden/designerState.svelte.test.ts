@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { flushSync } from 'svelte';
 import { pointFt } from '$lib/garden/geometry';
 import type { PlacedPlanting } from '$lib/garden/types';
@@ -112,6 +112,41 @@ describe('DesignerState beds', () => {
     await flush();
     expect(calls).toHaveLength(0);
     expect(d.alert).toBe("Beds can't overlap");
+    cleanup();
+  });
+
+  it('clears a refusal once the next change succeeds, or after a few seconds', async () => {
+    const { d, cleanup } = make({}, () => ({ status: 201, body: { block: { id: 'b3' } } }));
+    d.choosePreset('raised-4x8');
+    await d.tap(pointFt(3, 4), 'bed1', null);
+    await flush();
+    expect(d.alert).toBe("Beds can't overlap");
+    await d.tap(pointFt(14, 20), null, null);
+    await flush();
+    expect(d.status).toMatch(/added at/);
+    expect(d.alert).toBe('');
+
+    vi.useFakeTimers();
+    try {
+      d.warn('That bed is too big.');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(d.alert).toBe('That bed is too big.');
+      await vi.advanceTimersByTimeAsync(6000);
+      expect(d.alert).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
+    cleanup();
+  });
+
+  it('remembers when the server last accepted a change, for a fresh printed card', async () => {
+    const { d, cleanup } = make({}, () => ({ status: 201, body: { block: { id: 'b3' } } }));
+    expect(d.lastSavedAt).toBe(0);
+    const before = Date.now();
+    d.choosePreset('raised-4x8');
+    await d.tap(pointFt(14, 20), null, null);
+    await flush();
+    expect(d.lastSavedAt).toBeGreaterThanOrEqual(before);
     cleanup();
   });
 

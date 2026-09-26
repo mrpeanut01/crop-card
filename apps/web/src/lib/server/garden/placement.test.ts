@@ -605,7 +605,7 @@ describe('writeFootprint', () => {
         afterSecond
       );
       if (!shifted.ok) throw new Error(shifted.body.error);
-      expect(shifted.response.followers.map((f) => f.cropId)).toEqual([third.id]);
+      expect((shifted.response.followers ?? []).map((f) => f.cropId)).toEqual([third.id]);
       expect(getCrop(second.id)?.plantingDate).toBe(APR_1 + 14 * DAY);
       expect(getCrop(third.id)?.plantingDate).toBe(APR_1 + 25 * DAY);
 

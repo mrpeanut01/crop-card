@@ -7,6 +7,10 @@
   const d = getDesigner();
   const MAX_RESULTS = 40;
   const DRAG_START_PX = 6;
+  const EDGE_PX = 56;
+  const MAX_SCROLL_PX = 18;
+  const CHIP_GAP_PX = 12;
+  const GUTTER_PX = 16;
 
   const draggable = $derived(d.canEdit && d.view === 'canvas');
   let press: { id: number; x: number; y: number; choice: CropChoice } | null = null;
@@ -32,6 +36,41 @@
     }
     e.preventDefault();
     d.moveCropDrag(e.clientX, e.clientY);
+    edgeY = e.clientY;
+    edgeX = e.clientX;
+    if (edgeSpeed(edgeY) !== 0 && scrollFrame === null) {
+      scrollFrame = requestAnimationFrame(autoScroll);
+    }
+  }
+
+  let edgeX = 0;
+  let edgeY = 0;
+  let scrollFrame: number | null = null;
+
+  function edgeSpeed(y: number): number {
+    const bottom = window.innerHeight - bottomInset();
+    if (y < EDGE_PX) return -Math.ceil(((EDGE_PX - y) / EDGE_PX) * MAX_SCROLL_PX);
+    if (y > bottom - EDGE_PX)
+      return Math.ceil(((y - (bottom - EDGE_PX)) / EDGE_PX) * MAX_SCROLL_PX);
+    return 0;
+  }
+
+  function bottomInset(): number {
+    const nav = document.querySelector('.primary-nav');
+    if (!nav || getComputedStyle(nav).position !== 'fixed') return 0;
+    return Math.max(0, window.innerHeight - nav.getBoundingClientRect().top);
+  }
+
+  function autoScroll(): void {
+    scrollFrame = null;
+    if (!press || !d.cropDrag) return;
+    const dy = edgeSpeed(edgeY);
+    if (dy === 0) return;
+    const before = window.scrollY;
+    window.scrollBy(0, dy);
+    if (window.scrollY === before) return;
+    d.moveCropDrag(edgeX, edgeY);
+    scrollFrame = requestAnimationFrame(autoScroll);
   }
 
   function onUp(e: PointerEvent): void {
@@ -59,6 +98,8 @@
 
   function end(): void {
     press = null;
+    if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
+    scrollFrame = null;
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
     window.removeEventListener('pointercancel', onCancel);
@@ -74,6 +115,18 @@
   }
 
   $effect(() => end);
+
+  let viewportW = $state(0);
+  let chipW = $state(0);
+
+  /** Right of the finger, or left of it near the right edge, and never
+   *  closer than the page gutter to either side. */
+  function chipLeft(x: number): number {
+    const max = viewportW - GUTTER_PX - chipW;
+    const right = x + CHIP_GAP_PX;
+    const left = right <= max ? right : x - CHIP_GAP_PX - chipW;
+    return Math.max(GUTTER_PX, Math.min(left, max));
+  }
 
   let query = $state('');
   let input = $state<HTMLInputElement | null>(null);
@@ -134,13 +187,16 @@
   });
 </script>
 
+<svelte:window bind:innerWidth={viewportW} />
+
 {#if d.cropDrag}
   <div
     class="drag-chip"
     class:nofit={d.cropDrag.ghost ? !d.cropDrag.ghost.fits : false}
     aria-hidden="true"
     data-testid="drag-chip"
-    style:left="{d.cropDrag.clientX}px"
+    bind:offsetWidth={chipW}
+    style:left="{chipLeft(d.cropDrag.clientX)}px"
     style:top="{d.cropDrag.clientY}px"
   >
     {d.cropDrag.choice.label}{#if d.cropDrag.bedId}
@@ -391,7 +447,7 @@
   .drag-chip {
     position: fixed;
     z-index: 60;
-    transform: translate(12px, -140%);
+    transform: translateY(-140%);
     max-width: min(260px, calc(100vw - 32px));
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-input);

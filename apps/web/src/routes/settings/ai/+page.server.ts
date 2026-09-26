@@ -13,7 +13,7 @@
  */
 
 import { error, fail } from '@sveltejs/kit';
-import { and, count, eq, gte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
 import { users, aiCallLog } from '$lib/db/schema';
@@ -43,7 +43,7 @@ export const load: PageServerLoad = ({ locals }) => {
     .where(eq(users.id, locals.user.id))
     .get();
 
-  // Recent calls + degradation breakdown for the audit row.
+  // Recent calls + degradation breakdown for the audit row, newest first.
   const recentCalls = db
     .select({
       endpoint: aiCallLog.endpoint,
@@ -55,10 +55,9 @@ export const load: PageServerLoad = ({ locals }) => {
     })
     .from(aiCallLog)
     .where(withTenant(aiCallLog))
-    .orderBy(aiCallLog.createdAt)
+    .orderBy(desc(aiCallLog.createdAt))
     .limit(50)
-    .all()
-    .reverse(); // newest first
+    .all();
 
   // #167 / CT-SET-004 — canonical month-window call count. Same
   // tenant-scoped query as /settings (after Sprint 17 fix) so both

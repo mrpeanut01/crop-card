@@ -11,6 +11,8 @@ import { _requestSchema as hintsPost } from '../me/hints/+server';
 import { _requestSchema as gardenPlantings } from '../garden/plantings/+server';
 import { _requestSchema as gardenSuccession } from '../garden/beds/[blockId]/succession/+server';
 import { _requestSchema as gardenFill } from '../garden/beds/[blockId]/fill/+server';
+import { _requestSchema as mapFeatureCreate } from '../map-features/+server';
+import { _requestSchema as mapFeaturePatch } from '../map-features/[id]/+server';
 
 interface Operation {
   parameters?: { $ref?: string; name?: string; in?: string }[];
@@ -48,7 +50,9 @@ describe('openapi.json', () => {
     ['/api/me/hints', 'post', hintsPost],
     ['/api/garden/plantings', 'post', gardenPlantings],
     ['/api/garden/beds/{blockId}/succession', 'post', gardenSuccession],
-    ['/api/garden/beds/{blockId}/fill', 'post', gardenFill]
+    ['/api/garden/beds/{blockId}/fill', 'post', gardenFill],
+    ['/api/map-features', 'post', mapFeatureCreate],
+    ['/api/map-features/{id}', 'patch', mapFeaturePatch]
   ] as const)('%s %s publishes the schema the route validates with', (path, method, schema) => {
     expect(published(path, method)).toEqual(generated(schema));
   });
@@ -62,7 +66,10 @@ describe('openapi.json', () => {
       ['/api/fields/{id}', 'get'],
       ['/api/blocks', 'get'],
       ['/api/blocks/{id}', 'get'],
-      ['/api/blocks/{id}', 'delete']
+      ['/api/blocks/{id}', 'delete'],
+      ['/api/map-features', 'get'],
+      ['/api/map-features/{id}', 'get'],
+      ['/api/map-features/{id}', 'delete']
     ]) {
       expect(doc.paths[path]?.[method], `${method.toUpperCase()} ${path}`).toBeDefined();
     }

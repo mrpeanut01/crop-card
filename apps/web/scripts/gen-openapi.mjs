@@ -36,8 +36,11 @@ import {
   blockCreateSchema,
   blockPatchSchema,
   fieldCreateSchema,
-  fieldPatchSchema
+  fieldPatchSchema,
+  mapFeatureCreateSchema,
+  mapFeaturePatchSchema
 } from '../src/lib/farm/apiSchemas.ts';
+import { MAP_FEATURE_KINDS } from '../src/lib/farm/mapFeatures.ts';
 import { AREA_KINDS, BLOCK_KINDS } from '../src/lib/farm/areaKinds.ts';
 import {
   fillRequestSchema,
@@ -659,6 +662,88 @@ const paths = {
         ...OWNER_ERRORS,
         404: errorResponse('Block not found for the active Owner.'),
         409: jsonResponse('The block has records.', gardenErrorRef)
+      }
+    }
+  },
+
+  '/api/map-features': {
+    get: {
+      summary: 'List map lines and points',
+      description:
+        'Fences, gates, water sources, hydrants, irrigation lines and paths for the active Owner. Tenant-scoped; helpers can read. `?fieldId=` keeps the features linked to one Area.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        kindQuery(MAP_FEATURE_KINDS, 'fence,gate'),
+        { name: 'fieldId', in: 'query', required: false, schema: { type: 'string' } }
+      ],
+      responses: {
+        200: jsonResponse('Map features.', {
+          type: 'object',
+          required: ['mapFeatures'],
+          properties: { mapFeatures: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('Unknown kind.')
+      }
+    },
+    post: {
+      summary: 'Add a map line or point',
+      description:
+        "Owner only. `geometry` is a GeoJSON LineString for fence, irrigation line and path, and a Point for gate, water source and hydrant. `details` only applies to a water source: `{ source?: well | municipal | pond | rain, flowRateGpm?: number }`. `fieldId` links the feature to one of the Owner's Areas.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(mapFeatureCreateSchema),
+      responses: {
+        201: jsonResponse('Feature saved.', {
+          type: 'object',
+          required: ['mapFeature'],
+          properties: { mapFeature: { type: 'object' } }
+        }),
+        400: errorResponse(
+          "Invalid body, a geometry that does not fit the kind, details on the wrong kind, or another Owner's Area."
+        ),
+        ...OWNER_ERRORS
+      }
+    }
+  },
+
+  '/api/map-features/{id}': {
+    parameters: [idPath('id', 'Map feature id.')],
+    get: {
+      summary: 'Fetch one map line or point',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The feature.', {
+          type: 'object',
+          required: ['mapFeature'],
+          properties: { mapFeature: { type: 'object' } }
+        }),
+        404: errorResponse('Feature not found for the active Owner.')
+      }
+    },
+    patch: {
+      summary: 'Edit a map line or point',
+      description:
+        'Owner only. The kind cannot change. Null `fieldId` unlinks the feature from its Area.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(mapFeaturePatchSchema),
+      responses: {
+        200: jsonResponse('Feature saved.', {
+          type: 'object',
+          required: ['mapFeature'],
+          properties: { mapFeature: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, or a geometry or details that do not fit the kind.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Feature not found for the active Owner.')
+      }
+    },
+    delete: {
+      summary: 'Remove a map line or point',
+      description: 'Owner only.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Removed.', { type: 'object' }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Feature not found for the active Owner.')
       }
     }
   },

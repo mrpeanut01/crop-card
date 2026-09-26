@@ -1,5 +1,4 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
 import { getField } from '$lib/db/fields';
 import {
   deleteMapFeature,
@@ -9,6 +8,7 @@ import {
 } from '$lib/db/mapFeatures';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { mapFeaturePatchSchema } from '$lib/farm/apiSchemas';
 import { parseFeatureGeometry, validateFeatureDetails } from '$lib/farm/mapFeatures';
 
 export const GET: RequestHandler = ({ params }) => {
@@ -17,12 +17,7 @@ export const GET: RequestHandler = ({ params }) => {
   return json({ mapFeature });
 };
 
-export const _requestSchema = z.strictObject({
-  name: z.string().trim().min(1).max(120).optional(),
-  geometry: z.unknown().optional(),
-  fieldId: z.string().min(1).nullable().optional(),
-  details: z.unknown().optional()
-});
+export const _requestSchema = mapFeaturePatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
   requireOwner(event);

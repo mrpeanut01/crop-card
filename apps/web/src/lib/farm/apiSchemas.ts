@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { AREA_KINDS } from './areaKinds';
 import { blockLayoutPatchSchema, blockLayoutSchema } from './blockLayout';
 import { MAX_SKETCH_FT } from './sketch';
+import { MAP_FEATURE_KINDS } from './mapFeatures';
 
 const polygonType = z.enum(['Polygon', 'MultiPolygon']);
 
@@ -68,4 +69,19 @@ export const blockPatchSchema = blockLayoutPatchSchema.extend({
   slopeAspectDeg: z.number().min(0).max(360).nullable().optional(),
   widthFt: sketchFt.nullable().optional(),
   lengthFt: sketchFt.nullable().optional()
+});
+
+export const mapFeatureCreateSchema = z.strictObject({
+  kind: z.enum(MAP_FEATURE_KINDS),
+  name: z.string().trim().min(1).max(120),
+  geometry: z.unknown(),
+  fieldId: z.string().min(1).nullable().optional(),
+  details: z.unknown().optional()
+});
+
+export const mapFeaturePatchSchema = z.strictObject({
+  name: z.string().trim().min(1).max(120).optional(),
+  geometry: z.unknown().optional(),
+  fieldId: z.string().min(1).nullable().optional(),
+  details: z.unknown().optional()
 });

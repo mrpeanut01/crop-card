@@ -1,10 +1,10 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
 import { getField } from '$lib/db/fields';
 import { createMapFeature, listMapFeatures } from '$lib/db/mapFeatures';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { parseKindFilter } from '$lib/farm/kindFilter';
+import { mapFeatureCreateSchema } from '$lib/farm/apiSchemas';
 import {
   MAP_FEATURE_KINDS,
   parseFeatureGeometry,
@@ -19,13 +19,7 @@ export const GET: RequestHandler = ({ url }) => {
   return json({ mapFeatures: kinds ? all.filter((f) => kinds.includes(f.kind)) : all });
 };
 
-export const _requestSchema = z.strictObject({
-  kind: z.enum(MAP_FEATURE_KINDS),
-  name: z.string().trim().min(1).max(120),
-  geometry: z.unknown(),
-  fieldId: z.string().min(1).nullable().optional(),
-  details: z.unknown().optional()
-});
+export const _requestSchema = mapFeatureCreateSchema;
 
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);

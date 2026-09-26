@@ -7,6 +7,7 @@
  * render as the same day in every time zone; moments are epoch ms.
  */
 
+import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
 import type { HardinessZoneView } from '$lib/climate/zone';
 import type { MapFeatureView } from '$lib/farm/mapFeatures';
@@ -231,6 +232,9 @@ export interface FarmSnapshot {
   sprayProducts?: Record<string, SnapshotSprayProduct>;
   /** Fences, gates, water and paths. Absent on bundles saved before 30H. */
   mapFeatures?: SnapshotMapFeature[];
+  /** The owner's saved emergency contacts for the Farm Map Card. Absent on
+   *  bundles saved before Sprint 30H. */
+  emergencyContacts?: EmergencyContact[];
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

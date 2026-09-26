@@ -7,6 +7,7 @@ import { listCrops } from '$lib/db/crops';
 import { listTasks } from '$lib/db/tasks';
 import { requireOwnerId } from '$lib/db/tenant';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
+import { loadEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 import { RULES_VERSION } from '$lib/safety/version';
 import { snapshotAreas, snapshotBlocks } from '$lib/farm/mapSnapshot';
 import {
@@ -100,6 +101,7 @@ export function buildMapSnapshot(
     stock: [],
     cropPlugins: {},
     frost: snapshotFrostFromSettings(),
-    mapFeatures: listMapFeatureViews()
+    mapFeatures: listMapFeatureViews(),
+    emergencyContacts: loadEmergencyContacts()
   };
 }

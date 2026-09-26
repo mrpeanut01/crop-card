@@ -3,7 +3,7 @@
   "info": {
     "title": "CropCard External Agent API",
     "version": "0.1.0",
-    "description": "Owner-scoped JSON API for external Claude agents and SaaS integrations (Phase 24, UC-43). Bearer tokens minted at `/settings/api-tokens`. Safety kernel re-runs on every state-changing call — agents cannot bypass tenant isolation, the 48h spray lock, helper custom-rate restrictions, or kernel violations regardless of which endpoint they hit.\n\nCoverage is incremental: Phase 24 ships an initial surface (auth + health + spray/record + blocks). Additional endpoints adopt the OpenAPI registry in domain batches — track open work in [docs/phase-24-agent-api.md](https://github.com/mrpeanut01/crop-card/blob/main/docs/phase-24-agent-api.md).",
+    "description": "Owner-scoped JSON API for external Claude agents and SaaS integrations (Phase 24, UC-43). Bearer tokens minted at `/settings/api-tokens`. Safety kernel re-runs on every state-changing call — agents cannot bypass tenant isolation, the 48h spray lock, helper custom-rate restrictions, or kernel violations regardless of which endpoint they hit.\n\nCoverage is incremental: Phase 24 shipped auth, health, spray/record and blocks; Phase 30 adds Areas, blocks and garden beds, the garden designer, offline Cards, geocoding, first-use hints and the offline-safe record endpoints. Additional endpoints adopt the OpenAPI registry in domain batches — track open work in [docs/phase-24-agent-api.md](https://github.com/mrpeanut01/crop-card/blob/main/docs/phase-24-agent-api.md).",
     "contact": {
       "name": "CropCard"
     }
@@ -29,6 +29,19 @@
         "description": "HMAC-signed session cookie set by `/signin`. Cookie mutations under `/api/**` require matching Origin."
       }
     },
+    "parameters": {
+      "ClientRecordId": {
+        "name": "x-cropcard-client-record-id",
+        "in": "header",
+        "required": false,
+        "description": "Offline-queue row id (8 to 80 of `A-Z a-z 0-9 _ -`). A replay of an id the active Owner already saved answers 200 `{ ok: true, duplicate: true }` and writes nothing, so a record is saved at most once. Omit it for a plain request; an id that does not match the pattern is ignored.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,80}$",
+          "example": "q_01J9Z6X4K2M8"
+        }
+      }
+    },
     "schemas": {
       "Error": {
         "type": "object",
@@ -39,6 +52,136 @@
           "error": {
             "type": "string",
             "description": "Human-readable error message."
+          }
+        }
+      },
+      "GardenError": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "OFFLINE",
+              "READ_ONLY",
+              "OUTSIDE_AREA",
+              "OVERLAP",
+              "NOT_DESIGNABLE",
+              "IN_GROUND",
+              "BED_HAS_RECORDS",
+              "FOREIGN_REF"
+            ]
+          },
+          "issues": {}
+        }
+      },
+      "PlacedPlanting": {
+        "type": "object",
+        "description": "A planting placed in a bed. `plantCountProvenance` and `sourceProvenance` say where a value came from; a hand-placed planting has no `sourceProvenance`.",
+        "required": [
+          "cropId",
+          "blockId",
+          "cropPluginId",
+          "varietyDisplayName",
+          "status"
+        ],
+        "properties": {
+          "cropId": {
+            "type": "string"
+          },
+          "blockId": {
+            "type": "string"
+          },
+          "cropPluginId": {
+            "type": "string"
+          },
+          "varietyDisplayName": {
+            "type": "string"
+          },
+          "cropFamily": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "plantingDateMs": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "harvestedAtMs": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "footprint": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "spacing": {
+            "type": "object"
+          },
+          "plantCount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "plantCountProvenance": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "groupId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "groupSystemKind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "three-sisters",
+              "succession",
+              "manual",
+              null
+            ]
+          },
+          "groupRole": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "anchor",
+              "companion",
+              null
+            ]
+          },
+          "sourceProvenance": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ai",
+              "fallback",
+              "plugin",
+              null
+            ]
           }
         }
       },
@@ -375,7 +518,7 @@
     "/api/spray/record": {
       "post": {
         "summary": "Record a spray event (safety-kernel re-validated)",
-        "description": "Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 400 with kernel violations on safety failure.",
+        "description": "Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 422 with kernel violations on safety failure.",
         "security": [
           {
             "cookieSession": []
@@ -384,13 +527,18 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Spray-event payload. Exact shape is enforced inline in apps/web/src/routes/api/spray/record/+server.ts via Zod; promoting to exported `requestSchema` is a Phase 24 follow-up (see gen-openapi.mjs header).",
+                "description": "Spray-event payload. Exact shape is enforced inline in apps/web/src/routes/api/spray/record/+server.ts via Zod.",
                 "properties": {
                   "blockId": {
                     "type": "string"
@@ -412,17 +560,26 @@
         },
         "responses": {
           "200": {
-            "description": "Spray recorded.",
+            "description": "Record saved, or a replay that was already saved.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "object",
+                  "description": "Either the saved record, or `{ ok: true, duplicate: true }` when the client record id was already saved and nothing new was written.",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Safety kernel rejected the spray.",
+            "description": "Invalid body.",
             "content": {
               "application/json": {
                 "schema": {
@@ -443,6 +600,1151 @@
           },
           "403": {
             "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown block, crop, product or sprayer for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A safety check or the season close-out gate rejected the record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/insecticide/record": {
+      "post": {
+        "summary": "Record an insecticide application",
+        "description": "Runs the IPM threshold, pollinator-protection, cross-contamination and environment gates on the server before saving. Safe to replay from the offline queue with the client record id header.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Exact shape is enforced inline in apps/web/src/routes/api/insecticide/record/+server.ts via Zod."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Record saved, or a replay that was already saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Either the saved record, or `{ ok: true, duplicate: true }` when the client record id was already saved and nothing new was written.",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown block, crop, product or sprayer for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A safety check or the season close-out gate rejected the record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fungicide/record": {
+      "post": {
+        "summary": "Record a fungicide application",
+        "description": "Runs the FRAC rotation, tank-mix, bloom and cross-contamination gates on the server before saving. Safe to replay from the offline queue with the client record id header.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Exact shape is enforced inline in apps/web/src/routes/api/fungicide/record/+server.ts via Zod."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Record saved, or a replay that was already saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Either the saved record, or `{ ok: true, duplicate: true }` when the client record id was already saved and nothing new was written.",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown block, crop, product or sprayer for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A safety check or the season close-out gate rejected the record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/harvest/record": {
+      "post": {
+        "summary": "Record a harvest",
+        "description": "Checks stored moisture against the crop archetype and the pre-harvest interval of recent sprays. Safe to replay from the offline queue with the client record id header.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Exact shape is enforced inline in apps/web/src/routes/api/harvest/record/+server.ts via Zod."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Record saved, or a replay that was already saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Either the saved record, or `{ ok: true, duplicate: true }` when the client record id was already saved and nothing new was written.",
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown block, crop, product or sprayer for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A safety check or the season close-out gate rejected the record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scout/record": {
+      "post": {
+        "summary": "Record a scouting observation",
+        "description": "Saves one observation against a block (and optionally a planting). Safe to replay from the offline queue with the client record id header.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Exact shape is enforced inline in apps/web/src/routes/api/scout/record/+server.ts via Zod."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replay of a client record id that was already saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "duplicate"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Record saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown block, crop, product or sprayer for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A safety check or the season close-out gate rejected the record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/hay/cuttings": {
+      "post": {
+        "summary": "Record a hay cutting",
+        "description": "Re-runs the mow decision against the forecast before saving; a bale moisture danger stop cannot be overridden. Safe to replay from the offline queue with the client record id header.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ClientRecordId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Exact shape is enforced inline in apps/web/src/routes/api/hay/cuttings/+server.ts via Zod."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A replay of a client record id that was already saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok",
+                    "duplicate"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "const": true
+                    },
+                    "duplicate": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Record saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Cross-origin blocked, or read-only role.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown block, crop, product or sprayer for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A safety check or the season close-out gate rejected the record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The same client record id is being saved by another request right now. Retry shortly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fields": {
+      "get": {
+        "summary": "List Areas for the active Owner",
+        "description": "Areas (stored as fields) with their block counts and acres. Tenant-scoped; helpers can read.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "description": "Comma-separated kinds to include (`field`, `garden`, `greenhouse`, `orchard`, `pasture`, `barn`, `residence`, `natural_area`, `water`, `boundary`). An unknown kind returns 400.",
+            "schema": {
+              "type": "string",
+              "example": "garden,greenhouse"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Area list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "fields"
+                  ],
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown kind.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an Area",
+        "description": "Owner only. `details` is checked against the schema for `kind` (garden watering, greenhouse structure, orchard spacing and so on) and rejected with 400 when it does not fit.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "acres": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "location": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "widthFt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 20000
+                  },
+                  "lengthFt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 20000
+                  },
+                  "geometryGeojson": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "Polygon",
+                              "MultiPolygon"
+                            ]
+                          },
+                          "coordinates": {}
+                        },
+                        "required": [
+                          "type",
+                          "coordinates"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "Feature"
+                          },
+                          "geometry": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "Polygon",
+                                  "MultiPolygon"
+                                ]
+                              },
+                              "coordinates": {}
+                            },
+                            "required": [
+                              "type",
+                              "coordinates"
+                            ]
+                          },
+                          "properties": {}
+                        },
+                        "required": [
+                          "type",
+                          "geometry"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "FeatureCollection"
+                          },
+                          "features": {
+                            "type": "array",
+                            "items": {}
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "features"
+                        ]
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "field",
+                      "garden",
+                      "greenhouse",
+                      "orchard",
+                      "pasture",
+                      "barn",
+                      "residence",
+                      "natural_area",
+                      "water",
+                      "boundary"
+                    ]
+                  },
+                  "details": {}
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Area created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "field"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or `details` that do not fit the kind.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fields/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Area id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Fetch one Area",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The Area.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "field"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edit an Area",
+        "description": "Owner only. Null clears a value. Reshaping a garden or greenhouse that would leave a bed outside its edge answers 409 `OUTSIDE_AREA`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "acres": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "geometryGeojson": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "widthFt": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 20000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "lengthFt": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 20000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "field",
+                      "garden",
+                      "greenhouse",
+                      "orchard",
+                      "pasture",
+                      "barn",
+                      "residence",
+                      "natural_area",
+                      "water",
+                      "boundary"
+                    ]
+                  },
+                  "details": {}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Area saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "field"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or `details` that do not fit the kind.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A bed would end up outside the Area.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an Area and everything in it",
+        "description": "Owner only. Cascades through every block, planting and event in the Area.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted; the body counts what was removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found for the active Owner.",
             "content": {
               "application/json": {
                 "schema": {
@@ -471,7 +1773,7 @@
             "name": "kind",
             "in": "query",
             "required": false,
-            "description": "Comma-separated block kinds to include (`block`, `bed`, `row`, `container`). An unknown kind returns 400.",
+            "description": "Comma-separated kinds to include (`block`, `bed`, `row`, `container`). An unknown kind returns 400.",
             "schema": {
               "type": "string",
               "example": "bed,container"
@@ -493,6 +1795,1579 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown kind.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a block, bed, row or container",
+        "description": "Owner only. Designer layout fields (`xFt`, `yFt`, `rotationDeg`, `bedStyle`) are in feet from the Area corner and only apply to beds and containers in a garden or greenhouse. A bed that overlaps another or leaves the Area answers 409 `OVERLAP` or `OUTSIDE_AREA`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "block",
+                      "bed",
+                      "row",
+                      "container"
+                    ]
+                  },
+                  "xFt": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 20000
+                  },
+                  "yFt": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 20000
+                  },
+                  "rotationDeg": {
+                    "description": "Degrees, a multiple of 90; saved as 0, 90, 180 or 270.",
+                    "type": "number"
+                  },
+                  "bedStyle": {
+                    "type": "string",
+                    "enum": [
+                      "raised",
+                      "in-ground",
+                      "container",
+                      "vertical"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "acres": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "blockLabel": {
+                    "type": "string",
+                    "maxLength": 60
+                  },
+                  "fieldId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "widthFt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 20000
+                  },
+                  "lengthFt": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 20000
+                  },
+                  "geometryGeojson": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "Polygon",
+                              "MultiPolygon"
+                            ]
+                          },
+                          "coordinates": {}
+                        },
+                        "required": [
+                          "type",
+                          "coordinates"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "Feature"
+                          },
+                          "geometry": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "Polygon",
+                                  "MultiPolygon"
+                                ]
+                              },
+                              "coordinates": {}
+                            },
+                            "required": [
+                              "type",
+                              "coordinates"
+                            ]
+                          },
+                          "properties": {}
+                        },
+                        "required": [
+                          "type",
+                          "geometry"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "FeatureCollection"
+                          },
+                          "features": {
+                            "type": "array",
+                            "items": {}
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "features"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Block created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "block"
+                  ],
+                  "properties": {
+                    "block": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or a kind that cannot sit in that Area.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The bed does not fit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blocks/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Block id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Fetch one block with its plantings",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The block.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "block"
+                  ],
+                  "properties": {
+                    "block": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Block not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Move, resize, rotate or rename a block",
+        "description": "Owner only. Null clears a value. Shrinking a bed past a planting answers 409; finished plantings are clamped to the new size.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "block",
+                      "bed",
+                      "row",
+                      "container"
+                    ]
+                  },
+                  "xFt": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 20000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "yFt": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 20000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "rotationDeg": {
+                    "anyOf": [
+                      {
+                        "description": "Degrees, a multiple of 90; saved as 0, 90, 180 or 270.",
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "bedStyle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "raised",
+                          "in-ground",
+                          "container",
+                          "vertical"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "acres": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "blockLabel": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 60
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "fieldId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "tillageMethod": {
+                    "type": "string",
+                    "enum": [
+                      "conventional",
+                      "reduced-till",
+                      "no-till"
+                    ]
+                  },
+                  "slopePercent": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "slopeAspectDeg": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 360
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "widthFt": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 20000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "lengthFt": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 20000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Block saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "block"
+                  ],
+                  "properties": {
+                    "block": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, an unknown `fieldId`, or a kind that cannot sit there.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Block not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The new layout does not fit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a block",
+        "description": "Owner only. Cascades through its plantings and events. With `?ifEmpty=1` (the garden designer) a block holding anything but planned plantings is kept and the answer is 409 `BED_HAS_RECORDS`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ifEmpty",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted; the body counts what was removed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Block not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The block has records.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/garden/plantings": {
+      "post": {
+        "summary": "Plant into garden beds as one batch",
+        "description": "Owner only. Creates `planned` plantings in beds. Every item is checked before anything is written, so one bad item saves nothing. `source` records where each proposal came from and is stored as its provenance.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "plantings": {
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "blockId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "cropPluginId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "varietyDisplayName": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "plantingDateMs": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "footprint": {
+                          "type": "object",
+                          "properties": {
+                            "x_in": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 240000
+                            },
+                            "y_in": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 240000
+                            },
+                            "w_in": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 240000
+                            },
+                            "l_in": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 240000
+                            }
+                          },
+                          "required": [
+                            "x_in",
+                            "y_in",
+                            "w_in",
+                            "l_in"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "spacingPattern": {
+                          "type": "string",
+                          "enum": [
+                            "square",
+                            "offset",
+                            "sfg"
+                          ]
+                        },
+                        "spacingIn": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 600
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "rowSpacingIn": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 600
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "plantCount": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "exclusiveMinimum": 0,
+                              "maximum": 100000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "manual",
+                            "plugin",
+                            "ai",
+                            "fallback"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "blockId",
+                        "cropPluginId",
+                        "varietyDisplayName",
+                        "plantingDateMs",
+                        "footprint",
+                        "spacingPattern",
+                        "source"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "plantings"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Plantings saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "plantings"
+                  ],
+                  "properties": {
+                    "plantings": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PlacedPlanting"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bed not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The layout does not fit: `OVERLAP`, `OUTSIDE_AREA` or `NOT_DESIGNABLE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/garden/beds/{blockId}/succession": {
+      "parameters": [
+        {
+          "name": "blockId",
+          "in": "path",
+          "required": true,
+          "description": "Bed (block) id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Preview or save succession sowings",
+        "description": "Owner only. `commit: false` previews the sowings that fit after a planting; `commit: true` saves them linked as one succession group.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cropId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "intervalDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 90
+                  },
+                  "commit": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "cropId",
+                  "count",
+                  "commit"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preview.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Sowings saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "proposal": {
+                      "type": "object"
+                    },
+                    "groupId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "anchor": {
+                      "$ref": "#/components/schemas/PlacedPlanting"
+                    },
+                    "created": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PlacedPlanting"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bed not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The layout does not fit: `OVERLAP`, `OUTSIDE_AREA` or `NOT_DESIGNABLE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/garden/beds/{blockId}/fill": {
+      "parameters": [
+        {
+          "name": "blockId",
+          "in": "path",
+          "required": true,
+          "description": "Bed (block) id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Propose plantings for the free space in a bed",
+        "description": "Owner only. Never saves anything; accepted proposals go to `POST /api/garden/plantings`. Claude is asked only when it is available (through `aiTry()`); otherwise, or when its answer fails the server checks, the proposals come from the best-fitting bed recipe or a spacing-packed plan and are tagged `fallback`, with `fallbackReason` saying why.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dateMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "seasonYear": {
+                    "type": "integer",
+                    "minimum": 2000,
+                    "maximum": 2100
+                  },
+                  "cropPluginIds": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  }
+                },
+                "required": [
+                  "dateMs",
+                  "seasonYear"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proposals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "proposals",
+                    "provenance",
+                    "fallbackReason",
+                    "message"
+                  ],
+                  "properties": {
+                    "proposals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "provenance": {
+                      "type": "string",
+                      "enum": [
+                        "ai",
+                        "fallback"
+                      ]
+                    },
+                    "fallbackReason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "no-key",
+                        "over-cap",
+                        "offline",
+                        "rate-limit",
+                        "timeout",
+                        null
+                      ]
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bed not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The layout does not fit: `OVERLAP`, `OUTSIDE_AREA` or `NOT_DESIGNABLE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/snapshot": {
+      "get": {
+        "summary": "The active Owner's offline Card bundle",
+        "description": "Everything the offline Cards need, built from tenant-scoped reads: Areas, blocks, plantings, open tasks, equipment, stock, crop and spray product data, frost dates and the Farm Map Card emergency contacts. Helpers can read it. Sends a weak ETag and answers 304 to a matching `If-None-Match`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "description": "ETag from an earlier response.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The snapshot.",
+            "headers": {
+              "ETag": {
+                "description": "Weak validator over everything but `generatedAt`.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "version",
+                    "ownerId",
+                    "generatedAt",
+                    "rulesVersion",
+                    "areas",
+                    "blocks",
+                    "plantings",
+                    "tasks",
+                    "equipment",
+                    "stock",
+                    "cropPlugins",
+                    "frost"
+                  ],
+                  "properties": {
+                    "version": {
+                      "const": 1
+                    },
+                    "ownerId": {
+                      "type": "string"
+                    },
+                    "farmName": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "generatedAt": {
+                      "type": "integer",
+                      "description": "Unix epoch ms."
+                    },
+                    "rulesVersion": {
+                      "type": "string"
+                    },
+                    "origin": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "areas": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "blocks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "plantings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "equipment": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "stock": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "cropPlugins": {
+                      "type": "object"
+                    },
+                    "frost": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "description": "Frost dates with their provenance (`data`, `manual` or `fallback`)."
+                    },
+                    "sprayProducts": {
+                      "type": "object"
+                    },
+                    "emergencyContacts": {
+                      "type": "array",
+                      "maxItems": 5,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 60
+                          },
+                          "role": {
+                            "default": "",
+                            "type": "string",
+                            "maxLength": 60
+                          },
+                          "phone": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 30
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "phone"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Unchanged since the ETag you sent."
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/geocode": {
+      "get": {
+        "summary": "Look up an address",
+        "description": "Signed-in only. Asks the US Census geocoder for up to 5 matches. Limited to 20 lookups a minute per user.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "The address, 3 to 200 characters.",
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matches, best first. Empty when nothing matched or the lookup failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "matches"
+                  ],
+                  "properties": {
+                    "matches": {
+                      "type": "array",
+                      "maxItems": 5,
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "label",
+                          "lat",
+                          "lon"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "lat": {
+                            "type": "number"
+                          },
+                          "lon": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`q` is missing, too short or too long.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many lookups; try again in a minute.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/hints": {
+      "get": {
+        "summary": "First-use hints the signed-in user has dismissed",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dismissed hint keys.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "hints"
+                  ],
+                  "properties": {
+                    "hints": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Mark hints seen",
+        "description": "One `key`, or a batch of up to 50 `keys` (the client flushes offline dismissals this way). Answers with the full dismissed list.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]{1,63}$"
+                      }
+                    },
+                    "required": [
+                      "key"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "keys": {
+                        "minItems": 1,
+                        "maxItems": 50,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_]{1,63}$"
+                        }
+                      }
+                    },
+                    "required": [
+                      "keys"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dismissed hint keys.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "hints"
+                  ],
+                  "properties": {
+                    "hints": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Too many hints recorded for this user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

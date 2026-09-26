@@ -17,6 +17,7 @@ import {
 } from '$lib/cards/snapshot';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { loadHardinessZone } from '$lib/climate/zone.server';
+import { loadEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 import { listAreas } from '$lib/db/areas';
 import { listBlocks } from '$lib/db/blocks';
 import {
@@ -251,7 +252,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     frost: snapshotFrostFromSettings(),
     hardinessZone: await loadHardinessZone(),
     sprayProducts,
-    mapFeatures: listMapFeatureViews()
+    mapFeatures: listMapFeatureViews(),
+    emergencyContacts: loadEmergencyContacts()
   };
 }
 

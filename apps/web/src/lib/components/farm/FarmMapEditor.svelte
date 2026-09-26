@@ -9,12 +9,41 @@
    */
   import { invalidateAll } from '$app/navigation';
   import { browser } from '$app/environment';
-  import { untrack } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import BlockMap from '$lib/components/BlockMap.svelte';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import FarmSketch from '$lib/components/farm/FarmSketch.svelte';
+  import AreaAddDrawer from '$lib/components/farm/AreaAddDrawer.svelte';
+  import AreaCardSheet from '$lib/components/farm/AreaCardSheet.svelte';
+  import AreaDetailsFields from '$lib/components/farm/AreaDetailsFields.svelte';
+  import MapFilterPanel from '$lib/components/farm/MapFilterPanel.svelte';
+  import Hint from '$lib/components/ui/Hint.svelte';
+  import { markHintSeen } from '$lib/client/hints';
   import { SQFT_PER_ACRE, formatFt, sketchAcres } from '$lib/farm/sketch';
+  import {
+    AREA_KINDS,
+    AREA_KIND_LABELS,
+    isCropBearing,
+    type AreaDetails,
+    type AreaKind
+  } from '$lib/farm/areaKinds';
+  import {
+    AREA_KIND_NOUN,
+    AREA_NAME_PLACEHOLDER,
+    kindCounts,
+    kindStyle,
+    type AddPick
+  } from '$lib/farm/kindStyle';
+  import {
+    DEFAULT_MAP_FILTER,
+    loadMapFilter,
+    saveMapFilter,
+    type MapFilter
+  } from '$lib/farm/mapFilter';
+  import { detailsFromDraft, draftFromDetails, type DetailsDraft } from '$lib/farm/areaDetailsForm';
+  import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
+  import type { FarmSnapshot } from '$lib/cards/snapshot';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { FieldWithBlocks } from '$lib/db/fields';
   import type { ShadeSource, ShadeSourceKind } from '$lib/db/shadeSources';
@@ -22,6 +51,7 @@
 
   type Geom = { type: 'Polygon' | 'MultiPolygon'; coordinates: unknown };
   type ShadeKind = ShadeSourceKind;
+  type AreaExtra = { kind: AreaKind; details: AreaDetails | null };
 
   let {
     blocks,
@@ -30,7 +60,10 @@
     canEdit,
     isFirstRun = false,
     initialMode,
-    initialCenter = null
+    initialCenter = null,
+    ownerId = null,
+    snapshot = null,
+    exportHref = '/plan/farm-map'
   }: {
     blocks: BlockWithPlantings[];
     fields: FieldWithBlocks[];
@@ -41,7 +74,61 @@
      *  when the farm has sizes entered but nothing drawn on the map. */
     initialMode?: 'map' | 'sketch';
     initialCenter?: { lat: number; lon: number } | null;
+    /** Keys the saved layer filter so each farm keeps its own. */
+    ownerId?: string | null;
+    /** Card data for the Area Card; built from `fields`/`blocks` when absent. */
+    snapshot?: FarmSnapshot | null;
+    /** Where Export goes: the printable Farm Map Card. */
+    exportHref?: string | null;
   } = $props();
+
+  // ─── Filter (per Owner, this browser only) ─────────────────────────────────
+  let filter = $state<MapFilter>({ ...DEFAULT_MAP_FILTER, hidden: [] });
+  let filterOpen = $state(false);
+  onMount(() => {
+    filter = loadMapFilter(ownerId);
+  });
+  function setFilter(next: MapFilter) {
+    filter = next;
+    saveMapFilter(ownerId, next);
+  }
+  const counts = $derived(kindCounts(fields.map((f) => ({ kind: f.kind ?? 'field' }))));
+  const filterActive = $derived(
+    filter.hidden.length > 0 || !filter.shade || !filter.labels || !filter.satellite
+  );
+
+  // ─── Add drawer ────────────────────────────────────────────────────────────
+  let addOpen = $state(false);
+  let sketchFormEl = $state<HTMLFormElement | null>(null);
+  async function onPick(pick: AddPick) {
+    addOpen = false;
+    void markHintSeen('map_add');
+    if (mode === 'map') {
+      blockMap?.startDrawPick(pick);
+      return;
+    }
+    if (pick.type === 'area') {
+      setNewFieldKind(pick.kind);
+      await tick();
+      sketchFormEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      sketchFormEl?.querySelector<HTMLInputElement>('input[type="text"]')?.focus();
+    }
+  }
+
+  // ─── Area Card ─────────────────────────────────────────────────────────────
+  let selectedAreaId = $state<string | null>(null);
+  const selectedArea = $derived(fields.find((f) => f.id === selectedAreaId) ?? null);
+  const cardSnapshot = $derived(
+    snapshot ?? snapshotFromMapData({ ownerId: ownerId ?? 'local', fields, blocks })
+  );
+  function openArea(id: string) {
+    selectedAreaId = id;
+  }
+  function editSelectedShape() {
+    const id = selectedAreaId;
+    selectedAreaId = null;
+    if (id) blockMap?.editArea(id);
+  }
 
   const hasGeometry = $derived(
     fields.some((f) => f.geometryGeojson) || blocks.some((b) => b.geometryGeojson)
@@ -74,7 +161,17 @@
     currentDraftName: () => string;
     currentDraftFieldId: () => string;
     centerOnMe: () => Promise<string | null>;
+    startDrawPick: (pick: AddPick) => void;
+    editArea: (fieldId: string) => boolean;
   } | null>(null);
+
+  const canEditShape = $derived(
+    canEdit &&
+      mode === 'map' &&
+      !!selectedArea?.geometryGeojson &&
+      !!blockMap &&
+      !filter.hidden.includes(selectedArea.kind ?? 'field')
+  );
 
   async function saveGeometry(blockId: string, geom: Geom | null) {
     if (geom === null) {
@@ -139,16 +236,36 @@
     await invalidateAll();
   }
 
-  async function createFieldWithGeometry(name: string, geom: Geom, suggestedAcres: number | null) {
-    if (!name.trim()) throw new Error('field name required');
+  async function createFieldWithGeometry(
+    name: string,
+    geom: Geom,
+    suggestedAcres: number | null,
+    extra?: AreaExtra
+  ) {
+    if (!name.trim()) throw new Error('Give it a name first.');
     const res = await fetch('/api/fields', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: name.trim(),
         acres: suggestedAcres !== null ? Number(suggestedAcres.toFixed(2)) : undefined,
-        geometryGeojson: geom
+        geometryGeojson: geom,
+        kind: extra?.kind,
+        details: extra?.details ?? undefined
       })
+    });
+    if (!res.ok) {
+      const out = await res.json().catch(() => ({}));
+      throw new Error(out.error ?? `HTTP ${res.status}`);
+    }
+    await invalidateAll();
+  }
+
+  async function saveAreaDetails(fieldId: string, extra: AreaExtra) {
+    const res = await fetch(`/api/fields/${encodeURIComponent(fieldId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: extra.kind, details: extra.details })
     });
     if (!res.ok) {
       const out = await res.json().catch(() => ({}));
@@ -211,9 +328,21 @@
   let newFieldLength = $state<number | null | undefined>(undefined);
   let creatingField = $state(false);
   let fieldError = $state<string | null>(null);
+  let newFieldKind = $state<AreaKind>('field');
+  let newFieldDetails = $state<DetailsDraft>({});
+
+  function setNewFieldKind(kind: AreaKind) {
+    newFieldKind = kind;
+    newFieldDetails = draftFromDetails(kind, null);
+  }
 
   async function createField() {
     if (!newFieldName.trim()) return;
+    const checked = detailsFromDraft(newFieldKind, newFieldDetails);
+    if (!checked.ok) {
+      fieldError = 'Some details don’t look right. Check them and try again.';
+      return;
+    }
     creatingField = true;
     fieldError = null;
     try {
@@ -225,7 +354,9 @@
           acres: newFieldAcres,
           notes: newFieldNotes.trim() || undefined,
           widthFt: newFieldWidth || undefined,
-          lengthFt: newFieldLength || undefined
+          lengthFt: newFieldLength || undefined,
+          kind: newFieldKind,
+          details: checked.details ?? undefined
         })
       });
       const out = await res.json();
@@ -238,7 +369,8 @@
       newFieldNotes = '';
       newFieldWidth = undefined;
       newFieldLength = undefined;
-      newBlockFieldId = out.field?.id ?? newBlockFieldId;
+      newFieldDetails = draftFromDetails(newFieldKind, null);
+      if (out.field?.kind && isCropBearing(out.field.kind)) newBlockFieldId = out.field.id;
       await invalidateAll();
     } catch (e) {
       fieldError = e instanceof Error ? e.message : String(e);
@@ -298,8 +430,8 @@
   async function deleteField(id: string, name: string, blockCount: number) {
     const ok = confirm(
       blockCount > 0
-        ? `Delete field "${name}"? This removes all ${blockCount} block(s) and every crop + event recorded against them. Cannot be undone.`
-        : `Delete field "${name}"?`
+        ? `Delete "${name}"? This removes all ${blockCount} block(s) and every crop and record kept against them. It can't be undone.`
+        : `Delete "${name}"?`
     );
     if (!ok) return;
     const res = await fetch(`/api/fields/${encodeURIComponent(id)}`, { method: 'DELETE' });
@@ -319,9 +451,11 @@
   let newBlockLength = $state<number | null | undefined>(undefined);
   let creatingBlock = $state(false);
 
+  const blockParents = $derived(fields.filter((f) => isCropBearing(f.kind ?? 'field')));
+
   $effect(() => {
-    if (fields.length > 0 && !fields.some((f) => f.id === newBlockFieldId)) {
-      newBlockFieldId = fields[0].id;
+    if (blockParents.length > 0 && !blockParents.some((f) => f.id === newBlockFieldId)) {
+      newBlockFieldId = blockParents[0].id;
     }
   });
 
@@ -690,12 +824,11 @@
 
 {#if isFirstRun && canEdit}
   <section class="card welcome">
-    <h2>👋 Draw your farm</h2>
+    <h2>Put your farm on the map</h2>
     <p>
-      Start with your <strong>fields</strong>, then the <strong>blocks</strong> inside them. On the
-      <strong>Map</strong>, use the toolbar to draw a field, then draw its blocks. If the aerial
-      view doesn't help, switch to <strong>Dimensions</strong> and type each field's width and length;
-      CropCard draws them as boxes.
+      Tap <strong>Add</strong> and pick what you're adding: a field, a garden, a greenhouse, the
+      barn. Then outline it on the <strong>Map</strong>. If the aerial view doesn't help, switch to
+      <strong>Dimensions</strong> and type its width and length instead; CropCard draws it as a box.
     </p>
   </section>
 {/if}
@@ -721,8 +854,88 @@
     </button>
   {/if}
 </div>
+<div class="verbs" role="toolbar" aria-label="Farm map">
+  {#if canEdit}
+    <button
+      type="button"
+      class="verb primary"
+      data-hint-anchor="map_add"
+      onclick={() => (addOpen = true)}
+      disabled={mode === 'map' && !blockMap}>+ Add</button
+    >
+  {/if}
+  <button
+    type="button"
+    class="verb"
+    class:on={filterActive}
+    data-hint-anchor="map_filter"
+    onclick={() => {
+      filterOpen = true;
+      void markHintSeen('map_filter');
+    }}
+  >
+    Filter{filterActive ? ' (on)' : ''}
+  </button>
+  {#if exportHref}
+    <a class="verb" href={exportHref}>Export card</a>
+  {/if}
+</div>
 {#if mode === 'map' && locateMessage}
   <p class="locate-msg" role="status">{locateMessage}</p>
+{/if}
+
+{#if canEdit}
+  <Hint
+    key="map_add"
+    anchor="[data-hint-anchor=map_add]"
+    text="Tap Add to put a field, garden, greenhouse or barn on your farm. You pick what it is, then outline it."
+    suppressed={addOpen || filterOpen || !!selectedArea}
+  />
+  <Hint
+    key="map_draw_area"
+    anchor="[data-hint-anchor=map_draw_area]"
+    text="Tap each corner, then the first corner again to close the shape. Size and perimeter fill in for you."
+    suppressed={addOpen || filterOpen || !!selectedArea}
+  />
+{/if}
+<Hint
+  key="map_filter"
+  anchor="[data-hint-anchor=map_filter]"
+  text="Filter hides kinds you don't need right now, like woods or the pond. It remembers your choice on this device."
+  suppressed={addOpen || filterOpen || !!selectedArea}
+/>
+
+<AreaAddDrawer
+  open={addOpen}
+  onClose={() => (addOpen = false)}
+  {onPick}
+  {mode}
+  canAddBlock={blockParents.length > 0}
+/>
+<MapFilterPanel
+  open={filterOpen}
+  onClose={() => (filterOpen = false)}
+  {filter}
+  onChange={setFilter}
+  {counts}
+  showBaseLayer={mode === 'map'}
+  hasShade={shadeSources.length > 0}
+  canAdd={canEdit}
+/>
+{#if selectedArea}
+  <AreaCardSheet
+    open={!!selectedArea}
+    onClose={() => (selectedAreaId = null)}
+    snapshot={cardSnapshot}
+    area={{
+      id: selectedArea.id,
+      name: selectedArea.name,
+      kind: selectedArea.kind ?? 'field',
+      details: selectedArea.details ?? null
+    }}
+    {canEdit}
+    onEditShape={canEditShape ? editSelectedShape : undefined}
+  />
 {/if}
 
 {#if mode === 'map'}
@@ -734,7 +947,10 @@
       {canEdit}
       {shadeSources}
       {initialCenter}
+      {filter}
       autoLocate={canEdit && !hasGeometry && !initialCenter}
+      onSelectArea={openArea}
+      onSaveAreaDetails={saveAreaDetails}
       onSaveGeometry={saveGeometry}
       onCreateWithGeometry={createBlockWithGeometry}
       onSaveFieldGeometry={saveFieldGeometry}
@@ -747,7 +963,14 @@
     <section class="card empty"><p>Loading map…</p></section>
   {/if}
 {:else}
-  <FarmSketch {fields} {blocks} />
+  <FarmSketch
+    fields={fields.filter((f) => !filter.hidden.includes(f.kind ?? 'field'))}
+    blocks={blocks.filter((b) => {
+      const parent = fields.find((f) => f.id === b.fieldId);
+      return !parent || !filter.hidden.includes(parent.kind ?? 'field');
+    })}
+    onSelectArea={openArea}
+  />
   {#if canEdit}
     {@const fieldAcresPreview = sketchAcres(newFieldWidth, newFieldLength)}
     {@const blockAcresPreview = sketchAcres(newBlockWidth, newBlockLength)}
@@ -755,17 +978,31 @@
       <form
         class="dim-form"
         data-testid="sketch-add-field"
+        bind:this={sketchFormEl}
         onsubmit={(e) => {
           e.preventDefault();
           createField();
         }}
       >
-        <h3>{fields.length === 0 ? '1. Add your first field' : 'Add another field'}</h3>
+        <h3>
+          {fields.length === 0 ? '1. ' : ''}Add {AREA_KIND_NOUN[newFieldKind]}
+        </h3>
+        <label class="kind-pick"
+          >Kind
+          <select
+            value={newFieldKind}
+            onchange={(e) => setNewFieldKind(e.currentTarget.value as AreaKind)}
+          >
+            {#each AREA_KINDS as k (k)}
+              <option value={k}>{AREA_KIND_LABELS[k]}</option>
+            {/each}
+          </select>
+        </label>
         <div class="grid3">
           <label
-            >Field name<input
+            >Name<input
               type="text"
-              placeholder="e.g. North Field"
+              placeholder={AREA_NAME_PLACEHOLDER[newFieldKind]}
               bind:value={newFieldName}
             /></label
           >
@@ -786,13 +1023,14 @@
             /></label
           >
         </div>
+        <AreaDetailsFields kind={newFieldKind} bind:draft={newFieldDetails} idPrefix="sketch-new" />
         <div class="row">
           <button
             type="submit"
             class="primary"
             disabled={creatingField || !newFieldName.trim() || !fieldAcresPreview}
           >
-            {creatingField ? '…' : 'Add field'}
+            {creatingField ? '…' : `Add ${AREA_KIND_LABELS[newFieldKind].toLowerCase()}`}
           </button>
           {#if fieldAcresPreview}<span class="hint"
               >≈ {fmt.qty(
@@ -804,7 +1042,7 @@
         {#if fieldError}<p class="error">{fieldError}</p>{/if}
       </form>
 
-      {#if fields.length > 0}
+      {#if blockParents.length > 0}
         <form
           class="dim-form"
           data-testid="sketch-add-block"
@@ -816,14 +1054,14 @@
           <h3>{blocks.length === 0 ? '2. Add the blocks inside it' : 'Add a block'}</h3>
           <p class="hint">
             A block is a patch you plant as one unit: a bed, a row set, a corner of a field. Blocks
-            are packed inside their field's box.
+            are packed inside their area's box.
           </p>
           <div class="grid3">
-            {#if fields.length > 1}
+            {#if blockParents.length > 1}
               <label class="full"
-                >Field
+                >Inside
                 <select bind:value={newBlockFieldId}>
-                  {#each fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
+                  {#each blockParents as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
                 </select>
               </label>
             {/if}
@@ -873,20 +1111,29 @@
   {/if}
 {/if}
 
-<section class="card">
+<section class="card" aria-label="Areas">
   {#if fields.length === 0}
     <p class="empty-row">
-      No fields yet. Draw one on the map, or switch to Dimensions and type its size.
+      Nothing on the map yet. Tap Add to outline a field, garden or barn, or switch to Dimensions
+      and type its size.
     </p>
   {:else}
     {#each fields as f (f.id)}
       {@const fieldBlocks = blocks.filter((b) => b.fieldId === f.id)}
       {@const fieldAcresDisplay = f.acres ?? (f.blockAcresTotal > 0 ? f.blockAcresTotal : null)}
-      <div class="field-group">
+      {@const fKind = f.kind ?? 'field'}
+      <div class="field-group" data-area-row={f.id}>
         <div class="field-row">
-          <span class="field-icon">🌾</span>
-          <strong class="field-name">{f.name}</strong>
+          <span class="field-swatch" style:--kind={kindStyle(fKind).color} aria-hidden="true"
+          ></span>
+          <button
+            type="button"
+            class="field-name"
+            onclick={() => openArea(f.id)}
+            aria-label="Open the card for {f.name}">{f.name}</button
+          >
           <span class="field-stats">
+            {AREA_KIND_LABELS[fKind]} ·
             {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
             {#if fieldAcresDisplay !== null}· {fmt.qty(fieldAcresDisplay, 'area', {
                 digits: 1
@@ -905,14 +1152,17 @@
               title="Add block"
               aria-label="Add block to {f.name}">＋</button
             >
-            <button class="row-action" onclick={() => startEditField(f)} title="Edit field"
-              >✏</button
+            <button
+              class="row-action"
+              onclick={() => startEditField(f)}
+              title="Edit name and size"
+              aria-label="Edit {f.name}">✏</button
             >
             <button
               class="row-action danger"
               onclick={() => deleteField(f.id, f.name, fieldBlocks.length)}
               aria-label="Delete {f.name}"
-              title="Delete field">🗑</button
+              title="Delete">🗑</button
             >
           {/if}
         </div>
@@ -922,7 +1172,7 @@
             <div class="grid2">
               <label>Name<input type="text" bind:value={editFieldName} /></label>
               <label
-                >Area<UnitInput
+                >Size<UnitInput
                   quantity="area"
                   min={0}
                   bind:value={
@@ -1000,7 +1250,7 @@
                     <div class="grid2">
                       <label>Name<input type="text" bind:value={editBlockName} /></label>
                       <label
-                        >Area<UnitInput
+                        >Size<UnitInput
                           quantity="area"
                           min={0}
                           bind:value={
@@ -1033,9 +1283,10 @@
                       >
                       {#if fields.length > 1}
                         <label class="full"
-                          >Move to field
+                          >Move to
                           <select bind:value={editBlockFieldId}>
-                            {#each fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option
+                            {#each blockParents as ff (ff.id)}<option value={ff.id}
+                                >{ff.name}</option
                               >{/each}
                           </select>
                         </label>
@@ -1157,7 +1408,7 @@
       <div class="field-group">
         <div class="field-row">
           <span class="field-icon">🌐</span>
-          <strong class="field-name">Farm-wide shade sources</strong>
+          <strong class="field-title">Farm-wide shade sources</strong>
         </div>
         <ul class="block-list-flat">
           {#each shadeSources.filter((s) => !s.fieldId || !fields.some((f) => f.id === s.fieldId)) as s (s.id)}
@@ -1199,15 +1450,15 @@
   <details class="card advanced">
     <summary>Add without drawing</summary>
     <p class="lede">
-      Add a field, block, tree row, grove, building, or other shade source by name only. Geometry is
-      optional — draw it later on the map above by selecting the matching tool.
+      Add an area, a block, a tree row, a grove, a building or other shade source by name only. You
+      can outline it on the map later.
     </p>
 
     <label class="full">
       What are you adding?
       <select bind:value={addKind}>
-        <option value="field">Field</option>
-        <option value="block">Block</option>
+        <option value="field">An area (field, garden, barn…)</option>
+        <option value="block">A block inside an area</option>
         <option disabled>──────────────</option>
         <option value="tree-row">🌳 Tree row</option>
         <option value="tree-grove">🌲 Tree grove</option>
@@ -1224,14 +1475,25 @@
       <div class="add-form-section">
         <div class="grid2">
           <label
+            >Kind
+            <select
+              value={newFieldKind}
+              onchange={(e) => setNewFieldKind(e.currentTarget.value as AreaKind)}
+            >
+              {#each AREA_KINDS as k (k)}
+                <option value={k}>{AREA_KIND_LABELS[k]}</option>
+              {/each}
+            </select>
+          </label>
+          <label
             >Name<input
               type="text"
-              placeholder="e.g. North Field"
+              placeholder={AREA_NAME_PLACEHOLDER[newFieldKind]}
               bind:value={newFieldName}
             /></label
           >
           <label
-            >Area (optional)<UnitInput
+            >Size (optional)<UnitInput
               quantity="area"
               min={0}
               bind:value={() => newFieldAcres ?? null, (v) => (newFieldAcres = v ?? undefined)}
@@ -1245,18 +1507,19 @@
             /></label
           >
         </div>
+        <AreaDetailsFields kind={newFieldKind} bind:draft={newFieldDetails} idPrefix="nodraw-new" />
         <button
           class="primary"
           onclick={createField}
           disabled={creatingField || !newFieldName.trim()}
         >
-          {creatingField ? '…' : 'Add field'}
+          {creatingField ? '…' : `Add ${AREA_KIND_LABELS[newFieldKind].toLowerCase()}`}
         </button>
         {#if fieldError}<p class="error">{fieldError}</p>{/if}
       </div>
     {:else if addKind === 'block'}
-      {#if fields.length === 0}
-        <p class="error">Add a field first — every block belongs to one.</p>
+      {#if blockParents.length === 0}
+        <p class="error">Add a crop area first. Every block sits inside one.</p>
       {:else}
         <div class="add-form-section">
           <div class="grid2">
@@ -1268,16 +1531,16 @@
               /></label
             >
             <label
-              >Area (optional)<UnitInput
+              >Size (optional)<UnitInput
                 quantity="area"
                 min={0}
                 bind:value={() => newBlockAcres ?? null, (v) => (newBlockAcres = v ?? undefined)}
               /></label
             >
             <label class="full"
-              >Field
+              >Inside
               <select bind:value={newBlockFieldId}>
-                {#each fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
+                {#each blockParents as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
               </select>
             </label>
           </div>
@@ -1319,9 +1582,9 @@
             /></label
           >
           <label class="full"
-            >Field (optional — leave blank for farm-wide)
+            >Area (optional; leave blank for the whole farm)
             <select bind:value={addShadeFieldId}>
-              <option value="">— Farm-wide (no field) —</option>
+              <option value="">Whole farm</option>
               {#each fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
             </select>
           </label>
@@ -1491,7 +1754,7 @@
         <label class="full"
           >Field
           <select bind:value={editShadeFieldId}>
-            <option value="">— Farm-wide (no field) —</option>
+            <option value="">Whole farm</option>
             {#each fields as ff (ff.id)}<option value={ff.id}>{ff.name}</option>{/each}
           </select>
         </label>
@@ -1665,9 +1928,77 @@
   .field-icon {
     font-size: 1rem;
   }
-  .field-name {
+  .field-title {
     font-size: 14px;
     color: var(--color-ink);
+  }
+  .field-swatch {
+    flex: 0 0 16px;
+    height: 16px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--kind) 35%, transparent);
+    border: 2px solid var(--kind);
+  }
+  .field-name {
+    min-height: 48px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-ink);
+    text-align: left;
+    text-decoration: underline;
+    text-decoration-color: var(--color-divider);
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .field-name:hover {
+    text-decoration-color: currentColor;
+  }
+  .verbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .verb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 8px;
+    border: 1px solid var(--color-divider);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .verb.primary {
+    background: var(--color-forest-deep);
+    border-color: var(--color-forest-deep);
+    color: var(--color-paper);
+  }
+  .verb.on {
+    border-color: var(--color-forest);
+    background: var(--pill-forest-bg);
+  }
+  .verb:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .verb:focus-visible,
+  .field-name:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .kind-pick {
+    margin-bottom: 8px;
   }
   .field-stats {
     color: var(--color-ink-muted);
@@ -1716,10 +2047,10 @@
     border: 1px solid var(--color-divider);
     background: var(--color-paper);
     border-radius: 6px;
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 48px;
+    min-height: 48px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 15px;
   }
   .row-action:hover {
     border-color: var(--color-forest-deep);
@@ -1823,7 +2154,7 @@
     padding: 6px 10px;
     font-size: 12px;
   }
-  button:not(.primary):not(.row-action) {
+  button:not(.primary):not(.row-action):not(.verb):not(.field-name) {
     background: var(--color-paper);
     border: 1px solid var(--color-divider);
     border-radius: 6px;

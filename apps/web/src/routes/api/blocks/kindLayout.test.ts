@@ -1,19 +1,27 @@
 // @vitest-environment node
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { runWithTenant } from '$lib/db/tenant';
 import { createField } from '$lib/db/fields';
+import { loadGettingStartedFacts } from '$lib/onboarding/gettingStarted.server';
 
-vi.mock('$lib/server/auth', () => ({
-  currentUser: () => ({ id: 'user-1', role: 'owner' }),
-  requireOwner: () => ({ id: 'user-1', role: 'owner' })
-}));
-vi.mock('$lib/server/session', () => ({ canMutate: () => true }));
+const auth = vi.hoisted(() => ({ role: 'owner' as 'owner' | 'helper' }));
+vi.mock('$lib/server/auth', async () => {
+  const { error } = await import('@sveltejs/kit');
+  return {
+    currentUser: () => ({ id: 'user-1', role: auth.role }),
+    requireOwner: () => {
+      if (auth.role !== 'owner') throw error(403, 'owner role required');
+      return { id: 'user-1', role: auth.role };
+    }
+  };
+});
 
 import { GET as LIST, POST } from './+server';
-import { PATCH } from './[id]/+server';
+import { DELETE, GET as GET_ONE, PATCH } from './[id]/+server';
+import { DELETE as DELETE_GEOM, PUT as PUT_GEOM } from './[id]/geometry/+server';
 
 function seedOwner(): string {
   const id = `blocks-kind-${randomUUID()}`;
@@ -121,6 +129,18 @@ describe('/api/blocks kind + layout', () => {
     });
   });
 
+  it("POST defaults an omitted kind to the parent Area's default", async () => {
+    await runWithTenant(seedOwner(), async () => {
+      const garden = createField({ name: 'G', kind: 'garden' });
+      const field = createField({ name: 'F', kind: 'field' });
+      const inGarden = await (await create({ name: 'Drawn', fieldId: garden.id })).json();
+      expect(inGarden.block.kind).toBe('bed');
+      expect(loadGettingStartedFacts({ ownerId: 'o', userId: 'user-1' }).hasGardenBed).toBe(true);
+      const inField = await (await create({ name: 'Drawn', fieldId: field.id })).json();
+      expect(inField.block.kind).toBe('block');
+    });
+  });
+
   it('POST rejects layout fields on a plain block or row', async () => {
     await runWithTenant(seedOwner(), async () => {
       const garden = createField({ name: 'G', kind: 'garden' });
@@ -162,6 +182,52 @@ describe('/api/blocks kind + layout', () => {
       const beds = (await (await list('?kind=bed')).json()).blocks;
       expect(beds.map((b: { name: string }) => b.name)).toEqual(['Bed']);
       expect((await list('?kind=garden')).status).toBe(400);
+    });
+  });
+
+  describe('helper role', () => {
+    afterEach(() => {
+      auth.role = 'owner';
+    });
+
+    const status = async (fn: () => unknown) => {
+      try {
+        const res = (await fn()) as Response;
+        return res.status;
+      } catch (e) {
+        return (e as { status: number }).status;
+      }
+    };
+
+    it('403s on PATCH, DELETE and geometry writes, and changes nothing', async () => {
+      await runWithTenant(seedOwner(), async () => {
+        const { block } = await (await create({ name: 'North' })).json();
+        auth.role = 'helper';
+        expect(await status(() => patch(block.id, { name: 'Renamed' }))).toBe(403);
+        expect(
+          await status(() =>
+            DELETE({
+              params: { id: block.id },
+              request: req('DELETE', `http://localhost/api/blocks/${block.id}`)
+            } as never)
+          )
+        ).toBe(403);
+        expect(
+          await status(() =>
+            PUT_GEOM({
+              params: { id: block.id },
+              request: req('PUT', `http://localhost/api/blocks/${block.id}/geometry`, {
+                type: 'Polygon',
+                coordinates: []
+              })
+            } as never)
+          )
+        ).toBe(403);
+        expect(await status(() => DELETE_GEOM({ params: { id: block.id } } as never))).toBe(403);
+        auth.role = 'owner';
+        const one = await GET_ONE({ params: { id: block.id } } as never);
+        expect((await one.json()).block).toMatchObject({ name: 'North' });
+      });
     });
   });
 });

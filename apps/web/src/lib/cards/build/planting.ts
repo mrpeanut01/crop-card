@@ -126,7 +126,11 @@ export function buildPlantingCard(
   if (p.status === 'harvested' && p.harvestedAt) {
     facts.push({ label: 'Harvested', value: monthDay(p.harvestedAt), provenance: 'data' });
   } else if (window) {
-    facts.push({ label: 'Harvest', value: dateRange(window.start, window.end), provenance: 'plugin' });
+    facts.push({
+      label: 'Harvest',
+      value: dateRange(window.start, window.end),
+      provenance: 'plugin'
+    });
   } else if (plugin?.daysToMaturity) {
     const { min, max } = plugin.daysToMaturity;
     facts.push({
@@ -153,7 +157,9 @@ export function buildPlantingCard(
     const cutoff = window ? addDaysYmd(window.start, -phi) : null;
     facts.push({
       label: 'PHI buffer',
-      value: cutoff ? `${phi} d · check labels after ${monthDay(cutoff)}` : `${phi} d before harvest`,
+      value: cutoff
+        ? `${phi} d · check labels after ${monthDay(cutoff)}`
+        : `${phi} d before harvest`,
       provenance: 'plugin'
     });
   }
@@ -190,7 +196,7 @@ export function buildPlantingCard(
     kicker,
     title: p.varietyDisplayName.trim() || plugin?.displayName || 'Planting',
     facts,
-    next: nextAction(tasks, opts),
+    next: nextAction(tasks, opts, snapshot.plantings),
     sections,
     asOf: snapshot.generatedAt,
     provenance: mergeProvenance(provenance),

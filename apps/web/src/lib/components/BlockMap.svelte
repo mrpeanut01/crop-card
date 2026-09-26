@@ -11,18 +11,44 @@
   import { onMount, onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
+  import AreaDetailsFields from '$lib/components/farm/AreaDetailsFields.svelte';
+  import Provenance from '$lib/components/ui/Provenance.svelte';
   import { fmt } from '$lib/prefsState.svelte';
+  import {
+    AREA_KINDS,
+    AREA_KIND_LABELS,
+    isCropBearing,
+    perimeterFtFromGeojson,
+    type AreaDetails,
+    type AreaKind
+  } from '$lib/farm/areaKinds';
+  import { AREA_NAME_PLACEHOLDER, kindStyle, shadeStyle, type AddPick } from '$lib/farm/kindStyle';
+  import { isKindVisible, type MapFilter } from '$lib/farm/mapFilter';
+  import { detailsFromDraft, draftFromDetails, type DetailsDraft } from '$lib/farm/areaDetailsForm';
   import 'leaflet/dist/leaflet.css';
   import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
   import { geojsonCentroid, metersSquaredToAcres, polygonAreaSqMeters } from '$lib/geo/area';
-  import type { Map as LMap, Polygon as LPolygon, LayerGroup, GeoJSON as LGeoJSON } from 'leaflet';
+  import type {
+    Map as LMap,
+    Polygon as LPolygon,
+    LayerGroup,
+    GeoJSON as LGeoJSON,
+    TileLayer
+  } from 'leaflet';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { FieldWithBlocks } from '$lib/db/fields';
 
   type Geom = { type: 'Polygon' | 'MultiPolygon'; coordinates: number[][][] | number[][][][] };
   type SaveCallback = (id: string, geom: Geom | null) => Promise<void> | void;
   type CreateBlockCb = (geom: Geom, acres: number | null) => Promise<void> | void;
-  type CreateFieldCb = (name: string, geom: Geom, acres: number | null) => Promise<void> | void;
+  type AreaExtra = { kind: AreaKind; details: AreaDetails | null };
+  type CreateFieldCb = (
+    name: string,
+    geom: Geom,
+    acres: number | null,
+    extra?: AreaExtra
+  ) => Promise<void> | void;
+  type SaveAreaDetailsCb = (fieldId: string, extra: AreaExtra) => Promise<void> | void;
 
   type BlockChoice = { id: string; name: string; fieldName: string };
   type FieldChoice = { id: string; name: string };
@@ -42,6 +68,11 @@
     fieldChoices: FieldChoice[];
     existingFieldId: string;
     newFieldName: string;
+    kind: AreaKind;
+    details: DetailsDraft;
+    perimeterFt: number | null;
+    /** True when the draw started from a pick in the Add drawer. */
+    typed: boolean;
     // shared
     busy: boolean;
     error: string | null;
@@ -99,7 +130,10 @@
     onDeleteShadeSource,
     onUpdateShadeGeometry,
     initialCenter = null,
-    autoLocate = false
+    autoLocate = false,
+    filter,
+    onSelectArea,
+    onSaveAreaDetails
   }: {
     blocks: BlockWithPlantings[];
     fields: FieldWithBlocks[];
@@ -136,35 +170,38 @@
     /** When nothing is drawn yet, center on the browser's location (the
      *  browser asks the user first). */
     autoLocate?: boolean;
+    /** Layer toggles from the map's Filter panel. When set, the Satellite
+     *  toggle replaces Leaflet's base-layer control. */
+    filter?: MapFilter;
+    /** Tapping an Area opens its card instead of starting an edit. */
+    onSelectArea?: (fieldId: string) => void;
+    onSaveAreaDetails?: SaveAreaDetailsCb;
   } = $props();
 
-  // ── Per-field color palette (index cycles for farms with >8 fields) ──────
-  const FIELD_COLORS = [
-    '#1f5e3a',
-    '#2980b9',
-    '#8e44ad',
-    '#c0392b',
-    '#d35400',
-    '#16a085',
-    '#2c3e50',
-    '#a67c00'
-  ];
-  const fieldColorMap = new Map<string, string>();
+  // ── Colors by Area kind ──────────────────────────────────────────────────
+  const fieldKindMap = new Map<string, AreaKind>();
 
   function buildFieldColorMap() {
-    fieldColorMap.clear();
-    fields.forEach((f, i) => {
-      fieldColorMap.set(f.id, FIELD_COLORS[i % FIELD_COLORS.length]);
-    });
+    fieldKindMap.clear();
+    for (const f of fields) fieldKindMap.set(f.id, f.kind ?? 'field');
   }
 
   function blockColor(fieldId: string | undefined): string {
-    return (fieldId && fieldColorMap.get(fieldId)) ?? FIELD_COLORS[0];
+    return kindStyle(fieldId ? fieldKindMap.get(fieldId) : 'field').color;
   }
+
+  function areaVisible(kind: AreaKind | undefined): boolean {
+    return !filter || isKindVisible(filter, kind);
+  }
+
+  const labelsOn = $derived(!filter || filter.labels);
+  const blockParents = $derived(fields.filter((f) => isCropBearing(f.kind ?? 'field')));
 
   // ── Map state ────────────────────────────────────────────────────────────
   let mapEl: HTMLDivElement;
   let map: LMap | null = null;
+  let satelliteLayer: TileLayer | null = null;
+  let streetsLayer: TileLayer | null = null;
   let fieldLayer: LayerGroup | null = null; // rendered below blockLayer
   let blockLayer: LayerGroup | null = null;
   /** v1.3 — shade-source layer renders above blocks. */
@@ -184,13 +221,15 @@
 
   const polygonToBlockId = new Map<number, string>();
   const polygonToFieldId = new Map<number, string>();
+  const fieldLayersById = new Map<string, LGeoJSON>();
   const polygonToShadeId = new Map<number, string>();
 
   let pendingDraft = $state<DraftState | null>(null);
   /** Active draw mode. 'auto' = field/block by centroid containment;
    *  'shade-line' = drawing a tree row / fence / hedge;
    *  'shade-polygon' = drawing a tree grove / building / structure. */
-  let drawMode = $state<'auto' | 'shade-line' | 'shade-polygon'>('auto');
+  let drawMode = $state<'auto' | 'area' | 'block' | 'shade-line' | 'shade-polygon'>('auto');
+  let pendingAreaKind = $state<AreaKind>('field');
   /** Pending shade-source draft (after shape is drawn). */
   let shadeDraft = $state<ShadeDraft | null>(null);
   let drawing = $state(false);
@@ -276,7 +315,7 @@
     if (pendingDraft.mode === 'block') {
       return pendingDraft.assignMode === 'existing'
         ? !!pendingDraft.existingBlockId
-        : !!pendingDraft.newBlockName.trim();
+        : !!pendingDraft.newBlockName.trim() && !!pendingDraft.newBlockFieldId;
     }
     return pendingDraft.assignFieldMode === 'existing'
       ? !!pendingDraft.existingFieldId
@@ -318,8 +357,11 @@
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     });
-    satellite.addTo(map);
-    if (!thumbnail) {
+    satelliteLayer = satellite;
+    streetsLayer = streets;
+    if (filter && !filter.satellite) streets.addTo(map);
+    else satellite.addTo(map);
+    if (!thumbnail && !filter) {
       L.control
         .layers({ Satellite: satellite, Streets: streets }, undefined, { position: 'topright' })
         .addTo(map);
@@ -427,14 +469,23 @@
         }
 
         const acres = areaFromGeom(geojson);
+        const typedArea = drawMode === 'area';
+        const typedBlock = drawMode === 'block';
+        const areaKind = pendingAreaKind;
+        drawMode = 'auto';
 
-        // Auto-detect: if the centroid falls inside an existing field → block, otherwise → field.
-        const containingField = fields.find((f) => centroidInField(geojson, f));
+        // The legacy tool auto-detects: inside an existing Area → block,
+        // otherwise → a new Area. A kind picked from the Add drawer skips that.
+        const inside = fields.filter((f) => centroidInField(geojson, f));
+        const containingField = typedArea
+          ? undefined
+          : (inside.find((f) => isCropBearing(f.kind ?? 'field')) ?? inside[0]);
 
-        if (containingField) {
-          const unmapped = blocks.filter(
-            (b) => !b.geometryGeojson && b.fieldId === containingField.id
-          );
+        if (containingField || typedBlock) {
+          const parent = containingField ?? fields.find((f) => isCropBearing(f.kind ?? 'field'));
+          const unmapped = parent
+            ? blocks.filter((b) => !b.geometryGeojson && b.fieldId === parent.id)
+            : [];
           const allUnmapped = blocks.filter((b) => !b.geometryGeojson);
           const choices = (unmapped.length > 0 ? unmapped : allUnmapped).map((b) => ({
             id: b.id,
@@ -449,16 +500,24 @@
             blockChoices: choices,
             existingBlockId: choices[0]?.id ?? '',
             newBlockName: '',
-            newBlockFieldId: containingField.id,
+            newBlockFieldId: parent?.id ?? '',
             assignFieldMode: 'new',
             fieldChoices: [],
             existingFieldId: '',
             newFieldName: '',
+            kind: parent?.kind ?? 'field',
+            details: {},
+            perimeterFt: null,
+            typed: typedBlock,
             busy: false,
             error: null
           };
         } else {
-          const unmapped = fields.filter((f) => !f.geometryGeojson);
+          const kind: AreaKind = typedArea ? areaKind : 'field';
+          const undrawn = fields.filter((f) => !f.geometryGeojson);
+          const unmapped = typedArea
+            ? undrawn.filter((f) => (f.kind ?? 'field') === kind)
+            : undrawn;
           pendingDraft = {
             mode: 'field',
             geom: geojson,
@@ -472,6 +531,10 @@
             fieldChoices: unmapped.map((f) => ({ id: f.id, name: f.name })),
             existingFieldId: unmapped[0]?.id ?? '',
             newFieldName: '',
+            kind,
+            details: draftFromDetails(kind, null),
+            perimeterFt: perimeterFtFromGeojson(JSON.stringify(geojson)),
+            typed: typedArea,
             busy: false,
             error: null
           };
@@ -493,40 +556,59 @@
     if (!map || !fieldLayer) return;
     fieldLayer.clearLayers();
     polygonToFieldId.clear();
+    fieldLayersById.clear();
     for (const f of fields) {
       if (!f.geometryGeojson) continue;
+      if (!areaVisible(f.kind)) continue;
       let parsed: unknown;
       try {
         parsed = JSON.parse(f.geometryGeojson);
       } catch {
         continue;
       }
-      const color = fieldColorMap.get(f.id) ?? FIELD_COLORS[0];
+      const ks = kindStyle(f.kind);
       const layer = L.geoJSON(parsed as never, {
-        style: () => ({ color, weight: 2, dashArray: '7 5', fillColor: color, fillOpacity: 0.07 })
+        style: () => ({
+          color: ks.color,
+          weight: ks.weight,
+          dashArray: ks.dashArray,
+          fillColor: ks.color,
+          fillOpacity: ks.fillOpacity
+        })
       });
-      layer.bindTooltip(f.name, {
-        permanent: true,
-        direction: 'center',
-        className: 'field-label-tip'
-      });
+      layer.bindTooltip(
+        f.name,
+        labelsOn
+          ? { permanent: true, direction: 'center', className: 'field-label-tip' }
+          : { direction: 'center' }
+      );
       const id = (layer as unknown as { _leaflet_id: number })._leaflet_id;
       polygonToFieldId.set(id, f.id);
-      if (canEdit) {
-        // Attach handlers once to each sub-layer at render time.
-        (layer as LGeoJSON).eachLayer((l) => {
-          const poly = l as LPolygon & { pm: { enable: (o: object) => void } };
+      fieldLayersById.set(f.id, layer as LGeoJSON);
+      (layer as LGeoJSON).eachLayer((l) => {
+        const poly = l as LPolygon & { pm: { enable: (o: object) => void } };
+        if (canEdit) {
           l.on('pm:edit', () => debouncedFieldSave(f.id, poly));
           l.on('contextmenu', () => removeFieldGeometry(f.id, f.name));
-          l.on('click', () => {
-            if (drawing) return;
-            _suppressNextMapClick = true;
-            editingActive = true;
-            poly.pm.enable({ snappable: true, allowSelfIntersection: false });
-          });
+        }
+        l.on('click', () => {
+          if (drawing) return;
+          _suppressNextMapClick = true;
+          if (onSelectArea && !editingActive) {
+            onSelectArea(f.id);
+            return;
+          }
+          if (!canEdit) return;
+          editingActive = true;
+          poly.pm.enable({ snappable: true, allowSelfIntersection: false });
         });
-      }
+      });
       layer.addTo(fieldLayer);
+      (layer as LGeoJSON).eachLayer((l) => {
+        const el = (l as unknown as { getElement?: () => Element | undefined }).getElement?.();
+        el?.setAttribute('data-area-id', f.id);
+        el?.setAttribute('data-area-kind', f.kind ?? 'field');
+      });
     }
   }
 
@@ -538,6 +620,7 @@
     labelEntries = [];
     for (const b of blocks) {
       if (!b.geometryGeojson) continue;
+      if (!areaVisible(b.fieldId ? fieldKindMap.get(b.fieldId) : 'field')) continue;
       let parsed: unknown;
       try {
         parsed = JSON.parse(b.geometryGeojson);
@@ -555,7 +638,7 @@
       // Permanent, high-contrast name pill at the centroid for read-only
       // surfaces. The declutter pass (when enabled) keeps these from
       // overlapping; without it they render at the raw centroid.
-      if (showBlockLabels && !thumbnail && labelLayer) {
+      if (showBlockLabels && labelsOn && !thumbnail && labelLayer) {
         const centroid = geojsonCentroid(b.geometryGeojson);
         if (centroid) {
           const [lon, lat] = centroid;
@@ -625,6 +708,7 @@
     if (!map || !shadeLayer) return;
     shadeLayer.clearLayers();
     polygonToShadeId.clear();
+    if (filter && !filter.shade) return;
     for (const s of shadeSources) {
       if (!s.geometryGeojson) continue;
       let parsed: unknown;
@@ -636,9 +720,7 @@
       const isLine = isLineGeometry(parsed);
       // Distinct visual: dashed gray-green for tree-rows; dashed dark-amber
       // for buildings/structures so they don't compete with field/block colors.
-      const isStructure = s.kind === 'building' || s.kind === 'structure' || s.kind === 'fence';
-      const stroke = isStructure ? '#92400e' : '#15803d';
-      const fill = isStructure ? '#fbbf24' : '#86efac';
+      const { color: stroke, fill } = shadeStyle(s.kind);
       const layer = L.geoJSON(parsed as never, {
         style: () => ({
           color: stroke,
@@ -705,7 +787,18 @@
     void blocks;
     void fields;
     void shadeSources;
+    const f = filter;
     if (!browser || !map) return;
+    if (f && satelliteLayer && streetsLayer) {
+      const [on, off] = f.satellite
+        ? [satelliteLayer, streetsLayer]
+        : [streetsLayer, satelliteLayer];
+      if (map.hasLayer(off)) map.removeLayer(off);
+      if (!map.hasLayer(on)) {
+        on.addTo(map);
+        on.bringToBack();
+      }
+    }
     import('leaflet').then((mod) => {
       buildFieldColorMap();
       renderFields(mod.default);
@@ -905,6 +998,45 @@
     drawing = false;
     drawMode = 'auto';
     pendingShadeKind = null;
+  }
+
+  /** Starts drawing whatever was picked in the Add drawer. */
+  export function startDrawPick(pick: AddPick) {
+    if (pick.type === 'shade') {
+      startDrawShade(pick.kind);
+      return;
+    }
+    if (!map || !canEdit) return;
+    stopEditing();
+    drawError = null;
+    drawing = true;
+    if (pick.type === 'area') {
+      pendingAreaKind = pick.kind;
+      drawMode = 'area';
+    } else {
+      drawMode = 'block';
+    }
+    map.pm.enableDraw('Polygon');
+  }
+
+  /** Turns on vertex editing for one Area's outline (from its card). */
+  export function editArea(fieldId: string): boolean {
+    const layer = fieldLayersById.get(fieldId);
+    if (!layer || !canEdit || !map) return false;
+    stopEditing();
+    let bounds: import('leaflet').LatLngBounds | null = null;
+    layer.eachLayer((l) => {
+      const poly = l as LPolygon & { pm: { enable: (o: object) => void } };
+      poly.pm.enable({ snappable: true, allowSelfIntersection: false });
+      bounds = poly.getBounds();
+    });
+    editingActive = true;
+    if (bounds) map.fitBounds(bounds, { padding: [40, 40] });
+    return true;
+  }
+
+  export function hasAreaOnMap(fieldId: string): boolean {
+    return fieldLayersById.has(fieldId);
   }
 
   /** Centers the map on the browser's location. Resolves with an error
@@ -1151,13 +1283,28 @@
           await onCreateWithGeometry(pendingDraft.geom, pendingDraft.acres);
         }
       } else {
+        const checked = detailsFromDraft(pendingDraft.kind, pendingDraft.details);
+        if (!checked.ok) {
+          pendingDraft.error = 'Some details don’t look right. Check them and try again.';
+          return;
+        }
+        const extra = { kind: pendingDraft.kind, details: checked.details };
         if (pendingDraft.assignFieldMode === 'existing') {
           await onSaveFieldGeometry(pendingDraft.existingFieldId, pendingDraft.geom);
+          const existing = fields.find((f) => f.id === pendingDraft?.existingFieldId);
+          if (
+            onSaveAreaDetails &&
+            existing &&
+            (existing.kind !== extra.kind || (pendingDraft.typed && extra.details))
+          ) {
+            await onSaveAreaDetails(existing.id, extra);
+          }
         } else {
           await onCreateFieldWithGeometry(
             pendingDraft.newFieldName.trim(),
             pendingDraft.geom,
-            pendingDraft.acres
+            pendingDraft.acres,
+            extra
           );
         }
       }
@@ -1206,7 +1353,7 @@
         <button type="button" class="tool done" onclick={stopEditing} title="Finish editing">
           ✓ Done editing
         </button>
-      {:else}
+      {:else if !filter}
         <button
           type="button"
           class="tool primary"
@@ -1279,11 +1426,21 @@
   {/if}
 
   {#if drawing}
-    <p class="hint" aria-live="polite">
+    <p
+      class="hint"
+      aria-live="polite"
+      data-hint-anchor={drawMode === 'area' ? 'map_draw_area' : undefined}
+    >
       {#if drawMode === 'shade-line'}
         Click points to draw the tree row / fence line. Double-click to finish.
       {:else if drawMode === 'shade-polygon'}
         Click points to outline the grove / building footprint. Double-click to finish.
+      {:else if drawMode === 'area'}
+        Tap each corner of the {AREA_KIND_LABELS[pendingAreaKind].toLowerCase()}, then tap the first
+        corner again (or double-click) to finish.
+      {:else if drawMode === 'block'}
+        Tap each corner of the block inside one of your crop areas, then tap the first corner again
+        (or double-click) to finish.
       {:else}
         Click points to outline an area. Double-click to finish. Draw <strong>inside a field</strong
         >
@@ -1413,24 +1570,22 @@
     onkeydown={(e) => e.key === 'Escape' && dismissDraft()}
     tabindex="-1"
   >
-    <div class="draft-modal">
-      {#if pendingDraft.acres !== null}
-        <p class="acres-hint">Area ≈ <strong>{fmt.qty(pendingDraft.acres, 'area')}</strong></p>
-      {/if}
-
+    <div class="draft-modal" style:--kind={kindStyle(pendingDraft.kind).color}>
       {#if pendingDraft.mode === 'block'}
-        <!-- ── Block mode ── -->
-        <h2 id="draft-title">Assign block geometry</h2>
+        <h2 id="draft-title">
+          {pendingDraft.typed ? 'New block' : 'Assign block geometry'}
+        </h2>
+        {@render measures(pendingDraft.acres, null)}
 
         {#if pendingDraft.blockChoices.length > 0}
           <div class="mode-radio">
             <label>
               <input type="radio" bind:group={pendingDraft.assignMode} value="existing" />
-              Assign to existing block
+              Use a block you already named
             </label>
             <label>
               <input type="radio" bind:group={pendingDraft.assignMode} value="new" />
-              Create new block
+              Create a new block
             </label>
           </div>
         {/if}
@@ -1453,37 +1608,45 @@
               placeholder="e.g. Corn Block A"
             />
           </label>
-          {#if fields.length > 1}
+          {#if blockParents.length > 1 || !pendingDraft.newBlockFieldId}
             <label>
-              Field
+              Inside
               <select bind:value={pendingDraft.newBlockFieldId}>
-                {#each fields as f (f.id)}
+                {#if !pendingDraft.newBlockFieldId}<option value="">Pick one</option>{/if}
+                {#each blockParents as f (f.id)}
                   <option value={f.id}>{f.name}</option>
                 {/each}
               </select>
             </label>
           {/if}
+          {#if blockParents.length === 0}
+            <p class="map-error">Add a field, garden or other crop area first.</p>
+          {/if}
         {/if}
       {:else}
-        <!-- ── Field mode ── -->
-        <h2 id="draft-title">Assign field boundary</h2>
+        <h2 id="draft-title">
+          {pendingDraft.typed
+            ? `New ${AREA_KIND_LABELS[pendingDraft.kind].toLowerCase()}`
+            : 'New area'}
+        </h2>
+        {@render measures(pendingDraft.acres, pendingDraft.perimeterFt)}
 
         {#if pendingDraft.fieldChoices.length > 0}
           <div class="mode-radio">
             <label>
               <input type="radio" bind:group={pendingDraft.assignFieldMode} value="existing" />
-              Assign to existing field
+              Use one you already named
             </label>
             <label>
               <input type="radio" bind:group={pendingDraft.assignFieldMode} value="new" />
-              Create new field
+              Create a new one
             </label>
           </div>
         {/if}
 
         {#if pendingDraft.assignFieldMode === 'existing'}
           <label>
-            Field
+            Name
             <select bind:value={pendingDraft.existingFieldId}>
               {#each pendingDraft.fieldChoices as c (c.id)}
                 <option value={c.id}>{c.name}</option>
@@ -1492,14 +1655,35 @@
           </label>
         {:else}
           <label>
-            Field name
+            Name
             <input
               type="text"
               bind:value={pendingDraft.newFieldName}
-              placeholder="e.g. North Field"
+              placeholder={AREA_NAME_PLACEHOLDER[pendingDraft.kind]}
             />
           </label>
         {/if}
+        <label>
+          Kind
+          <select
+            value={pendingDraft.kind}
+            onchange={(e) => {
+              if (!pendingDraft) return;
+              const k = e.currentTarget.value as AreaKind;
+              pendingDraft.kind = k;
+              pendingDraft.details = draftFromDetails(k, null);
+            }}
+          >
+            {#each AREA_KINDS as k (k)}
+              <option value={k}>{AREA_KIND_LABELS[k]}</option>
+            {/each}
+          </select>
+        </label>
+        <AreaDetailsFields
+          kind={pendingDraft.kind}
+          bind:draft={pendingDraft.details}
+          idPrefix="draft"
+        />
       {/if}
 
       {#if pendingDraft.error}<p class="map-error">{pendingDraft.error}</p>{/if}
@@ -1508,9 +1692,9 @@
         <button type="button" class="primary" onclick={submitDraft} disabled={!draftReady}>
           {#if pendingDraft.busy}…
           {:else if pendingDraft.mode === 'block'}
-            {pendingDraft.assignMode === 'existing' ? 'Assign geometry' : 'Save block'}
+            {pendingDraft.assignMode === 'existing' ? 'Save outline' : 'Save block'}
           {:else}
-            {pendingDraft.assignFieldMode === 'existing' ? 'Assign boundary' : 'Save field'}
+            Save
           {/if}
         </button>
         <button type="button" onclick={dismissDraft}>Discard</button>
@@ -1519,7 +1703,50 @@
   </div>
 {/if}
 
+{#snippet measures(acres: number | null, perimeterFt: number | null)}
+  {#if acres !== null || perimeterFt !== null}
+    <dl class="measures" data-testid="draft-measures">
+      {#if acres !== null}
+        <div>
+          <dt>Size</dt>
+          <dd>≈ {fmt.qty(acres, 'area')} <Provenance source="data" compact /></dd>
+        </div>
+      {/if}
+      {#if perimeterFt !== null}
+        <div>
+          <dt>Perimeter</dt>
+          <dd>
+            ≈ {fmt.qty(perimeterFt, 'distance', { digits: 0 })}
+            <Provenance source="data" compact />
+          </dd>
+        </div>
+      {/if}
+    </dl>
+  {/if}
+{/snippet}
+
 <style>
+  .measures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    margin: 0 0 0.5rem;
+  }
+  .measures dt {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-soft);
+  }
+  .measures dd {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem;
+    color: var(--color-ink);
+  }
   /* Leaflet renders divIcons outside the component scope, so the badge
      styling has to be :global. */
   :global(.block-badge-wrap) {
@@ -1691,7 +1918,9 @@
     padding: 1.5rem;
     max-width: 420px;
     width: 100%;
-    border-top: 6px solid #1f5e3a;
+    border-top: 6px solid var(--kind, #1f5e3a);
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   }
   .draft-modal h2 {

@@ -73,7 +73,7 @@ export async function announceActiveOwner(
   });
 }
 
-function rememberActiveOwner(ownerId: string | null): void {
+export function rememberActiveOwner(ownerId: string | null): void {
   if (typeof window === 'undefined') return;
   try {
     if (ownerId) sessionStorage.setItem('cropcard.activeOwnerId', ownerId);
@@ -97,6 +97,14 @@ async function clearOfflineCards(): Promise<void> {
   } catch {
     /* IndexedDB unavailable → nothing stored */
   }
+}
+
+/** Signed in with no active Owner (a revoked helper downgraded to a partial
+ *  session, or a user between farms): forget this tab's Owner key and drop
+ *  every stored Card so nothing from the old farm stays readable. */
+export async function forgetActiveOwner(): Promise<void> {
+  rememberActiveOwner(null);
+  await clearOfflineCards();
 }
 
 /** Call after a successful switch. Keeps every Owner's namespaced SW cache
@@ -148,6 +156,7 @@ export async function syncServiceWorkerTenant(opts: {
   ownerId: string | null | undefined;
 }): Promise<void> {
   if (!opts.signedIn) await Promise.all([wipeTenantCaches(), unsubscribeDevicePush()]);
+  else if (!isValidOwnerId(opts.ownerId)) await forgetActiveOwner();
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
   if (opts.register) {
     try {

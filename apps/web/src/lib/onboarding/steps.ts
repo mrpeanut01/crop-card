@@ -1,113 +1,110 @@
 /**
- * First-run setup wizard step model. Pure and client-safe: the /onboarding
- * loader derives `OnboardingProgress` from live DB state and this module
- * decides which step to show and whether season planning is unlocked.
- *
- * Two phases. Farm basics (farm, location, fields, implements) must all be
- * done before the season phase (season philosophy, first plan) opens.
+ * Two-screen onboarding (Phase 30). Pure and client-safe: screen 1 creates
+ * the farm with its location, screen 2 asks what the owner grows on and
+ * seeds one undrawn starter Area per answer. Everything else is a Getting
+ * Started item on /today or a just-in-time prompt inside the flow that
+ * needs it.
  */
 
-export type OnboardingStepId = 'farm' | 'location' | 'fields' | 'implements' | 'season' | 'plan';
-export type OnboardingPhase = 'basics' | 'season';
-export type OnboardingProgress = Record<OnboardingStepId, boolean>;
+import type { AreaDetails, AreaKind } from '$lib/farm/areaKinds';
+import type { FarmProfile } from './profile';
 
-export interface OnboardingStep {
-  id: OnboardingStepId;
-  phase: OnboardingPhase;
+export type OnboardingScreen = 'farm' | 'growing';
+
+export const GROWING_CHOICES = ['garden', 'fields', 'hay', 'greenhouse'] as const;
+export type GrowingChoice = (typeof GROWING_CHOICES)[number];
+
+export interface GrowingOption {
+  id: GrowingChoice;
   title: string;
-  summary: string;
+  blurb: string;
+  starter: StarterArea;
 }
 
-export const ONBOARDING_STEPS: readonly OnboardingStep[] = [
+export interface StarterArea {
+  name: string;
+  kind: AreaKind;
+  details?: AreaDetails;
+}
+
+export const GROWING_OPTIONS: readonly GrowingOption[] = [
   {
-    id: 'farm',
-    phase: 'basics',
-    title: 'Name your farm',
-    summary: 'Creates your farm and the Home Field that holds your blocks.'
-  },
-  {
-    id: 'location',
-    phase: 'basics',
-    title: 'Set your location',
-    summary: 'Drives weather, spray windows, frost dates and the map.'
+    id: 'garden',
+    title: 'A garden',
+    blurb: 'Beds by the house, vegetables, herbs, a few fruit trees.',
+    starter: { name: 'Kitchen Garden', kind: 'garden' }
   },
   {
     id: 'fields',
-    phase: 'basics',
-    title: 'Draw your fields',
-    summary: 'Fields and the blocks inside them. Everything you plant lives in a block.'
+    title: 'Fields',
+    blurb: 'Row crops, grain, market-garden blocks.',
+    starter: { name: 'Home Field', kind: 'field' }
   },
   {
-    id: 'implements',
-    phase: 'basics',
-    title: 'Pick your implements',
-    summary: 'Tractors, sprayers, planters and the rest of what you actually run.'
+    id: 'hay',
+    title: 'Hay or pasture',
+    blurb: 'Hayfields to cut and bale, or ground for grazing.',
+    starter: { name: 'Hayfield', kind: 'pasture', details: { use: 'hay' } }
   },
   {
-    id: 'season',
-    phase: 'season',
-    title: 'Set this season’s approach',
-    summary: 'Six quick questions that steer what the planner suggests.'
-  },
-  {
-    id: 'plan',
-    phase: 'season',
-    title: 'Plan your season',
-    summary: 'Pick crops, place them in blocks and schedule the work.'
+    id: 'greenhouse',
+    title: 'A greenhouse or high tunnel',
+    blurb: 'Covered growing space for an early start and a late finish.',
+    starter: { name: 'High Tunnel', kind: 'greenhouse', details: { structure: 'high-tunnel' } }
   }
 ];
 
-const ORDER = ONBOARDING_STEPS.map((s) => s.id);
-const BASICS = ONBOARDING_STEPS.filter((s) => s.phase === 'basics').map((s) => s.id);
+/** Steps a bookmark from the old six-step wizard may still carry. */
+export const LEGACY_STEP_IDS = ['location', 'fields', 'implements', 'season', 'plan'] as const;
 
-export function isStepId(v: unknown): v is OnboardingStepId {
-  return typeof v === 'string' && (ORDER as string[]).includes(v);
+export function isGrowingChoice(v: unknown): v is GrowingChoice {
+  return typeof v === 'string' && (GROWING_CHOICES as readonly string[]).includes(v);
 }
 
-export function basicsComplete(p: OnboardingProgress): boolean {
-  return BASICS.every((id) => p[id]);
+/** Known choices in canonical order, deduplicated; unknown values dropped. */
+export function parseGrowingChoices(raw: readonly unknown[]): GrowingChoice[] {
+  const picked = new Set(raw.filter(isGrowingChoice));
+  return GROWING_CHOICES.filter((c) => picked.has(c));
 }
 
-/** First step not yet done, in wizard order. `plan` once everything is done,
- *  so a returning user lands on the hand-off screen. */
-export function firstIncomplete(p: OnboardingProgress): OnboardingStepId {
-  return ORDER.find((id) => !p[id]) ?? 'plan';
+export function isLegacyStep(v: unknown): boolean {
+  return typeof v === 'string' && (LEGACY_STEP_IDS as readonly string[]).includes(v);
 }
 
 /**
- * Which step to render for a requested `?step=`. Before the farm exists only
- * `farm` is reachable. After that the farm step is closed (renaming lives in
- * Settings), basics steps are freely reachable, and season steps stay locked
- * until every basics step is done.
+ * Garden and greenhouse on their own read as a household; fields or hay on
+ * their own read as a farm; both is mixed. Nothing picked is no profile.
  */
-export function resolveStep(requested: unknown, p: OnboardingProgress): OnboardingStepId {
-  if (!p.farm) return 'farm';
-  if (!isStepId(requested) || requested === 'farm') return firstIncomplete(p);
-  if (stepPhase(requested) === 'season' && !basicsComplete(p)) {
-    return BASICS.find((id) => !p[id]) ?? 'location';
-  }
-  return requested;
+export function profileForChoices(choices: readonly GrowingChoice[]): FarmProfile | null {
+  const household = choices.some((c) => c === 'garden' || c === 'greenhouse');
+  const farm = choices.some((c) => c === 'fields' || c === 'hay');
+  if (household && farm) return 'mixed';
+  if (farm) return 'farm';
+  if (household) return 'garden';
+  return null;
 }
 
-export function stepPhase(id: OnboardingStepId): OnboardingPhase {
-  return ONBOARDING_STEPS.find((s) => s.id === id)!.phase;
+export function starterAreasFor(choices: readonly GrowingChoice[]): StarterArea[] {
+  return GROWING_OPTIONS.filter((o) => choices.includes(o.id)).map((o) => ({ ...o.starter }));
 }
 
-/** Where "Continue" goes after finishing `id`: the next undone step, looking
- *  forward first, then wrapping to anything skipped earlier. */
-export function nextAfter(id: OnboardingStepId, p: OnboardingProgress): OnboardingStepId {
-  const done = { ...p, [id]: true };
-  const i = ORDER.indexOf(id);
-  const ahead = ORDER.slice(i + 1).find((s) => !done[s]);
-  const target = ahead ?? firstIncomplete(done);
-  return resolveStep(target, done);
-}
+export type OnboardingRoute =
+  | { kind: 'screen'; screen: OnboardingScreen }
+  | { kind: 'redirect'; status: 303 | 308; location: string };
 
-export function previousStep(id: OnboardingStepId): OnboardingStepId | null {
-  const i = ORDER.indexOf(id);
-  return i > 1 ? ORDER[i - 1] : null;
-}
-
-export function doneCount(p: OnboardingProgress): number {
-  return ORDER.filter((id) => p[id]).length;
+/**
+ * Where a visit to /onboarding goes. Without a farm it is always screen 1.
+ * With one, only an owner whose screen 2 is unanswered stays; a legacy
+ * `?step=` bookmark is a permanent redirect to /today so it never breaks.
+ */
+export function routeOnboarding(input: {
+  hasFarm: boolean;
+  isOwner: boolean;
+  status: string | null;
+  step: string | null;
+}): OnboardingRoute {
+  if (!input.hasFarm) return { kind: 'screen', screen: 'farm' };
+  if (isLegacyStep(input.step)) return { kind: 'redirect', status: 308, location: '/today' };
+  if (input.isOwner && input.status === 'in-progress') return { kind: 'screen', screen: 'growing' };
+  return { kind: 'redirect', status: 303, location: '/today' };
 }

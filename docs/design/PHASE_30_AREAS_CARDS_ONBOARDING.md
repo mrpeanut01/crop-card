@@ -1,6 +1,6 @@
 # Phase 30: Areas, Cards, and Setup That Gets Out of the Way
 
-Status: **Sprint 30A in progress** (2026-09-26). Owner: Shawn. The 30A foundations are integrated on a branch; 30B onward is not built yet. Panel decisions are recorded in [Decisions (2026-09-26)](#decisions-2026-09-26).
+Status: **Sprints 30A, 30B, 30C, 30D and 30F implemented** (2026-09-26). Owner: Shawn. 30E (garden designer) and 30G (cards everywhere) are not built yet. Panel decisions are recorded in [Decisions (2026-09-26)](#decisions-2026-09-26).
 
 This is the implementation plan for reshaping CropCard's first-run experience, farm map and everyday UI. It borrows what works from [LiteFarm](https://github.com/LiteFarmOrg/LiteFarm) and [Seedtime](https://seedtime.us/), keeps what makes CropCard CropCard, and turns the paper Field Card that started this project into the organizing idea of the whole interface.
 
@@ -517,7 +517,7 @@ Today, pages work offline only if they were opened online first. Cards need to w
 
 Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping rules. Migrations and Dexie versions are numbered from today: migration 0049, Dexie v3.
 
-### 30A. Foundations (1 sprint) (in progress)
+### 30A. Foundations (1 sprint) (implemented)
 
 - Migration 0050: area `kind`, `details_json` and `perimeter_ft`; block `kind` and layout columns.
 - `lib/farm/areaKinds.ts` Zod union, with a repo alias `lib/db/areas.ts`.
@@ -534,6 +534,8 @@ Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping 
 - e2e: new-owner happy path, geocoder-down path, legacy redirect, dismiss persistence, hint shows once.
 - Update `docs/personas.md` P5 (First-Run) and `docs/use-cases.md` UC-20.
 
+**Implemented (2026-09-26).** Onboarding is two screens. Screen 1 prefills the farm name from the email, takes a location from address search, GPS, a map pin or typed coordinates, and shows frost dates through the shared `FrostPanel` with provenance, station distance and a cautious toggle. The server reruns the station lookup and needs a "these dates are fine for now" tick for fallback, frost-free and year-crossing results. Screen 2 creates undrawn starter Areas (Kitchen Garden, Home Field, Hayfield, High Tunnel) and saves `farm_profile`; "Not sure yet" creates nothing. Legacy `?step=` bookmarks redirect to /today. The Getting Started card replaces the UC-20 card, is profile-aware, collapses to a slim strip, and its dismissal is stored per Owner and can be undone from Settings. `Hint.svelte` and `lib/client/hints.ts` give one first-use hint per view with offline-queued dismissals, hidden while a safety stop is on screen; the integration wires `plan_first_crop`, `map_add`, `map_draw_area`, `map_filter` and `cards_offline`. /settings/records folds the VDACS tier into a disclosure for garden households with no pesticide records. Deferred: the designer hints (they arrive with 30E), the quiet compliance wording on the /today retention banner and the /records export, and re-captured visual baselines. The Getting Started "Design a garden bed" item links to the farm map until the designer exists.
+
 ### 30C. Just-in-time setup (1 sprint)
 
 - `SetupSheet` + Sprayer / Spot / Planting-backfill / Calibration content.
@@ -542,6 +544,8 @@ Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping 
 - Fix `loadEquipmentContext` to prefer `spec.templateId`.
 - e2e per entry point, including helper read-only variants.
 
+**Implemented (2026-09-26).** `SetupSheet` (bottom sheet on phones, side panel on wider screens, focus-trapped) hosts four contents: SetupSprayer (six template tiles, created uncalibrated through the existing `/api/equipment`, then straight into calibration), SetupCalibration (wrapping a `CalibrationWizard` shared with `/calibrate`), SetupSpot (a name plus a crop-area kind or an existing Area, through the existing `/api/fields` and `/api/blocks`) and SetupPlantingBackfill (crop search, spot, confirmed planting date, recorded as manual). They are wired into `/spray`, `/spray/insecticide`, `/spray/fungicide`, `/scout`, `/harvest`, `/plan` and `/inventory`, and helpers see "Ask the owner" notes instead. The `/plan` redirect to `/plan/farm` is gone; an empty farm gets a "Where will this grow?" card with Draw, Sketch by size and Just name it. `loadEquipmentContext` matches `spec.templateId` first. SetupSpot uses the same crop-area kinds, hints and example names as the onboarding starter Areas and the map. No new endpoints, migrations or rule changes. Deferred: a sprayer picker on the insecticide and fungicide pages, the soft tiller prompt on the planting card, and merging the overlapping empty states of the "Where will this grow?" card and PlanV2Shell.
+
 ### 30D. Typed farm map (1 sprint)
 
 - Add / Filter / Export chrome.
@@ -549,6 +553,8 @@ Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping 
 - Kind colors, and an Area Card on tap with Details / Plantings / Tasks / History.
 - Farm Map Card.
 - Visual baselines re-captured with `visual.yml update`.
+
+**Implemented (2026-09-26).** The farm map editor has Add (a drawer with crop areas, other areas, and shade and structures), Filter (per kind, shade, labels and satellite, saved per Owner on the device) and Export (the printable Farm Map Card at `/plan/farm-map`). After drawing, a kind-aware form shows computed Size and Perimeter and the kind's details, checked against the `areaKinds` schemas by a test. Kind colors come from one table in `lib/farm/kindStyle.ts` and are shared by the map, the Dimensions sketch, the /plan overlay and the /settings/farm preview. Tapping an Area opens an Area Card with Details, Plantings, Tasks and History tabs. The Farm Map Card builder is pure, owner-only in `buildCard`, and now part of the `/cards` deck (under the Areas filter). Deferred: re-captured visual baselines, an emergency-contacts setting (the card section stays off until one exists), replacing `lib/server/mapSnapshot.ts` with the 30F snapshot builder, and an owner-only check on `PATCH /api/fields/:id` for detail edits (the UI already hides them from helpers). The "Open designer" button stays disabled until 30E ships its route.
 
 ### 30E. Garden designer v1 (2 sprints)
 
@@ -567,6 +573,8 @@ Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping 
 - Print layouts + QR.
 - Scout in the sync queue, and "Will save when online" badges.
 - e2e with Playwright `context.setOffline(true)`: cold-open `/cards`, open a planting card never visited online, print preview renders.
+
+**Implemented (2026-09-26).** `GET /api/cards/snapshot` returns one tenant-scoped snapshot with a weak ETag and 304 support, covered by a cross-tenant test over the builder, the built deck and the handler bytes. Builders exist for every card kind. Spray Cards are built only for calibrated sprayers, take amounts from `computeRatedDilution` and mix order and decon steps from the kernel, and always carry the rules version, an as-of time, a recheck notice and a stale banner after 24 hours. `lib/client/cardSync.ts` refreshes on app open, on reconnect and on "Save for offline". `/cards` and `/cards/[kind]/[key]` render only from Dexie, with filters, pinning with `storage.persist()`, printing through `CardPrintSheet`, an iOS install nudge and `/c/<key>` short links. The service worker precaches the /cards shell with a navigate fallback scoped to `/cards/**` and keeps a per-Owner copy of its layout data in a tenant cache that logout clears; this needed `kit.paths.relative: false` and an anonymous exact `/cards` path. Scout observations queue offline with a "Will save when online" badge. The Getting Started "Save cards for offline" item reads the same per-Owner pin store. Deferred: the NOAA station and hard-frost dates in the snapshot (it uses the saved frost settings or the Loudoun fallback), hiding the Spray Card print option for garden-only households, an OpenAPI entry for the snapshot endpoint, and full offline readiness on the very first visit (the worker is only in control from the next app open).
 
 ### 30G. Cards everywhere + garden extras (1-2 sprints)
 

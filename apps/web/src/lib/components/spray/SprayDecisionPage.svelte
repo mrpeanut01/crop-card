@@ -100,6 +100,8 @@
     /** Fungicide weather + FRAC rotation panel (leaf-wet dial, rain
      *  sparkline, dry-window gate, FRAC tile). */
     diseaseGate?: Snippet;
+    /** Rendered in place of the block picker when there are no blocks. */
+    noBlocks?: Snippet;
   }
 
   let {
@@ -130,7 +132,8 @@
     tankMixProvenance,
     ipmGate,
     pollinatorGate,
-    diseaseGate
+    diseaseGate,
+    noBlocks
   }: Props = $props();
 
   // `aiEnabled` is destructured for the page-level snippets that read it
@@ -156,15 +159,19 @@
   <section class="card">
     <h2>1 · Block + product</h2>
 
-    <label for={blockFieldId}>Block</label>
-    <select id={blockFieldId} bind:value={blockId} required>
-      <option value="">— pick a block —</option>
-      {#each blocks as b (b.id)}
-        <option value={b.id}
-          >{b.name}{b.acres ? ` · ${fmt.label(b.acres, 'area', { digits: 2 })}` : ''}</option
-        >
-      {/each}
-    </select>
+    {#if blocks.length === 0 && noBlocks}
+      {@render noBlocks()}
+    {:else}
+      <label for={blockFieldId}>Block</label>
+      <select id={blockFieldId} bind:value={blockId} required>
+        <option value="">— pick a block —</option>
+        {#each blocks as b (b.id)}
+          <option value={b.id}
+            >{b.name}{b.acres ? ` · ${fmt.label(b.acres, 'area', { digits: 2 })}` : ''}</option
+          >
+        {/each}
+      </select>
+    {/if}
 
     {@render productSection()}
 

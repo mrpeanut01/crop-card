@@ -117,6 +117,9 @@ export interface SnapshotEquipment {
   type: SnapshotEquipmentType;
   label: string;
   state: SnapshotEquipmentState | null;
+  /** Tank size from the equipment spec (`spec.tankGal`). Absent on bundles
+   *  saved before Sprint 30F. */
+  tankGal?: number | null;
 }
 
 export type SnapshotStockCategory =
@@ -172,6 +175,33 @@ export interface SnapshotFrostDates {
   distanceMi: number | null;
 }
 
+export type SnapshotSprayProductType = 'herbicide' | 'insecticide' | 'fungicide';
+
+export type SnapshotRateUnit = 'oz' | 'fl-oz' | 'lb' | 'pt' | 'qt';
+
+/** The label facts a Spray Card reads for one stocked pesticide. Rates are
+ *  the plugin's; the card scales them only through `lib/dilution`. */
+export interface SnapshotSprayProduct {
+  pluginId: string;
+  type: SnapshotSprayProductType;
+  displayName: string;
+  version: string;
+  epaRegistrationNumber: string | null;
+  ratePerAcre: { amount: number; unit: SnapshotRateUnit } | null;
+  gpaCalibration: number | null;
+  reEntryIntervalHours: number | null;
+  preHarvestIntervalDays: number | null;
+  targets: string[];
+  /** Sprayer load classes the kernel's cross-contamination gate compares:
+   *  HRAC classes for herbicides, `insecticide-load` / `fungicide-load`
+   *  otherwise. */
+  loadClasses: string[];
+  /** The kernel's `buildTankMixSteps` for this product (herbicides only). */
+  mixSteps: string[];
+  rainfastHours: number | null;
+  pollinator: { beeToxicity: string; bloomRestriction: string } | null;
+}
+
 export interface FarmSnapshot {
   version: typeof FARM_SNAPSHOT_VERSION;
   ownerId: string;
@@ -188,4 +218,7 @@ export interface FarmSnapshot {
   stock: SnapshotStockItem[];
   cropPlugins: Record<string, SnapshotCropPlugin>;
   frost: SnapshotFrostDates | null;
+  /** Stocked pesticides keyed by plugin id. Absent on bundles saved before
+   *  Sprint 30F. */
+  sprayProducts?: Record<string, SnapshotSprayProduct>;
 }

@@ -44,7 +44,7 @@ describe('buildAreaCard', () => {
     expect(buildAreaCard(snap, 'f_garden')!.next?.label).toBe('Side-dress');
     expect(buildAreaCard(snap, 'f_hay')!.next).toEqual({
       label: 'First cutting',
-      href: '/today?task=t_mow',
+      href: '/plan?block=b_hay#plan-scheduled-tasks',
       due: 'due Jun 20'
     });
   });
@@ -148,9 +148,11 @@ describe('copy rules (Phase 30 [term])', () => {
     fc.assert(
       fc.property(areaArb, (area) => {
         const card = buildAreaCard(sampleSnapshot({ areas: [area] }), area.id)!;
-        const text = [card.kicker, card.title, ...card.facts.map((f) => `${f.label} ${f.value}`)].join(
-          '\n'
-        );
+        const text = [
+          card.kicker,
+          card.title,
+          ...card.facts.map((f) => `${f.label} ${f.value}`)
+        ].join('\n');
         expect(card.facts.map((f) => f.label)).not.toContain('Area');
         expect(text).not.toMatch(/\barea area\b/i);
         expect(text).not.toMatch(/\b(Location|Place)s?\b/);

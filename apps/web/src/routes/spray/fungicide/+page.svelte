@@ -1,6 +1,11 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
+  import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
+  import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
+  import type { SetupSpotResult } from '$lib/setup/types';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import SprayDecisionPage from '$lib/components/spray/SprayDecisionPage.svelte';
   import SprayStepper, { type StepState } from '$lib/components/spray/SprayStepper.svelte';
@@ -35,6 +40,14 @@
   let selectedBlockId = $state<string>(
     untrack(() => data.preselect.blockId ?? data.blocks[0]?.id ?? '')
   );
+
+  let spotSheetOpen = $state(false);
+  async function onSpotAdded(r: SetupSpotResult) {
+    spotSheetOpen = false;
+    await invalidateAll();
+    selectedBlockId = r.blockId;
+    await focusAfterSetup('#fungicide-block');
+  }
   let selectedPluginIds = $state<string[]>(
     untrack(() =>
       data.preselect.productPluginIds.length > 0
@@ -511,7 +524,36 @@
       </section>
     {/if}
   {/snippet}
+
+  {#snippet noBlocks()}
+    <SetupCallout
+      kicker="Where?"
+      title="Where are you spraying?"
+      canEdit={data.setup.canEdit}
+      askOwner="Ask the owner to add the spot you're spraying. Once it's on the farm it shows up here."
+      testId="spray-where"
+    >
+      <p>There's nowhere on the farm to pick yet. Give the spot a name and carry on.</p>
+      {#snippet actions()}
+        <button type="button" class="primary" onclick={() => (spotSheetOpen = true)}>
+          Name a new spot
+        </button>
+      {/snippet}
+    </SetupCallout>
+  {/snippet}
 </SprayDecisionPage>
+
+<SetupSheet
+  open={spotSheetOpen}
+  kicker="Spray"
+  title="Where?"
+  onClose={() => (spotSheetOpen = false)}
+  onDone={onSpotAdded}
+>
+  {#snippet children(done)}
+    <SetupSpot areas={data.setup.areas} canEdit={data.setup.canEdit} onDone={done} />
+  {/snippet}
+</SetupSheet>
 
 <style>
   .spray-almanac-chrome {

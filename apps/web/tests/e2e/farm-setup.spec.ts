@@ -2,9 +2,10 @@ import type { Page } from '@playwright/test';
 import { test, expect } from './lib/test';
 import { provisionWizardTenant } from './lib/wizardTenant';
 
-// A new farm starts /plan at "Draw your farm" (/plan/farm). The dimension
-// fallback sketches fields and blocks as boxes without any map tiles, then
-// the page hands off to the planning wizard.
+// A new farm's /plan asks "Where will this grow?". "Sketch it by size"
+// opens "Draw your farm" (/plan/farm) in Dimensions mode, which sketches
+// fields and blocks as boxes without any map tiles, then the page hands
+// off to the planning wizard.
 
 function sketch(page: Page) {
   return page.getByTestId('farm-sketch');
@@ -13,19 +14,23 @@ function sketch(page: Page) {
 test.describe('draw your farm', () => {
   test.describe.configure({ timeout: 90_000 });
 
-  test('a farm with no blocks starts at the farm page and sketches by dimensions', async ({
+  test('a farm with no blocks is offered the farm page and sketches by dimensions', async ({
     page
   }) => {
     await provisionWizardTenant(page, { seasonSetup: true, blocks: [] });
     await page.goto('/plan');
-    await page.waitForURL(/\/plan\/farm$/);
+    await expect(page.getByRole('heading', { name: 'Where will this grow?' })).toBeVisible();
+    await page.getByRole('link', { name: /Sketch it by size/ }).click();
+    await page.waitForURL(/\/plan\/farm\?mode=sketch$/);
     await expect(page.getByRole('heading', { name: 'Draw your farm', level: 1 })).toBeVisible();
     await expect(page.locator('.continue.disabled')).toBeVisible();
-
-    await page.getByRole('button', { name: /Dimensions/ }).click();
+    await expect(page.getByRole('button', { name: /Dimensions/ })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
 
     const fieldForm = page.getByTestId('sketch-add-field');
-    await fieldForm.getByLabel('Field name').fill('Back Forty');
+    await fieldForm.getByLabel('Name').fill('Back Forty');
     await fieldForm.getByLabel('Width (ft)').fill('400');
     await fieldForm.getByLabel('Length (ft)').fill('300');
     await expect(fieldForm.getByText('≈ 2.75 ac')).toBeVisible();
@@ -33,7 +38,8 @@ test.describe('draw your farm', () => {
     await expect(sketch(page).locator('[data-field="Back Forty"] rect')).toBeVisible();
 
     const blockForm = page.getByTestId('sketch-add-block');
-    await blockForm.getByLabel('Field').selectOption({ label: 'Back Forty' });
+    const inside = blockForm.getByLabel('Inside');
+    if (await inside.count()) await inside.selectOption({ label: 'Back Forty' });
     await blockForm.getByLabel('Block name').fill('Sweet corn A');
     await blockForm.getByLabel('Width (ft)').fill('100');
     await blockForm.getByLabel('Length (ft)').fill('150');

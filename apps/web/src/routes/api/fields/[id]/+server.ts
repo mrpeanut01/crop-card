@@ -10,8 +10,7 @@ import { deleteFieldCascade } from '$lib/db/admin';
 import { getField, updateField } from '$lib/db/fields';
 import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
 import { AREA_KINDS, validateAreaDetails } from '$lib/farm/areaKinds';
-import { currentUser } from '$lib/server/auth';
-import { canMutate } from '$lib/server/session';
+import { requireOwner } from '$lib/server/auth';
 
 export const GET: RequestHandler = ({ params }) => {
   if (!params.id) throw error(400, 'id required');
@@ -34,10 +33,7 @@ const patchSchema = z.object({
 
 export const PATCH: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
-  }
+  requireOwner(event);
   const existing = getField(event.params.id);
   if (!existing) throw error(404, 'field not found');
 
@@ -66,10 +62,7 @@ export const PATCH: RequestHandler = async (event) => {
 
 export const DELETE: RequestHandler = (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
-  }
+  requireOwner(event);
   if (!getField(event.params.id)) throw error(404, 'field not found');
   return json(deleteFieldCascade(event.params.id));
 };

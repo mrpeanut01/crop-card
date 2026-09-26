@@ -20,7 +20,8 @@ const KINDS: PendingRecordKind[] = [
   'insecticide',
   'fungicide',
   'harvest',
-  'hay-cutting'
+  'hay-cutting',
+  'scout'
 ];
 
 interface FakeServer {

@@ -11,6 +11,7 @@
   import Modal from '$lib/components/ui/Modal.svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import { layoutMapOverlay, type OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
+  import { kindStyle } from '$lib/farm/kindStyle';
 
   interface Props {
     open: boolean;
@@ -52,10 +53,11 @@
       .join('');
   }
 
-  const PALETTE = ['#7a8f5a', '#c9961f', '#6f8fa8', '#a85a1f', '#4a8b54', '#a23a3a'];
-  const blockIndex = $derived(new Map(blocks.map((b, i) => [b.id, i])));
+  const kindByField = $derived(new Map(fields.map((f) => [f.id, f.kind ?? 'field'] as const)));
+  const fieldByBlock = $derived(new Map(blocks.map((b) => [b.id, b.fieldId] as const)));
   function colorForBlock(id: string): string {
-    return PALETTE[(blockIndex.get(id) ?? 0) % PALETTE.length];
+    const fieldId = fieldByBlock.get(id);
+    return kindStyle(fieldId ? kindByField.get(fieldId) : 'field').color;
   }
 
   function pick(id: string) {
@@ -81,8 +83,8 @@
         <div class="empty" data-testid="map-overlay-undrawn">
           <MapPin size={20} />
           <p>
-            None of your fields or blocks are drawn yet. Draw them on the map, or enter their width
-            and length, in the <a href="/settings/farm/map">fields & blocks editor</a>.
+            None of your areas or blocks are drawn yet. Draw them on the map, or enter their width
+            and length, in the <a href="/settings/farm/map">farm map editor</a>.
           </p>
         </div>
       {:else}
@@ -101,7 +103,16 @@
             data-testid="map-overlay-svg"
           >
             {#each layout.fields as f (f.id)}
-              <path class="field" d={pathFor(f.rings)} data-field-id={f.id} />
+              {@const ks = kindStyle(kindByField.get(f.id))}
+              <path
+                class="field"
+                d={pathFor(f.rings)}
+                data-field-id={f.id}
+                data-area-kind={kindByField.get(f.id) ?? 'field'}
+                style:stroke={ks.color}
+                style:fill={ks.color}
+                style:stroke-dasharray={ks.dashArray ?? '5 3'}
+              />
             {/each}
             {#each layout.blocks as b (b.id)}
               {@const isSel = b.id === selectedBlockId}
@@ -171,15 +182,15 @@
           {#if layout.mode === 'sketch'}
             Positions are packed from the widths and lengths you entered, not surveyed.
           {/if}
-          The <a href="/settings/farm/map">fields & blocks editor</a> in Settings is where you draw and
-          resize them.
+          The <a href="/settings/farm/map">farm map editor</a> in Settings is where you draw and resize
+          them.
         </p>
       </div>
     {/if}
   </div>
   {#snippet footer()}
     <a class="ghost" href="/settings/farm/map" onclick={onClose}>
-      Open fields & blocks editor <ArrowRight size={13} />
+      Open farm map editor <ArrowRight size={13} />
     </a>
   {/snippet}
 </Modal>
@@ -235,10 +246,8 @@
     height: 100%;
   }
   .field {
-    fill: rgba(255, 255, 255, 0.35);
-    stroke: var(--color-ink-soft);
-    stroke-width: 1.5;
-    stroke-dasharray: 5 3;
+    fill-opacity: 0.18;
+    stroke-width: 2;
     vector-effect: non-scaling-stroke;
   }
   .block {

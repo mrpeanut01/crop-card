@@ -1,161 +1,104 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { afterNavigate, goto, invalidateAll } from '$app/navigation';
   import { browser } from '$app/environment';
   import { untrack } from 'svelte';
-  import {
-    ArrowLeft,
-    ArrowRight,
-    Check,
-    CloudSun,
-    Crosshair,
-    Gauge,
-    Info,
-    Layers,
-    Leaf,
-    Lock,
-    MapPin,
-    Sparkles,
-    Sun,
-    Tractor,
-    Wheat
-  } from 'lucide-svelte';
+  import { ArrowRight, Check, Crosshair, MapPin, Search, Sun } from 'lucide-svelte';
   import Card from '$lib/components/ui/Card.svelte';
-  import { fmt } from '$lib/prefsState.svelte';
-  import Provenance from '$lib/components/ui/Provenance.svelte';
-  import FarmMapEditor from '$lib/components/farm/FarmMapEditor.svelte';
-  import SeasonSetupStep from '$lib/components/SeasonSetupStep.svelte';
-  import PlanningYearPicker from '$lib/components/PlanningYearPicker.svelte';
-  import LocationPicker from '$lib/components/onboarding/LocationPicker.svelte';
-  import ImplementPicker from '$lib/components/onboarding/ImplementPicker.svelte';
-  import {
-    ONBOARDING_STEPS,
-    basicsComplete,
-    doneCount,
-    nextAfter,
-    previousStep,
-    type OnboardingStepId
-  } from '$lib/onboarding/steps';
+  import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
   import type { ActionData, PageData } from './$types';
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+  const { data, form }: { data: PageData; form: ActionData } = $props();
 
-  const ICONS: Record<OnboardingStepId, typeof Sun> = {
-    farm: Sun,
-    location: MapPin,
-    fields: Layers,
-    implements: Tractor,
-    season: Leaf,
-    plan: Wheat
-  };
+  let farmName = $state(untrack(() => data.suggestedName));
+  let lat = $state<number | null>(null);
+  let lon = $state<number | null>(null);
+  let placeLabel = $state<string | null>(null);
+  let frostBlocked = $state(true);
+  let submitting = $state(false);
 
-  function headings(
-    firstName: string,
-    seasonYear: number
-  ): Record<OnboardingStepId, { kicker: string; title: string; lede: string }> {
-    return {
-      farm: {
-        kicker: 'Farm basics · 1 of 4',
-        title: `Welcome, ${firstName}.`,
-        lede: 'We’ll set up the farm itself first: where it is, what your fields look like and what equipment you run. Then we’ll plan a season on top of it. Plan on about fifteen minutes, and you can stop at any point.'
-      },
-      location: {
-        kicker: 'Farm basics · 2 of 4',
-        title: 'Where is the farm?',
-        lede: 'Your location sets the weather feed, spray windows, sunrise and sunset for the pollinator gate, and where the field map opens.'
-      },
-      fields: {
-        kicker: 'Farm basics · 3 of 4',
-        title: 'Draw your fields and blocks.',
-        lede: 'A field is the ground you farm. Blocks are the pieces inside it that you plant, spray and harvest as a unit. Draw at least one block to continue.'
-      },
-      implements: {
-        kicker: 'Farm basics · 4 of 4',
-        title: 'What do you run?',
-        lede: 'Pick the implements on the farm. Sprayers carry chemistry and decon history, and the rest attach their pre-use checks to scheduled tasks.'
-      },
-      season: {
-        kicker: `Your season · ${seasonYear}`,
-        title: `How do you want to farm in ${seasonYear}?`,
-        lede: 'Six quick questions. The answers decide which products the planner will suggest and which it filters out.'
-      },
-      plan: {
-        kicker: 'Your season · ready',
-        title: 'Your farm is set up.',
-        lede: 'Next comes the season plan: pick crops, place them in blocks and let the calendar lay out the work.'
-      }
-    };
-  }
+  let query = $state('');
+  let searching = $state(false);
+  let searchNote = $state<string | null>(null);
+  let matches = $state<Array<{ label: string; lat: number; lon: number }>>([]);
 
-  const yearNow = Number(fmt.today().slice(0, 4));
-  const heading = $derived(
-    headings(data.firstName, data.season?.currentYear ?? yearNow)[data.step]
-  );
-  const unlocked = $derived(basicsComplete(data.progress));
-  const done = $derived(doneCount(data.progress));
-  const next = $derived(nextAfter(data.step, data.progress));
-  const back = $derived(previousStep(data.step));
-
-  function stepHref(id: OnboardingStepId) {
-    return `/onboarding?step=${id}`;
-  }
-
-  // ─── Location step ─────────────────────────────────────────────────────
-  let lat = $state<number | null>(untrack(() => data.location?.current?.lat ?? null));
-  let lon = $state<number | null>(untrack(() => data.location?.current?.lon ?? null));
   let geoBusy = $state(false);
   let geoError = $state<string | null>(null);
-  // Steps share this component, so re-seed when navigating into the location
-  // step. Skipped on first load so hydration can't clobber typed values.
-  afterNavigate((nav) => {
-    if (nav.type === 'enter' || data.step !== 'location') return;
-    lat = data.location?.current?.lat ?? null;
-    lon = data.location?.current?.lon ?? null;
-    geoError = null;
-  });
 
-  function mmddToDate(mmdd: string | null | undefined): string {
-    return mmdd ? `${yearNow}-${mmdd}` : '';
+  let picked = $state<string[]>([]);
+
+  function setPoint(la: number, lo: number, label: string | null) {
+    lat = Number(la.toFixed(5));
+    lon = Number(lo.toFixed(5));
+    placeLabel = label;
   }
-  function prettyMmDd(mmdd: string): string {
-    return fmt.day(`${yearNow}-${mmdd}`, 'month-day');
+
+  async function searchAddress() {
+    const q = query.trim();
+    matches = [];
+    if (q.length < 3) {
+      searchNote = 'Type at least three letters of the address.';
+      return;
+    }
+    searching = true;
+    searchNote = null;
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const body = (await res.json()) as { matches?: typeof matches };
+        matches = body.matches ?? [];
+      }
+    } catch {
+      matches = [];
+    }
+    searching = false;
+    if (matches.length === 0) {
+      searchNote = "We couldn't find that address. Use your location or tap the map instead.";
+    } else if (matches.length === 1) {
+      choose(matches[0]);
+    }
+  }
+
+  function choose(m: { label: string; lat: number; lon: number }) {
+    setPoint(m.lat, m.lon, m.label);
+    matches = [];
+    searchNote = null;
   }
 
   function useMyLocation() {
     if (!browser || !navigator.geolocation) {
-      geoError = 'This browser can’t share its location. Tap the map instead.';
+      geoError = "This browser can't share its location. Search or tap the map instead.";
       return;
     }
     geoBusy = true;
     geoError = null;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        lat = Number(pos.coords.latitude.toFixed(5));
-        lon = Number(pos.coords.longitude.toFixed(5));
+        setPoint(pos.coords.latitude, pos.coords.longitude, 'Your current location');
         geoBusy = false;
       },
       (err) => {
         geoBusy = false;
         geoError =
           err.code === err.PERMISSION_DENIED
-            ? 'Location permission was declined. Tap the map or type coordinates instead.'
-            : 'Couldn’t get a GPS fix. Tap the map or type coordinates instead.';
+            ? 'Location permission was declined. Search or tap the map instead.'
+            : "Couldn't get a GPS fix. Search or tap the map instead.";
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
   }
 
-  // ─── Implements step ───────────────────────────────────────────────────
-  let pickedCount = $state(0);
-  const ownedCount = $derived(data.implements?.owned.length ?? 0);
-
-  // ─── Season step ───────────────────────────────────────────────────────
-  async function onSeasonSaved() {
-    await invalidateAll();
-    await goto(stepHref('plan'));
+  function typedCoord(which: 'lat' | 'lon', raw: string) {
+    const n = raw.trim() === '' ? null : Number(raw);
+    const v = n === null || !Number.isFinite(n) ? null : n;
+    if (which === 'lat') lat = v;
+    else lon = v;
+    placeLabel = null;
   }
 
-  let submitting = $state(false);
+  const canContinue = $derived(
+    farmName.trim().length > 0 && lat != null && lon != null && !frostBlocked && !submitting
+  );
+
   const submitEnhance = () => {
     submitting = true;
     return async ({ update }: { update: () => Promise<void> }) => {
@@ -170,591 +113,237 @@
 </svelte:head>
 
 <main class="ob-wrap">
-  <header class="intro">
-    <div class="kicker-row">
-      <Sun size={12} strokeWidth={2} aria-hidden="true" />
-      {heading.kicker}
-    </div>
-    <h1 class="serif">{heading.title}</h1>
-    <p class="lede">{heading.lede}</p>
-  </header>
+  {#if data.screen === 'farm'}
+    <header class="intro">
+      <div class="kicker-row"><Sun size={12} strokeWidth={2} aria-hidden="true" /> Step 1 of 2</div>
+      <h1 class="serif">Tell us about your farm</h1>
+      <p class="lede">
+        {data.firstName ? `Welcome, ${data.firstName}. ` : 'Welcome. '}Two quick questions and
+        you're in. Your location sets the weather, spray windows and frost dates, so we ask for it
+        first.
+      </p>
+    </header>
 
-  <div class="layout">
-    <!-- Step rail -->
-    <nav class="rail" aria-label="Setup steps">
-      {#if data.farmName}
-        <div class="rail-farm">
-          <span class="rail-farm-name">{data.farmName}</span>
-          <span class="rail-farm-count">{done} of {ONBOARDING_STEPS.length} done</span>
-        </div>
-      {/if}
-      {#each [{ phase: 'basics', label: 'Farm basics' }, { phase: 'season', label: 'Your season' }] as ph (ph.phase)}
-        <div class="rail-phase">
-          {ph.label}
-          {#if ph.phase === 'season' && !unlocked}
-            <Lock size={11} aria-label="Opens after farm basics" />
-          {/if}
-        </div>
-        <ol class="rail-steps">
-          {#each ONBOARDING_STEPS.filter((s) => s.phase === ph.phase) as s (s.id)}
-            {@const isDone = data.progress[s.id]}
-            {@const isCurrent = data.step === s.id}
-            {@const reachable =
-              data.progress.farm && s.id !== 'farm' && (s.phase === 'basics' || unlocked)}
-            {@const Icon = ICONS[s.id]}
-            <li class:done={isDone} class:current={isCurrent} class:locked={!reachable && !isDone}>
-              {#if reachable && !isCurrent}
-                <a href={stepHref(s.id)} class="rail-link">
-                  <span class="dot" aria-hidden="true">
-                    {#if isDone}<Check size={12} />{:else}<Icon size={13} />{/if}
-                  </span>
-                  <span class="rail-text">
-                    <span class="rail-title">{s.title}</span>
-                    {#if isDone}<span class="sr-only">(done)</span>{/if}
-                  </span>
-                </a>
-              {:else}
-                <span class="rail-link" aria-current={isCurrent ? 'step' : undefined}>
-                  <span class="dot" aria-hidden="true">
-                    {#if isDone}<Check size={12} />{:else}<Icon size={13} />{/if}
-                  </span>
-                  <span class="rail-text">
-                    <span class="rail-title">{s.title}</span>
-                    {#if isDone}<span class="sr-only">(done)</span>{/if}
-                  </span>
-                </span>
-              {/if}
-            </li>
-          {/each}
-        </ol>
-      {/each}
-    </nav>
-
-    <section class="panel">
+    <form method="POST" action="?/farm" use:enhance={submitEnhance} class="form">
       {#if form && 'error' in form && form.error}
         <p class="error" role="alert">{form.error}</p>
       {/if}
-      {#if data.progress.farm && !data.canEdit}
-        <p class="notice" role="status">
-          Only the farm owner can change the setup. You can look around, but changes are disabled.
-        </p>
-      {/if}
 
-      <!-- ─── 1. Farm ─────────────────────────────────────────────────── -->
-      {#if data.step === 'farm'}
-        <Card>
-          <h2 class="serif sub">Start with your farm</h2>
-          <form method="POST" action="?/farm" use:enhance={submitEnhance} class="form">
-            <label class="row">
-              <span class="lbl">Farm name <em>*</em></span>
-              <!-- svelte-ignore a11y_autofocus -->
-              <input
-                type="text"
-                name="farmName"
-                required
-                maxlength="120"
-                autocomplete="organization"
-                placeholder="e.g., Hilltop Acres"
-                autofocus
-              />
-            </label>
-            <label class="row">
-              <span class="lbl">Nearest town or address <em class="opt">(optional)</em></span>
-              <input
-                type="text"
-                name="location"
-                autocomplete="street-address"
-                placeholder="e.g., Purcellville, VA"
-              />
-            </label>
-            {#if data.planningYear}
-              <PlanningYearPicker view={data.planningYear} name="planningYear" />
-            {/if}
-            <div class="actions">
-              <button class="primary" type="submit" disabled={submitting}>
-                Create farm <ArrowRight size={15} />
-              </button>
-            </div>
-          </form>
-        </Card>
-        <div class="roadmap">
-          <h2 class="serif sub">What we’ll cover</h2>
-          <ol>
-            {#each ONBOARDING_STEPS as s, i (s.id)}
-              {@const Icon = ICONS[s.id]}
+      <Card loose>
+        <label class="row">
+          <span class="lbl">Farm name</span>
+          <input
+            type="text"
+            name="farmName"
+            required
+            maxlength="120"
+            autocomplete="organization"
+            placeholder="Hilltop Acres"
+            bind:value={farmName}
+          />
+        </label>
+      </Card>
+
+      <Card loose>
+        <h2 class="serif sub">Where is it?</h2>
+        <div class="search">
+          <input
+            type="search"
+            aria-label="Search for an address"
+            placeholder="Street address, town or zip"
+            autocomplete="street-address"
+            bind:value={query}
+            onkeydown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                void searchAddress();
+              }
+            }}
+          />
+          <button type="button" class="ghost" onclick={searchAddress} disabled={searching}>
+            <Search size={15} aria-hidden="true" />
+            {searching ? 'Searching…' : 'Search'}
+          </button>
+        </div>
+        {#if matches.length > 1}
+          <ul class="matches" aria-label="Matching addresses">
+            {#each matches as m (m.label)}
               <li>
-                <span class="rm-num">{i + 1}</span>
-                <Icon size={16} aria-hidden="true" />
-                <span><strong>{s.title}.</strong> {s.summary}</span>
+                <button type="button" class="match" onclick={() => choose(m)}>
+                  <MapPin size={14} aria-hidden="true" />
+                  {m.label}
+                </button>
               </li>
             {/each}
-          </ol>
+          </ul>
+        {/if}
+        {#if searchNote}<p class="note" role="status">{searchNote}</p>{/if}
+
+        <div class="or-row">
+          <button type="button" class="ghost" onclick={useMyLocation} disabled={geoBusy}>
+            <Crosshair size={15} aria-hidden="true" />
+            {geoBusy ? 'Finding you…' : 'Use my location'}
+          </button>
+          <span class="muted">or tap the map to drop a pin</span>
         </div>
+        {#if geoError}<p class="note warn" role="status">{geoError}</p>{/if}
 
-        <!-- ─── 2. Location ───────────────────────────────────────────── -->
-      {:else if data.step === 'location' && data.location}
-        <form method="POST" action="?/location" use:enhance={submitEnhance} class="form">
-          <Card>
-            <div class="loc-head">
-              <h2 class="serif sub">Drop a pin on the farm</h2>
-              <button
-                type="button"
-                class="ghost"
-                onclick={useMyLocation}
-                disabled={geoBusy || !data.canEdit}
-              >
-                <Crosshair size={15} aria-hidden="true" />
-                {geoBusy ? 'Finding you…' : 'Use my current location'}
-              </button>
-            </div>
-            {#if geoError}<p class="hint warn" role="status">{geoError}</p>{/if}
-            {#if browser}
-              <LocationPicker
-                {lat}
-                {lon}
-                fallback={data.location.fallback}
-                onPick={(la, lo) => {
-                  lat = la;
-                  lon = lo;
-                }}
-              />
-            {:else}
-              <div class="map-loading">Loading map…</div>
-            {/if}
-            <div class="two">
-              <label class="row">
-                <span class="lbl">Latitude</span>
-                <input
-                  type="number"
-                  name="lat"
-                  step="any"
-                  min="-90"
-                  max="90"
-                  inputmode="decimal"
-                  required
-                  bind:value={lat}
-                />
-              </label>
-              <label class="row">
-                <span class="lbl">Longitude</span>
-                <input
-                  type="number"
-                  name="lon"
-                  step="any"
-                  min="-180"
-                  max="180"
-                  inputmode="decimal"
-                  required
-                  bind:value={lon}
-                />
-              </label>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 class="serif sub">Frost dates</h2>
-            <p class="hint">
-              Average last spring frost and first fall frost. Planting windows and the season
-              calendar hang off these. Leave them blank to use the Loudoun County averages ({prettyMmDd(
-                data.location.defaultLastFrost
-              )} and
-              {prettyMmDd(data.location.defaultFirstFrost)}); your county extension office has the
-              local numbers.
-            </p>
-            <div class="two">
-              <label class="row">
-                <span class="lbl">Last spring frost</span>
-                <input type="date" name="lastFrost" value={mmddToDate(data.location.lastFrost)} />
-              </label>
-              <label class="row">
-                <span class="lbl">First fall frost</span>
-                <input type="date" name="firstFrost" value={mmddToDate(data.location.firstFrost)} />
-              </label>
-            </div>
-          </Card>
-
-          <div class="why">
-            <CloudSun size={16} aria-hidden="true" />
-            <span>
-              Coordinates stay on your farm record. They’re sent only to the National Weather
-              Service to fetch your forecast.
-            </span>
-          </div>
-
-          <div class="actions">
-            <button
-              class="primary"
-              type="submit"
-              disabled={submitting || !data.canEdit || lat == null || lon == null}
-            >
-              Save location and continue <ArrowRight size={15} />
-            </button>
-          </div>
-        </form>
-
-        <!-- ─── 3. Fields ─────────────────────────────────────────────── -->
-      {:else if data.step === 'fields' && data.map}
-        <div class="tips">
-          <div><strong>1.</strong> Use the map toolbar to draw the outline of a field.</div>
-          <div><strong>2.</strong> Draw the blocks inside it. Area fills in from the shape.</div>
-          <div>
-            <strong>No GPS or imagery?</strong> Switch to <em>Dimensions</em> above the map and type each
-            field's and block's width and length; they're drawn as boxes.
-          </div>
-        </div>
         {#if browser}
-          <FarmMapEditor
-            blocks={data.map.blocks}
-            fields={data.map.fields}
-            shadeSources={data.map.shadeSources}
-            canEdit={data.canEdit}
-            isFirstRun={data.map.blocks.length === 0}
-            initialCenter={data.map.center}
-          />
+          {#await import('$lib/components/onboarding/LocationPicker.svelte')}
+            <div class="map-loading">Loading map…</div>
+          {:then { default: LocationPicker }}
+            <LocationPicker
+              {lat}
+              {lon}
+              fallback={data.fallbackCenter}
+              onPick={(la, lo) => setPoint(la, lo, 'Pin on the map')}
+            />
+          {:catch}
+            <div class="map-loading">
+              The map couldn't load. Search or use your location instead.
+            </div>
+          {/await}
         {:else}
           <div class="map-loading">Loading map…</div>
         {/if}
-        <div class="actions sticky">
-          <span class="status" role="status">
-            {#if data.map.blocks.length === 0}
-              Add at least one block to continue.
-            {:else}
-              {data.map.blocks.length}
-              {data.map.blocks.length === 1 ? 'block' : 'blocks'} mapped. You can add more any time from
-              Settings → Farm map.
-            {/if}
-          </span>
-          {#if data.progress.fields}
-            <a class="primary" href={stepHref(next)}>Continue <ArrowRight size={15} /></a>
+
+        <p class="picked" role="status" data-testid="picked-location">
+          {#if lat != null && lon != null}
+            <Check size={15} aria-hidden="true" />
+            {placeLabel ? `${placeLabel} · ` : ''}{lat.toFixed(4)}, {lon.toFixed(4)}
           {:else}
-            <button class="primary" type="button" disabled>
-              Continue <ArrowRight size={15} />
-            </button>
+            No location yet.
           {/if}
-        </div>
+        </p>
 
-        <!-- ─── 4. Implements ─────────────────────────────────────────── -->
-      {:else if data.step === 'implements' && data.implements}
-        <form method="POST" action="?/implements" use:enhance={submitEnhance} class="form">
-          <ImplementPicker
-            templates={data.implements.templates}
-            owned={data.implements.owned}
-            ownedTemplateIds={data.implements.ownedTemplateIds}
-            onCountChange={(n) => (pickedCount = n)}
-          />
-          <div class="why">
-            <Gauge size={16} aria-hidden="true" />
-            <span>
-              New sprayers start <strong>uncalibrated</strong>. Before the first spray you’ll run
-              the 1/128-acre calibration from the sprayer’s page. It takes about five minutes with a
-              jug and a stopwatch, and dilution math won’t run without it.
-            </span>
+        <details class="advanced">
+          <summary>Type the coordinates instead</summary>
+          <div class="two">
+            <label class="row">
+              <span class="lbl">Latitude</span>
+              <input
+                type="number"
+                name="lat"
+                step="any"
+                min="-90"
+                max="90"
+                inputmode="decimal"
+                value={lat ?? ''}
+                oninput={(e) => typedCoord('lat', e.currentTarget.value)}
+              />
+            </label>
+            <label class="row">
+              <span class="lbl">Longitude</span>
+              <input
+                type="number"
+                name="lon"
+                step="any"
+                min="-180"
+                max="180"
+                inputmode="decimal"
+                value={lon ?? ''}
+                oninput={(e) => typedCoord('lon', e.currentTarget.value)}
+              />
+            </label>
           </div>
-          <div class="actions sticky">
-            <span class="status" role="status">
-              {#if pickedCount > 0}
-                {pickedCount} to add{ownedCount > 0 ? `, ${ownedCount} already on the farm` : ''}.
-              {:else if ownedCount > 0}
-                {ownedCount} already on the farm.
-              {:else}
-                Nothing picked. Hand tools only is fine too.
-              {/if}
-            </span>
-            <button class="primary" type="submit" disabled={submitting || !data.canEdit}>
-              {pickedCount === 0 && ownedCount === 0
-                ? 'Continue with no implements'
-                : 'Save implements and continue'}
-              <ArrowRight size={15} />
-            </button>
-          </div>
-        </form>
+        </details>
+      </Card>
 
-        <!-- ─── 5. Season ─────────────────────────────────────────────── -->
-      {:else if data.step === 'season' && data.season}
-        <div class="banner">
-          <Check size={16} aria-hidden="true" />
-          <span>Farm basics are done. Now for this season.</span>
-        </div>
-        <Card>
-          <PlanningYearPicker view={data.season.planningYear} canEdit={data.canEdit} />
-        </Card>
-        <Card>
-          {#key data.season.currentYear}
-            <SeasonSetupStep
-              existing={data.season.existing}
-              lastYearSetup={data.season.lastYearSetup}
-              currentYear={data.season.currentYear}
-              onSave={onSeasonSaved}
-            />
-          {/key}
-        </Card>
+      <Card loose>
+        <FrostPanel {lat} {lon} mode="auto" bind:blocked={frostBlocked} />
+      </Card>
 
-        <!-- ─── 6. Plan hand-off ──────────────────────────────────────── -->
-      {:else if data.step === 'plan' && data.summary}
-        <Card>
-          <h2 class="serif sub">What you’ve set up</h2>
-          <ul class="summary">
-            <li>
-              <MapPin size={16} aria-hidden="true" />
-              {#if data.summary.location}
-                Location {data.summary.location.lat.toFixed(3)}, {data.summary.location.lon.toFixed(
-                  3
-                )}
-              {:else}
-                Location not set
-              {/if}
-            </li>
-            <li>
-              <Layers size={16} aria-hidden="true" />
-              {data.summary.blockCount}
-              {data.summary.blockCount === 1 ? 'block' : 'blocks'}{data.summary.acres > 0
-                ? `, ${fmt.qty(data.summary.acres, 'area')}`
-                : ''}
-            </li>
-            <li>
-              <Tractor size={16} aria-hidden="true" />
-              {data.summary.implementCount}
-              {data.summary.implementCount === 1 ? 'implement' : 'implements'}
-            </li>
-            <li>
-              <Leaf size={16} aria-hidden="true" />
-              {data.progress.season ? 'Season approach saved' : 'Season approach not set yet'}
-            </li>
-          </ul>
-          {#if data.summary.uncalibratedSprayers > 0}
-            <p class="hint warn">
-              {data.summary.uncalibratedSprayers}
-              {data.summary.uncalibratedSprayers === 1 ? 'sprayer needs' : 'sprayers need'} calibrating
-              before the first spray. <a href="/calibrate">Calibrate now</a> or do it from Today when
-              you’re ready.
-            </p>
-          {/if}
-        </Card>
+      <p class="why">
+        Your coordinates stay on your farm record. They're only sent to the National Weather Service
+        for your forecast.
+      </p>
 
-        <Card>
-          <h2 class="serif sub">Plan the season</h2>
-          <p class="hint">
-            The planner walks crops, block placement, a dated schedule and the inputs you’ll need.
-            It works entirely without AI.
-          </p>
-          <form method="POST" action="?/finish" use:enhance={submitEnhance} class="finish">
-            <button
-              class="primary"
-              type="submit"
-              name="dest"
-              value="plan"
-              disabled={submitting || !data.canEdit}
-            >
-              <Wheat size={15} aria-hidden="true" /> Open the season planner
-            </button>
-            <button
-              class="ghost"
-              type="submit"
-              name="dest"
-              value="today"
-              disabled={submitting || !data.canEdit}
-            >
-              Go to Today instead
-            </button>
-          </form>
-        </Card>
+      <div class="actions">
+        <button class="primary" type="submit" disabled={!canContinue}>
+          Continue <ArrowRight size={15} aria-hidden="true" />
+        </button>
+      </div>
+    </form>
+  {:else}
+    <header class="intro">
+      <div class="kicker-row"><Sun size={12} strokeWidth={2} aria-hidden="true" /> Step 2 of 2</div>
+      <h1 class="serif">What are you growing on?</h1>
+      <p class="lede">
+        Pick any that apply. We'll set up a starting spot for each one{data.farmName
+          ? ` on ${data.farmName}`
+          : ''}, and you can put them on the map whenever you like.
+      </p>
+    </header>
 
-        <div class="ai-offer">
-          <div class="offer-head">
-            <Sparkles size={15} aria-hidden="true" />
-            <strong>Optional: AI planning suggestions</strong>
-            <Provenance source="ai" compact />
-          </div>
-          <p>
-            Add your own Claude API key and the planner will propose allocations and schedules you
-            can accept or reject. Nothing requires it.
-          </p>
-          <a href="/settings/ai">Add a key in Settings →</a>
-        </div>
+    <form method="POST" action="?/growing" use:enhance={submitEnhance} class="form">
+      {#if form && 'error' in form && form.error}
+        <p class="error" role="alert">{form.error}</p>
       {/if}
-
-      {#if data.progress.farm}
-        <footer class="wizard-foot">
-          {#if back}
-            <a class="ghost" href={stepHref(back)}><ArrowLeft size={14} /> Back</a>
-          {:else}
-            <span></span>
-          {/if}
-          {#if data.canEdit && data.step !== 'plan'}
-            <form method="POST" action="?/later" use:enhance>
-              <button class="link" type="submit">Finish setup later</button>
-            </form>
-          {/if}
-        </footer>
-      {/if}
-    </section>
-  </div>
-
-  <p class="reassurance">
-    <Info size={12} aria-hidden="true" />
-    <span>Everything here can be changed later from Settings.</span>
-  </p>
+      <fieldset class="choices">
+        <legend class="sr-only">What are you growing on?</legend>
+        {#each data.options ?? [] as o (o.id)}
+          <label class="choice" class:on={picked.includes(o.id)}>
+            <input type="checkbox" name="growing" value={o.id} bind:group={picked} />
+            <span class="choice-title serif">{o.title}</span>
+            <span class="choice-blurb">{o.blurb}</span>
+            <span class="tick" aria-hidden="true"><Check size={16} /></span>
+          </label>
+        {/each}
+      </fieldset>
+      <div class="actions">
+        <button class="link" type="submit" name="skip" value="1" disabled={submitting}>
+          Not sure yet
+        </button>
+        <button class="primary" type="submit" disabled={picked.length === 0 || submitting}>
+          Take me to Today <ArrowRight size={15} aria-hidden="true" />
+        </button>
+      </div>
+    </form>
+  {/if}
 </main>
 
 <style>
   .ob-wrap {
-    max-width: 1180px;
-    margin: 28px auto 40px;
-    padding: 0 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 16px 56px;
   }
   .intro {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 680px;
+    margin-bottom: 20px;
   }
   .kicker-row {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 11px;
-    color: var(--color-ink-muted);
-    letter-spacing: 0.12em;
+    font-size: var(--font-size-kicker);
     text-transform: uppercase;
+    letter-spacing: 0.08em;
     font-weight: 700;
+    color: var(--color-ink-soft);
   }
-  .kicker-row :global(svg) {
-    color: var(--color-wheat, #d4a75c);
-  }
-  h1.serif {
-    margin: 0;
-    font-size: 40px;
-    line-height: 1.08;
+  h1 {
+    margin: 8px 0 8px;
+    font-size: var(--font-size-display);
     color: var(--color-forest-deep);
-    letter-spacing: -0.025em;
+    letter-spacing: var(--letter-tighter);
+    line-height: 1.1;
   }
   .lede {
+    margin: 0;
+    color: var(--color-ink-soft);
     font-size: 15px;
-    color: var(--color-ink-soft);
     line-height: 1.55;
-    margin: 0;
-  }
-  .layout {
-    display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
-    gap: 24px;
-    align-items: start;
-  }
-  /* Rail */
-  .rail {
-    position: sticky;
-    top: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .rail-farm {
-    display: flex;
-    flex-direction: column;
-    padding: 0 4px 10px;
-    border-bottom: 1px solid var(--color-divider);
-    margin-bottom: 4px;
-  }
-  .rail-farm-name {
-    font-weight: 700;
-    color: var(--color-forest-deep);
-  }
-  .rail-farm-count {
-    font-size: 12px;
-    color: var(--color-ink-muted);
-  }
-  .rail-phase {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-ink-muted);
-    padding: 8px 4px 2px;
-  }
-  .rail-steps {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .rail-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 44px;
-    padding: 4px 8px;
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--color-ink-soft);
-  }
-  a.rail-link:hover {
-    background: var(--color-cream);
-  }
-  .current .rail-link {
-    background: var(--color-forest-tint, #e5eedf);
-    color: var(--color-forest-deep);
-    font-weight: 600;
-  }
-  .locked .rail-link {
-    opacity: 0.55;
-  }
-  .dot {
-    width: 26px;
-    height: 26px;
-    border-radius: 999px;
-    border: 1.5px solid var(--color-divider);
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    background: var(--color-paper);
-    color: var(--color-ink-muted);
-  }
-  .done .dot {
-    background: var(--color-forest);
-    border-color: var(--color-forest);
-    color: var(--color-cream);
-  }
-  .current .dot {
-    border-color: var(--color-forest);
-    color: var(--color-forest);
-  }
-  .rail-title {
-    font-size: 13.5px;
-    line-height: 1.3;
-  }
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-  /* Panel */
-  .panel {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0;
-  }
-  .sub {
-    margin: 0 0 12px;
-    font-size: 18px;
-    color: var(--color-forest-deep);
-    letter-spacing: -0.01em;
+    max-width: 60ch;
   }
   .form {
     display: flex;
     flex-direction: column;
     gap: 16px;
+  }
+  .sub {
+    margin: 0 0 12px;
+    font-size: 18px;
+    color: var(--color-forest-deep);
   }
   .row {
     display: grid;
@@ -763,125 +352,117 @@
   .lbl {
     font-weight: 600;
   }
-  .opt {
-    color: var(--color-ink-muted);
-    font-style: normal;
-    font-weight: 400;
-  }
-  em {
-    color: var(--color-rust);
-    font-style: normal;
-  }
   input[type='text'],
-  input[type='number'],
-  input[type='date'] {
+  input[type='search'],
+  input[type='number'] {
     font: inherit;
     padding: 0 12px;
     border: 1px solid var(--color-divider);
-    border-radius: 6px;
+    border-radius: var(--radius-input);
     min-height: 48px;
     background: var(--color-paper);
     min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
-  input:focus-visible {
+  input:focus-visible,
+  button:focus-visible,
+  summary:focus-visible {
     outline: 2px solid var(--color-forest);
     outline-offset: 2px;
+  }
+  .search {
+    display: flex;
+    gap: 8px;
+  }
+  .search input {
+    flex: 1;
+  }
+  .matches {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .match {
+    font: inherit;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input);
+    background: var(--color-cream);
+    cursor: pointer;
+  }
+  .note {
+    margin: 8px 0 0;
+    font-size: 13.5px;
+    color: var(--color-ink-soft);
+  }
+  .note.warn {
+    color: var(--pill-rust-fg);
+  }
+  .or-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 14px 0 10px;
+  }
+  .muted {
+    color: var(--color-ink-soft);
+    font-size: 13.5px;
+  }
+  .map-loading {
+    border: 1px solid var(--color-divider);
+    border-radius: 10px;
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--color-ink-soft);
+  }
+  .picked {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 0;
+    font-size: 13.5px;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+  }
+  .advanced {
+    margin-top: 10px;
+  }
+  .advanced summary {
+    cursor: pointer;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    color: var(--color-ink-soft);
+    font-size: 13.5px;
   }
   .two {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    margin-top: 12px;
   }
-  .hint {
-    margin: 0 0 8px;
-    font-size: 13.5px;
+  .why {
+    margin: 0;
+    font-size: 13px;
     color: var(--color-ink-soft);
     line-height: 1.5;
-  }
-  .hint a {
-    color: inherit;
-    font-weight: 600;
-    text-decoration: underline;
-  }
-  .hint.warn {
-    color: var(--pill-rust-fg, #8a3b1c);
   }
   .error {
     background: var(--pill-rust-bg);
     border: 1px solid var(--pill-rust-bd);
     color: var(--pill-rust-fg);
     padding: 12px 16px;
-    border-radius: 6px;
+    border-radius: var(--radius-input);
     margin: 0;
-  }
-  .notice {
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider);
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin: 0;
-    font-size: 13.5px;
-  }
-  .loc-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-  .loc-head .sub {
-    margin: 0;
-  }
-  .map-loading {
-    border: 1px solid var(--color-divider);
-    border-radius: 10px;
-    padding: 40px;
-    text-align: center;
-    color: var(--color-ink-muted);
-  }
-  .why,
-  .banner {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 13px;
-    color: var(--color-ink-soft);
-    line-height: 1.5;
-  }
-  .why :global(svg),
-  .banner :global(svg) {
-    flex-shrink: 0;
-    margin-top: 2px;
-    color: var(--color-forest);
-  }
-  .banner {
-    background: var(--color-forest-tint, #e5eedf);
-    color: var(--color-forest-deep);
-    font-weight: 600;
-  }
-  .tips {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    font-size: 13px;
-    color: var(--color-ink-soft);
-    line-height: 1.45;
-  }
-  .tips > div {
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider);
-    border-radius: 8px;
-    padding: 10px 12px;
-  }
-  .tips em {
-    color: inherit;
-    font-style: italic;
   }
   .actions {
     display: flex;
@@ -890,25 +471,12 @@
     gap: 12px;
     flex-wrap: wrap;
   }
-  .actions.sticky {
-    position: sticky;
-    bottom: 0;
-    background: var(--color-paper);
-    border-top: 1px solid var(--color-divider);
-    padding: 12px 0;
-    z-index: 5;
-  }
-  .status {
-    flex: 1;
-    font-size: 13px;
-    color: var(--color-ink-muted);
-    min-width: 180px;
-  }
   .primary,
-  .ghost {
+  .ghost,
+  .link {
     font: inherit;
     font-weight: 600;
-    border-radius: 6px;
+    border-radius: var(--radius-input);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -916,7 +484,6 @@
     min-height: 48px;
     padding: 0 18px;
     cursor: pointer;
-    text-decoration: none;
   }
   .primary {
     background: var(--color-forest);
@@ -931,160 +498,110 @@
     background: var(--color-paper);
     color: var(--color-forest-deep);
     border: 1px solid var(--color-divider);
+    flex-shrink: 0;
   }
   .ghost:disabled {
     opacity: 0.6;
   }
   .link {
-    font: inherit;
     background: none;
     border: none;
-    color: var(--color-ink-muted);
+    color: var(--color-ink-soft);
     text-decoration: underline;
-    cursor: pointer;
-    min-height: 48px;
-    padding: 0 8px;
   }
-  .wizard-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid var(--color-divider);
-    padding-top: 12px;
-  }
-  .roadmap ol {
-    list-style: none;
+  .choices {
+    border: 0;
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .roadmap li {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 13.5px;
-    color: var(--color-ink-soft);
-    line-height: 1.45;
-  }
-  .roadmap li :global(svg) {
-    color: var(--color-forest);
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-  .rm-num {
-    width: 22px;
-    height: 22px;
-    border-radius: 999px;
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider);
-    display: grid;
-    place-items: center;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-  .summary {
-    list-style: none;
-    margin: 0 0 8px;
-    padding: 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    font-size: 14px;
+    gap: 12px;
   }
-  .summary li {
+  .choice {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 132px;
+    padding: 18px 18px 18px 20px;
+    border: 1.5px solid var(--color-divider);
+    border-radius: var(--radius-hero);
+    background: var(--color-paper);
+    cursor: pointer;
   }
-  .summary :global(svg) {
-    color: var(--color-forest);
+  .choice::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--color-divider);
   }
-  .finish {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+  .choice.on {
+    border-color: var(--color-forest);
+    background: var(--pill-forest-bg);
   }
-  .ai-offer {
-    border: 1px dashed var(--color-divider);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-size: 13px;
+  .choice.on::before {
+    background: var(--color-forest);
+  }
+  .choice:focus-within {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 2px;
+  }
+  .choice input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  .choice-title {
+    font-size: 19px;
+    color: var(--color-forest-deep);
+    padding-right: 32px;
+  }
+  .choice-blurb {
     color: var(--color-ink-soft);
-  }
-  .ai-offer p {
-    margin: 6px 0;
+    font-size: 13.5px;
     line-height: 1.5;
   }
-  .offer-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--color-forest-deep);
+  .tick {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    border: 1.5px solid var(--color-divider);
+    display: grid;
+    place-items: center;
+    color: transparent;
+    background: var(--color-paper);
   }
-  .ai-offer a {
-    color: var(--color-forest);
-    font-weight: 600;
+  .choice.on .tick {
+    background: var(--color-forest);
+    border-color: var(--color-forest);
+    color: var(--color-cream);
   }
-  .reassurance {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: 0;
-    font-size: 12px;
-    color: var(--color-ink-muted);
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
-  @media (max-width: 900px) {
-    .layout {
+  @media (max-width: 600px) {
+    h1 {
+      font-size: var(--font-size-hero);
+    }
+    .choices,
+    .two {
       grid-template-columns: 1fr;
     }
-    .rail {
-      position: static;
-      min-width: 0;
-    }
-    .actions.sticky {
-      position: static;
-    }
-    .rail-steps {
-      flex-direction: row;
-      overflow-x: auto;
-      gap: 4px;
-    }
-    .rail-steps li {
-      flex-shrink: 0;
-    }
-    .rail-title {
-      white-space: nowrap;
-    }
-    .tips {
-      grid-template-columns: 1fr;
-    }
-    h1.serif {
-      font-size: 30px;
-    }
-  }
-  @media (max-width: 520px) {
-    .two,
-    .summary {
-      grid-template-columns: 1fr;
-    }
-    .status {
-      flex-basis: 100%;
-      min-width: 0;
-    }
-    .actions .primary,
-    .finish .primary,
-    .finish .ghost {
-      width: 100%;
-    }
-    .rail-steps .rail-title {
-      display: none;
-    }
-    .current .rail-title {
-      display: inline;
+    .choice {
+      min-height: 96px;
     }
   }
 </style>

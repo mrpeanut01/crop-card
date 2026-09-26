@@ -156,7 +156,11 @@
     <h1>Configure CropCard.</h1>
   </div>
   <div class="header-actions">
-    <a class="ghost-btn" href="/onboarding"> Re-walk setup tour → </a>
+    {#if data.isOwner}
+      <form method="POST" action="/today?/showSetup">
+        <button class="ghost-btn" type="submit">Re-show setup checklist</button>
+      </form>
+    {/if}
     <a class="ghost-btn" href="/settings/advanced">
       <FileDown size={14} />
       Export account data
@@ -271,8 +275,10 @@
     text-decoration: none;
     color: var(--color-ink);
     font-size: 13px;
+    font-family: inherit;
     font-weight: 600;
-    min-height: 36px;
+    min-height: 48px;
+    cursor: pointer;
   }
   .ghost-btn:hover {
     border-color: var(--color-forest-deep);

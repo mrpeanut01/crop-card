@@ -1,6 +1,13 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
+  import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
+  import SetupSprayer from '$lib/components/setup/SetupSprayer.svelte';
+  import SetupCalibration from '$lib/components/setup/SetupCalibration.svelte';
+  import SetupPlantingBackfill from '$lib/components/setup/SetupPlantingBackfill.svelte';
+  import type { SetupPlantingResult, SetupSprayerResult } from '$lib/setup/types';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
   import { herbicideRatePreview } from '$lib/dilution/ratePreview';
   import Banner from '$lib/components/ui/Banner.svelte';
@@ -662,6 +669,30 @@
             tone: 'rust'
           }
   );
+
+  let setupSheet = $state<null | 'planting' | 'sprayer' | 'calibration'>(null);
+
+  async function onPlantingAdded(r: SetupPlantingResult) {
+    setupSheet = null;
+    await invalidateAll();
+    selectedBlockIds = new Set([r.blockId]);
+    await focusAfterSetup(`[data-block-id="${CSS.escape(r.blockId)}"]`);
+  }
+
+  async function onSprayerAdded(r: SetupSprayerResult) {
+    setupSheet = null;
+    await invalidateAll();
+    selectedSprayerId = r.sprayerId;
+    await focusAfterSetup(`[data-sprayer-id="${CSS.escape(r.sprayerId)}"]`);
+  }
+
+  async function onCalibrated() {
+    setupSheet = null;
+    await invalidateAll();
+    if (selectedSprayerId) {
+      await focusAfterSetup(`[data-sprayer-id="${CSS.escape(selectedSprayerId)}"]`);
+    }
+  }
 </script>
 
 <SprayPageHeader chemistry="herbicide" />
@@ -691,13 +722,24 @@
 {/if}
 
 {#if data.blocks.length === 0}
-  <section class="step empty-state">
-    <h2>No blocks with plantings yet</h2>
+  <SetupCallout
+    kicker="Before you mix"
+    title="What are you spraying?"
+    canEdit={data.setup.canEdit}
+    askOwner="Ask the owner to add what's growing here. The safety checks need to know the crop before a spray can be recorded."
+    testId="spray-where"
+  >
     <p>
-      Add a block + planting on <a href="/plan">/plan</a> first. The spray flow operates on real plantings
-      so the kernel knows what crops are in the block.
+      The safety checks need to know what's growing where. Tell CropCard what's in the ground and
+      you'll carry on right here.
     </p>
-  </section>
+    {#snippet actions()}
+      <button type="button" class="primary" onclick={() => (setupSheet = 'planting')}>
+        Add what's growing
+      </button>
+      <a href="/plan">Plan a crop first</a>
+    {/snippet}
+  </SetupCallout>
 {:else}
   <section class="step">
     <h2>1. Block</h2>
@@ -710,6 +752,7 @@
           class:selected={isSelected}
           class:preplant={b.preplant}
           aria-pressed={isSelected}
+          data-block-id={b.id}
           onclick={() => toggleBlock(b.id)}
         >
           <span class="card-head">
@@ -760,7 +803,9 @@
     {#if sprayer && sprayer.calibratedGpa == null}
       <p class="filter-hint" data-testid="uncalibrated-hint">
         <strong>{sprayer.label}</strong> is uncalibrated — rates below are per acre only.
-        <a href="/calibrate">Calibrate sprayer →</a>
+        <button type="button" class="link-button" onclick={() => (setupSheet = 'calibration')}>
+          Calibrate {sprayer.label}
+        </button>
       </p>
     {/if}
     <div class="cards">
@@ -795,15 +840,22 @@
   <section class="step">
     <h2>3. Sprayer</h2>
     {#if data.sprayers.length === 0}
-      <div class="sprayer-empty">
+      <div class="sprayer-empty" data-testid="sprayer-empty">
         <p>
-          <strong>No sprayers configured yet.</strong> Add one before recording a spray — the kernel uses
-          the sprayer's GPA calibration to compute every product rate.
+          <strong>Which sprayer?</strong> There isn't one on the farm yet. Once it's added and calibrated,
+          CropCard works out every product rate from its gallons per acre.
         </p>
-        <div class="sprayer-empty-cta">
-          <a class="primary" href="/inventory/sprayer/add">+ Add sprayer</a>
-          <a href="/calibrate">Calibrate existing sprayer →</a>
-        </div>
+        {#if data.setup.canEdit}
+          <div class="sprayer-empty-cta">
+            <button type="button" class="primary" onclick={() => (setupSheet = 'sprayer')}>
+              + Add a sprayer
+            </button>
+          </div>
+        {:else}
+          <p class="ask-owner" role="note">
+            Ask the owner to add a sprayer. Once it's on the farm it shows up here.
+          </p>
+        {/if}
       </div>
     {:else}
       <div class="cards">
@@ -812,6 +864,7 @@
             type="button"
             class="card"
             class:selected={selectedSprayerId === s.id}
+            data-sprayer-id={s.id}
             onclick={() => (selectedSprayerId = s.id)}
           >
             <strong>{s.label}</strong>
@@ -1254,6 +1307,54 @@
   </section>
 {/if}
 
+<SetupSheet
+  open={setupSheet === 'planting'}
+  kicker="Spray"
+  title="What's growing there?"
+  onDone={onPlantingAdded}
+  onClose={() => (setupSheet = null)}
+>
+  {#snippet children(done)}
+    <SetupPlantingBackfill
+      blocks={data.setup.blocks}
+      areas={data.setup.areas}
+      canEdit={data.setup.canEdit}
+      submitLabel="Save and pick products"
+      onDone={done}
+    />
+  {/snippet}
+</SetupSheet>
+
+<SetupSheet
+  open={setupSheet === 'sprayer'}
+  kicker="Spray"
+  title="Which sprayer?"
+  onDone={onSprayerAdded}
+  onClose={() => (setupSheet = null)}
+>
+  {#snippet children(done)}
+    <SetupSprayer
+      templates={data.setup.sprayerTemplates}
+      canEdit={data.setup.canEdit}
+      onDone={done}
+    />
+  {/snippet}
+</SetupSheet>
+
+{#if sprayer}
+  <SetupSheet
+    open={setupSheet === 'calibration'}
+    kicker="Spray"
+    title="Calibrate {sprayer.label}"
+    onDone={onCalibrated}
+    onClose={() => (setupSheet = null)}
+  >
+    {#snippet children(done)}
+      <SetupCalibration {sprayer} canSave={data.setup.canEdit} onDone={done} />
+    {/snippet}
+  </SetupSheet>
+{/if}
+
 <style>
   /* Phase 25b (#85) — Almanac chrome layout. The new stepper + context
      strip sit above the legacy flow with a small spacing buffer. */
@@ -1262,14 +1363,6 @@
   }
   /* h1 + .lede now owned by SprayPageHeader (Phase 25b).
      .prefill-banner superseded by Banner primitive. */
-  .empty-state {
-    text-align: center;
-    padding: 2rem;
-  }
-  .empty-state a {
-    color: var(--color-forest);
-    font-weight: 600;
-  }
   .sprayer-empty {
     background: #fff8ec;
     border: 1px solid #d9c18f;
@@ -1280,24 +1373,29 @@
     margin: 0 0 1rem;
     color: #6b4d00;
   }
+  .sprayer-empty .ask-owner {
+    margin: 0;
+  }
   .sprayer-empty-cta {
     display: flex;
     gap: 1rem;
     align-items: center;
     flex-wrap: wrap;
   }
-  .sprayer-empty-cta a.primary {
+  .sprayer-empty-cta .primary {
     background: var(--color-forest);
     color: var(--color-cream, #fff8e1);
-    padding: 0.5rem 1rem;
+    border: none;
+    min-height: 48px;
+    padding: 0 1.25rem;
     border-radius: 6px;
-    text-decoration: none;
+    font: inherit;
     font-weight: 600;
+    cursor: pointer;
   }
-  .sprayer-empty-cta a {
-    color: var(--color-forest);
+  .filter-hint .link-button {
+    min-height: 48px;
     font-weight: 600;
-    text-decoration: none;
   }
   .filter-hint {
     background: #fff8ec;

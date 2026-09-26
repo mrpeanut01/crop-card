@@ -23,7 +23,11 @@ describe('buildPlantingCard', () => {
     expect(card.href).toBe('/cards/planting/pl_p_tom');
     expect(card.kicker).toBe('Planting · Bed 3 · Kitchen Garden');
     expect(card.title).toBe('Cherokee Purple tomato');
-    expect(fact(card, 'Planted')).toEqual({ label: 'Planted', value: 'May 4', provenance: 'manual' });
+    expect(fact(card, 'Planted')).toEqual({
+      label: 'Planted',
+      value: 'May 4',
+      provenance: 'manual'
+    });
     expect(fact(card, 'Harvest')).toEqual({
       label: 'Harvest',
       value: 'Jul 15 – Jul 23',
@@ -50,7 +54,7 @@ describe('buildPlantingCard', () => {
     const card = buildPlantingCard(snap, 'p_tom')!;
     expect(card.next).toEqual({
       label: 'Side-dress',
-      href: '/today?task=t_side',
+      href: '/plan?block=b_bed3#plan-scheduled-tasks',
       due: 'overdue since May 30'
     });
     expect(card.sections.find((s) => s.title === 'Coming up')?.items).toEqual([
@@ -80,7 +84,11 @@ describe('buildPlantingCard', () => {
     const card = buildPlantingCard(snap, 'p_bean')!;
     expect(fact(card, 'Sow')).toEqual({ label: 'Sow', value: 'Jun 10', provenance: 'ai' });
     expect(fact(card, 'Harvest')?.value).toBe('Jul 30');
-    expect(fact(card, 'Spacing')).toEqual({ label: 'Spacing', value: '3 in', provenance: 'manual' });
+    expect(fact(card, 'Spacing')).toEqual({
+      label: 'Spacing',
+      value: '3 in',
+      provenance: 'manual'
+    });
     expect(fact(card, 'Row spacing')).toEqual({
       label: 'Row spacing',
       value: '18 in',
@@ -127,7 +135,11 @@ describe('buildPlantingCard', () => {
     const s = sampleSnapshot();
     s.plantings[0] = { ...s.plantings[0], spacingIn: 6 };
     const card = buildPlantingCard(s, 'p_tom')!;
-    expect(fact(card, 'Spacing')).toEqual({ label: 'Spacing', value: '6 in', provenance: 'manual' });
+    expect(fact(card, 'Spacing')).toEqual({
+      label: 'Spacing',
+      value: '6 in',
+      provenance: 'manual'
+    });
     expect(fact(card, 'Row spacing')).toEqual({
       label: 'Row spacing',
       value: '48 in',
@@ -149,7 +161,12 @@ describe('buildPlantingCard', () => {
 
   it('an active, dated planting recorded by quantity has unique fact labels', () => {
     const s = sampleSnapshot();
-    s.plantings[0] = { ...s.plantings[0], plantCount: null, quantityPlanted: 12, quantityUnit: null };
+    s.plantings[0] = {
+      ...s.plantings[0],
+      plantCount: null,
+      quantityPlanted: 12,
+      quantityUnit: null
+    };
     const labels = buildPlantingCard(s, 'p_tom')!.facts.map((f) => f.label);
     expect(labels).toContain('Planted');
     expect(labels).toContain('Quantity');
@@ -158,14 +175,22 @@ describe('buildPlantingCard', () => {
 
   it('computes due wording in the user time zone', () => {
     const s = sampleSnapshot({ generatedAt: Date.parse('2026-06-04T02:00:00Z') });
-    const ny = buildPlantingCard(s, 'p_tom', { prefs: { timeZone: 'America/New_York', units: 'us' } })!;
-    const tokyo = buildPlantingCard(s, 'p_tom', { prefs: { timeZone: 'Asia/Tokyo', units: 'us' } })!;
+    const ny = buildPlantingCard(s, 'p_tom', {
+      prefs: { timeZone: 'America/New_York', units: 'us' }
+    })!;
+    const tokyo = buildPlantingCard(s, 'p_tom', {
+      prefs: { timeZone: 'Asia/Tokyo', units: 'us' }
+    })!;
     expect(ny.sections[0].items[0]).toBe('Stake + prune suckers (due tomorrow)');
     expect(tokyo.sections[0].items[0]).toBe('Stake + prune suckers (due today)');
   });
 
   it('builds one card per planting', () => {
-    expect(buildPlantingCards(snap).map((c) => c.key)).toEqual(['pl_p_tom', 'pl_p_bean', 'pl_p_alf']);
+    expect(buildPlantingCards(snap).map((c) => c.key)).toEqual([
+      'pl_p_tom',
+      'pl_p_bean',
+      'pl_p_alf'
+    ]);
   });
 });
 
@@ -179,15 +204,24 @@ describe('harvestWindow', () => {
 
   it('property: the window starts dtm.min days after planting and never ends before it starts', () => {
     const ymd = fc
-      .date({ min: new Date('2000-01-01T00:00:00Z'), max: new Date('2099-12-31T00:00:00Z'), noInvalidDate: true })
+      .date({
+        min: new Date('2000-01-01T00:00:00Z'),
+        max: new Date('2099-12-31T00:00:00Z'),
+        noInvalidDate: true
+      })
       .map((d) => d.toISOString().slice(0, 10));
     fc.assert(
-      fc.property(ymd, fc.integer({ min: 1, max: 400 }), fc.integer({ min: 0, max: 200 }), (d, min, extra) => {
-        const w = harvestWindow(d, { daysToMaturity: { min, max: min + extra } })!;
-        expect(daysBetweenYmd(d, w.start)).toBe(min);
-        expect(daysBetweenYmd(w.start, w.end)).toBe(extra);
-        expect(addDaysYmd(d, min)).toBe(w.start);
-      })
+      fc.property(
+        ymd,
+        fc.integer({ min: 1, max: 400 }),
+        fc.integer({ min: 0, max: 200 }),
+        (d, min, extra) => {
+          const w = harvestWindow(d, { daysToMaturity: { min, max: min + extra } })!;
+          expect(daysBetweenYmd(d, w.start)).toBe(min);
+          expect(daysBetweenYmd(w.start, w.end)).toBe(extra);
+          expect(addDaysYmd(d, min)).toBe(w.start);
+        }
+      )
     );
   });
 });
@@ -201,7 +235,11 @@ describe('planting builder properties', () => {
     status: fc.constantFrom('planned', 'active', 'harvested'),
     plantingDate: fc.option(
       fc
-        .date({ min: new Date('2020-01-01T00:00:00Z'), max: new Date('2030-12-31T00:00:00Z'), noInvalidDate: true })
+        .date({
+          min: new Date('2020-01-01T00:00:00Z'),
+          max: new Date('2030-12-31T00:00:00Z'),
+          noInvalidDate: true
+        })
         .map((d) => d.toISOString().slice(0, 10)),
       { nil: null }
     ),
@@ -230,7 +268,8 @@ describe('planting builder properties', () => {
           expect(f.value).not.toMatch(/NaN|undefined|null/);
         }
         for (const f of card.facts) {
-          if (f.provenance) expect(card.provenance.some((pr) => pr.source === f.provenance)).toBe(true);
+          if (f.provenance)
+            expect(card.provenance.some((pr) => pr.source === f.provenance)).toBe(true);
         }
       })
     );

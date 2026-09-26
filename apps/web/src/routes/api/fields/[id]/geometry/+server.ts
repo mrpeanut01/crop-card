@@ -10,8 +10,7 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getField, updateField } from '$lib/db/fields';
-import { currentUser } from '$lib/server/auth';
-import { canMutate } from '$lib/server/session';
+import { requireOwner } from '$lib/server/auth';
 
 const geomSchema = z.union([
   z.object({
@@ -34,10 +33,7 @@ const geomSchema = z.union([
 
 export const PUT: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'field id required');
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
-  }
+  requireOwner(event);
   if (!getField(event.params.id)) throw error(404, 'field not found');
 
   let body: unknown;
@@ -63,10 +59,7 @@ export const PUT: RequestHandler = async (event) => {
 
 export const DELETE: RequestHandler = (event) => {
   if (!event.params.id) throw error(400, 'field id required');
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
-  }
+  requireOwner(event);
   const field = updateField(event.params.id, { geometryGeojson: null });
   if (!field) throw error(404, 'field not found');
   return json({ field });

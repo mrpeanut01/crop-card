@@ -12,8 +12,7 @@ import { getField } from '$lib/db/fields';
 import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
 import { DEFAULT_BLOCK_KIND, usesDesignerLayout } from '$lib/farm/areaKinds';
 import { blockLayoutPatchSchema, blockPlacementError } from '$lib/farm/blockLayout';
-import { currentUser } from '$lib/server/auth';
-import { canMutate } from '$lib/server/session';
+import { requireOwner } from '$lib/server/auth';
 
 export const GET: RequestHandler = (event) => {
   if (!event.params.id) throw error(400, 'id required');
@@ -37,10 +36,7 @@ const patchSchema = blockLayoutPatchSchema.extend({
 
 export const PATCH: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
-  }
+  requireOwner(event);
   const block = getBlock(event.params.id);
   if (!block) throw error(404, 'block not found');
 
@@ -76,10 +72,7 @@ export const PATCH: RequestHandler = async (event) => {
 
 export const DELETE: RequestHandler = (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  const auth = currentUser(event);
-  if (auth && !canMutate(auth.role)) {
-    return json({ error: 'inspector role is read-only' }, { status: 403 });
-  }
+  requireOwner(event);
   const block = getBlock(event.params.id);
   if (!block) throw error(404, 'block not found');
   return json(deleteBlockCascade(event.params.id));

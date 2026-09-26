@@ -26,7 +26,8 @@ export const TENANT_CACHE_NAMES = [
   'cropcard-tenant-plugins',
   'cropcard-tenant-sprayers',
   'cropcard-tenant-data',
-  'cropcard-tenant-pages'
+  'cropcard-tenant-pages',
+  'cropcard-tenant-cards'
 ] as const;
 export const LEGACY_TENANT_CACHE_NAMES = ['cropcard-plugins', 'cropcard-sprayers'] as const;
 export const SW_META_CACHE = 'cropcard-sw-meta';

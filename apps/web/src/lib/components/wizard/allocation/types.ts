@@ -58,7 +58,7 @@ export type AllocationResponse = {
   meta: {
     model: string;
     usdEstimate: number;
-    fallback?: 'engine-only' | 'no-api-key' | 'over-cap' | 'quota-exceeded';
+    fallback?: 'engine-only' | 'no-api-key' | 'over-cap' | 'quota-exceeded' | 'ai-unavailable';
     violationsOnFirstAttempt?: string[];
   };
 };

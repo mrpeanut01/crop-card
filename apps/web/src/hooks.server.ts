@@ -23,11 +23,17 @@ import { isInternalTickRequest } from '$lib/server/push/wakeup';
 import { hostRedirectTarget, parseRedirectHosts } from '$lib/server/hostRedirect';
 import { isFenced, startHandoffWatcher, trackMutation } from '$lib/server/ops/handoff';
 import { fenceResponse } from '$lib/server/ops/fenceResponse';
+import { startRuntimeMetrics, withServerTiming } from '$lib/server/runtimeMetrics';
+import { scheduleBootMaintenance } from '$lib/server/dbMaintenance';
 
 /** Deploy handoff fence: hold the writer lease and release it to a newer
- *  container (docs/ops/restore-runbook.md). No-op outside Azure. */
+ *  container (docs/ops/restore-runbook.md). No-op outside Azure. Also starts
+ *  runtime metrics and a non-blocking DB maintenance pass shortly after boot
+ *  (both no-ops under tests). */
 export const init: ServerInit = () => {
   startHandoffWatcher();
+  startRuntimeMetrics();
+  scheduleBootMaintenance();
 };
 
 /**
@@ -250,7 +256,7 @@ const redirectHosts = parseRedirectHosts(process.env.REDIRECT_HOSTS);
  * has asked for the database, writes get 503 + Retry-After before anything
  * else runs, and admitted writes are counted so the release can wait for them.
  */
-export const handle: Handle = async (input) => {
+const handleFenced: Handle = async (input) => {
   const fenced = fenceResponse(input.event.request, isFenced());
   if (fenced) return fenced;
   if (MUTATION_METHODS.has(input.event.request.method)) {
@@ -533,3 +539,5 @@ function ownerBillingStatus(ownerId: string): string | null {
     return null;
   }
 }
+
+export const handle = withServerTiming(handleFenced);

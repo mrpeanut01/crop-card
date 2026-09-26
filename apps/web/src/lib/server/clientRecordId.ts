@@ -9,6 +9,16 @@ import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 
 const ID_PATTERN = /^[A-Za-z0-9_-]{8,80}$/;
 
+const claimedKeys = new WeakMap<Request, string>();
+
+/** Marks the replay receipt done. Call inside the record's write
+ *  transaction so the record and its receipt commit (or roll back)
+ *  together; a no-op for requests without a claimed client record id. */
+export function markClientRecordSaved(event: { request: Request }): void {
+  const key = claimedKeys.get(event.request);
+  if (key) completeClientRecord(key);
+}
+
 /** Makes a record endpoint safe to replay from the offline queue. A request
  *  carrying a client record id that was already saved gets a success answer
  *  and writes nothing; a request without one runs unchanged. */
@@ -25,6 +35,7 @@ export function withClientRecordId(handler: RequestHandler): RequestHandler {
         { status: 503 }
       );
     }
+    claimedKeys.set(event.request, key);
     let res: Response;
     try {
       res = await handler(event);

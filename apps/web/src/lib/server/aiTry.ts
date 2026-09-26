@@ -16,10 +16,6 @@
  * Spec: docs/design/almanac/AI_PROVENANCE_ADDENDUM.md ("aiTry helper").
  */
 
-import { eq } from 'drizzle-orm';
-import { db } from '$lib/db/client';
-import { users } from '$lib/db/schema';
-import { unscopedQueryNote } from '$lib/db/tenant';
 import { getApiKey } from './scanResult';
 
 export type FallbackReason = 'no-key' | 'over-cap' | 'offline' | 'rate-limit' | 'timeout';
@@ -113,37 +109,15 @@ export async function aiTry<T>(args: AiTryArgs<T>): Promise<AiTryResult<T>> {
 }
 
 /**
- * Cheap SELECT for loaders that need to thread `aiEnabled` into a page's
- * data. Not part of the session payload because the flag flips when the
- * user validates a key in Settings → AI — re-reading per-request keeps
- * the session lean and the flag fresh.
+ * Whether a signed-in user sees the AI-on variant: true whenever a Claude
+ * key is configured (env var or the owner setting saved on /settings/ai).
  *
- * Resolves to TRUE when BOTH:
- *   1. A Claude API key is configured (env var OR per-owner setting)
- *   2. The user hasn't explicitly opted out (`users.ai_enabled === false`)
- *
- * The opt-out column is future-proofing for per-user AI disable; today
- * the natural flow flips it true when the user saves a key on /settings/ai.
- * Returns false when the user is unknown (defensive — matches the safe
- * AI-off baseline rather than throwing).
+ * `users.ai_enabled` is deliberately not consulted. It defaults to false,
+ * only flips for the account that saved the key, and has no toggle in the
+ * UI, so gating on it showed "AI off" to every other account and whenever
+ * the key came from the environment.
  */
 export function getUserAiEnabled(userId: string | null | undefined): boolean {
   if (!userId) return false;
-  if (!getApiKey()) return false;
-  // Cross-tenant lookup — users is a global identity table per the
-  // Phase 18a multi-tenant design. unscopedQueryNote documents the
-  // intentional bypass of tenant scoping for this column read.
-  unscopedQueryNote(
-    'users.ai_enabled drives client-side AI variant rendering; global identity column'
-  );
-  try {
-    const row = db
-      .select({ aiEnabled: users.aiEnabled })
-      .from(users)
-      .where(eq(users.id, userId))
-      .get();
-    return !!row?.aiEnabled;
-  } catch {
-    return false;
-  }
+  return !!getApiKey();
 }

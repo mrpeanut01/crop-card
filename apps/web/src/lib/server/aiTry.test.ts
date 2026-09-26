@@ -1,5 +1,24 @@
 import { describe, it, expect, vi } from 'vitest';
-import { aiTry } from './aiTry';
+
+const apiKey = vi.hoisted(() => ({ value: '' }));
+vi.mock('./scanResult', () => ({ getApiKey: () => apiKey.value }));
+
+import { aiTry, getUserAiEnabled } from './aiTry';
+
+describe('getUserAiEnabled', () => {
+  it('is on for any signed-in user once a key is configured', () => {
+    apiKey.value = 'sk-ant-test';
+    expect(getUserAiEnabled('user_a')).toBe(true);
+    expect(getUserAiEnabled('user_never_saved_the_key')).toBe(true);
+  });
+
+  it('is off with no key or no user', () => {
+    apiKey.value = '';
+    expect(getUserAiEnabled('user_a')).toBe(false);
+    apiKey.value = 'sk-ant-test';
+    expect(getUserAiEnabled(null)).toBe(false);
+  });
+});
 
 describe('aiTry', () => {
   it('runs fallback with no-key when aiEnabled is false', async () => {

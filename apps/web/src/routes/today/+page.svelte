@@ -391,7 +391,6 @@
   <WeekStrip {todayStartMs} items={weekItemsByDay} />
   <div class="t-side-stack">
     <Recommendations
-      {aiEnabled}
       items={recommendationItems}
       onSchedule={(id) => {
         const idx = recommendationItems.findIndex((r) => r.id === id);
@@ -409,7 +408,7 @@
       ? ['plugin', 'data', 'ai', 'manual']
       : ['plugin', 'data', 'fallback', 'manual']}
     note={aiEnabled
-      ? 'AI on · recommendations Claude-ranked · all editable'
+      ? 'AI on · plugin + your records · all editable'
       : 'AI off · plugin + your records · all editable'}
   />
 </div>

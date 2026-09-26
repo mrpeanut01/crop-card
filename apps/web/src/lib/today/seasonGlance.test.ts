@@ -23,13 +23,11 @@ describe('deriveSeasonGlance', () => {
     const out = deriveSeasonGlance({
       activePlantings: 6,
       spraysYTD: 14,
-      pluginsLoaded: 308,
       derivedEvents: [],
       now: NOW
     });
     expect(out.activePlantings).toBe(6);
     expect(out.spraysYTD).toBe(14);
-    expect(out.pluginsLoaded).toBe(308);
     expect(out.daysToNextHarvest).toBeNull();
   });
 
@@ -37,7 +35,6 @@ describe('deriveSeasonGlance', () => {
     const out = deriveSeasonGlance({
       activePlantings: 1,
       spraysYTD: 0,
-      pluginsLoaded: 0,
       now: NOW,
       derivedEvents: [ev({ startMs: NOW + 14 * DAY }), ev({ startMs: NOW + 3 * DAY })]
     });
@@ -48,7 +45,6 @@ describe('deriveSeasonGlance', () => {
     const out = deriveSeasonGlance({
       activePlantings: 1,
       spraysYTD: 0,
-      pluginsLoaded: 0,
       now: NOW,
       derivedEvents: [ev({ startMs: NOW - 5 * DAY }), ev({ startMs: NOW + 10 * DAY })]
     });
@@ -59,7 +55,6 @@ describe('deriveSeasonGlance', () => {
     const out = deriveSeasonGlance({
       activePlantings: 1,
       spraysYTD: 0,
-      pluginsLoaded: 0,
       now: NOW,
       derivedEvents: [
         ev({ kind: 'spray-window', startMs: NOW + 1 * DAY }),

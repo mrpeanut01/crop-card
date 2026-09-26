@@ -7,27 +7,18 @@
  * render as the same day in every time zone; moments are epoch ms.
  */
 
+import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
+
 export const FARM_SNAPSHOT_VERSION = 1 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
-/** Mirrors the `fields.kind` values from the Phase 30 `areas_kind` migration.
- *  The UI calls these Areas; the table stays `fields`. */
-export type SnapshotAreaKind =
-  | 'field'
-  | 'garden'
-  | 'greenhouse'
-  | 'orchard'
-  | 'pasture'
-  | 'barn'
-  | 'residence'
-  | 'natural_area'
-  | 'water'
-  | 'boundary';
+/** `fields.kind` values. The UI calls these Areas; the table stays `fields`. */
+export type SnapshotAreaKind = AreaKind;
 
-export type SnapshotBlockKind = 'block' | 'bed' | 'row' | 'container';
+export type SnapshotBlockKind = BlockKind;
 
-export type SnapshotBedStyle = 'raised' | 'in-ground' | 'container' | 'vertical';
+export type SnapshotBedStyle = BedStyle;
 
 export interface SnapshotArea {
   id: string;

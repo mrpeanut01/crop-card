@@ -391,17 +391,29 @@ describe('cross-tenant isolation', () => {
         const aFirst = runWithTenant(OWNER_A, () =>
           clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
         );
-        runWithTenant(OWNER_A, () => clientRecordsRepo.completeClientRecord(clientId));
+        if (aFirst.status !== 'claimed') throw new Error('expected Owner A to claim');
+        const aToken = aFirst.token;
         const bFirst = runWithTenant(OWNER_B, () =>
-          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
+          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record', aToken)
         );
-        runWithTenant(OWNER_B, () => clientRecordsRepo.releaseClientRecord(clientId));
+        if (bFirst.status !== 'claimed') throw new Error('expected Owner B to claim');
+        expect(
+          runWithTenant(OWNER_B, () => clientRecordsRepo.completeClientRecord(clientId, aToken))
+        ).toBe(true);
+        expect(
+          runWithTenant(OWNER_A, () => clientRecordsRepo.releaseClientRecord(clientId, aToken))
+        ).toBe(true);
+        expect(
+          runWithTenant(OWNER_B, () => clientRecordsRepo.releaseClientRecord(clientId, aToken))
+        ).toBe(false);
         const aAgain = runWithTenant(OWNER_A, () =>
           clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
         );
-        expect(aFirst).toBe('claimed');
-        expect(bFirst).toBe('claimed');
-        expect(aAgain).toBe('done');
+        const bAgain = runWithTenant(OWNER_B, () =>
+          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
+        );
+        expect(aAgain.status).toBe('claimed');
+        expect(bAgain).toEqual({ status: 'done' });
       }),
       { numRuns: 20 }
     );

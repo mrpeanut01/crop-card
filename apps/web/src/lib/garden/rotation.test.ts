@@ -392,3 +392,118 @@ describe('companionHints', () => {
     expect(companionHints(beds, plantings, [], [beansOnions], adjacency)).toEqual([]);
   });
 });
+
+describe('companionHints with two-sided keepApart', () => {
+  const beds = [
+    bed('bed1', 2, 3, 3, 90),
+    bed('bed2', 9, 3, 3, 90),
+    bed('bed3', 16, 3, 3, 90),
+    bed('bed4', 23, 3, 3, 90)
+  ];
+  const adjacency = adjacentBeds(beds);
+  const sideA = ['tomato-celebrity-f1', 'tomato-san-marzano'];
+  const sideB = ['potato-kennebec', 'potato-yukon-gold'];
+  const blight = companion({
+    pluginId: 'tomato-potato-fixture',
+    keepApart: [{ a: sideA, b: sideB, reason: 'Late blight spreads between them' }]
+  });
+  const season = (id: string, b: string) => interval(id, b, day(5, 1), day(8, 1));
+
+  it('flags a tomato next to a potato with the entry reason', () => {
+    const plantings = [
+      planting('pot', 'bed3', 'potato-kennebec', 'solanaceae'),
+      planting('tom', 'bed2', 'tomato-celebrity-f1', 'solanaceae')
+    ];
+    expect(
+      companionHints(
+        beds,
+        plantings,
+        [season('tom', 'bed2'), season('pot', 'bed3')],
+        [blight],
+        adjacency
+      )
+    ).toEqual([
+      {
+        relation: 'keep-apart',
+        companionPluginId: 'tomato-potato-fixture',
+        a: { blockId: 'bed3', cropId: 'pot', cropPluginId: 'potato-kennebec' },
+        b: { blockId: 'bed2', cropId: 'tom', cropPluginId: 'tomato-celebrity-f1' },
+        sameBed: false,
+        benefit: 'Late blight spreads between them'
+      }
+    ]);
+  });
+
+  it('never flags two crops from the same side', () => {
+    const plantings = [
+      planting('t1', 'bed2', 'tomato-celebrity-f1', 'solanaceae'),
+      planting('t2', 'bed2', 'tomato-san-marzano', 'solanaceae'),
+      planting('p1', 'bed3', 'potato-kennebec', 'solanaceae'),
+      planting('p2', 'bed3', 'potato-yukon-gold', 'solanaceae')
+    ];
+    const hints = companionHints(
+      beds,
+      plantings,
+      plantings.map((p) => season(p.cropId, p.blockId)),
+      [blight],
+      adjacency
+    );
+    expect(hints).toHaveLength(4);
+    for (const h of hints) {
+      expect(h.relation).toBe('keep-apart');
+      expect(sideA.includes(h.a.cropPluginId)).not.toBe(sideA.includes(h.b.cropPluginId));
+    }
+  });
+
+  it('says nothing when the beds are far apart or the plantings never share time', () => {
+    const far = [
+      planting('tom', 'bed1', 'tomato-celebrity-f1', 'solanaceae'),
+      planting('pot', 'bed4', 'potato-kennebec', 'solanaceae')
+    ];
+    expect(
+      companionHints(beds, far, [season('tom', 'bed1'), season('pot', 'bed4')], [blight], adjacency)
+    ).toEqual([]);
+    const near = [
+      planting('tom', 'bed2', 'tomato-celebrity-f1', 'solanaceae'),
+      planting('pot', 'bed3', 'potato-kennebec', 'solanaceae')
+    ];
+    expect(
+      companionHints(
+        beds,
+        near,
+        [
+          interval('pot', 'bed3', day(3, 15), day(5, 20)),
+          interval('tom', 'bed2', day(5, 20), day(9, 1))
+        ],
+        [blight],
+        adjacency
+      )
+    ).toEqual([]);
+  });
+
+  it('fires for exactly the cross-side pairs (property)', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...sideA, ...sideB),
+        fc.constantFrom(...sideA, ...sideB),
+        fc.boolean(),
+        (x, y, sameBed) => {
+          fc.pre(x !== y);
+          const plantings = [
+            planting('x', 'bed2', x, 'solanaceae'),
+            planting('y', sameBed ? 'bed2' : 'bed3', y, 'solanaceae')
+          ];
+          const hints = companionHints(
+            beds,
+            plantings,
+            plantings.map((p) => season(p.cropId, p.blockId)),
+            [blight],
+            adjacency
+          );
+          const cross = sideA.includes(x) !== sideA.includes(y);
+          expect(hints.length).toBe(cross ? 1 : 0);
+        }
+      )
+    );
+  });
+});

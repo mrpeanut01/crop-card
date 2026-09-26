@@ -222,6 +222,8 @@ export interface CompanionHint {
   a: { blockId: string; cropId: string; cropPluginId: string };
   b: { blockId: string; cropId: string; cropPluginId: string };
   sameBed: boolean;
+  /** Good neighbours: the plugin's `benefit` line. Keep apart: the
+   *  `keepApart` entry's reason (or `benefit` for a `badWith` pair). */
   benefit: string | null;
 }
 

@@ -91,7 +91,7 @@ const TARGETS = [
     schema: companionPluginSchema,
     title: 'CropCard Companion Plugin',
     description:
-      'Data-only companion-planting definition (goodWith / badWith / member-system). Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema).'
+      'Data-only companion-planting definition (goodWith / badWith / two-sided keepApart / member-system). Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema).'
   },
   {
     file: 'bed-recipe.schema.json',

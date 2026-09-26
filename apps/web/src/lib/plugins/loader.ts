@@ -12,6 +12,8 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PluginRegistrationError, PluginRegistry, type PluginRecord } from './registry';
+import { unresolvedKeepApartIds } from './companionRelations';
+import type { CompanionPlugin } from './schemas';
 
 /** Folders under plugins/ that hold other data kinds with their own
  *  registry pass (bed recipes), not library plugins. */
@@ -20,6 +22,9 @@ export const NON_LIBRARY_PLUGIN_DIRS: ReadonlySet<string> = new Set(['bed-recipe
 export interface LoadResult {
   registered: PluginRecord[];
   failed: { file: string; error: PluginRegistrationError | Error }[];
+  /** Loaded, but a companion `keepApart` member names no crop plugin, so
+   *  that member never matches. */
+  warnings: string[];
 }
 
 export async function loadPluginsFromDirectory(
@@ -43,7 +48,15 @@ export async function loadPluginsFromDirectory(
     }
   }
 
-  return { registered, failed };
+  const warnings = unresolvedKeepApartIds(
+    registry
+      .all()
+      .map((r) => r.plugin)
+      .filter((p): p is CompanionPlugin => p.type === 'companion'),
+    (id) => registry.get(id)?.plugin.type === 'crop'
+  ).map((u) => `${u.pluginId}: keepApart member '${u.cropPluginId}' is not a crop plugin`);
+
+  return { registered, failed, warnings };
 }
 
 export async function collectJsonFiles(dir: string): Promise<string[]> {

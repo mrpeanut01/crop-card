@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cropcard.dev/schemas/companion.schema.json",
   "title": "CropCard Companion Plugin",
-  "description": "Data-only companion-planting definition (goodWith / badWith / member-system). Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema).",
+  "description": "Data-only companion-planting definition (goodWith / badWith / two-sided keepApart / member-system). Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema).",
   "type": "object",
   "properties": {
     "pluginId": {
@@ -41,6 +41,48 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "keepApart": {
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "minItems": 1,
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            }
+          },
+          "b": {
+            "minItems": 1,
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "reason"
+        ],
+        "additionalProperties": false
       }
     },
     "primaryFamily": {

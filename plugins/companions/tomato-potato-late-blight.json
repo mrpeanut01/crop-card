@@ -1,0 +1,53 @@
+{
+  "pluginId": "tomato-potato-late-blight",
+  "type": "companion",
+  "displayName": "Tomatoes and Potatoes (keep apart: late blight)",
+  "version": "1.0.0",
+  "pluginSchemaVersion": "1.1",
+  "goodWith": [],
+  "badWith": [],
+  "keepApart": [
+    {
+      "a": [
+        "tomato-amish-paste",
+        "tomato-better-boy-f1",
+        "tomato-bhn-589-f1",
+        "tomato-big-beef-f1",
+        "tomato-black-cherry",
+        "tomato-black-krim",
+        "tomato-brandywine-pink",
+        "tomato-celebrity-f1",
+        "tomato-cherokee-purple",
+        "tomato-defiant-phr-f1",
+        "tomato-early-girl-f1",
+        "tomato-green-zebra",
+        "tomato-indigo-rose",
+        "tomato-iron-lady-f1",
+        "tomato-juliet-f1",
+        "tomato-matts-wild-cherry",
+        "tomato-mortgage-lifter",
+        "tomato-mountain-magic-f1",
+        "tomato-mountain-merit-f1",
+        "tomato-pink-bumblebee",
+        "tomato-plum-regal-f1",
+        "tomato-roma-vf",
+        "tomato-roma-vfn",
+        "tomato-san-marzano",
+        "tomato-sun-gold-f1",
+        "tomato-sweet-100-f1",
+        "tomato-yellow-mini-grape",
+        "tomato-yellow-pear"
+      ],
+      "b": [
+        "potato-french-fingerling",
+        "potato-german-butterball",
+        "potato-kennebec",
+        "potato-purple-majesty",
+        "potato-russet-burbank",
+        "potato-yukon-gold"
+      ],
+      "reason": "Late blight (Phytophthora infestans) spreads between them",
+      "source": "WVU Extension, Lewis W. Jett, \"Late Blight of Tomatoes\" (2010, updated 2023-09-11), https://extension.wvu.edu/lawn-gardening-pests/plant-disease/fruit-vegetable-diseases/late-blight-tomatoes"
+    }
+  ]
+}

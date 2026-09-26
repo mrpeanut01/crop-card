@@ -819,6 +819,7 @@
   {#if kind === 'companion'}
     {@const goodWith = asArray<string>(plugin.goodWith)}
     {@const badWith = asArray<string>(plugin.badWith)}
+    {@const keepApart = asArray<Record<string, unknown>>(plugin.keepApart)}
     {@const members = asArray<Record<string, unknown>>(plugin.members)}
     <section class="card">
       <h2>Key facts</h2>
@@ -880,6 +881,26 @@
             />{/each}
         </div>
       {/if}
+      {#each keepApart as k, kIdx (kIdx)}
+        <div class="bullet-list">
+          <strong class="row-label">Keep apart</strong>
+          {#if asStr(k.reason)}<p class="notes">{k.reason}</p>{/if}
+          <div class="chip-row">
+            {#each asArray<string>(k.a) as id, idx (idx)}<PluginRef
+                pluginId={id}
+                lookup={data.pluginLookup}
+              />{/each}
+          </div>
+          <div class="chip-row">
+            <span class="row-label">away from</span>
+            {#each asArray<string>(k.b) as id, idx (idx)}<PluginRef
+                pluginId={id}
+                lookup={data.pluginLookup}
+              />{/each}
+          </div>
+          {#if asStr(k.source)}<p class="muted">Source: {k.source}</p>{/if}
+        </div>
+      {/each}
     </section>
   {/if}
 

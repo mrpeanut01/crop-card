@@ -11,6 +11,7 @@ import { recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { FallbackReason } from '$lib/server/aiTry';
 import type { PlanInput } from '$lib/layout/engine';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
+import { companionIndex } from '$lib/plugins/companionRelations';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 
 const bodySchema = z.object({
@@ -81,39 +82,15 @@ export const POST: RequestHandler = async (event) => {
   const registry = await getRegistry();
   const pluginIndex: Record<string, CropPlugin> = {};
   const companionSystems: CompanionPlugin[] = [];
-  const companionsBuilder: Record<string, { goodWith: Set<string>; badWith: Set<string> }> = {};
-  const ensureCompanionEntry = (id: string) => {
-    if (!companionsBuilder[id]) {
-      companionsBuilder[id] = { goodWith: new Set(), badWith: new Set() };
-    }
-    return companionsBuilder[id];
-  };
   for (const r of registry.all()) {
     if (r.plugin.type === 'crop') {
       pluginIndex[r.plugin.pluginId] = r.plugin as CropPlugin;
     } else if (r.plugin.type === 'companion') {
       const c = r.plugin as CompanionPlugin;
       companionSystems.push(c);
-      for (const id of c.goodWith) {
-        const entry = ensureCompanionEntry(id);
-        for (const partner of c.goodWith) {
-          if (partner !== id) entry.goodWith.add(partner);
-        }
-      }
-      for (const id of c.badWith) {
-        const entry = ensureCompanionEntry(id);
-        for (const partner of c.badWith) {
-          if (partner !== id) entry.badWith.add(partner);
-        }
-      }
     }
   }
-  const companions: PlanInput['companions'] = Object.fromEntries(
-    Object.entries(companionsBuilder).map(([k, v]) => [
-      k,
-      { goodWith: [...v.goodWith], badWith: [...v.badWith] }
-    ])
-  );
+  const companions: PlanInput['companions'] = companionIndex(companionSystems);
 
   const unknownPlugins = parsed.data.seedSelections
     .filter((s) => !pluginIndex[s.cropPluginId])

@@ -7,7 +7,13 @@ import {
   type CardProvenance,
   type CardSection
 } from '../model';
-import type { FarmSnapshot, SnapshotBlock, SnapshotBlockKind, SnapshotPlanting } from '../snapshot';
+import type {
+  FarmSnapshot,
+  SnapshotArea,
+  SnapshotBlock,
+  SnapshotBlockKind,
+  SnapshotPlanting
+} from '../snapshot';
 import {
   BLOCK_KIND_LABEL,
   CROP_AREA_KINDS,
@@ -20,7 +26,8 @@ import {
   sortTasks,
   type BuildOptions
 } from './common';
-import { formatFeet, formatSize } from './size';
+import { formatFeet, formatSize, sizeBasis } from './size';
+import { DEFAULT_AREA_KIND } from '$lib/farm/areaKinds';
 
 const MAX_LIST = 8;
 const BLOCK_KIND_ORDER: SnapshotBlockKind[] = ['bed', 'row', 'container', 'block'];
@@ -32,6 +39,16 @@ function plural(n: number, word: string): string {
 function capped(items: string[]): string[] {
   if (items.length <= MAX_LIST) return items;
   return [...items.slice(0, MAX_LIST), `+${items.length - MAX_LIST} more`];
+}
+
+/** Sketch dimensions and typed acres are the owner's; only acres measured
+ *  from drawn map geometry are `data`. */
+function sizeProvenance(area: SnapshotArea): CardProvenance | null {
+  const basis = sizeBasis(area);
+  if (basis === 'dimensions') return { source: 'manual', detail: 'your dimensions' };
+  if (basis !== 'acres' || area.acresSource === null) return null;
+  if (area.acresSource === 'geometry') return { source: 'data', detail: 'your map' };
+  return { source: 'manual', detail: area.acresSource === 'typed' ? 'typed acres' : 'your dimensions' };
 }
 
 function plantingLine(
@@ -66,11 +83,14 @@ export function buildAreaCard(
   const plantingIds = new Set(plantings.map((p) => p.id));
 
   const facts: CardFact[] = [];
-  const provenance: CardProvenance[] = [{ source: 'manual', detail: 'kind picked by you' }];
+  // Migration 0050 and a create without a kind both default to `field`, so
+  // only a non-default kind is known to be the owner's pick.
+  const provenance: CardProvenance[] =
+    area.kind !== DEFAULT_AREA_KIND ? [{ source: 'manual', detail: 'kind picked by you' }] : [];
   if (size) {
-    const drawn = area.widthFt !== null && area.lengthFt !== null;
-    facts.push({ label: 'Size', value: size, provenance: drawn ? 'manual' : 'data' });
-    provenance.push(drawn ? { source: 'manual' } : { source: 'data', detail: 'your map' });
+    const sp = sizeProvenance(area);
+    facts.push({ label: 'Size', value: size, provenance: sp?.source });
+    if (sp) provenance.push(sp);
   }
   if (area.perimeterFt !== null && area.perimeterFt > 0) {
     facts.push({
@@ -114,12 +134,14 @@ export function buildAreaCard(
       items: capped(planned.map((p) => plantingLine(p, blockById.get(p.blockId), true)))
     });
   }
-  const beds = blocks.filter((b) => b.kind !== 'block');
-  if (beds.length) {
+  for (const kind of BLOCK_KIND_ORDER) {
+    if (kind === 'block') continue;
+    const ofKind = blocks.filter((b) => b.kind === kind);
+    if (!ofKind.length) continue;
     sections.push({
-      title: 'Beds',
+      title: `${BLOCK_KIND_LABEL[kind]}s`,
       items: capped(
-        beds.map((b) => {
+        ofKind.map((b) => {
           const s = formatSize(b, opts.prefs);
           return s ? `${blockDisplayName(b)} · ${s}` : blockDisplayName(b);
         })

@@ -20,6 +20,7 @@ export function sampleSnapshot(overrides: Partial<FarmSnapshot> = {}): FarmSnaps
         widthFt: null,
         lengthFt: null,
         perimeterFt: 3900,
+        acresSource: 'geometry',
         notes: null
       },
       {
@@ -30,6 +31,7 @@ export function sampleSnapshot(overrides: Partial<FarmSnapshot> = {}): FarmSnaps
         widthFt: 30,
         lengthFt: 40,
         perimeterFt: null,
+        acresSource: null,
         notes: 'Drip on beds 1-3'
       },
       {
@@ -40,6 +42,7 @@ export function sampleSnapshot(overrides: Partial<FarmSnapshot> = {}): FarmSnaps
         widthFt: 40,
         lengthFt: 60,
         perimeterFt: null,
+        acresSource: null,
         notes: null
       }
     ],

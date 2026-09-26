@@ -38,7 +38,20 @@ export interface Field {
   kind: AreaKind;
   details: AreaDetails | null;
   perimeterFt?: number;
+  /** Where `acres` came from; undefined when there are no acres. */
+  acresSource?: AcresSource;
   createdAt: number;
+}
+
+export type AcresSource = 'geometry' | 'dimensions' | 'typed';
+
+function acresSourceFor(row: typeof fields.$inferSelect): AcresSource | undefined {
+  if (effectiveAcresFor({ acres: undefined, geometryGeojson: row.geometryGeojson }) !== undefined) {
+    return 'geometry';
+  }
+  if (row.acres == null) return undefined;
+  const fromDims = sketchAcres(row.widthFt, row.lengthFt);
+  return fromDims !== undefined && Math.abs(fromDims - row.acres) < 1e-9 ? 'dimensions' : 'typed';
 }
 
 export interface FieldWithBlocks extends Field {
@@ -59,7 +72,9 @@ function rowToField(row: typeof fields.$inferSelect): Field {
     lengthFt: row.lengthFt ?? undefined,
     kind: row.kind,
     details: parseAreaDetails(row.kind, row.detailsJson),
-    perimeterFt: row.perimeterFt ?? undefined,
+    // Rows from before migration 0050 have no stored perimeter.
+    perimeterFt: row.perimeterFt ?? perimeterFtFor(row) ?? undefined,
+    acresSource: acresSourceFor(row),
     createdAt: row.createdAt.getTime()
   };
 }

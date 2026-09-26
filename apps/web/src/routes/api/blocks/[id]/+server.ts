@@ -10,7 +10,8 @@ import { deleteBlockCascade } from '$lib/db/admin';
 import { getBlock, updateBlock } from '$lib/db/blocks';
 import { getField } from '$lib/db/fields';
 import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
-import { blockLayoutPatchSchema } from '$lib/farm/blockLayout';
+import { DEFAULT_BLOCK_KIND, usesDesignerLayout } from '$lib/farm/areaKinds';
+import { blockLayoutPatchSchema, blockPlacementError } from '$lib/farm/blockLayout';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
@@ -53,10 +54,23 @@ export const PATCH: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
-  if (parsed.data.fieldId && !getField(parsed.data.fieldId)) {
+  const newArea = parsed.data.fieldId ? getField(parsed.data.fieldId) : undefined;
+  if (parsed.data.fieldId && !newArea) {
     return json({ error: 'unknown fieldId' }, { status: 400 });
   }
-  const updated = updateBlock(event.params.id, withSketchAcres(parsed.data));
+  const kind = parsed.data.kind ?? block.kind ?? DEFAULT_BLOCK_KIND;
+  const placementChanged = parsed.data.kind !== undefined || parsed.data.fieldId !== undefined;
+  const area = newArea ?? (block.fieldId ? getField(block.fieldId) : undefined);
+  const placement = blockPlacementError(
+    placementChanged ? (area?.kind ?? null) : null,
+    kind,
+    parsed.data
+  );
+  if (placement) return json({ error: placement }, { status: 400 });
+  const patch = usesDesignerLayout(kind)
+    ? parsed.data
+    : { ...parsed.data, xFt: null, yFt: null, rotationDeg: null, bedStyle: null };
+  const updated = updateBlock(event.params.id, withSketchAcres(patch));
   return json({ block: updated });
 };
 

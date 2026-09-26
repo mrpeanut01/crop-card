@@ -117,6 +117,8 @@ describe('area details', () => {
   it('rejects bad values within the right kind', () => {
     expect(validateAreaDetails('garden', { irrigation: 'flood' }).ok).toBe(false);
     expect(validateAreaDetails('garden', { transitionDate: '4/1/2026' }).ok).toBe(false);
+    expect(validateAreaDetails('garden', { transitionDate: '2026-13-45' }).ok).toBe(false);
+    expect(validateAreaDetails('garden', { transitionDate: '2026-02-30' }).ok).toBe(false);
     expect(validateAreaDetails('orchard', { rowSpacingFt: -3 }).ok).toBe(false);
     expect(validateAreaDetails('greenhouse', { heated: 'yes' }).ok).toBe(false);
     expect(validateAreaDetails('garden', 'drip').ok).toBe(false);

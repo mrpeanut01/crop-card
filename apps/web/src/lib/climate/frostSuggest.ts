@@ -6,6 +6,15 @@ export type FrostValueProvenance = 'data' | 'manual' | 'fallback';
 export interface FrostSuggestedValue {
   value: string | null;
   provenance: FrostValueProvenance;
+  /** The owner typed something that isn't a calendar date; `value` is still
+   *  the suggestion so the form can show the error next to it. */
+  invalid?: true;
+}
+
+export interface FrostOverrideIssue {
+  field: FrostField;
+  input: string;
+  message: string;
 }
 
 export type FrostField = 'lastFrost' | 'firstFrost' | 'lastHardFrost' | 'firstHardFrost';
@@ -29,13 +38,8 @@ export interface FrostSuggestion {
   crossesYear: boolean;
   /** Why the defaults were used, when they were. */
   fallbackReason: string | null;
-}
-
-function canonicalMmDd(raw: unknown): string | null {
-  const v = normalizeFrost(raw);
-  if (!v) return null;
-  const [m, d] = v.split('-');
-  return `${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  /** Typed values that couldn't be read as a date. */
+  issues: FrostOverrideIssue[];
 }
 
 const FALLBACK_REASON: Record<string, string> = {
@@ -48,6 +52,9 @@ const FALLBACK_REASON: Record<string, string> = {
  * Turns a frost lookup plus whatever the owner typed into the values to save.
  * A typed value that differs from the suggestion is `manual`; one that matches
  * keeps the suggestion's provenance, so confirming a date never relabels it.
+ * A blank (or null) override clears the date, which is `manual` unless the
+ * suggestion was already empty. An unreadable override keeps the suggestion,
+ * is flagged `invalid` and listed in `issues`; it is never silently dropped.
  */
 export function suggestFrostValues(
   lookup: FrostLookupResult,
@@ -55,10 +62,27 @@ export function suggestFrostValues(
 ): FrostSuggestion {
   const base = lookup.provenance;
   const values = {} as Record<FrostField, FrostSuggestedValue>;
+  const issues: FrostOverrideIssue[] = [];
   for (const field of FROST_FIELDS) {
     const suggested = lookup[field];
-    const typed = override[field] === undefined ? undefined : canonicalMmDd(override[field]);
-    if (typed && typed !== suggested) {
+    const raw = override[field];
+    if (raw === undefined) {
+      values[field] = { value: suggested, provenance: base };
+      continue;
+    }
+    const input = raw === null ? '' : String(raw).trim();
+    if (!input) {
+      values[field] =
+        suggested === null
+          ? { value: null, provenance: base }
+          : { value: null, provenance: 'manual' };
+      continue;
+    }
+    const typed = normalizeFrost(input);
+    if (!typed) {
+      values[field] = { value: suggested, provenance: base, invalid: true };
+      issues.push({ field, input, message: `"${input}" isn't a date. Use MM-DD or M/D.` });
+    } else if (typed !== suggested) {
       values[field] = { value: typed, provenance: 'manual' };
     } else {
       values[field] = { value: suggested, provenance: base };
@@ -73,6 +97,7 @@ export function suggestFrostValues(
       values.lastFrost.provenance === 'data' &&
       values.firstFrost.provenance === 'data',
     fallbackReason:
-      lookup.provenance === 'fallback' ? (FALLBACK_REASON[lookup.reason] ?? null) : null
+      lookup.provenance === 'fallback' ? (FALLBACK_REASON[lookup.reason] ?? null) : null,
+    issues
   };
 }

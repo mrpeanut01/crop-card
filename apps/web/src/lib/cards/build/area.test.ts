@@ -24,6 +24,7 @@ describe('buildAreaCard', () => {
     expect(card.title).toBe('Kitchen Garden');
     expect(card.kicker).toBe('Garden · 30×40 ft');
     expect(fact(card, 'Size')).toEqual({ label: 'Size', value: '30×40 ft', provenance: 'manual' });
+    expect(card.provenance).toContainEqual({ source: 'manual', detail: 'your dimensions' });
     expect(fact(card, 'Holds')?.value).toBe('2 beds · 1 container');
     expect(fact(card, 'Growing')?.value).toBe('1 planting');
     expect(fact(card, 'Planned')?.value).toBe('1');
@@ -34,7 +35,8 @@ describe('buildAreaCard', () => {
     const section = (t: string) => card.sections.find((s) => s.title === t)?.items;
     expect(section('Growing now')).toEqual(['Cherokee Purple tomato · Bed 3']);
     expect(section('Planned')).toEqual(['Provider bush bean · Bed 1 · Jun 10']);
-    expect(section('Beds')).toEqual(['Bed 1 · 4×8 ft', 'Bed 3 · 4×8 ft', 'Container 2']);
+    expect(section('Beds')).toEqual(['Bed 1 · 4×8 ft', 'Bed 3 · 4×8 ft']);
+    expect(section('Containers')).toEqual(['Container 2']);
     expect(section('Notes')).toEqual(['Drip on beds 1-3']);
   });
 
@@ -71,10 +73,32 @@ describe('buildAreaCard', () => {
     expect(natural.kicker).toBe('Woods / natural');
   });
 
-  it('marks the kind as owner-picked (manual provenance)', () => {
+  it('marks a non-default kind as owner-picked (manual provenance)', () => {
     expect(buildAreaCard(snap, 'f_garden')!.provenance[0]).toEqual({
       source: 'manual',
       detail: 'kind picked by you'
+    });
+  });
+
+  it('does not claim the owner picked the migrated default kind', () => {
+    const s = sampleSnapshot();
+    s.areas[0] = { ...s.areas[0], kind: 'field' };
+    expect(buildAreaCard(s, 'f_hay')!.provenance).not.toContainEqual({
+      source: 'manual',
+      detail: 'kind picked by you'
+    });
+  });
+
+  it('tags typed acres manual and map acres data', () => {
+    const s = sampleSnapshot();
+    s.areas[0] = { ...s.areas[0], acresSource: 'typed' };
+    const typed = buildAreaCard(s, 'f_hay')!;
+    expect(fact(typed, 'Size')?.provenance).toBe('manual');
+    expect(typed.provenance).toContainEqual({ source: 'manual', detail: 'typed acres' });
+    expect(typed.provenance).not.toContainEqual({ source: 'data', detail: 'your map' });
+    expect(buildAreaCard(snap, 'f_hay')!.provenance).toContainEqual({
+      source: 'data',
+      detail: 'your map'
     });
   });
 
@@ -116,6 +140,7 @@ describe('copy rules (Phase 30 [term])', () => {
     widthFt: fc.option(fc.double({ min: 0, max: 5000, noNaN: true }), { nil: null }),
     lengthFt: fc.option(fc.double({ min: 0, max: 5000, noNaN: true }), { nil: null }),
     perimeterFt: fc.option(fc.double({ min: 0, max: 50000, noNaN: true }), { nil: null }),
+    acresSource: fc.constantFrom(null, 'geometry', 'dimensions', 'typed'),
     notes: fc.constantFrom(null, 'n')
   });
 

@@ -51,7 +51,7 @@
     <div class="content">
       {#if facts.length}
         <dl class="facts">
-          {#each facts as f (f.label)}
+          {#each facts as f, i (`${i}-${f.label}`)}
             <div class="fact">
               <dt>{f.label}</dt>
               <dd>
@@ -183,7 +183,7 @@
   .kicker {
     font-size: var(--font-size-kicker);
     font-weight: 600;
-    color: var(--color-ink-muted);
+    color: var(--color-ink-soft);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     overflow-wrap: anywhere;
@@ -238,7 +238,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--color-ink-muted);
+    color: var(--color-ink-soft);
   }
   dd {
     margin: 0;
@@ -276,7 +276,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--color-ink-muted);
+    color: var(--color-ink-soft);
   }
   .section ul {
     margin: 0;
@@ -290,7 +290,7 @@
     align-items: center;
     gap: var(--space-1) var(--space-2);
     font-size: var(--font-size-caption);
-    color: var(--color-ink-muted);
+    color: var(--color-ink-soft);
     padding-top: var(--space-2);
     border-top: 1px solid var(--color-divider-soft);
   }

@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import { BED_STYLES, BLOCK_KINDS, normalizeRotationDeg } from './areaKinds';
+import {
+  AREA_KIND_LABELS,
+  BED_STYLES,
+  BLOCK_KINDS,
+  blockKindsFor,
+  normalizeRotationDeg,
+  usesDesignerLayout,
+  type AreaKind,
+  type BlockKind
+} from './areaKinds';
 import { MAX_SKETCH_FT } from './sketch';
 
 const positionFt = z.number().min(0).max(MAX_SKETCH_FT);
@@ -26,3 +35,38 @@ export const blockLayoutPatchSchema = z.object({
   rotationDeg: rotationDeg.nullable().optional(),
   bedStyle: z.enum(BED_STYLES).nullable().optional()
 });
+
+export const BLOCK_LAYOUT_KEYS = ['xFt', 'yFt', 'rotationDeg', 'bedStyle'] as const;
+
+type LayoutValues = Partial<Record<(typeof BLOCK_LAYOUT_KEYS)[number], unknown>>;
+
+/** True when any designer layout field carries a value (null clears, so it
+ *  doesn't count). */
+export function hasLayoutValues(input: LayoutValues): boolean {
+  return BLOCK_LAYOUT_KEYS.some((k) => input[k] !== undefined && input[k] !== null);
+}
+
+/**
+ * Why a block of `kind` can't sit in an Area of `areaKind` with these layout
+ * values, or null when it can. A block with no parent Area only gets the
+ * layout check.
+ */
+export function blockPlacementError(
+  areaKind: AreaKind | null,
+  kind: BlockKind,
+  layout: LayoutValues
+): string | null {
+  if (areaKind !== null) {
+    const allowed = blockKindsFor(areaKind);
+    if (!allowed.includes(kind)) {
+      const label = AREA_KIND_LABELS[areaKind];
+      return allowed.length
+        ? `${label} Areas hold ${allowed.join(', ')}, not ${kind}`
+        : `${label} Areas don't hold blocks`;
+    }
+  }
+  if (!usesDesignerLayout(kind) && hasLayoutValues(layout)) {
+    return `layout fields (xFt, yFt, rotationDeg, bedStyle) apply only to beds and containers`;
+  }
+  return null;
+}

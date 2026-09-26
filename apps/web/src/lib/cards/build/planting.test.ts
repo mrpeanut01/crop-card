@@ -32,7 +32,12 @@ describe('buildPlantingCard', () => {
     expect(fact(card, 'Day')?.value).toBe('28 of ~80');
     expect(fact(card, 'Spacing')).toEqual({
       label: 'Spacing',
-      value: '18–24 in · rows 48 in',
+      value: '18–24 in',
+      provenance: 'plugin'
+    });
+    expect(fact(card, 'Row spacing')).toEqual({
+      label: 'Row spacing',
+      value: '48 in',
       provenance: 'plugin'
     });
     expect(fact(card, 'Plants')).toEqual({ label: 'Plants', value: '6', provenance: 'data' });
@@ -75,9 +80,10 @@ describe('buildPlantingCard', () => {
     const card = buildPlantingCard(snap, 'p_bean')!;
     expect(fact(card, 'Sow')).toEqual({ label: 'Sow', value: 'Jun 10', provenance: 'ai' });
     expect(fact(card, 'Harvest')?.value).toBe('Jul 30');
-    expect(fact(card, 'Spacing')).toEqual({
-      label: 'Spacing',
-      value: '3 in · rows 18 in',
+    expect(fact(card, 'Spacing')).toEqual({ label: 'Spacing', value: '3 in', provenance: 'manual' });
+    expect(fact(card, 'Row spacing')).toEqual({
+      label: 'Row spacing',
+      value: '18 in',
       provenance: 'manual'
     });
     expect(fact(card, 'Day')).toBeUndefined();
@@ -89,7 +95,11 @@ describe('buildPlantingCard', () => {
     const card = buildPlantingCard(snap, 'p_alf')!;
     expect(card.kicker).toBe('Planting · North cut · Hayfield');
     expect(fact(card, 'Sow')?.value).toBe('Not scheduled');
-    expect(fact(card, 'Planted')).toEqual({ label: 'Planted', value: '1,850 lb', provenance: 'data' });
+    expect(fact(card, 'Quantity')).toEqual({
+      label: 'Quantity',
+      value: '1,850 lb',
+      provenance: 'manual'
+    });
     expect(fact(card, 'Harvest')).toBeUndefined();
     expect(card.sections).toEqual([]);
   });
@@ -109,7 +119,41 @@ describe('buildPlantingCard', () => {
 
   it('renders spacing in centimetres for metric users', () => {
     const card = buildPlantingCard(snap, 'p_tom', { prefs: { timeZone: 'UTC', units: 'metric' } })!;
-    expect(fact(card, 'Spacing')?.value).toBe('45.7–61 cm · rows 121.9 cm');
+    expect(fact(card, 'Spacing')?.value).toBe('45.7–61 cm');
+    expect(fact(card, 'Row spacing')?.value).toBe('121.9 cm');
+  });
+
+  it('tags each spacing on its own: an owner in-row override keeps the plugin row spacing', () => {
+    const s = sampleSnapshot();
+    s.plantings[0] = { ...s.plantings[0], spacingIn: 6 };
+    const card = buildPlantingCard(s, 'p_tom')!;
+    expect(fact(card, 'Spacing')).toEqual({ label: 'Spacing', value: '6 in', provenance: 'manual' });
+    expect(fact(card, 'Row spacing')).toEqual({
+      label: 'Row spacing',
+      value: '48 in',
+      provenance: 'plugin'
+    });
+    expect(card.provenance).toContainEqual({
+      source: 'plugin',
+      detail: 'tomato-cherokee-purple · v1.0.0'
+    });
+  });
+
+  it('keeps a fallback plant count tagged fallback and never invents manual', () => {
+    const s = sampleSnapshot();
+    s.plantings[0] = { ...s.plantings[0], plantCountProvenance: 'fallback' };
+    expect(fact(buildPlantingCard(s, 'p_tom'), 'Plants')?.provenance).toBe('fallback');
+    s.plantings[0] = { ...s.plantings[0], plantCountProvenance: null };
+    expect(fact(buildPlantingCard(s, 'p_tom'), 'Plants')?.provenance).toBeUndefined();
+  });
+
+  it('an active, dated planting recorded by quantity has unique fact labels', () => {
+    const s = sampleSnapshot();
+    s.plantings[0] = { ...s.plantings[0], plantCount: null, quantityPlanted: 12, quantityUnit: null };
+    const labels = buildPlantingCard(s, 'p_tom')!.facts.map((f) => f.label);
+    expect(labels).toContain('Planted');
+    expect(labels).toContain('Quantity');
+    expect(new Set(labels).size).toBe(labels.length);
   });
 
   it('computes due wording in the user time zone', () => {
@@ -167,7 +211,7 @@ describe('planting builder properties', () => {
     spacingIn: fc.option(fc.double({ min: 0.5, max: 120, noNaN: true }), { nil: null }),
     rowSpacingIn: fc.option(fc.double({ min: 0.5, max: 120, noNaN: true }), { nil: null }),
     plantCount: fc.option(fc.integer({ min: 0, max: 10_000 }), { nil: null }),
-    plantCountProvenance: fc.constantFrom(null, 'data', 'manual'),
+    plantCountProvenance: fc.constantFrom(null, 'data', 'manual', 'fallback'),
     sourceProvenance: fc.constantFrom(null, 'ai', 'fallback')
   }) as fc.Arbitrary<SnapshotPlanting>;
 
@@ -179,6 +223,8 @@ describe('planting builder properties', () => {
         expect(card).not.toBeNull();
         expect(parseCardKey(card.key)).toEqual({ kind: 'planting', id: p.id });
         expect(card.title.length).toBeGreaterThan(0);
+        const labels = card.facts.map((f) => f.label);
+        expect(new Set(labels).size).toBe(labels.length);
         for (const f of card.facts) {
           expect(f.value.length).toBeGreaterThan(0);
           expect(f.value).not.toMatch(/NaN|undefined|null/);

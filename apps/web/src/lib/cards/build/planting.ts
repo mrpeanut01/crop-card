@@ -50,20 +50,30 @@ function plantingSource(p: SnapshotPlanting): ProvenanceSource {
   return p.sourceProvenance ?? 'manual';
 }
 
-function spacingFact(
+function spacingFacts(
   p: SnapshotPlanting,
   plugin: SnapshotCropPlugin | undefined,
   opts: ResolvedOptions
-): CardFact | null {
+): CardFact[] {
   const guide = plugin?.plantingGuide;
+  const facts: CardFact[] = [];
   const inRow = p.spacingIn ?? guide?.inRowSpacingIn ?? null;
+  if (inRow !== null) {
+    facts.push({
+      label: 'Spacing',
+      value: formatInches(inRow, opts.prefs),
+      provenance: p.spacingIn !== null ? 'manual' : 'plugin'
+    });
+  }
   const rows = p.rowSpacingIn ?? guide?.rowSpacingIn ?? plugin?.defaultRowSpacingInches ?? null;
-  if (inRow === null && rows === null) return null;
-  const parts: string[] = [];
-  if (inRow !== null) parts.push(formatInches(inRow, opts.prefs));
-  if (rows !== null) parts.push(`rows ${formatInches(rows, opts.prefs)}`);
-  const manual = p.spacingIn !== null || p.rowSpacingIn !== null;
-  return { label: 'Spacing', value: parts.join(' · '), provenance: manual ? 'manual' : 'plugin' };
+  if (rows !== null) {
+    facts.push({
+      label: 'Row spacing',
+      value: formatInches(rows, opts.prefs),
+      provenance: p.rowSpacingIn !== null ? 'manual' : 'plugin'
+    });
+  }
+  return facts;
 }
 
 function countFact(p: SnapshotPlanting): CardFact | null {
@@ -71,12 +81,16 @@ function countFact(p: SnapshotPlanting): CardFact | null {
     return {
       label: 'Plants',
       value: trimNumber(p.plantCount, 0),
-      provenance: p.plantCountProvenance ?? 'manual'
+      provenance: p.plantCountProvenance ?? undefined
     };
   }
   if (p.quantityPlanted !== null && p.quantityPlanted > 0) {
     const unit = p.quantityUnit ? ` ${p.quantityUnit}` : '';
-    return { label: 'Planted', value: `${trimNumber(p.quantityPlanted, 2)}${unit}`, provenance: 'data' };
+    return {
+      label: 'Quantity',
+      value: `${trimNumber(p.quantityPlanted, 2)}${unit}`,
+      provenance: 'manual'
+    };
   }
   return null;
 }
@@ -130,8 +144,7 @@ export function buildPlantingCard(
     }
   }
 
-  const spacing = spacingFact(p, plugin, opts);
-  if (spacing) facts.push(spacing);
+  facts.push(...spacingFacts(p, plugin, opts));
   const count = countFact(p);
   if (count) facts.push(count);
 

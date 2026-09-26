@@ -2,8 +2,8 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { createBlock, listBlocks } from '$lib/db/blocks';
 import { MAX_SKETCH_FT } from '$lib/farm/sketch';
-import { BLOCK_KINDS } from '$lib/farm/areaKinds';
-import { blockLayoutSchema } from '$lib/farm/blockLayout';
+import { BLOCK_KINDS, DEFAULT_BLOCK_KIND } from '$lib/farm/areaKinds';
+import { blockLayoutSchema, blockPlacementError } from '$lib/farm/blockLayout';
 import { parseKindFilter } from '$lib/farm/kindFilter';
 import { getField } from '$lib/db/fields';
 import { requireOwner } from '$lib/server/auth';
@@ -55,6 +55,13 @@ export const POST: RequestHandler = async (event) => {
   }
   const foreign = rejectForeignRefs(['fieldId', parsed.data.fieldId, getField]);
   if (foreign) return foreign;
+  const area = parsed.data.fieldId ? getField(parsed.data.fieldId) : undefined;
+  const placement = blockPlacementError(
+    area?.kind ?? null,
+    parsed.data.kind ?? DEFAULT_BLOCK_KIND,
+    parsed.data
+  );
+  if (placement) return json({ error: placement }, { status: 400 });
   const { geometryGeojson, ...rest } = parsed.data;
   const block = createBlock({
     ...rest,

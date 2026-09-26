@@ -53,7 +53,7 @@ export const IRRIGATION_KINDS = ['none', 'hose', 'drip', 'sprinkler'] as const;
 export const GREENHOUSE_STRUCTURES = ['glass', 'poly', 'high-tunnel', 'caterpillar'] as const;
 export const PASTURE_USES = ['hay', 'graze', 'both'] as const;
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
+const isoDate = z.iso.date('expected a real YYYY-MM-DD date');
 const spacingFt = z.number().positive().max(200);
 
 export const gardenDetailsSchema = z.strictObject({

@@ -21,6 +21,14 @@ function dims(widthFt: number, lengthFt: number, prefs: Pick<Prefs, 'units'>): s
   return `${trimNumber(widthFt, 1)}×${trimNumber(lengthFt, 1)} ft`;
 }
 
+/** Which input `formatSize` shows: the sketch dimensions or the acres. */
+export function sizeBasis(s: Sized): 'dimensions' | 'acres' | null {
+  const hasDims = positive(s.widthFt) && positive(s.lengthFt);
+  if (hasDims && s.widthFt! * s.lengthFt! < SQFT_PER_ACRE) return 'dimensions';
+  if (positive(s.acres)) return 'acres';
+  return hasDims ? 'dimensions' : null;
+}
+
 /** "30×40 ft" for anything under an acre drawn with dimensions, otherwise
  *  "20 ac" (or hectares). Null when nothing is known. */
 export function formatSize(s: Sized, prefs: Pick<Prefs, 'units'>): string | null {

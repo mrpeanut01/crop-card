@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { db } from './client';
-import { owners } from './schema';
-import { runWithTenant } from './tenant';
+import { fields, owners } from './schema';
+import { eq } from 'drizzle-orm';
+import { runWithTenant, withTenant } from './tenant';
 import { createArea, getArea, listAreas, updateArea } from './areas';
 import * as fieldsRepo from './fields';
 import { createBlock, getBlock, listBlocks, updateBlock } from './blocks';
@@ -40,6 +41,23 @@ describe('areas repo', () => {
       expect(g.details).toEqual({ irrigation: 'drip' });
       expect(g.perimeterFt).toBe(140);
       expect(getArea(g.id)).toMatchObject({ kind: 'garden', perimeterFt: 140 });
+    }));
+
+  it('derives a perimeter for rows saved before perimeter_ft existed', () =>
+    withOwner(() => {
+      const g = createArea({ name: 'Old', widthFt: 30, lengthFt: 40 });
+      db.update(fields)
+        .set({ perimeterFt: null })
+        .where(withTenant(fields, eq(fields.id, g.id)))
+        .run();
+      expect(getArea(g.id)?.perimeterFt).toBe(140);
+    }));
+
+  it('records where acres came from', () =>
+    withOwner(() => {
+      expect(createArea({ name: 'T', acres: 12 }).acresSource).toBe('typed');
+      expect(createArea({ name: 'D', widthFt: 300, lengthFt: 400 }).acresSource).toBe('dimensions');
+      expect(createArea({ name: 'N' }).acresSource).toBeUndefined();
     }));
 
   it('recomputes the perimeter when one dimension changes', () =>

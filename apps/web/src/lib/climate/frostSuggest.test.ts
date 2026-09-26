@@ -63,12 +63,32 @@ describe('suggestFrostValues', () => {
     }
   });
 
-  it('ignores blank or invalid overrides', () => {
-    for (const typed of ['', '  ', '13-01', 'soon', null]) {
-      expect(
-        suggestFrostValues(dataLookup, { firstFrost: typed }).values.firstFrost.provenance
-      ).toBe('data');
+  it('flags unreadable overrides instead of dropping them', () => {
+    for (const typed of ['13-01', '2/30', '02-31', '04-31', 'soon']) {
+      const s = suggestFrostValues(dataLookup, { firstFrost: typed });
+      expect(s.values.firstFrost).toEqual({
+        value: dataLookup.firstFrost,
+        provenance: 'data',
+        invalid: true
+      });
+      expect(s.issues).toEqual([expect.objectContaining({ field: 'firstFrost', input: typed })]);
     }
+  });
+
+  it('accepts US-style M/D', () => {
+    const s = suggestFrostValues(dataLookup, { lastFrost: '4/20' });
+    expect(s.values.lastFrost).toEqual({ value: '04-20', provenance: 'manual' });
+    expect(s.issues).toEqual([]);
+  });
+
+  it('treats a blank override as clearing the date', () => {
+    for (const typed of ['', '  ', null]) {
+      const s = suggestFrostValues(dataLookup, { lastHardFrost: typed });
+      expect(s.values.lastHardFrost).toEqual({ value: null, provenance: 'manual' });
+      expect(s.issues).toEqual([]);
+    }
+    const unchanged = suggestFrostValues(fallbackFrost('no-station'), { lastHardFrost: '' });
+    expect(unchanged.values.lastHardFrost).toEqual({ value: null, provenance: 'fallback' });
   });
 
   it('tags the Loudoun default as fallback with a reason, and edits as manual', () => {

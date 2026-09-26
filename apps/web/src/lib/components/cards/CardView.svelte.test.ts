@@ -15,6 +15,17 @@ const tomato = buildPlantingCard(snap, 'p_tom')!;
 const prefs = { timeZone: 'America/New_York', units: 'us' as const };
 
 describe('CardView', () => {
+  it('renders an active, dated planting recorded by quantity in every variant', () => {
+    const s = sampleSnapshot();
+    s.plantings[0] = { ...s.plantings[0], plantCount: null, quantityPlanted: 12 };
+    const card = buildPlantingCard(s, 'p_tom')!;
+    for (const variant of ['screen', 'compact', 'print'] as const) {
+      const { container, unmount } = render(CardView, { card, prefs, variant });
+      expect(container.querySelector('article')).not.toBeNull();
+      unmount();
+    }
+  });
+
   it('screen: kicker, serif title link, facts, next action and provenance footer', () => {
     const { container, getByRole, getByText } = render(CardView, { card: tomato, prefs });
     const article = container.querySelector('article')!;
@@ -28,7 +39,8 @@ describe('CardView', () => {
 
     const terms = [...container.querySelectorAll('dt')].map((d) => d.textContent);
     expect(terms).toEqual(tomato.facts.map((f) => f.label));
-    expect(getByText('18–24 in · rows 48 in')).toBeInTheDocument();
+    expect(getByText('18–24 in')).toBeInTheDocument();
+    expect(getByText('48 in')).toBeInTheDocument();
 
     const next = getByRole('link', { name: /Next: Side-dress \(overdue since May 30\)/ });
     expect(next).toHaveAttribute('href', '/today?task=t_side');

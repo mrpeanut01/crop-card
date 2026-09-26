@@ -28,8 +28,13 @@ export interface SnapshotArea {
   widthFt: number | null;
   lengthFt: number | null;
   perimeterFt: number | null;
+  /** Where `acres` came from: drawn map geometry, sketch dimensions or a
+   *  typed value. Null when there are no acres. */
+  acresSource: SnapshotAcresSource | null;
   notes: string | null;
 }
+
+export type SnapshotAcresSource = 'geometry' | 'dimensions' | 'typed';
 
 /** Illustrative position inside the parent Area's feet grid. Never a
  *  geometry input (pollination distance, shade, weather centroids). */
@@ -68,7 +73,8 @@ export interface SnapshotPlanting {
   spacingIn: number | null;
   rowSpacingIn: number | null;
   plantCount: number | null;
-  plantCountProvenance: 'data' | 'manual' | null;
+  /** How `plantCount` was set; `fallback` means computed without plugin spacing. */
+  plantCountProvenance: 'data' | 'manual' | 'fallback' | null;
   sourceProvenance: 'ai' | 'fallback' | null;
 }
 

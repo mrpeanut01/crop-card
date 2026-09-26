@@ -5,7 +5,7 @@
 
   interface Props extends Omit<HTMLInputAttributes, 'value' | 'type' | 'name' | 'min' | 'max'> {
     /** Stored value in US units. Bindable. */
-    value?: number | null;
+    value?: number | null | undefined;
     quantity: Quantity;
     /** Form field name; the hidden input submits the US value under it. */
     name?: string;
@@ -17,7 +17,7 @@
   }
 
   let {
-    value = $bindable(null),
+    value = $bindable(),
     quantity,
     name,
     min,

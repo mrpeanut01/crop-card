@@ -28,7 +28,7 @@ test.describe('draw your farm', () => {
     await fieldForm.getByLabel('Field name').fill('Back Forty');
     await fieldForm.getByLabel('Width (ft)').fill('400');
     await fieldForm.getByLabel('Length (ft)').fill('300');
-    await expect(fieldForm.getByText('≈ 2.75 acres')).toBeVisible();
+    await expect(fieldForm.getByText('≈ 2.75 ac')).toBeVisible();
     await fieldForm.getByRole('button', { name: 'Add field' }).click();
     await expect(sketch(page).locator('[data-field="Back Forty"] rect')).toBeVisible();
 

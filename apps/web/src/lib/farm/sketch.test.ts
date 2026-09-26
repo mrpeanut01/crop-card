@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { layoutSketch, sketchAcres, withSketchAcres, SQFT_PER_ACRE } from './sketch';
+import { formatFt, layoutSketch, sketchAcres, withSketchAcres, SQFT_PER_ACRE } from './sketch';
 
 describe('sketchAcres', () => {
   it('converts width × length in feet to acres', () => {
@@ -106,5 +106,12 @@ describe('layoutSketch', () => {
         }
       })
     );
+  });
+});
+
+describe('formatFt', () => {
+  it('prints feet by default and metres for metric users', () => {
+    expect(formatFt(1234.4)).toBe('1,234 ft');
+    expect(formatFt(100, { units: 'metric' })).toBe('30 m');
   });
 });

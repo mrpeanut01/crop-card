@@ -34,6 +34,9 @@ async function save(page: Page): Promise<void> {
     page.getByRole('button', { name: 'Save changes' }).click()
   ]);
   await expect(page.getByText('Profile saved.')).toBeVisible();
+  // The action re-renders the page; wait for hydration so the next edit
+  // isn't reset to the server-rendered value.
+  await page.waitForLoadState('networkidle');
 }
 
 test.describe('/settings/account profile', () => {
@@ -45,6 +48,7 @@ test.describe('/settings/account profile', () => {
 
   test('changes the display name and shows it in the top bar', async ({ page }) => {
     await page.goto('/settings/account');
+    await page.waitForLoadState('networkidle');
     const name = page.getByRole('textbox', { name: /display name/i });
     await name.fill('  Dale   Ridge ');
     await save(page);
@@ -61,6 +65,7 @@ test.describe('/settings/account profile', () => {
 
   test('saves time zone and display units', async ({ page }) => {
     await page.goto('/settings/account');
+    await page.waitForLoadState('networkidle');
     const tz = page.getByRole('combobox', { name: /time zone/i });
     const units = page.getByRole('combobox', { name: /display units/i });
     await expect(tz).toHaveValue('America/New_York');
@@ -82,6 +87,7 @@ test.describe('/settings/account profile', () => {
 
   test('uploads, displays and removes a profile picture', async ({ page }) => {
     await page.goto('/settings/account');
+    await page.waitForLoadState('networkidle');
     await page.locator('#avatar-file').setInputFiles({
       name: 'me.png',
       mimeType: 'image/png',
@@ -104,6 +110,7 @@ test.describe('/settings/account profile', () => {
 
   test('refuses a file that is not a picture', async ({ page }) => {
     await page.goto('/settings/account');
+    await page.waitForLoadState('networkidle');
     const res = await page.request.post('/api/account/avatar', {
       headers: { origin: new URL(page.url()).origin, 'content-type': 'image/svg+xml' },
       data: '<svg xmlns="http://www.w3.org/2000/svg"/>'

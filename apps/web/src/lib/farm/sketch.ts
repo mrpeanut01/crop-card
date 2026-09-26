@@ -5,6 +5,8 @@
  * never feeds geometry consumers like pollination distance or the shade model.
  */
 
+import { DEFAULT_PREFS, formatQuantity, type Prefs } from '$lib/prefs';
+
 export const SQFT_PER_ACRE = 43_560;
 export const MAX_SKETCH_FT = 20_000;
 
@@ -182,8 +184,8 @@ export function layoutSketch(fields: SketchInput[], blocks: SketchBlockInput[]):
   };
 }
 
-export function formatFt(n: number): string {
-  return `${Math.round(n).toLocaleString('en-US')} ft`;
+export function formatFt(n: number, prefs: Pick<Prefs, 'units'> = DEFAULT_PREFS): string {
+  return formatQuantity(n, 'distance', prefs, { digits: 0 });
 }
 
 /** Fills `acres` from width × length when a patch sets both and leaves acres out. */

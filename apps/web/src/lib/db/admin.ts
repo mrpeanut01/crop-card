@@ -31,6 +31,7 @@ import {
   harvestEvents,
   fungicideEvents,
   insecticideEvents,
+  mapFeatures,
   pendingCalibrations,
   recordDeletions,
   soilTests,
@@ -480,6 +481,7 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
     removed.sprayers = del(sprayers, isNotNull(sprayers.id));
   }
   removed.blocks = del(blocks, isNotNull(blocks.id));
+  removed.map_features = del(mapFeatures, isNotNull(mapFeatures.id));
   removed.fields = del(fields, isNotNull(fields.id));
   // Null out any orphan task.linkedToTaskId references (rare but possible
   // if a partial delete left dangling pointers). Tenant-scoped.

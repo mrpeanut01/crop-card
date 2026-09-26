@@ -12,6 +12,7 @@
   import { browser } from '$app/environment';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import AreaDetailsFields from '$lib/components/farm/AreaDetailsFields.svelte';
+  import MapFeatureFields from '$lib/components/farm/MapFeatureFields.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import {
@@ -23,7 +24,20 @@
     type AreaKind
   } from '$lib/farm/areaKinds';
   import { AREA_NAME_PLACEHOLDER, kindStyle, shadeStyle, type AddPick } from '$lib/farm/kindStyle';
-  import { isKindVisible, type MapFilter } from '$lib/farm/mapFilter';
+  import { isFeatureVisible, isKindVisible, type MapFilter } from '$lib/farm/mapFilter';
+  import {
+    MAP_FEATURE_LABELS,
+    MAP_FEATURE_STYLE,
+    describeFeature,
+    geometryTypeFor,
+    lineLengthFt,
+    parseFeatureGeometry,
+    type FeatureGeometry,
+    type MapFeatureDetails,
+    type MapFeatureKind,
+    type MapFeatureView
+  } from '$lib/farm/mapFeatures';
+  import { bodyFromDraft, draftFromFeature, type FeatureFormDraft } from '$lib/farm/mapFeatureForm';
   import { detailsFromDraft, draftFromDetails, type DetailsDraft } from '$lib/farm/areaDetailsForm';
   import 'leaflet/dist/leaflet.css';
   import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
@@ -110,6 +124,14 @@
     leafOffDayOfYear: number;
   }) => Promise<void>;
   export type DeleteShadeSourceCb = (id: string, name: string) => Promise<void>;
+  export type CreateMapFeatureCb = (input: {
+    kind: MapFeatureKind;
+    name: string;
+    geometry: FeatureGeometry;
+    fieldId: string | null;
+    details: MapFeatureDetails | null;
+  }) => Promise<void>;
+  export type UpdateMapFeatureGeometryCb = (id: string, geometry: FeatureGeometry) => Promise<void>;
   export type UpdateShadeGeometryCb = (id: string, geometryGeojson: string) => Promise<void>;
 
   let {
@@ -129,6 +151,9 @@
     onCreateShadeSource,
     onDeleteShadeSource,
     onUpdateShadeGeometry,
+    mapFeatures = [],
+    onCreateMapFeature,
+    onUpdateMapFeatureGeometry,
     initialCenter = null,
     autoLocate = false,
     filter,
@@ -164,6 +189,11 @@
     onCreateShadeSource?: CreateShadeSourceCb;
     onDeleteShadeSource?: DeleteShadeSourceCb;
     onUpdateShadeGeometry?: UpdateShadeGeometryCb;
+    /** Lines and points: fences, gates, water sources, hydrants, irrigation
+     *  lines and paths. */
+    mapFeatures?: MapFeatureView[];
+    onCreateMapFeature?: CreateMapFeatureCb;
+    onUpdateMapFeatureGeometry?: UpdateMapFeatureGeometryCb;
     /** Where the map opens before any geometry exists (the farm location).
      *  Once blocks or fields are drawn, the map fits to them instead. */
     initialCenter?: { lat: number; lon: number } | null;
@@ -206,6 +236,7 @@
   let blockLayer: LayerGroup | null = null;
   /** v1.3 — shade-source layer renders above blocks. */
   let shadeLayer: LayerGroup | null = null;
+  let featureLayer: LayerGroup | null = null;
   /** Permanent block-name labels render above everything else. */
   let labelLayer: LayerGroup | null = null;
   /** Live label elements + their map anchor, rebuilt on every block render and
@@ -228,13 +259,26 @@
   /** Active draw mode. 'auto' = field/block by centroid containment;
    *  'shade-line' = drawing a tree row / fence / hedge;
    *  'shade-polygon' = drawing a tree grove / building / structure. */
-  let drawMode = $state<'auto' | 'area' | 'block' | 'shade-line' | 'shade-polygon'>('auto');
+  let drawMode = $state<
+    'auto' | 'area' | 'block' | 'shade-line' | 'shade-polygon' | 'feature-line' | 'feature-point'
+  >('auto');
+  let pendingFeatureKind = $state<MapFeatureKind>('fence');
+  let featureDraft = $state<FeatureDraft | null>(null);
   let pendingAreaKind = $state<AreaKind>('field');
   /** Pending shade-source draft (after shape is drawn). */
   let shadeDraft = $state<ShadeDraft | null>(null);
   let drawing = $state(false);
   let editingActive = $state(false);
   let drawError = $state<string | null>(null);
+
+  type FeatureDraft = {
+    kind: MapFeatureKind;
+    geometry: FeatureGeometry;
+    lengthFt: number | null;
+    form: FeatureFormDraft;
+    busy: boolean;
+    error: string | null;
+  };
 
   type ShadeDraft = {
     geom: Geom;
@@ -273,6 +317,10 @@
       if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
     }
     return inside;
+  }
+
+  function pointInField(lon: number, lat: number, field: FieldWithBlocks): boolean {
+    return centroidInField({ type: 'Polygon', coordinates: [[[lon, lat]]] }, field);
   }
 
   function centroidInField(drawnGeom: Geom, field: FieldWithBlocks): boolean {
@@ -371,6 +419,7 @@
     fieldLayer = L.layerGroup().addTo(map);
     blockLayer = L.layerGroup().addTo(map);
     shadeLayer = L.layerGroup().addTo(map);
+    featureLayer = L.layerGroup().addTo(map);
     // Permanent name labels render on top of every polygon layer.
     labelLayer = L.layerGroup().addTo(map);
 
@@ -378,6 +427,7 @@
     renderFields(L);
     renderBlocks(L);
     renderShadeSources(L);
+    renderMapFeatures(L);
     const fitted = fitToAll(L);
     if (!fitted && autoLocate && !thumbnail) void centerOnMe();
 
@@ -434,6 +484,32 @@
         const layer = e.layer as LPolygon;
         const geojson = (layer.toGeoJSON() as { geometry: Geom }).geometry;
         layer.remove();
+
+        if (drawMode === 'feature-line' || drawMode === 'feature-point') {
+          const kind = pendingFeatureKind;
+          drawMode = 'auto';
+          map?.pm.disableDraw();
+          const parsed = parseFeatureGeometry(
+            kind,
+            (layer.toGeoJSON() as { geometry: unknown }).geometry
+          );
+          if (!parsed.ok) {
+            drawError =
+              geometryTypeFor(kind) === 'LineString'
+                ? 'That line needs at least two points. Try again.'
+                : 'That spot could not be read. Try again.';
+            return;
+          }
+          featureDraft = {
+            kind,
+            geometry: parsed.geometry,
+            lengthFt: lineLengthFt(parsed.geometry),
+            form: { ...draftFromFeature(), fieldId: suggestFieldFor(parsed.geometry) },
+            busy: false,
+            error: null
+          };
+          return;
+        }
 
         // v1.3 — shade-source draw modes capture before the block/field path.
         if (drawMode === 'shade-line' || drawMode === 'shade-polygon') {
@@ -773,6 +849,70 @@
     }
   }
 
+  function featureMarkerIcon(L: typeof import('leaflet'), kind: MapFeatureKind, name: string) {
+    const st = MAP_FEATURE_STYLE[kind];
+    return L.divIcon({
+      html: `<span class="feature-pin" data-feature-kind="${kind}" style="--pin:${st.color}" title="${escapeHtml(name)}">${st.symbol ?? ''}</span>`,
+      className: 'feature-pin-wrap',
+      iconSize: [0, 0]
+    });
+  }
+
+  function renderMapFeatures(L: typeof import('leaflet')) {
+    if (!map || !featureLayer) return;
+    featureLayer.clearLayers();
+    for (const f of mapFeatures) {
+      if (!f.geometry) continue;
+      if (filter && !isFeatureVisible(filter, f.kind)) continue;
+      const st = MAP_FEATURE_STYLE[f.kind];
+      const tip = describeFeature(f, (ft) => fmt.qty(ft, 'distance', { digits: 0 }));
+      let layer: import('leaflet').Layer;
+      if (f.geometry.type === 'LineString') {
+        const latlngs = f.geometry.coordinates.map(([lon, lat]) => [lat, lon] as [number, number]);
+        layer = L.polyline(latlngs, {
+          color: st.color,
+          weight: st.weight + 1,
+          dashArray: st.dashArray,
+          opacity: 0.95,
+          className: `feature-line feature-${f.kind}`
+        });
+      } else {
+        const [lon, lat] = f.geometry.coordinates;
+        layer = L.marker([lat, lon], {
+          icon: featureMarkerIcon(L, f.kind, f.name),
+          keyboard: false,
+          title: f.name
+        });
+      }
+      layer.bindTooltip(`${MAP_FEATURE_LABELS[f.kind]}: ${tip}`, { direction: 'top' });
+      if (canEdit && onUpdateMapFeatureGeometry) {
+        const id = f.id;
+        const kind = f.kind;
+        const editable = layer as import('leaflet').Layer & {
+          pm: { enable: (o: object) => void };
+          toGeoJSON: () => { geometry: unknown };
+        };
+        layer.on('pm:edit', () => debouncedFeatureSave(id, kind, editable));
+        layer.on('click', () => {
+          if (drawing) return;
+          _suppressNextMapClick = true;
+          editingActive = true;
+          editable.pm.enable({ snappable: true, allowSelfIntersection: true });
+        });
+      }
+      layer.addTo(featureLayer);
+    }
+  }
+
+  function suggestFieldFor(geometry: FeatureGeometry): string {
+    const [lon, lat] =
+      geometry.type === 'Point'
+        ? geometry.coordinates
+        : geometry.coordinates[Math.floor(geometry.coordinates.length / 2)];
+    const inside = fields.find((f) => pointInField(lon, lat, f));
+    return inside?.id ?? '';
+  }
+
   function isLineGeometry(parsed: unknown): boolean {
     if (!parsed || typeof parsed !== 'object') return false;
     const o = parsed as { type?: string; geometry?: { type?: string } };
@@ -787,6 +927,7 @@
     void blocks;
     void fields;
     void shadeSources;
+    void mapFeatures;
     const f = filter;
     if (!browser || !map) return;
     if (f && satelliteLayer && streetsLayer) {
@@ -804,6 +945,7 @@
       renderFields(mod.default);
       renderBlocks(mod.default);
       renderShadeSources(mod.default);
+      renderMapFeatures(mod.default);
       if (showBlockLabels && declutterLabels) scheduleLabelRelayout();
     });
   });
@@ -895,7 +1037,8 @@
     const group = L.featureGroup([
       ...(fieldLayer?.getLayers() ?? []),
       ...(blockLayer?.getLayers() ?? []),
-      ...(shadeLayer?.getLayers() ?? [])
+      ...(shadeLayer?.getLayers() ?? []),
+      ...(featureLayer?.getLayers() ?? [])
     ] as Parameters<typeof L.featureGroup>[0]);
     const bounds = group.getBounds();
     if (!bounds.isValid()) return false;
@@ -957,6 +1100,32 @@
     );
   }
 
+  const featureEditTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  function debouncedFeatureSave(
+    id: string,
+    kind: MapFeatureKind,
+    layer: { toGeoJSON: () => { geometry: unknown } }
+  ) {
+    if (!onUpdateMapFeatureGeometry) return;
+    const prev = featureEditTimers.get(id);
+    if (prev) clearTimeout(prev);
+    featureEditTimers.set(
+      id,
+      setTimeout(async () => {
+        const parsed = parseFeatureGeometry(kind, layer.toGeoJSON().geometry);
+        if (!parsed.ok) {
+          drawError = 'That edit could not be saved. Try again.';
+          return;
+        }
+        try {
+          await onUpdateMapFeatureGeometry!(id, parsed.geometry);
+        } catch (e) {
+          drawError = e instanceof Error ? e.message : String(e);
+        }
+      }, 800)
+    );
+  }
+
   async function removeGeometry(blockId: string, name: string) {
     if (!confirm(`Remove polygon for block "${name}"?`)) return;
     try {
@@ -1004,6 +1173,10 @@
   export function startDrawPick(pick: AddPick) {
     if (pick.type === 'shade') {
       startDrawShade(pick.kind);
+      return;
+    }
+    if (pick.type === 'feature') {
+      startDrawFeature(pick.kind);
       return;
     }
     if (!map || !canEdit) return;
@@ -1269,6 +1442,57 @@
     map.pm.enableDraw(defaults.geomKind === 'LineString' ? 'Line' : 'Polygon');
   }
 
+  function startDrawFeature(kind: MapFeatureKind) {
+    if (!map || !canEdit || !onCreateMapFeature) return;
+    stopEditing();
+    drawError = null;
+    drawing = true;
+    pendingFeatureKind = kind;
+    const color = MAP_FEATURE_STYLE[kind].color;
+    if (geometryTypeFor(kind) === 'LineString') {
+      drawMode = 'feature-line';
+      map.pm.enableDraw('Line', {
+        templineStyle: { color },
+        hintlineStyle: { color, dashArray: '5 5' }
+      });
+      return;
+    }
+    drawMode = 'feature-point';
+    void import('leaflet').then((mod) => {
+      if (!map || drawMode !== 'feature-point') return;
+      const icon = featureMarkerIcon(mod.default, kind, MAP_FEATURE_LABELS[kind]);
+      map.pm.enableDraw('Marker', { markerStyle: { icon }, continueDrawing: false });
+    });
+  }
+
+  async function submitFeatureDraft() {
+    if (!featureDraft || featureDraft.busy || !onCreateMapFeature) return;
+    const checked = bodyFromDraft(featureDraft.kind, featureDraft.form);
+    if (!checked.ok) {
+      featureDraft.error = checked.message;
+      return;
+    }
+    featureDraft.busy = true;
+    featureDraft.error = null;
+    try {
+      await onCreateMapFeature({
+        kind: featureDraft.kind,
+        geometry: featureDraft.geometry,
+        ...checked.body
+      });
+      featureDraft = null;
+    } catch (e) {
+      if (featureDraft) {
+        featureDraft.error = e instanceof Error ? e.message : String(e);
+        featureDraft.busy = false;
+      }
+    }
+  }
+
+  function dismissFeatureDraft() {
+    featureDraft = null;
+  }
+
   // ── Draft submit ──────────────────────────────────────────────────────────
 
   async function submitDraft() {
@@ -1432,7 +1656,12 @@
       data-hint-busy
       data-hint-anchor={drawMode === 'area' ? 'map_draw_area' : undefined}
     >
-      {#if drawMode === 'shade-line'}
+      {#if drawMode === 'feature-line'}
+        Tap along the {MAP_FEATURE_LABELS[pendingFeatureKind].toLowerCase()}, then tap the last
+        point again (or double-click) to finish.
+      {:else if drawMode === 'feature-point'}
+        Tap the map where the {MAP_FEATURE_LABELS[pendingFeatureKind].toLowerCase()} is.
+      {:else if drawMode === 'shade-line'}
         Click points to draw the tree row / fence line. Double-click to finish.
       {:else if drawMode === 'shade-polygon'}
         Click points to outline the grove / building footprint. Double-click to finish.
@@ -1450,6 +1679,51 @@
     </p>
   {/if}
 </div>
+
+{#if featureDraft}
+  <div
+    class="draft-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="feature-draft-title"
+    onclick={(e) => e.target === e.currentTarget && dismissFeatureDraft()}
+    onkeydown={(e) => e.key === 'Escape' && dismissFeatureDraft()}
+    tabindex="-1"
+  >
+    <div class="draft-modal" style:--kind={MAP_FEATURE_STYLE[featureDraft.kind].color}>
+      <h2 id="feature-draft-title">New {MAP_FEATURE_LABELS[featureDraft.kind].toLowerCase()}</h2>
+      {#if featureDraft.lengthFt !== null}
+        <dl class="measures" data-testid="feature-draft-length">
+          <div>
+            <dt>Length</dt>
+            <dd>
+              ≈ {fmt.qty(featureDraft.lengthFt, 'distance', { digits: 0 })}
+              <Provenance source="data" compact />
+            </dd>
+          </div>
+        </dl>
+      {/if}
+      <MapFeatureFields
+        kind={featureDraft.kind}
+        bind:draft={featureDraft.form}
+        areas={fields.map((f) => ({ id: f.id, name: f.name }))}
+        idPrefix="feature-draft"
+      />
+      {#if featureDraft.error}<p class="map-error" role="alert">{featureDraft.error}</p>{/if}
+      <div class="actions">
+        <button
+          type="button"
+          class="primary"
+          onclick={submitFeatureDraft}
+          disabled={featureDraft.busy || !featureDraft.form.name.trim()}
+        >
+          {featureDraft.busy ? '…' : 'Save'}
+        </button>
+        <button type="button" onclick={dismissFeatureDraft}>Discard</button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 {#if shadeDraft}
   <div
@@ -1793,6 +2067,27 @@
     font-weight: 800;
     padding: 1px 6px;
     border-radius: 999px;
+  }
+  :global(.feature-pin-wrap) {
+    background: transparent !important;
+    border: 0 !important;
+  }
+  :global(.feature-pin) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: var(--pin);
+    color: #fff;
+    font:
+      800 13px/1 system-ui,
+      sans-serif;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
   }
   :global(.shade-marker-wrap) {
     background: transparent !important;

@@ -278,7 +278,8 @@ export function describeFeature(
 ): string {
   const name = feature.name.trim() || MAP_FEATURE_LABELS[feature.kind];
   const extras: string[] = [];
-  if (feature.lengthFt !== null && feature.lengthFt > 0) extras.push(formatLength(feature.lengthFt));
+  if (feature.lengthFt !== null && feature.lengthFt > 0)
+    extras.push(formatLength(feature.lengthFt));
   if (feature.kind === 'water_source' && feature.details) {
     const d = feature.details;
     const bits: string[] = [];

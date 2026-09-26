@@ -30,6 +30,7 @@
         blocks={data.blocks}
         fields={data.fields}
         shadeSources={data.shadeSources}
+        mapFeatures={data.mapFeatures}
         ownerId={data.ownerId}
         snapshot={data.snapshot}
         canEdit={data.canEdit}

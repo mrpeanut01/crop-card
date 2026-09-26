@@ -14,6 +14,7 @@ import {
   type FarmSnapshot,
   type SnapshotPlanting
 } from '$lib/cards/snapshot';
+import { listMapFeatureViews } from '$lib/db/mapFeatures';
 
 const DAY_MS = 86_400_000;
 const TASK_HORIZON_DAYS = 30;
@@ -98,6 +99,7 @@ export function buildMapSnapshot(
     equipment: [],
     stock: [],
     cropPlugins: {},
-    frost: snapshotFrostFromSettings()
+    frost: snapshotFrostFromSettings(),
+    mapFeatures: listMapFeatureViews()
   };
 }

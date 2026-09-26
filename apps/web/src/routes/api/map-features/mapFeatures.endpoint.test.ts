@@ -143,9 +143,7 @@ describe('/api/map-features', () => {
         geometry: { type: 'Point', coordinates: [-77.56, 39.2] }
       });
       expect((await patch(mapFeature.id, { kind: 'hydrant' })).status).toBe(400);
-      expect(
-        (await patch(mapFeature.id, { geometry: fence.geometry })).status
-      ).toBe(400);
+      expect((await patch(mapFeature.id, { geometry: fence.geometry })).status).toBe(400);
       expect((await patch(mapFeature.id, { details: { source: 'lake' } })).status).toBe(400);
       expect((await patch('missing', { name: 'x' })).status).toBe(404);
     });

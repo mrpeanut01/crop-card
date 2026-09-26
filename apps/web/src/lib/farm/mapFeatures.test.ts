@@ -241,9 +241,9 @@ describe('describeFeature and featureCounts', () => {
     expect(
       describeFeature({ kind: 'fence', name: 'Pasture fence', details: null, lengthFt: 1240 })
     ).toBe('Pasture fence · 1,240 ft');
-    expect(describeFeature({ kind: 'gate', name: 'Lane gate', details: null, lengthFt: null })).toBe(
-      'Lane gate'
-    );
+    expect(
+      describeFeature({ kind: 'gate', name: 'Lane gate', details: null, lengthFt: null })
+    ).toBe('Lane gate');
     expect(
       describeFeature({
         kind: 'water_source',
@@ -252,9 +252,9 @@ describe('describeFeature and featureCounts', () => {
         lengthFt: null
       })
     ).toBe('Barn well · Well, 12 gal/min');
-    expect(
-      describeFeature({ kind: 'hydrant', name: '  ', details: null, lengthFt: null })
-    ).toBe('Hydrant');
+    expect(describeFeature({ kind: 'hydrant', name: '  ', details: null, lengthFt: null })).toBe(
+      'Hydrant'
+    );
   });
 
   it('counts every kind, including zeros', () => {

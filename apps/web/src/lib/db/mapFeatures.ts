@@ -134,3 +134,10 @@ export function unlinkMapFeaturesFromField(fieldId: string): number {
     .where(withTenant(mapFeatures, eq(mapFeatures.fieldId, fieldId)))
     .run().changes;
 }
+
+/** The client-safe shape (no timestamps), sorted for a stable snapshot. */
+export function listMapFeatureViews(): MapFeatureView[] {
+  return listMapFeatures()
+    .map(({ createdAt: _createdAt, ...view }) => view)
+    .sort((a, b) => a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
+}

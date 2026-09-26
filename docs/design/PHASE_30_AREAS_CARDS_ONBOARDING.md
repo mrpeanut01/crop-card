@@ -331,7 +331,7 @@ Existing rows backfill to `field` / `block`, so nothing changes for current farm
 
 The quantity-in-hundredths fields stay the record of what was planted for fields.
 
-**Lines and points** (fence, gate, water source, hydrant) are **deferred to 30G**. `shade_sources` already covers fences, hedges and buildings for shade. A future `map_features` table would add gates and water points with the same tenant pattern.
+**Lines and points** (fence, gate, water source, hydrant, irrigation line, path) shipped in 30H (see §8, 30G). `shade_sources` already covers fences, hedges and buildings for shade. Map lines and points live in `map_features` with the same tenant pattern.
 
 **Tenant checklist per Invariant 6:** no new tenant tables in 0050 and 0051 (columns only); the cross-tenant property test gains cases for `kind` filters; the `no-raw-tenant-table` drift test needs no change.
 
@@ -597,6 +597,8 @@ Deferred: dragging a crop or a bed preset onto the canvas (tap to place works ev
 - Care Guide cards; photo help through `aiTry()`.
 - `plugins/bed-recipes/` plugin kind with schema + 6 starter recipes for zones 6-7.
 - Map lines and points (fence, gate, water source) via `map_features`, if still wanted.
+
+**Map lines and points implemented (30H, 2026-09-26).** A tenant-scoped `map_features` table (`fence | gate | water_source | hydrant | irrigation_line | path`, GeoJSON LineString or Point, optional Area link, `details_json`) with a repo in `lib/db/mapFeatures.ts` and `/api/map-features` CRUD (owner-only writes, helpers read, another Owner's Area refused). Pure rules live in `lib/farm/mapFeatures.ts`: which kinds are lines or points, geometry checks, walked length in feet, and water source details (`well | municipal | pond | rain`, optional flow in gallons per minute). The Add drawer has a "Lines & points" group drawn with Geoman polyline or marker, Filter toggles each kind, and the list under the map edits names, Areas and water details. The Farm Map Card lists them by kind with lengths, adds them to the legend in plain color words, and draws them in its figure on the same plane as the Areas; on a farm sketched only by size they are counted, never placed. The migration is described in `apps/web/drizzle/PENDING_map_features.md` for the integrator to generate.
 
 **Total:** roughly 8-10 sprints. 30A-30C alone fix the onboarding complaint and can ship first.
 

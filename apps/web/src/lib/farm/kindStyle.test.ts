@@ -13,6 +13,7 @@ import {
   shadeStyle
 } from './kindStyle';
 import type { ShadeSourceKind } from '$lib/db/shadeSources';
+import { MAP_FEATURE_KINDS, geometryTypeFor } from './mapFeatures';
 
 const HEX = /^#[0-9a-f]{6}$/i;
 
@@ -62,11 +63,19 @@ describe('Add drawer groups', () => {
     expect(ADD_GROUPS.map((g) => g.title)).toEqual([
       'Crop areas',
       'Other areas',
+      'Lines & points',
       'Shade & structures'
     ]);
     expect(ADD_GROUPS[0].items.map((i) => i.kind)).toEqual([...CROP_AREA_KINDS]);
     expect(ADD_GROUPS[1].items.map((i) => i.kind)).toEqual([...OTHER_AREA_KINDS]);
-    expect(ADD_GROUPS[2].items.map((i) => i.kind)).toEqual([...SHADE_KINDS]);
+    expect(ADD_GROUPS[2].items.map((i) => i.kind)).toEqual([...MAP_FEATURE_KINDS]);
+    expect(ADD_GROUPS[3].items.map((i) => i.kind)).toEqual([...SHADE_KINDS]);
+    for (const item of ADD_GROUPS[2].items) {
+      expect(item.type).toBe('feature');
+      if (item.type === 'feature') {
+        expect(item.shape).toBe(geometryTypeFor(item.kind) === 'Point' ? 'point' : 'line');
+      }
+    }
   });
 
   it('offers every shade kind the shade-source API accepts', () => {

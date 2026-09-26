@@ -5,6 +5,14 @@ import {
   OTHER_AREA_KINDS,
   type AreaKind
 } from './areaKinds';
+import {
+  MAP_FEATURE_HINT,
+  MAP_FEATURE_KINDS,
+  MAP_FEATURE_LABELS,
+  MAP_FEATURE_STYLE,
+  geometryTypeFor,
+  type MapFeatureKind
+} from './mapFeatures';
 
 /**
  * Map colors per Area kind, taken from the Almanac palette in
@@ -139,18 +147,29 @@ export function shadeStyle(kind: ShadeKind): { color: string; fill: string } {
 }
 
 export type AddPick =
-  { type: 'area'; kind: AreaKind } | { type: 'shade'; kind: ShadeKind } | { type: 'block' };
+  | { type: 'area'; kind: AreaKind }
+  | { type: 'shade'; kind: ShadeKind }
+  | { type: 'feature'; kind: MapFeatureKind }
+  | { type: 'block' };
 
 export interface AddGroup {
-  id: 'crop' | 'other' | 'shade';
+  id: 'crop' | 'other' | 'features' | 'shade';
   title: string;
   items: Array<
     | { type: 'area'; kind: AreaKind; label: string; hint: string; color: string }
+    | {
+        type: 'feature';
+        kind: MapFeatureKind;
+        label: string;
+        hint: string;
+        color: string;
+        shape: 'line' | 'point';
+      }
     | { type: 'shade'; kind: ShadeKind; label: string; color: string }
   >;
 }
 
-/** The Add drawer: LiteFarm's grouping, with our shade kinds as the third. */
+/** The Add drawer: LiteFarm's grouping, plus lines and points and our shade kinds. */
 export const ADD_GROUPS: readonly AddGroup[] = [
   {
     id: 'crop',
@@ -172,6 +191,18 @@ export const ADD_GROUPS: readonly AddGroup[] = [
       label: AREA_KIND_LABELS[kind],
       hint: AREA_KIND_HINT[kind],
       color: AREA_KIND_STYLE[kind].color
+    }))
+  },
+  {
+    id: 'features',
+    title: 'Lines & points',
+    items: MAP_FEATURE_KINDS.map((kind) => ({
+      type: 'feature' as const,
+      kind,
+      label: MAP_FEATURE_LABELS[kind],
+      hint: MAP_FEATURE_HINT[kind],
+      color: MAP_FEATURE_STYLE[kind].color,
+      shape: geometryTypeFor(kind) === 'Point' ? ('point' as const) : ('line' as const)
     }))
   },
   {

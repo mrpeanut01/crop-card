@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_MAP_FILTER,
+  isFeatureVisible,
+  isFilterActive,
   isKindVisible,
   loadMapFilter,
   mapFilterKey,
   parseMapFilter,
   saveMapFilter,
+  toggleFeatureKind,
   toggleKind
 } from './mapFilter';
 
@@ -27,7 +30,18 @@ describe('map filter', () => {
   it('drops unknown kinds and wrong types', () => {
     expect(
       parseMapFilter({ hidden: ['garden', 'spaceport', 3], shade: 'yes', labels: false })
-    ).toEqual({ hidden: ['garden'], shade: true, labels: false, satellite: true });
+    ).toEqual({
+      hidden: ['garden'],
+      hiddenFeatures: [],
+      shade: true,
+      labels: false,
+      satellite: true
+    });
+    expect(parseMapFilter({ hiddenFeatures: ['gate', 'watercourse', 'fence', null] })).toEqual({
+      ...DEFAULT_MAP_FILTER,
+      hidden: [],
+      hiddenFeatures: ['fence', 'gate']
+    });
   });
 
   it('keys storage per Owner and skips storage with no Owner', () => {
@@ -42,11 +56,12 @@ describe('map filter', () => {
     const store = memoryStore();
     saveMapFilter(
       'owner_a',
-      { hidden: ['barn'], shade: false, labels: true, satellite: false },
+      { hidden: ['barn'], hiddenFeatures: ['path'], shade: false, labels: true, satellite: false },
       store
     );
     expect(loadMapFilter('owner_a', store)).toEqual({
       hidden: ['barn'],
+      hiddenFeatures: ['path'],
       shade: false,
       labels: true,
       satellite: false
@@ -79,5 +94,23 @@ describe('map filter', () => {
     expect(isKindVisible(f, 'garden')).toBe(true);
     expect(isKindVisible(f, undefined)).toBe(false);
     expect(toggleKind(f, 'water').hidden).toEqual(['field']);
+  });
+
+  it('toggles line and point kinds in canonical order, apart from Areas', () => {
+    let f = toggleFeatureKind(parseMapFilter(null), 'path');
+    f = toggleFeatureKind(f, 'fence');
+    expect(f.hiddenFeatures).toEqual(['fence', 'path']);
+    expect(f.hidden).toEqual([]);
+    expect(isFeatureVisible(f, 'fence')).toBe(false);
+    expect(isFeatureVisible(f, 'gate')).toBe(true);
+    expect(toggleFeatureKind(f, 'fence').hiddenFeatures).toEqual(['path']);
+  });
+
+  it('reports when anything is filtered', () => {
+    const base = parseMapFilter(null);
+    expect(isFilterActive(base)).toBe(false);
+    expect(isFilterActive(toggleFeatureKind(base, 'hydrant'))).toBe(true);
+    expect(isFilterActive(toggleKind(base, 'barn'))).toBe(true);
+    expect(isFilterActive({ ...base, labels: false })).toBe(true);
   });
 });

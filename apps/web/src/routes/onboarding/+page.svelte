@@ -52,7 +52,8 @@
     }
     searching = false;
     if (matches.length === 0) {
-      searchNote = "We couldn't find that address. Use your location or tap the map instead.";
+      searchNote =
+        "We couldn't find that address. The lookup needs a house number and street (not a town, zip, PO box or rural route). Use your location or tap the map instead.";
     } else if (matches.length === 1) {
       choose(matches[0]);
     }
@@ -150,7 +151,7 @@
           <input
             type="search"
             aria-label="Search for an address"
-            placeholder="Street address, town or zip"
+            placeholder="Street address, e.g. 12 Main St, Leesburg VA"
             autocomplete="street-address"
             bind:value={query}
             onkeydown={(e) => {

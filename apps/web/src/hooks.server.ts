@@ -145,15 +145,17 @@ export function isAnonymousRequest(pathname: string, isDataRequest: boolean): bo
 // Authenticated routes that work with a partial session (no
 // `activeOwnerId` yet). These exist to *complete* the session — onboarding
 // creates an Owner, the picker selects one, switch-owner re-mints the
-// cookie.
+// cookie. The geocoder backs onboarding's address search and reads no
+// tenant data.
 const PARTIAL_SESSION_PATHS = new Set([
   '/owner-picker',
   '/onboarding',
   '/signout',
-  '/api/session/switch-owner'
+  '/api/session/switch-owner',
+  '/api/geocode'
 ]);
 
-function allowsPartialSession(pathname: string, isSuperadmin: boolean): boolean {
+export function allowsPartialSession(pathname: string, isSuperadmin: boolean): boolean {
   if (PARTIAL_SESSION_PATHS.has(pathname)) return true;
   if (pathname.startsWith('/onboarding/')) return true;
   if (pathname.startsWith('/owner-picker/')) return true;

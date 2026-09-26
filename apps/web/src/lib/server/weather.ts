@@ -46,7 +46,7 @@ export interface NwsPointsResponse {
   };
 }
 
-interface NwsPeriod {
+export interface NwsPeriod {
   number: number;
   name: string;
   startTime: string;
@@ -59,7 +59,7 @@ interface NwsPeriod {
   shortForecast: string;
 }
 
-interface NwsForecastResponse {
+export interface NwsForecastResponse {
   properties: {
     periods: NwsPeriod[];
   };
@@ -103,12 +103,20 @@ export function fetchNwsPoints(
   return nwsFetch<NwsPointsResponse>(`${NWS_BASE}/points/${lat},${lon}`, init);
 }
 
+/** NWS period wind is a string such as "5 mph" or "14 to 21 mph"; ranges take the upper bound. */
+export function parseWindMph(windSpeed: unknown): number | null {
+  if (typeof windSpeed !== 'string') return null;
+  const nums = windSpeed.match(/\d+(?:\.\d+)?/g);
+  if (!nums) return null;
+  return Math.max(...nums.map(Number));
+}
+
 /**
  * Convert NWS's alternating day/night periods into a daily summary.
  * Each calendar day pairs one "daytime" period (high) with the following
  * "night" period (low + overnight rain).
  */
-function periodsToDays(periods: NwsPeriod[]): ForecastDay[] {
+export function periodsToDays(periods: NwsPeriod[]): ForecastDay[] {
   const byDate = new Map<string, ForecastDay & { nightForecast?: string }>();
   for (const p of periods) {
     const date = p.startTime.slice(0, 10);
@@ -124,8 +132,8 @@ function periodsToDays(periods: NwsPeriod[]): ForecastDay[] {
     }
     const pop = p.probabilityOfPrecipitation?.value ?? 0;
     if (pop > existing.popPct) existing.popPct = pop;
-    const wind = parseFloat(p.windSpeed);
-    if (!Number.isNaN(wind) && (p.isDaytime || existing.windMph === undefined)) {
+    const wind = parseWindMph(p.windSpeed);
+    if (wind !== null && (p.isDaytime || existing.windMph === undefined)) {
       existing.windMph = wind;
     }
     byDate.set(date, existing);

@@ -9,6 +9,7 @@ import { buildEquipmentCard, buildEquipmentCards } from './equipment';
 import { buildPlantingCard, buildPlantingCards } from './planting';
 import { buildSprayCard, buildSprayCards } from './spray';
 import { buildStockCard, buildStockCards } from './stock';
+import { buildTaskCard, buildTaskCardFromSnapshot } from './task';
 
 export type { BuildOptions } from './common';
 export type { EmergencyContact, FarmMapBuildOptions } from './farmMap';
@@ -27,7 +28,9 @@ export {
   buildSprayCard,
   buildSprayCards,
   buildStockCard,
-  buildStockCards
+  buildStockCards,
+  buildTaskCard,
+  buildTaskCardFromSnapshot
 };
 
 /** Builds any card kind that has a builder yet; null for unknown keys. */
@@ -55,6 +58,8 @@ export function buildCard(
       return buildDayCard(snapshot, parsed.id, options);
     case 'stock':
       return buildStockCard(snapshot, parsed.id, options);
+    case 'task':
+      return buildTaskCardFromSnapshot(snapshot, parsed.id, options);
     default:
       return null;
   }

@@ -21,6 +21,7 @@ import { db } from './client';
 import { equipment, equipmentState, tasks } from './schema';
 import { tenantValues, withTenant } from './tenant';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import type { TaskCategory } from '$lib/plan/taskCategory';
 import type { EquipmentPreTaskTemplate, EquipmentTemplate } from '$lib/server/equipmentTemplates';
 import { SEED_EQUIPMENT_TEMPLATES } from '$lib/server/equipmentTemplates';
 
@@ -50,6 +51,7 @@ export interface Task {
   relatedEventTable?: RelatedEventTable;
   relatedEventId?: string;
   pluginTemplateKey?: string;
+  category?: TaskCategory;
   recurrenceJson?: string;
   userOverridden: boolean;
   staleAnchor: boolean;
@@ -75,6 +77,7 @@ function rowToTask(row: typeof tasks.$inferSelect): Task {
     relatedEventTable: (row.relatedEventTable as RelatedEventTable | null) ?? undefined,
     relatedEventId: row.relatedEventId ?? undefined,
     pluginTemplateKey: row.pluginTemplateKey ?? undefined,
+    category: (row.category as TaskCategory | null) ?? undefined,
     recurrenceJson: row.recurrenceJson ?? undefined,
     userOverridden: row.userOverridden ?? false,
     staleAnchor: row.staleAnchor ?? false,
@@ -227,8 +230,8 @@ export function completeTask(
   return rowToTask(row);
 }
 
-export function abortTask(id: string, reason?: string, cascade = true): Task {
-  const now = Date.now();
+export function abortTask(id: string, reason?: string, cascade = true, at?: number): Task {
+  const now = at ?? Date.now();
   const row = db
     .update(tasks)
     .set({ abortedAt: new Date(now), abortReason: reason ?? null })

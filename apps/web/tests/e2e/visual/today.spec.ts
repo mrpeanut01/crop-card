@@ -22,7 +22,7 @@ for (const vp of VIEWPORTS) {
     await page.goto('/today');
     await page.waitForLoadState('networkidle');
     // Wait for at least one shell element so we don't snapshot a partial render.
-    await expect(page.getByRole('heading', { name: 'This week' })).toBeVisible();
+    await expect(page.getByTestId('today-deck')).toBeVisible();
 
     await settleForScreenshot(page);
     await expect(page).toHaveScreenshot(`today-${vp.name}.png`, {

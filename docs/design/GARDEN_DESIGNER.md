@@ -252,7 +252,7 @@ The Area Card for a garden or greenhouse gains a **Garden bed map** section in i
 
 ## 19. First-use hints
 
-Through the 30B `components/ui/Hint.svelte` and `lib/client/hints.ts`, at most one per view, never over a safety STOP. The anchors are `data-hint-anchor="garden_designer"` on the preset bar and `data-hint-anchor="designer_scrubber"` on the scrubber; both stay hidden while the crop panel is open.
+Through the 30B `components/ui/Hint.svelte` and `lib/client/hints.ts`, at most one per view, never over a safety STOP. The anchors are `data-hint-anchor="garden_designer"` on the preset bar and `data-hint-anchor="designer_scrubber"` on the scrubber; both stay hidden while the crop panel is open or a bed or crop is being placed, so the bubble never sits over the tap target.
 
 - `garden_designer`: owners only, on the first visit, anchored to the preset bar. "Pick a bed size, then tap the garden to put it there. Tap a bed to move, turn or size it."
 - `designer_scrubber`: anyone, on a later view once the Area has a scheduled planting, anchored to the slider. "Slide through the season to see what's growing in each bed and when it opens up."

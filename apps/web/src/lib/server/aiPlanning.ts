@@ -32,7 +32,8 @@ export type AiTask =
    *  (substitution lookup is comparatively simple). */
   | 'inputs'
   | 'plantingWindow'
-  | 'gardenFill';
+  | 'gardenFill'
+  | 'photoHelp';
 
 export interface ModelChoice {
   model: string;
@@ -188,7 +189,8 @@ const MAX_TOKENS_BY_TASK: Record<AiTask, number> = {
   shortNames: 1500,
   inputs: 3000,
   plantingWindow: 400,
-  gardenFill: 1500
+  gardenFill: 1500,
+  photoHelp: 400
 };
 
 export interface PlanWithAIOptions {

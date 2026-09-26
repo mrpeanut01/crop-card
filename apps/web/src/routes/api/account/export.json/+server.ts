@@ -32,6 +32,7 @@ import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { listScoutObservations } from '$lib/db/scoutObservations';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listCuttings } from '$lib/db/hayCuttings';
+import { listJournalForExport } from '$lib/db/plantingJournal';
 import { listBlocks } from '$lib/db/blocks';
 import { listSprayers } from '$lib/db/sprayers';
 import { listUnifiedRecords, summarizeUnifiedRecords } from '$lib/db/recordsUnified';
@@ -199,6 +200,10 @@ export const GET: RequestHandler = async (event) => {
       decon
     },
     hayCuttings,
+    plantingJournal: listJournalForExport().map((e) => ({
+      ...e,
+      createdAt: new Date(e.createdAt).toISOString()
+    })),
     apiTokens,
     relatedDownloads: {
       vdacsAuditPdf: '/api/records/export.vdacs.pdf',

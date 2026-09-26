@@ -6,7 +6,12 @@ import { createRawSnippet } from 'svelte';
 import { render, within } from '@testing-library/svelte';
 import CardView from './CardView.svelte';
 import CardPrintSheet from './CardPrintSheet.svelte';
-import { buildAreaCard, buildPlantingCard, buildPlantingCards } from '$lib/cards/build';
+import {
+  buildAreaCard,
+  buildCareGuideCard,
+  buildPlantingCard,
+  buildPlantingCards
+} from '$lib/cards/build';
 import { sampleSnapshot } from '$lib/cards/build/fixtures';
 import { printLinkFor } from '$lib/cards/print';
 import { STALE_NOTICE, type CardModel } from '$lib/cards/model';
@@ -163,8 +168,26 @@ describe('CardView', () => {
     expect(getByText('Rules 0.5.6-issue130')).toBeInTheDocument();
   });
 
+  it('tags Care Guide sections with their source on screen only', () => {
+    const care = buildCareGuideCard(snap, 'tomato-cherokee-purple')!;
+    const screen = render(CardView, { card: care, prefs });
+    const water = within(screen.container as HTMLElement).getByRole('heading', { name: /Water/ });
+    expect(water.querySelector('[data-provenance="fallback"]')).not.toBeNull();
+    screen.unmount();
+    const print = render(CardView, { card: care, prefs, variant: 'print' });
+    const printed = within(print.container as HTMLElement).getByRole('heading', { name: /Water/ });
+    expect(printed.children).toHaveLength(0);
+  });
+
   it('renders a card with no facts, sections or next action', () => {
-    const bare: CardModel = { ...tomato, facts: [], sections: [], next: undefined, provenance: [] };
+    const bare: CardModel = {
+      ...tomato,
+      facts: [],
+      sections: [],
+      next: undefined,
+      links: undefined,
+      provenance: []
+    };
     const { container } = render(CardView, { card: bare, prefs });
     expect(container.querySelector('dl')).toBeNull();
     expect(container.querySelector('.next')).toBeNull();

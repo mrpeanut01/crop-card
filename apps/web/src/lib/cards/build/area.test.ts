@@ -175,7 +175,7 @@ describe('formatSize', () => {
 describe('garden bed map', () => {
   it('gives a garden an Open designer link and a to-scale bed map for the card date', () => {
     const card = buildAreaCard(sampleSnapshot(), 'f_garden')!;
-    expect(card.links).toEqual([{ label: 'Open designer', href: '/plan/areas/f_garden/design' }]);
+    expect(card.links![0]).toEqual({ label: 'Open designer', href: '/plan/areas/f_garden/design' });
     expect(card.bedMap).toMatchObject({ widthFt: 30, lengthFt: 40, hasNorth: false });
     const beds = card.bedMap!.beds;
     expect(beds.map((b) => b.name).sort()).toEqual(['', 'Bed 1', 'Bed 3']);

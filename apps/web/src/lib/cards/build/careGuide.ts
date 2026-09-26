@@ -1,14 +1,63 @@
 import { formatQuantity } from '$lib/prefs';
-import { cardHref, cardKey, type CardFact, type CardModel, type CardSection } from '../model';
-import type { FarmSnapshot } from '../snapshot';
+import { isDesignable } from '$lib/farm/areaKinds';
+import {
+  cardHref,
+  cardKey,
+  parseCardKey,
+  type CardAction,
+  type CardFact,
+  type CardModel,
+  type CardSection
+} from '../model';
+import type { FarmSnapshot, SnapshotCareTask, SnapshotCropPlugin } from '../snapshot';
 import { blockDisplayName, resolveOptions, type BuildOptions } from './common';
 import { formatInches } from './size';
+import { familyCareTips, type FamilyCareTips } from './careTips';
+import { CARE_SECTION } from '$lib/journal/photoHelp';
 
 const MAX_PLANTINGS = 6;
 
 function familyLabel(family: string): string {
   const s = family.replace(/[-_.]+/g, ' ').trim();
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Crop';
+}
+
+function careTaskLine(t: SnapshotCareTask): string {
+  const title = t.title.trim();
+  const body = t.body?.trim();
+  if (!body) return title;
+  return /[.!?]$/.test(title) ? `${title} ${body}` : `${title}. ${body}`;
+}
+
+/** Water, feed, stake and prune, harvest cues, common problems and notes
+ *  for one crop. Plugin data wins; family tips fill the gaps as `fallback`. */
+export function careGuideSections(plugin: SnapshotCropPlugin): {
+  sections: CardSection[];
+  tips: FamilyCareTips | null;
+} {
+  const family = familyCareTips(plugin.cropFamily);
+  let usedTips = false;
+  const sections: CardSection[] = [];
+  const fromTips = (title: string, items: string[] | undefined) => {
+    if (!items?.length) return;
+    usedTips = true;
+    sections.push({ title, items: [...items], provenance: 'fallback' });
+  };
+  fromTips(CARE_SECTION.water, family?.water);
+  fromTips(CARE_SECTION.feed, family?.feed);
+  const tasks = (plugin.careTasks ?? []).map(careTaskLine).filter(Boolean);
+  if (tasks.length) {
+    sections.push({ title: CARE_SECTION.prune, items: tasks, provenance: 'plugin' });
+  } else {
+    fromTips(CARE_SECTION.prune, family?.prune);
+  }
+  const cues = plugin.harvestIndicators?.filter((s) => s.trim()) ?? [];
+  if (cues.length) sections.push({ title: CARE_SECTION.harvest, items: cues, provenance: 'plugin' });
+  fromTips(CARE_SECTION.problems, family?.problems);
+  if (plugin.notes?.trim()) {
+    sections.push({ title: CARE_SECTION.notes, items: [plugin.notes.trim()], provenance: 'plugin' });
+  }
+  return { sections, tips: usedTips ? family : null };
 }
 
 export function buildCareGuideCard(
@@ -63,10 +112,7 @@ export function buildCareGuideCard(
     });
   }
 
-  const sections: CardSection[] = [];
-  const cues = plugin.harvestIndicators?.filter((s) => s.trim()) ?? [];
-  if (cues.length) sections.push({ title: 'Harvest cues', items: cues });
-  if (plugin.notes?.trim()) sections.push({ title: 'Notes', items: [plugin.notes.trim()] });
+  const { sections, tips } = careGuideSections(plugin);
 
   const blocks = new Map(snapshot.blocks.map((b) => [b.id, b]));
   const growing = snapshot.plantings
@@ -100,7 +146,10 @@ export function buildCareGuideCard(
     facts,
     sections,
     asOf: snapshot.generatedAt,
-    provenance: [{ source: 'plugin', detail: `${plugin.pluginId} · v${plugin.version}` }],
+    provenance: [
+      { source: 'plugin', detail: `${plugin.pluginId} · v${plugin.version}` },
+      ...(tips ? [{ source: 'fallback' as const, detail: `General tips for ${tips.label}` }] : [])
+    ],
     href: cardHref('careGuide', key)
   };
 }
@@ -113,4 +162,42 @@ export function buildCareGuideCards(
     .sort()
     .map((id) => buildCareGuideCard(snapshot, id, options))
     .filter((c): c is CardModel => c !== null);
+}
+
+export const CARE_LINK_LABEL = 'How to care for it';
+const MAX_AREA_CARE_LINKS = 4;
+
+export function careGuideHref(pluginId: string): string {
+  return cardHref('careGuide', cardKey('careGuide', pluginId));
+}
+
+/** Crop plugins a card's "How to care for it" covers: the planting's crop,
+ *  or every crop growing or planned in a garden or greenhouse Area. */
+export function careGuidePluginIds(snapshot: FarmSnapshot, cardKeyValue: string): string[] {
+  const parsed = parseCardKey(cardKeyValue);
+  if (!parsed) return [];
+  if (parsed.kind === 'planting') {
+    const p = snapshot.plantings.find((x) => x.id === parsed.id);
+    return p && snapshot.cropPlugins[p.cropPluginId] ? [p.cropPluginId] : [];
+  }
+  if (parsed.kind !== 'area') return [];
+  const area = snapshot.areas.find((a) => a.id === parsed.id);
+  if (!area || !isDesignable(area.kind)) return [];
+  const blockIds = new Set(snapshot.blocks.filter((b) => b.areaId === area.id).map((b) => b.id));
+  const ids: string[] = [];
+  for (const p of snapshot.plantings) {
+    if (!blockIds.has(p.blockId) || p.status === 'harvested') continue;
+    if (!snapshot.cropPlugins[p.cropPluginId] || ids.includes(p.cropPluginId)) continue;
+    ids.push(p.cropPluginId);
+  }
+  return ids;
+}
+
+export function areaCareLinks(snapshot: FarmSnapshot, areaId: string): CardAction[] {
+  return careGuidePluginIds(snapshot, cardKey('area', areaId))
+    .slice(0, MAX_AREA_CARE_LINKS)
+    .map((id) => ({
+      label: `How to care for ${snapshot.cropPlugins[id].displayName}`,
+      href: careGuideHref(id)
+    }));
 }

@@ -4,6 +4,9 @@
   import CardView from '$lib/components/cards/CardView.svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
   import InstallNudge from '$lib/components/cards/InstallNudge.svelte';
+  import CareGuideList from '$lib/components/cards/CareGuideList.svelte';
+  import PhotoHelp from '$lib/components/cards/PhotoHelp.svelte';
+  import { careGuideCardsFor, photoHelpTargets } from '$lib/journal/targets';
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
   import { buildCard } from '$lib/cards/build';
   import { CARD_KIND_LABEL, isCardKind, type CardPrintLayout } from '$lib/cards/model';
@@ -28,6 +31,13 @@
     return built && built.kind === kind ? built : null;
   });
   const pinned = $derived(cards.isPinned(key));
+  const careCards = $derived(
+    snapshot && card ? careGuideCardsFor(snapshot, key, { prefs, now }) : []
+  );
+  const helpTargets = $derived(
+    snapshot && card ? photoHelpTargets(snapshot, key, { prefs, now }) : []
+  );
+  const role = $derived((page.data.user?.role as string | undefined) ?? null);
 
   onMount(() => {
     const tick = setInterval(() => (now = Date.now()), 60_000);
@@ -92,6 +102,10 @@
       {/each}
     </fieldset>
     <p class="hint">{PRINT_HELP}</p>
+    <CareGuideList cards={careCards} {prefs} {now} />
+    {#key key}
+      <PhotoHelp targets={helpTargets} {role} {prefs} />
+    {/key}
   {:else if snapshot}
     <p class="status" role="status">
       This card is not in the copy saved on this device. It may be new since the last save, or it no

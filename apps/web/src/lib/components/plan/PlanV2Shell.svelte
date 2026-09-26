@@ -1,23 +1,4 @@
 <script lang="ts">
-  /**
-   * Phase 25b (#81) — Plan v2 page shell.
-   *
-   * Composes the per-component pieces in
-   * [`direction-almanac-plan-v2.jsx`](../../../../docs/design/almanac/direction-almanac-plan-v2.jsx)
-   * into a single drop-in surface for [/plan](../../../../routes/plan/+page.svelte).
-   *
-   * URL contract (parent wires these via `?…`):
-   *   - `?block=<id>`     → selected block. Defaults to first block.
-   *   - `?planting=<idx>` → selected planting tab. `-1` = "All plantings"
-   *                         (default for poly blocks); single-planting blocks
-   *                         ignore this and render the deep view.
-   *   - `?map=open`       → opens the MapOverlay.
-   *
-   * The shell renders read-only views of each card; mutating actions
-   * (edit block / add planting / refine / open wizard) are emitted as
-   * callbacks the parent owns. This keeps the shell composable + easy
-   * to mock in tests.
-   */
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { Sparkle } from 'lucide-svelte';
@@ -26,6 +7,19 @@
   import type { Task } from '$lib/db/tasks';
 
   import PlanLeftRail from './PlanLeftRail.svelte';
+  import CardView from '$lib/components/cards/CardView.svelte';
+  import type { FarmSnapshot } from '$lib/cards/snapshot';
+  import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
+  import { isCropBearing, type AreaKind } from '$lib/farm/areaKinds';
+  import {
+    NO_AREA,
+    planAreaCard,
+    planBlockCard,
+    planRailCards,
+    plantingColor,
+    type PlanAreaEntry
+  } from '$lib/plan/planCards';
+  import { currentPrefs } from '$lib/prefsState.svelte';
   import PlanBlockHeader from './PlanBlockHeader.svelte';
   import PlantingsTabStrip from './PlantingsTabStrip.svelte';
   import PlantingCard from './PlantingCard.svelte';
@@ -76,8 +70,9 @@
     onAddTask?: (blockId: string, plantingId: string | null) => void;
     /** Farm-map editor link for the "No map geometry" pill (owner only). */
     geometryEditHref?: string;
-    /** Gardens and greenhouses listed in the rail with a designer link. */
-    gardens?: Array<{ id: string; name: string }>;
+    /** Areas, blocks and plantings for the Area and Block cards. Built
+     *  from `fields` + `blocks` when the loader doesn't send one. */
+    areaSnapshot?: FarmSnapshot | null;
     /** False for helpers: block and map edits are the owner's. */
     canEdit?: boolean;
   }
@@ -96,15 +91,36 @@
     onAddPlanting,
     onAddTask,
     geometryEditHref,
-    gardens = [],
+    areaSnapshot = null,
     canEdit = true
   }: Props = $props();
 
-  // ── URL-driven state ──────────────────────────────────────────────
+  const prefs = $derived(currentPrefs());
+  const areas = $derived<PlanAreaEntry[]>(
+    fields.map((f) => ({ id: f.id, name: f.name, kind: (f.kind ?? 'field') as AreaKind }))
+  );
+  const snapshot = $derived<FarmSnapshot>(
+    areaSnapshot ?? snapshotFromMapData({ ownerId: 'plan', fields, blocks })
+  );
+  function areaIdOf(b: BlockWithPlantings): string {
+    return b.fieldId && areas.some((a) => a.id === b.fieldId) ? b.fieldId : NO_AREA;
+  }
+
+  const fieldParam = $derived($page.url.searchParams.get('field'));
+  const blockParam = $derived($page.url.searchParams.get('block'));
+  const selectedAreaId = $derived.by(() => {
+    if (fieldParam === NO_AREA && blocks.some((b) => areaIdOf(b) === NO_AREA)) return NO_AREA;
+    if (fieldParam && areas.some((a) => a.id === fieldParam)) return fieldParam;
+    const fromBlock = blocks.find((b) => b.id === blockParam);
+    if (fromBlock) return areaIdOf(fromBlock);
+    if (blocks[0]) return areaIdOf(blocks[0]);
+    return areas[0]?.id;
+  });
+  const selectedArea = $derived(areas.find((a) => a.id === selectedAreaId));
+  const areaBlocks = $derived(blocks.filter((b) => areaIdOf(b) === selectedAreaId));
   const selectedBlockId = $derived.by(() => {
-    const fromUrl = $page.url.searchParams.get('block');
-    if (fromUrl && blocks.some((b) => b.id === fromUrl)) return fromUrl;
-    return blocks[0]?.id;
+    if (blockParam && areaBlocks.some((b) => b.id === blockParam)) return blockParam;
+    return areaBlocks[0]?.id;
   });
   const plantingIdxParam = $derived.by(() => {
     const raw = $page.url.searchParams.get('planting');
@@ -116,6 +132,20 @@
   const mapOpen = $derived($page.url.searchParams.get('map') === 'open');
 
   const selectedBlock = $derived(blocks.find((b) => b.id === selectedBlockId));
+  const railCards = $derived(planRailCards(snapshot, areas, blocks, $page.url.searchParams, prefs));
+  const areaCard = $derived(selectedArea ? planAreaCard(snapshot, selectedArea, prefs) : null);
+  const cropDays = $derived.by<Record<string, number | undefined>>(() => {
+    const out: Record<string, number | undefined> = {};
+    for (const k of Object.keys(cropMeta)) out[k] = cropMeta[k].daysToMaturity;
+    return out;
+  });
+  const blockCards = $derived(
+    selectedAreaId
+      ? areaBlocks.map((b) =>
+          planBlockCard(b, $page.url.searchParams, selectedAreaId, cropDays, prefs)
+        )
+      : []
+  );
   const plantings = $derived(selectedBlock?.plantings ?? []);
   const isPoly = $derived(plantings.length > 1);
 
@@ -187,22 +217,6 @@
       });
   });
 
-  function plantingColor(plantingId: string): string {
-    const PALETTE = [
-      '#7a8f5a',
-      '#c9961f',
-      '#6f8fa8',
-      '#a85a1f',
-      '#4a8b54',
-      '#a23a3a',
-      '#8a6722',
-      '#7a3a4d'
-    ];
-    let h = 0;
-    for (let i = 0; i < plantingId.length; i++) h = (h * 31 + plantingId.charCodeAt(i)) >>> 0;
-    return PALETTE[h % PALETTE.length];
-  }
-
   /** Companions for a given planting = the other plantings in the same
    *  block (everything that isn't this row). */
   function companionsFor(plantingId: string) {
@@ -219,6 +233,7 @@
   function selectBlock(id: string) {
     const sp = new URLSearchParams($page.url.searchParams);
     sp.set('block', id);
+    sp.delete('field');
     sp.delete('planting');
     goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
   }
@@ -237,25 +252,61 @@
     sp.delete('map');
     goto(`/plan?${sp.toString()}`, { keepFocus: true, noScroll: true });
   }
-
-  // Phase 25b legacy support — `?tab=layout` now opens the map overlay
-  // (per the issue's "back-compat" requirement) BUT we don't auto-flip
-  // the URL on first paint, since /plan/+page.svelte still owns the
-  // legacy layout-tab content for power users. Parent handles the
-  // tab-driven content switch.
 </script>
 
 <div class="pv2">
-  <PlanLeftRail
-    {blocks}
-    selectedId={selectedBlockId}
-    onSelect={selectBlock}
-    {onAddBlock}
-    {gardens}
-  />
+  <PlanLeftRail cards={railCards} {selectedAreaId} {onAddBlock} />
 
   <div class="pv2-main">
-    {#if !selectedBlock}
+    {#if blocks.length > 0 && selectedAreaId}
+      <section class="area-view" aria-label="Area" data-testid="plan-area-view">
+        {#if areaCard}
+          <CardView card={areaCard} {prefs} showAsOf={false} />
+        {/if}
+        <div class="block-cards-head">
+          <h2 class="section-title">
+            {selectedArea
+              ? `Beds and blocks in ${areaCard?.title ?? selectedArea.name}`
+              : 'Blocks not in an Area'}
+          </h2>
+          {#if onAddBlock}
+            <button type="button" class="ghost-btn" onclick={onAddBlock}>Add block</button>
+          {/if}
+        </div>
+        {#if blockCards.length}
+          <ul
+            class="block-cards"
+            data-testid="plan-block-cards"
+            data-sveltekit-noscroll
+            data-sveltekit-keepfocus
+          >
+            {#each blockCards as card, i (card.key)}
+              <li>
+                <CardView
+                  {card}
+                  variant="compact"
+                  {prefs}
+                  factLimit={3}
+                  showAsOf={false}
+                  selected={areaBlocks[i]?.id === selectedBlockId}
+                />
+              </li>
+            {/each}
+          </ul>
+        {:else}
+          <div class="card-empty" data-testid="plan-area-empty">
+            <p>Nothing is planted here yet.</p>
+            {#if canEdit && selectedArea && isCropBearing(selectedArea.kind)}
+              <a class="primary plan-here" href="/plan?area={encodeURIComponent(selectedArea.id)}">
+                <Sparkle size={13} strokeWidth={1.75} />
+                Plan a crop here
+              </a>
+            {/if}
+          </div>
+        {/if}
+      </section>
+    {/if}
+    {#if !selectedBlock && blocks.length === 0}
       <div class="pv2-empty" data-empty-state="season-start">
         {#if onStartPlan}
           <h2 class="pv2-empty-title">Plan your {seasonYear} season</h2>
@@ -277,7 +328,7 @@
           <p>No blocks yet. The farm owner sets up blocks and the season plan.</p>
         {/if}
       </div>
-    {:else}
+    {:else if selectedBlock}
       <PlanBlockHeader
         block={selectedBlock}
         statusLabel={headerStatus}
@@ -398,6 +449,51 @@
     flex-direction: column;
     gap: 16px;
     min-width: 0;
+  }
+  .area-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .block-cards-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .section-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+  .block-cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .ghost-btn {
+    min-height: 48px;
+    padding: 0 14px;
+    background: transparent;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .plan-here {
+    min-height: 48px;
+    text-decoration: none;
+  }
+  .ghost-btn:hover {
+    border-color: var(--color-forest-deep);
   }
   .pv2-empty {
     text-align: center;

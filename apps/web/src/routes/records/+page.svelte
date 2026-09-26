@@ -1,6 +1,9 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
+  import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
+  import RecordCardPanel from '$lib/components/records/RecordCardPanel.svelte';
+  import type { CardModel, CardPrintLayout } from '$lib/cards/model';
   import { ChevronRight, FileText, Lock, Calendar, Plus, ArrowRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
@@ -11,6 +14,34 @@
   let { data } = $props();
 
   let pendingCount = $state<number | null>(null);
+  let openCards = $state<string[]>([]);
+  let printJob = $state<{
+    cards: CardModel[];
+    layout: CardPrintLayout;
+    origin: string | null;
+  } | null>(null);
+
+  function toggleCard(id: string) {
+    openCards = openCards.includes(id) ? openCards.filter((x) => x !== id) : [...openCards, id];
+  }
+
+  async function printCards(job: NonNullable<typeof printJob>) {
+    printJob = job;
+    await tick();
+    const previous = document.title;
+    document.title = 'CropCard record card';
+    try {
+      window.print();
+    } finally {
+      document.title = previous;
+    }
+  }
+
+  onMount(() => {
+    const clear = () => (printJob = null);
+    window.addEventListener('afterprint', clear);
+    return () => window.removeEventListener('afterprint', clear);
+  });
 
   onMount(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -142,431 +173,470 @@
 
 <svelte:head><title>Records · CropCard</title></svelte:head>
 
-<header class="page-header">
-  <Kicker>Records & audit trail</Kicker>
-  <h1 class="serif">Records.</h1>
-  <p class="lede">
-    <strong>{summary.total} records</strong> · {summary.locked} locked · {summary.ytd} this year. Retained
-    through <span class="mono">{fmtDate(summary.retentionUntilMs)}</span>.
-  </p>
-  <div class="actions">
-    <a class="btn-ghost" href="/api/spray/records/export.csv{exportQuery}" download>
-      <FileText size={13} /> CSV
-    </a>
-    <a class="btn-ghost" href="/api/spray/records/export.pdf{exportQuery}" download>
-      <FileText size={13} /> PDF
-    </a>
-    {#if data.chrome === 'full'}
-      <a
-        class="btn-primary"
-        href="/api/records/export.vdacs.pdf{exportQuery}"
-        download
-        title="VDACS-formatted audit pack: spray + insecticide + fungicide records, owner identity, integrity hash"
-      >
-        <Lock size={13} /> VDACS audit PDF
+<div class="records-page" class:no-print={printJob !== null}>
+  <header class="page-header">
+    <Kicker>Records & audit trail</Kicker>
+    <h1 class="serif">Records.</h1>
+    <p class="lede">
+      <strong>{summary.total} records</strong> · {summary.locked} locked · {summary.ytd} this year. Retained
+      through <span class="mono">{fmtDate(summary.retentionUntilMs)}</span>.
+    </p>
+    <div class="actions">
+      <a class="btn-ghost" href="/api/spray/records/export.csv{exportQuery}" download>
+        <FileText size={13} /> CSV
       </a>
-      <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
-        <FileText size={13} /> USDA / NRCS CSV
+      <a class="btn-ghost" href="/api/spray/records/export.pdf{exportQuery}" download>
+        <FileText size={13} /> PDF
       </a>
-    {/if}
-    <a
-      class="btn-secondary"
-      class:has-pending={pendingCount && pendingCount > 0}
-      href="/records/pending"
-    >
-      Pending sync queue
-      {#if pendingCount && pendingCount > 0}
-        <span class="pending-badge">{pendingCount}</span>
-      {/if}
-    </a>
-  </div>
-</header>
-
-<section class="year-review" aria-labelledby="year-review-heading">
-  <div class="year-review-head">
-    <div>
-      <Kicker>Year in review</Kicker>
-      <h2 id="year-review-heading" class="serif">{yearSummary.year} season summary.</h2>
-      <p class="year-lede">
-        Deterministic roll-up of every recorded application, harvest, and input for the season.
-        Read-only.
-      </p>
-    </div>
-    <div class="year-actions">
-      <label class="year-select">
-        <span class="visually-hidden">Season year</span>
-        <Calendar size={13} />
-        <select
-          value={String(data.selectedYear)}
-          onchange={(e) => changeYear((e.target as HTMLSelectElement).value)}
+      {#if data.chrome === 'full'}
+        <a
+          class="btn-primary"
+          href="/api/records/export.vdacs.pdf{exportQuery}"
+          download
+          title="VDACS-formatted audit pack: spray + insecticide + fungicide records, owner identity, integrity hash"
         >
-          {#each data.availableYears as y (y)}
-            <option value={String(y)}>{y}</option>
+          <Lock size={13} /> VDACS audit PDF
+        </a>
+        <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
+          <FileText size={13} /> USDA / NRCS CSV
+        </a>
+      {/if}
+      <a
+        class="btn-secondary"
+        class:has-pending={pendingCount && pendingCount > 0}
+        href="/records/pending"
+      >
+        Pending sync queue
+        {#if pendingCount && pendingCount > 0}
+          <span class="pending-badge">{pendingCount}</span>
+        {/if}
+      </a>
+    </div>
+  </header>
+
+  <section class="year-review" aria-labelledby="year-review-heading">
+    <div class="year-review-head">
+      <div>
+        <Kicker>Year in review</Kicker>
+        <h2 id="year-review-heading" class="serif">{yearSummary.year} season summary.</h2>
+        <p class="year-lede">
+          Deterministic roll-up of every recorded application, harvest, and input for the season.
+          Read-only.
+        </p>
+      </div>
+      <div class="year-actions">
+        <label class="year-select">
+          <span class="visually-hidden">Season year</span>
+          <Calendar size={13} />
+          <select
+            value={String(data.selectedYear)}
+            onchange={(e) => changeYear((e.target as HTMLSelectElement).value)}
+          >
+            {#each data.availableYears as y (y)}
+              <option value={String(y)}>{y}</option>
+            {/each}
+          </select>
+        </label>
+        <a
+          class="btn-primary"
+          href="/api/records/year-summary.pdf?year={yearSummary.year}"
+          download
+        >
+          <FileText size={13} /> Year summary PDF
+        </a>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi">
+        <span class="kpi-num mono">{yearSummary.totals.totalApplications}</span>
+        <span class="kpi-label">Applications</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num mono">{yearSummary.totals.harvestEvents}</span>
+        <span class="kpi-label">Harvest events</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num mono">{yearSummary.totals.blocksTreated}</span>
+        <span class="kpi-label">Blocks treated</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num mono">{fmtCents(yearSummary.inputCosts.totalCents)}</span>
+        <span class="kpi-label">Input costs</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num mono">{yearSummary.scoutFunnel.spraysAvoided}</span>
+        <span class="kpi-label">Sprays avoided</span>
+      </div>
+    </div>
+
+    <div class="review-cards">
+      <article class="review-card">
+        <h3>Applications by product</h3>
+        {#if yearSummary.productAcreage.length}
+          <table class="mini-table">
+            <thead>
+              <tr
+                ><th>Product</th><th>Class</th><th class="num">Apps</th><th class="num"
+                  >Area ({fmt.unit('area')})</th
+                ></tr
+              >
+            </thead>
+            <tbody>
+              {#each yearSummary.productAcreage.slice(0, 12) as p (p.productId)}
+                <tr>
+                  <td>{p.displayName}</td>
+                  <td class="muted">{p.classes.join(', ') || '—'}</td>
+                  <td class="num mono">{p.applicationCount}</td>
+                  <td class="num mono">{fmtAcres(p.acresTreated)}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        {:else}
+          <p class="empty">No applications recorded this year.</p>
+        {/if}
+      </article>
+
+      <article class="review-card">
+        <h3>By chemistry class</h3>
+        {#if yearSummary.chemistryClassAcreage.length}
+          <table class="mini-table">
+            <thead>
+              <tr
+                ><th>Class</th><th class="num">Apps</th><th class="num"
+                  >Area ({fmt.unit('area')})</th
+                ></tr
+              >
+            </thead>
+            <tbody>
+              {#each yearSummary.chemistryClassAcreage as c (c.className)}
+                <tr>
+                  <td>{c.className}</td>
+                  <td class="num mono">{c.applicationCount}</td>
+                  <td class="num mono">{fmtAcres(c.acresTreated)}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        {:else}
+          <p class="empty">No chemistry classes recorded.</p>
+        {/if}
+      </article>
+
+      {#if data.chrome === 'full'}
+        <article class="review-card">
+          <h3>Philosophy compliance</h3>
+          <p class="philosophy-line">
+            Evaluated against <strong
+              >{PHILOSOPHY_LABELS[yearSummary.philosophy.philosophy] ??
+                yearSummary.philosophy.philosophy}</strong
+            >.
+          </p>
+          <ul class="stat-list">
+            <li>
+              <Pill tone="forest">{yearSummary.philosophy.compliantApplications}</Pill> compliant
+            </li>
+            <li>
+              <Pill tone="rust">{yearSummary.philosophy.nonCompliantApplications}</Pill> non-compliant
+            </li>
+            <li>
+              <Pill tone="neutral">{yearSummary.philosophy.unknownApplications}</Pill> unclassified
+            </li>
+          </ul>
+        </article>
+      {/if}
+
+      <article class="review-card">
+        <h3>Harvest by archetype</h3>
+        {#if yearSummary.harvestByArchetype.length}
+          <table class="mini-table">
+            <thead>
+              <tr><th>Archetype</th><th class="num">Events</th><th>Moisture min/mean/max</th></tr>
+            </thead>
+            <tbody>
+              {#each yearSummary.harvestByArchetype as h (h.archetype)}
+                <tr>
+                  <td>{h.archetype}</td>
+                  <td class="num mono">{h.eventCount}</td>
+                  <td class="mono muted">{fmtMoisture(h.moisture)}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        {:else}
+          <p class="empty">No harvest events recorded this year.</p>
+        {/if}
+      </article>
+
+      <article class="review-card">
+        <h3>Scout → spray funnel</h3>
+        <ul class="stat-list">
+          <li>
+            <strong class="mono">{yearSummary.scoutFunnel.scoutObservations}</strong> observations
+          </li>
+          <li>
+            <strong class="mono">{yearSummary.scoutFunnel.thresholdTriggeredApplications}</strong>
+            threshold-triggered
+          </li>
+          <li>
+            <strong class="mono">{yearSummary.scoutFunnel.spraysAvoided}</strong> sprays avoided
+          </li>
+        </ul>
+      </article>
+
+      {#if data.chrome === 'full'}
+        <article class="review-card">
+          <h3>Decon + calibration</h3>
+          <ul class="stat-list">
+            <li>
+              <strong class="mono"
+                >{yearSummary.compliance.calibratedSprayerCount}/{yearSummary.compliance
+                  .sprayerCount}</strong
+              > sprayers calibrated
+            </li>
+            <li>
+              <strong class="mono">{yearSummary.compliance.calibratedThisYear}</strong> calibrated this
+              year
+            </li>
+            <li>
+              <strong class="mono">{yearSummary.compliance.deconEventsThisYear}</strong> decon events
+            </li>
+          </ul>
+        </article>
+      {/if}
+    </div>
+  </section>
+
+  <section class="filter-card">
+    <div class="filter-row chip-row" role="group" aria-label="Record kind filters">
+      <span class="filter-label">Filter</span>
+      {#each RECORD_KINDS as kind (kind)}
+        {@const active = data.activeKinds.includes(kind)}
+        {@const count = summary.countsByKind[kind] ?? 0}
+        <button
+          type="button"
+          class="kind-chip"
+          class:active
+          onclick={() => toggleKind(kind)}
+          aria-pressed={active}
+        >
+          <Pill tone={KIND_TONE[kind]}>{KIND_LABEL[kind]}</Pill>
+          <span class="kind-count mono">{count}</span>
+        </button>
+      {/each}
+      <span class="sep" aria-hidden="true"></span>
+      <label class="inline-input">
+        <Calendar size={12} />
+        <span class="visually-hidden">From date</span>
+        <input
+          type="date"
+          value={data.activeFromIso ?? ''}
+          onchange={(e) => applyDateRange('from', (e.target as HTMLInputElement).value)}
+          aria-label="From date"
+        />
+      </label>
+      <span class="arrow" aria-hidden="true">→</span>
+      <label class="inline-input">
+        <span class="visually-hidden">To date</span>
+        <input
+          type="date"
+          value={data.activeToIso ?? ''}
+          onchange={(e) => applyDateRange('to', (e.target as HTMLInputElement).value)}
+          aria-label="To date"
+        />
+      </label>
+      {#if data.activeFromIso || data.activeToIso}
+        <button type="button" class="clear-range" onclick={clearDateRange}>clear dates</button>
+      {/if}
+      <span class="filter-spacer"></span>
+      <span class="count-mono mono">{data.records.length} of {summary.total}</span>
+    </div>
+
+    <div class="filter-row select-row">
+      <label class="inline-select">
+        Block
+        <select
+          value={data.activeBlockId ?? ''}
+          onchange={(e) => applyFilter('blockId', (e.target as HTMLSelectElement).value)}
+        >
+          <option value="">All blocks</option>
+          {#each data.blocks as b (b.id)}
+            <option value={b.id}>{b.blockLabel ?? b.name}</option>
           {/each}
         </select>
       </label>
-      <a class="btn-primary" href="/api/records/year-summary.pdf?year={yearSummary.year}" download>
-        <FileText size={13} /> Year summary PDF
-      </a>
-    </div>
-  </div>
-
-  <div class="kpi-grid">
-    <div class="kpi">
-      <span class="kpi-num mono">{yearSummary.totals.totalApplications}</span>
-      <span class="kpi-label">Applications</span>
-    </div>
-    <div class="kpi">
-      <span class="kpi-num mono">{yearSummary.totals.harvestEvents}</span>
-      <span class="kpi-label">Harvest events</span>
-    </div>
-    <div class="kpi">
-      <span class="kpi-num mono">{yearSummary.totals.blocksTreated}</span>
-      <span class="kpi-label">Blocks treated</span>
-    </div>
-    <div class="kpi">
-      <span class="kpi-num mono">{fmtCents(yearSummary.inputCosts.totalCents)}</span>
-      <span class="kpi-label">Input costs</span>
-    </div>
-    <div class="kpi">
-      <span class="kpi-num mono">{yearSummary.scoutFunnel.spraysAvoided}</span>
-      <span class="kpi-label">Sprays avoided</span>
-    </div>
-  </div>
-
-  <div class="review-cards">
-    <article class="review-card">
-      <h3>Applications by product</h3>
-      {#if yearSummary.productAcreage.length}
-        <table class="mini-table">
-          <thead>
-            <tr
-              ><th>Product</th><th>Class</th><th class="num">Apps</th><th class="num"
-                >Area ({fmt.unit('area')})</th
-              ></tr
-            >
-          </thead>
-          <tbody>
-            {#each yearSummary.productAcreage.slice(0, 12) as p (p.productId)}
-              <tr>
-                <td>{p.displayName}</td>
-                <td class="muted">{p.classes.join(', ') || '—'}</td>
-                <td class="num mono">{p.applicationCount}</td>
-                <td class="num mono">{fmtAcres(p.acresTreated)}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      {:else}
-        <p class="empty">No applications recorded this year.</p>
-      {/if}
-    </article>
-
-    <article class="review-card">
-      <h3>By chemistry class</h3>
-      {#if yearSummary.chemistryClassAcreage.length}
-        <table class="mini-table">
-          <thead>
-            <tr
-              ><th>Class</th><th class="num">Apps</th><th class="num">Area ({fmt.unit('area')})</th
-              ></tr
-            >
-          </thead>
-          <tbody>
-            {#each yearSummary.chemistryClassAcreage as c (c.className)}
-              <tr>
-                <td>{c.className}</td>
-                <td class="num mono">{c.applicationCount}</td>
-                <td class="num mono">{fmtAcres(c.acresTreated)}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      {:else}
-        <p class="empty">No chemistry classes recorded.</p>
-      {/if}
-    </article>
-
-    {#if data.chrome === 'full'}
-      <article class="review-card">
-        <h3>Philosophy compliance</h3>
-        <p class="philosophy-line">
-          Evaluated against <strong
-            >{PHILOSOPHY_LABELS[yearSummary.philosophy.philosophy] ??
-              yearSummary.philosophy.philosophy}</strong
-          >.
-        </p>
-        <ul class="stat-list">
-          <li>
-            <Pill tone="forest">{yearSummary.philosophy.compliantApplications}</Pill> compliant
-          </li>
-          <li>
-            <Pill tone="rust">{yearSummary.philosophy.nonCompliantApplications}</Pill> non-compliant
-          </li>
-          <li>
-            <Pill tone="neutral">{yearSummary.philosophy.unknownApplications}</Pill> unclassified
-          </li>
-        </ul>
-      </article>
-    {/if}
-
-    <article class="review-card">
-      <h3>Harvest by archetype</h3>
-      {#if yearSummary.harvestByArchetype.length}
-        <table class="mini-table">
-          <thead>
-            <tr><th>Archetype</th><th class="num">Events</th><th>Moisture min/mean/max</th></tr>
-          </thead>
-          <tbody>
-            {#each yearSummary.harvestByArchetype as h (h.archetype)}
-              <tr>
-                <td>{h.archetype}</td>
-                <td class="num mono">{h.eventCount}</td>
-                <td class="mono muted">{fmtMoisture(h.moisture)}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      {:else}
-        <p class="empty">No harvest events recorded this year.</p>
-      {/if}
-    </article>
-
-    <article class="review-card">
-      <h3>Scout → spray funnel</h3>
-      <ul class="stat-list">
-        <li>
-          <strong class="mono">{yearSummary.scoutFunnel.scoutObservations}</strong> observations
-        </li>
-        <li>
-          <strong class="mono">{yearSummary.scoutFunnel.thresholdTriggeredApplications}</strong>
-          threshold-triggered
-        </li>
-        <li>
-          <strong class="mono">{yearSummary.scoutFunnel.spraysAvoided}</strong> sprays avoided
-        </li>
-      </ul>
-    </article>
-
-    {#if data.chrome === 'full'}
-      <article class="review-card">
-        <h3>Decon + calibration</h3>
-        <ul class="stat-list">
-          <li>
-            <strong class="mono"
-              >{yearSummary.compliance.calibratedSprayerCount}/{yearSummary.compliance
-                .sprayerCount}</strong
-            > sprayers calibrated
-          </li>
-          <li>
-            <strong class="mono">{yearSummary.compliance.calibratedThisYear}</strong> calibrated this
-            year
-          </li>
-          <li>
-            <strong class="mono">{yearSummary.compliance.deconEventsThisYear}</strong> decon events
-          </li>
-        </ul>
-      </article>
-    {/if}
-  </div>
-</section>
-
-<section class="filter-card">
-  <div class="filter-row chip-row" role="group" aria-label="Record kind filters">
-    <span class="filter-label">Filter</span>
-    {#each RECORD_KINDS as kind (kind)}
-      {@const active = data.activeKinds.includes(kind)}
-      {@const count = summary.countsByKind[kind] ?? 0}
-      <button
-        type="button"
-        class="kind-chip"
-        class:active
-        onclick={() => toggleKind(kind)}
-        aria-pressed={active}
-      >
-        <Pill tone={KIND_TONE[kind]}>{KIND_LABEL[kind]}</Pill>
-        <span class="kind-count mono">{count}</span>
-      </button>
-    {/each}
-    <span class="sep" aria-hidden="true"></span>
-    <label class="inline-input">
-      <Calendar size={12} />
-      <span class="visually-hidden">From date</span>
-      <input
-        type="date"
-        value={data.activeFromIso ?? ''}
-        onchange={(e) => applyDateRange('from', (e.target as HTMLInputElement).value)}
-        aria-label="From date"
-      />
-    </label>
-    <span class="arrow" aria-hidden="true">→</span>
-    <label class="inline-input">
-      <span class="visually-hidden">To date</span>
-      <input
-        type="date"
-        value={data.activeToIso ?? ''}
-        onchange={(e) => applyDateRange('to', (e.target as HTMLInputElement).value)}
-        aria-label="To date"
-      />
-    </label>
-    {#if data.activeFromIso || data.activeToIso}
-      <button type="button" class="clear-range" onclick={clearDateRange}>clear dates</button>
-    {/if}
-    <span class="filter-spacer"></span>
-    <span class="count-mono mono">{data.records.length} of {summary.total}</span>
-  </div>
-
-  <div class="filter-row select-row">
-    <label class="inline-select">
-      Block
-      <select
-        value={data.activeBlockId ?? ''}
-        onchange={(e) => applyFilter('blockId', (e.target as HTMLSelectElement).value)}
-      >
-        <option value="">All blocks</option>
-        {#each data.blocks as b (b.id)}
-          <option value={b.id}>{b.blockLabel ?? b.name}</option>
-        {/each}
-      </select>
-    </label>
-    <label class="inline-select">
-      Sprayer
-      <select
-        value={data.activeSprayerId ?? ''}
-        onchange={(e) => applyFilter('sprayerId', (e.target as HTMLSelectElement).value)}
-      >
-        <option value="">All sprayers</option>
-        {#each data.sprayers as s (s.id)}
-          <option value={s.id}>{s.label}</option>
-        {/each}
-      </select>
-    </label>
-  </div>
-
-  <div class="retention-strip">
-    <Lock size={13} />
-    <span>
-      <strong>{summary.locked}/{summary.total}</strong> records locked under the 48-hour FR-09 rule.
-      Oldest record: <span class="mono">{fmtDate(summary.oldestMs)}</span>.
-    </span>
-  </div>
-
-  {#if data.records.length === 0}
-    <div class="empty">
-      <h2>No records match these filters</h2>
-      <p>
-        Toggle a kind chip above to widen the view, or
-        <a href="/spray">plan a spray</a>,
-        <a href="/scout">log a scout observation</a>, or
-        <a href="/harvest">record a harvest</a>.
-      </p>
-    </div>
-  {:else}
-    <div class="ledger-scroll">
-      <table class="ledger" aria-label="Records ledger">
-        <thead>
-          <tr>
-            <th scope="col">Timestamp ({fmt.zone()})</th>
-            <th scope="col">Kind</th>
-            <th scope="col">Block · planting</th>
-            <th scope="col">Detail</th>
-            <th scope="col">By</th>
-            <th scope="col">Hash</th>
-            <th scope="col" aria-label="Open"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each data.records as r (r.id)}
-            <tr>
-              <td class="mono ts">{fmtRowTime(r)}</td>
-              <td>
-                <Pill tone={KIND_TONE[r.kind]}>{KIND_LABEL[r.kind]}</Pill>
-              </td>
-              <td>
-                <div class="block-name">{r.blockLabel ?? '—'}</div>
-                {#if r.cropPluginId}
-                  <div class="block-sub">{r.cropPluginId}</div>
-                {/if}
-              </td>
-              <td class="detail-cell">
-                {r.detail}
-                {#if r.customRateOverride}
-                  <span class="override-pill">custom rate</span>
-                {/if}
-              </td>
-              <td class="performer">{r.performerLabel ?? '—'}</td>
-              <td>
-                <LockPill locked={r.locked} hash={r.hash} />
-              </td>
-              <td class="open-cell">
-                <a
-                  class="drill"
-                  href={`/records/${r.kind}/${r.rowId}`}
-                  aria-label={`Open ${KIND_LABEL[r.kind]} record from ${fmtRowTime(r)}`}
-                >
-                  <ChevronRight size={14} />
-                </a>
-              </td>
-            </tr>
+      <label class="inline-select">
+        Sprayer
+        <select
+          value={data.activeSprayerId ?? ''}
+          onchange={(e) => applyFilter('sprayerId', (e.target as HTMLSelectElement).value)}
+        >
+          <option value="">All sprayers</option>
+          {#each data.sprayers as s (s.id)}
+            <option value={s.id}>{s.label}</option>
           {/each}
-        </tbody>
-      </table>
+        </select>
+      </label>
     </div>
+
+    <div class="retention-strip">
+      <Lock size={13} />
+      <span>
+        <strong>{summary.locked}/{summary.total}</strong> records locked under the 48-hour FR-09
+        rule. Oldest record: <span class="mono">{fmtDate(summary.oldestMs)}</span>.
+      </span>
+    </div>
+
+    {#if data.records.length === 0}
+      <div class="empty">
+        <h2>No records match these filters</h2>
+        <p>
+          Toggle a kind chip above to widen the view, or
+          <a href="/spray">plan a spray</a>,
+          <a href="/scout">log a scout observation</a>, or
+          <a href="/harvest">record a harvest</a>.
+        </p>
+      </div>
+    {:else}
+      <div class="ledger-scroll">
+        <table class="ledger" aria-label="Records ledger">
+          <thead>
+            <tr>
+              <th scope="col">Timestamp ({fmt.zone()})</th>
+              <th scope="col">Kind</th>
+              <th scope="col">Block · planting</th>
+              <th scope="col">Detail</th>
+              <th scope="col">By</th>
+              <th scope="col">Hash</th>
+              <th scope="col" aria-label="Open"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each data.records as r (r.id)}
+              {@const cardOpen = openCards.includes(r.id)}
+              <tr>
+                <td class="mono ts">{fmtRowTime(r)}</td>
+                <td>
+                  <Pill tone={KIND_TONE[r.kind]}>{KIND_LABEL[r.kind]}</Pill>
+                </td>
+                <td>
+                  <div class="block-name">{r.blockLabel ?? '—'}</div>
+                  {#if r.cropPluginId}
+                    <div class="block-sub">{r.cropPluginId}</div>
+                  {/if}
+                </td>
+                <td class="detail-cell">
+                  {r.detail}
+                  {#if r.customRateOverride}
+                    <span class="override-pill">custom rate</span>
+                  {/if}
+                </td>
+                <td class="performer">{r.performerLabel ?? '—'}</td>
+                <td>
+                  <LockPill locked={r.locked} hash={r.hash} />
+                </td>
+                <td class="open-cell">
+                  <button
+                    type="button"
+                    class="card-toggle"
+                    aria-expanded={cardOpen}
+                    aria-controls={`record-card-${r.id}`}
+                    aria-label={`Card: ${KIND_LABEL[r.kind]} record from ${fmtRowTime(r)}`}
+                    onclick={() => toggleCard(r.id)}
+                  >
+                    Card
+                  </button>
+                  <a
+                    class="drill"
+                    href={`/records/${r.kind}/${r.rowId}`}
+                    aria-label={`Open ${KIND_LABEL[r.kind]} record from ${fmtRowTime(r)}`}
+                  >
+                    <ChevronRight size={14} />
+                  </a>
+                </td>
+              </tr>
+              {#if cardOpen}
+                <tr class="card-row" id={`record-card-${r.id}`}>
+                  <td colspan="7">
+                    <RecordCardPanel
+                      recordKind={r.kind}
+                      rowId={r.rowId}
+                      prefs={currentPrefs()}
+                      onPrint={printCards}
+                    />
+                  </td>
+                </tr>
+              {/if}
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    {/if}
+  </section>
+
+  {#if data.approachingRetention.length > 0}
+    <section class="alert" role="status">
+      ⚠ {data.approachingRetention.length} record(s) approaching the 2-year retention horizon. Confirm
+      with owner before any deletion.
+    </section>
   {/if}
-</section>
 
-{#if data.approachingRetention.length > 0}
-  <section class="alert" role="status">
-    ⚠ {data.approachingRetention.length} record(s) approaching the 2-year retention horizon. Confirm with
-    owner before any deletion.
-  </section>
-{/if}
+  {#snippet complianceCards()}
+    <section class="footer-cards">
+      <article class="reassurance">
+        <div class="reassurance-kicker">Integrity hash</div>
+        <p>
+          Each record carries per-plugin content hashes, and every export prints a SHA-256 of its
+          canonical row set. Re-exporting the same records reproduces the same hash; a change after
+          the FR-09 lock alters it.
+        </p>
+        <a class="reassurance-link" href="/api/records/export.vdacs.pdf{exportQuery}" download>
+          Download VDACS audit pack <ArrowRight size={12} />
+        </a>
+      </article>
+      <article class="reassurance">
+        <div class="reassurance-kicker">Inspector access</div>
+        <p>
+          Invite a VDACS inspector or CSA member as a read-only inspector. They sign in with their
+          own account and see this view without edit access.
+        </p>
+        <a class="reassurance-link ghost" href="/settings/helpers">
+          <Plus size={12} /> Invite an inspector
+        </a>
+      </article>
+    </section>
+  {/snippet}
 
-{#snippet complianceCards()}
-  <section class="footer-cards">
-    <article class="reassurance">
-      <div class="reassurance-kicker">Integrity hash</div>
-      <p>
-        Each record carries per-plugin content hashes, and every export prints a SHA-256 of its
-        canonical row set. Re-exporting the same records reproduces the same hash; a change after
-        the FR-09 lock alters it.
-      </p>
-      <a class="reassurance-link" href="/api/records/export.vdacs.pdf{exportQuery}" download>
-        Download VDACS audit pack <ArrowRight size={12} />
-      </a>
-    </article>
-    <article class="reassurance">
-      <div class="reassurance-kicker">Inspector access</div>
-      <p>
-        Invite a VDACS inspector or CSA member as a read-only inspector. They sign in with their own
-        account and see this view without edit access.
-      </p>
-      <a class="reassurance-link ghost" href="/settings/helpers">
-        <Plus size={12} /> Invite an inspector
-      </a>
-    </article>
-  </section>
-{/snippet}
-
-{#if data.chrome === 'full'}
-  {@render complianceCards()}
-{:else}
-  <details class="pesticide-fold" data-testid="records-pesticide-fold">
-    <summary>Pesticide record-keeping (applies if you spray)</summary>
-    <p class="fold-lede">
-      Virginia asks anyone who sprays a pesticide to keep these records. Nothing here needs your
-      attention until you record a spray.
-    </p>
-    <div class="fold-actions">
-      <a class="btn-ghost" href="/api/records/export.vdacs.pdf{exportQuery}" download>
-        <Lock size={13} /> VDACS audit PDF
-      </a>
-      <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
-        <FileText size={13} /> USDA / NRCS CSV
-      </a>
-    </div>
+  {#if data.chrome === 'full'}
     {@render complianceCards()}
-  </details>
+  {:else}
+    <details class="pesticide-fold" data-testid="records-pesticide-fold">
+      <summary>Pesticide record-keeping (applies if you spray)</summary>
+      <p class="fold-lede">
+        Virginia asks anyone who sprays a pesticide to keep these records. Nothing here needs your
+        attention until you record a spray.
+      </p>
+      <div class="fold-actions">
+        <a class="btn-ghost" href="/api/records/export.vdacs.pdf{exportQuery}" download>
+          <Lock size={13} /> VDACS audit PDF
+        </a>
+        <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
+          <FileText size={13} /> USDA / NRCS CSV
+        </a>
+      </div>
+      {@render complianceCards()}
+    </details>
+  {/if}
+</div>
+
+{#if printJob}
+  <CardPrintSheet
+    cards={printJob.cards}
+    layout={printJob.layout}
+    prefs={currentPrefs()}
+    origin={printJob.origin}
+  />
 {/if}
 
 <style>
@@ -919,6 +989,25 @@
   /* Wrap the table so narrow viewports get horizontal scroll instead
      of a clipped 7-column layout. `.filter-card` has `overflow: hidden`
      for rounded corners, so the scroll lives one level in. */
+  .card-toggle {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input, 6px);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .card-toggle[aria-expanded='true'] {
+    background: var(--pill-forest-bg);
+    border-color: var(--pill-forest-bd);
+  }
+  .card-row td {
+    background: var(--color-cream);
+  }
   .ledger-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -985,6 +1074,7 @@
   }
   .open-cell {
     text-align: right;
+    white-space: nowrap;
   }
   .drill {
     color: var(--color-ink-muted, #7a7f75);

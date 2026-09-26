@@ -73,6 +73,12 @@
   onMount(() => {
     refresh();
   });
+
+  function hidePhotoData(_key: string, value: unknown): unknown {
+    return typeof value === 'string' && value.startsWith('data:image/')
+      ? `[photo, ${Math.round((value.length * 0.75) / 1024)} KB]`
+      : value;
+  }
 </script>
 
 <h1>Pending sync queue</h1>
@@ -133,7 +139,7 @@
           {/if}
           <details>
             <summary>Payload</summary>
-            <pre>{JSON.stringify(p.payload, null, 2)}</pre>
+            <pre>{JSON.stringify(p.payload, hidePhotoData, 2)}</pre>
           </details>
         </li>
       {/each}

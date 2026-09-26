@@ -10,8 +10,10 @@ import {
   type FarmSnapshot,
   type SnapshotArea,
   type SnapshotBlock,
+  type SnapshotCareTask,
   type SnapshotCropPlugin,
   type SnapshotEquipment,
+  type SnapshotPlanting,
   type SnapshotSprayProduct,
   type SnapshotStockItem
 } from '$lib/cards/snapshot';
@@ -26,11 +28,13 @@ import {
 import { listEquipment } from '$lib/db/equipment';
 import { listStockItems } from '$lib/db/stock';
 import { requireOwnerId } from '$lib/db/tenant';
-import type { Plugin } from '$lib/plugins/schemas';
+import type { CropPlugin, Plugin } from '$lib/plugins/schemas';
 import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
 import { RULES_VERSION } from '$lib/safety/version';
+import { eventsForPlanting } from '$lib/calendar/engine';
 import { getRegistry } from './registry';
+import { sprayTermsFor } from './sprayTerms';
 
 const DAY_MS = 86_400_000;
 export const SNAPSHOT_TASK_PAST_DAYS = 14;
@@ -113,8 +117,25 @@ function toStock(i: ReturnType<typeof listStockItems>[number]): SnapshotStockIte
   };
 }
 
-function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
+const CARE_TASK_KINDS: ReadonlySet<string> = new Set(['pruning', 'thinning']);
+
+export function careTasksOf(p: CropPlugin): SnapshotCareTask[] {
+  const out: SnapshotCareTask[] = [];
+  for (const t of p.seasonalTasks ?? []) {
+    if (t.kind === 'spray' || t.category === 'spray') continue;
+    if (!CARE_TASK_KINDS.has(t.kind) && t.category !== 'prune') continue;
+    out.push(t.body ? { title: t.title, body: t.body } : { title: t.title });
+  }
+  for (const t of p.orchardSeasonalTasks ?? []) {
+    if (t.category !== 'prune') continue;
+    out.push(t.body ? { title: t.title, body: t.body } : { title: t.title });
+  }
+  return out;
+}
+
+export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
   if (p.type !== 'crop') return null;
+  const careTasks = careTasksOf(p);
   return {
     pluginId: p.pluginId,
     displayName: p.displayName,
@@ -133,7 +154,8 @@ function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
         }
       : undefined,
     harvestIndicators: p.harvestIndicators,
-    notes: p.notes
+    notes: p.notes,
+    ...(careTasks.length ? { careTasks } : {})
   };
 }
 
@@ -202,6 +224,36 @@ export interface BuildSnapshotOptions {
   origin?: string | null;
 }
 
+function utcDay(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+/** The engine's harvest window for a planting, so a Planting Card and /plan
+ *  show the same dates. */
+export function engineHarvestWindow(
+  p: SnapshotPlanting,
+  crop: CropPlugin
+): { start: string; end: string } | null {
+  if (!p.plantingDate) return null;
+  const plantingDate = Date.parse(p.plantingDate);
+  if (!Number.isFinite(plantingDate)) return null;
+  const windows = eventsForPlanting(
+    {
+      id: p.id,
+      blockId: p.blockId,
+      cropPluginId: p.cropPluginId,
+      varietyDisplayName: p.varietyDisplayName,
+      plantingDate
+    },
+    crop
+  ).filter((e) => e.kind === 'harvest-window');
+  if (!windows.length) return null;
+  return {
+    start: utcDay(Math.min(...windows.map((e) => e.startMs))),
+    end: utcDay(Math.max(...windows.map((e) => e.endMs)))
+  };
+}
+
 export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promise<FarmSnapshot> {
   const ownerId = requireOwnerId();
   const now = opts.now ?? Date.now();
@@ -213,6 +265,10 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     const rec = registry.get(id);
     const plugin = rec ? toCropPlugin(rec.plugin) : null;
     if (plugin) cropPlugins[id] = plugin;
+  }
+  for (const p of plantings) {
+    const rec = registry.get(p.cropPluginId);
+    if (rec?.plugin.type === 'crop') p.harvestWindow = engineHarvestWindow(p, rec.plugin);
   }
 
   const stockItems = listStockItems();
@@ -247,7 +303,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     stock: stockItems.map(toStock).sort((a, b) => a.id.localeCompare(b.id)),
     cropPlugins,
     frost: snapshotFrostFromSettings(),
-    sprayProducts
+    sprayProducts,
+    sprayTerms: sprayTermsFor(registry)
   };
 }
 

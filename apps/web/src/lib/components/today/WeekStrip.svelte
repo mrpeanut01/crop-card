@@ -31,10 +31,9 @@
     todayStartMs: number;
     /** Map keyed by YYYY-MM-DD → items for that day. Should cover 84 days for Season view. */
     items: Record<string, WeekItem[]>;
+    period?: Period;
   }
-  const { todayStartMs, items }: Props = $props();
-
-  let period = $state<Period>('week');
+  let { todayStartMs, items, period = $bindable('week') }: Props = $props();
   const periodMeta = $derived(PERIODS.find((p) => p.id === period)!);
 
   const DAY_MS = 24 * 60 * 60 * 1000;

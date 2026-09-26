@@ -188,5 +188,13 @@
     .floating .tb {
       flex: 0 0 auto;
     }
+    .floating .what {
+      flex: 0 0 auto;
+      max-width: 9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      overflow-wrap: normal;
+    }
   }
 </style>

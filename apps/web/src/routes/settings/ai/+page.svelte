@@ -40,7 +40,8 @@
     { key: 'scan-url', label: 'Inventory product-page URL', quota: q['scan-url'] ?? 20 },
     { key: 'scan-barcode', label: 'Inventory barcode lookup', quota: q['scan-barcode'] ?? 40 },
     { key: 'planting-window', label: 'Planting date helper', quota: q['planting-window'] ?? 40 },
-    { key: 'garden-fill', label: 'Fill this bed', quota: q['garden-fill'] ?? 10 }
+    { key: 'garden-fill', label: 'Fill this bed', quota: q['garden-fill'] ?? 10 },
+    { key: 'photo-help', label: 'Ask about a photo', quota: q['photo-help'] ?? 10 }
   ]);
 </script>
 

@@ -17,6 +17,7 @@
   import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import type { PriorityAction } from '$lib/today/priorityAction';
+  import SkipReasonForm from './SkipReasonForm.svelte';
 
   interface Props {
     action: PriorityAction | null;
@@ -27,13 +28,11 @@
   const { action, aiEnabled, onSkip }: Props = $props();
 
   let skipOpen = $state(false);
-  let skipReason = $state('');
 
-  function submitSkip() {
+  function submitSkip(reason: string) {
     if (!action?.taskId || !onSkip) return;
-    onSkip(action.taskId, skipReason.trim());
+    onSkip(action.taskId, reason);
     skipOpen = false;
-    skipReason = '';
   }
 
   /** Tone pill on the hero: chemistry-flavored chip. */
@@ -89,7 +88,7 @@
         </a>
         {#if action.taskId && onSkip}
           <button type="button" class="ghost" onclick={() => (skipOpen = !skipOpen)}>
-            Skip — note why
+            Skip, note why
           </button>
         {/if}
         {#if aiEnabled}
@@ -101,18 +100,8 @@
       </div>
     </div>
     {#if skipOpen}
-      <div class="skip-form" role="region" aria-label="Skip reason">
-        <label for="skip-reason">Why are you skipping this?</label>
-        <textarea
-          id="skip-reason"
-          bind:value={skipReason}
-          rows="2"
-          placeholder="e.g. weather window closed · stock out · re-evaluated"
-        ></textarea>
-        <div class="skip-actions">
-          <button type="button" class="ghost" onclick={() => (skipOpen = false)}>Cancel</button>
-          <button type="button" class="primary" onclick={submitSkip}>Save skip</button>
-        </div>
+      <div class="skip-wrap">
+        <SkipReasonForm id="skip-reason" onSave={submitSkip} onCancel={() => (skipOpen = false)} />
       </div>
     {/if}
     {#if action.scope.length > 0}
@@ -200,6 +189,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    min-height: 48px;
     padding: 10px 18px;
     border-radius: var(--radius-input, 6px);
     background: var(--color-forest);
@@ -219,6 +209,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    min-height: 48px;
     padding: 10px 16px;
     border-radius: var(--radius-input, 6px);
     background: transparent;
@@ -243,38 +234,8 @@
   .ai-hint :global(svg) {
     color: var(--color-wheat, #d4a75c);
   }
-  .skip-form {
-    margin: 14px 0 0;
-    padding: 12px 14px;
-    background: var(--color-cream);
-    border: 1px solid var(--color-divider);
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 620px;
-  }
-  .skip-form label {
-    font-size: 12px;
-    color: var(--color-ink-muted);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-  .skip-form textarea {
-    font-family: inherit;
-    font-size: 13.5px;
-    padding: 8px 10px;
-    border: 1px solid var(--color-divider);
-    border-radius: 4px;
-    background: var(--color-paper);
-    color: var(--color-ink);
-    resize: vertical;
-  }
-  .skip-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
+  .skip-wrap {
+    padding: 0 26px 14px;
   }
   .scope-band {
     display: grid;

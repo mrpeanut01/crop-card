@@ -2,10 +2,16 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
+import { createRawSnippet } from 'svelte';
 import { render, within } from '@testing-library/svelte';
 import CardView from './CardView.svelte';
 import CardPrintSheet from './CardPrintSheet.svelte';
-import { buildAreaCard, buildPlantingCard, buildPlantingCards } from '$lib/cards/build';
+import {
+  buildAreaCard,
+  buildCareGuideCard,
+  buildPlantingCard,
+  buildPlantingCards
+} from '$lib/cards/build';
 import { sampleSnapshot } from '$lib/cards/build/fixtures';
 import { printLinkFor } from '$lib/cards/print';
 import { STALE_NOTICE, type CardModel } from '$lib/cards/model';
@@ -162,8 +168,26 @@ describe('CardView', () => {
     expect(getByText('Rules 0.5.6-issue130')).toBeInTheDocument();
   });
 
+  it('tags Care Guide sections with their source on screen only', () => {
+    const care = buildCareGuideCard(snap, 'tomato-cherokee-purple')!;
+    const screen = render(CardView, { card: care, prefs });
+    const water = within(screen.container as HTMLElement).getByRole('heading', { name: /Water/ });
+    expect(water.querySelector('[data-provenance="fallback"]')).not.toBeNull();
+    screen.unmount();
+    const print = render(CardView, { card: care, prefs, variant: 'print' });
+    const printed = within(print.container as HTMLElement).getByRole('heading', { name: /Water/ });
+    expect(printed.children).toHaveLength(0);
+  });
+
   it('renders a card with no facts, sections or next action', () => {
-    const bare: CardModel = { ...tomato, facts: [], sections: [], next: undefined, provenance: [] };
+    const bare: CardModel = {
+      ...tomato,
+      facts: [],
+      sections: [],
+      next: undefined,
+      links: undefined,
+      provenance: []
+    };
     const { container } = render(CardView, { card: bare, prefs });
     expect(container.querySelector('dl')).toBeNull();
     expect(container.querySelector('.next')).toBeNull();
@@ -285,5 +309,101 @@ describe('garden Area card', () => {
   it('compact: no bed map', () => {
     const { queryByTestId } = render(CardView, { card: garden, prefs, variant: 'compact' });
     expect(queryByTestId('card-bed-map')).toBeNull();
+  });
+
+  it('task cards show their derived status as a pill on screen and as text in print', () => {
+    const card: CardModel = {
+      ...tomato,
+      kind: 'task',
+      key: 'tk_t1',
+      status: { id: 'late', label: 'Late', tone: 'rust' }
+    };
+    for (const variant of ['screen', 'compact'] as const) {
+      const { container, unmount } = render(CardView, { card, prefs, variant });
+      const pill = container.querySelector('[data-card-status="late"]')!;
+      expect(pill).toHaveTextContent('Late');
+      expect(pill.querySelector('.pill')).not.toBeNull();
+      unmount();
+    }
+    const { container } = render(CardView, { card, prefs, variant: 'print' });
+    const text = container.querySelector('[data-card-status="late"]')!;
+    expect(text).toHaveTextContent('Late');
+    expect(text.querySelector('.pill')).toBeNull();
+  });
+
+  it('cards without a status keep the plain kicker', () => {
+    const { container } = render(CardView, { card: tomato, prefs, variant: 'compact' });
+    expect(container.querySelector('[data-card-status]')).toBeNull();
+    expect(container.querySelector('.kicker-row')).toBeNull();
+  });
+});
+
+describe('CardView on live pages (30G)', () => {
+  const card: CardModel = {
+    ...tomato,
+    status: { label: 'active', tone: 'forest' },
+    accent: '#7a8f5a'
+  };
+
+  it('shows a derived status pill on screen and plain text in print', () => {
+    const screenView = render(CardView, { card, prefs });
+    expect(screenView.container.querySelector('[data-card-status]')?.textContent?.trim()).toBe(
+      'active'
+    );
+    screenView.unmount();
+    const printView = render(CardView, { card, prefs, variant: 'print' });
+    expect(printView.container.querySelector('.status-text')?.textContent).toBe('active');
+    expect(printView.container.querySelector('[data-card-status]')).toBeNull();
+  });
+
+  it('uses the accent for the strip', () => {
+    const { container } = render(CardView, { card, prefs });
+    const article = container.querySelector('article') as HTMLElement;
+    expect(article.style.getPropertyValue('--strip')).toBe('#7a8f5a');
+  });
+
+  it('selected marks the title link current', () => {
+    const { getByRole, container } = render(CardView, {
+      card,
+      prefs,
+      variant: 'compact',
+      selected: true
+    });
+    expect(getByRole('link', { name: card.title })).toHaveAttribute('aria-current', 'true');
+    expect(container.querySelector('article')?.classList.contains('selected')).toBe(true);
+  });
+
+  it('factLimit widens the compact variant and showAsOf drops the time', () => {
+    const { container } = render(CardView, {
+      card,
+      prefs,
+      variant: 'compact',
+      factLimit: 4,
+      showAsOf: false
+    });
+    expect(container.querySelectorAll('dt')).toHaveLength(Math.min(4, card.facts.length));
+    expect(container.querySelector('.asof')).toBeNull();
+  });
+
+  it('print always keeps the as-of time', () => {
+    const { container } = render(CardView, { card, prefs, variant: 'print', showAsOf: false });
+    expect(container.querySelector('.asof')).not.toBeNull();
+  });
+
+  it('renders screen actions and leaves them off print', () => {
+    const actions = createRawSnippet(() => ({
+      render: () => '<button type="button">Jump</button>'
+    }));
+    const screenView = render(CardView, { card, prefs, actions });
+    expect(screenView.getByRole('button', { name: 'Jump' })).toBeInTheDocument();
+    screenView.unmount();
+    const printView = render(CardView, { card, prefs, variant: 'print', actions });
+    expect(printView.queryByRole('button', { name: 'Jump' })).toBeNull();
+  });
+
+  it('a scout card gets its own strip color class', () => {
+    const scout: CardModel = { ...card, kind: 'scout', key: 'rc_scout.1', accent: undefined };
+    const { container } = render(CardView, { card: scout, prefs });
+    expect(container.querySelector('article')?.classList.contains('kind-scout')).toBe(true);
   });
 });

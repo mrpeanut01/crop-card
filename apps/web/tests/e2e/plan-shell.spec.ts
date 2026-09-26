@@ -1,7 +1,7 @@
 import { test, expect } from './lib/test';
 import { signInAsDemoOwner } from './lib/auth';
 
-test('plan v2 shell renders block rail + header + plantings', async ({ page }) => {
+test('plan v2 shell renders the Area card rail + header + plantings', async ({ page }) => {
   const errs: string[] = [];
   page.on('console', (m) => {
     if (m.type() === 'error') errs.push(m.text());
@@ -10,10 +10,15 @@ test('plan v2 shell renders block rail + header + plantings', async ({ page }) =
   await page.goto('/plan');
   await page.waitForLoadState('networkidle');
 
-  // Left rail "Blocks · N" kicker
-  await expect(page.getByText(/^Blocks · /).first()).toBeVisible();
+  // Left rail "Areas · N" kicker over one compact Area card per Area
+  await expect(page.getByText(/^Areas · /).first()).toBeVisible();
+  await expect(
+    page.getByTestId('plan-area-cards').locator('article[data-variant="compact"]').first()
+  ).toBeVisible();
   // Filter input
-  await expect(page.getByPlaceholder('Filter blocks…')).toBeVisible();
+  await expect(page.getByPlaceholder('Filter Areas, beds or crops…')).toBeVisible();
+  // The selected block's plantings render as planting Cards
+  await expect(page.locator('article[data-card-kind="planting"]').first()).toBeVisible();
   // Legacy editor in <details> exists (collapsed by default)
   await expect(page.locator('details.legacy-detail')).toBeVisible();
 

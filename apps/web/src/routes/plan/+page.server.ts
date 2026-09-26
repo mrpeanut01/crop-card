@@ -62,6 +62,7 @@ import {
 } from '$lib/db/cropEquipment';
 import { listEquipment, type EquipmentWithState } from '$lib/db/equipment';
 import { listFields, type FieldWithBlocks } from '$lib/db/fields';
+import { buildMapSnapshot } from '$lib/server/mapSnapshot';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listStockItems, type StockItemWithBalance } from '$lib/db/stock';
 import { listTasks, type Task } from '$lib/db/tasks';
@@ -222,6 +223,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     canEdit,
     setupAreas: canEdit ? setupAreas() : [],
     focusAreaId: url.searchParams.get('area'),
+    areaSnapshot: buildMapSnapshot({ fields, blocks }),
     cropCatalog,
     plantingGuides,
     showFieldControls: fields.length > 1,

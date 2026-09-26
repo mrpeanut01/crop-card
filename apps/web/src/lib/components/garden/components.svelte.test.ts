@@ -174,6 +174,18 @@ describe('BedInspector', () => {
     expect(getByTestId('plant-count')).toHaveTextContent('3 plants');
     expect(getByTestId('plant-count')).toHaveTextContent('4×8 ft · Rows');
   });
+
+  it('links each planting to its Planting Card for care, photo help and the journal', async () => {
+    const { d } = state({
+      canEdit: false,
+      design: kitchenGarden({ plantings: [plantingRow({ id: 'tom' })] })
+    });
+    const { getByRole, getByTestId } = mount(BedInspector, d, { bed: d.bed('bed1')! });
+    await fireEvent.click(getByRole('tab', { name: 'Plantings' }));
+    const link = getByTestId('planting-card-link');
+    expect(link).toHaveTextContent('Planting card, care and photo help');
+    expect(link).toHaveAttribute('href', '/cards/planting/pl_tom');
+  });
 });
 
 describe('TimeScrubber', () => {

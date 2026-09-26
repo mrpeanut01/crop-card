@@ -10,6 +10,9 @@
  * recorded offline at Farm A then switches to Farm B should not lose A's
  * records; they drain when A is active again.
  *
+ * Offline Card snapshots and pins (Dexie v4) are cleared on every switch and
+ * on logout, so a shared device never shows the previous farm's Cards.
+ *
  * Best-effort: failures are swallowed so a missing SW never blocks a switch.
  * The SW itself fails safe (unknown owner ⇒ network-only).
  */
@@ -86,18 +89,29 @@ export async function beginOwnerSwitch(): Promise<void> {
   await announceActiveOwner(null);
 }
 
-/** Call after a successful switch. Keeps every Owner's namespaced cache
- *  entries; only the SW's active-owner pointer moves. */
+async function clearOfflineCards(): Promise<void> {
+  if (typeof indexedDB === 'undefined') return;
+  try {
+    const { clearCardCaches } = await import('./cardStore');
+    await clearCardCaches();
+  } catch {
+    /* IndexedDB unavailable → nothing stored */
+  }
+}
+
+/** Call after a successful switch. Keeps every Owner's namespaced SW cache
+ *  entries (only the SW's active-owner pointer moves) and clears the offline
+ *  Card snapshots and pins. */
 export async function resetTenantCaches(newOwnerId: string): Promise<void> {
   rememberActiveOwner(newOwnerId);
-  await announceActiveOwner(newOwnerId);
+  await Promise.all([announceActiveOwner(newOwnerId), clearOfflineCards()]);
 }
 
 /** Logout: wipe every tenant cache (current + legacy) and the SW's
  *  persisted owner pointer. */
 export async function wipeTenantCaches(): Promise<void> {
   rememberActiveOwner(null);
-  await announceActiveOwner(null, { wipe: true });
+  await Promise.all([announceActiveOwner(null, { wipe: true }), clearOfflineCards()]);
   if (typeof caches === 'undefined') return;
   try {
     const doomed = new Set<string>([

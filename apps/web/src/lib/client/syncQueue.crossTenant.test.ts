@@ -29,7 +29,8 @@ const KINDS: PendingRecordKind[] = [
   'insecticide',
   'fungicide',
   'harvest',
-  'hay-cutting'
+  'hay-cutting',
+  'scout'
 ];
 
 /** 0 = accepted; 503 = transient (retried); 400/422 = definitive (parked). */

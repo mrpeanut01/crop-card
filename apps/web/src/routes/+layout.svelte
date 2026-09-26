@@ -57,6 +57,7 @@
     window.addEventListener('offline', updateOnline);
 
     let cleanupSync: (() => void) | undefined;
+    let stopCardSync: (() => void) | undefined;
     let stopOwnerWatch: (() => void) | undefined;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -94,6 +95,9 @@
         // no-op (records stranded) while enqueue mis-tags rows.
         primeActiveOwnerId(activeOwnerId);
         if (activeOwnerId) {
+          import('$lib/client/cardSync')
+            .then(({ startCardSync }) => (stopCardSync = startCardSync()))
+            .catch(() => undefined);
           const { isStaleOwner, watchOwnerSwitches } = await import('$lib/client/ownerSync');
           stopOwnerWatch = watchOwnerSwitches((observed) => {
             staleOwnerId = isStaleOwner(currentOwnerId, observed) ? observed : null;
@@ -118,6 +122,7 @@
       window.removeEventListener('online', updateOnline);
       window.removeEventListener('offline', updateOnline);
       cleanupSync?.();
+      stopCardSync?.();
       stopOwnerWatch?.();
       stopSwUpdates?.();
       if (pollInterval) clearInterval(pollInterval);

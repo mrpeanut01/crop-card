@@ -13,6 +13,7 @@
     origin?: string | null;
     /** Show the sheet on screen too (print preview, tests). */
     preview?: boolean;
+    now?: number;
   }
 
   const {
@@ -20,7 +21,8 @@
     layout = 'letter-4up',
     prefs = DEFAULT_PREFS,
     origin = null,
-    preview = false
+    preview = false,
+    now = Date.now()
   }: Props = $props();
 
   const pages = $derived(
@@ -36,7 +38,7 @@
     <div class="sheet-page">
       {#each page as { card, link } (card.key)}
         <div class="print-cell">
-          <CardView {card} variant="print" {prefs} printLink={link} />
+          <CardView {card} variant="print" {prefs} {now} printLink={link} />
         </div>
       {/each}
     </div>

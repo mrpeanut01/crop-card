@@ -9,6 +9,7 @@
     Wheat,
     Box,
     FileText,
+    Layers,
     Bell,
     Settings
   } from 'lucide-svelte';
@@ -78,7 +79,8 @@
     allAlerts.length === 0 ? 'Alerts, none active' : `Alerts, ${allAlerts.length} active`
   );
 
-  // 7-item nav per design (collapsed from 13). Map / Calendar fold into Plan,
+  // 7-item nav per design (collapsed from 13) plus Cards (Phase 30F, the
+  // offline deck). Map / Calendar fold into Plan,
   // Insecticides into Spray, Fertility under Records, Equipment under
   // /inventory?type=sprayer, Hay into archetype renderers.
   // Sprint 9 / Phase 27E: legacy /stock, /settings/plugins, /settings/sprayers
@@ -91,7 +93,8 @@
     { href: '/scout', label: 'Scout', icon: Eye },
     { href: '/harvest', label: 'Harvest', icon: Wheat },
     { href: '/inventory', label: 'Inventory', icon: Box },
-    { href: '/records', label: 'Records', icon: FileText }
+    { href: '/records', label: 'Records', icon: FileText },
+    { href: '/cards', label: 'Cards', icon: Layers }
   ];
 
   function isActive(href: string): boolean {

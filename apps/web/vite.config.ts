@@ -82,6 +82,19 @@ const tenantCachePlugin: WorkboxPlugin = {
   }
 };
 
+// Every /cards page shares the root layout's data and nothing else, so the
+// SW keeps one per-Owner copy of it. A card never opened online then opens
+// offline from the precached shell plus this entry (Phase 30F).
+const cardsDataKeyPlugin: WorkboxPlugin = {
+  cacheKeyWillBeUsed: async ({ request }) => {
+    const url = new URL(typeof request === 'string' ? request : request.url);
+    url.pathname = '/cards/__data.json';
+    return url.href;
+  }
+};
+
+const SHELL_REVISION = process.env.BUILD_SHA || String(Date.now());
+
 export default defineConfig({
   plugins: [
     cropcardSwModules(),
@@ -105,15 +118,20 @@ export default defineConfig({
       workbox: {
         globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff2,json}'],
         cleanupOutdatedCaches: true,
-        navigateFallback: null,
+        // The /cards shell is the only precached page: it renders with
+        // ssr=false, so it holds no farm data, and every /cards/** navigation
+        // falls back to it when offline. Other pages use the per-Owner cache.
+        additionalManifestEntries: [{ url: '/cards', revision: SHELL_REVISION }],
+        navigateFallback: '/cards',
+        navigateFallbackAllowlist: [/^\/cards(?:\/|$)/],
         importScripts: ['sw-tenant.js', 'sw-push.js'],
         // Tenant-scoped runtime caches are keyed per active Owner by
         // `tenantCachePlugin` (logic in src/lib/client/swTenantKey.ts), so an
         // Owner switch keeps every farm's entries and never cross-serves.
         // NetworkFirst: online reads always hit the server (which is also how
         // the SW notices a session/Owner change); the cache is the offline
-        // fallback. No navigateFallback: SSR pages are not precached, so
-        // offline navigations use the per-Owner page cache instead.
+        // fallback. SSR pages are not precached, so offline navigations
+        // outside /cards use the per-Owner page cache instead.
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname === '/api/plugins',
@@ -143,6 +161,17 @@ export default defineConfig({
               networkTimeoutSeconds: 3,
               expiration: { maxEntries: 100, maxAgeSeconds: 7 * 24 * 60 * 60 },
               plugins: [tenantCachePlugin]
+            }
+          },
+          {
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && /^\/cards(?:\/.*)?\/__data\.json$/.test(url.pathname),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'cropcard-tenant-cards',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 20, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              plugins: [cardsDataKeyPlugin, tenantCachePlugin]
             }
           },
           {

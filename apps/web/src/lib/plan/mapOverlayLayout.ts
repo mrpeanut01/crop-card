@@ -6,6 +6,7 @@
  */
 
 import { layoutSketch, type SketchBlockInput, type SketchInput } from '$lib/farm/sketch';
+import type { AreaKind } from '$lib/farm/areaKinds';
 
 type Ring = Array<[number, number]>;
 
@@ -35,6 +36,7 @@ export interface MapOverlayLayout {
 
 export interface OverlayFieldInput extends SketchInput {
   geometryGeojson?: string;
+  kind?: AreaKind;
 }
 
 export interface OverlayBlockInput extends SketchBlockInput {

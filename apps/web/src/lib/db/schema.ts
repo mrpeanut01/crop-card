@@ -1859,7 +1859,7 @@ export const pushDeliveries = tenantScoped(
       id: text('id').primaryKey(),
       ownerId: text('owner_id').notNull(),
       kind: text('kind', {
-        enum: ['decon-due', 'lock-window-closing', 'spring-calibration']
+        enum: ['decon-due', 'lock-window-closing', 'spring-calibration', 'frost-tonight']
       }).notNull(),
       subjectId: text('subject_id').notNull(),
       sentAt: integer('sent_at', { mode: 'timestamp_ms' })

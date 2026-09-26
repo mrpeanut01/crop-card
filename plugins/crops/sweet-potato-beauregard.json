@@ -9,6 +9,12 @@
     "max": 110
   },
   "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 12
+    }
+  },
   "postHarvestCuring": {
     "method": "Cure 7–10 d at 85 °F, 90% RH; store 55–60 °F, 80% RH",
     "durationWeeks": {

@@ -10,6 +10,10 @@
   },
   "defaultRowSpacingInches": 6,
   "notes": "Overwinter weed-suppressing cover. Terminate at early joint stage, ≥14 days before corn plant date.",
+  "harvestIndicators": [
+    "Roller-crimping kills rye only at or after anthesis (pollen shed); before that it needs another termination method",
+    "Do not incorporate mature rye: its high C:N ties up soil nitrogen for the next crop"
+  ],
   "harvestStyle": "cover-crop-termination",
   "bloomWindow": {
     "monthsOfYear": [

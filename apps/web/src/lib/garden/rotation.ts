@@ -1,10 +1,12 @@
 /**
  * Bed history, rotation warnings and companion hints for the designer.
  * Rotation wraps `buildRotationSuggestion` (lib/season/carryForwardPlan.ts);
- * companions read `goodWith`/`badWith` from companion plugins.
+ * companions read `goodWith`/`badWith`/`keepApart` from companion plugins
+ * through `lib/plugins/companionRelations.ts`.
  */
 
 import type { CompanionPlugin } from '$lib/plugins/schemas';
+import { keepApartMatch } from '$lib/plugins/companionRelations';
 import { buildRotationSuggestion, rotationLookbackDefault } from '$lib/season/carryForwardPlan';
 import { intervalsOverlapInTime } from './occupancy';
 import type {
@@ -139,16 +141,17 @@ function relationFor(
   c: CompanionPlugin,
   a: PlacedPlanting,
   b: PlacedPlanting
-): CompanionHint['relation'] | null {
-  const bad = c.badWith ?? [];
-  if (bad.includes(a.cropPluginId) && bad.includes(b.cropPluginId)) return 'keep-apart';
+): { relation: CompanionHint['relation']; note: string | null } | null {
+  const apart = keepApartMatch(c, a.cropPluginId, b.cropPluginId);
+  if (apart) return { relation: 'keep-apart', note: apart.reason };
   const good = c.goodWith ?? [];
   const aGood = good.includes(a.cropPluginId);
   const bGood = good.includes(b.cropPluginId);
-  if (aGood && bGood) return 'good-neighbor';
+  const note = c.benefit ?? null;
+  if (aGood && bGood) return { relation: 'good-neighbor', note };
   if (aGood || bGood) {
     const other = aGood ? b : a;
-    if (familiesOf(c).has(other.cropFamily)) return 'good-neighbor';
+    if (familiesOf(c).has(other.cropFamily)) return { relation: 'good-neighbor', note };
   }
   return null;
 }
@@ -156,7 +159,8 @@ function relationFor(
 /** Hints for plantings whose intervals overlap in time, in the same bed or in
  *  beds `adjacentBeds` pairs. Good: both crops in one plugin's `goodWith`, or
  *  one there and the other's family equal to its `primaryFamily` or a
- *  `members[].family`. Keep apart: both in one plugin's `badWith`. One hint
+ *  `members[].family`. Keep apart: both in one plugin's `badWith`, or one on
+ *  each side of one of its `keepApart` entries (see `keepApartMatch`). One hint
  *  per companion plugin per crop pair; `keep-apart` sorts first. Two
  *  plantings of the same crop plugin never pair. */
 export function companionHints(
@@ -184,15 +188,15 @@ export function companionHints(
       if (!sameBed && !near.has(key)) continue;
       if (!intervalsOverlapInTime(intervalOf.get(a.cropId)!, intervalOf.get(b.cropId)!)) continue;
       for (const c of companions) {
-        const relation = relationFor(c, a, b);
-        if (!relation) continue;
+        const found = relationFor(c, a, b);
+        if (!found) continue;
         out.push({
-          relation,
+          relation: found.relation,
           companionPluginId: c.pluginId,
           a: sideOf(a),
           b: sideOf(b),
           sameBed,
-          benefit: c.benefit ?? null
+          benefit: found.note
         });
       }
     }

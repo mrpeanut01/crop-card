@@ -11,11 +11,20 @@
   "defaultRowSpacingInches": 60,
   "preHarvestIntervalDays": 7,
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "vineSpreadFt": {
       "min": 10,
       "max": 14
     }
   },
+  "harvestIndicators": [
+    "Rind hard and firm; mature color (changed from green)",
+    "Harvest late September to October, before a heavy frost",
+    "Cut from the vine leaving 3 to 4 in of stem; avoid bruising"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

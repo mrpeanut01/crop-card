@@ -203,6 +203,7 @@ export async function loadGardenDesign(
       displayName: c.displayName,
       goodWith: c.goodWith,
       badWith: c.badWith,
+      keepApart: c.keepApart,
       primaryFamily: c.primaryFamily,
       members: c.members,
       benefit: c.benefit

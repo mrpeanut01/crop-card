@@ -173,7 +173,12 @@ describe('POST /api/garden/beds/[blockId]/fill', () => {
     });
     const prompt = m.create.mock.calls[0][0].messages[0].content as string;
     expect(prompt).toContain('48 in wide (x) by 96 in long (y)');
-    expect(prompt).toContain('spring-greens-beans-fall-brassicas');
+    expect(prompt).toContain('Spring greens, bush beans, fall brassicas.');
+    expect(prompt).not.toContain('spring-greens-beans-fall-brassicas');
+    expect(prompt).toMatch(
+      /- kale-red-russian: .*plant between 2027-\d{2}-\d{2} and 2027-\d{2}-\d{2}/
+    );
+    expect(prompt).toMatch(/kale-red-russian around 2027-\d{2}-\d{2}/);
     expect(logRows(owner)).toMatchObject([{ provenance: 'ai', success: true, inputTokens: 900 }]);
   });
 

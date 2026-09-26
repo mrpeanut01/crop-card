@@ -9,6 +9,10 @@
     "max": 100
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 42,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "Heirloom Jarrahdale pumpkin. Treated with Thiram. 96% germ. DO NOT use seed for food, feed, or oil. SD/LB 2,106.",
+  "harvestIndicators": [
+    "Rind hard and firm; mature color (changed from green)",
+    "Harvest late September to October, before a heavy frost",
+    "Cut from the vine leaving 3 to 4 in of stem; avoid bruising"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

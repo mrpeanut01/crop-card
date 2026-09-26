@@ -283,8 +283,8 @@ describe('deterministicFill', () => {
       varietyDisplayName: 'Buttercrunch',
       provenance: 'fallback',
       plantingDateMs: utc(5, 25),
-      footprint: { x_in: 0, y_in: 0, w_in: 48, l_in: 24 },
-      plantCount: 8
+      footprint: { x_in: 0, y_in: 0, w_in: 48, l_in: 18 },
+      plantCount: 12
     });
   });
 

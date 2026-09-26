@@ -128,7 +128,10 @@
     const b = d.design.plantings.find((p) => p.cropId === h.b.cropId);
     const an = `${a?.varietyDisplayName ?? h.a.cropPluginId} (${d.bed(h.a.blockId)?.name ?? ''})`;
     const bn = `${b?.varietyDisplayName ?? h.b.cropPluginId} (${d.bed(h.b.blockId)?.name ?? ''})`;
-    if (h.relation === 'keep-apart') return `Keep apart: ${an} and ${bn}.`;
+    if (h.relation === 'keep-apart') {
+      const why = h.benefit ? ` ${/[.!?]$/.test(h.benefit) ? h.benefit : `${h.benefit}.`}` : '';
+      return `Keep apart: ${an} and ${bn}.${why}`;
+    }
     return `Good neighbours: ${an} and ${bn}.${h.benefit ? ` ${h.benefit}` : ''}`;
   }
 

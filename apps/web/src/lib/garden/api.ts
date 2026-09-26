@@ -26,7 +26,14 @@ const plantCount = z.number().int().positive().max(100_000);
 
 export type DesignerCompanion = Pick<
   CompanionPlugin,
-  'pluginId' | 'displayName' | 'goodWith' | 'badWith' | 'primaryFamily' | 'members' | 'benefit'
+  | 'pluginId'
+  | 'displayName'
+  | 'goodWith'
+  | 'badWith'
+  | 'keepApart'
+  | 'primaryFamily'
+  | 'members'
+  | 'benefit'
 >;
 
 /** `GET /api/garden/areas/[id]/design?season=`. Readable by every role;

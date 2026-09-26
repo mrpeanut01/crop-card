@@ -9,6 +9,12 @@
     "max": 75
   },
   "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 3,
+      "max": 4
+    }
+  },
   "harvestIndicators": [
     "Pods turn purple",
     "Peas firm but not dry"

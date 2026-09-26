@@ -438,3 +438,88 @@ describe('validateAiPlan — density caps (Phase 15e)', () => {
     }
   });
 });
+
+describe('validateAiPlan — block space shared across crops', () => {
+  /** Recorded shape of a live Claude plan (2026-09-26): five different crops
+   *  on one 4×8 bed, each at or near its own full-bed plantsFit. Every
+   *  per-crop and per-family cap passed, so the bed was planned at several
+   *  times its size. */
+  function mixedBedInput(): PlanInput {
+    const crops = {
+      tomato: plugin({ pluginId: 'tomato', cropFamily: 'solanaceae' }),
+      basil: plugin({ pluginId: 'basil', cropFamily: 'herb-culinary' }),
+      lettuce: plugin({ pluginId: 'lettuce', cropFamily: 'leafy-green' }),
+      bean: plugin({ pluginId: 'bean', cropFamily: 'legume' }),
+      squash: plugin({ pluginId: 'squash', cropFamily: 'cucurbit' })
+    };
+    return {
+      seeds: Object.keys(crops).map((id) => ({
+        stockItemId: `${id}-stock`,
+        cropPluginId: id,
+        varietyDisplayName: id,
+        quantityPlants: 10_000
+      })),
+      blocks: [block('bed', 0.02)],
+      axes: [{ blockId: 'bed', east: 0, north: 0 }],
+      existingCrops: [],
+      pluginIndex: crops,
+      companions: {}
+    };
+  }
+
+  function planAt(input: PlanInput, share: number) {
+    const matrix = buildCandidacyMatrix(input);
+    return validateAiPlan(
+      {
+        rationale: 'r',
+        assignments: matrix.map((r) => ({
+          stockItemId: r.stockItemId,
+          blockId: r.blockId,
+          plants: Math.max(1, Math.floor(r.plantsFit * share)),
+          rationale: 'x'
+        }))
+      },
+      input,
+      matrix
+    );
+  }
+
+  it('rejects five crops that each claim the whole bed', () => {
+    const result = planAt(mixedBedInput(), 1);
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.violations.join(' ')).toMatch(/block bed is over-packed: .*5\.00× the block/);
+    }
+  });
+
+  it('accepts five crops that split the bed between them', () => {
+    expect(planAt(mixedBedInput(), 0.2).valid).toBe(true);
+  });
+
+  it('treats a 0-plant row as left out, and still rejects a negative one', () => {
+    const input = mixedBedInput();
+    const matrix = buildCandidacyMatrix(input);
+    const row = (plants: number) =>
+      validateAiPlan(
+        {
+          rationale: 'r',
+          assignments: [
+            { stockItemId: 'basil-stock', blockId: 'bed', plants: 4, rationale: 'x' },
+            { stockItemId: 'squash-stock', blockId: 'bed', plants, rationale: 'no room' }
+          ]
+        },
+        input,
+        matrix
+      );
+    const zero = row(0);
+    expect(zero.valid).toBe(true);
+    if (zero.valid)
+      expect(zero.plan.assignments.map((a) => a.stockItemId)).toEqual(['basil-stock']);
+    expect(row(-2).valid).toBe(false);
+  });
+
+  it('tells Claude that crops share a block', () => {
+    const input = mixedBedInput();
+    expect(buildAllocationPrompt(buildCandidacyMatrix(input), input)).toContain('BLOCK SPACE CAP');
+  });
+});

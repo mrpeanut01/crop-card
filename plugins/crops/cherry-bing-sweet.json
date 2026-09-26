@@ -4,7 +4,17 @@
   "displayName": "Cherry — Bing (sweet)",
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
+  "daysToMaturity": {
+    "min": 1825,
+    "max": 2555
+  },
   "defaultRowSpacingInches": 240,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 300,
+      "max": 300
+    }
+  },
   "harvestIndicators": [
     "Deep mahogany red",
     "Firm flesh"

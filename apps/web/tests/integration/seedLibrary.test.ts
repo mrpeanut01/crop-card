@@ -2,6 +2,8 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadPluginsFromDirectory, PluginRegistry } from '$lib/plugins';
 import { evaluateSpray, type SprayContext } from '$lib/safety';
+import { companionIndex, keepApartMatch } from '$lib/plugins/companionRelations';
+import type { CompanionPlugin } from '$lib/plugins/schemas';
 
 const PLUGINS_DIR = path.resolve(__dirname, '../../../../plugins');
 
@@ -100,5 +102,34 @@ describe('seed plugin library', () => {
 
     const result = evaluateSpray(ctx);
     expect(result.ok).toBe(true);
+  });
+
+  it('every companion keepApart member names a crop plugin', async () => {
+    const registry = new PluginRegistry();
+    const result = await loadPluginsFromDirectory(registry, PLUGINS_DIR);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('flags every tomato against every potato and never tomato against tomato', async () => {
+    const registry = new PluginRegistry();
+    await loadPluginsFromDirectory(registry, PLUGINS_DIR);
+    const blight = registry.get('tomato-potato-late-blight')!.plugin as CompanionPlugin;
+    const crops = registry.crops().map((c) => c.pluginId);
+    const tomatoes = crops.filter((id) => id.startsWith('tomato-'));
+    const potatoes = crops.filter((id) => id.startsWith('potato-'));
+    expect(tomatoes.length).toBeGreaterThan(20);
+    expect(potatoes.length).toBeGreaterThan(3);
+    for (const t of tomatoes)
+      for (const p of potatoes) expect(keepApartMatch(blight, t, p)).not.toBeNull();
+    expect(keepApartMatch(blight, tomatoes[0], tomatoes[1])).toBeNull();
+    expect(keepApartMatch(blight, potatoes[0], potatoes[1])).toBeNull();
+    const companions = registry
+      .all()
+      .map((r) => r.plugin)
+      .filter((p): p is CompanionPlugin => p.type === 'companion');
+    const idx = companionIndex(companions);
+    for (const t of tomatoes) {
+      expect(idx[t].badWith.filter((id) => id.startsWith('tomato-'))).toEqual([]);
+    }
   });
 });

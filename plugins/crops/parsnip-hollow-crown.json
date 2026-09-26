@@ -9,6 +9,12 @@
     "max": 130
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 4
+    }
+  },
   "harvestIndicators": [
     "Frost-touched roots are sweetest",
     "Roots 8–12 in"

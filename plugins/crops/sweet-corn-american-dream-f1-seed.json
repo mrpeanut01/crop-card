@@ -9,6 +9,10 @@
     "max": 75
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 9
+    },
     "soilTempMinF": 60,
     "rowSpacingIn": 12,
     "seedDepthIn": {
@@ -17,6 +21,11 @@
     }
   },
   "notes": "Bicolor SE type; 7.5\" trim ears, 16-18 rows; 6' plants, ears at 26\"; intermediate resistance to NCLB. Isolation required. Raw/untreated.",
+  "harvestIndicators": [
+    "Husk still green, silks dry and brown, kernels full size to the tip of the ear",
+    "Milky stage: a punctured kernel gives milky juice (clear = immature, none = too late)",
+    "About 17 to 24 days after first silks appear"
+  ],
   "harvestStyle": "row-grain-pollinated",
   "bloomWindow": {
     "daysFromPlantingMin": 55,

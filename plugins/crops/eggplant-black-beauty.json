@@ -10,6 +10,12 @@
     "max": 85
   },
   "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
   "harvestIndicators": [
     "Glossy purple-black skin",
     "Firm — no thumb-press indent"

@@ -9,6 +9,12 @@
     "max": 75
   },
   "defaultRowSpacingInches": 8,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 2
+    }
+  },
   "harvestIndicators": [
     "Pencil-thick shaft (3/8 in)",
     "Bright green tops"

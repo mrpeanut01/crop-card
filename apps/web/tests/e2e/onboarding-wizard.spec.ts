@@ -109,6 +109,13 @@ test.describe('two-screen onboarding', () => {
     expect(await areas(page)).toEqual([]);
   });
 
+  test('the geocoder answers a new owner before a farm exists', async ({ page }) => {
+    await signInNewUser(page, 'geo');
+    const res = await page.request.get('/api/geocode?q=ab', { maxRedirects: 0 });
+    expect(res.status()).toBe(400);
+    expect(await res.json()).toMatchObject({ error: expect.stringMatching(/3-200/) });
+  });
+
   test('an address search fills the location', async ({ page }) => {
     await page.route('**/api/geocode**', (route) =>
       route.fulfill({

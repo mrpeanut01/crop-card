@@ -9,6 +9,10 @@
     "max": 90
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 42,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "Film coated w/ Azoxystrobin, Fludioxonil, Mefenoxam, Thiamethoxam. Warted, caramel color, 6-8 lb avg. Intermediate PM resistance.",
+  "harvestIndicators": [
+    "Rind hard and firm; mature color (changed from green)",
+    "Harvest late September to October, before a heavy frost",
+    "Cut from the vine leaving 3 to 4 in of stem; avoid bruising"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

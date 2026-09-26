@@ -147,8 +147,8 @@ for (const viewport of [PHONE, DESKTOP]) {
       await page.getByTestId('bed-toolbar').getByRole('button', { name: 'Add crop' }).click();
       await addCropToSelected(page, 'Buttercrunch', /Buttercrunch/);
       const lettuce = await setPlantingSize(page, /Buttercrunch/, 4, 4);
-      await expect(lettuce.getByTestId('plant-count')).toContainText('16 plants');
-      await expect(lettuce.locator('[data-provenance="fallback"]')).toBeVisible();
+      await expect(lettuce.getByTestId('plant-count')).toContainText('36 plants');
+      await expect(lettuce.locator('[data-provenance="data"]')).toBeVisible();
 
       await scrubTo(page, year, 7, 15);
       await expect(await status(page)).toHaveText(
@@ -214,8 +214,8 @@ for (const viewport of [PHONE, DESKTOP]) {
       await addCropToSelected(page, 'Buttercrunch', /Buttercrunch/);
       await bed2.getByRole('tab', { name: 'Plantings' }).click();
       const lettuce = await setPlantingSize(page, /Buttercrunch/, 4, 4);
-      await expect(lettuce.getByTestId('plant-count')).toContainText('16 plants');
-      await expect(lettuce.locator('[data-provenance="fallback"]')).toBeVisible();
+      await expect(lettuce.getByTestId('plant-count')).toContainText('36 plants');
+      await expect(lettuce.locator('[data-provenance="data"]')).toBeVisible();
 
       await scrubTo(page, year, 7, 15);
       await expect(bed1.getByTestId('list-in-it')).toHaveText(

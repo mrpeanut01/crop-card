@@ -4,7 +4,17 @@
   "displayName": "Plum — Stanley (European prune-type)",
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
+  "daysToMaturity": {
+    "min": 1460,
+    "max": 1825
+  },
   "defaultRowSpacingInches": 216,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 240,
+      "max": 240
+    }
+  },
   "harvestIndicators": [
     "Dusty-blue waxy bloom",
     "Slight give"

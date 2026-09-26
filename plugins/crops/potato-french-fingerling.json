@@ -2,7 +2,7 @@
   "pluginId": "potato-french-fingerling",
   "type": "crop",
   "displayName": "Potato French Fingerling (Nosebag)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "pluginSchemaVersion": "1.1",
   "cropFamily": "solanaceae",
   "preHarvestIntervalDays": 14,
@@ -33,5 +33,5 @@
     "daysFromPlantingMax": 70,
     "beeAttractive": false
   },
-  "archetype": "continuous-harvest-fruit"
+  "archetype": "winter-squash-cure"
 }

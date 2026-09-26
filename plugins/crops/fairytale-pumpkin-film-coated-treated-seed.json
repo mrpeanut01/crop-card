@@ -9,6 +9,10 @@
     "max": 125
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 42,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "French heirloom, Cinderella shape, buckskin color, ~15 lb fruit. Treated with Thiram. Packed for 2025. SKU 01328FLCTRT-25SDS.",
+  "harvestIndicators": [
+    "Rind hard and firm; mature color (changed from green)",
+    "Harvest late September to October, before a heavy frost",
+    "Cut from the vine leaving 3 to 4 in of stem; avoid bruising"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

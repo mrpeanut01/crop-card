@@ -9,6 +9,12 @@
     "max": 140
   },
   "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
   "harvestIndicators": [
     "Shaft 1 in diameter, 8+ in long"
   ],

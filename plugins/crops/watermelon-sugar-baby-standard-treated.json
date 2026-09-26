@@ -9,6 +9,10 @@
     "max": 85
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    },
     "soilTempMinF": 85,
     "rowSpacingIn": 30,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "Treated with Thiram. 8-12 lb fruit, dark green rind, red crisp flesh. Packed for 2025. Harris Seeds SKU 00587STDTRT-25SDS.",
+  "harvestIndicators": [
+    "Yellowish ground spot where the melon rests on the soil",
+    "Dead tendril near the fruit attachment",
+    "Dull (not metallic) sound when thumped"
+  ],
   "bloomWindow": {
     "continuous": true,
     "beeAttractive": true

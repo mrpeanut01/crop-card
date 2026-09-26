@@ -2,7 +2,7 @@
   "pluginId": "potato-yukon-gold",
   "type": "crop",
   "displayName": "Potato — Yukon Gold (early)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "cropFamily": "solanaceae",
   "preHarvestIntervalDays": 14,
   "daysToMaturity": {
@@ -41,5 +41,5 @@
     "daysFromPlantingMax": 70,
     "beeAttractive": false
   },
-  "archetype": "continuous-harvest-fruit"
+  "archetype": "winter-squash-cure"
 }

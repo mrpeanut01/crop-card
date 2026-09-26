@@ -350,7 +350,13 @@
 <!-- Phase 25e (#97) — Almanac /today shell. Greeting + weather strip,
      hero card + quick actions, week strip + recommendations + glance.
      1:1 with `direction-almanac-today.jsx` ATodayScreen. -->
-<WeatherStrip dateLabel={todayDateLabel} {greeting} {subtitle} weather={data.weatherSummary} />
+<WeatherStrip
+  dateLabel={todayDateLabel}
+  {greeting}
+  {subtitle}
+  weather={data.weather}
+  canSetLocation={data.canSetFarmLocation}
+/>
 
 <div class="t-grid">
   <TodayHero

@@ -109,40 +109,44 @@ export function fetchNwsPoints(
  * "night" period (low + overnight rain).
  */
 function periodsToDays(periods: NwsPeriod[]): ForecastDay[] {
-  const byDate = new Map<string, ForecastDay>();
+  const byDate = new Map<string, ForecastDay & { nightForecast?: string }>();
   for (const p of periods) {
     const date = p.startTime.slice(0, 10);
-    const existing = byDate.get(date) ?? {
-      date,
-      popPct: 0,
-      highF: -Infinity,
-      lowF: Infinity,
-      shortForecast: undefined as string | undefined
-    };
+    const existing = byDate.get(date) ?? { date, popPct: 0, highF: -Infinity, lowF: Infinity };
     if (p.temperatureUnit === 'F') {
       if (p.isDaytime) {
         existing.highF = Math.max(existing.highF, p.temperature);
         existing.shortForecast = p.shortForecast;
       } else {
         existing.lowF = Math.min(existing.lowF, p.temperature);
+        existing.nightForecast ??= p.shortForecast;
       }
     }
     const pop = p.probabilityOfPrecipitation?.value ?? 0;
     if (pop > existing.popPct) existing.popPct = pop;
     const wind = parseFloat(p.windSpeed);
-    if (!Number.isNaN(wind) && p.isDaytime) existing.windMph = wind;
+    if (!Number.isNaN(wind) && (p.isDaytime || existing.windMph === undefined)) {
+      existing.windMph = wind;
+    }
     byDate.set(date, existing);
   }
-  // Replace +/-Infinity with NaN-equivalent rounded values.
+  // The first day is night-only after ~6pm and the last is day-only, so a
+  // missing extreme borrows the other one. A 0 here would read as a freezing
+  // night to the hay engine and as 0°F on /today.
   return Array.from(byDate.values())
-    .map((d) => ({
-      date: d.date,
-      popPct: d.popPct,
-      highF: Number.isFinite(d.highF) ? d.highF : 0,
-      lowF: Number.isFinite(d.lowF) ? d.lowF : 0,
-      windMph: d.windMph,
-      shortForecast: d.shortForecast
-    }))
+    .filter((d) => Number.isFinite(d.highF) || Number.isFinite(d.lowF))
+    .map((d) => {
+      const day: ForecastDay = {
+        date: d.date,
+        popPct: d.popPct,
+        highF: Number.isFinite(d.highF) ? d.highF : d.lowF,
+        lowF: Number.isFinite(d.lowF) ? d.lowF : d.highF,
+        windMph: d.windMph,
+        shortForecast: d.shortForecast ?? d.nightForecast
+      };
+      if (!Number.isFinite(d.highF)) day.overnightOnly = true;
+      return day;
+    })
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 

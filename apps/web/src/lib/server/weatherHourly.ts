@@ -12,7 +12,7 @@ import { randomUUID } from 'node:crypto';
 import { getBlock, geometryCentroid, listBlocks } from '$lib/db/blocks';
 import { db } from '$lib/db/client';
 import { weatherForecastCache } from '$lib/db/schema';
-import { getFarmLatLon } from '$lib/schedule/settings';
+import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { fetchNwsPoints, nwsFetch, WeatherFetchError } from '$lib/server/weather';
 import { floorHour, HOUR_MS, type HourlyPoint, type WeatherProvenance } from '$lib/weather/leafWet';
 
@@ -213,7 +213,7 @@ export async function getHourlyForecastSafely(
   }
 }
 
-export type WeatherLocationSource = 'block' | 'farm-block' | 'farm-default';
+export type WeatherLocationSource = 'block' | 'farm-block' | 'farm' | 'farm-default';
 
 export interface WeatherLocation {
   lat: number;
@@ -222,8 +222,8 @@ export interface WeatherLocation {
 }
 
 /**
- * Block centroid → first block with geometry → farm lat/lon setting (Loudoun
- * default). Block reads go through the tenant-scoped repo, so a foreign
+ * Block centroid → first block with geometry → saved farm location →
+ * Loudoun default (`farm-default`, which callers may treat as "unknown"). Block reads go through the tenant-scoped repo, so a foreign
  * blockId resolves to `null` (caller 404s).
  */
 export function resolveWeatherLocation(blockId?: string | null): WeatherLocation | null {
@@ -238,5 +238,5 @@ export function resolveWeatherLocation(blockId?: string | null): WeatherLocation
     if (c) return { lat: c.lat, lon: c.lon, source: 'farm-block' };
   }
   const farm = getFarmLatLon();
-  return { lat: farm.lat, lon: farm.lon, source: 'farm-default' };
+  return { lat: farm.lat, lon: farm.lon, source: hasFarmLatLon() ? 'farm' : 'farm-default' };
 }

@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getOnboardingStatus } from '$lib/onboarding/state.server';
-import { listBlocks, geometryCentroid } from '$lib/db/blocks';
+import { listBlocks } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listSprayEvents } from '$lib/db/sprayEvents';
@@ -22,9 +22,8 @@ import { getRegistry, getRegistryStats } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 import { RULES_VERSION } from '$lib/safety/version';
 import { getUserAiEnabled } from '$lib/server/aiTry';
-import { getForecast, WeatherFetchError } from '$lib/server/weather';
+import { loadTodayWeather } from '$lib/server/todayWeather';
 import { derivePriorityAction } from '$lib/today/priorityAction';
-import { summarizeForecastSafely } from '$lib/today/weatherSummary';
 import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
 import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
 import { prefsFor } from '$lib/db/userProfile';
@@ -156,7 +155,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       (!t.linkedToTaskId || !primariesInWindow.find((p) => p.id === t.linkedToTaskId))
   );
 
-  // Phase 25e (#97) — priorityAction + weatherSummary + seasonGlance.
+  // Phase 25e (#97) — priorityAction + weather + seasonGlance.
   const blockNameById = new Map(blocks.map((b) => [b.id, b.name]));
   // Re-fetch the broader open-primary list (last 30d → +14d) so the
   // hero card never shows null just because the user is on the "season"
@@ -174,29 +173,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     now
   });
 
-  // Best-effort weather call. Use the first block with geometry as the
-  // farm centroid. Empty array = no geometry, returns null upstream.
-  let forecast: Awaited<ReturnType<typeof getForecast>> | null = null;
-  const geomBlock = blocks.find((b) => b.geometryGeojson);
-  if (geomBlock?.geometryGeojson) {
-    const centroid = geometryCentroid(geomBlock.geometryGeojson);
-    if (centroid) {
-      try {
-        forecast = await getForecast(centroid.lat, centroid.lon);
-      } catch (e) {
-        // Best-effort: NWS rate-limit, DB cache write race, or a Vite/HMR
-        // module-resolution blip — none should crash the entire /today
-        // render. Swallow + hide the weather strip.
-        if (e instanceof WeatherFetchError) {
-          forecast = null;
-        } else {
-          console.error('[today/loader] weather fetch failed:', e);
-          forecast = null;
-        }
-      }
-    }
-  }
-  const weatherSummary = summarizeForecastSafely(forecast);
+  const weather = await loadTodayWeather();
 
   // YTD spray count = spray + insecticide + fungicide events since Jan 1.
   const yearStart = startOfYear(now);
@@ -268,7 +245,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     })),
     // Phase 25e (#97) — Almanac hero / weather strip / season glance.
     priorityAction,
-    weatherSummary,
+    weather,
+    canSetFarmLocation: locals.user?.role === 'owner',
     seasonGlance,
     winterizeAlerts
   };

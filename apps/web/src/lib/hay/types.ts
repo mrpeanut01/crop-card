@@ -53,6 +53,9 @@ export interface ForecastDay {
   windMph?: number;
   /** Free-form short forecast string from NWS (e.g., "Mostly sunny"). */
   shortForecast?: string;
+  /** Only the overnight period remains (evening fetch), so `highF` is
+   *  tonight's low rather than a daytime high. */
+  overnightOnly?: boolean;
 }
 
 export type HayViolationCode =

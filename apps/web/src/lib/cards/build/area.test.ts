@@ -191,7 +191,9 @@ describe('garden bed map', () => {
 
   it('lists later plantings once the card date reaches them', () => {
     const card = buildAreaCard(sampleSnapshot(), 'f_garden', { now: Date.UTC(2026, 5, 20) })!;
-    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual(['Provider bush bean']);
+    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual([
+      'Provider bush bean'
+    ]);
   });
 
   it('draws the bed map on the designer date without moving the card’s own date', () => {
@@ -199,7 +201,9 @@ describe('garden bed map', () => {
     const onMs = Date.UTC(2026, 5, 20);
     const card = buildAreaCard(snap, 'f_garden', { bedMapOnMs: onMs })!;
     expect(card.bedMap!.onMs).toBe(onMs);
-    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual(['Provider bush bean']);
+    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual([
+      'Provider bush bean'
+    ]);
     expect(card.next).toEqual(buildAreaCard(snap, 'f_garden')!.next);
   });
 

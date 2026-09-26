@@ -184,7 +184,9 @@ export function buildAreaCard(
   const name = areaDisplayName(area);
   const kicker = size ? `${kindLabel} · ${size}` : kindLabel;
   const key = cardKey('area', area.id);
-  const bedMap = isDesignable(area.kind) ? buildBedMap(snapshot, area.id, options.bedMapOnMs ?? opts.now) : null;
+  const bedMap = isDesignable(area.kind)
+    ? buildBedMap(snapshot, area.id, options.bedMapOnMs ?? opts.now)
+    : null;
 
   return {
     ...(isDesignable(area.kind)
@@ -206,7 +208,11 @@ export function buildAreaCard(
 
 /** To-scale bed sketch for a garden or greenhouse, with what is in each bed
  *  on `onMs`. Null when the Area has no beds or containers. */
-export function buildBedMap(snapshot: FarmSnapshot, areaId: string, onMs: number): CardBedMap | null {
+export function buildBedMap(
+  snapshot: FarmSnapshot,
+  areaId: string,
+  onMs: number
+): CardBedMap | null {
   const design = designFromSnapshot(snapshot, areaId, {
     seasonYear: new Date(onMs).getUTCFullYear(),
     readOnlyReason: null

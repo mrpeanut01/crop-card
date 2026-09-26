@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Locator, Page, Request } from '@playwright/test';
 import { test, expect } from './lib/test';
 import {
   gotoPlanWithoutWizard,
@@ -417,11 +417,11 @@ test.describe('allocation wizard', () => {
     page.on('request', (r) => {
       if (isDataLoad(r.url())) dataLoadsInFlight++;
     });
-    for (const done of ['requestfinished', 'requestfailed'] as const) {
-      page.on(done, (r) => {
-        if (isDataLoad(r.url())) dataLoadsInFlight--;
-      });
-    }
+    const settled = (r: Request) => {
+      if (isDataLoad(r.url())) dataLoadsInFlight--;
+    };
+    page.on('requestfinished', settled);
+    page.on('requestfailed', settled);
     page.on('request', (r) => {
       if (/\/api\/blocks\/[^/]+\/plantings$/.test(r.url()) && r.method() === 'POST') {
         plantingPosts.push(r.postData() ?? '');

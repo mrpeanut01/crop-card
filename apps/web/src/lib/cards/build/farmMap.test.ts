@@ -53,7 +53,9 @@ describe('buildFarmMapCard', () => {
 
   it('labels fallback and frost-free climates honestly', () => {
     const fb = buildFarmMapCard(
-      sampleSnapshot({ frost: frost({ provenance: 'fallback', stationName: null, hardLastSpring: null }) }),
+      sampleSnapshot({
+        frost: frost({ provenance: 'fallback', stationName: null, hardLastSpring: null })
+      }),
       { prefs }
     );
     expect(fb.facts.find((f) => f.label === 'Last frost')?.provenance).toBe('fallback');

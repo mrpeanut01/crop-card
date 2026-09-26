@@ -1,4 +1,10 @@
-import { json, redirect, type Handle, type HandleServerError, type ServerInit } from '@sveltejs/kit';
+import {
+  json,
+  redirect,
+  type Handle,
+  type HandleServerError,
+  type ServerInit
+} from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
 import { canMutate, clearSession, type SessionRole } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';

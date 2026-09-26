@@ -614,12 +614,16 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = if (deployMar
               httpGet: { path: '/api/v1/health', port: 8080 }
               initialDelaySeconds: 10
               periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 6
             }
             {
               type: 'Readiness'
               httpGet: { path: '/api/v1/health', port: 8080 }
               initialDelaySeconds: 5
               periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
             }
           ]
         }

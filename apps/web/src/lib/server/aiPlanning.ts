@@ -18,6 +18,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getApiKey } from './scanResult';
 import { appendTurn, buildThreadedMessages } from './aiPlanningSession';
 import { recordAiCall } from './aiCallStats';
+import { usageSurchargeUsd, type AnthropicUsageLike } from './aiCost';
+
+export {
+  CACHE_WRITE_INPUT_MULTIPLIER,
+  WEB_SEARCH_USD_PER_REQUEST,
+  usageSurchargeUsd,
+  type AnthropicUsageLike
+} from './aiCost';
 
 export type AiTask =
   | 'suggest'
@@ -157,12 +165,17 @@ export interface AiResultMeta {
   usdEstimate: number;
 }
 
-export function estimateUsd(meta: Omit<AiResultMeta, 'usdEstimate'>, choice: ModelChoice): number {
+export function estimateUsd(
+  meta: Omit<AiResultMeta, 'usdEstimate'>,
+  choice: ModelChoice,
+  usage?: AnthropicUsageLike | null
+): number {
   const { inputTokens, cachedInputTokens, outputTokens } = meta;
   return (
     (cachedInputTokens / 1_000_000) * choice.pricing.cachedInputUsdPerMTok +
     (inputTokens / 1_000_000) * choice.pricing.inputUsdPerMTok +
-    (outputTokens / 1_000_000) * choice.pricing.outputUsdPerMTok
+    (outputTokens / 1_000_000) * choice.pricing.outputUsdPerMTok +
+    usageSurchargeUsd(usage, choice.pricing.inputUsdPerMTok)
   );
 }
 
@@ -268,7 +281,7 @@ export async function planWithAI(
     outputTokens,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, usage);
 
   // Phase 17 (Track 3.4) — append this turn to the planning session so
   // the next call sees it in the threaded message history.

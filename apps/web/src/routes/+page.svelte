@@ -92,6 +92,10 @@
         </li>
       </ul>
 
+      <p class="pricing-link">
+        Free forever for records, safety and exports. <a href="/pricing">See plans and pricing</a>
+      </p>
+
       <!-- Decorative agricultural scene. Pure SVG so it ships offline; no
            external image asset. Three planted rows, a sun, and a barn silhouette. -->
       <svg
@@ -696,6 +700,17 @@
     font-size: 0.8rem;
   }
 
+  .pricing-link {
+    margin: 0.75rem 0 0;
+    font-size: 0.95rem;
+  }
+  .pricing-link a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: #1f5e3a;
+    font-weight: 600;
+  }
   .auth-footer {
     margin-top: 2rem;
     text-align: center;

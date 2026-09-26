@@ -2,6 +2,7 @@ import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { requireOwner } from '$lib/server/auth';
 import { dispatchEmail } from '$lib/server/email';
 import { issueInvite, listInvitesForOwner, revokeInvite } from '$lib/server/invites';
+import { roleTakesSeat, seatUsage, SEAT_LIMIT_MESSAGE } from '$lib/server/billing/plans';
 import { db } from '$lib/db/client';
 import { owners } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -29,6 +30,22 @@ export const POST: RequestHandler = async (event) => {
   }
   if (!['helper', 'inspector', 'custom-operator'].includes(role)) {
     throw error(400, 'invalid role');
+  }
+
+  if (roleTakesSeat(role)) {
+    const seats = seatUsage(u.activeOwnerId);
+    if (!seats.canInvite) {
+      return json(
+        {
+          error: 'seat-limit',
+          message: SEAT_LIMIT_MESSAGE,
+          used: seats.used,
+          limit: seats.limit,
+          plan: seats.plan
+        },
+        { status: 409 }
+      );
+    }
   }
 
   const issued = issueInvite({

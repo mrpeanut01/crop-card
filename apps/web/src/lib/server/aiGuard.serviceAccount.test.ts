@@ -40,7 +40,13 @@ function seedServiceAccountToken(): SeedResult {
   const ownerId = uniq('owner-sa');
   const userId = uniq('user-sa');
   db.insert(owners)
-    .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
+    .values({
+      id: ownerId,
+      name: ownerId,
+      slug: ownerId,
+      billingStatus: 'active',
+      planOverride: 'grower'
+    })
     .run();
   db.insert(users)
     .values({ id: userId, email: `${userId}@test` })
@@ -61,7 +67,13 @@ function seedPersonalToken(): SeedResult {
   const ownerId = uniq('owner-pers');
   const userId = uniq('user-pers');
   db.insert(owners)
-    .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
+    .values({
+      id: ownerId,
+      name: ownerId,
+      slug: ownerId,
+      billingStatus: 'active',
+      planOverride: 'grower'
+    })
     .run();
   db.insert(users)
     .values({ id: userId, email: `${userId}@test` })

@@ -8,7 +8,13 @@ import { json, error } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
 import { getSetting, setSetting, deleteSetting } from '$lib/db/settings';
-import { SETTINGS_KEYS } from '$lib/schedule/constants';
+import {
+  DEFAULT_AI_DAILY_QUOTA,
+  SETTINGS_KEYS,
+  type AiEndpointName
+} from '$lib/schedule/constants';
+import { currentOwnerId } from '$lib/db/tenant';
+import { resolvePlan } from '$lib/server/billing/plans';
 import { markFrostField } from '$lib/climate/frostSettings.server';
 import type { FrostField } from '$lib/climate/frostSuggest';
 
@@ -33,12 +39,25 @@ type SettingKey = (typeof ALLOWED_KEYS)[number];
 
 const mmDdRe = /^(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$/;
 
-const quotaSchema = z.object({
-  suggest: z.number().int().min(0).max(1000),
-  succession: z.number().int().min(0).max(1000),
-  optimize: z.number().int().min(0).max(1000),
-  allocate: z.number().int().min(0).max(1000)
-});
+const quotaSchema = z.record(z.string(), z.number().int().min(0).max(1000));
+
+function activePlan() {
+  const ownerId = currentOwnerId();
+  return ownerId ? resolvePlan(ownerId) : null;
+}
+
+/** The owner may lower their AI budget or a daily limit, never raise it
+ *  past what their plan includes. */
+function clampQuota(v: Record<string, number>): Partial<Record<AiEndpointName, number>> {
+  const plan = activePlan();
+  const out: Partial<Record<AiEndpointName, number>> = {};
+  for (const key of Object.keys(DEFAULT_AI_DAILY_QUOTA) as AiEndpointName[]) {
+    const n = v[key];
+    if (typeof n !== 'number') continue;
+    out[key] = plan ? Math.min(n, plan.dailyQuota[key]) : n;
+  }
+  return out;
+}
 
 const latLonSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -52,11 +71,12 @@ function validateAndSerialize(key: SettingKey, value: unknown): string {
   }
   if (key === SETTINGS_KEYS.aiMonthlyUsdCap) {
     const n = z.number().min(0).max(10_000).parse(value);
-    return String(n);
+    const plan = activePlan();
+    return String(plan ? Math.min(n, plan.aiMonthlyUsd) : n);
   }
   if (key === SETTINGS_KEYS.aiDailyCallQuota) {
     const v = quotaSchema.parse(value);
-    return JSON.stringify(v);
+    return JSON.stringify(clampQuota(v));
   }
   if (key === SETTINGS_KEYS.farmLatLon) {
     const v = latLonSchema.parse(value);

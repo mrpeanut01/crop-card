@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   import { onMount } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
@@ -316,6 +317,7 @@
     {/if}
 
     {#if canWrite}
+      <AiUsageChip onlyWhenOut />
       <div class="photo-row">
         <label class="btn ghost file">
           <input

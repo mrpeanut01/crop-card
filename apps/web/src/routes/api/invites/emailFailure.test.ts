@@ -25,6 +25,12 @@ vi.mock('$lib/server/invites', () => ({
   revokeInvite: () => true
 }));
 
+vi.mock('$lib/server/billing/plans', () => ({
+  SEAT_LIMIT_MESSAGE: 'Seat limit reached.',
+  roleTakesSeat: () => true,
+  seatUsage: () => ({ used: 0, limit: 2, plan: 'free', canInvite: true, overLimit: false })
+}));
+
 vi.mock('$lib/db/client', () => {
   const chain = { from: () => chain, where: () => chain, get: () => ({ name: 'Test Farm' }) };
   return { db: { select: () => chain } };

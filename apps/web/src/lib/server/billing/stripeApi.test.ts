@@ -70,7 +70,15 @@ afterEach(() => {
 
 describe('billingConfig', () => {
   it('is null unless both STRIPE_SECRET_KEY and STRIPE_PRICE_ID are set', () => {
-    expect(billingConfig()).toEqual({ secretKey: 'sk_test_123', priceId: 'price_solo' });
+    expect(billingConfig()).toEqual({
+      secretKey: 'sk_test_123',
+      prices: {
+        growerMonthly: 'price_solo',
+        growerAnnual: null,
+        farmMonthly: null,
+        farmAnnual: null
+      }
+    });
     vi.stubEnv('STRIPE_PRICE_ID', '');
     expect(billingConfig()).toBeNull();
     vi.stubEnv('STRIPE_PRICE_ID', 'price_solo');

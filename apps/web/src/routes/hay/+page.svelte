@@ -22,6 +22,7 @@
 
   // Forecast state
   let forecast = $state<ForecastDay[] | null>(null);
+  let forecastSource = $state<string | null>(null);
   let forecastError = $state<string | null>(null);
   let mowViolations = $state<HayViolation[]>([]);
 
@@ -52,6 +53,7 @@
         return;
       }
       forecast = out.forecast as ForecastDay[];
+      forecastSource = out.source ?? null;
       // Re-evaluate mow gate locally for instant feedback.
       if (selectedCrop?.hayOperations) {
         const window = selectedCrop.hayOperations.weatherWindowDays;
@@ -255,6 +257,13 @@
     </button>
     {#if forecastError}<p class="error">{forecastError}</p>{/if}
     {#if forecast}
+      {#if forecastSource === 'farm'}
+        <p class="hint">This block isn't mapped, so this is the forecast for your farm location.</p>
+      {:else if forecastSource === 'farm-block'}
+        <p class="hint">
+          This block isn't mapped, so this is the forecast for your nearest mapped block.
+        </p>
+      {/if}
       <table class="forecast">
         <thead>
           <tr>

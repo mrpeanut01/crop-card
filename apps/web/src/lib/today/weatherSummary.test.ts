@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { summarizeForecast, summarizeForecastSafely } from './weatherSummary';
+import { skyFor, summarizeForecast, summarizeForecastSafely } from './weatherSummary';
 import type { ForecastDay } from '$lib/hay/types';
 
 function day(over: Partial<ForecastDay>): ForecastDay {
@@ -9,7 +9,8 @@ function day(over: Partial<ForecastDay>): ForecastDay {
     highF: over.highF ?? 68,
     lowF: over.lowF ?? 52,
     windMph: over.windMph,
-    shortForecast: over.shortForecast
+    shortForecast: over.shortForecast,
+    overnightOnly: over.overnightOnly
   };
 }
 
@@ -71,5 +72,36 @@ describe('summarizeForecastSafely', () => {
     // throw — surrogate for any unforeseen NWS payload weirdness.
     const result = summarizeForecastSafely([day({ highF: 70 })]);
     expect(result).not.toBeNull();
+  });
+});
+
+describe('summarizeForecast overnight', () => {
+  it("shows tonight's low once only the overnight period is left", () => {
+    const result = summarizeForecast([
+      day({ highF: 54, lowF: 54, overnightOnly: true, shortForecast: 'Clear' })
+    ]);
+    expect(result).toMatchObject({ tempF: 54, tempKind: 'low', sky: 'clear-night' });
+  });
+
+  it('shows the daytime high otherwise', () => {
+    const result = summarizeForecast([day({ highF: 71, lowF: 50, shortForecast: 'Sunny' })]);
+    expect(result).toMatchObject({ tempF: 71, tempKind: 'high', sky: 'clear' });
+  });
+});
+
+describe('skyFor', () => {
+  it.each([
+    ['Sunny', false, 'clear'],
+    ['Mostly Sunny', false, 'clear'],
+    ['Partly Cloudy', false, 'partly'],
+    ['Partly Cloudy', true, 'partly-night'],
+    ['Mostly Cloudy', false, 'cloudy'],
+    ['Chance Rain Showers', false, 'rain'],
+    ['Slight Chance Showers And Thunderstorms', false, 'storm'],
+    ['Snow Likely', true, 'snow'],
+    ['Patchy Fog', false, 'fog'],
+    [undefined, true, 'clear-night']
+  ] as const)('%s (night=%s) → %s', (f, night, sky) => {
+    expect(skyFor(f, night)).toBe(sky);
   });
 });

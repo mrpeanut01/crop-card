@@ -123,7 +123,7 @@
     hours: HourlyPoint[];
     provenance: WeatherProvenance;
     fetchedAt: number;
-    location: { source: 'block' | 'farm-block' | 'farm-default' } | null;
+    location: { source: 'block' | 'farm-block' | 'farm' | 'farm-default' } | null;
   }
   const UNAVAILABLE: WeatherPayload = {
     hours: [],
@@ -405,6 +405,7 @@
       {#if weather && weather.provenance === 'data'}
         <span class="gate-meta">
           NWS forecast · fetched {fmt.instant(weather.fetchedAt, 'time')}
+          {#if weather.location?.source === 'farm'}· farm location (no block map){/if}
           {#if weather.location?.source === 'farm-default'}· farm default location (no block map){/if}
           {#if weather.location?.source === 'farm-block'}· nearest mapped block{/if}
         </span>

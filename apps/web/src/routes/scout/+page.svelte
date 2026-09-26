@@ -74,7 +74,10 @@
   const result = $derived(evaluateScout({ spots, maxWeedHeightInches: maxHeight ?? undefined }));
   let note = $state('');
   const noteText = $derived(note.trim());
-  const canSave = $derived(result.spotsCounted > 0 || noteText.length > 0);
+  // The four zero spots are placeholders; a walk only counts once the user enters a count.
+  let spotsEdited = $state(false);
+  const counted = $derived(result.spotsCounted > 0 && (spotsEdited || maxHeight != null));
+  const canSave = $derived(counted || noteText.length > 0);
   const showPicker = $derived(
     data.blocks.length > 0 || (data.setup.canEdit && emptyAreas(data.setup.areas).length > 0)
   );
@@ -152,9 +155,11 @@
 
   function addSpot() {
     spots = [...spots, { weedsPer10SqFt: 0 }];
+    spotsEdited = true;
   }
   function removeSpot(i: number) {
     spots = spots.filter((_, idx) => idx !== i);
+    spotsEdited = true;
   }
 
   async function saveObservation(): Promise<void> {
@@ -177,7 +182,7 @@
       // raw per-spot counts + the tallest-weed measurement preserved in
       // notes so the IPM evaluator can read the canonical average AND
       // historical context lives in the audit trail.
-      if (result.spotsCounted === 0) {
+      if (!counted) {
         payload = {
           blockId: selectedBlockId,
           pest: 'note',
@@ -345,7 +350,13 @@
     {#each spots as _, i (i)}
       <label class="spot">
         Spot {i + 1}: weeds in 10 sq ft
-        <input type="number" min="0" step="1" bind:value={spots[i].weedsPer10SqFt} />
+        <input
+          type="number"
+          min="0"
+          step="1"
+          bind:value={spots[i].weedsPer10SqFt}
+          oninput={() => (spotsEdited = true)}
+        />
         {#if spots.length > 1}
           <button type="button" class="remove" onclick={() => removeSpot(i)}>✕</button>
         {/if}

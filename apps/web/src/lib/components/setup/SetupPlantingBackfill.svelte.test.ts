@@ -34,6 +34,40 @@ afterEach(() => {
 });
 
 describe('SetupPlantingBackfill', () => {
+  it('offers an empty Area as a whole spot and a New spot option alongside blocks', async () => {
+    const onDone = vi.fn();
+    render(SetupPlantingBackfill, {
+      blocks,
+      areas: [
+        { id: 'a-hay', name: 'Hayfield', kind: 'pasture', blockCount: 0 },
+        { id: 'a-kg', name: 'Kitchen Garden', kind: 'garden', blockCount: 1 }
+      ],
+      canEdit: true,
+      onDone,
+      catalog,
+      now: NOW
+    });
+    const where = screen.getByLabelText('Where is it growing?') as HTMLSelectElement;
+    const labels = [...where.options].map((o) => o.textContent?.trim());
+    expect(labels).toEqual([
+      'Back bed · Kitchen Garden',
+      'Hayfield (the whole area)',
+      '+ New spot…'
+    ]);
+    await fireEvent.change(where, { target: { value: 'area:a-hay' } });
+    await waitFor(() => expect(where).toHaveValue('b9'));
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/blocks');
+    expect(JSON.parse(init.body as string)).toMatchObject({ name: 'Hayfield', fieldId: 'a-hay' });
+    expect(labels).not.toContain('Kitchen Garden (the whole area)');
+  });
+
+  it('lists planted-around months back past a year for an established stand', () => {
+    render(SetupPlantingBackfill, { blocks, areas: [], canEdit: true, onDone: vi.fn(), catalog });
+    const months = screen.getByLabelText('Planted around') as HTMLSelectElement;
+    expect([...months.options].at(-1)?.textContent).toBe('More than a year ago');
+  });
+
   it('asks a helper to go to the owner', () => {
     render(SetupPlantingBackfill, { blocks, areas: [], canEdit: false, onDone: vi.fn(), catalog });
     expect(screen.getByText(/Ask the owner to add what's growing/)).toBeInTheDocument();

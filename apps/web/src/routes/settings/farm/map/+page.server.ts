@@ -5,7 +5,7 @@
  * field geometry.
  */
 
-import { error, redirect, type ServerLoad } from '@sveltejs/kit';
+import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { listBlocks } from '$lib/db/blocks';
 import { listFields } from '$lib/db/fields';
 import { listShadeSources } from '$lib/db/shadeSources';
@@ -14,11 +14,12 @@ import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 
 export const load: ServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
-  if (locals.user.role !== 'owner') throw error(403, 'owner-only');
+  if (locals.user.role !== 'owner') return { refused: true as const };
 
   const blocks = listBlocks();
   const fields = listFields();
   return {
+    refused: false as const,
     blocks,
     fields,
     ownerId: locals.user.activeOwnerId,

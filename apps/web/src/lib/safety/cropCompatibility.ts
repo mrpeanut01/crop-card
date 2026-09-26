@@ -71,7 +71,7 @@ export function checkCropCompatibility(
       const families = uniqueFamilies(crops);
       violations.push({
         code: 'CROP_INCOMPATIBLE',
-        message: `${product.pluginId} (${cls}) is lethal to ${families.join(', ')} crops`,
+        message: `${product.displayName || product.pluginId} (${cls}) is lethal to ${families.join(', ')} crops`,
         detail: {
           product: product.pluginId,
           chemistryClass: cls,

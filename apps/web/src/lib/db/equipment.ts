@@ -14,7 +14,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, lt } from 'drizzle-orm';
 import type { SprayerLoadClass } from '$lib/safety/types';
 import { db } from './client';
 import { equipment, equipmentLog, equipmentState } from './schema';
@@ -257,6 +257,17 @@ export function appendEquipmentLog(input: {
     notes: row.notes ?? undefined,
     payload: row.payloadJson ? safeJson(row.payloadJson) : undefined
   };
+}
+
+/** Ids of this Owner's equipment with any log entry before `beforeMs`,
+ *  i.e. gear that was already in use in an earlier season. */
+export function equipmentIdsActiveBefore(beforeMs: number): Set<string> {
+  const rows = db
+    .selectDistinct({ id: equipmentLog.equipmentId })
+    .from(equipmentLog)
+    .where(withTenant(equipmentLog, lt(equipmentLog.occurredAt, new Date(beforeMs))))
+    .all();
+  return new Set(rows.map((r) => r.id));
 }
 
 export function listEquipmentLog(

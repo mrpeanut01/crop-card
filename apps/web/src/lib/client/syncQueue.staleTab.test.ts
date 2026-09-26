@@ -12,6 +12,7 @@ import fc from 'fast-check';
 import { db, type PendingRecordKind, type PendingSprayRecord } from './dexie';
 import { ACTIVE_OWNER_ENDPOINT, EXPECTED_OWNER_HEADER, OWNER_MISMATCH_CODE } from './ownerSync';
 import { discardPendingForActiveOwner, drainQueue, retryRejectedForActiveOwner } from './syncQueue';
+import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 
 const ACTIVE_KEY = 'cropcard.activeOwnerId';
 const OWNERS = ['owner_a', 'owner_b', 'owner_c'] as const;
@@ -146,6 +147,27 @@ describe('drainQueue — server-confirmed active Owner', () => {
       ),
       { numRuns: 80 }
     );
+  });
+
+  it('overlapping drains share one run: each row is POSTed once, with its queue id', async () => {
+    await seed([{ ownerId: 'owner_a', kind: 'scout' }, { ownerId: 'owner_a' }]);
+    sessionStorage.setItem(ACTIVE_KEY, 'owner_a');
+    const server = newServer('owner_a');
+    installServer(server);
+
+    const [a, b] = await Promise.all([drainQueue(), drainQueue()]);
+    expect(server.ran.map((r) => r.marker).sort()).toEqual(['row_0', 'row_1']);
+    expect(a).toBe(b);
+    expect(await snapshot()).toEqual(new Map());
+    const recordPosts = vi
+      .mocked(fetch)
+      .mock.calls.filter(([url]) => url !== ACTIVE_OWNER_ENDPOINT)
+      .map(([, init]) => (init?.headers as Record<string, string>)[CLIENT_RECORD_HEADER]);
+    expect(recordPosts.sort()).toEqual(['row_0', 'row_1']);
+
+    await seed([{ ownerId: 'owner_a' }]);
+    await drainQueue();
+    expect(server.ran).toHaveLength(3);
   });
 
   it('halts as owner-unverified when the server cannot confirm a session', async () => {

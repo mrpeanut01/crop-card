@@ -11,8 +11,8 @@ import type { FarmSnapshot, SnapshotArea, SnapshotFrostDates } from '../snapshot
 import { AREA_KINDS, isCropBearing } from '$lib/farm/areaKinds';
 import { AREA_KIND_PLURAL, AREA_KIND_STYLE } from '$lib/farm/kindStyle';
 import { areaDisplayName, areaKindLabel, monthDay, resolveOptions, trimNumber } from './common';
-import { formatSize } from './size';
-import { formatQuantity, type Prefs } from '$lib/prefs';
+import { formatAreaAcres, formatSize } from './size';
+import type { Prefs } from '$lib/prefs';
 
 export interface EmergencyContact {
   label: string;
@@ -97,7 +97,7 @@ export function buildFarmMapCard(
   if (cropAcres > 0) {
     facts.push({
       label: 'Growing size',
-      value: formatQuantity(cropAcres, 'area', prefs),
+      value: formatAreaAcres(cropAcres, prefs),
       provenance: 'data'
     });
   }

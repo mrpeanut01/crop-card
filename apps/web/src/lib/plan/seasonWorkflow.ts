@@ -148,9 +148,9 @@ export function deriveSeasonWorkflow(input: SeasonWorkflowInput): WorkflowStep[]
     input.hasPlanRevision === true || (input.hasPlanRevision == null && priorsAllDone);
   steps.push({
     id: 'commit',
-    label: 'Commit',
+    label: 'Save plan',
     state: commitDone ? 'done' : 'pending',
-    note: commitDone ? 'Plan locked for the season.' : 'Final commit creates the audit row.'
+    note: commitDone ? 'Plan saved for the season.' : 'Saving the plan keeps a dated copy.'
   });
 
   return steps;
@@ -207,7 +207,7 @@ export function workflowStepRoute(stepId: string, steps: WorkflowStep[]): Workfl
     case 'commit':
       return stateOf('commit') === 'done'
         ? { target: { kind: 'provenance' }, hint: 'Show the plan revision history' }
-        : { target: null, hint: 'Commit runs at the end of a wizard pass' };
+        : { target: null, hint: 'Save the plan at the end of the planning wizard' };
     default:
       return { target: null, hint: '' };
   }

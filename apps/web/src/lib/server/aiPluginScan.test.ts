@@ -10,7 +10,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { localFuzzyMatchPlugins, validateCandidate } from './aiPluginScan';
+import {
+  localFuzzyMatchPlugins,
+  localMatchScore,
+  pluginSearchTokens,
+  validateCandidate
+} from './aiPluginScan';
 
 describe('validateCandidate', () => {
   it('accepts a minimal valid crop payload (auto-fills version + slug)', async () => {
@@ -94,6 +99,29 @@ describe('localFuzzyMatchPlugins', () => {
     expect(top.source).toBe('local');
     expect(top.candidate?.pluginId).toBe('apple-orchard');
     expect((top.score ?? 0) >= 0.3).toBe(true);
+  });
+
+  it.each([
+    ['Sevin', 'sevin-xlr-plus'],
+    ['carbaryl', 'sevin-xlr-plus'],
+    ['Mustang', 'mustang-maxx'],
+    ['Roundup', 'roundup-powermax-3'],
+    ['roundu', 'roundup-powermax-3']
+  ])('a one-word search for %s finds %s', async (query, pluginId) => {
+    const matches = await localFuzzyMatchPlugins(query);
+    expect(matches.map((m) => m.candidate?.pluginId)).toContain(pluginId);
+  });
+
+  it('scores on query coverage, not on the longer name', () => {
+    const tokens = pluginSearchTokens({
+      pluginId: 'sevin-xlr-plus',
+      displayName: 'Sevin XLR Plus (Tessenderlo carbaryl)',
+      activeIngredients: [{ name: 'carbaryl' }]
+    });
+    expect(localMatchScore('Sevin', tokens)).toBeGreaterThan(0.85);
+    expect(localMatchScore('sevin xlr', tokens)).toBeGreaterThan(localMatchScore('sevin', tokens));
+    expect(localMatchScore('sevin malathion', tokens)).toBe(0);
+    expect(localMatchScore('zz', tokens)).toBe(0);
   });
 
   it('respects the hintType filter', async () => {

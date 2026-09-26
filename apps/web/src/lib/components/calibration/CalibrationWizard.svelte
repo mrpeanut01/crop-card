@@ -2,6 +2,7 @@
   import { invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import { calibrationDistance, computeCalibratedGpa } from '$lib/dilution/calibration';
+  import { calibrationRig, type CalibrationRig } from '$lib/dilution/calibrationRig';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
   import type { SetupCalibrationResult } from '$lib/setup/types';
 
@@ -10,6 +11,8 @@
     label: string;
     calibratedGpa: number | null;
     calibrationDate?: number;
+    templateId?: string;
+    tankGal?: number;
   }
 
   interface Props {
@@ -34,6 +37,8 @@
   let pendingSent = $state(false);
 
   const sprayer = $derived(sprayers.find((s) => s.id === selectedSprayerId));
+  let rigOverride = $state<CalibrationRig | null>(null);
+  const rig = $derived<CalibrationRig>(rigOverride ?? (sprayer ? calibrationRig(sprayer) : 'walk'));
   const metric = $derived(currentPrefs().units === 'metric');
   const gpaText = (gpa: number) =>
     `${gpa} GPA${metric ? ` (${fmt.qty(gpa, 'volumePerArea')})` : ''}`;
@@ -115,41 +120,80 @@
 
   <section class="card" aria-labelledby="{uid}-step-2">
     <h2 id="{uid}-step-2">{lockSprayer ? '1' : '2'}. Spray width</h2>
+    <fieldset class="rig">
+      <legend>How do you spray with it?</legend>
+      <label class="rig-choice">
+        <input
+          type="radio"
+          name="{uid}-rig"
+          value="walk"
+          checked={rig === 'walk'}
+          onchange={() => (rigOverride = 'walk')}
+        />
+        Walk with it (backpack or handheld)
+      </label>
+      <label class="rig-choice">
+        <input
+          type="radio"
+          name="{uid}-rig"
+          value="drive"
+          checked={rig === 'drive'}
+          onchange={() => (rigOverride = 'drive')}
+        />
+        Drive it (boom, ATV or 3-point)
+      </label>
+    </fieldset>
     <p class="hint">
-      For a single-nozzle handheld: the effective spray fan width on the ground at your normal
-      walking height. For a boom: the per-nozzle spacing.
+      {#if rig === 'walk'}
+        The width of the spray on the ground at your normal walking height.
+      {:else}
+        The spacing between two nozzles on the boom. For a boomless nozzle, the width it covers.
+      {/if}
     </p>
     <div class="grid">
       <label>
-        Spray width (in)
+        {rig === 'walk' ? 'Spray width (in)' : 'Nozzle spacing (in)'}
         <input type="number" min="1" step="1" bind:value={spreadInches} />
       </label>
-      <label>
-        Your stride (ft)
-        <input type="number" min="0.5" step="0.1" bind:value={strideFeet} />
-      </label>
+      {#if rig === 'walk'}
+        <label>
+          Your stride (ft)
+          <input type="number" min="0.5" step="0.1" bind:value={strideFeet} />
+        </label>
+      {/if}
     </div>
   </section>
 
   {#if distance}
     <section class="card distance-card" aria-labelledby="{uid}-step-3">
-      <h2 id="{uid}-step-3">{lockSprayer ? '2' : '3'}. Walk this distance</h2>
+      <h2 id="{uid}-step-3">
+        {lockSprayer ? '2' : '3'}. {rig === 'walk' ? 'Walk this distance' : 'Drive this distance'}
+      </h2>
       <p class="big-distance">
         <strong>{distance.distanceFeet}</strong> ft
-        <span>≈ {distance.steps} steps at {distance.strideFeet} ft</span>
+        {#if rig === 'walk'}
+          <span>≈ {distance.steps} steps at {distance.strideFeet} ft</span>
+        {/if}
       </p>
-      <p class="hint">
-        Mark a start and end point this far apart. Walk at normal spray speed with the sprayer
-        running, collecting all output in a graduated jug. Pour off and read the volume in fluid
-        ounces.
-      </p>
+      {#if rig === 'walk'}
+        <p class="hint">
+          Mark a start and end point this far apart. Walk at normal spray speed with the sprayer
+          running, catching everything it puts out in a measuring jug. Read the jug in fluid ounces.
+        </p>
+      {:else}
+        <p class="hint" data-testid="calibration-drive-steps">
+          Mark a start and end point this far apart. Drive the course at your spraying speed and
+          gear, and time it in seconds. Then, parked at the same engine speed and pressure, catch
+          what ONE nozzle puts out for that many seconds. Read the jug in fluid ounces.
+        </p>
+      {/if}
     </section>
   {/if}
 
   <section class="card" aria-labelledby="{uid}-step-4">
     <h2 id="{uid}-step-4">{lockSprayer ? '3' : '4'}. Ounces collected</h2>
     <label>
-      Fluid ounces in the jug
+      {rig === 'walk' ? 'Fluid ounces in the jug' : 'Fluid ounces from one nozzle'}
       <input type="number" min="0" step="0.1" bind:value={ouncesCollected} />
     </label>
   </section>
@@ -216,6 +260,29 @@
 </div>
 
 <style>
+  .rig {
+    border: none;
+    padding: 0;
+    margin: 0 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .rig legend {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .rig-choice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    cursor: pointer;
+  }
+  .rig-choice input {
+    width: 20px;
+    height: 20px;
+  }
   .card {
     background: white;
     border-radius: 8px;

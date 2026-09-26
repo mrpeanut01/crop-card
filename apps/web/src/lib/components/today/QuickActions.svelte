@@ -13,11 +13,23 @@
   type LucideIcon = typeof Eye;
   type Action = { label: string; href: string; icon: LucideIcon };
 
-  const ACTIONS: Action[] = [
+  interface Props {
+    /** Garden households see picking and notes first, spraying last. */
+    profile?: string | null;
+  }
+  const { profile = null }: Props = $props();
+
+  const FARM: Action[] = [
     { label: 'Spray', href: '/spray', icon: SprayCan },
     { label: 'Record harvest', href: '/harvest', icon: Wheat },
     { label: 'Log scout note', href: '/scout', icon: Eye }
   ];
+  const GARDEN: Action[] = [
+    { label: 'Record what you picked', href: '/harvest', icon: Wheat },
+    { label: 'Jot down what you saw', href: '/scout', icon: Eye },
+    { label: 'Spray', href: '/spray', icon: SprayCan }
+  ];
+  const ACTIONS = $derived(profile === 'garden' ? GARDEN : FARM);
 </script>
 
 <Card padded={false}>

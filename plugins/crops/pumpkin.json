@@ -4,6 +4,10 @@
   "displayName": "Pumpkin",
   "version": "1.0.0",
   "cropFamily": "cucurbit",
+  "daysToMaturity": {
+    "min": 90,
+    "max": 120
+  },
   "defaultRowSpacingInches": 60,
   "preHarvestIntervalDays": 7,
   "plantingGuide": {

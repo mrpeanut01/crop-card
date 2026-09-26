@@ -23,7 +23,7 @@
 
 <svelte:head><title>Farm map card · CropCard</title></svelte:head>
 
-<main class="wrap">
+<div class="wrap">
   <div class="no-print">
     <header>
       <p class="kicker">Farm map card</p>
@@ -61,7 +61,7 @@
   </div>
 
   <CardPrintSheet cards={[card]} {layout} {prefs} origin={data.snapshot.origin} />
-</main>
+</div>
 
 <style>
   .wrap {

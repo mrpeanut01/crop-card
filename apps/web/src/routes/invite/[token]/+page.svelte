@@ -39,7 +39,7 @@
   <title>Accept invite — CropCard</title>
 </svelte:head>
 
-<main class="invite">
+<div class="invite">
   {#if data.status === 'invalid'}
     <h1>{invalid?.title}</h1>
     <p class="hint">{invalid?.hint}</p>
@@ -61,7 +61,7 @@
       {fmt.zone(data.expiresAt)}.
     </p>
   {/if}
-</main>
+</div>
 
 <style>
   .invite {

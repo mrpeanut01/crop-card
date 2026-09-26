@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Lock, FileText, Sparkles, Pencil, RefreshCw } from 'lucide-svelte';
+  import { PROVENANCE_LABEL, PROVENANCE_LONG } from '$lib/provenanceLabels';
 
   /**
    * Phase 25 v2 addendum (#89, prop contract first shipped under #90).
@@ -27,40 +28,28 @@
     compact?: boolean;
     /** AI source only — 0..1. Renders as %. */
     confidence?: number;
+    /** Overrides the chip label, e.g. reference data that is not the user's own. */
+    label?: string;
+    /** Overrides the tooltip explanation. */
+    long?: string;
   }
 
-  const { source, detail, compact = false, confidence }: Props = $props();
+  const { source, detail, compact = false, confidence, label, long }: Props = $props();
 
   type LucideIcon = typeof Lock;
-  const META: Record<ProvenanceSource, { label: string; long: string; icon: LucideIcon }> = {
-    plugin: {
-      label: 'Plugin',
-      long: 'From a crop, input, or safety-kernel plugin',
-      icon: Lock
-    },
-    data: {
-      label: 'Your data',
-      long: 'Derived from your records — scout, calibration, prior season',
-      icon: FileText
-    },
-    ai: {
-      label: 'AI',
-      long: 'Claude proposed this · always editable · falls back when off',
-      icon: Sparkles
-    },
-    manual: {
-      label: 'You typed',
-      long: 'Entered or edited by you · the safety kernel still checks it',
-      icon: Pencil
-    },
-    fallback: {
-      label: 'Fallback',
-      long: 'AI was off or unavailable — used the deterministic default',
-      icon: RefreshCw
-    }
+  const ICON: Record<ProvenanceSource, LucideIcon> = {
+    plugin: Lock,
+    data: FileText,
+    ai: Sparkles,
+    manual: Pencil,
+    fallback: RefreshCw
   };
 
-  const meta = $derived(META[source]);
+  const meta = $derived({
+    label: label ?? PROVENANCE_LABEL[source],
+    long: long ?? PROVENANCE_LONG[source],
+    icon: ICON[source]
+  });
   const showConf = $derived(source === 'ai' && typeof confidence === 'number');
   const confPct = $derived(
     typeof confidence === 'number' ? `${Math.round(confidence * 100)}%` : ''

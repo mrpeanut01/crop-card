@@ -9,7 +9,8 @@ import { profileFor } from '$lib/db/userProfile';
 import { DEFAULT_PREFS } from '$lib/prefs';
 import { identityName } from '$lib/identity';
 import { expiringSoon, lowStockItems } from '$lib/db/stock';
-import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
+import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
+import { equipmentIdsActiveBefore } from '$lib/db/equipment';
 import { buildNavAlerts, type NavAlert } from '$lib/today/navAlerts';
 
 export const load: LayoutServerLoad = ({ locals }) => {
@@ -42,7 +43,11 @@ export const load: LayoutServerLoad = ({ locals }) => {
     try {
       navAlerts = buildNavAlerts({
         dirtySprayers,
-        winterize: deriveWinterizeAlerts(sprayers),
+        winterize: deriveWinterizeAlerts(
+          sprayers,
+          Date.now(),
+          equipmentIdsActiveBefore(startOfSeason(Date.now()))
+        ),
         lowStock: lowStockItems(),
         expiring: expiringSoon(30).map((e) => ({
           itemId: e.item.id,

@@ -10,6 +10,7 @@
  * client-side bypass cannot reach the database.
  */
 
+import { withClientRecordId } from '$lib/server/clientRecordId';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeTankMixDilutions } from '$lib/dilution/calculator';
@@ -85,7 +86,7 @@ const requestSchema = z.object({
   notes: z.string().max(500).optional()
 });
 
-export const POST: RequestHandler = async (event) => {
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const { request } = event;
   let body: unknown;
   try {
@@ -328,4 +329,4 @@ export const POST: RequestHandler = async (event) => {
     stockDecrements: stockResults,
     stockWarnings
   });
-};
+});

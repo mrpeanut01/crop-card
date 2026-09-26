@@ -26,7 +26,7 @@ import {
   sortTasks,
   type BuildOptions
 } from './common';
-import { formatFeet, formatSize, sizeBasis } from './size';
+import { formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
 import { DEFAULT_AREA_KIND, isDesignable } from '$lib/farm/areaKinds';
 import { designFromSnapshot, designerHref } from '$lib/garden/design';
 import { bedOccupancyOn, occupancyIntervals, scrubRange, utcDayStart } from '$lib/garden/occupancy';
@@ -99,6 +99,19 @@ export function buildAreaCard(
     const sp = sizeProvenance(area);
     facts.push({ label: 'Size', value: size, provenance: sp?.source });
     if (sp) provenance.push(sp);
+  }
+  if (!size) {
+    const blockAcres = blocks.reduce(
+      (sum, b) => sum + (typeof b.acres === 'number' && b.acres > 0 ? b.acres : 0),
+      0
+    );
+    if (blockAcres > 0) {
+      facts.push({
+        label: 'Size',
+        value: `${formatAreaAcres(blockAcres, opts.prefs)} across its ${blocks.length === 1 ? 'bed' : 'beds'}`,
+        provenance: 'data'
+      });
+    }
   }
   if (area.perimeterFt !== null && area.perimeterFt > 0) {
     facts.push({

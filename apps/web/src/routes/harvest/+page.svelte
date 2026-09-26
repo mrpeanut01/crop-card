@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, tick, untrack } from 'svelte';
-  import { invalidateAll } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import type { PlantingHarvestStatus } from './+page.server';
   import Kicker from '$lib/components/ui/Kicker.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
@@ -48,6 +48,13 @@
   async function onPlantingAdded(r: SetupPlantingResult) {
     plantingSheetOpen = false;
     await invalidateAll();
+    const added = data.plantings.find((p) => p.plantingId === r.plantingId);
+    if (added?.harvestStyle === 'forage-cutting-cycle') {
+      await goto(
+        `/hay?block=${encodeURIComponent(r.blockId)}&crop=${encodeURIComponent(r.plantingId)}`
+      );
+      return;
+    }
     startRecord(r.plantingId);
     await tick();
     document
@@ -162,7 +169,12 @@
    *  Banner copy on the renderer distinguishes the three states. */
   function showHarvestForm(p: PlantingHarvestStatus): boolean {
     if (p.alreadyHarvested && !allowsReHarvest(p)) return false;
-    return p.status === 'in-window' || p.status === 'too-early' || p.status === 'past';
+    return (
+      p.status === 'in-window' ||
+      p.status === 'too-early' ||
+      p.status === 'past' ||
+      p.status === 'unknown'
+    );
   }
 
   const readyPlantings = $derived(
@@ -255,7 +267,14 @@
   </SetupCallout>
 {:else}
   <section class="card panel ready">
-    <h2>Plantings <span class="panel-count">{readyPlantings.length} ready</span></h2>
+    <div class="panel-head">
+      <h2>Plantings <span class="panel-count">{readyPlantings.length} ready</span></h2>
+      {#if data.setup.canEdit}
+        <button type="button" class="add-more" onclick={() => (plantingSheetOpen = true)}>
+          + Add something else you're picking
+        </button>
+      {/if}
+    </div>
     <ul class="plantings">
       {#each data.plantings as p (p.plantingId)}
         <li
@@ -334,6 +353,10 @@
                 <Banner tone="sky">
                   Window closed {p.daysPastWindow}d ago — logging late?
                 </Banner>
+              </div>
+            {:else if p.status === 'unknown'}
+              <div class="window-banner" data-testid="no-window-banner">
+                <Banner tone="sky">No harvest window on file for this crop. Record anyway.</Banner>
               </div>
             {/if}
             <!-- #197 — re-harvest archetypes keep the form available
@@ -513,6 +536,24 @@
 </SetupSheet>
 
 <style>
+  .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .add-more {
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-divider);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
   h1 {
     margin: 0 0 0.25rem;
   }

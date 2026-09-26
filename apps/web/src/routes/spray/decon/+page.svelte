@@ -98,6 +98,7 @@
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
+  let helperFinished = $state(false);
   let submitting = $state(false);
   let submitError = $state<string | null>(null);
   let completed = $state(false);
@@ -132,8 +133,10 @@
       stepIndex += 1;
       stopTimer();
       timerStartedAt = null;
-    } else {
+    } else if (data.canRecord) {
       complete();
+    } else {
+      helperFinished = true;
     }
   }
 
@@ -148,15 +151,21 @@
 
 <h1>Sprayer decontamination</h1>
 <p class="lede">
-  Required by FR-05 before this sprayer can be used on a different chemistry. Each step must be
-  confirmed before the next is unlocked. The 30-minute ammonia soak is timed by the app.
+  Clean the sprayer before it carries a different chemistry. Confirm each step to unlock the next.
+  The app times the 30-minute ammonia soak.
 </p>
+{#if !data.canRecord}
+  <p class="ask-owner" role="note" data-testid="decon-ask-owner">
+    Decon due. Only the owner can record it. You can follow the steps here, then ask the owner to
+    record the decon so the sprayer is cleared.
+  </p>
+{/if}
 
 <section class="step">
   <h2>Sprayer</h2>
   <select bind:value={selectedSprayerId}>
     {#each data.sprayers as s (s.id)}
-      <option value={s.id}>{s.label} ({s.id})</option>
+      <option value={s.id}>{s.label}</option>
     {/each}
   </select>
   {#if sprayer?.lastChemistryClass}
@@ -166,7 +175,7 @@
     </p>
   {/if}
 
-  {#if !completed}
+  {#if !completed && data.canRecord}
     <details class="quick-mark">
       <summary>Already cleaned the sprayer? Mark it clean now.</summary>
       <p class="hint">
@@ -186,7 +195,16 @@
   {/if}
 </section>
 
-{#if !completed}
+{#if helperFinished}
+  <section class="step success" data-testid="decon-helper-done">
+    <h2>Steps done</h2>
+    <p>
+      Tell the owner the decon on <strong>{sprayer?.label ?? 'this sprayer'}</strong> is finished so they
+      can record it. The sprayer stays flagged until they do.
+    </p>
+    <button type="button" class="primary" onclick={() => goto('/today')}>Back to Today</button>
+  </section>
+{:else if !completed}
   <section class="step">
     <h2>Step {stepIndex + 1} of {STEPS.length}: {currentStep.title}</h2>
     <p>{currentStep.body}</p>
@@ -237,9 +255,11 @@
       <button type="button" onclick={back} disabled={stepIndex === 0}>← Back</button>
       <button type="button" class="primary" onclick={next} disabled={!stepCanAdvance || submitting}>
         {stepIndex === STEPS.length - 1
-          ? submitting
-            ? 'Recording…'
-            : 'Confirm complete'
+          ? !data.canRecord
+            ? 'Finish the steps'
+            : submitting
+              ? 'Recording…'
+              : 'Confirm complete'
           : 'Next →'}
       </button>
     </div>
@@ -278,6 +298,14 @@
   .lede {
     color: #555;
     margin: 0 0 1.5rem;
+  }
+  .ask-owner {
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: var(--pill-wheat-bg);
+    color: #5c4210;
+    font-weight: 600;
   }
   .step,
   .checklist {

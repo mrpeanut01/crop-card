@@ -53,7 +53,8 @@ test.describe('just-in-time setup', () => {
     await expect(sprayerSheet.locator('button.tile')).toHaveCount(6);
     await sprayerSheet.getByLabel(/Name it/).fill('Old Blue');
     await sprayerSheet.locator('button[data-template="sprayer-backpack-4gal"]').click();
-    await expect(sprayerSheet.getByText(/needs calibrating/)).toBeVisible();
+    const calibrateSheet = sheet(page, 'Calibrate Old Blue');
+    await expect(calibrateSheet.getByText(/needs calibrating/)).toBeVisible();
 
     const created = await page.request.get('/api/equipment?type=sprayer');
     const { equipment } = (await created.json()) as {
@@ -68,9 +69,10 @@ test.describe('just-in-time setup', () => {
     expect(equipment[0].spec?.templateId).toBe('sprayer-backpack-4gal');
     expect(equipment[0].state.calibratedGpa).toBeUndefined();
 
-    await sprayerSheet.getByLabel('Fluid ounces in the jug').fill('20');
-    await sprayerSheet.getByRole('button', { name: 'Save to Old Blue' }).click();
-    await expect(sprayerSheet).toBeHidden();
+    await expect(calibrateSheet.getByLabel('Your stride (ft)')).toBeVisible();
+    await calibrateSheet.getByLabel('Fluid ounces in the jug').fill('20');
+    await calibrateSheet.getByRole('button', { name: 'Save to Old Blue' }).click();
+    await expect(calibrateSheet).toBeHidden();
     await expect(page).toHaveURL(/\/spray$/);
     await expect(page.getByRole('button', { name: /Old Blue/ })).toContainText(/20/);
 
@@ -106,7 +108,9 @@ test.describe('just-in-time setup', () => {
     const hint = page.getByTestId('uncalibrated-hint');
     await hint.getByRole('button', { name: 'Calibrate Pull 50' }).click();
     const calib = sheet(page, 'Calibrate Pull 50');
-    await calib.getByLabel('Fluid ounces in the jug').fill('15');
+    await expect(calib.getByTestId('calibration-drive-steps')).toContainText('ONE nozzle');
+    await expect(calib.getByLabel('Your stride (ft)')).toHaveCount(0);
+    await calib.getByLabel('Fluid ounces from one nozzle').fill('15');
     await calib.getByRole('button', { name: 'Save to Pull 50' }).click();
     await expect(calib).toBeHidden();
     await expect(page.getByTestId('uncalibrated-hint')).toHaveCount(0);
@@ -141,7 +145,7 @@ test.describe('just-in-time setup', () => {
     await nameSpot(page, dialog, 'Back pasture', /^Pasture/);
     await dialog.getByRole('button', { name: 'Save this spot' }).click();
     await expect(dialog).toBeHidden();
-    await expect(page.getByLabel('Which block are you scouting?')).toHaveValue(/.+/);
+    await expect(page.getByLabel('Which spot are you scouting?')).toHaveValue(/.+/);
     await expect(page.locator('#scout-block option:checked')).toHaveText('Back pasture');
   });
 

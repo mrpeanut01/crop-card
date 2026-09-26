@@ -23,6 +23,19 @@ describe('Provenance', () => {
     }
   });
 
+  it('takes a label and tooltip override for reference data that is not the user own', () => {
+    render(Provenance, {
+      source: 'data',
+      label: 'Weather service',
+      long: 'Published station averages'
+    });
+    expect(screen.getByText('Weather service')).toBeInTheDocument();
+    expect(screen.queryByText('Your data')).not.toBeInTheDocument();
+    const chip = document.querySelector('[data-provenance="data"]');
+    expect(chip?.getAttribute('title')).toContain('Published station averages');
+    expect(chip?.getAttribute('title')).not.toContain('your records');
+  });
+
   it('omits the label in compact mode (icon-only)', () => {
     render(Provenance, { source: 'plugin', compact: true });
     expect(screen.queryByText('Plugin')).not.toBeInTheDocument();

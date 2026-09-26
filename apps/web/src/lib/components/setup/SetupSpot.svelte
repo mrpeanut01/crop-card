@@ -2,13 +2,21 @@
   import { untrack } from 'svelte';
   import { AREA_KIND_LABELS, CROP_AREA_KINDS, type CropAreaKind } from '$lib/farm/areaKinds';
   import { AREA_KIND_HINT, AREA_NAME_PLACEHOLDER } from '$lib/farm/kindStyle';
-  import { NEW_AREA, planSpot, saveSpot } from '$lib/setup/spot';
+  import {
+    NEW_AREA,
+    SPOT_NAME_PLACEHOLDER,
+    defaultSpotArea,
+    planSpot,
+    saveSpot
+  } from '$lib/setup/spot';
   import type { SetupArea, SetupSpotResult } from '$lib/setup/types';
 
   interface Props {
     areas: SetupArea[];
     canEdit: boolean;
     defaultKind?: CropAreaKind;
+    /** Start inside this Area, e.g. the Area the person came from. */
+    initialAreaId?: string;
     submitLabel?: string;
     onDone: (result: SetupSpotResult) => void;
   }
@@ -17,21 +25,33 @@
     areas,
     canEdit,
     defaultKind = 'field',
+    initialAreaId,
     submitLabel = 'Save this spot',
     onDone
   }: Props = $props();
   const uid = $props.id();
 
-  let name = $state('');
-  let areaId = $state(NEW_AREA);
+  const startArea = untrack(
+    () => areas.find((a) => a.id === initialAreaId) ?? defaultSpotArea(areas, defaultKind)
+  );
+  let name = $state(startArea && startArea.blockCount === 0 ? startArea.name : '');
+  let areaId = $state(startArea?.id ?? NEW_AREA);
   let kind = $state<CropAreaKind>(untrack(() => defaultKind));
+  const pickedArea = $derived(areas.find((a) => a.id === areaId) ?? null);
+  const placeholder = $derived(
+    pickedArea
+      ? (SPOT_NAME_PLACEHOLDER[pickedArea.kind as CropAreaKind] ?? 'e.g. Back bed')
+      : AREA_NAME_PLACEHOLDER[kind]
+  );
+  let widthFt = $state<number | null>(null);
+  let lengthFt = $state<number | null>(null);
   let saving = $state(false);
   let error = $state<string | null>(null);
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
     error = null;
-    const plan = planSpot({ name, areaId, kind }, areas);
+    const plan = planSpot({ name, areaId, kind, widthFt, lengthFt }, areas);
     if (!plan.ok) {
       error = plan.error;
       return;
@@ -66,11 +86,18 @@
       type="text"
       maxlength="120"
       autocomplete="off"
-      placeholder={areaId === NEW_AREA ? AREA_NAME_PLACEHOLDER[kind] : 'e.g. Back bed'}
+      {placeholder}
       bind:value={name}
       data-autofocus
       required
     />
+
+    {#if pickedArea && pickedArea.blockCount === 0}
+      <p class="help">
+        Nothing is inside {pickedArea.name} yet, so this can be the whole {pickedArea.name}. Or give
+        it a smaller name, like a bed.
+      </p>
+    {/if}
 
     {#if areas.length > 0}
       <label for="{uid}-area">Where is it?</label>
@@ -96,6 +123,22 @@
         </div>
       </fieldset>
     {/if}
+
+    <fieldset class="size">
+      <legend>About how big? <span class="optional">(optional)</span></legend>
+      <p class="help">Spray and seed totals use it. Pace it off or guess, in feet.</p>
+      <div class="size-row">
+        <label>
+          <span>Width (ft)</span>
+          <input type="number" min="1" step="1" inputmode="numeric" bind:value={widthFt} />
+        </label>
+        <span aria-hidden="true">×</span>
+        <label>
+          <span>Length (ft)</span>
+          <input type="number" min="1" step="1" inputmode="numeric" bind:value={lengthFt} />
+        </label>
+      </div>
+    </fieldset>
 
     {#if error}<p class="error" role="alert">{error}</p>{/if}
 
@@ -201,11 +244,43 @@
     margin: 0;
     color: var(--color-rust);
   }
+  .optional {
+    font-weight: 400;
+    color: var(--color-ink-muted);
+  }
+  .size-row {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-2);
+  }
+  .size-row label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-weight: 500;
+    flex: 1;
+  }
+  .size-row input {
+    min-height: 48px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input);
+    background: var(--color-paper);
+    font: inherit;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .help {
+    margin: 0 0 var(--space-2);
+    font-size: var(--font-size-caption);
+    color: var(--color-ink-soft);
+  }
   .ask-owner {
     margin: 0;
     padding: var(--space-3);
     border-radius: var(--radius-card);
     background: var(--pill-wheat-bg);
-    color: var(--pill-wheat-fg);
+    color: var(--color-ink);
   }
 </style>

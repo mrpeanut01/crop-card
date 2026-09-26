@@ -77,7 +77,9 @@ describe('SetupSprayer', () => {
       document.querySelector<HTMLButtonElement>('button[data-template="sprayer-25gal-atv"]')!
     );
     await screen.findByText(/needs calibrating/);
-    const ounces = screen.getByLabelText('Fluid ounces in the jug');
+    expect(screen.getByText(/catch what ONE nozzle puts out/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Your stride (ft)')).toBeNull();
+    const ounces = screen.getByLabelText('Fluid ounces from one nozzle');
     await fireEvent.input(ounces, { target: { value: '20' } });
     await fireEvent.click(await screen.findByRole('button', { name: /Save to/ }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());

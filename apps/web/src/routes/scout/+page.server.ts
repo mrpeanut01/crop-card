@@ -19,7 +19,14 @@ export const load: PageServerLoad = ({ url, locals }) => {
   const recent = listScoutObservations({ fromMs, limit: 200 });
   const observationsByBlock: Record<
     string,
-    Array<{ id: string; pest: string; metric: string; value: number; occurredAt: number }>
+    Array<{
+      id: string;
+      pest: string;
+      metric: string;
+      value: number;
+      occurredAt: number;
+      note: string | null;
+    }>
   > = {};
   for (const o of recent) {
     const list = (observationsByBlock[o.blockId] ??= []);
@@ -28,7 +35,8 @@ export const load: PageServerLoad = ({ url, locals }) => {
       pest: o.pest,
       metric: o.metric,
       value: o.value,
-      occurredAt: o.occurredAt
+      occurredAt: o.occurredAt,
+      note: o.metric === 'note' ? (o.notes ?? null) : null
     });
   }
 

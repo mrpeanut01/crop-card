@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Locator, Page, Request } from '@playwright/test';
 import { test, expect } from './lib/test';
 import {
   gotoPlanWithoutWizard,
@@ -418,11 +418,30 @@ test.describe('allocation wizard', () => {
       }
     });
     const inputsCommit = page.waitForResponse((r) => r.url().endsWith('/api/plan/inputs/commit'));
+    // onCommitted closes the modal and then calls invalidateAll(). Reloading
+    // while that /plan/__data.json fetch is in flight aborts it, and SvelteKit's
+    // client handleError logs "TypeError: network error". Wait until the refetch
+    // issued after the commit has settled before reloading. Chromium reports
+    // this streamed request as failed (ERR_ABORTED) once SvelteKit has read it,
+    // so "settled" means either requestfinished or requestfailed.
+    let committed = false;
+    const settled = new Set<Request>();
+    page.on('response', (r) => {
+      if (r.url().endsWith('/api/plan/inputs/commit')) committed = true;
+    });
+    page.on('requestfinished', (r) => settled.add(r));
+    page.on('requestfailed', (r) => settled.add(r));
+    const refresh = page.waitForRequest(
+      (r) => committed && new URL(r.url()).pathname === '/plan/__data.json' && r.method() === 'GET'
+    );
     await body(page)
       .getByRole('button', { name: /Accept and commit/ })
       .click();
     expect((await inputsCommit).ok()).toBe(true);
     await expect(wizard(page)).toHaveCount(0);
+    const refreshReq = await refresh;
+    expect((await refreshReq.response())?.ok()).toBe(true);
+    await expect.poll(() => settled.has(refreshReq)).toBe(true);
 
     expect(plantingPosts.length).toBeGreaterThan(0);
     for (const p of plantingPosts) {

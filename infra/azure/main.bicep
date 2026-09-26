@@ -349,15 +349,16 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
 
 // ─── Scheduled push wakeup ─────────────────────────────────────────────
 // The app scales to zero, so push alerts can't run on an in-process timer.
-// This job wakes it twice a day: 10:00 and 20:00 UTC are 06:00 / 16:00 EDT
-// (frost season) and 05:00 / 15:00 EST (ACA cron has no time zone). The
-// afternoon run catches NWS frost/freeze products issued for tonight; the
+// Two jobs wake it twice a day: 10:00 and 20:30 UTC are 06:00 / 16:30 EDT
+// (frost season) and 05:00 / 15:30 EST (ACA cron has no time zone, and one
+// cron can't hold both minutes). The afternoon run catches NWS frost/freeze
+// products issued for tonight; the
 // morning run covers decon-due, lock-window and calibration alerts. It reuses
 // the app image (already in the registry, so no Docker Hub pulls) but only
 // runs a node one-liner that POSTs /api/internal/push-tick with the shared
 // secret: no volume, no storage key, never touches the database (Invariant 3).
 // Retries with backoff cover the cold start; 404 means a secret mismatch and
-// fails at once. The cron is pinned by a unit test (push/wakeup.test.ts).
+// fails at once. The crons are pinned by a unit test (push/wakeup.test.ts).
 var pushTickScript = '''
 const url = process.env.TICK_URL;
 const secret = process.env.PUSH_TICK_SECRET;
@@ -385,8 +386,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 })();
 '''
 
-resource pushTickJob 'Microsoft.App/jobs@2024-03-01' = if (hasPushTickSecret) {
-  name: '${prefix}-push-tick'
+var pushTickSchedules = [
+  { suffix: '', cron: '0 10 * * *' }
+  { suffix: '-pm', cron: '30 20 * * *' }
+]
+
+resource pushTickJobs 'Microsoft.App/jobs@2024-03-01' = [for s in (hasPushTickSecret ? pushTickSchedules : []): {
+  name: '${prefix}-push-tick${s.suffix}'
   location: location
   identity: {
     type: 'UserAssigned'
@@ -401,7 +407,7 @@ resource pushTickJob 'Microsoft.App/jobs@2024-03-01' = if (hasPushTickSecret) {
       replicaTimeout: 600
       replicaRetryLimit: 0
       scheduleTriggerConfig: {
-        cronExpression: '0 10,20 * * *'
+        cronExpression: s.cron
         parallelism: 1
         replicaCompletionCount: 1
       }
@@ -426,7 +432,7 @@ resource pushTickJob 'Microsoft.App/jobs@2024-03-01' = if (hasPushTickSecret) {
       ]
     }
   }
-}
+}]
 
 // ─── Custom domain ─────────────────────────────────────────────────────
 // The zone is hosted here so the records track the app's hostname and
@@ -575,6 +581,6 @@ output appFqdn string = app.properties.configuration.ingress.fqdn
 output appOrigin string = appOrigin
 output marketplaceFqdn string = deployMarketplace ? marketplaceApp!.properties.configuration.ingress.fqdn : ''
 output customDomainNameServers array = useDomain ? dnsZone!.properties.nameServers : []
-output pushTickJob string = hasPushTickSecret ? pushTickJob.name : ''
+output pushTickJobs array = [for (s, i) in (hasPushTickSecret ? pushTickSchedules : []): pushTickJobs[i].name]
 output storageAccount string = storage.name
 output blobContainer string = blobContainerName

@@ -990,12 +990,13 @@ export function buildAllocationPrompt(
       '',
       'Rules (selection):',
       '- Total plants assigned for each stockItemId must equal its plantsAvailable (or as close as possible).',
-      '- For each (seed, block) pick: plants must be ≤ plantsFit and > 0.',
+      '- For each (seed, block) pick: plants must be ≤ plantsFit and > 0. Leave a seed out of assignments when it has no room; do not list it with 0 plants.',
       '- A seed may be split across multiple blocks; sum across blocks ≤ plantsAvailable.',
       '- Never select a row where compBad is non-empty unless no other option exists.',
       '',
       'HARD CAPS (a violation here will be rejected by the validator):',
       '- DENSITY CAP: never propose an assignment with utilizationPct > 1.25 ("badly surplus") when the same seed has any other viable block (sunMatch ≠ none AND narrow=N) where utilizationPct ≤ 1.25 is achievable. Split or reduce the assignment to avoid jamming a block.',
+      "- BLOCK SPACE CAP: crops share a block. Each assignment uses plants / plantsFit of the block, and the sum over every crop on one block must not exceed 1.25. Two crops on one block means roughly half of each crop's plantsFit, not the full amount of both.",
       '- COMBINED-FAMILY DENSITY CAP: when multiple varieties of the same family (e.g., several cucurbits, several brassicas) land on the same block, the SUM of their assigned plants across that block must not exceed plantsFit by more than 25% of the largest single-variety plantsFit on that block. If it does, REDUCE the smaller varieties or move them to other blocks. Cucurbits especially: a vining cultivar (vine_spread ≥ 10 ft) effectively claims the whole block — flag others for displacement.',
       '- Prefer sufficiency=match > surplus > deficit, but never push surplus past 1.25× when alternatives exist.',
       '',
@@ -1041,6 +1042,10 @@ export type ValidatedPlan =
   | { valid: true; plan: { assignments: AiAssignment[]; rationale: string; advisories: string[] } }
   | { valid: false; violations: string[] };
 
+/** Every crop on a block together may use at most this many blocks' worth
+ *  of space (sum of plants / plantsFit). */
+export const BLOCK_SHARE_CAP = 1.25;
+
 export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow[]): ValidatedPlan {
   const violations: string[] = [];
   if (!raw || typeof raw !== 'object') {
@@ -1075,7 +1080,8 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
       violations.push(`assignment[${i}] missing stockItemId or blockId`);
       continue;
     }
-    if (typeof item.plants !== 'number' || !Number.isFinite(item.plants) || item.plants <= 0) {
+    if (item.plants === 0) continue;
+    if (typeof item.plants !== 'number' || !Number.isFinite(item.plants) || item.plants < 0) {
       violations.push(`assignment[${i}] plants must be a positive number`);
       continue;
     }
@@ -1122,6 +1128,10 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
       plants: plantsInt,
       rationale: typeof item.rationale === 'string' ? item.rationale : ''
     });
+  }
+
+  if (obj.assignments.length > 0 && validAssignments.length === 0 && violations.length === 0) {
+    violations.push('every assignment has 0 plants');
   }
 
   // Per-seed sum cannot exceed available.
@@ -1225,6 +1235,29 @@ export function validateAiPlan(raw: unknown, input: PlanInput, matrix: MatrixRow
         `block ${blockId} packs multiple ${seedFamilyByStockId.get(items[0].stockItemId)} ` +
           `varieties: total ${totalPlants} plants exceeds 1.25× the largest plantsFit (${maxFit}). ` +
           `Reduce or move some varieties to other blocks. (${detail.join(', ')})`
+      );
+    }
+  }
+
+  // (c) Per-block combined space cap across every crop. plantsFit is what
+  // the whole block holds at one crop's spacing, so plants / plantsFit is
+  // the share of the block that assignment uses; the shares must add up to
+  // one block (with the same 25% slack as the caps above).
+  const blockShare = new Map<string, { share: number; detail: string[] }>();
+  for (const a of validAssignments) {
+    const m = matrixIndex.get(`${a.stockItemId}:${a.blockId}`);
+    if (!m || m.plantsFit <= 0) continue;
+    const entry = blockShare.get(a.blockId) ?? { share: 0, detail: [] };
+    entry.share += a.plants / m.plantsFit;
+    entry.detail.push(`${a.stockItemId}=${a.plants}/${m.plantsFit}`);
+    blockShare.set(a.blockId, entry);
+  }
+  for (const [blockId, { share, detail }] of blockShare) {
+    if (share > BLOCK_SHARE_CAP) {
+      violations.push(
+        `block ${blockId} is over-packed: its crops together use ${share.toFixed(2)}× the block ` +
+          `(each assignment uses plants/plantsFit of the block; the sum must be ≤ ${BLOCK_SHARE_CAP}). ` +
+          `Reduce plants or move crops to other blocks. (${detail.join(', ')})`
       );
     }
   }

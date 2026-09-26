@@ -20,6 +20,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { toVisionSource } from './visionImage';
 import { z } from 'zod';
 import { PluginRegistrationError, PluginRegistry, pluginSchema, type Plugin } from '$lib/plugins';
 import { pesticideFormulationSchema, pluginDefaultUnitSchema } from '$lib/plugins/schemas';
@@ -444,7 +445,7 @@ function buildSearchUserPrompt(query: string, hintType?: PluginKindHint): string
 
 /** Path A — single label photo → 1 plugin candidate. */
 export async function claudeVisionPluginLookup(
-  base64jpeg: string,
+  image: string,
   hintType?: PluginKindHint,
   signal?: AbortSignal
 ): Promise<{ candidate: PluginCandidate | null; meta: AiResultMeta }> {
@@ -476,7 +477,7 @@ export async function claudeVisionPluginLookup(
           content: [
             {
               type: 'image',
-              source: { type: 'base64', media_type: 'image/jpeg', data: base64jpeg }
+              source: toVisionSource(image)
             },
             { type: 'text', text: userPrompt }
           ]

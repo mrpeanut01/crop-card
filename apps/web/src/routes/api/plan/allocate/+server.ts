@@ -164,7 +164,8 @@ export const POST: RequestHandler = async (event) => {
       outputTokens: result.meta.outputTokens,
       usdEstimate: result.meta.usdEstimate,
       success: result.assignments.length > 0,
-      errorClass: result.meta.fallback
+      errorClass: result.meta.fallback,
+      provenance: result.meta.fallback ? 'fallback' : 'ai'
     });
     return json({
       assignments: result.assignments,
@@ -194,7 +195,8 @@ export const POST: RequestHandler = async (event) => {
       outputTokens: 0,
       usdEstimate: 0,
       success: false,
-      errorClass: 'upstream-error'
+      errorClass: 'upstream-error',
+      provenance: 'fallback'
     });
     return json(
       { error: err instanceof Error ? err.message : 'allocation failed' },

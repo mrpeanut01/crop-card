@@ -24,18 +24,20 @@ for (const vp of VIEWPORTS) {
     await page.waitForLoadState('networkidle');
     // An empty planning season opens the wizard; the baseline is the shell.
     if (await page.locator('.aw-modal').isVisible()) await page.keyboard.press('Escape');
-    await expect(page.getByPlaceholder('Filter blocks…')).toBeVisible();
+    await expect(page.getByPlaceholder('Filter Areas, beds or crops…')).toBeVisible();
 
     await settleForScreenshot(page);
     await expect(page).toHaveScreenshot(`plan-${vp.name}.png`, {
       fullPage: true,
       mask: [
-        // Block list rail rows (names + plantings counts vary by seed).
-        page.locator('.row .body'),
+        // Area card rail (names + crops vary by seed).
+        page.locator('[data-testid="plan-area-cards"] article'),
+        // Area card and Block cards over the selected block.
+        page.locator('[data-testid="plan-area-view"] article'),
         // Block header title (block name + crop summary vary).
         page.locator('.bh-left'),
-        // Planting cards' inner content (variety, dates, area, status).
-        page.locator('.pc-body'),
+        // Planting cards' inner content (variety, dates, amount, status).
+        page.locator('article[data-card-kind="planting"] .body'),
         // Season timeline rows (vary with current date + plantings).
         page.locator('.gantt-row'),
         // Scheduled-tasks rows.

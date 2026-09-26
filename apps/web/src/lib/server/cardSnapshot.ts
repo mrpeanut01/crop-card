@@ -113,7 +113,7 @@ function toStock(i: ReturnType<typeof listStockItems>[number]): SnapshotStockIte
   };
 }
 
-function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
+export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
   if (p.type !== 'crop') return null;
   return {
     pluginId: p.pluginId,

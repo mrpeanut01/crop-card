@@ -12,11 +12,18 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from './client';
 import { blocks, fields } from './schema';
 import { effectiveAcresFor } from './blocks';
 import { sketchAcres } from '$lib/farm/sketch';
+import {
+  DEFAULT_AREA_KIND,
+  parseAreaDetails,
+  perimeterFtFor,
+  type AreaDetails,
+  type AreaKind
+} from '$lib/farm/areaKinds';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
 
 export interface Field {
@@ -28,6 +35,9 @@ export interface Field {
   geometryGeojson?: string;
   widthFt?: number;
   lengthFt?: number;
+  kind: AreaKind;
+  details: AreaDetails | null;
+  perimeterFt?: number;
   createdAt: number;
 }
 
@@ -47,12 +57,22 @@ function rowToField(row: typeof fields.$inferSelect): Field {
     geometryGeojson: row.geometryGeojson ?? undefined,
     widthFt: row.widthFt ?? undefined,
     lengthFt: row.lengthFt ?? undefined,
+    kind: row.kind,
+    details: parseAreaDetails(row.kind, row.detailsJson),
+    perimeterFt: row.perimeterFt ?? undefined,
     createdAt: row.createdAt.getTime()
   };
 }
 
-export function listFields(): FieldWithBlocks[] {
-  const fieldRows = db.select().from(fields).where(tenantWhere(fields)).all();
+export function listFields(opts: { kinds?: readonly AreaKind[] } = {}): FieldWithBlocks[] {
+  if (opts.kinds && opts.kinds.length === 0) return [];
+  const fieldRows = db
+    .select()
+    .from(fields)
+    .where(
+      opts.kinds ? withTenant(fields, inArray(fields.kind, [...opts.kinds])) : tenantWhere(fields)
+    )
+    .all();
   if (fieldRows.length === 0) return [];
   const blockRows = db
     .select({
@@ -96,6 +116,8 @@ export function createField(input: {
   geometryGeojson?: string;
   widthFt?: number;
   lengthFt?: number;
+  kind?: AreaKind;
+  details?: AreaDetails | null;
 }): Field {
   const id = randomUUID();
   const acresToPersist =
@@ -114,7 +136,10 @@ export function createField(input: {
         notes: input.notes ?? null,
         geometryGeojson: input.geometryGeojson ?? null,
         widthFt: input.widthFt ?? null,
-        lengthFt: input.lengthFt ?? null
+        lengthFt: input.lengthFt ?? null,
+        kind: input.kind ?? DEFAULT_AREA_KIND,
+        detailsJson: input.details ? JSON.stringify(input.details) : null,
+        perimeterFt: perimeterFtFor(input)
       })
     )
     .returning()
@@ -132,6 +157,8 @@ export function updateField(
     geometryGeojson?: string | null;
     widthFt?: number | null;
     lengthFt?: number | null;
+    kind?: AreaKind;
+    details?: AreaDetails | null;
   }
 ): Field | undefined {
   const set: Partial<typeof fields.$inferInsert> = {};
@@ -145,6 +172,39 @@ export function updateField(
     set.geometryGeojson = patch.geometryGeojson;
     const fromGeo = effectiveAcresFor({ acres: undefined, geometryGeojson: patch.geometryGeojson });
     if (fromGeo !== undefined) set.acres = fromGeo;
+  }
+  if (patch.details !== undefined) {
+    set.detailsJson = patch.details ? JSON.stringify(patch.details) : null;
+  }
+  const touchesShape =
+    patch.geometryGeojson !== undefined ||
+    patch.widthFt !== undefined ||
+    patch.lengthFt !== undefined;
+  if (patch.kind !== undefined || touchesShape) {
+    const current = db
+      .select()
+      .from(fields)
+      .where(withTenant(fields, eq(fields.id, id)))
+      .get();
+    if (!current) return undefined;
+    if (patch.kind !== undefined) {
+      set.kind = patch.kind;
+      if (
+        patch.details === undefined &&
+        current.detailsJson &&
+        parseAreaDetails(patch.kind, current.detailsJson) === null
+      ) {
+        set.detailsJson = null;
+      }
+    }
+    if (touchesShape) {
+      set.perimeterFt = perimeterFtFor({
+        geometryGeojson:
+          patch.geometryGeojson !== undefined ? patch.geometryGeojson : current.geometryGeojson,
+        widthFt: patch.widthFt !== undefined ? patch.widthFt : current.widthFt,
+        lengthFt: patch.lengthFt !== undefined ? patch.lengthFt : current.lengthFt
+      });
+    }
   }
   if (Object.keys(set).length === 0) return getField(id);
   const row = db

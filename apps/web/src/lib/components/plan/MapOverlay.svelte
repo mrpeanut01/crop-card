@@ -1,159 +1,71 @@
 <script lang="ts">
   /**
-   * Phase 25b (#81) — Plan v2 map overlay.
+   * Plan v2 map overlay: a quick "where am I?" view of the farm, not a
+   * geometry editor (that's /settings/farm/map). Fields and blocks draw
+   * their real outlines when mapped, or the dimension sketch when entered
+   * as width × length. Each block is clickable to jump Plan to it.
    *
-   * 1:1 port of the `{showMap && (…)}` block in
-   * [`direction-almanac-plan-v2.jsx`](../../../../docs/design/almanac/direction-almanac-plan-v2.jsx)
-   * (lines 334–384). A lightweight pictorial spatial view inside the
-   * shared Modal primitive — block rectangles laid out by their
-   * geometry centroid (or row/col ordering), each clickable to jump
-   * the parent Plan v2 page to that block.
-   *
-   * Intentionally NOT wrapping the full `BlockMap` editor — that's the
-   * dedicated /plan?tab=layout surface (linked in the footer hint).
-   * This overlay is a quick "where am I?" view, not a geometry editor.
-   *
-   * URL-driven: parent toggles `open` from `?map=open` so the overlay
-   * survives a refresh and can be deep-linked.
+   * URL-driven: parent toggles `open` from `?map=open`.
    */
   import { ArrowRight, Info, Compass, MapPin } from 'lucide-svelte';
   import Modal from '$lib/components/ui/Modal.svelte';
-  import Kicker from '$lib/components/ui/Kicker.svelte';
   import type { BlockWithPlantings } from '$lib/db/blocks';
-
-  /** Inline geometry centroid (mirrors `geometryCentroid` in lib/db/blocks.ts).
-   *  Lives here because `$lib/db/blocks` pulls in drizzle + better-sqlite3 +
-   *  node:crypto, which would crash the browser bundle. */
-  function centroidFromGeoJson(geojson: string | undefined): { lat: number; lon: number } | null {
-    if (!geojson) return null;
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(geojson);
-    } catch {
-      return null;
-    }
-    const coords = extractOuterRing(parsed);
-    if (!coords || coords.length === 0) return null;
-    let sumLon = 0;
-    let sumLat = 0;
-    for (const [lon, lat] of coords) {
-      sumLon += lon;
-      sumLat += lat;
-    }
-    return { lon: sumLon / coords.length, lat: sumLat / coords.length };
-  }
-  function extractOuterRing(parsed: unknown): Array<[number, number]> | null {
-    if (!parsed || typeof parsed !== 'object') return null;
-    const obj = parsed as { type?: string; coordinates?: unknown };
-    if (obj.type === 'Polygon' && Array.isArray(obj.coordinates) && obj.coordinates[0]) {
-      return obj.coordinates[0] as Array<[number, number]>;
-    }
-    if (obj.type === 'MultiPolygon' && Array.isArray(obj.coordinates) && obj.coordinates[0]?.[0]) {
-      return obj.coordinates[0][0] as Array<[number, number]>;
-    }
-    return null;
-  }
+  import { layoutMapOverlay, type OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
 
   interface Props {
     open: boolean;
     onClose: () => void;
     blocks: BlockWithPlantings[];
-    /** Currently-selected block; renders highlighted on the map and in the
-     *  title. */
+    /** Fields with their drawn geometry / dimensions; outlines behind blocks. */
+    fields?: OverlayFieldInput[];
     selectedBlockId?: string;
-    /** Farm name; shows in the modal title. */
     farmLabel?: string;
-    /** Optional handler — when the user taps a block on the map, the
-     *  parent updates `?block=…` and closes the overlay. */
     onSelect?: (blockId: string) => void;
   }
-  const { open, onClose, blocks, selectedBlockId, farmLabel, onSelect }: Props = $props();
+  const {
+    open,
+    onClose,
+    blocks,
+    fields = [],
+    selectedBlockId,
+    farmLabel,
+    onSelect
+  }: Props = $props();
 
   const selected = $derived(blocks.find((b) => b.id === selectedBlockId));
   const titleText = $derived(
     `${farmLabel ?? 'Field map'}${selected ? ` · ${selected.name} highlighted` : ''}`
   );
 
-  // Compute pictorial positions: try geometry centroids first (normalise
-  // to 0..1 across the farm), fall back to a grid layout for blocks
-  // without geometry. The output is `{id, leftPct, topPct, wPct, hPct}`.
-  type Pos = {
-    id: string;
-    leftPct: number;
-    topPct: number;
-    wPct: number;
-    hPct: number;
-    color: string;
-    label: string;
-    plantingCount: number;
-  };
-  const positions = $derived.by<Pos[]>(() => {
-    const withGeom: Array<{ b: BlockWithPlantings; c: { lat: number; lon: number } }> = [];
-    const noGeom: BlockWithPlantings[] = [];
-    for (const b of blocks) {
-      const c = centroidFromGeoJson(b.geometryGeojson);
-      if (c) withGeom.push({ b, c });
-      else noGeom.push(b);
-    }
+  const layout = $derived(layoutMapOverlay(fields, blocks));
+  const span = $derived(Math.max(layout.width, layout.height));
+  const pad = $derived(span * 0.05);
+  const viewBox = $derived(
+    `${layout.minX - pad} ${layout.minY - pad} ${layout.width + pad * 2} ${layout.height + pad * 2}`
+  );
+  const fontSize = $derived(span * 0.032);
+  const plantingCount = $derived(new Map(blocks.map((b) => [b.id, b.plantings.length])));
 
-    let minLon = Infinity,
-      maxLon = -Infinity,
-      minLat = Infinity,
-      maxLat = -Infinity;
-    for (const { c } of withGeom) {
-      minLon = Math.min(minLon, c.lon);
-      maxLon = Math.max(maxLon, c.lon);
-      minLat = Math.min(minLat, c.lat);
-      maxLat = Math.max(maxLat, c.lat);
-    }
-    const lonRange = maxLon - minLon || 1;
-    const latRange = maxLat - minLat || 1;
+  function pathFor(rings: Array<[number, number]>[]): string {
+    return rings
+      .map((r) => 'M' + r.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join('L') + 'Z')
+      .join('');
+  }
 
-    const out: Pos[] = [];
-    for (const { b, c } of withGeom) {
-      // Normalise into 0..100% with 10% margin so blocks don't hit the edge.
-      const x = ((c.lon - minLon) / lonRange) * 80 + 10;
-      const y = (1 - (c.lat - minLat) / latRange) * 80 + 10; // invert: high lat = top
-      // Block-area-scaled box (capped between 6% and 18% on each axis).
-      const acres = b.acres ?? 0.5;
-      const size = Math.min(18, Math.max(6, Math.sqrt(acres) * 8));
-      out.push({
-        id: b.id,
-        leftPct: x - size / 2,
-        topPct: y - size / 2,
-        wPct: size,
-        hPct: size,
-        color: colorForBlock(b),
-        label: b.name,
-        plantingCount: b.plantings.length
-      });
-    }
-    // Lay out the no-geometry blocks in a row at the bottom-right.
-    const cols = Math.max(1, Math.ceil(Math.sqrt(noGeom.length)));
-    noGeom.forEach((b, i) => {
-      const r = Math.floor(i / cols);
-      const col = i % cols;
-      out.push({
-        id: b.id,
-        leftPct: 5 + col * 14,
-        topPct: 85 - r * 14,
-        wPct: 11,
-        hPct: 11,
-        color: colorForBlock(b),
-        label: b.name,
-        plantingCount: b.plantings.length
-      });
-    });
-    return out;
-  });
+  const PALETTE = ['#7a8f5a', '#c9961f', '#6f8fa8', '#a85a1f', '#4a8b54', '#a23a3a'];
+  const blockIndex = $derived(new Map(blocks.map((b, i) => [b.id, i])));
+  function colorForBlock(id: string): string {
+    return PALETTE[(blockIndex.get(id) ?? 0) % PALETTE.length];
+  }
 
-  function colorForBlock(b: BlockWithPlantings): string {
-    // Hash block id → stable accent palette pulled from the Almanac tokens
-    // (forest / wheat / sky / rust / olive / grape).
-    const PALETTE = ['#7a8f5a', '#c9961f', '#6f8fa8', '#a85a1f', '#4a8b54', '#a23a3a'];
-    let h = 0;
-    for (let i = 0; i < b.id.length; i++) h = (h * 31 + b.id.charCodeAt(i)) >>> 0;
-    return PALETTE[h % PALETTE.length];
+  function pick(id: string) {
+    onSelect?.(id);
+    onClose();
+  }
+
+  function plantingsLabel(id: string): string {
+    const n = plantingCount.get(id) ?? 0;
+    return `${n} planting${n === 1 ? '' : 's'}`;
   }
 </script>
 
@@ -165,38 +77,102 @@
         <p>No blocks yet. Add one in the workflow strip or via the layout editor.</p>
       </div>
     {:else}
-      <div class="map-canvas" role="img" aria-label="Block layout overview">
-        <div class="compass" title="North">
-          <Compass size={11} />
-          <span class="mono">N</span>
+      {#if layout.mode === 'none'}
+        <div class="empty" data-testid="map-overlay-undrawn">
+          <MapPin size={20} />
+          <p>
+            None of your fields or blocks are drawn yet. Draw them on the map, or enter their width
+            and length, in the <a href="/settings/farm/map">fields & blocks editor</a>.
+          </p>
         </div>
-        {#each positions as p (p.id)}
-          {@const isSel = p.id === selectedBlockId}
-          <button
-            class="map-block"
-            class:selected={isSel}
-            style:left="{p.leftPct}%"
-            style:top="{p.topPct}%"
-            style:width="{p.wPct}%"
-            style:height="{p.hPct}%"
-            style:background={p.color}
-            onclick={() => {
-              onSelect?.(p.id);
-              onClose();
-            }}
-            title="{p.label} · {p.plantingCount} planting{p.plantingCount === 1 ? '' : 's'}"
+      {:else}
+        <div class="map-canvas">
+          <div class="compass" title="North">
+            <Compass size={11} />
+            <span class="mono">N</span>
+          </div>
+          <svg
+            {viewBox}
+            preserveAspectRatio="xMidYMid meet"
+            role="group"
+            aria-label="Field and block layout{layout.mode === 'sketch'
+              ? ', sketched from entered dimensions'
+              : ''}"
+            data-testid="map-overlay-svg"
           >
-            <span class="mb-label">{p.label}</span>
-            <span class="mb-meta mono">{p.plantingCount}× planting</span>
-          </button>
-        {/each}
-      </div>
+            {#each layout.fields as f (f.id)}
+              <path class="field" d={pathFor(f.rings)} data-field-id={f.id} />
+            {/each}
+            {#each layout.blocks as b (b.id)}
+              {@const isSel = b.id === selectedBlockId}
+              <g
+                class="block"
+                class:selected={isSel}
+                role="button"
+                tabindex="0"
+                aria-label="{b.name}, {plantingsLabel(b.id)}"
+                aria-pressed={isSel}
+                data-block-id={b.id}
+                onclick={() => pick(b.id)}
+                onkeydown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    pick(b.id);
+                  }
+                }}
+              >
+                <title>{b.name} · {plantingsLabel(b.id)}</title>
+                <path d={pathFor(b.rings)} style:fill={colorForBlock(b.id)} />
+              </g>
+            {/each}
+            {#if layout.fields.length > 1}
+              {#each layout.fields as f (f.id)}
+                <text
+                  class="mo-field-label"
+                  x={f.labelX}
+                  y={f.topY + fontSize * 0.3}
+                  style:font-size="{fontSize * 0.85}px"
+                  text-anchor="middle"
+                  dominant-baseline="hanging">{f.name}</text
+                >
+              {/each}
+            {/if}
+            {#each layout.blocks as b (b.id)}
+              <text
+                class="mo-block-label"
+                class:selected={b.id === selectedBlockId}
+                x={b.labelX}
+                y={b.labelY}
+                style:font-size="{fontSize}px"
+                text-anchor="middle"
+                dominant-baseline="middle">{b.name}</text
+              >
+            {/each}
+          </svg>
+        </div>
+      {/if}
+      {#if layout.undrawn.length > 0 && layout.mode !== 'none'}
+        <div class="undrawn">
+          <span class="undrawn-label">Not on the map yet:</span>
+          {#each layout.undrawn as u (u.id)}
+            <button
+              type="button"
+              class="chip"
+              class:selected={u.id === selectedBlockId}
+              onclick={() => pick(u.id)}>{u.name}</button
+            >
+          {/each}
+        </div>
+      {/if}
       <div class="footer-hint">
         <Info size={13} />
         <p>
-          Click any block to jump there in Plan. The dedicated
-          <a href="/settings/farm/map">fields & blocks editor</a> in Settings has soil zones, irrigation,
-          and pesticide-buffer overlays.
+          Click any block to jump there in Plan.
+          {#if layout.mode === 'sketch'}
+            Positions are packed from the widths and lengths you entered, not surveyed.
+          {/if}
+          The <a href="/settings/farm/map">fields & blocks editor</a> in Settings is where you draw and
+          resize them.
         </p>
       </div>
     {/if}
@@ -229,7 +205,8 @@
   }
   .map-canvas {
     position: relative;
-    aspect-ratio: 2.4 / 1;
+    aspect-ratio: 16 / 10;
+    max-height: 60vh;
     width: 100%;
     background: linear-gradient(180deg, #e6e1cb 0%, #dad3b5 100%);
     border: 1px solid var(--color-divider);
@@ -252,47 +229,86 @@
     gap: 4px;
     border: 1px solid var(--color-divider);
   }
-  .map-block {
-    position: absolute;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    color: white;
-    padding: 6px 8px;
+  .map-canvas svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .field {
+    fill: rgba(255, 255, 255, 0.35);
+    stroke: var(--color-ink-soft);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 3;
+    vector-effect: non-scaling-stroke;
+  }
+  .block {
     cursor: pointer;
-    font-family: inherit;
-    font-weight: 700;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    opacity: 0.6;
-    transition:
-      opacity 80ms ease,
-      transform 80ms ease;
-    min-width: 60px;
-    min-height: 40px;
-    text-align: left;
-    overflow: hidden;
+    outline: none;
   }
-  .map-block:hover {
-    opacity: 0.9;
+  .block path {
+    opacity: 0.7;
+    stroke: rgba(0, 0, 0, 0.35);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    transition: opacity 80ms ease;
   }
-  .map-block.selected {
+  .block:hover path,
+  .block:focus-visible path {
+    opacity: 0.95;
+  }
+  .block:focus-visible path {
+    stroke: var(--color-forest-deep);
+    stroke-width: 3;
+  }
+  .block.selected path {
     opacity: 1;
-    border: 3px solid var(--color-ink);
-    z-index: 3;
+    stroke: var(--color-ink);
+    stroke-width: 3;
   }
-  .mb-label {
-    font-size: 12px;
-    line-height: 1.1;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  .mo-block-label,
+  .mo-field-label {
+    pointer-events: none;
+    font-family: inherit;
+    paint-order: stroke;
+    stroke-linejoin: round;
   }
-  .mb-meta {
-    font-size: 9.5px;
-    font-weight: 500;
-    opacity: 0.9;
-    margin-top: 1px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  .mo-block-label {
+    fill: white;
+    font-weight: 700;
+    stroke: rgba(0, 0, 0, 0.45);
+    stroke-width: 0.12em;
+  }
+  .mo-field-label {
+    fill: var(--color-ink-soft);
+    font-weight: 600;
+    stroke: var(--color-paper);
+    stroke-width: 0.2em;
+  }
+  .undrawn {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--color-ink-muted);
+  }
+  .chip {
+    min-height: 32px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-divider);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .chip.selected {
+    border-color: var(--color-ink);
+  }
+  .empty a {
+    color: var(--color-forest);
+    font-weight: 600;
   }
   .footer-hint {
     display: flex;

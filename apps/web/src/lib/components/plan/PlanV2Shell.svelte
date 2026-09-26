@@ -32,6 +32,7 @@
   import SeasonTimelineCard from './SeasonTimelineCard.svelte';
   import ScheduledTasksCard, { type ScheduledRow } from './ScheduledTasksCard.svelte';
   import MapOverlay from './MapOverlay.svelte';
+  import type { OverlayFieldInput } from '$lib/plan/mapOverlayLayout';
   import { fmt } from '$lib/prefsState.svelte';
   import {
     blockHarvestWindowLabel,
@@ -52,6 +53,8 @@
     events?: CalendarEvent[];
     /** Active farm name; appears in the MapOverlay title. */
     farmLabel?: string;
+    /** Field outlines / dimensions drawn behind blocks in the MapOverlay. */
+    fields?: OverlayFieldInput[];
     /** Plugin index used to derive crop name + DTM for plantings. */
     cropMeta: Record<
       string,
@@ -79,6 +82,7 @@
     tasks,
     events = [],
     farmLabel,
+    fields = [],
     cropMeta,
     onOpenWizard,
     onEditBlock,
@@ -354,6 +358,7 @@
     open={mapOpen}
     onClose={closeMap}
     {blocks}
+    {fields}
     {selectedBlockId}
     {farmLabel}
     onSelect={selectBlock}

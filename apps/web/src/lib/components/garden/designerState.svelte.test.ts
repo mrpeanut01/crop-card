@@ -467,6 +467,60 @@ describe('DesignerState crops', () => {
 });
 
 describe('DesignerState write safety', () => {
+  function slowFetch() {
+    let releaseAll!: () => void;
+    const gate = new Promise<void>((r) => (releaseAll = r));
+    const fetcher = (async () => {
+      await gate;
+      return new Response('{}', { status: 200 });
+    }) as typeof fetch;
+    return { fetcher, releaseAll };
+  }
+
+  it('a save that lands after a refusal leaves the refusal showing', async () => {
+    const { fetcher, releaseAll } = slowFetch();
+    const { d, cleanup } = make({ fetch: fetcher });
+    const nudged = d.nudgeBed('bed2', 1, 0);
+    await d.moveBedTo('bed2', 3, 4);
+    await flush();
+    expect(d.alert).toBe("Beds can't overlap");
+    releaseAll();
+    expect(await nudged).toBe(true);
+    await flush();
+    expect(d.alert).toBe("Beds can't overlap");
+    expect(d.status).toBe('');
+    cleanup();
+  });
+
+  it('a save that lands after a scrub still lets the date summary be read', async () => {
+    const { fetcher, releaseAll } = slowFetch();
+    const { d, cleanup } = make({ fetch: fetcher });
+    vi.useFakeTimers();
+    try {
+      const nudged = d.nudgeBed('bed1', 1, 0);
+      d.setDate(Date.UTC(2026, 6, 15));
+      d.announceDateSoon();
+      releaseAll();
+      expect(await nudged).toBe(true);
+      await vi.advanceTimersByTimeAsync(500);
+      expect(d.status).toBe(d.dateSummary());
+    } finally {
+      vi.useRealTimers();
+    }
+    cleanup();
+  });
+
+  it('a save that lands with nothing said since still confirms', async () => {
+    const { fetcher, releaseAll } = slowFetch();
+    const { d, cleanup } = make({ fetch: fetcher });
+    const nudged = d.nudgeBed('bed1', 1, 0);
+    releaseAll();
+    expect(await nudged).toBe(true);
+    await flush();
+    expect(d.status).toMatch(/^Bed 1 moved to/);
+    cleanup();
+  });
+
   it('a slow failed nudge never undoes a later saved one', async () => {
     let release!: () => void;
     const gate = new Promise<void>((r) => (release = r));

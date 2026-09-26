@@ -199,6 +199,11 @@ export class DesignerState {
   alert = $state('');
   private alertTimer: ReturnType<typeof setTimeout> | null = null;
   private summaryTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Bumped by everything said the moment it happens (a warning, a scrub, a
+   *  prompt). A write's confirmation carries the value from when the write
+   *  started, so one that lands after something newer was said stays quiet
+   *  instead of clearing that warning or cancelling that date summary. */
+  private spoken = 0;
   /** Client time of the last write the server accepted; 0 before any. */
   lastSavedAt = 0;
   busy = $state(false);
@@ -303,7 +308,14 @@ export class DesignerState {
     }
   }
 
-  say(text: string): void {
+  /** Marks the start of a write whose confirmation is said later. */
+  private mark(): number {
+    return this.spoken;
+  }
+
+  say(text: string, since?: number): void {
+    if (since === undefined) this.spoken++;
+    else if (since !== this.spoken) return;
     this.cancelDateSummary();
     this.clearAlert();
     this.status = '';
@@ -314,6 +326,7 @@ export class DesignerState {
    *  said in the meantime wins, so the result of a quick edit after a
    *  scrub is never replaced by a stale date summary. */
   announceDateSoon(delayMs = DATE_SUMMARY_DELAY_MS): void {
+    this.spoken++;
     this.cancelDateSummary();
     this.summaryTimer = setTimeout(() => {
       this.summaryTimer = null;
@@ -327,6 +340,7 @@ export class DesignerState {
   }
 
   warn(text: string): void {
+    this.spoken++;
     this.clearAlert();
     queueMicrotask(() => (this.alert = text));
     this.alertTimer = setTimeout(() => this.clearAlert(), ALERT_MS);
@@ -668,6 +682,7 @@ export class DesignerState {
       rotationDeg: 0
     };
     this.busy = true;
+    const since = this.mark();
     try {
       const res = await this.request<{ block: { id: string } }>('/api/blocks', {
         method: 'POST',
@@ -677,7 +692,7 @@ export class DesignerState {
       this.history[res.block.id] = [];
       this.selectedBedId = res.block.id;
       this.selectedCropId = null;
-      this.say(`${name} added at ${feet(rect.x)} from west, ${feet(rect.y)} from north.`);
+      this.say(`${name} added at ${feet(rect.x)} from west, ${feet(rect.y)} from north.`, since);
     } catch (e) {
       this.design.beds = this.design.beds.filter((b) => b.blockId !== tempId);
       this.fail(e);
@@ -711,6 +726,7 @@ export class DesignerState {
     const id = next.blockId;
     const key = `bed:${id}`;
     if (!this.confirmedBeds.has(id)) this.confirmedBeds.set(id, prev);
+    const since = this.mark();
     const { seq, done } = this.queueWrite(key, () =>
       this.request(`/api/blocks/${encodeURIComponent(id)}`, { method: 'PATCH', json: patch })
     );
@@ -719,7 +735,7 @@ export class DesignerState {
       if (this.isLatestWrite(key, seq)) this.confirmedBeds.delete(id);
       else this.confirmedBeds.set(id, next);
       this.markPlaced(id);
-      this.say(what);
+      this.say(what, since);
       return true;
     } catch (e) {
       if (this.isLatestWrite(key, seq)) {
@@ -890,6 +906,7 @@ export class DesignerState {
     const name = nextBedName(this.beds, bed.kind);
     const tempId = `pending-${Date.now()}`;
     this.design.beds = [...this.design.beds, { ...bed, blockId: tempId, name, rect: spot }];
+    const since = this.mark();
     try {
       const res = await this.request<{ block: { id: string } }>('/api/blocks', {
         method: 'POST',
@@ -908,7 +925,7 @@ export class DesignerState {
       this.replaceBed(tempId, (b) => ({ ...b, blockId: res.block.id }));
       this.history[res.block.id] = [];
       this.selectedBedId = res.block.id;
-      this.say(`${name} added next to ${bed.name}.`);
+      this.say(`${name} added next to ${bed.name}.`, since);
     } catch (e) {
       this.design.beds = this.design.beds.filter((b) => b.blockId !== tempId);
       this.fail(e);
@@ -925,6 +942,7 @@ export class DesignerState {
     const bed = this.bed(blockId);
     this.confirmDeleteBedId = null;
     if (!bed || !this.guard()) return;
+    const since = this.mark();
     try {
       await this.request(`/api/blocks/${encodeURIComponent(blockId)}?ifEmpty=1`, {
         method: 'DELETE'
@@ -932,7 +950,7 @@ export class DesignerState {
       this.design.beds = this.design.beds.filter((b) => b.blockId !== blockId);
       this.design.plantings = this.design.plantings.filter((p) => p.blockId !== blockId);
       if (this.selectedBedId === blockId) this.selectBed(null);
-      this.say(`${bed.name} deleted.`);
+      this.say(`${bed.name} deleted.`, since);
     } catch (e) {
       if (e instanceof WriteError && e.code === 'BED_HAS_RECORDS') {
         this.warn(
@@ -1101,6 +1119,7 @@ export class DesignerState {
       return;
     }
     this.mode = { kind: 'idle' };
+    const since = this.mark();
     try {
       if (existing) {
         await this.writeFootprint(existing, {
@@ -1137,7 +1156,8 @@ export class DesignerState {
         : undefined;
       const when = movedForWindow ? ` for ${movedForWindow}` : '';
       this.say(
-        `${label} placed in ${bed.name}${when}${placed?.plantCount ? `, ${plural(placed.plantCount, 'plant')}` : ''}.${warn ? ` ${warn.message}` : ''}`
+        `${label} placed in ${bed.name}${when}${placed?.plantCount ? `, ${plural(placed.plantCount, 'plant')}` : ''}.${warn ? ` ${warn.message}` : ''}`,
+        since
       );
       if (utcDayStart(dateMs) !== this.dateMs) {
         this.jumpTo = {
@@ -1322,6 +1342,7 @@ export class DesignerState {
     const id = planting.cropId;
     const key = `crop:${id}`;
     if (!this.confirmedPlantings.has(id)) this.confirmedPlantings.set(id, prev);
+    const since = this.mark();
     const { seq, done } = this.queueWrite(key, () =>
       this.request<FootprintWriteResponse>(`/api/crops/${encodeURIComponent(id)}`, {
         method: 'PATCH',
@@ -1340,7 +1361,7 @@ export class DesignerState {
         this.confirmedPlantings.set(id, res.planting);
       }
       for (const f of res.followers ?? []) this.replacePlanting(f);
-      for (const w of res.warnings ?? []) this.say(w);
+      for (const w of res.warnings ?? []) this.say(w, since);
       return res;
     } catch (e) {
       if (this.isLatestWrite(key, seq)) {
@@ -1404,6 +1425,7 @@ export class DesignerState {
       this.warn(`Pick a date near the ${this.design.seasonYear} season.`);
       return null;
     }
+    const since = this.mark();
     const res = await this.writeFootprint(p, {
       blockId: p.blockId,
       footprint: p.footprint,
@@ -1415,7 +1437,7 @@ export class DesignerState {
       const visible = iv ? this.dateMs >= iv.startMs && this.dateMs < iv.endMs : false;
       const text = `${p.varietyDisplayName} now starts ${this.dateText(dateMs)}.`;
       if (!visible) this.jumpTo = { dateMs: utcDayStart(dateMs), text };
-      this.say(visible ? text : `${text} Slide to ${this.dateText(dateMs)} to see it.`);
+      this.say(visible ? text : `${text} Slide to ${this.dateText(dateMs)} to see it.`, since);
     }
     return res;
   }
@@ -1535,6 +1557,7 @@ export class DesignerState {
     linked: boolean
   ): Promise<void> {
     const from = p.blockId;
+    const since = this.mark();
     const res = await this.writeFootprint(p, {
       blockId: bed.blockId,
       footprint: fp,
@@ -1544,7 +1567,7 @@ export class DesignerState {
     const shares = this.sharesSpaceText(res.planting);
     const where = from !== bed.blockId ? ` to ${bed.name}` : '';
     const link = linked && from !== bed.blockId ? ' It stays linked with its other sowings.' : '';
-    this.say(`${p.varietyDisplayName} moved${where}.${link}${shares ? ` ${shares}` : ''}`);
+    this.say(`${p.varietyDisplayName} moved${where}.${link}${shares ? ` ${shares}` : ''}`, since);
     if (from !== bed.blockId) {
       this.selectPlanting(p.cropId);
       this.focusRequest = { kind: 'planting', id: p.cropId, n: Date.now() };
@@ -1655,6 +1678,7 @@ export class DesignerState {
   async commitSuccession(cropId: string, count: number, intervalDays?: number): Promise<boolean> {
     const anchor = this.design.plantings.find((p) => p.cropId === cropId);
     if (!anchor || !this.guard()) return false;
+    const since = this.mark();
     try {
       const res = await this.request<SuccessionResponse>(
         `/api/garden/beds/${encodeURIComponent(anchor.blockId)}/succession`,
@@ -1672,7 +1696,7 @@ export class DesignerState {
         });
       }
       this.ghosts = [];
-      this.say(`${plural(res.created.length, 'sowing')} added.`);
+      this.say(`${plural(res.created.length, 'sowing')} added.`, since);
       return true;
     } catch (e) {
       this.fail(e);
@@ -1727,6 +1751,7 @@ export class DesignerState {
     accepted: ReadonlyArray<Pick<ProposedPlanting, 'key' | 'plantingDateMs' | 'footprint'>>
   ): Promise<boolean> {
     if (!accepted.length || !this.guard()) return false;
+    const since = this.mark();
     try {
       const res = await this.request<RecipeResponse>(
         `/api/garden/beds/${encodeURIComponent(blockId)}/recipe`,
@@ -1749,7 +1774,8 @@ export class DesignerState {
       this.ghosts = [];
       const recipe = this.recipes.find((r) => r.pluginId === recipePluginId);
       this.say(
-        `${plural(res.created.length, 'planting')} added${recipe ? ` from ${recipe.displayName}` : ''}.`
+        `${plural(res.created.length, 'planting')} added${recipe ? ` from ${recipe.displayName}` : ''}.`,
+        since
       );
       if (res.created[0]) {
         this.focusRequest = { kind: 'planting', id: res.created[0].cropId, n: Date.now() };
@@ -1786,6 +1812,7 @@ export class DesignerState {
 
   async acceptProposals(proposals: ProposedPlanting[]): Promise<boolean> {
     if (!proposals.length || !this.guard()) return false;
+    const since = this.mark();
     try {
       const created = await this.createPlantings(
         proposals.map((p) => ({
@@ -1802,7 +1829,7 @@ export class DesignerState {
       );
       this.absorbCreated(created);
       this.ghosts = [];
-      this.say(`${plural(created.length, 'planting')} added.`);
+      this.say(`${plural(created.length, 'planting')} added.`, since);
       if (created[0]) {
         this.focusRequest = { kind: 'planting', id: created[0].cropId, n: Date.now() };
       }

@@ -4,9 +4,9 @@
  */
 
 import type { BedRecipePlugin, BedRecipeStep } from '$lib/plugins/schemas';
-import { FAMILY_SUCCESSION_DAYS } from '$lib/schedule/succession';
+import { successionIntervalDays } from '$lib/schedule/succession';
 import { fitFootprint, footprintsOverlap } from './geometry';
-import { plantingOccupancy } from './occupancy';
+import { plantingOccupancy, shortDate } from './occupancy';
 import { footprintForCount, plantCount, resolveSpacing } from './plantCount';
 import type {
   BedLayout,
@@ -67,14 +67,6 @@ function addDays(ms: number, days: number): number {
  *  as local midnight land on the same day. */
 export function dayOf(ms: number): number {
   return Math.round(ms / DAY_MS) * DAY_MS;
-}
-
-function shortDate(ms: number): string {
-  return new Date(ms).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC'
-  });
 }
 
 function formatFt(ft: number): string {
@@ -190,7 +182,7 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
     const sowings = 1 + (step.successions?.count ?? 0);
     let intervalDays = 0;
     if (step.successions) {
-      intervalDays = step.successions.intervalDays ?? familyInterval(crop.cropFamily);
+      intervalDays = step.successions.intervalDays ?? successionIntervalDays(crop.cropFamily);
       if (intervalDays <= 0) {
         warnings.push(`${crop.displayName} doesn't usually succession-sow, so it is planted once.`);
       }
@@ -282,10 +274,6 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
     skipped,
     warnings
   };
-}
-
-function familyInterval(family: string): number {
-  return (FAMILY_SUCCESSION_DAYS as Readonly<Record<string, number>>)[family] ?? 0;
 }
 
 export interface UnplacedCrop {

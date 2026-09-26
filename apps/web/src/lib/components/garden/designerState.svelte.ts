@@ -1220,7 +1220,9 @@ export class DesignerState {
         { method: 'POST', json: { cropId, count, intervalDays, commit: true } }
       );
       this.absorbCreated(res.created);
-      if (res.groupId) {
+      if (res.anchor) {
+        this.replacePlanting(res.anchor);
+      } else if (res.groupId) {
         this.replacePlanting({
           ...(this.design.plantings.find((p) => p.cropId === cropId) ?? anchor),
           groupId: res.groupId,

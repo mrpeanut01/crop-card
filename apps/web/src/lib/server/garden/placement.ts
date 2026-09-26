@@ -26,7 +26,7 @@ import type {
   PlantingCreateRequest
 } from '$lib/garden/api';
 import { footprintsOverlap } from '$lib/garden/geometry';
-import { plantingOccupancy } from '$lib/garden/occupancy';
+import { plantingOccupancy, shortDate } from '$lib/garden/occupancy';
 import { plantCount, resolveSpacing } from '$lib/garden/plantCount';
 import type { GardenCrop, PlacedPlanting, PlantingStatus } from '$lib/garden/types';
 import { frostDatesForYear } from '$lib/schedule/settings';
@@ -166,14 +166,6 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
     groupId: crop.groupId ?? null,
     groupSystemKind: crop.groupSystemKind ?? null
   };
-}
-
-function shortDate(ms: number): string {
-  return new Date(ms).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC'
-  });
 }
 
 /** "Shares space with Lettuce until Jul 1." for each planting in the bed that

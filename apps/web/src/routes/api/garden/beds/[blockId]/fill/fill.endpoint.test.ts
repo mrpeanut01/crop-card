@@ -27,31 +27,6 @@ vi.mock('$lib/server/auth', () => ({
     return { id: 'garden-fill-user', role: 'owner' };
   }
 }));
-vi.mock('$lib/garden/geometry', async (orig) => {
-  const ref = await import('$lib/garden/__fixtures__/logicReference');
-  return {
-    ...(await orig<typeof import('$lib/garden/geometry')>()),
-    footprintsOverlap: ref.footprintsOverlap,
-    fitFootprint: ref.fitFootprint
-  };
-});
-vi.mock('$lib/garden/plantCount', async (orig) => {
-  const ref = await import('$lib/garden/__fixtures__/logicReference');
-  return {
-    ...(await orig<typeof import('$lib/garden/plantCount')>()),
-    resolveSpacing: ref.resolveSpacing,
-    plantCount: ref.plantCount,
-    footprintForCount: ref.footprintForCount
-  };
-});
-vi.mock('$lib/garden/occupancy', async (orig) => {
-  const ref = await import('$lib/garden/__fixtures__/logicReference');
-  return {
-    ...(await orig<typeof import('$lib/garden/occupancy')>()),
-    plantingOccupancy: ref.plantingOccupancy,
-    occupancyIntervals: ref.occupancyIntervals
-  };
-});
 
 import { db } from '$lib/db/client';
 import { aiCallLog, owners, users } from '$lib/db/schema';

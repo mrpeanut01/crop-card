@@ -18,6 +18,7 @@ import { tenantValues, tenantWhere, withTenant } from './tenant';
 import {
   cascadeDeleteForCrop,
   createTask,
+  listTasks,
   materializePluginPrePost,
   materializeSeasonalTasks,
   reanchorCropTasks,
@@ -466,6 +467,9 @@ export interface GroupMemberInput {
   /** Garden designer footprint + spacing for this member (successions
    *  copy the anchor's). */
   placement?: CropPlacement;
+  /** With `existingCropId`: when that planting already has tasks, join the
+   *  group without touching its status, date or tasks. */
+  keepExistingTasks?: boolean;
 }
 
 export interface CreateGroupInput {
@@ -503,6 +507,27 @@ function materializeMember(
   const offsetDays = role === 'anchor' ? null : (member.offsetDays ?? 0);
   let cropId: string;
   let cropRow: typeof crops.$inferSelect;
+
+  if (member.existingCropId && member.keepExistingTasks) {
+    const existingTasks = listTasks({ cropId: member.existingCropId });
+    const primaryTask = existingTasks.find((t) => t.kind === 'primary');
+    if (primaryTask) {
+      const joined = db
+        .update(crops)
+        .set({ groupId, groupRole: role, groupOffsetDays: offsetDays, groupSystemKind: systemKind })
+        .where(withTenant(crops, eq(crops.id, member.existingCropId)))
+        .returning()
+        .get();
+      if (!joined) throw new Error(`unknown crop id: ${member.existingCropId}`);
+      return {
+        crop: rowToCrop(joined),
+        primaryTaskId: primaryTask.id,
+        preTaskIds: [],
+        postTaskIds: [],
+        seasonalTaskIds: []
+      };
+    }
+  }
 
   if (member.existingCropId) {
     const existing = db

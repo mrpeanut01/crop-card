@@ -1,35 +1,9 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { bedRecipePluginSchema } from '$lib/plugins/schemas';
 import type { GardenCrop, OccupancyInterval } from './types';
-
-vi.mock('./geometry', async (orig) => {
-  const ref = await import('./__fixtures__/logicReference');
-  return {
-    ...(await orig<typeof import('./geometry')>()),
-    footprintsOverlap: ref.footprintsOverlap,
-    fitFootprint: ref.fitFootprint
-  };
-});
-vi.mock('./plantCount', async (orig) => {
-  const ref = await import('./__fixtures__/logicReference');
-  return {
-    ...(await orig<typeof import('./plantCount')>()),
-    resolveSpacing: ref.resolveSpacing,
-    plantCount: ref.plantCount,
-    footprintForCount: ref.footprintForCount
-  };
-});
-vi.mock('./occupancy', async (orig) => {
-  const ref = await import('./__fixtures__/logicReference');
-  return {
-    ...(await orig<typeof import('./occupancy')>()),
-    plantingOccupancy: ref.plantingOccupancy,
-    occupancyIntervals: ref.occupancyIntervals
-  };
-});
 
 import {
   applyRecipe,

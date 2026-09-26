@@ -286,6 +286,9 @@ for (const viewport of [PHONE, DESKTOP]) {
         await expect(succ).toContainText(d);
       }
       await expect(succ.getByRole('button', { name: 'Add 5 sowings' })).toBeEnabled();
+      await succ.getByRole('button', { name: 'Add 5 sowings' }).click();
+      await expect(page.getByTestId('designer-status')).toHaveText('5 sowings added.');
+      await expect(succ).toBeHidden();
 
       await page.getByRole('button', { name: 'Canvas', exact: true }).click();
       await expect(page.getByTestId('bed')).toHaveCount(4);

@@ -101,6 +101,8 @@ export type SuccessionRequest = z.infer<typeof successionRequestSchema>;
 export interface SuccessionResponse {
   proposal: SuccessionProposal;
   groupId: string | null;
+  /** The anchor as saved after a commit, now linked to the group. */
+  anchor?: PlacedPlanting;
   created: PlacedPlanting[];
 }
 

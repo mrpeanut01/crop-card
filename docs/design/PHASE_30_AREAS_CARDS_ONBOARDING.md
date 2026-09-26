@@ -1,6 +1,6 @@
 # Phase 30: Areas, Cards, and Setup That Gets Out of the Way
 
-Status: **Sprint 30A in progress** (2026-09-26). Owner: Shawn. The 30A foundations are integrated on a branch; 30B onward is not built yet. Panel decisions are recorded in [Decisions (2026-09-26)](#decisions-2026-09-26).
+Status: **Sprint 30A in progress, 30E implemented** (2026-09-26). Owner: Shawn. The 30A foundations and the 30E garden designer are integrated on branches; 30B, 30C, 30D, 30F and 30G are not built yet. Panel decisions are recorded in [Decisions (2026-09-26)](#decisions-2026-09-26).
 
 This is the implementation plan for reshaping CropCard's first-run experience, farm map and everyday UI. It borrows what works from [LiteFarm](https://github.com/LiteFarmOrg/LiteFarm) and [Seedtime](https://seedtime.us/), keeps what makes CropCard CropCard, and turns the paper Field Card that started this project into the organizing idea of the whole interface.
 
@@ -550,7 +550,21 @@ Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping 
 - Farm Map Card.
 - Visual baselines re-captured with `visual.yml update`.
 
-### 30E. Garden designer v1 (2 sprints)
+### 30E. Garden designer v1 (2 sprints) (implemented)
+
+**Implemented (2026-09-26).** The designer lives at `/plan/areas/[id]/design` for garden and greenhouse Areas, with the full contract in [`GARDEN_DESIGNER.md`](GARDEN_DESIGNER.md). What shipped:
+
+- A hand-rolled Svelte 5 SVG canvas in feet with a 1 ft and 5 ft grid, rulers, a north arrow for drawn Areas, landmarks from shade sources, 6 in snapping, 90° turns, drag with Pointer Events on tablet and desktop, pinch and wheel zoom, and a keyboard path for every action. Phones use tap to select, then tap to place, with a 48dp toolbar. A List view has full parity and the choice is remembered.
+- Pure logic in `lib/garden/`: geometry (clamping, overlap, free spots, adjacency), plant counts from plugin spacing in Rows, Offset and Square foot patterns with provenance, occupancy from planting date to harvest end plus turnover (now shared with `scheduleCandidacy`), succession proposals keyed on `FAMILY_SUCCESSION_DAYS`, rotation warnings through `buildRotationSuggestion`, and companion hints for the same or adjacent beds.
+- Placement data on plantings (footprint, spacing, pattern, count and count provenance), written through `PATCH /api/crops/[id]` `set-placement` and `POST /api/blocks/[id]/plantings`. Date moves re-anchor tasks and move linked sowings together. `/api/blocks` refuses overlapping or out-of-Area beds, refuses helpers on beds, and `DELETE ?ifEmpty=1` refuses a bed that has records.
+- A time scrubber showing what occupies each bed on any date, with open-from and next-open chips. **Add succession** previews on the canvas and commits through `POST /api/garden/beds/[blockId]/succession` as one succession group.
+- Bed recipes as a new data-only plugin kind (`plugins/bed-recipes/`, seven recipes, Zod and JSON Schema validated, every crop checked against the registry), previewed client side.
+- **Fill this bed** through `aiTry()` and `aiGuard`, with every proposal checked on the server and a recipe or spacing-packed plan tagged `fallback` whenever Claude is off.
+- The Area Card gains an **Open designer** link and a to-scale bed map, on screen and in print. First-use hints for the designer and the scrubber.
+- e2e for the household gardener and the high tunnel at 375 px and 1280 px in both views, keyboard-only placement, helper read-only, and a field Area returning 404.
+
+Deferred: dragging a crop or a bed preset onto the canvas (tap to place works everywhere); the `/plan` left-rail Gardens group and a Getting Started entry; Print opening the Area Card print view (Print uses the browser on the designer page today); a server-side recipe commit endpoint (accepted recipe steps are saved one at a time); moving a linked sowing to another bed; and full offline fallback for a client-side navigation to the designer, which needs a universal loader over a `GET /api/garden/areas/[id]/design` endpoint and card snapshots that 30F owns. The adjacency gap stays at 4 ft, so the high-tunnel scenario's beds 4.5 ft apart get no keep-apart hint; widen it or move the beds if that hint matters. When a footprint is narrower than its row spacing the count uses one row rather than zero.
+
 
 - Canvas, beds, snapping, 90° rotation.
 - Crop panel, footprint and spacing-driven counts (migration 0051).

@@ -10,6 +10,7 @@ import { getBlock, type Block } from '$lib/db/blocks';
 import {
   createPlanned,
   getCrop,
+  groupDateFollowers,
   listCrops,
   movePlantingDate,
   setPlacement,
@@ -201,17 +202,21 @@ export function sharedSpaceWarnings(crop: Crop, lookup: CropLookup): string[] {
   return out;
 }
 
-/** Why a linked succession sowing can't go to this spot in another bed:
- *  the spot is taken for part of its time there. Sowings in a series are
- *  meant to follow one another, so they never share space the way a
- *  hand-placed interplanting may. Null when the spot is free. */
+/** Why a linked succession sowing can't take this spot on this date: the
+ *  spot is taken for part of its time there. Sowings in a series are meant
+ *  to follow one another, so they never share space the way a hand-placed
+ *  interplanting may. A planting with no spot holds the whole bed, on
+ *  either side. Plantings in `ignore` are left out (group members moving
+ *  by the same number of days). Null when the spot is free or the sowing
+ *  has no date yet; the check runs again once a date is set. */
 export function linkedSowingClash(
   current: Crop,
   target: { blockId: string; footprint: Footprint | null; plantingDateMs: number | null },
   bedName: string,
-  lookup: CropLookup
+  lookup: CropLookup,
+  ignore: ReadonlySet<string> = new Set()
 ): string | null {
-  if (!target.footprint || target.plantingDateMs == null) return null;
+  if (target.plantingDateMs == null) return null;
   const plugin = lookup(current.cropPluginId);
   const year = new Date(target.plantingDateMs).getFullYear();
   const { firstFallFrostMs, lastSpringFrostMs } = frostDatesForYear(year);
@@ -227,17 +232,39 @@ export function linkedSowingClash(
   );
   if (!mine) return null;
   for (const other of listCrops({ blockId: target.blockId })) {
-    if (other.id === current.id || !other.footprint) continue;
+    if (other.id === current.id || ignore.has(other.id)) continue;
     const theirs = plantingOccupancy(
       placedPlantingFromCrop(other, lookup(other.cropPluginId)),
       lookup(other.cropPluginId),
       { firstFallFrostMs, lastSpringFrostMs }
     );
     if (!theirs || !intervalsOverlapInTime(mine, theirs)) continue;
-    if (!footprintsOverlap(other.footprint, target.footprint)) continue;
+    if (
+      other.footprint &&
+      target.footprint &&
+      !footprintsOverlap(other.footprint, target.footprint)
+    ) {
+      continue;
+    }
     return `No room for ${current.varietyDisplayName} there in ${bedName} on ${shortDate(mine.startMs)}. ${other.varietyDisplayName} holds that spot until ${shortDate(theirs.endMs)}.`;
   }
   return null;
+}
+
+function sameFootprint(a: Footprint | null | undefined, b: Footprint | null | undefined): boolean {
+  if (!a || !b) return !a && !b;
+  return a.x_in === b.x_in && a.y_in === b.y_in && a.w_in === b.w_in && a.l_in === b.l_in;
+}
+
+function cropInGround(c: Crop, nowMs: number): boolean {
+  return plantingInGround(
+    { status: c.status, plantingDateMs: c.plantingDate, harvestedAtMs: c.harvestedAt ?? null },
+    nowMs
+  );
+}
+
+function isLinkedSowing(c: Crop): boolean {
+  return !!c.groupId && c.groupSystemKind === 'succession';
 }
 
 export type FootprintWriteResult = { ok: true; response: FootprintWriteResponse } | GardenFailure;
@@ -265,11 +292,14 @@ export function mergePlacementInput(
 
 /** Places, moves or clears a planting's spot, and moves its date when
  *  `plantingDateMs` is sent. Moving to another bed is only for plantings
- *  not yet in the ground (`plantingInGround`); a linked succession sowing
- *  keeps its group link and needs a spot that is free for its whole time
- *  in the new bed (`linkedSowingClash`). A date move re-anchors the
- *  planting's tasks (and a group's members when it anchors one) through
- *  `movePlantingDate`; the members that moved come back as `followers`. */
+ *  not yet in the ground (`plantingInGround`); one in the ground may have
+ *  its date corrected, but never to a day after today. A linked succession
+ *  sowing keeps its group link, and whenever its bed, spot or date changes
+ *  it needs a spot that is free for its whole time there
+ *  (`linkedSowingClash`). A date move re-anchors the planting's tasks and,
+ *  when it anchors a group, moves the members not yet in the ground
+ *  (`groupDateFollowers`), each checked the same way in its own bed; the
+ *  members that moved come back as `followers`. */
 export function writeFootprint(
   cropId: string,
   req: FootprintWriteRequest,
@@ -280,17 +310,7 @@ export function writeFootprint(
   if (!current) return gardenFailure(404, 'planting not found');
   const bed = resolveDesignableBed(req.blockId);
   if (isFailure(bed)) return bed;
-  if (
-    req.blockId !== current.blockId &&
-    plantingInGround(
-      {
-        status: current.status,
-        plantingDateMs: current.plantingDate,
-        harvestedAtMs: current.harvestedAt ?? null
-      },
-      nowMs
-    )
-  ) {
+  if (req.blockId !== current.blockId && cropInGround(current, nowMs)) {
     return gardenFailure(
       409,
       `${current.varietyDisplayName} is already in the ground in ${getBlock(current.blockId)?.name ?? 'its bed'}. Record a new planting instead.`,
@@ -300,22 +320,47 @@ export function writeFootprint(
   if (req.footprint && !footprintInsideBed(req.footprint, bed)) {
     return gardenFailure(400, `That spot runs past the edge of ${bed.block.name}.`, 'OUTSIDE_AREA');
   }
+  const nextDateMs = req.plantingDateMs === undefined ? current.plantingDate : req.plantingDateMs;
+  const newDateMs =
+    req.plantingDateMs != null && req.plantingDateMs !== current.plantingDate
+      ? req.plantingDateMs
+      : null;
+  if (newDateMs != null && newDateMs > nowMs && cropInGround(current, nowMs)) {
+    return gardenFailure(
+      409,
+      `${current.varietyDisplayName} is already in the ground, so its date can't move past today. Record a new planting instead.`,
+      'IN_GROUND'
+    );
+  }
+  const followers = newDateMs != null ? groupDateFollowers(current, newDateMs, nowMs) : [];
+  const movingTogether = new Set(followers.map((f) => f.crop.id));
   if (
-    req.blockId !== current.blockId &&
-    current.groupId &&
-    current.groupSystemKind === 'succession'
+    isLinkedSowing(current) &&
+    (req.blockId !== current.blockId ||
+      newDateMs != null ||
+      (req.footprint !== null && !sameFootprint(req.footprint, current.footprint)))
   ) {
     const clash = linkedSowingClash(
       current,
-      {
-        blockId: req.blockId,
-        footprint: req.footprint,
-        plantingDateMs: req.plantingDateMs === undefined ? current.plantingDate : req.plantingDateMs
-      },
+      { blockId: req.blockId, footprint: req.footprint, plantingDateMs: nextDateMs },
       bed.block.name,
-      lookup
+      lookup,
+      movingTogether
     );
     if (clash) return gardenFailure(409, clash, 'OVERLAP');
+  }
+  if (isLinkedSowing(current)) {
+    const ignore = new Set([current.id, ...movingTogether]);
+    for (const f of followers) {
+      const clash = linkedSowingClash(
+        f.crop,
+        { blockId: f.crop.blockId, footprint: f.crop.footprint ?? null, plantingDateMs: f.toMs },
+        getBlock(f.crop.blockId)?.name ?? 'its bed',
+        lookup,
+        ignore
+      );
+      if (clash) return gardenFailure(409, clash, 'OVERLAP');
+    }
   }
   const plugin = lookup(current.cropPluginId);
   const placement = resolvePlacement(mergePlacementInput(current, req), plugin);
@@ -328,7 +373,7 @@ export function writeFootprint(
       if (req.plantingDateMs === null) {
         if (current.plantingDate != null) unscheduleCrop(cropId);
       } else if (req.plantingDateMs !== current.plantingDate) {
-        const moved = movePlantingDate(cropId, req.plantingDateMs);
+        const moved = movePlantingDate(cropId, req.plantingDateMs, nowMs);
         reanchored = moved?.reanchored ?? null;
         followers = (moved?.followers ?? []).map((f) =>
           placedPlantingFromCrop(f, lookup(f.cropPluginId))

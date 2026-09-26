@@ -464,6 +464,198 @@ describe('writeFootprint', () => {
     });
   });
 
+  function sowingGroup(blockId: string, offsets: Array<{ days: number; y_in: number }>) {
+    const plugin = registry.get(LETTUCE)!.plugin as CropPlugin;
+    const strip = (y_in: number) => ({
+      footprint: { x_in: 0, y_in, w_in: 48, l_in: 24 },
+      spacingIn: null,
+      rowSpacingIn: null,
+      spacingPattern: 'square' as const,
+      plantCount: null,
+      plantCountProvenance: null
+    });
+    const group = createPlantingGroup({
+      blockId,
+      anchor: { cropPluginId: LETTUCE, varietyDisplayName: 'Lettuce', placement: strip(0) },
+      companions: offsets.map((o) => ({
+        cropPluginId: LETTUCE,
+        varietyDisplayName: 'Lettuce',
+        offsetDays: o.days,
+        placement: strip(o.y_in)
+      })),
+      anchorPlantingDateMs: APR_1,
+      systemKind: 'succession',
+      resolvePlugin: (id) => (id === LETTUCE ? plugin : undefined)
+    });
+    return { groupId: group.groupId, crops: group.members.map((m) => m.crop), strip };
+  }
+
+  it('treats a planting with no spot as holding the whole bed for a linked sowing', () => {
+    runWithTenant(seedOwner(), () => {
+      const { bed1, bed2 } = seedGarden();
+      const { crops: sowings } = sowingGroup(bed1.id, [{ days: 14, y_in: 24 }]);
+      const member = sowings[1];
+      createPlanned({
+        blockId: bed2.id,
+        cropPluginId: LETTUCE,
+        varietyDisplayName: 'Loose lettuce',
+        plantingDate: APR_1
+      });
+
+      const anywhere = writeFootprint(
+        member.id,
+        {
+          blockId: bed2.id,
+          footprint: { x_in: 0, y_in: 72, w_in: 48, l_in: 24 },
+          spacingPattern: 'square'
+        },
+        lookup,
+        APR_1 - DAY
+      );
+      expect(anywhere).toMatchObject({ ok: false, status: 409, body: { code: 'OVERLAP' } });
+      expect(anywhere.ok ? '' : anywhere.body.error).toMatch(/Loose lettuce holds that spot/);
+
+      const unplaced = writeFootprint(
+        member.id,
+        { blockId: bed2.id, footprint: null, spacingPattern: 'square' },
+        lookup,
+        APR_1 - DAY
+      );
+      expect(unplaced).toMatchObject({ ok: false, status: 409, body: { code: 'OVERLAP' } });
+      expect(getCrop(member.id)?.blockId).toBe(bed1.id);
+    });
+  });
+
+  it('checks a linked sowing again when its spot or date changes inside a bed', () => {
+    runWithTenant(seedOwner(), () => {
+      const { bed1, bed2 } = seedGarden();
+      const { crops: sowings, strip } = sowingGroup(bed1.id, [{ days: 14, y_in: 24 }]);
+      const member = sowings[1];
+      createPlanned({
+        blockId: bed2.id,
+        cropPluginId: LETTUCE,
+        varietyDisplayName: 'Early lettuce',
+        plantingDate: APR_1,
+        placement: strip(0)
+      });
+      const lateBlocker = createPlanned({
+        blockId: bed2.id,
+        cropPluginId: LETTUCE,
+        varietyDisplayName: 'Late lettuce',
+        plantingDate: APR_1 + 120 * DAY,
+        placement: strip(48)
+      });
+      expect(lateBlocker.id).toBeTruthy();
+
+      const moved = writeFootprint(
+        member.id,
+        { blockId: bed2.id, footprint: strip(48).footprint, spacingPattern: 'square' },
+        lookup,
+        APR_1 - DAY
+      );
+      if (!moved.ok) throw new Error(moved.body.error);
+
+      const onTop = writeFootprint(
+        member.id,
+        { blockId: bed2.id, footprint: strip(0).footprint, spacingPattern: 'square' },
+        lookup,
+        APR_1 - DAY
+      );
+      expect(onTop).toMatchObject({ ok: false, status: 409, body: { code: 'OVERLAP' } });
+      expect(getCrop(member.id)?.footprint).toEqual(strip(48).footprint);
+
+      const redated = writeFootprint(
+        member.id,
+        {
+          blockId: bed2.id,
+          footprint: strip(48).footprint,
+          spacingPattern: 'square',
+          plantingDateMs: APR_1 + 110 * DAY
+        },
+        lookup,
+        APR_1 - DAY
+      );
+      expect(redated).toMatchObject({ ok: false, status: 409, body: { code: 'OVERLAP' } });
+      expect(redated.ok ? '' : redated.body.error).toMatch(/Late lettuce holds that spot/);
+      expect(getCrop(member.id)?.plantingDate).toBe(APR_1 + 14 * DAY);
+    });
+  });
+
+  it('moves only the sowings not yet in the ground and refuses a follower that no longer fits', () => {
+    runWithTenant(seedOwner(), () => {
+      const { bed1, bed2 } = seedGarden();
+      const { crops: sowings, strip } = sowingGroup(bed1.id, [
+        { days: 14, y_in: 24 },
+        { days: 28, y_in: 48 }
+      ]);
+      const [anchor, second, third] = sowings;
+      setSchedule(anchor.id, { plantingDate: APR_1 });
+      setSchedule(second.id, { plantingDate: APR_1 + 14 * DAY });
+      const afterSecond = APR_1 + 20 * DAY;
+
+      const shifted = writeFootprint(
+        anchor.id,
+        {
+          blockId: bed1.id,
+          footprint: strip(0).footprint,
+          spacingPattern: 'square',
+          plantingDateMs: APR_1 - 3 * DAY
+        },
+        lookup,
+        afterSecond
+      );
+      if (!shifted.ok) throw new Error(shifted.body.error);
+      expect(shifted.response.followers.map((f) => f.cropId)).toEqual([third.id]);
+      expect(getCrop(second.id)?.plantingDate).toBe(APR_1 + 14 * DAY);
+      expect(getCrop(third.id)?.plantingDate).toBe(APR_1 + 25 * DAY);
+
+      const future = writeFootprint(
+        anchor.id,
+        {
+          blockId: bed1.id,
+          footprint: strip(0).footprint,
+          spacingPattern: 'square',
+          plantingDateMs: afterSecond + 30 * DAY
+        },
+        lookup,
+        afterSecond
+      );
+      expect(future).toMatchObject({ ok: false, status: 409, body: { code: 'IN_GROUND' } });
+      expect(getCrop(anchor.id)?.plantingDate).toBe(APR_1 - 3 * DAY);
+
+      const moved = writeFootprint(
+        third.id,
+        { blockId: bed2.id, footprint: strip(0).footprint, spacingPattern: 'square' },
+        lookup,
+        afterSecond
+      );
+      if (!moved.ok) throw new Error(moved.body.error);
+      createPlanned({
+        blockId: bed2.id,
+        cropPluginId: LETTUCE,
+        varietyDisplayName: 'Summer lettuce',
+        plantingDate: APR_1 + 50 * DAY,
+        placement: strip(0)
+      });
+
+      const blocked = writeFootprint(
+        anchor.id,
+        {
+          blockId: bed1.id,
+          footprint: strip(0).footprint,
+          spacingPattern: 'square',
+          plantingDateMs: APR_1 + 7 * DAY
+        },
+        lookup,
+        afterSecond
+      );
+      expect(blocked).toMatchObject({ ok: false, status: 409, body: { code: 'OVERLAP' } });
+      expect(blocked.ok ? '' : blocked.body.error).toMatch(/Summer lettuce holds that spot/);
+      expect(getCrop(anchor.id)?.plantingDate).toBe(APR_1 - 3 * DAY);
+      expect(getCrop(third.id)?.plantingDate).toBe(APR_1 + 25 * DAY);
+    });
+  });
+
   it('lets a hand-placed planting share space in another bed, with a warning', () => {
     runWithTenant(seedOwner(), () => {
       const { bed1, bed2 } = seedGarden();

@@ -11,7 +11,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, gte, isNotNull, lte } from 'drizzle-orm';
-import { db } from './client';
+import { db, writeTransaction } from './client';
 import { crops, tasks as tasksTable } from './schema';
 import { splitQuantityForSuccession } from '$lib/schedule/succession';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
@@ -301,7 +301,7 @@ export function movePlantingDate(
   newMs: number,
   nowMs: number = Date.now()
 ): PlantingDateMove | undefined {
-  return db.transaction(() => {
+  return writeTransaction(() => {
     const cur = getCrop(id);
     if (!cur) return undefined;
     const reanchored = { shifted: 0, flaggedStale: 0 };
@@ -658,7 +658,7 @@ function materializeMember(
 
 export function createPlantingGroup(input: CreateGroupInput): GroupCommitResult {
   const groupId = randomUUID();
-  return db.transaction(() => {
+  return writeTransaction(() => {
     const anchorPlugin = input.resolvePlugin(input.anchor.cropPluginId);
     if (!anchorPlugin) throw new Error(`unknown crop plugin: ${input.anchor.cropPluginId}`);
 
@@ -731,7 +731,7 @@ export function appendToPlantingGroup(input: {
     throw new Error(`crop ${anchor.id} does not anchor group ${input.groupId}`);
   }
   if (anchor.plantingDate == null) throw new Error(`crop ${anchor.id} has no planting date`);
-  return db.transaction(() =>
+  return writeTransaction(() =>
     materializeCompanions(
       input.groupId,
       {
@@ -750,7 +750,7 @@ export function appendToPlantingGroup(input: {
 export function previewPlantingGroup(input: CreateGroupInput): GroupCommitResult {
   let result: GroupCommitResult | null = null;
   try {
-    db.transaction(() => {
+    writeTransaction(() => {
       result = createPlantingGroup(input);
       throw PREVIEW_ROLLBACK;
     });
@@ -795,7 +795,7 @@ export function nudgeCompanionPlanting(
   if (deltaDays === 0) {
     throw new Error('nudge requires non-zero deltaDays');
   }
-  return db.transaction(() => {
+  return writeTransaction(() => {
     const cropRow = db
       .select()
       .from(crops)
@@ -863,7 +863,7 @@ export function unscheduleCrop(cropId: string): {
   tasksDeleted: number;
   disbandedGroupId?: string;
 } {
-  return db.transaction(() => {
+  return writeTransaction(() => {
     const row = db
       .select()
       .from(crops)
@@ -895,7 +895,7 @@ export function clearSchedule(blockIdFilter?: Set<string> | null): {
   unscheduled: number;
   tasksDeleted: number;
 } {
-  return db.transaction(() => {
+  return writeTransaction(() => {
     const rows = db.select().from(crops).where(tenantWhere(crops)).all();
     let unscheduled = 0;
     let tasksDeleted = 0;

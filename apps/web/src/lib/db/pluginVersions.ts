@@ -17,7 +17,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
-import { db } from './client';
+import { db, writeTransaction } from './client';
 import { pluginVersions } from './schema';
 import { unscopedQueryNote } from './tenant';
 import type { PluginDiff } from '$lib/plugins/diff';
@@ -123,7 +123,7 @@ export function appendVersion(input: InsertVersionInput): PluginVersionRow {
   const existing = getByHash(input.pluginId, input.hash);
   if (existing && !existing.supersededAt) return existing;
 
-  return db.transaction((tx) => {
+  return writeTransaction((tx) => {
     tx.update(pluginVersions)
       .set({ supersededAt: new Date(Date.now()) })
       .where(and(eq(pluginVersions.pluginId, input.pluginId), isNull(pluginVersions.supersededAt)))

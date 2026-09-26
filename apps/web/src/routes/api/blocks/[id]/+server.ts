@@ -19,7 +19,7 @@ import {
   clampFinishedFootprints,
   plantingsPastBedEdge
 } from '$lib/server/garden/bedLayout';
-import { db } from '$lib/db/client';
+import { writeTransaction } from '$lib/db/client';
 import { requireOwner } from '$lib/server/auth';
 
 export const GET: RequestHandler = (event) => {
@@ -88,7 +88,7 @@ export const PATCH: RequestHandler = async (event) => {
     const shrink = plantingsPastBedEdge(block.id, block.name, nextSize);
     if (shrink) return json(shrink, { status: 409 });
   }
-  const updated = db.transaction(() => {
+  const updated = writeTransaction(() => {
     const saved = updateBlock(event.params.id!, withSketchAcres(patch));
     if (resized) clampFinishedFootprints(block.id, nextSize);
     return saved;

@@ -33,3 +33,14 @@ export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
     return Reflect.get(_db, prop);
   }
 });
+
+type Db = ReturnType<typeof drizzle<typeof schema>>;
+type WriteTx = Parameters<Parameters<Db['transaction']>[0]>[0];
+
+/** Write transaction that takes the write lock up front (BEGIN IMMEDIATE).
+ *  A deferred transaction that reads first and then writes fails at once with
+ *  "database is locked" when another connection holds the write lock, because
+ *  SQLite skips busy_timeout for that upgrade. Nested calls become savepoints. */
+export function writeTransaction<T>(fn: (tx: WriteTx) => T): T {
+  return db.transaction(fn, { behavior: 'immediate' });
+}

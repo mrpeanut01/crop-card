@@ -1,7 +1,7 @@
 import { error, fail, redirect, type Actions, type RequestEvent } from '@sveltejs/kit';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/db/client';
+import { db, writeTransaction } from '$lib/db/client';
 import { helperAssignments, ownerSubscriptions, owners } from '$lib/db/schema';
 import { currentUser } from '$lib/server/auth';
 import { writeSession } from '$lib/server/session';
@@ -134,7 +134,7 @@ export const actions: Actions = {
     const ownerId = `owner_${randomUUID().slice(0, 12)}`;
     const slug = uniqueSlug(slugify(farmName));
 
-    db.transaction(() => {
+    writeTransaction(() => {
       unscopedQueryNote('onboarding writes the new owner + assignment + subscription rows');
       db.insert(owners)
         .values({
@@ -198,7 +198,7 @@ export const actions: Actions = {
       return fail(400, { error: 'Pick at least one, or choose "Not sure yet".' });
     }
     const existing = listFields();
-    db.transaction(() => {
+    writeTransaction(() => {
       for (const s of starterAreasFor(choices)) {
         if (existing.some((f) => f.kind === s.kind && f.name === s.name)) continue;
         createField({ name: s.name, kind: s.kind, details: s.details ?? null });

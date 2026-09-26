@@ -439,6 +439,7 @@
 
       map.on('pm:create', (e: { layer: LPolygon }) => {
         drawing = false;
+        draftOpenedAt = performance.now();
         const layer = e.layer as LPolygon;
         const geojson = (layer.toGeoJSON() as { geometry: Geom }).geometry;
         layer.remove();
@@ -1142,6 +1143,16 @@
     }
   }
 
+  // The dialog opens under the cursor on the click that finishes a shape,
+  // so the rest of that double- or triple-click would hit Discard. Ignore the
+  // repeat clicks (detail >= 2) of a burst that began as it opened; a fresh
+  // single click or keyboard activation (detail 0) always goes through.
+  const DRAFT_CLICK_BURST_MS = 1500;
+  let draftOpenedAt = 0;
+  function finishingClick(e: MouseEvent): boolean {
+    return e.detail >= 2 && performance.now() - draftOpenedAt < DRAFT_CLICK_BURST_MS;
+  }
+
   function dismissShadeDraft() {
     shadeDraft = null;
   }
@@ -1459,13 +1470,14 @@
   {/if}
 </div>
 
+<!-- Post-draw dialogs ignore backdrop clicks so stray clicks after finishing
+     a shape can't discard it. Discard and Escape still close them. -->
 {#if shadeDraft}
   <div
     class="draft-backdrop"
     role="dialog"
     aria-modal="true"
     aria-labelledby="shade-draft-title"
-    onclick={(e) => e.target === e.currentTarget && dismissShadeDraft()}
     onkeydown={(e) => e.key === 'Escape' && dismissShadeDraft()}
     tabindex="-1"
   >
@@ -1558,12 +1570,14 @@
         <button
           type="button"
           class="primary"
-          onclick={submitShadeDraft}
+          onclick={(e) => !finishingClick(e) && submitShadeDraft()}
           disabled={!shadeDraftReady}
         >
           {shadeDraft.busy ? '…' : 'Save shade source'}
         </button>
-        <button type="button" onclick={dismissShadeDraft}>Discard</button>
+        <button type="button" onclick={(e) => !finishingClick(e) && dismissShadeDraft()}
+          >Discard</button
+        >
       </div>
     </div>
   </div>
@@ -1575,7 +1589,6 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="draft-title"
-    onclick={(e) => e.target === e.currentTarget && dismissDraft()}
     onkeydown={(e) => e.key === 'Escape' && dismissDraft()}
     tabindex="-1"
   >
@@ -1698,7 +1711,12 @@
       {#if pendingDraft.error}<p class="map-error">{pendingDraft.error}</p>{/if}
 
       <div class="actions">
-        <button type="button" class="primary" onclick={submitDraft} disabled={!draftReady}>
+        <button
+          type="button"
+          class="primary"
+          onclick={(e) => !finishingClick(e) && submitDraft()}
+          disabled={!draftReady}
+        >
           {#if pendingDraft.busy}…
           {:else if pendingDraft.mode === 'block'}
             {pendingDraft.assignMode === 'existing' ? 'Save outline' : 'Save block'}
@@ -1706,7 +1724,7 @@
             Save
           {/if}
         </button>
-        <button type="button" onclick={dismissDraft}>Discard</button>
+        <button type="button" onclick={(e) => !finishingClick(e) && dismissDraft()}>Discard</button>
       </div>
     </div>
   </div>

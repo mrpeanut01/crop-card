@@ -3,15 +3,19 @@
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
   import FarmMapFigure from '$lib/components/farm/FarmMapFigure.svelte';
   import { buildFarmMapCard } from '$lib/cards/build';
-  import type { CardPrintLayout } from '$lib/cards/model';
-  import { PRINT_HELP, PRINT_LAYOUTS } from '$lib/cards/print';
+  import { FULL_PAGE_NOTE, PRINT_HELP } from '$lib/cards/print';
+  import { layoutFarmFigure } from '$lib/farm/featureFigure';
   import { currentPrefs } from '$lib/prefsState.svelte';
 
   const { data } = $props();
 
   const prefs = $derived(currentPrefs());
-  const card = $derived(buildFarmMapCard(data.snapshot, { prefs }));
-  let layout = $state<CardPrintLayout>('letter-4up');
+  const features = $derived(data.snapshot.mapFeatures ?? []);
+  const drawnFeatureKinds = $derived.by(() => {
+    const figure = layoutFarmFigure(data.mapFields, data.mapBlocks, features);
+    return [...new Set([...figure.lines, ...figure.points].map((f) => f.kind))];
+  });
+  const card = $derived(buildFarmMapCard(data.snapshot, { prefs, drawnFeatureKinds }));
 
   function print() {
     const previous = document.title;
@@ -38,7 +42,7 @@
       <FarmMapFigure
         fields={data.mapFields}
         blocks={data.mapBlocks}
-        features={data.snapshot.mapFeatures ?? []}
+        {features}
         label="{card.title} map"
       />
       <CardView {card} {prefs} />
@@ -46,15 +50,7 @@
 
     <section class="print-box" aria-labelledby="print-title">
       <h2 id="print-title">Print</h2>
-      <fieldset>
-        <legend>Paper</legend>
-        {#each PRINT_LAYOUTS as l (l.id)}
-          <label class="opt">
-            <input type="radio" name="layout" value={l.id} bind:group={layout} />
-            <span>{l.label} <span class="hint">{l.hint}</span></span>
-          </label>
-        {/each}
-      </fieldset>
+      <p class="paper">{FULL_PAGE_NOTE} Choose Letter paper in the print dialog.</p>
       <div class="actions">
         <button type="button" class="primary" onclick={print}>Print or save as PDF</button>
         {#if data.canEdit}
@@ -65,7 +61,16 @@
     </section>
   </div>
 
-  <CardPrintSheet cards={[card]} {layout} {prefs} origin={data.snapshot.origin} />
+  <CardPrintSheet cards={[card]} {prefs} origin={data.snapshot.origin}>
+    {#snippet figure()}
+      <FarmMapFigure
+        fields={data.mapFields}
+        blocks={data.mapBlocks}
+        {features}
+        label="{card.title} map"
+      />
+    {/snippet}
+  </CardPrintSheet>
 </div>
 
 <style>
@@ -121,26 +126,10 @@
     margin: 0 0 8px;
     font-size: 1.1rem;
   }
-  fieldset {
-    border: 0;
+  .paper {
     margin: 0 0 8px;
-    padding: 0;
-  }
-  legend {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--color-ink-soft);
-    margin-bottom: 4px;
-  }
-  .opt {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 48px;
-  }
-  .opt input {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--color-forest);
   }
   .hint {
     color: var(--color-ink-muted);

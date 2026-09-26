@@ -142,7 +142,9 @@
         {/if}
         {#if figure.unplaced > 0}
           <p class="note">
-            Fences, gates and other lines and points show once your Areas are drawn on the map.
+            Your fences, gates and water points are saved, but this picture is built from the sizes
+            you typed, so it can't place them. Draw your fields on the map as well and they will
+            show here.
           </p>
         {/if}
       </figcaption>

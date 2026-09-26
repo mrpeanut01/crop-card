@@ -207,6 +207,28 @@ describe('garden bed map', () => {
     expect(card.next).toEqual(buildAreaCard(snap, 'f_garden')!.next);
   });
 
+  it('adds up bed sizes from their dimensions, not rounded acres', () => {
+    const snap = sampleSnapshot();
+    const garden = snap.areas.find((a) => a.id === 'f_garden')!;
+    Object.assign(garden, { acres: null, widthFt: null, lengthFt: null, acresSource: null });
+    const template = snap.blocks.find((b) => b.id === 'b_bed1')!;
+    snap.blocks = [
+      ...snap.blocks.filter((b) => b.areaId !== 'f_garden'),
+      ...[1, 2, 3].map((n) => ({
+        ...template,
+        id: `b_three_${n}`,
+        name: `Bed ${n}`,
+        blockLabel: null,
+        widthFt: 4,
+        lengthFt: 8,
+        acres: 0.001
+      }))
+    ];
+    snap.plantings = snap.plantings.filter((p) => !p.blockId.startsWith('b_bed'));
+    const card = buildAreaCard(snap, 'f_garden')!;
+    expect(fact(card, 'Size')?.value).toBe('96 sq ft across its beds');
+  });
+
   it('leaves pastures and barns without a designer', () => {
     for (const id of ['f_hay', 'f_barn']) {
       const card = buildAreaCard(sampleSnapshot(), id)!;

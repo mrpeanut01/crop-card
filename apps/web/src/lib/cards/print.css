@@ -73,6 +73,34 @@
   page-break-inside: avoid;
 }
 
+.card-print-sheet .sheet-page.full-page {
+  page: cc-letter;
+  display: block;
+  width: 8in;
+  height: 10.4in;
+}
+
+.card-print-sheet .full-page .print-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12in;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+.card-print-sheet .full-page .print-figure {
+  flex: 0 0 auto;
+}
+
+.card-print-sheet .full-page .print-cell > article {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+
 @media print {
   .no-print {
     display: none !important;

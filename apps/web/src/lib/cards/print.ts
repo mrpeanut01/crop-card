@@ -1,4 +1,4 @@
-import { cardShortUrl, type CardPrintLayout } from './model';
+import { cardShortUrl, type CardModel, type CardPrintLayout } from './model';
 import { qrPath, type QrPath } from './qr';
 
 export const PRINT_LAYOUTS: {
@@ -39,6 +39,33 @@ export function paginate<T>(items: readonly T[], layout: CardPrintLayout): T[][]
   const pages: T[][] = [];
   for (let i = 0; i < items.length; i += n) pages.push(items.slice(i, i + n));
   return pages;
+}
+
+/** Cards with a map (the Farm Map Card, an Area Card with a bed map) are
+ *  too much for an index card or a quarter sheet, so each prints on its own
+ *  letter page whatever paper the other cards use. */
+export function needsFullPage(card: Pick<CardModel, 'kind' | 'bedMap'>): boolean {
+  return card.kind === 'farmMap' || (card.kind === 'area' && !!card.bedMap);
+}
+
+export const FULL_PAGE_NOTE = 'This card prints on its own letter page so the whole map fits.';
+
+export interface PrintPage<T> {
+  full: boolean;
+  items: T[];
+}
+
+/** `paginate` for the chosen paper, then one letter page per map card. */
+export function paginateCards<T extends { card: Pick<CardModel, 'kind' | 'bedMap'> }>(
+  items: readonly T[],
+  layout: CardPrintLayout
+): PrintPage<T>[] {
+  const small = items.filter((i) => !needsFullPage(i.card));
+  const full = items.filter((i) => needsFullPage(i.card));
+  return [
+    ...paginate(small, layout).map((page) => ({ full: false, items: page })),
+    ...full.map((item) => ({ full: true, items: [item] }))
+  ];
 }
 
 export interface PrintLink {

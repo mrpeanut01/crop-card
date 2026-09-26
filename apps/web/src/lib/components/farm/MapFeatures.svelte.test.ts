@@ -205,6 +205,8 @@ describe('FarmMapFigure lines and points', () => {
       blocks: [],
       features: [well]
     });
-    expect(screen.getByText(/show once your Areas are drawn on the map/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Draw your fields on the map as well and they will show here/)
+    ).toBeInTheDocument();
   });
 });

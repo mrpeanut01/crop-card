@@ -118,7 +118,8 @@ describe('buildFarmMapCard', () => {
     });
     expect(some.sections[0]).toEqual({
       title: 'Emergency contacts',
-      items: ['Poison Control (Poisoning or chemical exposure): 1-800-222-1222']
+      items: ['Poison Control (Poisoning or chemical exposure): 1-800-222-1222'],
+      nowrapAfter: ': '
     });
   });
 
@@ -128,7 +129,8 @@ describe('buildFarmMapCard', () => {
     });
     expect(buildFarmMapCard(snap, { prefs }).sections[0]).toEqual({
       title: 'Emergency contacts',
-      items: ['Dr. Reyes (Vet): 540-555-0101']
+      items: ['Dr. Reyes (Vet): 540-555-0101'],
+      nowrapAfter: ': '
     });
     const overridden = buildFarmMapCard(snap, { prefs, emergencyContacts: [] });
     expect(overridden.sections.some((s) => s.title === 'Emergency contacts')).toBe(false);
@@ -224,6 +226,17 @@ describe('buildFarmMapCard lines and points', () => {
     expect(legend).toContain('Gate: brown dot marked G');
     expect(legend).toContain('Water source: blue dot marked W');
     expect(card.facts.find((f) => f.label === 'Areas')?.value).toBe('3');
+  });
+
+  it('says which lines and points the printed map could not draw', () => {
+    const card = buildFarmMapCard(sampleSnapshot({ mapFeatures: features }), {
+      prefs,
+      drawnFeatureKinds: ['water_source']
+    });
+    const legend = card.sections.find((s) => s.title === 'Legend')!.items;
+    expect(legend).toContain('Water source: blue dot marked W');
+    expect(legend).toContain('Fence: listed above, not drawn on this map');
+    expect(legend).toContain('Gate: listed above, not drawn on this map');
   });
 
   it('uses metric lengths for metric households', () => {

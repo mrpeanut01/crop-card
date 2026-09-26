@@ -2,10 +2,16 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
+import { createRawSnippet } from 'svelte';
 import { render, within } from '@testing-library/svelte';
 import CardView from './CardView.svelte';
 import CardPrintSheet from './CardPrintSheet.svelte';
-import { buildAreaCard, buildPlantingCard, buildPlantingCards } from '$lib/cards/build';
+import {
+  buildAreaCard,
+  buildFarmMapCard,
+  buildPlantingCard,
+  buildPlantingCards
+} from '$lib/cards/build';
 import { sampleSnapshot } from '$lib/cards/build/fixtures';
 import { printLinkFor } from '$lib/cards/print';
 import { STALE_NOTICE, type CardModel } from '$lib/cards/model';
@@ -200,6 +206,50 @@ describe('CardPrintSheet', () => {
       expect(container.querySelector(`.layout-${layout}`)).not.toBeNull();
       unmount();
     }
+  });
+
+  it('prints a card with a map on its own letter page whatever the paper', () => {
+    for (const layout of ['letter-4up', 'index-4x6'] as const) {
+      const { container, unmount } = render(CardPrintSheet, {
+        cards,
+        prefs,
+        layout,
+        figure: createRawSnippet((card: () => CardModel) => ({
+          render: () => `<svg data-testid="fig" data-for="${card().key}"></svg>`
+        }))
+      });
+      const full = container.querySelectorAll('.sheet-page.full-page');
+      expect(full).toHaveLength(1);
+      expect(full[0].querySelector('[data-card-key="ar_f_garden"]')).not.toBeNull();
+      expect(full[0].querySelector('[data-testid="fig"]')?.getAttribute('data-for')).toBe(
+        'ar_f_garden'
+      );
+      expect(container.querySelectorAll('[data-testid="fig"]')).toHaveLength(1);
+      unmount();
+    }
+  });
+
+  it('keeps an emergency phone number on one line', () => {
+    const card = buildFarmMapCard(snap, {
+      prefs,
+      emergencyContacts: [
+        { name: 'Poison Control', role: 'Poisoning or chemical exposure', phone: '1-800-222-1222' }
+      ]
+    });
+    const { container } = render(CardView, { card, prefs, variant: 'print' });
+    const item = [...container.querySelectorAll('li')].find(
+      (li) => li.textContent === 'Poison Control (Poisoning or chemical exposure): 1-800-222-1222'
+    )!;
+    expect(item.querySelector('.nowrap')?.textContent).toBe('1-800-222-1222');
+  });
+
+  it('points a cut-short Area Card at the live card, not a label', () => {
+    const { container } = render(CardPrintSheet, {
+      cards: [buildAreaCard(snap, 'f_garden')!],
+      prefs
+    });
+    const more = container.querySelector('.more');
+    expect(more?.textContent?.trim()).toBe('Cut short? The live card has the full list.');
   });
 
   it('leaves the QR off without a stable origin', () => {

@@ -8,7 +8,7 @@
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
   import { buildCard } from '$lib/cards/build';
   import { CARD_KIND_LABEL, isCardKind, type CardPrintLayout } from '$lib/cards/model';
-  import { PRINT_HELP, PRINT_LAYOUTS } from '$lib/cards/print';
+  import { FULL_PAGE_NOTE, PRINT_HELP, PRINT_LAYOUTS, needsFullPage } from '$lib/cards/print';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
   import { currentPrefs } from '$lib/prefsState.svelte';
   import { cardViewParams, snapshotOlderThan, withoutPrintParam } from '$lib/cards/viewParams';
@@ -108,16 +108,22 @@
     {#if showNudge}
       <InstallNudge onDismiss={() => (showNudge = false)} />
     {/if}
-    <fieldset>
-      <legend>Paper</legend>
-      {#each PRINT_LAYOUTS as l (l.id)}
-        <label class="opt">
-          <input type="radio" name="layout" value={l.id} bind:group={layout} />
-          <span>{l.label}</span>
-          <span class="hint">{l.hint}</span>
-        </label>
-      {/each}
-    </fieldset>
+    {#if needsFullPage(card)}
+      <p class="hint" data-testid="full-page-note">
+        {FULL_PAGE_NOTE} Choose Letter paper in the print dialog.
+      </p>
+    {:else}
+      <fieldset>
+        <legend>Paper</legend>
+        {#each PRINT_LAYOUTS as l (l.id)}
+          <label class="opt">
+            <input type="radio" name="layout" value={l.id} bind:group={layout} />
+            <span>{l.label}</span>
+            <span class="hint">{l.hint}</span>
+          </label>
+        {/each}
+      </fieldset>
+    {/if}
     <p class="hint">{PRINT_HELP}</p>
   {:else if snapshot}
     <p class="status" role="status">

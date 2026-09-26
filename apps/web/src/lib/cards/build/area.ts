@@ -26,7 +26,7 @@ import {
   sortTasks,
   type BuildOptions
 } from './common';
-import { formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
+import { SQFT_PER_ACRE, formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
 import { DEFAULT_AREA_KIND, isDesignable } from '$lib/farm/areaKinds';
 import { designFromSnapshot, designerHref } from '$lib/garden/design';
 import { bedOccupancyOn, occupancyIntervals, scrubRange, utcDayStart } from '$lib/garden/occupancy';
@@ -67,6 +67,19 @@ function plantingLine(
   return `${p.varietyDisplayName}${where}${when}`;
 }
 
+/** A bed's own width by length when it has them; stored acres are rounded
+ *  to 0.001 and would overstate small beds. */
+function blockSizeAcres(b: {
+  acres: number | null;
+  widthFt: number | null;
+  lengthFt: number | null;
+}): number {
+  if (b.widthFt && b.widthFt > 0 && b.lengthFt && b.lengthFt > 0) {
+    return (b.widthFt * b.lengthFt) / SQFT_PER_ACRE;
+  }
+  return typeof b.acres === 'number' && b.acres > 0 ? b.acres : 0;
+}
+
 export function buildAreaCard(
   snapshot: FarmSnapshot,
   areaId: string,
@@ -101,10 +114,7 @@ export function buildAreaCard(
     if (sp) provenance.push(sp);
   }
   if (!size) {
-    const blockAcres = blocks.reduce(
-      (sum, b) => sum + (typeof b.acres === 'number' && b.acres > 0 ? b.acres : 0),
-      0
-    );
+    const blockAcres = blocks.reduce((sum, b) => sum + blockSizeAcres(b), 0);
     if (blockAcres > 0) {
       facts.push({
         label: 'Size',

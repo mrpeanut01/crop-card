@@ -19,7 +19,8 @@ import {
   MAP_FEATURE_LABELS,
   MAP_FEATURE_PLURAL,
   MAP_FEATURE_STYLE,
-  describeFeature
+  describeFeature,
+  type MapFeatureKind
 } from '$lib/farm/mapFeatures';
 import { formatEmergencyContact, type EmergencyContact } from '$lib/farm/emergencyContacts';
 
@@ -30,6 +31,9 @@ export interface FarmMapBuildOptions {
   now?: number;
   /** Overrides the snapshot's saved contacts; the section is left off when none exist. */
   emergencyContacts?: readonly EmergencyContact[];
+  /** Line and point kinds the printed figure actually draws. Given, the
+   *  legend names the others as listed but not drawn. */
+  drawnFeatureKinds?: readonly MapFeatureKind[];
 }
 
 const MAX_PER_KIND = 6;
@@ -157,7 +161,11 @@ export function buildFarmMapCard(
       title: 'Legend',
       items: [
         ...kindsPresent.map((k) => `${areaKindLabel(k)}: ${AREA_KIND_STYLE[k].colorName}`),
-        ...featureKinds.map((k) => `${MAP_FEATURE_LABELS[k]}: ${MAP_FEATURE_STYLE[k].colorName}`)
+        ...featureKinds.map((k) =>
+          !options.drawnFeatureKinds || options.drawnFeatureKinds.includes(k)
+            ? `${MAP_FEATURE_LABELS[k]}: ${MAP_FEATURE_STYLE[k].colorName}`
+            : `${MAP_FEATURE_LABELS[k]}: listed above, not drawn on this map`
+        )
       ]
     });
   }
@@ -168,7 +176,8 @@ export function buildFarmMapCard(
   if (contacts.length) {
     sections.unshift({
       title: 'Emergency contacts',
-      items: contacts.map(formatEmergencyContact)
+      items: contacts.map(formatEmergencyContact),
+      nowrapAfter: ': '
     });
   }
 

@@ -82,12 +82,19 @@
       </ul>
     {/if}
 
+    {#snippet itemText(item: string, nowrapAfter: string | undefined)}
+      {@const at = nowrapAfter ? item.lastIndexOf(nowrapAfter) : -1}
+      {#if at >= 0 && nowrapAfter}{item.slice(0, at + nowrapAfter.length)}<span class="nowrap"
+          >{item.slice(at + nowrapAfter.length)}</span
+        >{:else}{item}{/if}
+    {/snippet}
+
     {#each safetyFirst as s (s.title)}
       <section class="section safety" data-safety-section>
         <h4>{s.title}</h4>
         <ul>
           {#each s.items as item, i (i)}
-            <li>{item}</li>
+            <li>{@render itemText(item, s.nowrapAfter)}</li>
           {/each}
         </ul>
       </section>
@@ -142,7 +149,7 @@
             <h4>{s.title}</h4>
             <ul>
               {#each s.items as item, i (i)}
-                <li>{item}</li>
+                <li>{@render itemText(item, s.nowrapAfter)}</li>
               {/each}
             </ul>
           </section>
@@ -150,7 +157,11 @@
       {/if}
     </div>
     {#if variant === 'print' && bodySections.length}
-      <p class="more">Cut short? The label and the live card have the full directions.</p>
+      <p class="more">
+        {card.kind === 'spray'
+          ? 'Cut short? The label and the live card have the full directions.'
+          : 'Cut short? The live card has the full list.'}
+      </p>
     {/if}
 
     <footer class="foot">
@@ -366,6 +377,9 @@
     padding-left: 1.1em;
     font-size: var(--font-size-body);
     color: var(--color-ink-soft);
+  }
+  .nowrap {
+    white-space: nowrap;
   }
   .foot {
     display: flex;

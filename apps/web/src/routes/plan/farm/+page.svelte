@@ -45,6 +45,7 @@
       canEdit
       isFirstRun={data.isFirstRun}
       initialCenter={data.center}
+      initialMode={data.initialMode}
     />
   {:else}
     <section class="loading"><p>Loading map…</p></section>

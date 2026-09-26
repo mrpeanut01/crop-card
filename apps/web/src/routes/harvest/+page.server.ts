@@ -5,6 +5,7 @@ import type { Archetype, CropPlugin, HarvestStyle } from '$lib/plugins/schemas';
 import type { RendererData } from '$lib/components/harvest/renderers/types';
 import { forageCutWindow, plantingHarvestKey } from '$lib/harvest/forageWindow';
 import { getRegistry } from '$lib/server/registry';
+import { canSetUp, setupAreas, setupBlocks } from '$lib/server/setupContext';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -41,7 +42,7 @@ export interface PlantingHarvestStatus {
   rendererData: RendererData;
 }
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   // ?crop=<id> aliases ?planting=<id> for Phase 12D crop-attribution
   // navigation. Both fall through to the planting-status loop below.
   const focusPlantingId = url.searchParams.get('crop') ?? url.searchParams.get('planting') ?? null;
@@ -205,6 +206,11 @@ export const load: PageServerLoad = async ({ url }) => {
   return {
     plantings,
     recordedHarvests,
-    focusPlantingId
+    focusPlantingId,
+    setup: {
+      canEdit: canSetUp(locals.user?.role),
+      areas: setupAreas(),
+      blocks: setupBlocks(blocks)
+    }
   };
 };

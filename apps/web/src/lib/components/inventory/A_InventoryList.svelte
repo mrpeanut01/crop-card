@@ -13,6 +13,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import InvTypeChip from './InvTypeChip.svelte';
+  import InventoryEmptyGrid from './InventoryEmptyGrid.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
   import type { InventoryType } from '$lib/inventory/types';
@@ -28,9 +29,11 @@
     mode: 'stock' | 'catalog';
     counts: Record<InventoryType, number>;
     rows: InventoryRow[];
+    /** Owners get add links in the empty state; helpers are told to ask. */
+    canAdd?: boolean;
   }
 
-  const { type, mode, counts, rows }: Props = $props();
+  const { type, mode, counts, rows, canAdd = true }: Props = $props();
 
   let search = $state('');
 
@@ -165,98 +168,102 @@
   {/each}
 </div>
 
-<div class="search-row">
-  <input
-    type="search"
-    bind:value={search}
-    placeholder="Search by name…"
-    aria-label="Search inventory"
-  />
-  <span class="count mono">{filteredRows.length} of {rows.length}</span>
-</div>
+{#if rows.length === 0}
+  <InventoryEmptyGrid activeType={type} {canAdd} />
+{:else}
+  <div class="search-row">
+    <input
+      type="search"
+      bind:value={search}
+      placeholder="Search by name…"
+      aria-label="Search inventory"
+    />
+    <span class="count mono">{filteredRows.length} of {rows.length}</span>
+  </div>
 
-<div class="table-wrap">
-  <table class="inv-table">
-    <thead>
-      <tr>
-        {#if type === 'sprayer'}
-          <th>Sprayer</th>
-          <th>Nozzle</th>
-          <th>Tank</th>
-          <th>Last cal</th>
-          <th>GPA</th>
-          <th>Status</th>
-        {:else if type === 'crop' || mode === 'catalog'}
-          <th>Plugin id</th>
-          <th>{type === 'crop' ? 'Archetype' : 'Type'}</th>
-          <th>{type === 'crop' ? 'Family' : 'Source'}</th>
-          <th>{type === 'crop' ? 'DTM' : 'Version'}</th>
-        {:else}
-          <th>Item</th>
-          <th>Category</th>
-          <th class="num">On hand</th>
-          <th class="num">Lots</th>
-          <th>Expires</th>
-        {/if}
-      </tr>
-    </thead>
-    <tbody>
-      {#if filteredRows.length === 0}
+  <div class="table-wrap">
+    <table class="inv-table">
+      <thead>
         <tr>
-          <td colspan="6" class="empty">No rows.</td>
+          {#if type === 'sprayer'}
+            <th>Sprayer</th>
+            <th>Nozzle</th>
+            <th>Tank</th>
+            <th>Last cal</th>
+            <th>GPA</th>
+            <th>Status</th>
+          {:else if type === 'crop' || mode === 'catalog'}
+            <th>Plugin id</th>
+            <th>{type === 'crop' ? 'Archetype' : 'Type'}</th>
+            <th>{type === 'crop' ? 'Family' : 'Source'}</th>
+            <th>{type === 'crop' ? 'DTM' : 'Version'}</th>
+          {:else}
+            <th>Item</th>
+            <th>Category</th>
+            <th class="num">On hand</th>
+            <th class="num">Lots</th>
+            <th>Expires</th>
+          {/if}
         </tr>
-      {:else}
-        {#each filteredRows as row (row.kind === 'catalog' ? row.pluginId : row.kind === 'stock' ? row.id : row.id)}
-          <tr class="clickable" onclick={() => navigateTo(row)}>
-            {#if row.kind === 'sprayer'}
-              <td>{row.label}</td>
-              <td class="muted">{row.nozzleType ?? '—'}</td>
-              <td class="num muted"
-                >{row.tankGal != null ? fmt.label(row.tankGal, 'volume') : '—'}</td
-              >
-              <td class="muted">
-                {row.lastCalibratedAt ? fmt.instant(row.lastCalibratedAt, 'date') : '—'}
-              </td>
-              <td class="num">{row.measuredGpa != null ? gpaText(row.measuredGpa) : '—'}</td>
-              <td>
-                {#if row.deconRequired}
-                  <span class="pill pill-warn">Decon</span>
-                {:else if row.lastCalibratedAt}
-                  <span class="pill pill-ok">OK</span>
-                {:else}
-                  <span class="pill pill-muted">New</span>
-                {/if}
-              </td>
-            {:else if row.kind === 'catalog'}
-              <td class="mono">{row.pluginId}</td>
-              <td>{row.archetype ?? row.pluginType}</td>
-              <td class="muted">{row.cropFamily ?? '—'}</td>
-              <td class="num muted">
-                {#if row.daysToMaturity}
-                  {row.daysToMaturity.min}–{row.daysToMaturity.max} d
-                {:else}
-                  {row.version ?? '—'}
-                {/if}
-              </td>
-            {:else}
-              <td>{row.displayName}</td>
-              <td class="muted">{row.category}</td>
-              <td class="num" class:low={row.isLow}>
-                {formatStockQuantity(row.onHand, row.defaultUnit, currentPrefs(), {
-                  labelUnit: isLabelUnitCategory(row.category)
-                })}
-              </td>
-              <td class="num muted">{row.lotCount}</td>
-              <td class="muted">
-                {row.earliestExpiry ? fmt.day(row.earliestExpiry) : '—'}
-              </td>
-            {/if}
+      </thead>
+      <tbody>
+        {#if filteredRows.length === 0}
+          <tr>
+            <td colspan="6" class="empty">Nothing matches that search.</td>
           </tr>
-        {/each}
-      {/if}
-    </tbody>
-  </table>
-</div>
+        {:else}
+          {#each filteredRows as row (row.kind === 'catalog' ? row.pluginId : row.kind === 'stock' ? row.id : row.id)}
+            <tr class="clickable" onclick={() => navigateTo(row)}>
+              {#if row.kind === 'sprayer'}
+                <td>{row.label}</td>
+                <td class="muted">{row.nozzleType ?? '—'}</td>
+                <td class="num muted"
+                  >{row.tankGal != null ? fmt.label(row.tankGal, 'volume') : '—'}</td
+                >
+                <td class="muted">
+                  {row.lastCalibratedAt ? fmt.instant(row.lastCalibratedAt, 'date') : '—'}
+                </td>
+                <td class="num">{row.measuredGpa != null ? gpaText(row.measuredGpa) : '—'}</td>
+                <td>
+                  {#if row.deconRequired}
+                    <span class="pill pill-warn">Decon</span>
+                  {:else if row.lastCalibratedAt}
+                    <span class="pill pill-ok">OK</span>
+                  {:else}
+                    <span class="pill pill-muted">New</span>
+                  {/if}
+                </td>
+              {:else if row.kind === 'catalog'}
+                <td class="mono">{row.pluginId}</td>
+                <td>{row.archetype ?? row.pluginType}</td>
+                <td class="muted">{row.cropFamily ?? '—'}</td>
+                <td class="num muted">
+                  {#if row.daysToMaturity}
+                    {row.daysToMaturity.min}–{row.daysToMaturity.max} d
+                  {:else}
+                    {row.version ?? '—'}
+                  {/if}
+                </td>
+              {:else}
+                <td>{row.displayName}</td>
+                <td class="muted">{row.category}</td>
+                <td class="num" class:low={row.isLow}>
+                  {formatStockQuantity(row.onHand, row.defaultUnit, currentPrefs(), {
+                    labelUnit: isLabelUnitCategory(row.category)
+                  })}
+                </td>
+                <td class="num muted">{row.lotCount}</td>
+                <td class="muted">
+                  {row.earliestExpiry ? fmt.day(row.earliestExpiry) : '—'}
+                </td>
+              {/if}
+            </tr>
+          {/each}
+        {/if}
+      </tbody>
+    </table>
+  </div>
+{/if}
 
 <style>
   .inv-header {

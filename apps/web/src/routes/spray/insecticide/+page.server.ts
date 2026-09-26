@@ -9,6 +9,7 @@ import { getFarmLatLon } from '$lib/schedule/settings';
 import { isInBloom } from '$lib/safety/pollinatorBloom';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import { pollinatorNeighbors } from '$lib/server/pollinatorNeighbors';
+import { canSetUp, setupAreas } from '$lib/server/setupContext';
 
 /**
  * Phase 25d (#95) — IPM-gate scout data. Primary path reads from the
@@ -108,6 +109,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     taskId: url.searchParams.get('task'),
     // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
     aiEnabled: getUserAiEnabled(locals.user?.id),
+    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() },
     // Phase 25d (#89) — feeds the IPM threshold gate dial + sparkline.
     // Read from past insecticide events' scoutObservationJson until a
     // dedicated scout-events table lands (TODO future PR).

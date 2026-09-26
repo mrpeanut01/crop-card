@@ -2,8 +2,9 @@ import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { listScoutObservations } from '$lib/db/scoutObservations';
+import { canSetUp, setupAreas } from '$lib/server/setupContext';
 
-export const load: PageServerLoad = ({ url }) => {
+export const load: PageServerLoad = ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
   let preselectedBlockId = url.searchParams.get('block');
   if (cropId && !preselectedBlockId) {
@@ -40,6 +41,7 @@ export const load: PageServerLoad = ({ url }) => {
     preselectedBlockId,
     preselectedCropId: cropId,
     windowStage: url.searchParams.get('windowStage') ?? null,
-    observationsByBlock
+    observationsByBlock,
+    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() }
   };
 };

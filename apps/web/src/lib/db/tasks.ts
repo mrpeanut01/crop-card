@@ -570,6 +570,35 @@ export function detachTasksFromCrop(cropId: string): number {
   return r.changes;
 }
 
+function specTemplateId(specJson: string | null): string | null {
+  if (!specJson) return null;
+  try {
+    const spec: unknown = JSON.parse(specJson);
+    if (spec && typeof spec === 'object' && !Array.isArray(spec)) {
+      const id = (spec as Record<string, unknown>).templateId;
+      return typeof id === 'string' && id.length > 0 ? id : null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+/** Finds the starter template behind an equipment row. The template id
+ *  saved in `spec` wins so a renamed implement keeps its pre/post tasks;
+ *  older rows without one still match on their exact type + label. */
+export function matchEquipmentTemplate(
+  row: { type: string; label: string; specJson: string | null },
+  templates: ReadonlyArray<EquipmentTemplate> = SEED_EQUIPMENT_TEMPLATES
+): EquipmentTemplate | undefined {
+  const id = specTemplateId(row.specJson);
+  if (id) {
+    const byId = templates.find((t) => t.templateId === id && t.type === row.type);
+    if (byId) return byId;
+  }
+  return templates.find((t) => t.type === row.type && t.label === row.label);
+}
+
 export function loadEquipmentContext(equipmentId: string): {
   template?: EquipmentTemplate;
   lastUsedAt?: number;
@@ -580,9 +609,7 @@ export function loadEquipmentContext(equipmentId: string): {
     .where(withTenant(equipment, eq(equipment.id, equipmentId)))
     .get();
   if (!eq_row) return {};
-  const template = SEED_EQUIPMENT_TEMPLATES.find(
-    (t) => t.type === eq_row.type && t.label === eq_row.label
-  );
+  const template = matchEquipmentTemplate(eq_row);
   const state = db
     .select()
     .from(equipmentState)

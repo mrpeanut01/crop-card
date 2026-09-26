@@ -14,7 +14,6 @@
  *   Stock has been promoted to its own /stock route.
  */
 
-import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import {
   eventsForHarvest,
@@ -87,6 +86,7 @@ import { getRegistry } from '$lib/server/registry';
 import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/companions';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import { isEmptySeason, priorSeasonSummary } from '$lib/plan/seasonStart';
+import { setupAreas } from '$lib/server/setupContext';
 
 export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
 const TAB_VALUES: PlanTab[] = ['overview', 'layout', 'crops', 'schedule', 'calendar'];
@@ -150,10 +150,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const fields = listFields();
   const isFirstRun = blocks.length === 0 && fields.length === 0;
   const canEdit = locals.user?.role === 'owner';
-
-  // A farm with no blocks starts at "Draw your farm". Any query string
-  // (a deep link, or ?setup=skip from that page) stays on /plan.
-  if (canEdit && blocks.length === 0 && url.search === '') throw redirect(303, '/plan/farm');
 
   // Common (Overview / Crops / Equipment / Stock all need crop catalog).
   const registry = await getRegistry();
@@ -224,6 +220,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     fields,
     isFirstRun,
     canEdit,
+    setupAreas: canEdit && blocks.length === 0 ? setupAreas() : [],
     cropCatalog,
     plantingGuides,
     showFieldControls: fields.length > 1,

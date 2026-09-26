@@ -19,17 +19,17 @@ const counts = {
 
 describe('A_InventoryList — Phase 27B', () => {
   it('renders all 5 type chips with counts', () => {
-    const { getByText } = render(A_InventoryList, {
+    const { getByText, getByRole } = render(A_InventoryList, {
       type: 'pesticide',
       mode: 'stock',
       counts,
       rows: []
     });
-    expect(getByText('Pesticides')).toBeInTheDocument();
-    expect(getByText('Fertility')).toBeInTheDocument();
-    expect(getByText('Seeds')).toBeInTheDocument();
-    expect(getByText('Crops')).toBeInTheDocument();
-    expect(getByText('Sprayers')).toBeInTheDocument();
+    expect(getByRole('tab', { name: /^Pesticides/ })).toBeInTheDocument();
+    expect(getByRole('tab', { name: /^Fertility/ })).toBeInTheDocument();
+    expect(getByRole('tab', { name: /^Seeds/ })).toBeInTheDocument();
+    expect(getByRole('tab', { name: /^Crops/ })).toBeInTheDocument();
+    expect(getByRole('tab', { name: /^Sprayers/ })).toBeInTheDocument();
     // Per-type count badges.
     expect(getByText('12')).toBeInTheDocument();
     expect(getByText('376')).toBeInTheDocument();
@@ -136,5 +136,31 @@ describe('A_InventoryList — Phase 27B', () => {
     expect(getByText('GPA')).toBeInTheDocument();
     expect(getByText('Backpack 4-gal')).toBeInTheDocument();
     expect(getByText('OK')).toBeInTheDocument();
+  });
+
+  it('swaps the empty table for the add-a-kind card grid, inside the same chrome', () => {
+    const { getByTestId, queryByRole, getByRole } = render(A_InventoryList, {
+      type: 'seed',
+      mode: 'stock',
+      counts,
+      rows: []
+    });
+    expect(getByTestId('inventory-empty')).toBeInTheDocument();
+    expect(queryByRole('table')).toBeNull();
+    expect(queryByRole('searchbox')).toBeNull();
+    expect(getByRole('tablist', { name: 'Inventory type' })).toBeInTheDocument();
+    expect(getByRole('link', { current: true })).toHaveAttribute('href', '/inventory/seed/add');
+  });
+
+  it('shows a helper the ask-the-owner note when the list is empty', () => {
+    const { getByText, getByTestId } = render(A_InventoryList, {
+      type: 'pesticide',
+      mode: 'stock',
+      counts,
+      rows: [],
+      canAdd: false
+    });
+    expect(getByTestId('inventory-empty')).not.toContainHTML('/inventory/pesticide/add"');
+    expect(getByText(/Ask the owner to add some/)).toBeInTheDocument();
   });
 });

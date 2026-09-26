@@ -204,7 +204,7 @@ async function buildCounts(items: StockItemWithBalance[]): Promise<Record<Invent
   return counts;
 }
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const type = parseType(url.searchParams.get('type'));
   const mode = parseMode(url.searchParams.get('mode'), type);
 
@@ -224,6 +224,7 @@ export const load: PageServerLoad = async ({ url }) => {
     type,
     mode,
     counts,
-    rows
+    rows,
+    canAdd: locals.user?.role === 'owner'
   };
 };

@@ -20,6 +20,7 @@ import { activeFungicideReEntryRestrictions, listFungicideEvents } from '$lib/db
 import { getRegistry } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 import { getUserAiEnabled } from '$lib/server/aiTry';
+import { canSetUp, setupAreas } from '$lib/server/setupContext';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   const cropId = url.searchParams.get('crop');
@@ -88,6 +89,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       productPluginIds: url.searchParams.getAll('product')
     },
     // Phase 25d (#89) v2-addendum — drives AI-on vs AI-off variant.
-    aiEnabled: getUserAiEnabled(locals.user?.id)
+    aiEnabled: getUserAiEnabled(locals.user?.id),
+    setup: { canEdit: canSetUp(locals.user?.role), areas: setupAreas() }
   };
 };

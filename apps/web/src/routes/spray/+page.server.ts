@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { getRegistry } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
+import { canSetUp, setupAreas, setupBlocks, setupSprayerTemplates } from '$lib/server/setupContext';
 
 /**
  * Load real blocks from DB. Deep-link query params:
@@ -10,7 +11,7 @@ import { listSprayers } from '$lib/server/sprayers';
  *   ?fromScout=1                 — UI hint: showed up via the scout flow
  *   ?windowStage=V2-V3 | V4-V6 | BURNDOWN | PRE | POST — filter herbicide list
  */
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const registry = await getRegistry();
 
   const cropById = new Map(
@@ -163,6 +164,12 @@ export const load: PageServerLoad = async ({ url }) => {
     herbicides,
     allHerbicides,
     sprayers: listSprayers(),
+    setup: {
+      canEdit: canSetUp(locals.user?.role),
+      areas: setupAreas(),
+      blocks: setupBlocks(dbBlocks),
+      sprayerTemplates: setupSprayerTemplates()
+    },
     preselect: {
       blockId: requestedBlockId,
       cropId: requestedCropId,

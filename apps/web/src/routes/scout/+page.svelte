@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
   /**
    * /scout — FR-07 threshold-driven scouting + observation persistence.
    *
@@ -221,6 +222,12 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      if (isUpdatingResponse(res)) {
+        await queueObservation(payload);
+        const { scheduleDrain } = await import('$lib/client/syncQueue');
+        scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
+        return;
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
         saveError = body.error ?? `HTTP ${res.status}`;

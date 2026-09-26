@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { isUpdatingResponse, retryAfterSeconds, UPDATING_QUEUED_NOTICE } from '$lib/updating';
   import type { ForecastDay, HayViolation } from '$lib/hay';
   import { untrack } from 'svelte';
   import { fmt } from '$lib/prefsState.svelte';
@@ -101,6 +102,13 @@
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body)
       });
+      if (isUpdatingResponse(res)) {
+        const { enqueueRecord, scheduleDrain } = await import('$lib/client/syncQueue');
+        await enqueueRecord('hay-cutting', body);
+        scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
+        banner = UPDATING_QUEUED_NOTICE;
+        return;
+      }
       const out = await res.json();
       if (!res.ok) {
         error = out.error ?? 'failed to start cutting';

@@ -16,7 +16,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, asc, eq, gte, isNull, lte, or } from 'drizzle-orm';
+import { and, asc, count, eq, gte, isNull, lte, or } from 'drizzle-orm';
 import { db } from './client';
 import { equipment, equipmentState, tasks } from './schema';
 import { tenantValues, withTenant } from './tenant';
@@ -98,7 +98,7 @@ export interface ListFilters {
   limit?: number;
 }
 
-export function listTasks(filters: ListFilters = {}): Task[] {
+function taskConditions(filters: ListFilters) {
   const conds = [];
   if (filters.fromMs !== undefined) conds.push(gte(tasks.scheduledFor, new Date(filters.fromMs)));
   if (filters.toMs !== undefined) conds.push(lte(tasks.scheduledFor, new Date(filters.toMs)));
@@ -115,15 +115,28 @@ export function listTasks(filters: ListFilters = {}): Task[] {
   } else if (filters.status === 'aborted') {
     conds.push(eq(tasks.abortedAt, tasks.abortedAt));
   }
+  return conds.length ? and(...conds) : undefined;
+}
 
+export function listTasks(filters: ListFilters = {}): Task[] {
   let q = db
     .select()
     .from(tasks)
-    .where(withTenant(tasks, conds.length ? and(...conds) : undefined))
+    .where(withTenant(tasks, taskConditions(filters)))
     .$dynamic();
   q = q.orderBy(asc(tasks.scheduledFor));
   if (filters.limit) q = q.limit(filters.limit);
   return q.all().map(rowToTask);
+}
+
+/** `listTasks(filters).length` without reading the rows. */
+export function countTasks(filters: Omit<ListFilters, 'limit'> = {}): number {
+  const row = db
+    .select({ n: count() })
+    .from(tasks)
+    .where(withTenant(tasks, taskConditions(filters)))
+    .get();
+  return row?.n ?? 0;
 }
 
 export function getTask(id: string): Task | undefined {

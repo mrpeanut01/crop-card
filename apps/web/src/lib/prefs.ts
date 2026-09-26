@@ -9,6 +9,12 @@
  */
 
 import { DEFAULT_TIME_ZONE, type DisplayUnits } from './profile';
+import {
+  dateTimeFormat,
+  dateToLocaleDateString,
+  dateToLocaleString,
+  numberToLocaleString
+} from './intlCache';
 
 export interface Prefs {
   timeZone: string;
@@ -50,7 +56,7 @@ export function formatInstant(
   if (value === null || value === undefined) return '—';
   const d = toDate(value);
   if (!d) return '—';
-  return d.toLocaleString('en-US', { ...STYLES[style], ...extra, timeZone: prefs.timeZone });
+  return dateToLocaleString(d, 'en-US', { ...STYLES[style], ...extra, timeZone: prefs.timeZone });
 }
 
 const YMD = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -73,13 +79,13 @@ export function formatCalendarDate(
     d = toDate(value);
   }
   if (!d) return '—';
-  return d.toLocaleDateString('en-US', { ...STYLES[style], ...extra, timeZone: 'UTC' });
+  return dateToLocaleDateString(d, 'en-US', { ...STYLES[style], ...extra, timeZone: 'UTC' });
 }
 
 /** The `YYYY-MM-DD` day an instant falls on in `timeZone`. */
 export function ymdInZone(value: Instant, timeZone: string): string {
   const d = toDate(value) ?? new Date();
-  const parts = new Intl.DateTimeFormat('en-CA', {
+  const parts = dateTimeFormat('en-CA', {
     timeZone,
     year: 'numeric',
     month: '2-digit',
@@ -124,7 +130,7 @@ export function todayYmd(prefs: Pick<Prefs, 'timeZone'>, now: Instant = Date.now
 export function zoneAbbrev(prefs: Pick<Prefs, 'timeZone'>, at: Instant = Date.now()): string {
   const d = toDate(at) ?? new Date();
   return (
-    new Intl.DateTimeFormat('en-US', { timeZone: prefs.timeZone, timeZoneName: 'short' })
+    dateTimeFormat('en-US', { timeZone: prefs.timeZone, timeZoneName: 'short' })
       .formatToParts(d)
       .find((p) => p.type === 'timeZoneName')?.value ?? prefs.timeZone
   );
@@ -204,7 +210,10 @@ export function fromDisplay(value: number, q: Quantity, prefs: Pick<Prefs, 'unit
 }
 
 function round(v: number, digits: number): string {
-  return v.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+  return numberToLocaleString(v, 'en-US', {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: 0
+  });
 }
 
 export interface FormatOpts {

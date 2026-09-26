@@ -12,11 +12,12 @@
  */
 
 import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
+import { dateTimeFormat } from '$lib/intlCache';
 
 const YMD = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 function zoneOffsetMs(at: number, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat('en-US', {
+  const parts = dateTimeFormat('en-US', {
     timeZone,
     hourCycle: 'h23',
     year: 'numeric',

@@ -6,6 +6,9 @@ import {
   HOUR_MS,
   LOCK_WARNING_LEAD_MS,
   LOCK_WINDOW_MS,
+  MAX_TICK_GAP_MS,
+  PUSH_TICK_CRONS_UTC,
+  PUSH_TICK_TIMES_UTC,
   deconDueAlerts,
   lockWindowClosingAlerts,
   selectDueAlerts,
@@ -85,6 +88,8 @@ describe('lockWindowClosingAlerts', () => {
       audience: { kind: 'owners-and', userIds: ['user-helper'] }
     });
     expect(alerts[0].title).toContain('1h');
+    const early = record({ occurredAt: NOW - LOCK_WINDOW_MS + 20 * HOUR_MS });
+    expect(lockWindowClosingAlerts([early], NOW)[0].title).toContain('20h');
     expect(alerts[0].body).toContain('North');
   });
 
@@ -152,5 +157,51 @@ describe('selectDueAlerts', () => {
       'lock-window-closing',
       'spring-calibration'
     ]);
+  });
+});
+
+describe('twice-daily tick cadence', () => {
+  function ticksBetween(fromMs: number, toMs: number): number[] {
+    const out: number[] = [];
+    const day = new Date(fromMs);
+    day.setUTCHours(0, 0, 0, 0);
+    for (let d = day.getTime(); d <= toMs; d += 24 * HOUR_MS) {
+      for (const m of PUSH_TICK_TIMES_UTC) {
+        const t = d + m * 60_000;
+        if (t > fromMs && t <= toMs) out.push(t);
+      }
+    }
+    return out;
+  }
+  const YEAR_MINUTES = 365 * 24 * 60;
+  const BASE = Date.UTC(2026, 0, 1);
+
+  it('the cron and the declared maximum gap agree', () => {
+    expect(PUSH_TICK_CRONS_UTC).toEqual(['0 10 * * *', '30 20 * * *']);
+    const mins = [...PUSH_TICK_TIMES_UTC].sort((a, b) => a - b);
+    const gaps = mins.map((m, i) => (mins[(i + 1) % mins.length] - m + 1440) % 1440 || 1440);
+    expect(Math.max(...gaps) * 60_000).toBe(MAX_TICK_GAP_MS);
+    expect(LOCK_WARNING_LEAD_MS).toBeGreaterThan(MAX_TICK_GAP_MS);
+  });
+
+  it('property: every unlocked record is warned about by some tick before it locks', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: YEAR_MINUTES }), (minute) => {
+        const r = record({ occurredAt: BASE + minute * 60_000, lockedAt: null });
+        const ticks = ticksBetween(r.occurredAt, r.occurredAt + LOCK_WINDOW_MS - 1);
+        expect(ticks.some((t) => lockWindowClosingAlerts([r], t).length === 1)).toBe(true);
+      })
+    );
+  });
+
+  it('property: every dirty sprayer gets a decon-due alert within grace + one gap', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: YEAR_MINUTES }), (minute) => {
+        const lastSprayedAt = BASE + minute * 60_000;
+        const s = sprayer({ lastChemistryClass: 'group-4', lastSprayedAt });
+        const ticks = ticksBetween(lastSprayedAt, lastSprayedAt + DECON_GRACE_MS + MAX_TICK_GAP_MS);
+        expect(ticks.some((t) => deconDueAlerts([s], t).length === 1)).toBe(true);
+      })
+    );
   });
 });

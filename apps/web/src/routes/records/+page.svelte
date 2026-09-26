@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/state';
   import { onMount, tick } from 'svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
   import RecordCardPanel from '$lib/components/records/RecordCardPanel.svelte';
@@ -10,6 +11,7 @@
   import LockPill from '$lib/components/ui/LockPill.svelte';
   import { KIND_LABEL, KIND_TONE, RECORD_KINDS, type RecordKind } from '$lib/db/recordKinds';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { localStamp } from '$lib/exports/localTime';
 
   let { data } = $props();
 
@@ -68,6 +70,17 @@
 
   const isAllKinds = $derived(data.activeKinds.length === RECORD_KINDS.length);
 
+  const loadMoreHref = $derived.by(() => {
+    if (data.nextShow === null) return null;
+    const params = new URLSearchParams(page.url.searchParams);
+    params.set('show', String(data.nextShow));
+    return `/records?${params.toString()}`;
+  });
+  const hiddenCount = $derived(data.filteredTotal - data.records.length);
+  const loadMoreCount = $derived(
+    data.nextShow === null ? 0 : Math.min(hiddenCount, data.nextShow - data.records.length)
+  );
+
   const exportQuery = $derived.by(() => {
     const params = new URLSearchParams();
     if (data.activeSprayerId) params.set('sprayerId', data.activeSprayerId);
@@ -125,9 +138,7 @@
   }
 
   function fmtTimestamp(ms: number): string {
-    return new Date(ms)
-      .toLocaleString('sv-SE', { hour12: false, timeZone: currentPrefs().timeZone })
-      .slice(0, 16);
+    return localStamp(ms, currentPrefs());
   }
 
   function fmtRowTime(r: { kind: RecordKind; occurredAt: number }): string {
@@ -450,7 +461,7 @@
         <button type="button" class="clear-range" onclick={clearDateRange}>clear dates</button>
       {/if}
       <span class="filter-spacer"></span>
-      <span class="count-mono mono">{data.records.length} of {summary.total}</span>
+      <span class="count-mono mono">{data.filteredTotal} of {summary.total}</span>
     </div>
 
     <div class="filter-row select-row">
@@ -571,6 +582,26 @@
             {/each}
           </tbody>
         </table>
+      </div>
+      <div class="load-more">
+        <p class="load-more-status" role="status" aria-live="polite">
+          Showing {data.records.length} of {data.filteredTotal}
+          {data.filteredTotal === 1 ? 'record' : 'records'}, newest first.
+          {#if hiddenCount > 0 && loadMoreHref === null}
+            Export for the rest.
+          {/if}
+        </p>
+        {#if loadMoreHref}
+          <a
+            class="btn-ghost load-more-btn"
+            href={loadMoreHref}
+            data-sveltekit-noscroll
+            data-sveltekit-keepfocus
+            data-sveltekit-replacestate
+          >
+            Load {loadMoreCount} more
+          </a>
+        {/if}
       </div>
     {/if}
   </section>
@@ -1007,6 +1038,26 @@
   }
   .card-row td {
     background: var(--color-cream);
+  }
+  .load-more {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--color-divider);
+  }
+  .load-more-status {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--color-ink-soft, #4a4f46);
+  }
+  .load-more-btn {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 10px 18px;
+    justify-content: center;
   }
   .ledger-scroll {
     overflow-x: auto;

@@ -16,6 +16,7 @@
 #   CROPCARD_ACR        registry name         (default: discovered in the group, else created)
 #   CROPCARD_KV         Key Vault name        (default: discovered in the group, else created)
 #   EMAIL_FROM                                sender address (Postmark / Pingram)
+#   ALERT_EMAIL                               receiver for the operational alerts
 #
 # Secrets live only in the Key Vault; this script never passes one to the template.
 # The session secret is generated there on first deploy. Optional secrets are
@@ -23,6 +24,9 @@
 #   pingram-api-key     email + SMS sign-in codes via Pingram (email wins over postmark-token)
 #   postmark-token      emailed magic links (else they go to the container log)
 #   anthropic-api-key   AI assists (else no-key mode)
+#   push-tick-secret    shared secret for the twice-daily push-tick job; generated
+#                       here on a local --apply when absent (never printed). Without
+#                       it the job isn't deployed and /api/internal/push-tick is 404.
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
 #
 # The image tag is the commit SHA, so a dirty tree is refused unless --allow-dirty.
@@ -56,7 +60,7 @@ while [ $# -gt 0 ]; do
     --allow-dirty) ALLOW_DIRTY=true ;;
     --ci) CI_MODE=true ;;
     --image) PREBUILT_IMAGE="${2:?--image needs a value}"; shift ;;
-    -h|--help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,43p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
@@ -150,12 +154,22 @@ if ! kv_has auth-secret; then
   echo "seeded auth-secret in ${KV}"
 fi
 
+if ! kv_has push-tick-secret && [ "$CI_MODE" = false ] && [ "$APPLY" = true ]; then
+  openssl rand -base64 48 | tr -d '\n' |
+    az keyvault secret set --vault-name "$KV" --name push-tick-secret --file /dev/stdin \
+      --content-type "Shared secret for the push-tick wakeup job" --output none
+  SECRET_NAMES="$(printf '%s\npush-tick-secret' "$SECRET_NAMES")"
+  echo "seeded push-tick-secret in ${KV}"
+fi
+
 HAS_PINGRAM=false; kv_has pingram-api-key && HAS_PINGRAM=true
 HAS_POSTMARK=false; kv_has postmark-token && HAS_POSTMARK=true
 HAS_ANTHROPIC=false; kv_has anthropic-api-key && HAS_ANTHROPIC=true
+HAS_PUSH_TICK=false; kv_has push-tick-secret && HAS_PUSH_TICK=true
 echo "pingram      : ${HAS_PINGRAM}"
 echo "postmark     : ${HAS_POSTMARK}"
 echo "anthropic    : ${HAS_ANTHROPIC}"
+echo "push tick    : ${HAS_PUSH_TICK}"
 
 # ─── Custom domain readiness ────────────────────────────────────────────
 # Zone and host labels come from the .bicepparam so the template and this
@@ -199,8 +213,10 @@ PARAMS=(
   --parameters "$PARAM_FILE"
   --parameters location="$LOCATION" image="$IMAGE" containerRegistryServer="$REGISTRY"
   --parameters keyVaultName="$KV" hasPingramKey="$HAS_PINGRAM" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
+  --parameters hasPushTickSecret="$HAS_PUSH_TICK"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
+[ -n "${ALERT_EMAIL:-}" ] && PARAMS+=(--parameters alertEmail="$ALERT_EMAIL")
 domain_params() { echo "customDomainDnsReady=$DNS_READY" "customDomainCertIssued=$CERT_ISSUED"; }
 
 if [ "$APPLY" = false ]; then

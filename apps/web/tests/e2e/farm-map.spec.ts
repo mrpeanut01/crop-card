@@ -197,3 +197,29 @@ test.describe('typed farm map', () => {
     await expect(page.getByRole('button', { name: 'Print or save as PDF' })).toBeHidden();
   });
 });
+
+test.describe('farm map zoom', () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  test('zooms past the imagery limit so single trees and beds can be drawn', async ({ page }) => {
+    await provisionWizardTenant(page, { blocks: [] });
+    await page.goto('/settings/farm/map');
+    await page.waitForLoadState('networkidle');
+
+    const zoomIn = page.locator('.leaflet-control-zoom-in').first();
+    await expect(zoomIn).toBeVisible();
+    // An empty farm opens at z13; the map should keep going to z22.
+    for (let i = 0; i < 9; i++) {
+      await expect(zoomIn).not.toHaveClass(/leaflet-disabled/);
+      await zoomIn.click();
+      await page.waitForTimeout(300);
+    }
+    await expect(zoomIn).toHaveClass(/leaflet-disabled/);
+    // Past z19 the last real imagery tiles are upscaled, not requested.
+    const tiles = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLImageElement>('img.leaflet-tile')].map((t) => t.src)
+    );
+    expect(tiles.length).toBeGreaterThan(0);
+    for (const src of tiles) expect(src).toMatch(/\/tile\/19\//);
+  });
+});

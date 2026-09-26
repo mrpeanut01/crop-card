@@ -12,6 +12,7 @@ import {
   isDryHour,
   isLeafWet,
   leafWetHoursInRange,
+  mergeObservedAndForecast,
   summarizeLeafWet,
   tankMixRainfastHours,
   type HourlyPoint
@@ -226,5 +227,48 @@ describe('deriveHourly', () => {
     expect(d.dryWindow).toBeNull();
     expect(d.dailyRain).toEqual([]);
     expect(d.leafWet.next24h.coveredHours).toBe(0);
+  });
+});
+
+describe('mergeObservedAndForecast', () => {
+  const now = T0 + 3 * HOUR_MS + 20 * 60 * 1000;
+
+  it('prefers observations before now and forecast from the current hour on', () => {
+    const observed = [0, 1, 2, 3, 4].map((i) => pt(i, { tempF: 40 }));
+    const forecast = [2, 3, 4, 5].map((i) => pt(i, { tempF: 80 }));
+    const merged = mergeObservedAndForecast(observed, forecast, now);
+    expect(merged.map((h) => [h.t, h.tempF])).toEqual([
+      [T0, 40],
+      [T0 + HOUR_MS, 40],
+      [T0 + 2 * HOUR_MS, 40],
+      [T0 + 3 * HOUR_MS, 80],
+      [T0 + 4 * HOUR_MS, 80],
+      [T0 + 5 * HOUR_MS, 80]
+    ]);
+  });
+
+  it("lets either side fill the other side's gaps", () => {
+    const merged = mergeObservedAndForecast([pt(5, { tempF: 40 })], [pt(0, { tempF: 80 })], now);
+    expect(merged.map((h) => h.tempF)).toEqual([80, 40]);
+  });
+
+  it('is a sorted union with one point per hour for any input', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer({ min: -48, max: 48 })),
+        fc.array(fc.integer({ min: -48, max: 48 })),
+        (obs, fcst) => {
+          const merged = mergeObservedAndForecast(
+            obs.map((i) => pt(i)),
+            fcst.map((i) => pt(i)),
+            now
+          );
+          const ts = merged.map((h) => h.t);
+          expect(new Set(ts).size).toBe(ts.length);
+          expect([...ts].sort((a, b) => a - b)).toEqual(ts);
+          expect(ts.length).toBe(new Set([...obs, ...fcst]).size);
+        }
+      )
+    );
   });
 });

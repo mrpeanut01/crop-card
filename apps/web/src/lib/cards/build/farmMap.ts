@@ -8,12 +8,12 @@ import {
   type CardSection
 } from '../model';
 import type { FarmSnapshot, SnapshotArea, SnapshotFrostDates } from '../snapshot';
+import { zoneCardValue, zoneSourceDetail } from '$lib/climate/zone';
 import { AREA_KINDS, isCropBearing } from '$lib/farm/areaKinds';
 import { AREA_KIND_PLURAL, AREA_KIND_STYLE } from '$lib/farm/kindStyle';
 import { areaDisplayName, areaKindLabel, monthDay, resolveOptions, trimNumber } from './common';
 import { formatAreaAcres, formatSize } from './size';
 import { formatQuantity, type Prefs } from '$lib/prefs';
-import { hardinessZoneText } from '$lib/climate/zone';
 import {
   MAP_FEATURE_KINDS,
   MAP_FEATURE_LABELS,
@@ -117,18 +117,19 @@ export function buildFarmMapCard(
   facts.push(...frost.facts);
   provenance.push(...frost.provenance);
 
-  const zone = snapshot.hardinessZone;
-  if (zone) {
+  if (snapshot.zone) {
     facts.push({
       label: 'Zone',
-      value: hardinessZoneText(zone).replace(/^Zone /, ''),
-      provenance: zone.provenance
+      value: zoneCardValue(snapshot.zone),
+      provenance: snapshot.zone.provenance
     });
-    provenance.push(
-      zone.provenance === 'data'
-        ? { source: 'data', detail: 'zone from NOAA station averages' }
-        : { source: 'manual', detail: 'your zone' }
-    );
+    provenance.push({
+      source: snapshot.zone.provenance,
+      detail:
+        snapshot.zone.provenance === 'data'
+          ? `zone approx., ${zoneSourceDetail(snapshot.zone)}`
+          : zoneSourceDetail(snapshot.zone)
+    });
   }
 
   const sections: CardSection[] = [];

@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { db, writeTransaction } from '$lib/db/client';
+import { db } from '$lib/db/client';
 import {
   owners,
   ownerSubscriptions,
@@ -73,7 +73,7 @@ export function setBillingStatus(
   superadminUserId: string
 ): void {
   unscopedQueryNote('superadmin billing-status flip is intentionally cross-tenant');
-  writeTransaction(() => {
+  db.transaction(() => {
     db.update(owners).set({ billingStatus: status }).where(eq(owners.id, ownerId)).run();
     db.update(ownerSubscriptions)
       .set({ status, updatedAt: new Date(Date.now()) })

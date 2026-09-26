@@ -1,15 +1,15 @@
 /**
- * NFR-06 — in-process push alert scheduler.
+ * NFR-06 — one push alert tick.
  *
- * CropCard runs as a single replica (CLAUDE.md invariant 3), so a plain
- * interval in the Node process is enough: no queue, no leader election.
- * Every tick visits each Owner that has at least one subscription, builds
- * that Owner's snapshot inside `runWithTenantAsync`, selects due alerts
+ * The app scales to zero, so nothing runs on a timer in the process. An
+ * Azure Container Apps Job wakes the app twice a day and POSTs
+ * /api/internal/push-tick (see ./wakeup.ts), which calls `runPushTick` once.
+ * A tick visits each Owner that has at least one subscription, builds that
+ * Owner's snapshot inside `runWithTenantAsync`, selects due alerts
  * (triggers.ts), and claims each in the `push_deliveries` sent-log before
- * sending, so an alert goes out at most once even across restarts.
+ * sending, so an alert goes out at most once however often ticks run.
  *
- * Disabled entirely when VAPID is unset or under tests; the clock, interval,
- * and fetch are injectable.
+ * The clock, fetch and NWS fetcher are injectable.
  */
 
 import { eq } from 'drizzle-orm';
@@ -43,9 +43,7 @@ import {
   type PushAlert,
   type SprayerSnapshot
 } from './triggers';
-import { readVapidConfig, type VapidConfig } from './webPush';
-
-export const PUSH_TICK_INTERVAL_MS = 15 * 60 * 1000;
+import type { VapidConfig } from './webPush';
 
 const SKIPPED_BILLING = new Set(['suspended', 'canceled']);
 
@@ -88,7 +86,7 @@ function ownerSnapshot(now: number): {
     winterizedAt: s.winterizedAt
   }));
   const window = { fromMs: now - LOCK_WINDOW_MS, toMs: now };
-  const blockName = new Map(listBlocks().map((b) => [b.id, b.name]));
+  const blockName = new Map(listBlocks({ plantings: 'none' }).map((b) => [b.id, b.name]));
   const records: LockableRecordSnapshot[] = [
     ...listSprayEvents(window).map((e) => ({
       kind: 'spray' as const,
@@ -125,10 +123,10 @@ function ownerSnapshot(now: number): {
  */
 async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<PushAlert[]> {
   if (!listSubscriptions().some((s) => s.prefs['frost-tonight'])) return [];
-  const crops = listCrops().filter((c) => c.status === 'active' || c.status === 'planned');
+  const crops = listCrops({ statuses: ['active', 'planned'] });
   if (crops.length === 0) return [];
   const registry = await getRegistry();
-  const blockName = new Map(listBlocks().map((b) => [b.id, b.name]));
+  const blockName = new Map(listBlocks({ plantings: 'none' }).map((b) => [b.id, b.name]));
   const plantings: FrostPlantingSnapshot[] = [];
   for (const c of crops) {
     const plugin = registry.get(c.cropPluginId)?.plugin;
@@ -211,62 +209,4 @@ export async function runPushTick(deps: PushTickDeps): Promise<PushTickSummary> 
     }
   }
   return total;
-}
-
-export interface PushSchedulerHandle {
-  stop(): void;
-  /** Resolves when the in-flight tick (if any) settles. */
-  tick(): Promise<PushTickSummary | null>;
-}
-
-export function startPushScheduler(
-  deps: PushTickDeps & {
-    intervalMs?: number;
-    setIntervalImpl?: (fn: () => void, ms: number) => unknown;
-    clearIntervalImpl?: (handle: unknown) => void;
-  }
-): PushSchedulerHandle {
-  let running: Promise<PushTickSummary | null> | null = null;
-  const tick = (): Promise<PushTickSummary | null> => {
-    if (running) return running;
-    running = runPushTick(deps)
-      .catch((err) => {
-        console.error('[push] tick failed', err);
-        return null;
-      })
-      .finally(() => {
-        running = null;
-      });
-    return running;
-  };
-  const setI = deps.setIntervalImpl ?? ((fn, ms) => setInterval(fn, ms));
-  const clearI =
-    deps.clearIntervalImpl ?? ((h) => clearInterval(h as ReturnType<typeof setInterval>));
-  const handle = setI(() => void tick(), deps.intervalMs ?? PUSH_TICK_INTERVAL_MS);
-  (handle as { unref?: () => void } | null)?.unref?.();
-  return { stop: () => clearI(handle), tick };
-}
-
-export function shouldRunPushScheduler(env: Record<string, string | undefined>): boolean {
-  if (env.NODE_ENV === 'test' || env.VITEST === 'true') return false;
-  if (env.PUSH_SCHEDULER === 'off') return false;
-  return readVapidConfig(env) !== null;
-}
-
-const GLOBAL_KEY = Symbol.for('cropcard.pushScheduler');
-
-/** Called from hooks.server.ts `init`. Idempotent across HMR reloads. */
-export function maybeStartPushScheduler(
-  env: Record<string, string | undefined> = process.env
-): PushSchedulerHandle | null {
-  if (!shouldRunPushScheduler(env)) return null;
-  const g = globalThis as Record<symbol, PushSchedulerHandle | undefined>;
-  const existing = g[GLOBAL_KEY];
-  if (existing) return existing;
-  const config = readVapidConfig(env);
-  if (!config) return null;
-  const handle = startPushScheduler({ config });
-  g[GLOBAL_KEY] = handle;
-  console.log('[push] scheduler started (every 15 min)');
-  return handle;
 }

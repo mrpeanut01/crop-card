@@ -1,101 +1,79 @@
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
-interface Acc {
-  stations: Map<string, unknown>;
-}
-interface BuildScript {
-  GHCN_SHA256: Record<string, string>;
-  GHCN_FIRST_YEAR: number;
-  GHCN_LAST_YEAR: number;
-  MIN_DAYS_PER_COLD_MONTH: number;
-  MIN_YEARS_FOR_EXTREME: number;
-  newExtremeAccumulator(ids: Iterable<string>, southern?: Set<string>): Acc;
-  accumulateGhcnLine(acc: Acc, line: string): void;
-  extremeMinF(acc: Acc, id: string): number | null;
-}
+// A computed path keeps the untyped build script out of svelte-check.
+const SCRIPT: string = resolve(__dirname, '../../scripts/build-frost-normals.mjs');
+const { EXTREME_MIN_MIN_YEARS, extremeMinEligible, meanExtremeMinF } = (await import(
+  /* @vite-ignore */ SCRIPT
+)) as {
+  EXTREME_MIN_MIN_YEARS: number;
+  extremeMinEligible: (id: string) => boolean;
+  meanExtremeMinF: (csv: string) => number | null;
+};
 
-const SCRIPT = path.resolve(__dirname, '../../scripts/build-frost-normals.mjs');
-const load = () => import(/* @vite-ignore */ pathToFileURL(SCRIPT).href) as Promise<BuildScript>;
+const HEADER = '"STATION","DATE","LATITUDE","EMNT","EMNT_ATTRIBUTES"';
 
-const pad = (n: number) => String(n).padStart(2, '0');
-
-function coldMonths(
-  mod: BuildScript,
-  acc: Acc,
-  id: string,
-  year: number,
-  tenthsC: number,
-  months = [1, 2, 12],
-  days = 28
-) {
-  for (const m of months) {
-    for (let d = 1; d <= days; d++) {
-      mod.accumulateGhcnLine(acc, `${id},${year}${pad(m)}${pad(d)},TMIN,${tenthsC},,,7,0700`);
+/** Synthetic GSOM rows: every month of each year, EMNT in °C. */
+function gsom(years: number[], emnt: (year: number, month: number) => string): string {
+  const rows = [HEADER];
+  for (const y of years) {
+    for (let m = 1; m <= 12; m++) {
+      rows.push(
+        `"SYN0000001","${y}-${String(m).padStart(2, '0')}","40.0","${emnt(y, m)}","0,0101, "`
+      );
     }
   }
+  return rows.join('\n');
 }
 
-describe('build-frost-normals extreme minimum', () => {
-  it('pins one SHA-256 per year, 1991-2020', async () => {
-    const mod = await load();
-    expect(mod.GHCN_FIRST_YEAR).toBe(1991);
-    expect(mod.GHCN_LAST_YEAR).toBe(2020);
-    const years = Object.keys(mod.GHCN_SHA256).map(Number);
-    expect(years).toHaveLength(30);
-    for (const h of Object.values(mod.GHCN_SHA256)) expect(h).toMatch(/^[0-9a-f]{64}$/);
+const range = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+
+describe('meanExtremeMinF (GSOM parser)', () => {
+  it('averages each year’s lowest monthly EMNT and converts once to °F', () => {
+    const csv = gsom(range(1991, 2020), (y, m) => (m === 1 ? (y % 2 ? '-20.0' : '-10.0') : '5.0'));
+    expect(meanExtremeMinF(csv)).toBe(5);
   });
 
-  it('averages each complete year’s lowest TMIN and converts to °F', async () => {
-    const mod = await load();
-    const acc = mod.newExtremeAccumulator(['USW00093738']);
-    for (let y = 1991; y < 1991 + mod.MIN_YEARS_FOR_EXTREME; y++) {
-      coldMonths(mod, acc, 'USW00093738', y, 0);
-      mod.accumulateGhcnLine(acc, `USW00093738,${y}0115,TMIN,${y % 2 ? -200 : -100},,,7,0700`);
-    }
-    const f = mod.extremeMinF(acc, 'USW00093738')!;
-    const meanC =
-      [...Array(mod.MIN_YEARS_FOR_EXTREME).keys()]
-        .map((i) => ((1991 + i) % 2 ? -20 : -10))
-        .reduce((a, b) => a + b, 0) / mod.MIN_YEARS_FOR_EXTREME;
-    expect(f).toBeCloseTo((meanC * 9) / 5 + 32, 1);
+  it('only reads 1991-2020', () => {
+    const csv = gsom(range(1980, 2025), (y, m) =>
+      m === 1 ? (y < 1991 || y > 2020 ? '-40.0' : '-15.0') : '0.0'
+    );
+    expect(meanExtremeMinF(csv)).toBe(5);
   });
 
-  it('skips QC-flagged values, other elements, other stations and years outside 1991-2020', async () => {
-    const mod = await load();
-    const acc = mod.newExtremeAccumulator(['USC00012172']);
-    for (let y = 1991; y < 1991 + mod.MIN_YEARS_FOR_EXTREME; y++) {
-      coldMonths(mod, acc, 'USC00012172', y, 50);
-      mod.accumulateGhcnLine(acc, `USC00012172,${y}0110,TMIN,-300,,I,7,0700`);
-      mod.accumulateGhcnLine(acc, `USC00012172,${y}0110,TMAX,-300,,,7,0700`);
-      mod.accumulateGhcnLine(acc, `USC00099999,${y}0110,TMIN,-300,,,7,0700`);
-    }
-    mod.accumulateGhcnLine(acc, 'USC00012172,19900110,TMIN,-300,,,7,0700');
-    mod.accumulateGhcnLine(acc, 'USC00012172,20210110,TMIN,-300,,,7,0700');
-    expect(mod.extremeMinF(acc, 'USC00012172')).toBe(41);
+  it(`needs ${EXTREME_MIN_MIN_YEARS} qualifying years`, () => {
+    const cold = (_y: number, m: number) => (m === 2 ? '-15.0' : '1.0');
+    expect(meanExtremeMinF(gsom(range(1991, 1991 + EXTREME_MIN_MIN_YEARS - 1), cold))).toBe(5);
+    expect(meanExtremeMinF(gsom(range(1991, 1991 + EXTREME_MIN_MIN_YEARS - 2), cold))).toBeNull();
   });
 
-  it('needs enough days in every cold month and enough years', async () => {
-    const mod = await load();
-    const acc = mod.newExtremeAccumulator(['A', 'B']);
-    for (let y = 1991; y < 1991 + mod.MIN_YEARS_FOR_EXTREME; y++) {
-      coldMonths(mod, acc, 'A', y, 0, [1, 2, 12], mod.MIN_DAYS_PER_COLD_MONTH - 1);
-    }
-    for (let y = 1991; y < 1991 + mod.MIN_YEARS_FOR_EXTREME - 1; y++) {
-      coldMonths(mod, acc, 'B', y, 0);
-    }
-    expect(mod.extremeMinF(acc, 'A')).toBeNull();
-    expect(mod.extremeMinF(acc, 'B')).toBeNull();
-    expect(mod.extremeMinF(acc, 'nope')).toBeNull();
+  it('drops a year missing any cold month but keeps one missing summer', () => {
+    const noDec = gsom(range(1991, 2020), (y, m) =>
+      m === 12 && y > 2000 ? '' : m === 1 ? '-15.0' : '1.0'
+    );
+    expect(meanExtremeMinF(noDec)).toBeNull();
+    const noJuly = gsom(range(1991, 2020), (_y, m) => (m === 7 ? '' : m === 1 ? '-15.0' : '1.0'));
+    expect(meanExtremeMinF(noJuly)).toBe(5);
   });
 
-  it('uses June to August as the cold months south of the equator', async () => {
-    const mod = await load();
-    const acc = mod.newExtremeAccumulator(['AQW00061705'], new Set(['AQW00061705']));
-    for (let y = 1991; y < 1991 + mod.MIN_YEARS_FOR_EXTREME; y++) {
-      coldMonths(mod, acc, 'AQW00061705', y, 200, [6, 7, 8]);
-    }
-    expect(mod.extremeMinF(acc, 'AQW00061705')).toBe(68);
+  it('ignores blanks, junk and implausible values', () => {
+    const csv = gsom(range(1991, 2020), (y, m) =>
+      m === 3 ? (y === 1995 ? '-999.9' : y === 1996 ? 'abc' : '-15.0') : '1.0'
+    );
+    expect(meanExtremeMinF(csv)).toBe(5);
+    expect(meanExtremeMinF('')).toBeNull();
+    expect(meanExtremeMinF(HEADER)).toBeNull();
+    expect(meanExtremeMinF('"STATION","DATE"\n"X","1991-01"')).toBeNull();
+  });
+});
+
+describe('extremeMinEligible', () => {
+  it('keeps U.S. states and territories and leaves out other countries', () => {
+    expect(extremeMinEligible('USW00093738')).toBe(true);
+    expect(extremeMinEligible('RQC00660061')).toBe(true);
+    expect(extremeMinEligible('GQW00041415')).toBe(true);
+    expect(extremeMinEligible('CAW00064757')).toBe(false);
+    expect(extremeMinEligible('FMC00914395')).toBe(false);
+    expect(extremeMinEligible('')).toBe(false);
   });
 });

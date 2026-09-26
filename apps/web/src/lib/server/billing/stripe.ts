@@ -14,7 +14,7 @@
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { db, writeTransaction } from '$lib/db/client';
+import { db } from '$lib/db/client';
 import { ownerSubscriptions, owners } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 
@@ -234,7 +234,7 @@ function convergeSubscription(ownerId: string, patch: SubscriptionPatch): boolea
   const owner = db.select({ id: owners.id }).from(owners).where(eq(owners.id, ownerId)).get();
   if (!owner) return false;
   const now = new Date();
-  writeTransaction((tx) => {
+  db.transaction((tx) => {
     tx.insert(ownerSubscriptions)
       .values({ ownerId, ...patch, createdAt: now, updatedAt: now })
       .onConflictDoUpdate({

@@ -12,8 +12,26 @@ import type { PushAlertKind } from '$lib/push/prefs';
 
 export const HOUR_MS = 60 * 60 * 1000;
 export const LOCK_WINDOW_MS = 48 * HOUR_MS;
-/** Notify when a record locks within this lead time. */
-export const LOCK_WARNING_LEAD_MS = 2 * HOUR_MS;
+/**
+ * Times (UTC, minutes past midnight) the push-tick Container Apps Jobs run.
+ * 10:00 / 20:30 UTC is 06:00 / 16:30 EDT (the frost seasons) and 05:00 /
+ * 15:30 EST in winter; ACA cron has no time zone, so the local time drifts an
+ * hour with DST. 16:30 catches NWS frost/freeze products issued mid-to-late
+ * afternoon for tonight. One cron can't express both minutes, so each time is
+ * its own job.
+ */
+export const PUSH_TICK_TIMES_UTC = [10 * 60, 20 * 60 + 30] as const;
+export const PUSH_TICK_CRONS_UTC = PUSH_TICK_TIMES_UTC.map(
+  (m) => `${m % 60} ${Math.floor(m / 60)} * * *`
+);
+/** Longest gap between two ticks (10:00 to 20:30 is 10.5 h, 20:30 to 10:00 is 13.5 h). */
+export const MAX_TICK_GAP_MS = 13.5 * HOUR_MS;
+/**
+ * Notify when a record locks within this lead time. Ticks run twice a day, so
+ * the lead must exceed the longest gap between ticks or a record could lock
+ * unannounced; 24 h leaves room for a cold start or one missed run.
+ */
+export const LOCK_WARNING_LEAD_MS = 24 * HOUR_MS;
 /** Give the operator an hour to decon on their own before nagging. */
 export const DECON_GRACE_MS = HOUR_MS;
 /** Don't alert about ancient dirty tanks (e.g. on first deploy). */

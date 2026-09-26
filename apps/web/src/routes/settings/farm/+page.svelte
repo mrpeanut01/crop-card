@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronRight, Plus, Map, MapPin } from 'lucide-svelte';
+  import { ChevronRight, Plus, Map, MapPin, Crosshair } from 'lucide-svelte';
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
   import { untrack } from 'svelte';
@@ -9,16 +9,19 @@
   import BlockMap from '$lib/components/BlockMap.svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
+  import ZoneChip from '$lib/components/farm/ZoneChip.svelte';
   import { kindStyle } from '$lib/farm/kindStyle';
-  import HardinessZoneChip from '$lib/components/climate/HardinessZoneChip.svelte';
-  import { HARDINESS_ZONES } from '$lib/climate/zone';
   import EmergencyContactsEditor from '$lib/components/settings/EmergencyContactsEditor.svelte';
+  import LocationPickerModal from '$lib/components/farm/LocationPickerModal.svelte';
+  import { LOUDOUN_DEFAULT_LAT_LON } from '$lib/schedule/constants';
 
   const { data, form } = $props();
 
   const round4 = (n: number | undefined) => (n == null ? null : Number(n.toFixed(4)));
   let lat = $state<number | null>(untrack(() => round4(data.farmLatLon?.lat)));
   let lon = $state<number | null>(untrack(() => round4(data.farmLatLon?.lon)));
+  let pickerOpen = $state(false);
+  const finite = (n: number | null) => (typeof n === 'number' && Number.isFinite(n) ? n : null);
 
   // Read-only preview only — edit/draw happens at /settings/farm/map. BlockMap
   // requires these callbacks but never invokes them in thumbnail mode.
@@ -41,11 +44,6 @@
   );
 
   const total = $derived(data.blocks.reduce((s, b) => s + (b.acres ?? 0), 0));
-
-  const zoneChoice = $derived(
-    data.hardinessZone?.provenance === 'manual' ? data.hardinessZone.label : ''
-  );
-  const zoneEstimate = $derived(data.hardinessZone?.estimate ?? null);
 </script>
 
 <svelte:head><title>Farm & blocks · CropCard</title></svelte:head>
@@ -89,6 +87,27 @@
         />
       </SettingsField>
     </div>
+    <div class="locate-row">
+      <button
+        type="button"
+        class="ghost-sm"
+        onclick={() => (pickerOpen = true)}
+        data-testid="open-location-picker"
+      >
+        <Crosshair size={13} /> Find lat/long with GPS or map
+      </button>
+    </div>
+    <LocationPickerModal
+      open={pickerOpen}
+      lat={finite(lat)}
+      lon={finite(lon)}
+      fallback={LOUDOUN_DEFAULT_LAT_LON}
+      onClose={() => (pickerOpen = false)}
+      onApply={(la, lo) => {
+        lat = round4(la);
+        lon = round4(lo);
+      }}
+    />
     <div class="frost-box">
       <FrostPanel
         lat={typeof lat === 'number' && Number.isFinite(lat) ? lat : null}
@@ -97,28 +116,13 @@
         stored={data.frost}
       />
     </div>
-    <div class="zone-box">
-      <h3 class="zone-title serif">Hardiness zone</h3>
-      <HardinessZoneChip zone={data.hardinessZone} />
-      <p class="zone-note">
-        A rough guide for perennials and fruit trees, worked out from the nearest weather station's
-        coldest winter nights. It is not the USDA map, and CropCard never plans or blocks anything
-        by zone.
-      </p>
-      <details class="zone-edit" open={zoneChoice !== ''}>
-        <summary>{data.hardinessZone ? 'Change zone' : 'Set your zone'}</summary>
-        <label class="zone-field">
-          <span>Your zone</span>
-          <select class="s-input zone-select" name="hardinessZone">
-            <option value="" selected={zoneChoice === ''}>
-              {zoneEstimate ? `Use the station estimate (${zoneEstimate})` : 'Not set'}
-            </option>
-            {#each HARDINESS_ZONES as z (z)}
-              <option value={z} selected={z === zoneChoice}>Zone {z}</option>
-            {/each}
-          </select>
-        </label>
-      </details>
+    <div class="frost-box">
+      <ZoneChip
+        lat={typeof lat === 'number' && Number.isFinite(lat) ? lat : null}
+        lon={typeof lon === 'number' && Number.isFinite(lon) ? lon : null}
+        manualZone={data.manualZone}
+        editable
+      />
     </div>
   </SettingsSection>
 
@@ -215,48 +219,31 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
   }
+  .locate-row {
+    margin-top: 10px;
+  }
+  .ghost-sm {
+    background: transparent;
+    border: 1px solid var(--color-divider);
+    color: var(--color-forest-deep);
+    min-height: 48px;
+    padding: 8px 14px;
+    border-radius: var(--radius-input, 6px);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .ghost-sm:hover {
+    background: var(--color-cream);
+  }
   .frost-box {
     margin-top: 16px;
     padding-top: 14px;
     border-top: 1px solid var(--color-divider-soft);
-  }
-  .zone-box {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--color-divider-soft);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .zone-title {
-    margin: 0;
-    font-size: 16px;
-  }
-  .zone-note {
-    margin: 0;
-    color: var(--color-ink-soft);
-    font-size: 12.5px;
-    max-width: 60ch;
-  }
-  .zone-edit summary {
-    min-height: 48px;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-    color: var(--color-forest-deep);
-    font-weight: 600;
-    font-size: 13px;
-  }
-  .zone-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 12.5px;
-    color: var(--color-ink-soft);
-    max-width: 320px;
-  }
-  .zone-select {
-    min-height: 48px;
   }
   .error {
     background: var(--pill-rust-bg);

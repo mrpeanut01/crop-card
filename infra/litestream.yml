@@ -5,6 +5,11 @@
 # In production we prefer managed-identity, but Litestream's Azure backend
 # uses account+key, so we plumb a Key Vault secret for the account key.
 
+# Prometheus metrics, loopback only. The app reads the replica position here
+# during a deploy handoff to prove its last WAL frame reached Blob before it
+# releases the database (apps/web/src/lib/server/ops/handoff.ts).
+addr: "127.0.0.1:9090"
+
 dbs:
   - path: /data/cropcard.db
     replicas:
@@ -13,8 +18,10 @@ dbs:
         account-key: ${AZURE_STORAGE_KEY}
         bucket: ${AZURE_BLOB_CONTAINER}
         path: cropcard.db
-        retention: 168h          # 7 days of WAL retention
-        snapshot-interval: 24h
+        retention: 168h          # 7 days of point-in-time restore
+        # Hourly snapshots: the app scales to zero, so every cold start is a
+        # restore, and restore time grows with the WAL since the last snapshot.
+        snapshot-interval: 1h
         sync-interval: 1s
 
   # Phase 23 — marketplace catalog. Same Azure storage account, separate
@@ -29,5 +36,5 @@ dbs:
         bucket: ${AZURE_BLOB_CONTAINER}
         path: marketplace.db
         retention: 168h
-        snapshot-interval: 24h
+        snapshot-interval: 1h
         sync-interval: 1s

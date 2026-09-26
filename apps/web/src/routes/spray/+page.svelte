@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
   import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
@@ -626,6 +627,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(patchBody)
         });
+        if (!existingId && isUpdatingResponse(res)) {
+          const { enqueueSprayRecord, scheduleDrain } = await import('$lib/client/syncQueue');
+          const queueId = await enqueueSprayRecord(body);
+          scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
+          outcomes.set(b.id, { kind: 'created', eventId: queueId });
+          queuedOffline = true;
+          continue;
+        }
         const respData = await res.json().catch(() => ({}));
         if (!res.ok) {
           if (res.status === 409 && existingId) {

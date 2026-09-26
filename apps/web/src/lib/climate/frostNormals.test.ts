@@ -18,6 +18,7 @@ import {
 } from './frostNormals';
 import { normalizeFrost } from '$lib/schedule/farmLocation';
 
+const EXTREME_MIN_COUNT = 3500;
 const DATA_PATH = resolve(__dirname, 'data/frost-normals-us.json');
 const DULLES = { lat: 38.9408, lon: -77.4636 };
 const LEESBURG = { lat: 39.1157, lon: -77.5636 };
@@ -331,11 +332,20 @@ describe('bundled NOAA 1991-2020 dataset', () => {
     const frostFree = ds.stations.filter((s) => s[13] === 1);
     expect(withP50.length).toBe(6949);
     expect(frostFree.length).toBe(145);
+    const withExtremeMin = ds.stations.filter((s) => typeof s[14] === 'number');
+    expect(withExtremeMin.length).toBe(EXTREME_MIN_COUNT);
+    expect(withExtremeMin.every((s) => /^(US|AQ|CQ|GQ|JQ|RQ|VQ|WQ)/.test(s[0] as string))).toBe(
+      true
+    );
     const ids = new Set<string>();
     for (const s of ds.stations) {
       expect([13, 14, 15]).toContain(s.length);
-      if (s.length >= 14) expect([0, 1]).toContain(s[13]);
-      if (s.length === 15) expect(typeof s[14]).toBe('number');
+      if (s.length === 15) {
+        expect([0, 1]).toContain(s[13]);
+        expect(typeof s[14]).toBe('number');
+        expect(s[14] as number).toBeGreaterThan(-70);
+        expect(s[14] as number).toBeLessThan(80);
+      }
       expect(typeof s[0]).toBe('string');
       expect(typeof s[1]).toBe('string');
       expect(s[2] as number).toBeGreaterThanOrEqual(-90);

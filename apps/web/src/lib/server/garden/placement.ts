@@ -31,7 +31,7 @@ import { intervalsOverlapInTime, plantingOccupancy, shortDate } from '$lib/garde
 import { plantCount, resolveSpacing } from '$lib/garden/plantCount';
 import type { GardenCrop, PlacedPlanting, PlantingStatus } from '$lib/garden/types';
 import { frostDatesForYear } from '$lib/schedule/settings';
-import { writeTransaction } from '$lib/db/client';
+import { db } from '$lib/db/client';
 import { plantingInGround } from '$lib/garden/inGround';
 import type { PluginRegistry } from '$lib/plugins';
 
@@ -365,7 +365,7 @@ export function writeFootprint(
   const plugin = lookup(current.cropPluginId);
   const placement = resolvePlacement(mergePlacementInput(current, req), plugin);
 
-  return writeTransaction(() => {
+  return db.transaction(() => {
     setPlacement(cropId, placement, req.blockId);
     let reanchored: FootprintWriteResponse['reanchored'] = null;
     let followers: PlacedPlanting[] = [];
@@ -416,7 +416,7 @@ export function createPlacedPlantings(
     }
     checked.push({ item, plugin });
   }
-  return writeTransaction(() => ({
+  return db.transaction(() => ({
     ok: true as const,
     plantings: checked.map(({ item, plugin }) =>
       placedPlantingFromCrop(

@@ -302,6 +302,18 @@ async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
 }
 
 let inflight: Promise<DrainResult> | null = null;
+let scheduled: ReturnType<typeof setTimeout> | null = null;
+
+/** Drain once after `ms` (coalesced). Used when the server answered "updating,
+ *  retry shortly" (the deploy handoff fence): the row is queued and sent as
+ *  soon as the new server is up, without waiting for the next page load. */
+export function scheduleDrain(ms: number): void {
+  if (typeof window === 'undefined' || scheduled) return;
+  scheduled = setTimeout(() => {
+    scheduled = null;
+    drainQueue().catch(() => {});
+  }, ms);
+}
 
 /** Drains the active Owner's queue. Overlapping callers (a flapping
  *  `online` event, "Sync now" during an auto-drain) share one run, so no

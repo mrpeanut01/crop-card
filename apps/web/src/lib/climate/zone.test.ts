@@ -1,191 +1,189 @@
-import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import fc from 'fast-check';
-import { loadFrostDataset, type FrostDataset } from './frostNormals';
+import { describe, expect, it } from 'vitest';
+import type { FrostDataset } from './frostNormals';
 import {
-  HARDINESS_ZONES,
-  hardinessZoneDetail,
-  hardinessZoneText,
+  farmZoneFrom,
+  lookupZone,
   lookupZoneInDataset,
-  parseHardinessZone,
-  resolveHardinessZone,
-  stationExtremeMinF,
-  zoneFromExtremeMin
+  parseZone,
+  zoneFromExtremeMin,
+  zoneSourceDetail,
+  zoneValueLabel,
+  ZONE_CEILING_F,
+  ZONE_FLOOR_F
 } from './zone';
 
-const label = (f: number) => zoneFromExtremeMin(f)?.label;
-const index = (f: number) => HARDINESS_ZONES.indexOf(label(f)!);
+const DULLES = { lat: 38.9408, lon: -77.4636 };
+const LEESBURG = { lat: 39.1157, lon: -77.5636 };
 
-describe('zoneFromExtremeMin', () => {
-  it.each([
-    [-60, '1a'],
-    [-55.01, '1a'],
-    [-55, '1b'],
-    [-50.01, '1b'],
-    [-50, '2a'],
-    [-0.01, '6b'],
-    [0, '7a'],
-    [4.99, '7a'],
-    [5, '7b'],
-    [9.99, '7b'],
-    [10, '8a'],
-    [3.9, '7a'],
-    [-16.9, '5a'],
-    [42.6, '11a'],
-    [65, '13b'],
-    [69.99, '13b']
-  ])('%s °F is zone %s', (f, want) => {
-    expect(label(f)).toBe(want);
-  });
-
-  it('clamps to the ends of the scale', () => {
-    expect(label(-80)).toBe('1a');
-    expect(label(70)).toBe('13b');
-    expect(label(95)).toBe('13b');
-  });
-
-  it('returns null for values that are not temperatures', () => {
-    expect(zoneFromExtremeMin(Number.NaN)).toBeNull();
-    expect(zoneFromExtremeMin(Number.POSITIVE_INFINITY)).toBeNull();
-    expect(zoneFromExtremeMin('7' as unknown as number)).toBeNull();
-  });
-
-  it('reports 5 °F band edges', () => {
-    expect(zoneFromExtremeMin(3)).toEqual({ zone: 7, half: 'a', label: '7a', minF: 0, maxF: 5 });
-    expect(zoneFromExtremeMin(-12)).toMatchObject({ label: '5b', minF: -15, maxF: -10 });
-  });
-
-  it('never goes down as the extreme minimum warms (property)', () => {
-    const temp = fc.double({ min: -100, max: 120, noNaN: true });
-    fc.assert(
-      fc.property(temp, temp, (a, b) => {
-        const [lo, hi] = a <= b ? [a, b] : [b, a];
-        return index(lo) <= index(hi);
-      })
-    );
-  });
-
-  it('puts every in-range value inside its own band (property)', () => {
-    fc.assert(
-      fc.property(fc.double({ min: -60, max: 69.999, noNaN: true }), (f) => {
-        const band = zoneFromExtremeMin(f)!;
-        return band.minF <= f && f < band.maxF && band.maxF - band.minF === 5;
-      })
-    );
-  });
-
-  it('moves one half-zone per 5 °F (property)', () => {
-    fc.assert(
-      fc.property(fc.integer({ min: -6000, max: 6499 }), (hundredths) => {
-        const f = hundredths / 100;
-        return index(f + 5) === index(f) + 1;
-      })
-    );
-  });
-});
-
-describe('parseHardinessZone', () => {
-  it('accepts the 26 zones in any case', () => {
-    expect(HARDINESS_ZONES).toHaveLength(26);
-    expect(HARDINESS_ZONES[0]).toBe('1a');
-    expect(HARDINESS_ZONES[25]).toBe('13b');
-    expect(parseHardinessZone(' 7A ')).toBe('7a');
-    expect(parseHardinessZone('13b')).toBe('13b');
-  });
-
-  it.each(['', '7', '7c', '0a', '14a', 'zone 7a', null, 7])('rejects %p', (v) => {
-    expect(parseHardinessZone(v)).toBeNull();
-  });
-});
-
-const FIXTURE: FrostDataset = {
+// Clearly synthetic stations: made-up ids and values, used only to exercise the lookup.
+const nulls = [null, null, null, null, null, null, null, null] as const;
+const SYNTH: FrostDataset = {
   stations: [
-    ['NEAR', 'Near No Winter Data, VA', 39.0, -77.5, 90, 105, 297, 120, 283, 79, 321, 93, 307],
-    ['MID', 'Middle Station, VA', 39.1, -77.5, 90, 105, 297, 120, 283, 79, 321, 93, 307, 0, 4.2],
-    ['FAR', 'Far Station, VA', 40.5, -77.5, 90, 105, 297, 120, 283, 79, 321, 93, 307, 0, -3]
+    ['SYN-NEAR', 'Synthetic Near', 40, -100, 300, ...nulls, 0],
+    ['SYN-MID', 'Synthetic Mid', 40.2, -100, 300, ...nulls, 0, -12.4],
+    ['SYN-FAR', 'Synthetic Far', 41.5, -100, 300, ...nulls, 0, 3.2],
+    ['SYN-OUT', 'Synthetic Out', 45, -100, 300, ...nulls, 0, 30]
   ]
 };
 
-describe('lookupZoneInDataset', () => {
-  it('uses the nearest station that has an extreme minimum', () => {
-    const z = lookupZoneInDataset(FIXTURE, 39.0, -77.5)!;
-    expect(z.station.id).toBe('MID');
-    expect(z.band.label).toBe('7a');
-    expect(z.extremeMinF).toBe(4.2);
-    expect(z.station.distanceMi).toBeGreaterThan(6);
+describe('zoneFromExtremeMin', () => {
+  it.each([
+    [-60, '1a', -60, -55],
+    [-55.1, '1a', -60, -55],
+    [-55, '1b', -55, -50],
+    [-0.1, '6b', -5, 0],
+    [0, '7a', 0, 5],
+    [4.9, '7a', 0, 5],
+    [5, '7b', 5, 10],
+    [9.94, '7b', 5, 10],
+    [9.96, '8a', 10, 15],
+    [-5e-324, '7a', 0, 5],
+    [10, '8a', 10, 15],
+    [64.9, '13a', 60, 65],
+    [65, '13b', 65, 70],
+    [69.9, '13b', 65, 70]
+  ])('%s °F → %s', (f, zone, minF, maxF) => {
+    expect(zoneFromExtremeMin(f)).toMatchObject({ zone, minF, maxF });
   });
 
-  it('returns null with no station in range, no dataset or no location', () => {
-    expect(lookupZoneInDataset(FIXTURE, 45, -100)).toBeNull();
-    expect(lookupZoneInDataset(null, 39, -77.5)).toBeNull();
-    expect(lookupZoneInDataset(FIXTURE, null, -77.5)).toBeNull();
-    expect(lookupZoneInDataset({ stations: [FIXTURE.stations[0]] }, 39, -77.5)).toBeNull();
+  it('clamps beyond the published range to 1a and 13b', () => {
+    expect(zoneFromExtremeMin(-80)?.zone).toBe('1a');
+    expect(zoneFromExtremeMin(70)?.zone).toBe('13b');
+    expect(zoneFromExtremeMin(95)?.zone).toBe('13b');
   });
 
-  it('reads the extreme minimum column', () => {
-    expect(stationExtremeMinF(FIXTURE.stations[0])).toBeNull();
-    expect(stationExtremeMinF(FIXTURE.stations[2])).toBe(-3);
+  it('returns null for missing or non-finite input', () => {
+    for (const v of [null, undefined, NaN, Infinity, -Infinity]) {
+      expect(zoneFromExtremeMin(v)).toBeNull();
+    }
+  });
+
+  it('agrees with the zone bounds for every temperature in range', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: ZONE_FLOOR_F * 10, max: ZONE_CEILING_F * 10 - 1 }).map((t) => t / 10),
+        (f) => {
+          const z = zoneFromExtremeMin(f)!;
+          expect(f).toBeGreaterThanOrEqual(z.minF);
+          expect(f).toBeLessThan(z.maxF);
+          expect(z.maxF - z.minF).toBe(5);
+          expect(z.number).toBe(Math.floor((z.minF + 60) / 10) + 1);
+          expect(z.zone).toBe(`${z.number}${z.half}`);
+        }
+      )
+    );
+  });
+
+  it('never gets warmer as the extreme minimum gets colder', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: -100, max: 100, noNaN: true }),
+        fc.double({ min: 0, max: 50, noNaN: true }),
+        (f, d) => {
+          expect(zoneFromExtremeMin(f - d)!.minF).toBeLessThanOrEqual(zoneFromExtremeMin(f)!.minF);
+        }
+      )
+    );
   });
 });
 
-describe('the bundled station table', () => {
-  async function realDataset(): Promise<FrostDataset> {
-    const ds = await loadFrostDataset();
-    if (!ds) throw new Error('bundled frost dataset failed to load');
-    return ds;
-  }
-
-  it('gives Dulles zone 7a from its own station', async () => {
-    const z = lookupZoneInDataset(await realDataset(), 38.9408, -77.4636)!;
-    expect(z.station.name).toMatch(/Dulles/);
-    expect(z.band.label).toBe('7a');
+describe('parseZone', () => {
+  it('normalizes what an owner types', () => {
+    expect(parseZone('7a')).toBe('7a');
+    expect(parseZone(' 7B ')).toBe('7b');
+    expect(parseZone('Zone 6b')).toBe('6b');
+    expect(parseZone('zone10a')).toBe('10a');
+    expect(parseZone('13b')).toBe('13b');
   });
 
-  it.each([
-    ['Minneapolis', 44.8831, -93.2289, '5a'],
-    ['Miami', 25.7906, -80.3164, '11a'],
-    ['Seattle', 47.4444, -122.3139, '9a']
-  ])('gives %s a plausible zone', async (_name, lat, lon, want) => {
-    expect(lookupZoneInDataset(await realDataset(), lat, lon)?.band.label).toBe(want);
-  });
-
-  it('keeps extreme minimums in a physical range', async () => {
-    const ds = await realDataset();
-    const values = ds.stations.map(stationExtremeMinF).filter((v): v is number => v !== null);
-    expect(values.length).toBeGreaterThan(3000);
-    for (const v of values) {
-      expect(v).toBeGreaterThan(-70);
-      expect(v).toBeLessThan(80);
+  it('rejects anything that is not a half-zone', () => {
+    for (const v of ['', '7', '0a', '14a', '7c', 'a7', '7 a b', 'seven', null, 7, undefined]) {
+      expect(parseZone(v)).toBeNull();
     }
   });
 });
 
-describe('resolveHardinessZone', () => {
-  const lookup = lookupZoneInDataset(FIXTURE, 39.0, -77.5);
-
-  it('shows the station estimate as data', () => {
-    const v = resolveHardinessZone({ zone: null, provenance: null }, lookup)!;
-    expect(v).toMatchObject({ label: '7a', provenance: 'data', stationName: 'Middle Station, VA' });
-    expect(hardinessZoneText(v)).toBe('Zone 7a (approx., from Middle Station, VA)');
-    expect(hardinessZoneDetail(v)).toContain('NOAA station averages, 1991-2020');
-    expect(hardinessZoneText(v)).not.toMatch(/USDA/);
+describe('lookupZoneInDataset (synthetic stations)', () => {
+  it('skips the nearest station when it has no extreme minimum', () => {
+    const r = lookupZoneInDataset(SYNTH, 40, -100);
+    expect(r?.station.id).toBe('SYN-MID');
+    expect(r?.extremeMinF).toBe(-12.4);
+    expect(r?.zone.zone).toBe('5b');
+    expect(r?.provenance).toBe('data');
   });
 
-  it('prefers the owner’s own zone as manual and keeps the estimate', () => {
-    const v = resolveHardinessZone({ zone: '6b', provenance: 'manual' }, lookup)!;
-    expect(v).toMatchObject({ label: '6b', provenance: 'manual', estimate: '7a' });
-    expect(hardinessZoneText(v)).toBe('Zone 6b (your setting)');
-    expect(hardinessZoneDetail(v)).toBe('You set this; the station estimate is 7a');
+  it('returns null with no station in range, no location or no dataset', () => {
+    expect(lookupZoneInDataset(SYNTH, 0, 0)).toBeNull();
+    expect(lookupZoneInDataset(SYNTH, 40, -100, { maxDistanceMi: 5 })).toBeNull();
+    expect(lookupZoneInDataset(SYNTH, null, -100)).toBeNull();
+    expect(lookupZoneInDataset(null, 40, -100)).toBeNull();
+    expect(lookupZoneInDataset({ stations: [] }, 40, -100)).toBeNull();
+  });
+});
+
+describe('farm zone display', () => {
+  const lookup = lookupZoneInDataset(SYNTH, 40, -100);
+
+  it('prefers the owner-typed zone and tags it manual', () => {
+    const z = farmZoneFrom('Zone 6A', lookup)!;
+    expect(z).toEqual({
+      zone: '6a',
+      provenance: 'manual',
+      stationName: null,
+      distanceMi: null,
+      extremeMinF: null
+    });
+    expect(zoneValueLabel(z)).toBe('Zone 6a');
+    expect(zoneSourceDetail(z)).toBe('your zone');
   });
 
-  it('ignores a stored station value and bad overrides', () => {
-    expect(resolveHardinessZone({ zone: '9a', provenance: 'data' }, lookup)?.label).toBe('7a');
-    expect(resolveHardinessZone({ zone: 'x', provenance: 'manual' }, lookup)?.provenance).toBe(
-      'data'
-    );
+  it('labels a station estimate as approximate and names the station', () => {
+    const z = farmZoneFrom(null, lookup)!;
+    expect(z.provenance).toBe('data');
+    expect(zoneValueLabel(z)).toBe('Zone 5b (approx.)');
+    expect(zoneSourceDetail(z)).toBe('from Synthetic Mid · 14 mi');
+    expect(zoneValueLabel(z)).not.toMatch(/usda/i);
   });
 
-  it('is hidden when nothing is known', () => {
-    expect(resolveHardinessZone({ zone: null, provenance: null }, null)).toBeNull();
-    expect(resolveHardinessZone({ zone: '7a', provenance: 'manual' }, null)?.label).toBe('7a');
+  it('ignores a malformed saved zone and has no fallback zone', () => {
+    expect(farmZoneFrom('banana', lookup)?.provenance).toBe('data');
+    expect(farmZoneFrom(null, null)).toBeNull();
+    expect(farmZoneFrom('', null)).toBeNull();
+  });
+});
+
+describe('bundled NOAA dataset', () => {
+  const ds = JSON.parse(
+    readFileSync(resolve(__dirname, 'data/frost-normals-us.json'), 'utf8')
+  ) as FrostDataset;
+
+  it('puts Dulles in zone 7a from its own station', () => {
+    const r = lookupZoneInDataset(ds, DULLES.lat, DULLES.lon)!;
+    expect(r.station.id).toBe('USW00093738');
+    expect(r.zone.zone).toBe('7a');
+    expect(r.extremeMinF).toBeGreaterThanOrEqual(0);
+    expect(r.extremeMinF).toBeLessThan(5);
+  });
+
+  it('gives a Loudoun pin a zone 6b-7b estimate from a nearby station', async () => {
+    const r = (await lookupZone(LEESBURG.lat, LEESBURG.lon))!;
+    expect(['6b', '7a', '7b']).toContain(r.zone.zone);
+    expect(r.station.distanceMi).toBeLessThan(25);
+  });
+
+  it('lands well-known climates in the right broad band', () => {
+    const at = (lat: number, lon: number) => lookupZoneInDataset(ds, lat, lon)!.zone.number;
+    expect(at(64.8031, -147.8761)).toBeLessThanOrEqual(2);
+    expect(at(44.8831, -93.2289)).toBeGreaterThanOrEqual(4);
+    expect(at(44.8831, -93.2289)).toBeLessThanOrEqual(5);
+    expect(at(25.7881, -80.3169)).toBeGreaterThanOrEqual(10);
+    expect(at(21.3245, -157.9251)).toBeGreaterThanOrEqual(12);
+  });
+
+  it('has no fallback zone mid-ocean', async () => {
+    expect(await lookupZone(35, -50)).toBeNull();
   });
 });

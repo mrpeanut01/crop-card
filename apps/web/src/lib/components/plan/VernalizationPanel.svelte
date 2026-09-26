@@ -12,9 +12,13 @@
 
   interface Props {
     assessment: VernalizationAssessment;
+    /** Station label when past hours come from NOAA observations. */
+    observedLabel?: string | null;
   }
 
-  const { assessment: v }: Props = $props();
+  const { assessment: v, observedLabel = null }: Props = $props();
+
+  const dataDetail = $derived(observedLabel ? `NOAA observed · ${observedLabel}` : 'NWS hourly');
 
   const W = 240;
   const pct = $derived(Math.round(v.progress * 100));
@@ -60,7 +64,11 @@
       <div class="head-prov">
         <Provenance
           source={v.provenance}
-          detail={v.provenance === 'data' ? 'NWS hourly' : 'climatology + forecast'}
+          detail={v.provenance === 'data'
+            ? dataDetail
+            : observedLabel
+              ? 'observed + climatology'
+              : 'climatology + forecast'}
         />
       </div>
     {/if}
@@ -94,7 +102,7 @@
         {/if}
         {#if v.dataDays > 0}
           <span
-            ><Provenance source="data" detail="NWS hourly" compact />
+            ><Provenance source="data" detail={dataDetail} compact />
             {v.dataDays} d</span
           >
         {/if}
@@ -108,7 +116,9 @@
     <p class="note">{note}</p>
     {#if v.required && v.climatologyDays > 0}
       <p class="foot">
-        Past weather isn't stored, so days before the forecast window are estimated from {LOUDOUN_AIR_TEMP_NORMALS.label}
+        {observedLabel
+          ? 'Hours missing from the station record are'
+          : 'No nearby NOAA station record was available, so past days are'} estimated from {LOUDOUN_AIR_TEMP_NORMALS.label}
         with a ±{fmt.qty(9, 'temperatureDelta')} daily swing. Farms far from Loudoun County will differ.
       </p>
     {/if}

@@ -9,7 +9,6 @@
 
 import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
-import type { HardinessZoneView } from '$lib/climate/zone';
 import type { MapFeatureView } from '$lib/farm/mapFeatures';
 
 export const FARM_SNAPSHOT_VERSION = 1 as const;
@@ -188,9 +187,15 @@ export interface SnapshotFrostDates {
   distanceMi: number | null;
 }
 
-/** Approximate hardiness zone: the owner's own, or the nearest station's
- *  estimate. Display only. */
-export type SnapshotHardinessZone = HardinessZoneView;
+export interface SnapshotZone {
+  zone: string;
+  provenance: 'data' | 'manual';
+  stationName: string | null;
+  distanceMi: number | null;
+  extremeMinF: number | null;
+  reach?: 'near' | 'wide';
+  elevDeltaFt?: number | null;
+}
 
 export type SnapshotSprayProductType = 'herbicide' | 'insecticide' | 'fungicide';
 
@@ -235,8 +240,8 @@ export interface FarmSnapshot {
   stock: SnapshotStockItem[];
   cropPlugins: Record<string, SnapshotCropPlugin>;
   frost: SnapshotFrostDates | null;
-  /** Absent on bundles saved before Phase 30H; null when unknown. */
-  hardinessZone?: SnapshotHardinessZone | null;
+  /** Display-only hardiness zone; absent on bundles saved before it existed. */
+  zone?: SnapshotZone | null;
   /** Stocked pesticides keyed by plugin id. Absent on bundles saved before
    *  Sprint 30F. */
   sprayProducts?: Record<string, SnapshotSprayProduct>;

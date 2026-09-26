@@ -381,6 +381,11 @@
   });
 
   const LOCATE_GIVE_UP_MS = 15000;
+  // Imagery tops out at z19; past that Leaflet upscales the z19 tiles so
+  // single trees and garden beds can still be drawn precisely.
+  const TILE_NATIVE_MAX_ZOOM = 19;
+  const MAP_MAX_ZOOM = 22;
+  const FIT_MAX_ZOOM = 20;
   let markMapReady: () => void = () => {};
   const mapReady = new Promise<void>((resolve) => (markMapReady = resolve));
 
@@ -390,6 +395,7 @@
     await import('@geoman-io/leaflet-geoman-free');
 
     map = L.map(mapEl, {
+      maxZoom: MAP_MAX_ZOOM,
       zoomControl: !thumbnail,
       dragging: !thumbnail,
       scrollWheelZoom: !thumbnail,
@@ -406,13 +412,15 @@
     const satellite = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {
-        maxZoom: 19,
+        maxZoom: MAP_MAX_ZOOM,
+        maxNativeZoom: TILE_NATIVE_MAX_ZOOM,
         attribution:
           'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
       }
     );
     const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
+      maxZoom: MAP_MAX_ZOOM,
+      maxNativeZoom: TILE_NATIVE_MAX_ZOOM,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     });
     satelliteLayer = satellite;
@@ -1044,7 +1052,7 @@
     ] as Parameters<typeof L.featureGroup>[0]);
     const bounds = group.getBounds();
     if (!bounds.isValid()) return false;
-    map.fitBounds(bounds, { padding: [40, 40] });
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: FIT_MAX_ZOOM });
     return true;
   }
 
@@ -1206,7 +1214,7 @@
       bounds = poly.getBounds();
     });
     editingActive = true;
-    if (bounds) map.fitBounds(bounds, { padding: [40, 40] });
+    if (bounds) map.fitBounds(bounds, { padding: [40, 40], maxZoom: FIT_MAX_ZOOM });
     return true;
   }
 

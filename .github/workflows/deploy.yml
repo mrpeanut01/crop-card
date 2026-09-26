@@ -89,6 +89,7 @@ jobs:
           CROPCARD_KV: ${{ vars.KEY_VAULT_NAME }}
           CROPCARD_SHA: ${{ env.SHA }}
           EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+          ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
         run: ./scripts/deploy-azure.sh --apply --ci --image "${{ steps.meta.outputs.image }}"
 
       - name: Summary

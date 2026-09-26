@@ -8,7 +8,11 @@
     assessVernalization,
     dailyScabFavorableHours
   } from '$lib/plan/smallGrain';
-  import { type HourlyPoint, type WeatherProvenance } from '$lib/weather/leafWet';
+  import {
+    mergeObservedAndForecast,
+    type HourlyPoint,
+    type WeatherProvenance
+  } from '$lib/weather/leafWet';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
 
   const { data } = $props();
@@ -16,35 +20,61 @@
   interface WeatherState {
     hours: HourlyPoint[];
     provenance: WeatherProvenance;
+    observedLabel: string | null;
   }
+
+  interface FeedBody {
+    hours?: HourlyPoint[];
+    provenance?: string;
+    station?: { label?: string } | null;
+  }
+
+  const OBSERVED_MAX_SPAN_MS = 400 * 24 * 60 * 60 * 1000;
 
   let weather = $state<WeatherState | null>(null);
   let seq = 0;
 
-  async function loadWeather(blockId: string) {
+  async function getFeed(url: string): Promise<FeedBody | null> {
+    try {
+      const res = await fetch(url);
+      return res.ok ? ((await res.json()) as FeedBody) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function dataHours(body: FeedBody | null): HourlyPoint[] {
+    return body?.provenance === 'data' && Array.isArray(body.hours) ? body.hours : [];
+  }
+
+  async function loadWeather(blockId: string, plantMs: number | null) {
     const mine = ++seq;
     weather = null;
-    let next: WeatherState = { hours: [], provenance: 'fallback' };
+    let next: WeatherState = { hours: [], provenance: 'fallback', observedLabel: null };
     if (typeof navigator === 'undefined' || navigator.onLine !== false) {
-      try {
-        const res = await fetch(`/api/weather/hourly?blockId=${encodeURIComponent(blockId)}`);
-        if (res.ok) {
-          const body = (await res.json()) as Partial<WeatherState>;
-          next = {
-            hours: Array.isArray(body.hours) ? body.hours : [],
-            provenance: body.provenance === 'data' ? 'data' : 'fallback'
-          };
-        }
-      } catch {
-        next = { hours: [], provenance: 'fallback' };
-      }
+      const id = encodeURIComponent(blockId);
+      const wantObserved =
+        plantMs !== null && plantMs < data.nowMs && data.nowMs - plantMs < OBSERVED_MAX_SPAN_MS;
+      const [forecast, observed] = await Promise.all([
+        getFeed(`/api/weather/hourly?blockId=${id}`),
+        wantObserved
+          ? getFeed(`/api/weather/observed?blockId=${id}&from=${plantMs}`)
+          : Promise.resolve(null)
+      ]);
+      const obsHours = dataHours(observed);
+      const hours = mergeObservedAndForecast(obsHours, dataHours(forecast), data.nowMs);
+      next = {
+        hours,
+        provenance: hours.length > 0 ? 'data' : 'fallback',
+        observedLabel: obsHours.length > 0 ? (observed?.station?.label ?? null) : null
+      };
     }
     if (mine === seq) weather = next;
   }
 
   $effect(() => {
-    const id = data.plan?.candidate.blockId;
-    if (id) void loadWeather(id);
+    const c = data.plan?.candidate;
+    if (c) void loadWeather(c.blockId, c.plantingDate);
   });
 
   const plan = $derived(data.plan);
@@ -149,8 +179,9 @@
         nowMs={data.nowMs}
         loading={weather === null && plan.anthesisMs !== null}
         fungicides={plan.fungicides}
+        observedLabel={weather?.observedLabel ?? null}
       />
-      <VernalizationPanel assessment={vern} />
+      <VernalizationPanel assessment={vern} observedLabel={weather?.observedLabel ?? null} />
     </div>
   {/if}
 </div>

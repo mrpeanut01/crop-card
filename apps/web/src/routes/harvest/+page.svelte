@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { isUpdatingResponse, retryAfterSeconds, UPDATING_QUEUED_NOTICE } from '$lib/updating';
   import { onMount, tick, untrack } from 'svelte';
   import { goto, invalidateAll } from '$app/navigation';
   import type { PlantingHarvestStatus } from './+page.server';
@@ -98,6 +99,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
+      if (isUpdatingResponse(res)) {
+        const { enqueueRecord, scheduleDrain } = await import('$lib/client/syncQueue');
+        const queueId = await enqueueRecord('harvest', body);
+        scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
+        recordingFor = null;
+        lastNotice = UPDATING_QUEUED_NOTICE;
+        return queueId;
+      }
       const out = await res.json();
       if (!res.ok) {
         // #341 — surface the API's human `message` (with threshold) instead

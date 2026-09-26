@@ -1,4 +1,5 @@
 import { DEFAULT_PREFS, formatQuantity, UNITS, type Prefs } from '$lib/prefs';
+import { numberToLocaleString } from '$lib/intlCache';
 import type { InputsPlanApplication } from './inputsPlan';
 
 type ProductCategory = InputsPlanApplication['productCategory'];
@@ -18,7 +19,7 @@ const METRIC_UNIT: Record<string, { factor: number; unit: string }> = {
 const ACRES_PER_HA = UNITS.perArea.toMetric(1);
 
 function num(v: number, maxDigits: number): string {
-  return v.toLocaleString('en-US', { maximumFractionDigits: maxDigits });
+  return numberToLocaleString(v, 'en-US', { maximumFractionDigits: maxDigits });
 }
 
 function metricDigits(v: number): number {

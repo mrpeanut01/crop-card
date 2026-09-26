@@ -19,13 +19,15 @@ import {
   OWNER_MISMATCH_CODE,
   expectedOwnerDecision
 } from '$lib/client/ownerSync';
-import { maybeStartPushScheduler } from '$lib/server/push/scheduler';
+import { isInternalTickRequest } from '$lib/server/push/wakeup';
 import { hostRedirectTarget, parseRedirectHosts } from '$lib/server/hostRedirect';
+import { isFenced, startHandoffWatcher, trackMutation } from '$lib/server/ops/handoff';
+import { fenceResponse } from '$lib/server/ops/fenceResponse';
 
-/** NFR-06 — start the in-process push alert scheduler (no-op without VAPID
- *  keys or under tests; single replica per invariant 3). */
+/** Deploy handoff fence: hold the writer lease and release it to a newer
+ *  container (docs/ops/restore-runbook.md). No-op outside Azure. */
 export const init: ServerInit = () => {
-  maybeStartPushScheduler();
+  startHandoffWatcher();
 };
 
 /**
@@ -243,7 +245,21 @@ export function suspendedTenantGate(
  */
 const redirectHosts = parseRedirectHosts(process.env.REDIRECT_HOSTS);
 
-export const handle: Handle = async ({ event, resolve }) => {
+/**
+ * Deploy handoff fence (docs/ops/restore-runbook.md): once a newer container
+ * has asked for the database, writes get 503 + Retry-After before anything
+ * else runs, and admitted writes are counted so the release can wait for them.
+ */
+export const handle: Handle = async (input) => {
+  const fenced = fenceResponse(input.event.request, isFenced());
+  if (fenced) return fenced;
+  if (MUTATION_METHODS.has(input.event.request.method)) {
+    return trackMutation(async () => handleRequest(input));
+  }
+  return handleRequest(input);
+};
+
+const handleRequest: Handle = async ({ event, resolve }) => {
   const canonical = hostRedirectTarget({
     host: event.request.headers.get('host'),
     url: event.url,
@@ -257,6 +273,10 @@ export const handle: Handle = async ({ event, resolve }) => {
       headers: { location: canonical }
     });
   }
+
+  // The push-tick wakeup job authenticates with its own shared secret (the
+  // endpoint checks it). No cookie, Bearer, CSRF or tenant context applies.
+  if (isInternalTickRequest(event.url.pathname, event.request.headers)) return resolve(event);
 
   // Phase 24 — Bearer-first auth resolution.
   const authHeader = event.request.headers.get('authorization');
@@ -284,7 +304,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.authVia = 'bearer';
     event.locals.tokenId = resolved.tokenId;
     event.locals.isServiceAccountToken = resolved.isServiceAccount;
-    touchToken(resolved.tokenId);
+    if (!isFenced()) touchToken(resolved.tokenId);
   } else {
     const fromCookie = currentUser(event);
     user = fromCookie ? revalidateCookieUser(fromCookie) : null;

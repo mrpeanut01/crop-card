@@ -14,11 +14,12 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, lt } from 'drizzle-orm';
+import { and, desc, eq, exists, lt, sql } from 'drizzle-orm';
 import type { SprayerLoadClass } from '$lib/safety/types';
 import { db } from './client';
 import { equipment, equipmentLog, equipmentState } from './schema';
-import { tenantValues, tenantWhere, withTenant } from './tenant';
+import { preparedOnce, requestMemo } from './requestMemo';
+import { tenantParams, tenantValues, tenantWhere, withTenant, withTenantPrepared } from './tenant';
 
 export type EquipmentType =
   'sprayer' | 'planter' | 'drill' | 'rake' | 'baler' | 'tractor' | 'mower' | 'irrigation' | 'other';
@@ -259,15 +260,41 @@ export function appendEquipmentLog(input: {
   };
 }
 
+const activeBeforeStmt = preparedOnce(() =>
+  db
+    .select({ id: equipment.id })
+    .from(equipment)
+    .where(
+      withTenantPrepared(
+        equipment,
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(equipmentLog)
+            .where(
+              withTenantPrepared(
+                equipmentLog,
+                eq(equipmentLog.equipmentId, equipment.id),
+                lt(equipmentLog.occurredAt, sql.placeholder('beforeMs'))
+              )
+            )
+        )
+      )
+    )
+    .prepare()
+);
+
 /** Ids of this Owner's equipment with any log entry before `beforeMs`,
- *  i.e. gear that was already in use in an earlier season. */
+ *  i.e. gear that was already in use in an earlier season. One index probe
+ *  per piece of equipment (not a scan of the whole log), shared by the
+ *  root layout and /today within a request. */
 export function equipmentIdsActiveBefore(beforeMs: number): Set<string> {
-  const rows = db
-    .selectDistinct({ id: equipmentLog.equipmentId })
-    .from(equipmentLog)
-    .where(withTenant(equipmentLog, lt(equipmentLog.occurredAt, new Date(beforeMs))))
-    .all();
-  return new Set(rows.map((r) => r.id));
+  const ids = requestMemo(`equipment.activeBefore:${beforeMs}`, () =>
+    activeBeforeStmt()
+      .all(tenantParams({ beforeMs }))
+      .map((r) => r.id)
+  );
+  return new Set(ids);
 }
 
 export function listEquipmentLog(

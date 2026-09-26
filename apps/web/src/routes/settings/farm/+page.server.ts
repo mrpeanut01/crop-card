@@ -24,10 +24,10 @@ import {
   resolveFrostForm
 } from '$lib/climate/frostSettings.server';
 import { storedFrostView } from '$lib/climate/frostSettings';
+import { parseZone } from '$lib/climate/zone';
+import { loadManualZone, saveZoneForm } from '$lib/climate/zoneSettings.server';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { unscopedQueryNote } from '$lib/db/tenant';
-import { loadHardinessZone, saveHardinessZoneChoice } from '$lib/climate/zone.server';
-import { parseHardinessZone } from '$lib/climate/zone';
 import {
   ADD_POISON_CONTROL_INTENT,
   contactRowsFromForm,
@@ -81,9 +81,9 @@ export const load: ServerLoad = async ({ locals }) => {
         probability: stored.provenance.probability
       };
     })(),
+    manualZone: loadManualZone(),
     currentYear,
     activeSeasonSetup: loadSeasonSetup(currentYear),
-    hardinessZone: await loadHardinessZone(),
     emergencyContacts: loadEmergencyContacts()
   };
 };
@@ -105,10 +105,10 @@ export const actions: Actions = {
     const latLon = parseLatLon(form.get('lat'), form.get('lon'));
     const frost = await resolveFrostForm(form, latLon);
     if (!frost.ok) return fail(400, { error: frost.error, contactRows: rows });
-    const zoneValue = form.get('hardinessZone');
-    if (zoneValue !== null && String(zoneValue).trim() && !parseHardinessZone(zoneValue)) {
+    const zoneRaw = form.get('hardinessZone');
+    if (zoneRaw !== null && String(zoneRaw).trim() !== '' && !parseZone(zoneRaw)) {
       return fail(400, {
-        error: `"${String(zoneValue).trim()}" isn't a hardiness zone. Pick one like 7a.`,
+        error: 'Enter a zone like 7a or 6b, or leave it blank.',
         contactRows: rows
       });
     }
@@ -124,7 +124,7 @@ export const actions: Actions = {
 
     if (latLon) setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify(latLon));
     if (frost.plan) applyFrostPlan(frost.plan);
-    saveHardinessZoneChoice(zoneValue);
+    saveZoneForm(zoneRaw);
     if (contacts?.ok) saveEmergencyContacts(contacts.contacts);
 
     return { ok: true };

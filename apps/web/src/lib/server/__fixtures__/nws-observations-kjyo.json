@@ -1,0 +1,2337 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T13:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 63.624996508331,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T13:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 17,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.769403902783,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T11:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 82.008317294977,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T10:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 82.008317294977,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T10:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.681069549305,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T10:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.681069549305,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T09:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.681069549305,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T09:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.681069549305,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T09:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 14,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 71.84904007654,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T08:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 14,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 71.84904007654,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T08:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.681069549305,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T08:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 14,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 71.84904007654,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T07:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T07:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T07:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T06:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T06:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T06:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T05:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T05:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T05:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 15,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.355469880183,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T04:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 16,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 63.174428866933,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T04:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 16,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.563332617801,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T04:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 16,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.563332617801,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T03:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 16,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.563332617801,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T03:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 16,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.563332617801,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T03:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 16,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 63.174428866933,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T02:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 17,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.28213477523,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T02:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 17,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.28213477523,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T02:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 55.656762504377,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T01:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 55.656762504377,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T01:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.52339300817,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T01:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.52339300817,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T00:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.52339300817,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T00:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.52339300817,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-26T00:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.52339300817,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T23:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 17,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 63.400630000924,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T23:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 17,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.28213477523,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T23:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 55.656762504377,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T22:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 19,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 52.278271459276,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T22:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 20,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 52.541325581066,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T22:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 20,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 52.541325581066,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T21:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 21,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 43.166184386186,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T21:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 40.603202667227,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T21:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 40.603202667227,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T20:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 40.603202667227,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T20:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 40.603202667227,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T20:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 37.924772238276,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T19:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 37.924772238276,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T19:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 37.924772238276,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T19:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 40.603202667227,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T18:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 40.603202667227,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T18:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 21,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 43.166184386186,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T18:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 22,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 43.447262818608,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T17:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 21,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 46.189769148848,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T17:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 21,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 49.398701223186,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T17:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 21,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 49.398701223186,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T16:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 20,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 52.541325581066,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T16:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 20,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 52.541325581066,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T16:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 20,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 49.128249109205,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T15:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 48.582347990729,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T15:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 18,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 48.582347990729,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T15:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 17,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 51.746906785263,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T14:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 17,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 51.746906785263,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T14:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 17,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 55.401523057365,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T14:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 16,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 55.144459527044,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T13:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 16,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 59.039027369333,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T13:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 14,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 67.145798064498,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T13:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 71.472271072727,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T12:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 71.472271072727,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T12:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.357329126718,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T12:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.357329126718,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T11:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 6,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 66.720955975373,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T10:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 6,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 66.720955975373,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T10:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 6,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 71.281266407174,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T10:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 6,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 66.720955975373,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T09:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 6,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 66.720955975373,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T09:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 6,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 66.720955975373,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T09:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 6,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 66.720955975373,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T08:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 71.472271072727,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T08:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.357329126718,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T08:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.383237448204,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T07:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 7,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.289209441366,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T07:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.383237448204,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T07:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.383237448204,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T06:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.383237448204,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T06:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.383237448204,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T06:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.383237448204,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T05:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 8,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 81.750052187031,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T05:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.476252351683,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T05:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 93.504015298216,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T04:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.476252351683,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T04:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.476252351683,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T04:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.476252351683,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T03:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 11,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.476252351683,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T03:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 81.879846925107,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T03:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 81.879846925107,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T02:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 9,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 81.879846925107,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T02:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.56826823315,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T02:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.56826823315,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T01:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.56826823315,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T01:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 12,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 87.56826823315,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T01:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 82.008317294977,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T00:55:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 82.008317294977,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T00:35:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 13,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 82.008317294977,
+          "qualityControl": "V"
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "timestamp": "2026-09-25T00:15:00+00:00",
+        "stationName": "Leesburg / Godfrey",
+        "temperature": {
+          "unitCode": "wmoUnit:degC",
+          "value": 14,
+          "qualityControl": "V"
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 10,
+          "qualityControl": "V"
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 76.840593259432,
+          "qualityControl": "V"
+        }
+      }
+    }
+  ]
+}

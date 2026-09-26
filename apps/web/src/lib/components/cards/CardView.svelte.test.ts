@@ -230,3 +230,34 @@ describe('CardView spray cautions', () => {
     expect(queryByText(STALE_NOTICE)).toBeNull();
   });
 });
+
+describe('garden Area card', () => {
+  const garden = buildAreaCard(snap, 'f_garden')!;
+
+  it('screen: bed map thumbnail and an Open designer link', () => {
+    const { getByTestId, getByRole } = render(CardView, { card: garden, prefs });
+    const map = getByTestId('card-bed-map');
+    expect(within(map).getByRole('img').getAttribute('aria-label')).toMatch(
+      /^Bed map, 30 by 40 feet\..*Bed 3: Cherokee Purple tomato/
+    );
+    expect(getByRole('link', { name: 'Open designer' })).toHaveAttribute(
+      'href',
+      '/plan/areas/f_garden/design'
+    );
+  });
+
+  it('print: bed map with a legend and no designer link', () => {
+    const { getByTestId, queryByRole } = render(CardView, {
+      card: garden,
+      prefs,
+      variant: 'print'
+    });
+    expect(getByTestId('card-bed-map')).toHaveTextContent('Bed 3: Cherokee Purple tomato');
+    expect(queryByRole('link', { name: 'Open designer' })).toBeNull();
+  });
+
+  it('compact: no bed map', () => {
+    const { queryByTestId } = render(CardView, { card: garden, prefs, variant: 'compact' });
+    expect(queryByTestId('card-bed-map')).toBeNull();
+  });
+});

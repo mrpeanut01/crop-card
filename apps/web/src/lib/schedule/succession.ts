@@ -61,9 +61,15 @@ export interface SuccessionFit {
   reason: string;
 }
 
+/** Days between sowings for a crop family; 0 when the family is planted
+ *  once. Unknown families are 0. */
+export function successionIntervalDays(family: string): number {
+  return (FAMILY_SUCCESSION_DAYS as Record<string, number | undefined>)[family] ?? 0;
+}
+
 export function evaluateSuccessionFit(
   window: ScheduleWindow,
-  plug: CropPlugin | undefined,
+  plug: (Pick<CropPlugin, 'daysToMaturity'> & { cropFamily: string }) | undefined,
   blockId: string,
   stockItemId: string
 ): SuccessionFit {
@@ -77,7 +83,7 @@ export function evaluateSuccessionFit(
       reason: 'no plugin info — succession check skipped'
     };
   }
-  const intervalDays = FAMILY_SUCCESSION_DAYS[plug.cropFamily] ?? 0;
+  const intervalDays = successionIntervalDays(plug.cropFamily);
   if (intervalDays === 0) {
     return {
       stockItemId,

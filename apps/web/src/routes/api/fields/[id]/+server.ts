@@ -9,7 +9,8 @@ import { z } from 'zod';
 import { deleteFieldCascade } from '$lib/db/admin';
 import { getField, updateField } from '$lib/db/fields';
 import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
-import { AREA_KINDS, validateAreaDetails } from '$lib/farm/areaKinds';
+import { AREA_KINDS, isDesignable, validateAreaDetails } from '$lib/farm/areaKinds';
+import { bedsPastAreaEdge } from '$lib/server/garden/bedLayout';
 import { requireOwner } from '$lib/server/auth';
 
 export const GET: RequestHandler = ({ params }) => {
@@ -46,6 +47,25 @@ export const PATCH: RequestHandler = async (event) => {
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+  }
+  const nextKind = parsed.data.kind ?? existing.kind;
+  const reshapes =
+    parsed.data.widthFt !== undefined ||
+    parsed.data.lengthFt !== undefined ||
+    parsed.data.geometryGeojson !== undefined ||
+    (parsed.data.kind !== undefined && parsed.data.kind !== existing.kind);
+  if (reshapes && (isDesignable(existing.kind) || isDesignable(nextKind))) {
+    const pick = <T>(next: T | null | undefined, prev: T | null | undefined): T | null =>
+      next === undefined ? (prev ?? null) : next;
+    const problem = bedsPastAreaEdge({
+      id: existing.id,
+      name: parsed.data.name ?? existing.name,
+      kind: nextKind,
+      widthFt: pick(parsed.data.widthFt, existing.widthFt),
+      lengthFt: pick(parsed.data.lengthFt, existing.lengthFt),
+      geometryGeojson: pick(parsed.data.geometryGeojson, existing.geometryGeojson)
+    });
+    if (problem) return json(problem, { status: 409 });
   }
   const { details: rawDetails, ...rest } = parsed.data;
   let details;

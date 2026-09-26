@@ -59,8 +59,10 @@ test.describe('typed farm map', () => {
     await expect(sheet).toHaveAttribute('data-area-kind', 'garden');
     await expect(sheet.getByText('Garden · 30×40 ft')).toBeVisible();
     await expect(sheet.getByText('Drip')).toBeVisible();
-    await expect(sheet.getByRole('button', { name: 'Open designer' })).toBeDisabled();
-    await expect(sheet.getByText(/Coming soon/)).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'Open designer' })).toHaveAttribute(
+      'href',
+      /^\/plan\/areas\/[^/]+\/design$/
+    );
 
     await sheet.getByRole('tab', { name: /Plantings/ }).click();
     await expect(sheet.getByText('Nothing planted here yet.')).toBeVisible();

@@ -51,6 +51,17 @@ describe('gettingStartedItems', () => {
     ]);
   });
 
+  it("links the garden bed item to the garden's designer once a garden Area exists", () => {
+    const bed = (f: GettingStartedFacts) => gettingStartedItems(f).find((i) => i.id === 'bed')!;
+    expect(bed({ ...BLANK, profile: 'garden' }).href).toBe('/settings/farm/map');
+    expect(bed({ ...BLANK, profile: 'garden', gardenAreaId: null }).href).toBe(
+      '/settings/farm/map'
+    );
+    expect(bed({ ...BLANK, profile: 'garden', gardenAreaId: 'f_garden' }).href).toBe(
+      '/plan/areas/f_garden/design'
+    );
+  });
+
   it('shows the calibration item once a sprayer exists, for any profile', () => {
     expect(ids({ ...BLANK, profile: 'garden' })).not.toContain('calibrate');
     expect(ids({ ...BLANK, profile: 'garden', hasSprayer: true })).toContain('calibrate');

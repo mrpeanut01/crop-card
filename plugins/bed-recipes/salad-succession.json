@@ -1,0 +1,31 @@
+{
+  "pluginId": "salad-succession",
+  "type": "bed-recipe",
+  "displayName": "Salad succession",
+  "version": "1.0.0",
+  "description": "Four sowings of loose-leaf lettuce, one section at a time, so there is always a patch ready to cut through late spring.",
+  "bedSize": {
+    "widthFt": 3,
+    "lengthFt": 10
+  },
+  "frostFreeDays": {
+    "min": 90
+  },
+  "steps": [
+    {
+      "cropPluginId": "lettuce-black-seeded-simpson",
+      "alternates": [
+        "lettuce-red-sails",
+        "lettuce-salanova-mix"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": -28
+      },
+      "successions": {
+        "count": 3
+      },
+      "note": "Each sowing takes the next quarter of the bed."
+    }
+  ]
+}

@@ -27,7 +27,10 @@ import {
   type BuildOptions
 } from './common';
 import { formatFeet, formatSize, sizeBasis } from './size';
-import { DEFAULT_AREA_KIND } from '$lib/farm/areaKinds';
+import { DEFAULT_AREA_KIND, isDesignable } from '$lib/farm/areaKinds';
+import { designFromSnapshot, designerHref } from '$lib/garden/design';
+import { bedOccupancyOn, occupancyIntervals, scrubRange, utcDayStart } from '$lib/garden/occupancy';
+import type { CardBedMap } from '../model';
 
 const MAX_LIST = 8;
 const BLOCK_KIND_ORDER: SnapshotBlockKind[] = ['bed', 'row', 'container', 'block'];
@@ -168,8 +171,13 @@ export function buildAreaCard(
   const name = areaDisplayName(area);
   const kicker = size ? `${kindLabel} · ${size}` : kindLabel;
   const key = cardKey('area', area.id);
+  const bedMap = isDesignable(area.kind) ? buildBedMap(snapshot, area.id, opts.now) : null;
 
   return {
+    ...(isDesignable(area.kind)
+      ? { links: [{ label: 'Open designer', href: designerHref(area.id) }] }
+      : {}),
+    ...(bedMap ? { bedMap } : {}),
     kind: 'area',
     key,
     kicker,
@@ -180,6 +188,38 @@ export function buildAreaCard(
     asOf: snapshot.generatedAt,
     provenance: mergeProvenance(provenance),
     href: cardHref('area', key)
+  };
+}
+
+/** To-scale bed sketch for a garden or greenhouse, with what is in each bed
+ *  on `onMs`. Null when the Area has no beds or containers. */
+export function buildBedMap(snapshot: FarmSnapshot, areaId: string, onMs: number): CardBedMap | null {
+  const design = designFromSnapshot(snapshot, areaId, {
+    seasonYear: new Date(onMs).getUTCFullYear(),
+    readOnlyReason: null
+  });
+  if (!design || design.beds.length === 0) return null;
+  const intervals = occupancyIntervals(design.plantings, design.crops, {
+    firstFallFrostMs: design.frost.firstFallFrostMs
+  });
+  const range = scrubRange(design.seasonYear, intervals, onMs);
+  const byId = new Map(design.plantings.map((p) => [p.cropId, p]));
+  return {
+    widthFt: design.canvas.widthFt,
+    lengthFt: design.canvas.lengthFt,
+    hasNorth: design.canvas.hasNorth,
+    onMs: utcDayStart(onMs),
+    beds: design.beds.map((b) => ({
+      name: b.name,
+      kind: b.kind,
+      x: b.rect.x,
+      y: b.rect.y,
+      w: b.rect.w,
+      l: b.rect.l,
+      crops: bedOccupancyOn(b, intervals, utcDayStart(onMs), range)
+        .occupants.map((o) => byId.get(o.cropId)?.varietyDisplayName)
+        .filter((n): n is string => !!n)
+    }))
   };
 }
 

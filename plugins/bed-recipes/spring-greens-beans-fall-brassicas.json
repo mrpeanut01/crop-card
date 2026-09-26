@@ -1,0 +1,84 @@
+{
+  "pluginId": "spring-greens-beans-fall-brassicas",
+  "type": "bed-recipe",
+  "displayName": "Spring greens, bush beans, fall brassicas",
+  "version": "1.0.0",
+  "description": "Lettuce and spinach go in a month before the last frost. Bush beans follow the lettuce, and kale takes over the spinach half in late summer for fall picking.",
+  "bedSize": {
+    "widthFt": 4,
+    "lengthFt": 8
+  },
+  "frostFreeDays": {
+    "min": 145
+  },
+  "steps": [
+    {
+      "cropPluginId": "lettuce-black-seeded-simpson",
+      "alternates": [
+        "lettuce-red-sails",
+        "lettuce-salanova-mix"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": -28
+      },
+      "section": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "l": 0.5
+      },
+      "note": "Hardy enough to sow four weeks before the last frost."
+    },
+    {
+      "cropPluginId": "spinach-space-f1",
+      "alternates": [],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": -28
+      },
+      "section": {
+        "x": 0,
+        "y": 0.5,
+        "w": 1,
+        "l": 0.5
+      }
+    },
+    {
+      "cropPluginId": "bush-bean-provider",
+      "alternates": [
+        "bush-bean-blue-lake-274"
+      ],
+      "start": {
+        "anchor": "after-step",
+        "afterStep": 0,
+        "offsetDays": 0
+      },
+      "section": {
+        "x": 0,
+        "y": 0,
+        "w": 1,
+        "l": 0.5
+      },
+      "note": "Sow once the lettuce is cleared."
+    },
+    {
+      "cropPluginId": "kale-red-russian",
+      "alternates": [
+        "kale-lacinato",
+        "broccoli-de-cicco"
+      ],
+      "start": {
+        "anchor": "first-fall-frost",
+        "offsetDays": -84
+      },
+      "section": {
+        "x": 0,
+        "y": 0.5,
+        "w": 1,
+        "l": 0.5
+      },
+      "note": "Kale sweetens after the first light frosts."
+    }
+  ]
+}

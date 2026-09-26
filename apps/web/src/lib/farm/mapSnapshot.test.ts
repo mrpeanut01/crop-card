@@ -64,9 +64,9 @@ describe('snapshotFromMapData', () => {
 
 describe('designer link', () => {
   it('is offered only for gardens and greenhouses', () => {
-    expect(designerState('garden', false)).toBe('coming-soon');
-    expect(designerState('greenhouse', true)).toBe('available');
-    expect(designerState('field', true)).toBe('none');
+    expect(designerState('garden')).toBe('available');
+    expect(designerState('greenhouse')).toBe('available');
+    expect(designerState('field')).toBe('none');
     expect(designerHref('a b')).toBe('/plan/areas/a%20b/design');
   });
 });

@@ -666,6 +666,61 @@ describe('cross-tenant isolation', () => {
     expect(runWithTenant(OWNER_B, () => blocksRepo.getBlock(bBed.id))?.kind).toBe('bed');
   });
 
+  // Phase 30E — garden-bed footprints and date moves stay inside the tenant.
+  it('garden placement writes and date moves are owner-scoped', () => {
+    const placement = (x: number) => ({
+      footprint: { x_in: x, y_in: 0, w_in: 12, l_in: 12 },
+      spacingIn: null,
+      rowSpacingIn: null,
+      spacingPattern: 'square' as const,
+      plantCount: 4,
+      plantCountProvenance: 'data' as const
+    });
+    const seedPlaced = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const garden = areasRepo.createArea({ name: `${ownerId}-garden`, kind: 'garden' });
+        const bed = blocksRepo.createBlock({
+          name: `${ownerId}-bed`,
+          fieldId: garden.id,
+          kind: 'bed',
+          widthFt: 4,
+          lengthFt: 8
+        });
+        return cropsRepo.createPlanned({
+          blockId: bed.id,
+          cropPluginId: 'crop:lettuce',
+          varietyDisplayName: 'Lettuce',
+          plantingDate: Date.UTC(2027, 3, 1),
+          placement: placement(0)
+        });
+      });
+    const aCrop = seedPlaced(OWNER_A);
+    const bCrop = seedPlaced(OWNER_B);
+
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 36 }), fc.integer({ min: 1, max: 60 }), (x, days) => {
+        runWithTenant(OWNER_A, () => {
+          expect(cropsRepo.setPlacement(bCrop.id, placement(x))).toBeUndefined();
+          expect(
+            cropsRepo.movePlantingDate(bCrop.id, Date.UTC(2027, 3, 1) + days * 86_400_000)
+          ).toBeUndefined();
+          expect(cropsRepo.getCrop(bCrop.id)).toBeUndefined();
+        });
+        const theirs = runWithTenant(OWNER_B, () => cropsRepo.getCrop(bCrop.id))!;
+        expect(theirs.footprint).toEqual(placement(0).footprint);
+        expect(theirs.plantingDate).toBe(Date.UTC(2027, 3, 1));
+      }),
+      { numRuns: 25 }
+    );
+
+    runWithTenant(OWNER_A, () => {
+      expect(cropsRepo.setPlacement(aCrop.id, placement(24))?.footprint?.x_in).toBe(24);
+      const ids = cropsRepo.listCrops().map((c) => c.id);
+      expect(ids).toContain(aCrop.id);
+      expect(ids).not.toContain(bCrop.id);
+    });
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.

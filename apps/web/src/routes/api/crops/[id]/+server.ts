@@ -1,6 +1,8 @@
 /**
  * GET   /api/crops/:id  — fetch one crop with summary counts.
  * PATCH /api/crops/:id  — { action: 'mark-harvested' | 'archive' | 'mark-failed' | 'reactivate' }
+ *   Phase 30E: { action: 'set-placement', ...FootprintWriteRequest } places the
+ *   planting in a garden bed (owner only); see lib/server/garden/placement.ts.
  *
  * Status transitions stamp `harvested_at` / `archived_at` automatically.
  * Inspector role is read-only at the hooks layer.
@@ -23,6 +25,9 @@ import { reanchorCropTasks } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
+import { footprintWriteSchema } from '$lib/garden/api';
+import { cropLookupFrom, failureResponse, writeFootprint } from '$lib/server/garden/placement';
+import { getRegistry } from '$lib/server/registry';
 
 const patchSchema = z.discriminatedUnion('action', [
   z.object({
@@ -71,7 +76,8 @@ const patchSchema = z.discriminatedUnion('action', [
      *  target dates afterwards. */
     action: z.literal('split'),
     parts: z.number().int().min(2).max(12)
-  })
+  }),
+  footprintWriteSchema.extend({ action: z.literal('set-placement') })
 ]);
 
 const ACTION_TO_STATUS = {
@@ -111,6 +117,19 @@ export const PATCH: RequestHandler = async (event) => {
       { status: 400 }
     );
   }
+  if (parsed.data.action === 'set-placement') {
+    if (auth?.role !== 'owner') {
+      return json(
+        { error: 'The farm owner places crops in beds.', code: 'READ_ONLY' },
+        { status: 403 }
+      );
+    }
+    const { action: _action, ...request } = parsed.data;
+    const result = writeFootprint(event.params.id, request, cropLookupFrom(await getRegistry()));
+    if (!result.ok) return failureResponse(result);
+    return json(result.response);
+  }
+
   if (parsed.data.action === 'unschedule') {
     if (!getCrop(event.params.id)) throw error(404, 'crop not found');
     const result = unscheduleCrop(event.params.id);

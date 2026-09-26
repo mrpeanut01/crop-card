@@ -6,6 +6,7 @@
  * as null from the server and is filled in by the page.
  */
 
+import { designerHref } from '$lib/garden/design';
 import { profileIncludesFarm, profileIncludesGarden, type FarmProfile } from './profile';
 
 export interface GettingStartedFacts {
@@ -14,6 +15,9 @@ export interface GettingStartedFacts {
   hasMappedArea: boolean;
   hasPlanting: boolean;
   hasGardenBed: boolean;
+  /** First garden (else greenhouse) Area, so "Design a garden bed" opens its
+   *  designer. Null or missing sends the item to the farm map instead. */
+  gardenAreaId?: string | null;
   hasEquipment: boolean;
   hasSprayer: boolean;
   hasCalibratedSprayer: boolean;
@@ -63,7 +67,14 @@ export function gettingStartedItems(f: GettingStartedFacts): GettingStartedItem[
     blurb: string,
     done: boolean,
     optional = false
-  ): GettingStartedItem => ({ id, title, blurb, href: GETTING_STARTED_HREFS[id], done, optional });
+  ): GettingStartedItem => ({
+    id,
+    title,
+    blurb,
+    href: id === 'bed' && f.gardenAreaId ? designerHref(f.gardenAreaId) : GETTING_STARTED_HREFS[id],
+    done,
+    optional
+  });
 
   const items: GettingStartedItem[] = [
     item(

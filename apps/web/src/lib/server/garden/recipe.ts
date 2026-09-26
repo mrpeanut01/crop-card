@@ -6,6 +6,7 @@
  */
 
 import { listCrops } from '$lib/db/crops';
+import type { Footprint } from '$lib/farm/footprint';
 import type { RecipeRequest, RecipeResponse } from '$lib/garden/api';
 import { occupancyIntervals } from '$lib/garden/occupancy';
 import { applyRecipe } from '$lib/garden/recipes';
@@ -19,6 +20,17 @@ import {
   resolveDesignableBed,
   type GardenFailure
 } from './placement';
+
+const SPOT_TOLERANCE_IN = 1e-6;
+
+function sameSpot(a: Footprint, b: Footprint): boolean {
+  return (
+    Math.abs(a.x_in - b.x_in) <= SPOT_TOLERANCE_IN &&
+    Math.abs(a.y_in - b.y_in) <= SPOT_TOLERANCE_IN &&
+    Math.abs(a.w_in - b.w_in) <= SPOT_TOLERANCE_IN &&
+    Math.abs(a.l_in - b.l_in) <= SPOT_TOLERANCE_IN
+  );
+}
 
 export type RecipeResult =
   { ok: true; status: 200 | 201; response: RecipeResponse } | GardenFailure;
@@ -52,9 +64,17 @@ export function applyBedRecipe(
   if (!req.commit) return { ok: true, status: 200, response: { application, created: [] } };
 
   const byKey = new Map(application.plantings.map((p) => [p.key, p]));
-  const keys = [...new Set(req.acceptKeys ?? application.plantings.map((p) => p.key))];
+  const keys = [
+    ...new Set(
+      req.acceptKeys ?? req.expected?.map((e) => e.key) ?? application.plantings.map((p) => p.key)
+    )
+  ];
   if (keys.length === 0) return gardenFailure(400, 'Keep at least one planting to add.');
-  if (keys.some((k) => !byKey.has(k))) {
+  const changed = (req.expected ?? []).some((e) => {
+    const now = byKey.get(e.key);
+    return !now || now.plantingDateMs !== e.plantingDateMs || !sameSpot(now.footprint, e.footprint);
+  });
+  if (changed || keys.some((k) => !byKey.has(k))) {
     return gardenFailure(
       409,
       `${bed.block.name} changed since this preview, so nothing was added. Open the recipe again to see what fits now.`,

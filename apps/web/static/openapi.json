@@ -74,7 +74,8 @@
               "NOT_DESIGNABLE",
               "IN_GROUND",
               "BED_HAS_RECORDS",
-              "FOREIGN_REF"
+              "FOREIGN_REF",
+              "STALE"
             ]
           },
           "issues": {}
@@ -3327,6 +3328,613 @@
           },
           "409": {
             "description": "The layout does not fit: `OVERLAP`, `OUTSIDE_AREA` or `NOT_DESIGNABLE`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/garden/beds/{blockId}/recipe": {
+      "parameters": [
+        {
+          "name": "blockId",
+          "in": "path",
+          "required": true,
+          "description": "Bed (block) id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Preview or apply a bed recipe",
+        "description": "Owner only. `commit: false` previews the recipe on the bed as stored and saves nothing. `commit: true` saves the kept steps (`acceptKeys`, or the keys in `expected`, or every step) as `planned` plantings with `plugin` provenance, all or none. The server recomputes the recipe first; when a kept step no longer fits, or a step in `expected` came out with a different date or spot (the bed Size or the frost dates changed), nothing is saved and the answer is 409 `STALE`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recipePluginId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "seasonYear": {
+                    "type": "integer",
+                    "minimum": 2000,
+                    "maximum": 2100
+                  },
+                  "commit": {
+                    "type": "boolean"
+                  },
+                  "acceptKeys": {
+                    "maxItems": 80,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
+                  },
+                  "expected": {
+                    "maxItems": 80,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        },
+                        "plantingDateMs": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "footprint": {
+                          "type": "object",
+                          "properties": {
+                            "x_in": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 240000
+                            },
+                            "y_in": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 240000
+                            },
+                            "w_in": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 240000
+                            },
+                            "l_in": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 240000
+                            }
+                          },
+                          "required": [
+                            "x_in",
+                            "y_in",
+                            "w_in",
+                            "l_in"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "plantingDateMs",
+                        "footprint"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "recipePluginId",
+                  "seasonYear",
+                  "commit"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preview.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "application",
+                    "created"
+                  ],
+                  "properties": {
+                    "application": {
+                      "type": "object"
+                    },
+                    "created": {
+                      "type": "array",
+                      "maxItems": 0,
+                      "items": {
+                        "$ref": "#/components/schemas/PlacedPlanting"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Plantings saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "application",
+                    "created"
+                  ],
+                  "properties": {
+                    "application": {
+                      "type": "object"
+                    },
+                    "created": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PlacedPlanting"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body, or no step kept.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required. Helpers can read but not change this.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bed or recipe not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The bed changed since the preview (`STALE`), a step does not fit (`OVERLAP`, `OUTSIDE_AREA`), or the block is not a sized bed in a garden (`NOT_DESIGNABLE`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/garden/areas/{id}/design": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Area id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "A garden or greenhouse Area's designer data",
+        "description": "Readable by every signed-in role; `canEdit` is true only for the owner. Returns the beds, placed plantings, frost dates, crop catalog, companions, bed recipes and each bed's planting history. Another Owner's Area, or an Area that is not a garden or greenhouse, is a 404.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "season",
+            "in": "query",
+            "required": false,
+            "description": "Season year (`YYYY`). Honoured only when it is one of the `seasons` the answer lists; otherwise the active planning year is used.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}$",
+              "example": "2027"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The designer data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "design",
+                    "history",
+                    "catalog",
+                    "canEdit",
+                    "role",
+                    "seasons",
+                    "activeYear"
+                  ],
+                  "properties": {
+                    "design": {
+                      "type": "object"
+                    },
+                    "history": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array"
+                      }
+                    },
+                    "catalog": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "companions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "lookbackByFamily": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer"
+                      }
+                    },
+                    "areaKind": {
+                      "type": "string",
+                      "enum": [
+                        "garden",
+                        "greenhouse"
+                      ]
+                    },
+                    "recipes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "canEdit": {
+                      "type": "boolean"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "seasons": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    },
+                    "activeYear": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not a garden or greenhouse Area of the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/crops/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Planting (crop) id.",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "patch": {
+        "summary": "Place a planting in a garden bed",
+        "description": "Only the `set-placement` action is described here; the route's other actions (`mark-harvested`, `archive`, `mark-failed`, `reactivate`, `set-schedule`, `edit-details`, `unschedule`, `split`) are not yet published. Owner only. Places, moves or clears a planting's spot (`footprint: null`) and moves its date when `plantingDateMs` is sent. A planting already in the ground can't change beds and its date can't move past today (409 `IN_GROUND`). A linked succession sowing needs a spot that is free for its whole time in the bed (409 `OVERLAP`), and a spot past the bed edge is refused with `OUTSIDE_AREA`.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "footprint": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "x_in": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 240000
+                          },
+                          "y_in": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 240000
+                          },
+                          "w_in": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 240000
+                          },
+                          "l_in": {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 240000
+                          }
+                        },
+                        "required": [
+                          "x_in",
+                          "y_in",
+                          "w_in",
+                          "l_in"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "spacingPattern": {
+                    "type": "string",
+                    "enum": [
+                      "square",
+                      "offset",
+                      "sfg"
+                    ]
+                  },
+                  "spacingIn": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 600
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "rowSpacingIn": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 600
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plantCount": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 100000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "plantingDateMs": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "action": {
+                    "type": "string",
+                    "const": "set-placement"
+                  }
+                },
+                "required": [
+                  "blockId",
+                  "footprint",
+                  "spacingPattern",
+                  "action"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "planting",
+                    "reanchored",
+                    "warnings"
+                  ],
+                  "properties": {
+                    "planting": {
+                      "$ref": "#/components/schemas/PlacedPlanting"
+                    },
+                    "reanchored": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "shifted": {
+                          "type": "integer"
+                        },
+                        "flaggedStale": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "followers": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PlacedPlanting"
+                      }
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body, a spot past the bed edge (`OUTSIDE_AREA`) or an unknown bed (`FOREIGN_REF`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required (`READ_ONLY`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Planting not found for the active Owner.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`) or the block is not a sized bed in a garden (`NOT_DESIGNABLE`).",
             "content": {
               "application/json": {
                 "schema": {

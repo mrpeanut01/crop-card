@@ -45,6 +45,8 @@ import { AREA_KINDS, BLOCK_KINDS } from '../src/lib/farm/areaKinds.ts';
 import {
   fillRequestSchema,
   plantingCreateSchema,
+  recipeRequestSchema,
+  setPlacementPatchSchema,
   successionRequestSchema
 } from '../src/lib/garden/api.ts';
 import { hintsPostSchema } from '../src/lib/hints.ts';
@@ -156,7 +158,8 @@ const GARDEN_ERROR_SCHEMA = {
         'NOT_DESIGNABLE',
         'IN_GROUND',
         'BED_HAS_RECORDS',
-        'FOREIGN_REF'
+        'FOREIGN_REF',
+        'STALE'
       ]
     },
     issues: {}
@@ -813,6 +816,120 @@ const paths = {
           }
         }),
         ...GARDEN_ERRORS
+      }
+    }
+  },
+
+  '/api/garden/beds/{blockId}/recipe': {
+    parameters: [idPath('blockId', 'Bed (block) id.')],
+    post: {
+      summary: 'Preview or apply a bed recipe',
+      description:
+        'Owner only. `commit: false` previews the recipe on the bed as stored and saves nothing. `commit: true` saves the kept steps (`acceptKeys`, or the keys in `expected`, or every step) as `planned` plantings with `plugin` provenance, all or none. The server recomputes the recipe first; when a kept step no longer fits, or a step in `expected` came out with a different date or spot (the bed Size or the frost dates changed), nothing is saved and the answer is 409 `STALE`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(recipeRequestSchema),
+      responses: {
+        200: jsonResponse('Preview.', {
+          type: 'object',
+          required: ['application', 'created'],
+          properties: {
+            application: { type: 'object' },
+            created: { type: 'array', maxItems: 0, items: placedRef }
+          }
+        }),
+        201: jsonResponse('Plantings saved.', {
+          type: 'object',
+          required: ['application', 'created'],
+          properties: {
+            application: { type: 'object' },
+            created: { type: 'array', items: placedRef }
+          }
+        }),
+        400: jsonResponse('Invalid request body, or no step kept.', gardenErrorRef),
+        ...OWNER_ERRORS,
+        404: jsonResponse('Bed or recipe not found for the active Owner.', gardenErrorRef),
+        409: jsonResponse(
+          'The bed changed since the preview (`STALE`), a step does not fit (`OVERLAP`, `OUTSIDE_AREA`), or the block is not a sized bed in a garden (`NOT_DESIGNABLE`).',
+          gardenErrorRef
+        )
+      }
+    }
+  },
+
+  '/api/garden/areas/{id}/design': {
+    parameters: [idPath('id', 'Area id.')],
+    get: {
+      summary: "A garden or greenhouse Area's designer data",
+      description:
+        "Readable by every signed-in role; `canEdit` is true only for the owner. Returns the beds, placed plantings, frost dates, crop catalog, companions, bed recipes and each bed's planting history. Another Owner's Area, or an Area that is not a garden or greenhouse, is a 404.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'season',
+          in: 'query',
+          required: false,
+          description:
+            'Season year (`YYYY`). Honoured only when it is one of the `seasons` the answer lists; otherwise the active planning year is used.',
+          schema: { type: 'string', pattern: '^\\d{4}$', example: '2027' }
+        }
+      ],
+      responses: {
+        200: jsonResponse('The designer data.', {
+          type: 'object',
+          required: ['design', 'history', 'catalog', 'canEdit', 'role', 'seasons', 'activeYear'],
+          properties: {
+            design: { type: 'object' },
+            history: { type: 'object', additionalProperties: { type: 'array' } },
+            catalog: { type: 'array', items: { type: 'object' } },
+            companions: { type: 'array', items: { type: 'object' } },
+            lookbackByFamily: { type: 'object', additionalProperties: { type: 'integer' } },
+            areaKind: { type: 'string', enum: ['garden', 'greenhouse'] },
+            recipes: { type: 'array', items: { type: 'object' } },
+            canEdit: { type: 'boolean' },
+            role: { type: 'string' },
+            seasons: { type: 'array', items: { type: 'integer' } },
+            activeYear: { type: 'integer' }
+          }
+        }),
+        401: errorResponse('Authentication required.'),
+        404: errorResponse('Not a garden or greenhouse Area of the active Owner.')
+      }
+    }
+  },
+
+  '/api/crops/{id}': {
+    parameters: [idPath('id', 'Planting (crop) id.')],
+    patch: {
+      summary: 'Place a planting in a garden bed',
+      description:
+        "Only the `set-placement` action is described here; the route's other actions (`mark-harvested`, `archive`, `mark-failed`, `reactivate`, `set-schedule`, `edit-details`, `unschedule`, `split`) are not yet published. Owner only. Places, moves or clears a planting's spot (`footprint: null`) and moves its date when `plantingDateMs` is sent. A planting already in the ground can't change beds and its date can't move past today (409 `IN_GROUND`). A linked succession sowing needs a spot that is free for its whole time in the bed (409 `OVERLAP`), and a spot past the bed edge is refused with `OUTSIDE_AREA`.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(setPlacementPatchSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['planting', 'reanchored', 'warnings'],
+          properties: {
+            planting: placedRef,
+            reanchored: {
+              type: ['object', 'null'],
+              properties: { shifted: { type: 'integer' }, flaggedStale: { type: 'integer' } }
+            },
+            followers: { type: 'array', items: placedRef },
+            warnings: { type: 'array', items: { type: 'string' } }
+          }
+        }),
+        400: jsonResponse(
+          'Invalid request body, a spot past the bed edge (`OUTSIDE_AREA`) or an unknown bed (`FOREIGN_REF`).',
+          gardenErrorRef
+        ),
+        401: errorResponse('Authentication required.'),
+        403: jsonResponse('Owner role required (`READ_ONLY`).', gardenErrorRef),
+        404: jsonResponse('Planting not found for the active Owner.', gardenErrorRef),
+        409: jsonResponse(
+          'Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`) or the block is not a sized bed in a garden (`NOT_DESIGNABLE`).',
+          gardenErrorRef
+        )
       }
     }
   },

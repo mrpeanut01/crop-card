@@ -11,6 +11,8 @@ import { _requestSchema as hintsPost } from '../me/hints/+server';
 import { _requestSchema as gardenPlantings } from '../garden/plantings/+server';
 import { _requestSchema as gardenSuccession } from '../garden/beds/[blockId]/succession/+server';
 import { _requestSchema as gardenFill } from '../garden/beds/[blockId]/fill/+server';
+import { _requestSchema as gardenRecipe } from '../garden/beds/[blockId]/recipe/+server';
+import { setPlacementPatchSchema } from '$lib/garden/api';
 import { _requestSchema as mapFeatureCreate } from '../map-features/+server';
 import { _requestSchema as mapFeaturePatch } from '../map-features/[id]/+server';
 
@@ -51,6 +53,8 @@ describe('openapi.json', () => {
     ['/api/garden/plantings', 'post', gardenPlantings],
     ['/api/garden/beds/{blockId}/succession', 'post', gardenSuccession],
     ['/api/garden/beds/{blockId}/fill', 'post', gardenFill],
+    ['/api/garden/beds/{blockId}/recipe', 'post', gardenRecipe],
+    ['/api/crops/{id}', 'patch', setPlacementPatchSchema],
     ['/api/map-features', 'post', mapFeatureCreate],
     ['/api/map-features/{id}', 'patch', mapFeaturePatch]
   ] as const)('%s %s publishes the schema the route validates with', (path, method, schema) => {
@@ -69,13 +73,36 @@ describe('openapi.json', () => {
       ['/api/blocks/{id}', 'delete'],
       ['/api/map-features', 'get'],
       ['/api/map-features/{id}', 'get'],
-      ['/api/map-features/{id}', 'delete']
+      ['/api/map-features/{id}', 'delete'],
+      ['/api/garden/areas/{id}/design', 'get']
     ]) {
       expect(doc.paths[path]?.[method], `${method.toUpperCase()} ${path}`).toBeDefined();
     }
     const kinds = doc.paths['/api/fields'].get.parameters?.find((p) => p.name === 'kind');
     expect(kinds?.in).toBe('query');
     expect(doc.paths['/api/cards/snapshot'].get.responses['304']).toBeDefined();
+    const design = doc.paths['/api/garden/areas/{id}/design'].get;
+    expect(design.parameters?.find((p) => p.name === 'season')?.in).toBe('query');
+    expect(design.responses['404']).toBeDefined();
+  });
+
+  it('documents the garden designer refusals', () => {
+    const recipe = doc.paths['/api/garden/beds/{blockId}/recipe'].post.responses;
+    for (const status of ['200', '201', '400', '403', '404', '409']) {
+      expect(recipe[status], `recipe ${status}`).toBeDefined();
+    }
+    expect(JSON.stringify(recipe['409'])).toContain('STALE');
+    const placement = JSON.stringify(doc.paths['/api/crops/{id}'].patch.responses['409']);
+    for (const code of ['IN_GROUND', 'OVERLAP']) expect(placement).toContain(code);
+    expect(JSON.stringify(doc.paths['/api/crops/{id}'].patch.responses['400'])).toContain(
+      'OUTSIDE_AREA'
+    );
+    const codes = (
+      doc as unknown as {
+        components: { schemas: { GardenError: { properties: { code: { enum: string[] } } } } };
+      }
+    ).components.schemas.GardenError.properties.code.enum;
+    expect(codes).toContain('STALE');
   });
 
   it('documents the client record id header on all six record endpoints', () => {

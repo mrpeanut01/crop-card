@@ -237,7 +237,7 @@
 
   async function addRecipe(): Promise<void> {
     if (!recipePreview) return;
-    const kept = recipePreview.plantings.filter((p) => !skipped[p.key]).map((p) => p.key);
+    const kept = recipePreview.plantings.filter((p) => !skipped[p.key]);
     if (await d.commitRecipe(bed.blockId, recipePreview.recipePluginId, kept)) closeRecipes();
   }
 

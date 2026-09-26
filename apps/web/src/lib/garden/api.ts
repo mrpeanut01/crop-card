@@ -85,6 +85,9 @@ export const footprintWriteSchema = z.strictObject({
   plantingDateMs: epochMs.nullable().optional()
 });
 export type FootprintWriteRequest = z.infer<typeof footprintWriteSchema>;
+export const setPlacementPatchSchema = footprintWriteSchema.extend({
+  action: z.literal('set-placement')
+});
 
 export interface FootprintWriteResponse {
   planting: PlacedPlanting;
@@ -139,14 +142,22 @@ export interface SuccessionResponse {
 /** `POST /api/garden/beds/[blockId]/recipe`. `commit: false` previews; a
  *  commit creates the steps listed in `acceptKeys` (every step when it is
  *  left out) as `planned` plantings with `plugin` provenance, all or none.
- *  The server recomputes the recipe from the bed as stored, so a key the
- *  preview showed but the bed no longer has room for refuses the commit
- *  with `STALE`. */
+ *  The server recomputes the recipe from the bed as stored. A key the bed
+ *  no longer has room for refuses the commit with `STALE`, and so does a
+ *  step in `expected` (the proposals the owner saw and kept) whose date or
+ *  spot came out different, e.g. after the bed's Size or the frost dates
+ *  changed. With `expected` and no `acceptKeys`, its keys are the ones kept. */
+export const recipeExpectedSchema = z.strictObject({
+  key: z.string().min(1).max(64),
+  plantingDateMs: epochMs,
+  footprint: footprintSchema
+});
 export const recipeRequestSchema = z.strictObject({
   recipePluginId: id,
   seasonYear: z.number().int().min(2000).max(2100),
   commit: z.boolean(),
-  acceptKeys: z.array(z.string().min(1).max(64)).max(80).optional()
+  acceptKeys: z.array(z.string().min(1).max(64)).max(80).optional(),
+  expected: z.array(recipeExpectedSchema).max(80).optional()
 });
 export type RecipeRequest = z.infer<typeof recipeRequestSchema>;
 

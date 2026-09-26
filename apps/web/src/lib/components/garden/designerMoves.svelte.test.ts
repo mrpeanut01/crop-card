@@ -16,6 +16,7 @@ import {
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const APR_1 = Date.UTC(2026, 3, 1);
 const APR_15 = Date.UTC(2026, 3, 15);
+const FP = { x_in: 0, y_in: 0, w_in: 24, l_in: 24 };
 
 function make(
   over: Partial<DesignerInit> = {},
@@ -180,7 +181,8 @@ describe('bed recipes through the server', () => {
       status: 201,
       body: { application: {}, created: [saved] }
     }));
-    expect(await d.commitRecipe('bed1', 'radishes-then-tomatoes', ['s1'])).toBe(true);
+    const kept = { key: 's1', plantingDateMs: 1_780_000_000_000, footprint: FP };
+    expect(await d.commitRecipe('bed1', 'radishes-then-tomatoes', [kept])).toBe(true);
     await flush();
     expect(calls).toEqual([
       {
@@ -190,7 +192,8 @@ describe('bed recipes through the server', () => {
           recipePluginId: 'radishes-then-tomatoes',
           seasonYear: 2026,
           commit: true,
-          acceptKeys: ['s1']
+          acceptKeys: ['s1'],
+          expected: [kept]
         }
       }
     ]);
@@ -204,7 +207,11 @@ describe('bed recipes through the server', () => {
       status: 409,
       body: { error: 'Bed 1 changed since this preview, so nothing was added.', code: 'STALE' }
     }));
-    expect(await d.commitRecipe('bed1', 'radishes-then-tomatoes', ['s0'])).toBe(false);
+    expect(
+      await d.commitRecipe('bed1', 'radishes-then-tomatoes', [
+        { key: 's0', plantingDateMs: 1_780_000_000_000, footprint: FP }
+      ])
+    ).toBe(false);
     await flush();
     expect(d.design.plantings).toHaveLength(0);
     expect(d.alert).toBe('Bed 1 changed since this preview, so nothing was added.');
@@ -217,7 +224,11 @@ describe('bed recipes through the server', () => {
     expect(owner.calls).toHaveLength(0);
     owner.cleanup();
     const helper = make({ canEdit: false });
-    expect(await helper.d.commitRecipe('bed1', 'r', ['s0'])).toBe(false);
+    expect(
+      await helper.d.commitRecipe('bed1', 'r', [
+        { key: 's0', plantingDateMs: 1_780_000_000_000, footprint: FP }
+      ])
+    ).toBe(false);
     expect(helper.calls).toHaveLength(0);
     helper.cleanup();
   });

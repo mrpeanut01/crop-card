@@ -1692,9 +1692,9 @@ export class DesignerState {
   async commitRecipe(
     blockId: string,
     recipePluginId: string,
-    acceptKeys: string[]
+    accepted: ReadonlyArray<Pick<ProposedPlanting, 'key' | 'plantingDateMs' | 'footprint'>>
   ): Promise<boolean> {
-    if (!acceptKeys.length || !this.guard()) return false;
+    if (!accepted.length || !this.guard()) return false;
     try {
       const res = await this.request<RecipeResponse>(
         `/api/garden/beds/${encodeURIComponent(blockId)}/recipe`,
@@ -1704,7 +1704,12 @@ export class DesignerState {
             recipePluginId,
             seasonYear: this.design.seasonYear,
             commit: true,
-            acceptKeys
+            acceptKeys: accepted.map((p) => p.key),
+            expected: accepted.map((p) => ({
+              key: p.key,
+              plantingDateMs: p.plantingDateMs,
+              footprint: p.footprint
+            }))
           } satisfies RecipeRequest
         }
       );

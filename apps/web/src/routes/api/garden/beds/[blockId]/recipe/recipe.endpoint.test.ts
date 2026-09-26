@@ -146,6 +146,36 @@ describe('POST /api/garden/beds/[blockId]/recipe', () => {
     });
   });
 
+  it('refuses a commit whose kept proposals came out different from the preview', async () => {
+    await runWithTenant(seedOwner(), async () => {
+      const bed = seedBed();
+      const preview = (await (
+        await call(bed.id, recipe({ commit: false }))
+      ).json()) as RecipeResponse;
+      const seen = preview.application.plantings.map((p) => ({
+        key: p.key,
+        plantingDateMs: p.plantingDateMs,
+        footprint: p.footprint
+      }));
+      const moved = seen.map((e, i) =>
+        i === 0 ? { ...e, footprint: { ...e.footprint, w_in: e.footprint.w_in - 12 } } : e
+      );
+      const redated = seen.map((e, i) =>
+        i === 0 ? { ...e, plantingDateMs: e.plantingDateMs + 86_400_000 } : e
+      );
+      for (const expected of [moved, redated]) {
+        const res = await call(bed.id, recipe({ commit: true, expected }));
+        expect(res.status).toBe(409);
+        expect(await res.json()).toMatchObject({ code: 'STALE' });
+      }
+      expect(listCrops({ blockId: bed.id })).toHaveLength(0);
+
+      const ok = await call(bed.id, recipe({ commit: true, expected: seen.slice(1) }));
+      expect(ok.status).toBe(201);
+      expect(listCrops({ blockId: bed.id })).toHaveLength(seen.length - 1);
+    });
+  });
+
   it('refuses an empty keep list, an unknown recipe and a bad body', async () => {
     await runWithTenant(seedOwner(), async () => {
       const bed = seedBed();

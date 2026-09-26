@@ -88,6 +88,12 @@
     d.hints.filter((h) => h.a.blockId === bed.blockId || h.b.blockId === bed.blockId)
   );
   const plannedHere = $derived(plantings.filter((p) => !plantingInGround(p, d.nowMs)));
+  const otherBeds = $derived(
+    d.beds
+      .filter((b) => b.blockId !== bed.blockId)
+      .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }))
+  );
+  const moveTarget = $state<Record<string, string>>({});
 
   async function saveSize(): Promise<void> {
     if (!(await d.resizeBed(bed.blockId, widthFt, lengthFt))) {
@@ -232,7 +238,7 @@
   async function addRecipe(): Promise<void> {
     if (!recipePreview) return;
     const kept = recipePreview.plantings.filter((p) => !skipped[p.key]);
-    if (await d.acceptProposals(kept)) closeRecipes();
+    if (await d.commitRecipe(bed.blockId, recipePreview.recipePluginId, kept)) closeRecipes();
   }
 
   // Planting row editing
@@ -697,6 +703,35 @@
                   >
                 {/if}
               </div>
+              {#if p.footprint && otherBeds.length && !plantingInGround(p, d.nowMs)}
+                <form
+                  class="edit"
+                  data-testid="move-to-bed"
+                  onsubmit={(e) => {
+                    e.preventDefault();
+                    const to = moveTarget[p.cropId] ?? otherBeds[0].blockId;
+                    void d.movePlantingToBed(p.cropId, to);
+                  }}
+                >
+                  <label>
+                    Move to
+                    <select
+                      aria-label="Bed to move {who} to"
+                      value={moveTarget[p.cropId] ?? otherBeds[0].blockId}
+                      onchange={(e) =>
+                        (moveTarget[p.cropId] = (e.currentTarget as HTMLSelectElement).value)}
+                    >
+                      {#each otherBeds as b (b.blockId)}
+                        <option value={b.blockId}>{b.name}</option>
+                      {/each}
+                    </select>
+                  </label>
+                  <button type="submit" class="btn">Move to bed</button>
+                  {#if series.length > 1}
+                    <p class="pmeta">It stays linked with its other sowings.</p>
+                  {/if}
+                </form>
+              {/if}
             {/if}
 
             {#if successionFor === p.cropId}

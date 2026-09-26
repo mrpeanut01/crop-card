@@ -76,4 +76,14 @@ describe('/api/settings frost dates keep frost provenance honest', () => {
       expect(prov.probability).toBeNull();
     });
   });
+
+  it('refuses a frost date that no year has', async () => {
+    await runWithTenantAsync(seedOwner(), async () => {
+      for (const bad of ['02-30', '04-31', '13-01', '00-10']) {
+        const res = await post('last_frost_date', bad).catch((e: { status?: number }) => e);
+        expect((res as { status?: number }).status, bad).toBe(400);
+      }
+      expect((await post('last_frost_date', '02-29')).status).toBe(200);
+    });
+  });
 });

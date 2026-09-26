@@ -52,6 +52,8 @@ import type {
   GardenErrorResponse,
   PlantingCreateRequest,
   PlantingCreateResponse,
+  RecipeRequest,
+  RecipeResponse,
   SuccessionResponse
 } from '$lib/garden/api';
 import type { CompanionPlugin } from '$lib/plugins/schemas';
@@ -91,6 +93,15 @@ export type DesignerMode =
   | { kind: 'place-crop'; crop: CropChoice }
   | { kind: 'move-planting'; cropId: string };
 
+export interface CropDrag {
+  choice: CropChoice;
+  clientX: number;
+  clientY: number;
+  bedId: string | null;
+  at: { xIn: number; yIn: number } | null;
+  ghost: { footprint: Footprint; fits: boolean } | null;
+}
+
 export interface RoomConflict {
   text: string;
   retryDateMs: number | null;
@@ -129,10 +140,15 @@ export class WriteError extends Error {
 const OFFLINE_WRITE = "That change didn't save because you're offline.";
 const DEFAULT_CROP_LENGTH_IN = 24;
 const WINDOW_GRACE_MS = 7 * 86_400_000;
+const ALERT_MS = 6000;
+const DATE_SUMMARY_DELAY_MS = 500;
 
-function errorText(body: GardenErrorResponse | null, status: number): string {
-  if (body?.code === 'OVERLAP') return "Beds can't overlap";
-  if (body?.code === 'OUTSIDE_AREA') return 'Beds stay inside the garden.';
+function errorText(body: GardenErrorResponse | null, status: number, url: string): string {
+  const bedWrite = url.startsWith('/api/blocks');
+  if (body?.code === 'OVERLAP' && (bedWrite || !body.error)) return "Beds can't overlap";
+  if (body?.code === 'OUTSIDE_AREA' && (bedWrite || !body.error)) {
+    return 'Beds stay inside the garden.';
+  }
   if (body?.code === 'READ_ONLY' || status === 403) {
     return 'View only. The farm owner changes the layout.';
   }
@@ -181,11 +197,22 @@ export class DesignerState {
   conflict = $state<RoomConflict | null>(null);
   status = $state('');
   alert = $state('');
+  private alertTimer: ReturnType<typeof setTimeout> | null = null;
+  private summaryTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Client time of the last write the server accepted; 0 before any. */
+  lastSavedAt = 0;
   busy = $state(false);
   offline = $state(false);
   preview = $state<{ blockId: string; rect: RectFt } | null>(null);
   ghosts = $state<Array<{ key: string; blockId: string; footprint: Footprint; label: string }>>([]);
   recentPluginIds = $state<string[]>([]);
+  /** A crop row being dragged from the crop panel: where the pointer is,
+   *  the bed under it and the spot it would land on. */
+  cropDrag = $state<CropDrag | null>(null);
+  /** Set by the canvas while it is mounted: a client point to feet, and the
+   *  bed drawn under it. */
+  locate: ((clientX: number, clientY: number) => { point: PointFt; bedId: string | null }) | null =
+    null;
   /** Asks the canvas or list to focus a bed or planting after a keyboard
    *  action moved or created it. */
   focusRequest = $state<{ kind: 'bed' | 'planting'; id: string; n: number } | null>(null);
@@ -198,11 +225,14 @@ export class DesignerState {
   unplaced = $derived.by(() => new Set(this.design.unplacedBedIds ?? []));
   intervals = $derived.by<OccupancyInterval[]>(() =>
     occupancyIntervals(this.design.plantings, this.design.crops, {
-      firstFallFrostMs: this.design.frost.firstFallFrostMs
+      firstFallFrostMs: this.design.frost.firstFallFrostMs,
+      lastSpringFrostMs: this.design.frost.lastSpringFrostMs
     })
   );
   intervalById = $derived.by(() => new Map(this.intervals.map((i) => [i.cropId, i])));
-  range = $derived.by(() => scrubRange(this.design.seasonYear, this.intervals, this.nowMs));
+  range = $derived.by(() =>
+    scrubRange(this.design.seasonYear, this.intervals, this.nowMs, this.design.frost)
+  );
   changeDays = $derived.by(() => occupancyChangeDays(this.intervals));
   occupancy = $derived.by(() => {
     const out = new Map<string, BedOccupancyOnDate>();
@@ -253,9 +283,11 @@ export class DesignerState {
     const range = scrubRange(
       init.design.seasonYear,
       occupancyIntervals(init.design.plantings, init.design.crops, {
-        firstFallFrostMs: init.design.frost.firstFallFrostMs
+        firstFallFrostMs: init.design.frost.firstFallFrostMs,
+        lastSpringFrostMs: init.design.frost.lastSpringFrostMs
       }),
-      this.nowMs
+      this.nowMs,
+      init.design.frost
     );
     const today = utcDayStart(this.nowMs);
     const todayInRange = today >= range.startMs && today <= range.endMs;
@@ -272,13 +304,38 @@ export class DesignerState {
   }
 
   say(text: string): void {
+    this.cancelDateSummary();
+    this.clearAlert();
     this.status = '';
     queueMicrotask(() => (this.status = text));
   }
 
+  /** Reads out what each bed holds once the scrubber settles. Anything
+   *  said in the meantime wins, so the result of a quick edit after a
+   *  scrub is never replaced by a stale date summary. */
+  announceDateSoon(delayMs = DATE_SUMMARY_DELAY_MS): void {
+    this.cancelDateSummary();
+    this.summaryTimer = setTimeout(() => {
+      this.summaryTimer = null;
+      this.say(this.dateSummary());
+    }, delayMs);
+  }
+
+  cancelDateSummary(): void {
+    if (this.summaryTimer) clearTimeout(this.summaryTimer);
+    this.summaryTimer = null;
+  }
+
   warn(text: string): void {
-    this.alert = '';
+    this.clearAlert();
     queueMicrotask(() => (this.alert = text));
+    this.alertTimer = setTimeout(() => this.clearAlert(), ALERT_MS);
+  }
+
+  clearAlert(): void {
+    if (this.alertTimer) clearTimeout(this.alertTimer);
+    this.alertTimer = null;
+    this.alert = '';
   }
 
   bed(blockId: string): BedLayout | undefined {
@@ -455,7 +512,8 @@ export class DesignerState {
       throw new WriteError(OFFLINE_WRITE, 'OFFLINE', true);
     }
     const body = (await res.json().catch(() => null)) as (T & GardenErrorResponse) | null;
-    if (!res.ok) throw new WriteError(errorText(body, res.status), body?.code ?? null, false);
+    if (!res.ok) throw new WriteError(errorText(body, res.status, url), body?.code ?? null, false);
+    if ((rest.method ?? 'GET').toUpperCase() !== 'GET') this.lastSavedAt = Date.now();
     return body as T;
   }
 
@@ -567,7 +625,7 @@ export class DesignerState {
       this.canvas
     );
     if (!rect) {
-      this.warn("That bed is bigger than the garden. Set the garden's Size in Draw your farm.");
+      this.warn("That bed is bigger than the garden. Set the garden's size on the farm map.");
       return Promise.resolve();
     }
     if (overlappingBeds(rect, this.beds).length) {
@@ -939,7 +997,10 @@ export class DesignerState {
         footprint: null
       },
       this.crop(pluginId),
-      { firstFallFrostMs: this.design.frost.firstFallFrostMs }
+      {
+        firstFallFrostMs: this.design.frost.firstFallFrostMs,
+        lastSpringFrostMs: this.design.frost.lastSpringFrostMs
+      }
     )!;
   }
 
@@ -1020,11 +1081,7 @@ export class DesignerState {
         movedForWindow = `${this.dateText(dateMs)}, the last date it can finish before frost`;
       }
     }
-    const spacing = existing?.spacing ?? resolveSpacing(crop, 'square');
-    const want =
-      existing?.plantCount != null
-        ? footprintForCount(existing.plantCount, spacing, bed.widthFt * 12)
-        : { w_in: bed.widthFt * 12, l_in: Math.min(bed.lengthFt * 12, DEFAULT_CROP_LENGTH_IN) };
+    const want = this.wantedSize(existing, crop, bed);
     const span = this.spanFor(pluginId, dateMs);
     const taken = this.busyFootprints(blockId, span, existing?.cropId);
     const fp = fitFootprint(bed, want, taken, at);
@@ -1092,6 +1149,95 @@ export class DesignerState {
     } catch (e) {
       this.fail(e);
     }
+  }
+
+  /** The footprint a new or unplaced planting asks for: room for its
+   *  planned count, else the bed's width by 2 ft. */
+  private wantedSize(
+    existing: PlacedPlanting | undefined,
+    crop: GardenCrop | undefined,
+    bed: BedLayout
+  ): { w_in: number; l_in: number } {
+    const spacing = existing?.spacing ?? resolveSpacing(crop, 'square');
+    return existing?.plantCount != null
+      ? footprintForCount(existing.plantCount, spacing, bed.widthFt * 12)
+      : { w_in: bed.widthFt * 12, l_in: Math.min(bed.lengthFt * 12, DEFAULT_CROP_LENGTH_IN) };
+  }
+
+  /** Where a crop dropped at `at` in this bed would land on its date, the
+   *  same spot `placeCrop` picks, or the pointer's spot marked as not
+   *  fitting when the bed has no room then. */
+  dropPreview(
+    choice: CropChoice,
+    blockId: string,
+    at: { xIn: number; yIn: number }
+  ): { footprint: Footprint; fits: boolean } | null {
+    const bed = this.bed(blockId);
+    if (!bed) return null;
+    const existing =
+      choice.source === 'planting'
+        ? this.design.plantings.find((p) => p.cropId === choice.cropId)
+        : undefined;
+    const pluginId = existing?.cropPluginId ?? (choice.source === 'catalog' ? choice.pluginId : '');
+    if (!pluginId) return null;
+    const crop = this.crop(pluginId);
+    const want = this.wantedSize(existing, crop, bed);
+    const dateMs = existing?.plantingDateMs ?? this.dateMs;
+    const taken = this.busyFootprints(blockId, this.spanFor(pluginId, dateMs), existing?.cropId);
+    const fp = fitFootprint(bed, want, taken, at);
+    if (fp) return { footprint: fp, fits: true };
+    return {
+      footprint: clampFootprint(
+        { x_in: at.xIn - want.w_in / 2, y_in: at.yIn - want.l_in / 2, ...want },
+        bed
+      ),
+      fits: false
+    };
+  }
+
+  /** Starts dragging a crop row; the tap path (`chooseCrop`) stays the way
+   *  every device can place. */
+  startCropDrag(choice: CropChoice, clientX: number, clientY: number): boolean {
+    if (!this.canEdit || this.view !== 'canvas') return false;
+    this.conflict = null;
+    this.mode = { kind: 'idle' };
+    this.cropDrag = { choice, clientX, clientY, bedId: null, at: null, ghost: null };
+    this.say(`Dragging ${choice.label}. Drop it on a bed.`);
+    return true;
+  }
+
+  moveCropDrag(clientX: number, clientY: number): void {
+    const drag = this.cropDrag;
+    if (!drag) return;
+    const hit = this.locate?.(clientX, clientY) ?? null;
+    const bed = hit?.bedId ? this.bed(hit.bedId) : undefined;
+    const at = bed && hit ? pointInBedIn(hit.point, bed) : null;
+    this.cropDrag = {
+      ...drag,
+      clientX,
+      clientY,
+      bedId: at && bed ? bed.blockId : null,
+      at,
+      ghost: at && bed ? this.dropPreview(drag.choice, bed.blockId, at) : null
+    };
+  }
+
+  cancelCropDrag(): void {
+    if (!this.cropDrag) return;
+    this.cropDrag = null;
+    this.say('Put back.');
+  }
+
+  async dropCrop(): Promise<void> {
+    const drag = this.cropDrag;
+    this.cropDrag = null;
+    if (!drag) return;
+    if (!drag.bedId || !drag.at) {
+      this.say(`${drag.choice.label} not placed. Drop it on a bed, or tap it and then a bed.`);
+      return;
+    }
+    this.cropPanelOpen = false;
+    await this.placeCrop(drag.choice, drag.bedId, drag.at);
   }
 
   /** Creates `planned` plantings in beds as one batch: either every item
@@ -1311,7 +1457,7 @@ export class DesignerState {
     const size = p.footprint
       ? { w_in: p.footprint.w_in, l_in: p.footprint.l_in }
       : { w_in: bed.widthFt * 12, l_in: DEFAULT_CROP_LENGTH_IN };
-    const fp = clampFootprint(
+    let fp: Footprint | null = clampFootprint(
       {
         x_in: Math.max(0, snap(at.xIn - size.w_in / 2, FOOTPRINT_SNAP_IN)),
         y_in: Math.max(0, snap(at.yIn - size.l_in / 2, FOOTPRINT_SNAP_IN)),
@@ -1321,15 +1467,88 @@ export class DesignerState {
       bed,
       p.spacing.pattern === 'sfg'
     );
+    const linked = p.blockId !== blockId && this.seriesOf(p).length > 1;
+    if (linked) fp = this.freeSpotForSowing(p, bed, fp, at);
+    if (!fp) {
+      this.warn(this.noRoomText(p, bed));
+      return;
+    }
+    await this.commitMove(p, bed, fp, linked);
+  }
+
+  /** Moves a planting to another bed at the first spot that is free for
+   *  its whole time there; the List view and bed sheet path. */
+  async movePlantingToBed(cropId: string, blockId: string): Promise<void> {
+    const p = this.design.plantings.find((q) => q.cropId === cropId);
+    const bed = this.bed(blockId);
+    this.mode = { kind: 'idle' };
+    if (!p || !bed || p.blockId === blockId || !this.guard()) return;
+    if (this.inGround(p)) {
+      this.warn(
+        `${p.varietyDisplayName} is already in the ground in ${this.bed(p.blockId)?.name ?? 'its bed'}. Record a new planting instead.`
+      );
+      return;
+    }
+    const fp = this.freeSpotForSowing(p, bed, null);
+    if (!fp) {
+      this.warn(this.noRoomText(p, bed));
+      return;
+    }
+    await this.commitMove(p, bed, fp, this.seriesOf(p).length > 1);
+  }
+
+  /** A spot the planting's size fits in `bed` that no other planting holds
+   *  while it grows there: `wanted` when it is free, else the nearest free
+   *  one to `at`. Linked sowings never share space, so the server makes the
+   *  same check. */
+  private freeSpotForSowing(
+    p: PlacedPlanting,
+    bed: BedLayout,
+    wanted: Footprint | null,
+    at?: { xIn: number; yIn: number }
+  ): Footprint | null {
+    const size = p.footprint
+      ? {
+          w_in: Math.min(p.footprint.w_in, bed.widthFt * 12),
+          l_in: Math.min(p.footprint.l_in, bed.lengthFt * 12)
+        }
+      : { w_in: bed.widthFt * 12, l_in: Math.min(bed.lengthFt * 12, DEFAULT_CROP_LENGTH_IN) };
+    if (p.plantingDateMs == null) {
+      return wanted ?? fitFootprint(bed, size, [], at);
+    }
+    const span = this.spanFor(p.cropPluginId, p.plantingDateMs);
+    const taken = this.busyFootprints(bed.blockId, span, p.cropId);
+    if (wanted && !taken.some((t) => footprintsOverlap(t, wanted))) return wanted;
+    return fitFootprint(bed, size, taken, at);
+  }
+
+  private noRoomText(p: PlacedPlanting, bed: BedLayout): string {
+    const when = p.plantingDateMs ?? this.dateMs;
+    const next = bedOccupancyOn(bed, this.intervals, when, this.range).nextOpenMs;
+    return `No room for ${p.varietyDisplayName} in ${bed.name} on ${shortDate(when)}.${next ? ` It opens ${shortDate(next)}.` : ''}`;
+  }
+
+  private async commitMove(
+    p: PlacedPlanting,
+    bed: BedLayout,
+    fp: Footprint,
+    linked: boolean
+  ): Promise<void> {
+    const from = p.blockId;
     const res = await this.writeFootprint(p, {
-      blockId,
+      blockId: bed.blockId,
       footprint: fp,
       spacingPattern: p.spacing.pattern
     });
-    if (res)
-      this.say(
-        `${p.varietyDisplayName} moved.${this.sharesSpaceText(res.planting) ? ` ${this.sharesSpaceText(res.planting)}` : ''}`
-      );
+    if (!res) return;
+    const shares = this.sharesSpaceText(res.planting);
+    const where = from !== bed.blockId ? ` to ${bed.name}` : '';
+    const link = linked && from !== bed.blockId ? ' It stays linked with its other sowings.' : '';
+    this.say(`${p.varietyDisplayName} moved${where}.${link}${shares ? ` ${shares}` : ''}`);
+    if (from !== bed.blockId) {
+      this.selectPlanting(p.cropId);
+      this.focusRequest = { kind: 'planting', id: p.cropId, n: Date.now() };
+    }
   }
 
   /** "Shares space with Lettuce until Jul 1." when a footprint overlaps
@@ -1402,6 +1621,7 @@ export class DesignerState {
       intervalDays,
       intervals: this.intervals.filter((i) => i.blockId === bed.blockId),
       firstFallFrostMs: this.design.frost.firstFallFrostMs,
+      lastSpringFrostMs: this.design.frost.lastSpringFrostMs,
       afterMs: this.seriesOf(anchor).reduce<number | null>(
         (m, q) =>
           q.plantingDateMs != null && (m == null || q.plantingDateMs > m) ? q.plantingDateMs : m,
@@ -1497,6 +1717,48 @@ export class DesignerState {
       label: shortDate(p.plantingDateMs)
     }));
     return application;
+  }
+
+  /** Saves the kept steps of a recipe through the server, which recomputes
+   *  the recipe from the bed as stored and adds all of them or none. */
+  async commitRecipe(
+    blockId: string,
+    recipePluginId: string,
+    accepted: ReadonlyArray<Pick<ProposedPlanting, 'key' | 'plantingDateMs' | 'footprint'>>
+  ): Promise<boolean> {
+    if (!accepted.length || !this.guard()) return false;
+    try {
+      const res = await this.request<RecipeResponse>(
+        `/api/garden/beds/${encodeURIComponent(blockId)}/recipe`,
+        {
+          method: 'POST',
+          json: {
+            recipePluginId,
+            seasonYear: this.design.seasonYear,
+            commit: true,
+            acceptKeys: accepted.map((p) => p.key),
+            expected: accepted.map((p) => ({
+              key: p.key,
+              plantingDateMs: p.plantingDateMs,
+              footprint: p.footprint
+            }))
+          } satisfies RecipeRequest
+        }
+      );
+      this.absorbCreated(res.created);
+      this.ghosts = [];
+      const recipe = this.recipes.find((r) => r.pluginId === recipePluginId);
+      this.say(
+        `${plural(res.created.length, 'planting')} added${recipe ? ` from ${recipe.displayName}` : ''}.`
+      );
+      if (res.created[0]) {
+        this.focusRequest = { kind: 'planting', id: res.created[0].cropId, n: Date.now() };
+      }
+      return true;
+    } catch (e) {
+      this.fail(e);
+      return false;
+    }
   }
 
   async requestFill(blockId: string): Promise<FillResponse | null> {

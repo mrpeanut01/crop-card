@@ -21,7 +21,7 @@
     "db:reset": "rm -f /data/cropcard.db && pnpm db:migrate",
     "seed:test": "node scripts/seed-test-data.mjs",
     "gen:schemas": "tsx scripts/gen-schemas.mjs",
-    "gen:openapi": "node scripts/gen-openapi.mjs",
+    "gen:openapi": "tsx --tsconfig scripts/tsconfig.openapi.json scripts/gen-openapi.mjs",
     "audit:plugins": "node scripts/auditPluginDiscriminators.mjs",
     "enhance:plugins": "node scripts/enhancePluginDiscriminators.mjs",
     "backfill:archetype": "node scripts/backfill-archetype.mjs",

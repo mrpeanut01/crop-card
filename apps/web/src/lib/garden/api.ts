@@ -7,8 +7,12 @@
 
 import { z } from 'zod';
 import { footprintSchema, SPACING_PATTERNS, spacingInSchema } from '$lib/farm/footprint';
+import type { DesignableAreaKind } from '$lib/farm/areaKinds';
+import type { BedRecipePlugin, CompanionPlugin } from '$lib/plugins/schemas';
 import type {
+  BedHistoryEntry,
   BedLayout,
+  GardenCrop,
   GardenDesign,
   PlacedPlanting,
   ProposedPlanting,
@@ -20,9 +24,32 @@ const id = z.string().min(1).max(128);
 const epochMs = z.number().int().nonnegative();
 const plantCount = z.number().int().positive().max(100_000);
 
-/** `GET /api/garden/areas/[id]/design`. Readable by every role. */
+export type DesignerCompanion = Pick<
+  CompanionPlugin,
+  'pluginId' | 'displayName' | 'goodWith' | 'badWith' | 'primaryFamily' | 'members' | 'benefit'
+>;
+
+/** `GET /api/garden/areas/[id]/design?season=`. Readable by every role;
+ *  `canEdit` is true only for the owner. */
 export interface GardenDesignResponse {
   design: GardenDesign;
+  /** Every recorded planting per bed, all seasons. */
+  history: Record<string, BedHistoryEntry[]>;
+  catalog: GardenCrop[];
+  companions: DesignerCompanion[];
+  lookbackByFamily: Record<string, number>;
+  areaKind: DesignableAreaKind;
+  recipes: BedRecipePlugin[];
+  canEdit: boolean;
+  role: string;
+  seasons: number[];
+  activeYear: number;
+}
+
+/** What the designer page renders: the endpoint's answer, or the same
+ *  shape rebuilt from the offline card snapshot (`offline: true`). */
+export interface DesignerPageData extends GardenDesignResponse {
+  offline: boolean;
 }
 
 /** `POST /api/blocks` body for a designer bed (existing endpoint). */
@@ -58,6 +85,9 @@ export const footprintWriteSchema = z.strictObject({
   plantingDateMs: epochMs.nullable().optional()
 });
 export type FootprintWriteRequest = z.infer<typeof footprintWriteSchema>;
+export const setPlacementPatchSchema = footprintWriteSchema.extend({
+  action: z.literal('set-placement')
+});
 
 export interface FootprintWriteResponse {
   planting: PlacedPlanting;
@@ -110,12 +140,24 @@ export interface SuccessionResponse {
 }
 
 /** `POST /api/garden/beds/[blockId]/recipe`. `commit: false` previews; a
- *  commit creates only the steps listed in `acceptKeys`. */
+ *  commit creates the steps listed in `acceptKeys` (every step when it is
+ *  left out) as `planned` plantings with `plugin` provenance, all or none.
+ *  The server recomputes the recipe from the bed as stored. A key the bed
+ *  no longer has room for refuses the commit with `STALE`, and so does a
+ *  step in `expected` (the proposals the owner saw and kept) whose date or
+ *  spot came out different, e.g. after the bed's Size or the frost dates
+ *  changed. With `expected` and no `acceptKeys`, its keys are the ones kept. */
+export const recipeExpectedSchema = z.strictObject({
+  key: z.string().min(1).max(64),
+  plantingDateMs: epochMs,
+  footprint: footprintSchema
+});
 export const recipeRequestSchema = z.strictObject({
   recipePluginId: id,
   seasonYear: z.number().int().min(2000).max(2100),
   commit: z.boolean(),
-  acceptKeys: z.array(z.string().min(1).max(64)).max(80).optional()
+  acceptKeys: z.array(z.string().min(1).max(64)).max(80).optional(),
+  expected: z.array(recipeExpectedSchema).max(80).optional()
 });
 export type RecipeRequest = z.infer<typeof recipeRequestSchema>;
 
@@ -151,6 +193,7 @@ export interface GardenErrorResponse {
     | 'NOT_DESIGNABLE'
     | 'IN_GROUND'
     | 'BED_HAS_RECORDS'
-    | 'FOREIGN_REF';
+    | 'FOREIGN_REF'
+    | 'STALE';
   issues?: unknown;
 }

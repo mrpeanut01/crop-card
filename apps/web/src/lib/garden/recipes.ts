@@ -208,7 +208,7 @@ export function applyRecipe(recipe: BedRecipePlugin, ctx: RecipeContext): Recipe
           footprint
         },
         crop,
-        { firstFallFrostMs: ctx.firstFallFrostMs }
+        { firstFallFrostMs: ctx.firstFallFrostMs, lastSpringFrostMs: ctx.lastSpringFrostMs }
       );
       if (!interval) continue;
       const label = k === 0 ? '' : ` (sowing ${k + 1})`;
@@ -349,7 +349,7 @@ function packUnplaced(
         footprint: null
       },
       crop,
-      { firstFallFrostMs: ctx.firstFallFrostMs }
+      { firstFallFrostMs: ctx.firstFallFrostMs, lastSpringFrostMs: ctx.lastSpringFrostMs }
     );
     if (!timing || timing.harvestStartMs > ctx.firstFallFrostMs) return;
     const want =

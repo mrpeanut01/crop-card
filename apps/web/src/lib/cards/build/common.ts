@@ -25,6 +25,9 @@ export interface BuildOptions {
   prefs?: Prefs;
   /** Epoch ms used for "due" and "days since planting" wording. */
   now?: number;
+  /** The day a garden's bed map shows, when it isn't `now` (the designer's
+   *  scrubbed date). */
+  bedMapOnMs?: number;
 }
 
 export interface ResolvedOptions {

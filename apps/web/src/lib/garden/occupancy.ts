@@ -5,6 +5,7 @@
  */
 
 import { ARCHETYPES, resolveArchetype, type Archetype } from '$lib/plugins/schemas';
+import { frostSeasonShape, monthDayOfYear } from '$lib/schedule/frostSeason';
 import type {
   BedLayout,
   Footprint,
@@ -37,6 +38,8 @@ export const ARCHETYPE_HARVEST_TAIL: Record<Archetype, HarvestTail> = {
 
 export interface OccupancyOptions {
   firstFallFrostMs: number;
+  /** The same season's last spring frost; tells a year-crossing season apart. */
+  lastSpringFrostMs?: number;
 }
 
 export type OccupancyPlanting = Pick<
@@ -72,20 +75,41 @@ export function plantingDay(ms: number): number {
   return Math.round(ms / ONE_DAY_MS) * ONE_DAY_MS;
 }
 
-/** `firstFallFrostMs` moved to the calendar year of `ms`, so a frost date
- *  for one season can bound plantings in another. */
-export function frostInYearOf(firstFallFrostMs: number, ms: number): number {
+/** The first fall frost that ends the season `ms` falls in. For an ordinary
+ *  season that is the frost date in the calendar year of `ms`, so a frost
+ *  date for one season can bound plantings in another. When the season
+ *  crosses the new year, a date on or after the spring frost's month and day
+ *  belongs to the season whose fall frost comes the next calendar year.
+ *  Without the spring frost, a fall frost in January to June can only mean
+ *  such a season, and the next one on or after `ms` is used. */
+export function frostInYearOf(
+  firstFallFrostMs: number,
+  ms: number,
+  lastSpringFrostMs?: number
+): number {
   const frost = new Date(firstFallFrostMs);
-  const year = new Date(ms).getUTCFullYear();
-  return Date.UTC(
-    year,
-    frost.getUTCMonth(),
-    frost.getUTCDate(),
-    frost.getUTCHours(),
-    frost.getUTCMinutes(),
-    frost.getUTCSeconds(),
-    frost.getUTCMilliseconds()
-  );
+  const at = (year: number) =>
+    Date.UTC(
+      year,
+      frost.getUTCMonth(),
+      frost.getUTCDate(),
+      frost.getUTCHours(),
+      frost.getUTCMinutes(),
+      frost.getUTCSeconds(),
+      frost.getUTCMilliseconds()
+    );
+  const when = new Date(ms);
+  const year = when.getUTCFullYear();
+  const fallMd = { month: frost.getUTCMonth(), day: frost.getUTCDate() };
+  if (lastSpringFrostMs === undefined || !Number.isFinite(lastSpringFrostMs)) {
+    if (fallMd.month >= 6) return at(year);
+    return ms <= at(year) ? at(year) : at(year + 1);
+  }
+  const spring = new Date(lastSpringFrostMs);
+  const springMd = { month: spring.getUTCMonth(), day: spring.getUTCDate() };
+  if (frostSeasonShape(springMd, fallMd) === 'same-year') return at(year);
+  const msDay = monthDayOfYear({ month: when.getUTCMonth(), day: when.getUTCDate() });
+  return msDay >= monthDayOfYear(springMd) ? at(year + 1) : at(year);
 }
 
 function positiveDays(value: number | undefined): number | null {
@@ -132,7 +156,10 @@ export function plantingOccupancy(
   if (typeof tail === 'number') {
     harvestEndMs = maturityEnd + tail * ONE_DAY_MS;
   } else {
-    harvestEndMs = Math.max(maturityEnd, frostInYearOf(opts.firstFallFrostMs, harvestStartMs));
+    harvestEndMs = Math.max(
+      maturityEnd,
+      frostInYearOf(opts.firstFallFrostMs, harvestStartMs, opts.lastSpringFrostMs)
+    );
   }
   let actual = false;
   const harvested = planting.harvestedAtMs;
@@ -274,16 +301,21 @@ export function bedOccupancyOn(
 }
 
 /** Jan 1 of `seasonYear` to Dec 31, widened to cover every interval that
- *  touches the year. `todayMs` is `nowMs`'s UTC day, clamped into the range. */
+ *  touches the year and a season's frost dates that fall outside it. `todayMs` is `nowMs`'s UTC day, clamped into the range. */
 export function scrubRange(
   seasonYear: number,
   intervals: readonly OccupancyInterval[],
-  nowMs: number
+  nowMs: number,
+  frost?: { lastSpringFrostMs: number; firstFallFrostMs: number }
 ): ScrubRange {
   const yearStart = Date.UTC(seasonYear, 0, 1);
   const yearEnd = Date.UTC(seasonYear, 11, 31);
   let startMs = yearStart;
   let endMs = yearEnd;
+  if (frost) {
+    startMs = Math.min(startMs, utcDayStart(frost.lastSpringFrostMs));
+    endMs = Math.max(endMs, utcDayStart(frost.firstFallFrostMs));
+  }
   for (const i of intervals) {
     if (i.startMs > yearEnd + ONE_DAY_MS || i.endMs < yearStart) continue;
     startMs = Math.min(startMs, utcDayStart(i.startMs));

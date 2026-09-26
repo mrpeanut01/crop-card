@@ -26,7 +26,7 @@ import {
   sortTasks,
   type BuildOptions
 } from './common';
-import { formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
+import { SQFT_PER_ACRE, formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
 import { areaCareLinks } from './careGuide';
 import { DEFAULT_AREA_KIND, isDesignable } from '$lib/farm/areaKinds';
 import { designFromSnapshot, designerHref } from '$lib/garden/design';
@@ -68,6 +68,19 @@ function plantingLine(
   return `${p.varietyDisplayName}${where}${when}`;
 }
 
+/** A bed's own width by length when it has them; stored acres are rounded
+ *  to 0.001 and would overstate small beds. */
+function blockSizeAcres(b: {
+  acres: number | null;
+  widthFt: number | null;
+  lengthFt: number | null;
+}): number {
+  if (b.widthFt && b.widthFt > 0 && b.lengthFt && b.lengthFt > 0) {
+    return (b.widthFt * b.lengthFt) / SQFT_PER_ACRE;
+  }
+  return typeof b.acres === 'number' && b.acres > 0 ? b.acres : 0;
+}
+
 export function buildAreaCard(
   snapshot: FarmSnapshot,
   areaId: string,
@@ -102,12 +115,7 @@ export function buildAreaCard(
     if (sp) provenance.push(sp);
   }
   if (!size) {
-    const blockAcres = blocks.reduce((sum, b) => {
-      if (b.widthFt && b.widthFt > 0 && b.lengthFt && b.lengthFt > 0) {
-        return sum + (b.widthFt * b.lengthFt) / 43_560;
-      }
-      return sum + (typeof b.acres === 'number' && b.acres > 0 ? b.acres : 0);
-    }, 0);
+    const blockAcres = blocks.reduce((sum, b) => sum + blockSizeAcres(b), 0);
     if (blockAcres > 0) {
       facts.push({
         label: 'Size',
@@ -187,7 +195,9 @@ export function buildAreaCard(
   const name = areaDisplayName(area);
   const kicker = size ? `${kindLabel} · ${size}` : kindLabel;
   const key = cardKey('area', area.id);
-  const bedMap = isDesignable(area.kind) ? buildBedMap(snapshot, area.id, opts.now) : null;
+  const bedMap = isDesignable(area.kind)
+    ? buildBedMap(snapshot, area.id, options.bedMapOnMs ?? opts.now)
+    : null;
 
   return {
     ...(isDesignable(area.kind)
@@ -214,16 +224,21 @@ export function buildAreaCard(
 
 /** To-scale bed sketch for a garden or greenhouse, with what is in each bed
  *  on `onMs`. Null when the Area has no beds or containers. */
-export function buildBedMap(snapshot: FarmSnapshot, areaId: string, onMs: number): CardBedMap | null {
+export function buildBedMap(
+  snapshot: FarmSnapshot,
+  areaId: string,
+  onMs: number
+): CardBedMap | null {
   const design = designFromSnapshot(snapshot, areaId, {
     seasonYear: new Date(onMs).getUTCFullYear(),
     readOnlyReason: null
   });
   if (!design || design.beds.length === 0) return null;
   const intervals = occupancyIntervals(design.plantings, design.crops, {
-    firstFallFrostMs: design.frost.firstFallFrostMs
+    firstFallFrostMs: design.frost.firstFallFrostMs,
+    lastSpringFrostMs: design.frost.lastSpringFrostMs
   });
-  const range = scrubRange(design.seasonYear, intervals, onMs);
+  const range = scrubRange(design.seasonYear, intervals, onMs, design.frost);
   const byId = new Map(design.plantings.map((p) => [p.cropId, p]));
   return {
     widthFt: design.canvas.widthFt,

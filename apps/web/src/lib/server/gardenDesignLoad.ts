@@ -11,11 +11,10 @@ import { withTenant } from '$lib/db/tenant';
 import { getField } from '$lib/db/fields';
 import { listBlocks } from '$lib/db/blocks';
 import { listShadeSources } from '$lib/db/shadeSources';
-import { getSetting } from '$lib/db/settings';
 import { getBedRecipes, getRegistry } from '$lib/server/registry';
 import type { BedRecipePlugin } from '$lib/plugins/schemas';
 import { frostDatesForYear } from '$lib/schedule/settings';
-import { SETTINGS_KEYS } from '$lib/schedule/constants';
+import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { rotationLookbackForFamily } from '$lib/plugins/familyDefaults';
 import { resolveArchetype, type CompanionPlugin, type CropPlugin } from '$lib/plugins/schemas';
 import { isDesignable, type DesignableAreaKind } from '$lib/farm/areaKinds';
@@ -27,11 +26,11 @@ import {
   type DesignPlantingInput
 } from '$lib/garden/design';
 import type { BedHistoryEntry, GardenCrop, GardenDesign } from '$lib/garden/types';
+import type { DesignerCompanion, GardenDesignResponse } from '$lib/garden/api';
+import { getActivePlanningYear } from '$lib/season/planningYear.server';
+import { selectablePlanningYears } from '$lib/season/planningYear';
 
-export type DesignerCompanion = Pick<
-  CompanionPlugin,
-  'pluginId' | 'displayName' | 'goodWith' | 'badWith' | 'primaryFamily' | 'members' | 'benefit'
->;
+export type { DesignerCompanion };
 
 export interface DesignerLoad {
   design: GardenDesign;
@@ -66,6 +65,19 @@ export function gardenCropOf(p: CropPlugin): GardenCrop {
 function utcDayOfLocal(ms: number): number {
   const d = new Date(ms);
   return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/** The farm's frost dates for a season as UTC days, the way the designer
+ *  shows them, so a server recompute matches the page's preview. */
+export function designFrostForYear(seasonYear: number): {
+  lastSpringFrostMs: number;
+  firstFallFrostMs: number;
+} {
+  const frost = frostDatesForYear(seasonYear);
+  return {
+    lastSpringFrostMs: utcDayOfLocal(frost.lastSpringFrostMs),
+    firstFallFrostMs: utcDayOfLocal(frost.firstFallFrostMs)
+  };
 }
 
 /** Null when the Area is not the active Owner's or is not a garden or
@@ -127,9 +139,7 @@ export async function loadGardenDesign(
     sourceProvenance: r.sourceProvenance ?? null
   }));
 
-  const frost = frostDatesForYear(opts.seasonYear);
-  const typedFrost =
-    !!getSetting(SETTINGS_KEYS.lastFrost) || !!getSetting(SETTINGS_KEYS.firstFrost);
+  const frost = designFrostForYear(opts.seasonYear);
   const design = buildGardenDesign({
     area: {
       id: area.id,
@@ -143,9 +153,8 @@ export async function loadGardenDesign(
     plantings,
     crops: byId,
     frost: {
-      lastSpringFrostMs: utcDayOfLocal(frost.lastSpringFrostMs),
-      firstFallFrostMs: utcDayOfLocal(frost.firstFallFrostMs),
-      provenance: typedFrost ? 'manual' : 'fallback'
+      ...frost,
+      provenance: snapshotFrostFromSettings().provenance
     },
     seasonYear: opts.seasonYear,
     asOf: opts.now ?? Date.now(),
@@ -201,4 +210,27 @@ export async function loadGardenDesign(
 
   const recipes = (await getBedRecipes()).all();
   return { design, history, catalog, companions, lookbackByFamily, areaKind: area.kind, recipes };
+}
+
+/** The whole designer page for one user and season: the design plus the
+ *  seasons they can switch to. `season` is honoured only when it is one of
+ *  those; otherwise the active planning year is shown. */
+export async function loadDesignerResponse(
+  areaId: string,
+  opts: { role: string; season: string | null; now?: Date }
+): Promise<GardenDesignResponse | null> {
+  const canEdit = opts.role === 'owner';
+  const now = opts.now ?? new Date();
+  const activeYear = getActivePlanningYear(now);
+  const seasons = [
+    ...new Set([now.getFullYear(), ...selectablePlanningYears(now), activeYear])
+  ].sort((a, b) => a - b);
+  const asked = Number(opts.season);
+  const seasonYear = seasons.includes(asked) ? asked : activeYear;
+  const loaded = await loadGardenDesign(areaId, {
+    seasonYear,
+    readOnlyReason: canEdit ? null : 'role'
+  });
+  if (!loaded) return null;
+  return { ...loaded, canEdit, role: opts.role, seasons, activeYear };
 }

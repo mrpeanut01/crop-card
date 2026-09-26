@@ -19,4 +19,10 @@ export type HintKey = (typeof HINT_KEYS)[number];
  *  still record it against an older server. */
 export const hintKeySchema = z.string().regex(/^[a-z][a-z0-9_]{1,63}$/, 'invalid hint key');
 
+/** `POST /api/me/hints`: one key, or a batch flushed from offline. */
+export const hintsPostSchema = z.union([
+  z.object({ key: hintKeySchema }),
+  z.object({ keys: z.array(hintKeySchema).min(1).max(50) })
+]);
+
 export const MAX_HINTS_PER_USER = 200;

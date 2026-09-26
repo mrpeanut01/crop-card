@@ -634,6 +634,34 @@ export const shadeSources = tenantScoped(
   )
 );
 
+/** Map lines and points (Phase 30H): fences, gates, water sources,
+ *  hydrants, irrigation lines and paths. `geometry_geojson` is a LineString
+ *  or a Point depending on `kind`; `details_json` is validated per kind in
+ *  `lib/farm/mapFeatures.ts`. */
+export const mapFeatures = tenantScoped(
+  sqliteTable(
+    'map_features',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      fieldId: text('field_id').references(() => fields.id, { onDelete: 'set null' }),
+      kind: text('kind', {
+        enum: ['fence', 'gate', 'water_source', 'hydrant', 'irrigation_line', 'path']
+      }).notNull(),
+      geometryGeojson: text('geometry_geojson').notNull(),
+      name: text('name').notNull(),
+      detailsJson: text('details_json'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerKindIdx: index('map_features_owner_kind_idx').on(table.ownerId, table.kind),
+      ownerFieldIdx: index('map_features_owner_field_idx').on(table.ownerId, table.fieldId)
+    })
+  )
+);
+
 export const crops = tenantScoped(
   sqliteTable(
     'crops',

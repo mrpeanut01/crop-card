@@ -89,3 +89,29 @@ describe('dateFit + formatDay', () => {
     expect(formatDay('2027-04-01')).toBe('Apr 1');
   });
 });
+
+describe('a season that crosses the new year', () => {
+  const GULF: FrostDatesIso = { lastSpring: '2027-01-31', firstFall: '2028-01-06' };
+  const DESERT: FrostDatesIso = { lastSpring: '2026-12-31', firstFall: '2027-12-27' };
+
+  it('gives a Gulf-coast tomato a window after the January frost', () => {
+    const w = deterministicPlantingWindow({ cropFamily: 'solanaceae', dtmMaxDays: 80 }, GULF);
+    expect(w.earliest).toBe('2027-02-07');
+    expect(w.latest).toBe('2027-10-04');
+    expect(w.note).toMatch(/Frost-tender/);
+    expect(isValidWindow(w, 2027, GULF)).toBe(true);
+  });
+
+  it('accepts a hardy window that starts in the prior year when the spring frost is in December', () => {
+    const w = deterministicPlantingWindow({ cropFamily: 'leafy-green', dtmMaxDays: 50 }, DESERT);
+    expect(w.earliest).toBe('2026-12-17');
+    expect(isValidWindow(w, 2027)).toBe(false);
+    expect(isValidWindow(w, 2027, DESERT)).toBe(true);
+  });
+
+  it('never stretches the check past the season for an ordinary year', () => {
+    const w = { earliest: '2027-03-01', prime: '2027-04-01', latest: '2028-01-02', note: null };
+    expect(isValidWindow(w, 2027, LOUDOUN)).toBe(false);
+    expect(isValidWindow(w, 2027, GULF)).toBe(true);
+  });
+});

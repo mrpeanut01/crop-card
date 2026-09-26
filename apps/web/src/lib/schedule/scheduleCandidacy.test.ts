@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { CropPlugin } from '$lib/plugins/schemas';
 import type { Crop } from '$lib/db/crops';
 import { hardinessOf, scheduleCandidacy, formatDateMs } from './scheduleCandidacy';
+import { frostDatesFromMmDd } from './frostSeason';
 
 function fakePlugin(opts: {
   id: string;
@@ -339,5 +340,57 @@ describe('block occupancy follows the garden designer rule', () => {
     const busyUntil = plantedMs + (50 + 21 + 10) * 86_400_000;
     expect(busyUntil).toBeGreaterThan(w.latestMs);
     for (const [start] of w.freeSubWindows ?? []) expect(start).toBeLessThan(plantedMs);
+  });
+});
+
+describe('scheduleCandidacy for a season that crosses the new year', () => {
+  const year = PLAN_YEAR;
+  const nowMs = new Date(PLAN_YEAR, 0, 1).getTime();
+  const gulf = frostDatesFromMmDd(year, '01-31', '01-06');
+  const tomato = fakePlugin({ id: 'tom', family: 'solanaceae', soilTempMinF: 60, dtm: [70, 80] });
+
+  function windowFor(existingCrops: Crop[] = []) {
+    return scheduleCandidacy({
+      assignments: [
+        {
+          stockItemId: 's1',
+          blockId: 'b1',
+          cropPluginId: 'tom',
+          varietyDisplayName: 'Tomato',
+          plants: 10
+        }
+      ],
+      pluginIndex: { tom: tomato },
+      existingCrops,
+      frostDates: gulf,
+      year,
+      nowMs
+    })[0];
+  }
+
+  it('opens a long window from late winter to fall at a Gulf-coast station', () => {
+    const w = windowFor();
+    expect(formatDateMs(gulf.firstFallFrostMs)).toBe(`${year + 1}-01-06`);
+    expect(formatDateMs(w.earliestMs)).toBe(`${year}-01-17`);
+    expect(formatDateMs(w.latestMs)).toBe(`${year}-10-04`);
+    expect(w.latestMs - w.earliestMs).toBeGreaterThan(250 * 86_400_000);
+  });
+
+  it('still frees the bed after a continuous-harvest crop ends at the January frost', () => {
+    const planted = new Date(year, 2, 1).getTime();
+    const busy = {
+      id: 'c1',
+      blockId: 'b1',
+      cropPluginId: 'tom',
+      status: 'active',
+      plantingDate: planted,
+      harvestedAt: null
+    } as unknown as Crop;
+    const w = windowFor([busy]);
+    expect(w.freeSubWindows?.length ?? 0).toBeGreaterThanOrEqual(1);
+    for (const [start, end] of w.freeSubWindows ?? []) {
+      expect(end).toBeGreaterThan(start);
+      expect(start).toBeLessThan(planted);
+    }
   });
 });

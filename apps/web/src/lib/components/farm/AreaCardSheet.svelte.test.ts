@@ -190,7 +190,7 @@ describe('AreaAddDrawer', () => {
     const onPick = vi.fn();
     render(AreaAddDrawer, { open: true, onClose: vi.fn(), onPick });
     const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(headings).toEqual(['Crop areas', 'Other areas', 'Shade & structures']);
+    expect(headings).toEqual(['Crop areas', 'Other areas', 'Lines & points', 'Shade & structures']);
     await fireEvent.click(screen.getByRole('button', { name: /Garden/ }));
     expect(onPick).toHaveBeenCalledWith({ type: 'area', kind: 'garden' });
     await fireEvent.click(screen.getByRole('button', { name: /Block or bed/ }));

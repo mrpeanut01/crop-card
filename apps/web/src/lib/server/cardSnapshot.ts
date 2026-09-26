@@ -18,6 +18,8 @@ import {
   type SnapshotStockItem
 } from '$lib/cards/snapshot';
 import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
+import { loadHardinessZone } from '$lib/climate/zone.server';
+import { loadEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 import { listAreas } from '$lib/db/areas';
 import { listBlocks } from '$lib/db/blocks';
 import {
@@ -35,6 +37,7 @@ import { RULES_VERSION } from '$lib/safety/version';
 import { eventsForPlanting } from '$lib/calendar/engine';
 import { getRegistry } from './registry';
 import { sprayTermsFor } from './sprayTerms';
+import { listMapFeatureViews } from '$lib/db/mapFeatures';
 
 const DAY_MS = 86_400_000;
 export const SNAPSHOT_TASK_PAST_DAYS = 14;
@@ -303,8 +306,11 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     stock: stockItems.map(toStock).sort((a, b) => a.id.localeCompare(b.id)),
     cropPlugins,
     frost: snapshotFrostFromSettings(),
+    hardinessZone: await loadHardinessZone(),
     sprayProducts,
-    sprayTerms: sprayTermsFor(registry)
+    sprayTerms: sprayTermsFor(registry),
+    mapFeatures: listMapFeatureViews(),
+    emergencyContacts: loadEmergencyContacts()
   };
 }
 

@@ -15,6 +15,7 @@ import { crops, equipment, equipmentState, owners } from '$lib/db/schema';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
 import { createTask } from '$lib/db/tasks';
+import { createMapFeature } from '$lib/db/mapFeatures';
 import { createStockItem, receiveLot } from '$lib/db/stock';
 import { buildDeck } from '$lib/cards/build';
 import type { FarmSnapshot } from '$lib/cards/snapshot';
@@ -96,6 +97,14 @@ function seedOwner(ownerId: string, now: number, extraPlantings = 0): Seeded {
     });
     receiveLot({ stockItemId: item.id, receivedQuantity: 2, unit: 'gal' });
     ids.push(item.id);
+    const well = createMapFeature({
+      kind: 'water_source',
+      name: `${ownerId} well ${tag}`,
+      geometry: { type: 'Point', coordinates: [-77.55, 39.1] },
+      fieldId: field.id,
+      details: { source: 'well' }
+    });
+    ids.push(well.id);
     return { ownerId, ids };
   });
 }

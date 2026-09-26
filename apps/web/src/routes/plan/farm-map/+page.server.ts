@@ -2,15 +2,16 @@ import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { listBlocks } from '$lib/db/blocks';
 import { listFields } from '$lib/db/fields';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
+import { loadHardinessZone } from '$lib/climate/zone.server';
 
-export const load: ServerLoad = ({ locals }) => {
+export const load: ServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
   if (!locals.user.activeOwnerId) throw redirect(303, '/owner-picker');
 
   const fields = listFields();
   const blocks = listBlocks();
   return {
-    snapshot: buildMapSnapshot({ fields, blocks }),
+    snapshot: { ...buildMapSnapshot({ fields, blocks }), hardinessZone: await loadHardinessZone() },
     mapFields: fields.map((f) => ({
       id: f.id,
       name: f.name,

@@ -3,37 +3,12 @@ import { z } from 'zod';
 import { getCrop, type Crop } from '$lib/db/crops';
 import { insertJournalEntry } from '$lib/db/plantingJournal';
 import { ensureSystemUser } from '$lib/db/users';
-import { MAX_JOURNAL_TEXT, MAX_PHOTO_QUESTION, PHOTO_QUESTIONS } from '$lib/journal/model';
-import { MAX_PHOTO_DATA_URL_CHARS, sanitizePhotoDataUrl } from '$lib/journal/photo';
+import { journalEntrySchema, photoHelpSchema, queuedJournalSchema } from '$lib/journal/apiSchemas';
+import { sanitizePhotoDataUrl } from '$lib/journal/photo';
 import { currentUser } from './auth';
 import { canMutate } from './session';
 
-const photoField = z
-  .string()
-  .max(MAX_PHOTO_DATA_URL_CHARS + 8)
-  .nullable()
-  .optional();
-
-export const journalEntrySchema = z
-  .object({
-    kind: z.enum(['note', 'observation', 'photo_help']).default('note'),
-    text: z.string().max(MAX_JOURNAL_TEXT).default(''),
-    photo: photoField,
-    occurredAt: z.number().int().positive().optional()
-  })
-  .refine((v) => v.text.trim().length > 0 || !!v.photo, {
-    message: 'add a note or a photo'
-  });
-
-export const queuedJournalSchema = z
-  .object({ cropId: z.string().min(1).max(128) })
-  .and(journalEntrySchema);
-
-export const photoHelpSchema = z.object({
-  question: z.enum(PHOTO_QUESTIONS),
-  text: z.string().max(MAX_PHOTO_QUESTION).default(''),
-  photo: photoField
-});
+export { journalEntrySchema, photoHelpSchema, queuedJournalSchema };
 
 export type JournalWriteAuth = { ok: true; userId: string } | { ok: false; response: Response };
 

@@ -1,7 +1,7 @@
 import { formatQuantity, type Prefs } from '$lib/prefs';
 import { trimNumber } from './common';
 
-const SQFT_PER_ACRE = 43_560;
+export const SQFT_PER_ACRE = 43_560;
 
 export interface Sized {
   acres: number | null;

@@ -1,17 +1,12 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
+import { taskCloseSchema } from '$lib/tasks/apiSchemas';
 import { abortTask, completeTask, getTask } from '$lib/db/tasks';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
 const DAY_MS = 86_400_000;
 
-const requestSchema = z.object({
-  taskId: z.string().min(1).max(200),
-  action: z.enum(['complete', 'abort']),
-  reason: z.string().max(500).optional(),
-  occurredAt: z.number().int().positive().optional()
-});
+export const _requestSchema = taskCloseSchema;
 
 /**
  * POST /api/tasks/close: the offline queue's replay of a Done or Skip made
@@ -32,7 +27,7 @@ export const POST: RequestHandler = async (event) => {
   } catch {
     return json({ error: 'invalid JSON' }, { status: 400 });
   }
-  const parsed = requestSchema.safeParse(body);
+  const parsed = taskCloseSchema.safeParse(body);
   if (!parsed.success) {
     return json({ error: 'invalid request' }, { status: 400 });
   }

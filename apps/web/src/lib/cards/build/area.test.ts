@@ -225,7 +225,42 @@ describe('garden bed map', () => {
 
   it('lists later plantings once the card date reaches them', () => {
     const card = buildAreaCard(sampleSnapshot(), 'f_garden', { now: Date.UTC(2026, 5, 20) })!;
-    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual(['Provider bush bean']);
+    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual([
+      'Provider bush bean'
+    ]);
+  });
+
+  it('draws the bed map on the designer date without moving the card’s own date', () => {
+    const snap = sampleSnapshot();
+    const onMs = Date.UTC(2026, 5, 20);
+    const card = buildAreaCard(snap, 'f_garden', { bedMapOnMs: onMs })!;
+    expect(card.bedMap!.onMs).toBe(onMs);
+    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual([
+      'Provider bush bean'
+    ]);
+    expect(card.next).toEqual(buildAreaCard(snap, 'f_garden')!.next);
+  });
+
+  it('adds up bed sizes from their dimensions, not rounded acres', () => {
+    const snap = sampleSnapshot();
+    const garden = snap.areas.find((a) => a.id === 'f_garden')!;
+    Object.assign(garden, { acres: null, widthFt: null, lengthFt: null, acresSource: null });
+    const template = snap.blocks.find((b) => b.id === 'b_bed1')!;
+    snap.blocks = [
+      ...snap.blocks.filter((b) => b.areaId !== 'f_garden'),
+      ...[1, 2, 3].map((n) => ({
+        ...template,
+        id: `b_three_${n}`,
+        name: `Bed ${n}`,
+        blockLabel: null,
+        widthFt: 4,
+        lengthFt: 8,
+        acres: 0.001
+      }))
+    ];
+    snap.plantings = snap.plantings.filter((p) => !p.blockId.startsWith('b_bed'));
+    const card = buildAreaCard(snap, 'f_garden')!;
+    expect(fact(card, 'Size')?.value).toBe('96 sq ft across its beds');
   });
 
   it('leaves pastures and barns without a designer', () => {

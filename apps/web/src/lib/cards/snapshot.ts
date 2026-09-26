@@ -7,7 +7,10 @@
  * render as the same day in every time zone; moments are epoch ms.
  */
 
+import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
+import type { HardinessZoneView } from '$lib/climate/zone';
+import type { MapFeatureView } from '$lib/farm/mapFeatures';
 
 export const FARM_SNAPSHOT_VERSION = 1 as const;
 
@@ -185,6 +188,10 @@ export interface SnapshotFrostDates {
   distanceMi: number | null;
 }
 
+/** Approximate hardiness zone: the owner's own, or the nearest station's
+ *  estimate. Display only. */
+export type SnapshotHardinessZone = HardinessZoneView;
+
 export type SnapshotSprayProductType = 'herbicide' | 'insecticide' | 'fungicide';
 
 export type SnapshotRateUnit = 'oz' | 'fl-oz' | 'lb' | 'pt' | 'qt';
@@ -228,10 +235,20 @@ export interface FarmSnapshot {
   stock: SnapshotStockItem[];
   cropPlugins: Record<string, SnapshotCropPlugin>;
   frost: SnapshotFrostDates | null;
+  /** Absent on bundles saved before Phase 30H; null when unknown. */
+  hardinessZone?: SnapshotHardinessZone | null;
   /** Stocked pesticides keyed by plugin id. Absent on bundles saved before
    *  Sprint 30F. */
   sprayProducts?: Record<string, SnapshotSprayProduct>;
   /** `sprayProductTerms` for every pesticide in the Owner's library, so the
    *  offline Care Guide and photo help drop brand names too. */
   sprayTerms?: string[];
+  /** Fences, gates, water and paths. Absent on bundles saved before 30H. */
+  mapFeatures?: SnapshotMapFeature[];
+  /** The owner's saved emergency contacts for the Farm Map Card. Absent on
+   *  bundles saved before Sprint 30H. */
+  emergencyContacts?: EmergencyContact[];
 }
+
+/** One map line or point, as the map and the Farm Map Card read it. */
+export type SnapshotMapFeature = MapFeatureView;

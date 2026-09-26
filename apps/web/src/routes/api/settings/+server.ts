@@ -8,7 +8,7 @@ import { json, error } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
 import { getSetting, setSetting, deleteSetting } from '$lib/db/settings';
-import { SETTINGS_KEYS } from '$lib/schedule/constants';
+import { SETTINGS_KEYS, parseMmDd } from '$lib/schedule/constants';
 import { markFrostField } from '$lib/climate/frostSettings.server';
 import type { FrostField } from '$lib/climate/frostSuggest';
 
@@ -63,7 +63,11 @@ function validateAndSerialize(key: SettingKey, value: unknown): string {
     return JSON.stringify(v);
   }
   if (key === SETTINGS_KEYS.lastFrost || key === SETTINGS_KEYS.firstFrost) {
-    const s = z.string().regex(mmDdRe, 'expected MM-DD').parse(value);
+    const s = z
+      .string()
+      .regex(mmDdRe, 'expected MM-DD')
+      .refine((v) => parseMmDd(v) !== null, 'no such date')
+      .parse(value);
     return s;
   }
   if (

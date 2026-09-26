@@ -9,7 +9,9 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dev } from '$app/environment';
 import { loadPluginsFromDirectory, PluginRegistry } from '$lib/plugins';
+import { isTestPluginId } from '$lib/plugins/testPlugins';
 import { currentOwnerId } from '$lib/db/tenant';
 import { HIDDEN_PAYLOAD, listEffectiveOverrides, overridesRevision } from '$lib/db/pluginOverrides';
 
@@ -51,12 +53,26 @@ export async function getRegistry(): Promise<PluginRegistry> {
   return registry;
 }
 
+/** Click-through test fixtures stay out of real farms' lists. */
+function showTestPlugins(): boolean {
+  return dev || process.env.VITEST === 'true' || process.env.SHOW_TEST_PLUGINS === '1';
+}
+
 /** The shared plugin library, ignoring every Owner's overrides. Global
  *  (superadmin) library operations validate against this. */
 export async function getBaseRegistry(): Promise<PluginRegistry> {
   if (cached) return cached.registry;
-  const registry = new PluginRegistry();
-  const result = await loadPluginsFromDirectory(registry, pluginsDir());
+  const loaded = new PluginRegistry();
+  const result = await loadPluginsFromDirectory(loaded, pluginsDir());
+  const registry = showTestPlugins()
+    ? loaded
+    : loaded.withOverlay(
+        loaded
+          .all()
+          .map((r) => r.plugin.pluginId)
+          .filter(isTestPluginId),
+        []
+      ).registry;
   cached = {
     registry,
     loadedAt: Date.now(),

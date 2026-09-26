@@ -13,12 +13,17 @@
   let {
     fields,
     blocks,
-    onSelectArea
+    onSelectArea,
+    onSizeArea
   }: {
     fields: Array<SketchInput & { kind?: AreaKind }>;
     blocks: SketchBlockInput[];
     onSelectArea?: (id: string) => void;
+    /** Opens the width and length for an Area with no size yet. */
+    onSizeArea?: (id: string) => void;
   } = $props();
+
+  const unsizedFields = $derived(fields.filter((f) => layout.unsized.includes(f.name)));
 
   const kindById = $derived(new Map(fields.map((f) => [f.id, f.kind ?? 'field'] as const)));
 
@@ -171,12 +176,42 @@
     arranged automatically. Draw on the map when you want real boundaries for pollination distances
     and shade.
     {#if layout.unsized.length > 0}
-      <span class="unsized">Not shown (no size yet): {layout.unsized.join(', ')}.</span>
+      {#if onSizeArea && unsizedFields.length > 0}
+        <span class="unsized">
+          Not shown until they have a size:
+          {#each unsizedFields as f (f.id)}
+            <button
+              type="button"
+              class="size-it"
+              data-testid="size-area"
+              onclick={() => onSizeArea(f.id)}
+            >
+              Add size for {f.name}
+            </button>
+          {/each}
+        </span>
+      {:else}
+        <span class="unsized">Not shown (no size yet): {layout.unsized.join(', ')}.</span>
+      {/if}
     {/if}
   </figcaption>
 </figure>
 
 <style>
+  .size-it {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    margin: 4px 6px 0 0;
+    padding: 0 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input);
+    background: var(--color-paper);
+    color: var(--color-forest-deep);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
   .sketch {
     margin: 0 0 12px;
     border: 1px solid var(--color-divider);

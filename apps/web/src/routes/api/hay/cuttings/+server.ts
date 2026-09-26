@@ -8,6 +8,7 @@
  * operator can review the override path on /hay.
  */
 
+import { withClientRecordId } from '$lib/server/clientRecordId';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
@@ -54,7 +55,7 @@ export const GET: RequestHandler = ({ url }) => {
   return json({ cuttings: listCuttings({ blockId, year, limit }) });
 };
 
-export const POST: RequestHandler = async (event) => {
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
@@ -165,4 +166,4 @@ export const POST: RequestHandler = async (event) => {
     },
     { status: 201 }
   );
-};
+});

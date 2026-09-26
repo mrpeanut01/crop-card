@@ -29,6 +29,8 @@
   import { focusAfterSetup } from '$lib/components/setup/focusAfterSetup';
   import SetupCallout from '$lib/components/setup/SetupCallout.svelte';
   import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
+  import SpotSelect from '$lib/components/setup/SpotSelect.svelte';
+  import { emptyAreas } from '$lib/setup/spot';
   import type { SetupSpotResult } from '$lib/setup/types';
   import QueuedBadge from '$lib/components/ui/QueuedBadge.svelte';
 
@@ -65,10 +67,18 @@
   let saving = $state(false);
   let saveError = $state<string | null>(null);
   let saveSuccess = $state(false);
+  let uploaded = $state(false);
   let saveQueued = $state(false);
   let queued = $state<QueuedObservation[]>([]);
-
+  let queuedThisSession = $state<string[]>([]);
   const result = $derived(evaluateScout({ spots, maxWeedHeightInches: maxHeight ?? undefined }));
+  let note = $state('');
+  const noteText = $derived(note.trim());
+  const canSave = $derived(result.spotsCounted > 0 || noteText.length > 0);
+  const showPicker = $derived(
+    data.blocks.length > 0 || (data.setup.canEdit && emptyAreas(data.setup.areas).length > 0)
+  );
+
   const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId));
 
   /** Prior observations for the selected block, newest first. Comes from
@@ -103,6 +113,15 @@
       const waiting = (list: QueuedObservation[]) => list.filter((q) => !q.rejected).length;
       const drained = waiting(next) < waiting(queued);
       queued = next;
+      if (saveQueued && queuedThisSession.length > 0) {
+        const still = new Set(next.map((q) => q.id));
+        if (queuedThisSession.every((id) => !still.has(id))) {
+          saveQueued = false;
+          saveSuccess = true;
+          uploaded = true;
+          queuedThisSession = [];
+        }
+      }
       if (drained && navigator.onLine) await invalidateAll();
     } catch {
       queued = [];
@@ -117,7 +136,8 @@
 
   async function queueObservation(payload: Record<string, unknown>): Promise<void> {
     const { enqueueRecord } = await import('$lib/client/syncQueue');
-    await enqueueRecord('scout', payload);
+    const id = await enqueueRecord('scout', payload);
+    queuedThisSession = [...queuedThisSession, id];
     saveQueued = true;
     await refreshQueued();
   }
@@ -139,16 +159,17 @@
 
   async function saveObservation(): Promise<void> {
     if (!selectedBlockId) {
-      saveError = 'Pick a block first';
+      saveError = 'Pick a spot first.';
       return;
     }
-    if (result.spotsCounted === 0) {
-      saveError = 'Enter at least one spot count before saving';
+    if (!canSave) {
+      saveError = 'Write a note or count at least one spot before saving.';
       return;
     }
     saving = true;
     saveError = null;
     saveSuccess = false;
+    uploaded = false;
     saveQueued = false;
     let payload: Record<string, unknown> | null = null;
     try {
@@ -156,23 +177,36 @@
       // raw per-spot counts + the tallest-weed measurement preserved in
       // notes so the IPM evaluator can read the canonical average AND
       // historical context lives in the audit trail.
-      const notes = [
-        `spots=[${spots.map((s) => s.weedsPer10SqFt).join(',')}]`,
-        maxHeight != null && Number.isFinite(maxHeight)
-          ? `tallest_in=${Number(maxHeight.toFixed(2))}`
-          : null,
-        `decision=${result.decision}`
-      ]
-        .filter(Boolean)
-        .join(' ');
-      payload = {
-        blockId: selectedBlockId,
-        pest: 'broadleaf-weed',
-        metric: 'avg-per-10sqft',
-        value: result.averagePer10SqFt,
-        notes,
-        occurredAt: Date.now()
-      };
+      if (result.spotsCounted === 0) {
+        payload = {
+          blockId: selectedBlockId,
+          pest: 'note',
+          metric: 'note',
+          value: 0,
+          notes: noteText.slice(0, 500),
+          occurredAt: Date.now()
+        };
+      } else {
+        const notes = [
+          `spots=[${spots.map((s) => s.weedsPer10SqFt).join(',')}]`,
+          maxHeight != null && Number.isFinite(maxHeight)
+            ? `tallest_in=${Number(maxHeight.toFixed(2))}`
+            : null,
+          `decision=${result.decision}`,
+          noteText ? `note: ${noteText}` : null
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .slice(0, 500);
+        payload = {
+          blockId: selectedBlockId,
+          pest: 'broadleaf-weed',
+          metric: 'avg-per-10sqft',
+          value: result.averagePer10SqFt,
+          notes,
+          occurredAt: Date.now()
+        };
+      }
       if (navigator.onLine === false) {
         await queueObservation(payload);
         return;
@@ -188,6 +222,7 @@
         return;
       }
       saveSuccess = true;
+      note = '';
       await invalidateAll();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -219,26 +254,33 @@
 
 <header class="page-header">
   <div class="page-header-titles">
-    <Kicker>FR-07 · Threshold-driven scouting</Kicker>
-    <h1 class="serif">Scout &amp; spray decision</h1>
+    <Kicker>Scout</Kicker>
+    <h1 class="serif">What did you see?</h1>
   </div>
   <Pill tone="forest">SCOUT</Pill>
 </header>
 <p class="lede">
-  Walk the block, count broadleaves in 4–5 random 10 sq ft spots, and note the tallest weed. The
-  threshold: ≥ 3 weeds / 10 sq ft on average, or any weed taller than {fmt.qty(2, 'length')} → spray.
+  Jot down what you notice on a walk. Counting weeds? The weed count below tells you whether it's
+  time to spray.
 </p>
 
-{#if data.blocks.length > 0}
+{#if showPicker}
   <div class="card-wrap">
     <Card>
-      <h2>Block</h2>
-      <label for="scout-block">Which block are you scouting?</label>
-      <select id="scout-block" bind:value={selectedBlockId}>
-        {#each data.blocks as b (b.id)}
-          <option value={b.id}>{b.name}</option>
-        {/each}
-      </select>
+      <h2>Where</h2>
+      <label for="scout-block">Which spot are you scouting?</label>
+      <SpotSelect
+        id="scout-block"
+        blocks={data.blocks.map((b) => ({ id: b.id, label: b.name }))}
+        areas={data.setup.areas}
+        canEdit={data.setup.canEdit}
+        bind:value={selectedBlockId}
+        onSpotAdded={async (r) => {
+          await invalidateAll();
+          selectedBlockId = r.blockId;
+        }}
+        onNewSpot={() => (spotSheetOpen = true)}
+      />
       {#if data.windowStage}
         <p class="meta">Window: <strong>{data.windowStage}</strong> (from today's calendar)</p>
       {/if}
@@ -278,7 +320,28 @@
 
 <div class="card-wrap">
   <Card>
-    <h2>Spots</h2>
+    <h2>Note</h2>
+    <label for="scout-note">What did you notice? <span class="optional">(optional)</span></label>
+    <textarea
+      id="scout-note"
+      rows="3"
+      maxlength="400"
+      placeholder="Aphids on the kale, leaves chewed on the beans"
+      bind:value={note}
+    ></textarea>
+  </Card>
+</div>
+
+<div class="card-wrap">
+  <Card>
+    <h2>Weed count</h2>
+    <p class="meta">
+      For deciding on a weed spray: count broadleaves in 4 or 5 random 10 sq ft spots and note the
+      tallest weed. Spray when the average is 3 or more per 10 sq ft, or any weed is taller than {fmt.qty(
+        2,
+        'length'
+      )}.
+    </p>
     {#each spots as _, i (i)}
       <label class="spot">
         Spot {i + 1}: weeds in 10 sq ft
@@ -329,15 +392,17 @@
       type="button"
       class="save"
       onclick={saveObservation}
-      disabled={saving || result.spotsCounted === 0 || !selectedBlockId}
+      disabled={saving || !canSave || !selectedBlockId}
     >
       {saving
         ? 'Saving…'
-        : saveSuccess
-          ? '✓ Saved — save another?'
-          : saveQueued
-            ? 'Kept on this phone. Save another?'
-            : 'Save observation'}
+        : uploaded
+          ? '✓ Uploaded. Save another?'
+          : saveSuccess
+            ? '✓ Saved. Save another?'
+            : saveQueued
+              ? 'Kept on this phone. Save another?'
+              : 'Save observation'}
     </button>
     {#if result.decision === 'SPRAY'}
       <a href={planSprayHref} class="primary">
@@ -348,6 +413,10 @@
   {#if saveQueued}
     <p class="queued-note" role="status">
       No signal, so this observation is saved on this phone. It uploads when you are back online.
+    </p>
+  {:else if uploaded}
+    <p class="queued-note" role="status" data-testid="scout-uploaded">
+      Uploaded. Your observation is saved to the farm.
     </p>
   {/if}
   {#if saveError}
@@ -366,11 +435,15 @@
         {#each queuedForBlock as q (q.id)}
           <li>
             <span class="hist-date">{fmtDate(q.occurredAt)}</span>
-            <span class="hist-pest">{q.pest}</span>
-            <span class="hist-value">
-              {q.value.toFixed(2)}
-              <span class="hist-metric">{q.metric}</span>
-            </span>
+            {#if q.metric === 'note'}
+              <span class="hist-note">Note</span>
+            {:else}
+              <span class="hist-pest">{q.pest}</span>
+              <span class="hist-value">
+                {q.value.toFixed(2)}
+                <span class="hist-metric">{q.metric}</span>
+              </span>
+            {/if}
             {#if q.rejected}
               <a class="not-saved" href="/records/pending">Not saved - see Pending records</a>
             {:else}
@@ -390,13 +463,17 @@
         {#each observationsForBlock as o (o.id)}
           <li>
             <span class="hist-date">{fmtDate(o.occurredAt)}</span>
-            <span class="hist-pest">{o.pest}</span>
-            <span class="hist-value">
-              {o.value.toFixed(2)}
-              <span class="hist-metric">{o.metric}</span>
-            </span>
-            {#if o.value >= 3}
-              <Pill tone="rust">over threshold</Pill>
+            {#if o.metric === 'note'}
+              <span class="hist-note">{o.note ?? 'Note'}</span>
+            {:else}
+              <span class="hist-pest">{o.pest}</span>
+              <span class="hist-value">
+                {o.value.toFixed(2)}
+                <span class="hist-metric">{o.metric}</span>
+              </span>
+              {#if o.value >= 3}
+                <Pill tone="rust">over threshold</Pill>
+              {/if}
             {/if}
           </li>
         {/each}
@@ -406,6 +483,25 @@
 </div>
 
 <style>
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 96px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-input);
+    background: var(--color-paper);
+    font: inherit;
+    font-size: 16px;
+  }
+  .optional {
+    font-weight: 400;
+    color: var(--color-ink-soft);
+  }
+  .hist-note {
+    flex: 1;
+    color: var(--color-ink);
+  }
   .page-header {
     display: flex;
     align-items: flex-start;
@@ -604,15 +700,6 @@
   .muted {
     color: var(--color-ink-muted);
     margin: 0;
-  }
-  select {
-    padding: 0.6rem;
-    border: 2px solid var(--color-divider);
-    border-radius: 4px;
-    font-size: 1rem;
-    min-height: 48px;
-    width: 100%;
-    box-sizing: border-box;
   }
   .height-field {
     display: flex;

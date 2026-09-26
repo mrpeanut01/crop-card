@@ -33,6 +33,8 @@
     onOpenMap?: () => void;
     onRefineWithAi?: () => void;
     onEditBlock?: () => void;
+    /** Show "ask the owner" in place of the edit controls. */
+    askOwner?: boolean;
     onAddPlanting?: () => void;
   }
   const {
@@ -44,6 +46,7 @@
     onOpenMap,
     onRefineWithAi,
     onEditBlock,
+    askOwner = false,
     onAddPlanting
   }: Props = $props();
 
@@ -140,6 +143,8 @@
       <button class="ghost" onclick={onEditBlock}>
         <Wrench size={14} strokeWidth={1.75} /> Edit block
       </button>
+    {:else if askOwner}
+      <p class="ask-owner" data-testid="plan-ask-owner">Ask the owner to change blocks.</p>
     {/if}
     {#if onAddPlanting}
       <button class="primary" onclick={onAddPlanting} data-hint-anchor="plan_first_crop">
@@ -150,6 +155,12 @@
 </header>
 
 <style>
+  .ask-owner {
+    margin: 0;
+    align-self: center;
+    font-size: var(--font-size-caption);
+    color: var(--color-ink-soft);
+  }
   .bh {
     display: flex;
     align-items: flex-start;

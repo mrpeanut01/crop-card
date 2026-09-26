@@ -2,7 +2,15 @@
   import { onMount, untrack } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import SetupSpot from './SetupSpot.svelte';
-  import { dateForMonth, plantingDateMs, recentMonths, ymd } from '$lib/setup/plantedAround';
+  import SpotSelect from './SpotSelect.svelte';
+  import { emptyAreas } from '$lib/setup/spot';
+  import {
+    OLDER_OPTION,
+    dateForMonth,
+    plantingDateMs,
+    recentMonths,
+    ymd
+  } from '$lib/setup/plantedAround';
   import { savePlanting, searchCrops, type CropOption } from '$lib/setup/planting';
   import type {
     SetupArea,
@@ -35,7 +43,7 @@
   }: Props = $props();
   const uid = $props.id();
   const now = untrack(() => nowProp ?? new Date());
-  const months = recentMonths(now, 12);
+  const months = [...recentMonths(now, 12), OLDER_OPTION];
 
   let catalog = $state<CropOption[]>(untrack(() => catalogProp ?? []));
   let catalogError = $state<string | null>(null);
@@ -45,7 +53,19 @@
   let extraBlocks = $state<SetupBlock[]>([]);
   const allBlocks = $derived([...blocks, ...extraBlocks]);
   let blockId = $state(untrack(() => initialBlockId ?? blocks[0]?.id ?? ''));
-  let addingSpot = $state(untrack(() => blocks.length === 0));
+  let addingSpot = $state(untrack(() => blocks.length === 0 && emptyAreas(areas).length === 0));
+  let filledAreaIds = $state<string[]>([]);
+  const pickerAreas = $derived(
+    areas.map((a) =>
+      filledAreaIds.includes(a.id) ? { ...a, blockCount: (a.blockCount ?? 0) + 1 } : a
+    )
+  );
+  const spotOptions = $derived(
+    allBlocks.map((b) => ({
+      id: b.id,
+      label: b.areaName && b.areaName !== b.name ? `${b.name} · ${b.areaName}` : b.name
+    }))
+  );
   let month = $state(months[0].key);
   let date = $state(untrack(() => dateForMonth(months[0].key, now) ?? ymd(now)));
   let saving = $state(false);
@@ -86,6 +106,7 @@
 
   function onSpotAdded(r: SetupSpotResult) {
     const area = areas.find((a) => a.id === r.areaId);
+    filledAreaIds = [...filledAreaIds, r.areaId];
     extraBlocks = [
       ...extraBlocks,
       { id: r.blockId, name: r.blockName, areaName: area?.name ?? null }
@@ -192,16 +213,15 @@
     <input id="{uid}-variety" type="text" maxlength="160" bind:value={variety} />
 
     <label for="{uid}-block">Where is it growing?</label>
-    <select id="{uid}-block" bind:value={blockId}>
-      {#each allBlocks as b (b.id)}
-        <option value={b.id}
-          >{b.areaName && b.areaName !== b.name ? `${b.name} · ${b.areaName}` : b.name}</option
-        >
-      {/each}
-    </select>
-    <button type="button" class="ghost" onclick={() => (addingSpot = true)}>
-      Name a new spot
-    </button>
+    <SpotSelect
+      id="{uid}-block"
+      blocks={spotOptions}
+      areas={pickerAreas}
+      {canEdit}
+      bind:value={blockId}
+      {onSpotAdded}
+      onNewSpot={() => (addingSpot = true)}
+    />
 
     <label for="{uid}-month">Planted around</label>
     <select id="{uid}-month" value={month} onchange={(e) => pickMonth(e.currentTarget.value)}>
@@ -347,6 +367,6 @@
     padding: var(--space-3);
     border-radius: var(--radius-card);
     background: var(--pill-wheat-bg);
-    color: var(--pill-wheat-fg);
+    color: var(--color-ink);
   }
 </style>

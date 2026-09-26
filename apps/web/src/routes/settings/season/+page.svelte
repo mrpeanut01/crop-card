@@ -39,7 +39,7 @@
   <title>Season setup · CropCard</title>
 </svelte:head>
 
-<main class="season-page">
+<div class="season-page">
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/settings">Settings</a>
     <ChevronRight size={13} aria-hidden="true" />
@@ -128,7 +128,7 @@
       >
     </section>
   {/if}
-</main>
+</div>
 
 <style>
   .past-banner {

@@ -30,7 +30,7 @@
   <title>Admin · Owners — CropCard</title>
 </svelte:head>
 
-<main class="admin">
+<div class="admin">
   <h1>All Owners</h1>
   <p class="hint">
     Cross-tenant view. Every action you take is appended to the superadmin audit log.
@@ -126,7 +126,7 @@
       </tbody>
     </table>
   </section>
-</main>
+</div>
 
 <style>
   .admin {

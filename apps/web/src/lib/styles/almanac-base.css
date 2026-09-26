@@ -47,3 +47,12 @@ table,
 .tabnums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Leaflet zoom buttons meet the 48px glove-target rule on every map. */
+.leaflet-control-zoom a.leaflet-control-zoom-in,
+.leaflet-control-zoom a.leaflet-control-zoom-out {
+  width: 48px;
+  height: 48px;
+  line-height: 48px;
+  font-size: 22px;
+}

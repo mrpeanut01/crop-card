@@ -9,6 +9,8 @@
   import SetupPlantingBackfill from '$lib/components/setup/SetupPlantingBackfill.svelte';
   import type { SetupPlantingResult, SetupSprayerResult } from '$lib/setup/types';
   import GroupCodeBadge from '$lib/components/GroupCodeBadge.svelte';
+  import { killsFamily, type CropFamily } from '$lib/safety/cropFamilyLethality';
+  import { CHEMISTRY_CLASSES, type ChemistryClass } from '$lib/safety/types';
   import { herbicideRatePreview } from '$lib/dilution/ratePreview';
   import Banner from '$lib/components/ui/Banner.svelte';
   import SprayPageHeader from '$lib/components/spray/SprayPageHeader.svelte';
@@ -107,7 +109,9 @@
   }
   let cornHeightIn = $state<number | undefined>(6);
   let tankSizeGallons = $state(50);
+  let customTankOpen = $state(false);
   let showAllHerbicides = $state(untrack(() => data.preselect.windowStage === null));
+  let herbicideQuery = $state('');
 
   type SprayerPrefs = {
     tankSizeGallons: number;
@@ -152,7 +156,11 @@
     if (!selectedSprayerId || prefsLastApplied === selectedSprayerId) return;
     const prefs = loadSprayerPrefs(selectedSprayerId);
     prefsLastApplied = selectedSprayerId;
-    if (!prefs) return;
+    if (!prefs) {
+      const tank = data.sprayers.find((x) => x.id === selectedSprayerId)?.tankGal;
+      if (tank) tankSizeGallons = tank;
+      return;
+    }
     tankSizeGallons = prefs.tankSizeGallons;
     windMph = prefs.windMph;
     tempF = prefs.tempF;
@@ -211,7 +219,49 @@
   /** Phase 21b follow-up — array of currently-selected blocks. Driven
    *  by the `selectedBlockIds` Set so toggling is O(1) on the cards. */
   const selectedBlocks = $derived(data.blocks.filter((b) => selectedBlockIds.has(b.id)));
+  const pickedFamilies = $derived([
+    ...new Set(
+      selectedBlocks.flatMap((b) =>
+        b.crops.flatMap((c) => (typeof c.cropFamily === 'string' ? [String(c.cropFamily)] : []))
+      )
+    )
+  ]);
+  type HerbicideRow = (typeof data.allHerbicides)[number];
+  function harmedFamilies(h: HerbicideRow): string[] {
+    const out = new Set<string>();
+    for (const cls of h.chemistryClasses) {
+      if (!cls || !(CHEMISTRY_CLASSES as readonly string[]).includes(cls)) continue;
+      for (const f of pickedFamilies) {
+        if (killsFamily(cls as ChemistryClass, f as CropFamily)) out.add(f);
+      }
+    }
+    return [...out].sort();
+  }
+  const herbicideList = $derived.by(() => {
+    const base = showAllHerbicides ? data.allHerbicides : data.herbicides;
+    const q = herbicideQuery.trim().toLowerCase();
+    const matched = q
+      ? base.filter(
+          (h) =>
+            h.displayName.toLowerCase().includes(q) ||
+            h.pluginId.includes(q) ||
+            h.activeNames.some((n) => n.toLowerCase().includes(q))
+        )
+      : base;
+    return [...matched].sort(
+      (a, b) =>
+        Number(harmedFamilies(a).length > 0) - Number(harmedFamilies(b).length > 0) ||
+        a.displayName.localeCompare(b.displayName)
+    );
+  });
   const sprayer = $derived(data.sprayers.find((s) => s.id === selectedSprayerId));
+  const selectedSprayer = $derived(sprayer);
+  const selectedSprayerTank = $derived(sprayer?.tankGal ?? null);
+  const tankChoices = $derived(
+    [...new Set([...(selectedSprayerTank ? [selectedSprayerTank] : []), 10, 25, 50, 75, 100])].sort(
+      (a, b) => a - b
+    )
+  );
   /** Corn-height input fires when ANY selected block has corn in the
    *  ground. The same height applies to all corn blocks in the pass —
    *  a reasonable simplification since operators walk the field once. */
@@ -234,6 +284,36 @@
   const blocksMissingAcres = $derived(
     selectedBlocks.filter((b) => b.acres == null || b.acres <= 0).map((b) => b.label)
   );
+  const unsizedBlocks = $derived(selectedBlocks.filter((b) => b.acres == null || b.acres <= 0));
+  let sizeDrafts = $state<Record<string, string>>({});
+  let sizeSaving = $state<string | null>(null);
+  let sizeError = $state<string | null>(null);
+  async function saveBlockAcres(blockId: string) {
+    const acres = Number(sizeDrafts[blockId]);
+    if (!Number.isFinite(acres) || acres <= 0) {
+      sizeError = 'Enter the size in acres, like 0.25.';
+      return;
+    }
+    sizeSaving = blockId;
+    sizeError = null;
+    try {
+      const res = await fetch(`/api/blocks/${encodeURIComponent(blockId)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ acres })
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        sizeError = body.error ?? `Could not save the size (HTTP ${res.status}).`;
+        return;
+      }
+      await invalidateAll();
+    } catch {
+      sizeError = "We couldn't reach CropCard. Check your signal and try again.";
+    } finally {
+      sizeSaving = null;
+    }
+  }
 
   /** acresCovered for ONE tank = tankSizeGallons / gpaUsed. We pull
    *  gpaUsed from the first dilution row when available, otherwise
@@ -671,6 +751,7 @@
   );
 
   let setupSheet = $state<null | 'planting' | 'sprayer' | 'calibration'>(null);
+  let sprayerSheetTitle = $state('Which sprayer?');
 
   async function onPlantingAdded(r: SetupPlantingResult) {
     setupSheet = null;
@@ -681,6 +762,7 @@
 
   async function onSprayerAdded(r: SetupSprayerResult) {
     setupSheet = null;
+    sprayerSheetTitle = 'Which sprayer?';
     await invalidateAll();
     selectedSprayerId = r.sprayerId;
     await focusAfterSetup(`[data-sprayer-id="${CSS.escape(r.sprayerId)}"]`);
@@ -808,15 +890,35 @@
         </button>
       </p>
     {/if}
+    <label class="herbicide-search">
+      <span>Find a product</span>
+      <input
+        type="search"
+        placeholder="Name or active ingredient"
+        autocomplete="off"
+        bind:value={herbicideQuery}
+      />
+    </label>
+    {#if herbicideList.length === 0}
+      <p class="filter-hint">No herbicide matches “{herbicideQuery}”.</p>
+    {/if}
     <div class="cards">
-      {#each showAllHerbicides ? data.allHerbicides : data.herbicides as h (h.pluginId)}
+      {#each herbicideList as h (h.pluginId)}
+        {@const harmed = harmedFamilies(h)}
         <button
           type="button"
           class="card"
           class:selected={selectedHerbicideIds.includes(h.pluginId)}
+          class:incompatible={harmed.length > 0}
+          data-herbicide-id={h.pluginId}
           onclick={() => toggleHerbicide(h.pluginId)}
         >
           <strong>{h.displayName}</strong>
+          {#if harmed.length > 0}
+            <small class="harm" data-testid="herbicide-harm">
+              Harms {harmed.join(', ')} crops on the picked blocks
+            </small>
+          {/if}
           {#if h.hracGroups && h.hracGroups.length > 0}
             <div class="badges">
               {#each h.hracGroups as g, idx (idx)}
@@ -825,7 +927,9 @@
             </div>
           {/if}
           <small
-            >{h.applicationTiming ?? 'unspecified timing'} • {h.chemistryClasses.join(', ')}</small
+            >{h.applicationTiming ?? 'unspecified timing'} • {h.contactOrganic
+              ? 'contact, no HRAC group'
+              : h.chemistryClasses.join(', ')}</small
           >
           <small data-testid="herbicide-rate-preview">
             {herbicideRatePreview(h.ratePerAcre, sprayer, currentPrefs()).label}
@@ -869,7 +973,7 @@
           >
             <strong>{s.label}</strong>
             <small
-              >id: {s.id} • {s.calibratedGpa != null
+              >{s.tankGal ? `${s.tankGal} gal tank • ` : ''}{s.calibratedGpa != null
                 ? fmt.label(s.calibratedGpa, 'volumePerArea')
                 : 'Uncalibrated'}</small
             >
@@ -890,23 +994,53 @@
   <section class="step">
     <h2>4. Tank size</h2>
     <p class="hint">
-      Pick the tank you're loading. Per spec §4.2, supported sizes are 10/25/50/75/100 gal.
+      How much are you mixing in this load?{#if selectedSprayerTank}
+        {selectedSprayer?.label} holds {selectedSprayerTank} gal.{/if}
     </p>
     <div class="quick-picks" role="radiogroup" aria-label="Tank size in gallons">
-      {#each [10, 25, 50, 75, 100] as size (size)}
+      {#each tankChoices as size (size)}
         <button
           type="button"
           role="radio"
-          aria-checked={tankSizeGallons === size}
+          aria-checked={tankSizeGallons === size && !customTankOpen}
           class="pick"
-          class:selected={tankSizeGallons === size}
-          onclick={() => (tankSizeGallons = size)}
+          class:selected={tankSizeGallons === size && !customTankOpen}
+          onclick={() => {
+            tankSizeGallons = size;
+            customTankOpen = false;
+          }}
         >
           {size} <span>gal</span>
           {#if metric}<span class="pick-alt">{fmt.qty(size, 'volume', { digits: 0 })}</span>{/if}
         </button>
       {/each}
+      <button
+        type="button"
+        role="radio"
+        aria-checked={customTankOpen}
+        class="pick"
+        class:selected={customTankOpen}
+        onclick={() => (customTankOpen = true)}
+      >
+        Other
+      </button>
     </div>
+    {#if customTankOpen}
+      <label class="custom-tank">
+        Gallons in this load
+        <input
+          type="number"
+          min="0.5"
+          max="2000"
+          step="0.5"
+          value={tankSizeGallons}
+          oninput={(e) => {
+            const v = Number(e.currentTarget.value);
+            if (Number.isFinite(v) && v > 0) tankSizeGallons = v;
+          }}
+        />
+      </label>
+    {/if}
   </section>
 
   <!-- #320 / CT-S5-003 — explicit conditions inputs restored so the
@@ -1068,17 +1202,24 @@
         <div class="spray-card-summary">
           <div class="sc-metric">
             <span class="sc-label">Total area</span>
-            <span class="sc-value">{fmt.label(totalAcres, 'area', { digits: 2 })}</span>
+            <span class="sc-value"
+              >{totalAcres > 0 ? fmt.label(totalAcres, 'area', { digits: 2 }) : 'Not set'}</span
+            >
           </div>
           <div class="sc-metric">
             <span class="sc-label">Spray volume</span>
-            <span class="sc-value">{fmt.label(totalSprayGallons, 'volume', { digits: 1 })}</span>
-            <span class="sc-sublabel"
-              >{fmt.label(totalAcres, 'area', { digits: 2 })} × {fmt.label(
-                gpa,
-                'volumePerArea'
-              )}</span
-            >
+            {#if totalAcres > 0}
+              <span class="sc-value">{fmt.label(totalSprayGallons, 'volume', { digits: 1 })}</span>
+              <span class="sc-sublabel"
+                >{fmt.label(totalAcres, 'area', { digits: 2 })} × {fmt.label(
+                  gpa,
+                  'volumePerArea'
+                )}</span
+              >
+            {:else}
+              <span class="sc-value">—</span>
+              <span class="sc-sublabel">Needs the size of the area</span>
+            {/if}
           </div>
           <div class="sc-metric">
             <span class="sc-label">Tank fills</span>
@@ -1090,6 +1231,34 @@
             >
           </div>
         </div>
+        {#if unsizedBlocks.length > 0 && data.setup.canEdit}
+          <div class="size-prompt" data-testid="spray-size-prompt">
+            <p>How big is it? Totals need the size.</p>
+            {#each unsizedBlocks as b (b.id)}
+              <label class="size-row">
+                <span>{b.label} (acres)</span>
+                <input
+                  type="number"
+                  min="0.001"
+                  step="0.01"
+                  inputmode="decimal"
+                  placeholder="e.g. 0.25"
+                  value={sizeDrafts[b.id] ?? ''}
+                  oninput={(e) => (sizeDrafts = { ...sizeDrafts, [b.id]: e.currentTarget.value })}
+                />
+                <button
+                  type="button"
+                  class="size-save"
+                  disabled={sizeSaving !== null}
+                  onclick={() => saveBlockAcres(b.id)}
+                >
+                  {sizeSaving === b.id ? 'Saving…' : 'Save size'}
+                </button>
+              </label>
+            {/each}
+            {#if sizeError}<p class="error" role="alert">{sizeError}</p>{/if}
+          </div>
+        {/if}
         {#if blocksMissingAcres.length > 0}
           <p class="dilution-warn-line">
             ⚠ Acres unknown for {blocksMissingAcres.join(', ')} — totals exclude these blocks. Set acres
@@ -1125,9 +1294,13 @@
               <tr>
                 <td>{d.displayName}</td>
                 <td>
-                  <strong>{sd ? sd.totalDisplay : d.display}</strong>
-                  {#if totalSecondary.length > 0}
-                    <small class="alt-units">≈ {totalSecondary.join(' · ')}</small>
+                  {#if totalAcres > 0}
+                    <strong>{sd ? sd.totalDisplay : d.display}</strong>
+                    {#if totalSecondary.length > 0}
+                      <small class="alt-units">≈ {totalSecondary.join(' · ')}</small>
+                    {/if}
+                  {:else}
+                    <strong aria-label="Unknown until the area size is set">—</strong>
                   {/if}
                 </td>
                 <td>
@@ -1328,14 +1501,18 @@
 <SetupSheet
   open={setupSheet === 'sprayer'}
   kicker="Spray"
-  title="Which sprayer?"
+  title={sprayerSheetTitle}
   onDone={onSprayerAdded}
-  onClose={() => (setupSheet = null)}
+  onClose={() => {
+    setupSheet = null;
+    sprayerSheetTitle = 'Which sprayer?';
+  }}
 >
   {#snippet children(done)}
     <SetupSprayer
       templates={data.setup.sprayerTemplates}
       canEdit={data.setup.canEdit}
+      onCreated={(r) => (sprayerSheetTitle = `Calibrate ${r.label}`)}
       onDone={done}
     />
   {/snippet}
@@ -1356,6 +1533,69 @@
 {/if}
 
 <style>
+  .herbicide-search {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+  .herbicide-search input {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 0 12px;
+    max-width: 28rem;
+  }
+  .card.incompatible {
+    opacity: 0.6;
+    border-style: dashed;
+  }
+  .card .harm {
+    color: var(--color-rust);
+    font-weight: 600;
+  }
+  .size-prompt {
+    margin: 8px 0;
+    padding: 12px;
+    border: 1px solid var(--color-divider);
+    border-radius: 8px;
+    background: var(--pill-wheat-bg);
+  }
+  .size-prompt p {
+    margin: 0 0 8px;
+    font-weight: 600;
+  }
+  .size-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .size-row input {
+    min-height: 48px;
+    width: 8rem;
+    font-size: 16px;
+    padding: 0 10px;
+  }
+  .size-save {
+    min-height: 48px;
+    padding: 0 14px;
+    font-weight: 600;
+  }
+  .custom-tank {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+  .custom-tank input {
+    min-height: 48px;
+    max-width: 12rem;
+    font-size: 16px;
+    padding: 0 12px;
+  }
   /* Phase 25b (#85) — Almanac chrome layout. The new stepper + context
      strip sit above the legacy flow with a small spacing buffer. */
   .spray-almanac-chrome {

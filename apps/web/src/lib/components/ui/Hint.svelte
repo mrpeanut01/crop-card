@@ -23,6 +23,7 @@
   let mounted = $state(false);
   let anchorEl = $state<HTMLElement | null>(null);
   let stopOnScreen = $state(false);
+  let busy = $state(false);
   let pos = $state<{ top: number; left: number; arrow: number; above: boolean } | null>(null);
   let bubble = $state<HTMLDivElement | null>(null);
 
@@ -32,6 +33,7 @@
       !$hintState.seen.has(key) &&
       !suppressed &&
       !stopOnScreen &&
+      !busy &&
       anchorEl !== null
   );
   let claimed = $state(false);
@@ -50,6 +52,8 @@
   function scan() {
     anchorEl = document.querySelector<HTMLElement>(anchor);
     stopOnScreen = document.querySelector(SAFETY_STOP) !== null;
+    const busyEl = document.querySelector<HTMLElement>('[data-hint-busy]');
+    busy = busyEl !== null && !(anchorEl && busyEl.contains(anchorEl));
     place();
   }
 
@@ -144,7 +148,7 @@
 <style>
   .hint {
     position: fixed;
-    z-index: 40;
+    z-index: 1100;
     width: min(280px, calc(100vw - 16px));
     background: var(--color-forest-deep);
     color: var(--color-cream);
@@ -171,6 +175,7 @@
   }
   p {
     margin: 0 0 8px;
+    color: var(--color-cream);
   }
   button {
     font: inherit;

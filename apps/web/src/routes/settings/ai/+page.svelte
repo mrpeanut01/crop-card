@@ -118,26 +118,29 @@
     </form>
   </SettingsSection>
 
-  <SettingsSection
-    title="Per-endpoint daily quota"
-    sub="Each AI endpoint has its own cap. Hitting a quota falls back to deterministic mode for the rest of the day."
-  >
-    <div class="quota-grid">
-      {#each ENDPOINTS as e (e.key)}
-        {@const used = usedToday[e.key] ?? 0}
-        {@const pct = e.quota ? used / e.quota : 0}
-        <div class="quota-row">
-          <div class="quota-text">
-            <div class="quota-label">{e.label ?? `/api/plan/${e.key}`}</div>
-            {#if e.label}
-              <div class="quota-sub mono">/api/{e.key}</div>
-            {/if}
+  <details class="advanced" data-testid="ai-advanced">
+    <summary>Advanced: daily limits per feature</summary>
+    <SettingsSection
+      title="Per-endpoint daily quota"
+      sub="Each AI endpoint has its own cap. Hitting a quota falls back to deterministic mode for the rest of the day."
+    >
+      <div class="quota-grid">
+        {#each ENDPOINTS as e (e.key)}
+          {@const used = usedToday[e.key] ?? 0}
+          {@const pct = e.quota ? used / e.quota : 0}
+          <div class="quota-row">
+            <div class="quota-text">
+              <div class="quota-label">{e.label ?? `/api/plan/${e.key}`}</div>
+              {#if e.label}
+                <div class="quota-sub mono">/api/{e.key}</div>
+              {/if}
+            </div>
+            <span class="quota-val mono" class:warn={pct >= 0.8}>{used}/{e.quota}</span>
           </div>
-          <span class="quota-val mono" class:warn={pct >= 0.8}>{used}/{e.quota}</span>
-        </div>
-      {/each}
-    </div>
-  </SettingsSection>
+        {/each}
+      </div>
+    </SettingsSection>
+  </details>
 
   <SettingsSection
     title="What's gated vs always-works"
@@ -166,6 +169,17 @@
 </SettingsShell>
 
 <style>
+  .advanced {
+    margin: 0 0 16px;
+  }
+  .advanced summary {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--color-forest-deep);
+  }
   .grid-2-1 {
     display: grid;
     grid-template-columns: 1.6fr 1fr;

@@ -89,7 +89,9 @@
   );
 
   const planHref = $derived(
-    blocks[0] ? `/plan?block=${encodeURIComponent(blocks[0].id)}` : '/plan'
+    blocks[0]
+      ? `/plan?block=${encodeURIComponent(blocks[0].id)}`
+      : `/plan?area=${encodeURIComponent(area.id)}`
   );
 
   function taskHref(t: { blockId: string | null; cropId: string | null }): string {
@@ -332,11 +334,28 @@
       {:else}
         <p class="muted">No past plantings recorded here yet.</p>
       {/if}
+      {#if tab === 'history' && blocks.length > 0}
+        <div class="records-links" data-testid="area-records-links">
+          <p class="muted">Sprays, scouting and harvests are in Records.</p>
+          {#each blocks as b (b.id)}
+            <a class="empty-action" href="/records?blockId={encodeURIComponent(b.id)}">
+              Records for {blockDisplayName(b)}
+            </a>
+          {/each}
+        </div>
+      {/if}
     </div>
   </div>
 </Modal>
 
 <style>
+  .records-links {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 8px;
+  }
   .sheet {
     display: flex;
     flex-direction: column;

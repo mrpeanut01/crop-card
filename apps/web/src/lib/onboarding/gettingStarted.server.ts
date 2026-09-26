@@ -6,7 +6,8 @@ import { usersForOwner } from '$lib/db/users';
 import { isDesignable } from '$lib/farm/areaKinds';
 import { getUserAiEnabled } from '$lib/server/aiTry';
 import { hasFarmLatLon } from '$lib/schedule/settings';
-import type { GettingStartedFacts } from './gettingStarted';
+import { getSetting } from '$lib/db/settings';
+import { ASSISTANT_SKIPPED_SETTING, type GettingStartedFacts } from './gettingStarted';
 import { getFarmProfile } from './state.server';
 
 function onMap(a: { geometryGeojson?: string; widthFt?: number; lengthFt?: number }): boolean {
@@ -40,6 +41,7 @@ export function loadGettingStartedFacts(input: {
       (a) => a.roleWithinOwner !== 'owner' && a.status !== 'revoked'
     ),
     hasAiKey: getUserAiEnabled(input.userId),
+    assistantSkipped: getSetting(ASSISTANT_SKIPPED_SETTING) === '1',
     hasPinnedCards: null
   };
 }

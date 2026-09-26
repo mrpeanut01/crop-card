@@ -476,6 +476,27 @@ export const recordDeletions = tenantScoped(
   )
 );
 
+/**
+ * Offline-queue replay receipts. The client sends its queue row id with each
+ * replayed record; a repeat of an id already saved answers success without
+ * writing a second record. `pending` marks a save still running.
+ */
+export const clientRecordReceipts = tenantScoped(
+  sqliteTable(
+    'client_record_receipts',
+    {
+      ownerId: text('owner_id').notNull(),
+      clientRecordId: text('client_record_id').notNull(),
+      endpoint: text('endpoint').notNull(),
+      status: text('status', { enum: ['pending', 'done'] }).notNull(),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
+    },
+    (table) => ({
+      pk: primaryKey({ columns: [table.ownerId, table.clientRecordId] })
+    })
+  )
+);
+
 // ─── Fields → Blocks hierarchy (Phase 13, tenant-scoped in Phase 18a) ──
 
 export const fields = tenantScoped(

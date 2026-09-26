@@ -12,6 +12,7 @@
  * are typically much longer (14–21d vs 0–7d) but the math is identical.
  */
 
+import { withClientRecordId } from '$lib/server/clientRecordId';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeRatedDilution } from '$lib/dilution/calculator';
@@ -82,7 +83,7 @@ const requestSchema = z.object({
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
-export const POST: RequestHandler = async (event) => {
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
@@ -437,4 +438,4 @@ export const POST: RequestHandler = async (event) => {
     stockDecrements: stockResults,
     stockWarnings
   });
-};
+});

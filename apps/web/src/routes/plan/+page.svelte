@@ -24,7 +24,8 @@
   import WhereWillThisGrow from '$lib/components/plan/WhereWillThisGrow.svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
   import SetupSpot from '$lib/components/setup/SetupSpot.svelte';
-  import type { SetupSpotResult } from '$lib/setup/types';
+  import type { SetupArea, SetupSpotResult } from '$lib/setup/types';
+  import { emptyAreas, saveSpot, wholeAreaPlan } from '$lib/setup/spot';
   import type { StockUnit } from '$lib/stock/units';
   import { withStepRoutes, workflowStepRoute } from '$lib/plan/seasonWorkflow';
   // Phase 25b (#81) — controls the legacy <details> open state. The
@@ -407,6 +408,30 @@
   async function onSpotAdded(r: SetupSpotResult) {
     spotSheetOpen = false;
     await goto(`/plan?block=${encodeURIComponent(r.blockId)}`, { invalidateAll: true });
+  }
+
+  const focusArea = $derived(
+    data.focusAreaId
+      ? (emptyAreas(data.setupAreas).find((a) => a.id === data.focusAreaId) ?? null)
+      : null
+  );
+  let wholeBusy = $state(false);
+  let wholeError = $state<string | null>(null);
+  async function plantWholeArea(area: SetupArea) {
+    wholeBusy = true;
+    wholeError = null;
+    try {
+      const out = await saveSpot(wholeAreaPlan(area));
+      if (!out.ok) {
+        wholeError = out.error;
+        return;
+      }
+      await onSpotAdded(out.result);
+    } catch {
+      wholeError = "We couldn't reach CropCard. Check your signal and try again.";
+    } finally {
+      wholeBusy = false;
+    }
   }
 
   function openWizard(initial?: 'season-setup' | 'allocation') {
@@ -1838,8 +1863,8 @@
 -->
 <h1 class="sr-only">Plan</h1>
 <p class="sr-only">
-  Step 0 of the season — set up your fields, blocks, crops, equipment, and stock so /today knows
-  what to surface.
+  Plan the season: where each crop grows, when it goes in, and what it needs. Today then shows the
+  work as it comes due.
 </p>
 
 <!-- Phase 25b (#98) — season-workflow strip mapping the planning
@@ -1870,8 +1895,15 @@
      tabbed editor below for now — clicking "Edit block" / "Add planting"
      / "Refine with AI" routes the operator into the existing flows.
 -->
-{#if data.canEdit && data.blocks.length === 0}
-  <WhereWillThisGrow onName={() => (spotSheetOpen = true)} />
+{#if data.canEdit && (data.blocks.length === 0 || focusArea)}
+  <WhereWillThisGrow
+    onName={() => (spotSheetOpen = true)}
+    emptyAreas={emptyAreas(data.setupAreas)}
+    {focusArea}
+    onWhole={plantWholeArea}
+    busy={wholeBusy}
+    error={wholeError}
+  />
 {/if}
 
 <SetupSheet
@@ -1882,7 +1914,12 @@
   onDone={onSpotAdded}
 >
   {#snippet children(done)}
-    <SetupSpot areas={data.setupAreas} canEdit={data.canEdit} onDone={done} />
+    <SetupSpot
+      areas={data.setupAreas}
+      canEdit={data.canEdit}
+      initialAreaId={focusArea?.id}
+      onDone={done}
+    />
   {/snippet}
 </SetupSheet>
 
@@ -1912,12 +1949,17 @@
   onAddTask={(blockId, plantingId) => {
     addTaskTarget = { blockId, plantingId };
   }}
-  onAddBlock={() => {
-    showNewBlockModal = true;
-  }}
-  onEditBlock={(blockId: string) => {
-    editBlockTargetId = blockId;
-  }}
+  canEdit={data.canEdit}
+  onAddBlock={data.canEdit
+    ? () => {
+        showNewBlockModal = true;
+      }
+    : undefined}
+  onEditBlock={data.canEdit
+    ? (blockId: string) => {
+        editBlockTargetId = blockId;
+      }
+    : undefined}
   onAddPlanting={(blockId) => {
     const block = data.blocks.find((b) => b.id === blockId);
     addPlantingTargetBlockId = blockId;

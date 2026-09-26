@@ -13,6 +13,8 @@ export interface SetupArea {
   id: string;
   name: string;
   kind: AreaKind;
+  /** Beds or blocks already inside this Area, when the loader counted them. */
+  blockCount?: number;
 }
 
 export interface SetupBlock {

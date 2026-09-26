@@ -247,9 +247,6 @@
               {#if c?.type}<span class="kind">{c.type}</span>{/if}
               {#if cand.confidence}<span class="conf conf-{cand.confidence}">{cand.confidence}</span
                 >{/if}
-              {#if typeof cand.score === 'number'}
-                <span class="score">match {Math.round(cand.score * 100)}%</span>
-              {/if}
             </div>
           </div>
           {#if cand.guessed && cand.guessed.length > 0}
@@ -444,9 +441,6 @@
   .conf-low {
     background: rgba(186, 75, 56, 0.12);
     color: var(--color-rust, #ba4b38);
-  }
-  .score {
-    color: var(--color-ink-muted);
   }
   .guessed {
     margin: 0;

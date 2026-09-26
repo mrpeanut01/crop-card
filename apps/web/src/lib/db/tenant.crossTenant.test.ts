@@ -48,6 +48,7 @@ import * as seasonCloseoutsRepo from './seasonCloseouts';
 import * as pushSubscriptionsRepo from './pushSubscriptions';
 import * as taxonomyRepo from './taxonomy';
 import * as pluginOverridesRepo from './pluginOverrides';
+import * as clientRecordsRepo from './clientRecords';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
 import { users, helperAssignments, recordDeletions, cropEquipment, equipmentLog } from './schema';
 import { listUnifiedRecords } from './recordsUnified';
@@ -382,6 +383,28 @@ describe('cross-tenant isolation', () => {
         .all()
     );
     expect(aReadsB).toEqual([]);
+  });
+
+  it('client_record_receipts are owner-scoped: one Owner never sees or consumes another Owner receipt', () => {
+    fc.assert(
+      fc.property(fc.uuid(), (clientId) => {
+        const aFirst = runWithTenant(OWNER_A, () =>
+          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
+        );
+        runWithTenant(OWNER_A, () => clientRecordsRepo.completeClientRecord(clientId));
+        const bFirst = runWithTenant(OWNER_B, () =>
+          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
+        );
+        runWithTenant(OWNER_B, () => clientRecordsRepo.releaseClientRecord(clientId));
+        const aAgain = runWithTenant(OWNER_A, () =>
+          clientRecordsRepo.claimClientRecord(clientId, '/api/scout/record')
+        );
+        expect(aFirst).toBe('claimed');
+        expect(bFirst).toBe('claimed');
+        expect(aAgain).toBe('done');
+      }),
+      { numRuns: 20 }
+    );
   });
 
   it('season_closeouts rows are owner-scoped (UC-44)', () => {

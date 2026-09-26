@@ -61,6 +61,39 @@ describe('AreaCardSheet', () => {
     expect(within(sheet).getByRole('button', { name: 'Edit details' })).toBeInTheDocument();
   });
 
+  it('sends an undrawn Area with no beds to Plan for that Area, not bare /plan', async () => {
+    const s = sampleSnapshot();
+    s.areas.push({ ...s.areas[0], id: 'f_new', name: 'Hayfield', kind: 'pasture' });
+    render(AreaCardSheet, {
+      open: true,
+      onClose: vi.fn(),
+      snapshot: s,
+      area: { id: 'f_new', name: 'Hayfield', kind: 'pasture', details: null },
+      canEdit: true,
+      designerAvailable: false
+    });
+    await fireEvent.click(screen.getByRole('tab', { name: /Plantings/ }));
+    expect(screen.getByRole('link', { name: 'Plan a crop here' })).toHaveAttribute(
+      'href',
+      '/plan?area=f_new'
+    );
+  });
+
+  it('History links to the Records for each bed in the Area', async () => {
+    render(AreaCardSheet, {
+      open: true,
+      onClose: vi.fn(),
+      snapshot: sampleSnapshot(),
+      area: garden,
+      canEdit: true,
+      designerAvailable: false
+    });
+    await fireEvent.click(screen.getByRole('tab', { name: /History/ }));
+    const links = within(screen.getByTestId('area-records-links')).getAllByRole('link');
+    expect(links.length).toBeGreaterThan(0);
+    expect(links[0].getAttribute('href')).toMatch(/^\/records\?blockId=/);
+  });
+
   it('shows the designer as coming soon until the route ships', () => {
     render(AreaCardSheet, {
       open: true,

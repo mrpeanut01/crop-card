@@ -23,6 +23,13 @@ describe('deriveWinterizeAlerts (UC-45 spring reminder)', () => {
     expect(out[0].neverWinterized).toBe(true);
   });
 
+  it('leaves out a sprayer new this season: nothing to winterize yet', () => {
+    const fresh = sprayer({ id: 'new', calibrationDate: THIS_SEASON });
+    const old = sprayer({ id: 'old', lastSprayedAt: THIS_SEASON });
+    const out = deriveWinterizeAlerts([fresh, old], NOW, new Set(['old']));
+    expect(out.map((a) => a.sprayerId)).toEqual(['old']);
+  });
+
   it('flags a sprayer whose winterizedAt predates the current season', () => {
     const out = deriveWinterizeAlerts(
       [sprayer({ lastSprayedAt: THIS_SEASON, winterizedAt: LAST_SEASON })],

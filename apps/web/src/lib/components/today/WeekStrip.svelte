@@ -142,11 +142,13 @@
     gap: 2px;
   }
   .seg button {
-    padding: 4px 12px;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 14px;
     border: none;
     background: transparent;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--color-ink-muted);
     cursor: pointer;
@@ -183,6 +185,29 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2px 4px;
+    min-width: 0;
+  }
+  @media (max-width: 480px) {
+    .grid {
+      gap: 4px;
+    }
+    .day {
+      padding: 6px 4px;
+      min-width: 0;
+    }
+    .day-head {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .daynum {
+      font-size: 15px;
+    }
+    .month {
+      display: block;
+      margin-right: 0;
+    }
   }
   .weekday {
     font-size: 11px;

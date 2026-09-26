@@ -20,7 +20,7 @@
   <title>API tokens · CropCard</title>
 </svelte:head>
 
-<main class="api-tokens">
+<div class="api-tokens">
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/settings">Settings</a>
     <ChevronRight size={13} aria-hidden="true" />
@@ -120,7 +120,7 @@
       </table>
     </section>
   {/if}
-</main>
+</div>
 
 <style>
   .api-tokens {

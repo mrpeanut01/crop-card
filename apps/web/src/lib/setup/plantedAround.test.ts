@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { dateForMonth, plantingDateMs, recentMonths, ymd } from './plantedAround';
+import {
+  OLDER_KEY,
+  OLDER_OPTION,
+  dateForMonth,
+  plantingDateMs,
+  recentMonths,
+  ymd
+} from './plantedAround';
 
 const NOW = new Date(2026, 8, 26, 10, 30);
 
@@ -27,6 +34,13 @@ describe('dateForMonth', () => {
   it('never picks a date after today', () => {
     expect(dateForMonth('2026-09', new Date(2026, 8, 3))).toBe('2026-09-03');
     expect(dateForMonth('2026-09', NOW)).toBe('2026-09-15');
+  });
+
+  it('offers an established-stand option older than the listed months', () => {
+    expect(OLDER_OPTION.label).toBe('More than a year ago');
+    const date = dateForMonth(OLDER_KEY, NOW)!;
+    expect(date).toBe('2024-09-15');
+    expect(plantingDateMs(date, NOW)).not.toBeNull();
   });
 
   it('rejects malformed keys', () => {

@@ -61,6 +61,15 @@ describe('gettingStartedItems', () => {
     expect(items.filter((i) => i.optional).map((i) => i.id)).toEqual(['helper', 'assistant']);
   });
 
+  it('sends the assistant item to a plain explainer and ticks it off once skipped', () => {
+    const find = (f: GettingStartedFacts) =>
+      gettingStartedItems(f).find((i) => i.id === 'assistant')!;
+    expect(find(BLANK).href).toBe('/settings/ai/about');
+    expect(find(BLANK).done).toBe(false);
+    expect(find({ ...BLANK, assistantSkipped: true }).done).toBe(true);
+    expect(find({ ...BLANK, hasAiKey: true }).done).toBe(true);
+  });
+
   it('reads done straight from the facts', () => {
     const items = gettingStartedItems({
       ...BLANK,

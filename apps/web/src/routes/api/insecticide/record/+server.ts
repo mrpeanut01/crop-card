@@ -7,6 +7,7 @@
  * stock when a tank size is supplied (FIFO oldest non-expired lot).
  */
 
+import { withClientRecordId } from '$lib/server/clientRecordId';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeRatedDilution } from '$lib/dilution/calculator';
@@ -117,7 +118,7 @@ function occurredAtError(occurredAt: number, now: number): string | null {
   return null;
 }
 
-export const POST: RequestHandler = async (event) => {
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
@@ -558,4 +559,4 @@ export const POST: RequestHandler = async (event) => {
       ...(nearbyPollinator.status === 'warn' ? [nearbyPollinator] : [])
     ]
   });
-};
+});

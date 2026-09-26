@@ -174,7 +174,7 @@
 
 {#if !online}
   <Banner tone="rust" urgent>
-    Offline — spray records will queue locally and sync when back online.
+    You're offline. Changes save on this phone and sync when you're back online.
   </Banner>
 {:else if (pendingCount ?? 0) > 0}
   <Banner tone="wheat">
@@ -223,9 +223,22 @@
       : ''} decontamination —
     {#each data.dirtySprayers as s, i (s.id)}
       {i > 0 ? ', ' : ''}<strong>{s.label}</strong> ({s.lastChemistryClass}){/each}
-    <a class="decon-cta" href="/spray/decon?sprayer={encodeURIComponent(data.dirtySprayers[0].id)}">
-      Run decon wizard →
-    </a>
+    {#if data.user?.role === 'owner'}
+      <a
+        class="decon-cta"
+        href="/spray/decon?sprayer={encodeURIComponent(data.dirtySprayers[0].id)}"
+      >
+        Run decon wizard →
+      </a>
+    {:else}
+      <span class="decon-ask">Ask the owner to run and record it.</span>
+      <a
+        class="decon-cta"
+        href="/spray/decon?sprayer={encodeURIComponent(data.dirtySprayers[0].id)}"
+      >
+        See the steps →
+      </a>
+    {/if}
   </Banner>
 {/if}
 
@@ -242,6 +255,16 @@
 />
 
 <style>
+  .decon-cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 8px;
+    font-weight: 700;
+  }
+  .decon-ask {
+    font-weight: 600;
+  }
   .skip-link {
     position: absolute;
     left: 0.5rem;

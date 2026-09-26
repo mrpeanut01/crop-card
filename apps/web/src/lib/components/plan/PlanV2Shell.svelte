@@ -76,6 +76,8 @@
     onAddTask?: (blockId: string, plantingId: string | null) => void;
     /** Farm-map editor link for the "No map geometry" pill (owner only). */
     geometryEditHref?: string;
+    /** False for helpers: block and map edits are the owner's. */
+    canEdit?: boolean;
   }
   const {
     blocks,
@@ -91,7 +93,8 @@
     seasonYear = Number(fmt.today().slice(0, 4)),
     onAddPlanting,
     onAddTask,
-    geometryEditHref
+    geometryEditHref,
+    canEdit = true
   }: Props = $props();
 
   // ── URL-driven state ──────────────────────────────────────────────
@@ -275,6 +278,7 @@
         onOpenMap={openMap}
         onRefineWithAi={onOpenWizard}
         onEditBlock={onEditBlock ? () => onEditBlock(selectedBlock.id) : undefined}
+        askOwner={!canEdit}
         onAddPlanting={onAddPlanting ? () => onAddPlanting(selectedBlock.id) : undefined}
       />
 
@@ -361,6 +365,7 @@
     {fields}
     {selectedBlockId}
     {farmLabel}
+    {canEdit}
     onSelect={selectBlock}
   />
 </div>
@@ -422,6 +427,8 @@
     cursor: pointer;
     text-decoration: underline;
     font-family: inherit;
+    min-height: 48px;
+    padding: 0 4px;
   }
   .card-empty {
     background: var(--color-paper);

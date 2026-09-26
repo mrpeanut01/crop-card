@@ -25,6 +25,12 @@
 
 import { createHash } from 'node:crypto';
 import { type RequestHandler } from '@sveltejs/kit';
+import {
+  areaTreatedLine,
+  conditionsText,
+  perAcre,
+  totalAppliedLine
+} from '$lib/records/vdacsColumns';
 import { renderPdf, type PdfDocDefinition } from '$lib/server/pdf';
 import { eq } from 'drizzle-orm';
 
@@ -161,6 +167,10 @@ interface UnifiedRow {
   customRateOverride: boolean;
   /** #130 — pollinator-gate attestation; '' for other kinds and legacy rows. */
   pollinatorLine: string;
+  /** Area treated (the block's size on file). */
+  areaLine?: string;
+  /** Product applied in total: per-acre rate × area. */
+  totalLine?: string;
 }
 
 export const GET: RequestHandler = async (event) => {
@@ -176,6 +186,7 @@ export const GET: RequestHandler = async (event) => {
   const sprayerLabelById = new Map(sprayers.map((s) => [s.id, s.label]));
   const blocks = listBlocks();
   const blockLabelById = new Map(blocks.map((b) => [b.id, b.blockLabel ?? b.name]));
+  const blockAcresById = new Map(blocks.map((b) => [b.id, b.acres ?? null]));
   const registry = await getRegistry();
   const farmName = ownerNameOf(user.activeOwnerId);
   const generatedAt = new Date();
@@ -226,10 +237,17 @@ export const GET: RequestHandler = async (event) => {
           plugin && (plugin.type === 'herbicide' || plugin.type === 'insecticide')
             ? plugin.epaRegistrationNumber
             : undefined;
-        const rate = p.rate ? `${p.rate.amount} ${p.rate.unit}` : '';
+        const rate = perAcre(p.rate);
         return [name, epa ? `EPA ${epa}` : 'EPA missing', rate].filter(Boolean).join(' · ');
       })
       .join('\n');
+    const sprayNames = ev.products.map((p) => {
+      const plugin = registry.get(p.pluginId)?.plugin;
+      return {
+        name: plugin && 'displayName' in plugin ? plugin.displayName : p.pluginId,
+        rate: p.rate
+      };
+    });
     unified.push({
       kind: 'spray',
       id: ev.id,
@@ -238,12 +256,17 @@ export const GET: RequestHandler = async (event) => {
       sprayerLabel: sprayerLabelById.get(ev.sprayerId) ?? ev.sprayerId,
       performer: performerNameOf(ev.performedById),
       productLines,
-      conditionLine: `${ev.conditions.windMph}mph / ${ev.conditions.tempF}°F / ${ev.conditions.rainForecastMmNext24h}mm`,
+      conditionLine: conditionsText(
+        `${ev.conditions.windMph}mph / ${ev.conditions.tempF}°F / ${ev.conditions.rainForecastMmNext24h}mm`,
+        ev.conditions.conditionsProvenance
+      ),
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
       locked: evaluateLock(ev) !== undefined,
       customRateOverride: ev.customRateOverride === true,
-      pollinatorLine: ''
+      pollinatorLine: '',
+      areaLine: areaTreatedLine(blockAcresById.get(ev.blockId)),
+      totalLine: totalAppliedLine(sprayNames, blockAcresById.get(ev.blockId))
     });
   }
   for (const ev of insecticides) {
@@ -253,7 +276,7 @@ export const GET: RequestHandler = async (event) => {
         const epa =
           plugin && plugin.type === 'insecticide' ? plugin.epaRegistrationNumber : undefined;
         const irac = p.iracGroups.length ? ` · IRAC ${p.iracGroups.join('/')}` : '';
-        const rate = p.rate ? ` · ${p.rate.amount} ${p.rate.unit}` : '';
+        const rate = p.rate ? ` · ${perAcre(p.rate)}` : '';
         return `${p.displayName}${irac} · ${epa ? `EPA ${epa}` : 'EPA missing'}${rate}`;
       })
       .join('\n');
@@ -265,19 +288,27 @@ export const GET: RequestHandler = async (event) => {
       sprayerLabel: ev.sprayerId ? (sprayerLabelById.get(ev.sprayerId) ?? ev.sprayerId) : '—',
       performer: performerNameOf(ev.performedById),
       productLines,
-      conditionLine: `${ev.conditions.windMph}mph / ${ev.conditions.tempF}°F`,
+      conditionLine: conditionsText(
+        `${ev.conditions.windMph}mph / ${ev.conditions.tempF}°F`,
+        (ev.conditions as { conditionsProvenance?: string }).conditionsProvenance
+      ),
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
       locked: Boolean(ev.lockedAt),
       customRateOverride: false,
-      pollinatorLine: pollinatorAttestationSummary(ev)
+      pollinatorLine: pollinatorAttestationSummary(ev),
+      areaLine: areaTreatedLine(blockAcresById.get(ev.blockId)),
+      totalLine: totalAppliedLine(
+        ev.products.map((p) => ({ name: p.displayName, rate: p.rate })),
+        blockAcresById.get(ev.blockId)
+      )
     });
   }
   for (const ev of fungicides) {
     const productLines = ev.products
       .map((p) => {
         const frac = p.fracCodes.length ? ` · FRAC ${p.fracCodes.join('/')}` : '';
-        const rate = p.rate ? ` · ${p.rate.amount} ${p.rate.unit}` : '';
+        const rate = p.rate ? ` · ${perAcre(p.rate)}` : '';
         return `${p.displayName}${frac}${rate}`;
       })
       .join('\n');
@@ -289,12 +320,20 @@ export const GET: RequestHandler = async (event) => {
       sprayerLabel: ev.sprayerId ? (sprayerLabelById.get(ev.sprayerId) ?? ev.sprayerId) : '—',
       performer: performerNameOf(ev.performedById),
       productLines,
-      conditionLine: `${ev.conditions.windMph}mph / ${ev.conditions.tempF}°F`,
+      conditionLine: conditionsText(
+        `${ev.conditions.windMph}mph / ${ev.conditions.tempF}°F`,
+        (ev.conditions as { conditionsProvenance?: string }).conditionsProvenance
+      ),
       rulesVersion: ev.rulesVersion,
       pluginHashes: ev.pluginHashes,
       locked: Boolean(ev.lockedAt),
       customRateOverride: false,
-      pollinatorLine: ''
+      pollinatorLine: '',
+      areaLine: areaTreatedLine(blockAcresById.get(ev.blockId)),
+      totalLine: totalAppliedLine(
+        ev.products.map((p) => ({ name: p.displayName, rate: p.rate })),
+        blockAcresById.get(ev.blockId)
+      )
     });
   }
   // #326 — harvest rows carry crop/commodity, quantity, and stored moisture
@@ -397,7 +436,9 @@ export const GET: RequestHandler = async (event) => {
       { text: 'Kind', style: 'th' },
       { text: 'Block', style: 'th' },
       { text: 'Sprayer', style: 'th' },
-      { text: 'Product / EPA / Rate', style: 'th' },
+      { text: 'Product / EPA / Rate per acre', style: 'th' },
+      { text: 'Area', style: 'th' },
+      { text: 'Total applied', style: 'th' },
       { text: 'Cond.', style: 'th' },
       { text: 'Applicator', style: 'th' },
       { text: 'Pollinator', style: 'th' },
@@ -411,6 +452,8 @@ export const GET: RequestHandler = async (event) => {
       r.blockLabel,
       r.sprayerLabel,
       r.productLines,
+      r.areaLine ?? '—',
+      r.totalLine ?? '—',
       r.conditionLine,
       r.performer,
       r.pollinatorLine,
@@ -476,7 +519,7 @@ export const GET: RequestHandler = async (event) => {
       {
         table: {
           headerRows: 1,
-          widths: ['auto', 'auto', 60, 60, '*', 'auto', 'auto', 90, 'auto'],
+          widths: ['auto', 'auto', 55, 55, '*', 45, 80, 65, 'auto', 80, 'auto'],
           body: tableBody
         },
         layout: {

@@ -94,8 +94,7 @@ describe('buildSprayCard', () => {
     );
     expect(card.rulesVersion).toBe(snap.rulesVersion);
     expect(card.asOf).toBe(snap.generatedAt);
-    expect(card.notices).toEqual([SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE]);
-    expect(card.next?.href).toBe('/spray');
+    expect(card.notices?.slice(1)).toEqual([SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE]);
   });
 
   it('shows the kernel decon SOP when the last load differs and no decon followed', () => {
@@ -107,6 +106,18 @@ describe('buildSprayCard', () => {
     ]);
   });
 
+  it('puts decon first when it is needed: first section, a notice and the Next step', () => {
+    const card = buildSprayCard(snap, sprayCardId('eq_boom', '24d'))!;
+    expect(card.sections[0].title).toMatch(/^Decon first/);
+    expect(card.sections[0].safety).toBe(true);
+    expect(card.sections[1]).toMatchObject({ title: 'Before you spray', safety: true });
+    expect(card.notices?.[0]).toMatch(/^Decon first: .*Run it before you mix this product\.$/);
+    expect(card.next).toEqual({
+      label: 'Run decon first',
+      href: '/spray/decon?sprayer=eq_boom'
+    });
+  });
+
   it('skips the decon-first section once a decon is on record after the last load', () => {
     const s = sampleGearSnapshot();
     s.equipment[0] = {
@@ -116,6 +127,11 @@ describe('buildSprayCard', () => {
     const card = buildSprayCard(s, sprayCardId('eq_boom', '24d'))!;
     expect(card.sections.some((x) => x.title.startsWith('Decon first'))).toBe(false);
     expect(card.sections.find((x) => x.title === 'Decon')).toBeDefined();
+    expect(card.sections[0].title).toBe('Before you spray');
+    expect(card.notices).toEqual([SPRAY_RECHECK_NOTICE, SPRAY_REFERENCE_NOTICE]);
+    expect(card.next).toEqual({ label: 'Record this spray', href: '/spray' });
+    const fungicide = buildSprayCard(s, sprayCardId('eq_boom', 'copper-hydroxide'))!;
+    expect(fungicide.next?.href).toBe('/spray/fungicide');
   });
 
   it('carries label REI, PHI, targets and the right record flow for a fungicide', () => {
@@ -124,7 +140,6 @@ describe('buildSprayCard', () => {
     expect(fact(card, 'PHI')).toBe('0 d');
     expect(fact(card, 'EPA reg. no.')).toBe('Not on file, check the label');
     expect(fact(card, 'Target')).toBe('Early blight, Septoria leaf spot');
-    expect(card.next?.href).toBe('/spray/fungicide');
     expect(card.sections.find((s) => s.title === 'Mix order')?.items).toEqual([
       'Follow the mixing directions on the label.'
     ]);

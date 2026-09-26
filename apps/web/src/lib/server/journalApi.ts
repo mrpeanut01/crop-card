@@ -6,6 +6,7 @@ import { ensureSystemUser } from '$lib/db/users';
 import { journalEntrySchema, photoHelpSchema, queuedJournalSchema } from '$lib/journal/apiSchemas';
 import { sanitizePhotoDataUrl } from '$lib/journal/photo';
 import { currentUser } from './auth';
+import { writeRecord } from './recordWrite';
 import { canMutate } from './session';
 
 export { journalEntrySchema, photoHelpSchema, queuedJournalSchema };
@@ -61,6 +62,7 @@ export function cropOr404(id: string | undefined): Crop | Response {
 }
 
 export async function addJournalEntry(
+  event: { request: Request },
   cropId: string,
   userId: string,
   data: z.infer<typeof journalEntrySchema>
@@ -69,15 +71,17 @@ export async function addJournalEntry(
   if (crop instanceof Response) return crop;
   const photo = cleanPhoto(data.photo);
   if (!photo.ok) return photo.response;
-  const entry = insertJournalEntry({
-    cropId: crop.id,
-    blockId: crop.blockId,
-    createdBy: userId,
-    kind: data.kind,
-    text: data.text.trim(),
-    photoRef: photo.photo,
-    provenance: 'manual',
-    createdAt: data.occurredAt !== undefined ? Math.min(data.occurredAt, Date.now()) : undefined
-  });
+  const entry = writeRecord(event, () =>
+    insertJournalEntry({
+      cropId: crop.id,
+      blockId: crop.blockId,
+      createdBy: userId,
+      kind: data.kind,
+      text: data.text.trim(),
+      photoRef: photo.photo,
+      provenance: 'manual',
+      createdAt: data.occurredAt !== undefined ? Math.min(data.occurredAt, Date.now()) : undefined
+    })
+  );
   return json({ entry }, { status: 201 });
 }

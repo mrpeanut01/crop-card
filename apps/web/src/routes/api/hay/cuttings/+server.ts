@@ -9,6 +9,7 @@
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
+import { bestEffort, writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
@@ -131,32 +132,31 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const occurredAt = parsed.data.mowAt ?? Date.now();
   const year = parsed.data.year ?? new Date(occurredAt).getFullYear();
 
-  const persisted = createCutting({
-    blockId: parsed.data.blockId,
-    cropId: parsed.data.cropId,
-    cropPluginId: parsed.data.cropPluginId,
-    year,
-    cuttingNumber: parsed.data.cuttingNumber,
-    mowAt: occurredAt,
-    weatherForecastJson: parsed.data.forecast ? JSON.stringify(parsed.data.forecast) : undefined,
-    performedById: performer.id,
-    rulesVersion: RULES_VERSION,
-    notes: parsed.data.notes
-  });
+  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
+  const persisted = writeRecord(event, () => {
+    const persisted = createCutting({
+      blockId: parsed.data.blockId,
+      cropId: parsed.data.cropId,
+      cropPluginId: parsed.data.cropPluginId,
+      year,
+      cuttingNumber: parsed.data.cuttingNumber,
+      mowAt: occurredAt,
+      weatherForecastJson: parsed.data.forecast ? JSON.stringify(parsed.data.forecast) : undefined,
+      performedById: performer.id,
+      rulesVersion: RULES_VERSION,
+      notes: parsed.data.notes
+    });
 
-  // Phase 12D: close any originating primary task.
-  if (parsed.data.taskId) {
-    try {
-      const { completeTask } = await import('$lib/db/tasks');
-      completeTask(parsed.data.taskId, {
-        eventTable: 'hay_cutting',
-        eventId: persisted.id,
-        occurredAt
-      });
-    } catch {
-      // Non-fatal; the cutting is recorded.
+    // Phase 12D: close any originating primary task. Non-fatal; the cutting
+    // is recorded even if the task can't be closed.
+    const taskId = parsed.data.taskId;
+    if (tasks && taskId) {
+      bestEffort(() =>
+        tasks.completeTask(taskId, { eventTable: 'hay_cutting', eventId: persisted.id, occurredAt })
+      );
     }
-  }
+    return persisted;
+  });
 
   return json(
     {

@@ -350,4 +350,20 @@ describe('withClientRecordId', () => {
       /export const POST: RequestHandler = withClientRecordId\(/
     );
   });
+
+  it.each([
+    'routes/api/spray/record/+server.ts',
+    'routes/api/insecticide/record/+server.ts',
+    'routes/api/fungicide/record/+server.ts',
+    'routes/api/harvest/record/+server.ts',
+    'routes/api/hay/cuttings/+server.ts',
+    'routes/api/scout/record/+server.ts',
+    'lib/server/journalApi.ts'
+  ])(
+    'saves through writeRecord so the fenced receipt shares the record transaction (%s)',
+    (path) => {
+      const file = resolve(process.cwd(), `src/${path}`);
+      expect(readFileSync(file, 'utf8')).toMatch(/writeRecord\((event|\{ request \}),/);
+    }
+  );
 });

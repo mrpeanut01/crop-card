@@ -59,6 +59,18 @@ export function claimClientRecord(
   return taken.changes === 1 ? { status: 'claimed', token: now } : { status: 'pending' };
 }
 
+/** The receipt's current status for this Owner, or null when none exists. */
+export function clientRecordStatus(clientRecordId: string): 'done' | 'pending' | null {
+  const row = db
+    .select({ status: clientRecordReceipts.status })
+    .from(clientRecordReceipts)
+    .where(
+      withTenant(clientRecordReceipts, eq(clientRecordReceipts.clientRecordId, clientRecordId))
+    )
+    .get();
+  return row ? row.status : null;
+}
+
 /** Marks the record saved. Returns false when the claim behind `token` is no
  *  longer held, leaving the current holder's receipt untouched. */
 export function completeClientRecord(

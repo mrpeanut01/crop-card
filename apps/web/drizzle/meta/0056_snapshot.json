@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d342faf7-e59b-429c-bc3e-29cf0ac9cc43",
-  "prevId": "17d1673b-e5e3-4701-98dc-01186630de46",
+  "id": "429a4cf9-532a-456b-8ed3-2f65058fd3aa",
+  "prevId": "d342faf7-e59b-429c-bc3e-29cf0ac9cc43",
   "tables": {
     "ai_call_log": {
       "name": "ai_call_log",
@@ -2908,6 +2908,104 @@
         }
       },
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "map_features": {
+      "name": "map_features",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "field_id": {
+          "name": "field_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "geometry_geojson": {
+          "name": "geometry_geojson",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "details_json": {
+          "name": "details_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {
+        "map_features_owner_kind_idx": {
+          "name": "map_features_owner_kind_idx",
+          "columns": [
+            "owner_id",
+            "kind"
+          ],
+          "isUnique": false
+        },
+        "map_features_owner_field_idx": {
+          "name": "map_features_owner_field_idx",
+          "columns": [
+            "owner_id",
+            "field_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "map_features_field_id_fields_id_fk": {
+          "name": "map_features_field_id_fields_id_fk",
+          "tableFrom": "map_features",
+          "tableTo": "fields",
+          "columnsFrom": [
+            "field_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}

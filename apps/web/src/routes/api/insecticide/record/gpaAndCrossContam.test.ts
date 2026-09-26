@@ -74,6 +74,7 @@ vi.mock('$lib/db/stock', () => ({
 vi.mock('$lib/db/users', () => ({ ensureSystemUser: vi.fn(async () => ({ id: 'sys' })) }));
 
 import { POST } from './+server';
+import { sqliteHandle } from '$lib/db/client';
 
 const INSECT_PLUGIN = {
   pluginId: 'insect-1',
@@ -175,5 +176,49 @@ describe('#321 — insecticide cross-contamination gate + sprayer state', () => 
     const res = await POST(makeEvent(baseBody));
     expect(res.status).toBe(200);
     expect(recordSpray).toHaveBeenCalledWith('spr-1', 'insecticide-load', expect.any(Number));
+  });
+});
+
+describe('record writes are one transaction', () => {
+  const probe = () => {
+    sqliteHandle().exec('CREATE TABLE IF NOT EXISTS record_write_probe (id TEXT PRIMARY KEY)');
+    const id = `ins-${Math.random().toString(36).slice(2)}`;
+    return {
+      id,
+      write: () => sqliteHandle().prepare('INSERT INTO record_write_probe (id) VALUES (?)').run(id),
+      exists: () =>
+        !!sqliteHandle().prepare('SELECT 1 FROM record_write_probe WHERE id = ?').get(id)
+    };
+  };
+
+  it('a failure after the event row is written rolls the event back', async () => {
+    getSprayer.mockReturnValue({ id: 'spr-1', calibratedGpa: 18, lastChemistryClass: undefined });
+    const p = probe();
+    insertInsecticideEvent.mockImplementationOnce(() => {
+      p.write();
+      return { id: 'evt-1' };
+    });
+    recordSpray.mockImplementationOnce(() => {
+      throw new Error('sprayer state write failed');
+    });
+    await expect(POST(makeEvent(baseBody))).rejects.toThrow(/sprayer state/);
+    expect(p.exists()).toBe(false);
+  });
+
+  it('a stock decrement failure stays a warning and the event commits', async () => {
+    getSprayer.mockReturnValue({ id: 'spr-1', calibratedGpa: 18, lastChemistryClass: undefined });
+    getStockItemByPluginId.mockReturnValueOnce({ id: 'stock-1' } as never);
+    const p = probe();
+    insertInsecticideEvent.mockImplementationOnce(() => {
+      p.write();
+      return { id: 'evt-1' };
+    });
+    decrementForUse.mockImplementationOnce(() => {
+      throw new Error('lot missing');
+    });
+    const res = await POST(makeEvent(baseBody));
+    expect(res.status).toBe(200);
+    expect((await res.json()).stockWarnings.join(' ')).toMatch(/stock decrement failed/);
+    expect(p.exists()).toBe(true);
   });
 });

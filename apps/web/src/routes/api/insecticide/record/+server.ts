@@ -8,6 +8,7 @@
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
+import { bestEffort, errorText, writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { computeRatedDilution } from '$lib/dilution/calculator';
@@ -456,98 +457,102 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
 
   const performer = auth ?? (await ensureSystemUser());
 
-  const persisted = insertInsecticideEvent({
-    blockId: parsed.data.blockId,
-    cropId: parsed.data.cropId,
-    sprayerId: parsed.data.sprayerId,
-    performedById: performer.id,
-    occurredAt,
-    products: products.map((p) => ({
-      pluginId: p.pluginId,
-      displayName: p.displayName,
-      iracGroups: Array.from(new Set(p.activeIngredients.map((ai) => ai.iracGroup ?? 'UN'))),
-      rate: p.ratePerAcre
-    })),
-    scoutObservation: parsed.data.scout as ScoutObservation | undefined,
-    conditions: parsed.data.conditions,
-    reEntryClearAt,
-    preHarvestClearAt,
-    rulesVersion: RULES_VERSION,
-    pluginHashes,
-    bloomStatus,
-    bloomStatusSource,
-    attestedNoForagers: parsed.data.attestedNoForagers,
-    pollinatorVerdict: pollinator.overall
-  });
+  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
 
-  // #321 — update sprayer chemistry history so the next different-chemistry
-  // pass (e.g. a herbicide after this insecticide) trips the cross-
-  // contamination gate. Mirrors the herbicide path's post-persist
-  // recordSpray call.
-  if (sprayer) recordSpray(sprayer.id, INSECTICIDE_LOAD_CLASS, occurredAt);
+  // One transaction: record, sprayer state, stock movements, task close and
+  // the replay receipt commit together or not at all.
+  const { persisted, stockResults, stockWarnings } = writeRecord(event, () => {
+    const persisted = insertInsecticideEvent({
+      blockId: parsed.data.blockId,
+      cropId: parsed.data.cropId,
+      sprayerId: parsed.data.sprayerId,
+      performedById: performer.id,
+      occurredAt,
+      products: products.map((p) => ({
+        pluginId: p.pluginId,
+        displayName: p.displayName,
+        iracGroups: Array.from(new Set(p.activeIngredients.map((ai) => ai.iracGroup ?? 'UN'))),
+        rate: p.ratePerAcre
+      })),
+      scoutObservation: parsed.data.scout as ScoutObservation | undefined,
+      conditions: parsed.data.conditions,
+      reEntryClearAt,
+      preHarvestClearAt,
+      rulesVersion: RULES_VERSION,
+      pluginHashes,
+      bloomStatus,
+      bloomStatusSource,
+      attestedNoForagers: parsed.data.attestedNoForagers,
+      pollinatorVerdict: pollinator.overall
+    });
 
-  // Auto-decrement stock (best-effort; warns on shortfall, never blocks).
-  const stockResults: DecrementResult[] = [];
-  const stockWarnings: string[] = [];
-  if (parsed.data.tankSizeGallons) {
-    // #319 — scale the decrement by the sprayer's stored calibrated GPA, not
-    // the plugin default. `computeRatedDilution` coalesces null/undefined
-    // calibratedGpa to the plugin's `gpaCalibration` fallback, matching the
-    // herbicide path (an 18-GPA rig now decrements ~20% more product).
-    const effectiveGpa = sprayer?.calibratedGpa ?? undefined;
-    for (const p of products) {
-      if (!p.ratePerAcre) continue;
-      const line = computeRatedDilution(
-        {
-          pluginId: p.pluginId,
-          displayName: p.displayName,
-          ratePerAcre: p.ratePerAcre,
-          gpaCalibration: p.gpaCalibration ?? 15
-        },
-        parsed.data.tankSizeGallons,
-        effectiveGpa
-      );
-      const stockItem = stockByPluginId.get(p.pluginId);
-      if (!stockItem) {
-        stockWarnings.push(
-          `${p.pluginId}: not tracked in stock — add a SKU on /inventory to enable auto-decrement`
+    // #321 — update sprayer chemistry history so the next different-chemistry
+    // pass (e.g. a herbicide after this insecticide) trips the cross-
+    // contamination gate. Mirrors the herbicide path's post-persist
+    // recordSpray call.
+    if (sprayer) recordSpray(sprayer.id, INSECTICIDE_LOAD_CLASS, occurredAt);
+
+    // Auto-decrement stock (best-effort; warns on shortfall, never blocks).
+    const stockResults: DecrementResult[] = [];
+    const stockWarnings: string[] = [];
+    if (parsed.data.tankSizeGallons) {
+      // #319 — scale the decrement by the sprayer's stored calibrated GPA, not
+      // the plugin default. `computeRatedDilution` coalesces null/undefined
+      // calibratedGpa to the plugin's `gpaCalibration` fallback, matching the
+      // herbicide path (an 18-GPA rig now decrements ~20% more product).
+      const effectiveGpa = sprayer?.calibratedGpa ?? undefined;
+      for (const p of products) {
+        if (!p.ratePerAcre) continue;
+        const line = computeRatedDilution(
+          {
+            pluginId: p.pluginId,
+            displayName: p.displayName,
+            ratePerAcre: p.ratePerAcre,
+            gpaCalibration: p.gpaCalibration ?? 15
+          },
+          parsed.data.tankSizeGallons,
+          effectiveGpa
         );
-        continue;
+        const stockItem = stockByPluginId.get(p.pluginId);
+        if (!stockItem) {
+          stockWarnings.push(
+            `${p.pluginId}: not tracked in stock — add a SKU on /inventory to enable auto-decrement`
+          );
+          continue;
+        }
+        const dec = bestEffort(() =>
+          decrementForUse({
+            stockItemId: stockItem.id,
+            amount: line.productAmount,
+            unit: line.unit as StockUnit,
+            insecticideEventId: persisted.id,
+            performedById: performer.id,
+            occurredAt
+          })
+        );
+        if (dec.ok) {
+          stockResults.push(dec.value);
+          for (const note of dec.value.notes) stockWarnings.push(`${p.pluginId}: ${note}`);
+        } else {
+          stockWarnings.push(`${p.pluginId}: stock decrement failed — ${errorText(dec.error)}`);
+        }
       }
-      try {
-        const result = decrementForUse({
-          stockItemId: stockItem.id,
-          amount: line.productAmount,
-          unit: line.unit as StockUnit,
-          insecticideEventId: persisted.id,
-          performedById: performer.id,
+    }
+
+    // Phase 12D: close any originating primary task.
+    const taskId = parsed.data.taskId;
+    if (tasks && taskId) {
+      const closed = bestEffort(() =>
+        tasks.completeTask(taskId, {
+          eventTable: 'insecticide_event',
+          eventId: persisted.id,
           occurredAt
-        });
-        stockResults.push(result);
-        for (const note of result.notes) stockWarnings.push(`${p.pluginId}: ${note}`);
-      } catch (e) {
-        stockWarnings.push(
-          `${p.pluginId}: stock decrement failed — ${e instanceof Error ? e.message : String(e)}`
-        );
-      }
-    }
-  }
-
-  // Phase 12D: close any originating primary task.
-  if (parsed.data.taskId) {
-    try {
-      const { completeTask } = await import('$lib/db/tasks');
-      completeTask(parsed.data.taskId, {
-        eventTable: 'insecticide_event',
-        eventId: persisted.id,
-        occurredAt
-      });
-    } catch (e) {
-      stockWarnings.push(
-        `task ${parsed.data.taskId} not closed: ${e instanceof Error ? e.message : String(e)}`
+        })
       );
+      if (!closed.ok) stockWarnings.push(`task ${taskId} not closed: ${errorText(closed.error)}`);
     }
-  }
+    return { persisted, stockResults, stockWarnings };
+  });
 
   return json({
     event: persisted,

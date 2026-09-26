@@ -1,3 +1,4 @@
+import { numberToLocaleString } from '$lib/intlCache';
 import {
   DEFAULT_PREFS,
   dueYmd,
@@ -74,7 +75,7 @@ export function dateRange(startYmd: string, endYmd: string): string {
 }
 
 export function trimNumber(n: number, digits = 1): string {
-  return n.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+  return numberToLocaleString(n, 'en-US', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 }
 
 export const AREA_KIND_LABEL: Readonly<Record<SnapshotAreaKind, string>> = AREA_KIND_LABELS;

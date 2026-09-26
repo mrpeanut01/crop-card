@@ -12,6 +12,7 @@ import { buildYearSummary } from '$lib/records/yearSummary.server';
 import { prefsFor } from '$lib/db/userProfile';
 import { parseExportDateRange } from '$lib/exports/dateRange';
 import { todayYmd } from '$lib/prefs';
+import { pageOf, parseShow } from '$lib/records/pagination';
 import {
   RECORD_KINDS,
   listUnifiedRecords,
@@ -51,6 +52,8 @@ export const load: PageServerLoad = async (event) => {
   // Filter chips operate over the already-fetched superset so the
   // count chips stay accurate when the operator toggles them.
   const filteredRecords = allRecords.filter((r) => activeKinds.includes(r.kind));
+  const show = parseShow(url.searchParams.get('show'));
+  const page = pageOf(filteredRecords, show);
 
   const summary = summarizeUnifiedRecords(allRecords, prefs);
   const approaching = recordsApproachingRetention();
@@ -75,7 +78,9 @@ export const load: PageServerLoad = async (event) => {
 
   return {
     chrome,
-    records: filteredRecords,
+    records: page.rows,
+    filteredTotal: page.total,
+    nextShow: page.nextShow,
     summary,
     approachingRetention: approaching.map((e) => e.id),
     sprayers: listSprayers(),

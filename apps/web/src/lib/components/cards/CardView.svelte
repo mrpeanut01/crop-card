@@ -1,5 +1,6 @@
 <script lang="ts">
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import BedMapThumb from './BedMapThumb.svelte';
   import { CARD_KIND_LABEL, type CardModel, type CardVariant } from '$lib/cards/model';
   import type { QrPath } from '$lib/cards/qr';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
@@ -74,6 +75,21 @@
             {nextText}
           </a>
         {/if}
+      {/if}
+
+      {#if card.bedMap && variant !== 'compact'}
+        <section class="section" data-testid="card-bed-map">
+          <h4>Garden bed map</h4>
+          <BedMapThumb map={card.bedMap} print={variant === 'print'} />
+        </section>
+      {/if}
+
+      {#if card.links?.length && variant === 'screen'}
+        <div class="links">
+          {#each card.links as l (l.href)}
+            <a class="next" href={l.href}>{l.label}</a>
+          {/each}
+        </div>
       {/if}
 
       {#if variant !== 'compact'}
@@ -262,6 +278,11 @@
     color: var(--pill-forest-fg);
     font-weight: 600;
     text-decoration: none;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
   p.next {
     margin: 0;

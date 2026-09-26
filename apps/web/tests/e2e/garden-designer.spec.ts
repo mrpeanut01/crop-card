@@ -72,6 +72,26 @@ async function status(page: Page): Promise<Locator> {
   return page.getByTestId('designer-status');
 }
 
+/** Holds every save (PATCH) the page sends until `release`, so the next
+ *  step happens while the last save is still in flight, as on a weak
+ *  signal. `release` returns once the page has handled every answer. */
+async function holdSaves(page: Page): Promise<{ release: () => Promise<void> }> {
+  let open!: () => void;
+  const gate = new Promise<void>((r) => (open = r));
+  const pattern = /\/api\/(blocks|crops)\/[^/?]+(\?|$)/;
+  await page.route(pattern, async (route) => {
+    if (route.request().method() === 'PATCH') await gate;
+    await route.fallback();
+  });
+  return {
+    release: async () => {
+      open();
+      await page.unroute(pattern);
+      await expect(page.getByTestId('garden-designer')).toHaveAttribute('data-saving', '0');
+    }
+  };
+}
+
 async function noHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth
@@ -147,11 +167,13 @@ for (const viewport of [PHONE, DESKTOP]) {
       await bed(page, 'Bed 2').click();
       await page.getByTestId('bed-toolbar').getByRole('button', { name: 'Add crop' }).click();
       await addCropToSelected(page, 'Buttercrunch', /Buttercrunch/);
+      const held = await holdSaves(page);
       const lettuce = await setPlantingSize(page, /Buttercrunch/, 4, 4);
       await expect(lettuce.getByTestId('plant-count')).toContainText('36 plants');
       await expect(lettuce.locator('[data-provenance="data"]')).toBeVisible();
 
       await scrubTo(page, year, 7, 15);
+      await held.release();
       await expect(await status(page)).toHaveText(
         'July 15. Bed 1: Tomato Celebrity F1 (AAS Winner), harvesting. Bed 2: open from July 1.'
       );
@@ -178,6 +200,7 @@ for (const viewport of [PHONE, DESKTOP]) {
       const list = page.getByTestId('designer-list');
       await expect(list).toBeVisible();
 
+      const held = await holdSaves(page);
       for (const [name, x] of [
         ['Bed 1', 2],
         ['Bed 2', 8]
@@ -197,6 +220,8 @@ for (const viewport of [PHONE, DESKTOP]) {
       const bed2 = list.locator('[data-testid="list-bed"][data-bed-name="Bed 2"]');
       await bed2.getByLabel('From west').fill('3');
       await bed2.getByLabel('From west').press('Tab');
+      await expect(page.getByTestId('designer-alert')).toHaveText("Beds can't overlap");
+      await held.release();
       await expect(page.getByTestId('designer-alert')).toHaveText("Beds can't overlap");
       await expect(bed2).toContainText('8 ft from west, 3 ft from north');
 
@@ -250,6 +275,7 @@ for (const viewport of [PHONE, DESKTOP]) {
       });
       const year = await openDesigner(page, areaId, '?view=list');
       const list = page.getByTestId('designer-list');
+      const held = await holdSaves(page);
       for (const [i, x] of [2, 9.5, 17, 24.5].entries()) {
         await list.getByRole('button', { name: 'Add bed' }).click();
         await list.getByRole('button', { name: 'Custom size' }).click();
@@ -271,6 +297,10 @@ for (const viewport of [PHONE, DESKTOP]) {
       await bed1.getByRole('button', { name: /^Bed 1/ }).click();
       await bed1.getByRole('spinbutton', { name: 'Length' }).fill('100');
       await bed1.getByRole('spinbutton', { name: 'Length' }).press('Tab');
+      await expect(page.getByTestId('designer-alert')).toHaveText(
+        "Bed 1 can't be that big in this garden."
+      );
+      await held.release();
       await expect(page.getByTestId('designer-alert')).toHaveText(
         "Bed 1 can't be that big in this garden."
       );

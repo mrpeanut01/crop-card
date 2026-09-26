@@ -198,6 +198,7 @@
   data-testid="garden-designer"
   data-season-year={d.design.seasonYear}
   data-ready={ready}
+  data-saving={d.saving}
 >
   <header class="top">
     <div class="title">

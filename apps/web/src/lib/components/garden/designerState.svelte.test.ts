@@ -510,13 +510,16 @@ describe('DesignerState write safety', () => {
     cleanup();
   });
 
-  it('a save that lands with nothing said since still confirms', async () => {
+  it('a save that lands with nothing said since still confirms, and counts while in flight', async () => {
     const { fetcher, releaseAll } = slowFetch();
     const { d, cleanup } = make({ fetch: fetcher });
     const nudged = d.nudgeBed('bed1', 1, 0);
+    await flush();
+    expect(d.saving).toBe(1);
     releaseAll();
     expect(await nudged).toBe(true);
     await flush();
+    expect(d.saving).toBe(0);
     expect(d.status).toMatch(/^Bed 1 moved to/);
     cleanup();
   });

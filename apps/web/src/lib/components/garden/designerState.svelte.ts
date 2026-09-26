@@ -207,6 +207,8 @@ export class DesignerState {
   /** Client time of the last write the server accepted; 0 before any. */
   lastSavedAt = 0;
   busy = $state(false);
+  /** Writes sent and not yet answered. */
+  saving = $state(0);
   offline = $state(false);
   preview = $state<{ blockId: string; rect: RectFt } | null>(null);
   ghosts = $state<Array<{ key: string; blockId: string; footprint: Footprint; label: string }>>([]);
@@ -514,21 +516,28 @@ export class DesignerState {
 
   async request<T>(url: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
     const { json, ...rest } = init;
-    let res: Response;
+    const write = (rest.method ?? 'GET').toUpperCase() !== 'GET';
+    if (write) this.saving++;
     try {
-      res = await this.fetcher(url, {
-        ...rest,
-        headers: json !== undefined ? { 'content-type': 'application/json' } : undefined,
-        body: json !== undefined ? JSON.stringify(json) : undefined
-      });
-    } catch {
-      this.offline = true;
-      throw new WriteError(OFFLINE_WRITE, 'OFFLINE', true);
+      let res: Response;
+      try {
+        res = await this.fetcher(url, {
+          ...rest,
+          headers: json !== undefined ? { 'content-type': 'application/json' } : undefined,
+          body: json !== undefined ? JSON.stringify(json) : undefined
+        });
+      } catch {
+        this.offline = true;
+        throw new WriteError(OFFLINE_WRITE, 'OFFLINE', true);
+      }
+      const body = (await res.json().catch(() => null)) as (T & GardenErrorResponse) | null;
+      if (!res.ok)
+        throw new WriteError(errorText(body, res.status, url), body?.code ?? null, false);
+      if (write) this.lastSavedAt = Date.now();
+      return body as T;
+    } finally {
+      if (write) this.saving--;
     }
-    const body = (await res.json().catch(() => null)) as (T & GardenErrorResponse) | null;
-    if (!res.ok) throw new WriteError(errorText(body, res.status, url), body?.code ?? null, false);
-    if ((rest.method ?? 'GET').toUpperCase() !== 'GET') this.lastSavedAt = Date.now();
-    return body as T;
   }
 
   private writeSeq = new Map<string, number>();

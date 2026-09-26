@@ -27,6 +27,9 @@
 #   push-tick-secret    shared secret for the twice-daily push-tick job; generated
 #                       here on a local --apply when absent (never printed). Without
 #                       it the job isn't deployed and /api/internal/push-tick is 404.
+#   vapid-public-key +  Web Push key pair (both required; subject is the vapidSubject
+#   vapid-private-key   param). Create with ./scripts/set-azure-secret.sh vapid --generate;
+#                       without them every push tick reports vapid-not-configured.
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
 #
 # The image tag is the commit SHA, so a dirty tree is refused unless --allow-dirty.
@@ -169,7 +172,9 @@ HAS_PUSH_TICK=false; kv_has push-tick-secret && HAS_PUSH_TICK=true
 echo "pingram      : ${HAS_PINGRAM}"
 echo "postmark     : ${HAS_POSTMARK}"
 echo "anthropic    : ${HAS_ANTHROPIC}"
+HAS_VAPID=false; kv_has vapid-public-key && kv_has vapid-private-key && HAS_VAPID=true
 echo "push tick    : ${HAS_PUSH_TICK}"
+echo "web push     : ${HAS_VAPID}"
 
 # ─── Custom domain readiness ────────────────────────────────────────────
 # Zone and host labels come from the .bicepparam so the template and this
@@ -213,7 +218,7 @@ PARAMS=(
   --parameters "$PARAM_FILE"
   --parameters location="$LOCATION" image="$IMAGE" containerRegistryServer="$REGISTRY"
   --parameters keyVaultName="$KV" hasPingramKey="$HAS_PINGRAM" hasPostmarkToken="$HAS_POSTMARK" hasAnthropicKey="$HAS_ANTHROPIC"
-  --parameters hasPushTickSecret="$HAS_PUSH_TICK"
+  --parameters hasPushTickSecret="$HAS_PUSH_TICK" hasVapidKeys="$HAS_VAPID"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
 [ -n "${ALERT_EMAIL:-}" ] && PARAMS+=(--parameters alertEmail="$ALERT_EMAIL")

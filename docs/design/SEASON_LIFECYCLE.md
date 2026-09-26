@@ -434,7 +434,7 @@ Every planting that reaches its readiness window is visible, correctly staged, a
 | Upcoming-windows panel (next 8 too-early plantings) | UC-06 (Sprint 13) | `harvest/+page.svelte:289–306` |
 | 10 archetype renderers, dispatched via `resolveArchetype()` (override > archetype > legacy harvestStyle > family) | UC-06, Phase 27A | `lib/components/harvest/HarvestRouter.svelte`, `lib/components/harvest/renderers/*` |
 | Harvest commit + moisture kernel gate | UC-06 + UC-16, Phase 26A | `routes/api/harvest/record/+server.ts:48–70`, `lib/safety/harvestMoisture.ts` |
-| Moisture thresholds: small-grain 13.5 / row-grain 15.0 / dry-legume 15.0 / forage 18.0 / squash-cure 70.0; warn band = within 1.0% | UC-16 | `lib/safety/harvestMoisture.ts:44–54` |
+| Moisture thresholds: small-grain 13.5 / row-grain 15.0 / dry-legume 15.0 / forage 18.0 (squash-cure ungated since RULES_VERSION 0.5.7: flesh is 80 to 90% water); warn band = within 1.0% | UC-16 | `lib/safety/harvestMoisture.ts:44–54` |
 | Curing countdown (in-progress / ready / overdue) on recorded harvests | FR-08 | `harvest/+page.server.ts:163–203` |
 | Forage cut window re-keys on last pick + cutIntervalDays | #230 | `lib/harvest/forageWindow.ts`, consumed at `+page.server.ts:94–107` |
 | Hay mow gate: NOAA 3-day forecast, pop>30 wet-day STOP, captured forecast frozen | UC-13, FR-19/22 | `lib/hay/engine.ts:35–79`, `routes/api/hay/cuttings/+server.ts:94–116`, `routes/hay/+page.svelte:57, 256–277` |

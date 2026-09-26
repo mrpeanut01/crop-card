@@ -48,6 +48,7 @@ import * as scoutObservationsRepo from './scoutObservations';
 import * as wizardChatRepo from './wizardChat';
 import * as seasonCloseoutsRepo from './seasonCloseouts';
 import * as pushSubscriptionsRepo from './pushSubscriptions';
+import * as emailAlertConsentsRepo from './emailAlertConsents';
 import * as taxonomyRepo from './taxonomy';
 import * as pluginOverridesRepo from './pluginOverrides';
 import * as clientRecordsRepo from './clientRecords';
@@ -879,6 +880,58 @@ describe('cross-tenant isolation', () => {
     ).toBeTruthy();
   });
 
+  it('email_alert_consents are owner-scoped: consent on farm A never covers farm B', () => {
+    fc.assert(
+      fc.property(
+        fc.subarray(
+          ['decon-due', 'lock-window-closing', 'spring-calibration', 'frost-tonight'] as const,
+          {
+            minLength: 1
+          }
+        ),
+        (categories) => {
+          const userId = ensureCrossTenantTestUser(`${OWNER_A}-email-${randomUUID()}`);
+          runWithTenant(OWNER_A, () => {
+            for (const c of categories) {
+              emailAlertConsentsRepo.optIn(userId, c, { source: 'settings', ip: '198.51.100.7' });
+            }
+          });
+          const aPrefs = runWithTenant(OWNER_A, () =>
+            emailAlertConsentsRepo.getEmailPrefsForUser(userId)
+          );
+          const bPrefs = runWithTenant(OWNER_B, () =>
+            emailAlertConsentsRepo.getEmailPrefsForUser(userId)
+          );
+          for (const c of categories) expect(aPrefs[c]).toBe(true);
+          expect(Object.values(bPrefs).some(Boolean)).toBe(false);
+          expect(
+            runWithTenant(OWNER_B, () => emailAlertConsentsRepo.listOptedIn()).some(
+              (r) => r.userId === userId
+            )
+          ).toBe(false);
+          expect(
+            runWithTenant(OWNER_B, () =>
+              emailAlertConsentsRepo.optOut(userId, categories[0], { source: 'settings' })
+            )
+          ).toBe(false);
+          expect(
+            runWithTenant(OWNER_B, () =>
+              emailAlertConsentsRepo.optOutAll(userId, { source: 'settings' })
+            )
+          ).toEqual([]);
+          expect(
+            runWithTenant(OWNER_B, () => emailAlertConsentsRepo.listConsentHistoryForUser(userId))
+          ).toEqual([]);
+          const stillOn = runWithTenant(OWNER_A, () =>
+            emailAlertConsentsRepo.getEmailPrefsForUser(userId)
+          );
+          for (const c of categories) expect(stillOn[c]).toBe(true);
+        }
+      ),
+      { numRuns: 12 }
+    );
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -906,6 +959,7 @@ describe('cross-tenant isolation', () => {
       wizardChatRepo,
       seasonCloseoutsRepo,
       pushSubscriptionsRepo,
+      emailAlertConsentsRepo,
       pluginOverridesRepo,
       plantingJournalRepo
     ];

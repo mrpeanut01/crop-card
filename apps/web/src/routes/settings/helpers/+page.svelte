@@ -64,14 +64,33 @@
     </div>
   </SettingsSection>
 
-  <SettingsSection title={`Active helpers · ${activeMembers.length}`}>
+  <SettingsSection
+    title={`Active helpers · ${activeMembers.length}`}
+    sub={`${data.seats.used} of ${data.seats.limit} helper seats in use, counting pending invites. Inspectors never take a seat.`}
+  >
     {#snippet right()}
-      <button type="button" class="primary-sm" onclick={() => (showInviteForm = !showInviteForm)}>
+      <button
+        type="button"
+        class="primary-sm"
+        disabled={!data.seats.canInvite}
+        onclick={() => (showInviteForm = !showInviteForm)}
+      >
         <Plus size={11} /> Invite helper
       </button>
     {/snippet}
 
-    {#if showInviteForm}
+    {#if !data.seats.canInvite}
+      <div class="seat-limit" data-testid="seat-limit" role="status">
+        <strong>Seat limit reached (grandfathered helpers stay active)</strong>
+        <p>
+          All {data.seats.limit} helper seats on your plan are in use. Everyone already on the farm keeps
+          working and logging sprays. To invite someone new, revoke a pending invite or
+          <a href="/settings/billing">move to a plan with more seats</a>.
+        </p>
+      </div>
+    {/if}
+
+    {#if showInviteForm && data.seats.canInvite}
       <form method="POST" action="?/invite" class="invite-form">
         <label class="iv-field">
           <span>Email</span>
@@ -186,6 +205,23 @@
     line-height: 1.45;
   }
 
+  .seat-limit {
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #f3ead2;
+    border: 1px solid #e0cf9f;
+    color: #4a3b12;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .seat-limit p {
+    margin: 4px 0 0;
+  }
+  .seat-limit a {
+    color: var(--color-forest-deep);
+    font-weight: 600;
+  }
   .invite-form {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -307,6 +343,10 @@
   }
   .primary-sm:hover {
     filter: brightness(1.08);
+  }
+  .primary-sm:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   .ghost-sm {
     background: var(--color-paper);

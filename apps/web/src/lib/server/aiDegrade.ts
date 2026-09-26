@@ -1,6 +1,7 @@
 import type { AiEndpointName } from '$lib/schedule/constants';
+import type { AiLimit } from '$lib/billing/aiLimit';
 import { currentOwnerId, runWithTenant } from '$lib/db/tenant';
-import { checkGuard, recordCall, type GuardOutcome } from './aiGuard';
+import { checkGuard, recordCall, reserveGuard, type GuardHold, type GuardOutcome } from './aiGuard';
 import { aiTry, type FallbackReason } from './aiTry';
 import { getApiKey } from './scanResult';
 
@@ -50,8 +51,10 @@ export interface TryAiWithGuardArgs<T> {
   endpoint: AiEndpointName;
   userId: string;
   /** The signal aborts when aiTry gives up on the call (timeout); prompt
-   *  functions that thread it into the SDK get the request cancelled. */
-  prompt: (signal: AbortSignal) => Promise<T>;
+   *  functions that thread it into the SDK get the request cancelled. The
+   *  hold is this call's budget reservation, for prompts that make several
+   *  model calls and need to re-check the budget between them. */
+  prompt: (signal: AbortSignal, hold: GuardHold | null) => Promise<T>;
   timeoutMs?: number;
   /** Token usage carried by a resolved value, for metering a call that
    *  settles after the timeout. Defaults to reading `value.meta`. */
@@ -93,14 +96,18 @@ export function usageFromMeta(value: unknown): CallUsage | null {
 function meterLateSettle<T>(
   pending: Promise<T>,
   args: TryAiWithGuardArgs<T>,
-  ownerId: string | null
+  ownerId: string | null,
+  hold: GuardHold | null
 ): void {
   const usageOf = args.usageOf ?? usageFromMeta;
   pending.then(
     (value) => {
       const usage = usageOf(value);
-      if (!usage) return;
-      if (usage.inputTokens + usage.outputTokens + usage.usdEstimate <= 0) return;
+      if (!usage || usage.inputTokens + usage.outputTokens + usage.usdEstimate <= 0) {
+        hold?.release();
+        return;
+      }
+      hold?.settle(usage.usdEstimate);
       const write = () =>
         recordCall({
           userId: args.userId,
@@ -121,12 +128,18 @@ function meterLateSettle<T>(
         else write();
       } catch (err) {
         console.error(`[ai] ${args.endpoint} late recordCall failed`, err);
+      } finally {
+        hold?.release();
       }
     },
-    () => {
-      /* aborted or failed after the timeout: no usage reported to meter */
-    }
+    () => hold?.release()
   );
+}
+
+/** The guard's refusal, trimmed to what a banner and upgrade nudge need. */
+export function aiLimitOf(guard: GuardOutcome): AiLimit | null {
+  if (guard.ok || !guard.detail) return null;
+  return { detail: guard.detail, plan: guard.plan ?? null, upgrade: guard.upgrade ?? null };
 }
 
 export function fallbackMessageFor(
@@ -146,41 +159,58 @@ export function fallbackMessageFor(
  *  the caller. The degradation decision is aiTry's; this only resolves the
  *  inputs (key present, guard verdict) and the human copy for the banner. */
 export async function tryAiWithGuard<T>(args: TryAiWithGuardArgs<T>): Promise<DegradeOutcome<T>> {
-  const guard = checkGuard(args.userId, args.endpoint);
+  const aiEnabled = !!getApiKey();
+  const guard: GuardOutcome = aiEnabled
+    ? reserveGuard(args.userId, args.endpoint)
+    : checkGuard(args.userId, args.endpoint);
+  const hold = guard.ok ? (guard.hold ?? null) : null;
   const ownerId = currentOwnerId();
   const controller = new AbortController();
   const state: { error: unknown; pending: Promise<T> | null } = { error: null, pending: null };
-  const tried = await aiTry<T | null>({
-    endpoint: args.endpoint,
-    aiEnabled: !!getApiKey(),
-    overCap: !guard.ok && guard.reason === 'cap-exceeded',
-    rateLimited: !guard.ok && guard.reason === 'quota-exceeded',
-    timeoutMs: args.timeoutMs ?? LONG_AI_TIMEOUT_MS,
-    prompt: async () => {
-      try {
-        state.pending = args.prompt(controller.signal);
-        return { value: await state.pending };
-      } catch (err) {
-        state.error = err;
-        throw err;
+  let keepHold = false;
+  try {
+    const tried = await aiTry<T | null>({
+      endpoint: args.endpoint,
+      aiEnabled,
+      overCap: !guard.ok && guard.reason === 'cap-exceeded',
+      rateLimited: !guard.ok && guard.reason === 'quota-exceeded',
+      timeoutMs: args.timeoutMs ?? LONG_AI_TIMEOUT_MS,
+      prompt: async () => {
+        try {
+          state.pending = args.prompt(controller.signal, hold);
+          return { value: await state.pending };
+        } catch (err) {
+          state.error = err;
+          throw err;
+        }
+      },
+      fallback: () => null
+    });
+    if (tried.provenance === 'ai') {
+      const usage = (args.usageOf ?? usageFromMeta)(tried.value as T);
+      if (hold && usage && usage.inputTokens + usage.outputTokens > 0) {
+        hold.settle(usage.usdEstimate);
+        keepHold = true;
       }
-    },
-    fallback: () => null
-  });
-  if (tried.provenance === 'ai') return { provenance: 'ai', value: tried.value as T, guard };
-  const reason = tried.fallbackReason ?? 'rate-limit';
-  if (reason === 'timeout' && state.pending) {
-    controller.abort();
-    meterLateSettle(state.pending, args, ownerId);
+      return { provenance: 'ai', value: tried.value as T, guard };
+    }
+    const reason = tried.fallbackReason ?? 'rate-limit';
+    if (reason === 'timeout' && state.pending) {
+      controller.abort();
+      meterLateSettle(state.pending, args, ownerId, hold);
+      keepHold = true;
+    }
+    return {
+      provenance: 'fallback',
+      value: null,
+      fallbackReason: reason,
+      fallbackMessage: fallbackMessageFor(reason, guard, state.error),
+      error: state.error,
+      guard
+    };
+  } finally {
+    if (!keepHold) hold?.release();
   }
-  return {
-    provenance: 'fallback',
-    value: null,
-    fallbackReason: reason,
-    fallbackMessage: fallbackMessageFor(reason, guard, state.error),
-    error: state.error,
-    guard
-  };
 }
 
 /** Zero-token audit row for a deterministic response. Zero-token rows do not

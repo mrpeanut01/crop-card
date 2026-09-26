@@ -118,6 +118,6 @@ export async function askPhotoHelp(
     outputTokens: usage.output_tokens ?? 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, usage);
   return { text: text.trim().slice(0, MAX_ANSWER_CHARS), meta };
 }

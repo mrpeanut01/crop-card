@@ -101,6 +101,9 @@ const ANONYMOUS_PATHS = new Set([
   '/auth/verify', // UC-17 — redeem the link; mints the HMAC session.
   '/api/openapi.json', // Phase 24 — external agents fetch the OpenAPI doc pre-auth.
   '/api/billing/stripe-webhook', // Stripe POSTs without a session; the signature is the auth.
+  '/pricing', // Public plan comparison; static content, no tenant data.
+  '/api/email/pingram-webhook', // Pingram POSTs delivery events; the signature is the auth.
+  '/api/email/unsubscribe', // RFC 8058 one-click from the mail client; the signed token is the auth.
   // Phase 30F — the /cards route renders with ssr=false, so this path is a
   // data-free HTML shell the service worker precaches at install. Its data
   // (/cards/__data.json, /api/cards/snapshot) still needs a session; see
@@ -108,7 +111,8 @@ const ANONYMOUS_PATHS = new Set([
   '/cards'
 ]);
 const HTML_ONLY_ANONYMOUS_PATHS = new Set(['/cards']);
-const ANONYMOUS_PATH_PREFIXES = ['/invite/', '/api/health/'];
+// /unsubscribe/<token>: an email's unsubscribe link must work signed out.
+const ANONYMOUS_PATH_PREFIXES = ['/invite/', '/api/health/', '/unsubscribe/'];
 const ANONYMOUS_STATIC_PATHS = new Set([
   '/manifest.webmanifest',
   '/favicon.ico',
@@ -217,17 +221,61 @@ export function csrfDecision(input: {
 }
 
 /**
- * Billing gate for an Owner whose status is already known. API callers get
- * a JSON 402 instead of a 303 to the HTML /suspended page; /api/billing/**
- * stays reachable so a suspended Owner can pay their way back.
+ * Cross-site form guard, moved here from SvelteKit's built-in
+ * `csrf.checkOrigin` (see svelte.config.js) with the same rule: a POST, PUT,
+ * PATCH or DELETE with a form content type must carry this app's Origin.
+ * The one exception is the RFC 8058 one-click unsubscribe, which mail
+ * providers POST server-to-server with no Origin; its signed token is the
+ * only authority and it can only turn email off.
+ */
+const FORM_CONTENT_TYPES = new Set([
+  'application/x-www-form-urlencoded',
+  'multipart/form-data',
+  'text/plain',
+  'application/x-sveltekit-formdata'
+]);
+const CROSS_SITE_FORM_PATHS = new Set(['/api/email/unsubscribe']);
+
+export function formCsrfForbidden(input: {
+  method: string;
+  pathname: string;
+  contentType: string | null;
+  origin: string | null;
+  appOrigin: string;
+}): boolean {
+  if (!MUTATION_METHODS.has(input.method)) return false;
+  const type = (input.contentType?.split(';', 1)[0].trim() ?? '').toLowerCase();
+  if (!FORM_CONTENT_TYPES.has(type)) return false;
+  if (input.origin === input.appOrigin) return false;
+  return !CROSS_SITE_FORM_PATHS.has(input.pathname);
+}
+
+/**
+ * Gate for an Owner a superadmin suspended (fraud or terms abuse; Stripe
+ * never suspends). API callers get a JSON 402 instead of a 303 to the HTML
+ * /suspended page. Even then the farm keeps its records: record pages,
+ * record exports (CSV, VDACS, year summary) and the full data export stay
+ * readable, and billing and sign-out stay reachable.
  */
 export type SuspendedTenantGate = 'allow' | 'redirect' | 'json-402';
+function underPath(pathname: string, prefix: string): boolean {
+  return pathname === prefix || pathname.startsWith(prefix + '/');
+}
 export function suspendedTenantGate(
   pathname: string,
-  billingStatus: string | null
+  billingStatus: string | null,
+  method = 'GET'
 ): SuspendedTenantGate {
   if (billingStatus !== 'suspended') return 'allow';
   if (pathname.startsWith('/api/billing/')) return 'allow';
+  if (underPath(pathname, '/settings/billing') || pathname === '/signout') return 'allow';
+  const read = method === 'GET' || method === 'HEAD';
+  if (read) {
+    if (underPath(pathname, '/records')) return 'allow';
+    if (pathname.startsWith('/api/records/')) return 'allow';
+    if (pathname.startsWith('/api/spray/records/export.')) return 'allow';
+    if (pathname === '/api/account/export.json') return 'allow';
+  }
   return pathname.startsWith('/api/') ? 'json-402' : 'redirect';
 }
 
@@ -283,6 +331,21 @@ const handleRequest: Handle = async ({ event, resolve }) => {
   // The push-tick wakeup job authenticates with its own shared secret (the
   // endpoint checks it). No cookie, Bearer, CSRF or tenant context applies.
   if (isInternalTickRequest(event.url.pathname, event.request.headers)) return resolve(event);
+
+  if (
+    formCsrfForbidden({
+      method: event.request.method,
+      pathname: event.url.pathname,
+      contentType: event.request.headers.get('content-type'),
+      origin: event.request.headers.get('origin'),
+      appOrigin: event.url.origin
+    })
+  ) {
+    const message = `Cross-site ${event.request.method} form submissions are forbidden`;
+    return event.request.headers.get('accept') === 'application/json'
+      ? json({ message }, { status: 403 })
+      : new Response(message, { status: 403, headers: { 'content-type': 'text/plain' } });
+  }
 
   // Phase 24 — Bearer-first auth resolution.
   const authHeader = event.request.headers.get('authorization');
@@ -387,7 +450,11 @@ const handleRequest: Handle = async ({ event, resolve }) => {
     path !== '/suspended' &&
     path !== '/signout'
   ) {
-    const gate = suspendedTenantGate(path, ownerBillingStatus(user.activeOwnerId));
+    const gate = suspendedTenantGate(
+      path,
+      ownerBillingStatus(user.activeOwnerId),
+      event.request.method
+    );
     if (gate === 'json-402') {
       return json(
         { error: 'tenant-suspended' },

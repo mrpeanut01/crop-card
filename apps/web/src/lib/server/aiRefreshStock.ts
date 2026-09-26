@@ -203,7 +203,7 @@ export async function refreshStockItem(input: StockRefreshInput): Promise<StockR
       outputTokens: usage.output_tokens ?? 0,
       usdEstimate: 0
     };
-    meta.usdEstimate = estimateUsd(meta, choice);
+    meta.usdEstimate = estimateUsd(meta, choice, usage);
 
     // Claude's text block carries the structured JSON; web_search citations
     // are attached as `citations[]` on the text block when web_search ran.

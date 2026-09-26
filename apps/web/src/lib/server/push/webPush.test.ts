@@ -6,6 +6,7 @@ import {
   b64urlDecode,
   b64urlEncode,
   createVapidJwt,
+  DEFAULT_VAPID_SUBJECT,
   decryptPayload,
   encryptPayload,
   generateVapidKeys,
@@ -162,6 +163,10 @@ describe('VAPID (RFC 8292)', () => {
     expect(readVapidConfig({ ...env, VAPID_PUBLIC_KEY: '' })).toBeNull();
     expect(readVapidConfig({ ...env, VAPID_PRIVATE_KEY: undefined })).toBeNull();
     expect(readVapidConfig({ ...env, VAPID_SUBJECT: 'ops@cropcard.test' })).toBeNull();
+    expect(readVapidConfig({ ...env, VAPID_SUBJECT: undefined })?.subject).toBe(
+      'mailto:hello@cropcard.io'
+    );
+    expect(readVapidConfig({ ...env, VAPID_SUBJECT: '  ' })?.subject).toBe(DEFAULT_VAPID_SUBJECT);
     expect(readVapidConfig({ ...env, VAPID_PRIVATE_KEY: vapid().privateKey })).toBeNull();
     expect(readVapidConfig({ ...env, VAPID_PUBLIC_KEY: 'not-a-key' })).toBeNull();
   });

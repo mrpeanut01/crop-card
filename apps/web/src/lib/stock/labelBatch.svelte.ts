@@ -66,7 +66,7 @@ export function classifyScanResponse(status: number, body: unknown): ScanOutcome
 
 function stopMessageFor(reason: string): string {
   if (reason === 'no-key') return 'No Anthropic API key configured.';
-  if (reason === 'over-cap') return 'Monthly AI spend cap reached.';
+  if (reason === 'over-cap') return "This month's AI help is used up.";
   if (reason === 'rate-limit') return 'Claude is rate-limited right now.';
   return 'You appear to be offline.';
 }

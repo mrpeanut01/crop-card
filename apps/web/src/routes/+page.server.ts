@@ -1,5 +1,11 @@
 import { error, fail, redirect, type Actions } from '@sveltejs/kit';
-import { formatPhone, parseIdentifier } from '$lib/identity';
+import {
+  formatPhone,
+  parseForChannel,
+  parseIdentifier,
+  parseSignInChannel,
+  type SignInChannel
+} from '$lib/identity';
 import { loginByEmail, loginByIdentity, redirectFromLogin } from '$lib/server/auth';
 import {
   authMode,
@@ -30,7 +36,8 @@ export const load: PageServerLoad = ({ locals, url }) => {
   }
   return {
     inviteToken: url.searchParams.get('invite') ?? null,
-    authMode: authMode()
+    authMode: authMode(),
+    via: (url.searchParams.get('via') === 'phone' ? 'phone' : 'email') as SignInChannel
   };
 };
 
@@ -70,7 +77,14 @@ export const actions: Actions = {
     assertDirectLogin();
     const fd = await event.request.formData();
     const inviteToken = String(fd.get('invite') ?? '') || null;
-    const id = parseIdentifier(fd.get('identifier') ?? fd.get('email'));
+    const raw = fd.get('identifier') ?? fd.get('email');
+    const channel = parseSignInChannel(fd.get('channel'));
+    let id = parseIdentifier(raw);
+    if (channel) {
+      const parsed = parseForChannel(raw, channel);
+      if (!parsed.ok) return fail(400, { error: parsed.error, inviteToken, via: channel });
+      id = parsed.id;
+    }
     if (!id) return fail(400, { error: 'Enter an email address or a phone number.', inviteToken });
     let result;
     try {
@@ -100,12 +114,26 @@ export const actions: Actions = {
     const fd = await event.request.formData();
     const raw = fd.get('identifier') ?? fd.get('email');
     const inviteToken = sanitizeInviteToken(fd.get('invite'));
-    const result = await handleLoginRequest(event, raw, inviteToken);
+    const channel = parseSignInChannel(fd.get('channel'));
+    const entered = String(raw ?? '');
+    let identifier: unknown = raw;
+    if (channel) {
+      const parsed = parseForChannel(raw, channel);
+      if (!parsed.ok) return fail(400, { error: parsed.error, inviteToken, entered, via: channel });
+      identifier = parsed.id.value;
+    }
+    const result = await handleLoginRequest(event, identifier, inviteToken);
     if (!result.ok) {
-      return fail(result.status, { error: result.error, inviteToken, entered: String(raw ?? '') });
+      return fail(result.status, {
+        error: result.error,
+        inviteToken,
+        entered,
+        via: channel ?? undefined
+      });
     }
     return {
       sent: true,
+      via: (result.channel === 'sms' ? 'phone' : 'email') as SignInChannel,
       channel: result.channel,
       identifier: result.identifier,
       sentTo: result.sentTo,
@@ -124,6 +152,7 @@ export const actions: Actions = {
     if (!redeemed.ok) {
       return fail(400, {
         sent: true,
+        via: (id?.kind === 'phone' ? 'phone' : 'email') as SignInChannel,
         codeError: redeemed.error,
         channel: id?.kind === 'phone' ? ('sms' as const) : ('email' as const),
         identifier,

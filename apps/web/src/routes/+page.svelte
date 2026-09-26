@@ -1,17 +1,24 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { parseIdentifier } from '$lib/identity';
+  import type { SignInChannel } from '$lib/identity';
   import type { ActionData, PageData } from './$types';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let showDemo = $state(false);
   let submitting = $state(false);
-  let entered = $state('');
-
-  const detected = $derived(parseIdentifier(entered));
+  const via = $derived<SignInChannel>(form && 'via' in form && form.via ? form.via : data.via);
+  const enteredBefore = $derived(form && 'entered' in form ? (form.entered ?? '') : '');
   const sent = $derived(form && 'sent' in form && form.sent ? form : null);
   const inviteToken = $derived(form?.inviteToken ?? data.inviteToken);
+
+  function hrefFor(target: SignInChannel): string {
+    const params = new URLSearchParams();
+    if (target === 'phone') params.set('via', 'phone');
+    if (inviteToken) params.set('invite', inviteToken);
+    const q = params.toString();
+    return q ? `/?${q}` : '/';
+  }
 
   function pending() {
     submitting = true;
@@ -84,6 +91,10 @@
           CSV + PDF exports ready for cost-share inspectors and USDA reporting
         </li>
       </ul>
+
+      <p class="pricing-link">
+        Free forever for records, safety and exports. <a href="/pricing">See plans and pricing</a>
+      </p>
 
       <!-- Decorative agricultural scene. Pure SVG so it ships offline; no
            external image asset. Three planted rows, a sun, and a barn silhouette. -->
@@ -175,151 +186,186 @@
   <section class="auth" aria-labelledby="signin-title">
     <div class="auth-card">
       <h2 id="signin-title">Sign in</h2>
-      <p class="auth-hint">
-        Enter your email or mobile number. New here? We'll set up your farm in the next step.
-      </p>
+      {#if !sent && via === 'phone'}
+        <p class="auth-hint">
+          Sign in with a text message. New here? We'll set up your farm in the next step.
+        </p>
+      {:else if !sent}
+        <p class="auth-hint">
+          Enter your email and we'll send you a sign-in link. New here? We'll set up your farm in
+          the next step.
+        </p>
+      {/if}
 
       {#if form?.error}
         <p class="error" role="alert">{form.error}</p>
       {/if}
 
       {#if data.inviteToken}
-        <p class="invite-banner" role="status">
-          You've been invited to a farm — sign in to accept.
-        </p>
+        <p class="invite-banner" role="status">You've been invited to a farm. Sign in to accept.</p>
       {/if}
 
-      {#if data.authMode === 'magic-link'}
-        {#if sent}
-          <div class="sent" role="status" aria-live="polite">
-            {#if sent.channel === 'sms'}
-              <p><strong>Check your texts.</strong></p>
-              <p>We sent a 6-digit code to {sent.sentTo}. It expires in 10 minutes.</p>
-            {:else}
-              <p><strong>Check your email.</strong></p>
-              <p>
-                We sent a sign-in link to {sent.sentTo}. Tap it on this device, or enter the 6-digit
-                code from the email below.
-              </p>
-            {/if}
-          </div>
-
-          {#if 'codeError' in sent && sent.codeError}
-            <p class="error" role="alert">{sent.codeError}</p>
+      {#if data.authMode === 'magic-link' && sent}
+        <div class="sent" role="status" aria-live="polite">
+          {#if sent.channel === 'sms'}
+            <p><strong>Check your texts.</strong></p>
+            <p>We sent a 6-digit code to {sent.sentTo}. It expires in 10 minutes.</p>
+          {:else}
+            <p><strong>Check your email.</strong></p>
+            <p>
+              We sent a sign-in link and a 6-digit backup code to {sent.sentTo}, in the same email.
+              Tap the link on this device, or type the code below if you opened the email somewhere
+              else.
+            </p>
           {/if}
+        </div>
 
-          <form method="POST" action="?/code" use:enhance={pending}>
-            <label class="row">
-              <span class="lbl">6-digit code</span>
-              <input
-                class="code-input"
-                type="text"
-                name="code"
-                required
-                autocomplete="one-time-code"
-                inputmode="numeric"
-                maxlength="7"
-                placeholder="123456"
-              />
-            </label>
+        {#if 'codeError' in sent && sent.codeError}
+          <p class="error" role="alert">{sent.codeError}</p>
+        {/if}
+
+        <form method="POST" action="?/code" use:enhance={pending}>
+          <label class="row">
+            <span class="lbl">6-digit code</span>
+            <input
+              class="code-input"
+              type="text"
+              name="code"
+              required
+              autocomplete="one-time-code"
+              inputmode="numeric"
+              maxlength="7"
+              placeholder="123456"
+            />
+          </label>
+          <input type="hidden" name="identifier" value={sent.identifier} />
+          {#if inviteToken}
+            <input type="hidden" name="invite" value={inviteToken} />
+          {/if}
+          <button class="primary" type="submit" disabled={submitting}>
+            {submitting ? 'Checking…' : 'Sign in →'}
+          </button>
+        </form>
+
+        <div class="code-actions">
+          <form method="POST" action="?/magic" use:enhance={pending}>
             <input type="hidden" name="identifier" value={sent.identifier} />
+            <input
+              type="hidden"
+              name="channel"
+              value={sent.channel === 'sms' ? 'phone' : 'email'}
+            />
             {#if inviteToken}
               <input type="hidden" name="invite" value={inviteToken} />
             {/if}
-            <button class="primary" type="submit" disabled={submitting}>
-              {submitting ? 'Checking…' : 'Sign in →'}
+            <button class="link-btn" type="submit" disabled={submitting}>
+              {sent.channel === 'sms' ? 'Send a new code' : 'Send a new email'}
             </button>
           </form>
-
-          <div class="code-actions">
-            <form method="POST" action="?/magic" use:enhance={pending}>
-              <input type="hidden" name="identifier" value={sent.identifier} />
-              {#if inviteToken}
-                <input type="hidden" name="invite" value={inviteToken} />
-              {/if}
-              <button class="link-btn" type="submit" disabled={submitting}>Send a new code</button>
-            </form>
-            <a
-              class="link-btn"
-              href={inviteToken ? `/?invite=${encodeURIComponent(inviteToken)}` : '/'}
-              data-sveltekit-reload>Use a different email or phone</a
-            >
-          </div>
-        {:else}
-          <form method="POST" action="?/magic" use:enhance={pending}>
+          {#if sent.channel === 'sms'}
+            <a class="link-btn" href={hrefFor('phone')} data-sveltekit-reload>
+              Use a different number
+            </a>
+            <a class="link-btn" href={hrefFor('email')} data-sveltekit-reload>Use email instead</a>
+          {:else}
+            <a class="link-btn" href={hrefFor('email')} data-sveltekit-reload>
+              Use a different email
+            </a>
+          {/if}
+        </div>
+      {:else}
+        <form
+          method="POST"
+          action={data.authMode === 'magic-link' ? '?/magic' : '?/signin'}
+          use:enhance={pending}
+        >
+          <input type="hidden" name="channel" value={via} />
+          {#if via === 'phone'}
             <label class="row">
-              <span class="lbl">Email or mobile number</span>
+              <span class="lbl">Mobile number</span>
               <input
-                type="text"
+                type="tel"
                 name="identifier"
                 required
-                bind:value={entered}
-                autocomplete="username"
-                placeholder="you@example.com or (571) 555-0123"
+                defaultValue={enteredBefore}
+                autocomplete="tel"
+                inputmode="tel"
+                placeholder="(571) 555-0123"
+              />
+            </label>
+            <p class="consent">
+              CropCard will text you a sign-in code. Msg &amp; data rates may apply. Reply STOP to
+              opt out, HELP for help.
+            </p>
+          {:else}
+            <label class="row">
+              <span class="lbl">Email</span>
+              <input
+                type="email"
+                name="identifier"
+                required
+                defaultValue={enteredBefore}
+                autocomplete="email"
+                inputmode="email"
+                placeholder="you@example.com"
                 autocapitalize="off"
                 autocorrect="off"
                 spellcheck="false"
               />
             </label>
-            {#if data.inviteToken}
-              <input type="hidden" name="invite" value={data.inviteToken} />
+            {#if data.authMode === 'magic-link'}
+              <p class="field-note">
+                One email holds both a sign-in link and a 6-digit backup code. No password to
+                remember.
+              </p>
             {/if}
-            <button class="primary" type="submit" disabled={submitting}>
-              {#if submitting}
-                Sending…
-              {:else if detected?.kind === 'phone'}
-                Text me a code →
-              {:else if detected?.kind === 'email'}
-                Email me a sign-in link →
-              {:else}
-                Continue →
-              {/if}
-            </button>
-          </form>
-        {/if}
-      {:else}
-        <form method="POST" action="?/signin" use:enhance={pending}>
-          <label class="row">
-            <span class="lbl">Email or mobile number</span>
-            <input
-              type="text"
-              name="identifier"
-              required
-              autocomplete="username"
-              placeholder="you@example.com or (571) 555-0123"
-              autocapitalize="off"
-              autocorrect="off"
-              spellcheck="false"
-            />
-          </label>
+          {/if}
           {#if data.inviteToken}
             <input type="hidden" name="invite" value={data.inviteToken} />
           {/if}
           <button class="primary" type="submit" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Continue →'}
+            {#if submitting}
+              {data.authMode === 'magic-link' ? 'Sending…' : 'Signing in…'}
+            {:else if data.authMode !== 'magic-link'}
+              Continue →
+            {:else if via === 'phone'}
+              Text me a code →
+            {:else}
+              Email me a sign-in link →
+            {/if}
           </button>
         </form>
 
-        <details class="demo" bind:open={showDemo}>
-          <summary>Try the demo</summary>
-          <p class="demo-hint">
-            One-tap sign-in to a sandbox tenant — pick a role to feel the surface area.
-          </p>
-          <div class="demo-grid">
-            {#each demoRoles as r (r.role)}
-              <form method="POST" action="?/demo" use:enhance>
-                <input type="hidden" name="role" value={r.role} />
-                {#if data.inviteToken}
-                  <input type="hidden" name="invite" value={data.inviteToken} />
-                {/if}
-                <button class="demo-btn" type="submit">
-                  <strong>{r.label}</strong>
-                  <small>{r.sub}</small>
-                </button>
-              </form>
-            {/each}
-          </div>
-        </details>
+        <div class="alt-path">
+          {#if via === 'phone'}
+            <a class="link-btn" href={hrefFor('email')}>Use email instead</a>
+          {:else}
+            <a class="link-btn" href={hrefFor('phone')}>Use a phone number instead</a>
+          {/if}
+        </div>
+
+        {#if data.authMode !== 'magic-link'}
+          <details class="demo" bind:open={showDemo}>
+            <summary>Try the demo</summary>
+            <p class="demo-hint">
+              One-tap sign-in to a sandbox tenant. Pick a role to feel the surface area.
+            </p>
+            <div class="demo-grid">
+              {#each demoRoles as r (r.role)}
+                <form method="POST" action="?/demo" use:enhance>
+                  <input type="hidden" name="role" value={r.role} />
+                  {#if data.inviteToken}
+                    <input type="hidden" name="invite" value={data.inviteToken} />
+                  {/if}
+                  <button class="demo-btn" type="submit">
+                    <strong>{r.label}</strong>
+                    <small>{r.sub}</small>
+                  </button>
+                </form>
+              {/each}
+            </div>
+          </details>
+        {/if}
       {/if}
     </div>
 
@@ -500,6 +546,24 @@
     text-decoration: underline;
     cursor: pointer;
   }
+  .field-note,
+  .consent {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: #3d4742;
+  }
+  .consent {
+    background: #f4f8f3;
+    border: 1px solid #d6ddd6;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+  }
+  .alt-path {
+    margin-top: 0.75rem;
+    display: flex;
+    justify-content: center;
+  }
   .sent {
     background: #e7f4ee;
     border: 1px solid #b9d8c5;
@@ -531,7 +595,9 @@
     font-size: 0.875rem;
     color: #3d4742;
   }
-  input[type='text'] {
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'] {
     font: inherit;
     padding: 0.75rem 0.875rem;
     border: 1px solid #c9d2c9;
@@ -539,7 +605,9 @@
     min-height: 48px;
     background: #fbfbf9;
   }
-  input[type='text']:focus {
+  input[type='text']:focus,
+  input[type='email']:focus,
+  input[type='tel']:focus {
     outline: 2px solid #1f5e3a;
     outline-offset: 1px;
     background: white;
@@ -632,6 +700,17 @@
     font-size: 0.8rem;
   }
 
+  .pricing-link {
+    margin: 0.75rem 0 0;
+    font-size: 0.95rem;
+  }
+  .pricing-link a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: #1f5e3a;
+    font-weight: 600;
+  }
   .auth-footer {
     margin-top: 2rem;
     text-align: center;

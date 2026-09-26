@@ -1,31 +1,37 @@
-/**
- * /settings/billing loader — plan status from owner_subscriptions (the
- * Stripe webhook keeps it converged) + whether this server has Stripe
- * configured, so the UI can show honest Checkout / Portal actions.
- */
-
 import { error, redirect, type ServerLoad } from '@sveltejs/kit';
-import { db } from '$lib/db/client';
-import { owners } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
 import { spendSnapshot } from '$lib/server/aiGuard';
-import { billingConfig, getBillingSummary } from '$lib/server/billing/stripeApi';
+import { resolvePlan, seatUsage } from '$lib/server/billing/plans';
+import {
+  availableCheckouts,
+  billingConfig,
+  getBillingSummary
+} from '$lib/server/billing/stripeApi';
 
 export const load: ServerLoad = ({ locals, url }) => {
   if (!locals.user) throw redirect(303, '/');
   if (locals.user.role !== 'owner') throw error(403, 'owner-only');
-
   const ownerId = locals.user.activeOwnerId;
-  const ownerRow = ownerId ? db.select().from(owners).where(eq(owners.id, ownerId)).get() : null;
-  const summary = ownerId ? getBillingSummary(ownerId) : null;
+  if (!ownerId) throw redirect(303, '/owner-picker');
+
+  const plan = resolvePlan(ownerId);
+  const summary = getBillingSummary(ownerId);
+  const config = billingConfig();
   const checkout = url.searchParams.get('checkout');
 
   return {
-    billingStatus: summary?.status ?? ownerRow?.billingStatus ?? 'unknown',
+    plan: {
+      id: plan.plan,
+      source: plan.source,
+      starterBoost: plan.starterBoost,
+      boostEndsAt: plan.boostEndsAt,
+      graceEndsAt: plan.graceEndsAt
+    },
     subscription: summary,
-    billingConfigured: billingConfig() !== null,
+    billingConfigured: config !== null,
+    checkouts: availableCheckouts(config),
     impersonating: locals.user.impersonating,
     checkoutResult: checkout === 'success' || checkout === 'cancel' ? checkout : null,
-    ai: spendSnapshot()
+    ai: spendSnapshot(),
+    seats: seatUsage(ownerId)
   };
 };

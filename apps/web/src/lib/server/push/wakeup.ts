@@ -11,6 +11,7 @@
 
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { runPushTick, type PushTickDeps, type PushTickSummary } from './scheduler';
+import { emailAlertOrigin } from './emailAlerts';
 import { readVapidConfig } from './webPush';
 import { runDbMaintenance, type MaintenanceResult } from '$lib/server/dbMaintenance';
 
@@ -43,7 +44,7 @@ export function isInternalTickRequest(pathname: string, headers: Headers): boole
   return pathname === INTERNAL_TICK_PATH && headers.has(TICK_SECRET_HEADER);
 }
 
-export type TickPushResult = PushTickSummary | { skipped: 'vapid-not-configured' };
+export type TickPushResult = PushTickSummary | { skipped: 'alerts-not-configured' };
 
 export type TickMaintenanceResult = MaintenanceResult | { ran: false; failed: true };
 
@@ -65,10 +66,13 @@ let inFlight: Promise<Omit<TickResult, 'joined'>> | null = null;
 async function runOnce(deps: ScheduledTickDeps): Promise<Omit<TickResult, 'joined'>> {
   const now = deps.now ?? Date.now;
   const started = now();
-  const config = readVapidConfig(deps.env ?? process.env);
-  const push: TickPushResult = config
-    ? await runPushTick({ ...deps, config })
-    : { skipped: 'vapid-not-configured' };
+  const env = deps.env ?? process.env;
+  const config = readVapidConfig(env);
+  const emailOrigin = deps.emailOrigin !== undefined ? deps.emailOrigin : emailAlertOrigin(env);
+  const push: TickPushResult =
+    config || emailOrigin
+      ? await runPushTick({ ...deps, config, emailOrigin })
+      : { skipped: 'alerts-not-configured' };
   let maintenance: TickMaintenanceResult;
   try {
     maintenance = await runDbMaintenance();

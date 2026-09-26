@@ -8,9 +8,9 @@
 import { getSetting } from '$lib/db/settings';
 import {
   DEFAULT_AI_DAILY_QUOTA,
-  DEFAULT_AI_MONTHLY_USD_CAP,
   LOUDOUN_DEFAULT_LAT_LON,
   SETTINGS_KEYS,
+  type AiEndpointName,
   type FarmLatLon
 } from './constants';
 import { frostDatesFromMmDd } from './frostSeason';
@@ -53,31 +53,29 @@ export function getFarmLatLon(): FarmLatLon {
   return LOUDOUN_DEFAULT_LAT_LON;
 }
 
-export function getAiMonthlyUsdCap(): number {
+/** The owner's own monthly AI cap, or null when they have not set one.
+ *  The plan budget is the ceiling; this can only lower it. */
+export function getAiMonthlyUsdCapSetting(): number | null {
   const raw = getSetting(SETTINGS_KEYS.aiMonthlyUsdCap);
-  const n = raw ? Number(raw) : NaN;
-  return Number.isFinite(n) && n >= 0 ? n : DEFAULT_AI_MONTHLY_USD_CAP;
+  if (raw == null || raw === '') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
-export function getAiDailyCallQuota(): typeof DEFAULT_AI_DAILY_QUOTA {
+/** Per-feature daily limits the owner lowered below the plan's. */
+export function getAiDailyCallQuotaOverrides(): Partial<Record<AiEndpointName, number>> {
   const raw = getSetting(SETTINGS_KEYS.aiDailyCallQuota);
-  if (!raw) return DEFAULT_AI_DAILY_QUOTA;
+  if (!raw) return {};
   try {
-    const v = JSON.parse(raw) as Partial<typeof DEFAULT_AI_DAILY_QUOTA>;
-    // Merge per-key so any owner overrides apply on top of the canonical
-    // defaults. Iterating Object.keys keeps us in sync as new quota
-    // endpoints land — no need to hand-extend this list every time
-    // (rationale, plugin-scan, plugin-search, plugin-batch-scan, …).
-    const out = { ...DEFAULT_AI_DAILY_QUOTA };
-    for (const key of Object.keys(out) as Array<keyof typeof DEFAULT_AI_DAILY_QUOTA>) {
-      const override = v[key];
-      if (typeof override === 'number') {
-        (out as Record<string, number>)[key] = override;
-      }
+    const v = JSON.parse(raw) as Record<string, unknown>;
+    const out: Partial<Record<AiEndpointName, number>> = {};
+    for (const key of Object.keys(DEFAULT_AI_DAILY_QUOTA) as AiEndpointName[]) {
+      const n = v[key];
+      if (typeof n === 'number' && Number.isFinite(n) && n >= 0) out[key] = n;
     }
     return out;
   } catch {
-    return DEFAULT_AI_DAILY_QUOTA;
+    return {};
   }
 }
 

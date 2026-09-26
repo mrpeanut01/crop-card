@@ -102,6 +102,16 @@
 </script>
 
 <div class="methods">
+  {#if !email && phone && adding !== 'email'}
+    <div class="nudge" role="note" aria-label="Add an email">
+      <p>
+        <strong>Add an email to sign in faster.</strong> Email is the main way into CropCard: one message
+        carries a sign-in link and a 6-digit backup code. Farm invites go to email too. Your mobile number
+        keeps working.
+      </p>
+      <button type="button" class="primary-sm" onclick={() => start('email')}>Add an email</button>
+    </div>
+  {/if}
   {#each methods as m (m.kind)}
     <div class="method-row">
       <div class="m-text">
@@ -206,6 +216,20 @@
   .m-value {
     font-size: 14px;
     overflow-wrap: anywhere;
+  }
+  .nudge {
+    display: grid;
+    gap: 10px;
+    justify-items: start;
+    padding: 12px;
+    border: 1px solid var(--color-forest, #1f5e3a);
+    border-radius: 6px;
+    background: var(--color-cream-2, #f3ecdc);
+  }
+  .nudge p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.45;
   }
   .add-panel {
     display: grid;

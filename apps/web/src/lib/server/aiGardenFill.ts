@@ -150,7 +150,7 @@ export async function suggestGardenFill(
     outputTokens: usage.output_tokens ?? 0,
     usdEstimate: 0
   };
-  meta.usdEstimate = estimateUsd(meta, choice);
+  meta.usdEstimate = estimateUsd(meta, choice, usage);
   return { proposals: parseGardenFillResponse(text), meta };
 }
 

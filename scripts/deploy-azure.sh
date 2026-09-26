@@ -27,10 +27,14 @@
 #   push-tick-secret    shared secret for the twice-daily push-tick job; generated
 #                       here on a local --apply when absent (never printed). Without
 #                       it the job isn't deployed and /api/internal/push-tick is 404.
-#   vapid-public-key +  Web Push key pair (both required; subject is the vapidSubject
-#   vapid-private-key   param). Create with ./scripts/set-azure-secret.sh vapid --generate;
-#                       without them every push tick reports vapid-not-configured.
+#   stripe-secret-key, stripe-webhook-secret           billing (else "not configured")
+#   stripe-price-{grower,farm}-{monthly,annual}         plan price ids (price_…)
+#   vapid-public-key + vapid-private-key               Web Push, only as a pair (subject is the
+#                                                      vapidSubject param); without them every
+#                                                      push tick reports vapid-not-configured
+#   pingram-webhook-secret                             Pingram events webhook (unsubscribes, bounces)
 # Set one with:  ./scripts/set-azure-secret.sh anthropic-api-key
+# Web Push keys: ./scripts/set-azure-secret.sh vapid --generate
 #
 # The image tag is the commit SHA, so a dirty tree is refused unless --allow-dirty.
 # The same SHA is baked into the image (BUILD_SHA) and served by /api/health as
@@ -63,7 +67,7 @@ while [ $# -gt 0 ]; do
     --allow-dirty) ALLOW_DIRTY=true ;;
     --ci) CI_MODE=true ;;
     --image) PREBUILT_IMAGE="${2:?--image needs a value}"; shift ;;
-    -h|--help) sed -n '2,43p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,49p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
@@ -172,9 +176,33 @@ HAS_PUSH_TICK=false; kv_has push-tick-secret && HAS_PUSH_TICK=true
 echo "pingram      : ${HAS_PINGRAM}"
 echo "postmark     : ${HAS_POSTMARK}"
 echo "anthropic    : ${HAS_ANTHROPIC}"
-HAS_VAPID=false; kv_has vapid-public-key && kv_has vapid-private-key && HAS_VAPID=true
+HAS_VAPID_PUB=false; kv_has vapid-public-key && HAS_VAPID_PUB=true
+HAS_VAPID_PRIV=false; kv_has vapid-private-key && HAS_VAPID_PRIV=true
+HAS_VAPID=false; [ "$HAS_VAPID_PUB" = true ] && [ "$HAS_VAPID_PRIV" = true ] && HAS_VAPID=true
 echo "push tick    : ${HAS_PUSH_TICK}"
 echo "web push     : ${HAS_VAPID}"
+if [ "$HAS_VAPID" = false ] && { [ "$HAS_VAPID_PUB" = true ] || [ "$HAS_VAPID_PRIV" = true ]; }; then
+  echo "warning      : only one VAPID key is in ${KV}; push stays off until both are (./scripts/set-azure-secret.sh vapid --generate --force)" >&2
+fi
+
+PASS_THROUGH=(
+  stripe-secret-key stripe-webhook-secret
+  stripe-price-grower-monthly stripe-price-grower-annual
+  stripe-price-farm-monthly stripe-price-farm-annual
+  pingram-webhook-secret
+)
+PRESENT=()
+for s in "${PASS_THROUGH[@]}"; do kv_has "$s" && PRESENT+=("$s"); done
+present_has() { printf '%s\n' ${PRESENT[@]+"${PRESENT[@]}"} | grep -qx "$1"; }
+PRESENT_JSON="[$(for s in ${PRESENT[@]+"${PRESENT[@]}"}; do printf '"%s",' "$s"; done | sed 's/,$//')]"
+STRIPE_PRICES=0
+for s in grower-monthly grower-annual farm-monthly farm-annual; do present_has "stripe-price-$s" && STRIPE_PRICES=$((STRIPE_PRICES + 1)); done
+BILLING=false; present_has stripe-secret-key && BILLING=true
+echo "stripe       : ${BILLING} (webhook secret: $(present_has stripe-webhook-secret && echo true || echo false), prices: ${STRIPE_PRICES}/4)"
+if [ "$BILLING" = true ] && { ! present_has stripe-webhook-secret || [ "$STRIPE_PRICES" -lt 4 ]; }; then
+  echo "warning      : stripe-secret-key is set but the webhook secret or a plan price is missing; those plans stay unavailable" >&2
+fi
+echo "pingram hook : $(present_has pingram-webhook-secret && [ "$HAS_PINGRAM" = true ] && echo true || echo false)"
 
 # ─── Custom domain readiness ────────────────────────────────────────────
 # Zone and host labels come from the .bicepparam so the template and this

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AiUsageChip from '$lib/components/billing/AiUsageChip.svelte';
   /**
    * Inputs Plan wizard step (Phase 21 / B-28 / UC-37d).
    *
@@ -272,10 +273,10 @@
           <strong>AI limit reached.</strong>
           {planMeta.fallbackMessage} Showing the deterministic plan.
         {:else}
-          <strong>Daily AI quota reached.</strong> Showing the deterministic plan. Raise the quota on
-          Settings or try again tomorrow.
+          <strong>AI limit reached.</strong> Showing the deterministic plan, which works the same way.
         {/if}
       </div>
+      <AiUsageChip />
     {:else if planMeta?.fallback === 'ai-unavailable'}
       <div class="card info" role="status">
         Showing the deterministic plan — {planMeta.fallbackMessage ??

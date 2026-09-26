@@ -8,6 +8,8 @@
   import '$lib/styles/index.css';
 
   import { enhance } from '$app/forms';
+  import { page } from '$app/state';
+  import { fmt } from '$lib/prefsState.svelte';
   import TopBar from '$lib/components/ui/TopBar.svelte';
   import Banner from '$lib/components/ui/Banner.svelte';
   import UpdateToast from '$lib/components/ui/UpdateToast.svelte';
@@ -203,6 +205,17 @@
       >
         <button type="submit" class="banner-link-btn">Exit impersonation</button>
       </form>
+    {/snippet}
+  </Banner>
+{/if}
+
+{#if data.billingGrace && !page.url.pathname.startsWith('/settings/billing')}
+  <Banner tone="wheat">
+    Your last payment didn't go through. {data.billingGrace.planName} stays on until
+    {fmt.instant(data.billingGrace.graceEndsAt, 'date')} while the card is retried; your records are safe
+    either way.
+    {#snippet action()}
+      <a class="decon-cta" href="/settings/billing" data-testid="past-due-link">Update payment</a>
     {/snippet}
   </Banner>
 {/if}

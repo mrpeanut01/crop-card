@@ -6,7 +6,7 @@
  * list of data feeds.
  */
 
-import { error, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { and, count, gte } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/db/client';
@@ -35,7 +35,7 @@ export const load: PageServerLoad = ({ locals }) => {
     ai: {
       enabled: key.source !== 'none',
       fromEnv: key.source === 'env',
-      keyMasked: key.masked,
+      keyMasked: key.source === 'setting' ? key.masked : '',
       spendThisMonth: spend.monthlyUsdSoFar,
       monthlyCapUSD: spend.cap,
       pctUsed: spend.pctUsed,
@@ -46,5 +46,10 @@ export const load: PageServerLoad = ({ locals }) => {
 };
 
 export const actions: Actions = {
-  saveKey: ({ locals, request }) => saveAiKey(locals.user, request)
+  saveKey: ({ locals, request }) => {
+    if (aiKeyStatus().source === 'env') {
+      return fail(400, { error: 'AI help is included with your plan, so no key is needed.' });
+    }
+    return saveAiKey(locals.user, request);
+  }
 };

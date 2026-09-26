@@ -8,7 +8,14 @@ import { json, error } from '@sveltejs/kit';
 import { z } from 'zod';
 import { requireOwner } from '$lib/server/auth';
 import { getSetting, setSetting, deleteSetting } from '$lib/db/settings';
-import { SETTINGS_KEYS, parseMmDd } from '$lib/schedule/constants';
+import {
+  DEFAULT_AI_DAILY_QUOTA,
+  SETTINGS_KEYS,
+  parseMmDd,
+  type AiEndpointName
+} from '$lib/schedule/constants';
+import { currentOwnerId } from '$lib/db/tenant';
+import { resolvePlan } from '$lib/server/billing/plans';
 import { markFrostField } from '$lib/climate/frostSettings.server';
 import type { FrostField } from '$lib/climate/frostSuggest';
 
@@ -33,12 +40,35 @@ type SettingKey = (typeof ALLOWED_KEYS)[number];
 
 const mmDdRe = /^(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$/;
 
-const quotaSchema = z.object({
-  suggest: z.number().int().min(0).max(1000),
-  succession: z.number().int().min(0).max(1000),
-  optimize: z.number().int().min(0).max(1000),
-  allocate: z.number().int().min(0).max(1000)
-});
+const quotaSchema = z.record(z.string(), z.number().int().min(0).max(1000));
+
+function activePlan() {
+  const ownerId = currentOwnerId();
+  return ownerId ? resolvePlan(ownerId) : null;
+}
+
+/** The owner may lower their AI budget or a daily limit, never raise it
+ *  past what their plan includes. Only a real reduction is stored, so a
+ *  limit typed on a lower plan never holds a farm back after it upgrades. */
+function clampQuota(v: Record<string, number>): Partial<Record<AiEndpointName, number>> {
+  const plan = activePlan();
+  const out: Partial<Record<AiEndpointName, number>> = {};
+  for (const key of Object.keys(DEFAULT_AI_DAILY_QUOTA) as AiEndpointName[]) {
+    const n = v[key];
+    if (typeof n !== 'number') continue;
+    if (plan && n >= plan.dailyQuota[key]) continue;
+    out[key] = n;
+  }
+  return out;
+}
+
+/** null = the full plan budget (the setting is removed). */
+function monthlyCapSetting(value: unknown): string | null {
+  const n = z.number().min(0).max(10_000).parse(value);
+  const plan = activePlan();
+  if (plan && n >= plan.aiMonthlyUsd) return null;
+  return String(n);
+}
 
 const latLonSchema = z.object({
   lat: z.number().min(-90).max(90),
@@ -50,13 +80,9 @@ function validateAndSerialize(key: SettingKey, value: unknown): string {
     const s = z.string().min(1).max(500).parse(value);
     return s.trim();
   }
-  if (key === SETTINGS_KEYS.aiMonthlyUsdCap) {
-    const n = z.number().min(0).max(10_000).parse(value);
-    return String(n);
-  }
   if (key === SETTINGS_KEYS.aiDailyCallQuota) {
     const v = quotaSchema.parse(value);
-    return JSON.stringify(v);
+    return JSON.stringify(clampQuota(v));
   }
   if (key === SETTINGS_KEYS.farmLatLon) {
     const v = latLonSchema.parse(value);
@@ -103,13 +129,17 @@ export async function POST(event) {
     error(400, 'invalid key');
   }
   const key = body.key as SettingKey;
-  let serialized: string;
+  let serialized: string | null;
   try {
-    serialized = validateAndSerialize(key, body.value);
+    serialized =
+      key === SETTINGS_KEYS.aiMonthlyUsdCap
+        ? monthlyCapSetting(body.value)
+        : validateAndSerialize(key, body.value);
   } catch (e) {
     error(400, e instanceof Error ? e.message : 'invalid value');
   }
-  setSetting(key, serialized);
+  if (serialized === null) deleteSetting(key);
+  else setSetting(key, serialized);
   const frostField = FROST_FIELD_BY_KEY[key];
   if (frostField) markFrostField(frostField, 'manual');
   return json({ ok: true });

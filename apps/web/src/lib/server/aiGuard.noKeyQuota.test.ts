@@ -6,25 +6,24 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { runWithTenant } from '$lib/db/tenant';
-import { getAiDailyCallQuota } from '$lib/schedule/settings';
+import { PLANS } from '$lib/billing/plans';
 import { checkGuard, recordCall } from './aiGuard';
-
-// The monthly USD cap is global across the shared test DB; other files seed
-// oversized spend rows. Disable it here so only the daily quota is exercised.
-vi.mock('$lib/schedule/settings', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('$lib/schedule/settings')>()),
-  getAiMonthlyUsdCap: () => 0
-}));
 
 function seed(): { ownerId: string; userId: string } {
   const ownerId = `nk-owner-${randomUUID().slice(0, 8)}`;
   const userId = `nk-user-${randomUUID().slice(0, 8)}`;
   db.insert(owners)
-    .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
+    .values({
+      id: ownerId,
+      name: ownerId,
+      slug: ownerId,
+      billingStatus: 'active',
+      planOverride: 'grower'
+    })
     .run();
   db.insert(users)
     .values({ id: userId, email: `${userId}@test` })
@@ -35,7 +34,7 @@ function seed(): { ownerId: string; userId: string } {
 describe('aiGuard daily quota ignores calls that never reached Claude', () => {
   it('fallback rows with zero tokens never exhaust the quota', () => {
     const { ownerId, userId } = seed();
-    const quota = getAiDailyCallQuota().inputs;
+    const quota = PLANS.grower.dailyQuota.inputs;
     runWithTenant(ownerId, () => {
       for (let i = 0; i < quota + 3; i++) {
         recordCall({
@@ -56,7 +55,7 @@ describe('aiGuard daily quota ignores calls that never reached Claude', () => {
 
   it('real Claude calls still count toward the quota', () => {
     const { ownerId, userId } = seed();
-    const quota = getAiDailyCallQuota().inputs;
+    const quota = PLANS.grower.dailyQuota.inputs;
     runWithTenant(ownerId, () => {
       for (let i = 0; i < quota; i++) {
         recordCall({

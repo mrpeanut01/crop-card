@@ -1,6 +1,13 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import { requireSuperadmin } from '$lib/server/auth';
-import { listAllOwners, listAudit, setBillingStatus, writeAuditRow } from '$lib/server/superadmin';
+import {
+  listAllOwners,
+  listAudit,
+  setBillingStatus,
+  setPlanOverride,
+  writeAuditRow
+} from '$lib/server/superadmin';
+import { isPlanId } from '$lib/billing/plans';
 import { activeAssignmentsForUser } from '$lib/db/users';
 import { writeSession } from '$lib/server/session';
 import type { PageServerLoad } from './$types';
@@ -25,6 +32,16 @@ export const actions: Actions = {
       return fail(400, { error: 'invalid status' });
     }
     setBillingStatus(ownerId, status as (typeof allowed)[number], u.id);
+    return { ok: true };
+  },
+  setPlanOverride: async (event) => {
+    const u = requireSuperadmin(event);
+    const fd = await event.request.formData();
+    const ownerId = String(fd.get('ownerId') ?? '');
+    const plan = String(fd.get('plan') ?? '');
+    if (!ownerId) return fail(400, { error: 'ownerId required' });
+    if (plan !== '' && !isPlanId(plan)) return fail(400, { error: 'invalid plan' });
+    setPlanOverride(ownerId, plan === '' ? null : plan, u.id);
     return { ok: true };
   },
   impersonate: async (event) => {

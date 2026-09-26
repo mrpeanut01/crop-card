@@ -12,18 +12,15 @@ const config = {
     // Phase 30F — root-absolute asset URLs. The service worker answers every
     // offline /cards/** navigation with the one precached /cards shell, so
     // its `/_app/…` links must not depend on the depth of the URL it serves.
-    paths: { relative: false }
-    // Phase 24 CSRF posture (verified Phase 25, #94):
-    // SvelteKit's built-in `kit.csrf.checkOrigin` check only fires for
-    // FORM-encoded cross-origin mutations — JSON-encoded /api/** requests
-    // (the Bearer-authed agent surface) sail through by default. We rely
-    // on the per-request `csrfDecision()` helper in hooks.server.ts as
-    // the additional defensive layer that also vets cookie-session JSON
-    // mutations against Origin. Keeping SvelteKit's default ENABLED
-    // (no `csrf` block) preserves form-action protection for cookie
-    // sessions; removing the deprecated `checkOrigin: false` flag.
-    // Reference: kit/src/runtime/server/respond.js — `is_form_content_type`
-    // guard around the csrf check confirms the JSON path is unaffected.
+    paths: { relative: false },
+    // SvelteKit's own cross-site form check runs before `handle` and refuses
+    // every form-encoded POST without a same-origin Origin header. RFC 8058
+    // one-click unsubscribe is exactly that (the mail provider POSTs
+    // `List-Unsubscribe=One-Click` from its servers), so the check moves into
+    // hooks.server.ts (`formCsrfForbidden`), identical in behaviour except for
+    // that one signed-token endpoint. `csrfDecision()` still vets JSON
+    // mutations as before (Phase 24).
+    csrf: { trustedOrigins: ['*'] }
   }
 };
 

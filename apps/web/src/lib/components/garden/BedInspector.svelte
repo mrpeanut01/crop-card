@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
+  import AiLimitNudge from '$lib/components/billing/AiLimitNudge.svelte';
   import { BED_STYLES, BED_STYLE_LABELS, type BedStyle } from '$lib/farm/areaKinds';
   import { familyLabel } from '$lib/garden/rotation';
   import { bedOccupancyOn, shortDate } from '$lib/garden/occupancy';
@@ -921,6 +922,7 @@
       {#if fill}
         <div class="fill" data-testid="fill-results">
           {#if fill.message}<p class="banner">{fill.message}</p>{/if}
+          <AiLimitNudge limit={fill.aiLimit} isOwner={d.canEdit} />
           {#if fill.proposals.length === 0}
             <p class="empty">Nothing fits the open space on this date.</p>
           {/if}

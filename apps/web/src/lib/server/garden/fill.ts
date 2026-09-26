@@ -23,7 +23,8 @@ import type { GardenCrop } from '$lib/garden/types';
 import { deterministicPlantingWindow, type PlantingWindow } from '$lib/plan/plantingWindow';
 import type { BedRecipePlugin, CropPlugin } from '$lib/plugins/schemas';
 import { frostDatesForYear, frostDatesIsoForYear } from '$lib/schedule/settings';
-import { recordFallback, tryAiWithGuard } from '../aiDegrade';
+import { aiLimitReason, type AiLimit } from '$lib/billing/aiLimit';
+import { aiLimitOf, recordFallback, tryAiWithGuard } from '../aiDegrade';
 import type { FallbackReason } from '../aiTry';
 import { recordCall } from '../aiGuard';
 import {
@@ -219,16 +220,21 @@ type Why = FallbackReason | 'invalid' | 'quota';
 
 const WHY_PREFIX: Record<Why, string> = {
   'no-key': 'Claude is off',
-  'over-cap': "Claude has reached this month's spending cap",
-  quota: "Claude has reached today's limit for this",
+  'over-cap': "This month's AI help for your farm is used up",
+  quota: "Today's AI help for this is used up",
   'rate-limit': "Claude isn't answering right now",
   offline: "Claude can't be reached right now",
   timeout: 'Claude took too long',
   invalid: "Claude's ideas didn't fit this bed"
 };
 
-export function fallbackMessage(why: Why, plan: DeterministicFillPlan, dateMs: number): string {
-  const prefix = WHY_PREFIX[why];
+export function fallbackMessage(
+  why: Why,
+  plan: DeterministicFillPlan,
+  dateMs: number,
+  limit: AiLimit | null = null
+): string {
+  const prefix = limit ? aiLimitReason(limit) : WHY_PREFIX[why];
   if (plan.proposals.length === 0) {
     return `${prefix}, and no recipe or planned crop fits this bed on ${longDate(dateMs)}. Try a later date or free up some space.`;
   }
@@ -257,11 +263,13 @@ export async function fillBed(args: {
     recordFallback(userId, 'garden-fill', tried.fallbackReason);
     const why: Why =
       !tried.guard.ok && tried.guard.reason === 'quota-exceeded' ? 'quota' : tried.fallbackReason;
+    const limit = aiLimitOf(tried.guard);
     return {
       proposals: plan.proposals,
       provenance: 'fallback',
       fallbackReason: tried.fallbackReason,
-      message: fallbackMessage(why, plan, req.dateMs)
+      message: fallbackMessage(why, plan, req.dateMs, limit),
+      aiLimit: limit
     };
   }
 

@@ -387,11 +387,13 @@
   const MAP_MAX_ZOOM = 22;
   const FIT_MAX_ZOOM = 20;
   let markMapReady: () => void = () => {};
+  let leaflet: typeof import('leaflet') | null = null;
   const mapReady = new Promise<void>((resolve) => (markMapReady = resolve));
 
   onMount(async () => {
     if (!browser) return;
     const L = (await import('leaflet')).default;
+    leaflet = L;
     await import('@geoman-io/leaflet-geoman-free');
 
     map = L.map(mapEl, {
@@ -1479,11 +1481,10 @@
       return;
     }
     drawMode = 'feature-point';
-    void import('leaflet').then((mod) => {
-      if (!map || drawMode !== 'feature-point') return;
-      const icon = featureMarkerIcon(mod.default, kind, MAP_FEATURE_LABELS[kind]);
-      map.pm.enableDraw('Marker', { markerStyle: { icon }, continueDrawing: false });
-    });
+    const markerStyle = leaflet
+      ? { icon: featureMarkerIcon(leaflet, kind, MAP_FEATURE_LABELS[kind]) }
+      : undefined;
+    map.pm.enableDraw('Marker', { markerStyle, continueDrawing: false });
   }
 
   async function submitFeatureDraft() {

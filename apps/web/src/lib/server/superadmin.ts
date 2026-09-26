@@ -10,21 +10,19 @@
 
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/db/client';
-import {
-  owners,
-  ownerSubscriptions,
-  ownerUsageCounters,
-  superadminAudit,
-  users
-} from '$lib/db/schema';
+import { owners, ownerUsageCounters, superadminAudit, users } from '$lib/db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
 import { unscopedQueryNote } from '$lib/db/tenant';
+import type { PlanId } from '$lib/billing/plans';
+import { resolvePlan, setPlanOverride as writePlanOverride } from './billing/plans';
 
 export interface OwnerSummary {
   id: string;
   name: string;
   slug: string;
   billingStatus: string;
+  plan: PlanId;
+  planOverride: PlanId | null;
   createdAt: number;
   /** Most-recent month's AI calls + spray events. Null if no counter row exists. */
   currentPeriodAiCalls: number;
@@ -39,6 +37,7 @@ export function listAllOwners(): OwnerSummary[] {
       name: owners.name,
       slug: owners.slug,
       billingStatus: owners.billingStatus,
+      planOverride: owners.planOverride,
       createdAt: owners.createdAt
     })
     .from(owners)
@@ -60,6 +59,8 @@ export function listAllOwners(): OwnerSummary[] {
       name: row.name,
       slug: row.slug,
       billingStatus: row.billingStatus,
+      plan: resolvePlan(row.id).plan,
+      planOverride: row.planOverride ?? null,
       createdAt: row.createdAt.getTime(),
       currentPeriodAiCalls: usage?.aiCalls ?? 0,
       currentPeriodSprayEvents: usage?.sprayEventsCount ?? 0
@@ -67,6 +68,8 @@ export function listAllOwners(): OwnerSummary[] {
   });
 }
 
+/** Sets the farm's gate status only. The plan comes from Stripe (or a plan
+ *  override), so flipping this never grants or removes a paid plan. */
 export function setBillingStatus(
   ownerId: string,
   status: 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended',
@@ -75,15 +78,27 @@ export function setBillingStatus(
   unscopedQueryNote('superadmin billing-status flip is intentionally cross-tenant');
   db.transaction(() => {
     db.update(owners).set({ billingStatus: status }).where(eq(owners.id, ownerId)).run();
-    db.update(ownerSubscriptions)
-      .set({ status, updatedAt: new Date(Date.now()) })
-      .where(eq(ownerSubscriptions.ownerId, ownerId))
-      .run();
     writeAuditRow({
       superadminUserId,
       action: 'set_billing_status',
       ownerId,
       payload: { status }
+    });
+  });
+}
+
+export function setPlanOverride(
+  ownerId: string,
+  plan: PlanId | null,
+  superadminUserId: string
+): void {
+  db.transaction(() => {
+    writePlanOverride(ownerId, plan);
+    writeAuditRow({
+      superadminUserId,
+      action: 'set_plan_override',
+      ownerId,
+      payload: { plan }
     });
   });
 }

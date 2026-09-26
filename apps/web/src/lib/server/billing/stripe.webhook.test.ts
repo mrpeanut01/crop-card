@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { ownerSubscriptions, owners } from '$lib/db/schema';
 import { applyWebhookEvent, type StripeEvent } from './stripe';
+import { resolvePlan } from './plans';
 
 function freshOwner(): string {
   const id = `stripe-wh-${randomUUID().slice(0, 12)}`;
@@ -94,7 +95,7 @@ describe('applyWebhookEvent', () => {
     expect(owner(ownerId)?.billingStatus).toBe('past_due');
   });
 
-  it('subscription unpaid → suspended mirrors onto owners.billing_status (the hooks gate)', () => {
+  it('subscription unpaid ends the paid plan (canceled, never suspended)', () => {
     const ownerId = freshOwner();
     applyWebhookEvent({
       id: 'evt_sub',
@@ -110,12 +111,13 @@ describe('applyWebhookEvent', () => {
         }
       }
     });
-    expect(sub(ownerId)).toMatchObject({ status: 'suspended', stripeSubscriptionId: 'sub_9' });
+    expect(sub(ownerId)).toMatchObject({ status: 'canceled', stripeSubscriptionId: 'sub_9' });
     expect(sub(ownerId)?.periodEnd?.getTime()).toBe(1_802_592_000_000);
-    expect(owner(ownerId)?.billingStatus).toBe('suspended');
+    expect(owner(ownerId)?.billingStatus).toBe('canceled');
+    expect(resolvePlan(ownerId).plan).toBe('free');
   });
 
-  it('subscription active after suspension lifts the gate', () => {
+  it('subscription active after unpaid restores active', () => {
     const ownerId = freshOwner();
     const evt = (status: 'unpaid' | 'active'): StripeEvent => ({
       id: `evt_${status}`,
@@ -146,5 +148,286 @@ describe('applyWebhookEvent', () => {
       data: { object: { id: 'sub_x', customer: 'cus_unknown_anywhere', status: 'active' } }
     });
     expect(r).toEqual({ applied: false, ownerId: null, reason: 'event has no resolvable owner' });
+  });
+});
+
+const PRICES = {
+  STRIPE_PRICE_GROWER_MONTHLY: 'price_gm',
+  STRIPE_PRICE_GROWER_ANNUAL: 'price_ga',
+  STRIPE_PRICE_FARM_MONTHLY: 'price_fm',
+  STRIPE_PRICE_FARM_ANNUAL: 'price_fa'
+};
+
+function subEvent(
+  ownerId: string,
+  status: NonNullable<StripeEvent['data']['object']['status']>,
+  priceId: string | null = 'price_ga',
+  type = 'customer.subscription.updated'
+): StripeEvent {
+  return {
+    id: `evt_${randomUUID()}`,
+    type,
+    data: {
+      object: {
+        id: 'sub_plan',
+        customer: `cus_${ownerId}`,
+        status,
+        metadata: { ownerId },
+        items: { data: priceId ? [{ price: { id: priceId } }] : [] }
+      }
+    }
+  };
+}
+
+describe('applyWebhookEvent plan mapping', () => {
+  beforeEach(() => {
+    for (const [k, v] of Object.entries(PRICES)) vi.stubEnv(k, v);
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ['price_gm', 'grower', 'month'],
+    ['price_ga', 'grower', 'year'],
+    ['price_fm', 'farm', 'month'],
+    ['price_fa', 'farm', 'year']
+  ] as const)('price %s maps to %s/%s', (priceId, plan, interval) => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'active', priceId, 'customer.subscription.created'));
+    expect(sub(ownerId)).toMatchObject({
+      planCode: plan,
+      billingInterval: interval,
+      status: 'active'
+    });
+    expect(resolvePlan(ownerId).plan).toBe(plan);
+  });
+
+  it('the legacy STRIPE_PRICE_ID maps to grower monthly', () => {
+    vi.stubEnv('STRIPE_PRICE_GROWER_MONTHLY', '');
+    vi.stubEnv('STRIPE_PRICE_ID', 'price_legacy');
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'active', 'price_legacy'));
+    expect(sub(ownerId)).toMatchObject({ planCode: 'grower', billingInterval: 'month' });
+  });
+
+  it('an unknown price leaves the plan alone', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'active', 'price_fm'));
+    applyWebhookEvent(subEvent(ownerId, 'active', 'price_unknown'));
+    expect(sub(ownerId)?.planCode).toBe('farm');
+  });
+
+  it('incomplete never grants a paid plan and leaves the gate status alone', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'incomplete', 'price_fa'));
+    expect(sub(ownerId)?.status).toBe('incomplete');
+    expect(owner(ownerId)?.billingStatus).toBe('trial');
+    expect(resolvePlan(ownerId).plan).toBe('free');
+  });
+
+  it('a failed first payment on an incomplete checkout stays free', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'incomplete', 'price_ga'));
+    const r = applyWebhookEvent({
+      id: 'evt_fail_first',
+      type: 'invoice.payment_failed',
+      data: { object: { id: 'in_first', customer: `cus_${ownerId}`, metadata: { ownerId } } }
+    });
+    expect(r.applied).toBe(false);
+    expect(sub(ownerId)?.status).toBe('incomplete');
+    expect(sub(ownerId)?.pastDueSince).toBeNull();
+    expect(resolvePlan(ownerId).plan).toBe('free');
+  });
+
+  it('incomplete_expired maps to canceled', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'incomplete_expired', 'price_ga'));
+    expect(sub(ownerId)?.status).toBe('canceled');
+    expect(resolvePlan(ownerId).plan).toBe('free');
+  });
+
+  it('past_due stamps past_due_since once and active clears it', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'active', 'price_ga'));
+    applyWebhookEvent(subEvent(ownerId, 'past_due', 'price_ga'));
+    const first = sub(ownerId)?.pastDueSince?.getTime();
+    expect(first).toBeTypeOf('number');
+    applyWebhookEvent({
+      id: 'evt_retry_fail',
+      type: 'invoice.payment_failed',
+      data: { object: { id: 'in_2', customer: `cus_${ownerId}`, metadata: { ownerId } } }
+    });
+    expect(sub(ownerId)?.pastDueSince?.getTime()).toBe(first);
+    expect(resolvePlan(ownerId)).toMatchObject({ plan: 'grower', source: 'grace' });
+    applyWebhookEvent(subEvent(ownerId, 'active', 'price_ga'));
+    expect(sub(ownerId)?.pastDueSince).toBeNull();
+    expect(resolvePlan(ownerId).source).toBe('stripe');
+  });
+
+  it('invoice.payment_failed on an active plan starts the grace window', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'active', 'price_fm'));
+    applyWebhookEvent({
+      id: 'evt_fail',
+      type: 'invoice.payment_failed',
+      data: { object: { id: 'in_3', customer: `cus_${ownerId}`, metadata: { ownerId } } }
+    });
+    expect(sub(ownerId)?.status).toBe('past_due');
+    expect(resolvePlan(ownerId).plan).toBe('farm');
+    const eightDays = Date.now() + 8 * 86_400_000;
+    expect(resolvePlan(ownerId, eightDays).plan).toBe('free');
+  });
+
+  it('customer.subscription.deleted moves the owner to free', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(subEvent(ownerId, 'active', 'price_fa'));
+    applyWebhookEvent(subEvent(ownerId, 'canceled', 'price_fa', 'customer.subscription.deleted'));
+    expect(sub(ownerId)).toMatchObject({ status: 'canceled', planCode: 'free' });
+    expect(resolvePlan(ownerId).plan).toBe('free');
+  });
+
+  it('never overwrites a superadmin suspension', () => {
+    const ownerId = freshOwner();
+    db.update(owners).set({ billingStatus: 'suspended' }).where(eq(owners.id, ownerId)).run();
+    applyWebhookEvent(subEvent(ownerId, 'active', 'price_ga'));
+    expect(owner(ownerId)?.billingStatus).toBe('suspended');
+    expect(sub(ownerId)?.status).toBe('active');
+  });
+
+  it('replaying the same event is idempotent', () => {
+    const ownerId = freshOwner();
+    const evt = subEvent(ownerId, 'past_due', 'price_ga');
+    applyWebhookEvent(evt);
+    const first = sub(ownerId);
+    applyWebhookEvent(evt);
+    expect(sub(ownerId)).toMatchObject({
+      status: first?.status,
+      planCode: first?.planCode,
+      pastDueSince: first?.pastDueSince
+    });
+  });
+});
+
+describe('applyWebhookEvent ordering and subscription identity', () => {
+  beforeEach(() => {
+    for (const [k, v] of Object.entries(PRICES)) vi.stubEnv(k, v);
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const T0 = 1_800_000_000;
+
+  function timed(
+    ownerId: string,
+    type: string,
+    created: number,
+    object: Partial<StripeEvent['data']['object']>
+  ): StripeEvent {
+    return {
+      id: `evt_${randomUUID()}`,
+      type,
+      created,
+      data: {
+        object: {
+          customer: `cus_${ownerId}`,
+          metadata: { ownerId },
+          items: { data: [{ price: { id: 'price_ga' } }] },
+          ...object
+        }
+      }
+    };
+  }
+
+  it('a retried older updated(active) after deleted does not bring the paid plan back', () => {
+    const ownerId = freshOwner();
+    const updated = timed(ownerId, 'customer.subscription.updated', T0, {
+      id: 'sub_1',
+      status: 'active'
+    });
+    applyWebhookEvent(updated);
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.deleted', T0 + 60, { id: 'sub_1', status: 'canceled' })
+    );
+    expect(resolvePlan(ownerId).plan).toBe('free');
+    const replay = applyWebhookEvent(updated);
+    expect(replay.applied).toBe(false);
+    expect(replay.reason).toContain('stale');
+    expect(resolvePlan(ownerId).plan).toBe('free');
+  });
+
+  it('deleted for another subscription leaves a paying owner on the paid plan', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.created', T0, { id: 'sub_live', status: 'active' })
+    );
+    const r = applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.deleted', T0 + 60, {
+        id: 'sub_other',
+        status: 'canceled'
+      })
+    );
+    expect(r.applied).toBe(false);
+    expect(sub(ownerId)).toMatchObject({ stripeSubscriptionId: 'sub_live', status: 'active' });
+    expect(resolvePlan(ownerId).plan).toBe('grower');
+  });
+
+  it('incomplete_expired on an old attempt does not end the live subscription', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.created', T0, { id: 'sub_live', status: 'active' })
+    );
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.updated', T0 + 60, {
+        id: 'sub_old',
+        status: 'incomplete_expired'
+      })
+    );
+    expect(resolvePlan(ownerId).plan).toBe('grower');
+  });
+
+  it('a late payment_failed after recovery does not restart the grace window', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.updated', T0, { id: 'sub_1', status: 'past_due' })
+    );
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.updated', T0 + 120, { id: 'sub_1', status: 'active' })
+    );
+    const late = applyWebhookEvent(
+      timed(ownerId, 'invoice.payment_failed', T0 + 30, { id: 'in_1', subscription: 'sub_1' })
+    );
+    expect(late.applied).toBe(false);
+    expect(sub(ownerId)).toMatchObject({ status: 'active', pastDueSince: null });
+    expect(resolvePlan(ownerId, Date.now() + 8 * 86_400_000).plan).toBe('grower');
+  });
+
+  it('a second checkout does not replace a confirmed live subscription', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.created', T0, { id: 'sub_live', status: 'active' })
+    );
+    applyWebhookEvent(checkoutCompleted(ownerId, `cus_${ownerId}`, 'sub_dup'));
+    expect(sub(ownerId)?.stripeSubscriptionId).toBe('sub_live');
+  });
+
+  it('a new subscription after a cancel is accepted', () => {
+    const ownerId = freshOwner();
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.created', T0, { id: 'sub_1', status: 'active' })
+    );
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.deleted', T0 + 60, { id: 'sub_1', status: 'canceled' })
+    );
+    applyWebhookEvent(
+      timed(ownerId, 'customer.subscription.created', T0 + 3600, {
+        id: 'sub_2',
+        status: 'active',
+        items: { data: [{ price: { id: 'price_fa' } }] }
+      })
+    );
+    expect(sub(ownerId)).toMatchObject({ stripeSubscriptionId: 'sub_2', planCode: 'farm' });
+    expect(resolvePlan(ownerId).plan).toBe('farm');
   });
 });

@@ -11,6 +11,8 @@
  * failures, backup time).
  */
 
+import { PLANS } from '$lib/billing/plans';
+import { resolvePlan } from '$lib/server/billing/plans';
 import { error, type ServerLoad } from '@sveltejs/kit';
 import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
@@ -94,7 +96,8 @@ export const load: ServerLoad = async ({ locals }) => {
           id: ownerRow.id,
           name: ownerRow.name,
           slug: ownerRow.slug,
-          billingStatus: ownerRow.billingStatus
+          billingStatus: ownerRow.billingStatus,
+          planName: PLANS[resolvePlan(ownerRow.id).plan].name
         }
       : null,
     counts: {

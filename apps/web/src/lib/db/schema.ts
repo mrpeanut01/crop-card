@@ -116,6 +116,11 @@ export const owners = sqliteTable('owners', {
   /** Bumped on every plugin_overrides write so the per-owner plugin registry
    *  LRU can key on (ownerId, revision) for cache invalidation. */
   pluginOverridesRevision: integer('plugin_overrides_revision').notNull().default(0),
+  /** Superadmin-granted plan that wins over Stripe (comped farms, support). */
+  planOverride: text('plan_override', { enum: ['free', 'grower', 'farm'] }),
+  /** When this Owner first drew the free-plan starter AI boost. The boost is
+   *  granted once per owning identity, so a second farm does not get it. */
+  starterBoostUsedAt: integer('starter_boost_used_at', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`)
@@ -379,16 +384,26 @@ export const ownerSubscriptions = sqliteTable('owner_subscriptions', {
   ownerId: text('owner_id')
     .primaryKey()
     .references(() => owners.id),
-  planCode: text('plan_code').notNull().default('free'),
+  planCode: text('plan_code', { enum: ['free', 'grower', 'farm'] })
+    .notNull()
+    .default('free'),
   status: text('status', {
-    enum: ['trial', 'active', 'past_due', 'canceled', 'suspended']
+    enum: ['trial', 'active', 'past_due', 'canceled', 'suspended', 'incomplete']
   })
     .notNull()
     .default('trial'),
+  billingInterval: text('billing_interval', { enum: ['month', 'year'] }),
+  /** First failed payment of the current dunning run; the paid plan holds
+   *  for PAST_DUE_GRACE_DAYS from here. Cleared when the subscription is
+   *  active again. */
+  pastDueSince: integer('past_due_since', { mode: 'timestamp_ms' }),
   periodStart: integer('period_start', { mode: 'timestamp_ms' }),
   periodEnd: integer('period_end', { mode: 'timestamp_ms' }),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
+  /** `created` of the newest subscription or invoice event applied, so a
+   *  late or retried older event cannot overwrite newer state. */
+  lastStripeEventAt: integer('last_stripe_event_at', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
@@ -1894,4 +1909,70 @@ export const pushDeliveries = tenantScoped(
       )
     })
   )
+);
+
+// ─── Email alert consent (opt-in only) ──────────────────────────────────
+//
+// Field alerts by email are per (Owner, user, alert kind), like push: a
+// helper on two farms opts in per farm, and the alerts are about that farm's
+// sprayers and records. No row means off. The opt-in keeps when, where from
+// and the client IP as the consent record; an opt-out keeps the row.
+
+export const emailAlertConsents = tenantScoped(
+  sqliteTable(
+    'email_alert_consents',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      userId: text('user_id')
+        .notNull()
+        .references(() => users.id, { onDelete: 'cascade' }),
+      category: text('category', {
+        enum: ['decon-due', 'lock-window-closing', 'spring-calibration', 'frost-tonight']
+      }).notNull(),
+      status: text('status', { enum: ['opted-in', 'opted-out'] }).notNull(),
+      optedInAt: integer('opted_in_at', { mode: 'timestamp_ms' }),
+      optedInSource: text('opted_in_source'),
+      optedInIp: text('opted_in_ip'),
+      optedOutAt: integer('opted_out_at', { mode: 'timestamp_ms' }),
+      optedOutSource: text('opted_out_source'),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerUserCategoryUq: uniqueIndex('email_alert_consents_owner_user_category_uq').on(
+        table.ownerId,
+        table.userId,
+        table.category
+      ),
+      ownerStatusIdx: index('email_alert_consents_owner_status_idx').on(table.ownerId, table.status)
+    })
+  )
+);
+
+/** Provider-side opt-outs and failures, keyed by address. Global, not tenant
+ *  data: Pingram reports them per email address or phone number, and an
+ *  unsubscribe from an address holds for every farm that address serves. */
+export const contactSuppressions = sqliteTable(
+  'contact_suppressions',
+  {
+    id: text('id').primaryKey(),
+    address: text('address').notNull(),
+    channel: text('channel', { enum: ['email', 'sms'] }).notNull(),
+    reason: text('reason', { enum: ['unsubscribe', 'complaint', 'bounce', 'failed'] }).notNull(),
+    source: text('source').notNull(),
+    eventId: text('event_id'),
+    notificationType: text('notification_type'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+  },
+  (table) => ({
+    addressChannelReasonUq: uniqueIndex('contact_suppressions_address_channel_reason_uq').on(
+      table.address,
+      table.channel,
+      table.reason
+    )
+  })
 );

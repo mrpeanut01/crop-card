@@ -71,7 +71,6 @@ export interface FarmLatLon {
 
 export const LOUDOUN_DEFAULT_LAT_LON: FarmLatLon = { lat: 39.09, lon: -77.6 };
 
-export const DEFAULT_AI_MONTHLY_USD_CAP = 5.0;
 export const DEFAULT_AI_DAILY_QUOTA = {
   suggest: 20,
   succession: 20,

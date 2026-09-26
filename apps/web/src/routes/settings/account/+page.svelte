@@ -84,7 +84,7 @@
 
   <SettingsSection
     title="Sign-in methods"
-    sub="No passwords. Sign in with a link or 6-digit code sent to any verified email or mobile number."
+    sub="No passwords. Email is the main way in: one message carries a sign-in link and a 6-digit backup code. A verified mobile number works too."
   >
     <SignInMethods email={data.account.email} phone={data.account.phone} />
   </SettingsSection>

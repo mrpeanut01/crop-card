@@ -8,6 +8,7 @@ const { recordCall, ownerSeen } = vi.hoisted(() => ({
 vi.mock('./scanResult', () => ({ getApiKey: () => 'sk-test' }));
 vi.mock('./aiGuard', () => ({
   checkGuard: () => ({ ok: true, spend: {} }),
+  reserveGuard: () => ({ ok: true, spend: {} }),
   recordCall
 }));
 

@@ -72,7 +72,11 @@ test.describe('offline Cards', () => {
     const title = (await plantingLinks.first().textContent())?.trim() ?? '';
     await plantingLinks.first().click();
     await expect(page).toHaveURL(/\/cards\/planting\/pl_/);
-    await expect(page.getByRole('heading', { level: 3, name: title })).toBeVisible();
+    await expect(
+      page
+        .locator('article[data-card-kind="planting"]')
+        .getByRole('heading', { level: 3, name: title })
+    ).toBeVisible();
 
     // A hard navigation to a card URL this browser has never loaded.
     const target = hrefs[hrefs.length - 1];

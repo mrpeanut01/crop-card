@@ -159,6 +159,13 @@ export interface SnapshotCropPlugin {
   };
   harvestIndicators?: string[];
   notes?: string;
+  /** The plugin's pruning and thinning steps (never its spray tasks). */
+  careTasks?: SnapshotCareTask[];
+}
+
+export interface SnapshotCareTask {
+  title: string;
+  body?: string;
 }
 
 /** Month-day strings (`MM-DD`). `cautious` holds the 90%-sure dates, which

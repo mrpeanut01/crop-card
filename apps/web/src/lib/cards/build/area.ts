@@ -27,6 +27,7 @@ import {
   type BuildOptions
 } from './common';
 import { formatAreaAcres, formatFeet, formatSize, sizeBasis } from './size';
+import { areaCareLinks } from './careGuide';
 import { DEFAULT_AREA_KIND, isDesignable } from '$lib/farm/areaKinds';
 import { designFromSnapshot, designerHref } from '$lib/garden/design';
 import { bedOccupancyOn, occupancyIntervals, scrubRange, utcDayStart } from '$lib/garden/occupancy';
@@ -188,7 +189,12 @@ export function buildAreaCard(
 
   return {
     ...(isDesignable(area.kind)
-      ? { links: [{ label: 'Open designer', href: designerHref(area.id) }] }
+      ? {
+          links: [
+            { label: 'Open designer', href: designerHref(area.id) },
+            ...areaCareLinks(snapshot, area.id)
+          ]
+        }
       : {}),
     ...(bedMap ? { bedMap } : {}),
     kind: 'area',

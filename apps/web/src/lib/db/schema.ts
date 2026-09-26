@@ -1451,7 +1451,8 @@ export const aiCallLog = tenantScoped(
           'scan-url',
           'scan-barcode',
           'planting-window',
-          'garden-fill'
+          'garden-fill',
+          'photo-help'
         ]
       }).notNull(),
       model: text('model').notNull(),
@@ -1560,6 +1561,42 @@ export const scoutObservations = tenantScoped(
         table.ownerId,
         table.pest,
         table.metric
+      )
+    })
+  )
+);
+
+/** Phase 30G planting journal: notes, observations and photo-help answers.
+ *  `photo_ref` holds one downscaled, EXIF-free JPEG data URL (size-capped
+ *  by the repo). Journal rows are notes, not regulatory records, so they
+ *  go with their planting. */
+export const plantingJournal = tenantScoped(
+  sqliteTable(
+    'planting_journal',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      cropId: text('crop_id')
+        .notNull()
+        .references(() => crops.id, { onDelete: 'cascade' }),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id, { onDelete: 'cascade' }),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      createdBy: text('created_by').references(() => users.id),
+      kind: text('kind', { enum: ['note', 'photo_help', 'observation'] }).notNull(),
+      text: text('text').notNull().default(''),
+      photoRef: text('photo_ref'),
+      answerJson: text('answer_json'),
+      provenance: text('provenance', { enum: ['manual', 'ai', 'fallback'] }).notNull()
+    },
+    (table) => ({
+      ownerCropCreatedIdx: index('planting_journal_owner_crop_created_idx').on(
+        table.ownerId,
+        table.cropId,
+        table.createdAt
       )
     })
   )

@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { buildCareGuideCard, buildCareGuideCards } from './careGuide';
+import {
+  areaCareLinks,
+  buildCareGuideCard,
+  buildCareGuideCards,
+  careGuideHref,
+  careGuidePluginIds,
+  careGuideSections
+} from './careGuide';
+import { FAMILY_CARE_TIPS } from './careTips';
+import { buildAreaCard } from './area';
+import { buildPlantingCard } from './planting';
 import { sampleSnapshot } from './fixtures';
+import { isSprayAdvice } from '$lib/journal/photoHelp';
 
 describe('buildCareGuideCard', () => {
   const snap = sampleSnapshot();
@@ -18,13 +29,35 @@ describe('buildCareGuideCard', () => {
       { label: 'Soil temp', value: '60°F or warmer', provenance: 'plugin' },
       { label: 'PHI buffer', value: '14 d', provenance: 'plugin' }
     ]);
-    expect(card.sections).toEqual([
-      { title: 'Harvest cues', items: ['Shoulders turn dusky purple', 'Slight give when pressed'] },
-      { title: 'On your farm', items: ['Cherokee Purple tomato · Bed 3'] }
+    expect(card.sections.map((s) => [s.title, s.provenance])).toEqual([
+      ['Water', 'fallback'],
+      ['Feed', 'fallback'],
+      ['Stake and prune', 'fallback'],
+      ['Harvest cues', 'plugin'],
+      ['Common problems', 'fallback'],
+      ['On your farm', undefined]
     ]);
+    expect(card.sections.find((s) => s.title === 'Harvest cues')!.items).toEqual([
+      'Shoulders turn dusky purple',
+      'Slight give when pressed'
+    ]);
+    expect(card.sections.at(-1)!.items).toEqual(['Cherokee Purple tomato · Bed 3']);
     expect(card.provenance).toEqual([
-      { source: 'plugin', detail: 'tomato-cherokee-purple · v1.0.0' }
+      { source: 'plugin', detail: 'tomato-cherokee-purple · v1.0.0' },
+      { source: 'fallback', detail: 'General tips for tomatoes, peppers and eggplant' }
     ]);
+  });
+
+  it("uses the plugin's own pruning steps over family tips", () => {
+    const { sections } = careGuideSections({
+      ...snap.cropPlugins['tomato-cherokee-purple'],
+      careTasks: [{ title: 'Tip primocanes at 4 ft', body: 'Encourages laterals.' }]
+    });
+    expect(sections.find((s) => s.title === 'Stake and prune')).toEqual({
+      title: 'Stake and prune',
+      items: ['Tip primocanes at 4 ft. Encourages laterals.'],
+      provenance: 'plugin'
+    });
   });
 
   it('converts spacing and soil temperature for metric users', () => {
@@ -45,6 +78,7 @@ describe('buildCareGuideCard', () => {
     const card = buildCareGuideCard(s, 'bare')!;
     expect(card.facts).toEqual([]);
     expect(card.sections[0].items[0]).toMatch(/no growing guide yet/);
+    expect(card.provenance).toHaveLength(1);
   });
 
   it('builds one card per referenced plugin and null for unknown ids', () => {
@@ -53,5 +87,47 @@ describe('buildCareGuideCard', () => {
       'cg_tomato-cherokee-purple'
     ]);
     expect(buildCareGuideCard(snap, 'missing-plugin')).toBeNull();
+  });
+});
+
+describe('family care tips', () => {
+  it('never name a pesticide, a spray or a mix rate', () => {
+    for (const [family, tips] of Object.entries(FAMILY_CARE_TIPS)) {
+      for (const line of [...tips.water, ...tips.feed, ...tips.prune, ...tips.problems]) {
+        expect(isSprayAdvice(line), `${family}: ${line}`).toBe(false);
+        expect(line).not.toMatch(/—/);
+      }
+    }
+  });
+});
+
+describe('How to care for it', () => {
+  const snap = sampleSnapshot();
+
+  it('links a Planting Card to its crop care guide', () => {
+    const card = buildPlantingCard(snap, 'p_tom')!;
+    expect(card.links).toEqual([
+      { label: 'How to care for it', href: '/cards/careGuide/cg_tomato-cherokee-purple' }
+    ]);
+    expect(careGuidePluginIds(snap, 'pl_p_tom')).toEqual(['tomato-cherokee-purple']);
+  });
+
+  it('leaves the link off when the crop plugin is not in the snapshot', () => {
+    expect(buildPlantingCard(snap, 'p_alf')!.links).toBeUndefined();
+    expect(careGuidePluginIds(snap, 'pl_p_alf')).toEqual([]);
+  });
+
+  it('lists every crop in a garden Area and none for a pasture', () => {
+    expect(careGuidePluginIds(snap, 'ar_f_garden').sort()).toEqual([
+      'bean-provider',
+      'tomato-cherokee-purple'
+    ]);
+    expect(careGuidePluginIds(snap, 'ar_f_hay')).toEqual([]);
+    expect(careGuidePluginIds(snap, 'sp_x')).toEqual([]);
+    expect(careGuidePluginIds(snap, 'nonsense')).toEqual([]);
+    const links = buildAreaCard(snap, 'f_garden')!.links!;
+    expect(links[0].label).toBe('Open designer');
+    expect(links.slice(1)).toEqual(areaCareLinks(snap, 'f_garden'));
+    expect(links.map((l) => l.href)).toContain(careGuideHref('bean-provider'));
   });
 });

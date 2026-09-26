@@ -25,6 +25,7 @@ import {
   type ResolvedOptions
 } from './common';
 import { formatInches } from './size';
+import { CARE_LINK_LABEL, careGuideHref } from './careGuide';
 import { ymdInZone } from '$lib/prefs';
 
 const MAX_UPCOMING = 3;
@@ -191,6 +192,7 @@ export function buildPlantingCard(
   const key = cardKey('planting', p.id);
 
   return {
+    ...(plugin ? { links: [{ label: CARE_LINK_LABEL, href: careGuideHref(plugin.pluginId) }] } : {}),
     kind: 'planting',
     key,
     kicker,

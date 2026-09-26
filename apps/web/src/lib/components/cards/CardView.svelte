@@ -139,7 +139,12 @@
       {#if variant !== 'compact'}
         {#each bodySections as s (s.title)}
           <section class="section" class:safety={s.safety}>
-            <h4>{s.title}</h4>
+            <h4>
+              {s.title}
+              {#if s.provenance && variant === 'screen'}
+                <Provenance source={s.provenance} compact />
+              {/if}
+            </h4>
             <ul>
               {#each s.items as item, i (i)}
                 <li>{item}</li>

@@ -10,6 +10,7 @@ import {
   type FarmSnapshot,
   type SnapshotArea,
   type SnapshotBlock,
+  type SnapshotCareTask,
   type SnapshotCropPlugin,
   type SnapshotEquipment,
   type SnapshotSprayProduct,
@@ -26,7 +27,7 @@ import {
 import { listEquipment } from '$lib/db/equipment';
 import { listStockItems } from '$lib/db/stock';
 import { requireOwnerId } from '$lib/db/tenant';
-import type { Plugin } from '$lib/plugins/schemas';
+import type { CropPlugin, Plugin } from '$lib/plugins/schemas';
 import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
 import { RULES_VERSION } from '$lib/safety/version';
@@ -113,8 +114,25 @@ function toStock(i: ReturnType<typeof listStockItems>[number]): SnapshotStockIte
   };
 }
 
-function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
+const CARE_TASK_KINDS: ReadonlySet<string> = new Set(['pruning', 'thinning']);
+
+export function careTasksOf(p: CropPlugin): SnapshotCareTask[] {
+  const out: SnapshotCareTask[] = [];
+  for (const t of p.seasonalTasks ?? []) {
+    if (t.kind === 'spray' || t.category === 'spray') continue;
+    if (!CARE_TASK_KINDS.has(t.kind) && t.category !== 'prune') continue;
+    out.push(t.body ? { title: t.title, body: t.body } : { title: t.title });
+  }
+  for (const t of p.orchardSeasonalTasks ?? []) {
+    if (t.category !== 'prune') continue;
+    out.push(t.body ? { title: t.title, body: t.body } : { title: t.title });
+  }
+  return out;
+}
+
+export function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
   if (p.type !== 'crop') return null;
+  const careTasks = careTasksOf(p);
   return {
     pluginId: p.pluginId,
     displayName: p.displayName,
@@ -133,7 +151,8 @@ function toCropPlugin(p: Plugin): SnapshotCropPlugin | null {
         }
       : undefined,
     harvestIndicators: p.harvestIndicators,
-    notes: p.notes
+    notes: p.notes,
+    ...(careTasks.length ? { careTasks } : {})
   };
 }
 

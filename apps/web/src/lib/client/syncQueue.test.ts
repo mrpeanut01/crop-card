@@ -62,7 +62,8 @@ describe('#316 — kind → endpoint routing', () => {
       fungicide: '/api/fungicide/record',
       harvest: '/api/harvest/record',
       'hay-cutting': '/api/hay/cuttings',
-      scout: '/api/scout/record'
+      scout: '/api/scout/record',
+      journal: '/api/journal/record'
     });
     const endpoints = Object.values(ENDPOINT_BY_KIND);
     expect(new Set(endpoints).size).toBe(endpoints.length);
@@ -74,7 +75,8 @@ describe('#316 — kind → endpoint routing', () => {
     ['fungicide', '/api/fungicide/record'],
     ['harvest', '/api/harvest/record'],
     ['hay-cutting', '/api/hay/cuttings'],
-    ['scout', '/api/scout/record']
+    ['scout', '/api/scout/record'],
+    ['journal', '/api/journal/record']
   ])('routes kind %s to %s', (kind, endpoint) => {
     expect(endpointForRecord({ kind })).toBe(endpoint);
   });

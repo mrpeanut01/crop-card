@@ -43,6 +43,7 @@
       iso: string;
       weekday: string;
       day: number;
+      month: string | null;
       isToday: boolean;
       items: WeekItem[];
     }> = [];
@@ -50,23 +51,33 @@
       const ms = todayStartMs + i * DAY_MS;
       const d = new Date(ms);
       const iso = d.toISOString().slice(0, 10);
+      const day = d.getUTCDate();
       out.push({
         iso,
         weekday: fmt.day(iso, 'weekday'),
-        day: d.getUTCDate(),
+        day,
+        month: i === 0 || day === 1 ? fmt.day(iso, 'month-day', { day: undefined }) : null,
         isToday: i === 0,
         items: items[iso] ?? []
       });
     }
     return out;
   });
+  const range = $derived(
+    days.length > 0
+      ? `${fmt.day(days[0].iso, 'month-day')} – ${fmt.day(days[days.length - 1].iso, 'month-day')}`
+      : ''
+  );
 </script>
 
 <Card>
   <div class="head">
-    <h3 class="serif">
-      {period === 'week' ? 'This week' : period === 'month' ? 'Next 4 weeks' : 'This season'}
-    </h3>
+    <div class="title">
+      <h3 class="serif">
+        {period === 'week' ? 'This week' : period === 'month' ? 'Next 4 weeks' : 'This season'}
+      </h3>
+      <span class="range">{range}</span>
+    </div>
     <div class="seg" role="tablist" aria-label="View period">
       {#each PERIODS as p (p.id)}
         <button
@@ -83,10 +94,12 @@
   </div>
   <div class="grid" data-period={period}>
     {#each days as d (d.iso)}
-      <div class="day" class:today={d.isToday}>
+      <div class="day" class:today={d.isToday} class:month-start={d.day === 1}>
         <div class="day-head">
           <span class="weekday">{d.weekday}</span>
-          <span class="serif daynum" class:today-num={d.isToday}>{d.day}</span>
+          <span class="serif daynum" class:today-num={d.isToday}>
+            {#if d.month}<span class="month">{d.month}</span>{/if}{d.day}
+          </span>
         </div>
         {#each d.items as item, k (k)}
           <div class="item" data-kind={item.kind}>{item.title}</div>
@@ -102,6 +115,16 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 14px;
+  }
+  .title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .range {
+    font-size: 12px;
+    color: var(--color-ink-muted);
   }
   .head h3 {
     margin: 0;
@@ -172,6 +195,18 @@
     font-size: 18px;
     color: var(--color-ink-soft);
     font-family: var(--font-serif, serif);
+  }
+  .month {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-forest);
+    margin-right: 4px;
+    font-family: var(--font-sans, inherit);
+  }
+  .day.month-start {
+    border-left: 3px solid var(--color-forest);
   }
   .today-num {
     color: var(--color-forest-deep);

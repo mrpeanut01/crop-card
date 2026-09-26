@@ -13,16 +13,14 @@ import { AREA_KIND_PLURAL, AREA_KIND_STYLE } from '$lib/farm/kindStyle';
 import { areaDisplayName, areaKindLabel, monthDay, resolveOptions, trimNumber } from './common';
 import { formatAreaAcres, formatSize } from './size';
 import type { Prefs } from '$lib/prefs';
+import { formatEmergencyContact, type EmergencyContact } from '$lib/farm/emergencyContacts';
 
-export interface EmergencyContact {
-  label: string;
-  phone: string;
-}
+export type { EmergencyContact };
 
 export interface FarmMapBuildOptions {
   prefs?: Prefs;
   now?: number;
-  /** Only shown when the owner has saved some; the section is left off otherwise. */
+  /** Overrides the snapshot's saved contacts; the section is left off when none exist. */
   emergencyContacts?: readonly EmergencyContact[];
 }
 
@@ -126,13 +124,13 @@ export function buildFarmMapCard(
     });
   }
 
-  const contacts = (options.emergencyContacts ?? []).filter(
-    (c) => c.label.trim() && c.phone.trim()
+  const contacts = (options.emergencyContacts ?? snapshot.emergencyContacts ?? []).filter(
+    (c) => c.name.trim() && c.phone.trim()
   );
   if (contacts.length) {
     sections.unshift({
       title: 'Emergency contacts',
-      items: contacts.map((c) => `${c.label.trim()}: ${c.phone.trim()}`)
+      items: contacts.map(formatEmergencyContact)
     });
   }
 

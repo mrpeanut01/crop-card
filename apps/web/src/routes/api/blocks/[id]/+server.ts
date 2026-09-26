@@ -7,13 +7,13 @@
  */
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
 import { blockHasRecords, deleteBlockCascade } from '$lib/db/admin';
 import { getBlock, updateBlock } from '$lib/db/blocks';
 import { getField } from '$lib/db/fields';
-import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
+import { withSketchAcres } from '$lib/farm/sketch';
+import { blockPatchSchema } from '$lib/farm/apiSchemas';
 import { DEFAULT_BLOCK_KIND, usesDesignerLayout } from '$lib/farm/areaKinds';
-import { blockLayoutPatchSchema, blockPlacementError } from '$lib/farm/blockLayout';
+import { blockPlacementError } from '$lib/farm/blockLayout';
 import {
   bedLayoutProblem,
   clampFinishedFootprints,
@@ -29,18 +29,7 @@ export const GET: RequestHandler = (event) => {
   return json({ block });
 };
 
-const patchSchema = blockLayoutPatchSchema.extend({
-  name: z.string().min(1).max(120).optional(),
-  acres: z.number().positive().nullable().optional(),
-  blockLabel: z.string().max(60).nullable().optional(),
-  fieldId: z.string().min(1).optional(),
-  tillageMethod: z.enum(['conventional', 'reduced-till', 'no-till']).optional(),
-  /** v1.3 shade model — terrain slope (optional). Null clears the value. */
-  slopePercent: z.number().min(0).max(100).nullable().optional(),
-  slopeAspectDeg: z.number().min(0).max(360).nullable().optional(),
-  widthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional(),
-  lengthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional()
-});
+export const _requestSchema = blockPatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
@@ -54,7 +43,7 @@ export const PATCH: RequestHandler = async (event) => {
   } catch {
     return json({ error: 'invalid JSON body' }, { status: 400 });
   }
-  const parsed = patchSchema.safeParse(body);
+  const parsed = blockPatchSchema.safeParse(body);
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }

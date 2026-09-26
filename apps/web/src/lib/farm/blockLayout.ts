@@ -16,7 +16,8 @@ const positionFt = z.number().min(0).max(MAX_SKETCH_FT);
 const rotationDeg = z
   .number()
   .refine((d) => Number.isFinite(d) && d % 90 === 0, 'rotation must be a multiple of 90°')
-  .transform(normalizeRotationDeg);
+  .transform(normalizeRotationDeg)
+  .describe('Degrees, a multiple of 90; saved as 0, 90, 180 or 270.');
 
 /** Kind + designer layout fields accepted when creating a block. */
 export const blockLayoutSchema = z.object({

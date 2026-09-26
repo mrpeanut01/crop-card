@@ -7,6 +7,7 @@
  * render as the same day in every time zone; moments are epoch ms.
  */
 
+import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
 
 export const FARM_SNAPSHOT_VERSION = 1 as const;
@@ -221,4 +222,7 @@ export interface FarmSnapshot {
   /** Stocked pesticides keyed by plugin id. Absent on bundles saved before
    *  Sprint 30F. */
   sprayProducts?: Record<string, SnapshotSprayProduct>;
+  /** The owner's saved emergency contacts for the Farm Map Card. Absent on
+   *  bundles saved before Sprint 30H. */
+  emergencyContacts?: EmergencyContact[];
 }

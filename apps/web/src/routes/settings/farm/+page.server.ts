@@ -26,6 +26,13 @@ import {
 import { storedFrostView } from '$lib/climate/frostSettings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { unscopedQueryNote } from '$lib/db/tenant';
+import {
+  ADD_POISON_CONTROL_INTENT,
+  contactRowsFromForm,
+  parseContactRows,
+  withPoisonControl
+} from '$lib/farm/emergencyContacts';
+import { loadEmergencyContacts, saveEmergencyContacts } from '$lib/farm/emergencyContacts.server';
 
 export const load: ServerLoad = ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
@@ -73,7 +80,8 @@ export const load: ServerLoad = ({ locals }) => {
       };
     })(),
     currentYear,
-    activeSeasonSetup: loadSeasonSetup(currentYear)
+    activeSeasonSetup: loadSeasonSetup(currentYear),
+    emergencyContacts: loadEmergencyContacts()
   };
 };
 
@@ -83,9 +91,17 @@ export const actions: Actions = {
     if (locals.user.role !== 'owner') throw error(403, 'owner-only');
     if (!locals.user.activeOwnerId) throw error(400, 'no active owner');
     const form = await request.formData();
+    const hasContacts = form.get('contactsPresent') === '1';
+    let rows = contactRowsFromForm(form);
+    if (form.get('intent') === ADD_POISON_CONTROL_INTENT) rows = withPoisonControl(rows);
+    const contacts = hasContacts ? parseContactRows(rows) : null;
+    if (contacts && !contacts.ok) {
+      return fail(400, { contactsError: contacts.error, contactRows: rows });
+    }
+
     const latLon = parseLatLon(form.get('lat'), form.get('lon'));
     const frost = await resolveFrostForm(form, latLon);
-    if (!frost.ok) return fail(400, { error: frost.error });
+    if (!frost.ok) return fail(400, { error: frost.error, contactRows: rows });
 
     const farmName = String(form.get('farmName') ?? '').trim();
     if (farmName.length > 0 && farmName.length <= 120) {
@@ -98,6 +114,7 @@ export const actions: Actions = {
 
     if (latLon) setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify(latLon));
     if (frost.plan) applyFrostPlan(frost.plan);
+    if (contacts?.ok) saveEmergencyContacts(contacts.contacts);
 
     return { ok: true };
   }

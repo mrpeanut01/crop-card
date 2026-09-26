@@ -71,14 +71,26 @@ describe('buildFarmMapCard', () => {
     const some = buildFarmMapCard(sampleSnapshot(), {
       prefs,
       emergencyContacts: [
-        { label: 'Poison control', phone: '800-222-1222' },
-        { label: ' ', phone: '911' }
+        { name: 'Poison Control', role: 'Poisoning or chemical exposure', phone: '1-800-222-1222' },
+        { name: ' ', role: '', phone: '911' }
       ]
     });
     expect(some.sections[0]).toEqual({
       title: 'Emergency contacts',
-      items: ['Poison control: 800-222-1222']
+      items: ['Poison Control (Poisoning or chemical exposure): 1-800-222-1222']
     });
+  });
+
+  it('reads saved contacts from the snapshot unless options override them', () => {
+    const snap = sampleSnapshot({
+      emergencyContacts: [{ name: 'Dr. Reyes', role: 'Vet', phone: '540-555-0101' }]
+    });
+    expect(buildFarmMapCard(snap, { prefs }).sections[0]).toEqual({
+      title: 'Emergency contacts',
+      items: ['Dr. Reyes (Vet): 540-555-0101']
+    });
+    const overridden = buildFarmMapCard(snap, { prefs, emergencyContacts: [] });
+    expect(overridden.sections.some((s) => s.title === 'Emergency contacts')).toBe(false);
   });
 
   it('handles an empty farm and caps long lists', () => {

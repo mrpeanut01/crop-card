@@ -1,26 +1,25 @@
 #!/usr/bin/env node
 /**
  * Regenerate apps/web/static/openapi.json from a hand-curated registry of
- * representative `/api/**` endpoints (Phase 24, Sub-task C / #57).
+ * `/api/**` endpoints (Phase 24, Sub-task C / #57; Phase 30 endpoints added
+ * in Sprint 30H).
  *
- * Phase 24 ships an INITIAL OpenAPI surface covering the endpoints external
- * agents need most: auth-token mint/list/revoke, the openapi self-reference,
- * the safety-kernel-gated /api/spray/record, the block list, and the health
- * probe. Adding endpoints is intentionally incremental — each route's request
- * schema lives inline today, and bulk-promoting all 95 to exported consts is
- * a separate domain-batched effort tracked as a Phase 24 follow-up.
+ * To add an endpoint:
+ *   1. Move the route's request schema into a `$lib` module that imports
+ *      nothing server-only, and have the route re-export it as
+ *      `export const _requestSchema = ...` (SvelteKit only allows
+ *      underscore-prefixed extra exports from `+server.ts`).
+ *   2. Import that schema below and describe the path with `jsonBody()`, so
+ *      the published contract is generated from the same Zod schema the
+ *      handler validates with.
+ *   Endpoints whose schema still lives inline in the route keep a
+ *   hand-written body shape until they are promoted the same way.
  *
- * To add a new endpoint:
- *   1. Append a `paths['/api/...'] = { get|post|... : {...} }` block in
- *      ROUTES below.
- *   2. (Optional) Promote the route's inline `const schema = z.object(...)`
- *      to `export const requestSchema = ...` and `import` it here for
- *      machine-checked drift. Today the registry uses hand-written OpenAPI
- *      shapes — a deliberate v1 tradeoff to ship the contract without
- *      blocking on a 95-file refactor.
+ * Runs under `tsx` with `scripts/tsconfig.openapi.json`, which maps `$lib`
+ * without needing `svelte-kit sync` first.
  *
  * The generated artifact is served by `apps/web/src/routes/api/openapi.json/+server.ts`
- * and checked-in so external agents can fetch it without a build step. CI
+ * and checked in so external agents can fetch it without a build step. CI
  * runs `pnpm gen:openapi && git diff --exit-code apps/web/static/openapi.json`
  * to catch drift between source intent and the served file.
  *
@@ -31,6 +30,23 @@
 import { fileURLToPath } from 'node:url';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { z } from 'zod';
+
+import {
+  blockCreateSchema,
+  blockPatchSchema,
+  fieldCreateSchema,
+  fieldPatchSchema
+} from '../src/lib/farm/apiSchemas.ts';
+import { AREA_KINDS, BLOCK_KINDS } from '../src/lib/farm/areaKinds.ts';
+import {
+  fillRequestSchema,
+  plantingCreateSchema,
+  successionRequestSchema
+} from '../src/lib/garden/api.ts';
+import { hintsPostSchema } from '../src/lib/hints.ts';
+import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
+import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const APP_ROOT = resolve(__dirname, '..');
@@ -81,6 +97,189 @@ const TOKEN_SUMMARY_SCHEMA = {
     revokedAt: { type: ['integer', 'null'] }
   }
 };
+
+function fromZod(schema) {
+  const { $schema: _dialect, ...json } = z.toJSONSchema(schema, {
+    target: 'draft-2020-12',
+    io: 'input',
+    unrepresentable: 'any'
+  });
+  return json;
+}
+
+function jsonBody(schema, description) {
+  return {
+    required: true,
+    content: {
+      'application/json': {
+        schema: description ? { ...fromZod(schema), description } : fromZod(schema)
+      }
+    }
+  };
+}
+
+const errorRef = { $ref: '#/components/schemas/Error' };
+
+function errorResponse(description) {
+  return { description, content: { 'application/json': { schema: errorRef } } };
+}
+
+function jsonResponse(description, schema) {
+  return { description, content: { 'application/json': { schema } } };
+}
+
+const AUTH_ERRORS = {
+  401: errorResponse('Authentication required.'),
+  403: errorResponse('Cross-origin blocked, or read-only role.')
+};
+
+const OWNER_ERRORS = {
+  401: errorResponse('Authentication required.'),
+  403: errorResponse('Owner role required. Helpers can read but not change this.')
+};
+
+const GARDEN_ERROR_SCHEMA = {
+  type: 'object',
+  required: ['error'],
+  properties: {
+    error: { type: 'string' },
+    code: {
+      type: 'string',
+      enum: [
+        'OFFLINE',
+        'READ_ONLY',
+        'OUTSIDE_AREA',
+        'OVERLAP',
+        'NOT_DESIGNABLE',
+        'IN_GROUND',
+        'BED_HAS_RECORDS',
+        'FOREIGN_REF'
+      ]
+    },
+    issues: {}
+  }
+};
+
+const gardenErrorRef = { $ref: '#/components/schemas/GardenError' };
+
+const GARDEN_ERRORS = {
+  400: jsonResponse('Invalid request body.', gardenErrorRef),
+  ...OWNER_ERRORS,
+  404: jsonResponse('Bed not found for the active Owner.', gardenErrorRef),
+  409: jsonResponse(
+    'The layout does not fit: `OVERLAP`, `OUTSIDE_AREA` or `NOT_DESIGNABLE`.',
+    gardenErrorRef
+  )
+};
+
+const PLACED_PLANTING_SCHEMA = {
+  type: 'object',
+  description:
+    'A planting placed in a bed. `plantCountProvenance` and `sourceProvenance` say where a value came from; a hand-placed planting has no `sourceProvenance`.',
+  required: ['cropId', 'blockId', 'cropPluginId', 'varietyDisplayName', 'status'],
+  properties: {
+    cropId: { type: 'string' },
+    blockId: { type: 'string' },
+    cropPluginId: { type: 'string' },
+    varietyDisplayName: { type: 'string' },
+    cropFamily: { type: 'string' },
+    status: { type: 'string' },
+    plantingDateMs: { type: ['integer', 'null'] },
+    harvestedAtMs: { type: ['integer', 'null'] },
+    footprint: { type: ['object', 'null'] },
+    spacing: { type: 'object' },
+    plantCount: { type: ['integer', 'null'] },
+    plantCountProvenance: { type: ['string', 'null'] },
+    groupId: { type: ['string', 'null'] },
+    groupSystemKind: {
+      type: ['string', 'null'],
+      enum: ['three-sisters', 'succession', 'manual', null]
+    },
+    groupRole: { type: ['string', 'null'], enum: ['anchor', 'companion', null] },
+    sourceProvenance: { type: ['string', 'null'], enum: ['ai', 'fallback', 'plugin', null] }
+  }
+};
+
+const placedRef = { $ref: '#/components/schemas/PlacedPlanting' };
+
+const clientRecordRef = { $ref: '#/components/parameters/ClientRecordId' };
+
+const CLIENT_RECORD_PARAMETER = {
+  name: CLIENT_RECORD_HEADER,
+  in: 'header',
+  required: false,
+  description:
+    'Offline-queue row id (8 to 80 of `A-Z a-z 0-9 _ -`). A replay of an id the active Owner already saved answers 200 `{ ok: true, duplicate: true }` and writes nothing, so a record is saved at most once. Omit it for a plain request; an id that does not match the pattern is ignored.',
+  schema: { type: 'string', pattern: '^[A-Za-z0-9_-]{8,80}$', example: 'q_01J9Z6X4K2M8' }
+};
+
+const DUPLICATE_SCHEMA = {
+  type: 'object',
+  description:
+    'Either the saved record, or `{ ok: true, duplicate: true }` when the client record id was already saved and nothing new was written.',
+  properties: {
+    ok: { const: true },
+    duplicate: { type: 'boolean' }
+  }
+};
+
+function recordEndpoint({ summary, description, source, created = false }) {
+  const saved = created
+    ? {
+        200: jsonResponse('A replay of a client record id that was already saved.', {
+          type: 'object',
+          required: ['ok', 'duplicate'],
+          properties: { ok: { const: true }, duplicate: { const: true } }
+        }),
+        201: jsonResponse('Record saved.', { type: 'object' })
+      }
+    : { 200: jsonResponse('Record saved, or a replay that was already saved.', DUPLICATE_SCHEMA) };
+  return {
+    post: {
+      summary,
+      description,
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              description: `Exact shape is enforced inline in ${source} via Zod.`
+            }
+          }
+        }
+      },
+      responses: {
+        ...saved,
+        400: errorResponse('Invalid body.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('Unknown block, crop, product or sprayer for the active Owner.'),
+        422: errorResponse('A safety check or the season close-out gate rejected the record.'),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  };
+}
+
+const kindQuery = (kinds, example) => ({
+  name: 'kind',
+  in: 'query',
+  required: false,
+  description: `Comma-separated kinds to include (${kinds.map((k) => `\`${k}\``).join(', ')}). An unknown kind returns 400.`,
+  schema: { type: 'string', example }
+});
+
+const idPath = (name, description) => ({
+  name,
+  in: 'path',
+  required: true,
+  description,
+  schema: { type: 'string' }
+});
 
 // ─── Path registry ──────────────────────────────────────────────────────
 
@@ -233,10 +432,12 @@ const paths = {
 
   '/api/spray/record': {
     post: {
-      summary: 'Record a spray event (safety-kernel re-validated)',
-      description:
-        'Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 400 with kernel violations on safety failure.',
-      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      ...recordEndpoint({
+        summary: 'Record a spray event (safety-kernel re-validated)',
+        description:
+          'Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 422 with kernel violations on safety failure.',
+        source: 'apps/web/src/routes/api/spray/record/+server.ts'
+      }).post,
       requestBody: {
         required: true,
         content: {
@@ -244,7 +445,7 @@ const paths = {
             schema: {
               type: 'object',
               description:
-                'Spray-event payload. Exact shape is enforced inline in apps/web/src/routes/api/spray/record/+server.ts via Zod; promoting to exported `requestSchema` is a Phase 24 follow-up (see gen-openapi.mjs header).',
+                'Spray-event payload. Exact shape is enforced inline in apps/web/src/routes/api/spray/record/+server.ts via Zod.',
               properties: {
                 blockId: { type: 'string' },
                 products: { type: 'array', items: { type: 'object' } },
@@ -253,24 +454,121 @@ const paths = {
             }
           }
         }
-      },
+      }
+    }
+  },
+
+  '/api/insecticide/record': recordEndpoint({
+    summary: 'Record an insecticide application',
+    description:
+      'Runs the IPM threshold, pollinator-protection, cross-contamination and environment gates on the server before saving. Safe to replay from the offline queue with the client record id header.',
+    source: 'apps/web/src/routes/api/insecticide/record/+server.ts'
+  }),
+
+  '/api/fungicide/record': recordEndpoint({
+    summary: 'Record a fungicide application',
+    description:
+      'Runs the FRAC rotation, tank-mix, bloom and cross-contamination gates on the server before saving. Safe to replay from the offline queue with the client record id header.',
+    source: 'apps/web/src/routes/api/fungicide/record/+server.ts'
+  }),
+
+  '/api/harvest/record': recordEndpoint({
+    summary: 'Record a harvest',
+    description:
+      'Checks stored moisture against the crop archetype and the pre-harvest interval of recent sprays. Safe to replay from the offline queue with the client record id header.',
+    source: 'apps/web/src/routes/api/harvest/record/+server.ts'
+  }),
+
+  '/api/scout/record': recordEndpoint({
+    summary: 'Record a scouting observation',
+    description:
+      'Saves one observation against a block (and optionally a planting). Safe to replay from the offline queue with the client record id header.',
+    source: 'apps/web/src/routes/api/scout/record/+server.ts',
+    created: true
+  }),
+
+  '/api/hay/cuttings': recordEndpoint({
+    summary: 'Record a hay cutting',
+    description:
+      'Re-runs the mow decision against the forecast before saving; a bale moisture danger stop cannot be overridden. Safe to replay from the offline queue with the client record id header.',
+    source: 'apps/web/src/routes/api/hay/cuttings/+server.ts',
+    created: true
+  }),
+
+  '/api/fields': {
+    get: {
+      summary: 'List Areas for the active Owner',
+      description:
+        'Areas (stored as fields) with their block counts and acres. Tenant-scoped; helpers can read.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [kindQuery(AREA_KINDS, 'garden,greenhouse')],
       responses: {
-        200: {
-          description: 'Spray recorded.',
-          content: { 'application/json': { schema: { type: 'object' } } }
-        },
-        400: {
-          description: 'Safety kernel rejected the spray.',
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
-        },
-        401: {
-          description: 'Authentication required.',
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
-        },
-        403: {
-          description: 'Cross-origin blocked, or read-only role.',
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
-        }
+        200: jsonResponse('Area list.', {
+          type: 'object',
+          required: ['fields'],
+          properties: { fields: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('Unknown kind.')
+      }
+    },
+    post: {
+      summary: 'Create an Area',
+      description:
+        'Owner only. `details` is checked against the schema for `kind` (garden watering, greenhouse structure, orchard spacing and so on) and rejected with 400 when it does not fit.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(fieldCreateSchema),
+      responses: {
+        201: jsonResponse('Area created.', {
+          type: 'object',
+          required: ['field'],
+          properties: { field: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, or `details` that do not fit the kind.'),
+        ...OWNER_ERRORS
+      }
+    }
+  },
+
+  '/api/fields/{id}': {
+    parameters: [idPath('id', 'Area id.')],
+    get: {
+      summary: 'Fetch one Area',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The Area.', {
+          type: 'object',
+          required: ['field'],
+          properties: { field: { type: 'object' } }
+        }),
+        404: errorResponse('Area not found for the active Owner.')
+      }
+    },
+    patch: {
+      summary: 'Edit an Area',
+      description:
+        'Owner only. Null clears a value. Reshaping a garden or greenhouse that would leave a bed outside its edge answers 409 `OUTSIDE_AREA`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(fieldPatchSchema),
+      responses: {
+        200: jsonResponse('Area saved.', {
+          type: 'object',
+          required: ['field'],
+          properties: { field: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, or `details` that do not fit the kind.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Area not found for the active Owner.'),
+        409: jsonResponse('A bed would end up outside the Area.', gardenErrorRef)
+      }
+    },
+    delete: {
+      summary: 'Delete an Area and everything in it',
+      description: 'Owner only. Cascades through every block, planting and event in the Area.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Deleted; the body counts what was removed.', { type: 'object' }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Area not found for the active Owner.')
       }
     }
   },
@@ -281,30 +579,307 @@ const paths = {
       description:
         'Tenant-scoped via `runWithTenantAsync(activeOwnerId, …)`. Bearer tokens see only the Owner they were minted under.',
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [kindQuery(BLOCK_KINDS, 'bed,container')],
+      responses: {
+        200: jsonResponse('Block list.', {
+          type: 'object',
+          properties: {
+            blocks: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse('Unknown kind.')
+      }
+    },
+    post: {
+      summary: 'Create a block, bed, row or container',
+      description:
+        'Owner only. Designer layout fields (`xFt`, `yFt`, `rotationDeg`, `bedStyle`) are in feet from the Area corner and only apply to beds and containers in a garden or greenhouse. A bed that overlaps another or leaves the Area answers 409 `OVERLAP` or `OUTSIDE_AREA`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(blockCreateSchema),
+      responses: {
+        201: jsonResponse('Block created.', {
+          type: 'object',
+          required: ['block'],
+          properties: { block: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, or a kind that cannot sit in that Area.'),
+        ...OWNER_ERRORS,
+        409: jsonResponse('The bed does not fit.', gardenErrorRef)
+      }
+    }
+  },
+
+  '/api/blocks/{id}': {
+    parameters: [idPath('id', 'Block id.')],
+    get: {
+      summary: 'Fetch one block with its plantings',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The block.', {
+          type: 'object',
+          required: ['block'],
+          properties: { block: { type: 'object' } }
+        }),
+        404: errorResponse('Block not found for the active Owner.')
+      }
+    },
+    patch: {
+      summary: 'Move, resize, rotate or rename a block',
+      description:
+        'Owner only. Null clears a value. Shrinking a bed past a planting answers 409; finished plantings are clamped to the new size.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(blockPatchSchema),
+      responses: {
+        200: jsonResponse('Block saved.', {
+          type: 'object',
+          required: ['block'],
+          properties: { block: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, an unknown `fieldId`, or a kind that cannot sit there.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Block not found for the active Owner.'),
+        409: jsonResponse('The new layout does not fit.', gardenErrorRef)
+      }
+    },
+    delete: {
+      summary: 'Delete a block',
+      description:
+        'Owner only. Cascades through its plantings and events. With `?ifEmpty=1` (the garden designer) a block holding anything but planned plantings is kept and the answer is 409 `BED_HAS_RECORDS`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
       parameters: [
         {
-          name: 'kind',
+          name: 'ifEmpty',
           in: 'query',
           required: false,
-          description:
-            'Comma-separated block kinds to include (`block`, `bed`, `row`, `container`). An unknown kind returns 400.',
-          schema: { type: 'string', example: 'bed,container' }
+          schema: { type: 'string', enum: ['1'] }
+        }
+      ],
+      responses: {
+        200: jsonResponse('Deleted; the body counts what was removed.', { type: 'object' }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Block not found for the active Owner.'),
+        409: jsonResponse('The block has records.', gardenErrorRef)
+      }
+    }
+  },
+
+  '/api/garden/plantings': {
+    post: {
+      summary: 'Plant into garden beds as one batch',
+      description:
+        'Owner only. Creates `planned` plantings in beds. Every item is checked before anything is written, so one bad item saves nothing. `source` records where each proposal came from and is stored as its provenance.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(plantingCreateSchema),
+      responses: {
+        201: jsonResponse('Plantings saved.', {
+          type: 'object',
+          required: ['plantings'],
+          properties: { plantings: { type: 'array', items: placedRef } }
+        }),
+        ...GARDEN_ERRORS
+      }
+    }
+  },
+
+  '/api/garden/beds/{blockId}/succession': {
+    parameters: [idPath('blockId', 'Bed (block) id.')],
+    post: {
+      summary: 'Preview or save succession sowings',
+      description:
+        'Owner only. `commit: false` previews the sowings that fit after a planting; `commit: true` saves them linked as one succession group.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(successionRequestSchema),
+      responses: {
+        200: jsonResponse('Preview.', { type: 'object' }),
+        201: jsonResponse('Sowings saved.', {
+          type: 'object',
+          properties: {
+            proposal: { type: 'object' },
+            groupId: { type: ['string', 'null'] },
+            anchor: placedRef,
+            created: { type: 'array', items: placedRef }
+          }
+        }),
+        ...GARDEN_ERRORS
+      }
+    }
+  },
+
+  '/api/garden/beds/{blockId}/fill': {
+    parameters: [idPath('blockId', 'Bed (block) id.')],
+    post: {
+      summary: 'Propose plantings for the free space in a bed',
+      description:
+        'Owner only. Never saves anything; accepted proposals go to `POST /api/garden/plantings`. Claude is asked only when it is available (through `aiTry()`); otherwise, or when its answer fails the server checks, the proposals come from the best-fitting bed recipe or a spacing-packed plan and are tagged `fallback`, with `fallbackReason` saying why.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(fillRequestSchema),
+      responses: {
+        200: jsonResponse('Proposals.', {
+          type: 'object',
+          required: ['proposals', 'provenance', 'fallbackReason', 'message'],
+          properties: {
+            proposals: { type: 'array', items: { type: 'object' } },
+            provenance: { type: 'string', enum: ['ai', 'fallback'] },
+            fallbackReason: {
+              type: ['string', 'null'],
+              enum: ['no-key', 'over-cap', 'offline', 'rate-limit', 'timeout', null]
+            },
+            message: { type: ['string', 'null'] }
+          }
+        }),
+        ...GARDEN_ERRORS
+      }
+    }
+  },
+
+  '/api/cards/snapshot': {
+    get: {
+      summary: "The active Owner's offline Card bundle",
+      description:
+        'Everything the offline Cards need, built from tenant-scoped reads: Areas, blocks, plantings, open tasks, equipment, stock, crop and spray product data, frost dates and the Farm Map Card emergency contacts. Helpers can read it. Sends a weak ETag and answers 304 to a matching `If-None-Match`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'If-None-Match',
+          in: 'header',
+          required: false,
+          description: 'ETag from an earlier response.',
+          schema: { type: 'string' }
         }
       ],
       responses: {
         200: {
-          description: 'Block list.',
+          description: 'The snapshot.',
+          headers: {
+            ETag: {
+              description: 'Weak validator over everything but `generatedAt`.',
+              schema: { type: 'string' }
+            }
+          },
           content: {
             'application/json': {
               schema: {
                 type: 'object',
+                required: [
+                  'version',
+                  'ownerId',
+                  'generatedAt',
+                  'rulesVersion',
+                  'areas',
+                  'blocks',
+                  'plantings',
+                  'tasks',
+                  'equipment',
+                  'stock',
+                  'cropPlugins',
+                  'frost'
+                ],
                 properties: {
-                  blocks: { type: 'array', items: { type: 'object' } }
+                  version: { const: 1 },
+                  ownerId: { type: 'string' },
+                  farmName: { type: ['string', 'null'] },
+                  generatedAt: { type: 'integer', description: 'Unix epoch ms.' },
+                  rulesVersion: { type: 'string' },
+                  origin: { type: ['string', 'null'] },
+                  areas: { type: 'array', items: { type: 'object' } },
+                  blocks: { type: 'array', items: { type: 'object' } },
+                  plantings: { type: 'array', items: { type: 'object' } },
+                  tasks: { type: 'array', items: { type: 'object' } },
+                  equipment: { type: 'array', items: { type: 'object' } },
+                  stock: { type: 'array', items: { type: 'object' } },
+                  cropPlugins: { type: 'object' },
+                  frost: {
+                    type: ['object', 'null'],
+                    description:
+                      'Frost dates with their provenance (`data`, `manual` or `fallback`).'
+                  },
+                  sprayProducts: { type: 'object' },
+                  emergencyContacts: {
+                    type: 'array',
+                    maxItems: 5,
+                    items: fromZod(emergencyContactSchema)
+                  }
                 }
               }
             }
           }
+        },
+        304: { description: 'Unchanged since the ETag you sent.' },
+        401: errorResponse('Authentication required.')
+      }
+    }
+  },
+
+  '/api/geocode': {
+    get: {
+      summary: 'Look up an address',
+      description:
+        'Signed-in only. Asks the US Census geocoder for up to 5 matches. Limited to 20 lookups a minute per user.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'q',
+          in: 'query',
+          required: true,
+          description: 'The address, 3 to 200 characters.',
+          schema: { type: 'string', minLength: 3, maxLength: 200 }
         }
+      ],
+      responses: {
+        200: jsonResponse('Matches, best first. Empty when nothing matched or the lookup failed.', {
+          type: 'object',
+          required: ['matches'],
+          properties: {
+            matches: {
+              type: 'array',
+              maxItems: 5,
+              items: {
+                type: 'object',
+                required: ['label', 'lat', 'lon'],
+                properties: {
+                  label: { type: 'string' },
+                  lat: { type: 'number' },
+                  lon: { type: 'number' }
+                }
+              }
+            }
+          }
+        }),
+        400: errorResponse('`q` is missing, too short or too long.'),
+        401: errorResponse('Authentication required.'),
+        429: errorResponse('Too many lookups; try again in a minute.')
+      }
+    }
+  },
+
+  '/api/me/hints': {
+    get: {
+      summary: 'First-use hints the signed-in user has dismissed',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Dismissed hint keys.', {
+          type: 'object',
+          required: ['hints'],
+          properties: { hints: { type: 'array', items: { type: 'string' } } }
+        }),
+        401: errorResponse('Authentication required.')
+      }
+    },
+    post: {
+      summary: 'Mark hints seen',
+      description:
+        'One `key`, or a batch of up to 50 `keys` (the client flushes offline dismissals this way). Answers with the full dismissed list.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(hintsPostSchema),
+      responses: {
+        200: jsonResponse('Dismissed hint keys.', {
+          type: 'object',
+          required: ['hints'],
+          properties: { hints: { type: 'array', items: { type: 'string' } } }
+        }),
+        400: errorResponse('Invalid body.'),
+        401: errorResponse('Authentication required.'),
+        409: errorResponse('Too many hints recorded for this user.')
       }
     }
   }
@@ -318,7 +893,7 @@ const doc = {
     title: 'CropCard External Agent API',
     version: '0.1.0',
     description:
-      'Owner-scoped JSON API for external Claude agents and SaaS integrations (Phase 24, UC-43). Bearer tokens minted at `/settings/api-tokens`. Safety kernel re-runs on every state-changing call — agents cannot bypass tenant isolation, the 48h spray lock, helper custom-rate restrictions, or kernel violations regardless of which endpoint they hit.\n\nCoverage is incremental: Phase 24 ships an initial surface (auth + health + spray/record + blocks). Additional endpoints adopt the OpenAPI registry in domain batches — track open work in [docs/phase-24-agent-api.md](https://github.com/mrpeanut01/crop-card/blob/main/docs/phase-24-agent-api.md).',
+      'Owner-scoped JSON API for external Claude agents and SaaS integrations (Phase 24, UC-43). Bearer tokens minted at `/settings/api-tokens`. Safety kernel re-runs on every state-changing call — agents cannot bypass tenant isolation, the 48h spray lock, helper custom-rate restrictions, or kernel violations regardless of which endpoint they hit.\n\nCoverage is incremental: Phase 24 shipped auth, health, spray/record and blocks; Phase 30 adds Areas, blocks and garden beds, the garden designer, offline Cards, geocoding, first-use hints and the offline-safe record endpoints. Additional endpoints adopt the OpenAPI registry in domain batches — track open work in [docs/phase-24-agent-api.md](https://github.com/mrpeanut01/crop-card/blob/main/docs/phase-24-agent-api.md).',
     contact: { name: 'CropCard' }
   },
   servers: [
@@ -345,8 +920,13 @@ const doc = {
           'HMAC-signed session cookie set by `/signin`. Cookie mutations under `/api/**` require matching Origin.'
       }
     },
+    parameters: {
+      ClientRecordId: CLIENT_RECORD_PARAMETER
+    },
     schemas: {
       Error: ERROR_SCHEMA,
+      GardenError: GARDEN_ERROR_SCHEMA,
+      PlacedPlanting: PLACED_PLANTING_SCHEMA,
       TokenSummary: TOKEN_SUMMARY_SCHEMA
     }
   },

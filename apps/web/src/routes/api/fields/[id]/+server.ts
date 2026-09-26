@@ -5,11 +5,11 @@
  */
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
 import { deleteFieldCascade } from '$lib/db/admin';
 import { getField, updateField } from '$lib/db/fields';
-import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
-import { AREA_KINDS, isDesignable, validateAreaDetails } from '$lib/farm/areaKinds';
+import { withSketchAcres } from '$lib/farm/sketch';
+import { fieldPatchSchema } from '$lib/farm/apiSchemas';
+import { isDesignable, validateAreaDetails } from '$lib/farm/areaKinds';
 import { bedsPastAreaEdge } from '$lib/server/garden/bedLayout';
 import { requireOwner } from '$lib/server/auth';
 
@@ -20,17 +20,7 @@ export const GET: RequestHandler = ({ params }) => {
   return json({ field });
 };
 
-const patchSchema = z.object({
-  name: z.string().min(1).max(120).optional(),
-  acres: z.number().positive().nullable().optional(),
-  location: z.string().max(500).nullable().optional(),
-  notes: z.string().max(2000).nullable().optional(),
-  geometryGeojson: z.string().nullable().optional(),
-  widthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional(),
-  lengthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional(),
-  kind: z.enum(AREA_KINDS).optional(),
-  details: z.unknown().optional()
-});
+export const _requestSchema = fieldPatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
@@ -44,7 +34,7 @@ export const PATCH: RequestHandler = async (event) => {
   } catch {
     return json({ error: 'invalid JSON body' }, { status: 400 });
   }
-  const parsed = patchSchema.safeParse(body);
+  const parsed = fieldPatchSchema.safeParse(body);
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }

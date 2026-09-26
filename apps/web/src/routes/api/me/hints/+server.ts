@@ -5,9 +5,8 @@
  */
 
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
 import { listSeen, markSeen } from '$lib/db/userHints';
-import { hintKeySchema } from '$lib/hints';
+import { hintsPostSchema } from '$lib/hints';
 import { requireUser } from '$lib/server/auth';
 
 export const GET: RequestHandler = (event) => {
@@ -15,10 +14,7 @@ export const GET: RequestHandler = (event) => {
   return json({ hints: listSeen(user.id) });
 };
 
-const postSchema = z.union([
-  z.object({ key: hintKeySchema }),
-  z.object({ keys: z.array(hintKeySchema).min(1).max(50) })
-]);
+export const _requestSchema = hintsPostSchema;
 
 export const POST: RequestHandler = async (event) => {
   const user = requireUser(event);
@@ -28,7 +24,7 @@ export const POST: RequestHandler = async (event) => {
   } catch {
     return json({ error: 'invalid JSON body' }, { status: 400 });
   }
-  const parsed = postSchema.safeParse(body);
+  const parsed = hintsPostSchema.safeParse(body);
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }

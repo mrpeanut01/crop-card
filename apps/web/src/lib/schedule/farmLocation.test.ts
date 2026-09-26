@@ -29,4 +29,14 @@ describe('normalizeFrost', () => {
     expect(normalizeFrost('13-01')).toBeNull();
     expect(normalizeFrost('April')).toBeNull();
   });
+  it('accepts M/D and pads single digits', () => {
+    expect(normalizeFrost('4/5')).toBe('04-05');
+    expect(normalizeFrost('4-5')).toBe('04-05');
+    expect(normalizeFrost('02/29')).toBe('02-29');
+  });
+  it('rejects days past the end of the month', () => {
+    for (const bad of ['02-30', '2/30', '02-31', '04-31', '2026-06-31', '00-10', '01-00']) {
+      expect(normalizeFrost(bad)).toBeNull();
+    }
+  });
 });

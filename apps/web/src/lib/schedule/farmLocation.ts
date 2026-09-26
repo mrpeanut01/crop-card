@@ -6,8 +6,6 @@
 
 import type { FarmLatLon } from './constants';
 
-const MM_DD_RE = /^(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$/;
-
 /** Both coordinates present, finite and in range, or null. */
 export function parseLatLon(latRaw: unknown, lonRaw: unknown): FarmLatLon | null {
   const latS = String(latRaw ?? '').trim();
@@ -20,12 +18,18 @@ export function parseLatLon(latRaw: unknown, lonRaw: unknown): FarmLatLon | null
   return { lat, lon };
 }
 
-/** Normalize a frost-date form value to `MM-DD`, or null when blank or
- *  invalid. Accepts `<input type="date">` (`YYYY-MM-DD`) and bare `MM-DD`. */
+const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+/** Normalize a frost-date form value to zero-padded `MM-DD`, or null when
+ *  blank or invalid. Accepts `<input type="date">` (`YYYY-MM-DD`), `MM-DD`
+ *  and US-style `M/D`. Feb 29 is allowed since frost dates carry no year. */
 export function normalizeFrost(raw: unknown): string | null {
   const s = String(raw ?? '').trim();
   if (!s) return null;
-  const iso = /^\d{4}-(\d{2})-(\d{2})$/.exec(s);
-  const mmdd = iso ? `${iso[1]}-${iso[2]}` : s;
-  return MM_DD_RE.test(mmdd) ? mmdd : null;
+  const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(s) ?? /^(\d{1,2})[-/](\d{1,2})$/.exec(s);
+  if (!m) return null;
+  const month = Number(m[1]);
+  const day = Number(m[2]);
+  if (month < 1 || month > 12 || day < 1 || day > DAYS_IN_MONTH[month - 1]) return null;
+  return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }

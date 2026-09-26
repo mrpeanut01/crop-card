@@ -81,6 +81,23 @@ export const userAvatars = sqliteTable('user_avatars', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 
+/** Phase 30 first-use hints a person has dismissed. Keyed by user, not
+ *  Owner (someone learns a control once, on any farm), and holds no farm
+ *  data, so it is deliberately not tenant-scoped. */
+export const userHints = sqliteTable(
+  'user_hints',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    hintKey: text('hint_key').notNull(),
+    seenAt: integer('seen_at', { mode: 'timestamp_ms' }).notNull()
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.hintKey] })
+  })
+);
+
 // ─── Multi-tenant core (Phase 18a) ──────────────────────────────────────
 
 /** One row per farm / tenant. Created on self-serve signup (`/onboarding`)
@@ -479,6 +496,27 @@ export const fields = tenantScoped(
       /** Sketch dimensions in feet for farms mapped without GPS (drawn as boxes). */
       widthFt: real('width_ft'),
       lengthFt: real('length_ft'),
+      /** Phase 30: the UI calls a `fields` row an Area. Values mirror
+       *  `AREA_KINDS` in `lib/farm/areaKinds.ts`. */
+      kind: text('kind', {
+        enum: [
+          'field',
+          'garden',
+          'greenhouse',
+          'orchard',
+          'pasture',
+          'barn',
+          'residence',
+          'natural_area',
+          'water',
+          'boundary'
+        ]
+      })
+        .notNull()
+        .default('field'),
+      /** Kind-specific attributes, validated by `areaDetailsSchema`. */
+      detailsJson: text('details_json'),
+      perimeterFt: real('perimeter_ft'),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
         .default(sql`(unixepoch() * 1000)`)
@@ -515,7 +553,16 @@ export const blocks = tenantScoped(
       slopePercent: real('slope_percent'),
       slopeAspectDeg: real('slope_aspect_deg'),
       widthFt: real('width_ft'),
-      lengthFt: real('length_ft')
+      lengthFt: real('length_ft'),
+      kind: text('kind', { enum: ['block', 'bed', 'row', 'container'] })
+        .notNull()
+        .default('block'),
+      /** Position in the parent Area's local feet grid (garden designer).
+       *  Illustrative only: never read by geometry consumers. */
+      xFt: real('x_ft'),
+      yFt: real('y_ft'),
+      rotationDeg: real('rotation_deg'),
+      bedStyle: text('bed_style', { enum: ['raised', 'in-ground', 'container', 'vertical'] })
     },
     (table) => ({
       ownerNameIdx: index('blocks_owner_name_idx').on(table.ownerId, table.name),
@@ -615,7 +662,19 @@ export const crops = tenantScoped(
        *  the planting level (e.g., corn-for-silage routes through
        *  `forage-cutting-cycle` instead of `row-grain.pollination`). The
        *  enum constraint is enforced in code; SQLite stores any text. */
-      archetypeOverride: text('archetype_override')
+      archetypeOverride: text('archetype_override'),
+      /** Phase 30: where the planting sits in its bed, as JSON
+       *  `{x_in, y_in, w_in, l_in}` (see `lib/farm/footprint.ts`). */
+      footprintJson: text('footprint_json'),
+      spacingIn: real('spacing_in'),
+      rowSpacingIn: real('row_spacing_in'),
+      spacingPattern: text('spacing_pattern', { enum: ['square', 'offset', 'sfg'] }),
+      plantCount: integer('plant_count'),
+      /** `data` when computed from spacing, `manual` when typed,
+       *  `fallback` when the plugin had no spacing. */
+      plantCountProvenance: text('plant_count_provenance', {
+        enum: ['data', 'manual', 'fallback']
+      })
     },
     (table) => ({
       ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),

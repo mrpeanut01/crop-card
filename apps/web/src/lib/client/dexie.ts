@@ -22,9 +22,14 @@
  * for back-compat (renaming an IndexedDB object store is a destructive
  * migration); the v2→v3 upgrade stamps every existing (herbicide-only)
  * row with `kind: 'herbicide'`.
+ *
+ * Phase 30 (v4): `farmSnapshots` holds one offline Card bundle per Owner and
+ * `pinnedCards` the Cards pinned per Owner. Both are read only through
+ * `cardStore.ts`, which keys every read and write by the active Owner.
  */
 
 import Dexie, { type Table } from 'dexie';
+import type { FarmSnapshot } from '$lib/cards/snapshot';
 
 /** #316 — offline-capable record kinds. Each maps to a POST endpoint in
  *  syncQueue.ts (ENDPOINT_BY_KIND). Extend both together. */
@@ -61,9 +66,24 @@ export interface CachedCatalog {
   fetchedAt: number;
 }
 
+export interface FarmSnapshotRow {
+  ownerId: string;
+  etag: string | null;
+  fetchedAt: number;
+  bundle: FarmSnapshot;
+}
+
+export interface PinnedCardRow {
+  ownerId: string;
+  key: string;
+  pinnedAt: number;
+}
+
 export class CropCardDb extends Dexie {
   pendingSprayRecords!: Table<PendingSprayRecord, string>;
   cachedCatalogs!: Table<CachedCatalog, string>;
+  farmSnapshots!: Table<FarmSnapshotRow, string>;
+  pinnedCards!: Table<PinnedCardRow, [string, string]>;
 
   constructor() {
     super('cropcard');
@@ -121,6 +141,12 @@ export class CropCardDb extends Dexie {
             if (!row.kind) row.kind = 'herbicide';
           });
       });
+    this.version(4).stores({
+      pendingSprayRecords: 'id, ownerId, createdAt, [ownerId+createdAt]',
+      cachedCatalogs: 'key, ownerId, [ownerId+catalogKind]',
+      farmSnapshots: 'ownerId',
+      pinnedCards: '[ownerId+key], ownerId, [ownerId+pinnedAt]'
+    });
   }
 }
 

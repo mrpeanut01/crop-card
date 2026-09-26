@@ -4,11 +4,13 @@ node_modules/
 # Build artifacts
 .svelte-kit/
 build/
+!/apps/web/src/lib/cards/build/
 dist/
 *.tsbuildinfo
 
 # Dev DBs and logs
 data/
+!/apps/web/src/lib/climate/data/
 *.db
 *.db-journal
 *.db-shm

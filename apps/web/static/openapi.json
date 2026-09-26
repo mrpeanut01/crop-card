@@ -466,6 +466,18 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "description": "Comma-separated block kinds to include (`block`, `bed`, `row`, `container`). An unknown kind returns 400.",
+            "schema": {
+              "type": "string",
+              "example": "bed,container"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Block list.",

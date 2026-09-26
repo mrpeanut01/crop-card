@@ -5,13 +5,15 @@
  * and keeps a warm replica busy while it's up. Instead the `push-tick` Azure
  * Container Apps Job (infra/azure/main.bicep) POSTs /api/internal/push-tick
  * twice a day with a shared secret. The request is the only thing that wakes
- * the app for alerts; the job itself never touches the database.
+ * the app for alerts; the job itself never touches the database. The same
+ * wakeup runs DB maintenance, which limits itself to once a day.
  */
 
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { runPushTick, type PushTickDeps, type PushTickSummary } from './scheduler';
 import { emailAlertOrigin } from './emailAlerts';
 import { readVapidConfig } from './webPush';
+import { runDbMaintenance, type MaintenanceResult } from '$lib/server/dbMaintenance';
 
 export const INTERNAL_TICK_PATH = '/api/internal/push-tick';
 export const TICK_SECRET_HEADER = 'x-push-tick-secret';
@@ -44,10 +46,13 @@ export function isInternalTickRequest(pathname: string, headers: Headers): boole
 
 export type TickPushResult = PushTickSummary | { skipped: 'alerts-not-configured' };
 
+export type TickMaintenanceResult = MaintenanceResult | { ran: false; failed: true };
+
 export interface TickResult {
   startedAt: string;
   durationMs: number;
   push: TickPushResult;
+  maintenance: TickMaintenanceResult;
   /** True when this call joined a tick that was already running. */
   joined: boolean;
 }
@@ -68,7 +73,19 @@ async function runOnce(deps: ScheduledTickDeps): Promise<Omit<TickResult, 'joine
     config || emailOrigin
       ? await runPushTick({ ...deps, config, emailOrigin })
       : { skipped: 'alerts-not-configured' };
-  return { startedAt: new Date(started).toISOString(), durationMs: now() - started, push };
+  let maintenance: TickMaintenanceResult;
+  try {
+    maintenance = await runDbMaintenance();
+  } catch (err) {
+    console.error('[db-maintenance] failed', err);
+    maintenance = { ran: false, failed: true };
+  }
+  return {
+    startedAt: new Date(started).toISOString(),
+    durationMs: now() - started,
+    push,
+    maintenance
+  };
 }
 
 /**

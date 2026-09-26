@@ -13,21 +13,53 @@
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from './schema';
+import { instrumentSqlite } from './instrument';
 
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
 let _db: Db | null = null;
 let _sqlite: Database.Database | null = null;
 
+export function databasePath(): string {
+  return (process.env.DATABASE_URL ?? 'file:/data/cropcard.db').replace(/^file:/, '');
+}
+
+/** Connection pragmas. WAL + NORMAL + the default autocheckpoint stay as
+ *  Litestream expects (it reads WAL frames and runs its own checkpoints).
+ *  Sized for a 1 GiB container: the page cache grows to 64 MiB only as
+ *  pages are touched, and mmap pages are reclaimable file cache. */
+export const CONNECTION_PRAGMAS = [
+  'journal_mode = WAL',
+  'synchronous = NORMAL',
+  'foreign_keys = ON',
+  'busy_timeout = 5000',
+  'cache_size = -65536',
+  'mmap_size = 268435456',
+  'temp_store = MEMORY',
+  'journal_size_limit = 67108864',
+  // Bounds every ANALYZE that optimize runs: a stats-less 160 MB DB takes
+  // ~35 ms at open instead of ~1.2 s.
+  'analysis_limit = 1000'
+] as const;
+
+export function applyConnectionPragmas(sqlite: Database.Database): void {
+  for (const p of CONNECTION_PRAGMAS) sqlite.pragma(p);
+  // 0x10002: analyze tables whose stats are missing or stale.
+  sqlite.pragma('optimize = 0x10002');
+}
+
 function open() {
-  const dbPath = (process.env.DATABASE_URL ?? 'file:/data/cropcard.db').replace(/^file:/, '');
-  const sqlite = new Database(dbPath);
+  const sqlite = new Database(databasePath());
+  applyConnectionPragmas(sqlite);
+  instrumentSqlite(sqlite);
   _sqlite = sqlite;
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('synchronous = NORMAL');
-  sqlite.pragma('foreign_keys = ON');
-  sqlite.pragma('busy_timeout = 5000');
   return drizzle(sqlite, { schema });
+}
+
+/** The underlying better-sqlite3 handle, for pragmas and maintenance. */
+export function sqliteHandle(): Database.Database {
+  if (!_db) _db = open();
+  return _sqlite!;
 }
 
 /**

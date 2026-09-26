@@ -12,7 +12,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, eq, gte, inArray, notInArray, sql, sum } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, notInArray, sql, sum } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import { aiCallLog, apiTokens, ownerSubscriptions, owners } from '$lib/db/schema';
 import { type AiEndpointName } from '$lib/schedule/constants';
@@ -93,8 +93,8 @@ function callsToday(userId: string, endpoint: AiEndpointName): number {
   unscopedQueryNote(
     'per-user daily quota counts the user across every Owner they belong to, keyed on user id'
   );
-  const rows = db
-    .select({ id: aiCallLog.id })
+  const row = db
+    .select({ n: count() })
     .from(aiCallLog)
     .where(
       and(
@@ -104,8 +104,8 @@ function callsToday(userId: string, endpoint: AiEndpointName): number {
         consumedTokens
       )
     )
-    .all();
-  return rows.length;
+    .get();
+  return row?.n ?? 0;
 }
 
 function callsTodayByToken(tokenId: string, endpoint: AiEndpointName): number {
@@ -113,8 +113,8 @@ function callsTodayByToken(tokenId: string, endpoint: AiEndpointName): number {
   unscopedQueryNote(
     'per-token quota lookup keys on token id, not owner — branch lives in service-account path'
   );
-  const rows = db
-    .select({ id: aiCallLog.id })
+  const row = db
+    .select({ n: count() })
     .from(aiCallLog)
     .where(
       and(
@@ -124,8 +124,8 @@ function callsTodayByToken(tokenId: string, endpoint: AiEndpointName): number {
         consumedTokens
       )
     )
-    .all();
-  return rows.length;
+    .get();
+  return row?.n ?? 0;
 }
 
 function perTokenQuota(tokenId: string, endpoint: AiEndpointName): number | null {
@@ -166,8 +166,22 @@ export function freePoolMonthlyUsd(): number {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-function deploymentUsdSpent(): number {
-  const monthStart = utcMonthStart();
+// The deployment-wide sum reads every row this month, so it is memoised and
+// topped up by recordCall(). Single replica (Invariant 3) keeps this exact
+// between refreshes; the refresh picks up anything written out of band.
+const DEPLOYMENT_SPEND_TTL_MS = 60_000;
+let deploymentSpendMemo: { monthStart: number; total: number; at: number } | null = null;
+
+export function resetDeploymentSpendMemo(): void {
+  deploymentSpendMemo = null;
+}
+
+function deploymentUsdSpent(now = Date.now()): number {
+  const monthStart = utcMonthStart(now);
+  const memo = deploymentSpendMemo;
+  if (memo && memo.monthStart === monthStart && now - memo.at < DEPLOYMENT_SPEND_TTL_MS) {
+    return memo.total;
+  }
   unscopedQueryNote(
     'operator-set deployment-wide brake on the shared Anthropic key, summed across all Owners; the total is never shown to a farm'
   );
@@ -176,7 +190,9 @@ function deploymentUsdSpent(): number {
     .from(aiCallLog)
     .where(gte(aiCallLog.createdAt, new Date(monthStart)))
     .get();
-  return Number(row?.total ?? 0);
+  const total = Number(row?.total ?? 0);
+  deploymentSpendMemo = { monthStart, total, at: now };
+  return total;
 }
 
 const FREE_POOL_CACHE_MS = 60_000;
@@ -428,6 +444,9 @@ export function recordCall(input: RecordCallInput): void {
       })
     )
     .run();
+  if (deploymentSpendMemo && input.usdEstimate > 0) {
+    deploymentSpendMemo.total += input.usdEstimate;
+  }
   try {
     incrementUsageCounter(ownerId, { aiCalls: 1 });
   } catch (err) {

@@ -1355,6 +1355,14 @@ export const appSettings = tenantScoped(
   )
 );
 
+// Process-level key/value state (e.g. when DB maintenance last ran). Holds
+// no farm data, so it is global and outside the TenantScoped brand.
+export const systemState = sqliteTable('system_state', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
+});
+
 // Per-location NOAA NWS forecast cache. Globally shared — immutable, keyed
 // by lat/lon, no PII. Kept OUT of the TenantScoped brand on purpose.
 export const weatherForecastCache = sqliteTable('weather_forecast_cache', {
@@ -1496,7 +1504,18 @@ export const aiCallLog = tenantScoped(
       attemptedAiAt: integer('attempted_ai_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
-      ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(table.ownerId, table.createdAt)
+      ownerCreatedIdx: index('ai_call_log_owner_created_idx').on(table.ownerId, table.createdAt),
+      userEndpointCreatedIdx: index('ai_call_log_user_endpoint_created_idx').on(
+        table.userId,
+        table.endpoint,
+        table.createdAt
+      ),
+      tokenEndpointCreatedIdx: index('ai_call_log_token_endpoint_created_idx').on(
+        table.tokenId,
+        table.endpoint,
+        table.createdAt
+      ),
+      createdUsdIdx: index('ai_call_log_created_usd_idx').on(table.createdAt, table.usdEstimate)
     })
   )
 );

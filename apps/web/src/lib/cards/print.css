@@ -1,0 +1,110 @@
+/* Printable Cards. Imported by CardPrintSheet so it ships in the /cards chunk
+   and prints styled offline. Named pages need Chromium 85+, Safari 18.2+,
+   Firefox 110+; older browsers fall back to the dialog's paper choice. */
+
+@page cc-letter {
+  size: letter portrait;
+  margin: 0.25in;
+}
+
+@page cc-3x5 {
+  size: 5in 3in;
+  margin: 0;
+}
+
+@page cc-4x6 {
+  size: 6in 4in;
+  margin: 0;
+}
+
+.card-print-sheet {
+  display: none;
+}
+
+.card-print-sheet.preview {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.card-print-sheet .sheet-page {
+  box-sizing: border-box;
+}
+
+.card-print-sheet.layout-letter-4up .sheet-page {
+  page: cc-letter;
+  display: grid;
+  grid-template-columns: 4in 4in;
+  grid-template-rows: 5.25in 5.25in;
+  width: 8in;
+  height: 10.4in;
+}
+
+.card-print-sheet.layout-letter-4up .print-cell {
+  box-sizing: border-box;
+  padding: 0.12in;
+  border: 0.5pt dashed #999;
+  overflow: hidden;
+}
+
+.card-print-sheet.layout-index-3x5 .sheet-page {
+  page: cc-3x5;
+  width: 5in;
+  height: 2.95in;
+}
+
+.card-print-sheet.layout-index-4x6 .sheet-page {
+  page: cc-4x6;
+  width: 6in;
+  height: 3.95in;
+}
+
+.card-print-sheet.layout-index-3x5 .print-cell,
+.card-print-sheet.layout-index-4x6 .print-cell {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 0.1in;
+  overflow: hidden;
+}
+
+.card-print-sheet .print-cell {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  :has(.card-print-sheet) {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+  }
+
+  .card-print-sheet,
+  .card-print-sheet.preview {
+    display: block;
+    max-width: none;
+    overflow: visible;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .card-print-sheet .sheet-page {
+    overflow: hidden;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .card-print-sheet .sheet-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .card-print-sheet.preview {
+    margin: 0;
+  }
+}

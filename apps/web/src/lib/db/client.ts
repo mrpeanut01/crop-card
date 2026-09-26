@@ -17,10 +17,12 @@ import * as schema from './schema';
 type Db = ReturnType<typeof drizzle<typeof schema>>;
 
 let _db: Db | null = null;
+let _sqlite: Database.Database | null = null;
 
 function open() {
   const dbPath = (process.env.DATABASE_URL ?? 'file:/data/cropcard.db').replace(/^file:/, '');
   const sqlite = new Database(dbPath);
+  _sqlite = sqlite;
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('synchronous = NORMAL');
   sqlite.pragma('foreign_keys = ON');
@@ -45,3 +47,19 @@ export const db = new Proxy({} as Db, {
     return Reflect.get(_db, prop);
   }
 });
+
+/** Deploy handoff fence: refuse every further write on this connection so
+ *  nothing lands after the release record. Returns the page size, which
+ *  Litestream's WAL position math needs. */
+export function setDbReadOnly(): number {
+  if (!_db) _db = open();
+  const sqlite = _sqlite!;
+  sqlite.pragma('query_only = ON');
+  return Number(sqlite.pragma('page_size', { simple: true }));
+}
+
+/** Readiness probe: one round trip through the real connection. */
+export function pingDb(): void {
+  if (!_db) _db = open();
+  _sqlite!.prepare('SELECT 1').get();
+}

@@ -1,21 +1,56 @@
 #!/bin/sh
-# CropCard container entrypoint.
+# CropCard container entrypoint. Runbook: docs/ops/restore-runbook.md
 #
-# 1. Litestream restores the latest replica from Azure Blob (no-op if a local
-#    DB already exists or no replica yet).
-# 2. Drizzle migrations apply (idempotent).
-# 3. Litestream replicates continuously while running the SvelteKit Node app
-#    as its child — so when the app exits, Litestream stops too, after a
-#    final flush of pending WAL frames.
+# With a Litestream replica configured (AZURE_BLOB_CONTAINER set):
+#   1. Handoff fence (HANDOFF_FENCE=1): ask the running writer, if any, to
+#      stop taking writes and ship its last WAL frame, and wait (bounded) for
+#      it to say so. Only then is the replica complete enough to restore.
+#   2. Restore the latest replica. Fails closed: a storage or auth error
+#      exits non-zero, so Container Apps retries this container while the
+#      previous revision keeps serving, instead of booting an empty DB.
+#   3. Refuse to serve a restore that does not add up (replica has data but
+#      nothing came back, zero owners, failed quick_check).
+#   4. Apply migrations, then run the app as Litestream's child, so Litestream
+#      does a final sync after the app exits.
 set -eu
 
 DB_PATH="${DB_PATH:-/data/cropcard.db}"
 LITESTREAM_CONFIG="${LITESTREAM_CONFIG:-/etc/litestream.yml}"
+HANDOFF=./scripts/handoff.mjs
 
-# In dev / first-boot Azure runs there's no replica yet; restore is a no-op.
 if [ -n "${AZURE_BLOB_CONTAINER:-}" ]; then
+  HANDOFF_NONCE="$(cat /proc/sys/kernel/random/uuid)"
+  export HANDOFF_NONCE
+
+  if [ "${HANDOFF_FENCE:-}" = "1" ] && [ -f "$HANDOFF" ]; then
+    node "$HANDOFF" acquire || {
+      echo "[entrypoint] FATAL: could not reach the replica store to request the handoff; refusing to start"
+      exit 1
+    }
+  fi
+
+  # Never restore over a leftover local copy: it could be older than the
+  # replica. Keep it aside for forensics.
+  for f in "$DB_PATH" "$DB_PATH-wal" "$DB_PATH-shm"; do
+    if [ -e "$f" ]; then
+      echo "[entrypoint] moving leftover $f aside"
+      mv "$f" "$f.stale-$(date +%s)"
+    fi
+  done
+  rm -rf "$(dirname "$DB_PATH")/.$(basename "$DB_PATH")-litestream"
+
   echo "[entrypoint] litestream restore (if replica exists)"
-  litestream restore -if-replica-exists -config "$LITESTREAM_CONFIG" "$DB_PATH" || true
+  if ! litestream restore -if-replica-exists -config "$LITESTREAM_CONFIG" "$DB_PATH"; then
+    echo "[entrypoint] FATAL: litestream restore failed; refusing to start on an empty database"
+    exit 1
+  fi
+
+  if [ -f "$HANDOFF" ]; then
+    node "$HANDOFF" verify-restore || {
+      echo "[entrypoint] FATAL: restore verification failed; refusing to start"
+      exit 1
+    }
+  fi
 else
   echo "[entrypoint] AZURE_BLOB_CONTAINER unset — skipping restore (dev mode)"
 fi

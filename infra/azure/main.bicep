@@ -72,6 +72,9 @@ param marketplaceAdminEmails string = ''
 @description('Key Vault holds a marketplace-seed-credential secret (format ccm_<base64url>).')
 param hasMarketplaceSeed bool = false
 
+@description('Address that receives operational alerts (5xx, restarts, replication errors, handoff timeouts). Empty = alerts fire with no receiver.')
+param alertEmail string = ''
+
 // Names
 var prefix = '${project}-${env}'
 var storageName = toLower(replace('${prefix}stg', '-', ''))
@@ -94,13 +97,26 @@ var hasApex = contains(customHosts, '@')
 var acrPullRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 // ─── Storage account + blob container for Litestream replicas ──────────
+// The replica is the only durable copy of the database (the container disk is
+// ephemeral), so the account is protected like a backup:
+//   - GRS: a second, asynchronous copy in the paired region. GZRS would add
+//     zone redundancy in the primary region, but moving an existing LRS
+//     account to a zonal SKU is a conversion request, not a property change
+//     this template can make; GRS is an in-place update and covers the loss
+//     of the whole primary region, which LRS does not.
+//   - Hot: scale-to-zero means a restore (many reads) on every cold start and
+//     a snapshot every hour; Cool bills those reads and early deletes.
+//   - Versioning + 14-day blob and container soft delete: a deleted or
+//     overwritten snapshot/WAL segment stays recoverable
+//     (docs/ops/restore-runbook.md). Old versions expire via the lifecycle
+//     policy below.
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageName
   location: location
-  sku: { name: 'Standard_LRS' }
+  sku: { name: 'Standard_GRS' }
   kind: 'StorageV2'
   properties: {
-    accessTier: 'Cool'
+    accessTier: 'Hot'
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
     supportsHttpsTrafficOnly: true
@@ -110,6 +126,43 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
   parent: storage
   name: 'default'
+  properties: {
+    isVersioningEnabled: true
+    deleteRetentionPolicy: { enabled: true, days: 14 }
+    containerDeleteRetentionPolicy: { enabled: true, days: 14 }
+  }
+}
+
+// Previous versions are kept 30 days (longer than Litestream's 7-day
+// retention and the 14-day soft delete), except the handoff lease records,
+// which are rewritten every 20 s while the app runs.
+resource blobLifecycle 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05-01' = {
+  parent: storage
+  name: 'default'
+  properties: {
+    policy: {
+      rules: [
+        {
+          name: 'expire-old-versions'
+          enabled: true
+          type: 'Lifecycle'
+          definition: {
+            filters: { blobTypes: ['blockBlob'] }
+            actions: { version: { delete: { daysAfterCreationGreaterThan: 30 } } }
+          }
+        }
+        {
+          name: 'expire-handoff-lease-versions'
+          enabled: true
+          type: 'Lifecycle'
+          definition: {
+            filters: { blobTypes: ['blockBlob'], prefixMatch: ['${blobContainerName}/_ops/handoff/'] }
+            actions: { version: { delete: { daysAfterCreationGreaterThan: 1 } } }
+          }
+        }
+      ]
+    }
+  }
 }
 
 resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
@@ -319,25 +372,45 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
               { name: 'AZURE_STORAGE_ACCOUNT', value: storage.name }
               { name: 'AZURE_STORAGE_KEY', secretRef: 'storage-key' }
               { name: 'AZURE_BLOB_CONTAINER', value: blobContainerName }
+              // Deploy handoff fence (infra/entrypoint.sh, docs/ops/restore-runbook.md).
+              { name: 'HANDOFF_FENCE', value: '1' }
             ],
             optionalEnv
           )
+          // Startup covers the entrypoint: waiting (up to 75 s) for the old
+          // revision to release the database, the restore and migrations.
+          // Liveness only begins after it, stays on the static /api/health and
+          // tolerates a slow event loop under load (6 x 30 s, 5 s timeout)
+          // rather than restarting a busy container. Readiness runs SELECT 1.
           probes: [
+            {
+              type: 'Startup'
+              httpGet: { path: '/api/health', port: 8080 }
+              initialDelaySeconds: 10
+              periodSeconds: 15
+              timeoutSeconds: 5
+              failureThreshold: 10
+            }
             {
               type: 'Liveness'
               httpGet: { path: '/api/health', port: 8080 }
-              initialDelaySeconds: 10
               periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 6
             }
             {
               type: 'Readiness'
-              httpGet: { path: '/api/health', port: 8080 }
-              initialDelaySeconds: 5
+              httpGet: { path: '/api/health/ready', port: 8080 }
               periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
             }
           ]
         }
       ]
+      // Time for the SIGTERM handoff release (drain, then prove the last WAL
+      // frame reached Blob) before the container is killed.
+      terminationGracePeriodSeconds: 60
       scale: {
         // Single-writer SQLite — never scale beyond one replica.
         minReplicas: 0
@@ -541,12 +614,16 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = if (deployMar
               httpGet: { path: '/api/v1/health', port: 8080 }
               initialDelaySeconds: 10
               periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 6
             }
             {
               type: 'Readiness'
               httpGet: { path: '/api/v1/health', port: 8080 }
               initialDelaySeconds: 5
               periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
             }
           ]
         }
@@ -570,6 +647,118 @@ resource marketplaceApp 'Microsoft.App/containerApps@2024-03-01' = if (deployMar
     }
   }
 }
+
+// ─── Alerts ────────────────────────────────────────────────────────────
+resource alertGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
+  name: '${prefix}-alerts'
+  location: 'global'
+  properties: {
+    groupShortName: 'cropcard'
+    enabled: true
+    emailReceivers: empty(alertEmail)
+      ? []
+      : [{ name: 'owner', emailAddress: alertEmail, useCommonAlertSchema: true }]
+  }
+}
+
+resource alert5xx 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: '${appName}-5xx'
+  location: 'global'
+  properties: {
+    description: 'The web app returned more than 5 server errors in 15 minutes.'
+    severity: 2
+    enabled: true
+    scopes: [app.id]
+    evaluationFrequency: 'PT5M'
+    windowSize: 'PT15M'
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          criterionType: 'StaticThresholdCriterion'
+          name: 'server-errors'
+          metricName: 'Requests'
+          metricNamespace: 'Microsoft.App/containerapps'
+          dimensions: [{ name: 'statusCodeCategory', operator: 'Include', values: ['5xx'] }]
+          operator: 'GreaterThan'
+          threshold: 5
+          timeAggregation: 'Total'
+        }
+      ]
+    }
+    actions: [{ actionGroupId: alertGroup.id }]
+  }
+}
+
+resource alertRestarts 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: '${appName}-restarts'
+  location: 'global'
+  properties: {
+    description: 'A web app container restarted (crash, failed probe, or a restore that refused to start).'
+    severity: 2
+    enabled: true
+    scopes: [app.id]
+    evaluationFrequency: 'PT5M'
+    windowSize: 'PT15M'
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          criterionType: 'StaticThresholdCriterion'
+          name: 'restarts'
+          metricName: 'RestartCount'
+          metricNamespace: 'Microsoft.App/containerapps'
+          operator: 'GreaterThan'
+          threshold: 0
+          timeAggregation: 'Maximum'
+        }
+      ]
+    }
+    actions: [{ actionGroupId: alertGroup.id }]
+  }
+}
+
+var logAlerts = [
+  {
+    name: 'replication-errors'
+    severity: 1
+    description: 'Litestream reported an error, or a container refused to start on a bad restore, or a release could not prove its last WAL frame reached Blob.'
+    match: 'Log_s contains "level=ERROR" or (Log_s has "litestream" and Log_s has "error") or Log_s has "RESTORE_REFUSED" or Log_s has "RELEASE_UNVERIFIED" or Log_s contains "[entrypoint] FATAL"'
+  }
+  {
+    name: 'handoff-timeout'
+    severity: 1
+    description: 'A new revision gave up waiting for the old one to release the database; writes the old revision accepted afterwards may be orphaned.'
+    match: 'Log_s has "HANDOFF_TIMEOUT"'
+  }
+]
+
+resource logAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = [for a in logAlerts: {
+  name: '${appName}-${a.name}'
+  location: location
+  properties: {
+    description: a.description
+    severity: a.severity
+    enabled: true
+    scopes: [logs.id]
+    evaluationFrequency: 'PT5M'
+    windowSize: 'PT10M'
+    skipQueryValidation: true
+    autoMitigate: true
+    criteria: {
+      allOf: [
+        {
+          query: 'ContainerAppConsoleLogs_CL | where ContainerAppName_s == "${appName}" | where ${a.match}'
+          timeAggregation: 'Count'
+          operator: 'GreaterThan'
+          threshold: 0
+          failingPeriods: { numberOfEvaluationPeriods: 1, minFailingPeriodsToAlert: 1 }
+        }
+      ]
+    }
+    actions: { actionGroups: [alertGroup.id] }
+  }
+}]
 
 output appFqdn string = app.properties.configuration.ingress.fqdn
 output appOrigin string = appOrigin

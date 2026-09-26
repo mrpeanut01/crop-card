@@ -16,6 +16,7 @@
 #   CROPCARD_ACR        registry name         (default: discovered in the group, else created)
 #   CROPCARD_KV         Key Vault name        (default: discovered in the group, else created)
 #   EMAIL_FROM                                sender address (Postmark / Pingram)
+#   ALERT_EMAIL                               receiver for the operational alerts
 #
 # Secrets live only in the Key Vault; this script never passes one to the template.
 # The session secret is generated there on first deploy. Optional secrets are
@@ -215,6 +216,7 @@ PARAMS=(
   --parameters hasPushTickSecret="$HAS_PUSH_TICK"
 )
 [ -n "${EMAIL_FROM:-}" ] && PARAMS+=(--parameters emailFrom="$EMAIL_FROM")
+[ -n "${ALERT_EMAIL:-}" ] && PARAMS+=(--parameters alertEmail="$ALERT_EMAIL")
 domain_params() { echo "customDomainDnsReady=$DNS_READY" "customDomainCertIssued=$CERT_ISSUED"; }
 
 if [ "$APPLY" = false ]; then

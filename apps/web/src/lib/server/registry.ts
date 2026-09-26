@@ -15,6 +15,8 @@ import { loadBedRecipes, type BedRecipeRegistry } from '$lib/plugins/bedRecipes'
 import { isTestPluginId } from '$lib/plugins/testPlugins';
 import { currentOwnerId } from '$lib/db/tenant';
 import { HIDDEN_PAYLOAD, listEffectiveOverrides, overridesRevision } from '$lib/db/pluginOverrides';
+import { listAllCurrent } from '$lib/db/pluginVersions';
+import { runtimeCatalogOverlay } from './pluginCatalogOverlay';
 
 let cached: { registry: PluginRegistry; loadedAt: number; failures: string[] } | null = null;
 let cachedRecipes: BedRecipeRegistry | null = null;
@@ -64,8 +66,9 @@ function showTestPlugins(): boolean {
  *  (superadmin) library operations validate against this. */
 export async function getBaseRegistry(): Promise<PluginRegistry> {
   if (cached) return cached.registry;
-  const loaded = new PluginRegistry();
-  const result = await loadPluginsFromDirectory(loaded, pluginsDir());
+  const fromDisk = new PluginRegistry();
+  const result = await loadPluginsFromDirectory(fromDisk, pluginsDir());
+  const loaded = withRuntimeEdits(fromDisk);
   const registry = showTestPlugins()
     ? loaded
     : loaded.withOverlay(
@@ -86,6 +89,36 @@ export async function getBaseRegistry(): Promise<PluginRegistry> {
   if (result.warnings.length > 0) {
     console.warn('[registry] plugin warnings:', result.warnings);
   }
+  return registry;
+}
+
+/** Replay shared-library edits stored in `plugin_versions` over the image's
+ *  plugin files, which do not survive a container restart. */
+function withRuntimeEdits(fromDisk: PluginRegistry): PluginRegistry {
+  let rows: ReturnType<typeof listAllCurrent>;
+  try {
+    rows = listAllCurrent();
+  } catch (e) {
+    console.warn('[registry] plugin_versions unavailable; serving image plugins only', e);
+    return fromDisk;
+  }
+  const disk = new Map(fromDisk.all().map((r) => [r.plugin.pluginId, r.plugin.version ?? '1.0.0']));
+  const { hidden, payloads } = runtimeCatalogOverlay(rows, disk);
+  if (hidden.length === 0 && payloads.length === 0) return fromDisk;
+  const first = fromDisk.withOverlay(hidden, payloads);
+  const failures = first.failures;
+  let registry = first.registry;
+  if (failures.length > 0) {
+    const bad = new Set(failures.map((f) => f.pluginId));
+    const kept = payloads.filter(
+      (p) => !bad.has(String((p as { pluginId?: unknown } | null)?.pluginId ?? ''))
+    );
+    registry = fromDisk.withOverlay(hidden, kept).registry;
+  }
+  console.log(
+    `[registry] runtime catalog edits applied: ${payloads.length} replaced, ${hidden.length} retired`
+  );
+  if (failures.length > 0) console.warn('[registry] runtime catalog edits rejected', failures);
   return registry;
 }
 

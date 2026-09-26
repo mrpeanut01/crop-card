@@ -110,7 +110,10 @@ export const DEFAULT_AI_DAILY_QUOTA = {
   'planting-window': 40,
   /** Garden designer "Fill this bed" (Phase 30E). The recipe fallback is
    *  always there, so a low cap costs nothing. */
-  'garden-fill': 10
+  'garden-fill': 10,
+  /** Photo help on Planting and garden Area Cards (Phase 30G). The Care
+   *  Guide answers when the cap is spent. */
+  'photo-help': 10
 } as const;
 
 export type AiEndpointName = keyof typeof DEFAULT_AI_DAILY_QUOTA;

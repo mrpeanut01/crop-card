@@ -14,6 +14,8 @@
   import { page } from '$app/stores';
   import InvTypeChip from './InvTypeChip.svelte';
   import InventoryEmptyGrid from './InventoryEmptyGrid.svelte';
+  import CardView from '$lib/components/cards/CardView.svelte';
+  import { inventoryRowCard, inventoryRowId } from '$lib/inventory/rowCards';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatStockQuantity, isLabelUnitCategory } from '$lib/stock/units';
   import type { InventoryType } from '$lib/inventory/types';
@@ -121,6 +123,8 @@
   }
 
   const showCatalogToggle = $derived(type !== 'crop' && type !== 'sprayer');
+
+  const rowCards = $derived(filteredRows.map((r) => inventoryRowCard(r, type, currentPrefs())));
 </script>
 
 <header class="inv-header">
@@ -263,6 +267,24 @@
       </tbody>
     </table>
   </div>
+
+  <ul class="inv-cards" data-testid="inventory-cards" aria-label="Inventory">
+    {#if rowCards.length === 0}
+      <li class="cards-empty">Nothing matches that search.</li>
+    {:else}
+      {#each rowCards as card, i (inventoryRowId(filteredRows[i]))}
+        <li>
+          <CardView
+            {card}
+            variant="compact"
+            prefs={currentPrefs()}
+            factLimit={4}
+            showAsOf={false}
+          />
+        </li>
+      {/each}
+    {/if}
+  </ul>
 {/if}
 
 <style>
@@ -377,6 +399,27 @@
   }
   .mono {
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  }
+  .inv-cards {
+    display: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cards-empty {
+    text-align: center;
+    color: var(--color-ink-soft, #4a4f46);
+    padding: 24px 12px;
+  }
+  @media (max-width: 640px) {
+    .table-wrap {
+      display: none;
+    }
+    .inv-cards {
+      display: flex;
+    }
   }
   .table-wrap {
     overflow-x: auto;

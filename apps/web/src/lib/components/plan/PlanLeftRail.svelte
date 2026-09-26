@@ -1,67 +1,30 @@
 <script lang="ts">
-  /**
-   * Phase 25b (#81) — Plan v2 left rail with block list + filter.
-   *
-   * 1:1 port of the left-rail block in
-   * [`direction-almanac-plan-v2.jsx`](../../../../docs/design/almanac/direction-almanac-plan-v2.jsx)
-   * (lines 28–79). 280px fixed column showing every block with a color
-   * stack on the left (multi-bar when poly), block label + acres, crop
-   * name, and a "N plantings" pip when poly.
-   *
-   * The "Add block" button opens whatever flow Plan uses — passes
-   * through `onAddBlock`. The filter input does client-side substring
-   * filtering on block names.
-   */
-  import { Plus, Search, Layers } from 'lucide-svelte';
+  import { Plus, Search } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
-  import type { BlockWithPlantings } from '$lib/db/blocks';
-  import { fmt } from '$lib/prefsState.svelte';
-  import { designerHref } from '$lib/garden/design';
+  import CardView from '$lib/components/cards/CardView.svelte';
+  import { NO_AREA, type RailAreaCard } from '$lib/plan/planCards';
+  import { currentPrefs } from '$lib/prefsState.svelte';
 
   interface Props {
-    blocks: BlockWithPlantings[];
-    /** Currently-selected block id. */
-    selectedId?: string;
-    onSelect: (blockId: string) => void;
+    cards: RailAreaCard[];
+    selectedAreaId?: string;
     onAddBlock?: () => void;
-    /** Gardens and greenhouses, each opening in the garden designer. */
-    gardens?: Array<{ id: string; name: string }>;
   }
-  const { blocks, selectedId, onSelect, onAddBlock, gardens = [] }: Props = $props();
+  const { cards, selectedAreaId, onAddBlock }: Props = $props();
 
   let filterText = $state('');
-  const filtered = $derived(
-    filterText.trim()
-      ? blocks.filter((b) => b.name.toLowerCase().includes(filterText.trim().toLowerCase()))
-      : blocks
-  );
-
-  // Stable color hash per planting so the rail bars match the planting
-  // grid + season-timeline colors elsewhere.
-  function plantingColor(plantingId: string): string {
-    const PALETTE = [
-      '#7a8f5a',
-      '#c9961f',
-      '#6f8fa8',
-      '#a85a1f',
-      '#4a8b54',
-      '#a23a3a',
-      '#8a6722',
-      '#7a3a4d'
-    ];
-    let h = 0;
-    for (let i = 0; i < plantingId.length; i++) h = (h * 31 + plantingId.charCodeAt(i)) >>> 0;
-    return PALETTE[h % PALETTE.length];
-  }
+  const query = $derived(filterText.trim().toLowerCase());
+  const filtered = $derived(query ? cards.filter((c) => c.searchText.includes(query)) : cards);
+  const areaCount = $derived(cards.filter((c) => c.areaId !== NO_AREA).length);
 </script>
 
-<aside class="rail">
+<aside class="rail" aria-label="Areas" data-sveltekit-noscroll data-sveltekit-keepfocus>
   <div class="rail-head">
     <div class="head-row">
-      <Kicker>Blocks · {blocks.length}</Kicker>
+      <Kicker>Areas · {areaCount}</Kicker>
       {#if onAddBlock}
         <button class="add" onclick={onAddBlock} title="New block" aria-label="New block">
-          <Plus size={14} strokeWidth={1.75} />
+          <Plus size={16} strokeWidth={1.75} />
         </button>
       {/if}
     </div>
@@ -69,92 +32,45 @@
       <Search size={13} strokeWidth={1.75} class="filter-icon" />
       <input
         class="filter"
-        type="text"
-        placeholder="Filter blocks…"
+        type="search"
+        placeholder="Filter Areas, beds or crops…"
         bind:value={filterText}
-        aria-label="Filter blocks by name"
+        aria-label="Filter Areas by name, bed or crop"
       />
     </div>
   </div>
 
-  {#if gardens.length}
-    <div class="gardens" data-testid="rail-gardens">
-      <Kicker>Garden designer</Kicker>
-      {#each gardens as g (g.id)}
-        <a class="garden-link" href={designerHref(g.id)}>Open {g.name} designer</a>
-      {/each}
-    </div>
-  {/if}
-
   {#if filtered.length === 0}
     <div class="empty">
-      {filterText.trim() ? `No blocks match “${filterText}”.` : 'No blocks yet.'}
+      {query ? `Nothing matches “${filterText.trim()}”.` : 'No Areas yet.'}
     </div>
   {:else}
-    {#each filtered as b (b.id)}
-      {@const poly = b.plantings.length > 1}
-      <button class="row" class:selected={b.id === selectedId} onclick={() => onSelect(b.id)}>
-        <div class="bars">
-          {#if b.plantings.length === 0}
-            <span class="bar single" style:background="var(--color-divider)"></span>
-          {:else}
-            {#each b.plantings.slice(0, 3) as p (p.id)}
-              <span class="bar" class:single={!poly} style:background={plantingColor(p.id)}></span>
-            {/each}
-          {/if}
-        </div>
-        <div class="body">
-          <div class="head-line">
-            <span class="serif name">{b.name}</span>
-            {#if b.acres !== undefined}
-              <span class="mono acres">{fmt.qty(b.acres, 'area')}</span>
-            {/if}
-          </div>
-          {#if b.plantings.length > 0}
-            <div class="crops">
-              {b.plantings
-                .slice(0, 2)
-                .map((p) => p.varietyDisplayName)
-                .join(' · ')}{b.plantings.length > 2 ? ` · +${b.plantings.length - 2}` : ''}
-            </div>
-          {:else}
-            <div class="crops empty-crops">No plantings yet</div>
-          {/if}
-          {#if poly}
-            <div class="poly-pill">
-              <Layers size={10} strokeWidth={1.75} />
-              {b.plantings.length} plantings
-            </div>
-          {/if}
-        </div>
-      </button>
-    {/each}
+    <ul class="cards" data-testid="plan-area-cards">
+      {#each filtered as c (c.card.key)}
+        <li data-area-id={c.areaId}>
+          <CardView
+            card={c.card}
+            variant="compact"
+            prefs={currentPrefs()}
+            selected={c.areaId === selectedAreaId}
+            factLimit={c.card.facts.length}
+            showAsOf={false}
+          >
+            {#snippet actions()}
+              {#if c.designer}
+                <a class="designer" href={c.designer}>Open designer</a>
+              {/if}
+            {/snippet}
+          </CardView>
+        </li>
+      {/each}
+    </ul>
   {/if}
 </aside>
 
 <style>
-  .gardens {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--color-divider);
-  }
-  .garden-link {
-    display: flex;
-    align-items: center;
-    min-height: 48px;
-    color: var(--color-forest-deep);
-    font-weight: 600;
-    text-decoration: none;
-    overflow-wrap: anywhere;
-  }
-  .garden-link:hover,
-  .garden-link:focus-visible {
-    text-decoration: underline;
-  }
   .rail {
-    width: 280px;
+    width: 300px;
     border-right: 1px solid var(--color-divider);
     background: var(--color-paper);
     overflow-y: auto;
@@ -192,7 +108,7 @@
   }
   :global(.filter-wrap .filter-icon) {
     position: absolute;
-    left: 9px;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--color-ink-muted);
@@ -200,8 +116,9 @@
   }
   .filter {
     width: 100%;
-    padding: 7px 10px 7px 30px;
-    font-size: 13px;
+    min-height: 48px;
+    padding: 8px 10px 8px 32px;
+    font-size: 14px;
     background: var(--color-cream);
     border: 1px solid var(--color-divider);
     border-radius: 6px;
@@ -214,91 +131,30 @@
   }
   .empty {
     padding: 14px 18px;
-    color: var(--color-ink-muted);
-    font-size: 12.5px;
+    color: var(--color-ink-soft);
+    font-size: 13px;
     font-style: italic;
   }
-  .row {
-    width: 100%;
-    text-align: left;
-    padding: 12px 16px;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    background: transparent;
-    border: none;
-    border-left: 3px solid transparent;
-    border-bottom: 1px solid var(--color-divider-soft, var(--color-divider));
-    font-family: inherit;
-    cursor: pointer;
-  }
-  .row:hover {
-    background: var(--color-cream);
-  }
-  .row.selected {
-    background: var(--color-wheat-tint, #efe6cc);
-    border-left-color: var(--color-forest);
-  }
-  .bars {
-    width: 10px;
+  .cards {
+    list-style: none;
+    margin: 0;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 10px;
   }
-  .bar {
-    width: 10px;
-    height: 9px;
-    border-radius: 2px;
-  }
-  .bar.single {
-    height: 28px;
-  }
-  .body {
-    flex: 1;
-    min-width: 0;
-  }
-  .head-line {
+  .designer {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .name {
-    font-family: var(--font-serif, serif);
-    font-size: 15px;
-    color: var(--color-ink);
-  }
-  .acres {
-    font-family: var(--font-mono, ui-monospace, monospace);
-    font-size: 11px;
-    color: var(--color-ink-muted);
-  }
-  .crops {
-    font-size: 12px;
-    color: var(--color-ink-soft);
-    margin-top: 2px;
-    line-height: 1.35;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .empty-crops {
-    font-style: italic;
-    color: var(--color-ink-muted);
-  }
-  .poly-pill {
-    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 10.5px;
-    color: var(--color-forest);
-    margin-top: 4px;
+    min-height: 48px;
+    color: var(--color-forest-deep);
     font-weight: 600;
+    text-decoration: underline;
   }
   @media (max-width: 900px) {
     .rail {
       width: 100%;
-      max-height: 280px;
+      max-height: 360px;
       border-right: none;
       border-bottom: 1px solid var(--color-divider);
     }

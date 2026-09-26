@@ -45,9 +45,20 @@ describe('buildPlantingCard', () => {
       provenance: 'plugin'
     });
     expect(fact(card, 'Plants')).toEqual({ label: 'Plants', value: '6', provenance: 'data' });
-    expect(fact(card, 'PHI buffer')?.value).toBe('14 d · check labels after Jul 1');
+    expect(fact(card, 'Wait after spraying')?.value).toBe('14 days before picking');
     expect(card.asOf).toBe(snap.generatedAt);
     expect(card.rulesVersion).toBeUndefined();
+  });
+
+  it("shows the calendar engine's harvest window when the snapshot carries it", () => {
+    const withEngine = sampleSnapshot({
+      plantings: snap.plantings.map((p) =>
+        p.id === 'p_tom' ? { ...p, harvestWindow: { start: '2026-07-20', end: '2026-08-30' } } : p
+      )
+    });
+    expect(fact(buildPlantingCard(withEngine, 'p_tom'), 'Harvest')?.value).toBe(
+      'Jul 20 – Aug 30'
+    );
   });
 
   it('picks the earliest open task as the one next action, overdue first', () => {
@@ -95,7 +106,7 @@ describe('buildPlantingCard', () => {
       provenance: 'manual'
     });
     expect(fact(card, 'Day')).toBeUndefined();
-    expect(fact(card, 'PHI buffer')).toBeUndefined();
+    expect(fact(card, 'Wait after spraying')).toBeUndefined();
     expect(card.next).toBeUndefined();
   });
 
@@ -122,7 +133,7 @@ describe('buildPlantingCard', () => {
       provenance: 'data'
     });
     expect(fact(card, 'Harvest')).toBeUndefined();
-    expect(fact(card, 'PHI buffer')).toBeUndefined();
+    expect(fact(card, 'Wait after spraying')).toBeUndefined();
   });
 
   it('renders spacing in centimetres for metric users', () => {

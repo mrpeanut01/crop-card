@@ -200,7 +200,7 @@ function deconSection(
   };
 }
 
-function beforeYouSpray(product: SnapshotSprayProduct): string[] {
+export function beforeYouSpray(product: SnapshotSprayProduct): string[] {
   const items = ['Wear the PPE the label lists.'];
   const tox = product.pollinator?.beeToxicity;
   if (tox && tox !== 'relatively-nontoxic') {

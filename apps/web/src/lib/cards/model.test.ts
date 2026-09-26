@@ -8,7 +8,10 @@ import {
   cardShortUrl,
   isCardKind,
   mergeProvenance,
-  parseCardKey
+  parseCardKey,
+  parseRecordCardKey,
+  recordCardKey,
+  recordHref
 } from './model';
 import { PRINT_LAYOUTS, paginate, perPage, printLinkFor } from './print';
 import type { SnapshotCropPlugin } from './snapshot';
@@ -51,6 +54,32 @@ describe('card keys', () => {
       expect(printLinkFor(o, 'pl_1')).toBeNull();
     }
     expect(printLinkFor('http://localhost:5173', 'pl_1')?.url).toBe('http://localhost:5173/c/pl_1');
+  });
+});
+
+describe('record card keys', () => {
+  it('property: record kind + row id round-trip and never parse as a snapshot card', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('spray', 'insecticide', 'scout', 'harvest'),
+        fc.string({ minLength: 1 }),
+        (recordKind, rowId) => {
+          const key = recordCardKey(recordKind, rowId);
+          expect(parseRecordCardKey(key)).toEqual({ recordKind, rowId });
+          expect(parseCardKey(key)).toBeNull();
+        }
+      )
+    );
+  });
+
+  it('snapshot keys are not record keys', () => {
+    for (const k of ['pl_1', 'sc_1', 'rc_', 'rc_spray', 'rc_.x']) {
+      expect(parseRecordCardKey(k)).toBeNull();
+    }
+  });
+
+  it('record hrefs point at the record detail page', () => {
+    expect(recordHref('spray', 'a/b')).toBe('/records/spray/a%2Fb');
   });
 });
 

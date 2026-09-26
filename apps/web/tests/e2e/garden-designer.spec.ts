@@ -223,6 +223,13 @@ for (const viewport of [PHONE, DESKTOP]) {
       );
       await expect(bed2.getByTestId('list-open')).toHaveText('Open from Jul 1');
       if (viewport.width === PHONE.width) await noHorizontalOverflow(page);
+
+      const cardLink = page.locator('[data-testid="planting-card-link"]:visible').first();
+      await expect(cardLink).toHaveText('Planting card, care and photo help');
+      expect((await cardLink.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+      await cardLink.click();
+      await expect(page).toHaveURL(/\/cards\/planting\/pl_/);
+      await expect(page.getByTestId('photo-help')).toBeVisible({ timeout: 20_000 });
     });
   });
 

@@ -49,6 +49,7 @@ import * as pushSubscriptionsRepo from './pushSubscriptions';
 import * as taxonomyRepo from './taxonomy';
 import * as pluginOverridesRepo from './pluginOverrides';
 import * as clientRecordsRepo from './clientRecords';
+import * as plantingJournalRepo from './plantingJournal';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
 import { users, helperAssignments, recordDeletions, cropEquipment, equipmentLog } from './schema';
 import { listUnifiedRecords } from './recordsUnified';
@@ -744,6 +745,57 @@ describe('cross-tenant isolation', () => {
     });
   });
 
+  it('planting_journal entries are owner-scoped: list, read, photo and delete (Phase 30G)', () => {
+    const seed = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const field = fieldsRepo.createField({ name: `${ownerId}-journal-field` });
+        const block = blocksRepo.createBlock({ name: `${ownerId}-journal-bed`, fieldId: field.id });
+        const crop = cropsRepo.createPlanned({
+          blockId: block.id,
+          cropPluginId: 'crop:tomato',
+          varietyDisplayName: 'Journal tomato'
+        });
+        const entry = plantingJournalRepo.insertJournalEntry({
+          cropId: crop.id,
+          blockId: block.id,
+          createdBy: ensureCrossTenantTestUser(ownerId),
+          kind: 'photo_help',
+          text: `note from ${ownerId}`,
+          photoRef: 'data:image/jpeg;base64,/9j/',
+          provenance: 'manual'
+        });
+        return { cropId: crop.id, entryId: entry.id };
+      });
+    const a = seed(OWNER_A);
+    const b = seed(OWNER_B);
+    fc.assert(
+      fc.property(
+        fc.constantFrom([OWNER_A, a, b] as const, [OWNER_B, b, a] as const),
+        ([me, mine, theirs]) =>
+          runWithTenant(me, () => {
+            expect(plantingJournalRepo.listJournalForCrop(mine.cropId).map((e) => e.id)).toEqual([
+              mine.entryId
+            ]);
+            expect(plantingJournalRepo.listJournalForCrop(theirs.cropId)).toEqual([]);
+            expect(
+              plantingJournalRepo.getJournalEntry(theirs.cropId, theirs.entryId)
+            ).toBeUndefined();
+            expect(plantingJournalRepo.getJournalPhoto(theirs.cropId, theirs.entryId)).toBeNull();
+            expect(plantingJournalRepo.deleteJournalEntry(theirs.cropId, theirs.entryId)).toBe(
+              false
+            );
+            const exported = plantingJournalRepo.listJournalForExport().map((e) => e.id);
+            expect(exported).toContain(mine.entryId);
+            expect(exported).not.toContain(theirs.entryId);
+          })
+      ),
+      { numRuns: 6 }
+    );
+    expect(
+      runWithTenant(OWNER_B, () => plantingJournalRepo.getJournalEntry(b.cropId, b.entryId))
+    ).toBeTruthy();
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -770,7 +822,8 @@ describe('cross-tenant isolation', () => {
       wizardChatRepo,
       seasonCloseoutsRepo,
       pushSubscriptionsRepo,
-      pluginOverridesRepo
+      pluginOverridesRepo,
+      plantingJournalRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

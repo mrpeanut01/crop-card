@@ -118,6 +118,7 @@ test.describe('persona usability fixes', () => {
     await nav.getByLabel('More pages').click();
     await expect(nav.locator('.more-link', { hasText: 'Inventory' })).toBeVisible();
 
+    await page.getByTestId('today-deck').getByRole('button', { name: 'Calendar' }).click();
     const seg = page.getByRole('tab', { name: 'Week' });
     const segBox = await seg.boundingBox();
     expect(segBox?.height ?? 0).toBeGreaterThanOrEqual(48);

@@ -49,6 +49,40 @@ describe('buildAreaCard', () => {
     });
   });
 
+  it("adds up bed sizes from their dimensions, not the rounded acres", () => {
+    const s = sampleSnapshot({
+      areas: [
+        {
+          id: 'g',
+          name: 'Back garden',
+          kind: 'garden',
+          acres: null,
+          widthFt: null,
+          lengthFt: null,
+          perimeterFt: null,
+          acresSource: null,
+          notes: null
+        }
+      ],
+      blocks: [
+        {
+          id: 'bed',
+          areaId: 'g',
+          name: 'Bed 1',
+          blockLabel: null,
+          kind: 'bed',
+          acres: 0.001,
+          widthFt: 4,
+          lengthFt: 8,
+          layout: null
+        }
+      ],
+      plantings: [],
+      tasks: []
+    });
+    expect(fact(buildAreaCard(s, 'g'), 'Size')?.value).toBe('32 sq ft across its bed');
+  });
+
   it('shows acreage for big areas with data provenance', () => {
     const card = buildAreaCard(snap, 'f_hay')!;
     expect(card.title).toBe('Hayfield');
@@ -175,7 +209,7 @@ describe('formatSize', () => {
 describe('garden bed map', () => {
   it('gives a garden an Open designer link and a to-scale bed map for the card date', () => {
     const card = buildAreaCard(sampleSnapshot(), 'f_garden')!;
-    expect(card.links).toEqual([{ label: 'Open designer', href: '/plan/areas/f_garden/design' }]);
+    expect(card.links![0]).toEqual({ label: 'Open designer', href: '/plan/areas/f_garden/design' });
     expect(card.bedMap).toMatchObject({ widthFt: 30, lengthFt: 40, hasNorth: false });
     const beds = card.bedMap!.beds;
     expect(beds.map((b) => b.name).sort()).toEqual(['', 'Bed 1', 'Bed 3']);

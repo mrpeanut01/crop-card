@@ -19,6 +19,7 @@
   let map: LMap | null = null;
   let pin: CircleMarker | null = null;
   let L: typeof import('leaflet') | null = null;
+  let resizeObs: ResizeObserver | null = null;
 
   function placePin(la: number, lo: number, pan: boolean) {
     if (!map || !L) return;
@@ -40,11 +41,12 @@
       L = (await import('leaflet')).default;
       if (cancelled) return;
       const start = lat != null && lon != null ? { lat, lon } : fallback;
-      map = L.map(mapEl).setView([start.lat, start.lon], lat != null ? 15 : 11);
+      map = L.map(mapEl, { maxZoom: 21 }).setView([start.lat, start.lon], lat != null ? 15 : 11);
       L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         {
-          maxZoom: 19,
+          maxZoom: 21,
+          maxNativeZoom: 19,
           attribution:
             'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
         }
@@ -56,9 +58,12 @@
         placePin(la, lo, false);
         onPick(la, lo);
       });
+      resizeObs = new ResizeObserver(() => map?.invalidateSize());
+      resizeObs.observe(mapEl);
     })();
     return () => {
       cancelled = true;
+      resizeObs?.disconnect();
       map?.remove();
       map = null;
       pin = null;

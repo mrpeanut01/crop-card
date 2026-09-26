@@ -3,8 +3,16 @@ import { z } from 'zod';
 import { addPlanting, getBlock } from '$lib/db/blocks';
 import { requireOwner } from '$lib/server/auth';
 import { getRegistry } from '$lib/server/registry';
-import { IncompatibleUnitError, decrementForUse, getStockItem } from '$lib/db/stock';
-import type { StockUnit } from '$lib/stock/units';
+import {
+  IncompatibleUnitError,
+  createStockItem,
+  decrementForUse,
+  getStockItem,
+  receiveLot
+} from '$lib/db/stock';
+import { ALL_STOCK_UNITS, type StockUnit } from '$lib/stock/units';
+
+const stockUnit = z.enum(ALL_STOCK_UNITS as unknown as [StockUnit, ...StockUnit[]]);
 
 const plantingSchema = z.object({
   cropPluginId: z.string().min(1),
@@ -19,11 +27,14 @@ const plantingSchema = z.object({
   /** Sprint 3 (#212 / CT-PP-004) — wizard-driven commits send `'ai'` or
    *  `'fallback'` so PlantingCard renders the correct source badge.
    *  Manual drag-drop omits this and the column stays NULL. */
-  sourceProvenance: z.enum(['ai', 'fallback']).optional()
+  sourceProvenance: z.enum(['ai', 'fallback']).optional(),
+  /** Seed bought for this planting when none was on hand. Creates the seed
+   *  SKU + a received lot, then the planted amount comes out of it. */
+  purchase: z.object({ quantity: z.number().positive(), unit: stockUnit }).optional()
 });
 
 export const POST: RequestHandler = async (event) => {
-  requireOwner(event);
+  const user = requireOwner(event);
 
   const blockId = event.params.id;
   if (!blockId || !getBlock(blockId)) {
@@ -39,6 +50,12 @@ export const POST: RequestHandler = async (event) => {
   const parsed = plantingSchema.safeParse(body);
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
+  }
+  if (parsed.data.purchase && parsed.data.stockItemId) {
+    return json(
+      { error: 'send either stockItemId (seed on hand) or purchase (newly bought), not both' },
+      { status: 400 }
+    );
   }
 
   const registry = await getRegistry();
@@ -57,25 +74,48 @@ export const POST: RequestHandler = async (event) => {
     sourceProvenance: parsed.data.sourceProvenance
   });
 
-  // Decrement seed stock if a stock item + quantity were supplied (manual
-  // drag-drop flow on /plan?tab=crops). FIFO across lots; shortfall does not
-  // fail the request — the planting is already persisted.
+  let stockItemId = parsed.data.stockItemId;
+  let purchased: { stockItemId: string } | undefined;
+  if (parsed.data.purchase) {
+    const item = createStockItem({
+      category: 'seed',
+      displayName: planting.varietyDisplayName,
+      defaultUnit: parsed.data.purchase.unit,
+      pluginId: parsed.data.cropPluginId
+    });
+    receiveLot({
+      stockItemId: item.id,
+      receivedQuantity: parsed.data.purchase.quantity,
+      unit: parsed.data.purchase.unit,
+      performedById: user.id
+    });
+    stockItemId = item.id;
+    purchased = { stockItemId: item.id };
+  }
+
+  // Decrement seed stock if a stock item + quantity were supplied. FIFO
+  // across lots; shortfall does not fail the request — the planting is
+  // already persisted.
   let decrement: { fulfilled: number; shortfall: number } | undefined;
   if (
-    parsed.data.stockItemId &&
+    stockItemId &&
     parsed.data.quantityPlanted !== undefined &&
     parsed.data.quantityPlanted > 0 &&
     parsed.data.quantityUnit
   ) {
-    const item = getStockItem(parsed.data.stockItemId);
-    if (item) {
+    const item = getStockItem(stockItemId);
+    const unitOk = (ALL_STOCK_UNITS as ReadonlyArray<string>).includes(parsed.data.quantityUnit);
+    if (item && !unitOk) {
+      decrement = { fulfilled: 0, shortfall: parsed.data.quantityPlanted };
+    } else if (item) {
       try {
         const result = decrementForUse({
-          stockItemId: parsed.data.stockItemId,
+          stockItemId,
           amount: parsed.data.quantityPlanted,
           unit: parsed.data.quantityUnit as StockUnit,
           cropId: planting.id,
-          reason: 'planting'
+          reason: 'planting',
+          performedById: user.id
         });
         decrement = { fulfilled: result.fulfilled, shortfall: result.shortfall };
       } catch (err) {
@@ -88,5 +128,5 @@ export const POST: RequestHandler = async (event) => {
     }
   }
 
-  return json({ planting, decrement }, { status: 201 });
+  return json({ planting, decrement, purchased }, { status: 201 });
 };

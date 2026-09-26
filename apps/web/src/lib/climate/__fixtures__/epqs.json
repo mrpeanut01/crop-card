@@ -1,0 +1,6 @@
+{
+  "dulles": "{\"location\":{\"x\":-77.4636,\"y\":38.9408,\"spatialReference\":{\"wkid\":4326,\"latestWkid\":4326}},\"locationId\":0,\"value\":289.44164110924504,\"rasterId\":66368,\"resolution\":1}",
+  "boulder": "{\"location\":{\"x\":-105.2705,\"y\":40.015,\"spatialReference\":{\"wkid\":4326,\"latestWkid\":4326}},\"locationId\":0,\"value\":5319.097894384356,\"rasterId\":71273,\"resolution\":1}",
+  "ocean": "Invalid or missing input parameters.",
+  "failed": "Call failed.  [Failed cloud operation: Open, Path: /vsimem/_0000038E.aux.xml]"
+}

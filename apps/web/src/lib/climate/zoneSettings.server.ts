@@ -1,6 +1,7 @@
 import { deleteSetting, getSetting, setSetting } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
+import { elevationFtAt } from './elevation.server';
 import { farmZoneFrom, lookupZone, parseZone, type FarmZone } from './zone';
 
 /** The owner's typed zone, when they set one. The estimate is never stored:
@@ -15,7 +16,8 @@ export async function farmZone(): Promise<FarmZone | null> {
   if (manual) return farmZoneFrom(manual, null);
   if (!hasFarmLatLon()) return null;
   const { lat, lon } = getFarmLatLon();
-  return farmZoneFrom(null, await lookupZone(lat, lon));
+  const elevationFt = await elevationFtAt(lat, lon);
+  return farmZoneFrom(null, await lookupZone(lat, lon, { elevationFt }));
 }
 
 export type ZoneFormResult = { ok: true } | { ok: false; error: string };

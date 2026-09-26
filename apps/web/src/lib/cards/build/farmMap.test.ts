@@ -90,6 +90,33 @@ describe('buildFarmMapCard', () => {
     expect(JSON.stringify(card)).not.toMatch(/usda/i);
   });
 
+  it('shows a wide-radius estimate with its distance and a similar-elevation note', () => {
+    const card = buildFarmMapCard(
+      sampleSnapshot({
+        zone: {
+          zone: '6b',
+          provenance: 'data',
+          stationName: 'Great Basin NP, NV',
+          distanceMi: 70.5,
+          extremeMinF: -1.3,
+          reach: 'wide',
+          elevDeltaFt: -69
+        }
+      }),
+      { prefs }
+    );
+    expect(card.facts.find((f) => f.label === 'Zone')).toEqual({
+      label: 'Zone',
+      value: '6b (approx., station 71 mi)',
+      provenance: 'data'
+    });
+    expect(card.provenance).toContainEqual({
+      source: 'data',
+      detail: 'zone approx., from Great Basin NP, NV · 71 mi, similar elevation'
+    });
+    expect(JSON.stringify(card)).not.toMatch(/usda/i);
+  });
+
   it('shows an owner-typed zone as manual and leaves the zone off when there is none', () => {
     const manual = buildFarmMapCard(
       sampleSnapshot({

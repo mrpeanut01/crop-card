@@ -191,6 +191,8 @@ export interface SnapshotZone {
   stationName: string | null;
   distanceMi: number | null;
   extremeMinF: number | null;
+  reach?: 'near' | 'wide';
+  elevDeltaFt?: number | null;
 }
 
 export type SnapshotSprayProductType = 'herbicide' | 'insecticide' | 'fungicide';

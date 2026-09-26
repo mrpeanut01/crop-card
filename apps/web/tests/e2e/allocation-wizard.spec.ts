@@ -412,6 +412,16 @@ test.describe('allocation wizard', () => {
     await goToInputs(page);
 
     const plantingPosts: string[] = [];
+    let dataLoadsInFlight = 0;
+    const isDataLoad = (url: string) => /\/__data\.json/.test(url);
+    page.on('request', (r) => {
+      if (isDataLoad(r.url())) dataLoadsInFlight++;
+    });
+    for (const done of ['requestfinished', 'requestfailed'] as const) {
+      page.on(done, (r) => {
+        if (isDataLoad(r.url())) dataLoadsInFlight--;
+      });
+    }
     page.on('request', (r) => {
       if (/\/api\/blocks\/[^/]+\/plantings$/.test(r.url()) && r.method() === 'POST') {
         plantingPosts.push(r.postData() ?? '');
@@ -431,6 +441,7 @@ test.describe('allocation wizard', () => {
       expect(payload.sourceProvenance).toBe('fallback');
     }
 
+    await expect.poll(() => dataLoadsInFlight).toBe(0);
     await page.reload();
     await page.waitForLoadState('networkidle');
     await expect(page.getByText(BEAN).first()).toBeVisible();

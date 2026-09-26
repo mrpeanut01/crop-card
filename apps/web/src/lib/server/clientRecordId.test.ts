@@ -248,10 +248,12 @@ describe('withClientRecordId', () => {
     );
 
     it('an original that succeeds does not mark the new holder claim done', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const r = race();
       const { original, holder } = await takeover(r);
       r.settle(0, 'ok');
       expect((await original).status).toBe(201);
+      expect(warn).toHaveBeenCalledWith(expect.stringMatching(/claim was taken over/));
 
       const overlap = await r.send();
       expect(overlap.status).toBe(503);
@@ -263,6 +265,7 @@ describe('withClientRecordId', () => {
     });
 
     it('the new holder can still release its own claim after the original succeeded', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
       const r = race();
       const { original, holder } = await takeover(r);
       r.settle(0, 'ok');

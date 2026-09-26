@@ -26,7 +26,7 @@ import type {
   PlantingCreateRequest
 } from '$lib/garden/api';
 import { footprintsOverlap } from '$lib/garden/geometry';
-import { plantingOccupancy, shortDate } from '$lib/garden/occupancy';
+import { intervalsOverlapInTime, plantingOccupancy, shortDate } from '$lib/garden/occupancy';
 import { plantCount, resolveSpacing } from '$lib/garden/plantCount';
 import type { GardenCrop, PlacedPlanting, PlantingStatus } from '$lib/garden/types';
 import { frostDatesForYear } from '$lib/schedule/settings';
@@ -200,6 +200,45 @@ export function sharedSpaceWarnings(crop: Crop, lookup: CropLookup): string[] {
   return out;
 }
 
+/** Why a linked succession sowing can't go to this spot in another bed:
+ *  the spot is taken for part of its time there. Sowings in a series are
+ *  meant to follow one another, so they never share space the way a
+ *  hand-placed interplanting may. Null when the spot is free. */
+export function linkedSowingClash(
+  current: Crop,
+  target: { blockId: string; footprint: Footprint | null; plantingDateMs: number | null },
+  bedName: string,
+  lookup: CropLookup
+): string | null {
+  if (!target.footprint || target.plantingDateMs == null) return null;
+  const plugin = lookup(current.cropPluginId);
+  const year = new Date(target.plantingDateMs).getFullYear();
+  const { firstFallFrostMs } = frostDatesForYear(year);
+  const mine = plantingOccupancy(
+    {
+      ...placedPlantingFromCrop(current, plugin),
+      blockId: target.blockId,
+      plantingDateMs: target.plantingDateMs,
+      footprint: target.footprint
+    },
+    plugin,
+    { firstFallFrostMs }
+  );
+  if (!mine) return null;
+  for (const other of listCrops({ blockId: target.blockId })) {
+    if (other.id === current.id || !other.footprint) continue;
+    const theirs = plantingOccupancy(
+      placedPlantingFromCrop(other, lookup(other.cropPluginId)),
+      lookup(other.cropPluginId),
+      { firstFallFrostMs }
+    );
+    if (!theirs || !intervalsOverlapInTime(mine, theirs)) continue;
+    if (!footprintsOverlap(other.footprint, target.footprint)) continue;
+    return `No room for ${current.varietyDisplayName} there in ${bedName} on ${shortDate(mine.startMs)}. ${other.varietyDisplayName} holds that spot until ${shortDate(theirs.endMs)}.`;
+  }
+  return null;
+}
+
 export type FootprintWriteResult = { ok: true; response: FootprintWriteResponse } | GardenFailure;
 
 /** The placement to store for a partial write: a typed count survives a
@@ -225,7 +264,9 @@ export function mergePlacementInput(
 
 /** Places, moves or clears a planting's spot, and moves its date when
  *  `plantingDateMs` is sent. Moving to another bed is only for plantings
- *  not yet in the ground (`plantingInGround`). A date move re-anchors the
+ *  not yet in the ground (`plantingInGround`); a linked succession sowing
+ *  keeps its group link and needs a spot that is free for its whole time
+ *  in the new bed (`linkedSowingClash`). A date move re-anchors the
  *  planting's tasks (and a group's members when it anchors one) through
  *  `movePlantingDate`; the members that moved come back as `followers`. */
 export function writeFootprint(
@@ -257,6 +298,23 @@ export function writeFootprint(
   }
   if (req.footprint && !footprintInsideBed(req.footprint, bed)) {
     return gardenFailure(400, `That spot runs past the edge of ${bed.block.name}.`, 'OUTSIDE_AREA');
+  }
+  if (
+    req.blockId !== current.blockId &&
+    current.groupId &&
+    current.groupSystemKind === 'succession'
+  ) {
+    const clash = linkedSowingClash(
+      current,
+      {
+        blockId: req.blockId,
+        footprint: req.footprint,
+        plantingDateMs: req.plantingDateMs === undefined ? current.plantingDate : req.plantingDateMs
+      },
+      bed.block.name,
+      lookup
+    );
+    if (clash) return gardenFailure(409, clash, 'OVERLAP');
   }
   const plugin = lookup(current.cropPluginId);
   const placement = resolvePlacement(mergePlacementInput(current, req), plugin);

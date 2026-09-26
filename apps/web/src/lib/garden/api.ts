@@ -7,8 +7,12 @@
 
 import { z } from 'zod';
 import { footprintSchema, SPACING_PATTERNS, spacingInSchema } from '$lib/farm/footprint';
+import type { DesignableAreaKind } from '$lib/farm/areaKinds';
+import type { BedRecipePlugin, CompanionPlugin } from '$lib/plugins/schemas';
 import type {
+  BedHistoryEntry,
   BedLayout,
+  GardenCrop,
   GardenDesign,
   PlacedPlanting,
   ProposedPlanting,
@@ -20,9 +24,32 @@ const id = z.string().min(1).max(128);
 const epochMs = z.number().int().nonnegative();
 const plantCount = z.number().int().positive().max(100_000);
 
-/** `GET /api/garden/areas/[id]/design`. Readable by every role. */
+export type DesignerCompanion = Pick<
+  CompanionPlugin,
+  'pluginId' | 'displayName' | 'goodWith' | 'badWith' | 'primaryFamily' | 'members' | 'benefit'
+>;
+
+/** `GET /api/garden/areas/[id]/design?season=`. Readable by every role;
+ *  `canEdit` is true only for the owner. */
 export interface GardenDesignResponse {
   design: GardenDesign;
+  /** Every recorded planting per bed, all seasons. */
+  history: Record<string, BedHistoryEntry[]>;
+  catalog: GardenCrop[];
+  companions: DesignerCompanion[];
+  lookbackByFamily: Record<string, number>;
+  areaKind: DesignableAreaKind;
+  recipes: BedRecipePlugin[];
+  canEdit: boolean;
+  role: string;
+  seasons: number[];
+  activeYear: number;
+}
+
+/** What the designer page renders: the endpoint's answer, or the same
+ *  shape rebuilt from the offline card snapshot (`offline: true`). */
+export interface DesignerPageData extends GardenDesignResponse {
+  offline: boolean;
 }
 
 /** `POST /api/blocks` body for a designer bed (existing endpoint). */
@@ -110,7 +137,11 @@ export interface SuccessionResponse {
 }
 
 /** `POST /api/garden/beds/[blockId]/recipe`. `commit: false` previews; a
- *  commit creates only the steps listed in `acceptKeys`. */
+ *  commit creates the steps listed in `acceptKeys` (every step when it is
+ *  left out) as `planned` plantings with `plugin` provenance, all or none.
+ *  The server recomputes the recipe from the bed as stored, so a key the
+ *  preview showed but the bed no longer has room for refuses the commit
+ *  with `STALE`. */
 export const recipeRequestSchema = z.strictObject({
   recipePluginId: id,
   seasonYear: z.number().int().min(2000).max(2100),
@@ -151,6 +182,7 @@ export interface GardenErrorResponse {
     | 'NOT_DESIGNABLE'
     | 'IN_GROUND'
     | 'BED_HAS_RECORDS'
-    | 'FOREIGN_REF';
+    | 'FOREIGN_REF'
+    | 'STALE';
   issues?: unknown;
 }

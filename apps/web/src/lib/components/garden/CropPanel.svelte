@@ -2,10 +2,78 @@
   import { resolveSpacing } from '$lib/garden/plantCount';
   import { familyLabel } from '$lib/garden/rotation';
   import type { GardenCrop } from '$lib/garden/types';
-  import { getDesigner } from './designerState.svelte';
+  import { getDesigner, type CropChoice } from './designerState.svelte';
 
   const d = getDesigner();
   const MAX_RESULTS = 40;
+  const DRAG_START_PX = 6;
+
+  const draggable = $derived(d.canEdit && d.view === 'canvas');
+  let press: { id: number; x: number; y: number; choice: CropChoice } | null = null;
+  let suppressClick = false;
+
+  function onRowPointerDown(e: PointerEvent, choice: CropChoice): void {
+    if (!draggable || press) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const onGrip = e.target instanceof Element && !!e.target.closest('[data-drag-grip]');
+    if (e.pointerType !== 'mouse' && !onGrip) return;
+    press = { id: e.pointerId, x: e.clientX, y: e.clientY, choice };
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+    window.addEventListener('keydown', onKey);
+  }
+
+  function onMove(e: PointerEvent): void {
+    if (!press || e.pointerId !== press.id) return;
+    if (!d.cropDrag) {
+      if (Math.hypot(e.clientX - press.x, e.clientY - press.y) < DRAG_START_PX) return;
+      if (!d.startCropDrag(press.choice, e.clientX, e.clientY)) return end();
+    }
+    e.preventDefault();
+    d.moveCropDrag(e.clientX, e.clientY);
+  }
+
+  function onUp(e: PointerEvent): void {
+    if (!press || e.pointerId !== press.id) return;
+    if (d.cropDrag) {
+      suppressClick = true;
+      setTimeout(() => (suppressClick = false), 0);
+      void d.dropCrop();
+    }
+    end();
+  }
+
+  function onCancel(e: PointerEvent): void {
+    if (!press || e.pointerId !== press.id) return;
+    d.cancelCropDrag();
+    end();
+  }
+
+  function onKey(e: KeyboardEvent): void {
+    if (e.key !== 'Escape' || !d.cropDrag) return;
+    e.preventDefault();
+    d.cancelCropDrag();
+    end();
+  }
+
+  function end(): void {
+    press = null;
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    window.removeEventListener('keydown', onKey);
+  }
+
+  function choose(choice: CropChoice): void {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
+    d.chooseCrop(choice);
+  }
+
+  $effect(() => end);
 
   let query = $state('');
   let input = $state<HTMLInputElement | null>(null);
@@ -66,8 +134,27 @@
   });
 </script>
 
+{#if d.cropDrag}
+  <div
+    class="drag-chip"
+    class:nofit={d.cropDrag.ghost ? !d.cropDrag.ghost.fits : false}
+    aria-hidden="true"
+    data-testid="drag-chip"
+    style:left="{d.cropDrag.clientX}px"
+    style:top="{d.cropDrag.clientY}px"
+  >
+    {d.cropDrag.choice.label}{#if d.cropDrag.bedId}
+      · {d.cropDrag.ghost?.fits ? d.bed(d.cropDrag.bedId)?.name : 'No room here'}{/if}
+  </div>
+{/if}
+
 {#if d.cropPanelOpen}
-  <section class="panel" aria-labelledby="crop-panel-title" data-testid="crop-panel">
+  <section
+    class="panel"
+    class:dragging={!!d.cropDrag}
+    aria-labelledby="crop-panel-title"
+    data-testid="crop-panel"
+  >
     <header class="head">
       <h2 id="crop-panel-title">
         {target ? `Add a crop to ${target.name}` : 'Add a crop'}
@@ -79,13 +166,26 @@
       <h3>This season</h3>
       <ul class="list">
         {#each d.unplacedPlantings as p (p.cropId)}
+          {@const choice = {
+            source: 'planting' as const,
+            cropId: p.cropId,
+            label: p.varietyDisplayName
+          }}
           <li>
             <button
               type="button"
               class="row"
-              onclick={() =>
-                d.chooseCrop({ source: 'planting', cropId: p.cropId, label: p.varietyDisplayName })}
+              class:draggable
+              data-testid="crop-row"
+              onpointerdown={(e) => onRowPointerDown(e, choice)}
+              onclick={() => choose(choice)}
             >
+              {#if draggable}<span
+                  class="grip"
+                  data-drag-grip
+                  aria-hidden="true"
+                  title="Drag onto a bed"
+                ></span>{/if}
               <span class="name">{p.varietyDisplayName}</span>
               <span class="meta">
                 {d.bed(p.blockId)?.name ?? ''}{p.plantingDateMs != null
@@ -98,6 +198,9 @@
       </ul>
     {/if}
 
+    {#if draggable}
+      <p class="how">Tap a crop, then tap a bed. Or drag it by its handle onto a bed.</p>
+    {/if}
     <label class="search-label" for="crop-search">Search crops</label>
     <input
       id="crop-search"
@@ -119,13 +222,26 @@
       <h3>{family}</h3>
       <ul class="list">
         {#each crops as c (c.pluginId)}
+          {@const choice = {
+            source: 'catalog' as const,
+            pluginId: c.pluginId,
+            label: c.displayName
+          }}
           <li>
             <button
               type="button"
               class="row"
-              onclick={() =>
-                d.chooseCrop({ source: 'catalog', pluginId: c.pluginId, label: c.displayName })}
+              class:draggable
+              data-testid="crop-row"
+              onpointerdown={(e) => onRowPointerDown(e, choice)}
+              onclick={() => choose(choice)}
             >
+              {#if draggable}<span
+                  class="grip"
+                  data-drag-grip
+                  aria-hidden="true"
+                  title="Drag onto a bed"
+                ></span>{/if}
               <span class="name">{c.displayName}</span>
               <span class="meta">
                 {c.daysToMaturity
@@ -239,8 +355,56 @@
     outline: none;
     box-shadow: var(--focus-ring);
   }
-  .empty {
+  .empty,
+  .how {
     margin: 0;
     color: var(--color-ink-soft);
+  }
+  .how {
+    font-size: var(--font-size-caption);
+  }
+  .panel.dragging {
+    opacity: 0.35;
+  }
+  .row.draggable {
+    position: relative;
+    padding-right: 56px;
+  }
+  .grip {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 48px;
+    min-height: 48px;
+    touch-action: none;
+    cursor: grab;
+    background-image: radial-gradient(circle, var(--color-ink-soft) 1.5px, transparent 2px);
+    background-size: 8px 8px;
+    background-position: center;
+    background-repeat: repeat;
+    background-clip: content-box;
+    padding: 14px 16px;
+    box-sizing: border-box;
+    border-left: 1px solid var(--color-divider);
+  }
+  .drag-chip {
+    position: fixed;
+    z-index: 60;
+    transform: translate(12px, -140%);
+    max-width: min(260px, calc(100vw - 32px));
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-input);
+    background: var(--color-forest);
+    color: #fff;
+    font-weight: 600;
+    font-size: var(--font-size-caption);
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .drag-chip.nofit {
+    background: var(--color-rust);
   }
 </style>

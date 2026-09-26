@@ -194,6 +194,15 @@ describe('garden bed map', () => {
     expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual(['Provider bush bean']);
   });
 
+  it('draws the bed map on the designer date without moving the card’s own date', () => {
+    const snap = sampleSnapshot();
+    const onMs = Date.UTC(2026, 5, 20);
+    const card = buildAreaCard(snap, 'f_garden', { bedMapOnMs: onMs })!;
+    expect(card.bedMap!.onMs).toBe(onMs);
+    expect(card.bedMap!.beds.find((b) => b.name === 'Bed 1')!.crops).toEqual(['Provider bush bean']);
+    expect(card.next).toEqual(buildAreaCard(snap, 'f_garden')!.next);
+  });
+
   it('leaves pastures and barns without a designer', () => {
     for (const id of ['f_hay', 'f_barn']) {
       const card = buildAreaCard(sampleSnapshot(), id)!;

@@ -11,6 +11,7 @@
   const { data, form }: { data: PageData; form: ActionData } = $props();
 
   const enabled = $derived(data.key.source !== 'none');
+  const hostedKey = $derived(data.key.source === 'env');
 
   // Static lists from the design — these describe the kernel
   // architecture not per-user state, so they live in the component.
@@ -59,7 +60,6 @@
   title="AI planning assistant"
   kicker="Integrations · Claude"
   backHref="/settings/integrations"
-  saveAction="?/saveKey"
 >
   {#snippet badge()}
     {#if enabled}
@@ -78,27 +78,27 @@
     {/if}
   {/snippet}
 
-  <SettingsSection title="API key" sub="Stored locally · never sent to the CropCard server.">
-    <form method="POST" action="?/saveKey" class="form-block">
-      <div class="grid-2-1">
+  {#if hostedKey}
+    <p class="included" data-testid="ai-included">AI help is included with your plan.</p>
+  {:else if data.isOwner}
+    <SettingsSection
+      title="API key"
+      sub="Saved on this farm's CropCard server and used only for this farm's AI help."
+    >
+      <form method="POST" action="?/saveKey" class="form-block key-form">
         <SettingsField label="Claude API key" hint="sk-ant-…">
           <input
             class="s-input mono"
             type="password"
             name="apiKey"
-            value={data.key.masked}
-            placeholder="sk-ant-•••••"
+            autocomplete="off"
+            placeholder={data.key.masked || 'sk-ant-•••••'}
           />
         </SettingsField>
-        <SettingsField label="Model">
-          <select class="s-input" name="model">
-            <option value="claude-haiku-4-5">claude-haiku-4-5</option>
-            <option value="claude-sonnet-4-5">claude-sonnet-4-5</option>
-          </select>
-        </SettingsField>
-      </div>
-    </form>
-  </SettingsSection>
+        <button type="submit" class="cap-btn primary">Save key</button>
+      </form>
+    </SettingsSection>
+  {/if}
 
   <SettingsSection
     title="AI help this month"
@@ -276,10 +276,16 @@
     cursor: pointer;
     color: var(--color-forest-deep);
   }
-  .grid-2-1 {
-    display: grid;
-    grid-template-columns: 1.6fr 1fr;
-    gap: 16px;
+  .included {
+    margin: 0 0 16px;
+    font-size: 14px;
+    color: var(--color-ink);
+  }
+  .key-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 480px;
   }
   .form-block {
     margin: 0;
@@ -399,7 +405,6 @@
   }
 
   @media (max-width: 700px) {
-    .grid-2-1,
     .quota-grid,
     .gated-grid {
       grid-template-columns: 1fr;

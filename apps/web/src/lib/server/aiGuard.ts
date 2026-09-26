@@ -6,9 +6,13 @@
  *
  * Order: deployment brake, owner switched AI off, feature not in the plan,
  * monthly budget (spent + the call's worst-case reserve), free pool, daily
- * cap. The monthly budget is per Owner, so helpers and Bearer tokens spend
- * the same budget. Service-account tokens key their daily count on the
- * token instead of the user.
+ * cap. The monthly budget and the daily caps are per Owner, so helpers and
+ * Bearer tokens draw on the same farm allowance; a service-account token's
+ * own daily quota applies on top.
+ *
+ * Calls in flight hold their reserve in an in-process ledger (exact because
+ * Invariant 3 keeps a single replica), so parallel requests cannot all pass
+ * the check before any of them is logged.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -19,6 +23,8 @@ import { type AiEndpointName } from '$lib/schedule/constants';
 import { getAiDailyCallQuotaOverrides, getAiMonthlyUsdCapSetting } from '$lib/schedule/settings';
 import { currentOwnerId, tenantValues, unscopedQueryNote, withTenant } from '$lib/db/tenant';
 import {
+  AI_MIN_RESERVE_USD,
+  AI_PLAN_RESERVE_USD,
   AI_RESERVE_USD,
   DEFAULT_FREE_POOL_MONTHLY_USD,
   PLANS,
@@ -32,6 +38,7 @@ import {
   type PlanId,
   type ResolvedPlan
 } from '$lib/billing/plans';
+import type { AiLimitDetail } from '$lib/billing/aiLimit';
 import { resolvePlan } from './billing/plans';
 import { incrementUsageCounter } from './superadmin';
 
@@ -47,20 +54,22 @@ const TOKEN_QUOTA_COLUMN: Partial<Record<AiEndpointName, keyof typeof apiTokens.
   'plugin-search': 'dailyQuotaSchedule'
 };
 
-export type GuardBlockDetail =
-  | 'global'
-  | 'owner-disabled'
-  | 'plan-excluded'
-  | 'monthly-budget'
-  | 'free-pool'
-  | 'daily-quota'
-  | 'token-quota';
+export type GuardBlockDetail = AiLimitDetail;
+
+export interface GuardHold {
+  /** The call came back: hold its real cost until recordCall logs it. */
+  settle(usd: number): void;
+  /** Change the amount held while the call is still running. */
+  adjust(usd: number): void;
+  release(): void;
+}
 
 export type GuardOutcome =
   | {
       ok: true;
       spend: { monthlyUsdSoFar: number; cap: number; warnAt80: boolean };
       plan?: PlanId;
+      hold?: GuardHold;
     }
   | {
       ok: false;
@@ -88,20 +97,18 @@ function utcMonthStart(now = Date.now()): number {
 // path exhaust the AI quota and then 429 a no-key user (Invariant 7).
 const consumedTokens = sql`(${aiCallLog.inputTokens} + ${aiCallLog.cachedInputTokens} + ${aiCallLog.outputTokens}) > 0`;
 
-function callsToday(userId: string, endpoint: AiEndpointName): number {
-  const dayStart = utcDayStart();
-  unscopedQueryNote(
-    'per-user daily quota counts the user across every Owner they belong to, keyed on user id'
-  );
+function callsTodayOnFarm(endpoint: AiEndpointName): number {
   const row = db
     .select({ n: count() })
     .from(aiCallLog)
     .where(
-      and(
-        eq(aiCallLog.userId, userId),
-        eq(aiCallLog.endpoint, endpoint),
-        gte(aiCallLog.createdAt, new Date(dayStart)),
-        consumedTokens
+      withTenant(
+        aiCallLog,
+        and(
+          eq(aiCallLog.endpoint, endpoint),
+          gte(aiCallLog.createdAt, new Date(utcDayStart())),
+          consumedTokens
+        )
       )
     )
     .get();
@@ -138,6 +145,97 @@ function perTokenQuota(tokenId: string, endpoint: AiEndpointName): number | null
   if (!row) return null;
   const v = row[column];
   return typeof v === 'number' ? v : null;
+}
+
+interface LedgerHold {
+  id: number;
+  ownerId: string;
+  userId: string;
+  tokenId: string | null;
+  endpoint: AiEndpointName;
+  day: number;
+  month: number;
+  free: boolean;
+  usd: number;
+  settled: boolean;
+  at: number;
+}
+
+const IN_FLIGHT_TTL_MS = 15 * 60_000;
+const SETTLED_TTL_MS = 2 * 60_000;
+const holds = new Map<number, LedgerHold>();
+let nextHoldId = 1;
+
+function liveHolds(now = Date.now()): LedgerHold[] {
+  const out: LedgerHold[] = [];
+  for (const h of holds.values()) {
+    const ttl = h.settled ? SETTLED_TTL_MS : IN_FLIGHT_TTL_MS;
+    if (now - h.at > ttl) holds.delete(h.id);
+    else out.push(h);
+  }
+  return out;
+}
+
+function heldUsd(filter: (h: LedgerHold) => boolean): number {
+  const month = utcMonthStart();
+  return liveHolds()
+    .filter((h) => h.month === month && filter(h))
+    .reduce((acc, h) => acc + h.usd, 0);
+}
+
+function heldCalls(filter: (h: LedgerHold) => boolean): number {
+  const day = utcDayStart();
+  return liveHolds().filter((h) => h.day === day && filter(h)).length;
+}
+
+function openHold(input: Omit<LedgerHold, 'id' | 'at' | 'settled' | 'day' | 'month'>): GuardHold {
+  const now = Date.now();
+  const hold: LedgerHold = {
+    ...input,
+    id: nextHoldId++,
+    day: utcDayStart(now),
+    month: utcMonthStart(now),
+    settled: false,
+    at: now
+  };
+  holds.set(hold.id, hold);
+  return {
+    settle(usd: number) {
+      const h = holds.get(hold.id);
+      if (!h) return;
+      h.usd = Number.isFinite(usd) && usd > 0 ? usd : 0;
+      h.settled = true;
+      h.at = Date.now();
+    },
+    adjust(usd: number) {
+      const h = holds.get(hold.id);
+      if (h && !h.settled && Number.isFinite(usd) && usd >= 0) h.usd = usd;
+    },
+    release() {
+      holds.delete(hold.id);
+    }
+  };
+}
+
+/** A logged row replaces the settled hold it was waiting on. */
+function consumeSettledHold(ownerId: string, userId: string | null, endpoint: string): void {
+  if (!userId) return;
+  let oldest: LedgerHold | null = null;
+  for (const h of liveHolds()) {
+    if (!h.settled || h.ownerId !== ownerId || h.userId !== userId || h.endpoint !== endpoint) {
+      continue;
+    }
+    if (!oldest || h.id < oldest.id) oldest = h;
+  }
+  if (oldest) holds.delete(oldest.id);
+}
+
+export function resetGuardLedger(): void {
+  holds.clear();
+}
+
+export function guardLedgerSize(): number {
+  return liveHolds().length;
 }
 
 /** This Owner's spend this month, whoever on the farm made the call. */
@@ -278,103 +376,169 @@ function blocked(
   };
 }
 
-/** Check before making the model call. Does NOT write to the log; that
- *  happens after the call so real spend is captured. */
-export function checkGuard(
+interface Verdict {
+  outcome: GuardOutcome;
+  ownerId: string | null;
+  free: boolean;
+}
+
+function evaluate(
   userId: string,
   endpoint: AiEndpointName,
-  tokenContext?: TokenQuotaContext,
-  pendingUsd = 0
-): GuardOutcome {
+  tokenContext: TokenQuotaContext | undefined,
+  pendingUsd: number
+): Verdict {
+  const ownerId = currentOwnerId();
+  const verdict = (outcome: GuardOutcome, free = false): Verdict => ({ outcome, ownerId, free });
   const globalCap = globalMonthlyUsdCap();
-  if (globalCap > 0 && deploymentUsdSpent() >= globalCap) {
-    return blocked(
-      'cap-exceeded',
-      'global',
-      undefined,
-      'AI help is paused for this month across CropCard. Everything still works without it.'
+  if (globalCap > 0 && deploymentUsdSpent() + heldUsd(() => true) >= globalCap) {
+    return verdict(
+      blocked(
+        'cap-exceeded',
+        'global',
+        undefined,
+        'AI help is paused for this month across CropCard. Everything still works without it.'
+      )
     );
   }
 
   const plan = activePlan();
   const ownerSetting = getAiMonthlyUsdCapSetting();
   if (ownerSetting === 0) {
-    return blocked(
-      'cap-exceeded',
-      'owner-disabled',
-      plan.plan,
-      `AI help is turned off for this farm. ${WITHOUT_AI} Turn it back on in Settings, AI.`,
-      null
+    return verdict(
+      blocked(
+        'cap-exceeded',
+        'owner-disabled',
+        plan.plan,
+        `AI help is turned off for this farm. ${WITHOUT_AI} Turn it back on in Settings, AI.`,
+        null
+      )
     );
   }
 
   const quotas = effectiveDailyQuota(plan.dailyQuota, getAiDailyCallQuotaOverrides());
   if (plan.dailyQuota[endpoint] <= 0) {
-    return blocked(
-      'cap-exceeded',
-      'plan-excluded',
-      plan.plan,
-      `This AI feature is not part of the ${PLANS[plan.plan].name} plan. ${WITHOUT_AI}${upsell(plan.plan)}`
+    return verdict(
+      blocked(
+        'cap-exceeded',
+        'plan-excluded',
+        plan.plan,
+        `This AI feature is not part of the ${PLANS[plan.plan].name} plan. ${WITHOUT_AI}${upsell(plan.plan)}`
+      )
     );
   }
 
   const cap = effectiveMonthlyCap(plan.aiMonthlyUsd, ownerSetting);
-  const spent = monthlyUsdSpent() + pendingUsd;
+  const held = ownerId ? heldUsd((h) => h.ownerId === ownerId) : 0;
+  const spent = monthlyUsdSpent() + held + pendingUsd;
   if (spent + AI_RESERVE_USD[endpoint] > cap) {
     const ownerLowered = cap < plan.aiMonthlyUsd;
-    return blocked(
-      'cap-exceeded',
-      'monthly-budget',
-      plan.plan,
-      ownerLowered
-        ? `This farm's AI help for the month is used up (${formatUsd(spent)} of the ${formatUsd(cap)} you set). ${WITHOUT_AI} It resets on the 1st.`
-        : `You've used this month's AI help (${formatUsd(spent)} of ${formatUsd(cap)}). ${WITHOUT_AI} It resets on the 1st.${upsell(plan.plan)}`
+    return verdict(
+      blocked(
+        'cap-exceeded',
+        'monthly-budget',
+        plan.plan,
+        ownerLowered
+          ? `This farm's AI help for the month is used up (${formatUsd(spent)} of the ${formatUsd(cap)} you set). ${WITHOUT_AI} It resets on the 1st.`
+          : `You've used this month's AI help (${formatUsd(spent)} of ${formatUsd(cap)}). ${WITHOUT_AI} It resets on the 1st.${upsell(plan.plan)}`,
+        ownerLowered ? null : nextPlanUp(plan.plan)
+      )
     );
   }
 
-  if (plan.plan === 'free') {
+  const free = plan.plan === 'free';
+  if (free) {
     const pool = freePoolMonthlyUsd();
-    if (pool > 0 && freePoolUsdSpent() >= pool) {
-      return blocked(
-        'cap-exceeded',
-        'free-pool',
-        plan.plan,
-        `Free AI help is resting until the 1st because so many farms are using it. ${WITHOUT_AI}${upsell(plan.plan)}`
+    if (pool > 0 && freePoolUsdSpent() + heldUsd((h) => h.free) >= pool) {
+      return verdict(
+        blocked(
+          'cap-exceeded',
+          'free-pool',
+          plan.plan,
+          `Free AI help is resting until the 1st because so many farms are using it. ${WITHOUT_AI}${upsell(plan.plan)}`
+        )
       );
     }
   }
 
-  const useTokenScope = !!tokenContext && tokenContext.isServiceAccount;
-  let quota: number;
-  let today: number;
-  if (useTokenScope) {
-    const override = perTokenQuota(tokenContext.tokenId, endpoint);
-    quota = override ?? quotas[endpoint];
-    today = callsTodayByToken(tokenContext.tokenId, endpoint);
-  } else {
-    quota = quotas[endpoint];
-    today = callsToday(userId, endpoint);
-  }
-
+  const quota = quotas[endpoint];
+  const today =
+    callsTodayOnFarm(endpoint) +
+    (ownerId ? heldCalls((h) => h.ownerId === ownerId && h.endpoint === endpoint) : 0);
   if (today >= quota) {
-    return blocked(
-      'quota-exceeded',
-      useTokenScope ? 'token-quota' : 'daily-quota',
-      plan.plan,
-      useTokenScope
-        ? `Service-account token daily ${endpoint} quota of ${quota} reached. Raise it on /settings/api-tokens or wait until UTC midnight.`
-        : `Today's ${endpoint} AI limit of ${quota} is used up. ${WITHOUT_AI} It resets at midnight UTC.${upsell(plan.plan)}`
+    return verdict(
+      blocked(
+        'quota-exceeded',
+        'daily-quota',
+        plan.plan,
+        `Today's ${endpoint} AI limit of ${quota} for this farm is used up. ${WITHOUT_AI} It resets at midnight UTC.${upsell(plan.plan)}`
+      )
     );
   }
-  return {
-    ok: true,
-    plan: plan.plan,
-    spend: {
-      monthlyUsdSoFar: spent,
-      cap,
-      warnAt80: cap > 0 && spent >= 0.8 * cap
+
+  if (tokenContext?.isServiceAccount) {
+    const tokenQuota = perTokenQuota(tokenContext.tokenId, endpoint);
+    if (tokenQuota != null) {
+      const tokenToday =
+        callsTodayByToken(tokenContext.tokenId, endpoint) +
+        heldCalls((h) => h.tokenId === tokenContext.tokenId && h.endpoint === endpoint);
+      if (tokenToday >= tokenQuota) {
+        return verdict(
+          blocked(
+            'quota-exceeded',
+            'token-quota',
+            plan.plan,
+            `Service-account token daily ${endpoint} quota of ${tokenQuota} reached. Raise it on /settings/api-tokens or wait until UTC midnight.`
+          )
+        );
+      }
     }
-  };
+  }
+
+  return verdict(
+    {
+      ok: true,
+      plan: plan.plan,
+      spend: {
+        monthlyUsdSoFar: spent,
+        cap,
+        warnAt80: cap > 0 && spent >= 0.8 * cap
+      }
+    },
+    free
+  );
+}
+
+/** Read-only check: counts logged spend plus every call still in flight,
+ *  but holds nothing. Use reserveGuard() right before an actual call. */
+export function checkGuard(
+  userId: string,
+  endpoint: AiEndpointName,
+  tokenContext?: TokenQuotaContext,
+  pendingUsd = 0
+): GuardOutcome {
+  return evaluate(userId, endpoint, tokenContext, pendingUsd).outcome;
+}
+
+/** Check and, on ok, hold the call's worst-case cost and one daily slot
+ *  until the call is logged (hold.settle + recordCall) or released. */
+export function reserveGuard(
+  userId: string,
+  endpoint: AiEndpointName,
+  tokenContext?: TokenQuotaContext,
+  pendingUsd = 0
+): GuardOutcome {
+  const v = evaluate(userId, endpoint, tokenContext, pendingUsd);
+  if (!v.outcome.ok || !v.ownerId) return v.outcome;
+  const hold = openHold({
+    ownerId: v.ownerId,
+    userId,
+    tokenId: tokenContext?.isServiceAccount ? tokenContext.tokenId : null,
+    endpoint,
+    free: v.free,
+    usd: AI_RESERVE_USD[endpoint]
+  });
+  return { ...v.outcome, hold };
 }
 
 export interface RecordCallInput {
@@ -444,6 +608,9 @@ export function recordCall(input: RecordCallInput): void {
       })
     )
     .run();
+  if (input.inputTokens + input.cachedInputTokens + input.outputTokens > 0) {
+    consumeSettledHold(ownerId, input.userId, input.endpoint);
+  }
   if (deploymentSpendMemo && input.usdEstimate > 0) {
     deploymentSpendMemo.total += input.usdEstimate;
   }
@@ -464,13 +631,16 @@ export function spendSnapshot(): SpendSnapshot {
   const cap = effectiveMonthlyCap(plan.aiMonthlyUsd, ownerSetting);
   const spent = monthlyUsdSpent();
   const pct = cap > 0 ? Math.min(1, spent / cap) : 1;
+  const left = cap - spent;
+  const exhausted = cap <= 0 || left < AI_MIN_RESERVE_USD;
   return {
     monthlyUsdSoFar: spent,
     cap,
     planBudget: plan.aiMonthlyUsd,
     pctUsed: pct,
     warnAt80: pct >= 0.8,
-    exhausted: cap <= 0 || spent >= cap,
+    exhausted,
+    quickOnly: !exhausted && left < AI_PLAN_RESERVE_USD,
     aiOff: ownerSetting === 0,
     plan: plan.plan,
     planName: PLANS[plan.plan].name,

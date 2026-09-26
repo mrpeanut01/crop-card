@@ -41,12 +41,22 @@ export const actions: Actions = {
     if (!claims) return fail(400, { error: 'This unsubscribe link is not valid.' });
     const fd = await event.request.formData();
     const requested = fd.getAll('category').filter((v): v is string => typeof v === 'string');
-    const turnedOn = applyResubscribe(claims, requested, requestIp(event));
-    if (turnedOn.length === 0) {
-      return fail(409, {
-        error: 'You are no longer on this farm in CropCard, so its alerts cannot be turned on.'
+    const result = applyResubscribe(claims, requested, requestIp(event));
+    if (!result.ok) {
+      if (result.reason === 'not-member') {
+        return fail(409, {
+          error: 'You are no longer on this farm in CropCard, so its alerts cannot be turned on.'
+        });
+      }
+      if (result.reason === 'nothing-requested') {
+        return fail(400, { error: 'Pick at least one email to turn back on.' });
+      }
+      return fail(400, {
+        error:
+          'This link can only undo an unsubscribe for a few minutes. Sign in to CropCard and turn alerts back on under Settings, Notifications.',
+        signIn: true
       });
     }
-    return { done: 'resubscribed' as const, turnedOn };
+    return { done: 'resubscribed' as const, turnedOn: result.turnedOn };
   }
 };

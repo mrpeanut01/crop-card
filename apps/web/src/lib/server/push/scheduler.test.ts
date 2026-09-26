@@ -20,7 +20,10 @@ import { decryptPayload, generateVapidKeys } from './webPush';
 const config = { ...generateVapidKeys(), subject: 'mailto:ops@cropcard.test' };
 const HOUR = 60 * 60 * 1000;
 
-function seedOwner(role: 'owner' | 'helper' = 'owner', billing: 'active' | 'suspended' = 'active') {
+function seedOwner(
+  role: 'owner' | 'helper' = 'owner',
+  billing: 'active' | 'suspended' | 'canceled' = 'active'
+) {
   const ownerId = `push-owner-${randomUUID()}`;
   const userId = `push-user-${randomUUID()}`;
   db.insert(owners)
@@ -169,6 +172,20 @@ describe('push scheduler', () => {
     const fetchImpl = mockFetch();
     await runPushTick({ config, now: () => now, fetchImpl });
     expect(fetchImpl.mock.calls.map((c) => String(c[0]))).not.toContain(b.endpoint);
+  });
+
+  it('a farm that cancelled a paid plan (now Free) still gets decon-due push', async () => {
+    const s = seedOwner('owner', 'canceled');
+    const { b } = subscribe(s.ownerId, s.userId);
+    const now = Date.now();
+    dirtySprayer(s.ownerId, now - 2 * HOUR);
+    const fetchImpl = mockFetch();
+    await runPushTick({ config, now: () => now, fetchImpl });
+    expect(fetchImpl.mock.calls.map((c) => String(c[0]))).toContain(b.endpoint);
+    const decon = runWithTenant(s.ownerId, () => listDeliveries()).filter(
+      (d) => d.kind === 'decon-due'
+    );
+    expect(decon).toHaveLength(1);
   });
 
   it('a second tick twelve hours later sends nothing already sent', async () => {

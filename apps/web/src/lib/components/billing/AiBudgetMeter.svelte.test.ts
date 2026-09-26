@@ -15,6 +15,7 @@ function usage(over: Partial<AiUsageSnapshot> = {}): AiUsageSnapshot {
     pctUsed: 0.2,
     warnAt80: false,
     exhausted: false,
+    quickOnly: false,
     aiOff: false,
     plan: 'free',
     planName: 'Free',
@@ -60,6 +61,17 @@ describe('AiBudgetMeter', () => {
       isOwner: true
     });
     expect(screen.queryByTestId('ai-upsell')).toBeNull();
+  });
+
+  it('says only quick help is left when a full plan no longer fits', () => {
+    render(AiBudgetMeter, {
+      usage: usage({ monthlyUsdSoFar: 0.3, pctUsed: 0.6, quickOnly: true }),
+      isOwner: true
+    });
+    expect(screen.getByTestId('ai-low-note')).toHaveTextContent(
+      'Enough left for quick help, not a full AI plan'
+    );
+    expect(screen.getByTestId('ai-upsell')).toHaveTextContent('More AI on Grower');
   });
 
   it('says AI is off when the owner turned it off', () => {

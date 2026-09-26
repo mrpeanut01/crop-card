@@ -30,7 +30,12 @@ import { withTenant } from '$lib/db/tenant';
 export const load: PageServerLoad = ({ locals }) => {
   if (!locals.user) throw error(401, 'sign-in required');
 
-  const key = aiKeyStatus();
+  const status = aiKeyStatus();
+  const isOwner = locals.user.role === 'owner';
+  const key = {
+    source: status.source,
+    masked: status.source === 'setting' && isOwner ? status.masked : ''
+  };
   const spend = spendSnapshot();
   const cap = spend.cap;
   const ownerCapSetting = getAiMonthlyUsdCapSetting();
@@ -78,8 +83,8 @@ export const load: PageServerLoad = ({ locals }) => {
       .where(and(withTenant(aiCallLog), gte(aiCallLog.createdAt, new Date(Date.now() - MONTH_MS))))
       .get()?.n ?? 0;
 
-  // Per-endpoint usage against the daily quota — same predicate as
-  // aiGuard.callsToday (this user, UTC day, token-consuming rows only).
+  // Per-endpoint usage against the farm's daily caps, the same predicate
+  // as aiGuard (this farm, UTC day, token-consuming rows only).
   const utcDayStart = new Date();
   utcDayStart.setUTCHours(0, 0, 0, 0);
   const usedToday: Record<string, number> = {};
@@ -89,7 +94,6 @@ export const load: PageServerLoad = ({ locals }) => {
     .where(
       and(
         withTenant(aiCallLog),
-        eq(aiCallLog.userId, locals.user.id),
         gte(aiCallLog.createdAt, utcDayStart),
         sql`(${aiCallLog.inputTokens} + ${aiCallLog.cachedInputTokens} + ${aiCallLog.outputTokens}) > 0`
       )
@@ -109,12 +113,17 @@ export const load: PageServerLoad = ({ locals }) => {
     recentCalls,
     usedToday,
     callsThisMonth,
-    isOwner: locals.user.role === 'owner'
+    isOwner
   };
 };
 
 export const actions: Actions = {
-  saveKey: ({ locals, request }) => saveAiKey(locals.user, request),
+  saveKey: ({ locals, request }) => {
+    if (aiKeyStatus().source === 'env') {
+      return fail(400, { error: 'AI help is included with your plan, so no key is needed.' });
+    }
+    return saveAiKey(locals.user, request);
+  },
 
   clearKey: async ({ locals }) => {
     if (!locals.user) return fail(401, { error: 'sign-in required' });
@@ -143,8 +152,11 @@ export const actions: Actions = {
     const n = Number(form.get('cap'));
     if (!Number.isFinite(n) || n < 0) return fail(400, { error: 'Enter a dollar amount.' });
     const plan = locals.user.activeOwnerId ? resolvePlan(locals.user.activeOwnerId) : null;
-    const clamped = plan ? Math.min(n, plan.aiMonthlyUsd) : n;
-    setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, String(Math.round(clamped * 100) / 100));
+    if (plan && n >= plan.aiMonthlyUsd) {
+      deleteSetting(SETTINGS_KEYS.aiMonthlyUsdCap);
+      return { success: true, message: 'AI help is set to your full plan budget.' };
+    }
+    setSetting(SETTINGS_KEYS.aiMonthlyUsdCap, String(Math.round(n * 100) / 100));
     return { success: true, message: 'Monthly AI limit saved.' };
   },
 

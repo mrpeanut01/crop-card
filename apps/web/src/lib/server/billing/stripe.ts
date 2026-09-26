@@ -89,6 +89,8 @@ export function verifyWebhookSignature(
 export interface StripeEvent {
   id: string;
   type: string;
+  /** Unix seconds when Stripe created the event. */
+  created?: number;
   data: {
     object: {
       // Subscription objects
@@ -155,15 +157,21 @@ export function applyWebhookEvent(event: StripeEvent): {
     // Log + skip rather than fail so Stripe does not retry forever.
     return { applied: false, ownerId: null, reason: 'event has no resolvable owner' };
   }
+  const skip = staleOrForeign(ownerId, event);
+  if (skip) return { applied: false, ownerId, reason: skip };
+  const eventAt = {
+    lastStripeEventAt: new Date(event.created ? event.created * 1000 : Date.now())
+  };
   switch (event.type) {
     case 'checkout.session.completed': {
       if (!obj.customer) {
         return { applied: false, ownerId, reason: 'checkout session has no customer' };
       }
+      const keepLive = hasConfirmedLiveSubscription(ownerId);
       if (
         !convergeSubscription(ownerId, {
           stripeCustomerId: obj.customer,
-          ...(obj.subscription ? { stripeSubscriptionId: obj.subscription } : {})
+          ...(obj.subscription && !keepLive ? { stripeSubscriptionId: obj.subscription } : {})
         })
       ) {
         return { applied: false, ownerId, reason: 'unknown owner' };
@@ -188,7 +196,8 @@ export function applyWebhookEvent(event: StripeEvent): {
           stripeSubscriptionId: obj.id ?? null,
           periodStart: obj.current_period_start ? new Date(obj.current_period_start * 1000) : null,
           periodEnd: obj.current_period_end ? new Date(obj.current_period_end * 1000) : null,
-          ...(priced ? { planCode: priced.plan, billingInterval: priced.interval } : {})
+          ...(priced ? { planCode: priced.plan, billingInterval: priced.interval } : {}),
+          ...eventAt
         })
       ) {
         return { applied: false, ownerId, reason: 'unknown owner' };
@@ -201,7 +210,8 @@ export function applyWebhookEvent(event: StripeEvent): {
         !convergeSubscription(ownerId, {
           status: 'canceled',
           planCode: 'free',
-          billingInterval: null
+          billingInterval: null,
+          ...eventAt
         })
       ) {
         return { applied: false, ownerId, reason: 'unknown owner' };
@@ -218,7 +228,7 @@ export function applyWebhookEvent(event: StripeEvent): {
           reason: `payment failed while ${current ?? 'unsubscribed'}; stays free`
         };
       }
-      convergeSubscription(ownerId, { status: 'past_due' });
+      convergeSubscription(ownerId, { status: 'past_due', ...eventAt });
       return { applied: true, ownerId, reason: 'invoice failed → past_due' };
     }
     default:
@@ -234,6 +244,70 @@ interface SubscriptionPatch {
   periodEnd?: Date | null;
   planCode?: PlanId;
   billingInterval?: BillingInterval | null;
+  lastStripeEventAt?: Date;
+}
+
+const ORDERED_EVENT_TYPES: ReadonlySet<string> = new Set([
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+  'invoice.payment_failed'
+]);
+
+/**
+ * Stripe neither orders deliveries nor stops retrying for three days, so a
+ * subscription or invoice event is skipped when it is older than the newest
+ * one already applied, or when it belongs to a different subscription while
+ * the one on record is still live (a duplicate checkout, an old incomplete
+ * attempt). Returns the skip reason, or null to apply the event.
+ */
+function staleOrForeign(ownerId: string, event: StripeEvent): string | null {
+  if (!ORDERED_EVENT_TYPES.has(event.type)) return null;
+  unscopedQueryNote('Stripe webhook reads the stored subscription by owner id before applying');
+  const stored = db
+    .select({
+      status: ownerSubscriptions.status,
+      subscriptionId: ownerSubscriptions.stripeSubscriptionId,
+      lastEventAt: ownerSubscriptions.lastStripeEventAt
+    })
+    .from(ownerSubscriptions)
+    .where(eq(ownerSubscriptions.ownerId, ownerId))
+    .get();
+  if (!stored) return null;
+  const lastMs = stored.lastEventAt?.getTime() ?? null;
+  if (event.created && lastMs != null && event.created * 1000 < lastMs) {
+    return 'stale event: a newer subscription event was already applied';
+  }
+  const obj = event.data.object;
+  const eventSubscription = event.type.startsWith('customer.subscription.')
+    ? (obj.id ?? null)
+    : (obj.subscription ?? null);
+  if (
+    eventSubscription &&
+    stored.subscriptionId &&
+    eventSubscription !== stored.subscriptionId &&
+    lastMs != null &&
+    PAID_STATUSES.has(stored.status)
+  ) {
+    return `event for subscription ${eventSubscription}, not the current ${stored.subscriptionId}`;
+  }
+  return null;
+}
+
+/** A second checkout (another tab) must not replace a subscription that a
+ *  Stripe subscription event has already confirmed as live. */
+function hasConfirmedLiveSubscription(ownerId: string): boolean {
+  unscopedQueryNote('Stripe webhook reads the stored subscription by owner id before linking');
+  const row = db
+    .select({
+      status: ownerSubscriptions.status,
+      subscriptionId: ownerSubscriptions.stripeSubscriptionId,
+      lastEventAt: ownerSubscriptions.lastStripeEventAt
+    })
+    .from(ownerSubscriptions)
+    .where(eq(ownerSubscriptions.ownerId, ownerId))
+    .get();
+  return !!row?.subscriptionId && row.lastEventAt != null && PAID_STATUSES.has(row.status);
 }
 
 /** undefined = no such owner; null = owner without a subscription row. */

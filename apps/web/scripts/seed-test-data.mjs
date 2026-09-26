@@ -322,6 +322,16 @@ sqlite
   )
   .run(randomUUID(), capped.owner.id, capped.user.id, now);
 
+// `paused@cropcard.local` owns a farm a superadmin has suspended, so the
+// suspended page and its read-only way back to records can be checked.
+const paused = seedPlanOwner({
+  slug: 'paused-farm',
+  name: 'Paused Farm',
+  email: 'paused@cropcard.local',
+  createdAt: days(120)
+});
+sqlite.prepare(`UPDATE owners SET billing_status = 'suspended' WHERE id = ?`).run(paused.owner.id);
+
 sqlite.close();
 
 console.log(`[seed] done`);

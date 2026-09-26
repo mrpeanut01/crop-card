@@ -92,8 +92,7 @@
       <div class="icon" class:on={data.ai.enabled}><Leaf size={16} strokeWidth={1.75} /></div>
       <div class="row-text">
         {#if data.ai.fromEnv}
-          <div class="row-title">Key set by the server environment</div>
-          <div class="row-sub mono">{data.ai.keyMasked}</div>
+          <div class="row-title" data-testid="ai-included">AI help is included with your plan.</div>
         {:else}
           <form method="POST" action="?/saveKey" class="key-row">
             <label class="sr-only" for="ai-key">Claude API key</label>
@@ -122,7 +121,7 @@
           <p class="ok" role="status">{form.message}</p>
         {/if}
         <div class="row-meta mono">
-          ${data.ai.spendThisMonth.toFixed(2)} of ${data.ai.monthlyCapUSD.toFixed(0)} monthly cap ·
+          ${data.ai.spendThisMonth.toFixed(2)} of ${data.ai.monthlyCapUSD.toFixed(2)} this month ·
           {data.ai.callsThisMonth} call{data.ai.callsThisMonth === 1 ? '' : 's'} this month
         </div>
       </div>

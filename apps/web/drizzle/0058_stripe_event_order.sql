@@ -1,0 +1,1 @@
+ALTER TABLE `owner_subscriptions` ADD `last_stripe_event_at` integer;

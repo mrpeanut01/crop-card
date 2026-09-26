@@ -6,10 +6,11 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
-import { helperAssignments, owners, users } from '$lib/db/schema';
+import { helperAssignments, owners } from '$lib/db/schema';
 import { runWithTenant, unscopedQueryNote } from '$lib/db/tenant';
 import {
   getEmailPrefsForUser,
+  linkOptOutsSince,
   optIn,
   optOut,
   optOutAll,
@@ -72,12 +73,6 @@ function isActiveMember(ownerId: string, userId: string): boolean {
   return !!row && row.status === 'active' && row.role !== 'inspector';
 }
 
-function userEmail(userId: string): string | null {
-  return (
-    db.select({ email: users.email }).from(users).where(eq(users.id, userId)).get()?.email ?? null
-  );
-}
-
 export function unsubscribeContext(claims: UnsubscribeClaims): UnsubscribeContext {
   return {
     farmName: farmNameForOwner(claims.ownerId),
@@ -101,22 +96,33 @@ export function applyUnsubscribe(
   });
 }
 
-/** Turn categories back on from the unsubscribe page. Only categories the
- *  token covers, and only while the person still belongs to the farm. */
+/** How long after unsubscribing from a link the same link may undo it. */
+export const RESUBSCRIBE_UNDO_MS = 15 * 60_000;
+
+export type ResubscribeResult =
+  | { ok: true; turnedOn: EmailAlertCategory[] }
+  | { ok: false; reason: 'not-member' | 'nothing-requested' | 'window-closed' };
+
+/** Undo an unsubscribe from the same link. The link needs no sign-in and
+ *  never expires, so it may only restore what it turned off in the last few
+ *  minutes; anything else needs Settings, Notifications while signed in. A
+ *  provider-reported unsubscribe is never cleared from here. */
 export function applyResubscribe(
   claims: UnsubscribeClaims,
   requested: string[],
-  ip: string | null
-): EmailAlertCategory[] {
-  if (!isActiveMember(claims.ownerId, claims.userId)) return [];
-  const allowed = EMAIL_ALERT_CATEGORIES.filter(
+  ip: string | null,
+  now = Date.now()
+): ResubscribeResult {
+  if (!isActiveMember(claims.ownerId, claims.userId)) return { ok: false, reason: 'not-member' };
+  const wanted = EMAIL_ALERT_CATEGORIES.filter(
     (c) => requested.includes(c) && (claims.scope === 'all' || claims.scope === c)
   );
-  if (allowed.length === 0 && claims.scope !== 'all') allowed.push(claims.scope);
-  runWithTenant(claims.ownerId, () => {
-    for (const c of allowed) optIn(claims.userId, c, { source: 'unsubscribe-page', ip });
+  if (wanted.length === 0) return { ok: false, reason: 'nothing-requested' };
+  return runWithTenant(claims.ownerId, () => {
+    const undoable = new Set(linkOptOutsSince(claims.userId, now - RESUBSCRIBE_UNDO_MS));
+    const turnedOn = wanted.filter((c) => undoable.has(c));
+    if (turnedOn.length === 0) return { ok: false as const, reason: 'window-closed' as const };
+    for (const c of turnedOn) optIn(claims.userId, c, { source: 'unsubscribe-page', ip });
+    return { ok: true as const, turnedOn };
   });
-  const email = userEmail(claims.userId);
-  if (email && allowed.length > 0) clearEmailUnsubscribe(email);
-  return allowed;
 }

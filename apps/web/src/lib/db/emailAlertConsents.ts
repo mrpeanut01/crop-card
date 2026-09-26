@@ -97,6 +97,29 @@ export function optOutAll(userId: string, change: ConsentChange): EmailAlertCate
   return turnedOff;
 }
 
+/** Categories this user turned off from an email link (the page or the
+ *  one-click header) at or after `since`: the ones an undo may restore. */
+export function linkOptOutsSince(userId: string, since: number): EmailAlertCategory[] {
+  return db
+    .select({
+      category: emailAlertConsents.category,
+      status: emailAlertConsents.status,
+      optedOutAt: emailAlertConsents.optedOutAt,
+      optedOutSource: emailAlertConsents.optedOutSource
+    })
+    .from(emailAlertConsents)
+    .where(withTenant(emailAlertConsents, eq(emailAlertConsents.userId, userId)))
+    .all()
+    .filter(
+      (r) =>
+        r.status === 'opted-out' &&
+        (r.optedOutSource === 'unsubscribe-page' || r.optedOutSource === 'one-click') &&
+        r.optedOutAt != null &&
+        r.optedOutAt.getTime() >= since
+    )
+    .map((r) => r.category);
+}
+
 export function listOptedIn(): EmailConsentRecord[] {
   return db
     .select()

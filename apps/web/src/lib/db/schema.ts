@@ -401,6 +401,9 @@ export const ownerSubscriptions = sqliteTable('owner_subscriptions', {
   periodEnd: integer('period_end', { mode: 'timestamp_ms' }),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
+  /** `created` of the newest subscription or invoice event applied, so a
+   *  late or retried older event cannot overwrite newer state. */
+  lastStripeEventAt: integer('last_stripe_event_at', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),

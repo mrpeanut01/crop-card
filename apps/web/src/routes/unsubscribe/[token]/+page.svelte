@@ -80,6 +80,9 @@
     {/if}
     {#if form && 'error' in form && form.error}
       <p class="error" role="alert">{form.error}</p>
+      {#if 'signIn' in form && form.signIn}
+        <a class="ghost" href="/settings/notifications">Open notification settings</a>
+      {/if}
     {/if}
     <form method="POST" action="?/unsubscribe">
       <button class="primary" type="submit">Unsubscribe</button>

@@ -153,6 +153,12 @@ export const AI_RESERVE_USD: Record<AiEndpointName, number> = {
   'scan-barcode': HAIKU
 };
 
+/** Below this much left, no AI feature can start. */
+export const AI_MIN_RESERVE_USD = Math.min(...Object.values(AI_RESERVE_USD));
+
+/** Below this much left, a full AI plan cannot start but quick help can. */
+export const AI_PLAN_RESERVE_USD = SONNET_PLAN;
+
 export function isPlanId(v: unknown): v is PlanId {
   return typeof v === 'string' && (PLAN_IDS as readonly string[]).includes(v);
 }
@@ -283,6 +289,8 @@ export interface AiUsageSnapshot {
   pctUsed: number;
   warnAt80: boolean;
   exhausted: boolean;
+  /** Enough left for quick help but not for a full AI plan. */
+  quickOnly: boolean;
   aiOff: boolean;
   plan: PlanId;
   planName: string;
@@ -356,8 +364,26 @@ export const PLAN_HIGHLIGHTS: Record<PlanId, readonly string[]> = {
   ]
 };
 
+/** What one full AI plan (allocate, schedule and a refine turn) costs on a
+ *  typical farm, from the decision record's unit costs. */
+export const TYPICAL_PLAN_USD = 0.14;
+
+/** Full AI plans that fit a monthly budget: each one can only start while
+ *  spend plus the planning reserve still fits, exactly as the guard checks. */
+export function fullPlansFor(budget: number): number {
+  let spent = 0;
+  let n = 0;
+  while (spent + AI_PLAN_RESERVE_USD <= budget + 1e-9) {
+    spent += TYPICAL_PLAN_USD;
+    n += 1;
+  }
+  return n;
+}
+
+const roundDownTo5 = (n: number) => (n >= 10 ? Math.floor(n / 5) * 5 : n);
+
 export const AI_BUDGET_EXAMPLES: Record<PlanId, string> = {
-  free: 'About 3 full AI plans, or around 100 quick lookups.',
-  grower: 'About 30 full AI plans, or 20 web lookups plus daily quick help.',
+  free: `About ${fullPlansFor(PLANS.free.aiMonthlyUsd)} full AI plans a month (more in your first 30 days), or around 100 quick lookups.`,
+  grower: `About ${roundDownTo5(fullPlansFor(PLANS.grower.aiMonthlyUsd))} full AI plans, or 20 web lookups plus daily quick help.`,
   farm: 'Heavy daily use, receipt scans included.'
 };

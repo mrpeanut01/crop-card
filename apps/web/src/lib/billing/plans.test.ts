@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { DEFAULT_AI_DAILY_QUOTA, type AiEndpointName } from '$lib/schedule/constants';
 import {
+  AI_BUDGET_EXAMPLES,
+  AI_PLAN_RESERVE_USD,
   AI_RESERVE_USD,
+  TYPICAL_PLAN_USD,
+  fullPlansFor,
   PAST_DUE_GRACE_DAYS,
   PLANS,
   PLAN_IDS,
@@ -307,5 +311,26 @@ describe('Stripe price mapping', () => {
     expect(planForPriceId(prices, 'p_other')).toBeNull();
     expect(planForPriceId(prices, null)).toBeNull();
     expect(priceIdFor({ ...prices, farmAnnual: null }, 'farm', 'year')).toBeNull();
+  });
+});
+
+describe('plan copy matches what the guard allows', () => {
+  it('a full plan starts only while spend plus the planning reserve fits', () => {
+    expect(AI_PLAN_RESERVE_USD).toBe(AI_RESERVE_USD.allocate);
+    const budget = PLANS.free.aiMonthlyUsd;
+    const n = fullPlansFor(budget);
+    expect((n - 1) * TYPICAL_PLAN_USD + AI_RESERVE_USD.allocate).toBeLessThanOrEqual(budget);
+    expect(n * TYPICAL_PLAN_USD + AI_RESERVE_USD.allocate).toBeGreaterThan(budget);
+  });
+
+  it('the Free card promises 2 full plans, not 3', () => {
+    expect(fullPlansFor(PLANS.free.aiMonthlyUsd)).toBe(2);
+    expect(AI_BUDGET_EXAMPLES.free).toContain('About 2 full AI plans');
+    expect(AI_BUDGET_EXAMPLES.free).not.toContain('About 3');
+  });
+
+  it('the Grower card never promises more plans than fit', () => {
+    const claimed = Number(AI_BUDGET_EXAMPLES.grower.match(/About (\d+)/)?.[1]);
+    expect(claimed).toBeLessThanOrEqual(fullPlansFor(PLANS.grower.aiMonthlyUsd));
   });
 });

@@ -5,9 +5,16 @@ import { db } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { runWithTenant, runWithTenantAsync } from '$lib/db/tenant';
 import { addAssignment } from '$lib/db/users';
-import { getEmailPrefsForUser, listConsentHistoryForUser, optIn } from '$lib/db/emailAlertConsents';
+import {
+  getEmailPrefsForUser,
+  listConsentHistoryForUser,
+  optIn,
+  optOut
+} from '$lib/db/emailAlertConsents';
 import { isEmailSuppressed, recordSuppression } from '$lib/db/contactSuppressions';
 import { clearOutbox, readOutbox } from '$lib/server/email';
+import { testEmailLimiter } from '$lib/server/testEmailLimit';
+import { createSendLimiter } from '$lib/server/sendLimiter';
 import { signPingramPayload } from '$lib/server/pingramWebhook';
 import { signUnsubscribeToken, type UnsubscribeScope } from '$lib/server/emailUnsubscribe';
 import type { AuthenticatedUser } from '$lib/server/auth';
@@ -150,6 +157,35 @@ describe('POST /api/email/test', () => {
     expect(mail.headers['List-Unsubscribe']).toMatch(/\/api\/email\/unsubscribe\?t=u1\./);
     expect(mail.body).toContain('/unsubscribe/u1.');
   });
+
+  it('stops after three test emails an hour with a plain 429', async () => {
+    testEmailLimiter.reset();
+    const { user, ownerId, userId } = seed();
+    runWithTenant(ownerId, () => optIn(userId, 'decon-due', { source: 'settings' }));
+    for (let i = 0; i < 3; i++) {
+      expect((await call(() => testPost(apiEvent(user)), ownerId)).status).toBe(200);
+    }
+    const blocked = await call(() => testPost(apiEvent(user)), ownerId);
+    expect(blocked.status).toBe(429);
+    expect(JSON.stringify(blocked.body)).toContain('Try again in an hour');
+    expect(readOutbox(user.email!)).toHaveLength(3);
+  });
+});
+
+describe('createSendLimiter', () => {
+  it('holds each window separately and frees up as time passes', () => {
+    const lim = createSendLimiter([
+      { ms: 1000, max: 2 },
+      { ms: 10_000, max: 3 }
+    ]);
+    expect(lim.tryTake('a', 0)).toBe(true);
+    expect(lim.tryTake('a', 1)).toBe(true);
+    expect(lim.tryTake('a', 2)).toBe(false);
+    expect(lim.tryTake('b', 2)).toBe(true);
+    expect(lim.tryTake('a', 1500)).toBe(true);
+    expect(lim.tryTake('a', 3000)).toBe(false);
+    expect(lim.tryTake('a', 11_000)).toBe(true);
+  });
 });
 
 describe('RFC 8058 one-click endpoint', () => {
@@ -279,6 +315,33 @@ describe('/unsubscribe/[token] page', () => {
     const res = await run('unsubscribe', pageEvent(token, { everything: '1' }));
     expect((res as { turnedOff: string[] }).turnedOff.sort()).toEqual([...scopes].sort());
     expect(runWithTenant(other, () => getEmailPrefsForUser(userId))['decon-due']).toBe(true);
+  });
+
+  it('an old link cannot restart mail after the undo window or clear a provider unsubscribe', async () => {
+    const { ownerId, userId } = seed();
+    runWithTenant(ownerId, () => optIn(userId, 'decon-due', { source: 'settings' }));
+    const token = signUnsubscribeToken({ userId, ownerId, scope: 'decon-due' });
+    runWithTenant(ownerId, () =>
+      optOut(userId, 'decon-due', { source: 'one-click', at: Date.now() - 20 * 60_000 })
+    );
+    expect(await run('resubscribe', pageEvent(token, { category: 'decon-due' }))).toMatchObject({
+      status: 400
+    });
+    expect(runWithTenant(ownerId, () => getEmailPrefsForUser(userId))['decon-due']).toBe(false);
+
+    runWithTenant(ownerId, () => optIn(userId, 'decon-due', { source: 'settings' }));
+    runWithTenant(ownerId, () => optOut(userId, 'decon-due', { source: 'settings' }));
+    expect(await run('resubscribe', pageEvent(token, { category: 'decon-due' }))).toMatchObject({
+      status: 400
+    });
+  });
+
+  it('asks for a choice when nothing was picked', async () => {
+    const { ownerId, userId } = seed();
+    const token = signUnsubscribeToken({ userId, ownerId, scope: 'all' });
+    const res = await run('resubscribe', pageEvent(token));
+    expect(res).toMatchObject({ status: 400 });
+    expect((res as { data: { error: string } }).data.error).toContain('Pick at least one');
   });
 
   it('refuses a forged token and re-subscribing someone who left the farm', async () => {

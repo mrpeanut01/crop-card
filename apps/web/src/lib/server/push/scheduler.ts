@@ -49,7 +49,7 @@ import {
 } from './triggers';
 import type { VapidConfig } from './webPush';
 
-const SKIPPED_BILLING = new Set(['suspended', 'canceled']);
+const SKIPPED_BILLING = new Set(['suspended']);
 
 export interface PushTickDeps {
   /** null when push is not configured; alerts can still go by email. */

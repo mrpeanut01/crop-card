@@ -19,7 +19,8 @@ vi.mock('@anthropic-ai/sdk', () => ({
 vi.mock('$lib/server/scanResult', () => ({ getApiKey: m.getApiKey }));
 vi.mock('$lib/server/aiGuard', async (orig) => ({
   ...(await orig<typeof import('$lib/server/aiGuard')>()),
-  checkGuard: m.checkGuard
+  checkGuard: m.checkGuard,
+  reserveGuard: m.checkGuard
 }));
 vi.mock('$lib/server/auth', () => {
   const user = () => ({ id: 'photo-help-user', role: m.role });
@@ -360,13 +361,21 @@ describe('POST /api/plantings/[id]/photo-help', () => {
   it.each([
     [
       'over-cap',
-      { ok: false, reason: 'cap-exceeded', status: 402, message: 'cap' },
-      /spending cap/
+      {
+        ok: false,
+        reason: 'cap-exceeded',
+        status: 402,
+        message: 'cap',
+        detail: 'monthly-budget',
+        plan: 'free',
+        upgrade: 'grower'
+      },
+      /^This month's AI help for your farm is used up/
     ],
     [
       'rate-limit',
       { ok: false, reason: 'quota-exceeded', status: 429, message: 'quota' },
-      /today's limit for photo help/
+      /Today's AI help for photos is used up/
     ]
   ])('skips Claude when the guard says %s', async (reason, guard, copy) => {
     m.getApiKey.mockReturnValue('sk-test');

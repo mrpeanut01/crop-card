@@ -36,7 +36,11 @@ vi.mock('$lib/server/aiAllocation', () => ({
   allocate: m.allocate,
   allocateDeterministic: m.allocateDeterministic
 }));
-vi.mock('$lib/server/aiGuard', () => ({ checkGuard: m.checkGuard, recordCall: m.recordCall }));
+vi.mock('$lib/server/aiGuard', () => ({
+  checkGuard: m.checkGuard,
+  reserveGuard: m.checkGuard,
+  recordCall: m.recordCall
+}));
 vi.mock('$lib/server/scanResult', () => ({ getApiKey: m.getApiKey }));
 
 import { POST } from './+server';

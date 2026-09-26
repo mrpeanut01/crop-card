@@ -47,16 +47,26 @@ function activePlan() {
 }
 
 /** The owner may lower their AI budget or a daily limit, never raise it
- *  past what their plan includes. */
+ *  past what their plan includes. Only a real reduction is stored, so a
+ *  limit typed on a lower plan never holds a farm back after it upgrades. */
 function clampQuota(v: Record<string, number>): Partial<Record<AiEndpointName, number>> {
   const plan = activePlan();
   const out: Partial<Record<AiEndpointName, number>> = {};
   for (const key of Object.keys(DEFAULT_AI_DAILY_QUOTA) as AiEndpointName[]) {
     const n = v[key];
     if (typeof n !== 'number') continue;
-    out[key] = plan ? Math.min(n, plan.dailyQuota[key]) : n;
+    if (plan && n >= plan.dailyQuota[key]) continue;
+    out[key] = n;
   }
   return out;
+}
+
+/** null = the full plan budget (the setting is removed). */
+function monthlyCapSetting(value: unknown): string | null {
+  const n = z.number().min(0).max(10_000).parse(value);
+  const plan = activePlan();
+  if (plan && n >= plan.aiMonthlyUsd) return null;
+  return String(n);
 }
 
 const latLonSchema = z.object({
@@ -68,11 +78,6 @@ function validateAndSerialize(key: SettingKey, value: unknown): string {
   if (key === 'anthropic_api_key') {
     const s = z.string().min(1).max(500).parse(value);
     return s.trim();
-  }
-  if (key === SETTINGS_KEYS.aiMonthlyUsdCap) {
-    const n = z.number().min(0).max(10_000).parse(value);
-    const plan = activePlan();
-    return String(plan ? Math.min(n, plan.aiMonthlyUsd) : n);
   }
   if (key === SETTINGS_KEYS.aiDailyCallQuota) {
     const v = quotaSchema.parse(value);
@@ -119,13 +124,17 @@ export async function POST(event) {
     error(400, 'invalid key');
   }
   const key = body.key as SettingKey;
-  let serialized: string;
+  let serialized: string | null;
   try {
-    serialized = validateAndSerialize(key, body.value);
+    serialized =
+      key === SETTINGS_KEYS.aiMonthlyUsdCap
+        ? monthlyCapSetting(body.value)
+        : validateAndSerialize(key, body.value);
   } catch (e) {
     error(400, e instanceof Error ? e.message : 'invalid value');
   }
-  setSetting(key, serialized);
+  if (serialized === null) deleteSetting(key);
+  else setSetting(key, serialized);
   const frostField = FROST_FIELD_BY_KEY[key];
   if (frostField) markFrostField(frostField, 'manual');
   return json({ ok: true });

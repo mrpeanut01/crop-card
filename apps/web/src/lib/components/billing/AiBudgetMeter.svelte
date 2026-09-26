@@ -12,7 +12,7 @@
 
   const pct = $derived(Math.round(Math.min(1, usage.pctUsed) * 100));
   const level = $derived(
-    usage.aiOff ? 'off' : usage.exhausted ? 'out' : usage.warnAt80 ? 'low' : 'ok'
+    usage.aiOff ? 'off' : usage.exhausted ? 'out' : usage.warnAt80 || usage.quickOnly ? 'low' : 'ok'
   );
   const upgradeName = $derived(usage.upgrade ? PLANS[usage.upgrade].name : null);
   const money = (n: number) => (n < 10 ? `$${n.toFixed(2)}` : formatUsd(n));
@@ -52,6 +52,19 @@
       You've used this month's AI help. CropCard keeps working without it and it resets on the 1st.
     </p>
     {#if upgradeName && showUpsell}
+      {#if isOwner}
+        <a class="upsell" href="/settings/billing" data-testid="ai-upsell">
+          More AI on {upgradeName}
+        </a>
+      {:else}
+        <p class="note">Ask the farm owner about more AI on {upgradeName}.</p>
+      {/if}
+    {/if}
+  {:else if usage.quickOnly}
+    <p class="note" data-testid="ai-low-note">
+      Enough left for quick help, not a full AI plan. Plans work without AI until the 1st.
+    </p>
+    {#if upgradeName && showUpsell && !compact}
       {#if isOwner}
         <a class="upsell" href="/settings/billing" data-testid="ai-upsell">
           More AI on {upgradeName}

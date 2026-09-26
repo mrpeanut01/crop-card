@@ -6,6 +6,7 @@ import { dispatchEmail } from '$lib/server/email';
 import { farmNameForOwner } from '$lib/server/emailPrefs';
 import { unsubscribeLinks } from '$lib/server/emailUnsubscribe';
 import { magicLinkOrigin } from '$lib/server/magicLink';
+import { testEmailLimiter } from '$lib/server/testEmailLimit';
 
 /** POST — send the signed-in user one test alert email. Only once they have
  *  opted in to at least one alert kind on this farm. */
@@ -25,6 +26,9 @@ export const POST: RequestHandler = async (event) => {
     origin = magicLinkOrigin(event.url.origin);
   } catch {
     throw error(503, "Email links aren't configured on this server");
+  }
+  if (!testEmailLimiter.tryTake(u.id)) {
+    throw error(429, "That's enough test emails for now. Try again in an hour.");
   }
   try {
     await dispatchEmail({

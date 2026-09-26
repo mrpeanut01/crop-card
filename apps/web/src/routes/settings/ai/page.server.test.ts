@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { db } from '$lib/db/client';
 import { aiCallLog, owners, users } from '$lib/db/schema';
 import { runWithTenant, tenantValues } from '$lib/db/tenant';
 import { recordCall } from '$lib/server/aiGuard';
-import { load } from './+page.server';
+import { actions, load } from './+page.server';
 
 function seed(): { ownerId: string; userId: string } {
   const ownerId = `sai-owner-${randomUUID().slice(0, 8)}`;
@@ -79,5 +79,39 @@ describe('/settings/ai recent calls', () => {
     expect(times[0]).toBe(base + 59 * 1000);
     expect(times[49]).toBe(base + 10 * 1000);
     expect(times).toEqual([...times].sort((a, b) => b - a));
+  });
+});
+
+describe('/settings/ai on a hosted key', () => {
+  const saved = process.env.ANTHROPIC_API_KEY;
+  afterEach(() => {
+    if (saved === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = saved;
+  });
+
+  it('never sends any part of the operator key to a farm', () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-operator-secret-e2e';
+    const { ownerId, userId } = seed();
+    const data = runWithTenant(ownerId, () =>
+      load({
+        locals: { user: { id: userId, role: 'owner', activeOwnerId: ownerId } }
+      } as never)
+    ) as { key: { source: string; masked: string } };
+    expect(data.key).toEqual({ source: 'env', masked: '' });
+    expect(JSON.stringify(data)).not.toContain('sk-ant');
+  });
+
+  it('refuses to save a farm key that the hosted key would override', async () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-operator-secret-e2e';
+    const { ownerId, userId } = seed();
+    const body = new FormData();
+    body.set('apiKey', 'sk-ant-farm-key');
+    const res = await runWithTenant(ownerId, () =>
+      actions.saveKey({
+        locals: { user: { id: userId, role: 'owner', activeOwnerId: ownerId } },
+        request: new Request('http://localhost/settings/ai?/saveKey', { method: 'POST', body })
+      } as never)
+    );
+    expect(res).toMatchObject({ status: 400 });
   });
 });

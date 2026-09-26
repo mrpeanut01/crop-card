@@ -1854,6 +1854,8 @@
   }
 </script>
 
+<svelte:head><title>Plan · CropCard</title></svelte:head>
+
 <!--
   Page heading + lede are visually hidden — the active tab in the
   primary top nav (Phase 21b follow-up styling) carries the same

@@ -1,3 +1,4 @@
+import type { AiLimit } from '$lib/billing/aiLimit';
 /**
  * Request and response shapes for the garden designer's writes. Beds use the
  * existing /api/blocks endpoints; plantings, successions, recipes and "Fill
@@ -139,6 +140,8 @@ export interface FillResponse {
   fallbackReason: 'no-key' | 'over-cap' | 'offline' | 'rate-limit' | 'timeout' | null;
   /** Plain line for the banner, e.g. why Claude was skipped. */
   message: string | null;
+  /** Set when the farm's AI allowance stopped the call, for the upgrade nudge. */
+  aiLimit?: AiLimit | null;
 }
 
 export interface GardenErrorResponse {

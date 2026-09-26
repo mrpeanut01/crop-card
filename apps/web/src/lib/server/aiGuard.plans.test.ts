@@ -122,6 +122,27 @@ describe('monthly budget comes from the plan', () => {
   });
 });
 
+describe('the meter agrees with the guard', () => {
+  it('$0.99 of $1.00 reads as used up, because no feature can start', () => {
+    const f = farm(null, { young: true });
+    spend(f.ownerId, f.userId, 0.99);
+    runWithTenant(f.ownerId, () => {
+      expect(checkGuard(f.userId, 'suggest').ok).toBe(false);
+      expect(spendSnapshot()).toMatchObject({ exhausted: true, cap: 1, upgrade: 'grower' });
+    });
+  });
+
+  it('with less left than a full plan needs, the meter says quick help only', () => {
+    const f = farm(null);
+    spend(f.ownerId, f.userId, 0.3);
+    runWithTenant(f.ownerId, () => {
+      expect(checkGuard(f.userId, 'allocate').ok).toBe(false);
+      expect(checkGuard(f.userId, 'suggest').ok).toBe(true);
+      expect(spendSnapshot()).toMatchObject({ exhausted: false, quickOnly: true });
+    });
+  });
+});
+
 describe('reserve before each call', () => {
   it('refuses a call whose worst case would overshoot the budget', () => {
     const f = farm('grower');

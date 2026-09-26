@@ -1074,7 +1074,7 @@ export async function claudeReceiptScanStreaming(
   base64Image: string,
   mediaType: 'image/jpeg' | 'image/png' | 'application/pdf',
   send: (event: ReceiptStreamEvent) => void,
-  lineAllowed: (receiptUsdSoFar: number) => boolean = () => true
+  reserveLine: (receiptUsdSoFar: number) => (() => void) | null = () => () => {}
 ): Promise<{ proposed: ReceiptProposal[]; meta: AiResultMeta }> {
   const apiKey = getApiKey();
   if (!apiKey) {
@@ -1130,7 +1130,8 @@ export async function claudeReceiptScanStreaming(
       rawText: line.rawText
     });
 
-    if (!lineAllowed(aggregateMeta.usdEstimate)) {
+    const releaseLine = reserveLine(aggregateMeta.usdEstimate);
+    if (!releaseLine) {
       proposed.push({ lineIndex: i, line, candidate: null });
       send({
         phase: 'enriched',
@@ -1168,6 +1169,8 @@ export async function claudeReceiptScanStreaming(
         lineIndex: i,
         candidate: null
       });
+    } finally {
+      releaseLine();
     }
   }
 

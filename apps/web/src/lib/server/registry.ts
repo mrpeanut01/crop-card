@@ -10,10 +10,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadPluginsFromDirectory, PluginRegistry } from '$lib/plugins';
+import { loadBedRecipes, type BedRecipeRegistry } from '$lib/plugins/bedRecipes';
 import { currentOwnerId } from '$lib/db/tenant';
 import { HIDDEN_PAYLOAD, listEffectiveOverrides, overridesRevision } from '$lib/db/pluginOverrides';
 
 let cached: { registry: PluginRegistry; loadedAt: number; failures: string[] } | null = null;
+let cachedRecipes: BedRecipeRegistry | null = null;
 const ownerViews = new Map<string, { key: string; registry: PluginRegistry }>();
 
 function pluginsDir(): string {
@@ -77,5 +79,25 @@ export function getRegistryStats(): { loadedAt?: number; failures: string[] } {
  *  the plugin authoring + upload flows after writing a new file to disk. */
 export function resetRegistry(): void {
   cached = null;
+  cachedRecipes = null;
   ownerViews.clear();
+}
+
+/** Bed recipes from plugins/bed-recipes/, each checked against the shared
+ *  crop library. An Owner's retired crops are handled when a recipe is
+ *  applied (that step is skipped), not here. */
+export async function getBedRecipes(): Promise<BedRecipeRegistry> {
+  if (cachedRecipes) return cachedRecipes;
+  const base = await getBaseRegistry();
+  const { registry, failed } = await loadBedRecipes(pluginsDir(), {
+    isCrop: (id) => base.get(id)?.plugin.type === 'crop'
+  });
+  if (failed.length > 0) {
+    console.warn(
+      '[registry] some bed recipes failed to load:',
+      failed.map((f) => `${path.basename(f.file)}: ${f.error.message}`)
+    );
+  }
+  cachedRecipes = registry;
+  return registry;
 }

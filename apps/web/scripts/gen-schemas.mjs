@@ -19,6 +19,7 @@
  *   schemas/fungicide.schema.json       (newly generated; previously missing)
  *   schemas/fertilizer.schema.json      (newly generated; previously missing)
  *   schemas/companion.schema.json
+ *   schemas/bed-recipe.schema.json      (Phase 30E, plugins/bed-recipes/)
  *
  * Each file is written with a stable `$id` URL and a top-level description
  * pointing back to the Zod source. The schemas are emitted as JSON Schema
@@ -39,7 +40,8 @@ import {
   insecticidePluginSchema,
   fungicidePluginSchema,
   fertilizerPluginSchema,
-  companionPluginSchema
+  companionPluginSchema,
+  bedRecipePluginSchema
 } from '../src/lib/plugins/schemas.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -90,6 +92,13 @@ const TARGETS = [
     title: 'CropCard Companion Plugin',
     description:
       'Data-only companion-planting definition (goodWith / badWith / member-system). Mirrors apps/web/src/lib/plugins/schemas.ts (companionPluginSchema).'
+  },
+  {
+    file: 'bed-recipe.schema.json',
+    schema: bedRecipePluginSchema,
+    title: 'CropCard Bed Recipe Plugin',
+    description:
+      'Data-only garden bed recipe: a timed sequence of crops that fills one bed, anchored to the last spring frost, the first fall frost or the end of an earlier step. Every cropPluginId and alternate must name a registered crop plugin. Loaded from plugins/bed-recipes/. Mirrors packages/plugin-validation/src/schemas.ts (bedRecipePluginSchema).'
   }
 ];
 

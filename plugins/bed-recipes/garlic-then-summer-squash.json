@@ -1,0 +1,41 @@
+{
+  "pluginId": "garlic-then-summer-squash",
+  "type": "bed-recipe",
+  "displayName": "Garlic, then summer squash",
+  "version": "1.0.0",
+  "description": "Garlic planted the fall before fills the bed until early summer. Zucchini goes in right after the garlic comes out and bears until frost.",
+  "bedSize": {
+    "widthFt": 4,
+    "lengthFt": 8
+  },
+  "frostFreeDays": {
+    "min": 155
+  },
+  "steps": [
+    {
+      "cropPluginId": "garlic-music-hardneck",
+      "alternates": [
+        "garlic-german-extra-hardy",
+        "garlic-spanish-roja-hardneck"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": -180
+      },
+      "note": "Planted the fall before, about six months ahead of the last spring frost."
+    },
+    {
+      "cropPluginId": "zucchini-black-beauty",
+      "alternates": [
+        "summer-squash-yellow-crookneck",
+        "summer-squash-pattypan-yellow"
+      ],
+      "start": {
+        "anchor": "after-step",
+        "afterStep": 0,
+        "offsetDays": 0
+      },
+      "note": "Goes in as soon as the garlic is lifted."
+    }
+  ]
+}

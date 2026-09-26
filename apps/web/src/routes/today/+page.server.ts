@@ -177,7 +177,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       herbicides: registry.herbicides().length,
       pluginFailures: stats.failures.length,
       blocks: blocks.length,
-      activeCrops: activeCrops.length
+      activeCrops: activeCrops.length,
+      plantings: totalPlantings
     },
     sprayers,
     farmProfile: getFarmProfile(),
@@ -191,6 +192,13 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     plantingNames,
     equipmentLabels: Object.fromEntries(listEquipment().map((e) => [e.id, e.label])),
     activeCrops,
+    seasonCrops: blocks.flatMap((b) =>
+      b.plantings.map((p) => ({
+        id: p.id,
+        varietyDisplayName: p.varietyDisplayName,
+        blockId: b.id
+      }))
+    ),
     // #280 — lift `category` into the projection so the /today template
     // can resolve a /inventory/[type]/[id] link via the canonical
     // STOCK_CATEGORY_TO_INVENTORY_TYPE map (no 308-redirect RTT).

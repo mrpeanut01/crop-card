@@ -153,7 +153,12 @@ test.describe('Care Guide and photo help', () => {
     await help.getByLabel('Add a note').fill('Staked and tied today');
     await help.getByRole('button', { name: 'Save note' }).click();
     await expect(entries.locator('li')).toHaveCount(2);
-    await entries.locator('li').first().getByRole('button', { name: 'Delete' }).click();
+    const newest = entries.locator('li').first();
+    await newest.getByRole('button', { name: 'Delete…' }).click();
+    await newest.getByRole('button', { name: 'Cancel' }).click();
+    await expect(entries.locator('li')).toHaveCount(2);
+    await newest.getByRole('button', { name: 'Delete…' }).click();
+    await newest.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(entries.locator('li')).toHaveCount(1);
 
     await noHorizontalOverflow(page);
@@ -184,9 +189,20 @@ test.describe('Care Guide and photo help', () => {
     await expect(answer).toContainText('No signal right now');
     await expect(answer).toContainText('Stake and prune');
     await expect(answer.getByText('Will save when online')).toBeVisible();
+    await expect(help.getByTestId('journal-queued')).toContainText('Where do I prune?');
+    await expect(help.getByRole('button', { name: 'Where do I prune?' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+    await expect(help.getByRole('button', { name: 'Ask' })).toBeDisabled();
     await noHorizontalOverflow(page);
 
     await context.setOffline(false);
+    await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await expect(help.getByTestId('journal-queued')).toHaveCount(0, { timeout: 20_000 });
+    await expect(help.getByTestId('journal-entries').locator('li')).toHaveCount(1, {
+      timeout: 20_000
+    });
     await page.reload();
     await expect(page.getByTestId('photo-help').getByTestId('journal-entries')).toContainText(
       'Where do I prune?',
@@ -208,7 +224,7 @@ test.describe('Care Guide and photo help', () => {
     await expect(answer).toContainText('For anything you would spray, use the Spray flow');
     await expect(answer.getByRole('link', { name: 'Open the Spray flow' })).toBeVisible();
     await expect(help.getByTestId('journal-entries').locator('li')).toHaveCount(1);
-    await expect(help.getByRole('button', { name: 'Delete' })).toHaveCount(0);
+    await expect(help.getByRole('button', { name: /^Delete/ })).toHaveCount(0);
     await helper.context().close();
   });
 });

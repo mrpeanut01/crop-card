@@ -1,4 +1,4 @@
-import { ymdInZone } from '$lib/prefs';
+import { dueYmd, ymdInZone } from '$lib/prefs';
 import type { PillTone } from '$lib/styles/tokens';
 
 export const TASK_STATUSES = ['late', 'due-today', 'planned', 'done', 'skipped'] as const;
@@ -33,14 +33,15 @@ function isSet(v: number | null | undefined): v is number {
 
 /**
  * Derived, never stored. Done and skipped come from the closing stamps;
- * an open task compares its calendar day with today's, both in the
- * owner's time zone, so a 23:30 task is still "due today" at 23:59 and
- * "late" one minute later, whatever the clocks did overnight.
+ * an open task compares its due day (`dueYmd`: a date-only task keeps its
+ * stored day, a timed one falls in the owner's zone) with today's in the
+ * owner's zone, so a 23:30 task is still "due today" at 23:59 and "late"
+ * one minute later, whatever the clocks did overnight.
  */
 export function deriveTaskStatus(task: TaskStatusInput, now: number, timeZone: string): TaskStatus {
   if (isSet(task.completedAt)) return 'done';
   if (isSet(task.abortedAt)) return 'skipped';
-  const due = ymdInZone(task.scheduledFor, timeZone);
+  const due = dueYmd(task.scheduledFor, timeZone);
   const today = ymdInZone(now, timeZone);
   if (due < today) return 'late';
   if (due === today) return 'due-today';

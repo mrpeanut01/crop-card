@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { ymdInZone } from '$lib/prefs';
+import { dueYmd, ymdInZone } from '$lib/prefs';
 import {
   TASK_STATUSES,
   TASK_STATUS_LABEL,
@@ -86,6 +86,41 @@ describe('deriveTaskStatus', () => {
     expect(deriveTaskStatus(t, at('2026-06-04T18:40:00Z'), 'Asia/Kathmandu')).toBe('due-today');
   });
 
+  it('a date-only task (stored at UTC midnight) is due on its own day in a US zone', () => {
+    const morning = at('2026-06-04T14:00:00Z');
+    expect(deriveTaskStatus({ scheduledFor: Date.parse('2026-06-04') }, morning, NY)).toBe(
+      'due-today'
+    );
+    expect(deriveTaskStatus({ scheduledFor: Date.parse('2026-06-05') }, morning, NY)).toBe(
+      'planned'
+    );
+    expect(deriveTaskStatus({ scheduledFor: Date.parse('2026-06-03') }, morning, NY)).toBe('late');
+    const lateEvening = at('2026-06-05T03:30:00Z');
+    expect(deriveTaskStatus({ scheduledFor: Date.parse('2026-06-04') }, lateEvening, NY)).toBe(
+      'due-today'
+    );
+  });
+
+  it('property: a date-only task is due today on its own day in every zone', () => {
+    const zones = ['UTC', NY, 'America/Los_Angeles', 'Pacific/Auckland', 'Asia/Kolkata'];
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 700 }),
+        fc.integer({ min: 0, max: 86_399_999 }),
+        fc.constantFrom(...zones),
+        (dayOffset, msIntoDay, tz) => {
+          const day = at('2026-01-01T00:00:00Z') + dayOffset * 86_400_000;
+          const ymd = new Date(day).toISOString().slice(0, 10);
+          const nowMs = day + msIntoDay;
+          const status = deriveTaskStatus({ scheduledFor: day }, nowMs, tz);
+          const today = ymdInZone(nowMs, tz);
+          expect(status).toBe(ymd < today ? 'late' : ymd === today ? 'due-today' : 'planned');
+        }
+      ),
+      { numRuns: 300 }
+    );
+  });
+
   it('property: open status matches the calendar-day comparison in any zone', () => {
     const zones = ['UTC', NY, 'America/Los_Angeles', 'Pacific/Auckland', 'Asia/Kolkata'];
     const lo = at('2026-01-01T00:00:00Z');
@@ -97,7 +132,7 @@ describe('deriveTaskStatus', () => {
         fc.constantFrom(...zones),
         (scheduledFor, nowMs, tz) => {
           const s = deriveTaskStatus({ scheduledFor }, nowMs, tz);
-          const due = ymdInZone(scheduledFor, tz);
+          const due = dueYmd(scheduledFor, tz);
           const today = ymdInZone(nowMs, tz);
           expect(s).toBe(due < today ? 'late' : due === today ? 'due-today' : 'planned');
           expect(isClosedStatus(s)).toBe(false);

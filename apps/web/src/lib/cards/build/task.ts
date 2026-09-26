@@ -1,4 +1,4 @@
-import { DEFAULT_PREFS, formatInstant } from '$lib/prefs';
+import { DEFAULT_PREFS, formatDueDay, formatInstant } from '$lib/prefs';
 import { labelForTaskCategory, type TaskCategory } from '$lib/plan/taskCategory';
 import {
   TASK_STATUS_LABEL,
@@ -63,7 +63,7 @@ const KIND_KICKER: Record<NonNullable<TaskCardInput['kind']>, string> = {
 };
 
 function whenText(task: TaskCardInput, status: TaskStatus, opts: ResolvedOptions): string {
-  const day = formatInstant(task.scheduledFor, opts.prefs, 'month-day', { weekday: 'short' });
+  const day = formatDueDay(task.scheduledFor, opts.prefs, 'month-day', { weekday: 'short' });
   switch (status) {
     case 'late':
       return `Was due ${day}`;

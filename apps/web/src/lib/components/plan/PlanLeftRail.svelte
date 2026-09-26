@@ -53,6 +53,7 @@
             variant="compact"
             prefs={currentPrefs()}
             selected={c.areaId === selectedAreaId}
+            factLimit={c.card.facts.length}
             showAsOf={false}
           >
             {#snippet actions()}

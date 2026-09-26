@@ -25,8 +25,9 @@ export class OfflineCards {
     }
   }
 
-  /** Primes this tab's Owner key, loads what is stored, then reloads
-   *  whenever a background refresh lands. With no active Owner it forgets
+  /** Primes this tab's Owner key, loads what is stored, asks for a fresh
+   *  copy when online (a planting added since the page loaded), then reloads
+   *  whenever a refresh lands. With no active Owner it forgets
    *  the tab's key and every stored Card instead, and shows nothing. */
   start(ownerId: string | null | undefined): () => void {
     const onSnapshot = () => void this.load();
@@ -50,8 +51,9 @@ export class OfflineCards {
         /* no storage: nothing to prime */
       }
       await this.load();
-      const { SNAPSHOT_EVENT } = await import('$lib/client/cardSync');
+      const { SNAPSHOT_EVENT, syncCardSnapshot } = await import('$lib/client/cardSync');
       window.addEventListener(SNAPSHOT_EVENT, onSnapshot);
+      if (navigator.onLine !== false) void syncCardSnapshot();
     })();
     return () => {
       import('$lib/client/cardSync')

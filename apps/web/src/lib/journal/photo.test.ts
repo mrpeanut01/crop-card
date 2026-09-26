@@ -50,6 +50,116 @@ describe('stripJpegMetadata', () => {
   });
 });
 
+describe('stripJpegMetadata after the scan', () => {
+  const EXIF_APP1 = [0xff, 0xe1, 0x00, 0x0a, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00, 0x47, 0x50];
+
+  it('drops a second JPEG with its own EXIF appended after the end of the image', () => {
+    const bytes = Uint8Array.from([
+      0xff,
+      0xd8,
+      0xff,
+      0xda,
+      0x00,
+      0x02,
+      0x11,
+      0x22,
+      0xff,
+      0xd9,
+      0xff,
+      0xd8,
+      ...EXIF_APP1,
+      0xff,
+      0xd9
+    ]);
+    const clean = stripJpegMetadata(bytes)!;
+    expect(Array.from(clean)).toEqual([0xff, 0xd8, 0xff, 0xda, 0x00, 0x02, 0x11, 0x22, 0xff, 0xd9]);
+    const res = sanitizePhotoDataUrl(toDataUrl(bytes));
+    expect(res.ok).toBe(true);
+    if (res.ok)
+      expect(text(decodeBase64(res.dataUrl.slice(JPEG_DATA_URL_PREFIX.length))!)).not.toContain(
+        'Exif'
+      );
+  });
+
+  it('drops trailer bytes after the end of the image', () => {
+    const raw = Uint8Array.from([...fakeJpeg(), ...Array.from(Buffer.from(EXIF_SECRET))]);
+    const clean = stripJpegMetadata(raw)!;
+    expect(text(clean)).not.toContain(EXIF_SECRET);
+    expect(clean).toEqual(stripJpegMetadata(fakeJpeg()));
+  });
+
+  it('keeps the tables and scans of a progressive JPEG and drops APPn between scans', () => {
+    const bytes = Uint8Array.from([
+      0xff,
+      0xd8,
+      0xff,
+      0xda,
+      0x00,
+      0x02,
+      0x11,
+      0xff,
+      0x00,
+      0x22,
+      0xff,
+      0xd3,
+      0x33,
+      ...EXIF_APP1,
+      0xff,
+      0xc4,
+      0x00,
+      0x03,
+      0x05,
+      0xff,
+      0xfe,
+      0x00,
+      0x04,
+      0x68,
+      0x69,
+      0xff,
+      0xda,
+      0x00,
+      0x02,
+      0x44,
+      0xff,
+      0xd9
+    ]);
+    const clean = Array.from(stripJpegMetadata(bytes)!);
+    expect(clean).toEqual([
+      0xff, 0xd8, 0xff, 0xda, 0x00, 0x02, 0x11, 0xff, 0x00, 0x22, 0xff, 0xd3, 0x33, 0xff, 0xc4,
+      0x00, 0x03, 0x05, 0xff, 0xda, 0x00, 0x02, 0x44, 0xff, 0xd9
+    ]);
+  });
+
+  it('never keeps an APP1 or comment marker anywhere, whatever follows the scan', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer({ min: 0, max: 255 }), { maxLength: 60 }),
+        fc.boolean(),
+        (tail, exifBetweenScans) => {
+          const base = Array.from(fakeJpeg({ exif: true }));
+          const body = exifBetweenScans
+            ? [...base.slice(0, -2), ...EXIF_APP1, 0xff, 0xda, 0x00, 0x02, 0x10, 0xff, 0xd9]
+            : base;
+          const clean = stripJpegMetadata(Uint8Array.from([...body, ...tail]));
+          if (!clean) return;
+          expect(text(clean)).not.toContain('Exif');
+          const eoi = clean.length - 2;
+          expect([clean[eoi], clean[eoi + 1]]).toEqual([0xff, 0xd9]);
+        }
+      )
+    );
+  });
+
+  it('refuses a photo wider than the phone resize allows', () => {
+    const big = fakeJpeg();
+    const sof = Array.from(big).findIndex((b, i) => b === 0xff && big[i + 1] === 0xc0);
+    const wide = Uint8Array.from(big);
+    wide[sof + 7] = 0x08;
+    wide[sof + 8] = 0x00;
+    expect(sanitizePhotoDataUrl(toDataUrl(wide))).toEqual({ ok: false, error: 'too-large' });
+  });
+});
+
 describe('sanitizePhotoDataUrl', () => {
   it('re-encodes a JPEG without its metadata', () => {
     const res = sanitizePhotoDataUrl(toDataUrl(fakeJpeg({ exif: true })));

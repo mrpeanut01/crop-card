@@ -7,6 +7,9 @@
     kind: 'pre-task' | 'post-task';
     status: TaskStatus;
     queued: boolean;
+    /** The linked task's due day, already formatted. */
+    due?: string | null;
+    body?: string | null;
   }
 </script>
 
@@ -61,7 +64,14 @@
 </script>
 
 <div class="deck-card" data-task-id={taskId} data-status={status}>
-  <CardView {card} variant="compact" {prefs} {now}>
+  <CardView
+    {card}
+    variant="compact"
+    {prefs}
+    {now}
+    factLimit={card.facts.length}
+    compactSections={['Notes']}
+  >
     {#snippet badges()}
       {#if queued}<QueuedBadge />{/if}
       {#if rejected}
@@ -78,7 +88,9 @@
             <li data-task-id={l.id} data-status={l.status}>
               <span class="linked-kind">{l.kind === 'pre-task' ? 'Get ready' : 'Follow-up'}</span>
               <span class="linked-title">{l.title}</span>
+              {#if l.due}<span class="linked-due">{l.due}</span>{/if}
               <Pill tone={TASK_STATUS_TONE[l.status]}>{TASK_STATUS_LABEL[l.status]}</Pill>
+              {#if l.body?.trim()}<p class="linked-body">{l.body.trim()}</p>{/if}
               {#if l.queued}<QueuedBadge />{/if}
               {#if canAct && l.status !== 'done' && l.status !== 'skipped'}
                 <button
@@ -212,6 +224,16 @@
   .linked-title {
     flex: 1 1 8rem;
     min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .linked-due {
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-soft);
+  }
+  .linked-body {
+    flex: 1 0 100%;
+    margin: 0;
+    color: var(--color-ink-soft);
     overflow-wrap: anywhere;
   }
   .rejected {

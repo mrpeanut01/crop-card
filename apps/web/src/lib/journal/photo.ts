@@ -36,11 +36,55 @@ function isDroppedMarker(marker: number): boolean {
   return (marker >= 0xe1 && marker <= 0xef) || marker === 0xfe;
 }
 
+function isSofMarker(marker: number): boolean {
+  return marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+}
+
+/** End of the entropy-coded data that starts at `from`: the index of the
+ *  next real marker, skipping byte stuffing, fill bytes and restart markers. */
+function scanEnd(bytes: Uint8Array, from: number): number {
+  let k = from;
+  while (k < bytes.length) {
+    if (bytes[k] !== 0xff) {
+      k++;
+      continue;
+    }
+    const next = bytes[k + 1];
+    if (next === undefined) return bytes.length;
+    if (next === 0x00 || (next >= 0xd0 && next <= 0xd7)) {
+      k += 2;
+      continue;
+    }
+    if (next === 0xff) {
+      k++;
+      continue;
+    }
+    return k;
+  }
+  return bytes.length;
+}
+
 /** Copies a JPEG without APP1-APP15 (EXIF, XMP, ICC, maker notes) and
- *  comment segments. Null when the bytes are not a well-formed JPEG. */
+ *  comment segments, anywhere in the file, and drops everything after the
+ *  first end-of-image marker. Null when the bytes are not a well-formed
+ *  JPEG. */
 export function stripJpegMetadata(bytes: Uint8Array): Uint8Array | null {
+  return walkJpeg(bytes)?.clean ?? null;
+}
+
+/** The largest frame size a JPEG declares, or null when it declares none. */
+export function jpegDimensions(bytes: Uint8Array): { width: number; height: number } | null {
+  return walkJpeg(bytes)?.size ?? null;
+}
+
+function walkJpeg(
+  bytes: Uint8Array
+): { clean: Uint8Array; size: { width: number; height: number } | null } | null {
   if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
   const parts: Uint8Array[] = [bytes.subarray(0, 2)];
+  let width = 0;
+  let height = 0;
+  let sawFrame = false;
   let i = 2;
   while (i < bytes.length) {
     if (bytes[i] !== 0xff) return null;
@@ -64,10 +108,16 @@ export function stripJpegMetadata(bytes: Uint8Array): Uint8Array | null {
     if (len < 2) return null;
     const end = j + 1 + len;
     if (end > bytes.length) return null;
+    if (isSofMarker(marker) && len >= 7) {
+      sawFrame = true;
+      height = Math.max(height, (bytes[j + 4] << 8) | bytes[j + 5]);
+      width = Math.max(width, (bytes[j + 6] << 8) | bytes[j + 7]);
+    }
     if (marker === 0xda) {
-      parts.push(bytes.subarray(segStart));
-      i = bytes.length;
-      break;
+      const stop = scanEnd(bytes, end);
+      parts.push(bytes.subarray(segStart, stop));
+      i = stop;
+      continue;
     }
     if (!isDroppedMarker(marker)) parts.push(bytes.subarray(segStart, end));
     i = end;
@@ -79,7 +129,7 @@ export function stripJpegMetadata(bytes: Uint8Array): Uint8Array | null {
     out.set(p, o);
     o += p.length;
   }
-  return out;
+  return { clean: out, size: sawFrame ? { width, height } : null };
 }
 
 export function hasJpegMetadata(bytes: Uint8Array): boolean {
@@ -99,8 +149,12 @@ export function sanitizePhotoDataUrl(input: string): PhotoCheck {
   const bytes = decodeBase64(input.slice(JPEG_DATA_URL_PREFIX.length));
   if (!bytes) return { ok: false, error: 'not-jpeg' };
   if (bytes.length > MAX_PHOTO_BYTES) return { ok: false, error: 'too-large' };
-  const clean = stripJpegMetadata(bytes);
-  if (!clean) return { ok: false, error: 'not-jpeg' };
+  const walked = walkJpeg(bytes);
+  if (!walked) return { ok: false, error: 'not-jpeg' };
+  const { clean, size } = walked;
+  if (size && Math.max(size.width, size.height) > MAX_PHOTO_DIM) {
+    return { ok: false, error: 'too-large' };
+  }
   return {
     ok: true,
     dataUrl: JPEG_DATA_URL_PREFIX + encodeBase64(clean),

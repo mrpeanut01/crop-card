@@ -34,7 +34,9 @@
 <Card>
   <h3 class="serif head">Season by crop</h3>
   {#if crops.length === 0}
-    <p class="hint">No active crops yet. Plant a crop on the Plan page to see its season here.</p>
+    <p class="hint">
+      Nothing planted or planned yet. Plan a crop on the Plan page to see its season here.
+    </p>
   {:else}
     <div class="gantt" role="list" aria-label="Crop calendar by planting">
       <div class="axis" aria-hidden="true">

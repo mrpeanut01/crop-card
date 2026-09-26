@@ -4,8 +4,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, waitFor } from '@testing-library/svelte';
 
-const q = vi.hoisted(() => ({ enqueueRecord: vi.fn(async () => 'queued-1') }));
-vi.mock('$lib/client/syncQueue', () => ({ enqueueRecord: q.enqueueRecord }));
+const q = vi.hoisted(() => {
+  const rows: Array<{ id: string; kind: string; payload: unknown; status?: string }> = [];
+  return {
+    rows,
+    enqueueRecord: vi.fn(async (kind: string, payload: unknown) => {
+      const id = `queued-${rows.length + 1}`;
+      rows.push({ id, kind, payload, createdAt: rows.length } as never);
+      return id;
+    }),
+    listPendingForActiveOwner: vi.fn(async () => [...rows])
+  };
+});
+vi.mock('$lib/client/syncQueue', () => ({
+  enqueueRecord: q.enqueueRecord,
+  listPendingForActiveOwner: q.listPendingForActiveOwner
+}));
 
 import PhotoHelp from './PhotoHelp.svelte';
 import CareGuideList from './CareGuideList.svelte';
@@ -45,6 +59,7 @@ beforeEach(() => {
   Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => online });
   fetchMock.mockReset();
   q.enqueueRecord.mockClear();
+  q.rows.length = 0;
   vi.stubGlobal('fetch', fetchMock);
 });
 
@@ -73,6 +88,54 @@ describe('PhotoHelp', () => {
     );
     expect(fetchMock).not.toHaveBeenCalled();
     expect(getByText(/The journal loads when you have signal/)).toBeTruthy();
+    expect(answer.textContent).toContain('Your question will save when you are back online.');
+  });
+
+  it('resets the form after an offline Ask so a second tap does not queue it again', async () => {
+    online = false;
+    const { getByRole, getByLabelText, findByTestId } = render(PhotoHelp, {
+      targets: tomato,
+      role: 'helper'
+    });
+    await fireEvent.click(getByRole('button', { name: "What's wrong with these leaves?" }));
+    await fireEvent.input(getByLabelText('Anything to add?'), {
+      target: { value: 'spots on the bottom' }
+    });
+    await fireEvent.click(getByRole('button', { name: 'Ask' }));
+    await findByTestId('photo-answer');
+    expect(q.enqueueRecord).toHaveBeenCalledTimes(1);
+    expect(
+      getByRole('button', { name: "What's wrong with these leaves?" }).getAttribute('aria-pressed')
+    ).toBe('false');
+    expect((getByLabelText('Or ask in your own words') as HTMLTextAreaElement).value).toBe('');
+    expect((getByRole('button', { name: 'Ask' }) as HTMLButtonElement).disabled).toBe(true);
+    await fireEvent.click(getByRole('button', { name: 'Ask' }));
+    expect(q.enqueueRecord).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps queued notes after a reload and lists them once after they upload', async () => {
+    online = false;
+    const first = render(PhotoHelp, { targets: tomato, role: 'helper' });
+    await fireEvent.input(first.getByLabelText('Add a note'), {
+      target: { value: 'Hail last night' }
+    });
+    await fireEvent.click(first.getByRole('button', { name: 'Save note' }));
+    await first.findByTestId('journal-queued');
+    first.unmount();
+
+    const again = render(PhotoHelp, { targets: tomato, role: 'helper' });
+    const queued = await again.findByTestId('journal-queued');
+    expect(queued.textContent).toContain('Hail last night');
+    expect(queued.textContent).toContain('Will save when online');
+
+    q.rows.length = 0;
+    online = true;
+    fetchMock.mockImplementation(async () =>
+      jsonResponse({ entries: [{ ...ENTRY, id: 'j9', text: 'Hail last night' }] })
+    );
+    window.dispatchEvent(new Event('online'));
+    await waitFor(() => expect(again.queryByTestId('journal-queued')).toBeNull());
+    await waitFor(() => expect(again.getAllByText('Hail last night')).toHaveLength(1));
   });
 
   it('treats a failed request as no signal', async () => {
@@ -128,8 +191,57 @@ describe('PhotoHelp', () => {
     expect(answer.dataset.provenance).toBe('ai');
     expect(answer.textContent).toContain('Pinch the small shoot');
     expect(answer.textContent).toContain('AI');
-    await waitFor(() => expect(getAllByRole('button', { name: 'Delete' })).toHaveLength(2));
+    await waitFor(() => expect(getAllByRole('button', { name: 'Delete…' })).toHaveLength(2));
     expect(q.enqueueRecord).not.toHaveBeenCalled();
+  });
+
+  it('asks before deleting a journal entry', async () => {
+    fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
+      init?.method === 'DELETE' ? jsonResponse({ ok: true }) : jsonResponse({ entries: [ENTRY] })
+    );
+    const { getByRole, findByText, queryByText } = render(PhotoHelp, {
+      targets: tomato,
+      role: 'owner'
+    });
+    await findByText('Staked the tomatoes');
+    await fireEvent.click(getByRole('button', { name: 'Delete…' }));
+    expect(getByRole('group', { name: 'Delete this entry?' })).toBeTruthy();
+    await fireEvent.click(getByRole('button', { name: 'Cancel' }));
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(false);
+    expect(queryByText('Staked the tomatoes')).toBeTruthy();
+
+    await fireEvent.click(getByRole('button', { name: 'Delete…' }));
+    await fireEvent.click(getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(queryByText('Staked the tomatoes')).toBeNull());
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE')).toHaveLength(1);
+  });
+
+  it('tags each Care Guide section in an answer with where it came from', async () => {
+    online = false;
+    const { getByRole, findByTestId } = render(PhotoHelp, { targets: tomato, role: 'helper' });
+    await fireEvent.click(getByRole('button', { name: 'Is it ready to pick?' }));
+    await fireEvent.click(getByRole('button', { name: 'Ask' }));
+    const answer = await findByTestId('photo-answer');
+    const harvest = Array.from(answer.querySelectorAll('.care-section')).find((s) =>
+      s.textContent?.includes('Harvest cues')
+    )!;
+    expect(harvest.querySelector('[data-provenance]')?.getAttribute('data-provenance')).toBe(
+      'plugin'
+    );
+  });
+
+  it('sends a library brand question to the Spray flow offline', async () => {
+    online = false;
+    const { getByRole, getByLabelText, findByRole } = render(PhotoHelp, {
+      targets: tomato,
+      role: 'helper',
+      sprayTerms: ['^Entrust']
+    });
+    await fireEvent.input(getByLabelText('Or ask in your own words'), {
+      target: { value: 'Would Entrust fix the worms?' }
+    });
+    await fireEvent.click(getByRole('button', { name: 'Ask' }));
+    expect(await findByRole('link', { name: 'Open the Spray flow' })).toBeTruthy();
   });
 
   it('shows the Spray flow link when the answer points there', async () => {
@@ -172,7 +284,7 @@ describe('PhotoHelp', () => {
     const helper = render(PhotoHelp, { targets: tomato, role: 'helper' });
     await helper.findByText('Staked the tomatoes');
     expect(helper.getByRole('button', { name: 'Ask' })).toBeTruthy();
-    expect(helper.queryByRole('button', { name: 'Delete' })).toBeNull();
+    expect(helper.queryByRole('button', { name: 'Delete…' })).toBeNull();
   });
 
   it('saves a note offline to the queue', async () => {

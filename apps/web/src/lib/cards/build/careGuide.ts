@@ -13,7 +13,7 @@ import type { FarmSnapshot, SnapshotCareTask, SnapshotCropPlugin } from '../snap
 import { blockDisplayName, resolveOptions, type BuildOptions } from './common';
 import { formatInches } from './size';
 import { familyCareTips, type FamilyCareTips } from './careTips';
-import { CARE_SECTION } from '$lib/journal/photoHelp';
+import { CARE_SECTION, filterSprayAdviceItems, growerFacingText } from '$lib/journal/photoHelp';
 
 const MAX_PLANTINGS = 6;
 
@@ -30,8 +30,12 @@ function careTaskLine(t: SnapshotCareTask): string {
 }
 
 /** Water, feed, stake and prune, harvest cues, common problems and notes
- *  for one crop. Plugin data wins; family tips fill the gaps as `fallback`. */
-export function careGuideSections(plugin: SnapshotCropPlugin): {
+ *  for one crop. Plugin data wins; family tips fill the gaps as `fallback`.
+ *  Plugin text never shows spray advice or notes meant for plugin authors. */
+export function careGuideSections(
+  plugin: SnapshotCropPlugin,
+  sprayTerms?: readonly string[]
+): {
   sections: CardSection[];
   tips: FamilyCareTips | null;
 } {
@@ -45,17 +49,24 @@ export function careGuideSections(plugin: SnapshotCropPlugin): {
   };
   fromTips(CARE_SECTION.water, family?.water);
   fromTips(CARE_SECTION.feed, family?.feed);
-  const tasks = (plugin.careTasks ?? []).map(careTaskLine).filter(Boolean);
+  const tasks = filterSprayAdviceItems(
+    (plugin.careTasks ?? []).map(careTaskLine).filter(Boolean),
+    sprayTerms
+  );
   if (tasks.length) {
     sections.push({ title: CARE_SECTION.prune, items: tasks, provenance: 'plugin' });
   } else {
     fromTips(CARE_SECTION.prune, family?.prune);
   }
-  const cues = plugin.harvestIndicators?.filter((s) => s.trim()) ?? [];
+  const cues = filterSprayAdviceItems(
+    plugin.harvestIndicators?.filter((s) => s.trim()) ?? [],
+    sprayTerms
+  );
   if (cues.length) sections.push({ title: CARE_SECTION.harvest, items: cues, provenance: 'plugin' });
   fromTips(CARE_SECTION.problems, family?.problems);
-  if (plugin.notes?.trim()) {
-    sections.push({ title: CARE_SECTION.notes, items: [plugin.notes.trim()], provenance: 'plugin' });
+  const notes = plugin.notes ? growerFacingText(plugin.notes, sprayTerms) : '';
+  if (notes) {
+    sections.push({ title: CARE_SECTION.notes, items: [notes], provenance: 'plugin' });
   }
   return { sections, tips: usedTips ? family : null };
 }
@@ -106,13 +117,13 @@ export function buildCareGuideCard(
   }
   if (plugin.preHarvestIntervalDays && plugin.preHarvestIntervalDays > 0) {
     facts.push({
-      label: 'PHI buffer',
-      value: `${plugin.preHarvestIntervalDays} d`,
+      label: 'Wait after spraying',
+      value: `${plugin.preHarvestIntervalDays} ${plugin.preHarvestIntervalDays === 1 ? 'day' : 'days'} before picking`,
       provenance: 'plugin'
     });
   }
 
-  const { sections, tips } = careGuideSections(plugin);
+  const { sections, tips } = careGuideSections(plugin, snapshot.sprayTerms);
 
   const blocks = new Map(snapshot.blocks.map((b) => [b.id, b]));
   const growing = snapshot.plantings

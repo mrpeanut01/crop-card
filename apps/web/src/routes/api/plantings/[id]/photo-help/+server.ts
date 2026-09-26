@@ -10,6 +10,7 @@ import {
 } from '$lib/server/journalApi';
 import { answerPhotoHelp } from '$lib/server/photoHelp';
 import { getRegistry } from '$lib/server/registry';
+import { sprayTermsFor } from '$lib/server/sprayTerms';
 
 export const _requestSchema = photoHelpSchema;
 
@@ -29,14 +30,16 @@ export const POST: RequestHandler = async (event) => {
   const photo = cleanPhoto(parsed.data.photo);
   if (!photo.ok) return photo.response;
 
-  const rec = (await getRegistry()).get(crop.cropPluginId);
+  const registry = await getRegistry();
+  const rec = registry.get(crop.cropPluginId);
   const plugin = rec ? toCropPlugin(rec.plugin) : null;
   return json(
     await answerPhotoHelp({
       userId: who.userId,
       crop,
       plugin,
-      req: { question: parsed.data.question, text: parsed.data.text, photo: photo.photo }
+      req: { question: parsed.data.question, text: parsed.data.text, photo: photo.photo },
+      sprayTerms: sprayTermsFor(registry)
     })
   );
 };

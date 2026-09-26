@@ -20,6 +20,7 @@ import {
   careSectionsFor,
   filterSprayAdvice,
   filterSprayAdviceItems,
+  growerFacingText,
   topicFor
 } from '$lib/journal/photoHelp';
 import { recordFallback, tryAiWithGuard } from './aiDegrade';
@@ -57,8 +58,11 @@ const WHY_MESSAGE: Record<Why, string> = {
   spray: `${SPRAY_REDIRECT} Here is what the Care Guide says.`
 };
 
-export function photoHelpMessage(why: Why): string {
-  return `${WHY_MESSAGE[why]} Your photo and question are saved in the journal.`;
+export function photoHelpMessage(why: Why, hasPhoto = true): string {
+  const saved = hasPhoto
+    ? 'Your photo and question are saved in the journal.'
+    : 'Your question is saved in the journal.';
+  return `${WHY_MESSAGE[why]} ${saved}`;
 }
 
 function isoDay(ms: number): string {
@@ -68,12 +72,14 @@ function isoDay(ms: number): string {
 export function careAnswerSections(
   plugin: SnapshotCropPlugin | null,
   question: PhotoQuestion,
-  text: string
+  text: string,
+  sprayTerms?: readonly string[]
 ): JournalAnswerSection[] {
   const sections = plugin
-    ? careGuideSections(plugin).sections.map((s) => ({
+    ? careGuideSections(plugin, sprayTerms).sections.map((s) => ({
         title: s.title,
-        items: filterSprayAdviceItems(s.items)
+        items: filterSprayAdviceItems(s.items, sprayTerms),
+        provenance: s.provenance === 'plugin' ? ('plugin' as const) : ('fallback' as const)
       }))
     : [];
   return careSectionsFor(sections, topicFor(question, text));
@@ -83,7 +89,8 @@ export function promptInputFor(
   crop: Crop,
   plugin: SnapshotCropPlugin | null,
   question: string,
-  now: number
+  now: number,
+  sprayTerms?: readonly string[]
 ): PhotoHelpPromptInput {
   const days = crop.plantingDate !== null ? Math.floor((now - crop.plantingDate) / DAY_MS) : null;
   return {
@@ -92,11 +99,12 @@ export function promptInputFor(
     plantingDate: crop.plantingDate !== null ? isoDay(crop.plantingDate) : null,
     daysSincePlanting: days !== null && days >= 0 ? days : null,
     daysToMaturity: plugin?.daysToMaturity ?? null,
-    harvestIndicators: filterSprayAdviceItems(plugin?.harvestIndicators ?? []),
+    harvestIndicators: filterSprayAdviceItems(plugin?.harvestIndicators ?? [], sprayTerms),
     careTasks: filterSprayAdviceItems(
-      (plugin?.careTasks ?? []).map((t) => (t.body ? `${t.title}: ${t.body}` : t.title))
+      (plugin?.careTasks ?? []).map((t) => (t.body ? `${t.title}: ${t.body}` : t.title)),
+      sprayTerms
     ),
-    notes: plugin?.notes ? (filterSprayAdviceItems([plugin.notes])[0] ?? null) : null,
+    notes: plugin?.notes ? growerFacingText(plugin.notes, sprayTerms) || null : null,
     question
   };
 }
@@ -106,14 +114,15 @@ export async function answerPhotoHelp(args: {
   crop: Crop;
   plugin: SnapshotCropPlugin | null;
   req: PhotoHelpRequest;
+  sprayTerms?: readonly string[];
   now?: number;
 }): Promise<PhotoHelpResponse> {
-  const { userId, crop, plugin, req } = args;
+  const { userId, crop, plugin, req, sprayTerms } = args;
   const now = args.now ?? Date.now();
   const asked = questionText(req.question, req.text);
-  const careSections = careAnswerSections(plugin, req.question, req.text);
+  const careSections = careAnswerSections(plugin, req.question, req.text, sprayTerms);
 
-  const save = (answer: JournalAnswer, provenance: 'ai' | 'manual') =>
+  const save = (answer: JournalAnswer, provenance: 'ai' | 'fallback') =>
     insertJournalEntry({
       cropId: crop.id,
       blockId: crop.blockId,
@@ -140,19 +149,20 @@ export async function answerPhotoHelp(args: {
     return {
       provenance: 'fallback',
       fallbackReason: reason,
-      message: photoHelpMessage(why),
+      message: photoHelpMessage(why, !!req.photo),
       answer,
-      entry: save(answer, 'manual')
+      entry: save(answer, 'fallback')
     };
   };
 
-  if (asksForSprayAdvice(asked)) return fallback('spray', null);
+  if (asksForSprayAdvice(asked, sprayTerms)) return fallback('spray', null);
 
   const tried = await tryAiWithGuard({
     endpoint: 'photo-help',
     userId,
     timeoutMs: PHOTO_HELP_TIMEOUT_MS,
-    prompt: (signal) => askPhotoHelp(promptInputFor(crop, plugin, asked, now), req.photo, signal)
+    prompt: (signal) =>
+      askPhotoHelp(promptInputFor(crop, plugin, asked, now, sprayTerms), req.photo, signal)
   });
 
   if (tried.provenance === 'fallback') {
@@ -163,7 +173,7 @@ export async function answerPhotoHelp(args: {
   }
 
   const { text, meta } = tried.value;
-  const filtered = filterSprayAdvice(text);
+  const filtered = filterSprayAdvice(text, sprayTerms);
   const usable = filtered.text.trim().length > 0;
   try {
     recordCall({

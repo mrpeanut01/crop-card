@@ -7,7 +7,9 @@ import {
   careSectionsFor,
   filterSprayAdvice,
   filterSprayAdviceItems,
+  growerFacingText,
   isSprayAdvice,
+  sprayProductTerms,
   topicFor
 } from './photoHelp';
 import { questionText } from './model';
@@ -48,7 +50,7 @@ describe('careSectionsFor', () => {
 
   it('says so plainly when the guide has nothing on the topic', () => {
     expect(careSectionsFor([], 'harvest')).toEqual([
-      { title: 'Care guide', items: [NO_SECTION_TEXT.harvest] }
+      { title: 'Care guide', items: [NO_SECTION_TEXT.harvest], provenance: 'fallback' }
     ]);
     expect(careSectionsFor([{ title: 'Harvest cues', items: [] }], 'harvest')[0].title).toBe(
       'Care guide'
@@ -120,6 +122,121 @@ describe('spray advice guard', () => {
     expect(asksForSprayAdvice('How much do I mix per gallon?')).toBe(true);
     expect(asksForSprayAdvice(questionText('leaves', ''))).toBe(false);
     expect(asksForSprayAdvice(questionText('ready', 'the big one'))).toBe(false);
+  });
+
+  const LIBRARY = sprayProductTerms([
+    { displayName: 'Entrust SC (Corteva spinosad — OMRI)', activeIngredients: ['spinosad'] },
+    { displayName: 'Actara (Syngenta thiamethoxam)', activeIngredients: ['thiamethoxam'] },
+    { displayName: 'Admire Pro (Bayer imidacloprid)', activeIngredients: ['imidacloprid'] },
+    {
+      displayName: 'Coragen (FMC chlorantraniliprole)',
+      activeIngredients: ['chlorantraniliprole']
+    },
+    { displayName: 'Serenade ASO (Bayer Bacillus subtilis — OMRI)' },
+    { displayName: 'Warrior II with Zeon (Syngenta lambda-cyhalothrin)' },
+    { displayName: 'Assail 30SG (UPL acetamiprid)' },
+    { displayName: 'Confirm 2F (tebufenozide)', activeIngredients: ['tebufenozide'] },
+    {
+      displayName: 'Roundup PowerMAX 3 (Ruveon; formerly Bayer)',
+      activeIngredients: ['glyphosate potassium salt']
+    }
+  ]);
+
+  it('builds brand and active-ingredient terms from the plugin library', () => {
+    expect(LIBRARY).toEqual(
+      expect.arrayContaining([
+        '^Entrust',
+        'actara',
+        'admire pro',
+        '^Admire',
+        'coragen',
+        'chlorantraniliprole',
+        'glyphosate',
+        '=Confirm',
+        '^Warrior'
+      ])
+    );
+  });
+
+  it.each([
+    'Entrust will clean up those caterpillars fast.',
+    'Actara or Admire Pro would knock the aphids back.',
+    'Dust the leaves with sulfur in the cool morning.',
+    'Apply copper every week while it stays wet.',
+    'Mix 2 tablespoons of dish soap in a gallon of water and wet the leaves.',
+    'Use 1 tablespoon per quart of water.',
+    'Serenade is a good biological choice here.',
+    'Dust with diatomaceous earth around the stems.',
+    'Try Captan for scab.',
+    'Coragen works on hornworms.',
+    'Hit them with Warrior.',
+    'I would reach for Assail here.',
+    'You could Confirm it with tebufenozide.',
+    'A kaolin clay film keeps beetles off.',
+    'Copper for fire blight.'
+  ])('catches library and household spray advice: %s', (s) => {
+    expect(isSprayAdvice(s, LIBRARY)).toBe(true);
+    expect(filterSprayAdvice(`Pick them by hand. ${s}`, LIBRARY)).toEqual({
+      text: 'Pick them by hand.',
+      removed: true
+    });
+  });
+
+  it.each([
+    'Confirm the fruit is soft before you pick.',
+    'I admire how fast these grew.',
+    'Switch to watering in the morning.',
+    'Water each plant with a gallon a week.'
+  ])('leaves everyday words alone: %s', (s) => {
+    expect(isSprayAdvice(s, LIBRARY)).toBe(false);
+  });
+
+  it.each([
+    'What should I put on these to kill the aphids?',
+    'Would Entrust fix the worms?',
+    'what should I treat this with',
+    'Can I dust it with sulfur?',
+    'What can I put on these beetles and at what rate?',
+    'What should I use to kill the armyworms, and how much per acre?',
+    'What is the application rate?',
+    'How do I get rid of the slugs?'
+  ])('sends %s to the Spray flow', (q) => {
+    expect(asksForSprayAdvice(q, LIBRARY)).toBe(true);
+  });
+
+  it.each([
+    'Is it ready to pick?',
+    'Where do I prune the suckers?',
+    'Why are the lower leaves turning yellow?',
+    'How much should I water each week?'
+  ])('answers %s as a growing question', (q) => {
+    expect(asksForSprayAdvice(q, LIBRARY)).toBe(false);
+  });
+
+  it('never lets a library brand through, however the answer is padded', () => {
+    const brands = ['Entrust', 'Actara', 'Admire Pro', 'Coragen', 'Serenade', 'Warrior'];
+    fc.assert(
+      fc.property(
+        fc.array(fc.constantFrom('Pick it.', 'Water well.', 'Mulch the bed.'), { maxLength: 4 }),
+        fc.constantFrom(...brands),
+        fc.constantFrom('works well', 'will fix it', 'is the one to use'),
+        (safe, brand, tail) => {
+          const out = filterSprayAdvice([...safe, `${brand} ${tail}.`, ...safe].join(' '), LIBRARY);
+          expect(out.removed).toBe(true);
+          expect(out.text).not.toContain(brand);
+        }
+      )
+    );
+  });
+
+  it('keeps grower text free of spray advice and plugin-author notes', () => {
+    expect(
+      growerFacingText(
+        'Indeterminate heirloom, requires staking. Susceptible to early/late blight; preventive copper or chlorothalonil per UMD vegetable guide. Phase 11 trait override: declares native halosulfuron tolerance so Sandea is permitted despite the sulfonylurea family-kill default.',
+        LIBRARY
+      )
+    ).toBe('Indeterminate heirloom, requires staking.');
+    expect(growerFacingText('Copper for fire blight.', LIBRARY)).toBe('');
   });
 
   it('filters list items and keeps the redirect itself clear of the filter path', () => {

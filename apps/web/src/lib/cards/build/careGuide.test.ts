@@ -27,7 +27,7 @@ describe('buildCareGuideCard', () => {
       { label: 'Spacing', value: '18–24 in', provenance: 'plugin' },
       { label: 'Row spacing', value: '48 in', provenance: 'plugin' },
       { label: 'Soil temp', value: '60°F or warmer', provenance: 'plugin' },
-      { label: 'PHI buffer', value: '14 d', provenance: 'plugin' }
+      { label: 'Wait after spraying', value: '14 days before picking', provenance: 'plugin' }
     ]);
     expect(card.sections.map((s) => [s.title, s.provenance])).toEqual([
       ['Water', 'fallback'],
@@ -58,6 +58,40 @@ describe('buildCareGuideCard', () => {
       items: ['Tip primocanes at 4 ft. Encourages laterals.'],
       provenance: 'plugin'
     });
+  });
+
+  it('never shows spray advice or plugin-author notes in the Notes section', () => {
+    const notes =
+      'Indeterminate heirloom — requires staking. Susceptible to early/late blight; preventive copper or chlorothalonil per UMD vegetable guide. Phase 11 trait override: declares native halosulfuron tolerance so Sandea is permitted despite the sulfonylurea → solanaceae family-kill default.';
+    const { sections } = careGuideSections(
+      { ...snap.cropPlugins['tomato-cherokee-purple'], notes },
+      ['^Sandea', 'halosulfuron-methyl']
+    );
+    const shown = sections.flatMap((s) => s.items);
+    expect(sections.find((s) => s.title === 'Notes')!.items).toEqual([
+      'Indeterminate heirloom — requires staking.'
+    ]);
+    for (const item of shown) {
+      expect(isSprayAdvice(item)).toBe(false);
+      expect(item).not.toMatch(/Phase \d|Sandea|chlorothalonil|copper/);
+    }
+    const onlyAdvice = careGuideSections({
+      ...snap.cropPlugins['tomato-cherokee-purple'],
+      notes: 'Copper for fire blight.'
+    });
+    expect(onlyAdvice.sections.find((s) => s.title === 'Notes')).toBeUndefined();
+  });
+
+  it('drops spray advice from plugin harvest cues and care tasks sentence by sentence', () => {
+    const { sections } = careGuideSections({
+      ...snap.cropPlugins['tomato-cherokee-purple'],
+      harvestIndicators: ['Deep color. Spray copper after picking.'],
+      careTasks: [{ title: 'Prune water sprouts', body: 'Follow with a copper spray.' }]
+    });
+    expect(sections.find((s) => s.title === 'Harvest cues')!.items).toEqual(['Deep color.']);
+    expect(sections.find((s) => s.title === 'Stake and prune')!.items).toEqual([
+      'Prune water sprouts.'
+    ]);
   });
 
   it('converts spacing and soil temperature for metric users', () => {

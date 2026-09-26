@@ -27,6 +27,7 @@ import {
 import { formatInches } from './size';
 import { CARE_LINK_LABEL, careGuideHref } from './careGuide';
 import { ymdInZone } from '$lib/prefs';
+import { filterSprayAdviceItems } from '$lib/journal/photoHelp';
 
 const MAX_UPCOMING = 3;
 
@@ -123,7 +124,7 @@ export function buildPlantingCard(
     facts.push({ label: 'Sow', value: 'Not scheduled', provenance: src });
   }
 
-  const window = harvestWindow(p.plantingDate, plugin);
+  const window = p.harvestWindow ?? harvestWindow(p.plantingDate, plugin);
   if (p.status === 'harvested' && p.harvestedAt) {
     facts.push({ label: 'Harvested', value: monthDay(p.harvestedAt), provenance: 'data' });
   } else if (window) {
@@ -155,12 +156,9 @@ export function buildPlantingCard(
 
   const phi = plugin?.preHarvestIntervalDays;
   if (phi && phi > 0 && p.status !== 'harvested') {
-    const cutoff = window ? addDaysYmd(window.start, -phi) : null;
     facts.push({
-      label: 'PHI buffer',
-      value: cutoff
-        ? `${phi} d · check labels after ${monthDay(cutoff)}`
-        : `${phi} d before harvest`,
+      label: 'Wait after spraying',
+      value: `${phi} ${phi === 1 ? 'day' : 'days'} before picking`,
       provenance: 'plugin'
     });
   }
@@ -175,7 +173,10 @@ export function buildPlantingCard(
         .map((t) => `${t.title} (${dueLabel(t.scheduledFor, opts.now, opts.prefs)})`)
     });
   }
-  const cues = plugin?.harvestIndicators?.filter((s) => s.trim()) ?? [];
+  const cues = filterSprayAdviceItems(
+    plugin?.harvestIndicators?.filter((s) => s.trim()) ?? [],
+    snapshot.sprayTerms
+  );
   if (cues.length) sections.push({ title: 'Harvest cues', items: cues });
 
   const provenance: CardProvenance[] = facts

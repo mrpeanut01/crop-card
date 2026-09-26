@@ -13,6 +13,7 @@ import {
   type SnapshotCareTask,
   type SnapshotCropPlugin,
   type SnapshotEquipment,
+  type SnapshotPlanting,
   type SnapshotSprayProduct,
   type SnapshotStockItem
 } from '$lib/cards/snapshot';
@@ -31,7 +32,9 @@ import type { CropPlugin, Plugin } from '$lib/plugins/schemas';
 import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
 import { RULES_VERSION } from '$lib/safety/version';
+import { eventsForPlanting } from '$lib/calendar/engine';
 import { getRegistry } from './registry';
+import { sprayTermsFor } from './sprayTerms';
 
 const DAY_MS = 86_400_000;
 export const SNAPSHOT_TASK_PAST_DAYS = 14;
@@ -221,6 +224,36 @@ export interface BuildSnapshotOptions {
   origin?: string | null;
 }
 
+function utcDay(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+/** The engine's harvest window for a planting, so a Planting Card and /plan
+ *  show the same dates. */
+export function engineHarvestWindow(
+  p: SnapshotPlanting,
+  crop: CropPlugin
+): { start: string; end: string } | null {
+  if (!p.plantingDate) return null;
+  const plantingDate = Date.parse(p.plantingDate);
+  if (!Number.isFinite(plantingDate)) return null;
+  const windows = eventsForPlanting(
+    {
+      id: p.id,
+      blockId: p.blockId,
+      cropPluginId: p.cropPluginId,
+      varietyDisplayName: p.varietyDisplayName,
+      plantingDate
+    },
+    crop
+  ).filter((e) => e.kind === 'harvest-window');
+  if (!windows.length) return null;
+  return {
+    start: utcDay(Math.min(...windows.map((e) => e.startMs))),
+    end: utcDay(Math.max(...windows.map((e) => e.endMs)))
+  };
+}
+
 export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promise<FarmSnapshot> {
   const ownerId = requireOwnerId();
   const now = opts.now ?? Date.now();
@@ -232,6 +265,10 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     const rec = registry.get(id);
     const plugin = rec ? toCropPlugin(rec.plugin) : null;
     if (plugin) cropPlugins[id] = plugin;
+  }
+  for (const p of plantings) {
+    const rec = registry.get(p.cropPluginId);
+    if (rec?.plugin.type === 'crop') p.harvestWindow = engineHarvestWindow(p, rec.plugin);
   }
 
   const stockItems = listStockItems();
@@ -266,7 +303,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     stock: stockItems.map(toStock).sort((a, b) => a.id.localeCompare(b.id)),
     cropPlugins,
     frost: snapshotFrostFromSettings(),
-    sprayProducts
+    sprayProducts,
+    sprayTerms: sprayTermsFor(registry)
   };
 }
 

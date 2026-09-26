@@ -89,6 +89,30 @@ export function ymdInZone(value: Instant, timeZone: string): string {
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
+function isUtcMidnight(ms: number): boolean {
+  return Number.isFinite(ms) && ms % 86_400_000 === 0;
+}
+
+/** The `YYYY-MM-DD` day a task or calendar item is due. Date-only values
+ *  (a task picked by day, a planting date and whole-day offsets from it)
+ *  are stored at UTC midnight and keep their UTC day; anything with a time
+ *  of day falls on its day in `timeZone`. */
+export function dueYmd(ms: number, timeZone: string): string {
+  return isUtcMidnight(ms) ? new Date(ms).toISOString().slice(0, 10) : ymdInZone(ms, timeZone);
+}
+
+/** A due day rendered with the same rule as `dueYmd`. */
+export function formatDueDay(
+  ms: number,
+  prefs: Prefs,
+  style: Exclude<DateStyle, 'time' | 'datetime'> = 'month-day',
+  extra: Intl.DateTimeFormatOptions = {}
+): string {
+  return isUtcMidnight(ms)
+    ? formatCalendarDate(ms, style, extra)
+    : formatInstant(ms, prefs, style, extra);
+}
+
 /** Today's date for the user, as `YYYY-MM-DD`. Use for date-input
  *  defaults; `new Date().toISOString().slice(0, 10)` is the UTC day and
  *  reads as tomorrow on a US evening. */

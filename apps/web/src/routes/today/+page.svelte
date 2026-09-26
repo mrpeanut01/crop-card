@@ -36,10 +36,14 @@
   } from '$lib/today/deck';
   import type { QueuedTaskRow } from '$lib/client/taskQueue';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
+  import { formatDueDay } from '$lib/prefs';
 
   const { data } = $props();
 
   const aiEnabled = $derived(data.aiEnabled);
+  const gardenOnly = $derived(data.farmProfile === 'garden');
+  const nothingPlanted = $derived(data.counts.blocks === 0 || data.counts.plantings === 0);
+  const gearOpen = $derived(data.sprayers.some((s) => !!s.lastChemistryClass));
   const prefs = $derived(currentPrefs());
   const canAct = $derived(!!data.user && data.user.role !== 'inspector');
 
@@ -139,7 +143,9 @@
         title: l.task.title,
         kind: l.task.kind === 'post-task' ? 'post-task' : 'pre-task',
         status: l.status,
-        queued: l.queued !== null
+        queued: l.queued !== null,
+        due: formatDueDay(l.task.scheduledFor, prefs, 'month-day', { weekday: 'short' }),
+        body: l.task.body ?? null
       }))
     }))
   );
@@ -278,7 +284,7 @@
     const { queueTaskAction } = await import('$lib/client/taskQueue');
     await queueTaskAction(taskId, action, reason);
     await refreshQueued();
-    liveMessage = 'Saved on this phone. It will save when you have signal.';
+    liveMessage = 'Saved on this phone. It will upload when you have signal.';
   }
 
   async function closeTask(taskId: string, action: QueuedTaskAction, reason?: string) {
@@ -495,7 +501,7 @@
       <WeekStrip {todayStartMs} items={weekItemsByDay} bind:period={calPeriod} />
       {#if deckWindow === 'season'}
         <SeasonStrip
-          crops={data.activeCrops}
+          crops={data.seasonCrops}
           events={data.seasonEvents as CalendarEvent[]}
           fromMs={data.nowMs}
           toMs={data.nowMs + 200 * 86_400_000}
@@ -510,15 +516,20 @@
         {:else}
           <p class="serif empty-title">Nothing scheduled in this window.</p>
         {/if}
-        <p>
-          {#if data.counts.blocks === 0}
-            Add an Area on the <a href="/plan">Plan</a> page and plant something, and the jobs it needs
-            will show up here.
-          {:else}
-            Your crop calendar suggestions are below. Plan a one-off spray any time.
-          {/if}
-        </p>
-        <a class="btn primary" href="/spray">Plan a spray</a>
+        {#if nothingPlanted}
+          <p>
+            Add an Area on the Plan page and plant something, and the jobs it needs will show up
+            here.
+          </p>
+          <a class="btn primary" href="/plan">Plan a crop</a>
+        {:else if windowEvents.length > 0}
+          <p>Your crop calendar suggestions are below.</p>
+        {:else}
+          <p>Nothing is due in this window.</p>
+        {/if}
+        {#if !gardenOnly}
+          <a class="empty-link" href="/spray">Plan a spray</a>
+        {/if}
       </div>
     {:else}
       <ul class="cards" aria-label="Tasks">
@@ -651,8 +662,8 @@
   </Banner>
 {/if}
 
-<section class="card gear" aria-labelledby="gear-heading" data-testid="today-gear">
-  <h2 id="gear-heading">Sprayers and safety rules</h2>
+<details class="card gear" data-testid="today-gear" open={gearOpen}>
+  <summary><h2 id="gear-heading">Sprayers and app info</h2></summary>
   {#if data.sprayers.length === 0}
     <p class="hint">No sprayers yet. Add one from <a href="/inventory">Inventory</a>.</p>
   {:else}
@@ -680,7 +691,7 @@
     <dd>{data.counts.crops}</dd>
     <dt>Herbicides registered</dt>
     <dd>{data.counts.herbicides}</dd>
-    <dt>Blocks defined</dt>
+    <dt>Beds and blocks</dt>
     <dd>{data.counts.blocks}</dd>
     {#if data.pluginFailures.length > 0}
       <dt>Plugin load failures</dt>
@@ -691,7 +702,7 @@
       </dd>
     {/if}
   </dl>
-</section>
+</details>
 
 <div class="legend-tail">
   <ProvenanceLegend
@@ -939,6 +950,37 @@
     color: var(--color-forest-deep);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+  }
+  .gear summary {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    cursor: pointer;
+  }
+  .gear summary h2 {
+    display: inline;
+    margin: 0;
+  }
+  .gear summary:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .gear[open] summary {
+    margin-bottom: 0.75rem;
+  }
+  .empty-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+  }
+  .btn + .empty-link {
+    margin-left: 12px;
+  }
+  .empty-link:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
   }
   .sprayers {
     list-style: none;

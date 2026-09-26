@@ -102,10 +102,12 @@ export function buildAreaCard(
     if (sp) provenance.push(sp);
   }
   if (!size) {
-    const blockAcres = blocks.reduce(
-      (sum, b) => sum + (typeof b.acres === 'number' && b.acres > 0 ? b.acres : 0),
-      0
-    );
+    const blockAcres = blocks.reduce((sum, b) => {
+      if (b.widthFt && b.widthFt > 0 && b.lengthFt && b.lengthFt > 0) {
+        return sum + (b.widthFt * b.lengthFt) / 43_560;
+      }
+      return sum + (typeof b.acres === 'number' && b.acres > 0 ? b.acres : 0);
+    }, 0);
     if (blockAcres > 0) {
       facts.push({
         label: 'Size',

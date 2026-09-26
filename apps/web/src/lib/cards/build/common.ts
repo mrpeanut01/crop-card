@@ -1,7 +1,8 @@
 import {
   DEFAULT_PREFS,
+  dueYmd,
   formatCalendarDate,
-  formatInstant,
+  formatDueDay,
   ymdInZone,
   type Prefs
 } from '$lib/prefs';
@@ -103,15 +104,15 @@ export function blockDisplayName(
 }
 
 export function dueLabel(scheduledFor: number, now: number, prefs: Prefs): string {
-  const due = ymdInZone(scheduledFor, prefs.timeZone);
+  const due = dueYmd(scheduledFor, prefs.timeZone);
   const today = ymdInZone(now, prefs.timeZone);
   const diff = daysBetweenYmd(today, due);
-  if (diff === null) return formatInstant(scheduledFor, prefs, 'month-day');
-  if (diff < 0) return `overdue since ${formatInstant(scheduledFor, prefs, 'month-day')}`;
+  if (diff === null) return formatDueDay(scheduledFor, prefs, 'month-day');
+  if (diff < 0) return `overdue since ${formatDueDay(scheduledFor, prefs, 'month-day')}`;
   if (diff === 0) return 'due today';
   if (diff === 1) return 'due tomorrow';
-  if (diff < 7) return `due ${formatInstant(scheduledFor, prefs, 'weekday')}`;
-  return `due ${formatInstant(scheduledFor, prefs, 'month-day')}`;
+  if (diff < 7) return `due ${formatDueDay(scheduledFor, prefs, 'weekday')}`;
+  return `due ${formatDueDay(scheduledFor, prefs, 'month-day')}`;
 }
 
 export function sortTasks(tasks: readonly SnapshotTask[]): SnapshotTask[] {

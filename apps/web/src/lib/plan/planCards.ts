@@ -54,6 +54,36 @@ export function growingSummary(
   return more > 0 ? `${names.join(' · ')} · +${more}` : names.join(' · ');
 }
 
+/** "Growing" for what is in the ground and "Planned" for what is not yet
+ *  sown, so the rail and block cards agree with the Area card. */
+export function growingFacts(
+  plantings: readonly { varietyDisplayName: string; plantingDate: number | null }[],
+  now: number = Date.now()
+): CardFact[] {
+  const planned = plantings.filter(
+    (p) => plantingStatus(p.plantingDate, undefined, now) === 'planned'
+  );
+  const growing = plantings.filter((p) => !planned.includes(p));
+  const facts: CardFact[] = [
+    { label: 'Growing', value: growingSummary(growing) ?? 'Nothing yet', provenance: 'data' }
+  ];
+  if (planned.length) {
+    facts.push({ label: 'Planned', value: growingSummary(planned)!, provenance: 'data' });
+  }
+  return facts;
+}
+
+function blockAcres(b: {
+  acres?: number | null;
+  widthFt?: number | null;
+  lengthFt?: number | null;
+}): number {
+  if (b.widthFt && b.widthFt > 0 && b.lengthFt && b.lengthFt > 0) {
+    return (b.widthFt * b.lengthFt) / 43_560;
+  }
+  return b.acres && b.acres > 0 ? b.acres : 0;
+}
+
 /** The `?field=` value for blocks that sit in no Area. */
 export const NO_AREA = 'none';
 
@@ -89,27 +119,24 @@ export function planRailCards(
   areas: readonly PlanAreaEntry[],
   blocks: readonly BlockWithPlantings[],
   current: URLSearchParams,
-  prefs: Prefs = DEFAULT_PREFS
+  prefs: Prefs = DEFAULT_PREFS,
+  now: number = Date.now()
 ): RailAreaCard[] {
   const out: RailAreaCard[] = [];
   for (const area of areas) {
     const built = buildAreaCard(snapshot, area.id, { prefs });
     if (!built) continue;
     const inArea = blocks.filter((b) => b.fieldId === area.id);
-    out.push(railCard(built, area.id, area.kind, inArea, current));
+    out.push(railCard(built, area.id, area.kind, inArea, current, now));
   }
   const loose = blocks.filter((b) => !b.fieldId || !areas.some((a) => a.id === b.fieldId));
   if (loose.length) {
     const plantings = loose.flatMap((b) => b.plantings);
-    const acres = loose.reduce((sum, b) => sum + (b.acres && b.acres > 0 ? b.acres : 0), 0);
+    const acres = loose.reduce((sum, b) => sum + blockAcres(b), 0);
     const size = acres > 0 ? formatSize({ acres, widthFt: null, lengthFt: null }, prefs) : null;
     const facts: CardFact[] = [];
     if (size) facts.push({ label: 'Size', value: size, provenance: 'data' });
-    facts.push({
-      label: 'Growing',
-      value: growingSummary(plantings) ?? 'Nothing yet',
-      provenance: 'data'
-    });
+    facts.push(...growingFacts(plantings, now));
     const card: CardModel = {
       kind: 'area',
       key: 'ar_none',
@@ -146,13 +173,18 @@ function railCard(
   areaId: string,
   kind: AreaKind,
   blocks: readonly BlockWithPlantings[],
-  current: URLSearchParams
+  current: URLSearchParams,
+  now: number
 ): RailAreaCard {
   const size = built.facts.find((f) => f.label === 'Size');
-  const growing = growingSummary(blocks.flatMap((b) => b.plantings));
   const facts: CardFact[] = [];
   if (size) facts.push(size);
-  facts.push({ label: 'Growing', value: growing ?? 'Nothing yet', provenance: 'data' });
+  facts.push(
+    ...growingFacts(
+      blocks.flatMap((b) => b.plantings),
+      now
+    )
+  );
   return {
     areaId,
     card: {
@@ -212,11 +244,7 @@ export function planBlockCard(
     prefs
   );
   if (size) facts.push({ label: 'Size', value: size, provenance: 'data' });
-  facts.push({
-    label: 'Growing',
-    value: growingSummary(block.plantings) ?? 'Nothing yet',
-    provenance: 'data'
-  });
+  facts.push(...growingFacts(block.plantings, now));
   const statuses = block.plantings.map((p) =>
     plantingStatus(p.plantingDate, cropDays[p.cropPluginId], now)
   );

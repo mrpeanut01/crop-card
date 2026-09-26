@@ -49,6 +49,40 @@ describe('buildAreaCard', () => {
     });
   });
 
+  it("adds up bed sizes from their dimensions, not the rounded acres", () => {
+    const s = sampleSnapshot({
+      areas: [
+        {
+          id: 'g',
+          name: 'Back garden',
+          kind: 'garden',
+          acres: null,
+          widthFt: null,
+          lengthFt: null,
+          perimeterFt: null,
+          acresSource: null,
+          notes: null
+        }
+      ],
+      blocks: [
+        {
+          id: 'bed',
+          areaId: 'g',
+          name: 'Bed 1',
+          blockLabel: null,
+          kind: 'bed',
+          acres: 0.001,
+          widthFt: 4,
+          lengthFt: 8,
+          layout: null
+        }
+      ],
+      plantings: [],
+      tasks: []
+    });
+    expect(fact(buildAreaCard(s, 'g'), 'Size')?.value).toBe('32 sq ft across its bed');
+  });
+
   it('shows acreage for big areas with data provenance', () => {
     const card = buildAreaCard(snap, 'f_hay')!;
     expect(card.title).toBe('Hayfield');

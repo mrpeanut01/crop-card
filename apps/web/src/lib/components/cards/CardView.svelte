@@ -27,6 +27,8 @@
     selected?: boolean;
     /** How many facts the compact variant shows. */
     factLimit?: number;
+    /** Section titles the compact variant still shows (a task's Notes). */
+    compactSections?: readonly string[];
     /** False drops the as-of time, for live pages rather than saved cards. */
     showAsOf?: boolean;
     /** Screen and compact only: controls under the links (task actions, companion chips). */
@@ -45,6 +47,7 @@
     now = Date.now(),
     selected = false,
     factLimit = COMPACT_FACTS,
+    compactSections = [],
     showAsOf = true,
     actions,
     badges
@@ -62,6 +65,11 @@
   const safetyFirst = $derived(variant === 'print' ? card.sections.filter((s) => s.safety) : []);
   const bodySections = $derived(
     variant === 'print' ? card.sections.filter((s) => !s.safety) : card.sections
+  );
+  const shownSections = $derived(
+    variant === 'compact'
+      ? bodySections.filter((s) => compactSections.includes(s.title))
+      : bodySections
   );
   const provText = $derived(provenanceText(card.provenance));
   const nextText = $derived(
@@ -179,23 +187,21 @@
         <div class="actions">{@render actions()}</div>
       {/if}
 
-      {#if variant !== 'compact'}
-        {#each bodySections as s (s.title)}
-          <section class="section" class:safety={s.safety}>
-            <h4>
-              {s.title}
-              {#if s.provenance && variant === 'screen'}
-                <Provenance source={s.provenance} compact />
-              {/if}
-            </h4>
-            <ul>
-              {#each s.items as item, i (i)}
-                <li>{item}</li>
-              {/each}
-            </ul>
-          </section>
-        {/each}
-      {/if}
+      {#each shownSections as s (s.title)}
+        <section class="section" class:safety={s.safety}>
+          <h4>
+            {s.title}
+            {#if s.provenance && variant === 'screen'}
+              <Provenance source={s.provenance} compact />
+            {/if}
+          </h4>
+          <ul>
+            {#each s.items as item, i (i)}
+              <li>{item}</li>
+            {/each}
+          </ul>
+        </section>
+      {/each}
     </div>
     {#if variant === 'print' && bodySections.length}
       <p class="more">Cut short? The label and the live card have the full directions.</p>
@@ -509,6 +515,9 @@
   .v-print .content {
     flex: 1 1 auto;
     overflow: hidden;
+    padding-bottom: 0.2in;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 0.22in), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 0.22in), transparent 100%);
   }
   .v-print .body {
     min-height: 0;

@@ -1,4 +1,4 @@
-import { ymdInZone } from '$lib/prefs';
+import { dueYmd, ymdInZone } from '$lib/prefs';
 import {
   closedOnYmd,
   compareByStatus,
@@ -82,7 +82,7 @@ function inWindow<T extends DeckTaskLike>(
   if (item.queued) return true;
   if (isClosedStatus(item.status)) return closedOnYmd(item.task, timeZone) === today;
   if (item.status === 'late') return true;
-  const due = ymdInZone(item.task.scheduledFor, timeZone);
+  const due = dueYmd(item.task.scheduledFor, timeZone);
   return due >= today && due <= lastDay;
 }
 
@@ -187,7 +187,7 @@ export function calendarItems<T, K>(
   const last = addDaysYmd(todayYmd, days - 1);
   const out: Record<string, K[]> = {};
   for (const e of entries) {
-    const key = ymdInZone(e.at, timeZone);
+    const key = dueYmd(e.at, timeZone);
     if (key < todayYmd || key > last) continue;
     (out[key] ??= []).push(map(e.value));
   }

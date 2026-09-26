@@ -7,7 +7,13 @@ const DAY = 86_400_000;
 
 async function addTask(
   page: Page,
-  body: { title: string; scheduledFor: number; kind?: string; linkedToTaskId?: string }
+  body: {
+    title: string;
+    scheduledFor: number;
+    kind?: string;
+    linkedToTaskId?: string;
+    body?: string;
+  }
 ): Promise<string> {
   const res = await page.request.post('/api/tasks', {
     data: { kind: 'primary', ...body },
@@ -95,7 +101,43 @@ test.describe('/today task deck', () => {
     await page.getByRole('tab', { name: 'Week' }).click();
     await expect(page.getByRole('heading', { name: 'This week' })).toBeVisible();
 
-    await expect(page.getByTestId('today-gear')).toContainText('Rules version');
+    const gear = page.getByTestId('today-gear');
+    await expect(gear).not.toHaveAttribute('open', '');
+    await gear.getByText('Sprayers and app info').click();
+    await expect(gear.getByText('Rules version')).toBeVisible();
+    await expect(gear).toContainText('Beds and blocks');
+  });
+
+  test('a task picked by day is due on that day, with its notes on the card', async ({ page }) => {
+    await signInNewUser(page, 'deckday');
+    await createOnboardedFarm(page, { growing: ['garden'] });
+    const ymd = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+    const id = await addTask(page, {
+      title: 'Water the seedlings',
+      scheduledFor: Date.parse(ymd),
+      body: 'Use the rain barrel first'
+    });
+    await page.goto('/today');
+    await page.waitForLoadState('networkidle');
+    await expect(card(page, id).locator('[data-card-status="due-today"]')).toHaveText('Due today');
+    await expect(card(page, id)).toContainText('Use the rain barrel first');
+  });
+
+  test('a new garden with nothing planted is pointed at the Plan page', async ({ page }) => {
+    await signInNewUser(page, 'deckempty');
+    await createOnboardedFarm(page, { growing: ['garden'] });
+    await page.goto('/today');
+    await page.waitForLoadState('networkidle');
+    const empty = page.getByTestId('deck-empty');
+    await expect(empty.getByRole('link', { name: 'Plan a crop' })).toHaveAttribute('href', '/plan');
+    await expect(empty.getByRole('link', { name: 'Plan a spray' })).toHaveCount(0);
+    await expect(empty).not.toContainText('suggestions are below');
+    await expect(page.getByTestId('today-gear').getByText('Rules version')).toBeHidden();
   });
 
   test('a Done with no signal waits on the card and saves when back online', async ({

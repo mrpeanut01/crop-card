@@ -126,7 +126,7 @@ afterEach(() => {
 });
 
 describe('POST /api/plantings/[id]/photo-help', () => {
-  it('answers from the Care Guide with no key and saves the photo as a manual entry', async () => {
+  it('answers from the Care Guide with no key and saves the photo tagged fallback', async () => {
     const owner = seedOwner();
     const body = await runWithTenant(owner, async () => {
       const crop = seedPlanting();
@@ -139,9 +139,13 @@ describe('POST /api/plantings/[id]/photo-help', () => {
     expect(body.fallbackReason).toBe('no-key');
     expect(body.message).toMatch(/^Claude is off, so here is what the Care Guide says\./);
     expect(body.answer.sections).toEqual([
-      { title: 'Harvest cues', items: ['Deep red, dry-feeling flesh'] }
+      { title: 'Harvest cues', items: ['Deep red, dry-feeling flesh'], provenance: 'plugin' }
     ]);
-    expect(body.entry).toMatchObject({ kind: 'photo_help', provenance: 'manual', hasPhoto: true });
+    expect(body.entry).toMatchObject({
+      kind: 'photo_help',
+      provenance: 'fallback',
+      hasPhoto: true
+    });
     const [row] = journal(owner);
     expect(row.text).toBe('Is it ready to pick?');
     expect(row.photoRef!.startsWith('data:image/jpeg;base64,')).toBe(true);
@@ -229,6 +233,39 @@ describe('POST /api/plantings/[id]/photo-help', () => {
     expect(logRows(owner)[0].errorClass).toBe('spray-advice-removed');
   });
 
+  it('strips brand names from the plugin library out of a Claude answer', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.create.mockResolvedValue(
+      aiReply(
+        'Those are hornworms. Entrust will clean them up fast. Actara or Admire Pro would knock them back. Pick them off by hand in the evening.'
+      )
+    );
+    const owner = seedOwner();
+    const body = await runWithTenant(owner, async () => {
+      const crop = seedPlanting();
+      return (await (
+        await call(crop.id, { question: 'leaves', text: '' })
+      ).json()) as PhotoHelpResponse;
+    });
+    expect(body.provenance).toBe('ai');
+    expect(body.answer.text).toBe('Those are hornworms. Pick them off by hand in the evening.');
+    expect(body.answer.sprayRedirect).toBe(true);
+  });
+
+  it('sends a brand-name question to the Spray flow without asking Claude', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    const owner = seedOwner();
+    const body = await runWithTenant(owner, async () => {
+      const crop = seedPlanting();
+      return (await (
+        await call(crop.id, { question: 'other', text: 'Would Coragen fix the worms?' })
+      ).json()) as PhotoHelpResponse;
+    });
+    expect(m.create).not.toHaveBeenCalled();
+    expect(body.answer.sprayRedirect).toBe(true);
+    expect(body.message).toMatch(/Your question is saved in the journal\.$/);
+  });
+
   it('falls back to the Care Guide when the whole answer is spray advice', async () => {
     m.getApiKey.mockReturnValue('sk-test');
     m.create.mockResolvedValue(aiReply('Use neem oil. Spray every 5 days.'));
@@ -242,7 +279,7 @@ describe('POST /api/plantings/[id]/photo-help', () => {
     expect(body.provenance).toBe('fallback');
     expect(body.message).toMatch(/^Claude's answer could not be used/);
     expect(body.answer).toMatchObject({ source: 'fallback', text: '', sprayRedirect: true });
-    expect(body.entry.provenance).toBe('manual');
+    expect(body.entry.provenance).toBe('fallback');
     expect(JSON.stringify(body)).not.toMatch(/neem/i);
     expect(logRows(owner)).toMatchObject([
       { provenance: 'fallback', success: false, errorClass: 'unusable' }

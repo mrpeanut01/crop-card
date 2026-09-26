@@ -57,6 +57,41 @@ describe('TaskDeckCard', () => {
     expect(onDone).toHaveBeenCalledWith('t1');
   });
 
+  it('keeps the notes, the equipment and the skip reason on the deck card', () => {
+    const card = buildTaskCard(
+      {
+        ...task,
+        body: 'Triple rinse the tank first',
+        abortedAt: now - 60_000,
+        abortReason: 'Too wet to walk the rows'
+      },
+      { asOf: now, where: 'Kale · Bed 2', equipmentLabel: 'Backpack sprayer' },
+      { now, prefs }
+    );
+    const { container } = setup({
+      card,
+      status: 'skipped',
+      linked: [
+        {
+          id: 'pre1',
+          title: 'Check the nozzles',
+          kind: 'pre-task',
+          status: 'planned',
+          queued: false,
+          due: 'Tue, Jun 2',
+          body: 'Swap the worn tip'
+        }
+      ]
+    });
+    const text = container.textContent ?? '';
+    expect(text).toContain('Triple rinse the tank first');
+    expect(text).toContain('Backpack sprayer');
+    expect(text).toContain('Too wet to walk the rows');
+    expect(text).toContain('Kale · Bed 2');
+    expect(text).toContain('Swap the worn tip');
+    expect(text).toContain('Tue, Jun 2');
+  });
+
   it('a task on a planting links to its Planting Card, care guide and photo help', () => {
     const card = buildTaskCard(
       { ...task, cropId: 'p_kale' },

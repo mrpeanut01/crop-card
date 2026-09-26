@@ -104,7 +104,7 @@
     <p class="hint">{PRINT_HELP}</p>
     <CareGuideList cards={careCards} {prefs} {now} />
     {#key key}
-      <PhotoHelp targets={helpTargets} {role} {prefs} />
+      <PhotoHelp targets={helpTargets} {role} {prefs} sprayTerms={snapshot?.sprayTerms ?? []} />
     {/key}
   {:else if snapshot}
     <p class="status" role="status">

@@ -76,6 +76,9 @@ export interface SnapshotPlanting {
   /** How `plantCount` was set; `fallback` means computed without plugin spacing. */
   plantCountProvenance: 'data' | 'manual' | 'fallback' | null;
   sourceProvenance: 'ai' | 'fallback' | 'plugin' | null;
+  /** The calendar engine's harvest window (the one /plan shows), as UTC
+   *  days. Absent on older bundles; cards then count days to maturity. */
+  harvestWindow?: { start: string; end: string } | null;
 }
 
 export type SnapshotTaskCategory =
@@ -228,4 +231,7 @@ export interface FarmSnapshot {
   /** Stocked pesticides keyed by plugin id. Absent on bundles saved before
    *  Sprint 30F. */
   sprayProducts?: Record<string, SnapshotSprayProduct>;
+  /** `sprayProductTerms` for every pesticide in the Owner's library, so the
+   *  offline Care Guide and photo help drop brand names too. */
+  sprayTerms?: string[];
 }

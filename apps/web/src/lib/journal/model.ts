@@ -19,6 +19,8 @@ export const PHOTO_QUESTION_LABEL: Record<Exclude<PhotoQuestion, 'other'>, strin
 export interface JournalAnswerSection {
   title: string;
   items: string[];
+  /** Where the section's text came from: the crop plugin, or general tips. */
+  provenance?: 'plugin' | 'fallback';
 }
 
 export interface JournalAnswer {

@@ -127,6 +127,30 @@ describe('window helpers', () => {
     expect(eventsForWindow(upcoming, [open], '30d', now)).toEqual([open, soon, later]);
   });
 
+  it('date-only tasks (UTC midnight) sit on their own day in a US zone', () => {
+    const dated = [
+      task('dueToday', '2026-06-04'),
+      task('dueTomorrow', '2026-06-05'),
+      task('dueYesterday', '2026-06-03')
+    ];
+    const deck = buildTaskDeck(dated, { window: 'today', now, timeZone: NY });
+    expect(deck.map((e) => [e.task.id, e.status])).toEqual([
+      ['dueYesterday', 'late'],
+      ['dueToday', 'due-today']
+    ]);
+    const week = buildTaskDeck(dated, { window: '7d', now, timeZone: NY });
+    expect(week.find((e) => e.task.id === 'dueTomorrow')?.status).toBe('planned');
+    expect(
+      calendarItems(
+        dated.map((t) => ({ at: t.scheduledFor, value: t.id })),
+        '2026-06-04',
+        NY,
+        (v) => v,
+        7
+      )
+    ).toEqual({ '2026-06-04': ['dueToday'], '2026-06-05': ['dueTomorrow'] });
+  });
+
   it('calendar items key on the owner calendar day and stay inside the range', () => {
     const rows = [
       { at: at('2026-06-05T02:00:00Z'), value: 'late evening' },

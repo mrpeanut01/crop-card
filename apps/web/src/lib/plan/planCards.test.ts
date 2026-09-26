@@ -5,6 +5,7 @@ import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
 import { kindStyle } from '$lib/farm/kindStyle';
 import {
   NO_AREA,
+  growingFacts,
   growingSummary,
   planAreaCard,
   planBlockCard,
@@ -96,13 +97,28 @@ describe('planCards', () => {
     expect(growingSummary(BLOCKS[0].plantings)).toBe('Orchardgrass');
   });
 
+  it('growingFacts splits what is in the ground from what is only planned', () => {
+    expect(growingFacts(BLOCKS[1].plantings, NOW).map((f) => [f.label, f.value])).toEqual([
+      ['Growing', 'Cherokee Purple'],
+      ['Planned', 'Genovese basil · Marigold']
+    ]);
+    const future = [{ varietyDisplayName: 'Tomato', plantingDate: NOW + 300 * DAY }];
+    expect(growingFacts(future, NOW).map((f) => [f.label, f.value])).toEqual([
+      ['Growing', 'Nothing yet'],
+      ['Planned', 'Tomato']
+    ]);
+    expect(growingFacts([], NOW)).toEqual([
+      { label: 'Growing', value: 'Nothing yet', provenance: 'data' }
+    ]);
+  });
+
   it('planSelectHref keeps other params, drops the planting tab', () => {
     expect(planSelectHref(params, 'g1')).toBe('/plan?tab=overview&field=g1');
     expect(planSelectHref(params, 'g1', 'b2')).toBe('/plan?tab=overview&block=b2&field=g1');
   });
 
   it('rail: one compact card per Area with its kind color, size and crops, then loose blocks', () => {
-    const rail = planRailCards(snapshot, areas, BLOCKS, params);
+    const rail = planRailCards(snapshot, areas, BLOCKS, params, undefined, NOW);
     expect(rail.map((r) => r.areaId)).toEqual(['f1', 'g1', NO_AREA]);
     const [hay, garden, loose] = rail;
     expect(hay.card.title).toBe('Hayfield');

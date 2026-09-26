@@ -44,6 +44,17 @@ describe('buildTaskCard', () => {
     expect(queued.status).toEqual({ id: 'done', label: 'Done', tone: 'forest' });
   });
 
+  it('a date-only task reads as its own day, not the evening before', () => {
+    const dueToday = { ...base, scheduledFor: Date.parse('2026-06-04') };
+    expect(buildTaskCard(dueToday, { asOf: now }, { now, prefs }).status?.id).toBe('due-today');
+    const late = { ...base, scheduledFor: Date.parse('2026-06-02') };
+    expect(buildTaskCard(late, { asOf: now }, { now, prefs }).facts[0].value).toBe(
+      'Was due Tue, Jun 2'
+    );
+    const later = { ...base, scheduledFor: Date.parse('2026-06-09') };
+    expect(buildTaskCard(later, { asOf: now }, { now, prefs }).facts[0].value).toBe('Tue, Jun 9');
+  });
+
   it('a skipped job keeps its reason as a manual fact', () => {
     const card = buildTaskCard(
       { ...base, abortedAt: now - 3_600_000, abortReason: '  rain all week ' },

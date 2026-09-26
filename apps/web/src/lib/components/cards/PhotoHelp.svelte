@@ -20,15 +20,17 @@
   } from '$lib/journal/photoHelp';
   import type { PhotoHelpTarget } from '$lib/journal/targets';
   import { resizePhoto } from '$lib/client/photoResize';
+  import type { QueuedJournalRow } from '$lib/client/journalQueue';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
 
   interface Props {
     targets: PhotoHelpTarget[];
     role?: string | null;
     prefs?: Prefs;
+    sprayTerms?: readonly string[];
   }
 
-  const { targets, role = null, prefs = DEFAULT_PREFS }: Props = $props();
+  const { targets, role = null, prefs = DEFAULT_PREFS, sprayTerms = [] }: Props = $props();
 
   const CHIPS = Object.entries(PHOTO_QUESTION_LABEL) as Array<
     [Exclude<PhotoQuestion, 'other'>, string]
@@ -58,7 +60,8 @@
 
   let entries = $state<JournalEntry[]>([]);
   let journalState = $state<'idle' | 'loading' | 'ready' | 'offline' | 'error'>('idle');
-  let queuedNotes = $state<Array<{ id: string; text: string; hasPhoto: boolean }>>([]);
+  let queuedNotes = $state<QueuedJournalRow[]>([]);
+  let confirmDelete = $state<string | null>(null);
   let note = $state('');
   let noteBusy = $state(false);
   let noteMessage = $state<string | null>(null);
@@ -87,18 +90,44 @@
     }
   }
 
+  async function refreshQueued(): Promise<void> {
+    const id = cropId;
+    if (!id) return;
+    try {
+      const { listQueuedJournal } = await import('$lib/client/journalQueue');
+      const next = await listQueuedJournal(id);
+      if (id !== cropId) return;
+      const waiting = (rows: QueuedJournalRow[]) => rows.filter((r) => !r.rejected).length;
+      const drained = waiting(next) < waiting(queuedNotes);
+      queuedNotes = next;
+      if (drained && online()) await loadJournal();
+    } catch {
+      queuedNotes = [];
+    }
+  }
+
   onMount(() => {
     void loadJournal();
-    const back = () => void loadJournal();
+    void refreshQueued();
+    const back = () => {
+      void loadJournal();
+      void refreshQueued();
+    };
     window.addEventListener('online', back);
-    return () => window.removeEventListener('online', back);
+    const timer = setInterval(refreshQueued, 4000);
+    return () => {
+      window.removeEventListener('online', back);
+      clearInterval(timer);
+    };
   });
 
   function pickTarget(id: string) {
     chosenId = id;
     shown = null;
     queuedNotes = [];
+    confirmDelete = null;
     void loadJournal();
+    void refreshQueued();
   }
 
   async function onPhoto(e: Event) {
@@ -121,27 +150,30 @@
   function careFallback(q: PhotoQuestion, text: string): JournalAnswerSection[] {
     const sections = (target?.careGuide?.sections ?? []).map((s) => ({
       title: s.title,
-      items: filterSprayAdviceItems(s.items)
+      items: filterSprayAdviceItems(s.items, sprayTerms),
+      provenance: s.provenance === 'plugin' ? ('plugin' as const) : ('fallback' as const)
     }));
     return careSectionsFor(sections, topicFor(q, text));
   }
 
   async function queueEntry(kind: 'note' | 'photo_help', text: string, withPhoto: string | null) {
-    const { enqueueRecord } = await import('$lib/client/syncQueue');
-    const id = await enqueueRecord('journal', {
-      cropId,
-      kind,
-      text,
-      ...(withPhoto ? { photo: withPhoto } : {}),
-      occurredAt: Date.now()
-    });
-    queuedNotes = [{ id, text, hasPhoto: !!withPhoto }, ...queuedNotes];
+    if (!cropId) return;
+    const { queueJournalEntry } = await import('$lib/client/journalQueue');
+    await queueJournalEntry({ cropId, kind, text, photo: withPhoto });
+    await refreshQueued();
   }
 
   async function answerOffline(q: PhotoQuestion, text: string) {
     const asked = questionText(q, text);
+    const hadPhoto = !!photo;
     await queueEntry('photo_help', asked, photo);
-    const spray = asksForSprayAdvice(asked);
+    photo = null;
+    chip = null;
+    typed = '';
+    const spray = asksForSprayAdvice(asked, sprayTerms);
+    const saved = hadPhoto
+      ? 'Your photo and question will save when you are back online.'
+      : 'Your question will save when you are back online.';
     shown = {
       answer: {
         question: q,
@@ -151,7 +183,7 @@
         sprayRedirect: spray
       },
       provenance: 'fallback',
-      message: `${spray ? `${SPRAY_REDIRECT} ` : ''}No signal right now, so here is what the Care Guide says. Your photo and question will save when you are back online.`,
+      message: `${spray ? `${SPRAY_REDIRECT} ` : ''}No signal right now, so here is what the Care Guide says. ${saved}`,
       queued: true
     };
   }
@@ -244,6 +276,7 @@
 
   async function remove(entry: JournalEntry) {
     if (!cropId) return;
+    confirmDelete = null;
     const res = await fetch(
       `/api/plantings/${encodeURIComponent(cropId)}/journal/${encodeURIComponent(entry.id)}`,
       { method: 'DELETE' }
@@ -340,7 +373,14 @@
           {/if}
           {#each shown.answer.sections as s (s.title)}
             <section class="care-section">
-              <h3>{s.title} <Provenance source="fallback" label="Care guide" compact /></h3>
+              <h3>
+                {s.title}
+                <Provenance
+                  source={s.provenance ?? 'fallback'}
+                  label={s.provenance === 'plugin' ? undefined : 'Care guide'}
+                  compact
+                />
+              </h3>
               <ul>
                 {#each s.items as item, i (i)}<li>{item}</li>{/each}
               </ul>
@@ -371,9 +411,13 @@
 
       {#if queuedNotes.length}
         <ul class="entries">
-          {#each queuedNotes as q (q.id)}
-            <li class="entry">
-              <QueuedBadge />
+          {#each queuedNotes as q (q.rowId)}
+            <li class="entry" data-testid="journal-queued">
+              {#if q.rejected}
+                <p class="error">This did not save. Open Records to try it again.</p>
+              {:else}
+                <QueuedBadge />
+              {/if}
               <p>{q.text || 'Photo'}{q.hasPhoto && q.text ? ' (with photo)' : ''}</p>
             </li>
           {/each}
@@ -410,9 +454,25 @@
                 <p class="hint">Answered from the Care Guide: {e.answer.sections[0].title}.</p>
               {/if}
               {#if isOwner}
-                <button type="button" class="btn ghost small" onclick={() => remove(e)}
-                  >Delete</button
-                >
+                {#if confirmDelete === e.id}
+                  <div class="confirm" role="group" aria-label="Delete this entry?">
+                    <span class="confirm-q">Delete this entry?</span>
+                    <button
+                      type="button"
+                      class="btn ghost small"
+                      onclick={() => (confirmDelete = null)}>Cancel</button
+                    >
+                    <button type="button" class="btn danger small" onclick={() => remove(e)}
+                      >Delete</button
+                    >
+                  </div>
+                {:else}
+                  <button
+                    type="button"
+                    class="btn ghost small"
+                    onclick={() => (confirmDelete = e.id)}>Delete…</button
+                  >
+                {/if}
               {/if}
             </li>
           {/each}
@@ -535,6 +595,20 @@
   .btn.small {
     min-height: 48px;
     padding: 0 var(--space-3);
+  }
+  .btn.danger {
+    background: var(--pill-rust-bg);
+    border-color: var(--pill-rust-bd);
+    color: var(--pill-rust-fg);
+  }
+  .confirm {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .confirm-q {
+    font-weight: 600;
   }
   .btn:focus-visible,
   .chip:focus-visible,

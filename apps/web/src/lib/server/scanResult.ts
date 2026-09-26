@@ -2,6 +2,7 @@
  * Shared types and Claude prompt logic for barcode + label scan endpoints.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { toVisionSource } from './visionImage';
 import type { StockCategory } from '$lib/db/stock';
 import { getRegistry } from '$lib/server/registry';
 import { getSetting } from '$lib/db/settings';
@@ -783,7 +784,7 @@ export async function claudeUrlLookup(
 
 // Claude vision call (for label photo).
 export async function claudeVisionLookup(
-  base64jpeg: string,
+  image: string,
   barcode?: string,
   onUsage?: ScanUsageSink
 ): Promise<Partial<ScanResult>> {
@@ -802,7 +803,7 @@ export async function claudeVisionLookup(
           content: [
             {
               type: 'image',
-              source: { type: 'base64', media_type: 'image/jpeg', data: base64jpeg }
+              source: toVisionSource(image)
             },
             {
               type: 'text',

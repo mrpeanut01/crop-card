@@ -35,6 +35,7 @@ import {
 import { placedPlantingFromCrop, type DesignableBed } from './placement';
 
 export const GARDEN_FILL_TIMEOUT_MS = 6000;
+const DAY_MS = 86_400_000;
 
 function isoDay(ms: number): string {
   return new Date(dayOf(ms)).toISOString().slice(0, 10);
@@ -112,9 +113,14 @@ export function loadFillInputs(
   };
 }
 
-function cropFact(crop: GardenCrop, plants: number | null): GardenFillCropFact {
+function cropFact(
+  crop: GardenCrop,
+  plants: number | null,
+  window: PlantingWindow | null = null
+): GardenFillCropFact {
   const spacing = resolveSpacing(crop, 'square');
   return {
+    window: window ? { earliest: window.earliest, latest: window.latest } : null,
     cropPluginId: crop.pluginId,
     name: crop.displayName,
     family: crop.cropFamily,
@@ -134,6 +140,25 @@ export function buildPromptInput(
   const ffd = frostFreeDays(ctx.lastSpringFrostMs, ctx.firstFallFrostMs);
   const fitting = inputs.recipes.filter((r) => recipeFits(r, ffd).fits);
   const names = new Map(listCropNames(inputs));
+  const windowOf = windowLookup(inputs);
+  const plannedIds = new Set(inputs.unplaced.map((u) => u.cropPluginId));
+  const plannedCrops = inputs.unplaced
+    .map((u) => {
+      const crop = inputs.crops[u.cropPluginId];
+      return crop ? cropFact(crop, u.plants, windowOf(u.cropPluginId)) : null;
+    })
+    .filter((f): f is GardenFillCropFact => f !== null);
+  const recipeIds = new Set<string>();
+  for (const r of fitting) {
+    for (const s of r.steps) {
+      const id = [s.cropPluginId, ...s.alternates].find((c) => inputs.crops[c]);
+      if (id && !plannedIds.has(id)) recipeIds.add(id);
+    }
+  }
+  const today = isoDay(dateMs);
+  const recipeCrops = [...recipeIds]
+    .map((id) => cropFact(inputs.crops[id], null, windowOf(id)))
+    .filter((c) => !c.window || c.window.latest >= today);
   return {
     bed: { name: bed.block.name, widthFt: bed.widthFt, lengthFt: bed.lengthFt },
     seasonYear: ctx.seasonYear,
@@ -150,26 +175,24 @@ export function buildPromptInput(
       name: c.varietyDisplayName,
       family: inputs.crops[c.cropPluginId]?.cropFamily ?? 'unknown'
     })),
-    plannedCrops: inputs.unplaced
-      .map((u) => {
-        const crop = inputs.crops[u.cropPluginId];
-        return crop ? cropFact(crop, u.plants) : null;
-      })
-      .filter((f): f is GardenFillCropFact => f !== null),
+    plannedCrops,
+    recipeCrops,
     recipes: fitting.map((r) => ({
       pluginId: r.pluginId,
       name: r.displayName,
       description: r.description,
       steps: r.steps.map((s) => {
         const ids = [s.cropPluginId, ...s.alternates].filter((id) => inputs.crops[id]);
-        const when =
-          s.start.anchor === 'after-step'
-            ? `after step ${(s.start.afterStep ?? 0) + 1}`
-            : `${s.start.offsetDays} days from ${s.start.anchor.replace(/-/g, ' ')}`;
-        return `${ids[0] ?? s.cropPluginId} ${when}`;
+        return `${ids[0] ?? s.cropPluginId} ${stepWhen(s.start, ctx)}`;
       })
     }))
   };
+}
+
+function stepWhen(start: BedRecipePlugin['steps'][number]['start'], ctx: RecipeContext): string {
+  if (start.anchor === 'after-step') return `after step ${(start.afterStep ?? 0) + 1}`;
+  const base = start.anchor === 'last-spring-frost' ? ctx.lastSpringFrostMs : ctx.firstFallFrostMs;
+  return `around ${isoDay(base + start.offsetDays * DAY_MS)}`;
 }
 
 function listCropNames(inputs: FillInputs): Array<[string, string]> {

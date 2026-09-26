@@ -286,6 +286,60 @@ describe('POST /api/plantings/[id]/photo-help', () => {
     ]);
   });
 
+  it('falls back to the Care Guide when most of the answer was spray advice', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.create.mockResolvedValue(
+      aiReply(
+        'I can see white powder on the leaves. Mix baking soda into water. Apply it every 7 days.'
+      )
+    );
+    const owner = seedOwner();
+    const body = await runWithTenant(owner, async () => {
+      const crop = seedPlanting();
+      return (await (
+        await call(crop.id, { question: 'leaves', text: '', photo: PHOTO })
+      ).json()) as PhotoHelpResponse;
+    });
+    expect(body.provenance).toBe('fallback');
+    expect(body.answer).toMatchObject({ source: 'fallback', text: '', sprayRedirect: true });
+    expect(JSON.stringify(body)).not.toMatch(/baking soda|every 7 days/i);
+  });
+
+  it('shows a Claude answer as plain sentences, without markdown headings or bullets', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.create.mockResolvedValue(
+      aiReply(
+        '# Cherokee Purple Tomato Care\n\nI can see dark spots on the lower leaves.\n- Remove the spotted leaves.\n- **Water** at the base.'
+      )
+    );
+    const owner = seedOwner();
+    const body = await runWithTenant(owner, async () => {
+      const crop = seedPlanting();
+      return (await (
+        await call(crop.id, { question: 'leaves', text: '', photo: PHOTO })
+      ).json()) as PhotoHelpResponse;
+    });
+    expect(body.answer.text).toBe(
+      'I can see dark spots on the lower leaves. Remove the spotted leaves. Water at the base.'
+    );
+  });
+
+  it('tells Claude there is no photo when the grower sent none', async () => {
+    m.getApiKey.mockReturnValue('sk-test');
+    m.create.mockResolvedValue(aiReply('Pick them when the shoulders darken.'));
+    const owner = seedOwner();
+    await runWithTenant(owner, async () => {
+      const crop = seedPlanting();
+      await call(crop.id, { question: 'ready', text: '' });
+    });
+    const content = m.create.mock.calls[0][0].messages[0].content;
+    expect(typeof content).toBe('string');
+    expect(content).toContain('They did not send a photo.');
+    expect(content).toContain('never say what you can see');
+    expect(content).not.toContain('Say what you can see in the photo');
+    expect(content).toContain('Always answer in English');
+  });
+
   it('never asks Claude for spray advice: a spray question goes to the Spray flow', async () => {
     m.getApiKey.mockReturnValue('sk-test');
     const owner = seedOwner();

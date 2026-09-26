@@ -31,6 +31,8 @@ export interface GardenFillCropFact {
   inRowSpacingIn: number;
   rowSpacingIn: number;
   plants: number | null;
+  /** Planting dates the server accepts for this crop this season. */
+  window?: { earliest: string; latest: string } | null;
 }
 
 export interface GardenFillPromptInput {
@@ -41,6 +43,8 @@ export interface GardenFillPromptInput {
   occupied: Array<{ name: string; fromIso: string; untilIso: string; footprint: Footprint | null }>;
   history: Array<{ year: number; name: string; family: string }>;
   plannedCrops: GardenFillCropFact[];
+  /** Crops from the fitting recipes that the owner has not planned. */
+  recipeCrops?: GardenFillCropFact[];
   recipes: Array<{ pluginId: string; name: string; description: string; steps: string[] }>;
 }
 
@@ -52,6 +56,13 @@ export interface GardenFillAiResult {
 
 function fmtFootprint(fp: Footprint | null): string {
   return fp ? `x ${fp.x_in} in, y ${fp.y_in} in, ${fp.w_in}×${fp.l_in} in` : 'the whole bed';
+}
+
+function cropLine(c: GardenFillCropFact): string {
+  const dtm = c.daysToMaturity ? `${c.daysToMaturity.min}-${c.daysToMaturity.max}` : 'unknown';
+  const window = c.window ? `, plant between ${c.window.earliest} and ${c.window.latest}` : '';
+  const plants = c.plants ? `, wants ${c.plants} plants` : '';
+  return `- ${c.cropPluginId}: ${c.name}, ${c.family}, ${dtm} days to maturity, ${c.inRowSpacingIn} in in-row, ${c.rowSpacingIn} in between rows${window}${plants}`;
 }
 
 export function buildGardenFillPrompt(input: GardenFillPromptInput): string {
@@ -74,25 +85,23 @@ export function buildGardenFillPrompt(input: GardenFillPromptInput): string {
       ? input.history.map((h) => `- ${h.year}: ${h.name} (${h.family})`)
       : ['- no history']),
     '',
-    "The owner's planned crops that still need a spot:",
-    ...(input.plannedCrops.length
-      ? input.plannedCrops.map(
-          (c) =>
-            `- ${c.cropPluginId}: ${c.name}, ${c.family}, ${c.daysToMaturity ? `${c.daysToMaturity.min}-${c.daysToMaturity.max}` : 'unknown'} days to maturity, ${c.inRowSpacingIn} in in-row, ${c.rowSpacingIn} in between rows${c.plants ? `, wants ${c.plants} plants` : ''}`
-        )
-      : ['- none']),
+    "The owner's planned crops that still need a spot (place these first):",
+    ...(input.plannedCrops.length ? input.plannedCrops.map(cropLine) : ['- none']),
     '',
-    'Bed recipes that fit this season (sequences that work here):',
+    'Other crops you may use:',
+    ...(input.recipeCrops?.length ? input.recipeCrops.map(cropLine) : ['- none']),
+    '',
+    'Bed recipes that fit this season (ideas for sequences; a recipe name is not a crop):',
     ...(input.recipes.length
-      ? input.recipes.map(
-          (r) => `- ${r.pluginId}: ${r.name}. ${r.description} Steps: ${r.steps.join('; ')}`
-        )
+      ? input.recipes.map((r) => `- ${r.name}. ${r.description} Steps: ${r.steps.join('; ')}`)
       : ['- none']),
     '',
     'Rules:',
-    '- Use only cropPluginId values listed above.',
+    '- cropPluginId must be one of the crop ids in the two crop lists above, exactly as written.',
+    `- Each plantingDate must fall inside that crop's "plant between" dates and on or after ${input.dateIso}. Skip a crop whose dates have passed.`,
     `- Footprints are inches inside the bed: 0 <= x_in, x_in + w_in <= ${widthIn}, 0 <= y_in, y_in + l_in <= ${lengthIn}. Use multiples of 6.`,
-    `- plantingDate is YYYY-MM-DD in ${input.seasonYear}, on or after ${input.dateIso}, inside the crop's usual planting window for these frost dates.`,
+    `- plantingDate is YYYY-MM-DD in ${input.seasonYear}. When a recipe date falls outside a crop's "plant between" dates, the "plant between" dates win.`,
+    '- Fill the free space: give each planting enough room for several plants at its spacing, and use a later crop to follow an early one in the same spot.',
     '- Each crop must be ready to harvest before the first fall frost.',
     `- At most ${MAX_AI_PROPOSALS} plantings. pattern is "square" (rows), "offset" (intensive) or "sfg" (square foot).`,
     `- note: one plain sentence under ${MAX_NOTE_CHARS} characters, or omit it.`,

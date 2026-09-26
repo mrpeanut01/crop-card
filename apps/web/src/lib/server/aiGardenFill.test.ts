@@ -176,7 +176,20 @@ describe('buildGardenFillPrompt', () => {
           daysToMaturity: { min: 45, max: 55 },
           inRowSpacingIn: 9,
           rowSpacingIn: 12,
-          plants: 16
+          plants: 16,
+          window: { earliest: '2027-03-04', latest: '2027-08-17' }
+        }
+      ],
+      recipeCrops: [
+        {
+          cropPluginId: 'kale',
+          name: 'Kale',
+          family: 'brassica',
+          daysToMaturity: { min: 50, max: 60 },
+          inRowSpacingIn: 15,
+          rowSpacingIn: 18,
+          plants: null,
+          window: null
         }
       ],
       recipes: [
@@ -193,7 +206,11 @@ describe('buildGardenFillPrompt', () => {
     expect(text).toContain('- Tomato: 2027-05-01 to 2027-11-03, x 0 in, y 0 in, 48×48 in');
     expect(text).toContain('- 2026: Tomato (solanaceae)');
     expect(text).toContain('wants 16 plants');
-    expect(text).toContain('salad-succession: Salad succession.');
+    expect(text).toContain('- Salad succession. Greens.');
+    expect(text).not.toContain('salad-succession');
+    expect(text).toContain('plant between 2027-03-04 and 2027-08-17, wants 16 plants');
+    expect(text).toMatch(/Other crops you may use:\n- kale: Kale, brassica/);
+    expect(text).toContain('a recipe name is not a crop');
     expect(text).toContain('on or after 2027-07-15');
   });
 });

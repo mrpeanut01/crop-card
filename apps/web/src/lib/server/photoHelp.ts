@@ -20,6 +20,7 @@ import {
   careSectionsFor,
   filterSprayAdvice,
   filterSprayAdviceItems,
+  answerSentences,
   growerFacingText,
   topicFor
 } from '$lib/journal/photoHelp';
@@ -69,6 +70,19 @@ function isoDay(ms: number): string {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
+/** Claude's answer as plain sentences: no markdown headings, bullets or
+ *  emphasis, which the grower would otherwise see as stray symbols. */
+export function plainAnswer(text: string): string {
+  return text
+    .split('\n')
+    .filter((line) => !/^\s*#{1,6}\s/.test(line))
+    .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, ''))
+    .join(' ')
+    .replace(/\*\*|__|`/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function careAnswerSections(
   plugin: SnapshotCropPlugin | null,
   question: PhotoQuestion,
@@ -90,7 +104,8 @@ export function promptInputFor(
   plugin: SnapshotCropPlugin | null,
   question: string,
   now: number,
-  sprayTerms?: readonly string[]
+  sprayTerms?: readonly string[],
+  hasPhoto = true
 ): PhotoHelpPromptInput {
   const days = crop.plantingDate !== null ? Math.floor((now - crop.plantingDate) / DAY_MS) : null;
   return {
@@ -105,7 +120,8 @@ export function promptInputFor(
       sprayTerms
     ),
     notes: plugin?.notes ? growerFacingText(plugin.notes, sprayTerms) || null : null,
-    question
+    question,
+    hasPhoto
   };
 }
 
@@ -162,7 +178,11 @@ export async function answerPhotoHelp(args: {
     userId,
     timeoutMs: PHOTO_HELP_TIMEOUT_MS,
     prompt: (signal) =>
-      askPhotoHelp(promptInputFor(crop, plugin, asked, now, sprayTerms), req.photo, signal)
+      askPhotoHelp(
+        promptInputFor(crop, plugin, asked, now, sprayTerms, !!req.photo),
+        req.photo,
+        signal
+      )
   });
 
   if (tried.provenance === 'fallback') {
@@ -172,9 +192,12 @@ export async function answerPhotoHelp(args: {
     return fallback(why, tried.fallbackReason);
   }
 
-  const { text, meta } = tried.value;
+  const { meta } = tried.value;
+  const text = plainAnswer(tried.value.text);
   const filtered = filterSprayAdvice(text, sprayTerms);
-  const usable = filtered.text.trim().length > 0;
+  const mostlySpray =
+    filtered.removed && answerSentences(filtered.text).length * 2 < answerSentences(text).length;
+  const usable = filtered.text.trim().length > 0 && !mostlySpray;
   try {
     recordCall({
       userId,

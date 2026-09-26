@@ -70,6 +70,17 @@ export const SPRAY_REDIRECT =
 const PESTICIDE_TERMS = new RegExp(
   [
     'spray\\w*',
+    'spr[ae]y[ei]?\\w*',
+    'spary\\w*',
+    'pesti?[cs]i?de?\\w*',
+    'insecti?[cs]i?de?\\w*',
+    'fungi?c[iy]?de?\\w*',
+    'fongicide\\w*',
+    'herbi?[cs]i?de?\\w*',
+    'pulv[eé]ris\\w*',
+    'pulveriz\\w*',
+    'roci[ae]r\\w*',
+    'fumig\\w*',
     'pesticid\\w*',
     'insecticid\\w*',
     'fungicid\\w*',
@@ -80,6 +91,36 @@ const PESTICIDE_TERMS = new RegExp(
     'weed ?killer',
     'bug ?killer',
     'neem',
+    'baking soda',
+    'bicarbonate',
+    'hydrogen peroxide',
+    'bordeaux',
+    'milk (?:spray|solution|mix)',
+    'garlic (?:water|spray|oil|tea)',
+    '(?:cayenne|hot)? ?pepper (?:spray|tea|wax)',
+    'bonide',
+    'captain jack',
+    'monterey',
+    'garden safe',
+    'safer brand',
+    'ortho\\b',
+    'spectracide',
+    'bioadvanced',
+    'bayer advanced',
+    'southern ag',
+    'ferti-?lome',
+    'hi-?yield',
+    'natria',
+    'dr\\.? earth',
+    'bravo\\b',
+    'active ingredients?',
+    'mode of action',
+    'frac\\b',
+    'irac\\b',
+    'hrac\\b',
+    'capfuls?',
+    'ppm\\b',
+    'parts per million',
     'copper(?![- ](?:colou?red|toned|brown|tint))',
     'sulfur',
     'sulphur',
@@ -116,8 +157,8 @@ const PESTICIDE_TERMS = new RegExp(
     'horticultural oil',
     'dormant oil',
     'rei\\b',
-    're-?entry interval',
-    'pre-?harvest interval',
+    're[- ]?entry interval',
+    'pre[- ]?harvest interval',
     'phi\\b'
   ]
     .map((t) => `\\b${t}`)
@@ -126,13 +167,14 @@ const PESTICIDE_TERMS = new RegExp(
 );
 
 const VOLUME_UNITS =
-  'fl\\.?\\s*oz|oz|ounces?|ml|milliliters?|tbsp|tablespoons?|tsp|teaspoons?|lbs?|pounds?|pints?|pt|quarts?|qt|gallons?|gal|grams?|g|cups?|liters?|litres?|l';
-const PER_UNITS = 'gallon|gal|acre|ac|liter|litre|l|1,?000|quart|qt|pint|pt|cup';
+  'fl\\.?\\s*oz|oz|ounces?|ml|milliliters?|tbsp|tablespoons?|tsp|teaspoons?|lbs?|pounds?|pints?|pt|quarts?|qt|gallons?|gal|grams?|g|cups?|liters?|litres?|l|onzas?|onces?|cucharad(?:it)?as?|cuill[eè]res?|litros?|gramos?|grammes?';
+const PER_UNITS =
+  'gallon|gal|gal[oó]n|acre|ac|liter|litre|litro|l|1,?000|quart|qt|pint|pt|cup|hect[aá]re|hectar[eé]a|ha';
 const CONTAINERS = 'gallons?|quarts?|liters?|litres?|pints?|cups?';
 
 const RATE_PATTERNS = [
   new RegExp(
-    `\\b\\d+(?:\\.\\d+)?\\s*(?:${VOLUME_UNITS})\\b.{0,40}?\\b(?:per|\\/|a|an|each)\\s*(?:${PER_UNITS})\\b`,
+    `\\b\\d+(?:\\.\\d+)?\\s*(?:${VOLUME_UNITS})\\b.{0,40}?\\b(?:per|\\/|a|an|each|par|por|pro)\\s*(?:${PER_UNITS})\\b`,
     'i'
   ),
   new RegExp(
@@ -142,7 +184,17 @@ const RATE_PATTERNS = [
   new RegExp(
     `\\bmix\\b.{0,60}\\b(?:in|into|with)\\s+(?:a|one|each|every)\\s+(?:${CONTAINERS})\\b`,
     'i'
-  )
+  ),
+  /\b(?:\d+(?:\.\d+)?|a|one|half an?)\s*(?:tbsp|tablespoons?|tsp|teaspoons?|ml|fl\.?\s*oz|ounces?|oz)\b.{0,40}\bwater\b/i
+];
+
+/** Spray timing with the product left out: "apply every 7 days", "re-apply
+ *  after rain", "treat weekly while it stays wet". */
+const TIMING_PATTERNS = [
+  /\b(?:re-?appl\w*|appl(?:y|ies|ied|ying|ication)|treat\w*|dust\w*|drench\w*|fog\w*|mist\w*)\b.{0,50}\b(?:every|each)\s+(?:\d+|few|other|one|two|three|seven|ten|week|7|10|14)\b/i,
+  /\b(?:re-?appl\w*|appl(?:y|ies|ied|ying|ication)|treat\w*|dust\w*)\b.{0,50}\b(?:weekly|biweekly|fortnightly|after (?:each |every )?rain|before (?:bloom|rain|bud|harvest)|at (?:dusk|dawn|first sign)|preventat?ive(?:ly)?|protectant)\b/i,
+  /\b(?:preventat?ive(?:ly)?|protectant)\b.{0,30}\b(?:appl\w*|treat\w*|cover)\b/i,
+  /\b(?:days?|hours?)\b.{0,20}\bbefore (?:harvest|picking|you pick)\b.{0,40}\b(?:appl\w*|treat\w*|dust\w*)\b/i
 ];
 
 const PEST_WORDS =
@@ -160,8 +212,53 @@ const QUESTION_PATTERNS = [
   ),
   /\b(?:what|which)\b.{0,40}\b(?:rate|dose|dosage|how much)\b/i,
   /\bapplication rate\b/i,
-  /\bhow (?:much|many)\b.{0,30}\bper (?:gallon|acre|quart|liter|litre)\b/i
+  /\bhow (?:much|many)\b.{0,30}\bper (?:gallon|acre|quart|liter|litre)\b/i,
+  /\bwhat (?:do|does|would|will)\b.{0,30}\b(?:farms?|farmers?|growers?|pros?|professionals?|orchards?|extension|agents?|nurser(?:y|ies)|stores?)\b.{0,30}\b(?:put|use|apply|recommend|spray|dust)\w*\b/i,
+  /\btreatments?\b/i,
+  /\btreat(?:ing)? (?:it|this|these|them|the (?:leaves|plants?|spots?|bed))\b/i,
+  /\b(?:medicine|remed(?:y|ies)|repellents?|deterrents?)\b/i,
+  /\bcure (?:it|this|the|these)\b.{0,20}\b(?:disease|blight|mildew|fung\w*|rot|spots?|infection)\b/i,
+  /\b(?:something|anything)\b.{0,25}\b(?:put|buy|use|apply|spray|dust|give)\b/i,
+  /\b(?:what|which)\b.{0,30}\b(?:apply|applying|use|using)\b.{0,30}\b(?:preventat?ive(?:ly)?|this time of year|now|protect\w*)\b/i,
+  /\bpreventat?ive(?:ly)?\b/i,
+  /\b(?:schedule|every (?:week|\d+ days?|few days|other week)|how often|how many times)\b.{0,50}\b(?:protect\w*|treat\w*|appl\w*|dust\w*)\b/i,
+  /\b(?:protect\w*|treat\w*|appl\w*|dust\w*)\b.{0,50}\b(?:schedule|every (?:week|\d+ days?|few days|other week)|how often|weekly)\b/i,
+  /\b(?:safe to|ok to|okay to) (?:put|use|apply|dust)\b/i,
+  /\bput on\b.{0,50}\bhow much\b/i,
+  /\b(?:ratio|dilut\w*|concentration|strength)\b/i,
+  /\bhow much\s+\w+(?:\s+\w+)?\s+(?:to|in|per|into)\s+(?:\w+\s+)?water\b/i,
+  /\brecipe\b.{0,40}\b(?:bugs?|pests?|repel\w*|mildew|fung\w*|blight|aphids?|beetles?|mixture|mix)\b/i,
+  /\b(?:homemade|home-made|diy)\b.{0,30}\b(?:mix\w*|bug|pest|repel\w*|fung\w*|killer)\b/i,
+  /\b(?:days?|how long)\b.{0,30}\bbefore (?:harvest|picking|i pick)\b/i,
+  /\b(?:dose|dosis|dosage|quel produit|qu[eé] producto|welches mittel)\b/i,
+  /\bhow many (?:tablespoons?|teaspoons?|ounces?|oz|ml|cups?)\b/i,
+  /\b(?:watering can|tank|sprayer|pump|backpack)\b.{0,40}\b(?:how much|what goes|put in|add|mix)\b/i,
+  /\b(?:what goes|put|add|mix)\b.{0,30}\b(?:in|into) (?:my|the|a|your) (?:watering can|tank|sprayer|pump|backpack)\b/i,
+  /\b(?:pour|sprinkle|dip|paint|drench|coat|wet|dust|rub|wipe)\w*\b.{0,40}\b(?:with (?:something|anything|what)|what\b|something|anything)/i,
+  /\bwhat\b.{0,30}\b(?:pour|sprinkle|dip|paint|drench|coat|rub|wipe)\b/i,
+  /\bwith (?:something|anything)\b/i,
+  new RegExp(
+    `\\b(?:sold|buy|bought|purchase)\\b.{0,40}\\b(?:for|to (?:kill|stop|control|prevent))\\b.{0,20}\\b(?:${PEST_WORDS}|spots?)`,
+    'i'
+  ),
+  /\b(?:home depot|lowe'?s|tractor supply|walmart|amazon|garden (?:center|centre)|feed store|hardware store)\b/i,
+  /\b(?:specific|exact)\b.{0,20}\bamounts?\b/i,
+  /\bwhat(?:'s| is) the (?:[a-z]) one\b/i,
+  /\bqu[eé] (?:le |les |lui )?(?:echo|pongo|aplico|mettre|appliquer)\b/i
 ];
+
+/** The question with leetspeak and letter-by-letter spelling undone, so
+ *  "sp_r_a_y" and "n-e-e-m" meet the same patterns as the plain words. */
+export function normalizeQuestion(question: string): string {
+  return question
+    .replace(/[3]/g, 'e')
+    .replace(/[4@]/g, 'a')
+    .replace(/[0]/g, 'o')
+    .replace(/[1!|]/g, 'i')
+    .replace(/[5$]/g, 's')
+    .replace(/\b(?:[a-z][\s_.*\-]+){2,}[a-z]\b/gi, (m) => m.replace(/[\s_.*\-]+/g, ''))
+    .replace(/([a-z])[_*]+(?=[a-z])/gi, '$1');
+}
 
 const COMMON_WORD_BRANDS = new Set(
   (
@@ -267,17 +364,28 @@ function compileTerms(terms: readonly string[] | undefined): CompiledTerms {
 /** True when a sentence names a pesticide, a spray, or a mix rate. Pass the
  *  library's `sprayProductTerms` so brand names are caught too. */
 export function isSprayAdvice(sentence: string, terms?: readonly string[]): boolean {
-  if (PESTICIDE_TERMS.test(sentence) || RATE_PATTERNS.some((r) => r.test(sentence))) return true;
+  if (
+    PESTICIDE_TERMS.test(sentence) ||
+    RATE_PATTERNS.some((r) => r.test(sentence)) ||
+    TIMING_PATTERNS.some((r) => r.test(sentence))
+  )
+    return true;
   const compiled = compileTerms(terms);
   return !!(compiled.plain?.test(sentence) || compiled.capitalized?.test(sentence));
 }
 
 /** True when the grower's own question asks for spray or product advice. */
 export function asksForSprayAdvice(question: string, terms?: readonly string[]): boolean {
-  return isSprayAdvice(question, terms) || QUESTION_PATTERNS.some((r) => r.test(question));
+  const variants = [question, normalizeQuestion(question)];
+  return variants.some((q) => isSprayAdvice(q, terms) || QUESTION_PATTERNS.some((r) => r.test(q)));
 }
 
 const AUTHOR_NOTE = /\bPhase \d+|\btrait override\b|\bfamily-kill\b|\bdefault\b/i;
+
+/** A text split into the sentences the spray filter works on. */
+export function answerSentences(text: string): string[] {
+  return sentences(text);
+}
 
 function sentences(text: string): string[] {
   return text

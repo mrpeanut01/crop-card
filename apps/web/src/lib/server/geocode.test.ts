@@ -13,6 +13,7 @@ import {
   type GeocodeFetcher
 } from './geocode';
 import { SafeFetchError, type SafeFetchResponse } from './safeFetch';
+import census from './__fixtures__/census-onelineaddress.json';
 
 function response(status: number, text: string, truncated = false): SafeFetchResponse {
   return {
@@ -24,19 +25,8 @@ function response(status: number, text: string, truncated = false): SafeFetchRes
   };
 }
 
-const CENSUS_BODY = {
-  result: {
-    input: { address: { address: '1 Harrison St SE, Leesburg, VA' } },
-    addressMatches: [
-      {
-        matchedAddress: '1 HARRISON ST SE, LEESBURG, VA, 20175',
-        coordinates: { x: -77.5636, y: 39.1157 }
-      },
-      { matchedAddress: 'BROKEN', coordinates: { x: 'nope', y: 1 } },
-      { coordinates: { x: -77, y: 39 } }
-    ]
-  }
-};
+// Live geocoding.geo.census.gov onelineaddress responses recorded 2026-09-26.
+const CENSUS_BODY = census.street;
 
 describe('censusGeocodeUrl', () => {
   it('targets the onelineaddress endpoint with the current benchmark', () => {
@@ -70,10 +60,53 @@ describe('normalizeGeocodeQuery', () => {
 });
 
 describe('parseCensusMatches', () => {
-  it('keeps well-formed matches with x=lon, y=lat', () => {
-    expect(parseCensusMatches(CENSUS_BODY)).toEqual([
-      { label: '1 HARRISON ST SE, LEESBURG, VA, 20175', lat: 39.1157, lon: -77.5636 }
+  it('reads a Leesburg street address with x=lon, y=lat', () => {
+    expect(parseCensusMatches(census.street)).toEqual([
+      {
+        label: '1 HARRISON ST SE, LEESBURG, VA, 20175',
+        lat: 39.113939436497,
+        lon: -77.561559980346
+      }
     ]);
+  });
+
+  it('matches a rural street address and corrects a misspelled town', () => {
+    expect(parseCensusMatches(census.ruraladdr)).toEqual([
+      {
+        label: '16501 HILLSBORO RD, PURCELLVILLE, VA, 20132',
+        lat: 39.16074187382,
+        lon: -77.7338836194
+      }
+    ]);
+    expect(parseCensusMatches(census.misspelled)).toEqual([
+      {
+        label: '25 W MARKET ST, LEESBURG, VA, 20176',
+        lat: 39.115504561944,
+        lon: -77.564976413073
+      }
+    ]);
+  });
+
+  it.each(['rural', 'pobox', 'nonsense'] as const)(
+    'returns [] for the %s query (Census has no address range for it)',
+    (kind) => {
+      expect(census[kind].result.addressMatches).toEqual([]);
+      expect(parseCensusMatches(census[kind])).toEqual([]);
+    }
+  );
+
+  it('skips entries with a missing label or non-numeric coordinates', () => {
+    const [real] = census.street.result.addressMatches;
+    const body = {
+      result: {
+        addressMatches: [
+          { ...real, coordinates: { x: 'nope', y: 1 } },
+          { ...real, matchedAddress: undefined },
+          real
+        ]
+      }
+    };
+    expect(parseCensusMatches(body)).toHaveLength(1);
   });
 
   it('returns [] for anything malformed', () => {

@@ -8,7 +8,11 @@ import { runWithTenant } from '$lib/db/tenant';
 import { LOUDOUN_DEFAULT_LAT_LON } from '$lib/schedule/constants';
 import { deriveHourly, HOUR_MS } from '$lib/weather/leafWet';
 import grid from './__fixtures__/nws-gridpoint-lwx.json';
+import gridMob from './__fixtures__/nws-gridpoint-mob.json';
+import gridBzn from './__fixtures__/nws-gridpoint-tfx-bozeman.json';
 import points from './__fixtures__/nws-points-lwx.json';
+import pointsMob from './__fixtures__/nws-points-mob.json';
+import pointsBzn from './__fixtures__/nws-points-tfx-bozeman.json';
 import { WeatherFetchError } from './weather';
 import {
   expandValidTime,
@@ -22,8 +26,9 @@ import {
   type NwsGridpointResponse
 } from './weatherHourly';
 
-const FIXTURE_START = Date.UTC(2026, 8, 25, 8);
-const FIXTURE_HOURS = 130;
+// Live api.weather.gov responses recorded 2026-09-26, trimmed to five days.
+const FIXTURE_START = Date.UTC(2026, 8, 26, 5);
+const FIXTURE_HOURS = 123;
 let latSeq = 0;
 function freshLat(): number {
   latSeq += 1;
@@ -42,6 +47,10 @@ function mockNws(): ReturnType<typeof vi.fn> {
 afterEach(() => {
   vi.unstubAllGlobals();
 });
+
+function lastCompleteHour(hours: ReturnType<typeof gridpointToHourly>): number {
+  return hours.findLastIndex((h) => h.tempF !== null && h.rhPct !== null && h.windMph !== null);
+}
 
 describe('parseIsoDurationHours', () => {
   it.each([
@@ -84,11 +93,11 @@ describe('gridpointToHourly', () => {
     expect(hours).toHaveLength(FIXTURE_HOURS);
     expect(hours[0].t).toBe(FIXTURE_START);
     for (let i = 1; i < hours.length; i++) expect(hours[i].t - hours[i - 1].t).toBe(HOUR_MS);
-    // NWS series end at different times, so the tail past the last temperature
-    // interval legitimately carries nulls.
-    const lastTemp = hours.findLastIndex((h) => h.tempF !== null);
-    expect(lastTemp).toBeGreaterThan(110);
-    for (const h of hours.slice(0, lastTemp + 1)) {
+    // NWS series end at different times, so the last few hours legitimately
+    // carry nulls for the series that ended first.
+    const lastFull = lastCompleteHour(hours);
+    expect(lastFull).toBeGreaterThan(110);
+    for (const h of hours.slice(0, lastFull + 1)) {
       expect(h.tempF).not.toBeNull();
       expect(h.tempF!).toBeGreaterThan(40);
       expect(h.tempF!).toBeLessThan(100);
@@ -125,14 +134,49 @@ describe('gridpointToHourly', () => {
     expect(hours[0].rhPct).toBeNull();
   });
 
-  it('fixture derives a rain-risk window for the recorded Sep 26 rain', () => {
+  it('fixture derives a rain-risk window for the recorded Sep 26 afternoon rain', () => {
     const hours = gridpointToHourly(grid as NwsGridpointResponse);
-    const d = deriveHourly(hours, 'data', { nowMs: Date.UTC(2026, 8, 26, 16), rainfastHours: 4 });
+    const d = deriveHourly(hours, 'data', { nowMs: Date.UTC(2026, 8, 26, 17), rainfastHours: 4 });
     expect(d.rainfast.status).toBe('rain-risk');
-    const clear = deriveHourly(hours, 'data', { nowMs: Date.UTC(2026, 8, 25, 14) });
+    const clear = deriveHourly(hours, 'data', { nowMs: Date.UTC(2026, 8, 26, 6) });
     expect(clear.rainfast.status).toBe('clear');
-    expect(clear.dryWindow?.startMs).toBe(Date.UTC(2026, 8, 25, 14));
+    expect(clear.dryWindow?.startMs).toBe(Date.UTC(2026, 8, 26, 6));
     expect(clear.dailyRain.length).toBe(5);
+  });
+});
+
+describe('gridpointToHourly across forecast offices', () => {
+  it.each([
+    ['LWX (Leesburg, VA)', points, grid, 'LWX', [25, 100]],
+    ['MOB (Mobile, AL)', pointsMob, gridMob, 'MOB', [45, 105]],
+    ['TFX (Bozeman, MT, mountain grid)', pointsBzn, gridBzn, 'TFX', [5, 95]]
+  ] as const)('%s parses into a gap-free hourly series', (_label, pts, g, office, [lo, hi]) => {
+    expect(pts.properties.gridId).toBe(office);
+    expect(pts.properties.forecastGridData).toMatch(
+      new RegExp(`^https://api\\.weather\\.gov/gridpoints/${office}/`)
+    );
+    const hours = gridpointToHourly(g as NwsGridpointResponse);
+    expect(hours.length).toBeGreaterThan(110);
+    for (let i = 1; i < hours.length; i++) expect(hours[i].t - hours[i - 1].t).toBe(HOUR_MS);
+    const lastFull = lastCompleteHour(hours);
+    expect(lastFull).toBeGreaterThan(110);
+    for (const h of hours.slice(0, lastFull + 1)) {
+      expect(h.tempF).not.toBeNull();
+      expect(h.tempF!).toBeGreaterThan(lo);
+      expect(h.tempF!).toBeLessThan(hi);
+      expect(h.rhPct!).toBeGreaterThanOrEqual(0);
+      expect(h.rhPct!).toBeLessThanOrEqual(100);
+      expect(h.windMph!).toBeGreaterThanOrEqual(0);
+      expect(h.windMph!).toBeLessThan(60);
+      if (h.popPct !== null) expect(h.popPct).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it('expands multi-day PoP intervals such as P2DT16H from the MOB grid', () => {
+    const vt = (gridMob as NwsGridpointResponse).properties.probabilityOfPrecipitation!.values[0]
+      .validTime;
+    expect(vt.endsWith('/P2DT16H')).toBe(true);
+    expect(expandValidTime(vt)).toHaveLength(64);
   });
 });
 

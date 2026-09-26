@@ -1,0 +1,176 @@
+{
+  "street": {
+    "result": {
+      "input": {
+        "address": {
+          "address": "1 Harrison St SE, Leesburg, VA 20175"
+        },
+        "benchmark": {
+          "isDefault": true,
+          "benchmarkDescription": "Public Address Ranges - Current Benchmark",
+          "id": "4",
+          "benchmarkName": "Public_AR_Current"
+        }
+      },
+      "addressMatches": [
+        {
+          "tigerLine": {
+            "side": "L",
+            "tigerLineId": "62323968"
+          },
+          "coordinates": {
+            "x": -77.561559980346,
+            "y": 39.113939436497
+          },
+          "addressComponents": {
+            "zip": "20175",
+            "streetName": "HARRISON",
+            "preType": "",
+            "city": "LEESBURG",
+            "preDirection": "",
+            "suffixDirection": "SE",
+            "fromAddress": "99",
+            "state": "VA",
+            "suffixType": "ST",
+            "toAddress": "1",
+            "suffixQualifier": "",
+            "preQualifier": ""
+          },
+          "matchedAddress": "1 HARRISON ST SE, LEESBURG, VA, 20175"
+        }
+      ]
+    }
+  },
+  "ruraladdr": {
+    "result": {
+      "input": {
+        "address": {
+          "address": "16501 Hillsboro Rd, Purcellville, VA 20132"
+        },
+        "benchmark": {
+          "isDefault": true,
+          "benchmarkDescription": "Public Address Ranges - Current Benchmark",
+          "id": "4",
+          "benchmarkName": "Public_AR_Current"
+        }
+      },
+      "addressMatches": [
+        {
+          "tigerLine": {
+            "side": "L",
+            "tigerLineId": "642575082"
+          },
+          "coordinates": {
+            "x": -77.7338836194,
+            "y": 39.16074187382
+          },
+          "addressComponents": {
+            "zip": "20132",
+            "streetName": "HILLSBORO",
+            "preType": "",
+            "city": "PURCELLVILLE",
+            "preDirection": "",
+            "suffixDirection": "",
+            "fromAddress": "16599",
+            "state": "VA",
+            "suffixType": "RD",
+            "toAddress": "16477",
+            "suffixQualifier": "",
+            "preQualifier": ""
+          },
+          "matchedAddress": "16501 HILLSBORO RD, PURCELLVILLE, VA, 20132"
+        }
+      ]
+    }
+  },
+  "misspelled": {
+    "result": {
+      "input": {
+        "address": {
+          "address": "25 W Market St, Leesbrg, VA"
+        },
+        "benchmark": {
+          "isDefault": true,
+          "benchmarkDescription": "Public Address Ranges - Current Benchmark",
+          "id": "4",
+          "benchmarkName": "Public_AR_Current"
+        }
+      },
+      "addressMatches": [
+        {
+          "tigerLine": {
+            "side": "L",
+            "tigerLineId": "62323569"
+          },
+          "coordinates": {
+            "x": -77.564976413073,
+            "y": 39.115504561944
+          },
+          "addressComponents": {
+            "zip": "20176",
+            "streetName": "MARKET",
+            "preType": "",
+            "city": "LEESBURG",
+            "preDirection": "W",
+            "suffixDirection": "",
+            "fromAddress": "1",
+            "state": "VA",
+            "suffixType": "ST",
+            "toAddress": "99",
+            "suffixQualifier": "",
+            "preQualifier": ""
+          },
+          "matchedAddress": "25 W MARKET ST, LEESBURG, VA, 20176"
+        }
+      ]
+    }
+  },
+  "rural": {
+    "result": {
+      "input": {
+        "address": {
+          "address": "Rural Route 1 Box 50, Lovettsville, VA 20180"
+        },
+        "benchmark": {
+          "isDefault": true,
+          "benchmarkDescription": "Public Address Ranges - Current Benchmark",
+          "id": "4",
+          "benchmarkName": "Public_AR_Current"
+        }
+      },
+      "addressMatches": []
+    }
+  },
+  "pobox": {
+    "result": {
+      "input": {
+        "address": {
+          "address": "PO Box 88, Leesburg, VA 20178"
+        },
+        "benchmark": {
+          "isDefault": true,
+          "benchmarkDescription": "Public Address Ranges - Current Benchmark",
+          "id": "4",
+          "benchmarkName": "Public_AR_Current"
+        }
+      },
+      "addressMatches": []
+    }
+  },
+  "nonsense": {
+    "result": {
+      "input": {
+        "address": {
+          "address": "asdkjh qwpoeiru zzzz"
+        },
+        "benchmark": {
+          "isDefault": true,
+          "benchmarkDescription": "Public Address Ranges - Current Benchmark",
+          "id": "4",
+          "benchmarkName": "Public_AR_Current"
+        }
+      },
+      "addressMatches": []
+    }
+  }
+}

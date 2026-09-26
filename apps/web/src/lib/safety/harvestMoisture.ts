@@ -11,8 +11,13 @@
  *   - BLOCK  — over threshold; /api/harvest/record returns 422.
  *
  * Thresholds align with USDA storage guidelines (small-grain: 13.5% mc
- * wb; dry legume: 15% wb; forage hay: 18% wb; cure-then-store: 70%
- * after cure-down). All values are wet-basis percentages.
+ * wb; dry legume: 15% wb; forage hay: 18% wb). All values are wet-basis
+ * percentages.
+ *
+ * Cure-then-store crops (winter squash, potatoes, sweet potatoes, root
+ * crops, alliums) have no gate. Their flesh is 80 to 90% water at any
+ * point in a healthy cure, so no moisture ceiling separates sound from
+ * spoiling fruit; a reading is recorded but never blocks.
  *
  * The kernel only fires when the operator supplied moisture (the
  * `moisturePct` field on /api/harvest/record). Missing moisture is
@@ -45,10 +50,7 @@ const ARCHETYPE_MOISTURE_MAX: Partial<Record<Archetype, number>> = {
   'small-grain.zadoks': 13.5,
   'row-grain.pollination': 15.0,
   'dry-seed-legume': 15.0,
-  'forage-cutting-cycle': 18.0,
-  // Winter squash + cure-then-store crops finish at much higher % during
-  // cure; the gate only catches outright spoilage above 70%.
-  'winter-squash-cure': 70.0
+  'forage-cutting-cycle': 18.0
 };
 
 const WARN_BUFFER_PCT = 1.0;
@@ -75,15 +77,6 @@ export function thresholdForPlugin(plugin: PluginShape): number | null {
   return ARCHETYPE_MOISTURE_MAX[archetype] ?? null;
 }
 
-/**
- * Cure-then-store archetypes (winter squash) finish at a much higher
- * moisture during cure; the 70% ceiling is a *cure-moisture cap*, not a
- * drying floor. Its over-threshold copy must not say "drying required"
- * (#340) — a curing crop is remedied by extending the cure / rejecting a
- * rotting fruit, not by drying grain.
- */
-const CURE_ARCHETYPES = new Set<Archetype>(['winter-squash-cure']);
-
 export function evaluateHarvestMoisture(input: HarvestMoistureInput): HarvestMoistureResult | null {
   const threshold = thresholdForPlugin(input.cropPlugin);
   if (threshold == null) return null;
@@ -95,26 +88,20 @@ export function evaluateHarvestMoisture(input: HarvestMoistureInput): HarvestMoi
     return null;
   }
 
-  const isCure = CURE_ARCHETYPES.has(resolveArchetype(input.cropPlugin));
-
   if (m > threshold) {
-    const remedy = isCure
-      ? 'Extend cure or cull soft fruit before storing.'
-      : 'Drying required before commit.';
     return {
       decision: 'block',
       thresholdPct: threshold,
       warnBufferPct: WARN_BUFFER_PCT,
-      reason: `Stored moisture ${m.toFixed(1)}% > ${threshold.toFixed(1)}% safe-storage threshold for this crop family. ${remedy}`
+      reason: `Stored moisture ${m.toFixed(1)}% > ${threshold.toFixed(1)}% safe-storage threshold for this crop family. Drying required before commit.`
     };
   }
   if (m >= threshold - WARN_BUFFER_PCT) {
-    const watch = isCure ? 'Monitor for soft spots / rot.' : 'Monitor for heating.';
     return {
       decision: 'warn',
       thresholdPct: threshold,
       warnBufferPct: WARN_BUFFER_PCT,
-      reason: `Stored moisture ${m.toFixed(1)}% within ${WARN_BUFFER_PCT.toFixed(1)}% of the ${threshold.toFixed(1)}% threshold. ${watch}`
+      reason: `Stored moisture ${m.toFixed(1)}% within ${WARN_BUFFER_PCT.toFixed(1)}% of the ${threshold.toFixed(1)}% threshold. Monitor for heating.`
     };
   }
   return {

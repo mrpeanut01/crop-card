@@ -1,3 +1,4 @@
+import fc from 'fast-check';
 import { describe, it, expect } from 'vitest';
 import { evaluateHarvestMoisture, thresholdForPlugin } from './harvestMoisture';
 
@@ -12,8 +13,8 @@ describe('harvestMoisture — UC-16 storage-moisture safety gate', () => {
     it('returns 18.0% for forage-cutting-cycle (hay)', () => {
       expect(thresholdForPlugin({ archetype: 'forage-cutting-cycle' })).toBe(18.0);
     });
-    it('returns 70.0% for winter-squash-cure (catches outright spoilage)', () => {
-      expect(thresholdForPlugin({ archetype: 'winter-squash-cure' })).toBe(70.0);
+    it('returns null for winter-squash-cure (flesh is 80-90% water; no storage ceiling)', () => {
+      expect(thresholdForPlugin({ archetype: 'winter-squash-cure' })).toBeNull();
     });
     it('returns null for archetypes with no kernel gate (e.g. continuous-harvest-fruit)', () => {
       expect(thresholdForPlugin({ archetype: 'continuous-harvest-fruit' })).toBeNull();
@@ -74,30 +75,53 @@ describe('harvestMoisture — UC-16 storage-moisture safety gate', () => {
     });
   });
 
-  describe('#340 — cure-archetype copy branch', () => {
-    const squash = { archetype: 'winter-squash-cure' as const };
+  describe('cure-then-store crops are never gated', () => {
+    const cureCrops = [
+      { archetype: 'winter-squash-cure' as const },
+      { archetype: 'winter-squash-cure' as const, cropFamily: 'solanaceae' },
+      { cropFamily: 'root' },
+      { cropFamily: 'allium' },
+      { cropFamily: 'mystery' }
+    ];
 
-    it('winter-squash-cure block copy is cure-appropriate, NOT "drying required"', () => {
-      const r = evaluateHarvestMoisture({ moisturePct: 80, cropPlugin: squash });
-      expect(r?.decision).toBe('block');
-      expect(r?.reason).not.toMatch(/drying required/i);
-      expect(r?.reason).toMatch(/extend cure|cull/i);
+    it('realistic flesh moisture (squash ~88%, potato ~80%, carrot ~88%) returns null', () => {
+      for (const cropPlugin of cureCrops) {
+        for (const moisturePct of [65, 70, 78, 80, 88, 92]) {
+          expect(evaluateHarvestMoisture({ moisturePct, cropPlugin })).toBeNull();
+        }
+      }
     });
 
-    it('winter-squash-cure warn copy watches for rot, not heating', () => {
-      const r = evaluateHarvestMoisture({ moisturePct: 69.5, cropPlugin: squash });
-      expect(r?.decision).toBe('warn');
-      expect(r?.reason).not.toMatch(/heating/i);
-      expect(r?.reason).toMatch(/soft spots|rot/i);
+    it('property: no moisture reading ever warns or blocks a cure-archetype crop', () => {
+      fc.assert(
+        fc.property(
+          fc.constantFrom(...cureCrops),
+          fc.double({ min: -10, max: 150, noNaN: false }),
+          (cropPlugin, moisturePct) => evaluateHarvestMoisture({ moisturePct, cropPlugin }) === null
+        )
+      );
     });
 
-    it('small-grain block copy keeps the "drying required" remedy', () => {
-      const r = evaluateHarvestMoisture({
-        moisturePct: 15,
-        cropPlugin: { archetype: 'small-grain.zadoks' as const }
-      });
-      expect(r?.decision).toBe('block');
-      expect(r?.reason).toMatch(/drying required/i);
+    it('property: gated archetypes still block every reading above threshold', () => {
+      const gated = [
+        ['small-grain.zadoks', 13.5],
+        ['row-grain.pollination', 15.0],
+        ['dry-seed-legume', 15.0],
+        ['forage-cutting-cycle', 18.0]
+      ] as const;
+      fc.assert(
+        fc.property(
+          fc.constantFrom(...gated),
+          fc.double({ min: 0.001, max: 100, noNaN: true }),
+          ([archetype, max], over) => {
+            const r = evaluateHarvestMoisture({
+              moisturePct: max + over,
+              cropPlugin: { archetype }
+            });
+            return r?.decision === 'block' && /drying required/i.test(r.reason);
+          }
+        )
+      );
     });
 
     it('small-grain warn copy keeps the "heating" watch', () => {

@@ -27,5 +27,9 @@
  * during bloom and the block is in bloom (or bloom is unattested), and
  * dusk-to-dawn-only products are blocked between sunrise and sunset while
  * flowers may be present (NOAA sunrise/sunset in `sunTimes.ts`).
+ * 0.5.7: harvestMoisture no longer gates the `winter-squash-cure`
+ * archetype. Its 70% ceiling sat below the 80 to 90% flesh moisture of
+ * healthy squash, potatoes and root crops, so an honest reading was
+ * refused. Cure-then-store moisture is now recorded, never blocked.
  */
-export const RULES_VERSION = '0.5.6-issue130' as const;
+export const RULES_VERSION = '0.5.7' as const;

@@ -1,3 +1,4 @@
+import { RULES_VERSION } from '$lib/safety/version';
 import { FARM_SNAPSHOT_VERSION, type FarmSnapshot } from '../snapshot';
 
 const at = (iso: string) => Date.parse(iso);
@@ -9,7 +10,7 @@ export function sampleSnapshot(overrides: Partial<FarmSnapshot> = {}): FarmSnaps
     ownerId: 'owner_a',
     farmName: 'Goose Creek',
     generatedAt: at('2026-06-01T13:00:00Z'),
-    rulesVersion: '0.5.6-issue130',
+    rulesVersion: RULES_VERSION,
     origin: 'https://app.cropcard.io',
     areas: [
       {

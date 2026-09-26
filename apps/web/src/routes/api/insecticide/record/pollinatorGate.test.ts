@@ -45,6 +45,7 @@ vi.mock('$lib/db/users', () => ({ ensureSystemUser: vi.fn(async () => ({ id: 'sy
 
 import { POST } from './+server';
 import { sunTimesFor } from '$lib/safety/sunTimes';
+import { RULES_VERSION } from '$lib/safety/version';
 
 const NOON_EDT = Date.parse('2026-06-21T16:00:00Z');
 const MIDNIGHT_EDT = Date.parse('2026-06-22T04:00:00Z');
@@ -131,7 +132,7 @@ describe('POST /api/insecticide/record — #130 pollinator gate', () => {
     expect(body.code).toBe('POLLINATOR_BLOCK');
     expect(body.violations[0].code).toBe('POLLINATOR_BLOCK');
     expect(body.checks.find((c: { id: string }) => c.id === 'bloom').status).toBe('block');
-    expect(body.ruleVersion).toMatch(/^0\.5\.6/);
+    expect(body.ruleVersion).toBe(RULES_VERSION);
     expect(insertInsecticideEvent).not.toHaveBeenCalled();
   });
 

@@ -13,6 +13,7 @@ export const load: PageServerLoad = ({ locals }) => {
     configured: config !== null,
     publicKey: config?.publicKey ?? null,
     canSubscribe: locals.user.role !== 'inspector',
+    isOwner: locals.user.role === 'owner',
     frostNeedsLocation: (resolveWeatherLocation(null)?.source ?? 'farm-default') === 'farm-default',
     email: {
       address: locals.user.email,

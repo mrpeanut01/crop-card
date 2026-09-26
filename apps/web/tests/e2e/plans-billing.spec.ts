@@ -84,6 +84,16 @@ test.describe('plan & billing page', () => {
     expect(sent).toEqual({ plan: 'grower', interval: 'month' });
   });
 
+  test('the plan page and the alert settings link to each other', async ({ page }) => {
+    await signInAsDemoOwner(page);
+    await page.goto('/settings/billing');
+    await page.getByRole('link', { name: 'Choose your alerts' }).click();
+    await expect(page).toHaveURL(/\/settings\/notifications$/);
+    await page.getByRole('link', { name: 'See your plan and billing' }).click();
+    await expect(page).toHaveURL(/\/settings\/billing$/);
+    await expect(page.getByTestId('current-plan')).toBeVisible();
+  });
+
   test('yearly is the default period at checkout', async ({ page }) => {
     await signInAsDemoOwner(page);
     await page.goto('/settings/billing');

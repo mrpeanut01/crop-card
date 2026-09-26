@@ -205,6 +205,10 @@
   </SettingsSection>
 
   <div class="free-wrap"><FreeForever /></div>
+  <p class="payment-sub cross-link">
+    Push and email alerts are free on every plan, and email alerts are off until you turn them on.
+    <a href="/settings/notifications">Choose your alerts</a>.
+  </p>
 
   <SettingsSection
     title="Payment"
@@ -385,6 +389,10 @@
   }
   .free-wrap {
     margin: 0 0 16px;
+  }
+  .cross-link {
+    margin: 0 0 16px;
+    font-size: 14px;
   }
   .fine {
     margin: 12px 0 0;

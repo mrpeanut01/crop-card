@@ -350,6 +350,11 @@
         Every alert email has a one-click unsubscribe link. We never send marketing mail. Sign-in
         codes, farm invites and billing receipts still arrive because you asked for them.
       </p>
+      {#if data.isOwner}
+        <p class="muted">
+          Receipts come from Stripe. <a href="/settings/billing">See your plan and billing</a>.
+        </p>
+      {/if}
       {#if anyEmailOn}
         <div class="device-row email-actions">
           <button

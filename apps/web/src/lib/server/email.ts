@@ -415,8 +415,10 @@ function bodyFor(email: OutboundEmail): string {
         [
           `Your CropCard sign-in code is ${email.code}.`,
           ``,
-          `Enter it on the sign-in screen, or use this link on this device (it expires in ${expires} and works once):`,
+          `Tap this link on this device to sign in. It expires in ${expires} and works once:`,
           email.loginUrl,
+          ``,
+          `Opened this email somewhere else? Type the backup code above on the sign-in screen instead.`,
           ``,
           `If you didn't ask to sign in, you can ignore this email.`,
           ``,

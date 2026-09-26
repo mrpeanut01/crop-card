@@ -253,6 +253,11 @@
               <span class="kind-sub">{PUSH_ALERT_LABELS[kind].sub}</span>
             </span>
           </label>
+          {#if kind === 'frost-tonight' && data.frostNeedsLocation}
+            <p class="kind-note">
+              Needs your farm's location: <a href="/settings/farm">set it in Farm settings</a>.
+            </p>
+          {/if}
         </li>
       {/each}
     </ul>
@@ -347,5 +352,13 @@
   .kind-sub {
     color: var(--color-ink-muted);
     font-size: 12.5px;
+  }
+  .kind-note {
+    margin: 4px 0 0 52px;
+    color: var(--color-ink-muted);
+    font-size: 12.5px;
+  }
+  .kind-note a {
+    color: var(--color-ink);
   }
 </style>

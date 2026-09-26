@@ -198,6 +198,63 @@ test.describe('typed farm map', () => {
   });
 });
 
+test.describe('post-draw dialog', () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  test('extra clicks after finishing a fence keep the save dialog open', async ({ page }) => {
+    await provisionWizardTenant(page, { blocks: [] });
+    await page.setViewportSize({ width: 1280, height: 1100 });
+    await page.goto('/settings/farm/map');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: '+ Add' }).click();
+    await page
+      .getByRole('dialog', { name: 'Add to map' })
+      .getByRole('button', { name: /^Fence/ })
+      .click();
+
+    const map = page.locator('.leaflet-container');
+    await map.scrollIntoViewIfNeeded();
+    const box = (await map.boundingBox())!;
+    const cy = box.y + box.height / 2;
+    const start: [number, number] = [box.x + box.width / 2 - 120, cy];
+    const end: [number, number] = [box.x + box.width / 2 + 120, cy];
+    await page.mouse.click(...start);
+    await page.waitForTimeout(150);
+    await page.mouse.click(...end);
+    await page.waitForTimeout(150);
+    // The first click of this double-click finishes the line and opens the
+    // dialog under the cursor; the second used to land on Discard. Stray
+    // clicks on the backdrop afterwards must not close it either.
+    await page.mouse.dblclick(...end);
+    const modal = page.getByRole('dialog', { name: 'Add shade source' });
+    await expect(modal).toBeVisible();
+    await page.mouse.click(box.x + 10, box.y + 10);
+    await page.waitForTimeout(800);
+    await page.mouse.click(box.x + 10, box.y + 10);
+    await expect(modal).toBeVisible();
+
+    await modal.getByLabel('Name').fill('Back fence');
+    await modal.getByRole('button', { name: 'Save shade source' }).click();
+    await expect(modal).toHaveCount(0);
+
+    await page.getByRole('button', { name: '+ Add' }).click();
+    await page
+      .getByRole('dialog', { name: 'Add to map' })
+      .getByRole('button', { name: /^Fence/ })
+      .click();
+    await page.mouse.click(start[0], start[1] + 80);
+    await page.waitForTimeout(150);
+    await page.mouse.click(end[0], end[1] + 80);
+    await page.waitForTimeout(150);
+    await page.mouse.dblclick(end[0], end[1] + 80);
+    await expect(modal).toBeVisible();
+    await page.waitForTimeout(800);
+    await modal.getByRole('button', { name: 'Discard' }).click();
+    await expect(modal).toHaveCount(0);
+  });
+});
+
 test.describe('farm map zoom', () => {
   test.describe.configure({ timeout: 120_000 });
 

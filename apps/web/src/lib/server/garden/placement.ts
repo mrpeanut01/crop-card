@@ -31,6 +31,7 @@ import { plantCount, resolveSpacing } from '$lib/garden/plantCount';
 import type { GardenCrop, PlacedPlanting, PlantingStatus } from '$lib/garden/types';
 import { frostDatesForYear } from '$lib/schedule/settings';
 import { db } from '$lib/db/client';
+import { plantingInGround } from '$lib/garden/inGround';
 import type { PluginRegistry } from '$lib/plugins';
 
 export type CropLookup = (pluginId: string) => GardenCrop | undefined;
@@ -164,7 +165,9 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
     plantCount: crop.plantCount ?? null,
     plantCountProvenance: crop.plantCountProvenance ?? null,
     groupId: crop.groupId ?? null,
-    groupSystemKind: crop.groupSystemKind ?? null
+    groupSystemKind: crop.groupSystemKind ?? null,
+    groupRole: crop.groupRole ?? null,
+    sourceProvenance: crop.sourceProvenance ?? null
   };
 }
 
@@ -199,20 +202,53 @@ export function sharedSpaceWarnings(crop: Crop, lookup: CropLookup): string[] {
 
 export type FootprintWriteResult = { ok: true; response: FootprintWriteResponse } | GardenFailure;
 
+/** The placement to store for a partial write: a typed count survives a
+ *  move, resize or date change unless the request sends a new count (or
+ *  null to recount), and stored spacing survives unless the request sends
+ *  new spacing (or null to clear it). */
+export function mergePlacementInput(
+  current: Pick<Crop, 'spacingIn' | 'rowSpacingIn' | 'plantCount' | 'plantCountProvenance'>,
+  req: PlacementInput
+): PlacementInput {
+  const keptCount =
+    req.footprint && current.plantCountProvenance === 'manual' && current.plantCount != null
+      ? current.plantCount
+      : null;
+  return {
+    ...req,
+    spacingIn: req.spacingIn === undefined ? (current.spacingIn ?? null) : req.spacingIn,
+    rowSpacingIn:
+      req.rowSpacingIn === undefined ? (current.rowSpacingIn ?? null) : req.rowSpacingIn,
+    plantCount: req.plantCount === undefined ? keptCount : req.plantCount
+  };
+}
+
 /** Places, moves or clears a planting's spot, and moves its date when
- *  `plantingDateMs` is sent. Moving to another bed is only for `planned`
- *  plantings. A date move re-anchors the planting's tasks (and a group's
- *  members when it anchors one) through `movePlantingDate`. */
+ *  `plantingDateMs` is sent. Moving to another bed is only for plantings
+ *  not yet in the ground (`plantingInGround`). A date move re-anchors the
+ *  planting's tasks (and a group's members when it anchors one) through
+ *  `movePlantingDate`; the members that moved come back as `followers`. */
 export function writeFootprint(
   cropId: string,
   req: FootprintWriteRequest,
-  lookup: CropLookup
+  lookup: CropLookup,
+  nowMs: number = Date.now()
 ): FootprintWriteResult {
   const current = getCrop(cropId);
   if (!current) return gardenFailure(404, 'planting not found');
   const bed = resolveDesignableBed(req.blockId);
   if (isFailure(bed)) return bed;
-  if (req.blockId !== current.blockId && current.status !== 'planned') {
+  if (
+    req.blockId !== current.blockId &&
+    plantingInGround(
+      {
+        status: current.status,
+        plantingDateMs: current.plantingDate,
+        harvestedAtMs: current.harvestedAt ?? null
+      },
+      nowMs
+    )
+  ) {
     return gardenFailure(
       409,
       `${current.varietyDisplayName} is already in the ground in ${getBlock(current.blockId)?.name ?? 'its bed'}. Record a new planting instead.`,
@@ -223,16 +259,21 @@ export function writeFootprint(
     return gardenFailure(400, `That spot runs past the edge of ${bed.block.name}.`, 'OUTSIDE_AREA');
   }
   const plugin = lookup(current.cropPluginId);
-  const placement = resolvePlacement(req, plugin);
+  const placement = resolvePlacement(mergePlacementInput(current, req), plugin);
 
   return db.transaction(() => {
     setPlacement(cropId, placement, req.blockId);
     let reanchored: FootprintWriteResponse['reanchored'] = null;
+    let followers: PlacedPlanting[] = [];
     if (req.plantingDateMs !== undefined) {
       if (req.plantingDateMs === null) {
         if (current.plantingDate != null) unscheduleCrop(cropId);
       } else if (req.plantingDateMs !== current.plantingDate) {
-        reanchored = movePlantingDate(cropId, req.plantingDateMs)?.reanchored ?? null;
+        const moved = movePlantingDate(cropId, req.plantingDateMs);
+        reanchored = moved?.reanchored ?? null;
+        followers = (moved?.followers ?? []).map((f) =>
+          placedPlantingFromCrop(f, lookup(f.cropPluginId))
+        );
       }
     }
     const saved = getCrop(cropId)!;
@@ -241,6 +282,7 @@ export function writeFootprint(
       response: {
         planting: placedPlantingFromCrop(saved, plugin),
         reanchored,
+        followers,
         warnings: sharedSpaceWarnings(saved, lookup)
       }
     };
@@ -280,8 +322,7 @@ export function createPlacedPlantings(
           varietyDisplayName: item.varietyDisplayName,
           plantingDate: item.plantingDateMs,
           placement: resolvePlacement(item, plugin),
-          sourceProvenance:
-            item.source === 'ai' || item.source === 'fallback' ? item.source : undefined
+          sourceProvenance: item.source === 'manual' ? undefined : item.source
         }),
         plugin
       )

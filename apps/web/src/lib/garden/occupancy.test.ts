@@ -190,6 +190,26 @@ describe('plantingOccupancy', () => {
   });
 });
 
+describe('planting dates written at local midnight', () => {
+  it('count on the day that was picked, whatever zone wrote them', () => {
+    const virginia = plantingOccupancy(
+      planting({ plantingDateMs: Date.UTC(2026, 4, 1, 4) }),
+      tomato,
+      FROST
+    )!;
+    expect(virginia.startMs).toBe(day(5, 1));
+    const berlin = plantingOccupancy(
+      planting({ plantingDateMs: Date.UTC(2026, 3, 30, 22) }),
+      tomato,
+      FROST
+    )!;
+    expect(berlin.startMs).toBe(day(5, 1));
+    const bed = { blockId: 'bed1', widthFt: 4, lengthFt: 8 };
+    const range = { startMs: day(1, 1), endMs: day(12, 31), todayMs: day(5, 1) };
+    expect(bedOccupancyOn(bed, [virginia], day(5, 1), range).occupants).toHaveLength(1);
+  });
+});
+
 describe('occupancyIntervals', () => {
   it('skips plantings off the timeline and sorts by bed then start', () => {
     const out = occupancyIntervals(

@@ -2,9 +2,9 @@
   import { tick } from 'svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import { BED_STYLES, BED_STYLE_LABELS, type BedStyle } from '$lib/farm/areaKinds';
-  import { cardHref, cardKey } from '$lib/cards/model';
   import { familyLabel } from '$lib/garden/rotation';
-  import { shortDate } from '$lib/garden/occupancy';
+  import { bedOccupancyOn, shortDate } from '$lib/garden/occupancy';
+  import { plantingInGround, plantingStatusText } from '$lib/garden/inGround';
   import { successionIntervalDays } from '$lib/schedule/succession';
   import { MAX_SUCCESSIONS } from '$lib/garden/succession';
   import type { FillResponse } from '$lib/garden/api';
@@ -86,7 +86,7 @@
   const bedHints = $derived(
     d.hints.filter((h) => h.a.blockId === bed.blockId || h.b.blockId === bed.blockId)
   );
-  const plannedHere = $derived(plantings.filter((p) => p.status === 'planned'));
+  const plannedHere = $derived(plantings.filter((p) => !plantingInGround(p, d.nowMs)));
 
   async function saveSize(): Promise<void> {
     if (!(await d.resizeBed(bed.blockId, widthFt, lengthFt))) {
@@ -123,6 +123,35 @@
     const bn = `${b?.varietyDisplayName ?? h.b.cropPluginId} (${d.bed(h.b.blockId)?.name ?? ''})`;
     if (h.relation === 'keep-apart') return `Keep apart: ${an} and ${bn}.`;
     return `Good neighbours: ${an} and ${bn}.${h.benefit ? ` ${h.benefit}` : ''}`;
+  }
+
+  function countDetail(p: PlacedPlanting): string | undefined {
+    if (p.plantCountProvenance === 'fallback') {
+      return `No spacing on this crop, used ${Math.round(p.spacing.inRowIn)} in rows`;
+    }
+    if (p.plantCountProvenance === 'data') return 'from its spacing';
+    return undefined;
+  }
+
+  function commitDate(p: PlacedPlanting, el: unknown): void {
+    if (!(el instanceof HTMLInputElement)) return;
+    const ms = parseYmd(el.value);
+    if (ms == null || ms === p.plantingDateMs) return;
+    void d.setPlantingDate(p.cropId, ms);
+  }
+
+  function spotText(fp: { x_in: number; y_in: number; w_in: number }): string {
+    const across =
+      fp.x_in <= 0
+        ? 'left side'
+        : fp.x_in + fp.w_in >= bed.widthFt * 12 - 1e-6
+          ? 'right side'
+          : `${ft(fp.x_in / 12)} ft from the left`;
+    return fp.y_in > 0 ? `${across}, ${ft(fp.y_in / 12)} ft in` : `${across}, at the top`;
+  }
+
+  function nextOpenAfter(dateMs: number): number | null {
+    return bedOccupancyOn(bed, d.intervals, dateMs, d.range).nextOpenMs;
   }
 
   // Succession sheet
@@ -170,7 +199,7 @@
   async function requestFill(): Promise<void> {
     fillBusy = true;
     fill = await d.requestFill(bed.blockId);
-    accepted = {};
+    accepted = Object.fromEntries((fill?.proposals ?? []).map((p) => [p.key, true]));
     fillBusy = false;
   }
 
@@ -439,7 +468,6 @@
           >
         </div>
       {/if}
-      <a class="link" href={cardHref('area', cardKey('area', d.canvas.areaId))}>Area Card</a>
     </div>
   {:else if tab === 'plantings'}
     <div
@@ -454,32 +482,58 @@
       <ul class="plist">
         {#each plantings as p (p.cropId)}
           {@const sz = sizeOf(p)}
-          {@const rot = d.rotationFor(bed.blockId, p.cropFamily, p.cropId)}
+          {@const rot = d.rotationFor(bed.blockId, p.cropFamily, p.cropId, p.plantingDateMs)}
           {@const shares = d.sharesSpaceText(p)}
+          {@const early = d.windowWarning(p)}
+          {@const open = d.selectedCropId === p.cropId}
+          {@const series = d.seriesOf(p)}
+          {@const place = series.findIndex((q) => q.cropId === p.cropId)}
+          {@const first = series[0]}
+          {@const when = p.plantingDateMs != null ? d.dateText(p.plantingDateMs) : 'No date'}
+          {@const who = `${p.varietyDisplayName}, ${when}`}
+          {@const thisYear = d.inSeasonYear(p)}
           <li
             class="prow"
-            class:selected={d.selectedCropId === p.cropId}
+            class:selected={open}
             data-testid="planting-row"
             data-crop-name={p.varietyDisplayName}
           >
             <div class="ptitle">
-              <button type="button" class="linkish" onclick={() => d.selectPlanting(p.cropId)}
+              <button
+                type="button"
+                class="linkish"
+                aria-expanded={open}
+                data-planting-row-id={p.cropId}
+                onclick={() => (open ? (d.selectedCropId = null) : d.selectPlanting(p.cropId))}
                 >{p.varietyDisplayName}</button
               >
+              {#if p.sourceProvenance}<span class="prov-inline"
+                  ><Provenance
+                    source={p.sourceProvenance}
+                    detail={p.sourceProvenance === 'plugin' ? 'bed recipe' : undefined}
+                    compact
+                  /></span
+                >{/if}
               <span class="pmeta">
-                {p.plantingDateMs != null ? shortDate(p.plantingDateMs) : 'No date'} · {p.status}
-                {#if p.groupSystemKind === 'succession'}
-                  · succession{/if}
+                {when} · {plantingStatusText(
+                  p,
+                  d.nowMs,
+                  d.stageOf(p.cropId)
+                )}{#if series.length > 1 && place >= 0}
+                  · sowing {place + 1} of {series.length}{/if}
               </span>
             </div>
             {#if p.footprint}
               <div class="count" data-testid="plant-count">
                 <span>{p.plantCount != null ? plural(p.plantCount, 'plant') : 'Count not set'}</span
                 >
-                {#if p.plantCountProvenance}<Provenance
-                    source={p.plantCountProvenance}
-                    compact
-                  />{/if}
+                {#if p.plantCountProvenance}<span class="prov-inline"
+                    ><Provenance
+                      source={p.plantCountProvenance}
+                      detail={countDetail(p)}
+                      compact={p.plantCountProvenance !== 'fallback'}
+                    /></span
+                  >{/if}
                 <span class="pmeta"
                   >{sizeLabel(p.footprint.w_in / 12, p.footprint.l_in / 12)} · {PATTERN_LABELS[
                     p.spacing.pattern
@@ -489,12 +543,13 @@
             {:else}
               <p class="pmeta">Not placed in the bed yet.</p>
             {/if}
+            {#if early}<p class="chip warn">{early}</p>{/if}
             {#each rot as w (w.family)}
               <p class="chip {w.severity}">{w.message}</p>
             {/each}
             {#if shares}<p class="chip warn">{shares}</p>{/if}
 
-            {#if d.canEdit}
+            {#if d.canEdit && open}
               {#if p.footprint}
                 <div class="edit">
                   <label>
@@ -575,35 +630,63 @@
                   {/if}
                 </div>
               {/if}
-              <div class="edit">
+              <form
+                class="edit"
+                onsubmit={(e) => {
+                  e.preventDefault();
+                  commitDate(p, (e.currentTarget as HTMLFormElement).elements.namedItem('date'));
+                }}
+              >
                 <label>
                   Date
                   <input
                     type="date"
+                    name="date"
                     value={p.plantingDateMs != null ? ymd(p.plantingDateMs) : ''}
                     aria-label="{p.varietyDisplayName} planting date"
-                    onchange={(e) => {
-                      const ms = parseYmd((e.currentTarget as HTMLInputElement).value);
-                      if (ms != null) void d.setPlantingDate(p.cropId, ms);
-                    }}
+                    onblur={(e) => commitDate(p, e.currentTarget)}
                   />
                 </label>
-              </div>
+                <button type="submit" class="btn">Change date</button>
+              </form>
               <div class="actions">
                 {#if p.footprint}
-                  <button type="button" class="btn" onclick={() => d.startMovePlanting(p.cropId)}
-                    >Move</button
-                  >
-                  <button type="button" class="btn" onclick={() => openSuccession(p)}
-                    >Add succession</button
-                  >
-                  <button type="button" class="btn" onclick={() => d.removeFromBed(p.cropId)}
-                    >Remove from bed</button
-                  >
-                {:else}
                   <button
                     type="button"
                     class="btn"
+                    aria-label="Move {who}"
+                    onclick={() => d.startMovePlanting(p.cropId)}>Move</button
+                  >
+                  {#if series.length > 1 && place > 0 && first}
+                    <p class="pmeta series">
+                      Part of a succession of {series.length} sowings.
+                    </p>
+                    <button
+                      type="button"
+                      class="btn"
+                      aria-label="Go to the first sowing, {d.dateText(first.plantingDateMs ?? 0)}"
+                      onclick={() => d.selectPlanting(first.cropId)}>First sowing</button
+                    >
+                  {:else}
+                    <button
+                      type="button"
+                      class="btn"
+                      aria-label="{series.length > 1 ? 'Add more sowings' : 'Add succession'} {who}"
+                      onclick={() => openSuccession(p)}
+                      >{series.length > 1 ? 'Add more sowings' : 'Add succession'}</button
+                    >
+                  {/if}
+                  <button
+                    type="button"
+                    class="btn"
+                    aria-label="Remove {who} from bed"
+                    onclick={() => d.removeFromBed(p.cropId)}>Remove from bed</button
+                  >
+                {:else if thisYear}
+                  <button
+                    type="button"
+                    class="btn"
+                    aria-label="Place {who} in {bed.name}"
                     onclick={() =>
                       d.placeCrop(
                         { source: 'planting', cropId: p.cropId, label: p.varietyDisplayName },
@@ -646,6 +729,7 @@
                   <label>
                     How many more?
                     <select
+                      class="count-select"
                       value={succCount}
                       aria-label="How many more sowings"
                       onchange={(e) => {
@@ -661,10 +745,13 @@
                   {#if succProposal}
                     <ul class="sowings">
                       {#each succProposal.sowings as s (s.index)}
+                        {@const opens = s.conflict ? nextOpenAfter(s.plantingDateMs) : null}
                         <li class:conflict={!!s.conflict}>
                           {shortDate(s.plantingDateMs)}{s.plantCount
                             ? ` · ${plural(s.plantCount, 'plant')}`
-                            : ''}{s.conflict ? ` · ${s.conflict}` : ''}
+                            : ''}{s.conflict ? ` · ${s.conflict}` : ''}{opens
+                            ? ` ${bed.name} opens ${shortDate(opens)}, so a longer gap between sowings may fit.`
+                            : ''}
                         </li>
                       {/each}
                     </ul>
@@ -745,7 +832,7 @@
                       prop.footprint.l_in / 12
                     )} · {plural(prop.plantCount, 'plant')}
                   </span>
-                  <Provenance source={prop.provenance} compact />
+                  <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>
                   <label class="accept">
                     <input
                       type="checkbox"
@@ -795,15 +882,16 @@
             {#each fill.proposals as prop (prop.key)}
               <li class="prow">
                 <span
-                  >{prop.varietyDisplayName} · {shortDate(prop.plantingDateMs)} · {plural(
-                    prop.plantCount,
-                    'plant'
-                  )}</span
+                  >{prop.varietyDisplayName} · {shortDate(prop.plantingDateMs)} · {sizeLabel(
+                    prop.footprint.w_in / 12,
+                    prop.footprint.l_in / 12
+                  )} · {plural(prop.plantCount, 'plant')}</span
                 >
-                <Provenance source={prop.provenance} compact />
+                <span class="pmeta">{prop.note ?? spotText(prop.footprint)}</span>
+                <span class="prov-inline"><Provenance source={prop.provenance} compact /></span>
                 <label class="accept">
                   <input type="checkbox" bind:checked={accepted[prop.key]} />
-                  Accept
+                  Keep
                 </label>
               </li>
             {/each}
@@ -813,7 +901,7 @@
               type="button"
               class="btn primary"
               disabled={acceptedCount === 0}
-              onclick={addAccepted}>Add accepted ({acceptedCount})</button
+              onclick={addAccepted}>Add {plural(acceptedCount, 'planting')}</button
             >
             <button
               type="button"
@@ -846,8 +934,8 @@
               {h.varietyDisplayName}
               <span class="pmeta"
                 >· {familyLabel(h.cropFamily)}{h.plantingDateMs != null
-                  ? ` · ${shortDate(h.plantingDateMs)}`
-                  : ''} · {h.status}</span
+                  ? ` · ${d.dateText(h.plantingDateMs)}`
+                  : ''} · {plantingStatusText(h, d.nowMs)}</span
               >
             </li>
           {/each}
@@ -1017,8 +1105,7 @@
   .tab:focus-visible,
   .linkish:focus-visible,
   input:focus-visible,
-  select:focus-visible,
-  .link:focus-visible {
+  select:focus-visible {
     outline: none;
     box-shadow: var(--focus-ring);
   }
@@ -1050,13 +1137,6 @@
   .confirm p,
   .succ p {
     margin: 0;
-  }
-  .link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 48px;
-    color: var(--color-forest-deep);
-    font-weight: 600;
   }
   .plist,
   .hist,
@@ -1108,12 +1188,24 @@
     color: var(--pill-forest-fg);
   }
   .sowings li.conflict {
-    color: var(--color-ink-soft);
-    text-decoration: line-through;
+    color: var(--pill-wheat-fg);
+    font-weight: 600;
   }
   .banner {
     margin: 0;
     font-weight: 600;
+  }
+  .prov-inline {
+    display: inline-flex;
+    align-self: flex-start;
+    flex: 0 0 auto;
+  }
+  .series {
+    flex-basis: 100%;
+    margin: 0;
+  }
+  .count-select {
+    min-width: 64px;
   }
   .accept {
     display: inline-flex;

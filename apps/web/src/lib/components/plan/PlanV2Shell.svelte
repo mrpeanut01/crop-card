@@ -76,6 +76,8 @@
     onAddTask?: (blockId: string, plantingId: string | null) => void;
     /** Farm-map editor link for the "No map geometry" pill (owner only). */
     geometryEditHref?: string;
+    /** Gardens and greenhouses listed in the rail with a designer link. */
+    gardens?: Array<{ id: string; name: string }>;
   }
   const {
     blocks,
@@ -91,7 +93,8 @@
     seasonYear = Number(fmt.today().slice(0, 4)),
     onAddPlanting,
     onAddTask,
-    geometryEditHref
+    geometryEditHref,
+    gardens = []
   }: Props = $props();
 
   // ── URL-driven state ──────────────────────────────────────────────
@@ -240,7 +243,13 @@
 </script>
 
 <div class="pv2">
-  <PlanLeftRail {blocks} selectedId={selectedBlockId} onSelect={selectBlock} {onAddBlock} />
+  <PlanLeftRail
+    {blocks}
+    selectedId={selectedBlockId}
+    onSelect={selectBlock}
+    {onAddBlock}
+    {gardens}
+  />
 
   <div class="pv2-main">
     {#if !selectedBlock}

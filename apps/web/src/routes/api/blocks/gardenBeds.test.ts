@@ -1,9 +1,10 @@
 // @vitest-environment node
 import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '$lib/db/client';
 import { crops, owners } from '$lib/db/schema';
-import { runWithTenant, tenantValues } from '$lib/db/tenant';
+import { runWithTenant, tenantValues, withTenant } from '$lib/db/tenant';
 import { createField } from '$lib/db/fields';
 import { createBlock, getBlock } from '$lib/db/blocks';
 
@@ -17,6 +18,8 @@ vi.mock('$lib/server/session', () => ({ canMutate: () => true }));
 
 import { POST } from './+server';
 import { DELETE, PATCH } from './[id]/+server';
+import { PATCH as PATCH_FIELD } from '../fields/[id]/+server';
+import { getCrop } from '$lib/db/crops';
 
 function seedOwner(): string {
   const id = `garden-beds-${randomUUID()}`;
@@ -38,6 +41,11 @@ const patch = (id: string, body: unknown) =>
   PATCH({
     params: { id },
     request: req('PATCH', `http://localhost/api/blocks/${id}`, body)
+  } as never);
+const patchField = (id: string, body: unknown) =>
+  PATCH_FIELD({
+    params: { id },
+    request: req('PATCH', `http://localhost/api/fields/${id}`, body)
   } as never);
 const del = (id: string, query = '?ifEmpty=1') =>
   DELETE({ params: { id }, url: new URL(`http://localhost/api/blocks/${id}${query}`) } as never);
@@ -129,6 +137,87 @@ describe('/api/blocks garden bed layout', () => {
     });
   });
 
+  it('never lets a helper delete a bed, with or without ifEmpty', async () => {
+    await runWithTenant(seedOwner(), async () => {
+      const { bed1 } = kitchen();
+      db.insert(crops)
+        .values(
+          tenantValues({
+            id: randomUUID(),
+            blockId: bed1.id,
+            cropPluginId: 'tomato-celebrity-f1',
+            varietyDisplayName: 'Tomato',
+            status: 'active',
+            plantingDate: new Date(Date.UTC(2026, 4, 1))
+          })
+        )
+        .run();
+      role.current = 'helper';
+      const res = await del(bed1.id, '');
+      expect(res.status).toBe(403);
+      expect(await res.json()).toMatchObject({ code: 'READ_ONLY' });
+      expect(getBlock(bed1.id)).toBeDefined();
+    });
+  });
+
+  it('refuses to shrink a bed past a planting in it, and pulls finished ones inside', async () => {
+    await runWithTenant(seedOwner(), async () => {
+      const { bed1 } = kitchen();
+      const growing = randomUUID();
+      const done = randomUUID();
+      db.insert(crops)
+        .values([
+          tenantValues({
+            id: growing,
+            blockId: bed1.id,
+            cropPluginId: 'tomato-celebrity-f1',
+            varietyDisplayName: 'Tomato',
+            status: 'planned' as const,
+            footprintJson: JSON.stringify({ x_in: 24, y_in: 72, w_in: 24, l_in: 24 })
+          }),
+          tenantValues({
+            id: done,
+            blockId: bed1.id,
+            cropPluginId: 'lettuce-buttercrunch',
+            varietyDisplayName: 'Lettuce',
+            status: 'harvested' as const,
+            footprintJson: JSON.stringify({ x_in: 0, y_in: 48, w_in: 48, l_in: 48 })
+          })
+        ])
+        .run();
+      const refused = await patch(bed1.id, { widthFt: 2, lengthFt: 4 });
+      expect(refused.status).toBe(409);
+      const body = await refused.json();
+      expect(body).toMatchObject({ code: 'OUTSIDE_AREA' });
+      expect(body.error).toContain('Tomato');
+      expect(getBlock(bed1.id)).toMatchObject({ widthFt: 4, lengthFt: 8 });
+
+      db.update(crops)
+        .set({ footprintJson: JSON.stringify({ x_in: 0, y_in: 0, w_in: 24, l_in: 24 }) })
+        .where(withTenant(crops, eq(crops.id, growing)))
+        .run();
+      const ok = await patch(bed1.id, { lengthFt: 4 });
+      expect(ok.status).toBe(200);
+      const fp = getCrop(done)!.footprint!;
+      expect(fp.y_in + fp.l_in).toBeLessThanOrEqual(48);
+    });
+  });
+
+  it('refuses a garden Size its beds no longer fit, and lets only the owner resize it', async () => {
+    await runWithTenant(seedOwner(), async () => {
+      const { garden } = kitchen();
+      role.current = 'helper';
+      expect((await patchField(garden.id, { widthFt: 10 })).status).toBe(403);
+      role.current = 'owner';
+      const res = await patchField(garden.id, { widthFt: 10 });
+      expect(res.status).toBe(409);
+      const body = await res.json();
+      expect(body).toMatchObject({ code: 'OUTSIDE_AREA' });
+      expect(body.error).toContain('Bed 2');
+      expect((await patchField(garden.id, { widthFt: 14 })).status).toBe(200);
+    });
+  });
+
   it('a helper can still rename a plain field block', async () => {
     await runWithTenant(seedOwner(), async () => {
       const block = createBlock({ name: 'North' });
@@ -154,6 +243,25 @@ describe('/api/blocks garden bed layout', () => {
       const res = await del(bed1.id);
       expect(res.status).toBe(200);
       expect(getBlock(bed1.id)).toBeUndefined();
+    });
+  });
+
+  it('deletes a bed holding only a scheduled plan for a future date', async () => {
+    await runWithTenant(seedOwner(), async () => {
+      const { bed1 } = kitchen();
+      db.insert(crops)
+        .values(
+          tenantValues({
+            id: randomUUID(),
+            blockId: bed1.id,
+            cropPluginId: 'lettuce-buttercrunch',
+            varietyDisplayName: 'Lettuce',
+            status: 'active',
+            plantingDate: new Date(Date.now() + 200 * 86_400_000)
+          })
+        )
+        .run();
+      expect((await del(bed1.id)).status).toBe(200);
     });
   });
 

@@ -287,21 +287,37 @@ export function overlappingBeds(
     .map((b) => b.blockId);
 }
 
+function inflate(r: RectFt, by: number): RectFt {
+  return by > 0 ? rectFt(r.x - by, r.y - by, r.w + 2 * by, r.l + 2 * by) : r;
+}
+
 function firstFree(
   ys: readonly number[],
   xs: readonly number[],
   w: number,
   l: number,
-  beds: readonly BedLayout[]
+  beds: readonly BedLayout[],
+  aisleFt = 0
 ): RectFt | null {
   for (const y of ys) {
     for (const x of xs) {
       const r = rectFt(x, y, w, l);
-      if (!beds.some((b) => rectsOverlap(r, b.rect))) return r;
+      if (!beds.some((b) => rectsOverlap(r, inflate(b.rect, aisleFt)))) return r;
     }
   }
   return null;
 }
+
+/** Room left for walking: `aisleFt` between beds and `insetFt` from the
+ *  Area's edge. */
+export interface SpotSpacing {
+  aisleFt?: number;
+  insetFt?: number;
+}
+
+/** A 2 ft path between beds and 1 ft in from the edge, so a new bed never
+ *  lands flush against another one or the fence. */
+export const DEFAULT_SPOT_SPACING: Required<SpotSpacing> = { aisleFt: 2, insetFt: 1 };
 
 function sortedUnique(values: number[]): number[] {
   return [...new Set(values)].sort((a, b) => a - b);
@@ -317,27 +333,48 @@ export function freeSpot(
   rotationDeg: Rotation,
   beds: readonly BedLayout[],
   canvas: AreaCanvas,
-  near?: RectFt
+  near?: RectFt,
+  spacing: SpotSpacing = {}
+): RectFt | null {
+  const aisle = Math.max(0, spacing.aisleFt ?? 0);
+  const inset = Math.max(0, spacing.insetFt ?? 0);
+  const spaced =
+    aisle > 0 || inset > 0
+      ? freeSpotWith(widthFt, lengthFt, rotationDeg, beds, canvas, near, aisle, inset)
+      : null;
+  return spaced ?? freeSpotWith(widthFt, lengthFt, rotationDeg, beds, canvas, near, 0, 0);
+}
+
+function freeSpotWith(
+  widthFt: number,
+  lengthFt: number,
+  rotationDeg: Rotation,
+  beds: readonly BedLayout[],
+  canvas: AreaCanvas,
+  near: RectFt | undefined,
+  aisle: number,
+  inset: number
 ): RectFt | null {
   const size = bedRect(0, 0, widthFt, lengthFt, rotationDeg);
-  const maxX = floorStep(canvas.widthFt - size.w, SNAP_FT);
-  const maxY = floorStep(canvas.lengthFt - size.l, SNAP_FT);
-  if (maxX < -EPS || maxY < -EPS) return null;
-  const rights = beds.map((b) => ceilStep(b.rect.x + b.rect.w, SNAP_FT));
-  const bottoms = beds.map((b) => ceilStep(b.rect.y + b.rect.l, SNAP_FT));
-  const xs = sortedUnique([0, ...rights]).filter((x) => x <= maxX + EPS);
-  const ys = sortedUnique([0, ...bottoms]).filter((y) => y <= maxY + EPS);
+  const start0 = ceilStep(inset, SNAP_FT);
+  const maxX = floorStep(canvas.widthFt - inset - size.w, SNAP_FT);
+  const maxY = floorStep(canvas.lengthFt - inset - size.l, SNAP_FT);
+  if (maxX < start0 - EPS || maxY < start0 - EPS) return null;
+  const rights = beds.map((b) => ceilStep(b.rect.x + b.rect.w + aisle, SNAP_FT));
+  const bottoms = beds.map((b) => ceilStep(b.rect.y + b.rect.l + aisle, SNAP_FT));
+  const xs = sortedUnique([start0, ...rights]).filter((x) => x >= start0 - EPS && x <= maxX + EPS);
+  const ys = sortedUnique([start0, ...bottoms]).filter((y) => y >= start0 - EPS && y <= maxY + EPS);
 
   if (near) {
     const nearY = snap(near.y);
-    const start = ceilStep(near.x + near.w, SNAP_FT);
+    const start = ceilStep(near.x + near.w + aisle, SNAP_FT);
     if (nearY >= 0 && nearY <= maxY + EPS) {
       const rowXs = sortedUnique([start, ...rights]).filter((x) => x >= start && x <= maxX + EPS);
-      const hit = firstFree([nearY], rowXs, size.w, size.l, beds);
+      const hit = firstFree([nearY], rowXs, size.w, size.l, beds, aisle);
       if (hit) return hit;
     }
   }
-  return firstFree(ys, xs, size.w, size.l, beds);
+  return firstFree(ys, xs, size.w, size.l, beds, aisle);
 }
 
 function rectGap(a: RectFt, b: RectFt): number {

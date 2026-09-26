@@ -45,7 +45,7 @@ export interface BedWriteResponse {
   bed: BedLayout;
 }
 
-/** `PUT /api/garden/plantings/[cropId]/footprint`. Places or moves a planting
+/** `PATCH /api/crops/[id]` with `action: 'set-placement'`. Places or moves a planting
  *  in a bed, or clears its spot with `footprint: null`. `plantCount` given
  *  means typed (`manual`); omitted means the server recomputes it. */
 export const footprintWriteSchema = z.strictObject({
@@ -63,11 +63,14 @@ export interface FootprintWriteResponse {
   planting: PlacedPlanting;
   /** Tasks shifted by `reanchorCropTasks` when the planting date moved. */
   reanchored: { shifted: number; flaggedStale: number } | null;
+  /** Group members that moved with an anchor's new date, as saved. */
+  followers?: PlacedPlanting[];
   warnings: string[];
 }
 
-/** `POST /api/garden/plantings`. Creates plantings straight into beds, from
- *  the crop panel's plugin search or from accepted proposals. */
+/** `POST /api/garden/plantings`. Creates `planned` plantings straight into
+ *  beds, from the crop panel's plugin search or from accepted proposals, as
+ *  one batch: a bad item writes nothing. */
 export const plantingCreateItemSchema = z.strictObject({
   blockId: id,
   cropPluginId: id,

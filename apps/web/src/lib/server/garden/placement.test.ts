@@ -137,6 +137,21 @@ describe('writeFootprint', () => {
         plantCount: 30,
         plantCountProvenance: 'manual'
       });
+      const moved = writeFootprint(
+        crop.id,
+        {
+          blockId: bed1.id,
+          footprint: { ...HALF, x_in: 0, y_in: 24 },
+          spacingPattern: 'offset',
+          plantingDateMs: APR_1
+        },
+        lookup
+      );
+      expect(moved.ok && moved.response.planting).toMatchObject({
+        plantCount: 30,
+        plantCountProvenance: 'manual',
+        spacing: { source: 'manual', inRowIn: 12 }
+      });
       const cleared = writeFootprint(
         crop.id,
         { blockId: bed1.id, footprint: null, spacingPattern: 'square' },
@@ -234,14 +249,22 @@ describe('writeFootprint', () => {
       const growing = planned(bed1.id);
       setSchedule(growing.id, { plantingDate: APR_1 });
       expect(getCrop(growing.id)?.status).toBe('active');
-      const refused = writeFootprint(
+      const beforeItsDate = writeFootprint(
         growing.id,
         { blockId: bed2.id, footprint: HALF, spacingPattern: 'square' },
-        lookup
+        lookup,
+        APR_1 - 5 * 86_400_000
+      );
+      expect(beforeItsDate.ok && beforeItsDate.response.planting.blockId).toBe(bed2.id);
+      const refused = writeFootprint(
+        growing.id,
+        { blockId: bed1.id, footprint: HALF, spacingPattern: 'square' },
+        lookup,
+        APR_1 + 86_400_000
       );
       expect(refused).toMatchObject({ ok: false, status: 409, body: { code: 'IN_GROUND' } });
       expect(refused.ok ? '' : refused.body.error).toBe(
-        'Lettuce is already in the ground in Bed 1. Record a new planting instead.'
+        'Lettuce is already in the ground in Bed 2. Record a new planting instead.'
       );
     });
   });

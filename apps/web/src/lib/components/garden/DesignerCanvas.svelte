@@ -1,15 +1,19 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { footprintBounds, pointFt, rectFt, snap } from '$lib/garden/geometry';
   import { shortDate } from '$lib/garden/occupancy';
   import type { BedLayout, PlacedPlanting, PointFt, RectFt } from '$lib/garden/types';
   import { getDesigner } from './designerState.svelte';
   import {
     clampView,
+    cropBadge,
     fitText,
     fitView,
+    MAX_CANVAS_DOTS,
+    MIN_DOT_PX_PER_FT,
     padRect,
     plantDots,
+    rulerMarginFt,
     textWidthFt,
     zoomView,
     type View
@@ -23,10 +27,22 @@
   const MIN_CHIP_PX = 8.5;
 
   let svg = $state<SVGSVGElement | null>(null);
+  let mounted = $state(false);
   let viewportPx = $state(360);
   let viewportH = $state(0);
+  let fitted = true;
+  const fit = $derived(
+    fitView(
+      d.canvas.widthFt,
+      d.canvas.lengthFt,
+      rulerMarginFt(d.canvas.widthFt, d.canvas.lengthFt, viewportPx, viewportH)
+    )
+  );
   let view = $state<View>(fitView(d.canvas.widthFt, d.canvas.lengthFt));
-  const fit = $derived(fitView(d.canvas.widthFt, d.canvas.lengthFt));
+  $effect(() => {
+    const next = fit;
+    if (fitted) view = next;
+  });
   const pxPerFt = $derived(
     Math.min(viewportPx / view.w, viewportH > 0 ? viewportH / view.h : Infinity)
   );
@@ -34,8 +50,36 @@
   const hitFt = $derived(HIT_PX / pxPerFt);
 
   const orderedBeds = $derived(
-    [...d.beds].sort((a, b) => a.rect.y - b.rect.y || a.rect.x - b.rect.x)
+    [...d.beds].sort(
+      (a, b) =>
+        a.name.localeCompare(b.name, 'en', { numeric: true }) ||
+        (a.blockId < b.blockId ? -1 : a.blockId > b.blockId ? 1 : 0)
+    )
   );
+
+  const dotsFor = $derived.by(() => {
+    const out = new Map<string, Array<[number, number]>>();
+    if (!mounted || pxPerFt < MIN_DOT_PX_PER_FT) return out;
+    let budget = MAX_CANVAS_DOTS;
+    for (const bed of orderedBeds) {
+      const r = bed.rect;
+      if (
+        r.x > view.x + view.w ||
+        r.x + r.w < view.x ||
+        r.y > view.y + view.h ||
+        r.y + r.l < view.y
+      )
+        continue;
+      for (const p of d.plantingsIn(bed.blockId)) {
+        if (budget <= 0) return out;
+        if (!p.footprint || shown(p) !== 'now') continue;
+        const dots = plantDots(p.footprint, bed, p.spacing).slice(0, budget);
+        budget -= dots.length;
+        out.set(p.cropId, dots);
+      }
+    }
+    return out;
+  });
 
   type Drag =
     | { kind: 'pan'; startView: View; sx: number; sy: number }
@@ -58,17 +102,41 @@
   let pinch: { dist: number; view: View; mid: PointFt } | null = null;
   let plantingPreview = $state<{ cropId: string; rect: RectFt } | null>(null);
 
+  /** Zoom about the selected bed, or the middle of all beds, so zooming in
+   *  never leaves an empty grid on screen. */
+  function zoomCenter(): { x: number; y: number } {
+    const sel = d.selectedBed;
+    if (sel) return { x: sel.rect.x + sel.rect.w / 2, y: sel.rect.y + sel.rect.l / 2 };
+    if (d.beds.length) {
+      const x0 = Math.min(...d.beds.map((b) => b.rect.x));
+      const y0 = Math.min(...d.beds.map((b) => b.rect.y));
+      const x1 = Math.max(...d.beds.map((b) => b.rect.x + b.rect.w));
+      const y1 = Math.max(...d.beds.map((b) => b.rect.y + b.rect.l));
+      return { x: (x0 + x1) / 2, y: (y0 + y1) / 2 };
+    }
+    return { x: view.x + view.w / 2, y: view.y + view.h / 2 };
+  }
+
+  function zoomTo(factor: number): void {
+    const c = zoomCenter();
+    const next = zoomView(view, factor, c.x, c.y, fit, viewportPx);
+    view = clampView({ ...next, x: c.x - next.w / 2, y: c.y - next.h / 2 }, fit);
+    fitted = false;
+  }
+
   export function zoomIn(): void {
-    view = zoomView(view, 1.5, view.x + view.w / 2, view.y + view.h / 2, fit, viewportPx);
+    zoomTo(1.5);
   }
   export function zoomOut(): void {
-    view = zoomView(view, 1 / 1.5, view.x + view.w / 2, view.y + view.h / 2, fit, viewportPx);
+    zoomTo(1 / 1.5);
   }
   export function fitAll(): void {
-    view = fitView(d.canvas.widthFt, d.canvas.lengthFt);
+    view = fit;
+    fitted = true;
   }
 
   onMount(() => {
+    mounted = true;
     if (!svg) return;
     viewportPx = Math.max(1, svg.clientWidth || 360);
     viewportH = svg.clientHeight;
@@ -171,6 +239,7 @@
       const dist = Math.hypot(a.x - b.x, a.y - b.y);
       if (pinch.dist > 0) {
         view = zoomView(pinch.view, dist / pinch.dist, pinch.mid.x, pinch.mid.y, fit, viewportPx);
+        fitted = false;
       }
       return;
     }
@@ -181,6 +250,7 @@
     }
     if (!drag) return;
     if (drag.kind === 'pan') {
+      fitted = false;
       const k = 1 / pxPerFt;
       view = clampView(
         {
@@ -284,6 +354,7 @@
 
   function onWheel(e: WheelEvent): void {
     e.preventDefault();
+    fitted = false;
     if (e.ctrlKey || e.metaKey) {
       const p = toFt(e.clientX, e.clientY);
       view = zoomView(view, Math.exp(-e.deltaY / 300), p.x, p.y, fit, viewportPx);
@@ -309,7 +380,11 @@
         d.carry(dx, dy);
       } else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        void d.drop();
+        const target = e.currentTarget as SVGGElement;
+        void d.drop().then(async () => {
+          await tick();
+          if (document.activeElement !== target) target.focus();
+        });
       } else if (e.key === 'Escape') {
         e.preventDefault();
         d.cancelMode();
@@ -391,8 +466,21 @@
   /** Bed name bottom-left and its open chip bottom-right, or the chip on its
    *  own line above when both don't fit; each cut to the bed's width. */
   function bedLabels(bed: BedLayout, r: RectFt, unplaced: boolean) {
-    const room = r.w - 0.3;
     const full = `${bed.name}${unplaced ? ' · Not placed yet' : ''}`;
+    const tall = r.l > r.w * 1.5 && textWidthFt(bed.name, fontFt) > r.w - 0.3;
+    if (tall) {
+      const along = r.l - 0.4;
+      const chip = openChip(bed).replace('Open from ', 'Open ');
+      const both = `${full} · ${chip}`;
+      return {
+        name: '',
+        chip: '',
+        chipFont: fontFt * 0.8,
+        chipOwnLine: false,
+        vertical: fitText(textWidthFt(both, fontFt) <= along ? both : full, along, fontFt)
+      };
+    }
+    const room = r.w - 0.3;
     const long = openChip(bed);
     const short = long.replace('Open from ', 'Open ');
     const fits = (t: string) => textWidthFt(t, fontFt * 0.8) <= room;
@@ -407,7 +495,8 @@
       name: fitText(full, room, fontFt),
       chip: sameLine || ownLine ? fitText(chip, room, chipFont) : '',
       chipFont,
-      chipOwnLine: ownLine
+      chipOwnLine: ownLine,
+      vertical: ''
     };
   }
 
@@ -434,6 +523,19 @@
     Array.from({ length: Math.floor(d.canvas.lengthFt / rulerStep) + 1 }, (_, i) => i * rulerStep)
   );
   const placing = $derived(d.mode.kind !== 'idle');
+
+  /** Full crop name when it fits, else a short badge (the inspector and the
+   *  printed legend carry the full name). */
+  function footprintLabel(p: PlacedPlanting, widthFt: number): string {
+    const name = p.varietyDisplayName.split(/[—(]/)[0].trim();
+    const count = p.plantCount ? ` · ${p.plantCount}` : '';
+    const font = fontFt * 0.9;
+    const room = widthFt - 0.3;
+    if (textWidthFt(`${name}${count}`, font) <= room) return `${name}${count}`;
+    const first = name.split(/\s+/)[0];
+    if (textWidthFt(`${first}${count}`, font) <= room) return `${first}${count}`;
+    return fitText(cropBadge(name), room, font);
+  }
 </script>
 
 <div class="canvas-wrap" class:placing>
@@ -518,10 +620,23 @@
       {/if}
     {/each}
 
+    <g class="hits" aria-hidden="true">
+      {#each orderedBeds as bed (bed.blockId)}
+        {@const hit = padRect(bedRectShown(bed), hitFt)}
+        <rect
+          class="hit"
+          data-bed-id={bed.blockId}
+          x={hit.x}
+          y={hit.y}
+          width={hit.w}
+          height={hit.h}
+        />
+      {/each}
+    </g>
+
     {#each orderedBeds as bed (bed.blockId)}
       {@const r = bedRectShown(bed)}
       {@const selected = d.selectedBedId === bed.blockId}
-      {@const hit = padRect(r, hitFt)}
       {@const unplaced = d.unplaced.has(bed.blockId)}
       {@const carrying = d.mode.kind === 'carry-bed' && d.mode.blockId === bed.blockId}
       {@const labels = bedLabels(bed, r, unplaced)}
@@ -544,7 +659,6 @@
           d.renameRequest++;
         }}
       >
-        <rect class="hit" x={hit.x} y={hit.y} width={hit.w} height={hit.h} />
         <rect
           class="bed-body"
           x={r.x}
@@ -555,6 +669,20 @@
           vector-effect="non-scaling-stroke"
         />
         {#if !d.preview || d.preview.blockId !== bed.blockId}
+          {#each d.plantingsIn(bed.blockId) as p (p.cropId)}
+            {#if shown(p) && p.footprint}
+              {@const pad = padRect(footprintBounds(p.footprint, bed), hitFt)}
+              <rect
+                class="hit"
+                data-crop-id={p.cropId}
+                aria-hidden="true"
+                x={pad.x}
+                y={pad.y}
+                width={pad.w}
+                height={pad.h}
+              />
+            {/if}
+          {/each}
           {#each d.plantingsIn(bed.blockId) as p (p.cropId)}
             {@const when = shown(p)}
             {#if when && p.footprint}
@@ -585,18 +713,14 @@
                   fill={when === 'now' ? `url(#fam-${familyTone(p.cropFamily)})` : 'none'}
                   vector-effect="non-scaling-stroke"
                 />
-                {#if when === 'now' && p.spacing}
-                  {#each plantDots(p.footprint, bed, p.spacing) as [cx, cy], i (i)}
+                {#if when === 'now'}
+                  {#each dotsFor.get(p.cropId) ?? [] as [cx, cy], i (i)}
                     <circle class="dot" {cx} {cy} r={Math.min(0.18, pr.w / 6, pr.l / 6)} />
                   {/each}
                 {/if}
-                {#if pr.w * pxPerFt > 40 && pr.l * pxPerFt > 18}
+                {#if pr.w * pxPerFt > 24 && pr.l * pxPerFt > 16}
                   <text class="fp-label" x={pr.x + 0.15} y={pr.y + fontFt} font-size={fontFt * 0.9}>
-                    {fitText(
-                      `${p.varietyDisplayName.split(/[—(]/)[0].trim()}${p.plantCount ? ` · ${p.plantCount}` : ''}`,
-                      pr.w - 0.3,
-                      fontFt * 0.9
-                    )}
+                    {footprintLabel(p, pr.w)}
                   </text>
                   {#if stage && pr.l * pxPerFt > 34}
                     <text
@@ -628,9 +752,20 @@
             <text x={gr.x + 0.1} y={gr.y + fontFt} font-size={fontFt * 0.8}>{g.label}</text>
           </g>
         {/each}
-        <text class="bed-name" x={r.x + 0.15} y={r.y + r.l - 0.2} font-size={fontFt}>
-          {labels.name}
-        </text>
+        {#if labels.vertical}
+          <text
+            class="bed-name"
+            x={r.x + r.w / 2 + fontFt * 0.35}
+            y={r.y + r.l - 0.2}
+            font-size={fontFt}
+            transform="rotate(-90 {r.x + r.w / 2 + fontFt * 0.35} {r.y + r.l - 0.2})"
+            >{labels.vertical}</text
+          >
+        {:else}
+          <text class="bed-name" x={r.x + 0.15} y={r.y + r.l - 0.2} font-size={fontFt}>
+            {labels.name}
+          </text>
+        {/if}
         {#if labels.chip}
           <text
             class="open-chip"

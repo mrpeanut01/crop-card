@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ONE_DAY_MS } from '$lib/garden/occupancy';
+  import { ONE_DAY_MS, shortDate } from '$lib/garden/occupancy';
   import type { ScrubRange } from '$lib/garden/types';
   import { longDate } from './format';
 
@@ -18,6 +18,11 @@
     wholeSeason: boolean;
     onchange: (ms: number) => void;
     onwholeseason: (on: boolean) => void;
+    /** Shown after the date so it's clear which season is on screen. */
+    seasonYear?: number;
+    /** False when today falls outside the range, so the Today chip would
+     *  only jump to the range's edge; it then jumps to the last frost. */
+    todayInRange?: boolean;
   }
 
   const {
@@ -28,21 +33,50 @@
     firstFallFrostMs,
     wholeSeason,
     onchange,
-    onwholeseason
+    onwholeseason,
+    seasonYear,
+    todayInRange = true
   }: Props = $props();
 
+  let menuOpen = $state(false);
+
   const span = $derived(Math.max(ONE_DAY_MS, range.endMs - range.startMs));
+  const year = $derived(new Date(value).getUTCFullYear());
+  const dateLabel = $derived(
+    seasonYear !== undefined ? `${longDate(value)}, ${year}` : longDate(value)
+  );
   const ticks = $derived.by<Tick[]>(() => {
     const out: Tick[] = [];
-    for (const [ms, label] of [
-      [lastSpringFrostMs, 'Last spring frost'],
-      [firstFallFrostMs, 'First fall frost']
-    ] as const) {
-      if (ms >= range.startMs && ms <= range.endMs) out.push({ ms, kind: 'frost', label });
-    }
     for (const ms of changeDays) {
       if (ms >= range.startMs && ms <= range.endMs)
         out.push({ ms, kind: 'change', label: 'A bed changes' });
+    }
+    return out;
+  });
+  const frostMarks = $derived(
+    (
+      [
+        [lastSpringFrostMs, 'Last frost'],
+        [firstFallFrostMs, 'First frost']
+      ] as const
+    )
+      .filter(([ms]) => ms >= range.startMs && ms <= range.endMs)
+      .map(([ms, label]) => ({ ms, label }))
+  );
+  const months = $derived.by(() => {
+    const out: Array<{ ms: number; label: string }> = [];
+    const start = new Date(range.startMs);
+    let y = start.getUTCFullYear();
+    let m = start.getUTCMonth();
+    for (;;) {
+      const ms = Date.UTC(y, m, 1);
+      if (ms > range.endMs) break;
+      if (ms >= range.startMs) out.push({ ms, label: 'JFMAMJJASOND'[m] });
+      m += 1;
+      if (m > 11) {
+        m = 0;
+        y += 1;
+      }
     }
     return out;
   });
@@ -50,6 +84,9 @@
     [...new Set([range.startMs, ...changeDays, lastSpringFrostMs, firstFallFrostMs, range.endMs])]
       .filter((d) => d >= range.startMs && d <= range.endMs)
       .sort((a, b) => a - b)
+  );
+  const todayTarget = $derived(
+    todayInRange ? range.todayMs : Math.min(range.endMs, Math.max(range.startMs, lastSpringFrostMs))
   );
 
   function pct(ms: number): number {
@@ -71,14 +108,26 @@
 <div class="scrubber" data-testid="time-scrubber">
   <div class="row">
     <label for="designer-scrubber" class="label">
-      On <strong>{longDate(value)}</strong>
+      <span class="on">On </span><strong>{dateLabel}</strong>
     </label>
-    <div class="controls">
+    <button
+      type="button"
+      class="chip more"
+      aria-expanded={menuOpen}
+      aria-controls="scrubber-controls"
+      onclick={() => (menuOpen = !menuOpen)}>Options</button
+    >
+    <div class="controls" class:open={menuOpen} id="scrubber-controls">
       <button
         type="button"
         class="chip"
-        onclick={() => onchange(range.todayMs)}
-        disabled={value === range.todayMs}>Today</button
+        onclick={() => {
+          onchange(todayTarget);
+          menuOpen = false;
+        }}
+        disabled={value === todayTarget}
+        title={todayInRange ? undefined : 'Today is outside this season'}
+        >{todayInRange ? 'Today' : 'Last frost'}</button
       >
       <label class="whole">
         <input
@@ -106,6 +155,19 @@
       {#each ticks as t (`${t.kind}-${t.ms}`)}
         <span class="tick {t.kind}" style:left="{pct(t.ms)}%" title={t.label}></span>
       {/each}
+      {#each frostMarks as f (f.label)}
+        <span class="tick frost" style:left="{pct(f.ms)}%"></span>
+      {/each}
+    </div>
+    <div class="scale months" aria-hidden="true">
+      {#each months as m (m.ms)}
+        <span class="month" style:left="{pct(m.ms)}%">{m.label}</span>
+      {/each}
+    </div>
+    <div class="scale frosts" aria-hidden="true">
+      {#each frostMarks as f (f.label)}
+        <span class="frost-label" style:left="{pct(f.ms)}%">{f.label} {shortDate(f.ms)}</span>
+      {/each}
     </div>
   </div>
 </div>
@@ -118,6 +180,7 @@
     padding: var(--space-2) 0;
   }
   .row {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -146,6 +209,9 @@
     color: var(--color-ink);
     font-weight: 600;
   }
+  .more {
+    display: none;
+  }
   .whole input {
     width: 20px;
     height: 20px;
@@ -155,7 +221,7 @@
   }
   .track {
     position: relative;
-    padding-bottom: 10px;
+    padding-bottom: 38px;
   }
   input[type='range'] {
     width: 100%;
@@ -168,12 +234,40 @@
     box-shadow: var(--focus-ring);
     border-radius: var(--radius-input);
   }
-  .ticks {
+  .ticks,
+  .scale {
     position: absolute;
     left: 10px;
     right: 10px;
-    bottom: 0;
+  }
+  .ticks {
+    bottom: 28px;
     height: 10px;
+  }
+  .scale {
+    overflow: hidden;
+    height: 14px;
+    font-size: 11px;
+    line-height: 14px;
+    color: var(--color-ink-soft);
+  }
+  .months {
+    bottom: 14px;
+  }
+  .frosts {
+    bottom: 0;
+  }
+  .month {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+  .frost-label {
+    position: absolute;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--color-sky, var(--color-ink-soft));
+    pointer-events: none;
   }
   .tick {
     position: absolute;
@@ -186,5 +280,37 @@
   .tick.frost {
     height: 10px;
     background: var(--color-sky);
+  }
+  @media (max-width: 639px) {
+    .scrubber {
+      padding: var(--space-1) 0;
+    }
+    .row {
+      flex-wrap: nowrap;
+    }
+    .label {
+      font-size: var(--font-size-meta, 14px);
+    }
+    .on {
+      display: none;
+    }
+    .more {
+      display: inline-flex;
+    }
+    .controls {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 4px);
+      z-index: 6;
+      padding: var(--space-2);
+      background: var(--color-paper);
+      border: 1px solid var(--color-divider);
+      border-radius: var(--radius-input);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+    }
+    .controls.open {
+      display: flex;
+    }
   }
 </style>

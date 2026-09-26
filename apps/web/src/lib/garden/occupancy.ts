@@ -64,6 +64,14 @@ export function utcDayStart(ms: number): number {
   return Math.floor(ms / ONE_DAY_MS) * ONE_DAY_MS;
 }
 
+/** The UTC day a date-only value means. Planting dates are written at
+ *  midnight in whatever zone the writer was in (the swim-lane uses the
+ *  browser's local midnight, the designer UTC midnight), so the nearest
+ *  UTC midnight is the day that was picked. */
+export function plantingDay(ms: number): number {
+  return Math.round(ms / ONE_DAY_MS) * ONE_DAY_MS;
+}
+
 /** `firstFallFrostMs` moved to the calendar year of `ms`, so a frost date
  *  for one season can bound plantings in another. */
 export function frostInYearOf(firstFallFrostMs: number, ms: number): number {
@@ -113,8 +121,9 @@ export function plantingOccupancy(
   opts: OccupancyOptions
 ): OccupancyInterval | null {
   if (planting.status === 'failed' || planting.status === 'archived') return null;
-  const startMs = planting.plantingDateMs;
-  if (startMs == null || !Number.isFinite(startMs)) return null;
+  const rawStart = planting.plantingDateMs;
+  if (rawStart == null || !Number.isFinite(rawStart)) return null;
+  const startMs = plantingDay(rawStart);
   const dtm = maturityDays(crop);
   const maturityEnd = startMs + dtm.max * ONE_DAY_MS;
   let harvestStartMs = startMs + dtm.min * ONE_DAY_MS;
@@ -128,7 +137,7 @@ export function plantingOccupancy(
   let actual = false;
   const harvested = planting.harvestedAtMs;
   if (harvested != null && Number.isFinite(harvested)) {
-    harvestEndMs = Math.max(startMs, harvested);
+    harvestEndMs = Math.max(startMs, utcDayStart(harvested));
     harvestStartMs = Math.min(harvestStartMs, harvestEndMs);
     actual = true;
   }

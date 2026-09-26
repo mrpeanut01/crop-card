@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, untrack } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { page } from '$app/state';
   import Hint from '$lib/components/ui/Hint.svelte';
   import DesignerCanvas from '$lib/components/garden/DesignerCanvas.svelte';
@@ -9,11 +9,11 @@
   import BedInspector from '$lib/components/garden/BedInspector.svelte';
   import TimeScrubber from '$lib/components/garden/TimeScrubber.svelte';
   import { DesignerState, setDesigner } from '$lib/components/garden/designerState.svelte';
-  import { ft, parseYmd, ymd } from '$lib/components/garden/format';
+  import { ft, longDate, parseYmd, plural, ymd } from '$lib/components/garden/format';
   import { isHintSeen } from '$lib/client/hints';
   import { loadSnapshot } from '$lib/client/cardStore';
   import { designFromSnapshot } from '$lib/garden/design';
-  import { cardHref, cardKey } from '$lib/cards/model';
+  import { shortDate } from '$lib/garden/occupancy';
   import { AREA_KIND_LABELS } from '$lib/farm/areaKinds';
   import { DEFAULT_PREFS, formatInstant } from '$lib/prefs';
 
@@ -31,6 +31,7 @@
           companions: data.companions,
           lookbackByFamily: data.lookbackByFamily,
           recipes: data.recipes,
+          areaKind: data.areaKind,
           canEdit: data.canEdit,
           initialDateMs: parseYmd(page.url.searchParams.get('on')),
           initialBedId: page.url.searchParams.get('bed')
@@ -48,7 +49,27 @@
 
   const areaName = $derived(d.canvas.name);
   const sizeText = $derived(`${ft(d.canvas.widthFt)}×${ft(d.canvas.lengthFt)} ft`);
-  const areaCardHref = $derived(cardHref('area', cardKey('area', d.canvas.areaId)));
+  const printDate = $derived(`${longDate(d.dateMs)}, ${new Date(d.dateMs).getUTCFullYear()}`);
+  const legend = $derived(
+    [...d.beds]
+      .sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true }))
+      .map((bed) => {
+        const occ = d.occupancy.get(bed.blockId);
+        const rows = (occ?.occupants ?? []).map((o) => {
+          const p = d.design.plantings.find((q) => q.cropId === o.cropId);
+          const count = p?.plantCount ? `, ${plural(p.plantCount, 'plant')}` : '';
+          return `${p?.varietyDisplayName ?? 'Planting'}${count}, ${shortDate(o.startMs)} to ${shortDate(o.harvestEndMs)}`;
+        });
+        return { id: bed.blockId, name: bed.name, rows };
+      })
+  );
+
+  function seasonHref(year: number): string {
+    const url = new URL(page.url);
+    url.searchParams.set('season', String(year));
+    url.searchParams.delete('on');
+    return `${url.pathname}${url.search}`;
+  }
   const asOfText = $derived(formatInstant(d.design.asOf, DEFAULT_PREFS, 'datetime'));
   const showDesignerHint = $derived(
     hintsReady && data.canEdit && !designerHintDone && d.view === 'canvas'
@@ -123,13 +144,39 @@
     else if (d.cropPanelOpen) d.cropPanelOpen = false;
   }
 
-  function print(): void {
+  async function print(): Promise<void> {
     const on = ymd(d.dateMs);
     const url = new URL(page.url);
     url.searchParams.set('on', on);
     history.replaceState(history.state, '', url);
+    if (d.view === 'canvas') canvasRef?.fitAll();
+    await tick();
     window.print();
   }
+
+  $effect(() => {
+    const req = d.focusRequest;
+    if (!req) return;
+    void tick().then(() => {
+      const selectors =
+        req.kind === 'planting'
+          ? [
+              `[data-testid="footprint"][data-crop-id="${CSS.escape(req.id)}"]`,
+              `[data-planting-row-id="${CSS.escape(req.id)}"]`
+            ]
+          : [
+              `[data-testid="bed"][data-bed-id="${CSS.escape(req.id)}"]`,
+              `[data-testid="list-bed"] [aria-controls="list-${CSS.escape(req.id)}"]`
+            ];
+      for (const sel of selectors) {
+        const el = document.querySelector<HTMLElement | SVGElement>(sel);
+        if (el && el.getClientRects().length) {
+          el.focus({ preventScroll: false });
+          return;
+        }
+      }
+    });
+  });
 </script>
 
 <svelte:head><title>{areaName} designer · CropCard</title></svelte:head>
@@ -138,8 +185,11 @@
 <div class="designer" data-testid="garden-designer" data-season-year={d.design.seasonYear}>
   <header class="top">
     <div class="title">
-      <p class="kicker">{AREA_KIND_LABELS[data.areaKind]} · {sizeText}</p>
+      <p class="kicker">
+        {AREA_KIND_LABELS[data.areaKind]} · {sizeText} · {d.design.seasonYear} season
+      </p>
       <h1 class="serif">{areaName}</h1>
+      <p class="print-only print-head">On {printDate}</p>
     </div>
     <div class="head-actions">
       <div class="seg" role="group" aria-label="View">
@@ -150,8 +200,19 @@
           >List</button
         >
       </div>
+      {#if data.seasons.length > 1}
+        <nav class="seg" aria-label="Season">
+          {#each data.seasons as y (y)}
+            <a
+              class="seg-link"
+              href={seasonHref(y)}
+              data-sveltekit-reload
+              aria-current={y === d.design.seasonYear ? 'page' : undefined}>{y}</a
+            >
+          {/each}
+        </nav>
+      {/if}
       <button type="button" class="hbtn" onclick={print}>Print</button>
-      <a class="hbtn" href={areaCardHref}>Area Card</a>
     </div>
   </header>
 
@@ -165,15 +226,20 @@
     </div>
   {/if}
   {#if d.canvas.source === 'default'}
-    <div class="banner">This garden has no Size yet. Set one on the Area Card so beds fit.</div>
+    <div class="banner">
+      This garden has no Size yet, so beds are drawn on a {ft(d.canvas.widthFt)} by {ft(
+        d.canvas.lengthFt
+      )} foot grid.
+      <a class="hbtn" href="/plan/farm">Set its Size in Draw your farm</a>
+    </div>
   {/if}
 
+  {#if showScrubberHint}
+    <Hint hintKey="designer_scrubber" ondismiss={() => (scrubberHintDone = true)}>
+      Slide through the season to see what's growing in each bed and when it opens up.
+    </Hint>
+  {/if}
   <div class="sticky">
-    {#if showScrubberHint}
-      <Hint hintKey="designer_scrubber" ondismiss={() => (scrubberHintDone = true)}>
-        Slide through the season to see what's growing in each bed and when it opens up.
-      </Hint>
-    {/if}
     <TimeScrubber
       range={d.range}
       value={d.dateMs}
@@ -181,10 +247,23 @@
       lastSpringFrostMs={d.design.frost.lastSpringFrostMs}
       firstFallFrostMs={d.design.frost.firstFallFrostMs}
       wholeSeason={d.wholeSeason}
+      seasonYear={d.design.seasonYear}
+      todayInRange={d.todayInRange}
       onchange={onScrub}
       onwholeseason={(on) => (d.wholeSeason = on)}
     />
   </div>
+
+  {#if d.jumpTo}
+    {@const j = d.jumpTo}
+    <div class="banner" data-testid="jump-to">
+      <span>{j.text}</span>
+      <button type="button" class="hbtn" onclick={() => onScrub(j.dateMs)}
+        >Go to {shortDate(j.dateMs)}</button
+      >
+      <button type="button" class="hbtn" onclick={() => (d.jumpTo = null)}>Dismiss</button>
+    </div>
+  {/if}
 
   {#if d.conflict}
     {@const c = d.conflict}
@@ -247,8 +326,15 @@
   {#if d.view === 'canvas'}
     <div class="layout">
       <div class="main">
-        <DesignerToolbar oncustom={() => (customOpen = true)} />
+        <div class="no-print">
+          <DesignerToolbar oncustom={() => (customOpen = true)} />
+        </div>
         <DesignerCanvas bind:this={canvasRef} />
+        <ul class="print-only legend" aria-label="What is in each bed on {printDate}">
+          {#each legend as l (l.id)}
+            <li><strong>{l.name}:</strong> {l.rows.length ? l.rows.join('; ') : 'Open'}</li>
+          {/each}
+        </ul>
         <div class="zoom" role="group" aria-label="Zoom">
           <button type="button" class="hbtn" onclick={() => canvasRef?.zoomIn()}>Zoom in</button>
           <button type="button" class="hbtn" onclick={() => canvasRef?.zoomOut()}>Zoom out</button>
@@ -359,7 +445,27 @@
     text-decoration: none;
     font-size: var(--font-size-body);
   }
+  .seg-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 56px;
+    padding: 0 var(--space-3);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .seg-link[aria-current='page'] {
+    background: var(--color-forest);
+    color: #fff;
+  }
+  .print-only {
+    display: none;
+  }
   .hbtn:focus-visible,
+  .seg-link:focus-visible,
   .seg button:focus-visible {
     outline: none;
     box-shadow: var(--focus-ring);
@@ -425,6 +531,11 @@
       grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     }
   }
+  @media (max-width: 639px) {
+    .designer {
+      padding-bottom: 96px;
+    }
+  }
   .sr-only {
     position: absolute;
     width: 1px;
@@ -457,8 +568,28 @@
     .side,
     .banner,
     .toast,
-    :global(.hint) {
+    .no-print,
+    .custom,
+    :global(.hint),
+    :global(header.topbar),
+    :global(.primary-nav),
+    :global(.skip-link),
+    :global(div.banner) {
       display: none !important;
+    }
+    .print-only {
+      display: block;
+    }
+    .print-head {
+      margin: 0;
+      font-weight: 700;
+    }
+    .legend {
+      margin: var(--space-2) 0 0;
+      padding-left: 1.2em;
+    }
+    .designer {
+      padding-bottom: 0;
     }
     .layout {
       grid-template-columns: 1fr;

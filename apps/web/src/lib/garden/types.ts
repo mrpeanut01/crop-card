@@ -91,6 +91,7 @@ export interface GardenCrop {
   plantingGuide?: {
     rowSpacingIn?: number;
     inRowSpacingIn?: { min: number; max: number };
+    soilTempMinF?: number;
   };
 }
 
@@ -129,7 +130,13 @@ export interface PlacedPlanting {
   plantCountProvenance: PlantCountProvenance | null;
   groupId: string | null;
   groupSystemKind: 'three-sisters' | 'succession' | 'manual' | null;
+  groupRole?: 'anchor' | 'companion' | null;
+  /** Where a proposed planting came from once saved; null or absent when
+   *  it was placed by hand. */
+  sourceProvenance?: PlantingSourceProvenance | null;
 }
+
+export type PlantingSourceProvenance = 'ai' | 'fallback' | 'plugin';
 
 /** When a planting holds its spot: planting date to harvest end, then the
  *  bed turnover buffer shared with `scheduleCandidacy`. */

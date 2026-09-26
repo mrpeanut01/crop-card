@@ -120,7 +120,8 @@ export const POST: RequestHandler = async (event) => {
     quantityPlanted: parsed.data.quantityPlanted,
     quantityUnit: parsed.data.quantityUnit,
     sourceProvenance: parsed.data.sourceProvenance,
-    placement
+    placement,
+    status: placement ? 'planned' : undefined
   });
 
   let stockItemId = parsed.data.stockItemId;

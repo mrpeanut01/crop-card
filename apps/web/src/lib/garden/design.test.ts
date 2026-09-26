@@ -175,8 +175,22 @@ describe('buildGardenDesign', () => {
 });
 
 describe('inSeason', () => {
-  it('counts the season and the one before so overwintering crops still show', () => {
-    expect(inSeason({ plantingDateMs: Date.UTC(2025, 9, 1), status: 'active' }, 2026)).toBe(true);
+  it('counts the season, plus last year plantings still holding a bed (overwintering crops)', () => {
+    expect(
+      inSeason(
+        { plantingDateMs: Date.UTC(2025, 9, 1), status: 'active' },
+        2026,
+        Date.UTC(2026, 5, 20)
+      )
+    ).toBe(true);
+    expect(
+      inSeason(
+        { plantingDateMs: Date.UTC(2025, 3, 1), status: 'active' },
+        2026,
+        Date.UTC(2025, 6, 1)
+      )
+    ).toBe(false);
+    expect(inSeason({ plantingDateMs: Date.UTC(2025, 9, 1), status: 'active' }, 2026)).toBe(false);
     expect(inSeason({ plantingDateMs: Date.UTC(2024, 9, 1), status: 'active' }, 2026)).toBe(false);
     expect(inSeason({ plantingDateMs: null, status: 'active' }, 2026)).toBe(false);
     expect(inSeason({ plantingDateMs: Date.UTC(2026, 3, 1), status: 'failed' }, 2026)).toBe(false);

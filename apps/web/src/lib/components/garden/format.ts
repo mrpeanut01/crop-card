@@ -45,6 +45,11 @@ export function ft(n: number): string {
   return Number.isInteger(r) ? String(r) : r.toFixed(1);
 }
 
+/** "1 foot", "2.5 feet". */
+export function feet(n: number): string {
+  return `${ft(n)} ${ft(n) === '1' ? 'foot' : 'feet'}`;
+}
+
 export function sizeLabel(widthFt: number, lengthFt: number): string {
   return `${ft(widthFt)}×${ft(lengthFt)} ft`;
 }

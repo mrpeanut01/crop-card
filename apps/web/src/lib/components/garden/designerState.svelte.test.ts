@@ -96,12 +96,12 @@ describe('DesignerState beds', () => {
     cleanup();
   });
 
-  it('choosing a preset twice drops it at the first open spot', async () => {
+  it('choosing a preset twice drops it at the first open spot, in from the edge', async () => {
     const { d, calls, cleanup } = make({}, () => ({ status: 201, body: { block: { id: 'b3' } } }));
     d.choosePreset('container-5gal');
     d.choosePreset('container-5gal');
     await flush();
-    expect(calls[0].body).toMatchObject({ name: 'Pot 1', kind: 'container', xFt: 0, yFt: 0 });
+    expect(calls[0].body).toMatchObject({ name: 'Pot 1', kind: 'container', xFt: 1, yFt: 1 });
     cleanup();
   });
 
@@ -241,26 +241,35 @@ describe('DesignerState crops', () => {
     const { d, calls, cleanup } = make({}, (c) => ({
       status: 201,
       body: {
-        placed: placed({
-          cropId: 'new',
-          footprint: (c.body as { footprint: PlacedPlanting['footprint'] }).footprint
-        })
+        plantings: [
+          placed({
+            cropId: 'new',
+            footprint: (c.body as { plantings: Array<{ footprint: PlacedPlanting['footprint'] }> })
+              .plantings[0].footprint
+          })
+        ]
       }
     }));
     d.chooseCrop({ source: 'catalog', pluginId: TOMATO.pluginId, label: TOMATO.displayName });
     expect(d.mode.kind).toBe('place-crop');
     await d.tap(pointFt(3, 4), 'bed1', null);
+    expect(calls).toHaveLength(1);
     expect(calls[0]).toMatchObject({
-      url: '/api/blocks/bed1/plantings',
+      url: '/api/garden/plantings',
       method: 'POST',
       body: {
-        cropPluginId: TOMATO.pluginId,
-        plantingDate: Date.UTC(2026, 4, 1),
-        spacingPattern: 'square',
-        footprint: { x_in: 0, w_in: 48, l_in: 24 }
+        plantings: [
+          {
+            blockId: 'bed1',
+            cropPluginId: TOMATO.pluginId,
+            plantingDateMs: Date.UTC(2026, 4, 1),
+            spacingPattern: 'square',
+            footprint: { x_in: 0, w_in: 48, l_in: 24 },
+            source: 'manual'
+          }
+        ]
       }
     });
-    expect(calls[0].body).not.toHaveProperty('sourceProvenance');
     expect(d.selectedCropId).toBe('new');
     cleanup();
   });
@@ -396,6 +405,217 @@ describe('DesignerState crops', () => {
     const { d, cleanup } = make({ initialDateMs: Date.UTC(2026, 6, 15, 14), initialBedId: 'bed2' });
     expect(d.dateMs).toBe(Date.UTC(2026, 6, 15));
     expect(d.selectedBedId).toBe('bed2');
+    cleanup();
+  });
+});
+
+describe('DesignerState write safety', () => {
+  it('a slow failed nudge never undoes a later saved one', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let n = 0;
+    const calls: unknown[] = [];
+    const fetcher = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      calls.push(JSON.parse(String(init?.body)));
+      n += 1;
+      if (n === 1) {
+        await gate;
+        return new Response('{}', { status: 500 });
+      }
+      return new Response('{}', { status: 200 });
+    }) as typeof fetch;
+    const { d, cleanup } = make({ fetch: fetcher });
+    const first = d.nudgeBed('bed1', 1, 0);
+    const second = d.nudgeBed('bed1', 1, 0);
+    release();
+    expect(await first).toBe(false);
+    expect(await second).toBe(true);
+    expect(calls).toEqual([
+      { xFt: 3, yFt: 3 },
+      { xFt: 4, yFt: 3 }
+    ]);
+    expect(d.bed('bed1')?.rect.x).toBe(4);
+    cleanup();
+  });
+
+  it('rolls back to the last saved spot when the latest write fails', async () => {
+    let n = 0;
+    const fetcher = (async () => {
+      n += 1;
+      return new Response('{}', { status: n === 1 ? 200 : 500 });
+    }) as typeof fetch;
+    const { d, cleanup } = make({ fetch: fetcher });
+    const a = d.nudgeBed('bed1', 1, 0);
+    const b = d.nudgeBed('bed1', 1, 0);
+    await Promise.all([a, b]);
+    expect(d.bed('bed1')?.rect.x).toBe(3);
+    cleanup();
+  });
+
+  it('moves only the members the server says followed an anchor', async () => {
+    const design = kitchenGarden({
+      plantings: [
+        plantingRow({
+          id: 'a',
+          plantingDateMs: Date.UTC(2026, 4, 1),
+          groupId: 'g',
+          groupSystemKind: 'succession',
+          groupRole: 'anchor'
+        }),
+        plantingRow({
+          id: 'm1',
+          plantingDateMs: Date.UTC(2026, 4, 15),
+          groupId: 'g',
+          groupSystemKind: 'succession',
+          groupRole: 'companion'
+        }),
+        plantingRow({
+          id: 'm2',
+          plantingDateMs: Date.UTC(2026, 4, 29),
+          groupId: 'g',
+          groupSystemKind: 'succession',
+          groupRole: 'companion'
+        })
+      ]
+    });
+    const { d, cleanup } = make({ design }, (c) => ({
+      body: {
+        planting: placed({
+          cropId: 'm1',
+          plantingDateMs: (c.body as { plantingDateMs: number }).plantingDateMs,
+          groupId: 'g',
+          groupSystemKind: 'succession'
+        }),
+        reanchored: { shifted: 0, flaggedStale: 0 },
+        followers: [],
+        warnings: []
+      }
+    }));
+    await d.setPlantingDate('m1', Date.UTC(2026, 4, 20));
+    const byId = new Map(d.design.plantings.map((p) => [p.cropId, p.plantingDateMs]));
+    expect(byId.get('a')).toBe(Date.UTC(2026, 4, 1));
+    expect(byId.get('m1')).toBe(Date.UTC(2026, 4, 20));
+    expect(byId.get('m2')).toBe(Date.UTC(2026, 4, 29));
+    cleanup();
+  });
+
+  it('saves accepted proposals as one batch and keeps nothing when it fails', async () => {
+    const { d, calls, cleanup } = make({}, () => ({ status: 400, body: { error: 'nope' } }));
+    const ok = await d.acceptProposals([
+      {
+        key: 'k1',
+        blockId: 'bed1',
+        cropPluginId: TOMATO.pluginId,
+        varietyDisplayName: 'Tomato',
+        plantingDateMs: Date.UTC(2026, 4, 1),
+        footprint: { x_in: 0, y_in: 0, w_in: 24, l_in: 24 },
+        spacing: { inRowIn: 30, rowIn: 48, pattern: 'square', source: 'plugin' },
+        plantCount: 1,
+        provenance: 'plugin',
+        note: null,
+        followsKey: null
+      },
+      {
+        key: 'k2',
+        blockId: 'bed1',
+        cropPluginId: LETTUCE.pluginId,
+        varietyDisplayName: 'Lettuce',
+        plantingDateMs: Date.UTC(2026, 4, 1),
+        footprint: { x_in: 24, y_in: 0, w_in: 24, l_in: 24 },
+        spacing: { inRowIn: 10, rowIn: 10, pattern: 'square', source: 'manual' },
+        plantCount: 4,
+        provenance: 'plugin',
+        note: null,
+        followsKey: null
+      }
+    ]);
+    expect(ok).toBe(false);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({
+      url: '/api/garden/plantings',
+      body: {
+        plantings: [{ source: 'plugin' }, { source: 'plugin', spacingIn: 10, rowSpacingIn: 10 }]
+      }
+    });
+    expect(d.design.plantings).toHaveLength(0);
+    cleanup();
+  });
+
+  it('refuses to shrink a bed past a planting in it', async () => {
+    const design = kitchenGarden({
+      plantings: [plantingRow({ id: 'tom', footprint: { x_in: 24, y_in: 72, w_in: 24, l_in: 24 } })]
+    });
+    const { d, calls, cleanup } = make({ design });
+    expect(await d.resizeBed('bed1', 2, 4)).toBe(false);
+    await flush();
+    expect(calls).toHaveLength(0);
+    expect(d.alert).toMatch(/can't get that small/);
+    expect(d.bed('bed1')).toMatchObject({ widthFt: 4, lengthFt: 8 });
+    cleanup();
+  });
+
+  it('plants a tomato after the last frost when the scrubber sits in midwinter', async () => {
+    const { d, calls, cleanup } = make({ initialDateMs: Date.UTC(2026, 0, 1) }, (c) => ({
+      status: 201,
+      body: {
+        plantings: [
+          placed({
+            cropId: 'new',
+            plantingDateMs: (c.body as { plantings: Array<{ plantingDateMs: number }> })
+              .plantings[0].plantingDateMs
+          })
+        ]
+      }
+    }));
+    expect(d.dateMs).toBe(Date.UTC(2026, 0, 1));
+    await d.placeCrop({ source: 'catalog', pluginId: TOMATO.pluginId, label: 'Tomato' }, 'bed1');
+    const sent = (calls[0].body as { plantings: Array<{ plantingDateMs: number }> }).plantings[0];
+    expect(sent.plantingDateMs).toBe(Date.UTC(2026, 3, 22));
+    await flush();
+    expect(d.status).toMatch(/for Apr 22, after your last frost/);
+    expect(d.jumpTo?.dateMs).toBe(Date.UTC(2026, 3, 22));
+    cleanup();
+  });
+
+  it('opens on the last frost when today is outside the season', () => {
+    const { d, cleanup } = make({ nowMs: Date.UTC(2025, 8, 26) });
+    expect(d.todayInRange).toBe(false);
+    expect(d.dateMs).toBe(Date.UTC(2026, 3, 15));
+    cleanup();
+  });
+
+  it('does not count a same-season crop sharing the bed as rotation history', () => {
+    const history = {
+      bed1: [
+        {
+          cropId: 'sq1',
+          cropPluginId: TOMATO.pluginId,
+          varietyDisplayName: 'Tomato',
+          cropFamily: 'solanaceae',
+          archetype: 'continuous-harvest-fruit',
+          status: 'planned' as const,
+          plantingDateMs: Date.UTC(2026, 5, 3),
+          harvestedAtMs: null,
+          seasonYear: 2026
+        }
+      ]
+    };
+    const design = kitchenGarden({
+      plantings: [
+        plantingRow({
+          id: 'sq1',
+          plantingDateMs: Date.UTC(2026, 5, 3),
+          footprint: { x_in: 0, y_in: 0, w_in: 24, l_in: 24 }
+        }),
+        plantingRow({
+          id: 'sq2',
+          plantingDateMs: Date.UTC(2026, 5, 3),
+          footprint: { x_in: 24, y_in: 0, w_in: 24, l_in: 24 }
+        })
+      ]
+    });
+    const { d, cleanup } = make({ design, history });
+    expect(d.rotationFor('bed1', 'solanaceae', 'sq2', Date.UTC(2026, 5, 3))).toEqual([]);
     cleanup();
   });
 });

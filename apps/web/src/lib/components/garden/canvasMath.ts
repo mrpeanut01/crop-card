@@ -2,8 +2,14 @@ import { plantCount } from '$lib/garden/plantCount';
 import type { BedLayout, Footprint, PlantSpacing, RectFt } from '$lib/garden/types';
 
 export const MAX_DOTS = 240;
+/** Plant dots drawn across the whole canvas; past this the family pattern
+ *  alone shows the planting. */
+export const MAX_CANVAS_DOTS = 1500;
+/** Below this zoom a dot is under a pixel and says nothing. */
+export const MIN_DOT_PX_PER_FT = 12;
 export const MAX_PX_PER_FT = 96;
 export const RULER_MARGIN_FT = 1.5;
+const RULER_LABEL_PX = 20;
 
 export interface View {
   x: number;
@@ -56,13 +62,50 @@ export function plantDots(
   return out;
 }
 
-export function fitView(widthFt: number, lengthFt: number): View {
+export function fitView(
+  widthFt: number,
+  lengthFt: number,
+  marginFt: number = RULER_MARGIN_FT
+): View {
   return {
-    x: -RULER_MARGIN_FT,
-    y: -RULER_MARGIN_FT,
-    w: widthFt + 2 * RULER_MARGIN_FT,
-    h: lengthFt + 2 * RULER_MARGIN_FT
+    x: -marginFt,
+    y: -marginFt,
+    w: widthFt + 2 * marginFt,
+    h: lengthFt + 2 * marginFt
   };
+}
+
+/** Margin around the Area, in feet, that leaves the ruler labels about
+ *  `RULER_LABEL_PX` of room at the fitted zoom, never less than
+ *  `RULER_MARGIN_FT`. */
+export function rulerMarginFt(
+  widthFt: number,
+  lengthFt: number,
+  viewportPx: number,
+  viewportH = 0
+): number {
+  let m = RULER_MARGIN_FT;
+  for (let i = 0; i < 4; i++) {
+    const px = Math.min(
+      viewportPx / (widthFt + 2 * m),
+      viewportH > 0 ? viewportH / (lengthFt + 2 * m) : Infinity
+    );
+    if (!(px > 0) || !Number.isFinite(px)) return m;
+    m = Math.max(RULER_MARGIN_FT, RULER_LABEL_PX / px);
+  }
+  return Math.min(m, Math.max(widthFt, lengthFt) / 2);
+}
+
+/** "Tom" for Tomato, "BL" for Bibb Lettuce: a short tag for a planting too
+ *  narrow for its name. */
+export function cropBadge(name: string): string {
+  const words = name.split(/[\s—(),-]+/).filter(Boolean);
+  if (words.length >= 2)
+    return words
+      .slice(0, 2)
+      .map((w) => w[0].toUpperCase())
+      .join('');
+  return (words[0] ?? '').slice(0, 3);
 }
 
 /** Zoom about a point, kept between "whole Area fits" and `MAX_PX_PER_FT`. */

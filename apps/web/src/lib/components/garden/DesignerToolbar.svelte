@@ -36,7 +36,7 @@
 
 {#if d.canEdit}
   {#if d.mode.kind === 'place-bed' || d.mode.kind === 'move-bed' || d.mode.kind === 'place-crop' || d.mode.kind === 'move-planting'}
-    <div class="bar banner" role="region" aria-label="Placing">
+    <div class="bar banner floating" role="region" aria-label="Placing">
       <span class="banner-text" data-testid="placing-banner">
         {#if d.mode.kind === 'place-bed'}
           Tap the garden where the {BED_PRESETS[d.mode.presetId].label} goes, or choose {PRESET_LABEL[
@@ -65,7 +65,12 @@
     </div>
   {/if}
   {#if bed && (d.mode.kind === 'idle' || d.mode.kind === 'carry-bed')}
-    <div class="bar" role="toolbar" aria-label="{bed.name} actions" data-testid="bed-toolbar">
+    <div
+      class="bar floating"
+      role="toolbar"
+      aria-label="{bed.name} actions"
+      data-testid="bed-toolbar"
+    >
       {#if planting && planting.blockId === bed.blockId}
         <span class="what">{planting.varietyDisplayName}</span>
         <button type="button" class="tb" onclick={() => d.startMovePlanting(planting.cropId)}
@@ -154,5 +159,28 @@
   .tb:focus-visible {
     outline: none;
     box-shadow: var(--focus-ring);
+  }
+  @media (max-width: 639px) {
+    .floating {
+      position: fixed;
+      left: 8px;
+      right: 8px;
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      z-index: 30;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: var(--space-2);
+      border-radius: var(--radius-input);
+      background: var(--color-paper);
+      border: 1px solid var(--color-divider);
+      box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.16);
+    }
+    .floating.banner {
+      flex-wrap: wrap;
+      background: var(--pill-wheat-bg);
+    }
+    .floating .tb {
+      flex: 0 0 auto;
+    }
   }
 </style>

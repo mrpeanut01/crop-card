@@ -5,9 +5,16 @@
  * group through `createPlantingGroup`.
  */
 
-import { createPlantingGroup, getCrop, listCrops, type GroupMemberInput } from '$lib/db/crops';
+import {
+  appendToPlantingGroup,
+  createPlantingGroup,
+  getCrop,
+  listCrops,
+  listGroupMembers,
+  type GroupMemberInput
+} from '$lib/db/crops';
 import type { SuccessionRequest, SuccessionResponse } from '$lib/garden/api';
-import { ONE_DAY_MS, occupancyIntervals } from '$lib/garden/occupancy';
+import { ONE_DAY_MS, occupancyIntervals, shortDate } from '$lib/garden/occupancy';
 import { proposeSuccession } from '$lib/garden/succession';
 import type { GardenCrop } from '$lib/garden/types';
 import type { CropPlugin } from '$lib/plugins/schemas';
@@ -40,12 +47,27 @@ export function addSuccession(
       `${anchorCrop.varietyDisplayName} is finished for the season. Pick a current planting.`
     );
   }
-  if (req.commit && anchorCrop.groupId) {
+  const extending =
+    !!anchorCrop.groupId &&
+    anchorCrop.groupSystemKind === 'succession' &&
+    anchorCrop.groupRole === 'anchor';
+  if (anchorCrop.groupId && !extending) {
+    const first =
+      anchorCrop.groupSystemKind === 'succession'
+        ? listGroupMembers(anchorCrop.groupId).find((m) => m.groupRole === 'anchor')
+        : undefined;
     return gardenFailure(
       409,
-      `${anchorCrop.varietyDisplayName} is already linked to other plantings. Add sowings from its first planting.`
+      first
+        ? `This is one sowing in a series. Add sowings from the first one${first.plantingDate != null ? `, ${shortDate(first.plantingDate)}` : ''}.`
+        : `${anchorCrop.varietyDisplayName} is already linked to other plantings.`
     );
   }
+  const series = extending ? listGroupMembers(anchorCrop.groupId!) : [];
+  const afterMs = series.reduce<number | null>(
+    (m, c) => (c.plantingDate != null && (m == null || c.plantingDate > m) ? c.plantingDate : m),
+    null
+  );
   const plugin: GardenCrop | undefined = crops[anchorCrop.cropPluginId];
   const anchor = placedPlantingFromCrop(anchorCrop, plugin);
   const year = new Date(anchor.plantingDateMs ?? Date.now()).getUTCFullYear();
@@ -64,7 +86,8 @@ export function addSuccession(
     count: req.count,
     intervalDays: req.intervalDays,
     intervals,
-    firstFallFrostMs
+    firstFallFrostMs,
+    afterMs
   });
   if (!req.commit) return { ok: true, response: { proposal, groupId: null, created: [] } };
 
@@ -82,11 +105,29 @@ export function addSuccession(
         footprint: s.footprint,
         spacingPattern: anchor.spacing.pattern,
         spacingIn: anchorCrop.spacingIn ?? null,
-        rowSpacingIn: anchorCrop.rowSpacingIn ?? null
+        rowSpacingIn: anchorCrop.rowSpacingIn ?? null,
+        plantCount: anchorCrop.plantCountProvenance === 'manual' ? anchorCrop.plantCount : null
       },
       plugin
     )
   }));
+  if (extending) {
+    const added = appendToPlantingGroup({
+      groupId: anchorCrop.groupId!,
+      anchor: anchorCrop,
+      companions,
+      resolvePlugin: (id) => crops[id]
+    });
+    return {
+      ok: true,
+      response: {
+        proposal,
+        groupId: anchorCrop.groupId!,
+        anchor: placedPlantingFromCrop(getCrop(anchorCrop.id)!, plugin),
+        created: added.map((m) => placedPlantingFromCrop(m.crop, plugin))
+      }
+    };
+  }
   const result = createPlantingGroup({
     blockId: bed.block.id,
     anchor: {

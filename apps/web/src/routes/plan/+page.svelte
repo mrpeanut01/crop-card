@@ -16,6 +16,7 @@
   // rail + block header + plantings tabs/grid + timeline + scheduled
   // tasks) on top of the legacy tabbed editor (now in a <details>).
   import PlanV2Shell from '$lib/components/plan/PlanV2Shell.svelte';
+  import { isDesignable } from '$lib/farm/areaKinds';
   import NewBlockModal from '$lib/components/plan/NewBlockModal.svelte';
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
@@ -1865,6 +1866,7 @@
   geometryEditHref={data.canEdit ? '/settings/farm/map' : undefined}
   farmLabel={data.fields.length === 1 ? data.fields[0].name : undefined}
   fields={data.fields}
+  gardens={data.fields.filter((f) => isDesignable(f.kind)).map((f) => ({ id: f.id, name: f.name }))}
   cropMeta={Object.fromEntries(
     data.cropCatalog.map((c) => [
       c.pluginId,

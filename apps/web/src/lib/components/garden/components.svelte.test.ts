@@ -9,6 +9,7 @@ import DesignerListView from './DesignerListView.svelte';
 import DesignerToolbar from './DesignerToolbar.svelte';
 import TimeScrubber from './TimeScrubber.svelte';
 import BedInspector from './BedInspector.svelte';
+import CropPanel from './CropPanel.svelte';
 import { DESIGNER_KEY, DesignerState, type DesignerInit } from './designerState.svelte';
 import { CATALOG, fakeFetch, kitchenGarden, plantingRow, type FetchCall } from './fixtures';
 
@@ -200,5 +201,66 @@ describe('TimeScrubber', () => {
     expect(slider).toHaveAttribute('aria-valuetext', 'May 1');
     await fireEvent.keyDown(slider, { key: 'PageDown' });
     expect(value).toBe(Date.UTC(2026, 6, 1));
+  });
+});
+
+describe('CropPanel', () => {
+  it('ranks crops named for the search ahead of their family and says when the list is cut', async () => {
+    const family = Array.from({ length: 45 }, (_, i) => ({
+      pluginId: `eggplant-${i}`,
+      displayName: `Eggplant ${String(i).padStart(2, '0')}`,
+      cropFamily: 'solanaceae'
+    }));
+    const catalog = [
+      ...family,
+      { pluginId: 'tomato-sungold', displayName: 'Tomato Sungold', cropFamily: 'solanaceae' },
+      ...CATALOG
+    ];
+    const { d } = state({ catalog });
+    d.openCropPanel(null);
+    const { getByLabelText, getAllByRole, getByTestId } = mount(CropPanel, d, {});
+    await fireEvent.input(getByLabelText('Search crops'), { target: { value: 'tomato' } });
+    const names = getAllByRole('button')
+      .map((b) => b.textContent ?? '')
+      .filter((t) => /Tomato|Eggplant/.test(t));
+    expect(names[0]).toMatch(/Tomato/);
+    expect(names[1]).toMatch(/Tomato/);
+    expect(getByTestId('crop-results-cut')).toHaveTextContent('Showing 40 of 47. Keep typing');
+  });
+});
+
+describe('BedInspector succession series', () => {
+  it('points a later sowing back at the first one instead of offering a new series', async () => {
+    const fp = { x_in: 0, y_in: 0, w_in: 48, l_in: 24 };
+    const { d } = state({
+      design: kitchenGarden({
+        plantings: [
+          plantingRow({
+            id: 'a',
+            footprint: fp,
+            groupId: 'g',
+            groupSystemKind: 'succession',
+            groupRole: 'anchor'
+          }),
+          plantingRow({
+            id: 'b',
+            footprint: { ...fp, y_in: 24 },
+            plantingDateMs: Date.UTC(2026, 4, 15),
+            groupId: 'g',
+            groupSystemKind: 'succession',
+            groupRole: 'companion'
+          })
+        ]
+      })
+    });
+    d.selectPlanting('b');
+    const { getByRole, queryByRole, getAllByTestId } = mount(BedInspector, d, {
+      bed: d.bed('bed1')!
+    });
+    expect(getAllByTestId('planting-row')[1]).toHaveTextContent('sowing 2 of 2');
+    expect(queryByRole('button', { name: /^Add succession/ })).toBeNull();
+    await fireEvent.click(getByRole('button', { name: /first sowing/ }));
+    expect(d.selectedCropId).toBe('a');
+    expect(getByRole('button', { name: /^Add more sowings/ })).toBeInTheDocument();
   });
 });

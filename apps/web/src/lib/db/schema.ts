@@ -653,8 +653,10 @@ export const crops = tenantScoped(
        *  source badge ("AI plan" / "Carry-forward") instead of the
        *  catch-all "Manual entry". NULL = manual drag-drop (the existing
        *  /plan?tab=crops behavior); explicit `'ai'` or `'fallback'` for
-       *  wizard runs. */
-      sourceProvenance: text('source_provenance', { enum: ['ai', 'fallback'] }),
+       *  wizard runs. Phase 30E adds `'plugin'` for plantings saved from a
+       *  bed recipe. SQLite stores the enum as plain TEXT, so widening it
+       *  needs no migration. */
+      sourceProvenance: text('source_provenance', { enum: ['ai', 'fallback', 'plugin'] }),
       /** Sprint 6 / Phase 27A (#257) — per-planting archetype override.
        *  NULL means "use the resolved archetype from the crop plugin"
        *  (the default — `resolveArchetype(plugin)` in plugin-validation).

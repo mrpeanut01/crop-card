@@ -16,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 import { type SQL, and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
+import { plantingInGround } from '$lib/garden/inGround';
 import {
   blocks,
   cropEquipment,
@@ -253,17 +254,31 @@ export function deleteCropCascade(id: string): DeleteSummary {
 
 // ─── Per-block (the heaviest cascade) ───────────────────────────────────
 
-/** True when a block holds anything beyond `planned` plantings: an active,
- *  harvested or failed planting, any spray, harvest, hay, fertility or soil
- *  record, or a task that is not one of its planned plantings' own. The
- *  garden designer only deletes beds for which this is false. */
-export function blockHasRecords(id: string): boolean {
+/** True when a block holds anything beyond plans: a planting already in the
+ *  ground (see `plantingInGround`), any spray, harvest, hay, fertility or
+ *  soil record, or a task that is not one of its plans' own. The garden
+ *  designer only deletes beds for which this is false. */
+export function blockHasRecords(id: string, nowMs: number = Date.now()): boolean {
   const cropRows = db
-    .select({ id: crops.id, status: crops.status })
+    .select({
+      id: crops.id,
+      status: crops.status,
+      plantingDate: crops.plantingDate,
+      harvestedAt: crops.harvestedAt
+    })
     .from(crops)
     .where(withTenant(crops, eq(crops.blockId, id)))
     .all();
-  if (cropRows.some((c) => c.status !== 'planned')) return true;
+  const inGround = (c: (typeof cropRows)[number]) =>
+    plantingInGround(
+      {
+        status: c.status,
+        plantingDateMs: c.plantingDate?.getTime() ?? null,
+        harvestedAtMs: c.harvestedAt?.getTime() ?? null
+      },
+      nowMs
+    );
+  if (cropRows.some(inGround)) return true;
   const plannedIds = new Set(cropRows.map((c) => c.id));
   const any = <T extends TenantScopedTable>(table: T, where: SQL): boolean =>
     db

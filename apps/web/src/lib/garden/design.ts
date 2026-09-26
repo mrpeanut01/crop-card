@@ -13,6 +13,7 @@ import {
 } from '$lib/schedule/constants';
 import { bedRect, canvasFromArea, clampToArea, freeSpot, rectFt } from './geometry';
 import { plantCount, resolveSpacing } from './plantCount';
+import { plantingOccupancy } from './occupancy';
 import type {
   AreaCanvas,
   BedLayout,
@@ -70,6 +71,8 @@ export interface DesignPlantingInput {
   plantCountProvenance: PlantCountProvenance | null;
   groupId: string | null;
   groupSystemKind: PlacedPlanting['groupSystemKind'];
+  groupRole?: PlacedPlanting['groupRole'];
+  sourceProvenance?: PlacedPlanting['sourceProvenance'];
 }
 
 export interface DesignInput {
@@ -170,20 +173,29 @@ export function placedPlanting(
     plantCount: count ?? null,
     plantCountProvenance: provenance ?? null,
     groupId: p.groupId,
-    groupSystemKind: p.groupSystemKind
+    groupSystemKind: p.groupSystemKind,
+    groupRole: p.groupRole ?? null,
+    sourceProvenance: p.sourceProvenance ?? null
   };
 }
 
 /** A planting belongs to the designer's season when it is dated in that
- *  year, or is an undated plan. */
+ *  year, or is an undated plan. A planting from the year before belongs
+ *  only while it still holds its bed into this season (overwintered garlic,
+ *  a perennial): `occupancyEndMs` is when it lets the bed go. Everything
+ *  else from past years lives in the bed's History. */
 export function inSeason(
   p: Pick<DesignPlantingInput, 'plantingDateMs' | 'status'>,
-  seasonYear: number
+  seasonYear: number,
+  occupancyEndMs?: number | null
 ): boolean {
   if (p.status === 'archived' || p.status === 'failed') return false;
   if (p.plantingDateMs == null) return p.status === 'planned';
   const y = new Date(p.plantingDateMs).getUTCFullYear();
-  return y === seasonYear || y === seasonYear - 1;
+  if (y === seasonYear) return true;
+  return (
+    y === seasonYear - 1 && occupancyEndMs != null && occupancyEndMs > Date.UTC(seasonYear, 0, 1)
+  );
 }
 
 /** Null when the Area is not a garden or greenhouse. */
@@ -192,8 +204,22 @@ export function buildGardenDesign(input: DesignInput): GardenDesign | null {
   const canvas = canvasFromArea(input.area);
   const { beds, unplacedBedIds } = layoutBeds(input.blocks, canvas);
   const bedIds = new Set(beds.map((b) => b.blockId));
+  const endOf = (p: DesignPlantingInput) =>
+    plantingOccupancy(
+      {
+        cropId: p.id,
+        blockId: p.blockId,
+        cropPluginId: p.cropPluginId,
+        status: p.status,
+        plantingDateMs: p.plantingDateMs,
+        harvestedAtMs: p.harvestedAtMs,
+        footprint: p.footprint
+      },
+      input.crops[p.cropPluginId],
+      { firstFallFrostMs: input.frost.firstFallFrostMs }
+    )?.harvestEndMs ?? null;
   const plantings = input.plantings
-    .filter((p) => bedIds.has(p.blockId) && inSeason(p, input.seasonYear))
+    .filter((p) => bedIds.has(p.blockId) && inSeason(p, input.seasonYear, endOf(p)))
     .map((p) => placedPlanting(p, input.crops[p.cropPluginId]))
     .sort(
       (a, b) =>

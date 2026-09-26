@@ -72,7 +72,7 @@ export interface PlantingRecord {
    *  manual /plan?tab=crops drag-drop. PlanV2Shell maps this to the
    *  PlantingCard `sourceTag` prop so the footer renders the right
    *  badge instead of the catch-all "Manual entry". */
-  sourceProvenance?: 'ai' | 'fallback' | null;
+  sourceProvenance?: 'ai' | 'fallback' | 'plugin' | null;
   groupRole?: 'anchor' | 'companion';
 }
 
@@ -339,10 +339,13 @@ export function addPlanting(input: {
   /** Sprint 3 (#212) — provenance tag the wizard threads through to the
    *  endpoint so PlantingCard renders the correct source footer. NULL =
    *  manual drag-drop. */
-  sourceProvenance?: 'ai' | 'fallback';
+  sourceProvenance?: 'ai' | 'fallback' | 'plugin';
   /** Phase 30E garden-bed footprint + spacing. A placed planting is always
    *  its own row, never merged into an existing planned one. */
   placement?: CropPlacement;
+  /** A placed planting is a plan until its date comes, so the designer
+   *  paths pass `'planned'`; otherwise a dated row starts `'active'`. */
+  status?: 'planned' | 'active';
 }): PlantingRecord {
   if (input.plantingDate === null && input.quantityPlanted !== undefined && !input.placement) {
     const conds = [
@@ -393,7 +396,7 @@ export function addPlanting(input: {
         cropPluginId: input.cropPluginId,
         varietyDisplayName: input.varietyDisplayName,
         plantingDate: input.plantingDate !== null ? new Date(input.plantingDate) : null,
-        status: input.plantingDate === null ? 'planned' : 'active',
+        status: input.plantingDate === null ? 'planned' : (input.status ?? 'active'),
         quantityPlantedHundredths:
           input.quantityPlanted !== undefined ? Math.round(input.quantityPlanted * 100) : null,
         quantityUnit: input.quantityUnit ?? null,

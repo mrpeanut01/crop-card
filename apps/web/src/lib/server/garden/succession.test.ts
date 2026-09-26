@@ -151,7 +151,7 @@ describe('addSuccession', () => {
     });
   });
 
-  it('refuses a second group on a linked planting and another Owner’s bed', () => {
+  it('extends a series from its first sowing, refuses from a later one and another Owner’s bed', () => {
     const ownerA = seedOwner();
     let bedId = '';
     let anchorId = '';
@@ -161,8 +161,21 @@ describe('addSuccession', () => {
       anchorId = anchorIn(bed.id).id;
       const first = addSuccession(bed.id, { cropId: anchorId, count: 1, commit: true }, crops);
       expect(first.ok).toBe(true);
+      const firstDates = first.ok ? first.response.created.map((c) => c.plantingDateMs) : [];
       const again = addSuccession(bed.id, { cropId: anchorId, count: 1, commit: true }, crops);
-      expect(again.ok).toBe(false);
+      expect(again.ok).toBe(true);
+      if (!again.ok || !first.ok) return;
+      expect(again.response.groupId).toBe(first.response.groupId);
+      expect(again.response.created).toHaveLength(1);
+      expect(again.response.created[0].plantingDateMs).toBeGreaterThan(firstDates[0]!);
+      expect(again.response.created[0].groupId).toBe(first.response.groupId);
+      const later = addSuccession(
+        bed.id,
+        { cropId: first.response.created[0].cropId, count: 1, commit: true },
+        crops
+      );
+      expect(later.ok).toBe(false);
+      if (!later.ok) expect(later.body.error).toMatch(/Add sowings from the first one/);
     });
     runWithTenant(seedOwner(), () => {
       const out = addSuccession(bedId, { cropId: anchorId, count: 1, commit: true }, crops);

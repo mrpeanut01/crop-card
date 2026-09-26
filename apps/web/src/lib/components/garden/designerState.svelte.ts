@@ -7,6 +7,7 @@
 import { getContext, setContext } from 'svelte';
 import {
   BED_PRESETS,
+  DEFAULT_SPOT_SPACING,
   FOOTPRINT_SNAP_IN,
   SNAP_FT,
   adjacentBeds,
@@ -19,7 +20,8 @@ import {
   overlappingBeds,
   pointInBedIn,
   rotate90,
-  snap
+  snap,
+  type SpotSpacing
 } from '$lib/garden/geometry';
 import {
   bedOccupancyOn,
@@ -49,6 +51,7 @@ import type {
   FootprintWriteResponse,
   GardenErrorResponse,
   PlantingCreateRequest,
+  PlantingCreateResponse,
   SuccessionResponse
 } from '$lib/garden/api';
 import type { CompanionPlugin } from '$lib/plugins/schemas';
@@ -72,7 +75,9 @@ import type {
   SpacingPattern,
   SuccessionProposal
 } from '$lib/garden/types';
-import { ft, longDate, plural } from './format';
+import { feet, ft, longDate, parseYmd, plural, ymd } from './format';
+import { plantingInGround } from '$lib/garden/inGround';
+import { deterministicPlantingWindow } from '$lib/plan/plantingWindow';
 
 export type CropChoice =
   | { source: 'planting'; cropId: string; label: string }
@@ -102,6 +107,9 @@ export interface DesignerInit {
   lookbackByFamily: Record<string, number>;
   canEdit: boolean;
   recipes?: BedRecipePlugin[];
+  /** A greenhouse stretches the season, so frost-date planting windows
+   *  only apply outdoors. */
+  areaKind?: string;
   nowMs?: number;
   initialDateMs?: number | null;
   initialBedId?: string | null;
@@ -120,6 +128,7 @@ export class WriteError extends Error {
 
 const OFFLINE_WRITE = "That change didn't save because you're offline.";
 const DEFAULT_CROP_LENGTH_IN = 24;
+const WINDOW_GRACE_MS = 7 * 86_400_000;
 
 function errorText(body: GardenErrorResponse | null, status: number): string {
   if (body?.code === 'OVERLAP') return "Beds can't overlap";
@@ -177,6 +186,9 @@ export class DesignerState {
   preview = $state<{ blockId: string; rect: RectFt } | null>(null);
   ghosts = $state<Array<{ key: string; blockId: string; footprint: Footprint; label: string }>>([]);
   recentPluginIds = $state<string[]>([]);
+  /** Asks the canvas or list to focus a bed or planting after a keyboard
+   *  action moved or created it. */
+  focusRequest = $state<{ kind: 'bed' | 'planting'; id: string; n: number } | null>(null);
   renameRequest = $state(0);
   sizeRequest = $state(0);
 
@@ -199,7 +211,9 @@ export class DesignerState {
     }
     return out;
   });
-  unplacedPlantings = $derived.by(() => this.design.plantings.filter((p) => !p.footprint));
+  unplacedPlantings = $derived.by(() =>
+    this.design.plantings.filter((p) => !p.footprint && this.inSeasonYear(p))
+  );
   selectedBed = $derived.by(() => this.beds.find((b) => b.blockId === this.selectedBedId) ?? null);
   selectedPlanting = $derived.by(
     () => this.design.plantings.find((p) => p.cropId === this.selectedCropId) ?? null
@@ -214,10 +228,19 @@ export class DesignerState {
     )
   );
   hasScheduledPlanting = $derived.by(() => this.intervals.length > 0);
+  todayInRange = $derived.by(() => {
+    const today = utcDayStart(this.nowMs);
+    return today >= this.range.startMs && today <= this.range.endMs;
+  });
+  /** Where a new planting in view starts; set by `placeCrop` so the page can
+   *  offer to jump there when it isn't the scrubbed date. */
+  jumpTo = $state<{ dateMs: number; text: string } | null>(null);
 
   readonly nowMs: number;
+  readonly outdoors: boolean;
 
   constructor(init: DesignerInit) {
+    this.outdoors = init.areaKind !== 'greenhouse';
     this.design = init.design;
     this.history = init.history;
     this.catalog = init.catalog;
@@ -234,7 +257,14 @@ export class DesignerState {
       }),
       this.nowMs
     );
-    const wanted = init.initialDateMs != null ? utcDayStart(init.initialDateMs) : range.todayMs;
+    const today = utcDayStart(this.nowMs);
+    const todayInRange = today >= range.startMs && today <= range.endMs;
+    const wanted =
+      init.initialDateMs != null
+        ? utcDayStart(init.initialDateMs)
+        : todayInRange
+          ? today
+          : init.design.frost.lastSpringFrostMs;
     this.dateMs = Math.min(range.endMs, Math.max(range.startMs, wanted));
     if (init.initialBedId && init.design.beds.some((b) => b.blockId === init.initialBedId)) {
       this.selectedBedId = init.initialBedId;
@@ -264,7 +294,7 @@ export class DesignerState {
   }
 
   bedLabel(bed: BedLayout): string {
-    const pos = `${ft(bed.rect.x)} feet from west, ${ft(bed.rect.y)} feet from north`;
+    const pos = `${feet(bed.rect.x)} from west, ${feet(bed.rect.y)} from north`;
     const kind = bed.kind === 'container' ? 'container' : `${bed.bedStyle ?? 'garden'} bed`;
     const occ = this.occupancy.get(bed.blockId);
     const on = occ?.occupants.length
@@ -314,6 +344,65 @@ export class DesignerState {
 
   setDate(ms: number): void {
     this.dateMs = Math.min(this.range.endMs, Math.max(this.range.startMs, utcDayStart(ms)));
+    if (this.jumpTo && this.jumpTo.dateMs === this.dateMs) this.jumpTo = null;
+  }
+
+  /** "May 15, 2027" or "May 15" when the date is in the season year. */
+  dateText(ms: number): string {
+    const y = new Date(ms).getUTCFullYear();
+    return y === this.design.seasonYear ? shortDate(ms) : `${shortDate(ms)}, ${y}`;
+  }
+
+  /** Undated, or dated in the season year. Plantings from another year
+   *  are shown for context but never offered for placing. */
+  inSeasonYear(p: Pick<PlacedPlanting, 'plantingDateMs'>): boolean {
+    return (
+      p.plantingDateMs == null ||
+      new Date(p.plantingDateMs).getUTCFullYear() === this.design.seasonYear
+    );
+  }
+
+  private inGround(p: PlacedPlanting): boolean {
+    return plantingInGround(p, this.nowMs);
+  }
+
+  /** The plugin's planting window for a crop in this season, from the
+   *  farm's frost dates. */
+  plantingWindowFor(pluginId: string): { startMs: number; endMs: number; note: string | null } {
+    const crop = this.crop(pluginId);
+    const w = deterministicPlantingWindow(
+      {
+        cropFamily: crop?.cropFamily ?? null,
+        soilTempMinF: crop?.plantingGuide?.soilTempMinF ?? null,
+        dtmMaxDays: crop?.daysToMaturity?.max ?? null
+      },
+      {
+        lastSpring: ymd(this.design.frost.lastSpringFrostMs),
+        firstFall: ymd(this.design.frost.firstFallFrostMs)
+      }
+    );
+    return {
+      startMs: parseYmd(w.earliest) ?? this.design.frost.lastSpringFrostMs,
+      endMs: parseYmd(w.latest) ?? this.design.frost.firstFallFrostMs,
+      note: w.note
+    };
+  }
+
+  /** A warning when an outdoor planting is dated outside its crop's
+   *  window by more than a week. */
+  windowWarning(p: Pick<PlacedPlanting, 'cropPluginId' | 'plantingDateMs'>): string | null {
+    if (p.plantingDateMs == null || !this.outdoors) return null;
+    const crop = this.crop(p.cropPluginId);
+    if (!crop) return null;
+    const day = utcDayStart(p.plantingDateMs);
+    const w = this.plantingWindowFor(p.cropPluginId);
+    if (day < w.startMs - WINDOW_GRACE_MS) {
+      return `Early for ${crop.displayName}. Its window opens ${this.dateText(w.startMs)}.`;
+    }
+    if (day > w.endMs + WINDOW_GRACE_MS) {
+      return `Late for ${crop.displayName}. It needs to go in by ${this.dateText(w.endMs)} to finish before frost.`;
+    }
+    return null;
   }
 
   selectBed(blockId: string | null): void {
@@ -370,6 +459,29 @@ export class DesignerState {
     return body as T;
   }
 
+  private writeSeq = new Map<string, number>();
+  private writeChain = new Map<string, Promise<unknown>>();
+  private confirmedBeds = new Map<string, BedLayout>();
+  private confirmedPlantings = new Map<string, PlacedPlanting>();
+
+  /** Runs writes for one bed or planting one after another, so a slow
+   *  failure can't land after a later success. `seq` says which write is
+   *  the latest for that key. */
+  private queueWrite<T>(key: string, run: () => Promise<T>): { seq: number; done: Promise<T> } {
+    const seq = (this.writeSeq.get(key) ?? 0) + 1;
+    this.writeSeq.set(key, seq);
+    const done = (this.writeChain.get(key) ?? Promise.resolve()).then(run);
+    this.writeChain.set(
+      key,
+      done.catch(() => undefined)
+    );
+    return { seq, done };
+  }
+
+  private isLatestWrite(key: string, seq: number): boolean {
+    return this.writeSeq.get(key) === seq;
+  }
+
   private fail(e: unknown): void {
     this.warn(e instanceof WriteError ? e.message : "That didn't save. Try again.");
   }
@@ -393,7 +505,15 @@ export class DesignerState {
     const lengthFt = size?.lengthFt ?? preset.lengthFt;
     if (this.mode.kind === 'place-bed' && this.mode.presetId === presetId) {
       this.mode = { kind: 'idle' };
-      const spot = freeSpot(widthFt, lengthFt, 0, this.beds, this.canvas);
+      const spot = freeSpot(
+        widthFt,
+        lengthFt,
+        0,
+        this.beds,
+        this.canvas,
+        undefined,
+        this.spotSpacing(presetId)
+      );
       if (!spot) {
         this.warn('The garden is full. Make it bigger or remove a bed.');
         return;
@@ -408,6 +528,13 @@ export class DesignerState {
     );
   }
 
+  /** Containers sit closer together than beds you walk between. */
+  private spotSpacing(presetId: BedPresetId): SpotSpacing {
+    return BED_PRESETS[presetId].kind === 'container'
+      ? { aisleFt: 1, insetFt: DEFAULT_SPOT_SPACING.insetFt }
+      : DEFAULT_SPOT_SPACING;
+  }
+
   addBedAtFreeSpot(
     presetId: BedPresetId,
     size?: { widthFt: number; lengthFt: number }
@@ -416,7 +543,15 @@ export class DesignerState {
     const preset = BED_PRESETS[presetId];
     const widthFt = size?.widthFt ?? preset.widthFt;
     const lengthFt = size?.lengthFt ?? preset.lengthFt;
-    const spot = freeSpot(widthFt, lengthFt, 0, this.beds, this.canvas);
+    const spot = freeSpot(
+      widthFt,
+      lengthFt,
+      0,
+      this.beds,
+      this.canvas,
+      undefined,
+      this.spotSpacing(presetId)
+    );
     if (!spot) {
       this.warn('The garden is full. Make it bigger or remove a bed.');
       return Promise.resolve();
@@ -432,7 +567,7 @@ export class DesignerState {
       this.canvas
     );
     if (!rect) {
-      this.warn("That bed is bigger than the garden. Set the garden's Size on its Area Card.");
+      this.warn("That bed is bigger than the garden. Set the garden's Size in Draw your farm.");
       return Promise.resolve();
     }
     if (overlappingBeds(rect, this.beds).length) {
@@ -484,7 +619,7 @@ export class DesignerState {
       this.history[res.block.id] = [];
       this.selectedBedId = res.block.id;
       this.selectedCropId = null;
-      this.say(`${name} added at ${ft(rect.x)} feet from west, ${ft(rect.y)} feet from north.`);
+      this.say(`${name} added at ${feet(rect.x)} from west, ${feet(rect.y)} from north.`);
     } catch (e) {
       this.design.beds = this.design.beds.filter((b) => b.blockId !== tempId);
       this.fail(e);
@@ -515,16 +650,25 @@ export class DesignerState {
       patch.yFt = next.rect.y;
     }
     if (Object.keys(patch).length === 0) return true;
+    const id = next.blockId;
+    const key = `bed:${id}`;
+    if (!this.confirmedBeds.has(id)) this.confirmedBeds.set(id, prev);
+    const { seq, done } = this.queueWrite(key, () =>
+      this.request(`/api/blocks/${encodeURIComponent(id)}`, { method: 'PATCH', json: patch })
+    );
     try {
-      await this.request(`/api/blocks/${encodeURIComponent(next.blockId)}`, {
-        method: 'PATCH',
-        json: patch
-      });
-      this.markPlaced(next.blockId);
+      await done;
+      if (this.isLatestWrite(key, seq)) this.confirmedBeds.delete(id);
+      else this.confirmedBeds.set(id, next);
+      this.markPlaced(id);
       this.say(what);
       return true;
     } catch (e) {
-      this.replaceBed(next.blockId, () => prev);
+      if (this.isLatestWrite(key, seq)) {
+        const back = this.confirmedBeds.get(id) ?? prev;
+        this.confirmedBeds.delete(id);
+        this.replaceBed(id, () => back);
+      }
       this.fail(e);
       return false;
     }
@@ -542,7 +686,7 @@ export class DesignerState {
     return this.commitBed(
       { ...bed, rect },
       bed,
-      `${bed.name} moved to ${ft(rect.x)} feet from west, ${ft(rect.y)} feet from north.`
+      `${bed.name} moved to ${feet(rect.x)} from west, ${feet(rect.y)} from north.`
     );
   }
 
@@ -593,7 +737,7 @@ export class DesignerState {
     await this.commitBed(
       bed,
       prev,
-      `${bed.name} moved to ${ft(bed.rect.x)} feet from west, ${ft(bed.rect.y)} feet from north.`
+      `${bed.name} moved to ${feet(bed.rect.x)} from west, ${feet(bed.rect.y)} from north.`
     );
   }
 
@@ -619,6 +763,22 @@ export class DesignerState {
     if (!bed || !this.guard()) return Promise.resolve(false);
     const w = Math.max(1, snap(widthFt));
     const l = Math.max(1, snap(lengthFt));
+    const inTheWay = this.plantingsIn(blockId).filter(
+      (p) =>
+        p.footprint &&
+        p.status !== 'harvested' &&
+        p.status !== 'failed' &&
+        p.status !== 'archived' &&
+        (p.footprint.x_in + p.footprint.w_in > w * 12 + 1e-6 ||
+          p.footprint.y_in + p.footprint.l_in > l * 12 + 1e-6)
+    );
+    if (inTheWay.length) {
+      const names = [...new Set(inTheWay.map((p) => p.varietyDisplayName))].join(', ');
+      this.warn(
+        `${bed.name} can't get that small. ${names} would sit past the new edge. Move or shrink ${inTheWay.length === 1 ? 'it' : 'them'} first.`
+      );
+      return Promise.resolve(false);
+    }
     const rect = clampToArea(bedRect(bed.rect.x, bed.rect.y, w, l, bed.rotationDeg), this.canvas);
     if (!rect) {
       this.warn(`${bed.name} can't be that big in this garden.`);
@@ -662,7 +822,8 @@ export class DesignerState {
       bed.rotationDeg,
       this.beds,
       this.canvas,
-      bed.rect
+      bed.rect,
+      this.spotSpacing(bed.kind === 'container' ? 'container-5gal' : 'raised-4x8')
     );
     if (!spot) {
       this.warn('No room for a copy. Make the garden bigger or remove a bed.');
@@ -717,7 +878,7 @@ export class DesignerState {
     } catch (e) {
       if (e instanceof WriteError && e.code === 'BED_HAS_RECORDS') {
         this.warn(
-          `${bed.name} has records, so it stays. Clear it from the Area Card if you really mean it.`
+          `${bed.name} has records, so it stays. Delete it from the Plan page if you really mean it.`
         );
       } else {
         this.fail(e);
@@ -782,10 +943,27 @@ export class DesignerState {
     )!;
   }
 
-  rotationFor(blockId: string, family: string, ignoreCropId?: string): RotationWarning[] {
+  /** Rotation warnings for `family` going into this bed on `dateMs`. From
+   *  this season, only plantings that finished before that date count:
+   *  crops sharing the bed at the same time are neighbours, not history. */
+  rotationFor(
+    blockId: string,
+    family: string,
+    ignoreCropId?: string,
+    dateMs: number | null = this.dateMs
+  ): RotationWarning[] {
     const bed = this.bed(blockId);
     if (!bed) return [];
-    const past = (this.history[blockId] ?? []).filter((h) => h.cropId !== ignoreCropId);
+    const startMs = dateMs != null ? utcDayStart(dateMs) : null;
+    const past = (this.history[blockId] ?? []).filter((h) => {
+      if (h.cropId === ignoreCropId) return false;
+      if (h.seasonYear !== this.design.seasonYear) return true;
+      if (startMs == null) return false;
+      const iv = this.intervalById.get(h.cropId);
+      if (iv) return iv.harvestEndMs <= startMs;
+      if (h.harvestedAtMs != null) return h.harvestedAtMs <= startMs;
+      return false;
+    });
     return rotationWarnings(
       blockId,
       bed.name,
@@ -820,13 +998,28 @@ export class DesignerState {
         : '';
     const crop = this.crop(pluginId);
     if (!pluginId) return;
-    if (existing && existing.blockId !== blockId && existing.status !== 'planned') {
+    if (existing && existing.blockId !== blockId && this.inGround(existing)) {
       this.warn(
         `${existing.varietyDisplayName} is already in the ground in ${this.bed(existing.blockId)?.name ?? 'its bed'}. Record a new planting instead.`
       );
       return;
     }
-    const dateMs = forceDateMs ?? existing?.plantingDateMs ?? this.dateMs;
+    let dateMs = forceDateMs ?? existing?.plantingDateMs ?? this.dateMs;
+    let movedForWindow: string | null = null;
+    if (!existing && forceDateMs === undefined && crop && this.outdoors) {
+      const w = this.plantingWindowFor(pluginId);
+      if (dateMs < w.startMs - WINDOW_GRACE_MS) {
+        dateMs = w.startMs;
+        movedForWindow = `${this.dateText(dateMs)}, ${
+          w.startMs >= this.design.frost.lastSpringFrostMs
+            ? 'after your last frost'
+            : 'when its planting window opens'
+        }`;
+      } else if (dateMs > w.endMs + WINDOW_GRACE_MS && w.endMs >= w.startMs) {
+        dateMs = w.endMs;
+        movedForWindow = `${this.dateText(dateMs)}, the last date it can finish before frost`;
+      }
+    }
     const spacing = existing?.spacing ?? resolveSpacing(crop, 'square');
     const want =
       existing?.plantCount != null
@@ -882,41 +1075,33 @@ export class DesignerState {
           p.footprint.y_in === fp.y_in
       );
       if (placed) this.selectPlanting(placed.cropId);
-      const warn = crop ? this.rotationFor(blockId, crop.cropFamily, placed?.cropId)[0] : undefined;
+      const warn = crop
+        ? this.rotationFor(blockId, crop.cropFamily, placed?.cropId, dateMs)[0]
+        : undefined;
+      const when = movedForWindow ? ` for ${movedForWindow}` : '';
       this.say(
-        `${label} placed in ${bed.name}${placed?.plantCount ? `, ${plural(placed.plantCount, 'plant')}` : ''}.${warn ? ` ${warn.message}` : ''}`
+        `${label} placed in ${bed.name}${when}${placed?.plantCount ? `, ${plural(placed.plantCount, 'plant')}` : ''}.${warn ? ` ${warn.message}` : ''}`
       );
+      if (utcDayStart(dateMs) !== this.dateMs) {
+        this.jumpTo = {
+          dateMs: utcDayStart(dateMs),
+          text: `${label} starts ${this.dateText(dateMs)}.`
+        };
+      }
+      if (placed) this.focusRequest = { kind: 'planting', id: placed.cropId, n: Date.now() };
     } catch (e) {
       this.fail(e);
     }
   }
 
-  /** Creates placed plantings through the planting route, one bed at a time.
-   *  Stops at the first failure; the ones already saved are returned. */
+  /** Creates `planned` plantings in beds as one batch: either every item
+   *  saves or none does, so a retry never makes duplicates. */
   async createPlantings(items: PlantingCreateRequest['plantings']): Promise<PlacedPlanting[]> {
-    const out: PlacedPlanting[] = [];
-    for (const item of items) {
-      const res = await this.request<{ placed?: PlacedPlanting }>(
-        `/api/blocks/${encodeURIComponent(item.blockId)}/plantings`,
-        {
-          method: 'POST',
-          json: {
-            cropPluginId: item.cropPluginId,
-            varietyDisplayName: item.varietyDisplayName,
-            plantingDate: item.plantingDateMs,
-            footprint: item.footprint,
-            spacingPattern: item.spacingPattern,
-            spacingIn: item.spacingIn ?? undefined,
-            rowSpacingIn: item.rowSpacingIn ?? undefined,
-            plantCount: item.plantCount ?? undefined,
-            sourceProvenance:
-              item.source === 'ai' || item.source === 'fallback' ? item.source : undefined
-          }
-        }
-      );
-      if (res.placed) out.push(res.placed);
-    }
-    return out;
+    const res = await this.request<PlantingCreateResponse>('/api/garden/plantings', {
+      method: 'POST',
+      json: { plantings: items } satisfies PlantingCreateRequest
+    });
+    return res.plantings;
   }
 
   absorbCreated(created: PlacedPlanting[]): void {
@@ -951,7 +1136,8 @@ export class DesignerState {
     this.design.plantings = this.design.plantings.map((p) => (p.cropId === next.cropId ? next : p));
   }
 
-  /** Optimistic footprint write; rolls back with the server's message. */
+  /** Optimistic footprint write; rolls back to the last saved state with
+   *  the server's message. Writes for one planting run in order. */
   async writeFootprint(
     planting: PlacedPlanting,
     body: Omit<FootprintWriteRequest, 'spacingPattern'> & { spacingPattern?: SpacingPattern }
@@ -959,9 +1145,12 @@ export class DesignerState {
     if (!this.guard()) return null;
     const prev = planting;
     const pattern = body.spacingPattern ?? planting.spacing.pattern;
+    const kept = planting.spacing.source === 'manual';
     const spacing = resolveSpacing(this.crop(planting.cropPluginId), pattern, {
-      inRowIn: body.spacingIn ?? null,
-      rowIn: body.rowSpacingIn ?? null
+      inRowIn:
+        body.spacingIn !== undefined ? body.spacingIn : kept ? planting.spacing.inRowIn : null,
+      rowIn:
+        body.rowSpacingIn !== undefined ? body.rowSpacingIn : kept ? planting.spacing.rowIn : null
     });
     const fp = body.footprint === undefined ? planting.footprint : body.footprint;
     const count =
@@ -984,40 +1173,38 @@ export class DesignerState {
       plantCountProvenance: count?.provenance ?? planting.plantCountProvenance,
       plantingDateMs: body.plantingDateMs ?? planting.plantingDateMs
     });
-    try {
-      const res = await this.request<FootprintWriteResponse>(
-        `/api/crops/${encodeURIComponent(planting.cropId)}`,
-        {
-          method: 'PATCH',
-          json: {
-            action: 'set-placement',
-            ...({ ...body, spacingPattern: pattern } satisfies FootprintWriteRequest)
-          }
+    const id = planting.cropId;
+    const key = `crop:${id}`;
+    if (!this.confirmedPlantings.has(id)) this.confirmedPlantings.set(id, prev);
+    const { seq, done } = this.queueWrite(key, () =>
+      this.request<FootprintWriteResponse>(`/api/crops/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        json: {
+          action: 'set-placement',
+          ...({ ...body, spacingPattern: pattern } satisfies FootprintWriteRequest)
         }
-      );
-      this.replacePlanting(res.planting);
-      if (res.reanchored && body.plantingDateMs != null && res.planting.groupId) {
-        await this.refreshGroup(
-          res.planting,
-          body.plantingDateMs - (prev.plantingDateMs ?? body.plantingDateMs)
-        );
+      })
+    );
+    try {
+      const res = await done;
+      if (this.isLatestWrite(key, seq)) {
+        this.confirmedPlantings.delete(id);
+        this.replacePlanting(res.planting);
+      } else {
+        this.confirmedPlantings.set(id, res.planting);
       }
+      for (const f of res.followers ?? []) this.replacePlanting(f);
       for (const w of res.warnings ?? []) this.say(w);
       return res;
     } catch (e) {
-      this.replacePlanting(prev);
+      if (this.isLatestWrite(key, seq)) {
+        const back = this.confirmedPlantings.get(id) ?? prev;
+        this.confirmedPlantings.delete(id);
+        this.replacePlanting(back);
+      }
       this.fail(e);
       return null;
     }
-  }
-
-  private async refreshGroup(anchor: PlacedPlanting, shiftMs: number): Promise<void> {
-    if (!shiftMs) return;
-    this.design.plantings = this.design.plantings.map((p) =>
-      p.groupId === anchor.groupId && p.cropId !== anchor.cropId && p.plantingDateMs != null
-        ? { ...p, plantingDateMs: p.plantingDateMs + shiftMs }
-        : p
-    );
   }
 
   setPlantingSize(cropId: string, wFt: number, lFt: number): Promise<unknown> {
@@ -1060,15 +1247,31 @@ export class DesignerState {
     });
   }
 
-  setPlantingDate(cropId: string, dateMs: number): Promise<unknown> {
+  /** Refuses dates outside the season's reach (a half-typed year), then
+   *  saves and, when the planting now starts off the scrubbed date, offers
+   *  to jump there so it doesn't seem to vanish. */
+  async setPlantingDate(cropId: string, dateMs: number): Promise<unknown> {
     const p = this.design.plantings.find((q) => q.cropId === cropId);
-    if (!p) return Promise.resolve(null);
-    return this.writeFootprint(p, {
+    if (!p) return null;
+    const year = new Date(dateMs).getUTCFullYear();
+    if (Math.abs(year - this.design.seasonYear) > 1) {
+      this.warn(`Pick a date near the ${this.design.seasonYear} season.`);
+      return null;
+    }
+    const res = await this.writeFootprint(p, {
       blockId: p.blockId,
       footprint: p.footprint,
       spacingPattern: p.spacing.pattern,
       plantingDateMs: dateMs
     });
+    if (res) {
+      const iv = this.intervalById.get(cropId);
+      const visible = iv ? this.dateMs >= iv.startMs && this.dateMs < iv.endMs : false;
+      const text = `${p.varietyDisplayName} now starts ${this.dateText(dateMs)}.`;
+      if (!visible) this.jumpTo = { dateMs: utcDayStart(dateMs), text };
+      this.say(visible ? text : `${text} Slide to ${this.dateText(dateMs)} to see it.`);
+    }
+    return res;
   }
 
   removeFromBed(cropId: string): Promise<unknown> {
@@ -1099,7 +1302,7 @@ export class DesignerState {
     const bed = this.bed(blockId);
     this.mode = { kind: 'idle' };
     if (!p || !bed) return;
-    if (p.blockId !== blockId && p.status !== 'planned') {
+    if (p.blockId !== blockId && this.inGround(p)) {
       this.warn(
         `${p.varietyDisplayName} is already in the ground in ${this.bed(p.blockId)?.name ?? 'its bed'}. Record a new planting instead.`
       );
@@ -1198,7 +1401,12 @@ export class DesignerState {
       count,
       intervalDays,
       intervals: this.intervals.filter((i) => i.blockId === bed.blockId),
-      firstFallFrostMs: this.design.frost.firstFallFrostMs
+      firstFallFrostMs: this.design.frost.firstFallFrostMs,
+      afterMs: this.seriesOf(anchor).reduce<number | null>(
+        (m, q) =>
+          q.plantingDateMs != null && (m == null || q.plantingDateMs > m) ? q.plantingDateMs : m,
+        null
+      )
     });
     this.ghosts = proposal.sowings
       .filter((s) => s.footprint && !s.conflict)
@@ -1209,6 +1417,19 @@ export class DesignerState {
         label: shortDate(s.plantingDateMs)
       }));
     return proposal;
+  }
+
+  /** Every sowing in a planting's succession series, first sowing first;
+   *  empty when it isn't part of one. */
+  seriesOf(p: Pick<PlacedPlanting, 'groupId' | 'groupSystemKind'>): PlacedPlanting[] {
+    if (!p.groupId || p.groupSystemKind !== 'succession') return [];
+    return this.design.plantings
+      .filter((q) => q.groupId === p.groupId)
+      .sort(
+        (a, b) =>
+          Number(b.groupRole === 'anchor') - Number(a.groupRole === 'anchor') ||
+          (a.plantingDateMs ?? 0) - (b.plantingDateMs ?? 0)
+      );
   }
 
   async commitSuccession(cropId: string, count: number, intervalDays?: number): Promise<boolean> {
@@ -1226,7 +1447,8 @@ export class DesignerState {
         this.replacePlanting({
           ...(this.design.plantings.find((p) => p.cropId === cropId) ?? anchor),
           groupId: res.groupId,
-          groupSystemKind: 'succession'
+          groupSystemKind: 'succession',
+          groupRole: 'anchor'
         });
       }
       this.ghosts = [];
@@ -1311,12 +1533,17 @@ export class DesignerState {
           plantingDateMs: p.plantingDateMs,
           footprint: p.footprint,
           spacingPattern: p.spacing.pattern,
+          spacingIn: p.spacing.source === 'manual' ? p.spacing.inRowIn : undefined,
+          rowSpacingIn: p.spacing.source === 'manual' ? p.spacing.rowIn : undefined,
           source: p.provenance
         }))
       );
       this.absorbCreated(created);
       this.ghosts = [];
       this.say(`${plural(created.length, 'planting')} added.`);
+      if (created[0]) {
+        this.focusRequest = { kind: 'planting', id: created[0].cropId, n: Date.now() };
+      }
       return true;
     } catch (e) {
       this.fail(e);

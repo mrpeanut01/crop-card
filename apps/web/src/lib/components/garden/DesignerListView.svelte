@@ -30,7 +30,7 @@
     if (!occ) return '';
     if (occ.occupants.length === 0)
       return occ.openSinceMs != null ? `Open from ${shortDate(occ.openSinceMs)}` : 'Open';
-    return occ.nextOpenMs != null ? shortDate(occ.nextOpenMs) : 'Full';
+    return occ.nextOpenMs != null ? `Opens ${shortDate(occ.nextOpenMs)}` : 'Full';
   }
 
   function inIt(blockId: string): string {

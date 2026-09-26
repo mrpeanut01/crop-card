@@ -40,6 +40,9 @@ export interface SuccessionInput {
   /** Every interval on this bed, the anchor's included. */
   intervals: readonly OccupancyInterval[];
   firstFallFrostMs: number;
+  /** Date of the series' latest sowing when the anchor already has some;
+   *  new sowings follow it instead of the anchor. */
+  afterMs?: number | null;
 }
 
 function centerOf(fp: Footprint): { xIn: number; yIn: number } {
@@ -81,13 +84,14 @@ export function proposeSuccession(input: SuccessionInput): SuccessionProposal {
 
   const count = Math.min(MAX_SUCCESSIONS - 1, Math.max(1, Math.round(input.count || 1)));
   const anchorMs = anchor.plantingDateMs;
+  const baseMs = input.afterMs != null && input.afterMs > anchorMs ? input.afterMs : anchorMs;
   const dtm = maturityDays(crop);
   const existing = input.intervals.filter((i) => i.blockId === bed.blockId);
   const accepted: OccupancyInterval[] = [];
   const sowings: SuccessionSowing[] = [];
 
   for (let index = 1; index <= count; index++) {
-    const plantingDateMs = anchorMs + index * intervalDays * ONE_DAY_MS;
+    const plantingDateMs = baseMs + index * intervalDays * ONE_DAY_MS;
     const frostMs = frostInYearOf(input.firstFallFrostMs, plantingDateMs);
     if (plantingDateMs + dtm.max * ONE_DAY_MS > frostMs) {
       sowings.push({

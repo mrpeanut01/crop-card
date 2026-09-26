@@ -66,7 +66,12 @@ export interface Crop {
   spacingPattern?: SpacingPattern;
   plantCount?: number;
   plantCountProvenance?: PlantCountProvenance;
+  /** Where a proposed planting came from (wizard, recipe, Claude). Absent
+   *  for plantings made by hand. */
+  sourceProvenance?: PlantingSource;
 }
+
+export type PlantingSource = 'ai' | 'fallback' | 'plugin';
 
 /** The designer columns on a planting. `null` clears a value. */
 export interface CropPlacement {
@@ -115,6 +120,7 @@ function rowToCrop(row: typeof crops.$inferSelect): Crop {
   if (row.spacingPattern) out.spacingPattern = row.spacingPattern;
   if (row.plantCount != null) out.plantCount = row.plantCount;
   if (row.plantCountProvenance) out.plantCountProvenance = row.plantCountProvenance;
+  if (row.sourceProvenance) out.sourceProvenance = row.sourceProvenance;
   if (row.harvestUseCases) {
     try {
       const parsed = JSON.parse(row.harvestUseCases);
@@ -427,7 +433,7 @@ export function createPlanned(input: {
   quantityUnit?: string;
   plantingDate?: number | null;
   placement?: CropPlacement;
-  sourceProvenance?: 'ai' | 'fallback';
+  sourceProvenance?: PlantingSource;
 }): Crop {
   const id = randomUUID();
   const row = db
@@ -638,38 +644,79 @@ export function createPlantingGroup(input: CreateGroupInput): GroupCommitResult 
       anchorPlugin
     );
 
-    const memberOuts: GroupMemberOutput[] = [anchorOut];
-    for (const c of input.companions) {
-      const plugin = input.resolvePlugin(c.cropPluginId);
-      if (!plugin) throw new Error(`unknown crop plugin: ${c.cropPluginId}`);
-      const offsetDays = c.offsetDays ?? 0;
-      const companionPlantingMs = input.anchorPlantingDateMs + offsetDays * DAY_MS;
-      const out = materializeMember(
-        groupId,
-        input.blockId,
-        c,
-        'companion',
-        input.systemKind,
-        companionPlantingMs,
-        plugin
-      );
-
-      const checkScheduled = companionPlantingMs - COMPANION_CHECK_LEAD_DAYS * DAY_MS;
-      const checkTask = createTask({
-        title: `Confirm ${input.anchor.varietyDisplayName} stage — ${c.varietyDisplayName} due in ${COMPANION_CHECK_LEAD_DAYS}d`,
-        body: `Companion check for ${input.systemKind}. Verify ${input.anchor.varietyDisplayName} has reached the expected growth stage; nudge ${c.varietyDisplayName} planting ±N days if the anchor is ahead or behind.`,
-        kind: 'primary',
-        cropId: anchorOut.crop.id,
-        blockId: input.blockId,
-        scheduledFor: checkScheduled,
-        pluginTemplateKey: `companion-check:${groupId}:${out.crop.id}`
-      });
-      out.companionCheckTaskId = checkTask.id;
-      memberOuts.push(out);
-    }
-
+    const memberOuts: GroupMemberOutput[] = [
+      anchorOut,
+      ...materializeCompanions(groupId, input, anchorOut.crop.id)
+    ];
     return { groupId, members: memberOuts };
   });
+}
+
+function materializeCompanions(
+  groupId: string,
+  input: Omit<CreateGroupInput, 'anchor'> & { anchor: { varietyDisplayName: string } },
+  anchorCropId: string
+): GroupMemberOutput[] {
+  const out: GroupMemberOutput[] = [];
+  for (const c of input.companions) {
+    const plugin = input.resolvePlugin(c.cropPluginId);
+    if (!plugin) throw new Error(`unknown crop plugin: ${c.cropPluginId}`);
+    const offsetDays = c.offsetDays ?? 0;
+    const companionPlantingMs = input.anchorPlantingDateMs + offsetDays * DAY_MS;
+    const member = materializeMember(
+      groupId,
+      input.blockId,
+      c,
+      'companion',
+      input.systemKind,
+      companionPlantingMs,
+      plugin
+    );
+
+    const checkScheduled = companionPlantingMs - COMPANION_CHECK_LEAD_DAYS * DAY_MS;
+    const checkTask = createTask({
+      title: `Confirm ${input.anchor.varietyDisplayName} stage — ${c.varietyDisplayName} due in ${COMPANION_CHECK_LEAD_DAYS}d`,
+      body: `Companion check for ${input.systemKind}. Verify ${input.anchor.varietyDisplayName} has reached the expected growth stage; nudge ${c.varietyDisplayName} planting ±N days if the anchor is ahead or behind.`,
+      kind: 'primary',
+      cropId: anchorCropId,
+      blockId: input.blockId,
+      scheduledFor: checkScheduled,
+      pluginTemplateKey: `companion-check:${groupId}:${member.crop.id}`
+    });
+    member.companionCheckTaskId = checkTask.id;
+    out.push(member);
+  }
+  return out;
+}
+
+/** Adds members to an existing planting group, dated by `offsetDays` from
+ *  the anchor's current date, the same way `createPlantingGroup` makes
+ *  them. Used to extend a succession series from its first sowing. */
+export function appendToPlantingGroup(input: {
+  groupId: string;
+  anchor: Crop;
+  companions: GroupMemberInput[];
+  resolvePlugin: (pluginId: string) => CropPlugin | undefined;
+}): GroupMemberOutput[] {
+  const { anchor } = input;
+  if (anchor.groupId !== input.groupId || anchor.groupRole !== 'anchor') {
+    throw new Error(`crop ${anchor.id} does not anchor group ${input.groupId}`);
+  }
+  if (anchor.plantingDate == null) throw new Error(`crop ${anchor.id} has no planting date`);
+  return db.transaction(() =>
+    materializeCompanions(
+      input.groupId,
+      {
+        blockId: anchor.blockId,
+        anchor: { varietyDisplayName: anchor.varietyDisplayName },
+        companions: input.companions,
+        anchorPlantingDateMs: anchor.plantingDate!,
+        systemKind: anchor.groupSystemKind ?? 'manual',
+        resolvePlugin: input.resolvePlugin
+      },
+      anchor.id
+    )
+  );
 }
 
 export function previewPlantingGroup(input: CreateGroupInput): GroupCommitResult {

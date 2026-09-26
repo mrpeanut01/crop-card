@@ -1,7 +1,6 @@
 <script lang="ts">
   import { resolveSpacing } from '$lib/garden/plantCount';
   import { familyLabel } from '$lib/garden/rotation';
-  import { shortDate } from '$lib/garden/occupancy';
   import type { GardenCrop } from '$lib/garden/types';
   import { getDesigner } from './designerState.svelte';
 
@@ -13,23 +12,36 @@
 
   const target = $derived(d.cropTargetBedId ? d.bed(d.cropTargetBedId) : null);
 
-  const results = $derived.by(() => {
+  function rank(c: GardenCrop, q: string): number {
+    if (!q) return 0;
+    const name = c.displayName.toLowerCase();
+    if (name.startsWith(q)) return 0;
+    if (name.split(/[\s—(),-]+/).some((w) => w.startsWith(q))) return 1;
+    if (name.includes(q)) return 2;
+    if (
+      c.cropFamily.toLowerCase().includes(q) ||
+      familyLabel(c.cropFamily).toLowerCase().includes(q)
+    )
+      return 3;
+    return -1;
+  }
+
+  const matches = $derived.by(() => {
     const q = query.trim().toLowerCase();
     const recent = new Map(d.recentPluginIds.map((id, i) => [id, i]));
-    const matches = d.catalog.filter(
-      (c) =>
-        !q ||
-        c.displayName.toLowerCase().includes(q) ||
-        c.cropFamily.toLowerCase().includes(q) ||
-        familyLabel(c.cropFamily).toLowerCase().includes(q)
-    );
-    const sorted = matches.sort((a, b) => {
-      const ra = recent.get(a.pluginId) ?? Infinity;
-      const rb = recent.get(b.pluginId) ?? Infinity;
-      return ra - rb || a.displayName.localeCompare(b.displayName);
-    });
-    return sorted.slice(0, q || recent.size ? MAX_RESULTS : 0);
+    return d.catalog
+      .map((c) => ({ c, r: rank(c, q) }))
+      .filter((m) => m.r >= 0)
+      .sort((a, b) => {
+        const ra = recent.get(a.c.pluginId) ?? Infinity;
+        const rb = recent.get(b.c.pluginId) ?? Infinity;
+        return ra - rb || a.r - b.r || a.c.displayName.localeCompare(b.c.displayName);
+      })
+      .map((m) => m.c);
   });
+  const results = $derived(
+    matches.slice(0, query.trim() || d.recentPluginIds.length ? MAX_RESULTS : 0)
+  );
 
   const groups = $derived.by(() => {
     const out = new Map<string, GardenCrop[]>();
@@ -77,7 +89,7 @@
               <span class="name">{p.varietyDisplayName}</span>
               <span class="meta">
                 {d.bed(p.blockId)?.name ?? ''}{p.plantingDateMs != null
-                  ? ` · ${shortDate(p.plantingDateMs)}`
+                  ? ` · ${d.dateText(p.plantingDateMs)}`
                   : ' · no date'}{p.plantCount ? ` · ${p.plantCount} plants` : ''}
               </span>
             </button>
@@ -98,6 +110,10 @@
     />
     {#if query.trim() && results.length === 0}
       <p class="empty">No crop matches "{query.trim()}".</p>
+    {:else if query.trim() && matches.length > results.length}
+      <p class="empty" data-testid="crop-results-cut">
+        Showing {results.length} of {matches.length}. Keep typing to narrow it.
+      </p>
     {/if}
     {#each groups as [family, crops] (family)}
       <h3>{family}</h3>

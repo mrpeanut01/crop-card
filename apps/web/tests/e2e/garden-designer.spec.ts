@@ -313,7 +313,7 @@ test.describe('keyboard only', () => {
     await page.keyboard.press('Enter');
     await page.keyboard.press('Enter');
     await expect(await status(page)).toHaveText(
-      'Bed 1 added at 0 feet from west, 0 feet from north.'
+      'Bed 1 added at 1 foot from west, 1 foot from north.'
     );
 
     const b1 = bed(page, 'Bed 1');
@@ -332,7 +332,7 @@ test.describe('keyboard only', () => {
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('Enter');
     await expect(await status(page)).toHaveText(
-      'Bed 1 moved to 2 feet from west, 3 feet from north.'
+      'Bed 1 moved to 3 feet from west, 4 feet from north.'
     );
     await page.keyboard.press('r');
     await expect(await status(page)).toHaveText('Bed 1 turned to 90 degrees.');
@@ -341,8 +341,53 @@ test.describe('keyboard only', () => {
     await page.reload();
     await expect(bed(page, 'Bed 1')).toHaveAttribute(
       'aria-label',
-      /0 feet from west, 5 feet from north/
+      /1 foot from west, 6 feet from north/
     );
+  });
+
+  test('carries a bed past its neighbours without losing focus', async ({ page }) => {
+    const areaId = await newArea(page, {
+      name: 'Kitchen Garden',
+      kind: 'garden',
+      widthFt: 20,
+      lengthFt: 30
+    });
+    for (const [i, x] of [1, 6, 11, 16].entries()) {
+      const res = await page.request.post('/api/blocks', {
+        data: {
+          name: `Bed ${i + 1}`,
+          fieldId: areaId,
+          kind: 'bed',
+          bedStyle: 'raised',
+          widthFt: 3,
+          lengthFt: 8,
+          xFt: x,
+          yFt: 3,
+          rotationDeg: 0
+        },
+        headers: { origin: origin(page) }
+      });
+      expect(res.status()).toBe(201);
+    }
+    await openDesigner(page, areaId, '?view=canvas');
+    const b1 = bed(page, 'Bed 1');
+    await expect(async () => {
+      await b1.focus();
+      await page.keyboard.press('Enter');
+      await expect(b1).toHaveAttribute('aria-pressed', 'true', { timeout: 1000 });
+    }).toPass();
+    await page.keyboard.press('Enter');
+    await expect(await status(page)).toHaveText(
+      'Bed 1 picked up. Use arrow keys to move, Enter to drop.'
+    );
+    await page.keyboard.press('Shift+ArrowDown');
+    await expect(b1).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Enter');
+    await expect(await status(page)).toHaveText(
+      'Bed 1 moved to 1.5 feet from west, 8 feet from north.'
+    );
+    await expect(b1).toBeFocused();
   });
 });
 

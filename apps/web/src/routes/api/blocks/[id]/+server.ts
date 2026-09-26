@@ -18,7 +18,12 @@ import {
   blockPlacementError,
   hasLayoutValues
 } from '$lib/farm/blockLayout';
-import { bedLayoutProblem } from '$lib/server/garden/bedLayout';
+import {
+  bedLayoutProblem,
+  clampFinishedFootprints,
+  plantingsPastBedEdge
+} from '$lib/server/garden/bedLayout';
+import { db } from '$lib/db/client';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
@@ -101,7 +106,22 @@ export const PATCH: RequestHandler = async (event) => {
     rotationDeg: pick(patch.rotationDeg, block.rotationDeg)
   });
   if (layoutProblem) return json(layoutProblem, { status: 409 });
-  const updated = updateBlock(event.params.id, withSketchAcres(patch));
+  const resized =
+    usesDesignerLayout(kind) &&
+    (parsed.data.widthFt !== undefined || parsed.data.lengthFt !== undefined);
+  const nextSize = {
+    widthFt: pick(parsed.data.widthFt, block.widthFt),
+    lengthFt: pick(parsed.data.lengthFt, block.lengthFt)
+  };
+  if (resized) {
+    const shrink = plantingsPastBedEdge(block.id, block.name, nextSize);
+    if (shrink) return json(shrink, { status: 409 });
+  }
+  const updated = db.transaction(() => {
+    const saved = updateBlock(event.params.id!, withSketchAcres(patch));
+    if (resized) clampFinishedFootprints(block.id, nextSize);
+    return saved;
+  });
   return json({ block: updated });
 };
 
@@ -113,17 +133,17 @@ export const DELETE: RequestHandler = (event) => {
   }
   const block = getBlock(event.params.id);
   if (!block) throw error(404, 'block not found');
+  if (usesDesignerLayout(block.kind ?? DEFAULT_BLOCK_KIND) && auth?.role !== 'owner') {
+    return json(
+      { error: 'View only. The farm owner changes the layout.', code: 'READ_ONLY' },
+      { status: 403 }
+    );
+  }
   if (event.url.searchParams.get('ifEmpty') === '1') {
-    if (auth?.role !== 'owner') {
-      return json(
-        { error: 'View only. The farm owner changes the layout.', code: 'READ_ONLY' },
-        { status: 403 }
-      );
-    }
     if (blockHasRecords(block.id)) {
       return json(
         {
-          error: `${block.name} has records, so it stays. Clear it from the Area Card if you really mean it.`,
+          error: `${block.name} has records, so it stays. Delete it from the Plan page if you really mean it.`,
           code: 'BED_HAS_RECORDS'
         },
         { status: 409 }

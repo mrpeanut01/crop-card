@@ -371,6 +371,17 @@ describe('freeSpot', () => {
     expect(freeSpot(4, 8, 0, [b1], canvas(20, 30), b1.rect)).toEqual(rectFt(0, 8, 4, 8));
   });
 
+  it('leaves a path between beds and room at the edge when asked, and packs tight when it must', () => {
+    const spacing = { aisleFt: 2, insetFt: 1 };
+    expect(freeSpot(4, 8, 0, [], canvas(20, 30), undefined, spacing)).toEqual(rectFt(1, 1, 4, 8));
+    const b1 = bed('b1', 1, 1, 4, 8);
+    expect(freeSpot(4, 8, 0, [b1], canvas(20, 30), undefined, spacing)).toEqual(rectFt(7, 1, 4, 8));
+    const tight = bed('b1', 0, 0, 4, 10);
+    expect(freeSpot(4, 10, 0, [tight], canvas(8, 10), undefined, spacing)).toEqual(
+      rectFt(4, 0, 4, 10)
+    );
+  });
+
   it('returns null when the Area is full or the bed is too big', () => {
     expect(freeSpot(4, 8, 0, [bed('b1', 0, 0, 20, 30)], canvas(20, 30))).toBeNull();
     expect(freeSpot(4, 40, 0, [], canvas(20, 30))).toBeNull();

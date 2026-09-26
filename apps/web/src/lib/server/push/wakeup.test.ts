@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 import { POST } from '../../../routes/api/internal/push-tick/+server';
-import { PUSH_TICK_CRON_UTC } from './triggers';
+import { PUSH_TICK_CRONS_UTC } from './triggers';
 import {
   INTERNAL_TICK_PATH,
   TICK_SECRET_HEADER,
@@ -98,7 +98,7 @@ describe('infra drift', () => {
       new URL('../../../../../../infra/azure/main.bicep', import.meta.url),
       'utf8'
     );
-    expect(bicep).toContain(`cronExpression: '${PUSH_TICK_CRON_UTC}'`);
+    for (const cron of PUSH_TICK_CRONS_UTC) expect(bicep).toContain(`cron: '${cron}'`);
     expect(bicep).toContain(INTERNAL_TICK_PATH);
     expect(bicep).toContain(TICK_SECRET_HEADER);
   });

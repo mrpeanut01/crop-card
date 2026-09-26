@@ -7,8 +7,8 @@ import {
   LOCK_WARNING_LEAD_MS,
   LOCK_WINDOW_MS,
   MAX_TICK_GAP_MS,
-  PUSH_TICK_CRON_UTC,
-  PUSH_TICK_HOURS_UTC,
+  PUSH_TICK_CRONS_UTC,
+  PUSH_TICK_TIMES_UTC,
   deconDueAlerts,
   lockWindowClosingAlerts,
   selectDueAlerts,
@@ -166,8 +166,8 @@ describe('twice-daily tick cadence', () => {
     const day = new Date(fromMs);
     day.setUTCHours(0, 0, 0, 0);
     for (let d = day.getTime(); d <= toMs; d += 24 * HOUR_MS) {
-      for (const h of PUSH_TICK_HOURS_UTC) {
-        const t = d + h * HOUR_MS;
+      for (const m of PUSH_TICK_TIMES_UTC) {
+        const t = d + m * 60_000;
         if (t > fromMs && t <= toMs) out.push(t);
       }
     }
@@ -177,10 +177,10 @@ describe('twice-daily tick cadence', () => {
   const BASE = Date.UTC(2026, 0, 1);
 
   it('the cron and the declared maximum gap agree', () => {
-    expect(PUSH_TICK_CRON_UTC).toBe('0 10,20 * * *');
-    const hours = [...PUSH_TICK_HOURS_UTC].sort((a, b) => a - b);
-    const gaps = hours.map((h, i) => (hours[(i + 1) % hours.length] - h + 24) % 24 || 24);
-    expect(Math.max(...gaps) * HOUR_MS).toBe(MAX_TICK_GAP_MS);
+    expect(PUSH_TICK_CRONS_UTC).toEqual(['0 10 * * *', '30 20 * * *']);
+    const mins = [...PUSH_TICK_TIMES_UTC].sort((a, b) => a - b);
+    const gaps = mins.map((m, i) => (mins[(i + 1) % mins.length] - m + 1440) % 1440 || 1440);
+    expect(Math.max(...gaps) * 60_000).toBe(MAX_TICK_GAP_MS);
     expect(LOCK_WARNING_LEAD_MS).toBeGreaterThan(MAX_TICK_GAP_MS);
   });
 

@@ -18,22 +18,23 @@ export function withClientRecordId(handler: RequestHandler): RequestHandler {
     const key = raw && ID_PATTERN.test(raw) ? raw : null;
     if (!key || !currentOwnerId()) return handler(event);
     const claim = claimClientRecord(key, event.url.pathname);
-    if (claim === 'done') return json({ ok: true, duplicate: true }, { status: 200 });
-    if (claim === 'pending') {
+    if (claim.status === 'done') return json({ ok: true, duplicate: true }, { status: 200 });
+    if (claim.status === 'pending') {
       return json(
         { error: 'This record is already being saved. It will retry shortly.' },
         { status: 503 }
       );
     }
+    const { token } = claim;
     let res: Response;
     try {
       res = await handler(event);
     } catch (e) {
-      releaseClientRecord(key);
+      releaseClientRecord(key, token);
       throw e;
     }
-    if (res.ok) completeClientRecord(key);
-    else releaseClientRecord(key);
+    if (res.ok) completeClientRecord(key, token);
+    else releaseClientRecord(key, token);
     return res;
   };
 }

@@ -1,0 +1,84 @@
+{
+  "pluginId": "three-sisters-4x8",
+  "type": "bed-recipe",
+  "displayName": "Three sisters in a 4×8 bed",
+  "version": "1.0.0",
+  "description": "Sweet corn down the middle, pole beans sown at the corn two weeks later and winter squash along both edges five weeks after the corn, following the Three Sisters companion plan.",
+  "bedSize": {
+    "widthFt": 4,
+    "lengthFt": 8
+  },
+  "frostFreeDays": {
+    "min": 150
+  },
+  "steps": [
+    {
+      "cropPluginId": "corn-bantam-sweet",
+      "alternates": [
+        "sweet-corn-honey-select-f1"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": 14
+      },
+      "section": {
+        "x": 0.25,
+        "y": 0,
+        "w": 0.5,
+        "l": 1
+      },
+      "pattern": "sfg",
+      "note": "A block of corn pollinates better than a single row."
+    },
+    {
+      "cropPluginId": "pole-bean-kentucky-wonder",
+      "alternates": [
+        "pole-beans-rattlesnake"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": 28
+      },
+      "section": {
+        "x": 0.25,
+        "y": 0,
+        "w": 0.5,
+        "l": 1
+      },
+      "note": "Sow beside each cornstalk once the corn is about 6 in tall."
+    },
+    {
+      "cropPluginId": "winter-squash-delicata",
+      "alternates": [
+        "acorn-squash-table-queen"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": 49
+      },
+      "section": {
+        "x": 0,
+        "y": 0,
+        "w": 0.25,
+        "l": 1
+      },
+      "note": "Vines shade out weeds along the edge."
+    },
+    {
+      "cropPluginId": "winter-squash-delicata",
+      "alternates": [
+        "acorn-squash-table-queen"
+      ],
+      "start": {
+        "anchor": "last-spring-frost",
+        "offsetDays": 49
+      },
+      "section": {
+        "x": 0.75,
+        "y": 0,
+        "w": 0.25,
+        "l": 1
+      }
+    }
+  ]
+}

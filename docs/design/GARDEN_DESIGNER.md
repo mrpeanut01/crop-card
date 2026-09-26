@@ -192,13 +192,15 @@ Seedtime calls these Garden Blocks. Ours are data-only plugins under `plugins/be
 
 A recipe has a reference `bedSize`, an optional `frostFreeDays` range, a display-only `zoneLabel`, and 1 to 12 `steps`. Each step names a crop (with up to 5 alternates), a start anchored to last spring frost, first fall frost or the end of an earlier step, a `section` of the bed as fractions, an optional pattern and optional successions.
 
+Every crop a recipe names, alternates included, must be a registered crop plugin, or the recipe fails registration. Timing comes from plugin data: "the end of an earlier step" is that step's occupancy end (days to maturity, the archetype tail and bed turnover), succession intervals default to `FAMILY_SUCCESSION_DAYS`, spring offsets never start a crop before its hardiness allows (`EARLIEST_OFFSET_DAYS`), and the three sisters offsets are the Three Sisters companion plugin's. Successions split the step's section into equal slices along the bed's length, one per sowing. A step whose earlier step was skipped is skipped too.
+
 **Apply flow.**
 
 1. **Use a bed recipe** lists recipes; ones whose frost-free range fits the farm (`recipeFits`) come first with "Fits your season", others are shown muted with the reason.
 2. Choosing one previews it (`applyRecipe`, `commit: false`): each step as a dashed ghost on the bed and a row with crop, date, size, count and the `plugin` provenance tag. Steps that cannot be placed (unknown crop, too short a season, no room) are listed with the reason.
 3. Each row has **Keep**/**Skip** (all kept by default). **Add N plantings** commits the kept keys through `POST /api/garden/beds/[blockId]/recipe`.
 
-v1 ships three recipes: "Spring greens, bush beans, fall brassicas" (4×8), "Salad succession" (3×10) and "Tomato and basil" (4×8).
+v1 ships seven recipes: "Spring greens, bush beans, fall brassicas", "Garlic, then summer squash", "Radishes, then tomatoes", "Carrots, then fall spinach", "Three sisters in a 4×8 bed" and "Tomato and basil" (all 4×8), and "Salad succession" (3×10). Peas are left out on purpose: their archetype holds the bed until frost, so nothing can follow them.
 
 ## 13. Fill this bed (optional AI)
 
@@ -275,7 +277,9 @@ Through `components/ui/Hint.svelte` and `lib/client/hints.ts`, at most one per v
 | `POST /api/garden/beds/[blockId]/recipe`       | owner          | `RecipeRequest`, `RecipeResponse`                 |
 | `POST /api/garden/beds/[blockId]/fill`         | owner          | `FillRequest`, `FillResponse`                     |
 
-Errors use `GardenErrorResponse` with a `code`. Request schemas are exported as `requestSchema` from each new endpoint so the OpenAPI generator picks them up.
+Errors use `GardenErrorResponse` with a `code`. Request schemas are exported as `_requestSchema` from each new endpoint (SvelteKit refuses any other non-handler export from `+server.ts`).
+
+The data track also takes placement on the existing planting routes: `PATCH /api/crops/[id]` with `{ action: 'set-placement', ...FootprintWriteRequest }` (owner only) and `POST /api/blocks/[id]/plantings` with optional `footprint`, `spacingPattern`, `spacingIn`, `rowSpacingIn` and `plantCount`. Both go through `lib/server/garden/placement.ts` (`writeFootprint`, `createPlacedPlantings`, `resolveDesignableBed`), which the `/api/garden/plantings` endpoints are meant to wrap.
 
 ## 22. Contract files
 

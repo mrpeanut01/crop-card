@@ -6,10 +6,10 @@
 
 import { randomUUID } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { db } from '$lib/db/client';
+import { db, sqliteHandle } from '$lib/db/client';
 import { owners, users } from '$lib/db/schema';
 import { runWithTenant } from '$lib/db/tenant';
-import { checkGuard, recordCall, spendSnapshot } from './aiGuard';
+import { checkGuard, recordCall, resetDeploymentSpendMemo, spendSnapshot } from './aiGuard';
 
 vi.mock('$lib/schedule/settings', async (importOriginal) => ({
   ...(await importOriginal<typeof import('$lib/schedule/settings')>()),
@@ -74,5 +74,54 @@ describe('aiGuard monthly cap is per farm', () => {
       expect(out.ok).toBe(false);
       if (!out.ok) expect(out.reason).toBe('cap-exceeded');
     });
+  });
+});
+
+describe('deployment-wide spend memo', () => {
+  const raw = () => sqliteHandle();
+  const deploymentTotal = () =>
+    (
+      raw().prepare('SELECT coalesce(sum(usd_estimate), 0) AS t FROM ai_call_log').get() as {
+        t: number;
+      }
+    ).t;
+  const dropSpend = (ownerId: string) =>
+    raw().prepare('DELETE FROM ai_call_log WHERE owner_id = ?').run(ownerId);
+
+  afterEach(() => {
+    vi.useRealTimers();
+    resetDeploymentSpendMemo();
+  });
+
+  it('recordCall keeps the memoised deployment total current', () => {
+    const a = seedFarm();
+    process.env.AI_GLOBAL_MONTHLY_USD_CAP = String(deploymentTotal() + 1_000_000);
+    resetDeploymentSpendMemo();
+    runWithTenant(a.ownerId, () => expect(checkGuard(a.userId, 'inputs').ok).toBe(true));
+    spend(a.ownerId, a.userId, 2_000_000);
+    runWithTenant(a.ownerId, () => {
+      const out = checkGuard(a.userId, 'inputs');
+      expect(out.ok).toBe(false);
+      if (!out.ok) expect(out.message).toMatch(/across CropCard/);
+    });
+    dropSpend(a.ownerId);
+  });
+
+  it('rows written out of band are picked up within a minute', () => {
+    const a = seedFarm();
+    const b = seedFarm();
+    process.env.AI_GLOBAL_MONTHLY_USD_CAP = String(deploymentTotal() + 1_000_000);
+    resetDeploymentSpendMemo();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    runWithTenant(a.ownerId, () => expect(checkGuard(a.userId, 'inputs').ok).toBe(true));
+    raw()
+      .prepare(
+        "INSERT INTO ai_call_log (id, owner_id, endpoint, model, usd_estimate) VALUES (?, ?, 'inputs', 'x', 2000000)"
+      )
+      .run(randomUUID(), b.ownerId);
+    runWithTenant(a.ownerId, () => expect(checkGuard(a.userId, 'inputs').ok).toBe(true));
+    vi.setSystemTime(Date.now() + 61_000);
+    runWithTenant(a.ownerId, () => expect(checkGuard(a.userId, 'inputs').ok).toBe(false));
+    dropSpend(b.ownerId);
   });
 });

@@ -22,7 +22,8 @@ const {
   recordSpray,
   computeRatedDilution,
   insertFungicideEvent,
-  decrementForUse
+  decrementForUse,
+  getStockItemByPluginId
 } = vi.hoisted(() => ({
   currentUser: vi.fn(() => ({ id: 'u1', role: 'owner' })),
   getRegistry: vi.fn(),
@@ -40,7 +41,8 @@ const {
     customRateApplied: false
   })),
   insertFungicideEvent: vi.fn(() => ({ id: 'evt-1' })),
-  decrementForUse: vi.fn(() => ({ notes: [] }))
+  decrementForUse: vi.fn(() => ({ notes: [] })),
+  getStockItemByPluginId: vi.fn((): unknown => undefined)
 }));
 
 vi.mock('$lib/server/auth', () => ({ currentUser }));
@@ -56,11 +58,12 @@ vi.mock('$lib/db/blocks', () => ({ getBlock: vi.fn(() => ({ plantings: [] })) })
 vi.mock('$lib/db/stock', () => ({
   decrementForUse,
   getStockItem: vi.fn(() => undefined),
-  getStockItemByPluginId: vi.fn(() => undefined)
+  getStockItemByPluginId
 }));
 vi.mock('$lib/db/users', () => ({ ensureSystemUser: vi.fn(async () => ({ id: 'sys' })) }));
 
 import { POST } from './+server';
+import { sqliteHandle } from '$lib/db/client';
 
 const FUNG_PLUGIN = {
   pluginId: 'fung-1',
@@ -136,5 +139,49 @@ describe('#321 — fungicide cross-contamination gate + sprayer state', () => {
     expect(payload.requiresDecon).toBe(true);
     expect(insertFungicideEvent).not.toHaveBeenCalled();
     expect(recordSpray).not.toHaveBeenCalled();
+  });
+});
+
+describe('record writes are one transaction', () => {
+  const probe = () => {
+    sqliteHandle().exec('CREATE TABLE IF NOT EXISTS record_write_probe (id TEXT PRIMARY KEY)');
+    const id = `fung-${Math.random().toString(36).slice(2)}`;
+    return {
+      id,
+      write: () => sqliteHandle().prepare('INSERT INTO record_write_probe (id) VALUES (?)').run(id),
+      exists: () =>
+        !!sqliteHandle().prepare('SELECT 1 FROM record_write_probe WHERE id = ?').get(id)
+    };
+  };
+
+  it('a failure after the event row is written rolls the event back', async () => {
+    getSprayer.mockReturnValue({ id: 'spr-1', calibratedGpa: 18, lastChemistryClass: undefined });
+    const p = probe();
+    insertFungicideEvent.mockImplementationOnce(() => {
+      p.write();
+      return { id: 'evt-1' };
+    });
+    recordSpray.mockImplementationOnce(() => {
+      throw new Error('sprayer state write failed');
+    });
+    await expect(POST(makeEvent(baseBody))).rejects.toThrow(/sprayer state/);
+    expect(p.exists()).toBe(false);
+  });
+
+  it('a stock decrement failure stays a warning and the event commits', async () => {
+    getSprayer.mockReturnValue({ id: 'spr-1', calibratedGpa: 18, lastChemistryClass: undefined });
+    getStockItemByPluginId.mockReturnValueOnce({ id: 'stock-1' } as never);
+    const p = probe();
+    insertFungicideEvent.mockImplementationOnce(() => {
+      p.write();
+      return { id: 'evt-1' };
+    });
+    decrementForUse.mockImplementationOnce(() => {
+      throw new Error('lot missing');
+    });
+    const res = await POST(makeEvent(baseBody));
+    expect(res.status).toBe(200);
+    expect((await res.json()).stockWarnings.join(' ')).toMatch(/stock decrement failed/);
+    expect(p.exists()).toBe(true);
   });
 });

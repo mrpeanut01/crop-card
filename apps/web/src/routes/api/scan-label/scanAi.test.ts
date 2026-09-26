@@ -230,6 +230,28 @@ describe('AI path', () => {
     expect((await res.json()).message).toMatch(/could not read the label.*Manual entry/i);
   });
 
+  it('#439 — Anthropic 400 (unreadable image) → 422, not a rate-limit degradation', async () => {
+    m.claudeVisionLookup.mockRejectedValue(
+      Object.assign(new Error('image exceeds 5 MB maximum'), { status: 400 })
+    );
+    const res = await scanLabel(labelEvent());
+    expect(res.status).toBe(422);
+    const body = await res.json();
+    expect(body).toMatchObject({ found: false, source: 'none' });
+    expect(body.fallbackReason).toBeUndefined();
+    expect(body.message).toMatch(/could not read this label.*5 MB.*Manual entry/i);
+    expect(m.recordCall).toHaveBeenCalledWith(
+      expect.objectContaining({ errorClass: 'anthropic-400', fallbackReason: null })
+    );
+  });
+
+  it('Anthropic 429 is still a rate-limit fallback', async () => {
+    m.claudeVisionLookup.mockRejectedValue(Object.assign(new Error('slow down'), { status: 429 }));
+    const res = await scanLabel(labelEvent());
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ fallbackReason: 'rate-limit' });
+  });
+
   it('timeout → 504 fallback; a late completion is still metered as a timeout row', async () => {
     let finish!: (v: unknown) => void;
     m.claudeVisionLookup.mockImplementation(

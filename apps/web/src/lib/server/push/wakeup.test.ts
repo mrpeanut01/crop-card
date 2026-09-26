@@ -2,6 +2,16 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
+
+const maintenance = vi.hoisted(() => ({
+  runDbMaintenance: vi.fn(async () => ({
+    ran: true,
+    pruned: { ai_call_log: 0 },
+    durationMs: 1
+  }))
+}));
+vi.mock('$lib/server/dbMaintenance', () => maintenance);
+
 import { POST } from '../../../routes/api/internal/push-tick/+server';
 import { PUSH_TICK_CRONS_UTC } from './triggers';
 import {
@@ -89,6 +99,24 @@ describe('runScheduledTick', () => {
     expect(b.startedAt).toBe(a.startedAt);
     const c = await runScheduledTick({ env });
     expect(c.joined).toBe(false);
+  });
+});
+
+describe('DB maintenance rides the wakeup', () => {
+  it('runs after the push tick and reports its summary', async () => {
+    const res = await runScheduledTick({ env: {} });
+    expect(maintenance.runDbMaintenance).toHaveBeenCalled();
+    expect(res.maintenance).toMatchObject({ ran: true, pruned: { ai_call_log: 0 } });
+  });
+
+  it('a maintenance failure is logged and never fails the tick', async () => {
+    maintenance.runDbMaintenance.mockRejectedValueOnce(new Error('disk I/O error'));
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await runScheduledTick({ env: {} });
+    expect(res.push).toEqual({ skipped: 'vapid-not-configured' });
+    expect(res.maintenance).toEqual({ ran: false, failed: true });
+    expect(err).toHaveBeenCalled();
+    err.mockRestore();
   });
 });
 

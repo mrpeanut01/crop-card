@@ -5,8 +5,9 @@ import { listBlocks } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { getRegistry } from '$lib/server/registry';
 import { buildFarmContextWithCache } from '$lib/server/aiContext';
-import { allocate, allocateDeterministic } from '$lib/server/aiAllocation';
-import { checkGuard, recordCall } from '$lib/server/aiGuard';
+import { allocate, allocateDeterministic, type AllocationResult } from '$lib/server/aiAllocation';
+import { recordCall } from '$lib/server/aiGuard';
+import { degradeTag, recordFallback, tryAiWithGuard } from '$lib/server/aiDegrade';
 import type { PlanInput } from '$lib/layout/engine';
 import type { CompanionPlugin, CropPlugin } from '$lib/plugins/schemas';
 import { companionIndex } from '$lib/plugins/companionRelations';
@@ -34,19 +35,6 @@ const bodySchema = z.object({
 
 export const POST: RequestHandler = async (event) => {
   const user = requireOwner(event);
-  // #184 / FP-004 — Invariant 7 ("AI assists, never gates"): the guard
-  // result must NOT short-circuit the endpoint with a 4xx. We resolve
-  // ok-vs-degrade here and finish parsing first, then either run the
-  // AI path or call the deterministic engine and tag the response with
-  // `meta.fallback` so the wizard can render the "AI off — engine plan"
-  // chip and CTA. Spec: docs/design/almanac/AI_PROVENANCE_ADDENDUM.md
-  // §degradation-matrix.
-  const guard = checkGuard(user.id, 'allocate');
-  const guardFallbackReason: 'over-cap' | 'quota-exceeded' | null = !guard.ok
-    ? guard.reason === 'cap-exceeded'
-      ? 'over-cap'
-      : 'quota-exceeded'
-    : null;
 
   let raw: unknown;
   try {
@@ -107,54 +95,38 @@ export const POST: RequestHandler = async (event) => {
 
   const year = parsed.data.year ?? getActivePlanningYear();
 
-  // #184 / FP-004 — guard short-circuit. Skip Anthropic context build entirely
-  // and return the deterministic engine plan with `meta.fallback` tagged. The
-  // wizard treats this identically to the AI-output path (renders provenance
-  // badges + a banner explaining the cap/quota state).
-  if (guardFallbackReason) {
-    const result = allocateDeterministic(planInput, guardFallbackReason);
-    recordCall({
-      userId: user.id,
-      endpoint: 'allocate',
-      model: 'engine-fallback',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: true,
-      errorClass: guardFallbackReason,
-      provenance: 'fallback',
-      fallbackReason: guardFallbackReason === 'over-cap' ? 'over-cap' : 'rate-limit'
-    });
-    return json({
-      assignments: result.assignments,
-      unplaced: result.unplaced,
-      sufficiency: result.sufficiency,
-      rationale: result.rationale,
-      perRowRationale: result.perRowRationale,
-      advisories: result.advisories,
-      pollinationConstraints: result.pollinationConstraints,
-      geometryMissingBlockIds: result.geometryMissingBlockIds,
-      companionGroups: result.companionGroups,
-      meta: {
-        model: result.meta.model,
-        usdEstimate: result.meta.usdEstimate,
-        fallback: result.meta.fallback,
-        violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt
-      },
-      guardMessage: guard.ok ? null : guard.message
-    });
-  }
+  // Invariant 7 — every degradation (no key, cap, quota, timeout, upstream
+  // error) goes through aiTry() via tryAiWithGuard and ends in the
+  // deterministic engine plan tagged `meta.fallback`, never a 4xx/5xx.
+  const tried = await tryAiWithGuard({
+    endpoint: 'allocate',
+    userId: user.id,
+    prompt: async () => {
+      const built = await buildFarmContextWithCache(year);
+      return allocate(planInput, built.context, {
+        planningSessionId: parsed.data.planningSessionId,
+        contextCacheHit: built.cacheHit,
+        contextVersion: built.contextVersion,
+        companionSystems
+      });
+    }
+  });
 
-  const built = await buildFarmContextWithCache(year);
-
-  try {
-    const result = await allocate(planInput, built.context, {
-      planningSessionId: parsed.data.planningSessionId,
-      contextCacheHit: built.cacheHit,
-      contextVersion: built.contextVersion,
-      companionSystems
-    });
+  let result: AllocationResult;
+  let fallbackMessage: string | null = null;
+  if (tried.provenance === 'fallback') {
+    fallbackMessage = tried.fallbackMessage;
+    const tag = degradeTag(tried.fallbackReason, tried.guard);
+    result = allocateDeterministic(
+      planInput,
+      tag === 'quota-exceeded' && !tried.guard.ok && tried.guard.reason === 'cap-exceeded'
+        ? 'over-cap'
+        : tag,
+      tag === 'ai-unavailable' ? fallbackMessage : undefined
+    );
+    recordFallback(user.id, 'allocate', tried.fallbackReason);
+  } else {
+    result = tried.value;
     recordCall({
       userId: user.id,
       endpoint: 'allocate',
@@ -167,40 +139,26 @@ export const POST: RequestHandler = async (event) => {
       errorClass: result.meta.fallback,
       provenance: result.meta.fallback ? 'fallback' : 'ai'
     });
-    return json({
-      assignments: result.assignments,
-      unplaced: result.unplaced,
-      sufficiency: result.sufficiency,
-      rationale: result.rationale,
-      perRowRationale: result.perRowRationale,
-      advisories: result.advisories,
-      pollinationConstraints: result.pollinationConstraints,
-      geometryMissingBlockIds: result.geometryMissingBlockIds,
-      companionGroups: result.companionGroups,
-      meta: {
-        model: result.meta.model,
-        usdEstimate: result.meta.usdEstimate,
-        fallback: result.meta.fallback,
-        violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt
-      },
-      spend: guard.ok ? guard.spend : null
-    });
-  } catch (err) {
-    recordCall({
-      userId: user.id,
-      endpoint: 'allocate',
-      model: 'unknown',
-      inputTokens: 0,
-      cachedInputTokens: 0,
-      outputTokens: 0,
-      usdEstimate: 0,
-      success: false,
-      errorClass: 'upstream-error',
-      provenance: 'fallback'
-    });
-    return json(
-      { error: err instanceof Error ? err.message : 'allocation failed' },
-      { status: 502 }
-    );
   }
+
+  return json({
+    assignments: result.assignments,
+    unplaced: result.unplaced,
+    sufficiency: result.sufficiency,
+    rationale: result.rationale,
+    perRowRationale: result.perRowRationale,
+    advisories: result.advisories,
+    pollinationConstraints: result.pollinationConstraints,
+    geometryMissingBlockIds: result.geometryMissingBlockIds,
+    companionGroups: result.companionGroups,
+    meta: {
+      model: result.meta.model,
+      usdEstimate: result.meta.usdEstimate,
+      fallback: result.meta.fallback,
+      violationsOnFirstAttempt: result.meta.violationsOnFirstAttempt
+    },
+    spend: tried.guard.ok ? tried.guard.spend : null,
+    guardMessage: tried.guard.ok ? null : tried.guard.message,
+    fallbackMessage
+  });
 };

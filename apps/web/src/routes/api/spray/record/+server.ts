@@ -46,6 +46,7 @@ import { getRegistry } from '$lib/server/registry';
 import { getSprayer, recordSpray } from '$lib/server/sprayers';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { bestEffort, errorText, writeRecord } from '$lib/server/recordWrite';
 
 const cropStageInput = z.object({
   cropPluginId: z.string().min(1),
@@ -233,95 +234,97 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   // Use the signed-in user as performer; fall back to system if unauthenticated.
   const performer = auth ?? (await ensureSystemUser());
 
-  // Persist event (`event` is the request context; use a separate name).
-  const persisted = insertSprayEvent({
-    blockId: parsed.data.blockId,
-    cropId: parsed.data.cropId,
-    sprayerId: stored.id,
-    performedById: performer.id,
-    occurredAt,
-    products: fullProducts.map((p) => ({
-      pluginId: p.pluginId,
-      chemistryClasses: Array.from(new Set(p.activeIngredients.map((ai) => ai.chemistryClass))),
-      rate: p.ratePerAcre
-    })),
-    conditions: {
-      ...parsed.data.conditions,
-      // #320 — never let a synthetic reading masquerade as measured. A
-      // client that omits the flag gets `'default'`; the UI sets
-      // `'measured'` only once the operator enters real conditions.
-      conditionsProvenance: parsed.data.conditions.conditionsProvenance ?? 'default'
-    },
-    rulesVersion: RULES_VERSION,
-    pluginHashes,
-    customRateOverride: parsed.data.customRateOverride ?? false,
-    notes: parsed.data.notes
-  });
+  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
 
-  // Update sprayer chemistry history (most-aggressive class wins on the kernel's
-  // future evaluations; we record the union below as a sequence of updates).
-  const newClasses: ChemistryClass[] = Array.from(
-    new Set(fullProducts.flatMap((p) => p.activeIngredients.map((ai) => ai.chemistryClass)))
-  );
-  for (const cls of newClasses) recordSpray(stored.id, cls, occurredAt);
+  // One transaction: record, sprayer state, stock movements, task close and
+  // the replay receipt commit together or not at all.
+  const { persisted, stockResults, stockWarnings } = writeRecord(event, () => {
+    const persisted = insertSprayEvent({
+      blockId: parsed.data.blockId,
+      cropId: parsed.data.cropId,
+      sprayerId: stored.id,
+      performedById: performer.id,
+      occurredAt,
+      products: fullProducts.map((p) => ({
+        pluginId: p.pluginId,
+        chemistryClasses: Array.from(new Set(p.activeIngredients.map((ai) => ai.chemistryClass))),
+        rate: p.ratePerAcre
+      })),
+      conditions: {
+        ...parsed.data.conditions,
+        // #320 — never let a synthetic reading masquerade as measured. A
+        // client that omits the flag gets `'default'`; the UI sets
+        // `'measured'` only once the operator enters real conditions.
+        conditionsProvenance: parsed.data.conditions.conditionsProvenance ?? 'default'
+      },
+      rulesVersion: RULES_VERSION,
+      pluginHashes,
+      customRateOverride: parsed.data.customRateOverride ?? false,
+      notes: parsed.data.notes
+    });
 
-  // Auto-decrement stock from the dilution math (Phase 8b). Warn-don't-block
-  // policy: shortfalls are surfaced in the response but don't cancel the
-  // spray record (the product is already in the tank; refusing the record
-  // would create a worse audit gap than letting the negative balance
-  // persist for reconciliation on /stock).
-  const stockResults: DecrementResult[] = [];
-  const stockWarnings: string[] = [];
-  if (parsed.data.tankSizeGallons) {
-    // #190 / F-02 — stored.calibratedGpa may be null on an uncalibrated
-    // sprayer; coalesce so computeTankMixDilutions falls back to the
-    // herbicide-plugin GPA default rather than treating null as 0.
-    const effectiveGpa = stored?.calibratedGpa ?? undefined;
-    const lines = computeTankMixDilutions(fullProducts, parsed.data.tankSizeGallons, effectiveGpa);
-    for (const line of lines) {
-      const stockItem = stockByPluginId.get(line.pluginId);
-      if (!stockItem) {
-        stockWarnings.push(
-          `${line.pluginId}: not tracked in stock — add a SKU on /inventory to enable auto-decrement`
-        );
-        continue;
-      }
-      try {
-        const result = decrementForUse({
-          stockItemId: stockItem.id,
-          amount: line.productAmount,
-          unit: line.unit as StockUnit,
-          sprayEventId: persisted.id,
-          performedById: performer.id,
-          occurredAt
-        });
-        stockResults.push(result);
-        for (const note of result.notes) stockWarnings.push(`${line.pluginId}: ${note}`);
-      } catch (e) {
-        stockWarnings.push(
-          `${line.pluginId}: stock decrement failed — ${e instanceof Error ? e.message : String(e)}`
-        );
-      }
-    }
-  }
+    // Update sprayer chemistry history (most-aggressive class wins on the kernel's
+    // future evaluations; we record the union below as a sequence of updates).
+    const newClasses: ChemistryClass[] = Array.from(
+      new Set(fullProducts.flatMap((p) => p.activeIngredients.map((ai) => ai.chemistryClass)))
+    );
+    for (const cls of newClasses) recordSpray(stored.id, cls, occurredAt);
 
-  // Phase 12: close the originating primary task if the caller passed one.
-  if (parsed.data.taskId) {
-    try {
-      const { completeTask } = await import('$lib/db/tasks');
-      completeTask(parsed.data.taskId, {
-        eventTable: 'spray_event',
-        eventId: persisted.id,
-        occurredAt
-      });
-    } catch (e) {
-      // Non-fatal — log and continue. The spray was recorded; the task can
-      // be closed manually on /today if this fails.
-      stockWarnings.push(
-        `task ${parsed.data.taskId} not closed: ${e instanceof Error ? e.message : String(e)}`
+    // Auto-decrement stock from the dilution math (Phase 8b). Warn-don't-block
+    // policy: shortfalls are surfaced in the response but don't cancel the
+    // spray record (the product is already in the tank; refusing the record
+    // would create a worse audit gap than letting the negative balance
+    // persist for reconciliation on /stock).
+    const stockResults: DecrementResult[] = [];
+    const stockWarnings: string[] = [];
+    if (parsed.data.tankSizeGallons) {
+      // #190 / F-02 — stored.calibratedGpa may be null on an uncalibrated
+      // sprayer; coalesce so computeTankMixDilutions falls back to the
+      // herbicide-plugin GPA default rather than treating null as 0.
+      const effectiveGpa = stored?.calibratedGpa ?? undefined;
+      const lines = computeTankMixDilutions(
+        fullProducts,
+        parsed.data.tankSizeGallons,
+        effectiveGpa
       );
+      for (const line of lines) {
+        const stockItem = stockByPluginId.get(line.pluginId);
+        if (!stockItem) {
+          stockWarnings.push(
+            `${line.pluginId}: not tracked in stock — add a SKU on /inventory to enable auto-decrement`
+          );
+          continue;
+        }
+        const dec = bestEffort(() =>
+          decrementForUse({
+            stockItemId: stockItem.id,
+            amount: line.productAmount,
+            unit: line.unit as StockUnit,
+            sprayEventId: persisted.id,
+            performedById: performer.id,
+            occurredAt
+          })
+        );
+        if (dec.ok) {
+          stockResults.push(dec.value);
+          for (const note of dec.value.notes) stockWarnings.push(`${line.pluginId}: ${note}`);
+        } else {
+          stockWarnings.push(`${line.pluginId}: stock decrement failed — ${errorText(dec.error)}`);
+        }
+      }
     }
-  }
+
+    // Phase 12: close the originating primary task. Non-fatal — the spray is
+    // recorded; the task can be closed manually on /today if this fails.
+    const taskId = parsed.data.taskId;
+    if (tasks && taskId) {
+      const closed = bestEffort(() =>
+        tasks.completeTask(taskId, { eventTable: 'spray_event', eventId: persisted.id, occurredAt })
+      );
+      if (!closed.ok) stockWarnings.push(`task ${taskId} not closed: ${errorText(closed.error)}`);
+    }
+    return { persisted, stockResults, stockWarnings };
+  });
 
   return json({
     event: persisted,

@@ -59,7 +59,8 @@ describe('emergency contacts setting', () => {
     expect(mapSnap.emergencyContacts).toEqual([vet]);
     expect(buildFarmMapCard(mapSnap).sections[0]).toEqual({
       title: 'Emergency contacts',
-      items: ['Dr. Reyes (Vet): 540-555-0101']
+      items: ['Dr. Reyes (Vet): 540-555-0101'],
+      nowrapAfter: ': '
     });
 
     const before = await runWithTenantAsync(a, () => buildFarmSnapshot());

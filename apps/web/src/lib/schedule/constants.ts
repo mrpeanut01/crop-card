@@ -95,7 +95,10 @@ export const DEFAULT_AI_DAILY_QUOTA = {
    *  manual form is the fallback when the quota is spent. */
   'scan-label': 40,
   'scan-url': 20,
-  'scan-barcode': 40
+  'scan-barcode': 40,
+  /** Add-planting date helper: earliest / prime / latest for one crop at the
+   *  farm's location. Cached per crop + year, so real use is a handful. */
+  'planting-window': 40
 } as const;
 
 export type AiEndpointName = keyof typeof DEFAULT_AI_DAILY_QUOTA;

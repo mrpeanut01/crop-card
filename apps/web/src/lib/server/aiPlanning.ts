@@ -30,7 +30,8 @@ export type AiTask =
   /** Phase 21 / B-27 — input substitution + tank-mix consolidation
    *  pass on top of the deterministic InputsPlan. Uses Haiku
    *  (substitution lookup is comparatively simple). */
-  | 'inputs';
+  | 'inputs'
+  | 'plantingWindow';
 
 export interface ModelChoice {
   model: string;
@@ -184,7 +185,8 @@ const MAX_TOKENS_BY_TASK: Record<AiTask, number> = {
   allocate: 4000,
   groups: 4000,
   shortNames: 1500,
-  inputs: 3000
+  inputs: 3000,
+  plantingWindow: 400
 };
 
 export interface PlanWithAIOptions {

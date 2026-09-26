@@ -30,10 +30,15 @@ const FAMILY_HARDINESS: Record<string, Hardiness> = {
   brassica: 'half-hardy',
   'leafy-green': 'half-hardy',
   alliums: 'hardy',
+  allium: 'hardy',
   'root-crop': 'hardy',
+  root: 'hardy',
   'cereal-grain': 'hardy',
   forage: 'hardy',
   'culinary-herb': 'half-hardy',
+  'herb-culinary': 'half-hardy',
+  'cover-grass': 'hardy',
+  'cover-legume': 'half-hardy',
   'cover-crop-grass': 'hardy',
   'cover-crop-legume': 'half-hardy'
 };
@@ -134,28 +139,38 @@ export function scheduleCandidacy(input: ScheduleWindowInput): ScheduleWindow[] 
 
 export function hardinessOf(plug: CropPlugin | undefined): Hardiness {
   if (!plug) return 'half-hardy';
-  const tempMin = plug.plantingGuide?.soilTempMinF;
-  if (typeof tempMin === 'number') {
-    if (tempMin >= 65) return 'tender';
-    if (tempMin >= 50) return 'half-hardy';
-    return 'hardy';
-  }
-  return FAMILY_HARDINESS[plug.cropFamily] ?? 'half-hardy';
+  return hardinessFrom(plug.plantingGuide?.soilTempMinF, plug.cropFamily);
 }
 
-/** Earliest plantable date relative to the last spring frost. */
-function earliestPlantingMs(hardiness: Hardiness, lastSpringFrostMs: number): number {
-  switch (hardiness) {
-    case 'tender':
-      // 7d buffer after last frost so soil warms slightly.
-      return lastSpringFrostMs + 7 * ONE_DAY_MS;
-    case 'half-hardy':
-      // 14d before last frost is the canonical "set out half-hardy" mark.
-      return lastSpringFrostMs - 14 * ONE_DAY_MS;
-    case 'hardy':
-      // 42d before last frost — direct-seed peas, spinach, lettuce, etc.
-      return lastSpringFrostMs - 42 * ONE_DAY_MS;
+export function hardinessFrom(
+  soilTempMinF: number | null | undefined,
+  cropFamily: string | null | undefined
+): Hardiness {
+  if (typeof soilTempMinF === 'number') {
+    if (soilTempMinF >= 65) return 'tender';
+    if (soilTempMinF >= 50) return 'half-hardy';
+    return 'hardy';
   }
+  return (cropFamily && FAMILY_HARDINESS[cropFamily]) || 'half-hardy';
+}
+
+export function defaultDtmFor(hardiness: Hardiness): number {
+  return HARDINESS_DEFAULT_DTM[hardiness];
+}
+
+/** Days from the last spring frost to the earliest sensible planting. */
+export const EARLIEST_OFFSET_DAYS: Record<Hardiness, number> = {
+  // 7d buffer after last frost so soil warms slightly.
+  tender: 7,
+  // 14d before last frost is the canonical "set out half-hardy" mark.
+  'half-hardy': -14,
+  // 42d before last frost — direct-seed peas, spinach, lettuce, etc.
+  hardy: -42
+};
+
+/** Earliest plantable date relative to the last spring frost. */
+export function earliestPlantingMs(hardiness: Hardiness, lastSpringFrostMs: number): number {
+  return lastSpringFrostMs + EARLIEST_OFFSET_DAYS[hardiness] * ONE_DAY_MS;
 }
 
 interface OccupiedWindow {

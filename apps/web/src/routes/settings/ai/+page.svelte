@@ -38,7 +38,8 @@
     { key: 'plugin-scan', label: 'Plugin scan (label OCR)', quota: q['plugin-scan'] ?? 10 },
     { key: 'scan-label', label: 'Inventory label / photo scan', quota: q['scan-label'] ?? 40 },
     { key: 'scan-url', label: 'Inventory product-page URL', quota: q['scan-url'] ?? 20 },
-    { key: 'scan-barcode', label: 'Inventory barcode lookup', quota: q['scan-barcode'] ?? 40 }
+    { key: 'scan-barcode', label: 'Inventory barcode lookup', quota: q['scan-barcode'] ?? 40 },
+    { key: 'planting-window', label: 'Planting date helper', quota: q['planting-window'] ?? 40 }
   ]);
 </script>
 

@@ -46,7 +46,7 @@ import {
 import { listBlocks, type BlockWithPlantings, type PlantingRecord } from '$lib/db/blocks';
 import { listCrops, type Crop } from '$lib/db/crops';
 import { harvestTargetKey } from '$lib/plan/harvestTargetKey';
-import { frostDatesForYear } from '$lib/schedule/settings';
+import { frostDatesForYear, frostDatesIsoForYear } from '$lib/schedule/settings';
 import { getActivePlanningYear } from '$lib/season/planningYear.server';
 import { getSetting } from '$lib/db/settings';
 import {
@@ -167,6 +167,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         displayName: c.displayName,
         cropFamily: c.cropFamily,
         daysToMaturity: c.daysToMaturity,
+        soilTempMinF: c.plantingGuide?.soilTempMinF ?? null,
         archetype: resolveArchetype(c)
       };
     })
@@ -227,6 +228,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     plantingGuides,
     showFieldControls: fields.length > 1,
     frostDates,
+    frostDatesIso: frostDatesIsoForYear(currentYear),
     currentYear,
     seasonSetup,
     lastYearSetup,

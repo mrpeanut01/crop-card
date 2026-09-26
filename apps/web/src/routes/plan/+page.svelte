@@ -20,6 +20,7 @@
   import EditBlockModal from '$lib/components/plan/EditBlockModal.svelte';
   import NewPlantingModal from '$lib/components/plan/NewPlantingModal.svelte';
   import AddTaskModal from '$lib/components/plan/AddTaskModal.svelte';
+  import type { StockUnit } from '$lib/stock/units';
   import { withStepRoutes, workflowStepRoute } from '$lib/plan/seasonWorkflow';
   // Phase 25b (#81) — controls the legacy <details> open state. The
   // mutation callbacks emitted from PlanV2Shell flip this true so the
@@ -1925,8 +1926,21 @@
   cropCatalog={data.cropCatalog.map((c) => ({
     pluginId: c.pluginId,
     displayName: c.displayName,
-    cropFamily: c.cropFamily ?? undefined
+    cropFamily: c.cropFamily ?? undefined,
+    soilTempMinF: c.soilTempMinF,
+    dtmMaxDays: c.daysToMaturity?.max ?? null
   }))}
+  seedStock={seedStockData.map((s) => ({
+    stockItemId: s.stockItemId,
+    displayName: s.displayName,
+    shortName: s.shortName,
+    onHand: s.onHand,
+    defaultUnit: s.defaultUnit as StockUnit,
+    cropPluginId: s.cropPluginId
+  }))}
+  frostDates={data.frostDatesIso}
+  seasonYear={data.currentYear}
+  aiEnabled={data.aiEnabled}
   onClose={() => (showNewPlantingModal = false)}
   onCreated={async () => {
     showNewPlantingModal = false;

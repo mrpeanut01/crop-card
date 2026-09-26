@@ -17,13 +17,14 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db } from './client';
 import { ensureHomeField } from './fields';
 import { blocks, plantingRecords } from './schema';
 import { tenantValues, tenantWhere, withTenant } from './tenant';
 import { geojsonAreaAcres } from '$lib/geo/area';
 import { sketchAcres } from '$lib/farm/sketch';
+import { DEFAULT_BLOCK_KIND, type BedStyle, type BlockKind } from '$lib/farm/areaKinds';
 
 export type TillageMethod = 'conventional' | 'reduced-till' | 'no-till';
 export type SunExposure = 'full' | 'partial' | 'shade';
@@ -48,6 +49,13 @@ export interface Block {
   slopeAspectDeg?: number;
   widthFt?: number;
   lengthFt?: number;
+  /** Always set on rows read from the DB; optional so hand-built fixtures stay valid. */
+  kind?: BlockKind;
+  /** Designer feet-grid position inside the parent Area. Illustrative only. */
+  xFt?: number;
+  yFt?: number;
+  rotationDeg?: number;
+  bedStyle?: BedStyle;
 }
 
 export interface PlantingRecord {
@@ -96,12 +104,24 @@ function rowToBlock(row: typeof blocks.$inferSelect): Block {
     slopePercent: row.slopePercent ?? undefined,
     slopeAspectDeg: row.slopeAspectDeg ?? undefined,
     widthFt: row.widthFt ?? undefined,
-    lengthFt: row.lengthFt ?? undefined
+    lengthFt: row.lengthFt ?? undefined,
+    kind: row.kind,
+    xFt: row.xFt ?? undefined,
+    yFt: row.yFt ?? undefined,
+    rotationDeg: row.rotationDeg ?? undefined,
+    bedStyle: row.bedStyle ?? undefined
   };
 }
 
-export function listBlocks(): BlockWithPlantings[] {
-  const blockRows = db.select().from(blocks).where(tenantWhere(blocks)).all();
+export function listBlocks(opts: { kinds?: readonly BlockKind[] } = {}): BlockWithPlantings[] {
+  if (opts.kinds && opts.kinds.length === 0) return [];
+  const blockRows = db
+    .select()
+    .from(blocks)
+    .where(
+      opts.kinds ? withTenant(blocks, inArray(blocks.kind, [...opts.kinds])) : tenantWhere(blocks)
+    )
+    .all();
   if (blockRows.length === 0) return [];
   const all = db.select().from(plantingRecords).where(tenantWhere(plantingRecords)).all();
   const grouped = new Map<string, PlantingRecord[]>();
@@ -167,6 +187,11 @@ export function createBlock(input: {
   northSouthIndex?: number;
   widthFt?: number;
   lengthFt?: number;
+  kind?: BlockKind;
+  xFt?: number;
+  yFt?: number;
+  rotationDeg?: number;
+  bedStyle?: BedStyle;
 }): Block {
   const id = randomUUID();
   const fieldId = input.fieldId ?? ensureHomeField();
@@ -191,7 +216,12 @@ export function createBlock(input: {
         northSouthIndex: input.northSouthIndex ?? null,
         axesLocked: input.eastWestIndex !== undefined || input.northSouthIndex !== undefined,
         widthFt: input.widthFt ?? null,
-        lengthFt: input.lengthFt ?? null
+        lengthFt: input.lengthFt ?? null,
+        kind: input.kind ?? DEFAULT_BLOCK_KIND,
+        xFt: input.xFt ?? null,
+        yFt: input.yFt ?? null,
+        rotationDeg: input.rotationDeg ?? null,
+        bedStyle: input.bedStyle ?? null
       })
     )
     .returning()
@@ -246,6 +276,11 @@ export function updateBlock(
     slopeAspectDeg?: number | null;
     widthFt?: number | null;
     lengthFt?: number | null;
+    kind?: BlockKind;
+    xFt?: number | null;
+    yFt?: number | null;
+    rotationDeg?: number | null;
+    bedStyle?: BedStyle | null;
   }
 ): Block | undefined {
   const set: Partial<typeof blocks.$inferInsert> = {};
@@ -259,6 +294,11 @@ export function updateBlock(
   if (patch.slopeAspectDeg !== undefined) set.slopeAspectDeg = patch.slopeAspectDeg;
   if (patch.widthFt !== undefined) set.widthFt = patch.widthFt;
   if (patch.lengthFt !== undefined) set.lengthFt = patch.lengthFt;
+  if (patch.kind !== undefined) set.kind = patch.kind;
+  if (patch.xFt !== undefined) set.xFt = patch.xFt;
+  if (patch.yFt !== undefined) set.yFt = patch.yFt;
+  if (patch.rotationDeg !== undefined) set.rotationDeg = patch.rotationDeg;
+  if (patch.bedStyle !== undefined) set.bedStyle = patch.bedStyle;
   const axisManualEdit = patch.eastWestIndex !== undefined || patch.northSouthIndex !== undefined;
   if (patch.eastWestIndex !== undefined) set.eastWestIndex = patch.eastWestIndex;
   if (patch.northSouthIndex !== undefined) set.northSouthIndex = patch.northSouthIndex;

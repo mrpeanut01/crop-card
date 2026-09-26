@@ -18,6 +18,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import fc from 'fast-check';
 
 import { runWithTenant } from './tenant';
 import { db } from './client';
@@ -25,6 +26,8 @@ import { owners } from './schema';
 
 import * as blocksRepo from './blocks';
 import * as fieldsRepo from './fields';
+import * as areasRepo from './areas';
+import { AREA_KINDS, BLOCK_KINDS } from '$lib/farm/areaKinds';
 import * as cropsRepo from './crops';
 import * as shadeRepo from './shadeSources';
 import * as sprayRepo from './sprayEvents';
@@ -595,6 +598,74 @@ describe('cross-tenant isolation', () => {
     expect(pluginOverridesRepo.overridesRevision(OWNER_A)).toBeGreaterThan(0);
   });
 
+  // Phase 30 — kind-filtered Area and block reads stay inside the tenant.
+  it('kind-filtered Area and block reads are owner-scoped', () => {
+    const seedTyped = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const areaIds = new Set<string>();
+        const blockIds = new Set<string>();
+        for (const kind of AREA_KINDS) {
+          const a = areasRepo.createArea({ name: `${ownerId}-${kind}`, kind });
+          areaIds.add(a.id);
+          for (const bk of BLOCK_KINDS) {
+            blockIds.add(
+              blocksRepo.createBlock({ name: `${ownerId}-${kind}-${bk}`, fieldId: a.id, kind: bk })
+                .id
+            );
+          }
+        }
+        return { areaIds, blockIds };
+      });
+    const a = seedTyped(OWNER_A);
+    const b = seedTyped(OWNER_B);
+
+    fc.assert(
+      fc.property(
+        fc.subarray([...AREA_KINDS], { minLength: 1 }),
+        fc.subarray([...BLOCK_KINDS], { minLength: 1 }),
+        fc.constantFrom(OWNER_A, OWNER_B),
+        (areaKinds, blockKinds, owner) => {
+          const [mine, theirs] = owner === OWNER_A ? [a, b] : [b, a];
+          runWithTenant(owner, () => {
+            const areas = areasRepo.listAreas({ kinds: areaKinds });
+            for (const row of areas) {
+              expect(theirs.areaIds.has(row.id)).toBe(false);
+              expect(areaKinds).toContain(row.kind);
+            }
+            const ownTyped = areas.filter((row) => mine.areaIds.has(row.id));
+            expect(ownTyped).toHaveLength(areaKinds.length);
+
+            const blockRows = blocksRepo.listBlocks({ kinds: blockKinds });
+            for (const row of blockRows) {
+              expect(theirs.blockIds.has(row.id)).toBe(false);
+              expect(blockKinds).toContain(row.kind);
+            }
+          });
+        }
+      ),
+      { numRuns: 40 }
+    );
+
+    const bGarden = runWithTenant(OWNER_B, () =>
+      areasRepo.listAreas({ kinds: ['garden'] }).find((row) => b.areaIds.has(row.id))
+    )!;
+    expect(runWithTenant(OWNER_A, () => areasRepo.getArea(bGarden.id))).toBeUndefined();
+    expect(
+      runWithTenant(OWNER_A, () =>
+        areasRepo.updateArea(bGarden.id, { kind: 'barn', details: { washPack: true } })
+      )
+    ).toBeUndefined();
+    expect(runWithTenant(OWNER_B, () => areasRepo.getArea(bGarden.id))?.kind).toBe('garden');
+
+    const bBed = runWithTenant(OWNER_B, () =>
+      blocksRepo.listBlocks({ kinds: ['bed'] }).find((row) => b.blockIds.has(row.id))
+    )!;
+    expect(
+      runWithTenant(OWNER_A, () => blocksRepo.updateBlock(bBed.id, { kind: 'row', xFt: 9 }))
+    ).toBeUndefined();
+    expect(runWithTenant(OWNER_B, () => blocksRepo.getBlock(bBed.id))?.kind).toBe('bed');
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -602,6 +673,7 @@ describe('cross-tenant isolation', () => {
     const auditedModules = [
       blocksRepo,
       fieldsRepo,
+      areasRepo,
       cropsRepo,
       shadeRepo,
       sprayRepo,

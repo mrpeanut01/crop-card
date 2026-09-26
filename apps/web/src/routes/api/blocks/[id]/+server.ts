@@ -10,6 +10,7 @@ import { deleteBlockCascade } from '$lib/db/admin';
 import { getBlock, updateBlock } from '$lib/db/blocks';
 import { getField } from '$lib/db/fields';
 import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
+import { blockLayoutPatchSchema } from '$lib/farm/blockLayout';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
@@ -20,7 +21,7 @@ export const GET: RequestHandler = (event) => {
   return json({ block });
 };
 
-const patchSchema = z.object({
+const patchSchema = blockLayoutPatchSchema.extend({
   name: z.string().min(1).max(120).optional(),
   acres: z.number().positive().nullable().optional(),
   blockLabel: z.string().max(60).nullable().optional(),

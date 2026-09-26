@@ -281,6 +281,16 @@ const paths = {
       description:
         'Tenant-scoped via `runWithTenantAsync(activeOwnerId, …)`. Bearer tokens see only the Owner they were minted under.',
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'kind',
+          in: 'query',
+          required: false,
+          description:
+            'Comma-separated block kinds to include (`block`, `bed`, `row`, `container`). An unknown kind returns 400.',
+          schema: { type: 'string', example: 'bed,container' }
+        }
+      ],
       responses: {
         200: {
           description: 'Block list.',

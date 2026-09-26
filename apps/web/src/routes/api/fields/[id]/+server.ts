@@ -1,6 +1,6 @@
 /**
  * GET    /api/fields/:id  — fetch one field
- * PATCH  /api/fields/:id  — edit name/acres/location/notes/geometry
+ * PATCH  /api/fields/:id  — edit name/acres/location/notes/geometry/kind/details
  * DELETE /api/fields/:id  — cascade through every block + crop + event
  */
 
@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { deleteFieldCascade } from '$lib/db/admin';
 import { getField, updateField } from '$lib/db/fields';
 import { MAX_SKETCH_FT, withSketchAcres } from '$lib/farm/sketch';
+import { AREA_KINDS, validateAreaDetails } from '$lib/farm/areaKinds';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 
@@ -26,7 +27,9 @@ const patchSchema = z.object({
   notes: z.string().max(2000).nullable().optional(),
   geometryGeojson: z.string().nullable().optional(),
   widthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional(),
-  lengthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional()
+  lengthFt: z.number().positive().max(MAX_SKETCH_FT).nullable().optional(),
+  kind: z.enum(AREA_KINDS).optional(),
+  details: z.unknown().optional()
 });
 
 export const PATCH: RequestHandler = async (event) => {
@@ -35,7 +38,8 @@ export const PATCH: RequestHandler = async (event) => {
   if (auth && !canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
   }
-  if (!getField(event.params.id)) throw error(404, 'field not found');
+  const existing = getField(event.params.id);
+  if (!existing) throw error(404, 'field not found');
 
   let body: unknown;
   try {
@@ -47,7 +51,16 @@ export const PATCH: RequestHandler = async (event) => {
   if (!parsed.success) {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
-  const field = updateField(event.params.id, withSketchAcres(parsed.data));
+  const { details: rawDetails, ...rest } = parsed.data;
+  let details;
+  if (rawDetails !== undefined) {
+    const checked = validateAreaDetails(rest.kind ?? existing.kind, rawDetails);
+    if (!checked.ok) {
+      return json({ error: 'invalid details for kind', issues: checked.issues }, { status: 400 });
+    }
+    details = checked.details;
+  }
+  const field = updateField(event.params.id, { ...withSketchAcres(rest), details });
   return json({ field });
 };
 

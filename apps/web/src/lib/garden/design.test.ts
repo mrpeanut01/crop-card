@@ -1,3 +1,4 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { sampleSnapshot } from '$lib/cards/build/fixtures';
 import {
@@ -13,6 +14,7 @@ import {
 } from './design';
 import { canvasFromArea, rectsOverlap } from './geometry';
 import { seasonFrostMs } from './design';
+import { frostDatesFromMmDd } from '$lib/schedule/frostSeason';
 
 const canvas = canvasFromArea({
   id: 'a',
@@ -299,6 +301,45 @@ describe('seasonFrostMs', () => {
       lastSpringFrostMs: Date.UTC(2027, 3, 15),
       firstFallFrostMs: Date.UTC(2027, 9, 15)
     });
+  });
+
+  it('rolls a typed Feb 29 to Mar 1 in a non-leap year instead of using Loudoun', () => {
+    expect(seasonFrostMs(2027, '02-29', '10-24').lastSpringFrostMs).toBe(Date.UTC(2027, 2, 1));
+    expect(seasonFrostMs(2028, '02-29', '10-24').lastSpringFrostMs).toBe(Date.UTC(2028, 1, 29));
+    expect(seasonFrostMs(2027, '12-01', '02-29')).toEqual({
+      lastSpringFrostMs: Date.UTC(2026, 11, 1),
+      firstFallFrostMs: Date.UTC(2027, 2, 1)
+    });
+    expect(seasonFrostMs(2028, '4-5', '9-30')).toEqual({
+      lastSpringFrostMs: Date.UTC(2028, 3, 5),
+      firstFallFrostMs: Date.UTC(2028, 8, 30)
+    });
+  });
+
+  it('matches the server frost dates day for day', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 2000, max: 2040 }),
+        fc.integer({ min: 1, max: 12 }),
+        fc.integer({ min: 1, max: 29 }),
+        fc.integer({ min: 1, max: 12 }),
+        fc.integer({ min: 1, max: 29 }),
+        (year, lm, ld, fm, fd) => {
+          const mmdd = (m: number, d: number) =>
+            `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const offline = seasonFrostMs(year, mmdd(lm, ld), mmdd(fm, fd));
+          const server = frostDatesFromMmDd(year, mmdd(lm, ld), mmdd(fm, fd));
+          const day = (ms: number) => {
+            const d = new Date(ms);
+            return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+          };
+          expect(offline).toEqual({
+            lastSpringFrostMs: day(server.lastSpringFrostMs),
+            firstFallFrostMs: day(server.firstFallFrostMs)
+          });
+        }
+      )
+    );
   });
 
   it('puts a December spring frost in the year before', () => {

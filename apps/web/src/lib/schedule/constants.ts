@@ -50,13 +50,17 @@ export function parseBoolSetting(raw: string | undefined, fallback: boolean): bo
   return fallback;
 }
 
+const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
+
+/** A month-day that exists in some year: `02-29` is allowed, `02-30` and
+ *  `04-31` are not. */
 export function parseMmDd(s: string | undefined): { month: number; day: number } | null {
   if (!s) return null;
   const m = /^(\d{1,2})-(\d{1,2})$/.exec(s.trim());
   if (!m) return null;
   const month = Number(m[1]);
   const day = Number(m[2]);
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  if (month < 1 || month > 12 || day < 1 || day > DAYS_IN_MONTH[month - 1]) return null;
   return { month: month - 1, day };
 }
 

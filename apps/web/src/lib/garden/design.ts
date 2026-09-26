@@ -9,7 +9,8 @@ import { ymdToUtcMs } from '$lib/cards/build/common';
 import { geojsonBBox } from '$lib/geo/area';
 import {
   LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
-  LOUDOUN_DEFAULT_LAST_FROST_MMDD
+  LOUDOUN_DEFAULT_LAST_FROST_MMDD,
+  parseMmDd
 } from '$lib/schedule/constants';
 import { frostSeasonYears, type MonthDay } from '$lib/schedule/frostSeason';
 import { bedRect, canvasFromArea, clampToArea, freeSpot, rectFt } from './geometry';
@@ -217,7 +218,10 @@ export function buildGardenDesign(input: DesignInput): GardenDesign | null {
         footprint: p.footprint
       },
       input.crops[p.cropPluginId],
-      { firstFallFrostMs: input.frost.firstFallFrostMs }
+      {
+        firstFallFrostMs: input.frost.firstFallFrostMs,
+        lastSpringFrostMs: input.frost.lastSpringFrostMs
+      }
     )?.harvestEndMs ?? null;
   const plantings = input.plantings
     .filter((p) => bedIds.has(p.blockId) && inSeason(p, input.seasonYear, endOf(p)))
@@ -251,32 +255,26 @@ export const FALLBACK_FROST_MMDD = {
   firstFall: LOUDOUN_DEFAULT_FIRST_FROST_MMDD
 } as const;
 
-function mmDdOr(year: number, mmdd: string | null | undefined, fallback: string): string {
-  return mmdd && ymdToUtcMs(`${year}-${mmdd}`) !== null ? mmdd : fallback;
-}
-
-function monthDay(mmdd: string): MonthDay {
-  const [m, d] = mmdd.split('-').map(Number);
-  return { month: m - 1, day: d };
+function frostMonthDay(mmdd: string | null | undefined, fallback: string): MonthDay {
+  return parseMmDd(mmdd ?? undefined) ?? parseMmDd(fallback)!;
 }
 
 /** UTC-midnight frost dates for season `year`, placing a year-crossing
- *  season's fall frost in the next year (or its spring frost in the last). */
+ *  season's fall frost in the next year (or its spring frost in the last).
+ *  The year is chosen first and Feb 29 in a non-leap year rolls to Mar 1,
+ *  the same as the server's `frostDatesFromMmDd`. Only a missing or
+ *  unreadable date uses the Loudoun default. */
 export function seasonFrostMs(
   year: number,
   lastSpring: string | null | undefined,
   firstFall: string | null | undefined
 ): { lastSpringFrostMs: number; firstFallFrostMs: number } {
-  const last = mmDdOr(year, lastSpring, FALLBACK_FROST_MMDD.lastSpring);
-  const first = mmDdOr(year, firstFall, FALLBACK_FROST_MMDD.firstFall);
-  const years = frostSeasonYears(year, monthDay(last), monthDay(first));
+  const last = frostMonthDay(lastSpring, FALLBACK_FROST_MMDD.lastSpring);
+  const first = frostMonthDay(firstFall, FALLBACK_FROST_MMDD.firstFall);
+  const years = frostSeasonYears(year, last, first);
   return {
-    lastSpringFrostMs:
-      ymdToUtcMs(`${years.lastSpringYear}-${last}`) ??
-      ymdToUtcMs(`${year}-${FALLBACK_FROST_MMDD.lastSpring}`)!,
-    firstFallFrostMs:
-      ymdToUtcMs(`${years.firstFallYear}-${first}`) ??
-      ymdToUtcMs(`${year}-${FALLBACK_FROST_MMDD.firstFall}`)!
+    lastSpringFrostMs: Date.UTC(years.lastSpringYear, last.month, last.day),
+    firstFallFrostMs: Date.UTC(years.firstFallYear, first.month, first.day)
   };
 }
 

@@ -184,13 +184,16 @@ test.describe('typed farm map', () => {
     await expect(card.getByText('Garden: sage')).toBeVisible();
     await expect(card.getByText('Last frost')).toBeVisible();
     await expect(
-      page.getByTestId('farm-map-figure').locator('[data-area-kind="pasture"]')
+      page.locator('.no-print').getByTestId('farm-map-figure').locator('[data-area-kind="pasture"]')
     ).toHaveCount(1);
 
     const printed = page.locator('.card-print-sheet article[data-card-kind="farmMap"]');
     await expect(printed).toBeHidden();
     await page.emulateMedia({ media: 'print' });
     await expect(printed).toBeVisible();
+    await expect(
+      page.locator('.card-print-sheet .full-page').getByTestId('farm-map-figure').locator('svg')
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Print or save as PDF' })).toBeHidden();
   });
 });

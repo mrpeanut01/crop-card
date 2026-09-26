@@ -10,6 +10,8 @@
   import { fmt } from '$lib/prefsState.svelte';
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
   import { kindStyle } from '$lib/farm/kindStyle';
+  import HardinessZoneChip from '$lib/components/climate/HardinessZoneChip.svelte';
+  import { HARDINESS_ZONES } from '$lib/climate/zone';
 
   const { data, form } = $props();
 
@@ -31,6 +33,11 @@
   }
 
   const total = $derived(data.blocks.reduce((s, b) => s + (b.acres ?? 0), 0));
+
+  const zoneChoice = $derived(
+    data.hardinessZone?.provenance === 'manual' ? data.hardinessZone.label : ''
+  );
+  const zoneEstimate = $derived(data.hardinessZone?.estimate ?? null);
 </script>
 
 <svelte:head><title>Farm & blocks · CropCard</title></svelte:head>
@@ -81,6 +88,29 @@
         mode="manual"
         stored={data.frost}
       />
+    </div>
+    <div class="zone-box">
+      <h3 class="zone-title serif">Hardiness zone</h3>
+      <HardinessZoneChip zone={data.hardinessZone} />
+      <p class="zone-note">
+        A rough guide for perennials and fruit trees, worked out from the nearest weather station's
+        coldest winter nights. It is not the USDA map, and CropCard never plans or blocks anything
+        by zone.
+      </p>
+      <details class="zone-edit" open={zoneChoice !== ''}>
+        <summary>{data.hardinessZone ? 'Change zone' : 'Set your zone'}</summary>
+        <label class="zone-field">
+          <span>Your zone</span>
+          <select class="s-input zone-select" name="hardinessZone">
+            <option value="" selected={zoneChoice === ''}>
+              {zoneEstimate ? `Use the station estimate (${zoneEstimate})` : 'Not set'}
+            </option>
+            {#each HARDINESS_ZONES as z (z)}
+              <option value={z} selected={z === zoneChoice}>Zone {z}</option>
+            {/each}
+          </select>
+        </label>
+      </details>
     </div>
   </SettingsSection>
 
@@ -171,6 +201,44 @@
     margin-top: 16px;
     padding-top: 14px;
     border-top: 1px solid var(--color-divider-soft);
+  }
+  .zone-box {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-divider-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .zone-title {
+    margin: 0;
+    font-size: 16px;
+  }
+  .zone-note {
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: 12.5px;
+    max-width: 60ch;
+  }
+  .zone-edit summary {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--color-forest-deep);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .zone-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12.5px;
+    color: var(--color-ink-soft);
+    max-width: 320px;
+  }
+  .zone-select {
+    min-height: 48px;
   }
   .error {
     background: var(--pill-rust-bg);

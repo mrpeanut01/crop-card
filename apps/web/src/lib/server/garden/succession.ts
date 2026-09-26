@@ -71,13 +71,13 @@ export function addSuccession(
   const plugin: GardenCrop | undefined = crops[anchorCrop.cropPluginId];
   const anchor = placedPlantingFromCrop(anchorCrop, plugin);
   const year = new Date(anchor.plantingDateMs ?? Date.now()).getUTCFullYear();
-  const { firstFallFrostMs } = frostDatesForYear(year);
+  const { firstFallFrostMs, lastSpringFrostMs } = frostDatesForYear(year);
   const intervals = occupancyIntervals(
     listCrops({ blockId: bed.block.id }).map((c) =>
       placedPlantingFromCrop(c, crops[c.cropPluginId])
     ),
     crops,
-    { firstFallFrostMs }
+    { firstFallFrostMs, lastSpringFrostMs }
   );
   const proposal = proposeSuccession({
     anchor,
@@ -87,6 +87,7 @@ export function addSuccession(
     intervalDays: req.intervalDays,
     intervals,
     firstFallFrostMs,
+    lastSpringFrostMs,
     afterMs
   });
   if (!req.commit) return { ok: true, response: { proposal, groupId: null, created: [] } };

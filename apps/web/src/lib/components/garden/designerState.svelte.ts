@@ -219,11 +219,14 @@ export class DesignerState {
   unplaced = $derived.by(() => new Set(this.design.unplacedBedIds ?? []));
   intervals = $derived.by<OccupancyInterval[]>(() =>
     occupancyIntervals(this.design.plantings, this.design.crops, {
-      firstFallFrostMs: this.design.frost.firstFallFrostMs
+      firstFallFrostMs: this.design.frost.firstFallFrostMs,
+      lastSpringFrostMs: this.design.frost.lastSpringFrostMs
     })
   );
   intervalById = $derived.by(() => new Map(this.intervals.map((i) => [i.cropId, i])));
-  range = $derived.by(() => scrubRange(this.design.seasonYear, this.intervals, this.nowMs));
+  range = $derived.by(() =>
+    scrubRange(this.design.seasonYear, this.intervals, this.nowMs, this.design.frost)
+  );
   changeDays = $derived.by(() => occupancyChangeDays(this.intervals));
   occupancy = $derived.by(() => {
     const out = new Map<string, BedOccupancyOnDate>();
@@ -274,9 +277,11 @@ export class DesignerState {
     const range = scrubRange(
       init.design.seasonYear,
       occupancyIntervals(init.design.plantings, init.design.crops, {
-        firstFallFrostMs: init.design.frost.firstFallFrostMs
+        firstFallFrostMs: init.design.frost.firstFallFrostMs,
+        lastSpringFrostMs: init.design.frost.lastSpringFrostMs
       }),
-      this.nowMs
+      this.nowMs,
+      init.design.frost
     );
     const today = utcDayStart(this.nowMs);
     const todayInRange = today >= range.startMs && today <= range.endMs;
@@ -960,7 +965,10 @@ export class DesignerState {
         footprint: null
       },
       this.crop(pluginId),
-      { firstFallFrostMs: this.design.frost.firstFallFrostMs }
+      {
+        firstFallFrostMs: this.design.frost.firstFallFrostMs,
+        lastSpringFrostMs: this.design.frost.lastSpringFrostMs
+      }
     )!;
   }
 
@@ -1581,6 +1589,7 @@ export class DesignerState {
       intervalDays,
       intervals: this.intervals.filter((i) => i.blockId === bed.blockId),
       firstFallFrostMs: this.design.frost.firstFallFrostMs,
+      lastSpringFrostMs: this.design.frost.lastSpringFrostMs,
       afterMs: this.seriesOf(anchor).reduce<number | null>(
         (m, q) =>
           q.plantingDateMs != null && (m == null || q.plantingDateMs > m) ? q.plantingDateMs : m,

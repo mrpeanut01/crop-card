@@ -16,6 +16,7 @@
   } from '$lib/climate/frostSuggest';
   import {
     FROST_CONFIRM_COPY,
+    FROST_CROSSES_YEAR_COPY,
     FROST_STORED_FALLBACK_COPY,
     frostConfirmReason,
     suggestFromStored
@@ -257,6 +258,9 @@
         <p class="src">{suggestion.fallbackReason}</p>
       {:else if canEdit && basis === 'stored' && suggestion.values.lastFrost.provenance === 'fallback' && suggestion.values.firstFrost.provenance === 'fallback'}
         <p class="src">{FROST_STORED_FALLBACK_COPY}</p>
+      {/if}
+      {#if suggestion.crossesYear && !editing}
+        <p class="src" data-testid="frost-crosses-year">{FROST_CROSSES_YEAR_COPY}</p>
       {/if}
 
       <div class="controls">

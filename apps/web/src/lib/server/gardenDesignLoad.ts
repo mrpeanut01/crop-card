@@ -11,11 +11,10 @@ import { withTenant } from '$lib/db/tenant';
 import { getField } from '$lib/db/fields';
 import { listBlocks } from '$lib/db/blocks';
 import { listShadeSources } from '$lib/db/shadeSources';
-import { getSetting } from '$lib/db/settings';
 import { getBedRecipes, getRegistry } from '$lib/server/registry';
 import type { BedRecipePlugin } from '$lib/plugins/schemas';
 import { frostDatesForYear } from '$lib/schedule/settings';
-import { SETTINGS_KEYS } from '$lib/schedule/constants';
+import { snapshotFrostFromSettings } from '$lib/climate/frostSettings.server';
 import { rotationLookbackForFamily } from '$lib/plugins/familyDefaults';
 import { resolveArchetype, type CompanionPlugin, type CropPlugin } from '$lib/plugins/schemas';
 import { isDesignable, type DesignableAreaKind } from '$lib/farm/areaKinds';
@@ -141,8 +140,6 @@ export async function loadGardenDesign(
   }));
 
   const frost = designFrostForYear(opts.seasonYear);
-  const typedFrost =
-    !!getSetting(SETTINGS_KEYS.lastFrost) || !!getSetting(SETTINGS_KEYS.firstFrost);
   const design = buildGardenDesign({
     area: {
       id: area.id,
@@ -157,7 +154,7 @@ export async function loadGardenDesign(
     crops: byId,
     frost: {
       ...frost,
-      provenance: typedFrost ? 'manual' : 'fallback'
+      provenance: snapshotFrostFromSettings().provenance
     },
     seasonYear: opts.seasonYear,
     asOf: opts.now ?? Date.now(),

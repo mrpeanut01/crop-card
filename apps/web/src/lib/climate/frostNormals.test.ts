@@ -333,7 +333,9 @@ describe('bundled NOAA 1991-2020 dataset', () => {
     expect(frostFree.length).toBe(145);
     const ids = new Set<string>();
     for (const s of ds.stations) {
-      expect([13, 14]).toContain(s.length);
+      expect([13, 14, 15]).toContain(s.length);
+      if (s.length >= 14) expect([0, 1]).toContain(s[13]);
+      if (s.length === 15) expect(typeof s[14]).toBe('number');
       expect(typeof s[0]).toBe('string');
       expect(typeof s[1]).toBe('string');
       expect(s[2] as number).toBeGreaterThanOrEqual(-90);

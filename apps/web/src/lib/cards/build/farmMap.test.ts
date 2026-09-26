@@ -65,6 +65,45 @@ describe('buildFarmMapCard', () => {
     expect(warm.facts.some((f) => f.label === 'Last frost')).toBe(false);
   });
 
+  it('shows the approximate hardiness zone with its source, and hides it when unknown', () => {
+    const zone = {
+      label: '7a',
+      provenance: 'data' as const,
+      stationName: 'Washington DC Dulles AP, VA',
+      distanceMi: 6,
+      extremeMinF: 3.9,
+      estimate: '7a'
+    };
+    const card = buildFarmMapCard(sampleSnapshot({ hardinessZone: zone }), { prefs });
+    expect(card.facts.find((f) => f.label === 'Zone')).toEqual({
+      label: 'Zone',
+      value: '7a (approx., from Washington DC Dulles AP, VA)',
+      provenance: 'data'
+    });
+    expect(card.provenance).toContainEqual({
+      source: 'data',
+      detail: 'zone from NOAA station averages'
+    });
+    expect(JSON.stringify(card)).not.toMatch(/USDA/);
+
+    const mine = buildFarmMapCard(
+      sampleSnapshot({
+        hardinessZone: { ...zone, label: '6b', provenance: 'manual', stationName: null }
+      }),
+      { prefs }
+    );
+    expect(mine.facts.find((f) => f.label === 'Zone')).toEqual({
+      label: 'Zone',
+      value: '6b (your setting)',
+      provenance: 'manual'
+    });
+
+    for (const hardinessZone of [null, undefined]) {
+      const none = buildFarmMapCard(sampleSnapshot({ hardinessZone }), { prefs });
+      expect(none.facts.some((f) => f.label === 'Zone')).toBe(false);
+    }
+  });
+
   it('adds emergency contacts only when some are saved', () => {
     const none = buildFarmMapCard(sampleSnapshot(), { prefs });
     expect(none.sections.some((s) => s.title === 'Emergency contacts')).toBe(false);

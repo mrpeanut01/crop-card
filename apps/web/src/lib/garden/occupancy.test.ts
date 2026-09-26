@@ -16,6 +16,7 @@ import {
   type OccupancyPlanting
 } from './occupancy';
 import type { Footprint, GardenCrop, OccupancyInterval } from './types';
+import { seasonFrostMs } from './design';
 
 const day = (m: number, d: number, y = 2026) => Date.UTC(y, m - 1, d);
 const FROST = { firstFallFrostMs: day(10, 24) };
@@ -71,6 +72,79 @@ describe('shortDate and frostInYearOf', () => {
 
   it('moves the frost date into the planting year', () => {
     expect(frostInYearOf(day(10, 24, 2026), day(5, 1, 2027))).toBe(day(10, 24, 2027));
+    expect(frostInYearOf(day(10, 24, 2026), day(11, 20, 2027))).toBe(day(10, 24, 2027));
+  });
+});
+
+describe('a season that crosses the new year (Gulf coast)', () => {
+  const GULF = { lastSpringFrostMs: day(1, 31, 2027), firstFallFrostMs: day(1, 6, 2028) };
+
+  it('bounds a summer planting by the next January frost', () => {
+    expect(frostInYearOf(GULF.firstFallFrostMs, day(10, 1, 2027), GULF.lastSpringFrostMs)).toBe(
+      day(1, 6, 2028)
+    );
+    expect(frostInYearOf(GULF.firstFallFrostMs, day(10, 1, 2027))).toBe(day(1, 6, 2028));
+  });
+
+  it('keeps a harvest that starts just before that frost in its own season', () => {
+    expect(frostInYearOf(GULF.firstFallFrostMs, day(1, 3, 2028), GULF.lastSpringFrostMs)).toBe(
+      day(1, 6, 2028)
+    );
+  });
+
+  it('holds tomatoes until the January frost instead of ending before they start', () => {
+    const iv = plantingOccupancy(
+      planting({ cropPluginId: tomato.pluginId, plantingDateMs: day(3, 1, 2027) }),
+      tomato,
+      GULF
+    )!;
+    expect(iv.harvestStartMs).toBe(day(5, 10, 2027));
+    expect(iv.harvestEndMs).toBe(day(1, 6, 2028));
+    expect(iv.endMs).toBeGreaterThan(iv.harvestEndMs);
+  });
+
+  it('leaves a desert season with a late-December spring frost in its own year', () => {
+    const desert = { lastSpringFrostMs: day(12, 31, 2026), firstFallFrostMs: day(12, 27, 2027) };
+    expect(frostInYearOf(desert.firstFallFrostMs, day(6, 1, 2027), desert.lastSpringFrostMs)).toBe(
+      day(12, 27, 2027)
+    );
+  });
+
+  it('bounds every date inside a season by that season’s own frost (property)', () => {
+    const mmdd = fc
+      .tuple(fc.integer({ min: 1, max: 12 }), fc.integer({ min: 1, max: 28 }))
+      .map(([m, d]) => `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 2001, max: 2099 }),
+        mmdd,
+        mmdd,
+        fc.double({ min: 0, max: 1, noNaN: true }),
+        (year, last, first, t) => {
+          const f = seasonFrostMs(year, last, first);
+          const span = f.firstFallFrostMs - f.lastSpringFrostMs;
+          const ms = f.lastSpringFrostMs + Math.floor(t * span);
+          if (ms <= f.lastSpringFrostMs || ms >= f.firstFallFrostMs) return true;
+          return frostInYearOf(f.firstFallFrostMs, ms, f.lastSpringFrostMs) === f.firstFallFrostMs;
+        }
+      )
+    );
+  });
+
+  it('matches the old same-year answer for ordinary seasons (property)', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 364 }),
+        fc.integer({ min: 2001, max: 2099 }),
+        (offset, year) => {
+          const f = seasonFrostMs(year, '04-15', '10-24');
+          const ms = Date.UTC(year, 0, 1) + offset * ONE_DAY_MS;
+          return (
+            frostInYearOf(f.firstFallFrostMs, ms, f.lastSpringFrostMs) === Date.UTC(year, 9, 24)
+          );
+        }
+      )
+    );
   });
 });
 
@@ -385,6 +459,15 @@ describe('scrubRange and occupancyChangeDays', () => {
     expect(r.startMs).toBe(day(1, 1));
     expect(r.endMs).toBe(day(2, 10, 2027));
     expect(r.todayMs).toBe(day(2, 10, 2027));
+  });
+
+  it('widens to show a frost date that falls in the next year', () => {
+    const r = scrubRange(2027, [], day(7, 15, 2027), {
+      lastSpringFrostMs: day(1, 31, 2027),
+      firstFallFrostMs: day(1, 6, 2028)
+    });
+    expect(r.startMs).toBe(day(1, 1, 2027));
+    expect(r.endMs).toBe(day(1, 6, 2028));
   });
 
   it('lists the days a bed changes', () => {

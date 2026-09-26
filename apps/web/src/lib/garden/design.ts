@@ -11,6 +11,7 @@ import {
   LOUDOUN_DEFAULT_FIRST_FROST_MMDD,
   LOUDOUN_DEFAULT_LAST_FROST_MMDD
 } from '$lib/schedule/constants';
+import { frostSeasonYears, type MonthDay } from '$lib/schedule/frostSeason';
 import { bedRect, canvasFromArea, clampToArea, freeSpot, rectFt } from './geometry';
 import { plantCount, resolveSpacing } from './plantCount';
 import { plantingOccupancy } from './occupancy';
@@ -250,8 +251,33 @@ export const FALLBACK_FROST_MMDD = {
   firstFall: LOUDOUN_DEFAULT_FIRST_FROST_MMDD
 } as const;
 
-function frostMs(year: number, mmdd: string | null | undefined, fallback: string): number {
-  return ymdToUtcMs(`${year}-${mmdd ?? fallback}`) ?? ymdToUtcMs(`${year}-${fallback}`)!;
+function mmDdOr(year: number, mmdd: string | null | undefined, fallback: string): string {
+  return mmdd && ymdToUtcMs(`${year}-${mmdd}`) !== null ? mmdd : fallback;
+}
+
+function monthDay(mmdd: string): MonthDay {
+  const [m, d] = mmdd.split('-').map(Number);
+  return { month: m - 1, day: d };
+}
+
+/** UTC-midnight frost dates for season `year`, placing a year-crossing
+ *  season's fall frost in the next year (or its spring frost in the last). */
+export function seasonFrostMs(
+  year: number,
+  lastSpring: string | null | undefined,
+  firstFall: string | null | undefined
+): { lastSpringFrostMs: number; firstFallFrostMs: number } {
+  const last = mmDdOr(year, lastSpring, FALLBACK_FROST_MMDD.lastSpring);
+  const first = mmDdOr(year, firstFall, FALLBACK_FROST_MMDD.firstFall);
+  const years = frostSeasonYears(year, monthDay(last), monthDay(first));
+  return {
+    lastSpringFrostMs:
+      ymdToUtcMs(`${years.lastSpringYear}-${last}`) ??
+      ymdToUtcMs(`${year}-${FALLBACK_FROST_MMDD.lastSpring}`)!,
+    firstFallFrostMs:
+      ymdToUtcMs(`${years.firstFallYear}-${first}`) ??
+      ymdToUtcMs(`${year}-${FALLBACK_FROST_MMDD.firstFall}`)!
+  };
 }
 
 type SnapshotPlantingWithLayout = SnapshotPlanting &
@@ -320,12 +346,7 @@ export function designFromSnapshot(
     plantings,
     crops: snapshot.cropPlugins,
     frost: {
-      lastSpringFrostMs: frostMs(
-        opts.seasonYear,
-        frost?.lastSpring,
-        FALLBACK_FROST_MMDD.lastSpring
-      ),
-      firstFallFrostMs: frostMs(opts.seasonYear, frost?.firstFall, FALLBACK_FROST_MMDD.firstFall),
+      ...seasonFrostMs(opts.seasonYear, frost?.lastSpring, frost?.firstFall),
       provenance
     },
     seasonYear: opts.seasonYear,

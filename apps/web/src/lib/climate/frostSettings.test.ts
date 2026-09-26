@@ -135,11 +135,18 @@ describe('planFrostSave from a station lookup', () => {
     expect(r.ok && r.plan?.provenance.values.lastFrost).toBe('manual');
   });
 
-  it('asks to confirm a frost season that crosses the new year', () => {
+  it('saves a frost season that crosses the new year without asking', () => {
     const s = suggestFrostValues(odd);
     expect(s.crossesYear).toBe(true);
-    expect(frostConfirmReason(s)).toBe('crosses-year');
-    expect(planFrostSave(s, { confirmed: true, probability: 'median' }).ok).toBe(true);
+    expect(frostConfirmReason(s)).toBeNull();
+    const r = planFrostSave(s, { confirmed: false, probability: 'median' });
+    expect(r.ok && r.plan?.provenance.values.lastFrost).toBe('data');
+  });
+
+  it('still asks to confirm a fallback lookup', () => {
+    const s = suggestFrostValues(fallbackFrost('no-station'));
+    expect(frostConfirmReason(s)).toBe('fallback');
+    expect(planFrostSave(s, { confirmed: false, probability: 'median' }).ok).toBe(false);
   });
 
   it('asks when the owner clears a date', () => {

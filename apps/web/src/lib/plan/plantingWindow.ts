@@ -93,8 +93,14 @@ export function deterministicPlantingWindow(
   return { earliest, prime, latest: naturalLatest, note: HARDINESS_NOTE[hardiness] };
 }
 
-/** True when the three dates parse, are ordered, and sit in `year`. */
-export function isValidWindow(w: unknown, year: number): w is PlantingWindow {
+/** True when the three dates parse, are ordered, and sit in `year`. With
+ *  `frost`, a season that crosses the new year also allows dates from the
+ *  earliest planting before its spring frost to its fall frost. */
+export function isValidWindow(
+  w: unknown,
+  year: number,
+  frost?: FrostDatesIso
+): w is PlantingWindow {
   if (!w || typeof w !== 'object') return false;
   const { earliest, prime, latest, note } = w as Record<string, unknown>;
   if (typeof earliest !== 'string' || typeof prime !== 'string' || typeof latest !== 'string') {
@@ -105,8 +111,14 @@ export function isValidWindow(w: unknown, year: number): w is PlantingWindow {
     return false;
   }
   if (!(earliest <= prime && prime <= latest)) return false;
-  const y = String(year);
-  return earliest.startsWith(y) && latest.startsWith(y);
+  let lo = `${year}-01-01`;
+  let hi = `${year}-12-31`;
+  if (frost && parseDay(frost.lastSpring) !== null && parseDay(frost.firstFall) !== null) {
+    const springFloor = addDays(frost.lastSpring, EARLIEST_OFFSET_DAYS.hardy);
+    if (springFloor < lo) lo = springFloor;
+    if (frost.firstFall > hi) hi = frost.firstFall;
+  }
+  return earliest >= lo && latest <= hi;
 }
 
 export function dateFit(dateIso: string, w: PlantingWindow): DateFit | null {

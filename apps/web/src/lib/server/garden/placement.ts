@@ -177,11 +177,11 @@ export function placedPlantingFromCrop(crop: Crop, plugin: GardenCrop | undefine
 export function sharedSpaceWarnings(crop: Crop, lookup: CropLookup): string[] {
   if (!crop.footprint || crop.plantingDate == null) return [];
   const year = new Date(crop.plantingDate).getFullYear();
-  const { firstFallFrostMs } = frostDatesForYear(year);
+  const { firstFallFrostMs, lastSpringFrostMs } = frostDatesForYear(year);
   const mine = plantingOccupancy(
     placedPlantingFromCrop(crop, lookup(crop.cropPluginId)),
     lookup(crop.cropPluginId),
-    { firstFallFrostMs }
+    { firstFallFrostMs, lastSpringFrostMs }
   );
   if (!mine) return [];
   const out: string[] = [];
@@ -189,7 +189,8 @@ export function sharedSpaceWarnings(crop: Crop, lookup: CropLookup): string[] {
     if (other.id === crop.id) continue;
     const plugin = lookup(other.cropPluginId);
     const theirs = plantingOccupancy(placedPlantingFromCrop(other, plugin), plugin, {
-      firstFallFrostMs
+      firstFallFrostMs,
+      lastSpringFrostMs
     });
     if (!theirs || !(theirs.startMs < mine.endMs && mine.startMs < theirs.endMs)) continue;
     if (other.footprint && !footprintsOverlap(other.footprint, crop.footprint)) continue;
@@ -213,7 +214,7 @@ export function linkedSowingClash(
   if (!target.footprint || target.plantingDateMs == null) return null;
   const plugin = lookup(current.cropPluginId);
   const year = new Date(target.plantingDateMs).getFullYear();
-  const { firstFallFrostMs } = frostDatesForYear(year);
+  const { firstFallFrostMs, lastSpringFrostMs } = frostDatesForYear(year);
   const mine = plantingOccupancy(
     {
       ...placedPlantingFromCrop(current, plugin),
@@ -222,7 +223,7 @@ export function linkedSowingClash(
       footprint: target.footprint
     },
     plugin,
-    { firstFallFrostMs }
+    { firstFallFrostMs, lastSpringFrostMs }
   );
   if (!mine) return null;
   for (const other of listCrops({ blockId: target.blockId })) {
@@ -230,7 +231,7 @@ export function linkedSowingClash(
     const theirs = plantingOccupancy(
       placedPlantingFromCrop(other, lookup(other.cropPluginId)),
       lookup(other.cropPluginId),
-      { firstFallFrostMs }
+      { firstFallFrostMs, lastSpringFrostMs }
     );
     if (!theirs || !intervalsOverlapInTime(mine, theirs)) continue;
     if (!footprintsOverlap(other.footprint, target.footprint)) continue;

@@ -237,7 +237,7 @@ export function validateFillProposals(
         footprint
       },
       crop,
-      { firstFallFrostMs: ctx.firstFallFrostMs }
+      { firstFallFrostMs: ctx.firstFallFrostMs, lastSpringFrostMs: ctx.lastSpringFrostMs }
     );
     if (!interval || interval.harvestStartMs > ctx.firstFallFrostMs) continue;
     const clash = [

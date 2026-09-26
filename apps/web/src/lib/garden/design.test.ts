@@ -12,6 +12,7 @@ import {
   type DesignPlantingInput
 } from './design';
 import { canvasFromArea, rectsOverlap } from './geometry';
+import { seasonFrostMs } from './design';
 
 const canvas = canvasFromArea({
   id: 'a',
@@ -265,6 +266,45 @@ describe('designFromSnapshot', () => {
       lastSpringFrostMs: Date.UTC(2026, 3, 20),
       firstFallFrostMs: Date.UTC(2026, 9, 20),
       provenance: 'data'
+    });
+  });
+
+  it('puts a Gulf-coast first frost in the next January', () => {
+    const s = sampleSnapshot({
+      frost: {
+        lastSpring: '01-31',
+        firstFall: '01-06',
+        hardLastSpring: null,
+        hardFirstFall: null,
+        cautious: null,
+        frostFree: false,
+        provenance: 'data',
+        stationName: 'Dauphin Is #2, AL',
+        distanceMi: 3
+      }
+    });
+    const design = designFromSnapshot(s, 'f_garden', { seasonYear: 2027, readOnlyReason: null })!;
+    expect(design.frost.lastSpringFrostMs).toBe(Date.UTC(2027, 0, 31));
+    expect(design.frost.firstFallFrostMs).toBe(Date.UTC(2028, 0, 6));
+  });
+});
+
+describe('seasonFrostMs', () => {
+  it('keeps an ordinary season and falls back on bad dates', () => {
+    expect(seasonFrostMs(2027, '04-15', '10-24')).toEqual({
+      lastSpringFrostMs: Date.UTC(2027, 3, 15),
+      firstFallFrostMs: Date.UTC(2027, 9, 24)
+    });
+    expect(seasonFrostMs(2027, null, '13-40')).toEqual({
+      lastSpringFrostMs: Date.UTC(2027, 3, 15),
+      firstFallFrostMs: Date.UTC(2027, 9, 15)
+    });
+  });
+
+  it('puts a December spring frost in the year before', () => {
+    expect(seasonFrostMs(2027, '12-31', '12-27')).toEqual({
+      lastSpringFrostMs: Date.UTC(2026, 11, 31),
+      firstFallFrostMs: Date.UTC(2027, 11, 27)
     });
   });
 });

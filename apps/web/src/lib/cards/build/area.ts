@@ -213,9 +213,10 @@ export function buildBedMap(snapshot: FarmSnapshot, areaId: string, onMs: number
   });
   if (!design || design.beds.length === 0) return null;
   const intervals = occupancyIntervals(design.plantings, design.crops, {
-    firstFallFrostMs: design.frost.firstFallFrostMs
+    firstFallFrostMs: design.frost.firstFallFrostMs,
+    lastSpringFrostMs: design.frost.lastSpringFrostMs
   });
-  const range = scrubRange(design.seasonYear, intervals, onMs);
+  const range = scrubRange(design.seasonYear, intervals, onMs, design.frost);
   const byId = new Map(design.plantings.map((p) => [p.cropId, p]));
   return {
     widthFt: design.canvas.widthFt,

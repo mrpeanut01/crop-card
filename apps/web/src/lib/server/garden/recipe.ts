@@ -40,7 +40,7 @@ export function applyBedRecipe(
       placedPlantingFromCrop(c, crops[c.cropPluginId])
     ),
     crops,
-    { firstFallFrostMs: frost.firstFallFrostMs }
+    { firstFallFrostMs: frost.firstFallFrostMs, lastSpringFrostMs: frost.lastSpringFrostMs }
   );
   const application = applyRecipe(recipe, {
     bed: { blockId: bed.block.id, widthFt: bed.widthFt, lengthFt: bed.lengthFt },

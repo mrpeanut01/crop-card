@@ -8,8 +8,9 @@ const EARTH_RADIUS_MI = 3958.7613;
 const FT_PER_M = 3.28084;
 
 /** [id, name, lat, lon, elevM, spring32P50, fall32P50, spring32P10, fall32P10,
- *  spring24P50, fall24P50, spring24P10, fall24P10, frostFree?] with day-of-year
- *  (non-leap, Jan 1 = 1) or null. */
+ *  spring24P50, fall24P50, spring24P10, fall24P10, frostFree?, extremeMinF?]
+ *  with day-of-year (non-leap, Jan 1 = 1) or null. `frostFree` is 1 or 0;
+ *  `extremeMinF` is the 1991-2020 mean annual extreme minimum in °F. */
 export type FrostStationRow = readonly (string | number | null)[];
 
 export interface FrostDataset {
@@ -40,8 +41,8 @@ export interface FrostLookupData extends FrostDateSet {
   station: FrostStation;
   frostFree: boolean;
   /** The chosen last-spring 32 °F date falls on or after the first-fall one
-   *  in day-of-year terms: the frost season spans Dec/Jan, which a single
-   *  calendar year's MM-DD pair cannot represent. */
+   *  in day-of-year terms: the frost season spans Dec/Jan and the growing
+   *  season runs across the new year (see `lib/schedule/frostSeason.ts`). */
   crossesYear: boolean;
   median: FrostDateSet;
   cautious: FrostDateSet;
@@ -139,7 +140,10 @@ export function nearestFrostStation(
   dataset: FrostDataset,
   lat: number,
   lon: number,
-  opts: Pick<FrostLookupOptions, 'maxDistanceMi' | 'elevationFt' | 'maxElevDeltaFt'> = {}
+  opts: Pick<FrostLookupOptions, 'maxDistanceMi' | 'elevationFt' | 'maxElevDeltaFt'> & {
+    /** Only consider stations this accepts. */
+    filter?: (row: FrostStationRow) => boolean;
+  } = {}
 ): NearestStation | null {
   if (!validPoint(lat, lon)) return null;
   const maxMi = opts.maxDistanceMi ?? FROST_LOOKUP_MAX_MI;
@@ -150,6 +154,7 @@ export function nearestFrostStation(
     const sLon = num(row, COL.lon);
     if (sLat === null || sLon === null) continue;
     if (Math.abs(sLat - lat) > latSlack) continue;
+    if (opts.filter && !opts.filter(row)) continue;
     if (opts.elevationFt != null && opts.maxElevDeltaFt != null) {
       const elevM = num(row, COL.elevM);
       if (elevM !== null && Math.abs(elevM * FT_PER_M - opts.elevationFt) > opts.maxElevDeltaFt) {

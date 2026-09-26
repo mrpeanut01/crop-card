@@ -39,8 +39,16 @@ export function recentMonths(now: Date, count = 12): MonthOption[] {
   return out;
 }
 
-/** Mid-month for a `YYYY-MM` key, never later than today. */
+/** Picker key for a stand put in before the months listed, such as an
+ *  established hayfield or orchard. */
+export const OLDER_KEY = 'older';
+
+export const OLDER_OPTION: MonthOption = { key: OLDER_KEY, label: 'More than a year ago' };
+
+/** Mid-month for a `YYYY-MM` key, never later than today. `older` picks the
+ *  same month two years back as an editable starting point. */
 export function dateForMonth(key: string, now: Date): string | null {
+  if (key === OLDER_KEY) return ymd(new Date(now.getFullYear() - 2, now.getMonth(), 15));
   const m = /^(\d{4})-(\d{2})$/.exec(key);
   if (!m) return null;
   const year = Number(m[1]);

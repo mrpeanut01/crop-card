@@ -248,6 +248,12 @@
   {#if !selectedCrop}
     <p>Select a hay variety above.</p>
   {:else}
+    {@const planted = data.blocks.find((b) => b.id === blockId)?.hayPlanting}
+    {#if planted && planted.cropPluginId !== selectedCrop.pluginId}
+      <p class="hint" data-testid="hay-thresholds-note">
+        Using {selectedCrop.displayName} thresholds, not {planted.varietyDisplayName}.
+      </p>
+    {/if}
     <p class="hint">
       Mow trigger: <strong>{selectedCrop.hayOperations?.mowTrigger ?? '—'}</strong>. Plugin requires
       a {selectedCrop.hayOperations?.weatherWindowDays}-day dry window.
@@ -316,7 +322,7 @@
 </section>
 
 <section class="card">
-  <h2>Cuttings — block {blockId} / {year}</h2>
+  <h2>Cuttings · {data.blocks.find((b) => b.id === blockId)?.name ?? 'Pick a block'} · {year}</h2>
   {#if data.cuttings.length === 0}
     <p>No cuttings recorded for this block + year.</p>
   {:else}

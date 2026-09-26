@@ -26,6 +26,9 @@ export interface Sprayer {
   lastDeconAt?: number;
   /** UC-45 — set when the sprayer was winterized for the off-season. */
   winterizedAt?: number;
+  /** Starter-library template it was created from, when known. */
+  templateId?: string;
+  tankGal?: number;
 }
 
 function toSprayer(eq: ReturnType<typeof listEquipment>[number]): Sprayer {
@@ -37,7 +40,10 @@ function toSprayer(eq: ReturnType<typeof listEquipment>[number]): Sprayer {
     lastChemistryClass: eq.state.lastChemistryClass,
     lastSprayedAt: eq.state.lastUsedAt,
     lastDeconAt: eq.state.lastDeconAt,
-    winterizedAt: eq.state.winterizedAt
+    winterizedAt: eq.state.winterizedAt,
+    templateId: typeof eq.spec?.templateId === 'string' ? eq.spec.templateId : undefined,
+    tankGal:
+      typeof eq.spec?.tankGal === 'number' && eq.spec.tankGal > 0 ? eq.spec.tankGal : undefined
   };
 }
 

@@ -35,7 +35,7 @@
   </div>
   {#if visible.length === 0}
     <div class="empty">
-      No recommendations in the next 2 weeks. Add a planting or run a wizard pass.
+      No recommendations in the next 2 weeks. Add a planting or open the planning wizard.
     </div>
   {:else}
     {#each visible as s (s.id)}
@@ -64,7 +64,11 @@
     gap: 12px;
   }
   .see-all {
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    min-width: 48px;
+    font-size: 13px;
     color: var(--color-forest);
     font-weight: 600;
     text-decoration: none;
@@ -94,7 +98,9 @@
     background: transparent;
     color: var(--color-forest);
     border: none;
-    padding: 0;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 4px;
     font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;

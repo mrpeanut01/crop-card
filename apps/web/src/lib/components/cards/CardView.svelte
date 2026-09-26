@@ -10,6 +10,7 @@
   } from '$lib/cards/model';
   import type { QrPath } from '$lib/cards/qr';
   import { DEFAULT_PREFS, formatInstant, type Prefs } from '$lib/prefs';
+  import { provenanceText } from '$lib/provenanceLabels';
 
   interface Props {
     card: CardModel;
@@ -41,6 +42,11 @@
     card.kicker.toLowerCase().startsWith(CARD_KIND_LABEL[card.kind].toLowerCase())
   );
   const link = $derived(variant === 'print' ? printLink : null);
+  const safetyFirst = $derived(variant === 'print' ? card.sections.filter((s) => s.safety) : []);
+  const bodySections = $derived(
+    variant === 'print' ? card.sections.filter((s) => !s.safety) : card.sections
+  );
+  const provText = $derived(provenanceText(card.provenance));
   const nextText = $derived(
     card.next ? `${card.next.label}${card.next.due ? ` (${card.next.due})` : ''}` : ''
   );
@@ -75,6 +81,17 @@
         {/each}
       </ul>
     {/if}
+
+    {#each safetyFirst as s (s.title)}
+      <section class="section safety" data-safety-section>
+        <h4>{s.title}</h4>
+        <ul>
+          {#each s.items as item, i (i)}
+            <li>{item}</li>
+          {/each}
+        </ul>
+      </section>
+    {/each}
 
     <div class="content">
       {#if facts.length}
@@ -120,8 +137,8 @@
       {/if}
 
       {#if variant !== 'compact'}
-        {#each card.sections as s (s.title)}
-          <section class="section">
+        {#each bodySections as s (s.title)}
+          <section class="section" class:safety={s.safety}>
             <h4>{s.title}</h4>
             <ul>
               {#each s.items as item, i (i)}
@@ -132,6 +149,9 @@
         {/each}
       {/if}
     </div>
+    {#if variant === 'print' && bodySections.length}
+      <p class="more">Cut short? The label and the live card have the full directions.</p>
+    {/if}
 
     <footer class="foot">
       <span class="asof">As of {asOf}</span>
@@ -139,11 +159,7 @@
         <span class="rules mono">Rules {card.rulesVersion}</span>
       {/if}
       {#if variant === 'print'}
-        <span class="prov-text">
-          {card.provenance
-            .map((p) => (p.detail ? `${p.source} (${p.detail})` : p.source))
-            .join(' · ')}
-        </span>
+        <span class="prov-text">{provText}</span>
       {:else if variant === 'screen'}
         <span class="prov-list">
           {#each card.provenance as p, i (i)}
@@ -437,6 +453,24 @@
   .v-print .foot {
     font-size: 8pt;
     flex: 0 0 auto;
+  }
+  .v-print > .body > .section.safety {
+    flex: 0 0 auto;
+  }
+  .v-print .section.safety ul {
+    font-size: 8.5pt;
+    line-height: 1.25;
+  }
+  .v-print .section.safety h4 {
+    color: #000;
+    font-weight: 700;
+  }
+  .more {
+    margin: 0;
+    flex: 0 0 auto;
+    font-size: 8pt;
+    font-style: italic;
+    color: #333;
   }
   .v-print .qr-row {
     flex: 0 0 auto;

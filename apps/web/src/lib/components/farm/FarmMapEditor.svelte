@@ -13,6 +13,7 @@
   import BlockMap from '$lib/components/BlockMap.svelte';
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { formatAreaAcres } from '$lib/cards/build/size';
   import FarmSketch from '$lib/components/farm/FarmSketch.svelte';
   import AreaAddDrawer from '$lib/components/farm/AreaAddDrawer.svelte';
   import AreaCardSheet from '$lib/components/farm/AreaCardSheet.svelte';
@@ -328,7 +329,11 @@
   let newFieldLength = $state<number | null | undefined>(undefined);
   let creatingField = $state(false);
   let fieldError = $state<string | null>(null);
-  let newFieldKind = $state<AreaKind>('field');
+  let newFieldKind = $state<AreaKind>(
+    untrack(
+      () => (fields.find((f) => f.kind && isCropBearing(f.kind))?.kind as AreaKind) ?? 'field'
+    )
+  );
   let newFieldDetails = $state<DetailsDraft>({});
 
   function setNewFieldKind(kind: AreaKind) {
@@ -400,6 +405,16 @@
     editFieldNotes = f.notes ?? '';
     editFieldWidth = f.widthFt;
     editFieldLength = f.lengthFt;
+  }
+
+  async function sizeArea(id: string) {
+    const f = fields.find((x) => x.id === id);
+    if (!f) return;
+    startEditField(f);
+    await tick();
+    const row = document.querySelector<HTMLElement>(`[data-area-row="${CSS.escape(id)}"]`);
+    row?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row?.querySelector<HTMLInputElement>('.inline-edit input')?.focus();
   }
 
   async function saveEditField() {
@@ -970,6 +985,7 @@
       return !parent || !filter.hidden.includes(parent.kind ?? 'field');
     })}
     onSelectArea={openArea}
+    onSizeArea={canEdit ? sizeArea : undefined}
   />
   {#if canEdit}
     {@const fieldAcresPreview = sketchAcres(newFieldWidth, newFieldLength)}
@@ -1135,9 +1151,10 @@
           <span class="field-stats">
             {AREA_KIND_LABELS[fKind]} ·
             {fieldBlocks.length} block{fieldBlocks.length === 1 ? '' : 's'}
-            {#if fieldAcresDisplay !== null}· {fmt.qty(fieldAcresDisplay, 'area', {
-                digits: 1
-              })}{/if}
+            {#if fieldAcresDisplay !== null && fieldAcresDisplay > 0}· {formatAreaAcres(
+                fieldAcresDisplay,
+                currentPrefs()
+              )}{/if}
             {#if dimsText(f)}· {dimsText(f)}{/if}
           </span>
           {#if canEdit}
@@ -1150,19 +1167,19 @@
                 blockError = null;
               }}
               title="Add block"
-              aria-label="Add block to {f.name}">＋</button
+              aria-label="Add block to {f.name}">+ Block</button
             >
             <button
               class="row-action"
               onclick={() => startEditField(f)}
               title="Edit name and size"
-              aria-label="Edit {f.name}">✏</button
+              aria-label="Edit name and size of {f.name}">Edit size</button
             >
             <button
               class="row-action danger"
               onclick={() => deleteField(f.id, f.name, fieldBlocks.length)}
               aria-label="Delete {f.name}"
-              title="Delete">🗑</button
+              title="Delete">Delete</button
             >
           {/if}
         </div>
@@ -1215,7 +1232,9 @@
           <ul class="block-list-flat">
             {#each fieldBlocks as b (b.id)}
               {@const acresDisplay =
-                b.acres !== undefined ? fmt.qty(b.acres, 'area', { digits: 1 }) : null}
+                b.acres !== undefined && b.acres > 0
+                  ? formatAreaAcres(b.acres, currentPrefs())
+                  : null}
               <li class="block-row">
                 <span class="block-icon">▪</span>
                 <span class="block-name">{b.name}</span>
@@ -1233,14 +1252,17 @@
                   {#if !b.geometryGeojson}<span class="not-drawn">not on map</span>{/if}
                 </span>
                 {#if canEdit}
-                  <button class="row-action" onclick={() => startEditBlock(b)} title="Edit block"
-                    >✏</button
+                  <button
+                    class="row-action"
+                    onclick={() => startEditBlock(b)}
+                    title="Edit block"
+                    aria-label="Edit {b.name}">Edit</button
                   >
                   <button
                     class="row-action danger"
                     onclick={() => deleteBlock(b.id, b.name, b.plantings.length)}
                     aria-label="Delete {b.name}"
-                    title="Delete block">🗑</button
+                    title="Delete block">Delete</button
                   >
                 {/if}
               </li>
@@ -1339,16 +1361,45 @@
 
         {#if canEdit && addingBlockForFieldId === f.id}
           <div class="add-block-inline">
-            <input type="text" placeholder="Block name" bind:value={newBlockName} />
-            <span class="acres-input"
-              ><UnitInput
-                quantity="area"
-                min={0}
-                placeholder={fmt.unit('area')}
-                suffix={false}
-                bind:value={() => newBlockAcres ?? null, (v) => (newBlockAcres = v ?? undefined)}
-              /></span
-            >
+            <input
+              type="text"
+              placeholder={fKind === 'garden' || fKind === 'greenhouse' ? 'Bed name' : 'Block name'}
+              aria-label="Name"
+              bind:value={newBlockName}
+            />
+            {#if fKind === 'garden' || fKind === 'greenhouse'}
+              <span class="acres-input"
+                ><UnitInput
+                  quantity="distance"
+                  min={1}
+                  suffix={false}
+                  placeholder="Width ({fmt.unit('distance')})"
+                  aria-label="Width ({fmt.unit('distance')})"
+                  bind:value={newBlockWidth}
+                /></span
+              >
+              <span aria-hidden="true">×</span>
+              <span class="acres-input"
+                ><UnitInput
+                  quantity="distance"
+                  min={1}
+                  suffix={false}
+                  placeholder="Length ({fmt.unit('distance')})"
+                  aria-label="Length ({fmt.unit('distance')})"
+                  bind:value={newBlockLength}
+                /></span
+              >
+            {:else}
+              <span class="acres-input"
+                ><UnitInput
+                  quantity="area"
+                  min={0}
+                  placeholder={fmt.unit('area')}
+                  suffix={false}
+                  bind:value={() => newBlockAcres ?? null, (v) => (newBlockAcres = v ?? undefined)}
+                /></span
+              >
+            {/if}
             <button
               class="primary small"
               onclick={() => createBlock(f.id)}
@@ -2049,8 +2100,11 @@
     border-radius: 6px;
     min-width: 48px;
     min-height: 48px;
+    padding: 0 10px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-forest-deep);
   }
   .row-action:hover {
     border-color: var(--color-forest-deep);
@@ -2103,9 +2157,11 @@
     color: var(--color-ink);
     padding: 7px 9px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 16px;
     font-family: inherit;
     width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
   }
   textarea {
     font-family: var(--font-mono, ui-monospace, monospace);
@@ -2124,6 +2180,7 @@
 
   .add-block-inline {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     margin: 6px 0 6px 1.5rem;
@@ -2141,6 +2198,7 @@
     border: 0;
     border-radius: 6px;
     padding: 8px 14px;
+    min-height: 48px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -2152,6 +2210,7 @@
   button.small,
   button.primary.small {
     padding: 6px 10px;
+    min-width: 48px;
     font-size: 12px;
   }
   button:not(.primary):not(.row-action):not(.verb):not(.field-name) {
@@ -2159,6 +2218,7 @@
     border: 1px solid var(--color-divider);
     border-radius: 6px;
     padding: 8px 14px;
+    min-height: 48px;
     font-size: 13px;
     cursor: pointer;
   }

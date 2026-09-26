@@ -1,3 +1,4 @@
+import { isContactOrganic } from '$lib/plugins/contactOrganic';
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
 import { getRegistry } from '$lib/server/registry';
@@ -95,14 +96,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       const chemistryClasses = Array.from(
         new Set(h.activeIngredients.map((ai) => ai.chemistryClass))
       );
-      const hracGroups = Array.from(
-        new Set(chemistryClasses.map((c) => String(hracGroupOf(c))).filter((g) => g.length > 0))
-      );
+      const contactOrganic = isContactOrganic(h.activeIngredients);
+      const hracGroups = contactOrganic
+        ? []
+        : Array.from(
+            new Set(chemistryClasses.map((c) => String(hracGroupOf(c))).filter((g) => g.length > 0))
+          );
       return {
         pluginId: h.pluginId,
         displayName: h.displayName,
         applicationTiming: h.applicationTiming,
         chemistryClasses,
+        contactOrganic,
+        activeNames: h.activeIngredients.map((ai) => ai.name),
         hracGroups,
         ratePerAcre: h.ratePerAcre,
         gpaCalibration: h.gpaCalibration,

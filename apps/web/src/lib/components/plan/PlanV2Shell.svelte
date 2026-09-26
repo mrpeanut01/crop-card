@@ -78,6 +78,8 @@
     geometryEditHref?: string;
     /** Gardens and greenhouses listed in the rail with a designer link. */
     gardens?: Array<{ id: string; name: string }>;
+    /** False for helpers: block and map edits are the owner's. */
+    canEdit?: boolean;
   }
   const {
     blocks,
@@ -94,7 +96,8 @@
     onAddPlanting,
     onAddTask,
     geometryEditHref,
-    gardens = []
+    gardens = [],
+    canEdit = true
   }: Props = $props();
 
   // ── URL-driven state ──────────────────────────────────────────────
@@ -284,6 +287,7 @@
         onOpenMap={openMap}
         onRefineWithAi={onOpenWizard}
         onEditBlock={onEditBlock ? () => onEditBlock(selectedBlock.id) : undefined}
+        askOwner={!canEdit}
         onAddPlanting={onAddPlanting ? () => onAddPlanting(selectedBlock.id) : undefined}
       />
 
@@ -370,6 +374,7 @@
     {fields}
     {selectedBlockId}
     {farmLabel}
+    {canEdit}
     onSelect={selectBlock}
   />
 </div>
@@ -431,6 +436,8 @@
     cursor: pointer;
     text-decoration: underline;
     font-family: inherit;
+    min-height: 48px;
+    padding: 0 4px;
   }
   .card-empty {
     background: var(--color-paper);

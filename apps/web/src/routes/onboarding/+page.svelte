@@ -112,14 +112,14 @@
   <title>Set up your farm · CropCard</title>
 </svelte:head>
 
-<main class="ob-wrap">
+<div class="ob-wrap">
   {#if data.screen === 'farm'}
     <header class="intro">
       <div class="kicker-row"><Sun size={12} strokeWidth={2} aria-hidden="true" /> Step 1 of 2</div>
       <h1 class="serif">Tell us about your farm</h1>
       <p class="lede">
         {data.firstName ? `Welcome, ${data.firstName}. ` : 'Welcome. '}Two quick questions and
-        you're in. Your location sets the weather, spray windows and frost dates, so we ask for it
+        you're in. Your location sets the weather, frost dates and planting times, so we ask for it
         first.
       </p>
     </header>
@@ -300,7 +300,7 @@
       </div>
     </form>
   {/if}
-</main>
+</div>
 
 <style>
   .ob-wrap {

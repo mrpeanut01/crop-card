@@ -63,6 +63,23 @@ describe('SetupSpot', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('/api/blocks');
   });
 
+  it('starts inside the matching starter Area and offers its name for an empty one', () => {
+    render(SetupSpot, {
+      areas: [
+        { id: 'a1', name: 'Home Field', kind: 'field', blockCount: 2 },
+        { id: 'a2', name: 'Hayfield', kind: 'pasture', blockCount: 0 }
+      ],
+      canEdit: true,
+      defaultKind: 'pasture',
+      onDone: vi.fn()
+    });
+    expect(screen.getByLabelText('Where is it?')).toHaveValue('a2');
+    const name = screen.getByLabelText('What do you call it?');
+    expect(name).toHaveValue('Hayfield');
+    expect(name).toHaveAttribute('placeholder', 'e.g. Upper paddock');
+    expect(screen.queryByText('What kind of place is it?')).toBeNull();
+  });
+
   it('shows the server error in plain words', async () => {
     fetchMock.mockImplementation(async () => new Response('{}', { status: 403 }));
     render(SetupSpot, { areas: [], canEdit: true, onDone: vi.fn() });

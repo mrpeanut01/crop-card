@@ -27,7 +27,7 @@
 <section class="setup-callout" aria-labelledby="{uid}-title" data-testid={testId}>
   {#if kicker}<p class="kicker">{kicker}</p>{/if}
   <h2 id="{uid}-title" class="serif">{title}</h2>
-  {#if children}<div class="body">{@render children()}</div>{/if}
+  {#if children && canEdit}<div class="body">{@render children()}</div>{/if}
   {#if canEdit}
     {#if actions}<div class="actions">{@render actions()}</div>{/if}
   {:else}
@@ -92,6 +92,6 @@
     padding: var(--space-3);
     border-radius: var(--radius-card);
     background: var(--pill-wheat-bg);
-    color: var(--pill-wheat-fg);
+    color: var(--color-ink);
   }
 </style>

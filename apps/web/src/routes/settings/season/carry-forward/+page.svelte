@@ -45,7 +45,7 @@
   <title>Prep next season · CropCard</title>
 </svelte:head>
 
-<main class="cf-page">
+<div class="cf-page">
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/settings">Settings</a>
     <ChevronRight size={13} aria-hidden="true" />
@@ -186,7 +186,7 @@
       {#if applied}Applied ✓{:else if submitting}Applying…{:else}Apply {data.toYear} prep →{/if}
     </button>
   </div>
-</main>
+</div>
 
 <style>
   .cf-page {

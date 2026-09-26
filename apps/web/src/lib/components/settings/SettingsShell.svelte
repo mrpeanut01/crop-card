@@ -108,8 +108,8 @@
     gap: 14px;
   }
   .back {
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     border-radius: var(--radius-input, 6px);
     border: 1px solid var(--color-divider);
     display: grid;

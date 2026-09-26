@@ -9,7 +9,7 @@
   <title>Choose farm — CropCard</title>
 </svelte:head>
 
-<main class="picker">
+<div class="picker">
   <h1>Choose a farm</h1>
   <p class="hint">
     You're assigned to multiple farms. Pick the one you want to work on; you can switch later from
@@ -28,7 +28,7 @@
       {/each}
     </ul>
   </form>
-</main>
+</div>
 
 <style>
   .picker {

@@ -289,7 +289,7 @@
     {/if}
 
     <div class="layout">
-      <main class="cards">
+      <div class="cards">
         <ProvenanceLegend
           shown={aiEnabled && !planMeta?.fallback
             ? ['plugin', 'data', 'ai', 'manual']
@@ -393,7 +393,7 @@
             </ul>
           </section>
         {/if}
-      </main>
+      </div>
 
       <aside class="shopping">
         <h3>Shopping list</h3>

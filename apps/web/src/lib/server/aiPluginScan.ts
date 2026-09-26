@@ -32,6 +32,7 @@ const MAX_VISION_TOKENS = 1500;
 const MAX_SEARCH_TOKENS = 2500;
 const MAX_WEB_SEARCHES = 4;
 const MAX_CANDIDATES = 3;
+const LOCAL_MAX_CANDIDATES = 8;
 
 export type PluginKindHint = Plugin['type'];
 
@@ -626,44 +627,85 @@ export async function claudePluginSearchByName(
   return { candidates: out, citations, meta };
 }
 
-/** Path B (local branch) — token-overlap match against the live registry.
- *  No AI call; safe to run on every keystroke (debounced client-side). */
+function searchTokens(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length >= 2);
+}
+
+/** Search tokens for a plugin: display name, id and active ingredients. */
+export function pluginSearchTokens(plugin: {
+  pluginId: string;
+  displayName: string;
+  activeIngredients?: ReadonlyArray<{ name?: string }>;
+}): Set<string> {
+  const out = new Set([...searchTokens(plugin.displayName), ...searchTokens(plugin.pluginId)]);
+  for (const ai of plugin.activeIngredients ?? []) {
+    if (ai.name) for (const t of searchTokens(ai.name)) out.add(t);
+  }
+  return out;
+}
+
+/** How well a query matches a plugin, 0-1. Scored on how much of the
+ *  QUERY is covered, so one word ("Sevin", "carbaryl") finds a product
+ *  whose name also carries a maker and an active ingredient. A query word
+ *  may be the start of a name word ("roundu" finds "Roundup"). Returns 0
+ *  unless every query word matches something. */
+export function localMatchScore(query: string, tokens: ReadonlySet<string>): number {
+  const q = [...new Set(searchTokens(query))];
+  if (q.length === 0 || tokens.size === 0) return 0;
+  let covered = 0;
+  let matchedNameTokens = 0;
+  for (const t of q) {
+    if (tokens.has(t)) {
+      covered += 1;
+      matchedNameTokens++;
+      continue;
+    }
+    if (t.length >= 3 && [...tokens].some((n) => n.startsWith(t))) {
+      covered += 0.85;
+      matchedNameTokens++;
+    }
+  }
+  if (matchedNameTokens < q.length) return 0;
+  const coverage = covered / q.length;
+  const tightness = matchedNameTokens / tokens.size;
+  return Math.min(1, coverage * 0.9 + tightness * 0.1);
+}
+
+/** Path B (local branch) — match against the live registry by name, id and
+ *  active ingredient. No AI call; safe to run on every keystroke (debounced
+ *  client-side). */
 export async function localFuzzyMatchPlugins(
   query: string,
   hintType?: PluginKindHint,
-  limit = MAX_CANDIDATES
+  limit = LOCAL_MAX_CANDIDATES
 ): Promise<PluginCandidate[]> {
   if (!query || query.trim().length < 2) return [];
-  const tokA = new Set(
-    query
-      .toLowerCase()
-      .split(/\W+/)
-      .filter((t) => t.length >= 2)
-  );
-  if (tokA.size === 0) return [];
+  if (searchTokens(query).length === 0) return [];
   const registry = await getRegistry();
   const scored = registry
     .all()
     .filter((r) => (hintType ? r.plugin.type === hintType : true))
-    .map((r) => {
-      const tokB = new Set(
-        r.plugin.displayName
-          .toLowerCase()
-          .split(/\W+/)
-          .filter((t) => t.length >= 2)
-      );
-      const idTokens = r.plugin.pluginId.toLowerCase().split('-');
-      for (const t of idTokens) {
-        if (t.length >= 2) tokB.add(t);
-      }
-      let shared = 0;
-      for (const t of tokA) if (tokB.has(t)) shared++;
-      const max = Math.max(tokA.size, tokB.size);
-      const score = max > 0 ? shared / max : 0;
-      return { record: r, score };
-    })
-    .filter((m) => m.score >= 0.3)
-    .sort((a, b) => b.score - a.score)
+    .map((r) => ({
+      record: r,
+      score: localMatchScore(
+        query,
+        pluginSearchTokens(
+          r.plugin as {
+            pluginId: string;
+            displayName: string;
+            activeIngredients?: Array<{ name?: string }>;
+          }
+        )
+      )
+    }))
+    .filter((m) => m.score > 0)
+    .sort(
+      (a, b) =>
+        b.score - a.score || a.record.plugin.displayName.localeCompare(b.record.plugin.displayName)
+    )
     .slice(0, limit);
 
   return scored.map((s) => ({

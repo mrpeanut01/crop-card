@@ -11,6 +11,7 @@
  * primary scout-data source (via scoutLogByBlock()).
  */
 
+import { withClientRecordId } from '$lib/server/clientRecordId';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
@@ -31,7 +32,7 @@ const requestSchema = z.object({
   occurredAt: z.number().int().optional()
 });
 
-export const POST: RequestHandler = async (event) => {
+export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);
   if (auth && !canMutate(auth.role)) {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
@@ -74,4 +75,4 @@ export const POST: RequestHandler = async (event) => {
   });
 
   return json({ observation: persisted }, { status: 201 });
-};
+});

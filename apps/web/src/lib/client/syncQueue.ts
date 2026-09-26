@@ -37,6 +37,7 @@
  */
 
 import { db, type PendingSprayRecord, type PendingRecordKind } from './dexie';
+import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import {
   EXPECTED_OWNER_HEADER,
   classifySubmitFailure,
@@ -272,7 +273,11 @@ async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
   try {
     res = await fetch(endpointForRecord(rec), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', [EXPECTED_OWNER_HEADER]: rec.ownerId },
+      headers: {
+        'Content-Type': 'application/json',
+        [EXPECTED_OWNER_HEADER]: rec.ownerId,
+        [CLIENT_RECORD_HEADER]: rec.id
+      },
       body: JSON.stringify(rec.payload),
       credentials: 'include'
     });
@@ -294,7 +299,20 @@ async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
   };
 }
 
-export async function drainQueue(): Promise<DrainResult> {
+let inflight: Promise<DrainResult> | null = null;
+
+/** Drains the active Owner's queue. Overlapping callers (a flapping
+ *  `online` event, "Sync now" during an auto-drain) share one run, so no
+ *  row is POSTed twice by this tab. */
+export function drainQueue(): Promise<DrainResult> {
+  if (inflight) return inflight;
+  inflight = drainOnce().finally(() => {
+    inflight = null;
+  });
+  return inflight;
+}
+
+async function drainOnce(): Promise<DrainResult> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return emptyResult('offline');
   }

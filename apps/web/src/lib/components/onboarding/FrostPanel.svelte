@@ -21,6 +21,7 @@
     suggestFromStored
   } from '$lib/climate/frostSettings';
   import { formatCalendarDate } from '$lib/prefs';
+  import { colderFrostDates } from '$lib/climate/frostShift';
 
   interface Props {
     lat: number | null;
@@ -114,6 +115,9 @@
     return mmdd ? formatCalendarDate(`2000-${mmdd}`, 'month-day') : 'None on record';
   }
 
+  const REFERENCE_LONG =
+    'Published weather-station averages for your area, not something you entered';
+
   function detail(p: FrostValueProvenance): string {
     if (p === 'data') return suggestion?.sourceLabel ?? 'NOAA 1991-2020 normals';
     if (p === 'fallback') return 'Loudoun County averages';
@@ -125,7 +129,31 @@
     return suggestion?.values[f].value ?? '';
   }
 
+  let colderOpen = $state(false);
+  let colderDays = $state(0);
+
+  const baseSuggestion = $derived.by(() => {
+    if (basis === 'lookup') return lookup ? suggestFrostValues(lookup, {}) : null;
+    if (!stored) return null;
+    return suggestFromStored(stored.values, {}, stored.source);
+  });
+
+  function runColder(days: number) {
+    if (!baseSuggestion) return;
+    const base: Partial<Record<FrostField, string | null>> = {};
+    for (const f of FROST_FIELDS) base[f] = baseSuggestion.values[f].value;
+    edits = colderFrostDates(base, days);
+    colderDays = days;
+    confirmed = false;
+  }
+
+  function resetColder() {
+    edits = {};
+    colderDays = 0;
+  }
+
   function startEditing() {
+    colderOpen = false;
     editing = true;
     const next: Partial<Record<FrostField, string>> = {};
     for (const f of FROST_FIELDS) next[f] = suggestion?.values[f].value ?? '';
@@ -172,7 +200,12 @@
               <dt>{LABEL[f]}</dt>
               <dd>
                 <span class="serif big" data-testid="frost-{f}">{pretty(v.value)}</span>
-                <Provenance source={v.provenance} detail={detail(v.provenance)} />
+                <Provenance
+                  source={v.provenance}
+                  detail={detail(v.provenance)}
+                  label={v.provenance === 'data' ? 'Weather service' : undefined}
+                  long={v.provenance === 'data' ? REFERENCE_LONG : undefined}
+                />
               </dd>
             </div>
           {/each}
@@ -180,7 +213,16 @@
         <p class="hard">
           Hard frost (24 °F or colder): last around {pretty(suggestion.values.lastHardFrost.value)},
           first around {pretty(suggestion.values.firstHardFrost.value)}.
-          <Provenance source={suggestion.values.lastHardFrost.provenance} compact />
+          <Provenance
+            source={suggestion.values.lastHardFrost.provenance}
+            label={suggestion.values.lastHardFrost.provenance === 'data'
+              ? 'Weather service'
+              : undefined}
+            long={suggestion.values.lastHardFrost.provenance === 'data'
+              ? REFERENCE_LONG
+              : undefined}
+            compact
+          />
         </p>
       {:else}
         <div class="edit-grid">
@@ -229,10 +271,49 @@
             <span>Cautious dates (90%). Nine years in ten, frost is gone by then.</span>
           </label>
         {/if}
-        {#if !editing && canEdit}
-          <button type="button" class="ghost" onclick={startEditing}>My place runs colder</button>
+        {#if !editing && canEdit && !colderOpen}
+          <button type="button" class="ghost" onclick={() => (colderOpen = true)}>
+            My place runs colder
+          </button>
         {/if}
       </div>
+
+      {#if colderOpen && !editing && canEdit}
+        <fieldset class="colder">
+          <legend>How much colder?</legend>
+          <p class="muted">
+            Low spots and north slopes often frost later in spring and earlier in fall than the
+            weather station.
+          </p>
+          <div class="colder-options">
+            <button
+              type="button"
+              class="ghost"
+              aria-pressed={colderDays === 7}
+              onclick={() => runColder(7)}
+            >
+              About a week colder
+            </button>
+            <button
+              type="button"
+              class="ghost"
+              aria-pressed={colderDays === 14}
+              onclick={() => runColder(14)}
+            >
+              About two weeks colder
+            </button>
+            {#if colderDays}
+              <button type="button" class="ghost" onclick={resetColder}>
+                Use the station dates
+              </button>
+            {/if}
+          </div>
+          <details class="exact">
+            <summary>Enter exact dates</summary>
+            <button type="button" class="ghost" onclick={startEditing}>Type my own dates</button>
+          </details>
+        </fieldset>
+      {/if}
 
       {#if reason}
         <div class="confirm" role="group" aria-label="Confirm frost dates">
@@ -258,6 +339,36 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+  .colder {
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card);
+    padding: 10px 12px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .colder legend {
+    font-weight: 600;
+    padding: 0 4px;
+  }
+  .colder-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .colder [aria-pressed='true'] {
+    border-color: var(--color-forest);
+    background: var(--pill-forest-bg);
+  }
+  .exact summary {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-forest-deep);
   }
   .frost-head {
     display: flex;

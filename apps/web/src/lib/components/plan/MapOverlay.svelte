@@ -22,6 +22,8 @@
     selectedBlockId?: string;
     farmLabel?: string;
     onSelect?: (blockId: string) => void;
+    /** False for helpers, who can view the farm map but not edit it. */
+    canEdit?: boolean;
   }
   const {
     open,
@@ -30,7 +32,8 @@
     fields = [],
     selectedBlockId,
     farmLabel,
-    onSelect
+    onSelect,
+    canEdit = true
   }: Props = $props();
 
   const selected = $derived(blocks.find((b) => b.id === selectedBlockId));
@@ -82,10 +85,14 @@
       {#if layout.mode === 'none'}
         <div class="empty" data-testid="map-overlay-undrawn">
           <MapPin size={20} />
-          <p>
-            None of your areas or blocks are drawn yet. Draw them on the map, or enter their width
-            and length, in the <a href="/settings/farm/map">farm map editor</a>.
-          </p>
+          {#if canEdit}
+            <p>
+              None of your areas or blocks are drawn yet. Draw them on the map, or enter their width
+              and length, in the <a href="/settings/farm/map">farm map editor</a>.
+            </p>
+          {:else}
+            <p>None of the areas or blocks are drawn yet. Ask the owner to add them to the map.</p>
+          {/if}
         </div>
       {:else}
         <div class="map-canvas">
@@ -182,16 +189,26 @@
           {#if layout.mode === 'sketch'}
             Positions are packed from the widths and lengths you entered, not surveyed.
           {/if}
-          The <a href="/settings/farm/map">farm map editor</a> in Settings is where you draw and resize
-          them.
+          {#if canEdit}
+            The <a href="/settings/farm/map">farm map editor</a> in Settings is where you draw and resize
+            them.
+          {:else}
+            Ask the owner to change blocks.
+          {/if}
         </p>
       </div>
     {/if}
   </div>
   {#snippet footer()}
-    <a class="ghost" href="/settings/farm/map" onclick={onClose}>
-      Open farm map editor <ArrowRight size={13} />
-    </a>
+    {#if canEdit}
+      <a class="ghost" href="/settings/farm/map" onclick={onClose}>
+        Open farm map editor <ArrowRight size={13} />
+      </a>
+    {:else}
+      <a class="ghost" href="/plan/farm-map" onclick={onClose}>
+        Open the farm map card <ArrowRight size={13} />
+      </a>
+    {/if}
   {/snippet}
 </Modal>
 

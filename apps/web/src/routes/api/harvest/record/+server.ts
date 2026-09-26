@@ -6,6 +6,7 @@
  * (e.g., "12 bushels", "lot 2026-A-7").
  */
 
+import { withClientRecordId } from '$lib/server/clientRecordId';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
@@ -95,7 +96,7 @@ const requestSchema = z.object({
   moisturePct: z.number().min(0).max(100).optional()
 });
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
   let body: unknown;
   try {
     body = await request.json();
@@ -185,4 +186,4 @@ export const POST: RequestHandler = async ({ request }) => {
     event,
     phiWarning: phi.decision === 'warn' ? { message: phi.message, conflicts: phi.conflicts } : null
   });
-};
+});

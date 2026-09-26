@@ -98,9 +98,35 @@ describe('CardView', () => {
     expect(getByText('Next:')).toBeInTheDocument();
     expect(getByText('Beds')).toBeInTheDocument();
     expect(container.querySelector('.prov-text')?.textContent).toMatch(
-      /manual \(kind picked by you\)/
+      /You typed \(kind picked by you\)/
     );
     expect(container.querySelector('.qr')).toBeNull();
+  });
+
+  it('print: decon-first and bee cautions sit above the clipped content on a spray card', () => {
+    const gear = sampleGearSnapshot();
+    const product = gear.sprayProducts!['24d'];
+    gear.sprayProducts!['24d'] = {
+      ...product,
+      pollinator: { beeToxicity: 'highly-toxic', bloomRestriction: 'prohibited-during-bloom' }
+    } as typeof product;
+    const card = buildSprayCard(gear, 'eq_boom~24d')!;
+    const { container } = render(CardView, { card, variant: 'print', prefs });
+    const safety = [...container.querySelectorAll('[data-safety-section]')];
+    const body = container.querySelector('.body')!;
+    const content = container.querySelector('.content')!;
+    expect(safety.map((s) => s.querySelector('h4')?.textContent)).toEqual([
+      card.sections[0].title,
+      'Before you spray'
+    ]);
+    expect(card.sections[0].title).toMatch(/^Decon first/);
+    for (const s of safety) {
+      expect(s.parentElement).toBe(body);
+      expect(content.contains(s)).toBe(false);
+    }
+    expect(safety[1].textContent).toMatch(/bloom/);
+    expect(container.querySelector('.notices')?.textContent).toMatch(/Decon first/);
+    expect(container.querySelector('.more')?.textContent).toMatch(/label/);
   });
 
   it('print: skips the kind label when the kicker already names the kind', () => {

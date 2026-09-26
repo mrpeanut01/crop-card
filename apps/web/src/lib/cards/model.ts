@@ -30,6 +30,8 @@ export interface CardAction {
 export interface CardSection {
   title: string;
   items: string[];
+  /** Safety content (decon, pollinator cautions). Print never clips it. */
+  safety?: boolean;
 }
 
 export interface CardProvenance {

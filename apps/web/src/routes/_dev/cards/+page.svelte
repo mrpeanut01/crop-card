@@ -20,7 +20,7 @@
 
 <svelte:head><title>Cards preview · CropCard</title></svelte:head>
 
-<main class="wrap">
+<div class="wrap">
   <div class="no-print">
     <h1 class="serif">Cards preview</h1>
     <p>Sample snapshot rendered by the Planting and Area builders.</p>
@@ -54,7 +54,7 @@
   </div>
 
   <CardPrintSheet {cards} {layout} origin={snapshot.origin} preview />
-</main>
+</div>
 
 <style>
   .wrap {

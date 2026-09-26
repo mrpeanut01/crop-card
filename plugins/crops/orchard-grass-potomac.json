@@ -21,5 +21,42 @@
     "continuous": true,
     "beeAttractive": true
   },
-  "archetype": "forage-cutting-cycle"
+  "archetype": "forage-cutting-cycle",
+  "hayOperations": {
+    "steps": [
+      "mow",
+      "ted",
+      "rake",
+      "bale",
+      "store"
+    ],
+    "cuttingsPerSeason": {
+      "min": 3,
+      "max": 4
+    },
+    "cutIntervalDays": {
+      "min": 30,
+      "max": 40
+    },
+    "mowTrigger": "boot to early head on the first cut",
+    "weatherWindowDays": 3,
+    "baleMoistureGate": {
+      "small-square": {
+        "warnAbovePct": 18,
+        "dangerAbovePct": 22,
+        "optimumPercent": {
+          "min": 14,
+          "max": 18
+        }
+      },
+      "large-round": {
+        "warnAbovePct": 16,
+        "dangerAbovePct": 20,
+        "optimumPercent": {
+          "min": 12,
+          "max": 16
+        }
+      }
+    }
+  }
 }

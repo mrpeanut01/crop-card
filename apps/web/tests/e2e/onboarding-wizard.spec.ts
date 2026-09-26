@@ -37,6 +37,14 @@ test.describe('two-screen onboarding', () => {
     await expect(page.getByTestId('frost-lastFrost')).toHaveText(median ?? '');
 
     await frost.getByRole('button', { name: 'My place runs colder' }).click();
+    await frost.getByRole('button', { name: 'About a week colder' }).click();
+    await expect(page.getByTestId('frost-lastFrost')).not.toHaveText(median ?? '');
+    await expect(frost.locator('[data-provenance="manual"]').first()).toBeVisible();
+    await frost.getByRole('button', { name: 'Use the station dates' }).click();
+    await expect(page.getByTestId('frost-lastFrost')).toHaveText(median ?? '');
+    await expect(frost.locator('[data-provenance="manual"]')).toHaveCount(0);
+    await frost.getByText('Enter exact dates').click();
+    await frost.getByRole('button', { name: 'Type my own dates' }).click();
     await frost.getByLabel('Last spring frost').fill('04-28');
 
     await expect(cont).toBeEnabled();

@@ -96,8 +96,9 @@
   .close {
     background: transparent;
     border: none;
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
     border-radius: var(--radius-pill);
     font-size: 22px;
     line-height: 1;

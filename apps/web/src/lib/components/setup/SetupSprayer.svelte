@@ -11,15 +11,18 @@
     templates: SprayerTemplateTile[];
     canEdit: boolean;
     onDone: (result: SetupSprayerResult) => void;
+    /** Called once the sprayer exists and calibration starts. */
+    onCreated?: (result: SetupSprayerResult) => void;
   }
 
-  const { templates, canEdit, onDone }: Props = $props();
+  const { templates, canEdit, onDone, onCreated }: Props = $props();
   const uid = $props.id();
 
   let name = $state('');
   let savingId = $state<string | null>(null);
   let error = $state<string | null>(null);
   let created = $state<SetupSprayerResult | null>(null);
+  let createdTile = $state<SprayerTemplateTile | null>(null);
 
   async function pick(tile: SprayerTemplateTile) {
     if (savingId) return;
@@ -32,6 +35,8 @@
         return;
       }
       created = out.result;
+      createdTile = tile;
+      onCreated?.(out.result);
     } catch {
       error = "We couldn't reach CropCard. Check your signal and try again.";
     } finally {
@@ -58,7 +63,13 @@
     a rate for it.
   </div>
   <SetupCalibration
-    sprayer={{ id: created.sprayerId, label: created.label, calibratedGpa: null }}
+    sprayer={{
+      id: created.sprayerId,
+      label: created.label,
+      calibratedGpa: null,
+      templateId: createdTile?.templateId,
+      tankGal: createdTile?.tankGal ?? undefined
+    }}
     canSave
     onDone={calibrated}
   />
@@ -207,6 +218,6 @@
     padding: var(--space-3);
     border-radius: var(--radius-card);
     background: var(--pill-wheat-bg);
-    color: var(--pill-wheat-fg);
+    color: var(--color-ink);
   }
 </style>

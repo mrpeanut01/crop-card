@@ -23,8 +23,13 @@ export interface GettingStartedFacts {
   hasCalibratedSprayer: boolean;
   hasHelper: boolean;
   hasAiKey: boolean;
+  /** The owner chose to go without the planning assistant. */
+  assistantSkipped?: boolean;
   hasPinnedCards: boolean | null;
 }
+
+/** Per-Owner setting written when the owner skips the planning assistant. */
+export const ASSISTANT_SKIPPED_SETTING = 'onboarding_assistant_skipped';
 
 export type GettingStartedItemId =
   | 'location'
@@ -54,7 +59,7 @@ export const GETTING_STARTED_HREFS: Record<GettingStartedItemId, string> = {
   equipment: '/equipment',
   calibrate: '/calibrate',
   helper: '/settings/helpers',
-  assistant: '/settings/ai',
+  assistant: '/settings/ai/about',
   cards: '/cards'
 };
 
@@ -142,7 +147,7 @@ export function gettingStartedItems(f: GettingStartedFacts): GettingStartedItem[
       'assistant',
       'Turn on the planning assistant',
       'Adds Claude suggestions to planning. Everything works without it.',
-      f.hasAiKey,
+      f.hasAiKey || f.assistantSkipped === true,
       true
     ),
     item(

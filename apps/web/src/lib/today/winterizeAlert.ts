@@ -46,13 +46,17 @@ function lastActivity(s: SprayerWinterizeInput): number {
  */
 export function deriveWinterizeAlerts(
   sprayers: SprayerWinterizeInput[],
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
+  /** Sprayers known to have been used before this season. When given, a
+   *  sprayer new this season (nothing to winterize yet) is left out. */
+  usedBeforeSeason?: ReadonlySet<string>
 ): WinterizeAlert[] {
   const seasonStart = startOfSeason(nowMs);
   const alerts: WinterizeAlert[] = [];
   for (const s of sprayers) {
     const touchedThisSeason = lastActivity(s) >= seasonStart;
     if (!touchedThisSeason) continue;
+    if (usedBeforeSeason && !usedBeforeSeason.has(s.id)) continue;
     const winterizedThisSeasonOrLater = (s.winterizedAt ?? 0) >= seasonStart;
     // If the sprayer was winterized within this season it is fine — the
     // reminder is only for tanks that came out of storage un-winterized.

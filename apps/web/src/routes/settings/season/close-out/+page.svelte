@@ -90,7 +90,7 @@
   <title>Close season · CropCard</title>
 </svelte:head>
 
-<main class="closeout-page">
+<div class="closeout-page">
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/settings">Settings</a>
     <ChevronRight size={13} aria-hidden="true" />
@@ -252,7 +252,7 @@
       {/if}
     </div>
   {/if}
-</main>
+</div>
 
 <style>
   .closeout-page {

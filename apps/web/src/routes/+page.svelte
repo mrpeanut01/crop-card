@@ -37,7 +37,7 @@
   />
 </svelte:head>
 
-<main class="landing" aria-labelledby="hero-title">
+<section class="landing" aria-labelledby="hero-title">
   <section class="hero">
     <div class="hero-inner">
       <a href="/" class="brand" aria-label="CropCard home">
@@ -330,7 +330,7 @@
       </small>
     </footer>
   </section>
-</main>
+</section>
 
 <style>
   /* Layout — split-screen on desktop, stacked on mobile (form first). */

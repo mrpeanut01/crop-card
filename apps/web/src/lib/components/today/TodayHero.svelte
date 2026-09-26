@@ -132,8 +132,8 @@
       </div>
       <h2 class="serif action-title">All caught up.</h2>
       <p class="action-body">
-        Nothing's overdue, nothing's scheduled today, and no spray or harvest windows open in the
-        next 24 hours. Browse the week strip below for what's coming.
+        Nothing's overdue and nothing needs doing in the next 24 hours. The week below shows what's
+        coming.
       </p>
     </div>
   {/if}

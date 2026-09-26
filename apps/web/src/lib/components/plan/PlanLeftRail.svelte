@@ -171,8 +171,8 @@
     justify-content: space-between;
   }
   .add {
-    width: 28px;
-    height: 28px;
+    width: 48px;
+    height: 48px;
     border-radius: 6px;
     background: transparent;
     border: 1px solid var(--color-divider);

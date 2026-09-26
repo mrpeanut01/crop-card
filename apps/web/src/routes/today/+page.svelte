@@ -366,7 +366,7 @@
     {aiEnabled}
     onSkip={(taskId, reason) => patchTask(taskId, { action: 'abort', reason })}
   />
-  <QuickActions />
+  <QuickActions profile={data.farmProfile} />
 </div>
 
 {#if data.winterizeAlerts.length > 0}

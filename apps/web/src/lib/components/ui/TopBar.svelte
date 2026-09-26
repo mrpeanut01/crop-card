@@ -11,7 +11,8 @@
     FileText,
     Layers,
     Bell,
-    Settings
+    Settings,
+    Ellipsis
   } from 'lucide-svelte';
   import IconButton from './IconButton.svelte';
   import Avatar from './Avatar.svelte';
@@ -118,6 +119,13 @@
     return path === href || path.startsWith(`${href}/`);
   }
 
+  // Below 400px the bottom bar keeps the five field tabs and folds the rest
+  // into More, so every tab stays a 48px target.
+  const PRIMARY_COUNT = 5;
+  const moreItems = $derived(items.slice(PRIMARY_COUNT));
+  const moreActive = $derived(moreItems.some((i) => isActive(i.href)));
+  let moreOpen = $state(false);
+
   const avatarName = $derived(user?.name ?? user?.email ?? (user?.phone ? '#' : '?'));
 </script>
 
@@ -134,14 +142,40 @@
   </div>
 
   <nav aria-label="Primary" class="primary-nav">
-    {#each items as item (item.href)}
+    {#each items as item, i (item.href)}
       {@const Icon = item.icon}
       {@const active = isActive(item.href)}
-      <a href={item.href} class="nav-link" class:active aria-current={active ? 'page' : undefined}>
+      <a
+        href={item.href}
+        class="nav-link"
+        class:secondary={i >= PRIMARY_COUNT}
+        class:active
+        aria-current={active ? 'page' : undefined}
+      >
         <Icon size={15} strokeWidth={1.75} />
         <span>{item.label}</span>
       </a>
     {/each}
+    <details class="more-nav" bind:open={moreOpen}>
+      <summary class="nav-link" class:active={moreActive} aria-label="More pages">
+        <Ellipsis size={15} strokeWidth={1.75} />
+        <span>More</span>
+      </summary>
+      <div class="more-menu">
+        {#each moreItems as item (item.href)}
+          {@const Icon = item.icon}
+          <a
+            href={item.href}
+            class="more-link"
+            aria-current={isActive(item.href) ? 'page' : undefined}
+            onclick={() => (moreOpen = false)}
+          >
+            <Icon size={16} strokeWidth={1.75} />
+            <span>{item.label}</span>
+          </a>
+        {/each}
+      </div>
+    </details>
   </nav>
 
   <div class="right">
@@ -503,6 +537,56 @@
       min-height: 48px;
     }
     .nav-link.active {
+      background: var(--pill-forest-bg);
+      color: var(--pill-forest-fg);
+    }
+  }
+
+  .more-nav {
+    display: none;
+  }
+  @media (max-width: 400px) {
+    .nav-link.secondary {
+      display: none;
+    }
+    .more-nav {
+      display: flex;
+      flex: 1;
+      position: relative;
+    }
+    .more-nav summary {
+      list-style: none;
+      cursor: pointer;
+      width: 100%;
+    }
+    .more-nav summary::-webkit-details-marker {
+      display: none;
+    }
+    .more-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      min-width: 180px;
+      background: var(--color-paper);
+      border: 1px solid var(--color-divider);
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(26, 31, 26, 0.18);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+    }
+    .more-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 0 12px;
+      border-radius: 6px;
+      color: var(--color-ink);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .more-link[aria-current='page'] {
       background: var(--pill-forest-bg);
       color: var(--pill-forest-fg);
     }

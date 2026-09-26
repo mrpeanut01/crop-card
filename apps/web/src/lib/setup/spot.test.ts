@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { NEW_AREA, planSpot, saveSpot } from './spot';
+import { NEW_AREA, defaultSpotArea, emptyAreas, planSpot, saveSpot, wholeAreaPlan } from './spot';
 import type { SetupArea } from './types';
 
 const AREAS: SetupArea[] = [
@@ -55,6 +55,44 @@ describe('planSpot', () => {
       AREAS
     );
     expect(plan.ok).toBe(false);
+  });
+});
+
+describe('spot size and starter Areas', () => {
+  it('turns width and length in feet into acres for the block', () => {
+    const plan = planSpot(
+      { name: 'Salad bed', areaId: 'a-garden', kind: 'garden', widthFt: 30, lengthFt: 20 },
+      AREAS
+    );
+    expect(plan).toMatchObject({
+      ok: true,
+      block: { size: { widthFt: 30, lengthFt: 20 } }
+    });
+    if (!plan.ok) throw new Error('plan');
+    expect(plan.block.size!.acres).toBeCloseTo(600 / 43_560, 8);
+  });
+
+  it('asks for both measurements or neither', () => {
+    const plan = planSpot(
+      { name: 'Salad bed', areaId: 'a-garden', kind: 'garden', widthFt: 30, lengthFt: null },
+      AREAS
+    );
+    expect(plan.ok).toBe(false);
+  });
+
+  it('plants a whole empty Area as one spot named after it', () => {
+    const areas = [
+      { id: 'h', name: 'Hayfield', kind: 'pasture' as const, blockCount: 0 },
+      { id: 'g', name: 'Kitchen Garden', kind: 'garden' as const, blockCount: 3 }
+    ];
+    expect(emptyAreas(areas).map((a) => a.id)).toEqual(['h']);
+    expect(wholeAreaPlan(areas[0])).toEqual({
+      ok: true,
+      area: { id: 'h' },
+      block: { name: 'Hayfield', kind: 'block' }
+    });
+    expect(defaultSpotArea(areas, 'garden')?.id).toBe('g');
+    expect(defaultSpotArea(areas, 'orchard')).toBeNull();
   });
 });
 

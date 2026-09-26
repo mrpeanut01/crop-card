@@ -167,7 +167,10 @@ function dilutionFacts(
   ];
 }
 
-function deconSection(product: SnapshotSprayProduct, sprayer: SnapshotEquipment): CardSection {
+function deconSection(
+  product: SnapshotSprayProduct,
+  sprayer: SnapshotEquipment
+): CardSection & { required: boolean } {
   const state = sprayer.state;
   const last = (state?.lastChemistryClass ?? undefined) as SprayerLoadClass | undefined;
   const check = checkCrossContaminationForClasses(product.loadClasses as SprayerLoadClass[], {
@@ -180,7 +183,9 @@ function deconSection(product: SnapshotSprayProduct, sprayer: SnapshotEquipment)
     const protocol = selectDeconProtocol(last);
     return {
       title: `Decon first: ${protocol.label}`,
-      items: [`Last load was ${last}.`, ...protocol.steps]
+      items: [`Last load was ${last}.`, ...protocol.steps],
+      safety: true,
+      required: true
     };
   }
   const after = selectDeconProtocol(product.loadClasses[0] as SprayerLoadClass | undefined);
@@ -189,7 +194,9 @@ function deconSection(product: SnapshotSprayProduct, sprayer: SnapshotEquipment)
     items: [
       last ? `Last load was ${last}; no decon needed first.` : 'Tank is clean on record.',
       `Before a different chemistry: ${after.label.toLowerCase()}.`
-    ]
+    ],
+    safety: true,
+    required: false
   };
 }
 
@@ -258,16 +265,21 @@ function productCard(
     facts.push({ label: 'Target', value: product.targets.join(', '), provenance: 'plugin' });
   }
 
-  const sections: CardSection[] = [
-    {
-      title: 'Mix order',
-      items: product.mixSteps.length
-        ? product.mixSteps
-        : ['Follow the mixing directions on the label.']
-    },
-    { title: 'Before you spray', items: beforeYouSpray(product) },
-    deconSection(product, sprayer)
-  ];
+  const { required: deconRequired, ...decon } = deconSection(product, sprayer);
+  const mix: CardSection = {
+    title: 'Mix order',
+    items: product.mixSteps.length
+      ? product.mixSteps
+      : ['Follow the mixing directions on the label.']
+  };
+  const before: CardSection = {
+    title: 'Before you spray',
+    items: beforeYouSpray(product),
+    safety: true
+  };
+  const sections: CardSection[] = deconRequired ? [decon, before, mix] : [before, mix, decon];
+  const notices = sprayNotices(snapshot);
+  if (deconRequired) notices.unshift(`${decon.title}. Run it before you mix this product.`);
 
   const provenance: CardProvenance[] = [
     { source: 'plugin', detail: `${product.pluginId} · v${product.version}` },
@@ -279,10 +291,12 @@ function productCard(
     kicker: `Spray · ${sprayer.label}`,
     title: product.displayName,
     facts,
-    next: { label: 'Record this spray', href: RECORD_HREF[product.type] },
+    next: deconRequired
+      ? { label: 'Run decon first', href: `/spray/decon?sprayer=${encodeURIComponent(sprayer.id)}` }
+      : { label: 'Record this spray', href: RECORD_HREF[product.type] },
     sections,
     provenance: mergeProvenance(provenance),
-    notices: sprayNotices(snapshot)
+    notices
   };
 }
 

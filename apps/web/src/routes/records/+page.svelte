@@ -156,17 +156,19 @@
     <a class="btn-ghost" href="/api/spray/records/export.pdf{exportQuery}" download>
       <FileText size={13} /> PDF
     </a>
-    <a
-      class="btn-primary"
-      href="/api/records/export.vdacs.pdf{exportQuery}"
-      download
-      title="VDACS-formatted audit pack: spray + insecticide + fungicide records, owner identity, integrity hash"
-    >
-      <Lock size={13} /> VDACS audit PDF
-    </a>
-    <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
-      <FileText size={13} /> USDA / NRCS CSV
-    </a>
+    {#if data.chrome === 'full'}
+      <a
+        class="btn-primary"
+        href="/api/records/export.vdacs.pdf{exportQuery}"
+        download
+        title="VDACS-formatted audit pack: spray + insecticide + fungicide records, owner identity, integrity hash"
+      >
+        <Lock size={13} /> VDACS audit PDF
+      </a>
+      <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
+        <FileText size={13} /> USDA / NRCS CSV
+      </a>
+    {/if}
     <a
       class="btn-secondary"
       class:has-pending={pendingCount && pendingCount > 0}
@@ -285,26 +287,28 @@
       {/if}
     </article>
 
-    <article class="review-card">
-      <h3>Philosophy compliance</h3>
-      <p class="philosophy-line">
-        Evaluated against <strong
-          >{PHILOSOPHY_LABELS[yearSummary.philosophy.philosophy] ??
-            yearSummary.philosophy.philosophy}</strong
-        >.
-      </p>
-      <ul class="stat-list">
-        <li>
-          <Pill tone="forest">{yearSummary.philosophy.compliantApplications}</Pill> compliant
-        </li>
-        <li>
-          <Pill tone="rust">{yearSummary.philosophy.nonCompliantApplications}</Pill> non-compliant
-        </li>
-        <li>
-          <Pill tone="neutral">{yearSummary.philosophy.unknownApplications}</Pill> unclassified
-        </li>
-      </ul>
-    </article>
+    {#if data.chrome === 'full'}
+      <article class="review-card">
+        <h3>Philosophy compliance</h3>
+        <p class="philosophy-line">
+          Evaluated against <strong
+            >{PHILOSOPHY_LABELS[yearSummary.philosophy.philosophy] ??
+              yearSummary.philosophy.philosophy}</strong
+          >.
+        </p>
+        <ul class="stat-list">
+          <li>
+            <Pill tone="forest">{yearSummary.philosophy.compliantApplications}</Pill> compliant
+          </li>
+          <li>
+            <Pill tone="rust">{yearSummary.philosophy.nonCompliantApplications}</Pill> non-compliant
+          </li>
+          <li>
+            <Pill tone="neutral">{yearSummary.philosophy.unknownApplications}</Pill> unclassified
+          </li>
+        </ul>
+      </article>
+    {/if}
 
     <article class="review-card">
       <h3>Harvest by archetype</h3>
@@ -344,23 +348,26 @@
       </ul>
     </article>
 
-    <article class="review-card">
-      <h3>Decon + calibration</h3>
-      <ul class="stat-list">
-        <li>
-          <strong class="mono"
-            >{yearSummary.compliance.calibratedSprayerCount}/{yearSummary.compliance
-              .sprayerCount}</strong
-          > sprayers calibrated
-        </li>
-        <li>
-          <strong class="mono">{yearSummary.compliance.calibratedThisYear}</strong> calibrated this year
-        </li>
-        <li>
-          <strong class="mono">{yearSummary.compliance.deconEventsThisYear}</strong> decon events
-        </li>
-      </ul>
-    </article>
+    {#if data.chrome === 'full'}
+      <article class="review-card">
+        <h3>Decon + calibration</h3>
+        <ul class="stat-list">
+          <li>
+            <strong class="mono"
+              >{yearSummary.compliance.calibratedSprayerCount}/{yearSummary.compliance
+                .sprayerCount}</strong
+            > sprayers calibrated
+          </li>
+          <li>
+            <strong class="mono">{yearSummary.compliance.calibratedThisYear}</strong> calibrated this
+            year
+          </li>
+          <li>
+            <strong class="mono">{yearSummary.compliance.deconEventsThisYear}</strong> decon events
+          </li>
+        </ul>
+      </article>
+    {/if}
   </div>
 </section>
 
@@ -515,31 +522,78 @@
   </section>
 {/if}
 
-<section class="footer-cards">
-  <article class="reassurance">
-    <div class="reassurance-kicker">Integrity hash</div>
-    <p>
-      Each record carries per-plugin content hashes, and every export prints a SHA-256 of its
-      canonical row set. Re-exporting the same records reproduces the same hash; a change after the
-      FR-09 lock alters it.
+{#snippet complianceCards()}
+  <section class="footer-cards">
+    <article class="reassurance">
+      <div class="reassurance-kicker">Integrity hash</div>
+      <p>
+        Each record carries per-plugin content hashes, and every export prints a SHA-256 of its
+        canonical row set. Re-exporting the same records reproduces the same hash; a change after
+        the FR-09 lock alters it.
+      </p>
+      <a class="reassurance-link" href="/api/records/export.vdacs.pdf{exportQuery}" download>
+        Download VDACS audit pack <ArrowRight size={12} />
+      </a>
+    </article>
+    <article class="reassurance">
+      <div class="reassurance-kicker">Inspector access</div>
+      <p>
+        Invite a VDACS inspector or CSA member as a read-only inspector. They sign in with their own
+        account and see this view without edit access.
+      </p>
+      <a class="reassurance-link ghost" href="/settings/helpers">
+        <Plus size={12} /> Invite an inspector
+      </a>
+    </article>
+  </section>
+{/snippet}
+
+{#if data.chrome === 'full'}
+  {@render complianceCards()}
+{:else}
+  <details class="pesticide-fold" data-testid="records-pesticide-fold">
+    <summary>Pesticide record-keeping (applies if you spray)</summary>
+    <p class="fold-lede">
+      Virginia asks anyone who sprays a pesticide to keep these records. Nothing here needs your
+      attention until you record a spray.
     </p>
-    <a class="reassurance-link" href="/api/records/export.vdacs.pdf{exportQuery}" download>
-      Download VDACS audit pack <ArrowRight size={12} />
-    </a>
-  </article>
-  <article class="reassurance">
-    <div class="reassurance-kicker">Inspector access</div>
-    <p>
-      Invite a VDACS inspector or CSA member as a read-only inspector. They sign in with their own
-      account and see this view without edit access.
-    </p>
-    <a class="reassurance-link ghost" href="/settings/helpers">
-      <Plus size={12} /> Invite an inspector
-    </a>
-  </article>
-</section>
+    <div class="fold-actions">
+      <a class="btn-ghost" href="/api/records/export.vdacs.pdf{exportQuery}" download>
+        <Lock size={13} /> VDACS audit PDF
+      </a>
+      <a class="btn-ghost" href="/api/spray/records/export.usda.csv{exportQuery}" download>
+        <FileText size={13} /> USDA / NRCS CSV
+      </a>
+    </div>
+    {@render complianceCards()}
+  </details>
+{/if}
 
 <style>
+  .pesticide-fold {
+    margin: 18px 0;
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-card, 12px);
+    background: var(--color-paper);
+    padding: 0 16px;
+  }
+  .pesticide-fold summary {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--color-forest-deep);
+  }
+  .fold-lede {
+    margin: 0 0 10px;
+  }
+  .fold-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
   .page-header {
     margin-bottom: 14px;
   }

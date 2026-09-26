@@ -91,6 +91,20 @@ test.describe('first-use hints', () => {
     await expect(tip).toBeVisible();
     await expect(tip).toContainText('Start here.');
     await expect(page.getByRole('note', { name: 'Tip' })).toHaveCount(1);
+    const ratio = await tip.evaluate((el) => {
+      const lum = (c: string) => {
+        const parts = (c.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+        const [r, g, b] = parts.map((v) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const fg = lum(getComputedStyle(el.querySelector('p')!).color);
+      const bg = lum(getComputedStyle(el).backgroundColor);
+      return (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
+    });
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
     await tip.getByRole('button', { name: 'Got it' }).click();
     await expect(tip).toHaveCount(0);
 

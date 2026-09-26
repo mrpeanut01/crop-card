@@ -7,6 +7,7 @@ import {
   restoreGettingStarted
 } from '$lib/onboarding/state.server';
 import { loadGettingStartedFacts } from '$lib/onboarding/gettingStarted.server';
+import { getFarmProfile } from '$lib/onboarding/state.server';
 import { currentUser } from '$lib/server/auth';
 import { listBlocks } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
@@ -32,7 +33,8 @@ import { getUserAiEnabled } from '$lib/server/aiTry';
 import { loadTodayWeather } from '$lib/server/todayWeather';
 import { derivePriorityAction } from '$lib/today/priorityAction';
 import { deriveSeasonGlance, startOfYear } from '$lib/today/seasonGlance';
-import { deriveWinterizeAlerts } from '$lib/today/winterizeAlert';
+import { deriveWinterizeAlerts, startOfSeason } from '$lib/today/winterizeAlert';
+import { equipmentIdsActiveBefore } from '$lib/db/equipment';
 import { prefsFor } from '$lib/db/userProfile';
 import { todayYmd } from '$lib/prefs';
 
@@ -195,7 +197,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
   // UC-45 — next-spring reminder for sprayers used this season but not
   // winterized after the prior one. Informational (assists, never gates).
-  const winterizeAlerts = deriveWinterizeAlerts(sprayers, now);
+  const winterizeAlerts = deriveWinterizeAlerts(
+    sprayers,
+    now,
+    equipmentIdsActiveBefore(startOfSeason(now))
+  );
 
   return {
     today,
@@ -213,6 +219,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       activeCrops: activeCrops.length
     },
     sprayers,
+    farmProfile: getFarmProfile(),
     gettingStarted,
     pluginFailures: stats.failures,
     // Legacy: keep these so the existing template still has data while we

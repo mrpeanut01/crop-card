@@ -1,6 +1,10 @@
 import type { PageServerLoad } from './$types';
 import { listBlocks } from '$lib/db/blocks';
-import { recordsApproachingRetention } from '$lib/db/sprayEvents';
+import { listSprayEvents, recordsApproachingRetention } from '$lib/db/sprayEvents';
+import { listInsecticideEvents } from '$lib/db/insecticideEvents';
+import { listFungicideEvents } from '$lib/db/fungicideEvents';
+import { complianceChromeLevel } from '$lib/records/complianceChrome';
+import { getFarmProfile } from '$lib/onboarding/state.server';
 import { listSprayers } from '$lib/server/sprayers';
 import { listYearsWithCrops } from '$lib/db/crops';
 import { requireUser } from '$lib/server/auth';
@@ -63,7 +67,14 @@ export const load: PageServerLoad = async (event) => {
   ).sort((a, b) => b - a);
   const yearSummary = await buildYearSummary(selectedYear, user.activeOwnerId, prefs);
 
+  const chrome = complianceChromeLevel(getFarmProfile(), {
+    sprays: listSprayEvents({ limit: 1 }).length,
+    insecticides: listInsecticideEvents({ limit: 1 }).length,
+    fungicides: listFungicideEvents({ limit: 1 }).length
+  });
+
   return {
+    chrome,
     records: filteredRecords,
     summary,
     approachingRetention: approaching.map((e) => e.id),

@@ -15,7 +15,14 @@ import { and, asc, desc, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { fromHundredths, toHundredths, toStorage, type StockUnit } from '$lib/stock/units';
 import { db } from './client';
 import { stockItems, stockLots, stockMovements } from './schema';
-import { tenantValues, tenantWhere, withTenant } from './tenant';
+import { preparedOnce, requestMemo } from './requestMemo';
+import {
+  tenantParams,
+  tenantValues,
+  tenantWherePrepared,
+  withTenant,
+  withTenantPrepared
+} from './tenant';
 
 export type StockCategory =
   'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'seed' | 'adjuvant' | 'fuel' | 'part';
@@ -291,20 +298,86 @@ export function listItemsWithPendingRefresh(): Array<{
 
 /** All items, with on-hand balance + low-stock flag computed in one pass. */
 export function listStockItems(): StockItemWithBalance[] {
-  const items = db.select().from(stockItems).where(tenantWhere(stockItems)).all().map(rowToItem);
-  return items.map((item) => withBalance(item));
+  return stockSnapshot().items.map((i) => ({ ...i }));
 }
 
-function withBalance(item: StockItem): StockItemWithBalance {
-  const lots = db
-    .select()
+type LotRow = typeof stockLots.$inferSelect;
+
+interface LotBalanceRow {
+  lot: LotRow;
+  balanceHundredths: number;
+}
+
+interface StockSnapshot {
+  items: StockItemWithBalance[];
+  lotsByItem: Map<string, LotBalanceRow[]>;
+}
+
+/** Every lot of the active Owner (or of one item) with its balance summed
+ *  from `stock_movements` in one grouped query, oldest receipt first.
+ *  Sprint 4 (#200 / CT-HS-004): every receipt is a positive-delta movement,
+ *  so the balance is the movement sum alone; `received_quantity_hundredths`
+ *  is the denormalized cache that initialized the lot. */
+function lotsWithBalancesQuery(byItem: boolean) {
+  return db
+    .select({
+      lot: stockLots,
+      balanceHundredths: sql<number>`coalesce(sum(${stockMovements.deltaHundredths}), 0)`
+    })
     .from(stockLots)
-    .where(withTenant(stockLots, eq(stockLots.stockItemId, item.id)))
-    .all();
+    .leftJoin(
+      stockMovements,
+      withTenantPrepared(stockMovements, eq(stockMovements.stockLotId, stockLots.id))
+    )
+    .where(
+      withTenantPrepared(
+        stockLots,
+        byItem ? eq(stockLots.stockItemId, sql.placeholder('stockItemId')) : undefined
+      )
+    )
+    .groupBy(stockLots.id)
+    .orderBy(asc(stockLots.receivedAt), sql`${stockLots}.rowid`)
+    .prepare();
+}
+
+const allLotsStmt = preparedOnce(() => lotsWithBalancesQuery(false));
+const itemLotsStmt = preparedOnce(() => lotsWithBalancesQuery(true));
+const allItemsStmt = preparedOnce(() =>
+  db.select().from(stockItems).where(tenantWherePrepared(stockItems)).prepare()
+);
+
+function lotsWithBalances(stockItemId?: string): LotBalanceRow[] {
+  return stockItemId === undefined
+    ? allLotsStmt().all(tenantParams())
+    : itemLotsStmt().all(tenantParams({ stockItemId }));
+}
+
+function computeStockSnapshot(): StockSnapshot {
+  const items = allItemsStmt().all(tenantParams()).map(rowToItem);
+  const lotsByItem = new Map<string, LotBalanceRow[]>();
+  for (const row of lotsWithBalances()) {
+    const list = lotsByItem.get(row.lot.stockItemId);
+    if (list) list.push(row);
+    else lotsByItem.set(row.lot.stockItemId, [row]);
+  }
+  return {
+    items: items.map((item) => withBalance(item, lotsByItem.get(item.id) ?? [])),
+    lotsByItem
+  };
+}
+
+/** Items + lot balances for the active Owner, shared by the root layout and
+ *  the page load of one request (see `requestMemo`). Read-only: the public
+ *  functions below hand out copies. */
+function stockSnapshot(): StockSnapshot {
+  return requestMemo('stock.snapshot', computeStockSnapshot);
+}
+
+function withBalance(item: StockItem, lots: LotBalanceRow[]): StockItemWithBalance {
   let totalHundredths = 0;
   let earliestExpiry: number | undefined;
-  for (const lot of lots) {
-    totalHundredths += lotBalanceHundredths(lot.id, lot.receivedQuantityHundredths);
+  for (const { lot, balanceHundredths } of lots) {
+    totalHundredths += balanceHundredths;
     if (lot.expiresAt) {
       const ts = lot.expiresAt.getTime();
       if (earliestExpiry === undefined || ts < earliestExpiry) earliestExpiry = ts;
@@ -323,23 +396,23 @@ function withBalance(item: StockItem): StockItemWithBalance {
   };
 }
 
-/** Per-lot on-hand balance derived purely from `stock_movements`. Sprint 4
- *  (#200 / CT-HS-004) — until this commit the receipt was written as a
- *  delta=0 row and the lot's `received_quantity_hundredths` was added on
- *  top, which made the movement ledger show "0 gal received" while the
- *  balance still summed correctly. After the Sprint 4 backfill + receipt
- *  write fix, every receipt is a positive-delta movement and
- *  `received_quantity_hundredths` is the denormalized cache that
- *  initialized the lot — no longer added at read time. `receivedHundredths`
- *  is left in the signature for call-site clarity but not folded into the
- *  total. */
-function lotBalanceHundredths(lotId: string, _receivedHundredths: number): number {
+/** One lot's balance, read fresh for the write paths below. */
+function lotBalanceHundredths(lotId: string): number {
   const sum = db
     .select({ total: sql<number>`coalesce(sum(${stockMovements.deltaHundredths}), 0)` })
     .from(stockMovements)
     .where(withTenant(stockMovements, eq(stockMovements.stockLotId, lotId)))
     .get();
   return sum?.total ?? 0;
+}
+
+function toLotWithBalance(row: LotBalanceRow, now: number): LotWithBalance {
+  const lot = rowToLot(row.lot);
+  return {
+    ...lot,
+    balance: fromHundredths(row.balanceHundredths),
+    daysUntilExpiry: lot.expiresAt ? Math.floor((lot.expiresAt - now) / 86400000) : null
+  };
 }
 
 // ─── Lots ────────────────────────────────────────────────────────────────
@@ -426,22 +499,8 @@ function rowToLot(row: typeof stockLots.$inferSelect): StockLot {
 }
 
 export function listLotsForItem(stockItemId: string): LotWithBalance[] {
-  const lots = db
-    .select()
-    .from(stockLots)
-    .where(withTenant(stockLots, eq(stockLots.stockItemId, stockItemId)))
-    .orderBy(asc(stockLots.receivedAt))
-    .all();
   const now = Date.now();
-  return lots.map((row) => {
-    const balanceHundredths = lotBalanceHundredths(row.id, row.receivedQuantityHundredths);
-    const lot = rowToLot(row);
-    return {
-      ...lot,
-      balance: fromHundredths(balanceHundredths),
-      daysUntilExpiry: lot.expiresAt ? Math.floor((lot.expiresAt - now) / 86400000) : null
-    };
-  });
+  return lotsWithBalances(stockItemId).map((row) => toLotWithBalance(row, now));
 }
 
 // ─── Movements / decrement ───────────────────────────────────────────────
@@ -558,7 +617,7 @@ export function setOnHandQuantity(input: SetQuantityInput): SetQuantityResult {
 
   let currentHundredths = 0;
   for (const lot of lots) {
-    currentHundredths += lotBalanceHundredths(lot.id, lot.receivedQuantityHundredths);
+    currentHundredths += lotBalanceHundredths(lot.id);
   }
   const deltaHundredths = targetHundredths - currentHundredths;
   const result: SetQuantityResult = {
@@ -659,7 +718,7 @@ export function decrementForUse(input: {
   let remaining = requestedHundredths;
   for (const lot of lots) {
     if (remaining <= 0) break;
-    const balance = lotBalanceHundredths(lot.id, lot.receivedQuantityHundredths);
+    const balance = lotBalanceHundredths(lot.id);
     if (balance <= 0) continue;
     const take = Math.min(balance, remaining);
     const id = randomUUID();
@@ -713,16 +772,19 @@ export function lowStockItems(): StockItemWithBalance[] {
 }
 
 export function expiringSoon(windowDays = 30): Array<{
-  item: StockItem;
+  item: StockItemWithBalance;
   lot: LotWithBalance;
 }> {
-  const out: Array<{ item: StockItem; lot: LotWithBalance }> = [];
-  for (const item of listStockItems()) {
-    for (const lot of listLotsForItem(item.id)) {
+  const { items, lotsByItem } = stockSnapshot();
+  const now = Date.now();
+  const out: Array<{ item: StockItemWithBalance; lot: LotWithBalance }> = [];
+  for (const item of items) {
+    for (const row of lotsByItem.get(item.id) ?? []) {
+      const lot = toLotWithBalance(row, now);
       if (lot.daysUntilExpiry === null) continue;
       if (lot.daysUntilExpiry < 0 || lot.daysUntilExpiry > windowDays) continue;
       if (lot.balance <= 0) continue;
-      out.push({ item, lot });
+      out.push({ item: { ...item }, lot });
     }
   }
   return out.sort((a, b) => (a.lot.daysUntilExpiry ?? 0) - (b.lot.daysUntilExpiry ?? 0));

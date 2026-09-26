@@ -32,7 +32,7 @@
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { type SQL, and, eq } from 'drizzle-orm';
+import { type SQL, and, eq, sql } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 
 // ─── Tenant-scoped table brand ──────────────────────────────────────────
@@ -53,7 +53,13 @@ export type TenantScopedTable = SQLiteTable & TenantScoped;
 
 // ─── Request-scoped context ─────────────────────────────────────────────
 
-const storage = new AsyncLocalStorage<{ ownerId: string }>();
+interface TenantStore {
+  ownerId: string;
+  /** Per-request memo for repeated reads (see `requestMemo.ts`). */
+  memo: Map<string, unknown>;
+}
+
+const storage = new AsyncLocalStorage<TenantStore>();
 
 /** Run `fn` with `ownerId` bound as the active tenant. Repos called inside
  *  `fn` see `requireOwnerId() === ownerId`. Outside any `runWithTenant`,
@@ -62,7 +68,7 @@ export function runWithTenant<T>(ownerId: string, fn: () => T): T {
   if (!ownerId || typeof ownerId !== 'string') {
     throw new Error('runWithTenant: ownerId must be a non-empty string');
   }
-  return storage.run({ ownerId }, fn);
+  return storage.run({ ownerId, memo: new Map() }, fn);
 }
 
 /** Like `runWithTenant`, but the wrapped `fn` is awaited. Useful in tests
@@ -71,7 +77,7 @@ export function runWithTenantAsync<T>(ownerId: string, fn: () => Promise<T>): Pr
   if (!ownerId || typeof ownerId !== 'string') {
     throw new Error('runWithTenantAsync: ownerId must be a non-empty string');
   }
-  return storage.run({ ownerId }, fn);
+  return storage.run({ ownerId, memo: new Map() }, fn);
 }
 
 /** Current active tenant, or null if no context is set. Most code wants
@@ -80,6 +86,12 @@ export function runWithTenantAsync<T>(ownerId: string, fn: () => Promise<T>): Pr
  *  outside a tenant. */
 export function currentOwnerId(): string | null {
   return storage.getStore()?.ownerId ?? null;
+}
+
+/** The memo map of the innermost tenant run, or null outside one. Each
+ *  `runWithTenant` gets a fresh map, so entries never cross Owners. */
+export function currentTenantMemo(): Map<string, unknown> | null {
+  return storage.getStore()?.memo ?? null;
 }
 
 /** Throws if called outside a `runWithTenant` block. Used by the scoped
@@ -129,6 +141,44 @@ export function withTenant<T extends TenantScopedTable>(
   const composed = and(tenantWhere(table), ...filtered);
   if (!composed) throw new Error('withTenant: failed to compose conditions');
   return composed;
+}
+
+// ─── Scoped query primitives (prepared statements) ──────────────────────
+//
+// A statement built once with Drizzle's `.prepare()` outlives the request
+// that built it, so it cannot capture the Owner id. These helpers bind the
+// Owner to a named placeholder instead; `tenantParams()` fills it from the
+// active tenant on every execution (and throws outside one, like the
+// helpers above). Executing without `tenantParams()` fails in Drizzle with
+// a missing-placeholder error rather than reading unscoped.
+
+export const TENANT_PLACEHOLDER = 'tenantOwnerId';
+
+/** `tenantWhere` for a prepared statement. */
+export function tenantWherePrepared<T extends TenantScopedTable>(table: T): SQL {
+  return eq(table.ownerId, sql.placeholder(TENANT_PLACEHOLDER));
+}
+
+/** `withTenant` for a prepared statement. */
+export function withTenantPrepared<T extends TenantScopedTable>(
+  table: T,
+  ...extraConditions: Array<SQL | undefined>
+): SQL {
+  const filtered = extraConditions.filter((c): c is SQL => c !== undefined);
+  if (filtered.length === 0) return tenantWherePrepared(table);
+  const composed = and(tenantWherePrepared(table), ...filtered);
+  if (!composed) throw new Error('withTenantPrepared: failed to compose conditions');
+  return composed;
+}
+
+/** Execution params for a statement built with the prepared helpers. */
+export function tenantParams<P extends Record<string, unknown> = Record<never, never>>(
+  params?: P
+): P & { [TENANT_PLACEHOLDER]: string } {
+  if (params && TENANT_PLACEHOLDER in params) {
+    throw new Error(`tenantParams: '${TENANT_PLACEHOLDER}' is set from the active tenant only`);
+  }
+  return { ...(params ?? ({} as P)), [TENANT_PLACEHOLDER]: requireOwnerId() };
 }
 
 // ─── Scoped query primitives (write) ────────────────────────────────────

@@ -28,6 +28,7 @@ import {
 } from '$lib/db/cardSnapshot';
 import { listEquipment } from '$lib/db/equipment';
 import { listStockItems } from '$lib/db/stock';
+import { dbChangeMarker } from '$lib/db/requestMemo';
 import { requireOwnerId } from '$lib/db/tenant';
 import type { CropPlugin, Plugin } from '$lib/plugins/schemas';
 import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
@@ -38,6 +39,7 @@ import { getRegistry } from './registry';
 import { sprayTermsFor } from './sprayTerms';
 
 const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
 export const SNAPSHOT_TASK_PAST_DAYS = 14;
 export const SNAPSHOT_TASK_FUTURE_DAYS = 30;
 
@@ -255,12 +257,20 @@ export function engineHarvestWindow(
   };
 }
 
+/** The time the snapshot's date windows are cut at: `now` rounded down to
+ *  the hour, so the content (and its ETag) only moves with the data or on
+ *  the hour, and `snapshotStateKey` can name it without building. */
+export function snapshotWindowTime(now: number): number {
+  return Math.floor(now / HOUR_MS) * HOUR_MS;
+}
+
 export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promise<FarmSnapshot> {
   const ownerId = requireOwnerId();
   const now = opts.now ?? Date.now();
+  const windowNow = snapshotWindowTime(now);
   const registry = await getRegistry();
 
-  const plantings = listPlantingsForCards(now);
+  const plantings = listPlantingsForCards(windowNow);
   const cropPlugins: Record<string, SnapshotCropPlugin> = {};
   for (const id of new Set(plantings.map((p) => p.cropPluginId))) {
     const rec = registry.get(id);
@@ -289,13 +299,13 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     rulesVersion: RULES_VERSION,
     origin: opts.origin ?? null,
     areas: listAreas().map(toArea),
-    blocks: listBlocks()
+    blocks: listBlocks({ plantings: 'none' })
       .map(toBlock)
       .sort((a, b) => a.id.localeCompare(b.id)),
     plantings,
     tasks: listOpenTasksForCards(
-      now - SNAPSHOT_TASK_PAST_DAYS * DAY_MS,
-      now + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS
+      windowNow - SNAPSHOT_TASK_PAST_DAYS * DAY_MS,
+      windowNow + SNAPSHOT_TASK_FUTURE_DAYS * DAY_MS
     ),
     equipment: listEquipment()
       .filter((e) => e.retiredAt === undefined)
@@ -316,6 +326,61 @@ export function snapshotEtag(snapshot: FarmSnapshot): string {
   const { generatedAt: _generatedAt, ...rest } = snapshot;
   const digest = createHash('sha256').update(JSON.stringify(rest)).digest('base64url');
   return `W/"${digest.slice(0, 32)}"`;
+}
+
+const registryIds = new WeakMap<object, number>();
+let nextRegistryId = 1;
+
+function registryIdentity(registry: object): number {
+  let id = registryIds.get(registry);
+  if (id === undefined) {
+    id = nextRegistryId++;
+    registryIds.set(registry, id);
+  }
+  return id;
+}
+
+/** Everything a snapshot is a function of, without building it: the Owner,
+ *  the database change marker (any row written anywhere, or a commit from
+ *  another connection, moves it), the plugin registry instance this Owner
+ *  sees, the hour its date windows are cut at, the origin, and the rules
+ *  and bundle versions. Equal keys mean an equal snapshot, give or take
+ *  `generatedAt`. Read it before building, so a write that lands mid-build
+ *  can only make the next key differ. */
+export async function snapshotStateKey(opts: {
+  now: number;
+  origin: string | null;
+}): Promise<string> {
+  const ownerId = requireOwnerId();
+  const registry = await getRegistry();
+  return JSON.stringify([
+    ownerId,
+    dbChangeMarker(),
+    registryIdentity(registry),
+    snapshotWindowTime(opts.now),
+    opts.origin,
+    RULES_VERSION,
+    FARM_SNAPSHOT_VERSION
+  ]);
+}
+
+const MAX_KNOWN_ETAGS = 1000;
+const knownEtags = new Map<string, { key: string; etag: string }>();
+
+/** The ETag last built for this Owner, if it was built from the same state. */
+export function knownSnapshotEtag(key: string): string | null {
+  const hit = knownEtags.get(requireOwnerId());
+  return hit && hit.key === key ? hit.etag : null;
+}
+
+export function rememberSnapshotEtag(key: string, etag: string): void {
+  const ownerId = requireOwnerId();
+  knownEtags.delete(ownerId);
+  knownEtags.set(ownerId, { key, etag });
+  if (knownEtags.size > MAX_KNOWN_ETAGS) {
+    const oldest = knownEtags.keys().next().value;
+    if (oldest !== undefined) knownEtags.delete(oldest);
+  }
 }
 
 export function etagMatches(ifNoneMatch: string | null, etag: string): boolean {

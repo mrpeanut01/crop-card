@@ -21,6 +21,10 @@ ruleTester.run('no-raw-tenant-table', rule, {
     `db.select().from(blocks).where(tenantWhere(blocks));`,
     `db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id)));`,
     `db.insert(sprayEvents).values(tenantValues({ blockId: 1 }));`,
+    `const q = db.select().from(blocks).where(tenantWherePrepared(blocks)).prepare();`,
+    `function build() {
+       return db.select().from(stockLots).where(withTenantPrepared(stockLots, eq(stockLots.id, p))).prepare();
+     }`,
     `function crossTenant() {
        unscopedQueryNote('superadmin lookup');
        return db.select().from(blocks);

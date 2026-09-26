@@ -18,6 +18,27 @@
   let online = $state(true);
   let waitingWorker = $state<ServiceWorker | null>(null);
   let updateDismissed = $state(false);
+  // An Owner switch in another tab moves the shared session cookie; this
+  // tab still shows (and queues records for) the Owner it rendered for.
+  let staleOwnerId = $state<string | null>(null);
+  const staleOwnerName = $derived(
+    data.availableOwners?.find((o) => o.id === staleOwnerId)?.name ?? 'another farm'
+  );
+  const currentOwnerId = $derived(data.activeOwner?.id ?? data.user?.activeOwnerId ?? null);
+
+  // Mount and client-side Owner changes (e.g. the owner picker) both land
+  // here: keep this tab's queue key in step and tell other tabs.
+  $effect(() => {
+    const ownerId = currentOwnerId;
+    if (!ownerId) return;
+    staleOwnerId = null;
+    Promise.all([import('$lib/client/syncQueue'), import('$lib/client/ownerSync')])
+      .then(([queue, sync]) => {
+        queue.primeActiveOwnerId(ownerId);
+        sync.announceOwnerToTabs(ownerId);
+      })
+      .catch(() => undefined);
+  });
 
   function reloadIntoNewVersion() {
     const worker = waitingWorker;
@@ -36,6 +57,7 @@
     window.addEventListener('offline', updateOnline);
 
     let cleanupSync: (() => void) | undefined;
+    let stopOwnerWatch: (() => void) | undefined;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
     const activeOwnerId = data.activeOwner?.id ?? data.user?.activeOwnerId ?? null;
@@ -71,6 +93,12 @@
         // without this the key is null and drainQueue would fail-safe to a
         // no-op (records stranded) while enqueue mis-tags rows.
         primeActiveOwnerId(activeOwnerId);
+        if (activeOwnerId) {
+          const { isStaleOwner, watchOwnerSwitches } = await import('$lib/client/ownerSync');
+          stopOwnerWatch = watchOwnerSwitches((observed) => {
+            staleOwnerId = isStaleOwner(currentOwnerId, observed) ? observed : null;
+          });
+        }
         cleanupSync = watchOnline();
         const refresh = async () => {
           try {
@@ -90,6 +118,7 @@
       window.removeEventListener('online', updateOnline);
       window.removeEventListener('offline', updateOnline);
       cleanupSync?.();
+      stopOwnerWatch?.();
       stopSwUpdates?.();
       if (pollInterval) clearInterval(pollInterval);
     };
@@ -123,6 +152,19 @@
     alerts={data.navAlerts}
     {onSwitchOwner}
   />
+{/if}
+
+{#if staleOwnerId}
+  <Banner tone="rust" urgent>
+    You switched to <strong>{staleOwnerName}</strong> in another tab. This tab still shows
+    <strong>{data.activeOwner?.name ?? 'the previous farm'}</strong>; queued records wait until you
+    reload.
+    {#snippet action()}
+      <button type="button" class="banner-link-btn" onclick={() => window.location.reload()}>
+        Reload tab
+      </button>
+    {/snippet}
+  </Banner>
 {/if}
 
 {#if !online}

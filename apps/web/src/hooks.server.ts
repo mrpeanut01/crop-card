@@ -14,6 +14,11 @@ import { owners, users, helperAssignments } from '$lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { lookupByPlaintext, touchToken } from '$lib/server/apiTokens';
 import { OWNER_HEADER } from '$lib/client/swTenantKey';
+import {
+  EXPECTED_OWNER_HEADER,
+  OWNER_MISMATCH_CODE,
+  expectedOwnerDecision
+} from '$lib/client/ownerSync';
 import { maybeStartPushScheduler } from '$lib/server/push/scheduler';
 import { hostRedirectTarget, parseRedirectHosts } from '$lib/server/hostRedirect';
 
@@ -350,6 +355,21 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   const activeOwnerId = user.activeOwnerId;
+  // Offline-queue replays name the Owner the row was recorded under. If the
+  // cookie moved to another Owner (switch in a second tab), refuse before
+  // the endpoint runs rather than writing the row under the wrong farm.
+  if (
+    expectedOwnerDecision(event.request.headers.get(EXPECTED_OWNER_HEADER), activeOwnerId) ===
+    'mismatch'
+  ) {
+    return withOwnerHeader(
+      json(
+        { error: 'active owner changed', code: OWNER_MISMATCH_CODE },
+        { status: 409, headers: { 'cache-control': 'no-store' } }
+      ),
+      activeOwnerId
+    );
+  }
   const response = await runWithTenantAsync(activeOwnerId, () => Promise.resolve(resolve(event)));
   return withOwnerHeader(response, activeOwnerId);
 };

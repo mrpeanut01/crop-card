@@ -25,14 +25,51 @@
  * accepts any offline-capable record kind and `drainQueue` POSTs each to the
  * kind's endpoint (ENDPOINT_BY_KIND). `enqueueSprayRecord` is retained as a
  * herbicide-kind wrapper for back-compat.
+ *
+ * Stale-tab guard: `cropcard.activeOwnerId` is per tab, but the session
+ * cookie is shared, so a switch in another tab leaves this tab's id stale.
+ * Before replaying anything, `drainQueue` confirms the server's active Owner
+ * matches the tab's and halts on a mismatch; each replay POST also names its
+ * row's Owner (`EXPECTED_OWNER_HEADER`) so the server refuses it if the
+ * session moves mid-drain. A definitive 4xx (e.g. a foreign-ref 400 or a
+ * kernel 422) marks the row `rejected` so it stops retrying and waits for
+ * the operator on /records/pending.
  */
 
 import { db, type PendingSprayRecord, type PendingRecordKind } from './dexie';
+import {
+  EXPECTED_OWNER_HEADER,
+  classifySubmitFailure,
+  fetchServerActiveOwner,
+  type SubmitFailure
+} from './ownerSync';
+
+export type DrainHalt = 'offline' | 'no-active-owner' | 'owner-unverified' | 'owner-mismatch';
 
 export interface DrainResult {
   succeeded: string[];
+  /** Transient failures; retried on the next drain. */
   failed: { id: string; error: string }[];
+  /** Definitive 4xx; parked until the operator retries or discards. */
+  rejected: { id: string; status: number; error: string }[];
   skippedOtherOwner: number;
+  /** Previously rejected rows left alone by this drain. */
+  skippedRejected: number;
+  /** Why the drain stopped early, if it did. */
+  halted: DrainHalt | null;
+  /** The server's active Owner when it disagreed with this tab's. */
+  serverOwnerId?: string | null;
+}
+
+function emptyResult(halted: DrainHalt | null): DrainResult {
+  return {
+    succeeded: [],
+    failed: [],
+    rejected: [],
+    skippedOtherOwner: 0,
+    skippedRejected: 0,
+    halted
+  };
 }
 
 /** #316 — replay endpoint per record kind. Each POST re-runs the server
@@ -209,60 +246,110 @@ export async function discardPendingForActiveOwner(id: string): Promise<boolean>
   return true;
 }
 
-async function submitOne(rec: PendingSprayRecord): Promise<unknown> {
-  const res = await fetch(endpointForRecord(rec), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(rec.payload),
-    credentials: 'include'
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`HTTP ${res.status}: ${body.slice(0, 240)}`);
+/** Operator "retry" for a rejected row: clears the rejection so the next
+ *  drain replays it. Scoped to the active Owner like discard. */
+export async function retryRejectedForActiveOwner(id: string): Promise<boolean> {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return false;
+  const target = await db().pendingSprayRecords.get(id);
+  if (!target || target.ownerId !== ownerId || target.status !== 'rejected') return false;
+  await db()
+    .pendingSprayRecords.where('id')
+    .equals(id)
+    .modify((r) => {
+      delete r.status;
+      delete r.lastStatus;
+    });
+  return true;
+}
+
+type SubmitOutcome =
+  { ok: true } | { ok: false; kind: SubmitFailure; status: number; error: string };
+
+async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
+  let res: Response;
+  try {
+    res = await fetch(endpointForRecord(rec), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', [EXPECTED_OWNER_HEADER]: rec.ownerId },
+      body: JSON.stringify(rec.payload),
+      credentials: 'include'
+    });
+  } catch (e) {
+    return {
+      ok: false,
+      kind: 'retry',
+      status: 0,
+      error: e instanceof Error ? e.message : String(e)
+    };
   }
-  return res.json();
+  if (res.ok) return { ok: true };
+  const body = await res.text().catch(() => '');
+  return {
+    ok: false,
+    kind: classifySubmitFailure(res.status, body),
+    status: res.status,
+    error: `HTTP ${res.status}: ${body.slice(0, 240)}`
+  };
 }
 
 export async function drainQueue(): Promise<DrainResult> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    return { succeeded: [], failed: [], skippedOtherOwner: 0 };
+    return emptyResult('offline');
   }
   const ownerId = currentOwnerId();
   // #314 — FAIL SAFE. If we don't know the active owner we must NOT drain:
   // an unfiltered drain would replay every tenant's rows against whichever
   // session is live. Treat null as "no active owner, skip entirely".
-  if (!ownerId) {
-    return { succeeded: [], failed: [], skippedOtherOwner: 0 };
-  }
+  if (!ownerId) return emptyResult('no-active-owner');
+
   const allPending = await listPending();
-  const succeeded: string[] = [];
-  const failed: { id: string; error: string }[] = [];
-  let skippedOtherOwner = 0;
+  const result = emptyResult(null);
+  const mine: PendingSprayRecord[] = [];
   for (const rec of allPending) {
     const decision = drainDecisionFor(ownerId, rec.ownerId);
-    if (decision === 'halt-no-active-owner') {
-      // Unreachable given the guard above, but keeps the contract explicit.
-      break;
-    }
-    if (decision === 'skip-other-owner') {
-      skippedOtherOwner++;
+    if (decision === 'halt-no-active-owner') return emptyResult('no-active-owner');
+    if (decision === 'skip-other-owner') result.skippedOtherOwner++;
+    else if (rec.status === 'rejected') result.skippedRejected++;
+    else mine.push(rec);
+  }
+  if (mine.length === 0) return result;
+
+  const serverOwnerId = await fetchServerActiveOwner();
+  if (serverOwnerId !== ownerId) {
+    result.halted = serverOwnerId === null ? 'owner-unverified' : 'owner-mismatch';
+    result.serverOwnerId = serverOwnerId;
+    return result;
+  }
+
+  for (const rec of mine) {
+    const outcome = await submitOne(rec);
+    if (outcome.ok) {
+      await db().pendingSprayRecords.delete(rec.id);
+      result.succeeded.push(rec.id);
       continue;
     }
-    try {
-      await submitOne(rec);
-      await db().pendingSprayRecords.delete(rec.id);
-      succeeded.push(rec.id);
-    } catch (e) {
-      const errMsg = e instanceof Error ? e.message : String(e);
-      await db().pendingSprayRecords.update(rec.id, {
-        attempts: rec.attempts + 1,
-        lastErrorAt: Date.now(),
-        lastError: errMsg
-      });
-      failed.push({ id: rec.id, error: errMsg });
+    if (outcome.kind === 'owner-mismatch') {
+      // The session moved to another Owner mid-drain; the server ran nothing.
+      // Leave this row and the rest untouched for when this farm is active.
+      result.halted = 'owner-mismatch';
+      break;
     }
+    const patch: Partial<PendingSprayRecord> = {
+      attempts: rec.attempts + 1,
+      lastErrorAt: Date.now(),
+      lastError: outcome.error,
+      lastStatus: outcome.status
+    };
+    if (outcome.kind === 'rejected') {
+      patch.status = 'rejected';
+      result.rejected.push({ id: rec.id, status: outcome.status, error: outcome.error });
+    } else {
+      result.failed.push({ id: rec.id, error: outcome.error });
+    }
+    await db().pendingSprayRecords.update(rec.id, patch);
   }
-  return { succeeded, failed, skippedOtherOwner };
+  return result;
 }
 
 /** Auto-drain on reconnect. Call once during app init. */

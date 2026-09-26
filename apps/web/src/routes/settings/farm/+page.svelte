@@ -9,6 +9,7 @@
   import BlockMap from '$lib/components/BlockMap.svelte';
   import { fmt } from '$lib/prefsState.svelte';
   import FrostPanel from '$lib/components/onboarding/FrostPanel.svelte';
+  import ZoneChip from '$lib/components/farm/ZoneChip.svelte';
   import { kindStyle } from '$lib/farm/kindStyle';
 
   const { data, form } = $props();
@@ -80,6 +81,14 @@
         lon={typeof lon === 'number' && Number.isFinite(lon) ? lon : null}
         mode="manual"
         stored={data.frost}
+      />
+    </div>
+    <div class="frost-box">
+      <ZoneChip
+        lat={typeof lat === 'number' && Number.isFinite(lat) ? lat : null}
+        lon={typeof lon === 'number' && Number.isFinite(lon) ? lon : null}
+        manualZone={data.manualZone}
+        editable
       />
     </div>
   </SettingsSection>

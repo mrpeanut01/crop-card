@@ -8,6 +8,7 @@ import {
   type CardSection
 } from '../model';
 import type { FarmSnapshot, SnapshotArea, SnapshotFrostDates } from '../snapshot';
+import { zoneSourceDetail, zoneValueLabel } from '$lib/climate/zone';
 import { AREA_KINDS, isCropBearing } from '$lib/farm/areaKinds';
 import { AREA_KIND_PLURAL, AREA_KIND_STYLE } from '$lib/farm/kindStyle';
 import { areaDisplayName, areaKindLabel, monthDay, resolveOptions, trimNumber } from './common';
@@ -106,6 +107,21 @@ export function buildFarmMapCard(
   const frost = frostFacts(snapshot.frost);
   facts.push(...frost.facts);
   provenance.push(...frost.provenance);
+
+  if (snapshot.zone) {
+    facts.push({
+      label: 'Zone',
+      value: zoneValueLabel(snapshot.zone).replace(/^Zone /, ''),
+      provenance: snapshot.zone.provenance
+    });
+    provenance.push({
+      source: snapshot.zone.provenance,
+      detail:
+        snapshot.zone.provenance === 'data'
+          ? `zone approx., ${zoneSourceDetail(snapshot.zone)}`
+          : zoneSourceDetail(snapshot.zone)
+    });
+  }
 
   const sections: CardSection[] = [];
   for (const kind of kindsPresent) {

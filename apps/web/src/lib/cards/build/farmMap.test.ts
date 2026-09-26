@@ -65,6 +65,48 @@ describe('buildFarmMapCard', () => {
     expect(warm.facts.some((f) => f.label === 'Last frost')).toBe(false);
   });
 
+  it('shows an estimated zone as approximate with its station, never as the USDA map', () => {
+    const card = buildFarmMapCard(
+      sampleSnapshot({
+        zone: {
+          zone: '7a',
+          provenance: 'data',
+          stationName: 'Dulles Intl',
+          distanceMi: 6.2,
+          extremeMinF: 4.5
+        }
+      }),
+      { prefs }
+    );
+    expect(card.facts.find((f) => f.label === 'Zone')).toEqual({
+      label: 'Zone',
+      value: '7a (approx.)',
+      provenance: 'data'
+    });
+    expect(card.provenance).toContainEqual({
+      source: 'data',
+      detail: 'zone approx., from Dulles Intl · 6 mi'
+    });
+    expect(JSON.stringify(card)).not.toMatch(/usda/i);
+  });
+
+  it('shows an owner-typed zone as manual and leaves the zone off when there is none', () => {
+    const manual = buildFarmMapCard(
+      sampleSnapshot({
+        zone: { zone: '6b', provenance: 'manual', stationName: null, distanceMi: null, extremeMinF: null }
+      }),
+      { prefs }
+    );
+    expect(manual.facts.find((f) => f.label === 'Zone')).toEqual({
+      label: 'Zone',
+      value: '6b',
+      provenance: 'manual'
+    });
+    expect(manual.provenance).toContainEqual({ source: 'manual', detail: 'your zone' });
+    expect(buildFarmMapCard(sampleSnapshot({ zone: null }), { prefs }).facts.some((f) => f.label === 'Zone')).toBe(false);
+    expect(buildFarmMapCard(sampleSnapshot(), { prefs }).facts.some((f) => f.label === 'Zone')).toBe(false);
+  });
+
   it('adds emergency contacts only when some are saved', () => {
     const none = buildFarmMapCard(sampleSnapshot(), { prefs });
     expect(none.sections.some((s) => s.title === 'Emergency contacts')).toBe(false);

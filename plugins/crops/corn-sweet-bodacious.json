@@ -9,6 +9,12 @@
     "max": 80
   },
   "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 12
+    }
+  },
   "harvestIndicators": [
     "Silks brown and dry at tip",
     "Kernels milky when tested"

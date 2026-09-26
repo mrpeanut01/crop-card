@@ -13,6 +13,10 @@
     "recommendedLbsPerAcre": 96
   },
   "notes": "Winter-kills below ~20 °F — clean spring residue, no termination spray needed. Plant Aug–Sep for vegetable-bed prep.",
+  "harvestIndicators": [
+    "Fall-sown oats winter-kill at the first hard freeze, leaving a mat of dead residue",
+    "In spring, plant through the residue or fork it in"
+  ],
   "harvestStyle": "cover-crop-termination",
   "bloomWindow": {
     "monthsOfYear": [

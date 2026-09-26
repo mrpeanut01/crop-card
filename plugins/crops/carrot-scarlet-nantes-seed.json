@@ -9,6 +9,10 @@
     "max": 68
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 1,
+      "max": 3
+    },
     "soilTempMinF": 45,
     "rowSpacingIn": 3,
     "seedDepthIn": {
@@ -17,6 +21,10 @@
     }
   },
   "notes": "OP Nantes type; sweet, tender, crisp. Film coated/treated or raw/untreated. Also avail: 1/2 oz, 1 oz, 1/4 lb, 1 lb variants.",
+  "harvestIndicators": [
+    "Roots normally pulled at 1/2 to 3/4 in diameter",
+    "Dig only what you need; the rest keeps sizing in the ground"
+  ],
   "harvestStyle": "single-event",
   "bloomWindow": {
     "monthsOfYear": [

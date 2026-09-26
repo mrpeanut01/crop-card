@@ -9,6 +9,12 @@
     "max": 60
   },
   "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 4
+    }
+  },
   "harvestIndicators": [
     "Bulb 2–3 in (anything bigger goes woody)"
   ],

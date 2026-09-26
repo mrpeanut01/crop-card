@@ -9,6 +9,12 @@
     "max": 65
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 3
+    }
+  },
   "harvestIndicators": [
     "Roots 2–3 in",
     "Tops can be eaten as greens"

@@ -9,6 +9,10 @@
     "max": 115
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 42,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "Treated with Thiram. 10-17 lb flat scalloped fruit, bright orange flesh. Packed for 2025. SKU 11486STDTRT-25SDS.",
+  "harvestIndicators": [
+    "Rind hard and firm; mature color (changed from green)",
+    "Harvest late September to October, before a heavy frost",
+    "Cut from the vine leaving 3 to 4 in of stem; avoid bruising"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

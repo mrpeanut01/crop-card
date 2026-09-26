@@ -5,7 +5,17 @@
   "version": "1.0.0",
   "cropFamily": "small-fruit",
   "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1095
+  },
   "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 60
+    }
+  },
   "seasonalTasks": [
     {
       "key": "winter-prune",

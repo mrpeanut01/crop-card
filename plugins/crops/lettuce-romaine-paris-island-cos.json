@@ -9,6 +9,12 @@
     "max": 75
   },
   "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 10
+    }
+  },
   "harvestIndicators": [
     "Tight head 8–12 in tall",
     "Heart firm"

@@ -9,6 +9,12 @@
     "max": 85
   },
   "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 4
+    }
+  },
   "harvestIndicators": [
     "Pods plump and bright green",
     "Seeds firm"

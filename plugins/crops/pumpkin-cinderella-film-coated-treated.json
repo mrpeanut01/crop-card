@@ -9,6 +9,10 @@
     "max": 115
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 42,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "Film coated, Thiram 480 DP treated. 85% germ. 115 DTM. Flat round fruit 10-15 lbs, ornamental/pie use. SKU 01683FLCTRT-1OZ.",
+  "harvestIndicators": [
+    "Rind hard and firm; mature color (changed from green)",
+    "Harvest late September to October, before a heavy frost",
+    "Cut from the vine leaving 3 to 4 in of stem; avoid bruising"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

@@ -9,6 +9,10 @@
     "max": 105
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 12
+    },
     "soilTempMinF": 65,
     "rowSpacingIn": 10.5,
     "seedDepthIn": {
@@ -17,6 +21,9 @@
     }
   },
   "notes": "Heirloom dent-type corn, blood-red kernels, 8-12\" ears, 9-10' tall, untreated non-GMO, 95% germ, lot 103971, dated 12/25",
+  "harvestIndicators": [
+    "Leave ears on the stalk until they are fully mature and dry"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 1

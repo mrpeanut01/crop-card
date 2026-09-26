@@ -9,6 +9,12 @@
     "max": 85
   },
   "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 6
+    }
+  },
   "harvestIndicators": [
     "Stems 6–8 in"
   ],

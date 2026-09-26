@@ -9,6 +9,10 @@
     "max": 105
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 42,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "Butternut cross; film coated w/ Fludioxonil, Mefenoxam, Thiamethoxam, Azoxystrobin. 2-4 lb fruit. Packed for 2025.",
+  "harvestIndicators": [
+    "Deep, solid rind color and a hard rind",
+    "Let it ripen on the vine; harvest after the vine dries, before a heavy frost",
+    "Cut with 2 to 3 in of stem left on"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

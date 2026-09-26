@@ -9,6 +9,10 @@
     "max": 63
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 4
+    },
     "soilTempMinF": 65,
     "rowSpacingIn": 3,
     "seedDepthIn": {
@@ -17,6 +21,10 @@
     }
   },
   "notes": "Cross of Kentucky Wonder x Blue Lake. 6-7\" pods on 6-8' vines. Cruiser (thiamethoxam) treated. Also avail: 100 seeds ($8.58), 10,000 seeds ($101.72).",
+  "harvestIndicators": [
+    "Pods full size and still tender; they break with a snap",
+    "Seeds should not make the pods bulge"
+  ],
   "harvestStyle": "continuous-fruit",
   "bloomWindow": {
     "daysFromPlantingMin": 35,

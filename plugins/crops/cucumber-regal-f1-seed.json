@@ -9,6 +9,10 @@
     "max": 52
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    },
     "soilTempMinF": 60,
     "rowSpacingIn": 12,
     "seedDepthIn": {
@@ -17,6 +21,10 @@
     }
   },
   "notes": "Gynoecious hybrid pickle type; film coated/treated (50sd) is smallest pack. Also avail: Raw/Untreated 50sd, FC/Treated 500sd, 1Ksd, 5Ksd, 10Ksd; Raw 5Ksd.",
+  "harvestIndicators": [
+    "Pick from about 2 in long up to any size before the fruit starts to yellow",
+    "Turn the fruit parallel to the vine and snap it off"
+  ],
   "harvestStyle": "continuous-fruit",
   "bloomWindow": {
     "continuous": true,

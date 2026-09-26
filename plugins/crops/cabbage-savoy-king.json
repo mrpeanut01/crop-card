@@ -10,6 +10,12 @@
     "max": 85
   },
   "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 15,
+      "max": 18
+    }
+  },
   "harvestIndicators": [
     "Firm head",
     "Wrinkled outer leaves with mid-green color"

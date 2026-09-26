@@ -9,6 +9,12 @@
     "max": 85
   },
   "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 5,
+      "max": 5
+    }
+  },
   "harvestIndicators": [
     "Pods plump (R6 stage)",
     "Beans fill 80–90% of pod"

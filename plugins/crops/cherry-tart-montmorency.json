@@ -4,7 +4,17 @@
   "displayName": "Cherry — Tart, Montmorency",
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
+  "daysToMaturity": {
+    "min": 1460,
+    "max": 1825
+  },
   "defaultRowSpacingInches": 216,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 216,
+      "max": 216
+    }
+  },
   "harvestIndicators": [
     "Bright red",
     "Easy stem release"

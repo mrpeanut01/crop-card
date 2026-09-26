@@ -9,6 +9,12 @@
     "max": 50
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 4,
+      "max": 6
+    }
+  },
   "harvestIndicators": [
     "Outer leaves 8–10 in",
     "Before bolt"

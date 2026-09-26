@@ -16,6 +16,10 @@
   ],
   "notes": "Pick young + frequently. Bush type — minimal trellising.",
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    },
     "vineSpreadFt": {
       "min": 4,
       "max": 6

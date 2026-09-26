@@ -9,6 +9,12 @@
     "max": 70
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 3
+    }
+  },
   "harvestIndicators": [
     "Flat pods 3–4 in",
     "Peas just visible inside"

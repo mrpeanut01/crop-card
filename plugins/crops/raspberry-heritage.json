@@ -5,7 +5,17 @@
   "version": "1.0.0",
   "cropFamily": "bramble",
   "preHarvestIntervalDays": 1,
+  "daysToMaturity": {
+    "min": 365,
+    "max": 365
+  },
   "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 36
+    }
+  },
   "seasonalTasks": [
     {
       "key": "mow-canes-down",

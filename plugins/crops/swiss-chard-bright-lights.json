@@ -9,6 +9,12 @@
     "max": 65
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 8
+    }
+  },
   "harvestIndicators": [
     "Outer leaves 10 in",
     "Continue cut-and-come"

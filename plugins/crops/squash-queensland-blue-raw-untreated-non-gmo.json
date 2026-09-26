@@ -9,6 +9,10 @@
     "max": 95
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 42,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "Untreated Non-GMO; 8-10 lb fruits; dark blue-green ribbed; thick orange flesh; good for cooking/storage. Packed 2025.",
+  "harvestIndicators": [
+    "Deep, solid rind color and a hard rind",
+    "Let it ripen on the vine; harvest after the vine dries, before a heavy frost",
+    "Cut with 2 to 3 in of stem left on"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

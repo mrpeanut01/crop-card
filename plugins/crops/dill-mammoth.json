@@ -9,6 +9,12 @@
     "max": 70
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 12
+    }
+  },
   "harvestIndicators": [
     "Foliage cut as needed",
     "Seed heads at full bloom→drying"

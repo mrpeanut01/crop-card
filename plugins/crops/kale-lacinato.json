@@ -9,6 +9,12 @@
     "max": 65
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 10,
+      "max": 18
+    }
+  },
   "harvestIndicators": [
     "Leaves 8–10 in",
     "Bottom-up harvest leaves crown"

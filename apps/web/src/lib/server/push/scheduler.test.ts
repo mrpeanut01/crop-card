@@ -14,12 +14,7 @@ import {
 } from '$lib/db/pushSubscriptions';
 import { DEFAULT_PUSH_PREFS } from '$lib/push/prefs';
 import { selectRecipients, sendToSubscriptions } from './dispatch';
-import {
-  processOwnerAlerts,
-  runPushTick,
-  shouldRunPushScheduler,
-  startPushScheduler
-} from './scheduler';
+import { processOwnerAlerts, runPushTick } from './scheduler';
 import { decryptPayload, generateVapidKeys } from './webPush';
 
 const config = { ...generateVapidKeys(), subject: 'mailto:ops@cropcard.test' };
@@ -176,40 +171,20 @@ describe('push scheduler', () => {
     expect(fetchImpl.mock.calls.map((c) => String(c[0]))).not.toContain(b.endpoint);
   });
 
-  it('startPushScheduler uses the injected interval and stops cleanly', async () => {
-    let captured: (() => void) | null = null;
-    const setIntervalImpl = vi.fn((fn: () => void, ms: number) => {
-      captured = fn;
-      expect(ms).toBe(1234);
-      return 7;
-    });
-    const clearIntervalImpl = vi.fn();
-    const handle = startPushScheduler({
-      config,
-      intervalMs: 1234,
-      now: () => Date.now(),
-      fetchImpl: mockFetch(),
-      setIntervalImpl,
-      clearIntervalImpl
-    });
-    expect(captured).not.toBeNull();
-    const summary = await handle.tick();
-    expect(summary).not.toBeNull();
-    handle.stop();
-    expect(clearIntervalImpl).toHaveBeenCalledWith(7);
-  });
-
-  it('is disabled under tests, when switched off, or without VAPID', () => {
-    const env = {
-      VAPID_PUBLIC_KEY: config.publicKey,
-      VAPID_PRIVATE_KEY: config.privateKey,
-      VAPID_SUBJECT: config.subject
-    };
-    expect(shouldRunPushScheduler({ ...env, NODE_ENV: 'production' })).toBe(true);
-    expect(shouldRunPushScheduler({ ...env, NODE_ENV: 'test' })).toBe(false);
-    expect(shouldRunPushScheduler({ ...env, VITEST: 'true' })).toBe(false);
-    expect(shouldRunPushScheduler({ ...env, PUSH_SCHEDULER: 'off' })).toBe(false);
-    expect(shouldRunPushScheduler({ NODE_ENV: 'production' })).toBe(false);
+  it('a second tick twelve hours later sends nothing already sent', async () => {
+    const { ownerId, userId } = seedOwner();
+    subscribe(ownerId, userId);
+    const now = Date.now();
+    dirtySprayer(ownerId, now - 2 * HOUR);
+    const fetchImpl = mockFetch();
+    await runPushTick({ config, now: () => now, fetchImpl });
+    const sentFirst = fetchImpl.mock.calls.length;
+    expect(sentFirst).toBeGreaterThan(0);
+    await runPushTick({ config, now: () => now + 12 * HOUR, fetchImpl });
+    const decon = runWithTenant(ownerId, () => listDeliveries()).filter(
+      (d) => d.kind === 'decon-due'
+    );
+    expect(decon).toHaveLength(1);
   });
 });
 

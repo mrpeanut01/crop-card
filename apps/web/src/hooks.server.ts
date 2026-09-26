@@ -1,10 +1,4 @@
-import {
-  json,
-  redirect,
-  type Handle,
-  type HandleServerError,
-  type ServerInit
-} from '@sveltejs/kit';
+import { json, redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
 import { canMutate, clearSession, type SessionRole } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';
@@ -19,14 +13,8 @@ import {
   OWNER_MISMATCH_CODE,
   expectedOwnerDecision
 } from '$lib/client/ownerSync';
-import { maybeStartPushScheduler } from '$lib/server/push/scheduler';
+import { isInternalTickRequest } from '$lib/server/push/wakeup';
 import { hostRedirectTarget, parseRedirectHosts } from '$lib/server/hostRedirect';
-
-/** NFR-06 — start the in-process push alert scheduler (no-op without VAPID
- *  keys or under tests; single replica per invariant 3). */
-export const init: ServerInit = () => {
-  maybeStartPushScheduler();
-};
 
 /**
  * Phase 21a follow-up — error visibility (2026-05-17).
@@ -257,6 +245,10 @@ export const handle: Handle = async ({ event, resolve }) => {
       headers: { location: canonical }
     });
   }
+
+  // The push-tick wakeup job authenticates with its own shared secret (the
+  // endpoint checks it). No cookie, Bearer, CSRF or tenant context applies.
+  if (isInternalTickRequest(event.url.pathname, event.request.headers)) return resolve(event);
 
   // Phase 24 — Bearer-first auth resolution.
   const authHeader = event.request.headers.get('authorization');

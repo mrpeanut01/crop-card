@@ -6,6 +6,7 @@
 #   ./scripts/set-azure-secret.sh postmark-token
 #   ./scripts/set-azure-secret.sh pingram-api-key
 #   ./scripts/set-azure-secret.sh auth-secret --generate   # rotate: signs everyone out
+#   ./scripts/set-azure-secret.sh push-tick-secret --generate
 #
 # The value is read from a hidden prompt (or stdin when piped) and streamed to
 # Key Vault, so it never lands in shell history or a process argument list.
@@ -17,8 +18,8 @@ set -euo pipefail
 GROUP="${CROPCARD_GROUP:-cropcard-dev-rg}"
 NAME="${1:-}"
 case "$NAME" in
-  auth-secret|postmark-token|pingram-api-key|anthropic-api-key|marketplace-seed-credential) ;;
-  *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  auth-secret|postmark-token|pingram-api-key|anthropic-api-key|marketplace-seed-credential|push-tick-secret) ;;
+  *) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac
 
 KV="${CROPCARD_KV:-$(az keyvault list --resource-group "$GROUP" --query "[0].name" -o tsv)}"

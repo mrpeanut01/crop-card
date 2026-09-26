@@ -7,6 +7,7 @@
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
+import { bestEffort, writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
@@ -161,27 +162,26 @@ export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
     occurredAt
   );
 
-  const event = insertHarvestEvent({
-    blockId: parsed.data.blockId,
-    cropId: parsed.data.cropId,
-    cropPluginId: parsed.data.cropPluginId,
-    occurredAt,
-    quantity: parsed.data.quantity,
-    lotNumber: parsed.data.lotNumber,
-    moisturePct: parsed.data.moisturePct
-  });
-  if (parsed.data.taskId) {
-    try {
-      const { completeTask } = await import('$lib/db/tasks');
-      completeTask(parsed.data.taskId, {
-        eventTable: 'harvest_event',
-        eventId: event.id,
-        occurredAt
-      });
-    } catch {
-      // Non-fatal; the harvest is recorded.
+  const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
+  const event = writeRecord({ request }, () => {
+    const event = insertHarvestEvent({
+      blockId: parsed.data.blockId,
+      cropId: parsed.data.cropId,
+      cropPluginId: parsed.data.cropPluginId,
+      occurredAt,
+      quantity: parsed.data.quantity,
+      lotNumber: parsed.data.lotNumber,
+      moisturePct: parsed.data.moisturePct
+    });
+    const taskId = parsed.data.taskId;
+    // Non-fatal; the harvest is recorded even if the task can't be closed.
+    if (tasks && taskId) {
+      bestEffort(() =>
+        tasks.completeTask(taskId, { eventTable: 'harvest_event', eventId: event.id, occurredAt })
+      );
     }
-  }
+    return event;
+  });
   return json({
     event,
     phiWarning: phi.decision === 'warn' ? { message: phi.message, conflicts: phi.conflicts } : null

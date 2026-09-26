@@ -75,6 +75,16 @@ function fallbackBody(
   };
 }
 
+/** Anthropic refused the request itself (an unreadable or oversized image,
+ *  a malformed prompt): a 4xx other than auth, timeout, conflict or rate
+ *  limit. Retrying the same input will not help, so it is not a degradation
+ *  and is not reported as `rate-limit`. */
+export function isRejectedRequest(err: unknown): boolean {
+  const status = (err as { status?: unknown } | null)?.status;
+  if (typeof status !== 'number' || status < 400 || status >= 500) return false;
+  return ![401, 403, 408, 409, 429].includes(status);
+}
+
 /** Runs one scan's Claude call through `aiTry()` + `aiGuard`. Every non-AI
  *  outcome is the deterministic "not found — enter it manually" result with
  *  an honest message; nothing here throws a 500. */
@@ -133,10 +143,15 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
       } catch (err) {
         state.callError = err;
         if (err instanceof ScanInputError) throw err;
+        const rejected = !state.settledAsTimeout && isRejectedRequest(err);
         log(usage, {
           provenance: 'fallback',
-          reason: state.settledAsTimeout ? 'timeout' : 'rate-limit',
-          errorClass: err instanceof Error ? err.name : 'unknown'
+          reason: state.settledAsTimeout ? 'timeout' : rejected ? undefined : 'rate-limit',
+          errorClass: rejected
+            ? `anthropic-${(err as { status: number }).status}`
+            : err instanceof Error
+              ? err.name
+              : 'unknown'
         });
         throw err;
       }
@@ -151,6 +166,22 @@ export async function runScanAi(args: RunScanAiArgs): Promise<ScanAiOutcome> {
       ok: false,
       status: state.callError.status,
       body: { found: false, source: 'none', message: state.callError.message }
+    };
+  }
+
+  if (result.fallbackReason === 'rate-limit' && isRejectedRequest(state.callError)) {
+    const detail =
+      state.callError instanceof Error && state.callError.message
+        ? ` (${state.callError.message})`
+        : '';
+    return {
+      ok: false,
+      status: 422,
+      body: {
+        found: false,
+        source: 'none',
+        message: `Claude could not read this ${args.subject}${detail}. Try a clearer or smaller photo, or use Manual entry.`
+      }
     };
   }
 

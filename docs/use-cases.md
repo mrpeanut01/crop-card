@@ -195,7 +195,7 @@ Persona keys (P1–P5) are defined in [personas.md](./personas.md).
 - **Preconditions:** Hay-type crop plugin (alfalfa, orchardgrass, timothy, fescue, etc.) registered with `hayOperations` (steps + weather window + moisture gate). NOAA NWS forecast reachable.
 - **Primary path:**
   1. Pick block (hay-eligible blocks listed); plugin auto-selects from `hayPlanting`
-  2. Tap **Fetch forecast** — `/api/hay/forecast?blockId=...` calls NOAA NWS, caches for 1h ([weather_forecast_cache](../apps/web/src/lib/db/schema.ts) per the migration)
+  2. Tap **Fetch forecast** — `/api/hay/forecast?blockId=...` calls NOAA NWS for the block centroid, falling back to the nearest mapped block and then the saved farm location (a 400 asks for a location when none is set), caches for 1h ([weather_forecast_cache](../apps/web/src/lib/db/schema.ts) per the migration)
   3. Forecast view: 3-day day-summary chips (high/low, popPct, conditions)
   4. App evaluates mow gate locally for instant feedback: any forecast day inside the plugin's `weatherWindowDays` with `popPct > 30` becomes a `HayViolation`
   5. If clear: tap **Begin cutting** — server posts to `POST /api/hay/cuttings` with the captured forecast (immutable on the row); `hay_cuttings.status` starts at `mowing`
@@ -586,7 +586,7 @@ All changes are confined to [+layout.svelte](../apps/web/src/routes/+layout.svel
 - **Preconditions:** ≥1 block; ≥1 fungicide plugin loaded; owner or helper role. Weather is optional.
 - **Primary path:**
   1. Pick block (`?block=` / `?crop=` pre-fill) and one or more fungicide products (grouped by FRAC code). The client-side copper × sulfur tank-mix check (`checkFungicideTankMixCompat`) runs immediately.
-  2. **Disease + FRAC panel** loads the hourly NWS gridpoint forecast for the block via `GET /api/weather/hourly?blockId=…` (block centroid → first mapped block → farm lat/lon setting; cached 1 h in the global `weather_forecast_cache` under `hourly:<lat>,<lon>`). It renders:
+  2. **Disease + FRAC panel** loads the hourly NWS gridpoint forecast for the block via `GET /api/weather/hourly?blockId=…` (block centroid → first mapped block → saved farm location → Loudoun default; cached 1 h in the global `weather_forecast_cache` under `hourly:<lat>,<lon>`). It renders:
      - **Leaf-wet dial** — forecast leaf-wet hours in the next 24 h (RH ≥ 90% proxy; hours with measurable rain also count) against a generic 6 h threshold, plus whatever past hours the forecast feed still carries.
      - **5-day rain sparkline** — daily QPF totals (mm) with per-day leaf-wet hours.
      - **Rain/dew dry-window tile** — checks the next _N_ hours (N = tank mix's longest label `rainfastHours`; 4 h default when no label value) for measurable rain or PoP ≥ 30%. On risk it shows the first risky hour, the next dry window (≥ N contiguous dry hours: no rain, PoP < 30%, RH < 90%), and an **acknowledge checkbox that must be ticked before Record enables**.

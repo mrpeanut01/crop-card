@@ -25,6 +25,7 @@ import { loginCodes, loginTokens, users } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { type Identifier } from '$lib/identity';
 import { dispatchEmail } from './email';
+import { authSecret } from './session';
 import { smsLinkBody, smsLoginBody } from './otpMessage';
 import { dispatchSms } from './sms';
 
@@ -44,7 +45,7 @@ type Channel = 'email' | 'sms';
 type Purpose = 'login' | 'link';
 
 function codeSecret(): string {
-  return process.env.AUTH_SECRET ?? 'dev-only-not-secret-change-in-prod';
+  return authSecret();
 }
 
 function hashCode(id: string, code: string): string {

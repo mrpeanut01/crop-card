@@ -49,7 +49,9 @@ export function currentUser(event: RequestEvent): AuthenticatedUser | null {
   // for Bearer agents instead of falling through to a cookie-only 401.
   // We do NOT synthesize a user from anything else — this stays exactly as
   // authenticated as "a cookie session OR a hooks-vetted Bearer user".
-  if (event.locals?.authVia === 'bearer' && event.locals?.user) {
+  // A cookie user in locals has been re-checked against the DB by
+  // `revalidateCookieUser`, so it wins over the raw cookie claims.
+  if (event.locals?.user) {
     return event.locals.user;
   }
   const session = readSession(event.cookies);

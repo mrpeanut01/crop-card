@@ -1,6 +1,6 @@
 /**
  * Persist user-picked block ordering across surfaces (Schedule swim-lane,
- * Crops page) in localStorage. The order is shared so top-to-bottom on
+ * Crops page) in localStorage, per farm. The order is shared so top-to-bottom on
  * Crops matches left-to-right on Schedule.
  *
  * Format: JSON array of block IDs. Unknown IDs are skipped on apply;
@@ -10,10 +10,17 @@
 
 const ORDER_KEY = 'cropcard.swimlane.column-order.v1';
 
-export function loadBlockOrder(): string[] | null {
-  if (typeof window === 'undefined') return null;
+/** One saved order per farm, so a shared device never carries one farm's
+ *  block ids into another's layout. */
+export function blockOrderKey(ownerId: string | null | undefined): string | null {
+  return ownerId ? `${ORDER_KEY}:${ownerId}` : null;
+}
+
+export function loadBlockOrder(ownerId: string | null | undefined): string[] | null {
+  const key = blockOrderKey(ownerId);
+  if (typeof window === 'undefined' || !key) return null;
   try {
-    const raw = window.localStorage.getItem(ORDER_KEY);
+    const raw = window.localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')) {
@@ -25,10 +32,14 @@ export function loadBlockOrder(): string[] | null {
   }
 }
 
-export function saveBlockOrder(order: ReadonlyArray<string>): void {
-  if (typeof window === 'undefined') return;
+export function saveBlockOrder(
+  ownerId: string | null | undefined,
+  order: ReadonlyArray<string>
+): void {
+  const key = blockOrderKey(ownerId);
+  if (typeof window === 'undefined' || !key) return;
   try {
-    window.localStorage.setItem(ORDER_KEY, JSON.stringify(order));
+    window.localStorage.setItem(key, JSON.stringify(order));
   } catch {
     // quota exceeded or storage unavailable — silent
   }

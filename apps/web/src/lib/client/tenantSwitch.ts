@@ -112,6 +112,20 @@ export async function wipeTenantCaches(): Promise<void> {
   }
 }
 
+/** Logout: stop this browser receiving the last user's farm alerts. The
+ *  push service then answers 410 for the endpoint and the server drops the
+ *  row, so a shared device never shows the previous farm's notifications. */
+export async function unsubscribeDevicePush(): Promise<void> {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = await reg?.pushManager?.getSubscription();
+    await sub?.unsubscribe();
+  } catch {
+    /* no push support → nothing to unsubscribe */
+  }
+}
+
 /** Layout-mount entry point: optionally registers the SW, then tells it
  *  which Owner is active (signed in) or wipes tenant caches (signed out). */
 export async function syncServiceWorkerTenant(opts: {
@@ -119,7 +133,7 @@ export async function syncServiceWorkerTenant(opts: {
   signedIn: boolean;
   ownerId: string | null | undefined;
 }): Promise<void> {
-  if (!opts.signedIn) await wipeTenantCaches();
+  if (!opts.signedIn) await Promise.all([wipeTenantCaches(), unsubscribeDevicePush()]);
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
   if (opts.register) {
     try {

@@ -6,7 +6,7 @@ import {
   type ServerInit
 } from '@sveltejs/kit';
 import { currentUser } from '$lib/server/auth';
-import { canMutate, type SessionRole } from '$lib/server/session';
+import { canMutate, clearSession, type SessionRole } from '$lib/server/session';
 import { activeAssignmentsForUser } from '$lib/db/users';
 import { runWithTenantAsync } from '$lib/db/tenant';
 import { db } from '$lib/db/client';
@@ -265,7 +265,9 @@ export const handle: Handle = async ({ event, resolve }) => {
     event.locals.isServiceAccountToken = resolved.isServiceAccount;
     touchToken(resolved.tokenId);
   } else {
-    user = currentUser(event);
+    const fromCookie = currentUser(event);
+    user = fromCookie ? revalidateCookieUser(fromCookie) : null;
+    if (fromCookie && !user) clearSession(event.cookies);
     if (user) {
       event.locals.user = user;
       event.locals.authVia = 'cookie';
@@ -367,6 +369,45 @@ export function withOwnerHeader(response: Response, ownerId: string): Response {
     copy.headers.set(OWNER_HEADER, ownerId);
     return copy;
   }
+}
+
+/**
+ * A signed cookie proves who the user was when it was minted, not what they
+ * may do now. Re-read the user row and the membership on every request so a
+ * revoked helper, a changed role or a withdrawn superadmin flag takes effect
+ * immediately instead of when the 7-day cookie expires.
+ *
+ * Returns null when the user no longer exists (the session is cleared).
+ * A lost membership downgrades to a partial session, which routes the user
+ * to the Owner-picker or onboarding rather than into the old farm.
+ */
+export function revalidateCookieUser(
+  user: import('$lib/server/auth').AuthenticatedUser
+): import('$lib/server/auth').AuthenticatedUser | null {
+  const row = db
+    .select({ email: users.email, phone: users.phone, isSuperadmin: users.isSuperadmin })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .get();
+  if (!row) return null;
+  const fresh = { ...user, email: row.email, phone: row.phone, isSuperadmin: row.isSuperadmin };
+  if (!fresh.activeOwnerId) return { ...fresh, impersonating: false };
+  if (fresh.impersonating) {
+    return fresh.isSuperadmin ? fresh : { ...fresh, activeOwnerId: null, impersonating: false };
+  }
+  const assignment = db
+    .select({ roleWithinOwner: helperAssignments.roleWithinOwner })
+    .from(helperAssignments)
+    .where(
+      and(
+        eq(helperAssignments.userId, user.id),
+        eq(helperAssignments.ownerId, fresh.activeOwnerId),
+        eq(helperAssignments.status, 'active')
+      )
+    )
+    .get();
+  if (!assignment) return { ...fresh, activeOwnerId: null };
+  return { ...fresh, role: assignment.roleWithinOwner as SessionRole };
 }
 
 /**

@@ -461,7 +461,8 @@
   // null` means "all fields"; an empty selectedBlockIds Set means "all
   // blocks within the field scope".
   type ScheduleFilter = { fieldId: string | null; blockIds: string[] };
-  const FILTER_LS_KEY = 'cropcard:schedule-filter:v1';
+  // Per farm: the filter holds field/block ids that mean nothing elsewhere.
+  const FILTER_LS_KEY = `cropcard:schedule-filter:v1:${$page.data.user?.activeOwnerId ?? 'none'}`;
   let selectedFieldId = $state<string | null>(null);
   let selectedBlockIds = $state<Set<string>>(new Set());
   let filterLoaded = $state(false);
@@ -1372,7 +1373,7 @@
   }
 
   onMount(() => {
-    cropsTabOrder = loadBlockOrder();
+    cropsTabOrder = loadBlockOrder($page.data.user?.activeOwnerId);
     const w = $page.url.searchParams.get('wizard');
     if (w === 'allocation' || w === 'season-setup') {
       openWizard(w);
@@ -1494,7 +1495,7 @@
           ? [...filtered, sourceId]
           : [...filtered.slice(0, targetIdx), sourceId, ...filtered.slice(targetIdx)];
       cropsTabOrder = newOrder;
-      saveBlockOrder(newOrder);
+      saveBlockOrder($page.data.user?.activeOwnerId, newOrder);
 
       try {
         const r = await fetch(`/api/blocks/${encodeURIComponent(sourceId)}`, {
@@ -1514,7 +1515,7 @@
     if (!next) return;
     const merged = mergeFieldOrder(cropsTabOrder, currentIds, next);
     cropsTabOrder = merged;
-    saveBlockOrder(merged);
+    saveBlockOrder($page.data.user?.activeOwnerId, merged);
   }
   function onCropsHeaderDragEnd() {
     cropsReorderDragId = null;
@@ -1549,7 +1550,7 @@
     const filtered = baseOrder.filter((id) => id !== sourceId);
     const newOrder = [...filtered, sourceId];
     cropsTabOrder = newOrder;
-    saveBlockOrder(newOrder);
+    saveBlockOrder($page.data.user?.activeOwnerId, newOrder);
 
     try {
       const r = await fetch(`/api/blocks/${encodeURIComponent(sourceId)}`, {

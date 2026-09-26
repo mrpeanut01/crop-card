@@ -1,10 +1,903 @@
 {
+  "acorn-squash-table-queen": {
+    "inRowSpacingIn": {
+      "url": "https://extension.umd.edu/resource/growing-winter-squash-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-04-05",
+      "quote": "UMD HGIC, Growing Winter Squash in a Home Garden: \"Spacing: Seeds should be planted every 3 ft. to 4 ft. apart in rows that are about 6 to 8 feet apart, depending on the type.\"",
+      "note": "VCE is internally inconsistent (426-331 Table 5: Squash, winter 2-4 ft; 426-406: bush 3-4 ft, semi-vining 4-6 ft, vining 5-7 ft), so the UMD figure, which overlaps both, is used."
+    }
+  },
+  "arugula-rocket": {
+    "inRowSpacingIn": {
+      "url": "https://gardening.cals.cornell.edu/vegetables/arugula/",
+      "publisher": "Cornell Cooperative Extension, Cornell Garden-Based Learning (Vegetable Growing Guides)",
+      "date": "2026-09-26 (accessed; page shows no publication date)",
+      "quote": "Cornell Vegetable Growing Guide, Arugula: \"Plant ¼ inch deep and 1 inch apart in rows, or broadcast alone or mixed with other greens. Gradually thin to 6-inch spacings using thinnings for salads.\"",
+      "note": "NC State planting calendar gives Arugula 6-9 in (overlapping)."
+    }
+  },
+  "basil-genovese": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Annuals table, Plant spacing): \"Basil Ocimum basilicum | 20-24” | 24-36”\""
+    }
+  },
+  "bean-kentucky-blue-pole-seed-standard-cruiser-treated-1-000-seed": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/00035-bean-kentucky-blue-pole",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 63 Days; Spacing in Row: 2-4\"; Spacing Between Rows: 2-3'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule. VCE 426-402 gives 4-8 in for pole beans generally."
+    },
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-402/426-402.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2025-03-10",
+      "quote": "VCE 426-402, Beans: \"Harvest: Snap beans - full size pods, small beans or larger beans as long as pods are still tender; pods break easily with a snap when ready; seed should not cause pods to bulge.\""
+    }
+  },
+  "beet-detroit-dark-red": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-422/426-422.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-20",
+      "quote": "VCE 426-422, Root Crops (Beets): \"Spacing: 2 to 3 inches x 12 to 18 inches\"",
+      "note": "VCE 426-331 Table 5 agrees (Beets 2-3 in)."
+    }
+  },
+  "blackberry-triple-crown": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Red and purple raspberries can be set 3 feet apart within the row; set erect and semierect blackberries plants 5 feet apart.\" Table 1: \"Blackberry (erect) | 10 | 5 | 5-10 | 1 | 5-12\"",
+      "note": "Feet converted to inches. Triple Crown is a semierect thornless blackberry."
+    },
+    "daysToMaturity": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1, Average bearing age (years): \"Blackberry (erect) | 10 | 5 | 5-10 | 1 | 5-12\"; text: \"raspberries and blackberries ... will usually yield a moderate crop of fruit the second year after planting and a full crop in the third season.\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    }
+  },
+  "bloody-butcher-ornamental-corn-raw-untreated-non-gmo-1-2-lb": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/01157-ornamental-corn-bloody-butcher",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 105 Days; Spacing in Row: 9-12\"; Spacing Between Rows: 3-4'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "http://www.gardening.cornell.edu/homegardening/scene05f6.html",
+      "publisher": "Cornell University, Cornell Home Gardening Vegetable Growing Guides (Corn)",
+      "date": "2006 (page copyright)",
+      "quote": "Cornell Vegetable Growing Guide, Corn: \"choose another type of corn that you won’t harvest until the ears are fully mature and dry. These include popcorn, ornamental corn or field corn (dent, flint and flour corns grown for meal or animal feed).\""
+    }
+  },
+  "blueberry-bluecrop": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1 (Minimum distance between rows (feet) | Minimum distance between plants (feet) | Annual yield per plant | Average bearing age (years) | Life expectancy): \"Blueberry | 6 | 5 | 4-6 | 3 | 20-30\"",
+      "note": "Feet converted to inches."
+    },
+    "daysToMaturity": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1, Average bearing age (years): \"Blueberry | 6 | 5 | 4-6 | 3 | 20-30\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095). The text adds that \"Some varieties of blueberry will bear the second year after planting. Full production is reached in about six years\"."
+    }
+  },
+  "brussels-sprouts-long-island": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-403/426-403.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-403, Cole Crops or Brassicas (Brussels Sprouts): \"Spacing: 18 to 24 inches by 30 to 34 inches.\"",
+      "note": "VCE 426-331 Table 5 agrees (18-24 in)."
+    }
+  },
+  "buckwheat-cover": {
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/cover-crops-gardens",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-08-07",
+      "quote": "UMD HGIC, Cover Crops For Gardens: Selection chart: \"Buckwheat (Fagopyrum esculentum) | buckwheat | 3 to 4 | spring or summer | any time | not winter-hardy; grows quickly; willreseed\" \"Cover crops are mown, flattened, and/or turned into the soil before going to seed, usually in late April or early May.\""
+    }
+  },
+  "cabbage-savoy-king": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-403/426-403.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-403, Cole Crops or Brassicas (Cabbage): \"Spacing: 15 to 18 inches by 30 to 36 inches.\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives 12-18 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "cantaloupe-hales-best": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-406/426-406.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-406, Cucumbers, Melons and Squash (Melons): \"Spacing: 2 to 3 feet between bulbs in rows 5 to 7 feet for muskmelon\"",
+      "note": "VCE 426-331 Table 5 agrees (Muskmelon 24-36 in)."
+    }
+  },
+  "carrot-scarlet-nantes-seed": {
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-422/426-422.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-20",
+      "quote": "VCE 426-422, Root Crops (Carrots): \"Harvest: Carrot roots may be harvested whenever roots reach an acceptable size. Dig only the amount needed for immediate use, and allow the remainder to increase in size. ... Roots are normally harvested when 1/2 to 3/4 inch in diameter.\""
+    },
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/00323-carrot-scarlet-nantes",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 68 Days; Spacing in Row: 1-3\"; Spacing Between Rows: 1-3'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule. Extension figures disagree for carrots generally (VCE 426-331 thin to 1.5-2 in; VCE 426-422 1/2 in; UMD thin to 1-2 in)."
+    }
+  },
+  "cauliflower-snowball-y": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-403/426-403.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-403, Cole Crops or Brassicas (Cauliflower): \"Spacing: 15 to 24 inches by 24 to 36 inches.\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives 12-24 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "celery-tall-utah-52-70": {
+    "inRowSpacingIn": {
+      "url": "https://extension.psu.edu/programs/master-gardener/counties/york/vegetable-guides/vegetable-seed-planting-guide/@@download/file/Vegetable-Seed-Planting-Guide.pdf",
+      "publisher": "Penn State Extension (York County Master Gardeners)",
+      "date": "2020-10-28 (PDF last modified)",
+      "quote": "Penn State Extension Seed Planting Guide, column 7 \"Inches apart to thin plants\" (\"Distance in inches to leave between seedlings in the row after thinning out excess seedlings\"): \"Celery C 6.0-7.0 0.25 2 18 6\"",
+      "note": "NC State planting calendar gives Celery 6-8 in (overlapping). VCE has no home-garden celery spacing."
+    }
+  },
+  "cereal-rye-cover": {
+    "harvestIndicators": {
+      "url": "https://extension.psu.edu/cereal-rye-as-a-cover-crop",
+      "publisher": "Penn State Extension",
+      "date": "2024-06-05",
+      "quote": "Penn State Extension, Cereal Rye as a Cover Crop: \"Roll-crimping alone will not kill the cover crop until after anthesis (pollen shed), and if rolled-crimped before anthesis, it should be followed by a burndown spray.\" ... \"It is not recommended to incorporate mature rye because soil microbes require a lot of N to break down high C:N rye, causing N deficiency in the next crop.\""
+    }
+  },
+  "cherry-bing-sweet": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2020-09-21",
+      "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Cherry - sweet | 25 | 75 qt. | 5-7 | 20-30\"; \"The table below shows the minimum desirable distances between fruit trees in home orchards.\"",
+      "note": "Feet converted to inches. Minimum distance."
+    },
+    "daysToMaturity": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2020-09-21",
+      "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Cherry - sweet | 25 | 75 qt. | 5-7 | 20-30\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    }
+  },
+  "cherry-tart-montmorency": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2020-09-21",
+      "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Cherry - sour | 18 | 60 qt. | 4-5 | 15-20\"; \"The table below shows the minimum desirable distances between fruit trees in home orchards.\"",
+      "note": "Feet converted to inches. Minimum distance."
+    },
+    "daysToMaturity": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2020-09-21",
+      "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Cherry - sour | 18 | 60 qt. | 4-5 | 15-20\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    }
+  },
+  "chives-common": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Perennials table, Plant spacing): \"Chives, garlic chives Allium spp. | 12” | 12”\""
+    }
+  },
+  "cilantro-santo": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Annuals table, Plant spacing): \"Cilantro, coriander Coriandrum sativum | 24” | 18”\""
+    }
+  },
+  "collards-georgia-southern": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-408/426-408.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-408, Leafy Green Vegetables (Cooking Greens): \"Spacing: Collards: 18 to 24 inches x 24 to 36 inches\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Collards, kale 12-24 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "corn": {
+    "harvestIndicators": {
+      "url": "http://www.gardening.cornell.edu/homegardening/scene05f6.html",
+      "publisher": "Cornell University, Cornell Home Gardening Vegetable Growing Guides (Corn)",
+      "date": "2006 (page copyright)",
+      "quote": "Cornell Vegetable Growing Guide, Corn: \"choose another type of corn that you won’t harvest until the ears are fully mature and dry. These include popcorn, ornamental corn or field corn (dent, flint and flour corns grown for meal or animal feed).\""
+    }
+  },
+  "corn-sweet-bodacious": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-405/426-405.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-405, Sweet Corn: \"Spacing: 9 to 12 inches x 24 to 36 inches\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Corn, sweet 6-12 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "crimson-clover-cover": {
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/cover-crops-gardens",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-08-07",
+      "quote": "UMD HGIC, Cover Crops For Gardens: \"Cover crops are mown, flattened, and/or turned into the soil before going to seed, usually in late April or early May.\" \"Spring vegetable planting may be delayed somewhat by a cover crop (except for oats and usually daikon radish) since you must allow about 2 weeks for the terminated cover crop plants to break down.\" Selection chart: \"Crimson clover (Trifolium incarnatum) | legume | 1 to 2 | spring or late summer/fall | fall or spring | showy spring blooms\""
+    }
+  },
+  "cucumber-regal-f1-seed": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/00446-cucumber-regal-f1",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 52 Days; Spacing in Row: 24-36\"; Spacing Between Rows: 3-6'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule. VCE 426-406 / 426-331 give 12-18 in for cucumbers generally."
+    },
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-406/426-406.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-406, Cucumbers, Melons and Squash (Cucumbers): \"Harvest: From when cucumbers are about 2 inches long up to any size before they begin to turn yellow, about 15 days. Remove by turning cucumbers parallel to the vine and giving a quick snap.\""
+    }
+  },
+  "daikon-radish-cover": {
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/cover-crops-gardens",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-08-07",
+      "quote": "UMD HGIC, Cover Crops For Gardens: \"In most years, forage/daikon radish and spring oats will winter-kill (die out due to the cold), leaving a mat of dead vegetation. The debris can be treated as a mulch (planted through in the spring) or turned-under.\""
+    }
+  },
+  "dill-mammoth": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Annuals table, Plant spacing): \"Dill Anethum graveolens | 24-48” | 12”\""
+    }
+  },
+  "edamame-midori-giant": {
+    "inRowSpacingIn": {
+      "url": "https://extension.psu.edu/programs/master-gardener/counties/york/vegetable-guides/vegetable-seed-planting-guide/@@download/file/Vegetable-Seed-Planting-Guide.pdf",
+      "publisher": "Penn State Extension (York County Master Gardeners)",
+      "date": "2020-10-28 (PDF last modified)",
+      "quote": "Penn State Extension Seed Planting Guide, column 7 \"Inches apart to thin plants\" (\"Distance in inches to leave between seedlings in the row after thinning out excess seedlings\"): \"Bean, Soy W 5.8-6.8 1 5 15 5\"",
+      "note": "VCE 426-402 covers soybeans/edamame but gives no spacing."
+    }
+  },
+  "eggplant-black-beauty": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-413/426-413.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-03-10",
+      "quote": "VCE 426-413, Potatoes, Peppers and Eggplant (Eggplant): \"Spacing: 18 to 24 inches by 30 to 36 inches.\"",
+      "note": "VCE 426-331 Table 5 agrees (Eggplant 18-24 in)."
+    }
+  },
+  "fairytale-pumpkin-film-coated-treated-seed": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/01328-pumpkin-fairytale",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 125 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden, Harvesting pumpkins: \"Generally, pumpkins are harvested in late September or October before heavy frosts hit the planting area. Use a sharp knife or pruning shears to cut them from the vines, leaving 3 to 4 inches of stem attached to each fruit. Try to avoid cutting or bruising the fruit. The rinds need to be hard and firm for pumpkins to store well.\" Growing and care: \"It is harvested and eaten in the mature fruit stage, when its color has changed from green\""
+    }
+  },
+  "fennel-florence-zefa-fino": {
+    "inRowSpacingIn": {
+      "url": "https://content.ces.ncsu.edu/central-north-carolina-planting-calendar-for-annual-vegetables-fruits-and-herbs",
+      "publisher": "NC State Extension",
+      "date": "2016-07-08",
+      "quote": "NC State Extension, Central North Carolina Planting Calendar for Annual Vegetables, Fruits, and Herbs, Table 1 (Days to Harvest | Distance Between Plants (inches)): \"Fennel, Florence | 60–90 | 6–12\""
+    }
+  },
+  "grape-concord": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1 (Minimum distance between rows (feet) | Minimum distance between plants (feet) | ... | Average bearing age (years) | ...): \"Grape (American) | 8 | 6 | 10 | 3 | 20-30\"; Concord is described as \"by far the most widely planted blue-black grape.\"",
+      "note": "Feet converted to inches."
+    },
+    "daysToMaturity": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: Table 1, Average bearing age (years): \"Grape (American) | 8 | 6 | 10 | 3 | 20-30\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    }
+  },
+  "hairy-vetch-cover": {
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/cover-crops-gardens",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-08-07",
+      "quote": "UMD HGIC, Cover Crops For Gardens: Selection chart: \"Hairy vetch (Vicia villosa) | legume | 3 to 4 | late summer/fall | spring | very hardy; slow to establish; can become weedy, so till under at bloom before it ripens seed\" \"Spring vegetable planting may be delayed somewhat by a cover crop (except for oats and usually daikon radish) since you must allow about 2 weeks for the terminated cover crop plants to break down.\""
+    }
+  },
+  "kale-lacinato": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-408/426-408.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-408, Leafy Green Vegetables (Cooking Greens): \"Kale: 10 to 18 inches x 18 to 36 inches\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Collards, kale 12-24 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "kohlrabi-early-white-vienna": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-403/426-403.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-403, Cole Crops or Brassicas (Kohlrabi): \"Spacing: 4 inches x 15 to 18 inches.\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives 4-6 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "leek-american-flag": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-331/426-331.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2025-05-30",
+      "quote": "VCE 426-331, Virginia's Home Garden Vegetable Planting Guide, Table 5 (Distance between plants in row): Leeks, 4-6 in"
+    }
+  },
+  "lettuce-buttercrunch": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-408/426-408.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-408, Leafy Green Vegetables (Lettuce): \"Spacing: Romaine, leaf or butterhead: 4 to 10 inches x 12 to 24 inches\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Lettuce, head 6-10 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "lettuce-romaine-paris-island-cos": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-408/426-408.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-408, Leafy Green Vegetables (Lettuce): \"Spacing: Romaine, leaf or butterhead: 4 to 10 inches x 12 to 24 inches\""
+    }
+  },
+  "lima-bean-fordhook-242": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-402/426-402.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2025-03-10",
+      "quote": "VCE 426-402, Beans: \"Row Spacing: ... 4 inches by 18 to 30 inches for bush lima beans\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Beans, lima 3-6 in; overlapping range, crop-specific publication used. Fordhook 242 is a bush lima."
+    }
+  },
+  "mint-spearmint": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Perennials table, Plant spacing): \"Mints Mentha spp. | 12-36” | 18”\""
+    }
+  },
+  "mustard-greens-southern-giant-curled": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-408/426-408.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-408, Leafy Green Vegetables (Cooking Greens): \"Mustard: 4 to 6 inches x 18 to 30 inches\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives 1-2 in thinned to 6 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "oats-cover-spring": {
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/cover-crops-gardens",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2026-08-07",
+      "quote": "UMD HGIC, Cover Crops For Gardens: \"Oats are killed by the first hard freeze, leaving a brown decomposing mat in spring.\" ... \"In spring, any remaining debris can be forked into the soil or raked aside to mulch around new plants.\""
+    }
+  },
+  "onion-walla-walla": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-331/426-331.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2025-05-30",
+      "quote": "VCE 426-331, Virginia's Home Garden Vegetable Planting Guide, Table 5 (Distance between plants in row): Onions (bulbing), 2-4 in",
+      "note": "VCE 426-411 (Onions) gives 1 to 6 inches, but that figure includes close planting thinned for green onions (\"Plant close, then thin using thinnings as green onions\"); the bulbing-onion row of 426-331 is used for a bulb crop."
+    }
+  },
+  "oregano-greek": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Perennials table, Plant spacing): \"Oregano Origanum spp. | 24” | 9”\""
+    }
+  },
+  "ornamental-corn-earth-tones-dent-raw-untreated-non-gmo": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/01118-ornamental-corn-earth-tones-dent",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 90 Days; Spacing in Row: 9-12\"; Spacing Between Rows: 3-4'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "http://www.gardening.cornell.edu/homegardening/scene05f6.html",
+      "publisher": "Cornell University, Cornell Home Gardening Vegetable Growing Guides (Corn)",
+      "date": "2006 (page copyright)",
+      "quote": "Cornell Vegetable Growing Guide, Corn: \"choose another type of corn that you won’t harvest until the ears are fully mature and dry. These include popcorn, ornamental corn or field corn (dent, flint and flour corns grown for meal or animal feed).\""
+    }
+  },
+  "ornamental-corn-oxacana-green-dent": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/12968-ornamental-corn-oxacana-green-dent",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 95 Days; Spacing in Row: 9-12\"; Spacing Between Rows: 3-4'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "http://www.gardening.cornell.edu/homegardening/scene05f6.html",
+      "publisher": "Cornell University, Cornell Home Gardening Vegetable Growing Guides (Corn)",
+      "date": "2006 (page copyright)",
+      "quote": "Cornell Vegetable Growing Guide, Corn: \"choose another type of corn that you won’t harvest until the ears are fully mature and dry. These include popcorn, ornamental corn or field corn (dent, flint and flour corns grown for meal or animal feed).\""
+    }
+  },
+  "parsley-italian-flat-leaf": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Annuals table, Plant spacing): \"Parsley Petroselinum spp | 12” | 6”\""
+    }
+  },
+  "parsnip-hollow-crown": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-422/426-422.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-20",
+      "quote": "VCE 426-422, Root Crops (Parsnips): \"Spacing: 1/2 inch deep, 2 to 4 inches x 18 to 24 inches\""
+    }
+  },
+  "peach-redhaven": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2020-09-21",
+      "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Peach | 20 | 4 | 3-4 | 15-20\"; \"The table below shows the minimum desirable distances between fruit trees in home orchards.\"",
+      "note": "Feet converted to inches. Minimum distance; the publication says trees can be set farther apart."
+    },
+    "daysToMaturity": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2020-09-21",
+      "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Peach | 20 | 4 | 3-4 | 15-20\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    }
+  },
+  "pepper-jalapeno": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-413/426-413.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-03-10",
+      "quote": "VCE 426-413, Potatoes, Peppers and Eggplant (Peppers): \"Spacing: 18 to 24 inches by 30 to 36 inches.\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Peppers 12-24 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "plum-stanley": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2020-09-21",
+      "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Plum | 20 | 2 | 4-5 | 15-20\"; \"The table below shows the minimum desirable distances between fruit trees in home orchards.\"",
+      "note": "Feet converted to inches. Minimum distance."
+    },
+    "daysToMaturity": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-841/426-841.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2020-09-21",
+      "quote": "VCE 426-841, Tree Fruit in the Home Garden, Table 1 (Minimum Distance Between Plants (feet) | Approximate Yield Per Plant | Bearing Age (years) | Life Expectancy): \"Plum | 20 | 2 | 4-5 | 15-20\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention (e.g. blueberry-duke-northern-highbush 1095)."
+    }
+  },
+  "pole-beans-rattlesnake": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-402/426-402.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2025-03-10",
+      "quote": "VCE 426-402, Beans: \"Row Spacing: ... 4 to 8 inches by 24 to 36 inches for pole beans.\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Beans, pole 4-12 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "popcorn-top-pop-f1-seed-standard-treated-100-seeds": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/01162-popcorn-top-pop-f1",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 100 Days; Spacing in Row: 9-12\"; Spacing Between Rows: 3-4'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "http://www.gardening.cornell.edu/homegardening/scene05f6.html",
+      "publisher": "Cornell University, Cornell Home Gardening Vegetable Growing Guides (Corn)",
+      "date": "2006 (page copyright)",
+      "quote": "Cornell Vegetable Growing Guide, Corn: \"choose another type of corn that you won’t harvest until the ears are fully mature and dry. These include popcorn, ornamental corn or field corn (dent, flint and flour corns grown for meal or animal feed).\""
+    }
+  },
+  "pumpkin": {
+    "inRowSpacingIn": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden: \"Spacing: Plant 2 to 3 seeds every 3 ft. to 4 ft. apart in rows that are about 8 to 12 feet apart ... Thin seedlings to a single plant.\"",
+      "note": "VCE is internally inconsistent for vining Cucurbita (426-331 Table 5: Pumpkin 2-4 ft in row; 426-406: vining winter squash \"two best plants ... every 5-7 feet\"), so the UMD figure, which overlaps 426-331, is used."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden, Harvesting pumpkins: \"Generally, pumpkins are harvested in late September or October before heavy frosts hit the planting area. Use a sharp knife or pruning shears to cut them from the vines, leaving 3 to 4 inches of stem attached to each fruit. Try to avoid cutting or bruising the fruit. The rinds need to be hard and firm for pumpkins to store well.\" Growing and care: \"It is harvested and eaten in the mature fruit stage, when its color has changed from green\""
+    }
+  },
+  "pumpkin-cinderella-film-coated-treated": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/01683-pumpkin-cinderella",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 115 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden, Harvesting pumpkins: \"Generally, pumpkins are harvested in late September or October before heavy frosts hit the planting area. Use a sharp knife or pruning shears to cut them from the vines, leaving 3 to 4 inches of stem attached to each fruit. Try to avoid cutting or bruising the fruit. The rinds need to be hard and firm for pumpkins to store well.\" Growing and care: \"It is harvested and eaten in the mature fruit stage, when its color has changed from green\""
+    }
+  },
+  "pumpkin-flat-white-boer-ford-standard-treated-harris-seeds": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/11486-pumpkin-flat-white-boer-ford",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 115 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden, Harvesting pumpkins: \"Generally, pumpkins are harvested in late September or October before heavy frosts hit the planting area. Use a sharp knife or pruning shears to cut them from the vines, leaving 3 to 4 inches of stem attached to each fruit. Try to avoid cutting or bruising the fruit. The rinds need to be hard and firm for pumpkins to store well.\" Growing and care: \"It is harvested and eaten in the mature fruit stage, when its color has changed from green\""
+    }
+  },
+  "pumpkin-grizzly-bear-film-coated-farmore-harris-seeds": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/12851-pumpkin-grizzly-bear-f1",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 90 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden, Harvesting pumpkins: \"Generally, pumpkins are harvested in late September or October before heavy frosts hit the planting area. Use a sharp knife or pruning shears to cut them from the vines, leaving 3 to 4 inches of stem attached to each fruit. Try to avoid cutting or bruising the fruit. The rinds need to be hard and firm for pumpkins to store well.\" Growing and care: \"It is harvested and eaten in the mature fruit stage, when its color has changed from green\""
+    }
+  },
+  "pumpkin-jarrahdale-film-coat-treated": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/11680-pumpkin-jarrahdale",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 100 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden, Harvesting pumpkins: \"Generally, pumpkins are harvested in late September or October before heavy frosts hit the planting area. Use a sharp knife or pruning shears to cut them from the vines, leaving 3 to 4 inches of stem attached to each fruit. Try to avoid cutting or bruising the fruit. The rinds need to be hard and firm for pumpkins to store well.\" Growing and care: \"It is harvested and eaten in the mature fruit stage, when its color has changed from green\""
+    }
+  },
+  "pumpkin-rouge-vif-d-etampes-film-coated-treated": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/11488-pumpkin-rouge-vif-detampes",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 105 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden, Harvesting pumpkins: \"Generally, pumpkins are harvested in late September or October before heavy frosts hit the planting area. Use a sharp knife or pruning shears to cut them from the vines, leaving 3 to 4 inches of stem attached to each fruit. Try to avoid cutting or bruising the fruit. The rinds need to be hard and firm for pumpkins to store well.\" Growing and care: \"It is harvested and eaten in the mature fruit stage, when its color has changed from green\""
+    }
+  },
+  "pumpkin-silver-moon-film-coated-treated": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/11694-pumpkin-silver-moon-f1",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 100 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    },
+    "harvestIndicators": {
+      "url": "https://extension.umd.edu/resource/growing-pumpkins-home-garden",
+      "publisher": "University of Maryland Extension, Home and Garden Information Center",
+      "date": "2023-09-14",
+      "quote": "UMD HGIC, Growing Pumpkins in a Home Garden, Harvesting pumpkins: \"Generally, pumpkins are harvested in late September or October before heavy frosts hit the planting area. Use a sharp knife or pruning shears to cut them from the vines, leaving 3 to 4 inches of stem attached to each fruit. Try to avoid cutting or bruising the fruit. The rinds need to be hard and firm for pumpkins to store well.\" Growing and care: \"It is harvested and eaten in the mature fruit stage, when its color has changed from green\""
+    }
+  },
+  "raspberry-heritage": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden: \"Red and purple raspberries can be set 3 feet apart within the row\". Table 1: \"Raspberry (red) | 8 | 3 | 3-5 | 1 | 5-12\"",
+      "note": "Feet converted to inches."
+    },
+    "daysToMaturity": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-840/426-840.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2022-05-05",
+      "quote": "VCE 426-840, Small Fruit in the Home Garden, Table 1 (Minimum distance between rows (feet) | Minimum distance between plants (feet) | Annual yield per plant (pounds) | Average bearing age (years) | Life expectancy (years)): \"Raspberry (red) | 8 | 3 | 3-5 | 1 | 5-12\"",
+      "note": "Bearing age in years converted at 365 days/year, matching the existing perennial daysToMaturity convention. Heritage is primocane-fruiting; the publication does not give a separate first-crop age for primocane types."
+    }
+  },
+  "rosemary-tuscan-blue": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Perennials table, Plant spacing): \"Rosemary Rosmarinus spp. | 36-72” | 12-36”\""
+    }
+  },
+  "sage-broadleaf": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Perennials table, Plant spacing): \"Sage Salvia spp. | 18” | 12”\""
+    }
+  },
+  "scallion-evergreen-bunching": {
+    "inRowSpacingIn": {
+      "url": "https://extension.psu.edu/programs/master-gardener/counties/york/vegetable-guides/vegetable-seed-planting-guide/@@download/file/Vegetable-Seed-Planting-Guide.pdf",
+      "publisher": "Penn State Extension (York County Master Gardeners)",
+      "date": "2020-10-28 (PDF last modified)",
+      "quote": "Penn State Extension Seed Planting Guide, column 7 \"Inches apart to thin plants\" (\"Distance in inches to leave between seedlings in the row after thinning out excess seedlings\"): \"Onion, Bunching C 6.2-7.2 0.5 0.5 12 2\"",
+      "note": "NC State planting calendar gives Onions, green 1-2 in (overlapping)."
+    }
+  },
+  "snow-pea-oregon-sugar-pod-ii": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-331/426-331.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2025-05-30",
+      "quote": "VCE 426-331, Virginia's Home Garden Vegetable Planting Guide, Table 5 (Distance between plants in row): Peas, garden, 2-3 in"
+    }
+  },
+  "southern-pea-pinkeye-purple-hull": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-331/426-331.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2025-05-30",
+      "quote": "VCE 426-331, Virginia's Home Garden Vegetable Planting Guide, Table 5 (Distance between plants in row): Peas, southern (cowpeas), 3-4 in"
+    }
+  },
+  "spinach-bloomsdale-long-standing": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-408/426-408.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-408, Leafy Green Vegetables (Spinach): \"Spacing: 2 to 4 inches x 12 to 18 inches\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives 0.5-1 in thinned to 4 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "squash-butterkin-film-coated-farmore": {
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-406/426-406.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-406, Cucumbers, Melons and Squash (Squash): \"Harvest winter squash when fruits turn a deep, solid color and the rind hard. Allow to ripen on the vine. Harvest after vine dries up before heavy frost. Cut the stem 2 to 3 inches from the vine as fruit without a stem tends not to store well.\""
+    },
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/12447-squash-butterkin-f1",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 105 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    }
+  },
+  "squash-marina-de-chioggia-film-coated-treated": {
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-406/426-406.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-406, Cucumbers, Melons and Squash (Squash): \"Harvest winter squash when fruits turn a deep, solid color and the rind hard. Allow to ripen on the vine. Harvest after vine dries up before heavy frost. Cut the stem 2 to 3 inches from the vine as fruit without a stem tends not to store well.\""
+    },
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/12856-pumpkin-marina-de-chioggia",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 100 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    }
+  },
+  "squash-queensland-blue-raw-untreated-non-gmo": {
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-406/426-406.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-406, Cucumbers, Melons and Squash (Squash): \"Harvest winter squash when fruits turn a deep, solid color and the rind hard. Allow to ripen on the vine. Harvest after vine dries up before heavy frost. Cut the stem 2 to 3 inches from the vine as fruit without a stem tends not to store well.\""
+    },
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/12428-squash-queensland-blue",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 95 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    }
+  },
+  "squash-sunshine-standard-treated": {
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-406/426-406.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-406, Cucumbers, Melons and Squash (Squash): \"Harvest winter squash when fruits turn a deep, solid color and the rind hard. Allow to ripen on the vine. Harvest after vine dries up before heavy frost. Cut the stem 2 to 3 inches from the vine as fruit without a stem tends not to store well.\""
+    },
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/00861-squash-sunshine-f1",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 98 Days; Spacing in Row: 36-48\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule."
+    }
+  },
+  "summer-squash-yellow-crookneck": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-406/426-406.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-406, Cucumbers, Melons and Squash (Squash): \"2 to 3 feet by 3 to 5 feet for single plants.\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Squash, summer 18-36 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "sunflower-mammoth-russian": {
+    "inRowSpacingIn": {
+      "url": "https://content.ces.ncsu.edu/central-north-carolina-planting-calendar-for-annual-vegetables-fruits-and-herbs",
+      "publisher": "NC State Extension",
+      "date": "2016-07-08",
+      "quote": "NC State Extension, Central North Carolina Planting Calendar for Annual Vegetables, Fruits, and Herbs, Table 1 (Days to Harvest | Distance Between Plants (inches)): \"Sunflower | 55–110 | 9–24\"",
+      "note": "Crop-level figure; Mammoth Russian is an open-pollinated heirloom not tied to one vendor."
+    }
+  },
+  "sweet-corn-american-dream-f1-seed": {
+    "inRowSpacingIn": {
+      "url": "https://www.johnnyseeds.com/vegetables/corn/sweet-corn/american-dream-f1-corn-seed-4393.html",
+      "publisher": "Johnny's Selected Seeds",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Johnny's Selected Seeds, American Dream (F1) Corn Seed, Growing Information: \"Sow 3/4-1\" deep, 6-7\" apart (or 2 seeds every 9\", thinning to 1 plant)\"",
+      "note": "Harris Seeds' American Dream page (12324) now returns 404, so Johnny's (the other untreated-seed vendor) is used. VCE 426-405 gives 9-12 in for sweet corn generally."
+    },
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-405/426-405.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-405, Sweet Corn: \"Harvest: when husk is still green, silks dry-brown, kernels full size, and yellow or white color to the tip of the ear; and at “milky” stage (use thumbnail to puncture a kernel - if liquid is clear, the corn is immature, if milky it’s ready, and if no sap, you’re too late). ... Corn matures 17 to 24 days after first silk strands appear\""
+    }
+  },
+  "sweet-corn-anthem-xr-standard-cruiser-1-000-seeds": {
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/11410-sweet-corn-anthem-xr-f1",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 73 Days; Spacing in Row: 8-12\"; Spacing Between Rows: 2-3'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule. VCE 426-405 gives 9-12 in for sweet corn generally."
+    },
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-405/426-405.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-405, Sweet Corn: \"Harvest: when husk is still green, silks dry-brown, kernels full size, and yellow or white color to the tip of the ear; and at “milky” stage (use thumbnail to puncture a kernel - if liquid is clear, the corn is immature, if milky it’s ready, and if no sap, you’re too late). ... Corn matures 17 to 24 days after first silk strands appear\""
+    }
+  },
+  "sweet-potato-beauregard": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-331/426-331.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2025-05-30",
+      "quote": "VCE 426-331, Virginia's Home Garden Vegetable Planting Guide, Table 5 (Distance between plants in row): Sweet potato, 9-12 in"
+    }
+  },
+  "swiss-chard-bright-lights": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-408/426-408.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-408, Leafy Green Vegetables (Chards): \"Spacing: 8 inches x 12 to 18 inches\"",
+      "note": "Cross-check VCE 426-331 Table 5 gives Chard, Swiss 6-12 in; overlapping range, crop-specific publication used."
+    }
+  },
+  "thyme-german-winter": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-420/426-420.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2019-10-11",
+      "quote": "VCE 426-420, Herb Culture and Use (Perennials table, Plant spacing): \"Thyme Thymus spp. | 8-12” | 12”\""
+    }
+  },
+  "tomatillo-de-milpa": {
+    "inRowSpacingIn": {
+      "url": "https://www.johnnyseeds.com/vegetables/tomatillos/de-milpa-organic-tomatillo-seed-2075.html",
+      "publisher": "Johnny's Selected Seeds",
+      "date": "2026-09-26 (accessed; page shows no publication date)",
+      "quote": "Johnny's Selected Seeds, De Milpa Organic Tomatillo Seed, Growing Information: \"Plant tomatillos deeply for adventitious rooting, spaced at 24–36\" apart, depending on amount of plant training.\"",
+      "note": "No VCE / Penn State / UMD / Cornell / NC State tomatillo spacing found; variety seed page used."
+    }
+  },
   "tomato-potato-late-blight": {
     "keepApart": {
       "url": "https://extension.wvu.edu/lawn-gardening-pests/plant-disease/fruit-vegetable-diseases/late-blight-tomatoes",
       "publisher": "West Virginia University Extension (Lewis W. Jett, \"Late Blight of Tomatoes\")",
       "date": "2010-05; last updated 2023-09-11",
       "quote": "Avoid planting tomatoes on sites that were previously in potatoes or close to potatoes."
+    }
+  },
+  "turnip-purple-top-white-globe": {
+    "inRowSpacingIn": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-422/426-422.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-20",
+      "quote": "VCE 426-422, Root Crops (Turnips and Rutabagas): \"Spacing: 2 to 3 inches x 14 to 18 inches\"",
+      "note": "VCE 426-331 Table 5 agrees (Turnips 2-3 in)."
+    }
+  },
+  "watermelon-sugar-baby-standard-treated": {
+    "harvestIndicators": {
+      "url": "https://www.pubs.ext.vt.edu/426/426-406/426-406.html",
+      "publisher": "Virginia Cooperative Extension (Virginia Tech / Virginia State University)",
+      "date": "2026-02-17",
+      "quote": "VCE 426-406, Cucumbers, Melons and Squash (Melons): \"The best indicator is a yellowish color on the underside where the melon touches the ground. A dead tendril or curl near the point where the fruit is attached to the vine is used by some as an indicator that the fruit is ready for harvest. You may also thump the fruit, listening for the dull sound of ripe fruit, rather than a more metallic sound\""
+    },
+    "inRowSpacingIn": {
+      "url": "https://www.harrisseeds.com/products/00587-watermelon-sugar-baby",
+      "publisher": "Harris Seeds (Harris Moran Seed Co. retail catalog)",
+      "date": "2026-09-26 (accessed; product page has no publication date)",
+      "quote": "Harris Seeds product page Growing Information: Maturation Days: 85 Days; Spacing in Row: 24-36\"; Spacing Between Rows: 6-8'",
+      "note": "Named-variety plugin tied to this vendor catalog item; the variety page figure is used per the Task 3 source rule. VCE 426-331 gives Watermelon 3-4 ft in row; VCE 426-406 gives hills 6-8 ft apart."
     }
   }
 }

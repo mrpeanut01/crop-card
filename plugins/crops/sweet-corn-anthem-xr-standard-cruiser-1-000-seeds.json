@@ -9,6 +9,10 @@
     "max": 73
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 8,
+      "max": 12
+    },
     "soilTempMinF": 65,
     "rowSpacingIn": 10,
     "seedDepthIn": {
@@ -17,6 +21,11 @@
     }
   },
   "notes": "73-day sweet corn. Large 7–8\" ears, rust resistance (Rp1-G). Treated: Azoxystrobin, Difenoconazole, Fludioxonil, Mefenoxam, Sedaxane, Thiamethoxam, Thiophanate.",
+  "harvestIndicators": [
+    "Husk still green, silks dry and brown, kernels full size to the tip of the ear",
+    "Milky stage: a punctured kernel gives milky juice (clear = immature, none = too late)",
+    "About 17 to 24 days after first silks appear"
+  ],
   "harvestStyle": "row-grain-pollinated",
   "bloomWindow": {
     "daysFromPlantingMin": 55,

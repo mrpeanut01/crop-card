@@ -15,6 +15,10 @@
   ],
   "notes": "Bush-type winter squash; less aggressive vining than butternut. Cure briefly (3–5 d) only.",
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "vineSpreadFt": {
       "min": 6,
       "max": 10

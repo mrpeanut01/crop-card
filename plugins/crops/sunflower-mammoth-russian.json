@@ -9,6 +9,12 @@
     "max": 110
   },
   "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 24
+    }
+  },
   "harvestIndicators": [
     "Back of head turns brown",
     "Seeds plump",

@@ -9,6 +9,12 @@
     "max": 90
   },
   "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 12
+    }
+  },
   "harvestIndicators": [
     "Cut at 6 in",
     "Multiple cuts per season"

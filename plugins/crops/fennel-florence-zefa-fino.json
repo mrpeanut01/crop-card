@@ -9,6 +9,12 @@
     "max": 90
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 12
+    }
+  },
   "harvestIndicators": [
     "Bulb 3–4 in across",
     "Pre-bolt"

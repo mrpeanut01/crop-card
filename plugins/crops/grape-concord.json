@@ -5,7 +5,17 @@
   "version": "1.0.0",
   "cropFamily": "vine-fruit",
   "preHarvestIntervalDays": 14,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1095
+  },
   "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 72,
+      "max": 72
+    }
+  },
   "seasonalTasks": [
     {
       "key": "winter-prune",

@@ -9,6 +9,12 @@
     "max": 45
   },
   "defaultRowSpacingInches": 6,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 6,
+      "max": 6
+    }
+  },
   "harvestIndicators": [
     "3–4 in leaves",
     "Pre-bolt for milder flavor"

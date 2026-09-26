@@ -9,6 +9,12 @@
     "max": 130
   },
   "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 2,
+      "max": 4
+    }
+  },
   "harvestIndicators": [
     "Tops fall",
     "Bulbs ~3–4 in"

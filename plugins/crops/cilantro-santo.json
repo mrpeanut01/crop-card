@@ -9,6 +9,12 @@
     "max": 55
   },
   "defaultRowSpacingInches": 12,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 18
+    }
+  },
   "harvestIndicators": [
     "Foliage harvest pre-bolt",
     "Allow some plants to flower for coriander seed"

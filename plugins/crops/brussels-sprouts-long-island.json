@@ -9,6 +9,12 @@
     "max": 110
   },
   "defaultRowSpacingInches": 30,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 18,
+      "max": 24
+    }
+  },
   "harvestIndicators": [
     "Sprouts 1–1.5 in firm",
     "Bottom-up after first frost"

@@ -9,6 +9,10 @@
     "max": 100
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 36,
+      "max": 48
+    },
     "soilTempMinF": 70,
     "rowSpacingIn": 42,
     "seedDepthIn": {
@@ -21,6 +25,11 @@
     }
   },
   "notes": "Italian heirloom; film coated, treated with Thiram 42-S. Avg 10-12 lb fruit. Long-storing. Packed for 2025. SKU 12856FLCTRT-25SDS",
+  "harvestIndicators": [
+    "Deep, solid rind color and a hard rind",
+    "Let it ripen on the vine; harvest after the vine dries, before a heavy frost",
+    "Cut with 2 to 3 in of stem left on"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 2

@@ -14,6 +14,10 @@
     "recommendedLbsPerAcre": 22
   },
   "notes": "Winter-annual N-fixing cover. Drill Aug–Sep; terminate at full bloom for max biomass + N. Excellent rye / vetch alternative for vegetable systems.",
+  "harvestIndicators": [
+    "Mow, flatten or turn under before it goes to seed, usually late April to early May",
+    "Allow about 2 weeks for the residue to break down before planting"
+  ],
   "harvestStyle": "cover-crop-termination",
   "bloomWindow": {
     "continuous": true,

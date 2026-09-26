@@ -5,7 +5,17 @@
   "version": "1.0.0",
   "cropFamily": "stone-fruit",
   "preHarvestIntervalDays": 7,
+  "daysToMaturity": {
+    "min": 1095,
+    "max": 1460
+  },
   "defaultRowSpacingInches": 216,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 240,
+      "max": 240
+    }
+  },
   "seasonalTasks": [
     {
       "key": "dormant-spray",

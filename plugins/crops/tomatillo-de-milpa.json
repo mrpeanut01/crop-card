@@ -10,6 +10,12 @@
     "max": 90
   },
   "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
   "harvestIndicators": [
     "Husk filled and starting to split",
     "Fruit firm"

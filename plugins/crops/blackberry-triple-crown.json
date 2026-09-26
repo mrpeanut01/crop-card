@@ -4,7 +4,17 @@
   "displayName": "Blackberry — Triple Crown (thornless)",
   "version": "1.0.0",
   "cropFamily": "bramble",
+  "daysToMaturity": {
+    "min": 365,
+    "max": 365
+  },
   "defaultRowSpacingInches": 96,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 60,
+      "max": 60
+    }
+  },
   "seasonalTasks": [
     {
       "key": "post-harvest-prune",

@@ -9,6 +9,12 @@
     "max": 730
   },
   "defaultRowSpacingInches": 36,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 36
+    }
+  },
   "harvestIndicators": [
     "Year-round cuts (light tipping)"
   ],

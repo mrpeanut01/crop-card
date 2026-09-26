@@ -9,6 +9,12 @@
     "max": 75
   },
   "defaultRowSpacingInches": 24,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 15,
+      "max": 24
+    }
+  },
   "harvestIndicators": [
     "Curd 6–8 in",
     "Compact + smooth"

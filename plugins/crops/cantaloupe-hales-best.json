@@ -9,6 +9,12 @@
     "max": 90
   },
   "defaultRowSpacingInches": 60,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 24,
+      "max": 36
+    }
+  },
   "harvestIndicators": [
     "Full-slip stem release",
     "Net-pattern fully expressed",

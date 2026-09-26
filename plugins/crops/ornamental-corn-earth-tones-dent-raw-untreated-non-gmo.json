@@ -9,6 +9,10 @@
     "max": 90
   },
   "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 9,
+      "max": 12
+    },
     "soilTempMinF": 65,
     "rowSpacingIn": 9,
     "seedDepthIn": {
@@ -17,6 +21,9 @@
     }
   },
   "notes": "Heirloom dent flour corn reselection. 8-10\" ears, earth tone colors. Untreated, Non-GMO. 97% germ. SD/LB 1660. Use: decor, flour, feed.",
+  "harvestIndicators": [
+    "Leave ears on the stalk until they are fully mature and dry"
+  ],
   "agronomy": {
     "lifecycle": "annual",
     "rotationLookbackYears": 1

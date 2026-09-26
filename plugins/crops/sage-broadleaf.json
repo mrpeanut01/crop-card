@@ -9,6 +9,12 @@
     "max": 180
   },
   "defaultRowSpacingInches": 18,
+  "plantingGuide": {
+    "inRowSpacingIn": {
+      "min": 12,
+      "max": 12
+    }
+  },
   "harvestIndicators": [
     "Pre-flower for best flavor"
   ],

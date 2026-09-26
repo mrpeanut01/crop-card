@@ -1,6 +1,6 @@
 # Phase 30: Areas, Cards, and Setup That Gets Out of the Way
 
-Status: **Proposed** (2026-09-26). Owner: Shawn. Nothing here is built yet.
+Status: **Sprint 30A in progress** (2026-09-26). Owner: Shawn. The 30A foundations are integrated on a branch; 30B onward is not built yet. Panel decisions are recorded in [Decisions (2026-09-26)](#decisions-2026-09-26).
 
 This is the implementation plan for reshaping CropCard's first-run experience, farm map and everyday UI. It borrows what works from [LiteFarm](https://github.com/LiteFarmOrg/LiteFarm) and [Seedtime](https://seedtime.us/), keeps what makes CropCard CropCard, and turns the paper Field Card that started this project into the organizing idea of the whole interface.
 
@@ -388,7 +388,7 @@ Route: `/plan/areas/[id]/design`, for crop-bearing areas of kind `garden` or `gr
 **Succession and sequences**
 
 - **Add succession** on a planting uses `FAMILY_SUCCESSION_DAYS` and creates a linked group (`group_system_kind='succession'`).
-- **Bed recipes** are Seedtime's Garden Blocks, done our way: data-only plugins under `plugins/bed-recipes/`, e.g. "Spring greens → bush beans → fall brassicas" for a 4×8 bed in zone 7. Each one has a Zod schema, a public JSON Schema and registry validation, following Invariant 2. Applying one creates the planned sequence in one step.
+- **Bed recipes** are Seedtime's Garden Blocks, done our way: data-only plugins under `plugins/bed-recipes/`, e.g. "Spring greens → bush beans → fall brassicas" for a 4×8 bed with ~180+ frost-free days. Each one has a Zod schema, a public JSON Schema and registry validation, following Invariant 2. Applying one creates the planned sequence in one step.
 
 **History and hints**
 
@@ -517,11 +517,11 @@ Today, pages work offline only if they were opened online first. Cards need to w
 
 Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping rules. Migrations and Dexie versions are numbered from today: migration 0049, Dexie v3.
 
-### 30A. Foundations (1 sprint)
+### 30A. Foundations (1 sprint) (in progress)
 
 - Migration 0050: area `kind`, `details_json` and `perimeter_ft`; block `kind` and layout columns.
 - `lib/farm/areaKinds.ts` Zod union, with a repo alias `lib/db/areas.ts`.
-- `lib/climate/frostNormals.ts` + `scripts/build-frost-normals.mjs`, with a checked-in dataset (needs NCEI access; the dataset PR can land separately).
+- `lib/climate/frostNormals.ts` + `scripts/build-frost-normals.mjs`, with a checked-in dataset built from NOAA's AWS Open Data mirror (`noaa-normals-pds`), pinned by SHA-256.
 - `lib/cards/model.ts` + `components/cards/CardView.svelte` (screen + print CSS), with Planting and Area builders.
 - Tests: kind validation, nearest-station lookup (property: always returns the true nearest station within the radius), cross-tenant cases for kind filters, CardView component tests.
 
@@ -583,7 +583,7 @@ Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping 
 
 **Risks**
 
-- **Frost data access.** NCEI must be reachable from wherever the dataset is built; the cloud sandbox can't reach it today. Until then, onboarding keeps manual frost entry with `fallback` provenance, so no one is blocked.
+- **Frost data access.** Resolved for v1: ncei.noaa.gov is unreachable from the sandbox, but the same public-domain 1991-2020 normals archive is on NOAA's AWS Open Data mirror, and the committed dataset is built from it. With no station within 50 mi, onboarding still falls back to manual entry with `fallback` provenance.
 - **Plant spacing coverage.** 117 of 406 crop plugins lack `inRowSpacingIn`. Their counts use the row-spacing fallback and say so. A backfill goes in the label-research brief.
 - **Offline staleness.** A card is only as fresh as its snapshot. Every card shows its as-of time; Spray Cards add a stale banner and never gate or permit anything.
 - **iOS storage eviction.** Mitigated by the install nudge and printing, and documented on the `/cards` page.
@@ -592,5 +592,49 @@ Each sprint is one or more PRs, CI-gated, squash-merged per the repo's shipping 
 **Open questions**
 
 1. **Hardiness zone.** Should onboarding also show a USDA zone? It needs another dataset (PRISM). Frost dates matter more for planning, so this proposal leaves it out of v1.
-2. **Terminology.** "Areas" or "Places" on the map? LiteFarm says Locations. "Areas" is proposed because it reads naturally for both a 20-acre field and a 4×8 bed's parent garden.
-3. **Garden-only households.** Should a `garden`-profile farm hide the VDACS audit tier in `/settings/records` entirely? The proposal keeps it visible but quiet, because a gardener spraying copper still has label obligations.
+2. **Terminology.** "Areas" or "Places" on the map? LiteFarm says Locations. "Areas" is proposed because it reads naturally for both a 20-acre field and a 4×8 bed's parent garden. **Decided 2026-09-26: "Areas"** (see Decisions).
+3. **Garden-only households.** Should a `garden`-profile farm hide the VDACS audit tier in `/settings/records` entirely? The proposal keeps it visible but quiet, because a gardener spraying copper still has label obligations. **Decided 2026-09-26: quiet, not hidden, triggered by pesticide records** (see Decisions).
+
+## Decisions (2026-09-26)
+
+A three-view panel (farmer, household gardener, engineer) settled the open questions below before Sprint 30A. Where the views disagreed, the engineer's constraints on bundle size, offline use and the invariants decided it. None of these decisions changes the safety kernel, the tenant schema or `RULES_VERSION`.
+
+### Hardiness zone (open question 1)
+
+Onboarding in v1 shows frost dates only. That means the last spring and first fall 32 °F dates and the hard-frost 24 °F dates, taken from the bundled NOAA station table, each with a `<Provenance>` tag and the station label (for example "Last frost ~Apr 20 · Dulles Intl, 6 mi · data"). Neither screen shows a USDA hardiness zone, and v1 adds no PRISM data and no zip-to-zone package. If the station table has nothing in range, the Loudoun fallback dates (Apr 15 / Oct 15) show with `fallback` provenance and a clear prompt to confirm or edit; an edit is stored as `manual`.
+
+The reason is that nothing in the app uses a zone. Planting windows come only from frost dates (`lib/plan/plantingWindow.ts`, `lib/schedule/scheduleCandidacy.ts`, succession and the AI schedule prompt), and no plugin has a zone field. A zone on screen would be a pre-filled value the app never acts on, which goes against Invariant 7, and it would slow the two-screen setup while leaving a new gardener unsure which climate number to trust. Loudoun is almost entirely zone 7a/7b, so it adds nothing for the farm either. A second dataset would also add a larger client payload or a server call that breaks offline onboarding, and the PRISM/USDA 2023 data carries an Oregon State University copyright.
+
+The per-Owner settings keys `farm.hardiness_zone` (a string such as "7a", or null) and `farm.hardiness_zone_provenance` (`data`, `manual` or null) are reserved in the farm settings shape so no backfill is needed later; nothing reads them in v1. Bed recipes key their applicability on frost-date offsets or a frost-free-days range, and any zone text on a recipe is a display label that the validator never filters on.
+
+In v1.1 the frost build adds an `extremeMinF` column (the 1991-2020 mean annual extreme minimum) to the same station table. A pure `zoneFromExtremeMin` in `lib/climate/zone.ts` then derives an approximate zone, shown read-only on /settings/farm and the Farm Map sheet as "Zone 7a (approx., from Dulles Intl) · data" and never labelled as the USDA map. The owner can override it with `manual` provenance. Perennial and orchard work is its first consumer, and the zone never gates anything.
+
+### Terminology: "Areas" (open question 2)
+
+Typed map objects are called "Areas" in the UI. We do not use "Places", and we do not use LiteFarm's "Locations", because "location" already means the farm's latitude and longitude (onboarding "Where is it?", "Set your farm location", `lib/schedule/farmLocation.ts` and the frost and weather provenance). "Areas" fits a 20-acre hayfield, a kitchen garden, a barn footprint and a pond equally well, and it matches the words LiteFarm users know. "Places" sounds soft next to VDACS spray records and sprayer calibration.
+
+The collective word appears only in the map's Add drawer groups ("Crop areas" / "Other areas"), list headings, the Area Card title and the Cards filter chip. Wherever one record is shown, the UI uses the owner's name or the kind label with its size, such as "Hayfield · 20 ac" or "Kitchen Garden · 30×40 ft", and never builds "{kind} area"; the `natural_area` kind reads "Woods / natural". The measured size is labelled "Size", never "Area", in the map editor and post-draw form. Fences, watercourses and buffers are "Lines", gates and sample spots are "Points", both under "Map features", and the map verb is "Add to map". The Seedtime-style per-bed "Location History" becomes "Bed history". Search treats "location", "place" and "field" as synonyms for Areas, and a one-time map hint tells newcomers that Areas are sometimes called locations or fields.
+
+This is a copy decision only. **Glossary: UI "Area" = the `fields` table.** The table keeps its name, `lib/db/areas.ts` is the repo alias, and `lib/farm/areaKinds.ts`, the `areas_kind` migration and the `/plan/areas/[id]/design` route already use the word, so Invariant 6 and its tests are untouched. USDA/VDACS exports and the year summary keep their "Field" and "Block" column headers because inspectors expect them. The garden-persona usability pass re-checks the wording before copy freeze, and "Places" is reopened only if named points of interest are added later.
+
+### Compliance tier for garden households (open question 3)
+
+The VDACS/audit tier on /settings/records is quieted, not hidden, and the trigger is the data rather than the profile. A `garden`-profile Owner with no spray, insecticide or fungicide records sees the tier folded into one keyboard-reachable disclosure titled "Pesticide record-keeping (applies if you spray)". The full tier appears on the first pesticide record, and always for the `farm` and `mixed` profiles. Hiding it outright would break §4's rule that the profile never hides records or safety features, and would let `farm_profile` quietly switch compliance off, even though gardeners do spray copper, sulfur, Bt and spinosad. Showing it unchanged puts "VDACS", "FR-09" and "SHA-256" in front of a four-bed household.
+
+One pure, client-safe helper, `complianceChromeLevel(profile, counts)` in `lib/records/complianceChrome.ts`, returns `quiet` only for the garden profile with all three counts at zero and `full` otherwise, including an unknown profile. The /today retention banner and the /records export wording use the same helper. It is display-only: enforcement, exports, the 48 h lock, retention, owner-only deletes, the hash chain and every spray-flow safety step never read `farm_profile`, and regression tests check that. Records still waiting in the offline queue are not counted, which is acceptable because the server enforces lock and retention regardless of what the page shows. The disclosure copy never says home use is exempt.
+
+### Frost data source
+
+Sprint 30A ships real frost dates. The dataset is NOAA's 1991-2020 annual/seasonal normals archive from NOAA's official AWS Open Data mirror (`noaa-normals-pds`), the same public-domain NCEI data the design already named. `scripts/build-frost-normals.mjs` verifies a hard-coded SHA-256 of the pinned archive and writes `lib/climate/data/frost-normals-us.json`, which is committed; CI and the running app never touch the network for it. The file is about 226 KB gzipped, several times the earlier estimate, so it loads through a dynamic `import()` and stays out of the /today and field-flow chunks.
+
+`lib/climate/frostNormals.ts` is a pure nearest-station lookup with a 50-mile cap. A station result carries `data` provenance with the station name and distance, an edit becomes `manual`, and no station or a missing file gives the Loudoun `fallback`. NOAA's FPxx columns mean an xx% chance the frost comes after the date, so the "cautious" setting reads the P10 columns for both seasons; tests pin Dulles at Apr 15 / Oct 24 median and Apr 30 / Oct 10 cautious. We rejected zone-keyed frost packages (a zone does not determine frost dates), runtime Open-Meteo (not offline, not normals) and unlicensed or 1981-2010 datasets. Census geocoding stays an optional online extra behind `safeFetch`; the map pin and GPS are the main path. The work needs no new runtime dependency and no `RULES_VERSION` bump.
+
+### Printing Cards
+
+Printable Cards use browser print CSS. The single `CardView.svelte` renderer has a print variant, the Print button calls `window.print()`, and people save a PDF from the print dialog, which works offline and reuses the precached Almanac fonts. pdfmake stays server-only for compliance exports, because shipping it to the client would add one to two megabytes to the service-worker install and a second layout engine that could drift from the screen Card. QR codes are generated on the device by a vendored copy of Nayuki's MIT `qrcodegen` rendered as inline SVG, with error correction M. The QR payload is only `${ORIGIN}/c/<cardKey>` from the server-provided origin, never the Host header; with no stable origin there is no QR, and the short link is always printed as text. A printed Spray Card carries its as-of time, `RULES_VERSION`, "Recheck weather, REI and label before spraying", "Reference, not clearance" and "Calibrate first" for uncalibrated sprayers, and garden-only accounts do not see a Spray Card print option.
+
+### Garden designer
+
+The garden designer is a hand-rolled Svelte 5 SVG component with a viewBox in feet and Pointer Events, and all its geometry lives in a pure `lib/garden/designer.ts`. Konva, svelte-konva and Fabric are excluded (roughly 150 to 300 KB precached on every install for a screen many owners seldom open), and Leaflet in CRS.Simple is not reused because its power-of-two zoom and small vertex handles fight a feet grid and gloved hands. Leaflet with Geoman stays the acre-scale farm map. On a phone the flow is tap to select, then tap to place, backed by 48dp buttons for nudge, rotate, duplicate, delete and zoom, and an editable List view with the same abilities serves screen readers and devices without a usable canvas. Beds are real DOM nodes with roles and labels, so they are keyboard and screen-reader reachable and Playwright can test them without pixel coordinates.
+
+Designer positions use their own branded coordinate type so they can never reach distance, pollination, shade or weather consumers; like the Dimensions sketch, the layout is illustrative. Writes go only through the tenant-scoped `/api/blocks` endpoints and their `foreignRefs` checks. Editing needs a connection in v1, and the canvas is read-only offline. "Fill this bed" suggestions go through `aiTry()` with `ai` provenance, and without a key a deterministic spacing fill tagged `fallback` does the same job.

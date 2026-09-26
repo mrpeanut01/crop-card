@@ -231,3 +231,33 @@ function collectOuterRings(obj: unknown): Array<Array<[number, number]>> {
   }
   return out;
 }
+
+/** Bounding box of every outer ring in a GeoJSON string as
+ *  `[minLon, minLat, maxLon, maxLat]`, or null when there is no polygon. */
+export function geojsonBBox(
+  geojson: string | null | undefined
+): [number, number, number, number] | null {
+  if (!geojson) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(geojson);
+  } catch {
+    return null;
+  }
+  let minLon = Infinity;
+  let minLat = Infinity;
+  let maxLon = -Infinity;
+  let maxLat = -Infinity;
+  for (const ring of collectOuterRings(parsed)) {
+    for (const pt of ring) {
+      if (!Array.isArray(pt)) continue;
+      const [lon, lat] = pt;
+      if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
+      minLon = Math.min(minLon, lon);
+      maxLon = Math.max(maxLon, lon);
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+    }
+  }
+  return Number.isFinite(minLon) ? [minLon, minLat, maxLon, maxLat] : null;
+}

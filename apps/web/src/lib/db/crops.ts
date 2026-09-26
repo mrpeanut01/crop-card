@@ -10,7 +10,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, asc, desc, eq, gte, isNotNull, lte } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, lte } from 'drizzle-orm';
 import { db } from './client';
 import { crops, tasks as tasksTable } from './schema';
 import { splitQuantityForSuccession } from '$lib/schedule/succession';
@@ -137,6 +137,7 @@ function rowToCrop(row: typeof crops.$inferSelect): Crop {
 export interface ListFilters {
   blockId?: string;
   status?: CropStatus;
+  statuses?: readonly CropStatus[];
   year?: number;
   limit?: number;
 }
@@ -145,6 +146,7 @@ export function listCrops(filters: ListFilters = {}): Crop[] {
   const conds = [];
   if (filters.blockId) conds.push(eq(crops.blockId, filters.blockId));
   if (filters.status) conds.push(eq(crops.status, filters.status));
+  if (filters.statuses) conds.push(inArray(crops.status, [...filters.statuses]));
   if (filters.year !== undefined) {
     const start = new Date(filters.year, 0, 1);
     const end = new Date(filters.year + 1, 0, 1);

@@ -65,7 +65,7 @@ import { listFields, type FieldWithBlocks } from '$lib/db/fields';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listStockItems, type StockItemWithBalance } from '$lib/db/stock';
-import { listTasks, type Task } from '$lib/db/tasks';
+import { countTasks, listTasks, type Task } from '$lib/db/tasks';
 import {
   resolveArchetype,
   type CropPlugin,
@@ -86,7 +86,7 @@ import {
 import { getRegistry } from '$lib/server/registry';
 import { suggestCompanions, type CompanionSuggestion } from '$lib/calendar/companions';
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
-import { isEmptySeason, priorSeasonSummary } from '$lib/plan/seasonStart';
+import { isEmptySeason, plantingsInYear, priorSeasonSummary } from '$lib/plan/seasonStart';
 import { setupAreas } from '$lib/server/setupContext';
 
 export type PlanTab = 'overview' | 'layout' | 'crops' | 'schedule' | 'calendar';
@@ -196,7 +196,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   //     /stock/add.
   // The legacy Seed Stock rail (Phase 14c) on the Crops tab also reads
   // data.seedStock, so it continues to render unchanged.
-  const allSeedStock = listStockItems().filter((s) => s.category === 'seed');
+  const stockItems = listStockItems();
+  const allSeedStock = stockItems.filter((s) => s.category === 'seed');
   const seedStock = allSeedStock.map((s) => {
     const plug = s.pluginId ? registry.get(s.pluginId)?.plugin : undefined;
     const cropFamily = plug && plug.type === 'crop' ? (plug as CropPlugin).cropFamily : null;
@@ -247,8 +248,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     seasonWorkflow: deriveSeasonWorkflow({
       seasonSetup: seasonSetup ? { modifiedAt: seasonSetup.setAt } : null,
       lastYearSetup,
-      crops: listCrops({ year: currentYear }).map((c) => ({ plantingDate: c.plantingDate })),
-      inputsTaskCount: listTasks({ kind: 'primary' }).length,
+      crops: plantingsInYear(blocks, currentYear),
+      inputsTaskCount: countTasks({ kind: 'primary' }),
       hasPlanRevision: listPlanRevisions(`season-${currentYear}`, 1).length > 0
     }),
     // Phase 25d (#89) — ProvenancePanel data. planId is the season-year
@@ -455,7 +456,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     // copied from the stock item at planting time.
     const shortNameByDisplay = new Map<string, string>();
     const stockIdByDisplay = new Map<string, string>();
-    for (const s of listStockItems()) {
+    for (const s of stockItems) {
       if (s.shortName) shortNameByDisplay.set(s.displayName, s.shortName);
       stockIdByDisplay.set(s.displayName, s.id);
     }
@@ -779,7 +780,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     }));
 
     // Phase 15 — seed-stock cards for the wizard's gate (family + on-hand).
-    const seedStockForWizard = listStockItems()
+    const seedStockForWizard = stockItems
       .filter((s) => s.category === 'seed' && s.onHand > 0)
       .map((s) => ({
         stockItemId: s.id,

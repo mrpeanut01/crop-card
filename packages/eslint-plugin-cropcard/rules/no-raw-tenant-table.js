@@ -15,6 +15,11 @@
  *   db.select().from(blocks).where(withTenant(blocks, eq(blocks.id, id)))
  *   db.insert(sprayEvents).values(tenantValues({...}))
  *
+ * Statements built once with Drizzle's `.prepare()` use
+ * `tenantWherePrepared` / `withTenantPrepared`, which bind the Owner to a
+ * placeholder that `tenantParams()` fills from the active tenant on every
+ * execution.
+ *
  * If you genuinely need an unscoped query (e.g. cross-tenant superadmin
  * lookup or a global table like users), call `unscopedQueryNote('reason')`
  * in the same function.
@@ -47,7 +52,14 @@ function fromSchema(spec) {
   return SCHEMA_SOURCE.test(String(spec.parent.source.value));
 }
 
-const HELPERS = new Set(['tenantWhere', 'withTenant', 'tenantValues', 'unscopedQueryNote']);
+const HELPERS = new Set([
+  'tenantWhere',
+  'withTenant',
+  'tenantWherePrepared',
+  'withTenantPrepared',
+  'tenantValues',
+  'unscopedQueryNote'
+]);
 
 const FUNCTION_TYPES = new Set([
   'FunctionDeclaration',

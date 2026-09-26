@@ -17,11 +17,19 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNull, or, sql } from 'drizzle-orm';
 import { db } from './client';
 import { ensureHomeField } from './fields';
 import { blocks, plantingRecords } from './schema';
-import { tenantValues, tenantWhere, withTenant } from './tenant';
+import { preparedOnce } from './requestMemo';
+import {
+  tenantParams,
+  tenantValues,
+  tenantWhere,
+  tenantWherePrepared,
+  withTenant,
+  withTenantPrepared
+} from './tenant';
 import { geojsonAreaAcres } from '$lib/geo/area';
 import { sketchAcres } from '$lib/farm/sketch';
 import { DEFAULT_BLOCK_KIND, type BedStyle, type BlockKind } from '$lib/farm/areaKinds';
@@ -114,17 +122,82 @@ function rowToBlock(row: typeof blocks.$inferSelect): Block {
   };
 }
 
-export function listBlocks(opts: { kinds?: readonly BlockKind[] } = {}): BlockWithPlantings[] {
-  if (opts.kinds && opts.kinds.length === 0) return [];
-  const blockRows = db
+/** Which plantings `listBlocks` attaches to each block:
+ *  - `all`: every planting ever (records, exports, /plan's history views);
+ *  - `current`: planned or active plantings, undated ones, and anything
+ *    planted since Jan 1 of last year (`currentPlantingsCutoff`);
+ *  - `none`: no plantings (callers that only need block names or shapes). */
+export type PlantingScope = 'all' | 'current' | 'none';
+
+export interface ListBlocksOptions {
+  kinds?: readonly BlockKind[];
+  plantings?: PlantingScope;
+  /** Reference time for `plantings: 'current'`; defaults to now. */
+  now?: number;
+}
+
+/** Jan 1 (local) of the year before `now`: `current` keeps last season too,
+ *  so fall-planted crops and the prior-season view keep their plantings. */
+export function currentPlantingsCutoff(now: number): number {
+  return new Date(new Date(now).getFullYear() - 1, 0, 1).getTime();
+}
+
+const allBlocksStmt = preparedOnce(() =>
+  db.select().from(blocks).where(tenantWherePrepared(blocks)).prepare()
+);
+const allPlantingsStmt = preparedOnce(() =>
+  db.select().from(plantingRecords).where(tenantWherePrepared(plantingRecords)).prepare()
+);
+const currentPlantingsStmt = preparedOnce(() =>
+  db
     .select()
-    .from(blocks)
+    .from(plantingRecords)
     .where(
-      opts.kinds ? withTenant(blocks, inArray(blocks.kind, [...opts.kinds])) : tenantWhere(blocks)
+      withTenantPrepared(
+        plantingRecords,
+        or(
+          inArray(plantingRecords.status, ['planned', 'active']),
+          isNull(plantingRecords.plantingDate),
+          gte(plantingRecords.plantingDate, sql.placeholder('cutoff'))
+        )
+      )
     )
-    .all();
+    .prepare()
+);
+
+const plantingCountStmt = preparedOnce(() =>
+  db
+    .select({ n: count() })
+    .from(plantingRecords)
+    .where(tenantWherePrepared(plantingRecords))
+    .prepare()
+);
+
+/** Every planting the Owner has ever recorded, in any status: the number
+ *  `listBlocks()` would attach across all blocks, without reading them. */
+export function countPlantings(): number {
+  return plantingCountStmt().get(tenantParams())?.n ?? 0;
+}
+
+export function listBlocks(opts: ListBlocksOptions = {}): BlockWithPlantings[] {
+  if (opts.kinds && opts.kinds.length === 0) return [];
+  const blockRows = opts.kinds
+    ? db
+        .select()
+        .from(blocks)
+        .where(withTenant(blocks, inArray(blocks.kind, [...opts.kinds])))
+        .all()
+    : allBlocksStmt().all(tenantParams());
   if (blockRows.length === 0) return [];
-  const all = db.select().from(plantingRecords).where(tenantWhere(plantingRecords)).all();
+  const scope = opts.plantings ?? 'all';
+  const all =
+    scope === 'none'
+      ? []
+      : scope === 'current'
+        ? currentPlantingsStmt().all(
+            tenantParams({ cutoff: currentPlantingsCutoff(opts.now ?? Date.now()) })
+          )
+        : allPlantingsStmt().all(tenantParams());
   const grouped = new Map<string, PlantingRecord[]>();
   for (const p of all) {
     const list = grouped.get(p.blockId) ?? [];

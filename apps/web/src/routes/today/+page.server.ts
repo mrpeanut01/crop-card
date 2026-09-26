@@ -9,7 +9,7 @@ import {
 import { loadGettingStartedFacts } from '$lib/onboarding/gettingStarted.server';
 import { getFarmProfile } from '$lib/onboarding/state.server';
 import { currentUser } from '$lib/server/auth';
-import { listBlocks } from '$lib/db/blocks';
+import { countPlantings, listBlocks } from '$lib/db/blocks';
 import { listCrops } from '$lib/db/crops';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listSprayEvents } from '$lib/db/sprayEvents';
@@ -26,6 +26,8 @@ import {
   type CalendarEvent
 } from '$lib/calendar/engine';
 import type { CropPlugin } from '$lib/plugins/schemas';
+import type { PluginRegistry } from '$lib/plugins';
+import { listPlantingsForCardsByIds } from '$lib/db/cardSnapshot';
 import { getRegistry, getRegistryStats } from '$lib/server/registry';
 import { listSprayers } from '$lib/server/sprayers';
 import { RULES_VERSION } from '$lib/safety/version';
@@ -41,6 +43,21 @@ import { SEASON_DAYS, clampView, clampWindow } from '$lib/today/deck';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
+
+const curingDaysByRegistry = new WeakMap<PluginRegistry, number>();
+
+/** The longest post-harvest curing window any crop plugin declares. */
+function maxCuringDays(registry: PluginRegistry): number {
+  const hit = curingDaysByRegistry.get(registry);
+  if (hit !== undefined) return hit;
+  let weeks = 0;
+  for (const c of registry.crops()) {
+    const max = c.postHarvestCuring?.durationWeeks.max ?? 0;
+    if (max > weeks) weeks = max;
+  }
+  curingDaysByRegistry.set(registry, weeks * 7);
+  return weeks * 7;
+}
 
 export const load: PageServerLoad = async ({ url, locals }) => {
   // An Owner who hasn't answered onboarding screen 2 goes back to it.
@@ -60,15 +77,15 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const aiEnabled = getUserAiEnabled(locals.user?.id);
   const registry = await getRegistry();
   const stats = getRegistryStats();
-  const blocks = listBlocks();
+  const now = Date.now();
+  const blocks = listBlocks({ plantings: 'current', now });
 
   // Calendar-engine derived events — every active planting contributes
   // spray windows / harvest windows / orchard tasks etc. These are the
   // suggestions the operator can promote to a real Task.
   const allEvents: CalendarEvent[] = [];
-  let totalPlantings = 0;
+  const totalPlantings = countPlantings();
   for (const b of blocks) {
-    totalPlantings += b.plantings.length;
     for (const planting of b.plantings) {
       const cropRecord = registry.get(planting.cropPluginId);
       if (!cropRecord || cropRecord.plugin.type !== 'crop') continue;
@@ -80,15 +97,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     }
   }
 
-  // FR-08 curing reminders.
-  const harvests = listHarvestEvents();
+  // FR-08 curing reminders. Every view below starts at today, so a harvest
+  // matters only while its longest curing window can still be open.
+  const harvests = listHarvestEvents({
+    fromMs: now - (maxCuringDays(registry) + 2) * DAY_MS
+  });
   for (const h of harvests) {
     const cropRecord = registry.get(h.cropPluginId);
     if (!cropRecord || cropRecord.plugin.type !== 'crop') continue;
     allEvents.push(...eventsForHarvest(h, cropRecord.plugin as CropPlugin));
   }
 
-  const now = Date.now();
   const prefs = prefsFor(locals.user?.id);
   const today = todayYmd(prefs, now);
   const dayStart = Date.parse(today);
@@ -164,6 +183,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   for (const b of blocks)
     for (const p of b.plantings)
       plantingNames[p.id] = { name: p.varietyDisplayName, blockId: b.id };
+  const olderPlantingIds = [
+    ...new Set(deckTasks.flatMap((t) => (t.cropId && !plantingNames[t.cropId] ? [t.cropId] : [])))
+  ];
+  for (const p of listPlantingsForCardsByIds(olderPlantingIds))
+    plantingNames[p.id] = { name: p.varietyDisplayName, blockId: p.blockId };
 
   return {
     today,

@@ -86,7 +86,7 @@ function ownerSnapshot(now: number): {
     winterizedAt: s.winterizedAt
   }));
   const window = { fromMs: now - LOCK_WINDOW_MS, toMs: now };
-  const blockName = new Map(listBlocks().map((b) => [b.id, b.name]));
+  const blockName = new Map(listBlocks({ plantings: 'none' }).map((b) => [b.id, b.name]));
   const records: LockableRecordSnapshot[] = [
     ...listSprayEvents(window).map((e) => ({
       kind: 'spray' as const,
@@ -123,10 +123,10 @@ function ownerSnapshot(now: number): {
  */
 async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<PushAlert[]> {
   if (!listSubscriptions().some((s) => s.prefs['frost-tonight'])) return [];
-  const crops = listCrops().filter((c) => c.status === 'active' || c.status === 'planned');
+  const crops = listCrops({ statuses: ['active', 'planned'] });
   if (crops.length === 0) return [];
   const registry = await getRegistry();
-  const blockName = new Map(listBlocks().map((b) => [b.id, b.name]));
+  const blockName = new Map(listBlocks({ plantings: 'none' }).map((b) => [b.id, b.name]));
   const plantings: FrostPlantingSnapshot[] = [];
   for (const c of crops) {
     const plugin = registry.get(c.cropPluginId)?.plugin;

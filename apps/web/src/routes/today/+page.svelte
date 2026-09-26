@@ -37,6 +37,7 @@
   import type { QueuedTaskRow } from '$lib/client/taskQueue';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatDueDay } from '$lib/prefs';
+  import { dateTimeFormat } from '$lib/intlCache';
 
   const { data } = $props();
 
@@ -50,7 +51,7 @@
   const todayDateLabel = $derived(fmt.instant(data.nowMs, 'date-long', { year: undefined }));
   const greeting = $derived.by(() => {
     const hour = Number(
-      new Intl.DateTimeFormat('en-US', {
+      dateTimeFormat('en-US', {
         hour: 'numeric',
         hourCycle: 'h23',
         timeZone: prefs.timeZone

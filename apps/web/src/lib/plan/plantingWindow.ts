@@ -1,3 +1,4 @@
+import { dateToLocaleDateString } from '$lib/intlCache';
 import {
   EARLIEST_OFFSET_DAYS,
   defaultDtmFor,
@@ -60,7 +61,7 @@ function addDays(iso: string, days: number): string {
 export function formatDay(iso: string): string {
   const ms = parseDay(iso);
   if (ms === null) return iso;
-  return new Date(ms).toLocaleDateString('en-US', {
+  return dateToLocaleDateString(new Date(ms), 'en-US', {
     month: 'short',
     day: 'numeric',
     timeZone: 'UTC'

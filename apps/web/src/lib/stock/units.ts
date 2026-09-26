@@ -7,6 +7,7 @@
  */
 
 import { DEFAULT_PREFS, type Prefs } from '$lib/prefs';
+import { numberToLocaleString } from '$lib/intlCache';
 
 export type LiquidUnit = 'fl-oz' | 'pt' | 'qt' | 'gal';
 export type SolidUnit = 'oz' | 'lb' | 'kg' | 'g';
@@ -94,7 +95,7 @@ const ML_PER_FL_OZ = 29.5735295625;
 const GRAMS_PER_OZ = 28.349523125;
 
 const num = (v: number, digits: number) =>
-  v.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
+  numberToLocaleString(v, 'en-US', { maximumFractionDigits: digits, minimumFractionDigits: 0 });
 
 function metricEquivalent(amount: number, unit: StockUnit): string | null {
   if (isLiquid(unit)) {

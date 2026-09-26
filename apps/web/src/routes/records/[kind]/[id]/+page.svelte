@@ -9,14 +9,13 @@
     VERDICT_LABEL
   } from '$lib/records/pollinatorAttestation';
   import { currentPrefs, fmt } from '$lib/prefsState.svelte';
+  import { localStamp } from '$lib/exports/localTime';
   import type { Quantity } from '$lib/prefs';
 
   let { data } = $props();
 
   function fmtTimestamp(ms: number): string {
-    return new Date(ms)
-      .toLocaleString('sv-SE', { hour12: false, timeZone: currentPrefs().timeZone })
-      .slice(0, 16);
+    return localStamp(ms, currentPrefs());
   }
 
   const QTY_KEYS: Record<string, Quantity> = {

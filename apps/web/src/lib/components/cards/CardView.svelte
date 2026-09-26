@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+  import Pill from '$lib/components/ui/Pill.svelte';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import BedMapThumb from './BedMapThumb.svelte';
   import {
@@ -21,6 +23,14 @@
     printLink?: { url: string; qr: QrPath } | null;
     /** Epoch ms the stale check compares `asOf` against. */
     now?: number;
+    /** Marks the card the page has selected (a rail of Area cards). */
+    selected?: boolean;
+    /** How many facts the compact variant shows. */
+    factLimit?: number;
+    /** False drops the as-of time, for live pages rather than saved cards. */
+    showAsOf?: boolean;
+    /** Screen-only controls under the links, e.g. companion chips. */
+    actions?: Snippet;
   }
 
   const COMPACT_FACTS = 2;
@@ -30,13 +40,17 @@
     variant = 'screen',
     prefs = DEFAULT_PREFS,
     printLink = null,
-    now = Date.now()
+    now = Date.now(),
+    selected = false,
+    factLimit = COMPACT_FACTS,
+    showAsOf = true,
+    actions
   }: Props = $props();
 
   const stale = $derived(isCardStale(card, now));
 
   const titleId = $derived(`card-title-${variant}-${card.key}`);
-  const facts = $derived(variant === 'compact' ? card.facts.slice(0, COMPACT_FACTS) : card.facts);
+  const facts = $derived(variant === 'compact' ? card.facts.slice(0, factLimit) : card.facts);
   const asOf = $derived(formatInstant(card.asOf, prefs, 'datetime'));
   const kickerNamesKind = $derived(
     card.kicker.toLowerCase().startsWith(CARD_KIND_LABEL[card.kind].toLowerCase())
@@ -54,6 +68,8 @@
 
 <article
   class="cardview kind-{card.kind} v-{variant}"
+  class:selected
+  style:--strip={card.accent}
   data-card-kind={card.kind}
   data-card-key={card.key}
   data-variant={variant}
@@ -65,11 +81,24 @@
       <div class="kind-label">{CARD_KIND_LABEL[card.kind]}</div>
     {/if}
     <div class="kicker">{card.kicker}</div>
-    {#if variant === 'print'}
-      <h3 class="title serif" id={titleId}>{card.title}</h3>
-    {:else}
-      <h3 class="title serif" id={titleId}><a href={card.href}>{card.title}</a></h3>
-    {/if}
+    <div class="title-row">
+      {#if variant === 'print'}
+        <h3 class="title serif" id={titleId}>{card.title}</h3>
+      {:else}
+        <h3 class="title serif" id={titleId}>
+          <a href={card.href} aria-current={selected ? 'true' : undefined}>{card.title}</a>
+        </h3>
+      {/if}
+      {#if card.status}
+        {#if variant === 'print'}
+          <span class="status-text">{card.status.label}</span>
+        {:else}
+          <span class="status" data-card-status={card.status.label}>
+            <Pill tone={card.status.tone}>{card.status.label}</Pill>
+          </span>
+        {/if}
+      {/if}
+    </div>
 
     {#if stale}
       <p class="stale" role="status">{STALE_NOTICE}</p>
@@ -136,6 +165,10 @@
         </div>
       {/if}
 
+      {#if actions && variant !== 'print'}
+        <div class="actions">{@render actions()}</div>
+      {/if}
+
       {#if variant !== 'compact'}
         {#each bodySections as s (s.title)}
           <section class="section" class:safety={s.safety}>
@@ -153,21 +186,25 @@
       <p class="more">Cut short? The label and the live card have the full directions.</p>
     {/if}
 
-    <footer class="foot">
-      <span class="asof">As of {asOf}</span>
-      {#if card.rulesVersion}
-        <span class="rules mono">Rules {card.rulesVersion}</span>
-      {/if}
-      {#if variant === 'print'}
-        <span class="prov-text">{provText}</span>
-      {:else if variant === 'screen'}
-        <span class="prov-list">
-          {#each card.provenance as p, i (i)}
-            <Provenance source={p.source} detail={p.detail} />
-          {/each}
-        </span>
-      {/if}
-    </footer>
+    {#if showAsOf || card.rulesVersion || variant !== 'compact'}
+      <footer class="foot">
+        {#if showAsOf || variant === 'print'}
+          <span class="asof">As of {asOf}</span>
+        {/if}
+        {#if card.rulesVersion}
+          <span class="rules mono">Rules {card.rulesVersion}</span>
+        {/if}
+        {#if variant === 'print'}
+          <span class="prov-text">{provText}</span>
+        {:else if variant === 'screen'}
+          <span class="prov-list">
+            {#each card.provenance as p, i (i)}
+              <Provenance source={p.source} detail={p.detail} />
+            {/each}
+          </span>
+        {/if}
+      </footer>
+    {/if}
 
     {#if link}
       <div class="qr-row">
@@ -198,6 +235,34 @@
     color: var(--color-ink);
     min-width: 0;
   }
+  .cardview.selected {
+    border-color: var(--color-forest);
+    box-shadow: inset 0 0 0 1px var(--color-forest);
+  }
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .title-row .title {
+    flex: 1;
+    min-width: 0;
+  }
+  .status {
+    flex: 0 0 auto;
+  }
+  .status-text {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
   .kind-planting,
   .kind-careGuide {
     --strip: var(--color-forest);
@@ -217,6 +282,9 @@
   }
   .kind-day {
     --strip: var(--color-ink-soft);
+  }
+  .kind-scout {
+    --strip: var(--color-ink-muted);
   }
   .strip {
     flex: 0 0 6px;

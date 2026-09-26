@@ -8,8 +8,12 @@ export const CARD_KINDS = [
   'equipment',
   'careGuide',
   'day',
-  'stock'
+  'stock',
+  'scout'
 ] as const;
+
+/** Kinds built only from a saved record, never from the offline snapshot. */
+export const RECORD_ONLY_CARD_KINDS: readonly CardKind[] = ['scout'];
 
 export type CardKind = (typeof CARD_KINDS)[number];
 
@@ -61,6 +65,14 @@ export interface CardBedMap {
   beds: CardBedMapBed[];
 }
 
+export type CardStatusTone = 'forest' | 'sky' | 'wheat' | 'rust' | 'neutral';
+
+/** A derived status pill beside the title, never stored. */
+export interface CardStatus {
+  label: string;
+  tone: CardStatusTone;
+}
+
 export interface CardModel {
   kind: CardKind;
   key: string;
@@ -81,6 +93,10 @@ export interface CardModel {
   /** Extra screen links, e.g. "Open designer" on a garden Area. */
   links?: CardAction[];
   bedMap?: CardBedMap;
+  status?: CardStatus;
+  /** Strip color that matches the item elsewhere on the page (a planting's
+   *  swatch on /plan). Defaults to the kind color. */
+  accent?: string;
 }
 
 export const STALE_NOTICE = 'This card is more than a day old. Refresh it before you rely on it.';
@@ -101,7 +117,8 @@ export const CARD_KIND_LABEL: Record<CardKind, string> = {
   equipment: 'Equipment',
   careGuide: 'Care guide',
   day: 'Day',
-  stock: 'Seed & stock'
+  stock: 'Seed & stock',
+  scout: 'Scout'
 };
 
 export const CARD_KEY_PREFIX: Record<CardKind, string> = {
@@ -112,7 +129,8 @@ export const CARD_KEY_PREFIX: Record<CardKind, string> = {
   equipment: 'eq',
   careGuide: 'cg',
   day: 'dy',
-  stock: 'st'
+  stock: 'st',
+  scout: 'sc'
 };
 
 const KIND_BY_PREFIX = new Map<string, CardKind>(
@@ -132,6 +150,24 @@ export function parseCardKey(key: string): { kind: CardKind; id: string } | null
   if (i <= 0 || i === key.length - 1) return null;
   const kind = KIND_BY_PREFIX.get(key.slice(0, i));
   return kind ? { kind, id: key.slice(i + 1) } : null;
+}
+
+const RECORD_KEY_PREFIX = 'rc_';
+const RECORD_KEY = /^rc_([a-z]+)\.([\s\S]+)$/;
+
+/** Key for a card shown from a saved record. Its printed QR opens the
+ *  record itself, which stays the legal source of truth. */
+export function recordCardKey(recordKind: string, rowId: string): string {
+  return `${RECORD_KEY_PREFIX}${recordKind}.${rowId}`;
+}
+
+export function parseRecordCardKey(key: string): { recordKind: string; rowId: string } | null {
+  const m = RECORD_KEY.exec(key);
+  return m ? { recordKind: m[1], rowId: m[2] } : null;
+}
+
+export function recordHref(recordKind: string, rowId: string): string {
+  return `/records/${encodeURIComponent(recordKind)}/${encodeURIComponent(rowId)}`;
 }
 
 export function cardHref(kind: CardKind, key: string): string {

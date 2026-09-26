@@ -16,6 +16,25 @@ function ymd(d: Date | null | undefined): string | null {
   return d ? d.toISOString().slice(0, 10) : null;
 }
 
+function toSnapshotPlanting(r: typeof crops.$inferSelect): SnapshotPlanting {
+  return {
+    id: r.id,
+    blockId: r.blockId,
+    cropPluginId: r.cropPluginId,
+    varietyDisplayName: r.varietyDisplayName,
+    status: r.status as SnapshotPlanting['status'],
+    plantingDate: ymd(r.plantingDate),
+    harvestedAt: ymd(r.harvestedAt),
+    quantityPlanted: r.quantityPlantedHundredths != null ? r.quantityPlantedHundredths / 100 : null,
+    quantityUnit: r.quantityUnit ?? null,
+    spacingIn: r.spacingIn ?? null,
+    rowSpacingIn: r.rowSpacingIn ?? null,
+    plantCount: r.plantCount ?? null,
+    plantCountProvenance: r.plantCountProvenance ?? null,
+    sourceProvenance: r.sourceProvenance ?? null
+  };
+}
+
 /** Active and planned plantings, plus anything harvested in the last
  *  `harvestedWithinDays` so a just-finished bed still has its card. */
 export function listPlantingsForCards(now: number, harvestedWithinDays = 30): SnapshotPlanting[] {
@@ -36,27 +55,43 @@ export function listPlantingsForCards(now: number, harvestedWithinDays = 30): Sn
     )
     .all();
   return rows
-    .map((r) => ({
-      id: r.id,
-      blockId: r.blockId,
-      cropPluginId: r.cropPluginId,
-      varietyDisplayName: r.varietyDisplayName,
-      status: r.status as SnapshotPlanting['status'],
-      plantingDate: ymd(r.plantingDate),
-      harvestedAt: ymd(r.harvestedAt),
-      quantityPlanted:
-        r.quantityPlantedHundredths != null ? r.quantityPlantedHundredths / 100 : null,
-      quantityUnit: r.quantityUnit ?? null,
-      spacingIn: r.spacingIn ?? null,
-      rowSpacingIn: r.rowSpacingIn ?? null,
-      plantCount: r.plantCount ?? null,
-      plantCountProvenance: r.plantCountProvenance ?? null,
-      sourceProvenance: r.sourceProvenance ?? null
-    }))
+    .map(toSnapshotPlanting)
     .sort(
       (a, b) =>
         (a.plantingDate ?? '').localeCompare(b.plantingDate ?? '') || a.id.localeCompare(b.id)
     );
+}
+
+/** Plantings by id in any status, for a record whose planting is older
+ *  than the snapshot keeps. */
+export function listPlantingsForCardsByIds(ids: readonly string[]): SnapshotPlanting[] {
+  if (!ids.length) return [];
+  return db
+    .select()
+    .from(crops)
+    .where(withTenant(crops, inArray(crops.id, [...ids])))
+    .all()
+    .map(toSnapshotPlanting);
+}
+
+/** The planting a harvest or hay record most likely belongs to when it
+ *  carries no crop id: the latest one of that crop in that block planted on
+ *  or before the record. */
+export function plantingIdForRecord(
+  blockId: string,
+  cropPluginId: string,
+  occurredAt: number
+): string | null {
+  const rows = db
+    .select({ id: crops.id, plantingDate: crops.plantingDate })
+    .from(crops)
+    .where(withTenant(crops, and(eq(crops.blockId, blockId), eq(crops.cropPluginId, cropPluginId))))
+    .all();
+  const dated = rows
+    .map((r) => ({ id: r.id, at: r.plantingDate?.getTime() ?? null }))
+    .sort((a, b) => (b.at ?? 0) - (a.at ?? 0));
+  const before = dated.find((r) => r.at !== null && r.at <= occurredAt);
+  return (before ?? dated[0])?.id ?? null;
 }
 
 /** Open tasks scheduled between `fromMs` and `toMs`, oldest first. */

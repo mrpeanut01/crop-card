@@ -26,8 +26,10 @@ import {
 import { storedFrostView } from '$lib/climate/frostSettings';
 import { loadSeasonSetup } from '$lib/season/setup.server';
 import { unscopedQueryNote } from '$lib/db/tenant';
+import { loadHardinessZone, saveHardinessZoneChoice } from '$lib/climate/zone.server';
+import { parseHardinessZone } from '$lib/climate/zone';
 
-export const load: ServerLoad = ({ locals }) => {
+export const load: ServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
   if (locals.user.role !== 'owner') throw error(403, 'owner-only');
 
@@ -73,7 +75,8 @@ export const load: ServerLoad = ({ locals }) => {
       };
     })(),
     currentYear,
-    activeSeasonSetup: loadSeasonSetup(currentYear)
+    activeSeasonSetup: loadSeasonSetup(currentYear),
+    hardinessZone: await loadHardinessZone()
   };
 };
 
@@ -86,6 +89,12 @@ export const actions: Actions = {
     const latLon = parseLatLon(form.get('lat'), form.get('lon'));
     const frost = await resolveFrostForm(form, latLon);
     if (!frost.ok) return fail(400, { error: frost.error });
+    const zoneValue = form.get('hardinessZone');
+    if (zoneValue !== null && String(zoneValue).trim() && !parseHardinessZone(zoneValue)) {
+      return fail(400, {
+        error: `"${String(zoneValue).trim()}" isn't a hardiness zone. Pick one like 7a.`
+      });
+    }
 
     const farmName = String(form.get('farmName') ?? '').trim();
     if (farmName.length > 0 && farmName.length <= 120) {
@@ -98,6 +107,7 @@ export const actions: Actions = {
 
     if (latLon) setSetting(SETTINGS_KEYS.farmLatLon, JSON.stringify(latLon));
     if (frost.plan) applyFrostPlan(frost.plan);
+    saveHardinessZoneChoice(zoneValue);
 
     return { ok: true };
   }

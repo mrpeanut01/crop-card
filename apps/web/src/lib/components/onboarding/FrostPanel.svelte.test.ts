@@ -44,6 +44,18 @@ describe('FrostPanel', () => {
     );
   });
 
+  it('explains a Gulf-coast season across the new year without asking to confirm', async () => {
+    const { container } = render(FrostPanel, {
+      props: { lat: 30.2506, lon: -88.0775, mode: 'auto' }
+    });
+    await waitFor(() => expect(hidden(container, 'lastFrost')).toBe('01-31'), { timeout: 5000 });
+    expect(hidden(container, 'firstFrost')).toBe('01-06');
+    expect(screen.getByTestId('frost-crosses-year')).toHaveTextContent(
+      /growing season runs from one year into the next/
+    );
+    expect(screen.queryByText('These dates are fine for now')).toBeNull();
+  });
+
   it('asks for confirmation when there is no station nearby', async () => {
     render(FrostPanel, { props: { lat: 30, lon: -45, mode: 'auto' } });
     const box = await screen.findByLabelText('These dates are fine for now', undefined, {

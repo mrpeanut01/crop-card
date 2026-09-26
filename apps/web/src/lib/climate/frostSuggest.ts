@@ -34,7 +34,8 @@ export interface FrostSuggestion {
   sourceLabel: string | null;
   frostFree: boolean;
   /** Station normals put the last spring frost on or after the first fall one
-   *  (a Dec/Jan frost season); the owner should confirm or edit before saving. */
+   *  (a Dec/Jan frost season). Informational: the planner places those dates
+   *  in the right years (`lib/schedule/frostSeason.ts`). */
   crossesYear: boolean;
   /** Why the defaults were used, when they were. */
   fallbackReason: string | null;

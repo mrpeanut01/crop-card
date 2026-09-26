@@ -131,7 +131,7 @@ export function suggestFromStored(
   };
 }
 
-export type FrostConfirmReason = 'fallback' | 'frost-free' | 'missing' | 'crosses-year';
+export type FrostConfirmReason = 'fallback' | 'frost-free' | 'missing';
 
 /**
  * Whether the owner must confirm before these values are saved. Nothing is
@@ -142,7 +142,6 @@ export function frostConfirmReason(s: FrostSuggestion): FrostConfirmReason | nul
   const last = s.values.lastFrost;
   const first = s.values.firstFrost;
   if (last.value === null || first.value === null) return s.frostFree ? 'frost-free' : 'missing';
-  if (s.crossesYear) return 'crosses-year';
   if (s.basis !== 'stored' && last.provenance === 'fallback' && first.provenance === 'fallback') {
     return 'fallback';
   }
@@ -160,10 +159,12 @@ export const FROST_CONFIRM_COPY: Record<FrostConfirmReason, string> = {
   'frost-free':
     'The nearest station almost never records frost. The planting calendar still needs a spring and a fall date, so type your own, or keep the Loudoun County averages for now.',
   missing:
-    'The planting calendar needs a spring and a fall frost date. Type them in, or keep the Loudoun County averages for now.',
-  'crosses-year':
-    'At this station the frost season runs across the new year, so these dates may read oddly. Check them, change them if you need to, and confirm.'
+    'The planting calendar needs a spring and a fall frost date. Type them in, or keep the Loudoun County averages for now.'
 };
+
+/** Shown, never blocking, when the station's frost season spans the new year. */
+export const FROST_CROSSES_YEAR_COPY =
+  'Here frost only comes for a few weeks around the new year, so your growing season runs from one year into the next. The planting calendar handles that for you.';
 
 export interface FrostSavePlan {
   set: Partial<Record<FrostField, string>>;

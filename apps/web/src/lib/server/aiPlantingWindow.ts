@@ -34,6 +34,8 @@ export function buildPlantingWindowPrompt(input: PlantingWindowPromptInput): str
   const where = input.latLon
     ? `Farm location: ${input.latLon.lat.toFixed(2)}, ${input.latLon.lon.toFixed(2)} (lat, lon).`
     : 'Farm location: not set; rely on the frost dates.';
+  const y = String(input.year);
+  const crosses = !input.frost.lastSpring.startsWith(y) || !input.frost.firstFall.startsWith(y);
   return [
     `Give planting dates for ${input.cropName} on a small farm in ${input.year}.`,
     where,
@@ -43,7 +45,9 @@ export function buildPlantingWindowPrompt(input: PlantingWindowPromptInput): str
     '',
     'Rules:',
     '- Dates are for putting the crop in this block (direct seed or transplant, whichever is usual here).',
-    `- All dates in ${input.year}, formatted YYYY-MM-DD, with earliest <= prime <= latest.`,
+    crosses
+      ? `- This season runs across the new year (last spring frost ${input.frost.lastSpring}, first fall frost ${input.frost.firstFall}). Dates fall in that season, formatted YYYY-MM-DD, with earliest <= prime <= latest.`
+      : `- All dates in ${input.year}, formatted YYYY-MM-DD, with earliest <= prime <= latest.`,
     '- Fall-planted crops (garlic, winter grains, cover crops) use the fall window.',
     '- "latest" still lets the crop mature or establish before it matters (frost, winter).',
     `- note: one plain sentence under ${MAX_NOTE_CHARS} characters on the key local factor. No hedging.`,
@@ -61,12 +65,16 @@ export function sanitizeNote(note: unknown): string | null {
 
 /** Throws on anything unusable so `tryAiWithGuard` degrades to the
  *  frost-date window. */
-export function parsePlantingWindowResponse(text: string, year: number): PlantingWindow {
+export function parsePlantingWindowResponse(
+  text: string,
+  year: number,
+  frost?: FrostDatesIso
+): PlantingWindow {
   const raw = extractJsonObject(text) as Record<string, unknown> | null;
   const candidate = raw
     ? { earliest: raw.earliest, prime: raw.prime, latest: raw.latest, note: sanitizeNote(raw.note) }
     : null;
-  if (!isValidWindow(candidate, year)) throw new Error('invalid planting window');
+  if (!isValidWindow(candidate, year, frost)) throw new Error('invalid planting window');
   return candidate;
 }
 
@@ -101,7 +109,7 @@ export async function suggestPlantingWindow(
     usdEstimate: 0
   };
   meta.usdEstimate = estimateUsd(meta, choice);
-  return { window: parsePlantingWindowResponse(text, input.year), meta };
+  return { window: parsePlantingWindowResponse(text, input.year, input.frost), meta };
 }
 
 const CACHE_TTL_MS = 7 * 86_400_000;

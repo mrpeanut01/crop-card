@@ -57,8 +57,8 @@ param dnsZoneName string = ''
 @description('Labels of dnsZoneName bound to the web app, \'@\' for the apex, e.g. [\'app\', \'www\', \'@\']. The first becomes ORIGIN; the rest redirect to it.')
 param customHosts array = []
 
-@description('Extra TXT records in dnsZoneName, relative name → value (mail DKIM and the like). Each value must fit one 255-char string.')
-param dnsTxtRecords object = {}
+@description('Extra TXT records in dnsZoneName, relative name (\'@\' for the apex) → values, one TXT record per value (mail DKIM, SPF, domain verification). Each value must fit one 255-char string.')
+param dnsTxtRecords { *: string[] } = {}
 
 type mxRecord = {
   preference: int
@@ -608,7 +608,7 @@ resource extraTxt 'Microsoft.Network/dnsZones/TXT@2018-05-01' = [for r in items(
   name: r.key
   properties: {
     TTL: 3600
-    TXTRecords: [{ value: [r.value] }]
+    TXTRecords: [for v in r.value: { value: [v] }]
   }
 }]
 

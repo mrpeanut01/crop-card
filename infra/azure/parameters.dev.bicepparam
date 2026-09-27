@@ -33,10 +33,10 @@ param dnsCnameRecords = {
   autodiscover: 'autodiscover.outlook.com'
 }
 
-// Set to 'hello@cropcard.io' only once Pingram's domain check passes (dkim,
-// mail_from_mx, mail_from_spf, dmarc). Until then Pingram's built-in sender
-// keeps sign-in mail flowing. EMAIL_FROM in the deploy environment overrides it.
-param emailFrom = ''
+// Pingram's domain checks (dkim, mail_from_mx, mail_from_spf, dmarc) passed on
+// 2026-09-27, so mail goes out from hello@cropcard.io. EMAIL_FROM in the deploy
+// environment overrides it.
+param emailFrom = 'hello@cropcard.io'
 param vapidSubject = 'mailto:hello@cropcard.io'
 
 // The free pool plus about 20 Grower budgets plus headroom. Recompute monthly

@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cropcard.dev/schemas/animal-health.schema.json",
+  "title": "CropCard Animal-Health Plugin",
+  "description": "Data-only animal-health product (dewormer, antibiotic, vaccine) with its label uses and withdrawal times per species and class. Every labelUses speciesId must name a species plugin, and every withdrawal value needs a quoted source in apps/web/scripts/animal-health-sources.json. A missing withdrawal is unknown, and the safety kernel blocks food use on unknown. The kernel, not the plugin, owns the prohibited-drug list. Loaded from plugins/animal-health/. Mirrors packages/plugin-validation/src/schemas.ts (animalHealthPluginSchema).",
+  "type": "object",
+  "properties": {
+    "pluginId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pluginSchemaVersion": {
+      "type": "string",
+      "enum": [
+        "1.0",
+        "1.1"
+      ]
+    },
+    "type": {
+      "type": "string",
+      "const": "animal-health"
+    },
+    "productKind": {
+      "type": "string",
+      "enum": [
+        "antibiotic",
+        "dewormer",
+        "vaccine",
+        "external-parasiticide",
+        "coccidiostat",
+        "anti-inflammatory",
+        "other"
+      ]
+    },
+    "activeIngredients": {
+      "minItems": 1,
+      "maxItems": 10,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "approval": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "NADA",
+            "ANADA",
+            "USDA-CVB",
+            "EPA"
+          ]
+        },
+        "number": {
+          "type": "string",
+          "pattern": "^[0-9A-Z][0-9A-Z.-]{0,19}$"
+        }
+      },
+      "required": [
+        "kind",
+        "number"
+      ],
+      "additionalProperties": false
+    },
+    "marketingStatus": {
+      "type": "string",
+      "enum": [
+        "otc",
+        "rx",
+        "vfd"
+      ]
+    },
+    "labelUses": {
+      "minItems": 1,
+      "maxItems": 40,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speciesId": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+          },
+          "class": {
+            "default": "all",
+            "type": "string",
+            "enum": [
+              "all",
+              "lactating-dairy",
+              "non-lactating-dairy",
+              "laying",
+              "non-laying",
+              "veal-calves"
+            ]
+          },
+          "routes": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "oral",
+                "drinking-water",
+                "feed",
+                "injection-im",
+                "injection-sc",
+                "injection-iv",
+                "intranasal",
+                "ocular",
+                "topical",
+                "pour-on",
+                "intramammary",
+                "other"
+              ]
+            }
+          },
+          "withdrawal": {
+            "type": "object",
+            "properties": {
+              "meatDays": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3650
+              },
+              "milkHours": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 8760
+              },
+              "eggsDays": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3650
+              },
+              "doNotUseFor": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "meat",
+                    "milk",
+                    "eggs"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "speciesId"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "pluginId",
+    "displayName",
+    "version",
+    "type",
+    "productKind",
+    "activeIngredients",
+    "marketingStatus",
+    "labelUses"
+  ],
+  "additionalProperties": false
+}

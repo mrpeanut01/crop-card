@@ -1,0 +1,4 @@
+{
+  "$comment": "Phase 32A. Quotes for every withdrawal value on plugins/animal-health/*.json, keyed pluginId → withdrawal.<speciesId>.<class>.<meatDays|milkHours|eggsDays|doNotUseFor>. Each entry is { url, publisher, date, quote, note? } read from the product label (FDA Animal Drugs @ FDA, DailyMed or the manufacturer label). A product ships only once every food species on its label has a sourced withdrawal. See docs/research/label-research-prompt.md Task 9.",
+  "entries": {}
+}

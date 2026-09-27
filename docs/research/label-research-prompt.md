@@ -105,6 +105,46 @@ The `*-darwin.png` screenshots in `apps/web/tests/e2e/visual/**` went stale when
 
 A leftover stash named `agent-adcf-crops-const` exists. Its contents are already on main. Confirm with `git stash show -p` against `main`, then drop it.
 
+## Task 9: animal-health withdrawal times (Phase 32, on the critical path)
+
+The animal safety kernel coming in sprint 32C refuses to let eggs, milk or meat be used for food while a treated animal is inside its withdrawal period. The kernel treats a product with no withdrawal data as unknown, and unknown blocks. So this task decides which products CropCard can support at all. None of the numbers in the Phase 32 research reports have been checked. Treat them as leads, never as answers.
+
+**Where values go.** Write one `plugins/animal-health/<pluginId>.json` per product you fully verify, following `schemas/animal-health.schema.json` (Zod source: `animalHealthPluginSchema` in `packages/plugin-validation/src/schemas.ts`). Every `labelUses[].speciesId` must name a species plugin in `plugins/species/`, which sprint 32B adds. If 32B has not landed, record your findings in the sources file only and leave the plugin JSON for 32C. For every value, add a quote to `apps/web/scripts/animal-health-sources.json` under `entries.<pluginId>` with the key `withdrawal.<speciesId>.<class>.<field>`. The fields are `meatDays`, `milkHours` and `eggsDays`, plus `doNotUseFor` when the label says "do not use in lactating dairy cattle" or "not for use in laying hens". Each entry is `{ "url", "publisher", "date", "quote", "note"? }`.
+
+**Sources.** Use the current label on FDA Animal Drugs @ FDA (the NADA or ANADA record), DailyMed's animal labels, or the manufacturer's label PDF for that exact product and concentration. Distributor pages, forum posts and summary tables don't count. If two current labels for the same product disagree, leave the value out and write down both.
+
+**Seed set: ten products at most.** Pick common over-the-counter products a small farm or homestead actually buys, covering poultry, goats, sheep, cattle and pigs. Good places to start are the ivermectin, fenbendazole, levamisole and morantel dewormers, amprolium for coccidiosis, a permethrin pour-on or spray, and a clostridial (CD&T) vaccine. For each candidate, confirm that it is still sold over the counter. Many antibiotics moved to prescription in June 2023 under FDA GFI #263, so check the current status rather than assuming. Also confirm which species and classes the label names. Drop any product whose label you cannot open. Core dog and cat vaccines may ship with no withdrawal, but only when every species on the label is a non-food species.
+
+**Rules for this task.**
+
+- Record every species and class on the label. A plugin that lists a food species without a sourced withdrawal fails the CI gate (`sourceCoverage.gate.test.ts`), and that is intended.
+- Use the longest withdrawal where the label gives more than one for a class (by route or dose, for example). Say which one you used in `note`.
+- Never add a field the schema doesn't have. The schema is strict, and the kernel, not the plugin, decides what an unknown or extra-label use means.
+- Withdrawal numbers never come from a label scan, AI or memory.
+
+**The FDA prohibited list.** Read the current 21 CFR 530.41 on eCFR (ecfr.gov). Record the full list of drugs prohibited from extra-label use in food-producing animals, with the eCFR "up to date as of" date and a quote, as a top-level `prohibitedExtraLabel` object in `animal-health-sources.json`: `{ "url", "date", "quote", "drugs": [ ... ] }`. Sprint 32C copies it into the kernel in TypeScript. Do not put it in any plugin.
+
+Run `pnpm --filter @cropcard/web exec vitest run src/lib/plugins` before you commit.
+
+## Task 10: grazing and haying intervals for pasture herbicides (Phase 32)
+
+The grazing rule coming in sprint 32C blocks moving food animals onto, or cutting hay from, a pasture sprayed inside the label's grazing or haying interval. A pasture-labelled product with no interval data blocks food animals until the owner types the interval from the label. This task fills that data for about ten products.
+
+**Work list.** The seven products in `pastureAllowlist` in `apps/web/scripts/grazing-sources.json`: `banvel`, `chaparral-aminopyralid-metsulfuron`, `crossbow`, `duracor-aminopyralid-florpyrauxifen`, `grazonnext-hl`, `harmony-sg-thifensulfuron` and `pursuit`. Then check whether `2-4-d-amine`, `24d`, `stinger` and the glyphosate plugins name one label with pasture or hay uses. Skip the generic plugins unless the plugin clearly names a single registrant.
+
+**Where values go.** Add a `grazingRestrictions` block to the plugin JSON (schema: `grazingRestrictionsSchema`). Fill only the fields the label states:
+
+- `grazeDays` and `hayDays`: days after application before grazing or cutting hay;
+- `lactatingDairyGrazeDays`: the separate interval for lactating dairy animals;
+- `meatAnimalRemovalBeforeSlaughterDays`: "remove meat animals from treated areas N days before slaughter";
+- `speciesExceptions`: `{ speciesId, lactating?, grazeDays?, hayDays? }` only where the label names a species (horses or lactating goats, for example). `speciesId` must name a species plugin.
+- `notForPasture: true` when the label forbids use on grazed or hayed land;
+- `manureCarryover: true` when the label warns that residue passes through manure, hay or compost (aminopyralid, clopyralid and picloram labels do).
+
+Set `source` to a short citation (product, EPA number, label date). For every number, and for a true `notForPasture` or `manureCarryover`, add a quote to `grazing-sources.json` under `entries.<pluginId>.<field>`. For a species exception, the key is `speciesExceptions.<speciesId>.<field>`, or `speciesExceptions.<speciesId>.lactating.<field>` for the lactating variant. When a label has no restriction ("no grazing restrictions"), record `0` with the quote. Never leave a field out to mean zero. Once a product is covered, delete its `pastureAllowlist` entry, because the gate fails on stale entries.
+
+Take the stricter reading whenever the label is ambiguous. If the interval depends on the rate, use the interval for the highest labelled rate and say so in `note`.
+
 ---
 
 ## Finish
@@ -113,3 +153,4 @@ Update the "Known follow-ups" bullets in `CLAUDE.md` on EPA numbers, pollinator 
 
 - per-task counts: filled, still gapped with reasons, data corrections made
 - anything you found that contradicts existing plugin data, especially safety-relevant fields
+- for Tasks 9 and 10, each product you verified and each one you dropped, with the reason

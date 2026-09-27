@@ -46,6 +46,14 @@ const minMaxNumber = z
   .object({ min: z.number().nonnegative(), max: z.number().nonnegative() })
   .refine((v) => v.min <= v.max, { message: "min must be ≤ max" });
 
+/** Matches `crops.establishment`; `either` lets the grower choose. */
+export const PLANTING_ESTABLISHMENTS = [
+  "direct-seed",
+  "transplant",
+  "either",
+] as const;
+export const DTM_ANCHORS = ["direct-seed", "transplant"] as const;
+
 export const plantingGuideSchema = z
   .object({
     soilTempMinF: z.number().optional(),
@@ -73,6 +81,20 @@ export const plantingGuideSchema = z
     /** Days from planting until visible emergence. Replaces the global
      *  `DEFAULT_EMERGENCE_DAYS = {7, 14}` fallback in `calendar/engine.ts`. */
     emergenceDays: minMaxNumber.optional(),
+    // ─── Phase 32A — seed starting (values need crop-data-sources.json) ──
+    /** How this crop usually goes in the ground. */
+    establishment: z.enum(PLANTING_ESTABLISHMENTS).optional(),
+    /** Weeks to start seed indoors before the transplant date. */
+    startIndoorsWeeks: minMaxNumber.optional(),
+    /** Transplant date relative to the last spring frost, in days
+     *  (negative = before the frost date). */
+    transplantOffsetDays: z.number().int().min(-120).max(120).optional(),
+    /** Days of hardening off before transplant. */
+    hardenOffDays: minMaxNumber.optional(),
+    /** Soil temperature range, in °F, over which the seed germinates well. */
+    germinationTempF: minMaxNumber.optional(),
+    /** The event `daysToMaturity` counts from. */
+    dtmFrom: z.enum(DTM_ANCHORS).optional(),
   })
   .partial();
 
@@ -648,6 +670,49 @@ const CROP_FAMILY_ALIASES: Record<string, string> = {
   "cane-fruit": "bramble",
 };
 
+// ─── Phase 32A — animal toxicity (advisory only, never a kernel input) ──
+// Each species listed needs a source under `animalToxicity.<speciesId>` in
+// apps/web/scripts/crop-data-sources.json.
+
+export const PLANT_PARTS = [
+  "whole-plant",
+  "leaves",
+  "stems",
+  "roots",
+  "tubers",
+  "flowers",
+  "fruit",
+  "unripe-fruit",
+  "seeds",
+  "pits",
+] as const;
+
+export const ANIMAL_TOXICITY_SEVERITIES = [
+  "caution",
+  "toxic",
+  "highly-toxic",
+] as const;
+
+export const animalToxicitySchema = z
+  .array(
+    z.strictObject({
+      /** Species plugin ids (plugins/species/). */
+      speciesIds: z.array(z.string().regex(pluginIdRegex)).min(1).max(20),
+      parts: z.array(z.enum(PLANT_PARTS)).min(1),
+      severity: z.enum(ANIMAL_TOXICITY_SEVERITIES),
+      note: z.string().max(300).optional(),
+    }),
+  )
+  .max(20)
+  .refine(
+    (entries) => {
+      const ids = entries.flatMap((e) => e.speciesIds);
+      return new Set(ids).size === ids.length;
+    },
+    { message: "list each species in only one animalToxicity entry" },
+  );
+export type AnimalToxicity = z.infer<typeof animalToxicitySchema>;
+
 export const cropPluginSchema = pluginBase.extend({
   type: z.literal("crop"),
   cropFamily: z.preprocess(
@@ -821,6 +886,8 @@ export const cropPluginSchema = pluginBase.extend({
    *  Wind- and self-pollinated crops carry `beeAttractive: false` so the
    *  gate skips them regardless of timing. */
   bloomWindow: bloomWindowSchema,
+  /** Phase 32A — which animals this crop harms. Advisory callouts only. */
+  animalToxicity: animalToxicitySchema.optional(),
   // ────────────────────────────────────────────────────────────────────
   /** Legacy passthroughs from earlier phases — accepted but not validated. */
   planting: z.record(z.string(), z.unknown()).optional(),
@@ -946,6 +1013,61 @@ export const PESTICIDE_FORMULATIONS = Object.keys(
 ) as [PesticideFormulation, ...PesticideFormulation[]];
 export const pesticideFormulationSchema = z.enum(PESTICIDE_FORMULATIONS);
 
+/**
+ * Phase 32A — label grazing and haying restrictions for pesticides used on
+ * pasture, hay or forage. Data only: `lib/safety/grazingInterval.ts` (32C)
+ * owns the decision. A product with no block is unknown, and unknown blocks
+ * food-producing animals. Every number, and a true `notForPasture` or
+ * `manureCarryover`, needs a quote in apps/web/scripts/grazing-sources.json.
+ */
+const labelDays = z.number().int().min(0).max(3650);
+
+export const grazingSpeciesExceptionSchema = z.strictObject({
+  /** Species plugin id (plugins/species/). */
+  speciesId: z.string().regex(pluginIdRegex),
+  lactating: z.boolean().optional(),
+  grazeDays: labelDays.optional(),
+  hayDays: labelDays.optional(),
+});
+
+export const grazingRestrictionsSchema = z
+  .strictObject({
+    grazeDays: labelDays.optional(),
+    hayDays: labelDays.optional(),
+    lactatingDairyGrazeDays: labelDays.optional(),
+    meatAnimalRemovalBeforeSlaughterDays: labelDays.optional(),
+    speciesExceptions: z.array(grazingSpeciesExceptionSchema).max(20).optional(),
+    /** The label forbids use on grazed or hayed land. */
+    notForPasture: z.boolean().optional(),
+    /** Residue survives in manure from animals that grazed treated forage. */
+    manureCarryover: z.boolean().optional(),
+    /** Short citation: product label, EPA reg number and label date. */
+    source: z.string().min(1).max(300),
+  })
+  .refine(
+    (g) => {
+      const keys = (g.speciesExceptions ?? []).map(
+        (e) => `${e.speciesId}:${e.lactating === true}`,
+      );
+      return new Set(keys).size === keys.length;
+    },
+    {
+      message: "one species exception per species and lactating state",
+      path: ["speciesExceptions"],
+    },
+  )
+  .refine(
+    (g) =>
+      (g.speciesExceptions ?? []).every(
+        (e) => e.grazeDays !== undefined || e.hayDays !== undefined,
+      ),
+    {
+      message: "a species exception needs grazeDays or hayDays",
+      path: ["speciesExceptions"],
+    },
+  );
+export type GrazingRestrictions = z.infer<typeof grazingRestrictionsSchema>;
+
 export const herbicidePluginSchema = pluginBase.extend({
   type: z.literal("herbicide"),
   activeIngredients: z.array(activeIngredientSchema).min(1),
@@ -1007,6 +1129,8 @@ export const herbicidePluginSchema = pluginBase.extend({
     .optional(),
   /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
   complianceFlags: complianceFlagsSchema,
+  /** Phase 32A — label grazing and haying intervals. */
+  grazingRestrictions: grazingRestrictionsSchema.optional(),
   notes: z.string().optional(),
 });
 
@@ -1132,6 +1256,8 @@ export const insecticidePluginSchema = pluginBase.extend({
     .optional(),
   /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
   complianceFlags: complianceFlagsSchema,
+  /** Phase 32A — label grazing and haying intervals. */
+  grazingRestrictions: grazingRestrictionsSchema.optional(),
   notes: z.string().optional(),
 });
 
@@ -1201,6 +1327,8 @@ export const fungicidePluginSchema = pluginBase.extend({
     .optional(),
   /** Phase 21 — philosophy filter flags. See `complianceFlagsSchema`. */
   complianceFlags: complianceFlagsSchema,
+  /** Phase 32A — label grazing and haying intervals. */
+  grazingRestrictions: grazingRestrictionsSchema.optional(),
   notes: z.string().optional(),
 });
 
@@ -1425,3 +1553,304 @@ export const bedRecipePluginSchema = pluginBase
 
 export type BedRecipeStep = z.infer<typeof bedRecipeStepSchema>;
 export type BedRecipePlugin = z.infer<typeof bedRecipePluginSchema>;
+
+// ─── Phase 32A: species, animal-health and pest-model plugins ──────────
+// Data only, loaded from plugins/species/, plugins/animal-health/ and
+// plugins/pest-models/ by their own registry passes, so `pluginSchema`
+// never sees them. Objects are strict: an unknown key is a registration
+// error, so a plugin cannot carry a field the kernel might one day read.
+// The kernel (lib/safety/) owns withdrawal floors, the prohibited-drug list
+// and every decision; plugins carry label facts, each quoted in a
+// *-sources.json file under apps/web/scripts/.
+
+const speciesIdSchema = z.string().regex(pluginIdRegex);
+const monthDay = z
+  .string()
+  .regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, "use MM-DD");
+
+export const SPECIES_GROUP_NOUNS = [
+  "flock",
+  "herd",
+  "litter",
+  "colony",
+  "group",
+] as const;
+
+export const SPECIES_PRODUCTS = [
+  "meat",
+  "eggs",
+  "milk",
+  "fiber",
+  "breeding",
+  "work",
+  "companion",
+] as const;
+
+export const SPECIES_CARE_KINDS = [
+  "vaccination",
+  "deworm",
+  "hoof-trim",
+  "shearing",
+  "health-check",
+  "other",
+] as const;
+
+export const speciesPluginSchema = z
+  .strictObject({
+    ...pluginBase.shape,
+    type: z.literal("species"),
+    scientificName: z.string().min(1).max(120).optional(),
+    groupNoun: z.enum(SPECIES_GROUP_NOUNS),
+    /** Default for a new animal's `food_producing` flag. The owner may
+     *  change it per animal, with an audit row. Needs a source. */
+    foodProducingDefault: z.boolean(),
+    /** Offer the recorded "not for slaughter" toggle (horses). */
+    notForSlaughterToggle: z.boolean().optional(),
+    products: z.array(z.enum(SPECIES_PRODUCTS)).min(1),
+    tile: z.strictObject({
+      /** lucide icon name, kebab-case. */
+      icon: z.string().regex(pluginIdRegex),
+      label: z.string().min(1).max(40).optional(),
+    }),
+    /** Care cadence defaults for 32D care plans. `intervalDays` needs a
+     *  source under `careDefaults.<key>.intervalDays`. */
+    careDefaults: z
+      .array(
+        z.strictObject({
+          key: z.string().regex(pluginIdRegex),
+          kind: z.enum(SPECIES_CARE_KINDS),
+          title: z.string().min(1).max(120),
+          intervalDays: z.number().int().min(1).max(3650).optional(),
+          /** Guidance such as "ask your vet" when there is no interval. */
+          note: z.string().max(300).optional(),
+        }),
+      )
+      .max(30)
+      .optional(),
+    notes: z.string().max(1000).optional(),
+  })
+  .refine(
+    (s) => {
+      const keys = (s.careDefaults ?? []).map((c) => c.key);
+      return new Set(keys).size === keys.length;
+    },
+    { message: "careDefaults keys must be unique", path: ["careDefaults"] },
+  );
+export type SpeciesPlugin = z.infer<typeof speciesPluginSchema>;
+
+export const ANIMAL_HEALTH_PRODUCT_KINDS = [
+  "antibiotic",
+  "dewormer",
+  "vaccine",
+  "external-parasiticide",
+  "coccidiostat",
+  "anti-inflammatory",
+  "other",
+] as const;
+
+export const ANIMAL_DOSE_ROUTES = [
+  "oral",
+  "drinking-water",
+  "feed",
+  "injection-im",
+  "injection-sc",
+  "injection-iv",
+  "intranasal",
+  "ocular",
+  "topical",
+  "pour-on",
+  "intramammary",
+  "other",
+] as const;
+
+export const ANIMAL_FOOD_PRODUCTS = ["meat", "milk", "eggs"] as const;
+
+/** Label animal classes a withdrawal statement can be scoped to. */
+export const ANIMAL_LABEL_CLASSES = [
+  "all",
+  "lactating-dairy",
+  "non-lactating-dairy",
+  "laying",
+  "non-laying",
+  "veal-calves",
+] as const;
+
+export const ANIMAL_APPROVAL_KINDS = [
+  "NADA",
+  "ANADA",
+  "USDA-CVB",
+  "EPA",
+] as const;
+
+/** Label withdrawal for one species and class. Every number, and
+ *  `doNotUseFor`, needs a quote under
+ *  `withdrawal.<speciesId>.<class>.<field>` in animal-health-sources.json. */
+export const animalWithdrawalSchema = z
+  .strictObject({
+    meatDays: labelDays.optional(),
+    milkHours: z.number().int().min(0).max(8760).optional(),
+    eggsDays: labelDays.optional(),
+    /** The label forbids use in animals producing these foods. */
+    doNotUseFor: z.array(z.enum(ANIMAL_FOOD_PRODUCTS)).min(1).optional(),
+  })
+  .refine(
+    (w) =>
+      w.meatDays !== undefined ||
+      w.milkHours !== undefined ||
+      w.eggsDays !== undefined ||
+      w.doNotUseFor !== undefined,
+    { message: "a withdrawal needs at least one value" },
+  )
+  .refine(
+    (w) =>
+      !(w.doNotUseFor ?? []).some(
+        (p) =>
+          (p === "meat" && w.meatDays !== undefined) ||
+          (p === "milk" && w.milkHours !== undefined) ||
+          (p === "eggs" && w.eggsDays !== undefined),
+      ),
+    { message: "a food cannot have both a withdrawal and a do-not-use" },
+  );
+export type AnimalWithdrawal = z.infer<typeof animalWithdrawalSchema>;
+
+export const animalLabelUseSchema = z.strictObject({
+  speciesId: speciesIdSchema,
+  class: z.enum(ANIMAL_LABEL_CLASSES).default("all"),
+  routes: z.array(z.enum(ANIMAL_DOSE_ROUTES)).min(1).optional(),
+  /** Absent means unknown, which the kernel treats as a block for a
+   *  food-producing animal. */
+  withdrawal: animalWithdrawalSchema.optional(),
+});
+export type AnimalLabelUse = z.infer<typeof animalLabelUseSchema>;
+
+export const animalHealthPluginSchema = z
+  .strictObject({
+    ...pluginBase.shape,
+    type: z.literal("animal-health"),
+    productKind: z.enum(ANIMAL_HEALTH_PRODUCT_KINDS),
+    activeIngredients: z
+      .array(z.strictObject({ name: z.string().min(1).max(120) }))
+      .min(1)
+      .max(10),
+    approval: z
+      .strictObject({
+        kind: z.enum(ANIMAL_APPROVAL_KINDS),
+        number: z.string().regex(/^[0-9A-Z][0-9A-Z.-]{0,19}$/),
+      })
+      .optional(),
+    marketingStatus: z.enum(["otc", "rx", "vfd"]),
+    labelUses: z.array(animalLabelUseSchema).min(1).max(40),
+    notes: z.string().max(1000).optional(),
+  })
+  .refine(
+    (p) => {
+      const keys = p.labelUses.map((u) => `${u.speciesId}:${u.class}`);
+      return new Set(keys).size === keys.length;
+    },
+    { message: "one label use per species and class", path: ["labelUses"] },
+  );
+export type AnimalHealthPlugin = z.infer<typeof animalHealthPluginSchema>;
+
+/** Degree-day methods `lib/climate/degreeDays.ts` implements. A pest model
+ *  names one; it never carries a formula. */
+export const DEGREE_DAY_METHODS = ["simple-average", "single-sine"] as const;
+
+export const PEST_MODEL_BIOFIX_KINDS = [
+  "january-1",
+  "calendar-date",
+  "first-trap-catch",
+] as const;
+
+/** What the "Watch for" strip suggests. Never a spray. */
+export const PEST_MODEL_ACTIONS = [
+  "scout",
+  "set-traps",
+  "cover",
+  "uncover",
+  "hand-pick",
+] as const;
+
+const SPRAY_WORDS = /spray|insecticide|pesticide|fungicide|\bapply/i;
+
+export const pestModelPluginSchema = z
+  .strictObject({
+    ...pluginBase.shape,
+    type: z.literal("pest-model"),
+    pest: z.strictObject({
+      commonName: z.string().min(1).max(120),
+      scientificName: z.string().min(1).max(120).optional(),
+    }),
+    hostCropFamilies: z.array(z.enum(CROP_FAMILIES)).min(1),
+    method: z.enum(DEGREE_DAY_METHODS),
+    baseTempF: z.number().min(0).max(100),
+    upperCutoffF: z.number().min(0).max(130).optional(),
+    biofix: z.strictObject({
+      kind: z.enum(PEST_MODEL_BIOFIX_KINDS),
+      /** The biofix for `calendar-date`, or the fallback for
+       *  `first-trap-catch` until the grower records a catch. */
+      date: monthDay.optional(),
+    }),
+    stages: z
+      .array(
+        z.strictObject({
+          key: z.string().regex(pluginIdRegex),
+          label: z.string().min(1).max(80),
+          gddFrom: z.number().min(0).max(10000),
+          gddTo: z.number().min(0).max(10000).optional(),
+          action: z.enum(PEST_MODEL_ACTIONS),
+          message: z
+            .string()
+            .min(1)
+            .max(200)
+            .refine(
+              (text) => !SPRAY_WORDS.test(text),
+              "pest model advice is about scouting or covering, never spraying",
+            ),
+        }),
+      )
+      .min(1)
+      .max(12),
+    notes: z.string().max(1000).optional(),
+  })
+  .superRefine((m, ctx) => {
+    if (m.upperCutoffF !== undefined && m.upperCutoffF <= m.baseTempF) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["upperCutoffF"],
+        message: "upperCutoffF must be above baseTempF",
+      });
+    }
+    if (m.biofix.kind === "calendar-date" && m.biofix.date === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["biofix", "date"],
+        message: "a calendar-date biofix needs a date",
+      });
+    }
+    if (m.biofix.kind === "january-1" && m.biofix.date !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["biofix", "date"],
+        message: "a january-1 biofix takes no date",
+      });
+    }
+    const keys = new Set<string>();
+    m.stages.forEach((s, i) => {
+      if (keys.has(s.key)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["stages", i, "key"],
+          message: "stage keys must be unique",
+        });
+      }
+      keys.add(s.key);
+      if (s.gddTo !== undefined && s.gddTo < s.gddFrom) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["stages", i, "gddTo"],
+          message: "gddTo must be at or above gddFrom",
+        });
+      }
+    });
+  });
+export type PestModelPlugin = z.infer<typeof pestModelPluginSchema>;

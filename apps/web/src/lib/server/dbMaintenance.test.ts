@@ -14,6 +14,7 @@ import {
   releaseClientRecord
 } from '$lib/db/clientRecords';
 import { runWithTenant } from '$lib/db/tenant';
+import { PHASE_32_TABLES } from '$lib/db/phase32.fixtures';
 import { _fenceForTests, _resetHandoffForTests } from '$lib/server/ops/handoff';
 import {
   LAST_RUN_KEY,
@@ -114,6 +115,13 @@ describe('RETENTION_RULES', () => {
   it('never names a compliance ledger', () => {
     for (const rule of RETENTION_RULES) {
       expect(COMPLIANCE_LEDGERS).not.toContain(rule.table);
+    }
+  });
+
+  it('never prunes a Phase 32 table (animal, growing, time and ledger records)', () => {
+    const phase32 = Object.keys(PHASE_32_TABLES);
+    for (const rule of RETENTION_RULES) {
+      expect(phase32).not.toContain(rule.table);
     }
   });
 

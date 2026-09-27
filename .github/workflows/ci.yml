@@ -126,6 +126,8 @@ jobs:
         run: az bicep install
       - name: Build Bicep
         run: az bicep build --file infra/azure/main.bicep
+      - name: Check parameters against the template
+        run: az bicep build-params --file infra/azure/parameters.dev.bicepparam --stdout > /dev/null
 
   # Single stable check name for branch protection. Require `test` and the
   # individual jobs can be split, renamed or parallelised freely.

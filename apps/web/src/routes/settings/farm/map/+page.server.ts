@@ -12,6 +12,8 @@ import { listShadeSources } from '$lib/db/shadeSources';
 import { listMapFeatures } from '$lib/db/mapFeatures';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
 import { loadAreaHousing } from '$lib/server/areaHousing';
+import { loadAreaGrazing } from '$lib/server/areaGrazing';
+import { prefsFor } from '$lib/db/userProfile';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 
 export const load: ServerLoad = async ({ locals }) => {
@@ -21,6 +23,7 @@ export const load: ServerLoad = async ({ locals }) => {
   const blocks = listBlocks();
   const fields = listFields();
   const { housing, petsLayout } = await loadAreaHousing(fields);
+  const grazing = await loadAreaGrazing(blocks, prefsFor(locals.user.id).timeZone);
   return {
     refused: false as const,
     blocks,
@@ -30,6 +33,7 @@ export const load: ServerLoad = async ({ locals }) => {
     shadeSources: listShadeSources(),
     mapFeatures: listMapFeatures(),
     housing,
+    grazing,
     petsLayout,
     canEdit: true,
     isFirstRun: blocks.length === 0,

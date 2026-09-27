@@ -6,10 +6,15 @@
  * The kernel (lib/hay/engine) re-validates the mow decision when a forecast
  * is supplied; if the kernel rejects, the cutting is still created so the
  * operator can review the override path on /hay.
+ *
+ * Phase 32C: the haying-interval gate runs first on every Area block
+ * (C-21, C-28) and answers 422 GRAZING_* while a label haying interval runs
+ * or is unknown. `overrideMowGate` is a weather override and never lifts it.
  */
 
 import { withClientRecordId } from '$lib/server/clientRecordId';
-import { bestEffort, writeRecord } from '$lib/server/recordWrite';
+import { bestEffort } from '$lib/server/recordWrite';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { hayCuttingSchema } from '$lib/records/apiSchemas';
 import { getBlock } from '$lib/db/blocks';
@@ -22,6 +27,9 @@ import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { hayCutGate } from '$lib/server/grazingGate';
+import { prefsFor } from '$lib/db/userProfile';
+import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
 
 export const _requestSchema = hayCuttingSchema;
 const inputSchema = hayCuttingSchema;
@@ -65,6 +73,22 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     ['cropId', parsed.data.cropId, getCrop]
   );
   if (foreign) return foreign;
+
+  const now = Date.now();
+  if (parsed.data.mowAt !== undefined && parsed.data.mowAt > now + MAX_FUTURE_SKEW_MS) {
+    return json(
+      { error: 'A mow cannot be dated in the future.', code: 'IN_THE_FUTURE' },
+      { status: 400 }
+    );
+  }
+  const hayGate = await hayCutGate(
+    parsed.data.blockId,
+    getBlock(parsed.data.blockId)?.fieldId ?? null,
+    Math.min(parsed.data.mowAt ?? now, now),
+    auth?.role ?? 'helper',
+    prefsFor(auth?.id).timeZone
+  );
+  if (!hayGate.ok) return json(hayGate.body, { status: hayGate.status });
 
   const registry = await getRegistry();
   const cropRecord = registry.get(parsed.data.cropPluginId);
@@ -111,30 +135,43 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
   const year = parsed.data.year ?? new Date(occurredAt).getFullYear();
 
   const tasks = parsed.data.taskId ? await import('$lib/db/tasks') : null;
-  const persisted = writeRecord(event, () => {
-    const persisted = createCutting({
-      blockId: parsed.data.blockId,
-      cropId: parsed.data.cropId,
-      cropPluginId: parsed.data.cropPluginId,
-      year,
-      cuttingNumber: parsed.data.cuttingNumber,
-      mowAt: occurredAt,
-      weatherForecastJson: parsed.data.forecast ? JSON.stringify(parsed.data.forecast) : undefined,
-      performedById: performer.id,
-      rulesVersion: RULES_VERSION,
-      notes: parsed.data.notes
-    });
+  const guarded = await tryGuardedHoldWrite(
+    event,
+    auth,
+    () => {
+      const persisted = createCutting({
+        blockId: parsed.data.blockId,
+        cropId: parsed.data.cropId,
+        cropPluginId: parsed.data.cropPluginId,
+        year,
+        cuttingNumber: parsed.data.cuttingNumber,
+        mowAt: occurredAt,
+        weatherForecastJson: parsed.data.forecast
+          ? JSON.stringify(parsed.data.forecast)
+          : undefined,
+        performedById: performer.id,
+        rulesVersion: RULES_VERSION,
+        notes: parsed.data.notes
+      });
 
-    // Phase 12D: close any originating primary task. Non-fatal; the cutting
-    // is recorded even if the task can't be closed.
-    const taskId = parsed.data.taskId;
-    if (tasks && taskId) {
-      bestEffort(() =>
-        tasks.completeTask(taskId, { eventTable: 'hay_cutting', eventId: persisted.id, occurredAt })
-      );
-    }
-    return persisted;
-  });
+      // Phase 12D: close any originating primary task. Non-fatal; the cutting
+      // is recorded even if the task can't be closed.
+      const taskId = parsed.data.taskId;
+      if (tasks && taskId) {
+        bestEffort(() =>
+          tasks.completeTask(taskId, {
+            eventTable: 'hay_cutting',
+            eventId: persisted.id,
+            occurredAt
+          })
+        );
+      }
+      return persisted;
+    },
+    { dated: true }
+  );
+  if (!guarded.ok) return guarded.response;
+  const persisted = guarded.value;
 
   return json(
     {

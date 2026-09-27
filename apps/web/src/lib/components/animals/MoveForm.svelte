@@ -53,6 +53,9 @@
   let earlier = $state(msToLocalInput(Date.now()));
   let saving = $state(false);
   let error = $state<string | null>(null);
+  let attestHref = $state<string | null>(null);
+  let saveToday = $state(false);
+  let form = $state<HTMLFormElement | null>(null);
 
   const areaName = (id: string | null) => areas.find((a) => a.id === id)?.name ?? 'the new place';
 
@@ -63,6 +66,8 @@
   async function submit(e: SubmitEvent) {
     e.preventDefault();
     error = null;
+    attestHref = null;
+    saveToday = false;
     const movedAt = when === 'now' ? Date.now() : localInputToMs(earlier);
     if (movedAt === null) {
       error = 'Pick when they moved.';
@@ -105,6 +110,8 @@
       const out = await submitMove(input);
       if (out.status === 'error') {
         error = out.message;
+        attestHref = out.attestHref ?? null;
+        saveToday = out.saveToday === true;
         return;
       }
       if (out.status === 'queued') {
@@ -116,7 +123,8 @@
           ? `into ${joinGroups.find((g) => g.id === toGroupId)?.name ?? 'the group'}`
           : `to ${areaName(fieldId)}`;
       const split = out.move.newGroup ? ` They are now the group "${out.move.newGroup.name}".` : '';
-      onDone(out, `Moved ${where}.${split}${capacityText(out.move.capacity)}`);
+      const notes = out.warnings?.length ? ` ${out.warnings.join(' ')}` : '';
+      onDone(out, `Moved ${where}.${split}${capacityText(out.move.capacity)}${notes}`);
     } catch {
       error = "We couldn't save the move. Try again.";
     } finally {
@@ -125,7 +133,7 @@
   }
 </script>
 
-<form class="af-form" onsubmit={submit} novalidate aria-label="Move">
+<form class="af-form" bind:this={form} onsubmit={submit} novalidate aria-label="Move">
   {#if subjectType === 'animal' && joinGroups.length > 0}
     <div class="af-segment">
       <label class="af-tile" class:on={target === 'area'}>
@@ -239,7 +247,31 @@
   </fieldset>
 
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
+  {#if attestHref}
+    <a class="af-ghost attest-link" href={attestHref}>Add the grazing time from the label</a>
+  {/if}
+  {#if saveToday}
+    <button
+      class="af-ghost"
+      type="button"
+      disabled={saving}
+      onclick={() => {
+        when = 'now';
+        form?.requestSubmit();
+      }}>Save with today's date</button
+    >
+  {/if}
   <button class="af-primary" type="submit" disabled={saving}>
     {saving ? 'Saving…' : 'Save the move'}
   </button>
 </form>
+
+<style>
+  .attest-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    text-decoration: none;
+  }
+</style>

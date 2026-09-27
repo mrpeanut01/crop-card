@@ -87,6 +87,11 @@ export interface DeleteSprayEventOptions {
   /** #329 — acting user + reason recorded on the force-delete tombstone. */
   deletedBy?: string;
   reason?: string;
+  /** Phase 32C: write a tombstone even for an unlocked record, so the
+   *  grazing and hay holds of the application survive the delete (C-26). */
+  tombstone?: boolean;
+  /** The owner says the product was never applied, so its holds drop. */
+  neverApplied?: boolean;
 }
 
 export class RecordLockedError extends Error {
@@ -105,8 +110,11 @@ function writeDeletionTombstone(
   kind: 'spray' | 'insecticide' | 'harvest',
   recordId: string,
   snapshot: unknown,
-  opts: { deletedBy?: string; reason?: string }
+  opts: { deletedBy?: string; reason?: string; neverApplied?: boolean }
 ): void {
+  if (opts.neverApplied && snapshot && typeof snapshot === 'object') {
+    snapshot = { ...snapshot, neverApplied: true };
+  }
   db.insert(recordDeletions)
     .values(
       tenantValues({
@@ -121,6 +129,54 @@ function writeDeletionTombstone(
     .run();
 }
 
+export interface ApplicationTombstone {
+  source: 'spray' | 'insecticide' | 'fungicide';
+  id: string;
+  blockId: string;
+  occurredAt: number;
+  products: Array<{ pluginId?: string | null; displayName?: string }>;
+}
+
+/**
+ * Phase 32C (C-26): deleted herbicide, insecticide and fungicide
+ * applications that still count for grazing and hay holds. Only an owner's
+ * "never applied" delete drops one.
+ */
+export function listApplicationTombstones(fromMs: number): ApplicationTombstone[] {
+  const rows = db
+    .select()
+    .from(recordDeletions)
+    .where(
+      withTenant(
+        recordDeletions,
+        inArray(recordDeletions.recordKind, ['spray', 'insecticide', 'fungicide'])
+      )
+    )
+    .all();
+  const out: ApplicationTombstone[] = [];
+  for (const row of rows) {
+    let snap: unknown;
+    try {
+      snap = JSON.parse(row.snapshotJson);
+    } catch {
+      continue;
+    }
+    if (!snap || typeof snap !== 'object') continue;
+    const e = snap as Record<string, unknown>;
+    if (e.neverApplied === true) continue;
+    if (typeof e.blockId !== 'string' || typeof e.occurredAt !== 'number') continue;
+    if (e.occurredAt < fromMs) continue;
+    out.push({
+      source: row.recordKind as ApplicationTombstone['source'],
+      id: row.recordId,
+      blockId: e.blockId,
+      occurredAt: e.occurredAt,
+      products: Array.isArray(e.products) ? (e.products as ApplicationTombstone['products']) : []
+    });
+  }
+  return out;
+}
+
 export function deleteSprayEvent(id: string, opts: DeleteSprayEventOptions = {}): DeleteSummary {
   const event = getSprayEvent(id);
   if (!event) return { removed: {} };
@@ -130,6 +186,8 @@ export function deleteSprayEvent(id: string, opts: DeleteSprayEventOptions = {})
   const lockedAt = evaluateSprayLock(event);
   if (lockedAt !== undefined) {
     if (!opts.force) throw new RecordLockedError('spray');
+    writeDeletionTombstone('spray', id, event, opts);
+  } else if (opts.tombstone) {
     writeDeletionTombstone('spray', id, event, opts);
   }
   const removed: Record<string, number> = {};
@@ -160,6 +218,8 @@ export function deleteInsecticideEvent(
   const lockedAt = evaluateInsecticideLock(event);
   if (lockedAt !== undefined) {
     if (!opts.force) throw new RecordLockedError('insecticide');
+    writeDeletionTombstone('insecticide', id, event, opts);
+  } else if (opts.tombstone) {
     writeDeletionTombstone('insecticide', id, event, opts);
   }
   const removed: Record<string, number> = {};
@@ -258,6 +318,14 @@ export function deleteCropCascade(id: string): DeleteSummary {
 
   removed.crop_equipment = del(cropEquipment, eq(cropEquipment.cropId, id));
 
+  for (const sid of sprayIds) {
+    const e = getSprayEvent(sid);
+    if (e) writeDeletionTombstone('spray', sid, e, { reason: 'planting deleted' });
+  }
+  for (const iid of insecticideIds) {
+    const e = getInsecticideEvent(iid);
+    if (e) writeDeletionTombstone('insecticide', iid, e, { reason: 'planting deleted' });
+  }
   removed.spray_events = del(sprayEvents, eq(sprayEvents.cropId, id));
   removed.insecticide_events = del(insecticideEvents, eq(insecticideEvents.cropId, id));
   removed.fertility_applications = del(fertilityApplications, eq(fertilityApplications.cropId, id));
@@ -401,21 +469,22 @@ export function deleteFieldCascade(id: string): DeleteSummary {
 
 // ─── Per-sprayer (legacy `sprayers` table) ─────────────────────────────
 
-export function deleteSprayerCascade(id: string): DeleteSummary {
-  const removed: Record<string, number> = {};
-  const sprayIds = db
+/** Spray records carry the FR-09 lock, the grazing and hay holds (C-19,
+ *  C-26) and the tombstone rule, so they are only removed one at a time
+ *  through the spray-record delete. This returns how many reference the id
+ *  (`spray_events.sprayer_id` points at `equipment`, so an equipment id
+ *  finds them). */
+export function countSprayEventsForSprayer(id: string): number {
+  return db
     .select({ id: sprayEvents.id })
     .from(sprayEvents)
     .where(withTenant(sprayEvents, eq(sprayEvents.sprayerId, id)))
-    .all()
-    .map((r) => r.id);
-  if (sprayIds.length) {
-    removed.stock_movements = db
-      .delete(stockMovements)
-      .where(withTenant(stockMovements, inArray(stockMovements.sprayEventId, sprayIds)))
-      .run().changes;
-  }
-  removed.spray_events = del(sprayEvents, eq(sprayEvents.sprayerId, id));
+    .all().length;
+}
+
+/** Removes a legacy `sprayers` row. Never touches spray records. */
+export function deleteSprayerCascade(id: string): DeleteSummary {
+  const removed: Record<string, number> = {};
   removed.sprayers = del(sprayers, eq(sprayers.id, id));
   return { removed };
 }

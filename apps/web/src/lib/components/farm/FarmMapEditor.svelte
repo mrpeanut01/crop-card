@@ -55,6 +55,7 @@
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
   import type { HousingByArea } from '$lib/farm/housedAnimals';
+  import type { GrazingByArea } from '$lib/farm/areaGrazing';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { FieldWithBlocks } from '$lib/db/fields';
   import type { ShadeSource, ShadeSourceKind } from '$lib/db/shadeSources';
@@ -76,6 +77,7 @@
     ownerId = null,
     snapshot = null,
     housing = {},
+    grazing = {},
     petsLayout = false,
     exportHref = '/plan/farm-map'
   }: {
@@ -95,6 +97,8 @@
     snapshot?: FarmSnapshot | null;
     /** Animals housed on each Area, for the Area Card sheet (Phase 32B). */
     housing?: HousingByArea;
+    /** Grazing and hay holds on each Area (Phase 32C). */
+    grazing?: GrazingByArea;
     petsLayout?: boolean;
     /** Where Export goes: the printable Farm Map Card. */
     exportHref?: string | null;
@@ -1006,6 +1010,7 @@
     }}
     {canEdit}
     housing={housing[selectedArea.id] ?? null}
+    grazing={grazing[selectedArea.id] ?? null}
     {petsLayout}
     onEditShape={canEditShape ? editSelectedShape : undefined}
   />

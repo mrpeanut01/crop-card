@@ -34,17 +34,30 @@ export type AnimalStatus = (typeof ANIMAL_STATUSES)[number];
 export const OUTCOME_STATUSES = ['sold', 'died', 'culled', 'rehomed'] as const;
 export type OutcomeStatus = (typeof OUTCOME_STATUSES)[number];
 
-/** Food-use declarations. The API refuses them until the 32C withdrawal
- *  gate can block them. */
+/** Meat declared as food. The status endpoint runs the 32C withdrawal and
+ *  grazing exposure gate before recording either (C-17). */
 export const MEAT_STATUSES = ['sold-for-meat', 'slaughtered'] as const;
+export type MeatStatus = (typeof MEAT_STATUSES)[number];
 
-/** Statuses the status endpoint accepts in 32B. `active` is a correction
- *  (an animal marked died that is alive) or, on a group, an addition. */
-export const STATUS_EVENT_STATUSES = ['active', ...OUTCOME_STATUSES] as const;
+/** Statuses the status endpoint accepts. `active` is a correction (an
+ *  animal marked died that is alive) or, on a group, an addition. */
+export const STATUS_EVENT_STATUSES = ['active', ...OUTCOME_STATUSES, ...MEAT_STATUSES] as const;
 export type StatusEventStatus = (typeof STATUS_EVENT_STATUSES)[number];
 
-export function isOutcomeStatus(status: string): status is OutcomeStatus {
-  return (OUTCOME_STATUSES as readonly string[]).includes(status);
+/** Outcomes that may say the meat was used as food, which runs the gate. */
+export const MEAT_USED_STATUSES = ['sold', 'died', 'culled'] as const;
+
+/** An animal that is no longer here, whichever way it left. */
+export function isOutcomeStatus(status: string): status is OutcomeStatus | MeatStatus {
+  return (
+    (OUTCOME_STATUSES as readonly string[]).includes(status) ||
+    (MEAT_STATUSES as readonly string[]).includes(status)
+  );
+}
+
+/** The value `animals.status` takes after a status event. */
+export function animalStatusAfter(status: Exclude<StatusEventStatus, 'active'>): AnimalStatus {
+  return status === 'sold-for-meat' ? 'sold' : status;
 }
 
 /** Area kinds that can never house animals. Every other kind can, including

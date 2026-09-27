@@ -6,7 +6,7 @@
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { deleteFieldCascade } from '$lib/db/admin';
-import { housedSubjectCount } from '$lib/db/animalLocations';
+import { fieldHoldsGroupHistory, housedSubjectCount } from '$lib/db/animalLocations';
 import { getField, updateField } from '$lib/db/fields';
 import { withSketchAcres } from '$lib/farm/sketch';
 import { fieldPatchSchema } from '$lib/farm/apiSchemas';
@@ -14,6 +14,10 @@ import { isDesignable, validateAreaDetails } from '$lib/farm/areaKinds';
 import { isHousingAreaKind } from '$lib/animals/model';
 import { bedsPastAreaEdge } from '$lib/server/garden/bedLayout';
 import { requireOwner } from '$lib/server/auth';
+import { listBlocks } from '$lib/db/blocks';
+import { prefsFor } from '$lib/db/userProfile';
+import { blocksDeleteRefusal } from '$lib/server/areaGrazing';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 
 export const GET: RequestHandler = ({ params }) => {
   if (!params.id) throw error(400, 'id required');
@@ -86,10 +90,19 @@ export const PATCH: RequestHandler = async (event) => {
   return json({ field });
 };
 
-export const DELETE: RequestHandler = (event) => {
+export const DELETE: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  requireOwner(event);
+  const user = requireOwner(event);
   if (!getField(event.params.id)) throw error(404, 'field not found');
+  const fieldId = event.params.id;
+  const held = await blocksDeleteRefusal(
+    fieldId,
+    listBlocks({ plantings: 'none' })
+      .filter((b) => b.fieldId === fieldId)
+      .map((b) => b.id),
+    prefsFor(user.id).timeZone
+  );
+  if (held) return json(held, { status: 409 });
   if (housedSubjectCount(event.params.id) > 0) {
     return json(
       {
@@ -99,5 +112,17 @@ export const DELETE: RequestHandler = (event) => {
       { status: 409 }
     );
   }
-  return json(deleteFieldCascade(event.params.id));
+  if (fieldHoldsGroupHistory(event.params.id)) {
+    return json(
+      {
+        error:
+          "A group was split or an animal changed group here. That record shows which animals share the group's treatments and grazing, so this place has to stay. Rename it instead.",
+        code: 'AREA_HAS_GROUP_HISTORY'
+      },
+      { status: 409 }
+    );
+  }
+  const guarded = await tryGuardedHoldWrite(event, user, () => deleteFieldCascade(fieldId));
+  if (!guarded.ok) return guarded.response;
+  return json(guarded.value);
 };

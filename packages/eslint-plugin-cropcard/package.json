@@ -11,7 +11,7 @@
   "scripts": {
     "test": "node --test",
     "test:unit": "node --test",
-    "gen:tables": "node scripts/gen-tenant-tables.js"
+    "gen:tables": "node scripts/gen-tenant-tables.js && node scripts/gen-hold-fact-tables.js"
   },
   "peerDependencies": {
     "eslint": "^9.0.0"

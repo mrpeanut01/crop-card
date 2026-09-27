@@ -85,7 +85,9 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   scout: '/api/scout/record',
   task: '/api/tasks/close',
   journal: '/api/journal/record',
-  'animal-move': '/api/animals/move'
+  'animal-move': '/api/animals/move',
+  'animal-health': '/api/animals/health/record',
+  'animal-production': '/api/animals/production/record'
 };
 
 /** Rows written before the v3 Dexie upgrade lack `kind`; they were all

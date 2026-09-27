@@ -442,6 +442,31 @@
   <QuickActions profile={data.farmProfile} />
 </div>
 
+{#if data.coveredLogs.length > 0}
+  <section class="card covered-alert" role="alert" aria-label="Treated food already logged">
+    <h2>Food logged during a treatment hold</h2>
+    <p>
+      Eggs, milk or meat were saved as food or for sale while a treatment hold applied. If any of
+      these were sold, tell the buyer. This stays here for two weeks after the treatment was
+      recorded, even if a log is changed to discarded.
+    </p>
+    <ul>
+      {#each data.coveredLogs as c (c.subjectType + c.subjectId)}
+        <li>
+          <a
+            href={c.count > 0
+              ? `/animals/${encodeURIComponent(c.subjectId)}/log`
+              : `/animals/${encodeURIComponent(c.subjectId)}`}>{c.name}</a
+          >:
+          {#if c.count > 0}{c.count}
+            {c.count === 1 ? 'log' : 'logs'}{/if}{#if c.count > 0 && c.meatCount > 0},
+          {/if}{#if c.meatCount > 0}meat recorded as food{/if}
+        </li>
+      {/each}
+    </ul>
+  </section>
+{/if}
+
 {#if data.winterizeAlerts.length > 0}
   <section class="card winterize-alert" aria-label="Winterization reminder">
     <h2>❄ Winterization check</h2>
@@ -1072,5 +1097,24 @@
     border-radius: 3px;
     font-size: 0.75rem;
     margin-left: 0.4rem;
+  }
+  .covered-alert {
+    border-left: 4px solid #a8432a;
+    background: #fbf0ec;
+  }
+  .covered-alert h2 {
+    color: #6e2413;
+  }
+  .covered-alert ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+  }
+  .covered-alert a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: #6e2413;
+    font-weight: 600;
+    overflow-wrap: anywhere;
   }
 </style>

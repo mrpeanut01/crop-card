@@ -25,6 +25,8 @@ export interface HarvestEventInput {
   lotNumber?: string;
   /** UC-16 (#339) — stored moisture %, when the operator measured it. */
   moisturePct?: number;
+  /** RULES_VERSION of the hay cut gate that cleared the cut (C-28). */
+  rulesVersion?: string;
 }
 
 export interface HarvestEvent extends HarvestEventInput {
@@ -52,7 +54,8 @@ export function insertHarvestEvent(input: HarvestEventInput): HarvestEvent {
         occurredAt: new Date(input.occurredAt),
         quantity: input.quantity ?? null,
         lotNumber: input.lotNumber ?? null,
-        moisturePct: input.moisturePct ?? null
+        moisturePct: input.moisturePct ?? null,
+        rulesVersion: input.rulesVersion ?? null
       })
     )
     .returning()
@@ -95,6 +98,7 @@ function rowToEvent(row: typeof harvestEvents.$inferSelect): HarvestEvent {
     quantity: row.quantity ?? undefined,
     lotNumber: row.lotNumber ?? undefined,
     moisturePct: row.moisturePct ?? undefined,
+    ...(row.rulesVersion ? { rulesVersion: row.rulesVersion } : {}),
     lockedAt: row.lockedAt?.getTime()
   };
 }

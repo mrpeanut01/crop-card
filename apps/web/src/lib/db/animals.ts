@@ -286,7 +286,9 @@ export function getAnimalPhoto(id: string): string | null {
   return row?.photoRef ?? null;
 }
 
-export type AnimalFlag = 'food_producing' | 'not_for_slaughter';
+/** `presumed_lactating` records a sex change that ends the lactating
+ *  presumption (C-10), which shortens grazing holds. */
+export type AnimalFlag = 'food_producing' | 'not_for_slaughter' | 'presumed_lactating';
 
 export interface FlagChange {
   id: string;
@@ -346,7 +348,7 @@ export function insertFlagChange(input: {
  *  value is unchanged (nothing is written). */
 export function setAnimalFlag(
   id: string,
-  flag: AnimalFlag,
+  flag: 'food_producing' | 'not_for_slaughter',
   value: boolean,
   reason: string,
   changedBy: string | null,

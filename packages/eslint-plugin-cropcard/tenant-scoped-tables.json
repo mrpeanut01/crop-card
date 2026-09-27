@@ -25,6 +25,7 @@
   "grazingAttestations",
   "harvestEvents",
   "hayCuttings",
+  "holdCorrections",
   "insecticideEvents",
   "irrigationEvents",
   "kernelDryRunLog",

@@ -4,7 +4,8 @@
  * Accepts a JSON plugin payload (raw body or { plugin: {...} }) and
  * validates it via Zod + the bypass check. By default (owner) it is saved
  * to the active Owner's `plugin_overrides` and replaces the shared plugin
- * for that farm only. `?scope=global` (superadmin, interactive session)
+ * for that farm only; a farm copy that would shorten any hold is refused
+ * with 422 PLUGIN_SHORTENS_HOLD (C-35). `?scope=global` (superadmin, interactive session)
  * writes it to the shared library instead: plugins/{type}s/ + a
  * `plugin_versions` row + registry reload.
  *
@@ -16,6 +17,8 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { requireOwner, requireSuperadmin } from '$lib/server/auth';
 import { PluginAuthorError, writeOwnerPlugin, writePluginFile } from '$lib/server/pluginFiles';
+import { getBaseRegistry } from '$lib/server/registry';
+import { pluginShortensHold, pluginShortensHoldMessage } from '$lib/plugins/holdFields';
 
 export const POST: RequestHandler = async (event) => {
   const global = event.url.searchParams.get('scope') === 'global';
@@ -35,6 +38,21 @@ export const POST: RequestHandler = async (event) => {
     body && typeof body === 'object' && 'changeReason' in body
       ? String((body as { changeReason: unknown }).changeReason ?? '')
       : undefined;
+  if (!global && candidate && typeof candidate === 'object' && 'pluginId' in candidate) {
+    const pluginId = String((candidate as { pluginId: unknown }).pluginId);
+    const shared = (await getBaseRegistry()).get(pluginId)?.plugin;
+    const changes = shared ? pluginShortensHold(shared, candidate) : [];
+    if (changes.length > 0) {
+      return json(
+        {
+          error: pluginShortensHoldMessage(changes[0]),
+          code: 'PLUGIN_SHORTENS_HOLD',
+          changes
+        },
+        { status: 422 }
+      );
+    }
+  }
   try {
     const result = global
       ? await writePluginFile(candidate, { changedByUserId: session.id, changeReason })

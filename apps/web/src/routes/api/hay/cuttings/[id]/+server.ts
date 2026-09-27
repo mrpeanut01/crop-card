@@ -24,6 +24,11 @@ import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { checkSeasonClosed } from '$lib/server/seasonClose';
+import { getBlock } from '$lib/db/blocks';
+import { prefsFor } from '$lib/db/userProfile';
+import { MAX_FUTURE_SKEW_MS } from '$lib/animals/model';
+import { hayCutGate } from '$lib/server/grazingGate';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 
 const patchSchema = z.discriminatedUnion('action', [
   z.object({
@@ -83,12 +88,22 @@ export const PATCH: RequestHandler = async (event) => {
   }
 
   if (parsed.data.action === 'abort') {
-    return json({ cutting: abortCutting(cutting.id, parsed.data.reason) });
+    const reason = parsed.data.reason;
+    const aborted = await tryGuardedHoldWrite(event, auth, () => abortCutting(cutting.id, reason));
+    if (!aborted.ok) return aborted.response;
+    return json({ cutting: aborted.value });
   }
 
   // UC-44 — SEASON_CLOSED gate. An advance stamps a dated field operation;
   // refuse it when that date lands inside a closed season.
-  const advanceAt = parsed.data.occurredAt ?? Date.now();
+  const now = Date.now();
+  const advanceAt = parsed.data.occurredAt ?? now;
+  if (advanceAt > now + MAX_FUTURE_SKEW_MS) {
+    return json(
+      { error: 'A hay step cannot be dated in the future.', code: 'IN_THE_FUTURE' },
+      { status: 400 }
+    );
+  }
   const seasonClosed = checkSeasonClosed(advanceAt);
   if (seasonClosed) {
     return json(
@@ -121,6 +136,17 @@ export const PATCH: RequestHandler = async (event) => {
   if (!canAdvance(spec.steps as HayStep[], cutting.status, proposed)) {
     return json({ error: `cannot advance from ${cutting.status} to ${proposed}` }, { status: 409 });
   }
+
+  // Phase 32C (C-28): every step after the mow runs the haying-interval
+  // gate again, so hay cut before a spray is not carried through inside it.
+  const hayGate = await hayCutGate(
+    cutting.blockId,
+    getBlock(cutting.blockId)?.fieldId ?? null,
+    Math.max(cutting.mowAt ?? 0, Math.min(advanceAt, now)),
+    auth?.role ?? 'helper',
+    prefsFor(auth?.id).timeZone
+  );
+  if (!hayGate.ok) return json(hayGate.body, { status: hayGate.status });
 
   // Bale gate enforcement.
   if (proposed === 'bale') {
@@ -162,14 +188,23 @@ export const PATCH: RequestHandler = async (event) => {
   }
 
   const targetStatus = proposed === 'store' ? 'complete' : statusAfter(proposed);
-  const updated = advanceCutting(cutting.id, {
-    status: targetStatus,
-    occurredAt: parsed.data.occurredAt,
-    baleType: parsed.data.baleType,
-    balesQuantity: parsed.data.balesQuantity,
-    baleMoisturePct: parsed.data.baleMoisturePct,
-    notes: parsed.data.notes
-  });
+  const advance = parsed.data;
+  const guarded = await tryGuardedHoldWrite(
+    event,
+    auth,
+    () =>
+      advanceCutting(cutting.id, {
+        status: targetStatus,
+        occurredAt: advance.occurredAt,
+        baleType: advance.baleType,
+        balesQuantity: advance.balesQuantity,
+        baleMoisturePct: advance.baleMoisturePct,
+        notes: advance.notes
+      }),
+    { dated: true }
+  );
+  if (!guarded.ok) return guarded.response;
+  const updated = guarded.value;
 
   return json({ cutting: updated, advancedTo: proposed });
 };
@@ -184,5 +219,8 @@ export const DELETE: RequestHandler = async (eventCtx) => {
     return json({ error: 'inspector role is read-only' }, { status: 403 });
   }
   const { deleteHayCutting } = await import('$lib/db/admin');
-  return json(deleteHayCutting(eventCtx.params.id));
+  const id = eventCtx.params.id;
+  const guarded = await tryGuardedHoldWrite(eventCtx, auth, () => deleteHayCutting(id));
+  if (!guarded.ok) return guarded.response;
+  return json(guarded.value);
 };

@@ -19,8 +19,10 @@ import {
   clampFinishedFootprints,
   plantingsPastBedEdge
 } from '$lib/server/garden/bedLayout';
-import { db } from '$lib/db/client';
 import { requireOwner } from '$lib/server/auth';
+import { blockReassignRefusal, blocksDeleteRefusal } from '$lib/server/areaGrazing';
+import { prefsFor } from '$lib/db/userProfile';
+import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
 
 export const GET: RequestHandler = (event) => {
   if (!event.params.id) throw error(400, 'id required');
@@ -33,7 +35,7 @@ export const _requestSchema = blockPatchSchema;
 
 export const PATCH: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  requireOwner(event);
+  const user = requireOwner(event);
   const block = getBlock(event.params.id);
   if (!block) throw error(404, 'block not found');
 
@@ -50,6 +52,10 @@ export const PATCH: RequestHandler = async (event) => {
   const newArea = parsed.data.fieldId ? getField(parsed.data.fieldId) : undefined;
   if (parsed.data.fieldId && !newArea) {
     return json({ error: 'unknown fieldId' }, { status: 400 });
+  }
+  if (newArea && newArea.id !== block.fieldId) {
+    const refusal = await blockReassignRefusal(block.id, prefsFor(user.id).timeZone);
+    if (refusal) return json(refusal, { status: 409 });
   }
   const kind = parsed.data.kind ?? block.kind ?? DEFAULT_BLOCK_KIND;
   const placementChanged = parsed.data.kind !== undefined || parsed.data.fieldId !== undefined;
@@ -88,19 +94,26 @@ export const PATCH: RequestHandler = async (event) => {
     const shrink = plantingsPastBedEdge(block.id, block.name, nextSize);
     if (shrink) return json(shrink, { status: 409 });
   }
-  const updated = db.transaction(() => {
+  const guarded = await tryGuardedHoldWrite(event, user, () => {
     const saved = updateBlock(event.params.id!, withSketchAcres(patch));
     if (resized) clampFinishedFootprints(block.id, nextSize);
     return saved;
   });
-  return json({ block: updated });
+  if (!guarded.ok) return guarded.response;
+  return json({ block: guarded.value });
 };
 
-export const DELETE: RequestHandler = (event) => {
+export const DELETE: RequestHandler = async (event) => {
   if (!event.params.id) throw error(400, 'id required');
-  requireOwner(event);
+  const user = requireOwner(event);
   const block = getBlock(event.params.id);
   if (!block) throw error(404, 'block not found');
+  const held = await blocksDeleteRefusal(
+    block.fieldId ?? null,
+    [block.id],
+    prefsFor(user.id).timeZone
+  );
+  if (held) return json(held, { status: 409 });
   if (event.url.searchParams.get('ifEmpty') === '1') {
     if (blockHasRecords(block.id)) {
       return json(
@@ -112,5 +125,8 @@ export const DELETE: RequestHandler = (event) => {
       );
     }
   }
-  return json(deleteBlockCascade(event.params.id));
+  const id = event.params.id;
+  const guarded = await tryGuardedHoldWrite(event, user, () => deleteBlockCascade(id));
+  if (!guarded.ok) return guarded.response;
+  return json(guarded.value);
 };

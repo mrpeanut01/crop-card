@@ -111,6 +111,23 @@ describe('Phase 32A source coverage gate', () => {
     expect(unknown).toEqual([]);
   });
 
+  it('every grazingRestrictions block records all four intervals (C-24, 0 = none stated)', () => {
+    const fields = [
+      'grazeDays',
+      'hayDays',
+      'lactatingDairyGrazeDays',
+      'meatAnimalRemovalBeforeSlaughterDays'
+    ] as const;
+    const missing = pesticidesOf(library)
+      .filter((p) => p.grazingRestrictions && p.grazingRestrictions.notForPasture !== true)
+      .flatMap((p) =>
+        fields
+          .filter((f) => p.grazingRestrictions![f] === undefined)
+          .map((f) => `${p.pluginId}: ${f}`)
+      );
+    expect(missing, 'record 0 with a quote when the label states no interval').toEqual([]);
+  });
+
   it('every pasture-labelled pesticide has grazingRestrictions or an allowlist reason', () => {
     const report = checkPastureCoverage(
       pesticidesOf(library),

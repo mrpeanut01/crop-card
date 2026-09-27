@@ -50,14 +50,11 @@ export type PendingRecordKind =
   | 'scout'
   | 'task'
   | 'journal'
-  | 'animal-move';
+  | 'animal-move'
+  | 'animal-health'
+  | 'animal-production';
 
-export const PHASE_32_RECORD_KINDS = [
-  'animal-health',
-  'animal-production',
-  'seed-start',
-  'irrigation'
-] as const;
+export const PHASE_32_RECORD_KINDS = ['seed-start', 'irrigation'] as const;
 
 export type Phase32RecordKind = (typeof PHASE_32_RECORD_KINDS)[number];
 

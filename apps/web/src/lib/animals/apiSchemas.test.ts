@@ -144,10 +144,10 @@ describe('animalMoveSchema', () => {
 });
 
 describe('animalStatusSchema', () => {
-  it.each(MEAT_STATUSES)('refuses %s until the 32C withdrawal gate lands', (status) => {
+  it.each(MEAT_STATUSES)('accepts %s now that the 32C food gate runs on it', (status) => {
     expect(
       animalStatusSchema.safeParse({ subjectType: 'animal', subjectId: 'a', status }).success
-    ).toBe(false);
+    ).toBe(true);
     expect(
       animalStatusSchema.safeParse({
         subjectType: 'group',
@@ -155,7 +155,19 @@ describe('animalStatusSchema', () => {
         status,
         headCountDelta: -1
       }).success
-    ).toBe(false);
+    ).toBe(true);
+  });
+
+  it('takes meatUsed only on sold, died or culled', () => {
+    const base = { subjectType: 'animal', subjectId: 'a' } as const;
+    for (const status of ['sold', 'died', 'culled']) {
+      expect(animalStatusSchema.safeParse({ ...base, status, meatUsed: true }).success).toBe(true);
+    }
+    for (const status of ['active', 'rehomed', 'slaughtered', 'sold-for-meat']) {
+      expect(animalStatusSchema.safeParse({ ...base, status, meatUsed: false }).success).toBe(
+        false
+      );
+    }
   });
 
   it('needs a negative delta for group losses and a positive one for additions', () => {

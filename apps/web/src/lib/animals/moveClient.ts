@@ -8,11 +8,18 @@ import type { AnimalMoveInput } from './apiSchemas';
 import { errorFromResponse } from './display';
 import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
+import { grazingTimeHref } from './holdCopy';
 
 export type MoveOutcome =
-  | { status: 'saved'; move: MoveResponse }
+  | { status: 'saved'; move: MoveResponse; warnings?: string[] }
   | { status: 'queued' }
-  | { status: 'error'; message: string };
+  | {
+      status: 'error';
+      message: string;
+      attestHref?: string;
+      /** C-35: the same move dated now would save. */
+      saveToday?: boolean;
+    };
 
 export interface MoveResponse {
   fieldId: string | null;
@@ -64,7 +71,27 @@ export async function submitMove(
     scheduleDrain((retryAfterSeconds(res) + 2) * 1000);
     return out;
   }
-  if (!res.ok) return { status: 'error', message: await errorFromResponse(res) };
-  const body = (await res.json()) as { move: MoveResponse };
-  return { status: 'saved', move: body.move };
+  if (!res.ok) {
+    const stop = (await res
+      .clone()
+      .json()
+      .catch(() => null)) as {
+      ownerCanAttest?: boolean;
+      askOwner?: boolean;
+      fieldId?: string | null;
+      code?: string;
+      todayVersionPasses?: boolean;
+    } | null;
+    const message = await errorFromResponse(res);
+    if (stop?.code === 'HOLD_WOULD_SHORTEN' && stop.todayVersionPasses) {
+      return { status: 'error', message, saveToday: true };
+    }
+    return stop?.ownerCanAttest && !stop.askOwner && stop.fieldId
+      ? { status: 'error', message, attestHref: grazingTimeHref(stop.fieldId) }
+      : { status: 'error', message };
+  }
+  const body = (await res.json()) as { move: MoveResponse; warnings?: string[] };
+  return body.warnings?.length
+    ? { status: 'saved', move: body.move, warnings: body.warnings }
+    : { status: 'saved', move: body.move };
 }

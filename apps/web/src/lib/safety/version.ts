@@ -31,5 +31,9 @@
  * archetype. Its 70% ceiling sat below the 80 to 90% flesh moisture of
  * healthy squash, potatoes and root crops, so an honest reading was
  * refused. Cure-then-store moisture is now recorded, never blocked.
+ * Phase 32C — 0.6.0: the animal withdrawal rule (`animalWithdrawal.ts`,
+ * `prohibitedAnimalDrugs.ts`) and the grazing and haying interval rule
+ * (`grazingInterval.ts`, with `grazingExposure.ts` holding food from
+ * animals that were on a sprayed Area inside its interval).
  */
-export const RULES_VERSION = '0.5.7' as const;
+export const RULES_VERSION = '0.6.0' as const;

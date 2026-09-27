@@ -1934,6 +1934,7 @@
   fields={data.fields}
   areaSnapshot={data.areaSnapshot}
   areaHousing={data.areaHousing}
+  areaGrazing={data.areaGrazing}
   petsLayout={data.petsLayout}
   cropMeta={Object.fromEntries(
     data.cropCatalog.map((c) => [

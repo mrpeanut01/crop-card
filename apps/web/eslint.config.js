@@ -56,6 +56,16 @@ export default tseslint.config(
     }
   },
   {
+    // C-35: every write that can affect a hold runs inside the hold guard.
+    // Repos in lib/db write hold-fact tables directly; endpoints and server
+    // helpers call them inside guardedHoldWrite.
+    files: ['src/routes/**/*.ts', 'src/lib/server/**/*.ts'],
+    ignores: ['**/*.test.ts', '**/*.spec.ts', 'src/lib/server/animals.ts'],
+    rules: {
+      'cropcard/no-unguarded-hold-write': 'error'
+    }
+  },
+  {
     files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
     languageOptions: {
       parserOptions: {

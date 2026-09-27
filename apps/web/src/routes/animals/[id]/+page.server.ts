@@ -7,6 +7,8 @@ import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
 import { statusEventsWithLocks } from '$lib/server/animals';
 import { loadAnimalsProfile } from '$lib/animals/profile.server';
+import { pageHoldsFor } from '$lib/server/animalFoodGate';
+import { prefsFor } from '$lib/db/userProfile';
 import { areaOptions, housingAreaOptions, speciesOptions } from '$lib/animals/pageData.server';
 
 export const load: PageServerLoad = async (event) => {
@@ -33,7 +35,13 @@ export const load: PageServerLoad = async (event) => {
         (g) => g.status === 'active' && g.speciesId === animal.speciesId && g.id !== animal.groupId
       )
       .map((g) => ({ id: g.id, name: g.name })),
+    ...(await holdsFor('animal', animal.id, prefsFor(user?.id).timeZone)),
     canEdit: user?.role === 'owner',
     canLog: !!user && canMutate(user.role)
   };
 };
+
+async function holdsFor(type: 'animal' | 'group', id: string, timeZone: string) {
+  const page = await pageHoldsFor(type, id, timeZone);
+  return { holds: page?.holds ?? null, foods: page?.foods ?? [] };
+}

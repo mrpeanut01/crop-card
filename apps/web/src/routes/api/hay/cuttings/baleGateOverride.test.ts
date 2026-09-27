@@ -11,6 +11,18 @@
 
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 
+// The C-35 hold guard has its own suites (holdGuard.*.test.ts); this file
+// pins the endpoint's other gates, so the guard only runs the write.
+vi.mock('$lib/server/holdGuard', async () => {
+  const { writeRecord } = await import('$lib/server/recordWrite');
+  const run = (event: { request: Request }, _user: unknown, fn: () => unknown) =>
+    writeRecord(event, fn);
+  return {
+    guardedHoldWrite: async (...a: Parameters<typeof run>) => run(...a),
+    tryGuardedHoldWrite: async (...a: Parameters<typeof run>) => ({ ok: true, value: run(...a) })
+  };
+});
+
 const { getCutting, advanceCutting, currentUser, getRegistry } = vi.hoisted(() => ({
   getCutting: vi.fn(),
   advanceCutting: vi.fn((_id: string, patch: Record<string, unknown>) => ({ id: _id, ...patch })),
@@ -25,6 +37,10 @@ vi.mock('$lib/db/hayCuttings', () => ({
 }));
 vi.mock('$lib/server/auth', () => ({ currentUser }));
 vi.mock('$lib/server/registry', () => ({ getRegistry }));
+vi.mock('$lib/server/grazingGate', () => ({
+  hayCutGate: vi.fn(async () => ({ ok: true, warnings: [] }))
+}));
+vi.mock('$lib/db/blocks', () => ({ getBlock: vi.fn(() => ({ id: 'b1', fieldId: null })) }));
 
 import { PATCH } from './[id]/+server';
 

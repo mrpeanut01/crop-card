@@ -1,6 +1,7 @@
 <script lang="ts">
   import './animalForms.css';
   import {
+    MEAT_CHOICE_VALUES,
     OFFLINE_MESSAGE,
     OUTCOME_CHOICES,
     STATUS_LABEL,
@@ -16,13 +17,25 @@
     /** Group only: the unnamed count and the group word ("flock"). */
     headCount?: number;
     noun?: string;
+    /** Offer slaughter and sale for meat (food animals only). */
+    meatChoices?: boolean;
     onDone: (result: { emptied: boolean }, text: string) => void;
   }
 
-  const { subjectType, subjectId, headCount = 0, noun = 'group', onDone }: Props = $props();
+  const {
+    subjectType,
+    subjectId,
+    headCount = 0,
+    noun = 'group',
+    meatChoices = false,
+    onDone
+  }: Props = $props();
   const uid = $props.id();
 
   type Outcome = (typeof OUTCOME_CHOICES)[number]['value'];
+  const choices = $derived(
+    OUTCOME_CHOICES.filter((o) => meatChoices || !MEAT_CHOICE_VALUES.includes(o.value))
+  );
   let kind = $state<'left' | 'added'>('left');
   let status = $state<Outcome>('died');
   let count = $state<number | null>(1);
@@ -30,10 +43,18 @@
   let at = $state(msToLocalInput(Date.now()));
   let saving = $state(false);
   let error = $state<string | null>(null);
+  let canCullInstead = $state(false);
+
+  function cullInstead() {
+    status = 'culled';
+    canCullInstead = false;
+    error = null;
+  }
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
     error = null;
+    canCullInstead = false;
     const occurredAt = localInputToMs(at);
     if (occurredAt === null) {
       error = 'Pick when it happened.';
@@ -66,6 +87,7 @@
         body: JSON.stringify(body)
       });
       if (!res.ok) {
+        canCullInstead = res.status === 422 && MEAT_CHOICE_VALUES.includes(body.status);
         error = await errorFromResponse(res);
         return;
       }
@@ -103,7 +125,7 @@
     <fieldset class="af-fieldset">
       <legend class="af-legend">What happened?</legend>
       <div class="af-tiles">
-        {#each OUTCOME_CHOICES as o (o.value)}
+        {#each choices as o (o.value)}
           <label class="af-tile" class:on={status === o.value}>
             <input type="radio" name="{uid}-status" value={o.value} bind:group={status} />
             <span>{o.label}</span>
@@ -143,6 +165,11 @@
   />
 
   {#if error}<p class="af-error" role="alert">{error}</p>{/if}
+  {#if canCullInstead}
+    <button class="af-ghost" type="button" onclick={cullInstead}>
+      Record as culled, meat not used
+    </button>
+  {/if}
   <button class="af-primary" type="submit" disabled={saving}>
     {saving ? 'Saving…' : 'Save'}
   </button>

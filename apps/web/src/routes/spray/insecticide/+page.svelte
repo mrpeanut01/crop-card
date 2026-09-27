@@ -13,6 +13,7 @@
     type CompatibilityState,
     type SprayContextBlock
   } from '$lib/components/spray/SprayContextStrip.svelte';
+  import { pastureNotice } from '$lib/farm/pastureNotice';
   import Provenance from '$lib/components/ui/Provenance.svelte';
   import ProvenanceLegend from '$lib/components/ui/ProvenanceLegend.svelte';
   import PollinatorGatePanel from '$lib/components/spray/PollinatorGatePanel.svelte';
@@ -188,6 +189,15 @@
   });
 
   const selectedBlock = $derived(data.blocks.find((b) => b.id === selectedBlockId) ?? null);
+  const ctxPasture = $derived(
+    pastureNotice({
+      blockIds: selectedBlock ? [selectedBlock.id] : [],
+      products: data.insecticides
+        .filter((p) => p.pluginId === selectedPluginId)
+        .map((p) => ({ pluginId: p.pluginId, name: p.displayName })),
+      context: data.pasture
+    })
+  );
   const ctxBlocks = $derived<SprayContextBlock[]>(
     selectedBlock ? [{ id: selectedBlock.id, label: selectedBlock.name, acres: 0 }] : []
   );
@@ -355,7 +365,12 @@
 
 <div class="spray-almanac-chrome">
   <SprayStepper steps={stepperData} />
-  <SprayContextStrip blocks={ctxBlocks} cropLabel={ctxCropLabel} compatibility={ctxCompatibility} />
+  <SprayContextStrip
+    blocks={ctxBlocks}
+    cropLabel={ctxCropLabel}
+    compatibility={ctxCompatibility}
+    pastureNotice={ctxPasture}
+  />
 </div>
 
 {#if ipmBlocked}

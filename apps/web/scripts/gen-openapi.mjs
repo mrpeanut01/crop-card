@@ -74,6 +74,13 @@ import {
   animalPatchSchema,
   animalStatusSchema
 } from '../src/lib/animals/apiSchemas.ts';
+import {
+  grazingAttestationSchema,
+  healthRecordSchema,
+  productionPatchSchema,
+  productionRecordSchema,
+  withdrawalEntrySchema
+} from '../src/lib/animals/recordApiSchemas.ts';
 import { RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
@@ -1003,6 +1010,194 @@ const paths = {
         ...OWNER_ERRORS,
         404: errorResponse('Status change not found for the active Owner.'),
         409: errorResponse('Locked, not the latest change, or it would leave a negative count.')
+      }
+    }
+  },
+
+  '/api/animals/health/record': {
+    post: {
+      summary: 'Record an animal health event',
+      description:
+        "Owners and helpers. A treatment, vaccination, deworm, vet visit, injury or note on an animal or a group. Any event that names a product carries a withdrawal hold on meat, milk and eggs; the kernel's verdict is stored in `withdrawalClear` with `rulesVersion`, and the treatment always saves. A dose taken from `stockItemId` is deducted as an `animal-treatment` movement when its unit converts, and the bottle's product wins over a different pick. `coveredLogs` lists earlier food or sale logs the new hold covers (a log later changed to discarded still counts, and so do logs of groups split off the treated group), and `coveredMeat` lists slaughters or sales for meat already recorded inside it. The prohibited-drug check reads the stock bottle's name and active ingredients as well as the typed name. Withdrawal numbers are never set here; the owner adds them through `POST /api/animals/health/{id}/entries`. Not gated by the season close-out. Safe to replay from the offline queue with the client record id header.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(healthRecordSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Recorded.', {
+          type: 'object',
+          required: [
+            'event',
+            'withdrawalClear',
+            'holds',
+            'carriesHold',
+            'coveredLogs',
+            'coveredMeat',
+            'warnings'
+          ],
+          properties: {
+            event: { type: 'object' },
+            withdrawalClear: { type: 'object' },
+            holds: { type: 'object' },
+            carriesHold: { type: 'boolean' },
+            locksOnSave: { type: 'boolean' },
+            coveredLogs: { type: 'array', items: { type: 'object' } },
+            coveredMeat: { type: 'array', items: { type: 'object' } },
+            warnings: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse(
+          "Invalid body, a subject that is not on this farm (`UNKNOWN_SUBJECT`), another Owner's stock item, a product not in the library (`UNKNOWN_PRODUCT`) or a date in the future."
+        ),
+        ...AUTH_ERRORS,
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
+  '/api/animals/health/{id}': {
+    parameters: [idPath('id', 'Health event id.')],
+    delete: {
+      summary: 'Remove a health record',
+      description:
+        'A record that carries a withdrawal hold can only be removed by the owner. On a food-producing subject it locks 48 hours after the dose (`RECORD_LOCKED`); the owner can force it with `force=true` and a `reason`. Every delete leaves a tombstone, and a deleted dose keeps its hold unless `neverGiven=true`.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        { name: 'force', in: 'query', required: false, schema: { type: 'boolean' } },
+        { name: 'neverGiven', in: 'query', required: false, schema: { type: 'boolean' } },
+        { name: 'reason', in: 'query', required: false, schema: { type: 'string' } }
+      ],
+      responses: {
+        200: jsonResponse('Removed.', {
+          type: 'object',
+          properties: { removed: { type: 'string' }, holdKept: { type: 'boolean' } }
+        }),
+        400: errorResponse('A locked record needs a reason (`REASON_REQUIRED`).'),
+        ...AUTH_ERRORS,
+        404: errorResponse('Health record not found for the active Owner.'),
+        409: errorResponse('Locked (`RECORD_LOCKED`).')
+      }
+    }
+  },
+
+  '/api/animals/health/{id}/entries': {
+    parameters: [idPath('id', 'Health event id.')],
+    post: {
+      summary: 'Add a withdrawal entry',
+      description:
+        'Owner only. Appends a withdrawal read from the label (the owner confirms the label names this species and class; zero needs `labelSaysNone`), a vet-directed withdrawal (`vetName` required), the actual last dose of a course, or the product that proves on-label use. Entries are never edited or removed, so this works on locked records and can only resolve or lengthen a hold. Extra-label use and a label that says not to use the product for this food only take a vet entry (`LABEL_PATH_CLOSED`). Numbers are typed by the owner, never filled in by AI.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(withdrawalEntrySchema),
+      responses: {
+        201: jsonResponse('Added.', {
+          type: 'object',
+          required: ['event', 'withdrawalClear', 'holds'],
+          properties: {
+            event: { type: 'object' },
+            withdrawalClear: { type: 'object' },
+            holds: { type: 'object' }
+          }
+        }),
+        400: errorResponse('Invalid body.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Health record not found for the active Owner.'),
+        409: errorResponse(
+          'The entry is refused by the withdrawal rules (`LABEL_PATH_CLOSED`, `LABEL_NOT_CONFIRMED`, `ZERO_NOT_CONFIRMED`, `COURSE_END_EARLIER` and others).'
+        )
+      }
+    }
+  },
+
+  '/api/animals/production/record': {
+    post: {
+      summary: 'Log eggs, milk or a weight',
+      description:
+        'Owners and helpers. Eggs and milk declared as `food` or `sale` run the withdrawal gate at the time they were collected, with no override: a stop answers 422 with `code` (`WITHDRAWAL_ACTIVE`, `WITHDRAWAL_UNKNOWN` or `PROHIBITED_DRUG`), the clear date when known and `resubmitAs: discard`. `discard` always saves; `feed-to-animals` and `unknown` save with a warning. Weights are never gated. Not gated by the season close-out. Safe to replay from the offline queue; a replay that now hits a hold gets the same 422.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(productionRecordSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Logged.', {
+          type: 'object',
+          required: ['log', 'warnings'],
+          properties: {
+            log: { type: 'object' },
+            warnings: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse('Invalid body, a subject that is not on this farm, or a future date.'),
+        ...AUTH_ERRORS,
+        422: errorResponse('A withdrawal hold stops this food or sale declaration.'),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
+  '/api/animals/production/{id}': {
+    parameters: [idPath('id', 'Production log id.')],
+    patch: {
+      summary: 'Change what happened to a log',
+      description:
+        'A change toward `discard` always saves, even on a locked log. Any other change runs the withdrawal gate and respects the 48 hour lock of a food-producing subject. The previous value is kept in the record trail.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(productionPatchSchema),
+      responses: {
+        200: jsonResponse('Changed.', { type: 'object' }),
+        400: errorResponse('Invalid body.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('Log not found for the active Owner.'),
+        409: errorResponse('Locked (`RECORD_LOCKED`).'),
+        422: errorResponse('A withdrawal hold stops this food or sale declaration.')
+      }
+    },
+    delete: {
+      summary: 'Remove a log',
+      description:
+        "A food-producing subject's log locks 48 hours after it was collected; only the owner can then remove it, with `force=true` and a `reason`, leaving a tombstone.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        { name: 'force', in: 'query', required: false, schema: { type: 'boolean' } },
+        { name: 'reason', in: 'query', required: false, schema: { type: 'string' } }
+      ],
+      responses: {
+        200: jsonResponse('Removed.', { type: 'object' }),
+        400: errorResponse('A locked log needs a reason.'),
+        ...AUTH_ERRORS,
+        404: errorResponse('Log not found for the active Owner.'),
+        409: errorResponse('Locked (`RECORD_LOCKED`).')
+      }
+    }
+  },
+
+  '/api/animals/grazing-attestations': {
+    post: {
+      summary: 'Record grazing intervals read from a label',
+      description:
+        "Owner only. For applications on one Area (`spray|insecticide|fungicide:<event id>`), records the grazing and haying days read from the product's label, which lift a `GRAZING_UNKNOWN` block for exactly those applications. One row per application and product with `manual` provenance and the owner's reason; rows are never edited or deleted. A label that forbids grazing is never cleared (`LABEL_FORBIDS_GRAZING`), and a number below a label value on file never shortens a hold.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(grazingAttestationSchema),
+      responses: {
+        201: jsonResponse('Recorded.', {
+          type: 'object',
+          required: ['attestations'],
+          properties: { attestations: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse(
+          "Invalid body, another Owner's Area, an application that is not on the Area (`UNKNOWN_APPLICATION`) or a multi-product application with no product named (`PRODUCT_REQUIRED`)."
+        ),
+        ...OWNER_ERRORS,
+        409: errorResponse('The label forbids grazing (`LABEL_FORBIDS_GRAZING`).')
       }
     }
   },

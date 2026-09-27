@@ -1,0 +1,1 @@
+ALTER TABLE `harvest_events` ADD `rules_version` text;

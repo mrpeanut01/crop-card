@@ -10,7 +10,10 @@ import {
   rejectForeignRefs,
   type ForeignRef
 } from '$lib/server/foreignRefs';
-import { writeRecord } from '$lib/server/recordWrite';
+import { guardedHoldWrite } from '$lib/server/holdGuard';
+import { grazingMoveGate, moveTruncationRefusal } from '$lib/server/grazingGate';
+import { moveOrderRefusal } from '$lib/server/animalOrder';
+import { prefsFor } from '$lib/db/userProfile';
 import {
   applyMove,
   parseBody,
@@ -43,13 +46,26 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
 
   try {
     const plan = planMove(input);
-    const move = writeRecord(event, () =>
-      applyMove(plan, {
-        movedBy: user.id,
-        clientRecordId: event.request.headers.get(CLIENT_RECORD_HEADER)
-      })
+    const timeZone = prefsFor(user.id).timeZone;
+    const outOfOrder = moveOrderRefusal(plan, timeZone);
+    if (outOfOrder) return outOfOrder.toResponse();
+    const truncated = await moveTruncationRefusal(plan, timeZone);
+    if (truncated) return json(truncated, { status: 409 });
+    const gate = await grazingMoveGate(plan, user.role, timeZone);
+    if (!gate.ok) return json(gate.body, { status: gate.status });
+    const move = await guardedHoldWrite(
+      event,
+      user,
+      () =>
+        applyMove(plan, {
+          movedBy: user.id,
+          clientRecordId: event.request.headers.get(CLIENT_RECORD_HEADER),
+          rulesVersion: gate.rulesVersion ?? null,
+          exposureFloor: gate.exposureFloor ?? null
+        }),
+      { dated: true }
     );
-    return json({ move }, { status: 201 });
+    return json({ move, warnings: gate.warnings }, { status: 201 });
   } catch (e) {
     return ruleResponse(e);
   }

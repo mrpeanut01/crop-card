@@ -57,6 +57,9 @@ import * as animalsRepo from './animals';
 import * as animalGroupsRepo from './animalGroups';
 import * as animalLocationsRepo from './animalLocations';
 import * as animalStatusRepo from './animalStatus';
+import * as grazingAttestationsRepo from './grazingAttestations';
+import * as animalHealthRepo from './animalHealth';
+import * as animalProductionRepo from './animalProduction';
 import {
   PHASE_32_TABLES,
   listPhase32Ids,
@@ -1099,6 +1102,167 @@ describe('cross-tenant isolation', () => {
     ).toBe(false);
   });
 
+  it("grazing attestations never read another Owner's rows", () => {
+    const seed = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const field = fieldsRepo.createField({ name: `${ownerId}-pasture`, kind: 'pasture' });
+        const row = grazingAttestationsRepo.insertGrazingAttestation({
+          fieldId: field.id,
+          sprayEventRef: `spray:${ownerId}`,
+          productPluginId: null,
+          grazeDays: 7,
+          hayDays: null,
+          reason: 'read from the label',
+          attestedBy: null
+        });
+        return { fieldId: field.id, id: row.id, ref: `spray:${ownerId}` };
+      });
+    const a = seed(OWNER_A);
+    const b = seed(OWNER_B);
+    fc.assert(
+      fc.property(
+        fc.constantFrom([OWNER_A, a, b] as const, [OWNER_B, b, a] as const),
+        ([me, mine, theirs]) =>
+          runWithTenant(me, () => {
+            const all = grazingAttestationsRepo.listGrazingAttestations().map((r) => r.id);
+            expect(all).toContain(mine.id);
+            expect(all).not.toContain(theirs.id);
+            expect(
+              grazingAttestationsRepo.listGrazingAttestations({ fieldIds: [theirs.fieldId] })
+            ).toEqual([]);
+            expect(
+              grazingAttestationsRepo.listGrazingAttestations({ sprayEventRefs: [theirs.ref] })
+            ).toEqual([]);
+            expect(grazingAttestationsRepo.getGrazingAttestation(theirs.id)).toBeUndefined();
+            expect(grazingAttestationsRepo.getGrazingAttestation(mine.id)?.grazeDays).toBe(7);
+          })
+      ),
+      { numRuns: 10 }
+    );
+  });
+
+  it("animal health and production repos never read, lock, change or delete another Owner's rows", () => {
+    const seed = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const group = animalGroupsRepo.insertAnimalGroup({
+          name: `${ownerId}-flock`,
+          speciesId: 'chicken',
+          purpose: 'production',
+          headCount: 3,
+          foodProducing: true
+        });
+        const hen = animalsRepo.insertAnimal({
+          speciesId: 'chicken',
+          name: `${ownerId}-hen`,
+          groupId: group.id,
+          purpose: 'production',
+          foodProducing: true
+        });
+        animalLocationsRepo.insertGroupChangeMarker({
+          subject: { subjectType: 'animal', subjectId: hen.id },
+          fieldId: fieldsRepo.createField({ name: `${ownerId}-coop`, kind: 'barn' }).id,
+          atMs: Date.now() - 1000,
+          movedBy: null,
+          fromGroupId: null,
+          toGroupId: group.id
+        });
+        const old = Date.now() - 5 * 86_400_000;
+        const treatment = animalHealthRepo.insertHealthEvent({
+          subjectType: 'group',
+          subjectId: group.id,
+          kind: 'deworm',
+          productName: 'wormer',
+          administeredAt: old,
+          withdrawalClear: null,
+          rulesVersion: 'test',
+          foodProducingAtRecord: true,
+          performedById: null
+        });
+        const log = animalProductionRepo.insertProductionLog({
+          subjectType: 'group',
+          subjectId: group.id,
+          kind: 'eggs',
+          quantity: 6,
+          unit: 'eggs',
+          occurredAt: old,
+          use: 'food',
+          rulesVersion: 'test',
+          performedById: null
+        });
+        return { groupId: group.id, henId: hen.id, treatmentId: treatment.id, logId: log.id };
+      });
+    const a = seed(OWNER_A);
+    const b = seed(OWNER_B);
+    fc.assert(
+      fc.property(
+        fc.constantFrom([OWNER_A, a, b] as const, [OWNER_B, b, a] as const),
+        ([me, mine, theirs]) =>
+          runWithTenant(me, () => {
+            const subject = { subjectType: 'group' as const, subjectId: theirs.groupId };
+            expect(animalHealthRepo.getHealthEvent(theirs.treatmentId)).toBeUndefined();
+            expect(animalHealthRepo.listHealthEvents('group', theirs.groupId)).toEqual([]);
+            expect(animalHealthRepo.listHealthEventsForSubjects([subject])).toEqual([]);
+            expect(animalHealthRepo.listHealthTombstones([subject])).toEqual([]);
+            expect(animalHealthRepo.listAnimalIdsEverInGroup(theirs.groupId)).toEqual([]);
+            expect(
+              animalHealthRepo.saveWithdrawalEntries(theirs.treatmentId, '[]')
+            ).toBeUndefined();
+            expect(animalHealthRepo.getHealthEvent(mine.treatmentId)?.subjectId).toBe(mine.groupId);
+            expect(animalHealthRepo.listAnimalIdsEverInGroup(mine.groupId)).toEqual([mine.henId]);
+
+            expect(animalProductionRepo.getProductionLog(theirs.logId)).toBeUndefined();
+            expect(animalProductionRepo.listProductionLogs('group', theirs.groupId)).toEqual([]);
+            expect(animalProductionRepo.listFoodLogsForSubjects([subject])).toEqual([]);
+            expect(
+              animalProductionRepo
+                .listFoodLogsForSubjects([{ subjectType: 'group', subjectId: mine.groupId }])
+                .map((l) => l.id)
+            ).toEqual([mine.logId]);
+          })
+      ),
+      { numRuns: 10 }
+    );
+    runWithTenant(OWNER_A, () => {
+      const theirLog = runWithTenant(OWNER_B, () =>
+        animalProductionRepo.getProductionLog(b.logId)
+      )!;
+      expect(
+        animalProductionRepo.setProductionUse(theirLog, 'discard', {
+          by: null,
+          reason: null,
+          rulesVersion: 'x'
+        })
+      ).toBeUndefined();
+      expect(
+        animalProductionRepo.deleteProductionLog(theirLog, {
+          by: null,
+          reason: null,
+          tombstone: false
+        })
+      ).toBe(false);
+      const theirEvent = runWithTenant(OWNER_B, () =>
+        animalHealthRepo.getHealthEvent(b.treatmentId)
+      )!;
+      expect(
+        animalHealthRepo.deleteHealthEvent(theirEvent, {
+          deletedBy: null,
+          reason: null,
+          dosed: true
+        })
+      ).toBe(false);
+      expect(
+        animalHealthRepo.listHealthTombstones([{ subjectType: 'group', subjectId: b.groupId }])
+      ).toEqual([]);
+    });
+    runWithTenant(OWNER_B, () => {
+      expect(animalProductionRepo.getProductionLog(b.logId)?.use).toBe('food');
+      expect(animalHealthRepo.getHealthEvent(b.treatmentId)).toBeDefined();
+      expect(
+        animalHealthRepo.listHealthTombstones([{ subjectType: 'group', subjectId: b.groupId }])
+      ).toEqual([]);
+    });
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -1132,7 +1296,10 @@ describe('cross-tenant isolation', () => {
       animalsRepo,
       animalGroupsRepo,
       animalLocationsRepo,
-      animalStatusRepo
+      animalStatusRepo,
+      grazingAttestationsRepo,
+      animalHealthRepo,
+      animalProductionRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

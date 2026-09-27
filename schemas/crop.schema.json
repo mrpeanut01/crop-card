@@ -188,6 +188,80 @@
             "max"
           ],
           "additionalProperties": false
+        },
+        "establishment": {
+          "type": "string",
+          "enum": [
+            "direct-seed",
+            "transplant",
+            "either"
+          ]
+        },
+        "startIndoorsWeeks": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "min",
+            "max"
+          ],
+          "additionalProperties": false
+        },
+        "transplantOffsetDays": {
+          "type": "integer",
+          "minimum": -120,
+          "maximum": 120
+        },
+        "hardenOffDays": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "min",
+            "max"
+          ],
+          "additionalProperties": false
+        },
+        "germinationTempF": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "min",
+            "max"
+          ],
+          "additionalProperties": false
+        },
+        "dtmFrom": {
+          "type": "string",
+          "enum": [
+            "direct-seed",
+            "transplant"
+          ]
         }
       },
       "additionalProperties": false
@@ -1109,6 +1183,61 @@
         }
       },
       "additionalProperties": false
+    },
+    "animalToxicity": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speciesIds": {
+            "minItems": 1,
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            }
+          },
+          "parts": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "whole-plant",
+                "leaves",
+                "stems",
+                "roots",
+                "tubers",
+                "flowers",
+                "fruit",
+                "unripe-fruit",
+                "seeds",
+                "pits"
+              ]
+            }
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "caution",
+              "toxic",
+              "highly-toxic"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "speciesIds",
+          "parts",
+          "severity"
+        ],
+        "additionalProperties": false
+      }
     },
     "planting": {
       "type": "object",

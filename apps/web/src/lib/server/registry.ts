@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { dev } from '$app/environment';
 import { loadPluginsFromDirectory, PluginRegistry } from '$lib/plugins';
 import { loadBedRecipes, type BedRecipeRegistry } from '$lib/plugins/bedRecipes';
+import { loadPhase32DataKinds, type Phase32DataKinds } from '$lib/plugins/registryDataKinds';
 import { isTestPluginId } from '$lib/plugins/testPlugins';
 import { currentOwnerId } from '$lib/db/tenant';
 import { HIDDEN_PAYLOAD, listEffectiveOverrides, overridesRevision } from '$lib/db/pluginOverrides';
@@ -20,6 +21,7 @@ import { runtimeCatalogOverlay } from './pluginCatalogOverlay';
 
 let cached: { registry: PluginRegistry; loadedAt: number; failures: string[] } | null = null;
 let cachedRecipes: BedRecipeRegistry | null = null;
+let cachedDataKinds: Phase32DataKinds | null = null;
 const ownerViews = new Map<string, { key: string; registry: PluginRegistry }>();
 
 function pluginsDir(): string {
@@ -132,6 +134,7 @@ export function getRegistryStats(): { loadedAt?: number; failures: string[] } {
 export function resetRegistry(): void {
   cached = null;
   cachedRecipes = null;
+  cachedDataKinds = null;
   ownerViews.clear();
 }
 
@@ -152,4 +155,18 @@ export async function getBedRecipes(): Promise<BedRecipeRegistry> {
   }
   cachedRecipes = registry;
   return registry;
+}
+
+/** Species, animal-health and pest-model plugins (Phase 32). */
+export async function getDataKinds(): Promise<Phase32DataKinds> {
+  if (cachedDataKinds) return cachedDataKinds;
+  const kinds = await loadPhase32DataKinds(pluginsDir());
+  if (kinds.failed.length > 0) {
+    console.warn(
+      '[registry] some Phase 32 data plugins failed to load:',
+      kinds.failed.map((f) => `${path.basename(f.file)}: ${f.error.message}`)
+    );
+  }
+  cachedDataKinds = kinds;
+  return kinds;
 }

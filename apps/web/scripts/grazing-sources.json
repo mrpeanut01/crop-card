@@ -1,0 +1,34 @@
+{
+  "$comment": "Phase 32A. Quotes for every grazingRestrictions value on herbicide, insecticide and fungicide plugins, keyed pluginId → fact path (grazeDays, hayDays, lactatingDairyGrazeDays, meatAnimalRemovalBeforeSlaughterDays, notForPasture, manureCarryover, speciesExceptions.<speciesId>[.lactating].grazeDays|hayDays). Each entry is { url, publisher, date, quote, note? } read from the product label. `pastureAllowlist` lists pasture-labelled products that have no grazingRestrictions yet, each with a reason. The gate in apps/web/src/lib/plugins/sourceCoverage.gate.test.ts fails on a pasture-labelled product that is neither covered nor listed, and on a listed product that is no longer a gap.",
+  "entries": {},
+  "pastureAllowlist": [
+    {
+      "pluginId": "banvel",
+      "reason": "The plugin notes list pasture use, but the plugin does not name one Banvel label (see the EPA-number allowlist). Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
+      "pluginId": "chaparral-aminopyralid-metsulfuron",
+      "reason": "Chaparral (EPA 62719-597) is labelled for pasture and rangeland. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
+      "pluginId": "crossbow",
+      "reason": "Crossbow (EPA 62719-260) is labelled for pasture and hay fence lines. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
+      "pluginId": "duracor-aminopyralid-florpyrauxifen",
+      "reason": "DuraCor (EPA 62719-739) is labelled for pasture and rangeland. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
+      "pluginId": "grazonnext-hl",
+      "reason": "GrazonNext HL (EPA 62719-628) is labelled for pasture, hay and rangeland. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
+      "pluginId": "harmony-sg-thifensulfuron",
+      "reason": "The plugin notes list pasture among the Harmony SG (EPA 279-9595) sites. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
+      "pluginId": "pursuit",
+      "reason": "Pursuit (EPA 241-310) claims safety on alfalfa, a forage crop that is cut for hay or grazed. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    }
+  ]
+}

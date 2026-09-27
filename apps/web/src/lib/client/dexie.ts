@@ -28,6 +28,12 @@
  * `cardStore.ts`, which keys every read and write by the active Owner.
  * Sprint 30F adds the `scout` record kind (no schema change: `kind` is not
  * indexed).
+ *
+ * Phase 32 (v5): the queue gains a `[ownerId+kind]` index so the pending
+ * list can group rows per kind for the replay recovery UX, and every Phase
+ * 32 queue kind is declared up front in `PHASE_32_RECORD_KINDS`. They stay
+ * out of `PendingRecordKind` until their endpoint exists: moving one over
+ * is a type change plus an `ENDPOINT_BY_KIND` entry, never another bump.
  */
 
 import Dexie, { type Table } from 'dexie';
@@ -44,6 +50,16 @@ export type PendingRecordKind =
   | 'scout'
   | 'task'
   | 'journal';
+
+export const PHASE_32_RECORD_KINDS = [
+  'animal-move',
+  'animal-health',
+  'animal-production',
+  'seed-start',
+  'irrigation'
+] as const;
+
+export type Phase32RecordKind = (typeof PHASE_32_RECORD_KINDS)[number];
 
 export interface PendingSprayRecord {
   id: string;
@@ -152,6 +168,12 @@ export class CropCardDb extends Dexie {
       });
     this.version(4).stores({
       pendingSprayRecords: 'id, ownerId, createdAt, [ownerId+createdAt]',
+      cachedCatalogs: 'key, ownerId, [ownerId+catalogKind]',
+      farmSnapshots: 'ownerId',
+      pinnedCards: '[ownerId+key], ownerId, [ownerId+pinnedAt]'
+    });
+    this.version(5).stores({
+      pendingSprayRecords: 'id, ownerId, createdAt, [ownerId+createdAt], [ownerId+kind]',
       cachedCatalogs: 'key, ownerId, [ownerId+catalogKind]',
       farmSnapshots: 'ownerId',
       pinnedCards: '[ownerId+key], ownerId, [ownerId+pinnedAt]'

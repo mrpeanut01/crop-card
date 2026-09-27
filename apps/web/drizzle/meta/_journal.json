@@ -421,6 +421,69 @@
       "when": 1790442850558,
       "tag": "0059_stripe_event_order",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "6",
+      "when": 1790479826732,
+      "tag": "0060_soil_test_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "6",
+      "when": 1790479865088,
+      "tag": "0061_animals_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "6",
+      "when": 1790479896856,
+      "tag": "0062_animal_records",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "6",
+      "when": 1790479907708,
+      "tag": "0063_animal_care_plans",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "6",
+      "when": 1790479920872,
+      "tag": "0064_seed_starting",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "6",
+      "when": 1790479932995,
+      "tag": "0065_block_protections",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "6",
+      "when": 1790479945009,
+      "tag": "0066_irrigation",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "6",
+      "when": 1790479960396,
+      "tag": "0067_task_assignees_time",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "6",
+      "when": 1790479980310,
+      "tag": "0068_ledger",
+      "breakpoints": true
     }
   ]
 }

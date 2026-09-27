@@ -211,7 +211,7 @@ test.describe('post-draw dialog', () => {
     await page
       .getByRole('dialog', { name: 'Add to map' })
       .getByRole('region', { name: 'Shade & structures' })
-      .getByRole('button', { name: /^Fence/ })
+      .getByRole('button', { name: /^Fence \(shade\)/ })
       .click();
 
     const map = page.locator('.leaflet-container');
@@ -243,7 +243,7 @@ test.describe('post-draw dialog', () => {
     await page
       .getByRole('dialog', { name: 'Add to map' })
       .getByRole('region', { name: 'Shade & structures' })
-      .getByRole('button', { name: /^Fence/ })
+      .getByRole('button', { name: /^Fence \(shade\)/ })
       .click();
     await page.mouse.click(start[0], start[1] + 80);
     await page.waitForTimeout(150);
@@ -265,7 +265,7 @@ test.describe('post-draw dialog', () => {
     await page
       .getByRole('dialog', { name: 'Add to map' })
       .getByRole('region', { name: 'Lines & points' })
-      .getByRole('button', { name: /^Fence/ })
+      .getByRole('button', { name: /^Fence line/ })
       .click();
 
     const map = page.locator('.leaflet-container');

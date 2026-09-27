@@ -1,6 +1,6 @@
 <script lang="ts">
   import Modal from '$lib/components/ui/Modal.svelte';
-  import { ADD_GROUPS, type AddPick } from '$lib/farm/kindStyle';
+  import { ADD_GROUPS, type AddGroup, type AddPick } from '$lib/farm/kindStyle';
 
   const {
     open,
@@ -19,6 +19,12 @@
   const groups = $derived(
     mode === 'map' ? ADD_GROUPS : ADD_GROUPS.filter((g) => g.id !== 'shade' && g.id !== 'features')
   );
+
+  // Both groups have a fence: one casts shade, the other is a drawn line.
+  function labelFor(item: AddGroup['items'][number]): string {
+    if (item.kind !== 'fence') return item.label;
+    return item.type === 'shade' ? 'Fence (shade)' : 'Fence line';
+  }
 </script>
 
 <Modal {open} {onClose} title="Add to map">
@@ -51,7 +57,7 @@
                 aria-hidden="true"
               ></span>
               <span class="text">
-                <span class="label">{item.label}</span>
+                <span class="label">{labelFor(item)}</span>
                 {#if item.type === 'area' || item.type === 'feature'}<span class="hint"
                     >{item.hint}</span
                   >{/if}

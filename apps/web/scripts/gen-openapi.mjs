@@ -46,7 +46,6 @@ import {
   fillRequestSchema,
   plantingCreateSchema,
   recipeRequestSchema,
-  setPlacementPatchSchema,
   successionRequestSchema
 } from '../src/lib/garden/api.ts';
 import { hintsPostSchema } from '../src/lib/hints.ts';
@@ -57,6 +56,15 @@ import {
 } from '../src/lib/journal/apiSchemas.ts';
 import { JOURNAL_KINDS, JOURNAL_PROVENANCE } from '../src/lib/journal/model.ts';
 import { taskCloseSchema } from '../src/lib/tasks/apiSchemas.ts';
+import {
+  fungicideRecordSchema,
+  harvestRecordSchema,
+  hayCuttingSchema,
+  insecticideRecordSchema,
+  scoutRecordSchema,
+  sprayRecordSchema
+} from '../src/lib/records/apiSchemas.ts';
+import { cropPatchSchema } from '../src/lib/crops/apiSchemas.ts';
 import { RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
@@ -237,7 +245,7 @@ const DUPLICATE_SCHEMA = {
   }
 };
 
-function recordEndpoint({ summary, description, source, created = false }) {
+function recordEndpoint({ summary, description, schema, created = false }) {
   const saved = created
     ? {
         200: jsonResponse('A replay of a client record id that was already saved.', {
@@ -254,17 +262,7 @@ function recordEndpoint({ summary, description, source, created = false }) {
       description,
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
       parameters: [clientRecordRef],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              description: `Exact shape is enforced inline in ${source} via Zod.`
-            }
-          }
-        }
-      },
+      requestBody: jsonBody(schema),
       responses: {
         ...saved,
         400: errorResponse('Invalid body.'),
@@ -483,60 +481,39 @@ const paths = {
     }
   },
 
-  '/api/spray/record': {
-    post: {
-      ...recordEndpoint({
-        summary: 'Record a spray event (safety-kernel re-validated)',
-        description:
-          'Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 422 with kernel violations on safety failure.',
-        source: 'apps/web/src/routes/api/spray/record/+server.ts'
-      }).post,
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              description:
-                'Spray-event payload. Exact shape is enforced inline in apps/web/src/routes/api/spray/record/+server.ts via Zod.',
-              properties: {
-                blockId: { type: 'string' },
-                products: { type: 'array', items: { type: 'object' } },
-                occurredAt: { type: 'integer', description: 'Unix epoch ms.' }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
+  '/api/spray/record': recordEndpoint({
+    summary: 'Record a spray event (safety-kernel re-validated)',
+    description:
+      'Every POST re-runs `evaluateSpray()` on the server regardless of UI. A Bearer-authed agent cannot bypass the safety kernel, the 48h spray lock, the helper custom-rate restriction, or tenant isolation. Returns 422 with kernel violations on safety failure.',
+    schema: sprayRecordSchema
+  }),
 
   '/api/insecticide/record': recordEndpoint({
     summary: 'Record an insecticide application',
     description:
       'Runs the IPM threshold, pollinator-protection, cross-contamination and environment gates on the server before saving. Safe to replay from the offline queue with the client record id header.',
-    source: 'apps/web/src/routes/api/insecticide/record/+server.ts'
+    schema: insecticideRecordSchema
   }),
 
   '/api/fungicide/record': recordEndpoint({
     summary: 'Record a fungicide application',
     description:
       'Runs the FRAC rotation, tank-mix, bloom and cross-contamination gates on the server before saving. Safe to replay from the offline queue with the client record id header.',
-    source: 'apps/web/src/routes/api/fungicide/record/+server.ts'
+    schema: fungicideRecordSchema
   }),
 
   '/api/harvest/record': recordEndpoint({
     summary: 'Record a harvest',
     description:
       'Checks stored moisture against the crop archetype and the pre-harvest interval of recent sprays. Safe to replay from the offline queue with the client record id header.',
-    source: 'apps/web/src/routes/api/harvest/record/+server.ts'
+    schema: harvestRecordSchema
   }),
 
   '/api/scout/record': recordEndpoint({
     summary: 'Record a scouting observation',
     description:
       'Saves one observation against a block (and optionally a planting). Safe to replay from the offline queue with the client record id header.',
-    source: 'apps/web/src/routes/api/scout/record/+server.ts',
+    schema: scoutRecordSchema,
     created: true
   }),
 
@@ -544,7 +521,7 @@ const paths = {
     summary: 'Record a hay cutting',
     description:
       'Re-runs the mow decision against the forecast before saving; a bale moisture danger stop cannot be overridden. Safe to replay from the offline queue with the client record id header.',
-    source: 'apps/web/src/routes/api/hay/cuttings/+server.ts',
+    schema: hayCuttingSchema,
     created: true
   }),
 
@@ -947,36 +924,67 @@ const paths = {
   '/api/crops/{id}': {
     parameters: [idPath('id', 'Planting (crop) id.')],
     patch: {
-      summary: 'Place a planting in a garden bed',
+      summary: 'Change a planting',
       description:
-        "Only the `set-placement` action is described here; the route's other actions (`mark-harvested`, `archive`, `mark-failed`, `reactivate`, `set-schedule`, `edit-details`, `unschedule`, `split`) are not yet published. Owner only. Places, moves or clears a planting's spot (`footprint: null`) and moves its date when `plantingDateMs` is sent. A planting already in the ground can't change beds and its date can't move past today (409 `IN_GROUND`). A linked succession sowing needs a spot that is free for its whole time in the bed (409 `OVERLAP`), and a spot past the bed edge is refused with `OUTSIDE_AREA`.",
+        "The body's `action` picks what changes: the status (`mark-harvested`, `archive`, `mark-failed`, `reactivate`), the date and block (`set-schedule`), the crop plugin (`change-plugin`, not available yet), the variety and quantity (`edit-details`), taking it off the schedule (`unschedule`), splitting it (`split`) or its spot in a garden bed (`set-placement`). Inspectors are read-only. `set-placement` is owner only: it places, moves or clears a planting's spot (`footprint: null`) and moves its date when `plantingDateMs` is sent. A planting already in the ground can't change beds and its date can't move past today (409 `IN_GROUND`). A linked succession sowing needs a spot that is free for its whole time in the bed (409 `OVERLAP`), and a spot past the bed edge is refused with `OUTSIDE_AREA`.",
       security: [{ cookieSession: [] }, { bearerAuth: [] }],
-      requestBody: jsonBody(setPlacementPatchSchema),
+      requestBody: jsonBody(cropPatchSchema),
       responses: {
-        200: jsonResponse('Saved.', {
-          type: 'object',
-          required: ['planting', 'reanchored', 'warnings'],
-          properties: {
-            planting: placedRef,
-            reanchored: {
-              type: ['object', 'null'],
-              properties: { shifted: { type: 'integer' }, flaggedStale: { type: 'integer' } }
+        200: jsonResponse('Saved. The shape depends on the action.', {
+          oneOf: [
+            {
+              type: 'object',
+              description: 'Status, `set-schedule` and `edit-details`: the saved planting.',
+              required: ['crop'],
+              properties: { crop: { type: 'object' } }
             },
-            followers: { type: 'array', items: placedRef },
-            warnings: { type: 'array', items: { type: 'string' } }
-          }
+            {
+              type: 'object',
+              description: '`split`: every part.',
+              required: ['crops'],
+              properties: { crops: { type: 'array', items: { type: 'object' } } }
+            },
+            {
+              type: 'object',
+              description: '`unschedule`: what was removed with it.',
+              required: ['ok'],
+              properties: {
+                ok: { const: true },
+                tasksDeleted: { type: 'integer' },
+                disbandedGroupId: { type: ['string', 'null'] }
+              }
+            },
+            {
+              type: 'object',
+              description: '`set-placement`: the placed planting.',
+              required: ['planting', 'reanchored', 'warnings'],
+              properties: {
+                planting: placedRef,
+                reanchored: {
+                  type: ['object', 'null'],
+                  properties: { shifted: { type: 'integer' }, flaggedStale: { type: 'integer' } }
+                },
+                followers: { type: 'array', items: placedRef },
+                warnings: { type: 'array', items: { type: 'string' } }
+              }
+            }
+          ]
         }),
         400: jsonResponse(
           'Invalid request body, a spot past the bed edge (`OUTSIDE_AREA`) or an unknown bed (`FOREIGN_REF`).',
           gardenErrorRef
         ),
         401: errorResponse('Authentication required.'),
-        403: jsonResponse('Owner role required (`READ_ONLY`).', gardenErrorRef),
+        403: jsonResponse(
+          'Inspectors are read-only; `set-placement` needs the owner role (`READ_ONLY`).',
+          gardenErrorRef
+        ),
         404: jsonResponse('Planting not found for the active Owner.', gardenErrorRef),
         409: jsonResponse(
-          'Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`) or the block is not a sized bed in a garden (`NOT_DESIGNABLE`).',
+          'Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`), the block is not a sized bed in a garden (`NOT_DESIGNABLE`), a split that could not be made, or `change-plugin` on the anchor of a planting group.',
           gardenErrorRef
-        )
+        ),
+        501: errorResponse('`change-plugin` is not available yet.')
       }
     }
   },

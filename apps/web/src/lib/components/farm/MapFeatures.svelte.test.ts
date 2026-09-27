@@ -52,9 +52,22 @@ describe('Add drawer lines and points', () => {
     const { unmount } = render(AreaAddDrawer, { open: true, onClose: vi.fn(), onPick });
     const dialog = screen.getByRole('dialog', { name: 'Add to map' });
     const drawer = within(dialog).getByRole('region', { name: 'Lines & points' });
-    for (const label of ['Fence', 'Gate', 'Water source', 'Hydrant', 'Irrigation line', 'Path']) {
+    for (const label of [
+      'Fence line',
+      'Gate',
+      'Water source',
+      'Hydrant',
+      'Irrigation line',
+      'Path'
+    ]) {
       expect(within(drawer).getByRole('button', { name: new RegExp(`^${label}`) })).toBeTruthy();
     }
+    const shade = within(dialog).getByRole('region', { name: 'Shade & structures' });
+    expect(within(shade).getByRole('button', { name: /^Fence \(shade\)/ })).toBeTruthy();
+    const fenceLabels = within(dialog)
+      .getAllByRole('button', { name: /^Fence/ })
+      .map((b) => b.querySelector('.label')?.textContent);
+    expect(fenceLabels.sort()).toEqual(['Fence (shade)', 'Fence line']);
     await fireEvent.click(within(drawer).getByRole('button', { name: /^Water source/ }));
     expect(onPick).toHaveBeenCalledWith({ type: 'feature', kind: 'water_source' });
     unmount();

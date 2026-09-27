@@ -1,6 +1,6 @@
 # Phase 32 plan: animals, growing workflow and farm operations
 
-Status: proposed, 2026-09-27. Sources: four research reports (livestock and home pets; growing workflow gaps; farm operations; records, compliance and reach) and three independent judge rulings. The Decisions section records every ruling and its vote.
+Status: 32A shipped 2026-09-27 (schema, plugin contracts, cleanup and soil tests; see the Phase 32 bullet in CLAUDE.md). 32B to 32F proposed. Sources: four research reports (livestock and home pets; growing workflow gaps; farm operations; records, compliance and reach) and three independent judge rulings. The Decisions section records every ruling and its vote.
 
 ## Why this phase
 

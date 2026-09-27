@@ -1,4 +1,4 @@
-import type { FarmSnapshot, SnapshotSprayProduct } from '../snapshot';
+import type { FarmSnapshot, SnapshotSoilTest, SnapshotSprayProduct } from '../snapshot';
 import { sampleSnapshot } from './fixtures';
 
 const at = (iso: string) => Date.parse(iso);
@@ -40,6 +40,26 @@ export const SAMPLE_FUNGICIDE: SnapshotSprayProduct = {
   mixSteps: [],
   rainfastHours: 2,
   pollinator: null
+};
+
+/** Last spring's Virginia Tech report for the hayfield, in lb/acre. */
+export const SAMPLE_SOIL_TEST: SnapshotSoilTest = {
+  id: 'soil_hay',
+  blockId: 'b_hay',
+  sampledAt: at('2026-03-15T16:00:00Z'),
+  lab: 'Virginia Tech Soil Testing Lab',
+  ph: 5.8,
+  bufferPh: 6.6,
+  organicMatterPct: 3.2,
+  cec: null,
+  nitratePpm: null,
+  phosphorusPpm: 30,
+  potassiumPpm: 190,
+  caPpm: null,
+  mgPpm: 120,
+  extractionMethod: 'mehlich-1',
+  unitsBasis: 'lb-per-acre',
+  labRatings: { k: 'high', mg: 'medium' }
 };
 
 /** The sample farm plus two sprayers (one calibrated), a planter, stock
@@ -100,6 +120,7 @@ export function sampleGearSnapshot(overrides: Partial<FarmSnapshot> = {}): FarmS
       }
     ],
     sprayProducts: { '24d': SAMPLE_HERBICIDE, 'copper-hydroxide': SAMPLE_FUNGICIDE },
+    soilTests: [SAMPLE_SOIL_TEST],
     ...overrides
   });
 }

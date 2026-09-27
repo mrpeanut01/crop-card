@@ -14,6 +14,7 @@ import {
   type SnapshotCropPlugin,
   type SnapshotEquipment,
   type SnapshotPlanting,
+  type SnapshotSoilTest,
   type SnapshotSprayProduct,
   type SnapshotStockItem
 } from '$lib/cards/snapshot';
@@ -28,6 +29,7 @@ import {
   listPlantingsForCards
 } from '$lib/db/cardSnapshot';
 import { listEquipment } from '$lib/db/equipment';
+import { listSoilTests, type SoilTest } from '$lib/db/fertility';
 import { listStockItems } from '$lib/db/stock';
 import { dbChangeMarker } from '$lib/db/requestMemo';
 import { requireOwnerId } from '$lib/db/tenant';
@@ -120,6 +122,35 @@ function toStock(i: ReturnType<typeof listStockItems>[number]): SnapshotStockIte
     reorderThreshold: i.reorderThreshold ?? null,
     earliestExpiry: i.earliestExpiry ? new Date(i.earliestExpiry).toISOString().slice(0, 10) : null
   };
+}
+
+/** Newest test per block; `tests` arrive newest first. */
+export function latestSoilTestsPerBlock(tests: readonly SoilTest[]): SnapshotSoilTest[] {
+  const seen = new Set<string>();
+  const out: SnapshotSoilTest[] = [];
+  for (const t of tests) {
+    if (seen.has(t.blockId)) continue;
+    seen.add(t.blockId);
+    out.push({
+      id: t.id,
+      blockId: t.blockId,
+      sampledAt: t.sampledAt,
+      lab: t.lab ?? null,
+      ph: t.ph ?? null,
+      bufferPh: t.bufferPh ?? null,
+      organicMatterPct: t.organicMatterPct ?? null,
+      cec: t.cec ?? null,
+      nitratePpm: t.nitratePpm ?? null,
+      phosphorusPpm: t.phosphorusPpm ?? null,
+      potassiumPpm: t.potassiumPpm ?? null,
+      caPpm: t.caPpm ?? null,
+      mgPpm: t.mgPpm ?? null,
+      extractionMethod: t.extractionMethod ?? null,
+      unitsBasis: t.unitsBasis ?? null,
+      labRatings: t.labRatings ?? null
+    });
+  }
+  return out.sort((a, b) => a.id.localeCompare(b.id));
 }
 
 const CARE_TASK_KINDS: ReadonlySet<string> = new Set(['pruning', 'thinning']);
@@ -320,7 +351,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     sprayProducts,
     sprayTerms: sprayTermsFor(registry),
     mapFeatures: listMapFeatureViews(),
-    emergencyContacts: loadEmergencyContacts()
+    emergencyContacts: loadEmergencyContacts(),
+    soilTests: latestSoilTestsPerBlock(listSoilTests())
   };
 }
 

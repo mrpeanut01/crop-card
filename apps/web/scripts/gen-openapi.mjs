@@ -65,6 +65,7 @@ import {
   sprayRecordSchema
 } from '../src/lib/records/apiSchemas.ts';
 import { cropPatchSchema } from '../src/lib/crops/apiSchemas.ts';
+import { soilTestCreateSchema } from '../src/lib/fertility/apiSchemas.ts';
 import { RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
@@ -1063,6 +1064,26 @@ const paths = {
         },
         304: { description: 'Unchanged since the ETag you sent.' },
         401: errorResponse('Authentication required.')
+      }
+    }
+  },
+
+  '/api/fertility/soil-tests': {
+    post: {
+      summary: 'Save a soil test for a bed or block',
+      description:
+        "Owner only. Enter the numbers exactly as the lab printed them and say whether they were ppm or lb/acre in `unitsBasis` (missing means ppm); planning converts lb/acre to ppm before crediting nutrients. `labRatings` holds the lab's own low/medium/high words, which are shown in place of CropCard's computed class. Soil tests are saved online only. Another Owner's `blockId` is refused.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(soilTestCreateSchema),
+      responses: {
+        201: jsonResponse('The saved soil test.', {
+          type: 'object',
+          required: ['soilTest'],
+          properties: { soilTest: { type: 'object' } }
+        }),
+        400: errorResponse('Invalid body, or a `blockId` the active Owner does not have.'),
+        401: errorResponse('Authentication required.'),
+        403: errorResponse('Owner role required.')
       }
     }
   },

@@ -10,7 +10,8 @@ export const CARD_KINDS = [
   'day',
   'stock',
   'task',
-  'scout'
+  'scout',
+  'soilTest'
 ] as const;
 
 /** Kinds built only from a saved record, never from the offline snapshot. */
@@ -126,7 +127,8 @@ export const CARD_KIND_LABEL: Record<CardKind, string> = {
   day: 'Day',
   stock: 'Seed & stock',
   task: 'Task',
-  scout: 'Scout'
+  scout: 'Scout',
+  soilTest: 'Soil test'
 };
 
 export const CARD_KEY_PREFIX: Record<CardKind, string> = {
@@ -139,7 +141,9 @@ export const CARD_KEY_PREFIX: Record<CardKind, string> = {
   day: 'dy',
   stock: 'st',
   task: 'tk',
-  scout: 'sc'
+  scout: 'sc',
+  /** `st` is taken by stock, whose keys are already printed on cards. */
+  soilTest: 'so'
 };
 
 const KIND_BY_PREFIX = new Map<string, CardKind>(

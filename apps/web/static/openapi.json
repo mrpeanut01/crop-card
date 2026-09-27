@@ -4956,6 +4956,225 @@
         }
       }
     },
+    "/api/fertility/soil-tests": {
+      "post": {
+        "summary": "Save a soil test for a bed or block",
+        "description": "Owner only. Enter the numbers exactly as the lab printed them and say whether they were ppm or lb/acre in `unitsBasis` (missing means ppm); planning converts lb/acre to ppm before crediting nutrients. `labRatings` holds the lab's own low/medium/high words, which are shown in place of CropCard's computed class. Soil tests are saved online only. Another Owner's `blockId` is refused.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sampledAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "lab": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "reportPdfUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "ph": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 14
+                  },
+                  "bufferPh": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 14
+                  },
+                  "cec": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000
+                  },
+                  "organicMatterPct": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "unitsBasis": {
+                    "type": "string",
+                    "enum": [
+                      "ppm",
+                      "lb-per-acre"
+                    ]
+                  },
+                  "extractionMethod": {
+                    "type": "string",
+                    "enum": [
+                      "mehlich-1",
+                      "mehlich-3",
+                      "bray-p1",
+                      "olsen",
+                      "morgan",
+                      "modified-morgan",
+                      "other"
+                    ]
+                  },
+                  "nitratePpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "phosphorusPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "potassiumPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "caPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "mgPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "labRatings": {
+                    "type": "object",
+                    "properties": {
+                      "p": {
+                        "type": "string",
+                        "enum": [
+                          "very-low",
+                          "low",
+                          "medium",
+                          "optimum",
+                          "high",
+                          "very-high",
+                          "excessive"
+                        ]
+                      },
+                      "k": {
+                        "type": "string",
+                        "enum": [
+                          "very-low",
+                          "low",
+                          "medium",
+                          "optimum",
+                          "high",
+                          "very-high",
+                          "excessive"
+                        ]
+                      },
+                      "ca": {
+                        "type": "string",
+                        "enum": [
+                          "very-low",
+                          "low",
+                          "medium",
+                          "optimum",
+                          "high",
+                          "very-high",
+                          "excessive"
+                        ]
+                      },
+                      "mg": {
+                        "type": "string",
+                        "enum": [
+                          "very-low",
+                          "low",
+                          "medium",
+                          "optimum",
+                          "high",
+                          "very-high",
+                          "excessive"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "blockId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The saved soil test.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "soilTest"
+                  ],
+                  "properties": {
+                    "soilTest": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or a `blockId` the active Owner does not have.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tasks/close": {
       "post": {
         "summary": "Close a task (offline replay of Done or Skip)",

@@ -16,6 +16,7 @@ import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
 import { createTask } from '$lib/db/tasks';
 import { createMapFeature } from '$lib/db/mapFeatures';
+import { insertSoilTest } from '$lib/db/fertility';
 import { createStockItem, receiveLot } from '$lib/db/stock';
 import { buildDeck } from '$lib/cards/build';
 import type { FarmSnapshot } from '$lib/cards/snapshot';
@@ -105,6 +106,15 @@ function seedOwner(ownerId: string, now: number, extraPlantings = 0): Seeded {
       details: { source: 'well' }
     });
     ids.push(well.id);
+    const soil = insertSoilTest({
+      blockId: block.id,
+      sampledAt: now - 30 * DAY,
+      ph: 6.2,
+      phosphorusPpm: 40,
+      unitsBasis: 'lb-per-acre',
+      extractionMethod: 'mehlich-1'
+    });
+    ids.push(soil.id);
     return { ownerId, ids };
   });
 }

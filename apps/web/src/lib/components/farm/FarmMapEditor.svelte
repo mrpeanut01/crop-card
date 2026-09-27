@@ -1580,7 +1580,7 @@
         <option value="tree-single">🌳 Single tree</option>
         <option value="hedge">🌿 Hedge</option>
         <option value="building">🏠 Building</option>
-        <option value="fence">🧱 Fence</option>
+        <option value="fence">🧱 Fence (shade)</option>
         <option value="structure">🏗️ Structure</option>
         <option value="other">🌑 Other</option>
       </select>
@@ -1843,7 +1843,7 @@
           <option value="tree-single">Single tree</option>
           <option value="hedge">Hedge</option>
           <option value="building">Building</option>
-          <option value="fence">Fence</option>
+          <option value="fence">Fence (shade)</option>
           <option value="structure">Structure</option>
           <option value="other">Other</option>
         </select>

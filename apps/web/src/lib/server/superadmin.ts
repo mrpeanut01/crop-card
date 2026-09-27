@@ -12,9 +12,10 @@ import { randomUUID } from 'node:crypto';
 import { db } from '$lib/db/client';
 import { owners, ownerUsageCounters, superadminAudit, users } from '$lib/db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
-import { unscopedQueryNote } from '$lib/db/tenant';
+import { runWithTenant, unscopedQueryNote } from '$lib/db/tenant';
 import type { PlanId } from '$lib/billing/plans';
 import { resolvePlan, setPlanOverride as writePlanOverride } from './billing/plans';
+import { storageUsage } from './storageUsage';
 
 export interface OwnerSummary {
   id: string;
@@ -27,6 +28,8 @@ export interface OwnerSummary {
   /** Most-recent month's AI calls + spray events. Null if no counter row exists. */
   currentPeriodAiCalls: number;
   currentPeriodSprayEvents: number;
+  /** Computed from the stored rows (see storageUsage.ts), not usage counters. */
+  storageBytes: number;
 }
 
 export function listAllOwners(): OwnerSummary[] {
@@ -63,7 +66,8 @@ export function listAllOwners(): OwnerSummary[] {
       planOverride: row.planOverride ?? null,
       createdAt: row.createdAt.getTime(),
       currentPeriodAiCalls: usage?.aiCalls ?? 0,
-      currentPeriodSprayEvents: usage?.sprayEventsCount ?? 0
+      currentPeriodSprayEvents: usage?.sprayEventsCount ?? 0,
+      storageBytes: runWithTenant(row.id, () => storageUsage().bytes)
     };
   });
 }
@@ -186,23 +190,21 @@ export function yyyymm(ms: number): number {
  *  totals atomically. */
 export function incrementUsageCounter(
   ownerId: string,
-  patch: { aiCalls?: number; sprayEventsCount?: number; storageBytes?: number }
+  patch: { aiCalls?: number; sprayEventsCount?: number }
 ): void {
   unscopedQueryNote('usage counter UPSERT — keyed by (owner, period_yyyymm)');
   const period = yyyymm(Date.now());
   const aiCalls = patch.aiCalls ?? 0;
   const sprayEventsCount = patch.sprayEventsCount ?? 0;
-  const storageBytes = patch.storageBytes ?? 0;
-  if (aiCalls === 0 && sprayEventsCount === 0 && storageBytes === 0) return;
+  if (aiCalls === 0 && sprayEventsCount === 0) return;
   db.run(sql`
     INSERT INTO owner_usage_counters
-      (owner_id, period_yyyymm, ai_calls, spray_events_count, storage_bytes, updated_at)
+      (owner_id, period_yyyymm, ai_calls, spray_events_count, updated_at)
     VALUES
-      (${ownerId}, ${period}, ${aiCalls}, ${sprayEventsCount}, ${storageBytes}, ${Date.now()})
+      (${ownerId}, ${period}, ${aiCalls}, ${sprayEventsCount}, ${Date.now()})
     ON CONFLICT(owner_id, period_yyyymm) DO UPDATE SET
       ai_calls = ai_calls + excluded.ai_calls,
       spray_events_count = spray_events_count + excluded.spray_events_count,
-      storage_bytes = storage_bytes + excluded.storage_bytes,
       updated_at = excluded.updated_at
   `);
 }

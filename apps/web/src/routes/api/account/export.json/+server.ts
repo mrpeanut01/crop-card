@@ -13,8 +13,10 @@
  *
  * The `events` object mirrors every kind in `summary.countsByKind`
  * (spray, insecticide, fungicide, scout, harvest, fertility, planting,
- * decon) so the two reconcile (#328). Hay cuttings and API-token
- * METADATA (never the plaintext token or its hash) round out the dump.
+ * decon) so the two reconcile (#328). Hay cuttings, Areas with their
+ * blocks and layout, map lines and points, soil tests, the planting journal,
+ * every Phase 32 record table (see `sections.ts`) and API-token METADATA
+ * (never the plaintext token or its hash) round out the dump.
  *
  * Bigger objects (PDF audit pack, plugin snapshot zip) are linked, not
  * inlined, so the JSON stays under a few MB even for active farms.
@@ -42,6 +44,13 @@ import { requireUser } from '$lib/server/auth';
 import { APP_VERSION } from '$lib/version';
 import { RULES_VERSION } from '$lib/safety/version';
 import { identityLabel } from '$lib/identity';
+import {
+  areaSection,
+  mapFeatureSection,
+  recordSections,
+  shadeSourceSection,
+  soilTestSection
+} from './sections';
 
 export const GET: RequestHandler = async (event) => {
   const user = requireUser(event);
@@ -103,7 +112,8 @@ export const GET: RequestHandler = async (event) => {
 
   // Plantings are also nested under `blocks`, but the flat list makes the
   // `planting` kind in countsByKind self-contained inside `events`.
-  const planting = listBlocks().flatMap((b) =>
+  const blockList = listBlocks();
+  const planting = blockList.flatMap((b) =>
     b.plantings
       .filter((p) => p.plantingDate != null)
       .map((p) => ({
@@ -136,7 +146,7 @@ export const GET: RequestHandler = async (event) => {
     : [];
 
   const payload = {
-    schemaVersion: '1.0.0',
+    schemaVersion: '1.1.0',
     generatedAt: new Date().toISOString(),
     generator: `CropCard v${APP_VERSION}`,
     rulesVersion: RULES_VERSION,
@@ -163,13 +173,30 @@ export const GET: RequestHandler = async (event) => {
         }
       : null,
     summary,
-    blocks: listBlocks().map((b) => ({
+    areas: areaSection(),
+    blocks: blockList.map((b) => ({
       id: b.id,
       name: b.name,
       blockLabel: b.blockLabel ?? null,
+      fieldId: b.fieldId ?? null,
+      kind: b.kind ?? 'block',
       acres: b.acres ?? null,
       tillageMethod: b.tillageMethod,
       sunExposure: b.sunExposure ?? null,
+      slopePercent: b.slopePercent ?? null,
+      slopeAspectDeg: b.slopeAspectDeg ?? null,
+      geometryGeojson: b.geometryGeojson ?? null,
+      widthFt: b.widthFt ?? null,
+      lengthFt: b.lengthFt ?? null,
+      layout: {
+        xFt: b.xFt ?? null,
+        yFt: b.yFt ?? null,
+        rotationDeg: b.rotationDeg ?? null,
+        bedStyle: b.bedStyle ?? null,
+        eastWestIndex: b.eastWestIndex ?? null,
+        northSouthIndex: b.northSouthIndex ?? null,
+        axesLocked: b.axesLocked
+      },
       plantings: b.plantings.map((p) => ({
         id: p.id,
         cropPluginId: p.cropPluginId,
@@ -179,6 +206,9 @@ export const GET: RequestHandler = async (event) => {
         quantityUnit: p.quantityUnit ?? null
       }))
     })),
+    mapFeatures: mapFeatureSection(),
+    shadeSources: shadeSourceSection(),
+    soilTests: soilTestSection(),
     sprayers: listSprayers().map((s) => ({
       id: s.id,
       label: s.label,
@@ -204,8 +234,10 @@ export const GET: RequestHandler = async (event) => {
     hayCuttings,
     plantingJournal: listJournalForExport().map((e) => ({
       ...e,
-      createdAt: new Date(e.createdAt).toISOString()
+      createdAt: new Date(e.createdAt).toISOString(),
+      photoBytes: e.photoRef?.length ?? 0
     })),
+    ...recordSections(user),
     apiTokens,
     relatedDownloads: {
       vdacsAuditPdf: '/api/records/export.vdacs.pdf',

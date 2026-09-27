@@ -740,7 +740,11 @@ export const crops = tenantScoped(
        *  `fallback` when the plugin had no spacing. */
       plantCountProvenance: text('plant_count_provenance', {
         enum: ['data', 'manual', 'fallback']
-      })
+      }),
+      /** Phase 32E. `planting_date` stays the in-ground date; a transplant
+       *  records its indoor sowing here. */
+      establishment: text('establishment', { enum: ['direct-seed', 'transplant'] }),
+      sownIndoorsAt: integer('sown_indoors_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
       ownerBlockIdx: index('crops_owner_block_idx').on(table.ownerId, table.blockId),
@@ -1095,7 +1099,22 @@ export const soilTests = tenantScoped(
       nitratePpm: integer('nitrate_ppm'),
       phosphorusPpm: integer('phosphorus_ppm'),
       potassiumPpm: integer('potassium_ppm'),
-      notes: text('notes')
+      notes: text('notes'),
+      /** Phase 32A. Nutrient columns are ppm unless `units_basis` says the
+       *  lab reported lb/acre; `lib/fertility/soilInterpret.ts` converts. */
+      extractionMethod: text('extraction_method', {
+        enum: ['mehlich-1', 'mehlich-3', 'bray-p1', 'olsen', 'morgan', 'modified-morgan', 'other']
+      }),
+      unitsBasis: text('units_basis', { enum: ['ppm', 'lb-per-acre'] }),
+      caPpm: integer('ca_ppm'),
+      mgPpm: integer('mg_ppm'),
+      bufferPhHundredths: integer('buffer_ph_hundredths'),
+      /** The lab's own low/medium/high ratings, which win over the computed
+       *  class. JSON `{ p?, k?, ca?, mg? }`. */
+      labRatingJson: text('lab_rating_json'),
+      provenance: text('provenance', { enum: ['manual', 'ai', 'fallback'] }),
+      /** Reserved for the document vault (Phase 33); no FK until it exists. */
+      documentId: text('document_id')
     },
     (table) => ({
       ownerBlockIdx: index('soil_tests_owner_block_idx').on(table.ownerId, table.blockId)
@@ -1460,11 +1479,22 @@ export const tasks = tenantScoped(
       }),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()
-        .default(sql`(unixepoch() * 1000)`)
+        .default(sql`(unixepoch() * 1000)`),
+      /** Phase 32F. Must hold an active `helper_assignments` row for this
+       *  Owner (`assignableUserRef`). */
+      assigneeUserId: text('assignee_user_id').references(() => users.id, {
+        onDelete: 'set null'
+      }),
+      assignedAt: integer('assigned_at', { mode: 'timestamp_ms' })
     },
     (table) => ({
       ownerScheduledIdx: index('tasks_owner_scheduled_idx').on(table.ownerId, table.scheduledFor),
       ownerCropIdx: index('tasks_owner_crop_idx').on(table.ownerId, table.cropId),
+      ownerAssigneeScheduledIdx: index('tasks_owner_assignee_scheduled_idx').on(
+        table.ownerId,
+        table.assigneeUserId,
+        table.scheduledFor
+      ),
       categoryIdx: index('tasks_category_idx').on(table.category)
     })
   )
@@ -1975,4 +2005,604 @@ export const contactSuppressions = sqliteTable(
       table.reason
     )
   })
+);
+
+// ─── Phase 32: animals and pets ─────────────────────────────────────────
+//
+// Records target either one animal or a group (`subject_type` +
+// `subject_id`); the polymorphic id has no FK, so every endpoint resolves it
+// through `animalSubjectRef` in `lib/server/foreignRefs.ts`.
+
+export const ANIMAL_SUBJECT_TYPES = ['animal', 'group'] as const;
+export const ANIMAL_PURPOSES = ['production', 'pet', 'mixed'] as const;
+
+export const animalGroups = tenantScoped(
+  sqliteTable(
+    'animal_groups',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      name: text('name').notNull(),
+      speciesId: text('species_id').notNull(),
+      purpose: text('purpose', { enum: ANIMAL_PURPOSES }).notNull().default('production'),
+      /** Unnamed members; tagged individuals are counted from `animals`. */
+      headCount: integer('head_count'),
+      housingFieldId: text('housing_field_id').references(() => fields.id, {
+        onDelete: 'set null'
+      }),
+      status: text('status', { enum: ['active', 'archived'] })
+        .notNull()
+        .default('active'),
+      notes: text('notes'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerStatusIdx: index('animal_groups_owner_status_idx').on(table.ownerId, table.status),
+      ownerHousingIdx: index('animal_groups_owner_housing_idx').on(
+        table.ownerId,
+        table.housingFieldId
+      )
+    })
+  )
+);
+
+export const animals = tenantScoped(
+  sqliteTable(
+    'animals',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      groupId: text('group_id').references(() => animalGroups.id, { onDelete: 'set null' }),
+      speciesId: text('species_id').notNull(),
+      breed: text('breed'),
+      name: text('name'),
+      tag: text('tag'),
+      sex: text('sex', { enum: ['female', 'male', 'neutered-male', 'spayed-female', 'unknown'] })
+        .notNull()
+        .default('unknown'),
+      birthDate: integer('birth_date', { mode: 'timestamp_ms' }),
+      birthDateEstimated: integer('birth_date_estimated', { mode: 'boolean' })
+        .notNull()
+        .default(false),
+      acquiredDate: integer('acquired_date', { mode: 'timestamp_ms' }),
+      acquiredFrom: text('acquired_from'),
+      purpose: text('purpose', { enum: ANIMAL_PURPOSES }).notNull().default('production'),
+      /** Seeded from the species plugin; only the owner changes it, and each
+       *  change writes `animal_flag_changes`. Defaults to the safe side. */
+      foodProducing: integer('food_producing', { mode: 'boolean' }).notNull().default(true),
+      notForSlaughter: integer('not_for_slaughter', { mode: 'boolean' }).notNull().default(false),
+      status: text('status', {
+        enum: ['active', 'sold', 'died', 'culled', 'rehomed', 'slaughtered', 'archived']
+      })
+        .notNull()
+        .default('active'),
+      statusDate: integer('status_date', { mode: 'timestamp_ms' }),
+      statusReason: text('status_reason'),
+      housingFieldId: text('housing_field_id').references(() => fields.id, {
+        onDelete: 'set null'
+      }),
+      photoRef: text('photo_ref'),
+      notes: text('notes'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerStatusIdx: index('animals_owner_status_idx').on(table.ownerId, table.status),
+      ownerGroupIdx: index('animals_owner_group_idx').on(table.ownerId, table.groupId),
+      ownerHousingIdx: index('animals_owner_housing_idx').on(table.ownerId, table.housingFieldId)
+    })
+  )
+);
+
+/** Where a subject lived and when. `to_ms` is null for the current stay. */
+export const animalLocations = tenantScoped(
+  sqliteTable(
+    'animal_locations',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      subjectType: text('subject_type', { enum: ANIMAL_SUBJECT_TYPES }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      fieldId: text('field_id')
+        .notNull()
+        .references(() => fields.id, { onDelete: 'cascade' }),
+      fromMs: integer('from_ms', { mode: 'timestamp_ms' }).notNull(),
+      toMs: integer('to_ms', { mode: 'timestamp_ms' }),
+      movedBy: text('moved_by').references(() => users.id),
+      clientRecordId: text('client_record_id'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerSubjectFromIdx: index('animal_locations_owner_subject_from_idx').on(
+        table.ownerId,
+        table.subjectType,
+        table.subjectId,
+        table.fromMs
+      ),
+      ownerFieldFromIdx: index('animal_locations_owner_field_from_idx').on(
+        table.ownerId,
+        table.fieldId,
+        table.fromMs
+      )
+    })
+  )
+);
+
+/** Treatments, vaccinations, deworms, vet visits, injuries and notes.
+ *  `withdrawal_clear` is the kernel's verdict at write time (JSON of
+ *  per-product clear times), stored with `rules_version` like spray records.
+ *  Food-producing treatments lock under FR-09 using the stricter of
+ *  `food_producing_at_record` and the subject's current flag. */
+export const animalHealthEvents = tenantScoped(
+  sqliteTable(
+    'animal_health_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      subjectType: text('subject_type', { enum: ANIMAL_SUBJECT_TYPES }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      kind: text('kind', {
+        enum: ['treatment', 'vaccination', 'deworm', 'vet-visit', 'injury', 'note']
+      }).notNull(),
+      productPluginId: text('product_plugin_id'),
+      productName: text('product_name'),
+      stockItemId: text('stock_item_id').references(() => stockItems.id, { onDelete: 'set null' }),
+      lotNumber: text('lot_number'),
+      dose: real('dose'),
+      doseUnit: text('dose_unit'),
+      route: text('route'),
+      administeredAt: integer('administered_at', { mode: 'timestamp_ms' }).notNull(),
+      courseEndAt: integer('course_end_at', { mode: 'timestamp_ms' }),
+      labelUse: text('label_use', { enum: ['label', 'extra-label-vet', 'unknown'] }),
+      vetName: text('vet_name'),
+      /** JSON of per-product withdrawal the vet directed; can only lengthen. */
+      vetDirectedWithdrawal: text('vet_directed_withdrawal'),
+      withdrawalClear: text('withdrawal_clear'),
+      rulesVersion: text('rules_version'),
+      foodProducingAtRecord: integer('food_producing_at_record', { mode: 'boolean' }).notNull(),
+      notes: text('notes'),
+      performedById: text('performed_by_id').references(() => users.id),
+      clientRecordId: text('client_record_id'),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerSubjectAdministeredIdx: index('animal_health_events_owner_subject_admin_idx').on(
+        table.ownerId,
+        table.subjectType,
+        table.subjectId,
+        table.administeredAt
+      ),
+      ownerAdministeredIdx: index('animal_health_events_owner_admin_idx').on(
+        table.ownerId,
+        table.administeredAt
+      )
+    })
+  )
+);
+
+export const animalProductionLogs = tenantScoped(
+  sqliteTable(
+    'animal_production_logs',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      subjectType: text('subject_type', { enum: ANIMAL_SUBJECT_TYPES }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      kind: text('kind', { enum: ['eggs', 'milk', 'weight'] }).notNull(),
+      quantity: real('quantity').notNull(),
+      unit: text('unit').notNull(),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      use: text('use', {
+        enum: ['food', 'sale', 'discard', 'feed-to-animals', 'unknown']
+      }).notNull(),
+      rulesVersion: text('rules_version'),
+      performedById: text('performed_by_id').references(() => users.id),
+      clientRecordId: text('client_record_id'),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerSubjectOccurredIdx: index('animal_production_logs_owner_subject_occurred_idx').on(
+        table.ownerId,
+        table.subjectType,
+        table.subjectId,
+        table.occurredAt
+      )
+    })
+  )
+);
+
+/** Sold, died, culled, rehomed and slaughter changes. A group row may carry
+ *  a `head_count_delta` for unnamed members leaving the flock. */
+export const animalStatusEvents = tenantScoped(
+  sqliteTable(
+    'animal_status_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      subjectType: text('subject_type', { enum: ANIMAL_SUBJECT_TYPES }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      status: text('status', {
+        enum: ['active', 'sold', 'sold-for-meat', 'slaughtered', 'died', 'culled', 'rehomed']
+      }).notNull(),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      reason: text('reason'),
+      headCountDelta: integer('head_count_delta'),
+      rulesVersion: text('rules_version'),
+      recordedById: text('recorded_by_id').references(() => users.id),
+      clientRecordId: text('client_record_id'),
+      lockedAt: integer('locked_at', { mode: 'timestamp_ms' }),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerSubjectOccurredIdx: index('animal_status_events_owner_subject_occurred_idx').on(
+        table.ownerId,
+        table.subjectType,
+        table.subjectId,
+        table.occurredAt
+      )
+    })
+  )
+);
+
+/** Owner-recorded grazing and haying intervals read from a label, which lift
+ *  a `GRAZING_UNKNOWN` block for exactly the attested interval. */
+export const grazingAttestations = tenantScoped(
+  sqliteTable(
+    'grazing_attestations',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      fieldId: text('field_id')
+        .notNull()
+        .references(() => fields.id, { onDelete: 'cascade' }),
+      productPluginId: text('product_plugin_id'),
+      /** `<spray|insecticide|fungicide>:<event id>` of the application. */
+      sprayEventRef: text('spray_event_ref'),
+      grazeDays: integer('graze_days'),
+      hayDays: integer('hay_days'),
+      reason: text('reason').notNull(),
+      provenance: text('provenance', { enum: ['manual'] })
+        .notNull()
+        .default('manual'),
+      attestedBy: text('attested_by').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerFieldIdx: index('grazing_attestations_owner_field_idx').on(
+        table.ownerId,
+        table.fieldId,
+        table.createdAt
+      )
+    })
+  )
+);
+
+/** Audit of `food_producing` and horse "not for slaughter" changes. */
+export const animalFlagChanges = tenantScoped(
+  sqliteTable(
+    'animal_flag_changes',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      subjectType: text('subject_type', { enum: ANIMAL_SUBJECT_TYPES }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      flag: text('flag', { enum: ['food_producing', 'not_for_slaughter'] }).notNull(),
+      oldValue: integer('old_value', { mode: 'boolean' }),
+      newValue: integer('new_value', { mode: 'boolean' }).notNull(),
+      reason: text('reason').notNull(),
+      changedBy: text('changed_by').references(() => users.id),
+      changedAt: integer('changed_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerSubjectChangedIdx: index('animal_flag_changes_owner_subject_changed_idx').on(
+        table.ownerId,
+        table.subjectType,
+        table.subjectId,
+        table.changedAt
+      )
+    })
+  )
+);
+
+/** Recurring (`interval_days`) or one-off (`once_on`) care that materializes
+ *  into `tasks` with category `animal-care`, deduped by plan and due date. */
+export const animalCarePlans = tenantScoped(
+  sqliteTable(
+    'animal_care_plans',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      subjectType: text('subject_type', { enum: ANIMAL_SUBJECT_TYPES }).notNull(),
+      subjectId: text('subject_id').notNull(),
+      kind: text('kind', {
+        enum: ['vaccination', 'deworm', 'treatment', 'vet-visit', 'hoof-trim', 'grooming', 'other']
+      }).notNull(),
+      title: text('title').notNull(),
+      productPluginId: text('product_plugin_id'),
+      intervalDays: integer('interval_days'),
+      onceOn: integer('once_on', { mode: 'timestamp_ms' }),
+      nextDueAt: integer('next_due_at', { mode: 'timestamp_ms' }),
+      leadDays: integer('lead_days').notNull().default(0),
+      active: integer('active', { mode: 'boolean' }).notNull().default(true),
+      provenance: text('provenance', { enum: ['plugin', 'manual', 'fallback'] }).notNull(),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerActiveDueIdx: index('animal_care_plans_owner_active_due_idx').on(
+        table.ownerId,
+        table.active,
+        table.nextDueAt
+      ),
+      ownerSubjectIdx: index('animal_care_plans_owner_subject_idx').on(
+        table.ownerId,
+        table.subjectType,
+        table.subjectId
+      )
+    })
+  )
+);
+
+// ─── Phase 32E: growing season helpers ──────────────────────────────────
+
+/** One row per seed-starting tray. */
+export const seedStarts = tenantScoped(
+  sqliteTable(
+    'seed_starts',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      cropId: text('crop_id')
+        .notNull()
+        .references(() => crops.id, { onDelete: 'cascade' }),
+      sownAt: integer('sown_at', { mode: 'timestamp_ms' }).notNull(),
+      trayLabel: text('tray_label'),
+      cells: integer('cells'),
+      seedsPerCell: integer('seeds_per_cell'),
+      locationAreaId: text('location_area_id').references(() => fields.id, {
+        onDelete: 'set null'
+      }),
+      locationText: text('location_text'),
+      stockLotId: text('stock_lot_id').references(() => stockLots.id, { onDelete: 'set null' }),
+      germinatedCount: integer('germinated_count'),
+      germinatedAt: integer('germinated_at', { mode: 'timestamp_ms' }),
+      hardenStartedAt: integer('harden_started_at', { mode: 'timestamp_ms' }),
+      transplantedAt: integer('transplanted_at', { mode: 'timestamp_ms' }),
+      performedById: text('performed_by_id').references(() => users.id),
+      clientRecordId: text('client_record_id'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerCropIdx: index('seed_starts_owner_crop_idx').on(table.ownerId, table.cropId),
+      ownerSownIdx: index('seed_starts_owner_sown_idx').on(table.ownerId, table.sownAt)
+    })
+  )
+);
+
+/** Season-extension covers per bed. Shifts apply to planning windows only;
+ *  stacked covers take the largest shift. */
+export const blockProtections = tenantScoped(
+  sqliteTable(
+    'block_protections',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      blockId: text('block_id')
+        .notNull()
+        .references(() => blocks.id, { onDelete: 'cascade' }),
+      kind: text('kind', {
+        enum: [
+          'row-cover',
+          'low-tunnel',
+          'caterpillar-tunnel',
+          'high-tunnel',
+          'cold-frame',
+          'cloche',
+          'greenhouse-unheated',
+          'greenhouse-heated',
+          'other'
+        ]
+      }).notNull(),
+      springShiftDays: integer('spring_shift_days'),
+      fallShiftDays: integer('fall_shift_days'),
+      provenance: text('provenance', { enum: ['plugin', 'data', 'manual', 'fallback'] }).notNull(),
+      installedOn: integer('installed_on', { mode: 'timestamp_ms' }),
+      removedOn: integer('removed_on', { mode: 'timestamp_ms' }),
+      seasonYear: integer('season_year'),
+      notes: text('notes'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerBlockIdx: index('block_protections_owner_block_idx').on(table.ownerId, table.blockId)
+    })
+  )
+);
+
+/** A light watering log: no lock, not a compliance record, never pruned. */
+export const irrigationEvents = tenantScoped(
+  sqliteTable(
+    'irrigation_events',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      fieldId: text('field_id')
+        .notNull()
+        .references(() => fields.id, { onDelete: 'cascade' }),
+      blockId: text('block_id').references(() => blocks.id, { onDelete: 'set null' }),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      durationMin: integer('duration_min'),
+      inches: real('inches'),
+      gallons: real('gallons'),
+      method: text('method', {
+        enum: ['drip', 'soaker', 'sprinkler', 'hand', 'flood', 'other']
+      }),
+      notes: text('notes'),
+      performedById: text('performed_by_id').references(() => users.id),
+      clientRecordId: text('client_record_id'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerFieldOccurredIdx: index('irrigation_events_owner_field_occurred_idx').on(
+        table.ownerId,
+        table.fieldId,
+        table.occurredAt
+      )
+    })
+  )
+);
+
+/** A manual rain-gauge reading, which overrides station rain for its Area. */
+export const rainGaugeReadings = tenantScoped(
+  sqliteTable(
+    'rain_gauge_readings',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      fieldId: text('field_id')
+        .notNull()
+        .references(() => fields.id, { onDelete: 'cascade' }),
+      readAt: integer('read_at', { mode: 'timestamp_ms' }).notNull(),
+      inches: real('inches').notNull(),
+      recordedById: text('recorded_by_id').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerFieldReadIdx: index('rain_gauge_readings_owner_field_read_idx').on(
+        table.ownerId,
+        table.fieldId,
+        table.readAt
+      )
+    })
+  )
+);
+
+// ─── Phase 32F: farm operations ─────────────────────────────────────────
+
+/** Minutes recorded on Done. Crop, block and field are copied from the task
+ *  so season hours survive the task being deleted. */
+export const taskTimeEntries = tenantScoped(
+  sqliteTable(
+    'task_time_entries',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      taskId: text('task_id').references(() => tasks.id, { onDelete: 'set null' }),
+      userId: text('user_id').references(() => users.id),
+      cropId: text('crop_id').references(() => crops.id, { onDelete: 'set null' }),
+      blockId: text('block_id').references(() => blocks.id, { onDelete: 'set null' }),
+      fieldId: text('field_id').references(() => fields.id, { onDelete: 'set null' }),
+      startedAt: integer('started_at', { mode: 'timestamp_ms' }),
+      minutes: integer('minutes').notNull(),
+      source: text('source', { enum: ['task-close', 'manual'] })
+        .notNull()
+        .default('task-close'),
+      note: text('note'),
+      clientRecordId: text('client_record_id'),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`)
+    },
+    (table) => ({
+      ownerTaskIdx: index('task_time_entries_owner_task_idx').on(table.ownerId, table.taskId),
+      ownerCropIdx: index('task_time_entries_owner_crop_idx').on(table.ownerId, table.cropId),
+      ownerUserCreatedIdx: index('task_time_entries_owner_user_created_idx').on(
+        table.ownerId,
+        table.userId,
+        table.createdAt
+      )
+    })
+  )
+);
+
+/** Owner-only expenses and income. No lock; `deleted_at` is a soft delete. */
+export const ledgerEntries = tenantScoped(
+  sqliteTable(
+    'ledger_entries',
+    {
+      id: text('id').primaryKey(),
+      ownerId: text('owner_id').notNull(),
+      kind: text('kind', { enum: ['expense', 'income'] }).notNull(),
+      occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull(),
+      amountCents: integer('amount_cents').notNull(),
+      category: text('category'),
+      description: text('description'),
+      cropId: text('crop_id').references(() => crops.id, { onDelete: 'set null' }),
+      blockId: text('block_id').references(() => blocks.id, { onDelete: 'set null' }),
+      fieldId: text('field_id').references(() => fields.id, { onDelete: 'set null' }),
+      animalId: text('animal_id').references(() => animals.id, { onDelete: 'set null' }),
+      animalGroupId: text('animal_group_id').references(() => animalGroups.id, {
+        onDelete: 'set null'
+      }),
+      stockLotId: text('stock_lot_id').references(() => stockLots.id, { onDelete: 'set null' }),
+      harvestEventId: text('harvest_event_id').references(() => harvestEvents.id, {
+        onDelete: 'set null'
+      }),
+      enterprise: text('enterprise'),
+      quantity: real('quantity'),
+      unit: text('unit'),
+      provenance: text('provenance', { enum: ['manual', 'data'] })
+        .notNull()
+        .default('manual'),
+      createdById: text('created_by_id').references(() => users.id),
+      createdAt: integer('created_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+        .notNull()
+        .default(sql`(unixepoch() * 1000)`),
+      deletedAt: integer('deleted_at', { mode: 'timestamp_ms' })
+    },
+    (table) => ({
+      ownerOccurredIdx: index('ledger_entries_owner_occurred_idx').on(
+        table.ownerId,
+        table.occurredAt
+      ),
+      ownerCropIdx: index('ledger_entries_owner_crop_idx').on(table.ownerId, table.cropId),
+      ownerStockLotIdx: index('ledger_entries_owner_stock_lot_idx').on(
+        table.ownerId,
+        table.stockLotId
+      )
+    })
+  )
 );

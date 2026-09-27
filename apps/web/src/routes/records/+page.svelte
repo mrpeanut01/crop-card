@@ -4,6 +4,7 @@
   import { onMount, tick } from 'svelte';
   import CardPrintSheet from '$lib/components/cards/CardPrintSheet.svelte';
   import RecordCardPanel from '$lib/components/records/RecordCardPanel.svelte';
+  import SoilTestNudge from '$lib/components/setup/SoilTestNudge.svelte';
   import type { CardModel, CardPrintLayout } from '$lib/cards/model';
   import { ChevronRight, FileText, Lock, Calendar, Plus, ArrowRight } from 'lucide-svelte';
   import Kicker from '$lib/components/ui/Kicker.svelte';
@@ -224,6 +225,10 @@
       </a>
     </div>
   </header>
+
+  {#if data.soilNudgePlaces}
+    <SoilTestNudge places={data.soilNudgePlaces} />
+  {/if}
 
   <section class="year-review" aria-labelledby="year-review-heading">
     <div class="year-review-head">

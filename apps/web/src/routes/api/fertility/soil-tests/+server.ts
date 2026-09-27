@@ -1,23 +1,11 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
 import { getBlock } from '$lib/db/blocks';
 import { insertSoilTest, listSoilTestsForBlock } from '$lib/db/fertility';
 import { requireOwner } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
+import { soilTestCreateSchema } from '$lib/fertility/apiSchemas';
 
-const inputSchema = z.object({
-  blockId: z.string().min(1),
-  sampledAt: z.number().int().optional(),
-  lab: z.string().max(120).optional(),
-  reportPdfUrl: z.string().url().optional(),
-  ph: z.number().min(0).max(14).optional(),
-  cec: z.number().nonnegative().optional(),
-  organicMatterPct: z.number().min(0).max(100).optional(),
-  nitratePpm: z.number().nonnegative().optional(),
-  phosphorusPpm: z.number().nonnegative().optional(),
-  potassiumPpm: z.number().nonnegative().optional(),
-  notes: z.string().max(500).optional()
-});
+export const _requestSchema = soilTestCreateSchema;
 
 export const POST: RequestHandler = async (event) => {
   requireOwner(event);
@@ -27,7 +15,7 @@ export const POST: RequestHandler = async (event) => {
   } catch {
     return json({ error: 'invalid JSON' }, { status: 400 });
   }
-  const parsed = inputSchema.safeParse(body);
+  const parsed = soilTestCreateSchema.safeParse(body);
   if (!parsed.success) {
     return json(
       {
@@ -41,7 +29,8 @@ export const POST: RequestHandler = async (event) => {
   if (foreign) return foreign;
   const persisted = insertSoilTest({
     ...parsed.data,
-    sampledAt: parsed.data.sampledAt ?? Date.now()
+    sampledAt: parsed.data.sampledAt ?? Date.now(),
+    provenance: 'manual'
   });
   return json({ soilTest: persisted }, { status: 201 });
 };

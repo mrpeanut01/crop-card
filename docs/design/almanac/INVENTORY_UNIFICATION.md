@@ -83,7 +83,7 @@ Component: `A_InventoryList({ type })` where `type ∈ {pesticide, fertility, se
 **Shared chrome** (every type):
 - `A_TopBar` (active = `stock` for inventory types, `settings` for crop/sprayer).
 - Header: kicker (`Inventory · {Type}`), serif H1, sub-line, action buttons (`Export CSV` / `Add item` or `Upload plugin`).
-- **Type swap chip row** — 5 chips, the active type uses `A.forest` filled, others use `A.paper` outlined. Counts shown right of label in mono. This is the streamlining move: one inventory surface, type chips switch the data shape.
+- **Type swap chip row** — one chip per inventory type, with empty types hidden (a crop-only farm sees five; Phase 32 adds `feed` and `animal-health`, shown once the farm has animals or stock of that type). The active type uses `A.forest` filled, others use `A.paper` outlined. Counts shown right of label in mono. This is the streamlining move: one inventory surface, type chips switch the data shape.
 - **Stock ↔ Catalog toggle** (only for pesticide / fertility / seed — types that have both lot instances and a plugin catalog). Segmented control: `Lots on hand | Catalog (plugin)`.
 - **4-card KPI strip** — counts/health metrics specific to the type. Icon left in `#E5EEDF` square. Big number in serif (24px, weight 600). Kicker label below.
 - **Search row + sub-filter chips** — search input with mono "N of M" count. Sub-filters differ per type (see component config).
@@ -145,7 +145,7 @@ Component: `A_InventoryEditForm({ type, mode })` where `mode ∈ {edit, add}`.
 
 **Main form sections (in order):**
 
-1. **Inventory type** — 5-chip type selector. Switching the chip swaps the field stacks below.
+1. **Inventory type** — type selector with one chip per inventory type. Switching the chip swaps the field stacks below.
 2. **Identity** — common to every type: name/brand, SKU/plugin id, manufacturer, unit of measure (or class for sprayer / archetype for crop), location/tag.
 3. **Type-specific stack** — one of:
    - Pesticide: 8-field stack of plugin-derived fields (EPA, signal, MoA, RUP, REI, PHI, AI, concentration). All show `FROM PLUGIN` + `KERNEL-LOCKED` chips, rendered with `A.cream` background to indicate read-only.

@@ -53,6 +53,12 @@ import * as taxonomyRepo from './taxonomy';
 import * as pluginOverridesRepo from './pluginOverrides';
 import * as clientRecordsRepo from './clientRecords';
 import * as plantingJournalRepo from './plantingJournal';
+import {
+  PHASE_32_TABLES,
+  listPhase32Ids,
+  seedPhase32Rows,
+  type Phase32Table
+} from './phase32.fixtures';
 import { issueToken, lookupByPlaintext } from '$lib/server/apiTokens';
 import { users, helperAssignments, recordDeletions, cropEquipment, equipmentLog } from './schema';
 import { listUnifiedRecords } from './recordsUnified';
@@ -929,6 +935,28 @@ describe('cross-tenant isolation', () => {
         }
       ),
       { numRuns: 12 }
+    );
+  });
+
+  it('every Phase 32 table is owner-scoped: list and read-by-id never cross Owners', () => {
+    const tag = randomUUID().slice(0, 8);
+    const a = runWithTenant(OWNER_A, () => seedPhase32Rows(`p32a-${tag}`));
+    const b = runWithTenant(OWNER_B, () => seedPhase32Rows(`p32b-${tag}`));
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...(Object.keys(PHASE_32_TABLES) as Phase32Table[])),
+        fc.boolean(),
+        (table, aIsReader) => {
+          const [reader, mine, theirs] = aIsReader ? [OWNER_A, a, b] : [OWNER_B, b, a];
+          runWithTenant(reader, () => {
+            const seen = listPhase32Ids(table);
+            expect(seen).toContain(mine.rowIds[table]);
+            expect(seen).not.toContain(theirs.rowIds[table]);
+            expect(listPhase32Ids(table, theirs.rowIds[table])).toEqual([]);
+          });
+        }
+      ),
+      { numRuns: 60 }
     );
   });
 

@@ -20,6 +20,9 @@
  *   schemas/fertilizer.schema.json      (newly generated; previously missing)
  *   schemas/companion.schema.json
  *   schemas/bed-recipe.schema.json      (Phase 30E, plugins/bed-recipes/)
+ *   schemas/species.schema.json         (Phase 32A, plugins/species/)
+ *   schemas/animal-health.schema.json   (Phase 32A, plugins/animal-health/)
+ *   schemas/pest-model.schema.json      (Phase 32A, plugins/pest-models/)
  *
  * Each file is written with a stable `$id` URL and a top-level description
  * pointing back to the Zod source. The schemas are emitted as JSON Schema
@@ -41,7 +44,10 @@ import {
   fungicidePluginSchema,
   fertilizerPluginSchema,
   companionPluginSchema,
-  bedRecipePluginSchema
+  bedRecipePluginSchema,
+  speciesPluginSchema,
+  animalHealthPluginSchema,
+  pestModelPluginSchema
 } from '../src/lib/plugins/schemas.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -99,6 +105,27 @@ const TARGETS = [
     title: 'CropCard Bed Recipe Plugin',
     description:
       'Data-only garden bed recipe: a timed sequence of crops that fills one bed, anchored to the last spring frost, the first fall frost or the end of an earlier step. Every cropPluginId and alternate must name a registered crop plugin. Loaded from plugins/bed-recipes/. Mirrors packages/plugin-validation/src/schemas.ts (bedRecipePluginSchema).'
+  },
+  {
+    file: 'species.schema.json',
+    schema: speciesPluginSchema,
+    title: 'CropCard Species Plugin',
+    description:
+      'Data-only animal species definition: names, group noun, product types, the default food-producing flag and care cadence defaults. foodProducingDefault and every care intervalDays need a quoted source in apps/web/scripts/species-sources.json. Loaded from plugins/species/. Mirrors packages/plugin-validation/src/schemas.ts (speciesPluginSchema).'
+  },
+  {
+    file: 'animal-health.schema.json',
+    schema: animalHealthPluginSchema,
+    title: 'CropCard Animal-Health Plugin',
+    description:
+      'Data-only animal-health product (dewormer, antibiotic, vaccine) with its label uses and withdrawal times per species and class. Every labelUses speciesId must name a species plugin, and every withdrawal value needs a quoted source in apps/web/scripts/animal-health-sources.json. A missing withdrawal is unknown, and the safety kernel blocks food use on unknown. The kernel, not the plugin, owns the prohibited-drug list. Loaded from plugins/animal-health/. Mirrors packages/plugin-validation/src/schemas.ts (animalHealthPluginSchema).'
+  },
+  {
+    file: 'pest-model.schema.json',
+    schema: pestModelPluginSchema,
+    title: 'CropCard Pest-Model Plugin',
+    description:
+      'Data-only degree-day pest model. method names one of the degree-day methods the app implements and never carries a formula; stage advice is about scouting or covering, never spraying. Every number needs a quoted source in apps/web/scripts/pest-model-sources.json. Loaded from plugins/pest-models/. Mirrors packages/plugin-validation/src/schemas.ts (pestModelPluginSchema).'
   }
 ];
 

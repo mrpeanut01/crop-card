@@ -1,0 +1,209 @@
+// @vitest-environment node
+import { randomUUID } from 'node:crypto';
+import { describe, expect, it, vi } from 'vitest';
+import { getTableName } from 'drizzle-orm';
+
+const m = vi.hoisted(() => ({ ownerId: '', role: 'owner' }));
+
+vi.mock('$lib/server/auth', () => {
+  const user = () => ({
+    id: 'export-user',
+    email: 'export@test.local',
+    phone: null,
+    role: m.role,
+    activeOwnerId: m.ownerId,
+    isSuperadmin: false
+  });
+  return { currentUser: user, requireUser: user };
+});
+
+import { db } from '$lib/db/client';
+import { owners, taskTimeEntries, users } from '$lib/db/schema';
+import { runWithTenantAsync, runWithTenant, tenantValues } from '$lib/db/tenant';
+import { createField } from '$lib/db/fields';
+import { createBlock } from '$lib/db/blocks';
+import { createPlanned } from '$lib/db/crops';
+import { createMapFeature } from '$lib/db/mapFeatures';
+import { insertSoilTest } from '$lib/db/fertility';
+import { insertJournalEntry } from '$lib/db/plantingJournal';
+import { PHASE_32_TABLES, seedPhase32Rows, type Phase32Seed } from '$lib/db/phase32.fixtures';
+import { GET } from './+server';
+import { RECORD_TABLE_GROUPS } from './sections';
+
+interface Seeded {
+  ownerId: string;
+  areaId: string;
+  bedId: string;
+  featureId: string;
+  soilTestId: string;
+  journalId: string;
+  phase32: Phase32Seed;
+}
+
+function seed(label: string): Seeded {
+  const ownerId = `export-${label}-${randomUUID()}`;
+  db.insert(owners)
+    .values({ id: ownerId, name: ownerId, slug: ownerId, billingStatus: 'active' })
+    .run();
+  return runWithTenant(ownerId, () => {
+    const area = createField({
+      name: `${label} kitchen garden`,
+      kind: 'garden',
+      widthFt: 20,
+      lengthFt: 30
+    });
+    const bed = createBlock({
+      name: `${label} bed`,
+      fieldId: area.id,
+      kind: 'bed',
+      widthFt: 4,
+      lengthFt: 8
+    });
+    const crop = createPlanned({
+      blockId: bed.id,
+      cropPluginId: 'tomato-amish-paste',
+      varietyDisplayName: 'Amish Paste tomato'
+    });
+    const feature = createMapFeature({
+      kind: 'fence',
+      name: `${label} fence`,
+      fieldId: area.id,
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [-77.55, 39.1],
+          [-77.549, 39.1]
+        ]
+      }
+    });
+    const soil = insertSoilTest({ blockId: bed.id, sampledAt: Date.UTC(2026, 3, 1), ph: 6.4 });
+    const journal = insertJournalEntry({
+      cropId: crop.id,
+      blockId: bed.id,
+      createdBy: null,
+      kind: 'observation',
+      text: 'Spots on lower leaves',
+      photoRef: 'data:image/jpeg;base64,AAAA',
+      provenance: 'manual'
+    });
+    return {
+      ownerId,
+      areaId: area.id,
+      bedId: bed.id,
+      featureId: feature.id,
+      soilTestId: soil.id,
+      journalId: journal.id,
+      phase32: seedPhase32Rows(`${label}-p32`)
+    };
+  });
+}
+
+async function exportFor(
+  ownerId: string,
+  role = 'owner'
+): Promise<{ text: string; json: Record<string, unknown> }> {
+  m.ownerId = ownerId;
+  m.role = role;
+  const res = await runWithTenantAsync(ownerId, async () =>
+    GET({ locals: {}, url: new URL('http://localhost/api/account/export.json') } as never)
+  );
+  expect(res.status).toBe(200);
+  const text = await res.text();
+  return { text, json: JSON.parse(text) as Record<string, unknown> };
+}
+
+function idsOf(s: Seeded): string[] {
+  return [
+    s.areaId,
+    s.bedId,
+    s.featureId,
+    s.soilTestId,
+    s.journalId,
+    ...Object.values(s.phase32.rowIds)
+  ];
+}
+
+describe('GET /api/account/export.json', () => {
+  db.insert(users)
+    .values({ id: 'export-user', email: 'export@test.local' })
+    .onConflictDoNothing()
+    .run();
+
+  it('lists every Phase 32 table exactly once', () => {
+    const exported = Object.values(RECORD_TABLE_GROUPS)
+      .flatMap((g) => Object.values(g))
+      .map((t) => getTableName(t))
+      .sort();
+    expect(exported).toEqual(Object.keys(PHASE_32_TABLES).sort());
+  });
+
+  it("contains Areas, map features, soil tests, the journal and Phase 32 rows, and no other Owner's", async () => {
+    const a = seed('a');
+    const b = seed('b');
+    for (const [self, other] of [
+      [a, b],
+      [b, a]
+    ] as const) {
+      const { text, json } = await exportFor(self.ownerId);
+      for (const id of idsOf(self)) expect(text, id).toContain(id);
+      for (const id of idsOf(other)) expect(text, id).not.toContain(id);
+      expect(text).not.toContain(other.ownerId);
+
+      const areas = json.areas as Array<{ id: string; kind: string; widthFt: number }>;
+      expect(areas.find((x) => x.id === self.areaId)).toMatchObject({
+        kind: 'garden',
+        widthFt: 20
+      });
+      const blocks = json.blocks as Array<{
+        id: string;
+        fieldId: string;
+        kind: string;
+        widthFt: number;
+        layout: Record<string, unknown>;
+      }>;
+      const bed = blocks.find((x) => x.id === self.bedId);
+      expect(bed).toMatchObject({ fieldId: self.areaId, kind: 'bed', widthFt: 4 });
+      expect(Object.keys(bed!.layout)).toEqual(
+        expect.arrayContaining(['xFt', 'yFt', 'rotationDeg', 'bedStyle'])
+      );
+      const features = json.mapFeatures as Array<{ id: string; kind: string }>;
+      expect(features.map((f) => f.id)).toEqual([self.featureId]);
+      const soil = json.soilTests as Array<{ id: string; ph: number }>;
+      expect(soil).toEqual([expect.objectContaining({ id: self.soilTestId, ph: 6.4 })]);
+      const journal = json.plantingJournal as Array<{ id: string; photoBytes: number }>;
+      expect(journal.find((j) => j.id === self.journalId)?.photoBytes).toBe(27);
+
+      const animals = json.animals as Record<string, Array<{ id: string }>>;
+      expect(animals.groups.map((r) => r.id)).toEqual([self.phase32.rowIds.animal_groups]);
+      const operations = json.operations as Record<string, Array<{ id: string }>>;
+      expect(operations.ledgerEntries.map((r) => r.id)).toEqual([
+        self.phase32.rowIds.ledger_entries
+      ]);
+    }
+  });
+
+  it.each(['helper', 'inspector'])(
+    'gives a %s their own time entries and no ledger',
+    async (role) => {
+      const farm = seed(`role-${role}`);
+      const mine = randomUUID();
+      runWithTenant(farm.ownerId, () =>
+        db
+          .insert(taskTimeEntries)
+          .values(tenantValues({ id: mine, userId: 'export-user', minutes: 45 }))
+          .run()
+      );
+
+      const { text, json } = await exportFor(farm.ownerId, role);
+      const operations = json.operations as Record<string, Array<{ id: string }> | undefined>;
+      expect(operations.ledgerEntries).toBeUndefined();
+      expect(text).not.toContain(farm.phase32.rowIds.ledger_entries);
+      expect(operations.taskTimeEntries?.map((r) => r.id)).toEqual([mine]);
+      expect(text).not.toContain(farm.phase32.rowIds.task_time_entries);
+
+      const owner = await exportFor(farm.ownerId, 'owner');
+      expect(owner.text).toContain(farm.phase32.rowIds.ledger_entries);
+      expect(owner.text).toContain(farm.phase32.rowIds.task_time_entries);
+    }
+  );
+});

@@ -1,0 +1,4 @@
+{
+  "$comment": "Phase 32A. Quotes for every number on plugins/pest-models/*.json, keyed pluginId → fact path (baseTempF, upperCutoffF, biofix.date, stages.<key>.gddFrom, stages.<key>.gddTo). Each entry is { url, publisher, date, quote, note? } from an extension or university source. A model ships only where the sources agree.",
+  "entries": {}
+}

@@ -601,22 +601,196 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Spray-event payload. Exact shape is enforced inline in apps/web/src/routes/api/spray/record/+server.ts via Zod.",
                 "properties": {
                   "blockId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cropId": {
                     "type": "string"
                   },
-                  "products": {
-                    "type": "array",
-                    "items": {
-                      "type": "object"
-                    }
+                  "taskId": {
+                    "type": "string"
                   },
                   "occurredAt": {
                     "type": "integer",
-                    "description": "Unix epoch ms."
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "blockCrops": {
+                    "type": "object",
+                    "properties": {
+                      "primary": {
+                        "type": "object",
+                        "properties": {
+                          "cropPluginId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "cropFamily": {
+                            "type": "string",
+                            "enum": [
+                              "corn",
+                              "cucurbit",
+                              "legume",
+                              "broadleaf-companion",
+                              "orchard",
+                              "cover-grass",
+                              "cover-legume",
+                              "solanaceae",
+                              "brassica",
+                              "allium",
+                              "leafy-green",
+                              "root",
+                              "apiaceae",
+                              "small-fruit",
+                              "bramble",
+                              "vine-fruit",
+                              "stone-fruit",
+                              "cereal-grain",
+                              "forage",
+                              "herb-culinary"
+                            ]
+                          },
+                          "heightInches": {
+                            "type": "number",
+                            "minimum": 0
+                          }
+                        },
+                        "required": [
+                          "cropPluginId"
+                        ]
+                      },
+                      "coPlanted": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "cropPluginId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "cropFamily": {
+                              "type": "string",
+                              "enum": [
+                                "corn",
+                                "cucurbit",
+                                "legume",
+                                "broadleaf-companion",
+                                "orchard",
+                                "cover-grass",
+                                "cover-legume",
+                                "solanaceae",
+                                "brassica",
+                                "allium",
+                                "leafy-green",
+                                "root",
+                                "apiaceae",
+                                "small-fruit",
+                                "bramble",
+                                "vine-fruit",
+                                "stone-fruit",
+                                "cereal-grain",
+                                "forage",
+                                "herb-culinary"
+                              ]
+                            },
+                            "heightInches": {
+                              "type": "number",
+                              "minimum": 0
+                            }
+                          },
+                          "required": [
+                            "cropPluginId"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "primary"
+                    ]
+                  },
+                  "productPluginIds": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "stockItemIds": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "sprayer": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "conditions": {
+                    "type": "object",
+                    "properties": {
+                      "windMph": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "tempF": {
+                        "type": "number"
+                      },
+                      "rainForecastMmNext24h": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "conditionsProvenance": {
+                        "type": "string",
+                        "enum": [
+                          "measured",
+                          "default"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "windMph",
+                      "tempF",
+                      "rainForecastMmNext24h"
+                    ]
+                  },
+                  "tankSizeGallons": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "customRateOverride": {
+                    "type": "boolean"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
                   }
-                }
+                },
+                "required": [
+                  "blockId",
+                  "blockCrops",
+                  "productPluginIds",
+                  "sprayer",
+                  "conditions"
+                ]
               }
             }
           }
@@ -727,7 +901,120 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Exact shape is enforced inline in apps/web/src/routes/api/insecticide/record/+server.ts via Zod."
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cropId": {
+                    "type": "string"
+                  },
+                  "taskId": {
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "productPluginIds": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "stockItemIds": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "sprayerId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "conditions": {
+                    "type": "object",
+                    "properties": {
+                      "windMph": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "tempF": {
+                        "type": "number"
+                      },
+                      "rainForecastMmNext24h": {
+                        "type": "number",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "windMph",
+                      "tempF",
+                      "rainForecastMmNext24h"
+                    ]
+                  },
+                  "scout": {
+                    "type": "object",
+                    "properties": {
+                      "pest": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "metric": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "value": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "threshold": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "notes": {
+                        "type": "string",
+                        "maxLength": 500
+                      }
+                    },
+                    "required": [
+                      "pest",
+                      "metric",
+                      "value"
+                    ]
+                  },
+                  "tankSizeGallons": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "bloomStatus": {
+                    "type": "string",
+                    "enum": [
+                      "in-bloom",
+                      "not-in-bloom",
+                      "unknown"
+                    ]
+                  },
+                  "attestedNoForagers": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "blockId",
+                  "productPluginIds",
+                  "conditions"
+                ]
               }
             }
           }
@@ -838,7 +1125,109 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Exact shape is enforced inline in apps/web/src/routes/api/fungicide/record/+server.ts via Zod."
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cropId": {
+                    "type": "string"
+                  },
+                  "taskId": {
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "productPluginIds": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "stockItemIds": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "sprayerId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "conditions": {
+                    "type": "object",
+                    "properties": {
+                      "windMph": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "tempF": {
+                        "type": "number"
+                      },
+                      "rainForecastMmNext24h": {
+                        "type": "number",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "windMph",
+                      "tempF",
+                      "rainForecastMmNext24h"
+                    ]
+                  },
+                  "disease": {
+                    "type": "object",
+                    "properties": {
+                      "disease": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "metric": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "value": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "threshold": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "notes": {
+                        "type": "string",
+                        "maxLength": 500
+                      }
+                    },
+                    "required": [
+                      "disease",
+                      "metric",
+                      "value"
+                    ]
+                  },
+                  "tankSizeGallons": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "blockId",
+                  "productPluginIds",
+                  "conditions"
+                ]
               }
             }
           }
@@ -949,7 +1338,44 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Exact shape is enforced inline in apps/web/src/routes/api/harvest/record/+server.ts via Zod."
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cropId": {
+                    "type": "string"
+                  },
+                  "taskId": {
+                    "type": "string"
+                  },
+                  "cropPluginId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "occurredAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "quantity": {
+                    "type": "string",
+                    "maxLength": 60
+                  },
+                  "lotNumber": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "moisturePct": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "blockId",
+                  "cropPluginId"
+                ]
               }
             }
           }
@@ -1060,7 +1486,44 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Exact shape is enforced inline in apps/web/src/routes/api/scout/record/+server.ts via Zod."
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cropId": {
+                    "type": "string"
+                  },
+                  "pest": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "metric": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40
+                  },
+                  "value": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "occurredAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "blockId",
+                  "pest",
+                  "metric",
+                  "value"
+                ]
               }
             }
           }
@@ -1184,7 +1647,84 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Exact shape is enforced inline in apps/web/src/routes/api/hay/cuttings/+server.ts via Zod."
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "cropId": {
+                    "type": "string"
+                  },
+                  "taskId": {
+                    "type": "string"
+                  },
+                  "cropPluginId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "year": {
+                    "type": "integer",
+                    "minimum": 1900,
+                    "maximum": 3000
+                  },
+                  "cuttingNumber": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "mowAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "forecast": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "date": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "popPct": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "highF": {
+                          "type": "number"
+                        },
+                        "lowF": {
+                          "type": "number"
+                        },
+                        "windMph": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "shortForecast": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "date",
+                        "popPct",
+                        "highF",
+                        "lowF"
+                      ]
+                    }
+                  },
+                  "overrideMowGate": {
+                    "type": "boolean"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "blockId",
+                  "cropPluginId"
+                ]
               }
             }
           }
@@ -3775,8 +4315,8 @@
         }
       ],
       "patch": {
-        "summary": "Place a planting in a garden bed",
-        "description": "Only the `set-placement` action is described here; the route's other actions (`mark-harvested`, `archive`, `mark-failed`, `reactivate`, `set-schedule`, `edit-details`, `unschedule`, `split`) are not yet published. Owner only. Places, moves or clears a planting's spot (`footprint: null`) and moves its date when `plantingDateMs` is sent. A planting already in the ground can't change beds and its date can't move past today (409 `IN_GROUND`). A linked succession sowing needs a spot that is free for its whole time in the bed (409 `OVERLAP`), and a spot past the bed edge is refused with `OUTSIDE_AREA`.",
+        "summary": "Change a planting",
+        "description": "The body's `action` picks what changes: the status (`mark-harvested`, `archive`, `mark-failed`, `reactivate`), the date and block (`set-schedule`), the crop plugin (`change-plugin`, not available yet), the variety and quantity (`edit-details`), taking it off the schedule (`unschedule`), splitting it (`split`) or its spot in a garden bed (`set-placement`). Inspectors are read-only. `set-placement` is owner only: it places, moves or clears a planting's spot (`footprint: null`) and moves its date when `plantingDateMs` is sent. A planting already in the ground can't change beds and its date can't move past today (409 `IN_GROUND`). A linked succession sowing needs a spot that is free for its whole time in the bed (409 `OVERLAP`), and a spot past the bed edge is refused with `OUTSIDE_AREA`.",
         "security": [
           {
             "cookieSession": []
@@ -3790,167 +4330,389 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "blockId": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 128
-                  },
-                  "footprint": {
-                    "anyOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "x_in": {
-                            "type": "number",
-                            "minimum": 0,
-                            "maximum": 240000
-                          },
-                          "y_in": {
-                            "type": "number",
-                            "minimum": 0,
-                            "maximum": 240000
-                          },
-                          "w_in": {
-                            "type": "number",
-                            "exclusiveMinimum": 0,
-                            "maximum": 240000
-                          },
-                          "l_in": {
-                            "type": "number",
-                            "exclusiveMinimum": 0,
-                            "maximum": 240000
-                          }
-                        },
-                        "required": [
-                          "x_in",
-                          "y_in",
-                          "w_in",
-                          "l_in"
-                        ],
-                        "additionalProperties": false
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "enum": [
+                          "mark-harvested",
+                          "archive",
+                          "mark-failed",
+                          "reactivate"
+                        ]
                       },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "spacingPattern": {
-                    "type": "string",
-                    "enum": [
-                      "square",
-                      "offset",
-                      "sfg"
-                    ]
-                  },
-                  "spacingIn": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "exclusiveMinimum": 0,
-                        "maximum": 600
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "rowSpacingIn": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "exclusiveMinimum": 0,
-                        "maximum": 600
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "plantCount": {
-                    "anyOf": [
-                      {
+                      "occurredAt": {
                         "type": "integer",
-                        "exclusiveMinimum": 0,
-                        "maximum": 100000
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "plantingDateMs": {
-                    "anyOf": [
-                      {
-                        "type": "integer",
-                        "minimum": 0,
+                        "minimum": -9007199254740991,
                         "maximum": 9007199254740991
-                      },
-                      {
-                        "type": "null"
                       }
-                    ]
+                    },
+                    "required": [
+                      "action"
+                    ],
+                    "description": "Change the planting status. Harvested and archived dates are stamped for you."
                   },
-                  "action": {
-                    "type": "string",
-                    "const": "set-placement"
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "set-schedule"
+                      },
+                      "plantingDate": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "blockId": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "plantingDate"
+                    ],
+                    "description": "Set or clear the planting date, and optionally move it to another block. Open tasks tied to the planting move by the same number of days."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "change-plugin"
+                      },
+                      "cropPluginId": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "varietyDisplayName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 160
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "cropPluginId"
+                    ],
+                    "description": "Swap the crop plugin. Refused with 409 for the anchor of a planting group, and otherwise not available yet (501)."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "edit-details"
+                      },
+                      "varietyDisplayName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 160
+                      },
+                      "quantityPlanted": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "quantityUnit": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 16
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "harvestUseCases": {
+                        "anyOf": [
+                          {
+                            "maxItems": 8,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 40
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "action"
+                    ],
+                    "description": "Edit the variety name, quantity and which harvest windows to show."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "unschedule"
+                      }
+                    },
+                    "required": [
+                      "action"
+                    ],
+                    "description": "Take the planting off the schedule without deleting it. Its tasks are removed, its group is disbanded and it goes back to planned."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "split"
+                      },
+                      "parts": {
+                        "type": "integer",
+                        "minimum": 2,
+                        "maximum": 12
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "parts"
+                    ],
+                    "description": "Split the planting into 2 to 12 parts on the same date and block."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "blockId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "footprint": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "x_in": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 240000
+                              },
+                              "y_in": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 240000
+                              },
+                              "w_in": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "maximum": 240000
+                              },
+                              "l_in": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "maximum": 240000
+                              }
+                            },
+                            "required": [
+                              "x_in",
+                              "y_in",
+                              "w_in",
+                              "l_in"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "spacingPattern": {
+                        "type": "string",
+                        "enum": [
+                          "square",
+                          "offset",
+                          "sfg"
+                        ]
+                      },
+                      "spacingIn": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 600
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "rowSpacingIn": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "exclusiveMinimum": 0,
+                            "maximum": 600
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "plantCount": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 100000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "plantingDateMs": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "action": {
+                        "type": "string",
+                        "const": "set-placement"
+                      }
+                    },
+                    "required": [
+                      "blockId",
+                      "footprint",
+                      "spacingPattern",
+                      "action"
+                    ],
+                    "additionalProperties": false
                   }
-                },
-                "required": [
-                  "blockId",
-                  "footprint",
-                  "spacingPattern",
-                  "action"
-                ],
-                "additionalProperties": false
+                ]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Saved.",
+            "description": "Saved. The shape depends on the action.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "required": [
-                    "planting",
-                    "reanchored",
-                    "warnings"
-                  ],
-                  "properties": {
-                    "planting": {
-                      "$ref": "#/components/schemas/PlacedPlanting"
-                    },
-                    "reanchored": {
-                      "type": [
-                        "object",
-                        "null"
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "description": "Status, `set-schedule` and `edit-details`: the saved planting.",
+                      "required": [
+                        "crop"
                       ],
                       "properties": {
-                        "shifted": {
-                          "type": "integer"
-                        },
-                        "flaggedStale": {
-                          "type": "integer"
+                        "crop": {
+                          "type": "object"
                         }
                       }
                     },
-                    "followers": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/PlacedPlanting"
+                    {
+                      "type": "object",
+                      "description": "`split`: every part.",
+                      "required": [
+                        "crops"
+                      ],
+                      "properties": {
+                        "crops": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
                       }
                     },
-                    "warnings": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
+                    {
+                      "type": "object",
+                      "description": "`unschedule`: what was removed with it.",
+                      "required": [
+                        "ok"
+                      ],
+                      "properties": {
+                        "ok": {
+                          "const": true
+                        },
+                        "tasksDeleted": {
+                          "type": "integer"
+                        },
+                        "disbandedGroupId": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "description": "`set-placement`: the placed planting.",
+                      "required": [
+                        "planting",
+                        "reanchored",
+                        "warnings"
+                      ],
+                      "properties": {
+                        "planting": {
+                          "$ref": "#/components/schemas/PlacedPlanting"
+                        },
+                        "reanchored": {
+                          "type": [
+                            "object",
+                            "null"
+                          ],
+                          "properties": {
+                            "shifted": {
+                              "type": "integer"
+                            },
+                            "flaggedStale": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "followers": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PlacedPlanting"
+                          }
+                        },
+                        "warnings": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
                       }
                     }
-                  }
+                  ]
                 }
               }
             }
@@ -3976,7 +4738,7 @@
             }
           },
           "403": {
-            "description": "Owner role required (`READ_ONLY`).",
+            "description": "Inspectors are read-only; `set-placement` needs the owner role (`READ_ONLY`).",
             "content": {
               "application/json": {
                 "schema": {
@@ -3996,11 +4758,21 @@
             }
           },
           "409": {
-            "description": "Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`) or the block is not a sized bed in a garden (`NOT_DESIGNABLE`).",
+            "description": "Already in the ground (`IN_GROUND`), the spot is taken for a linked sowing (`OVERLAP`), the block is not a sized bed in a garden (`NOT_DESIGNABLE`), a split that could not be made, or `change-plugin` on the anchor of a planting group.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GardenError"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "`change-plugin` is not available yet.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -4173,6 +4945,225 @@
           },
           "401": {
             "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fertility/soil-tests": {
+      "post": {
+        "summary": "Save a soil test for a bed or block",
+        "description": "Owner only. Enter the numbers exactly as the lab printed them and say whether they were ppm or lb/acre in `unitsBasis` (missing means ppm); planning converts lb/acre to ppm before crediting nutrients. `labRatings` holds the lab's own low/medium/high words, which are shown in place of CropCard's computed class. Soil tests are saved online only. Another Owner's `blockId` is refused.",
+        "security": [
+          {
+            "cookieSession": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "blockId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "sampledAt": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "lab": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "reportPdfUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "ph": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 14
+                  },
+                  "bufferPh": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 14
+                  },
+                  "cec": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000
+                  },
+                  "organicMatterPct": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "unitsBasis": {
+                    "type": "string",
+                    "enum": [
+                      "ppm",
+                      "lb-per-acre"
+                    ]
+                  },
+                  "extractionMethod": {
+                    "type": "string",
+                    "enum": [
+                      "mehlich-1",
+                      "mehlich-3",
+                      "bray-p1",
+                      "olsen",
+                      "morgan",
+                      "modified-morgan",
+                      "other"
+                    ]
+                  },
+                  "nitratePpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "phosphorusPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "potassiumPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "caPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "mgPpm": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "labRatings": {
+                    "type": "object",
+                    "properties": {
+                      "p": {
+                        "type": "string",
+                        "enum": [
+                          "very-low",
+                          "low",
+                          "medium",
+                          "optimum",
+                          "high",
+                          "very-high",
+                          "excessive"
+                        ]
+                      },
+                      "k": {
+                        "type": "string",
+                        "enum": [
+                          "very-low",
+                          "low",
+                          "medium",
+                          "optimum",
+                          "high",
+                          "very-high",
+                          "excessive"
+                        ]
+                      },
+                      "ca": {
+                        "type": "string",
+                        "enum": [
+                          "very-low",
+                          "low",
+                          "medium",
+                          "optimum",
+                          "high",
+                          "very-high",
+                          "excessive"
+                        ]
+                      },
+                      "mg": {
+                        "type": "string",
+                        "enum": [
+                          "very-low",
+                          "low",
+                          "medium",
+                          "optimum",
+                          "high",
+                          "very-high",
+                          "excessive"
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "blockId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The saved soil test.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "soilTest"
+                  ],
+                  "properties": {
+                    "soilTest": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or a `blockId` the active Owner does not have.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner role required.",
             "content": {
               "application/json": {
                 "schema": {

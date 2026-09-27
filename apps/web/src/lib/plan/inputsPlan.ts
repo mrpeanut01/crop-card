@@ -48,6 +48,7 @@
 
 import type { Block } from '$lib/db/blocks';
 import type { FertilityCredit, SoilTest } from '$lib/db/fertility';
+import { toPpm } from '$lib/fertility/soilInterpret';
 import type {
   CropPlugin,
   CropSprayWindow,
@@ -403,22 +404,26 @@ export interface InputsPlanInput {
 /** Soil-test N credit, lb/acre. Conservative: anything above an 8 ppm
  *  nitrate baseline credits 4 lb-N/acre per ppm. Mehlich-3 is the
  *  default lab method for our region; the multiplier is the Penn State
- *  PSNT crediting table simplification. */
-function nCreditFromSoilTestLbPerAcre(test: SoilTest | undefined): number {
-  if (!test || test.nitratePpm == null) return 0;
-  return Math.max(0, (test.nitratePpm - 8) * 4);
+ *  PSNT crediting table simplification. Every baseline below is in ppm,
+ *  so a lab sheet typed in lb/acre is converted first. */
+export function nCreditFromSoilTestLbPerAcre(test: SoilTest | undefined): number {
+  const ppm = toPpm(test?.nitratePpm, test?.unitsBasis);
+  if (ppm == null) return 0;
+  return Math.max(0, (ppm - 8) * 4);
 }
 
-function pCreditFromSoilTestLbPerAcre(test: SoilTest | undefined): number {
-  if (!test || test.phosphorusPpm == null) return 0;
-  // P2O5 credit: above 25 ppm Mehlich-3 P, credit 0.5 lb P2O5 per ppm.
-  return Math.max(0, (test.phosphorusPpm - 25) * 0.5);
+/** P2O5 credit: above 25 ppm Mehlich-3 P, credit 0.5 lb P2O5 per ppm. */
+export function pCreditFromSoilTestLbPerAcre(test: SoilTest | undefined): number {
+  const ppm = toPpm(test?.phosphorusPpm, test?.unitsBasis);
+  if (ppm == null) return 0;
+  return Math.max(0, (ppm - 25) * 0.5);
 }
 
-function kCreditFromSoilTestLbPerAcre(test: SoilTest | undefined): number {
-  if (!test || test.potassiumPpm == null) return 0;
-  // K2O credit: above 120 ppm Mehlich-3 K, credit 0.5 lb K2O per ppm.
-  return Math.max(0, (test.potassiumPpm - 120) * 0.5);
+/** K2O credit: above 120 ppm Mehlich-3 K, credit 0.5 lb K2O per ppm. */
+export function kCreditFromSoilTestLbPerAcre(test: SoilTest | undefined): number {
+  const ppm = toPpm(test?.potassiumPpm, test?.unitsBasis);
+  if (ppm == null) return 0;
+  return Math.max(0, (ppm - 120) * 0.5);
 }
 
 /** Sum N/P/K (lb/acre) from explicit operator-entered fertility credits

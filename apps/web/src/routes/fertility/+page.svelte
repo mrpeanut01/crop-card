@@ -3,6 +3,9 @@
   import UnitInput from '$lib/components/ui/UnitInput.svelte';
   import { fmt, currentPrefs } from '$lib/prefsState.svelte';
   import { formatRateText } from '$lib/stock/units';
+  import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
+  import SetupSoilTest from '$lib/components/setup/SetupSoilTest.svelte';
+  import type { SetupSoilTestResult } from '$lib/fertility/soilTestForm';
 
   let { data } = $props();
 
@@ -26,12 +29,7 @@
   let creditN = $state<number | null>(null);
   let creditUseDefaults = $state(true);
 
-  // Soil-test form
-  let stPh = $state<number | null>(null);
-  let stOM = $state<number | null>(null);
-  let stNO3 = $state<number | null>(null);
-  let stP = $state<number | null>(null);
-  let stK = $state<number | null>(null);
+  let soilSheetOpen = $state(false);
 
   const rateUnit = $derived(fmt.unit('weightPerArea'));
   const npk = (v: number | null | undefined) =>
@@ -109,35 +107,11 @@
     }
   }
 
-  async function recordSoilTest(e: Event) {
-    e.preventDefault();
-    busy = true;
-    error = null;
-    try {
-      const res = await fetch('/api/fertility/soil-tests', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          blockId,
-          ph: stPh ?? undefined,
-          organicMatterPct: stOM ?? undefined,
-          nitratePpm: stNO3 ?? undefined,
-          phosphorusPpm: stP ?? undefined,
-          potassiumPpm: stK ?? undefined
-        })
-      });
-      const out = await res.json();
-      if (!res.ok) {
-        error = out.error ?? 'failed';
-        return;
-      }
-      message = 'Soil test recorded.';
-      reload();
-    } catch (e2) {
-      error = e2 instanceof Error ? e2.message : String(e2);
-    } finally {
-      busy = false;
-    }
+  function onSoilTestSaved(r: SetupSoilTestResult) {
+    soilSheetOpen = false;
+    blockId = r.blockId;
+    message = 'Soil test saved.';
+    reload();
   }
 </script>
 
@@ -249,25 +223,30 @@
   </form>
 </details>
 
-<details class="card">
-  <summary><h2>Record soil test</h2></summary>
-  <form onsubmit={recordSoilTest}>
-    <label>pH <input type="number" min="0" max="14" step="0.1" bind:value={stPh} /></label>
-    <label
-      >Organic matter % <input
-        type="number"
-        min="0"
-        max="100"
-        step="0.1"
-        bind:value={stOM}
-      /></label
-    >
-    <label>Nitrate (ppm) <input type="number" min="0" bind:value={stNO3} /></label>
-    <label>Phosphorus (ppm) <input type="number" min="0" bind:value={stP} /></label>
-    <label>Potassium (ppm) <input type="number" min="0" bind:value={stK} /></label>
-    <button type="submit" class="primary" disabled={busy}>Record soil test</button>
-  </form>
-</details>
+<section class="card">
+  <h2>Soil test</h2>
+  <p>Copy the numbers from your lab report, in ppm or lb per acre.</p>
+  <button type="button" class="primary" onclick={() => (soilSheetOpen = true)}>
+    Add a soil test
+  </button>
+</section>
+
+<SetupSheet
+  open={soilSheetOpen}
+  kicker="Fertility"
+  title="Add a soil test"
+  onClose={() => (soilSheetOpen = false)}
+  onDone={onSoilTestSaved}
+>
+  {#snippet children(done)}
+    <SetupSoilTest
+      places={data.blocks.map((b) => ({ id: b.id, name: b.name }))}
+      canEdit={data.canAddSoilTest}
+      initialBlockId={blockId}
+      onDone={done}
+    />
+  {/snippet}
+</SetupSheet>
 
 <section class="card">
   <h2>History — applications</h2>
@@ -315,7 +294,9 @@
         <li>
           {fmt.instant(t.sampledAt, 'date')} — pH {t.ph?.toFixed(1) ?? '?'}, OM {t.organicMatterPct?.toFixed(
             1
-          ) ?? '?'}%, NO₃ {t.nitratePpm ?? '?'} ppm
+          ) ?? '?'}%, NO₃ {t.nitratePpm ?? '?'}, P {t.phosphorusPpm ?? '?'}, K {t.potassiumPpm ??
+            '?'}
+          {t.unitsBasis === 'lb-per-acre' ? 'lb/A' : 'ppm'}
         </li>
       {/each}
     </ul>

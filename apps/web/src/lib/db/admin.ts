@@ -18,6 +18,15 @@ import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { db } from './client';
 import { plantingInGround } from '$lib/garden/inGround';
 import {
+  animalCarePlans,
+  animalFlagChanges,
+  animalGroups,
+  animalHealthEvents,
+  animalLocations,
+  animalProductionLogs,
+  animalStatusEvents,
+  animals,
+  blockProtections,
   blocks,
   cropEquipment,
   crops,
@@ -30,16 +39,22 @@ import {
   hayCuttings,
   harvestEvents,
   fungicideEvents,
+  grazingAttestations,
   insecticideEvents,
+  irrigationEvents,
+  ledgerEntries,
   mapFeatures,
   pendingCalibrations,
+  rainGaugeReadings,
   recordDeletions,
+  seedStarts,
   soilTests,
   sprayEvents,
   sprayers,
   stockItems,
   stockLots,
   stockMovements,
+  taskTimeEntries,
   tasks
 } from './schema';
 import { type TenantScopedTable, tenantValues, withTenant } from './tenant';
@@ -379,6 +394,7 @@ export function deleteFieldCascade(id: string): DeleteSummary {
     }
   }
   unlinkMapFeaturesFromField(id);
+  removed.animal_locations = del(animalLocations, eq(animalLocations.fieldId, id));
   removed.fields = del(fields, eq(fields.id, id));
   return { removed };
 }
@@ -425,6 +441,10 @@ export function deleteStockItemCascade(id: string): DeleteSummary {
     .set({ stockItemId: null })
     .where(withTenant(fertilityApplications, eq(fertilityApplications.stockItemId, id)))
     .run();
+  db.update(animalHealthEvents)
+    .set({ stockItemId: null })
+    .where(withTenant(animalHealthEvents, eq(animalHealthEvents.stockItemId, id)))
+    .run();
   removed.stock_items = del(stockItems, eq(stockItems.id, id));
   return { removed };
 }
@@ -460,6 +480,21 @@ export function wipeAllData(opts: WipeOptions = {}): DeleteSummary {
   // Order: leaf rows first. Each `del(table, ...)` filters by active Owner.
   // The `isNotNull(table.id)` predicate is a tautology that lets the helper
   // run a tenant-scoped DELETE without a more specific filter.
+  removed.ledger_entries = del(ledgerEntries, isNotNull(ledgerEntries.id));
+  removed.task_time_entries = del(taskTimeEntries, isNotNull(taskTimeEntries.id));
+  removed.animal_care_plans = del(animalCarePlans, isNotNull(animalCarePlans.id));
+  removed.animal_health_events = del(animalHealthEvents, isNotNull(animalHealthEvents.id));
+  removed.animal_production_logs = del(animalProductionLogs, isNotNull(animalProductionLogs.id));
+  removed.animal_status_events = del(animalStatusEvents, isNotNull(animalStatusEvents.id));
+  removed.animal_flag_changes = del(animalFlagChanges, isNotNull(animalFlagChanges.id));
+  removed.animal_locations = del(animalLocations, isNotNull(animalLocations.id));
+  removed.grazing_attestations = del(grazingAttestations, isNotNull(grazingAttestations.id));
+  removed.animals = del(animals, isNotNull(animals.id));
+  removed.animal_groups = del(animalGroups, isNotNull(animalGroups.id));
+  removed.seed_starts = del(seedStarts, isNotNull(seedStarts.id));
+  removed.block_protections = del(blockProtections, isNotNull(blockProtections.id));
+  removed.irrigation_events = del(irrigationEvents, isNotNull(irrigationEvents.id));
+  removed.rain_gauge_readings = del(rainGaugeReadings, isNotNull(rainGaugeReadings.id));
   removed.stock_movements = del(stockMovements, isNotNull(stockMovements.id));
   removed.tasks = del(tasks, isNotNull(tasks.id));
   removed.crop_equipment = del(cropEquipment, isNotNull(cropEquipment.id));

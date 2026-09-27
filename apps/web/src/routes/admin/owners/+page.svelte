@@ -24,6 +24,12 @@
       );
     })
   );
+
+  function formatBytes(n: number): string {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  }
 </script>
 
 <svelte:head>
@@ -65,7 +71,7 @@
       <thead>
         <tr>
           <th>Name</th><th>Slug</th><th>Status</th><th>Plan</th><th>AI calls<br />(this month)</th>
-          <th>Sprays<br />(this month)</th><th>Created</th><th>Actions</th>
+          <th>Sprays<br />(this month)</th><th>Photos</th><th>Created</th><th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -112,6 +118,7 @@
             </td>
             <td>{o.currentPeriodAiCalls.toLocaleString()}</td>
             <td>{o.currentPeriodSprayEvents.toLocaleString()}</td>
+            <td>{formatBytes(o.storageBytes)}</td>
             <td>{fmt.instant(o.createdAt, 'date')}</td>
             <td>
               <form method="POST" action="?/impersonate" use:enhance>

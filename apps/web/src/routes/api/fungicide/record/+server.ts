@@ -15,7 +15,7 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { bestEffort, errorText, writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
+import { fungicideRecordSchema } from '$lib/records/apiSchemas';
 import { computeRatedDilution } from '$lib/dilution/calculator';
 import { insertFungicideEvent, type DiseaseObservation } from '$lib/db/fungicideEvents';
 import { listFungicideEvents } from '$lib/db/fungicideEvents';
@@ -56,30 +56,8 @@ import { rejectForeignRefs } from '$lib/server/foreignRefs';
  *  tank records this category token instead of a per-ingredient class. */
 const FUNGICIDE_LOAD_CLASS = 'fungicide-load' as const;
 
-const requestSchema = z.object({
-  blockId: z.string().min(1),
-  cropId: z.string().optional(),
-  taskId: z.string().optional(),
-  occurredAt: z.number().int().optional(),
-  productPluginIds: z.array(z.string().min(1)).min(1),
-  stockItemIds: z.array(z.string().min(1).nullable()).optional(),
-  sprayerId: z.string().min(1).optional(),
-  conditions: z.object({
-    windMph: z.number().nonnegative(),
-    tempF: z.number(),
-    rainForecastMmNext24h: z.number().nonnegative()
-  }),
-  disease: z
-    .object({
-      disease: z.string().min(1),
-      metric: z.string().min(1),
-      value: z.number().nonnegative(),
-      threshold: z.number().nonnegative().optional(),
-      notes: z.string().max(500).optional()
-    })
-    .optional(),
-  tankSizeGallons: z.number().positive().optional()
-});
+export const _requestSchema = fungicideRecordSchema;
+const requestSchema = fungicideRecordSchema;
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;

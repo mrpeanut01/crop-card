@@ -14,7 +14,7 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
+import { scoutRecordSchema } from '$lib/records/apiSchemas';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { insertScoutObservation } from '$lib/db/scoutObservations';
@@ -23,15 +23,8 @@ import { currentUser } from '$lib/server/auth';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { canMutate } from '$lib/server/session';
 
-const requestSchema = z.object({
-  blockId: z.string().min(1),
-  cropId: z.string().optional(),
-  pest: z.string().min(1).max(80),
-  metric: z.string().min(1).max(40),
-  value: z.number().nonnegative(),
-  notes: z.string().max(500).optional(),
-  occurredAt: z.number().int().optional()
-});
+export const _requestSchema = scoutRecordSchema;
+const requestSchema = scoutRecordSchema;
 
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const auth = currentUser(event);

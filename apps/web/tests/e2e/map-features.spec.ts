@@ -61,7 +61,7 @@ test.describe('map lines and points', () => {
     await page.setViewportSize({ width: 1280, height: 1100 });
     await openMap(page);
 
-    await pick(page, /^Fence/);
+    await pick(page, /^Fence line/);
     await expect(page.getByText(/Tap along the fence/)).toBeVisible();
     await expect(page.locator('[data-hint]')).toHaveCount(0);
     const { cx, cy } = await mapCenter(page);
@@ -252,5 +252,44 @@ test.describe('map lines and points', () => {
     await expect(tip).toHaveText('Gate: <img src=x onerror=alert(1)><b>Back</b> gate');
     await expect(tip.locator('b, img')).toHaveCount(0);
     expect(dialogs).toBe(0);
+  });
+
+  test('the account export carries Areas and map lines and points', async ({ page }) => {
+    await provisionWizardTenant(page, { blocks: [] });
+    const area = await page.request.post('/api/fields', {
+      data: { name: 'Back pasture', kind: 'pasture', widthFt: 200, lengthFt: 300 },
+      headers: { origin: origin(page) }
+    });
+    expect(area.status(), await area.text()).toBe(201);
+    const fence = await page.request.post('/api/map-features', {
+      data: {
+        kind: 'fence',
+        name: 'Pasture fence',
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [-77.551, 39.1],
+            [-77.549, 39.1]
+          ]
+        }
+      },
+      headers: { origin: origin(page) }
+    });
+    expect(fence.status(), await fence.text()).toBe(201);
+
+    const res = await page.request.get('/api/account/export.json');
+    expect(res.ok()).toBe(true);
+    const dump = (await res.json()) as {
+      areas: Array<{ name: string; kind: string; widthFt?: number }>;
+      mapFeatures: Array<{ name: string; kind: string }>;
+      animals: Record<string, unknown[]>;
+    };
+    expect(dump.areas).toContainEqual(
+      expect.objectContaining({ name: 'Back pasture', kind: 'pasture', widthFt: 200 })
+    );
+    expect(dump.mapFeatures).toEqual([
+      expect.objectContaining({ name: 'Pasture fence', kind: 'fence' })
+    ]);
+    expect(dump.animals.groups).toEqual([]);
   });
 });

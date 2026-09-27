@@ -14,6 +14,7 @@ import { systemState } from '$lib/db/schema';
 import { unscopedQueryNote } from '$lib/db/tenant';
 import { STALE_CLAIM_MS } from '$lib/db/clientRecords';
 import { isFenced, trackMutation } from '$lib/server/ops/handoff';
+import { recomputeAllStorageUsage } from '$lib/server/storageUsage';
 
 const DAY_MS = 86_400_000;
 
@@ -83,6 +84,8 @@ export interface MaintenanceResult {
   ran: boolean;
   skipped?: 'recent' | 'running' | 'fenced';
   pruned: Record<string, number>;
+  /** Owners whose cached storage total was recomputed from source. */
+  storageOwners?: number;
   durationMs: number;
 }
 
@@ -147,10 +150,11 @@ async function run(opts: MaintenanceOptions): Promise<MaintenanceResult> {
     pruned[rule.name] = await pruneRule(rule, now, batch);
     await yieldToEventLoop();
   }
+  const storageOwners = isFenced() ? 0 : recomputeAllStorageUsage(now);
   if (!isFenced()) sqliteHandle().pragma('optimize');
   const durationMs = Math.round(performance.now() - started);
-  console.log('[db-maintenance]', JSON.stringify({ pruned, ms: durationMs }));
-  return { ran: true, pruned, durationMs };
+  console.log('[db-maintenance]', JSON.stringify({ pruned, storageOwners, ms: durationMs }));
+  return { ran: true, pruned, storageOwners, durationMs };
 }
 
 /** Runs at most once per 24 h (tracked in system_state) and never twice

@@ -94,13 +94,13 @@ export function seedPhase32Rows(label: string): Phase32Seed {
 
   const groupId = put('animal_groups', {
     name: `${label}-layers`,
-    speciesId: 'species:chicken',
+    speciesId: 'chicken',
     headCount: 24,
     housingFieldId: field.id
   });
   const animalId = put('animals', {
     groupId,
-    speciesId: 'species:chicken',
+    speciesId: 'chicken',
     name: `${label}-hen`,
     housingFieldId: field.id
   });

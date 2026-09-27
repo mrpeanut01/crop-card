@@ -14,6 +14,7 @@ import { equipmentIdsActiveBefore } from '$lib/db/equipment';
 import { buildNavAlerts, type NavAlert } from '$lib/today/navAlerts';
 import { PLANS } from '$lib/billing/plans';
 import { resolvePlan } from '$lib/server/billing/plans';
+import { animalsNavLabel } from '$lib/animals/profile.server';
 
 export const load: LayoutServerLoad = ({ locals }) => {
   // A sprayer is "dirty" when it has carried chemistry that has not yet been
@@ -124,6 +125,15 @@ export const load: LayoutServerLoad = ({ locals }) => {
     }
   }
 
+  let animalsLabel: string | null = null;
+  if (locals.user?.activeOwnerId) {
+    try {
+      animalsLabel = animalsNavLabel();
+    } catch (err) {
+      console.error('[layout] failed to read the animals nav entry', err);
+    }
+  }
+
   const profile = locals.user ? profileFor(locals.user.id) : null;
 
   return {
@@ -143,6 +153,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
     prefs: profile?.prefs ?? DEFAULT_PREFS,
     dirtySprayers,
     navAlerts,
+    animalsNavLabel: animalsLabel,
     activeOwner,
     availableOwners,
     billingGrace

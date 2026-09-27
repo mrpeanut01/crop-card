@@ -9,7 +9,15 @@
  */
 
 import { deleteSetting, getSetting, setSetting } from '$lib/db/settings';
-import { FARM_PROFILE_KEY, parseFarmProfile, type FarmProfile } from './profile';
+import {
+  FARM_ANIMALS_KEY,
+  FARM_PROFILE_KEY,
+  parseFarmAnimals,
+  parseFarmProfile,
+  serializeFarmAnimals,
+  type FarmAnimalChoice,
+  type FarmProfile
+} from './profile';
 
 const STATUS_KEY = 'onboarding_status';
 export const GETTING_STARTED_DISMISSED_KEY = 'getting_started_dismissed_at';
@@ -31,6 +39,17 @@ export function getFarmProfile(): FarmProfile | null {
 
 export function setFarmProfile(profile: FarmProfile): void {
   setSetting(FARM_PROFILE_KEY, profile);
+}
+
+/** The animal tiles the owner picked; empty when none or never asked. */
+export function getFarmAnimals(): FarmAnimalChoice[] {
+  return parseFarmAnimals(getSetting(FARM_ANIMALS_KEY));
+}
+
+export function setFarmAnimals(choices: readonly FarmAnimalChoice[]): void {
+  const value = serializeFarmAnimals(choices);
+  if (value) setSetting(FARM_ANIMALS_KEY, value);
+  else deleteSetting(FARM_ANIMALS_KEY);
 }
 
 export function getGettingStartedDismissedAt(): number | null {

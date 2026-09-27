@@ -33,6 +33,8 @@
         mapFeatures={data.mapFeatures}
         ownerId={data.ownerId}
         snapshot={data.snapshot}
+        housing={data.housing}
+        petsLayout={data.petsLayout}
         canEdit={data.canEdit}
         isFirstRun={data.isFirstRun}
         initialCenter={data.initialCenter}

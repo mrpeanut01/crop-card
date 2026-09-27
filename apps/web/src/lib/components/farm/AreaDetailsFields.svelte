@@ -45,6 +45,24 @@
                 value={(draft[f.key] as string) ?? ''}
                 onchange={(e) => (draft = { ...draft, [f.key]: e.currentTarget.value })}
               />
+            {:else if f.type === 'count'}
+              <span class="feet">
+                <input
+                  id="{idPrefix}-{f.key}"
+                  type="number"
+                  min="1"
+                  max="100000"
+                  step="1"
+                  inputmode="numeric"
+                  value={draft[f.key] ?? ''}
+                  oninput={(e) =>
+                    (draft = {
+                      ...draft,
+                      [f.key]: e.currentTarget.value === '' ? null : Number(e.currentTarget.value)
+                    })}
+                />
+                <span class="unit">{f.unit}</span>
+              </span>
             {:else}
               <span class="feet">
                 <input

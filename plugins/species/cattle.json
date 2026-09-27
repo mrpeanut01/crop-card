@@ -1,0 +1,17 @@
+{
+  "pluginId": "cattle",
+  "displayName": "Cattle",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Bos taurus",
+  "groupNoun": "herd",
+  "foodProducingDefault": true,
+  "products": [
+    "meat",
+    "milk"
+  ],
+  "tile": {
+    "icon": "beef",
+    "label": "Cattle"
+  }
+}

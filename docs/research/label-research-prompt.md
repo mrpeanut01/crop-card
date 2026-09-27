@@ -145,6 +145,10 @@ Set `source` to a short citation (product, EPA number, label date). For every nu
 
 Take the stricter reading whenever the label is ambiguous. If the interval depends on the rate, use the interval for the highest labelled rate and say so in `note`.
 
+## Task 11: check the species food-flag quotes (Phase 32B)
+
+Sprint 32B shipped ten species plugins in `plugins/species/`. Each `foodProducingDefault` is quoted in `apps/web/scripts/species-sources.json`, but those quotes came from web search excerpts because the cloud environment could not open the pages (9 CFR 381.1, 9 CFR 301.2, 9 CFR 354.1 and the FDA CVM 2018 antimicrobial sales report). Open each URL, confirm the quote word for word, and fix the wording, URL or date where it differs. Once a quote is confirmed, delete the "could not open the page" sentence from its `note`. If a page no longer supports the flag, say so in the report instead of changing the flag: the kernel reads it in 32C, and an unknown species counts as food-producing.
+
 ---
 
 ## Finish

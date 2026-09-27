@@ -25,6 +25,12 @@ import { _requestSchema as taskClose } from '../tasks/close/+server';
 import { _requestSchema as journalEntry } from '../plantings/[id]/journal/+server';
 import { _requestSchema as journalRecord } from '../journal/record/+server';
 import { _requestSchema as photoHelp } from '../plantings/[id]/photo-help/+server';
+import { _requestSchema as animalCreate } from '../animals/+server';
+import { _requestSchema as animalPatch } from '../animals/[id]/+server';
+import { _requestSchema as animalMove } from '../animals/move/+server';
+import { _requestSchema as animalStatus } from '../animals/status/+server';
+import { _requestSchema as animalGroupCreate } from '../animal-groups/+server';
+import { _requestSchema as animalGroupPatch } from '../animal-groups/[id]/+server';
 
 interface Operation {
   parameters?: { $ref?: string; name?: string; in?: string }[];
@@ -76,7 +82,13 @@ describe('openapi.json', () => {
     ['/api/tasks/close', 'post', taskClose],
     ['/api/plantings/{id}/journal', 'post', journalEntry],
     ['/api/journal/record', 'post', journalRecord],
-    ['/api/plantings/{id}/photo-help', 'post', photoHelp]
+    ['/api/plantings/{id}/photo-help', 'post', photoHelp],
+    ['/api/animals', 'post', animalCreate],
+    ['/api/animals/{id}', 'patch', animalPatch],
+    ['/api/animals/move', 'post', animalMove],
+    ['/api/animals/status', 'post', animalStatus],
+    ['/api/animal-groups', 'post', animalGroupCreate],
+    ['/api/animal-groups/{id}', 'patch', animalGroupPatch]
   ] as const)('%s %s publishes the schema the route validates with', (path, method, schema) => {
     expect(published(path, method)).toEqual(generated(schema));
   });
@@ -174,6 +186,15 @@ describe('openapi.json', () => {
       '/api/scout/record',
       '/api/hay/cuttings'
     ]) {
+      const op = doc.paths[path]?.post;
+      expect(op, path).toBeDefined();
+      expect(op!.parameters).toContainEqual({ $ref: '#/components/parameters/ClientRecordId' });
+      expect(op!.responses['503']).toBeDefined();
+    }
+  });
+
+  it('documents the client record id header on the replayable animal writes', () => {
+    for (const path of ['/api/animals/move', '/api/animals/status']) {
       const op = doc.paths[path]?.post;
       expect(op, path).toBeDefined();
       expect(op!.parameters).toContainEqual({ $ref: '#/components/parameters/ClientRecordId' });

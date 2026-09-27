@@ -27,6 +27,7 @@
   } from '$lib/farm/areaDetailsForm';
   import { designerHref, designerState } from '$lib/farm/designerRoute';
   import { kindStyle } from '$lib/farm/kindStyle';
+  import { withHousing, type AreaHousing } from '$lib/farm/housedAnimals';
   import { currentPrefs } from '$lib/prefsState.svelte';
 
   type Tab = 'details' | 'plantings' | 'tasks' | 'history';
@@ -37,6 +38,8 @@
     snapshot,
     area,
     canEdit,
+    housing = null,
+    petsLayout = false,
     onEditShape
   }: {
     open: boolean;
@@ -44,6 +47,8 @@
     snapshot: FarmSnapshot;
     area: { id: string; name: string; kind: AreaKind; details: AreaDetails | null };
     canEdit: boolean;
+    housing?: AreaHousing | null;
+    petsLayout?: boolean;
     onEditShape?: () => void;
   } = $props();
 
@@ -59,7 +64,7 @@
   // The sheet shows its own primary Open designer button, so the card's copy is dropped.
   const card = $derived.by(() => {
     const built = buildAreaCard(snapshot, area.id, { prefs });
-    return built ? { ...built, links: undefined } : null;
+    return built ? { ...withHousing(built, housing, { petsLayout }), links: undefined } : null;
   });
   const title = $derived(areaDisplayName(area));
   const style = $derived(kindStyle(area.kind));
@@ -256,6 +261,11 @@
           </form>
         {:else}
           {#if card}<CardView {card} {prefs} />{/if}
+          {#if housing && housing.total > 0}
+            <a class="empty-action" href="/animals" data-testid="area-animals-link">
+              {petsLayout ? 'Open Pets & animals' : 'Open Animals'}
+            </a>
+          {/if}
           {#if summary.length}
             <dl class="details">
               {#each summary as row (row.label)}

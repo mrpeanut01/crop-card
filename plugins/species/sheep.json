@@ -1,0 +1,18 @@
+{
+  "pluginId": "sheep",
+  "displayName": "Sheep",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Ovis aries",
+  "groupNoun": "flock",
+  "foodProducingDefault": true,
+  "products": [
+    "meat",
+    "fiber",
+    "milk"
+  ],
+  "tile": {
+    "icon": "paw-print",
+    "label": "Sheep"
+  }
+}

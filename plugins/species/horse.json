@@ -1,0 +1,20 @@
+{
+  "pluginId": "horse",
+  "displayName": "Horse",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Equus caballus",
+  "groupNoun": "herd",
+  "foodProducingDefault": true,
+  "notForSlaughterToggle": true,
+  "products": [
+    "work",
+    "companion",
+    "breeding"
+  ],
+  "tile": {
+    "icon": "paw-print",
+    "label": "Horses"
+  },
+  "notes": "Horses default to food-producing because federal meat inspection rules list them as livestock and horse drug labels warn against use in horses intended for food. The not-for-slaughter toggle is recorded separately and never changes this flag, so a prohibited drug still blocks meat."
+}

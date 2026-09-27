@@ -1,0 +1,17 @@
+{
+  "pluginId": "duck",
+  "displayName": "Duck",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Anas platyrhynchos domesticus",
+  "groupNoun": "flock",
+  "foodProducingDefault": true,
+  "products": [
+    "eggs",
+    "meat"
+  ],
+  "tile": {
+    "icon": "feather",
+    "label": "Ducks"
+  }
+}

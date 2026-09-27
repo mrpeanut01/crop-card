@@ -1,0 +1,16 @@
+{
+  "pluginId": "pig",
+  "displayName": "Pig",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Sus scrofa domesticus",
+  "groupNoun": "herd",
+  "foodProducingDefault": true,
+  "products": [
+    "meat"
+  ],
+  "tile": {
+    "icon": "ham",
+    "label": "Pigs"
+  }
+}

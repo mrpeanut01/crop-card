@@ -10,7 +10,14 @@ import { z } from 'zod';
 import { haversineMeters } from '$lib/geo/area';
 
 export const CROP_AREA_KINDS = ['field', 'garden', 'greenhouse', 'orchard', 'pasture'] as const;
-export const OTHER_AREA_KINDS = ['barn', 'residence', 'natural_area', 'water', 'boundary'] as const;
+export const OTHER_AREA_KINDS = [
+  'barn',
+  'coop_pen',
+  'residence',
+  'natural_area',
+  'water',
+  'boundary'
+] as const;
 export const AREA_KINDS = [...CROP_AREA_KINDS, ...OTHER_AREA_KINDS] as const;
 
 export type CropAreaKind = (typeof CROP_AREA_KINDS)[number];
@@ -25,6 +32,7 @@ export const AREA_KIND_LABELS: Record<AreaKind, string> = {
   orchard: 'Orchard',
   pasture: 'Pasture',
   barn: 'Barn',
+  coop_pen: 'Coop or pen',
   residence: 'House',
   natural_area: 'Woods / natural',
   water: 'Pond / water',
@@ -84,6 +92,12 @@ export const barnDetailsSchema = z.strictObject({
   chemicalStorage: z.boolean().optional()
 });
 
+/** How many animals the owner says it holds. Shown on the Area Card and
+ *  at a move, never enforced (Phase 32B, B-14). */
+export const coopPenDetailsSchema = z.strictObject({
+  capacity: z.number().int().positive().max(100_000).optional()
+});
+
 export const waterDetailsSchema = z.strictObject({
   usedForIrrigation: z.boolean().optional()
 });
@@ -97,6 +111,7 @@ export const AREA_DETAILS_SCHEMAS = {
   orchard: orchardDetailsSchema,
   pasture: pastureDetailsSchema,
   barn: barnDetailsSchema,
+  coop_pen: coopPenDetailsSchema,
   residence: emptyDetailsSchema,
   natural_area: emptyDetailsSchema,
   water: waterDetailsSchema,
@@ -109,6 +124,7 @@ export type GreenhouseDetails = z.infer<typeof greenhouseDetailsSchema>;
 export type OrchardDetails = z.infer<typeof orchardDetailsSchema>;
 export type PastureDetails = z.infer<typeof pastureDetailsSchema>;
 export type BarnDetails = z.infer<typeof barnDetailsSchema>;
+export type CoopPenDetails = z.infer<typeof coopPenDetailsSchema>;
 export type WaterDetails = z.infer<typeof waterDetailsSchema>;
 
 function variant<K extends AreaKind>(kind: K) {
@@ -127,6 +143,7 @@ export const areaKindWithDetailsSchema = z.discriminatedUnion('kind', [
   variant('orchard'),
   variant('pasture'),
   variant('barn'),
+  variant('coop_pen'),
   variant('residence'),
   variant('natural_area'),
   variant('water'),
@@ -137,7 +154,13 @@ export type AreaKindWithDetails = z.infer<typeof areaKindWithDetailsSchema>;
 /** Stored details are never `{}` (validation normalizes that to null), so
  *  the empty kinds contribute nothing here. */
 export type AreaDetails =
-  GardenDetails | GreenhouseDetails | OrchardDetails | PastureDetails | BarnDetails | WaterDetails;
+  | GardenDetails
+  | GreenhouseDetails
+  | OrchardDetails
+  | PastureDetails
+  | BarnDetails
+  | CoopPenDetails
+  | WaterDetails;
 
 export type DetailsResult =
   { ok: true; details: AreaDetails | null } | { ok: false; issues: z.ZodError['issues'] };

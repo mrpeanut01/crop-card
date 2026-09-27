@@ -60,6 +60,47 @@ describe('AreaCardSheet', () => {
     expect(within(sheet).getByRole('button', { name: 'Edit details' })).toBeInTheDocument();
   });
 
+  it('lists the animals housed on a coop with its capacity, and hides tags for pets', () => {
+    const s = sampleSnapshot();
+    s.areas.push({ ...s.areas[0], id: 'f_coop', name: 'Hen House', kind: 'coop_pen' });
+    render(AreaCardSheet, {
+      open: true,
+      onClose: vi.fn(),
+      snapshot: s,
+      area: { id: 'f_coop', name: 'Hen House', kind: 'coop_pen', details: { capacity: 24 } },
+      canEdit: false,
+      petsLayout: true,
+      housing: {
+        groups: [
+          { id: 'g1', name: 'Layers', speciesPlural: 'Chickens', total: 24, foodProducing: true }
+        ],
+        animals: [
+          {
+            id: 'a1',
+            name: null,
+            tag: '9',
+            speciesName: 'Duck',
+            purpose: 'production',
+            foodProducing: true
+          }
+        ],
+        total: 25,
+        capacity: { capacity: 24, count: 25, over: true }
+      }
+    });
+    const sheet = screen.getByTestId('area-card-sheet');
+    expect(within(sheet).getByText('Lives here')).toBeInTheDocument();
+    expect(within(sheet).getByText('Layers · 24 chickens · food animals')).toBeInTheDocument();
+    expect(within(sheet).getByText('Duck · food animal')).toBeInTheDocument();
+    expect(within(sheet).getByText('Over capacity (25 of 24)')).toBeInTheDocument();
+    expect(within(sheet).getByText('Holds up to')).toBeInTheDocument();
+    expect(sheet.textContent).not.toMatch(/Tag 9|livestock/i);
+    expect(within(sheet).getByRole('link', { name: 'Open Pets & animals' })).toHaveAttribute(
+      'href',
+      '/animals'
+    );
+  });
+
   it('sends an undrawn Area with no beds to Plan for that Area, not bare /plan', async () => {
     const s = sampleSnapshot();
     s.areas.push({ ...s.areas[0], id: 'f_new', name: 'Hayfield', kind: 'pasture' });

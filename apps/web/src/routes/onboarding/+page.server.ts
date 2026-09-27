@@ -15,15 +15,19 @@ import { setActivePlanningYear } from '$lib/season/planningYear.server';
 import { isSelectablePlanningYear } from '$lib/season/planningYear';
 import {
   getOnboardingStatus,
+  setFarmAnimals,
   setFarmProfile,
   setOnboardingStatus
 } from '$lib/onboarding/state.server';
 import {
+  ANIMAL_OPTIONS,
   GROWING_OPTIONS,
+  farmAnimalsFor,
+  parseAnimalChoices,
   parseGrowingChoices,
-  profileForChoices,
+  profileForAnswers,
   routeOnboarding,
-  starterAreasFor
+  starterAreasForAnswers
 } from '$lib/onboarding/steps';
 import { inferFirstName, suggestedFarmName } from '$lib/onboarding/names';
 import type { PageServerLoad } from './$types';
@@ -47,7 +51,8 @@ export const load: PageServerLoad = ({ locals, url }) => {
       suggestedName: suggestedFarmName(firstName),
       fallbackCenter: LOUDOUN_DEFAULT_LAT_LON,
       farmName: null,
-      options: null
+      options: null,
+      animalOptions: null
     };
   }
 
@@ -65,7 +70,8 @@ export const load: PageServerLoad = ({ locals, url }) => {
     suggestedName: '',
     fallbackCenter: LOUDOUN_DEFAULT_LAT_LON,
     farmName: ownerRow?.name ?? null,
-    options: GROWING_OPTIONS.map((o) => ({ id: o.id, title: o.title, blurb: o.blurb }))
+    options: GROWING_OPTIONS.map((o) => ({ id: o.id, title: o.title, blurb: o.blurb })),
+    animalOptions: ANIMAL_OPTIONS.map((o) => ({ id: o.id, title: o.title, blurb: o.blurb }))
   };
 };
 
@@ -193,17 +199,20 @@ export const actions: Actions = {
       throw redirect(303, '/today');
     }
     const choices = parseGrowingChoices(fd.getAll('growing'));
-    const profile = profileForChoices(choices);
+    const animals = parseAnimalChoices(fd.getAll('animals'));
+    const profile = profileForAnswers(choices, animals);
+    const farmAnimals = farmAnimalsFor(animals);
     if (!profile) {
       return fail(400, { error: 'Pick at least one, or choose "Not sure yet".' });
     }
     const existing = listFields();
     db.transaction(() => {
-      for (const s of starterAreasFor(choices)) {
+      for (const s of starterAreasForAnswers(choices, animals)) {
         if (existing.some((f) => f.kind === s.kind && f.name === s.name)) continue;
         createField({ name: s.name, kind: s.kind, details: s.details ?? null });
       }
       setFarmProfile(profile);
+      if (farmAnimals) setFarmAnimals(farmAnimals);
       setOnboardingStatus('complete');
     });
     throw redirect(303, '/today');

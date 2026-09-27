@@ -26,6 +26,10 @@ export interface GettingStartedFacts {
   /** The owner chose to go without the planning assistant. */
   assistantSkipped?: boolean;
   hasPinnedCards: boolean | null;
+  /** The owner picked an animal tile on onboarding screen 2 (Phase 32B). */
+  animalsAnswered?: boolean;
+  /** Any animal or group was ever added, archived or not. */
+  hasAnimals?: boolean;
 }
 
 /** Per-Owner setting written when the owner skips the planning assistant. */
@@ -36,6 +40,7 @@ export type GettingStartedItemId =
   | 'area'
   | 'crop'
   | 'bed'
+  | 'animals'
   | 'equipment'
   | 'calibrate'
   | 'helper'
@@ -56,6 +61,7 @@ export const GETTING_STARTED_HREFS: Record<GettingStartedItemId, string> = {
   area: '/settings/farm/map',
   crop: '/plan',
   bed: '/settings/farm/map',
+  animals: '/animals/add',
   equipment: '/equipment',
   calibrate: '/calibrate',
   helper: '/settings/helpers',
@@ -108,6 +114,16 @@ export function gettingStartedItems(f: GettingStartedFacts): GettingStartedItem[
         'Design a garden bed',
         'Lay out a bed or two so each planting knows where it lives.',
         f.hasGardenBed
+      )
+    );
+  }
+  if (f.animalsAnswered) {
+    items.push(
+      item(
+        'animals',
+        'Add your animals',
+        'Your flock, herd or pets, and where each one lives.',
+        f.hasAnimals === true
       )
     );
   }

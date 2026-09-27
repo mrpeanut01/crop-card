@@ -90,4 +90,9 @@ describe('Phase 32 queue kinds', () => {
       expect(routed as string[]).not.toContain(kind);
     }
   });
+
+  it('routes animal-move once 32B wired it', () => {
+    expect(PHASE_32_RECORD_KINDS as readonly string[]).not.toContain('animal-move');
+    expect(ENDPOINT_BY_KIND['animal-move']).toBe('/api/animals/move');
+  });
 });

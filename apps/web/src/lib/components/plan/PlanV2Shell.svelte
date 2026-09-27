@@ -9,6 +9,7 @@
   import PlanLeftRail from './PlanLeftRail.svelte';
   import CardView from '$lib/components/cards/CardView.svelte';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
+  import { withHousing, type HousingByArea } from '$lib/farm/housedAnimals';
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
   import { isCropBearing, type AreaKind } from '$lib/farm/areaKinds';
   import {
@@ -73,6 +74,9 @@
     /** Areas, blocks and plantings for the Area and Block cards. Built
      *  from `fields` + `blocks` when the loader doesn't send one. */
     areaSnapshot?: FarmSnapshot | null;
+    /** Animals housed on each Area (Phase 32B). */
+    areaHousing?: HousingByArea;
+    petsLayout?: boolean;
     /** False for helpers: block and map edits are the owner's. */
     canEdit?: boolean;
   }
@@ -92,6 +96,8 @@
     onAddTask,
     geometryEditHref,
     areaSnapshot = null,
+    areaHousing = {},
+    petsLayout = false,
     canEdit = true
   }: Props = $props();
 
@@ -133,7 +139,11 @@
 
   const selectedBlock = $derived(blocks.find((b) => b.id === selectedBlockId));
   const railCards = $derived(planRailCards(snapshot, areas, blocks, $page.url.searchParams, prefs));
-  const areaCard = $derived(selectedArea ? planAreaCard(snapshot, selectedArea, prefs) : null);
+  const areaCard = $derived.by(() => {
+    if (!selectedArea) return null;
+    const card = planAreaCard(snapshot, selectedArea, prefs);
+    return card ? withHousing(card, areaHousing[selectedArea.id], { petsLayout }) : null;
+  });
   const cropDays = $derived.by<Record<string, number | undefined>>(() => {
     const out: Record<string, number | undefined> = {};
     for (const k of Object.keys(cropMeta)) out[k] = cropMeta[k].daysToMaturity;

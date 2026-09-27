@@ -157,6 +157,7 @@
     {online}
     {pendingCount}
     alerts={data.navAlerts}
+    animalsLabel={data.animalsNavLabel}
     {onSwitchOwner}
   />
 {/if}

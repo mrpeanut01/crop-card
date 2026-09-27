@@ -30,7 +30,7 @@ import { PLANT_COUNT_PROVENANCES, SPACING_PATTERNS } from './footprint';
 
 describe('area kinds', () => {
   it('splits into crop-bearing and other areas with no overlap', () => {
-    expect(AREA_KINDS).toHaveLength(10);
+    expect(AREA_KINDS).toHaveLength(11);
     expect(new Set(AREA_KINDS).size).toBe(AREA_KINDS.length);
     for (const k of CROP_AREA_KINDS) expect(isCropBearing(k)).toBe(true);
     for (const k of OTHER_AREA_KINDS) expect(isCropBearing(k)).toBe(false);
@@ -95,6 +95,7 @@ describe('area details', () => {
       ['orchard', { rowSpacingFt: 18, treeSpacingFt: 12 }],
       ['pasture', { use: 'both' }],
       ['barn', { washPack: true, coldStorage: false, chemicalStorage: true }],
+      ['coop_pen', { capacity: 24 }],
       ['water', { usedForIrrigation: true }],
       ['field', {}],
       ['boundary', {}]
@@ -103,6 +104,21 @@ describe('area details', () => {
       expect(validateAreaDetails(kind, details).ok, kind).toBe(true);
       expect(areaKindWithDetailsSchema.safeParse({ kind, details }).success, kind).toBe(true);
     }
+  });
+
+  it('takes a whole, positive coop capacity only', () => {
+    expect(validateAreaDetails('coop_pen', { capacity: 24 })).toEqual({
+      ok: true,
+      details: { capacity: 24 }
+    });
+    for (const capacity of [0, -3, 2.5, '24', 100_001]) {
+      expect(validateAreaDetails('coop_pen', { capacity }).ok, String(capacity)).toBe(false);
+    }
+    expect(validateAreaDetails('barn', { capacity: 10 }).ok).toBe(false);
+    expect(validateAreaDetails('pasture', { capacity: 10 }).ok).toBe(false);
+    expect(isCropBearing('coop_pen')).toBe(false);
+    expect(isDesignable('coop_pen')).toBe(false);
+    expect(blockKindsFor('coop_pen')).toEqual([]);
   });
 
   it('rejects details that belong to another kind', () => {

@@ -1,0 +1,16 @@
+{
+  "pluginId": "cat",
+  "displayName": "Cat",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Felis catus",
+  "groupNoun": "group",
+  "foodProducingDefault": false,
+  "products": [
+    "companion"
+  ],
+  "tile": {
+    "icon": "cat",
+    "label": "Cats"
+  }
+}

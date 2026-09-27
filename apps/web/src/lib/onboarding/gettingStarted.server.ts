@@ -8,7 +8,8 @@ import { getUserAiEnabled } from '$lib/server/aiTry';
 import { hasFarmLatLon } from '$lib/schedule/settings';
 import { getSetting } from '$lib/db/settings';
 import { ASSISTANT_SKIPPED_SETTING, type GettingStartedFacts } from './gettingStarted';
-import { getFarmProfile } from './state.server';
+import { getFarmAnimals, getFarmProfile } from './state.server';
+import { hasAnyAnimalRecord } from '$lib/db/animals';
 
 function onMap(a: { geometryGeojson?: string; widthFt?: number; lengthFt?: number }): boolean {
   return !!a.geometryGeojson || (a.widthFt != null && a.lengthFt != null);
@@ -45,6 +46,12 @@ export function loadGettingStartedFacts(input: {
     ),
     hasAiKey: getUserAiEnabled(input.userId),
     assistantSkipped: getSetting(ASSISTANT_SKIPPED_SETTING) === '1',
-    hasPinnedCards: null
+    hasPinnedCards: null,
+    ...animalFacts()
   };
+}
+
+function animalFacts(): Pick<GettingStartedFacts, 'animalsAnswered' | 'hasAnimals'> {
+  if (getFarmAnimals().length === 0) return { animalsAnswered: false, hasAnimals: false };
+  return { animalsAnswered: true, hasAnimals: hasAnyAnimalRecord() };
 }

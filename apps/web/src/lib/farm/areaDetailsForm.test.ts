@@ -44,6 +44,19 @@ describe('area detail form', () => {
     });
   });
 
+  it('round-trips a coop capacity and shows it with its unit', () => {
+    expect(draftFromDetails('coop_pen', { capacity: 24 })).toEqual({ capacity: 24 });
+    expect(detailsFromDraft('coop_pen', { capacity: '24' })).toEqual({
+      ok: true,
+      details: { capacity: 24 }
+    });
+    expect(detailsFromDraft('coop_pen', { capacity: null })).toEqual({ ok: true, details: null });
+    expect(detailsFromDraft('coop_pen', { capacity: '2.5' }).ok).toBe(false);
+    expect(detailsSummary('coop_pen', { capacity: 24 })).toEqual([
+      { label: 'Holds up to', value: '24 animals' }
+    ]);
+  });
+
   it('treats an empty form as no details', () => {
     expect(detailsFromDraft('barn', draftFromDetails('barn', null))).toEqual({
       ok: true,

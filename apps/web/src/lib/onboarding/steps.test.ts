@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { CROP_AREA_KINDS, validateAreaDetails } from '$lib/farm/areaKinds';
+import { CROP_AREA_KINDS, isCropBearing, validateAreaDetails } from '$lib/farm/areaKinds';
+import { isHousingAreaKind } from '$lib/animals/model';
 import { AREA_NAME_PLACEHOLDER } from '$lib/farm/kindStyle';
 import {
+  ANIMAL_CHOICES,
+  ANIMAL_OPTIONS,
+  farmAnimalsFor,
+  parseAnimalChoices,
+  profileForAnswers,
+  starterAreasForAnswers,
   GROWING_CHOICES,
   GROWING_OPTIONS,
   LEGACY_STEP_IDS,
@@ -58,6 +65,86 @@ describe('growing choices', () => {
         expect(starterAreasFor(choices)).toHaveLength(choices.length);
         expect(profileForChoices(choices) === null).toBe(choices.length === 0);
       })
+    );
+  });
+});
+
+describe('animal tiles', () => {
+  it('parses known animal choices in canonical order without duplicates', () => {
+    expect(parseAnimalChoices(['chickens', 'pets', 'chickens', 'cows', null])).toEqual([
+      'pets',
+      'chickens'
+    ]);
+    expect(parseAnimalChoices([])).toEqual([]);
+  });
+
+  it('lets an animals-only answer through, with the household reading for pets and hens', () => {
+    expect(profileForAnswers([], ['animals'])).toBe('farm');
+    expect(profileForAnswers([], ['pets'])).toBe('garden');
+    expect(profileForAnswers([], ['chickens'])).toBe('garden');
+    expect(profileForAnswers([], ['pets', 'chickens'])).toBe('garden');
+    expect(profileForAnswers([], ['animals', 'pets'])).toBe('farm');
+    expect(profileForAnswers([], [])).toBeNull();
+  });
+
+  it('keeps the growing answer, and adds the farm side for Animals', () => {
+    expect(profileForAnswers(['garden'], ['pets', 'chickens'])).toBe('garden');
+    expect(profileForAnswers(['garden'], ['animals'])).toBe('mixed');
+    expect(profileForAnswers(['fields'], ['pets'])).toBe('farm');
+    expect(profileForAnswers(['fields'], ['animals'])).toBe('farm');
+    expect(profileForAnswers(['garden', 'hay'], ['chickens'])).toBe('mixed');
+  });
+
+  it('stores every picked tile as the farm_animals answer', () => {
+    expect(farmAnimalsFor([])).toBeNull();
+    expect(farmAnimalsFor(['pets'])).toEqual(['pets']);
+    expect(farmAnimalsFor(['chickens', 'pets'])).toEqual(['pets', 'chickens']);
+    expect(farmAnimalsFor(['animals', 'pets', 'chickens'])).toEqual([
+      'animals',
+      'pets',
+      'chickens'
+    ]);
+  });
+
+  it('seeds a Barn for animals, a Coop for chickens and nothing for pets', () => {
+    expect(starterAreasForAnswers([], ['pets'])).toEqual([]);
+    expect(starterAreasForAnswers(['garden'], ['animals', 'pets', 'chickens'])).toEqual([
+      { name: 'Kitchen Garden', kind: 'garden' },
+      { name: 'Barn', kind: 'barn' },
+      { name: 'Chicken Coop', kind: 'coop_pen' }
+    ]);
+  });
+
+  it('animal starters can house animals, are not crop ground and validate', () => {
+    for (const o of ANIMAL_OPTIONS) {
+      if (!o.starter) continue;
+      expect(isHousingAreaKind(o.starter.kind)).toBe(true);
+      expect(isCropBearing(o.starter.kind)).toBe(false);
+      expect(validateAreaDetails(o.starter.kind, o.starter.details ?? null).ok).toBe(true);
+    }
+  });
+
+  it('copy never says livestock and uses no long dashes', () => {
+    for (const o of ANIMAL_OPTIONS) {
+      expect(`${o.title} ${o.blurb}`).not.toMatch(/livestock|[\u2013\u2014]/i);
+    }
+  });
+
+  it('any mix of tiles gives a profile exactly when something was picked', () => {
+    fc.assert(
+      fc.property(
+        fc.subarray([...GROWING_CHOICES]),
+        fc.subarray([...ANIMAL_CHOICES]),
+        (growing, animals) => {
+          const profile = profileForAnswers(growing, animals);
+          expect(profile === null).toBe(growing.length === 0 && animals.length === 0);
+          if (growing.length > 0 && animals.length === 0) {
+            expect(profile).toBe(profileForChoices(growing));
+          }
+          if (animals.includes('animals')) expect(profile).not.toBe('garden');
+          expect(farmAnimalsFor(animals) === null).toBe(animals.length === 0);
+        }
+      )
     );
   });
 });

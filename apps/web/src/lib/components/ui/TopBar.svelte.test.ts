@@ -56,3 +56,21 @@ describe('TopBar alerts + search', () => {
     expect(screen.getByRole('link', { name: 'Open Today →' }).getAttribute('href')).toBe('/today');
   });
 });
+
+describe('TopBar animals entry (Phase 32B)', () => {
+  it('is hidden for crop-only growers', () => {
+    const { container } = render(TopBar, { online: true, pendingCount: 0 });
+    expect(container.querySelector('a[href="/animals"]')).toBeNull();
+  });
+
+  it('uses the label the layout passes, such as "Pets & animals"', () => {
+    const { container } = render(TopBar, {
+      online: true,
+      pendingCount: 0,
+      animalsLabel: 'Pets & animals'
+    });
+    const links = container.querySelectorAll('a[href="/animals"]');
+    expect(links.length).toBeGreaterThan(0);
+    expect(links[0].textContent).toContain('Pets & animals');
+  });
+});

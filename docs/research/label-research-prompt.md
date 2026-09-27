@@ -130,7 +130,7 @@ Run `pnpm --filter @cropcard/web exec vitest run src/lib/plugins` before you com
 
 The grazing rule coming in sprint 32C blocks moving food animals onto, or cutting hay from, a pasture sprayed inside the label's grazing or haying interval. A pasture-labelled product with no interval data blocks food animals until the owner types the interval from the label. This task fills that data for about ten products.
 
-**Work list.** The seven products in `pastureAllowlist` in `apps/web/scripts/grazing-sources.json`: `banvel`, `chaparral-aminopyralid-metsulfuron`, `crossbow`, `duracor-aminopyralid-florpyrauxifen`, `grazonnext-hl`, `harmony-sg-thifensulfuron` and `pursuit`. Then check whether `2-4-d-amine`, `24d`, `stinger` and the glyphosate plugins name one label with pasture or hay uses. Skip the generic plugins unless the plugin clearly names a single registrant.
+**Work list.** The ten products in `pastureAllowlist` in `apps/web/scripts/grazing-sources.json`: `balan-benefin`, `banvel`, `chaparral-aminopyralid-metsulfuron`, `crossbow`, `dimilin-2l`, `duracor-aminopyralid-florpyrauxifen`, `grazonnext-hl`, `harmony-sg-thifensulfuron`, `pursuit` and `raptor-imazamox`. Then check whether `2-4-d-amine`, `24d`, `stinger` and the glyphosate plugins name one label with pasture or hay uses. Skip the generic plugins unless the plugin clearly names a single registrant.
 
 **Where values go.** Add a `grazingRestrictions` block to the plugin JSON (schema: `grazingRestrictionsSchema`). Fill only the fields the label states:
 

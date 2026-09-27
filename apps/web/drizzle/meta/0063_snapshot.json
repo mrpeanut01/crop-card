@@ -773,7 +773,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "animal_health_events_performed_by_id_users_id_fk": {
@@ -901,7 +901,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "animal_locations_moved_by_users_id_fk": {

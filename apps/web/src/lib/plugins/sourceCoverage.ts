@@ -133,11 +133,14 @@ export function cropFactPaths(c: CropPlugin): string[] {
 
 export type PesticidePlugin = HerbicidePlugin | InsecticidePlugin | FungicidePlugin;
 
-const PASTURE_WORDS = /\b(pasture|pastures|rangeland|grazing|grazed)\b/i;
+const PASTURE_WORDS =
+  /\b(pastures?|rangeland|grazing|grazed|hay|hayfields?|forages?|alfalfa|clovers?|timothy|orchard-?grass|fescue|sudangrass)\b/i;
 
 /** True when a pesticide's label crops include pasture, hay or forage: it
- *  claims safety on the forage family or a forage crop, or its text talks
- *  about pasture, rangeland or grazing. */
+ *  claims safety on the forage family or a forage crop, or its text names
+ *  pasture, rangeland, grazing, hay, forage or a forage crop such as
+ *  alfalfa or clover. A forage pest name ("alfalfa weevil") counts too, so
+ *  the gate errs toward asking. */
 export function isPastureLabelled(
   p: PesticidePlugin,
   cropFamilyOf: (cropPluginId: string) => string | undefined

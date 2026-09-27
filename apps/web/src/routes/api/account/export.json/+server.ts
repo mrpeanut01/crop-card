@@ -237,7 +237,7 @@ export const GET: RequestHandler = async (event) => {
       createdAt: new Date(e.createdAt).toISOString(),
       photoBytes: e.photoRef?.length ?? 0
     })),
-    ...recordSections(),
+    ...recordSections(user),
     apiTokens,
     relatedDownloads: {
       vdacsAuditPdf: '/api/records/export.vdacs.pdf',

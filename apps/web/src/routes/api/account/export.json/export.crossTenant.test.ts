@@ -3,14 +3,14 @@ import { randomUUID } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import { getTableName } from 'drizzle-orm';
 
-const m = vi.hoisted(() => ({ ownerId: '' }));
+const m = vi.hoisted(() => ({ ownerId: '', role: 'owner' }));
 
 vi.mock('$lib/server/auth', () => {
   const user = () => ({
     id: 'export-user',
     email: 'export@test.local',
     phone: null,
-    role: 'owner',
+    role: m.role,
     activeOwnerId: m.ownerId,
     isSuperadmin: false
   });
@@ -18,8 +18,8 @@ vi.mock('$lib/server/auth', () => {
 });
 
 import { db } from '$lib/db/client';
-import { owners, users } from '$lib/db/schema';
-import { runWithTenantAsync, runWithTenant } from '$lib/db/tenant';
+import { owners, taskTimeEntries, users } from '$lib/db/schema';
+import { runWithTenantAsync, runWithTenant, tenantValues } from '$lib/db/tenant';
 import { createField } from '$lib/db/fields';
 import { createBlock } from '$lib/db/blocks';
 import { createPlanned } from '$lib/db/crops';
@@ -99,9 +99,11 @@ function seed(label: string): Seeded {
 }
 
 async function exportFor(
-  ownerId: string
+  ownerId: string,
+  role = 'owner'
 ): Promise<{ text: string; json: Record<string, unknown> }> {
   m.ownerId = ownerId;
+  m.role = role;
   const res = await runWithTenantAsync(ownerId, async () =>
     GET({ locals: {}, url: new URL('http://localhost/api/account/export.json') } as never)
   );
@@ -179,4 +181,29 @@ describe('GET /api/account/export.json', () => {
       ]);
     }
   });
+
+  it.each(['helper', 'inspector'])(
+    'gives a %s their own time entries and no ledger',
+    async (role) => {
+      const farm = seed(`role-${role}`);
+      const mine = randomUUID();
+      runWithTenant(farm.ownerId, () =>
+        db
+          .insert(taskTimeEntries)
+          .values(tenantValues({ id: mine, userId: 'export-user', minutes: 45 }))
+          .run()
+      );
+
+      const { text, json } = await exportFor(farm.ownerId, role);
+      const operations = json.operations as Record<string, Array<{ id: string }> | undefined>;
+      expect(operations.ledgerEntries).toBeUndefined();
+      expect(text).not.toContain(farm.phase32.rowIds.ledger_entries);
+      expect(operations.taskTimeEntries?.map((r) => r.id)).toEqual([mine]);
+      expect(text).not.toContain(farm.phase32.rowIds.task_time_entries);
+
+      const owner = await exportFor(farm.ownerId, 'owner');
+      expect(owner.text).toContain(farm.phase32.rowIds.ledger_entries);
+      expect(owner.text).toContain(farm.phase32.rowIds.task_time_entries);
+    }
+  );
 });

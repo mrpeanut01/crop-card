@@ -180,6 +180,8 @@ interface OptimumBand {
   lowPpm: number;
   highPpm: number;
   source: keyof typeof SOIL_SOURCES;
+  /** The source's own words for the band when it does not call it optimum. */
+  labels?: Record<NutrientClass, string>;
 }
 
 /** Published optimum bands in ppm, by extraction method. A method or
@@ -189,7 +191,12 @@ export const OPTIMUM_BANDS: Partial<
 > = {
   'mehlich-1': {
     p: { lowPpm: 12 / LB_PER_ACRE_PER_PPM, highPpm: 35 / LB_PER_ACRE_PER_PPM, source: 'mehlich1' },
-    k: { lowPpm: 76 / LB_PER_ACRE_PER_PPM, highPpm: 175 / LB_PER_ACRE_PER_PPM, source: 'mehlich1' }
+    k: {
+      lowPpm: 76 / LB_PER_ACRE_PER_PPM,
+      highPpm: 175 / LB_PER_ACRE_PER_PPM,
+      source: 'mehlich1',
+      labels: { low: 'Below medium', optimum: 'Medium', high: 'Above medium' }
+    }
   },
   'mehlich-3': {
     p: { lowPpm: 50, highPpm: 100, source: 'mehlich3P' }
@@ -207,6 +214,15 @@ export function computedNutrientClass(
   if (ppm < band.lowPpm) return 'low';
   if (ppm > band.highPpm) return 'high';
   return 'optimum';
+}
+
+export function nutrientClassLabel(
+  nutrient: 'p' | 'k',
+  cls: NutrientClass,
+  method: ExtractionMethod | null | undefined
+): string {
+  const band = method ? OPTIMUM_BANDS[method]?.[nutrient] : undefined;
+  return band?.labels?.[cls] ?? NUTRIENT_CLASS_LABEL[cls];
 }
 
 export type RatingProvenance = 'manual' | 'fallback';
@@ -245,7 +261,10 @@ function readNutrient(
   return {
     ppm,
     lbPerAcre: toLbPerAcre(ppm),
-    label: computed ? NUTRIENT_CLASS_LABEL[computed] : null,
+    label:
+      computed && (nutrient === 'p' || nutrient === 'k')
+        ? nutrientClassLabel(nutrient, computed, method)
+        : null,
     provenance: computed ? 'fallback' : null,
     labRating: null,
     computed

@@ -2114,7 +2114,7 @@ export const animalLocations = tenantScoped(
       subjectId: text('subject_id').notNull(),
       fieldId: text('field_id')
         .notNull()
-        .references(() => fields.id),
+        .references(() => fields.id, { onDelete: 'cascade' }),
       fromMs: integer('from_ms', { mode: 'timestamp_ms' }).notNull(),
       toMs: integer('to_ms', { mode: 'timestamp_ms' }),
       movedBy: text('moved_by').references(() => users.id),
@@ -2157,7 +2157,7 @@ export const animalHealthEvents = tenantScoped(
       }).notNull(),
       productPluginId: text('product_plugin_id'),
       productName: text('product_name'),
-      stockItemId: text('stock_item_id').references(() => stockItems.id),
+      stockItemId: text('stock_item_id').references(() => stockItems.id, { onDelete: 'set null' }),
       lotNumber: text('lot_number'),
       dose: real('dose'),
       doseUnit: text('dose_unit'),

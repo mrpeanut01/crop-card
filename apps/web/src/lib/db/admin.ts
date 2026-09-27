@@ -394,6 +394,7 @@ export function deleteFieldCascade(id: string): DeleteSummary {
     }
   }
   unlinkMapFeaturesFromField(id);
+  removed.animal_locations = del(animalLocations, eq(animalLocations.fieldId, id));
   removed.fields = del(fields, eq(fields.id, id));
   return { removed };
 }
@@ -439,6 +440,10 @@ export function deleteStockItemCascade(id: string): DeleteSummary {
   db.update(fertilityApplications)
     .set({ stockItemId: null })
     .where(withTenant(fertilityApplications, eq(fertilityApplications.stockItemId, id)))
+    .run();
+  db.update(animalHealthEvents)
+    .set({ stockItemId: null })
+    .where(withTenant(animalHealthEvents, eq(animalHealthEvents.stockItemId, id)))
     .run();
   removed.stock_items = del(stockItems, eq(stockItems.id, id));
   return { removed };

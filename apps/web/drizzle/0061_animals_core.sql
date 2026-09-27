@@ -26,7 +26,7 @@ CREATE TABLE `animal_locations` (
 	`moved_by` text,
 	`client_record_id` text,
 	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
-	FOREIGN KEY (`field_id`) REFERENCES `fields`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`field_id`) REFERENCES `fields`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`moved_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint

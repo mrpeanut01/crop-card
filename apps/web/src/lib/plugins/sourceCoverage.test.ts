@@ -161,6 +161,14 @@ describe('pasture coverage', () => {
     expect(isPastureLabelled(herbicide({}), familyOf)).toBe(false);
     expect(isPastureLabelled(herbicide({ notes: 'For pasture and hay.' }), familyOf)).toBe(true);
     expect(
+      isPastureLabelled(herbicide({ notes: 'Standard tool for alfalfa and soybean.' }), familyOf)
+    ).toBe(true);
+    expect(
+      isPastureLabelled(herbicide({ notes: 'Labeled for lettuce, peanut, clover.' }), familyOf)
+    ).toBe(true);
+    expect(isPastureLabelled(herbicide({ notes: 'For hay fields.' }), familyOf)).toBe(true);
+    expect(isPastureLabelled(herbicide({ notes: 'Corn and soybean only.' }), familyOf)).toBe(false);
+    expect(
       isPastureLabelled(
         herbicide({ labelClaims: { safeForCropPluginIds: ['test-alfalfa'] } }),
         familyOf

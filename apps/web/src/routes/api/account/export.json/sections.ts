@@ -1,4 +1,4 @@
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { db } from '$lib/db/client';
 import {
   animalCarePlans,
@@ -61,11 +61,35 @@ function readGroup<G extends Record<string, TenantScopedTable>>(group: G): Secti
   return out;
 }
 
-export function recordSections(): { [K in keyof Groups]: Section<Groups[K]> } {
+export interface ExportViewer {
+  id: string;
+  role: string;
+}
+
+type Operations = Partial<Section<Groups['operations']>>;
+
+/** Owners get the whole farm. Anyone else gets their own time entries and
+ *  never the ledger (finance is owner-only). */
+function operationsFor(viewer: ExportViewer): Operations {
+  if (viewer.role === 'owner') return readGroup(RECORD_TABLE_GROUPS.operations);
+  return {
+    taskTimeEntries: db
+      .select()
+      .from(taskTimeEntries)
+      .where(withTenant(taskTimeEntries, eq(taskTimeEntries.userId, viewer.id)))
+      .all()
+  };
+}
+
+export function recordSections(viewer: ExportViewer): {
+  animals: Section<Groups['animals']>;
+  growing: Section<Groups['growing']>;
+  operations: Operations;
+} {
   return {
     animals: readGroup(RECORD_TABLE_GROUPS.animals),
     growing: readGroup(RECORD_TABLE_GROUPS.growing),
-    operations: readGroup(RECORD_TABLE_GROUPS.operations)
+    operations: operationsFor(viewer)
   };
 }
 

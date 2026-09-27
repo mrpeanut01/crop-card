@@ -145,6 +145,39 @@ describe('P and K class by extraction method', () => {
   });
 });
 
+describe('class labels follow the source', () => {
+  it('names Mehlich-1 potassium medium, as Virginia Tech does, never optimum', () => {
+    const at = (lb: number) =>
+      interpretSoilTest(
+        {
+          sampledAt: NOW,
+          potassiumPpm: lb,
+          extractionMethod: 'mehlich-1',
+          unitsBasis: 'lb-per-acre'
+        },
+        NOW
+      ).k.label;
+    expect(at(60)).toBe('Below medium');
+    expect(at(150)).toBe('Medium');
+    expect(at(200)).toBe('Above medium');
+    expect(SOIL_SOURCES.mehlich1.quote).toContain('medium level of potassium');
+  });
+
+  it('keeps optimum for Mehlich-1 phosphorus, which the source calls medium or optimum', () => {
+    const r = interpretSoilTest(
+      {
+        sampledAt: NOW,
+        phosphorusPpm: 30,
+        extractionMethod: 'mehlich-1',
+        unitsBasis: 'lb-per-acre'
+      },
+      NOW
+    );
+    expect(r.p.label).toBe('Optimum');
+    expect(SOIL_SOURCES.mehlich1.quote).toContain('medium or optimum');
+  });
+});
+
 describe('the lab rating wins', () => {
   it('shows the typed rating over the computed class and tags it manual', () => {
     const r = interpretSoilTest(

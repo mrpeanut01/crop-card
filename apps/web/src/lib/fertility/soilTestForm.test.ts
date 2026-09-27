@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import type { SoilTest } from '$lib/db/fertility';
+import { nCreditFromSoilTestLbPerAcre } from '$lib/plan/inputsPlan';
 import { buildSoilTestBody, sampledOnToMs, type SoilTestFormValues } from './soilTestForm';
 
 const NOW = Date.UTC(2026, 8, 27, 12);
@@ -13,6 +15,7 @@ function values(over: Partial<SoilTestFormValues> = {}): SoilTestFormValues {
     ph: 5.9,
     bufferPh: null,
     organicMatterPct: 2.4,
+    nitrate: null,
     nutrients: { p: 30, k: 150, ca: null, mg: 110 },
     ratings: { p: 'medium', k: '', ca: '', mg: 'high' },
     ...over
@@ -38,6 +41,29 @@ describe('buildSoilTestBody', () => {
         labRatings: { p: 'medium', mg: 'high' }
       }
     });
+  });
+
+  it('carries nitrate through to the Inputs Plan N credit', () => {
+    const ppm = buildSoilTestBody(values({ unitsBasis: 'ppm', nitrate: 20 }), NOW);
+    expect(ppm).toMatchObject({ ok: true, body: { nitratePpm: 20 } });
+    if (!ppm.ok) return;
+    const credit = nCreditFromSoilTestLbPerAcre(ppm.body as unknown as SoilTest);
+    expect(credit).toBe((20 - 8) * 4);
+
+    const lb = buildSoilTestBody(values({ nitrate: 40 }), NOW);
+    if (!lb.ok) throw new Error('expected ok');
+    expect(nCreditFromSoilTestLbPerAcre(lb.body as unknown as SoilTest)).toBe((20 - 8) * 4);
+
+    const onlyNitrate = buildSoilTestBody(
+      values({
+        ph: null,
+        organicMatterPct: null,
+        nitrate: 12,
+        nutrients: { p: null, k: null, ca: null, mg: null }
+      }),
+      NOW
+    );
+    expect(onlyNitrate.ok).toBe(true);
   });
 
   it('asks for a place, a date and at least one reading', () => {

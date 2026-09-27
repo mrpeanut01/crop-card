@@ -3,6 +3,10 @@
   "entries": {},
   "pastureAllowlist": [
     {
+      "pluginId": "balan-benefin",
+      "reason": "The plugin notes list alfalfa and clover, forage crops that are cut for hay or grazed, among the Balan sites. Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
       "pluginId": "banvel",
       "reason": "The plugin notes list pasture use, but the plugin does not name one Banvel label (see the EPA-number allowlist). Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
     },
@@ -13,6 +17,10 @@
     {
       "pluginId": "crossbow",
       "reason": "Crossbow (EPA 62719-260) is labelled for pasture and hay fence lines. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
+      "pluginId": "dimilin-2l",
+      "reason": "The plugin targets alfalfa weevil, so it is used on alfalfa, a forage crop that is cut for hay or grazed, but the plugin does not list the label's crops. Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
     },
     {
       "pluginId": "duracor-aminopyralid-florpyrauxifen",
@@ -29,6 +37,10 @@
     {
       "pluginId": "pursuit",
       "reason": "Pursuit (EPA 241-310) claims safety on alfalfa, a forage crop that is cut for hay or grazed. Grazing and haying intervals have not been read from the label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
+    },
+    {
+      "pluginId": "raptor-imazamox",
+      "reason": "The plugin notes call Raptor a standard tool for alfalfa, a forage crop that is cut for hay or grazed. Grazing and haying intervals have not been read from a label yet; docs/research/label-research-prompt.md Task 10 covers it and the values land in 32C."
     }
   ]
 }

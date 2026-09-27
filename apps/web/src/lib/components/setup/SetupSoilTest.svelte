@@ -53,6 +53,7 @@
   let ph = $state<number | null>(null);
   let bufferPh = $state<number | null>(null);
   let organicMatterPct = $state<number | null>(null);
+  let nitrate = $state<number | null>(null);
   let nutrients = $state<Record<RatedNutrient, number | null>>({
     p: null,
     k: null,
@@ -75,6 +76,7 @@
       ph,
       bufferPh,
       organicMatterPct,
+      nitrate,
       nutrients,
       ratings
     });
@@ -203,6 +205,13 @@
           </label>
         </div>
       {/each}
+      <label class="nitrate">
+        <span>
+          Nitrate (NO₃-N, {unitsBasis === 'ppm' ? 'ppm' : 'lb/A'})
+          <span class="optional">(optional)</span>
+        </span>
+        <input type="number" min="0" step="any" inputmode="decimal" bind:value={nitrate} />
+      </label>
     </fieldset>
 
     <label>
@@ -243,6 +252,7 @@
   }
   .pair label,
   .nutrient label,
+  .nitrate,
   .setup-soil > label:has(input) {
     display: flex;
     flex-direction: column;
@@ -250,7 +260,8 @@
     min-width: 0;
   }
   .pair label span,
-  .nutrient label span {
+  .nutrient label span,
+  .nitrate span {
     font-weight: 500;
   }
   input,

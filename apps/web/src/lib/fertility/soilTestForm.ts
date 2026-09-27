@@ -21,6 +21,8 @@ export interface SoilTestFormValues {
   ph: number | null;
   bufferPh: number | null;
   organicMatterPct: number | null;
+  /** Nitrate-nitrogen (NO3-N). Labs don't rate it, so it has no rating. */
+  nitrate: number | null;
   nutrients: Record<RatedNutrient, number | null>;
   ratings: Record<RatedNutrient, LabRating | ''>;
 }
@@ -66,6 +68,7 @@ export function buildSoilTestBody(v: SoilTestFormValues, now = Date.now()): Soil
   if (num(v.ph) !== undefined) body.ph = v.ph;
   if (num(v.bufferPh) !== undefined) body.bufferPh = v.bufferPh;
   if (num(v.organicMatterPct) !== undefined) body.organicMatterPct = v.organicMatterPct;
+  if (num(v.nitrate) !== undefined) body.nitratePpm = v.nitrate;
   const ratings: Partial<Record<RatedNutrient, LabRating>> = {};
   for (const n of Object.keys(NUTRIENT_FIELD) as RatedNutrient[]) {
     const value = num(v.nutrients[n]);
@@ -77,6 +80,7 @@ export function buildSoilTestBody(v: SoilTestFormValues, now = Date.now()): Soil
   const hasReading =
     body.ph !== undefined ||
     body.organicMatterPct !== undefined ||
+    body.nitratePpm !== undefined ||
     Object.values(NUTRIENT_FIELD).some((f) => body[f] !== undefined);
   if (!hasReading) {
     return { ok: false, error: 'Enter at least one number from the report, such as pH.' };

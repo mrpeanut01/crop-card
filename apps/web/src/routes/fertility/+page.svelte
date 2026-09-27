@@ -294,7 +294,8 @@
         <li>
           {fmt.instant(t.sampledAt, 'date')} — pH {t.ph?.toFixed(1) ?? '?'}, OM {t.organicMatterPct?.toFixed(
             1
-          ) ?? '?'}%, P {t.phosphorusPpm ?? '?'}, K {t.potassiumPpm ?? '?'}
+          ) ?? '?'}%, NO₃ {t.nitratePpm ?? '?'}, P {t.phosphorusPpm ?? '?'}, K {t.potassiumPpm ??
+            '?'}
           {t.unitsBasis === 'lb-per-acre' ? 'lb/A' : 'ppm'}
         </li>
       {/each}

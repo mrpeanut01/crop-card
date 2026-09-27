@@ -417,7 +417,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "animal_locations_moved_by_users_id_fk": {

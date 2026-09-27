@@ -111,6 +111,29 @@ describe('gettingStartedItems', () => {
   });
 });
 
+describe('Add your animals', () => {
+  it('shows only once the owner answered with an animal tile, and is required', () => {
+    expect(ids({ ...BLANK, profile: 'farm' })).not.toContain('animals');
+    const items = gettingStartedItems({ ...BLANK, profile: 'garden', animalsAnswered: true });
+    const animals = items.find((i) => i.id === 'animals')!;
+    expect(animals.title).toBe('Add your animals');
+    expect(animals.href).toBe('/animals/add');
+    expect(animals.optional).toBe(false);
+    expect(animals.done).toBe(false);
+    expect(animals.blurb).not.toMatch(/livestock|[\u2013\u2014]/i);
+  });
+
+  it('is done once any animal or group exists', () => {
+    const items = gettingStartedItems({
+      ...BLANK,
+      profile: 'farm',
+      animalsAnswered: true,
+      hasAnimals: true
+    });
+    expect(items.find((i) => i.id === 'animals')?.done).toBe(true);
+  });
+});
+
 describe('gettingStartedMode', () => {
   const s = (done: number, total: number, requiredDone: number, requiredTotal: number) => ({
     done,
@@ -140,7 +163,9 @@ describe('gettingStartedMode', () => {
     hasCalibratedSprayer: fc.boolean(),
     hasHelper: fc.boolean(),
     hasAiKey: fc.boolean(),
-    hasPinnedCards: fc.constantFrom(true, false, null)
+    hasPinnedCards: fc.constantFrom(true, false, null),
+    animalsAnswered: fc.boolean(),
+    hasAnimals: fc.boolean()
   }) as fc.Arbitrary<GettingStartedFacts>;
 
   it('summary counts are consistent for any facts', () => {

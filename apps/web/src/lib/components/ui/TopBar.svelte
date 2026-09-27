@@ -12,7 +12,8 @@
     Layers,
     Bell,
     Settings,
-    Ellipsis
+    Ellipsis,
+    PawPrint
   } from 'lucide-svelte';
   import IconButton from './IconButton.svelte';
   import Avatar from './Avatar.svelte';
@@ -48,6 +49,9 @@
     online: boolean;
     pendingCount: number | null;
     alerts?: NavAlert[];
+    /** "Animals" or "Pets & animals" once the farm keeps any (Phase 32B);
+     *  null hides the entry for crop-only growers. */
+    animalsLabel?: string | null;
     onSwitchOwner?: (ownerId: string) => void | Promise<void>;
   }
 
@@ -58,6 +62,7 @@
     online,
     pendingCount,
     alerts = [],
+    animalsLabel = null,
     onSwitchOwner
   }: Props = $props();
 
@@ -87,16 +92,17 @@
   // Sprint 9 / Phase 27E: legacy /stock, /settings/plugins, /settings/sprayers
   // now 308-redirect to /inventory; the transitional active-state branch
   // below is kept short-term so a 308 still lights up the Inventory chip.
-  const items: Array<{ href: string; label: string; icon: LucideIcon }> = [
+  const items: Array<{ href: string; label: string; icon: LucideIcon }> = $derived([
     { href: '/today', label: 'Today', icon: Sun },
     { href: '/plan', label: 'Plan', icon: Sprout },
     { href: '/spray', label: 'Spray', icon: SprayCan },
     { href: '/scout', label: 'Scout', icon: Eye },
     { href: '/harvest', label: 'Harvest', icon: Wheat },
+    ...(animalsLabel ? [{ href: '/animals', label: animalsLabel, icon: PawPrint }] : []),
     { href: '/inventory', label: 'Inventory', icon: Box },
     { href: '/records', label: 'Records', icon: FileText },
     { href: '/cards', label: 'Cards', icon: Layers }
-  ];
+  ]);
 
   function isActive(href: string): boolean {
     const path = page.url.pathname;

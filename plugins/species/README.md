@@ -2,10 +2,11 @@
 
 One JSON file per animal species (chicken, goat, dog and so on). Each file is validated with `speciesPluginSchema` in `packages/plugin-validation/src/schemas.ts`; the author-facing JSON Schema is `schemas/species.schema.json`. Files here are loaded by their own registry pass (`apps/web/src/lib/plugins/registryDataKinds.ts`), not by the crop and pesticide library.
 
-This folder is empty on purpose. Species plugins arrive in sprint 32B.
+The ten starter species shipped in sprint 32B: chicken, duck, goat, sheep, cattle, pig, horse, rabbit, dog and cat. There is no "Other" species, because every 32C kernel rule keys on the species. Requests for more species (turkey, goose, alpaca, bees) are logged as follow-ups. If an "Other" is ever added, it defaults `foodProducingDefault` to `true` and carries no care defaults. Helpers that read these files live in `apps/web/src/lib/plugins/species.ts`.
 
 Rules:
 
 - Data only. No scripts, no expressions.
 - `foodProducingDefault` and every care `intervalDays` need a quoted source in `apps/web/scripts/species-sources.json`, keyed by pluginId and field path. A value that cannot be sourced is left out.
-- Names, product types, the group noun and the tile icon need no source.
+- Names, the scientific name, product types, the group noun and the tile icon need no source.
+- Care defaults are read in 32D and ship with that sprint, each `intervalDays` sourced.

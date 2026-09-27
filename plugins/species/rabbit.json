@@ -1,0 +1,18 @@
+{
+  "pluginId": "rabbit",
+  "displayName": "Rabbit",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Oryctolagus cuniculus",
+  "groupNoun": "colony",
+  "foodProducingDefault": true,
+  "products": [
+    "meat",
+    "fiber",
+    "companion"
+  ],
+  "tile": {
+    "icon": "rabbit",
+    "label": "Rabbits"
+  }
+}

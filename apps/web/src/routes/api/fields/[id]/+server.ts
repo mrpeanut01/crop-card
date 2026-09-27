@@ -6,10 +6,12 @@
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { deleteFieldCascade } from '$lib/db/admin';
+import { housedSubjectCount } from '$lib/db/animalLocations';
 import { getField, updateField } from '$lib/db/fields';
 import { withSketchAcres } from '$lib/farm/sketch';
 import { fieldPatchSchema } from '$lib/farm/apiSchemas';
 import { isDesignable, validateAreaDetails } from '$lib/farm/areaKinds';
+import { isHousingAreaKind } from '$lib/animals/model';
 import { bedsPastAreaEdge } from '$lib/server/garden/bedLayout';
 import { requireOwner } from '$lib/server/auth';
 
@@ -39,6 +41,20 @@ export const PATCH: RequestHandler = async (event) => {
     return json({ error: 'invalid request', issues: parsed.error.issues }, { status: 400 });
   }
   const nextKind = parsed.data.kind ?? existing.kind;
+  if (
+    nextKind !== existing.kind &&
+    !isHousingAreaKind(nextKind) &&
+    housedSubjectCount(existing.id) > 0
+  ) {
+    return json(
+      {
+        error:
+          'Animals live on this Area, and they cannot live on a natural area, water or a boundary. Move them first.',
+        code: 'AREA_HAS_ANIMALS'
+      },
+      { status: 409 }
+    );
+  }
   const reshapes =
     parsed.data.widthFt !== undefined ||
     parsed.data.lengthFt !== undefined ||
@@ -74,5 +90,14 @@ export const DELETE: RequestHandler = (event) => {
   if (!event.params.id) throw error(400, 'id required');
   requireOwner(event);
   if (!getField(event.params.id)) throw error(404, 'field not found');
+  if (housedSubjectCount(event.params.id) > 0) {
+    return json(
+      {
+        error: 'Animals live on this Area. Move them somewhere else before deleting it.',
+        code: 'AREA_HAS_ANIMALS'
+      },
+      { status: 409 }
+    );
+  }
   return json(deleteFieldCascade(event.params.id));
 };

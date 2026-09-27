@@ -25,6 +25,7 @@
   let geoError = $state<string | null>(null);
 
   let picked = $state<string[]>([]);
+  let pickedAnimals = $state<string[]>([]);
 
   function setPoint(la: number, lo: number, label: string | null) {
     lat = Number(la.toFixed(5));
@@ -291,11 +292,32 @@
           </label>
         {/each}
       </fieldset>
+      {#if data.animalOptions?.length}
+        <fieldset class="choices animals" aria-describedby="animals-note">
+          <legend class="choices-legend serif">Any animals?</legend>
+          <p class="choices-note" id="animals-note">
+            Pick these too if they apply. Chickens get a coop and other animals get a barn. Pets
+            need nothing set up.
+          </p>
+          {#each data.animalOptions as o (o.id)}
+            <label class="choice" class:on={pickedAnimals.includes(o.id)}>
+              <input type="checkbox" name="animals" value={o.id} bind:group={pickedAnimals} />
+              <span class="choice-title serif">{o.title}</span>
+              <span class="choice-blurb">{o.blurb}</span>
+              <span class="tick" aria-hidden="true"><Check size={16} /></span>
+            </label>
+          {/each}
+        </fieldset>
+      {/if}
       <div class="actions">
         <button class="link" type="submit" name="skip" value="1" disabled={submitting}>
           Not sure yet
         </button>
-        <button class="primary" type="submit" disabled={picked.length === 0 || submitting}>
+        <button
+          class="primary"
+          type="submit"
+          disabled={(picked.length === 0 && pickedAnimals.length === 0) || submitting}
+        >
           Take me to Today <ArrowRight size={15} aria-hidden="true" />
         </button>
       </div>
@@ -517,6 +539,23 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+  .choices.animals {
+    margin-top: 8px;
+  }
+  .choices-legend {
+    grid-column: 1 / -1;
+    padding: 0;
+    margin: 0 0 4px;
+    font-size: 20px;
+    color: var(--color-forest-deep);
+  }
+  .choices-note {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--color-ink-soft);
+    font-size: 14px;
+    line-height: 1.5;
   }
   .choice {
     position: relative;

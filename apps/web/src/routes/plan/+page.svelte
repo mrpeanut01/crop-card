@@ -1933,6 +1933,8 @@
   farmLabel={data.fields.length === 1 ? data.fields[0].name : undefined}
   fields={data.fields}
   areaSnapshot={data.areaSnapshot}
+  areaHousing={data.areaHousing}
+  petsLayout={data.petsLayout}
   cropMeta={Object.fromEntries(
     data.cropCatalog.map((c) => [
       c.pluginId,

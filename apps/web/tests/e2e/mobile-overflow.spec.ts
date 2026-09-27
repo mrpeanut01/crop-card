@@ -7,6 +7,7 @@ const ROUTES = [
   '/plan/farm',
   '/spray/fungicide',
   '/inventory',
+  '/animals',
   '/settings/about',
   '/settings/billing',
   '/settings/ai',

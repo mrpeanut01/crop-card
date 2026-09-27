@@ -39,7 +39,7 @@ const grazing = readJson<{ entries: SourceMap; pastureAllowlist: PastureAllowlis
   'grazing-sources.json',
   { entries: {}, pastureAllowlist: [] }
 );
-// 32B adds species-sources.json; until then any species number is unsourced.
+// Species facts (32B): foodProducingDefault and every care intervalDays.
 const speciesSources = readJson<{ entries: SourceMap }>('species-sources.json', {
   entries: {}
 }).entries;

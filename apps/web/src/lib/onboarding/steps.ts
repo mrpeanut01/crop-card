@@ -7,7 +7,7 @@
  */
 
 import type { AreaDetails, AreaKind } from '$lib/farm/areaKinds';
-import type { FarmProfile } from './profile';
+import { FARM_ANIMAL_CHOICES, type FarmAnimalChoice, type FarmProfile } from './profile';
 
 export type OnboardingScreen = 'farm' | 'growing';
 
@@ -86,6 +86,84 @@ export function profileForChoices(choices: readonly GrowingChoice[]): FarmProfil
 
 export function starterAreasFor(choices: readonly GrowingChoice[]): StarterArea[] {
   return GROWING_OPTIONS.filter((o) => choices.includes(o.id)).map((o) => ({ ...o.starter }));
+}
+
+// ─── Animal tiles (Phase 32B) ────────────────────────────────────────────
+
+export const ANIMAL_CHOICES = FARM_ANIMAL_CHOICES;
+export type AnimalChoice = FarmAnimalChoice;
+
+export interface AnimalOption {
+  id: AnimalChoice;
+  title: string;
+  blurb: string;
+  /** Pets usually live in the house, so they get no starter Area. */
+  starter: StarterArea | null;
+}
+
+export const ANIMAL_OPTIONS: readonly AnimalOption[] = [
+  {
+    id: 'animals',
+    title: 'Animals',
+    blurb: 'Sheep, goats, cattle, pigs or horses.',
+    starter: { name: 'Barn', kind: 'barn' }
+  },
+  {
+    id: 'pets',
+    title: 'Pets',
+    blurb: 'Dogs, cats, rabbits and other companions.',
+    starter: null
+  },
+  {
+    id: 'chickens',
+    title: 'Backyard chickens',
+    blurb: 'A few hens or ducks for eggs.',
+    starter: { name: 'Chicken Coop', kind: 'coop_pen' }
+  }
+];
+
+export function isAnimalChoice(v: unknown): v is AnimalChoice {
+  return typeof v === 'string' && (ANIMAL_CHOICES as readonly string[]).includes(v);
+}
+
+export function parseAnimalChoices(raw: readonly unknown[]): AnimalChoice[] {
+  const picked = new Set(raw.filter(isAnimalChoice));
+  return ANIMAL_CHOICES.filter((c) => picked.has(c));
+}
+
+/** The `farm_animals` answer, or null when no animal tile was picked. */
+export function farmAnimalsFor(choices: readonly AnimalChoice[]): AnimalChoice[] | null {
+  const picked = parseAnimalChoices(choices);
+  return picked.length > 0 ? picked : null;
+}
+
+/**
+ * The profile for both answers. Growing tiles decide it as before. Animals
+ * add the farm side, so a garden with animals is mixed. With no growing
+ * tile, Animals alone reads as a farm and Pets or Backyard chickens alone
+ * read as a household, which keeps compliance chrome folded for them.
+ */
+export function profileForAnswers(
+  growing: readonly GrowingChoice[],
+  animals: readonly AnimalChoice[]
+): FarmProfile | null {
+  const fromGrowing = profileForChoices(growing);
+  const farmAnimals = animals.includes('animals');
+  if (fromGrowing === 'garden' && farmAnimals) return 'mixed';
+  if (fromGrowing) return fromGrowing;
+  if (farmAnimals) return 'farm';
+  if (animals.length > 0) return 'garden';
+  return null;
+}
+
+export function starterAreasForAnswers(
+  growing: readonly GrowingChoice[],
+  animals: readonly AnimalChoice[]
+): StarterArea[] {
+  const fromAnimals = ANIMAL_OPTIONS.filter((o) => animals.includes(o.id) && o.starter).map(
+    (o) => ({ ...o.starter! })
+  );
+  return [...starterAreasFor(growing), ...fromAnimals];
 }
 
 export type OnboardingRoute =

@@ -542,6 +542,7 @@ export const fields = tenantScoped(
           'orchard',
           'pasture',
           'barn',
+          'coop_pen',
           'residence',
           'natural_area',
           'water',
@@ -2027,6 +2028,10 @@ export const animalGroups = tenantScoped(
       purpose: text('purpose', { enum: ANIMAL_PURPOSES }).notNull().default('production'),
       /** Unnamed members; tagged individuals are counted from `animals`. */
       headCount: integer('head_count'),
+      /** Seeded from the species plugin; only the owner changes it (audited in
+       *  `animal_flag_changes`). The kernel reads this OR any active member's
+       *  flag, whichever is stricter. */
+      foodProducing: integer('food_producing', { mode: 'boolean' }).notNull().default(true),
       housingFieldId: text('housing_field_id').references(() => fields.id, {
         onDelete: 'set null'
       }),
@@ -2118,6 +2123,13 @@ export const animalLocations = tenantScoped(
       fromMs: integer('from_ms', { mode: 'timestamp_ms' }).notNull(),
       toMs: integer('to_ms', { mode: 'timestamp_ms' }),
       movedBy: text('moved_by').references(() => users.id),
+      /** The group this stay began by leaving (an individual taken out of a
+       *  flock, or a group split off another). */
+      fromGroupId: text('from_group_id').references(() => animalGroups.id, {
+        onDelete: 'set null'
+      }),
+      /** The group the subject joined when this stay ended. */
+      toGroupId: text('to_group_id').references(() => animalGroups.id, { onDelete: 'set null' }),
       clientRecordId: text('client_record_id'),
       createdAt: integer('created_at', { mode: 'timestamp_ms' })
         .notNull()

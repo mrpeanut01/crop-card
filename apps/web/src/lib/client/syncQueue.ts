@@ -84,7 +84,8 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   'hay-cutting': '/api/hay/cuttings',
   scout: '/api/scout/record',
   task: '/api/tasks/close',
-  journal: '/api/journal/record'
+  journal: '/api/journal/record',
+  'animal-move': '/api/animals/move'
 };
 
 /** Rows written before the v3 Dexie upgrade lack `kind`; they were all
@@ -179,8 +180,13 @@ export function withOccurredAt(kind: PendingRecordKind, payload: unknown, now: n
  * payload when present (herbicide/insecticide/etc. carry it) so the queue
  * UI can show a sensible timestamp.
  */
-export async function enqueueRecord(kind: PendingRecordKind, raw: unknown): Promise<string> {
-  const id = uuid();
+/** `id` becomes the replay's client record id. Pass the one an online
+ *  attempt already sent, so a replay after a lost response is a duplicate. */
+export async function enqueueRecord(
+  kind: PendingRecordKind,
+  raw: unknown,
+  id: string = uuid()
+): Promise<string> {
   const payload = withOccurredAt(kind, raw, Date.now());
   const ownerId = currentOwnerId() ?? UNASSIGNED_OWNER_ID;
   await db().pendingSprayRecords.put({

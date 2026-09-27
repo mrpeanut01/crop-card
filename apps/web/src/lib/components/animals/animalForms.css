@@ -1,0 +1,169 @@
+/* Shared field styles for the animal forms. Every control is at least
+   48px tall so it works with gloves. */
+.af-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.af-label,
+.af-legend {
+  font-weight: 600;
+  font-size: var(--font-size-body);
+  color: var(--color-ink);
+}
+.af-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-2);
+  min-width: 0;
+}
+.af-legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+}
+.af-input {
+  min-height: 48px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  background: var(--color-paper);
+  font: inherit;
+  font-size: 16px;
+  color: var(--color-ink);
+}
+textarea.af-input {
+  padding: var(--space-2) var(--space-3);
+  min-height: 72px;
+}
+.af-help {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-ink-soft);
+}
+.af-optional {
+  font-weight: 400;
+  color: var(--color-ink-muted);
+}
+.af-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-2);
+}
+.af-row > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 500;
+  min-width: 0;
+}
+.af-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  font-weight: 500;
+}
+.af-check input {
+  width: 22px;
+  height: 22px;
+}
+.af-primary,
+.af-ghost,
+.af-danger {
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: var(--radius-input);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.af-primary {
+  background: var(--color-forest);
+  color: var(--color-cream);
+}
+.af-ghost {
+  background: var(--color-paper);
+  color: var(--color-forest-deep);
+  border-color: var(--color-divider);
+}
+.af-danger {
+  background: var(--color-paper);
+  color: var(--color-rust);
+  border-color: var(--color-rust);
+}
+.af-primary:disabled,
+.af-ghost:disabled,
+.af-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.af-error {
+  margin: 0;
+  color: var(--color-rust);
+}
+.af-note {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  background: var(--pill-wheat-bg);
+  color: var(--color-ink);
+}
+.af-ok {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  background: var(--pill-forest-bg);
+  color: var(--color-ink);
+}
+.af-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-2);
+}
+.af-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: var(--space-2);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-paper);
+  cursor: pointer;
+  font-weight: 600;
+  text-align: center;
+  color: var(--color-ink);
+}
+.af-tile input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.af-tile:focus-within {
+  box-shadow: var(--focus-ring);
+}
+.af-tile.on {
+  border-color: var(--color-forest);
+  background: var(--pill-forest-bg);
+}
+.af-tile-hint {
+  font-size: var(--font-size-caption);
+  font-weight: 400;
+  color: var(--color-ink-muted);
+}
+.af-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}

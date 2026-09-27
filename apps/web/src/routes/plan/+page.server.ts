@@ -62,6 +62,7 @@ import {
 } from '$lib/db/cropEquipment';
 import { listEquipment, type EquipmentWithState } from '$lib/db/equipment';
 import { listFields, type FieldWithBlocks } from '$lib/db/fields';
+import { loadAreaHousing } from '$lib/server/areaHousing';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
 import { listHarvestEvents } from '$lib/db/harvestEvents';
 import { listStockItems, type StockItemWithBalance } from '$lib/db/stock';
@@ -151,6 +152,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const fields = listFields();
   const isFirstRun = blocks.length === 0 && fields.length === 0;
   const canEdit = locals.user?.role === 'owner';
+  const { housing: areaHousing, petsLayout } = await loadAreaHousing(fields);
 
   // Common (Overview / Crops / Equipment / Stock all need crop catalog).
   const registry = await getRegistry();
@@ -225,6 +227,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     setupAreas: canEdit ? setupAreas() : [],
     focusAreaId: url.searchParams.get('area'),
     areaSnapshot: buildMapSnapshot({ fields, blocks }),
+    areaHousing,
+    petsLayout,
     cropCatalog,
     plantingGuides,
     showFieldControls: fields.length > 1,

@@ -53,6 +53,10 @@ import * as taxonomyRepo from './taxonomy';
 import * as pluginOverridesRepo from './pluginOverrides';
 import * as clientRecordsRepo from './clientRecords';
 import * as plantingJournalRepo from './plantingJournal';
+import * as animalsRepo from './animals';
+import * as animalGroupsRepo from './animalGroups';
+import * as animalLocationsRepo from './animalLocations';
+import * as animalStatusRepo from './animalStatus';
 import {
   PHASE_32_TABLES,
   listPhase32Ids,
@@ -960,6 +964,141 @@ describe('cross-tenant isolation', () => {
     );
   });
 
+  it("animal repos never read, count, move or change another Owner's animals", () => {
+    const seed = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const field = fieldsRepo.createField({ name: `${ownerId}-coop`, kind: 'barn' });
+        const group = animalGroupsRepo.insertAnimalGroup({
+          name: `${ownerId}-layers`,
+          speciesId: 'chicken',
+          purpose: 'production',
+          headCount: 6,
+          foodProducing: true,
+          housingFieldId: field.id
+        });
+        const stay = animalLocationsRepo.insertStay({
+          subject: { subjectType: 'group', subjectId: group.id },
+          fieldId: field.id,
+          atMs: Date.now() - 60_000,
+          movedBy: null
+        });
+        const hen = animalsRepo.insertAnimal({
+          speciesId: 'chicken',
+          groupId: group.id,
+          name: `${ownerId}-hen`,
+          tag: 'X1',
+          purpose: 'production',
+          foodProducing: true,
+          housingFieldId: field.id
+        });
+        animalsRepo.setAnimalPhoto(hen.id, 'data:image/jpeg;base64,/9j/');
+        const flag = animalsRepo.setAnimalFlag(hen.id, 'food_producing', false, 'pet', null)!;
+        const event = animalStatusRepo.insertStatusEvent({
+          subjectType: 'group',
+          subjectId: group.id,
+          status: 'died',
+          occurredAt: Date.now(),
+          headCountDelta: -1,
+          recordedById: null
+        });
+        if (!stay.ok) throw new Error('seed stay');
+        return {
+          fieldId: field.id,
+          groupId: group.id,
+          henId: hen.id,
+          stayId: stay.location.id,
+          eventId: event.id,
+          flagId: flag.id
+        };
+      });
+    const a = seed(OWNER_A);
+    const b = seed(OWNER_B);
+    fc.assert(
+      fc.property(
+        fc.constantFrom([OWNER_A, a, b] as const, [OWNER_B, b, a] as const),
+        ([me, mine, theirs]) =>
+          runWithTenant(me, () => {
+            const ids = (rows: Array<{ id: string }>) => rows.map((r) => r.id);
+            expect(ids(animalsRepo.listAnimals({ status: 'all' }))).toContain(mine.henId);
+            expect(ids(animalsRepo.listAnimals({ status: 'all' }))).not.toContain(theirs.henId);
+            expect(animalsRepo.getAnimal(theirs.henId)).toBeUndefined();
+            expect(animalsRepo.hasAnyAnimalRecord()).toBe(true);
+            expect(animalsRepo.getAnimalPhoto(theirs.henId)).toBeNull();
+            expect(animalsRepo.listGroupMembers(theirs.groupId)).toEqual([]);
+            expect(animalsRepo.listFlagChanges('animal', theirs.henId)).toEqual([]);
+            expect(ids(animalsRepo.findTagConflicts('X1'))).toContain(mine.henId);
+            expect(ids(animalsRepo.findTagConflicts('X1'))).not.toContain(theirs.henId);
+            expect(
+              animalsRepo.hasRecords(animalsRepo.subjectRecordCounts('group', theirs.groupId))
+            ).toBe(false);
+            expect(animalsRepo.updateAnimal(theirs.henId, { name: 'stolen' })).toBeUndefined();
+            expect(animalsRepo.setAnimalPhoto(theirs.henId, null)).toBe(false);
+            expect(
+              animalsRepo.setAnimalFlag(theirs.henId, 'food_producing', true, 'x', null)
+            ).toBeNull();
+            expect(animalsRepo.deleteAnimalIfEmpty(theirs.henId)).toBe('not-found');
+
+            expect(ids(animalGroupsRepo.listAnimalGroups({ status: 'all' }))).toContain(
+              mine.groupId
+            );
+            expect(ids(animalGroupsRepo.listAnimalGroups({ status: 'all' }))).not.toContain(
+              theirs.groupId
+            );
+            expect(animalGroupsRepo.getAnimalGroup(theirs.groupId)).toBeUndefined();
+            expect(animalGroupsRepo.getAnimalGroupSummary(theirs.groupId)).toBeUndefined();
+            expect(animalGroupsRepo.activeMemberCount(theirs.groupId)).toBe(0);
+            expect(animalGroupsRepo.groupMemberRowCount(theirs.groupId)).toBe(0);
+            expect(
+              animalGroupsRepo.updateAnimalGroup(theirs.groupId, { name: 'x' })
+            ).toBeUndefined();
+            expect(
+              animalGroupsRepo.setGroupFoodProducing(theirs.groupId, false, 'x', null)
+            ).toBeNull();
+            expect(animalGroupsRepo.deleteGroupIfEmpty(theirs.groupId)).toBe('not-found');
+
+            expect(animalLocationsRepo.listLocationsForSubject('group', theirs.groupId)).toEqual(
+              []
+            );
+            expect(animalLocationsRepo.getLocation(theirs.stayId)).toBeUndefined();
+            expect(animalLocationsRepo.listLocationsOnField(theirs.fieldId)).toEqual([]);
+            expect(animalLocationsRepo.housedOnField(theirs.fieldId).total).toBe(0);
+            expect(animalLocationsRepo.housedSubjectCount(theirs.fieldId)).toBe(0);
+            expect(animalLocationsRepo.deleteLatestStay(theirs.stayId)).toEqual({
+              ok: false,
+              reason: 'not-found'
+            });
+            expect(
+              animalLocationsRepo.endStayAt(
+                { subjectType: 'group', subjectId: theirs.groupId },
+                Date.now()
+              )
+            ).toBeNull();
+            expect(ids(animalLocationsRepo.listLocationsOnField(mine.fieldId))).toEqual([
+              mine.stayId
+            ]);
+            expect(animalLocationsRepo.housedOnField(mine.fieldId).total).toBe(7);
+
+            expect(animalStatusRepo.listStatusEvents('group', theirs.groupId)).toEqual([]);
+            expect(animalStatusRepo.getStatusEvent(theirs.eventId)).toBeUndefined();
+            expect(animalStatusRepo.deleteStatusEvent(theirs.eventId)).toBe(false);
+            expect(ids(animalStatusRepo.listStatusEvents('group', mine.groupId))).toEqual([
+              mine.eventId
+            ]);
+          })
+      ),
+      { numRuns: 8 }
+    );
+    expect(runWithTenant(OWNER_B, () => animalsRepo.getAnimal(b.henId)?.name)).toBe(
+      `${OWNER_B}-hen`
+    );
+    expect(
+      runWithTenant(OWNER_A, () => animalLocationsRepo.getLocation(a.stayId)?.toMs)
+    ).toBeNull();
+    expect(
+      runWithTenant('cross-tenant-test-owner-no-animals', () => animalsRepo.hasAnyAnimalRecord())
+    ).toBe(false);
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -989,7 +1128,11 @@ describe('cross-tenant isolation', () => {
       pushSubscriptionsRepo,
       emailAlertConsentsRepo,
       pluginOverridesRepo,
-      plantingJournalRepo
+      plantingJournalRepo,
+      animalsRepo,
+      animalGroupsRepo,
+      animalLocationsRepo,
+      animalStatusRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

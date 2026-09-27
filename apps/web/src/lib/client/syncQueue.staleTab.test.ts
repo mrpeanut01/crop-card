@@ -23,7 +23,8 @@ const KINDS: PendingRecordKind[] = [
   'harvest',
   'hay-cutting',
   'scout',
-  'journal'
+  'journal',
+  'animal-move'
 ];
 
 interface FakeServer {

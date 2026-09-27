@@ -1,0 +1,17 @@
+{
+  "pluginId": "chicken",
+  "displayName": "Chicken",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Gallus gallus domesticus",
+  "groupNoun": "flock",
+  "foodProducingDefault": true,
+  "products": [
+    "eggs",
+    "meat"
+  ],
+  "tile": {
+    "icon": "egg",
+    "label": "Chickens"
+  }
+}

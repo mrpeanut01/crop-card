@@ -1,6 +1,6 @@
 # Phase 32 plan: animals, growing workflow and farm operations
 
-Status: 32A shipped 2026-09-27 (schema, plugin contracts, cleanup and soil tests; see the Phase 32 bullet in CLAUDE.md). 32B to 32F proposed. Sources: four research reports (livestock and home pets; growing workflow gaps; farm operations; records, compliance and reach) and three independent judge rulings. The Decisions section records every ruling and its vote.
+Status: 32A shipped 2026-09-27 (schema, plugin contracts, cleanup and soil tests). 32B shipped 2026-09-27 (animals and pets core; its panel rulings are under "32B rulings"). See the Phase 32 bullet in CLAUDE.md. 32C to 32F proposed. Sources: four research reports (livestock and home pets; growing workflow gaps; farm operations; records, compliance and reach) and three independent judge rulings. The Decisions section records every ruling and its vote.
 
 ## Why this phase
 
@@ -35,7 +35,7 @@ Two of the three judges wanted every Phase 32 table to land in one PR before fea
 | 0066 | `irrigation`          | `irrigation_events`, `rain_gauge_readings`                                                                                                                                                                                                    |
 | 0067 | `task_assignees_time` | `tasks.assignee_user_id`, `tasks.assigned_at`, index `(owner_id, assignee_user_id, scheduled_for)`, `task_time_entries`                                                                                                                       |
 | 0068 | `ledger`              | `ledger_entries` with optional `crop_id`, `block_id`, `field_id`, `animal_id`, `animal_group_id`, `stock_lot_id`, `harvest_event_id` and a free-text `enterprise`                                                                             |
-| 0069 | reserved              | `email_alert_consents.category` gains `weekly-digest`, only if 0058 declared a SQL CHECK. If it is a plain TEXT column, the number stays unused.                                                                                              |
+| 0069 | `animals_32b`         | Used by 32B, since 0058 has no SQL CHECK: `animal_groups.food_producing` (B-04) and `animal_locations.from_group_id` / `to_group_id` (B-08), both foreign keys `ON DELETE set null`.                                                          |
 
 Confirmed in the repo: `stock_items.category` and `tasks.category` are drizzle TEXT enums with no SQL CHECK, so widening them is a TypeScript-only change. Adding `coop_pen` to the Area kinds is also TypeScript and Zod only, since `fields.kind` and `details_json` are TEXT.
 
@@ -162,6 +162,45 @@ A1 merges first. A2, A3 and A4 rebase on it and do not touch each other's files.
 - **375 px:** `/animals` has no horizontal overflow.
 - **Persona, farm:** the owner enters a herd of 12 ewes, a ram and a family cow, houses them on pasture and barn, and moves the ewes, all in under five minutes.
 - **Persona, garden household:** a household adds a dog, two cats and four hens from onboarding tiles and never sees the word "livestock". The hens show as food-producing, with a one-line explanation.
+
+### 32B rulings
+
+A three-judge panel answered 32 build questions before 32B started. Each row is the choice at least two judges shared; where all three differed, the records and safety judge's choice was adopted.
+
+| ID   | Ruling                                                                                                                                                                                                                                          | Vote |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| B-01 | One animal needs a name or a tag. Everything else is optional. With neither, the form offers "Add as a group with a count".                                                                                                                     | 3-0  |
+| B-02 | "24 layers" is one group with a head count. "Name some of them" turns each named row into an animal in the group and takes one off the unnamed count.                                                                                           | 3-0  |
+| B-03 | `head_count` is the unnamed part only. The group total is `head_count` plus active named members, from one helper (`lib/animals/counts.ts`).                                                                                                    | 3-0  |
+| B-04 | New `animal_groups.food_producing` column. The value the kernel reads is the group flag or any active member's flag, never derived from purpose.                                                                                                | 3-0  |
+| B-05 | One species per group. Mixed living is two groups on the same Area.                                                                                                                                                                             | 3-0  |
+| B-06 | The open `animal_locations` row is authoritative; `housing_field_id` is a cache rewritten in the same transaction. A grouped animal lives where its group lives.                                                                                | 3-0  |
+| B-07 | Part of a group moves by count and picked names into a new group in one replayable transaction. Helpers can do it.                                                                                                                              | 3-0  |
+| B-08 | Joining or leaving a group is a move, recorded on the location row in `from_group_id` / `to_group_id` (migration 0069).                                                                                                                         | 3-0  |
+| B-09 | Losses from a group are status events with a negative delta, never more than the unnamed count. At zero the page asks whether to archive. Additions write an `active` event with a positive delta.                                              | 3-0  |
+| B-10 | `slaughtered` and `sold-for-meat` are refused by the API schema until the 32C withdrawal gate exists.                                                                                                                                           | 3-0  |
+| B-11 | A mistaken entry with no records can be deleted with its first stay; anything with records is archived. Sold, died, culled and rehomed animals are read-only except notes and photo. A group with active members cannot be deleted or archived. | 3-0  |
+| B-12 | Status history is append-only, corrected by a new `active` event. Owners can delete the latest change inside the 48 hour lock. Status events of food-producing subjects get `locked_at` from 32B.                                               | 3-0  |
+| B-13 | Any Area can house animals except natural areas, water and boundaries. Housing stays optional.                                                                                                                                                  | 3-0  |
+| B-14 | Capacity only on `coop_pen`, owner-typed, shown as "Over capacity (26 of 24)" and never enforced.                                                                                                                                               | 3-0  |
+| B-15 | The onboarding answer is its own `farm_animals` setting (a comma list of `animals`, `pets`, `chickens`), parsed in `lib/onboarding/profile.ts`. `farm_profile` readers are untouched.                                                           | 3-0  |
+| B-16 | Animals seeds an undrawn Barn, Backyard chickens an undrawn Chicken Coop, Pets nothing. An animals-only answer is valid: Animals reads as a farm, Pets or chickens alone as a household.                                                        | 3-0  |
+| B-17 | Pets layout for a garden household, or when the answer has Pets but not Animals (`usesPetsLayout`). Tags and farm fields hide per row by purpose. Safety chips always show. No "livestock" in that layout.                                      | 3-0  |
+| B-18 | Only the owner changes the food flag, with a reason, audited in the same save. The add form shows the species default as a chip with a one-line reason.                                                                                         | 3-0  |
+| B-19 | The horse "not for slaughter" toggle is reversible, shown only when the species offers it, and never changes `food_producing`.                                                                                                                  | 3-0  |
+| B-20 | Ten species, no Other. Requests for turkeys, geese, alpacas and bees are follow-ups.                                                                                                                                                            | 3-0  |
+| B-21 | Only `foodProducingDefault` is sourced in 32B (`species-sources.json`). Care defaults wait for 32D.                                                                                                                                             | 3-0  |
+| B-22 | Breed is free text. Sex words per species are a display-only map.                                                                                                                                                                               | 3-0  |
+| B-23 | A tag already in use is a warning with a link, not a block. No unique index.                                                                                                                                                                    | 3-0  |
+| B-24 | Photos ship in 32B: EXIF stripped, 300 KB cap, counted in storage, owner and helper, online only.                                                                                                                                               | 3-0  |
+| B-25 | Birth date can be marked estimated and shows as "about N years".                                                                                                                                                                                | 3-0  |
+| B-26 | The live Area Card and the map's Area sheet list who lives there. Nothing enters the offline snapshot until 32D.                                                                                                                                | 3-0  |
+| B-27 | Deleting an Area with animals on it is refused (`AREA_HAS_ANIMALS`). An archive-an-Area path is filed for 32C.                                                                                                                                  | 2-1  |
+| B-28 | Moves can be backdated and replay out of order. The timeline never overlaps, checked by a property test.                                                                                                                                        | 3-0  |
+| B-29 | Helpers correct a move by moving the animals back. Owners can delete only the latest move, which reopens the stay before it.                                                                                                                    | 3-0  |
+| B-30 | Creating animals and groups is online only. A queued move for an unknown id fails with a clear message.                                                                                                                                         | 3-0  |
+| B-31 | "Add your animals" shows only for farms that answered with an animal tile, owner-only, done once any animal or group exists.                                                                                                                    | 3-0  |
+| B-32 | The nav shows "Animals" or "Pets & animals" only once the owner answered with an animal tile or an animal exists.                                                                                                                               | 3-0  |
 
 ---
 

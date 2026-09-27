@@ -54,6 +54,7 @@
   import { detailsFromDraft, draftFromDetails, type DetailsDraft } from '$lib/farm/areaDetailsForm';
   import { snapshotFromMapData } from '$lib/farm/mapSnapshot';
   import type { FarmSnapshot } from '$lib/cards/snapshot';
+  import type { HousingByArea } from '$lib/farm/housedAnimals';
   import type { BlockWithPlantings } from '$lib/db/blocks';
   import type { FieldWithBlocks } from '$lib/db/fields';
   import type { ShadeSource, ShadeSourceKind } from '$lib/db/shadeSources';
@@ -74,6 +75,8 @@
     initialCenter = null,
     ownerId = null,
     snapshot = null,
+    housing = {},
+    petsLayout = false,
     exportHref = '/plan/farm-map'
   }: {
     blocks: BlockWithPlantings[];
@@ -90,6 +93,9 @@
     ownerId?: string | null;
     /** Card data for the Area Card; built from `fields`/`blocks` when absent. */
     snapshot?: FarmSnapshot | null;
+    /** Animals housed on each Area, for the Area Card sheet (Phase 32B). */
+    housing?: HousingByArea;
+    petsLayout?: boolean;
     /** Where Export goes: the printable Farm Map Card. */
     exportHref?: string | null;
   } = $props();
@@ -999,6 +1005,8 @@
       details: selectedArea.details ?? null
     }}
     {canEdit}
+    housing={housing[selectedArea.id] ?? null}
+    {petsLayout}
     onEditShape={canEditShape ? editSelectedShape : undefined}
   />
 {/if}

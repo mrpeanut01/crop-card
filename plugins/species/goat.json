@@ -1,0 +1,18 @@
+{
+  "pluginId": "goat",
+  "displayName": "Goat",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Capra hircus",
+  "groupNoun": "herd",
+  "foodProducingDefault": true,
+  "products": [
+    "milk",
+    "meat",
+    "fiber"
+  ],
+  "tile": {
+    "icon": "milk",
+    "label": "Goats"
+  }
+}

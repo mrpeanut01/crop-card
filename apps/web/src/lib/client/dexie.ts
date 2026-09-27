@@ -49,10 +49,10 @@ export type PendingRecordKind =
   | 'hay-cutting'
   | 'scout'
   | 'task'
-  | 'journal';
+  | 'journal'
+  | 'animal-move';
 
 export const PHASE_32_RECORD_KINDS = [
-  'animal-move',
   'animal-health',
   'animal-production',
   'seed-start',

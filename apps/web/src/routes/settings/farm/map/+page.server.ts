@@ -11,14 +11,16 @@ import { listFields } from '$lib/db/fields';
 import { listShadeSources } from '$lib/db/shadeSources';
 import { listMapFeatures } from '$lib/db/mapFeatures';
 import { buildMapSnapshot } from '$lib/server/mapSnapshot';
+import { loadAreaHousing } from '$lib/server/areaHousing';
 import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 
-export const load: ServerLoad = ({ locals }) => {
+export const load: ServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(303, '/');
   if (locals.user.role !== 'owner') return { refused: true as const };
 
   const blocks = listBlocks();
   const fields = listFields();
+  const { housing, petsLayout } = await loadAreaHousing(fields);
   return {
     refused: false as const,
     blocks,
@@ -27,6 +29,8 @@ export const load: ServerLoad = ({ locals }) => {
     snapshot: buildMapSnapshot({ fields, blocks }),
     shadeSources: listShadeSources(),
     mapFeatures: listMapFeatures(),
+    housing,
+    petsLayout,
     canEdit: true,
     isFirstRun: blocks.length === 0,
     initialCenter: hasFarmLatLon() ? getFarmLatLon() : null

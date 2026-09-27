@@ -1,0 +1,17 @@
+{
+  "pluginId": "dog",
+  "displayName": "Dog",
+  "version": "1.0.0",
+  "type": "species",
+  "scientificName": "Canis lupus familiaris",
+  "groupNoun": "group",
+  "foodProducingDefault": false,
+  "products": [
+    "companion",
+    "work"
+  ],
+  "tile": {
+    "icon": "dog",
+    "label": "Dogs"
+  }
+}

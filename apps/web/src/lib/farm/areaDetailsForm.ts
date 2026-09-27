@@ -15,7 +15,8 @@ export type DetailField =
   | { key: string; label: string; type: 'select'; options: readonly Option[] }
   | { key: string; label: string; type: 'boolean' }
   | { key: string; label: string; type: 'date'; onlyWhen?: { key: string; equals: string } }
-  | { key: string; label: string; type: 'feet' };
+  | { key: string; label: string; type: 'feet' }
+  | { key: string; label: string; type: 'count'; unit: string };
 
 const ORGANIC_LABELS: Record<(typeof ORGANIC_STATUSES)[number], string> = {
   'non-organic': 'Not organic',
@@ -92,6 +93,7 @@ export const AREA_DETAIL_FIELDS: Readonly<Record<AreaKind, readonly DetailField[
     { key: 'coldStorage', label: 'Cold storage', type: 'boolean' },
     { key: 'chemicalStorage', label: 'Chemical storage', type: 'boolean' }
   ],
+  coop_pen: [{ key: 'capacity', label: 'Holds up to', type: 'count', unit: 'animals' }],
   residence: [],
   natural_area: [],
   water: [{ key: 'usedForIrrigation', label: 'Used for irrigation', type: 'boolean' }],
@@ -119,7 +121,8 @@ export function draftFromDetails(
   for (const f of AREA_DETAIL_FIELDS[kind]) {
     const v = src[f.key];
     if (f.type === 'boolean') draft[f.key] = v === true;
-    else if (f.type === 'feet') draft[f.key] = typeof v === 'number' ? v : null;
+    else if (f.type === 'feet' || f.type === 'count')
+      draft[f.key] = typeof v === 'number' ? v : null;
     else draft[f.key] = typeof v === 'string' ? v : '';
   }
   return draft;
@@ -134,7 +137,7 @@ export function detailsFromDraft(kind: AreaKind, draft: DetailsDraft): DetailsRe
     const v = draft[f.key];
     if (f.type === 'boolean') {
       if (v === true) out[f.key] = true;
-    } else if (f.type === 'feet') {
+    } else if (f.type === 'feet' || f.type === 'count') {
       const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() ? Number(v) : NaN;
       if (Number.isFinite(n)) out[f.key] = n;
     } else if (typeof v === 'string' && v.trim()) {
@@ -158,6 +161,8 @@ export function detailsSummary(
     if (f.type === 'boolean') rows.push({ label: f.label, value: v ? 'Yes' : 'No' });
     else if (f.type === 'feet' && typeof v === 'number')
       rows.push({ label: f.label, value: `${v} ft` });
+    else if (f.type === 'count' && typeof v === 'number')
+      rows.push({ label: f.label, value: `${v} ${f.unit}` });
     else if (f.type === 'select') {
       const opt = f.options.find((o) => o.value === v);
       rows.push({ label: f.label, value: opt?.label ?? String(v) });

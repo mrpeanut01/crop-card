@@ -66,6 +66,14 @@ import {
 } from '../src/lib/records/apiSchemas.ts';
 import { cropPatchSchema } from '../src/lib/crops/apiSchemas.ts';
 import { soilTestCreateSchema } from '../src/lib/fertility/apiSchemas.ts';
+import {
+  animalCreateSchema,
+  animalGroupCreateSchema,
+  animalGroupPatchSchema,
+  animalMoveSchema,
+  animalPatchSchema,
+  animalStatusSchema
+} from '../src/lib/animals/apiSchemas.ts';
 import { RECORD_KINDS } from '../src/lib/db/recordKinds.ts';
 import { emergencyContactSchema } from '../src/lib/farm/emergencyContacts.ts';
 import { CLIENT_RECORD_HEADER } from '../src/lib/clientRecordHeader.ts';
@@ -776,6 +784,325 @@ const paths = {
     }
   },
 
+  '/api/animals': {
+    get: {
+      summary: 'List animals',
+      description:
+        'Individual animals of the active Owner. `status` is `active` (default), `gone` (sold, died, culled or rehomed), `archived` or `all`. `groupId`, `fieldId` (where they live now), `speciesId` and `ungrouped=1|0` narrow the list. Helpers can read.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'status',
+          in: 'query',
+          required: false,
+          schema: { type: 'string', enum: ['active', 'gone', 'archived', 'all'] }
+        },
+        { name: 'groupId', in: 'query', required: false, schema: { type: 'string' } },
+        { name: 'fieldId', in: 'query', required: false, schema: { type: 'string' } },
+        { name: 'speciesId', in: 'query', required: false, schema: { type: 'string' } },
+        {
+          name: 'ungrouped',
+          in: 'query',
+          required: false,
+          schema: { type: 'string', enum: ['1', '0'] }
+        }
+      ],
+      responses: {
+        200: jsonResponse('Animals.', {
+          type: 'object',
+          required: ['animals'],
+          properties: { animals: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('Unknown status.')
+      }
+    },
+    post: {
+      summary: 'Add an animal',
+      description:
+        'Owner only. Needs a name or a tag. The food-producing flag comes from the species plugin and is changed later with `PATCH /api/animals/{id}`. An animal in a group lives where its group lives; otherwise `housingFieldId` writes its first stay. A tag already in use comes back as a `TAG_IN_USE` warning, never a refusal.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(animalCreateSchema),
+      responses: {
+        201: jsonResponse('Animal added.', {
+          type: 'object',
+          required: ['animal', 'warnings'],
+          properties: {
+            animal: { type: 'object' },
+            warnings: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse(
+          "Invalid body, an unknown species, another Owner's Area or group, or an Area animals cannot live on (`NOT_A_HOUSING_AREA`)."
+        ),
+        ...OWNER_ERRORS,
+        409: errorResponse('The group is archived or holds another species (`SPECIES_MISMATCH`).')
+      }
+    }
+  },
+
+  '/api/animals/{id}': {
+    parameters: [idPath('id', 'Animal id.')],
+    get: {
+      summary: 'One animal with its history',
+      description:
+        'The animal, its group, its stays, its status changes (with lock state) and its flag changes.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The animal.', { type: 'object', required: ['animal'] }),
+        404: errorResponse('Animal not found for the active Owner.')
+      }
+    },
+    patch: {
+      summary: 'Edit an animal',
+      description:
+        'Owner only, except that a helper may set `photo` (a JPEG data URL under 300 KB; metadata is stripped). Changing `foodProducing` or `notForSlaughter` needs `flagReason` and writes an audit row in the same save; `notForSlaughter` exists only for species that offer it and never changes `foodProducing`. `status` archives or restores. An animal that is no longer here only takes `notes` and `photo` (`READ_ONLY`).',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(animalPatchSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['animal', 'flagChanges', 'warnings'],
+          properties: {
+            animal: { type: 'object' },
+            flagChanges: { type: 'array', items: { type: 'object' } },
+            warnings: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse(
+          'Invalid body, no name or tag left, a bad photo, or a toggle the species does not offer.'
+        ),
+        ...OWNER_ERRORS,
+        404: errorResponse('Animal not found for the active Owner.'),
+        409: errorResponse(
+          'The animal is no longer here, or the change needs `POST /api/animals/status`.'
+        )
+      }
+    },
+    delete: {
+      summary: 'Delete a mistaken animal',
+      description:
+        'Owner only. Deletes an animal with no records along with the stay written when it was added. Anything with a record answers `ANIMAL_HAS_RECORDS`; archive it instead. `?ifEmpty=1` is accepted and behaves the same.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        { name: 'ifEmpty', in: 'query', required: false, schema: { type: 'string', enum: ['1'] } }
+      ],
+      responses: {
+        200: jsonResponse('Deleted.', { type: 'object' }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Animal not found for the active Owner.'),
+        409: errorResponse('The animal has records (`ANIMAL_HAS_RECORDS`).')
+      }
+    }
+  },
+
+  '/api/animals/{id}/photo': {
+    parameters: [idPath('id', 'Animal id.')],
+    get: {
+      summary: "An animal's photo",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'The photo.',
+          content: { 'image/jpeg': { schema: { type: 'string', format: 'binary' } } }
+        },
+        401: errorResponse('Authentication required.'),
+        404: { description: 'No photo for this animal of the active Owner.' }
+      }
+    }
+  },
+
+  '/api/animals/move': {
+    post: {
+      summary: 'Move animals',
+      description:
+        'Owners and helpers. Moves a group or an individual to an Area (`fieldId`), part of a group into a new group (`count` unnamed animals and/or named `animalIds`), or an individual into a group (`toGroupId`; it then lives where the group lives, and one moved to an Area leaves its group). `movedAt` may be backdated; moves arriving out of order are slotted into a non-overlapping timeline. Natural areas, water and boundaries cannot house animals. A coop over its capacity is reported in `capacity`, never refused. Safe to replay from the offline queue with the client record id header.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(animalMoveSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Moved.', {
+          type: 'object',
+          required: ['move'],
+          properties: { move: { type: 'object' } }
+        }),
+        400: errorResponse(
+          "Invalid body, a subject that is not on this farm (`UNKNOWN_SUBJECT`), another Owner's Area or group, an Area animals cannot live on, or a time in the future."
+        ),
+        ...AUTH_ERRORS,
+        409: errorResponse(
+          'The subject is archived or gone, already there, a count larger than the group, another move at the same moment (`SAME_TIME`), or a group change before a later move (`OUT_OF_ORDER`).'
+        ),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
+  '/api/animals/locations/{id}': {
+    parameters: [idPath('id', 'Stay (animal location) id.')],
+    delete: {
+      summary: 'Undo the latest move',
+      description:
+        "Owner only. Removes a subject's latest stay and reopens the one before it. Stays that changed a group are not undone here; move the animal again instead. Helpers correct a move by moving the animals back.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Undone.', { type: 'object' }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Stay not found for the active Owner.'),
+        409: errorResponse(
+          'Not the latest stay (`NOT_LATEST`), or it changed a group (`GROUP_CHANGE`).'
+        )
+      }
+    }
+  },
+
+  '/api/animals/status': {
+    post: {
+      summary: 'Record a status change',
+      description:
+        'Owners and helpers. Sold, died, culled or rehomed, or `active` to correct a mistaken outcome. On a group, losses carry a negative `headCountDelta` for unnamed animals and `active` with a positive one records a hatch or purchase. `sold-for-meat` and `slaughtered` are refused until the withdrawal gate ships. A group that reaches zero answers `emptied: true` so the app can offer to archive it. Not gated by the season close-out.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [clientRecordRef],
+      requestBody: jsonBody(animalStatusSchema),
+      responses: {
+        200: jsonResponse(
+          'A replay of a client record id that was already saved.',
+          DUPLICATE_SCHEMA
+        ),
+        201: jsonResponse('Recorded.', {
+          type: 'object',
+          required: ['event', 'emptied'],
+          properties: { event: { type: 'object' }, emptied: { type: 'boolean' } }
+        }),
+        400: errorResponse('Invalid body, or a subject that is not on this farm.'),
+        ...AUTH_ERRORS,
+        409: errorResponse(
+          'The subject is archived or already in that state, or the loss is larger than the group.'
+        ),
+        503: errorResponse(
+          'The same client record id is being saved by another request right now. Retry shortly.'
+        )
+      }
+    }
+  },
+
+  '/api/animals/status/{id}': {
+    parameters: [idPath('id', 'Status change id.')],
+    delete: {
+      summary: 'Undo the latest status change',
+      description:
+        "Owner only. Removes the subject's latest status change and restores it. A food-producing subject's change locks 48 hours after it happened (`RECORD_LOCKED`); pets stay editable. Older changes are corrected by recording a new one.",
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Undone.', { type: 'object' }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Status change not found for the active Owner.'),
+        409: errorResponse('Locked, not the latest change, or it would leave a negative count.')
+      }
+    }
+  },
+
+  '/api/animal-groups': {
+    get: {
+      summary: 'List animal groups',
+      description:
+        'Groups of the active Owner with `total` (unnamed `headCount` plus active named members) and `effectiveFoodProducing` (the group flag or any active member). `status` is `active` (default), `archived` or `all`; `fieldId` and `speciesId` narrow the list.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      parameters: [
+        {
+          name: 'status',
+          in: 'query',
+          required: false,
+          schema: { type: 'string', enum: ['active', 'archived', 'all'] }
+        },
+        { name: 'fieldId', in: 'query', required: false, schema: { type: 'string' } },
+        { name: 'speciesId', in: 'query', required: false, schema: { type: 'string' } }
+      ],
+      responses: {
+        200: jsonResponse('Groups.', {
+          type: 'object',
+          required: ['groups'],
+          properties: { groups: { type: 'array', items: { type: 'object' } } }
+        }),
+        400: errorResponse('Unknown status.')
+      }
+    },
+    post: {
+      summary: 'Add a group with a head count',
+      description:
+        'Owner only. `headCount` is the whole group; each entry in `members` becomes a named animal in the group and comes off the unnamed count. One species per group.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(animalGroupCreateSchema),
+      responses: {
+        201: jsonResponse('Group added.', {
+          type: 'object',
+          required: ['group', 'members', 'warnings'],
+          properties: {
+            group: { type: 'object' },
+            members: { type: 'array', items: { type: 'object' } },
+            warnings: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse(
+          "Invalid body, an unknown species, another Owner's Area or an Area animals cannot live on."
+        ),
+        ...OWNER_ERRORS
+      }
+    }
+  },
+
+  '/api/animal-groups/{id}': {
+    parameters: [idPath('id', 'Group id.')],
+    get: {
+      summary: 'One group with its members and history',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('The group.', { type: 'object', required: ['group'] }),
+        404: errorResponse('Group not found for the active Owner.')
+      }
+    },
+    patch: {
+      summary: 'Edit a group',
+      description:
+        'Owner only. A `headCount` change writes a status change with the difference (`countReason`, default "Count corrected"). Changing `foodProducing` needs `flagReason` and writes an audit row. A group with active named members cannot be archived.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      requestBody: jsonBody(animalGroupPatchSchema),
+      responses: {
+        200: jsonResponse('Saved.', {
+          type: 'object',
+          required: ['group', 'flagChanges'],
+          properties: {
+            group: { type: 'object' },
+            flagChanges: { type: 'array', items: { type: 'object' } }
+          }
+        }),
+        400: errorResponse('Invalid body.'),
+        ...OWNER_ERRORS,
+        404: errorResponse('Group not found for the active Owner.'),
+        409: errorResponse(
+          'The group still has named animals (`GROUP_HAS_MEMBERS`), or is archived.'
+        )
+      }
+    },
+    delete: {
+      summary: 'Delete a mistaken group',
+      description:
+        'Owner only. Deletes a group with no member rows and no records. Otherwise `GROUP_HAS_MEMBERS` or `ANIMAL_HAS_RECORDS`; archive it instead.',
+      security: [{ cookieSession: [] }, { bearerAuth: [] }],
+      responses: {
+        200: jsonResponse('Deleted.', { type: 'object' }),
+        ...OWNER_ERRORS,
+        404: errorResponse('Group not found for the active Owner.'),
+        409: errorResponse('The group has members or records.')
+      }
+    }
+  },
+
   '/api/garden/plantings': {
     post: {
       summary: 'Plant into garden beds as one batch',
@@ -1326,7 +1653,7 @@ const doc = {
     title: 'CropCard External Agent API',
     version: '0.1.0',
     description:
-      'Owner-scoped JSON API for external Claude agents and SaaS integrations (Phase 24, UC-43). Bearer tokens minted at `/settings/api-tokens`. Safety kernel re-runs on every state-changing call — agents cannot bypass tenant isolation, the 48h spray lock, helper custom-rate restrictions, or kernel violations regardless of which endpoint they hit.\n\nCoverage is incremental: Phase 24 shipped auth, health, spray/record and blocks; Phase 30 adds Areas, blocks and garden beds, the garden designer, offline Cards, geocoding, first-use hints, the offline-safe record endpoints, map lines and points, task closing, record cards and the planting journal with photo help. Additional endpoints adopt the OpenAPI registry in domain batches — track open work in [docs/phase-24-agent-api.md](https://github.com/mrpeanut01/crop-card/blob/main/docs/phase-24-agent-api.md).',
+      'Owner-scoped JSON API for external Claude agents and SaaS integrations (Phase 24, UC-43). Bearer tokens minted at `/settings/api-tokens`. Safety kernel re-runs on every state-changing call — agents cannot bypass tenant isolation, the 48h spray lock, helper custom-rate restrictions, or kernel violations regardless of which endpoint they hit.\n\nCoverage is incremental: Phase 24 shipped auth, health, spray/record and blocks; Phase 30 adds Areas, blocks and garden beds, the garden designer, offline Cards, geocoding, first-use hints, the offline-safe record endpoints, map lines and points, task closing, record cards and the planting journal with photo help; Phase 32B adds animals, groups, moves and status changes. Additional endpoints adopt the OpenAPI registry in domain batches — track open work in [docs/phase-24-agent-api.md](https://github.com/mrpeanut01/crop-card/blob/main/docs/phase-24-agent-api.md).',
     contact: { name: 'CropCard' }
   },
   servers: [

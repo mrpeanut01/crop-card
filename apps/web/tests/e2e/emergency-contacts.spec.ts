@@ -31,7 +31,14 @@ test.describe('emergency contacts', () => {
     await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
     await expect(page.getByLabel('Contact 2 name')).toHaveValue('Dr. Reyes');
 
-    await page.getByLabel('Contact 2 phone').fill('soon');
+    // Saving re-renders the form from the reloaded data; edit only once it has settled.
+    await page.waitForLoadState('networkidle');
+    const phone = page.getByLabel('Contact 2 phone');
+    await expect(phone).toHaveValue('540-555-0101');
+    await expect(async () => {
+      await phone.fill('soon');
+      await expect(phone).toHaveValue('soon', { timeout: 1000 });
+    }).toPass();
     await page.getByRole('button', { name: 'Save changes' }).click();
     await expect(page.getByRole('alert')).toContainText('Contact 2:');
     await expect(page.getByLabel('Contact 2 phone')).toHaveValue('soon');

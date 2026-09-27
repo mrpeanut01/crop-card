@@ -68,6 +68,9 @@ type mxRecord = {
 @description('MX records in dnsZoneName, relative name → exchanges, e.g. the Pingram/SES custom MAIL FROM subdomain.')
 param dnsMxRecords { *: mxRecord[] } = {}
 
+@description('Extra CNAME records in dnsZoneName, relative name → target (e.g. Microsoft 365 autodiscover). Never a customHosts label.')
+param dnsCnameRecords { *: string } = {}
+
 @description('Public DNS for every custom hostname already resolves to this app (checked by deploy-azure.sh). Gates the hostname bindings and the managed certificate requests.')
 param customDomainDnsReady bool = false
 
@@ -609,6 +612,15 @@ resource extraTxt 'Microsoft.Network/dnsZones/TXT@2018-05-01' = [for r in items(
   properties: {
     TTL: 3600
     TXTRecords: [for v in r.value: { value: [v] }]
+  }
+}]
+
+resource extraCname 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = [for r in items(useDomain ? dnsCnameRecords : {}): {
+  parent: dnsZone
+  name: r.key
+  properties: {
+    TTL: 3600
+    CNAMERecord: { cname: r.value }
   }
 }]
 

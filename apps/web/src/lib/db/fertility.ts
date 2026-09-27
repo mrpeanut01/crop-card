@@ -13,6 +13,12 @@ import { and, desc, eq } from 'drizzle-orm';
 import { db } from './client';
 import { fertilityApplications, fertilityCredits, soilTests } from './schema';
 import { tenantValues, withTenant } from './tenant';
+import {
+  parseLabRatings,
+  type ExtractionMethod,
+  type LabRatings,
+  type UnitsBasis
+} from '$lib/fertility/soilInterpret';
 
 // ─── soil_tests ──────────────────────────────────────────────────────────
 
@@ -28,6 +34,15 @@ export interface SoilTestInput {
   phosphorusPpm?: number;
   potassiumPpm?: number;
   notes?: string;
+  /** Nutrient values are as typed on the lab sheet; `unitsBasis` says
+   *  whether that was ppm or lb/acre. Missing means ppm. */
+  unitsBasis?: UnitsBasis;
+  extractionMethod?: ExtractionMethod;
+  caPpm?: number;
+  mgPpm?: number;
+  bufferPh?: number;
+  labRatings?: LabRatings;
+  provenance?: 'manual' | 'ai' | 'fallback';
 }
 
 export interface SoilTest extends SoilTestInput {
@@ -48,7 +63,14 @@ function rowToSoilTest(row: typeof soilTests.$inferSelect): SoilTest {
     nitratePpm: row.nitratePpm ?? undefined,
     phosphorusPpm: row.phosphorusPpm ?? undefined,
     potassiumPpm: row.potassiumPpm ?? undefined,
-    notes: row.notes ?? undefined
+    notes: row.notes ?? undefined,
+    unitsBasis: row.unitsBasis ?? undefined,
+    extractionMethod: row.extractionMethod ?? undefined,
+    caPpm: row.caPpm ?? undefined,
+    mgPpm: row.mgPpm ?? undefined,
+    bufferPh: row.bufferPhHundredths !== null ? row.bufferPhHundredths / 100 : undefined,
+    labRatings: row.labRatingJson ? parseLabRatings(row.labRatingJson) : undefined,
+    provenance: row.provenance ?? undefined
   };
 }
 
@@ -70,7 +92,17 @@ export function insertSoilTest(input: SoilTestInput): SoilTest {
         nitratePpm: input.nitratePpm ?? null,
         phosphorusPpm: input.phosphorusPpm ?? null,
         potassiumPpm: input.potassiumPpm ?? null,
-        notes: input.notes ?? null
+        notes: input.notes ?? null,
+        unitsBasis: input.unitsBasis ?? null,
+        extractionMethod: input.extractionMethod ?? null,
+        caPpm: input.caPpm ?? null,
+        mgPpm: input.mgPpm ?? null,
+        bufferPhHundredths: input.bufferPh !== undefined ? Math.round(input.bufferPh * 100) : null,
+        labRatingJson:
+          input.labRatings && Object.keys(input.labRatings).length
+            ? JSON.stringify(input.labRatings)
+            : null,
+        provenance: input.provenance ?? 'manual'
       })
     )
     .returning()
@@ -86,6 +118,24 @@ export function listSoilTestsForBlock(blockId: string): SoilTest[] {
     .orderBy(desc(soilTests.sampledAt))
     .all()
     .map(rowToSoilTest);
+}
+
+/** Every soil test on the active Owner's farm, newest first. */
+export function listSoilTests(): SoilTest[] {
+  return db
+    .select()
+    .from(soilTests)
+    .where(withTenant(soilTests))
+    .orderBy(desc(soilTests.sampledAt), desc(soilTests.id))
+    .all()
+    .map(rowToSoilTest);
+}
+
+export function hasSoilTest(): boolean {
+  return (
+    db.select({ id: soilTests.id }).from(soilTests).where(withTenant(soilTests)).limit(1).get() !==
+    undefined
+  );
 }
 
 // ─── fertility_applications ──────────────────────────────────────────────

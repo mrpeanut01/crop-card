@@ -8,6 +8,7 @@ import { buildDayCard, buildDayCards } from './day';
 import { buildEquipmentCard, buildEquipmentCards } from './equipment';
 import { buildPlantingCard, buildPlantingCards } from './planting';
 import { buildSprayCard, buildSprayCards } from './spray';
+import { buildSoilTestCard, buildSoilTestCards } from './soilTest';
 import { buildStockCard, buildStockCards } from './stock';
 import { buildTaskCard, buildTaskCardFromSnapshot } from './task';
 
@@ -27,6 +28,8 @@ export {
   buildPlantingCards,
   buildSprayCard,
   buildSprayCards,
+  buildSoilTestCard,
+  buildSoilTestCards,
   buildStockCard,
   buildStockCards,
   buildTaskCard,
@@ -60,6 +63,8 @@ export function buildCard(
       return buildStockCard(snapshot, parsed.id, options);
     case 'task':
       return buildTaskCardFromSnapshot(snapshot, parsed.id, options);
+    case 'soilTest':
+      return buildSoilTestCard(snapshot, parsed.id, options);
     default:
       return null;
   }
@@ -75,6 +80,7 @@ export function buildDeck(snapshot: FarmSnapshot, options: BuildOptions = {}): C
     ...buildEquipmentCards(snapshot, options),
     ...buildSprayCards(snapshot, options),
     ...buildCareGuideCards(snapshot, options),
+    ...buildSoilTestCards(snapshot, options),
     ...buildStockCards(snapshot, options)
   ];
 }

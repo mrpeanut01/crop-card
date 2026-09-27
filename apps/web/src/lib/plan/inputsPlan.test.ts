@@ -34,7 +34,13 @@ import type {
 import type { CropFamily } from '$lib/safety/cropFamilyLethality';
 import type { FertilityApproach, Philosophy, SeasonSetup } from '$lib/season/setup';
 
-import { planInputs, type InputsPlanInput } from './inputsPlan';
+import {
+  kCreditFromSoilTestLbPerAcre,
+  nCreditFromSoilTestLbPerAcre,
+  pCreditFromSoilTestLbPerAcre,
+  planInputs,
+  type InputsPlanInput
+} from './inputsPlan';
 import {
   formatApplicationRateLine,
   formatInputAmount,
@@ -957,5 +963,69 @@ describe('Inputs Plan display units', () => {
     expect(localizeRationale(text, metric)).toBe(
       'N 135 kg/ha, P₂O₅ 0 kg/ha − 73 kg-N/ha cover-crop credit'
     );
+  });
+});
+
+describe('planInputs — soil test units (Phase 32A regression)', () => {
+  const base = { id: 'soil-1', blockId: 'b1', sampledAt: Date.UTC(2025, 3, 1) };
+  const ppmReport: SoilTest = {
+    ...base,
+    unitsBasis: 'ppm',
+    nitratePpm: 33,
+    phosphorusPpm: 60,
+    potassiumPpm: 200
+  };
+  const lbReport: SoilTest = {
+    ...base,
+    unitsBasis: 'lb-per-acre',
+    nitratePpm: 66,
+    phosphorusPpm: 120,
+    potassiumPpm: 400
+  };
+
+  it('a lab report in lb/acre gives the same credits as the same report in ppm', () => {
+    expect(nCreditFromSoilTestLbPerAcre(lbReport)).toBe(nCreditFromSoilTestLbPerAcre(ppmReport));
+    expect(pCreditFromSoilTestLbPerAcre(lbReport)).toBe(pCreditFromSoilTestLbPerAcre(ppmReport));
+    expect(kCreditFromSoilTestLbPerAcre(lbReport)).toBe(kCreditFromSoilTestLbPerAcre(ppmReport));
+    expect(nCreditFromSoilTestLbPerAcre(ppmReport)).toBe(100);
+    expect(pCreditFromSoilTestLbPerAcre(ppmReport)).toBe(17.5);
+    expect(kCreditFromSoilTestLbPerAcre(ppmReport)).toBe(40);
+  });
+
+  it('a test saved before units existed reads as ppm', () => {
+    const legacy: SoilTest = { ...base, phosphorusPpm: 60, potassiumPpm: 200 };
+    expect(pCreditFromSoilTestLbPerAcre(legacy)).toBe(17.5);
+    expect(kCreditFromSoilTestLbPerAcre(legacy)).toBe(40);
+  });
+
+  it('a medium Virginia Tech Mehlich-1 report in lb/acre is not over-credited', () => {
+    const vt: SoilTest = {
+      ...base,
+      unitsBasis: 'lb-per-acre',
+      extractionMethod: 'mehlich-1',
+      phosphorusPpm: 30,
+      potassiumPpm: 150
+    };
+    expect(pCreditFromSoilTestLbPerAcre(vt)).toBe(0);
+    expect(kCreditFromSoilTestLbPerAcre(vt)).toBe(0);
+  });
+
+  it('the whole plan comes out the same for either unit basis', () => {
+    const crop = buildCrop('corn', 'corn-1');
+    const planting = buildPlanting('p1', 'b1', 'corn-1');
+    const run = (test: SoilTest) =>
+      planInputs(
+        buildBaseInput({
+          plantings: [planting],
+          blocks: [buildBlock('b1')],
+          cropPlugins: { 'corn-1': crop },
+          soilTests: [test],
+          seasonSetup: buildSetup('conventional', 'synthetic')
+        })
+      );
+    const fromPpm = run(ppmReport).applications.find((a) => a.slot === 'pre-plant-fertility');
+    const fromLb = run(lbReport).applications.find((a) => a.slot === 'pre-plant-fertility');
+    expect(fromLb?.totalAmount).toBe(fromPpm?.totalAmount);
+    expect(fromLb?.rationale).toBe(fromPpm?.rationale);
   });
 });

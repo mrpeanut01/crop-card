@@ -6,6 +6,7 @@ import { listFungicideEvents } from '$lib/db/fungicideEvents';
 import { complianceChromeLevel } from '$lib/records/complianceChrome';
 import { getFarmProfile } from '$lib/onboarding/state.server';
 import { listSprayers } from '$lib/server/sprayers';
+import { hasSoilTest } from '$lib/db/fertility';
 import { listYearsWithCrops } from '$lib/db/crops';
 import { requireUser } from '$lib/server/auth';
 import { buildYearSummary } from '$lib/records/yearSummary.server';
@@ -76,15 +77,22 @@ export const load: PageServerLoad = async (event) => {
     fungicides: listFungicideEvents({ limit: 1 }).length
   });
 
+  const blocks = listBlocks();
+  const soilNudgePlaces =
+    chrome === 'quiet' && user.role === 'owner' && blocks.length > 0 && !hasSoilTest()
+      ? blocks.map((b) => ({ id: b.id, name: b.name }))
+      : null;
+
   return {
     chrome,
+    soilNudgePlaces,
     records: page.rows,
     filteredTotal: page.total,
     nextShow: page.nextShow,
     summary,
     approachingRetention: approaching.map((e) => e.id),
     sprayers: listSprayers(),
-    blocks: listBlocks(),
+    blocks,
     activeSprayerId: sprayerId ?? null,
     activeBlockId: blockId ?? null,
     activeKinds,

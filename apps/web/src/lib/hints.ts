@@ -9,7 +9,8 @@ export const HINT_KEYS = [
   'designer_scrubber',
   'plan_first_crop',
   'spray_first',
-  'cards_offline'
+  'cards_offline',
+  'soil_test_nudge'
 ] as const;
 
 export type HintKey = (typeof HINT_KEYS)[number];

@@ -321,6 +321,9 @@
   .kind-scout {
     --strip: var(--color-ink-muted);
   }
+  .kind-soilTest {
+    --strip: var(--color-wheat);
+  }
   .kicker-row {
     display: flex;
     flex-wrap: wrap;

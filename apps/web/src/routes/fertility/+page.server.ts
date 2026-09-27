@@ -3,6 +3,7 @@ import { prefsFor } from '$lib/db/userProfile';
 import { todayYmd } from '$lib/prefs';
 import { listBlocks } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
+import { canSetUp } from '$lib/server/setupContext';
 import {
   fertilityBudgetForBlock,
   listFertilityApplicationsForBlock,
@@ -34,6 +35,7 @@ export const load: PageServerLoad = ({ url, locals }) => {
     budget: blockId ? fertilityBudgetForBlock(blockId, year) : null,
     applications: blockId ? listFertilityApplicationsForBlock(blockId) : [],
     credits: blockId ? listFertilityCreditsForBlock(blockId) : [],
-    soilTests: blockId ? listSoilTestsForBlock(blockId) : []
+    soilTests: blockId ? listSoilTestsForBlock(blockId) : [],
+    canAddSoilTest: canSetUp(locals.user?.role)
   };
 };

@@ -10,6 +10,7 @@
 import type { EmergencyContact } from '$lib/farm/emergencyContacts';
 import type { AreaKind, BedStyle, BlockKind } from '$lib/farm/areaKinds';
 import type { MapFeatureView } from '$lib/farm/mapFeatures';
+import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
 export const FARM_SNAPSHOT_VERSION = 1 as const;
 
@@ -224,6 +225,27 @@ export interface SnapshotSprayProduct {
   pollinator: { beeToxicity: string; bloomRestriction: string } | null;
 }
 
+/** The newest soil test on a bed or block. Nutrient values are as the lab
+ *  printed them, in `unitsBasis` (null means ppm). */
+export interface SnapshotSoilTest {
+  id: string;
+  blockId: string;
+  sampledAt: number;
+  lab: string | null;
+  ph: number | null;
+  bufferPh: number | null;
+  organicMatterPct: number | null;
+  cec: number | null;
+  nitratePpm: number | null;
+  phosphorusPpm: number | null;
+  potassiumPpm: number | null;
+  caPpm: number | null;
+  mgPpm: number | null;
+  extractionMethod: ExtractionMethod | null;
+  unitsBasis: UnitsBasis | null;
+  labRatings: LabRatings | null;
+}
+
 export interface FarmSnapshot {
   version: typeof FARM_SNAPSHOT_VERSION;
   ownerId: string;
@@ -253,6 +275,8 @@ export interface FarmSnapshot {
   /** The owner's saved emergency contacts for the Farm Map Card. Absent on
    *  bundles saved before Sprint 30H. */
   emergencyContacts?: EmergencyContact[];
+  /** Newest soil test per bed or block. Absent on bundles saved before 32A. */
+  soilTests?: SnapshotSoilTest[];
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

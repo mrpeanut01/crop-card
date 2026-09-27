@@ -11,7 +11,7 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { bestEffort, writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
+import { hayCuttingSchema } from '$lib/records/apiSchemas';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { createCutting, listCuttings } from '$lib/db/hayCuttings';
@@ -23,30 +23,8 @@ import { canMutate } from '$lib/server/session';
 import { getRegistry } from '$lib/server/registry';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 
-const inputSchema = z.object({
-  blockId: z.string().min(1),
-  cropId: z.string().optional(),
-  taskId: z.string().optional(),
-  cropPluginId: z.string().min(1),
-  year: z.number().int().min(1900).max(3000).optional(),
-  cuttingNumber: z.number().int().positive().optional(),
-  mowAt: z.number().int().optional(),
-  forecast: z
-    .array(
-      z.object({
-        date: z.string().min(1),
-        popPct: z.number().min(0).max(100),
-        highF: z.number(),
-        lowF: z.number(),
-        windMph: z.number().nonnegative().optional(),
-        shortForecast: z.string().optional()
-      })
-    )
-    .optional(),
-  /** Set true when the operator chooses to mow despite a kernel "no-go". */
-  overrideMowGate: z.boolean().optional(),
-  notes: z.string().max(500).optional()
-});
+export const _requestSchema = hayCuttingSchema;
+const inputSchema = hayCuttingSchema;
 
 export const GET: RequestHandler = ({ url }) => {
   const blockId = url.searchParams.get('blockId') ?? undefined;

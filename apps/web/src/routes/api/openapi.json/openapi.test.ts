@@ -12,7 +12,13 @@ import { _requestSchema as gardenPlantings } from '../garden/plantings/+server';
 import { _requestSchema as gardenSuccession } from '../garden/beds/[blockId]/succession/+server';
 import { _requestSchema as gardenFill } from '../garden/beds/[blockId]/fill/+server';
 import { _requestSchema as gardenRecipe } from '../garden/beds/[blockId]/recipe/+server';
-import { setPlacementPatchSchema } from '$lib/garden/api';
+import { _requestSchema as cropPatch } from '../crops/[id]/+server';
+import { _requestSchema as sprayRecord } from '../spray/record/+server';
+import { _requestSchema as insecticideRecord } from '../insecticide/record/+server';
+import { _requestSchema as fungicideRecord } from '../fungicide/record/+server';
+import { _requestSchema as harvestRecord } from '../harvest/record/+server';
+import { _requestSchema as scoutRecord } from '../scout/record/+server';
+import { _requestSchema as hayCutting } from '../hay/cuttings/+server';
 import { _requestSchema as mapFeatureCreate } from '../map-features/+server';
 import { _requestSchema as mapFeaturePatch } from '../map-features/[id]/+server';
 import { _requestSchema as taskClose } from '../tasks/close/+server';
@@ -58,7 +64,13 @@ describe('openapi.json', () => {
     ['/api/garden/beds/{blockId}/succession', 'post', gardenSuccession],
     ['/api/garden/beds/{blockId}/fill', 'post', gardenFill],
     ['/api/garden/beds/{blockId}/recipe', 'post', gardenRecipe],
-    ['/api/crops/{id}', 'patch', setPlacementPatchSchema],
+    ['/api/crops/{id}', 'patch', cropPatch],
+    ['/api/spray/record', 'post', sprayRecord],
+    ['/api/insecticide/record', 'post', insecticideRecord],
+    ['/api/fungicide/record', 'post', fungicideRecord],
+    ['/api/harvest/record', 'post', harvestRecord],
+    ['/api/scout/record', 'post', scoutRecord],
+    ['/api/hay/cuttings', 'post', hayCutting],
     ['/api/map-features', 'post', mapFeatureCreate],
     ['/api/map-features/{id}', 'patch', mapFeaturePatch],
     ['/api/tasks/close', 'post', taskClose],
@@ -115,6 +127,30 @@ describe('openapi.json', () => {
       }
     ).components.schemas.GardenError.properties.code.enum;
     expect(codes).toContain('STALE');
+  });
+
+  it('publishes every PATCH /api/crops/:id action', () => {
+    const body = published('/api/crops/{id}', 'patch') as {
+      oneOf: { properties: { action: { const?: string; enum?: string[] } } }[];
+    };
+    const actions = body.oneOf.flatMap((v) =>
+      v.properties.action.enum ? v.properties.action.enum : [v.properties.action.const]
+    );
+    expect(new Set(actions)).toEqual(
+      new Set([
+        'mark-harvested',
+        'archive',
+        'mark-failed',
+        'reactivate',
+        'set-schedule',
+        'change-plugin',
+        'edit-details',
+        'unschedule',
+        'split',
+        'set-placement'
+      ])
+    );
+    expect(JSON.stringify(doc.paths['/api/crops/{id}'].patch)).not.toContain('not yet published');
   });
 
   it('documents the client record id header on the journal writes', () => {

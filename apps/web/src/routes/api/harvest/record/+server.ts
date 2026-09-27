@@ -9,7 +9,7 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { bestEffort, writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
+import { harvestRecordSchema } from '$lib/records/apiSchemas';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
 import { insertHarvestEvent } from '$lib/db/harvestEvents';
@@ -84,18 +84,8 @@ function gatherAppliedSprays(
   return out;
 }
 
-const requestSchema = z.object({
-  blockId: z.string().min(1),
-  cropId: z.string().optional(),
-  taskId: z.string().optional(),
-  cropPluginId: z.string().min(1),
-  occurredAt: z.number().int().optional(),
-  quantity: z.string().max(60).optional(),
-  lotNumber: z.string().max(40).optional(),
-  // UC-16 — stored moisture %. When provided, the safety kernel gates
-  // the commit against the family threshold (block above, warn near).
-  moisturePct: z.number().min(0).max(100).optional()
-});
+export const _requestSchema = harvestRecordSchema;
+const requestSchema = harvestRecordSchema;
 
 export const POST: RequestHandler = withClientRecordId(async ({ request }) => {
   let body: unknown;

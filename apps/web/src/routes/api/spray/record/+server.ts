@@ -13,6 +13,7 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
+import { sprayCropStageSchema, sprayRecordSchema } from '$lib/records/apiSchemas';
 import { computeTankMixDilutions } from '$lib/dilution/calculator';
 import { getBlock } from '$lib/db/blocks';
 import { getCrop } from '$lib/db/crops';
@@ -26,7 +27,6 @@ import {
 } from '$lib/db/stock';
 import { ensureSystemUser } from '$lib/db/users';
 import type { HerbicidePlugin } from '$lib/plugins/schemas';
-import { CROP_FAMILIES } from '$lib/safety/cropFamilyLethality';
 import {
   evaluateSpray,
   RULES_VERSION,
@@ -48,44 +48,8 @@ import { checkSeasonClosed } from '$lib/server/seasonClose';
 import { rejectForeignRefs } from '$lib/server/foreignRefs';
 import { bestEffort, errorText, writeRecord } from '$lib/server/recordWrite';
 
-const cropStageInput = z.object({
-  cropPluginId: z.string().min(1),
-  cropFamily: z.enum(CROP_FAMILIES).optional(),
-  heightInches: z.number().nonnegative().optional()
-});
-
-const requestSchema = z.object({
-  blockId: z.string().min(1),
-  /** Phase 12: per-crop attribution. When supplied, the spray_event row
-   *  carries crop_id; if a `taskId` is also supplied, that primary task
-   *  is marked complete on success. */
-  cropId: z.string().optional(),
-  taskId: z.string().optional(),
-  occurredAt: z.number().int().optional(),
-  blockCrops: z.object({
-    primary: cropStageInput,
-    coPlanted: z.array(cropStageInput).optional()
-  }),
-  productPluginIds: z.array(z.string().min(1)).min(1),
-  /** Phase 17 (Track 2.4) — parallel to productPluginIds. When supplied, the
-   *  named stock items feed the safety augmenter; missing entries fall back
-   *  to lookup by pluginId. */
-  stockItemIds: z.array(z.string().min(1).nullable()).optional(),
-  sprayer: z.object({ id: z.string().min(1) }),
-  conditions: z.object({
-    windMph: z.number().nonnegative(),
-    tempF: z.number(),
-    rainForecastMmNext24h: z.number().nonnegative(),
-    /** #320 / CT-S5-003 — honest audit trail. When the client omits this
-     *  (or the operator never entered readings) we persist `'default'`
-     *  so a synthetic 5 mph / 70 °F is never presented as measured. */
-    conditionsProvenance: z.enum(['measured', 'default']).optional()
-  }),
-  /** Tank size for auto-decrement; if omitted, no stock decrement happens. */
-  tankSizeGallons: z.number().positive().optional(),
-  customRateOverride: z.boolean().optional(),
-  notes: z.string().max(500).optional()
-});
+export const _requestSchema = sprayRecordSchema;
+const requestSchema = sprayRecordSchema;
 
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const { request } = event;
@@ -165,7 +129,7 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     return json({ error: 'custom rate override requires owner role' }, { status: 403 });
   }
 
-  const enrichCrop = (c: z.infer<typeof cropStageInput>) => ({
+  const enrichCrop = (c: z.infer<typeof sprayCropStageSchema>) => ({
     ...c,
     cropFamily: c.cropFamily ?? registry.cropFamilyOf(c.cropPluginId),
     traits: registry.cropTraitsOf(c.cropPluginId)

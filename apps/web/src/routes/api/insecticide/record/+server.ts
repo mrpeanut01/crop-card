@@ -10,7 +10,7 @@
 import { withClientRecordId } from '$lib/server/clientRecordId';
 import { bestEffort, errorText, writeRecord } from '$lib/server/recordWrite';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { z } from 'zod';
+import { insecticideRecordSchema } from '$lib/records/apiSchemas';
 import { computeRatedDilution } from '$lib/dilution/calculator';
 import {
   insertInsecticideEvent,
@@ -64,42 +64,8 @@ import { rejectForeignRefs } from '$lib/server/foreignRefs';
  *  the tank records this category token instead of a per-ingredient class. */
 const INSECTICIDE_LOAD_CLASS = 'insecticide-load' as const;
 
-const requestSchema = z.object({
-  blockId: z.string().min(1),
-  cropId: z.string().optional(),
-  taskId: z.string().optional(),
-  /** Epoch ms the operator recorded the application (stamped client-side,
-   *  preserved through the offline queue). The pollinator time-of-day gate
-   *  and the stored event time key off this, not server receive time. */
-  occurredAt: z.number().int().optional(),
-  productPluginIds: z.array(z.string().min(1)).min(1),
-  /** Phase 17 (Track 2.4) — parallel to productPluginIds. Feeds the safety
-   *  augmenter so operator-confirmed label chemistry can block a spray when
-   *  it diverges from the plugin's declared ingredients. */
-  stockItemIds: z.array(z.string().min(1).nullable()).optional(),
-  sprayerId: z.string().min(1).optional(),
-  conditions: z.object({
-    windMph: z.number().nonnegative(),
-    tempF: z.number(),
-    rainForecastMmNext24h: z.number().nonnegative()
-  }),
-  scout: z
-    .object({
-      pest: z.string().min(1),
-      metric: z.string().min(1),
-      value: z.number().nonnegative(),
-      threshold: z.number().nonnegative().optional(),
-      notes: z.string().max(500).optional()
-    })
-    .optional(),
-  tankSizeGallons: z.number().positive().optional(),
-  /** #130 — operator bloom attestation (crop or flowering weeds). Missing
-   *  → derived from crop-plugin bloom windows, else `unknown`. */
-  bloomStatus: z.enum(['in-bloom', 'not-in-bloom', 'unknown']).optional(),
-  /** #130 — "no bees foraging" attestation; only consulted when sunrise /
-   *  sunset cannot be computed for a dusk-to-dawn-only label. */
-  attestedNoForagers: z.boolean().optional()
-});
+export const _requestSchema = insecticideRecordSchema;
+const requestSchema = insecticideRecordSchema;
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;

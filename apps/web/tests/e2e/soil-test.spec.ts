@@ -56,6 +56,13 @@ async function snapshotHas(page: Page, needle: string): Promise<boolean> {
   );
 }
 
+async function cardsDataCached(page: Page): Promise<number> {
+  return page.evaluate(async () => {
+    if (!(await caches.has('cropcard-tenant-cards'))) return 0;
+    return (await (await caches.open('cropcard-tenant-cards')).keys()).length;
+  });
+}
+
 test.describe('soil tests', () => {
   test.describe.configure({ timeout: 150_000 });
 
@@ -95,6 +102,7 @@ test.describe('soil tests', () => {
     await page.reload();
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await expect.poll(() => snapshotHas(page, soilId), { timeout: 30_000 }).toBe(true);
+    await expect.poll(() => cardsDataCached(page), { timeout: 30_000 }).toBeGreaterThan(0);
 
     await context.setOffline(true);
     await page.goto(href);

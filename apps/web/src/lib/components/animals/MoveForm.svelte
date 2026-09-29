@@ -8,6 +8,8 @@
   } from '$lib/animals/display';
   import { submitMove, type MoveOutcome } from '$lib/animals/moveClient';
   import type { AnimalMoveInput } from '$lib/animals/apiSchemas';
+  import type { ToxicPlantsByArea } from '$lib/animals/toxicAdjacency';
+  import ToxicPlantsCallout from './ToxicPlantsCallout.svelte';
 
   interface Member {
     id: string;
@@ -26,6 +28,12 @@
     joinGroups?: { id: string; name: string }[];
     /** The group an individual is in now. */
     inGroup?: { id: string; name: string } | null;
+    /** Toxic-plant advisory for the destination Area. Never blocks. */
+    toxic?: {
+      byArea: ToxicPlantsByArea;
+      speciesIds: string[];
+      speciesPlural: Record<string, string>;
+    } | null;
     onDone: (outcome: MoveOutcome, text: string) => void;
   }
 
@@ -37,6 +45,7 @@
     group = null,
     joinGroups = [],
     inGroup = null,
+    toxic = null,
     onDone
   }: Props = $props();
   const uid = $props.id();
@@ -155,6 +164,14 @@
         <option value={a.id}>{a.name} ({areaKindLabel(a.kind)})</option>
       {/each}
     </select>
+    {#if toxic && fieldId}
+      <ToxicPlantsCallout
+        crops={toxic.byArea[fieldId]}
+        speciesIds={toxic.speciesIds}
+        speciesPlural={toxic.speciesPlural}
+        where={areaName(fieldId)}
+      />
+    {/if}
     {#if destinations.length === 0}
       <p class="af-help">There is nowhere else to move them yet. The owner can add a place.</p>
     {/if}

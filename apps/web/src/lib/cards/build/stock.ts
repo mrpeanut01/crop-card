@@ -30,7 +30,10 @@ export const STOCK_CATEGORY_LABEL: Record<SnapshotStockCategory, string> = {
   seed: 'Seed',
   adjuvant: 'Adjuvant',
   fuel: 'Fuel',
-  part: 'Part'
+  part: 'Part',
+  feed: 'Feed',
+  bedding: 'Bedding',
+  'animal-health': 'Animal health'
 };
 
 export function isLowStock(item: Pick<SnapshotStockItem, 'onHand' | 'reorderThreshold'>): boolean {

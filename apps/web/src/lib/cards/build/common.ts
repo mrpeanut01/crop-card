@@ -29,6 +29,9 @@ export interface BuildOptions {
   /** The day a garden's bed map shows, when it isn't `now` (the designer's
    *  scrubbed date). */
   bedMapOnMs?: number;
+  /** `animal:<id>` / `group:<id>` subjects with a treatment or move still
+   *  queued on this phone; their cards can't confirm "no holds". */
+  unsyncedAnimalSubjects?: ReadonlySet<string>;
 }
 
 export interface ResolvedOptions {

@@ -6,6 +6,7 @@
   import SpeciesIcon from '$lib/components/animals/SpeciesIcon.svelte';
   import FoodChip from '$lib/components/animals/FoodChip.svelte';
   import HoldChips from '$lib/components/animals/HoldChips.svelte';
+  import ToxicPlantsCallout from '$lib/components/animals/ToxicPlantsCallout.svelte';
   import FactList from '$lib/components/animals/FactList.svelte';
   import AnimalRow from '$lib/components/animals/AnimalRow.svelte';
   import MoveForm from '$lib/components/animals/MoveForm.svelte';
@@ -13,6 +14,7 @@
   import FlagForm from '$lib/components/animals/FlagForm.svelte';
   import GroupEditForm from '$lib/components/animals/GroupEditForm.svelte';
   import History from '$lib/components/animals/History.svelte';
+  import CarePlansPanel from '$lib/components/animals/CarePlansPanel.svelte';
   import {
     OFFLINE_MESSAGE,
     STATUS_LABEL,
@@ -153,6 +155,13 @@
       isOwner={data.canEdit}
       healthHref="/animals/{group.id}/health"
     />
+    {#if group.housingFieldId}
+      <ToxicPlantsCallout
+        crops={data.toxicPlants[group.housingFieldId]}
+        speciesIds={[group.speciesId]}
+        speciesPlural={data.speciesPlural}
+      />
+    {/if}
     <nav class="record-links" aria-label="Records">
       <a class="af-ghost" href="/animals/{group.id}/health">Health</a>
       <a class="af-ghost" href="/animals/{group.id}/log">Eggs, milk and weights</a>
@@ -164,6 +173,22 @@
   </article>
 
   {#if message}<p class="af-ok" role="status">{message}</p>{/if}
+
+  {#if data.care.plans.length > 0 || (data.canEdit && group.status === 'active')}
+    <CarePlansPanel
+      subjectId={group.id}
+      subjectName={group.name}
+      plans={data.care.plans}
+      cards={data.care.cards}
+      todayYmd={data.todayYmd}
+      isOwner={data.canEdit}
+      canAct={data.canLog && group.status === 'active'}
+      active={group.status === 'active'}
+      products={data.care.products}
+      stock={data.care.stock}
+      onChanged={(t) => refresh(t)}
+    />
+  {/if}
   {#if emptied && data.canEdit && !archived}
     <div class="af-note" role="status">
       <p class="emptied">No animals left. Archive this {noun}?</p>
@@ -218,6 +243,11 @@
             total: group.total,
             noun,
             members: here.map((m) => ({ id: m.id, label: animalLabel(m) }))
+          }}
+          toxic={{
+            byArea: data.toxicPlants,
+            speciesIds: [group.speciesId],
+            speciesPlural: data.speciesPlural
           }}
           onDone={moved}
         />

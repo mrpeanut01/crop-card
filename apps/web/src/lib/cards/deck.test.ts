@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { DECK_FILTERS, filterDeck, isDeckFilter, orderDeck } from './deck';
+import { DECK_FILTERS, filterDeck, foldMembers, isDeckFilter, orderDeck } from './deck';
 import { buildDeck } from './build';
 import { sampleGearSnapshot } from './build/fixturesGear';
+import { sampleAnimalSnapshot } from './build/fixturesAnimals';
 
 const deck = buildDeck(sampleGearSnapshot());
 const keys = deck.map((c) => c.key);
@@ -13,6 +14,7 @@ describe('deck filters', () => {
       'All',
       'Pinned',
       'Today',
+      'Animals',
       'Plantings',
       'Areas',
       'Equipment',
@@ -54,6 +56,37 @@ describe('deck filters', () => {
           expect(filterDeck(deck, 'all', pinned)).toEqual(out);
         }
       )
+    );
+  });
+});
+
+describe('animal cards on /cards (D2-14)', () => {
+  const animalDeck = buildDeck(sampleAnimalSnapshot());
+
+  it('the Animals filter keeps Flock and Animal Cards, flocks first', () => {
+    const out = filterDeck(animalDeck, 'animals', []);
+    expect(out.map((c) => c.kind)).toEqual(['flock', 'animal', 'animal', 'animal', 'animal']);
+  });
+
+  it('folds members under their Flock Card and leaves other animals as their own slots', () => {
+    const slots = foldMembers(filterDeck(animalDeck, 'animals', []));
+    expect(slots.map((s) => s.card.key)).toEqual(['fl_g_layers', 'an_a_goat', 'an_a_dog']);
+    expect(slots[0].members.map((m) => m.key)).toEqual(['an_a_hen2', 'an_a_hen1']);
+  });
+
+  it('keeps a pinned member as its own slot when its flock is not pinned', () => {
+    const pinned = ['an_a_hen1'];
+    const slots = foldMembers(filterDeck(animalDeck, 'pinned', pinned));
+    expect(slots).toEqual([{ card: expect.objectContaining({ key: 'an_a_hen1' }), members: [] }]);
+  });
+
+  it('property: folding never drops or repeats a card', () => {
+    fc.assert(
+      fc.property(fc.shuffledSubarray(animalDeck), (cards) => {
+        const slots = foldMembers(cards);
+        const keys = slots.flatMap((s) => [s.card.key, ...s.members.map((m) => m.key)]);
+        expect(keys.sort()).toEqual(cards.map((c) => c.key).sort());
+      })
     );
   });
 });

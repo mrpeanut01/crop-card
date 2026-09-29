@@ -47,6 +47,7 @@ import {
   type AnimalStatusEvent
 } from '$lib/db/animalStatus';
 import { getField, type Field } from '$lib/db/fields';
+import { copyCarePlans } from '$lib/db/animalCarePlans';
 import { getDataKinds } from '$lib/server/registry';
 import type {
   AnimalCreateInput,
@@ -230,7 +231,9 @@ export function createAnimalWithHousing(
         purpose: input.purpose ?? group?.purpose ?? defaultPurpose(species),
         foodProducing: species.foodProducingDefault,
         housingFieldId: group ? group.housingFieldId : (field?.id ?? null),
-        notes: input.notes
+        notes: input.notes,
+        microchipId: input.microchipId,
+        feedingNote: input.feedingNote
       },
       now
     );
@@ -528,6 +531,7 @@ export function applyMove(plan: MovePlan, ctx: MoveContext, now = Date.now()): M
         now
       );
       setGroupHeadCount(group.id, group.headCount - plan.count, now);
+      copyCarePlans(group.id, newGroup.id, now);
       const subject: Subject = { subjectType: 'group', subjectId: newGroup.id };
       const location = staySaved(
         insertStay({

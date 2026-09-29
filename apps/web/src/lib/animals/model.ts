@@ -74,6 +74,8 @@ export const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 
 export const MAX_ANIMAL_NAME = 80;
 export const MAX_ANIMAL_TAG = 40;
+export const MAX_MICROCHIP_ID = 40;
+export const MAX_FEEDING_NOTE = 200;
 export const MAX_NOTES = 2000;
 export const MAX_REASON = 500;
 export const MAX_HEAD_COUNT = 100_000;

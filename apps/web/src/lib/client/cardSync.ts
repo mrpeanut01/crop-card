@@ -8,6 +8,7 @@
 
 import type { FarmSnapshot } from '$lib/cards/snapshot';
 import { activeCardOwnerId, loadSnapshot, saveSnapshot } from './cardStore';
+import { clearOnlineHoldWritesBefore } from './onlineHoldWrites';
 
 export const SNAPSHOT_URL = '/api/cards/snapshot';
 export const SNAPSHOT_EVENT = 'cropcard:snapshot';
@@ -51,6 +52,7 @@ async function run(opts: CardSyncOptions): Promise<CardSyncOutcome> {
   if (!ownerId) return 'no-owner';
   const doFetch = opts.fetchImpl ?? fetch;
   const now = opts.now ?? Date.now;
+  const startedAt = now();
 
   const existing = await loadSnapshot().catch(() => null);
   const headers: Record<string, string> = { accept: 'application/json' };
@@ -66,6 +68,7 @@ async function run(opts: CardSyncOptions): Promise<CardSyncOutcome> {
   if (res.status === 304 && existing) {
     const at = now();
     const saved = await saveSnapshot({ ...existing.bundle, generatedAt: at }, existing.etag, at);
+    if (saved) clearOnlineHoldWritesBefore(startedAt, at);
     return saved ? 'unchanged' : 'owner-mismatch';
   }
   if (res.status === 401 || res.status === 403) return 'unauthorized';
@@ -79,7 +82,9 @@ async function run(opts: CardSyncOptions): Promise<CardSyncOutcome> {
   }
   if (!looksLikeSnapshot(body)) return 'error';
   if (body.ownerId !== ownerId) return 'owner-mismatch';
-  const saved = await saveSnapshot(body, res.headers.get('etag'), now());
+  const at = now();
+  const saved = await saveSnapshot(body, res.headers.get('etag'), at);
+  if (saved) clearOnlineHoldWritesBefore(startedAt, at);
   return saved ? 'updated' : 'owner-mismatch';
 }
 
@@ -97,6 +102,16 @@ export function syncCardSnapshot(opts: CardSyncOptions = {}): Promise<CardSyncOu
       });
   }
   return inflight;
+}
+
+/** A fresh copy after this phone saved something that changes holds. A
+ *  refresh already running may have started before the save, so this one
+ *  waits for it and then asks again. */
+export async function refreshCardSnapshotAfterWrite(
+  opts: CardSyncOptions = {}
+): Promise<CardSyncOutcome> {
+  if (inflight) await inflight.catch(() => undefined);
+  return syncCardSnapshot(opts);
 }
 
 /** Primes the service worker's copy of the /cards layout data so a card

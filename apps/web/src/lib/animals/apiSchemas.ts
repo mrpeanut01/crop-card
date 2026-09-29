@@ -6,7 +6,9 @@ import {
   ANIMAL_SUBJECT_TYPES,
   MAX_ANIMAL_NAME,
   MAX_ANIMAL_TAG,
+  MAX_FEEDING_NOTE,
   MAX_HEAD_COUNT,
+  MAX_MICROCHIP_ID,
   MAX_NOTES,
   MAX_REASON,
   MEAT_USED_STATUSES,
@@ -36,7 +38,9 @@ const identity = {
   name: optionalText(MAX_ANIMAL_NAME),
   tag: optionalText(MAX_ANIMAL_TAG),
   sex: z.enum(ANIMAL_SEXES).optional(),
-  breed: optionalText(80)
+  breed: optionalText(80),
+  microchipId: optionalText(MAX_MICROCHIP_ID),
+  feedingNote: optionalText(MAX_FEEDING_NOTE)
 };
 
 /** `POST /api/animals`. One of name or tag is required. The food-producing
@@ -148,7 +152,17 @@ export const animalMoveSchema = z
     count: z.number().int().min(0).max(MAX_HEAD_COUNT).optional(),
     animalIds: z.array(id).max(500).optional(),
     newGroupName: z.string().trim().min(1).max(MAX_ANIMAL_NAME).optional(),
-    movedAt: ms.optional()
+    movedAt: ms.optional(),
+    /** 32D (D1-06): tapped offline and replayed from the queue. The grazing
+     *  gate judges it as a live move at `movedAt`, so a hold answers 422
+     *  instead of saving it as a move that already happened. Only ever
+     *  stricter. */
+    queuedLive: z.boolean().optional(),
+    /** 32D: the "They already went through the gate" resend of a refused
+     *  queued move. The animals are there, so the move is saved at once
+     *  however recent it is, with the same warning and food holds as a
+     *  move dated 30 minutes or more back. Ignored with `queuedLive`. */
+    alreadyThere: z.boolean().optional()
   })
   .refine((v) => !!v.fieldId !== !!v.toGroupId, {
     message: 'give either fieldId or toGroupId',

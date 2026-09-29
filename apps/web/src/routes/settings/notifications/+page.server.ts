@@ -4,6 +4,7 @@ import { getEmailPrefsForUser } from '$lib/db/emailAlertConsents';
 import { isEmailSuppressed } from '$lib/db/contactSuppressions';
 import { readVapidConfig } from '$lib/server/push/webPush';
 import { resolveWeatherLocation } from '$lib/server/weatherHourly';
+import { hasAnyAnimalRecord } from '$lib/db/animals';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals }) => {
@@ -14,6 +15,7 @@ export const load: PageServerLoad = ({ locals }) => {
     publicKey: config?.publicKey ?? null,
     canSubscribe: locals.user.role !== 'inspector',
     isOwner: locals.user.role === 'owner',
+    hasAnimals: hasAnyAnimalRecord(),
     frostNeedsLocation: (resolveWeatherLocation(null)?.source ?? 'farm-default') === 'farm-default',
     email: {
       address: locals.user.email,

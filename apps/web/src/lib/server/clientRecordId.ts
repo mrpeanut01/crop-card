@@ -17,6 +17,13 @@ interface HeldClaim {
   lost: boolean;
 }
 
+/** True when the request carries a well-formed client record id, which only
+ *  the offline queue and its recovery resends send. */
+export function hasClientRecordId(request: Request): boolean {
+  const raw = request.headers.get(CLIENT_RECORD_HEADER);
+  return !!raw && ID_PATTERN.test(raw);
+}
+
 const claims = new WeakMap<Request, HeldClaim>();
 
 /** Thrown inside a record's write transaction when the replay claim was

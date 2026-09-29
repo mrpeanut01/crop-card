@@ -5,7 +5,9 @@
   import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
   import Pill from '$lib/components/ui/Pill.svelte';
   import {
+    ANIMAL_PUSH_KINDS,
     DEFAULT_PUSH_PREFS,
+    OWNER_ONLY_PUSH_KINDS,
     PUSH_ALERT_KINDS,
     PUSH_ALERT_LABELS,
     type PushAlertKind,
@@ -20,6 +22,13 @@
   } from '$lib/client/pushClient';
 
   const { data } = $props();
+
+  function shown(kind: PushAlertKind): boolean {
+    if (ANIMAL_PUSH_KINDS.includes(kind) && !data.hasAnimals) return false;
+    return !OWNER_ONLY_PUSH_KINDS.includes(kind) || data.isOwner;
+  }
+  const pushKinds = $derived(PUSH_ALERT_KINDS.filter(shown));
+  const emailKinds = $derived(EMAIL_ALERT_CATEGORIES.filter(shown));
 
   let support = $state<PushSupport | 'checking'>('checking');
   let endpoint = $state<string | null>(null);
@@ -279,7 +288,7 @@
     sub="Reminders only. The safety checks and the 48-hour record lock apply either way."
   >
     <ul class="kinds">
-      {#each PUSH_ALERT_KINDS as kind (kind)}
+      {#each pushKinds as kind (kind)}
         <li>
           <label class="kind-row">
             <input
@@ -329,7 +338,7 @@
         <p class="notice" role="status">Email isn't configured on this server.</p>
       {/if}
       <ul class="kinds">
-        {#each EMAIL_ALERT_CATEGORIES as category (category)}
+        {#each emailKinds as category (category)}
           <li>
             <label class="kind-row">
               <input

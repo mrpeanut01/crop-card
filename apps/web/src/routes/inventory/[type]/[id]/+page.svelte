@@ -3,18 +3,31 @@
   import FertilityDetail from '$lib/components/inventory/detail/FertilityDetail.svelte';
   import SeedDetail from '$lib/components/inventory/detail/SeedDetail.svelte';
   import CropPluginDetail from '$lib/components/inventory/detail/CropPluginDetail.svelte';
+  import FeedDetail from '$lib/components/inventory/detail/FeedDetail.svelte';
+  import AnimalHealthDetail from '$lib/components/inventory/detail/AnimalHealthDetail.svelte';
+  import { INVENTORY_TYPE_LABELS } from '$lib/inventory/types';
 
   const { data } = $props();
+
+  function titleOf(d: typeof data): string {
+    if (d.type === 'crop') return d.plugin.displayName;
+    if (d.type === 'animal-health') return d.item?.displayName ?? d.plugin?.displayName ?? '';
+    return d.item.displayName;
+  }
 </script>
 
 <svelte:head>
   <title>
-    {data.type === 'crop' ? data.plugin.displayName : data.item.displayName} · CropCard
+    {titleOf(data)} · CropCard
   </title>
 </svelte:head>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">
-  <a href="/inventory?type={data.type}">← All {data.type}</a>
+  <a
+    href="/inventory?type={data.type}{data.type === 'animal-health' && !data.item
+      ? '&mode=catalog'
+      : ''}">← All {INVENTORY_TYPE_LABELS[data.type].toLowerCase()}</a
+  >
 </nav>
 
 {#if data.type === 'pesticide'}
@@ -33,6 +46,10 @@
   />
 {:else if data.type === 'seed'}
   <SeedDetail item={data.item} lots={data.lots} movements={data.movements} plugin={data.plugin} />
+{:else if data.type === 'feed'}
+  <FeedDetail {...data} />
+{:else if data.type === 'animal-health'}
+  <AnimalHealthDetail {...data} />
 {:else if data.type === 'crop'}
   <CropPluginDetail
     plugin={data.plugin}
@@ -46,6 +63,9 @@
     margin-bottom: 12px;
   }
   .breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
     font-size: 0.85rem;
     color: var(--color-forest, #1f5e3a);
     text-decoration: none;

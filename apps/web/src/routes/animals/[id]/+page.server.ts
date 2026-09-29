@@ -10,6 +10,9 @@ import { loadAnimalsProfile } from '$lib/animals/profile.server';
 import { pageHoldsFor } from '$lib/server/animalFoodGate';
 import { farmTimeZone } from '$lib/db/userProfile';
 import { areaOptions, housingAreaOptions, speciesOptions } from '$lib/animals/pageData.server';
+import { loadCareSection } from '$lib/server/careView';
+import { ymdInZone } from '$lib/prefs';
+import { loadToxicPlants } from '$lib/server/toxicPlants';
 
 export const load: PageServerLoad = async (event) => {
   const animal = getAnimal(event.params.id);
@@ -18,6 +21,7 @@ export const load: PageServerLoad = async (event) => {
   const species = await speciesOptions();
   const areas = areaOptions();
   const groups = listAnimalGroups({ status: 'all' });
+  const today = ymdInZone(Date.now(), farmTimeZone());
 
   return {
     profile: loadAnimalsProfile(),
@@ -36,6 +40,9 @@ export const load: PageServerLoad = async (event) => {
       )
       .map((g) => ({ id: g.id, name: g.name })),
     ...(await holdsFor('animal', animal.id, farmTimeZone())),
+    care: await loadCareSection('animal', animal.id, animal.speciesId, today),
+    todayYmd: today,
+    ...(await loadToxicPlants()),
     canEdit: user?.role === 'owner',
     canLog: !!user && canMutate(user.role)
   };

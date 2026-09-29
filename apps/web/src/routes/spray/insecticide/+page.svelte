@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { noteHoldWrite } from '$lib/animals/recordClient';
   import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
   import SetupSheet from '$lib/components/setup/SetupSheet.svelte';
@@ -280,6 +281,7 @@
         if (Array.isArray(respData.violations)) violations = respData.violations;
         return;
       }
+      await noteHoldWrite('insecticide', body);
       result = `Recorded — re-entry clear ${fmt.instant(respData.event.reEntryClearAt)}.`;
       if (data.taskId) {
         goto('/plan?tab=schedule&view=swimlane');

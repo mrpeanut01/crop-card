@@ -1,9 +1,11 @@
 import { parseCardKey, type CardModel } from '../model';
 import type { FarmSnapshot } from '../snapshot';
+import { buildAnimalCard, buildAnimalCards } from './animal';
 import { buildAreaCard, buildAreaCards } from './area';
 import { buildCareGuideCard, buildCareGuideCards } from './careGuide';
 import type { BuildOptions } from './common';
 import { buildFarmMapCard } from './farmMap';
+import { barnPinKeys, buildFlockCard, buildFlockCards } from './flock';
 import { buildDayCard, buildDayCards } from './day';
 import { buildEquipmentCard, buildEquipmentCards } from './equipment';
 import { buildPlantingCard, buildPlantingCards } from './planting';
@@ -15,6 +17,11 @@ import { buildTaskCard, buildTaskCardFromSnapshot } from './task';
 export type { BuildOptions } from './common';
 export type { EmergencyContact, FarmMapBuildOptions } from './farmMap';
 export {
+  barnPinKeys,
+  buildAnimalCard,
+  buildAnimalCards,
+  buildFlockCard,
+  buildFlockCards,
   buildAreaCard,
   buildAreaCards,
   buildCareGuideCard,
@@ -65,16 +72,23 @@ export function buildCard(
       return buildTaskCardFromSnapshot(snapshot, parsed.id, options);
     case 'soilTest':
       return buildSoilTestCard(snapshot, parsed.id, options);
+    case 'animal':
+      return buildAnimalCard(snapshot, parsed.id, options);
+    case 'flock':
+      return buildFlockCard(snapshot, parsed.id, options);
     default:
       return null;
   }
 }
 
-/** Every card the snapshot can build, in deck order. */
+/** Every card the snapshot can build, in deck order. Flock Cards come
+ *  before their members, which /cards folds under them. */
 export function buildDeck(snapshot: FarmSnapshot, options: BuildOptions = {}): CardModel[] {
   return [
     ...buildDayCards(snapshot, options),
     buildFarmMapCard(snapshot, options),
+    ...buildFlockCards(snapshot, options),
+    ...buildAnimalCards(snapshot, options),
     ...buildPlantingCards(snapshot, options),
     ...buildAreaCards(snapshot, options),
     ...buildEquipmentCards(snapshot, options),

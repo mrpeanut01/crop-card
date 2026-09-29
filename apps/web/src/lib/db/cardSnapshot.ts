@@ -4,11 +4,17 @@
  * categories, the active Owner's display name).
  */
 
-import { and, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { db } from './client';
-import { crops, owners, tasks } from './schema';
+import { animalCarePlans, animalHealthEvents, crops, owners, tasks } from './schema';
 import { requireOwnerId, unscopedQueryNote, withTenant } from './tenant';
-import type { SnapshotPlanting, SnapshotTask, SnapshotTaskCategory } from '$lib/cards/snapshot';
+import type {
+  SnapshotCarePlan,
+  SnapshotPlanting,
+  SnapshotTask,
+  SnapshotTaskCategory,
+  SnapshotTreatment
+} from '$lib/cards/snapshot';
 import { parseFootprint } from '$lib/farm/footprint';
 
 const DAY_MS = 86_400_000;
@@ -138,4 +144,67 @@ export function activeOwnerName(): string | null {
   unscopedQueryNote('owners is the tenant registry; read only the active Owner row by id');
   const row = db.select({ name: owners.name }).from(owners).where(eq(owners.id, ownerId)).get();
   return row?.name ?? null;
+}
+
+/** Active care plans, soonest first; undated ("ask your vet") plans last. */
+export function listCarePlansForCards(): SnapshotCarePlan[] {
+  return db
+    .select()
+    .from(animalCarePlans)
+    .where(withTenant(animalCarePlans, eq(animalCarePlans.active, true)))
+    .all()
+    .map((r) => ({
+      id: r.id,
+      subjectType: r.subjectType,
+      subjectId: r.subjectId,
+      kind: r.kind as SnapshotCarePlan['kind'],
+      title: r.title,
+      intervalDays: r.intervalDays ?? null,
+      nextDueAt: r.nextDueAt ? r.nextDueAt.getTime() : null,
+      provenance: r.provenance
+    }))
+    .sort(
+      (a, b) =>
+        (a.nextDueAt ?? Infinity) - (b.nextDueAt ?? Infinity) ||
+        a.title.localeCompare(b.title) ||
+        a.id.localeCompare(b.id)
+    );
+}
+
+/** Health events given since `sinceMs` (or with a course still running
+ *  then), newest first. Display only: no hold is read from these. */
+export function listTreatmentsForCards(sinceMs: number): SnapshotTreatment[] {
+  const since = new Date(sinceMs);
+  return db
+    .select({
+      id: animalHealthEvents.id,
+      subjectType: animalHealthEvents.subjectType,
+      subjectId: animalHealthEvents.subjectId,
+      kind: animalHealthEvents.kind,
+      productName: animalHealthEvents.productName,
+      administeredAt: animalHealthEvents.administeredAt,
+      courseEndAt: animalHealthEvents.courseEndAt
+    })
+    .from(animalHealthEvents)
+    .where(
+      withTenant(
+        animalHealthEvents,
+        or(
+          gte(animalHealthEvents.administeredAt, since),
+          gte(animalHealthEvents.courseEndAt, since)
+        )
+      )
+    )
+    .orderBy(asc(animalHealthEvents.administeredAt), asc(animalHealthEvents.id))
+    .all()
+    .map((r) => ({
+      id: r.id,
+      subjectType: r.subjectType,
+      subjectId: r.subjectId,
+      kind: r.kind,
+      productName: r.productName ?? null,
+      administeredAt: r.administeredAt.getTime(),
+      courseEndAt: r.courseEndAt ? r.courseEndAt.getTime() : null
+    }))
+    .reverse();
 }

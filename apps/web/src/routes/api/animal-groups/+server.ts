@@ -8,6 +8,7 @@ import { createGroupWithMembers, getSpecies, parseBody, ruleResponse } from '$li
 import { farmTimeZone } from '$lib/db/userProfile';
 import { grazingPlacementGate } from '$lib/server/grazingGate';
 import { guardedHoldWrite } from '$lib/server/holdGuard';
+import { seedSpeciesCarePlans } from '$lib/server/carePlans';
 
 const LIST_STATUSES = ['active', 'archived', 'all'] as const;
 type ListStatus = (typeof LIST_STATUSES)[number];
@@ -55,7 +56,13 @@ export const POST: RequestHandler = async (event) => {
         exposureFloor: gate.exposureFloor ?? null
       })
     );
-    return json({ ...created, grazingWarnings: gate.warnings }, { status: 201 });
+    const carePlans = await seedSpeciesCarePlans(
+      'group',
+      created.group.id,
+      created.group.speciesId,
+      now
+    );
+    return json({ ...created, grazingWarnings: gate.warnings, carePlans }, { status: 201 });
   } catch (e) {
     return ruleResponse(e);
   }

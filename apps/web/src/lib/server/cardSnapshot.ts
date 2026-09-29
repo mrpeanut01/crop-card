@@ -8,8 +8,14 @@ import { createHash } from 'node:crypto';
 import {
   FARM_SNAPSHOT_VERSION,
   type FarmSnapshot,
+  type SnapshotAnimal,
+  type SnapshotAnimalGroup,
+  type SnapshotAnimalHold,
   type SnapshotArea,
+  type SnapshotAreaHold,
   type SnapshotBlock,
+  type SnapshotHoldStatus,
+  type SnapshotSpecies,
   type SnapshotCareTask,
   type SnapshotCropPlugin,
   type SnapshotEquipment,
@@ -25,9 +31,17 @@ import { listAreas } from '$lib/db/areas';
 import { listBlocks } from '$lib/db/blocks';
 import {
   activeOwnerName,
+  listCarePlansForCards,
   listOpenTasksForCards,
-  listPlantingsForCards
+  listPlantingsForCards,
+  listTreatmentsForCards
 } from '$lib/db/cardSnapshot';
+import { hasAnyAnimalRecord, listAnimals, type Animal } from '$lib/db/animals';
+import { listAnimalGroups, type AnimalGroupSummary } from '$lib/db/animalGroups';
+import { farmTimeZone } from '$lib/db/userProfile';
+import { loadAnimalsProfile } from '$lib/animals/profile.server';
+import { splitHoldMapKey, type HoldProjection, type Span } from '$lib/safety/holdLedger';
+import { projectActiveFarm } from './holdGuard';
 import { listEquipment } from '$lib/db/equipment';
 import { listSoilTests, type SoilTest } from '$lib/db/fertility';
 import { listStockItems } from '$lib/db/stock';
@@ -38,7 +52,7 @@ import { pollinatorDataFor } from '$lib/safety/pollinatorProtection';
 import { buildTankMixSteps } from '$lib/safety/tankMixOrder';
 import { RULES_VERSION } from '$lib/safety/version';
 import { eventsForPlanting } from '$lib/calendar/engine';
-import { getRegistry } from './registry';
+import { getDataKinds, getRegistry } from './registry';
 import { sprayTermsFor } from './sprayTerms';
 import { listMapFeatureViews } from '$lib/db/mapFeatures';
 
@@ -255,6 +269,160 @@ export function toSprayProduct(p: Plugin): SnapshotSprayProduct | null {
   return null;
 }
 
+/** Treatments shown on Animal and Flock Cards (display only, D1-01). */
+export const SNAPSHOT_TREATMENT_DAYS = 90;
+
+/**
+ * Holds are projected as if every open stay and course ran this far past
+ * the snapshot's hour. The projection only ever grows as open facts run
+ * longer, so an offline chip reads the same as the server or longer, never
+ * shorter, for as long as a clear can be trusted (`HOLD_CONFIRM_MAX_AGE_MS`
+ * plus the hour the window is cut at).
+ */
+export const SNAPSHOT_HOLD_HORIZON_MS = 25 * HOUR_MS;
+
+function toSnapshotAnimal(a: Animal, groups: Map<string, AnimalGroupSummary>): SnapshotAnimal {
+  const group = a.groupId ? groups.get(a.groupId) : undefined;
+  return {
+    id: a.id,
+    groupId: a.groupId,
+    speciesId: a.speciesId,
+    name: a.name,
+    tag: a.tag,
+    sex: a.sex,
+    breed: a.breed,
+    birthDate: a.birthDate,
+    birthDateEstimated: a.birthDateEstimated,
+    purpose: a.purpose,
+    foodProducing: a.foodProducing,
+    notForSlaughter: a.notForSlaughter,
+    housingFieldId: group ? group.housingFieldId : a.housingFieldId,
+    microchipId: a.microchipId,
+    feedingNote: a.feedingNote
+  };
+}
+
+function toSnapshotGroup(g: AnimalGroupSummary): SnapshotAnimalGroup {
+  return {
+    id: g.id,
+    name: g.name,
+    speciesId: g.speciesId,
+    purpose: g.purpose,
+    headCount: g.headCount,
+    namedCount: g.namedCount,
+    total: g.total,
+    foodProducing: g.effectiveFoodProducing,
+    housingFieldId: g.housingFieldId
+  };
+}
+
+function statusOf(span: Span): { status: SnapshotHoldStatus; clearMs: number | null } {
+  const finite = Number.isFinite(span.toMs);
+  if (span.basis === 'prohibited') return { status: 'prohibited', clearMs: null };
+  if (span.basis === 'unknown' || !finite) return { status: 'unknown', clearMs: null };
+  return { status: 'held', clearMs: span.toMs };
+}
+
+const FOOD_OF_KIND: Record<string, SnapshotAnimalHold['food'] | undefined> = {
+  meat: 'meat',
+  preSlaughter: 'meat',
+  milk: 'milk',
+  eggs: 'eggs'
+};
+
+/** Every hold of the projection that is still open at `openAtMs`: food
+ *  holds for the listed subjects, and grazing and haying holds per Area. */
+export function snapshotHolds(
+  projection: HoldProjection,
+  openAtMs: number,
+  subjects: ReadonlySet<string>
+): { animalHolds: SnapshotAnimalHold[]; areaHolds: SnapshotAreaHold[] } {
+  const animalHolds: SnapshotAnimalHold[] = [];
+  const areaHolds: SnapshotAreaHold[] = [];
+  for (const [mapKey, spans] of projection.holds) {
+    const { key, kind } = splitHoldMapKey(mapKey);
+    for (const span of spans) {
+      if (span.toMs <= openAtMs) continue;
+      const { status, clearMs } = statusOf(span);
+      if (key.startsWith('area:') && (kind === 'graze' || kind === 'hay')) {
+        areaHolds.push({ areaId: key.slice(5), kind, fromMs: span.fromMs, clearMs, status });
+        continue;
+      }
+      const food = FOOD_OF_KIND[kind];
+      if (food && subjects.has(key)) {
+        animalHolds.push({ subject: key, food, fromMs: span.fromMs, clearMs, status });
+      }
+    }
+  }
+  const order = (a: { fromMs: number }, b: { fromMs: number }) => a.fromMs - b.fromMs;
+  animalHolds.sort(
+    (a, b) => a.subject.localeCompare(b.subject) || a.food.localeCompare(b.food) || order(a, b)
+  );
+  areaHolds.sort(
+    (a, b) => a.areaId.localeCompare(b.areaId) || a.kind.localeCompare(b.kind) || order(a, b)
+  );
+  return { animalHolds, areaHolds };
+}
+
+type AnimalSnapshotPart = Pick<
+  FarmSnapshot,
+  | 'animals'
+  | 'animalGroups'
+  | 'species'
+  | 'animalsLayout'
+  | 'carePlans'
+  | 'treatments'
+  | 'animalHolds'
+  | 'areaHolds'
+  | 'holdTimeZone'
+  | 'holdsProjectedTo'
+>;
+
+/** 32D: animals, flocks, care plans, recent treatments and the kernel's
+ *  open holds. A farm that never had an animal pays one existence check. */
+export async function animalSnapshotPart(windowNow: number): Promise<AnimalSnapshotPart> {
+  if (!hasAnyAnimalRecord()) return {};
+  const groupRows = listAnimalGroups();
+  const groups = new Map(groupRows.map((g) => [g.id, g]));
+  const animalRows = listAnimals();
+  const kinds = await getDataKinds();
+  const species: Record<string, SnapshotSpecies> = {};
+  for (const id of new Set([...groupRows, ...animalRows].map((r) => r.speciesId))) {
+    const p = kinds.species.get(id);
+    if (!p) continue;
+    species[id] = {
+      pluginId: p.pluginId,
+      displayName: p.displayName,
+      label: p.tile.label ?? p.displayName,
+      groupNoun: p.groupNoun,
+      foodProducingDefault: p.foodProducingDefault,
+      products: [...p.products]
+    };
+  }
+  const subjects = new Set([
+    ...groupRows.map((g) => `group:${g.id}`),
+    ...animalRows.map((a) => `animal:${a.id}`)
+  ]);
+  const timeZone = farmTimeZone();
+  const projectedTo = windowNow + SNAPSHOT_HOLD_HORIZON_MS;
+  const { projection } = await projectActiveFarm(timeZone, projectedTo);
+  const holds = snapshotHolds(projection, windowNow, subjects);
+  return {
+    animals: animalRows
+      .map((a) => toSnapshotAnimal(a, groups))
+      .sort((a, b) => a.id.localeCompare(b.id)),
+    animalGroups: groupRows.map(toSnapshotGroup).sort((a, b) => a.id.localeCompare(b.id)),
+    species,
+    animalsLayout: loadAnimalsProfile().layout,
+    carePlans: listCarePlansForCards(),
+    treatments: listTreatmentsForCards(windowNow - SNAPSHOT_TREATMENT_DAYS * DAY_MS),
+    animalHolds: holds.animalHolds,
+    areaHolds: holds.areaHolds,
+    holdTimeZone: timeZone,
+    holdsProjectedTo: projectedTo
+  };
+}
+
 export interface BuildSnapshotOptions {
   now?: number;
   origin?: string | null;
@@ -352,7 +520,8 @@ export async function buildFarmSnapshot(opts: BuildSnapshotOptions = {}): Promis
     sprayTerms: sprayTermsFor(registry),
     mapFeatures: listMapFeatureViews(),
     emergencyContacts: loadEmergencyContacts(),
-    soilTests: latestSoilTestsPerBlock(listSoilTests())
+    soilTests: latestSoilTestsPerBlock(listSoilTests()),
+    ...(await animalSnapshotPart(windowNow))
   };
 }
 

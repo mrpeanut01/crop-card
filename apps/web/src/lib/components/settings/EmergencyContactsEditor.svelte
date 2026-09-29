@@ -23,7 +23,8 @@
     id: nextId++,
     name: r.name,
     role: r.role,
-    phone: r.phone
+    phone: r.phone,
+    type: r.type === 'vet' ? 'vet' : 'other'
   });
 
   let rows = $state<Row[]>(untrack(() => initial.map(toRow)));
@@ -34,7 +35,7 @@
 
   function addRow() {
     if (full) return;
-    rows.push(toRow({ name: '', role: '', phone: '' }));
+    rows.push(toRow({ name: '', role: '', phone: '', type: 'other' }));
   }
 
   function removeRow(id: number) {
@@ -81,6 +82,18 @@
         />
       </label>
       <label class="field">
+        <span>Type</span>
+        <select
+          class="s-input"
+          name="contactType"
+          bind:value={row.type}
+          aria-label="Contact {i + 1} type"
+        >
+          <option value="other">Other</option>
+          <option value="vet">Vet</option>
+        </select>
+      </label>
+      <label class="field">
         <span>Phone</span>
         <input
           class="s-input mono"
@@ -116,8 +129,8 @@
   </button>
 </div>
 <p class="hint">
-  Up to {MAX_EMERGENCY_CONTACTS} contacts. {POISON_CONTROL_CONTACT.phone} is the national US Poison Help
-  line, open all day, every day. Tap Save changes to keep edits.
+  Up to {MAX_EMERGENCY_CONTACTS} contacts. The first Vet shows on your animal and pet cards. {POISON_CONTROL_CONTACT.phone}
+  is the national US Poison Help line, open all day, every day. Tap Save changes to keep edits.
 </p>
 
 <style>
@@ -130,7 +143,7 @@
   }
   .row {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) 48px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.6fr) minmax(0, 1fr) 48px;
     gap: 8px;
     align-items: end;
   }

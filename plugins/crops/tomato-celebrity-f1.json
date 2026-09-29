@@ -32,5 +32,21 @@
     "continuous": true,
     "beeAttractive": false
   },
-  "archetype": "continuous-harvest-fruit"
+  "archetype": "continuous-harvest-fruit",
+  "animalToxicity": [
+    {
+      "speciesIds": [
+        "dog",
+        "cat",
+        "horse"
+      ],
+      "parts": [
+        "leaves",
+        "stems",
+        "unripe-fruit"
+      ],
+      "severity": "toxic",
+      "note": "Ripe fruit is not the problem. The green parts are."
+    }
+  ]
 }

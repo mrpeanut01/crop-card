@@ -46,6 +46,8 @@ import { getFarmLatLon, hasFarmLatLon } from '$lib/schedule/settings';
 import { getSetting } from '$lib/db/settings';
 import { SETTINGS_KEYS } from '$lib/schedule/constants';
 import { coveredLogAlerts, healthPlugins } from '$lib/server/animalRecords';
+import { materializeCareTasks } from '$lib/server/carePlans';
+import { careCards, careCloseFormData } from '$lib/server/careView';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const OVERDUE_LOOKBACK_DAYS = 30;
@@ -120,6 +122,17 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const today = todayYmd(prefs, now);
   const dayStart = Date.parse(today);
 
+  // Phase 32D (D0-2): /today and the push tick write care tasks. They show
+  // in their own Animal care section, whose Done carries the health form,
+  // so the generic deck and hero leave them out.
+  const careTimeZone = farmTimeZone();
+  const care = materializeCareTasks(now, careTimeZone);
+  const animalCare = careCards(care.open, care.plans, care.subjects, ymdInZone(now, careTimeZone), {
+    surfacedOnly: true
+  });
+  const careForm = await careCloseFormData(animalCare);
+  const notCare = (t: { category?: string }) => t.category !== 'animal-care';
+
   let deckTasks: ReturnType<typeof listTasks> = [];
   let calendar: {
     view: 'week' | 'month';
@@ -136,6 +149,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       fromMs: dayStart - OVERDUE_LOOKBACK_DAYS * DAY_MS,
       toMs: dayStart + DAY_DECK_HORIZON_DAYS * DAY_MS
     }).filter((t) => {
+      if (!notCare(t)) return false;
       const closedAt = t.completedAt ?? t.abortedAt;
       return closedAt === undefined || ymdInZone(closedAt, prefs.timeZone) === today;
     });
@@ -153,7 +167,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       view,
       anchor,
       grid,
-      tasks: rangeTasks.filter((t) => t.scheduledFor >= fromMs - DAY_MS),
+      tasks: rangeTasks.filter((t) => t.scheduledFor >= fromMs - DAY_MS && notCare(t)),
       suggestions: allEvents.filter(
         (e) => e.endMs >= Math.max(fromMs, dayStart) && e.startMs < toMs + DAY_MS
       ),
@@ -193,7 +207,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     toMs: now + 14 * DAY_MS,
     status: 'open',
     kind: 'primary'
-  });
+  }).filter(notCare);
   const priorityAction = derivePriorityAction({
     openPrimaries: allOpenPrimaries,
     derivedEvents: allEvents,
@@ -315,7 +329,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       },
       locals.user?.role ?? 'helper'
     ),
-    coveredLogs
+    coveredLogs,
+    animalCare,
+    animalCareForm: careForm,
+    careTodayYmd: ymdInZone(now, careTimeZone),
+    isOwner
   };
 };
 

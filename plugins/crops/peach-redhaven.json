@@ -76,5 +76,21 @@
     ],
     "beeAttractive": true
   },
-  "archetype": "tree-fruit-multi-pick"
+  "archetype": "tree-fruit-multi-pick",
+  "animalToxicity": [
+    {
+      "speciesIds": [
+        "dog",
+        "cat",
+        "horse"
+      ],
+      "parts": [
+        "leaves",
+        "stems",
+        "seeds"
+      ],
+      "severity": "toxic",
+      "note": "Wilted leaves are the most dangerous. Keep animals away from fallen or pruned branches."
+    }
+  ]
 }

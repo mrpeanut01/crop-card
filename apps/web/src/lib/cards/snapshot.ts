@@ -13,7 +13,8 @@ import type { MapFeatureView } from '$lib/farm/mapFeatures';
 import type { Footprint, SpacingPattern } from '$lib/farm/footprint';
 import type { ExtractionMethod, LabRatings, UnitsBasis } from '$lib/fertility/soilInterpret';
 
-export const FARM_SNAPSHOT_VERSION = 1 as const;
+/** 2 since 32D: animals, flocks, care plans and precomputed holds. */
+export const FARM_SNAPSHOT_VERSION = 2 as const;
 
 export type SnapshotProvenance = 'plugin' | 'data' | 'ai' | 'manual' | 'fallback';
 
@@ -134,7 +135,17 @@ export interface SnapshotEquipment {
 }
 
 export type SnapshotStockCategory =
-  'herbicide' | 'insecticide' | 'fungicide' | 'fertilizer' | 'seed' | 'adjuvant' | 'fuel' | 'part';
+  | 'herbicide'
+  | 'insecticide'
+  | 'fungicide'
+  | 'fertilizer'
+  | 'seed'
+  | 'adjuvant'
+  | 'fuel'
+  | 'part'
+  | 'feed'
+  | 'bedding'
+  | 'animal-health';
 
 export interface SnapshotStockItem {
   id: string;
@@ -251,8 +262,121 @@ export interface SnapshotSoilTest {
   labRatings: LabRatings | null;
 }
 
+/** A species' display facts for Animal and Flock Cards. */
+export interface SnapshotSpecies {
+  pluginId: string;
+  displayName: string;
+  /** Plural ("Chickens"). */
+  label: string;
+  groupNoun: string;
+  foodProducingDefault: boolean;
+  products: string[];
+}
+
+export type SnapshotAnimalPurpose = 'production' | 'pet' | 'mixed';
+
+/** An active animal. */
+export interface SnapshotAnimal {
+  id: string;
+  groupId: string | null;
+  speciesId: string;
+  name: string | null;
+  tag: string | null;
+  sex: string;
+  breed: string | null;
+  birthDate: number | null;
+  birthDateEstimated: boolean;
+  purpose: SnapshotAnimalPurpose;
+  foodProducing: boolean;
+  notForSlaughter: boolean;
+  /** Where it lives; a grouped animal lives where its group lives. */
+  housingFieldId: string | null;
+  microchipId: string | null;
+  feedingNote: string | null;
+}
+
+/** An active herd, flock or litter. */
+export interface SnapshotAnimalGroup {
+  id: string;
+  name: string;
+  speciesId: string;
+  purpose: SnapshotAnimalPurpose;
+  /** Unnamed members only. */
+  headCount: number;
+  namedCount: number;
+  /** Unnamed plus active named members (`groupTotal`). */
+  total: number;
+  /** The group's flag or any active member's. */
+  foodProducing: boolean;
+  housingFieldId: string | null;
+}
+
+export type SnapshotCareKind =
+  | 'vaccination'
+  | 'deworm'
+  | 'treatment'
+  | 'vet-visit'
+  | 'hoof-trim'
+  | 'grooming'
+  | 'shearing'
+  | 'health-check'
+  | 'other';
+
+/** An active care plan. `nextDueAt` is null for "ask your vet" plans with
+ *  no date yet (D2-09). */
+export interface SnapshotCarePlan {
+  id: string;
+  subjectType: 'animal' | 'group';
+  subjectId: string;
+  kind: SnapshotCareKind;
+  title: string;
+  intervalDays: number | null;
+  nextDueAt: number | null;
+  provenance: 'plugin' | 'manual' | 'fallback';
+}
+
+/** A treatment from the last 90 days, for display only. Holds never come
+ *  from these rows; they come from `animalHolds`. */
+export interface SnapshotTreatment {
+  id: string;
+  subjectType: 'animal' | 'group';
+  subjectId: string;
+  kind: string;
+  productName: string | null;
+  administeredAt: number;
+  courseEndAt: number | null;
+}
+
+export type SnapshotHoldStatus = 'held' | 'unknown' | 'prohibited';
+
+/**
+ * One stretch of a food hold the server's kernel projected (D1-01), for
+ * every hold still open when the snapshot was built, whatever its age.
+ * `subject` is `animal:<id>` or `group:<id>`. `clearMs` is when it ends,
+ * already rounded up to local midnight in `holdTimeZone` like the server
+ * gate; null when it never ends on the data we have (unknown or
+ * prohibited). The client never computes a clear by itself.
+ */
+export interface SnapshotAnimalHold {
+  subject: string;
+  food: 'meat' | 'milk' | 'eggs';
+  fromMs: number;
+  clearMs: number | null;
+  status: SnapshotHoldStatus;
+}
+
+/** A grazing or haying hold on an Area, for the move pre-check and the
+ *  Area Card. */
+export interface SnapshotAreaHold {
+  areaId: string;
+  kind: 'graze' | 'hay';
+  fromMs: number;
+  clearMs: number | null;
+  status: SnapshotHoldStatus;
+}
+
 export interface FarmSnapshot {
-  version: typeof FARM_SNAPSHOT_VERSION;
+  version: typeof FARM_SNAPSHOT_VERSION | 1;
   ownerId: string;
   farmName: string | null;
   generatedAt: number;
@@ -282,6 +406,21 @@ export interface FarmSnapshot {
   emergencyContacts?: EmergencyContact[];
   /** Newest soil test per bed or block. Absent on bundles saved before 32A. */
   soilTests?: SnapshotSoilTest[];
+  /** 32D. Absent on bundles saved before it; cards then show no animals. */
+  animals?: SnapshotAnimal[];
+  animalGroups?: SnapshotAnimalGroup[];
+  species?: Record<string, SnapshotSpecies>;
+  /** `farm` or `pets` (`animalsLayout`), for the pet layout of a card. */
+  animalsLayout?: 'farm' | 'pets';
+  carePlans?: SnapshotCarePlan[];
+  treatments?: SnapshotTreatment[];
+  animalHolds?: SnapshotAnimalHold[];
+  areaHolds?: SnapshotAreaHold[];
+  /** The zone the hold clear times were rounded in (the farm's). */
+  holdTimeZone?: string;
+  /** Holds are projected as if every open stay and course ran to this
+   *  moment, so an offline chip can only read longer than the server's. */
+  holdsProjectedTo?: number;
 }
 
 /** One map line or point, as the map and the Farm Map Card read it. */

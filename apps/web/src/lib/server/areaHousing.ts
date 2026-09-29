@@ -8,6 +8,8 @@ import { usesPetsLayout } from '$lib/onboarding/profile';
 import type { SpeciesPlugin } from '$lib/plugins/schemas';
 import type { SpeciesSource } from '$lib/plugins/species';
 import { getDataKinds } from '$lib/server/registry';
+import { loadToxicPlants } from '$lib/server/toxicPlants';
+import type { ToxicPlantsByArea } from '$lib/animals/toxicAdjacency';
 
 interface AreaLike {
   id: string;
@@ -111,5 +113,28 @@ export async function loadAreaHousing(areas: readonly AreaLike[]): Promise<{
     return { housing: {}, petsLayout };
   }
   const { species } = await getDataKinds();
-  return { housing: buildHousingByArea({ areas, groups, animals, species }), petsLayout };
+  const housing = buildHousingByArea({ areas, groups, animals, species });
+  if (Object.values(housing).some((h) => h.speciesIds?.length)) {
+    const { toxicPlants, speciesPlural } = await loadToxicPlants();
+    attachToxicPlants(housing, toxicPlants, speciesPlural);
+  }
+  return { housing, petsLayout };
+}
+
+/** Adds each housed Area's toxic crops and its species' plural words, so
+ *  `withHousing` can add the advisory callout. Pure; mutates `housing`. */
+export function attachToxicPlants(
+  housing: HousingByArea,
+  toxicPlants: ToxicPlantsByArea,
+  speciesPlural: Record<string, string>
+): HousingByArea {
+  for (const [areaId, h] of Object.entries(housing)) {
+    const crops = toxicPlants[areaId];
+    if (!crops?.length || !h.speciesIds?.length) continue;
+    h.toxicPlants = crops;
+    h.speciesPlural = Object.fromEntries(
+      h.speciesIds.filter((id) => speciesPlural[id]).map((id) => [id, speciesPlural[id]])
+    );
+  }
+  return housing;
 }

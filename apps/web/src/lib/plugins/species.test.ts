@@ -71,8 +71,17 @@ describe('shipped species library', () => {
     expect(withToggle).toEqual(['horse']);
   });
 
-  it('keeps care intervals out until 32D sources them', () => {
-    for (const s of species.all()) expect(s.careDefaults ?? [], s.pluginId).toEqual([]);
+  it('ships care suggestions with no interval, so none needs a source (D2-09)', () => {
+    for (const s of species.all()) {
+      for (const c of s.careDefaults ?? []) {
+        expect(c.intervalDays, `${s.pluginId}.${c.key}`).toBeUndefined();
+        expect(c.note ?? '', `${s.pluginId}.${c.key}`).toMatch(/ask your vet/i);
+      }
+    }
+    expect(species.get('dog')?.careDefaults?.map((c) => c.key)).toEqual([
+      'rabies',
+      'core-vaccines'
+    ]);
   });
 
   it('uses tile icons that exist in lucide-svelte', () => {

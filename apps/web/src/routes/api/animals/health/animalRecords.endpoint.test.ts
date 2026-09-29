@@ -682,12 +682,25 @@ describe('stock (C-34)', () => {
         subjectId: groupId,
         kind: 'deworm',
         stockItemId: item.id,
-        dose: 5,
+        dose: 29.5735295625,
         doseUnit: 'mL',
         administeredAt: Date.now()
       });
       expect(ml.status).toBe(201);
-      expect(ml.body.warnings[0].code).toBe('STOCK_NOT_DEDUCTED');
+      const mlMove = listMovementsForItem(item.id).filter((mv) => mv.reason === 'animal-treatment');
+      expect(mlMove.map((mv) => mv.delta).sort((a, b) => a - b)).toEqual([-2, -1]);
+
+      const tablets = await health({
+        subjectType: 'group',
+        subjectId: groupId,
+        kind: 'deworm',
+        stockItemId: item.id,
+        dose: 2,
+        doseUnit: 'tablets',
+        administeredAt: Date.now()
+      });
+      expect(tablets.status).toBe(201);
+      expect(tablets.body.warnings[0].code).toBe('STOCK_NOT_DEDUCTED');
     });
   });
 });

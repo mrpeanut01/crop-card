@@ -6,6 +6,7 @@
   import SpeciesIcon from '$lib/components/animals/SpeciesIcon.svelte';
   import FoodChip from '$lib/components/animals/FoodChip.svelte';
   import HoldChips from '$lib/components/animals/HoldChips.svelte';
+  import ToxicPlantsCallout from '$lib/components/animals/ToxicPlantsCallout.svelte';
   import FactList from '$lib/components/animals/FactList.svelte';
   import PhotoField from '$lib/components/animals/PhotoField.svelte';
   import MoveForm from '$lib/components/animals/MoveForm.svelte';
@@ -13,6 +14,7 @@
   import FlagForm from '$lib/components/animals/FlagForm.svelte';
   import History from '$lib/components/animals/History.svelte';
   import AnimalEditForm from '$lib/components/animals/AnimalEditForm.svelte';
+  import CarePlansPanel from '$lib/components/animals/CarePlansPanel.svelte';
   import {
     OFFLINE_MESSAGE,
     STATUS_LABEL,
@@ -170,6 +172,13 @@
       isOwner={data.canEdit}
       healthHref="/animals/{animal.id}/health"
     />
+    {#if livesAtId}
+      <ToxicPlantsCallout
+        crops={data.toxicPlants[livesAtId]}
+        speciesIds={[animal.speciesId]}
+        speciesPlural={data.speciesPlural}
+      />
+    {/if}
     <nav class="record-links" aria-label="Records">
       <a class="af-ghost" href="/animals/{animal.id}/health">Health</a>
       <a class="af-ghost" href="/animals/{animal.id}/log">Eggs, milk and weights</a>
@@ -195,6 +204,22 @@
   </article>
 
   {#if message}<p class="af-ok" role="status">{message}</p>{/if}
+
+  {#if data.care.plans.length > 0 || (data.canEdit && animal.status === 'active')}
+    <CarePlansPanel
+      subjectId={animal.id}
+      subjectName={label}
+      plans={data.care.plans}
+      cards={data.care.cards}
+      todayYmd={data.todayYmd}
+      isOwner={data.canEdit}
+      canAct={data.canLog && animal.status === 'active'}
+      active={animal.status === 'active'}
+      products={data.care.products}
+      stock={data.care.stock}
+      onChanged={(t) => refresh(t)}
+    />
+  {/if}
   {#if warnings.length > 0}
     <ul class="af-note warn-list" role="status">
       {#each warnings as w (w.animalId + w.message)}
@@ -242,6 +267,11 @@
           currentFieldId={animal.groupId ? null : animal.housingFieldId}
           joinGroups={data.joinGroups}
           inGroup={data.group ? { id: data.group.id, name: data.group.name } : null}
+          toxic={{
+            byArea: data.toxicPlants,
+            speciesIds: [animal.speciesId],
+            speciesPlural: data.speciesPlural
+          }}
           onDone={moved}
         />
       {:else if panel === 'status'}

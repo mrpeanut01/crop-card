@@ -9,8 +9,24 @@ describe('push prefs', () => {
     expect(parsePushPrefs('[]')).toEqual(DEFAULT_PUSH_PREFS);
     expect(parsePushPrefs('{"decon-due":false,"evil":true,"spring-calibration":"no"}')).toEqual({
       ...DEFAULT_PUSH_PREFS,
-      'decon-due': false
+      'decon-due': false,
+      'animal-care-due': false
     });
+  });
+
+  it('turns animal care on for new devices and keeps it off for devices saved before it existed', () => {
+    expect(DEFAULT_PUSH_PREFS['animal-care-due']).toBe(true);
+    expect(DEFAULT_PUSH_PREFS['withdrawal-clears']).toBe(false);
+    const saved = JSON.stringify({
+      'decon-due': true,
+      'lock-window-closing': true,
+      'spring-calibration': true,
+      'frost-tonight': false
+    });
+    expect(parsePushPrefs(saved)['animal-care-due']).toBe(false);
+    expect(parsePushPrefs(saved)['withdrawal-clears']).toBe(false);
+    const fresh = JSON.stringify(DEFAULT_PUSH_PREFS);
+    expect(parsePushPrefs(fresh)['animal-care-due']).toBe(true);
   });
 
   it('merge only applies boolean values for known kinds', () => {

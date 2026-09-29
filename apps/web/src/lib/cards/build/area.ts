@@ -36,6 +36,7 @@ import type { CardBedMap, CardBedMapPlanting } from '../model';
 import { displayFootprints } from '$lib/garden/displayPack';
 import { familyGlyph } from '$lib/garden/familyGlyph';
 import { footprintBounds } from '$lib/garden/geometry';
+import { withSnapshotAnimals } from './areaAnimals';
 
 const MAX_LIST = 8;
 const BLOCK_KIND_ORDER: SnapshotBlockKind[] = ['bed', 'row', 'container', 'block'];
@@ -85,10 +86,21 @@ function blockSizeAcres(b: {
   return typeof b.acres === 'number' && b.acres > 0 ? b.acres : 0;
 }
 
+/** The Area Card; on an offline bundle it also lists who lives there and
+ *  the Area's grazing holds (32D). Live pages add those themselves. */
 export function buildAreaCard(
   snapshot: FarmSnapshot,
   areaId: string,
   options: BuildOptions = {}
+): CardModel | null {
+  const card = baseAreaCard(snapshot, areaId, options);
+  return card ? withSnapshotAnimals(snapshot, areaId, card, resolveOptions(snapshot, options)) : null;
+}
+
+function baseAreaCard(
+  snapshot: FarmSnapshot,
+  areaId: string,
+  options: BuildOptions
 ): CardModel | null {
   const area = snapshot.areas.find((a) => a.id === areaId);
   if (!area) return null;

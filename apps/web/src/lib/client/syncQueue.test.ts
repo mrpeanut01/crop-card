@@ -67,7 +67,8 @@ describe('#316 — kind → endpoint routing', () => {
       journal: '/api/journal/record',
       'animal-move': '/api/animals/move',
       'animal-health': '/api/animals/health/record',
-      'animal-production': '/api/animals/production/record'
+      'animal-production': '/api/animals/production/record',
+      'feed-use': '/api/stock/:id/use'
     });
     const endpoints = Object.values(ENDPOINT_BY_KIND);
     expect(new Set(endpoints).size).toBe(endpoints.length);

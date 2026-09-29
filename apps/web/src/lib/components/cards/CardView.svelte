@@ -195,19 +195,35 @@
       {/if}
 
       {#each shownSections as s (s.title)}
-        <section class="section" class:safety={s.safety}>
-          <h4>
-            {s.title}
-            {#if s.provenance && variant === 'screen'}
-              <Provenance source={s.provenance} compact />
-            {/if}
-          </h4>
-          <ul>
-            {#each s.items as item, i (i)}
-              <li>{@render itemText(item, s.nowrapAfter)}</li>
-            {/each}
-          </ul>
-        </section>
+        {#if s.collapsible && variant !== 'print'}
+          <details class="section fold" class:safety={s.safety} data-collapsible-section>
+            <summary>
+              <span class="fold-title">{s.title}</span>
+              {#if s.provenance && variant === 'screen'}
+                <Provenance source={s.provenance} compact />
+              {/if}
+            </summary>
+            <ul>
+              {#each s.items as item, i (i)}
+                <li>{@render itemText(item, s.nowrapAfter)}</li>
+              {/each}
+            </ul>
+          </details>
+        {:else}
+          <section class="section" class:safety={s.safety}>
+            <h4>
+              {s.title}
+              {#if s.provenance && variant === 'screen'}
+                <Provenance source={s.provenance} compact />
+              {/if}
+            </h4>
+            <ul>
+              {#each s.items as item, i (i)}
+                <li>{@render itemText(item, s.nowrapAfter)}</li>
+              {/each}
+            </ul>
+          </section>
+        {/if}
       {/each}
     </div>
     {#if variant === 'print' && bodySections.length}
@@ -323,6 +339,10 @@
   }
   .kind-soilTest {
     --strip: var(--color-wheat);
+  }
+  .kind-animal,
+  .kind-flock {
+    --strip: var(--color-sky);
   }
   .kicker-row {
     display: flex;
@@ -481,6 +501,23 @@
   }
   .nowrap {
     white-space: nowrap;
+  }
+  .fold summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    min-height: 48px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-ink);
+    overflow-wrap: anywhere;
+  }
+  .fold-title {
+    min-width: 0;
+  }
+  .fold ul {
+    margin-top: var(--space-1);
   }
   .foot {
     display: flex;

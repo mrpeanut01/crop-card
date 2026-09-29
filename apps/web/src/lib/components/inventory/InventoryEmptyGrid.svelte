@@ -1,18 +1,27 @@
 <script lang="ts">
-  import { INVENTORY_TYPES, INVENTORY_TYPE_LABELS, type InventoryType } from '$lib/inventory/types';
+  import { INVENTORY_TYPE_LABELS, type InventoryType } from '$lib/inventory/types';
+  import { visibleInventoryTypes } from '$lib/inventory/chips';
 
   interface Props {
     activeType: InventoryType;
     canAdd: boolean;
+    /** Kinds offered as tiles; defaults to the always-shown types plus the
+     *  active one. */
+    types?: readonly InventoryType[];
   }
 
-  const { activeType, canAdd }: Props = $props();
+  const { activeType, canAdd, types: typesProp }: Props = $props();
+  const types = $derived(
+    typesProp ?? visibleInventoryTypes({ stockCounts: {}, hasAnimals: false, active: activeType })
+  );
 
   const HINTS: Record<InventoryType, string> = {
     pesticide: 'Herbicides, insecticides and fungicides on the shelf.',
     fertility: 'Fertilizer, compost and other amendments.',
     seed: 'Seed packets and bags, with their lot numbers.',
-    crop: "A crop the library doesn't have yet."
+    crop: "A crop the library doesn't have yet.",
+    feed: 'Feed, hay and bedding, by the bag or the pound.',
+    'animal-health': 'Medicines, vaccines and dewormers on the shelf.'
   };
 </script>
 
@@ -23,7 +32,7 @@
   {#if canAdd}
     <p class="lede">What would you like to add? Pick a kind and CropCard walks you through it.</p>
     <ul class="grid">
-      {#each INVENTORY_TYPES as t (t)}
+      {#each types as t (t)}
         <li>
           <a
             class="tile"

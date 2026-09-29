@@ -10,9 +10,11 @@
 
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import { z } from 'zod';
-import { abortTask, completeTask, getTaskWithLinked, updateTask } from '$lib/db/tasks';
+import { abortTask, completeTask, getTask, getTaskWithLinked, updateTask } from '$lib/db/tasks';
+import { farmTimeZone } from '$lib/db/userProfile';
 import { currentUser } from '$lib/server/auth';
 import { canMutate } from '$lib/server/session';
+import { careMetaOf, closeCareTask } from '$lib/server/carePlans';
 
 const patchSchema = z.discriminatedUnion('action', [
   z.object({
@@ -69,6 +71,27 @@ export const PATCH: RequestHandler = async (event) => {
   }
 
   const id = event.params.id;
+  const action = parsed.data.action;
+  if (auth && (action === 'complete' || action === 'abort')) {
+    const existing = getTask(id);
+    const meta = existing ? careMetaOf(existing) : null;
+    if (existing && meta) {
+      if (existing.completedAt !== undefined || existing.abortedAt !== undefined) {
+        return json({ task: existing, alreadyClosed: true });
+      }
+      return closeCareTask({
+        event,
+        user: auth,
+        task: existing,
+        meta,
+        input:
+          parsed.data.action === 'complete'
+            ? { action: 'complete', occurredAt: parsed.data.occurredAt }
+            : { action: 'abort', reason: parsed.data.reason },
+        timeZone: farmTimeZone()
+      });
+    }
+  }
   try {
     if (parsed.data.action === 'complete') {
       return json({ task: completeTask(id, { occurredAt: parsed.data.occurredAt }) });

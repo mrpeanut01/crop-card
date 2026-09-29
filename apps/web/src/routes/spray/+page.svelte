@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { noteHoldWrite } from '$lib/animals/recordClient';
   import { isUpdatingResponse, retryAfterSeconds } from '$lib/updating';
   import { goto, invalidateAll } from '$app/navigation';
   import { untrack } from 'svelte';
@@ -652,6 +653,7 @@
           kind: existingId ? 'updated' : 'created',
           eventId: respData.event.id
         });
+        await noteHoldWrite('herbicide', { blockId: b.id });
         if (data.preselect?.taskId && b.id === data.preselect.blockId) {
           postedTaskRedirect = true;
         }

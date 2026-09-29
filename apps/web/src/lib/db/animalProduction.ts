@@ -78,7 +78,26 @@ export function insertProductionLog(input: {
   performedById: string | null;
   clientRecordId?: string | null;
   createdAt?: number;
+  /** An offline log a hold stop turned into a discard (D0-11): the audit
+   *  trail keeps the use it was queued with. */
+  convertedFromUse?: 'food' | 'sale';
 }): AnimalProductionLog {
+  if (input.convertedFromUse && input.use === 'discard') {
+    const from = input.convertedFromUse;
+    return db.transaction(() => {
+      const log = insertLogRow(input);
+      writeAudit(log, {
+        by: input.performedById,
+        reason: `Saved as discarded after an offline hold stop. It was queued as ${from}.`,
+        snapshot: { action: 'offline-convert', convertedFromUse: from, use: 'discard', log }
+      });
+      return log;
+    });
+  }
+  return insertLogRow(input);
+}
+
+function insertLogRow(input: Parameters<typeof insertProductionLog>[0]): AnimalProductionLog {
   return rowTo(
     db
       .insert(animalProductionLogs)

@@ -96,11 +96,18 @@ export const productionRecordSchema = z
     quantity: z.number().min(0).max(1_000_000),
     unit: z.enum(PRODUCTION_UNITS),
     occurredAt: ms.optional(),
-    use: z.enum(PRODUCTION_USES)
+    use: z.enum(PRODUCTION_USES),
+    /** 32D (D0-11): the use an offline log was queued with before a hold
+     *  stop turned it into a discard. Only with `use: 'discard'`. */
+    convertedFromUse: z.enum(['food', 'sale']).optional()
   })
   .refine((v) => v.kind !== 'weight' || v.unit === 'lb' || v.unit === 'kg', {
     message: 'weigh in lb or kg',
     path: ['unit']
+  })
+  .refine((v) => v.convertedFromUse === undefined || v.use === 'discard', {
+    message: 'convertedFromUse only goes with a discard',
+    path: ['convertedFromUse']
   });
 
 /** `PATCH /api/animals/production/:id`. A change toward discard always

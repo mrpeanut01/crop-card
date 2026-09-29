@@ -38,6 +38,7 @@
 
 import Dexie, { type Table } from 'dexie';
 import type { FarmSnapshot } from '$lib/cards/snapshot';
+import type { RejectInfo } from '$lib/animals/queueRecovery';
 
 /** #316 — offline-capable record kinds. Each maps to a POST endpoint in
  *  syncQueue.ts (ENDPOINT_BY_KIND). Extend both together. */
@@ -52,7 +53,8 @@ export type PendingRecordKind =
   | 'journal'
   | 'animal-move'
   | 'animal-health'
-  | 'animal-production';
+  | 'animal-production'
+  | 'feed-use';
 
 export const PHASE_32_RECORD_KINDS = ['seed-start', 'irrigation'] as const;
 
@@ -78,6 +80,9 @@ export interface PendingSprayRecord {
   lastStatus?: number;
   /** C-35: what unblocks an item the hold guard refused. */
   holdMarker?: string;
+  /** 32D: the parts of a definitive refusal the recovery UX reads (code,
+   *  message, askOwner, resubmitAs, fieldId). Not indexed; no bump. */
+  rejectInfo?: RejectInfo;
   createdAt: number;
 }
 

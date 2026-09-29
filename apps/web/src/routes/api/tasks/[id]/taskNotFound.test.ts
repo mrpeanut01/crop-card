@@ -24,6 +24,7 @@ vi.mock('$lib/db/tasks', () => ({
   abortTask,
   completeTask,
   updateTask,
+  getTask: vi.fn(),
   getTaskWithLinked: vi.fn()
 }));
 

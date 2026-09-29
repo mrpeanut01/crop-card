@@ -8,8 +8,15 @@
   import Hint from '$lib/components/ui/Hint.svelte';
   import { markHintSeen } from '$lib/client/hints';
   import { OfflineCards } from '$lib/components/cards/offlineCards.svelte';
-  import { buildDeck } from '$lib/cards/build';
-  import { DECK_FILTERS, filterDeck, isDeckFilter, type DeckFilter } from '$lib/cards/deck';
+  import { barnPinKeys, buildDeck } from '$lib/cards/build';
+  import {
+    DECK_FILTERS,
+    filterDeck,
+    foldMembers,
+    isDeckFilter,
+    type DeckFilter
+  } from '$lib/cards/deck';
+  import { parseCardKey } from '$lib/cards/model';
   import type { CardPrintLayout } from '$lib/cards/model';
   import { PRINT_HELP, PRINT_LAYOUTS } from '$lib/cards/print';
   import { installNudgeWanted } from '$lib/client/offlineStorage';
@@ -27,6 +34,11 @@
       text: 'Nothing due today or overdue. New tasks from your plan show up here.',
       href: '/plan',
       action: 'Open Plan'
+    },
+    animals: {
+      text: 'No animals yet. Add a flock, a herd or a pet and its card shows up here.',
+      href: '/animals/add',
+      action: 'Add animals'
     },
     spray: {
       text: 'Spray cards appear for pesticides you have in stock, one for each calibrated sprayer.',
@@ -63,12 +75,24 @@
   let layout = $state<CardPrintLayout>('letter-4up');
   let showNudge = $state(false);
   let notice = $state<string | null>(null);
+  let unsynced = $state<ReadonlySet<string>>(new Set());
+
+  async function refreshUnsynced() {
+    const { loadUnsyncedSubjects } = await import('$lib/client/animalHold');
+    unsynced = await loadUnsyncedSubjects(cards.row?.bundle ?? null);
+  }
+  $effect(() => {
+    if (cards.row) void refreshUnsynced();
+  });
 
   const prefs = $derived(currentPrefs());
   const ownerId = $derived(page.data.activeOwner?.id ?? page.data.user?.activeOwnerId ?? null);
   const snapshot = $derived(cards.row?.bundle ?? null);
-  const deck = $derived(snapshot ? buildDeck(snapshot, { prefs, now }) : []);
+  const deck = $derived(
+    snapshot ? buildDeck(snapshot, { prefs, now, unsyncedAnimalSubjects: unsynced }) : []
+  );
   const visible = $derived(filterDeck(deck, filter, cards.pinned));
+  const slots = $derived(foldMembers(visible));
   const printCards = $derived.by(() => {
     const chosen = new Set(selected);
     const picked = deck.filter((c) => chosen.has(c.key));
@@ -80,7 +104,10 @@
     const onLine = () => (online = navigator.onLine);
     window.addEventListener('online', onLine);
     window.addEventListener('offline', onLine);
-    const tick = setInterval(() => (now = Date.now()), 60_000);
+    const tick = setInterval(() => {
+      now = Date.now();
+      if (cards.row) void refreshUnsynced();
+    }, 60_000);
     try {
       const saved = localStorage.getItem(FILTER_KEY);
       if (isDeckFilter(saved)) filter = saved;
@@ -126,6 +153,21 @@
   async function togglePin(key: string) {
     await cards.togglePin(key);
     if (cards.isPinned(key)) showNudge = installNudgeWanted();
+  }
+
+  function barnKeys(flockKey: string): string[] {
+    const parsed = parseCardKey(flockKey);
+    return snapshot && parsed?.kind === 'flock' ? barnPinKeys(snapshot, parsed.id) : [];
+  }
+
+  async function toggleBarn(flockKey: string) {
+    const keys = barnKeys(flockKey);
+    if (cards.allPinned(keys)) {
+      await cards.unpinAll(keys);
+      return;
+    }
+    await cards.pinAll(keys);
+    showNudge = installNudgeWanted();
   }
 
   function printSelected() {
@@ -211,32 +253,63 @@
     {/if}
   {/if}
 
+  {#snippet slotActions(card: (typeof visible)[number])}
+    {@const pinned = cards.isPinned(card.key)}
+    {@const isSelected = selected.includes(card.key)}
+    <div class="slot-actions">
+      <button
+        type="button"
+        class="btn ghost"
+        aria-pressed={pinned}
+        aria-label="{pinned ? 'Unpin' : 'Pin'} {card.title}"
+        onclick={() => togglePin(card.key)}
+      >
+        {pinned ? 'Pinned' : 'Pin'}
+      </button>
+      <label class="select">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onchange={() => toggleSelected(card.key)}
+          aria-label="Select {card.title} for printing"
+        />
+        <span>Select</span>
+      </label>
+    </div>
+  {/snippet}
+
   <ul class="deck" aria-label="Cards">
-    {#each visible as card (card.key)}
-      {@const pinned = cards.isPinned(card.key)}
+    {#each slots as slot (slot.card.key)}
+      {@const card = slot.card}
       {@const isSelected = selected.includes(card.key)}
       <li class="slot" class:selected={isSelected}>
         <CardView {card} {prefs} {now} variant="compact" />
-        <div class="slot-actions">
+        {@render slotActions(card)}
+        {#if card.kind === 'flock'}
+          {@const barn = cards.allPinned(barnKeys(card.key))}
           <button
             type="button"
-            class="btn ghost"
-            aria-pressed={pinned}
-            aria-label="{pinned ? 'Unpin' : 'Pin'} {card.title}"
-            onclick={() => togglePin(card.key)}
+            class="btn ghost barn"
+            aria-pressed={barn}
+            data-testid="pin-barn"
+            onclick={() => toggleBarn(card.key)}
           >
-            {pinned ? 'Pinned' : 'Pin'}
+            {barn ? 'Pinned for the barn' : 'Pin for the barn'}
           </button>
-          <label class="select">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onchange={() => toggleSelected(card.key)}
-              aria-label="Select {card.title} for printing"
-            />
-            <span>Select</span>
-          </label>
-        </div>
+        {/if}
+        {#if slot.members.length}
+          <details class="members" data-testid="flock-members">
+            <summary>Members ({slot.members.length})</summary>
+            <ul class="member-list" aria-label="Members of {card.title}">
+              {#each slot.members as member (member.key)}
+                <li class="slot" class:selected={selected.includes(member.key)}>
+                  <CardView card={member} {prefs} {now} variant="compact" />
+                  {@render slotActions(member)}
+                </li>
+              {/each}
+            </ul>
+          </details>
+        {/if}
       </li>
     {/each}
   </ul>
@@ -349,6 +422,25 @@
   .slot.selected :global(.cardview) {
     box-shadow: 0 0 0 2px var(--color-forest);
   }
+  .members summary {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--color-forest);
+  }
+  .member-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 var(--space-2);
+    display: grid;
+    gap: var(--space-3);
+    border-left: 2px solid var(--color-divider);
+  }
+  .barn {
+    width: 100%;
+  }
   .slot-actions {
     display: flex;
     gap: var(--space-2);
@@ -384,6 +476,7 @@
   }
   .btn:focus-visible,
   .chip:focus-visible,
+  .members summary:focus-visible,
   .select:focus-within {
     outline: none;
     box-shadow: var(--focus-ring);

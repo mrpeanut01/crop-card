@@ -61,6 +61,13 @@ export const load: PageServerLoad = async (event) => {
     products: library
       .map((p) => ({ id: p.pluginId, name: p.displayName }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    stock: listStockItems().map((s) => ({ id: s.id, name: s.displayName, unit: s.defaultUnit }))
+    stock: listStockItems()
+      .filter((s) => s.category !== 'feed' && s.category !== 'bedding')
+      .sort(
+        (a, b) =>
+          Number(b.category === 'animal-health') - Number(a.category === 'animal-health') ||
+          a.displayName.localeCompare(b.displayName)
+      )
+      .map((s) => ({ id: s.id, name: s.displayName, unit: s.defaultUnit }))
   };
 };

@@ -3,7 +3,7 @@ import { getField } from '$lib/db/fields';
 import { animalMoveSchema } from '$lib/animals/apiSchemas';
 import { CLIENT_RECORD_HEADER } from '$lib/clientRecordHeader';
 import { requireMutator } from '$lib/server/auth';
-import { withClientRecordId } from '$lib/server/clientRecordId';
+import { hasClientRecordId, withClientRecordId } from '$lib/server/clientRecordId';
 import {
   assertAnimalSubject,
   firstUnknownRef,
@@ -25,7 +25,11 @@ import {
 export const _requestSchema = animalMoveSchema;
 
 /** Owners and helpers log moves. Replayable from the offline queue. The
- *  32C grazing gate runs on the resolved plan, before the write. */
+ *  32C grazing gate runs on the resolved plan, before the write.
+ *  `alreadyThere` is only the offline recovery resend ("They already went
+ *  through the gate"): it counts only with a client record id from a signed
+ *  in phone, never for a Bearer token, and never clears a stop that asks the
+ *  helper to get the owner. */
 export const POST: RequestHandler = withClientRecordId(async (event) => {
   const user = requireMutator(event);
   const body = await parseBody(event.request, animalMoveSchema);
@@ -51,7 +55,13 @@ export const POST: RequestHandler = withClientRecordId(async (event) => {
     if (outOfOrder) return outOfOrder.toResponse();
     const truncated = await moveTruncationRefusal(plan, timeZone);
     if (truncated) return json(truncated, { status: 409 });
-    const gate = await grazingMoveGate(plan, user.role, timeZone);
+    const gate = await grazingMoveGate(plan, user.role, timeZone, Date.now(), {
+      judgeAsLive: input.queuedLive === true,
+      alreadyThere:
+        input.alreadyThere === true &&
+        hasClientRecordId(event.request) &&
+        event.locals.authVia !== 'bearer'
+    });
     if (!gate.ok) return json(gate.body, { status: gate.status });
     const move = await guardedHoldWrite(
       event,

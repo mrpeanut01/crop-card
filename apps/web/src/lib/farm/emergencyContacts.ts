@@ -3,10 +3,16 @@ import { z } from 'zod';
 export const EMERGENCY_CONTACTS_KEY = 'farm_emergency_contacts';
 export const MAX_EMERGENCY_CONTACTS = 5;
 
+export const EMERGENCY_CONTACT_TYPES = ['vet', 'other'] as const;
+export type EmergencyContactType = (typeof EMERGENCY_CONTACT_TYPES)[number];
+
 export interface EmergencyContact {
   name: string;
   role: string;
   phone: string;
+  /** 32D (D2-13): a vet is shown on Animal and Flock Cards. Absent means
+   *  other; only `vet` is stored. */
+  type?: 'vet';
 }
 
 export const POISON_CONTROL_CONTACT: EmergencyContact = {
@@ -33,7 +39,11 @@ export const emergencyContactSchema = z.object({
     .refine((v) => {
       const n = digits(v).length;
       return n >= 3 && n <= 20;
-    }, 'A phone number needs between 3 and 20 digits.')
+    }, 'A phone number needs between 3 and 20 digits.'),
+  type: z
+    .enum(EMERGENCY_CONTACT_TYPES)
+    .optional()
+    .transform((t) => (t === 'vet' ? ('vet' as const) : undefined))
 });
 
 export const emergencyContactsSchema = z
@@ -44,6 +54,7 @@ export interface ContactRowInput {
   name: string;
   role: string;
   phone: string;
+  type?: string;
 }
 
 export type ContactsParse =
@@ -55,7 +66,9 @@ export function isBlankRow(row: ContactRowInput): boolean {
 
 export function parseContactRows(rows: readonly ContactRowInput[]): ContactsParse {
   const filled = rows.filter((r) => !isBlankRow(r));
-  const parsed = emergencyContactsSchema.safeParse(filled);
+  const parsed = emergencyContactsSchema.safeParse(
+    filled.map(({ type, ...rest }) => (type === 'vet' ? { ...rest, type } : rest))
+  );
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     const index = typeof issue?.path[0] === 'number' ? issue.path[0] : null;
@@ -78,9 +91,30 @@ export function decodeEmergencyContacts(raw: string | undefined | null): Emergen
   for (const item of value) {
     if (out.length >= MAX_EMERGENCY_CONTACTS) break;
     const parsed = emergencyContactSchema.safeParse(item);
-    if (parsed.success) out.push(parsed.data);
+    if (parsed.success) out.push(withoutEmptyType(parsed.data));
   }
   return out;
+}
+
+function withoutEmptyType(c: EmergencyContact): EmergencyContact {
+  if (c.type === 'vet') return c;
+  const { type: _type, ...rest } = c;
+  return rest;
+}
+
+const VET_ROLE = /\b(vet|vets|veterinarian|veterinary|animal hospital)\b/i;
+
+/** The farm's vet for Animal and Flock Cards: the first contact marked as
+ *  a vet, else the first whose role or name says vet. */
+export function firstVetContact(
+  contacts: readonly EmergencyContact[] | null | undefined
+): EmergencyContact | null {
+  if (!contacts?.length) return null;
+  return (
+    contacts.find((c) => c.type === 'vet') ??
+    contacts.find((c) => VET_ROLE.test(c.role) || VET_ROLE.test(c.name)) ??
+    null
+  );
 }
 
 function nationalDigits(phone: string): string {
@@ -94,7 +128,7 @@ export function hasPoisonControl(contacts: readonly { phone: string }[]): boolea
 
 export function formatEmergencyContact(contact: EmergencyContact): string {
   const name = contact.name.trim();
-  const role = contact.role.trim();
+  const role = contact.role.trim() || (contact.type === 'vet' ? 'Vet' : '');
   const who = role && role.toLowerCase() !== name.toLowerCase() ? `${name} (${role})` : name;
   return `${who}: ${contact.phone.trim()}`;
 }
@@ -105,11 +139,13 @@ export function contactRowsFromForm(form: FormData): ContactRowInput[] {
   const names = form.getAll('contactName').map(String);
   const roles = form.getAll('contactRole').map(String);
   const phones = form.getAll('contactPhone').map(String);
+  const types = form.getAll('contactType').map(String);
   const count = Math.max(names.length, roles.length, phones.length);
   return Array.from({ length: count }, (_, i) => ({
     name: names[i] ?? '',
     role: roles[i] ?? '',
-    phone: phones[i] ?? ''
+    phone: phones[i] ?? '',
+    ...(types[i] === 'vet' ? { type: 'vet' } : {})
   }));
 }
 

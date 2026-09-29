@@ -1,5 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import { type SQL, and, asc, count, eq, inArray, isNotNull, ne, or, sql } from 'drizzle-orm';
+import {
+  type SQL,
+  and,
+  asc,
+  count,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  ne,
+  or,
+  sql
+} from 'drizzle-orm';
 import { db } from './client';
 import {
   animalCarePlans,
@@ -37,6 +49,8 @@ export interface Animal {
   housingFieldId: string | null;
   hasPhoto: boolean;
   notes: string | null;
+  microchipId: string | null;
+  feedingNote: string | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -69,6 +83,8 @@ function rowToAnimal(row: AnimalRow): Animal {
     housingFieldId: row.housingFieldId ?? null,
     hasPhoto: !!row.photoRef,
     notes: row.notes ?? null,
+    microchipId: row.microchipId ?? null,
+    feedingNote: row.feedingNote ?? null,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime()
   };
@@ -146,6 +162,8 @@ export interface CreateAnimalInput {
   foodProducing: boolean;
   housingFieldId?: string | null;
   notes?: string | null;
+  microchipId?: string | null;
+  feedingNote?: string | null;
 }
 
 const blankToNull = (v: string | null | undefined): string | null => {
@@ -175,6 +193,8 @@ export function insertAnimal(input: CreateAnimalInput, now = Date.now()): Animal
         foodProducing: input.foodProducing,
         housingFieldId: input.housingFieldId ?? null,
         notes: blankToNull(input.notes),
+        microchipId: blankToNull(input.microchipId),
+        feedingNote: blankToNull(input.feedingNote),
         createdAt: new Date(now),
         updatedAt: new Date(now)
       })
@@ -195,6 +215,8 @@ export interface UpdateAnimalInput {
   acquiredFrom?: string | null;
   purpose?: AnimalPurpose;
   notes?: string | null;
+  microchipId?: string | null;
+  feedingNote?: string | null;
   status?: 'active' | 'archived';
 }
 
@@ -210,6 +232,8 @@ export function updateAnimal(id: string, patch: UpdateAnimalInput, now = Date.no
   if (patch.acquiredFrom !== undefined) set.acquiredFrom = blankToNull(patch.acquiredFrom);
   if (patch.purpose !== undefined) set.purpose = patch.purpose;
   if (patch.notes !== undefined) set.notes = blankToNull(patch.notes);
+  if (patch.microchipId !== undefined) set.microchipId = blankToNull(patch.microchipId);
+  if (patch.feedingNote !== undefined) set.feedingNote = blankToNull(patch.feedingNote);
   if (patch.status !== undefined) {
     set.status = patch.status;
     set.statusDate = patch.status === 'archived' ? new Date(now) : null;
@@ -470,9 +494,30 @@ function countWhere(n: { n: number } | undefined): number {
   return Number(n?.n ?? 0);
 }
 
+/** Care plans the species plugin seeded that nobody has touched: still
+ *  `plugin`, on, undated and not one-off. They are suggestions, not
+ *  records, so they never block delete-if-empty and go with the subject. */
+function untouchedSeedConds(subjectType: AnimalSubjectType, subjectId: string): SQL[] {
+  return [
+    eq(animalCarePlans.subjectType, subjectType),
+    eq(animalCarePlans.subjectId, subjectId),
+    eq(animalCarePlans.provenance, 'plugin'),
+    eq(animalCarePlans.active, true),
+    isNull(animalCarePlans.nextDueAt),
+    isNull(animalCarePlans.onceOn)
+  ];
+}
+
+/** Deletes the subject's untouched seeded care plans (delete-if-empty). */
+export function deleteUntouchedSeedPlans(subjectType: AnimalSubjectType, subjectId: string): void {
+  db.delete(animalCarePlans)
+    .where(withTenant(animalCarePlans, ...untouchedSeedConds(subjectType, subjectId)))
+    .run();
+}
+
 /** What counts as a record for delete-if-empty. The single stay written
- *  when a subject was added does not: a mistaken entry can be deleted in
- *  the same session. */
+ *  when a subject was added does not, nor do untouched seeded care plans:
+ *  a mistaken entry can be deleted in the same session. */
 export function subjectRecordCounts(
   subjectType: AnimalSubjectType,
   subjectId: string
@@ -532,7 +577,17 @@ export function subjectRecordCounts(
     productionLogs: n(animalProductionLogs),
     statusEvents: n(animalStatusEvents),
     flagChanges: n(animalFlagChanges),
-    carePlans: n(animalCarePlans),
+    carePlans: Math.max(
+      0,
+      n(animalCarePlans) -
+        countWhere(
+          db
+            .select({ n: count() })
+            .from(animalCarePlans)
+            .where(withTenant(animalCarePlans, ...untouchedSeedConds(subjectType, subjectId)))
+            .get()
+        )
+    ),
     ledgerEntries: ledger,
     extraLocations: Math.max(0, ownStays - 1) + groupLinked + referencing
   };
@@ -547,6 +602,7 @@ export function deleteAnimalIfEmpty(id: string): 'deleted' | 'has-records' | 'no
   return db.transaction(() => {
     if (!getAnimal(id)) return 'not-found';
     if (hasRecords(subjectRecordCounts('animal', id))) return 'has-records';
+    deleteUntouchedSeedPlans('animal', id);
     db.delete(animalLocations)
       .where(
         withTenant(

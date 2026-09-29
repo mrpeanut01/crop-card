@@ -22,5 +22,19 @@
     ],
     "beeAttractive": false
   },
-  "archetype": "cover-crop.termination"
+  "archetype": "cover-crop.termination",
+  "animalToxicity": [
+    {
+      "speciesIds": [
+        "cattle",
+        "sheep",
+        "goat"
+      ],
+      "parts": [
+        "leaves"
+      ],
+      "severity": "caution",
+      "note": "Young regrowth and plants stressed by drought or frost can release prussic acid. Ask your extension agent or vet before grazing it."
+    }
+  ]
 }

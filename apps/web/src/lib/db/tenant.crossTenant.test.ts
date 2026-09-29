@@ -60,6 +60,8 @@ import * as animalStatusRepo from './animalStatus';
 import * as grazingAttestationsRepo from './grazingAttestations';
 import * as animalHealthRepo from './animalHealth';
 import * as animalProductionRepo from './animalProduction';
+import * as carePlansRepo from './animalCarePlans';
+import * as careTasksRepo from './careTasks';
 import {
   PHASE_32_TABLES,
   listPhase32Ids,
@@ -501,7 +503,9 @@ describe('cross-tenant isolation', () => {
           'decon-due': false,
           'lock-window-closing': false,
           'spring-calibration': false,
-          'frost-tonight': false
+          'frost-tonight': false,
+          'animal-care-due': false,
+          'withdrawal-clears': false
         })
       )
     ).toBeNull();
@@ -1312,6 +1316,94 @@ describe('cross-tenant isolation', () => {
     });
   });
 
+  it("care plans and care tasks never read, change or reopen another Owner's rows (32D)", () => {
+    const seed = (ownerId: string) =>
+      runWithTenant(ownerId, () => {
+        const dog = animalsRepo.insertAnimal({
+          speciesId: 'dog',
+          name: `${ownerId}-dog`,
+          purpose: 'pet',
+          foodProducing: false
+        });
+        const plan = carePlansRepo.insertCarePlan({
+          subjectType: 'animal',
+          subjectId: dog.id,
+          kind: 'vaccination',
+          title: 'Rabies vaccine',
+          intervalDays: 365,
+          nextDueOn: '2030-01-10',
+          leadDays: 14,
+          provenance: 'manual'
+        });
+        careTasksRepo.upsertCareTask({
+          meta: {
+            subjectType: 'animal',
+            subjectId: dog.id,
+            planId: plan.id,
+            dueOn: '2030-01-10',
+            careKind: 'vaccination',
+            leadDays: 14
+          },
+          title: 'Rabies vaccine: dog'
+        });
+        return { dogId: dog.id, planId: plan.id };
+      });
+    const a = seed(OWNER_A);
+    const b = seed(OWNER_B);
+    fc.assert(
+      fc.property(
+        fc.constantFrom([OWNER_A, a, b] as const, [OWNER_B, b, a] as const),
+        ([me, mine, theirs]) =>
+          runWithTenant(me, () => {
+            expect(carePlansRepo.getCarePlan(theirs.planId)).toBeUndefined();
+            expect(carePlansRepo.listCarePlansForSubject('animal', theirs.dogId)).toEqual([]);
+            expect(
+              carePlansRepo.listCarePlansForSubjects([
+                { subjectType: 'animal', subjectId: theirs.dogId }
+              ])
+            ).toEqual([]);
+            expect(
+              carePlansRepo.listActiveDatedCarePlans().some((p) => p.id === theirs.planId)
+            ).toBe(false);
+            expect(
+              carePlansRepo.careSubjects([{ subjectType: 'animal', subjectId: theirs.dogId }]).size
+            ).toBe(0);
+            expect(carePlansRepo.updateCarePlan(theirs.planId, { title: 'x' })).toBeUndefined();
+            expect(carePlansRepo.deleteCarePlan(theirs.planId)).toBe(false);
+            expect(careTasksRepo.listOpenTasksForPlan(theirs.planId)).toEqual([]);
+            expect(
+              careTasksRepo.listOpenCareTasks().every((t) => !t.id.includes(theirs.planId))
+            ).toBe(true);
+            expect(careTasksRepo.listOpenTasksForPlan(mine.planId)).toHaveLength(1);
+          })
+      ),
+      { numRuns: 6 }
+    );
+    runWithTenant(OWNER_A, () => {
+      const theirTaskId = `tk_care_${b.planId}_20300110`;
+      runWithTenant(OWNER_B, () => tasksRepo.abortTask(theirTaskId, 'plan-edited'));
+      expect(
+        careTasksRepo.upsertCareTask({
+          meta: {
+            subjectType: 'animal',
+            subjectId: a.dogId,
+            planId: b.planId,
+            dueOn: '2030-01-10',
+            careKind: 'vaccination',
+            leadDays: 14
+          },
+          title: 'stolen'
+        })
+      ).toBe(false);
+    });
+    runWithTenant(OWNER_B, () => {
+      const t = tasksRepo.getTask(`tk_care_${b.planId}_20300110`);
+      expect(t?.title).toBe('Rabies vaccine: dog');
+      expect(t?.abortReason).toBe('plan-edited');
+      expect(carePlansRepo.getCarePlan(b.planId)?.title).toBe('Rabies vaccine');
+    });
+  });
+
   // Quiet noise — these imports exist so the test refuses to compile when a
   // new repo is added without explicit consideration. Listing them here is
   // the human-readable "we audited everything" gate.
@@ -1348,7 +1440,9 @@ describe('cross-tenant isolation', () => {
       animalStatusRepo,
       grazingAttestationsRepo,
       animalHealthRepo,
-      animalProductionRepo
+      animalProductionRepo,
+      carePlansRepo,
+      careTasksRepo
     ];
     for (const m of auditedModules) {
       expect(m).toBeTruthy();

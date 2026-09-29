@@ -12,5 +12,19 @@
   "tile": {
     "icon": "cat",
     "label": "Cats"
-  }
+  },
+  "careDefaults": [
+    {
+      "key": "rabies",
+      "kind": "vaccination",
+      "title": "Rabies vaccine",
+      "note": "How often depends on the vaccine and local law. Ask your vet."
+    },
+    {
+      "key": "core-vaccines",
+      "kind": "vaccination",
+      "title": "Core vaccines",
+      "note": "Which ones and how often depend on age and risk. Ask your vet."
+    }
+  ]
 }

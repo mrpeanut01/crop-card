@@ -48,6 +48,21 @@ import {
   type SprayerSnapshot
 } from './triggers';
 import type { VapidConfig } from './webPush';
+import { farmTimeZone } from '$lib/db/userProfile';
+import { hasAnyAnimalRecord } from '$lib/db/animals';
+import { careSubjectKey } from '$lib/db/animalCarePlans';
+import { ymdInZone } from '$lib/prefs';
+import { msToYmd, parseCareMeta } from '$lib/animals/carePlans';
+import type { PushAlertKind } from '$lib/push/prefs';
+import { materializeCareTasks } from '$lib/server/carePlans';
+import { projectActiveFarm } from '$lib/server/holdGuard';
+import {
+  batchMessage,
+  careDueAlerts,
+  clearedHolds,
+  withdrawalClearsAlerts,
+  type OpenCareTask
+} from './animalAlerts';
 
 const SKIPPED_BILLING = new Set(['suspended']);
 
@@ -167,6 +182,45 @@ async function frostAlertsForOwner(now: number, deps: PushTickDeps): Promise<Pus
   }
 }
 
+function someoneWants(kind: PushAlertKind, deps: PushTickDeps): boolean {
+  if (deps.config !== null && listSubscriptions().some((s) => s.prefs[kind])) return true;
+  return !!deps.emailOrigin && listOptedIn().some((c) => c.category === kind);
+}
+
+/**
+ * Phase 32D. The tick writes this farm's care tasks (D0-2) whether or not
+ * anyone wants the push, so /today and the Cards agree with it. The hold
+ * ledger is only projected when someone wants hold-cleared alerts.
+ */
+async function animalAlertsForOwner(now: number, deps: PushTickDeps): Promise<PushAlert[]> {
+  const timeZone = farmTimeZone();
+  const care = materializeCareTasks(now, timeZone);
+  const out: PushAlert[] = [];
+  if (care.open.length > 0 && someoneWants('animal-care-due', deps)) {
+    const tasks: OpenCareTask[] = [];
+    for (const t of care.open) {
+      const meta = parseCareMeta(t.recurrenceJson);
+      if (!meta) continue;
+      const subject = care.subjects.get(careSubjectKey(meta.subjectType, meta.subjectId));
+      tasks.push({
+        meta,
+        scheduledOn: msToYmd(t.scheduledFor),
+        subjectName: subject?.name ?? 'An animal'
+      });
+    }
+    out.push(...careDueAlerts(tasks, ymdInZone(now, timeZone)));
+  }
+  if (someoneWants('withdrawal-clears', deps) && hasAnyAnimalRecord()) {
+    try {
+      const { loaded, projection } = await projectActiveFarm(timeZone, now);
+      out.push(...withdrawalClearsAlerts(clearedHolds(projection.holds, now), loaded.labels));
+    } catch (err) {
+      console.warn('[push] hold projection unavailable this tick', err);
+    }
+  }
+  return out;
+}
+
 /** Process one Owner. Caller must already be inside that Owner's tenant context. */
 export async function processOwnerAlerts(
   ownerId: string,
@@ -177,14 +231,24 @@ export async function processOwnerAlerts(
   const { sprayers, records } = ownerSnapshot(now);
   const alerts = [
     ...selectDueAlerts({ sprayers, records, now }),
-    ...(await frostAlertsForOwner(now, deps))
+    ...(await frostAlertsForOwner(now, deps)),
+    ...(await animalAlertsForOwner(now, deps))
   ];
   if (alerts.length === 0) return summary;
   const members = usersForOwner(ownerId);
   const farmName = ownerRow(ownerId)?.name ?? 'your farm';
+  const batches = new Map<string, PushAlert[]>();
   for (const alert of alerts) {
     if (!claimDelivery(alert.kind, alert.subjectId, now)) continue;
     summary.alerts++;
+    const key = `${alert.kind}|${alert.batchKey ?? alert.subjectId}`;
+    const list = batches.get(key);
+    if (list) list.push(alert);
+    else batches.set(key, [alert]);
+  }
+  for (const batch of batches.values()) {
+    const first = batch[0];
+    const alert: PushAlert = { ...first, ...batchMessage(batch) };
     let delivered = 0;
     const recipients = deps.config ? selectRecipients(listSubscriptions(), members, alert) : [];
     if (deps.config && recipients.length > 0) {
@@ -194,7 +258,7 @@ export async function processOwnerAlerts(
           title: alert.title,
           body: alert.body,
           url: alert.url,
-          tag: `${alert.kind}:${alert.subjectId}`,
+          tag: `${alert.kind}:${alert.batchKey ?? alert.subjectId}`,
           kind: alert.kind
         },
         deps.config,
@@ -211,7 +275,7 @@ export async function processOwnerAlerts(
       summary.emailed += mail.sent;
       summary.emailFailed += mail.failed;
     }
-    setDeliveryRecipientCount(alert.kind, alert.subjectId, delivered);
+    for (const a of batch) setDeliveryRecipientCount(a.kind, a.subjectId, delivered);
   }
   return summary;
 }

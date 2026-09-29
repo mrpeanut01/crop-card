@@ -2,7 +2,7 @@
   import { INVENTORY_TYPES, INVENTORY_TYPE_LABELS, type InventoryType } from '$lib/inventory/types';
 
   /**
-   * Phase 27A primitive (#257). The 5-chip type-swap row that sits at
+   * Phase 27A primitive (#257). The type-swap row that sits at
    * the top of every unified inventory list, detail, and edit screen.
    * Click switches `?type=` and re-renders the parent's data binding
    * without page reload — the chrome shape is identical, only the rows
@@ -18,13 +18,15 @@
     /** Optional per-type counts surfaced as a small badge after the
      *  label, e.g. "Pesticides 3". Pass undefined to hide. */
     countByType?: Partial<Record<InventoryType, number>>;
+    /** Chips to show, in order. Empty animal types are hidden (32D). */
+    types?: readonly InventoryType[];
   }
 
-  const { activeType, onTypeChange, countByType }: Props = $props();
+  const { activeType, onTypeChange, countByType, types = INVENTORY_TYPES }: Props = $props();
 </script>
 
 <div class="inv-type-chip-row" role="tablist" aria-label="Inventory type">
-  {#each INVENTORY_TYPES as type (type)}
+  {#each types as type (type)}
     <button
       type="button"
       role="tab"
@@ -53,6 +55,7 @@
     border: 1px solid var(--color-divider, #e5e7e0);
     border-radius: 99px;
     padding: 6px 14px;
+    min-height: 48px;
     font: inherit;
     font-size: 0.85rem;
     font-weight: 600;

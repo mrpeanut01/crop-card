@@ -6,6 +6,8 @@
  *   /inventory/fertility/<stockItemId>
  *   /inventory/seed/<stockItemId>
  *   /inventory/crop/<pluginId>
+ *   /inventory/feed/<stockItemId>
+ *   /inventory/animal-health/<stockItemId | animal-health pluginId>
  *
  * /inventory/sprayer/<equipmentId> 308s to /equipment/<id> (#474).
  *
@@ -27,9 +29,21 @@ import {
   type StockItem,
   type StockMovement
 } from '$lib/db/stock';
-import { getRegistry } from '$lib/server/registry';
+import { getDataKinds, getRegistry } from '$lib/server/registry';
 import { INVENTORY_TYPES, type InventoryType } from '$lib/inventory/types';
-import { resolveArchetype } from '$lib/plugins/schemas';
+import { resolveArchetype, type AnimalHealthPlugin } from '$lib/plugins/schemas';
+import { listAnimals } from '$lib/db/animals';
+import { listAnimalGroups } from '$lib/db/animalGroups';
+import { canMutate } from '$lib/server/session';
+import {
+  animalHealthMeta,
+  feedMeta,
+  isFeedCategory,
+  onHandLb,
+  type AnimalHealthMeta,
+  type FeedMeta
+} from '$lib/stock/animalStock';
+import { getStockItemWithBalance } from '$lib/db/stock';
 
 export interface PesticideDetailPayload {
   type: 'pesticide';
@@ -94,8 +108,44 @@ export interface CropDetailPayload {
   hash: string;
 }
 
+export interface FeedSubject {
+  type: 'animal' | 'group';
+  id: string;
+  label: string;
+}
+
+export interface FeedDetailPayload {
+  type: 'feed';
+  item: StockItem;
+  lots: LotWithBalance[];
+  movements: StockMovement[];
+  feed: FeedMeta;
+  onHand: number;
+  onHandLb: number | null;
+  subjects: FeedSubject[];
+  canUse: boolean;
+  canEdit: boolean;
+}
+
+export interface AnimalHealthDetailPayload {
+  type: 'animal-health';
+  /** Absent when the page shows a library product (Catalog). */
+  item?: StockItem;
+  lots: LotWithBalance[];
+  movements: StockMovement[];
+  meta: AnimalHealthMeta;
+  plugin?: AnimalHealthPlugin;
+  speciesNames: Record<string, string>;
+  canEdit: boolean;
+}
+
 export type DetailPayload =
-  PesticideDetailPayload | FertilityDetailPayload | SeedDetailPayload | CropDetailPayload;
+  | PesticideDetailPayload
+  | FertilityDetailPayload
+  | SeedDetailPayload
+  | CropDetailPayload
+  | FeedDetailPayload
+  | AnimalHealthDetailPayload;
 
 function parseType(raw: string): InventoryType {
   if (!(INVENTORY_TYPES as readonly string[]).includes(raw)) {
@@ -104,7 +154,59 @@ function parseType(raw: string): InventoryType {
   return raw as InventoryType;
 }
 
-export const load: PageServerLoad = async ({ params }): Promise<DetailPayload> => {
+function feedSubjects(): FeedSubject[] {
+  const groups = listAnimalGroups().map((g) => ({
+    type: 'group' as const,
+    id: g.id,
+    label: g.name
+  }));
+  const animals = listAnimals()
+    .filter((a) => !a.groupId)
+    .map((a) => ({
+      type: 'animal' as const,
+      id: a.id,
+      label: a.name ?? a.tag ?? 'Unnamed animal'
+    }));
+  return [...groups, ...animals].sort((a, b) => a.label.localeCompare(b.label));
+}
+
+async function animalHealthPayload(
+  id: string,
+  role: string | undefined
+): Promise<AnimalHealthDetailPayload> {
+  const kinds = await getDataKinds();
+  const speciesNames = Object.fromEntries(
+    kinds.species.all().map((sp) => [sp.pluginId, sp.displayName])
+  );
+  const canEdit = role === 'owner';
+  const item = getStockItem(id);
+  if (item) {
+    if (item.category !== 'animal-health') throw error(404, `item ${id} is not animal health`);
+    return {
+      type: 'animal-health',
+      item,
+      lots: listLotsForItem(id),
+      movements: listMovementsForItem(id, 25),
+      meta: animalHealthMeta(item.metadataJson),
+      plugin: item.pluginId ? kinds.animalHealth.get(item.pluginId) : undefined,
+      speciesNames,
+      canEdit
+    };
+  }
+  const plugin = kinds.animalHealth.get(id);
+  if (!plugin) throw error(404, `animal-health item not found: ${id}`);
+  return {
+    type: 'animal-health',
+    lots: [],
+    movements: [],
+    meta: {},
+    plugin,
+    speciesNames,
+    canEdit
+  };
+}
+
+export const load: PageServerLoad = async ({ params, locals }): Promise<DetailPayload> => {
   if (params.type === 'sprayer') {
     throw redirect(308, `/equipment/${encodeURIComponent(params.id)}`);
   }
@@ -130,7 +232,9 @@ export const load: PageServerLoad = async ({ params }): Promise<DetailPayload> =
     };
   }
 
-  // Lot-bearing types: pesticide / fertility / seed
+  if (type === 'animal-health') return animalHealthPayload(id, locals.user?.role);
+
+  // Lot-bearing types: pesticide / fertility / seed / feed
   const item = getStockItem(id);
   if (!item) throw error(404, `stock item not found: ${id}`);
 
@@ -152,6 +256,23 @@ export const load: PageServerLoad = async ({ params }): Promise<DetailPayload> =
   if (type === 'seed' && item.category !== 'seed') {
     throw error(404, `item ${id} is not a seed`);
   }
+  if (type === 'feed') {
+    if (!isFeedCategory(item.category)) throw error(404, `item ${id} is not feed or bedding`);
+    const onHand = getStockItemWithBalance(id)?.onHand ?? 0;
+    const role = locals.user?.role;
+    return {
+      type,
+      item,
+      lots: listLotsForItem(id),
+      movements: listMovementsForItem(id, 25),
+      feed: feedMeta(item.metadataJson),
+      onHand,
+      onHandLb: onHandLb(item, onHand),
+      subjects: feedSubjects(),
+      canUse: !!role && canMutate(role),
+      canEdit: role === 'owner'
+    };
+  }
 
   const lots = listLotsForItem(id);
   const movements = listMovementsForItem(id, 25);
@@ -169,5 +290,5 @@ export const load: PageServerLoad = async ({ params }): Promise<DetailPayload> =
   if (type === 'fertility') {
     return { type, item, lots, movements, plugin: plugin as FertilityDetailPayload['plugin'] };
   }
-  return { type, item, lots, movements, plugin: plugin as SeedDetailPayload['plugin'] };
+  return { type: 'seed', item, lots, movements, plugin: plugin as SeedDetailPayload['plugin'] };
 };

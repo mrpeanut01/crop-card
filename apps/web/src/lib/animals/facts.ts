@@ -30,6 +30,8 @@ export interface AnimalFactsInput {
   purpose: AnimalPurpose;
   livesAt: string | null;
   groupName: string | null;
+  feedingNote?: string | null;
+  microchipId?: string | null;
 }
 
 export function animalFacts(a: AnimalFactsInput, layout: AnimalsLayout, now = Date.now()): Fact[] {
@@ -46,6 +48,8 @@ export function animalFacts(a: AnimalFactsInput, layout: AnimalsLayout, now = Da
     if (a.acquiredFrom) facts.push({ label: 'Came from', value: a.acquiredFrom });
     facts.push({ label: 'Kept for', value: PURPOSE_TEXT[a.purpose] });
   }
+  if (a.feedingNote) facts.push({ label: 'Food', value: a.feedingNote });
+  if (a.microchipId) facts.push({ label: 'Microchip', value: a.microchipId });
   return facts;
 }
 

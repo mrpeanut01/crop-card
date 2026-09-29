@@ -45,6 +45,16 @@ import {
   type SubmitFailure
 } from './ownerSync';
 import { holdQueueMarker, type HoldQueueMarker } from '$lib/animals/holdGuardCopy';
+import {
+  QUEUED_LIVE_FIELD,
+  lineageKeys,
+  payloadSubjectKeys,
+  rejectInfoOf,
+  rewriteForRecovery,
+  type RecoveryAction,
+  type RejectInfo
+} from '$lib/animals/queueRecovery';
+import type { FarmSnapshot } from '$lib/cards/snapshot';
 
 export type DrainHalt = 'offline' | 'no-active-owner' | 'owner-unverified' | 'owner-mismatch';
 
@@ -57,6 +67,9 @@ export interface DrainResult {
   skippedOtherOwner: number;
   /** Previously rejected rows left alone by this drain. */
   skippedRejected: number;
+  /** 32D (D1-09): animal rows held back because an earlier row for the
+   *  same animal, group or flock was refused and is still waiting. */
+  heldBehindRejected: string[];
   /** Why the drain stopped early, if it did. */
   halted: DrainHalt | null;
   /** The server's active Owner when it disagreed with this tab's. */
@@ -70,6 +83,7 @@ function emptyResult(halted: DrainHalt | null): DrainResult {
     rejected: [],
     skippedOtherOwner: 0,
     skippedRejected: 0,
+    heldBehindRejected: [],
     halted
   };
 }
@@ -88,8 +102,11 @@ export const ENDPOINT_BY_KIND: Record<PendingRecordKind, string> = {
   journal: '/api/journal/record',
   'animal-move': '/api/animals/move',
   'animal-health': '/api/animals/health/record',
-  'animal-production': '/api/animals/production/record'
+  'animal-production': '/api/animals/production/record',
+  'feed-use': '/api/stock/:id/use'
 };
+
+const STOCK_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 
 /** Rows written before the v3 Dexie upgrade lack `kind`; they were all
  *  herbicide sprays. Coalesce here so routing never sees `undefined`. */
@@ -99,8 +116,25 @@ export function kindOf(rec: Pick<PendingSprayRecord, 'kind'>): PendingRecordKind
 
 /** #316 — resolve the replay endpoint for a row, defaulting a missing/
  *  unknown kind to the herbicide endpoint (matches the pre-v3 shape). */
-export function endpointForRecord(rec: Pick<PendingSprayRecord, 'kind'>): string {
-  return ENDPOINT_BY_KIND[kindOf(rec)] ?? ENDPOINT_BY_KIND.herbicide;
+export function endpointForRecord(
+  rec: Pick<PendingSprayRecord, 'kind'> & { payload?: unknown }
+): string {
+  const kind = kindOf(rec);
+  if (kind === 'feed-use') {
+    const id = (rec.payload as { stockItemId?: unknown } | null | undefined)?.stockItemId;
+    const safe = typeof id === 'string' && STOCK_ID_PATTERN.test(id) ? id : '_';
+    return `/api/stock/${safe}/use`;
+  }
+  return ENDPOINT_BY_KIND[kind] ?? ENDPOINT_BY_KIND.herbicide;
+}
+
+/** The body a row replays with. `feed-use` carries its stock item in the
+ *  path, not the body. */
+export function bodyForRecord(rec: Pick<PendingSprayRecord, 'kind' | 'payload'>): unknown {
+  if (kindOf(rec) !== 'feed-use') return rec.payload;
+  if (!rec.payload || typeof rec.payload !== 'object') return rec.payload;
+  const { stockItemId: _drop, ...rest } = rec.payload as Record<string, unknown>;
+  return rest;
 }
 
 /**
@@ -167,13 +201,17 @@ export function primeActiveOwnerId(ownerId: string | null | undefined): void {
  *  count from an application or a cut). Their payloads must carry the
  *  moment the operator recorded, not the drain time. The value is the
  *  field the endpoint reads that moment from. */
-const TIME_GATED_KINDS: ReadonlyMap<PendingRecordKind, 'occurredAt' | 'mowAt'> = new Map([
-  ['herbicide', 'occurredAt'],
-  ['insecticide', 'occurredAt'],
-  ['fungicide', 'occurredAt'],
-  ['harvest', 'occurredAt'],
-  ['hay-cutting', 'mowAt']
-]);
+const TIME_GATED_KINDS: ReadonlyMap<PendingRecordKind, 'occurredAt' | 'mowAt' | 'movedAt'> =
+  new Map<PendingRecordKind, 'occurredAt' | 'mowAt' | 'movedAt'>([
+    ['herbicide', 'occurredAt'],
+    ['insecticide', 'occurredAt'],
+    ['fungicide', 'occurredAt'],
+    ['harvest', 'occurredAt'],
+    ['hay-cutting', 'mowAt'],
+    ['animal-production', 'occurredAt'],
+    ['animal-move', 'movedAt'],
+    ['feed-use', 'occurredAt']
+  ]);
 
 /** Stamps the recorded moment on a time-gated payload that lacks one.
  *  Pure; other kinds and payloads that already carry it pass through. */
@@ -188,8 +226,13 @@ export function withOccurredAt(kind: PendingRecordKind, payload: unknown, now: n
 
 function recordedAt(payload: unknown): number | null {
   if (!payload || typeof payload !== 'object') return null;
-  const p = payload as { occurredAt?: unknown; mowAt?: unknown };
-  const v = typeof p.occurredAt === 'number' ? p.occurredAt : p.mowAt;
+  const p = payload as {
+    occurredAt?: unknown;
+    mowAt?: unknown;
+    movedAt?: unknown;
+    administeredAt?: unknown;
+  };
+  const v = [p.occurredAt, p.mowAt, p.movedAt, p.administeredAt].find((x) => typeof x === 'number');
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
@@ -285,8 +328,79 @@ export async function retryRejectedForActiveOwner(id: string): Promise<boolean> 
     .modify((r) => {
       delete r.status;
       delete r.lastStatus;
+      delete r.rejectInfo;
     });
   return true;
+}
+
+async function loadActiveSnapshot(): Promise<FarmSnapshot | null> {
+  try {
+    const { loadSnapshot } = await import('./cardStore');
+    return (await loadSnapshot())?.bundle ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function animalLineage(
+  rec: Pick<PendingSprayRecord, 'kind' | 'payload'>,
+  snapshot: FarmSnapshot | null
+): string[] {
+  const keys = payloadSubjectKeys(rec.kind, rec.payload);
+  if (keys.length === 0) return [];
+  return [...lineageKeys(keys, snapshot)];
+}
+
+async function ownRejectedRow(id: string): Promise<PendingSprayRecord | null> {
+  const ownerId = currentOwnerId();
+  if (!ownerId) return null;
+  const target = await db().pendingSprayRecords.get(id);
+  if (!target || target.ownerId !== ownerId || target.status !== 'rejected') return null;
+  return target;
+}
+
+/**
+ * 32D recovery for a refused row (D0-11, D1-06, D1-07). Every action but
+ * `keep-here` rewrites the parked row in place and clears the refusal, so
+ * the next drain re-sends it under the same client record id; the server
+ * released that id when it refused, so the record saves once.
+ * `keep-here` drops a refused move: nothing is sent. Scoped to the active
+ * Owner like discard. Returns false when the row is not this Owner's
+ * refused row or the action does not apply to it.
+ */
+export async function recoverRejectedForActiveOwner(
+  id: string,
+  action: RecoveryAction,
+  opts: { now?: number; at?: number } = {}
+): Promise<boolean> {
+  const target = await ownRejectedRow(id);
+  if (!target) return false;
+  if (action === 'retry') return retryRejectedForActiveOwner(id);
+  if (action === 'keep-here') {
+    if (kindOf(target) !== 'animal-move') return false;
+    await db().pendingSprayRecords.delete(id);
+    return true;
+  }
+  const now = opts.now ?? Date.now();
+  const payload = rewriteForRecovery(target.kind, target.payload, action, { now, at: opts.at });
+  if (!payload) return false;
+  await db()
+    .pendingSprayRecords.where('id')
+    .equals(id)
+    .modify((r) => {
+      r.payload = payload;
+      r.occurredAt = recordedAt(payload) ?? r.occurredAt;
+      delete r.status;
+      delete r.lastStatus;
+      delete r.rejectInfo;
+      delete r.holdMarker;
+    });
+  return true;
+}
+
+/** Offline-tapped moves carry this flag so a replay is judged as live. */
+export function markQueuedLive(payload: Record<string, unknown>): Record<string, unknown> {
+  return { ...payload, [QUEUED_LIVE_FIELD]: true };
 }
 
 type SubmitOutcome =
@@ -297,6 +411,7 @@ type SubmitOutcome =
       status: number;
       error: string;
       holdMarker?: HoldQueueMarker | null;
+      rejectInfo?: RejectInfo;
     };
 
 async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
@@ -309,7 +424,7 @@ async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
         [EXPECTED_OWNER_HEADER]: rec.ownerId,
         [CLIENT_RECORD_HEADER]: rec.id
       },
-      body: JSON.stringify(rec.payload),
+      body: JSON.stringify(bodyForRecord(rec)),
       credentials: 'include'
     });
   } catch (e) {
@@ -327,7 +442,8 @@ async function submitOne(rec: PendingSprayRecord): Promise<SubmitOutcome> {
     kind: classifySubmitFailure(res.status, body),
     status: res.status,
     error: `HTTP ${res.status}: ${body.slice(0, 240)}`,
-    holdMarker: holdQueueMarker(res.status, body)
+    holdMarker: holdQueueMarker(res.status, body),
+    rejectInfo: rejectInfoOf(body)
   };
 }
 
@@ -385,7 +501,22 @@ async function drainOnce(): Promise<DrainResult> {
     return result;
   }
 
+  const snapshot = await loadActiveSnapshot();
+  const blocked = new Set<string>();
+  for (const rec of allPending) {
+    if (rec.ownerId !== ownerId || rec.status !== 'rejected') continue;
+    for (const k of animalLineage(rec, snapshot)) blocked.add(k);
+  }
+
   for (const rec of mine) {
+    const lineage = animalLineage(rec, snapshot);
+    if (lineage.some((k) => blocked.has(k))) {
+      // D1-09: an earlier row for this animal or flock is waiting on the
+      // operator. Replaying this one first could save it out of order.
+      for (const k of lineage) blocked.add(k);
+      result.heldBehindRejected.push(rec.id);
+      continue;
+    }
     const outcome = await submitOne(rec);
     if (outcome.ok) {
       await db().pendingSprayRecords.delete(rec.id);
@@ -403,10 +534,12 @@ async function drainOnce(): Promise<DrainResult> {
       lastErrorAt: Date.now(),
       lastError: outcome.error,
       lastStatus: outcome.status,
-      holdMarker: outcome.holdMarker ?? undefined
+      holdMarker: outcome.holdMarker ?? undefined,
+      rejectInfo: outcome.rejectInfo
     };
     if (outcome.kind === 'rejected') {
       patch.status = 'rejected';
+      for (const k of lineage) blocked.add(k);
       result.rejected.push({ id: rec.id, status: outcome.status, error: outcome.error });
     } else {
       result.failed.push({ id: rec.id, error: outcome.error });

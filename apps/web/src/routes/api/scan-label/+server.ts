@@ -1,13 +1,22 @@
 import { json, error } from '@sveltejs/kit';
 import { z } from 'zod';
-import { claudeVisionLookup, matchCropPlugins, type ScanResult } from '$lib/server/scanResult';
+import {
+  claudeMedLabelLookup,
+  claudeVisionLookup,
+  matchCropPlugins,
+  type ScanResult
+} from '$lib/server/scanResult';
+import { animalHealthRefs } from '$lib/server/inventoryLibrary';
+import { matchHealthPluginByNada } from '$lib/stock/animalStock';
 import { runScanAi } from '$lib/server/scanAi';
 import { findTaxonomyTermByName, inventoryDomain } from '$lib/db/taxonomy';
 import { getStockItemByPluginId } from '$lib/db/stock';
 
 const requestSchema = z.object({
   image: z.string().min(1),
-  barcode: z.string().optional()
+  barcode: z.string().optional(),
+  /** Phase 32D: a medicine label, read for its name and NADA only. */
+  target: z.literal('animal-health').optional()
 });
 
 export async function POST(event) {
@@ -15,7 +24,29 @@ export async function POST(event) {
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) error(400, 'invalid request');
 
-  const { image, barcode } = parsed.data;
+  const { image, barcode, target } = parsed.data;
+
+  if (target === 'animal-health') {
+    const med = await runScanAi({
+      event,
+      endpoint: 'scan-label',
+      subject: 'label',
+      call: (onUsage) => claudeMedLabelLookup(image, onUsage)
+    });
+    if (!med.ok) return json(med.body, { status: med.status });
+    const scan = med.result as { found?: boolean; displayName?: string; nada?: ScanResult['nada'] };
+    const suggestion = matchHealthPluginByNada(scan.nada, await animalHealthRefs());
+    return json({
+      found: !!scan.found,
+      source: 'claude-vision',
+      ...(scan.displayName ? { displayName: scan.displayName } : {}),
+      ...(scan.nada ? { nada: scan.nada } : {}),
+      suggestedHealthPlugin: suggestion
+        ? { pluginId: suggestion.pluginId, displayName: suggestion.displayName }
+        : null,
+      provenance: 'ai'
+    });
+  }
 
   const ai = await runScanAi({
     event,

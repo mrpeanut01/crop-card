@@ -15,6 +15,7 @@ import { animalGroupPatchSchema } from '$lib/animals/apiSchemas';
 import { requireOwner } from '$lib/server/auth';
 import { parseBody, statusEventsWithLocks } from '$lib/server/animals';
 import { tryGuardedHoldWrite } from '$lib/server/holdGuard';
+import { endCareForSubject } from '$lib/server/carePlans';
 import { groupAdditionGate } from '$lib/server/grazingGate';
 import { farmTimeZone } from '$lib/db/userProfile';
 
@@ -104,6 +105,7 @@ export const PATCH: RequestHandler = async (event) => {
     }
   });
   if (!guarded.ok) return guarded.response;
+  if (input.status === 'archived') endCareForSubject('group', group.id);
   return json({ group: getAnimalGroupSummary(group.id), flagChanges, grazingWarnings });
 };
 
